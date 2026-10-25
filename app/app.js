@@ -312,7 +312,7 @@ function scopeNote(id) { if (S.view !== "level") return ""; return scopeFor(S.le
 var UTIL_VIEWS = { settings: 1, easy: 1, classes: 1, admin: 1 };
 function go(view, opts) {
   if (UTIL_VIEWS[view] && !UTIL_VIEWS[S.view] && S.view !== view && S.view !== "terrarium") S.utilBack = { view: S.view, level: S.level, tab: S.tab };
-  clearTimeout(S.qT); S.view = view; Object.assign(S, { showFilt: false, onlyMarks: false, tool: null, shopF: null, tab: "hub", q: "", tags: {}, group: "all", scen: null, fc: null, nr: null, sess: null, prepNr: null, unit: null, fam: null, famq: "", cn: null, menu: false, mupop: false }, opts || {});
+  clearTimeout(S.qT); S.view = view; Object.assign(S, { pointGo: null, showFilt: false, onlyMarks: false, tool: null, shopF: null, tab: "hub", q: "", tags: {}, group: "all", scen: null, fc: null, nr: null, sess: null, prepNr: null, unit: null, fam: null, famq: "", cn: null, menu: false, mupop: false }, opts || {});
   Admin.on = view === "admin"; if (view === "level") store("lastLevel", S.level);
   var h = view === "home" ? "" : view === "admin" ? "admin" : view === "classes" ? "classes" : view === "settings" ? "settings" : view === "terrarium" ? "terrarium" : view === "levels" ? "prehospital" : view === "nlevels" ? "nursing" : view === "mlevels" ? "medschool" : view === "ilevels" ? "imaging" : view === "everyday" ? "everyday" : view === "gen" ? "general" : view === "easy" ? "easy" : S.level;
   try { history.replaceState(null, "", h ? "#" + h : location.pathname); } catch (e) {}
@@ -348,12 +348,14 @@ function backRow() {
 /* ---------- views ---------- */
 function viewHome() {
   var genN = genIds().length;
-  function mini(cls, go, title, line, bug) { return '<button class="route rmini ' + cls + '" data-go="' + go + '"><span class="mtx"><h2>' + title + '</h2><p>' + line + '</p></span><span class="mbug">' + bugArt(bugById(bug), "", { mood: "happy" }) + '</span></button>'; }
+  var PT = '<span class="pointer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v13M6 12l6 6 6-6" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Start here</span>';
+  function pt(go) { return S.pointGo === go ? ' pointed' : ''; }
+  function mini(cls, go, title, line, bug) { return '<button class="route rmini ' + cls + pt(go) + '" data-go="' + go + '"' + '>' + (S.pointGo === go ? PT : '') + '<span class="mtx"><h2>' + title + '</h2><p>' + line + '</p></span><span class="mbug">' + bugArt(bugById(bug), "", { mood: "happy" }) + '</span></button>'; }
   return topbar() + homeTip() +
    heroHTML() +
    homeStart() + homeProgress() + (typeof trialBanner === "function" ? trialBanner() : '') +
    '<section class="routes">' +
-   '<button class="route gen wide" data-go="gen"><span class="eyebrow">Start here</span><h2>BugDex</h2><p>Every medication in DrugBug in one place, explained in plain language by Professor Sage. Search any drug or browse by class.</p><span class="count">' + genN + ' medications</span><span class="sage">' + bugSVG("sage") + '</span></button>' +
+   '<button class="route gen wide' + pt("gen") + '" data-go="gen">' + (S.pointGo === "gen" ? PT : '') + '<span class="eyebrow">Start here</span><h2>BugDex</h2><p>Every medication in DrugBug in one place, explained in plain language by Professor Sage. Search any drug or browse by class.</p><span class="count">' + genN + ' medications</span><span class="sage">' + bugSVG("sage") + '</span></button>' +
    '<div class="minis">' +
    mini("ev", "everyday", "Everyday Health", "Meds, vitamins and your body", "grub-everyday") +
    mini("ph", "levels", "Prehospital", "EMT to Flight Paramedic", "grub-medic") +
@@ -451,6 +453,7 @@ function tabList() {
   if (S.level !== "cna" && !img) L.push(["calc", "Calc Lab", "Dose and drip math with worked answers."]);
   if (!img) L.push(["tools", "Study Tools", "Megacode, pediatric dosing practice, interactions, med lists and safety drills."], ["scenarios", "Scenarios", "Clinical cases: choose what to give."]);
   L.push(["cards", "Flashcards", S.view === "level" && isM(S.level) ? "DrugBug flashcards, or your own decks imported from Anki." : "Flip, sort and master each drug."], ["games", "Brain Games", "Memory match, crossword, quick match, word scramble, Class Blitz and Frog Snack."], ["progress", "Progress", "Mastery, achievements and leaderboard."]);
+  if (typeof disView === "function" && !(S.view === "level" && isI(S.level))) L.splice(1, 0, ["diseases", "Disease Wormhole", "Go down the wormhole on 250 conditions: their history, what goes wrong from cell to organ, and the drugs that treat them."]);
   return L;
 }
 function tabName(k) { var t = tabList().filter(function (x) { return x[0] === k; })[0]; return t ? t[1] : k === "session" ? "Study session" : k === "anki" ? "Imported Decks" : ""; }
@@ -696,7 +699,7 @@ function flashcards() {
 function viewLevel() {
   if (!S.tab || (S.tab !== "hub" && S.tab !== "session" && !tabName(S.tab))) S.tab = "hub";
   if (S.tab !== "hub" && S.tab !== "session" && typeof proLocked === "function" && proLocked(S.tab)) { var lt = S.tab; S.tab = "hub"; setTimeout(function () { openPaywall(tabName(lt), tabTier(lt)); }, 0); }
-  var body = S.tab === "hub" ? "" : S.tab === "registry" ? registry() : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "doses" ? doseView() : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "calc" ? calcView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "anki" ? ankiView() : S.tab === "tools" ? toolsView() : (S.tab === "cards" && S.view === "level" && isM(S.level) && !S.fcPick ? cardsChooser() : flashcards());
+  var body = S.tab === "hub" ? "" : S.tab === "registry" ? registry() : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? doseView() : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "calc" ? calcView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "anki" ? ankiView() : S.tab === "tools" ? toolsView() : (S.tab === "cards" && S.view === "level" && isM(S.level) && !S.fcPick ? cardsChooser() : flashcards());
   var msg = S.sessMsg ? '<div class="presult" role="status">' + esc(S.sessMsg) + '</div>' : ''; S.sessMsg = "";
   var notes = (S.tab === "calc" || S.tab === "tools" ? eduBanner() : '') + (["prep", "session", "nbug", "scenarios", "cards"].indexOf(S.tab) >= 0 ? esQNote() : '');
   if (S.tab === "hub") return topbar() + '<div class="' + ctxClass() + '">' + band() + protocolBanner() + dailyCard() + msg + hubView() + '</div>';
@@ -1238,7 +1241,7 @@ document.addEventListener("click", function (e) {
   var a = t.dataset;
   if (S.view === "admin" && (a.atab || a.aedit || a.aqedit || a.asedit || a.arestore || a.aact || a.rqopen || a.psedit)) return adminClick(t);
   if (a.role) return pickRole(a.role);
-  if ((typeof deepClick === "function" && deepClick(t, a)) || (typeof gamesClick === "function" && S.tab === "games" && gamesClick(t, a)) || (typeof ankiClick === "function" && ankiClick(t, a)) || altsClick(t, a) || flClick(t, a) || aiClick(t, a) || critClick(t, a) || labsClick(t, a) || legalClick(t, a) || i18nClick(t, a) || printClick(t, a) || settingsClick(t, a) || buddyClick(t, a)) return;
+  if ((typeof deepClick === "function" && deepClick(t, a)) || (typeof disClick === "function" && disClick(t, a)) || (typeof gamesClick === "function" && S.tab === "games" && gamesClick(t, a)) || (typeof ankiClick === "function" && ankiClick(t, a)) || altsClick(t, a) || flClick(t, a) || aiClick(t, a) || critClick(t, a) || labsClick(t, a) || legalClick(t, a) || i18nClick(t, a) || printClick(t, a) || settingsClick(t, a) || buddyClick(t, a)) return;
   if (a.report) return openReport(a.report);
   if (a.idea) return openIdeas();
   if (a.goEdit) { closeSheet(); go("admin"); A().tab = "drugs"; A().form = recordOf(a.goEdit); return render(); }
@@ -4783,7 +4786,9 @@ function pickRole(r) {
   Prog.d.role = r;
   var G = R || ROLES[0]; /* every path starts with its version of the starter beetle; BugDex browsers get the Garden Beetle */
   { var g = G[3]; if ((Prog.d.owned || []).indexOf(g) < 0) Prog.d.owned = (Prog.d.owned || []).concat([g]); if (!Prog.d.avatar || Prog.d.avatar === "starter") { Prog.d.avatar = g; Prog.d.avatarTs = Date.now(); } }
-  saveProg(); go(R ? R[4] : "gen");
+  /* land on the main menu with a flashing arrow at the box for the path they picked (they choose when to go in) */
+  saveProg(); go("home", { pointGo: R ? R[4] : "gen" });
+  setTimeout(function () { var el = document.querySelector(".route.pointed"); if (el) try { el.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) {} }, 60);
 }
 
 /* Spanish UI strings (exact-text matches; content stays in its own language unless a Spanish version exists) */
@@ -6507,7 +6512,7 @@ var PRO_IDS = { monthly: PLANS.pro.monthly, annual: PLANS.pro.annual };
 var TRIAL_DAYS = 7, DAYMS = 86400000;
 var FREE_DRUGS = "acetaminophen,ibuprofen,aspirin,naproxen,diphenhydramine,loratadine,cetirizine,famotidine,omeprazole,loperamide,lisinopril,amlodipine,metoprolol,atorvastatin,metformin,insulin-glargine,levothyroxine,albuterol,prednisone,amoxicillin,azithromycin,sertraline,fluoxetine,ondansetron,warfarin,apixaban,furosemide,hydrochlorothiazide,losartan,gabapentin,montelukast,cholecalciferol,melatonin,pseudoephedrine,dextromethorphan,guaifenesin,naloxone,epinephrine,amiodarone,atropine,nitroglycerin,dextrose".split(",");
 var FREE_SET = {}; FREE_DRUGS.forEach(function (id) { FREE_SET[id] = 1; });
-var FREE_TABS = { hub: 1, registry: 1, mylist: 1, cards: 1, flashcards: 1, progress: 1, shop: 1 };
+var FREE_TABS = { hub: 1, registry: 1, diseases: 1, mylist: 1, cards: 1, flashcards: 1, progress: 1, shop: 1 };
 var PLUS_GEN_TABS = { families: 1, alts: 1 };
 /* simulations, tools and scenarios are Pro on every route, including the BugDex */
 var PRO_GEN_TABS = { calc: 1, tools: 1, scenarios: 1, doses: 1, prep: 1 };
@@ -9532,6 +9537,7 @@ function deepView(id) {
   var mem = [["Memory trick", get(d, 16, 2)], ["Key fact", get(d, 16, 3)], ["Most-tested fact", get(d, 16, 4)], ["Often confused with", get(d, 16, 5)], ["Similar drugs", get(d, 16, 6)], ["Opposite / reversal", get(d, 16, 7)]].filter(function (x) { return deepOk(x[1]); });
   if (mem.length) c += deepSec("🧠", "Make it stick", '<div class="mem">' + mem.map(function (x) { return '<div><b>' + x[0] + ':</b> ' + esc(x[1]) + '</div>'; }).join("") + '</div>');
   if (e && e.fun) c += '<div class="fun"><b>Fun fact:</b> ' + esc(e.fun) + '</div>';
+  if (typeof disDrugSection === "function") c += disDrugSection(id);
   /* 7 sources */
   var L = (DB.LABEL || {})[id], src = (e && e.src ? e.src.slice() : []);
   var sh = (src.length ? '<ul class="srcl">' + src.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join("") + '</ul>' : '') +
@@ -9539,6 +9545,93 @@ function deepView(id) {
   c += deepSec("📚", "Sources", sh || '<p class="dnote">See Sources &amp; Content Review on the drug page.</p>');
   c += '<div class="sheetacts"><button class="btn small" data-sess="study" data-drug-id="' + id + '">Study this drug</button><button class="btn small ghost" data-dtab="main">Back to the drug page</button></div>';
   return c + '</div>';
+}
+
+/* ---------- Disease Wormhole (tab "diseases" in the BugDex and every professional level) ----------
+   About 250 high-yield conditions from DB.DIS (data/dis*.js, validated by tools/check-dis.js): history, what goes wrong
+   from cell to organ, why the symptoms happen, how it is diagnosed, how treatment works and the DrugBug drugs that treat it
+   (linked to their drug pages and drug Wormholes). DrugBug Pro feature with a few free preview conditions (DIS_FREE).
+   Drug Wormholes list the conditions that drug treats (deepView -> disForDrug). Education only. */
+var DIS_FREE = { "hypertension": 1, "type-2-diabetes": 1, "asthma": 1, "migraine": 1, "influenza": 1 };
+var DIS_SYS = ["Heart & Blood Vessels", "Lungs & Breathing", "Brain & Nerves", "Mental Health", "Hormones & Metabolism", "Stomach & Digestion", "Kidneys & Urinary", "Infections", "Blood & Immune", "Bones, Joints & Muscles", "Skin", "Eyes, Ears, Nose & Throat", "Pregnancy & Reproductive", "Children", "Poisoning & Emergencies", "Cancer"];
+ICO.diseases = '<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5c-2.6 2.4-2.6 14.6 0 17M12 3.5c2.6 2.4 2.6 14.6 0 17M4 9.5h16M4 14.5h16"/><circle cx="17.5" cy="6.5" r="2" fill="currentColor" stroke="none"/>';
+(function () {
+  var css = '.dislist{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-top:12px}' +
+    '.disitem{text-align:left;border:1px solid var(--line,rgba(127,127,127,.25));border-radius:14px;padding:12px 14px;background:var(--surface,transparent);color:inherit;font:inherit;cursor:pointer;display:flex;flex-direction:column;gap:4px}' +
+    '.disitem strong{font-size:1rem;line-height:1.3}.disitem span{font-size:.82rem;opacity:.75;line-height:1.35}' +
+    '.disitem.locked{opacity:.8}' +
+    '.dischips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}' +
+    '.dischips button{border:1px solid var(--line,rgba(127,127,127,.3));background:transparent;color:inherit;font:inherit;font-size:.82rem;padding:6px 10px;border-radius:999px;cursor:pointer}' +
+    '.dischips button[aria-pressed="true"]{background:var(--c,#6b3fbf);border-color:transparent;color:#fff}' +
+    '.dissearch{width:100%;margin-top:10px}' +
+    '.dishead h2{margin:4px 0 2px}.dishead .dsys{display:inline-block;font-size:.75rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;opacity:.75}' +
+    '.disred{border-left:4px solid #e5484d;padding:10px 12px;border-radius:0 10px 10px 0;background:rgba(229,72,77,.1);line-height:1.45}' +
+    '.drugchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}';
+  try { var st = document.createElement("style"); st.textContent = css; document.head.appendChild(st); } catch (e) {}
+})();
+function disAll() { return DB.DIS || {}; }
+function disLocked(id) { return typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier("pro") && !DIS_FREE[id]; }
+function disForDrug(drugId) { var D = disAll(); return Object.keys(D).filter(function (k) { return (D[k].drugs || []).indexOf(drugId) >= 0; }).sort(function (a, b) { return D[a].name.localeCompare(D[b].name); }); }
+function disMatch(e, q) { if (!q) return true; q = q.toLowerCase(); return (e.name + " " + (e.aka || []).join(" ") + " " + e.sys).toLowerCase().indexOf(q) >= 0; }
+function disListHTML() {
+  var D = disAll(), q = (S.disQ || "").trim(), sys = S.disSys || "";
+  var ids = Object.keys(D).filter(function (k) { return (!sys || D[k].sys === sys) && disMatch(D[k], q); }).sort(function (a, b) { return D[a].name.localeCompare(D[b].name); });
+  if (!ids.length) return '<p class="muted">No conditions match. Try another word.</p>';
+  return '<p class="muted small">' + ids.length + ' condition' + (ids.length === 1 ? '' : 's') + '</p><div class="dislist">' + ids.map(function (k) {
+    var e = D[k], lk = disLocked(k);
+    return '<button class="disitem' + (lk ? ' locked' : '') + '" data-dis="' + k + '"><strong>' + esc(e.name) + (lk && typeof tierBadge === "function" ? ' ' + tierBadge("pro") : DIS_FREE[k] && typeof PAYWALL !== "undefined" && PAYWALL && !hasTier("pro") ? ' <span class="pill">Free preview</span>' : '') + '</strong><span>' + esc(e.sys) + '</span></button>';
+  }).join("") + '</div>';
+}
+function disView() {
+  var D = disAll();
+  if (S.disId && D[S.disId] && !disLocked(S.disId)) return disDetail(S.disId);
+  S.disId = null;
+  var c = '<p class="muted">Go down the wormhole on a disease: where it came from, what goes wrong from the cell to each organ, why the symptoms happen, how it is diagnosed and how the drugs that treat it work. Education only.</p>';
+  if (typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier("pro")) c += '<div class="callout evnote small"><strong>DrugBug Pro.</strong> Five conditions are open as a free preview: high blood pressure, type 2 diabetes, asthma, migraine and the flu. <button class="linkish" data-pw="open">See Pro</button></div>';
+  if (typeof lang === "function" && lang() === "es") c += '<p class="dnote">La sección "Disease Wormhole" solo está disponible en inglés por ahora.</p>';
+  c += '<input class="pinput dissearch" id="disq" type="search" placeholder="Search conditions, like asthma or DKA" aria-label="Search conditions" value="' + esc(S.disQ || "") + '">';
+  c += '<div class="dischips" role="group" aria-label="Body systems"><button data-dissys="" aria-pressed="' + !S.disSys + '">All</button>' + DIS_SYS.map(function (s) { return '<button data-dissys="' + esc(s) + '" aria-pressed="' + (S.disSys === s) + '">' + esc(s) + '</button>'; }).join("") + '</div>';
+  return c + '<div id="disout">' + disListHTML() + '</div>';
+}
+function disDetail(id) {
+  var e = disAll()[id], c = '<div class="deep">';
+  c += '<div class="backrow"><button class="backbtn" data-disback="1"><span aria-hidden="true">&larr;</span> All conditions</button></div>';
+  c += '<header class="dishead"><span class="dsys">' + esc(e.sys) + '</span><h2>🪱 ' + esc(e.name) + '</h2>' + (e.aka && e.aka.length ? '<p class="dnote">Also called: ' + esc(e.aka.join(", ")) + '</p>' : '') + '</header>';
+  c += deepP(e.what);
+  c += '<p class="dnote">Draft study content. For learning only, not for diagnosing anyone. If you have health questions, ask a doctor, nurse or pharmacist. In an emergency, call 911.</p>';
+  if (e.red) c += '<div class="disred"><b>When it is an emergency:</b> ' + esc(e.red) + '</div>';
+  var org = deepP(e.origin);
+  if (e.timeline && e.timeline.length) org += '<ul class="tl">' + e.timeline.map(function (t) { return '<li><b>' + esc(t[0]) + '</b> ' + esc(t[1]) + '</li>'; }).join("") + '</ul>';
+  c += deepSec("🌱", "Where it came from", org);
+  c += deepSec("🔬", "What happens at the cellular level", deepP(e.cell));
+  if (e.body && e.body.length) c += deepSec("🫀", "What it does in the body, organ by organ", '<div class="organs">' + e.body.map(function (b) { return '<div class="organ"><b>' + esc(b[0]) + '</b>' + esc(b[1]) + '</div>'; }).join("") + '</div>');
+  c += deepSec("🤒", "Why the symptoms happen", deepP(e.symptoms));
+  c += deepSec("🩺", "How it is diagnosed", deepP(e.dx));
+  var dr = (e.drugs || []).filter(function (d) { return DB.drugs[d]; });
+  c += deepSec("💊", "How treatment works", deepP(e.tx) + (dr.length ? '<p class="dnote">Drugs in DrugBug used for it (tap one to open its page and its Wormhole):</p><div class="drugchips">' + dr.map(function (d) { return '<button class="chip" data-drug="' + d + '">' + esc(nameOf(d)) + '</button>'; }).join("") + '</div>' : ''));
+  if (e.mem && e.mem.length) c += deepSec("🧠", "Make it stick", '<div class="mem">' + e.mem.map(function (m) { return '<div><b>' + esc(m[0]) + ':</b> ' + esc(m[1]) + '</div>'; }).join("") + '</div>');
+  if (e.fun) c += '<div class="fun"><b>Fun fact:</b> ' + esc(e.fun) + '</div>';
+  if (e.src && e.src.length) c += deepSec("📚", "Sources", '<ul class="srcl">' + e.src.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join("") + '</ul>');
+  c += '<div class="sheetacts"><button class="btn small ghost" data-disback="1">Back to all conditions</button></div>';
+  return c + '</div>';
+}
+function disOpen(id) {
+  if (disLocked(id)) { if (typeof openPaywall === "function") openPaywall("The Disease Wormhole", "pro"); return; }
+  if (typeof sheet !== "undefined" && sheet && !sheet.hidden && typeof closeSheet === "function") closeSheet();
+  S.tab = "diseases"; S.disId = id; render(); try { window.scrollTo(0, 0); } catch (e) {}
+}
+function disClick(t, a) {
+  if (a.dis) { disOpen(a.dis); return true; }
+  if (a.disback) { S.disId = null; render(); try { window.scrollTo(0, 0); } catch (e) {} return true; }
+  if ("dissys" in a) { S.disSys = a.dissys; var o = document.getElementById("disout"); if (o) { o.innerHTML = disListHTML(); [].forEach.call(document.querySelectorAll("[data-dissys]"), function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-dissys") === S.disSys)); }); } else render(); return true; }
+  return false;
+}
+document.addEventListener("input", function (e) { if (e.target && e.target.id === "disq") { S.disQ = e.target.value; var o = document.getElementById("disout"); if (o) o.innerHTML = disListHTML(); } });
+/* "Conditions it treats" section for the drug Wormhole */
+function disDrugSection(drugId) {
+  var ids = disForDrug(drugId); if (!ids.length) return "";
+  var D = disAll();
+  return deepSec("🧬", "Conditions it treats (Disease Wormhole)", '<p class="dnote">Tap a condition to go down its wormhole.</p><div class="drugchips">' + ids.map(function (k) { return '<button class="chip" data-dis="' + k + '">' + esc(D[k].name) + (disLocked(k) && typeof tierBadge === "function" ? ' ' + tierBadge("pro") : '') + '</button>'; }).join("") + '</div>');
 }
 
 

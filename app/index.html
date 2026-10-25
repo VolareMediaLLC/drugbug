@@ -1145,7 +1145,21 @@ button.pstat{cursor:pointer}button.pstat:hover{border-color:var(--flight)}
 .t-families{--c:var(--gen);--cs:var(--gen-soft)}.t-blood{--c:#dc2626;--cs:rgba(220,38,38,.14)}.t-hemo{--c:#db2777;--cs:rgba(219,39,119,.14)}
 .hemotab td.hv.hi{color:#dc2626;font-weight:700}.hemotab td.hv.lo{color:#2563eb;font-weight:700}
 :root[data-theme="dark"] .hemotab td.hv.hi{color:#f87171}:root[data-theme="dark"] .hemotab td.hv.lo{color:#60a5fa}
-.rolepick{max-width:860px}.rolepick h1{margin-bottom:6px}
+.rolepick{max-width:860px}
+/* first screens (education notice, path picker): centered on the page instead of stuck at the top */
+#app:has(> .gate){min-height:calc(100vh - 48px);min-height:calc(100dvh - 48px);display:flex;flex-direction:column;justify-content:center}
+#app:has(> .gate) > .gate{margin:24px auto 0;width:100%}
+@media (min-width:1000px){.gate{max-width:720px;padding:36px 40px;font-size:17px}.gate h1{font-size:2.3rem}.rolepick{max-width:1000px}.rolepick .rolecard{padding:20px}}
+/* home: flashing "Start here" tag + glow at the path you picked */
+.route.pointed{position:relative;overflow:visible;animation:ptglow 1.6s ease-in-out infinite;outline:3px solid #ffc845;outline-offset:3px;z-index:2}
+.route.pointed .pointer{position:absolute;top:-17px;left:50%;transform:translateX(-50%);display:inline-flex;align-items:center;gap:4px;background:#ffc845;color:#3a2600;font-size:.74rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:4px 10px 4px 7px;border-radius:999px;box-shadow:0 3px 10px rgba(0,0,0,.35);animation:ptbob 1s ease-in-out infinite;z-index:3;pointer-events:none;white-space:nowrap}
+.route.pointed .pointer svg{width:16px;height:16px}
+@keyframes ptbob{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,-6px)}}
+@keyframes ptglow{0%,100%{outline-color:#ffc845;box-shadow:0 0 0 0 rgba(255,200,69,.55)}50%{outline-color:rgba(255,200,69,.35);box-shadow:0 0 0 12px rgba(255,200,69,0)}}
+@media (prefers-reduced-motion:reduce){.route.pointed,.route.pointed .pointer{animation:none}}
+/* big screens: use more of the window */
+@media (min-width:1500px){.wrap{max-width:1360px}.foot{max-width:1340px}body{font-size:17px}}
+@media (min-width:1900px){.wrap{max-width:1580px}.foot{max-width:1560px}}.rolepick h1{margin-bottom:6px}
 .roles{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0 14px}
 .rolecard{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;background:var(--surface);border:2px solid var(--line);border-radius:22px;padding:18px 14px;color:var(--ink);box-shadow:var(--shadow);transition:transform .15s,border-color .15s}
 .rolecard:hover{transform:translateY(-3px)}
@@ -1357,7 +1371,7 @@ button.pstat{cursor:pointer}button.pstat:hover{border-color:var(--flight)}
 <div class="wrap" id="app"></div>
 <div class="sheet" id="sheet" hidden></div>
 
-<script>window.DRUGBUG_CONFIG={"site": "https://volaremediallc.github.io/drugbug", "paywall": true, "demo": true, "supportEmail": "VolareMediaLLC@gmail.com"};</script>
+<script>window.DRUGBUG_CONFIG={"site": "https://drugbugapp.com", "paywall": true, "demo": true, "supportEmail": "VolareMediaLLC@gmail.com"};</script>
 <script src="data.js"></script>
 <script src="data2.js"></script>
 <script src="data3.js"></script>
