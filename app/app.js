@@ -1204,6 +1204,7 @@ function drawSheet() {
   if (typeof deepView === "function") {
     c += deepTabs();
     if (S.dtab === "deep") { c += deepView(id) + '<div class="sheetfoot">' + reportBtn("drug", id, id) + '</div>'; sheet.innerHTML = c + '</div>'; translateDom(sheet); return; }
+    if (typeof chemCard === "function") c += chemCard(id);
   }
   if (scopeNote(id) && !S.full) c += '<div class="scopenote">' + esc(scopeNote(id)) + '</div>';
   var rw = (DB.RW || {})[id] || {}, line = lang() !== "es" && nurseCtx() && rw.rl ? ["rn", "Nursing summary", rw.rl] : lang() !== "es" && medCtx() && rw.ml ? ["md", "Clinical summary", rw.ml] : lang() !== "es" && imCtx() && (DB.RWI || {})[id] ? ["im", "In imaging", DB.RWI[id].use] : get(d, 16, 0) ? ["", "", get(d, 16, 0)] : null;
@@ -1523,13 +1524,13 @@ function heroHTML() {
   var rr = { rare: "rare", seasonal: "rare", epic: "epic", earned: "epic", legendary: "legendary" }[b.rar] || "common";
   var spk = rr === "legendary" ? '<i class="lsp s1" aria-hidden="true"></i><i class="lsp s2" aria-hidden="true"></i><i class="lsp s3" aria-hidden="true"></i><i class="lsp s4" aria-hidden="true"></i>' : rr === "epic" ? '<i class="lsp s1" aria-hidden="true"></i><i class="lsp s3" aria-hidden="true"></i>' : '';
   var hol = typeof holToday === "function" ? holToday() : null;
-  return '<section class="hero ha' + (hol ? ' hol hol-' + hol.id + (hol.base ? ' hol-' + hol.base : '') : '') + '">' + (hol ? holFx(hol) : '') + '<div class="hatx lr-' + rr + '">' + (rr === "legendary" ? '<svg class="lcrown" viewBox="0 0 64 44" aria-hidden="true"><path d="M4 40 L8 12 L22 26 L32 4 L42 26 L56 12 L60 40Z" fill="#fbbf24" stroke="#92400e" stroke-width="3" stroke-linejoin="round"/><circle cx="32" cy="6" r="4" fill="#f43f5e"/><circle cx="8" cy="12" r="3.5" fill="#38bdf8"/><circle cx="56" cy="12" r="3.5" fill="#38bdf8"/><rect x="6" y="34" width="52" height="6" rx="2" fill="#f59e0b"/></svg>' : '') + '<h1 class="logo">Drug<span>Bug</span></h1>' + spk + '</div><button class="hbub" data-goshop="1" aria-label="' + lbl + '"><span class="orb">' + myBugArt("herobug", null, hol ? holWear(hol) : null) + '</span>' + chip + '</button>' + tag + (hol ? holBanner(hol) : '') + '</section>';
+  return '<section class="hero ha' + (hol ? ' hol hol-' + hol.id + (hol.base ? ' hol-' + hol.base : '') : '') + '">' + (hol ? holFx(hol) : '') + '<div class="hatx lr-' + rr + '">' + (rr === "legendary" ? '<svg class="lcrown" viewBox="0 0 64 44" aria-hidden="true"><path d="M4 40 L8 12 L22 26 L32 4 L42 26 L56 12 L60 40Z" fill="#fbbf24" stroke="#92400e" stroke-width="3" stroke-linejoin="round"/><circle cx="32" cy="6" r="4" fill="#f43f5e"/><circle cx="8" cy="12" r="3.5" fill="#38bdf8"/><circle cx="56" cy="12" r="3.5" fill="#38bdf8"/><rect x="6" y="34" width="52" height="6" rx="2" fill="#f59e0b"/></svg>' : '') + '<h1 class="logo">Drug<span>Bug</span></h1>' + spk + '</div><button class="hbub" data-goshop="1" aria-label="' + lbl + '"><span class="orb">' + myBugArt("herobug", null, hol ? holWear(hol) : null) + (typeof pkSide === "function" ? pkSide("hero") : "") + '</span>' + chip + '</button>' + tag + (hol ? holBanner(hol) : '') + '</section>';
 }
-function topLayerOpen() { return ["pwdlg", "wdwdlg", "evodlg", "pkdlg", "tourdlg", "rdlg", "idlg"].some(function (i) { var el = document.getElementById(i); return el && !el.hidden; }); }
+function topLayerOpen() { return ["pwdlg", "wdwdlg", "evodlg", "pkdlg", "chemdlg", "tourdlg", "rdlg", "idlg"].some(function (i) { var el = document.getElementById(i); return el && !el.hidden; }); }
 /* Android back button: closes the top layer or goes back one step; returns true when it handled it */
 window.drugbugBack = function () {
   try {
-    var layers = [["idlg", function () { if (typeof closeIdeas === "function") closeIdeas(); }], ["rdlg", function () { var el = document.getElementById("rdlg"); if (typeof closeReport === "function") closeReport(); else el.hidden = true; }], ["wdwdlg", function () { if (typeof wdwClose === "function") wdwClose(); }], ["evodlg", function () { if (typeof evoClose === "function") evoClose(); }], ["pkdlg", function () { if (typeof pkClose === "function") pkClose(); }], ["pwdlg", function () { if (typeof closePaywall === "function") closePaywall(); }], ["tourdlg", function () { if (typeof tourClose === "function") tourClose(); }]];
+    var layers = [["idlg", function () { if (typeof closeIdeas === "function") closeIdeas(); }], ["rdlg", function () { var el = document.getElementById("rdlg"); if (typeof closeReport === "function") closeReport(); else el.hidden = true; }], ["wdwdlg", function () { if (typeof wdwClose === "function") wdwClose(); }], ["evodlg", function () { if (typeof evoClose === "function") evoClose(); }], ["pkdlg", function () { if (typeof pkClose === "function") pkClose(); }], ["chemdlg", function () { if (typeof chem3Close === "function") chem3Close(); }], ["pwdlg", function () { if (typeof closePaywall === "function") closePaywall(); }], ["tourdlg", function () { if (typeof tourClose === "function") tourClose(); }]];
     for (var i = 0; i < layers.length; i++) { var el = document.getElementById(layers[i][0]); if (el && !el.hidden) { layers[i][1](); return true; } }
     if (document.body.classList.contains("printing") && typeof closePrint === "function") { closePrint(); return true; }
     if (S.sheet) { closeSheet(); return true; }
@@ -1880,11 +1881,12 @@ function mergeProg(remote) {
   Object.keys(R.ach).forEach(function (k) { if (!L.ach[k]) L.ach[k] = R.ach[k]; });
   Object.keys(R.chal || {}).forEach(function (k) { L.chal[k] = L.chal[k] || R.chal[k]; });
   L.owned = (L.owned || []).concat((R.owned || []).filter(function (x) { return (L.owned || []).indexOf(x) < 0; }));
-  if ((R.avatarTs || 0) > (L.avatarTs || 0)) { L.avatar = R.avatar; L.avatarTs = R.avatarTs; }
+  var avNewer = (R.avatarTs || 0) > (L.avatarTs || 0);
+  if (avNewer) { L.avatar = R.avatar; L.avatarTs = R.avatarTs; }
   ["xp", "answered", "dailyCount", "best", "earned", "spent"].forEach(function (k) { L[k] = Math.max(L[k] || 0, R[k] || 0); });
   if ((R.lastDaily || "") > (L.lastDaily || "")) { L.lastDaily = R.lastDaily; L.streak = R.streak; }
   ["items", "faces", "facesOwned", "tracks"].forEach(function (k) { L[k] = (L[k] || []).concat((R[k] || []).filter(function (x) { return (L[k] || []).indexOf(x) < 0; })); });
-  if ((R.avatarTs || 0) > (L.avatarTs || 0)) { if (R.wear) L.wear = R.wear; if (R.face) L.face = R.face; }
+  if (avNewer) { if (R.wear) L.wear = R.wear; if (R.face) L.face = R.face; if ("pal" in R) L.pal = R.pal; }
   if (!L.role && R.role) L.role = R.role;
   if (R.trialStart && (!L.trialStart || R.trialStart < L.trialStart)) L.trialStart = R.trialStart;
   if (R.agree && (!L.agree || (R.agree.ts || 0) > (L.agree.ts || 0))) L.agree = R.agree;
@@ -3132,7 +3134,7 @@ function shopView() {
   var f = S.shopF || "home", me = myBug(), bal = sticks();
   var c = '<section class="shop">';
   if (f === "home") {
-    c += '<div class="shophead"><div class="mybug">' + myBugArt("big") + '</div><div class="shtx"><span class="eyebrow">Your bug</span><h2>' + esc(me.name) + '</h2>' + stageLine() + '<p class="balance">' + stickIcon(24) + '<strong>' + bal.toLocaleString() + '</strong> sticks</p></div></div>';
+    c += '<div class="shophead"><div class="mybug">' + myBugArt("big") + (typeof pkSide === "function" ? pkSide("terr") : "") + '</div><div class="shtx"><span class="eyebrow">Your bug</span><h2>' + esc(me.name) + '</h2>' + stageLine() + '<p class="balance">' + stickIcon(24) + '<strong>' + bal.toLocaleString() + '</strong> sticks</p></div></div>';
     if (S.shopMsg) { c += '<div class="presult good" role="status">' + esc(S.shopMsg) + '</div>'; S.shopMsg = ""; }
     var mine = BUGS.filter(function (b) { return owned(b.id); });
     if (Admin.owner && !owned("admin-stickbug")) c += '<div class="adminbug">' + bugArt(bugById("admin-stickbug"), "", {}) + '<div><strong>Your administrator bug is ready</strong><p class="muted small">A stick bug that only you can use. Dress it up in the Wardrobe like any other bug.</p><button class="btn small" data-claim="admin-stickbug">Claim it</button></div></div>';
@@ -3602,7 +3604,7 @@ function drawBuddy() {
   if (!buddyOn()) { buddy.hidden = true; return; }
   buddy.hidden = false;
   var mood = BD.mood || myFace(); buddy.className = "buddy m-" + mood;
-  buddy.innerHTML = (BD.msg ? '<div class="bubble" role="status">' + esc(BD.msg) + '</div>' : '<div class="bubble" role="status" hidden></div>') + '<button class="bbtn" data-buddy="1" aria-label="Your bug, ' + esc(myBug().name) + '. Tap to say hi.">' + myBugArt("buddyart", mood) + '</button>';
+  buddy.innerHTML = (BD.msg ? '<div class="bubble" role="status">' + esc(BD.msg) + '</div>' : '<div class="bubble" role="status" hidden></div>') + '<button class="bbtn" data-buddy="1" aria-label="Your bug, ' + esc(myBug().name) + '. Tap to say hi.">' + myBugArt("buddyart", mood) + (typeof pkSide === "function" ? pkSide("bud") : "") + '</button>';
 }
 function buddySet(mood, msg, ms) {
   BD.mood = mood; BD.msg = msg || ""; drawBuddy();
@@ -7776,6 +7778,16 @@ function pkReveal(p, pay) {
 function pkClose() { pkdlg.hidden = true; pkdlg.innerHTML = ""; }
 document.addEventListener("click", function (e) { var t = e.target.closest && e.target.closest("[data-pk]"); if (t || e.target === pkdlg) pkClose(); });
 document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !pkdlg.hidden) pkClose(); });
+/* an equipped pal rides along beside your bug (home orb, Terrarium, floating buddy) */
+function pkEquipped() { var id = Prog.d.pal; return id && pkCaught(id) ? pkById(id) : null; }
+function pkSide(cls) { var p = pkEquipped(); if (!p) return ""; return '<span class="pkside ' + (cls || "") + '" aria-hidden="true">' + pkSvg(p, "", pkStage(pkLv(p.id))) + '</span>'; }
+function pkEquip(id) {
+  if (!pkCaught(id)) return; var p = pkById(id), es = lang() === "es", on = Prog.d.pal !== id;
+  Prog.d.pal = on ? id : null; Prog.d.avatarTs = Date.now(); saveProg();
+  S.shopMsg = on ? (es ? pkName(p) + " ahora acompaña a tu bicho." : pkName(p) + " is now hanging out with your bug.") : (es ? pkName(p) + " volvió a su marco." : pkName(p) + " went back to its frame.");
+  render(); if (typeof drawBuddy === "function") drawBuddy();
+}
+document.addEventListener("click", function (e) { var t = e.target.closest && e.target.closest("[data-pkeq]"); if (!t) return; e.preventDefault(); e.stopPropagation(); pkEquip(t.getAttribute("data-pkeq")); }, true);
 /* the collection, shown in the Terrarium */
 function peekView() {
   /* only pals you have caught are shown; nothing hints at the ones still out there */
@@ -7784,8 +7796,9 @@ function peekView() {
   return '<div class="pickhead"><h3>' + (es ? "Amigos escondidos" : "Peeking pals") + '</h3><span class="muted small">' + mine.length + (es ? " atrapados" : " caught") + '</span></div>' +
     '<div class="pkgrid">' + mine.map(function (p) {
       var lv = pkLv(p.id), stars = ""; for (var i = 1; i <= 10; i++) stars += '<i class="' + (i <= lv ? "on" : "") + '"></i>';
-      return '<div class="pkcard' + (lv >= 10 ? ' max' : lv >= 5 ? ' mid' : '') + '">' + pkFrame(p, pkStage(lv)) +
-        '<span class="pklv">' + (es ? "Nivel " : "Level ") + lv + ' · ' + esc(pkStageName(pkStage(lv))) + '</span><span class="pkstars" aria-label="' + (es ? "Nivel " : "Level ") + lv + ' / 10">' + stars + '</span><span class="muted small">' + (lv >= 10 ? (es ? "Completamente crecido" : "Fully grown") : (es ? "Sube de nivel al estudiar" : "Levels up as you study")) + '</span></div>';
+      return '<div class="pkcard' + (Prog.d.pal === p.id ? ' eq' : '') + (lv >= 10 ? ' max' : lv >= 5 ? ' mid' : '') + '">' + pkFrame(p, pkStage(lv)) +
+        '<span class="pklv">' + (es ? "Nivel " : "Level ") + lv + ' · ' + esc(pkStageName(pkStage(lv))) + '</span><span class="pkstars" aria-label="' + (es ? "Nivel " : "Level ") + lv + ' / 10">' + stars + '</span><span class="muted small">' + (lv >= 10 ? (es ? "Completamente crecido" : "Fully grown") : (es ? "Sube de nivel al estudiar" : "Levels up as you study")) + '</span>' +
+        '<button class="btn small' + (Prog.d.pal === p.id ? ' on' : '') + '" data-pkeq="' + p.id + '" aria-pressed="' + (Prog.d.pal === p.id) + '">' + (Prog.d.pal === p.id ? (es ? "Con tu bicho ✓" : "With your bug ✓") : (es ? "Equipar" : "Equip")) + '</button></div>';
     }).join("") + '</div>';
 }
 document.addEventListener("visibilitychange", function () { if (!document.hidden && pkOn()) pkSchedule(true); });
@@ -9445,6 +9458,219 @@ document.addEventListener("click", function (e) {
   drawProto(); var pp = document.querySelector("#proto .ppanel"); if (pp) pp.scrollTop = 0;
 });
 
+/* ---------- Chemical structure (2D skeletal drawing) on drug pages ----------
+   DB.CHEM[id] = { c: PubChem CID, f: formula, w: molecular weight, t: PubChem title,
+                   a: "El,x,y[,H[,charge]];..." heavy atoms (El "" = carbon; x,y in tenths of a bond length),
+                   b: "i,j[,order];..." bonds }  (data/chem*.js, built from PubChem 2D depictions).
+   Drawn here as a small SVG (theme colors, works offline). Large biologics have no entry. */
+(function () {
+  var css = '.chemcard{display:flex;gap:14px;align-items:center;margin:10px 0 4px;padding:10px 12px;border:1px solid var(--line,rgba(127,127,127,.25));border-radius:14px;background:var(--surface,transparent)}' +
+    '.chemcard svg{flex:0 0 auto;width:132px;height:104px;color:var(--ink,#222)}' +
+    '.chemcard .ctx{min-width:0;font-size:.86rem;line-height:1.4}.chemcard .ctx b{display:block;font-size:.92rem;margin-bottom:2px}' +
+    '.chemcard .cf{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9rem}' +
+    '.deep .chemcard{margin:2px 0 10px}.deep .chemcard svg{width:180px;height:140px}' +
+    '@media (min-width:700px){.chemcard svg{width:160px;height:124px}}' +
+    '.chem3d{position:relative;flex:0 0 auto;padding:0;border:0;background:none;color:inherit;cursor:pointer;border-radius:10px}.chem3d:focus-visible{outline:3px solid var(--flight,#22d3ee);outline-offset:2px}' +
+    '.c3tag{position:absolute;right:2px;bottom:2px;font:800 11px Inter,Arial,sans-serif;padding:2px 6px;border-radius:999px;background:var(--flight,#22d3ee);color:#06202a}' +
+    '#chemdlg{z-index:60}.c3panel{width:min(620px,100%)!important}.c3head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}.c3head .cf{font-family:ui-monospace,Menlo,Consolas,monospace;margin-left:6px}' +
+    '.c3cv{display:block;width:100%;height:min(62vh,440px);touch-action:none;cursor:grab;border-radius:14px;background:radial-gradient(circle at 50% 40%,var(--surface-2,rgba(127,127,127,.12)),var(--surface,transparent))}.c3cv:active{cursor:grabbing}' +
+    '.c3bar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:10px 0 4px}.c3note{margin:6px 0 0;text-align:center}.c3key{white-space:nowrap}.c3key i{display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 3px 0 8px;vertical-align:-1px}' +
+    '.c3h.on{box-shadow:inset 0 0 0 2px #fff}';
+  try { var st = document.createElement("style"); st.textContent = css; document.head.appendChild(st); } catch (e) {}
+})();
+var CHEM_COL = { N: "#2f9e44", O: "#e5484d", S: "#c99400", F: "#4dabf7", Cl: "#d6336c", Br: "#a0522d", I: "#8e44ad", P: "#e67700" };
+function chemOf(id) { return (DB.CHEM || {})[id] || null; }
+function chemFormulaHTML(f) { return esc(f || "").replace(/(\d+)/g, "<sub>$1</sub>").replace(/([+-])$/, "<sup>$1</sup>"); }
+function chemSVG(m) {
+  if (!m || !m.a) return "";
+  var A = m.a.split(";").map(function (s) { var p = s.split(","); return { e: p[0], x: +p[1], y: +p[2], h: +(p[3] || 0), q: +(p[4] || 0) }; });
+  var B = (m.b || "").split(";").filter(Boolean).map(function (s) { var p = s.split(","); return { i: +p[0], j: +p[1], o: +(p[2] || 1) }; });
+  var minx = 1e9, miny = 1e9, maxx = -1e9, maxy = -1e9;
+  function box() { minx = 1e9; miny = 1e9; maxx = -1e9; maxy = -1e9; A.forEach(function (a) { minx = Math.min(minx, a.x); maxx = Math.max(maxx, a.x); miny = Math.min(miny, a.y); maxy = Math.max(maxy, a.y); }); }
+  box();
+  /* tall molecules are turned 90 degrees so they fill the wide card */
+  if (maxy - miny > (maxx - minx) * 1.3) { A.forEach(function (a) { var x = a.x; a.x = a.y; a.y = maxx - x; }); box(); }
+  var pad = 9, w = Math.max(maxx - minx, 10) + pad * 2, h = Math.max(maxy - miny, 10) + pad * 2;
+  function X(a) { return (a.x - minx + pad).toFixed(1); } function Y(a) { return (a.y - miny + pad).toFixed(1); }
+  var lines = "";
+  B.forEach(function (b) {
+    var p = A[b.i], q = A[b.j]; if (!p || !q) return;
+    var dx = q.x - p.x, dy = q.y - p.y, L = Math.sqrt(dx * dx + dy * dy) || 1, ox = -dy / L * 1.6, oy = dx / L * 1.6;
+    function ln(o) { return '<line x1="' + (+X(p) + ox * o).toFixed(1) + '" y1="' + (+Y(p) + oy * o).toFixed(1) + '" x2="' + (+X(q) + ox * o).toFixed(1) + '" y2="' + (+Y(q) + oy * o).toFixed(1) + '"/>'; }
+    if (b.o === 2) lines += ln(-0.5) + ln(0.5); else if (b.o === 3) lines += ln(-1) + ln(0) + ln(1); else lines += ln(0);
+  });
+  var labels = "";
+  A.forEach(function (a) {
+    if (!a.e && !a.q) return;
+    var t = (a.e || "C") + (a.h ? "H" + (a.h > 1 ? '<tspan font-size="4.2" dy="1.4">' + a.h + '</tspan>' : '') : '') + (a.q ? '<tspan font-size="4.2" dy="-3">' + (Math.abs(a.q) > 1 ? Math.abs(a.q) : '') + (a.q > 0 ? '+' : '−') + '</tspan>' : '');
+    var col = CHEM_COL[a.e] || "currentColor", r = a.h || a.q ? 4.6 : 3.6;
+    labels += '<circle cx="' + X(a) + '" cy="' + Y(a) + '" r="' + r + '" fill="var(--surface,#fff)"/><text x="' + X(a) + '" y="' + (+Y(a) + 2.1).toFixed(1) + '" fill="' + col + '">' + t + '</text>';
+  });
+  return '<svg viewBox="0 0 ' + w.toFixed(0) + ' ' + h.toFixed(0) + '" role="img" aria-label="Chemical structure' + (m.f ? ', ' + esc(m.f) : '') + '" preserveAspectRatio="xMidYMid meet"><g stroke="currentColor" stroke-width="1.1" stroke-linecap="round">' + lines + '</g><g font-family="Inter,Arial,sans-serif" font-size="6" font-weight="600" text-anchor="middle">' + labels + '</g></svg>';
+}
+function chemCard(id) {
+  var m = chemOf(id); if (!m) return "";
+  var es = typeof lang === "function" && lang() === "es";
+  return '<div class="chemcard"><button class="chem3d" data-chem3d="' + esc(id) + '" aria-label="' + (es ? "Abrir el modelo 3D" : "Open the 3D model") + '">' + chemSVG(m) + '<span class="c3tag">3D</span></button><div class="ctx"><b>Chemical structure</b><span class="cf">' + chemFormulaHTML(m.f) + '</span>' + (m.w ? '<br><span class="muted small">Molecular weight ' + esc(String(m.w)) + ' g/mol</span>' : '') + '<br><a class="small" href="https://pubchem.ncbi.nlm.nih.gov/compound/' + encodeURIComponent(m.c) + '" target="_blank" rel="noopener">PubChem ' + esc(m.t || "") + '</a></div></div>';
+}
+/* ---------- 3D model: tap the drawing to open a spinnable ball-and-stick view ----------
+   The 3D shape is built here from the 2D structure (bond lengths, bond angles by hybridization,
+   flat sp2 centers, atoms kept apart), so it is an approximate shape: hydrogens hidden, stereo not shown. */
+var CHEM3_COL = { "": "#8d939e", C: "#8d939e", N: "#2fb344", O: "#e5484d", S: "#f2c32e", F: "#4dabf7", Cl: "#d6336c", Br: "#a0522d", I: "#8e44ad", P: "#f08c00", B: "#f4a3a3", Na: "#9b59b6", K: "#7950f2", Ca: "#20c997", Mg: "#82c91e", Fe: "#e8590c", Zn: "#7d8597", Li: "#cc5de8", Pt: "#adb5bd", Au: "#fab005", As: "#ae3ec9", Se: "#fd7e14", Bi: "#c2255c", Gd: "#15aabf", Co: "#4c6ef5", Cu: "#e67700" };
+var CHEM3_RAD = { "": .30, C: .30, N: .29, O: .28, F: .25, S: .38, Cl: .36, Br: .40, I: .44, P: .38, B: .30 };
+function chem3Build(m) {
+  var A = m.a.split(";").map(function (s) { var p = s.split(","); return { e: p[0], x: +p[1] / 10, y: -(+p[2]) / 10, h: +(p[3] || 0), q: +(p[4] || 0) }; });
+  var B = (m.b || "").split(";").filter(Boolean).map(function (s) { var p = s.split(","); return { i: +p[0], j: +p[1], o: +(p[2] || 1) }; }).filter(function (b) { return A[b.i] && A[b.j]; });
+  var n = A.length, nb = A.map(function () { return []; }), hyb = A.map(function () { return 3; });
+  B.forEach(function (b) { nb[b.i].push(b.j); nb[b.j].push(b.i); if (b.o === 2) { hyb[b.i] = Math.min(hyb[b.i], 2); hyb[b.j] = Math.min(hyb[b.j], 2); } if (b.o === 3) { hyb[b.i] = 1; hyb[b.j] = 1; } });
+  /* N or O next to a double bond (amides, aromatic N) is flat too */
+  A.forEach(function (a, i) { if (hyb[i] === 3 && (a.e === "N" || a.e === "O") && nb[i].some(function (k) { return hyb[k] === 2; })) hyb[i] = 2.5; });
+  var P = A.map(function (a, i) { return [a.x, a.y, Math.sin(i * 12.9898 + 4.1) * 0.35]; }), C = [], bonded = {}, BL = {};
+  /* hydrogens: carbons get 4 minus their bond orders; other atoms carry their count in the data */
+  var nHeavy = n, ord = A.map(function () { return 0; }); B.forEach(function (b) { ord[b.i] += b.o; ord[b.j] += b.o; });
+  for (var hi = 0; hi < nHeavy; hi++) {
+    var hc = A[hi].e ? A[hi].h : Math.max(0, 4 - ord[hi] + (A[hi].q < 0 ? -1 : 0)); if (!hc) continue;
+    var mx = 0, my = 0; nb[hi].forEach(function (k) { mx += P[k][0]; my += P[k][1]; }); var nn = nb[hi].length;
+    var dx = nn ? P[hi][0] - mx / nn : 1, dy = nn ? P[hi][1] - my / nn : 0, dl = Math.sqrt(dx * dx + dy * dy) || 1; dx /= dl; dy /= dl;
+    for (var hk = 0; hk < hc; hk++) {
+      var sp = (hk - (hc - 1) / 2) * 1.1, hz = hc > 1 && hyb[hi] === 3 ? (hk % 2 ? .8 : -.8) : (hk - (hc - 1) / 2) * .4;
+      var vx = dx - dy * sp, vy = dy + dx * sp, vl = Math.sqrt(vx * vx + vy * vy + hz * hz) || 1, idx = A.length;
+      A.push({ e: "H", H: 1 }); P.push([P[hi][0] + vx / vl * .72, P[hi][1] + vy / vl * .72, P[hi][2] + hz / vl * .72]);
+      B.push({ i: hi, j: idx, o: 1, H: 1 }); nb.push([hi]); nb[hi].push(idx); hyb.push(3);
+    }
+  }
+  n = A.length;
+  function blen(b) { return b.H ? .72 : b.o === 3 ? .86 : b.o === 2 ? .92 : 1; }
+  B.forEach(function (b) { var l = blen(b); C.push([b.i, b.j, l, 1]); bonded[b.i + "," + b.j] = bonded[b.j + "," + b.i] = 1; BL[b.i + "," + b.j] = BL[b.j + "," + b.i] = l; });
+  nb.forEach(function (L, j) {
+    var ang = hyb[j] === 1 ? 180 : hyb[j] >= 2 && hyb[j] < 3 ? 120 : 109.5, ca = Math.cos(ang * Math.PI / 180);
+    for (var a = 0; a < L.length; a++) for (var c = a + 1; c < L.length; c++) {
+      var u = L[a], v = L[c], l1 = BL[j + "," + u], l2 = BL[j + "," + v], dd = Math.sqrt(l1 * l1 + l2 * l2 - 2 * l1 * l2 * ca);
+      if (bonded[u + "," + v] === 1 && nb[u].indexOf(v) >= 0) continue; /* 3-membered ring: the pair is already bonded */
+      if (nb[u].some(function (x) { return x !== j && nb[v].indexOf(x) >= 0; })) dd = Math.sqrt(l1 * l1 + l2 * l2); /* 4-membered ring (beta-lactam): 90 degrees */
+      C.push([u, v, dd, .6]); bonded[u + "," + v] = bonded[v + "," + u] = 2;
+    }
+  });
+  function sub(a, b) { return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]; }
+  function len(v) { return Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) || 1e-6; }
+  for (var it = 0; it < 420; it++) {
+    for (var k = 0; k < C.length; k++) {
+      var c = C[k], p = P[c[0]], q = P[c[1]], v = sub(q, p), L = len(v), f = (L - c[2]) / L * .5 * c[3];
+      p[0] += v[0] * f; p[1] += v[1] * f; p[2] += v[2] * f; q[0] -= v[0] * f; q[1] -= v[1] * f; q[2] -= v[2] * f;
+    }
+    if (it % 3 === 0) for (var i = 0; i < n; i++) for (var j = i + 1; j < n; j++) {
+      if (bonded[i + "," + j]) continue; var rmin = (A[i].H ? 1 : 0) + (A[j].H ? 1 : 0), rd = rmin === 2 ? 1.2 : rmin === 1 ? 1.6 : 2.4, v2 = sub(P[j], P[i]), L2 = len(v2); if (L2 >= rd) continue;
+      var f2 = (L2 - rd) / L2 * .25; P[i][0] += v2[0] * f2; P[i][1] += v2[1] * f2; P[i][2] += v2[2] * f2; P[j][0] -= v2[0] * f2; P[j][1] -= v2[1] * f2; P[j][2] -= v2[2] * f2;
+    }
+    /* flat sp2 centers: keep the atom in the plane of its three neighbours */
+    for (var s = 0; s < n; s++) {
+      if (hyb[s] < 2 || hyb[s] >= 3 || nb[s].length !== 3) continue;
+      var a0 = P[nb[s][0]], a1 = P[nb[s][1]], a2 = P[nb[s][2]], u = sub(a1, a0), w = sub(a2, a0);
+      var nr = [u[1] * w[2] - u[2] * w[1], u[2] * w[0] - u[0] * w[2], u[0] * w[1] - u[1] * w[0]], nl = len(nr), dd = ((P[s][0] - a0[0]) * nr[0] + (P[s][1] - a0[1]) * nr[1] + (P[s][2] - a0[2]) * nr[2]) / (nl * nl) * .5;
+      P[s][0] -= nr[0] * dd; P[s][1] -= nr[1] * dd; P[s][2] -= nr[2] * dd;
+    }
+  }
+  /* finish with bonds only so every bond ends near its real length */
+  for (var it2 = 0; it2 < 60; it2++) for (var k2 = 0; k2 < B.length; k2++) {
+    var bb = B[k2], p2 = P[bb.i], q2 = P[bb.j], v3 = sub(q2, p2), L3 = len(v3), f3 = (L3 - blen(bb)) / L3 * .5;
+    p2[0] += v3[0] * f3; p2[1] += v3[1] * f3; p2[2] += v3[2] * f3; q2[0] -= v3[0] * f3; q2[1] -= v3[1] * f3; q2[2] -= v3[2] * f3;
+  }
+  var cx = 0, cy = 0, cz = 0; P.forEach(function (p) { cx += p[0]; cy += p[1]; cz += p[2]; }); cx /= n; cy /= n; cz /= n;
+  var R = 0; P.forEach(function (p) { p[0] -= cx; p[1] -= cy; p[2] -= cz; R = Math.max(R, len(p)); });
+  return { A: A, B: B, P: P, R: R + .5 };
+}
+var C3 = { H: (function () { try { return localStorage.getItem("dbC3H") !== "0"; } catch (e) { return true; } })(), el: null, mol: null, rot: null, zoom: 1, spin: true, raf: 0, drag: null, pts: {} };
+var chemdlg = document.createElement("div"); chemdlg.id = "chemdlg"; chemdlg.className = "sheet rsheet"; chemdlg.hidden = true; document.body.appendChild(chemdlg);
+function c3Mul(a, b) { var r = []; for (var i = 0; i < 3; i++) for (var j = 0; j < 3; j++) r[i * 3 + j] = a[i * 3] * b[j] + a[i * 3 + 1] * b[3 + j] + a[i * 3 + 2] * b[6 + j]; return r; }
+function c3Rot(ax, ay) { var cx = Math.cos(ax), sx = Math.sin(ax), cy = Math.cos(ay), sy = Math.sin(ay); return c3Mul([1, 0, 0, 0, cx, -sx, 0, sx, cx], [cy, 0, sy, 0, 1, 0, -sy, 0, cy]); }
+function c3Rad(a) { return a.H ? .17 : (CHEM3_RAD[a.e] || .42); }
+function c3Shade(hex, f) { /* f > 0 lightens toward white, f < 0 darkens toward black */
+  var h = hex.replace("#", ""); if (h.length === 3) h = h.replace(/(.)/g, "$1$1"); var r = parseInt(h.slice(0, 2), 16), gg = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+  function m(c) { return Math.round(f > 0 ? c + (255 - c) * f : c * (1 + f)); } return "rgb(" + m(r) + "," + m(gg) + "," + m(b) + ")"; }
+function chem3Draw() {
+  var cv = chemdlg.querySelector("canvas"); if (!cv || !C3.mol) return;
+  var dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight;
+  if (cv.width !== Math.round(W * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+  var g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+  var M = C3.mol, r = C3.rot, sc = Math.min(W, H) / (1.85 * M.R) * C3.zoom, D = M.R * 4;
+  var S2 = M.P.map(function (p) { var x = r[0] * p[0] + r[1] * p[1] + r[2] * p[2], y = r[3] * p[0] + r[4] * p[1] + r[5] * p[2], z = r[6] * p[0] + r[7] * p[1] + r[8] * p[2], f = D / (D - z); return [W / 2 + x * sc * f, H / 2 - y * sc * f, z, f]; });
+  var items = [], showH = C3.H;
+  M.B.forEach(function (b) { if (b.H && !showH) return; items.push({ z: (S2[b.i][2] + S2[b.j][2]) / 2 - .01, b: b }); });
+  M.A.forEach(function (a, i) { if (a.H && !showH) return; items.push({ z: S2[i][2], a: i }); });
+  items.sort(function (p, q) { return p.z - q.z; });
+  var ink = getComputedStyle(chemdlg).getPropertyValue("--ink").trim() || "#ccc";
+  g.globalAlpha = 1;
+  items.forEach(function (t) {
+    if (t.b) {
+      var p = S2[t.b.i], q = S2[t.b.j], dx = q[0] - p[0], dy = q[1] - p[1], L = Math.sqrt(dx * dx + dy * dy) || 1, ox = -dy / L, oy = dx / L, w = Math.max(1.5, (t.b.H ? .06 : .09) * sc * (p[3] + q[3]) / 2);
+      var offs = t.b.o === 2 ? [-1, 1] : t.b.o === 3 ? [-1.6, 0, 1.6] : [0];
+      /* sticks stop at each ball's surface, so no line is ever painted across a ball */
+      var rp = c3Rad(M.A[t.b.i]) * sc * p[3] * .92, rq = c3Rad(M.A[t.b.j]) * sc * q[3] * .92;
+      if (L > rp + rq) {
+        var ux = dx / L, uy = dy / L, x1 = p[0] + ux * rp, y1 = p[1] + uy * rp, x2 = q[0] - ux * rq, y2 = q[1] - uy * rq;
+        g.lineCap = "butt";
+        offs.forEach(function (o) {
+          var k = o * w * .75, lw = t.b.o > 1 ? w * .6 : w;
+          g.strokeStyle = ink; g.lineWidth = lw; g.beginPath(); g.moveTo(x1 + ox * k, y1 + oy * k); g.lineTo(x2 + ox * k, y2 + oy * k); g.stroke();
+        });
+      }
+    } else {
+      var a = M.A[t.a], s = S2[t.a], rr = c3Rad(a) * sc * s[3], col = a.H ? "#ffffff" : (CHEM3_COL[a.e] || "#c0c0c0");
+      /* glossy pool ball: fully opaque body shaded light to dark, plus a sharp white shine; no outline */
+      var hx = s[0] - rr * .38, hy = s[1] - rr * .42;
+      var body = g.createRadialGradient(hx, hy, rr * .05, s[0] + rr * .1, s[1] + rr * .12, rr * 1.15);
+      body.addColorStop(0, c3Shade(col, .3)); body.addColorStop(.3, col); body.addColorStop(.78, c3Shade(col, -.4)); body.addColorStop(1, c3Shade(col, -.7));
+      /* heavy, solid feel: a soft contact shadow under each ball, then the opaque body */
+      g.save(); g.shadowColor = "rgba(0,0,0,.55)"; g.shadowBlur = rr * .6; g.shadowOffsetX = rr * .12; g.shadowOffsetY = rr * .22;
+      g.beginPath(); g.arc(s[0], s[1], rr, 0, 7); g.fillStyle = c3Shade(col, -.4); g.fill(); g.restore();
+      g.beginPath(); g.arc(s[0], s[1], rr, 0, 7); g.fillStyle = body; g.fill();
+      var sh = g.createRadialGradient(hx, hy, 0, hx, hy, rr * .2);
+      sh.addColorStop(0, "rgba(255,255,255,.95)"); sh.addColorStop(.5, "rgba(255,255,255,.75)"); sh.addColorStop(1, "rgba(255,255,255,0)");
+      g.beginPath(); g.arc(hx, hy, rr * .2, 0, 7); g.fillStyle = sh; g.fill();
+      var bounce = g.createRadialGradient(s[0] + rr * .35, s[1] + rr * .5, 0, s[0] + rr * .35, s[1] + rr * .5, rr * .35);
+      bounce.addColorStop(0, "rgba(255,255,255,.12)"); bounce.addColorStop(1, "rgba(255,255,255,0)");
+      g.beginPath(); g.arc(s[0], s[1], rr, 0, 7); g.fillStyle = bounce; g.fill();
+      if (a.e && a.e !== "C" && !a.H && rr > 7) { g.fillStyle = "#fff"; g.font = "700 " + Math.round(rr * .9) + "px Inter,Arial,sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.shadowColor = "rgba(0,0,0,.5)"; g.shadowBlur = 2; g.fillText(a.e, s[0], s[1] + 1); g.shadowBlur = 0; }
+    }
+  });
+  g.globalAlpha = 1;
+}
+function chem3Loop() { cancelAnimationFrame(C3.raf); if (chemdlg.hidden) return; if (C3.spin) C3.rot = c3Mul(c3Rot(0, .008), C3.rot); chem3Draw(); C3.raf = requestAnimationFrame(chem3Loop); }
+function chem3Open(id) {
+  var m = chemOf(id); if (!m) return; var es = typeof lang === "function" && lang() === "es";
+  C3.mol = chem3Build(m); C3.rot = c3Rot(-.35, .5); C3.zoom = 1; C3.pts = {}; C3.spin = !(SET().motion || (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches));
+  chemdlg.innerHTML = '<div class="panel c3panel" role="dialog" aria-modal="true" aria-label="' + (es ? "Modelo 3D de " : "3D model of ") + esc(nameOf(id)) + '" tabindex="-1">' +
+    '<div class="c3head"><div><strong>' + esc(nameOf(id)) + '</strong><span class="cf"> ' + chemFormulaHTML(m.f) + '</span></div><button class="iconbtn" data-c3="close" aria-label="' + (es ? "Cerrar" : "Close") + '">✕</button></div>' +
+    '<canvas class="c3cv" role="img" aria-label="' + (es ? "Modelo 3D giratorio. Arrastra para girar." : "Spinning 3D model. Drag to turn it.") + '"></canvas>' +
+    '<div class="c3bar"><button class="btn small" data-c3="spin">' + (es ? "Girar / pausar" : "Spin / pause") + '</button><button class="btn small" data-c3="in" aria-label="Zoom in">+</button><button class="btn small" data-c3="out" aria-label="Zoom out">−</button><button class="btn small" data-c3="reset">' + (es ? "Restablecer" : "Reset") + '</button><button class="btn small c3h' + (C3.H ? ' on' : '') + '" data-c3="h" role="switch" aria-checked="' + C3.H + '">' + (es ? "Hidrógenos: " : "Hydrogens: ") + (C3.H ? (es ? "sí" : "on") : (es ? "no" : "off")) + '</button></div>' +
+    '<p class="muted small c3note">' + (es ? "Arrastra para girar, pellizca o usa la rueda para acercar. Forma 3D aproximada calculada a partir de la estructura; " : "Drag to turn it, pinch or scroll to zoom. Approximate 3D shape worked out from the structure; ") + '<span class="c3hn">' + (C3.H ? (es ? "hidrógenos en blanco" : "hydrogens in white") : (es ? "hidrógenos ocultos" : "hydrogens hidden")) + '</span>.' +
+    ' <span class="c3key"><i style="background:' + CHEM3_COL.C + '"></i>C <i style="background:' + CHEM3_COL.N + '"></i>N <i style="background:' + CHEM3_COL.O + '"></i>O <i style="background:' + CHEM3_COL.S + '"></i>S <i style="background:#ffffff"></i>H</span></p></div>';
+  chemdlg.hidden = false; var pn = chemdlg.querySelector(".panel"); if (pn) pn.focus();
+  var cv = chemdlg.querySelector("canvas");
+  cv.addEventListener("pointerdown", function (e) { cv.setPointerCapture(e.pointerId); C3.pts[e.pointerId] = [e.clientX, e.clientY]; C3.spin = false; });
+  cv.addEventListener("pointermove", function (e) {
+    var o = C3.pts[e.pointerId]; if (!o) return; var ids = Object.keys(C3.pts);
+    if (ids.length === 2) { var a = C3.pts[ids[0]], b = C3.pts[ids[1]], d0 = Math.hypot(a[0] - b[0], a[1] - b[1]); C3.pts[e.pointerId] = [e.clientX, e.clientY]; a = C3.pts[ids[0]]; b = C3.pts[ids[1]]; var d1 = Math.hypot(a[0] - b[0], a[1] - b[1]); if (d0 > 0) C3.zoom = Math.max(.4, Math.min(4, C3.zoom * d1 / d0)); }
+    else { C3.rot = c3Mul(c3Rot((e.clientY - o[1]) * .01, (e.clientX - o[0]) * .01), C3.rot); C3.pts[e.pointerId] = [e.clientX, e.clientY]; }
+    chem3Draw();
+  });
+  ["pointerup", "pointercancel"].forEach(function (k) { cv.addEventListener(k, function (e) { delete C3.pts[e.pointerId]; }); });
+  cv.addEventListener("wheel", function (e) { e.preventDefault(); C3.zoom = Math.max(.4, Math.min(4, C3.zoom * (e.deltaY < 0 ? 1.1 : .9))); chem3Draw(); }, { passive: false });
+  chem3Loop();
+}
+function chem3Close() { cancelAnimationFrame(C3.raf); chemdlg.hidden = true; chemdlg.innerHTML = ""; C3.mol = null; }
+document.addEventListener("click", function (e) {
+  var o = e.target.closest && e.target.closest("[data-chem3d]");
+  if (o) { e.preventDefault(); e.stopPropagation(); chem3Open(o.getAttribute("data-chem3d")); return; }
+  var t = e.target.closest && e.target.closest("[data-c3]");
+  if (t && chemdlg.contains(t)) { e.preventDefault(); e.stopPropagation(); var k = t.getAttribute("data-c3");
+    if (k === "close") chem3Close(); else if (k === "spin") C3.spin = !C3.spin; else if (k === "in") C3.zoom = Math.min(4, C3.zoom * 1.25); else if (k === "out") C3.zoom = Math.max(.4, C3.zoom / 1.25); else if (k === "reset") { C3.rot = c3Rot(-.35, .5); C3.zoom = 1; } else if (k === "h") { C3.H = !C3.H; try { localStorage.setItem("dbC3H", C3.H ? "1" : "0"); } catch (er) {} var es2 = typeof lang === "function" && lang() === "es"; t.classList.toggle("on", C3.H); t.setAttribute("aria-checked", C3.H); t.textContent = (es2 ? "Hidrógenos: " : "Hydrogens: ") + (C3.H ? (es2 ? "sí" : "on") : (es2 ? "no" : "off")); var nt = chemdlg.querySelector(".c3hn"); if (nt) nt.textContent = C3.H ? (es2 ? "hidrógenos en blanco" : "hydrogens in white") : (es2 ? "hidrógenos ocultos" : "hydrogens hidden"); }
+    chem3Draw(); return; }
+  if (e.target === chemdlg) chem3Close();
+}, true);
+document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !chemdlg.hidden) { e.stopPropagation(); chem3Close(); } }, true);
+window.addEventListener("resize", function () { if (!chemdlg.hidden) chem3Draw(); });
+
 /* ---------- Deep dive tab on every drug page ----------
    Two tabs at the top of a drug page: "Drug page" (the usual view) and "Deep dive".
    Deep dive = where the drug came from, what it does at the cell level, organ by organ,
@@ -9516,7 +9742,7 @@ function deepView(id) {
   var cell = e ? deepP(e.cell) : deepP(get(d, 2, 0));
   var tgt = [["Target", get(d, 2, 1)], ["Action", get(d, 2, 2)]].filter(function (x) { return deepOk(x[1]); });
   if (tgt.length) cell += '<div class="pk">' + tgt.map(function (x) { return '<div><span>' + x[0] + '</span>' + esc(x[1]) + '</div>'; }).join("") + '</div>';
-  c += deepSec("🔬", "What happens at the cellular level", cell);
+  c += deepSec("🔬", "What happens at the cellular level", (typeof chemCard === "function" ? chemCard(id) : "") + cell);
   /* 3 organ by organ */
   var org2 = '';
   if (e && e.body && e.body.length) org2 = '<div class="organs">' + e.body.map(function (b) { return '<div class="organ"><b>' + esc(b[0]) + '</b>' + esc(b[1]) + '</div>'; }).join("") + '</div>';

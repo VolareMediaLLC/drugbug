@@ -1073,6 +1073,10 @@ button.pstat{cursor:pointer}button.pstat:hover{border-color:var(--flight)}
 .holbunt{position:absolute;left:0;right:0;top:34px;width:100%;height:30px;filter:drop-shadow(0 2px 2px rgba(0,0,0,.25))}
 
 /* Peeking pals: gold picture frame */
+.pkside{position:absolute;z-index:3;right:-10%;bottom:-4%;width:44%;height:44%;display:block;pointer-events:none;animation:pkbob 3.2s ease-in-out infinite;filter:drop-shadow(0 2px 3px rgba(0,0,0,.28))}.pkside svg{position:absolute;inset:0;width:100%!important;height:100%!important;display:block}.pkside.bud{right:-14%;bottom:-8%}.shophead .mybug,#buddy .bbtn{position:relative}
+@keyframes pkbob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-6%) rotate(3deg)}}
+.pkcard.eq{border-color:var(--flight,#22d3ee)}.pkcard .btn.small{margin-top:6px}
+@media (prefers-reduced-motion:reduce){.pkside{animation:none}}[data-motion=reduce] .pkside{animation:none}
 .pkframe{display:inline-flex;flex-direction:column;align-items:center;padding:9px;border-radius:6px;background:linear-gradient(135deg,#fde68a,#b45309 30%,#fbbf24 50%,#92400e 75%,#fcd34d);box-shadow:inset 0 0 0 2px rgba(255,255,255,.35),inset 0 0 0 5px rgba(120,53,15,.35),0 8px 18px rgba(0,0,0,.28)}
 .pkmat{background:radial-gradient(circle at 50% 40%,#fffdf5,#efe6cf);padding:8px;border-radius:2px;box-shadow:inset 0 2px 6px rgba(0,0,0,.25)}
 .pkframe .pkfart{width:84px;height:84px;display:block}
@@ -1149,6 +1153,23 @@ button.pstat{cursor:pointer}button.pstat:hover{border-color:var(--flight)}
 /* first screens (education notice, path picker): centered on the page instead of stuck at the top */
 #app:has(> .gate){min-height:calc(100vh - 48px);min-height:calc(100dvh - 48px);display:flex;flex-direction:column;justify-content:center}
 #app:has(> .gate) > .gate{margin:24px auto 0;width:100%}
+/* first-run acknowledgement and agreement fit one phone screen (no scrolling) */
+@media (max-width:540px){
+body:has(#app > .gate){padding-inline:12px;padding-block:0;margin:0}#app:has(> .gate) .foot,#app:has(> .gate) ~ .foot{display:none}
+#app:has(> .gate){min-height:100vh;min-height:100dvh;padding:max(10px,env(safe-area-inset-top)) 0 max(10px,env(safe-area-inset-bottom));box-sizing:border-box;justify-content:center}
+#app:has(> .gate) > .gate{margin:0 auto}
+.gate{padding:16px 18px 12px;border-radius:18px;font-size:14.5px;line-height:1.42}
+.gate .glogo{float:left;margin:-2px 10px 0 -4px}.gate .glogo svg{width:48px;height:48px}
+.gate h1{font-size:1.6rem;line-height:1.12;margin:0 0 10px;min-height:46px;display:flex;align-items:center}
+.gate > p,.gate .disctext p{margin:0 0 8px}.gate .disctext{line-height:1.42;clear:both}
+.gate .gfs{padding:6px 12px 8px;margin:8px 0;gap:4px;clear:both}.gate .gfs .chk{align-items:center}.gate .gagree{margin:8px 0}
+.gate .actions{margin:10px 0 6px}.gate .actions .btn{width:100%;justify-content:center}
+.gate .muted.small{font-size:11.5px;line-height:1.35;margin:4px 0 0}
+}
+@media (max-width:540px) and (max-height:700px){
+.gate{font-size:13.5px;line-height:1.36;padding:12px 16px 10px}.gate h1{font-size:1.38rem;min-height:40px}.gate .glogo svg{width:40px;height:40px}
+.gate > p,.gate .disctext p{margin:0 0 6px}
+}
 @media (min-width:1000px){.gate{max-width:720px;padding:36px 40px;font-size:17px}.gate h1{font-size:2.3rem}.rolepick{max-width:1000px}.rolepick .rolecard{padding:20px}}
 /* home: flashing "Start here" tag + glow at the path you picked */
 .route.pointed{position:relative;overflow:visible;animation:ptglow 1.6s ease-in-out infinite;outline:3px solid #ffc845;outline-offset:3px;z-index:2}
