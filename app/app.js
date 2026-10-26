@@ -926,7 +926,9 @@ function nrSubmit() {
 function nrItemOpts(st, x, reveal) {
   var q = x.q, sel = st.sel[st.i] || [], ans = st.ans[st.i], c = "", es = lang() === "es";
   if (q.t === "multi") {
-    if (!/select all/i.test(q.q)) c += '<p class="qhow"><strong>' + (es ? "Seleccione todas las que apliquen." : "Select all that apply.") + '</strong></p>';
+    /* tell the learner how many choices are correct (owner request) */
+    var nOk = q.ok.length, sa = /select all/i.test(q.q) ? "" : (es ? "Seleccione todas las que apliquen. " : "Select all that apply. ");
+    c += '<p class="qhow"><strong>' + sa + (es ? (nOk === 1 ? "1 respuesta es correcta." : nOk + " respuestas son correctas.") : (nOk === 1 ? "1 answer is correct." : nOk + " answers are correct.")) + '</strong></p>';
     x.opts.forEach(function (o, k) {
       var on = reveal ? (ans || []).indexOf(o) >= 0 : sel.indexOf(k) >= 0, good = q.ok.indexOf(o) >= 0, cls = "", tag = "";
       if (reveal) { cls = good && on ? " right" : good ? " right missed" : on ? " wrong" : " dim"; if (good && !on) tag = '<span class="qtag">' + (es ? "No la marcó" : "You missed this one") + '</span>'; }
@@ -1397,12 +1399,13 @@ document.addEventListener("input", function (e) {
 });
 function showTip(e) {
   var t = e.target, tip = $("#tip"); if (!tip) return;
-  if (!t.classList || !t.classList.contains("hit")) { tip.hidden = true; return; }
+  /* touch until hidden only when it was showing: on iPhones any page change during mouseover cancels the tap, so answers needed two taps */
+  if (!t.classList || !t.classList.contains("hit")) { if (!tip.hidden) tip.hidden = true; return; }
   var box = t.closest(".chartbox").getBoundingClientRect(), r = t.getBoundingClientRect();
   tip.textContent = t.getAttribute("data-tip"); tip.hidden = false;
   var left = r.left - box.left + r.width / 2; var hw = (tip.offsetWidth || 140) / 2 + 4; tip.style.left = Math.max(hw, Math.min(box.width - hw, left)) + "px"; tip.style.top = (r.top - box.top - 8) + "px";
 }
-document.addEventListener("mouseover", showTip);
+if (!window.matchMedia || matchMedia("(hover: hover)").matches) document.addEventListener("mouseover", showTip);  /* mouse only; touch uses pointerdown */
 document.addEventListener("pointerdown", showTip);
 document.addEventListener("change", function (e) {
   if (e.target.id === "escope") { S.easyScope = e.target.value; render(); return; }
