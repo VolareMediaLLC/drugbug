@@ -1662,7 +1662,7 @@ var DX_MERGE = { "Mechanism of action": ["Receptors / targets"], "Toxicity / ove
 var DW = { id: null };
 function labelSrc(id) {
   var L = (DB.LABEL || {})[id];
-  if (!L || L.nl || !L.s) return null;
+  if (!L || L.nl || !(L.s || L.u)) return null;  /* L.u: FDA package insert URL for products not on DailyMed (e.g. some cell therapies) */
   return L;
 }
 function doseWarn(id, compact) {
@@ -1671,7 +1671,7 @@ function doseWarn(id, compact) {
   var head = es ? "Verifique antes de administrar." : "Check before you give.";
   var body = es ? "Dosis y vías solo con fines educativos, no para uso clínico. Pueden cambiar y varían según el producto, el paciente y el protocolo. Verifique siempre con la etiqueta actual de la FDA, sus protocolos y la dirección médica." :
     "Doses and routes are for education only, not for clinical use. They can change and differ by product, patient and protocol. Always verify against the current FDA label, your protocols and medical direction.";
-  var src = L ? (es ? "Fuente: Información de prescripción de la FDA (DailyMed)" : "Source: FDA Prescribing Information (DailyMed)") + ' — ' + esc([L.b, L.m].filter(Boolean).join(", ")) + (L.d ? (es ? ", etiqueta del " : ", label dated ") + esc(L.d) : "") + '. <a href="https://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=' + encodeURIComponent(L.s) + '" target="_blank" rel="noopener">' + (es ? "Ver la etiqueta" : "View the label") + '</a>. ' + (es ? "Las dosis marcadas “fuera de etiqueta” provienen de la guía indicada." : "Doses marked “Off-label” come from the guideline named with them.")
+  var src = L ? (es ? "Fuente: Información de prescripción de la FDA" + (L.s ? " (DailyMed)" : "") : "Source: FDA Prescribing Information" + (L.s ? " (DailyMed)" : "")) + ' — ' + esc([L.b, L.m].filter(Boolean).join(", ")) + (L.d ? (es ? ", etiqueta del " : ", label dated ") + esc(L.d) : "") + '. <a href="' + (L.s ? 'https://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=' + encodeURIComponent(L.s) : esc(L.u)) + '" target="_blank" rel="noopener">' + (es ? "Ver la etiqueta" : "View the label") + '</a>. ' + (es ? "Las dosis marcadas “fuera de etiqueta” provienen de la guía indicada." : "Doses marked “Off-label” come from the guideline named with them.")
     : (es ? "Fuente: no hay una etiqueta actual de la FDA en EE. UU.; las dosis provienen de la guía o referencia indicada en el texto." : "Source: no current US FDA label; dosing comes from the guideline or reference named in the text.");
   if (compact) return '<div class="dosewarn small" role="note"><strong>' + head + '</strong> ' + (es ? "Solo educativo; verifique con la etiqueta de la FDA y su protocolo." : "Education only; verify with the FDA label and your protocol.") + ' <span class="dsrc">' + src + '</span></div>';
   var q = L && L.q && L.q.length && !es ? '<details class="dlabel"><summary>FDA label wording</summary>' + L.q.map(function (x) { return '<p><b>' + esc(x[0]) + ':</b> “' + esc(x[1]) + '”</p>'; }).join("") + '</details>' : '';
@@ -2780,7 +2780,7 @@ var BODYFIT = {
   cicada: { r: 30, t: [100, 140, 30, 44] }, grasshopper: { r: 29, t: [100, 142, 30, 46] }, snail: { r: 28, t: [96, 132, 24, 44], R: [150, 120] },
   longhorn: { r: 28, t: [100, 146, 36, 52] }, hercules: { r: 29, t: [100, 146, 46, 46] }, stick: { r: 28, t: [100, 148, 22, 50], R: [174, 112], L: [26, 112] },
   scorpion: { r: 27, t: [100, 140, 34, 40], R: [164, 96], L: [36, 96] }, rhino: { r: 30, t: [100, 142, 48, 46] }, firefly: { r: 30, t: [100, 145, 30, 40] },
-  larva: { r: 29, t: [106, 162, 46, 28], R: [170, 140], L: [44, 150] }, chrysalis: { r: 26, t: [100, 150, 28, 40] }, cocoon: { r: 26, t: [100, 150, 34, 40] },
+  larva: { r: 29, t: [106, 122, 46, 28], R: [170, 100], L: [44, 110] }, chrysalis: { r: 26, t: [100, 150, 28, 40] }, cocoon: { r: 26, t: [100, 150, 34, 40] },
   wasp: { r: 28, t: [100, 154, 30, 36] }, cricket: { r: 28, t: [100, 150, 28, 40] }
 };
 function fitG(body, slot, hy, svg) {
@@ -2811,6 +2811,7 @@ function stageBody(t, st) {
 }
 function mixHex(a, b, k) { function p(h) { h = h.replace("#", ""); if (h.length === 3) h = h.replace(/./g, "$&$&"); return [0, 2, 4].map(function (i) { return parseInt(h.substr(i, 2), 16); }); } var x = p(a), y = p(b); return "#" + x.map(function (v, i) { return ("0" + Math.round(v + (y[i] - v) * k).toString(16)).slice(-2); }).join(""); }
 function sparkleP(x, y, r, c) { return '<path d="M' + x + ' ' + (y - r) + ' L' + (x + r * .28) + ' ' + (y - r * .28) + ' L' + (x + r) + ' ' + y + ' L' + (x + r * .28) + ' ' + (y + r * .28) + ' L' + x + ' ' + (y + r) + ' L' + (x - r * .28) + ' ' + (y + r * .28) + ' L' + (x - r) + ' ' + y + ' L' + (x - r * .28) + ' ' + (y - r * .28) + 'Z" fill="' + c + '"/>'; }
+var BUG_DY = {"ant2":-14,"ant3":-5,"ant4":-5,"ant5":-5,"bee2":-10,"bee4":-8,"bee5":-8,"beetle2":-10,"butterfly5":-12,"caterpillar1":-16,"caterpillar2":-7,"chrysalis2":-14,"cicada1":-31,"cicada2":-23,"cicada3":-16,"cicada4":-16,"cicada5":-7,"cocoon2":-14,"cricket1":-21,"cricket2":-12,"cricket3":-3,"cricket4":-3,"cricket5":-3,"dragonfly1":-32,"dragonfly2":-25,"dragonfly3":-17,"dragonfly4":-17,"dragonfly5":-8,"firefly2":-18,"firefly3":-10,"firefly4":-10,"firefly5":-10,"grasshopper1":-23,"grasshopper2":-15,"grasshopper3":-6,"grasshopper4":-6,"grasshopper5":-6,"larva1":-3,"longhorn2":-19,"longhorn3":-11,"longhorn4":-11,"longhorn5":-11,"mantis1":-23,"mantis2":-14,"mantis3":-6,"mantis4":-6,"mantis5":-6,"moth5":-12,"rhino2":-5,"scarab2":-15,"scarab3":-6,"scarab4":-6,"scarab5":-6,"scorpion1":-34,"scorpion2":-27,"scorpion3":-19,"scorpion4":-19,"scorpion5":-11,"snail1":-20,"snail2":-11,"spider1":-32,"spider2":-24,"spider3":-17,"spider4":-17,"spider5":-10,"stag2":-7,"stick1":-5,"stick2":-5,"stick3":-5,"stick4":-5,"stick5":-5,"wasp2":-21,"wasp3":-13,"wasp4":-13,"wasp5":-13};
 function bugArt(b, cls, opt) {
   opt = opt || {}; var wear = opt.wear || {}, mood = opt.mood || "happy";
   var id = "sb" + (++bid), c1 = b.c[0], c2 = b.c[1], c3 = b.c[2] || "#ffffff", ink = b.ink || "#1b1430", hy = 74, s = "";
@@ -2838,10 +2839,10 @@ function bugArt(b, cls, opt) {
   if (t === "larva") {
     /* grub: a curled, soft larva in a pale version of the bug's colors */
     var gl = mixHex(c1, "#fff6e0", .45), gd = mixHex(c2, "#fff6e0", .4);
-    [[156, 160, 22], [128, 170, 26], [96, 170, 28], [66, 158, 26]].forEach(function (p, i) { s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="' + p[2] + '" fill="' + (i % 2 ? gd : gl) + '" stroke="' + gd + '" stroke-width="2"/><path d="M' + (p[0] - p[2] * .5) + ' ' + (p[1] - p[2] * .55) + ' q' + (p[2] * .5) + ' -4 ' + p[2] + ' 0" stroke="#fff" stroke-width="2.5" fill="none" opacity=".6" stroke-linecap="round"/>'; });
-    if (adultT === "firefly") s += '<circle cx="158" cy="160" r="28" fill="url(#' + id + 'r)"/><circle cx="158" cy="162" r="12" fill="' + c3 + '"/>';
-    s += '<path d="M58 176 l-8 12 M76 184 l-6 12 M98 192 l-2 10" stroke="' + ink + '" stroke-width="5" stroke-linecap="round"/>';
-    hy = 100; s += '<path d="M90 ' + (hy - 26) + ' L86 ' + (hy - 36) + ' M110 ' + (hy - 26) + ' L114 ' + (hy - 36) + '" stroke="' + ink + '" stroke-width="4" stroke-linecap="round"/><circle cx="100" cy="' + hy + '" r="29" fill="' + (b.head || c1) + '"/>';
+    [[156, 120, 22], [128, 130, 26], [96, 130, 28], [66, 118, 26]].forEach(function (p, i) { s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="' + p[2] + '" fill="' + (i % 2 ? gd : gl) + '" stroke="' + gd + '" stroke-width="2"/><path d="M' + (p[0] - p[2] * .5) + ' ' + (p[1] - p[2] * .55) + ' q' + (p[2] * .5) + ' -4 ' + p[2] + ' 0" stroke="#fff" stroke-width="2.5" fill="none" opacity=".6" stroke-linecap="round"/>'; });
+    if (adultT === "firefly") s += '<circle cx="158" cy="120" r="28" fill="url(#' + id + 'r)"/><circle cx="158" cy="122" r="12" fill="' + c3 + '"/>';
+    s += '<path d="M58 136 l-8 12 M76 144 l-6 12 M98 152 l-2 10" stroke="' + ink + '" stroke-width="5" stroke-linecap="round"/>';
+    hy = 60; /* grub drawn 40 units higher so it sits centered in its bubble */ s += '<path d="M90 ' + (hy - 26) + ' L86 ' + (hy - 36) + ' M110 ' + (hy - 26) + ' L114 ' + (hy - 36) + '" stroke="' + ink + '" stroke-width="4" stroke-linecap="round"/><circle cx="100" cy="' + hy + '" r="29" fill="' + (b.head || c1) + '"/>';
   } else if (t === "chrysalis" || t === "cocoon") {
     s += '<path d="M42 18 H158" stroke="#8a5a2b" stroke-width="7" stroke-linecap="round"/><path d="M130 18 q14 -10 20 -2 q-8 10 -20 2z" fill="#5bbf6a"/><path d="M100 18 V36" stroke="' + (t === "cocoon" ? "#e8e2d4" : c2) + '" stroke-width="4"/>';
     if (t === "chrysalis") s += '<path d="M100 34 C64 42 60 100 70 144 C78 178 92 194 100 198 C108 194 122 178 130 144 C140 100 136 42 100 34Z" fill="' + F + '" stroke="' + ink + '" stroke-width="3"/><path d="M78 134 Q100 126 122 134 M80 158 Q100 150 120 158 M86 180 Q100 174 114 180" stroke="' + c3 + '" stroke-width="3" fill="none" opacity=".7"/><path d="M80 60 Q74 84 76 104" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" opacity=".45"/>';
@@ -2982,6 +2983,9 @@ function bugArt(b, cls, opt) {
   var sk = st === 1 ? (t === "larva" ? .9 : .8) : st === 2 ? .9 : 1;
   if (t === "stick") sk *= .82; /* the stick insect is drawn edge to edge; bring it in line with the other bugs */
   if (sk !== 1) { var sy = t === "stick" ? 108 : 190; s = '<g transform="translate(' + (100 * (1 - sk)).toFixed(1) + ' ' + (sy * (1 - sk)).toFixed(1) + ') scale(' + sk.toFixed(3) + ')">' + s + '</g>'; }
+  /* lift each body/stage so the drawing (body, face and anything worn) sits centered in its bubble or orb.
+     Offsets were measured from the rendered art (big stage-4/5 aura circles excluded); only upward moves. */
+  var dyC = BUG_DY[t + st]; if (dyC) s = '<g transform="translate(0 ' + dyC + ')">' + s + '</g>';
   return '<svg class="bug ' + (cls || "") + (opt.stage ? ' st' + st : '') + '" viewBox="0 0 200 200" role="img" aria-label="' + esc(b.name) + (opt.stage ? ', ' + stageName(st) : '') + '">' + grad.replace('</defs>', ol + '</defs>') + '<g class="bob"' + (dk ? ' filter="url(#' + id + 'o)"' : '') + '>' + under + s + '</g></svg>';
 }
 var RARITY = { admin: "Administrator", common: "Common", rare: "Rare", epic: "Epic", legendary: "Legendary", seasonal: "Seasonal", earned: "Earned" };
@@ -7283,7 +7287,7 @@ document.addEventListener("submit", function (e) {
 });
 
 /* ---------- Weird Drug Wednesday: one strange-but-true drug fact a week (on by default) ----------
-   The fact rotates by calendar week (DB.WDW, 52 facts). In the iPhone and Android apps the next 12 Wednesdays are
+   The fact rotates by calendar week (DB.WDW, 64 facts). In the iPhone and Android apps the next 12 Wednesdays are
    scheduled as local notifications (nothing leaves the phone); tapping one opens this card. Elsewhere the card
    shows once on a Wednesday after the start-up notice. Settings > Study preferences turns it off. */
 function wdwList() { return DB.WDW || []; }
