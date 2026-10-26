@@ -450,7 +450,7 @@ function tabList() {
   if (S.level === "lvn" || S.level === "rn") L.push(["nbug", "Nursing Bug", "Assess, hold, labs, teaching: one skill at a time."]);
   var img = S.view === "level" && isI(S.level);
   if (img) L.splice(1, 0, ["contrast", "Contrast Safety", "Reactions, screening, eGFR, GBCA groups, nuclear medicine and IR safety."]);
-  if (S.level !== "cna" && !img) L.push(["calc", "Calc Lab", "Dose and drip math with worked answers."]);
+  /* Calc Lab removed Oct 26, 2026 (owner decision) */
   if (!img) L.push(["tools", "Study Tools", "Megacode, pediatric dosing practice, interactions, med lists and safety drills."], ["scenarios", "Scenarios", "Clinical cases: choose what to give."]);
   L.push(["cards", "Flashcards", S.view === "level" && isM(S.level) ? "DrugBug flashcards, or your own decks imported from Anki." : "Flip, sort and master each drug."], ["games", "Brain Games", "Memory match, crossword, quick match, word scramble, Class Blitz and Frog Snack."], ["progress", "Progress", "Mastery, achievements and leaderboard."]);
   if (typeof disView === "function" && !(S.view === "level" && isI(S.level))) L.splice(1, 0, ["diseases", "Disease Wormhole", "Go down the wormhole on 250 conditions: their history, what goes wrong from cell to organ, and the drugs that treat them."]);
@@ -699,6 +699,7 @@ function flashcards() {
 function viewLevel() {
   if (!S.tab || (S.tab !== "hub" && S.tab !== "session" && !tabName(S.tab))) S.tab = "hub";
   if (S.tab !== "hub" && S.tab !== "session" && typeof proLocked === "function" && proLocked(S.tab)) { var lt = S.tab; S.tab = "hub"; setTimeout(function () { openPaywall(tabName(lt), tabTier(lt)); }, 0); }
+  if (S.tab === "calc") S.tab = "hub";  /* Calc Lab was removed */
   var body = S.tab === "hub" ? "" : S.tab === "registry" ? registry() : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? doseView() : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "calc" ? calcView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "anki" ? ankiView() : S.tab === "tools" ? toolsView() : (S.tab === "cards" && S.view === "level" && isM(S.level) && !S.fcPick ? cardsChooser() : flashcards());
   var msg = S.sessMsg ? '<div class="presult" role="status">' + esc(S.sessMsg) + '</div>' : ''; S.sessMsg = "";
   var notes = (S.tab === "calc" || S.tab === "tools" ? eduBanner() : '') + (["prep", "session", "nbug", "scenarios", "cards"].indexOf(S.tab) >= 0 ? esQNote() : '');
@@ -761,6 +762,7 @@ function nrPool(filter) {
   var inScope = null;
   if (S.view === "level" && (isN(S.level) || isI(S.level))) { inScope = {}; scopeFor(S.level).ids.forEach(function (id) { inScope[id] = 1; }); }
   function ok(q) { return allowed.indexOf(q.lv) >= 0 && !(q.home && ctxKey() !== "gen") && qVisible(q) && (!inScope || !q.d || inScope[q.d]) && (!q.d || !drugLocked(q.d)); }
+  if (S.nr && S.nr.kind === "reg") return (DB.RQ || []).filter(function (q) { return allowed.indexOf(q.lv) >= 0 && qVisible(q); });
   return DB.Q.filter(ok).concat((DB.QX || []).filter(ok)).concat(ctxKey() === "gen" && typeof qgGenPool === "function" ? qgGenPool(ok) : []);
 }
 function nrState() {
@@ -863,16 +865,31 @@ function scoreArea() {
   } else c += '<p class="muted">No tests yet. Your first score will show up here.</p>';
   return c + '</section>';
 }
+var RQ_DOM = { airway: "Airway, respiration & ventilation", cardio: "Cardiology & resuscitation", trauma: "Trauma", medical: "Medical & OB/GYN", ops: "EMS operations" };
+function drugCount() { var k = S.nr && S.nr.kind; if (S.nr) S.nr.kind = "drug"; var n = nrPool(S.nr ? S.nr.filter : "").length; if (S.nr) S.nr.kind = k; return n; }
+/* registry tests follow the NREMT blueprint: about 20% airway, 23% cardiology, 15% trauma, 30% medical/OB, 12% operations */
+var RQ_MIX = { airway: .2, cardio: .23, trauma: .15, medical: .3, ops: .12 };
+function regCompose(pool, n, adaptive) {
+  var pick = function (L, k) { return k <= 0 ? [] : adaptive ? adaptivePick(L, k) : shuffle(L.slice()).slice(0, k); }, out = [];
+  Object.keys(RQ_MIX).forEach(function (d) { out = out.concat(pick(pool.filter(function (q) { return q.cat === d; }), Math.round(n * RQ_MIX[d]))); });
+  if (out.length < n) out = out.concat(pick(pool.filter(function (q) { return out.indexOf(q) < 0; }), n - out.length));
+  return shuffle(out.slice(0, n));
+}
+function regCount() { var al = nrLevelsFor(ctxKey()); return (DB.RQ || []).filter(function (q) { return al.indexOf(q.lv) >= 0 && qVisible(q); }).length; }
 function nrPrep() {
   var st = nrState();
   if (st.phase === "quiz") return nrQuiz(st);
   if (st.phase === "done") return nrDone(st) + scoreArea();
   var pool = nrPool(st.filter);
   var nurse = nurseCtx(), exam = nurse ? { cna: "CNA state exam", lvn: "NCLEX-PN", rn: "NCLEX-RN" }[S.level] : medCtx() ? { ms1: "USMLE Step 1", ms3: "USMLE Step 2 CK", intern: "USMLE Step 3" }[S.level] : imCtx() ? "Imaging exam" : S.level === "flight" ? "Flight and critical care certification exam" : "NREMT";
-  var c = '<section class="nrsetup"><h2>' + esc(prepName()) + '</h2><p class="muted">' + exam + '-style multiple choice on the medications. Pick a length and a mode, then start. Questions come from your level only.</p>' + (S.level === "flight" && S.view === "level" ? '<p class="muted small">Original practice questions for flight and critical care certification study. Not affiliated with or endorsed by IBSC or BCEN, and not official exam items.</p>' : '') + examCard(pool) + weakCard();
+  var c = '<section class="nrsetup"><h2>' + esc(prepName()) + '</h2><p class="muted">' + exam + '-style ' + (st.kind === "reg" ? 'questions across the whole exam' : 'multiple choice on the medications') + '. Pick a length and a mode, then start. Questions come from your level only.</p>' + (S.level === "flight" && S.view === "level" ? '<p class="muted small">Original practice questions for flight and critical care certification study. Not affiliated with or endorsed by IBSC or BCEN, and not official exam items.</p>' : '') + examCard(pool) + weakCard();
   var filters = nrLevelsFor(ctxKey()).concat(["all"]);
-  c += qNamesChips();
-  if (filters.length > 2) c += '<div class="lbl">Question set</div><div class="chips">' + filters.map(function (f) { return '<button class="chip" data-nrfilter="' + f + '" aria-pressed="' + (st.filter === f) + '">' + (f === "all" ? "Everything" : NRLV[f]) + ' (' + nrPool(f).length + ')</button>'; }).join("") + '</div>';
+  /* two sections: drug questions (the medication bank) and registry questions (the whole exam: airway, cardiology, trauma, medical, operations) */
+  var regN = regCount();
+  if (regN) c += '<div class="lbl">Question type</div><div class="chips"><button class="chip" data-nrkind="drug" aria-pressed="' + (st.kind !== "reg") + '">Drug questions (' + drugCount() + ')</button><button class="chip" data-nrkind="reg" aria-pressed="' + (st.kind === "reg") + '">Registry questions (' + regN + ')</button></div>' +
+    '<p class="muted small">' + (st.kind === "reg" ? "Registry questions cover the whole " + exam + ": airway, respiration and ventilation; cardiology and resuscitation; trauma; medical and OB/GYN; and EMS operations." : "Drug questions focus on the medications in your scope: doses, actions, indications, contraindications and side effects.") + '</p>';
+  if (st.kind !== "reg") c += qNamesChips();
+  if (filters.length > 2 && st.kind !== "reg") c += '<div class="lbl">Question set</div><div class="chips">' + filters.map(function (f) { return '<button class="chip" data-nrfilter="' + f + '" aria-pressed="' + (st.filter === f) + '">' + (f === "all" ? "Everything" : NRLV[f]) + ' (' + nrPool(f).length + ')</button>'; }).join("") + '</div>';
   c += '<div class="lbl">Number of questions</div><div class="chips">' + [10, 25, 50, 100].map(function (n) { return '<button class="chip" data-nrlen="' + n + '" aria-pressed="' + (st.n === n) + '"' + (n > pool.length ? " disabled" : "") + '>' + n + (n > 10 && !isPro() ? ' ' + proBadge() : '') + '</button>'; }).join("") + '</div>';
   c += '<div class="lbl">Question choice</div><div class="chips"><button class="chip" data-nradapt="1" aria-pressed="' + (st.adaptive !== false) + '">Adaptive: more of what I miss</button><button class="chip" data-nradapt="0" aria-pressed="' + (st.adaptive === false) + '">Random</button></div>';
   c += '<div class="lbl">Mode</div><div class="chips"><button class="chip" data-nrmode="practice" aria-pressed="' + (st.mode === "practice") + '">Practice: see the answer after each question</button><button class="chip" data-nrmode="exam" aria-pressed="' + (st.mode === "exam") + '">Exam: answers at the end' + (!isPro() ? ' ' + proBadge() : '') + '</button></div>';
@@ -983,12 +1000,12 @@ function nrDone(st) {
   var total = st.qs.length, correct = nrScore(st), pct = Math.round(100 * correct / total), secs = Math.round((st.end - st.start) / 1000);
   if (!st.saved) { st.saved = true; addScore({ id: "t" + st.start, ts: st.end, route: curRoute(), lvl: st.filter === "all" ? (S.view === "gen" ? "all" : S.level) : st.filter, n: total, correct: correct, pct: pct, mode: st.mode, secs: secs }); }
   var by = {};
-  st.qs.forEach(function (x, i) { var k = x.q.lv; by[k] = by[k] || [0, 0]; by[k][1]++; if (nrRight(x, st.ans[i])) by[k][0]++; });
+  st.qs.forEach(function (x, i) { var k = x.q.reg && RQ_DOM[x.q.cat] ? "d:" + x.q.cat : x.q.lv; by[k] = by[k] || [0, 0]; by[k][1]++; if (nrRight(x, st.ans[i])) by[k][0]++; });
   var missed = st.qs.map(function (x, i) { return { x: x, a: st.ans[i] }; }).filter(function (m) { return !nrRight(m.x, m.a); });
   var msg = pct >= 85 ? "Excellent. You know this material." : pct >= 70 ? "Solid. You're on track." : pct >= 50 ? "Getting there. Review the misses below." : "Keep studying. Start with the BugDex and Easy Learn.";
   var pb = perfectBonus(st, total, correct) || st.perfectPaid;
   var c = '<section class="result"><div class="bigscore ' + (pct >= 70 ? "good" : pct >= 50 ? "mid" : "low") + '"><span class="pct">' + pct + '%</span><span>' + correct + ' of ' + total + ' correct · ' + fmtTime(secs) + '</span></div><p class="resmsg">' + msg + '</p>' + (pb ? '<p class="presult good">Perfect score bonus: <strong>+' + PERFECT_BONUS + ' sticks</strong></p>' : '');
-  c += '<div class="chips">' + Object.keys(by).map(function (k) { return '<span class="chip static">' + NRLV[k] + ': ' + by[k][0] + '/' + by[k][1] + '</span>'; }).join("") + '</div>';
+  c += '<div class="chips">' + Object.keys(by).map(function (k) { return '<span class="chip static">' + (k.indexOf("d:") === 0 ? RQ_DOM[k.slice(2)] : NRLV[k]) + ': ' + by[k][0] + '/' + by[k][1] + '</span>'; }).join("") + '</div>';
   c += '<div class="actions"><button class="btn" data-act="nrnew">New test</button>' + (missed.length ? '<button class="btn ghost" data-act="nrmissed">Practice my ' + missed.length + ' misses</button>' : '') + '</div>';
   if (missed.length) c += '<details class="sec" open><summary>Review what you missed (' + missed.length + ')</summary><div class="fields">' + missed.map(function (m) {
     return '<div class="miss">' + (m.x.q.cs ? '<p class="muted small"><strong>' + esc(m.x.q.csTitle) + ', part ' + m.x.q.part + ':</strong> ' + esc(m.x.q.story) + '</p>' : '') + '<p class="qstem small">' + esc(m.x.q.q) + '</p><p><span class="pill low">Your answer</span> ' + esc(nrAnsText(m.x, m.a)) + '</p><p><span class="pill good">Correct</span> ' + esc(m.x.q.a) + '</p><p class="muted">' + esc(m.x.q.x) + '</p>' + (m.x.q.d && DB.drugs[m.x.q.d] ? '<button class="linkish" data-drug="' + m.x.q.d + '">Review ' + esc(DB.drugs[m.x.q.d].name) + '</button>' : '') + '</div>';
@@ -1300,6 +1317,7 @@ document.addEventListener("click", function (e) {
   if (a.nrlen) { if (+a.nrlen > 10 && !isPro()) return openPaywall("Longer practice tests"); nrState().n = +a.nrlen; return render(); }
   if (a.nrmode) { if (a.nrmode === "exam" && !isPro()) return openPaywall("Exam mode"); nrState().mode = a.nrmode; return render(); }
   if (a.qnames) { setSet("qnames", a.qnames); return render(); }
+  if (a.nrkind) { var nk = nrState(); nk.kind = a.nrkind; var pk = nrPool(nk.filter).length; if (nk.n > pk) nk.n = [10, 25, 50, 100].filter(function (v) { return v <= pk; }).pop() || 10; return render(); }
   if (a.nrfilter) { var ns = nrState(); ns.filter = a.nrfilter; var pl = nrPool(ns.filter).length; if (ns.n > pl) ns.n = [10, 25, 50, 100].filter(function (v) { return v <= pl; }).pop() || 10; return render(); }
   if (a.nrtog != null) { nrToggle(+a.nrtog); return render(); }
   if (a.act === "nrsubmit") { nrSubmit(); return render(); }
@@ -1327,7 +1345,7 @@ document.addEventListener("click", function (e) {
     case "weakgo": var stw = nrState(); stw.mode = "practice"; nrStart(weakPool().slice(0, 20)); S.nr.kind = "weak"; render(); return window.scrollTo(0, 0);
     case "exedit": S.exEdit = true; return render();
     case "exclear": if (Prog.d.exam) delete Prog.d.exam[examKey()]; S.exEdit = false; saveProg(); return render();
-    case "nrstart": var st0 = nrState(), pl0 = nrPool(st0.filter), pk0 = isEMSLv(ctxKey()) ? nrCompose(pl0, Math.min(st0.n, pl0.length), st0.filter && st0.filter !== "all" ? [st0.filter] : nrLevelsFor(ctxKey()), st0.adaptive !== false) : st0.adaptive !== false ? adaptivePick(pl0, st0.n) : shuffle(pl0).slice(0, st0.n); nrStart(pk0); render(); return window.scrollTo(0, 0);
+    case "nrstart": var st0 = nrState(), pl0 = nrPool(st0.filter), pk0 = st0.kind === "reg" ? regCompose(pl0, st0.n, st0.adaptive !== false) : isEMSLv(ctxKey()) ? nrCompose(pl0, Math.min(st0.n, pl0.length), st0.filter && st0.filter !== "all" ? [st0.filter] : nrLevelsFor(ctxKey()), st0.adaptive !== false) : st0.adaptive !== false ? adaptivePick(pl0, st0.n) : shuffle(pl0).slice(0, st0.n); nrStart(pk0); render(); return window.scrollTo(0, 0);
     case "nrnext": S.nr.i++; render(); return window.scrollTo(0, 0);
     case "nrprev": S.nr.i--; return render();
     case "nrfinish": S.nr.end = Date.now(); S.nr.phase = "done"; if (S.nr.mode === "exam") { S.nr.rec = S.nr.rec || {}; S.nr.qs.forEach(function (x, i) { if (!S.nr.rec[i] && S.nr.ans[i] != null) { S.nr.rec[i] = 1; record(x.q, nrRight(x, S.nr.ans[i])); } }); setTimeout(toastAch, 300); } render(); return window.scrollTo(0, 0);
@@ -1930,8 +1948,10 @@ function masteryPct(ids) { if (!ids.length) return 0; return Math.round(100 * id
 function xpLevel(xp) { var lv = 1, need = 100; while (xp >= need) { xp -= need; lv++; need = 100 + (lv - 1) * 50; } return { lv: lv, into: xp, need: need }; }
 
 /* recording answers */
-function record(q, ok) {
+function record(q, ok) { try { recordInner(q, ok); } catch (e) { /* never let progress bookkeeping block the quiz from moving on */ try { console.warn("record", e); } catch (x) { } } }
+function recordInner(q, ok) {
   var P = Prog.d, t = today();
+  if (!P) return; P.days = P.days || {}; P.drugs = P.drugs || {}; P.xp = P.xp || 0;
   P.answered = (P.answered || 0) + 1; P.days[t] = (P.days[t] || 0) + 1; P.xp += ok ? 10 : 2;
   earn(qSticks(ok)); if (typeof feedback === "function") feedback(ok);
   if (q && q.d) {
@@ -1951,7 +1971,7 @@ function recordCalc(type, ok) {
 
 /* adaptive selection: weak and due drugs come up more, mastered drugs less */
 function weightOf(q) {
-  if (!q.d) return 1.2;
+  if (!q.d) { var mm = q.reg && typeof qid === "function" ? ((Prog.d.miss || {})[qid(q)] || 0) : 0; return 1.2 + mm * 1.5; }
   var s = stat(q.d), m = mastery(q.d), w = { "new": 2, learning: 4, familiar: 2.5, proficient: 1.2, mastered: 0.35 }[m];
   if (s) { if (Date.now() >= (s.due || 0)) w *= 1.6; var misses = (s.h || "").slice(-5).split("").filter(function (x) { return x === "0"; }).length; w += misses * 1.5; }
   return w;
@@ -1983,8 +2003,6 @@ var ACH = [
   ["m1", "First drug mastered", function (P) { return mastCount(P) >= 1; }],
   ["m25", "25 drugs mastered", function (P) { return mastCount(P) >= 25; }],
   ["m100", "100 drugs mastered", function (P) { return mastCount(P) >= 100; }],
-  ["c25", "Calc Lab: 25 correct", function (P) { return calcCorrect(P) >= 25; }],
-  ["c100", "Calc Lab: 100 correct", function (P) { return calcCorrect(P) >= 100; }],
   ["class", "Class completed (every drug in a class mastered)", function () { return classDone().length > 0; }],
   ["chal", "Daily challenge completed", function (P) { return Object.keys(P.chal || {}).length >= 1; }]
 ];
@@ -3108,7 +3126,7 @@ var BUGS = [
   { id: "airway-ace", name: "Airway Ace", body: "bee", c: ["#7dd3fc", "#0369a1", "#e0f2fe"], acc: ["goggles"], rar: "earned", price: 0, unlock: { group: "Respiratory", pct: 80, text: "Reach 80% mastery in Respiratory" } },
   { id: "neuro-navigator", name: "Neuro Navigator", body: "moth", c: ["#c4b5fd", "#5b21b6", "#ede9fe"], ink: "#2e1065", acc: ["headset"], rar: "earned", price: 0, unlock: { group: "Seizure / Antiepileptic", pct: 80, text: "Reach 80% mastery in Seizure / Antiepileptic" } },
   { id: "code-commander", name: "Code Commander", body: "stag", c: ["#fde68a", "#b45309", "#ffffff"], acc: ["crown", "stetho"], rar: "earned", price: 0, unlock: { mega: true, text: "Score 100% on 5 different Megacode cases" } },
-  { id: "calc-champion", name: "Calc Champion", body: "ant", c: ["#a5b4fc", "#3730a3"], acc: ["goggles"], rar: "earned", price: 0, unlock: { calc: 100, text: "Get 100 Calc Lab problems right" } }
+  { id: "calc-champion", name: "Calc Champion", body: "ant", c: ["#a5b4fc", "#3730a3"], acc: ["goggles"], rar: "earned", price: 0, unlock: { calc: 100, text: "Retired: earned in Calc Lab" }, retired: 1 }
 ];
 var STYLES = [["classic", "Classic", 0, ""], ["obsidian", "Obsidian", 150, "brightness(.55) contrast(1.35) saturate(.8)"], ["neon", "Neon", 160, "saturate(2.4) brightness(1.15) contrast(1.1)"], ["bloodmoon", "Blood Moon", 180, "sepia(.6) hue-rotate(-40deg) saturate(3) brightness(.75)"], ["ghost", "Ghost", 170, "grayscale(1) brightness(1.35) opacity(.85)"], ["galaxy", "Galaxy", 220, "hue-rotate(250deg) saturate(1.8) brightness(.85) contrast(1.15)"], ["inverted", "Upside Down", 260, "invert(.88) hue-rotate(180deg)"], ["shiny", "Shiny", 60, "saturate(1.7) brightness(1.08) contrast(1.05)"], ["midnight", "Midnight", 90, "hue-rotate(200deg) saturate(1.3) brightness(.9)"], ["ember", "Ember", 90, "hue-rotate(320deg) saturate(1.5)"], ["frost", "Frost", 90, "hue-rotate(160deg) saturate(.75) brightness(1.12)"], ["toxic", "Toxic", 120, "hue-rotate(90deg) saturate(1.8)"], ["gold", "Gold", 200, "sepia(.9) saturate(2.6) hue-rotate(-12deg) brightness(1.05)"]];
 var MONTHS = ["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -3126,7 +3144,7 @@ function myBugArt(cls, mood, wear) { var f = styleFilter(), a = bugArt(myBug(), 
 function buyStyle(id) { var st = STYLES.filter(function (x) { return x[0] === id; })[0]; if (!st) return; var own = (Prog.d.styles || []).indexOf(id) >= 0 || st[2] === 0;
   if (!own) { if (sticks() < st[2]) return; Prog.d.spent = (Prog.d.spent || 0) + st[2]; Prog.d.styles = (Prog.d.styles || []).concat([id]); }
   Prog.d.style = id; saveProg(); S.shopMsg = st[1] + " style applied to your bug."; }
-function shopBugs() { return BUGS.filter(function (b) { return !b.admin || Admin.owner || owned(b.id); }); }
+function shopBugs() { return BUGS.filter(function (b) { return (!b.admin || Admin.owner || owned(b.id)) && (!b.retired || owned(b.id)); }); }
 function bugById(id) { return BUGS.filter(function (b) { return b.id === id; })[0] || BUGS.filter(function (b) { return b.id === "starter"; })[0]; }
 function owned(id) { return id === "starter" || (Prog.d.owned || []).indexOf(id) >= 0; } /* new players own only the starter beetle and their path's beetle */
 function myBug() { return bugById(owned(Prog.d.avatar) ? Prog.d.avatar : "starter"); }
@@ -4578,7 +4596,7 @@ document.addEventListener("visibilitychange", function () {
   S.discAway = 0;
 });
 
-/* simulation framing for every calculator (Dose Cards, My vials, Calc Lab, Pediatric dosing practice, Megacode) */
+/* simulation framing for every calculator (Dose Cards, My vials, Pediatric dosing practice, Megacode) */
 var SIM_V = 1;
 function simOk() { var a = store("simAck"); return !!(a && a.v === SIM_V); }
 function simBanner() { return '<div class="simbar" role="note"><span class="simtag">SIMULATION</span> Fictional practice patients only. <strong>Not for real human patients.</strong> Results can contain errors: verify every calculation independently against the FDA label and your protocol.</div>'; }
@@ -4603,10 +4621,10 @@ var LEGAL_PAGES = {
   terms: ["Terms of Use", function () {
     return L("1. Who we are", ["DrugBug is provided by " + COMPANY + ' ("we", "us"). Contact: <a href="mailto:' + CONTACT + '">' + CONTACT + '</a>. By using DrugBug you agree to these Terms. If you do not agree, do not use DrugBug.']) +
       L("2. Educational use only", ["DrugBug is an educational study tool for students and clinicians in training. It is <strong>not</strong> medical advice, is <strong>not</strong> a medical device, and is <strong>not</strong> intended for diagnosing, treating, or making decisions about any real patient.", "Dose calculators, the pediatric reference, the med-list decoder, interaction notes, megacode cases and every other tool are practice exercises. Do not rely on them for patient care. Always follow your agency protocols, medical direction, facility policy, current drug references, and the judgment of a licensed clinician.", "Drug information changes. Content may be incomplete, out of date or contain errors, even after clinical review. Some content is drafted with the help of AI and is labeled with its review status."]) +
-      L("3. Clinical use prohibited", ["DrugBug is designed only for education, exam preparation and simulated clinical scenarios.", "DrugBug must not be used as a clinical decision-support system, a medication administration reference, a drug dosing authority, or a substitute for independently verified clinical information. Do not use DrugBug for actual patient assessment, diagnosis, treatment, medication administration or any other clinical decision.", "Dose Cards, Calc Lab, Pediatric dosing practice, Megacode, any Apple Watch app or widgets, and every other calculation feature are <strong>simulations for fictional practice patients</strong>. They are not for real human patients. Do not enter real patient information into them. Software and content can contain errors; independently verify every number against the current FDA label, your protocols and medical direction.", "You acknowledge that relying on DrugBug during actual patient care may result in medication errors, injury or death. " + COMPANY + " does not authorize or endorse any use of DrugBug in patient care."]) +
+      L("3. Clinical use prohibited", ["DrugBug is designed only for education, exam preparation and simulated clinical scenarios.", "DrugBug must not be used as a clinical decision-support system, a medication administration reference, a drug dosing authority, or a substitute for independently verified clinical information. Do not use DrugBug for actual patient assessment, diagnosis, treatment, medication administration or any other clinical decision.", "Dose Cards, Pediatric dosing practice, Megacode, any Apple Watch app or widgets, and every other calculation feature are <strong>simulations for fictional practice patients</strong>. They are not for real human patients. Do not enter real patient information into them. Software and content can contain errors; independently verify every number against the current FDA label, your protocols and medical direction.", "You acknowledge that relying on DrugBug during actual patient care may result in medication errors, injury or death. " + COMPANY + " does not authorize or endorse any use of DrugBug in patient care."]) +
       L("4. Who may use DrugBug", ["DrugBug is for adults only. You must be at least 18 years old to use it. DrugBug is not directed to anyone under 18, and we do not knowingly collect information from minors."]) +
-      L("5. Your account and conduct", ["You agree not to: enter patient information or any protected health information; post offensive, harassing or misleading display names or content; copy or resell DrugBug content; attempt to access other people's data; or interfere with the app.", "We may remove display names, classes or content, and may suspend access, if these Terms are broken."]) +
-      L("6. Classes and instructors", ["Classes and the public leaderboard are currently turned off. If they return: Instructors who create a class are responsible for how they use learner scores and for following their school's policies, including FERPA where it applies. Learners should use a first name or nickname. Learners can leave a class at any time, which deletes their class results."]) +
+      L("5. Your account and conduct", ["You agree not to: enter patient information or any protected health information; post offensive, harassing or misleading display names or content; copy or resell DrugBug content; attempt to access other people's data; or interfere with the app.", "We may remove or hide display names, leaderboard and competition entries, and anything else you submit to DrugBug that breaks these Terms. If you have a DrugBug account, we may suspend or close it for serious or repeated violations. Subscriptions bought through Apple are managed by Apple under its own terms."]) +
+      L("6. Leaderboards and school competitions", ["The leaderboard and school competitions are currently turned off. If they are turned on, learners can compete with other DrugBug users, including classmates from the same school, using a first name or nickname. Other participants see only your display name, your school or team name if you join one, and your scores. DrugBug competitions are for fun and motivation; they are not designed for teaching, grading or tracking individual students, and DrugBug does not give schools or instructors your individual study records. You can leave a competition or the leaderboard at any time."]) +
       L("7. Protocols", ["Agency, facility and school protocols belong to their owners. DrugBug adds an agency's protocols only with written permission, and shows them only as study material. By sending protocols you confirm you are authorized to share them or will help us get that permission."]) +
       L("8. Trademarks", ["NREMT, NCLEX, NCSBN, USMLE, FSMB, NBME, ARRT, IBSC, FP-C, BCEN, CFRN, AHA, ACLS, PALS and ISMP are trademarks of their owners. DrugBug uses these names only to describe the subjects it covers. Anki is a trademark of its owner; DrugBug can read deck files exported from Anki but is not affiliated with or endorsed by Anki or Ankitects. " + NONAFF + " Practice questions are original and are not official exam items."]) +
       L("9. Our content", ["DrugBug's text, questions, artwork and software are owned by " + COMPANY + " or its licensors. You may use them for your own personal study."]) +
@@ -4620,14 +4638,14 @@ var LEGAL_PAGES = {
       L("17. Changes and effective date", ["These Terms are effective " + LEGAL_V + ". We may update them. When we make a material change, we will ask you to agree again in the app, and we keep a record of the version you accepted and when."]);
   }],
   privacy: ["Privacy Policy", function () {
-    return L("What DrugBug stores", ["<strong>On your device:</strong> your settings (theme, language, level), study progress, saved drug list, agreement record, and score history. If you import an Anki deck, its cards and images are saved only on your device. They are never uploaded to DrugBug or shared, and you can delete a deck anytime in Imported Decks.", (NATIVE ? "<strong>In DrugBug's online database (only when online features are on), linked to an anonymous DrugBug account ID created on your device</strong> (not your name or email):" : "<strong>In DrugBug's database, linked to your claude.ai account ID</strong> (an opaque ID, not your name or email):"), ["Your study progress and score history (private to you).", "If you join the leaderboard: the display name you choose and your weekly XP (visible to other DrugBug users).", "If you join a class: the name you give your instructor, your class memberships and assignment scores.", "If you create a class: the class name, join code and assignments.", "If you report an error or request protocols: what you write, and an email address only if you choose to give one."]]) +
+    return L("What DrugBug stores", ["<strong>On your device:</strong> your settings (theme, level), study progress, saved drug list, agreement record, and score history. If you import an Anki deck, its cards and images are saved only on your device. They are never uploaded to DrugBug or shared, and you can delete a deck anytime in Imported Decks.", (NATIVE ? "<strong>In DrugBug's online database (only when online features are on), linked to an anonymous DrugBug account ID created on your device</strong> (not your name or email):" : "<strong>In DrugBug's database, linked to your claude.ai account ID</strong> (an opaque ID, not your name or email):"), ["Your study progress and score history (private to you).", "If you join the leaderboard: the display name you choose and your weekly XP (visible to other DrugBug users).", "If you join a school competition: your display name, your school or team name and your competition scores (visible to other participants in that competition).", "If you report an error or request protocols: what you write, and an email address only if you choose to give one."]]) +
       L("Optional account", ["DrugBug works without an account. If you choose to create one (Sign in with Apple or email and password), we store your email address (or Apple's private relay address if you use Hide My Email), an account ID, and your study data so it can sync across your devices.", "Passwords and sign-in are handled by our authentication provider (Google Firebase Authentication); DrugBug never sees or stores your password or your Apple Account password. Apple sign-in tokens are verified by the provider's servers.", "Your account data is private to you: other users never see your email, account ID or study records. Data is encrypted in transit (HTTPS/TLS) and at rest by our provider. Access to the database is restricted by server-side security rules, and only authorized DrugBug administrators can manage content.", "You can export your data (Settings, Download my data) and delete your account in the app (Settings, Privacy & account). Deleting your account deletes your account and its study records; copies in our provider's backups expire within 30 days."]) +
       L("What we do not collect", ["We do not ask for patient information, and you must never enter it. We do not sell personal information, and we do not show ads."]) +
-      L("Who can see it", ["Your progress and score history are private to your account. (Classes and the leaderboard are currently turned off.) If turned on: leaderboard names and XP are visible to other users. Class results are meant for your instructor; because class records are kept in a shared database area, use a first name or nickname only. Error reports and protocol requests are seen by the DrugBug team."]) +
-      L("Students and schools", ["Classes are currently turned off. Learners can leave a class at any time, which deletes their class results. Schools that need a FERPA-specific data agreement should contact us before using Classes for graded work."]) +
+      L("Who can see it", ["Your progress and score history are private to your account. (The leaderboard and school competitions are currently turned off.) If turned on: leaderboard and competition display names, school or team names and scores are visible to other participants. Use a first name or nickname only. Error reports and protocol requests are seen by the DrugBug team."]) +
+      L("Students and schools", ["When a school or program buys DrugBug for its students, students use the app on their own. School competitions (currently turned off) let classmates compete on a shared leaderboard using a first name or nickname. DrugBug is not used for teaching or grading, and we do not give schools or instructors students' individual study records. Schools that need a data agreement can contact us."]) +
       L("Account deletion and retention", ["Use <button class=\"linkish\" data-legal=\"data\">Your data</button> to delete everything DrugBug stores about you, or email us. We delete or de-identify your information promptly, except where we must keep limited records for legal reasons (for example records of purchases kept by Apple, or a record that you agreed to the Terms). Data stored only on your device is removed when you delete the app."]) +
       L("Age", ["DrugBug is for adults 18 and older only. If you believe someone under 18 has used DrugBug, contact us and we will delete the data."]) +
-      L("Your choices and rights", ['Open <button class="linkish" data-legal="data">Your data</button> to leave the leaderboard, leave classes, or delete everything DrugBug stores about you. You can also email <a href="mailto:' + CONTACT + '">' + CONTACT + '</a> to ask what we hold or to request deletion. Depending on where you live, you may have additional privacy rights; we will honor them.']) +
+      L("Your choices and rights", ['Open <button class="linkish" data-legal="data">Your data</button> to leave the leaderboard or a school competition, or delete everything DrugBug stores about you. You can also email <a href="mailto:' + CONTACT + '">' + CONTACT + '</a> to ask what we hold or to request deletion. Depending on where you live, you may have additional privacy rights; we will honor them.']) +
       (NATIVE ? L("Subscriptions and payments", ["DrugBug Plus and Pro are sold through Apple's App Store. Apple processes the payment; DrugBug never receives your card or billing details. We only learn which plan is active and when it renews or ends. Manage or cancel subscriptions in iPhone Settings, your name, Subscriptions."]) +
         L("Service providers", ["Apple distributes the app and handles purchases. When online features are on, DrugBug's database and anonymous sign-in are hosted by Google Firebase (Google Cloud). DrugBug contains no advertising or third-party tracking, and we do not track you across other apps or websites."])
       : L("Service providers", ["DrugBug runs on claude.ai, which hosts the app and its database. Your use of claude.ai is also covered by Anthropic's own terms and privacy policy."])) +
@@ -4635,16 +4653,16 @@ var LEGAL_PAGES = {
   }],
   disclaimers: ["Disclaimers & Attributions", function () {
     return L("Not affiliated", [NONAFF + " Exam names describe subjects DrugBug covers. Practice questions are original and are not official items from any exam.", "Resuscitation content is written from published resuscitation guidelines. DrugBug is not an AHA course, does not provide ACLS or PALS certification, and is not reviewed by AHA."]) +
-      L("Not a medical device", ["Every calculation feature in DrugBug (Dose Cards, Calc Lab, Pediatric dosing practice, Megacode, and any Apple Watch app or widgets) is a simulation for fictional practice patients and is not for real human patients. DrugBug is educational software. It is not intended for clinical decision support, diagnosis or treatment of real patients, and it has not been cleared or approved by the FDA. Calculators and interaction notes are practice tools for learning."]) +
+      L("Not a medical device", ["Every calculation feature in DrugBug (Dose Cards, Pediatric dosing practice, Megacode, and any Apple Watch app or widgets) is a simulation for fictional practice patients and is not for real human patients. DrugBug is educational software. It is not intended for clinical decision support, diagnosis or treatment of real patients, and it has not been cleared or approved by the FDA. Calculators and interaction notes are practice tools for learning."]) +
       L("Safety medication lists", ["High-alert medication drills are adapted from the ISMP List of High-Alert Medications, and look-alike/sound-alike pairs are informed by the ISMP List of Confused Drug Names and FDA/ISMP tall-man lettering guidance. ISMP lists © Institute for Safe Medication Practices (ISMP), used for education with attribution. DrugBug is not affiliated with ISMP. Consult ismp.org for the current lists."]) +
       L("Protocols", ["Agency and facility protocols shown in DrugBug are used with the written permission of their owners and remain their property. National default scopes follow publicly available scope-of-practice models and may differ from your state or agency."]) +
-      L("How content is made", ["Drug monographs, questions, scenarios and translations are original writing. Some content was drafted with AI assistance. Each drug shows its content review status. A content review checks educational accuracy against standard references at a point in time; it is not a guarantee that the content is complete, current or error-free. Content marked as draft has not yet been reviewed. Spanish translations are AI-prepared and pending clinical review."]) +
+      L("How content is made", ["Drug monographs, questions and scenarios are original writing. Some content was drafted with AI assistance. Each drug shows its content review status. A content review checks educational accuracy against standard references at a point in time; it is not a guarantee that the content is complete, current or error-free. Content marked as draft has not yet been reviewed."]) +
       L("Pronunciation", ["Spoken pronunciations use your device's built-in voice and may not be perfect."]);
   }],
   data: ["Your data", function () {
-    var c = L("What you can do here", ["Leave the leaderboard, leave a class, or delete everything DrugBug stores about you."]);
+    var c = L("What you can do here", ["Leave the leaderboard or a school competition, or delete everything DrugBug stores about you."]);
     c += '<div class="actions">' + (Prog.d.lbName ? '<button class="btn ghost" data-act="lbleave">Leave the leaderboard</button>' : '') + (SOCIAL ? '<button class="btn ghost" data-go="classes">Manage my classes</button>' : '') + '</div>';
-    c += '<h2>Delete my DrugBug data</h2><p>This deletes your progress, scores, saved list, leaderboard entry, class memberships and results, classes you created, error reports, protocol requests, and everything stored on this device. It cannot be undone.</p>';
+    c += '<h2>Delete my DrugBug data</h2><p>This deletes your progress, scores, saved list, leaderboard and competition entries, error reports, protocol requests, and everything stored on this device. It cannot be undone.</p>';
     if (S.delState === "ask") c += '<div class="confirm" role="alert">Delete all of your DrugBug data? <button class="btn small again" data-act="delyes">Yes, delete everything</button> <button class="btn small ghost" data-act="delno">Cancel</button></div>';
     else if (S.delState === "busy") c += '<p class="muted">Deleting…</p>';
     else if (S.delState === "done") c += '<div class="presult good" role="status">Your DrugBug data was deleted.</div>';
@@ -4656,7 +4674,7 @@ var LEGAL_PAGES = {
 function legalView() {
   var k = LEGAL_PAGES[S.legal] ? S.legal : "terms", pg = LEGAL_PAGES[k];
   var c = (agreeRec() ? topbar() : '') + '<div class="legal"><button class="linkish" data-act="legalback">Back</button><div class="chips subtabs">' + Object.keys(LEGAL_PAGES).map(function (x) { return '<button class="chip" data-legal="' + x + '" aria-pressed="' + (x === k) + '">' + esc(LEGAL_PAGES[x][0]) + '</button>'; }).join("") + '</div>';
-  c += '<header class="pagehead"><h1>' + esc(pg[0]) + '</h1>' + (k !== "data" ? '<p class="muted small">Effective ' + LEGAL_V + '. Draft pending legal review.' + (lang() === "es" ? ' La versión en inglés es la oficial.' : '') + '</p>' : '') + '</header><article class="legaltext">' + pg[1]() + '</article></div>';
+  c += '<header class="pagehead"><h1>' + esc(pg[0]) + '</h1>' + (k !== "data" ? '<p class="muted small">Effective ' + LEGAL_V + '. Draft pending legal review.'  + '</p>' : '') + '</header><article class="legaltext">' + pg[1]() + '</article></div>';
   return c;
 }
 function openLegal(k) { if (S.view !== "legal") S.legalBack = { view: S.view, tab: S.tab, level: S.level }; S.legal = k; S.delState = null; if (S.sheet) closeSheet(); S.view = "legal"; render(); window.scrollTo(0, 0); }
@@ -5257,9 +5275,9 @@ var ES_GROUPS = {"Prehospital / EMS / Critical Care Transport": "Prehospitalario
 
 /* ---------- Spanish mode (UI strings + Spanish drug pages) and audio pronunciation ---------- */
 var LANG_C = null;
-function lang() { if (LANG_C === null) LANG_C = store("lang") === "es" ? "es" : "en"; return LANG_C; }
+function lang() { return "en"; }  /* Spanish removed Oct 26, 2026 (owner decision); DB.ES is kept only for pronunciations */
 function langBtn() { return '<button class="theme-btn" data-act="lang" lang="' + (lang() === "es" ? "en" : "es") + '" aria-label="' + (lang() === "es" ? "Switch to English" : "Cambiar a español") + '">' + (lang() === "es" ? "English" : "Español") + '</button>'; }
-function setLang(l) { store("lang", l); LANG_C = null; document.documentElement.lang = l; render(); if (S.sheet) drawSheet(); if (P.open) drawProto(); }
+function setLang(l) { return; /* Spanish removed */  store("lang", l); LANG_C = null; document.documentElement.lang = l; render(); if (S.sheet) drawSheet(); if (P.open) drawProto(); }
 var ES_RX = [
   [/^Please read \((\d+)\)$/, "Lea por favor ($1)"],
   [/^(\d+) drugs in scope$/, "$1 medicamentos en su nivel"], [/^(\d+) drugs?$/, "$1 medicamentos"], [/^(\d+) medications$/, "$1 medicamentos"],
@@ -5332,7 +5350,7 @@ function reportBtn(kind, ref, drug) { return '<button class="linkish rptbtn" dat
 function qRef(q) { return typeof qid === "function" ? qid(q) : String(q.q || "").slice(0, 60); }
 function openReport(spec) {
   var p = spec.split("|"), kind = p[0], ref = p[1], drug = p[2], q = null;
-  if (kind === "question") q = DB.Q.filter(function (x) { return qRef(x) === ref; })[0];
+  if (kind === "question") q = DB.Q.concat(DB.QX || [], DB.RQ || []).filter(function (x) { return qRef(x) === ref; })[0];
   RP.open = { kind: kind, ref: ref, drug: drug || (q && q.d) || "", qtext: q ? q.q : "", type: kind === "question" ? RTYPES[2] : RTYPES[1], text: "", email: "" }; RP.sent = null; RP.err = "";
   drawReport(); rdlg.hidden = false; var f = $("#rptext", rdlg); if (f) f.focus();
 }
@@ -5422,7 +5440,7 @@ function printIds0(src) {
 }
 function openPrint(spec) {
   var p = spec.split("|"), ids = printIds(p[0]);
-  var sp = SET(); PR = { src: p[0], ids: ids.slice(0, 200), mode: p[1] || sp.printMode, es: sp.printLang === "auto" ? lang() === "es" : sp.printLang === "es", dense: sp.printDense, msg: "" };
+  var sp = SET(); PR = { src: p[0], ids: ids.slice(0, 200), mode: p[1] || sp.printMode, es: false, dense: sp.printDense, msg: "" };
   if (sheet && !sheet.hidden) closeSheet();
   drawPrint(); printv.hidden = false; document.body.classList.add("printing"); window.scrollTo(0, 0);
 }
@@ -5457,7 +5475,7 @@ function printDoc() {
 var PRINT_CSS = ".pr-src{margin-top:4px;font-size:9px;color:#444}.pr-tag{margin-top:3px;font-size:9px;font-weight:700;color:#222;border-top:1px dashed #999;padding-top:3px}body{font-family:Arial,Helvetica,sans-serif;color:#111;margin:0;padding:16px;background:#fff}.pr-title{font-size:18px;margin:0 0 10px}.pr-title small{font-weight:400;color:#555;font-size:12px}.pr-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.pr-card{border:1.5px solid #333;border-radius:8px;padding:8px 10px;break-inside:avoid;page-break-inside:avoid;font-size:10.5px;line-height:1.35}.pr-card header{display:flex;justify-content:space-between;gap:6px;align-items:baseline;border-bottom:1px solid #999;margin-bottom:4px}.pr-card h3{font-size:14px;margin:0}.pr-card header span{color:#444;font-size:10px;text-align:right}.pr-ph{font-style:italic;color:#444;margin-bottom:3px}.pr-r{margin:2px 0}.pr-dense{grid-template-columns:repeat(3,1fr);gap:6px}.pr-dense .pr-card{font-size:9px;padding:6px 7px}.pr-dense .pr-card h3{font-size:12px}.pr-table{width:100%;border-collapse:collapse;font-size:10px;line-height:1.3}.pr-table th,.pr-table td{border:1px solid #888;padding:3px 5px;text-align:left;vertical-align:top}.pr-table th{background:#eee}.pr-table tr{break-inside:avoid}.pr-foot{font-size:9.5px;color:#444;margin-top:10px;border-top:1px solid #aaa;padding-top:4px}@media (max-width:560px){.pr-cards{grid-template-columns:1fr}}@page{margin:12mm}";
 function drawPrint() {
   if (!PR) return;
-  var c = '<div class="pr-bar noprint"><button class="btn small ghost" data-pract="close">Close</button><div class="chips"><button class="chip" data-pract="cards" aria-pressed="' + (PR.mode === "cards") + '">Study cards</button><button class="chip" data-pract="sheet" aria-pressed="' + (PR.mode === "sheet") + '">Cheat sheet</button>' + (Object.keys(DB.ES).length ? '<button class="chip" data-pract="es" aria-pressed="' + PR.es + '">Español</button>' : '') + '</div><span class="spacer"></span><button class="btn small" data-pract="print"' + (PR.ids.length ? "" : " disabled") + '>Print</button><button class="btn small ghost" data-pract="pdf"' + (PR.ids.length ? "" : " disabled") + '>Save as PDF</button>' + (NATIVE ? '' : '<button class="btn small ghost" data-pract="dl"' + (PR.ids.length ? "" : " disabled") + '>Download as HTML</button>') + '</div>';
+  var c = '<div class="pr-bar noprint"><button class="btn small ghost" data-pract="close">Close</button><div class="chips"><button class="chip" data-pract="cards" aria-pressed="' + (PR.mode === "cards") + '">Study cards</button><button class="chip" data-pract="sheet" aria-pressed="' + (PR.mode === "sheet") + '">Cheat sheet</button>' + (Object.keys(DB.ES).length ? '' : '') + '</div><span class="spacer"></span><button class="btn small" data-pract="print"' + (PR.ids.length ? "" : " disabled") + '>Print</button><button class="btn small ghost" data-pract="pdf"' + (PR.ids.length ? "" : " disabled") + '>Save as PDF</button>' + (NATIVE ? '' : '<button class="btn small ghost" data-pract="dl"' + (PR.ids.length ? "" : " disabled") + '>Download as HTML</button>') + '</div>';
   if (PR.msg) c += '<p class="presult noprint" role="status">' + esc(PR.msg) + '</p>';
   c += '<p class="muted small noprint">' + (isAndroid() ? '<b>Print</b> finds printers on your Wi-Fi or Bluetooth. <b>Save as PDF</b> opens the same screen: pick "Save as PDF" at the top to keep a file.' : NATIVE ? '<b>Print</b> sends to an AirPrint printer on your Wi-Fi. <b>Save as PDF</b> makes a file you can save to Files, AirDrop or email.' : '<b>Print</b> uses your computer\'s printers. <b>Save as PDF</b> opens the same window: set the destination to "Save as PDF".') + ' Cards print two per row.</p>';
   if (!PR.ids.length) c += '<p class="presult noprint">No drugs to print. Save drugs to My List or change your filter.</p>';
@@ -5477,7 +5495,7 @@ printv.addEventListener("click", function (e) {
   var act = t.getAttribute("data-pract");
   if (act === "close") return closePrint();
   if (act === "cards" || act === "sheet") { PR.mode = act; PR.msg = ""; return drawPrint(); }
-  if (act === "es") { PR.es = !PR.es; return drawPrint(); }
+  if (act === "es") return;
   if (act === "print") {
     var ph = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.print;
     if (ph) { try { ph.postMessage({ title: "DrugBug " + (PR.mode === "cards" ? "study cards" : "cheat sheet"), html: '<!doctype html><html><head><meta charset="utf-8"><style>' + PRINT_CSS + '</style></head><body>' + printDoc() + '</body></html>' }); } catch (err) { PR.msg = "Could not open printing."; drawPrint(); } return; }
@@ -5549,7 +5567,6 @@ function settingsView() {
   // display
   c += setCard("display", "Display",
     setRow("Theme", "", setOpts("theme", themePref(), [["dark", "Night shift (default)"], ["light", "Day shift"], ["system", "Match my device"]])) +
-    setRow("Language", "Drug pages and menus. Questions stay in English for now.", setOpts("lang", lang(), [["en", "English"], ["es", "Español"]])) +
     setRow("Text size", "", setOpts("text", s.text, [["normal", "Normal"], ["large", "Large"], ["xl", "Extra large"]])) +
     setRow("High contrast", "Darker text and borders.", setTog("contrast", s.contrast, "High contrast")) +
         setRow("Reduce motion", "Turns off card flips and animations.", setTog("motion", s.motion, "Reduce motion")));
@@ -5583,7 +5600,6 @@ function settingsView() {
   // printing
   if (canPrint()) c += setCard("print", "Printing",
     setRow("Default layout", "Used by \"Print study card\" on a drug page.", setOpts("printMode", s.printMode, [["cards", "Study cards"], ["sheet", "Cheat sheet"]])) +
-    setRow("Print language", "", setOpts("printLang", s.printLang, [["auto", "Same as the app"], ["en", "English"], ["es", "Español"]])) +
     setRow("Card size", "", setOpts("printDense", s.printDense ? "1" : "0", [["0", "Regular (2 across)"], ["1", "Compact (3 across)"]])));
   // privacy & account
   var R = CL.roster, cls = (R && R.classIds) || [];
@@ -6511,7 +6527,7 @@ var PAYWALL = CFG.paywall === true;
          Normal Vitals & Labs, flashcards and daily study for those drugs, basic progress.
    Plus: the whole BugDex and Everyday Health library, unlimited flashcards and quizzes, full progress.
    Pro:  every professional route (EMS, nursing, medical school, imaging), exam prep, labs, blood, hemodynamics,
-         simulations (Dose Cards, Calc Lab, Megacode), scenarios, drug alternatives, the Wormhole deep dives and all tools. */
+         simulations (Dose Cards, Megacode), scenarios, drug alternatives, the Wormhole deep dives and all tools. */
 var TIER_RANK = { free: 0, plus: 1, pro: 2 }, TIER_NAME = { free: "DrugBug Free", plus: "DrugBug Plus", pro: "DrugBug Pro" };
 var PLANS = {
   plus: { monthly: "com.volaremedia.drugbug.plus.monthly", annual: "com.volaremedia.drugbug.plus.annual", m: "$4.99", y: "$39.99" },
@@ -6524,7 +6540,7 @@ var FREE_SET = {}; FREE_DRUGS.forEach(function (id) { FREE_SET[id] = 1; });
 var FREE_TABS = { hub: 1, registry: 1, diseases: 1, mylist: 1, cards: 1, flashcards: 1, progress: 1, shop: 1 };
 var PLUS_GEN_TABS = { families: 1, alts: 1 };
 /* simulations, tools and scenarios are Pro on every route, including the BugDex */
-var PRO_GEN_TABS = { calc: 1, tools: 1, scenarios: 1, doses: 1, prep: 1 };
+var PRO_GEN_TABS = { tools: 1, scenarios: 1, doses: 1, prep: 1 };
 var PRO_TABS = { anki: 1, labs: 1, flightp: 1, blood: 1, hemo: 1, units: 1, contrast: 1, families: 1 };
 var PRO = { store: false, tier: "free", expires: 0, products: [], msg: "", busy: false, open: false, code: "", why: "", need: "pro" };
 function hasStore() { return !!(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.store); }
@@ -6608,7 +6624,7 @@ function openPaywall(why, need) { if (!PAYWALL) return; PRO.open = true; PRO.bus
 function closePaywall() { PRO.open = false; pwdlg.hidden = true; pwdlg.innerHTML = ""; }
 var PLAN_PERKS = {
   plus: ["Every medication in the BugDex (professional routes need Pro)", "All of Everyday Health: medicine cabinet, your body, peptides, drugs and your body", "Unlimited flashcards and daily study", "Drug Families comparisons", "Rare and seasonal bugs"],
-  pro: ["Everything in Plus (new subscribers can try Pro free for 7 days)", "Every professional route: Prehospital, Nursing, Medical School, Imaging", "Exam prep: NREMT, NCLEX, Step and registry-style practice, Exam mode", "Lab Values, Blood Products, Hemodynamics, Flight Prep, Specialty Units", "Simulations: Dose Cards, Calc Lab, Megacode, clinical scenarios", "My List: save your drugs, see how they interact, quiz and print them", "Interaction explorer and Drug Alternatives", "The Wormhole on every drug: its origin story and how it works inside you, cell to organ (free drugs include a preview)", "Epic and Legendary bugs"]
+  pro: ["Everything in Plus (new subscribers can try Pro free for 7 days)", "Every professional route: Prehospital, Nursing, Medical School, Imaging", "Exam prep: NREMT, NCLEX, Step and registry-style practice, Exam mode", "Lab Values, Blood Products, Hemodynamics, Flight Prep, Specialty Units", "Simulations: Dose Cards, Megacode, clinical scenarios", "My List: save your drugs, see how they interact, quiz and print them", "Interaction explorer and Drug Alternatives", "The Wormhole on every drug: its origin story and how it works inside you, cell to organ (free drugs include a preview)", "Epic and Legendary bugs"]
 };
 function drawPaywall() {
   if (!PRO.open) return;

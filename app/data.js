@@ -138,6 +138,24 @@ DB.addQX = function (text) {
     DB.QX.push(it);
   });
 };
+// Registry questions: whole-exam National Registry-style items (not drug-only), grouped by NREMT content domain.
+//   S|level|domain|question|correct|wrong|wrong|wrong|explanation         single best answer
+//   M|level|domain|question|+correct;;-wrong;;+correct;;...|explanation   select all that apply
+// domain: airway | cardio | trauma | medical | ops
+DB.RQ = DB.RQ || [];
+DB.addRQ = function (text) {
+  text.split("\n").forEach(function (l) {
+    l = l.trim(); if (!l || l.indexOf("|") < 0 || l.indexOf("//") === 0) return;
+    var f = l.split("|").map(function (x) { return x.trim(); });
+    if (f[0] === "S" && f.length === 9) { DB.RQ.push({ reg: 1, lv: f[1], cat: f[2], d: "", q: f[3], a: f[4], w: [f[5], f[6], f[7]], x: f[8] }); return; }
+    if (f[0] === "M" && f.length === 6) {
+      var parts = f[4].split(";;").map(function (x) { return x.trim(); }).filter(Boolean), it = { reg: 1, t: "multi", lv: f[1], cat: f[2], d: "", q: f[3], x: f[5], w: [] };
+      it.opts = parts.map(function (p) { return p.replace(/^[+-]\s*/, ""); }); it.ok = parts.filter(function (p) { return p.charAt(0) === "+"; }).map(function (p) { return p.replace(/^\+\s*/, ""); }); it.a = it.ok.join("; ");
+      DB.RQ.push(it); return;
+    }
+    if (window.console) console.warn("Bad registry line", l);
+  });
+};
 // Unfolding calls (National Registry style): one call, several questions in order, from dispatch and scene size-up to handoff.
 //   CASE|level|caseId|title
 //   STEP|what happens now (the update)|drugId or -|question|CORRECT|wrong|wrong|wrong|explanation
