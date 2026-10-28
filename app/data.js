@@ -143,6 +143,7 @@ DB.addQX = function (text) {
 };
 // Registry questions: whole-exam National Registry-style items (not drug-only), grouped by NREMT content domain.
 //   S|level|domain|question|correct|wrong|wrong|wrong|explanation         single best answer
+//   O|level|domain|question|first;;second;;...(correct order, most important first)|explanation
 //   M|level|domain|question|+correct;;-wrong;;+correct;;...|explanation   select all that apply
 // domain: airway | cardio | trauma | medical | ops
 DB.RQ = DB.RQ || [];
@@ -155,6 +156,10 @@ DB.addRQ = function (text) {
       var parts = f[4].split(";;").map(function (x) { return x.trim(); }).filter(Boolean), it = { reg: 1, t: "multi", lv: f[1], cat: f[2], d: "", q: f[3], x: f[5], w: [] };
       it.opts = parts.map(function (p) { return p.replace(/^[+-]\s*/, ""); }); it.ok = parts.filter(function (p) { return p.charAt(0) === "+"; }).map(function (p) { return p.replace(/^\+\s*/, ""); }); it.a = it.ok.join("; ");
       DB.RQ.push(it); return;
+    }
+    if (f[0] === "O" && f.length === 6) {
+      var steps = f[4].split(";;").map(function (x) { return x.trim(); }).filter(Boolean);
+      DB.RQ.push({ reg: 1, t: "order", prio: 1, lv: f[1], cat: f[2], d: "", q: f[3], x: f[5], w: [], opts: steps.slice(), ok: steps.slice(), a: steps.map(function (p, k) { return (k + 1) + ". " + p; }).join("  ") }); return;
     }
     if (window.console) console.warn("Bad registry line", l);
   });

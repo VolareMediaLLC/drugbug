@@ -438,7 +438,6 @@ var ICO = {
   body: '<circle cx="12" cy="4.5" r="2.5"/><path d="M12 7v8M7 10h10M12 15l-3 6M12 15l3 6"/>',
   doses: '<rect x="7" y="2" width="10" height="20" rx="4"/><path d="M12 7v6l3 2"/>',
   alts: '<path d="M7 4v13M7 17l-3-3M7 17l3-3M17 20V7M17 7l-3 3M17 7l3 3"/>',
-  anki: '<rect x="4" y="6" width="12" height="15" rx="2"/><path d="M8 3h10a2 2 0 0 1 2 2v13"/><path d="M10 11l2 3 3-5"/>',
   illicit: '<path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/>',
   conds: '<path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/><circle cx="17" cy="15" r="2.5"/>',
   vegc: '<path d="M12 21c-4-3-6-7-5-11 3 0 5 2 5 5 0-3 2-5 5-5 1 4-1 8-5 11z"/><path d="M12 6V3M10 4l2 2 2-2"/>',
@@ -466,22 +465,18 @@ function tabList() {
   if (img) L.splice(1, 0, ["contrast", "Contrast Safety", "Reactions, screening, eGFR, GBCA groups, nuclear medicine and IR safety."]);
   /* Calc Lab removed Oct 26, 2026 (owner decision) */
   if (!img) L.push(["tools", "Study Tools", "Megacode, interactions, med lists and safety drills."], ["scenarios", "Scenarios", "Clinical cases: choose what to give."]);
-  L.push(["cards", "Flashcards", S.view === "level" && isM(S.level) ? "DrugBug flashcards, or your own decks imported from Anki." : "Flip, sort and master each drug."], ["games", "Brain Games", "Memory match, crossword, quick match, word scramble, Class Blitz and Frog Snack."], ["progress", "Progress", "Mastery, achievements and leaderboard."]);
+  L.push(["cards", "Flashcards", "Flip, sort and master each drug."], ["games", "Brain Games", "Memory match, crossword, quick match, word scramble, Class Blitz and Frog Snack."], ["progress", "Progress", "Mastery, achievements and leaderboard."]);
   if (S.view === "gen" && typeof illicitView === "function") L.splice(1, 0, ["illicit", "Illicit & Street Drugs", "How illicit and recreational drugs affect the body, overdose signs and treatment. Education only."]);
   if (S.view === "gen" && typeof COMPOUND_TABS !== "undefined") L.splice(1, 0, ["vegc", "Vegetable Compounds", "Sulforaphane, allicin, lycopene, favism beans and more cool compounds from vegetables."], ["fruitc", "Fruit Compounds", "Resveratrol, bromelain, star fruit toxin and more unique compounds from fruit."], ["vitc", "Vitamin Compounds", "Every vitamin form, from B12 types to vitamin K2, CoQ10 and choline."]);
   if (typeof disView === "function" && !(S.view === "level" && isI(S.level))) L.splice(1, 0, ["diseases", "Disease Lab", "250 conditions explained: their history, what goes wrong from cell to organ, and the drugs that treat them."]);
   return L;
 }
-function tabName(k) { var t = tabList().filter(function (x) { return x[0] === k; })[0]; return t ? t[1] : k === "session" ? "Study session" : k === "anki" ? "Imported Decks" : ""; }
-function cardsChooser() {
-  return '<div class="fcpick"><button data-fcpick="1"><strong>DrugBug flashcards</strong><span>Flip, sort and master the drugs for your level.</span></button>' +
-    '<button data-tab="anki"><strong>Imported Decks' + (proLocked("anki") ? ' ' + proBadge("anki") : '') + '</strong><span>Study flashcard decks you exported from Anki (.apkg). They stay private on this device.</span></button></div>';
-}
+function tabName(k) { var t = tabList().filter(function (x) { return x[0] === k; })[0]; return t ? t[1] : k === "session" ? "Study session" : ""; }
 /* Hub tiles grouped into sections with short labels (UI cleanup, Oct 28 2026) */
 var HUB_GROUPS = [
   ["Look it up", ["registry", "families", "conds", "diseases", "illicit", "units", "body", "alts", "contrast", "labs", "blood", "hemo", "flightp"]],
   ["Food and vitamin compounds", ["vegc", "fruitc", "vitc"]],
-  ["Study and practice", ["prep", "nbug", "cards", "scenarios", "tools", "games", "anki"]],
+  ["Study and practice", ["prep", "nbug", "cards", "scenarios", "tools", "games"]],
   ["Yours", ["mylist", "progress", "shop"]]
 ];
 var HUB_SHORT = { illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "Saved drugs and their interactions", tools: "Megacode, interactions, safety drills", scenarios: "Clinical cases", cards: "Flip, sort and master", games: "Match, crossword, scramble and more", progress: "Mastery, badges, leaderboard", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time", prep: "Timed tests with scores" };
@@ -503,7 +498,6 @@ function sectionHead() {
   var where = S.view === "gen" ? "BugDex" : (levelObj(S.level) || {}).name || "";
   var inUnit = S.tab === "units" && S.unit;
   if ((S.tab === "blood" || S.tab === "hemo" || S.tab === "contrast" || S.tab === "flightp") && S.cn && S.cn.kind === S.tab && (S.cn.grp || S.cn.mode)) { var ch = critHead(); return '<div class="sechead"><button class="backbtn" data-cnav="' + ch[0] + '"><span aria-hidden="true">&larr;</span> ' + esc(ch[1]) + '</button><h2' + (ch[2].length > 28 ? ' class="long"' : '') + '>' + esc(ch[2]) + '</h2></div>'; }
-  if (S.tab === "anki") return '<div class="sechead"><button class="backbtn" data-tab="cards"><span aria-hidden="true">&larr;</span> Flashcards</button><h2>Imported Decks</h2></div>';
   return '<div class="sechead"><button class="backbtn" data-act="' + (S.tab === "session" ? "sessquit" : inUnit ? "unitsback" : "hub") + '"><span aria-hidden="true">&larr;</span> ' + (S.tab === "session" ? "Exit" : inUnit ? "Specialty Units" : esc(where)) + '</button><h2>' + esc(tabName(S.tab)) + '</h2></div>';
 }
 function prepName() {
@@ -733,7 +727,7 @@ function viewLevel() {
   if (!S.tab || (S.tab !== "hub" && S.tab !== "session" && !tabName(S.tab))) S.tab = "hub";
   if (S.tab !== "hub" && S.tab !== "session" && typeof proLocked === "function" && proLocked(S.tab)) { var lt = S.tab; S.tab = "hub"; setTimeout(function () { openPaywall(tabName(lt), tabTier(lt)); }, 0); }
   if (S.tab === "calc") S.tab = "hub";  /* Calc Lab was removed */
-  var body = S.tab === "hub" ? "" : (S.tab === "vegc" || S.tab === "fruitc" || S.tab === "vitc") && typeof compoundView === "function" ? compoundView(S.tab) : S.tab === "illicit" && typeof illicitView === "function" ? illicitView() : S.tab === "registry" ? registry() : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? (S.tab = "hub", "") : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "anki" ? ankiView() : S.tab === "tools" ? toolsView() : (S.tab === "cards" && S.view === "level" && isM(S.level) && !S.fcPick ? cardsChooser() : flashcards());
+  var body = S.tab === "hub" ? "" : (S.tab === "vegc" || S.tab === "fruitc" || S.tab === "vitc") && typeof compoundView === "function" ? compoundView(S.tab) : S.tab === "illicit" && typeof illicitView === "function" ? illicitView() : S.tab === "registry" ? registry() : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? (S.tab = "hub", "") : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "tools" ? toolsView() : flashcards();
   var msg = S.sessMsg ? '<div class="presult" role="status">' + esc(S.sessMsg) + '</div>' : ''; S.sessMsg = "";
   var notes = (S.tab === "calc" || S.tab === "tools" ? eduBanner() : '') + (["prep", "session", "nbug", "scenarios", "cards"].indexOf(S.tab) >= 0 ? esQNote() : '');
   if (S.tab === "hub") return topbar() + '<div class="' + ctxClass() + '">' + band() + protocolBanner() + dailyCard() + msg + hubView() + '</div>';
@@ -986,7 +980,7 @@ function nrItemOpts(st, x, reveal) {
       c += '<button class="qopt qmulti' + cls + '" data-nrtog="' + k + '"' + (reveal ? " disabled" : "") + ' role="checkbox" aria-checked="' + on + '"><span class="box" aria-hidden="true">' + (on ? "&#10003;" : "") + '</span><span>' + esc(o) + tag + '</span></button>';
     });
   } else {
-    c += '<p class="qhow"><strong>' + (es ? "Póngalas en orden." : "Put these in order.") + '</strong> ' + (es ? "Toque cada paso del primero al último." : "Tap each step from first to last. Tap again to take it back.") + '</p>';
+    c += '<p class="qhow"><strong>' + (es ? "Póngalas en orden." : "Put these in order.") + '</strong> ' + (es ? "Toque cada paso del primero al último." : q.prio ? "Tap each one from most important to least important. Tap again to take it back." : "Tap each step from first to last. Tap again to take it back.") + '</p>';
     if (reveal) {
       var mine = ans || [];
       c += '<ol class="qorder">' + q.ok.map(function (o, k) { var ok = mine[k] === o; return '<li class="' + (ok ? "right" : "wrong") + '"><span>' + esc(o) + '</span>' + (ok ? "" : '<span class="qtag">' + (es ? "Usted puso: " : "You put: ") + esc(mine[k] || "-") + '</span>') + '</li>'; }).join("") + '</ol>';
@@ -1294,7 +1288,7 @@ document.addEventListener("click", function (e) {
   var a = t.dataset;
   if (S.view === "admin" && (a.atab || a.aedit || a.aqedit || a.asedit || a.arestore || a.aact || a.rqopen || a.psedit)) return adminClick(t);
   if (a.role) return pickRole(a.role);
-  if ((typeof deepClick === "function" && deepClick(t, a)) || (typeof disClick === "function" && disClick(t, a)) || (typeof gamesClick === "function" && S.tab === "games" && gamesClick(t, a)) || (typeof ankiClick === "function" && ankiClick(t, a)) || altsClick(t, a) || flClick(t, a) || aiClick(t, a) || critClick(t, a) || labsClick(t, a) || legalClick(t, a) || i18nClick(t, a) || printClick(t, a) || settingsClick(t, a) || buddyClick(t, a)) return;
+  if ((typeof deepClick === "function" && deepClick(t, a)) || (typeof disClick === "function" && disClick(t, a)) || (typeof gamesClick === "function" && S.tab === "games" && gamesClick(t, a)) || altsClick(t, a) || flClick(t, a) || aiClick(t, a) || critClick(t, a) || labsClick(t, a) || legalClick(t, a) || i18nClick(t, a) || printClick(t, a) || settingsClick(t, a) || buddyClick(t, a)) return;
   if (a.report) return openReport(a.report);
   if (a.idea) return openIdeas();
   if (a.goEdit) { closeSheet(); go("admin"); A().tab = "drugs"; A().form = recordOf(a.goEdit); return render(); }
@@ -4767,7 +4761,7 @@ var LEGAL_PAGES = {
       L("5. Your account and conduct", ["You agree not to: enter patient information or any protected health information; post offensive, harassing or misleading display names or content; copy or resell DrugBug content; attempt to access other people's data; or interfere with the app.", "We may remove or hide display names, leaderboard and competition entries, and anything else you submit to DrugBug that breaks these Terms. If you have a DrugBug account, we may suspend or close it for serious or repeated violations. Subscriptions bought through Apple are managed by Apple under its own terms."]) +
       L("6. Leaderboards and school competitions", ["The leaderboard and school competitions are currently turned off. If they are turned on, learners can compete with other DrugBug users, including classmates from the same school, using a first name or nickname. Other participants see only your display name, your school or team name if you join one, and your scores. DrugBug competitions are for fun and motivation; they are not designed for teaching, grading or tracking individual students, and DrugBug does not give schools or instructors your individual study records. You can leave a competition or the leaderboard at any time."]) +
       L("7. Protocols", ["Agency, facility and school protocols belong to their owners. DrugBug adds an agency's protocols only with written permission, and shows them only as study material. By sending protocols you confirm you are authorized to share them or will help us get that permission."]) +
-      L("8. Trademarks", ["NREMT, NCLEX, NCSBN, USMLE, FSMB, NBME, ARRT, IBSC, FP-C, BCEN, CFRN, AHA, ACLS, PALS and ISMP are trademarks of their owners. DrugBug uses these names only to describe the subjects it covers. Anki is a trademark of its owner; DrugBug can read deck files exported from Anki but is not affiliated with or endorsed by Anki or Ankitects. " + NONAFF + " Practice questions are original and are not official exam items."]) +
+      L("8. Trademarks", ["NREMT, NCLEX, NCSBN, USMLE, FSMB, NBME, ARRT, IBSC, FP-C, BCEN, CFRN, AHA, ACLS, PALS and ISMP are trademarks of their owners. DrugBug uses these names only to describe the subjects it covers. " + NONAFF + " Practice questions are original and are not official exam items."]) +
       L("9. Our content", ["DrugBug's text, questions, artwork and software are owned by " + COMPANY + " or its licensors. You may use them for your own personal study."]) +
       L("10. Reporting errors", ['If you see an error, use "Report an error". Reports help us fix content but do not create any duty for us to respond within a set time.']) +
       L("11. No warranty", ['DrugBug is provided "as is" and "as available", without warranties of any kind, express or implied, including accuracy, completeness, fitness for a particular purpose, and non-infringement.']) +
@@ -4779,7 +4773,7 @@ var LEGAL_PAGES = {
       L("17. Changes and effective date", ["These Terms are effective " + LEGAL_V + ". We may update them. When we make a material change, we will ask you to agree again in the app, and we keep a record of the version you accepted and when."]);
   }],
   privacy: ["Privacy Policy", function () {
-    return L("What DrugBug stores", ["<strong>On your device:</strong> your settings (theme, level), study progress, saved drug list, agreement record, and score history. If you import an Anki deck, its cards and images are saved only on your device. They are never uploaded to DrugBug or shared, and you can delete a deck anytime in Imported Decks.", (NATIVE ? "<strong>In DrugBug's online database (only when online features are on), linked to an anonymous DrugBug account ID created on your device</strong> (not your name or email):" : "<strong>In DrugBug's database, linked to your claude.ai account ID</strong> (an opaque ID, not your name or email):"), ["Your study progress and score history (private to you).", "If you join the leaderboard: the display name you choose and your weekly XP (visible to other DrugBug users).", "If you join a school competition: your display name, your school or team name and your competition scores (visible to other participants in that competition).", "If you report an error or request protocols: what you write, and an email address only if you choose to give one."]]) +
+    return L("What DrugBug stores", ["<strong>On your device:</strong> your settings (theme, level), study progress, saved drug list, agreement record, and score history.", (NATIVE ? "<strong>In DrugBug's online database (only when online features are on), linked to an anonymous DrugBug account ID created on your device</strong> (not your name or email):" : "<strong>In DrugBug's database, linked to your claude.ai account ID</strong> (an opaque ID, not your name or email):"), ["Your study progress and score history (private to you).", "If you join the leaderboard: the display name you choose and your weekly XP (visible to other DrugBug users).", "If you join a school competition: your display name, your school or team name and your competition scores (visible to other participants in that competition).", "If you report an error or request protocols: what you write, and an email address only if you choose to give one."]]) +
       L("Optional account", ["DrugBug works without an account. If you choose to create one (Sign in with Apple or email and password), we store your email address (or Apple's private relay address if you use Hide My Email), an account ID, and your study data so it can sync across your devices.", "Passwords and sign-in are handled by our authentication provider (Google Firebase Authentication); DrugBug never sees or stores your password or your Apple Account password. Apple sign-in tokens are verified by the provider's servers.", "Your account data is private to you: other users never see your email, account ID or study records. Data is encrypted in transit (HTTPS/TLS) and at rest by our provider. Access to the database is restricted by server-side security rules, and only authorized DrugBug administrators can manage content.", "You can export your data (Settings, Download my data) and delete your account in the app (Settings, Privacy & account). Deleting your account deletes your account and its study records; copies in our provider's backups expire within 30 days."]) +
       L("What we do not collect", ["We do not ask for patient information, and you must never enter it. We do not sell personal information, and we do not show ads."]) +
       L("Who can see it", ["Your progress and score history are private to your account. (The leaderboard and school competitions are currently turned off.) If turned on: leaderboard and competition display names, school or team names and scores are visible to other participants. Use a first name or nickname only. Error reports and protocol requests are seen by the DrugBug team."]) +
@@ -6611,7 +6605,7 @@ var PAYWALL = CFG.paywall === true;
    Plus: ACCESS to everything: every drug page on every route (BugDex, Prehospital, Nursing, Medical School, Imaging), probiotics,
          food and vitamin compounds, My List with in-depth interactions, Drug Families, Drug Alternatives, Lab Values, Blood Products,
          Hemodynamics, Flight Prep, Specialty Units, Contrast Safety, Everyday Health.
-   Pro:  everything in Plus + the EXTRA LEARNING: exam prep / practice tests, imported Anki decks, Brain Games,
+   Pro:  everything in Plus + the EXTRA LEARNING: exam prep / practice tests, Brain Games,
          scenarios and Megacode, Study Tools (interaction explorer, med-list decoder, safety drills), Nursing Bug,
          Wormhole deep dives (drug Wormhole and Disease Lab) are Plus (Oct 28 2026). */
 var TIER_RANK = { free: 0, plus: 1, pro: 2 }, TIER_NAME = { free: "DrugBug Free", plus: "DrugBug Plus", pro: "DrugBug Pro" };
@@ -6625,11 +6619,11 @@ var FREE_DRUGS = "acetaminophen,ibuprofen,aspirin,naproxen,diphenhydramine,lorat
 var FREE_SET = {}; FREE_DRUGS.forEach(function (id) { FREE_SET[id] = 1; });
 var FREE_TABS = { hub: 1, registry: 1, diseases: 1, progress: 1, shop: 1, conds: 1, cards: 1, flashcards: 1 }; /* flashcards free again (Oct 28 2026): Free gets flashcards for the free drugs, Plus for every drug */ /* compound tabs are Plus (Oct 28 2026) */
 /* extra learning: Pro on every route */
-var PRO_EXTRA = { prep: 1, anki: 1, games: 1, scenarios: 1, tools: 1, nbug: 1, doses: 1 };
+var PRO_EXTRA = { prep: 1, games: 1, scenarios: 1, tools: 1, nbug: 1, doses: 1 };
 var PLUS_GEN_TABS = { families: 1, alts: 1 };
 /* simulations, tools and scenarios are Pro on every route, including the BugDex */
 var PRO_GEN_TABS = { tools: 1, scenarios: 1, doses: 1, prep: 1 };
-var PRO_TABS = { anki: 1, labs: 1, flightp: 1, blood: 1, hemo: 1, units: 1, contrast: 1, families: 1 };
+var PRO_TABS = { labs: 1, flightp: 1, blood: 1, hemo: 1, units: 1, contrast: 1, families: 1 };
 var PRO = { store: false, tier: "free", expires: 0, products: [], msg: "", busy: false, open: false, code: "", why: "", need: "pro" };
 function hasStore() { return !!(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.store); }
 function storeCall(cmd, extra) { if (!hasStore()) return false; var m = { cmd: cmd }; for (var k in extra || {}) m[k] = extra[k]; window.webkit.messageHandlers.store.postMessage(m); return true; }
@@ -6710,8 +6704,8 @@ var pwdlg = document.createElement("div"); pwdlg.id = "pwdlg"; pwdlg.className =
 function openPaywall(why, need) { if (!PAYWALL) return; PRO.open = true; PRO.busy = false; clearTimeout(PRO.busyT); PRO.why = why || ""; PRO.need = need || "pro"; PRO.msg = ""; if (NATIVE) storeCall("products"); drawPaywall(); pwdlg.hidden = false; var p = $(".panel", pwdlg); if (p) p.focus(); }
 function closePaywall() { PRO.open = false; pwdlg.hidden = true; pwdlg.innerHTML = ""; }
 var PLAN_PERKS = {
-  plus: ["Every medication in DrugBug, on every route: BugDex, Prehospital, Nursing, Medical School and Imaging", "Probiotics plus the Vegetable, Fruit and Vitamin Compounds tabs", "My List: save your drugs and see in depth how they interact", "Drug Families, Drug Alternatives, Lab Values, Blood Products, Hemodynamics, Flight Prep, Specialty Units and Contrast Safety", "The Wormhole on every drug and the Disease Lab on 250 conditions: origin stories and how they work, cell to organ", "Flashcards for every drug", "All of Everyday Health", "Rare and seasonal bugs"],
-  pro: ["Everything in Plus (new subscribers can try Pro free for 7 days)", "Exam prep: NREMT, NCLEX, Step and registry-style practice tests, Exam mode", "Import your own Anki flashcard decks", "Brain Games: memory match, crossword, scramble, Class Blitz and more", "Clinical scenarios and Megacode", "Study Tools: Interaction explorer, Med-list decoder and Safety drills", "Nursing Bug skill practice", "Epic and Legendary bugs"]
+  plus: ["Every medication in DrugBug, on every route: BugDex, Prehospital, Nursing, Medical School and Imaging", "Illicit and street drug education in the BugDex", "Probiotics plus the Vegetable, Fruit and Vitamin Compounds tabs", "My List: save your drugs and see in depth how they interact", "Drug Families, Drug Alternatives, Lab Values, Blood Products, Hemodynamics, Flight Prep, Specialty Units and Contrast Safety", "The Wormhole on every drug and the Disease Lab on 250 conditions: origin stories and how they work, cell to organ", "Flashcards for every drug", "All of Everyday Health", "Rare and seasonal bugs"],
+  pro: ["Everything in Plus (new subscribers can try Pro free for 7 days)", "Exam prep: NREMT, NCLEX, Step and registry-style practice tests, including select-all and put-in-order questions, plus Exam mode", "Practice quizzes", "Brain Games: memory match, crossword, scramble, Class Blitz and more", "Clinical scenarios and Megacode", "Study Tools: Interaction explorer, Med-list decoder and Safety drills", "Nursing Bug skill practice", "Epic and Legendary bugs"]
 };
 function drawPaywall() {
   if (!PRO.open) return;
@@ -6731,7 +6725,7 @@ function drawPaywall() {
   });
   if (PRO.busy) c += '<p class="muted small" role="status">Talking to the App Store…</p>';
   if (PRO.msg) c += '<div class="presult" role="alert">' + esc(PRO.msg) + '</div>';
-  c += '<p class="muted small">DrugBug Free stays free forever: about 40 common medications, the Small Sickness Guide, Normal Vitals &amp; Labs, and flashcards for those drugs.</p>';
+  c += '<p class="muted small">DrugBug Free stays free forever: about 40 common medications, flashcards for those drugs, the daily 5-minute DrugBug, the Small Sickness Guide, Normal Vitals &amp; Labs, and a free preview of the Wormhole and the Disease Lab.</p>';
   c += '<div class="pwrow"><button class="linkish" data-pw="restore">Restore purchases</button>' + (NATIVE ? '<button class="linkish" data-pw="redeem">Redeem an offer code</button>' : '') + (NATIVE && PRO.store ? '<button class="linkish" data-pw="manage">Manage subscription</button>' : '') + '</div>';
   if (HASDB) c += '<div class="pwcode">' + (PRO.codeOpen ? '<form data-pwcode="1" class="inl"><input class="pinput" id="pwcode" maxlength="16" placeholder="School or agency code" value="' + esc(PRO.code) + '" autocapitalize="characters"><button class="btn small" type="submit">Apply</button></form>' : '<button class="linkish" data-pw="code">Have a school or agency code?</button>') + '</div>';
   c += '<p class="muted small pwfine">Prices are shown before you buy. If a free trial is offered, payment is charged when the trial ends unless you cancel at least 24 hours before it ends. Subscriptions renew automatically at the end of each billing period unless cancelled at least 24 hours before it ends. Payment is charged to your Apple Account when you confirm. Manage or cancel any time in iPhone Settings → your name → Subscriptions. Cancelling stops future renewals; refunds for App Store purchases are handled by Apple. Plus and Pro are in one subscription group, so changing plans replaces your current one. DrugBug is for education only, not for patient care.' +
@@ -8445,666 +8439,6 @@ function sbTap(e) {
 function sbGone() { cancelAnimationFrame(SB.raf); if (SB.el && SB.el.parentNode) SB.el.parentNode.removeChild(SB.el); SB.el = null; SB.state = ""; sbSchedule(false); }
 document.addEventListener("visibilitychange", function () { if (document.hidden && SB.el) sbGone(); });
 sbSchedule(true);
-
-/* ---------- Imported Decks (from Anki) (Medical School): import a student's own .apkg and study it here ----------
-   Private by design: the file is read on this device, cards and images are saved only in this device's
-   IndexedDB, nothing is uploaded, shared or synced. Imported cards are labeled "not reviewed by DrugBug".
-   Self-contained readers (no network, no libraries): ZIP (random access via Blob.slice), DEFLATE,
-   Zstandard (RFC 8878), SQLite (read-only b-tree scan) and a tiny protobuf reader. */
-
-/* ===== DEFLATE (raw) ===== */
-var AK_LBASE = [3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31, 35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258];
-var AK_LEXT = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0];
-var AK_DBASE = [1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193, 257, 385, 513, 769, 1025, 1537, 2049, 3073, 4097, 6145, 8193, 12289, 16385, 24577];
-var AK_DEXT = [0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13];
-function akInflate(src, sizeHint) {
-  var out = new Uint8Array(Math.max(sizeHint || 0, src.length * 3, 1024)), op = 0, pos = 0, bb = 0, bc = 0;
-  function need(n) { if (op + n > out.length) { var o = new Uint8Array(Math.max(out.length * 2, op + n)); o.set(out.subarray(0, op)); out = o; } }
-  function bits(n) { while (bc < n) { if (pos >= src.length + 4) throw new Error("inflate: unexpected end"); bb |= (src[pos++] || 0) << bc; bc += 8; } var v = bb & ((1 << n) - 1); bb >>>= n; bc -= n; return v; }
-  function build(lens, n) { var counts = new Uint16Array(16), offs = new Uint16Array(16), sym = new Uint16Array(n), i; for (i = 0; i < n; i++) counts[lens[i]]++; counts[0] = 0; for (i = 1; i < 15; i++) offs[i + 1] = offs[i] + counts[i]; for (i = 0; i < n; i++) if (lens[i]) sym[offs[lens[i]]++] = i; return { c: counts, s: sym }; }
-  function dec(h) { var code = 0, first = 0, index = 0; for (var len = 1; len < 16; len++) { code |= bits(1); var cnt = h.c[len]; if (code - cnt < first) return h.s[index + (code - first)]; index += cnt; first += cnt; first <<= 1; code <<= 1; } throw new Error("inflate: bad code"); }
-  var fl = new Uint8Array(288), i; for (i = 0; i < 144; i++) fl[i] = 8; for (; i < 256; i++) fl[i] = 9; for (; i < 280; i++) fl[i] = 7; for (; i < 288; i++) fl[i] = 8;
-  var FL = build(fl, 288), fd = new Uint8Array(30).fill(5), FD = build(fd, 30), last = 0;
-  var ORD = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15];
-  while (!last) {
-    last = bits(1); var type = bits(2);
-    if (type === 0) {
-      bb = 0; bc = 0; var len = src[pos] | (src[pos + 1] << 8); pos += 4; need(len); out.set(src.subarray(pos, pos + len), op); op += len; pos += len; continue;
-    }
-    var L = FL, D = FD;
-    if (type === 2) {
-      var hlit = bits(5) + 257, hdist = bits(5) + 1, hclen = bits(4) + 4, cl = new Uint8Array(19);
-      for (i = 0; i < hclen; i++) cl[ORD[i]] = bits(3);
-      var CL = build(cl, 19), lens = new Uint8Array(hlit + hdist), n = 0;
-      while (n < hlit + hdist) {
-        var s = dec(CL);
-        if (s < 16) lens[n++] = s;
-        else if (s === 16) { var p = lens[n - 1], r = 3 + bits(2); while (r--) lens[n++] = p; }
-        else if (s === 17) { r = 3 + bits(3); while (r--) lens[n++] = 0; }
-        else { r = 11 + bits(7); while (r--) lens[n++] = 0; }
-      }
-      L = build(lens.subarray(0, hlit), hlit); D = build(lens.subarray(hlit), hdist);
-    } else if (type !== 1) throw new Error("inflate: bad block");
-    for (;;) {
-      var sy = dec(L);
-      if (sy < 256) { need(1); out[op++] = sy; }
-      else if (sy === 256) break;
-      else {
-        sy -= 257; var ln = AK_LBASE[sy] + bits(AK_LEXT[sy]), ds = dec(D), dist = AK_DBASE[ds] + bits(AK_DEXT[ds]);
-        if (dist > op) throw new Error("inflate: bad distance");
-        need(ln); for (var k = 0; k < ln; k++) { out[op] = out[op - dist]; op++; }
-      }
-    }
-  }
-  return out.subarray(0, op);
-}
-
-/* ===== Zstandard decoder (RFC 8878) ===== */
-var AK_ZSTD = (function () {
-  function E(m) { throw new Error("zstd: " + m); }
-  function hb(x) { return 31 - Math.clz32(x); }
-  var LL_B = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 24, 28, 32, 40, 48, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536];
-  var LL_X = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
-  var ML_B = [], ML_X = [];
-  for (var i = 0; i < 32; i++) { ML_B.push(i + 3); ML_X.push(0); }
-  ML_B = ML_B.concat([35, 37, 39, 41, 43, 47, 51, 59, 67, 83, 99, 131, 259, 515, 1027, 2051, 4099, 8195, 16387, 32771, 65539]);
-  ML_X = ML_X.concat([1, 1, 1, 1, 2, 2, 3, 3, 4, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
-  var LL_D = [4, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 2, 1, 1, 1, 1, 1, -1, -1, -1, -1];
-  var ML_D = [1, 4, 3, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1];
-  var OF_D = [1, 1, 1, 1, 1, 1, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1];
-  /* forward bit reader (little-endian) for FSE headers */
-  function FR(s, p) { this.s = s; this.b = p * 8; }
-  FR.prototype.read = function (n) { var v = 0; for (var k = 0; k < n; k++) { var bit = (this.s[this.b >> 3] >> (this.b & 7)) & 1; v |= bit << k; this.b++; } return v; };
-  /* backward bit reader */
-  function BR(s, start, end) {
-    this.s = s; this.st = start; var last = s[end - 1]; if (!last) E("corrupt bitstream");
-    this.p = (end - start - 1) * 8 + hb(last);
-  }
-  BR.prototype.byte = function (i) { var j = this.st + i; return i < 0 || j >= this.s.length ? 0 : this.s[j]; };
-  BR.prototype.read = function (n) {
-    if (!n) return 0; this.p -= n; var p = this.p, b = p >> 3, sh = p & 7;
-    var lo = (this.byte(b) | (this.byte(b + 1) << 8) | (this.byte(b + 2) << 16) | (this.byte(b + 3) << 24)) >>> 0;
-    var v = sh ? (lo >>> sh) + this.byte(b + 4) * Math.pow(2, 32 - sh) : lo;
-    return v % Math.pow(2, n);
-  };
-  function table(freqs, n, log) {
-    var size = 1 << log, sym = new Uint16Array(size), nb = new Uint8Array(size), base = new Int32Array(size), next = new Uint16Array(Math.max(n, 1)), hi = size, s, k;
-    for (s = 0; s < n; s++) if (freqs[s] === -1) { sym[--hi] = s; next[s] = 1; }
-    var step = (size >> 1) + (size >> 3) + 3, mask = size - 1, pos = 0;
-    for (s = 0; s < n; s++) { if (freqs[s] <= 0) continue; next[s] = freqs[s]; for (k = 0; k < freqs[s]; k++) { sym[pos] = s; do { pos = (pos + step) & mask; } while (pos >= hi); } }
-    for (k = 0; k < size; k++) { var d = next[sym[k]]++; nb[k] = log - hb(d); base[k] = (d << nb[k]) - size; }
-    return { sym: sym, nb: nb, base: base, log: log };
-  }
-  function rle(s) { return { sym: new Uint16Array([s]), nb: new Uint8Array([0]), base: new Int32Array([0]), log: 0 }; }
-  function readHeader(src, p, maxLog, maxSym) {
-    var r = new FR(src, p), log = 5 + r.read(4); if (log > maxLog) E("accuracy too large");
-    var freqs = [], remaining = 1 << log, s = 0;
-    while (remaining > 0 && s <= maxSym) {
-      var bits = hb(remaining + 1) + 1, val = r.read(bits), lower = (1 << (bits - 1)) - 1, thr = (1 << bits) - 1 - (remaining + 1);
-      if ((val & lower) < thr) { r.b--; val = val & lower; } else if (val > lower) val -= thr;
-      var pr = val - 1; remaining -= pr < 0 ? -pr : pr; freqs[s++] = pr;
-      if (pr === 0) { var rep = r.read(2); for (;;) { for (var q = 0; q < rep && s <= maxSym; q++) freqs[s++] = 0; if (rep === 3) rep = r.read(2); else break; } }
-    }
-    if (remaining !== 0) E("bad FSE header");
-    return { t: table(freqs, s, log), len: ((r.b + 7) >> 3) - p };
-  }
-  var PRE_LL = table(LL_D, LL_D.length, 6), PRE_ML = table(ML_D, ML_D.length, 6), PRE_OF = table(OF_D, OF_D.length, 5);
-  function huffFromWeights(w) {
-    var n = w.length, total = 0, i; for (i = 0; i < n; i++) if (w[i]) total += 1 << (w[i] - 1);
-    if (!total) E("bad huffman weights");
-    var maxBits = hb(total) + 1, left = (1 << maxBits) - total; if (left & (left - 1)) E("bad huffman tree");
-    w.push(hb(left) + 1); n++;
-    var bits = new Uint8Array(n), rank = new Uint32Array(maxBits + 2), ri = new Uint32Array(maxBits + 2);
-    for (i = 0; i < n; i++) { bits[i] = w[i] ? maxBits + 1 - w[i] : 0; rank[bits[i]]++; }
-    var size = 1 << maxBits, sym = new Uint8Array(size), nb = new Uint8Array(size);
-    ri[maxBits] = 0; for (i = maxBits; i >= 1; i--) { ri[i - 1] = ri[i] + rank[i] * (1 << (maxBits - i)); nb.fill(i, ri[i], ri[i - 1]); }
-    for (i = 0; i < n; i++) if (bits[i]) { var c = ri[bits[i]], l = 1 << (maxBits - bits[i]); sym.fill(i, c, c + l); ri[bits[i]] += l; }
-    return { sym: sym, nb: nb, max: maxBits };
-  }
-  function readHuff(src, p) {
-    var h = src[p], w = [], i;
-    if (h >= 128) { var num = h - 127; for (i = 0; i < num; i++) { var by = src[p + 1 + (i >> 1)]; w.push(i & 1 ? by & 15 : by >> 4); } return { t: huffFromWeights(w), len: 1 + ((num + 1) >> 1) }; }
-    var hd = readHeader(src, p + 1, 6, 255), ft = hd.t, st = p + 1 + hd.len, en = p + 1 + h, br = new BR(src, st, en);
-    var s1 = br.read(ft.log), s2 = br.read(ft.log);
-    for (;;) {
-      w.push(ft.sym[s1]); s1 = ft.base[s1] + br.read(ft.nb[s1]);
-      if (br.p < 0) { w.push(ft.sym[s2]); break; }
-      w.push(ft.sym[s2]); s2 = ft.base[s2] + br.read(ft.nb[s2]);
-      if (br.p < 0) { w.push(ft.sym[s1]); break; }
-      if (w.length > 255) E("too many weights");
-    }
-    return { t: huffFromWeights(w), len: 1 + h };
-  }
-  function huffStream(src, st, en, ht, out, op, n) {
-    var br = new BR(src, st, en), mask = (1 << ht.max) - 1, state = br.read(ht.max);
-    for (var k = 0; k < n; k++) { out[op + k] = ht.sym[state]; var b = ht.nb[state]; state = ((state << b) + br.read(b)) & mask; }
-  }
-  function decompress(src) {
-    var outs = [], p = 0, totalLen = 0;
-    while (p < src.length) {
-      var magic = (src[p] | (src[p + 1] << 8) | (src[p + 2] << 16) | (src[p + 3] << 24)) >>> 0;
-      if ((magic & 0xFFFFFFF0) >>> 0 === 0x184D2A50) { var sl = (src[p + 4] | (src[p + 5] << 8) | (src[p + 6] << 16) | (src[p + 7] << 24)) >>> 0; p += 8 + sl; continue; }
-      if (magic !== 0xFD2FB528) E("bad magic");
-      p += 4; var fhd = src[p++], fcsF = fhd >> 6, single = (fhd >> 5) & 1, ck = (fhd >> 2) & 1, did = fhd & 3;
-      if (!single) p++;
-      p += [0, 1, 2, 4][did];
-      var fcsLen = fcsF === 0 ? (single ? 1 : 0) : [0, 2, 4, 8][fcsF], fcs = -1;
-      if (fcsLen) { fcs = 0; for (var q = fcsLen - 1; q >= 0; q--) fcs = fcs * 256 + src[p + q]; if (fcsLen === 2) fcs += 256; }
-      p += fcsLen;
-      var out = new Uint8Array(fcs >= 0 ? fcs : Math.max(src.length * 4, 65536)), op = 0;
-      var need = function (n) { if (op + n > out.length) { var o = new Uint8Array(Math.max(out.length * 2, op + n)); o.set(out.subarray(0, op)); out = o; } };
-      var huff = null, tLL = null, tML = null, tOF = null, rep = [1, 4, 8], last = 0;
-      while (!last) {
-        var bh = src[p] | (src[p + 1] << 8) | (src[p + 2] << 16); p += 3; last = bh & 1; var bt = (bh >> 1) & 3, bs = bh >>> 3;
-        if (bt === 0) { need(bs); out.set(src.subarray(p, p + bs), op); op += bs; p += bs; continue; }
-        if (bt === 1) { need(bs); out.fill(src[p], op, op + bs); op += bs; p += 1; continue; }
-        if (bt !== 2) E("reserved block");
-        var be = p + bs, b0 = src[p], lt = b0 & 3, sf = (b0 >> 2) & 3, regen, comp = 0, hl, streams = 1, lits;
-        if (lt < 2) {
-          if (sf === 0 || sf === 2) { regen = b0 >> 3; hl = 1; } else if (sf === 1) { regen = (b0 >> 4) + (src[p + 1] << 4); hl = 2; } else { regen = (b0 >> 4) + (src[p + 1] << 4) + (src[p + 2] << 12); hl = 3; }
-          if (lt === 0) { lits = src.subarray(p + hl, p + hl + regen); p += hl + regen; } else { lits = new Uint8Array(regen).fill(src[p + hl]); p += hl + 1; }
-        } else {
-          if (sf < 2) { var v3 = b0 | (src[p + 1] << 8) | (src[p + 2] << 16); regen = (v3 >> 4) & 0x3ff; comp = (v3 >> 14) & 0x3ff; hl = 3; streams = sf === 0 ? 1 : 4; }
-          else if (sf === 2) { var v4 = (b0 | (src[p + 1] << 8) | (src[p + 2] << 16) | (src[p + 3] << 24)) >>> 0; regen = (v4 >>> 4) & 0x3fff; comp = (v4 >>> 18) & 0x3fff; hl = 4; streams = 4; }
-          else { var v5 = (b0 | (src[p + 1] << 8) | (src[p + 2] << 16) | (src[p + 3] << 24)) >>> 0; regen = (v5 >>> 4) & 0x3ffff; comp = ((v5 >>> 22) | (src[p + 4] << 10)) & 0x3ffff; hl = 5; streams = 4; }
-          var cp = p + hl, ce = cp + comp;
-          if (lt === 2) { var hr = readHuff(src, cp); huff = hr.t; cp += hr.len; } else if (!huff) E("no huffman table");
-          lits = new Uint8Array(regen);
-          if (streams === 1) huffStream(src, cp, ce, huff, lits, 0, regen);
-          else {
-            var j1 = src[cp] | (src[cp + 1] << 8), j2 = src[cp + 2] | (src[cp + 3] << 8), j3 = src[cp + 4] | (src[cp + 5] << 8), sp = cp + 6, seg = (regen + 3) >> 2;
-            huffStream(src, sp, sp + j1, huff, lits, 0, seg); sp += j1;
-            huffStream(src, sp, sp + j2, huff, lits, seg, seg); sp += j2;
-            huffStream(src, sp, sp + j3, huff, lits, seg * 2, seg); sp += j3;
-            huffStream(src, sp, ce, huff, lits, seg * 3, regen - seg * 3);
-          }
-          p = ce;
-        }
-        /* sequences */
-        var s0 = src[p], nseq;
-        if (s0 === 0) { nseq = 0; p++; } else if (s0 < 128) { nseq = s0; p++; } else if (s0 < 255) { nseq = ((s0 - 128) << 8) + src[p + 1]; p += 2; } else { nseq = src[p + 1] + (src[p + 2] << 8) + 0x7F00; p += 3; }
-        var lp = 0;
-        if (nseq) {
-          var modes = src[p++], mLL = modes >> 6, mOF = (modes >> 4) & 3, mML = (modes >> 2) & 3;
-          var pick = function (mode, pre, maxLog, maxSym, prev) { if (mode === 0) return pre; if (mode === 1) return rle(src[p++]); if (mode === 2) { var h = readHeader(src, p, maxLog, maxSym); p += h.len; return h.t; } if (!prev) E("no previous table"); return prev; };
-          tLL = pick(mLL, PRE_LL, 9, 35, tLL); tOF = pick(mOF, PRE_OF, 8, 31, tOF); tML = pick(mML, PRE_ML, 9, 52, tML);
-          var br = new BR(src, p, be), sLL = br.read(tLL.log), sOF = br.read(tOF.log), sML = br.read(tML.log);
-          for (var n = 0; n < nseq; n++) {
-            var oc = tOF.sym[sOF], lc = tLL.sym[sLL], mc = tML.sym[sML];
-            var ov = Math.pow(2, oc) + br.read(oc), ml = ML_B[mc] + br.read(ML_X[mc]), ll = LL_B[lc] + br.read(LL_X[lc]), off;
-            if (ov > 3) { off = ov - 3; rep[2] = rep[1]; rep[1] = rep[0]; rep[0] = off; }
-            else { var idx = ov - 1; if (ll === 0) idx++; if (idx === 0) off = rep[0]; else { off = idx < 3 ? rep[idx] : rep[0] - 1; if (idx > 1) rep[2] = rep[1]; rep[1] = rep[0]; rep[0] = off; } }
-            if (n < nseq - 1) { sLL = tLL.base[sLL] + br.read(tLL.nb[sLL]); sML = tML.base[sML] + br.read(tML.nb[sML]); sOF = tOF.base[sOF] + br.read(tOF.nb[sOF]); }
-            need(ll + ml); out.set(lits.subarray(lp, lp + ll), op); op += ll; lp += ll;
-            if (off > op) E("bad offset");
-            if (off >= ml) { out.copyWithin(op, op - off, op - off + ml); op += ml; }
-            else for (var c = 0; c < ml; c++) { out[op] = out[op - off]; op++; }
-          }
-        }
-        var rest = lits.length - lp; need(rest); out.set(lits.subarray(lp), op); op += rest;
-        p = be;
-      }
-      if (ck) p += 4;
-      outs.push(out.subarray(0, op)); totalLen += op;
-    }
-    if (outs.length === 1) return outs[0];
-    var all = new Uint8Array(totalLen), o2 = 0; outs.forEach(function (x) { all.set(x, o2); o2 += x.length; }); return all;
-  }
-  return { decompress: decompress, isZstd: function (b) { return b && b.length >= 4 && b[0] === 0x28 && b[1] === 0xB5 && b[2] === 0x2F && b[3] === 0xFD; } };
-})();
-
-/* ===== ZIP (random access, ZIP64-aware) ===== */
-function akU8(blob) { return blob.arrayBuffer().then(function (b) { return new Uint8Array(b); }); }
-function akZipOpen(file) {
-  var size = file.size, tl = Math.min(size, 65535 + 22 + 20 + 56);
-  return akU8(file.slice(size - tl)).then(function (t) {
-    var dv = new DataView(t.buffer), e = -1;
-    for (var i = t.length - 22; i >= 0; i--) if (dv.getUint32(i, true) === 0x06054b50) { e = i; break; }
-    if (e < 0) throw new Error("This doesn't look like an Anki file (.apkg or .colpkg).");
-    var count = dv.getUint16(e + 10, true), cdSize = dv.getUint32(e + 12, true), cdOff = dv.getUint32(e + 16, true);
-    if ((cdOff === 0xffffffff || count === 0xffff || cdSize === 0xffffffff) && e >= 20 && dv.getUint32(e - 20, true) === 0x07064b50) {
-      var z64 = dv.getUint32(e - 12, true) * 4294967296 + dv.getUint32(e - 16, true);
-      return akU8(file.slice(z64, z64 + 56)).then(function (z) { var zd = new DataView(z.buffer); return { cdSize: zd.getUint32(44, true) * 4294967296 + zd.getUint32(40, true), cdOff: zd.getUint32(52, true) * 4294967296 + zd.getUint32(48, true) }; });
-    }
-    return { cdSize: cdSize, cdOff: cdOff };
-  }).then(function (c) {
-    return akU8(file.slice(c.cdOff, c.cdOff + c.cdSize)).then(function (cd) {
-      var dv = new DataView(cd.buffer), p = 0, ents = {}, td = new TextDecoder();
-      while (p + 46 <= cd.length && dv.getUint32(p, true) === 0x02014b50) {
-        var method = dv.getUint16(p + 10, true), comp = dv.getUint32(p + 20, true), un = dv.getUint32(p + 24, true), nl = dv.getUint16(p + 28, true), xl = dv.getUint16(p + 30, true), cl = dv.getUint16(p + 32, true), off = dv.getUint32(p + 42, true);
-        var name = td.decode(cd.subarray(p + 46, p + 46 + nl)), x = p + 46 + nl, xe = x + xl;
-        while (x + 4 <= xe) {
-          var id = dv.getUint16(x, true), sz = dv.getUint16(x + 2, true), q = x + 4;
-          if (id === 1) {
-            var rd = function () { var v = dv.getUint32(q, true) + dv.getUint32(q + 4, true) * 4294967296; q += 8; return v; };
-            if (un === 0xffffffff) un = rd(); if (comp === 0xffffffff) comp = rd(); if (off === 0xffffffff) off = rd();
-          }
-          x += 4 + sz;
-        }
-        ents[name] = { method: method, comp: comp, un: un, off: off };
-        p += 46 + nl + xl + cl;
-      }
-      return { file: file, ents: ents };
-    });
-  });
-}
-function akZipRead(z, name) {
-  var e = z.ents[name]; if (!e) return Promise.resolve(null);
-  return akU8(z.file.slice(e.off, e.off + 30)).then(function (h) {
-    var dv = new DataView(h.buffer), st = e.off + 30 + dv.getUint16(26, true) + dv.getUint16(28, true), blob = z.file.slice(st, st + e.comp);
-    if (e.method === 0) return akU8(blob);
-    if (e.method !== 8) throw new Error("Unsupported compression in this file.");
-    if (typeof DecompressionStream === "function") {
-      try { return new Response(blob.stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer().then(function (b) { return new Uint8Array(b); }, function () { return akU8(blob).then(function (u) { return akInflate(u, e.un); }); }); } catch (x) { }
-    }
-    return akU8(blob).then(function (u) { return akInflate(u, e.un); });
-  });
-}
-
-/* ===== SQLite (read-only) ===== */
-function AkSQL(b) {
-  var hdr = new TextDecoder().decode(b.subarray(0, 15));
-  if (hdr !== "SQLite format 3") throw new Error("The deck's database could not be read.");
-  this.b = b; this.dv = new DataView(b.buffer, b.byteOffset, b.byteLength);
-  var ps = this.dv.getUint16(16); this.ps = ps === 1 ? 65536 : ps; this.U = this.ps - b[20];
-  this.td = new TextDecoder(this.dv.getUint32(56) === 2 ? "utf-16le" : this.dv.getUint32(56) === 3 ? "utf-16be" : "utf-8");
-  var self = this; this.roots = {};
-  this.scan(1, function (rid, r) { if (r[0] === "table") self.roots[String(r[2]).toLowerCase()] = r[3]; });
-}
-AkSQL.prototype.vi = function (o) { var v = 0, b = this.b; for (var i = 0; i < 8; i++) { var c = b[o + i]; v = v * 128 + (c & 127); if (!(c & 128)) return [v, i + 1]; } return [v * 256 + b[o + 8], 9]; };
-AkSQL.prototype.u32 = function (o) { return this.dv.getUint32(o); };
-AkSQL.prototype.payload = function (o, P, table) {
-  var U = this.U, X = table ? U - 35 : Math.floor((U - 12) * 64 / 255) - 23, local;
-  if (P <= X) return this.b.subarray(o, o + P);
-  var M = Math.floor((U - 12) * 32 / 255) - 23, K = M + ((P - M) % (U - 4)); local = K <= X ? K : M;
-  var out = new Uint8Array(P); out.set(this.b.subarray(o, o + local)); var w = local, ov = this.u32(o + local);
-  while (w < P && ov) { var pb = (ov - 1) * this.ps, n = Math.min(P - w, U - 4); out.set(this.b.subarray(pb + 4, pb + 4 + n), w); w += n; ov = this.u32(pb); }
-  return out;
-};
-AkSQL.prototype.rec = function (r) {
-  var dv = new DataView(r.buffer, r.byteOffset, r.byteLength), hs = this.vi.call({ b: r }, 0), p = hs[1], end = hs[0], ty = [], vals = [];
-  while (p < end) { var t = this.vi.call({ b: r }, p); ty.push(t[0]); p += t[1]; }
-  for (var i = 0; i < ty.length; i++) {
-    var t2 = ty[i], v = null;
-    if (t2 === 0) v = null;
-    else if (t2 >= 1 && t2 <= 6) { var n = [0, 1, 2, 3, 4, 6, 8][t2], x = r[p] & 128 ? -1 : 0; v = 0; for (var k = 0; k < n; k++) v = v * 256 + r[p + k]; if (x) v -= Math.pow(2, 8 * n); p += n; }
-    else if (t2 === 7) { v = dv.getFloat64(p); p += 8; }
-    else if (t2 === 8) v = 0; else if (t2 === 9) v = 1;
-    else if (t2 >= 12) { var ln = (t2 - (t2 & 1 ? 13 : 12)) / 2, sub = r.subarray(p, p + ln); v = t2 & 1 ? this.td.decode(sub) : sub.slice(); p += ln; }
-    vals.push(v);
-  }
-  return vals;
-};
-AkSQL.prototype.scan = function (pg, cb) {
-  var self = this, ps = this.ps, b = this.b;
-  (function walk(pg, depth) {
-    if (depth > 40) throw new Error("database too deep");
-    var base = (pg - 1) * ps, h = base + (pg === 1 ? 100 : 0), type = b[h], nc = (b[h + 3] << 8) | b[h + 4], hl = type === 2 || type === 5 ? 12 : 8;
-    for (var i = 0; i < nc; i++) {
-      var co = base + ((b[h + hl + 2 * i] << 8) | b[h + hl + 2 * i + 1]);
-      if (type === 13) { var P = self.vi(co), R = self.vi(co + P[1]); cb(R[0], self.rec(self.payload(co + P[1] + R[1], P[0], true))); }
-      else if (type === 5) walk(self.u32(co), depth + 1);
-      else if (type === 10) { var P2 = self.vi(co); cb(null, self.rec(self.payload(co + P2[1], P2[0], false))); }
-      else if (type === 2) { walk(self.u32(co), depth + 1); var P3 = self.vi(co + 4); cb(null, self.rec(self.payload(co + 4 + P3[1], P3[0], false))); }
-      else throw new Error("unexpected page");
-    }
-    if (hl === 12) walk(self.u32(h + 8), depth + 1);
-  })(pg, 0);
-};
-AkSQL.prototype.rows = function (name) { var r = this.roots[name], out = []; if (!r) return null; this.scan(r, function (rid, v) { v.rid = rid; out.push(v); }); return out; };
-
-/* ===== protobuf (just enough) ===== */
-function akPB(b) {
-  var p = 0, f = {};
-  function vi() { var v = 0, m = 1, c; do { c = b[p++]; v += (c & 127) * m; m *= 128; } while (c & 128 && p < b.length); return v; }
-  while (p < b.length) {
-    var key = vi(), fn = Math.floor(key / 8), wt = key & 7, val;
-    if (wt === 0) val = vi(); else if (wt === 2) { var l = vi(); val = b.subarray(p, p + l); p += l; } else if (wt === 1) { p += 8; continue; } else if (wt === 5) { p += 4; continue; } else break;
-    (f[fn] = f[fn] || []).push(val);
-  }
-  return f;
-}
-function akStr(u) { return u ? new TextDecoder().decode(u) : ""; }
-
-/* ===== card rendering ===== */
-var AK_CLOZE = /\{\{c(\d+)::([\s\S]*?)(?:::([\s\S]*?))?\}\}/g;
-function akCloze(txt, n, ans) {
-  return String(txt || "").replace(AK_CLOZE, function (m, num, body, hint) {
-    if (/^image-occlusion:/.test(body)) return "";
-    if (+num !== n) return body;
-    return ans ? '<span class="cloze">' + body + '</span>' : '<span class="cloze">[' + (hint || "...") + ']</span>';
-  });
-}
-function akStrip(h) { return String(h || "").replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim(); }
-function akTpl(tpl, F, ctx) {
-  var prev; tpl = String(tpl || "");
-  do {
-    prev = tpl;
-    tpl = tpl.replace(/\{\{([#^])\s*([^}]+?)\s*\}\}([\s\S]*?)\{\{\/\s*\2\s*\}\}/g, function (m, k, name, body) {
-      var v = akField(name, F, ctx), has = akStrip(v) !== "" || /<img/i.test(v);
-      return (k === "#" ? has : !has) ? body : "";
-    });
-  } while (tpl !== prev);
-  return tpl.replace(/\{\{([^#^\/{}][^{}]*?)\}\}/g, function (m, key) {
-    key = key.trim(); if (key === "FrontSide") return ctx.front || "";
-    var parts = key.split(":"), name = parts.pop().trim(), v = akField(name, F, ctx);
-    for (var i = parts.length - 1; i >= 0; i--) {
-      var f = parts[i].trim().split(" ")[0];
-      if (f === "cloze") v = akCloze(v, ctx.n, ctx.ans);
-      else if (f === "text") v = akStrip(v);
-      else if (f === "type") v = ctx.ans && !ctx.inFront ? '<div class="aktype">' + (/cloze/.test(parts.join(" ")) ? akCloze(v, ctx.n, true) : v) + '</div>' : "";
-      else if (f === "tts") v = "";
-      else if (f === "furigana" || f === "kanji") v = v.replace(/\[[^\]]*\]/g, "");
-      else if (f === "cloze-only") v = (v.match(AK_CLOZE) || []).join(", ");
-    }
-    return v;
-  });
-}
-function akField(name, F, ctx) {
-  if (name === "Tags") return ctx.tags || ""; if (name === "Deck") return ctx.deck || ""; if (name === "Subdeck") return (ctx.deck || "").split("::").pop();
-  if (name === "Type") return ctx.ntName || ""; if (name === "Card") return ctx.tName || ""; if (name === "CardFlag") return "";
-  return Object.prototype.hasOwnProperty.call(F, name) ? F[name] : "";
-}
-var AK_KEEP = { b: 1, i: 1, u: 1, s: 1, em: 1, strong: 1, br: 1, div: 1, span: 1, p: 1, ul: 1, ol: 1, li: 1, sub: 1, sup: 1, img: 1, table: 1, thead: 1, tbody: 1, tr: 1, td: 1, th: 1, hr: 1, h1: 1, h2: 1, h3: 1, h4: 1, h5: 1, h6: 1, code: 1, pre: 1, blockquote: 1, small: 1, mark: 1, center: 1, dl: 1, dt: 1, dd: 1, ruby: 1, rt: 1 };
-var AK_DROP = { script: 1, style: 1, iframe: 1, object: 1, embed: 1, audio: 1, video: 1, source: 1, link: 1, meta: 1, svg: 1, math: 1, template: 1, noscript: 1, form: 1, input: 1, button: 1, select: 1, textarea: 1, canvas: 1, frame: 1, frameset: 1, base: 1, title: 1, head: 1 };
-var AK_CSS = /^(color|background-color|font-weight|font-style|text-decoration|text-align|vertical-align)$/;
-var AK_DP = typeof DOMParser === "function" ? new DOMParser() : null;
-function akClean(html) {
-  var doc = AK_DP.parseFromString("<body>" + html + "</body>", "text/html"), imgs = [];
-  (function walk(node) {
-    var kids = Array.prototype.slice.call(node.childNodes);
-    for (var i = 0; i < kids.length; i++) {
-      var c = kids[i];
-      if (c.nodeType === 8) { c.remove(); continue; }
-      if (c.nodeType !== 1) continue;
-      var tag = c.tagName.toLowerCase();
-      if (AK_DROP[tag]) { c.remove(); continue; }
-      if (tag === "font") { var sp = doc.createElement("span"), col = c.getAttribute("color"); if (col && /^#?[\w]+$/.test(col)) sp.style.color = col; while (c.firstChild) sp.appendChild(c.firstChild); c.replaceWith(sp); c = sp; tag = "span"; }
-      if (!AK_KEEP[tag]) { var frag = doc.createDocumentFragment(); while (c.firstChild) frag.appendChild(c.firstChild); var holder = doc.createElement("span"); holder.appendChild(frag); c.replaceWith(holder); walk(holder); while (holder.firstChild) holder.parentNode.insertBefore(holder.firstChild, holder); holder.remove(); continue; }
-      var keep = {};
-      if (tag === "img") { var src = c.getAttribute("src") || ""; if (src && !/^(https?:|data:|javascript:)/i.test(src)) { try { src = decodeURIComponent(src); } catch (x) { } keep["data-m"] = src; imgs.push(src); } keep.alt = c.getAttribute("alt") || ""; }
-      if ((tag === "td" || tag === "th") && c.getAttribute("colspan")) keep.colspan = String(+c.getAttribute("colspan") || 1);
-      if ((tag === "td" || tag === "th") && c.getAttribute("rowspan")) keep.rowspan = String(+c.getAttribute("rowspan") || 1);
-      if (tag === "span" && c.classList && c.classList.contains("cloze")) keep["class"] = "cloze";
-      var css = [];
-      if (c.style) for (var s = 0; s < c.style.length; s++) { var pn = c.style[s]; if (AK_CSS.test(pn)) { var pv = c.style.getPropertyValue(pn); if (!/url\(|expression/i.test(pv)) css.push(pn + ":" + pv); } }
-      var names = Array.prototype.map.call(c.attributes, function (a) { return a.name; });
-      names.forEach(function (n) { c.removeAttribute(n); });
-      Object.keys(keep).forEach(function (k) { if (keep[k] !== "") c.setAttribute(k, keep[k]); });
-      if (css.length) c.setAttribute("style", css.join(";"));
-      walk(c);
-    }
-  })(doc.body);
-  return { html: doc.body.innerHTML.trim(), text: (doc.body.textContent || "").replace(/\s+/g, " ").trim(), imgs: imgs };
-}
-
-/* ===== drug linking (names DrugBug knows) ===== */
-var AK_IDX = null;
-var AK_STOP = { potassium: 1, sodium: 1, calcium: 1, magnesium: 1, glucose: 1, oxygen: 1, water: 1, iron: 1, zinc: 1, chloride: 1, phosphate: 1, alcohol: 1, solution: 1, tablets: 1, tablet: 1, capsules: 1, capsule: 1, patch: 1, human: 1, recombinant: 1, merck: 1, pfizer: 1, hospira: 1, available: 1, similar: 1, concentrated: 1, related: 1, natural: 1, combination: 1, injection: 1, spray: 1, cream: 1, ointment: 1, premix: 1, generic: 1, generics: 1, others: 1, various: 1, crystal: 1, speed: 1, crack: 1, molly: 1, grass: 1, smack: 1, street: 1, extended: 1, release: 1, delayed: 1, suspension: 1, powder: 1, liquid: 1, drops: 1, topical: 1, vaccine: 1, insulin: 1 };
-/* only well-known clinical abbreviations are matched (TMP, PCC, DMT etc. mean other things in basic science) */
-var AK_ABBR = { ASA: 1, TXA: 1, NTG: 1, APAP: 1, HCTZ: 1, KCl: 1, NAC: 1, PTU: 1, LSD: 1, MDMA: 1, THC: 1, CBD: 1, PCP: 1, GHB: 1, SSRI: 0, MTX: 1, INH: 1, PZA: 1, TMP: 0, LMWH: 0, UFH: 1, "D50": 1, TNK: 1, NSAID: 0 };
-/* aliases that are everyday or basic-science words (from an English word list), never used as drug links */
-var AK_BLOCK = {}; "a and b|abortion pill|acacia fiber|actinomycin d|adult erectile dysfunction|adults|aerosol propellants and gases|albumin|align|also in mouthwash|amino acid injection|an ingredient in many supplement and food brands|antacid tablets|anti d|antivenin|approved there as a medicine|aqueous potassium or sodium|at iii|australia|availability in the us is limited|available|bagging|bal in oil|bangkok|beans|bedside generator|bicarb|birth control pill|blends|blotter|body protection compound 157|booze|brand|brazil|brown|businessman s trip|butane|buttons|cactus|calcium|calcium chloride 10|capsules|capsules and gel|capsules and suspension|charcoal|chickenpox vaccine|children s cold and allergy|china white|chocolates|cloudy insulin|coagulation factor ix|coagulation factor xa recombinant|cold sore treatment cream|colonoscopy prep|combination|combination products|combinations|combined contraceptives|combo|combos|common names alcohol|common names cigarettes|concentrate|contact lens|crack|crank|cream|crystal|current us formula|cyanide antidote kit|d glucose|d h e 45|dairy ease|decongestant|delta 8|delta 9 tetrahydrocannabinol|delta d3|dermatology|development code|diabetes|different indications|doses|drops|e cigarettes|e liquid|edibles|effervescent|elephant tranquilizer|elixir|emend|emend for injection|emulsion|enema|enteral|enteric contrast given in fluoroscopy and ct|epidural|equate saline|equine|er for acne|er injection|ester c|et 743|europe|ex lax|extra strength|extracts|eyelash product|eyelid|ez char|factor 8|factor 9|factor viii|fake weed|fermented milk|fermented milk drink|fermented milks and children s products|film coated tablets|films and tablets|flu shot|for example ph d|former brand|galaxy gas|gasoline|generics|germany|given by nuclear medicine or pet technologists|given by nuclear medicine technologists|given in echo|given in gi endoscopy|given in nuclear medicine or radiology|given in the stress lab by nurses|glass|glucose|glucose and electrolytes|glucose gel|granules|grass|gravel|gray market and vendor names|groups a|growth hormone|gum and drops|gynecology|hair skin nails supplements|halls|heather|hemihydrate|hep a vaccine|hep b vaccine|hep lock flush|herbal incense|high dose il 2|honey|hooch|hope pharmaceuticals|horse|human|human or recombinant|hypertonic|hypertonic saline|hypoallergenic infant formula|immediate release|immune f|immune globulin|immune globulin antivenin|in many combos|in many products|in supplements and fermented milks|infant drops|inhalants|inhalation aerosol|inhalation powder|injection|injection and tablets|insert|inserts|insulin|insulin human inhalation powder|intermezzo|international|intravenous|ir and er tablets|iron pills|is a separate rx drug|japan|jewelry cleaner|juice|k phos|liquid|liquid i v|liquid x|liquor|locker room|lotion|love boat|low dose for sleep|low dose redness reliever|lozenge|lozenges|luminal|m m r ii|mag citrate|mag ox 400|mag oxide|mag sulfate|magnesium citrate saline laxative|magnesium oxide 400 mg|many yogurts and fermented milks|mark i kit|measles|meow meow|mexico|micro k|microdots|military|mini pill|molly|monovalent|moonshine|motion sickness relief|mots c|multiple electrolytes injection|multiple sclerosis|mumps|mushrooms|my way|na phos|natural|nectar|neomycin sulfate|neonatal|nerve agent antidote kit|nighttime sleep aid|nitrite|nitro|nitro bid|nitrogen mustard|no neomycin|not a common us product|not an ems drug|not for humans|not sold in stores|not the same as ergocalciferol|not us approved|nurses|ocean|ocular implant|ointment|once daily relief|oncology|oncology product|option 2|originator|os cal|osteoporosis|other forms|others|ovine|ovine fab|ozone|paste|patch|pediatric|pediatric central precocious puberty|peg els|pen vk|pendulum glucose control|pentavalent|pl 14736|plain|plan b|plan b one step|plant food|pneumonia shot|polyvalent|poppers|potassium phosphates injection|potato resistant starch|potpourri|powder|powders|pregnancy termination|premix|prenatal vitamins|preservative free|pressed bars|propane|provitamin a|pudding|rabbit|radioactive iodine|radiology|rattlesnake antivenom|recombinant|rectal|red back spider antivenom|refresh eye itch relief|ringer s lactate|rinse|rocket fuel|rolls|ru 486|rx 120 mg|rx buccal|saline|sc or at 2 week intervals|sc three times weekly|scorpion|sea snake antivenom|separate product|shards|shatter|shingles vaccine|shots|similar|sin and t|sl tablets|sleep apnea|sleep cut|slow fe|smack|snake antivenom|snappers|sodium chloride 0 9 injection|sodium chloride 23 4 injection|sodium chloride 3 injection|sodium phosphates injection|sodium succinate|sojourn|sold as dietary supplements|some regions|some yogurts|soybean oil|speed|spice|spirits|spray|sps suspension|steroids|stool softener|store brand anti itch cream|store brands|street name for alkyl nitrites|street names acid|street names coke|street names dope|street names g|street names k2|street or gray market slang|subcutaneous|subcutaneous pen|sublingual|sublingual film|sublingual tablet|supplement|supplements and some infant formulas|suppository|surfactant|suspension|tablets|tablets and|tablets and granules|tablets and injection|tablets for suspension|tabloid|take action|tas 102|tb 4 fragment|tb 500|tb skin test|td red|technologists|the pill|the red devil|the spirit molecule|therapeutic|thin liquid|thymosin beta 4 fragment|til therapy|toluene|topical|transdermal|transplant|travel ease|twice a day tablets|twice daily relief|type 1|type 2 diabetes|ultrasound|us brand withdrawn 2021|used pasteurized|vaginal|vapes|vendor names vary|vendor variant|vendor variants|versed|veterinary product|vitamin a supplements|vitamin b1|vitamin b2|vitamin b3|vitamin b6|vitamin b7|vitamin b9|vitamin c|vitamin d|vitamin d3|vitamin h|vitamin k|vitamin k1|wafer|water soluble enteric contrast given in radiology|weekly|weight|weight management|whip its|whippets|who ors|window pane|with electrolytes|with fluorescein|with hyaluronidase|with magnesium|with oxygen|with vitamin d|women s|za za red|zinc oxide skin products|zinc sulfate|zinc sulfate injection|zinc supplements|zombie drug".split("|").forEach(function (w) { AK_BLOCK[w] = 1; });
-function akIndex() {
-  if (AK_IDX) return AK_IDX;
-  var lo = {}, up = {}, alias = {}, ids = Object.keys(DB.drugs);
-  var keyOf = function (nm) { return String(nm || "").toLowerCase().replace(/[^a-z0-9+]+/g, " ").trim(); };
-  ids.forEach(function (id) { var k = keyOf(nameOf(id)); if (k && !AK_STOP[k]) (lo[k] = lo[k] || []).push(id); });
-  ids.forEach(function (id) {
-    (typeof drugNames === "function" ? drugNames(id) : []).forEach(function (nm) {
-      nm = String(nm || "").trim(); var k = keyOf(nm), core = nm.replace(/[^A-Za-z0-9]/g, "");
-      if (!k || AK_STOP[k] || AK_BLOCK[k] || lo[k] || /[:(]/.test(nm) || k.split(" ").length > 4) return;
-      if (AK_ABBR[nm]) { (up[nm] = up[nm] || []).indexOf(id) < 0 && up[nm].push(id); return; }
-      if (/^[A-Z0-9-]+$/.test(nm)) return;
-      if (core.length < 5 || !(/^[A-Z]/.test(nm) || core.length >= 8)) return;
-      k.split(" ").forEach(function () { });
-      (alias[k] = alias[k] || []).indexOf(id) < 0 && alias[k].push(id);
-    });
-  });
-  Object.keys(alias).forEach(function (k) { if (alias[k].length <= 2 && !k.split(" ").every(function (w) { return AK_STOP[w]; })) lo[k] = alias[k]; });
-  AK_IDX = { lo: lo, up: up };
-  return AK_IDX;
-}
-function akLink(text) {
-  var I = akIndex(), found = [], seen = {};
-  var add = function (ids) { ids.forEach(function (id) { if (!seen[id]) { seen[id] = 1; found.push(id); } }); };
-  var raw = String(text || "").match(/[A-Za-z0-9+\-]+/g) || [], low = raw.map(function (w) { return w.toLowerCase(); });
-  for (var i = 0; i < raw.length; i++) {
-    if (I.up[raw[i]]) add(I.up[raw[i]]);
-    var k = ""; for (var j = 0; j < 4 && i + j < low.length; j++) { k = j ? k + " " + low[i + j] : low[i]; if (I.lo[k]) add(I.lo[k]); }
-    if (found.length >= 8) break;
-  }
-  return found;
-}
-
-/* ===== storage (this device only) ===== */
-var AK_DBP = null;
-function akDB() {
-  if (AK_DBP) return AK_DBP;
-  AK_DBP = new Promise(function (res, rej) {
-    if (typeof indexedDB === "undefined") return rej(new Error("This device can't store decks."));
-    var r = indexedDB.open("drugbug-anki", 1);
-    r.onupgradeneeded = function () { var d = r.result; d.createObjectStore("decks", { keyPath: "id" }); d.createObjectStore("cards"); d.createObjectStore("media"); };
-    r.onsuccess = function () { res(r.result); }; r.onerror = function () { AK_DBP = null; rej(r.error || new Error("Storage is not available.")); };
-  });
-  return AK_DBP;
-}
-function akTx(stores, mode, fn) { return akDB().then(function (d) { return new Promise(function (res, rej) { var t = d.transaction(stores, mode), out; t.oncomplete = function () { res(out); }; t.onerror = t.onabort = function () { rej(t.error || new Error("Storage error")); }; out = fn(t); }); }); }
-function akGet(store, key) { return akDB().then(function (d) { return new Promise(function (res, rej) { var q = d.transaction(store).objectStore(store).get(key); q.onsuccess = function () { res(q.result); }; q.onerror = function () { rej(q.error); }; }); }); }
-function akAll(store) { return akDB().then(function (d) { return new Promise(function (res, rej) { var q = d.transaction(store).objectStore(store).getAll(); q.onsuccess = function () { res(q.result || []); }; q.onerror = function () { rej(q.error); }; }); }); }
-function akDeleteDeck(id) {
-  return akTx(["decks", "cards", "media"], "readwrite", function (t) {
-    t.objectStore("decks").delete(id);
-    t.objectStore("cards").delete(IDBKeyRange.bound(id + ":", id + ":￿"));
-    t.objectStore("media").delete(IDBKeyRange.bound(id + "|", id + "|￿"));
-  });
-}
-function akWipeAll() { return akTx(["decks", "cards", "media"], "readwrite", function (t) { t.objectStore("decks").clear(); t.objectStore("cards").clear(); t.objectStore("media").clear(); }); }
-
-/* ===== import ===== */
-var AK_MEDIA_MAX = 300 * 1024 * 1024, AK_IMG_MAX = 8 * 1024 * 1024;
-var AK_MIME = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif", webp: "image/webp", svg: "", bmp: "image/bmp", avif: "image/avif" };
-function akStatus(msg, pct) {
-  ANK.status = msg; ANK.pct = pct;
-  var el = document.getElementById("ankistat");
-  if (el) el.innerHTML = '<p>' + esc(msg) + '</p>' + (pct != null ? '<div class="akbar"><span style="width:' + Math.max(2, Math.min(100, pct)) + '%"></span></div>' : '');
-}
-function akYield() { return new Promise(function (r) { setTimeout(r, 0); }); }
-function akImport(file) {
-  if (ANK.busy) return;
-  ANK.busy = true; ANK.err = ""; render();
-  var z, sql, deckId = "d" + Date.now().toString(36), result = { n: 0, linked: [], media: 0, skippedAudio: 0, skippedBig: 0, io: 0, missing: 0 };
-  akStatus("Opening " + file.name + "...", 2);
-  akZipOpen(file).then(function (zz) {
-    z = zz;
-    var name = z.ents["collection.anki21b"] ? "collection.anki21b" : z.ents["collection.anki21"] ? "collection.anki21" : z.ents["collection.anki2"] ? "collection.anki2" : null;
-    if (!name) throw new Error("No Anki collection was found in this file. Export it from Anki as an Anki Deck Package (.apkg).");
-    akStatus("Reading the deck...", 6);
-    return akZipRead(z, name);
-  }).then(function (raw) {
-    if (AK_ZSTD.isZstd(raw)) { akStatus("Unpacking the deck...", 10); raw = AK_ZSTD.decompress(raw); }
-    sql = new AkSQL(raw);
-    return akZipRead(z, "media");
-  }).then(function (mraw) {
-    /* media index: number-in-zip -> filename */
-    var mmap = {};
-    if (mraw && mraw.length) {
-      if (AK_ZSTD.isZstd(mraw)) mraw = AK_ZSTD.decompress(mraw);
-      var first = mraw[0];
-      if (first === 0x7B) { try { var j = JSON.parse(new TextDecoder().decode(mraw)); Object.keys(j).forEach(function (k) { mmap[j[k]] = k; }); } catch (x) { } }
-      else { (akPB(mraw)[1] || []).forEach(function (ent, i) { var e = akPB(ent), nm = akStr(e[1] && e[1][0]); if (nm) mmap[nm] = String(i); }); }
-    }
-    /* note types */
-    var NT = {};
-    var ntRows = sql.rows("notetypes");
-    if (ntRows && ntRows.length) {
-      ntRows.forEach(function (r) { var cfg = akPB(r[4] || new Uint8Array()); NT[r.rid != null && r[0] == null ? r.rid : r[0]] = { name: r[1], cloze: ((cfg[1] || [0])[0]) === 1, flds: [], tmpls: [] }; });
-      (sql.rows("fields") || []).forEach(function (r) { var nt = NT[r[0]]; if (nt) nt.flds[r[1]] = r[2]; });
-      (sql.rows("templates") || []).forEach(function (r) { var nt = NT[r[0]]; if (nt) { var c = akPB(r[5] || new Uint8Array()); nt.tmpls[r[1]] = { name: r[2], q: akStr(c[1] && c[1][0]), a: akStr(c[2] && c[2][0]) }; } });
-    }
-    var col = (sql.rows("col") || [])[0], DK = {};
-    if (col && col[9] && !Object.keys(NT).length) {
-      var models = JSON.parse(col[9] || "{}");
-      Object.keys(models).forEach(function (k) { var m = models[k]; NT[k] = { name: m.name, cloze: m.type === 1, flds: (m.flds || []).sort(function (a, b) { return a.ord - b.ord; }).map(function (f) { return f.name; }), tmpls: (m.tmpls || []).sort(function (a, b) { return a.ord - b.ord; }).map(function (t) { return { name: t.name, q: t.qfmt, a: t.afmt }; }) }; });
-    }
-    var dkRows = sql.rows("decks");
-    if (dkRows && dkRows.length) dkRows.forEach(function (r) { DK[r[0] == null ? r.rid : r[0]] = String(r[1] || "").split("\x1f").join("::"); });
-    else if (col && col[10]) { try { var dj = JSON.parse(col[10]); Object.keys(dj).forEach(function (k) { DK[k] = dj[k].name; }); } catch (x) { } }
-    var NOTES = {};
-    (sql.rows("notes") || []).forEach(function (r) { var id = r[0] == null ? r.rid : r[0]; NOTES[id] = { mid: r[2], tags: String(r[5] || "").trim(), flds: String(r[6] || "").split("\x1f") }; });
-    var CARDS = (sql.rows("cards") || []).map(function (r) { return { nid: r[1], did: r[2], ord: r[3], due: r[7] || 0 }; }).filter(function (c) { return NOTES[c.nid]; });
-    CARDS.sort(function (a, b) { return (a.did - b.did) || (a.nid - b.nid) || (a.ord - b.ord); });
-    sql = null;
-    if (!CARDS.length) throw new Error("This deck has no cards.");
-    var tops = {}; CARDS.forEach(function (c) { var t = (DK[c.did] || "").split("::")[0]; tops[t] = (tops[t] || 0) + 1; });
-    var topList = Object.keys(tops).filter(function (t) { return t && !(t === "Default" && tops[t] < 3); }), baseName = file.name.replace(/\.(apkg|colpkg)$/i, "");
-    var topName = /\.colpkg$/i.test(file.name) ? "My collection" : topList.length === 1 && topList[0] !== "Default" ? topList[0] : baseName;
-    var subs = {};
-    var wanted = {}, i = 0, batch = [];
-    function flush() { var b = batch; batch = []; return akTx(["cards"], "readwrite", function (t) { var s = t.objectStore("cards"); b.forEach(function (x) { s.put(x[1], x[0]); }); }); }
-    function step() {
-      var stop = Math.min(CARDS.length, i + 150);
-      for (; i < stop; i++) {
-        var c = CARDS[i], note = NOTES[c.nid], nt = NT[note.mid]; if (!nt) continue;
-        var F = {}; nt.flds.forEach(function (fn, k) { F[fn] = String(note.flds[k] || "").replace(/\[sound:[^\]]*\]/g, ""); });
-        var tpl = nt.cloze ? nt.tmpls[0] : nt.tmpls[c.ord]; if (!tpl) continue;
-        var ctx = { n: c.ord + 1, ans: false, tags: note.tags, deck: DK[c.did] || "", ntName: nt.name, tName: tpl.name };
-        var qh = akTpl(tpl.q, F, ctx); ctx.ans = true; ctx.front = qh;
-        var ah = akTpl(tpl.a, F, ctx);
-        var q = akClean(qh), a = akClean(ah);
-        if (!q.text && !q.imgs.length) continue;
-        var io = /image.occlusion/i.test(nt.name); if (io) result.io++;
-        q.imgs.concat(a.imgs).forEach(function (m) { wanted[m] = 1; });
-        var drugs = akLink(a.text || q.text);
-        var idx = result.n++;
-        if (drugs.length) result.linked.push(idx);
-        (subs[ctx.deck || "Default"] = subs[ctx.deck || "Default"] || []).push(idx);
-        batch.push([deckId + ":" + idx, { q: q.html, a: a.html, d: drugs, s: ctx.deck, io: io ? 1 : 0 }]);
-      }
-      akStatus("Converting cards: " + Math.min(i, CARDS.length).toLocaleString() + " of " + CARDS.length.toLocaleString(), 12 + 60 * i / CARDS.length);
-      return flush().then(function () { if (i < CARDS.length) return akYield().then(step); });
-    }
-    return step().then(function () {
-      if (!result.n) throw new Error("No cards could be read from this deck.");
-      /* images that the cards use */
-      var names = Object.keys(wanted), k = 0, total = 0;
-      function mstep() {
-        var tries = 0;
-        while (k < names.length) {
-          var nm = names[k++], ext = (nm.split(".").pop() || "").toLowerCase(), mime = AK_MIME[ext], zn = mmap[nm];
-          if (zn == null && z.ents[nm]) zn = nm;
-          if (!mime) { result.skippedAudio++; continue; }
-          if (zn == null || !z.ents[zn]) { result.missing++; continue; }
-          if (z.ents[zn].un > AK_IMG_MAX * 4 || total > AK_MEDIA_MAX) { result.skippedBig++; continue; }
-          if (k % 20 === 0) akStatus("Saving images: " + k.toLocaleString() + " of " + names.length.toLocaleString(), 72 + 26 * k / names.length);
-          return akZipRead(z, zn).then(function (u) {
-            if (AK_ZSTD.isZstd(u)) u = AK_ZSTD.decompress(u);
-            if (u.length > AK_IMG_MAX || total + u.length > AK_MEDIA_MAX) { result.skippedBig++; return; }
-            total += u.length; result.media++;
-            return akTx(["media"], "readwrite", function (t) { t.objectStore("media").put(new Blob([u], { type: mime }), deckId + "|" + nm); });
-          }.bind(null)).then(mstep, mstep);
-        }
-        return Promise.resolve();
-      }
-      return mstep();
-    }).then(function () {
-      var subList = Object.keys(subs).sort(function (a, b) { return a.localeCompare(b, undefined, { numeric: true }); }).map(function (k) { return [k, subs[k]]; });
-      var rec = { id: deckId, name: topName, file: file.name, created: Date.now(), n: result.n, linked: result.linked, media: result.media, skippedBig: result.skippedBig, io: result.io, missing: result.missing, subs: subList.length > 1 ? subList : [] };
-      return akTx(["decks"], "readwrite", function (t) { t.objectStore("decks").put(rec); }).then(function () { return rec; });
-    });
-  }).then(function (rec) {
-    ANK.busy = false; ANK.status = ""; ANK.note = "Imported " + rec.n.toLocaleString() + " cards from \"" + rec.name + "\"" + (rec.media ? " with " + rec.media.toLocaleString() + " images" : "") + "." + (rec.linked.length ? " " + rec.linked.length.toLocaleString() + " cards mention a drug in DrugBug." : "") + (rec.missing ? (rec.media ? " " + rec.missing.toLocaleString() + " images were missing from this file." : " Images weren't included in this file. To bring them in, export again with \"Include media\" checked.") : "") + (rec.skippedBig ? " Some large images were skipped to save space." : "") + (rec.io ? " Image occlusion masks can't be shown, so those cards show the image only." : "");
-    ANK.decks = null; render();
-  }).catch(function (e) {
-    ANK.busy = false; ANK.status = ""; ANK.err = (e && e.message ? e.message : "The deck could not be imported.");
-    akDeleteDeck(deckId).catch(function () { }); render();
-  });
-}
-
-/* ===== view ===== */
-var ANK = { sub: {}, decks: null, loading: false, busy: false, status: "", pct: null, err: "", note: "", st: null, urls: {} };
-var AK_LABEL = "Decks you import stay on this device and are never uploaded or shared. Imported cards are not reviewed by DrugBug.";
-function akLoad() {
-  if (ANK.loading) return; ANK.loading = true;
-  akAll("decks").then(function (d) { ANK.decks = d.sort(function (a, b) { return b.created - a.created; }); ANK.loading = false; if (S.tab === "anki") render(); }, function (e) { ANK.decks = []; ANK.loading = false; ANK.err = "Storage on this device is not available, so decks can't be saved here."; if (S.tab === "anki") render(); });
-}
-function ankiView() {
-  if (ANK.st) return akStudyView();
-  if (!ANK.decks) akLoad();
-  var c = '<div class="aknote"><strong>Private to you.</strong> ' + esc(AK_LABEL) + '</div>';
-  c += '<section class="akimp"><h3>Import a deck from Anki</h3><p class="muted">In Anki, export your deck as an <b>Anki Deck Package (.apkg)</b> with media included. A full collection backup (.colpkg) works too. Get the file onto this device (AirDrop, Files, email or Drive), then pick it here.</p>' +
-    (ANK.busy ? '<div id="ankistat" class="akstat"><p>' + esc(ANK.status || "Working...") + '</p></div><p class="muted small">Keep DrugBug open. Big decks can take a few minutes.</p>' :
-      '<label class="btn akpick" for="ankifile">Choose an Anki file</label><input type="file" id="ankifile" class="akfile">') +
-    '<p class="muted small">Anki is a trademark of its owner. DrugBug is not affiliated with or endorsed by Anki or Ankitects; it only reads deck files you export.</p>' + (ANK.err ? '<p class="akerr" role="alert">' + esc(ANK.err) + '</p>' : '') + (ANK.note ? '<p class="akok" role="status">' + esc(ANK.note) + '</p>' : '') + '</section>';
-  if (!ANK.decks) return c + '<p class="muted">Loading your decks...</p>';
-  if (!ANK.decks.length) return c + '<p class="muted">No decks yet. Your imported decks will show up here.</p>';
-  c += '<h3 class="akh">Your decks</h3>' + ANK.decks.map(function (d) {
-    return '<div class="akdeck"><div class="akdh"><strong>' + esc(d.name) + '</strong><span class="akbadge">Imported &middot; not reviewed by DrugBug</span></div>' +
-      '<p class="muted small">' + d.n.toLocaleString() + ' cards' + (d.media ? ' &middot; ' + d.media.toLocaleString() + ' images' : '') + ' &middot; ' + d.linked.length.toLocaleString() + ' mention DrugBug drugs &middot; added ' + esc(new Date(d.created).toLocaleDateString()) + '</p>' +
-      (d.subs && d.subs.length ? '<label class="aksubsel"><span class="muted small">Section</span><select data-aksub="' + d.id + '"><option value="">All sections (' + d.n.toLocaleString() + ')</option>' + d.subs.map(function (x, i) { return '<option value="' + i + '"' + (String(ANK.sub[d.id]) === String(i) ? ' selected' : '') + '>' + esc(x[0].split("::").join(" › ")) + ' (' + x[1].length.toLocaleString() + ')</option>'; }).join("") + '</select></label>' : '') +
-      '<div class="akbtns"><button class="btn" data-akstudy="' + d.id + '" data-akmode="order">Study</button><button class="btn ghost" data-akstudy="' + d.id + '" data-akmode="shuffle">Shuffle</button>' +
-      (d.linked.length ? '<button class="btn ghost" data-akstudy="' + d.id + '" data-akmode="drugs">Cards with DrugBug drugs</button>' : '') +
-      '<button class="linkish akdel" data-akdel="' + d.id + '">Delete deck</button></div></div>';
-  }).join("");
-  return c;
-}
-function akQueue(d, mode) {
-  var si = ANK.sub[d.id], part = si !== undefined && si !== "" && d.subs && d.subs[si] ? d.subs[si][1] : null;
-  var q = part ? part.slice() : Array.from({ length: d.n }, function (x, i) { return i; });
-  if (mode === "drugs") { var L = {}; d.linked.forEach(function (i) { L[i] = 1; }); q = q.filter(function (i) { return L[i]; }); }
-  if (mode !== "order") shuffle(q);
-  return q;
-}
-function akOpen(i) {
-  var st = ANK.st; if (!st) return;
-  st.card = null; st.flipped = false;
-  akGet("cards", st.deck.id + ":" + st.q[st.pos]).then(function (cd) { if (ANK.st !== st) return; st.card = cd || { q: "<p>This card could not be loaded.</p>", a: "", d: [] }; render(); });
-}
-function akStudyView() {
-  var st = ANK.st, d = st.deck, total = st.q.length;
-  var c = '<div class="akstudy"><div class="akbar2"><button class="backbtn" data-akback="1"><span aria-hidden="true">&larr;</span> Imported Decks</button><span class="muted small">' + Math.min(st.pos + 1, total).toLocaleString() + ' / ' + total.toLocaleString() + (st.got ? ' &middot; ' + st.got + ' got it' : '') + '</span></div>' +
-    '<h3 class="akh">' + esc(d.name) + (ANK.sub[d.id] !== undefined && ANK.sub[d.id] !== "" && d.subs && d.subs[ANK.sub[d.id]] ? ' <span class="muted small">› ' + esc(d.subs[ANK.sub[d.id]][0].split("::").pop()) + '</span>' : '') + '</h3><p class="akbadge">Imported card &middot; not reviewed by DrugBug</p>';
-  if (!total) return c + '<div class="akcard"><p>No cards in this section match. Pick another section or study all cards.</p></div></div>';
-  if (st.pos >= total) return c + '<div class="akcard"><p><strong>Deck finished.</strong> You marked ' + st.got + ' of ' + st.seen + ' as got it.</p><button class="btn" data-akagain="1">Study again</button></div></div>';
-  if (!st.card) return c + '<div class="akcard"><p class="muted">Loading card...</p></div></div>';
-  var cd = st.card;
-  setTimeout(akHydrate, 0);
-  c += '<div class="akcard" id="akcard">' + (cd.s ? '<p class="muted small aksub">' + esc(cd.s.split("::").join(" › ")) + '</p>' : '') + '<div class="akface">' + (st.flipped ? cd.a || cd.q : cd.q) + '</div>' + (cd.io ? '<p class="muted small">Image occlusion masks are not shown in DrugBug.</p>' : '') + '</div>';
-  if (st.flipped && cd.d && cd.d.length) c += '<div class="akdrugs"><span class="muted small">Look it up in DrugBug:</span> ' + cd.d.map(function (id) { return '<button class="chip" data-drug="' + esc(id) + '">' + esc(nameOf(id)) + '</button>'; }).join(" ") + '</div>';
-  c += st.flipped ? '<div class="akbtns"><button class="btn ghost" data-akgrade="again">Again</button><button class="btn" data-akgrade="good">Got it</button></div>' : '<div class="akbtns"><button class="btn" data-akflip="1">Show answer</button></div>';
-  return c + '</div>';
-}
-function akHydrate() {
-  var st = ANK.st; if (!st) return;
-  Array.prototype.forEach.call(document.querySelectorAll("#akcard img[data-m]"), function (im) {
-    var key = st.deck.id + "|" + im.getAttribute("data-m");
-    if (ANK.urls[key]) { im.src = ANK.urls[key]; return; }
-    akGet("media", key).then(function (b) { if (!b) { var sp = document.createElement("span"); sp.className = "akmissing"; sp.textContent = "[image not included]"; im.replaceWith(sp); return; } ANK.urls[key] = URL.createObjectURL(b); im.src = ANK.urls[key]; });
-  });
-}
-function akFreeUrls() { Object.keys(ANK.urls).forEach(function (k) { try { URL.revokeObjectURL(ANK.urls[k]); } catch (x) { } }); ANK.urls = {}; }
-function ankiClick(t, a) {
-  if (S.tab !== "anki") return false;
-  if (a.akstudy) { var d = (ANK.decks || []).filter(function (x) { return x.id === a.akstudy; })[0]; if (!d) return true; ANK.note = ""; ANK.err = ""; ANK.st = { deck: d, mode: a.akmode, q: akQueue(d, a.akmode), pos: 0, got: 0, seen: 0, card: null, flipped: false }; if (ANK.st.q.length) akOpen(); render(); window.scrollTo(0, 0); return true; }
-  if (a.akflip && ANK.st) { ANK.st.flipped = true; render(); return true; }
-  if (a.akgrade && ANK.st) {
-    var st = ANK.st; st.seen++;
-    if (a.akgrade === "good") st.got++; else { var cur = st.q[st.pos], at = Math.min(st.q.length, st.pos + 1 + 5); st.q.splice(at, 0, cur); }
-    st.pos++; if (st.pos < st.q.length) akOpen(); render(); return true;
-  }
-  if (a.akagain && ANK.st) { ANK.st.q = akQueue(ANK.st.deck, ANK.st.mode); ANK.st.pos = 0; ANK.st.got = 0; ANK.st.seen = 0; akOpen(); render(); return true; }
-  if (a.akback) { ANK.st = null; akFreeUrls(); render(); return true; }
-  if (a.akdel) {
-    var dd = (ANK.decks || []).filter(function (x) { return x.id === a.akdel; })[0]; if (!dd) return true;
-    if (t.getAttribute("data-confirm") !== "1") { t.setAttribute("data-confirm", "1"); t.textContent = "Tap again to delete \"" + dd.name + "\""; return true; }
-    akDeleteDeck(dd.id).then(function () { ANK.decks = null; ANK.note = "Deleted \"" + dd.name + "\" from this device."; render(); }); return true;
-  }
-  return false;
-}
-document.addEventListener("change", function (e) {
-  if (e.target && e.target.getAttribute && e.target.getAttribute("data-aksub")) { ANK.sub[e.target.getAttribute("data-aksub")] = e.target.value; return; }
-  if (e.target && e.target.id === "ankifile" && e.target.files && e.target.files[0]) { var f = e.target.files[0]; e.target.value = ""; ANK.note = ""; akImport(f); }
-});
 
 /* ---------- Ratings and ideas ----------
    Rating: after a few good study sessions the app asks iOS / Google Play for their own rating box
