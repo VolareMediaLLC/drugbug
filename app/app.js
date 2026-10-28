@@ -436,6 +436,8 @@ var ICO = {
   labs: '<path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3"/><path d="M7.5 15h9"/>',
   units: '<path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-5h6v5M12 8v5M9.5 10.5h5"/>',
   body: '<circle cx="12" cy="4.5" r="2.5"/><path d="M12 7v8M7 10h10M12 15l-3 6M12 15l3 6"/>',
+  pillq: '<path d="M10.5 3.5a5 5 0 0 1 7 7l-7 7a5 5 0 0 1-7-7z"/><path d="M7 10l7 7"/>',
+  ecg: '<path d="M3 12h4l2-5 4 10 2-5h6"/>',
   doses: '<rect x="7" y="2" width="10" height="20" rx="4"/><path d="M12 7v6l3 2"/>',
   alts: '<path d="M7 4v13M7 17l-3-3M7 17l3-3M17 20V7M17 7l-3 3M17 7l3 3"/>',
   illicit: '<path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/>',
@@ -909,20 +911,34 @@ function nrPrep() {
   if (st.phase === "done") return nrDone(st) + scoreArea();
   var pool = nrPool(st.filter);
   var nurse = nurseCtx(), exam = nurse ? { cna: "CNA state exam", lvn: "NCLEX-PN", rn: "NCLEX-RN" }[S.level] : medCtx() ? { ms1: "USMLE Step 1", ms3: "USMLE Step 2 CK", intern: "USMLE Step 3" }[S.level] : imCtx() ? "Imaging exam" : S.level === "flight" ? "Flight and critical care certification exam" : "NREMT";
-  var c = '<section class="nrsetup"><h2>' + esc(prepName()) + '</h2><p class="muted">' + exam + '-style ' + (st.kind === "reg" ? 'questions across the whole exam' : 'multiple choice on the medications') + '. Pick a length and a mode, then start. Questions come from your level only.</p>' + (S.level === "flight" && S.view === "level" ? '<p class="muted small">Original practice questions for flight and critical care certification study. Not affiliated with or endorsed by IBSC or BCEN, and not official exam items.</p>' : '') + examCard(pool) + weakCard();
-  var filters = nrLevelsFor(ctxKey()).concat(["all"]);
-  /* two sections: drug questions (the medication bank) and registry questions (the whole exam: airway, cardiology, trauma, medical, operations) */
-  var regN = regCount();
-  if (regN) c += '<div class="lbl">Question type</div><div class="chips"><button class="chip" data-nrkind="drug" aria-pressed="' + (st.kind !== "reg") + '">Drug questions (' + drugCount() + ')</button><button class="chip" data-nrkind="reg" aria-pressed="' + (st.kind === "reg") + '">Registry questions (' + regN + ')</button></div>' +
-    '<p class="muted small">' + (st.kind === "reg" ? "Registry questions cover the whole " + exam + ": airway, respiration and ventilation; cardiology and resuscitation; trauma; medical and OB/GYN; and EMS operations." : "Drug questions focus on the medications in your scope: doses, actions, indications, contraindications and side effects.") + '</p>';
-  if (st.kind !== "reg") c += qNamesChips();
-  if (filters.length > 2 && st.kind !== "reg") c += '<div class="lbl">Question set</div><div class="chips">' + filters.map(function (f) { return '<button class="chip" data-nrfilter="' + f + '" aria-pressed="' + (st.filter === f) + '">' + (f === "all" ? "Everything" : NRLV[f]) + ' (' + nrPool(f).length + ')</button>'; }).join("") + '</div>';
-  c += '<div class="lbl">Number of questions</div><div class="chips">' + [10, 25, 50, 100].map(function (n) { return '<button class="chip" data-nrlen="' + n + '" aria-pressed="' + (st.n === n) + '"' + (n > pool.length ? " disabled" : "") + '>' + n + (n > 10 && !isPro() ? ' ' + proBadge() : '') + '</button>'; }).join("") + '</div>';
-  c += '<div class="lbl">Question choice</div><div class="chips"><button class="chip" data-nradapt="1" aria-pressed="' + (st.adaptive !== false) + '">Adaptive: more of what I miss</button><button class="chip" data-nradapt="0" aria-pressed="' + (st.adaptive === false) + '">Random</button></div>';
-  c += '<div class="lbl">Mode</div><div class="chips"><button class="chip" data-nrmode="practice" aria-pressed="' + (st.mode === "practice") + '">Practice: see the answer after each question</button><button class="chip" data-nrmode="exam" aria-pressed="' + (st.mode === "exam") + '">Exam: answers at the end' + (!isPro() ? ' ' + proBadge() : '') + '</button></div>';
-  c += '<div class="actions"><button class="btn" data-act="nrstart"' + (pool.length ? "" : " disabled") + '>Start ' + Math.min(st.n, pool.length) + ' questions</button><span class="muted small">' + pool.length + ' questions in this set</span></div>';
-  c += '<p class="muted small">Original practice questions written for studying, not official ' + exam + ' items. Aim for steady scores of 70% or better here.</p><p class="muted small">Answers reflect common national guidance at the time of writing. Where practice varies, the explanation says so; your protocols, facility policy and medical direction always come first.</p><p class="muted small nonaff">' + NONAFF + '</p></section>';
+  var regN = regCount(), reg = st.kind === "reg", filters = nrLevelsFor(ctxKey()).concat(["all"]), n = Math.min(st.n, pool.length);
+  /* one simple screen: pick a deck, a length and a mode, then go. Everything else sits under More options. */
+  var c = '<section class="nrsetup nrfun"><div class="nrtop">' + myBugArt("nrbug") + '<p class="nrtag"><strong>' + esc(exam) + '-style practice.</strong> <span class="muted">Pick a deck, pick a length, go.</span></p></div>' + examPill(pool);
+  if (regN) c += '<div class="nrdecks" role="group" aria-label="Question type">' +
+    '<button class="nrdeck" data-nrkind="drug" aria-pressed="' + !reg + '"><span class="nrdk-ic" aria-hidden="true">' + icon("pillq") + '</span><strong>Drug questions</strong><span class="nrdk-n">' + drugCount() + '</span><span class="nrdk-sub">Doses, actions, uses and side effects</span></button>' +
+    '<button class="nrdeck" data-nrkind="reg" aria-pressed="' + reg + '"><span class="nrdk-ic" aria-hidden="true">' + icon("ecg") + '</span><strong>Registry questions</strong><span class="nrdk-n">' + regN + '</span><span class="nrdk-sub">Airway, cardiology, trauma, medical and operations</span></button></div>';
+  c += '<div class="nrrow"><span class="nrlbl">How many?</span><div class="nrseg" role="group" aria-label="Number of questions">' + [10, 25, 50, 100].map(function (k) { return '<button data-nrlen="' + k + '" aria-pressed="' + (st.n === k) + '"' + (k > pool.length ? " disabled" : "") + '>' + k + (k > 10 && !isPro() ? '<i class="nrlock" aria-label="Pro">&#9733;</i>' : '') + '</button>'; }).join("") + '</div></div>';
+  c += '<div class="nrmodes" role="group" aria-label="Mode"><button class="nrmode" data-nrmode="practice" aria-pressed="' + (st.mode === "practice") + '"><strong>Practice</strong><span>See each answer as you go</span></button><button class="nrmode" data-nrmode="exam" aria-pressed="' + (st.mode === "exam") + '"><strong>Exam' + (!isPro() ? ' ' + proBadge() : '') + '</strong><span>Answers at the end, like test day</span></button></div>';
+  c += '<button class="btn nrgo" data-act="nrstart"' + (pool.length ? "" : " disabled") + '>Start ' + n + ' question' + (n === 1 ? '' : 's') + ' <span aria-hidden="true">&rarr;</span></button>';
+  var wn = weakPool().length;
+  if (wn) c += '<button class="nrweak" data-act="weakgo"><span class="nrweak-n">' + wn + '</span><span><strong>Weak spots</strong><span class="muted small">Questions you missed and drugs under 70%. Drill ' + Math.min(wn, 20) + ' now.</span></span><span aria-hidden="true">&rsaquo;</span></button>';
+  c += '<button class="linkish nrmorebtn" data-act="nrmore" aria-expanded="' + !!(S.nrMore || S.exEdit) + '">' + (S.nrMore || S.exEdit ? "Hide options" : "More options") + '</button>';
+  if (S.nrMore || S.exEdit) {
+    c += '<div class="nrmore">';
+    if (!reg) c += qNamesChips();
+    if (filters.length > 2 && !reg) c += '<div class="lbl">Question set</div><div class="chips">' + filters.map(function (f) { return '<button class="chip" data-nrfilter="' + f + '" aria-pressed="' + (st.filter === f) + '">' + (f === "all" ? "Everything" : NRLV[f]) + ' (' + nrPool(f).length + ')</button>'; }).join("") + '</div>';
+    c += '<div class="lbl">Question choice</div><div class="chips"><button class="chip" data-nradapt="1" aria-pressed="' + (st.adaptive !== false) + '">Adaptive: more of what I miss</button><button class="chip" data-nradapt="0" aria-pressed="' + (st.adaptive === false) + '">Random</button></div>';
+    c += examCard(pool) + '</div>';
+  }
+  c += '<p class="muted small nrfine">Original practice questions, not official ' + esc(exam) + ' items. Your protocols and medical direction come first. ' + (S.level === "flight" && S.view === "level" ? 'Not affiliated with IBSC or BCEN. ' : '') + '<span class="nonaff">' + NONAFF + '</span></p></section>';
   return c + scoreArea();
+}
+/* small countdown pill at the top of exam prep, once a test date is set */
+function examPill(pool) {
+  var E = (Prog.d.exam || {})[examKey()], t = today(); if (!E || S.exEdit) return "";
+  var days = Math.round((new Date(E + "T00:00:00") - new Date(t + "T00:00:00")) / 864e5); if (days < 0) return "";
+  var done = (Prog.d.days || {})[t] || 0, goal = days === 0 ? 0 : Math.max(10, Math.min(150, Math.ceil(pool.length * 1.5 / days)));
+  return '<div class="expill"><strong>' + (days === 0 ? "Test day!" : days + (days === 1 ? " day" : " days") + " to go") + '</strong>' + (goal ? '<span>Today ' + done + ' of ' + goal + (done >= goal ? ' &#10003;' : '') + '</span><i style="--p:' + Math.min(100, Math.round(100 * done / goal)) + '%"></i>' : '') + '</div>';
 }
 /* exam countdown: set your test date, get a daily question goal */
 function examKey() { return ctxKey() || "gen"; }
@@ -1373,6 +1389,7 @@ document.addEventListener("click", function (e) {
     case "easy": S.menu = false; if (S.view !== "easy") { S.easyScope = S.view === "level" ? S.level : S.view === "gen" ? "gen" : "all"; S.easyQ = ""; go("easy"); } return;
     case "weakgo": var stw = nrState(); stw.mode = "practice"; nrStart(weakPool().slice(0, 20)); S.nr.kind = "weak"; render(); return window.scrollTo(0, 0);
     case "exedit": S.exEdit = true; return render();
+    case "nrmore": S.nrMore = !(S.nrMore || S.exEdit); S.exEdit = false; return render();
     case "exclear": if (Prog.d.exam) delete Prog.d.exam[examKey()]; S.exEdit = false; saveProg(); return render();
     case "nrstart": var st0 = nrState(), pl0 = nrPool(st0.filter), pk0 = st0.kind === "reg" ? regCompose(pl0, st0.n, st0.adaptive !== false) : isEMSLv(ctxKey()) ? nrCompose(pl0, Math.min(st0.n, pl0.length), st0.filter && st0.filter !== "all" ? [st0.filter] : nrLevelsFor(ctxKey()), st0.adaptive !== false) : st0.adaptive !== false ? adaptivePick(pl0, st0.n) : shuffle(pl0).slice(0, st0.n); nrStart(pk0); render(); return window.scrollTo(0, 0);
     case "nrnext": S.nr.i++; render(); return window.scrollTo(0, 0);
