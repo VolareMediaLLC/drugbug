@@ -332,7 +332,7 @@ function topbar() {
   if (S.view === "terrarium") c += '<span>/</span><span>Terrarium</span>';
   if (S.view === "everyday") c += '<span>/</span>' + (S.evTab ? '<button data-evtab="">Everyday Health</button>' : '<span>Everyday Health</span>');
   var extra = (!SOCIAL ? '' : '<button class="theme-btn" data-go="classes"' + (S.view === "classes" ? ' aria-current="page"' : '') + '>Classes</button>') + (Admin.can ? '<button class="theme-btn admin-btn" data-go="admin"' + (S.view === "admin" ? ' aria-current="page"' : '') + '><span class="lg">Control Center</span><span class="sm">Control Center</span></button>' : '') + '<button class="theme-btn easy-btn" data-act="easy"' + (S.view === "easy" ? ' aria-current="page"' : '') + '>Easy Learn</button><button class="theme-btn mob-only" data-act="openproto">Protocols</button>';
-  c += '</nav><span class="spacer"></span><div class="tbacts">' + stickChip() + '<span class="tbx">' + extra + '</span><button class="theme-btn menu-btn" data-act="tbmenu" aria-expanded="' + !!S.menu + '" aria-label="More">More</button>' + musicBtn() + gearBtn() + '<span class="tbsticks" aria-label="' + sticks() + ' sticks">' + stickIcon(18) + '<strong>' + sticks().toLocaleString() + '</strong></span></div>' + (S.menu ? '<div class="tbmenu" role="menu">' + extra + '<button class="theme-btn" data-idea="1">Send an idea</button></div>' : '') + '</div>';
+  c += '</nav><span class="spacer"></span><div class="tbacts">' + stickChip() + '<span class="tbx">' + extra + '</span><button class="theme-btn srch-btn" data-act="gsearch" aria-label="Search all drugs" title="Search all drugs"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button><button class="theme-btn menu-btn" data-act="tbmenu" aria-expanded="' + !!S.menu + '" aria-label="More">More</button>' + musicBtn() + gearBtn() + '<span class="tbsticks" aria-label="' + sticks() + ' sticks">' + stickIcon(18) + '<strong>' + sticks().toLocaleString() + '</strong></span></div>' + (S.menu ? '<div class="tbmenu" role="menu">' + extra + '<button class="theme-btn" data-idea="1">Send an idea</button></div>' : '') + '</div>';
   return c + (typeof muPop === "function" ? muPop() : "") + backRow();
 }
 function backRow() {
@@ -354,16 +354,25 @@ function viewHome() {
   return topbar() + homeTip() +
    heroHTML() +
    homeStart() + homeProgress() + (typeof trialBanner === "function" ? trialBanner() : '') +
-   '<section class="routes">' +
-   '<button class="route gen wide' + pt("gen") + '" data-go="gen">' + (S.pointGo === "gen" ? PT : '') + '<span class="eyebrow">Start here</span><h2>BugDex</h2><p>Every medication in DrugBug in one place, explained in plain language by Professor Sage. Search any drug or browse by class.</p><span class="count">' + genN + ' medications</span><span class="sage">' + bugSVG("sage") + '</span></button>' +
-   '<div class="minis">' +
+   '<h3 class="homegh">Look it up</h3><section class="routes">' +
+   '<button class="route gen wide' + pt("gen") + '" data-go="gen">' + (S.pointGo === "gen" ? PT : '') + '<span class="eyebrow">Start here</span><h2>BugDex</h2><p>Every medication, explained in plain language. Search or browse.</p><span class="count">' + genN + ' medications</span><span class="sage">' + bugSVG("sage") + '</span></button>' +
+   myListRoute() +
+   '</section><h3 class="homegh">Study by role</h3><section class="routes"><div class="minis">' +
    mini("ev", "everyday", "Everyday Health", "Meds, vitamins and your body", "grub-everyday") +
    mini("ph", "levels", "Prehospital", "EMT to Flight Paramedic", "grub-medic") +
    mini("rn", "nlevels", "Nursing", "CNA, LVN/LPN and RN", "grub-nurse") +
    mini("md", "mlevels", "Medical School", "MS1 to Intern", "grub-doc") +
    mini("im", "ilevels", "Imaging", "X-ray, CT, MRI, NM and IR", "grub-imaging") +
-   '</div></section>' +
-   '<p class="disclaimer">DrugBug is a study and reference tool. Scope of practice, doses and drug availability vary by state, agency, facility and medical direction. Always follow your local protocols, your state practice act and facility policy.</p>';
+   '</div></section>';
+}
+/* My List on the home screen, right under the BugDex (owner, Oct 28 2026) */
+function myListRoute() {
+  var m = marks().filter(function (id) { return DB.drugs[id]; }), n = m.length, ix = 0;
+  if (n >= 2 && typeof ixnGroups === "function") { var key = m.join(","); if (DB._ixk !== key) { var G = ixnGroups(m.slice(0, 40)); DB._ixk = key; DB._ixn = G.syn.length + G.add.length + G.neg.length + G.oth.length; } ix = DB._ixn; }
+  var lock = typeof proLocked === "function" && proLocked("mylist");
+  return '<button class="route mylist wide" data-golist="1"><span class="eyebrow">Your drugs</span><h2>My List' + (lock ? '<span class="lockpill">Plus</span>' : '') + '</h2><p>' +
+    (n ? n + ' saved drug' + (n === 1 ? '' : 's') + '. Quiz, print and see how they interact.' : 'Save drugs from any page to quiz on them and see how they interact.') +
+    '</p>' + (n >= 2 ? '<span class="count">' + ix + ' interaction' + (ix === 1 ? '' : 's') + ' on your list</span>' : '') + '</button>';
 }
 /* the first thing after the header: get studying */
 function homeStart() {
@@ -380,7 +389,7 @@ function homeProgress() {
     '<div class="pstat"><span class="pk">Level</span><strong>' + L.lv + '</strong><span class="pbar" aria-hidden="true"><i style="width:' + pct + '%"></i></span><span class="pm">' + (L.need - L.into) + ' XP to level ' + (L.lv + 1) + '</span></div>' +
     '<div class="pstat"><span class="pk">Streak</span><strong>' + liveStreak() + '</strong><span class="pm">day' + (liveStreak() === 1 ? '' : 's') + ' in a row</span></div>' +
     '<button class="pstat" data-goshop="1"><span class="pk">Your bug</span><strong>' + esc(stageName(st)) + '</strong><span class="pm">' + (nx ? esc(stageName(st + 1)) + ' at level ' + nx : 'Fully grown') + '</span></button>' +
-    '<button class="pstat" data-goshop="1"><span class="pk">Sticks</span><strong>' + sticks().toLocaleString() + '</strong><span class="pm">Spend in the Bug Store</span></button></section>';
+    '</section>';
 }
 function homeTip() {
   if (store("tipBug") || (typeof tourDone === "function" && !tourDone())) return "";
@@ -403,7 +412,7 @@ var SCOPE_TAG = { emt: "Basic life support", aemt: "Limited advanced life suppor
   cna: "Basic patient care", lvn: "Practical nursing", rn: "Professional nursing", ms1: "Preclinical sciences", ms3: "Clinical rotations", intern: "First-year residency" };
 function scopeTag(key, i, tot) { return SCOPE_TAG[key] || ("Level " + (i + 1) + " of " + tot); }
 function band() {
-  if (S.view === "gen") return '<header class="band"><div class="bugstage">' + bugSVG("sage") + '</div><div><h1>BugDex</h1><div class="sub">Every medication in DrugBug, explained in plain language by Professor Sage. Filter by class or search by name.</div></div></header>';
+  if (S.view === "gen") return '<header class="band"><div class="bugstage">' + bugSVG("sage") + '</div><div><h1>BugDex</h1><div class="sub">Every medication in DrugBug, explained by Professor Sage.</div></div></header>';
   var l = levelObj(S.level), i = levelIdx(S.level), m = '', mu = isN(S.level) && myUnit(S.level), tot = levelsOf(S.level).length;
   for (var k = 0; k < tot; k++) m += '<span class="p' + (k <= i ? " on" : "") + '"></span>';
   return '<header class="band"><div class="bugstage">' + levelBug(S.level) + '</div><div><h1>' + esc(l.name) + '</h1><div class="sub">' + esc(l.bug) + (mu ? ' · ' + esc(unitObj(mu).name) : '') + '</div><div class="meter">' + (isI(S.level) ? '<span>' + esc(l.full) + '</span>' : m + '<span>' + esc(scopeTag(S.level, i, tot)) + '</span>') + '</div></div></header>';
@@ -430,6 +439,11 @@ var ICO = {
   doses: '<rect x="7" y="2" width="10" height="20" rx="4"/><path d="M12 7v6l3 2"/>',
   alts: '<path d="M7 4v13M7 17l-3-3M7 17l3-3M17 20V7M17 7l-3 3M17 7l3 3"/>',
   anki: '<rect x="4" y="6" width="12" height="15" rx="2"/><path d="M8 3h10a2 2 0 0 1 2 2v13"/><path d="M10 11l2 3 3-5"/>',
+  illicit: '<path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/>',
+  conds: '<path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/><circle cx="17" cy="15" r="2.5"/>',
+  vegc: '<path d="M12 21c-4-3-6-7-5-11 3 0 5 2 5 5 0-3 2-5 5-5 1 4-1 8-5 11z"/><path d="M12 6V3M10 4l2 2 2-2"/>',
+  fruitc: '<circle cx="12" cy="14" r="7"/><path d="M12 7c0-2 1-4 3-4M12 7c-2-2-4-2-5-1"/>',
+  vitc: '<rect x="5" y="9" width="14" height="7" rx="3.5" transform="rotate(-35 12 12.5)"/><path d="M10 9.5l4 6"/>',
   shop: '<path d="M7 7h10l1 3v9a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-9z"/><path d="M6 4h12v3H6zM10 14c0-2 2-3 2-5 0 2 2 3 2 5a2 2 0 0 1-4 0z"/>'
 };
 function icon(k) { return '<svg class="ico" viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (ICO[k] || '') + '</svg>'; }
@@ -438,7 +452,7 @@ function tabList() {
   L.push(["mylist", "My List", marks().length ? "Your saved drugs: study, quiz or print them." : "Tap \"Save to My List\" on any drug page to build your list."]);
   if (S.view === "level" && isN(S.level) && unitsFor(S.level).length) L.push(["units", "Specialty Units", "ICU, ER, L&D, peds and more: the meds your unit uses."]);
   if (S.view !== "gen") L.push(["prep", prepName(), "Timed practice tests with scores."]);
-  if (typeof dcAllowed === "function" && dcAllowed()) L.push(["doses", "Dose Cards", "Study cards for emergency doses: enter a weight to see mg and mL. Same cards as the Apple Watch app."]);
+  /* Dose Cards removed Oct 27, 2026 (owner: too much liability) */
   if (S.view === "level" && isM(S.level)) L.push(["body", "Body Systems", "Pick a part of the body to see the drugs that act on it and the drugs that harm it."]);
   if (S.view === "level" && isM(S.level)) L.push(["alts", "Drug Alternatives", "Can't order a drug? See same-class options and other drugs for the same problem, and how they differ."]);
   if (S.view === "gen") L.splice(1, 0, ["conds", "Conditions & Medicine Cautions", "Pick a condition to see which medicines mention it in their contraindications and warnings. Education only."]);
@@ -451,8 +465,10 @@ function tabList() {
   var img = S.view === "level" && isI(S.level);
   if (img) L.splice(1, 0, ["contrast", "Contrast Safety", "Reactions, screening, eGFR, GBCA groups, nuclear medicine and IR safety."]);
   /* Calc Lab removed Oct 26, 2026 (owner decision) */
-  if (!img) L.push(["tools", "Study Tools", "Megacode, pediatric dosing practice, interactions, med lists and safety drills."], ["scenarios", "Scenarios", "Clinical cases: choose what to give."]);
+  if (!img) L.push(["tools", "Study Tools", "Megacode, interactions, med lists and safety drills."], ["scenarios", "Scenarios", "Clinical cases: choose what to give."]);
   L.push(["cards", "Flashcards", S.view === "level" && isM(S.level) ? "DrugBug flashcards, or your own decks imported from Anki." : "Flip, sort and master each drug."], ["games", "Brain Games", "Memory match, crossword, quick match, word scramble, Class Blitz and Frog Snack."], ["progress", "Progress", "Mastery, achievements and leaderboard."]);
+  if (S.view === "gen" && typeof illicitView === "function") L.splice(1, 0, ["illicit", "Illicit & Street Drugs", "How illicit and recreational drugs affect the body, overdose signs and treatment. Education only."]);
+  if (S.view === "gen" && typeof COMPOUND_TABS !== "undefined") L.splice(1, 0, ["vegc", "Vegetable Compounds", "Sulforaphane, allicin, lycopene, favism beans and more cool compounds from vegetables."], ["fruitc", "Fruit Compounds", "Resveratrol, bromelain, star fruit toxin and more unique compounds from fruit."], ["vitc", "Vitamin Compounds", "Every vitamin form, from B12 types to vitamin K2, CoQ10 and choline."]);
   if (typeof disView === "function" && !(S.view === "level" && isI(S.level))) L.splice(1, 0, ["diseases", "Disease Wormhole", "Go down the wormhole on 250 conditions: their history, what goes wrong from cell to organ, and the drugs that treat them."]);
   return L;
 }
@@ -461,10 +477,27 @@ function cardsChooser() {
   return '<div class="fcpick"><button data-fcpick="1"><strong>DrugBug flashcards</strong><span>Flip, sort and master the drugs for your level.</span></button>' +
     '<button data-tab="anki"><strong>Imported Decks' + (proLocked("anki") ? ' ' + proBadge("anki") : '') + '</strong><span>Study flashcard decks you exported from Anki (.apkg). They stay private on this device.</span></button></div>';
 }
+/* Hub tiles grouped into sections with short labels (UI cleanup, Oct 28 2026) */
+var HUB_GROUPS = [
+  ["Look it up", ["registry", "families", "conds", "diseases", "illicit", "units", "body", "alts", "contrast", "labs", "blood", "hemo", "flightp"]],
+  ["Food and vitamin compounds", ["vegc", "fruitc", "vitc"]],
+  ["Study and practice", ["prep", "nbug", "cards", "scenarios", "tools", "games", "anki"]],
+  ["Yours", ["mylist", "progress", "shop"]]
+];
+var HUB_SHORT = { illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "Saved drugs and their interactions", tools: "Megacode, interactions, safety drills", scenarios: "Clinical cases", cards: "Flip, sort and master", games: "Match, crossword, scramble and more", progress: "Mastery, badges, leaderboard", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time", prep: "Timed tests with scores" };
 function hubView() {
-  return '<nav class="hub" aria-label="Sections">' + tabList().map(function (t) {
-    return '<button class="hubtile t-' + t[0] + (proLocked(t[0]) ? ' locked' : '') + '" data-tab="' + t[0] + '">' + icon(t[0]) + '<span class="ht"><strong>' + esc(t[1]) + (proLocked(t[0]) ? ' ' + proBadge(t[0]) : '') + '</strong><span>' + esc(t[2]) + '</span></span>' + (t[0] === "shop" ? '<span class="hubsticks">' + stickIcon(14) + sticks().toLocaleString() + '</span>' : t[0] === "mylist" && marks().length ? '<span class="hubsticks">' + marks().length + '</span>' : '') + '</button>';
-  }).join("") + '</nav>';
+  var L = tabList(), used = {}, c = '<nav class="hub2" aria-label="Sections">';
+  function tile(t) {
+    used[t[0]] = 1;
+    return '<button class="hubtile t-' + t[0] + (proLocked(t[0]) ? ' locked' : '') + '" data-tab="' + t[0] + '">' + icon(t[0]) + '<span class="ht"><strong>' + esc(t[1]) + (proLocked(t[0]) ? ' ' + proBadge(t[0]) : '') + '</strong><span>' + esc(t[0] === "registry" && S.view !== "gen" ? "Every drug in your scope" : HUB_SHORT[t[0]] || t[2]) + '</span></span>' + (t[0] === "shop" ? '<span class="hubsticks">' + stickIcon(14) + sticks().toLocaleString() + '</span>' : t[0] === "mylist" && marks().length ? '<span class="hubsticks">' + marks().length + '</span>' : '') + '</button>';
+  }
+  HUB_GROUPS.forEach(function (g) {
+    var items = L.filter(function (t) { return g[1].indexOf(t[0]) >= 0; }); if (!items.length) return;
+    c += '<h3 class="hubgh">' + esc(g[0]) + '</h3><div class="hub">' + items.map(tile).join("") + '</div>';
+  });
+  var rest = L.filter(function (t) { return !used[t[0]]; });
+  if (rest.length) c += '<h3 class="hubgh">More</h3><div class="hub">' + rest.map(tile).join("") + '</div>';
+  return c + '</nav>';
 }
 function sectionHead() {
   var where = S.view === "gen" ? "BugDex" : (levelObj(S.level) || {}).name || "";
@@ -700,7 +733,7 @@ function viewLevel() {
   if (!S.tab || (S.tab !== "hub" && S.tab !== "session" && !tabName(S.tab))) S.tab = "hub";
   if (S.tab !== "hub" && S.tab !== "session" && typeof proLocked === "function" && proLocked(S.tab)) { var lt = S.tab; S.tab = "hub"; setTimeout(function () { openPaywall(tabName(lt), tabTier(lt)); }, 0); }
   if (S.tab === "calc") S.tab = "hub";  /* Calc Lab was removed */
-  var body = S.tab === "hub" ? "" : S.tab === "registry" ? registry() : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? doseView() : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "calc" ? calcView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "anki" ? ankiView() : S.tab === "tools" ? toolsView() : (S.tab === "cards" && S.view === "level" && isM(S.level) && !S.fcPick ? cardsChooser() : flashcards());
+  var body = S.tab === "hub" ? "" : (S.tab === "vegc" || S.tab === "fruitc" || S.tab === "vitc") && typeof compoundView === "function" ? compoundView(S.tab) : S.tab === "illicit" && typeof illicitView === "function" ? illicitView() : S.tab === "registry" ? registry() : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? (S.tab = "hub", "") : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "anki" ? ankiView() : S.tab === "tools" ? toolsView() : (S.tab === "cards" && S.view === "level" && isM(S.level) && !S.fcPick ? cardsChooser() : flashcards());
   var msg = S.sessMsg ? '<div class="presult" role="status">' + esc(S.sessMsg) + '</div>' : ''; S.sessMsg = "";
   var notes = (S.tab === "calc" || S.tab === "tools" ? eduBanner() : '') + (["prep", "session", "nbug", "scenarios", "cards"].indexOf(S.tab) >= 0 ? esQNote() : '');
   if (S.tab === "hub") return topbar() + '<div class="' + ctxClass() + '">' + band() + protocolBanner() + dailyCard() + msg + hubView() + '</div>';
@@ -1229,7 +1262,7 @@ function drawSheet() {
   var rw = (DB.RW || {})[id] || {}, line = lang() !== "es" && nurseCtx() && rw.rl ? ["rn", "Nursing summary", rw.rl] : lang() !== "es" && medCtx() && rw.ml ? ["md", "Clinical summary", rw.ml] : lang() !== "es" && imCtx() && (DB.RWI || {})[id] ? ["im", "In imaging", DB.RWI[id].use] : get(d, 16, 0) ? ["", "", get(d, 16, 0)] : null;
   if (line) c += '<p class="plain' + (line[0] ? ' plain-' + line[0] : '') + '">' + (line[1] ? '<span class="plainlab">' + line[1] + '</span>' : '') + esc(line[2]) + '</p>';
   if (typeof agpDrugBox === "function") c += agpDrugBox(id);
-  c += '<div class="sheetacts"><button class="btn small" data-sess="study" data-drug-id="' + id + '">Study this drug</button>' + (medCtx() ? '<button class="btn small ghost" data-altgo="' + id + '">Alternatives</button>' : '') + '<button class="btn small ghost" data-mark="' + id + '" aria-pressed="' + isMarked(id) + '">' + (isMarked(id) ? "In My List ✓" : "Save to My List" + (typeof PAYWALL !== "undefined" && PAYWALL && !isPro() ? " " + tierBadge("pro") : "")) + '</button>' + (S.markHint === id && isMarked(id) ? '<span class="muted small markhint">Saved. Open it any time from the <strong>My List</strong> tile.</span>' : '') + '<button class="btn small ghost" data-act="srcjump">Sources &amp; Content Review</button>' + (typeof canPrint === "function" && canPrint() ? '<button class="btn small ghost" data-print="drug:' + id + '|cards">Print study card</button>' : '') + (Admin.can ? '<button class="btn small ghost" data-go-edit="' + id + '">Edit in Control Center</button>' : '') + '</div>' + famLinks(id) + eduBanner(true);
+  c += '<div class="sheetacts"><button class="btn small" data-sess="study" data-drug-id="' + id + '">Study it</button>' + (medCtx() ? '<button class="btn small ghost" data-altgo="' + id + '">Alternatives</button>' : '') + '<button class="btn small ghost" data-mark="' + id + '" aria-pressed="' + isMarked(id) + '">' + (isMarked(id) ? "In My List ✓" : "Save to My List" + (typeof PAYWALL !== "undefined" && PAYWALL && !hasTier("plus") ? " " + tierBadge("plus") : "")) + '</button>' + (S.markHint === id && isMarked(id) ? '<span class="muted small markhint">Saved. Open it any time from the <strong>My List</strong> tile.</span>' : '') + '<button class="btn small ghost" data-act="srcjump">Sources</button>' + (typeof canPrint === "function" && canPrint() ? '<button class="btn small ghost" data-print="drug:' + id + '|cards">Print</button>' : '') + (Admin.can ? '<button class="btn small ghost" data-go-edit="' + id + '">Edit in Control Center</button>' : '') + '</div>' + famLinks(id) + eduBanner(true);
   if (S.full) c += '<button class="toggle-full" data-act="full">Back to the simple view</button>' + (typeof probioSection === "function" ? probioSection(id) : "") + (dexCtx() ? dexView(d) : fullView(d, tier)) + '<button class="toggle-full" data-act="full">Back to the simple view</button>';
   else c += (dexCtx() ? dexBox(d) : tierBox(d, tier)) + (typeof probioSection === "function" ? probioSection(id) : "") + lensCard(d) + (lang() === "es" && DB.ES[id] ? esView(id) : simpleView(d, tier)) + '<button class="toggle-full" data-act="full">' + (dexCtx() ? "Show the full DrugDex record" : "Show everything (full monograph)") + '</button>';
   c += sourcesPanel(d) + '<div class="sheetfoot">' + reportBtn("drug", id, id) + '</div>';
@@ -1266,6 +1299,7 @@ document.addEventListener("click", function (e) {
   if (a.idea) return openIdeas();
   if (a.goEdit) { closeSheet(); go("admin"); A().tab = "drugs"; A().form = recordOf(a.goEdit); return render(); }
   if (a.sess) {
+    if (a.sess !== "daily" && typeof PAYWALL !== "undefined" && PAYWALL && !isPro()) return openPaywall("Practice quizzes", "pro"); /* extra learning is Pro; the daily 5-min DrugBug stays free */
     if (sheet && !sheet.hidden) closeSheet();
     if (S.view !== "level" && S.view !== "gen") { var ll = store("lastLevel"); if (ll && levelObj(ll)) go("level", { level: ll }); else go("gen"); }
     return startSession(a.sess, { drug: a.drugId, g: a.g != null ? +a.g : undefined, cat: a.cat, unit: a.unitq, chal: !!a.chal, n: a.chal ? 5 : 10 });
@@ -1275,7 +1309,7 @@ document.addEventListener("click", function (e) {
   if (a.mopt != null) { return megaAnswer(+a.mopt); }
   if (a.mlrm) { S.medlist = (S.medlist || []).filter(function (x) { return x !== a.mlrm; }); return render(); }
   if (a.sopt != null) { var sf = S.safe; if (sf.pick != null) return; sf.pick = sf.opts[+a.sopt]; sf.n++; feedback(sf.pick === sf.q.a); earn(qSticks(sf.pick === sf.q.a)); if (sf.pick === sf.q.a) { sf.c++; Prog.d.xp += 5; } saveProg(); return render(); }
-  if (a.mark) { if (typeof PAYWALL !== "undefined" && PAYWALL && !isPro() && !isMarked(a.mark)) { openPaywall("Saving drugs to My List", "pro"); return; } toggleMark(a.mark); S.markHint = isMarked(a.mark) ? a.mark : null; return drawSheet(); }
+  if (a.mark) { if (typeof PAYWALL !== "undefined" && PAYWALL && !hasTier("plus") && !isMarked(a.mark)) { openPaywall("Saving drugs to My List", "plus"); return; } toggleMark(a.mark); S.markHint = isMarked(a.mark) ? a.mark : null; return drawSheet(); }
   if (a.unmark) { toggleMark(a.unmark); return render(); }
   if (a.onlymarks) { S.onlyMarks = !S.onlyMarks; return render(); }
   if (a.style) { buyStyle(a.style); render(); return window.scrollTo(0, 0); }
@@ -1296,8 +1330,8 @@ document.addEventListener("click", function (e) {
     if (S.view !== "terrarium") S.terrBack = { view: S.view, level: S.level, tab: S.tab };
     var sf = a.shopf || null; go("terrarium"); if (sf) { S.shopF = sf; render(); } return;
   }
-  if (a.ctype) { calcState().type = a.ctype; newCalc(); return render(); }
   if (a.nradapt != null) { nrState().adaptive = a.nradapt === "1"; return render(); }
+  if (a.golist) { if (typeof proLocked === "function" && proLocked("mylist")) return openPaywall(tabName("mylist"), tabTier("mylist")); return go("gen", { tab: "mylist" }); }
   if (a.go) return go(a.go);
   if (a.level) return go("level", { level: a.level });
   if (a.unitopen) { S.unit = a.unitopen; render(); return window.scrollTo(0, 0); }
@@ -1332,6 +1366,7 @@ document.addEventListener("click", function (e) {
   switch (a.act) {
     case "close": return closeSheet();
     case "tbmenu": S.menu = !S.menu; return render();
+    case "gsearch": S.menu = false; go("gen", { tab: "registry" }); setTimeout(function () { var q = document.getElementById("q"); if (q) { q.focus(); q.scrollIntoView({ block: "center" }); } }, 60); return;
     case "openproto": S.menu = false; render(); return openProto();
     case "utilback": var ub = S.utilBack; S.utilBack = null; if (ub && ub.view && !UTIL_VIEWS[ub.view]) { go(ub.view, ub.level ? { level: ub.level } : {}); if (ub.tab && ub.tab !== "hub") { S.tab = ub.tab; render(); } return; } return go("home");
     case "terrback": var tb = S.terrBack; S.terrBack = null; if (tb && tb.view && tb.view !== "terrarium") { go(tb.view, tb.level ? { level: tb.level } : {}); if (tb.tab) { S.tab = tb.tab; render(); } return; } return go("home");
@@ -1359,7 +1394,6 @@ document.addEventListener("click", function (e) {
     case "protooff": store("protocol", null); DB._ncache = {}; return render();
     case "sessquit": return endSession();
     case "sessagain": var so = S.sess; return startSession(so.kind, so.opt);
-    case "cnext": newCalc(); render(); var ca = $("#cans"); if (ca) ca.focus({ preventScroll: true }); return;
     case "srcjump": var sp = $("#srcpanel", sheet); if (sp) { sp.open = true; sp.scrollIntoView({ behavior: "smooth", block: "start" }); } return;
     case "nrquit": S.nr.phase = "setup"; return render();
     case "nrnew": S.nr.phase = "setup"; return render();
@@ -1392,7 +1426,6 @@ document.addEventListener("click", function (e) {
 });
 document.addEventListener("submit", function (e) {
   var f = e.target; if (!f.getAttribute) return;
-  if (f.getAttribute("data-cform")) { e.preventDefault(); return checkCalc(); }
   if (f.getAttribute("data-exform")) { e.preventDefault(); var dv = ($("#exdate") || {}).value || ""; if (/^\d{4}-\d{2}-\d{2}$/.test(dv)) { Prog.d.exam = Prog.d.exam || {}; Prog.d.exam[examKey()] = dv; S.exEdit = false; saveProg(); if (typeof remindSync === "function") remindSync(); } return render(); }
   if (f.getAttribute("data-mlform")) { e.preventDefault(); var v = ($("#mlq") || {}).value || "", id = findDrug(v); if (!id) S.mlMsg = "Couldn't find \"" + v + "\" in DrugBug."; else if ((S.medlist = S.medlist || []).indexOf(id) < 0) S.medlist.push(id); render(); var mi = $("#mlq"); if (mi) mi.focus(); return; }
   if (f.getAttribute("data-joinform")) { e.preventDefault(); return joinClass(); }
@@ -1403,15 +1436,11 @@ document.addEventListener("submit", function (e) {
 });
 document.addEventListener("change", function (e) {
   var id = e.target.id;
-  if (id === "ctypesel") { calcState().type = e.target.value; newCalc(); return render(); }
   if (id === "rqf") { A().rqf = e.target.value; A().rqid = null; return render(); }
-  if (id === "pkg" || id === "page") { S.peds = S.peds || {}; if (id === "pkg") S.peds.kg = e.target.value; else { S.peds.age = e.target.value; var ag = parseFloat(e.target.value); if (ag >= 1 && ag <= 10) S.peds.kg = (ag + 4) * 2; } return render(); }
   if (id === "afilter") { A().filter = e.target.value; render(); } else if (id === "aqlv") { A().qf.lv = e.target.value; render(); } else if (id === "aqst") { A().qf.st = e.target.value; render(); }
 });
 document.addEventListener("input", function (e) {
   if (e.target.id === "aq" || e.target.id === "aqq") { var v = e.target.value, idd = e.target.id; if (idd === "aq") A().q = v; else A().qf.q = v; clearTimeout(S._at); S._at = setTimeout(function () { render(); var f = $("#" + idd); if (f) { f.focus(); f.setSelectionRange(v.length, v.length); } }, 250); return; }
-  if (e.target.id === "cans") { calcState().ans = e.target.value; return; }
-  if (e.target.id === "pkg" || e.target.id === "page") { var pid = e.target.id, pv = e.target.value; S.peds = S.peds || {}; if (pid === "pkg") S.peds.kg = pv; else { S.peds.age = pv; var pa = parseFloat(pv); if (pa >= 1 && pa <= 10) S.peds.kg = (pa + 4) * 2; } clearTimeout(S._pkT); S._pkT = setTimeout(function () { render(); var f = $("#" + pid); if (f) { f.focus({ preventScroll: true }); try { f.setSelectionRange(pv.length, pv.length); } catch (x) {} } }, 450); return; }
   if (e.target.id === "q") { S.q = e.target.value; clearTimeout(S.qT); S.qT = setTimeout(refreshGrid, 120); }
   if (e.target.id === "eq") { S.easyQ = e.target.value; clearTimeout(S.eqT); S.eqT = setTimeout(function () { var eg = $("#egrid"); if (!eg) return; eg.innerHTML = easyCards(easyIds()); translateDom(eg); }, 150); }
 });
@@ -1539,7 +1568,7 @@ document.addEventListener("focusin", function (e) { if (!S.sheet || sheet.hidden
 /* ---------- home hero: the DrugBug title with your bug ---------- */
 function heroHTML() {
   var b = myBug(), st = typeof myStage === "function" ? myStage() : 3;
-  var tag = '<p class="tagline">Learn your meds by scope. Pick a route, find your level, and grow your bug as your scope grows.</p>';
+  var tag = '<p class="tagline">Learn your meds. Grow your bug.</p>';
   var chip = '<span class="stchip st' + st + '">' + esc(stageName(st)) + '</span>';
   var lbl = 'Your bug, ' + esc(b.name) + ', ' + esc(stageName(st)) + '. Open the Terrarium.';
   var rr = { rare: "rare", seasonal: "rare", epic: "epic", earned: "epic", legendary: "legendary" }[b.rar] || "common";
@@ -2248,46 +2277,82 @@ function qgPublished() {
 }
 /* three wrong answers taken from the same field of drugs in other classes;
    a candidate is rejected if it also appears anywhere in this drug's related text */
-function qgWrong(id, fieldFn, right, avoidText, n) {
+function qgWrong(id, fieldFn, right, avoidText, n, strict) {
   n = n || 3;
-  var d = DB.drugs[id], cls = qgCls(d), avoid = QG.all[id] || (QG.all[id] = qgNorm(d.s.map(function (l) { return l.join(" "); }).join(" "))), rn = qgNorm(right), rl = String(right || "").length, out = [], seen = {}, ids = qgPublished(), tries = 0;
+  var d = DB.drugs[id], cls = qgCls(d), avoid = QG.all[id] || (QG.all[id] = qgExpand(d.s.map(function (l) { return l.join(" "); }).join(" "))), rn = qgNorm(right), rl = String(right || "").length, out = [], seen = {}, ids = qgPublished(), tries = 0;
   var tags = (d.tags || []).filter(function (t) { return t !== "HM" || (d.tags || []).length === 1; });
   if (!QG.byTag) { QG.byTag = {}; ids.forEach(function (o) { (DB.drugs[o].tags || []).forEach(function (t) { (QG.byTag[t] = QG.byTag[t] || []).push(o); }); }); }
   var tk = tags.slice().sort().join(" "), near = QG.near[tk] || (QG.near[tk] = (function () { var m = {}; tags.forEach(function (t) { (QG.byTag[t] || []).forEach(function (o) { m[o] = 1; }); }); return Object.keys(m); })());
   var phr = [get(d, 0, 3), get(d, 0, 4)].join(";").split(/[;,()\/]/).map(qgNorm).filter(function (p) { return p.length >= 6 && !/^(drug|agent|class|other|combination|antihypertensive|analgesic)$/.test(p); });
   seen[rn] = 1;
+  var peers = qgPeers(id);
   while (out.length < n && tries < 500) {
     tries++;
-    var src = tries < 250 && near.length > 20 ? near : ids, oid = src[Math.floor(Math.random() * src.length)]; if (oid === id) continue;
-    var od = DB.drugs[oid]; if (!od || qgCls(od) === cls) continue;
+    /* plausible wrong answers first: drugs from the same DrugBug groups (but a different class), then drugs with the same tags, then anything */
+    var src = tries < 300 && peers.length >= 6 ? peers : tries < 380 && near.length > 20 ? near : ids, oid = src[Math.floor(Math.random() * src.length)]; if (oid === id) continue;
+    var od = DB.drugs[oid]; if (!od || qgCls(od) === cls || qgSameClass(d, od)) continue;
     var v = fieldFn(od, oid); if (!v) continue;
     var vn = qgNorm(v); if (!vn || seen[vn] || vn.length < 3) continue;
     if (tries < 400 && rl > 25 && (v.length < rl * 0.45 || v.length > rl * 2.2)) continue;
     if (phr.some(function (p) { return vn.indexOf(p) >= 0; })) continue;
     if (avoid && (avoid.indexOf(vn) >= 0 || vn.indexOf(rn) >= 0 || rn.indexOf(vn) >= 0)) continue;
-    var words = vn.split(" ").filter(function (w) { return w.length > 4; });
-    if (avoid && words.length && words.filter(function (w) { return avoid.indexOf(w) >= 0; }).length / words.length > 0.75) continue;
+    /* reject a wrong answer that is also true for this drug: if half or more of its key terms (including
+       abbreviations such as AF, DVT, HF) appear anywhere on this drug's page, it could be a second right answer */
+    if (strict && avoidText && qgStrictHit(v, avoidText)) continue;
+    var terms = qgTerms(v);
+    if (avoid && terms.length && terms.filter(function (w) { return qgHas(avoid, w); }).length / terms.length >= 0.5) continue;
+    /* no near-duplicate wrong answers (e.g. "Asthma" and "Bronchial asthma") */
+    var ct = qgTerms(v).map(function (w) { return w.slice(0, 6); });
+    if (ct.length && out.some(function (o) { var ot = qgTerms(o).map(function (w) { return w.slice(0, 6); }); return ct.filter(function (w) { return ot.indexOf(w) >= 0; }).length / Math.min(ct.length, ot.length || 1) >= 0.5; })) continue;
+    if (ct.length && qgTerms(right).map(function (w) { return w.slice(0, 6); }).filter(function (w) { return ct.indexOf(w) >= 0; }).length / ct.length >= 0.6) continue;
     seen[vn] = 1; out.push(v);
   }
   return out.length >= n ? out : null;
+}
+/* drugs that share this drug's smallest DrugBug groups (e.g. Electrolytes, Antidotes), used for believable wrong answers */
+var QG_STOP = { with: 1, from: 1, that: 1, this: 1, used: 1, uses: 1, when: 1, into: 1, more: 1, less: 1, than: 1, also: 1, adults: 1, adult: 1, patients: 1, patient: 1, treatment: 1, treat: 1, therapy: 1, including: 1, other: 1, such: 1, some: 1, only: 1, after: 1, before: 1, their: 1, which: 1, while: 1, risk: 1, history: 1 };
+var QG_SYN = { af: "atrial fibrillation", afib: "atrial fibrillation", hf: "heart failure", hfref: "heart failure", hfpef: "heart failure", chf: "heart failure", dvt: "deep vein thrombosis", pe: "pulmonary embolism", vte: "thromboembolism", acs: "coronary", mi: "myocardial infarction", htn: "hypertension", copd: "pulmonary", ckd: "kidney", esrd: "kidney", aki: "kidney", uti: "urinary", svt: "tachycardia", vt: "ventricular", vf: "ventricular", gi: "gastrointestinal", cns: "nervous", bp: "blood pressure", qt: "qt", mao: "mao", maoi: "mao", ssri: "serotonin" };
+var QG_PHR = [[/high blood pressure/g, "hypertension"], [/low blood pressure/g, "hypotension"], [/blood clots?/g, "thrombosis"], [/heart attack/g, "myocardial infarction"], [/irregular heartbeat/g, "arrhythmia"]];
+function qgExpand(t) { t = " " + qgNorm(t) + " "; QG_PHR.forEach(function (r) { t = t.replace(r[0], r[1]); }); Object.keys(QG_SYN).forEach(function (k) { if (t.indexOf(" " + k + " ") >= 0) t += " " + QG_SYN[k]; }); return t; }
+var QG_GENERIC = { patients: 1, treatment: 1, therapy: 1, management: 1, disease: 1, chronic: 1, including: 1, reduction: 1, prevention: 1, associated: 1, history: 1, condition: 1, conditions: 1, symptoms: 1, children: 1, pediatric: 1, increased: 1, decreased: 1, concurrent: 1, combined: 1, adjunct: 1, standard: 1, initial: 1, moderate: 1, primary: 1, secondary: 1, prophylaxis: 1, temporary: 1, severe: 1, people: 1, during: 1, within: 1, should: 1, before: 1, active: 1, recent: 1, normal: 1, higher: 1, mainly: 1, called: 1, caused: 1, causes: 1, effect: 1, effects: 1, better: 1, single: 1, weekly: 1, months: 1, years: 1, others: 1, others: 1, mild: 1, about: 1, under: 1, older: 1, younger: 1, function: 1, release: 1, levels: 1, blocks: 1, blocking: 1 };
+/* strict check for list-type answers (indications, contraindications, side effects): a wrong answer is rejected
+   if any of its abbreviations or long medical words also appears in this drug's own fields */
+function qgStrictHit(v, fieldText) {
+  var f = qgExpand(fieldText), c = qgExpand(v);
+  return c.split(" ").some(function (w) { return w && !QG_GENERIC[w] && !QG_STOP[w] && (w.length >= 6 ? f.indexOf(w.slice(0, 6)) >= 0 : QG_SYN[w] && f.indexOf(" " + w + " ") >= 0); }) ||
+    Object.keys(QG_SYN).some(function (k) { var syn = QG_SYN[k]; return syn.indexOf(" ") > 0 && c.indexOf(syn) >= 0 && f.indexOf(syn) >= 0; });
+}
+function qgTerms(v) { return String(v || "").replace(/[^A-Za-z0-9 ]/g, " ").split(/\s+/).filter(function (w) { return /^[A-Z]{2,6}[a-z]{0,2}$/.test(w) || (w.length > 3 && !QG_STOP[w.toLowerCase()]); }).map(function (w) { return w.toLowerCase(); }); }
+function qgHas(avoid, w) { if (new RegExp("(^| )" + w + "( |$)").test(avoid)) return true; var syn = QG_SYN[w]; return !!(syn && avoid.indexOf(syn) >= 0); }
+/* same therapeutic class (e.g. two anticoagulants): their answers overlap too much to be fair wrong answers */
+function qgSameClass(a, b) {
+  function k(d) { return qgNorm(get(d, 0, 3)).split(" ").filter(function (w) { return w.length > 3 && !/^(agent|drug|class|other|combination|dietary|supplement|approved)$/.test(w); })[0] || ""; }
+  var x = k(a), y = k(b); return !!x && x === y;
+}
+function qgPeers(id) {
+  QG.peers = QG.peers || {}; if (QG.peers[id]) return QG.peers[id];
+  var gs = (DB.GROUPS || []).filter(function (g) { return g.ids && g.ids.indexOf(id) >= 0; }).sort(function (a, b) { return a.ids.length - b.ids.length; }), m = {}, n = 0;
+  for (var i = 0; i < gs.length && n < 25; i++) gs[i].ids.forEach(function (o) { if (o !== id && DB.drugs[o] && !m[o]) { m[o] = 1; n++; } });
+  return (QG.peers[id] = Object.keys(m));
 }
 function qgMake(lv, id, kind, q, a, w, x) { if (!a || !w) return null; return { lv: lv, d: id, q: q, a: a, w: w, x: x, cat: "", auto: true, src: "page" }; }
 var QG_T = {
   use: function (lv, id, d, nm) {
     var a = qgClause(get(d, 1, 2) || get(d, 3, 0), 140);
-    return qgMake(lv, id, "use", "What is " + nm + " mainly used for?", a, qgWrong(id, function (o) { return qgClause(get(o, 1, 2) || get(o, 3, 0), 140); }, a, [get(d, 1, 2), get(d, 3, 0), get(d, 3, 1), get(d, 3, 2), get(d, 3, 3)].join(" ")),
+    return qgMake(lv, id, "use", "What is " + nm + " mainly used for?", a, qgWrong(id, function (o) { return qgClause(get(o, 1, 2) || get(o, 3, 0), 140); }, a, [get(d, 1, 2), get(d, 3, 0), get(d, 3, 1), get(d, 3, 2), get(d, 3, 3)].join(" "), 3, true),
       nm + ": " + (get(d, 1, 1) || a) + (get(d, 16, 1) ? " " + get(d, 16, 1) : ""));
   },
   plain: function (lv, id, d, nm) {
-    var a = qgClause(get(d, 16, 0) || get(d, 1, 0), 150);
-    return qgMake(lv, id, "plain", "Which sentence best describes " + nm + "?", a, qgWrong(id, function (o) { return qgClause(get(o, 16, 0) || get(o, 1, 0), 150); }, a, [get(d, 16, 0), get(d, 1, 0), get(d, 1, 1)].join(" ")),
+    /* "What It Does" is specific to the drug, so exactly one answer fits (owner, Oct 28 2026) */
+    var a = qgClause(get(d, 1, 1) || get(d, 1, 0), 160);
+    return qgMake(lv, id, "plain", "Which sentence best describes what " + nm + " does?", a, qgWrong(id, function (o) { return qgClause(get(o, 1, 1) || get(o, 1, 0), 160); }, a, [get(d, 16, 0), get(d, 1, 0), get(d, 1, 1), get(d, 2, 3)].join(" ")),
       (get(d, 1, 0) || a) + " " + (get(d, 1, 1) || ""));
   },
   common: function (lv, id, d, nm) {
     var items = qgItems(get(d, 9, 0)); if (!items.length) return null;
     var a = qgCap(items[Math.floor(Math.random() * Math.min(items.length, 4))]);
     var all = [get(d, 9, 0), get(d, 9, 1), get(d, 9, 2), get(d, 5, 0), get(d, 5, 2)].join(" ");
-    return qgMake(lv, id, "common", "Which is a common side effect of " + nm + "?", a, qgWrong(id, function (o) { var it = qgItems(get(o, 9, 0)); var v = it[Math.floor(Math.random() * it.length)]; return v ? qgCap(v) : ""; }, a, all),
+    return qgMake(lv, id, "common", "Which is a common side effect of " + nm + "?", a, qgWrong(id, function (o) { var it = qgItems(get(o, 9, 0)); var v = it[Math.floor(Math.random() * it.length)]; return v ? qgCap(v) : ""; }, a, all, 3, true),
       "Common side effects of " + nm + ": " + get(d, 9, 0));
   },
   brand: function (lv, id, d, nm) {
@@ -2309,7 +2374,7 @@ var QG_T = {
   ind: function (lv, id, d, nm) {
     var a = qgClause(get(d, 3, 0), 130);
     var all = [get(d, 3, 0), get(d, 3, 1), get(d, 3, 2), get(d, 3, 3), get(d, 1, 2)].join(" ");
-    return qgMake(lv, id, "ind", "Which is a primary indication for " + nm + "?", a, qgWrong(id, function (o) { return qgClause(get(o, 3, 0), 130); }, a, all),
+    return qgMake(lv, id, "ind", "Which is a primary indication for " + nm + "?", a, qgWrong(id, function (o) { return qgClause(get(o, 3, 0), 130); }, a, all, 3, true),
       "Primary indications for " + nm + ": " + get(d, 3, 0));
   },
   contra: function (lv, id, d, nm) {
@@ -2317,7 +2382,7 @@ var QG_T = {
     if (!parts.length) return null; var a = parts[0];
     var all = [get(d, 4, 0), get(d, 4, 1), get(d, 5, 0), get(d, 5, 1), get(d, 5, 2), get(d, 12, 0), get(d, 12, 4), get(d, 12, 5)].join(" ");
     return qgMake(lv, id, "contra", lv === "gen" || lv === "cna" || lv === "lvn" || lv === "emt" || lv === "aemt" ? "Who should not take " + nm + "?" : "Which is a contraindication to " + nm + "?", a,
-      qgWrong(id, function (o) { var p = String(get(o, 4, 0) || "").split(/;\s*/).map(function (s) { return qgClause(s, 120); }).filter(function (s) { return s && !/hypersensitiv|allerg/i.test(s); }); return p[0] || ""; }, a, all),
+      qgWrong(id, function (o) { var p = String(get(o, 4, 0) || "").split(/;\s*/).map(function (s) { return qgClause(s, 120); }).filter(function (s) { return s && !/hypersensitiv|allerg/i.test(s); }); return p[0] || ""; }, a, all, 3, true),
       "Contraindications for " + nm + ": " + get(d, 4, 0));
   },
   serious: function (lv, id, d, nm) {
@@ -2325,7 +2390,7 @@ var QG_T = {
     var a = qgCap(items[0]);
     var all = [get(d, 9, 0), get(d, 9, 1), get(d, 9, 2), get(d, 5, 0), get(d, 5, 1), get(d, 5, 2), get(d, 13, 1), get(d, 13, 2)].join(" ");
     return qgMake(lv, id, "serious", "Which serious adverse effect is linked to " + nm + "?", a,
-      qgWrong(id, function (o) { var it = qgItems(get(o, 9, 2) || get(o, 9, 1)); return it[0] ? qgCap(it[0]) : ""; }, a, all),
+      qgWrong(id, function (o) { var it = qgItems(get(o, 9, 2) || get(o, 9, 1)); return it[0] ? qgCap(it[0]) : ""; }, a, all, 3, true),
       "Serious or life-threatening effects of " + nm + ": " + [get(d, 9, 1), get(d, 9, 2)].filter(function (v) { return !qgBlank(v); }).join("; "));
   },
   antidote: function (lv, id, d, nm) {
@@ -2379,120 +2444,10 @@ function qgGenPool(scopeOk) {
   return out.filter(scopeOk);
 }
 
-/* ---------- Calc Lab: generated dosage-calculation practice with worked steps ---------- */
-var CALC_TYPES = [
-  ["mgkg", "mg/kg"], ["mcgkgmin", "mcg/kg/min"], ["ml", "mL to give"], ["drip", "Drip rates (gtt/min)"],
-  ["unitshr", "Units/hr"], ["conc", "Concentrations"], ["peds", "Pediatric doses"], ["titrate", "Infusion titration"]
-];
-function rint(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
+/* small helpers (were in the removed Calc Lab module) */
 function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
 function r1(x) { return Math.round(x * 10) / 10; }
 function r2(x) { return Math.round(x * 100) / 100; }
-function fmt(x) { return (Math.round(x * 100) / 100).toLocaleString(undefined, { maximumFractionDigits: 2 }); }
-var MGKG = [
-  ["Ceftriaxone", 50, "mg", 2000, "IV"], ["Vancomycin", 15, "mg", 2000, "IV"], ["Ketamine (induction)", 1.5, "mg", null, "IV"],
-  ["Rocuronium", 1.2, "mg", null, "IV"], ["Succinylcholine", 1.5, "mg", null, "IV"], ["Amiodarone (pediatric arrest)", 5, "mg", 300, "IV/IO"],
-  ["Ondansetron", 0.15, "mg", 4, "IV"], ["Dexamethasone (croup)", 0.6, "mg", 16, "PO/IM"], ["Midazolam", 0.1, "mg", 5, "IV"],
-  ["Fentanyl", 1, "mcg", 100, "IV"], ["Morphine", 0.1, "mg", 4, "IV"], ["Magnesium sulfate (pediatric asthma)", 50, "mg", 2000, "IV"]
-];
-var PEDS = [
-  ["Acetaminophen suspension", 15, 160, 5, 1000], ["Ibuprofen suspension", 10, 100, 5, 400], ["Amoxicillin suspension", 25, 400, 5, 1000],
-  ["Cephalexin suspension", 25, 250, 5, 1000], ["Diphenhydramine liquid", 1, 12.5, 5, 50], ["Prednisolone solution", 1, 15, 5, 60]
-];
-var VASO = [
-  ["Dopamine", 400, 250, "mcg/kg/min", 2, 20], ["Dobutamine", 500, 250, "mcg/kg/min", 2, 20], ["Propofol", 1000, 100, "mcg/kg/min", 5, 50],
-  ["Norepinephrine", 4, 250, "mcg/min", 2, 20], ["Nitroglycerin", 50, 250, "mcg/min", 10, 100], ["Epinephrine", 4, 250, "mcg/min", 1, 10]
-];
-var MLDRUGS = [
-  ["Morphine", 2, 6, 1, 4, "mg"], ["Fentanyl", 25, 100, 25, 50, "mcg"], ["Ondansetron", 4, 4, 1, 2, "mg"], ["Enoxaparin", 40, 120, 10, 100, "mg"],
-  ["Heparin (SQ)", 5000, 5000, 1, 5000, "units"], ["Furosemide", 20, 80, 10, 10, "mg"], ["Ketorolac", 15, 30, 15, 30, "mg"], ["Diphenhydramine", 25, 50, 25, 50, "mg"],
-  ["Haloperidol", 2, 5, 1, 5, "mg"], ["Lorazepam", 1, 2, 1, 2, "mg"]
-];
-function genCalc(type) {
-  var p = {}, wt, w2, d, conc, rate;
-  if (type === "mgkg") {
-    d = pick(MGKG); var lb = Math.random() < 0.4; wt = lb ? rint(20, 90) : rint(8, 90); var kg = lb ? r1(wt / 2.2) : wt;
-    var dose = d[1] * kg, capped = d[3] && dose > d[3];
-    p.q = "Order: " + d[0] + " " + d[1] + " " + d[2] + "/kg " + d[4] + (d[3] ? " (maximum " + fmt(d[3]) + " " + d[2] + ")" : "") + ". The patient weighs " + wt + (lb ? " lb" : " kg") + ". What dose do you give, in " + d[2] + "?";
-    p.a = capped ? d[3] : r1(dose); p.unit = d[2];
-    p.steps = (lb ? [wt + " lb ÷ 2.2 = " + fmt(kg) + " kg"] : []).concat([d[1] + " " + d[2] + "/kg × " + fmt(kg) + " kg = " + fmt(r1(dose)) + " " + d[2]]).concat(capped ? ["That is above the maximum, so give the maximum: " + fmt(d[3]) + " " + d[2]] : []);
-  } else if (type === "mcgkgmin") {
-    d = pick(VASO.filter(function (v) { return v[3] === "mcg/kg/min"; })); wt = rint(50, 120); var dz = rint(d[4], d[5]);
-    conc = d[1] * 1000 / d[2]; rate = dz * wt * 60 / conc;
-    p.q = d[0] + " " + fmt(d[1]) + " mg in " + d[2] + " mL is ordered at " + dz + " mcg/kg/min for a " + wt + "-kg patient. What is the pump rate in mL/hr?";
-    p.a = r1(rate); p.unit = "mL/hr";
-    p.steps = ["Concentration: " + fmt(d[1]) + " mg × 1,000 ÷ " + d[2] + " mL = " + fmt(conc) + " mcg/mL", "Dose per hour: " + dz + " × " + wt + " kg × 60 min = " + fmt(dz * wt * 60) + " mcg/hr", fmt(dz * wt * 60) + " ÷ " + fmt(conc) + " = " + fmt(r1(rate)) + " mL/hr"];
-  } else if (type === "ml") {
-    d = pick(MLDRUGS); var amt = d[1] === d[2] ? d[1] : d[3] * rint(Math.ceil(d[1] / d[3]), Math.floor(d[2] / d[3])); conc = d[4];
-    if (d[0] === "Enoxaparin") { conc = 100; } if (d[0] === "Morphine") conc = pick([2, 4, 10]); if (d[0] === "Fentanyl") conc = 50; if (d[0] === "Ondansetron") conc = 2; if (d[0] === "Heparin (SQ)") conc = pick([5000, 10000]);
-    p.q = "Order: " + d[0] + " " + fmt(amt) + " " + d[5] + ". Available: " + fmt(conc) + " " + d[5] + "/mL. How many mL do you give?";
-    p.a = r2(amt / conc); p.unit = "mL"; p.steps = ["Dose ÷ concentration = volume", fmt(amt) + " " + d[5] + " ÷ " + fmt(conc) + " " + d[5] + "/mL = " + fmt(r2(amt / conc)) + " mL"];
-  } else if (type === "drip") {
-    var vol = pick([100, 250, 500, 1000]), hrs = vol <= 250 ? pick([0.5, 1, 2]) : pick([2, 4, 6, 8, 10, 12]), df = pick([10, 15, 20, 60]);
-    var mins = hrs * 60, gtt = vol * df / mins;
-    p.q = "Infuse " + vol + " mL of normal saline over " + (hrs < 1 ? mins + " minutes" : hrs + " hour" + (hrs > 1 ? "s" : "")) + " by gravity. The tubing delivers " + df + " gtt/mL. How many drops per minute? (Round to a whole drop.)";
-    p.a = Math.round(gtt); p.unit = "gtt/min"; p.tol = 1;
-    p.steps = ["(Volume × drop factor) ÷ time in minutes", "(" + vol + " mL × " + df + " gtt/mL) ÷ " + mins + " min = " + fmt(r1(gtt)) + " → " + Math.round(gtt) + " gtt/min"];
-  } else if (type === "unitshr") {
-    if (Math.random() < 0.6) {
-      wt = rint(55, 120); var u = pick([12, 14, 15, 16, 18]), bag = pick([[25000, 500], [25000, 250]]); conc = bag[0] / bag[1];
-      var uh = u * wt; rate = uh / conc;
-      p.q = "Heparin " + bag[0].toLocaleString() + " units in " + bag[1] + " mL. Start the infusion at " + u + " units/kg/hr for a " + wt + "-kg patient. What is the rate in mL/hr?";
-      p.a = r1(rate); p.unit = "mL/hr"; p.steps = ["Concentration: " + bag[0].toLocaleString() + " ÷ " + bag[1] + " = " + fmt(conc) + " units/mL", "Units/hr: " + u + " × " + wt + " = " + uh.toLocaleString() + " units/hr", uh.toLocaleString() + " ÷ " + fmt(conc) + " = " + fmt(r1(rate)) + " mL/hr"];
-    } else {
-      var ins = rint(2, 14) * 0.5 * 2 / 2; ins = rint(2, 12); rate = ins;
-      p.q = "Regular insulin 100 units in 100 mL normal saline is running at " + rate + " mL/hr. How many units/hr is the patient receiving?";
-      p.a = ins; p.unit = "units/hr"; p.steps = ["Concentration: 100 units ÷ 100 mL = 1 unit/mL", rate + " mL/hr × 1 unit/mL = " + ins + " units/hr"];
-    }
-  } else if (type === "conc") {
-    var opts = [
-      function () { var mg = pick([2, 4, 8, 16]), ml = pick([250, 500]); return { q: "You add " + mg + " mg of norepinephrine to " + ml + " mL. What is the concentration in mcg/mL?", a: r2(mg * 1000 / ml), unit: "mcg/mL", steps: [mg + " mg × 1,000 = " + (mg * 1000).toLocaleString() + " mcg", (mg * 1000).toLocaleString() + " mcg ÷ " + ml + " mL = " + fmt(r2(mg * 1000 / ml)) + " mcg/mL"] }; },
-      function () { var g = pick([1, 2, 4]), ml = pick([50, 100]); return { q: "Magnesium sulfate " + g + " g is mixed in " + ml + " mL. What is the concentration in mg/mL?", a: r2(g * 1000 / ml), unit: "mg/mL", steps: [g + " g = " + g * 1000 + " mg", g * 1000 + " mg ÷ " + ml + " mL = " + fmt(r2(g * 1000 / ml)) + " mg/mL"] }; },
-      function () { var pct = pick([1, 2]), v = pick([5, 10]); return { q: "Lidocaine " + pct + "% solution: how many mg are in " + v + " mL?", a: pct * 10 * v, unit: "mg", steps: [pct + "% = " + pct + " g/100 mL = " + pct * 10 + " mg/mL", pct * 10 + " mg/mL × " + v + " mL = " + pct * 10 * v + " mg"] }; },
-      function () { return { q: "Epinephrine 1 mg/10 mL (0.1 mg/mL): how many mL contain 0.5 mg?", a: 5, unit: "mL", steps: ["0.5 mg ÷ 0.1 mg/mL = 5 mL"] }; },
-      function () { var pr = pick([[5, 1000], [5, 500], [5, 250], [10, 250], [10, 500], [50, 50]]), g = pr[0], ml = pr[1]; return { q: "How many grams of dextrose are in " + ml + " mL of D" + g + "W?", a: g * ml / 100, unit: "g", steps: ["D" + g + " = " + g + " g per 100 mL", g + " × " + ml + " ÷ 100 = " + fmt(g * ml / 100) + " g"] }; }
-    ];
-    var o = pick(opts)(); p.q = o.q; p.a = o.a; p.unit = o.unit; p.steps = o.steps;
-  } else if (type === "peds") {
-    d = pick(PEDS); wt = rint(6, 40); var mg = d[1] * wt, cap = mg > d[4]; var give = cap ? d[4] : mg, mlv = give / (d[2] / d[3]);
-    p.q = "A " + wt + "-kg child needs " + d[0].split(" ")[0].toLowerCase() + " " + d[1] + " mg/kg PO (maximum " + d[4] + " mg per dose). The " + d[0].toLowerCase() + " is " + d[2] + " mg per " + d[3] + " mL. How many mL do you give? (Round to the tenth.)";
-    p.a = r1(mlv); p.unit = "mL"; p.tol = 0.1;
-    p.steps = [d[1] + " mg/kg × " + wt + " kg = " + fmt(mg) + " mg" + (cap ? " → above the maximum, so give " + d[4] + " mg" : ""), "Concentration: " + d[2] + " mg ÷ " + d[3] + " mL = " + fmt(d[2] / d[3]) + " mg/mL", fmt(give) + " mg ÷ " + fmt(d[2] / d[3]) + " mg/mL = " + fmt(r1(mlv)) + " mL"];
-  } else if (type === "titrate") {
-    if (Math.random() < 0.5) {
-      d = pick(VASO.filter(function (v) { return v[3] === "mcg/min"; })); conc = d[1] * 1000 / d[2]; var cur = rint(d[4], Math.max(d[4], d[5] - 4)), inc = d[0] === "Nitroglycerin" ? 10 : pick([1, 2]);
-      var nw = cur + inc; rate = nw * 60 / conc;
-      p.q = d[0] + " " + d[1] + " mg in " + d[2] + " mL is running at " + cur + " mcg/min. The order says to increase by " + inc + " mcg/min. What is the NEW pump rate in mL/hr?";
-      p.a = r1(rate); p.unit = "mL/hr"; p.steps = ["Concentration: " + d[1] + " mg × 1,000 ÷ " + d[2] + " = " + fmt(conc) + " mcg/mL", "New dose: " + cur + " + " + inc + " = " + nw + " mcg/min", nw + " × 60 ÷ " + fmt(conc) + " = " + fmt(r1(rate)) + " mL/hr"];
-    } else {
-      wt = rint(60, 110); var curU = pick([14, 16, 18]), step = pick([1, 2, 3]); conc = 50; var newU = curU + step; rate = newU * wt / conc;
-      p.q = "A " + wt + "-kg patient is on heparin 25,000 units/500 mL at " + curU + " units/kg/hr. The aPTT is low and the nomogram says increase by " + step + " units/kg/hr. What is the NEW rate in mL/hr?";
-      p.a = r1(rate); p.unit = "mL/hr"; p.steps = ["Concentration: 25,000 ÷ 500 = 50 units/mL", "New dose: " + curU + " + " + step + " = " + newU + " units/kg/hr × " + wt + " kg = " + (newU * wt).toLocaleString() + " units/hr", (newU * wt).toLocaleString() + " ÷ 50 = " + fmt(r1(rate)) + " mL/hr"];
-    }
-  }
-  p.type = type; p.tol = p.tol != null ? p.tol : Math.max(0.02 * Math.abs(p.a), 0.05);
-  return p;
-}
-function calcState() { if (!S.calc) S.calc = { type: "all", p: null, ans: "", res: null, streak: 0 }; return S.calc; }
-function newCalc() { var c = calcState(), t = c.type === "all" ? pick(CALC_TYPES)[0] : c.type; c.p = genCalc(t); c.ans = ""; c.res = null; }
-function calcView() {
-  if (!simOk()) return simGate("Calc Lab");
-  var c = calcState(); if (!c.p) newCalc();
-  var P = Prog.d.calc, tot = Object.keys(P).reduce(function (t, k) { return t + P[k].n; }, 0), ok = Object.keys(P).reduce(function (t, k) { return t + P[k].c; }, 0);
-  var h = '<section class="calc">' + simBanner() + '<p class="muted">Fictional patients and fresh numbers every time, with the math worked out after you answer. Answers within normal rounding count.</p>';
-  h += '<label class="ctypel">Problem type <select class="sel" id="ctypesel"><option value="all"' + (c.type === "all" ? " selected" : "") + '>Mixed</option>' + CALC_TYPES.map(function (t) { var s = P[t[0]]; return '<option value="' + t[0] + '"' + (c.type === t[0] ? " selected" : "") + '>' + esc(t[1]) + (s ? ' (' + Math.round(100 * s.c / s.n) + '% correct)' : '') + '</option>'; }).join("") + '</select></label>';
-  h += '<div class="calccard"><span class="lbl">' + esc((CALC_TYPES.filter(function (t) { return t[0] === c.p.type; })[0] || [0, ""])[1]) + '</span><p class="qstem">' + esc(c.p.q) + '</p>';
-  h += '<form class="calcform" data-cform="1"><input id="cans" class="pinput" inputmode="decimal" autocomplete="off" aria-label="Your answer" placeholder="Your answer" value="' + esc(c.ans) + '"' + (c.res ? " disabled" : "") + '><span class="unit">' + esc(c.p.unit) + '</span>' + (c.res ? '' : '<button class="btn" type="submit">Check</button>') + '</form>';
-  if (c.res) h += '<div class="explain ' + (c.res === "ok" ? "ok" : "bad") + '"><strong>' + (c.res === "ok" ? "Correct." : "Not quite. Answer: " + fmt(c.p.a) + " " + esc(c.p.unit)) + '</strong><ol class="steps2">' + c.p.steps.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join("") + '</ol></div><div class="actions"><button class="btn" data-act="cnext">Next problem</button></div>';
-  h += '</div><p class="muted small">' + ok + ' of ' + tot + ' correct all time' + (c.streak > 1 ? ' · ' + c.streak + ' in a row' : '') + '. Practice math only: always verify doses against the order, the label and your protocols.</p></section>';
-  return h;
-}
-function checkCalc() {
-  var c = calcState(), raw = ($("#cans") || {}).value || "", v = numIn(raw);
-  if (isNaN(v)) return;
-  c.ans = raw; var ok = Math.abs(v - c.p.a) <= c.p.tol + 1e-9; c.res = ok ? "ok" : "bad"; c.streak = ok ? c.streak + 1 : 0;
-  recordCalc(c.p.type, ok); render(); var nb = $('[data-act="cnext"]'); if (nb) nb.focus({ preventScroll: true }); setTimeout(toastAch, 200);
-}
 
 /* ---------- Control Center (admin dashboard): edit the DrugDex database live ---------- */
 var Admin = { owner: false, can: false, on: false, uid: null, msg: "", busy: false };
@@ -3166,7 +3121,7 @@ function shopView() {
     c += tankHTML(mine, true);
     if (typeof peekView === "function") c += peekView();
     var nb = mine.length, ni = ITEMS.filter(function (it) { return ownsItem(it.id); }).length, nf = FACES.filter(function (x) { return faceAvail(x[0]); }).length, ns = 1 + (Prog.d.styles || []).length;
-    c += '<div class="pickhead"><h3>Dress it up</h3></div><div class="hub sub terrtiles">' + [["bugs", "Bug Store", nb + " of " + shopBugs().length + " collected"], ["items", "Wardrobe", ni + " of " + ITEMS.length + " owned"], ["faces", "Faces", nf + " of " + FACES.length + " unlocked"], ["styles", "Colors", ns + " of " + STYLES.length + " owned"], ["music", "Music", TRACKS.filter(function (t) { return ownsTrack(t.id); }).length + " of " + TRACKS.length + " tracks"]].map(function (x) { return '<button class="hubtile" data-shopf="' + x[0] + '"><span class="ht"><strong>' + x[1] + '</strong><span>' + esc(x[2]) + '</span></span></button>'; }).join("") + '</div>';
+    c += '<div class="pickhead"><h3>Dress it up</h3></div><div class="hub sub terrtiles">' + [["bugs", "Bug Store", nb + " of " + shopBugs().length + " collected"], ["items", "Wardrobe", ni + " of " + ITEMS.length + " owned"], ["faces", "Faces", nf + " of " + FACES.length + " unlocked"], ["styles", "Colors", ns + " of " + STYLES.length + " owned"], ["music", "Music", shownTracks().filter(function (t) { return ownsTrack(t.id); }).length + " of " + shownTracks().length + " tracks"]].map(function (x) { return '<button class="hubtile" data-shopf="' + x[0] + '"><span class="ht"><strong>' + x[1] + '</strong><span>' + esc(x[2]) + '</span></span></button>'; }).join("") + '</div>';
     return c + '</section>';
   }
   if (S.shopMsg) { c += '<div class="presult good" role="status">' + esc(S.shopMsg) + '</div>'; S.shopMsg = ""; }
@@ -3208,10 +3163,11 @@ function shopView() {
 }
 function tracksView() {
   var bal = sticks(), cur = curTrack().id, note = '<svg class="trkicon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 18.5a2.5 2.5 0 1 1-2-2.45V5l11-2v12.5a2.5 2.5 0 1 1-2-2.45V7.1L9 8.4z"/></svg>';
-  return '<p class="muted">Background music tracks. Preview any track, buy it with sticks, then tap Use. Turn music on or off with the note button at the top.</p><div class="trklist">' + TRACKS.map(function (t) {
-    var own = ownsTrack(t.id), on = Prog.d.track ? Prog.d.track === t.id : t.id === "rookie", pv = MU.preview === t.id;
+  muRefundOld(); var rf = Prog.d.muRefundAmt ? '<div class="presult good" role="status">New music is here! The old tracks were retired, so the ' + Prog.d.muRefundAmt.toLocaleString() + ' sticks you spent on them are back in your jar.</div>' : ''; if (Prog.d.muRefundAmt) { delete Prog.d.muRefundAmt; saveProg(); }
+  return rf + '<p class="muted">Background music tracks. Preview any track, buy it with sticks, then tap Use. Turn music on or off with the note button at the top.</p><div class="trklist">' + shownTracks().map(function (t) {
+    var own = ownsTrack(t.id), on = (Prog.d.track && ownsTrack(Prog.d.track) ? Prog.d.track : MU_DEFAULT) === t.id, pv = MU.preview === t.id;
     var act = on ? '<span class="eqd">In use</span>' : own ? '<button class="btn small" data-trackuse="' + t.id + '">Use</button>' : '<button class="btn small' + (bal >= t.price ? '' : ' ghost') + '" data-trackbuy="' + t.id + '"' + (bal >= t.price ? '' : ' disabled') + '>' + (bal >= t.price ? 'Buy' : 'Need ' + (t.price - bal) + ' more') + '</button>';
-    return '<div class="trk' + (on ? ' eq' : '') + '">' + note + '<div class="trktx"><strong>' + esc(t.name) + '</strong><span class="muted small">' + esc(t.desc) + ' · ' + t.bpm + ' bpm</span>' + (own ? '<span class="muted small">' + (t.price ? 'Owned' : 'Free') + '</span>' : stickTag(t.price)) + '</div><div class="bact"><button class="btn small ghost" data-trackpv="' + t.id + '">' + (pv ? 'Playing…' : 'Preview') + '</button>' + act + '</div></div>';
+    return '<div class="trk' + (on ? ' eq' : '') + '">' + note + '<div class="trktx"><strong>' + esc(t.name) + '</strong><span class="muted small">' + esc(t.desc) + ' · ' + t.bpm + ' bpm</span>' + (own ? '<span class="muted small">' + (t.price ? 'Owned' : t.season && !MU_ONLY ? 'Free for Halloween' : 'Free') + '</span>' : stickTag(t.price)) + '</div><div class="bact"><button class="btn small ghost" data-trackpv="' + t.id + '">' + (pv ? 'Playing…' : 'Preview') + '</button>' + act + '</div></div>';
   }).join("") + '</div>';
 }
 function buyTrack(id) { var t = trackById(id); if (ownsTrack(id) || sticks() < t.price) return; Prog.d.spent = (Prog.d.spent || 0) + t.price; Prog.d.tracks = (Prog.d.tracks || []).concat([id]); useTrack(id); S.shopMsg = t.name + " is yours and now playing."; }
@@ -3734,7 +3690,7 @@ function lvbTap(b) {
 document.addEventListener("click", function (e) { var b = e.target.closest && e.target.closest(".band .lvbug, .route .lvbug.t4"); if (!b) return; if (b.closest(".route") && !lvbStill()) { e.stopPropagation(); e.preventDefault(); } lvbTap(b); }, true);
 
 /* ---------- Clinical tools: Megacode, Pediatric quick reference, Med-list decoder, Safety drills, My List ---------- */
-var TOOLS = [["ixn", "Interaction explorer"], ["mega", "Megacode"], ["peds", "Pediatric dosing practice"], ["medlist", "Med-list decoder"], ["safety", "Safety drills"]];
+var TOOLS = [["ixn", "Interaction explorer"], ["mega", "Megacode"], ["medlist", "Med-list decoder"], ["safety", "Safety drills"]];
 function toolsAllowed() { var k = ctxKey(); return { mega: !!DB.MEGA_LEVELS[k], peds: ["emt", "cna"].indexOf(k) < 0, medlist: true, safety: true, ixn: true }; }
 var TOOLDESC = { ixn: "Pick 2 to 8 drugs and see the combinations to watch.", mega: "Run a timed code with a live monitor.", peds: "Weight-based pediatric doses at a glance.", medlist: "Decode a patient's home medication list.", safety: "Look-alike names and high-alert drug drills." };
 function toolsView() {
@@ -3742,7 +3698,8 @@ function toolsView() {
   if (S.tool && !al[S.tool]) S.tool = null;
   if (!S.tool) return '<div class="hub sub">' + list.map(function (t) { return '<button class="hubtile" data-tool="' + t[0] + '"><span class="ht"><strong>' + esc(t[1]) + '</strong><span>' + esc(TOOLDESC[t[0]]) + '</span></span></button>'; }).join("") + '</div>';
   var c = '<button class="linkish subback" data-act="toolsback">&larr; All clinical tools</button>';
-  if (S.tool === "mega") c += megaView(); else if (S.tool === "peds") c += pedsView(); else if (S.tool === "medlist") c += medlistView(); else if (S.tool === "ixn") c += ixnView(); else c += safetyView();
+  if (S.tool === "peds") S.tool = "mega"; /* Pediatric dosing practice removed Oct 27, 2026 (code deleted Oct 28) */
+  if (S.tool === "mega") c += megaView(); else if (S.tool === "medlist") c += medlistView(); else if (S.tool === "ixn") c += ixnView(); else c += safetyView();
   return c;
 }
 
@@ -3860,48 +3817,6 @@ function megaDone() {
 }
 
 /* ===== Pediatric quick reference ===== */
-function pedsRows(kg) {
-  function mg(perkg, max) { var v = perkg * kg; return max && v > max ? max : v; }
-  function f(x) { return (Math.round(x * 100) / 100).toLocaleString(); }
-  var R = [];
-  function row(cat, drug, dose, calc, vol, note, src) { R.push([cat, drug, dose, calc, vol || "", note || "", src || "Off-label: PALS / pediatric guideline (not FDA label dosing)"]); }
-  var e = mg(0.01, 1); row("Arrest", "Epinephrine (0.1 mg/mL)", "0.01 mg/kg IV/IO (max 1 mg)", f(e) + " mg", f(e / 0.1) + " mL", "Every 3–5 min");
-  var am = mg(5, 300); row("Arrest", "Amiodarone", "5 mg/kg IV/IO (max 300 mg)", f(am) + " mg", "", "May repeat to 15 mg/kg total");
-  row("Arrest", "Lidocaine", "1 mg/kg IV/IO", f(mg(1, 100)) + " mg", "", "Alternative to amiodarone");
-  row("Electrical", "Defibrillation", "2 J/kg, then 4 J/kg (max 10 J/kg or adult dose)", f(2 * kg) + " J → " + f(4 * kg) + " J", "", "", "PALS (electrical therapy, not a drug label)");
-  row("Electrical", "Synchronized cardioversion", "0.5–1 J/kg, then 2 J/kg", f(0.5 * kg) + "–" + f(kg) + " J → " + f(2 * kg) + " J", "", "", "PALS (electrical therapy, not a drug label)");
-  var a1 = mg(0.1, 6), a2 = mg(0.2, 12); row("Tachycardia", "Adenosine", "0.1 mg/kg (max 6 mg), then 0.2 mg/kg (max 12 mg)", f(a1) + " mg → " + f(a2) + " mg", "", "Rapid push + flush");
-  var at = mg(0.02, 0.5); row("Bradycardia", "Atropine", "0.02 mg/kg (max single dose 0.5 mg)", f(at) + " mg", "", "Vagal cause or primary AV block");
-  var ae = mg(0.01, 0.5); row("Anaphylaxis", "Epinephrine IM (1 mg/mL)", "0.01 mg/kg IM (max 0.3 mg child / 0.5 mg adult)", f(Math.min(ae, kg < 30 ? 0.3 : 0.5)) + " mg", f(Math.min(ae, kg < 30 ? 0.3 : 0.5)) + " mL", "Anterolateral thigh", "FDA label (Adrenalin): 0.01 mg/kg IM, up to 0.3 mg in children");
-  var dx = 5 * kg; row("Hypoglycemia", "Dextrose 10%", "0.5 g/kg = 5 mL/kg D10", f(dx) + " mL", "", "Recheck glucose");
-  row("Hypoglycemia", "Glucagon", "0.5 mg if < 20 kg, 1 mg if ≥ 20 kg", kg < 20 ? "0.5 mg" : "1 mg", "", "IM/IN/SQ");
-  var nx = mg(0.1, 2); row("Toxicology", "Naloxone", "0.1 mg/kg (max 2 mg)", f(nx) + " mg", "", "Titrate to breathing");
-  var mz = mg(0.2, 10); row("Seizure", "Midazolam IN/IM", "0.2 mg/kg (max 10 mg)", f(mz) + " mg", "", "");
-  var lz = mg(0.1, 4); row("Seizure", "Lorazepam IV", "0.1 mg/kg (max 4 mg)", f(lz) + " mg", "", "");
-  row("Analgesia", "Fentanyl", "1 mcg/kg IV/IN", f(mg(1, 100)) + " mcg", "", "");
-  row("Nausea", "Ondansetron", "0.15 mg/kg IV (max 4 mg)", f(mg(0.15, 4)) + " mg", "", "");
-  row("Respiratory", "Albuterol neb", "2.5 mg if < 20 kg, 5 mg if ≥ 20 kg", kg < 20 ? "2.5 mg" : "5 mg", "", "");
-  row("Respiratory", "Dexamethasone (croup)", "0.6 mg/kg (max 16 mg)", f(mg(0.6, 16)) + " mg", "", "PO/IM/IV");
-  row("Respiratory", "Magnesium sulfate (asthma)", "25–50 mg/kg IV over 15–30 min (max 2 g)", f(mg(25, 2000)) + "–" + f(mg(50, 2000)) + " mg", "", "");
-  row("RSI", "Ketamine", "1–2 mg/kg IV", f(kg) + "–" + f(2 * kg) + " mg", "", "");
-  row("RSI", "Rocuronium", "1 mg/kg IV", f(kg) + " mg", "", "");
-  row("Fluids", "Normal saline bolus", "10–20 mL/kg", f(10 * kg) + "–" + f(20 * kg) + " mL", "", "Reassess after each bolus", "PALS / pediatric guideline");
-  return R;
-}
-function pedsView() {
-  if (!simOk()) return simGate("Pediatric dosing practice");
-  var p = S.peds || (S.peds = { kg: 20, age: "" }), kg = +p.kg || 0;
-  var c = '<section class="peds"><h2>Pediatric dosing practice</h2>' + simBanner() + '<p class="muted">Pick a weight or age for a fictional practice child and work the doses yourself, then compare with the table.</p><div class="dosewarn" role="note"><strong>Check before you give.</strong> These pediatric doses are for education only and mostly follow PALS and pediatric resuscitation guidelines, which often differ from FDA label dosing (off-label). Each row names its source. Always verify against your agency-approved pediatric reference, the current FDA label, your protocols and medical direction.</div>';
-  c += '<div class="pedsin"><label>Fictional child weight (kg)<input class="pinput" id="pkg" inputmode="decimal" value="' + esc(p.kg) + '"></label><label>Fictional child age (years)<input class="pinput" id="page" inputmode="decimal" value="' + esc(p.age) + '" placeholder="1–10"></label></div>';
-  if (!kg || kg < 3 || kg > 80) return c + '<p class="presult">Enter a weight between 3 and 80 kg.</p></section>';
-  c += '<p class="muted small"><span class="simtag sm">SIM</span> Practice answers for a fictional <strong>' + kg + ' kg</strong> child' + (p.age ? ' · cuffed tube estimate for age ' + esc(p.age) + ': ' + (Math.round((+p.age / 4 + 3.5) * 2) / 2) + ' mm' : '') + '</p>';
-  var rows = pedsRows(kg), cat = "";
-  c += '<div class="tablewrap"><table class="hist pedtab"><thead><tr><th>Drug</th><th>Dose rule</th><th class="r">Practice answer (' + kg + ' kg)</th><th>Notes &amp; source</th></tr></thead><tbody>' + rows.map(function (r) {
-    var h = r[0] !== cat ? '<tr class="cat"><td colspan="4">' + esc(r[0]) + '</td></tr>' : ''; cat = r[0];
-    return h + '<tr><td><strong>' + esc(r[1]) + '</strong></td><td>' + esc(r[2]) + '</td><td class="r"><strong>' + esc(r[3]) + '</strong>' + (r[4] ? '<br><span class="muted small">' + esc(r[4]) + '</span>' : '') + '</td><td class="muted small">' + esc(r[5]) + (r[5] ? '<br>' : '') + '<em>Source: ' + esc(r[6]) + '</em>' + '</td></tr>';
-  }).join("") + '</tbody></table></div><p class="muted small">Study reference drawn from published pediatric resuscitation dosing (not an AHA product). Educational practice only: always confirm with your agency-approved pediatric reference, your protocols and a second clinician.</p></section>';
-  return c;
-}
 
 /* ===== Med-list decoder ===== */
 var CLS = {
@@ -4015,6 +3930,8 @@ function ruleAlerts(ids) {
   if (apap.length && ibu.length) add("good", "Acetaminophen plus ibuprofen", apap.concat(ibu), "They relieve pain by different routes, and studies show the pair relieves pain better than either one alone. They are sold together (Advil Dual Action). Each still has its own daily maximum.", "syn");
   var lp = ids.filter(function (x) { return ["furosemide", "bumetanide", "torsemide", "ethacrynic-acid"].indexOf(x) >= 0; }), tz = hasAny(ids, "thiazide").filter(function (x) { return lp.indexOf(x) < 0; });
   if (lp.length && tz.length) add("med", "Loop diuretic plus a thiazide", lp.concat(tz), "Sequential nephron blockade: a thiazide such as metolazone added to a loop diuretic produces far more fluid loss than either alone. It is used on purpose for resistant fluid overload, and it also deepens potassium, sodium and magnesium losses.", "syn");
+  A = A.concat(typeof ruleAlertsMore === "function" ? ruleAlertsMore(ids) : []);
+  A.forEach(function (a) { a.d = typeof ixDetailFor === "function" ? ixDetailFor(a) : null; });
   return A;
 }
 function drugSearchIndex() {
@@ -4032,7 +3949,7 @@ function medlistView() {
   c += '<div class="chips">' + L.map(function (id) { return '<button class="chip" data-mlrm="' + id + '" aria-label="Remove ' + esc(nameOf(id)) + '">' + esc(nameOf(id)) + ' ×</button>'; }).join("") + '</div>';
   var al = ruleAlerts(L);
   c += '<h3 class="eh small">Combinations to watch (' + al.length + ')</h3>';
-  c += al.length ? '<div class="alerts">' + al.map(function (a) { return '<div class="alert ' + a.sev + '"><strong>' + esc(a.title) + '</strong><span class="muted small">' + a.ids.map(nameOf).map(esc).join(", ") + '</span><p>' + esc(a.why) + '</p></div>'; }).join("") + '</div>' : '<p class="muted">No flagged combinations among these drugs in DrugBug\'s rule set.</p>';
+  c += al.length ? '<div class="alerts">' + al.map(function (a) { return '<div class="alert ' + a.sev + '"><strong>' + esc(a.title) + '</strong><span class="muted small">' + a.ids.map(nameOf).map(esc).join(", ") + '</span><p>' + esc(a.why) + '</p>' + (typeof ixDetailHtml === "function" ? ixDetailHtml(a.d) : '') + '</div>'; }).join("") + '</div>' : '<p class="muted">No flagged combinations among these drugs in DrugBug\'s rule set.</p>';
   c += '<h3 class="eh small">What each drug suggests</h3><div class="mlgrid">' + L.map(function (id) {
     var d = DB.drugs[id]; return '<div class="mlcard"><button class="linkish" data-drug="' + id + '"><strong>' + esc(d.name) + '</strong></button><span class="muted small">' + esc(get(d, 0, 3)) + '</span>' +
       (get(d, 15, 0) ? '<p><span class="k">Suggests</span> ' + esc(get(d, 15, 0)) + '</p>' : '') + (get(d, 15, 2) ? '<p><span class="k">Ask about</span> ' + esc(get(d, 15, 2)) + '</p>' : '') + (get(d, 15, 3) ? '<p><span class="k">Could cause</span> ' + esc(get(d, 15, 3)) + '</p>' : '') + (get(d, 15, 4) ? '<p><span class="k">If stopped</span> ' + esc(get(d, 15, 4)) + '</p>' : '') + '</div>';
@@ -4129,20 +4046,36 @@ function ixnPairType(t) {
 function ixnSev(sev) { return sev === "page" ? '<span class="ixpill low">From the drug page</span>' : sev === "good" ? '<span class="ixpill good">Used together on purpose</span>' : sev === "high" ? '<span class="ixpill high">Major</span>' : sev === "med" ? '<span class="ixpill med">Moderate</span>' : '<span class="ixpill low">Minor</span>'; }
 function ixnGroups(ids) {
   var al = ruleAlerts(ids), pr = ixnPairs(ids), seen = {}, G = { syn: [], add: [], neg: [], oth: [] };
-  al.forEach(function (a) { var u = a.ids.filter(function (x, i, A) { return A.indexOf(x) === i; }); G[a.type || "add"].push({ title: a.title, sev: a.sev, names: u.map(nameOf).join(", "), why: a.why }); });
+  al.forEach(function (a) { var u = a.ids.filter(function (x, i, A) { return A.indexOf(x) === i; }); G[a.type || "add"].push({ title: a.title, sev: a.sev, names: u.map(nameOf).join(", "), why: a.why, d: a.d, ids: u }); });
   pr.forEach(function (x) {
-    var k = [x.a, x.b].sort().join("|"); if (seen[k]) return; seen[k] = 1;
-    if (al.some(function (a) { return a.ids.indexOf(x.a) >= 0 && a.ids.indexOf(x.b) >= 0; })) return; /* already explained above */
-    G[ixnPairType(x.text)].push({ title: nameOf(x.a) + " + " + nameOf(x.b), sev: "page", names: x.field + " (" + nameOf(x.a) + " page)", why: x.text, page: x.a });
+    var k = [x.a, x.b].sort().join("|");
+    if (seen[k]) { if (seen[k].page !== x.a) seen[k].also = { page: x.a, field: x.field, text: x.text }; return; } /* the other drug's page talks about the pair too */
+    if (al.some(function (a) { return a.ids.indexOf(x.a) >= 0 && a.ids.indexOf(x.b) >= 0; })) { seen[k] = { page: "" }; return; } /* already explained above */
+    var e = { title: nameOf(x.a) + " + " + nameOf(x.b), sev: "page", names: x.field + " (" + nameOf(x.a) + " page)", why: x.text, page: x.a, other: x.b, ids: [x.a, x.b] };
+    seen[k] = e; G[ixnPairType(x.text)].push(e);
   });
   Object.keys(G).forEach(function (g) { G[g].sort(function (a, b) { var o = { good: 0, high: 1, med: 2, low: 3, page: 4 }; return o[a.sev] - o[b.sev]; }); });
-  G.oth = G.oth.slice(0, 10);
+  G.oth = G.oth.slice(0, 25);
   return G;
 }
-function ixnGroupsHtml(G) {
+function ixnGroupsHtml(G, opts) {
+  opts = opts || {};
+  function cls(id) { var d = DB.drugs[id]; return d ? (get(d, 0, 3) || "").split(/[;(]/)[0].trim() : ""; }
+  function who(ids) { return '<div class="ixwho">' + ids.map(function (id) { return '<button class="ixdrug" data-drug="' + id + '"><strong>' + esc(nameOf(id)) + '</strong>' + (cls(id) && cls(id) !== "-" ? '<span>' + esc(cls(id)) + '</span>' : '') + '</button>'; }).join("") + '</div>'; }
+  function pageMore(x) {
+    var fx = typeof ixSharedFx === "function" ? ixSharedFx(x.page, x.other) : [];
+    var c = '<details class="ixmore"' + (opts.open ? ' open' : '') + '><summary>In depth</summary><dl class="ixdl"><dt>' + esc(nameOf(x.page)) + ' page (' + esc(x.names.split(" (")[0]) + ')</dt><dd>' + esc(x.why) + '</dd>';
+    if (x.also) c += '<dt>' + esc(nameOf(x.also.page)) + ' page (' + esc(x.also.field) + ')</dt><dd>' + esc(x.also.text) + '</dd>';
+    if (fx.length) c += '<dt>Side effects both pages list</dt><dd>' + esc(fx.join(", ")) + '. Shared side effects can add up when the drugs are taken together.</dd>';
+    return c + '</dl><p class="muted small ixsrc">Source: the DrugBug drug pages for these medicines.</p></details>';
+  }
   return IXG.filter(function (g) { return G[g.k].length; }).map(function (g) {
     return '<div class="ixgrp ixg-' + g.k + '"><h4 class="ixh">' + esc(g.h) + ' <span class="ixn">' + G[g.k].length + '</span></h4><p class="muted small">' + esc(g.d) + '</p><div class="alerts">' +
-      G[g.k].map(function (x) { return '<div class="alert ' + (x.sev === "page" ? "low" : x.sev) + '"><strong>' + esc(x.title) + '</strong> ' + ixnSev(x.sev) + '<span class="muted small">' + esc(x.names) + '</span><p>' + esc(x.why) + '</p>' + (x.page ? '<button class="linkish" data-drug="' + x.page + '">Open ' + esc(nameOf(x.page)) + '</button>' : '') + '</div>'; }).join("") + '</div></div>';
+      G[g.k].map(function (x) {
+        return '<div class="alert ' + (x.sev === "page" ? "low" : x.sev) + '"><strong>' + esc(x.title) + '</strong> ' + ixnSev(x.sev) + (x.page ? '' : '<span class="muted small">' + esc(x.names) + '</span>') + '<p>' + esc(x.why) + '</p>' +
+          (x.ids && x.ids.length ? who(x.ids) : '') +
+          (x.page ? pageMore(x) : (typeof ixDetailHtml === "function" ? ixDetailHtml(x.d, opts.open) : '')) + '</div>';
+      }).join("") + '</div></div>';
   }).join("");
 }
 function ixnPanel(ids, opts) {
@@ -4152,14 +4085,14 @@ function ixnPanel(ids, opts) {
   var c = '<section class="ixpanel"><h3 class="eh small">Interactions on your list (' + n + ')</h3><p class="muted small">For studying. This is not a complete check of anyone\'s medicines. A pharmacist can review a real medication list.</p>';
   if (!n) return c + '<p class="muted">No combinations among these drugs are flagged in DrugBug\'s rules or drug pages.</p></section>';
   c += '<div class="ixsum">' + IXG.slice(0, 3).map(function (g) { return '<span class="ixchip ixg-' + g.k + '">' + esc(g.h.split(":")[0]) + ' <b>' + G[g.k].length + '</b></span>'; }).join("") + '</div>';
-  return c + ixnGroupsHtml(G) + '</section>';
+  return c + ixnGroupsHtml(G, opts) + '</section>';
 }
-function myListView(own) { var m0 = marks().filter(function (id) { return DB.drugs[id]; }); return myListBase(own) + (m0.length >= 2 ? ixnPanel(m0) : ''); }
+function myListView(own) { var m0 = marks().filter(function (id) { return DB.drugs[id]; }); return myListBase(own) + (m0.length >= 2 ? ixnPanel(m0, { open: false }) : ''); }
 function myListBase(own) {
   var m = marks().filter(function (id) { return DB.drugs[id]; });
   var c = own ? '' : '<h3 class="eh small">My List</h3>';
   if (!m.length) return c + '<div class="learncard"><p><strong>Your list is empty.</strong></p><p class="muted">Open any drug and tap <strong>Save to My List</strong>. Saved drugs show up here so you can study, quiz yourself on them or print them as a shift list.</p><button class="btn" data-tab="registry">Browse medications</button></div>';
-  return c + '<div class="actions"><button class="btn" data-sess="marks">Quiz me on my list</button><span class="muted small">' + m.length + ' saved drug' + (m.length === 1 ? '' : 's') + '</span></div>' + (typeof canPrint === "function" && canPrint() ? '<div class="actions"><button class="btn" data-print="marks|cards">Print all study cards (' + m.length + ')</button><button class="btn small ghost" data-print="marks|sheet">Print cheat sheet</button></div>' : '') + '<ul class="weaklist">' + m.map(function (id) { return '<li><button class="linkish" data-drug="' + id + '">' + esc(nameOf(id)) + '</button><span class="mchip m-' + mastery(id) + '">' + esc(mlabel(mastery(id))) + '</span><button class="btn small ghost" data-sess="study" data-drug-id="' + id + '">Study</button><button class="btn small ghost" data-unmark="' + id + '" aria-label="Remove ' + esc(nameOf(id)) + ' from My List">Remove</button></li>'; }).join("") + '</ul>' + (typeof dcMyList === "function" && S.view === "level" && DC_LEVELS[S.level] ? dcMyList(m) : '');
+  return c + '<div class="actions"><button class="btn" data-sess="marks">Quiz me on my list</button><span class="muted small">' + m.length + ' saved drug' + (m.length === 1 ? '' : 's') + '</span></div>' + (typeof canPrint === "function" && canPrint() ? '<div class="actions"><button class="btn" data-print="marks|cards">Print all study cards (' + m.length + ')</button><button class="btn small ghost" data-print="marks|sheet">Print cheat sheet</button></div>' : '') + '<ul class="weaklist">' + m.map(function (id) { return '<li><button class="linkish" data-drug="' + id + '">' + esc(nameOf(id)) + '</button><span class="mchip m-' + mastery(id) + '">' + esc(mlabel(mastery(id))) + '</span><button class="btn small ghost" data-sess="study" data-drug-id="' + id + '">Study</button><button class="btn small ghost" data-unmark="' + id + '" aria-label="Remove ' + esc(nameOf(id)) + ' from My List">Remove</button></li>'; }).join("") + '</ul>';
 }
 
 /* ===== Interaction explorer ===== */
@@ -4167,7 +4100,7 @@ function ixnList() { return S.ixn || (S.ixn = []); }
 function ixnSnip(text, names) {
   var t = String(text || ""); if (!t || t === "-") return "";
   var parts = t.replace(/([.;])\s+/g, "$1\u0001").split("\u0001"), hit = parts.filter(function (p) { var l = p.toLowerCase(); return names.some(function (n) { return n.length > 3 && new RegExp("\\b" + n.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "(s|es)?\\b").test(l); }); });
-  return hit.slice(0, 2).join(" ");
+  return hit.slice(0, 3).join(" ");
 }
 function ixnPairs(ids) {
   var out = [];
@@ -4175,7 +4108,7 @@ function ixnPairs(ids) {
     if (a === b) return; var d = DB.drugs[a], e = DB.drugs[b]; if (!d || !e) return;
     var names = drugNames(b).concat([(get(e, 0, 3).split(";")[0] || "").trim()]).filter(function (n) { return n && n.length > 3 && !/^(antibiotic|analgesic|antihypertensive|sedative|antiemetic|other|combo|combos|combination|generic)$/i.test(n) && !/^with |\band\b/i.test(n); });
     var F = [["Major interactions", get(d, 10, 0)], ["Drug classes to avoid", get(d, 10, 1)], ["Combination effects", get(d, 10, 4)], ["Dangerous combinations", get(d, 14, 6)]];
-    for (var i = 0; i < F.length; i++) { var sn = ixnSnip(F[i][1], names); if (sn) { out.push({ a: a, b: b, field: F[i][0], text: sn.length > 260 ? sn.slice(0, 257) + "..." : sn }); break; } }
+    for (var i = 0; i < F.length; i++) { var sn = ixnSnip(F[i][1], names); if (sn) { out.push({ a: a, b: b, field: F[i][0], text: sn.length > 700 ? sn.slice(0, 697) + "..." : sn }); break; } }
   }); });
   return out;
 }
@@ -4188,7 +4121,7 @@ function ixnView() {
   if (L.length < 2) return c + '<p class="muted small">Add at least two drugs to check.</p></section>';
   var A = ruleAlerts(L), P = ixnPairs(L);
   c += '<h3 class="alth">Flagged combinations (' + A.length + ')</h3>';
-  c += A.length ? A.map(function (x) { return '<div class="alert ' + x.sev + '"><strong>' + esc(x.title) + '</strong><span class="pill ' + (x.sev === "high" ? "low" : "mid") + '">' + (x.sev === "high" ? "Major" : x.sev === "med" ? "Moderate" : "Minor") + '</span><p>' + esc(x.why) + '</p><p class="muted small">' + x.ids.filter(function (v, i, a) { return a.indexOf(v) === i; }).map(function (id) { return esc(nameOf(id)); }).join(", ") + '</p></div>'; }).join("") : '<p class="muted small">No combination in DrugBug\'s rule set is flagged for these drugs. That does not mean none exist.</p>';
+  c += A.length ? A.map(function (x) { return '<div class="alert ' + x.sev + '"><strong>' + esc(x.title) + '</strong><span class="pill ' + (x.sev === "high" ? "low" : "mid") + '">' + (x.sev === "high" ? "Major" : x.sev === "med" ? "Moderate" : "Minor") + '</span><p>' + esc(x.why) + '</p><p class="muted small">' + x.ids.filter(function (v, i, a) { return a.indexOf(v) === i; }).map(function (id) { return esc(nameOf(id)); }).join(", ") + '</p>' + (typeof ixDetailHtml === "function" ? ixDetailHtml(x.d) : '') + '</div>'; }).join("") : '<p class="muted small">No combination in DrugBug\'s rule set is flagged for these drugs. That does not mean none exist.</p>';
   c += '<h3 class="alth">What the drug pages say (' + P.length + ')</h3>';
   c += P.length ? P.map(function (x) { return '<div class="alert low"><strong>' + esc(nameOf(x.a)) + ' page mentions ' + esc(nameOf(x.b)) + '</strong><p><span class="muted small">' + esc(x.field) + ':</span> ' + esc(x.text) + '</p><button class="linkish" data-drug="' + x.a + '">Open ' + esc(nameOf(x.a)) + '</button></div>'; }).join("") : '<p class="muted small">None of these drug pages mention the others by name or class.</p>';
   return c + '</section>';
@@ -4210,6 +4143,214 @@ document.addEventListener("click", function (e) {
 document.addEventListener("input", function (e) { if (e.target.id !== "ixq") return; S.ixq = e.target.value; clearTimeout(S._ixT); S._ixT = setTimeout(function () { var r = document.getElementById("ixres"); if (r) r.innerHTML = ixnSug(S.ixq); }, 120); });
 
 document.addEventListener("visibilitychange", function () { var st = S.mega; if (!document.hidden && st && st.paused && S.tab === "tools" && !st.done && st.ans[st.i] == null) { st.paused = false; st.t0 = Date.now() - (megaSecs(st.cs.steps[st.i]) - st.left) * 1000; megaTick(); } });
+
+/* ---------- Interaction detail (Oct 28, 2026; owner: "much much more detail" on My List interactions) ----------
+   Adds (1) a long-form explanation for every rule in ruleAlerts() and (2) more rules, including the new plant
+   compounds and stimulants. Education only, descriptive wording (tools/callwording/RULES.md): no advice, no doses. */
+var IXCLS = {
+  inducer: ["rifampin", "rifabutin", "rifapentine", "carbamazepine", "phenytoin", "fosphenytoin", "phenobarbital", "primidone", "oxcarbazepine", "efavirenz-emtricitabine-tenofovir"],
+  strong3a4: ["ketoconazole", "itraconazole", "posaconazole", "voriconazole", "clarithromycin", "nirmatrelvir-ritonavir", "lopinavir-ritonavir"],
+  doac: ["apixaban", "rivaroxaban", "edoxaban", "dabigatran"],
+  inducedTarget: ["apixaban", "rivaroxaban", "edoxaban", "dabigatran", "tacrolimus", "cyclosporine", "simvastatin", "lovastatin", "atorvastatin", "warfarin", "nirmatrelvir-ritonavir"],
+  suppBleed: ["curcumin", "gingerol", "allicin", "resveratrol", "omega-3-acid-ethyl-esters", "vitamin-e", "egcg"],
+  stim: ["dmaa", "dmha", "amphetamine-dextroamphetamine", "dextroamphetamine", "lisdexamfetamine", "methamphetamine", "methylphenidate", "dexmethylphenidate", "serdexmethylphenidate", "phentermine", "phentermine-topiramate", "pseudoephedrine", "cocaine", "modafinil", "armodafinil"],
+  bpLower: [],
+  kLoss: ["furosemide", "bumetanide", "torsemide", "hydrochlorothiazide", "chlorthalidone", "metolazone", "indapamide", "ethacrynic-acid", "prednisone", "prednisolone", "methylprednisolone", "dexamethasone", "hydrocortisone"],
+  pipTarget: ["phenytoin", "propranolol", "theophylline", "cyclosporine", "tacrolimus"]
+};
+function ixHas(ids, k) { var L = IXCLS[k] || []; return ids.filter(function (id) { return L.indexOf(id) >= 0; }); }
+function ruleAlertsMore(ids) {
+  var A = [];
+  function add(sev, title, list, why, type) { list = list.filter(function (x, i, Z) { return Z.indexOf(x) === i; }); if (list.length >= 2) A.push({ sev: sev, title: title, ids: list, why: why, type: type || "add" }); }
+  var thin = hasAny(ids, "anticoag").concat(hasAny(ids, "antiplt"));
+  var sb = ixHas(ids, "suppBleed");
+  if (sb.length && thin.length) add("med", "Supplement with antiplatelet effects plus a blood thinner", sb.concat(thin), "Some supplements (turmeric/curcumin, ginger, garlic, resveratrol, fish oil, vitamin E, green tea extract) have antiplatelet effects in studies and may add to bleeding risk with anticoagulants and antiplatelets.");
+  var ind = ixHas(ids, "inducer"), tgt = ixHas(ids, "inducedTarget").filter(function (x) { return ind.indexOf(x) < 0; });
+  if (ind.length && tgt.length) add("high", "Enzyme inducer lowers other drug levels", ind.concat(tgt), "Rifampin, carbamazepine, phenytoin and similar drugs speed up CYP3A4 and P-glycoprotein, which can drop levels of blood thinners, transplant drugs and statins enough to lose their effect.", "neg");
+  var s3 = ixHas(ids, "strong3a4"), da = ixHas(ids, "doac").filter(function (x) { return x !== "dabigatran"; });
+  if (s3.length && da.length) add("med", "Strong CYP3A4 inhibitor plus a DOAC", s3.concat(da), "Strong CYP3A4 and P-glycoprotein inhibitors raise apixaban and rivaroxaban levels, which raises bleeding risk; their labels address this combination.", "neg");
+  var ns = hasAny(ids, "nsaid"), ra = hasAny(ids, "acei").concat(hasAny(ids, "arb")), du = hasAny(ids, "diuretic");
+  if (ns.length && ra.length && du.length) add("high", "Triple whammy: NSAID plus ACE inhibitor or ARB plus diuretic", ns.concat(ra, du), "This three-drug combination is a well-known cause of acute kidney injury, because each drug reduces kidney blood flow or filtration in a different way.");
+  if (ids.indexOf("glycyrrhizin") >= 0) { var kl = ixHas(ids, "kLoss").concat(ids.indexOf("digoxin") >= 0 ? ["digoxin"] : []); if (kl.length) add("high", "Licorice (glycyrrhizin) plus a potassium-lowering drug or digoxin", ["glycyrrhizin"].concat(kl), "Glycyrrhizin causes potassium loss on its own; diuretics and corticosteroids add to it, and low potassium makes digoxin toxicity and arrhythmias more likely.", "add"); }
+  var st = ixHas(ids, "stim"), mao = hasAny(ids, "maoi");
+  if (st.length >= 2) add("high", "Two or more stimulants", st, "Stimulants add up: blood pressure, heart rate, body temperature and arrhythmia risk all climb. Pre-workout stimulants such as DMAA and DMHA are linked to strokes and heart attacks.", "syn");
+  if (st.length && mao.length) add("high", "Stimulant plus an MAOI", st.concat(mao), "MAO inhibitors block the breakdown of norepinephrine, so sympathomimetic stimulants can trigger a hypertensive crisis.", "syn");
+  if (ids.indexOf("egcg") >= 0 && ids.indexOf("nadolol") >= 0) add("med", "Green tea (EGCG) plus nadolol", ["egcg", "nadolol"], "Green tea markedly lowered nadolol levels in a small study, likely by blocking the gut transporter that absorbs nadolol.", "neg");
+  if (ids.indexOf("naringin") >= 0) { var fx = ids.filter(function (x) { return x === "fexofenadine" || x === "fexofenadine-pseudoephedrine"; }); if (fx.length) add("low", "Grapefruit flavonoids plus fexofenadine", ["naringin"].concat(fx), "Naringin inhibits the gut uptake transporter OATP1A2, which lowers fexofenadine absorption; the label notes fruit juices reduce its effect.", "neg"); }
+  if (ids.indexOf("soy-isoflavones") >= 0 && ids.indexOf("levothyroxine") >= 0) add("low", "Soy plus levothyroxine", ["soy-isoflavones", "levothyroxine"], "Soy products can reduce levothyroxine absorption, so thyroid levels may drift when soy intake changes.", "neg");
+  if (ids.indexOf("piperine") >= 0) { var pt = ixHas(ids, "pipTarget"); if (pt.length) add("low", "Black pepper extract (piperine) may raise drug levels", ["piperine"].concat(pt), "Piperine inhibits CYP3A4, P-glycoprotein and glucuronidation in studies, and small studies show higher levels of some drugs (studies limited).", "neg"); }
+  var bpc = [["acei"], ["arb"], ["bb"], ["ndhp"], ["diuretic"], ["alpha"], ["nitrate"], ["pde5"]].filter(function (k) { return hasAny(ids, k[0]).length; });
+  if (bpc.length >= 3) { var bl = []; bpc.forEach(function (k) { bl = bl.concat(hasAny(ids, k[0])); }); add("med", "Several blood pressure lowering drug classes", bl, "Three or more classes that lower blood pressure add up. Dizziness, fainting and falls are more likely, especially when standing up or when dehydrated."); }
+  var hg = hasAny(ids, "hypogly"); if (hg.length >= 2) add("med", "Two or more drugs that can cause low blood sugar", hg, "Insulin and sulfonylureas (or two of either) stack their glucose-lowering effect, raising the risk of hypoglycemia, especially with missed meals.");
+  if (ids.indexOf("ethanol") >= 0) { var dep = hasAny(ids, "opioid").concat(hasAny(ids, "benzo"), hasAny(ids, "cnsdep")).filter(function (x) { return x !== "ethanol"; }); if (dep.length) add("high", "Alcohol plus a sedating drug", ["ethanol"].concat(dep), "Alcohol adds to the sedation and breathing suppression of opioids, benzodiazepines and other sedatives; this combination is common in overdose deaths.", "syn"); }
+  var qt = hasAny(ids, "qt"), dk = hasAny(ids, "diuretic").filter(function (x) { return hasAny([x], "ksparing").length === 0; });
+  if (qt.length && dk.length) add("med", "QT-prolonging drug plus a potassium-wasting diuretic", qt.concat(dk), "Loop and thiazide diuretics lower potassium and magnesium, and low levels make torsades more likely with QT-prolonging drugs.");
+  var nox = ids.filter(function (x) { return x === "beetroot-nitrate" || x === "citrulline"; }), pd = hasAny(ids, "pde5").concat(hasAny(ids, "nitrate"));
+  if (nox.length && pd.length) add("low", "Nitric oxide supplement plus a PDE-5 inhibitor or nitrate", nox.concat(pd), "Beet nitrate and citrulline raise nitric oxide; with PDE-5 inhibitors or nitrates an added blood pressure drop is theoretical (studies limited).", "syn");
+  return A;
+}
+
+/* Long-form detail for each rule, keyed by title. how = mechanism, looks = what it can look like,
+   risk = who is at higher risk, watch = what is usually monitored or done (descriptive), pearl = classic teaching point, src = source */
+var IX_DETAIL = {
+  "Bleeding risk: more than one anticoagulant or antiplatelet": { how: "Anticoagulants (warfarin, DOACs, heparins) slow clot formation in the coagulation cascade, while antiplatelets (aspirin, P2Y12 inhibitors) stop platelets from sticking together. Hitting both steps at once, or doubling one, leaves fewer ways to stop bleeding.", looks: "Easy bruising, nosebleeds, bleeding gums, blood in urine, black or tarry stools, vomiting blood, and in the worst case bleeding in the brain after even a minor fall.", risk: "Older adults, people with kidney impairment, prior GI bleeding, low platelets, uncontrolled blood pressure, or a history of falls.", watch: "Hemoglobin, platelets, kidney function, INR for warfarin, signs of bleeding, and fall risk. Some combinations (for example after a coronary stent) are used on purpose for a limited time.", pearl: "Dual antiplatelet therapy after a stent is intentional; adding an anticoagulant to it (triple therapy) is the highest-bleeding-risk combination and is usually kept as short as possible.", src: "2023 ACC/AHA/ACCP/HRS Guideline for Atrial Fibrillation; FDA labels for each anticoagulant and antiplatelet" },
+  "NSAID plus a blood thinner": { how: "NSAIDs block COX-1, which thins the protective mucus layer of the stomach and reversibly impairs platelets. A blood thinner then turns a small stomach erosion into a real bleed.", looks: "Stomach pain, coffee-ground vomit, black stools, dizziness or fainting from blood loss, and a dropping hemoglobin.", risk: "Age over 65, prior ulcer or GI bleed, corticosteroid use, alcohol use, and H. pylori infection.", watch: "GI symptoms, stool color, hemoglobin, and blood pressure. Acetaminophen is often discussed as the alternative pain reliever for people on blood thinners, and stomach-protecting drugs are sometimes added.", pearl: "Ibuprofen can also block low-dose aspirin from reaching its platelet binding site, reducing aspirin's heart protection.", src: "FDA labels (NSAID boxed warning for GI bleeding); 2019 AGS Beers Criteria (updated 2023)" },
+  "SSRI or SNRI plus a blood thinner": { how: "Platelets cannot make serotonin; they take it up from the blood and use it to help clump. SSRIs and SNRIs block that uptake, so platelets work less well, which adds to the effect of anticoagulants and antiplatelets.", looks: "More bruising, nosebleeds and GI bleeding than either drug alone.", risk: "Older adults, prior GI bleeding, and people also taking NSAIDs.", watch: "Bleeding signs and hemoglobin. The combination is common and often continued, with attention to bleeding.", pearl: "The SSRI bleeding effect comes from platelet serotonin depletion, not from any effect on clotting factors or the INR.", src: "FDA labels for SSRIs and SNRIs (Warnings: abnormal bleeding)" },
+  "Opioid plus benzodiazepine": { how: "Opioids act on mu receptors in the brainstem breathing centers, and benzodiazepines enhance GABA-A inhibition. Together they suppress the drive to breathe far more than either alone (synergy).", looks: "Heavy sleepiness, slow or shallow breathing, snoring respirations, pinpoint pupils (from the opioid), low oxygen, unresponsiveness, and death.", risk: "Older adults, sleep apnea, lung disease, alcohol use, high opioid doses, and the first days of starting or increasing either drug.", watch: "Sedation level, respiratory rate, oxygen saturation and end-tidal CO2. Naloxone reverses the opioid part but not the benzodiazepine part.", pearl: "FDA added a boxed warning in 2016 to both drug classes about this combination; the combination appears in a large share of opioid overdose deaths.", src: "FDA Drug Safety Communication (2016): opioid and benzodiazepine boxed warning; CDC Clinical Practice Guideline for Prescribing Opioids for Pain (2022)" },
+  "Opioid plus another sedating drug": { how: "Gabapentinoids, sleep aids, muscle relaxants, sedating antihistamines and antipsychotics each depress the central nervous system. Their effects add to an opioid's sedation and breathing suppression.", looks: "Drowsiness, confusion, falls, slow breathing and low oxygen, especially at night.", risk: "Older adults, kidney impairment (gabapentin and pregabalin build up), sleep apnea and lung disease.", watch: "Sedation scores, breathing, oxygen saturation and fall risk.", pearl: "FDA added a warning in 2019 that gabapentin and pregabalin can cause serious breathing problems when combined with opioids or other CNS depressants.", src: "FDA Drug Safety Communication (2019): gabapentinoids and respiratory depression" },
+  "MAOI plus a serotonergic drug": { how: "MAO inhibitors stop the breakdown of serotonin. Adding a drug that releases serotonin or blocks its reuptake floods the synapse, causing serotonin syndrome.", looks: "Agitation, confusion, sweating, fast heart rate, high blood pressure, tremor, inducible or spontaneous clonus, hyperreflexia (worse in the legs), diarrhea and high fever. Severe cases cause seizures and death.", risk: "Starting or switching drugs without a washout period; fluoxetine needs a longer washout because of its long half-life.", watch: "Mental status, temperature, heart rate, blood pressure and neuromuscular findings (clonus). Severe cases are managed in the hospital with cooling and sedation, and cyproheptadine is a recognized antidote.", pearl: "Linezolid and methylene blue are MAO inhibitors too, a classic trap with SSRIs. Hunter criteria center on clonus.", src: "FDA labels for MAOIs, linezolid and methylene blue; NCBI StatPearls: Serotonin Syndrome" },
+  "Two or more serotonergic drugs": { how: "Each drug raises serotonin activity in a different way (reuptake blockade, release, receptor agonism). Combined, the total effect can cross into serotonin toxicity.", looks: "Mild cases: tremor, shivering, sweating, diarrhea, restlessness. Moderate to severe: clonus, hyperreflexia, high fever, agitation.", risk: "Dose increases, adding tramadol, triptans, dextromethorphan or linezolid to an antidepressant, and CYP2D6 interactions that raise levels.", watch: "New tremor, clonus or agitation after a medication change. Many of these combinations are used together with attention to symptoms.", pearl: "Serotonin syndrome develops within hours of a change, while neuroleptic malignant syndrome develops over days with rigidity and slow reflexes.", src: "NCBI StatPearls: Serotonin Syndrome; FDA Drug Safety Communication on triptans with SSRIs/SNRIs" },
+  "QT-prolonging drugs combined": { how: "Most QT-prolonging drugs block the hERG potassium channel (IKr), slowing repolarization of the heart muscle. Two blockers add up and can trigger early afterdepolarizations and torsades de pointes.", looks: "A long QTc on the ECG, palpitations, fainting, seizure-like episodes from brief torsades, and sudden cardiac arrest.", risk: "Female sex, older age, low potassium or magnesium, slow heart rate, heart failure, congenital long QT, and drugs that raise levels of a QT drug.", watch: "QTc on the ECG, potassium and magnesium, and heart rhythm. A QTc above 500 ms is commonly cited as the high-risk threshold.", pearl: "Torsades is classically treated with IV magnesium sulfate, and the risk is highest with slow heart rates (pause-dependent).", src: "CredibleMeds QTdrugs list; NCBI StatPearls: Long QT Syndrome" },
+  "Hyperkalemia risk": { how: "ACE inhibitors and ARBs lower aldosterone, potassium-sparing diuretics block the kidney's potassium excretion, trimethoprim blocks the same sodium channel as amiloride, and potassium supplements add more. Stacked together, potassium climbs.", looks: "Often no symptoms until dangerous. Weakness, numbness, slow heart rate, and ECG changes: peaked T waves, wide QRS, sine wave, then cardiac arrest.", risk: "Kidney impairment, diabetes, heart failure, older age, dehydration, and NSAID use.", watch: "Serum potassium and kidney function, especially after starting or increasing a drug. IV calcium protects the heart while other treatments shift and remove potassium.", pearl: "Spironolactone plus an ACE inhibitor in heart failure is used on purpose, which is why potassium is followed so closely.", src: "2022 AHA/ACC/HFSA Guideline for the Management of Heart Failure; KDIGO Clinical Practice Guideline for Diabetes Management in CKD" },
+  "ACE inhibitor plus ARB": { how: "Both block the renin-angiotensin-aldosterone system at different steps. Blocking it twice lowers kidney filtration pressure and aldosterone further.", looks: "Rising creatinine, high potassium, low blood pressure and dizziness.", risk: "Diabetes, kidney disease, heart failure and older age.", watch: "Kidney function, potassium and blood pressure. Large trials (ONTARGET, VA NEPHRON-D) showed more harm without added benefit.", pearl: "Dual RAAS blockade is generally discouraged; the same applies to aliskiren with an ACE inhibitor or ARB in diabetes.", src: "FDA labels for ACE inhibitors and ARBs (dual blockade warning)" },
+  "Nitrate plus PDE-5 inhibitor": { how: "Nitrates release nitric oxide, which raises cGMP to relax blood vessels. PDE-5 inhibitors stop cGMP from being broken down. Together cGMP soars and blood vessels dilate dramatically.", looks: "Sudden severe low blood pressure, dizziness, fainting, reflex fast heart rate, and in people with heart disease, worsening chest pain or heart attack.", risk: "Coronary artery disease (the people most likely to have both drugs), dehydration and alpha blocker use.", watch: "Blood pressure. Labels describe a time window after a PDE-5 inhibitor (about 24 hours for sildenafil and vardenafil, 48 hours for tadalafil) before nitrates are considered.", pearl: "This is one of the most tested contraindications in medicine; asking about erectile dysfunction drugs before nitroglycerin is a classic exam point.", src: "FDA labels for sildenafil, tadalafil, vardenafil and nitroglycerin" },
+  "PDE-5 inhibitor plus alpha blocker": { how: "Alpha blockers relax vascular smooth muscle, and PDE-5 inhibitors dilate blood vessels through cGMP. The blood pressure drops add together.", looks: "Lightheadedness or fainting when standing, especially after the first doses.", risk: "Starting either drug, nonselective alpha blockers (doxazosin, terazosin), dehydration and older age.", watch: "Orthostatic blood pressure and dizziness. Labels describe being stable on the alpha blocker before starting the PDE-5 inhibitor.", pearl: "Tamsulosin and silodosin are more uroselective, so they lower blood pressure less than doxazosin or terazosin.", src: "FDA labels for sildenafil, tadalafil and vardenafil" },
+  "Beta blocker plus diltiazem or verapamil": { how: "Both slow conduction through the AV node and both weaken the heart's squeeze. Together they can block the AV node completely.", looks: "Slow pulse, dizziness, fatigue, low blood pressure, worsening heart failure, and second or third degree heart block on the ECG.", risk: "Older adults, existing conduction disease, heart failure with reduced ejection fraction, and IV use of either drug.", watch: "Heart rate, blood pressure, PR interval and rhythm. Bradycardia from this combination can be resistant to atropine.", pearl: "Dihydropyridine calcium channel blockers (amlodipine, nifedipine) act on vessels, not the AV node, so they combine with beta blockers much more safely.", src: "FDA labels for verapamil and diltiazem; NCBI StatPearls: Calcium Channel Blocker Toxicity" },
+  "Insulin or sulfonylurea plus a beta blocker": { how: "Hypoglycemia normally triggers a surge of epinephrine that causes shakiness and a racing heart. Beta blockers blunt those warning signs, and nonselective ones can also slow the liver's glucose recovery.", looks: "Low blood sugar with few warning signs; sweating is usually preserved because it is cholinergic. Confusion or unresponsiveness may be the first sign.", risk: "Nonselective beta blockers (propranolol), tight glucose control, missed meals, and older adults.", watch: "Blood glucose. Sweating remains a useful clue.", pearl: "Sweating is the hypoglycemia symptom beta blockers do not mask, because sympathetic sweat glands use acetylcholine.", src: "American Diabetes Association. Standards of Care in Diabetes (2025)" },
+  "Digoxin level may rise": { how: "Amiodarone, verapamil, diltiazem, macrolides and others block P-glycoprotein, the pump that clears digoxin through the kidney and gut. Digoxin has a narrow therapeutic window, so even a modest rise matters.", looks: "Nausea, vomiting, loss of appetite, confusion, yellow-green vision or halos, and arrhythmias such as PVCs, bigeminy, atrial tachycardia with block, and bidirectional VT.", risk: "Kidney impairment, older age, low potassium, low magnesium, and high calcium.", watch: "Digoxin level, potassium, magnesium, kidney function and ECG. Labels describe lowering the digoxin dose when amiodarone is started.", pearl: "Digoxin-specific antibody fragments (DigiFab) are the antidote; hyperkalemia in acute digoxin overdose is a marker of severity.", src: "FDA label for digoxin (Lanoxin); FDA label for amiodarone" },
+  "Digoxin plus a diuretic": { how: "Loop and thiazide diuretics waste potassium and magnesium. Low potassium lets more digoxin bind to the Na-K ATPase pump, increasing toxicity even at a normal digoxin level.", looks: "Digoxin toxicity signs (nausea, vision changes, arrhythmias) with a low potassium.", risk: "Heart failure (where both drugs are common), poor intake, vomiting or diarrhea.", watch: "Potassium, magnesium, kidney function and digoxin level.", pearl: "Hypokalemia worsens digoxin toxicity, while hyperkalemia in an acute digoxin overdose signals severe poisoning.", src: "FDA label for digoxin (Lanoxin)" },
+  "Lithium level may rise": { how: "Lithium is cleared by the kidney like sodium. NSAIDs, ACE inhibitors, ARBs and thiazides lower kidney blood flow or make the kidney hold on to sodium, and lithium is reabsorbed along with it.", looks: "Early: tremor, nausea, diarrhea. Worse: coarse tremor, confusion, unsteady walking, slurred speech, muscle twitching, seizures and coma.", risk: "Dehydration, hot weather, illness with vomiting or diarrhea, low-salt diets, older age and kidney impairment.", watch: "Lithium level, kidney function and sodium, especially after a medication change. Severe toxicity is treated in the hospital and may need dialysis.", pearl: "Thiazides raise lithium levels by about a quarter or more; loop diuretics have a smaller effect.", src: "FDA label for lithium (boxed warning for toxicity)" },
+  "Warfarin interaction": { how: "Warfarin is cleared mainly by CYP2C9 (S-warfarin) and CYP3A4. Drugs that inhibit these enzymes (amiodarone, TMP-SMX, metronidazole, fluconazole) raise the INR; inducers (rifampin, carbamazepine, phenytoin) lower it. Antibiotics can also lower vitamin K from gut bacteria.", looks: "A high INR shows as bruising and bleeding; a low INR raises the risk of clots, stroke or a clotted valve.", risk: "Starting or stopping an interacting drug, especially antibiotics and antifungals, older age and poor diet.", watch: "INR, more often after any medication change. Vitamin K reverses warfarin.", pearl: "TMP-SMX and metronidazole are the classic antibiotic culprits; amiodarone's effect on the INR builds over weeks because of its long half-life.", src: "FDA label for warfarin (Coumadin) boxed warning for bleeding" },
+  "Statin plus a CYP3A4 inhibitor": { how: "Simvastatin, lovastatin and to a lesser degree atorvastatin are broken down by CYP3A4. Blocking it raises statin levels many-fold, which damages muscle.", looks: "Muscle aches, weakness, dark cola-colored urine, high CK, and in severe cases rhabdomyolysis with kidney injury.", risk: "High statin doses, older age, hypothyroidism, kidney impairment and strong inhibitors (clarithromycin, azole antifungals, HIV protease inhibitors).", watch: "Muscle symptoms, CK and kidney function. Labels limit or contraindicate some statins with strong inhibitors.", pearl: "Rosuvastatin and pravastatin are not mainly CYP3A4 drugs, so they are less affected; grapefruit juice affects simvastatin and lovastatin the most.", src: "FDA labels for simvastatin and lovastatin (contraindicated with strong CYP3A4 inhibitors)" },
+  "Anticholinergic burden": { how: "Each drug blocks muscarinic acetylcholine receptors. The total load adds up across drugs, even when each one alone seems mild.", looks: "Confusion or delirium, memory problems, dry mouth, constipation, urinary retention, blurred vision, fast heart rate, overheating and falls. Toxicity: hot, dry, flushed, dilated pupils, delirium.", risk: "Older adults, dementia, enlarged prostate and narrow-angle glaucoma.", watch: "Mental status, bowel and bladder function, and falls. Long-term high anticholinergic burden has been linked to dementia in observational studies.", pearl: "The toxidrome mnemonic: hot as a hare, dry as a bone, red as a beet, blind as a bat, mad as a hatter, full as a flask.", src: "2019 AGS Beers Criteria (American Geriatrics Society, updated 2023)" },
+  "Methotrexate plus TMP-SMX": { how: "Methotrexate blocks dihydrofolate reductase in human cells and trimethoprim blocks the bacterial version, with some effect on the human enzyme. Sulfamethoxazole also displaces methotrexate and reduces its kidney clearance.", looks: "Mouth sores, low white cells (infections), low platelets (bleeding), anemia and pancytopenia, which can be fatal.", risk: "Kidney impairment, older age and higher methotrexate doses, though it happens with low weekly doses too.", watch: "Complete blood count and kidney function. Leucovorin (folinic acid) is the rescue agent for methotrexate toxicity.", pearl: "Leucovorin bypasses the blocked enzyme because it is already reduced folate, which is why folic acid cannot rescue methotrexate toxicity.", src: "FDA label for methotrexate (boxed warning); FDA label for trimethoprim-sulfamethoxazole" },
+  "Allopurinol plus azathioprine/mercaptopurine": { how: "Xanthine oxidase breaks down 6-mercaptopurine (azathioprine's active form). Allopurinol blocks xanthine oxidase, so the drug builds up to toxic levels.", looks: "Severe bone marrow suppression: infections, bleeding and profound low blood counts.", risk: "Full-dose azathioprine or mercaptopurine and low TPMT or NUDT15 enzyme activity.", watch: "Complete blood count. Labels describe reducing the azathioprine or mercaptopurine dose substantially when allopurinol is used. Febuxostat has the same interaction.", pearl: "A classic board question: allopurinol and febuxostat both block xanthine oxidase, the enzyme that inactivates 6-MP.", src: "FDA labels for azathioprine and mercaptopurine" },
+  "Clopidogrel plus omeprazole": { how: "Clopidogrel is a prodrug activated by CYP2C19. Omeprazole and esomeprazole inhibit CYP2C19, reducing active clopidogrel.", looks: "No symptoms from the interaction itself; the concern is less platelet inhibition and a higher chance of stent thrombosis or heart attack, though outcome data are mixed.", risk: "People with a recent stent and CYP2C19 poor metabolizers.", watch: "The clopidogrel label advises against omeprazole and esomeprazole; pantoprazole has less effect on CYP2C19.", pearl: "CYP2C19 poor metabolizers have a boxed warning on clopidogrel for reduced effectiveness.", src: "FDA label for clopidogrel (Plavix)" },
+  "Fluoroquinolone plus corticosteroid": { how: "Fluoroquinolones damage tendon cells and collagen, and corticosteroids weaken tendon healing. The risks multiply.", looks: "Sudden tendon pain, swelling or a pop, most often the Achilles tendon, sometimes on both sides, during or months after treatment.", risk: "Age over 60, kidney, heart or lung transplant recipients, and corticosteroid use.", watch: "Tendon pain. Fluoroquinolones carry a boxed warning for tendinitis, tendon rupture, neuropathy, CNS effects and myasthenia gravis worsening.", pearl: "The Achilles tendon is the classic rupture site; FDA strengthened the boxed warning in 2016.", src: "FDA label class boxed warning for fluoroquinolones; FDA Drug Safety Communication (2016)" },
+  "Nonselective beta blocker plus a beta-2 agonist": { how: "Albuterol opens airways by stimulating beta-2 receptors. Nonselective beta blockers (propranolol, nadolol, timolol) block those same receptors, so they can trigger bronchospasm and blunt the rescue inhaler.", looks: "Wheezing, chest tightness and an asthma attack that responds poorly to albuterol.", risk: "Asthma, and to a lesser degree COPD.", watch: "Breathing and inhaler response. Cardioselective beta blockers (metoprolol, bisoprolol) are generally better tolerated in lung disease.", pearl: "Even timolol eye drops absorb enough to cause bronchospasm in some people with asthma.", src: "Global Initiative for Asthma (GINA) Strategy Report (2024); FDA label for propranolol" },
+  "dup": { how: "Two drugs from the same class act on the same target, so their effects and side effects add together, usually without extra benefit.", looks: "More of the class's typical side effects: for example GI bleeding and kidney injury with two NSAIDs, sedation and falls with two benzodiazepines, low blood pressure with two blood pressure drugs of the same class.", risk: "Multiple prescribers, brand and generic names that look different, and over-the-counter products (many contain ibuprofen or naproxen).", watch: "Medication reconciliation often finds duplicates; combination products can hide a second dose of the same class.", pearl: "Duplicate therapy is one of the most common medication-list problems found by pharmacists.", src: "2019 AGS Beers Criteria (American Geriatrics Society, updated 2023)" },
+  "Ipratropium plus albuterol": { how: "Albuterol relaxes airway muscle through beta-2 receptors, while ipratropium blocks acetylcholine at muscarinic receptors. Two different pathways give more bronchodilation together.", looks: "Better relief of wheezing and shortness of breath than either alone in moderate to severe attacks.", risk: "Side effects are usually mild: tremor and fast heart rate from albuterol, dry mouth from ipratropium.", watch: "Breathing, oxygen and heart rate. Combined nebulizers (DuoNeb) are common in emergency care of COPD and asthma.", pearl: "In acute asthma the benefit of adding ipratropium is clearest in the first hours of a severe attack.", src: "Global Initiative for Asthma (GINA) Strategy Report (2024); GOLD Report: Global Strategy for COPD (2025)" },
+  "Acetaminophen plus ibuprofen": { how: "Acetaminophen works mainly in the central nervous system, while ibuprofen blocks COX enzymes in the tissues. Different mechanisms mean better pain relief together than either alone.", looks: "Better pain control in studies of dental and musculoskeletal pain.", risk: "Liver risk from too much acetaminophen (it hides in many combination products) and GI and kidney risk from ibuprofen.", watch: "Total daily acetaminophen from all products, and kidney function and GI symptoms with ibuprofen.", pearl: "The combination is studied as an opioid-sparing option for acute pain.", src: "FDA labels for acetaminophen and ibuprofen (OTC Drug Facts)" },
+  "Loop diuretic plus a thiazide": { how: "Loop diuretics block sodium reabsorption in the loop of Henle, and thiazides block it further down in the distal tubule (sequential nephron blockade). Together they overcome diuretic resistance.", looks: "Very large urine output, dehydration, low potassium, low sodium, low magnesium and rising creatinine.", risk: "Heart failure and kidney disease, where the combination is used on purpose.", watch: "Weight, urine output, electrolytes and kidney function, often daily.", pearl: "Metolazone added to a loop diuretic is the classic sequential nephron blockade combination.", src: "2022 AHA/ACC/HFSA Guideline for the Management of Heart Failure" },
+  "Supplement with antiplatelet effects plus a blood thinner": { how: "Curcumin, ginger, garlic (allicin), resveratrol, fish oil and vitamin E interfere with platelet clumping in laboratory and small human studies. Added to an anticoagulant or antiplatelet, the effects may add up.", looks: "More bruising or bleeding, particularly around surgery or procedures.", risk: "High-dose concentrated extracts, older adults and upcoming surgery.", watch: "Supplements are often missed in medication histories. Many surgical teams ask about them before procedures.", pearl: "Supplements are not FDA reviewed for safety before sale, and product strength varies between brands.", src: "NIH NCCIH: Turmeric, Garlic and Ginger pages; NIH Office of Dietary Supplements. Vitamin E Fact Sheet for Health Professionals" },
+  "Enzyme inducer lowers other drug levels": { how: "Inducers turn on the genes for CYP3A4, other CYP enzymes and the P-glycoprotein pump through the PXR receptor. The body clears other drugs faster, so their levels fall. The effect builds over about 1 to 2 weeks and fades over a similar time after stopping.", looks: "Loss of effect: clots or stroke on blood thinners, transplant rejection on tacrolimus or cyclosporine, unplanned pregnancy on hormonal birth control. When the inducer stops, levels of the other drug can climb to toxic.", risk: "Narrow therapeutic index drugs and long courses of rifampin or anticonvulsants.", watch: "Drug levels (tacrolimus, cyclosporine), INR for warfarin. DOAC labels advise against combined strong CYP3A4 and P-gp inducers.", pearl: "Rifampin is the strongest common inducer; St. John's wort is the classic supplement inducer.", src: "FDA labels for rifampin, apixaban and rivaroxaban; FDA Drug Development and Drug Interactions table of substrates, inhibitors and inducers" },
+  "Strong CYP3A4 inhibitor plus a DOAC": { how: "Apixaban and rivaroxaban are cleared by CYP3A4 and the P-gp pump. Strong inhibitors of both (ketoconazole, itraconazole, ritonavir) raise DOAC levels.", looks: "Bleeding: bruising, nosebleeds, GI bleeding, blood in urine.", risk: "Kidney impairment, older age and other bleeding risks.", watch: "Bleeding signs and hemoglobin. The DOAC labels describe dose changes or avoiding certain combinations.", pearl: "Dabigatran is not a CYP3A4 drug, but it is a P-gp substrate, so P-gp inhibitors such as dronedarone raise its levels.", src: "FDA labels for apixaban (Eliquis) and rivaroxaban (Xarelto)" },
+  "Triple whammy: NSAID plus ACE inhibitor or ARB plus diuretic": { how: "The kidney's filtration depends on prostaglandins widening the incoming artery and angiotensin II tightening the outgoing artery. NSAIDs block the first, ACE inhibitors and ARBs block the second, and diuretics lower blood volume. Filtration pressure collapses.", looks: "Acute kidney injury: less urine, swelling, rising creatinine and potassium, and fatigue, often after an illness with vomiting or diarrhea.", risk: "Older adults, dehydration, heart failure and chronic kidney disease.", watch: "Kidney function and potassium. Avoiding NSAIDs is a common teaching point for people on this combination.", pearl: "The name 'triple whammy' comes from Australian reports in 2000; the first 30 days after adding the third drug carry the highest risk.", src: "NCBI StatPearls: Acute Kidney Injury; 2019 AGS Beers Criteria (updated 2023)" },
+  "Licorice (glycyrrhizin) plus a potassium-lowering drug or digoxin": { how: "Glycyrrhetinic acid blocks 11-beta-hydroxysteroid dehydrogenase type 2, so cortisol activates the mineralocorticoid receptor like aldosterone. The kidney wastes potassium and holds sodium. Diuretics and steroids waste even more potassium.", looks: "High blood pressure, swelling, muscle weakness or cramps, and arrhythmias from low potassium; digoxin toxicity becomes more likely.", risk: "Daily black licorice candy, licorice teas or extracts, older adults and heart disease.", watch: "Potassium and blood pressure. Deglycyrrhizinated licorice (DGL) has the glycyrrhizin removed.", pearl: "Licorice causes apparent mineralocorticoid excess: high blood pressure and low potassium with low renin and low aldosterone.", src: "NIH NCCIH: Licorice Root; NCBI StatPearls: Apparent Mineralocorticoid Excess" },
+  "Two or more stimulants": { how: "Sympathomimetic stimulants release or block reuptake of norepinephrine and dopamine. Together they push blood pressure, heart rate and body temperature higher and narrow blood vessels.", looks: "Pounding heart, chest pain, severe headache, anxiety, tremor, overheating, and in severe cases stroke, heart attack, arrhythmia or death.", risk: "Pre-workout or diet products (which may contain DMAA, DMHA or high caffeine), heat and heavy exercise, dehydration and heart disease.", watch: "Blood pressure, heart rate, temperature and ECG in a stimulant toxidrome. Benzodiazepines are a recognized hospital treatment for stimulant agitation.", pearl: "DMAA was linked to deaths of service members, and DMHA appeared as its replacement; FDA considers neither a lawful dietary ingredient.", src: "FDA: DMAA in Products Marketed as Dietary Supplements; NCBI StatPearls: Sympathomimetic Toxicity" },
+  "Stimulant plus an MAOI": { how: "MAO inhibitors stop the breakdown of norepinephrine stored in nerve endings. Indirect stimulants release that stored norepinephrine all at once.", looks: "Hypertensive crisis: sudden severe headache, pounding heart, sweating, stiff neck, vomiting, chest pain and stroke risk.", risk: "Amphetamines, pseudoephedrine, phentermine and pre-workout stimulants combined with MAOIs (including linezolid).", watch: "Blood pressure. Stimulant labels contraindicate use during or within 14 days after an MAOI.", pearl: "The same mechanism explains the tyramine 'cheese reaction' with MAOIs.", src: "FDA labels for amphetamine products and MAOIs" },
+  "Green tea (EGCG) plus nadolol": { how: "Nadolol is absorbed through the gut uptake transporter OATP1A2, which green tea catechins inhibit, so less nadolol reaches the blood.", looks: "Higher blood pressure or heart rate than expected; in the study the effect was large.", risk: "Regular green tea drinkers or concentrated extract users who take nadolol.", watch: "Blood pressure and heart rate response to nadolol.", pearl: "This is a transporter interaction, not a CYP enzyme interaction.", src: "NIH NCCIH: Green Tea; LiverTox (NIH): Green Tea" },
+  "Grapefruit flavonoids plus fexofenadine": { how: "Naringin in grapefruit blocks OATP1A2, the gut transporter that pulls fexofenadine in. Orange and apple juice have a similar effect.", looks: "Weaker allergy relief.", risk: "Taking fexofenadine with fruit juice.", watch: "The fexofenadine label states taking it with water and not fruit juice.", pearl: "Grapefruit raises many drug levels by blocking CYP3A4, but for fexofenadine it lowers levels by blocking uptake.", src: "FDA label for fexofenadine (Allegra)" },
+  "Soy plus levothyroxine": { how: "Soy protein can bind levothyroxine in the gut and reduce its absorption.", looks: "Rising TSH and hypothyroid symptoms (fatigue, cold intolerance, weight gain) when soy intake goes up; the reverse when it drops.", risk: "Infants on soy formula taking levothyroxine and adults with big changes in soy intake.", watch: "TSH after diet changes. The levothyroxine label lists soybean flour among foods that reduce absorption.", pearl: "Calcium, iron, PPIs and coffee also reduce levothyroxine absorption.", src: "FDA label for levothyroxine; NIH NCCIH: Soy" },
+  "Black pepper extract (piperine) may raise drug levels": { how: "Piperine inhibits CYP3A4, P-glycoprotein and glucuronidation in laboratory studies, which is why it is added to curcumin supplements to boost absorption. The same effect could raise levels of some medicines.", looks: "Possible side effects of the other drug from higher levels.", risk: "Concentrated piperine extracts, not normal pepper in food.", watch: "Drug levels for narrow therapeutic index drugs if a piperine product is started (studies limited).", pearl: "Supplements marketed for better absorption are absorption enhancers for other drugs too.", src: "LiverTox (NIH): Turmeric" },
+  "Several blood pressure lowering drug classes": { how: "Each class lowers blood pressure in a different way (less volume, relaxed vessels, slower heart, blocked angiotensin). Combinations are common and intentional, but the drops add together.", looks: "Dizziness when standing, fainting, falls, fatigue, and kidney injury when dehydrated.", risk: "Older adults, dehydration, illness with vomiting or diarrhea, and new medication starts.", watch: "Orthostatic blood pressure, falls and kidney function.", pearl: "Orthostatic hypotension is a leading cause of falls in older adults on several blood pressure drugs.", src: "2017 ACC/AHA Guideline for the Prevention, Detection, Evaluation, and Management of High Blood Pressure in Adults" },
+  "Two or more drugs that can cause low blood sugar": { how: "Insulin lowers glucose directly and sulfonylureas make the pancreas release insulin regardless of glucose level. Together the effects add.", looks: "Shakiness, sweating, hunger, confusion, irritability, seizures and unconsciousness.", risk: "Missed meals, kidney impairment (sulfonylureas build up), older age and alcohol.", watch: "Blood glucose. Glyburide carries the highest hypoglycemia risk among sulfonylureas.", pearl: "Sulfonylurea hypoglycemia can recur for many hours; octreotide is used in the hospital to block insulin release.", src: "American Diabetes Association. Standards of Care in Diabetes (2025)" },
+  "Alcohol plus a sedating drug": { how: "Alcohol enhances GABA-A and blocks NMDA receptors, depressing the brain and breathing. With opioids, benzodiazepines or other sedatives, the effects stack.", looks: "Slurred speech, confusion, vomiting, slow breathing, unresponsiveness and death.", risk: "Binge drinking, opioid use, older adults and sleep apnea.", watch: "Breathing and level of consciousness. Overdose is a medical emergency; 911 and Poison Control (1-800-222-1222) are resources.", pearl: "Alcohol is involved in a large share of opioid and benzodiazepine overdose deaths.", src: "CDC Clinical Practice Guideline for Prescribing Opioids for Pain (2022); NCBI StatPearls: Alcohol Toxicity" },
+  "QT-prolonging drug plus a potassium-wasting diuretic": { how: "Low potassium and magnesium slow the heart's repolarization and make the hERG channel more sensitive to blockade. Diuretics lower both electrolytes.", looks: "Long QTc, palpitations, fainting and torsades de pointes.", risk: "High diuretic doses, poor intake, vomiting or diarrhea and heart disease.", watch: "Potassium, magnesium and the ECG.", pearl: "Correcting potassium and magnesium is a standard part of managing a long QTc.", src: "CredibleMeds QTdrugs list; NCBI StatPearls: Torsades de Pointes" },
+  "Nitric oxide supplement plus a PDE-5 inhibitor or nitrate": { how: "Beet nitrate is converted to nitrite and then nitric oxide, and citrulline becomes arginine, the substrate for nitric oxide. Both could add to the blood vessel relaxing effect of PDE-5 inhibitors and nitrates.", looks: "Possible extra blood pressure lowering or dizziness (theoretical; studies limited).", risk: "Concentrated supplements combined with blood pressure drugs.", watch: "Blood pressure when supplements are added.", pearl: "Antibacterial mouthwash blunts the beet nitrate effect because mouth bacteria do the first conversion step.", src: "NCBI StatPearls: Nitric Oxide (physiology)" }
+};
+function ixDetailFor(a) { return IX_DETAIL[a.title] || (/^Two (NSAIDs|benzodiazepines|ACE inhibitors|ARBs|beta blockers|opioids|statins) on the same list$/.test(a.title) ? IX_DETAIL.dup : null); }
+function ixDetailHtml(d, open) {
+  if (!d) return "";
+  var R = [["How it happens", d.how], ["What it can look like", d.looks], ["Higher risk", d.risk], ["What is usually monitored", d.watch], ["Teaching point", d.pearl]];
+  return '<details class="ixmore"' + (open ? ' open' : '') + '><summary>In depth</summary><dl class="ixdl">' + R.filter(function (r) { return r[1]; }).map(function (r) { return '<dt>' + esc(r[0]) + '</dt><dd>' + esc(r[1]) + '</dd>'; }).join("") + '</dl>' + (d.src ? '<p class="muted small ixsrc">Source: ' + esc(d.src) + '</p>' : '') + '</details>';
+}
+/* effects both drug pages share (from side effects and warnings), shown on page-derived pairs */
+var IX_FX = [["bleeding", /bleed|hemorrhag/], ["sedation", /sedat|drows|somnolen|cns depress/], ["breathing suppression", /respiratory depress/], ["low blood pressure", /hypotens/], ["slow heart rate", /bradycard/], ["QT prolongation", /\bqt\b/], ["serotonin syndrome", /serotonin syndrome/], ["high potassium", /hyperkal/], ["low potassium", /hypokal/], ["low blood sugar", /hypoglyc/], ["kidney injury", /nephrotox|kidney injury|renal failure|\baki\b/], ["liver injury", /hepatotox|liver injury|hepatitis|liver failure/], ["seizures", /seizure/], ["falls or dizziness", /dizz|falls?\b/]];
+function ixSharedFx(a, b) {
+  function txt(id) { var d = DB.drugs[id]; return [get(d, 9, 0), get(d, 9, 1), get(d, 9, 2), get(d, 5, 0), get(d, 5, 1)].join(" ").toLowerCase(); }
+  var ta = txt(a), tb = txt(b);
+  return IX_FX.filter(function (f) { return f[1].test(ta) && f[1].test(tb); }).map(function (f) { return f[0]; });
+}
+
+/* ---------- BugDex compound tabs (Oct 28, 2026; owner request): Vegetable, Fruit and Vitamin compounds ----------
+   Fun, interactive version: themed "beds" (sections) with art and color, flip cards (front: name and where it is found;
+   back: plain-language explanation + memory trick, Open page, Save), filter chips, an explored-progress bar and a
+   "Surprise me" button. Items: [id, found in, kind] where kind "tox" marks a toxin (education only). */
+var COMPOUND_TABS = {
+  vegc: { name: "Vegetable Compounds", line: "Dig through the garden: cool compounds from greens, roots, beans and herbs, plus a few famous troublemakers.", sec: [
+    ["The Cabbage Patch", "Leafy greens and the cabbage crew", "leaf", "#22c55e", [["sulforaphane", "Broccoli and broccoli sprouts"], ["indole-3-carbinol", "Cabbage, Brussels sprouts, kale"], ["lutein-zeaxanthin", "Kale, spinach, egg yolk"], ["chlorophyllin", "Green leaves (chlorophyll)"], ["oxalates", "Spinach, rhubarb leaves, beet greens", "tox"]]],
+    ["Underground Roots", "Bulbs, roots and rhizomes", "root", "#f97316", [["allicin", "Crushed garlic"], ["inulin", "Chicory root, onions, garlic"], ["beta-carotene", "Carrots, sweet potatoes"], ["beetroot-nitrate", "Beets, arugula, spinach"], ["betanin", "Beets"], ["curcumin", "Turmeric root"], ["gingerol", "Ginger root"], ["glycyrrhizin", "Licorice root", "tox"]]],
+    ["The Herb Garden", "Herbs, stalks and tea leaves", "herb", "#14b8a6", [["apigenin", "Parsley, celery, chamomile"], ["luteolin", "Celery, peppers, thyme"], ["egcg", "Green tea leaves"], ["furocoumarins", "Celery, parsnip, parsley, limes", "tox"]]],
+    ["The Bean Bunker", "Beans, pods and soy", "bean", "#a3e635", [["soy-isoflavones", "Soybeans, tofu, edamame"], ["vicine-convicine", "Fava beans", "tox"], ["phytohemagglutinin", "Raw red kidney beans", "tox"]]],
+    ["Nightshade Alley", "Tomatoes, peppers, potatoes, squash and mushrooms", "shroom", "#ef4444", [["lycopene", "Tomatoes"], ["capsaicin-topical", "Chili peppers (used in pain creams and patches)"], ["ergothioneine", "Mushrooms"], ["solanine", "Green or sprouted potatoes", "tox"], ["cucurbitacin", "Very bitter squash and gourds", "tox"]]]
+  ] },
+  fruitc: { name: "Fruit Compounds", line: "Raid the fruit bowl: antioxidants, enzymes and a few fruits with a dark side.", sec: [
+    ["The Berry Patch", "Berries, grapes and pomegranate", "berry", "#a855f7", [["anthocyanins", "Blueberries, blackberries, cherries"], ["resveratrol", "Grape skins, red wine"], ["fisetin", "Strawberries"], ["cranberry-proanthocyanidins", "Cranberries"], ["urolithin-a", "Pomegranates, walnuts, raspberries"]]],
+    ["Citrus Grove", "Oranges, grapefruit and melons", "citrus", "#f59e0b", [["hesperidin", "Orange and lemon peel"], ["naringin", "Grapefruit"], ["citrulline", "Watermelon"]]],
+    ["Tropical Island", "Pineapple, papaya, mango and more", "palm", "#06b6d4", [["bromelain", "Pineapple stems"], ["papain", "Papaya"], ["actinidin", "Kiwi"], ["mangiferin", "Mango"], ["persin", "Avocado (toxic to many animals)", "tox"], ["caramboxin", "Star fruit", "tox"], ["annonacin", "Soursop (graviola)", "tox"], ["hypoglycin-a", "Unripe ackee fruit", "tox"]]],
+    ["The Orchard", "Apples, pits and spice fruits", "apple", "#dc2626", [["quercetin", "Apples, onions, capers"], ["phlorizin", "Apple tree bark and leaves"], ["piperine", "Black peppercorns"], ["amygdalin", "Apricot pits, bitter almonds", "tox"], ["myristicin", "Nutmeg (the seed of a fruit)", "tox"]]]
+  ] },
+  vitc: { name: "Vitamin Compounds", line: "Meet the vitamin squad: classic vitamins, their active forms and their vitamin-like sidekicks.", sec: [
+    ["The Fat-Soluble Vault", "A, D, E and K: stored in fat, so they can build up", "vault", "#eab308", [["vitamin-a", "Liver, eggs, dairy"], ["beta-carotene", "Carrots (provitamin A)"], ["cholecalciferol", "Sunlight on skin, fatty fish"], ["calcitriol", "Active vitamin D hormone"], ["vitamin-e", "Nuts, seeds, plant oils"], ["phytonadione", "Leafy greens (vitamin K1)"], ["menaquinone-7", "Natto (vitamin K2)"]]],
+    ["The B-Team", "Eight B vitamins that run your metabolism", "bee", "#f472b6", [["thiamine", "Whole grains, pork (B1)"], ["benfotiamine", "Lab-made B1 form"], ["riboflavin", "Milk, eggs (B2)"], ["niacin", "Meat, fish, peanuts (B3)"], ["nicotinamide-riboside", "B3 form, NAD+ precursor"], ["pantothenic-acid", "Almost every food (B5)"], ["pyridoxine", "Fish, potatoes, chickpeas (B6)"], ["biotin", "Eggs, nuts (B7)"], ["folic-acid", "Fortified grains (B9)"], ["l-methylfolate", "Active folate form"], ["cyanocobalamin", "Supplements and injections (B12)"], ["methylcobalamin", "Active B12 form"], ["hydroxocobalamin", "B12 form, cyanide antidote"]]],
+    ["C Station", "Vitamin C and its oxidized twin", "orange", "#fb923c", [["ascorbic-acid", "Citrus, peppers, kiwi"], ["dehydroascorbic-acid", "Oxidized vitamin C"]]],
+    ["The Vitamin-ish Club", "Not official vitamins, but they act like it", "spark", "#818cf8", [["choline", "Eggs, liver, soybeans"], ["coq10", "Made in the body; meat, fish"], ["alpha-lipoic-acid", "Made in the body; spinach, broccoli"]]]
+  ] }
+};
+/* small generic line art for each bed (no brands, no characters) */
+var CMP_ART = {
+  leaf: '<path d="M12 21C6 18 4 12 6 5c6 0 11 4 11 10 0 3-2 5-5 6z"/><path d="M12 21C11 15 9 10 6 5"/>',
+  root: '<path d="M8 3c1 2 3 3 4 3s3-1 4-3"/><path d="M12 6c-4 0-6 3-5 7l5 8 5-8c1-4-1-7-5-7z"/><path d="M10 11h3M10.5 14h2"/>',
+  herb: '<path d="M12 22V8"/><path d="M12 12c-3 0-5-2-5-5 3 0 5 2 5 5zM12 9c0-3 2-5 5-5 0 3-2 5-5 5zM12 16c3 0 5-2 5-5-3 0-5 2-5 5z"/>',
+  bean: '<path d="M7 17c-3-3-2-8 2-10 3-2 5 1 7 1 3 0 4 3 2 6-2 4-8 6-11 3z"/><path d="M11 10c1 1 1 3 0 4"/>',
+  shroom: '<path d="M3 11c0-4 4-7 9-7s9 3 9 7z"/><path d="M9 11v7a3 3 0 0 0 6 0v-7"/><circle cx="9" cy="8" r="1"/><circle cx="15" cy="7" r="1"/>',
+  berry: '<circle cx="8" cy="14" r="4"/><circle cx="16" cy="14" r="4"/><circle cx="12" cy="9" r="4"/><path d="M12 5V2M12 3l3-1"/>',
+  citrus: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="6"/><path d="M12 6v12M6 12h12M7.8 7.8l8.4 8.4M16.2 7.8l-8.4 8.4"/>',
+  palm: '<path d="M12 22c0-6 1-10 2-13"/><path d="M14 9c-3-3-7-3-9-1 3 0 5 1 6 2M14 9c2-3 6-4 8-2-3 0-5 1-6 2M14 9c0-3-2-6-5-6 1 2 2 4 2 6M14 9c3-1 6 1 6 4-2-1-4-2-6-3"/>',
+  apple: '<path d="M12 7c-5-2-9 2-8 7s4 8 6 7c1 0 1-1 2-1s1 1 2 1c2 1 5-2 6-7s-3-9-8-7z"/><path d="M12 7c0-2 1-4 3-5"/>',
+  vault: '<rect x="3" y="5" width="18" height="15" rx="2"/><circle cx="12" cy="12.5" r="4"/><path d="M12 10.5v2l1.5 1"/><path d="M6 20v1.5M18 20v1.5"/>',
+  bee: '<ellipse cx="12" cy="14" rx="5" ry="6"/><path d="M7.5 12h9M7.5 15.5h9"/><path d="M10 8c-3-4-7-2-6 0 1 2 4 2 6 0zM14 8c3-4 7-2 6 0-1 2-4 2-6 0z"/>',
+  orange: '<circle cx="12" cy="13" r="8"/><path d="M12 5c0-2 2-3 4-3-1 2-2 3-4 3z"/><path d="M9 11h.01M14 14h.01M11 16h.01"/>',
+  spark: '<path d="M12 2l2.2 6.3L21 9l-5.2 4.1L17.6 20 12 16.2 6.4 20l1.8-6.9L3 9l6.8-.7z"/>'
+};
+function cmpSeen() { return Prog.d.cmpSeen || (Prog.d.cmpSeen = []); }
+function compoundView(k) {
+  var T = COMPOUND_TABS[k]; if (!T) return "";
+  var seen = cmpSeen(), all = [], tox = 0;
+  T.sec.forEach(function (s) { s[4].forEach(function (it) { if (DB.drugs[it[0]]) { all.push(it[0]); if (it[2] === "tox") tox++; } }); });
+  var nSeen = all.filter(function (id) { return seen.indexOf(id) >= 0; }).length, pct = all.length ? Math.round(nSeen / all.length * 100) : 0;
+  var c = '<section class="cmpd cmp-' + k + '" data-cmptab="' + k + '"><p class="cmpline">' + esc(T.line) + '</p>' +
+    '<div class="cmpbar"><div class="cmpprog"><span class="cmpprogtx"><strong>' + nSeen + '</strong> of ' + all.length + ' explored</span><span class="cmptrack"><span class="cmpfill" style="width:' + pct + '%"></span></span></div>' +
+    '<button class="btn small cmpsurp" type="button" data-cmpsurp="1">Surprise me</button></div>' +
+    '<div class="chips cmpchips" role="group" aria-label="Show"><button class="chip" aria-pressed="true" data-cmpf="all">All ' + all.length + '</button><button class="chip" aria-pressed="false" data-cmpf="good">Helpful ' + (all.length - tox) + '</button><button class="chip" aria-pressed="false" data-cmpf="tox">Toxins ' + tox + '</button><button class="chip" aria-pressed="false" data-cmpf="new">New to me ' + (all.length - nSeen) + '</button></div>' +
+    '<p class="muted small cmphint">Tap a card to flip it. ' + (k === "vitc" ? 'Some are FDA-approved prescription products and many are supplements; each page says which.' : 'These are food compounds and supplements, not FDA-approved drugs, and DrugBug lists no doses for them.') + ' Education only.</p>';
+  T.sec.forEach(function (s, si) {
+    var items = s[4].filter(function (it) { return DB.drugs[it[0]]; }); if (!items.length) return;
+    var bs = items.filter(function (it) { return seen.indexOf(it[0]) >= 0; }).length;
+    c += '<details class="cmpbed" open style="--bed:' + s[3] + '"><summary class="cmpbedh"><span class="cmpart"><svg viewBox="0 0 24 24" aria-hidden="true">' + (CMP_ART[s[2]] || CMP_ART.spark) + '</svg></span><span class="cmpbedtx"><strong>' + esc(s[0]) + '</strong><span>' + esc(s[1]) + '</span></span><span class="cmpbedn">' + bs + '/' + items.length + '</span></summary><div class="cmpgrid">' +
+      items.map(function (it) {
+        var d = DB.drugs[it[0]], nm = nameOf(it[0]), m = nm.match(/^(.*?)\s*\((.*)\)$/), was = seen.indexOf(it[0]) >= 0;
+        var simple = get(d, 16, 0), trick = get(d, 16, 2);
+        return '<div class="cmpcard' + (it[2] === "tox" ? ' tox' : '') + (was ? ' seen' : '') + '" data-cmpid="' + it[0] + '" data-kind="' + (it[2] === "tox" ? "tox" : "good") + '"><div class="cmpin">' +
+          '<button class="cmpfront" type="button" data-cmpflip="1" aria-label="Flip ' + esc(m ? m[1] : nm) + '"><strong>' + esc(m ? m[1] : nm) + '</strong>' + (m ? '<span class="cmpsub">' + esc(m[2]) + '</span>' : '') + '<span class="cmpsrc">Found in: ' + esc(it[1]) + '</span><span class="cmptags">' + (it[2] === "tox" ? '<span class="cmptox">Toxin</span>' : '') + (was ? '<span class="cmpseen">Explored</span>' : '') + '<span class="cmpflipi" aria-hidden="true">Flip</span></span></button>' +
+          '<div class="cmpback"><button class="cmpx" type="button" data-cmpflip="1" aria-label="Flip back">&times;</button><span class="cmpk">In plain words</span><p>' + esc(simple || nm) + '</p>' + (trick && trick !== "-" ? '<span class="cmpk">Memory trick</span><p class="cmptrick">' + esc(trick) + '</p>' : '') +
+          '<div class="cmpacts"><button class="btn small" type="button" data-drug="' + it[0] + '">Open page</button><button class="btn small ghost" type="button" data-mark="' + it[0] + '">' + (isMarked(it[0]) ? 'Saved' : 'Save') + '</button></div></div>' +
+          '</div></div>';
+      }).join("") + '</div></details>';
+  });
+  return c + '<p class="muted small">Many supplements interact with medicines, which is why health care teams ask about them. Saved compounds show up in My List with their interactions.</p></section>';
+}
+/* interactions handled here (no full re-render, so flips feel instant) */
+function cmpApplyFilter(sec, f) {
+  var seen = cmpSeen();
+  sec.querySelectorAll(".cmpcard").forEach(function (el) {
+    var id = el.getAttribute("data-cmpid"), kind = el.getAttribute("data-kind");
+    var show = f === "all" || (f === "tox" ? kind === "tox" : f === "good" ? kind !== "tox" : seen.indexOf(id) < 0);
+    el.hidden = !show;
+  });
+  sec.querySelectorAll(".cmpbed").forEach(function (b) { var any = Array.prototype.some.call(b.querySelectorAll(".cmpcard"), function (el) { return !el.hidden; }); b.hidden = !any; if (any && f !== "all") b.open = true; });
+  sec.querySelectorAll("[data-cmpf]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-cmpf") === f)); });
+}
+function cmpMarkSeen(id) { var s = cmpSeen(); if (s.indexOf(id) < 0) { s.push(id); try { saveProg(); } catch (e) {} } }
+document.addEventListener("click", function (e) {
+  var t = e.target && e.target.closest ? e.target : null; if (!t) return;
+  var sec = t.closest(".cmpd"); if (!sec) return;
+  var fl = t.closest("[data-cmpflip]");
+  if (fl) { var card = fl.closest(".cmpcard"); card.classList.toggle("flipped"); if (card.classList.contains("flipped")) cmpMarkSeen(card.getAttribute("data-cmpid")); e.preventDefault(); return; }
+  var f = t.closest("[data-cmpf]"); if (f) { cmpApplyFilter(sec, f.getAttribute("data-cmpf")); return; }
+  if (t.closest("[data-cmpsurp]")) {
+    var vis = Array.prototype.filter.call(sec.querySelectorAll(".cmpcard"), function (el) { return !el.hidden && !el.classList.contains("flipped"); });
+    if (!vis.length) vis = Array.prototype.filter.call(sec.querySelectorAll(".cmpcard"), function (el) { return !el.hidden; });
+    var pick = vis[Math.floor(Math.random() * vis.length)]; if (!pick) return;
+    var bed = pick.closest(".cmpbed"); if (bed) bed.open = true;
+    sec.querySelectorAll(".cmpcard.flipped").forEach(function (el) { el.classList.remove("flipped"); });
+    pick.scrollIntoView({ behavior: "smooth", block: "center" });
+    pick.classList.add("pulse"); setTimeout(function () { pick.classList.add("flipped"); cmpMarkSeen(pick.getAttribute("data-cmpid")); }, 450); setTimeout(function () { pick.classList.remove("pulse"); }, 1400);
+    return;
+  }
+  var dr = t.closest("[data-drug]"); if (dr) cmpMarkSeen(dr.getAttribute("data-drug"));
+}, true);
 
 /* ---------- Classes (instructor / agency mode) and weekly leaderboard ---------- */
 // classes/<uid>      : an instructor's classes {list:[{id,name,code,level,created,asg:[{id,title,level,src,srcv,n,due}]}]}
@@ -4568,7 +4709,7 @@ function discView() {
   if (left > 0 && !S.discTimer) S.discTimer = setInterval(discTick, 250);
   return '<div class="gate disc" role="alertdialog" aria-labelledby="disch" aria-describedby="discb"><div class="glogo">' + bugSVG("sage") + '</div><h1 id="disch">Education only</h1>' +
     '<div id="discb" class="disctext"><p><strong>DrugBug is for education only. It is not to be used in patient care.</strong></p>' +
-    '<p>Nothing in this app is medical advice, a treatment recommendation or a medical device. Doses, dose cards, calculators, Apple Watch cards and every other tool are study material only. DrugBug never tells anyone to take, give or use any drug.</p>' +
+    '<p>Nothing in this app is medical advice, a treatment recommendation or a medical device. Doses, practice scenarios and every other tool are study material only. DrugBug never tells anyone to take, give or use any drug.</p>' +
     '<p>For real patients, always follow your protocols, medical direction, facility policy, the current FDA label and a licensed clinician. If you have a health question about yourself, ask your doctor or pharmacist. In an emergency, call 911.</p>' +
     '<p><strong>DrugBug is for adults 18 and older only.</strong></p></div>' +
     '<div class="actions"><button class="btn" id="discok" data-act="discok"' + (left > 0 ? ' disabled aria-disabled="true"' : '') + '>' + (left > 0 ? 'Please read (' + left + ')' : 'I understand') + '</button></div>' +
@@ -4596,7 +4737,7 @@ document.addEventListener("visibilitychange", function () {
   S.discAway = 0;
 });
 
-/* simulation framing for every calculator (Dose Cards, My vials, Pediatric dosing practice, Megacode) */
+/* simulation framing for practice simulations (Megacode). Dose Cards, My vials and Pediatric dosing practice were removed Oct 27, 2026 */
 var SIM_V = 1;
 function simOk() { var a = store("simAck"); return !!(a && a.v === SIM_V); }
 function simBanner() { return '<div class="simbar" role="note"><span class="simtag">SIMULATION</span> Fictional practice patients only. <strong>Not for real human patients.</strong> Results can contain errors: verify every calculation independently against the FDA label and your protocol.</div>'; }
@@ -4612,7 +4753,7 @@ document.addEventListener("click", function (e) { var t = e.target.closest && e.
 
 /* footer */
 function footer() {
-  return '<footer class="foot"><nav><button class="linkish" data-legal="terms">Terms of Use</button><button class="linkish" data-legal="privacy">Privacy Policy</button><button class="linkish" data-legal="disclaimers">Disclaimers &amp; Attributions</button><button class="linkish" data-legal="data">Your data</button></nav><p>Educational use only. Not for clinical decision-making or patient care. Not a medical device.</p><p>' + esc(NONAFF) + '</p><p>© ' + new Date().getFullYear() + ' ' + COMPANY + ' · <a href="mailto:' + CONTACT + '">' + CONTACT + '</a></p></footer>';
+  return '<footer class="foot"><nav><button class="linkish" data-legal="terms">Terms of Use</button><button class="linkish" data-legal="privacy">Privacy Policy</button><button class="linkish" data-legal="disclaimers">Disclaimers &amp; Attributions</button><button class="linkish" data-legal="data">Your data</button></nav><p>Educational use only. Scope of practice, doses and drug availability vary by state, agency, facility and medical direction. Not for clinical decision-making or patient care. Not a medical device.</p><p>' + esc(NONAFF) + '</p><p>© ' + new Date().getFullYear() + ' ' + COMPANY + ' · <a href="mailto:' + CONTACT + '">' + CONTACT + '</a></p></footer>';
 }
 
 /* legal pages */
@@ -4620,8 +4761,8 @@ function L(h, ps) { return '<h2>' + h + '</h2>' + ps.map(function (p) { return A
 var LEGAL_PAGES = {
   terms: ["Terms of Use", function () {
     return L("1. Who we are", ["DrugBug is provided by " + COMPANY + ' ("we", "us"). Contact: <a href="mailto:' + CONTACT + '">' + CONTACT + '</a>. By using DrugBug you agree to these Terms. If you do not agree, do not use DrugBug.']) +
-      L("2. Educational use only", ["DrugBug is an educational study tool for students and clinicians in training. It is <strong>not</strong> medical advice, is <strong>not</strong> a medical device, and is <strong>not</strong> intended for diagnosing, treating, or making decisions about any real patient.", "Dose calculators, the pediatric reference, the med-list decoder, interaction notes, megacode cases and every other tool are practice exercises. Do not rely on them for patient care. Always follow your agency protocols, medical direction, facility policy, current drug references, and the judgment of a licensed clinician.", "Drug information changes. Content may be incomplete, out of date or contain errors, even after clinical review. Some content is drafted with the help of AI and is labeled with its review status."]) +
-      L("3. Clinical use prohibited", ["DrugBug is designed only for education, exam preparation and simulated clinical scenarios.", "DrugBug must not be used as a clinical decision-support system, a medication administration reference, a drug dosing authority, or a substitute for independently verified clinical information. Do not use DrugBug for actual patient assessment, diagnosis, treatment, medication administration or any other clinical decision.", "Dose Cards, Pediatric dosing practice, Megacode, any Apple Watch app or widgets, and every other calculation feature are <strong>simulations for fictional practice patients</strong>. They are not for real human patients. Do not enter real patient information into them. Software and content can contain errors; independently verify every number against the current FDA label, your protocols and medical direction.", "You acknowledge that relying on DrugBug during actual patient care may result in medication errors, injury or death. " + COMPANY + " does not authorize or endorse any use of DrugBug in patient care."]) +
+      L("2. Educational use only", ["DrugBug is an educational study tool for students and clinicians in training. It is <strong>not</strong> medical advice, is <strong>not</strong> a medical device, and is <strong>not</strong> intended for diagnosing, treating, or making decisions about any real patient.", "The med-list decoder, interaction notes, megacode cases and every other tool are practice exercises. Do not rely on them for patient care. Always follow your agency protocols, medical direction, facility policy, current drug references, and the judgment of a licensed clinician.", "Drug information changes. Content may be incomplete, out of date or contain errors, even after clinical review. Some content is drafted with the help of AI and is labeled with its review status."]) +
+      L("3. Clinical use prohibited", ["DrugBug is designed only for education, exam preparation and simulated clinical scenarios.", "DrugBug must not be used as a clinical decision-support system, a medication administration reference, a drug dosing authority, or a substitute for independently verified clinical information. Do not use DrugBug for actual patient assessment, diagnosis, treatment, medication administration or any other clinical decision.", "Megacode, clinical scenarios and every other practice or calculation feature are <strong>simulations for fictional practice patients</strong>. They are not for real human patients. Do not enter real patient information into them. Software and content can contain errors; independently verify every number against the current FDA label, your protocols and medical direction.", "You acknowledge that relying on DrugBug during actual patient care may result in medication errors, injury or death. " + COMPANY + " does not authorize or endorse any use of DrugBug in patient care."]) +
       L("4. Who may use DrugBug", ["DrugBug is for adults only. You must be at least 18 years old to use it. DrugBug is not directed to anyone under 18, and we do not knowingly collect information from minors."]) +
       L("5. Your account and conduct", ["You agree not to: enter patient information or any protected health information; post offensive, harassing or misleading display names or content; copy or resell DrugBug content; attempt to access other people's data; or interfere with the app.", "We may remove or hide display names, leaderboard and competition entries, and anything else you submit to DrugBug that breaks these Terms. If you have a DrugBug account, we may suspend or close it for serious or repeated violations. Subscriptions bought through Apple are managed by Apple under its own terms."]) +
       L("6. Leaderboards and school competitions", ["The leaderboard and school competitions are currently turned off. If they are turned on, learners can compete with other DrugBug users, including classmates from the same school, using a first name or nickname. Other participants see only your display name, your school or team name if you join one, and your scores. DrugBug competitions are for fun and motivation; they are not designed for teaching, grading or tracking individual students, and DrugBug does not give schools or instructors your individual study records. You can leave a competition or the leaderboard at any time."]) +
@@ -4653,7 +4794,7 @@ var LEGAL_PAGES = {
   }],
   disclaimers: ["Disclaimers & Attributions", function () {
     return L("Not affiliated", [NONAFF + " Exam names describe subjects DrugBug covers. Practice questions are original and are not official items from any exam.", "Resuscitation content is written from published resuscitation guidelines. DrugBug is not an AHA course, does not provide ACLS or PALS certification, and is not reviewed by AHA."]) +
-      L("Not a medical device", ["Every calculation feature in DrugBug (Dose Cards, Pediatric dosing practice, Megacode, and any Apple Watch app or widgets) is a simulation for fictional practice patients and is not for real human patients. DrugBug is educational software. It is not intended for clinical decision support, diagnosis or treatment of real patients, and it has not been cleared or approved by the FDA. Calculators and interaction notes are practice tools for learning."]) +
+      L("Not a medical device", ["Every simulation in DrugBug (such as Megacode and clinical scenarios) uses fictional practice patients and is not for real human patients. DrugBug is educational software. It is not intended for clinical decision support, diagnosis or treatment of real patients, and it has not been cleared or approved by the FDA. Calculators and interaction notes are practice tools for learning."]) +
       L("Safety medication lists", ["High-alert medication drills are adapted from the ISMP List of High-Alert Medications, and look-alike/sound-alike pairs are informed by the ISMP List of Confused Drug Names and FDA/ISMP tall-man lettering guidance. ISMP lists © Institute for Safe Medication Practices (ISMP), used for education with attribution. DrugBug is not affiliated with ISMP. Consult ismp.org for the current lists."]) +
       L("Protocols", ["Agency and facility protocols shown in DrugBug are used with the written permission of their owners and remain their property. National default scopes follow publicly available scope-of-practice models and may differ from your state or agency."]) +
       L("How content is made", ["Drug monographs, questions and scenarios are original writing. Some content was drafted with AI assistance. Each drug shows its content review status. A content review checks educational accuracy against standard references at a point in time; it is not a guarantee that the content is complete, current or error-free. Content marked as draft has not yet been reviewed."]) +
@@ -4746,7 +4887,7 @@ var COMPLY = [
   ["reviewers", "Signed agreement on file for every clinical reviewer", "Scope, credentials, payment, content responsibility, confidentiality. Approvals require the reviewer agreement box."],
   ["ismp", "ISMP permission terms confirmed before commercial use", "Attribution is shown in Safety drills and Disclaimers."],
   ["protocols", "Written permission and medical director sign-off on file for every agency protocol set", "Protocol sets cannot be published without the permission box."],
-  ["fda", "FDA: marketing stays educational; regulatory advice before promoting any tool for patient care", "Calculators and tools are labeled educational use only."],
+  ["fda", "FDA: marketing stays educational; regulatory advice before promoting any tool for patient care", "Tools are labeled educational use only. Dose Cards and Pediatric dosing practice were removed."],
   ["ferpa", "FERPA: data agreement template ready for schools using Classes", "Consider a separate DrugBug copy per school for graded work."],
   ["coppa", "Age gate confirmed (18+ only)", "Users under 18 are blocked at the agreement screen. App Store age rating set to 18+."],
   ["a11y", "Accessibility review (WCAG 2.1 AA / VPAT) before selling to schools", ""],
@@ -5589,7 +5730,7 @@ function settingsView() {
     setRow("Voice speed", "For the \"Say it\" button." + (SPEAK_OK ? "" : " Your device does not support speech."), setOpts("voiceRate", s.voiceRate, [["slow", "Slow"], ["normal", "Normal"], ["fast", "Fast"]]) + (SPEAK_OK ? ' <button class="btn small ghost" data-say="epinephrine">Test</button>' : '')) +
     setRow("Written pronunciation", "Shows a guide like ep-ih-NEF-rin.", setTog("showPhon", s.showPhon, "Show pronunciation")) +
     setRow("Bug buddy", "Your bug on the side of the screen, reacting to your answers.", setTog("buddy", s.buddy, "Show my bug buddy")) +
-    setRow("Background music", "A quiet beep-boop tune while you study. You can also tap the music note at the top of any page.", setTog("music", s.music !== false, "Background music") + '<label class="muvol"><span>Volume</span><input type="range" min="0" max="100" step="5" id="muvolset" value="' + muLevel() + '" aria-label="Music volume"><output id="muvolsetv">' + muLevel() + '%</output></label>') +
+    setRow("Background music", "Relaxed lo-fi beats while you study. You can also tap the music note at the top of any page.", setTog("music", s.music !== false, "Background music") + '<label class="muvol"><span>Volume</span><input type="range" min="0" max="100" step="5" id="muvolset" value="' + muLevel() + '" aria-label="Music volume"><output id="muvolsetv">' + muLevel() + '%</output></label>') +
     setRow("Sound effects", "A short tone for right and wrong answers.", setTog("sfx", s.sfx, "Sound effects") + ' <button class="btn small ghost" data-act="sfxtest">Test</button>'));
   // protocols
   var ap = activeProtocol(), sets = PS.sets.filter(function (p) { return p.status !== "unpublished"; });
@@ -5744,80 +5885,47 @@ Object.assign(ES_UI, { "My path (default)": "Mi ruta (predeterminado)", "The hom
 Object.assign(ES_UI, { "Imaging": "Imagenología", "Contrast Safety": "Seguridad del contraste", "Imaging Exam Prep": "Preparación para examen de imagenología", "Imaging: choose your modality": "Imagenología: elige tu modalidad", "Imaging focus": "Enfoque de imagenología", "In imaging": "En imagenología", "eGFR calculator": "Calculadora de TFGe", "Browse everything": "Explorar todo", "Start here": "Empieza aquí" });
 document.addEventListener("visibilitychange", function () { if (document.hidden) { remindSync(); if (typeof wdwSync === "function") wdwSync(); } });
 
-/* ---------- Background music: a small original chiptune loop made with WebAudio (no audio files) ---------- */
-var MU = { ctx: null, master: null, timer: null, step: 0, nextT: 0, playing: false, armed: false };
-var MU_BPM = 112, MU_VOL = { quiet: 30, medium: 60, loud: 100 };
-/* 4-bar loop, 8 steps per bar (eighth notes). Chords: C, Am, F, G. Lead in C major pentatonic (semitones above C5; null = rest). */
-var MU_BASS = [48, 48, 55, 48, 45, 45, 52, 45, 41, 41, 48, 41, 43, 43, 50, 43];
-var MU_LEAD_A = [0, null, 4, 7, 9, null, 7, 4, 9, null, 7, 4, 2, null, 0, null, 5, null, 9, 7, 5, null, 4, 2, 7, null, 4, 7, 9, 12, null, null];
-var MU_LEAD_B = [12, null, 9, 7, 9, null, 12, 9, 7, null, 4, 2, 4, null, 7, null, 5, 7, 9, null, 7, 5, 4, null, 2, null, 4, 2, 0, null, null, null];
+/* ---------- Background music: recorded lo-fi loops in music/*.mp3 ----------
+   Oct 28, 2026: the old WebAudio synth tracks, holiday synth tracks and synthesized bug ambience were removed to save space
+   (archived in tools/music-synth-archive.js). Tracks are made offline with tools/musicgen. */
+var MU = { ctx: null, master: null, timer: null, playing: false, armed: false };
+var MU_VOL = { quiet: 30, medium: 60, loud: 100 };
 function muOn() { return SET().music !== false && !!agreeRec(); }
-function muFreq(m) { return 440 * Math.pow(2, (m - 69) / 12); }
-function muNote(type, midi, t, dur, vol) {
-  var c = MU.ctx, o = c.createOscillator(), g = c.createGain();
-  o.type = type; o.frequency.setValueAtTime(muFreq(midi), t);
-  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  o.connect(g); g.connect(MU.master); o.start(t); o.stop(t + dur + 0.02);
-}
-function muBoop(t) { /* a tiny pitch-drop "boop" every other loop */
-  var c = MU.ctx, o = c.createOscillator(), g = c.createGain(); o.type = "sine";
-  o.frequency.setValueAtTime(880, t); o.frequency.exponentialRampToValueAtTime(330, t + 0.18);
-  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.05, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
-  o.connect(g); g.connect(MU.master); o.start(t); o.stop(t + 0.22);
-}
-/* ----- tracks you can buy with sticks (all original, generated from chords + patterns) ----- */
-/* prog: 4 chords [root midi, "M" or "m"]; lead/lead2: 32 steps of chord-tone index (0 root,1 third,2 fifth,3 octave,4 octave+third,5 octave+fifth, -1 below) or null; bass: 8-char pattern per bar (R root, 5 fifth, 8 octave, . rest); hat: 8-char (x tick) */
+/* Oct 27, 2026: all tracks are now recorded lo-fi loops (made offline from sampled instruments, see /home/claude/music),
+   played from music/*.mp3. The old WebAudio tracks (Rookie Loop, Night Shift Lo-Fi, Rotor Wash, ...) were retired and
+   anyone who bought one with sticks gets the sticks back (muRefundOld). */
+/* Oct 2026 (owner): only Haunted Study Hall for now, until the rest of the music is sorted out. Set MU_ONLY = null to bring back the full list. */
+var MU_ONLY = "haunted-study-hall";
+var MU_DEFAULT = MU_ONLY || "study-session";
 var TRACKS = [
-  { id: "rookie", name: "Rookie Loop", price: 0, desc: "The original bouncy beep-boop.", bpm: 112, legacy: true },
-  { id: "nightshift", name: "Night Shift Lo-Fi", price: 500, desc: "Slow, mellow minor chords for 3 a.m. studying.", bpm: 84, prog: [[45, "m"], [41, "M"], [48, "M"], [43, "M"]], lw: "triangle", bw: "sine", lv: 0.05, bv: 0.11,
-    lead: [2, null, null, 1, 0, null, null, null, 3, null, 2, null, 1, null, null, null, 2, null, 1, null, 0, null, null, null, 1, null, 2, null, 3, null, null, null],
-    lead2: [3, null, 2, null, 1, null, 2, null, 0, null, null, null, -1, null, null, null, 1, null, 2, null, 3, null, 2, null, 1, null, null, null, 0, null, null, null], bass: "R...5...", hat: "....x..." },
-  { id: "rotor", name: "Rotor Wash", price: 500, desc: "Chopper-blade pulse for flight crews.", bpm: 120, prog: [[50, "m"], [50, "m"], [48, "M"], [45, "m"]], lw: "square", bw: "triangle", lv: 0.03, bv: 0.1,
-    lead: [0, 0, 2, null, 0, 0, 3, null, 2, null, 1, 0, 2, null, null, null, 0, 0, 2, null, 0, 0, 4, null, 3, null, 2, 1, 0, null, null, null],
-    lead2: [3, null, 2, null, 3, null, 4, null, 5, null, 4, 3, 2, null, null, null, 2, 2, 1, null, 0, null, 1, 2, 3, null, 2, null, 0, null, null, null], bass: "R8R8R8R8", hat: "x.x.x.x." },
-  { id: "codeblue", name: "Code Blue Rush", price: 500, desc: "Fast and urgent: compressions at 120+.", bpm: 150, prog: [[52, "m"], [48, "M"], [43, "M"], [47, "m"]], lw: "sawtooth", bw: "square", lv: 0.022, bv: 0.05,
-    lead: [0, 2, 3, 2, 0, 2, 3, 4, 3, 2, 0, 2, 3, null, 3, null, 0, 2, 3, 2, 0, 2, 3, 5, 4, 3, 2, 0, 1, null, 0, null],
-    lead2: [3, null, 3, 2, 3, null, 4, 3, 2, null, 2, 1, 2, null, 0, null, 3, null, 3, 4, 5, null, 4, 3, 2, 1, 0, 1, 2, null, 3, null], bass: "R.R.RR5.", hat: "xxxxxxxx" },
-  { id: "labrat", name: "Lab Rat Funk", price: 500, desc: "Syncopated, swingy and a little silly.", bpm: 104, swing: 0.18, prog: [[50, "m"], [55, "M"], [50, "m"], [57, "M"]], lw: "square", bw: "sawtooth", lv: 0.03, bv: 0.06,
-    lead: [null, 0, null, 2, 3, null, 2, null, null, 1, 2, null, 0, null, null, null, null, 0, null, 2, 3, null, 4, 3, 2, null, 1, null, 0, null, null, null],
-    lead2: [3, null, null, 3, null, 2, 1, null, 2, null, null, 2, null, 1, 0, null, 3, null, null, 4, null, 3, 2, null, 1, null, 2, null, 0, null, null, null], bass: "R..R.5R.", hat: "..x...x." },
-  { id: "dripdream", name: "Drip Dream", price: 500, desc: "Twinkly arpeggios, like an IV drip at sunrise.", bpm: 92, prog: [[48, "M"], [52, "m"], [53, "M"], [55, "M"]], lw: "sine", bw: "triangle", lv: 0.07, bv: 0.08,
-    lead: [0, 1, 2, 3, 2, 1, 0, 1, 0, 1, 2, 3, 4, 3, 2, 1, 0, 1, 2, 3, 2, 1, 0, 1, 2, 3, 4, 5, 4, 3, 2, null],
-    lead2: [3, 2, 1, 0, 1, 2, 3, 4, 3, 2, 1, 0, 1, 2, 3, null, 5, 4, 3, 2, 3, 4, 5, 4, 3, 2, 1, 2, 3, null, 0, null], bass: "R...R...", hat: "........" },
-  { id: "victory", name: "Victory Fanfare", price: 500, desc: "A triumphant march for perfect scores.", bpm: 132, prog: [[48, "M"], [53, "M"], [55, "M"], [48, "M"]], lw: "square", bw: "triangle", lv: 0.035, bv: 0.1,
-    lead: [0, null, 0, 0, 2, null, 3, null, 1, null, 1, 1, 3, null, 4, null, 2, null, 2, 2, 3, null, 4, 5, 3, null, null, null, 3, null, null, null],
-    lead2: [3, null, 2, 1, 2, null, 3, null, 4, null, 3, 2, 3, null, 1, null, 2, null, 1, 0, 1, null, 2, null, 3, null, null, null, 0, null, null, null], bass: "R5R5R5R5", hat: "x...x..." }
+  { id: "study-session", name: "Study Session", price: 0, desc: "Warm electric piano, a laid-back beat and a little vinyl crackle.", bpm: 82, src: "music/study-session.mp3" },
+  { id: "coffee-flashcards", name: "Coffee and Flashcards", price: 0, desc: "Breezy bossa nova: nylon guitar, brushes and a flute.", bpm: 136, src: "music/coffee-flashcards.mp3" },
+  { id: "rainy-day-review", name: "Rainy Day Review", price: 0, desc: "A swinging jazz trio with walking bass and soft rain outside.", bpm: 118, src: "music/rainy-day-review.mp3" },
+  { id: "haunted-study-hall", name: "Haunted Study Hall", price: 0, season: "halloween", desc: "Spooky lo-fi with a music box, a ghostly choir and a distant bell.", bpm: 78, src: "music/haunted-study-hall.mp3" },
+  { id: "night-shift-lofi", name: "Night Shift", price: 500, desc: "Dreamy, spacey keys and pads for the quiet hours.", bpm: 68, src: "music/night-shift.mp3" },
+  { id: "flight-crew", name: "Flight Crew", price: 500, desc: "Funky neo-soul groove with clav, guitar and a tight beat.", bpm: 98, src: "music/flight-crew.mp3" },
+  { id: "golden-hour", name: "Golden Hour", price: 500, desc: "Sunny dance-pop with a steel drum hook.", bpm: 112, src: "music/golden-hour.mp3" },
+  { id: "midnight-review", name: "Midnight Review", price: 500, desc: "Moody trip-hop with strings, vibes and heavy drums.", bpm: 84, src: "music/midnight-review.mp3" }
 ];
+var MU_OLD_PAID = { nightshift: 500, rotor: 500, codeblue: 500, labrat: 500, dripdream: 500, victory: 500 };
+function muRefundOld() { /* give back sticks spent on retired tracks, once */
+  if (!Prog || !Prog.d || Prog.d.muRefunded) return;
+  var back = 0, keep = (Prog.d.tracks || []).filter(function (id) { if (MU_OLD_PAID[id]) { back += MU_OLD_PAID[id]; return false; } return true; });
+  Prog.d.tracks = keep; Prog.d.muRefunded = 1;
+  if (back) { Prog.d.spent = Math.max(0, (Prog.d.spent || 0) - back); Prog.d.muRefundAmt = back; }
+  if (Prog.d.track && !TRACKS.some(function (t) { return t.id === Prog.d.track; })) Prog.d.track = MU_DEFAULT;
+  try { saveProg(); } catch (e) {}
+}
 function trackById(id) { return TRACKS.filter(function (t) { return t.id === id; })[0] || TRACKS[0]; }
-function ownsTrack(id) { var t = trackById(id); return !t.price || (Prog.d.tracks || []).indexOf(id) >= 0; }
-function curTrack() { if (MU.preview) return trackById(MU.preview); var ht = muHolTrack(); if (ht) return ht; var id = Prog.d.track; return trackById(id && ownsTrack(id) ? id : "rookie"); }
-function muTone(ch, idx) { var th = ch[1] === "M" ? 4 : 3, fi = ch[1] === "d" ? 6 : 7, map = { "-1": fi - 12, 0: 0, 1: th, 2: fi, 3: 12, 4: 12 + th, 5: 12 + fi }; return ch[0] + map[idx]; }
+function muSeason(k) { var d = new Date(), mo = d.getMonth(), day = d.getDate(); return k === "halloween" ? mo === 9 || (mo === 10 && day <= 1) : true; }
+function trackAvail(t) { if (MU_ONLY) return t.id === MU_ONLY; return !t.season || muSeason(t.season); }
+function shownTracks() { return TRACKS.filter(trackAvail); }
+function ownsTrack(id) { var t = trackById(id); if (!trackAvail(t)) return false; return !t.price || (Prog.d.tracks || []).indexOf(id) >= 0; }
+function curTrack() { muRefundOld(); if (MU.preview) return trackById(MU.preview); var id = Prog.d.track; return trackById(id && ownsTrack(id) ? id : MU_DEFAULT); }
 function muTick() {
-  var c = MU.ctx, T = curTrack(), eighth = 60 / (T.bpm || MU_BPM) / 2;
-  if (MU.trackId !== T.id) { MU.trackId = T.id; MU.step = 0; }
-  if (c.state !== "running") return;
-  if (MU.nextT < c.currentTime) MU.nextT = c.currentTime + 0.05; /* timers were throttled: skip ahead instead of playing a burst of late notes */
-  while (MU.nextT < c.currentTime + 0.15) {
-    var s = MU.step, loop = Math.floor(s / 32) % 2, i = s % 32, t = MU.nextT + (T.swing && i % 2 ? eighth * T.swing : 0);
-    if (T.legacy) {
-      if (i % 2 === 0) muNote("triangle", MU_BASS[(i / 2) % 16], t, eighth * 1.6, 0.09);
-      var lead = (loop ? MU_LEAD_B : MU_LEAD_A)[i];
-      if (lead != null) muNote("square", 72 + lead, t, eighth * 0.75, 0.035);
-      if (i % 8 === 4) muNote("square", 96, t, 0.03, 0.012);
-      if (loop && i === 30) muBoop(t);
-    } else {
-      var ch = T.prog[Math.floor(i / 8) % 4], b = T.bass.charAt(i % 8), li = (loop ? T.lead2 : T.lead)[i];
-      if (b !== ".") muNote(T.bw, ch[0] - 12 + (b === "5" ? 7 : b === "8" ? 12 : 0), t, eighth * 1.5, T.bv);
-      if (li != null) muNote(T.lw, muTone(ch, li) + 24, t, eighth * 0.8, T.lv);
-      if (T.hat.charAt(i % 8) === "x") muNote("square", 98, t, 0.025, 0.01);
-      if (loop && i === 31 && T.id === "victory") muBoop(t);
-      if (T.bells && T.bells[i] != null) muNote("sine", muTone(ch, T.bells[i]) + 36, t, eighth * 2.2, T.bellv || 0.03);
-      if (T.jingle && T.jingle.charAt(i % 8) === "x") muJingle(t, T.jv || 0.018);
-      if (T.siren && loop && i === 24) muSiren(t, eighth * 8);
-      if (T.boo && loop && i === 28) muBoo(t);
-    }
-    MU.step++; MU.nextT += eighth;
-  }
+  var c = MU.ctx, T = curTrack(); if (!c) return;
+  if (MU.trackId !== T.id) MU.trackId = T.id;
+  if (c.state === "running" && T.src) muFile(T);
 }
 function muPreview(id) {
   MU.armed = true; MU.preview = id; MU.trackId = null; clearTimeout(MU.pvT);
@@ -5828,7 +5936,13 @@ function muLevel() { var v = SET().musicVol; if (typeof v === "string") v = MU_V
 function muVol() { return muLevel() / 100 * 2.6; }
 function muCtx() {
   var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
-  if (!MU.ctx) { MU.ctx = new AC(); MU.master = MU.ctx.createGain(); MU.master.gain.value = 0; var comp = MU.ctx.createDynamicsCompressor(); comp.threshold.value = -12; comp.ratio.value = 6; MU.master.connect(comp); comp.connect(MU.ctx.destination); }
+  if (!MU.ctx) {
+    MU.ctx = new AC(); var c = MU.ctx; MU.master = c.createGain(); MU.master.gain.value = 0;
+    /* recorded tracks are already mixed: the compressor only catches peaks */
+    var comp = c.createDynamicsCompressor(); comp.threshold.value = -4; comp.ratio.value = 4; comp.knee.value = 20; MU.comp = comp;
+    MU.fileOut = c.createGain(); MU.fileOut.gain.value = 0.6; MU.fileOut.connect(MU.master);
+    MU.master.connect(comp); comp.connect(c.destination);
+  }
   return MU.ctx;
 }
 function muStart(force) {
@@ -5863,8 +5977,7 @@ function muPop() {
   if (!S.mupop) return "";
   var on = muOn(), v = muLevel();
   return '<div class="mupop" role="dialog" aria-label="Music"><div class="murow"><strong>Background music</strong><button class="btn small' + (on ? ' ghost' : '') + '" data-act="mutoggle" aria-pressed="' + on + '">' + (on ? "Turn off" : "Turn on") + '</button></div>' +
-    (muHolTrack() ? '<p class="muted small">' + (lang() === "es" ? "Música festiva: " : "Holiday music: ") + esc(muHolTrack().name) + (lang() === "es" ? ". Tu pista vuelve después de la fiesta." : ". Your own track comes back after the holiday.") + '</p>' : '') +
-    '<label class="muvol"><span>Track</span><select class="pinput" id="mutrack">' + TRACKS.filter(function (t) { return ownsTrack(t.id); }).map(function (t) { return '<option value="' + t.id + '"' + (curTrack().id === t.id ? " selected" : "") + '>' + esc(t.name) + '</option>'; }).join("") + '</select></label><p class="muted small mumore">More tracks in the <button class="linkish" data-goshop="1" data-shopf="music">Terrarium Music shop</button></p>' +
+    '<label class="muvol"><span>Track</span><select class="pinput" id="mutrack">' + shownTracks().filter(function (t) { return ownsTrack(t.id); }).map(function (t) { return '<option value="' + t.id + '"' + (curTrack().id === t.id ? " selected" : "") + '>' + esc(t.name) + '</option>'; }).join("") + '</select></label><p class="muted small mumore">More tracks in the <button class="linkish" data-goshop="1" data-shopf="music">Terrarium Music shop</button></p>' +
     '<label class="muvol"><span>Volume</span><input type="range" min="0" max="100" step="5" id="muvol" value="' + v + '" aria-label="Music volume"><output id="muvolv">' + v + '%</output></label>' +
     '<div class="murow"><button class="btn small ghost" data-act="mupopclose">Done</button></div></div>';
 }
@@ -5874,64 +5987,35 @@ document.addEventListener("input", function (e) {
 
 document.addEventListener("change", function (e) { if (e.target.id === "mutrack") { useTrack(e.target.value); } });
 
-/* ----- holiday sounds ----- */
-function muNoiseBuf() { if (MU.nb) return MU.nb; var c = MU.ctx, n = Math.floor(c.sampleRate * 0.25), b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0); for (var i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; MU.nb = b; return b; }
-function muJingle(t, vol) { /* sleigh-bell shimmer: filtered noise burst */
-  var c = MU.ctx, src = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
-  src.buffer = muNoiseBuf(); f.type = "highpass"; f.frequency.value = 7000;
-  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
-  src.connect(f); f.connect(g); g.connect(MU.master); src.start(t); src.stop(t + 0.14);
+/* white-noise buffer used by holiday opening sounds (modules/holiday.js) */
+function muNoiseBuf() { if (MU.nb) return MU.nb; var c = MU.ctx, n = Math.floor(c.sampleRate * 1.2), b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0); for (var i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; MU.nb = b; return b; }
+/* ----- recorded tracks: fetch + decode once, then loop seamlessly ----- */
+function muLoadBuf(T) {
+  MU.fbufs = MU.fbufs || {};
+  if (MU.fbufCtx !== MU.ctx) { MU.fbufs = {}; MU.fbufCtx = MU.ctx; }
+  if (!MU.fbufs[T.id]) {
+    var c = MU.ctx;
+    MU.fbufs[T.id] = fetch(T.src).then(function (r) { if (!r.ok) throw new Error("music " + r.status); return r.arrayBuffer(); })
+      .then(function (ab) { return new Promise(function (res, rej) { var p = c.decodeAudioData(ab, res, rej); if (p && p.catch) p.catch(rej); }); });
+    MU.fbufs[T.id].catch(function () { delete MU.fbufs[T.id]; });
+  }
+  return MU.fbufs[T.id];
 }
-function muSiren(t, dur) { /* a soft two-tone siren swoop */
-  var c = MU.ctx, o = c.createOscillator(), g = c.createGain(); o.type = "triangle";
-  o.frequency.setValueAtTime(660, t); o.frequency.linearRampToValueAtTime(880, t + dur * .25); o.frequency.linearRampToValueAtTime(660, t + dur * .5); o.frequency.linearRampToValueAtTime(880, t + dur * .75); o.frequency.linearRampToValueAtTime(660, t + dur);
-  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.018, t + 0.1); g.gain.setValueAtTime(0.018, t + dur - 0.15); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  o.connect(g); g.connect(MU.master); o.start(t); o.stop(t + dur + 0.05);
+function muFile(T) {
+  if (MU.file && MU.file.id === T.id) return;
+  muFileStop();
+  var c = MU.ctx, f = { id: T.id }; MU.file = f;
+  muLoadBuf(T).then(function (buf) {
+    if (MU.file !== f) return;
+    var s = c.createBufferSource(), g = c.createGain(); s.buffer = buf; s.loop = true;
+    g.gain.setValueAtTime(0.0001, c.currentTime); g.gain.linearRampToValueAtTime(1, c.currentTime + 0.8);
+    s.connect(g); g.connect(MU.fileOut); s.start(); f.src = s; f.g = g;
+  }).catch(function () { f.failed = true; });
 }
-function muBoo(t) { /* a spooky ghost "oooOOOooo": a wobbling sine slide */
-  var c = MU.ctx, o = c.createOscillator(), l = c.createOscillator(), lg = c.createGain(), g = c.createGain(); o.type = "sine"; l.frequency.value = 6; lg.gain.value = 14;
-  o.frequency.setValueAtTime(330, t); o.frequency.linearRampToValueAtTime(520, t + 0.5); o.frequency.linearRampToValueAtTime(300, t + 1.1);
-  l.connect(lg); lg.connect(o.frequency);
-  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.03, t + 0.2); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.2);
-  o.connect(g); g.connect(MU.master); o.start(t); l.start(t); o.stop(t + 1.25); l.stop(t + 1.25);
+function muFileStop() {
+  var f = MU.file; MU.file = null; if (!f || !f.src) return;
+  try { var c = MU.ctx; f.g.gain.cancelScheduledValues(c.currentTime); f.g.gain.setTargetAtTime(0.0001, c.currentTime, 0.15); f.src.stop(c.currentTime + 0.8); } catch (e) {}
 }
-/* Original holiday loops (written for DrugBug; not arrangements of existing songs). Play automatically while a holiday theme is on. */
-var HOL_TRACKS = {
-  winter: { id: "h-winter", name: "Sleigh Bell Shuffle", bpm: 132, prog: [[48, "M"], [45, "m"], [41, "M"], [43, "M"]], lw: "triangle", bw: "triangle", lv: 0.06, bv: 0.09, jingle: "x.xxx.xx", jv: 0.016,
-    lead: [2, null, 2, null, 3, null, 2, 1, 0, null, 1, null, 2, null, null, null, 3, null, 3, 4, 3, null, 2, 1, 2, null, 1, null, 0, null, null, null],
-    lead2: [4, null, 3, null, 2, null, 3, 4, 3, null, 2, null, 1, null, null, null, 2, null, 3, null, 4, 3, 2, 1, 0, null, 2, null, 3, null, null, null],
-    bells: [3, null, null, null, null, null, null, null, 4, null, null, null, null, null, null, null, 3, null, null, null, null, null, null, null, 2, null, null, null, 3, null, null, null], bellv: 0.025, bass: "R.5.R.5.", hat: "........" },
-  halloween: { id: "h-halloween", name: "Creepy Crawly", bpm: 100, prog: [[45, "m"], [41, "M"], [50, "m"], [44, "d"]], lw: "square", bw: "sawtooth", lv: 0.036, bv: 0.07, boo: true,
-    lead: [0, null, 2, null, 3, null, 2, null, 1, null, 0, null, -1, null, null, null, 0, null, 2, null, 3, null, 5, null, 4, null, 3, null, 2, null, null, null],
-    lead2: [3, 2, 1, 0, 3, 2, 1, 0, 2, null, 1, null, 0, null, null, null, 3, null, 2, null, 1, null, 2, null, 0, null, null, null, null, null, null, null],
-    bells: [null, null, null, null, 5, null, null, null, null, null, null, null, 5, null, null, null, null, null, null, null, 5, null, null, null, null, null, null, null, 4, null, null, null], bellv: 0.012, bass: "R..R.5..", hat: "...x...x" },
-  july4: { id: "h-july4", name: "Firework Fanfare", bpm: 120, prog: [[48, "M"], [53, "M"], [55, "M"], [48, "M"]], lw: "square", bw: "triangle", lv: 0.032, bv: 0.1,
-    lead: [0, null, 1, 2, 3, null, 2, null, 1, null, 2, 3, 4, null, 3, null, 2, null, 1, 2, 3, null, 5, null, 3, null, 2, null, 3, null, null, null],
-    lead2: [3, 3, 3, null, 2, null, 4, null, 3, 3, 3, null, 2, null, 1, null, 2, 2, 2, null, 3, null, 4, null, 5, null, 3, null, 0, null, null, null], bass: "R5R5R5R5", hat: "x.x.x.xx" },
-  newyear: { id: "h-newyear", name: "Midnight Countdown", bpm: 126, prog: [[50, "M"], [47, "m"], [43, "M"], [45, "M"]], lw: "square", bw: "triangle", lv: 0.03, bv: 0.09, jingle: "....x...", jv: 0.012,
-    lead: [3, null, 2, null, 1, null, 0, null, 1, 2, 3, null, 4, null, null, null, 3, null, 2, null, 1, null, 2, 3, 5, null, 4, null, 3, null, null, null],
-    lead2: [0, 1, 2, 3, 2, 1, 0, null, 1, 2, 3, 4, 3, 2, 1, null, 2, 3, 4, 5, 4, 3, 2, null, 3, null, 3, null, 3, null, null, null], bass: "R.R.5.R.", hat: "x.x.x.x." },
-  valentine: { id: "h-valentine", name: "Sweetheart Sway", bpm: 88, swing: 0.15, prog: [[53, "M"], [50, "m"], [46, "M"], [48, "M"]], lw: "sine", bw: "triangle", lv: 0.07, bv: 0.08,
-    lead: [2, null, null, 1, 2, null, 3, null, 1, null, null, 0, 1, null, null, null, 2, null, null, 3, 4, null, 3, null, 2, null, 1, null, 0, null, null, null],
-    lead2: [3, null, 2, null, 1, null, 2, null, 3, null, 4, null, 3, null, null, null, 2, null, 1, null, 2, null, 1, null, 0, null, null, null, null, null, null, null], bass: "R...5...", hat: "........" },
-  stpatrick: { id: "h-stpatrick", name: "Shamrock Jig", bpm: 168, swing: 0.2, prog: [[50, "M"], [43, "M"], [50, "M"], [45, "M"]], lw: "square", bw: "triangle", lv: 0.028, bv: 0.08,
-    lead: [0, 1, 2, 1, 0, 1, 2, 3, 2, 1, 0, 1, 2, 1, 0, null, 3, 2, 1, 2, 3, 4, 3, 2, 1, 0, 1, 2, 0, null, 0, null],
-    lead2: [3, 4, 3, 2, 3, 4, 5, 4, 3, 2, 1, 2, 3, 2, 1, null, 2, 3, 2, 1, 0, 1, 2, 3, 2, 1, 0, -1, 0, null, 0, null], bass: "R.5.R.5.", hat: "x..x..x." },
-  easter: { id: "h-easter", name: "Spring Hop", bpm: 112, prog: [[55, "M"], [52, "m"], [48, "M"], [50, "M"]], lw: "triangle", bw: "sine", lv: 0.06, bv: 0.1,
-    lead: [0, null, 2, null, 3, 2, 0, null, 1, null, 2, null, 3, null, null, null, 2, null, 3, null, 4, 3, 2, null, 1, null, 0, null, 2, null, null, null],
-    lead2: [3, null, 4, 3, 2, null, 1, null, 2, null, 3, 2, 1, null, null, null, 0, 1, 2, 3, 2, 1, 0, null, 1, null, 2, null, 0, null, null, null],
-    bells: [null, null, null, null, null, null, 3, null, null, null, null, null, null, null, 4, null, null, null, null, null, null, null, 3, null, null, null, null, null, null, null, 2, null], bellv: 0.02, bass: "R..5R..5", hat: "....x..." },
-  nurses: { id: "h-nurses", name: "Thank-You Shift", bpm: 104, prog: [[48, "M"], [43, "M"], [45, "m"], [41, "M"]], lw: "triangle", bw: "triangle", lv: 0.06, bv: 0.09,
-    lead: [2, null, 1, null, 0, null, 1, 2, 3, null, 2, null, 1, null, null, null, 2, null, 3, null, 4, null, 3, 2, 1, null, 2, null, 0, null, null, null],
-    lead2: [4, null, 3, null, 2, null, 3, null, 4, null, 5, null, 4, null, null, null, 3, null, 2, null, 1, null, 2, null, 3, null, null, null, 2, null, null, null], bass: "R...5.R.", hat: "....x..." },
-  ems: { id: "h-ems", name: "Lights and Sirens", bpm: 140, prog: [[52, "m"], [48, "M"], [50, "M"], [47, "m"]], lw: "square", bw: "sawtooth", lv: 0.034, bv: 0.066, siren: true,
-    lead: [0, null, 0, 2, 3, null, 2, null, 0, null, 0, 2, 4, null, 3, null, 0, null, 0, 2, 3, null, 5, 4, 3, null, 2, null, 0, null, null, null],
-    lead2: [3, 3, 2, null, 3, 3, 4, null, 3, 3, 2, null, 1, null, 0, null, 3, null, 4, null, 5, null, 4, null, 3, 2, 1, 0, 1, null, null, null], bass: "R.RR.R5.", hat: "x.x.x.x." },
-  thanksgiving: { id: "h-thanksgiving", name: "Harvest Porch", bpm: 96, swing: 0.12, prog: [[43, "M"], [48, "M"], [43, "M"], [50, "M"]], lw: "triangle", bw: "triangle", lv: 0.065, bv: 0.1,
-    lead: [0, null, 1, 2, 3, null, 2, null, 1, null, 2, null, 0, null, null, null, 2, null, 3, null, 4, null, 3, 2, 1, null, 2, 1, 0, null, null, null],
-    lead2: [3, null, 2, null, 1, 2, 3, null, 4, null, 3, null, 2, null, null, null, 1, null, 2, null, 3, null, 2, null, 0, null, 1, null, 0, null, null, null], bass: "R.5.R.5.", hat: "..x...x." }
-};
-function muHolTrack() { if (typeof holToday !== "function") return null; var h = holToday(); return h && HOL_TRACKS[holKey(h)] ? HOL_TRACKS[holKey(h)] : null; }
 
 /* ---------- Protocol submissions: link + photos saved in DrugBug; owner inbox with photo viewer ---------- */
 // protocolRequests/<uid> {items:[{id, ts, type, state, agency, name, email, notes, link, photos:[photoId], status}]}
@@ -6521,13 +6605,15 @@ var CFG = window.DRUGBUG_CONFIG || {};
 /* Beta switch: subscriptions stay built in but turned off until DRUGBUG_CONFIG.paywall = true (app-config.js).
    While off, everything is unlocked and no paywall, prices or store calls appear. */
 var PAYWALL = CFG.paywall === true;
-/* Tiers (2.1 plan, "Option A"): Free forever; Plus $4.99/mo or $39.99/yr; Pro $9.99/mo or $79.99/yr.
+/* Tiers (updated Oct 28, 2026, owner): Free forever; Plus $4.99/mo or $39.99/yr; Pro $9.99/mo or $79.99/yr.
    Pro has a 1-week free introductory offer through the App Store (Apple-run trial).
-   Free: ~40 common medications (incl. epinephrine, amiodarone, atropine as Pro samples), Small Sickness Guide,
-         Normal Vitals & Labs, flashcards and daily study for those drugs, basic progress.
-   Plus: the whole BugDex and Everyday Health library, unlimited flashcards and quizzes, full progress.
-   Pro:  every professional route (EMS, nursing, medical school, imaging), exam prep, labs, blood, hemodynamics,
-         simulations (Dose Cards, Megacode), scenarios, drug alternatives, the Wormhole deep dives and all tools. */
+   Free: ~40 common medications with flashcards, the daily 5-min DrugBug, Small Sickness Guide, Normal Vitals & Labs, basic progress.
+   Plus: ACCESS to everything: every drug page on every route (BugDex, Prehospital, Nursing, Medical School, Imaging), probiotics,
+         food and vitamin compounds, My List with in-depth interactions, Drug Families, Drug Alternatives, Lab Values, Blood Products,
+         Hemodynamics, Flight Prep, Specialty Units, Contrast Safety, Everyday Health.
+   Pro:  everything in Plus + the EXTRA LEARNING: exam prep / practice tests, imported Anki decks, Brain Games,
+         scenarios and Megacode, Study Tools (interaction explorer, med-list decoder, safety drills), Nursing Bug,
+         Wormhole deep dives (drug and Disease Wormhole) are Plus (Oct 28 2026). */
 var TIER_RANK = { free: 0, plus: 1, pro: 2 }, TIER_NAME = { free: "DrugBug Free", plus: "DrugBug Plus", pro: "DrugBug Pro" };
 var PLANS = {
   plus: { monthly: "com.volaremedia.drugbug.plus.monthly", annual: "com.volaremedia.drugbug.plus.annual", m: "$4.99", y: "$39.99" },
@@ -6537,7 +6623,9 @@ var PRO_IDS = { monthly: PLANS.pro.monthly, annual: PLANS.pro.annual };
 var TRIAL_DAYS = 7, DAYMS = 86400000;
 var FREE_DRUGS = "acetaminophen,ibuprofen,aspirin,naproxen,diphenhydramine,loratadine,cetirizine,famotidine,omeprazole,loperamide,lisinopril,amlodipine,metoprolol,atorvastatin,metformin,insulin-glargine,levothyroxine,albuterol,prednisone,amoxicillin,azithromycin,sertraline,fluoxetine,ondansetron,warfarin,apixaban,furosemide,hydrochlorothiazide,losartan,gabapentin,montelukast,cholecalciferol,melatonin,pseudoephedrine,dextromethorphan,guaifenesin,naloxone,epinephrine,amiodarone,atropine,nitroglycerin,dextrose".split(",");
 var FREE_SET = {}; FREE_DRUGS.forEach(function (id) { FREE_SET[id] = 1; });
-var FREE_TABS = { hub: 1, registry: 1, diseases: 1, mylist: 1, cards: 1, flashcards: 1, progress: 1, shop: 1 };
+var FREE_TABS = { hub: 1, registry: 1, diseases: 1, progress: 1, shop: 1, conds: 1, cards: 1, flashcards: 1 }; /* flashcards free again (Oct 28 2026): Free gets flashcards for the free drugs, Plus for every drug */ /* compound tabs are Plus (Oct 28 2026) */
+/* extra learning: Pro on every route */
+var PRO_EXTRA = { prep: 1, anki: 1, games: 1, scenarios: 1, tools: 1, nbug: 1, doses: 1 };
 var PLUS_GEN_TABS = { families: 1, alts: 1 };
 /* simulations, tools and scenarios are Pro on every route, including the BugDex */
 var PRO_GEN_TABS = { tools: 1, scenarios: 1, doses: 1, prep: 1 };
@@ -6586,13 +6674,12 @@ function hasTier(t) { return TIER_RANK[tier()] >= TIER_RANK[t || "pro"]; }
 function isPro() { return hasTier("pro"); }
 function proView() { return S.view === "level"; } /* professional routes */
 function tabTier(tab) {
-  if (tab === "mylist") return "pro"; /* building your own med list (with its interaction groups) is Pro */
-  if (S.view === "gen") return PRO_GEN_TABS[tab] ? "pro" : PLUS_GEN_TABS[tab] ? "plus" : "free";
-  if (proView()) return FREE_TABS[tab] ? "free" : "pro";
-  return PRO_TABS[tab] ? "pro" : "free";
+  if (PRO_EXTRA[tab]) return "pro";   /* games, flashcards, exam prep, scenarios, tools: Pro */
+  if (FREE_TABS[tab]) return "free";
+  return "plus";                      /* everything else is access to content (My List, families, labs, units...): Plus */
 }
 function proLocked(tab) { return PAYWALL && !hasTier(tabTier(tab)); }
-function drugTier(id) { return FREE_SET[id] ? "free" : proView() ? "pro" : "plus"; }
+function drugTier(id) { return FREE_SET[id] ? "free" : "plus"; } /* every drug page, any route: Plus */
 function drugLocked(id) { return PAYWALL && !hasTier(drugTier(id)); }
 /* bugs by subscription: Common, starter and earned bugs are free; Rare and Seasonal need Plus; Epic and Legendary need Pro. Bugs already owned stay owned. */
 function bugTier(b) { if (!b) return "free"; if (b.rar === "epic" || b.rar === "legendary") return "pro"; if (b.rar === "rare" || b.rar === "seasonal") return "plus"; return "free"; }
@@ -6623,8 +6710,8 @@ var pwdlg = document.createElement("div"); pwdlg.id = "pwdlg"; pwdlg.className =
 function openPaywall(why, need) { if (!PAYWALL) return; PRO.open = true; PRO.busy = false; clearTimeout(PRO.busyT); PRO.why = why || ""; PRO.need = need || "pro"; PRO.msg = ""; if (NATIVE) storeCall("products"); drawPaywall(); pwdlg.hidden = false; var p = $(".panel", pwdlg); if (p) p.focus(); }
 function closePaywall() { PRO.open = false; pwdlg.hidden = true; pwdlg.innerHTML = ""; }
 var PLAN_PERKS = {
-  plus: ["Every medication in the BugDex (professional routes need Pro)", "All of Everyday Health: medicine cabinet, your body, peptides, drugs and your body", "Unlimited flashcards and daily study", "Drug Families comparisons", "Rare and seasonal bugs"],
-  pro: ["Everything in Plus (new subscribers can try Pro free for 7 days)", "Every professional route: Prehospital, Nursing, Medical School, Imaging", "Exam prep: NREMT, NCLEX, Step and registry-style practice, Exam mode", "Lab Values, Blood Products, Hemodynamics, Flight Prep, Specialty Units", "Simulations: Dose Cards, Megacode, clinical scenarios", "My List: save your drugs, see how they interact, quiz and print them", "Interaction explorer and Drug Alternatives", "The Wormhole on every drug: its origin story and how it works inside you, cell to organ (free drugs include a preview)", "Epic and Legendary bugs"]
+  plus: ["Every medication in DrugBug, on every route: BugDex, Prehospital, Nursing, Medical School and Imaging", "Probiotics plus the Vegetable, Fruit and Vitamin Compounds tabs", "My List: save your drugs and see in depth how they interact", "Drug Families, Drug Alternatives, Lab Values, Blood Products, Hemodynamics, Flight Prep, Specialty Units and Contrast Safety", "The Wormhole on every drug and condition: origin stories and how it works, cell to organ", "Flashcards for every drug", "All of Everyday Health", "Rare and seasonal bugs"],
+  pro: ["Everything in Plus (new subscribers can try Pro free for 7 days)", "Exam prep: NREMT, NCLEX, Step and registry-style practice tests, Exam mode", "Import your own Anki flashcard decks", "Brain Games: memory match, crossword, scramble, Class Blitz and more", "Clinical scenarios and Megacode", "Study Tools: Interaction explorer, Med-list decoder and Safety drills", "Nursing Bug skill practice", "Epic and Legendary bugs"]
 };
 function drawPaywall() {
   if (!PRO.open) return;
@@ -6859,7 +6946,7 @@ var EVTABS = [
   ["sick", "Small Sickness Guide", "Colds, heartburn, rashes and more: self-care facts, OTC products labeled for it, and when to see a doctor."],
   ["normals", "Normal Vitals & Labs", "What normal heart rate, blood pressure, temperature and lab results look like at every age."],
   ["body", "Your Body & Medicines", "Tap a body part to see the medicines that work there and the ones that can harm it."],
-  ["illicit", "Drugs & Your Body", "How illicit and recreational drugs affect the body, overdose signs and what treatment looks like. Education only."],
+  /* "Drugs & Your Body" (illicit education) moved to the BugDex as "Illicit & Street Drugs" (owner, Oct 28 2026) */
   ["peptides", "Peptides", "Approved peptide medicines and popular research peptides that are NOT FDA approved. Education only."],
   ["probiotics", "Probiotics", "Probiotic strains and what research shows for each one, strain by strain. Most are supplements, not FDA-approved medicines. Education only."],
   ["conds", "Conditions & Medicine Cautions", "Pick a condition, like high blood pressure, kidney disease or pregnancy, to see which medicines mention it in their warnings. Education only."],
@@ -6887,6 +6974,7 @@ function evView() {
   else if (t === "probiotics") c += probioView();
   return c;
 }
+function illicitView() { return '<div class="callout evnote"><strong>Education only.</strong> These pages explain effects, risks and overdose signs. They never give instructions for using any drug. If someone will not wake up or is not breathing, call 911. Naloxone reverses opioid overdoses.</div>' + evList(["Illicit & Recreational Drugs"], "Search illicit and street drugs"); }
 function evList(groups, ph) {
   var ids = []; groups.forEach(function (g) { evGroup(g).forEach(function (id) { if (ids.indexOf(id) < 0) ids.push(id); }); });
   var q = (S.evq || "").trim(); if (q) { var ex = ids.filter(function (id) { return drugMatch(id, q); }); ids = ex.length ? ex : ids.filter(function (id) { return drugMatch(id, q, true); }); }
@@ -7114,125 +7202,6 @@ document.addEventListener("click", function (e) {
 document.addEventListener("input", function (e) {
   if (e.target.id !== "condq") return; S.condq = e.target.value; var pos = e.target.selectionStart; render(); var f = document.getElementById("condq"); if (f) { f.focus(); try { f.setSelectionRange(pos, pos); } catch (x) {} }
 });
-
-/* ---------- Dose Cards: the same study cards the Apple Watch app shows (DB.WATCH) ----------
-   Study cards for memorizing emergency doses. Weight in, mg and mL out. Not for clinical decision-making. */
-var DC_LEVELS = { paramedic: 1, flight: 1, rn: 1, intern: 1, ms3: 1 };
-function dcAllowed() { return S.view === "level" && !!DC_LEVELS[S.level] && !!DB.WATCH; }
-function dcFmt(n) { if (n == null || isNaN(n)) return ""; var a = Math.abs(n); return (a >= 100 ? Math.round(n) : a >= 10 ? Math.round(n * 10) / 10 : Math.round(n * 100) / 100).toString(); }
-function dcToMg(v, unit) { return unit === "mcg" ? v / 1000 : unit === "g" ? v * 1000 : v; }
-/* your own vial concentrations, saved per dose card in Prog.d.conc (synced to your account and to the Apple Watch) */
-var DC_UNITS = ["mg", "mcg", "g"];
-function dcMine(id) { var m = (Prog.d.conc || {})[id]; return m && m.amt > 0 && m.ml > 0 && DC_UNITS.indexOf(m.unit) >= 0 ? m : null; }
-function dcConcText(m) { return dcFmt(m.amt) + " " + m.unit + " in " + dcFmt(m.ml) + " mL" + (m.ml !== 1 ? " (" + dcFmt(m.amt / m.ml) + " " + m.unit + "/mL)" : ""); }
-function dcConc(c) { var m = dcMine(c.id); return m ? { amt: m.amt, unit: m.unit, ml: m.ml, text: dcConcText(m), mine: true } : c.conc; }
-function dcVialOk(c) { return !!(c.dose && /^(mg|mcg|g)$/.test(c.dose.unit)); }
-function dcSetConc(id, m) { Prog.d.conc = Prog.d.conc || {}; if (m) Prog.d.conc[id] = m; else delete Prog.d.conc[id]; saveProg(); watchSync(); }
-/* send your vial sizes to the iPhone app, which passes them to the DrugBug Watch app */
-function watchSync() {
-  try {
-    var h = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.watch; if (!h) return;
-    var out = {}, C = Prog.d.conc || {}; Object.keys(C).forEach(function (id) { var m = dcMine(id); if (m) out[id] = { amt: m.amt, unit: m.unit, ml: m.ml, text: dcConcText(m) }; });
-    h.postMessage({ conc: JSON.stringify(out), kg: +S.dkg || 0 });
-  } catch (e) {}
-}
-/* returns {text, ml} for one card at a weight in kg */
-function dcCalc(c, kg) {
-  var out = { text: "", ml: "" }, d = c.dose; c = { dose: c.dose, seq: c.seq, rate: c.rate, conc: dcConc(c) };
-  if (d) {
-    var lo = d.lo, hi = d.hi, unit = d.unit;
-    if (d.per === "kg") {
-      if (!kg) { out.text = (lo === hi ? dcFmt(lo) : dcFmt(lo) + "-" + dcFmt(hi)) + " " + unit + "/kg" + (d.max != null ? " (max " + dcFmt(d.max) + " " + unit + ")" : ""); }
-      else if (c.seq && d.maxSeq) {
-        /* two-dose sequence with its own cap per dose (e.g. adenosine 0.1 then 0.2 mg/kg, max 6 then 12 mg) */
-        var cap = false, ds = c.seq.map(function (v, i) { var x = v * kg, mx = d.maxSeq[i] != null ? d.maxSeq[i] : d.max; if (mx != null && x > mx) { x = mx; cap = true; } return x; });
-        out.text = ds.map(dcFmt).join(" then ") + " " + unit + (cap ? " (max)" : "");
-        if (c.conc && c.conc.amt && c.conc.ml && /^(mg|mcg|g)$/.test(unit) && /^(mg|mcg|g)$/.test(c.conc.unit)) { var pq = dcToMg(c.conc.amt, c.conc.unit) / c.conc.ml; out.ml = ds.map(function (x) { return dcFmt(dcToMg(x, unit) / pq); }).join(" then ") + " mL"; }
-      }
-      else {
-        var a = lo * kg, b = hi * kg, capped = false;
-        if (d.max != null) { if (a > d.max) { a = d.max; capped = true; } if (b > d.max) { b = d.max; capped = true; } }
-        out.text = (Math.abs(a - b) < 1e-9 ? dcFmt(a) : dcFmt(a) + "-" + dcFmt(b)) + " " + unit + (capped ? " (max)" : "");
-        if (c.conc && c.conc.amt && c.conc.ml && /^(mg|mcg|g)$/.test(unit) && /^(mg|mcg|g)$/.test(c.conc.unit)) { var per = dcToMg(c.conc.amt, c.conc.unit) / c.conc.ml, ma = dcToMg(a, unit) / per, mb = dcToMg(b, unit) / per; out.ml = (Math.abs(ma - mb) < 1e-9 ? dcFmt(ma) : dcFmt(ma) + "-" + dcFmt(mb)) + " mL"; }
-      }
-    } else {
-      out.text = (c.seq ? c.seq.map(dcFmt).join(" then ") : lo === hi ? dcFmt(lo) : dcFmt(lo) + "-" + dcFmt(hi)) + " " + unit;
-      if (c.conc && c.conc.amt && c.conc.ml && /^(mg|mcg|g)$/.test(unit) && /^(mg|mcg|g)$/.test(c.conc.unit)) { var p2 = dcToMg(c.conc.amt, c.conc.unit) / c.conc.ml, v1 = dcToMg(lo, unit) / p2, v2 = dcToMg(hi, unit) / p2; out.ml = c.seq ? c.seq.map(function (x) { return dcFmt(dcToMg(x, unit) / p2); }).join(" then ") + " mL" : (Math.abs(v1 - v2) < 1e-9 ? dcFmt(v1) : dcFmt(v1) + "-" + dcFmt(v2)) + " mL"; }
-    }
-  }
-  if (c.rate) {
-    var r = c.rate, rt = dcFmt(r.lo) + (r.hi !== r.lo ? "-" + dcFmt(r.hi) : "") + " " + r.unit;
-    if (kg && /\/kg\//.test(r.unit)) { var u2 = r.unit.replace("/kg", ""); rt += " = " + dcFmt(r.lo * kg) + (r.hi !== r.lo ? "-" + dcFmt(r.hi * kg) : "") + " " + u2; }
-    out.text = out.text ? out.text + "; then " + rt : rt;
-  }
-  return out;
-}
-function dcVial(c) {
-  if (!dcVialOk(c)) return '';
-  var m = dcMine(c.id);
-  if (S.dcEdit === c.id) {
-    var v = m || c.conc || { amt: "", unit: c.dose.unit, ml: "" };
-    return '<form class="dcvial" data-dcvial="' + c.id + '"><span class="small"><strong>My vial:</strong></span><input class="pinput" name="amt" type="number" inputmode="decimal" min="0" max="99999" step="any" value="' + (v.amt || "") + '" aria-label="Amount in the vial" required><select class="pinput" name="unit" aria-label="Unit">' + DC_UNITS.map(function (u) { return '<option' + (u === (v.unit || c.dose.unit) ? " selected" : "") + '>' + u + '</option>'; }).join("") + '</select><span class="small">in</span><input class="pinput" name="ml" type="number" inputmode="decimal" min="0" max="1000" step="any" value="' + (v.ml || "") + '" aria-label="Volume in mL" required><span class="small">mL</span><button class="btn small" type="submit">Save</button>' + (m ? '<button class="btn small ghost" type="button" data-dcreset="' + c.id + '">Use default</button>' : '') + '<button class="linkish" type="button" data-dccancel="1">Cancel</button></form>';
-  }
-  return '<div class="dcvialrow small">' + (m ? '<span class="pill good">My vial</span> ' + esc(dcConcText(m)) : '<span class="muted">' + (c.conc ? 'Default vial: ' + esc(c.conc.text) : 'No vial set') + '</span>') + ' <button class="linkish" data-dcedit="' + c.id + '">' + (m ? 'Change' : 'Enter my vial') + '</button></div>';
-}
-function dcCard(c, kg) {
-  var r = dcCalc(c, kg), cc = dcConc(c);
-  return '<div class="dccard"><div class="dctop"><button class="dcname" data-drug="' + c.drug + '">' + esc(c.name) + '</button><span class="dcrole">' + esc(c.role || "") + ' · ' + esc(c.route || "") + '</span></div>' +
-    '<div class="dcdose"><span class="simtag sm">SIM</span> ' + esc(r.text) + (r.ml ? '<span class="dcml">' + esc(r.ml) + (cc ? ' of ' + esc(cc.text) + (cc.mine ? ' (my vial)' : '') : '') + '</span>' : '') + '</div>' +
-    dcVial(c) +
-    '<div class="dcsrc"><span class="pill ' + (c.lab ? 'good' : 'mid') + '">' + (c.lab ? 'FDA label' : 'Guideline / off-label') + '</span> ' + esc(c.src || "") + '</div>' +
-    ((c.onset || c.dur) ? '<div class="muted small">Onset ' + esc(c.onset || "-") + ' · Duration ' + esc(c.dur || "-") + '</div>' : '') +
-    (c.peds ? '<div class="small"><strong>Peds:</strong> ' + esc(c.peds) + '</div>' : '') +
-    (c.notes && c.notes.length ? '<ul class="dcnotes">' + c.notes.map(function (n) { return '<li>' + esc(n) + '</li>'; }).join("") + '</ul>' : '') + '</div>';
-}
-function dcWeightForm() {
-  var kg = +S.dkg || 0;
-  return '<form class="inl dcw" data-dcform="1"><label for="dkg"><strong>Fictional patient weight</strong></label><input class="pinput" id="dkg" type="number" inputmode="decimal" min="0.5" max="300" step="0.1" placeholder="kg" value="' + (kg || "") + '"><span>kg</span>' + (kg ? '<span class="muted small">= ' + dcFmt(kg * 2.2046) + ' lb</span><button class="linkish" type="button" data-dcclear="1">Clear</button>' : '<span class="muted small">Leave blank to see mg/kg</span>') + '</form>';
-}
-/* My List: dose cards for the drugs you saved, with your own vial sizes */
-function dcMyList(ids) {
-  var W = DB.WATCH; if (!W) return "";
-  var cards = W.cards.filter(function (c) { return ids.indexOf(c.drug) >= 0; }), kg = +S.dkg || 0;
-  if (!simOk()) return '<section class="dcmy"><h3 class="eh small">My vials and doses (simulation)</h3>' + simGate("My vials and doses") + '</section>';
-  var c = '<section class="dcmy"><h3 class="eh small">My vials and doses (simulation)</h3>' + simBanner() + '<p class="muted small">Enter the vial sizes your service stocks. DrugBug works out the mL for a fictional practice patient, and the DrugBug Apple Watch app shows the same practice numbers.</p>';
-  if (!cards.length) return c + '<p class="muted small">None of your saved drugs has a dose card yet. Dose cards cover emergency drugs such as RSI, ACLS, PALS and pressors. Save one of those (for example ketamine or rocuronium) to set its vial here.</p></section>';
-  return c + dcWeightForm() + '<div class="dcgrid">' + cards.map(function (x) { return dcCard(x, kg); }).join("") + '</div></section>';
-}
-function doseView() {
-  if (!simOk()) return simGate("Dose Cards");
-  var W = DB.WATCH, kg = +S.dkg || 0, mode = S.dcMode || "groups", grp = S.dcGrp || W.cards[0].grp;
-  var grps = []; W.cards.forEach(function (c) { if (grps.indexOf(c.grp) < 0) grps.push(c.grp); });
-  var c = simBanner() + '<div class="callout evnote"><strong>' + esc(W.tag || "Study card - verify with your protocol and the FDA label") + '.</strong> ' + esc(W.note || "") + ' These are the same cards the DrugBug Apple Watch app shows.</div>';
-  c += dcWeightForm() + '<p class="muted small">Tap <strong>Enter my vial</strong> on any card to use the concentration your service stocks. Your vials also show on My List and on the DrugBug Apple Watch app.</p>';
-  c += '<div class="chips"><button class="chip" data-dcmode="groups" aria-pressed="' + (mode === "groups") + '">Drug cards</button><button class="chip" data-dcmode="protocols" aria-pressed="' + (mode === "protocols") + '">Protocols</button></div>';
-  if (mode === "groups") {
-    c += '<div class="chips">' + grps.map(function (g) { return '<button class="chip" data-dcgrp="' + esc(g) + '" aria-pressed="' + (g === grp) + '">' + esc(g) + '</button>'; }).join("") + '</div>';
-    c += '<div class="dcgrid">' + W.cards.filter(function (x) { return x.grp === grp; }).map(function (x) { return dcCard(x, kg); }).join("") + '</div>';
-  } else {
-    var P = W.protocols, cur = P.filter(function (p) { return p.id === S.dcProto; })[0] || P[0];
-    c += '<div class="chips">' + P.map(function (p) { return '<button class="chip" data-dcproto="' + p.id + '" aria-pressed="' + (p === cur) + '">' + esc(p.name) + '</button>'; }).join("") + '</div>';
-    c += '<section class="sickcard"><h2>' + esc(cur.name) + '</h2><ol class="dcsteps">' + cur.steps.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join("") + '</ol><p class="muted small">' + esc(cur.src || "") + '</p></section>';
-    var byId = {}; W.cards.forEach(function (x) { byId[x.id] = x; });
-    c += '<div class="dcgrid">' + (cur.cards || []).map(function (id) { return byId[id] ? dcCard(byId[id], kg) : ''; }).join("") + '</div>';
-  }
-  return c;
-}
-document.addEventListener("click", function (e) {
-  var t = e.target.closest && e.target.closest("[data-dcmode],[data-dcgrp],[data-dcproto],[data-dcclear],[data-dcedit],[data-dcreset],[data-dccancel]"); if (!t) return;
-  var d = t.dataset;
-  if (d.dcmode) S.dcMode = d.dcmode; if (d.dcgrp) S.dcGrp = d.dcgrp; if (d.dcproto) S.dcProto = d.dcproto; if (d.dcclear) { S.dkg = ""; watchSync(); }
-  if (d.dcedit) S.dcEdit = d.dcedit; if (d.dccancel) S.dcEdit = null; if (d.dcreset) { dcSetConc(d.dcreset, null); S.dcEdit = null; }
-  render();
-});
-document.addEventListener("submit", function (e) {
-  var f = e.target; if (!f.getAttribute || !f.getAttribute("data-dcvial")) return; e.preventDefault();
-  var amt = parseFloat(f.amt.value), ml = parseFloat(f.ml.value), unit = f.unit.value;
-  if (!(amt > 0 && amt < 100000 && ml > 0 && ml <= 1000) || DC_UNITS.indexOf(unit) < 0) { f.amt.setCustomValidity && f.amt.reportValidity(); return; }
-  dcSetConc(f.getAttribute("data-dcvial"), { amt: amt, unit: unit, ml: ml, ts: Date.now() }); S.dcEdit = null; render();
-});
-document.addEventListener("submit", function (e) { if (!e.target.getAttribute || !e.target.getAttribute("data-dcform")) return; e.preventDefault(); var v = parseFloat((document.getElementById("dkg") || {}).value); S.dkg = v > 0 && v <= 300 ? v : ""; watchSync(); render(); });
-document.addEventListener("change", function (e) { if (e.target.id !== "dkg") return; var v = parseFloat(e.target.value); S.dkg = v > 0 && v <= 300 ? v : ""; watchSync(); render(); });
 
 /* ---------- Optional personal accounts (iPhone app with the backend turned on) ----------
    Shows nothing unless the backend provides use("account") (tools/ios/backend.js with DRUGBUG_CONFIG.firebase).
@@ -7739,13 +7708,13 @@ function pkCalm() {
 }
 function pkPick() {
   var h = typeof holToday === "function" ? holToday() : null, hp = h ? PEEKERS.filter(function (p) { return p.hol === holKey(h) && !pkCaught(p.id); }) : [];
-  if (hp.length) return hp[0];
+  if (hp.length) return !window.__PK_FAST && Math.random() > .3 ? "skip" : hp[0]; /* holiday pals: rarer (owner, Oct 28 2026): about 1 in 3 chances */
   if (!window.__PK_FAST && Math.random() > .2) return "skip"; /* everyday pals are rare finds */
   var every = PEEKERS.filter(function (p) { return !p.hol && !pkCaught(p.id); }); return every.length ? every[Math.floor(Math.random() * every.length)] : null;
 }
 function pkSchedule(first) {
   clearTimeout(PK.t);
-  var h = typeof holToday === "function" ? holToday() : null, lo = first ? 5 : (h ? 240 : 360), hi = first ? 120 : (h ? 480 : 720); /* minutes apart, and at most 3 a day */
+  var h = typeof holToday === "function" ? holToday() : null, lo = first ? 30 : 360, hi = first ? 240 : 720; /* holiday days no longer come more often (Oct 28 2026) */ /* minutes apart, and at most 3 a day */
   if (window.__PK_FAST) { lo = 1; hi = 2; }
   PK.t = setTimeout(pkShow, (lo + Math.random() * (hi - lo)) * 1000);
 }
@@ -7761,7 +7730,7 @@ function pkShow() {
   el.addEventListener("click", function (e) { e.stopPropagation(); pkCatch(p, el); });
   document.body.appendChild(el); PK.el = el; PK.live = p;
   requestAnimationFrame(function () { el.classList.add("in"); });
-  PK.hideT = setTimeout(function () { pkHide(false); }, 2800); /* about 2.8 s to tap it */
+  PK.hideT = setTimeout(function () { pkHide(false); }, p.hol ? 2300 : 2800); /* about 2.8 s to tap it (holiday pals are a bit quicker) */
 }
 function pkHide(caught) {
   clearTimeout(PK.hideT); var el = PK.el; PK.el = null; PK.live = null; if (!el) return pkSchedule(false);
@@ -9730,14 +9699,14 @@ window.addEventListener("resize", function () { if (!chemdlg.hidden) chem3Draw()
 function deepOf(id) { return (DB.DEEP || {})[id] || null; }
 /* The Wormhole is a DrugBug Pro feature (locked only when subscriptions are on; see modules/pro.js) */
 /* Free teaser: the ~40 free drugs (FREE_SET) open their Wormhole on every plan, so Free users can try it */
-function deepLocked() { var id = S.sheet && S.sheet.id; if (id && typeof FREE_SET !== "undefined" && FREE_SET[id]) return false; return typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier("pro"); }
+function deepLocked() { var id = S.sheet && S.sheet.id; if (id && typeof FREE_SET !== "undefined" && FREE_SET[id]) return false; return typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier("plus"); }
 function deepTabs() {
   if (S.dtab === "deep" && deepLocked()) S.dtab = "main";
   var t = S.dtab === "deep" ? "deep" : "main", lk = deepLocked();
-  return '<div class="dtabs" role="tablist" aria-label="Drug page sections"><button role="tab" data-dtab="main" aria-selected="' + (t === "main") + '">Drug page</button><button role="tab" data-dtab="deep" aria-selected="' + (t === "deep") + '"' + (lk ? ' aria-label="Wormhole, DrugBug Pro"' : '') + '>🪱 Wormhole' + (lk && typeof tierBadge === "function" ? ' ' + tierBadge("pro") : '') + '</button></div>';
+  return '<div class="dtabs" role="tablist" aria-label="Drug page sections"><button role="tab" data-dtab="main" aria-selected="' + (t === "main") + '">Drug page</button><button role="tab" data-dtab="deep" aria-selected="' + (t === "deep") + '"' + (lk ? ' aria-label="Wormhole, DrugBug Plus"' : '') + '>🪱 Wormhole' + (lk && typeof tierBadge === "function" ? ' ' + tierBadge("plus") : '') + '</button></div>';
 }
 function deepClick(t, a) {
-  if (a.dtab === "deep" && deepLocked()) { openPaywall("The Wormhole", "pro"); return true; }
+  if (a.dtab === "deep" && deepLocked()) { openPaywall("The Wormhole", "plus"); return true; }
   if (a.dtab) { S.dtab = a.dtab; drawSheet(); var pn = $(".panel", sheet); if (pn) { var tb = $(".dtabs", pn); pn.scrollTop = tb ? Math.max(0, tb.offsetTop - 70) : 0; } return true; }
   return false;
 }
@@ -9748,7 +9717,7 @@ function deepView(id) {
   var d = DB.drugs[id], e = deepOf(id), nm = nameOf(id), c = '<div class="deep">';
   if (lang() === "es") c += '<p class="dnote">La sección "Wormhole" solo está disponible en inglés por ahora.</p>';
   var st = e && typeof crStatus === "function" ? crStatus("deep", id) : "draft";
-  if (typeof FREE_SET !== "undefined" && FREE_SET[id] && typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier("pro")) c += '<div class="callout evnote small"><strong>Free preview.</strong> The Wormhole is open on your free drugs. Every drug in DrugBug has one with DrugBug Pro. <button class="linkish" data-pw="open">See Pro</button></div>';
+  if (typeof FREE_SET !== "undefined" && FREE_SET[id] && typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier("plus")) c += '<div class="callout evnote small"><strong>Free preview.</strong> The Wormhole is open on your free drugs. Every drug in DrugBug has one with DrugBug Plus. <button class="linkish" data-pw="open">See Plus</button></div>';
   c += '<p class="dnote"><b>Go down the wormhole:</b> the deep dive on where this drug came from and how it works inside you.</p><p class="dnote">' + (e ? (st === "reviewed" ? "Deep dive reviewed for educational accuracy. " : "Draft study content. ") : "The full origin story for " + esc(nm) + " is still being written. Everything below comes from its DrugBug drug page. ") + 'For learning only: always follow your protocols, the FDA label and medical direction. Doses are on the drug page.</p>';
   /* 1 origins */
   var org = '';
@@ -9819,7 +9788,7 @@ ICO.diseases = '<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5c-2.6 2.4-2.6 1
   try { var st = document.createElement("style"); st.textContent = css; document.head.appendChild(st); } catch (e) {}
 })();
 function disAll() { return DB.DIS || {}; }
-function disLocked(id) { return typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier("pro") && !DIS_FREE[id]; }
+function disLocked(id) { return typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier("plus") && !DIS_FREE[id]; }
 function disForDrug(drugId) { var D = disAll(); return Object.keys(D).filter(function (k) { return (D[k].drugs || []).indexOf(drugId) >= 0; }).sort(function (a, b) { return D[a].name.localeCompare(D[b].name); }); }
 function disMatch(e, q) { if (!q) return true; q = q.toLowerCase(); return (e.name + " " + (e.aka || []).join(" ") + " " + e.sys).toLowerCase().indexOf(q) >= 0; }
 function disListHTML() {
@@ -9828,7 +9797,7 @@ function disListHTML() {
   if (!ids.length) return '<p class="muted">No conditions match. Try another word.</p>';
   return '<p class="muted small">' + ids.length + ' condition' + (ids.length === 1 ? '' : 's') + '</p><div class="dislist">' + ids.map(function (k) {
     var e = D[k], lk = disLocked(k);
-    return '<button class="disitem' + (lk ? ' locked' : '') + '" data-dis="' + k + '"><strong>' + esc(e.name) + (lk && typeof tierBadge === "function" ? ' ' + tierBadge("pro") : DIS_FREE[k] && typeof PAYWALL !== "undefined" && PAYWALL && !hasTier("pro") ? ' <span class="pill">Free preview</span>' : '') + '</strong><span>' + esc(e.sys) + '</span></button>';
+    return '<button class="disitem' + (lk ? ' locked' : '') + '" data-dis="' + k + '"><strong>' + esc(e.name) + (lk && typeof tierBadge === "function" ? ' ' + tierBadge("plus") : DIS_FREE[k] && typeof PAYWALL !== "undefined" && PAYWALL && !hasTier("plus") ? ' <span class="pill">Free preview</span>' : '') + '</strong><span>' + esc(e.sys) + '</span></button>';
   }).join("") + '</div>';
 }
 function disView() {
@@ -9836,7 +9805,7 @@ function disView() {
   if (S.disId && D[S.disId] && !disLocked(S.disId)) return disDetail(S.disId);
   S.disId = null;
   var c = '<p class="muted">Go down the wormhole on a disease: where it came from, what goes wrong from the cell to each organ, why the symptoms happen, how it is diagnosed and how the drugs that treat it work. Education only.</p>';
-  if (typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier("pro")) c += '<div class="callout evnote small"><strong>DrugBug Pro.</strong> Five conditions are open as a free preview: high blood pressure, type 2 diabetes, asthma, migraine and the flu. <button class="linkish" data-pw="open">See Pro</button></div>';
+  if (typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier("plus")) c += '<div class="callout evnote small"><strong>DrugBug Plus.</strong> Five conditions are open as a free preview: high blood pressure, type 2 diabetes, asthma, migraine and the flu. <button class="linkish" data-pw="open">See Plus</button></div>';
   if (typeof lang === "function" && lang() === "es") c += '<p class="dnote">La sección "Disease Wormhole" solo está disponible en inglés por ahora.</p>';
   c += '<input class="pinput dissearch" id="disq" type="search" placeholder="Search conditions, like asthma or DKA" aria-label="Search conditions" value="' + esc(S.disQ || "") + '">';
   c += '<div class="dischips" role="group" aria-label="Body systems"><button data-dissys="" aria-pressed="' + !S.disSys + '">All</button>' + DIS_SYS.map(function (s) { return '<button data-dissys="' + esc(s) + '" aria-pressed="' + (S.disSys === s) + '">' + esc(s) + '</button>'; }).join("") + '</div>';
@@ -9865,7 +9834,7 @@ function disDetail(id) {
   return c + '</div>';
 }
 function disOpen(id) {
-  if (disLocked(id)) { if (typeof openPaywall === "function") openPaywall("The Disease Wormhole", "pro"); return; }
+  if (disLocked(id)) { if (typeof openPaywall === "function") openPaywall("The Disease Wormhole", "plus"); return; }
   if (typeof sheet !== "undefined" && sheet && !sheet.hidden && typeof closeSheet === "function") closeSheet();
   S.tab = "diseases"; S.disId = id; render(); try { window.scrollTo(0, 0); } catch (e) {}
 }
@@ -9880,7 +9849,7 @@ document.addEventListener("input", function (e) { if (e.target && e.target.id ==
 function disDrugSection(drugId) {
   var ids = disForDrug(drugId); if (!ids.length) return "";
   var D = disAll();
-  return deepSec("🧬", "Conditions it treats (Disease Wormhole)", '<p class="dnote">Tap a condition to go down its wormhole.</p><div class="drugchips">' + ids.map(function (k) { return '<button class="chip" data-dis="' + k + '">' + esc(D[k].name) + (disLocked(k) && typeof tierBadge === "function" ? ' ' + tierBadge("pro") : '') + '</button>'; }).join("") + '</div>');
+  return deepSec("🧬", "Conditions it treats (Disease Wormhole)", '<p class="dnote">Tap a condition to go down its wormhole.</p><div class="drugchips">' + ids.map(function (k) { return '<button class="chip" data-dis="' + k + '">' + esc(D[k].name) + (disLocked(k) && typeof tierBadge === "function" ? ' ' + tierBadge("plus") : '') + '</button>'; }).join("") + '</div>');
 }
 
 
