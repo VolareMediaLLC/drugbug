@@ -6674,9 +6674,32 @@ function trialActive() { return false; }
 function trialEligible() { var p = PRO.products.filter(function (x) { return x.id === PLANS.pro.monthly || x.id === PLANS.pro.annual; }); return p.length > 0 && p.some(function (x) { return !!x.trial; }); }  /* only promise the free week once the store confirms it */
 /* Public web demo (tools/build_demo.py sets DRUGBUG_CONFIG.demo): always DrugBug Free, no plan preview */
 var DEMO = CFG.demo === true && !NATIVE;
+/* Website access codes (web demo only): the build stores SHA-256 hashes of the codes in CFG.webCodes
+   [{h, by: "YYYY-MM-DD" last day to redeem, days}]. Redeeming one gives DrugBug Pro in that browser for `days` days. */
+function webPass() { var p = store("webPass"); return p && p.until > Date.now() ? p : null; }
+var WEBDEEP = 0;
+function webDeepLoad() { /* the demo ships Wormhole text for the free drugs only; a code holder gets the rest */
+  if (WEBDEEP || !DEMO || !webPass()) return; WEBDEEP = 1;
+  var sc = document.createElement("script"); sc.src = "deep.js"; sc.onload = function () { if (typeof render === "function") render(); }; sc.onerror = function () { WEBDEEP = 0; }; document.head.appendChild(sc);
+}
+function webCodeTry(raw) {
+  var code = String(raw || "").toUpperCase().replace(/[^A-Z0-9]/g, ""), list = CFG.webCodes || [];
+  PRO.code = raw; if (!code) return;
+  if (!(window.crypto && crypto.subtle)) { PRO.msg = "This browser can't check codes. Try a current version of Safari or Chrome."; return drawPaywall(); }
+  crypto.subtle.digest("SHA-256", new TextEncoder().encode("drugbug-web:" + code)).then(function (buf) {
+    var h = Array.prototype.map.call(new Uint8Array(buf), function (b) { return ("0" + b.toString(16)).slice(-2); }).join("");
+    var hit = list.filter(function (c) { return c.h === h; })[0];
+    if (!hit) { PRO.msg = "That code isn't valid. Check the spelling and try again."; return drawPaywall(); }
+    if (hit.by && today() > hit.by) { PRO.msg = "That code has expired."; return drawPaywall(); }
+    var old = webPass(); if (old && old.h === h) { PRO.msg = "This code is already active until " + new Date(old.until).toLocaleDateString() + "."; return drawPaywall(); }
+    store("webPass", { h: h, until: Date.now() + (hit.days || 30) * 864e5 }); PRO.codeOpen = false; PRO.code = "";
+    PRO.msg = "Code accepted. DrugBug Pro is unlocked in this browser until " + new Date(webPass().until).toLocaleDateString() + ".";
+    webDeepLoad(); drawPaywall(); if (typeof render === "function") render();
+  });
+}
 function tier() {
   if (!PAYWALL) return "pro";
-  if (DEMO) return "free";
+  if (DEMO) return webPass() ? "pro" : "free";
   if (!NATIVE) return SET().previewTier || "pro";
   if (PRO.tier === "pro" || licenseActive()) return "pro";
   return PRO.tier === "plus" ? "plus" : "free";
@@ -6699,7 +6722,7 @@ function tierBadge(t) { return '<span class="probadge">' + (t === "plus" ? "PLUS
 function proBadge(tab) { return tierBadge(tab ? tabTier(tab) : "pro"); }
 function proLabel() {
   if (!PAYWALL) return "Beta: everything is unlocked. Subscriptions are turned off for now.";
-  if (DEMO) return "DrugBug Free (web demo)";
+  if (DEMO) return webPass() ? "DrugBug Pro (access code) until " + new Date(webPass().until).toLocaleDateString() : "DrugBug Free (web demo)";
   if (!NATIVE) return "Web preview as " + TIER_NAME[tier()];
   if (PRO.store) return TIER_NAME[PRO.tier] + " active" + (PRO.offer ? " · offer code" : "") + (PRO.expires ? " · renews or ends " + new Date(PRO.expires).toLocaleDateString() : "");
   if (licenseActive()) return "School license (" + Prog.d.license.code + ") until " + new Date(Prog.d.license.until).toLocaleDateString();
@@ -6708,6 +6731,7 @@ function proLabel() {
 }
 /* home banner about the 7 free days */
 function trialBanner() {
+  if (DEMO && webPass()) return '<div class="callout evnote small trialbar"><strong>DrugBug Pro is unlocked</strong> with your access code until ' + new Date(webPass().until).toLocaleDateString() + '. Enjoy every drug, route and study tool.</div>';
   if (DEMO) return '<div class="callout evnote small trialbar"><strong>You are using the free DrugBug web demo.</strong> It includes about 40 common medications, with a free preview of the Wormhole. The full DrugBug, with 2,000+ medications and every professional route, is coming soon to iPhone. <button class="linkish" data-pw="open">See Plus and Pro</button></div>';
   if (!PAYWALL || !NATIVE || PRO.store || licenseActive() || Prog.d.proGrant) return "";
   return '<div class="callout evnote small trialbar"><strong>You are on DrugBug Free.</strong> ' + (trialEligible() ? 'Try Pro free for 7 days through the App Store (renews unless you cancel). ' : '') + '<button class="linkish" data-pw="open">See Plus and Pro</button></div>';
@@ -6730,7 +6754,7 @@ function drawPaywall() {
   var c = '<div class="panel pwpanel" role="dialog" aria-modal="true" aria-label="DrugBug plans" tabindex="-1"><div class="navrow"><span class="spacer"></span><button class="iconbtn" data-pw="close">Close</button></div>';
   c += '<div class="pwhead">' + myBugArt("pwbug") + '<div><h2>DrugBug Plus and Pro</h2><p class="muted">' + (PRO.why ? esc(PRO.why) + ' is part of ' + TIER_NAME[PRO.need] + '. ' : '') + 'Your plan: ' + esc(proLabel()) + '</p></div></div>';
   var canBuy = NATIVE && hasStore();
-  if (!canBuy) c += '<div class="presult">' + (DEMO ? 'This is the free web demo. Plus and Pro come with the DrugBug iPhone app, coming soon to the App Store.' : 'Plans are purchased in the DrugBug iPhone app.') + '</div>';
+  if (!canBuy) c += '<div class="presult">' + (DEMO && webPass() ? 'Your access code has DrugBug Pro unlocked in this browser until ' + new Date(webPass().until).toLocaleDateString() + '. Plus and Pro subscriptions come with the DrugBug iPhone app.' : DEMO ? 'This is the free web demo. Plus and Pro come with the DrugBug iPhone app, coming soon to the App Store.' : 'Plans are purchased in the DrugBug iPhone app.') + '</div>';
   ["plus", "pro"].forEach(function (t) {
     var P = PLANS[t], pm = prodOf(P.monthly), py = prodOf(P.annual), m = pm ? pm.price : P.m, y = py ? py.price : P.y, own = PRO.store && PRO.tier === t;
     c += '<section class="pwtier pw-' + t + '"><h3>' + TIER_NAME[t] + (own ? ' <span class="pill good">Your plan</span>' : '') + '</h3><ul class="pwperks">' + PLAN_PERKS[t].map(function (x) { return '<li><span>' + esc(x) + '</span></li>'; }).join("") + '</ul>';
@@ -6744,7 +6768,8 @@ function drawPaywall() {
   if (PRO.msg) c += '<div class="presult" role="alert">' + esc(PRO.msg) + '</div>';
   c += '<p class="muted small">DrugBug Free stays free forever: about 40 common medications, flashcards for those drugs, the daily 5-minute DrugBug, the Small Sickness Guide, Normal Vitals &amp; Labs, and a free preview of the Wormhole and the Disease Lab.</p>';
   c += '<div class="pwrow"><button class="linkish" data-pw="restore">Restore purchases</button>' + (NATIVE ? '<button class="linkish" data-pw="redeem">Redeem an offer code</button>' : '') + (NATIVE && PRO.store ? '<button class="linkish" data-pw="manage">Manage subscription</button>' : '') + '</div>';
-  if (HASDB) c += '<div class="pwcode">' + (PRO.codeOpen ? '<form data-pwcode="1" class="inl"><input class="pinput" id="pwcode" maxlength="16" placeholder="School or agency code" value="' + esc(PRO.code) + '" autocapitalize="characters"><button class="btn small" type="submit">Apply</button></form>' : '<button class="linkish" data-pw="code">Have a school or agency code?</button>') + '</div>';
+  if (DEMO) c += '<div class="pwcode">' + (PRO.codeOpen ? '<form data-pwwebcode="1" class="inl"><input class="pinput" id="pwwebcode" maxlength="24" placeholder="Access code" value="' + esc(PRO.code || "") + '" autocapitalize="characters" autocomplete="off"><button class="btn small" type="submit">Apply</button></form>' : '<button class="linkish" data-pw="code">Have an access code?</button>') + '</div>';
+  if (HASDB && !DEMO) c += '<div class="pwcode">' + (PRO.codeOpen ? '<form data-pwcode="1" class="inl"><input class="pinput" id="pwcode" maxlength="16" placeholder="School or agency code" value="' + esc(PRO.code) + '" autocapitalize="characters"><button class="btn small" type="submit">Apply</button></form>' : '<button class="linkish" data-pw="code">Have a school or agency code?</button>') + '</div>';
   c += '<p class="muted small pwfine">Prices are shown before you buy. If a free trial is offered, payment is charged when the trial ends unless you cancel at least 24 hours before it ends. Subscriptions renew automatically at the end of each billing period unless cancelled at least 24 hours before it ends. Payment is charged to your Apple Account when you confirm. Manage or cancel any time in iPhone Settings → your name → Subscriptions. Cancelling stops future renewals; refunds for App Store purchases are handled by Apple. Plus and Pro are in one subscription group, so changing plans replaces your current one. DrugBug is for education only, not for patient care.' +
     (site ? ' <a href="' + esc(site) + '/terms.html" target="_blank" rel="noopener">Terms of Use</a> · <a href="' + esc(site) + '/privacy.html" target="_blank" rel="noopener">Privacy Policy</a>' : ' <button class="linkish" data-legal="terms">Terms of Use</button> · <button class="linkish" data-legal="privacy">Privacy Policy</button>') + '</p>';
   pwdlg.innerHTML = c + '</div>'; translateDom(pwdlg);
@@ -6780,9 +6805,10 @@ document.addEventListener("click", function (e) {
   if (a === "restore") { PRO.restoring = true; PRO.msg = "Checking your purchases…"; drawPaywall(); if (!storeCall("restore")) { PRO.msg = "Restore works in the DrugBug iPhone app."; drawPaywall(); } return; }
   if (a === "manage") { storeCall("manage"); return; }
   if (a === "redeem") { PRO.msg = ""; if (!storeCall("redeem")) { PRO.msg = "Offer codes are redeemed in the DrugBug iPhone app."; drawPaywall(); } return; }
-  if (a === "code") { PRO.codeOpen = true; drawPaywall(); var f = $("#pwcode"); if (f) f.focus(); return; }
+  if (a === "code") { PRO.codeOpen = true; drawPaywall(); var f = $("#pwcode") || $("#pwwebcode"); if (f) f.focus(); return; }
 });
-document.addEventListener("submit", function (e) { if (e.target.getAttribute && e.target.getAttribute("data-pwcode")) { e.preventDefault(); applyCode($("#pwcode").value); } });
+document.addEventListener("submit", function (e) { if (e.target.getAttribute && e.target.getAttribute("data-pwcode")) { e.preventDefault(); applyCode($("#pwcode").value); } if (e.target.getAttribute && e.target.getAttribute("data-pwwebcode")) { e.preventDefault(); webCodeTry($("#pwwebcode").value); } });
+setTimeout(webDeepLoad, 1500);
 document.addEventListener("keydown", function (e) { if (e.key === "Escape" && PRO.open) closePaywall(); });
 document.addEventListener("change", function (e) { if (e.target.id === "pvtier") { setSet("previewTier", e.target.value); render(); } });
 if (NATIVE) setTimeout(function () { storeCall("products"); }, 300);
