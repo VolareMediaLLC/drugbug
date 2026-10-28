@@ -469,7 +469,7 @@ function tabList() {
   L.push(["cards", "Flashcards", S.view === "level" && isM(S.level) ? "DrugBug flashcards, or your own decks imported from Anki." : "Flip, sort and master each drug."], ["games", "Brain Games", "Memory match, crossword, quick match, word scramble, Class Blitz and Frog Snack."], ["progress", "Progress", "Mastery, achievements and leaderboard."]);
   if (S.view === "gen" && typeof illicitView === "function") L.splice(1, 0, ["illicit", "Illicit & Street Drugs", "How illicit and recreational drugs affect the body, overdose signs and treatment. Education only."]);
   if (S.view === "gen" && typeof COMPOUND_TABS !== "undefined") L.splice(1, 0, ["vegc", "Vegetable Compounds", "Sulforaphane, allicin, lycopene, favism beans and more cool compounds from vegetables."], ["fruitc", "Fruit Compounds", "Resveratrol, bromelain, star fruit toxin and more unique compounds from fruit."], ["vitc", "Vitamin Compounds", "Every vitamin form, from B12 types to vitamin K2, CoQ10 and choline."]);
-  if (typeof disView === "function" && !(S.view === "level" && isI(S.level))) L.splice(1, 0, ["diseases", "Disease Wormhole", "Go down the wormhole on 250 conditions: their history, what goes wrong from cell to organ, and the drugs that treat them."]);
+  if (typeof disView === "function" && !(S.view === "level" && isI(S.level))) L.splice(1, 0, ["diseases", "Disease Lab", "250 conditions explained: their history, what goes wrong from cell to organ, and the drugs that treat them."]);
   return L;
 }
 function tabName(k) { var t = tabList().filter(function (x) { return x[0] === k; })[0]; return t ? t[1] : k === "session" ? "Study session" : k === "anki" ? "Imported Decks" : ""; }
@@ -6613,7 +6613,7 @@ var PAYWALL = CFG.paywall === true;
          Hemodynamics, Flight Prep, Specialty Units, Contrast Safety, Everyday Health.
    Pro:  everything in Plus + the EXTRA LEARNING: exam prep / practice tests, imported Anki decks, Brain Games,
          scenarios and Megacode, Study Tools (interaction explorer, med-list decoder, safety drills), Nursing Bug,
-         Wormhole deep dives (drug and Disease Wormhole) are Plus (Oct 28 2026). */
+         Wormhole deep dives (drug Wormhole and Disease Lab) are Plus (Oct 28 2026). */
 var TIER_RANK = { free: 0, plus: 1, pro: 2 }, TIER_NAME = { free: "DrugBug Free", plus: "DrugBug Plus", pro: "DrugBug Pro" };
 var PLANS = {
   plus: { monthly: "com.volaremedia.drugbug.plus.monthly", annual: "com.volaremedia.drugbug.plus.annual", m: "$4.99", y: "$39.99" },
@@ -6710,7 +6710,7 @@ var pwdlg = document.createElement("div"); pwdlg.id = "pwdlg"; pwdlg.className =
 function openPaywall(why, need) { if (!PAYWALL) return; PRO.open = true; PRO.busy = false; clearTimeout(PRO.busyT); PRO.why = why || ""; PRO.need = need || "pro"; PRO.msg = ""; if (NATIVE) storeCall("products"); drawPaywall(); pwdlg.hidden = false; var p = $(".panel", pwdlg); if (p) p.focus(); }
 function closePaywall() { PRO.open = false; pwdlg.hidden = true; pwdlg.innerHTML = ""; }
 var PLAN_PERKS = {
-  plus: ["Every medication in DrugBug, on every route: BugDex, Prehospital, Nursing, Medical School and Imaging", "Probiotics plus the Vegetable, Fruit and Vitamin Compounds tabs", "My List: save your drugs and see in depth how they interact", "Drug Families, Drug Alternatives, Lab Values, Blood Products, Hemodynamics, Flight Prep, Specialty Units and Contrast Safety", "The Wormhole on every drug and condition: origin stories and how it works, cell to organ", "Flashcards for every drug", "All of Everyday Health", "Rare and seasonal bugs"],
+  plus: ["Every medication in DrugBug, on every route: BugDex, Prehospital, Nursing, Medical School and Imaging", "Probiotics plus the Vegetable, Fruit and Vitamin Compounds tabs", "My List: save your drugs and see in depth how they interact", "Drug Families, Drug Alternatives, Lab Values, Blood Products, Hemodynamics, Flight Prep, Specialty Units and Contrast Safety", "The Wormhole on every drug and the Disease Lab on 250 conditions: origin stories and how they work, cell to organ", "Flashcards for every drug", "All of Everyday Health", "Rare and seasonal bugs"],
   pro: ["Everything in Plus (new subscribers can try Pro free for 7 days)", "Exam prep: NREMT, NCLEX, Step and registry-style practice tests, Exam mode", "Import your own Anki flashcard decks", "Brain Games: memory match, crossword, scramble, Class Blitz and more", "Clinical scenarios and Megacode", "Study Tools: Interaction explorer, Med-list decoder and Safety drills", "Nursing Bug skill practice", "Epic and Legendary bugs"]
 };
 function drawPaywall() {
@@ -7319,6 +7319,8 @@ function wdwAuto() {
   if (SET().weird === false || new Date().getDay() !== 3 || (typeof agreeRec === "function" && !agreeRec())) return;
   if (typeof needDisc === "function" && needDisc()) return;
   var key = new Date().toDateString(); if (store("wdwSeen") === key) return;
+  /* never on the first day someone opens the app (owner, Oct 28 2026) */
+  var first = store("firstOpenDay"); if (!first) { var old = Prog && Prog.d && (Prog.d.xp || 0) > 0; store("firstOpenDay", old ? "before" : key); if (!old) return; } else if (first === key) return;
   store("wdwSeen", key); wdwOpen("");
 }
 document.addEventListener("click", function (e) {
@@ -9765,7 +9767,7 @@ function deepView(id) {
   return c + '</div>';
 }
 
-/* ---------- Disease Wormhole (tab "diseases" in the BugDex and every professional level) ----------
+/* ---------- Disease Lab (renamed from "Disease Wormhole" Oct 28 2026; tab "diseases" in the BugDex and every professional level) ----------
    About 250 high-yield conditions from DB.DIS (data/dis*.js, validated by tools/check-dis.js): history, what goes wrong
    from cell to organ, why the symptoms happen, how it is diagnosed, how treatment works and the DrugBug drugs that treat it
    (linked to their drug pages and drug Wormholes). DrugBug Pro feature with a few free preview conditions (DIS_FREE).
@@ -9804,9 +9806,9 @@ function disView() {
   var D = disAll();
   if (S.disId && D[S.disId] && !disLocked(S.disId)) return disDetail(S.disId);
   S.disId = null;
-  var c = '<p class="muted">Go down the wormhole on a disease: where it came from, what goes wrong from the cell to each organ, why the symptoms happen, how it is diagnosed and how the drugs that treat it work. Education only.</p>';
+  var c = '<p class="muted">Step into the lab on a disease: where it came from, what goes wrong from the cell to each organ, why the symptoms happen, how it is diagnosed and how the drugs that treat it work. Education only.</p>';
   if (typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier("plus")) c += '<div class="callout evnote small"><strong>DrugBug Plus.</strong> Five conditions are open as a free preview: high blood pressure, type 2 diabetes, asthma, migraine and the flu. <button class="linkish" data-pw="open">See Plus</button></div>';
-  if (typeof lang === "function" && lang() === "es") c += '<p class="dnote">La sección "Disease Wormhole" solo está disponible en inglés por ahora.</p>';
+  if (typeof lang === "function" && lang() === "es") c += '<p class="dnote">La sección "Disease Lab" solo está disponible en inglés por ahora.</p>';
   c += '<input class="pinput dissearch" id="disq" type="search" placeholder="Search conditions, like asthma or DKA" aria-label="Search conditions" value="' + esc(S.disQ || "") + '">';
   c += '<div class="dischips" role="group" aria-label="Body systems"><button data-dissys="" aria-pressed="' + !S.disSys + '">All</button>' + DIS_SYS.map(function (s) { return '<button data-dissys="' + esc(s) + '" aria-pressed="' + (S.disSys === s) + '">' + esc(s) + '</button>'; }).join("") + '</div>';
   return c + '<div id="disout">' + disListHTML() + '</div>';
@@ -9834,7 +9836,7 @@ function disDetail(id) {
   return c + '</div>';
 }
 function disOpen(id) {
-  if (disLocked(id)) { if (typeof openPaywall === "function") openPaywall("The Disease Wormhole", "plus"); return; }
+  if (disLocked(id)) { if (typeof openPaywall === "function") openPaywall("The Disease Lab", "plus"); return; }
   if (typeof sheet !== "undefined" && sheet && !sheet.hidden && typeof closeSheet === "function") closeSheet();
   S.tab = "diseases"; S.disId = id; render(); try { window.scrollTo(0, 0); } catch (e) {}
 }
@@ -9849,7 +9851,7 @@ document.addEventListener("input", function (e) { if (e.target && e.target.id ==
 function disDrugSection(drugId) {
   var ids = disForDrug(drugId); if (!ids.length) return "";
   var D = disAll();
-  return deepSec("🧬", "Conditions it treats (Disease Wormhole)", '<p class="dnote">Tap a condition to go down its wormhole.</p><div class="drugchips">' + ids.map(function (k) { return '<button class="chip" data-dis="' + k + '">' + esc(D[k].name) + (disLocked(k) && typeof tierBadge === "function" ? ' ' + tierBadge("plus") : '') + '</button>'; }).join("") + '</div>');
+  return deepSec("🧬", "Conditions it treats (Disease Lab)", '<p class="dnote">Tap a condition to open it in the Disease Lab.</p><div class="drugchips">' + ids.map(function (k) { return '<button class="chip" data-dis="' + k + '">' + esc(D[k].name) + (disLocked(k) && typeof tierBadge === "function" ? ' ' + tierBadge("plus") : '') + '</button>'; }).join("") + '</div>');
 }
 
 
