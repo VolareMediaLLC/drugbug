@@ -485,7 +485,7 @@ var HUB_GROUPS = [
   ["Study and practice", ["prep", "nbug", "cards", "scenarios", "tools", "games"]],
   ["Yours", ["mylist", "progress", "shop"]]
 ];
-var HUB_SHORT = { pcc_icu: "TIVA, drips and the vent", fm_trauma: "Bleeding, airway, head injury", fm_care: "Pain, nausea, wounds, burns", fm_adv: "Procedures, ACLS, i-STAT, dive", pcc_vent: "Vents, tubes and oxygen", pcc_nurse: "Turning, lines, eyes, skin", pcc_tele: "Consults and getting out", board: "Every field drug by class", acls: "Rhythm by rhythm", dive: "Dive tables, DCS and AGE", skills: "What this tier is trained to do", march: "Sequence, tier skills, drill", fm_bleed: "Hemorrhage control, TXA, blood", fm_tiva: "Ketamine-based sedation", fm_head: "Herniation, 3% and 23.4% saline", fm_pain: "Wound pack, ketamine, esketamine", fm_abx: "Wounds, eye injury, burns", fm_airway: "Positioning to surgical airway", pcc: "Long hold, nursing, flight prep", istat: "Point-of-care labs", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "Saved drugs and their interactions", tools: "Megacode, interactions, safety drills", scenarios: "Clinical cases", cards: "Flip, sort and master", games: "Match, crossword, scramble and more", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time", prep: "Timed tests with scores" };
+var HUB_SHORT = { pcc_icu: "TIVA, drips and the vent", fm_trauma: "Bleeding, airway, head injury", fm_care: "Pain, nausea, wounds, burns", fm_adv: "Procedures, ACLS, i-STAT, dive", pcc_vent: "Vents, tubes and oxygen", pcc_nurse: "Turning, lines, eyes, skin", pcc_tele: "Consults and getting out", board: "Every field drug by class", acls: "Rhythm by rhythm", dive: "Dive tables, DCS and AGE", skills: "What this tier is trained to do", march: "Sequence, tier skills, drill", fm_bleed: "Hemorrhage control, TXA, blood", fm_tiva: "Ketamine-based sedation", fm_head: "Herniation, 3% and 23.4% saline", fm_pain: "Wound pack, ketamine, esketamine", fm_abx: "Wounds, eye injury, burns", fm_airway: "Positioning to surgical airway", pcc: "Drugs by problem, handling, flight", istat: "Point-of-care labs", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "Saved drugs and their interactions", tools: "Megacode, interactions, safety drills", scenarios: "Clinical cases", cards: "Flip, sort and master", games: "Match, crossword, scramble and more", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time", prep: "Timed tests with scores" };
 function hubView() {
   var L = tabList(), used = {}, c = '<nav class="hub2" aria-label="Sections">';
   function tile(t) {
@@ -1162,6 +1162,7 @@ function expoSimple(d, role) {
 }
 function simpleView(d, tier) {
   if (expoOf(d.id)) return expoSimple(d, drugRole());
+  if (fmCtx() && typeof fmSimple === "function") return fmSimple(d);
   if (medCtx()) return medSimple(d);
   if (nurseCtx()) return nurseSimple(d);
   var note = scopeNote(d.id), c = '', genish = S.view === "gen" || S.view === "everyday" || imCtx(), call = !genish && callOf(d.id);
@@ -1181,13 +1182,14 @@ function simpleView(d, tier) {
   c += S2("Remember it", "", true, F("Memory Trick", 16, 2) + F("Key Fact", 16, 3));
   return c;
 }
+function fmCtx() { return S.view === "level" && isF(S.level); }
 function tierBox(d, tier) {
-  var cells = [], adm = [];
+  var cells = [], adm = [], fm = fmCtx();
   function hidden(si, fi) { return tier === 2 && HIDE_MEDIC[si] && HIDE_MEDIC[si].indexOf(fi) >= 0; }
   T[0][2].forEach(function (lab, fi) { cells.push([lab, get(d, 0, fi)]); });
   cells.push(["Routes", get(d, 7, 0)]);
   T[8][2].forEach(function (lab, fi) { if (!hidden(8, fi)) cells.push([lab, get(d, 8, fi)]); });
-  T[7][2].forEach(function (lab, fi) { var v = get(d, 7, fi); if (fi && v) adm.push(lab + ": " + v); });
+  if (!fm) T[7][2].forEach(function (lab, fi) { var v = get(d, 7, fi); if (fi && v) adm.push(lab + ": " + v); });
   return drugBox(cells, adm.join("\n"));
 }
 function fullView(d, tier) {
@@ -1196,12 +1198,15 @@ function fullView(d, tier) {
   T[0][2].forEach(function (lab, fi) { cells.push([lab, get(d, 0, fi)]); });
   cells.push(["Routes", get(d, 7, 0)]);
   T[8][2].forEach(function (lab, fi) { if (!hidden(8, fi)) cells.push([lab, get(d, 8, fi)]); });
-  T[7][2].forEach(function (lab, fi) { var v = get(d, 7, fi); if (fi && v) adm.push(lab + ": " + v); });
+  var fm = fmCtx();
+  if (!fm) T[7][2].forEach(function (lab, fi) { var v = get(d, 7, fi); if (fi && v) adm.push(lab + ": " + v); });
   c += drugBox(cells, adm.join("\n"));
+  if (fm && typeof fmCard === "function") c += fmCard(d);
   T.forEach(function (t, si) {
     if (si === 0 || si === 7 || si === 8) return;
+    if (fm && (si === 6 || si === 13 || si === 14)) return; /* Field Medic: no doses, no EMS pearls or home-med notes */
     var rows = '';
-    t[2].forEach(function (lab, fi) { if (tier === 2 && HIDE_MEDIC[si] && HIDE_MEDIC[si].indexOf(fi) >= 0) return; if (si === 3 && fi === 2) { var X = expoOf(d.id), cl = callOf(d.id); if (X) return (rows += field("Why it matters on a call", X.ems)); if (cl) return (rows += field("EMS: why it matters on a call", cl)); } rows += field(lab, get(d, si, fi)); });
+    t[2].forEach(function (lab, fi) { if (tier === 2 && HIDE_MEDIC[si] && HIDE_MEDIC[si].indexOf(fi) >= 0) return; if (si === 3 && fi === 2 && fm) return; if (si === 3 && fi === 2) { var X = expoOf(d.id), cl = callOf(d.id); if (X) return (rows += field("Why it matters on a call", X.ems)); if (cl) return (rows += field("EMS: why it matters on a call", cl)); } rows += field(lab, get(d, si, fi)); });
     if (si === 6 && note) rows = field("Your Scope", note) + rows;
     c += sec(t[0], SECCLASS[t[1]], !!OPEN_DEFAULT[t[1]], rows);
   });
@@ -1793,6 +1798,7 @@ function lensVal(d, k) {
   return F2(d, k);
 }
 function lensCard(d) {
+  if (typeof fmCtx === "function" && fmCtx() && typeof fmCard === "function") return fmCard(d);
   var r = lensRoute(), L = LENS[r]; if (!L) return "";
   if (typeof expoOf === "function" && expoOf(d.id)) return ""; /* illicit / unapproved: the "Why it matters" section replaces the lens */
   var cl = r === "ems" && typeof callOf === "function" ? callOf(d.id) : "";
@@ -9459,7 +9465,7 @@ function fmTierOk(min, max) { var i = fmTierIdx(S.level); return i >= fmTierIdx(
 function fmTierName(k) { var l = (DB.FLEVELS || []).filter(function (x) { return x.key === k; })[0]; return l ? (l.short === "PCC" ? "Prolonged Casualty Care" : l.short + " (" + l.name + ")") : k; }
 /* field tabs on the Field Medic level hub: key -> [name, description] */
 var FM_TABS = {
-  pcc: ["Prolonged Care", "The long hold, nursing care, teleconsult and flight prep.", "pcc"],
+  pcc: ["Prolonged Care", "Long-hold drugs by problem, drug handling, consult and flight.", "pcc"],
   pcc_icu: ["Drips & Ventilator", "TIVA, sedation drips and running a vent for days.", "pcc"],
   march: ["MARCH-PAWS", "The TCCC sequence, your tier's skills and the drill.", "asm"],
   fm_trauma: ["Trauma Care", "Bleeding and shock, airway and breathing, head injury.", "asm"],
@@ -9468,7 +9474,7 @@ var FM_TABS = {
 };
 /* combined tabs (Oct 28 2026, owner: fewer, cleaner tabs): group -> sub-tabs [key, label, minTier, maxTier] */
 var FM_GROUPS = {
-  pcc: [["pcc", "The long hold"], ["pcc_nurse", "Nursing"], ["pcc_tele", "Consult & flight"]],
+  pcc: [["pcc", "By problem"], ["pcc_rx", "Handling"], ["pcc_tele", "Consult & flight"]],
   pcc_icu: [["fm_tiva", "TIVA & drips"], ["pcc_vent", "Ventilator"]],
   march: [["march", "MARCH-PAWS"], ["skills", "Tier skills", "asm", "cpp"], ["drill", "Check yourself"]],
   fm_trauma: [["fm_bleed", "Bleeding"], ["fm_airway", "Airway"], ["fm_head", "Head injury", "cmc"]],
@@ -9773,11 +9779,9 @@ function fieldTabBody(k) {
     var t = fmSec(k.slice(3)); if (!t) return "";
     c += fmKey(t[5], true) + (typeof fmDeep === "function" ? fmDeep(k.slice(3)) : "") + fmMedTiles(t[6].map(function (d) { return d[0]; }));
   } else if (k === "pcc") {
-    c += '<p class="fmlead">Prolonged casualty care starts when evacuation is delayed past normal timelines. A medic may hold one or more casualties for hours, days or even weeks, and the job turns into running a small ICU.</p>';
-    c += '<h3 class="fmh">The 10 core capabilities</h3><div class="pcccaps">' + PCC_CAPS.map(function (x, i) { return '<details class="pcccap"><summary><span class="pccn">' + (i + 1) + '</span>' + esc(x[0]) + '</summary><p>' + esc(x[1]) + '</p></details>'; }).join("") + '</div>';
-    c += '<h3 class="fmh">The rhythm of a long hold</h3><ol class="pccday">' + PCC_DAY.map(function (x) { return '<li><strong>' + esc(x[0]) + '</strong><span>' + esc(x[1]) + '</span></li>'; }).join("") + '</ol>';
-    c += '<h3 class="fmh">Drugs that run for days</h3>' + fmMedTiles(PCC_DRUGS.map(function (d) { return d[0]; }));
-    c += '<p class="muted small">Sedation drips are covered in Drips &amp; Ventilator, and labs in Advanced Care.</p>';
+    c += pccProblems();
+  } else if (k === "pcc_rx") {
+    c += pccHandling();
   } else if (k === "board") {
     var f = S.fbf || "all";
     c += '<p class="fmlead">Every medication a combat paramedic works with, grouped and color-coded by what it does. Tap a drug for its full page. No doses are shown at the Field Medic level.</p>';
@@ -10188,18 +10192,6 @@ var FM_DEEP = {
   ],
   /* ---------- PCC: the long hold ---------- */
   pcc: [
-    ["pcc", "Holding versus moving", "The first decision of every long hold.", [
-      "Prolonged casualty care begins when evacuation is delayed past normal timelines, by weather, distance, enemy action or a lack of aircraft.",
-      "The medic weighs the casualty's needs against what the team can provide on site and what a risky move would cost.",
-      "A teleconsult early in the hold helps set priorities: what can be fixed here, what needs surgery, and how long the casualty can safely wait.",
-      "The plan is revisited whenever the casualty, the resources or the tactical situation changes.",
-      "Holding is active care, not waiting: the flowsheet, reassessment and nursing care continue around the clock."]],
-    ["pcc", "Several casualties at once", "Triage that keeps changing.", [
-      "With several casualties, triage is repeated over time because conditions change in both directions.",
-      "Scarce resources such as blood, oxygen, ventilators and the medic's own hands go where they change outcomes most.",
-      "Non-medical teammates are trained to take on monitoring, turning and recording tasks.",
-      "Each casualty gets a separate flowsheet and a clear label for every drip and line.",
-      "Expectant or comfort care decisions, when they arise, are made with leadership and medical direction and documented."]],
     ["pcc", "Resupply and logistics", "Running out is a clinical problem.", [
       "Supplies are counted early: blood and donors, oxygen, batteries, fluids, sedation drugs, antibiotics, dressings and gloves.",
       "Drug consumption is projected forward. A ketamine drip that lasts days needs a supply plan from the first hour.",
@@ -10212,50 +10204,12 @@ var FM_DEEP = {
       "Early feeding by mouth or gastric tube, when the gut is working, preserves gut health and supports healing.",
       "Blood clots in the legs become a risk after the first days; moving the limbs when safe and compression where available help.",
       "Stress ulcer prevention with an acid reducer such as famotidine is part of prolonged care for critically ill casualties."]],
-    ["pcc", "Temperature over days", "Hypothermia does not take a day off.", [
-      "TCCC hypothermia prevention starts early and continues for the entire hold: insulation from the ground, dry clothing, an active heater on the front of the torso and under the arms, and a vapor barrier.",
-      "Active heating sources are kept off bare skin and not wrapped around the torso, to prevent burns.",
-      "Blood and fluids are warmed in-line.",
-      "Fever later in a hold suggests infection, a transfusion reaction or a brain injury effect, and is investigated, not just treated.",
-      "Core temperature, when it can be measured, is trended on the flowsheet."]],
     ["pcc", "Comfort and palliative care", "When survival is no longer possible.", [
       "Some casualties will not survive even with ideal care. Prolonged care guidance includes keeping them comfortable and treated with dignity.",
       "Pain, breathlessness, agitation and secretions are treated to relieve suffering.",
       "These decisions involve medical direction and leadership whenever communications allow, and are documented.",
       "Teammates caring for a dying casualty are supported during and after.",
       "Personal effects, identification and the timeline are recorded and kept with the casualty."]]
-  ],
-  pcc_nurse: [
-    ["pcc", "Pressure injuries", "Damage that starts in hours.", [
-      "A pressure injury can begin within a few hours of lying still on a hard surface, especially in a cold, wet or low-blood-pressure casualty.",
-      "High-risk spots are the back of the head, shoulder blades, elbows, sacrum, hips and heels, and anywhere straps, splints or tubes press.",
-      "Early stages show as redness that does not fade with light pressure; later stages break the skin.",
-      "Padding, a log-roll schedule, keeping the skin dry and floating the heels off the surface reduce risk.",
-      "The skin check is recorded with every turn."]],
-    ["pcc", "Ventilator-associated pneumonia", "Preventing a lung infection on the vent.", [
-      "Raising the head of the bed when the casualty is not in shock lowers aspiration risk.",
-      "Mouth care and suctioning reduce bacteria that travel down the tube.",
-      "Venting the stomach with a gastric tube reduces reflux.",
-      "Keeping the tube cuff properly inflated limits leakage of secretions into the lungs.",
-      "New fever, thicker secretions and worsening oxygen raise concern for pneumonia."]],
-    ["pcc", "Lines and catheters", "Every device is a doorway for infection.", [
-      "IO access is designed for short-term use; prolonged care guidance moves toward IV access as the hold continues.",
-      "Line sites are checked for redness, swelling, leaking and the date placed.",
-      "A Foley drains into a closed bag kept below the bladder.",
-      "Every line is labeled with what runs through it, so drugs that do not mix are kept apart.",
-      "Devices that are no longer needed are removed, because each extra day adds infection risk."]],
-    ["pcc", "Eyes, mouth and dignity", "The small things in a sedated casualty.", [
-      "A sedated casualty does not blink, and the cornea dries and scratches within hours. Lubrication and closing the lids protect it.",
-      "Mouth care keeps the lips and tongue moist and reduces infection.",
-      "Bowel and bladder care, cleaning and changing soiled dressings protect the skin.",
-      "Talking to a sedated casualty and explaining care continues, because hearing may be preserved.",
-      "TCCC lists communicating with the casualty: encouraging, reassuring and explaining care."]],
-    ["pcc", "The flowsheet", "The tool that runs a long hold.", [
-      "A flowsheet records vital signs, sedation level, drips, intake and output, labs and every intervention on a time line.",
-      "The trend shows what single numbers cannot: a slowly rising heart rate, a falling urine output, a creeping sodium.",
-      "Handoffs between medics or teammates use the flowsheet so nothing is lost overnight.",
-      "The teleconsultant reads the same flowsheet, which speeds every call.",
-      "The completed record travels with the casualty and closes with the after-action report."]]
   ],
   pcc_tele: [
     ["pcc", "What to have ready", "Before the call connects.", [
@@ -10349,6 +10303,129 @@ function fmDeep(k) {
   return '<section class="fmdeep"><h3 class="fmh">Going deeper <span class="fmdtag">' + esc(lv.short === "PCC" ? "Tier 4 + PCC" : "Tier 4") + '</span></h3><div class="fmles">' + list.map(function (x) {
     return '<details class="fmlesson"><summary><span class="fmlt"><strong>' + esc(x[1]) + '</strong>' + (x[0] === "pcc" ? '<em class="fmpcc">PCC</em>' : '') + '</span><span class="fmls">' + esc(x[2]) + '</span></summary><ul>' + x[3].map(function (p) { return '<li>' + esc(p) + '</li>'; }).join("") + '</ul></details>';
   }).join("") + '</div></section>';
+}
+/* ---------- Prolonged Care, drug-first (owner Oct 28 2026: "mostly about drugs"; only what medics need but do not normally have) ---------- */
+/* problems of a long hold -> [title, why it matters in a long hold, [[drug id, field role]]] */
+var PCC_PROBS = [
+  ["Sedation and pain for days", "Drips run for days, so tolerance, build-up and secretions become the problems.", [
+    ["ketamine", "Base drip for sedation and pain."], ["fentanyl", "Small pushes for breakthrough or procedural pain."], ["hydromorphone", "Longer-acting opioid option for ongoing pain."], ["morphine", "Older opioid; metabolites build up when the kidneys fail."],
+    ["midazolam", "Adjunct for agitation, emergence reactions and seizures."], ["lorazepam", "Longer-acting benzodiazepine; stored refrigerated."], ["propofol", "Sedation drip for teams trained in it; drops blood pressure."], ["dexmedetomidine", "Light sedation without stopping breathing; slows the heart."],
+    ["haloperidol", "Used in critical care for agitated delirium; prolongs the QT interval."], ["glycopyrrolate", "Dries the secretions that ketamine increases."]]],
+  ["Holding blood pressure", "Pressors come after the bleeding is controlled and the volume is replaced.", [
+    ["norepinephrine", "First pressor once volume is replaced."], ["vasopressin", "Second pressor added to norepinephrine."], ["epinephrine", "Pressor, anaphylaxis and arrest drug."], ["phenylephrine", "Pure vessel squeezer; can slow the heart."]]],
+  ["Potassium, calcium and acid", "Stored blood, crush injury and kidney injury move potassium and calcium over hours.", [
+    ["calcium-chloride", "Protects the heart in high potassium; replaces calcium after blood."], ["calcium-gluconate", "Gentler calcium salt for the same jobs."], ["regular-insulin", "Shifts potassium into cells; paired with dextrose."], ["dextrose", "Prevents low glucose with insulin; treats low glucose."],
+    ["albuterol", "Inhaled; also shifts potassium into cells."], ["sodium-bicarbonate", "Severe acidosis and high potassium; inactivates pressors in the same line."], ["magnesium-sulfate", "Torsades, and low magnesium after massive transfusion."], ["potassium-chloride", "Replaces low potassium; dangerous if given too fast."]]],
+  ["Infection", "Wounds, the vent, the Foley and lines all become sources as the days pass.", [
+    ["ceftriaxone", "Ongoing wound coverage once the casualty cannot swallow."], ["ertapenem", "Broad coverage including gut bacteria (earlier TCCC choice)."], ["cefazolin", "Surgical and wound prophylaxis cephalosporin."], ["metronidazole", "Adds coverage for gut (anaerobic) bacteria in abdominal wounds."]]],
+  ["Brain", "Herniation, seizures and sodium all need trending over days.", [
+    ["hypertonic-saline-3-percent", "Herniation signs; sodium rises with each dose."], ["sodium-chloride-23-4-percent", "Same osmotic pull in a small volume."], ["mannitol", "Osmotic option; makes urine and can drop blood pressure."], ["levetiracetam", "Seizure prevention after significant head injury."]]],
+  ["Stomach and clots", "Critically ill casualties develop stress ulcers and leg clots after the first days.", [
+    ["famotidine", "Stress ulcer prevention."], ["pantoprazole", "Stronger acid reducer for stress ulcer prevention or GI bleeding."], ["ondansetron", "Nausea; adds to QT effects with haloperidol."], ["enoxaparin", "Clot prevention once bleeding is controlled; a risk with brain injury or ongoing bleeding."]]],
+  ["Airway drugs", "Re-intubation or a lost airway can happen at any point in a hold.", [
+    ["ketamine", "Induction that tends to hold blood pressure."], ["etomidate", "Induction with little blood pressure effect; not a drip."], ["rocuronium", "Longer paralytic; sedation runs before and after."], ["succinylcholine", "Fast paralytic; potassium risk after the first day in burns and crush."]]],
+  ["Smoke, burns and rescue", "Antidotes and reversal agents that a long hold may suddenly need.", [
+    ["hydroxocobalamin", "Cyanide antidote after smoke inhalation; turns skin and urine red."], ["lactated-ringers", "Burn fluid titrated to urine output."], ["naloxone", "Reverses opioid breathing depression; can wear off first."], ["flumazenil", "Reverses benzodiazepines; can trigger seizures."], ["diphenhydramine", "Allergic and transfusion reactions."]]]
+];
+var PCC_STORE = [
+  ["succinylcholine", "Refrigerated; the label allows room temperature for up to 14 days."],
+  ["rocuronium", "Refrigerated; the label allows room temperature for up to 60 days."],
+  ["regular-insulin", "Unopened vials last about a month at room temperature; the exact limit is brand-specific on the label."],
+  ["lorazepam", "Refrigerated and protected from light."],
+  ["vasopressin", "Refrigerated; the label allows a limited time at room temperature."],
+  ["mannitol", "Crystallizes when cold; crystals are redissolved by warming, and it runs through an in-line filter."],
+  ["propofol", "Lipid emulsion that supports bacterial growth; the label limits an opened vial and its tubing to 12 hours."],
+  ["norepinephrine", "Protected from light; a brown or pink solution is not used."],
+  ["", "Most injectable drugs are labeled for controlled room temperature with short excursions. Packs, vehicles and aircraft in hot climates go well beyond that.", "Heat"],
+  ["", "Damages insulin and blood products.", "Freezing"]
+];
+var PCC_LINES = [
+  ["Ceftriaxone + calcium", "Forms a precipitate. Ceftriaxone and calcium-containing fluids such as lactated Ringer's are kept out of the same line, with a flush between them."],
+  ["Bicarbonate + calcium", "Forms calcium carbonate, which can block the line."],
+  ["Bicarbonate + epinephrine or norepinephrine", "Alkaline solutions inactivate catecholamines in the same line."],
+  ["Blood + any fluid but normal saline", "Lactated Ringer's calcium can clot citrated blood, and dextrose solutions can damage red cells. Normal saline is the only fluid run with blood."],
+  ["Propofol", "A lipid emulsion that runs in its own line."],
+  ["Pressors", "Run through a dedicated, reliable line, so a flush or a bolus in the same line does not push a surge of pressor."]
+];
+var PCC_LONG = [
+  ["midazolam", "Builds up in fat and has an active metabolite, so long infusions wear off slowly, more so with kidney or liver failure."],
+  ["fentanyl", "Wears off more slowly the longer it has been infused (context-sensitive half-time)."],
+  ["ketamine", "Tolerance builds over days, so the same amount does less."],
+  ["propofol", "Propofol infusion syndrome after long, high-rate infusions: metabolic acidosis, muscle breakdown, high potassium and heart failure."],
+  ["etomidate", "Suppresses the adrenal stress response; an induction drug, not a drip."],
+  ["succinylcholine", "From about a day after burns, crush injury, immobility or nerve injury, the risk of dangerous potassium release rises."],
+  ["morphine", "Active metabolites accumulate when the kidneys fail."],
+  ["famotidine", "Can cause confusion as kidney function falls."],
+  ["levetiracetam", "Cleared by the kidneys, so levels rise with kidney injury."],
+  ["enoxaparin", "Cleared by the kidneys; bleeding risk rises as kidney function falls."],
+  ["magnesium-sulfate", "Strengthens and prolongs neuromuscular blockers."]
+];
+var PCC_IX = [
+  ["Opioid + benzodiazepine + propofol", "Each one adds to breathing and blood pressure depression."],
+  ["Ondansetron + haloperidol", "Both prolong the QT interval."],
+  ["Ketamine with other sedatives", "Lower amounts of each are used together."],
+  ["Insulin without glucose", "Shifting potassium with insulin can drop the glucose; glucose is trended after."]
+];
+function pccName(id) { return id && DB.drugs[id] ? nameOf(id) : ""; }
+function pccRow(id, txt, lab) { var nm = lab || pccName(id); return id && DB.drugs[id] ? '<button type="button" class="pccrow" data-drug="' + id + '"><strong>' + esc(nm) + '</strong><span>' + esc(txt) + '</span></button>' : '<div class="pccrow"><strong>' + esc(nm || "Note") + '</strong><span>' + esc(txt) + '</span></div>'; }
+/* Drugs by problem: rows of drugs this tier can see */
+function pccProblems() {
+  var sc = {}; scopeFor(S.level).ids.forEach(function (id) { sc[id] = 1; });
+  return '<p class="fmlead">The drugs that come into play when a casualty is held for hours to days, grouped by the problem they solve. Tap a drug for its Field Medic card.</p>' + PCC_PROBS.map(function (g) {
+    var rows = g[2].filter(function (x) { return DB.drugs[x[0]] && sc[x[0]]; }); if (!rows.length) return "";
+    return '<section class="pccgrp"><h3 class="fmh">' + esc(g[0]) + '</h3><p class="muted small">' + esc(g[1]) + '</p><div class="pccrows">' + rows.map(function (x) { return pccRow(x[0], x[1]); }).join("") + '</div></section>';
+  }).join("");
+}
+/* Drug handling: storage, lines, drugs that change over days, interactions, supply math */
+function pccHandling() {
+  function blk(t, sub, list, byId) { return '<section class="pccgrp"><h3 class="fmh">' + esc(t) + '</h3>' + (sub ? '<p class="muted small">' + esc(sub) + '</p>' : '') + '<div class="pccrows">' + list.map(function (x) { return byId ? pccRow(x[0], x[1], x[2]) : pccRow("", x[1], x[0]); }).join("") + '</div></section>'; }
+  return '<p class="fmlead">What changes when drugs leave the clinic: storage without a fridge, what cannot share a line, and how drugs behave after days of use.</p>' +
+    blk("Storage away from a fridge", "From the product labels. Storage rules differ by manufacturer, so the label in the kit decides.", PCC_STORE, true) +
+    blk("Not in the same line", "", PCC_LINES, false) +
+    blk("Drugs that change over days", "", PCC_LONG, true) +
+    blk("Interactions common in a long hold", "", PCC_IX, false) +
+    '<section class="pccgrp"><h3 class="fmh">How long the supply lasts</h3><p class="pccmath">Hours left = amount on hand &divide; amount used per hour</p><p class="muted small">Example with round numbers: 1,000 units on hand, used at 50 units per hour, lasts 20 hours. The count is repeated after every rate change and before every resupply request.</p></section>';
+}
+/* Field Medic drug card (replaces the EMS lens on Field Medic levels) */
+var FM_INFO = null;
+function fmInfo(id) {
+  if (!FM_INFO) {
+    FM_INFO = {};
+    function add(i, role, caut, where) { var o = FM_INFO[i] || (FM_INFO[i] = { role: "", caut: "", where: [] }); if (role && !o.role) o.role = role; if (caut && !o.caut) o.caut = caut; if (where && o.where.indexOf(where) < 0) o.where.push(where); }
+    FM_SECS.forEach(function (s) { s[6].forEach(function (d) { add(d[0], d[2], d[3], s[1]); }); });
+    PCC_PROBS.forEach(function (g) { g[2].forEach(function (x) { add(x[0], x[1], "", "Prolonged care: " + g[0].toLowerCase()); }); });
+    PCC_DRUGS.forEach(function (d) { add(d[0], d[2], d[3], ""); });
+    if (typeof FB_DRUGS !== "undefined") FB_DRUGS.forEach(function (d) { add(d[0], d[2], d[3], ""); });
+    PCC_LONG.forEach(function (x) { var o = FM_INFO[x[0]]; if (o) o.days = x[1]; });
+    PCC_STORE.forEach(function (x) { var o = x[0] && FM_INFO[x[0]]; if (o) o.store = x[1]; });
+  }
+  return FM_INFO[id] || null;
+}
+function fmStart(id) { for (var i = 0; i < DB.FLEVELS.length; i++) { var m = DB.FSCOPE[DB.FLEVELS[i].key] || {}; if (id in m) return DB.FLEVELS[i]; } return null; }
+function fmCard(d) {
+  var o = fmInfo(d.id) || { role: "", caut: "", where: [] }, st = fmStart(d.id), note = scopeNote(d.id), rows = [];
+  if (o.role) rows.push(["Field role", o.role]);
+  if (FM_CLASS[d.id]) rows.push(["Class", FM_CLASS[d.id]]);
+  if (o.where.length) rows.push(["In TCCC and PCC", o.where.join(" · ")]);
+  if (st) rows.push(["Starts at", st.short === "PCC" ? "Prolonged Casualty Care" : st.short + ", " + st.name]);
+  if (note) rows.push(["Scope note", note]);
+  if (o.caut) rows.push(["Field cautions", o.caut]);
+  if (o.days) rows.push(["Over days", o.days]);
+  if (o.store) rows.push(["Storage", o.store]);
+  var mon = typeof F2 === "function" ? F2(d, "pearl.whatToMonitorAfterGiving") : ""; if (mon) rows.push(["Monitor", mon]);
+  if (!rows.length) return "";
+  return '<section class="lens lens-fm"><h3>Field Medic card</h3>' + rows.map(function (r) { return '<div class="lrow2"><div class="k">' + esc(r[0]) + '</div><div class="v">' + esc(r[1]) + '</div></div>'; }).join("") + '<p class="muted small" style="margin:6px 0 0">No doses at the Field Medic level.</p></section>';
+}
+/* simple drug view on Field Medic levels: no doses, no EMS wording */
+function fmSimple(d) {
+  function F(k, si, fi) { var v = get(d, si, fi); return v ? field(k, v) : ""; }
+  function S2(title, cls, open, rows) { return rows ? sec(title, cls, open, rows) : ""; }
+  var c = S2("What it is", "", true, F("What It Does", 1, 1) + F("Drug Class", 0, 3));
+  c += S2("Contraindications", "stop", true, F("Not for people with or taking", 4, 0));
+  c += S2("Routes", "dose", true, F("Routes", 7, 0));
+  c += S2("What to watch", "", true, F("Common Side Effects", 9, 0) + F("Serious Side Effects", 9, 1));
+  c += S2("Remember it", "", true, F("Memory Trick", 16, 2) + F("Key Fact", 16, 3));
+  return c;
 }
 
 
