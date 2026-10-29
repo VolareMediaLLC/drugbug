@@ -485,7 +485,7 @@ var HUB_GROUPS = [
   ["Study and practice", ["prep", "nbug", "cards", "scenarios", "tools", "games"]],
   ["Yours", ["mylist", "progress", "shop"]]
 ];
-var HUB_SHORT = { pcc_icu: "TIVA, drips and the vent", fm_trauma: "Bleeding, airway, head injury", fm_care: "Pain, nausea, wounds, burns", fm_adv: "ACLS, i-STAT and dive", pcc_vent: "Vents, tubes and oxygen", pcc_nurse: "Turning, lines, eyes, skin", pcc_tele: "Consults and getting out", board: "Every field drug by class", acls: "Rhythm by rhythm", dive: "Dive tables, DCS and AGE", skills: "What this tier is trained to do", march: "Sequence, tier skills, drill", fm_bleed: "Hemorrhage control, TXA, blood", fm_tiva: "Ketamine-based sedation", fm_head: "Herniation, 3% and 23.4% saline", fm_pain: "Wound pack, ketamine, esketamine", fm_abx: "Wounds, eye injury, burns", fm_airway: "Positioning to surgical airway", pcc: "Long hold, nursing, flight prep", istat: "Point-of-care labs", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "Saved drugs and their interactions", tools: "Megacode, interactions, safety drills", scenarios: "Clinical cases", cards: "Flip, sort and master", games: "Match, crossword, scramble and more", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time", prep: "Timed tests with scores" };
+var HUB_SHORT = { pcc_icu: "TIVA, drips and the vent", fm_trauma: "Bleeding, airway, head injury", fm_care: "Pain, nausea, wounds, burns", fm_adv: "Procedures, ACLS, i-STAT, dive", pcc_vent: "Vents, tubes and oxygen", pcc_nurse: "Turning, lines, eyes, skin", pcc_tele: "Consults and getting out", board: "Every field drug by class", acls: "Rhythm by rhythm", dive: "Dive tables, DCS and AGE", skills: "What this tier is trained to do", march: "Sequence, tier skills, drill", fm_bleed: "Hemorrhage control, TXA, blood", fm_tiva: "Ketamine-based sedation", fm_head: "Herniation, 3% and 23.4% saline", fm_pain: "Wound pack, ketamine, esketamine", fm_abx: "Wounds, eye injury, burns", fm_airway: "Positioning to surgical airway", pcc: "Long hold, nursing, flight prep", istat: "Point-of-care labs", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "Saved drugs and their interactions", tools: "Megacode, interactions, safety drills", scenarios: "Clinical cases", cards: "Flip, sort and master", games: "Match, crossword, scramble and more", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time", prep: "Timed tests with scores" };
 function hubView() {
   var L = tabList(), used = {}, c = '<nav class="hub2" aria-label="Sections">';
   function tile(t) {
@@ -9464,7 +9464,7 @@ var FM_TABS = {
   march: ["MARCH-PAWS", "The TCCC sequence, your tier's skills and the drill.", "asm"],
   fm_trauma: ["Trauma Care", "Bleeding and shock, airway and breathing, head injury.", "asm"],
   fm_care: ["Pain & Antibiotics", "The wound medication pack, nausea, wounds, eyes and burns.", "cls"],
-  fm_adv: ["Advanced Care", "ACLS rhythms, i-STAT labs and dive medicine.", "cpp"]
+  fm_adv: ["Advanced Care", "Procedures, ACLS rhythms, i-STAT labs and dive medicine.", "cpp"]
 };
 /* combined tabs (Oct 28 2026, owner: fewer, cleaner tabs): group -> sub-tabs [key, label, minTier, maxTier] */
 var FM_GROUPS = {
@@ -9473,7 +9473,7 @@ var FM_GROUPS = {
   march: [["march", "MARCH-PAWS"], ["skills", "Tier skills", "asm", "cpp"], ["drill", "Check yourself"]],
   fm_trauma: [["fm_bleed", "Bleeding"], ["fm_airway", "Airway"], ["fm_head", "Head injury", "cmc"]],
   fm_care: [["fm_pain", "Pain & nausea"], ["fm_abx", "Antibiotics"]],
-  fm_adv: [["acls", "ACLS"], ["istat", "i-STAT"], ["dive", "Dive"]]
+  fm_adv: [["proc", "Procedures"], ["acls", "ACLS"], ["istat", "i-STAT"], ["dive", "Dive"]]
 };
 function fmWhere(k) { for (var g in FM_GROUPS) { var x = FM_GROUPS[g].filter(function (y) { return y[0] === k; })[0]; if (x) return FM_TABS[g][0] + ": " + x[1]; } return ""; }
 function fmSubsOf(g) { return (FM_GROUPS[g] || []).filter(function (x) { return fmTierOk(x[2], x[3]); }); }
@@ -9771,7 +9771,7 @@ function fieldTabBody(k) {
     c += '<h3 class="fmh">Phases of care</h3><ol class="pccday"><li><strong>Care Under Fire</strong><span>Return fire, get to cover, and stop life-threatening bleeding with a tourniquet only when it is tactically possible.</span></li><li><strong>Tactical Field Care</strong><span>Behind cover: the full MARCH-PAWS assessment and treatment, and the DD1380 card.</span></li><li><strong>Tactical Evacuation Care</strong><span>On the way out: the same care plus more equipment, oxygen, monitoring and handoff.</span></li><li><strong>Prolonged Casualty Care</strong><span>When evacuation is delayed: holding the casualty for hours to days.</span></li></ol>';
   } else if (k.indexOf("fm_") === 0) {
     var t = fmSec(k.slice(3)); if (!t) return "";
-    c += fmKey(t[5], true) + fmMedTiles(t[6].map(function (d) { return d[0]; }));
+    c += fmKey(t[5], true) + (typeof fmDeep === "function" ? fmDeep(k.slice(3)) : "") + fmMedTiles(t[6].map(function (d) { return d[0]; }));
   } else if (k === "pcc") {
     c += '<p class="fmlead">Prolonged casualty care starts when evacuation is delayed past normal timelines. A medic may hold one or more casualties for hours, days or even weeks, and the job turns into running a small ICU.</p>';
     c += '<h3 class="fmh">The 10 core capabilities</h3><div class="pcccaps">' + PCC_CAPS.map(function (x, i) { return '<details class="pcccap"><summary><span class="pccn">' + (i + 1) + '</span>' + esc(x[0]) + '</summary><p>' + esc(x[1]) + '</p></details>'; }).join("") + '</div>';
@@ -9787,6 +9787,8 @@ function fieldTabBody(k) {
       var rows = FB_DRUGS.filter(function (d) { return d[1] === x[0] && DB.drugs[d[0]]; }); if (!rows.length) return;
       c += '<section class="fbsec" style="--fb:' + x[2] + '"><h3>' + esc(x[1]) + '</h3>' + rows.map(function (d) { return '<button class="fbrow" data-drug="' + d[0] + '"><strong>' + esc(nameOf(d[0])) + '</strong><span class="fbuse">' + esc(d[2]) + '</span>' + (d[3] ? '<span class="fbnote">' + esc(d[3]) + '</span>' : '') + '</button>'; }).join("") + '</section>';
     });
+  } else if (k === "proc") {
+    c += '<p class="fmlead">The procedures that set Tier 4 and prolonged care apart: what each one is for, how it is confirmed, and what can go wrong. Hands-on skills are learned and signed off in training under medical direction.</p>';
   } else if (k === "acls") {
     var a = S.aclsK || ACLS[0][0], A = ACLS.filter(function (x) { return x[0] === a; })[0] || ACLS[0];
     c += '<p class="fmlead">The adult ACLS rhythms as step sequences: what comes first and what comes next. Doses and energy settings are left out at the Field Medic level.</p>';
@@ -9838,6 +9840,7 @@ function fieldTabBody(k) {
     c += '<h3 class="fmh">What each value tells you</h3><div class="isref">' + ISTAT_VALS.map(function (v) { return '<div class="isrow open"><div class="isrowh"><strong>' + esc(v[0]) + '</strong><span>' + esc(v[1]) + '</span></div><p>' + esc(v[2]) + '</p></div>'; }).join("") + '</div>';
     c += '<p class="muted small">Ranges shown are typical adult reference ranges; each cartridge, device and lab sets its own. i-STAT is a trademark of Abbott. DrugBug is not affiliated with Abbott.</p>';
   }
+  if (k.indexOf("fm_") !== 0 && typeof fmDeep === "function") c += fmDeep(k);
   return c + '<p class="muted small fmnote">' + esc(FM_NOTE) + '</p></div>';
 }
 /* the old stand-alone view now opens the Field Medic level */
@@ -9878,6 +9881,474 @@ document.addEventListener("click", function (e) {
 function fmDrill() {
   if (typeof PAYWALL !== "undefined" && PAYWALL && !isPro()) return openPaywall("The Field Medic drill", "pro");
   startSession("field");
+}
+
+/* Field Medic deep lessons for Tier 4 (Combat Paramedic / Provider) and Prolonged Casualty Care.
+   Owner, Oct 28 2026: "make all of the info on the PCC and level 4 much more expansive".
+   Sources: TCCC Guidelines 2026 (CoTCCC), Joint Trauma System Prolonged Casualty Care guidance,
+   U.S. Navy Diving Manual Rev 7, AHA adult algorithms (general form only).
+   Descriptive education wording only. NO doses and NO device settings at the Field Medic level.
+   Each lesson: [minTier, title, one-line summary, [points]] */
+var FM_DEEP = {
+  /* ---------- Trauma Care: Bleeding ---------- */
+  bleed: [
+    ["cpp", "Damage control resuscitation", "Blood first, little crystalloid, and breaking the lethal diamond.", [
+      "Damage control resuscitation is the hospital-to-field strategy of replacing lost blood with blood, limiting crystalloid, and preventing the problems that make bleeding worse until surgery controls the source.",
+      "The lethal diamond is hypothermia, acidosis, coagulopathy and low ionized calcium. Each one worsens the others, so warming, blood, calcium and TXA are all part of one plan.",
+      "Whole blood carries red cells, plasma and platelets in one bag, which is why low-titer O whole blood sits at the top of the TCCC list.",
+      "Crystalloid dilutes clotting factors and red cells and cools the casualty, so TCCC does not use it for hemorrhagic shock.",
+      "TCCC states that Rh-positive products are used in hemorrhagic shock when Rh-negative products are not immediately available.",
+      "Resuscitation is reassessed after every unit. Recurring shock sends the medic back to recheck every hemorrhage control measure before more blood is given."]],
+    ["cpp", "Reading the response to blood", "Which signs show that resuscitation is working.", [
+      "TCCC endpoints: a palpable radial pulse, improved mental status, or a systolic blood pressure of about 100 mmHg.",
+      "With a suspected brain injury, TCCC targets a systolic pressure greater than 100 mmHg, or a normal radial pulse when pressure cannot be measured.",
+      "Shock index is heart rate divided by systolic pressure. Values above about 1 suggest significant shock even when the pressure alone looks acceptable.",
+      "A low end-tidal CO2 in a ventilated casualty can reflect low blood flow back to the lungs; a rising value with resuscitation suggests improving cardiac output.",
+      "Lactate and base deficit trends on the i-STAT show whether tissues are still starved of oxygen.",
+      "Urine output through a Foley is a slower but steady marker of organ perfusion over hours."]],
+    ["cpp", "Bleeding the field cannot stop", "Junctional, pelvic and torso hemorrhage.", [
+      "Non-compressible torso hemorrhage (chest, abdomen, deep pelvis) cannot be controlled by tourniquets or packing. The field answer is blood, warmth, TXA and the fastest route to surgery.",
+      "Junctional bleeding at the groin, armpit or neck is controlled with hemostatic packing and pressure, and junctional devices where carried.",
+      "A pelvic binder sits over the greater trochanters, not the iliac crests, to close a disrupted pelvic ring.",
+      "Repeat exams find bleeding that was missed or has restarted: a growing thigh, a tense abdomen, or blood soaking through dressings.",
+      "Endovascular balloon occlusion of the aorta (REBOA) is used by specially trained surgical teams and is outside Field Medic tiers."]],
+    ["cpp", "Tourniquet conversion", "When a tourniquet comes off, and when it stays on.", [
+      "TCCC lists three criteria for converting a tourniquet to a hemostatic or pressure dressing: the casualty is not in shock, the wound can be watched closely, and the tourniquet is not controlling bleeding from an amputation.",
+      "Conversion is attempted in under 2 hours when bleeding can be controlled by other means.",
+      "A tourniquet that has been on for more than 6 hours is left in place unless close monitoring and lab capability are available, because releasing it can flush potassium, acid and muscle breakdown products into the circulation.",
+      "Tier 1 and Tier 2 personnel do not convert beyond 2 hours unless directed by Tier 3, Tier 4 or other advanced medical personnel.",
+      "Every application, re-application, conversion and removal time goes on the tourniquet and the DD1380 card."]],
+    ["pcc", "The walking blood bank", "Fresh whole blood from the team itself.", [
+      "When stored products run out, a walking blood bank collects fresh whole blood from pre-screened donors in the unit, ideally low-titer group O.",
+      "Pre-deployment screening covers blood type, titers and transfusion-transmitted infections, so donors are known before they are needed. Rapid point-of-care tests add a check at collection.",
+      "Fresh whole blood is used soon after collection, warmed, and given through a filtered blood set.",
+      "Every donation lowers a teammate's own fighting strength for a time, so donor selection weighs the mission, the donor's role and the number of donors available.",
+      "Each donor, unit number, collection time and recipient is recorded, which allows tracing if a reaction occurs."]],
+    ["pcc", "Transfusion reactions", "What can go wrong with blood during a long hold.", [
+      "Acute hemolytic reaction (wrong blood type): fever, back pain, low blood pressure, dark or red urine and bleeding from line sites. The transfusion is stopped and the remaining product saved.",
+      "Febrile and allergic reactions range from fever and hives to airway swelling and anaphylaxis.",
+      "TRALI (transfusion-related acute lung injury) causes low oxygen and lung swelling within hours of a transfusion.",
+      "TACO (circulatory overload) causes breathing difficulty and lung fluid from too much volume, more likely after many units in a small or older casualty.",
+      "Massive transfusion also drops calcium and can raise potassium, which i-STAT trends catch."]],
+    ["pcc", "Pressors after the bleeding stops", "Holding blood pressure once the tank is full.", [
+      "Prolonged care guidance turns to a vasopressor only after hemorrhage is controlled and volume has been replaced with blood.",
+      "Norepinephrine is the usual first choice, with vasopressin added when one drug is not enough.",
+      "A pressor squeezes vessels; it does not replace lost blood. A casualty still bleeding on a pressor is a casualty whose bleeding is still the problem.",
+      "Pressors run through a reliable line, and the site is checked often because a leak can injure the surrounding tissue.",
+      "Mean arterial pressure, mental status, urine output and lactate together show whether the pressure is actually reaching the organs."]],
+    ["pcc", "Crush injury and high potassium", "When muscle breakdown threatens the heart and kidneys.", [
+      "Crush syndrome follows prolonged compression of large muscle groups. When pressure is released, potassium, acid and myoglobin flood the circulation.",
+      "Early IV or IO fluid, ideally started before the limb is freed, helps protect the kidneys.",
+      "High potassium shows up as peaked T waves, a widening QRS and, finally, deadly rhythms. The i-STAT gives the number.",
+      "Treatment works in three layers: calcium stabilizes the heart's membranes, shifting agents (insulin with glucose, inhaled albuterol, bicarbonate) push potassium into cells, and removal (urine, and dialysis at a hospital) takes it out of the body.",
+      "Dark, tea-colored urine points to myoglobin from muscle breakdown and kidney risk."]]
+  ],
+  /* ---------- Trauma Care: Airway ---------- */
+  airway: [
+    ["cpp", "Drug-assisted intubation", "Taking over the airway without losing the casualty.", [
+      "Rapid sequence intubation pairs an induction drug with a paralytic so the airway can be secured quickly in a casualty who may have a full stomach.",
+      "Preoxygenation builds an oxygen reserve before the casualty stops breathing; positioning the ear level with the sternal notch improves the view.",
+      "Hypotension and low oxygen around intubation are linked to cardiac arrest and worse brain injury outcomes, so blood and oxygen come first whenever time allows.",
+      "Ketamine is favored for induction in shock because it tends to hold blood pressure.",
+      "Waveform capnography is the standard for confirming that the tube is in the trachea, and the tube depth at the teeth is recorded.",
+      "After intubation the paralytic wears off on its own schedule, so sedation and analgesia start right away."]],
+    ["cpp", "Cric or tube", "Which airway fits which casualty.", [
+      "TCCC places surgical cricothyroidotomy at the end of the field airway sequence, when facial fractures, direct airway injury, blood or burns make the airway unmanageable.",
+      "The TCCC cric uses a flanged, cuffed cannula of under 10 mm outer diameter, placed by an open or bougie-aided technique, with continuous capnography to confirm it and lidocaine if the casualty is conscious.",
+      "During TACEVAC, TCCC states that endotracheal intubation may be considered in place of a cric by trained providers.",
+      "Cervical spine stabilization is not needed for casualties with only penetrating trauma.",
+      "Any secured airway is reassessed often: SpO2, end-tidal CO2 and the tube depth can change with every move."]],
+    ["cpp", "Tension pneumothorax and thoracostomy", "Decompression that lasts.", [
+      "TCCC suspects tension pneumothorax with significant torso trauma or blast and severe or progressive breathing distress, fast breathing, absent breath sounds on one side, low saturation, shock or traumatic arrest.",
+      "Needle decompression sites are the 5th intercostal space at the anterior axillary line or the 2nd intercostal space at the midclavicular line.",
+      "Refractory shock after resuscitation raises suspicion of an untreated tension pneumothorax.",
+      "Finger thoracostomy opens the chest at the 5th intercostal space, anterior axillary line. The opening can seal over and may need to be reopened.",
+      "Tube thoracostomy leaves a drain in place with a one-way system, and the output is recorded. A large initial blood output or steady ongoing bleeding points to the need for surgery."]],
+    ["cpp", "Capnography in depth", "What the CO2 waveform is saying.", [
+      "A normal waveform is a rectangle: a flat start, a sharp rise, a plateau as the lungs empty, then a fast drop with the next breath in.",
+      "A sudden loss of the waveform means displacement, disconnection, a blocked tube or cardiac arrest until proven otherwise.",
+      "A gradually rising value suggests under-ventilation or a rising metabolic rate (fever); a falling value suggests over-ventilation or falling blood flow.",
+      "A slanted, shark-fin shape suggests narrowed airways, as in bronchospasm.",
+      "End-tidal CO2 normally runs a little below the blood PCO2. The gap widens in shock and lung injury, which is why i-STAT gases help calibrate it.",
+      "TCCC targets an end-tidal CO2 of 35 to 45 mmHg in a ventilated casualty with a brain injury."]],
+    ["pcc", "Smoke and airway burns", "An airway that gets worse by the hour.", [
+      "Facial burns, singed nasal hair, soot in the mouth, a hoarse voice or stridor after a closed-space fire point to inhalation injury.",
+      "Airway swelling builds over hours, so an airway that looks adequate early can close later. That timing drives early airway decisions in a long hold.",
+      "Carbon monoxide makes a standard pulse oximeter read falsely normal. Headache, confusion and a history of enclosed smoke raise suspicion.",
+      "Cyanide from burning plastics causes collapse with a high lactate, and hydroxocobalamin is the specific antidote where carried.",
+      "Oxygen is one of the listed TCCC indications for known or suspected smoke inhalation."]],
+    ["pcc", "Oxygen as a supply problem", "Planning oxygen in hours, not minutes.", [
+      "Cylinder time is estimated from the remaining pressure, the cylinder size factor and the flow rate. Running out mid-hold is a predictable failure.",
+      "Oxygen concentrators make oxygen from room air without cylinders, but they deliver a limited flow and need power.",
+      "The lowest oxygen that reaches the saturation target stretches the supply; TCCC uses a target of 92% or higher in brain injury.",
+      "Bag-valve-mask ventilation with a PEEP valve can improve oxygenation without raising oxygen flow.",
+      "Batteries for concentrators, ventilators and monitors are planned with the same care as the oxygen itself."]]
+  ],
+  /* ---------- Trauma Care: Head ---------- */
+  head: [
+    ["cpp", "The brain-protection targets", "Oxygen, pressure and CO2.", [
+      "TCCC defines suspected moderate or severe brain injury as inability to follow simple commands beyond 10 minutes after injury with a suspected head injury and no other cause.",
+      "Targets: oxygen saturation of 92% or more, systolic pressure greater than 100 mmHg (or a normal radial pulse), and end-tidal CO2 of 35 to 45 mmHg when ventilated.",
+      "When hemorrhagic shock is also present, TCCC gives shock resuscitation precedence; without bleeding, plasma is listed for moderate or severe brain injury.",
+      "Outcomes improve with neurosurgery within about 5 hours of injury, so evacuation planning starts at the first exam.",
+      "When the cause of an abnormal neurological exam is unclear, TCCC errs toward treating hemorrhagic shock."]],
+    ["cpp", "Recognizing herniation", "The signs that the brain is being pushed out of place.", [
+      "TCCC herniation signs: an asymmetric or fixed and dilated pupil, or posturing.",
+      "The Cushing response (high blood pressure, slow heart rate and irregular breathing) is a late sign of rising pressure in the skull.",
+      "A falling level of consciousness on repeat exams matters more than any single score.",
+      "Hypertonic saline is for herniation signs only. It is not a resuscitation fluid and is not given to prevent herniation.",
+      "Agitation raises pressure in the skull, so analgesia and sedation are part of brain care."]],
+    ["pcc", "Brain injury in a long hold", "Days of neuro care without a CT scanner.", [
+      "Serial neurological exams on a flowsheet show the trend: pupils, motor response and level of consciousness, recorded with the time and the sedation level.",
+      "Sodium is trended after hypertonic saline. A rapid fall afterward can worsen brain swelling, which is why the trend matters as much as the value.",
+      "Fever, low or high glucose, low oxygen and low blood pressure all add injury to an injured brain.",
+      "Head of bed above 30 degrees (when not in shock), a loose collar, tube ties that do not compress the neck veins and a straight head position help drainage from the brain.",
+      "Levetiracetam is used in prolonged care to help prevent early seizures; an active seizure is treated right away.",
+      "Ultrasound of the optic nerve sheath is used by some trained providers as an adjunct sign of raised pressure, alongside the exam."]],
+    ["pcc", "Concussion care", "Mild brain injury, deferred but not ignored.", [
+      "TCCC defers evaluation of suspected mild brain injury to prolonged care or later phases.",
+      "The Military Acute Concussion Evaluation (MACE 2) structures the history, symptoms, cognitive and neurological checks.",
+      "Red flags such as worsening headache, repeated vomiting, seizures, unequal pupils, double vision, weakness or worsening confusion change the plan from rest to evacuation.",
+      "Recovery follows a progressive return to activity after a period of relative rest.",
+      "Plasma is not indicated for mild brain injury or concussion."]]
+  ],
+  /* ---------- Pain & nausea ---------- */
+  pain: [
+    ["cpp", "Procedural (dissociative) sedation", "Ketamine for painful procedures.", [
+      "At a dissociative level ketamine separates awareness from pain, which allows procedures such as fracture reduction, chest tubes or wound care.",
+      "Breathing and airway reflexes are usually preserved, but secretions rise and rare laryngospasm can occur, so airway equipment and suction stay ready.",
+      "Emergence reactions (vivid dreams, agitation) are more common in adults; midazolam is the Tier 4 adjunct for them.",
+      "Monitoring through the procedure includes SpO2, end-tidal CO2 where available, heart rate, blood pressure and the airway itself.",
+      "TCCC notes that if continued dissociation is needed, care moves into the prolonged care guidance."]],
+    ["cpp", "Multimodal analgesia", "Several mechanisms, less of each drug.", [
+      "Combining drugs that work differently (acetaminophen, an anti-inflammatory, ketamine, a nerve block) relieves pain with fewer side effects than pushing one drug higher.",
+      "Splinting, padding, warming and reassurance are pain treatments too.",
+      "Regional nerve blocks, placed by trained providers, can numb an entire limb for hours with little effect on breathing or blood pressure.",
+      "Pain is reassessed after every intervention and recorded on the card or flowsheet.",
+      "In head injury, the goal is comfort while keeping the neurological exam readable."]],
+    ["pcc", "Analgesia first, then sedation", "Running comfort for days.", [
+      "Prolonged care guidance treats pain before adding sedation, because untreated pain often looks like agitation.",
+      "In a casualty who cannot talk, behavior-based pain scales look at the face, body movement, muscle tension and fighting the ventilator.",
+      "After days of ketamine, tolerance develops and higher amounts may be needed for the same effect; abrupt stops can cause withdrawal-like agitation.",
+      "Delirium (fluctuating attention and confusion) is common in long holds. Causes include pain, low oxygen, infection, drug effects, sleep loss and a full bladder.",
+      "Orientation, day-night light cycles, glasses or hearing aids if available, and family-style reassurance help prevent delirium."]]
+  ],
+  /* ---------- Antibiotics & wounds ---------- */
+  abx: [
+    ["cpp", "Why early antibiotics matter", "Infection is the delayed killer.", [
+      "Combat wounds are contaminated with soil, clothing and fragments. Infection risk rises the longer antibiotics are delayed, which is why TCCC gives them in the field.",
+      "Antibiotics do not replace wound care: removing dead tissue and foreign material and irrigating the wound do most of the work.",
+      "Clean, drinkable water is described as acceptable for wound irrigation in austere settings.",
+      "Allergy history is checked when possible; a severe penicillin allergy history raises the question of cephalosporin cross-reaction.",
+      "Every antibiotic given, with the time, goes on the card so the next level does not repeat or miss a dose."]],
+    ["pcc", "Sepsis in a long hold", "Recognizing infection that is spreading through the body.", [
+      "Sepsis looks like a second shock: fever or a low temperature, fast heart rate, fast breathing, low blood pressure, confusion and a rising lactate.",
+      "Common sources in a long hold are wounds, the lungs of a ventilated casualty, the bladder of a casualty with a Foley, and IV or IO sites.",
+      "Source control means opening and cleaning infected wounds, removing infected lines and replacing old catheters.",
+      "Antibiotic coverage is often broadened through a teleconsult, based on the likely source and what is in the kit.",
+      "Fluids and pressors support blood pressure while the antibiotics and source control take effect."]],
+    ["pcc", "Wound care over days", "Dressings, smell and the signs of deep infection.", [
+      "Dressings are changed and wounds inspected on a schedule, with photos for the teleconsult when possible.",
+      "Necrotizing soft-tissue infection is suggested by pain out of proportion, rapidly spreading redness, crackling under the skin, gray watery drainage and a sick casualty. It is a surgical emergency.",
+      "Compartment syndrome causes pain out of proportion and pain with passive stretch of the muscles, with a tense limb. Pulses often remain until late. Fasciotomy is a surgical skill at advanced levels.",
+      "Improvised negative-pressure dressings are described in prolonged care guidance for large wounds.",
+      "Amputation stumps and fasciotomy wounds are kept covered, moist and clean."]],
+    ["pcc", "Burns over days", "Fluids, warmth and the circumferential burn.", [
+      "Burn fluid needs are titrated over hours by urine output, because both too little and too much fluid cause harm.",
+      "Circumferential burns of a limb or the chest can act like a tourniquet or a corset as swelling builds. Escharotomy releases them and is an advanced surgical skill.",
+      "Burned skin cannot hold heat, so hypothermia prevention continues for the whole hold.",
+      "Burns raise the body's calorie needs sharply. Early feeding, when the casualty can eat, supports healing.",
+      "Large-volume resuscitation can raise pressure inside the abdomen; a tense abdomen with falling urine output is a warning sign."]]
+  ],
+  /* ---------- Procedures (Advanced Care, Tier 4 and PCC) ---------- */
+  proc: [
+    ["cpp", "Endotracheal intubation", "Tier 4: a cuffed tube through the vocal cords.", [
+      "Indications include an airway that cannot be protected, failing oxygenation or ventilation, and an expected decline during a long evacuation.",
+      "The procedure includes preparation, preoxygenation, positioning, induction and paralysis, tube placement and confirmation.",
+      "Confirmation relies on continuous waveform capnography, with breath sounds and chest rise as supporting signs.",
+      "Complications include placement in the esophagus or down one main bronchus, low oxygen during attempts, low blood pressure after induction, and dislodgement during moves.",
+      "A failed airway plan (extraglottic device, then surgical cric) is decided before the first attempt."]],
+    ["cpp", "Finger and tube thoracostomy", "Tier 4: opening the chest to relieve air and blood.", [
+      "The site is the 5th intercostal space at the anterior axillary line, above the rib to avoid the vessels and nerve below each rib.",
+      "Finger thoracostomy relieves tension quickly but can close; tube thoracostomy leaves a drain with a one-way valve or drainage system.",
+      "Air leaks, blood output and breathing are recorded after placement.",
+      "Complications include infection, bleeding from the chest wall, placement outside the chest cavity and tube kinking or dislodgement.",
+      "Antibiotics follow any invasive procedure in TCCC."]],
+    ["cpp", "Automated ventilation", "Tier 4: a portable ventilator.", [
+      "A ventilator replaces hand bagging, which frees the medic and gives steady, measured breaths.",
+      "Settings follow lung-protective principles, with small breaths sized to ideal body weight, and are adjusted with end-tidal CO2, saturation and i-STAT gases.",
+      "Every ventilated casualty needs sedation and analgesia, suction, a bag-valve-mask at hand and an oxygen and battery plan.",
+      "DOPES (displacement, obstruction, pneumothorax, equipment, stacked breaths) is the checklist when a ventilated casualty suddenly worsens.",
+      "The Ventilator lesson in Drips & Ventilator covers this in depth at the PCC level."]],
+    ["cpp", "Foley catheter and urine output", "Tier 4: measuring perfusion through the kidneys.", [
+      "A Foley catheter drains the bladder and turns urine output into an hourly perfusion trend.",
+      "Blood at the urethral opening, a high-riding prostate or a scrotal or perineal hematoma suggests urethral injury, which is a reason not to pass a catheter blindly.",
+      "Dark, tea-colored urine raises concern for muscle breakdown; red urine raises concern for bleeding or a hemolytic reaction.",
+      "Catheter-related infection is reduced by a closed drainage system kept below the bladder and good hygiene.",
+      "Urine output totals go on the flowsheet with every set of vital signs."]],
+    ["cpp", "Point-of-care lactate and labs", "Tier 4: numbers that show the hidden shock.", [
+      "TCCC Tier 4 skills include point-of-care lactate, a quick measure of tissue oxygen debt.",
+      "Lactate and base deficit often move before blood pressure does, which makes them early warnings of ongoing bleeding.",
+      "At the PCC level, full i-STAT cartridges add gases, electrolytes, kidney function and clotting.",
+      "Trends matter more than single values; a value is recorded with the time and what treatment came before it.",
+      "The i-STAT section in Advanced Care covers each value and how to read a blood gas."]],
+    ["pcc", "Ultrasound (eFAST)", "PCC: a look inside the chest and abdomen.", [
+      "The extended focused assessment with sonography for trauma (eFAST) looks for free fluid around the heart, in the abdomen and in the chest, and for pneumothorax.",
+      "Lung sliding seen on ultrasound argues against a pneumothorax at that spot; its absence raises suspicion.",
+      "Ultrasound is repeated over time, because a scan that is negative early can turn positive as bleeding continues.",
+      "Ultrasound also helps guide IV access, check bladder volume, and (for some trained providers) assess the optic nerve sheath.",
+      "Saved clips can be sent with a teleconsult for expert review."]],
+    ["pcc", "Fasciotomy and escharotomy", "PCC, surgical level: releasing pressure.", [
+      "Fasciotomy opens the tight fibrous sheaths around muscle compartments to relieve compartment syndrome. It is a surgical skill at the highest PCC levels.",
+      "Escharotomy cuts through stiff burned skin that is restricting a limb or the chest.",
+      "Both leave large open wounds that need dressing, infection watch and evacuation planning.",
+      "The decision is usually made with a surgical teleconsult whenever communications allow.",
+      "Compartment checks on injured limbs continue for the whole hold, because swelling can build for days."]],
+    ["pcc", "Gastric tube", "PCC: venting the stomach.", [
+      "A gastric tube decompresses the stomach in a ventilated or vomiting casualty, which lowers aspiration risk and improves breathing.",
+      "The oral route is used when skull base fractures are possible, because a nasal tube can pass into the skull.",
+      "Placement is checked before use, and the tube is secured and its output recorded.",
+      "The same tube can later carry liquid nutrition and oral medicines when the gut is working.",
+      "Before flight, a vented stomach reduces the effect of gas expansion at altitude."]]
+  ],
+  /* ---------- Advanced Care: ACLS ---------- */
+  acls: [
+    ["cpp", "Trauma arrest is different", "Why medical ACLS rarely fixes a bleeding arrest.", [
+      "Traumatic cardiac arrest is usually caused by blood loss, tension pneumothorax, low oxygen or cardiac tamponade, not by a primary heart rhythm problem.",
+      "TCCC describes bilateral needle decompression for a casualty with torso trauma or polytrauma who has no pulse or breathing.",
+      "TCCC states that CPR may be attempted when there are no obviously fatal wounds and surgical care is a short time away, and that it is not done at the expense of the mission or other casualties' lifesaving care.",
+      "Medical arrests in the field (heat, electrolytes, toxins, a primary heart attack) follow the standard ACLS algorithms more closely.",
+      "Every arrest includes a search for the H's and T's."]],
+    ["cpp", "Reading the monitor", "Four questions for any rhythm.", [
+      "Is there a pulse, and is the casualty stable? Instability means low blood pressure, confusion, chest pain, shock or heart failure.",
+      "Is the rate fast or slow?",
+      "Is the QRS narrow or wide? Narrow usually means the rhythm starts above the ventricles; wide can mean the ventricles or abnormal conduction.",
+      "Is it regular or irregular, and is there a P wave before each QRS?",
+      "Those answers place the rhythm on one of the algorithms in the list above."]],
+    ["cpp", "Electrical therapy", "Defibrillation, cardioversion and pacing.", [
+      "Defibrillation is an unsynchronized shock for pulseless VF or VT, delivered as soon as possible.",
+      "Synchronized cardioversion times the shock to the QRS, which avoids triggering VF, and is used for unstable tachycardia with a pulse.",
+      "Transcutaneous pacing delivers small repeated impulses for unstable bradycardia that does not respond to drugs. Capture is confirmed by a pulse that matches the paced rate, not just spikes on the screen.",
+      "Sedation is given for cardioversion and pacing whenever time allows, because both are painful.",
+      "Pads are placed away from implanted devices and medication patches, on a dry chest."]],
+    ["cpp", "After return of a pulse", "Post-cardiac arrest care.", [
+      "After return of spontaneous circulation the goals are enough oxygen without excess, a stable blood pressure, a 12-lead ECG and a search for the cause.",
+      "Low blood pressure after arrest is common and is treated with fluids or pressors depending on the cause.",
+      "Temperature control and avoiding fever protect the brain.",
+      "Glucose, electrolytes and blood gases on the i-STAT guide the next steps.",
+      "Expert consultation and evacuation to a higher level of care follow as soon as possible."]]
+  ],
+  /* ---------- Advanced Care: i-STAT ---------- */
+  istat: [
+    ["cpp", "Reading a blood gas in four steps", "pH, CO2, bicarbonate, compensation.", [
+      "Step 1, the pH: below 7.35 is acidemia, above 7.45 is alkalemia.",
+      "Step 2, the PCO2: if it moves in the direction that explains the pH (high CO2 with acidemia, low CO2 with alkalemia), the problem is respiratory.",
+      "Step 3, bicarbonate or base excess: a low bicarbonate or negative base excess with acidemia points to a metabolic acidosis, the usual pattern in shock.",
+      "Step 4, compensation: the other system shifts to pull the pH back toward normal. A shocked casualty breathes fast to lower CO2; a ventilated one depends on the ventilator settings to do it.",
+      "Venous gases are useful for pH, CO2 and lactate trends, but venous PO2 does not reflect lung oxygenation."]],
+    ["cpp", "The anion gap", "Why a metabolic acidosis happened.", [
+      "Anion gap = sodium - (chloride + bicarbonate). A typical value is roughly 8 to 12, depending on the analyzer.",
+      "A high gap points to added acids: lactate from shock, ketones, kidney failure, or toxins such as methanol or ethylene glycol.",
+      "A normal gap with acidosis often follows large volumes of saline (high chloride) or diarrhea.",
+      "In trauma, a high-gap acidosis with a rising lactate usually means ongoing shock.",
+      "Low albumin lowers the gap and can hide a high-gap acidosis in a long hold."]],
+    ["pcc", "Getting a good sample", "Errors that change the numbers.", [
+      "Air bubbles in a gas sample change the PO2 and PCO2.",
+      "Delays before testing let cells keep using oxygen and making lactate.",
+      "Drawing above an IV line that is running fluid dilutes the sample.",
+      "Hemolysis from a hard pull through a small needle raises potassium falsely.",
+      "Cartridges have storage temperature and room-temperature time limits printed on the box, and cold or expired cartridges give errors or false values."]]
+  ],
+  /* ---------- Advanced Care: Dive ---------- */
+  dive: [
+    ["cpp", "Pulmonary overinflation", "When expanding gas tears the lung.", [
+      "Holding the breath or air trapping during ascent lets expanding gas rupture the alveoli.",
+      "The results range from gas in the tissues of the chest and neck (mediastinal and subcutaneous emphysema) to pneumothorax and arterial gas embolism.",
+      "Crackling under the skin of the neck, a voice change and chest pain after an ascent point to overinflation.",
+      "A pneumothorax needs attention before or during recompression, because the gas expands again on ascent from the chamber treatment.",
+      "Arterial gas embolism is the most urgent form and is treated with recompression."]],
+    ["cpp", "Barotrauma of descent", "Squeezes: ears, sinuses, mask.", [
+      "Middle ear squeeze is the most common diving injury: pain, fullness and sometimes a ruptured eardrum when pressure is not equalized.",
+      "Sinus and mask squeezes cause facial pain, nosebleed or bleeding in the whites of the eyes.",
+      "Inner ear barotrauma (from forceful equalizing) and inner ear DCS can look alike, with vertigo and hearing loss. The dive profile and timing help separate them, and the distinction changes treatment.",
+      "Most squeezes resolve with time off diving; persistent vertigo or hearing loss needs specialist review.",
+      "Recompression is for DCS and AGE, not for simple squeezes."]],
+    ["pcc", "Oxygen toxicity in the chamber", "The risk of the treatment itself.", [
+      "Breathing high-pressure oxygen during treatment tables can cause central nervous system oxygen toxicity.",
+      "Warning signs are often taught as VENTID-C: vision changes, ears (ringing), nausea, twitching, irritability, dizziness and convulsions.",
+      "Treatment tables include air breaks to lower the risk.",
+      "If a seizure occurs, the oxygen mask comes off and the chamber depth is held; ascending during a seizure risks arterial gas embolism because the airway may be closed.",
+      "Pulmonary oxygen toxicity (chest burning, cough) builds up over long or repeated treatments."]],
+    ["pcc", "Moving a dive casualty", "Getting to the chamber without making it worse.", [
+      "High-flow oxygen by a tight-fitting mask or demand valve continues all the way to the chamber.",
+      "The casualty is kept lying flat; fluids by mouth or IV help support circulation.",
+      "Altitude worsens bubbles, so air transport uses the lowest safe altitude or an aircraft pressurized to near sea level.",
+      "The Divers Alert Network and Navy diving medical officers provide consultation around the clock.",
+      "The dive profile (depths, times, gas, ascent problems) travels with the casualty."]]
+  ],
+  /* ---------- PCC: the long hold ---------- */
+  pcc: [
+    ["pcc", "Holding versus moving", "The first decision of every long hold.", [
+      "Prolonged casualty care begins when evacuation is delayed past normal timelines, by weather, distance, enemy action or a lack of aircraft.",
+      "The medic weighs the casualty's needs against what the team can provide on site and what a risky move would cost.",
+      "A teleconsult early in the hold helps set priorities: what can be fixed here, what needs surgery, and how long the casualty can safely wait.",
+      "The plan is revisited whenever the casualty, the resources or the tactical situation changes.",
+      "Holding is active care, not waiting: the flowsheet, reassessment and nursing care continue around the clock."]],
+    ["pcc", "Several casualties at once", "Triage that keeps changing.", [
+      "With several casualties, triage is repeated over time because conditions change in both directions.",
+      "Scarce resources such as blood, oxygen, ventilators and the medic's own hands go where they change outcomes most.",
+      "Non-medical teammates are trained to take on monitoring, turning and recording tasks.",
+      "Each casualty gets a separate flowsheet and a clear label for every drip and line.",
+      "Expectant or comfort care decisions, when they arise, are made with leadership and medical direction and documented."]],
+    ["pcc", "Resupply and logistics", "Running out is a clinical problem.", [
+      "Supplies are counted early: blood and donors, oxygen, batteries, fluids, sedation drugs, antibiotics, dressings and gloves.",
+      "Drug consumption is projected forward. A ketamine drip that lasts days needs a supply plan from the first hour.",
+      "Cold chain matters for blood products and some drugs; heat matters for cartridges and medications.",
+      "Resupply requests are specific about item, quantity and urgency.",
+      "Power planning covers monitors, warmers, ventilators, suction, concentrators and communications."]],
+    ["pcc", "Kidneys, fluids and nutrition", "The slow problems of day two and beyond.", [
+      "Urine output, creatinine and potassium trends track the kidneys. Shock, crush injury, muscle breakdown and dehydration all threaten them.",
+      "Once resuscitation ends, fluid needs shift to maintenance and replacing ongoing losses, guided by intake and output totals.",
+      "Early feeding by mouth or gastric tube, when the gut is working, preserves gut health and supports healing.",
+      "Blood clots in the legs become a risk after the first days; moving the limbs when safe and compression where available help.",
+      "Stress ulcer prevention with an acid reducer such as famotidine is part of prolonged care for critically ill casualties."]],
+    ["pcc", "Temperature over days", "Hypothermia does not take a day off.", [
+      "TCCC hypothermia prevention starts early and continues for the entire hold: insulation from the ground, dry clothing, an active heater on the front of the torso and under the arms, and a vapor barrier.",
+      "Active heating sources are kept off bare skin and not wrapped around the torso, to prevent burns.",
+      "Blood and fluids are warmed in-line.",
+      "Fever later in a hold suggests infection, a transfusion reaction or a brain injury effect, and is investigated, not just treated.",
+      "Core temperature, when it can be measured, is trended on the flowsheet."]],
+    ["pcc", "Comfort and palliative care", "When survival is no longer possible.", [
+      "Some casualties will not survive even with ideal care. Prolonged care guidance includes keeping them comfortable and treated with dignity.",
+      "Pain, breathlessness, agitation and secretions are treated to relieve suffering.",
+      "These decisions involve medical direction and leadership whenever communications allow, and are documented.",
+      "Teammates caring for a dying casualty are supported during and after.",
+      "Personal effects, identification and the timeline are recorded and kept with the casualty."]]
+  ],
+  pcc_nurse: [
+    ["pcc", "Pressure injuries", "Damage that starts in hours.", [
+      "A pressure injury can begin within a few hours of lying still on a hard surface, especially in a cold, wet or low-blood-pressure casualty.",
+      "High-risk spots are the back of the head, shoulder blades, elbows, sacrum, hips and heels, and anywhere straps, splints or tubes press.",
+      "Early stages show as redness that does not fade with light pressure; later stages break the skin.",
+      "Padding, a log-roll schedule, keeping the skin dry and floating the heels off the surface reduce risk.",
+      "The skin check is recorded with every turn."]],
+    ["pcc", "Ventilator-associated pneumonia", "Preventing a lung infection on the vent.", [
+      "Raising the head of the bed when the casualty is not in shock lowers aspiration risk.",
+      "Mouth care and suctioning reduce bacteria that travel down the tube.",
+      "Venting the stomach with a gastric tube reduces reflux.",
+      "Keeping the tube cuff properly inflated limits leakage of secretions into the lungs.",
+      "New fever, thicker secretions and worsening oxygen raise concern for pneumonia."]],
+    ["pcc", "Lines and catheters", "Every device is a doorway for infection.", [
+      "IO access is designed for short-term use; prolonged care guidance moves toward IV access as the hold continues.",
+      "Line sites are checked for redness, swelling, leaking and the date placed.",
+      "A Foley drains into a closed bag kept below the bladder.",
+      "Every line is labeled with what runs through it, so drugs that do not mix are kept apart.",
+      "Devices that are no longer needed are removed, because each extra day adds infection risk."]],
+    ["pcc", "Eyes, mouth and dignity", "The small things in a sedated casualty.", [
+      "A sedated casualty does not blink, and the cornea dries and scratches within hours. Lubrication and closing the lids protect it.",
+      "Mouth care keeps the lips and tongue moist and reduces infection.",
+      "Bowel and bladder care, cleaning and changing soiled dressings protect the skin.",
+      "Talking to a sedated casualty and explaining care continues, because hearing may be preserved.",
+      "TCCC lists communicating with the casualty: encouraging, reassuring and explaining care."]],
+    ["pcc", "The flowsheet", "The tool that runs a long hold.", [
+      "A flowsheet records vital signs, sedation level, drips, intake and output, labs and every intervention on a time line.",
+      "The trend shows what single numbers cannot: a slowly rising heart rate, a falling urine output, a creeping sodium.",
+      "Handoffs between medics or teammates use the flowsheet so nothing is lost overnight.",
+      "The teleconsultant reads the same flowsheet, which speeds every call.",
+      "The completed record travels with the casualty and closes with the after-action report."]]
+  ],
+  pcc_tele: [
+    ["pcc", "What to have ready", "Before the call connects.", [
+      "Casualty basics: age, weight estimate, allergies, mechanism and time of injury.",
+      "Injuries found, interventions done, and the drugs and blood given with times.",
+      "The current vital sign trends, sedation level, ventilator state, intake and output, and i-STAT results.",
+      "Resources on hand: blood, oxygen, drugs, equipment, and how long they will last.",
+      "The specific questions to ask and the expected evacuation timeline."]],
+    ["pcc", "When bandwidth is poor", "Consulting without a clear voice line.", [
+      "Asynchronous consults by text or email allow a written report, photos and flowsheets to be sent and answered when the link allows.",
+      "Short, numbered questions get faster, clearer answers.",
+      "Images are compressed and labeled with the casualty, time and body part.",
+      "Every recommendation received is written down with the time and who gave it.",
+      "A planned next check-in time keeps the consult going even if the link drops."]],
+    ["pcc", "Common consult questions", "Where experts help most.", [
+      "Is this casualty stable enough to wait, or does the situation justify a risky evacuation?",
+      "What changes to the sedation and pressor plan fit these trends?",
+      "Which antibiotic coverage fits this wound or suspected infection with what is in the kit?",
+      "Does this lab or ultrasound finding change the plan?",
+      "What does the casualty need prepared for the flight and the receiving team?"]],
+    ["pcc", "The stresses of flight", "What altitude and aircraft do to a casualty.", [
+      "Lower oxygen pressure at altitude reduces blood oxygen, so oxygen needs usually rise in flight.",
+      "Gas expansion affects a pneumothorax, the stomach and bowel, tube cuffs, splints with air bladders and air trapped in the skull or eye.",
+      "Cold, low humidity, noise, vibration and acceleration all add stress and make assessment harder.",
+      "Certain conditions (pneumothorax without a chest tube, air in the skull or eye, DCS, bowel obstruction) call for a lower cabin altitude or extra preparation.",
+      "Critical care air transport teams can continue ventilator and drip care in flight when they are available."]],
+    ["pcc", "Packaging for the move", "Arriving with everything still in place.", [
+      "Tubes and lines are secured and their depths and positions re-checked after every move.",
+      "Drips are on pumps or carefully counted gravity sets, with enough drug for the whole flight and extra drawn up.",
+      "The casualty is insulated, padded and strapped in a way that leaves the airway and key sites reachable.",
+      "Monitors are set to visual alarms when noise makes audio alarms useless.",
+      "The handoff carries the DD1380, the flowsheet, all drugs and times, and the teleconsult advice."]]
+  ],
+  tiva: [
+    ["pcc", "The RASS sedation scale", "A common language for how deeply sedated a casualty is.", [
+      "The Richmond Agitation-Sedation Scale runs from +4 (combative) through 0 (alert and calm) to -5 (unresponsive to voice and touch).",
+      "+4 combative, +3 very agitated (pulls at tubes), +2 agitated (fights the ventilator), +1 restless.",
+      "-1 drowsy (eye contact over 10 seconds to voice), -2 light sedation (brief eye contact to voice), -3 moderate sedation (movement but no eye contact to voice).",
+      "-4 deep sedation (no response to voice, movement to touch), -5 unarousable.",
+      "Recording RASS with every vital sign set shows whether a drip is too light or too deep."]],
+    ["pcc", "Choosing the depth", "Lighter is usually better.", [
+      "Most casualties do better with the lightest sedation that keeps them safe and comfortable, which allows exams and lowers drug use.",
+      "Deeper sedation is used when the casualty cannot tolerate the ventilator, when brain pressure is a concern, or when a paralytic is running.",
+      "A paralyzed casualty cannot show pain or awareness, so sedation and analgesia run deep enough before and during paralysis.",
+      "Daily checks of whether the sedation can be lightened are part of ICU practice and are adapted to the field situation.",
+      "The goal and current RASS level are written on the flowsheet so every medic aims for the same target."]],
+    ["pcc", "Drip logistics", "Running infusions without a pharmacy.", [
+      "Each drug runs in its own labeled bag and line, with the concentration written on the bag.",
+      "Infusion pumps give the most accurate rates; gravity drips are counted by drops per minute and rechecked often.",
+      "Drug supply is projected forward from the current rate so the kit does not run dry mid-hold.",
+      "Bags, lines and concentrations are double-checked by a second person when one is available.",
+      "Every rate change is recorded with the time and the reason."]],
+    ["pcc", "Weaning and transition", "Coming off the drips.", [
+      "Drips are reduced gradually after long use to avoid agitation, withdrawal and blood pressure swings.",
+      "Pain control is kept in place while sedation is lightened.",
+      "Emergence agitation after ketamine is anticipated and managed calmly with a quiet environment and adjuncts when needed.",
+      "Sedation decisions are coordinated with the evacuation timeline and receiving team.",
+      "The total drug amounts and times are summarized for the handoff."]]
+  ],
+  pcc_vent: [
+    ["pcc", "Oxygenation versus ventilation", "Two different problems with two different controls.", [
+      "Oxygenation is getting oxygen into the blood. It is improved mainly by more inspired oxygen and PEEP, which holds the small airways open.",
+      "Ventilation is getting CO2 out. It is changed mainly by the breath size and the breathing rate.",
+      "Pulse oximetry tracks oxygenation; end-tidal CO2 and blood PCO2 track ventilation.",
+      "A casualty can be well oxygenated and still retain CO2, or the reverse, so both are watched.",
+      "TCCC lists a rate of 10 breaths per minute (one every 6 seconds) with low breath sizes when ventilating a brain-injured casualty without end-tidal CO2."]],
+    ["pcc", "Ventilator modes in plain words", "How the machine decides when to breathe.", [
+      "Assist-control gives a full set breath every time, whether the machine or the casualty starts it. It is the common starting mode.",
+      "Volume control delivers a set breath size; pressure control delivers breaths up to a set pressure, and the breath size varies with the lungs.",
+      "Pressure support helps breaths the casualty starts, and is used as sedation lightens.",
+      "CPAP or PEEP alone holds pressure in the airways without giving full breaths.",
+      "Portable ventilators offer fewer modes than ICU machines, so knowing the specific device in the kit matters more than knowing every mode."]],
+    ["pcc", "High and low pressure alarms", "What the alarm is pointing at.", [
+      "A high pressure alarm means the breath is meeting resistance: a kinked or bitten tube, secretions, bronchospasm, the casualty fighting the vent, or a pneumothorax.",
+      "A low pressure alarm means pressure is escaping: a disconnection, a cuff leak, or a tube that has slipped out.",
+      "An apnea or low volume alarm can mean the casualty is not triggering breaths or gas is leaking.",
+      "With any alarm and a worsening casualty, disconnecting and bagging by hand separates the machine from the patient while DOPES is worked through.",
+      "Power and oxygen alarms point to the supply plan."]],
+    ["pcc", "Blast lung and ARDS", "Stiff, leaky lungs.", [
+      "Primary blast injury can bruise the lungs and cause bleeding into the airspaces, low oxygen and air leaks.",
+      "Acute respiratory distress syndrome (ARDS) can follow shock, massive transfusion, sepsis, smoke or lung injury, with stiff lungs and low oxygen despite oxygen therapy.",
+      "Lung-protective ventilation with small breaths and PEEP limits further damage.",
+      "Positive pressure raises the risk of pneumothorax in injured lungs, so breath sounds, pressures and the chest are watched closely.",
+      "Prone positioning is an ICU strategy for severe ARDS that may be discussed through a teleconsult in a long hold."]]
+  ]
+};
+/* render: "Going deeper" lessons for this tier (Tier 4 and PCC only) */
+function fmDeep(k) {
+  var list = (FM_DEEP[k] || []).filter(function (x) { return fmTierOk(x[0]); }); if (!list.length) return "";
+  var lv = (levelObj(S.level) || {});
+  return '<section class="fmdeep"><h3 class="fmh">Going deeper <span class="fmdtag">' + esc(lv.short === "PCC" ? "Tier 4 + PCC" : "Tier 4") + '</span></h3><div class="fmles">' + list.map(function (x) {
+    return '<details class="fmlesson"><summary><span class="fmlt"><strong>' + esc(x[1]) + '</strong>' + (x[0] === "pcc" ? '<em class="fmpcc">PCC</em>' : '') + '</span><span class="fmls">' + esc(x[2]) + '</span></summary><ul>' + x[3].map(function (p) { return '<li>' + esc(p) + '</li>'; }).join("") + '</ul></details>';
+  }).join("") + '</div></section>';
 }
 
 
