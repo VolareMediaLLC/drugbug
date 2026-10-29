@@ -314,7 +314,7 @@ function go(view, opts) {
   if (UTIL_VIEWS[view] && !UTIL_VIEWS[S.view] && S.view !== view && S.view !== "terrarium") S.utilBack = { view: S.view, level: S.level, tab: S.tab };
   clearTimeout(S.qT); S.view = view; Object.assign(S, { pointGo: null, showFilt: false, onlyMarks: false, tool: null, shopF: null, tab: "hub", q: "", tags: {}, group: "all", scen: null, fc: null, nr: null, sess: null, prepNr: null, unit: null, fam: null, famq: "", cn: null, menu: false, mupop: false }, opts || {});
   Admin.on = view === "admin"; if (view === "level") store("lastLevel", S.level);
-  var h = view === "home" ? "" : view === "admin" ? "admin" : view === "classes" ? "classes" : view === "settings" ? "settings" : view === "terrarium" ? "terrarium" : view === "levels" ? "prehospital" : view === "nlevels" ? "nursing" : view === "mlevels" ? "medschool" : view === "ilevels" ? "imaging" : view === "everyday" ? "everyday" : view === "gen" ? "general" : view === "easy" ? "easy" : S.level;
+  var h = view === "home" ? "" : view === "admin" ? "admin" : view === "classes" ? "classes" : view === "settings" ? "settings" : view === "terrarium" ? "terrarium" : view === "levels" ? "prehospital" : view === "nlevels" ? "nursing" : view === "mlevels" ? "medschool" : view === "ilevels" ? "imaging" : view === "everyday" ? "everyday" : view === "field" ? "field" : view === "gen" ? "general" : view === "easy" ? "easy" : S.level;
   try { history.replaceState(null, "", h ? "#" + h : location.pathname); } catch (e) {}
   render(); window.scrollTo(0, 0);
 }
@@ -350,15 +350,16 @@ function viewHome() {
   var genN = genIds().length;
   var PT = '<span class="pointer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v13M6 12l6 6 6-6" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Start here</span>';
   function pt(go) { return S.pointGo === go ? ' pointed' : ''; }
-  function mini(cls, go, title, line, bug) { return '<button class="route rmini ' + cls + pt(go) + '" data-go="' + go + '"' + '>' + (S.pointGo === go ? PT : '') + '<span class="mtx"><h2>' + title + '</h2><p>' + line + '</p></span><span class="mbug">' + bugArt(bugById(bug), "", { mood: "happy" }) + '</span></button>'; }
+  function mini(cls, go, title, line, bug) { return '<button class="route rmini ' + cls + pt(go) + '" data-go="' + go + '"' + '>' + (S.pointGo === go ? PT : '') + '<span class="mtx"><h2>' + title + '</h2><p>' + line + '</p></span><span class="mbug">' + bugArt(typeof bug === "string" ? bugById(bug) : bug, "", { mood: "happy" }) + '</span></button>'; }
   return topbar() + homeTip() +
    heroHTML() +
    homeStart() + homeProgress() + (typeof trialBanner === "function" ? trialBanner() : '') +
    '<h3 class="homegh">Look it up</h3><section class="routes">' +
    '<button class="route gen wide' + pt("gen") + '" data-go="gen">' + (S.pointGo === "gen" ? PT : '') + '<span class="eyebrow">Start here</span><h2>BugDex</h2><p>Every medication, explained in plain language. Search or browse.</p><span class="count">' + genN + ' medications</span><span class="sage">' + bugSVG("sage") + '</span></button>' +
+   '<button class="route evsmall" data-go="everyday"><span class="evs-ic" aria-hidden="true">' + bugArt(bugById("grub-everyday"), "", { mood: "happy" }) + '</span><span class="evs-tx"><strong>Everyday Health</strong><span>Medicine cabinet, small sicknesses, normal vitals</span></span><span class="evs-go" aria-hidden="true">&rsaquo;</span></button>' +
    myListRoute() +
    '</section><h3 class="homegh">Study by role</h3><section class="routes"><div class="minis">' +
-   mini("ev", "everyday", "Everyday Health", "Meds, vitamins and your body", "grub-everyday") +
+   mini("fm", "field", "Field Medic", "TCCC Tier 4: trauma drugs, TIVA drips, 23.4% saline", FIELD_BUG) +
    mini("ph", "levels", "Prehospital", "EMT to Flight Paramedic", "grub-medic") +
    mini("rn", "nlevels", "Nursing", "CNA, LVN/LPN and RN", "grub-nurse") +
    mini("md", "mlevels", "Medical School", "MS1 to Intern", "grub-doc") +
@@ -481,7 +482,7 @@ var HUB_GROUPS = [
   ["Study and practice", ["prep", "nbug", "cards", "scenarios", "tools", "games"]],
   ["Yours", ["mylist", "progress", "shop"]]
 ];
-var HUB_SHORT = { illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "Saved drugs and their interactions", tools: "Megacode, interactions, safety drills", scenarios: "Clinical cases", cards: "Flip, sort and master", games: "Match, crossword, scramble and more", progress: "Mastery, badges, leaderboard", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time", prep: "Timed tests with scores" };
+var HUB_SHORT = { illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "Saved drugs and their interactions", tools: "Megacode, interactions, safety drills", scenarios: "Clinical cases", cards: "Flip, sort and master", games: "Match, crossword, scramble and more", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time", prep: "Timed tests with scores" };
 function hubView() {
   var L = tabList(), used = {}, c = '<nav class="hub2" aria-label="Sections">';
   function tile(t) {
@@ -496,11 +497,17 @@ function hubView() {
   if (rest.length) c += '<h3 class="hubgh">More</h3><div class="hub">' + rest.map(tile).join("") + '</div>';
   return c + '</nav>';
 }
+/* compact education strip: the first sentence stays visible, the rest opens with "More" (cleanup, Oct 28 2026) */
+function eduNote(lead, rest) { return '<details class="edunote" role="note"><summary><span class="edl">' + lead + '</span>' + (rest ? '<span class="edmore">More</span>' : '') + '</summary>' + (rest ? '<p>' + rest + '</p>' : '') + '</details>'; }
 function sectionHead() {
   var where = S.view === "gen" ? "BugDex" : (levelObj(S.level) || {}).name || "";
   var inUnit = S.tab === "units" && S.unit;
   if ((S.tab === "blood" || S.tab === "hemo" || S.tab === "contrast" || S.tab === "flightp") && S.cn && S.cn.kind === S.tab && (S.cn.grp || S.cn.mode)) { var ch = critHead(); return '<div class="sechead"><button class="backbtn" data-cnav="' + ch[0] + '"><span aria-hidden="true">&larr;</span> ' + esc(ch[1]) + '</button><h2' + (ch[2].length > 28 ? ' class="long"' : '') + '>' + esc(ch[2]) + '</h2></div>'; }
-  return '<div class="sechead"><button class="backbtn" data-act="' + (S.tab === "session" ? "sessquit" : inUnit ? "unitsback" : "hub") + '"><span aria-hidden="true">&larr;</span> ' + (S.tab === "session" ? "Exit" : inUnit ? "Specialty Units" : esc(where)) + '</button><h2>' + esc(tabName(S.tab)) + '</h2></div>';
+  var back = '<button class="backbtn" data-act="' + (S.tab === "session" ? "sessquit" : inUnit ? "unitsback" : "hub") + '"><span aria-hidden="true">&larr;</span> ' + (S.tab === "session" ? "Exit" : inUnit ? "Specialty Units" : esc(where)) + '</button>';
+  if (S.tab === "session" || inUnit) return '<div class="sechead">' + back + '<h2>' + esc(tabName(S.tab)) + '</h2></div>';
+  /* every tab opens with the same friendly header: icon bubble, name and a one-line hook (cleanup, Oct 28 2026) */
+  var sub = S.tab === "prep" ? "" : (HUB_SHORT[S.tab] || "");
+  return '<div class="sechead slim">' + back + '</div><div class="tabhero t-' + S.tab + '"><span class="thic">' + icon(S.tab) + '</span><div class="thtx"><h2>' + esc(tabName(S.tab)) + '</h2>' + (sub ? '<p>' + esc(sub) + '</p>' : '') + '</div></div>';
 }
 function prepName() {
   if (S.view === "level" && isN(S.level)) return { cna: "CNA Exam Prep", lvn: "PN Licensure Prep", rn: "RN Licensure Prep" }[S.level];
@@ -647,7 +654,7 @@ function scenarios() {
   if (!list.length) return '<div class="empty">Scenarios are on the way.</div>';
   if (S.scen) return scenView(list.filter(function (s) { return s.id === S.scen.id; })[0], list);
   var n = list.filter(function (s) { return done[s.id]; }).length;
-  return '<p class="resultcount">' + n + ' of ' + list.length + ' scenarios cleared</p><div class="scenlist">' + list.map(function (s) {
+  return '<div class="fmprog scenprog"><span><strong>' + n + '</strong> of ' + list.length + ' scenarios cleared</span><span class="cmptrack"><span class="cmpfill" style="width:' + (list.length ? Math.round(100 * n / list.length) : 0) + '%"></span></span></div><div class="scenlist">' + list.map(function (s) {
     return '<button class="scard' + (done[s.id] ? " done" : "") + '" data-scen="' + s.id + '"><span class="meta">' + esc(s.cat || "") + (done[s.id] ? " · Cleared" : "") + '</span><h3>' + esc(s.title) + '</h3><span class="tapnote">Tap to open</span></button>';
   }).join("") + '</div>';
 }
@@ -1283,7 +1290,7 @@ function closeSheet() { sheet.hidden = true; sheet.innerHTML = ""; S.sheet = nul
 /* ---------- render & events ---------- */
 function render() {
   var ok = agreeRec(); protoTab.hidden = !ok; protoTab.textContent = lang() === "es" ? "Protocolos" : "Protocols"; document.documentElement.lang = lang();
-  var html = needDisc() ? discView() : !ok && S.view !== "legal" ? gateView() : S.view === "legal" ? legalView() : needRole() ? roleView() : S.view === "home" ? viewHome() : (S.view === "levels" || S.view === "nlevels" || S.view === "mlevels" || S.view === "ilevels") ? viewLevels() : S.view === "easy" ? viewEasy() : S.view === "admin" ? viewAdmin() : S.view === "classes" ? classesView() : S.view === "settings" ? settingsView() : S.view === "terrarium" ? terrariumView() : S.view === "everyday" ? evView() : viewLevel();
+  var html = needDisc() ? discView() : !ok && S.view !== "legal" ? gateView() : S.view === "legal" ? legalView() : needRole() ? roleView() : S.view === "home" ? viewHome() : (S.view === "levels" || S.view === "nlevels" || S.view === "mlevels" || S.view === "ilevels") ? viewLevels() : S.view === "easy" ? viewEasy() : S.view === "admin" ? viewAdmin() : S.view === "classes" ? classesView() : S.view === "settings" ? settingsView() : S.view === "terrarium" ? terrariumView() : S.view === "everyday" ? evView() : S.view === "field" && typeof fieldView === "function" ? fieldView() : viewLevel();
   app.innerHTML = html + footer();
   if (typeof tourMaybe === "function") tourMaybe();
   if (S.proMsg) { var tst = document.createElement("div"); tst.className = "protoast"; tst.setAttribute("role", "status"); tst.textContent = S.proMsg; app.appendChild(tst); S.proMsg = ""; setTimeout(function () { if (tst.parentNode) tst.parentNode.removeChild(tst); }, 5000); }
@@ -1389,6 +1396,7 @@ document.addEventListener("click", function (e) {
     case "easy": S.menu = false; if (S.view !== "easy") { S.easyScope = S.view === "level" ? S.level : S.view === "gen" ? "gen" : "all"; S.easyQ = ""; go("easy"); } return;
     case "weakgo": var stw = nrState(); stw.mode = "practice"; nrStart(weakPool().slice(0, 20)); S.nr.kind = "weak"; render(); return window.scrollTo(0, 0);
     case "exedit": S.exEdit = true; return render();
+    case "fmdrill": return typeof fmDrill === "function" && fmDrill();
     case "nrmore": S.nrMore = !(S.nrMore || S.exEdit); S.exEdit = false; return render();
     case "exclear": if (Prog.d.exam) delete Prog.d.exam[examKey()]; S.exEdit = false; saveProg(); return render();
     case "nrstart": var st0 = nrState(), pl0 = nrPool(st0.filter), pk0 = st0.kind === "reg" ? regCompose(pl0, st0.n, st0.adaptive !== false) : isEMSLv(ctxKey()) ? nrCompose(pl0, Math.min(st0.n, pl0.length), st0.filter && st0.filter !== "all" ? [st0.filter] : nrLevelsFor(ctxKey()), st0.adaptive !== false) : st0.adaptive !== false ? adaptivePick(pl0, st0.n) : shuffle(pl0).slice(0, st0.n); nrStart(pk0); render(); return window.scrollTo(0, 0);
@@ -1598,6 +1606,7 @@ window.drugbugBack = function () {
     if (P.open) { closeProto(); return true; }
     if (S.view === "level" && S.tab && S.tab !== "hub") { S.tab = "hub"; S.scen = null; S.fc = null; render(); window.scrollTo(0, 0); return true; }
     if (S.view === "everyday" && S.evTab) { S.evTab = null; render(); window.scrollTo(0, 0); return true; }
+    if (S.view === "field" && S.fmTab) { S.fmTab = null; render(); window.scrollTo(0, 0); return true; }
     if (S.view !== "home") { go("home"); return true; }
   } catch (x) {}
   return false;
@@ -2121,6 +2130,9 @@ function startSession(kind, opt) {
     qs = adaptivePick(upool, 10); title = "Practice: " + (uo ? uo.name : "Unit"); sub = "Questions on the medications this unit uses most.";
   } else if (kind === "marks") {
     var mk = marks(); qs = adaptivePick(pool.filter(function (q) { return mk.indexOf(q.d) >= 0; }), 15); title = "Study my list"; sub = "Questions on the drugs you saved.";
+  } else if (kind === "field" && typeof FM_Q !== "undefined") {
+    var fid = fmIds(); qs = shuffle(FM_Q.slice()).slice(0, 4).concat(adaptivePick(pool.filter(function (q) { return fid.indexOf(q.d) >= 0; }), 8)); qs = shuffle(qs);
+    title = "Field Medic drill"; sub = "Put-in-order field calls plus questions on the trauma drugs.";
   } else if (kind === "weak") {
     var w = weakest(scopeIds(), 15); qs = adaptivePick(pool.filter(function (q) { return w.indexOf(q.d) >= 0; }), 10); title = "Practice my weak drugs"; sub = "Drugs with the lowest mastery come first.";
   }
@@ -4679,7 +4691,8 @@ var LEGAL_V = "2026-10-08", COMPANY = "Volare Media LLC", CONTACT = DB.PROTOCOL_
 var NONAFF = "Not affiliated with or endorsed by NREMT, NCSBN, FSMB, NBME, ARRT, IBSC, BCEN or AHA.";
 var LG = { owner: false, blocked: [], mod: null };
 function eduBanner(short) {
-  return '<div class="edubar" role="note"><strong>Educational use only.</strong> ' + (short ? "Not for clinical decision-making." : "Not for clinical decision-making or patient care, and not a medical device. Follow your protocols, medical direction and facility policy.") + '</div>';
+  if (short || typeof eduNote !== "function") return '<div class="edubar" role="note"><strong>Educational use only.</strong> ' + (short ? "Not for clinical decision-making." : "Not for clinical decision-making or patient care, and not a medical device. Follow your protocols, medical direction and facility policy.") + '</div>';
+  return eduNote("<strong>Educational use only.</strong> Not for clinical decision-making or patient care.", "Not a medical device. Your protocols, medical direction and facility policy come first.");
 }
 function phiWarn() { return '<p class="phiwarn" role="note"><strong>No patient information.</strong> Do not enter names, birth dates, record numbers or anything else that could identify a patient (HIPAA).</p>'; }
 function agreeRec() { var g = store("agree"); return g && g.v === LEGAL_V && g.age === "adult" ? g : null; }
@@ -5581,7 +5594,7 @@ function setReportStatus(spec, status) {
 var printv = document.createElement("div"); printv.id = "printv"; printv.hidden = true; document.body.appendChild(printv);
 var PR = null;
 function canPrint() { return !NATIVE || !!(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.print); }
-function printBtns(src, label) { if (!canPrint()) return ""; return '<button class="btn small ghost" data-print="' + esc(src) + '|cards">Print study cards</button><button class="btn small ghost" data-print="' + esc(src) + '|sheet">Print cheat sheet</button>' + (label ? '<span class="muted small">' + esc(label) + '</span>' : ''); }
+function printBtns(src, label) { if (!canPrint()) return ""; /* one small Print menu instead of two loose buttons (cleanup, Oct 28 2026) */ return '<details class="printmenu"><summary class="btn small ghost">Print</summary><div class="pmlist"><button class="btn small ghost" data-print="' + esc(src) + '|cards">Study cards</button><button class="btn small ghost" data-print="' + esc(src) + '|sheet">Cheat sheet</button>' + (label ? '<span class="muted small">' + esc(label) + '</span>' : '') + '</div></details>'; }
 function printIds(src) { return printIds0(src).filter(function (id) { return !(typeof drugLocked === "function" && drugLocked(id)); }); }
 function printIds0(src) {
   if (src === "marks") return marks().filter(function (id) { return DB.drugs[id]; });
@@ -6986,7 +6999,7 @@ var EVTABS = [
   /* "Drugs & Your Body" (illicit education) moved to the BugDex as "Illicit & Street Drugs" (owner, Oct 28 2026) */
   ["peptides", "Peptides", "Approved peptide medicines and popular research peptides that are NOT FDA approved. Education only."],
   ["probiotics", "Probiotics", "Probiotic strains and what research shows for each one, strain by strain. Most are supplements, not FDA-approved medicines. Education only."],
-  ["conds", "Conditions & Medicine Cautions", "Pick a condition, like high blood pressure, kidney disease or pregnancy, to see which medicines mention it in their warnings. Education only."],
+  /* "Conditions & Medicine Cautions" lives in the BugDex only (owner, Oct 28 2026) */
   ["all", "Search Every Medicine", "Open the full BugDex: every medicine in DrugBug, A to Z."]
 ];
 var EV_NOTE = "Education only. DrugBug does not tell anyone to use any medicine, supplement or drug. Ask your doctor or pharmacist before using anything, and call 911 in an emergency.";
@@ -6995,15 +7008,15 @@ function evView() {
   var t = S.evTab, c = topbar();
   if (!t) {
     c += '<header class="pagehead lvl-gen"><h1>Everyday Health</h1><p>Plain-language health and medicine education for everyone: no medical background needed.</p></header>';
-    c += '<div class="callout evnote"><strong>Education only.</strong> ' + esc(EV_NOTE.replace(/^Education only\. /, "")) + '</div>';
+    c += eduNote("<strong>Education only.</strong> Call 911 in an emergency.", esc(EV_NOTE.replace(/^Education only\. /, "")));
     c += '<nav class="hub" aria-label="Everyday Health">' + EVTABS.map(function (x) { return '<button class="hubtile t-ev-' + x[0] + (evLocked(x[0]) ? ' locked' : '') + '" data-evtab="' + x[0] + '"><span class="ht"><strong>' + esc(x[1]) + (evLocked(x[0]) ? ' ' + tierBadge("plus") : '') + '</strong><span>' + esc(x[2]) + '</span></span></button>'; }).join("") + '</nav>';
     return c;
   }
   var T = EVTABS.filter(function (x) { return x[0] === t; })[0] || EVTABS[0];
-  c += '<div class="backrow"><button class="backbtn" data-evtab=""><span aria-hidden="true">&larr;</span> Everyday Health</button></div><header class="pagehead lvl-gen"><h1>' + esc(T[1]) + '</h1><p>' + esc(T[2]) + '</p></header>';
+  c += '<div class="backrow"><button class="backbtn" data-evtab=""><span aria-hidden="true">&larr;</span> Everyday Health</button></div><div class="tabhero evhero"><span class="thic">' + icon({ cabinet: "pillq", sick: "scenarios", normals: "labs", body: "body", peptides: "families", probiotics: "vegc", all: "registry" }[t] || "registry") + '</span><div class="thtx"><h2>' + esc(T[1]) + '</h2><p>' + esc(T[2].split(/(?<=\.)\s/)[0]) + '</p></div></div>';
   if (t === "cabinet") c += evList(["Over-the-Counter Remedies", "Vitamins & Supplements"], "Search the medicine cabinet");
-  else if (t === "illicit") c += '<div class="callout evnote"><strong>Education only.</strong> These pages explain effects, risks and overdose signs. They never give instructions for using any drug. If someone will not wake up or is not breathing, call 911. Naloxone reverses opioid overdoses.</div>' + evList(["Illicit & Recreational Drugs"], "Search drugs");
-  else if (t === "peptides") c += '<div class="callout evnote"><strong>Education only.</strong> Peptides marked NOT FDA APPROVED have no FDA-approved use or dose. DrugBug is not telling anyone to use them.</div>' + evList(["Peptides"], "Search peptides");
+  else if (t === "illicit") c += '' + eduNote("<strong>Education only.</strong> If someone will not wake up or is not breathing, call 911.", "These pages explain effects, risks and overdose signs. They never give instructions for using any drug. Naloxone reverses opioid overdoses.") + evList(["Illicit & Recreational Drugs"], "Search drugs");
+  else if (t === "peptides") c += eduNote("<strong>Education only.</strong> NOT FDA APPROVED peptides have no approved use or dose.", "DrugBug is not telling anyone to use them.") + evList(["Peptides"], "Search peptides");
   else if (t === "sick") c += sickView();
   else if (t === "normals") c += normalsView();
   else if (t === "body") c += bodyView();
@@ -7011,7 +7024,7 @@ function evView() {
   else if (t === "probiotics") c += probioView();
   return c;
 }
-function illicitView() { return '<div class="callout evnote"><strong>Education only.</strong> These pages explain effects, risks and overdose signs. They never give instructions for using any drug. If someone will not wake up or is not breathing, call 911. Naloxone reverses opioid overdoses.</div>' + evList(["Illicit & Recreational Drugs"], "Search illicit and street drugs"); }
+function illicitView() { return '' + eduNote("<strong>Education only.</strong> If someone will not wake up or is not breathing, call 911.", "These pages explain effects, risks and overdose signs. They never give instructions for using any drug. Naloxone reverses opioid overdoses.") + evList(["Illicit & Recreational Drugs"], "Search illicit and street drugs"); }
 function evList(groups, ph) {
   var ids = []; groups.forEach(function (g) { evGroup(g).forEach(function (id) { if (ids.indexOf(id) < 0) ids.push(id); }); });
   var q = (S.evq || "").trim(); if (q) { var ex = ids.filter(function (id) { return drugMatch(id, q); }); ids = ex.length ? ex : ids.filter(function (id) { return drugMatch(id, q, true); }); }
@@ -7021,7 +7034,7 @@ function evList(groups, ph) {
 /* small-sickness guide */
 function sickView() {
   var L = DB.SICK || [], cur = S.sick && L.filter(function (x) { return x.id === S.sick; })[0];
-  var c = '<div class="callout evnote">' + esc(EV_NOTE) + '</div><div class="chips sickchips">' + L.map(function (x) { return '<button class="chip" data-sick="' + x.id + '" aria-pressed="' + (cur && cur.id === x.id) + '">' + esc(x.name) + '</button>'; }).join("") + '</div>';
+  var c = eduNote("<strong>Education only.</strong> Call 911 in an emergency.", esc(EV_NOTE.replace(/^Education only\. /, ""))) + '<div class="chips sickchips">' + L.map(function (x) { return '<button class="chip" data-sick="' + x.id + '" aria-pressed="' + (cur && cur.id === x.id) + '">' + esc(x.name) + '</button>'; }).join("") + '</div>';
   if (!cur) return c + '<p class="muted">Pick a topic above.</p>';
   c += '<section class="sickcard"><h2>' + esc(cur.name) + '</h2><p>' + esc(cur.what) + '</p>';
   if (cur.red && cur.red.length) c += '<div class="redflags"><h3>See a doctor or call 911 if</h3><ul>' + cur.red.map(function (r) { return '<li>' + esc(r) + '</li>'; }).join("") + '</ul></div>';
@@ -7204,7 +7217,7 @@ function condHits(cid) {
 var COND_NOTE = "Education only. This shows which medicines in DrugBug mention a condition in their contraindications, warnings or notes, quoted from each drug's page. It is not a list of what you personally can or cannot take: whether a medicine fits a person depends on things this app cannot see, and a medicine missing from this list is not a sign that it is safe. Your doctor or pharmacist is the right person to review your own medicines. Nothing you pick here is saved.";
 function condView() {
   var cid = S.cond, q = (S.condq || "").trim().toLowerCase();
-  var c = '<div class="callout evnote"><strong>Education only.</strong> ' + esc(COND_NOTE.replace(/^Education only\. /, "")) + '</div>';
+  var c = eduNote("<strong>Education only.</strong> Not a list of what you personally can or cannot take.", esc(COND_NOTE.replace(/^Education only\. /, "")));
   if (!cid) {
     c += '<div class="tools"><input class="search" id="condq" type="search" placeholder="Find a condition" value="' + esc(S.condq || "") + '" aria-label="Find a condition"></div>';
     CONDS.forEach(function (g) {
@@ -7869,7 +7882,7 @@ function gamesView() {
   var n = gmIds().length, best = (Prog.d.games || {}).blitzBest || 0;
   if (n < 6) return '<div class="empty">There are not enough drugs at this level for games yet. Try the BugDex or a higher level.</div>';
   var L = [["memory", "Memory Match", "Flip cards to match each drug with its class.", "&#129504;"], ["match", "Quick Match", "Connect drugs to what they treat, or poisons to their antidotes.", "&#128279;"], ["cross", "Crossword", "A new med crossword every time, built from your scope.", "&#9638;"], ["scramble", "Word Scramble", "Unscramble the drug name from the clue.", "&#128292;"], ["blitz", "Class Blitz", "60 seconds. Name the class of as many drugs as you can." + (best ? " Your best: " + best + "." : ""), "&#9889;"], ["frog", "Frog Snack", "Bugs fly by carrying answers. Only the right one can be caught." + ((Prog.d.games || {}).frogBest ? " Your best: " + Prog.d.games.frogBest + "." : ""), "&#128056;"]];
-  return '<p class="muted">Quick games built from the ' + n + ' medications in this ' + (S.view === "level" ? "level" : "app") + '. Earn sticks for every game you finish.</p><div class="gmgrid">' + L.map(function (g) {
+  return '<p class="gmline"><span class="gmstick" aria-hidden="true">&#10022;</span> ' + n + ' medications, ' + L.length + ' games. Every finished game earns sticks.</p><div class="gmgrid">' + L.map(function (g) {
     return '<button class="gmcard" data-gm="' + g[0] + '"><span class="gmico" aria-hidden="true">' + g[3] + '</span><strong>' + esc(g[1]) + '</strong><span class="muted small">' + esc(g[2]) + '</span><span class="earned">+' + GM_STICKS[g[0]] + (g[0] === "scramble" ? " per word" : g[0] === "blitz" || g[0] === "frog" ? " per 3" : "") + ' sticks</span></button>';
   }).join("") + '</div>';
 }
@@ -9229,6 +9242,171 @@ function disDrugSection(drugId) {
   var ids = disForDrug(drugId); if (!ids.length) return "";
   var D = disAll();
   return deepSec("🧬", "Conditions it treats (Disease Lab)", '<p class="dnote">Tap a condition to open it in the Disease Lab.</p><div class="drugchips">' + ids.map(function (k) { return '<button class="chip" data-dis="' + k + '">' + esc(D[k].name) + (disLocked(k) && typeof tierBadge === "function" ? ' ' + tierBadge("plus") : '') + '</button>'; }).join("") + '</div>');
+}
+
+/* ---------- Field Medic (TCCC Tier 4: Combat Paramedic/Provider) ----------
+   Owner request Oct 28 2026. Education only, NO DOSES (owner choice: most TCCC uses are off-label).
+   Content follows the CoTCCC TCCC Guidelines (01 May 2026) and JTS Prolonged Casualty Care guidance,
+   written descriptively (tools/callwording/RULES.md: no imperatives, no always/never/must/should).
+   View: S.view === "field"; S.fmTab = section key or null (hub); S.fmStep = open MARCH-PAWS letter. */
+var FM_NOTE = "Education only. DrugBug lists no doses here. Field care follows the current CoTCCC guidelines, Joint Trauma System guidance, unit protocols and medical direction. Not affiliated with or endorsed by the CoTCCC, the Joint Trauma System or the Department of Defense.";
+/* MARCH-PAWS: letter, name, one line, section to jump to */
+var FM_MARCH = [
+  ["M", "Massive hemorrhage", "Tourniquets, wound packing and junctional control first. TXA and blood come right behind.", "bleed"],
+  ["A", "Airway", "Position of comfort, recovery position, adjuncts, and a surgical airway when nothing else works.", "airway"],
+  ["R", "Respiration", "Chest seals, needle decompression and oxygen for low saturation or head injury.", "airway"],
+  ["C", "Circulation", "IV or IO access, whole blood first, calcium after the first unit, and reassessment after every unit.", "bleed"],
+  ["H", "Hypothermia and head injury", "Keep the casualty warm and protect the brain: oxygen, blood pressure, and hypertonic saline for herniation signs.", "head"],
+  ["P", "Pain", "Mission capable or not decides the plan: the wound pill pack, or ketamine and esketamine.", "pain"],
+  ["A", "Antibiotics", "For every open combat wound and invasive procedure, by mouth if possible, IV, IO or IM if not.", "abx"],
+  ["W", "Wounds", "Recheck every dressing and tourniquet, cover burns dry, and shield penetrating eye injuries.", "abx"],
+  ["S", "Splinting", "Splint fractures and recheck pulses. Prolonged care adds sedation drips for long holds.", "tiva"]
+];
+/* sections: key, title, one line, accent colour, icon art key, key ideas, drug cards [id, tag, why it is in the bag, what to watch] */
+var FM_SECS = [
+  ["bleed", "Bleeding & shock", "Stop the bleeding, then replace what was lost with blood.", "#ef4444", "drop",
+    ["TCCC ranks blood products from first choice to last: cold-stored low-titer O whole blood, pre-screened fresh whole blood, plasma + red cells + platelets 1:1:1, plasma + red cells 1:1, then plasma or red cells alone.",
+     "TXA is listed for casualties likely to need a transfusion or with significant head injury, as soon as possible and no later than 3 hours after injury.",
+     "Calcium follows the first transfused blood product, because stored blood binds calcium.",
+     "Resuscitation is reassessed after each unit, with endpoints of a palpable radial pulse, better mental status or a systolic pressure near 100.",
+     "Crystalloid is not the TCCC fluid for hemorrhagic shock. Hypertonic saline is not a resuscitation fluid."],
+    [["tranexamic-acid", "Clot keeper", "Blocks the breakdown of clots, so the clots that form at injured vessels hold.", "Timing: the benefit fades after the 3-hour window. Given by slow push."],
+     ["calcium-chloride", "Clotting fuel", "Replaces calcium bound up by the citrate in stored blood. Calcium is needed for clotting and heart contraction.", "Burns tissue if it leaks out of the vein, so a solid IV or IO line matters."],
+     ["calcium-gluconate", "Gentler calcium", "The other calcium salt named by TCCC, with less calcium per amount but easier on veins.", "Same goal as calcium chloride. The two are not interchangeable amount for amount."],
+     ["lactated-ringers", "Burn fluid", "TCCC names it for burn resuscitation over 20% body surface area once access is in.", "Hemorrhagic shock is treated with blood first. Large volumes dilute clotting factors."],
+     ["hetastarch", "Hextend", "A colloid TCCC lists for burns, limited in volume and followed by crystalloid.", "Can affect clotting and the kidneys, which is why its volume is limited."],
+     ["norepinephrine", "Pressor drip", "Prolonged care guidance uses it when blood pressure stays low after the bleeding is controlled and volume is replaced.", "A pressor is not a substitute for blood. Leaks out of veins can injure tissue."],
+     ["vasopressin", "Second pressor", "Added in prolonged care when one pressor is not enough, often with norepinephrine.", "Can reduce blood flow to the gut, fingers and toes."]]],
+  ["tiva", "TIVA & drips", "Keeping a casualty comfortable and safe for hours with IV drugs alone.", "#8b5cf6", "drip",
+    ["TIVA means total intravenous anesthesia: sedation or anesthesia run entirely through IV drugs, with no anesthetic gas or vaporizer, which suits austere settings.",
+     "Field TIVA is usually ketamine based, because ketamine tends to keep blood pressure and breathing better than other sedatives.",
+     "Prolonged casualty care guidance describes a continuous ketamine drip, with small pushes of an opioid or midazolam added only when needed.",
+     "Each medicine runs in its own bag. Mixing several drugs in one bag is untested and can form unsafe compounds.",
+     "These drugs work together, so less of each is used. Trending the RASS sedation score, pulse oximetry and end-tidal CO2 shows when a drip is too light or too deep.",
+     "Airway equipment and naloxone stay within reach whenever opioids are part of the plan."],
+    [["ketamine", "The base drip", "Dissociative anesthetic and strong pain reliever. In TIVA it is the backbone drip for sedation and analgesia.", "Emergence reactions, raised secretions and rising blood pressure. Watch the airway."],
+     ["midazolam", "Calm adjunct", "Benzodiazepine for emergence reactions, agitation and seizures, given as small pushes on top of a ketamine drip.", "Breathing and blood pressure drop, especially with opioids. TCCC field guidance avoids pairing it with ketamine for routine pain control."],
+     ["fentanyl", "Pain adjunct", "Short-acting opioid used as small pushes in prolonged care for breakthrough or procedural pain.", "Slowed breathing. Fentanyl was removed from the 2026 TCCC field analgesia options, but appears in prolonged care."],
+     ["propofol", "Hospital-style TIVA", "Fast on and fast off sedative used for TIVA by surgical and critical care teams.", "Drops blood pressure, so it is a poor fit for a casualty in shock. No pain relief on its own."],
+     ["dexmedetomidine", "Light sedation", "Calms without stopping breathing, used for lighter sedation where available.", "Slow heart rate and low blood pressure."],
+     ["naloxone", "Opioid reversal", "Reverses opioid-driven slow breathing while the rest of the plan continues.", "Wears off sooner than some opioids, so breathing is rechecked."]]],
+  ["head", "Head injury & 23.4% saline", "Protect the brain: oxygen, blood pressure, and pulling fluid out of a swelling brain.", "#0ea5e9", "brain",
+    ["Herniation signs that TCCC lists for hypertonic saline: unequal or fixed and dilated pupils, or posturing.",
+     "Hypertonic saline is for those signs, not given ahead of time to prevent herniation. A saline flush follows it, and the site is watched for leaking.",
+     "23.4% sodium chloride carries a similar osmotic load to 3% or 5% saline in a much smaller, lighter volume, which is why special operations medics carry it.",
+     "Low oxygen and low blood pressure both worsen brain injury. TCCC targets an oxygen saturation of at least 92% in head injury.",
+     "Plasma is listed for moderate or severe head injury without bleeding. Hyperventilation is only a short bridge.",
+     "Seizures are treated right away, and prolonged care guidance adds levetiracetam for seizure prevention when available."],
+    [["sodium-chloride-23-4-percent", "Small bag, big pull", "Very concentrated salt solution that draws water out of swollen brain tissue to lower pressure inside the skull.", "Very high sodium, vein irritation and tissue injury if it leaks. A flush follows it."],
+     ["hypertonic-saline-3-percent", "Standard hypertonic", "The more common hypertonic saline, with the same purpose in a larger volume.", "Sodium levels climb with repeated doses."],
+     ["tranexamic-acid", "Also for the brain", "TCCC lists TXA for signs of significant head injury from blast or blunt trauma, inside the 3-hour window.", "Same timing limit as in bleeding."],
+     ["levetiracetam", "Seizure shield", "Anti-seizure medicine used in prolonged care to help prevent seizures after head injury.", "Drowsiness and mood changes."],
+     ["midazolam", "Seizure stopper", "Benzodiazepine for an active seizure.", "Slowed breathing can make a brain injury worse."],
+     ["mannitol", "Hospital option", "Another osmotic drug for raised pressure in the skull, used more in hospitals than in the field.", "Works partly by making the kidneys pass water, which can drop blood pressure in a bleeding casualty."]]],
+  ["pain", "Pain & nausea", "Pain control that keeps the airway, breathing and thinking intact.", "#f59e0b", "bolt",
+    ["TCCC splits pain care by one question: can the casualty stay in the fight?",
+     "Mission capable: the Combat Wound Medication Pack, with acetaminophen, meloxicam and suzetrigine, all by mouth.",
+     "Not mission capable: the pill pack plus ketamine (IM, intranasal or IV/IO) or intranasal esketamine.",
+     "Before ketamine, TCCC describes disarming the casualty and documenting an AVPU mental status. The endpoint is tolerable pain or nystagmus, not zero pain.",
+     "The 2026 guidelines removed fentanyl and oral transmucosal fentanyl from field analgesia and added suzetrigine and esketamine.",
+     "Ondansetron is the listed medicine for nausea and vomiting."],
+    [["acetaminophen", "Pill pack", "Pain and fever reliever that does not affect bleeding.", "Liver injury with too much. Not a treatment for heat stroke."],
+     ["meloxicam", "Pill pack", "Anti-inflammatory chosen because it affects platelets less than many others in its class.", "Stomach and kidney effects, more so with dehydration."],
+     ["suzetrigine", "Non-opioid newcomer", "Blocks a pain-specific sodium channel (NaV1.8) on pain nerves, so it relieves pain without sedation or opioid effects.", "New to TCCC in 2026. Interacts with some drugs that change liver enzymes."],
+     ["ketamine", "Big-gun analgesia", "Strong pain relief that tends to protect breathing and blood pressure, which is why it is the choice in shock.", "Disorientation and emergence reactions. Can cloud a neurologic exam in head injury."],
+     ["esketamine", "Nasal ketamine", "The S-form of ketamine, given in the nose, added as a field analgesia option in 2026.", "Same dissociation and blood pressure effects as ketamine."],
+     ["ondansetron", "Nausea", "Blocks serotonin signals that trigger vomiting. Comes as a dissolving tablet, IV, IO or IM.", "Heart rhythm effects (QT prolongation)."]]],
+  ["abx", "Antibiotics & wounds", "Every open combat wound gets antibiotics as early as possible.", "#22c55e", "shield",
+    ["TCCC lists antibiotics for all open combat wounds and invasive procedures.",
+     "By mouth if the casualty can swallow: cefadroxil first, cephalexin as the alternative.",
+     "If not (shock or unconsciousness): ceftriaxone IV, IO or IM.",
+     "Penetrating eye injury: a rapid visual acuity check, a rigid shield (not a pressure patch), and ceftriaxone or cefadroxil as soon as possible.",
+     "Burns alone are not a reason for field antibiotics. Burns over 20% get IV or IO fluids, and burned casualties lose heat fast.",
+     "Older TCCC versions used moxifloxacin and ertapenem. The 2026 update replaced them with these cephalosporins."],
+    [["cefadroxil", "First by mouth", "Oral first-generation cephalosporin that covers common skin and wound bacteria.", "Allergy, especially with a serious penicillin allergy history."],
+     ["cephalexin", "Backup by mouth", "Close relative of cefadroxil, the listed alternative.", "Taken more often during the day than cefadroxil."],
+     ["ceftriaxone", "Can't swallow", "Long-acting cephalosporin given IV, IO or IM, used for shock, unconsciousness and eye injuries.", "Allergy. Not mixed with calcium in the same line."],
+     ["moxifloxacin", "Older guideline", "The previous TCCC oral choice, still found in older kits.", "Tendon injury and heart rhythm effects."],
+     ["ertapenem", "Older guideline", "The previous TCCC IV or IM choice.", "Allergy and seizures at high levels."]]],
+  ["airway", "Airway & breathing", "Open it, protect it, and get oxygen in when it counts.", "#14b8a6", "lungs",
+    ["Field airways go from positioning and nasal airways to a surgical cricothyroidotomy. During evacuation, intubation may be considered by trained providers.",
+     "Chest seals treat open chest wounds, and needle decompression treats a suspected tension pneumothorax.",
+     "Most combat casualties do not need oxygen, but it helps low saturation, unconsciousness, head injury, shock, altitude and smoke inhalation.",
+     "Where a scope includes drug-assisted airway management, the drugs below are the common ones. Ketamine is favored when blood pressure is low."],
+    [["ketamine", "Induction", "Puts the patient under while tending to hold up blood pressure.", "Secretions and emergence reactions."],
+     ["etomidate", "Induction", "Short-acting induction drug with little effect on blood pressure.", "Briefly suppresses the body's stress hormone (cortisol) response."],
+     ["rocuronium", "Paralytic", "Non-depolarizing paralytic that relaxes the muscles for intubation and lasts a while.", "The patient cannot breathe on their own until it wears off, so ventilation depends on the provider."],
+     ["succinylcholine", "Fast paralytic", "Quick on and quick off paralytic.", "Raises potassium, a danger in crush injuries, burns after the first day and some nerve injuries."]]]
+];
+/* drill: ordered priority questions for this route (same O format as registry items) */
+var FM_Q = [];
+(function () {
+  var L = [
+    "O|A casualty in Tactical Field Care has a leg amputation, snoring respirations and a weak radial pulse. Put the MARCH priorities in order, from most important (first) to least important (last).|Control the massive bleeding;;Open and manage the airway;;Check respiration and treat chest wounds;;Gain IV or IO access and start blood;;Prevent hypothermia and protect the head|MARCH puts massive bleeding first because it kills fastest, then the airway, breathing, circulation, and finally hypothermia and head injury. In the field, warming starts during resuscitation because cold blood does not clot well.",
+    "O|Put these blood products in order of TCCC preference for hemorrhagic shock, from first choice to last.|Cold-stored low-titer O whole blood;;Pre-screened low-titer O fresh whole blood;;Plasma, red cells and platelets 1:1:1;;Plasma and red cells 1:1;;Plasma or red cells alone|TCCC ranks whole blood first because it replaces everything that was lost, including clotting factors and platelets. Component therapy follows, and single components are the last choice.",
+    "O|A casualty in hemorrhagic shock is receiving cold-stored whole blood. Put these steps in order, from first to last.|Transfuse the first unit;;Give calcium after the first blood product;;Reassess radial pulse, mental status and blood pressure;;Give another unit if the endpoints are not met|TCCC lists calcium after the first transfused product because citrate in stored blood binds calcium. Each unit is followed by reassessment against the endpoints before more is given.",
+    "O|An unconscious casualty with a head injury has a fixed, dilated right pupil, extensor posturing and an SpO2 of 88 percent. Put these actions in order of priority, from most important (first) to least important (last).|Secure the airway and give oxygen;;Treat low blood pressure;;Give hypertonic saline IV or IO with a flush;;Reassess pupils and posturing|Low oxygen and low blood pressure both injure the brain further, so they come first. Hypertonic saline treats the herniation signs, and the pupils and posturing are rechecked to judge the response.",
+    "O|A casualty who cannot stay in the fight is about to receive ketamine for severe pain. Put these steps in order, from first to last.|Disarm the casualty;;Document an AVPU mental status;;Give ketamine;;Monitor airway, breathing and level of dissociation|TCCC describes disarming the casualty and recording a baseline mental status before ketamine, so later changes can be judged. Airway and breathing are watched afterward.",
+    "O|A casualty with a 30% body surface area burn also has a bleeding thigh wound and is in shock. Put these priorities in order, from most important (first) to least important (last).|Control the bleeding;;Treat the hemorrhagic shock;;Cover the burns with dry dressings and prevent hypothermia;;Start burn fluid resuscitation|TCCC states that hemorrhagic shock takes priority over burn shock. Burned casualties lose heat quickly, and burn fluids start once access is in and the bleeding is handled.",
+    "O|A casualty needs prolonged sedation during a long hold. Put these steps for a ketamine-based drip in order, from first to last.|Set up airway equipment, pulse oximetry and end-tidal CO2;;Start the ketamine drip in its own bag;;Add small pushes of an adjunct only if needed;;Trend the RASS score and vital signs|Prolonged casualty care guidance builds sedation on a ketamine drip with adjuncts only as needed, one drug per bag, and close monitoring of sedation depth, breathing and blood pressure."
+  ];
+  L.forEach(function (l) { var f = l.split("|"); var st = f[2].split(";;"); FM_Q.push({ reg: 1, t: "order", prio: 1, lv: "flight", cat: "trauma", d: "", fm: 1, q: f[1], x: f[3], w: [], opts: st.slice(), ok: st.slice(), a: st.map(function (p, k) { return (k + 1) + ". " + p; }).join("  ") }); });
+})();
+var FM_ART = {
+  drop: '<path d="M12 3c3 4 6 7.5 6 11a6 6 0 0 1-12 0c0-3.5 3-7 6-11z"/>',
+  drip: '<path d="M8 3h8v6a4 4 0 0 1-8 0z"/><path d="M12 13v3M12 19v2"/>',
+  brain: '<path d="M9 4a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 3 5 3 3 0 0 0 5 2V4a3 3 0 0 0-3 0z"/><path d="M15 4a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-3 5 3 3 0 0 1-5 2"/>',
+  bolt: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
+  shield: '<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="M9 12l2 2 4-4"/>',
+  lungs: '<path d="M12 4v8M12 12c-2 0-3-2-5-2-2 0-3 3-3 6 0 3 1 4 3 4s5-1 5-4zM12 12c2 0 3-2 5-2 2 0 3 3 3 6 0 3-1 4-3 4s-5-1-5-4z"/>'
+};
+var FIELD_BUG = { id: "fm", name: "Field Beetle", body: "beetle", c: ["#a3b18a", "#4b5320", "#ffffff"], acc: ["helmet"] };
+function fmSec(k) { return FM_SECS.filter(function (s) { return s[0] === k; })[0]; }
+function fmIds() { var o = []; FM_SECS.forEach(function (s) { s[6].forEach(function (d) { if (DB.drugs[d[0]] && o.indexOf(d[0]) < 0) o.push(d[0]); }); }); return o; }
+function fmSeen() { return store("fmSeen") || []; }
+function fieldView() {
+  var c = topbar(), t = S.fmTab && fmSec(S.fmTab);
+  c += '<div class="backrow"><button class="backbtn" ' + (t ? 'data-fmtab=""' : 'data-go="home"') + '><span aria-hidden="true">&larr;</span> ' + (t ? "Field Medic" : "Main menu") + '</button></div>';
+  if (!t) {
+    var seen = fmSeen(), all = fmIds(), n = all.filter(function (id) { return seen.indexOf(id) >= 0; }).length;
+    c += '<header class="fmhead"><span class="fmbug">' + bugArt(FIELD_BUG, "", { mood: "happy" }) + '</span><div><span class="fmtier">TCCC Tier 4</span><h1>Field Medic</h1><p>Combat paramedic level: trauma drugs, TIVA drips, head injury and the MARCH-PAWS flow.</p></div></header>';
+    c += '<section class="fmmarch" aria-label="MARCH-PAWS"><div class="fmletters">' + FM_MARCH.map(function (m, i) { return '<button class="fmlet' + (i === 5 ? ' paws' : '') + '" data-fmstep="' + i + '" aria-pressed="' + (S.fmStep === i) + '" aria-label="' + esc(m[1]) + '">' + m[0] + '</button>'; }).join("") + '</div>' +
+      (S.fmStep != null && FM_MARCH[S.fmStep] ? '<div class="fmstep"><strong>' + esc(FM_MARCH[S.fmStep][1]) + '</strong><p>' + esc(FM_MARCH[S.fmStep][2]) + '</p><button class="linkish" data-fmtab="' + FM_MARCH[S.fmStep][3] + '">Open ' + esc(fmSec(FM_MARCH[S.fmStep][3])[1]) + ' &rsaquo;</button></div>' : '<p class="muted small fmhint">Tap a letter to walk the MARCH-PAWS flow.</p>') + '</section>';
+    c += '<div class="fmprog"><span><strong>' + n + '</strong> of ' + all.length + ' field drugs explored</span><span class="cmptrack"><span class="cmpfill fmfill" style="width:' + (all.length ? Math.round(100 * n / all.length) : 0) + '%"></span></span></div>';
+    c += '<nav class="fmtiles" aria-label="Field Medic sections">' + FM_SECS.map(function (s) { return '<button class="fmtile" style="--fm:' + s[3] + '" data-fmtab="' + s[0] + '"><span class="fmart"><svg viewBox="0 0 24 24" aria-hidden="true">' + FM_ART[s[4]] + '</svg></span><strong>' + esc(s[1]) + '</strong><span>' + esc(s[2]) + '</span></button>'; }).join("") +
+      '<button class="fmtile drill" style="--fm:#64748b" data-act="fmdrill"><span class="fmart"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l5 5L20 6"/></svg></span><strong>Field drill' + (typeof proLocked === "function" && PAYWALL && !isPro() ? ' ' + proBadge() : '') + '</strong><span>Put-in-order calls and questions on these drugs.</span></button></nav>';
+    c += '<p class="muted small fmnote">' + esc(FM_NOTE) + '</p>';
+    return c;
+  }
+  var seen2 = fmSeen();
+  c += '<section class="fmsec" style="--fm:' + t[3] + '"><header class="fmsechead"><span class="fmart"><svg viewBox="0 0 24 24" aria-hidden="true">' + FM_ART[t[4]] + '</svg></span><div><h1>' + esc(t[1]) + '</h1><p>' + esc(t[2]) + '</p></div></header>';
+  c += '<details class="fmkey" open><summary>Key ideas</summary><ul>' + t[5].map(function (k) { return '<li>' + esc(k) + '</li>'; }).join("") + '</ul></details>';
+  c += '<p class="muted small">Tap a card to flip it.</p><div class="fmgrid">' + t[6].filter(function (d) { return DB.drugs[d[0]]; }).map(function (d) {
+    var nm = nameOf(d[0]), lk = typeof drugLocked === "function" && drugLocked(d[0]);
+    return '<div class="fmcard' + (seen2.indexOf(d[0]) >= 0 ? ' seen' : '') + '" data-fmid="' + d[0] + '"><div class="fmin"><button class="fmfront" type="button" data-fmflip="1"><span class="fmtag">' + esc(d[1]) + '</span><strong>' + esc(nm) + '</strong>' + (lk ? '<span class="lockpill">Plus</span>' : '') + '<span class="fmtap">Tap to flip</span></button>' +
+      '<div class="fmback"><span class="cmpk">Why it is in the bag</span><p>' + esc(d[2]) + '</p><span class="cmpk">Watch for</span><p>' + esc(d[3]) + '</p><div class="cmpacts"><button class="btn small" type="button" data-drug="' + d[0] + '">Open page</button><button class="btn small ghost" type="button" data-fmflip="1">Flip back</button></div></div></div></div>';
+  }).join("") + '</div></section>';
+  c += '<p class="muted small fmnote">' + esc(FM_NOTE) + '</p>';
+  return c;
+}
+/* clicks: handled before the app's own handler (capture), flips without a re-render */
+document.addEventListener("click", function (e) {
+  if (typeof S === "undefined" || S.view !== "field") return;
+  var t = e.target.closest && e.target.closest("[data-fmflip],[data-fmtab],[data-fmstep]"); if (!t) return;
+  if (t.hasAttribute("data-fmflip")) {
+    var card = t.closest(".fmcard"); if (!card) return; e.preventDefault(); e.stopPropagation();
+    card.classList.toggle("flip"); var id = card.getAttribute("data-fmid"), s = fmSeen();
+    if (id && s.indexOf(id) < 0) { s.push(id); store("fmSeen", s); card.classList.add("seen"); }
+    return;
+  }
+  e.preventDefault(); e.stopPropagation();
+  if (t.hasAttribute("data-fmstep")) { var i = +t.getAttribute("data-fmstep"); S.fmStep = S.fmStep === i ? null : i; render(); return; }
+  S.fmTab = t.getAttribute("data-fmtab") || null; S.fmStep = null; render(); window.scrollTo(0, 0);
+}, true);
+/* the drill runs as a study session at the Flight level (priority calls + drug questions on these drugs) */
+function fmDrill() {
+  if (typeof PAYWALL !== "undefined" && PAYWALL && !isPro()) return openPaywall("The Field Medic drill", "pro");
+  go("level", { level: "flight" }); startSession("field");
 }
 
 
