@@ -485,7 +485,7 @@ var HUB_GROUPS = [
   ["Study and practice", ["prep", "nbug", "cards", "scenarios", "tools", "games"]],
   ["Yours", ["mylist", "progress", "shop"]]
 ];
-var HUB_SHORT = { pcc_icu: "FDA drip doses and vent settings", fm_trauma: "Bleeding, airway, head injury", fm_care: "Pain, nausea, wounds, burns", fm_adv: "Procedures, ACLS, i-STAT, dive", pcc_vent: "Vents, tubes and oxygen", pcc_nurse: "Turning, lines, eyes, skin", pcc_tele: "Consults and getting out", board: "Every field drug by class", acls: "Rhythm by rhythm", dive: "Dive tables, DCS and AGE", skills: "What this tier is trained to do", march: "Sequence, tier skills, drill", fm_bleed: "Hemorrhage control, TXA, blood", fm_tiva: "Ketamine-based sedation", fm_head: "Herniation, 3% and 23.4% saline", fm_pain: "Wound pack, ketamine, esketamine", fm_abx: "Wounds, eye injury, burns", fm_airway: "Positioning to surgical airway", pcc: "Long-hold drugs and drug handling", istat: "Point-of-care labs", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "Saved drugs and their interactions", tools: "Megacode, interactions, safety drills", scenarios: "Clinical cases", cards: "Flip, sort and master", games: "Match, crossword, scramble and more", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time", prep: "Timed tests with scores" };
+var HUB_SHORT = { pcc_icu: "FDA drip doses and vent settings", fm_trauma: "Bleeding, airway, head injury", fm_care: "Pain, nausea, wounds, burns", fm_adv: "ACLS, i-STAT and dive", pcc_vent: "Vents, tubes and oxygen", pcc_nurse: "Turning, lines, eyes, skin", pcc_tele: "Consults and getting out", board: "Every field drug by class", acls: "Rhythm by rhythm", dive: "Dive tables, DCS and AGE", skills: "What this tier is trained to do", march: "Sequence, tier skills, drill", fm_bleed: "Hemorrhage control, TXA, blood", fm_tiva: "Ketamine-based sedation", fm_head: "Herniation, 3% and 23.4% saline", fm_pain: "Wound pack, ketamine, esketamine", fm_abx: "Wounds, eye injury, burns", fm_airway: "Positioning to surgical airway", pcc: "Long-hold drugs and drug handling", istat: "Point-of-care labs", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "Saved drugs and their interactions", tools: "Megacode, interactions, safety drills", scenarios: "Clinical cases", cards: "Flip, sort and master", games: "Match, crossword, scramble and more", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time", prep: "Timed tests with scores" };
 function hubView() {
   var L = tabList(), used = {}, c = '<nav class="hub2" aria-label="Sections">';
   function tile(t) {
@@ -9474,14 +9474,14 @@ var FM_TABS = {
   fm_care: ["Pain & Antibiotics", "The wound medication pack, nausea, wounds, eyes and burns.", "cls"],
   pcc: ["Prolonged Care", "Long-hold drugs by problem and drug handling.", "cpp"],
   pcc_icu: ["Drips & Vents", "Drip doses from the FDA labels and ventilator settings.", "cpp"],
-  fm_adv: ["Advanced Care", "Procedures, ACLS rhythms, i-STAT labs and dive medicine.", "cpp"]
+  fm_adv: ["Advanced Care", "ACLS rhythms, i-STAT labs and dive medicine.", "cpp"]
 };
 /* combined tabs (Oct 28 2026, owner: fewer, cleaner tabs): group -> sub-tabs [key, label, minTier, maxTier] */
 var FM_GROUPS = {
   pcc: [["pcc", "By problem"], ["pcc_rx", "Handling"]],
   pcc_icu: [["fm_tiva", "Drips"], ["pcc_vent", "Vent settings"]],
   fm_care: [["fm_pain", "Pain & nausea"], ["fm_abx", "Antibiotics"]],
-  fm_adv: [["proc", "Procedures"], ["acls", "ACLS"], ["istat", "i-STAT"], ["dive", "Dive"]]
+  fm_adv: [["acls", "ACLS"], ["istat", "i-STAT"], ["dive", "Dive"]]
 };
 function fmWhere(k) { for (var g in FM_GROUPS) { var x = FM_GROUPS[g].filter(function (y) { return y[0] === k; })[0]; if (x) return FM_TABS[g][0] + ": " + x[1]; } return ""; }
 function fmSubsOf(g) { return (FM_GROUPS[g] || []).filter(function (x) { return fmTierOk(x[2], x[3]); }); }
@@ -9489,7 +9489,7 @@ function fmSubsOf(g) { return (FM_GROUPS[g] || []).filter(function (x) { return 
 function fmAlias() {
   if (S.level === "pcc") S.level = "cpp";
   if (!S.tab || FM_TABS[S.tab]) return;
-  var old = { march: "fm_trauma", drill: "fm_trauma", skills: "fm_trauma", fm_bleed: "fm_trauma", fm_airway: "fm_trauma", fm_head: "fm_trauma", pcc_tele: "pcc", pcc_nurse: "pcc" }; if (old[S.tab]) S.tab = old[S.tab];
+  var old = { proc: "fm_adv", march: "fm_trauma", drill: "fm_trauma", skills: "fm_trauma", fm_bleed: "fm_trauma", fm_airway: "fm_trauma", fm_head: "fm_trauma", pcc_tele: "pcc", pcc_nurse: "pcc" }; if (old[S.tab]) S.tab = old[S.tab];
   for (var g in FM_GROUPS) { if (FM_GROUPS[g].some(function (x) { return x[0] === S.tab; })) { S.fmSub = S.fmSub || {}; S.fmSub["g_" + g] = S.tab; S.tab = g; return; } }
 }
 if (typeof ICO !== "undefined") {
@@ -10172,6 +10172,7 @@ var FM_DEEP = {
 };
 /* render: "Going deeper" lessons for this tier (Tier 4 and PCC only) */
 function fmDeep(k) {
+  return ""; /* owner Oct 28 2026: Going deeper lessons removed from Field Medic (they already know this) */
   var list = (FM_DEEP[k] || []).filter(function (x) { return fmTierOk(x[0]); }); if (!list.length) return "";
   var lv = (levelObj(S.level) || {});
   return '<section class="fmdeep"><h3 class="fmh">Going deeper <span class="fmdtag">' + "Tier 4" + '</span></h3><div class="fmles">' + list.map(function (x) {
