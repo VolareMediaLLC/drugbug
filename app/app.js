@@ -29,8 +29,8 @@ var HIDE_MEDIC = { 6: [6, 7], 8: [6], 10: [2], 12: [1] };
 var TAGS = [["IM","Imaging"],["PH","Prehospital"],["ED","Emergency Department"],["ICU","ICU"],["CCT","Critical Care Transport"],["FL","Flight"],["HM","Home Medication"],["CA","Cardiac"],["RE","Respiratory"],["NE","Neurologic"],["TR","Trauma"],["OB","OB/GYN"],["PE","Pediatric"],["TX","Toxicology"],["BH","Behavioral"],["AN","Analgesia"],["SE","Sedation"],["RSI","RSI"],["VP","Vasopressor"],["AD","Antidote"]];
 var TAGNAME = {}; TAGS.forEach(function (t) { TAGNAME[t[0]] = t[1]; });
 var FILTER_TAGS = ["IM","CA","RE","NE","TR","OB","PE","TX","BH","AN","SE","RSI","VP","AD"];
-var LVCLASS = { rt: "lvl-rt", ct: "lvl-ct", mri: "lvl-mri", nm: "lvl-nm", ir: "lvl-ir", emt: "lvl-emt", aemt: "lvl-aemt", paramedic: "lvl-medic", flight: "lvl-flight", field: "lvl-field", gen: "lvl-gen", cna: "lvl-cna", lvn: "lvl-lvn", rn: "lvl-rn", ms1: "lvl-ms1", ms3: "lvl-ms3", intern: "lvl-intern" };
-var TIER = { rt: 3, ct: 3, mri: 3, nm: 3, ir: 3, emt: 0, aemt: 1, paramedic: 2, flight: 3, field: 3, gen: 3, cna: 0, lvn: 1, rn: 3, ms1: 3, ms3: 3, intern: 3 };
+var LVCLASS = { rt: "lvl-rt", ct: "lvl-ct", mri: "lvl-mri", nm: "lvl-nm", ir: "lvl-ir", emt: "lvl-emt", aemt: "lvl-aemt", paramedic: "lvl-medic", flight: "lvl-flight", asm: "lvl-field", cls: "lvl-field", cmc: "lvl-field", cpp: "lvl-field", pcc: "lvl-field", gen: "lvl-gen", cna: "lvl-cna", lvn: "lvl-lvn", rn: "lvl-rn", ms1: "lvl-ms1", ms3: "lvl-ms3", intern: "lvl-intern" };
+var TIER = { rt: 3, ct: 3, mri: 3, nm: 3, ir: 3, emt: 0, aemt: 1, paramedic: 2, flight: 3, asm: 0, cls: 1, cmc: 2, cpp: 3, pcc: 3, gen: 3, cna: 0, lvn: 1, rn: 3, ms1: 3, ms3: 3, intern: 3 };
 
 /* ---------- helpers ---------- */
 function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
@@ -115,16 +115,17 @@ function nrRight(x, ans) { var q = x.q; if (ans == null) return false; if (!q.t)
 function nrAnsText(x, ans) { if (ans == null || (Array.isArray(ans) && !ans.length)) return "No answer"; if (!Array.isArray(ans)) return ans; return x.q.t === "order" ? ans.map(function (v, k) { return (k + 1) + ". " + v; }).join("  ") : ans.join("; "); }
 function nameOf(id) { var d = DB.drugs[id]; if (d) return d.name; return id.split("-").map(function (w) { return w.charAt(0).toUpperCase() + w.slice(1); }).join(" "); }
 function isN(k) { return k === "cna" || k === "lvn" || k === "rn"; }
-function isEMSLv(k) { return k === "emt" || k === "aemt" || k === "paramedic" || k === "flight" || k === "field"; }
+function isEMSLv(k) { return k === "emt" || k === "aemt" || k === "paramedic" || k === "flight"; }
+function isF(k) { return k === "asm" || k === "cls" || k === "cmc" || k === "cpp" || k === "pcc"; } /* Field Medic route: TCCC tiers + Prolonged Casualty Care */
 function isM(k) { return k === "ms1" || k === "ms3" || k === "intern"; }
 function isI(k) { return k === "rt" || k === "ct" || k === "mri" || k === "nm" || k === "ir"; }
-function routeOfLevel(k) { return isN(k) ? "rn" : isM(k) ? "md" : isI(k) ? "im" : "ph"; }
-var ROUTES = { ph: { view: "levels", hash: "prehospital", name: "Prehospital" }, rn: { view: "nlevels", hash: "nursing", name: "Nursing" }, md: { view: "mlevels", hash: "medschool", name: "Med School" }, im: { view: "ilevels", hash: "imaging", name: "Imaging" } };
-function levelsOf(k) { return isN(k) ? DB.NLEVELS : isM(k) ? DB.MLEVELS : isI(k) ? DB.ILEVELS : DB.LEVELS; }
-function levelObj(k) { return DB.LEVELS.concat(DB.NLEVELS, DB.MLEVELS, DB.ILEVELS || []).filter(function (l) { return l.key === k; })[0]; }
+function routeOfLevel(k) { return isN(k) ? "rn" : isM(k) ? "md" : isI(k) ? "im" : isF(k) ? "fm" : "ph"; }
+var ROUTES = { ph: { view: "levels", hash: "prehospital", name: "Prehospital" }, fm: { view: "flevels", hash: "fieldmedic", name: "Field Medic" }, rn: { view: "nlevels", hash: "nursing", name: "Nursing" }, md: { view: "mlevels", hash: "medschool", name: "Med School" }, im: { view: "ilevels", hash: "imaging", name: "Imaging" } };
+function levelsOf(k) { return isN(k) ? DB.NLEVELS : isM(k) ? DB.MLEVELS : isI(k) ? DB.ILEVELS : isF(k) ? DB.FLEVELS : DB.LEVELS; }
+function levelObj(k) { return DB.LEVELS.concat(DB.NLEVELS, DB.MLEVELS, DB.ILEVELS || [], DB.FLEVELS || []).filter(function (l) { return l.key === k; })[0]; }
 function levelIdx(k) { return levelsOf(k).map(function (l) { return l.key; }).indexOf(k); }
 function scopeFor(k) {
-  var b = isN(k) ? DB.nscopeFor(k) : isM(k) ? DB.mscopeFor(k) : isI(k) ? DB.iscopeFor(k) : DB.scopeFor(k), u = isN(k) ? myUnit(k) : null;
+  var b = isN(k) ? DB.nscopeFor(k) : isM(k) ? DB.mscopeFor(k) : isI(k) ? DB.iscopeFor(k) : isF(k) ? DB.fscopeFor(k) : DB.scopeFor(k), u = isN(k) ? myUnit(k) : null;
   if (u) { var ck = k + ":" + u; if (!UNITC[ck] || UNITC[ck].base !== b) { var have = {}; b.ids.forEach(function (id) { have[id] = 1; }); UNITC[ck] = { base: b, v: { ids: b.ids.concat(DB.nunitIds(u, k).filter(function (id) { return !have[id]; })), notes: b.notes } }; } b = UNITC[ck].v; }
   return applyProtocolScope(k, b);
 }
@@ -314,7 +315,7 @@ function go(view, opts) {
   if (UTIL_VIEWS[view] && !UTIL_VIEWS[S.view] && S.view !== view && S.view !== "terrarium") S.utilBack = { view: S.view, level: S.level, tab: S.tab };
   clearTimeout(S.qT); S.view = view; Object.assign(S, { pointGo: null, showFilt: false, onlyMarks: false, tool: null, shopF: null, tab: "hub", q: "", tags: {}, group: "all", scen: null, fc: null, nr: null, sess: null, prepNr: null, unit: null, fam: null, famq: "", cn: null, menu: false, mupop: false }, opts || {});
   Admin.on = view === "admin"; if (view === "level") store("lastLevel", S.level);
-  var h = view === "home" ? "" : view === "admin" ? "admin" : view === "classes" ? "classes" : view === "settings" ? "settings" : view === "terrarium" ? "terrarium" : view === "levels" ? "prehospital" : view === "nlevels" ? "nursing" : view === "mlevels" ? "medschool" : view === "ilevels" ? "imaging" : view === "everyday" ? "everyday" : view === "field" ? "field" : view === "gen" ? "general" : view === "easy" ? "easy" : S.level;
+  var h = view === "home" ? "" : view === "admin" ? "admin" : view === "classes" ? "classes" : view === "settings" ? "settings" : view === "terrarium" ? "terrarium" : view === "levels" ? "prehospital" : view === "flevels" ? "fieldmedic" : view === "nlevels" ? "nursing" : view === "mlevels" ? "medschool" : view === "ilevels" ? "imaging" : view === "everyday" ? "everyday" : view === "field" ? "field" : view === "gen" ? "general" : view === "easy" ? "easy" : S.level;
   try { history.replaceState(null, "", h ? "#" + h : location.pathname); } catch (e) {}
   render(); window.scrollTo(0, 0);
 }
@@ -337,7 +338,7 @@ function topbar() {
 }
 function backRow() {
   var v = S.view, lab = "", act = "";
-  if (v === "levels" || v === "nlevels" || v === "mlevels" || v === "ilevels" || (v === "everyday" && !S.evTab)) { lab = "Main menu"; act = 'data-go="home"'; }
+  if (v === "levels" || v === "flevels" || v === "nlevels" || v === "mlevels" || v === "ilevels" || (v === "everyday" && !S.evTab)) { lab = "Main menu"; act = 'data-go="home"'; }
   else if (v === "gen" && S.tab === "hub") { lab = "Main menu"; act = 'data-go="home"'; }
   else if (v === "level" && S.tab === "hub") { var r = ROUTES[routeOfLevel(S.level)]; lab = r ? r.name : "Main menu"; act = 'data-go="' + (r ? r.view : "home") + '"'; }
   else if (UTIL_VIEWS[v]) { var ub = S.utilBack; lab = ub && ub.view && ub.view !== "home" ? "Back" : "Main menu"; act = 'data-act="utilback"'; }
@@ -360,7 +361,7 @@ function viewHome() {
    myListRoute() +
    '</section><h3 class="homegh">Study by role</h3><section class="routes"><div class="minis">' +
    mini("ph", "levels", "Prehospital", "EMT to Flight Paramedic", "grub-medic") +
-   mini("fm", "level:field", "Field Medic", "TCCC Tier 4 and prolonged care", FIELD_BUG) +
+   mini("fm", "flevels", "Field Medic", "TCCC Tiers 1 to 4 and prolonged care", FIELD_BUG) +
    mini("rn", "nlevels", "Nursing", "CNA, LVN/LPN and RN", "grub-nurse") +
    mini("md", "mlevels", "Medical School", "MS1 to Intern", "grub-doc") +
    mini("im", "ilevels", "Imaging", "X-ray, CT, MRI, NM and IR", "grub-imaging") +
@@ -377,7 +378,7 @@ function myListRoute() {
 }
 /* the first thing after the header: get studying */
 function homeStart() {
-  var ll = store("lastLevel"), lo = ll && levelObj(ll), RV = { ph: "levels", rn: "nlevels", md: "mlevels", im: "ilevels", ev: "everyday" };
+  var ll = store("lastLevel"), lo = ll && levelObj(ll), RV = { ph: "levels", fm: "flevels", rn: "nlevels", md: "mlevels", im: "ilevels", ev: "everyday" };
   var main = lo ? '<button class="btn big" data-level="' + ll + '">Continue: ' + esc(lo.name) + '</button>' : '<button class="btn big" data-go="' + (RV[Prog.d.role] || "gen") + '">Start studying</button>';
   var daily = dailyDone() ? '<span class="sdone">Today\'s 5-min DrugBug: done</span>' : '<button class="btn big ghost" data-sess="daily">Today\'s 5-min DrugBug</button>';
   var gn = typeof growNudge === "function" ? growNudge(200) : null;
@@ -401,15 +402,15 @@ function homeContinue() {
   return '<div class="dailymini home"><span class="dmt"><strong>Continue: ' + esc(lo.name) + '</strong><span class="muted"> · ' + liveStreak() + '-day streak' + (dailyDone() ? ' · 5-min DrugBug done' : '') + '</span></span><span class="dma"><button class="btn small" data-level="' + ll + '">Open</button>' + (dailyDone() ? '' : '<button class="btn small ghost" data-sess="daily">5-min DrugBug</button>') + '</span></div>';
 }
 function viewLevels() {
-  var rt = routeCtx(), nurse = rt === "rn", med = rt === "md", img = rt === "im", L = nurse ? DB.NLEVELS : med ? DB.MLEVELS : img ? DB.ILEVELS : DB.LEVELS;
-  var c = topbar() + '<header class="pagehead"><h1>' + (nurse ? "Nursing: choose your license" : med ? "Medical school: choose your year" : img ? "Imaging: choose your modality" : "Choose your level") + '</h1><p>' + (img ? "Each modality covers the reaction cart and sedation drugs every tech needs, plus the contrast agents and radiopharmaceuticals for that modality." : med ? "Every year studies the full drug library; the exam prep, scenarios and focus change as you advance. Your bug evolves with you." : "Each level includes every drug from the levels before it. Your bug evolves as your scope grows.") + '</p></header><section class="levels' + (L.length === 3 || L.length === 5 ? " three" : "") + '">';
+  var rt = routeCtx(), nurse = rt === "rn", med = rt === "md", img = rt === "im", fm = rt === "fm", L = nurse ? DB.NLEVELS : med ? DB.MLEVELS : img ? DB.ILEVELS : fm ? DB.FLEVELS : DB.LEVELS;
+  var c = topbar() + '<header class="pagehead"><h1>' + (fm ? "Field Medic: choose your tier" : nurse ? "Nursing: choose your license" : med ? "Medical school: choose your year" : img ? "Imaging: choose your modality" : "Choose your level") + '</h1><p>' + (fm ? "Tactical Combat Casualty Care in four tiers, from every service member to the combat paramedic, plus prolonged casualty care. Each tier includes every skill and medication from the tiers before it." : img ? "Each modality covers the reaction cart and sedation drugs every tech needs, plus the contrast agents and radiopharmaceuticals for that modality." : med ? "Every year studies the full drug library; the exam prep, scenarios and focus change as you advance. Your bug evolves with you." : "Each level includes every drug from the levels before it. Your bug evolves as your scope grows.") + '</p></header><section class="levels' + (fm ? " flv" : "") + (L.length === 3 || L.length === 5 ? " three" : "") + '">';
   L.forEach(function (l, i) {
     c += '<button class="lvcard ' + LVCLASS[l.key] + '" data-level="' + l.key + '"><span class="stage">' + levelBug(l.key) + '</span><span class="pip">' + (img ? esc(l.full).toUpperCase() : esc(scopeTag(l.key, i, L.length)).toUpperCase()) + '</span><h2>' + esc(l.name) + '</h2><span class="bugname">' + esc(l.bug) + '</span><p>' + esc(l.blurb) + '</p></button>';
   });
-  return c + '</section><p class="disclaimer">' + (img ? "Who may inject contrast or give medications in imaging depends on your state, ARRT practice standards and facility policy. Always follow your radiologist and department protocols." : nurse ? "Nursing scope varies by state nurse practice act and facility policy. CNAs give medications only where state law and certification (such as medication aide) allow." : med ? "Independent study material for board-style learning. Always confirm doses and choices with current references and your supervising physician." : "Scope lists follow the National EMS Scope of Practice Model with common state additions. Your state or agency may differ.") + '</p>';
+  return c + '</section><p class="disclaimer">' + (fm ? (typeof FM_NOTE !== "undefined" ? esc(FM_NOTE) : "") + " Tiers follow the CoTCCC tiered TCCC curriculum; your service, unit and medical director set what you are authorized to do." : img ? "Who may inject contrast or give medications in imaging depends on your state, ARRT practice standards and facility policy. Always follow your radiologist and department protocols." : nurse ? "Nursing scope varies by state nurse practice act and facility policy. CNAs give medications only where state law and certification (such as medication aide) allow." : med ? "Independent study material for board-style learning. Always confirm doses and choices with current references and your supervising physician." : "Scope lists follow the National EMS Scope of Practice Model with common state additions. Your state or agency may differ.") + '</p>';
 }
 
-var SCOPE_TAG = { emt: "Basic life support", aemt: "Limited advanced life support", paramedic: "Advanced life support", flight: "Critical care transport", field: "TCCC Tier 4 · prolonged care",
+var SCOPE_TAG = { emt: "Basic life support", aemt: "Limited advanced life support", paramedic: "Advanced life support", flight: "Critical care transport", asm: "TCCC Tier 1", cls: "TCCC Tier 2", cmc: "TCCC Tier 3", cpp: "TCCC Tier 4", pcc: "Prolonged casualty care",
   cna: "Basic patient care", lvn: "Practical nursing", rn: "Professional nursing", ms1: "Preclinical sciences", ms3: "Clinical rotations", intern: "First-year residency" };
 function scopeTag(key, i, tot) { return SCOPE_TAG[key] || ("Level " + (i + 1) + " of " + tot); }
 function band() {
@@ -459,11 +460,11 @@ function tabList() {
   if (S.view === "level" && isM(S.level)) L.push(["alts", "Drug Alternatives", "Can't order a drug? See same-class options and other drugs for the same problem, and how they differ."]);
   if (S.view === "gen") L.splice(1, 0, ["conds", "Conditions & Medicine Cautions", "Pick a condition to see which medicines mention it in their contraindications and warnings. Education only."]);
   if (S.view === "gen") L.splice(1, 0, ["families", "Drug Families", "Similar drugs side by side: beta blockers, statins, SSRIs and more, and what makes each one different."]);
-  if (hasBlood()) L.push(["flightp", "Flight Prep", "Gas laws, stresses of flight and hard critical care questions."]);
+  if (hasBlood() && (!isF(S.level) || S.level === "pcc")) L.push(["flightp", "Flight Prep", "Gas laws, stresses of flight and hard critical care questions."]);
   if (hasBlood()) L.push(["blood", "Blood Products", "PRBCs, whole blood, plasma, MTP and transfusion reactions."]);
   if (hasHemo()) L.push(["hemo", "Hemodynamics", "A-lines, PA catheters, IABP, Impella, ECMO, LVAD and shock profiles."]);
   if (hasLabs()) L.push(["labs", "Lab Values", labRoute() === "rn" ? "What each lab means for the meds you give." : labRoute() === "fl" ? "Labs for RSI, the vent, resuscitation and drips." : "Advanced labs, patterns and calculations."]);
-  if (S.view === "level" && S.level === "field" && typeof FM_TABS !== "undefined") Object.keys(FM_TABS).forEach(function (k) { L.push([k, FM_TABS[k][0], FM_TABS[k][1]]); });
+  if (S.view === "level" && isF(S.level) && typeof FM_TABS !== "undefined") Object.keys(FM_TABS).forEach(function (k) { if (fmTierOk(FM_TABS[k][2])) L.push([k, FM_TABS[k][0], FM_TABS[k][1]]); });
   if (S.level === "lvn" || S.level === "rn") L.push(["nbug", "Nursing Bug", "Assess, hold, labs, teaching: one skill at a time."]);
   var img = S.view === "level" && isI(S.level);
   if (img) L.splice(1, 0, ["contrast", "Contrast Safety", "Reactions, screening, eGFR, GBCA groups, nuclear medicine and IR safety."]);
@@ -478,13 +479,13 @@ function tabList() {
 function tabName(k) { var t = tabList().filter(function (x) { return x[0] === k; })[0]; return t ? t[1] : k === "session" ? "Study session" : ""; }
 /* Hub tiles grouped into sections with short labels (UI cleanup, Oct 28 2026) */
 var HUB_GROUPS = [
-  ["Field care", ["march", "fm_bleed", "fm_tiva", "fm_head", "fm_pain", "fm_abx", "fm_airway", "pcc", "istat"]],
+  ["Field care", ["skills", "march", "fm_bleed", "fm_airway", "fm_pain", "fm_abx", "fm_head", "istat", "fm_tiva", "pcc"]],
   ["Look it up", ["registry", "families", "conds", "diseases", "illicit", "units", "body", "alts", "contrast", "labs", "blood", "hemo", "flightp"]],
   ["Food and vitamin compounds", ["vegc", "fruitc", "vitc"]],
   ["Study and practice", ["prep", "nbug", "cards", "scenarios", "tools", "games"]],
   ["Yours", ["mylist", "progress", "shop"]]
 ];
-var HUB_SHORT = { march: "Tap through the TCCC flow", fm_bleed: "TXA, calcium, whole blood", fm_tiva: "Ketamine-based drips", fm_head: "Herniation and 23.4% saline", fm_pain: "Pill pack, ketamine, esketamine", fm_abx: "Wounds, eyes and burns", fm_airway: "Open it, protect it", pcc: "When you become the hospital", istat: "Read the cartridge", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "Saved drugs and their interactions", tools: "Megacode, interactions, safety drills", scenarios: "Clinical cases", cards: "Flip, sort and master", games: "Match, crossword, scramble and more", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time", prep: "Timed tests with scores" };
+var HUB_SHORT = { skills: "What this tier is trained to do", march: "The TCCC sequence and drill", fm_bleed: "Hemorrhage control, TXA, blood", fm_tiva: "Ketamine-based sedation", fm_head: "Herniation, 3% and 23.4% saline", fm_pain: "Wound pack, ketamine, esketamine", fm_abx: "Wounds, eye injury, burns", fm_airway: "Positioning to surgical airway", pcc: "Holding casualties for days", istat: "Point-of-care labs", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "Saved drugs and their interactions", tools: "Megacode, interactions, safety drills", scenarios: "Clinical cases", cards: "Flip, sort and master", games: "Match, crossword, scramble and more", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time", prep: "Timed tests with scores" };
 function hubView() {
   var L = tabList(), used = {}, c = '<nav class="hub2" aria-label="Sections">';
   function tile(t) {
@@ -516,7 +517,7 @@ function prepName() {
   if (S.view === "level" && isI(S.level)) return "Imaging Exam Prep";
   if (S.view === "level" && isM(S.level)) return { ms1: "Step 1–Style Prep", ms3: "Step 2 CK–Style Prep", intern: "Step 3–Style Prep" }[S.level];
   if (S.view === "level" && S.level === "flight") return "Flight Certification Exam Prep";
-  if (S.view === "level" && S.level === "field") return "Field Medic Practice";
+  if (S.view === "level" && isF(S.level)) return "TCCC Practice";
   return "Registry Exam Prep";
 }
 function groupOptions() {
@@ -739,7 +740,7 @@ function viewLevel() {
   if (!S.tab || (S.tab !== "hub" && S.tab !== "session" && !tabName(S.tab))) S.tab = "hub";
   if (S.tab !== "hub" && S.tab !== "session" && typeof proLocked === "function" && proLocked(S.tab)) { var lt = S.tab; S.tab = "hub"; setTimeout(function () { openPaywall(tabName(lt), tabTier(lt)); }, 0); }
   if (S.tab === "calc") S.tab = "hub";  /* Calc Lab was removed */
-  var body = S.tab === "hub" ? "" : typeof fieldTab === "function" && S.level === "field" && FM_TABS[S.tab] ? fieldTab(S.tab) : (S.tab === "vegc" || S.tab === "fruitc" || S.tab === "vitc") && typeof compoundView === "function" ? compoundView(S.tab) : S.tab === "illicit" && typeof illicitView === "function" ? illicitView() : S.tab === "registry" ? registry() : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? (S.tab = "hub", "") : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "tools" ? toolsView() : flashcards();
+  var body = S.tab === "hub" ? "" : typeof fieldTab === "function" && isF(S.level) && FM_TABS[S.tab] ? fieldTab(S.tab) : (S.tab === "vegc" || S.tab === "fruitc" || S.tab === "vitc") && typeof compoundView === "function" ? compoundView(S.tab) : S.tab === "illicit" && typeof illicitView === "function" ? illicitView() : S.tab === "registry" ? registry() : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? (S.tab = "hub", "") : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "tools" ? toolsView() : flashcards();
   var msg = S.sessMsg ? '<div class="presult" role="status">' + esc(S.sessMsg) + '</div>' : ''; S.sessMsg = "";
   var notes = (S.tab === "calc" || S.tab === "tools" ? eduBanner() : '') + (["prep", "session", "nbug", "scenarios", "cards"].indexOf(S.tab) >= 0 ? esQNote() : '');
   if (S.tab === "hub") return topbar() + '<div class="' + ctxClass() + '">' + band() + protocolBanner() + dailyCard() + msg + hubView() + '</div>';
@@ -785,24 +786,24 @@ function addScore(r) { mergeScores([r]); saveLocal(); pushScoresToDb(); }
 function refreshScoresUI() { var el = $("#scorearea"); if (el) { el.outerHTML = scoreArea(); var n = $("#scorearea"); if (n) translateDom(n); } }
 
 /* ---------- Registry Exam Prep ---------- */
-var NRLV = { all: "All levels", emt: "EMT", aemt: "AEMT", paramedic: "Paramedic", flight: "Flight", field: "Field Medic", gen: "Home & general meds", cna: "CNA", lvn: "LVN/LPN", rn: "RN", im: "Imaging", ms1: "Step 1", ms3: "Step 2 CK", intern: "Step 3" };
+var NRLV = { all: "All levels", emt: "EMT", aemt: "AEMT", paramedic: "Paramedic", flight: "Flight", asm: "Tier 1", cls: "Tier 2", cmc: "Tier 3", cpp: "Tier 4", pcc: "PCC", field: "Field calls", gen: "Home & general meds", cna: "CNA", lvn: "LVN/LPN", rn: "RN", im: "Imaging", ms1: "Step 1", ms3: "Step 2 CK", intern: "Step 3" };
 function nrLevelsFor(k) {
   /* each scope studies its OWN question bank only (no lower-scope questions); top scopes get no general pool */
   if (isI(k)) return ["im"];
   if (k === "gen") return ["gen"]; /* Everyday / BugDex: plain-language home & general med questions only (no flight questions); topped up by modules/qgen.js */
   if (k === "lvn") return ["lvn", "gen"];
   if (k === "paramedic") return ["paramedic", "gen"];
-  if (k === "field") return ["field", "flight"]; /* Field Medic: its own priority calls plus the critical care bank */
+  if (isF(k)) { var fl = DB.FLEVELS.map(function (l) { return l.key; }), out = fl.slice(0, fl.indexOf(k) + 1); return out.concat(k === "asm" || k === "cls" ? ["emt", "gen"] : k === "cmc" ? ["emt", "aemt", "paramedic"] : ["emt", "aemt", "paramedic", "flight"]); } /* Field Medic: its tier bank, plus EMS drug questions on the drugs in this tier's scope (nrPool filters by scope) */
   if (["cna", "rn", "ms1", "ms3", "intern", "emt", "aemt", "flight"].indexOf(k) >= 0) return [k];
   return ["flight"];
 }
 function nrPool(filter) {
   var allowed = nrLevelsFor(ctxKey());
-  if (filter && filter !== "all") allowed = allowed.indexOf(filter) >= 0 ? [filter] : [];
+  if (filter && filter !== "all" && !isF(ctxKey())) allowed = allowed.indexOf(filter) >= 0 ? [filter] : []; /* tiers always study their whole cumulative bank */
   var inScope = null;
-  if (S.view === "level" && (isN(S.level) || isI(S.level))) { inScope = {}; scopeFor(S.level).ids.forEach(function (id) { inScope[id] = 1; }); }
-  function ok(q) { return allowed.indexOf(q.lv) >= 0 && !(q.home && ctxKey() !== "gen") && qVisible(q) && (!inScope || !q.d || inScope[q.d]) && (!q.d || !drugLocked(q.d)); }
-  if (S.nr && S.nr.kind === "reg") return (DB.RQ || []).filter(function (q) { return allowed.indexOf(q.lv) >= 0 && qVisible(q); });
+  if (S.view === "level" && (isN(S.level) || isI(S.level) || isF(S.level))) { inScope = {}; scopeFor(S.level).ids.forEach(function (id) { inScope[id] = 1; }); }
+  function ok(q) { return allowed.indexOf(q.lv) >= 0 && !(q.home && ctxKey() !== "gen") && qVisible(q) && (!inScope || (q.d ? inScope[q.d] : !isF(ctxKey()))) && (!q.d || !drugLocked(q.d)); }
+  if (S.nr && S.nr.kind === "reg") return (DB.RQ || []).filter(function (q) { return allowed.indexOf(q.lv) >= 0 && qVisible(q) && (!isF(ctxKey()) || q.fm); });
   return DB.Q.filter(ok).concat((DB.QX || []).filter(ok)).concat(ctxKey() === "gen" && typeof qgGenPool === "function" ? qgGenPool(ok) : []);
 }
 function nrState() {
@@ -915,13 +916,13 @@ function regCompose(pool, n, adaptive) {
   if (out.length < n) out = out.concat(pick(pool.filter(function (q) { return out.indexOf(q) < 0; }), n - out.length));
   return shuffle(out.slice(0, n));
 }
-function regCount() { var al = nrLevelsFor(ctxKey()); return (DB.RQ || []).filter(function (q) { return al.indexOf(q.lv) >= 0 && qVisible(q); }).length; }
+function regCount() { var al = nrLevelsFor(ctxKey()), f = isF(ctxKey()); return (DB.RQ || []).filter(function (q) { return al.indexOf(q.lv) >= 0 && qVisible(q) && (!f || q.fm); }).length; }
 function nrPrep() {
   var st = nrState();
   if (st.phase === "quiz") return nrQuiz(st);
   if (st.phase === "done") return nrDone(st) + scoreArea();
   var pool = nrPool(st.filter);
-  var nurse = nurseCtx(), exam = nurse ? { cna: "CNA state exam", lvn: "NCLEX-PN", rn: "NCLEX-RN" }[S.level] : medCtx() ? { ms1: "USMLE Step 1", ms3: "USMLE Step 2 CK", intern: "USMLE Step 3" }[S.level] : imCtx() ? "Imaging exam" : S.level === "flight" ? "Flight and critical care certification exam" : S.level === "field" ? "Field medic" : "NREMT";
+  var nurse = nurseCtx(), exam = nurse ? { cna: "CNA state exam", lvn: "NCLEX-PN", rn: "NCLEX-RN" }[S.level] : medCtx() ? { ms1: "USMLE Step 1", ms3: "USMLE Step 2 CK", intern: "USMLE Step 3" }[S.level] : imCtx() ? "Imaging exam" : S.level === "flight" ? "Flight and critical care certification exam" : isF(S.level) ? "TCCC" : "NREMT";
   var regN = regCount(), reg = st.kind === "reg", filters = nrLevelsFor(ctxKey()).concat(["all"]), n = Math.min(st.n, pool.length);
   /* one simple screen: pick a deck, a length and a mode, then go. Everything else sits under More options. */
   var c = '<section class="nrsetup nrfun"><div class="nrtop">' + myBugArt("nrbug") + '<p class="nrtag"><strong>' + esc(exam) + '-style practice.</strong> <span class="muted">Pick a deck, pick a length, go.</span></p></div>' + examPill(pool);
@@ -1294,7 +1295,7 @@ function closeSheet() { sheet.hidden = true; sheet.innerHTML = ""; S.sheet = nul
 /* ---------- render & events ---------- */
 function render() {
   var ok = agreeRec(); protoTab.hidden = !ok; protoTab.textContent = lang() === "es" ? "Protocolos" : "Protocols"; document.documentElement.lang = lang();
-  var html = needDisc() ? discView() : !ok && S.view !== "legal" ? gateView() : S.view === "legal" ? legalView() : needRole() ? roleView() : S.view === "home" ? viewHome() : (S.view === "levels" || S.view === "nlevels" || S.view === "mlevels" || S.view === "ilevels") ? viewLevels() : S.view === "easy" ? viewEasy() : S.view === "admin" ? viewAdmin() : S.view === "classes" ? classesView() : S.view === "settings" ? settingsView() : S.view === "terrarium" ? terrariumView() : S.view === "everyday" ? evView() : S.view === "field" && typeof fieldView === "function" ? fieldView() : viewLevel();
+  var html = needDisc() ? discView() : !ok && S.view !== "legal" ? gateView() : S.view === "legal" ? legalView() : needRole() ? roleView() : S.view === "home" ? viewHome() : (S.view === "levels" || S.view === "flevels" || S.view === "nlevels" || S.view === "mlevels" || S.view === "ilevels") ? viewLevels() : S.view === "easy" ? viewEasy() : S.view === "admin" ? viewAdmin() : S.view === "classes" ? classesView() : S.view === "settings" ? settingsView() : S.view === "terrarium" ? terrariumView() : S.view === "everyday" ? evView() : S.view === "field" && typeof fieldView === "function" ? fieldView() : viewLevel();
   app.innerHTML = html + footer();
   if (typeof tourMaybe === "function") tourMaybe();
   if (S.proMsg) { var tst = document.createElement("div"); tst.className = "protoast"; tst.setAttribute("role", "status"); tst.textContent = S.proMsg; app.appendChild(tst); S.proMsg = ""; setTimeout(function () { if (tst.parentNode) tst.parentNode.removeChild(tst); }, 5000); }
@@ -2135,8 +2136,11 @@ function startSession(kind, opt) {
   } else if (kind === "marks") {
     var mk = marks(); qs = adaptivePick(pool.filter(function (q) { return mk.indexOf(q.d) >= 0; }), 15); title = "Study my list"; sub = "Questions on the drugs you saved.";
   } else if (kind === "field" && typeof FM_Q !== "undefined") {
-    var fid = fmIds(); qs = shuffle(FM_Q.slice()).slice(0, 4).concat(adaptivePick(pool.filter(function (q) { return fid.indexOf(q.d) >= 0; }), 8)); qs = shuffle(qs);
-    title = "Field Medic drill"; sub = "Put-in-order field calls plus questions on the trauma drugs.";
+    var alw = nrLevelsFor(S.level), sid = scopeFor(S.level).ids, fq = FM_Q.filter(function (q) { return alw.indexOf(q.lv) >= 0; });
+    var mine = shuffle(fq.filter(function (q) { return q.lv === S.level; })), rest = shuffle(fq.filter(function (q) { return q.lv !== S.level; }));
+    var dq = adaptivePick(pool.filter(function (q) { return q.d && sid.indexOf(q.d) >= 0; }), 6), fmq = mine.concat(rest).slice(0, 12 - dq.length);
+    qs = shuffle(fmq.concat(dq)); /* this tier's calls first, then lower tiers, plus drug questions on this tier's scope: 12 total */
+    var lo = levelObj(S.level) || {}; title = (lo.short || "Field") + " drill"; sub = "Priority calls in order, plus questions on the medications at this tier.";
   } else if (kind === "weak") {
     var w = weakest(scopeIds(), 15); qs = adaptivePick(pool.filter(function (q) { return w.indexOf(q.d) >= 0; }), 10); title = "Practice my weak drugs"; sub = "Drugs with the lowest mastery come first.";
   }
@@ -6167,7 +6171,7 @@ document.addEventListener("change", function (e) { if (e.target.id === "pfiles")
 document.addEventListener("input", function (e) { if (e.target.id === "plink") { PQ.link = e.target.value; var b = $('[data-pq="submit"]'); if (b) b.disabled = !(P.auth && (PQ.link.trim() || PQ.photos.length) && !PQ.busy); } });
 
 /* ---------- Lab values (RN, Flight, Med School) ---------- */
-function labRoute() { var k = S.level; return k === "rn" ? "rn" : k === "flight" || k === "field" ? "fl" : isM(k) ? "md" : null; }
+function labRoute() { var k = S.level; return k === "rn" ? "rn" : k === "flight" || k === "cpp" || k === "pcc" ? "fl" : isM(k) ? "md" : null; }
 function hasLabs() { return S.view === "level" && !!labRoute(); }
 var LABHEAD = { rn: "At the bedside", fl: "In the aircraft", md: "Interpretation" };
 var LABGRP_ORDER = ["Electrolytes", "Kidney & glucose", "Blood count", "Clotting", "Blood gas", "Cardiac & other", "Acid-base", "Kidney & sodium", "Calcium & endocrine", "Liver & pancreas", "Hematology", "Coagulation", "Inflammation & infection", "Drug levels & toxicology", "Cardio-metabolic"];
@@ -6287,7 +6291,7 @@ document.addEventListener("input", function (e) {
 
 /* ---------- Blood products (Flight), Hemodynamics (Flight + Med School), Drug Families (BugDex) ---------- */
 function flightRN() { return S.view === "level" && S.level === "rn" && typeof myUnit === "function" && myUnit("rn") === "flight"; }
-function hasBlood() { return S.view === "level" && (S.level === "flight" || S.level === "field" || flightRN()); }
+function hasBlood() { return S.view === "level" && (S.level === "flight" || S.level === "cmc" || S.level === "cpp" || S.level === "pcc" || flightRN()); }
 function hasHemo() { return S.view === "level" && (S.level === "flight" || isM(S.level) || flightRN() || (S.level === "rn" && typeof myUnit === "function" && myUnit("rn") === "icu")); }
 function critData(kind) { return kind === "flightp" ? DB.FLIGHTP : kind === "blood" ? DB.BLOOD : kind === "contrast" ? DB.CONTRAST : DB.HEMO; }
 function critKey(kind) { return kind === "flightp" ? "fl" : kind === "contrast" ? S.level : S.level === "rn" ? "fl" : labRoute(); }
@@ -7759,7 +7763,7 @@ function pkCalm() {
   if (typeof tourDone === "function" && !tourDone()) return false;
   if (typeof topLayerOpen === "function" && topLayerOpen()) return false;
   if (S.sheet || S.sess || S.mupop) return false;
-  var v = S.view; if (v === "home" || v === "levels" || v === "nlevels" || v === "mlevels" || v === "ilevels" || v === "terrarium") return true;
+  var v = S.view; if (v === "home" || v === "levels" || v === "flevels" || v === "nlevels" || v === "mlevels" || v === "ilevels" || v === "terrarium") return true;
   return (v === "gen" || v === "level" || v === "everyday") && (!S.tab || S.tab === "hub");
 }
 function pkPick() {
@@ -8663,7 +8667,7 @@ function agpList(lines, d) {
 var AGP_ROLES = [["emt", "EMT"], ["aemt", "AEMT"], ["para", "Paramedic"]];
 function agpRole() {
   if (AGP.role) return AGP.role;
-  var lv = S.view === "level" ? S.level : ""; return lv === "paramedic" || lv === "flight" || lv === "field" ? "para" : lv === "aemt" ? "aemt" : "emt";
+  var lv = S.view === "level" ? S.level : ""; return lv === "paramedic" || lv === "flight" ? "para" : lv === "aemt" ? "aemt" : "emt";
 }
 function agpRoleChips() { var r = agpRole(); return '<div class="chips agroles" role="group" aria-label="Show protocols for"><span class="muted small">Show for:</span>' + AGP_ROLES.map(function (x) { return '<button class="chip" data-agp="role" data-agid="' + x[0] + '" aria-pressed="' + (r === x[0]) + '">' + x[1] + '</button>'; }).join("") + '</div>'; }
 function agpBlocks(it) { var r = agpRole(); return (it.mgmt || []).filter(function (m) { return r === "para" || (m.lv || "para") === "emt"; }); }
@@ -9345,17 +9349,45 @@ var FM_SECS = [
 ];
 /* drill: ordered priority questions for this route (same O format as registry items) */
 var FM_Q = [];
+/* TCCC question bank by tier. O|tier|question|steps in order|explanation   S|tier|question|correct|wrong|wrong|wrong|explanation
+   Written from the CoTCCC TCCC Guidelines (01 May 2026) and the TCCC Skill Sets by Responder Level (01 SEP 2023). */
 (function () {
   var L = [
-    "O|A casualty in Tactical Field Care has a leg amputation, snoring respirations and a weak radial pulse. Put the MARCH priorities in order, from most important (first) to least important (last).|Control the massive bleeding;;Open and manage the airway;;Check respiration and treat chest wounds;;Gain IV or IO access and start blood;;Prevent hypothermia and protect the head|MARCH puts massive bleeding first because it kills fastest, then the airway, breathing, circulation, and finally hypothermia and head injury. In the field, warming starts during resuscitation because cold blood does not clot well.",
-    "O|Put these blood products in order of TCCC preference for hemorrhagic shock, from first choice to last.|Cold-stored low-titer O whole blood;;Pre-screened low-titer O fresh whole blood;;Plasma, red cells and platelets 1:1:1;;Plasma and red cells 1:1;;Plasma or red cells alone|TCCC ranks whole blood first because it replaces everything that was lost, including clotting factors and platelets. Component therapy follows, and single components are the last choice.",
-    "O|A casualty in hemorrhagic shock is receiving cold-stored whole blood. Put these steps in order, from first to last.|Transfuse the first unit;;Give calcium after the first blood product;;Reassess radial pulse, mental status and blood pressure;;Give another unit if the endpoints are not met|TCCC lists calcium after the first transfused product because citrate in stored blood binds calcium. Each unit is followed by reassessment against the endpoints before more is given.",
-    "O|An unconscious casualty with a head injury has a fixed, dilated right pupil, extensor posturing and an SpO2 of 88 percent. Put these actions in order of priority, from most important (first) to least important (last).|Secure the airway and give oxygen;;Treat low blood pressure;;Give hypertonic saline IV or IO with a flush;;Reassess pupils and posturing|Low oxygen and low blood pressure both injure the brain further, so they come first. Hypertonic saline treats the herniation signs, and the pupils and posturing are rechecked to judge the response.",
-    "O|A casualty who cannot stay in the fight is about to receive ketamine for severe pain. Put these steps in order, from first to last.|Disarm the casualty;;Document an AVPU mental status;;Give ketamine;;Monitor airway, breathing and level of dissociation|TCCC describes disarming the casualty and recording a baseline mental status before ketamine, so later changes can be judged. Airway and breathing are watched afterward.",
-    "O|A casualty with a 30% body surface area burn also has a bleeding thigh wound and is in shock. Put these priorities in order, from most important (first) to least important (last).|Control the bleeding;;Treat the hemorrhagic shock;;Cover the burns with dry dressings and prevent hypothermia;;Start burn fluid resuscitation|TCCC states that hemorrhagic shock takes priority over burn shock. Burned casualties lose heat quickly, and burn fluids start once access is in and the bleeding is handled.",
-    "O|A casualty needs prolonged sedation during a long hold. Put these steps for a ketamine-based drip in order, from first to last.|Set up airway equipment, pulse oximetry and end-tidal CO2;;Start the ketamine drip in its own bag;;Add small pushes of an adjunct only if needed;;Trend the RASS score and vital signs|Prolonged casualty care guidance builds sedation on a ketamine drip with adjuncts only as needed, one drug per bag, and close monitoring of sedation depth, breathing and blood pressure."
+    "O|asm|Under effective enemy fire, a teammate is hit with heavy bleeding from the thigh. Put these Care Under Fire actions in order, from first to last.|Return fire and take cover;;Direct the casualty to move to cover and apply self-aid if able;;Apply a limb tourniquet high and tight over the uniform;;Move the casualty to cover|In Care Under Fire, fire superiority comes first, because the best medicine on the battlefield is winning the fight. TCCC then describes directing self-aid and movement to cover, controlling life-threatening bleeding with a tourniquet when tactically feasible, and moving the casualty to cover.",
+    "S|asm|In Care Under Fire, where does TCCC describe placing a limb tourniquet when the bleeding site is not obvious?|High and tight on the injured limb, over the uniform|Directly over the wound on bare skin|Two inches below the nearest joint|On the uninjured limb for comparison|When the bleeding site cannot be seen under fire, TCCC describes applying the tourniquet high and tight on the injured limb, over the uniform, and reassessing it later in Tactical Field Care.",
+    "S|asm|Which form documents casualty care in TCCC?|DD Form 1380, the TCCC Card|SF 600, the chronological record|DA Form 31|DD Form 214|The DD 1380 TCCC Card records injuries, treatments and times so the next level of care knows exactly what was done.",
+    "S|asm|Why does TCCC start hypothermia prevention even in a warm climate?|Cold blood clots poorly, so heat loss worsens bleeding|Shivering prevents the casualty from walking|Hypothermia raises blood pressure too high|Cold makes tourniquets loosen|Hypothermia, acidosis and clotting problems feed each other in bleeding casualties. Even in heat, a casualty in shock loses body heat quickly.",
+    "O|asm|A casualty in Tactical Field Care has a leg amputation, snoring respirations and a weak radial pulse. Put the MARCH priorities in order, from most important (first) to least important (last).|Control the massive bleeding;;Open and manage the airway;;Check respiration and treat chest wounds;;Treat circulation and shock;;Prevent hypothermia and protect the head|MARCH puts massive bleeding first because it kills fastest, then the airway, breathing, circulation, and finally hypothermia and head injury.",
+    "S|cls|A casualty has an open chest wound. What does TCCC list for it?|A vented or non-vented chest seal|Packing the wound with gauze|Leaving the wound uncovered|Needle decompression before any seal|TCCC treats open and sucking chest wounds with a vented or non-vented chest seal, then monitors for a developing tension pneumothorax.",
+    "O|cls|A casualty with a chest seal develops worsening shortness of breath and falling blood pressure. Put these actions in order, from first to last.|Burp or remove the chest seal;;Perform needle decompression if there is no improvement;;Reassess breathing and circulation;;Repeat decompression if the signs return|A seal can trap air and cause a tension pneumothorax. Burping or removing the seal lets the air out, needle decompression follows if that does not work, and the casualty is reassessed for recurrence.",
+    "S|cls|When does TCCC describe converting a tourniquet to a hemostatic or pressure dressing?|When the casualty is not in shock, can be closely watched, and the tourniquet has been on less than 2 hours|Whenever the bleeding seems to have stopped|Only after 6 hours have passed|Never; tourniquets are left until surgery|Conversion is considered only when the casualty is not in shock, can be monitored, the wound is not an amputation, and the tourniquet has been in place under 2 hours.",
+    "S|cls|Which oral antibiotic is first-line for an open combat wound in the 2026 TCCC Guidelines?|Cefadroxil|Moxifloxacin|Amoxicillin|Doxycycline|The 2026 update replaced moxifloxacin with cefadroxil as the oral first-line choice, with cephalexin as the alternative.",
+    "S|cls|A casualty with a forearm wound can still fight. Which pain option fits TCCC?|The Combat Wound Medication Pack|Intramuscular ketamine|An oral transmucosal fentanyl lozenge|IV morphine|Casualties who can stay in the fight use the oral Combat Wound Medication Pack (acetaminophen, meloxicam and, since 2026, suzetrigine), which does not sedate.",
+    "S|cmc|TCCC lists TXA as soon as possible, but no later than how long after injury?|3 hours|1 hour|6 hours|12 hours|The benefit of TXA falls with time and may reverse after 3 hours, which is why TCCC sets that limit.",
+    "S|cmc|Which blood product does TCCC rank first for hemorrhagic shock?|Cold-stored low-titer O whole blood|Plasma and red cells 1:1|Lactated Ringer's|Hextend|Whole blood replaces red cells, plasma and platelets at once. Components follow, and crystalloid is not the TCCC fluid for hemorrhagic shock.",
+    "S|cmc|When does TCCC list calcium during resuscitation?|After the first transfused blood product|Before TXA|Only for seizures|After the fourth unit|Citrate in stored blood binds calcium, so calcium follows the first product to support clotting and heart contraction.",
+    "S|cmc|Which finding prompts hypertonic saline in a head-injured casualty?|Unequal or fixed and dilated pupils, or posturing|A headache with nausea|A GCS of 14|One episode of vomiting|TCCC lists hypertonic saline for herniation signs only, not to prevent herniation ahead of time.",
+    "S|cmc|What endpoint does TCCC describe for ketamine pain control?|Reduced pain or nystagmus|Complete loss of consciousness|Zero pain|A heart rate below 60|The goal is tolerable pain that preserves airway, breathing and mentation, not complete pain relief or unconsciousness.",
+    "O|cmc|Put these blood products in order of TCCC preference for hemorrhagic shock, from first choice to last.|Cold-stored low-titer O whole blood;;Pre-screened low-titer O fresh whole blood;;Plasma, red cells and platelets 1:1:1;;Plasma and red cells 1:1;;Plasma or red cells alone|TCCC ranks whole blood first because it replaces everything that was lost, including clotting factors and platelets. Component therapy follows.",
+    "O|cmc|A casualty in hemorrhagic shock is receiving cold-stored whole blood. Put these steps in order, from first to last.|Transfuse the first unit;;Give calcium after the first blood product;;Reassess radial pulse, mental status and blood pressure;;Give another unit if the endpoints are not met|Calcium follows the first product, and each unit is followed by reassessment against the endpoints before more is given.",
+    "O|cmc|An unconscious casualty with a head injury has a fixed, dilated right pupil, extensor posturing and an SpO2 of 88 percent. Put these actions in order of priority, from most important (first) to least important (last).|Secure the airway and give oxygen;;Treat low blood pressure;;Give hypertonic saline IV or IO with a flush;;Reassess pupils and posturing|Low oxygen and low blood pressure both injure the brain further, so they come first. Hypertonic saline treats the herniation signs.",
+    "O|cmc|A casualty who cannot stay in the fight is about to receive ketamine for severe pain. Put these steps in order, from first to last.|Disarm the casualty;;Document an AVPU mental status;;Give ketamine;;Monitor airway, breathing and level of dissociation|TCCC describes disarming the casualty and recording a baseline mental status before ketamine, so later changes can be judged.",
+    "O|cmc|A casualty with a 30% body surface area burn also has a bleeding thigh wound and is in shock. Put these priorities in order, from most important (first) to least important (last).|Control the bleeding;;Treat the hemorrhagic shock;;Cover the burns with dry dressings and prevent hypothermia;;Start burn fluid resuscitation|TCCC states that hemorrhagic shock takes priority over burn shock. Burned casualties lose heat quickly.",
+    "S|cpp|During tactical evacuation, what airway may a trained provider consider instead of a cricothyroidotomy?|Endotracheal intubation|A second nasopharyngeal airway|A chest seal|Bag-valve-mask alone for the whole flight|TCCC notes that endotracheal intubation may be considered in TACEVAC by trained providers, a Tier 4 skill.",
+    "S|cpp|What oxygen saturation does TCCC target in a casualty with moderate or severe head injury?|At least 92%|At least 85%|At least 88%|Exactly 100%|Low oxygen worsens brain injury. TCCC lists a target of at least 92% for head-injured casualties.",
+    "S|cpp|Which monitoring tool is added at Tier 4?|Capnography (end-tidal CO2)|Pulse checks|Respiratory rate counts|The DD1380 card|Tier 4 adds capnography, point-of-care lactate, Foley catheters and urine output monitoring to the earlier tiers' vital signs.",
+    "S|cpp|Why is 23.4% sodium chloride attractive to special operations medics?|It gives a similar osmotic load to 3% or 5% saline in a much smaller volume|It also replaces lost blood|It needs no IV or IO access|It prevents herniation when given early|The concentrated solution weighs and takes up far less space. Like other hypertonic saline, it is for herniation signs, followed by a flush.",
+    "O|pcc|A casualty needs prolonged sedation during a long hold. Put these steps for a ketamine-based drip in order, from first to last.|Set up airway equipment, pulse oximetry and end-tidal CO2;;Start the ketamine drip in its own bag;;Add small pushes of an adjunct only if needed;;Trend the RASS score and vital signs|Prolonged casualty care guidance builds sedation on a ketamine drip with adjuncts only as needed, one drug per bag, and close monitoring.",
+    "S|pcc|Why does prolonged care guidance run each sedation drug in its own bag?|Mixing drugs in one bag is untested and can form unsafe compounds|It saves IV fluid|It makes the drip run faster|One bag cannot hold two drugs|Each medicine runs separately so it can be adjusted or stopped on its own and to avoid untested mixtures.",
+    "S|pcc|During a long hold, what does hourly urine output from a Foley mainly show?|Whether the kidneys are being perfused, a sign of adequate resuscitation|How much pain the casualty has|Whether antibiotics are working|The depth of sedation|Urine output is one of the most useful trends in prolonged care, because it reflects blood flow to the kidneys.",
+    "S|pcc|Why might famotidine be given during prolonged casualty care?|To help prevent stress ulcers in a critically ill casualty|To treat nausea from ketamine|To raise blood pressure|To prevent seizures|Critically ill casualties are at risk of stomach bleeding from stress ulcers. Acid reducers like famotidine help prevent them.",
+    "S|pcc|After several units of stored blood, which i-STAT change is expected?|Low ionized calcium|Low potassium|High hemoglobin|Low sodium|Citrate in stored blood binds calcium, so ionized calcium falls. Potassium often rises."
   ];
-  L.forEach(function (l) { var f = l.split("|"); var st = f[2].split(";;"); FM_Q.push({ reg: 1, t: "order", prio: 1, lv: "field", cat: "trauma", d: "", fm: 1, q: f[1], x: f[3], w: [], opts: st.slice(), ok: st.slice(), a: st.map(function (p, k) { return (k + 1) + ". " + p; }).join("  ") }); });
+  L.forEach(function (l) {
+    var f = l.split("|");
+    if (f[0] === "O") { var st = f[3].split(";;"); FM_Q.push({ reg: 1, t: "order", prio: 1, lv: f[1], cat: "trauma", d: "", fm: 1, q: f[2], x: f[4], w: [], opts: st.slice(), ok: st.slice(), a: st.map(function (p, k) { return (k + 1) + ". " + p; }).join("  ") }); }
+    else if (f[0] === "S") FM_Q.push({ reg: 1, lv: f[1], cat: "trauma", d: "", fm: 1, q: f[2], a: f[3], w: [f[4], f[5], f[6]], x: f[7] });
+  });
 })();
 var FM_ART = {
   drop: '<path d="M12 3c3 4 6 7.5 6 11a6 6 0 0 1-12 0c0-3.5 3-7 6-11z"/>',
@@ -9366,20 +9398,33 @@ var FM_ART = {
   lungs: '<path d="M12 4v8M12 12c-2 0-3-2-5-2-2 0-3 3-3 6 0 3 1 4 3 4s5-1 5-4zM12 12c2 0 3-2 5-2 2 0 3 3 3 6 0 3-1 4-3 4s-5-1-5-4z"/>'
 };
 var FIELD_BUG = { id: "fm", name: "Field Beetle", body: "beetle", c: ["#a3b18a", "#4b5320", "#ffffff"], acc: ["helmet"] };
-if (typeof IMBUG !== "undefined") IMBUG.field = FIELD_BUG;
+if (typeof IMBUG !== "undefined") {
+  IMBUG.field = FIELD_BUG;
+  IMBUG.asm = { name: "Tier 1", body: "beetle", c: ["#b5b98f", "#6b6f4a", "#ffffff"], acc: ["helmet"] };
+  IMBUG.cls = { name: "Tier 2", body: "beetle", c: ["#a3b18a", "#55603a", "#ffffff"], acc: ["helmet"] };
+  IMBUG.cmc = { name: "Tier 3", body: "beetle", c: ["#94a36b", "#4b5320", "#ffffff"], acc: ["helmet"] };
+  IMBUG.cpp = { name: "Tier 4", body: "beetle", c: ["#8a9a5b", "#3f4a1f", "#ffffff"], acc: ["helmet"] };
+  IMBUG.pcc = { name: "Prolonged Casualty Care", body: "beetle", c: ["#a68a4b", "#5c4a22", "#ffffff"], acc: ["helmet"] };
+}
+var FM_TIERS = ["asm", "cls", "cmc", "cpp", "pcc"];
+function fmTierIdx(k) { return FM_TIERS.indexOf(k); }
+function fmTierOk(min) { return fmTierIdx(S.level) >= fmTierIdx(min || "asm"); }
+function fmTierName(k) { var l = (DB.FLEVELS || []).filter(function (x) { return x.key === k; })[0]; return l ? (l.short === "PCC" ? "Prolonged Casualty Care" : l.short + " (" + l.name + ")") : k; }
 /* field tabs on the Field Medic level hub: key -> [name, description] */
 var FM_TABS = {
-  march: ["MARCH-PAWS", "Walk the TCCC flow letter by letter, then run the field drill."],
-  fm_bleed: ["Bleeding & Shock", "TXA, calcium and the whole blood ladder."],
-  fm_tiva: ["TIVA & Drips", "Ketamine-based drips and the drugs that ride along."],
-  fm_head: ["Head Injury & 23.4%", "Herniation signs and hypertonic saline."],
-  fm_pain: ["Pain & Nausea", "The wound pill pack, ketamine and esketamine."],
-  fm_abx: ["Antibiotics & Wounds", "Open wounds, eye injuries and burns."],
-  fm_airway: ["Airway & Breathing", "Positioning to cric, chest seals and RSI drugs."],
-  pcc: ["Prolonged Casualty Care", "Days to weeks with a casualty: when the medic becomes the hospital."],
-  istat: ["i-STAT Labs", "Read the cartridge: what each value means for a casualty."]
+  skills: ["Tier Skills", "What this tier is trained to do, by MARCH-PAWS.", "asm"],
+  march: ["MARCH-PAWS", "The TCCC sequence, step by step, and the tier drill.", "asm"],
+  fm_bleed: ["Bleeding & Shock", "Hemorrhage control, TXA, calcium and blood.", "asm"],
+  fm_airway: ["Airway & Breathing", "Positioning to cricothyroidotomy, chest seals, decompression.", "asm"],
+  fm_pain: ["Pain & Nausea", "The wound medication pack, ketamine and esketamine.", "cls"],
+  fm_abx: ["Antibiotics & Wounds", "Open wounds, penetrating eye injury and burns.", "cls"],
+  fm_head: ["Head Injury & Hypertonic Saline", "Herniation signs, 3% and 23.4% saline.", "cmc"],
+  istat: ["i-STAT Labs", "Point-of-care labs and how to read them.", "cpp"],
+  fm_tiva: ["TIVA & Drips", "Ketamine-based sedation and infusions.", "pcc"],
+  pcc: ["Prolonged Casualty Care", "Holding casualties for hours to weeks.", "pcc"]
 };
 if (typeof ICO !== "undefined") {
+  ICO.skills = '<path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/>';
   ICO.march = '<path d="M4 6h16M4 12h10M4 18h7"/><circle cx="18" cy="16" r="3"/>';
   ICO.fm_bleed = FM_ART.drop; ICO.fm_tiva = FM_ART.drip; ICO.fm_head = FM_ART.brain; ICO.fm_pain = FM_ART.bolt; ICO.fm_abx = FM_ART.shield; ICO.fm_airway = FM_ART.lungs;
   ICO.pcc = '<path d="M3 20V9l9-5 9 5v11"/><path d="M9 20v-6h6v6M12 8v4M10 10h4"/>';
@@ -9443,26 +9488,62 @@ var ISTAT_CASES = [
   ["Hypertonic saline", "A head-injured casualty received hypertonic saline twice for herniation signs.", "CHEM8+", [["Sodium", "157 mmol/L", "H", "Climbs with each hypertonic saline dose. The trend is followed before more is given."], ["Chloride", "122 mmol/L", "H", "Saline carries chloride too, which can add to acidosis."], ["Glucose", "196 mg/dL", "H", "High glucose harms an injured brain."], ["Potassium", "3.9 mmol/L", "", "Normal."], ["Creatinine", "0.9 mg/dL", "", "Normal."], ["Hematocrit", "41%", "", "Normal."]]],
   ["Still in shock", "A casualty with a pelvic injury still has a weak radial pulse after the first unit of blood.", "CG4+", [["pH", "7.21", "L", "Significant acidosis from poor tissue perfusion."], ["PCO2", "30 mmHg", "L", "The casualty is breathing fast to blow off acid, a partial compensation."], ["Lactate", "6.8 mmol/L", "H", "Tissues are starved of oxygen: shock is ongoing."], ["Base excess", "-11 mmol/L", "L", "A deep base deficit tracks with heavy blood loss."], ["PO2", "92 mmHg", "", "Oxygenation is adequate."]]]
 ];
+/* TCCC Skill Sets by Responder Level (CoTCCC master list, 01 SEP 2023), medications updated to the 2026 Guidelines. [min tier, category, skill] */
+var FM_SKILLS = [
+  ["asm", "Massive hemorrhage", "Limb tourniquet"], ["asm", "Massive hemorrhage", "Wound packing with hemostatic dressing"], ["asm", "Massive hemorrhage", "Direct pressure and pressure dressing"],
+  ["cls", "Massive hemorrhage", "Tourniquet reassessment, replacement and conversion"], ["cmc", "Massive hemorrhage", "Junctional tourniquet, XStat and pelvic binder"],
+  ["asm", "Airway", "Sit up and lean forward, chin lift and jaw thrust, recovery position"], ["cls", "Airway", "Nasopharyngeal airway and bag-valve-mask"], ["cmc", "Airway", "Extraglottic airway, suctioning and surgical cricothyroidotomy"], ["cpp", "Airway", "Endotracheal intubation"],
+  ["asm", "Respiration", "Assess and support breathing"], ["cls", "Respiration", "Vented chest seal and needle decompression"], ["cmc", "Respiration", "Supplemental oxygen"], ["cpp", "Respiration", "Automated ventilation, finger and tube thoracostomy"],
+  ["asm", "Circulation", "Recognize hemorrhagic shock"], ["cmc", "Circulation", "IV and IO access, fluid warming, whole blood, plasma and red cells, TXA and calcium"],
+  ["asm", "Hypothermia and head injury", "Hypothermia prevention and recognizing a head injury"], ["cls", "Hypothermia and head injury", "Active warming devices and AVPU mental status"], ["cmc", "Hypothermia and head injury", "Head injury treatment, including hypertonic saline for herniation signs"],
+  ["cls", "Pain", "Combat Wound Medication Pack (acetaminophen, meloxicam, suzetrigine)"], ["cmc", "Pain", "Ketamine (IM, IN, IV/IO), intranasal esketamine, ondansetron, naloxone, local lidocaine"],
+  ["cls", "Antibiotics", "Oral antibiotics (cefadroxil or cephalexin)"], ["cmc", "Antibiotics", "IV, IO or IM ceftriaxone"],
+  ["asm", "Wounds and burns", "Stop the burning process, burn dressings, rigid eye shield"], ["cmc", "Wounds and burns", "Burn fluid resuscitation, visual acuity check, wound care and stump dressing"],
+  ["asm", "Splinting", "Fracture assessment"], ["cls", "Splinting", "Extremity splinting"], ["cmc", "Splinting", "Traction splinting"],
+  ["asm", "Monitoring", "Pulse and respirations"], ["cmc", "Monitoring", "Pulse oximetry and electronic vital signs"], ["cpp", "Monitoring", "Capnography, point-of-care lactate, Foley catheter and urine output"],
+  ["asm", "Documentation and evacuation", "DD1380 TCCC card, reporting to leadership, reassuring a conscious casualty"], ["cls", "Documentation and evacuation", "Casualty assessment, drags and carries, extrication, evacuation request and TACEVAC care"], ["cmc", "Documentation and evacuation", "Triage and the after-action report to the Joint Trauma System"],
+  ["pcc", "Prolonged care", "Long-duration sedation and analgesia drips, vasopressors and ventilator management"], ["pcc", "Prolonged care", "Nursing care: turning, padding, hygiene, line, tube and Foley care"], ["pcc", "Prolonged care", "Serial exams, ultrasound and i-STAT labs"], ["pcc", "Prolonged care", "Teleconsultation and preparing the casualty for flight"]
+];
+/* clinical class labels for the drug cards (serious tone, owner Oct 28) */
+var FM_CLASS = { "tranexamic-acid": "Antifibrinolytic", "calcium-chloride": "Calcium salt", "calcium-gluconate": "Calcium salt", "lactated-ringers": "Isotonic crystalloid", "hetastarch": "Colloid (Hextend)", "norepinephrine": "Vasopressor", "vasopressin": "Vasopressor",
+  "ketamine": "Dissociative anesthetic", "midazolam": "Benzodiazepine", "fentanyl": "Opioid", "propofol": "Sedative-hypnotic", "dexmedetomidine": "Alpha-2 agonist", "naloxone": "Opioid antagonist",
+  "sodium-chloride-23-4-percent": "Hypertonic saline 23.4%", "hypertonic-saline-3-percent": "Hypertonic saline 3%", "levetiracetam": "Anticonvulsant", "mannitol": "Osmotic diuretic",
+  "acetaminophen": "Analgesic", "meloxicam": "NSAID", "suzetrigine": "NaV1.8 blocker", "esketamine": "Dissociative (intranasal)", "ondansetron": "Antiemetic",
+  "cefadroxil": "1st-gen cephalosporin", "cephalexin": "1st-gen cephalosporin", "ceftriaxone": "3rd-gen cephalosporin", "moxifloxacin": "Fluoroquinolone (earlier guideline)", "ertapenem": "Carbapenem (earlier guideline)",
+  "etomidate": "Induction agent", "rocuronium": "Neuromuscular blocker", "succinylcholine": "Neuromuscular blocker", "famotidine": "H2 blocker" };
 function fmSec(k) { return FM_SECS.filter(function (s) { return s[0] === k; })[0]; }
 function fmIds() { var o = []; FM_SECS.forEach(function (s) { s[6].forEach(function (d) { if (DB.drugs[d[0]] && o.indexOf(d[0]) < 0) o.push(d[0]); }); }); return o; }
 function fmSeen() { return store("fmSeen") || []; }
-function fmCards(list, color) {
-  var seen = fmSeen();
-  return '<p class="muted small">Tap a card to flip it.</p><div class="fmgrid">' + list.filter(function (d) { return DB.drugs[d[0]]; }).map(function (d) {
+function fmCards(list) {
+  var seen = fmSeen(), sc = {}; (isF(S.level) ? scopeFor(S.level).ids : []).forEach(function (id) { sc[id] = 1; });
+  var vis = list.filter(function (d) { return DB.drugs[d[0]] && sc[d[0]]; });
+  if (!vis.length) return '<p class="fmnone">No medications in this section are given at ' + esc(fmTierName(S.level)) + '. They start at a higher tier.</p>';
+  var hidden = list.filter(function (d) { return DB.drugs[d[0]] && !sc[d[0]]; }).length;
+  return '<p class="muted small">Tap a card for its role and cautions.' + (hidden ? ' ' + hidden + ' more in this section start' + (hidden === 1 ? 's' : '') + ' at a higher tier.' : '') + '</p><div class="fmgrid">' + vis.map(function (d) {
     var lk = typeof drugLocked === "function" && drugLocked(d[0]);
-    return '<div class="fmcard' + (seen.indexOf(d[0]) >= 0 ? ' seen' : '') + '" data-fmid="' + d[0] + '"><div class="fmin"><button class="fmfront" type="button" data-fmflip="1"><span class="fmtag">' + esc(d[1]) + '</span><strong>' + esc(nameOf(d[0])) + '</strong>' + (lk ? '<span class="lockpill">Plus</span>' : '') + '<span class="fmtap">Tap to flip</span></button>' +
-      '<div class="fmback"><span class="cmpk">Why it is in the bag</span><p>' + esc(d[2]) + '</p><span class="cmpk">Watch for</span><p>' + esc(d[3]) + '</p><div class="cmpacts"><button class="btn small" type="button" data-drug="' + d[0] + '">Open page</button><button class="btn small ghost" type="button" data-fmflip="1">Flip back</button></div></div></div></div>';
+    return '<div class="fmcard' + (seen.indexOf(d[0]) >= 0 ? ' seen' : '') + '" data-fmid="' + d[0] + '"><div class="fmin"><button class="fmfront" type="button" data-fmflip="1"><span class="fmtag">' + esc(FM_CLASS[d[0]] || d[1]) + '</span><strong>' + esc(nameOf(d[0])) + '</strong>' + (lk ? '<span class="lockpill">Plus</span>' : '') + '<span class="fmtap">Role and cautions</span></button>' +
+      '<div class="fmback"><span class="cmpk">Role in field care</span><p>' + esc(d[2]) + '</p><span class="cmpk">Cautions</span><p>' + esc(d[3]) + '</p><div class="cmpacts"><button class="btn small" type="button" data-drug="' + d[0] + '">Open page</button><button class="btn small ghost" type="button" data-fmflip="1">Flip back</button></div></div></div></div>';
   }).join("") + '</div>';
 }
 function fmKey(list, open) { return '<details class="fmkey"' + (open ? ' open' : '') + '><summary>Key ideas</summary><ul>' + list.map(function (k) { return '<li>' + esc(k) + '</li>'; }).join("") + '</ul></details>'; }
 function fieldTab(k) {
   var c = '<div class="fmwrap">';
-  if (k === "march") {
-    var seen = fmSeen(), all = fmIds(), n = all.filter(function (id) { return seen.indexOf(id) >= 0; }).length;
+  if (k === "skills") {
+    var cur = fmTierIdx(S.level), cats = [];
+    FM_SKILLS.forEach(function (x) { if (cats.indexOf(x[1]) < 0) cats.push(x[1]); });
+    c += '<p class="fmlead">' + esc((levelObj(S.level) || {}).blurb || "") + '</p><p class="muted small"><span class="fmnew">New</span> marks skills added at this tier. Everything else comes from the tiers before it.</p>';
+    cats.forEach(function (cat) {
+      var rows = FM_SKILLS.filter(function (x) { return x[1] === cat && fmTierIdx(x[0]) <= cur; }); if (!rows.length) return;
+      c += '<section class="fmskill"><h3>' + esc(cat) + '</h3><ul>' + rows.map(function (x) { return '<li' + (x[0] === S.level ? ' class="isnew"' : '') + '><span>' + esc(x[2]) + '</span>' + (x[0] === S.level ? '<span class="fmnew">New</span>' : '<span class="fmfrom">' + esc((DB.FLEVELS.filter(function (l) { return l.key === x[0]; })[0] || {}).short || "") + '</span>') + '</li>'; }).join("") + '</ul></section>';
+    });
+    var nxt = DB.FLEVELS[cur + 1];
+    if (nxt) c += '<p class="muted small">Next: ' + esc(nxt.short === "PCC" ? nxt.name : nxt.short + ", " + nxt.name) + ' adds ' + FM_SKILLS.filter(function (x) { return x[0] === nxt.key; }).length + ' more skill areas. <button class="linkish" data-level="' + nxt.key + '">Open ' + esc(nxt.short) + '</button></p>';
+  } else if (k === "march") {
+    var seen = fmSeen(), all = fmIds().filter(function (id) { return scopeFor(S.level).ids.indexOf(id) >= 0; }), n = all.filter(function (id) { return seen.indexOf(id) >= 0; }).length;
     c += '<section class="fmmarch" aria-label="MARCH-PAWS"><div class="fmletters">' + FM_MARCH.map(function (m, i) { return '<button class="fmlet' + (i >= 5 ? ' paws' : '') + '" data-fmstep="' + i + '" aria-pressed="' + (S.fmStep === i) + '" aria-label="' + esc(m[1]) + '">' + m[0] + '</button>'; }).join("") + '</div>' +
-      (S.fmStep != null && FM_MARCH[S.fmStep] ? '<div class="fmstep"><strong>' + esc(FM_MARCH[S.fmStep][1]) + '</strong><p>' + esc(FM_MARCH[S.fmStep][2]) + '</p><button class="linkish" data-tab="fm_' + FM_MARCH[S.fmStep][3] + '">Open ' + esc(FM_TABS["fm_" + FM_MARCH[S.fmStep][3]][0]) + ' &rsaquo;</button></div>' : '<p class="muted small fmhint">Tap a letter to walk the MARCH-PAWS flow.</p>') + '</section>';
-    c += '<div class="fmprog"><span><strong>' + n + '</strong> of ' + all.length + ' field drugs explored</span><span class="cmptrack"><span class="cmpfill fmfill" style="width:' + (all.length ? Math.round(100 * n / all.length) : 0) + '%"></span></span></div>';
-    c += '<button class="btn nrgo" data-act="fmdrill">Run the field drill' + (PAYWALL && !isPro() ? ' ' + proBadge() : '') + ' <span aria-hidden="true">&rarr;</span></button><p class="muted small">Put-in-order field calls plus questions on the trauma drugs.</p>';
+      (S.fmStep != null && FM_MARCH[S.fmStep] ? '<div class="fmstep"><strong>' + esc(FM_MARCH[S.fmStep][1]) + '</strong><p>' + esc(FM_MARCH[S.fmStep][2]) + '</p><button class="linkish" data-tab="fm_' + FM_MARCH[S.fmStep][3] + '">Open ' + esc(FM_TABS["fm_" + FM_MARCH[S.fmStep][3]][0]) + ' &rsaquo;</button></div>' : '<p class="muted small fmhint">Select a letter to review that step.</p>') + '</section>';
+    c += '<div class="fmprog"><span><strong>' + n + '</strong> of ' + all.length + ' field medications reviewed</span><span class="cmptrack"><span class="cmpfill fmfill" style="width:' + (all.length ? Math.round(100 * n / all.length) : 0) + '%"></span></span></div>';
+    c += '<button class="btn nrgo" data-act="fmdrill">Start the ' + esc((DB.FLEVELS.filter(function (l) { return l.key === S.level; })[0] || {}).short || "") + ' drill' + (PAYWALL && !isPro() ? ' ' + proBadge() : '') + '</button><p class="muted small">Priority calls in order, plus questions on the medications at this tier.</p>';
   } else if (k.indexOf("fm_") === 0) {
     var t = fmSec(k.slice(3)); if (!t) return "";
     c += '<div style="--fm:' + t[3] + '">' + fmKey(t[5], true) + fmCards(t[6]) + '</div>';
@@ -9483,10 +9564,10 @@ function fieldTab(k) {
   return c + '<p class="muted small fmnote">' + esc(FM_NOTE) + '</p></div>';
 }
 /* the old stand-alone view now opens the Field Medic level */
-function fieldView() { setTimeout(function () { go("level", { level: "field" }); }, 0); return topbar(); }
+function fieldView() { setTimeout(function () { go("flevels"); }, 0); return topbar(); }
 /* clicks: handled before the app's own handler (capture); flips and lab checks without a re-render */
 document.addEventListener("click", function (e) {
-  if (typeof S === "undefined" || S.view !== "level" || S.level !== "field") return;
+  if (typeof S === "undefined" || S.view !== "level" || !isF(S.level)) return;
   var t = e.target.closest && e.target.closest("[data-fmflip],[data-fmstep],[data-isv],[data-ischeck]"); if (!t) return;
   e.preventDefault(); e.stopPropagation();
   if (t.hasAttribute("data-fmflip")) {
@@ -9500,8 +9581,8 @@ document.addEventListener("click", function (e) {
     var sec = t.closest(".iscase"), cs = ISTAT_CASES[+t.getAttribute("data-ischeck")], right = 0, wrong = 0, out = sec.querySelector(".isout");
     sec.classList.add("done");
     sec.querySelectorAll(".isval").forEach(function (b) { var v = cs[3][+b.getAttribute("data-isv")], picked = b.getAttribute("aria-pressed") === "true", off = !!v[2]; b.classList.add(off ? (picked ? "hit" : "miss") : (picked ? "wrongpick" : "ok")); if (picked === off) right++; else wrong++; if (off) b.querySelector("strong").insertAdjacentHTML("beforeend", ' <em>' + (v[2] === "H" ? "high" : "low") + '</em>'); });
-    out.hidden = false; out.innerHTML = '<strong>' + (wrong ? right + " of " + cs[3].length + " called right." : "All called right!") + '</strong><ul>' + cs[3].filter(function (v) { return v[2]; }).map(function (v) { return '<li><strong>' + esc(v[0]) + ':</strong> ' + esc(v[3]) + '</li>'; }).join("") + '</ul>';
-    t.hidden = true; if (!wrong && typeof earn === "function") { earn(2); saveProg(); out.insertAdjacentHTML("beforeend", "<p class=\"earned\">+2 sticks</p>"); }
+    out.hidden = false; out.innerHTML = '<strong>' + (wrong ? right + " of " + cs[3].length + " interpreted correctly." : "All values interpreted correctly.") + '</strong><ul>' + cs[3].filter(function (v) { return v[2]; }).map(function (v) { return '<li><strong>' + esc(v[0]) + ':</strong> ' + esc(v[3]) + '</li>'; }).join("") + '</ul>';
+    t.hidden = true; if (!wrong && typeof earn === "function") { earn(2); saveProg(); out.insertAdjacentHTML("beforeend", "<p class=\"earned small\">+2 sticks</p>"); }
     return;
   }
   if (t.hasAttribute("data-fmstep")) { var i = +t.getAttribute("data-fmstep"); S.fmStep = S.fmStep === i ? null : i; render(); }

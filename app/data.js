@@ -212,9 +212,7 @@ DB.LEVELS = [
   { key: "paramedic", name: "Paramedic", bug: "Siren Beetle", color: "medic",
     blurb: "Advanced life support. Cardiac arrest and dysrhythmia drugs, opioid analgesia, sedation, and RSI where credentialed." },
   { key: "flight", name: "Flight Paramedic", bug: "Sky Hornet", color: "flight",
-    blurb: "Critical care transport. Infusions, vasopressors, thrombolytics, antidotes, OB transport drugs and full RSI." },
-  { key: "field", name: "Field Medic", bug: "Field Beetle", color: "field",
-    blurb: "TCCC Tier 4 combat paramedic and prolonged casualty care: trauma drugs, TIVA drips, whole blood and i-STAT labs. No doses listed." }
+    blurb: "Critical care transport. Infusions, vasopressors, thrombolytics, antidotes, OB transport drugs and full RSI." }
 ];
 DB.SCOPE = {
   emt: {
@@ -258,12 +256,6 @@ DB.SCOPE = {
     "methylene-blue": "", "n-acetylcysteine": "", "physostigmine": "", "betamethasone": "", "carboprost": "",
     "methylergonovine": "", "misoprostol": "", "nifedipine": "",
     "mannitol": "", "hypertonic-saline-3-percent": "", "prothrombin-complex-concentrate": "", "idarucizumab": "", "protamine": "", "andexanet-alfa": ""
-  },
-  /* Field Medic (owner, Oct 28 2026): TCCC Tier 4 + prolonged casualty care. Builds on every Prehospital scope; NO dose notes at this level. */
-  field: {
-    "sodium-chloride-23-4-percent": "", "suzetrigine": "", "esketamine": "", "meloxicam": "", "acetaminophen": "",
-    "cefadroxil": "", "cephalexin": "", "ceftriaxone": "", "ertapenem": "", "moxifloxacin": "", "calcium-gluconate": "",
-    "hetastarch": "", "lactated-ringers": "", "plasma-lyte": "", "famotidine": ""
   }
 };
 DB.scopeFor = function (levelKey) {
@@ -276,8 +268,41 @@ DB.scopeFor = function (levelKey) {
     Object.keys(m).forEach(function (id) { ids[id] = true; if (m[id] && keepNotes) notes[id] = m[id]; });
     if (k === levelKey) break;
   }
-  if (levelKey === "field") notes = {}; /* Field Medic shows no dose notes (owner choice: most TCCC uses are off-label) */
   return { ids: Object.keys(ids), notes: notes };
+};
+
+/* ---------- Field Medic route (owner, Oct 28 2026): TCCC tiers + Prolonged Casualty Care ----------
+   Tiers follow the CoTCCC tiered curriculum (TCCC Skill Sets by Responder Level, master list 01 SEP 2023),
+   with medications updated to the TCCC Guidelines of 01 May 2026. Each tier includes everything below it.
+   NO DOSES at any Field Medic level (owner choice: most TCCC uses are off-label). Notes are role notes only. */
+DB.FLEVELS = [
+  { key: "asm", name: "All Service Members", short: "Tier 1", bug: "Self and buddy aid", color: "field",
+    blurb: "Tier 1. Self and buddy aid for every service member: tourniquets, wound packing, pressure dressings, positioning the airway, preventing hypothermia, and the DD1380 casualty card." },
+  { key: "cls", name: "Combat Lifesaver", short: "Tier 2", bug: "Combat lifesaver", color: "field",
+    blurb: "Tier 2. Adds tourniquet conversion, nasopharyngeal airways, bag-valve-mask, vented chest seals, needle decompression, splinting, the Combat Wound Medication Pack and oral antibiotics." },
+  { key: "cmc", name: "Combat Medic / Corpsman", short: "Tier 3", bug: "Medic and corpsman", color: "field",
+    blurb: "Tier 3. Adds junctional and pelvic devices, extraglottic airways, surgical cricothyroidotomy, IV and IO access, whole blood, TXA, calcium, ketamine, ondansetron, IV antibiotics and hypertonic saline." },
+  { key: "cpp", name: "Combat Paramedic / Provider", short: "Tier 4", bug: "Combat paramedic", color: "field",
+    blurb: "Tier 4. Adds endotracheal intubation, automated ventilation, finger and tube thoracostomy, capnography, point-of-care lactate and labs, Foley catheters and urine output monitoring." },
+  { key: "pcc", name: "Prolonged Casualty Care", short: "PCC", bug: "Hours to weeks", color: "field",
+    blurb: "Beyond Tier 4. Holding casualties for hours to weeks when evacuation is delayed: sedation drips, vasopressors, ventilator care, nursing care, i-STAT labs and teleconsultation." }
+];
+DB.FSCOPE = {
+  asm: { "acetaminophen": "Combat Wound Medication Pack (carried by every service member; given from Tier 2 up).", "meloxicam": "Combat Wound Medication Pack (carried by every service member; given from Tier 2 up).", "suzetrigine": "Combat Wound Medication Pack (added in the 2026 TCCC Guidelines)." },
+  cls: { "cefadroxil": "Oral antibiotic of choice in the 2026 TCCC Guidelines.", "cephalexin": "Oral alternative in the 2026 TCCC Guidelines.", "moxifloxacin": "Oral antibiotic in earlier TCCC guidelines (2023 skill sets); replaced in 2026." },
+  cmc: { "tranexamic-acid": "", "calcium-chloride": "Given after the first blood product.", "calcium-gluconate": "Given after the first blood product.", "ketamine": "", "esketamine": "Intranasal option added in the 2026 TCCC Guidelines.", "midazolam": "Listed for ketamine emergence reactions, not with ketamine for routine pain control.",
+    "ondansetron": "", "ceftriaxone": "IV, IO or IM antibiotic in the 2026 TCCC Guidelines.", "ertapenem": "IV or IM antibiotic in earlier TCCC guidelines; replaced in 2026.", "naloxone": "", "morphine": "Listed in the 2023 skill sets; not in the 2026 field analgesia options.", "fentanyl": "Oral transmucosal fentanyl was removed from the 2026 TCCC Guidelines.",
+    "hypertonic-saline-3-percent": "For herniation signs only.", "lidocaine": "Local anesthesia.", "lactated-ringers": "", "hetastarch": "Hextend.", "plasma-lyte": "" },
+  cpp: { "sodium-chloride-23-4-percent": "Concentrated hypertonic saline carried mainly at advanced and special operations levels." },
+  pcc: { "propofol": "", "dexmedetomidine": "", "norepinephrine": "", "vasopressin": "", "levetiracetam": "", "famotidine": "Stress ulcer prevention during long holds.", "mannitol": "",
+    "etomidate": "Drug-assisted airway management where scope and medical direction allow.", "rocuronium": "Drug-assisted airway management where scope and medical direction allow.", "succinylcholine": "Drug-assisted airway management where scope and medical direction allow." }
+};
+DB._fcache = {};
+DB.fscopeFor = function (key) {
+  if (DB._fcache[key]) return DB._fcache[key];
+  var ids = {}, notes = {};
+  for (var i = 0; i < DB.FLEVELS.length; i++) { var k = DB.FLEVELS[i].key, m = DB.FSCOPE[k] || {}; Object.keys(m).forEach(function (id) { if (!DB.drugs[id]) return; ids[id] = 1; if (m[id]) notes[id] = m[id]; }); if (k === key) break; }
+  return (DB._fcache[key] = { ids: Object.keys(ids), notes: notes });
 };
 
 ;
