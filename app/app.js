@@ -9257,6 +9257,7 @@ function disDetail(id) {
   c += deepP(e.what);
   c += '<p class="dnote">Draft study content. For learning only, not for diagnosing anyone. If you have health questions, ask a doctor, nurse or pharmacist. In an emergency, call 911.</p>';
   if (e.red) c += '<div class="disred"><b>When it is an emergency:</b> ' + esc(e.red) + '</div>';
+  if (typeof disTypesHTML === "function") c += disTypesHTML(id);
   var org = deepP(e.origin);
   if (e.timeline && e.timeline.length) org += '<ul class="tl">' + e.timeline.map(function (t) { return '<li><b>' + esc(t[0]) + '</b> ' + esc(t[1]) + '</li>'; }).join("") + '</ul>';
   c += deepSec("🌱", "Where it came from", org);
@@ -10711,6 +10712,325 @@ document.addEventListener("click", function (e) {
   e.preventDefault(); e.stopPropagation();
   S.trId = b.hasAttribute("data-trback") ? null : b.getAttribute("data-trc"); render(); try { window.scrollTo(0, 0); } catch (x) {}
 }, true);
+
+/* Disease Lab: "Types and patterns" for the field conditions (owner, Oct 28 2026:
+   "go into detail on the different diseases or conditions that can occur, for example spinal injuries has lots of types").
+   [type, what sets it apart]. Education wording, no doses. */
+var DIS_TYPES = {
+  "spinal-cord-injury": [
+    ["Complete injury (ASIA A)", "No motor or sensory function in the lowest sacral segments; the chance of meaningful recovery below the level is low."],
+    ["Incomplete injury (ASIA B to D)", "Some function is spared below the level: B sensory only, C some motor but most key muscles too weak to work against gravity, D most key muscles working against gravity. ASIA E is normal function."],
+    ["Central cord syndrome", "The most common incomplete pattern, often a neck hyperextension injury in an older person with arthritis of the spine. Arms are weaker than legs, and hands worst of all."],
+    ["Anterior cord syndrome", "Flexion injury or loss of blood flow in the anterior spinal artery. Motor function, pain and temperature are lost below the level; position sense and vibration are kept."],
+    ["Brown-Séquard syndrome", "Half the cord is cut, often by a stab or gunshot wound. Weakness and loss of position sense on the same side, loss of pain and temperature on the opposite side."],
+    ["Posterior cord syndrome", "Rare. Loss of position sense and vibration with movement and pain sensation largely kept."],
+    ["Conus medullaris syndrome", "Injury at the end of the cord (around T12 to L2): early bladder and bowel loss, saddle numbness, with mixed upper and lower motor neuron signs."],
+    ["Cauda equina syndrome", "Injury to the nerve roots below the cord: saddle numbness, bladder and bowel dysfunction and floppy leg weakness, often uneven between sides."],
+    ["Spinal shock", "A temporary loss of all reflexes and tone below the injury, lasting hours to weeks. It is not a blood pressure problem."],
+    ["Neurogenic shock", "Cervical or high thoracic injury cuts sympathetic tone: low blood pressure with a slow heart rate and warm, dry skin. In trauma, bleeding is ruled out before it is blamed."],
+    ["Fractures by mechanism", "Jefferson (C1 burst from axial load), hangman's (both C2 pars, hyperextension), odontoid (C2 dens, types I to III), burst (axial load with fragments pushed toward the cord), Chance (flexion-distraction, lap belt), compression or wedge (flexion, often stable), flexion teardrop (highly unstable)."],
+    ["Penetrating spinal injury", "Gunshot or fragment wounds. TCCC notes that cervical spine stabilization is not needed for penetrating trauma alone."],
+    ["Autonomic dysreflexia", "A later complication of injuries at or above T6: a full bladder or other trigger below the level causes dangerously high blood pressure, headache and flushing above it."]
+  ],
+  "traumatic-brain-injury": [
+    ["Concussion (mild TBI)", "Brief confusion, memory loss or loss of consciousness with a normal or near-normal exam and no bleeding on imaging."],
+    ["Epidural hematoma", "Arterial bleeding (often the middle meningeal artery under a temporal skull fracture) between skull and dura. A lucid interval can come before rapid decline."],
+    ["Subdural hematoma", "Venous bleeding from torn bridging veins under the dura. Acute after major trauma; chronic in older people and heavy drinkers after minor falls."],
+    ["Traumatic subarachnoid hemorrhage", "Blood in the spaces around the brain after trauma, common with other injuries."],
+    ["Contusion and intracerebral hemorrhage", "Bruising and bleeding in the brain tissue itself, often at the impact site and the opposite side (coup-contrecoup), and can enlarge over the first day."],
+    ["Diffuse axonal injury", "Shearing of nerve fibers from rotational forces; deep coma with little visible on CT."],
+    ["Penetrating TBI", "Gunshot or fragment wounds through the skull; TCCC states these are not automatically expectant."],
+    ["Blast TBI", "Brain injury from the pressure wave, often mild and easy to miss, sometimes with other blast injuries."],
+    ["Skull fractures", "Linear, depressed (bone pushed inward) or basilar. Basilar signs: raccoon eyes, bruising behind the ear (Battle sign) and clear fluid from the nose or ear."]
+  ],
+  "hemorrhagic-trauma": [
+    ["Class I (up to 15% of blood volume)", "About 750 mL in an adult. Vital signs stay near normal."],
+    ["Class II (15 to 30%)", "About 750 to 1,500 mL. Heart rate climbs, pulse pressure narrows, anxiety, but blood pressure is often still normal."],
+    ["Class III (30 to 40%)", "About 1,500 to 2,000 mL. Blood pressure falls, confusion, low urine output. Blood products are needed."],
+    ["Class IV (over 40%)", "Over 2,000 mL. Immediately life-threatening: very low pressure, little or no urine, lethargy."],
+    ["External compressible bleeding", "Arm and leg wounds that tourniquets, packing and pressure can control."],
+    ["Junctional bleeding", "Groin, armpit and neck, where limb tourniquets cannot reach."],
+    ["Non-compressible torso bleeding", "Chest, abdomen and pelvis, where only surgery controls the source."]
+  ],
+  "shock": [
+    ["Hypovolemic (hemorrhagic)", "Not enough volume: bleeding, burns, vomiting or diarrhea. Cool, pale skin and a fast pulse."],
+    ["Distributive: septic", "Infection dilates vessels and makes them leak; skin can be warm early."],
+    ["Distributive: anaphylactic", "An allergic reaction dilates vessels, with hives, wheezing or airway swelling."],
+    ["Distributive: neurogenic", "Spinal cord injury removes sympathetic tone: low pressure with a slow pulse and warm skin."],
+    ["Cardiogenic", "The heart cannot pump: heart attack, arrhythmia, heart contusion. Lungs may fill with fluid."],
+    ["Obstructive", "Something blocks blood flow: tension pneumothorax, cardiac tamponade or a large pulmonary embolism."]
+  ],
+  "pneumothorax": [
+    ["Simple pneumothorax", "Air around the lung without pressure buildup; breathing may be only mildly affected."],
+    ["Tension pneumothorax", "Trapped air under pressure collapses the lung and blocks blood return to the heart; it leads to shock and arrest without decompression."],
+    ["Open (sucking) chest wound", "Air moves through a hole in the chest wall; treated with a chest seal."],
+    ["Hemothorax and hemopneumothorax", "Blood, or blood and air, in the chest. A large hemothorax can hold a large share of the blood volume."],
+    ["Primary spontaneous", "No lung disease, often a tall, thin young adult; small blebs rupture."],
+    ["Secondary spontaneous", "Underlying lung disease such as COPD, more dangerous because reserve is low."],
+    ["Barotrauma", "From positive-pressure ventilation, blast or a fast ascent in diving."]
+  ],
+  "burns": [
+    ["Superficial (first degree)", "Epidermis only: red, painful, no blisters, like sunburn. Not counted in burn size for fluids."],
+    ["Superficial partial thickness", "Blisters, moist pink base, very painful; usually heals in about 2 to 3 weeks."],
+    ["Deep partial thickness", "Paler, drier, less painful; may need grafting."],
+    ["Full thickness (third degree)", "Leathery, white, brown or charred, painless because nerves are destroyed; needs grafting."],
+    ["Fourth degree", "Extends into fat, muscle or bone."],
+    ["Thermal", "Flame, scald or contact burns."],
+    ["Chemical", "Alkalis penetrate deeper than acids; long irrigation removes the agent."],
+    ["Electrical", "Small skin wounds can hide deep muscle damage, arrhythmias and muscle breakdown."],
+    ["Inhalation injury", "Airway and lung injury from heat and smoke, often with carbon monoxide or cyanide."],
+    ["Circumferential burns", "Burns around a limb or the chest act like a band as swelling builds, cutting off blood flow or breathing."]
+  ],
+  "fractures": [
+    ["Closed vs open", "Open fractures break the skin; they are graded by wound size and contamination (Gustilo I to III) and need antibiotics."],
+    ["Transverse, oblique and spiral", "Patterns from direct blows, angled forces and twisting injuries."],
+    ["Comminuted and segmental", "Bone in three or more pieces, or a segment broken free; high-energy injuries."],
+    ["Greenstick and buckle", "Incomplete fractures in children's softer bones."],
+    ["Avulsion", "A tendon or ligament pulls off a piece of bone."],
+    ["Stress fracture", "From repeated load, common in training and long marches (tibia, metatarsals, femoral neck)."],
+    ["Pelvic patterns", "Lateral compression, anteroposterior (open book) and vertical shear; open book and vertical shear bleed the most."],
+    ["Femur fracture", "Can hide over a liter of blood in the thigh."],
+    ["Dislocations", "Joints out of place, with risk to nearby nerves and vessels; pulses are checked before and after splinting."]
+  ],
+  "compartment-syndrome": [
+    ["Acute traumatic", "Fractures, crush injury, gunshot wounds and bleeding into a muscle compartment."],
+    ["Reperfusion", "Swelling after blood flow returns to an ischemic limb, such as after a long tourniquet time or vascular repair."],
+    ["Burn-related", "Circumferential burns and large fluid volumes raise compartment pressures."],
+    ["External compression", "Tight dressings, splints, casts or a casualty lying on a limb for hours."],
+    ["Chronic exertional", "Pain with exercise that resolves with rest; not an emergency."],
+    ["Abdominal compartment syndrome", "Pressure in the abdomen from swelling, bleeding or massive resuscitation, with falling urine output and stiff ventilation."],
+    ["Common sites", "Lower leg (four compartments), forearm, thigh, hand, foot and buttock."]
+  ],
+  "rhabdomyolysis": [
+    ["Traumatic and crush", "Prolonged compression or direct muscle injury, as in collapsed buildings."],
+    ["Exertional", "Extreme exercise, especially in heat, in new recruits or after a sudden increase in training."],
+    ["Heat-related", "Exertional heat stroke and other hyperthermia syndromes."],
+    ["Immobilization", "Lying on muscle for hours after a fall, overdose or unconsciousness."],
+    ["Drug and toxin", "Statins, cocaine, amphetamines, alcohol and some poisonings."],
+    ["Electrical injury", "Current through muscle causes deep damage."],
+    ["Complications", "Acute kidney injury from myoglobin, high potassium and compartment syndrome."]
+  ],
+  "dic": [
+    ["Acute (bleeding) DIC", "Clotting factors and platelets are used up quickly, causing oozing from wounds, lines and gums; trauma, sepsis and obstetric emergencies."],
+    ["Chronic (clotting) DIC", "Slower, with more clotting than bleeding, often in cancer."],
+    ["Trauma-induced coagulopathy", "A related but distinct early clotting failure in severe trauma, driven by shock, tissue injury, dilution, cold, acidosis and low calcium."]
+  ],
+  "cardiac-arrest": [
+    ["Shockable rhythms", "Ventricular fibrillation and pulseless ventricular tachycardia, treated with defibrillation."],
+    ["Non-shockable rhythms", "Pulseless electrical activity and asystole; outcome depends on finding a reversible cause."],
+    ["Traumatic arrest", "Usually from blood loss, tension pneumothorax, hypoxia or tamponade; TCCC lists bilateral needle decompression."],
+    ["Medical arrest", "Heart attack, electrolyte problems, toxins, heat stroke or hypothermia."],
+    ["Reversible causes", "The H's and T's: hypovolemia, hypoxia, acidosis, potassium problems, hypothermia, tension pneumothorax, tamponade, toxins and thrombosis."]
+  ],
+  "heat-stroke": [
+    ["Heat cramps", "Painful muscle cramps during or after heavy sweating."],
+    ["Heat syncope", "Fainting from blood pooling in the legs and dilated skin vessels."],
+    ["Heat exhaustion", "Weakness, headache, nausea and heavy sweating with a normal mental status."],
+    ["Exertional heat stroke", "Core temperature typically above 40 °C (104 °F) with altered mental status during exertion, often still sweating. Rapid cooling is the treatment."],
+    ["Classic heat stroke", "In older or ill people during heat waves, usually with hot, dry skin."],
+    ["Exercise-associated hyponatremia", "A look-alike: confusion during long exertion from drinking too much water, with a near-normal temperature."]
+  ],
+  "hypothermia": [
+    ["Mild (32 to 35 °C)", "Shivering, clumsiness, fast breathing and pulse."],
+    ["Moderate (28 to 32 °C)", "Shivering slows or stops, confusion, slow pulse, arrhythmias begin."],
+    ["Severe (below 28 °C)", "Unconscious, very slow or absent vital signs; rough handling can trigger ventricular fibrillation."],
+    ["Trauma hypothermia", "Even mild cooling worsens bleeding by impairing clotting, which is why TCCC starts prevention for every casualty."],
+    ["Immersion hypothermia", "Cold water removes heat far faster than air."],
+    ["Frostbite and non-freezing cold injury", "Local cold injuries: frozen tissue, or trench foot from prolonged cold, wet exposure."]
+  ],
+  "drowning": [
+    ["Submersion vs immersion", "Submersion puts the airway under water; immersion keeps the head out but adds cold stress."],
+    ["Cold shock", "In the first minutes of cold water, gasping and fast breathing can cause aspiration."],
+    ["Swim failure and hypothermia", "Arms and legs weaken within about 30 minutes in cold water, and hypothermia follows."],
+    ["Circum-rescue collapse", "Collapse just before, during or after rescue from cold water."],
+    ["Fresh vs salt water", "Treated the same way; the main injury is hypoxia either way."]
+  ],
+  "altitude-sickness": [
+    ["Acute mountain sickness", "Headache with nausea, fatigue, dizziness or poor sleep after recent ascent, usually above about 2,500 m."],
+    ["High-altitude cerebral edema (HACE)", "Severe AMS with confusion or loss of coordination (ataxia); life-threatening. Descent is the key treatment."],
+    ["High-altitude pulmonary edema (HAPE)", "Breathlessness at rest, cough, low oxygen and crackles; the leading cause of altitude death. Descent and oxygen."],
+    ["Chronic mountain sickness", "Long-term residents at altitude who make too many red blood cells."]
+  ],
+  "decompression-sickness": [
+    ["Type I", "Musculoskeletal pain (joints), skin itching or marbling, and lymphatic swelling."],
+    ["Type II: neurological", "Numbness, weakness, confusion, bladder problems and girdle pain from spinal cord involvement."],
+    ["Type II: inner ear (staggers)", "Vertigo, hearing loss and ringing; can look like inner ear barotrauma."],
+    ["Type II: cardiopulmonary (chokes)", "Chest pain, cough and breathlessness that can progress to collapse."],
+    ["Arterial gas embolism", "Gas bubbles in the arteries after lung overexpansion; sudden neurological symptoms within minutes of surfacing."],
+    ["Decompression illness", "The combined term for DCS and arterial gas embolism, which share recompression treatment."]
+  ],
+  "snakebite": [
+    ["Pit vipers (U.S.)", "Rattlesnakes, copperheads and cottonmouths: local pain and swelling, tissue damage and clotting problems."],
+    ["Coral snakes (U.S.)", "Neurotoxic venom with little local reaction; weakness and breathing failure can be delayed for hours."],
+    ["Dry bites", "A sizeable share of bites inject little or no venom, but this is only clear after observation."],
+    ["Elapids abroad", "Cobras, kraits and mambas: mostly neurotoxic, with paralysis and breathing failure."],
+    ["Vipers abroad", "Saw-scaled vipers, Russell's vipers and others: bleeding and clotting failure, kidney injury and tissue damage."]
+  ],
+  "carbon-monoxide": [
+    ["Acute poisoning", "Fires, generators, heaters and vehicle exhaust in closed spaces: headache, nausea, confusion, collapse."],
+    ["Chronic low-level exposure", "Faulty heaters causing recurring headaches and flu-like symptoms that improve away from the source."],
+    ["Combined CO and cyanide", "Common in smoke from enclosed fires, with a high lactate pointing to cyanide."],
+    ["Delayed neurological sequelae", "Memory, mood and movement problems days to weeks after a significant exposure."]
+  ],
+  "organophosphate-poisoning": [
+    ["Pesticide poisoning", "Agricultural organophosphates by skin contact, inhalation or ingestion."],
+    ["Nerve agents", "G agents (sarin, soman, tabun) evaporate quickly; V agents such as VX are oily and persistent. Far more potent than pesticides."],
+    ["Carbamate poisoning", "Similar cholinergic signs, but the enzyme block is reversible and shorter."],
+    ["Acute cholinergic crisis", "Secretions, sweating, small pupils, wheezing, slow heart, vomiting and diarrhea (muscarinic), plus twitching and weakness (nicotinic), seizures."],
+    ["Intermediate syndrome", "Weakness of neck, limb and breathing muscles 1 to 4 days after exposure, after the crisis has settled."],
+    ["Delayed neuropathy", "Weakness and numbness of the limbs weeks after some organophosphate exposures."]
+  ],
+  "cyanide-poisoning": [
+    ["Smoke inhalation", "Burning plastics, wool and foam release hydrogen cyanide in enclosed fires."],
+    ["Industrial and chemical", "Hydrogen cyanide gas or cyanide salts in mining, metal work and as a chemical weapon."],
+    ["Ingestion", "Cyanide salts, or cyanogenic plants and seeds."],
+    ["Drug-related", "Prolonged or high-rate nitroprusside infusion."]
+  ],
+  "opioid-overdose": [
+    ["Heroin and prescription opioids", "Classic sedation, slow breathing and pinpoint pupils, reversed by naloxone."],
+    ["Fentanyl and analogs", "Very potent and fast; carfentanil and other analogs may need repeated naloxone."],
+    ["Nitazenes", "Newer synthetic opioids, often stronger than fentanyl, sold hidden in other drugs."],
+    ["Long-acting opioids", "Methadone and extended-release pills can outlast naloxone, so sedation can return."],
+    ["Adulterated supply", "Xylazine (a veterinary sedative) does not respond to naloxone and causes severe wounds."]
+  ],
+  "benzodiazepine-overdose": [
+    ["Pure overdose", "Deep sleep with mostly preserved breathing; rarely fatal alone."],
+    ["Combined with opioids or alcohol", "The dangerous pattern: breathing depression multiplies."],
+    ["Designer benzodiazepines", "Unregulated pills of unknown strength, often sold as known brands."],
+    ["Paradoxical reactions", "Agitation or aggression instead of sedation, more common at age extremes."]
+  ],
+  "sepsis": [
+    ["Sepsis", "Infection plus organ dysfunction: confusion, low blood pressure, fast breathing, low urine, rising lactate."],
+    ["Septic shock", "Sepsis needing vasopressors to keep the mean arterial pressure at 65 or more, with lactate above 2 despite fluids."],
+    ["Wound sepsis", "Contaminated combat wounds, burns and fasciotomy sites."],
+    ["Pneumonia and ventilator-associated", "The lungs of ventilated casualties are a common source in long holds."],
+    ["Urinary and line sepsis", "Foley catheters and IV or IO sites as the hold lengthens."],
+    ["Abdominal sepsis", "Bowel injury leaking gut bacteria into the abdomen."],
+    ["Meningococcal", "Fast-moving sepsis with a purple, non-blanching rash."]
+  ],
+  "cellulitis": [
+    ["Erysipelas", "Superficial, raised, sharply bordered redness, often on the face or legs."],
+    ["Cellulitis", "Deeper skin infection with spreading redness, warmth and swelling with a less distinct edge."],
+    ["Abscess", "A pocket of pus that needs draining more than antibiotics."],
+    ["Lymphangitis", "Red streaks running up from the infection along lymph channels."],
+    ["Necrotizing soft-tissue infection", "Rapidly spreading deep infection: type I mixed bacteria, type II group A strep, gas gangrene from clostridia. Pain out of proportion; a surgical emergency."]
+  ],
+  "osteomyelitis": [
+    ["Acute hematogenous", "Infection carried by the blood, most often in children."],
+    ["Post-traumatic and contiguous", "From open fractures, gunshot wounds and surgery, the main pattern in combat injury."],
+    ["Chronic", "Dead bone (sequestrum) that keeps the infection going for months or years."],
+    ["Vertebral", "Spine infection causing back pain and fever."],
+    ["Diabetic foot", "Spread from foot ulcers into bone."]
+  ],
+  "tetanus": [
+    ["Generalized", "The most common form: jaw stiffness (lockjaw), facial spasm, back arching and painful spasms set off by noise or touch."],
+    ["Localized", "Muscle stiffness near the wound only, which can progress to generalized."],
+    ["Cephalic", "After head and face wounds, with cranial nerve palsies."],
+    ["Neonatal", "In newborns of unvaccinated mothers, often from umbilical stump infection."]
+  ],
+  "malaria": [
+    ["Plasmodium falciparum", "The most dangerous species: cerebral malaria, severe anemia, kidney failure and breathing failure."],
+    ["P. vivax and P. ovale", "Can hide in the liver and relapse months later."],
+    ["P. malariae and P. knowlesi", "Malariae causes long-lasting low-level infection; knowlesi (Southeast Asia) can turn severe quickly."],
+    ["Uncomplicated vs severe", "Severe malaria includes confusion, seizures, breathing difficulty, shock, jaundice or very high parasite counts."]
+  ],
+  "rabies": [
+    ["Furious (encephalitic)", "The most common form: agitation, confusion, fear of water (hydrophobia) and of drafts of air."],
+    ["Paralytic", "Weakness spreading from the bitten limb, often missed at first."],
+    ["Exposure categories (WHO)", "I: touching or feeding animals, intact skin. II: nibbling or minor scratches without bleeding. III: bites or scratches that break the skin, or licks on broken skin or mucous membranes."]
+  ],
+  "meningitis": [
+    ["Bacterial", "Meningococcus and pneumococcus most often in adults: fever, headache, stiff neck and confusion, life-threatening within hours."],
+    ["Meningococcal with sepsis", "A purple, non-blanching rash and rapid shock."],
+    ["Viral", "The most common type and usually milder."],
+    ["Fungal and tuberculous", "Slower onset, mostly in people with weakened immunity or exposure."],
+    ["Encephalitis", "Brain infection itself, with confusion, behavior change and seizures more prominent than neck stiffness."]
+  ],
+  "gastroenteritis": [
+    ["Viral", "Norovirus spreads fast through units and ships; rotavirus mainly in children."],
+    ["Traveler's diarrhea (bacterial)", "Enterotoxigenic E. coli is the most common cause; Campylobacter, Salmonella and Shigella follow."],
+    ["Dysentery", "Bloody diarrhea with fever, from Shigella, Campylobacter, invasive E. coli or amoebas."],
+    ["Cholera", "Huge volumes of watery diarrhea that cause shock within hours."],
+    ["Parasitic", "Giardia and Cryptosporidium from untreated water, with longer-lasting symptoms."],
+    ["Toxin-mediated", "Staphylococcus aureus and Bacillus cereus toxins in food cause vomiting within hours."]
+  ],
+  "tuberculosis": [
+    ["Latent", "Infection without symptoms or spread."],
+    ["Active pulmonary", "Cough for weeks, fever, night sweats, weight loss and coughing blood; contagious."],
+    ["Extrapulmonary", "Lymph nodes, spine (Pott disease), meninges and other organs."],
+    ["Miliary", "Spread through the blood to many organs at once."],
+    ["Drug-resistant", "Multidrug-resistant (MDR) and extensively drug-resistant (XDR) strains need longer, specialized treatment."]
+  ],
+  "ards": [
+    ["Mild, moderate, severe", "Graded by the PaO2/FiO2 ratio on at least 5 cmH2O of PEEP: mild 200 to 300, moderate 100 to 200, severe 100 or less."],
+    ["Direct (pulmonary)", "Injury to the lung itself: pneumonia, aspiration, smoke, blast, lung contusion, drowning."],
+    ["Indirect (extrapulmonary)", "Injury from elsewhere: sepsis, massive transfusion (including TRALI), pancreatitis and major trauma."],
+    ["Phases", "Exudative (first week, leaky lungs), proliferative (repair) and fibrotic (scarring in some)."]
+  ],
+  "pulmonary-embolism": [
+    ["High-risk (massive)", "Clot causing shock or arrest."],
+    ["Intermediate-risk (submassive)", "Normal blood pressure but signs of right heart strain."],
+    ["Low-risk", "Stable, with no heart strain."],
+    ["Fat embolism", "Fat from long-bone fractures, typically 1 to 3 days later: low oxygen, confusion and a petechial rash."],
+    ["Air embolism", "Air in the veins from lines, wounds or diving."]
+  ],
+  "deep-vein-thrombosis": [
+    ["Proximal", "Thigh and knee veins (femoral, popliteal), with the highest risk of pulmonary embolism."],
+    ["Distal", "Calf veins only, lower risk."],
+    ["Upper extremity", "Often linked to IV lines."],
+    ["Provoked vs unprovoked", "Provoked by trauma, immobility, surgery or long travel, or with no clear trigger."],
+    ["Phlegmasia", "Massive clot blocking a whole limb's veins, with a swollen, blue, painful leg that threatens the limb."]
+  ],
+  "hyperkalemia": [
+    ["Mild, moderate, severe", "Roughly 5.5 to 6, 6 to 7, and above 7 mmol/L; ECG changes matter as much as the number."],
+    ["Release from cells", "Crush injury, muscle breakdown, burns, tourniquet release, acidosis, stored blood and succinylcholine after the first day in some injuries."],
+    ["Reduced excretion", "Acute kidney injury and drugs that hold potassium."],
+    ["Pseudohyperkalemia", "A falsely high value from a hemolyzed sample."],
+    ["ECG progression", "Peaked T waves, then flattened P waves and a widened QRS, then a sine-wave pattern and arrest."]
+  ],
+  "hyponatremia": [
+    ["Hypovolemic", "Salt and water loss with water replacement only: vomiting, diarrhea, sweating."],
+    ["Euvolemic", "SIADH (from brain injury, pain, drugs, lung disease) and exercise-associated hyponatremia from over-drinking."],
+    ["Hypervolemic", "Heart, liver or kidney failure with fluid overload."],
+    ["Acute vs chronic", "Acute (under 48 hours) causes brain swelling and seizures; correcting chronic hyponatremia too fast risks osmotic demyelination."]
+  ],
+  "hypoglycemia": [
+    ["Level 1", "Glucose below 70 mg/dL."],
+    ["Level 2", "Below 54 mg/dL, with clear symptoms such as sweating, shaking and confusion."],
+    ["Level 3 (severe)", "Any low glucose with confusion or unconsciousness needing help from someone else."],
+    ["Causes", "Insulin and sulfonylureas, alcohol, sepsis, liver failure, starvation and long exertion."]
+  ],
+  "diabetic-ketoacidosis": [
+    ["Mild, moderate, severe DKA", "Graded by pH, bicarbonate and mental status."],
+    ["Hyperosmolar hyperglycemic state", "Very high glucose and dehydration with little ketosis, usually in older type 2 diabetics, often with confusion."],
+    ["Euglycemic DKA", "Ketoacidosis with near-normal glucose, linked to SGLT2 inhibitor drugs, starvation and pregnancy."]
+  ],
+  "status-epilepticus": [
+    ["Convulsive", "A generalized tonic-clonic seizure lasting 5 minutes or more, or repeated seizures without recovery between."],
+    ["Non-convulsive", "Ongoing seizure activity without obvious jerking, seen as coma or confusion; found on EEG."],
+    ["Focal", "Seizure activity confined to one part of the body, with or without impaired awareness."],
+    ["Refractory and super-refractory", "Continuing after a benzodiazepine and a second drug, or after anesthetic drugs."],
+    ["Field causes", "Brain injury, low oxygen, low glucose, low sodium, heat stroke, toxins and nerve agents."]
+  ],
+  "anaphylaxis": [
+    ["Allergic (IgE)", "Foods, insect stings, drugs such as antibiotics, and latex."],
+    ["Non-IgE", "Direct mast cell release from contrast dye, some opioids and other drugs."],
+    ["Biphasic", "Symptoms return hours after the first reaction settles, without a new exposure."],
+    ["Refractory", "Continuing despite repeated epinephrine, needing an infusion and advanced care."],
+    ["Exercise-induced", "Triggered by exertion, sometimes only after a specific food."]
+  ],
+  "ptsd": [
+    ["Combat and operational stress reaction", "The military term for normal, expected stress responses in the field: exhaustion, irritability, poor sleep. Most resolve with rest and support."],
+    ["Acute stress reaction", "Symptoms in the hours and days after a traumatic event."],
+    ["Acute stress disorder", "Significant symptoms lasting from 3 days to 1 month after the event."],
+    ["Post-traumatic stress disorder", "Re-experiencing, avoidance, negative mood and hyperarousal lasting more than 1 month."],
+    ["Complex PTSD", "After prolonged or repeated trauma, with added problems in emotion and relationships."]
+  ]
+};
+function disTypesHTML(id) {
+  var T = (typeof DIS_TYPES !== "undefined" && DIS_TYPES[id]) || null; if (!T) return "";
+  return deepSec("🧩", "Types and patterns", '<div class="organs distypes">' + T.map(function (t) { return '<div class="organ"><b>' + esc(t[0]) + '</b>' + esc(t[1]) + '</div>'; }).join("") + '</div>');
+}
 
 
 /* ---------- boot ---------- */
