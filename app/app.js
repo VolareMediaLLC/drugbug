@@ -403,7 +403,7 @@ function homeContinue() {
 }
 function viewLevels() {
   var rt = routeCtx(), nurse = rt === "rn", med = rt === "md", img = rt === "im", fm = rt === "fm", L = nurse ? DB.NLEVELS : med ? DB.MLEVELS : img ? DB.ILEVELS : fm ? DB.FLEVELS : DB.LEVELS;
-  var c = topbar() + '<header class="pagehead"><h1>' + (fm ? "Field Medic: choose your tier" : nurse ? "Nursing: choose your license" : med ? "Medical school: choose your year" : img ? "Imaging: choose your modality" : "Choose your level") + '</h1><p>' + (fm ? "Tactical Combat Casualty Care in four tiers, from every service member to the combat paramedic, plus prolonged casualty care. Each tier includes every skill and medication from the tiers before it." : img ? "Each modality covers the reaction cart and sedation drugs every tech needs, plus the contrast agents and radiopharmaceuticals for that modality." : med ? "Every year studies the full drug library; the exam prep, scenarios and focus change as you advance. Your bug evolves with you." : "Each level includes every drug from the levels before it. Your bug evolves as your scope grows.") + '</p></header><section class="levels' + (fm ? " flv" : (L.length === 3 || L.length === 5 ? " three" : "")) + '">';
+  var c = topbar() + '<header class="pagehead"><h1>' + (fm ? "Field Medic: choose your tier" : nurse ? "Nursing: choose your license" : med ? "Medical school: choose your year" : img ? "Imaging: choose your modality" : "Choose your level") + '</h1><p>' + (fm ? "Tactical Combat Casualty Care in four tiers, from every service member to the combat paramedic with prolonged casualty care. Each tier includes every skill and medication from the tiers before it." : img ? "Each modality covers the reaction cart and sedation drugs every tech needs, plus the contrast agents and radiopharmaceuticals for that modality." : med ? "Every year studies the full drug library; the exam prep, scenarios and focus change as you advance. Your bug evolves with you." : "Each level includes every drug from the levels before it. Your bug evolves as your scope grows.") + '</p></header><section class="levels' + (fm ? " flv" : (L.length === 3 || L.length === 5 ? " three" : "")) + '">';
   L.forEach(function (l, i) {
     c += '<button class="lvcard ' + LVCLASS[l.key] + '" data-level="' + l.key + '"><span class="stage">' + levelBug(l.key) + '</span><span class="pip">' + (img ? esc(l.full).toUpperCase() : esc(scopeTag(l.key, i, L.length)).toUpperCase()) + '</span><h2>' + esc(l.name) + '</h2><span class="bugname">' + esc(l.bug) + '</span><p>' + esc(l.blurb) + '</p></button>';
   });
@@ -479,13 +479,13 @@ function tabList() {
 function tabName(k) { var t = tabList().filter(function (x) { return x[0] === k; })[0]; return t ? t[1] : k === "session" ? "Study session" : ""; }
 /* Hub tiles grouped into sections with short labels (UI cleanup, Oct 28 2026) */
 var HUB_GROUPS = [
-  ["Field care", ["pcc", "pcc_icu", "march", "fm_trauma", "fm_care", "fm_adv"]],
+  ["Field care", ["fm_trauma", "fm_care", "pcc", "pcc_icu", "fm_adv"]],
   ["Look it up", ["registry", "families", "conds", "diseases", "illicit", "units", "body", "alts", "contrast", "labs", "blood", "hemo", "flightp"]],
   ["Food and vitamin compounds", ["vegc", "fruitc", "vitc"]],
   ["Study and practice", ["prep", "nbug", "cards", "scenarios", "tools", "games"]],
   ["Yours", ["mylist", "progress", "shop"]]
 ];
-var HUB_SHORT = { pcc_icu: "TIVA, drips and the vent", fm_trauma: "Bleeding, airway, head injury", fm_care: "Pain, nausea, wounds, burns", fm_adv: "Procedures, ACLS, i-STAT, dive", pcc_vent: "Vents, tubes and oxygen", pcc_nurse: "Turning, lines, eyes, skin", pcc_tele: "Consults and getting out", board: "Every field drug by class", acls: "Rhythm by rhythm", dive: "Dive tables, DCS and AGE", skills: "What this tier is trained to do", march: "Sequence, tier skills, drill", fm_bleed: "Hemorrhage control, TXA, blood", fm_tiva: "Ketamine-based sedation", fm_head: "Herniation, 3% and 23.4% saline", fm_pain: "Wound pack, ketamine, esketamine", fm_abx: "Wounds, eye injury, burns", fm_airway: "Positioning to surgical airway", pcc: "Drugs by problem, handling, flight", istat: "Point-of-care labs", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "Saved drugs and their interactions", tools: "Megacode, interactions, safety drills", scenarios: "Clinical cases", cards: "Flip, sort and master", games: "Match, crossword, scramble and more", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time", prep: "Timed tests with scores" };
+var HUB_SHORT = { pcc_icu: "FDA drip doses and vent settings", fm_trauma: "Tier skills, bleeding, airway, head", fm_care: "Pain, nausea, wounds, burns", fm_adv: "Procedures, ACLS, i-STAT, dive", pcc_vent: "Vents, tubes and oxygen", pcc_nurse: "Turning, lines, eyes, skin", pcc_tele: "Consults and getting out", board: "Every field drug by class", acls: "Rhythm by rhythm", dive: "Dive tables, DCS and AGE", skills: "What this tier is trained to do", march: "Sequence, tier skills, drill", fm_bleed: "Hemorrhage control, TXA, blood", fm_tiva: "Ketamine-based sedation", fm_head: "Herniation, 3% and 23.4% saline", fm_pain: "Wound pack, ketamine, esketamine", fm_abx: "Wounds, eye injury, burns", fm_airway: "Positioning to surgical airway", pcc: "Long-hold drugs and drug handling", istat: "Point-of-care labs", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "Saved drugs and their interactions", tools: "Megacode, interactions, safety drills", scenarios: "Clinical cases", cards: "Flip, sort and master", games: "Match, crossword, scramble and more", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time", prep: "Timed tests with scores" };
 function hubView() {
   var L = tabList(), used = {}, c = '<nav class="hub2" aria-label="Sections">';
   function tile(t) {
@@ -1412,6 +1412,7 @@ document.addEventListener("click", function (e) {
     case "weakgo": var stw = nrState(); stw.mode = "practice"; nrStart(weakPool().slice(0, 20)); S.nr.kind = "weak"; render(); return window.scrollTo(0, 0);
     case "exedit": S.exEdit = true; return render();
     case "fmdrill": return typeof fmDrill === "function" && fmDrill();
+    case "aclstest": return typeof fmAclsTest === "function" && fmAclsTest();
     case "nrmore": S.nrMore = !(S.nrMore || S.exEdit); S.exEdit = false; return render();
     case "exclear": if (Prog.d.exam) delete Prog.d.exam[examKey()]; S.exEdit = false; saveProg(); return render();
     case "nrstart": var st0 = nrState(), pl0 = nrPool(st0.filter), pk0 = st0.kind === "reg" ? regCompose(pl0, st0.n, st0.adaptive !== false) : isEMSLv(ctxKey()) ? nrCompose(pl0, Math.min(st0.n, pl0.length), st0.filter && st0.filter !== "all" ? [st0.filter] : nrLevelsFor(ctxKey()), st0.adaptive !== false) : st0.adaptive !== false ? adaptivePick(pl0, st0.n) : shuffle(pl0).slice(0, st0.n); nrStart(pk0); render(); return window.scrollTo(0, 0);
@@ -2152,6 +2153,8 @@ function startSession(kind, opt) {
     var dq = adaptivePick(pool.filter(function (q) { return q.d && sid.indexOf(q.d) >= 0; }), 6), fmq = mine.concat(rest).slice(0, 12 - dq.length);
     qs = shuffle(fmq.concat(dq)); /* this tier's calls first, then lower tiers, plus drug questions on this tier's scope: 12 total */
     var lo = levelObj(S.level) || {}; title = (lo.short || "Field") + " drill"; sub = "Priority calls in order, plus questions on the medications at this tier.";
+  } else if (kind === "acls" && typeof fmAclsQs === "function") {
+    qs = shuffle(fmAclsQs()).slice(0, 15); title = "ACLS algorithms test"; sub = "Order the steps, what comes next, and which algorithm fits.";
   } else if (kind === "weak") {
     var w = weakest(scopeIds(), 15); qs = adaptivePick(pool.filter(function (q) { return w.indexOf(q.d) >= 0; }), 10); title = "Practice my weak drugs"; sub = "Drugs with the lowest mastery come first.";
   }
@@ -9294,8 +9297,8 @@ function disDrugSection(drugId) {
    written descriptively (tools/callwording/RULES.md: no imperatives, no always/never/must/should).
    Field Medic is a Prehospital LEVEL (key "field", after Flight Paramedic) with the same hub as every level,
    plus the field tabs below (FM_TABS). S.fmStep = open MARCH-PAWS letter. */
-var FM_NOTE_SHORT = "Education only · No doses at the Field Medic level · Not affiliated with the CoTCCC, the Joint Trauma System or the DoD.";
-var FM_NOTE = "Education only. DrugBug lists no doses at the Field Medic level. Field care follows the current CoTCCC guidelines, Joint Trauma System guidance, unit protocols and medical direction. Not affiliated with or endorsed by the CoTCCC, the Joint Trauma System or the Department of Defense.";
+var FM_NOTE_SHORT = "Education only · Doses only on the Tier 4 drip cards, from the FDA labels · Not affiliated with the CoTCCC, the Joint Trauma System or the DoD.";
+var FM_NOTE = "Education only. At the Field Medic level DrugBug lists doses only for Tier 4 drips, taken from the FDA labels. Field care follows the current CoTCCC guidelines, Joint Trauma System guidance, unit protocols and medical direction. Not affiliated with or endorsed by the CoTCCC, the Joint Trauma System or the Department of Defense.";
 /* MARCH-PAWS: letter, name, one line, section to jump to */
 var FM_MARCH = [
   ["M", "Massive hemorrhage", "Tourniquets, wound packing and junctional control first. TXA and blood come right behind.", "bleed"],
@@ -9354,7 +9357,7 @@ var FM_SECS = [
   ["pain", "Pain & nausea", "Pain control that keeps the airway, breathing and thinking intact.", "#f59e0b", "bolt",
     ["TCCC splits pain care by one question: can the casualty stay in the fight?",
      "Mission capable: the Combat Wound Medication Pack, with acetaminophen, meloxicam and suzetrigine, all by mouth.",
-     "Not mission capable: the pill pack plus ketamine (IM, intranasal or IV/IO) or intranasal esketamine.",
+     "Not mission capable: the pill pack plus ketamine (IM, intranasal or IV/IO) or intranasal esketamine, both point-of-injury options for TCCC medical personnel.",
      "Before ketamine, TCCC describes disarming the casualty and documenting an AVPU mental status. The endpoint is tolerable pain or nystagmus, not zero pain.",
      "The 2026 guidelines removed fentanyl and oral transmucosal fentanyl from field analgesia and added suzetrigine and esketamine.",
      "Ondansetron is the listed medicine for nausea and vomiting."],
@@ -9362,7 +9365,7 @@ var FM_SECS = [
      ["meloxicam", "Pill pack", "Anti-inflammatory chosen because it affects platelets less than many others in its class.", "Stomach and kidney effects, more so with dehydration."],
      ["suzetrigine", "Non-opioid newcomer", "Blocks a pain-specific sodium channel (NaV1.8) on pain nerves, so it relieves pain without sedation or opioid effects.", "New to TCCC in 2026. Interacts with some drugs that change liver enzymes."],
      ["ketamine", "Big-gun analgesia", "Strong pain relief that tends to protect breathing and blood pressure, which is why it is the choice in shock.", "Disorientation and emergence reactions. Can cloud a neurologic exam in head injury."],
-     ["esketamine", "Nasal ketamine", "The S-form of ketamine, given in the nose, added as a field analgesia option in 2026.", "Same dissociation and blood pressure effects as ketamine."],
+     ["esketamine", "Point-of-injury nasal ketamine", "The S-form of ketamine, given in the nose: a 2026 TCCC point-of-injury analgesia option for casualties who cannot stay in the fight.", "Same dissociation and blood pressure effects as ketamine."],
      ["ondansetron", "Nausea", "Blocks serotonin signals that trigger vomiting. Comes as a dissolving tablet, IV, IO or IM.", "Heart rhythm effects (QT prolongation)."]]],
   ["abx", "Antibiotics & wounds", "Every open combat wound gets antibiotics as early as possible.", "#22c55e", "shield",
     ["TCCC lists antibiotics for all open combat wounds and invasive procedures.",
@@ -9432,7 +9435,7 @@ var FM_Q = [];
     "S|pcc|After several units of stored blood, which i-STAT change is expected?|Low ionized calcium|Low potassium|High hemoglobin|Low sodium|Citrate in stored blood binds calcium, so ionized calcium falls. Potassium often rises."
   ];
   L.forEach(function (l) {
-    var f = l.split("|");
+    var f = l.split("|"); if (f[1] === "pcc") f[1] = "cpp";
     if (f[0] === "O") { var st = f[3].split(";;"); FM_Q.push({ reg: 1, t: "order", prio: 1, lv: f[1], cat: "trauma", d: "", fm: 1, q: f[2], x: f[4], w: [], opts: st.slice(), ok: st.slice(), a: st.map(function (p, k) { return (k + 1) + ". " + p; }).join("  ") }); }
     else if (f[0] === "S") FM_Q.push({ reg: 1, lv: f[1], cat: "trauma", d: "", fm: 1, q: f[2], a: f[3], w: [f[4], f[5], f[6]], x: f[7] });
   });
@@ -9452,7 +9455,7 @@ if (typeof IMBUG !== "undefined") {
   IMBUG.asm = { name: "Tier 1", body: "ant", c: ["#f2c46b", "#c0762a", "#fff4d6"], acc: ["tachelmet"] };
   IMBUG.cls = { name: "Tier 2", body: "beetle", c: ["#7ee06a", "#2f8f3a", "#eaffe0"], acc: ["tachelmet", "patch"] };
   IMBUG.cmc = { name: "Tier 3", body: "mantis", c: ["#3ee0b0", "#0f8a74", "#dcfff4"], acc: ["tachelmet", "goggles", "patch"] };
-  IMBUG.cpp = { name: "Tier 4", body: "stag", c: ["#5aa8ff", "#2440a8", "#e3efff"], acc: ["tachelmet", "nvg", "headset", "patch"] };
+  IMBUG.cpp = { name: "Tier 4", body: "stag", c: ["#5aa8ff", "#2440a8", "#e3efff"], acc: ["tachelmet", "nvg", "headset", "stetho"] };
   IMBUG.pcc = { name: "Prolonged Casualty Care", body: "scarab", c: ["#ff9a3c", "#b3261e", "#ffe3c4"], acc: ["tachelmet", "nvg", "headset", "stetho"] };
 }
 if (typeof LVB_FX !== "undefined") { LVB_FX.cpp = ["#9cc7ff", "#5aa8ff"]; LVB_FX.pcc = ["#ffb37a", "#ff7a3c"]; }
@@ -9460,25 +9463,24 @@ if (typeof LVB_QUIPS !== "undefined") {
   LVB_QUIPS.cpp = ["Tube confirmed: waveform.", "Blood on board.", "Ready for TACEVAC.", "Chest decompressed.", "Card is filled out."];
   LVB_QUIPS.pcc = ["Vitals trended.", "Drips checked.", "Urine output charted.", "Teleconsult on the line.", "Turned and padded."];
 }
-var FM_TIERS = ["asm", "cls", "cmc", "cpp", "pcc"];
-function fmTierIdx(k) { return FM_TIERS.indexOf(k); }
+/* Oct 28 2026: PCC merged into Tier 4 (owner). "pcc" content keys now mean Tier 4. */
+var FM_TIERS = ["asm", "cls", "cmc", "cpp"];
+function fmTierIdx(k) { return FM_TIERS.indexOf(k === "pcc" ? "cpp" : k); }
 function fmTierOk(min, max) { var i = fmTierIdx(S.level); return i >= fmTierIdx(min || "asm") && (!max || i <= fmTierIdx(max)); }
 function fmTierName(k) { var l = (DB.FLEVELS || []).filter(function (x) { return x.key === k; })[0]; return l ? (l.short === "PCC" ? "Prolonged Casualty Care" : l.short + " (" + l.name + ")") : k; }
 /* field tabs on the Field Medic level hub: key -> [name, description] */
 var FM_TABS = {
-  pcc: ["Prolonged Care", "Long-hold drugs by problem, drug handling, consult and flight.", "pcc"],
-  pcc_icu: ["Drips & Ventilator", "TIVA, sedation drips and running a vent for days.", "pcc"],
-  march: ["MARCH-PAWS", "The TCCC sequence, your tier's skills and the drill.", "asm"],
-  fm_trauma: ["Trauma Care", "Bleeding and shock, airway and breathing, head injury.", "asm"],
+  fm_trauma: ["Trauma Care", "Tier skills, bleeding and shock, airway, head injury.", "asm"],
   fm_care: ["Pain & Antibiotics", "The wound medication pack, nausea, wounds, eyes and burns.", "cls"],
+  pcc: ["Prolonged Care", "Long-hold drugs by problem and drug handling.", "cpp"],
+  pcc_icu: ["Drips & Vents", "Drip doses from the FDA labels and ventilator settings.", "cpp"],
   fm_adv: ["Advanced Care", "Procedures, ACLS rhythms, i-STAT labs and dive medicine.", "cpp"]
 };
 /* combined tabs (Oct 28 2026, owner: fewer, cleaner tabs): group -> sub-tabs [key, label, minTier, maxTier] */
 var FM_GROUPS = {
-  pcc: [["pcc", "By problem"], ["pcc_rx", "Handling"], ["pcc_tele", "Consult & flight"]],
-  pcc_icu: [["fm_tiva", "TIVA & drips"], ["pcc_vent", "Ventilator"]],
-  march: [["march", "MARCH-PAWS"], ["skills", "Tier skills", "asm", "cpp"], ["drill", "Check yourself"]],
-  fm_trauma: [["fm_bleed", "Bleeding"], ["fm_airway", "Airway"], ["fm_head", "Head injury", "cmc"]],
+  pcc: [["pcc", "By problem"], ["pcc_rx", "Handling"]],
+  pcc_icu: [["fm_tiva", "Drips"], ["pcc_vent", "Vent settings"]],
+  fm_trauma: [["skills", "Tier skills"], ["fm_bleed", "Bleeding"], ["fm_airway", "Airway"], ["fm_head", "Head injury", "cmc"]],
   fm_care: [["fm_pain", "Pain & nausea"], ["fm_abx", "Antibiotics"]],
   fm_adv: [["proc", "Procedures"], ["acls", "ACLS"], ["istat", "i-STAT"], ["dive", "Dive"]]
 };
@@ -9486,7 +9488,9 @@ function fmWhere(k) { for (var g in FM_GROUPS) { var x = FM_GROUPS[g].filter(fun
 function fmSubsOf(g) { return (FM_GROUPS[g] || []).filter(function (x) { return fmTierOk(x[2], x[3]); }); }
 /* old tab keys (links inside lessons, saved state) open their group at the right sub-tab */
 function fmAlias() {
+  if (S.level === "pcc") S.level = "cpp";
   if (!S.tab || FM_TABS[S.tab]) return;
+  var old = { march: "skills", drill: "skills", pcc_tele: "pcc", pcc_nurse: "pcc" }; if (old[S.tab]) S.tab = old[S.tab];
   for (var g in FM_GROUPS) { if (FM_GROUPS[g].some(function (x) { return x[0] === S.tab; })) { S.fmSub = S.fmSub || {}; S.fmSub["g_" + g] = S.tab; S.tab = g; return; } }
 }
 if (typeof ICO !== "undefined") {
@@ -9751,22 +9755,26 @@ function fieldTab(k) {
     var subs = fmSubsOf(k), cur = (S.fmSub || {})["g_" + k];
     if (!subs.some(function (x) { return x[0] === cur; })) cur = subs[0][0];
     S.fmSub = S.fmSub || {}; S.fmSub["g_" + k] = cur;
-    return '<div class="fmwrap">' + (subs.length > 1 ? fmSubBar("g_" + k, subs) : '') + '</div>' + fieldTabBody(cur);
+    return '<div class="fmwrap">' + (k === "fm_trauma" ? fmMarchStrip() : '') + (subs.length > 1 ? fmSubBar("g_" + k, subs) : '') + '</div>' + fieldTabBody(cur);
   }
   return fieldTabBody(k);
 }
+/* MARCH-PAWS, mentioned once (owner: no whole tab) */
+function fmMarchStrip() { return '<div class="fmmarch1" aria-label="MARCH-PAWS order"><span class="fmm1t">MARCH-PAWS</span>' + FM_MARCH.map(function (m, i) { return '<span class="fmm1' + (i >= 5 ? ' paws' : '') + '" title="' + esc(m[1]) + '"><b>' + m[0] + '</b>' + esc(m[1].split(/[ ,]/)[0]) + '</span>'; }).join("") + '</div>'; }
 function fieldTabBody(k) {
   var c = '<div class="fmwrap">';
   if (k === "skills") {
     var cur = fmTierIdx(S.level), cats = [];
     FM_SKILLS.forEach(function (x) { if (cats.indexOf(x[1]) < 0) cats.push(x[1]); });
-    c += '<p class="fmlead">' + esc((levelObj(S.level) || {}).long || (levelObj(S.level) || {}).blurb || "") + '</p><p class="muted small"><span class="fmnew">New</span> marks skills added at this tier. Everything else comes from the tiers before it.</p>';
+    var mine = function (t) { return fmTierIdx(t) === cur; };
+    c += '<p class="muted small">Skills added at ' + esc((levelObj(S.level) || {}).short || "this tier") + '. Each tier also includes the skills of the tiers before it.</p>';
     cats.forEach(function (cat) {
-      var rows = FM_SKILLS.filter(function (x) { return x[1] === cat && fmTierIdx(x[0]) <= cur; }); if (!rows.length) return;
-      c += '<section class="fmskill"><h3>' + esc(cat) + '</h3><ul>' + rows.map(function (x) { return '<li' + (x[0] === S.level ? ' class="isnew"' : '') + '><span>' + esc(x[2]) + '</span>' + (x[0] === S.level ? '<span class="fmnew">New</span>' : '<span class="fmfrom">' + esc((DB.FLEVELS.filter(function (l) { return l.key === x[0]; })[0] || {}).short || "") + '</span>') + '</li>'; }).join("") + '</ul></section>';
+      var rows = FM_SKILLS.filter(function (x) { return x[1] === cat && mine(x[0]); }); if (!rows.length) return;
+      c += '<section class="fmskill"><h3>' + esc(cat) + '</h3><ul>' + rows.map(function (x) { return '<li><span>' + esc(x[2]) + '</span></li>'; }).join("") + '</ul></section>';
     });
     var nxt = DB.FLEVELS[cur + 1];
     if (nxt) c += '<p class="muted small">Next: ' + esc(nxt.short === "PCC" ? nxt.name : nxt.short + ", " + nxt.name) + ' adds ' + FM_SKILLS.filter(function (x) { return x[0] === nxt.key; }).length + ' more skill areas. <button class="linkish" data-level="' + nxt.key + '">Open ' + esc(nxt.short) + '</button></p>';
+    c += '<button class="btn nrgo" data-act="fmdrill">Start the ' + esc((levelObj(S.level) || {}).short || "") + ' drill' + (PAYWALL && !isPro() ? ' ' + proBadge() : '') + '</button><p class="muted small">Priority calls in order (MARCH-PAWS), plus questions on the medications at this tier.</p>';
   } else if (k === "drill") {
     var seen = fmSeen(), all = fmIds().filter(function (id) { return scopeFor(S.level).ids.indexOf(id) >= 0; }), n = all.filter(function (id) { return seen.indexOf(id) >= 0; }).length;
     c += '<section class="fmmarch" aria-label="MARCH-PAWS"><div class="fmletters">' + FM_MARCH.map(function (m, i) { return '<button class="fmlet' + (i >= 5 ? ' paws' : '') + '" data-fmstep="' + i + '" aria-pressed="' + (S.fmStep === i) + '" aria-label="' + esc(m[1]) + '">' + m[0] + '</button>'; }).join("") + '</div>' +
@@ -9776,6 +9784,8 @@ function fieldTabBody(k) {
     c += '';
     c += '<ol class="fmmarchlist">' + FM_MARCH.map(function (m, i) { return '<li class="' + (i >= 5 ? 'paws' : '') + '"><span class="fmml">' + m[0] + '</span><div><strong>' + esc(m[1]) + '</strong><p>' + esc(m[2]) + '</p><button class="linkish" data-tab="fm_' + m[3] + '">Learn more in ' + esc(fmWhere("fm_" + m[3])) + '</button></div></li>'; }).join("") + '</ol>';
     c += '<h3 class="fmh">Phases of care</h3><ol class="pccday"><li><strong>Care Under Fire</strong><span>Return fire, get to cover, and stop life-threatening bleeding with a tourniquet only when it is tactically possible.</span></li><li><strong>Tactical Field Care</strong><span>Behind cover: the full MARCH-PAWS assessment and treatment, and the DD1380 card.</span></li><li><strong>Tactical Evacuation Care</strong><span>On the way out: the same care plus more equipment, oxygen, monitoring and handoff.</span></li><li><strong>Prolonged Casualty Care</strong><span>When evacuation is delayed: holding the casualty for hours to days.</span></li></ol>';
+  } else if (k === "fm_tiva") {
+    c += fmDripsView();
   } else if (k.indexOf("fm_") === 0) {
     var t = fmSec(k.slice(3)); if (!t) return "";
     c += fmKey(t[5], true) + (typeof fmDeep === "function" ? fmDeep(k.slice(3)) : "") + fmMedTiles(t[6].map(function (d) { return d[0]; }));
@@ -9796,11 +9806,11 @@ function fieldTabBody(k) {
     c += '';
   } else if (k === "acls") {
     var a = S.aclsK || ACLS[0][0], A = ACLS.filter(function (x) { return x[0] === a; })[0] || ACLS[0];
-    c += '';
+    c += '<button class="btn nrgo" data-act="aclstest">Test the ACLS algorithms' + (PAYWALL && !isPro() ? ' ' + proBadge() : '') + '</button><p class="muted small">Order the steps, what comes next, and which algorithm fits.</p>';
     c += '<div class="aclspick">' + ACLS.map(function (x) { return '<button class="aclsbtn' + (x[3] ? ' unstable' : '') + '" data-acls="' + x[0] + '" aria-pressed="' + (x[0] === A[0]) + '"><strong>' + esc(x[1]) + '</strong><span>' + esc(x[2]) + '</span></button>'; }).join("") + '</div>';
     c += '<section class="aclsflow"><h3>' + esc(A[1]) + '</h3><p class="muted small">' + esc(A[2]) + '</p><ol>' + A[4].map(function (st) { return '<li>' + esc(st) + '</li>'; }).join("") + '</ol>' + (A[5] ? '<p class="aclsnote">' + esc(A[5]) + '</p>' : '') + '</section>';
     c += '<details class="fmkey"><summary>H\'s and T\'s (reversible causes)</summary><ul>' + ACLS_HT.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join("") + '</ul></details>';
-    c += '<p class="muted small">Field note: in combat trauma arrest, TCCC lists bilateral needle decompression, and CPR only when there are no obviously fatal wounds and surgical care is close. ACLS steps follow the general form of the American Heart Association adult algorithms. DrugBug is not affiliated with or endorsed by the AHA.</p>';
+    c += '<p class="muted small">General form of the AHA adult algorithms; DrugBug is not affiliated with the AHA.</p>';
   } else if (k === "dive") {
     var dsub = fmSub("dive"); if (dsub === "learn") dsub = "calc";
     c += fmSubBar("dive", [["learn", "Calculator"], ["tables", "Tables"], ["treat", "Treatment"], ["practice", "Practice"]]);
@@ -9812,8 +9822,7 @@ function fieldTabBody(k) {
     if (dsub === "tables") return c + diveTablesView() + '</div>';
     c += diveTreatView();
   } else if (k === "pcc_vent") {
-    c += '' + fmKey(PCC_VENT, true);
-    c += '<h3 class="fmh">When a ventilated casualty suddenly gets worse: DOPES</h3><ol class="pccday">' + PCC_DOPES.map(function (x) { return '<li><strong>' + esc(x[0]) + '</strong><span>' + esc(x[1]) + '</span></li>'; }).join("") + '</ol>';
+    c += fmVentView();
   } else if (k === "pcc_nurse") {
     c += '<p class="fmlead">In a long hold, nursing care decides whether a casualty arrives at surgery with new problems. Most of it is simple, repeated and easy to forget.</p>';
     c += PCC_NURSE.map(function (x) { return '<section class="fmskill"><h3>' + esc(x[0]) + '</h3><ul>' + x[1].map(function (y) { return '<li><span>' + esc(y) + '</span></li>'; }).join("") + '</ul></section>'; }).join("");
@@ -10108,32 +10117,6 @@ var FM_DEEP = {
       "Before flight, a vented stomach reduces the effect of gas expansion at altitude."]]
   ],
   /* ---------- Advanced Care: ACLS ---------- */
-  acls: [
-    ["cpp", "Trauma arrest is different", "Why medical ACLS rarely fixes a bleeding arrest.", [
-      "Traumatic cardiac arrest is usually caused by blood loss, tension pneumothorax, low oxygen or cardiac tamponade, not by a primary heart rhythm problem.",
-      "TCCC describes bilateral needle decompression for a casualty with torso trauma or polytrauma who has no pulse or breathing.",
-      "TCCC states that CPR may be attempted when there are no obviously fatal wounds and surgical care is a short time away, and that it is not done at the expense of the mission or other casualties' lifesaving care.",
-      "Medical arrests in the field (heat, electrolytes, toxins, a primary heart attack) follow the standard ACLS algorithms more closely.",
-      "Every arrest includes a search for the H's and T's."]],
-    ["cpp", "Reading the monitor", "Four questions for any rhythm.", [
-      "Is there a pulse, and is the casualty stable? Instability means low blood pressure, confusion, chest pain, shock or heart failure.",
-      "Is the rate fast or slow?",
-      "Is the QRS narrow or wide? Narrow usually means the rhythm starts above the ventricles; wide can mean the ventricles or abnormal conduction.",
-      "Is it regular or irregular, and is there a P wave before each QRS?",
-      "Those answers place the rhythm on one of the algorithms in the list above."]],
-    ["cpp", "Electrical therapy", "Defibrillation, cardioversion and pacing.", [
-      "Defibrillation is an unsynchronized shock for pulseless VF or VT, delivered as soon as possible.",
-      "Synchronized cardioversion times the shock to the QRS, which avoids triggering VF, and is used for unstable tachycardia with a pulse.",
-      "Transcutaneous pacing delivers small repeated impulses for unstable bradycardia that does not respond to drugs. Capture is confirmed by a pulse that matches the paced rate, not just spikes on the screen.",
-      "Sedation is given for cardioversion and pacing whenever time allows, because both are painful.",
-      "Pads are placed away from implanted devices and medication patches, on a dry chest."]],
-    ["cpp", "After return of a pulse", "Post-cardiac arrest care.", [
-      "After return of spontaneous circulation the goals are enough oxygen without excess, a stable blood pressure, a 12-lead ECG and a search for the cause.",
-      "Low blood pressure after arrest is common and is treated with fluids or pressors depending on the cause.",
-      "Temperature control and avoiding fever protect the brain.",
-      "Glucose, electrolytes and blood gases on the i-STAT guide the next steps.",
-      "Expert consultation and evacuation to a higher level of care follow as soon as possible."]]
-  ],
   /* ---------- Advanced Care: i-STAT ---------- */
   istat: [
     ["cpp", "Reading a blood gas in four steps", "pH, CO2, bicarbonate, compensation.", [
@@ -10183,116 +10166,12 @@ var FM_DEEP = {
       "The dive profile (depths, times, gas, ascent problems) travels with the casualty."]]
   ],
   /* ---------- PCC: the long hold ---------- */
-  pcc: [
-    ["pcc", "Resupply and logistics", "Running out is a clinical problem.", [
-      "Supplies are counted early: blood and donors, oxygen, batteries, fluids, sedation drugs, antibiotics, dressings and gloves.",
-      "Drug consumption is projected forward. A ketamine drip that lasts days needs a supply plan from the first hour.",
-      "Cold chain matters for blood products and some drugs; heat matters for cartridges and medications.",
-      "Resupply requests are specific about item, quantity and urgency.",
-      "Power planning covers monitors, warmers, ventilators, suction, concentrators and communications."]],
-    ["pcc", "Kidneys, fluids and nutrition", "The slow problems of day two and beyond.", [
-      "Urine output, creatinine and potassium trends track the kidneys. Shock, crush injury, muscle breakdown and dehydration all threaten them.",
-      "Once resuscitation ends, fluid needs shift to maintenance and replacing ongoing losses, guided by intake and output totals.",
-      "Early feeding by mouth or gastric tube, when the gut is working, preserves gut health and supports healing.",
-      "Blood clots in the legs become a risk after the first days; moving the limbs when safe and compression where available help.",
-      "Stress ulcer prevention with an acid reducer such as famotidine is part of prolonged care for critically ill casualties."]],
-    ["pcc", "Comfort and palliative care", "When survival is no longer possible.", [
-      "Some casualties will not survive even with ideal care. Prolonged care guidance includes keeping them comfortable and treated with dignity.",
-      "Pain, breathlessness, agitation and secretions are treated to relieve suffering.",
-      "These decisions involve medical direction and leadership whenever communications allow, and are documented.",
-      "Teammates caring for a dying casualty are supported during and after.",
-      "Personal effects, identification and the timeline are recorded and kept with the casualty."]]
-  ],
-  pcc_tele: [
-    ["pcc", "What to have ready", "Before the call connects.", [
-      "Casualty basics: age, weight estimate, allergies, mechanism and time of injury.",
-      "Injuries found, interventions done, and the drugs and blood given with times.",
-      "The current vital sign trends, sedation level, ventilator state, intake and output, and i-STAT results.",
-      "Resources on hand: blood, oxygen, drugs, equipment, and how long they will last.",
-      "The specific questions to ask and the expected evacuation timeline."]],
-    ["pcc", "When bandwidth is poor", "Consulting without a clear voice line.", [
-      "Asynchronous consults by text or email allow a written report, photos and flowsheets to be sent and answered when the link allows.",
-      "Short, numbered questions get faster, clearer answers.",
-      "Images are compressed and labeled with the casualty, time and body part.",
-      "Every recommendation received is written down with the time and who gave it.",
-      "A planned next check-in time keeps the consult going even if the link drops."]],
-    ["pcc", "Common consult questions", "Where experts help most.", [
-      "Is this casualty stable enough to wait, or does the situation justify a risky evacuation?",
-      "What changes to the sedation and pressor plan fit these trends?",
-      "Which antibiotic coverage fits this wound or suspected infection with what is in the kit?",
-      "Does this lab or ultrasound finding change the plan?",
-      "What does the casualty need prepared for the flight and the receiving team?"]],
-    ["pcc", "The stresses of flight", "What altitude and aircraft do to a casualty.", [
-      "Lower oxygen pressure at altitude reduces blood oxygen, so oxygen needs usually rise in flight.",
-      "Gas expansion affects a pneumothorax, the stomach and bowel, tube cuffs, splints with air bladders and air trapped in the skull or eye.",
-      "Cold, low humidity, noise, vibration and acceleration all add stress and make assessment harder.",
-      "Certain conditions (pneumothorax without a chest tube, air in the skull or eye, DCS, bowel obstruction) call for a lower cabin altitude or extra preparation.",
-      "Critical care air transport teams can continue ventilator and drip care in flight when they are available."]],
-    ["pcc", "Packaging for the move", "Arriving with everything still in place.", [
-      "Tubes and lines are secured and their depths and positions re-checked after every move.",
-      "Drips are on pumps or carefully counted gravity sets, with enough drug for the whole flight and extra drawn up.",
-      "The casualty is insulated, padded and strapped in a way that leaves the airway and key sites reachable.",
-      "Monitors are set to visual alarms when noise makes audio alarms useless.",
-      "The handoff carries the DD1380, the flowsheet, all drugs and times, and the teleconsult advice."]]
-  ],
-  tiva: [
-    ["pcc", "The RASS sedation scale", "A common language for how deeply sedated a casualty is.", [
-      "The Richmond Agitation-Sedation Scale runs from +4 (combative) through 0 (alert and calm) to -5 (unresponsive to voice and touch).",
-      "+4 combative, +3 very agitated (pulls at tubes), +2 agitated (fights the ventilator), +1 restless.",
-      "-1 drowsy (eye contact over 10 seconds to voice), -2 light sedation (brief eye contact to voice), -3 moderate sedation (movement but no eye contact to voice).",
-      "-4 deep sedation (no response to voice, movement to touch), -5 unarousable.",
-      "Recording RASS with every vital sign set shows whether a drip is too light or too deep."]],
-    ["pcc", "Choosing the depth", "Lighter is usually better.", [
-      "Most casualties do better with the lightest sedation that keeps them safe and comfortable, which allows exams and lowers drug use.",
-      "Deeper sedation is used when the casualty cannot tolerate the ventilator, when brain pressure is a concern, or when a paralytic is running.",
-      "A paralyzed casualty cannot show pain or awareness, so sedation and analgesia run deep enough before and during paralysis.",
-      "Daily checks of whether the sedation can be lightened are part of ICU practice and are adapted to the field situation.",
-      "The goal and current RASS level are written on the flowsheet so every medic aims for the same target."]],
-    ["pcc", "Drip logistics", "Running infusions without a pharmacy.", [
-      "Each drug runs in its own labeled bag and line, with the concentration written on the bag.",
-      "Infusion pumps give the most accurate rates; gravity drips are counted by drops per minute and rechecked often.",
-      "Drug supply is projected forward from the current rate so the kit does not run dry mid-hold.",
-      "Bags, lines and concentrations are double-checked by a second person when one is available.",
-      "Every rate change is recorded with the time and the reason."]],
-    ["pcc", "Weaning and transition", "Coming off the drips.", [
-      "Drips are reduced gradually after long use to avoid agitation, withdrawal and blood pressure swings.",
-      "Pain control is kept in place while sedation is lightened.",
-      "Emergence agitation after ketamine is anticipated and managed calmly with a quiet environment and adjuncts when needed.",
-      "Sedation decisions are coordinated with the evacuation timeline and receiving team.",
-      "The total drug amounts and times are summarized for the handoff."]]
-  ],
-  pcc_vent: [
-    ["pcc", "Oxygenation versus ventilation", "Two different problems with two different controls.", [
-      "Oxygenation is getting oxygen into the blood. It is improved mainly by more inspired oxygen and PEEP, which holds the small airways open.",
-      "Ventilation is getting CO2 out. It is changed mainly by the breath size and the breathing rate.",
-      "Pulse oximetry tracks oxygenation; end-tidal CO2 and blood PCO2 track ventilation.",
-      "A casualty can be well oxygenated and still retain CO2, or the reverse, so both are watched.",
-      "TCCC lists a rate of 10 breaths per minute (one every 6 seconds) with low breath sizes when ventilating a brain-injured casualty without end-tidal CO2."]],
-    ["pcc", "Ventilator modes in plain words", "How the machine decides when to breathe.", [
-      "Assist-control gives a full set breath every time, whether the machine or the casualty starts it. It is the common starting mode.",
-      "Volume control delivers a set breath size; pressure control delivers breaths up to a set pressure, and the breath size varies with the lungs.",
-      "Pressure support helps breaths the casualty starts, and is used as sedation lightens.",
-      "CPAP or PEEP alone holds pressure in the airways without giving full breaths.",
-      "Portable ventilators offer fewer modes than ICU machines, so knowing the specific device in the kit matters more than knowing every mode."]],
-    ["pcc", "High and low pressure alarms", "What the alarm is pointing at.", [
-      "A high pressure alarm means the breath is meeting resistance: a kinked or bitten tube, secretions, bronchospasm, the casualty fighting the vent, or a pneumothorax.",
-      "A low pressure alarm means pressure is escaping: a disconnection, a cuff leak, or a tube that has slipped out.",
-      "An apnea or low volume alarm can mean the casualty is not triggering breaths or gas is leaking.",
-      "With any alarm and a worsening casualty, disconnecting and bagging by hand separates the machine from the patient while DOPES is worked through.",
-      "Power and oxygen alarms point to the supply plan."]],
-    ["pcc", "Blast lung and ARDS", "Stiff, leaky lungs.", [
-      "Primary blast injury can bruise the lungs and cause bleeding into the airspaces, low oxygen and air leaks.",
-      "Acute respiratory distress syndrome (ARDS) can follow shock, massive transfusion, sepsis, smoke or lung injury, with stiff lungs and low oxygen despite oxygen therapy.",
-      "Lung-protective ventilation with small breaths and PEEP limits further damage.",
-      "Positive pressure raises the risk of pneumothorax in injured lungs, so breath sounds, pressures and the chest are watched closely.",
-      "Prone positioning is an ICU strategy for severe ARDS that may be discussed through a teleconsult in a long hold."]]
-  ]
 };
 /* render: "Going deeper" lessons for this tier (Tier 4 and PCC only) */
 function fmDeep(k) {
   var list = (FM_DEEP[k] || []).filter(function (x) { return fmTierOk(x[0]); }); if (!list.length) return "";
   var lv = (levelObj(S.level) || {});
-  return '<section class="fmdeep"><h3 class="fmh">Going deeper <span class="fmdtag">' + esc(lv.short === "PCC" ? "Tier 4 + PCC" : "Tier 4") + '</span></h3><div class="fmles">' + list.map(function (x) {
+  return '<section class="fmdeep"><h3 class="fmh">Going deeper <span class="fmdtag">' + "Tier 4" + '</span></h3><div class="fmles">' + list.map(function (x) {
     return '<details class="fmlesson"><summary><span class="fmlt"><strong>' + esc(x[1]) + '</strong>' + (x[0] === "pcc" ? '<em class="fmpcc">PCC</em>' : '') + '</span><span class="fmls">' + esc(x[2]) + '</span></summary><ul>' + x[3].map(function (p) { return '<li>' + esc(p) + '</li>'; }).join("") + '</ul></details>';
   }).join("") + '</div></section>';
 }
@@ -10399,14 +10278,15 @@ function fmCard(d) {
   if (o.role) rows.push(["Field role", o.role]);
   if (FM_CLASS[d.id]) rows.push(["Class", FM_CLASS[d.id]]);
   if (o.where.length) rows.push(["In TCCC and PCC", o.where.join(" · ")]);
-  if (st) rows.push(["Starts at", st.short === "PCC" ? "Prolonged Casualty Care" : st.short + ", " + st.name]);
+  if (st) rows.push(["Starts at", st.short + ", " + st.name]);
   if (note) rows.push(["Scope note", note]);
   if (o.caut) rows.push(["Field cautions", o.caut]);
   if (o.days) rows.push(["Over days", o.days]);
   if (o.store) rows.push(["Storage", o.store]);
   var mon = typeof F2 === "function" ? F2(d, "pearl.whatToMonitorAfterGiving") : ""; if (mon) rows.push(["Monitor", mon]);
+  if (typeof FM_EU !== "undefined" && FM_EU[d.id]) rows.push(["In Europe", FM_EU[d.id]]);
   if (!rows.length) return "";
-  return '<section class="lens lens-fm"><h3>Field Medic card</h3>' + rows.map(function (r) { return '<div class="lrow2"><div class="k">' + esc(r[0]) + '</div><div class="v">' + esc(r[1]) + '</div></div>'; }).join("") + '<p class="muted small" style="margin:6px 0 0">No doses at the Field Medic level.</p></section>';
+  return '<section class="lens lens-fm"><h3>Field Medic card</h3>' + rows.map(function (r) { return '<div class="lrow2"><div class="k">' + esc(r[0]) + '</div><div class="v">' + esc(r[1]) + '</div></div>'; }).join("") + '<p class="muted small" style="margin:6px 0 0">' + (typeof FM_DRIPS !== "undefined" && FM_DRIPS.some(function (g) { return g[1].indexOf(d.id) >= 0; }) ? "FDA label drip doses: Tier 4, Drips &amp; Vents." : "No doses on Field Medic cards.") + '</p></section>';
 }
 /* simple drug view on Field Medic levels: no doses, no EMS wording */
 function fmSimple(d) {
@@ -10585,6 +10465,114 @@ function diveTreatView() {
   c += '<h3 class="fmh">Recognition</h3><ul class="dvnotes">' + DIVE_KEYS.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join("") + '</ul>';
   return c;
 }
+
+/* Tier 4 (with prolonged care) drips, vent settings, ACLS test and European practice notes. Oct 28 2026.
+   Owner: "Drips and vents make sure to show FDA dosages. Show different vent settings in a tab."
+   Drip doses come straight from each drug's Dosing record (FDA label text, with off-label lines marked as such),
+   the same record every other DrugBug route shows. Vent settings are common adult starting points from
+   ARDSNet lung-protective ventilation and TCCC 2026; they are not FDA dosing. */
+var FM_DRIPS = [
+  ["Sedation and analgesia", ["ketamine", "fentanyl", "hydromorphone", "midazolam", "lorazepam", "propofol", "dexmedetomidine"]],
+  ["Pressors", ["norepinephrine", "vasopressin", "epinephrine", "phenylephrine"]],
+  ["Paralysis on the vent", ["rocuronium"]]
+];
+function fmDripCard(id) {
+  var d = DB.drugs[id]; if (!d) return "";
+  var adult = get(d, 6, 0), inf = get(d, 6, 5), mx = get(d, 6, 3), L = typeof labelSrc === "function" ? labelSrc(id) : null;
+  function row(k, v) {
+    if (!v) return "";
+    var parts = v.split(/\s*(?=Off-label)/), lab = parts.shift(), out = "";
+    if (/^Off-label/.test(lab)) { parts.unshift(lab); lab = ""; }
+    if (lab) out += '<div class="drrow"><span>' + k + '</span><p>' + esc(lab.replace(/^FDA label:?\s*/, "")) + '</p></div>';
+    parts.forEach(function (o) { out += '<div class="drrow off"><span>' + (lab ? "" : k + " ") + 'off-label</span><p>' + esc(o.replace(/^Off-label[^:]*:\s*/, "")) + '</p></div>'; });
+    return out;
+  }
+  return '<section class="drcard"><button type="button" class="drhead" data-drug="' + id + '"><strong>' + esc(nameOf(id)) + '</strong><em>' + esc(FM_CLASS[id] || get(d, 0, 3) || "") + '</em></button>' +
+    row("Infusion", inf) + row("Dose", adult) + row("Max", mx) +
+    (L ? '<p class="drsrc">FDA label: ' + esc([L.b, L.m].filter(Boolean).join(", ")) + (L.d ? ", " + esc(L.d) : "") + '</p>' : '') + '</section>';
+}
+function fmDripsView() {
+  var sc = {}; scopeFor(S.level).ids.forEach(function (id) { sc[id] = 1; });
+  var c = '<div class="dvwarn" role="note"><strong>FDA label doses, for education only.</strong> Lines marked off-label are not in the FDA label. Real infusions follow the current label, local protocols and medical direction.</div>';
+  FM_DRIPS.forEach(function (g) { var ids = g[1].filter(function (id) { return DB.drugs[id] && sc[id]; }); if (!ids.length) return; c += '<h3 class="fmh">' + esc(g[0]) + '</h3>' + ids.map(fmDripCard).join(""); });
+  c += '<h3 class="fmh">RASS sedation scale</h3><div class="pccrows">' + [["+4", "Combative"], ["+3", "Very agitated, pulls at tubes"], ["+2", "Agitated, fights the ventilator"], ["+1", "Restless"], ["0", "Alert and calm"], ["-1", "Drowsy, eye contact to voice over 10 s"], ["-2", "Light sedation, brief eye contact to voice"], ["-3", "Moderate, movement to voice, no eye contact"], ["-4", "Deep, no response to voice, moves to touch"], ["-5", "Unarousable"]].map(function (x) { return pccRow("", x[1], x[0]); }).join("") + '</div>';
+  return c;
+}
+/* ventilator settings by situation: [situation, [[setting, value]], note] */
+var FM_VENT = [
+  ["Starting point (most casualties)", [["Mode", "Assist-control, volume control"], ["Tidal volume", "6 to 8 mL/kg of ideal body weight"], ["Rate", "14 to 18 breaths/min, adjusted to EtCO2 or PaCO2"], ["PEEP", "5 cmH2O"], ["FiO2", "1.0 at first, then down to the lowest that keeps SpO2 92 to 96%"], ["I:E", "1:2"], ["Plateau pressure", "30 cmH2O or less"]], "Rechecked after every move, tube change or drip change."],
+  ["ARDS, blast lung or smoke injury", [["Tidal volume", "6 mL/kg IBW (range 4 to 8)"], ["Plateau pressure", "30 cmH2O or less"], ["PEEP / FiO2", "Higher PEEP, paired with FiO2 by the table below"], ["Oxygen goal", "SpO2 88 to 95% (PaO2 55 to 80 mmHg)"], ["Rate", "Up to 35/min to keep pH 7.30 or higher"], ["CO2", "Higher CO2 accepted (permissive hypercapnia)"]], "ARDSNet lung-protective ventilation."],
+  ["Traumatic brain injury", [["EtCO2", "35 to 45 mmHg (TCCC 2026)"], ["SpO2", "92% or higher (TCCC 2026)"], ["Tidal volume", "6 to 8 mL/kg IBW"], ["PEEP", "5 cmH2O, raised carefully if oxygen is low"], ["Without capnography", "Low tidal volume at 10 breaths/min (TCCC 2026)"], ["Position", "Head and torso up over 30 degrees if not in shock"]], "Hyperventilation lowers brain blood flow; it is only a brief bridge for herniation."],
+  ["Asthma or COPD (air trapping)", [["Rate", "Low, about 8 to 12/min"], ["Tidal volume", "6 to 8 mL/kg IBW"], ["I:E", "1:3 to 1:5, long exhale"], ["PEEP", "Low (0 to 5 cmH2O)"], ["CO2", "Permissive hypercapnia, pH above about 7.15 to 7.20"], ["Watch", "Auto-PEEP, rising plateau, falling blood pressure"]], "If pressure crashes, disconnecting the circuit lets trapped air out."],
+  ["Severe metabolic acidosis", [["Minute ventilation", "Matched to the casualty's breathing before intubation"], ["Rate", "High, often 20 to 30/min"], ["Tidal volume", "6 to 8 mL/kg IBW"], ["Checks", "Blood gas soon after intubation and after changes"]], "Crush injury, sepsis and DKA. Under-ventilating after intubation can drop the pH fast."],
+  ["Hemorrhagic shock", [["Tidal volume", "6 to 8 mL/kg IBW"], ["Rate", "Normal; avoid fast rates and air trapping"], ["PEEP", "5 cmH2O"], ["Order", "Blood and volume before or during intubation when possible"]], "Positive pressure lowers blood return to the heart."]
+];
+/* ARDSNet lower PEEP / higher FiO2 table */
+var FM_PEEP = [["0.3", "5"], ["0.4", "5 to 8"], ["0.5", "8 to 10"], ["0.6", "10"], ["0.7", "10 to 14"], ["0.8", "14"], ["0.9", "14 to 18"], ["1.0", "18 to 24"]];
+function fmVentView() {
+  var V = S.fmv || (S.fmv = { h: 70, sex: "m" });
+  var c = '<section class="dvcard"><h3>Ideal body weight and breath size</h3><div class="dvin"><label>Height (inches)<input type="number" inputmode="numeric" min="48" max="90" data-fmv="h" value="' + V.h + '"></label><label>Sex<select data-fmv="sex"><option value="m"' + (V.sex === "m" ? " selected" : "") + '>Male</option><option value="f"' + (V.sex === "f" ? " selected" : "") + '>Female</option></select></label></div><div class="dvout" id="fmvo"></div><p class="muted small">IBW: male 50 + 2.3 kg per inch over 5 ft; female 45.5 + 2.3 kg per inch over 5 ft.</p></section>';
+  FM_VENT.forEach(function (v) { c += '<section class="dvcard"><h3>' + esc(v[0]) + '</h3><div class="pccrows">' + v[1].map(function (r) { return pccRow("", r[1], r[0]); }).join("") + '</div>' + (v[2] ? '<p class="muted small" style="margin:6px 0 0">' + esc(v[2]) + '</p>' : '') + '</section>'; });
+  c += '<section class="dvcard"><h3>PEEP and FiO2 pairs (ARDSNet)</h3><table class="dvtab dvtt"><thead><tr><th>FiO2</th><th>PEEP (cmH2O)</th></tr></thead><tbody>' + FM_PEEP.map(function (r) { return '<tr><td>' + r[0] + '</td><td>' + r[1] + '</td></tr>'; }).join("") + '</tbody></table></section>';
+  c += '<section class="dvcard"><h3>Sudden deterioration: DOPES</h3><div class="pccrows">' + PCC_DOPES.map(function (x) { var p = x[0].split(": "); return pccRow("", x[1], p[0] + " " + (p[1] || "")); }).join("") + '</div></section>';
+  setTimeout(fmVentUpdate, 0);
+  return c;
+}
+function fmVentUpdate() {
+  var V = S.fmv, o = document.getElementById("fmvo"); if (!V || !o) return;
+  var h = +V.h || 0, ibw = (V.sex === "f" ? 45.5 : 50) + 2.3 * (h - 60);
+  if (h < 48 || ibw <= 0) { o.innerHTML = '<p class="muted small">Enter a height from 48 to 90 inches.</p>'; return; }
+  o.innerHTML = dvLine("Ideal body weight", ibw.toFixed(1) + " kg") + [6, 7, 8].map(function (k) { return dvLine(k + " mL/kg", Math.round(ibw * k) + " mL"); }).join("");
+}
+document.addEventListener("input", function (e) { var k = e.target && e.target.getAttribute && e.target.getAttribute("data-fmv"); if (!k || !S.fmv) return; S.fmv[k] = e.target.value; fmVentUpdate(); });
+document.addEventListener("change", function (e) { var k = e.target && e.target.getAttribute && e.target.getAttribute("data-fmv"); if (!k || !S.fmv) return; S.fmv[k] = e.target.value; fmVentUpdate(); });
+/* ACLS test: order the steps, what comes next, and which algorithm */
+function fmAclsQs() {
+  var qs = [], names = ACLS.map(function (x) { return x[1]; });
+  ACLS.forEach(function (A) {
+    var st = A[4];
+    if (st.length >= 3) qs.push({ reg: 1, t: "order", prio: 1, lv: "cpp", cat: "acls", d: "", fm: 1, q: A[1] + " (" + A[2] + "): put the algorithm steps in order, from first to last.", x: "This is the order of the " + A[1].toLowerCase() + " algorithm." + (A[5] ? " " + A[5] : ""), w: [], opts: st.slice(), ok: st.slice(), a: st.map(function (p, k) { return (k + 1) + ". " + p; }).join("  ") });
+    var others = names.filter(function (n) { return n !== A[1]; });
+    qs.push({ reg: 1, lv: "cpp", cat: "acls", d: "", fm: 1, q: "Which ACLS algorithm fits: " + A[2] + (A[3] ? ", unstable or pulseless" : ", stable") + "?", a: A[1], w: shuffle(others).slice(0, 3), x: A[1] + " covers " + A[2] + "." });
+    for (var i = 0; i < st.length - 1; i++) {
+      var wrong = st.filter(function (x, j) { return j !== i + 1 && j !== i; });
+      if (wrong.length < 3) ACLS.forEach(function (B) { if (B !== A) B[4].forEach(function (y) { if (wrong.length < 6 && wrong.indexOf(y) < 0) wrong.push(y); }); });
+      qs.push({ reg: 1, lv: "cpp", cat: "acls", d: "", fm: 1, q: A[1] + ": what comes after “" + st[i] + "”?", a: st[i + 1], w: shuffle(wrong).slice(0, 3), x: "In the " + A[1].toLowerCase() + " algorithm, “" + st[i + 1] + "” follows." });
+    }
+  });
+  return qs;
+}
+function fmAclsTest(k) {
+  if (typeof PAYWALL !== "undefined" && PAYWALL && typeof isPro === "function" && !isPro()) return openPaywall("The ACLS test", "pro");
+  startSession("acls", { k: k || "" });
+}
+/* European practice notes on Field Medic cards (owner: "how Europeans would use it"). General notes, not doses. */
+var FM_EU = {
+  "ketamine": "Many European EMS systems and armed forces use ketamine (often the S-enantiomer, esketamine) as a standard prehospital analgesic and induction drug, IV, IM or intranasal.",
+  "esketamine": "In Germany and several other European countries, IV and IM esketamine (S-ketamine, for example Ketanest S) is an approved anesthetic and analgesic and a standard prehospital pain drug, about twice as potent as racemic ketamine. In the U.S., esketamine is approved only as Spravato nasal spray for depression.",
+  "fentanyl": "Widely used IV and intranasal in European prehospital care. Germany also uses piritramide, and several systems use sufentanil.",
+  "morphine": "Still common across European EMS, alongside piritramide in Germany and nalbuphine in France.",
+  "midazolam": "Buccal midazolam (Buccolam) is approved in the EU for prolonged seizures in children and adolescents.",
+  "propofol": "Used for induction and post-intubation sedation by some physician-staffed European HEMS and military teams.",
+  "dexmedetomidine": "EMA-approved (Dexdor) for ICU sedation to a light level (RASS 0 to -3).",
+  "norepinephrine": "Called noradrenaline. European products are often labeled as the tartrate salt, so 2 mg noradrenaline tartrate equals about 1 mg noradrenaline base; concentrations on a European bag can differ from U.S. base strengths.",
+  "epinephrine": "Called adrenaline. European Resuscitation Council (ERC) guidelines run cardiac arrest care in Europe, with small differences from the AHA algorithms.",
+  "vasopressin": "Used less often in Europe; terlipressin, a longer-acting analog, is approved in many European countries.",
+  "amiodarone": "ERC guidelines give amiodarone after the third shock in shockable arrest, with lidocaine as an alternative.",
+  "tranexamic-acid": "Given early by civilian EMS in many European countries after CRASH-2; the European guideline on major bleeding after trauma recommends it as early as possible.",
+  "calcium-chloride": "The European trauma bleeding guideline recommends monitoring ionized calcium and keeping it in the normal range during massive transfusion.",
+  "calcium-gluconate": "The European trauma bleeding guideline recommends monitoring ionized calcium and keeping it in the normal range during massive transfusion.",
+  "acetaminophen": "Called paracetamol. IV paracetamol is a standard prehospital analgesic in many European systems, and metamizole (dipyrone), which is not approved in the U.S., is common in Germany, Spain and elsewhere.",
+  "succinylcholine": "Called suxamethonium in Europe and the UK.",
+  "etomidate": "Used less often than ketamine or propofol in many European systems; a lipid-emulsion form (Etomidat-Lipuro) is common in Germany.",
+  "rocuronium": "A common paralytic for RSI by European HEMS teams, often with sugammadex available for reversal.",
+  "hydroxocobalamin": "Cyanokit is carried by many European fire, EMS and HEMS services for smoke inhalation with suspected cyanide poisoning.",
+  "famotidine": "Less available in parts of Europe, where proton pump inhibitors such as pantoprazole are the usual stress ulcer drugs.",
+  "enoxaparin": "European packs are labeled in IU: 4,000 IU equals 40 mg.",
+  "ondansetron": "Used the same way; some European countries restrict metoclopramide to short courses, which leaves ondansetron as a common choice.",
+  "naloxone": "Intranasal naloxone kits are available in many European countries.",
+  "lidocaine": "Called lignocaine in some countries."
+};
 
 
 /* ---------- boot ---------- */
