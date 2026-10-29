@@ -29,7 +29,7 @@ var HIDE_MEDIC = { 6: [6, 7], 8: [6], 10: [2], 12: [1] };
 var TAGS = [["IM","Imaging"],["PH","Prehospital"],["ED","Emergency Department"],["ICU","ICU"],["CCT","Critical Care Transport"],["FL","Flight"],["HM","Home Medication"],["CA","Cardiac"],["RE","Respiratory"],["NE","Neurologic"],["TR","Trauma"],["OB","OB/GYN"],["PE","Pediatric"],["TX","Toxicology"],["BH","Behavioral"],["AN","Analgesia"],["SE","Sedation"],["RSI","RSI"],["VP","Vasopressor"],["AD","Antidote"]];
 var TAGNAME = {}; TAGS.forEach(function (t) { TAGNAME[t[0]] = t[1]; });
 var FILTER_TAGS = ["IM","CA","RE","NE","TR","OB","PE","TX","BH","AN","SE","RSI","VP","AD"];
-var LVCLASS = { rt: "lvl-rt", ct: "lvl-ct", mri: "lvl-mri", nm: "lvl-nm", ir: "lvl-ir", emt: "lvl-emt", aemt: "lvl-aemt", paramedic: "lvl-medic", flight: "lvl-flight", asm: "lvl-field", cls: "lvl-field", cmc: "lvl-field", cpp: "lvl-field", pcc: "lvl-field", gen: "lvl-gen", cna: "lvl-cna", lvn: "lvl-lvn", rn: "lvl-rn", ms1: "lvl-ms1", ms3: "lvl-ms3", intern: "lvl-intern" };
+var LVCLASS = { rt: "lvl-rt", ct: "lvl-ct", mri: "lvl-mri", nm: "lvl-nm", ir: "lvl-ir", emt: "lvl-emt", aemt: "lvl-aemt", paramedic: "lvl-medic", flight: "lvl-flight", asm: "lvl-field lvl-asm", cls: "lvl-field lvl-cls", cmc: "lvl-field lvl-cmc", cpp: "lvl-field lvl-cpp", pcc: "lvl-field lvl-pcc", gen: "lvl-gen", cna: "lvl-cna", lvn: "lvl-lvn", rn: "lvl-rn", ms1: "lvl-ms1", ms3: "lvl-ms3", intern: "lvl-intern" };
 var TIER = { rt: 3, ct: 3, mri: 3, nm: 3, ir: 3, emt: 0, aemt: 1, paramedic: 2, flight: 3, asm: 0, cls: 1, cmc: 2, cpp: 3, pcc: 3, gen: 3, cna: 0, lvn: 1, rn: 3, ms1: 3, ms3: 3, intern: 3 };
 
 /* ---------- helpers ---------- */
@@ -403,7 +403,7 @@ function homeContinue() {
 }
 function viewLevels() {
   var rt = routeCtx(), nurse = rt === "rn", med = rt === "md", img = rt === "im", fm = rt === "fm", L = nurse ? DB.NLEVELS : med ? DB.MLEVELS : img ? DB.ILEVELS : fm ? DB.FLEVELS : DB.LEVELS;
-  var c = topbar() + '<header class="pagehead"><h1>' + (fm ? "Field Medic: choose your tier" : nurse ? "Nursing: choose your license" : med ? "Medical school: choose your year" : img ? "Imaging: choose your modality" : "Choose your level") + '</h1><p>' + (fm ? "Tactical Combat Casualty Care in four tiers, from every service member to the combat paramedic, plus prolonged casualty care. Each tier includes every skill and medication from the tiers before it." : img ? "Each modality covers the reaction cart and sedation drugs every tech needs, plus the contrast agents and radiopharmaceuticals for that modality." : med ? "Every year studies the full drug library; the exam prep, scenarios and focus change as you advance. Your bug evolves with you." : "Each level includes every drug from the levels before it. Your bug evolves as your scope grows.") + '</p></header><section class="levels' + (fm ? " flv" : "") + (L.length === 3 || L.length === 5 ? " three" : "") + '">';
+  var c = topbar() + '<header class="pagehead"><h1>' + (fm ? "Field Medic: choose your tier" : nurse ? "Nursing: choose your license" : med ? "Medical school: choose your year" : img ? "Imaging: choose your modality" : "Choose your level") + '</h1><p>' + (fm ? "Tactical Combat Casualty Care in four tiers, from every service member to the combat paramedic, plus prolonged casualty care. Each tier includes every skill and medication from the tiers before it." : img ? "Each modality covers the reaction cart and sedation drugs every tech needs, plus the contrast agents and radiopharmaceuticals for that modality." : med ? "Every year studies the full drug library; the exam prep, scenarios and focus change as you advance. Your bug evolves with you." : "Each level includes every drug from the levels before it. Your bug evolves as your scope grows.") + '</p></header><section class="levels' + (fm ? " flv" : (L.length === 3 || L.length === 5 ? " three" : "")) + '">';
   L.forEach(function (l, i) {
     c += '<button class="lvcard ' + LVCLASS[l.key] + '" data-level="' + l.key + '"><span class="stage">' + levelBug(l.key) + '</span><span class="pip">' + (img ? esc(l.full).toUpperCase() : esc(scopeTag(l.key, i, L.length)).toUpperCase()) + '</span><h2>' + esc(l.name) + '</h2><span class="bugname">' + esc(l.bug) + '</span><p>' + esc(l.blurb) + '</p></button>';
   });
@@ -9430,7 +9430,7 @@ var FM_ART = {
   shield: '<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="M9 12l2 2 4-4"/>',
   lungs: '<path d="M12 4v8M12 12c-2 0-3-2-5-2-2 0-3 3-3 6 0 3 1 4 3 4s5-1 5-4zM12 12c2 0 3-2 5-2 2 0 3 3 3 6 0 3-1 4-3 4s-5-1-5-4z"/>'
 };
-var FIELD_BUG = { id: "fm", name: "Field Medic", body: "stag", c: ["#9bd44a", "#3f7a1f", "#f0ffd9"], acc: ["helmet", "goggles"] };
+var FIELD_BUG = { id: "fm", name: "Field Medic", body: "beetle", c: ["#a3e635", "#3f8f1f", "#ffffff"], acc: ["helmet"] };
 if (typeof IMBUG !== "undefined") {
   IMBUG.field = FIELD_BUG;
   /* the bugs get tougher with each tier, like Prehospital: ant -> beetle -> mantis -> stag -> hercules */
@@ -9438,9 +9438,9 @@ if (typeof IMBUG !== "undefined") {
   IMBUG.cls = { name: "Tier 2", body: "beetle", c: ["#7ee06a", "#2f8f3a", "#eaffe0"], acc: ["helmet", "headset"] };
   IMBUG.cmc = { name: "Tier 3", body: "mantis", c: ["#3ee0b0", "#0f8a74", "#dcfff4"], acc: ["helmet", "goggles"] };
   IMBUG.cpp = { name: "Tier 4", body: "stag", c: ["#5aa8ff", "#2440a8", "#e3efff"], acc: ["helmet", "goggles", "headset"] };
-  IMBUG.pcc = { name: "Prolonged Casualty Care", body: "hercules", c: ["#ffd25e", "#e0602a", "#fff3c4"], acc: ["headset", "goggles", "stars"] };
+  IMBUG.pcc = { name: "Prolonged Casualty Care", body: "scarab", c: ["#ff9a3c", "#b3261e", "#ffe3c4"], acc: ["jethelmet", "aviscarf", "stetho"] };
 }
-if (typeof LVB_FX !== "undefined") { LVB_FX.cpp = ["#9cc7ff", "#5aa8ff"]; LVB_FX.pcc = ["#ffd25e", "#d6b25e"]; }
+if (typeof LVB_FX !== "undefined") { LVB_FX.cpp = ["#9cc7ff", "#5aa8ff"]; LVB_FX.pcc = ["#ffb37a", "#ff7a3c"]; }
 if (typeof LVB_QUIPS !== "undefined") {
   LVB_QUIPS.cpp = ["Tube confirmed: waveform.", "Blood on board.", "Ready for TACEVAC.", "Chest decompressed.", "Card is filled out."];
   LVB_QUIPS.pcc = ["Vitals trended.", "Drips checked.", "Urine output charted.", "Teleconsult on the line.", "Turned and padded."];
@@ -9640,7 +9640,7 @@ function fieldTab(k) {
   if (k === "skills") {
     var cur = fmTierIdx(S.level), cats = [];
     FM_SKILLS.forEach(function (x) { if (cats.indexOf(x[1]) < 0) cats.push(x[1]); });
-    c += '<p class="fmlead">' + esc((levelObj(S.level) || {}).blurb || "") + '</p><p class="muted small"><span class="fmnew">New</span> marks skills added at this tier. Everything else comes from the tiers before it.</p>';
+    c += '<p class="fmlead">' + esc((levelObj(S.level) || {}).long || (levelObj(S.level) || {}).blurb || "") + '</p><p class="muted small"><span class="fmnew">New</span> marks skills added at this tier. Everything else comes from the tiers before it.</p>';
     cats.forEach(function (cat) {
       var rows = FM_SKILLS.filter(function (x) { return x[1] === cat && fmTierIdx(x[0]) <= cur; }); if (!rows.length) return;
       c += '<section class="fmskill"><h3>' + esc(cat) + '</h3><ul>' + rows.map(function (x) { return '<li' + (x[0] === S.level ? ' class="isnew"' : '') + '><span>' + esc(x[2]) + '</span>' + (x[0] === S.level ? '<span class="fmnew">New</span>' : '<span class="fmfrom">' + esc((DB.FLEVELS.filter(function (l) { return l.key === x[0]; })[0] || {}).short || "") + '</span>') + '</li>'; }).join("") + '</ul></section>';
