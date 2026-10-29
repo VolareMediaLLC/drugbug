@@ -9294,6 +9294,7 @@ function disDrugSection(drugId) {
    written descriptively (tools/callwording/RULES.md: no imperatives, no always/never/must/should).
    Field Medic is a Prehospital LEVEL (key "field", after Flight Paramedic) with the same hub as every level,
    plus the field tabs below (FM_TABS). S.fmStep = open MARCH-PAWS letter. */
+var FM_NOTE_SHORT = "Education only · No doses at the Field Medic level · Not affiliated with the CoTCCC, the Joint Trauma System or the DoD.";
 var FM_NOTE = "Education only. DrugBug lists no doses at the Field Medic level. Field care follows the current CoTCCC guidelines, Joint Trauma System guidance, unit protocols and medical direction. Not affiliated with or endorsed by the CoTCCC, the Joint Trauma System or the Department of Defense.";
 /* MARCH-PAWS: letter, name, one line, section to jump to */
 var FM_MARCH = [
@@ -9735,7 +9736,7 @@ function fieldMedsView() {
     var all = sc.filter(match).sort(function (a, b) { return nameOf(a).localeCompare(nameOf(b)); });
     c += '<p class="muted small">' + all.length + ' medications at ' + esc(fmTierName(S.level)) + '</p><div class="grid">' + tilesHTML(all) + '</div>';
   }
-  return c + '<p class="muted small fmnote">' + esc(FM_NOTE) + '</p>';
+  return c + '<p class="muted small fmnote">' + esc(FM_NOTE_SHORT) + '</p>';
 }
 document.addEventListener("click", function (e) { var b = e.target.closest && e.target.closest("[data-fmmode]"); if (!b || typeof S === "undefined") return; e.preventDefault(); e.stopPropagation(); S.fmMode = b.getAttribute("data-fmmode"); render(); }, true);
 document.addEventListener("input", function (e) { if (e.target && e.target.id === "fmq") { S.fmq = e.target.value; clearTimeout(S.fmqT); S.fmqT = setTimeout(function () { var pos = e.target.selectionStart; render(); var f = document.getElementById("fmq"); if (f) { f.focus(); try { f.setSelectionRange(pos, pos); } catch (x) {} } }, 250); } });
@@ -9772,7 +9773,7 @@ function fieldTabBody(k) {
       (S.fmStep != null && FM_MARCH[S.fmStep] ? '<div class="fmstep"><strong>' + esc(FM_MARCH[S.fmStep][1]) + '</strong><p>' + esc(FM_MARCH[S.fmStep][2]) + '</p></div>' : '<p class="muted small fmhint">Say each step out loud, then tap the letter to check.</p>') + '</section>';
     c += '<button class="btn nrgo" data-act="fmdrill">Start the ' + esc((DB.FLEVELS.filter(function (l) { return l.key === S.level; })[0] || {}).short || "") + ' drill' + (PAYWALL && !isPro() ? ' ' + proBadge() : '') + '</button><p class="muted small">Priority calls in order, plus questions on the medications at this tier.</p>';
   } else if (k === "march") {
-    c += '<p class="fmlead">MARCH-PAWS is the order TCCC works a casualty: the five life threats first, then the care that keeps a casualty alive for the long haul.</p>';
+    c += '';
     c += '<ol class="fmmarchlist">' + FM_MARCH.map(function (m, i) { return '<li class="' + (i >= 5 ? 'paws' : '') + '"><span class="fmml">' + m[0] + '</span><div><strong>' + esc(m[1]) + '</strong><p>' + esc(m[2]) + '</p><button class="linkish" data-tab="fm_' + m[3] + '">Learn more in ' + esc(fmWhere("fm_" + m[3])) + '</button></div></li>'; }).join("") + '</ol>';
     c += '<h3 class="fmh">Phases of care</h3><ol class="pccday"><li><strong>Care Under Fire</strong><span>Return fire, get to cover, and stop life-threatening bleeding with a tourniquet only when it is tactically possible.</span></li><li><strong>Tactical Field Care</strong><span>Behind cover: the full MARCH-PAWS assessment and treatment, and the DD1380 card.</span></li><li><strong>Tactical Evacuation Care</strong><span>On the way out: the same care plus more equipment, oxygen, monitoring and handoff.</span></li><li><strong>Prolonged Casualty Care</strong><span>When evacuation is delayed: holding the casualty for hours to days.</span></li></ol>';
   } else if (k.indexOf("fm_") === 0) {
@@ -9792,41 +9793,32 @@ function fieldTabBody(k) {
       c += '<section class="fbsec" style="--fb:' + x[2] + '"><h3>' + esc(x[1]) + '</h3>' + rows.map(function (d) { return '<button class="fbrow" data-drug="' + d[0] + '"><strong>' + esc(nameOf(d[0])) + '</strong><span class="fbuse">' + esc(d[2]) + '</span>' + (d[3] ? '<span class="fbnote">' + esc(d[3]) + '</span>' : '') + '</button>'; }).join("") + '</section>';
     });
   } else if (k === "proc") {
-    c += '<p class="fmlead">The procedures that set Tier 4 and prolonged care apart: what each one is for, how it is confirmed, and what can go wrong. Hands-on skills are learned and signed off in training under medical direction.</p>';
+    c += '';
   } else if (k === "acls") {
     var a = S.aclsK || ACLS[0][0], A = ACLS.filter(function (x) { return x[0] === a; })[0] || ACLS[0];
-    c += '<p class="fmlead">The adult ACLS rhythms as step sequences: what comes first and what comes next. Doses and energy settings are left out at the Field Medic level.</p>';
+    c += '';
     c += '<div class="aclspick">' + ACLS.map(function (x) { return '<button class="aclsbtn' + (x[3] ? ' unstable' : '') + '" data-acls="' + x[0] + '" aria-pressed="' + (x[0] === A[0]) + '"><strong>' + esc(x[1]) + '</strong><span>' + esc(x[2]) + '</span></button>'; }).join("") + '</div>';
     c += '<section class="aclsflow"><h3>' + esc(A[1]) + '</h3><p class="muted small">' + esc(A[2]) + '</p><ol>' + A[4].map(function (st) { return '<li>' + esc(st) + '</li>'; }).join("") + '</ol>' + (A[5] ? '<p class="aclsnote">' + esc(A[5]) + '</p>' : '') + '</section>';
     c += '<details class="fmkey"><summary>H\'s and T\'s (reversible causes)</summary><ul>' + ACLS_HT.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join("") + '</ul></details>';
     c += '<p class="muted small">Field note: in combat trauma arrest, TCCC lists bilateral needle decompression, and CPR only when there are no obviously fatal wounds and surgical care is close. ACLS steps follow the general form of the American Heart Association adult algorithms. DrugBug is not affiliated with or endorsed by the AHA.</p>';
   } else if (k === "dive") {
-    c += fmSubBar("dive", [["learn", "Learn"], ["tables", "Tables"], ["practice", "Practice"]]);
-    if (fmSubIs("dive")) {
-      c += '<p class="muted small">Pick the best fit for each diver, then check.</p>';
+    var dsub = fmSub("dive"); if (dsub === "learn") dsub = "calc";
+    c += fmSubBar("dive", [["learn", "Calculator"], ["tables", "Tables"], ["treat", "Treatment"], ["practice", "Practice"]]);
+    if (dsub === "practice") {
       c += DIVE_CASES.map(function (d, i) { return '<section class="iscase dvcase" data-dvcase="' + i + '"><p>' + esc(d[0]) + '</p><div class="dvopts">' + DIVE_CATS.map(function (o, j) { return '<button type="button" class="isval dvopt" data-dvo="' + j + '"><strong>' + esc(o) + '</strong></button>'; }).join("") + '</div><div class="isout" hidden></div></section>'; }).join("");
       return c + '</div>';
     }
-    if (fmSub("dive") === "tables") {
-      c += '<div class="edunote" role="note"><span class="edl"><strong>Not for dive planning.</strong> Images of the U.S. Navy Diving Manual, Revision 7, for study. Real dives and treatments use the current official manual, under a Dive Supervisor and an Undersea Medical Officer.</span></div>';
-    c += '<h3 class="fmh">The Navy dive tables</h3><p class="muted small">Exact page images from the U.S. Navy Diving Manual, Revision 7 (Distribution A). Tap a table to open it full size and zoom in.</p><div class="divetabs">' + DIVE_TABLES.map(function (t) { return '<details class="divetab"><summary><strong>' + esc(t[1]) + '</strong><span>' + esc(t[2]) + '</span></summary><a href="img/dive/' + t[0] + '" target="_blank" rel="noopener"><img src="img/dive/' + t[0] + '" alt="' + esc(t[1]) + ' from the U.S. Navy Diving Manual" loading="lazy"></a><p class="muted small">' + esc(t[3]) + '</p></details>'; }).join("") + '</div>';
-    c += '<h3 class="fmh">Worked example from the manual</h3><ol class="pccday">' + DIVE_EXAMPLE.map(function (x) { return '<li><strong>' + esc(x[0]) + '</strong><span>' + esc(x[1]) + '</span></li>'; }).join("") + '</ol>';
-      return c + '<p class="muted small">U.S. Navy Diving Manual, Revision 7 (Distribution A, approved for public release). DrugBug is not affiliated with the U.S. Navy.</p></div>';
-    }
-    c += '<p class="fmlead">Dive medicine for medics supporting dive operations: how the U.S. Navy dive tables work (the tables are in the Tables tab), and how to recognize and treat decompression sickness and arterial gas embolism.</p>';
-    c += '<div class="edunote" role="note"><span class="edl"><strong>Not for dive planning.</strong> The Tables tab shows images of the U.S. Navy Diving Manual, Revision 7, for study. Real dives and treatments use the current official manual, under a Dive Supervisor and an Undersea Medical Officer.</span></div>';
-    c += '<h3 class="fmh">How a table is read</h3><ol class="pccday">' + DIVE_FLOW.map(function (x) { return '<li><strong>' + esc(x[0]) + '</strong><span>' + esc(x[1]) + '</span></li>'; }).join("") + '</ol>';
-    c += '<h3 class="fmh">Terms that matter</h3><div class="isref">' + DIVE_TERMS.map(function (x) { return '<details class="isrow"><summary><strong>' + esc(x[0]) + '</strong></summary><p>' + esc(x[1]) + '</p></details>'; }).join("") + '</div>';
-    c += '<h3 class="fmh">Recognition and treatment</h3>' + fmKey(DIVE_KEYS, true);
-    c += '<p class="muted small">Based on the U.S. Navy Diving Manual, Revision 7 (Distribution A, approved for public release). DrugBug is not affiliated with the U.S. Navy.</p>';
+    if (dsub === "calc") { setTimeout(dvUpdate, 0); return c + diveCalcView() + '</div>'; }
+    if (dsub === "tables") return c + diveTablesView() + '</div>';
+    c += diveTreatView();
   } else if (k === "pcc_vent") {
-    c += '<p class="fmlead">Once a casualty has a tube, the medic is running an ICU airway: keeping the tube in, the lungs open and the oxygen up, sometimes for days.</p>' + fmKey(PCC_VENT, true);
+    c += '' + fmKey(PCC_VENT, true);
     c += '<h3 class="fmh">When a ventilated casualty suddenly gets worse: DOPES</h3><ol class="pccday">' + PCC_DOPES.map(function (x) { return '<li><strong>' + esc(x[0]) + '</strong><span>' + esc(x[1]) + '</span></li>'; }).join("") + '</ol>';
   } else if (k === "pcc_nurse") {
     c += '<p class="fmlead">In a long hold, nursing care decides whether a casualty arrives at surgery with new problems. Most of it is simple, repeated and easy to forget.</p>';
     c += PCC_NURSE.map(function (x) { return '<section class="fmskill"><h3>' + esc(x[0]) + '</h3><ul>' + x[1].map(function (y) { return '<li><span>' + esc(y) + '</span></li>'; }).join("") + '</ul></section>'; }).join("");
   } else if (k === "pcc_tele") {
-    c += '<p class="fmlead">Two jobs finish every long hold: getting expert advice early, and preparing the casualty to survive the trip out.</p>';
+    c += '';
     c += '<h3 class="fmh">Calling for a teleconsult</h3>' + fmKey(PCC_TELE, true);
     c += '<h3 class="fmh">Preparing for flight</h3>' + fmKey(PCC_FLIGHT, true);
   } else if (k === "istat") {
@@ -9837,15 +9829,15 @@ function fieldTabBody(k) {
       return c + '</div>';
     }
     if (fmSub("istat") === "carts") {
-      c += '<p class="fmlead">Each single-use cartridge runs a fixed panel. The medic picks the cartridge for the question being asked.</p><div class="iscarts">' + ISTAT_CARTS.map(function (x) { return '<div class="iscard"><span class="iscart">' + esc(x[0]) + '</span><strong>' + esc(x[1]) + '</strong><p>' + esc(x[2]) + '</p></div>'; }).join("") + '</div>';
+      c += '<div class="iscarts">' + ISTAT_CARTS.map(function (x) { return '<div class="iscard"><span class="iscart">' + esc(x[0]) + '</span><strong>' + esc(x[1]) + '</strong><p>' + esc(x[2]) + '</p></div>'; }).join("") + '</div>';
       return c + '<p class="muted small">i-STAT is a trademark of Abbott. DrugBug is not affiliated with Abbott.</p></div>';
     }
-    c += '<p class="fmlead">The i-STAT is a handheld blood analyzer that runs a few drops of blood through a single-use cartridge in about 2 minutes, which brings ICU-style labs to a long hold.</p>';
+    c += '';
     c += '<h3 class="fmh">What each value tells you</h3><div class="isref">' + ISTAT_VALS.map(function (v) { return '<div class="isrow open"><div class="isrowh"><strong>' + esc(v[0]) + '</strong><span>' + esc(v[1]) + '</span></div><p>' + esc(v[2]) + '</p></div>'; }).join("") + '</div>';
     c += '<p class="muted small">Ranges shown are typical adult reference ranges; each cartridge, device and lab sets its own. i-STAT is a trademark of Abbott. DrugBug is not affiliated with Abbott.</p>';
   }
   if (k.indexOf("fm_") !== 0 && typeof fmDeep === "function") c += fmDeep(k);
-  return c + '<p class="muted small fmnote">' + esc(FM_NOTE) + '</p></div>';
+  return c + '<p class="muted small fmnote">' + esc(FM_NOTE_SHORT) + '</p></div>';
 }
 /* the old stand-alone view now opens the Field Medic level */
 function fieldView() { setTimeout(function () { go("flevels"); }, 0); return topbar(); }
@@ -10371,7 +10363,7 @@ function pccRow(id, txt, lab) { var nm = lab || pccName(id); return id && DB.dru
 /* Drugs by problem: rows of drugs this tier can see */
 function pccProblems() {
   var sc = {}; scopeFor(S.level).ids.forEach(function (id) { sc[id] = 1; });
-  return '<p class="fmlead">The drugs that come into play when a casualty is held for hours to days, grouped by the problem they solve. Tap a drug for its Field Medic card.</p>' + PCC_PROBS.map(function (g) {
+  return '' + PCC_PROBS.map(function (g) {
     var rows = g[2].filter(function (x) { return DB.drugs[x[0]] && sc[x[0]]; }); if (!rows.length) return "";
     return '<section class="pccgrp"><h3 class="fmh">' + esc(g[0]) + '</h3><p class="muted small">' + esc(g[1]) + '</p><div class="pccrows">' + rows.map(function (x) { return pccRow(x[0], x[1]); }).join("") + '</div></section>';
   }).join("");
@@ -10379,7 +10371,7 @@ function pccProblems() {
 /* Drug handling: storage, lines, drugs that change over days, interactions, supply math */
 function pccHandling() {
   function blk(t, sub, list, byId) { return '<section class="pccgrp"><h3 class="fmh">' + esc(t) + '</h3>' + (sub ? '<p class="muted small">' + esc(sub) + '</p>' : '') + '<div class="pccrows">' + list.map(function (x) { return byId ? pccRow(x[0], x[1], x[2]) : pccRow("", x[1], x[0]); }).join("") + '</div></section>'; }
-  return '<p class="fmlead">What changes when drugs leave the clinic: storage without a fridge, what cannot share a line, and how drugs behave after days of use.</p>' +
+  return '' +
     blk("Storage away from a fridge", "From the product labels. Storage rules differ by manufacturer, so the label in the kit decides.", PCC_STORE, true) +
     blk("Not in the same line", "", PCC_LINES, false) +
     blk("Drugs that change over days", "", PCC_LONG, true) +
@@ -10425,6 +10417,172 @@ function fmSimple(d) {
   c += S2("Routes", "dose", true, F("Routes", 7, 0));
   c += S2("What to watch", "", true, F("Common Side Effects", 9, 0) + F("Serious Side Effects", 9, 1));
   c += S2("Remember it", "", true, F("Memory Trick", 16, 2) + F("Key Fact", 16, 3));
+  return c;
+}
+
+/* Dive tab, rebuilt Oct 28 2026 (owner: "a lot of useless information, I need hard to access information").
+   Values transcribed from the U.S. Navy Diving Manual, Revision 7 (Distribution A):
+   Table 9-7 (no-decompression limits and repetitive groups), Table 9-8 (residual nitrogen time),
+   Table 9-6 (surface interval before ascent to altitude), Treatment Tables 5 and 6 (Figures 17-4, 17-5).
+   Study tool only. The page images in the Tables tab are the source of truth. */
+var DV_G = "ABCDEFGHIJKLMNOZ".split("");
+/* Table 9-7: [depth fsw, no-stop limit (0 = unlimited), times by group A.., highest group for unlimited depths] */
+var DV_97 = [
+  [10, 0, [57, 101, 158, 245, 426], "F"], [15, 0, [36, 60, 88, 121, 163, 217, 297, 449], "I"], [20, 0, [26, 43, 61, 82, 106, 133, 165, 205, 256, 330, 461], "L"],
+  [25, 1102, [20, 33, 47, 62, 78, 97, 117, 140, 166, 198, 236, 285, 354, 469, 992, 1102]], [30, 371, [17, 27, 38, 50, 62, 76, 91, 107, 125, 145, 167, 193, 223, 260, 307, 371]],
+  [35, 232, [14, 23, 32, 42, 52, 63, 74, 87, 100, 115, 131, 148, 168, 190, 215, 232]], [40, 163, [12, 20, 27, 36, 44, 53, 63, 73, 84, 95, 108, 121, 135, 151, 163]],
+  [45, 125, [11, 17, 24, 31, 39, 46, 55, 63, 72, 82, 92, 102, 114, 125]], [50, 92, [9, 15, 21, 28, 34, 41, 48, 56, 63, 71, 80, 89, 92]],
+  [55, 74, [8, 14, 19, 25, 31, 37, 43, 50, 56, 63, 71, 74]], [60, 63, [7, 12, 17, 22, 28, 33, 39, 45, 51, 57, 63]], [70, 48, [6, 10, 14, 19, 23, 28, 32, 37, 42, 47, 48]],
+  [80, 39, [5, 9, 12, 16, 20, 24, 28, 32, 36, 39]], [90, 33, [4, 7, 11, 14, 17, 21, 24, 28, 31, 33]], [100, 25, [4, 6, 9, 12, 15, 18, 21, 25]], [110, 20, [3, 6, 8, 11, 14, 16, 19, 20]],
+  [120, 15, [3, 5, 7, 10, 12, 15]], [130, 12, [2, 4, 6, 9, 11, 12]], [140, 10, [2, 4, 6, 8, 10]], [150, 8, [null, 3, 5, 7, 8]], [160, 7, [null, 3, 5, 6, 7]],
+  [170, 6, [null, null, 4, 6]], [180, 6, [null, null, 4, 5, 6]], [190, 5, [null, null, 3, 5]]
+];
+/* Table 9-8 surface intervals: starting group -> upper end (h:mm) of each new group, from the starting group down to A. Each row starts at 0:10. */
+var DV_SI = {
+  Z: "0:52 1:44 2:37 3:29 4:21 5:13 6:06 6:58 7:50 8:42 9:34 10:27 11:19 12:13 13:30 15:50", O: "0:52 1:44 2:37 3:29 4:21 5:13 6:06 6:58 7:50 8:42 9:34 10:27 11:21 12:37 14:58",
+  N: "0:52 1:44 2:37 3:29 4:21 5:13 6:06 6:58 7:50 8:42 9:34 10:29 11:45 14:05", M: "0:52 1:44 2:37 3:29 4:21 5:13 6:06 6:58 7:50 8:42 9:37 10:53 13:13",
+  L: "0:52 1:44 2:37 3:29 4:21 5:13 6:06 6:58 7:50 8:44 10:01 12:21", K: "0:52 1:44 2:37 3:29 4:21 5:13 6:06 6:58 7:52 9:09 11:29",
+  J: "0:52 1:44 2:37 3:29 4:21 5:13 6:06 7:00 8:16 10:36", I: "0:52 1:44 2:37 3:29 4:21 5:13 6:08 7:24 9:44", H: "0:52 1:44 2:37 3:29 4:21 5:16 6:32 8:52",
+  G: "0:52 1:44 2:37 3:29 4:23 5:40 8:00", F: "0:52 1:44 2:37 3:31 4:48 7:08", E: "0:52 1:44 2:39 3:55 6:15", D: "0:52 1:47 3:03 5:23", C: "0:55 2:11 4:31", B: "1:16 3:36", A: "2:20"
+};
+/* Table 9-8 residual nitrogen time: depth -> minutes for groups Z O N M L K J I H G F E D C B A. -1 = cannot be determined from the table (**); -2 = use the 30 fsw row (dagger). */
+var DV_RNT_ORDER = "ZONMLKJIHGFEDCBA".split("");
+var DV_RNT = {
+  10: [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 427, 246, 159, 101, 58], 15: [-1, -1, -1, -1, -1, -1, -1, -1, 450, 298, 218, 164, 122, 89, 61, 37],
+  20: [-1, -1, -1, -1, -1, 462, 331, 257, 206, 166, 134, 106, 83, 62, 44, 27], 25: [-2, -2, 470, 354, 286, 237, 198, 167, 141, 118, 98, 79, 63, 48, 34, 21],
+  30: [372, 308, 261, 224, 194, 168, 146, 126, 108, 92, 77, 63, 51, 39, 28, 18], 35: [245, 216, 191, 169, 149, 132, 116, 101, 88, 75, 64, 53, 43, 33, 24, 15],
+  40: [188, 169, 152, 136, 122, 109, 97, 85, 74, 64, 55, 45, 37, 29, 21, 13], 45: [154, 140, 127, 115, 104, 93, 83, 73, 64, 56, 48, 40, 32, 25, 18, 12],
+  50: [131, 120, 109, 99, 90, 81, 73, 65, 57, 49, 42, 35, 29, 23, 17, 11], 55: [114, 105, 96, 88, 80, 72, 65, 58, 51, 44, 38, 32, 26, 20, 15, 10],
+  60: [101, 93, 86, 79, 72, 65, 58, 52, 46, 40, 35, 29, 24, 19, 14, 9], 70: [83, 77, 71, 65, 59, 54, 49, 44, 39, 34, 29, 25, 20, 16, 12, 8],
+  80: [70, 65, 60, 55, 51, 46, 42, 38, 33, 29, 25, 22, 18, 14, 10, 7], 90: [61, 57, 52, 48, 44, 41, 37, 33, 29, 26, 22, 19, 16, 12, 9, 6],
+  100: [54, 50, 47, 43, 40, 36, 33, 30, 26, 23, 20, 17, 14, 11, 8, 5], 110: [48, 45, 42, 39, 36, 33, 30, 27, 24, 21, 18, 16, 13, 10, 8, 5],
+  120: [44, 41, 38, 35, 32, 30, 27, 24, 22, 19, 17, 14, 12, 9, 7, 5], 130: [40, 37, 35, 32, 30, 27, 25, 22, 20, 18, 15, 13, 11, 9, 6, 4],
+  140: [37, 34, 32, 30, 27, 25, 23, 21, 19, 16, 14, 12, 10, 8, 6, 4], 150: [34, 32, 30, 28, 26, 23, 21, 19, 17, 15, 13, 11, 9, 8, 6, 4],
+  160: [32, 30, 28, 26, 24, 22, 20, 18, 16, 14, 13, 11, 9, 7, 5, 4], 170: [30, 28, 26, 24, 22, 21, 19, 17, 15, 14, 12, 10, 8, 7, 5, 3],
+  180: [28, 26, 25, 23, 21, 19, 18, 16, 14, 13, 11, 10, 8, 6, 5, 3], 190: [26, 25, 23, 22, 20, 18, 17, 15, 14, 12, 11, 9, 8, 6, 5, 3]
+};
+/* Table 9-6: group -> required surface interval (h:mm) for an altitude increase of 1,000 ... 10,000 ft */
+var DV_ALT = {
+  A: "0:00 0:00 0:00 0:00 0:00 0:00 0:00 0:00 0:00 0:00", B: "0:00 0:00 0:00 0:00 0:00 0:00 0:00 0:00 0:00 1:42", C: "0:00 0:00 0:00 0:00 0:00 0:00 0:00 0:00 1:48 6:23",
+  D: "0:00 0:00 0:00 0:00 0:00 0:00 0:00 1:45 5:24 9:59", E: "0:00 0:00 0:00 0:00 0:00 0:00 1:37 4:39 8:18 12:54", F: "0:00 0:00 0:00 0:00 0:00 1:32 4:04 7:06 10:45 15:20",
+  G: "0:00 0:00 0:00 0:00 1:19 3:38 6:10 9:13 12:52 17:27", H: "0:00 0:00 0:00 1:06 3:10 5:29 8:02 11:04 14:43 19:18", I: "0:00 0:00 0:56 2:45 4:50 7:09 9:41 12:44 16:22 20:58",
+  J: "0:00 0:41 2:25 4:15 6:19 8:39 11:11 14:13 17:52 22:27", K: "0:30 2:03 3:47 5:37 7:41 10:00 12:33 15:35 19:14 23:49", L: "1:45 3:18 5:02 6:52 8:56 11:15 13:48 16:50 20:29 25:04",
+  M: "2:54 4:28 6:12 8:01 10:06 12:25 14:57 18:00 21:38 26:14", N: "3:59 5:32 7:16 9:06 11:10 13:29 16:02 19:04 22:43 27:18", O: "4:59 6:33 8:17 10:06 12:11 14:30 17:02 20:05 23:43 28:19",
+  Z: "5:56 7:29 9:13 11:03 13:07 15:26 17:59 21:01 24:40 29:15"
+};
+/* Treatment tables: [depth, gas, minutes] steps; "asc" = ascent at 1 ft/min on oxygen */
+var DV_TT = [
+  ["Treatment Table 5", "Pain-only (Type I) DCS with a normal full neurological exam.", "2 h 15 min (135 min)", [[60, "O2", 20], [60, "Air", 5], [60, "O2", 20], ["60 → 30", "O2", 30, 1], [30, "Air", 5], [30, "O2", 20], [30, "Air", 5], ["30 → 0", "O2", 30, 1]],
+    ["Can be extended by two oxygen periods at 30 fsw, with no air break needed between them or before ascent.", "The tender breathes oxygen during ascent from 30 fsw; 20 more minutes if the tender had a hyperbaric exposure in the past 18 hours."]],
+  ["Treatment Table 6", "Arterial gas embolism, Type II DCS, and Type I symptoms not relieved within 10 minutes at 60 fsw.", "4 h 45 min (285 min)", [[60, "O2", 20], [60, "Air", 5], [60, "O2", 20], [60, "Air", 5], [60, "O2", 20], [60, "Air", 5], ["60 → 30", "O2", 30, 1], [30, "Air", 15], [30, "O2", 60], [30, "Air", 15], [30, "O2", 60], ["30 → 0", "O2", 30, 1]],
+    ["Can be lengthened by up to 2 more 25-minute periods at 60 fsw (20 min O2, 5 min air), up to 2 more 75-minute periods at 30 fsw (15 min air, 60 min O2), or both.", "The tender breathes oxygen for the last 30 minutes at 30 fsw and on ascent; 60 minutes at 30 fsw after more than one extension; 60 more minutes if the tender had a hyperbaric exposure in the past 18 hours."]]
+];
+var DV_TT_COMMON = ["Descent at 20 ft/min. Ascent no faster than 1 ft/min.", "Oxygen time starts on arrival at 60 fsw.", "If oxygen is interrupted for CNS oxygen toxicity, the schedule resumes at the point of interruption 15 minutes after the reaction has fully subsided.", "Total times do not include descent."];
+/* ---- helpers ---- */
+function dvMin(s) { var p = String(s).split(":"); return (+p[0]) * 60 + (+p[1]); }
+function dvHM(m) { var h = Math.floor(m / 60), mm = m % 60; return h + ":" + (mm < 10 ? "0" : "") + mm; }
+function dvRow(depth) { for (var i = 0; i < DV_97.length; i++) if (DV_97[i][0] >= depth) return DV_97[i]; return null; }
+/* -> {row, group, over, star} */
+function dvGroup(depth, bt) {
+  var r = dvRow(depth); if (!r) return { err: "Deeper than 190 fsw: outside the no-decompression table." };
+  if (r[1] && bt > r[1]) return { row: r, over: true };
+  for (var i = 0; i < r[2].length; i++) if (r[2][i] != null && bt <= r[2][i]) return { row: r, group: DV_G[i] };
+  return r[3] ? { row: r, group: r[3], star: true } : { row: r, over: true };
+}
+function dvAfterSI(g, si) {
+  var row = DV_SI[g]; if (!row) return null; var ends = row.split(" ").map(dvMin), order = DV_RNT_ORDER.slice(DV_RNT_ORDER.indexOf(g));
+  if (si < 10) return { under: true };
+  for (var i = 0; i < ends.length; i++) if (si <= ends[i]) return { group: order[i] };
+  return { clear: true, max: ends[ends.length - 1] };
+}
+function dvRNT(depth, g) {
+  var d = null; Object.keys(DV_RNT).map(Number).sort(function (a, b) { return a - b; }).some(function (k) { if (k >= depth) { d = k; return true; } return false; });
+  if (d == null) return { err: true };
+  var v = DV_RNT[d][DV_RNT_ORDER.indexOf(g)];
+  if (v === -2) return { depth: d, use30: true, rnt: DV_RNT[30][DV_RNT_ORDER.indexOf(g)] };
+  return { depth: d, rnt: v };
+}
+function dvAlt(g, ft) { var col = Math.min(10, Math.max(1, Math.ceil(ft / 1000))); return (DV_ALT[g] || "").split(" ")[col - 1]; }
+/* ---- views ---- */
+function dvNote() { return '<div class="dvwarn" role="note"><strong>Study tool, not for dive planning.</strong> Values from the U.S. Navy Diving Manual, Rev 7. Real dives and treatments follow the current official manual under a Dive Supervisor and a Diving Medical Officer.</div>'; }
+function dvGroupOpts(sel) { return DV_G.map(function (g) { return '<option' + (g === sel ? ' selected' : '') + '>' + g + '</option>'; }).join(""); }
+function diveCalcView() {
+  var D = S.dv || (S.dv = { d: 60, t: 40, si: 90, d2: 40, t2: 20, alt: 8000 });
+  return dvNote() +
+    '<section class="dvcard"><h3><span class="dvn">1</span>First dive</h3><div class="dvin"><label>Depth (fsw)<input type="number" inputmode="numeric" min="1" max="190" data-dv="d" value="' + D.d + '"></label><label>Bottom time (min)<input type="number" inputmode="numeric" min="1" data-dv="t" value="' + D.t + '"></label></div><div class="dvout" id="dvo1"></div></section>' +
+    '<section class="dvcard"><h3><span class="dvn">2</span>Surface interval and repeat dive</h3><div class="dvin"><label>Surface interval (min)<input type="number" inputmode="numeric" min="0" data-dv="si" value="' + D.si + '"></label><label>Next depth (fsw)<input type="number" inputmode="numeric" min="1" max="190" data-dv="d2" value="' + D.d2 + '"></label><label>Next bottom time (min)<input type="number" inputmode="numeric" min="1" data-dv="t2" value="' + D.t2 + '"></label></div><div class="dvout" id="dvo2"></div></section>' +
+    '<section class="dvcard"><h3><span class="dvn">3</span>Flying or driving to altitude</h3><div class="dvin"><label>Highest group in 24 h<select data-dv="ag"><option value="">Auto</option>' + dvGroupOpts(D.ag) + '</select></label><label>Altitude increase<select data-dv="alt">' + [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000].map(function (a) { return '<option value="' + a + '"' + (+D.alt === a ? ' selected' : '') + '>' + (a === 8000 ? "8,000 ft (commercial flight)" : a.toLocaleString() + " ft") + '</option>'; }).join("") + '</select></label></div><div class="dvout" id="dvo3"></div></section>' +
+    '<p class="muted small">Depth is rounded up to the next table depth and times up to the next table time, as the manual reads its tables.</p>';
+}
+function dvLine(k, v, cls) { return '<div class="dvl' + (cls ? ' ' + cls : '') + '"><span>' + k + '</span><strong>' + v + '</strong></div>'; }
+function dvUpdate() {
+  var D = S.dv; if (!D || !document.getElementById("dvo1")) return;
+  var o1 = "", o2 = "", o3 = "", g1 = null, gFinal = null;
+  var a = dvGroup(+D.d || 0, +D.t || 0);
+  if (a.err) o1 = dvLine("Result", esc(a.err), "bad");
+  else {
+    o1 += dvLine("Table depth", a.row[0] + " fsw") + dvLine("No-stop limit", a.row[1] ? a.row[1] + " min" : "Unlimited");
+    if (a.over) o1 += dvLine("Result", "Over the no-decompression limit: a decompression schedule is needed (Table 9-9, not shown).", "bad");
+    else { g1 = a.group; o1 += dvLine("Repetitive group", '<span class="dvg">' + g1 + '</span>' + (a.star ? ' <small>highest possible at this depth</small>' : ''), "good"); }
+  }
+  if (g1) {
+    var s = dvAfterSI(g1, +D.si || 0);
+    if (s.under) o2 = dvLine("Surface interval", "Under 10 minutes is outside Table 9-8; the manual combines the dives.", "warn");
+    else if (s.clear) o2 = dvLine("Surface interval", "Longer than " + dvHM(s.max) + ": not a repetitive dive. The next dive uses its actual bottom time.", "good");
+    else {
+      o2 += dvLine("Group after the interval", '<span class="dvg">' + s.group + '</span>');
+      var r = dvRNT(+D.d2 || 0, s.group);
+      if (r.err) o2 += dvLine("Residual nitrogen", "Deeper than 190 fsw is outside the table.", "bad");
+      else if (r.rnt === -1) o2 += dvLine("Residual nitrogen", "Cannot be determined from Table 9-8 at " + r.depth + " fsw (manual paragraph 9-9.1).", "warn");
+      else {
+        var esdt = r.rnt + (+D.t2 || 0), b = dvGroup(r.use30 ? 30 : r.depth, esdt);
+        o2 += dvLine("Residual nitrogen time", r.rnt + " min" + (r.use30 ? " (read from the 30 fsw row)" : "")) + dvLine("Equivalent single dive", r.rnt + " + " + (+D.t2 || 0) + " = " + esdt + " min at " + (r.use30 ? 30 : r.depth) + " fsw");
+        if (b.over) o2 += dvLine("Result", "Over the no-decompression limit for the repeat dive: decompression needed.", "bad");
+        else if (b.group) { gFinal = b.group; o2 += dvLine("Group after the repeat dive", '<span class="dvg">' + gFinal + '</span>', "good"); }
+      }
+    }
+  } else o2 = '<p class="muted small">Needs a no-decompression first dive.</p>';
+  var hi = D.ag || [g1, gFinal].filter(Boolean).sort(function (x, y) { return DV_G.indexOf(y) - DV_G.indexOf(x); })[0];
+  if (hi) { var w = dvAlt(hi, +D.alt || 8000); o3 = dvLine("Group used", '<span class="dvg">' + hi + '</span>') + dvLine("Wait before ascent", w === "0:00" ? "No wait required" : w.replace(":", " h ") + " min", w === "0:00" ? "good" : "warn"); }
+  else o3 = '<p class="muted small">Needs a repetitive group from step 1 or a group picked above.</p>';
+  o3 += '<p class="muted small">Exceptional exposure dives: 48 hours before ascent. Above 10,000 ft: NAVSEA 00C guidance. No interval is required to fly from a dive site at 8,000 ft or higher. After a non-saturation helium-oxygen dive: 12 hours (no-decompression) or 24 hours (decompression).</p>';
+  document.getElementById("dvo1").innerHTML = o1; document.getElementById("dvo2").innerHTML = o2; document.getElementById("dvo3").innerHTML = o3;
+}
+document.addEventListener("input", function (e) { var k = e.target && e.target.getAttribute && e.target.getAttribute("data-dv"); if (!k || !S.dv) return; S.dv[k] = e.target.value; dvUpdate(); });
+document.addEventListener("change", function (e) { var k = e.target && e.target.getAttribute && e.target.getAttribute("data-dv"); if (!k || !S.dv) return; S.dv[k] = e.target.value; dvUpdate(); });
+/* readable versions of the tables (with the page images as the source) */
+function diveTablesView() {
+  var c = dvNote(), sel = S.dvt || "97";
+  c += '<div class="fmsub inner seg3" role="tablist">' + [["97", "No-decompression"], ["98", "Repetitive"], ["96", "Altitude"], ["img", "Page images"]].map(function (x) { return '<button role="tab" data-dvt="' + x[0] + '" aria-pressed="' + (sel === x[0]) + '">' + x[1] + '</button>'; }).join("") + '</div>';
+  if (sel === "97") {
+    c += '<p class="muted small">Table 9-7. Depth row equal to or deeper than the dive; first time equal to or longer than the bottom time; the letter above it is the repetitive group.</p><div class="dvscroll"><table class="dvtab"><thead><tr><th>fsw</th><th>Limit</th>' + DV_G.map(function (g) { return '<th>' + g + '</th>'; }).join("") + '</tr></thead><tbody>' +
+      DV_97.map(function (r) { return '<tr><th>' + r[0] + '</th><td class="dvlim">' + (r[1] || "∞") + '</td>' + DV_G.map(function (g, i) { var v = r[2][i]; return '<td>' + (v != null ? v : (r[3] === g ? "*" : "")) + '</td>'; }).join("") + '</tr>'; }).join("") + '</tbody></table></div><p class="muted small">* Highest group reachable at that depth regardless of bottom time. ∞ = unlimited.</p>';
+  } else if (sel === "98") {
+    c += '<p class="muted small">Table 9-8, part 1: group after a surface interval. Each row starts at 0:10; the time shown is the end of each band.</p><div class="dvscroll"><table class="dvtab"><thead><tr><th>From</th>' + DV_RNT_ORDER.map(function (g) { return '<th>' + g + '</th>'; }).join("") + '</tr></thead><tbody>' +
+      DV_RNT_ORDER.map(function (g) { var ends = DV_SI[g].split(" "), start = DV_RNT_ORDER.indexOf(g); return '<tr><th>' + g + '</th>' + DV_RNT_ORDER.map(function (x, i) { return '<td>' + (i >= start ? ends[i - start] : "") + '</td>'; }).join("") + '</tr>'; }).join("") + '</tbody></table></div><p class="muted small">Read across the starting group to the band that holds the surface interval; the column letter is the new group. Past the last band the next dive is not a repetitive dive.</p>';
+    c += '<p class="muted small">Part 2: residual nitrogen time (minutes) by repeat-dive depth and the new group.</p><div class="dvscroll"><table class="dvtab"><thead><tr><th>fsw</th>' + DV_RNT_ORDER.map(function (g) { return '<th>' + g + '</th>'; }).join("") + '</tr></thead><tbody>' +
+      Object.keys(DV_RNT).map(Number).sort(function (a, b) { return a - b; }).map(function (d) { return '<tr><th>' + d + '</th>' + DV_RNT[d].map(function (v) { return '<td>' + (v === -1 ? "**" : v === -2 ? "†" : v) + '</td>'; }).join("") + '</tr>'; }).join("") + '</tbody></table></div><p class="muted small">** Cannot be determined from this table (manual paragraph 9-9.1). † Read down to the 30 fsw row and use that residual time with the 30 fsw table.</p>';
+  } else if (sel === "96") {
+    c += '<p class="muted small">Table 9-6: required surface interval (h:mm) before ascent to altitude. The highest group from the past 24 hours is used. Commercial cabins count as 8,000 ft.</p><div class="dvscroll"><table class="dvtab"><thead><tr><th>Grp</th>' + [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(function (k) { return '<th' + (k === 8 ? ' class="dvhi"' : '') + '>' + k + 'k</th>'; }).join("") + '</tr></thead><tbody>' +
+      DV_G.map(function (g) { return '<tr><th>' + g + '</th>' + DV_ALT[g].split(" ").map(function (v, i) { return '<td' + (i === 7 ? ' class="dvhi"' : '') + '>' + (v === "0:00" ? "–" : v) + '</td>'; }).join("") + '</tr>'; }).join("") + '</tbody></table></div><p class="muted small">– = no wait. Exceptional exposure: 48 hours. Altitudes above 10,000 ft: NAVSEA 00C.</p>';
+  } else {
+    c += '<div class="divetabs">' + DIVE_TABLES.map(function (t) { return '<details class="divetab"><summary><strong>' + esc(t[1]) + '</strong><span>' + esc(t[2]) + '</span></summary><a href="img/dive/' + t[0] + '" target="_blank" rel="noopener"><img src="img/dive/' + t[0] + '" alt="' + esc(t[1]) + ' from the U.S. Navy Diving Manual" loading="lazy"></a></details>'; }).join("") + '</div><p class="muted small">Exact page images from the U.S. Navy Diving Manual, Rev 7 (Distribution A). Tap one to open it full size.</p>';
+  }
+  return c;
+}
+document.addEventListener("click", function (e) { var b = e.target.closest && e.target.closest("[data-dvt]"); if (!b) return; e.preventDefault(); e.stopPropagation(); S.dvt = b.getAttribute("data-dvt"); render(); }, true);
+function diveTreatView() {
+  var c = '<div class="dvcall"><span>Diving emergency consult, 24/7</span><strong>Divers Alert Network: +1-919-684-9111</strong><small>Military: the unit Diving Medical Officer or Undersea Medical Officer.</small></div>';
+  c += '<h3 class="fmh">Which table</h3><div class="pccrows">' +
+    pccRow("", "Arterial gas embolism, Type II DCS, or Type I not relieved within 10 minutes at 60 fsw.", "Table 6") +
+    pccRow("", "Pain-only (Type I) DCS with a normal full neurological exam, relieved within 10 minutes at 60 fsw.", "Table 5") +
+    pccRow("", "The longer table is used.", "When in doubt") + '</div>';
+  DV_TT.forEach(function (t) {
+    c += '<section class="dvcard"><h3>' + esc(t[0]) + ' <small>' + esc(t[2]) + '</small></h3><p class="muted small">' + esc(t[1]) + '</p><table class="dvtab dvtt"><thead><tr><th>Depth (fsw)</th><th>Gas</th><th>Min</th></tr></thead><tbody>' +
+      t[3].map(function (s) { return '<tr class="' + (s[1] === "O2" ? "o2" : "air") + '"><td>' + s[0] + (s[3] ? ' <small>ascent 1 ft/min</small>' : '') + '</td><td>' + (s[1] === "O2" ? "O<sub>2</sub>" : "Air") + '</td><td>' + s[2] + '</td></tr>'; }).join("") + '</tbody></table><ul class="dvnotes">' + t[4].map(function (x) { return '<li>' + esc(x) + '</li>'; }).join("") + '</ul></section>';
+  });
+  c += '<h3 class="fmh">Both tables</h3><ul class="dvnotes">' + DV_TT_COMMON.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join("") + '</ul>';
+  c += '<h3 class="fmh">Recognition</h3><ul class="dvnotes">' + DIVE_KEYS.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join("") + '</ul>';
   return c;
 }
 
