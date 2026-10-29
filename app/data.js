@@ -304,7 +304,7 @@ DB._fcache = {};
 DB.fscopeFor = function (key) {
   if (DB._fcache[key]) return DB._fcache[key];
   var ids = {}, notes = {};
-  for (var i = 0; i < DB.FLEVELS.length; i++) { var k = DB.FLEVELS[i].key, m = DB.FSCOPE[k] || {}; Object.keys(m).forEach(function (id) { if (!DB.drugs[id]) return; ids[id] = 1; if (m[id]) notes[id] = m[id]; }); if (k === key) break; }
+  for (var i = 0; i < DB.FLEVELS.length; i++) { var k = DB.FLEVELS[i].key, m = DB.FSCOPE[k] || {}; Object.keys(m).forEach(function (id) { ids[id] = 1; if (m[id]) notes[id] = m[id]; }); if (k === key) break; }
   return (DB._fcache[key] = { ids: Object.keys(ids), notes: notes });
 };
 

@@ -313,7 +313,7 @@ function scopeNote(id) { if (S.view !== "level") return ""; return scopeFor(S.le
 var UTIL_VIEWS = { settings: 1, easy: 1, classes: 1, admin: 1 };
 function go(view, opts) {
   if (UTIL_VIEWS[view] && !UTIL_VIEWS[S.view] && S.view !== view && S.view !== "terrarium") S.utilBack = { view: S.view, level: S.level, tab: S.tab };
-  clearTimeout(S.qT); S.view = view; Object.assign(S, { pointGo: null, showFilt: false, onlyMarks: false, tool: null, shopF: null, tab: "hub", q: "", tags: {}, group: "all", scen: null, fc: null, nr: null, sess: null, prepNr: null, unit: null, fam: null, famq: "", cn: null, menu: false, mupop: false }, opts || {});
+  clearTimeout(S.qT); S.view = view; Object.assign(S, { pointGo: null, showFilt: false, onlyMarks: false, tool: null, shopF: null, tab: "hub", q: "", tags: {}, group: "all", scen: null, fc: null, nr: null, sess: null, prepNr: null, unit: null, fam: null, famq: "", cn: null, menu: false, mupop: false, fmq: "" }, opts || {});
   Admin.on = view === "admin"; if (view === "level") store("lastLevel", S.level);
   var h = view === "home" ? "" : view === "admin" ? "admin" : view === "classes" ? "classes" : view === "settings" ? "settings" : view === "terrarium" ? "terrarium" : view === "levels" ? "prehospital" : view === "flevels" ? "fieldmedic" : view === "nlevels" ? "nursing" : view === "mlevels" ? "medschool" : view === "ilevels" ? "imaging" : view === "everyday" ? "everyday" : view === "field" ? "field" : view === "gen" ? "general" : view === "easy" ? "easy" : S.level;
   try { history.replaceState(null, "", h ? "#" + h : location.pathname); } catch (e) {}
@@ -480,7 +480,7 @@ function tabName(k) { var t = tabList().filter(function (x) { return x[0] === k;
 /* Hub tiles grouped into sections with short labels (UI cleanup, Oct 28 2026) */
 var HUB_GROUPS = [
   ["Prolonged care", ["pcc", "fm_tiva", "pcc_vent", "pcc_nurse", "pcc_tele"]],
-  ["Field care", ["skills", "march", "fm_bleed", "fm_airway", "fm_pain", "fm_abx", "fm_head", "board", "acls", "istat", "dive"]],
+  ["Field care", ["skills", "march", "fm_bleed", "fm_airway", "fm_pain", "fm_abx", "fm_head", "acls", "istat", "dive"]],
   ["Look it up", ["registry", "families", "conds", "diseases", "illicit", "units", "body", "alts", "contrast", "labs", "blood", "hemo", "flightp"]],
   ["Food and vitamin compounds", ["vegc", "fruitc", "vitc"]],
   ["Study and practice", ["prep", "nbug", "cards", "scenarios", "tools", "games"]],
@@ -505,7 +505,7 @@ function hubView() {
 /* compact education strip: the first sentence stays visible, the rest opens with "More" (cleanup, Oct 28 2026) */
 function eduNote(lead, rest) { return '<details class="edunote" role="note"><summary><span class="edl">' + lead + '</span>' + (rest ? '<span class="edmore">More</span>' : '') + '</summary>' + (rest ? '<p>' + rest + '</p>' : '') + '</details>'; }
 /* one-line hooks; Field Medic levels get field wording for shared tabs */
-function hubShort(k) { if (S.view === "level" && isF(S.level) && k === "diseases") return "Trauma, environmental and field conditions"; return HUB_SHORT[k] || ""; }
+function hubShort(k) { if (S.view === "level" && isF(S.level) && k === "diseases") return "Trauma, environmental and field conditions"; if (S.view === "level" && isF(S.level) && k === "registry") return "By field use, by class or A to Z"; return HUB_SHORT[k] || ""; }
 function sectionHead() {
   var where = S.view === "gen" ? "BugDex" : (levelObj(S.level) || {}).name || "";
   var inUnit = S.tab === "units" && S.unit;
@@ -744,7 +744,7 @@ function viewLevel() {
   if (!S.tab || (S.tab !== "hub" && S.tab !== "session" && !tabName(S.tab))) S.tab = "hub";
   if (S.tab !== "hub" && S.tab !== "session" && typeof proLocked === "function" && proLocked(S.tab)) { var lt = S.tab; S.tab = "hub"; setTimeout(function () { openPaywall(tabName(lt), tabTier(lt)); }, 0); }
   if (S.tab === "calc") S.tab = "hub";  /* Calc Lab was removed */
-  var body = S.tab === "hub" ? "" : typeof fieldTab === "function" && isF(S.level) && FM_TABS[S.tab] ? fieldTab(S.tab) : (S.tab === "vegc" || S.tab === "fruitc" || S.tab === "vitc") && typeof compoundView === "function" ? compoundView(S.tab) : S.tab === "illicit" && typeof illicitView === "function" ? illicitView() : S.tab === "registry" ? registry() : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? (S.tab = "hub", "") : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "tools" ? toolsView() : flashcards();
+  var body = S.tab === "hub" ? "" : typeof fieldTab === "function" && isF(S.level) && FM_TABS[S.tab] ? fieldTab(S.tab) : (S.tab === "vegc" || S.tab === "fruitc" || S.tab === "vitc") && typeof compoundView === "function" ? compoundView(S.tab) : S.tab === "illicit" && typeof illicitView === "function" ? illicitView() : S.tab === "registry" ? (S.view === "level" && isF(S.level) && typeof fieldMedsView === "function" ? fieldMedsView() : registry()) : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? (S.tab = "hub", "") : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "tools" ? toolsView() : flashcards();
   var msg = S.sessMsg ? '<div class="presult" role="status">' + esc(S.sessMsg) + '</div>' : ''; S.sessMsg = "";
   var notes = (S.tab === "calc" || S.tab === "tools" ? eduBanner() : '') + (["prep", "session", "nbug", "scenarios", "cards"].indexOf(S.tab) >= 0 ? esQNote() : '');
   if (S.tab === "hub") return topbar() + '<div class="' + ctxClass() + '">' + band() + protocolBanner() + dailyCard() + msg + hubView() + '</div>';
@@ -9463,7 +9463,6 @@ var FM_TABS = {
   fm_pain: ["Pain & Nausea", "The wound medication pack, ketamine and esketamine.", "cls"],
   fm_abx: ["Antibiotics & Wounds", "Open wounds, penetrating eye injury and burns.", "cls"],
   fm_head: ["Head Injury & Hypertonic Saline", "Herniation signs, 3% and 23.4% saline.", "cmc"],
-  board: ["Field Drug Board", "Every field drug by class, color-coded, with what it is for.", "cpp"],
   acls: ["ACLS Algorithms", "Rhythm by rhythm: what comes next.", "cpp"],
   istat: ["i-STAT Labs", "Point-of-care labs and how to read them.", "cpp"],
   dive: ["Dive Medicine", "How dive tables work, DCS and arterial gas embolism.", "cpp"],
@@ -9691,6 +9690,38 @@ function fmCards(list) {
       '<div class="fmback"><span class="cmpk">Role in field care</span><p>' + esc(d[2]) + '</p><span class="cmpk">Cautions</span><p>' + esc(d[3]) + '</p><div class="cmpacts"><button class="btn small" type="button" data-drug="' + d[0] + '">Open page</button><button class="btn small ghost" type="button" data-fmflip="1">Flip back</button></div></div></div></div>';
   }).join("") + '</div>';
 }
+/* compact medication tiles (same tiles as every other specialty), limited to this tier's scope */
+function fmMedTiles(ids) {
+  var sc = {}; scopeFor(S.level).ids.forEach(function (id) { sc[id] = 1; });
+  var vis = ids.filter(function (id, i) { return DB.drugs[id] && sc[id] && ids.indexOf(id) === i; }), hid = ids.filter(function (id) { return DB.drugs[id] && !sc[id]; }).length;
+  if (!vis.length) return '<p class="fmnone">No medications in this section are given at ' + esc(fmTierName(S.level)) + '. They start at a higher tier.</p>';
+  return '<h3 class="fmh">Medications</h3>' + (hid ? '<p class="muted small">' + hid + ' more start' + (hid === 1 ? 's' : '') + ' at a higher tier.</p>' : '') + '<div class="grid fmtiles2">' + tilesHTML(vis) + '</div>';
+}
+/* the one Field Medic medicines tab: by field use, by drug class, or A to Z */
+var FMED_USE = [["fm_bleed", "Bleeding & shock"], ["fm_airway", "Airway & breathing"], ["fm_pain", "Pain & nausea"], ["fm_abx", "Antibiotics & wounds"], ["fm_head", "Head injury"], ["fm_tiva", "Sedation & drips"], ["acls", "Cardiac & ACLS"], ["pcc", "Long-hold care"]];
+function fieldMedsView() {
+  var mode = S.fmMode || "use", sc = scopeFor(S.level).ids, inS = {}, q = (S.fmq || "").trim(); sc.forEach(function (id) { inS[id] = 1; });
+  var match = function (id) { return DB.drugs[id] && inS[id] && (!q || (typeof drugMatch === "function" ? drugMatch(id, q) : nameOf(id).toLowerCase().indexOf(q.toLowerCase()) >= 0)); };
+  var c = '<div class="tools"><input class="search" id="fmq" type="search" placeholder="Search field medications" value="' + esc(S.fmq || "") + '" aria-label="Search field medications"></div>';
+  c += '<div class="seg3" role="group" aria-label="Organize by">' + [["use", "By field use"], ["class", "By drug class"], ["az", "A to Z"]].map(function (m) { return '<button data-fmmode="' + m[0] + '" aria-pressed="' + (mode === m[0]) + '">' + m[1] + '</button>'; }).join("") + '</div>';
+  var shown = {}, grp = function (title, ids, note) { ids = ids.filter(function (id, i) { return match(id) && ids.indexOf(id) === i; }); if (!ids.length) return ""; ids.forEach(function (id) { shown[id] = 1; }); return '<h3 class="fmh">' + esc(title) + ' <span class="muted small">' + ids.length + '</span></h3>' + (note ? '<p class="muted small">' + esc(note) + '</p>' : '') + '<div class="grid">' + tilesHTML(ids) + '</div>'; };
+  if (mode === "use") {
+    FMED_USE.forEach(function (u) {
+      var ids = u[0] === "pcc" ? PCC_DRUGS.map(function (d) { return d[0]; }) : u[0] === "acls" ? ["epinephrine", "amiodarone", "lidocaine", "adenosine", "diltiazem", "metoprolol", "atropine", "dopamine", "magnesium-sulfate", "sodium-bicarbonate", "calcium-chloride"] : (fmSec(u[0].slice(3)) || [0, 0, 0, 0, 0, 0, []])[6].map(function (d) { return d[0]; });
+      c += grp(u[1], ids);
+    });
+    c += grp("Other medications at this tier", sc.slice().sort(function (a, b) { return nameOf(a).localeCompare(nameOf(b)); }).filter(function (id) { return !shown[id]; }));
+  } else if (mode === "class") {
+    FB_CLASSES.forEach(function (x) { c += '<div class="fbsec2" style="--fb:' + x[2] + '">' + grp(x[1], FB_DRUGS.filter(function (d) { return d[1] === x[0]; }).map(function (d) { return d[0]; })) + '</div>'; });
+    c += grp("Other medications at this tier", sc.slice().sort(function (a, b) { return nameOf(a).localeCompare(nameOf(b)); }).filter(function (id) { return !shown[id]; }));
+  } else {
+    var all = sc.filter(match).sort(function (a, b) { return nameOf(a).localeCompare(nameOf(b)); });
+    c += '<p class="muted small">' + all.length + ' medications at ' + esc(fmTierName(S.level)) + '</p><div class="grid">' + tilesHTML(all) + '</div>';
+  }
+  return c + '<p class="muted small fmnote">' + esc(FM_NOTE) + '</p>';
+}
+document.addEventListener("click", function (e) { var b = e.target.closest && e.target.closest("[data-fmmode]"); if (!b || typeof S === "undefined") return; e.preventDefault(); e.stopPropagation(); S.fmMode = b.getAttribute("data-fmmode"); render(); }, true);
+document.addEventListener("input", function (e) { if (e.target && e.target.id === "fmq") { S.fmq = e.target.value; clearTimeout(S.fmqT); S.fmqT = setTimeout(function () { var pos = e.target.selectionStart; render(); var f = document.getElementById("fmq"); if (f) { f.focus(); try { f.setSelectionRange(pos, pos); } catch (x) {} } }, 250); } });
 function fmKey(list, open) { return '<details class="fmkey"' + (open ? ' open' : '') + '><summary>Key ideas</summary><ul>' + list.map(function (k) { return '<li>' + esc(k) + '</li>'; }).join("") + '</ul></details>'; }
 function fieldTab(k) {
   var c = '<div class="fmwrap">';
@@ -9715,12 +9746,12 @@ function fieldTab(k) {
     c += '<button class="btn nrgo" data-act="fmdrill">Start the ' + esc((DB.FLEVELS.filter(function (l) { return l.key === S.level; })[0] || {}).short || "") + ' drill' + (PAYWALL && !isPro() ? ' ' + proBadge() : '') + '</button><p class="muted small">Priority calls in order, plus questions on the medications at this tier.</p>';
   } else if (k.indexOf("fm_") === 0) {
     var t = fmSec(k.slice(3)); if (!t) return "";
-    c += fmKey(t[5], true) + fmCards(t[6]);
+    c += fmKey(t[5], true) + fmMedTiles(t[6].map(function (d) { return d[0]; }));
   } else if (k === "pcc") {
     c += '<p class="fmlead">Prolonged casualty care starts when evacuation is delayed past normal timelines. A medic may hold one or more casualties for hours, days or even weeks, and the job turns into running a small ICU.</p>';
     c += '<h3 class="fmh">The 10 core capabilities</h3><div class="pcccaps">' + PCC_CAPS.map(function (x, i) { return '<details class="pcccap"><summary><span class="pccn">' + (i + 1) + '</span>' + esc(x[0]) + '</summary><p>' + esc(x[1]) + '</p></details>'; }).join("") + '</div>';
     c += '<h3 class="fmh">The rhythm of a long hold</h3><ol class="pccday">' + PCC_DAY.map(function (x) { return '<li><strong>' + esc(x[0]) + '</strong><span>' + esc(x[1]) + '</span></li>'; }).join("") + '</ol>';
-    c += '<h3 class="fmh">Drugs that run for days</h3>' + fmCards(PCC_DRUGS);
+    c += '<h3 class="fmh">Drugs that run for days</h3>' + fmMedTiles(PCC_DRUGS.map(function (d) { return d[0]; }));
     c += '<p class="muted small">Sedation drips are covered in TIVA &amp; Drips, and labs in i-STAT Labs.</p>';
   } else if (k === "board") {
     var f = S.fbf || "all";
