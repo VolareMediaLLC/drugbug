@@ -360,7 +360,7 @@ function viewHome() {
    myListRoute() +
    '<button class="route evsmall" data-go="everyday"><span class="evs-ic" aria-hidden="true">' + bugArt(bugById("grub-everyday"), "", { mood: "happy" }) + '</span><span class="evs-tx"><strong>Everyday Health</strong><span>Medicine cabinet, small sicknesses, normal vitals</span></span><span class="evs-go" aria-hidden="true">&rsaquo;</span></button>' +
    '</section><h3 class="homegh">Study by role</h3><section class="routes"><div class="minis">' +
-   mini("fm", "flevels", "Field Medic", "TCCC Tiers 1 to 4 and prolonged care", FIELD_BUG) +
+   '<div class="fmcell">' + mini("fm", "flevels", "Field Medic", "TCCC Tiers 1 to 4 and prolonged care", FIELD_BUG) + '</div>' +
    mini("ph", "levels", "Prehospital", "EMT to Flight Paramedic", "grub-medic") +
    mini("rn", "nlevels", "Nursing", "CNA, LVN/LPN and RN", "grub-nurse") +
    mini("md", "mlevels", "Medical School", "MS1 to Intern", "grub-doc") +
