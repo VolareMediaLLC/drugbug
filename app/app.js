@@ -357,11 +357,12 @@ function viewHome() {
    homeStart() + homeProgress() + (typeof trialBanner === "function" ? trialBanner() : '') +
    '<h3 class="homegh">Look it up</h3><section class="routes">' +
    '<button class="route gen wide' + pt("gen") + '" data-go="gen">' + (S.pointGo === "gen" ? PT : '') + '<span class="eyebrow">Start here</span><h2>BugDex</h2><p>Every medication, explained in plain language. Search or browse.</p><span class="count">' + genN + ' medications</span><span class="sage">' + bugSVG("sage") + '</span></button>' +
-   '<button class="route evsmall" data-go="everyday"><span class="evs-ic" aria-hidden="true">' + bugArt(bugById("grub-everyday"), "", { mood: "happy" }) + '</span><span class="evs-tx"><strong>Everyday Health</strong><span>Medicine cabinet, small sicknesses, normal vitals</span></span><span class="evs-go" aria-hidden="true">&rsaquo;</span></button>' +
    myListRoute() +
-   '</section><h3 class="homegh">Study by role</h3><section class="routes"><div class="minis">' +
-   mini("ph", "levels", "Prehospital", "EMT to Flight Paramedic", "grub-medic") +
+   '<button class="route evsmall" data-go="everyday"><span class="evs-ic" aria-hidden="true">' + bugArt(bugById("grub-everyday"), "", { mood: "happy" }) + '</span><span class="evs-tx"><strong>Everyday Health</strong><span>Medicine cabinet, small sicknesses, normal vitals</span></span><span class="evs-go" aria-hidden="true">&rsaquo;</span></button>' +
+   '</section><h3 class="homegh">Study by role</h3><section class="routes"><div class="minis fmrow">' +
    mini("fm", "flevels", "Field Medic", "TCCC Tiers 1 to 4 and prolonged care", FIELD_BUG) +
+   '</div><hr class="rolesep" aria-hidden="true"><div class="minis">' +
+   mini("ph", "levels", "Prehospital", "EMT to Flight Paramedic", "grub-medic") +
    mini("rn", "nlevels", "Nursing", "CNA, LVN/LPN and RN", "grub-nurse") +
    mini("md", "mlevels", "Medical School", "MS1 to Intern", "grub-doc") +
    mini("im", "ilevels", "Imaging", "X-ray, CT, MRI, NM and IR", "grub-imaging") +
@@ -9397,14 +9398,20 @@ var FM_ART = {
   shield: '<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="M9 12l2 2 4-4"/>',
   lungs: '<path d="M12 4v8M12 12c-2 0-3-2-5-2-2 0-3 3-3 6 0 3 1 4 3 4s5-1 5-4zM12 12c2 0 3-2 5-2 2 0 3 3 3 6 0 3-1 4-3 4s-5-1-5-4z"/>'
 };
-var FIELD_BUG = { id: "fm", name: "Field Beetle", body: "beetle", c: ["#a3b18a", "#4b5320", "#ffffff"], acc: ["helmet"] };
+var FIELD_BUG = { id: "fm", name: "Field Medic", body: "stag", c: ["#6f7d3c", "#2f3a17", "#d9e4b0"], acc: ["helmet", "goggles"] };
 if (typeof IMBUG !== "undefined") {
   IMBUG.field = FIELD_BUG;
-  IMBUG.asm = { name: "Tier 1", body: "beetle", c: ["#b5b98f", "#6b6f4a", "#ffffff"], acc: ["helmet"] };
-  IMBUG.cls = { name: "Tier 2", body: "beetle", c: ["#a3b18a", "#55603a", "#ffffff"], acc: ["helmet"] };
-  IMBUG.cmc = { name: "Tier 3", body: "beetle", c: ["#94a36b", "#4b5320", "#ffffff"], acc: ["helmet"] };
-  IMBUG.cpp = { name: "Tier 4", body: "beetle", c: ["#8a9a5b", "#3f4a1f", "#ffffff"], acc: ["helmet"] };
-  IMBUG.pcc = { name: "Prolonged Casualty Care", body: "beetle", c: ["#a68a4b", "#5c4a22", "#ffffff"], acc: ["helmet"] };
+  /* the bugs get tougher with each tier, like Prehospital: ant -> beetle -> mantis -> stag -> hercules */
+  IMBUG.asm = { name: "Tier 1", body: "ant", c: ["#c2b58a", "#7a6e47", "#ffffff"], acc: ["helmet"] };
+  IMBUG.cls = { name: "Tier 2", body: "beetle", c: ["#a3b18a", "#55603a", "#ffffff"], acc: ["helmet", "headset"] };
+  IMBUG.cmc = { name: "Tier 3", body: "mantis", c: ["#8fa35a", "#3f5a1f", "#ffffff"], acc: ["helmet", "goggles"] };
+  IMBUG.cpp = { name: "Tier 4", body: "stag", c: ["#6f7d3c", "#2f3a17", "#d9e4b0"], acc: ["helmet", "goggles", "headset"] };
+  IMBUG.pcc = { name: "Prolonged Casualty Care", body: "hercules", c: ["#d6b25e", "#5c4a22", "#fff3c4"], acc: ["headset", "goggles", "stars"] };
+}
+if (typeof LVB_FX !== "undefined") { LVB_FX.cpp = ["#b8c77a", "#7d8f45"]; LVB_FX.pcc = ["#ffd25e", "#d6b25e"]; }
+if (typeof LVB_QUIPS !== "undefined") {
+  LVB_QUIPS.cpp = ["Tube confirmed: waveform.", "Blood on board.", "Ready for TACEVAC.", "Chest decompressed.", "Card is filled out."];
+  LVB_QUIPS.pcc = ["Vitals trended.", "Drips checked.", "Urine output charted.", "Teleconsult on the line.", "Turned and padded."];
 }
 var FM_TIERS = ["asm", "cls", "cmc", "cpp", "pcc"];
 function fmTierIdx(k) { return FM_TIERS.indexOf(k); }
