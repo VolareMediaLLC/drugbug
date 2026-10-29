@@ -3300,7 +3300,7 @@ function growNudge(maxXp) {
 
 /* ---------- Bug buddy: faces/expressions, wearable items, the on-screen buddy that reacts to answers ---------- */
 var INK = "#1b1430";
-function eyeBall(x, y, r, dx, dy) { return '<circle cx="' + x + '" cy="' + y + '" r="' + r + '" fill="#fff"/><circle cx="' + (x + (dx || 2)) + '" cy="' + (y + (dy || 1)) + '" r="' + (r * 0.5) + '" fill="' + INK + '"/><circle cx="' + (x + (dx || 2) + 2) + '" cy="' + (y + (dy || 1) - 3) + '" r="' + (r * 0.17) + '" fill="#fff"/>'; }
+function eyeBall(x, y, r, dx, dy) { return '<circle cx="' + x + '" cy="' + y + '" r="' + r + '" fill="#fff"/><g class="pupils"><circle cx="' + (x + (dx || 2)) + '" cy="' + (y + (dy || 1)) + '" r="' + (r * 0.5) + '" fill="' + INK + '"/><circle cx="' + (x + (dx || 2) + 2) + '" cy="' + (y + (dy || 1) - 3) + '" r="' + (r * 0.17) + '" fill="#fff"/></g>'; } /* pupils grouped so level bugs (tier 3+) can follow the pointer */
 function arcEye(x, y, up) { return '<path d="M' + (x - 7) + ' ' + y + ' Q' + x + ' ' + (y + (up ? -9 : 7)) + ' ' + (x + 7) + ' ' + y + '" stroke="' + INK + '" stroke-width="3.5" fill="none" stroke-linecap="round"/>'; }
 function starShape(x, y, r, fill) { var p = ""; for (var i = 0; i < 10; i++) { var a = Math.PI / 5 * i - Math.PI / 2, rr = i % 2 ? r * 0.45 : r; p += (i ? "L" : "M") + (x + rr * Math.cos(a)).toFixed(1) + " " + (y + rr * Math.sin(a)).toFixed(1); } return '<path d="' + p + 'Z" fill="' + fill + '" stroke="#b7860b" stroke-width="1"/>'; }
 function heartShape(x, y, s, fill) { return '<path d="M' + x + ' ' + (y + s * 0.9) + ' C' + (x - s * 1.4) + ' ' + (y - s * 0.1) + ' ' + (x - s * 0.7) + ' ' + (y - s * 1.1) + ' ' + x + ' ' + (y - s * 0.35) + ' C' + (x + s * 0.7) + ' ' + (y - s * 1.1) + ' ' + (x + s * 1.4) + ' ' + (y - s * 0.1) + ' ' + x + ' ' + (y + s * 0.9) + 'Z" fill="' + fill + '"/>'; }
@@ -3698,7 +3698,7 @@ function levelBug(key) {
 /* eyes follow the pointer (tier 3+) */
 var LVB = { raf: 0, x: 0, y: 0 };
 function lvbStill() { return SET().motion || (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches); }
-document.addEventListener("pointermove", function (e) {
+function lvbLook(e) {
   LVB.x = e.clientX; LVB.y = e.clientY; if (LVB.raf || lvbStill()) return;
   LVB.raf = requestAnimationFrame(function () {
     LVB.raf = 0;
@@ -3708,7 +3708,9 @@ document.addEventListener("pointermove", function (e) {
       b.querySelectorAll(".pupils").forEach(function (p) { p.setAttribute("transform", "translate(" + (dx / d * m).toFixed(2) + " " + (dy / d * m).toFixed(2) + ")"); });
     });
   });
-}, { passive: true });
+}
+document.addEventListener("pointermove", lvbLook, { passive: true });
+document.addEventListener("pointerdown", lvbLook, { passive: true });
 /* tap reactions on the level banner */
 function lvbTap(b) {
   if (lvbStill()) return;
@@ -9723,6 +9725,11 @@ function fieldMedsView() {
 document.addEventListener("click", function (e) { var b = e.target.closest && e.target.closest("[data-fmmode]"); if (!b || typeof S === "undefined") return; e.preventDefault(); e.stopPropagation(); S.fmMode = b.getAttribute("data-fmmode"); render(); }, true);
 document.addEventListener("input", function (e) { if (e.target && e.target.id === "fmq") { S.fmq = e.target.value; clearTimeout(S.fmqT); S.fmqT = setTimeout(function () { var pos = e.target.selectionStart; render(); var f = document.getElementById("fmq"); if (f) { f.focus(); try { f.setSelectionRange(pos, pos); } catch (x) {} } }, 250); } });
 function fmKey(list, open) { return '<details class="fmkey"' + (open ? ' open' : '') + '><summary>Key ideas</summary><ul>' + list.map(function (k) { return '<li>' + esc(k) + '</li>'; }).join("") + '</ul></details>'; }
+/* Learn / Practice sub-tabs inside a field tab */
+function fmSubBar(k, labels) { var cur = fmSub(k), opts = typeof labels[0] === "string" ? [["learn", labels[0]], ["practice", labels[1]]] : labels; return '<div class="seg3 fmsub' + (opts.length > 2 ? ' three' : '') + '" role="tablist">' + opts.map(function (x) { return '<button role="tab" data-fmsub="' + k + '|' + x[0] + '" aria-pressed="' + (cur === x[0]) + '">' + x[1] + '</button>'; }).join("") + '</div>'; }
+function fmSub(k) { return (S.fmSub || {})[k] || "learn"; }
+function fmSubIs(k) { return ((S.fmSub || {})[k] || "learn") === "practice"; }
+document.addEventListener("click", function (e) { var b = e.target.closest && e.target.closest("[data-fmsub]"); if (!b || typeof S === "undefined") return; e.preventDefault(); e.stopPropagation(); var p = b.getAttribute("data-fmsub").split("|"); S.fmSub = S.fmSub || {}; S.fmSub[p[0]] = p[1]; render(); }, true);
 function fieldTab(k) {
   var c = '<div class="fmwrap">';
   if (k === "skills") {
@@ -9735,15 +9742,17 @@ function fieldTab(k) {
     });
     var nxt = DB.FLEVELS[cur + 1];
     if (nxt) c += '<p class="muted small">Next: ' + esc(nxt.short === "PCC" ? nxt.name : nxt.short + ", " + nxt.name) + ' adds ' + FM_SKILLS.filter(function (x) { return x[0] === nxt.key; }).length + ' more skill areas. <button class="linkish" data-level="' + nxt.key + '">Open ' + esc(nxt.short) + '</button></p>';
+  } else if (k === "march" && fmSubIs("march")) {
+    c += fmSubBar("march", ["Learn", "Check yourself"]);
+    var seen = fmSeen(), all = fmIds().filter(function (id) { return scopeFor(S.level).ids.indexOf(id) >= 0; }), n = all.filter(function (id) { return seen.indexOf(id) >= 0; }).length;
+    c += '<section class="fmmarch" aria-label="MARCH-PAWS"><div class="fmletters">' + FM_MARCH.map(function (m, i) { return '<button class="fmlet' + (i >= 5 ? ' paws' : '') + '" data-fmstep="' + i + '" aria-pressed="' + (S.fmStep === i) + '" aria-label="' + esc(m[1]) + '">' + m[0] + '</button>'; }).join("") + '</div>' +
+      (S.fmStep != null && FM_MARCH[S.fmStep] ? '<div class="fmstep"><strong>' + esc(FM_MARCH[S.fmStep][1]) + '</strong><p>' + esc(FM_MARCH[S.fmStep][2]) + '</p></div>' : '<p class="muted small fmhint">Say each step out loud, then tap the letter to check.</p>') + '</section>';
+    c += '<button class="btn nrgo" data-act="fmdrill">Start the ' + esc((DB.FLEVELS.filter(function (l) { return l.key === S.level; })[0] || {}).short || "") + ' drill' + (PAYWALL && !isPro() ? ' ' + proBadge() : '') + '</button><p class="muted small">Priority calls in order, plus questions on the medications at this tier.</p>';
   } else if (k === "march") {
+    c += fmSubBar("march", ["Learn", "Check yourself"]);
     c += '<p class="fmlead">MARCH-PAWS is the order TCCC works a casualty: the five life threats first, then the care that keeps a casualty alive for the long haul.</p>';
     c += '<ol class="fmmarchlist">' + FM_MARCH.map(function (m, i) { return '<li class="' + (i >= 5 ? 'paws' : '') + '"><span class="fmml">' + m[0] + '</span><div><strong>' + esc(m[1]) + '</strong><p>' + esc(m[2]) + '</p><button class="linkish" data-tab="fm_' + m[3] + '">Learn more in ' + esc(FM_TABS["fm_" + m[3]] ? FM_TABS["fm_" + m[3]][0] : "") + '</button></div></li>'; }).join("") + '</ol>';
     c += '<h3 class="fmh">Phases of care</h3><ol class="pccday"><li><strong>Care Under Fire</strong><span>Return fire, get to cover, and stop life-threatening bleeding with a tourniquet only when it is tactically possible.</span></li><li><strong>Tactical Field Care</strong><span>Behind cover: the full MARCH-PAWS assessment and treatment, and the DD1380 card.</span></li><li><strong>Tactical Evacuation Care</strong><span>On the way out: the same care plus more equipment, oxygen, monitoring and handoff.</span></li><li><strong>Prolonged Casualty Care</strong><span>When evacuation is delayed: holding the casualty for hours to days.</span></li></ol>';
-    var seen = fmSeen(), all = fmIds().filter(function (id) { return scopeFor(S.level).ids.indexOf(id) >= 0; }), n = all.filter(function (id) { return seen.indexOf(id) >= 0; }).length;
-    c += '<h3 class="fmh">Check yourself</h3><section class="fmmarch" aria-label="MARCH-PAWS"><div class="fmletters">' + FM_MARCH.map(function (m, i) { return '<button class="fmlet' + (i >= 5 ? ' paws' : '') + '" data-fmstep="' + i + '" aria-pressed="' + (S.fmStep === i) + '" aria-label="' + esc(m[1]) + '">' + m[0] + '</button>'; }).join("") + '</div>' +
-      (S.fmStep != null && FM_MARCH[S.fmStep] ? '<div class="fmstep"><strong>' + esc(FM_MARCH[S.fmStep][1]) + '</strong><p>' + esc(FM_MARCH[S.fmStep][2]) + '</p><button class="linkish" data-tab="fm_' + FM_MARCH[S.fmStep][3] + '">Open ' + esc(FM_TABS["fm_" + FM_MARCH[S.fmStep][3]][0]) + ' &rsaquo;</button></div>' : '<p class="muted small fmhint">Select a letter to review that step.</p>') + '</section>';
-    c += '<div class="fmprog"><span><strong>' + n + '</strong> of ' + all.length + ' field medications reviewed</span><span class="cmptrack"><span class="cmpfill fmfill" style="width:' + (all.length ? Math.round(100 * n / all.length) : 0) + '%"></span></span></div>';
-    c += '<button class="btn nrgo" data-act="fmdrill">Start the ' + esc((DB.FLEVELS.filter(function (l) { return l.key === S.level; })[0] || {}).short || "") + ' drill' + (PAYWALL && !isPro() ? ' ' + proBadge() : '') + '</button><p class="muted small">Priority calls in order, plus questions on the medications at this tier.</p>';
   } else if (k.indexOf("fm_") === 0) {
     var t = fmSec(k.slice(3)); if (!t) return "";
     c += fmKey(t[5], true) + fmMedTiles(t[6].map(function (d) { return d[0]; }));
@@ -9770,15 +9779,23 @@ function fieldTab(k) {
     c += '<details class="fmkey"><summary>H\'s and T\'s (reversible causes)</summary><ul>' + ACLS_HT.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join("") + '</ul></details>';
     c += '<p class="muted small">Field note: in combat trauma arrest, TCCC lists bilateral needle decompression, and CPR only when there are no obviously fatal wounds and surgical care is close. ACLS steps follow the general form of the American Heart Association adult algorithms. DrugBug is not affiliated with or endorsed by the AHA.</p>';
   } else if (k === "dive") {
-    c += '<p class="fmlead">Dive medicine for medics supporting dive operations: how the U.S. Navy dive tables work, the tables themselves, and how to recognize and treat decompression sickness and arterial gas embolism.</p>';
-    c += '<div class="edunote" role="note"><span class="edl"><strong>Not for dive planning.</strong> The tables below are images of the U.S. Navy Diving Manual, Revision 7, for study. Real dives and treatments use the current official manual, under a Dive Supervisor and an Undersea Medical Officer.</span></div>';
-    c += '<h3 class="fmh">How a table is read</h3><ol class="pccday">' + DIVE_FLOW.map(function (x) { return '<li><strong>' + esc(x[0]) + '</strong><span>' + esc(x[1]) + '</span></li>'; }).join("") + '</ol>';
-    c += '<h3 class="fmh">Terms that matter</h3><div class="isref">' + DIVE_TERMS.map(function (x) { return '<details class="isrow"><summary><strong>' + esc(x[0]) + '</strong></summary><p>' + esc(x[1]) + '</p></details>'; }).join("") + '</div>';
+    c += fmSubBar("dive", [["learn", "Learn"], ["tables", "Tables"], ["practice", "Practice"]]);
+    if (fmSubIs("dive")) {
+      c += '<p class="muted small">Pick the best fit for each diver, then check.</p>';
+      c += DIVE_CASES.map(function (d, i) { return '<section class="iscase dvcase" data-dvcase="' + i + '"><p>' + esc(d[0]) + '</p><div class="dvopts">' + DIVE_CATS.map(function (o, j) { return '<button type="button" class="isval dvopt" data-dvo="' + j + '"><strong>' + esc(o) + '</strong></button>'; }).join("") + '</div><div class="isout" hidden></div></section>'; }).join("");
+      return c + '</div>';
+    }
+    if (fmSub("dive") === "tables") {
+      c += '<div class="edunote" role="note"><span class="edl"><strong>Not for dive planning.</strong> Images of the U.S. Navy Diving Manual, Revision 7, for study. Real dives and treatments use the current official manual, under a Dive Supervisor and an Undersea Medical Officer.</span></div>';
     c += '<h3 class="fmh">The Navy dive tables</h3><p class="muted small">Exact page images from the U.S. Navy Diving Manual, Revision 7 (Distribution A). Tap a table to open it full size and zoom in.</p><div class="divetabs">' + DIVE_TABLES.map(function (t) { return '<details class="divetab"><summary><strong>' + esc(t[1]) + '</strong><span>' + esc(t[2]) + '</span></summary><a href="img/dive/' + t[0] + '" target="_blank" rel="noopener"><img src="img/dive/' + t[0] + '" alt="' + esc(t[1]) + ' from the U.S. Navy Diving Manual" loading="lazy"></a><p class="muted small">' + esc(t[3]) + '</p></details>'; }).join("") + '</div>';
     c += '<h3 class="fmh">Worked example from the manual</h3><ol class="pccday">' + DIVE_EXAMPLE.map(function (x) { return '<li><strong>' + esc(x[0]) + '</strong><span>' + esc(x[1]) + '</span></li>'; }).join("") + '</ol>';
+      return c + '<p class="muted small">U.S. Navy Diving Manual, Revision 7 (Distribution A, approved for public release). DrugBug is not affiliated with the U.S. Navy.</p></div>';
+    }
+    c += '<p class="fmlead">Dive medicine for medics supporting dive operations: how the U.S. Navy dive tables work (the tables are in the Tables tab), and how to recognize and treat decompression sickness and arterial gas embolism.</p>';
+    c += '<div class="edunote" role="note"><span class="edl"><strong>Not for dive planning.</strong> The Tables tab shows images of the U.S. Navy Diving Manual, Revision 7, for study. Real dives and treatments use the current official manual, under a Dive Supervisor and an Undersea Medical Officer.</span></div>';
+    c += '<h3 class="fmh">How a table is read</h3><ol class="pccday">' + DIVE_FLOW.map(function (x) { return '<li><strong>' + esc(x[0]) + '</strong><span>' + esc(x[1]) + '</span></li>'; }).join("") + '</ol>';
+    c += '<h3 class="fmh">Terms that matter</h3><div class="isref">' + DIVE_TERMS.map(function (x) { return '<details class="isrow"><summary><strong>' + esc(x[0]) + '</strong></summary><p>' + esc(x[1]) + '</p></details>'; }).join("") + '</div>';
     c += '<h3 class="fmh">Recognition and treatment</h3>' + fmKey(DIVE_KEYS, true);
-    c += '<h3 class="fmh">Practice: AGE or DCS?</h3><p class="muted small">Pick the best fit for each diver, then check.</p>';
-    c += DIVE_CASES.map(function (d, i) { return '<section class="iscase dvcase" data-dvcase="' + i + '"><p>' + esc(d[0]) + '</p><div class="dvopts">' + DIVE_CATS.map(function (o, j) { return '<button type="button" class="isval dvopt" data-dvo="' + j + '"><strong>' + esc(o) + '</strong></button>'; }).join("") + '</div><div class="isout" hidden></div></section>'; }).join("");
     c += '<p class="muted small">Based on the U.S. Navy Diving Manual, Revision 7 (Distribution A, approved for public release). DrugBug is not affiliated with the U.S. Navy.</p>';
   } else if (k === "pcc_vent") {
     c += '<p class="fmlead">Once a casualty has a tube, the medic is running an ICU airway: keeping the tube in, the lungs open and the oxygen up, sometimes for days.</p>' + fmKey(PCC_VENT, true);
@@ -9791,11 +9808,18 @@ function fieldTab(k) {
     c += '<h3 class="fmh">Calling for a teleconsult</h3>' + fmKey(PCC_TELE, true);
     c += '<h3 class="fmh">Preparing for flight</h3>' + fmKey(PCC_FLIGHT, true);
   } else if (k === "istat") {
+    c += fmSubBar("istat", [["learn", "Values"], ["carts", "Cartridges"], ["practice", "Practice"]]);
+    if (fmSubIs("istat")) {
+      c += '<p class="muted small">Tap every value you think is off, then check.</p>';
+      c += ISTAT_CASES.map(function (cs, ci) { return '<section class="iscase" data-iscase="' + ci + '"><header><span class="iscart">' + esc(cs[2]) + '</span><strong>' + esc(cs[0]) + '</strong></header><p>' + esc(cs[1]) + '</p><div class="isvals">' + cs[3].map(function (v, vi) { return '<button type="button" class="isval" data-isv="' + vi + '" aria-pressed="false"><span>' + esc(v[0]) + '</span><strong>' + esc(v[1]) + '</strong></button>'; }).join("") + '</div><button class="btn small" type="button" data-ischeck="' + ci + '">Check</button><div class="isout" hidden></div></section>'; }).join("");
+      return c + '</div>';
+    }
+    if (fmSub("istat") === "carts") {
+      c += '<p class="fmlead">Each single-use cartridge runs a fixed panel. The medic picks the cartridge for the question being asked.</p><div class="iscarts">' + ISTAT_CARTS.map(function (x) { return '<div class="iscard"><span class="iscart">' + esc(x[0]) + '</span><strong>' + esc(x[1]) + '</strong><p>' + esc(x[2]) + '</p></div>'; }).join("") + '</div>';
+      return c + '<p class="muted small">i-STAT is a trademark of Abbott. DrugBug is not affiliated with Abbott.</p></div>';
+    }
     c += '<p class="fmlead">The i-STAT is a handheld blood analyzer that runs a few drops of blood through a single-use cartridge in about 2 minutes, which brings ICU-style labs to a long hold.</p>';
     c += '<h3 class="fmh">What each value tells you</h3><div class="isref">' + ISTAT_VALS.map(function (v) { return '<div class="isrow open"><div class="isrowh"><strong>' + esc(v[0]) + '</strong><span>' + esc(v[1]) + '</span></div><p>' + esc(v[2]) + '</p></div>'; }).join("") + '</div>';
-    c += '<h3 class="fmh">Cartridges</h3><div class="iscarts">' + ISTAT_CARTS.map(function (x) { return '<div class="iscard"><span class="iscart">' + esc(x[0]) + '</span><strong>' + esc(x[1]) + '</strong><p>' + esc(x[2]) + '</p></div>'; }).join("") + '</div>';
-    c += '<h3 class="fmh">Practice: read the cartridge</h3><p class="muted small">Tap every value you think is off, then check.</p>';
-    c += ISTAT_CASES.map(function (cs, ci) { return '<section class="iscase" data-iscase="' + ci + '"><header><span class="iscart">' + esc(cs[2]) + '</span><strong>' + esc(cs[0]) + '</strong></header><p>' + esc(cs[1]) + '</p><div class="isvals">' + cs[3].map(function (v, vi) { return '<button type="button" class="isval" data-isv="' + vi + '" aria-pressed="false"><span>' + esc(v[0]) + '</span><strong>' + esc(v[1]) + '</strong></button>'; }).join("") + '</div><button class="btn small" type="button" data-ischeck="' + ci + '">Check</button><div class="isout" hidden></div></section>'; }).join("");
     c += '<p class="muted small">Ranges shown are typical adult reference ranges; each cartridge, device and lab sets its own. i-STAT is a trademark of Abbott. DrugBug is not affiliated with Abbott.</p>';
   }
   return c + '<p class="muted small fmnote">' + esc(FM_NOTE) + '</p></div>';

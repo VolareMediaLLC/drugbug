@@ -277,7 +277,7 @@ DB.scopeFor = function (levelKey) {
    NO DOSES at any Field Medic level (owner choice: most TCCC uses are off-label). Notes are role notes only. */
 DB.FLEVELS = [
   { key: "asm", name: "All Service Members", short: "Tier 1", bug: "Self and buddy aid", color: "field",
-    blurb: "Self and buddy aid: tourniquets, wound packing, airway positioning, hypothermia prevention and the TCCC card.", long: "Tier 1. Self and buddy aid for every service member: tourniquets, wound packing, pressure dressings, positioning the airway, preventing hypothermia, and the DD1380 casualty card." },
+    blurb: "Tourniquets, wound packing, airway positioning, hypothermia prevention and the casualty card.", long: "Tier 1. Self and buddy aid for every service member: tourniquets, wound packing, pressure dressings, positioning the airway, preventing hypothermia, and the DD1380 casualty card." },
   { key: "cls", name: "Combat Lifesaver", short: "Tier 2", bug: "Combat lifesaver", color: "field",
     blurb: "Adds tourniquet conversion, NPA and BVM, chest seals, needle decompression, splints and the wound medication pack.", long: "Tier 2. Adds tourniquet conversion, nasopharyngeal airways, bag-valve-mask, vented chest seals, needle decompression, splinting, the Combat Wound Medication Pack and oral antibiotics." },
   { key: "cmc", name: "Combat Medic / Corpsman", short: "Tier 3", bug: "Medic and corpsman", color: "field",
@@ -285,7 +285,7 @@ DB.FLEVELS = [
   { key: "cpp", name: "Combat Paramedic / Provider", short: "Tier 4", bug: "Combat paramedic", color: "field",
     blurb: "Adds intubation, ventilators, thoracostomy, capnography, labs, procedural sedation and ACLS.", long: "Tier 4. Adds endotracheal intubation, automated ventilation, finger and tube thoracostomy, capnography, point-of-care lactate and labs, Foley catheters and urine output monitoring." },
   { key: "pcc", name: "Prolonged Casualty Care", short: "PCC", bug: "Hours to weeks", color: "field",
-    blurb: "Holding casualties for hours to weeks: sedation drips, pressors, ventilator and nursing care, i-STAT and teleconsults.", long: "Beyond Tier 4. Holding casualties for hours to weeks when evacuation is delayed: sedation drips, vasopressors, ventilator care, nursing care, i-STAT labs and teleconsultation." }
+    blurb: "Sedation drips, pressors, ventilator and nursing care, i-STAT labs and teleconsults.", long: "Beyond Tier 4. Holding casualties for hours to weeks when evacuation is delayed: sedation drips, vasopressors, ventilator care, nursing care, i-STAT labs and teleconsultation." }
 ];
 DB.FSCOPE = {
   asm: { "acetaminophen": "Combat Wound Medication Pack (carried by every service member; given from Tier 2 up).", "meloxicam": "Combat Wound Medication Pack (carried by every service member; given from Tier 2 up).", "suzetrigine": "Combat Wound Medication Pack (added in the 2026 TCCC Guidelines)." },
