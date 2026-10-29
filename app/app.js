@@ -313,7 +313,7 @@ function scopeNote(id) { if (S.view !== "level") return ""; return scopeFor(S.le
 var UTIL_VIEWS = { settings: 1, easy: 1, classes: 1, admin: 1 };
 function go(view, opts) {
   if (UTIL_VIEWS[view] && !UTIL_VIEWS[S.view] && S.view !== view && S.view !== "terrarium") S.utilBack = { view: S.view, level: S.level, tab: S.tab };
-  clearTimeout(S.qT); S.view = view; Object.assign(S, { pointGo: null, showFilt: false, onlyMarks: false, tool: null, shopF: null, tab: "hub", q: "", tags: {}, group: "all", scen: null, fc: null, nr: null, sess: null, prepNr: null, unit: null, fam: null, famq: "", cn: null, menu: false, mupop: false, fmq: "" }, opts || {});
+  clearTimeout(S.qT); S.view = view; Object.assign(S, { pointGo: null, showFilt: false, onlyMarks: false, tool: null, shopF: null, tab: "hub", q: "", tags: {}, group: "all", scen: null, fc: null, nr: null, sess: null, prepNr: null, unit: null, fam: null, famq: "", cn: null, menu: false, mupop: false, fmq: "", trId: null }, opts || {});
   Admin.on = view === "admin"; if (view === "level") store("lastLevel", S.level);
   var h = view === "home" ? "" : view === "admin" ? "admin" : view === "classes" ? "classes" : view === "settings" ? "settings" : view === "terrarium" ? "terrarium" : view === "levels" ? "prehospital" : view === "flevels" ? "fieldmedic" : view === "nlevels" ? "nursing" : view === "mlevels" ? "medschool" : view === "ilevels" ? "imaging" : view === "everyday" ? "everyday" : view === "field" ? "field" : view === "gen" ? "general" : view === "easy" ? "easy" : S.level;
   try { history.replaceState(null, "", h ? "#" + h : location.pathname); } catch (e) {}
@@ -485,7 +485,7 @@ var HUB_GROUPS = [
   ["Study and practice", ["prep", "nbug", "cards", "scenarios", "tools", "games"]],
   ["Yours", ["mylist", "progress", "shop"]]
 ];
-var HUB_SHORT = { pcc_icu: "FDA drip doses and vent settings", fm_trauma: "Tier skills, bleeding, airway, head", fm_care: "Pain, nausea, wounds, burns", fm_adv: "Procedures, ACLS, i-STAT, dive", pcc_vent: "Vents, tubes and oxygen", pcc_nurse: "Turning, lines, eyes, skin", pcc_tele: "Consults and getting out", board: "Every field drug by class", acls: "Rhythm by rhythm", dive: "Dive tables, DCS and AGE", skills: "What this tier is trained to do", march: "Sequence, tier skills, drill", fm_bleed: "Hemorrhage control, TXA, blood", fm_tiva: "Ketamine-based sedation", fm_head: "Herniation, 3% and 23.4% saline", fm_pain: "Wound pack, ketamine, esketamine", fm_abx: "Wounds, eye injury, burns", fm_airway: "Positioning to surgical airway", pcc: "Long-hold drugs and drug handling", istat: "Point-of-care labs", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "Saved drugs and their interactions", tools: "Megacode, interactions, safety drills", scenarios: "Clinical cases", cards: "Flip, sort and master", games: "Match, crossword, scramble and more", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time", prep: "Timed tests with scores" };
+var HUB_SHORT = { pcc_icu: "FDA drip doses and vent settings", fm_trauma: "Bleeding, airway, head injury", fm_care: "Pain, nausea, wounds, burns", fm_adv: "Procedures, ACLS, i-STAT, dive", pcc_vent: "Vents, tubes and oxygen", pcc_nurse: "Turning, lines, eyes, skin", pcc_tele: "Consults and getting out", board: "Every field drug by class", acls: "Rhythm by rhythm", dive: "Dive tables, DCS and AGE", skills: "What this tier is trained to do", march: "Sequence, tier skills, drill", fm_bleed: "Hemorrhage control, TXA, blood", fm_tiva: "Ketamine-based sedation", fm_head: "Herniation, 3% and 23.4% saline", fm_pain: "Wound pack, ketamine, esketamine", fm_abx: "Wounds, eye injury, burns", fm_airway: "Positioning to surgical airway", pcc: "Long-hold drugs and drug handling", istat: "Point-of-care labs", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "Saved drugs and their interactions", tools: "Megacode, interactions, safety drills", scenarios: "Clinical cases", cards: "Flip, sort and master", games: "Match, crossword, scramble and more", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time", prep: "Timed tests with scores" };
 function hubView() {
   var L = tabList(), used = {}, c = '<nav class="hub2" aria-label="Sections">';
   function tile(t) {
@@ -9470,7 +9470,7 @@ function fmTierOk(min, max) { var i = fmTierIdx(S.level); return i >= fmTierIdx(
 function fmTierName(k) { var l = (DB.FLEVELS || []).filter(function (x) { return x.key === k; })[0]; return l ? (l.short === "PCC" ? "Prolonged Casualty Care" : l.short + " (" + l.name + ")") : k; }
 /* field tabs on the Field Medic level hub: key -> [name, description] */
 var FM_TABS = {
-  fm_trauma: ["Trauma Care", "Tier skills, bleeding and shock, airway, head injury.", "asm"],
+  fm_trauma: ["Trauma Care", "Bleeding, airway and breathing, and head injury, condition by condition.", "asm"],
   fm_care: ["Pain & Antibiotics", "The wound medication pack, nausea, wounds, eyes and burns.", "cls"],
   pcc: ["Prolonged Care", "Long-hold drugs by problem and drug handling.", "cpp"],
   pcc_icu: ["Drips & Vents", "Drip doses from the FDA labels and ventilator settings.", "cpp"],
@@ -9480,7 +9480,6 @@ var FM_TABS = {
 var FM_GROUPS = {
   pcc: [["pcc", "By problem"], ["pcc_rx", "Handling"]],
   pcc_icu: [["fm_tiva", "Drips"], ["pcc_vent", "Vent settings"]],
-  fm_trauma: [["skills", "Tier skills"], ["fm_bleed", "Bleeding"], ["fm_airway", "Airway"], ["fm_head", "Head injury", "cmc"]],
   fm_care: [["fm_pain", "Pain & nausea"], ["fm_abx", "Antibiotics"]],
   fm_adv: [["proc", "Procedures"], ["acls", "ACLS"], ["istat", "i-STAT"], ["dive", "Dive"]]
 };
@@ -9490,7 +9489,7 @@ function fmSubsOf(g) { return (FM_GROUPS[g] || []).filter(function (x) { return 
 function fmAlias() {
   if (S.level === "pcc") S.level = "cpp";
   if (!S.tab || FM_TABS[S.tab]) return;
-  var old = { march: "skills", drill: "skills", pcc_tele: "pcc", pcc_nurse: "pcc" }; if (old[S.tab]) S.tab = old[S.tab];
+  var old = { march: "fm_trauma", drill: "fm_trauma", skills: "fm_trauma", fm_bleed: "fm_trauma", fm_airway: "fm_trauma", fm_head: "fm_trauma", pcc_tele: "pcc", pcc_nurse: "pcc" }; if (old[S.tab]) S.tab = old[S.tab];
   for (var g in FM_GROUPS) { if (FM_GROUPS[g].some(function (x) { return x[0] === S.tab; })) { S.fmSub = S.fmSub || {}; S.fmSub["g_" + g] = S.tab; S.tab = g; return; } }
 }
 if (typeof ICO !== "undefined") {
@@ -9751,11 +9750,12 @@ function fmSub(k) { return (S.fmSub || {})[k] || "learn"; }
 function fmSubIs(k) { return ((S.fmSub || {})[k] || "learn") === "practice"; }
 document.addEventListener("click", function (e) { var b = e.target.closest && e.target.closest("[data-fmsub]"); if (!b || typeof S === "undefined") return; e.preventDefault(); e.stopPropagation(); var p = b.getAttribute("data-fmsub").split("|"); S.fmSub = S.fmSub || {}; S.fmSub[p[0]] = p[1]; render(); }, true);
 function fieldTab(k) {
+  if (k !== "fm_trauma") S.trId = null;
   if (FM_GROUPS[k]) {
     var subs = fmSubsOf(k), cur = (S.fmSub || {})["g_" + k];
     if (!subs.some(function (x) { return x[0] === cur; })) cur = subs[0][0];
     S.fmSub = S.fmSub || {}; S.fmSub["g_" + k] = cur;
-    return '<div class="fmwrap">' + (k === "fm_trauma" ? fmMarchStrip() : '') + (subs.length > 1 ? fmSubBar("g_" + k, subs) : '') + '</div>' + fieldTabBody(cur);
+    return '<div class="fmwrap">' + (subs.length > 1 ? fmSubBar("g_" + k, subs) : '') + '</div>' + fieldTabBody(cur);
   }
   return fieldTabBody(k);
 }
@@ -9763,7 +9763,10 @@ function fieldTab(k) {
 function fmMarchStrip() { return '<div class="fmmarch1" aria-label="MARCH-PAWS order"><span class="fmm1t">MARCH-PAWS</span>' + FM_MARCH.map(function (m, i) { return '<span class="fmm1' + (i >= 5 ? ' paws' : '') + '" title="' + esc(m[1]) + '"><b>' + m[0] + '</b>' + esc(m[1].split(/[ ,]/)[0]) + '</span>'; }).join("") + '</div>'; }
 function fieldTabBody(k) {
   var c = '<div class="fmwrap">';
-  if (k === "skills") {
+  if (k === "fm_trauma") {
+    if (!S.trId) c += fmMarchStrip();
+    c += fmTraumaView();
+  } else if (k === "skills") {
     var cur = fmTierIdx(S.level), cats = [];
     FM_SKILLS.forEach(function (x) { if (cats.indexOf(x[1]) < 0) cats.push(x[1]); });
     var mine = function (t) { return fmTierIdx(t) === cur; };
@@ -10573,6 +10576,140 @@ var FM_EU = {
   "naloxone": "Intranasal naloxone kits are available in many European countries.",
   "lidocaine": "Called lignocaine in some countries."
 };
+
+/* Trauma Care as condition cards (owner, Oct 28 2026: "make these their own cards with explanations like the diseases").
+   Written from the TCCC Guidelines 2026 (CoTCCC). Descriptive education wording; no doses.
+   Entry: id, group, name, one line, what it is, what goes wrong in the body, signs[], care[[tier, text]], drugs[], warnings[] */
+var FM_TR_GROUPS = ["Bleeding", "Airway and breathing", "Head"];
+var FM_TRAUMA = [
+  { id: "ext", g: 0, name: "Massive extremity hemorrhage", line: "Arm or leg bleeding that can kill in minutes",
+    what: "Bleeding from an arm or leg wound fast enough to cause death within minutes. It is the leading cause of preventable death on the battlefield.",
+    why: "A torn major artery can lose a lethal volume of blood in a few minutes. As volume falls, the heart speeds up and vessels clamp down, until too little blood is left to carry oxygen to the brain and heart.",
+    signs: ["Spurting or steadily pooling blood", "Soaked clothing or blood pooling under the casualty", "Traumatic amputation", "Weak or absent radial pulse", "Altered mental status"],
+    care: [["asm", "Limb tourniquet high and tight over the uniform in Care Under Fire; in Tactical Field Care, one on bare skin 2 to 3 inches above the wound."], ["asm", "Hemostatic dressing (Combat Gauze is the CoTCCC choice) with at least 3 minutes of direct pressure where a tourniquet does not fit."], ["cls", "Reassessment: an over-the-uniform tourniquet is replaced by one on the skin, and a second tourniquet goes side by side when bleeding or a distal pulse persists."], ["cls", "Conversion to a dressing in under 2 hours when the casualty is not in shock, the wound can be watched closely, and there is no amputation."], ["cmc", "IV or IO access, TXA within 3 hours, blood products and calcium after the first unit."], ["cpp", "A tourniquet on for more than 6 hours stays on unless close monitoring and lab capability are available; potassium and acid are trended on the i-STAT after release."]],
+    drugs: ["tranexamic-acid", "calcium-chloride", "calcium-gluconate"],
+    warn: ["A tourniquet that stops venous return but not arterial flow can make bleeding worse; the goal is no bleeding and no distal pulse.", "Every application, conversion and removal time goes on the tourniquet and the DD1380.", "Tier 1 and Tier 2 personnel do not convert after 2 hours unless directed by Tier 3, Tier 4 or advanced medical personnel."] },
+  { id: "junc", g: 0, name: "Junctional hemorrhage", line: "Groin, armpit and neck bleeding a tourniquet cannot reach",
+    what: "Bleeding where a limb meets the torso, or at the neck, where a standard limb tourniquet cannot be placed.",
+    why: "Large vessels (femoral, axillary, subclavian, carotid) run close to the surface here but cannot be squeezed shut by a limb tourniquet, so control depends on packing, pressure and junctional devices.",
+    signs: ["Heavy bleeding from the groin, buttock, armpit, shoulder or neck", "High leg amputation", "Signs of shock"],
+    care: [["asm", "Hemostatic dressing packed into the wound with at least 3 minutes of firm direct pressure."], ["cmc", "Junctional tourniquet as soon as it is ready, without delay; hemostatic dressings and pressure while it is being readied."], ["cmc", "XStat for deep, narrow-tract junctional wounds; iTClamp for head and neck wounds whose edges close easily."], ["cmc", "TXA, blood and calcium for shock."]],
+    drugs: ["tranexamic-acid", "calcium-chloride"],
+    warn: ["XStat is not removed in the field; more XStat, other adjuncts or dressings can go over it.", "An iTClamp on the neck means frequent airway checks for an expanding hematoma; it is not placed within 1 cm of the eye.", "If one hemostatic dressing fails, a fresh dressing of the same or a different type can replace it."] },
+  { id: "torso", g: 0, name: "Non-compressible torso hemorrhage", line: "Bleeding inside the chest, abdomen or pelvis",
+    what: "Bleeding inside the chest, abdomen or pelvis that no tourniquet, packing or pressure can reach.",
+    why: "Solid organs such as the liver and spleen and the large vessels bleed into body cavities big enough to hold most of the blood volume. Only surgery stops it, so time to surgery decides survival.",
+    signs: ["Penetrating wound to the chest, abdomen, flank or buttock", "Distended or rigid abdomen", "Shock with no visible bleeding", "Shock that returns after limb bleeding is controlled"],
+    care: [["asm", "Early evacuation request and hypothermia prevention."], ["cmc", "TXA, blood products in TCCC order and calcium, reassessed after every unit."], ["cmc", "Resuscitation stops at a palpable radial pulse, better mental status or a systolic pressure of about 100 mmHg."], ["cpp", "Lactate, base deficit and shock index trends; ultrasound by trained providers; evacuation priority to surgery."]],
+    drugs: ["tranexamic-acid", "calcium-chloride", "calcium-gluconate"],
+    warn: ["Crystalloid is not the TCCC fluid for hemorrhagic shock: it dilutes clotting factors and cools the casualty.", "Pushing blood pressure above the endpoints can restart bleeding from clots that have just formed.", "Aortic balloon occlusion (REBOA) belongs to specially trained surgical teams."] },
+  { id: "pelvis", g: 0, name: "Pelvic fracture", line: "A broken pelvic ring can hide liters of blood",
+    what: "A disrupted pelvic ring after blunt force or blast, tearing the veins and arteries that line the pelvis.",
+    why: "When the ring opens, the pelvis becomes a larger space with nothing to press the bleeding vessels closed, so blood keeps filling it.",
+    signs: ["TCCC binder indications after severe blunt force or blast: pelvic pain", "Any major lower limb amputation or near amputation", "Exam findings of a pelvic fracture", "Unconsciousness", "Shock"],
+    care: [["cmc", "Pelvic binder for those indications, centered over the greater trochanters, not the iliac crests."], ["cmc", "TXA, blood and calcium for shock."], ["cpp", "Repeat exams and ultrasound for ongoing bleeding; evacuation priority to surgery."]],
+    drugs: ["tranexamic-acid", "calcium-chloride"],
+    warn: ["A binder placed too high over the iliac crests does not close the ring.", "Repeatedly rocking or springing the pelvis to test it can restart bleeding."] },
+  { id: "shock", g: 0, name: "Hemorrhagic shock", line: "When blood loss starves the organs",
+    what: "Too little circulating blood to carry oxygen to the tissues, because of bleeding.",
+    why: "Starved tissues switch to anaerobic metabolism and make lactic acid. Acidosis, cold and low calcium weaken clotting (the lethal diamond), which drives more bleeding in a spiral.",
+    signs: ["TCCC: altered mental status without brain injury, and/or a weak or absent radial pulse", "Fast heart rate; pale, cool, clammy skin", "Shock index (heart rate divided by systolic pressure) above about 1", "Rising lactate and base deficit"],
+    care: [["asm", "Bleeding control first, then hypothermia prevention."], ["cmc", "IV access (18-gauge or saline lock preferred) or IO when IV is not quickly obtainable."], ["cmc", "Blood in TCCC order: cold-stored low-titer O whole blood, pre-screened low-titer O fresh whole blood, plasma, red cells and platelets 1:1:1, plasma and red cells 1:1, then plasma or red cells alone."], ["cmc", "Calcium after the first transfused product; TXA within 3 hours; reassessment after each unit to the endpoints."], ["cpp", "Pressors only after the bleeding is controlled and volume is replaced; i-STAT lactate, base deficit, ionized calcium and potassium trends."]],
+    drugs: ["tranexamic-acid", "calcium-chloride", "calcium-gluconate", "norepinephrine", "vasopressin"],
+    warn: ["Rh-positive products are used in hemorrhagic shock when Rh-negative products are not immediately available.", "Unscreened group O or type-specific fresh whole blood carries a risk of a lethal hemolytic reaction and is given only under medical direction by trained personnel.", "Hypothermia prevention runs alongside resuscitation.", "A pressor squeezes vessels; it does not replace lost blood."] },
+  { id: "tension", g: 1, name: "Tension pneumothorax", line: "Trapped chest air crushing the lung and heart",
+    what: "Air leaks into the space around a lung and cannot escape, so pressure builds with every breath.",
+    why: "The lung collapses, and the rising pressure pushes on the heart and great veins and blocks blood returning to the heart. Low oxygen, shock and cardiac arrest follow.",
+    signs: ["Significant torso trauma or primary blast injury, plus one or more of:", "Severe or progressive breathing distress or fast breathing", "Absent or markedly decreased breath sounds on one side", "SpO2 below 90%", "Shock, or traumatic arrest without obviously fatal wounds"],
+    care: [["cls", "An existing chest seal is burped or removed; pulse oximetry is started."], ["cls", "Needle decompression on the injured side with a 14- or 10-gauge, 3.25-inch needle: 5th intercostal space at the anterior axillary line, or 2nd intercostal space at the midclavicular line (not medial to the nipple line), over the top of the lower rib, held 5 to 10 seconds."], ["cls", "No improvement: a second decompression at the other site with a new needle. Recurrence: a repeat at the same site."], ["cpp", "Finger or tube thoracostomy at the 5th intercostal space, anterior axillary line, for refractory cases; a finger thoracostomy can seal over and need reopening."]],
+    drugs: [],
+    warn: ["Signs of success: easier breathing, a hiss of air, SpO2 rising to 90% or more, or return of a pulse or consciousness.", "Torso or blast trauma in traumatic arrest: both sides are decompressed before care stops.", "Pulse oximetry can mislead in shock or marked hypothermia, and at altitude SpO2 may not rise."] },
+  { id: "openchest", g: 1, name: "Open chest wound", line: "A wound that pulls air into the chest",
+    what: "A penetrating chest wound that lets air move in and out through the chest wall.",
+    why: "Air drawn in through the wound collapses the lung, and a one-way leak can build into a tension pneumothorax.",
+    signs: ["Penetrating wound to the chest or upper back", "Bubbling or sucking sound with breathing", "Breathing difficulty"],
+    care: [["cls", "Vented chest seal over the defect, or a non-vented seal if no vented seal is available."], ["cls", "Monitoring for tension pneumothorax: worsening oxygen, breathing distress or low blood pressure lead to burping or removing the seal, or needle decompression."], ["cls", "Antibiotics, as for every open combat wound."]],
+    drugs: ["cefadroxil", "ceftriaxone"],
+    warn: ["Any chest seal can hide a developing tension pneumothorax.", "Wounds on the back and armpit are easy to miss during a quick sweep."] },
+  { id: "airwayobs", g: 1, name: "Airway obstruction", line: "Blood, broken bones or burns blocking the airway",
+    what: "Anything that blocks airflow: the tongue in an unconscious casualty, blood, broken facial bones, swelling or burns.",
+    why: "Without airflow, oxygen falls within minutes, leading to brain injury and cardiac arrest.",
+    signs: ["Snoring or gurgling breathing, stridor", "Unable to speak", "Facial fractures or direct airway injury", "Blood or vomit in the airway", "Unconsciousness"],
+    care: [["asm", "A conscious casualty takes any position that protects the airway, including sitting up and leaning forward; an unconscious casualty goes into the recovery position."], ["cls", "Nasopharyngeal airway and bag-valve-mask; suction if available."], ["cmc", "Extraglottic airway; surgical cricothyroidotomy (open or bougie-aided, with a flanged, cuffed cannula under 10 mm outer diameter) when other measures fail, confirmed with continuous EtCO2, with lidocaine if the casualty is conscious."], ["cpp", "During evacuation, endotracheal intubation may be considered in place of a cric by trained providers."]],
+    drugs: ["lidocaine", "ketamine", "etomidate", "rocuronium", "succinylcholine"],
+    warn: ["Cervical spine stabilization is not needed for penetrating trauma alone.", "Laying a conscious casualty with facial trauma flat can close the airway they were protecting by sitting up.", "SpO2, EtCO2 and airway patency change over time and are reassessed often."] },
+  { id: "smoke", g: 1, name: "Smoke inhalation and airway burns", line: "Swelling that closes the airway over hours",
+    what: "Heat and toxic smoke injury to the airway and lungs, often with carbon monoxide or cyanide poisoning.",
+    why: "Heat injures the upper airway, which swells over hours. Smoke chemicals injure the lungs, carbon monoxide blocks oxygen transport, and cyanide stops cells from using oxygen.",
+    signs: ["Fire in a closed space", "Facial burns, singed nasal hair, soot in the mouth or sputum", "Hoarse voice or stridor", "Headache, confusion or collapse"],
+    care: [["asm", "Removal from smoke and stopping the burning process."], ["cmc", "Oxygen, a TCCC indication for smoke inhalation; early airway planning because swelling progresses; surgical airway if the airway closes."], ["cpp", "Intubation by trained providers before swelling makes it impossible; hydroxocobalamin for suspected cyanide where carried."]],
+    drugs: ["hydroxocobalamin"],
+    warn: ["A standard pulse oximeter reads falsely normal with carbon monoxide.", "An airway that looks fine early can close hours later."] },
+  { id: "blastlung", g: 1, name: "Blast lung", line: "Pressure-wave injury to the lungs",
+    what: "Lung damage from the pressure wave of an explosion, with nothing penetrating the chest.",
+    why: "The pressure wave tears air spaces and small vessels. The lungs bleed and leak air, causing low oxygen, pneumothorax and air embolism.",
+    signs: ["Close-range explosion, especially in an enclosed space", "Breathing difficulty, cough, blood-stained sputum", "Chest pain and low SpO2", "Ruptured eardrums often alongside"],
+    care: [["asm", "Position of comfort and early evacuation."], ["cmc", "Oxygen; watching for tension pneumothorax."], ["cpp", "Lung-protective ventilation if ventilated, with careful pressures, because positive pressure can cause pneumothorax or air embolism."]],
+    drugs: [],
+    warn: ["Signs can be delayed for hours, so anyone close to a blast is reassessed.", "Large fluid volumes worsen leaky lungs."] },
+  { id: "tbi", g: 2, name: "Moderate or severe TBI", line: "Protecting the brain's oxygen and pressure",
+    what: "TCCC: unable to follow simple commands (thumbs up, two fingers or a blink) more than 10 minutes after injury, with a suspected head injury and no other cause.",
+    why: "The first injury cannot be undone. Secondary injury from low oxygen, low blood pressure, wrong CO2 and swelling decides how much more brain is lost.",
+    signs: ["Unable to follow commands", "Falling level of consciousness", "Unequal pupils, vomiting or seizures", "Blast or blunt mechanism"],
+    care: [["asm", "Recognition, airway protection and early evacuation."], ["cls", "AVPU mental status recorded on the DD1380."], ["cmc", "Oxygen to SpO2 92% or more; systolic pressure above 100 mmHg (or a normal radial pulse); plasma for moderate or severe TBI without bleeding; TXA within 3 hours for significant TBI."], ["cmc", "Head and torso raised above 30 degrees if not in shock, collar loosened, head facing forward, agitation treated."], ["cpp", "EtCO2 35 to 45 mmHg when ventilated, or low tidal volume at 10 breaths per minute without capnography; evacuation to neurosurgery, with better outcomes within about 5 hours."]],
+    drugs: ["tranexamic-acid", "hypertonic-saline-3-percent", "sodium-chloride-23-4-percent", "levetiracetam", "ketamine"],
+    warn: ["When hemorrhagic shock is also present, shock resuscitation comes first.", "When the cause of an abnormal neuro exam is unclear, TCCC errs toward treating shock.", "TBI and eye injury do not rule out ketamine, but any sedating analgesic can hide a declining neuro exam."] },
+  { id: "hern", g: 2, name: "Brain herniation", line: "The brain being pushed out of place",
+    what: "Swelling or bleeding raises the pressure inside the skull until brain tissue shifts.",
+    why: "Shifting tissue compresses the brainstem, which controls breathing and consciousness. Without treatment it is fatal.",
+    signs: ["TCCC: an asymmetric or fixed and dilated pupil", "Posturing", "Late: high blood pressure, slow pulse and irregular breathing (Cushing response)"],
+    care: [["cmc", "Hypertonic saline (3% or 5%, or 23.4%) IV or IO, given slowly with a saline flush, repeated once if there is no response; the site is watched and the infusion stopped if it leaks."], ["cmc", "Oxygen, blood pressure and head positioning as for any moderate or severe TBI."], ["cpp", "Brief hyperventilation only as a bridge; sodium trended after hypertonic saline."]],
+    drugs: ["hypertonic-saline-3-percent", "sodium-chloride-23-4-percent", "mannitol"],
+    warn: ["Hypertonic saline is not given to prevent herniation and is not a resuscitation fluid.", "Each dose raises sodium; the trend is followed before more is given."] },
+  { id: "ptbi", g: 2, name: "Penetrating head injury", line: "Not automatically expectant",
+    what: "A penetrating wound to the head or an open skull fracture.",
+    why: "Brain tissue is exposed to contamination, and bleeding and swelling follow the wound track.",
+    signs: ["Visible entry wound", "Exposed brain tissue or clear fluid leaking", "Any of the TBI signs"],
+    care: [["asm", "A surface dressing that keeps contaminants out of the wound."], ["asm", "Active bleeding from the wound or its edges: hemostatic gauze on the surface with gentle pressure."], ["cls", "Antibiotics for the open wound."], ["cmc", "The same oxygen, blood pressure and herniation care as any moderate or severe TBI."]],
+    drugs: ["ceftriaxone", "cefadroxil"],
+    warn: ["Nothing is packed into the wound cavity.", "TCCC states that penetrating TBI and open skull fractures are not automatically expectant."] },
+  { id: "mtbi", g: 2, name: "Concussion (mild TBI)", line: "Deferred, but not ignored",
+    what: "Brief confusion, memory loss or loss of consciousness after a blow or blast, with a normal or near-normal exam.",
+    why: "Brain function is disturbed without visible structural damage. A second injury before recovery causes more harm.",
+    signs: ["Headache, dizziness, ringing ears", "Confusion or memory gaps", "Nausea, light or noise sensitivity"],
+    care: [["asm", "Removal from further blast or blunt exposure when the mission allows."], ["cpp", "TCCC defers evaluation to prolonged care or later phases; the MACE 2 structures the exam; recovery follows a progressive return to activity."]],
+    drugs: [],
+    warn: ["Red flags (worsening headache, repeated vomiting, seizure, unequal pupils, weakness or worsening confusion) change the plan to evacuation.", "Plasma is not indicated for mild TBI or concussion."] }
+];
+var FM_TIER_LAB = { asm: "Tier 1", cls: "Tier 2", cmc: "Tier 3", cpp: "Tier 4" };
+function fmTraumaView() {
+  var cur = fmTierIdx(S.level), T = S.trId && FM_TRAUMA.filter(function (x) { return x.id === S.trId; })[0];
+  if (T) return fmTraumaDetail(T, cur);
+  var c = '';
+  FM_TR_GROUPS.forEach(function (g, gi) {
+    c += '<h3 class="fmh">' + esc(g) + '</h3><div class="dislist trlist">' + FM_TRAUMA.filter(function (x) { return x.g === gi; }).map(function (x) { return '<button class="disitem" data-trc="' + x.id + '"><strong>' + esc(x.name) + '</strong><span>' + esc(x.line) + '</span></button>'; }).join("") + '</div>';
+  });
+  c += '<button class="btn nrgo" data-act="fmdrill">Start the ' + esc((levelObj(S.level) || {}).short || "") + ' drill' + (PAYWALL && !isPro() ? ' ' + proBadge() : '') + '</button><p class="muted small">Priority calls in order, plus questions on the medications at this tier.</p>';
+  return c;
+}
+function fmTraumaDetail(T, cur) {
+  var sc = {}; scopeFor(S.level).ids.forEach(function (id) { sc[id] = 1; });
+  var care = T.care.filter(function (r) { return fmTierIdx(r[0]) <= cur; }), later = T.care.length - care.length;
+  var dr = T.drugs.filter(function (d) { return DB.drugs[d] && sc[d]; });
+  var c = '<div class="deep trdetail"><div class="backrow"><button class="backbtn" data-trback="1"><span aria-hidden="true">&larr;</span> All trauma</button></div>';
+  c += '<header class="dishead"><span class="dsys">' + esc(FM_TR_GROUPS[T.g]) + '</span><h2>' + esc(T.name) + '</h2></header>' + deepP(T.what);
+  c += deepSec("🩸", "What goes wrong in the body", deepP(T.why));
+  c += deepSec("👁️", "How it is recognized", '<ul class="trl">' + T.signs.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join("") + '</ul>');
+  c += deepSec("🪖", "Field care through " + esc(FM_TIER_LAB[FM_TIERS[cur]] || "your tier"), care.length ? '<div class="pccrows trcare">' + care.map(function (r) { return pccRow("", r[1], FM_TIER_LAB[r[0]]); }).join("") + '</div>' + (later ? '<p class="muted small" style="margin:6px 0 0">Higher tiers add ' + later + ' more step' + (later === 1 ? '' : 's') + '.</p>' : '') : '<p class="muted small">Care for this starts at a higher tier. At this tier: recognition, bleeding control and evacuation.</p>');
+  c += deepSec("⚠️", "Warnings", '<ul class="trl trwarn">' + T.warn.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join("") + '</ul>');
+  if (dr.length) c += deepSec("💊", "Medications at this tier", '<div class="drugchips">' + dr.map(function (d) { return '<button class="chip" data-drug="' + d + '">' + esc(nameOf(d)) + '</button>'; }).join("") + '</div>');
+  return c + '<div class="sheetacts"><button class="btn small ghost" data-trback="1">Back to all trauma</button></div></div>';
+}
+document.addEventListener("click", function (e) {
+  var b = e.target.closest && e.target.closest("[data-trc],[data-trback]"); if (!b || typeof S === "undefined") return;
+  e.preventDefault(); e.stopPropagation();
+  S.trId = b.hasAttribute("data-trback") ? null : b.getAttribute("data-trc"); render(); try { window.scrollTo(0, 0); } catch (x) {}
+}, true);
 
 
 /* ---------- boot ---------- */
