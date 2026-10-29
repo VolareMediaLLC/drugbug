@@ -5729,6 +5729,218 @@ A sulfur-containing helper molecule for energy enzymes, also sold as an antioxid
 `);
 
 ;
+/* Hormonal drugs added Oct 29 2026 (owner request). */
+DB.add("enclomiphene","Enclomiphene","HM",`
+Enclomiphene citrate (trans-clomiphene)|No FDA-approved brand (Androxal was the investigational name; NDA not approved); compounded and unapproved products|Enclomiphene, "enclo"|NOT FDA APPROVED - investigational SERM used off-label for male secondary hypogonadism|Selective estrogen receptor modulator (SERM); trans-isomer of clomiphene, hypothalamic and pituitary estrogen receptor antagonist|Not controlled
+A daily pill version of the active half of clomiphene, sold through compounding pharmacies and men's health clinics to raise testosterone in men.|Blocks estrogen feedback at the hypothalamus and pituitary so the body makes more LH and FSH, which tell the testes to make testosterone and sperm.|Used off-label to raise testosterone in men with low testosterone from low LH and FSH (secondary hypogonadism) while trying to keep fertility, as an alternative to testosterone therapy.
+Trans (E) isomer of clomiphene citrate; competitively antagonizes estrogen receptor alpha in the hypothalamus and anterior pituitary, removing estradiol negative feedback; GnRH pulse output and pituitary LH and FSH secretion rise, increasing Leydig cell testosterone production and Sertoli cell support of spermatogenesis. Lacks most of the estrogenic, long-lived zuclomiphene (cis) isomer found in racemic clomiphene.|Estrogen receptor (ER-alpha) in the hypothalamus and pituitary|Antagonist (SERM)|Increased LH, FSH and endogenous serum testosterone; sperm concentration generally maintained, unlike exogenous testosterone, which suppresses it.
+None (not FDA-approved for any use; an NDA for secondary hypogonadism in overweight men received an FDA complete response letter in late 2015)|Secondary (hypogonadotropic) hypogonadism in men who wish to preserve fertility (off-label, compounded)|None|Male secondary hypogonadism; restarting the hypothalamic-pituitary-testicular axis after anabolic steroid or testosterone use (off-label, limited evidence)
+Pregnancy; known hypersensitivity to clomiphene; liver disease (extrapolated from clomiphene labeling)|Primary (testicular) hypogonadism, in which LH is already high and the drug cannot work; history of venous thromboembolism; visual disturbance with clomiphene; pituitary tumor
+No FDA-approved labeling exists. Risks reported in trials or extrapolated from clomiphene include visual disturbances, mood changes, hot flashes, headache, possible venous thromboembolism (a SERM class effect) and erythrocytosis from rising testosterone. Compounded and online "research" products are not FDA-reviewed for quality, potency or purity.|None (no FDA label)|Enclomiphene citrate appears on the FDA list of bulk drug substances nominated for 503A compounding in Category 1 (under evaluation) as of the May 2026 update; this is not an approval. Product quality and dose vary by source.
+No FDA-approved dose. Phase 3 study doses were 12.5 mg PO once daily, titrated to 25 mg daily if testosterone stayed low (study doses only, not a labeled dose)|Not established; not used in children|Not applicable|No FDA-approved maximum (25 mg daily was the highest dose in the phase 3 program)|Daily in studies|Not applicable|No data|No data; clomiphene labeling contraindicates use in liver disease
+PO|-|-|-|-|Capsule or tablet once daily (compounded)|-|-|-|Once daily|Compounded strengths vary|Not applicable|Clinics typically recheck testosterone, LH, FSH, estradiol and hematocrit after several weeks; strength and purity of compounded or online products are not verified by FDA
+LH and testosterone rise within about 2 weeks|Plasma peak about 2 to 3 h after an oral dose|Testosterone effect fades within days to weeks of stopping|About 10 h (much shorter than the zuclomiphene isomer, which lingers for weeks)|Hepatic (CYP2D6 and CYP3A4, extrapolated from clomiphene)|Mainly feces|Not well characterized
+Headache, hot flashes, nausea, mood changes, acne|Visual disturbances (blurring, floaters), erythrocytosis, elevated estradiol with breast tenderness|Venous thromboembolism (rare, SERM class concern)
+Other SERMs or aromatase inhibitors stacked by clinics; testosterone products (defeats the purpose by suppressing LH)|Exogenous androgens; other SERMs|None known|No specific interaction|Often stacked with anastrozole or hCG in men's health clinics, adding effects and side effects that are not well studied
+-|-|-|-|-|-|Visual symptoms, mood|-|Total testosterone, LH, FSH, estradiol, hematocrit, liver tests; semen analysis when fertility is the goal|Visual symptoms, leg swelling, chest pain
+Not applicable (not used in women; clomiphene is contraindicated in pregnancy)|Not applicable|Not studied|Limited data; VTE risk factors matter|No data|Avoid in liver disease (extrapolated)
+No human overdose data|Expected nausea, hot flashes, visual blurring|Not well characterized|Supportive care|None|None
+Not given by EMS.|Enclomiphene is widely sold through telehealth men's clinics and online "research chemical" sites; it is not FDA-approved, and product strength and purity are unverified.|Source (compounding pharmacy vs online vendor), dose, other hormones taken with it.|Visual complaints, signs of DVT or PE, blood pressure.|Visual disturbance, VTE, marked erythrocytosis.|Assuming it is FDA-approved or the same as Clomid; combining it with testosterone, which shuts down the LH it is meant to raise.|Stacking with anabolic steroids, aromatase inhibitors or other SERMs.|Enclomiphene raises testosterone by raising LH and FSH, so it only works when the testes are intact (secondary hypogonadism); exogenous testosterone does the opposite and lowers sperm counts.
+Secondary hypogonadism (often obesity-related), male infertility concerns, or recovery after anabolic steroid use.|Raise testosterone while preserving fertility, often through a men's health or telehealth clinic.|Who prescribed it and where it came from, testosterone or steroid use, vision changes, leg swelling, chest pain, mood changes.|Venous thromboembolism, visual disturbance, polycythemia, mood changes.|Testosterone falls back to baseline over days to weeks with return of hypogonadal symptoms; no dangerous withdrawal.
+A pill that tells the brain to signal the testes to make more of their own testosterone.|Enclomiphene is the trans-isomer of clomiphene, an unapproved SERM used off-label in men to raise LH, FSH and testosterone without suppressing sperm production.|ENclomiphene ENcourages the brain to make LH: blocking estrogen feedback raises the body's own testosterone and keeps sperm.|Not FDA-approved; Androxal NDA received a complete response letter.|SERMs block hypothalamic estrogen feedback, raising GnRH, LH and FSH; useful in secondary but not primary hypogonadism.|Clomiphene (racemic mix of enclomiphene and zuclomiphene, FDA-approved for female ovulation induction)|Clomiphene, tamoxifen|Testosterone (suppresses LH and FSH)
+`);
+DB.add("testosterone-enanthate","Testosterone Enanthate","HM",`
+Testosterone enanthate|Xyosted (subcutaneous autoinjector); generic testosterone enanthate injection (IM); Delatestryl (discontinued brand)|Testosterone enanthate, "test E"|Androgen; anabolic steroid|Esterified testosterone in sesame oil; androgen receptor agonist|Schedule III
+A testosterone shot in sesame oil, given IM every 2 to 4 weeks or as a weekly under-the-skin autoinjector (Xyosted).|Replaces the male hormone, supporting muscle, bone, red blood cell production, libido and male sex characteristics.|Used for low testosterone in males from testicular failure or pituitary-hypothalamic disease; the IM form is also labeled for delayed puberty and some breast cancers in women.
+The enanthate ester slows release from the oily depot; esterases free testosterone, which binds the nuclear androgen receptor directly and after 5-alpha-reductase conversion to dihydrotestosterone, and is aromatized to estradiol; the hormone-receptor complex alters gene transcription. Exogenous testosterone suppresses hypothalamic GnRH and pituitary LH and FSH by negative feedback, lowering intratesticular testosterone and spermatogenesis.|Androgen receptor|Agonist|Male secondary sex characteristics, increased lean mass, erythropoiesis, libido; suppression of LH, FSH and sperm production.
+Testosterone replacement in males with primary hypogonadism or hypogonadotropic hypogonadism, congenital or acquired (IM generic and Xyosted labels)|IM generic: delayed puberty in carefully selected males; secondary treatment of inoperable metastatic breast cancer in women 1 to 5 years postmenopausal (label)|None|Masculinizing gender-affirming hormone therapy (off-label); nonmedical anabolic use
+Men with breast cancer or known or suspected prostate cancer; pregnancy; hypersensitivity to testosterone enanthate or sesame oil (label)|Uncontrolled hypertension (Xyosted not recommended), polycythemia, untreated obstructive sleep apnea, severe BPH symptoms, heart failure or edema-prone renal or hepatic disease, desire for fertility
+Blood pressure increases (Xyosted ambulatory BP rose about 4/1.5 mm Hg in trials), polycythemia, venous thromboembolism, abuse with serious cardiovascular and psychiatric reactions, edema, gynecomastia, sleep apnea, worsening BPH, depression and suicidal ideation, hypercalcemia, accelerated bone maturation in children.|None currently: per DailyMed, the Xyosted boxed warning for blood pressure increases was removed in 03/2025 after FDA class-wide testosterone labeling changes (Feb 28 2025); BP increase remains a labeled warning. The IM generic has no boxed warning.|Diagnosis is confirmed by morning serum testosterone below normal on at least two separate days. In June 2026 HHS and FDA requested further class-wide label changes (age-related hypogonadism limitation, narrower prostate cancer contraindication); check the current label.
+Xyosted: 75 mg SC in the abdomen once weekly; check trough testosterone (7 days after dose) at 6 weeks and adjust by 25 mg to keep 350 to 650 ng/dL (doses 50, 75 or 100 mg). IM generic: 50 to 400 mg IM every 2 to 4 weeks for male hypogonadism; 200 to 400 mg every 2 to 4 weeks for breast cancer in women (label)|IM generic: delayed puberty 50 to 200 mg every 2 to 4 weeks for a limited time (for example 4 to 6 months) with bone age monitoring; Xyosted not established under 18 years (label)|Not weight-based|Xyosted 100 mg weekly; IM label notes more than 400 mg per month is generally not required|Xyosted weekly; IM every 2 to 4 weeks|Not applicable|No specific adjustment; edema risk in renal disease|No specific adjustment; edema risk; stop if cholestatic hepatitis or jaundice
+IM, SQ|Not for IV use|-|Generic: deep gluteal IM injection|-|-|Xyosted: abdominal SC autoinjector only; not for IM use|-|-|Slow IM injection of viscous oil|Generic 200 mg/mL in sesame oil with chlorobutanol (5 mL multidose vial); Xyosted 50, 75 or 100 mg per 0.5 mL single-dose autoinjector|Not applicable|Do not inject IV or intravascularly; Xyosted is self-injected weekly in the abdomen; inspect for particles
+Days|IM: peak within about 1 to 3 days; Xyosted SC: median Tmax about 12 h|IM: about 2 to 4 weeks; Xyosted: 1 week|About 4 to 5 days for the IM ester depot (free testosterone itself 10 to 100 min)|Hepatic to estradiol, DHT and 17-ketosteroids|Urine (about 90%) and feces|About 98% (SHBG and albumin)
+Acne, injection site reactions, increased hematocrit, hypertension, gynecomastia, testicular atrophy|Polycythemia, VTE, worsening BPH, sleep apnea, depression, edema|Pulmonary embolism, MI or stroke with polycythemia, pulmonary oil microembolism (POME) or anaphylaxis after IM injection
+Warfarin (higher INR); insulin and oral hypoglycemics (lower glucose); corticosteroids (edema); drugs that raise blood pressure|Other anabolic steroids|-|-|Testosterone plus anticoagulant raises bleeding risk; plus NSAIDs or stimulants adds to blood pressure rise
+Increase possible; periodic checks especially in hypertensive men|-|-|-|-|Cough or dyspnea right after IM injection (POME)|Mood changes, aggression, depression|May lower glucose|Hematocrit (baseline and every 3 months), testosterone trough, PSA, lipids|Blood pressure, sleep apnea symptoms, edema
+Contraindicated (virilization of a female fetus)|Not recommended|Delayed puberty only (IM); bone age X-rays, early epiphyseal closure risk|More prostate and cardiovascular monitoring|Edema risk|Edema risk; peliosis hepatis and tumors reported mainly with oral 17-alpha-alkylated androgens and prolonged high doses
+Chronic supraphysiologic use (anabolic steroid misuse)|Erythrocytosis, hypertension, acne, aggression, testicular atrophy, gynecomastia|Polycythemia with thrombosis, cardiomyopathy, MI, psychiatric effects; withdrawal depression|Supportive care; therapeutic phlebotomy for severe erythrocytosis|None|None
+Not given by EMS.|Enanthate is one of the most common injectable steroids in bodybuilding and nonmedical use; young patients with chest pain, stroke or PE may be using it.|Prescribed vs nonmedical source, dose, interval, last injection, other steroids.|Blood pressure, signs of clot, mood.|Hematocrit too high, VTE, uncontrolled hypertension (per label, stop until corrected).|Confusing Xyosted (SC weekly) with generic enanthate (IM every 2 to 4 weeks); IV injection of oil.|Warfarin; other anabolic steroids; stimulants.|Exogenous testosterone suppresses LH and FSH, causing testicular atrophy and low sperm counts despite high serum testosterone.
+Male hypogonadism, masculinizing transgender hormone therapy, delayed puberty, or nonmedical anabolic steroid use.|Testosterone replacement or gender-affirming therapy; bodybuilding when nonmedical.|Injection schedule, dose, source, chest pain, leg swelling, headache, mood changes, other steroids.|DVT or PE, MI, stroke, polycythemia, hypertension, mood disorders.|Fatigue, low libido and depressed mood; after misuse, abrupt stop can cause prolonged hypogonadism and depression with suicidality risk.
+A testosterone shot in oil, given into muscle every few weeks or under the skin weekly with an autoinjector.|Testosterone enanthate is a Schedule III androgen ester given IM (50 to 400 mg every 2 to 4 weeks) or as weekly SC Xyosted for male hypogonadism.|Enanthate and cypionate are near twins: oily IM testosterone shots every 2 to 4 weeks; Xyosted is the weekly belly autoinjector version.|Xyosted 75 mg SC weekly; generic IM every 2 to 4 weeks.|Exogenous androgens suppress LH and FSH, causing testicular atrophy and infertility; erythrocytosis is the key lab adverse effect.|Testosterone cypionate (cottonseed oil, nearly identical dosing)|Testosterone cypionate, testosterone undecanoate, nandrolone|Leuprolide, finasteride, spironolactone (anti-androgen effects)
+`);
+DB.add("chorionic-gonadotropin","Chorionic Gonadotropin (hCG)","HM OB",`
+Chorionic gonadotropin (human chorionic gonadotropin, hCG; urinary-derived)|Novarel; Pregnyl; generic chorionic gonadotropin|hCG|Gonadotropin; fertility agent|Placental glycoprotein hormone with LH-like activity (LH/hCG receptor agonist)|Not controlled (some states regulate hCG with anabolic steroid laws)
+A pregnancy hormone purified from urine and given as an IM shot.|Acts like LH: tells the testes to make testosterone and triggers the final egg release in the ovary.|Used for undescended testes in boys, low testosterone from pituitary failure in men, and to trigger ovulation in fertility treatment.
+Alpha-beta glycoprotein whose beta subunit is structurally similar to LH; binds the LH/hCG G-protein-coupled receptor (Gs, cAMP) on testicular Leydig cells and ovarian theca and granulosa cells. In males it stimulates Leydig cell testosterone production and testicular descent; in females a single large dose mimics the midcycle LH surge, causing final oocyte maturation, follicle rupture and corpus luteum support.|LH/hCG receptor (LHCGR)|Agonist|Increased testosterone and testicular size in males; ovulation about 32 to 36 h after dosing in females; corpus luteum progesterone production.
+Prepubertal cryptorchidism not due to anatomic obstruction; selected cases of hypogonadotropic hypogonadism in males from pituitary deficiency; induction of ovulation and pregnancy in anovulatory infertile women (not primary ovarian failure) after menotropins (label)|-|None|Preserving testicular size and spermatogenesis with testosterone therapy; restarting the testicular axis after anabolic steroid use (off-label)
+Precocious puberty; prostate cancer or other androgen-dependent neoplasm; prior hypersensitivity to hCG (label)|Pregnancy; conditions worsened by fluid retention (heart failure, renal disease, epilepsy, migraine, asthma)
+Label statement: hCG has not been demonstrated to be effective adjunctive therapy for obesity; there is no substantial evidence it increases weight loss beyond calorie restriction, causes a more attractive or normal fat distribution, or reduces hunger. With menotropins: ovarian hyperstimulation syndrome, ovarian cyst rupture with hemoperitoneum, multiple births, arterial thromboembolism. Anaphylaxis reported with urinary hCG.|None|Can induce precocious puberty in boys treated for cryptorchidism; stop if signs appear. Bacteriostatic water diluent contains benzyl alcohol (gasping syndrome in premature infants). Use with menotropins only by experienced infertility specialists.
+Male hypogonadotropic hypogonadism: 500 to 1,000 USP units IM three times weekly for 3 weeks, then the same dose twice weekly for 3 weeks; or 4,000 units three times weekly for 6 to 9 months, then 2,000 units three times weekly for 3 more months. Ovulation induction: 5,000 to 10,000 units IM one day after the last menotropins dose (label)|Prepubertal cryptorchidism (label regimens): 4,000 units IM three times weekly for 3 weeks; or 5,000 units every second day for 4 injections; or 15 injections of 500 to 1,000 units over 6 weeks; or 500 units three times weekly for 4 to 6 weeks, repeated 1 month later at 1,000 units if unsuccessful|Not weight-based|10,000 units as a single ovulation trigger (label)|Regimen-specific|Not applicable|No specific adjustment; caution with fluid retention|No specific adjustment
+IM|-|-|IM only per Novarel and Pregnyl labeling|-|-|Off-label SC use is common in practice|-|-|Single IM injection|Reconstitute 5,000 or 10,000 unit vial with supplied bacteriostatic water (1 mL for a single full dose or 10 mL for multiple doses)|Not applicable|Refrigerate after reconstitution and use within about 30 days; hCG was transitioned to regulation as a biologic in March 2020
+Hours (testosterone rise within 1 to 2 days)|About 6 h after IM injection|Days|Biphasic: about 6 h and about 24 h (terminal)|Not well characterized; metabolized in kidney and liver|Renal (about 10 to 12% unchanged)|Not applicable
+Headache, irritability, fatigue, depression, injection site pain, gynecomastia, edema|Precocious puberty, ovarian hyperstimulation, multiple pregnancy, ovarian cyst rupture|Severe OHSS with thromboembolism, anaphylaxis
+Menotropins and other gonadotropins (OHSS risk)|-|None|No specific interaction|Combined with testosterone in TRT clinics to maintain testicular size; with gonadotropins for ovulation induction, raises OHSS risk
+-|-|-|-|-|Dyspnea with OHSS (ascites, pleural effusion)|Mood changes|-|Testosterone, estradiol, hematocrit in men; serum estradiol and follicle ultrasound in women; pregnancy test|Testicular descent and pubertal signs in boys; abdominal girth and weight in OHSS
+Contraindicated per label (fetal harm reported); used only to trigger ovulation before conception|Caution; limited data|Cryptorchidism; watch for precocious puberty|Not studied|Fluid retention caution|No specific data
+Overdose data limited|Ovarian enlargement or OHSS in women; gynecomastia and edema in men|OHSS with ascites, hemoconcentration, thrombosis|Supportive; OHSS managed with fluids and monitoring|None|None
+Not given by EMS.|hCG causes a positive urine or serum pregnancy test for about 10 days after a trigger shot; men using hCG will also test positive.|Fertility cycle timing, last hCG injection, abdominal pain or bloating.|Signs of OHSS: abdominal distension, dyspnea, oliguria, hypotension.|OHSS, hypersensitivity, precocious puberty in boys.|Using hCG for weight loss diets despite the label obesity statement; confusing units with mcg-based recombinant Ovidrel.|Other gonadotropins (OHSS); anabolic steroid stacks.|A woman with abdominal pain, distension and shortness of breath days after an hCG trigger shot may have ovarian hyperstimulation syndrome or ectopic pregnancy.
+Infertility treatment, male hypogonadotropic hypogonadism, cryptorchidism in boys, testosterone therapy, or anabolic steroid use and recovery.|Ovulation trigger, testosterone production, preserving fertility on TRT, or weight-loss diets (not effective).|Fertility treatment timing, pregnancy possibility, abdominal symptoms, testosterone or steroid use.|OHSS, ectopic or multiple pregnancy, thromboembolism, gynecomastia.|No withdrawal; testicular size and testosterone may fall in men also using testosterone.
+A shot of the pregnancy hormone that acts like LH to make the testes produce testosterone or trigger egg release.|Chorionic gonadotropin (Novarel, Pregnyl) is urinary hCG acting at the LH receptor, labeled for cryptorchidism, male hypogonadotropic hypogonadism and ovulation induction, and not effective for weight loss.|hCG = Hormone that Copies Gonadotropin LH: it triggers ovulation and testosterone and makes pregnancy tests positive.|Label states hCG is not effective for obesity or fat redistribution.|hCG acts on the LH receptor; ovulation trigger causing OHSS risk; beta-hCG is the pregnancy and tumor marker (choriocarcinoma, germ cell tumors).|Choriogonadotropin alfa (Ovidrel, recombinant hCG in mcg); menotropins (FSH plus LH)|Choriogonadotropin alfa (Ovidrel), menotropins, gonadorelin|GnRH antagonists (ganirelix, cetrorelix)
+`);
+DB.add("oxandrolone","Oxandrolone","HM",`
+Oxandrolone|Oxandrin (FDA approval withdrawn June 28 2023, with all generics)|Oxandrolone, "Anavar"|Anabolic steroid|17-alpha-alkylated synthetic androgen (dihydrotestosterone derivative); androgen receptor agonist|Schedule III
+An oral anabolic steroid that was used to help patients regain weight after surgery, trauma, burns or infection; FDA withdrew its approval in 2023.|Activates androgen receptors to increase protein synthesis and lean body mass with relatively weaker masculinizing effects.|Formerly used to promote weight gain after severe illness or surgery and to offset steroid-induced muscle breakdown; still misused for bodybuilding.
+17-alpha-methylated, 2-oxa-substituted dihydrotestosterone analog that binds the androgen receptor and increases muscle protein synthesis and nitrogen retention; high anabolic-to-androgenic ratio; not aromatized to estrogen. The 17-alpha-alkyl group resists first-pass hepatic metabolism, allowing oral use but causing hepatotoxicity.|Androgen receptor|Agonist|Increased lean body mass, nitrogen retention, weight gain; HDL lowered and LDL raised; suppression of LH and FSH.
+Historical label: adjunctive therapy to promote weight gain after weight loss from extensive surgery, chronic infections or severe trauma, and in some patients who fail to gain or maintain weight without a pathophysiologic reason; offsetting protein catabolism with prolonged corticosteroids; relief of bone pain with osteoporosis|Historical off-label: severe burns (especially pediatric), HIV wasting, Turner syndrome growth|None|No current FDA-approved use (approval withdrawn 2023)
+Known or suspected prostate or male breast cancer; breast cancer with hypercalcemia in women; pregnancy; nephrosis; hypercalcemia (historical label)|Liver disease, heart failure or edema, coronary disease, warfarin therapy
+Cholestatic hepatitis and jaundice, edema, virilization in women (voice deepening, hirsutism, clitoromegaly may be irreversible), hypercalcemia, premature epiphyseal closure in children, marked warfarin potentiation.|Peliosis hepatis (blood-filled liver cysts, can cause liver failure or intra-abdominal hemorrhage); liver cell tumors, sometimes malignant, with possible life-threatening intra-abdominal hemorrhage; blood lipid changes (low HDL, high LDL) increasing atherosclerosis and coronary disease risk|FDA withdrew approval of Oxandrin and four generic ANDAs effective June 28 2023 at the holders' request, citing safety and effectiveness concerns; a 1984 FDA advisory committee found no evidence of efficacy. Any current supply is unapproved or illicit.
+Historical label: 2.5 mg PO two to four times daily (range 2.5 to 20 mg per day in divided doses) for 2 to 4 weeks, repeated intermittently as needed; no current FDA-approved dose (approval withdrawn 2023)|Historical label: total daily dose 0.1 mg/kg or less, repeated intermittently as indicated, with bone age monitoring|Pediatric historical dosing 0.1 mg/kg/day|20 mg per day (historical label)|Courses of 2 to 4 weeks|Not applicable|Caution; edema and sodium retention|Historical label: caution; contraindicated in significant liver disease in practice
+PO|-|-|-|-|Tablets (historically 2.5 mg and 10 mg)|-|-|-|Divided doses 2 to 4 times daily|Not applicable|Not applicable|Historical warfarin labeling required large warfarin dose reductions and close INR monitoring when starting oxandrolone
+Days to weeks for weight effect|About 1 h|Hours (divided dosing)|About 9 to 10 h (longer in elderly)|Minimal hepatic metabolism|Renal (largely unchanged)|About 94 to 97%
+Acne, virilization in women, edema, menstrual irregularity, libido changes, insomnia|Cholestatic jaundice, low HDL, hypercalcemia, gynecomastia, bleeding with warfarin|Peliosis hepatis with liver failure or hemorrhage, hepatocellular tumors, MI from lipid changes
+Warfarin (large INR increase and bleeding; historical label recommended major warfarin dose reduction); oral hypoglycemics and insulin (lower glucose); corticosteroids and ACTH (edema)|Other 17-alpha-alkylated steroids (additive liver toxicity)|-|Additive hepatotoxicity|Oxandrolone plus warfarin: serious bleeding; stacking with other oral steroids: cholestasis and liver injury
+-|-|-|-|-|-|Mood, aggression|May lower glucose|Liver tests, lipids, INR if on warfarin, calcium, hemoglobin|Signs of virilization, edema, jaundice
+Contraindicated (masculinization of a female fetus)|Not recommended|Premature epiphyseal closure; bone age X-rays every 6 months historically|Edema, prostate effects|Caution (nephrosis contraindicated)|Hepatotoxicity risk; avoid in liver disease
+Chronic use at supratherapeutic doses|Jaundice, edema, acne, virilization, hypertension|Peliosis hepatis or hepatic tumor rupture with hemoperitoneum, cholestatic liver failure|Stop drug; supportive care; evaluate liver; reverse anticoagulation if bleeding on warfarin|None|Vitamin K or prothrombin complex for warfarin-associated bleeding
+Not given by EMS.|Oxandrolone ("Anavar") is a popular oral bodybuilding steroid; because FDA approval was withdrawn in 2023, any current product is unapproved, compounded or illicit.|Source, dose, other steroids, warfarin use, jaundice or right upper quadrant pain.|Liver signs, bleeding, blood pressure.|Jaundice, abnormal liver tests, edema, virilization.|Assuming it is still a marketed prescription drug; missing the warfarin interaction.|Warfarin; other oral anabolic steroids.|Oral 17-alpha-alkylated steroids (oxandrolone, methyltestosterone, stanozolol, fluoxymesterone) cause cholestatic hepatitis and peliosis hepatis; injectable testosterone esters rarely do.
+Bodybuilding or nonmedical steroid use now; historically weight loss after burns, trauma, surgery or HIV wasting.|Muscle gain or weight gain.|Steroid stacks, source, jaundice, abdominal pain, bleeding, warfarin use, mood changes.|Liver injury, intra-abdominal hemorrhage from peliosis or hepatic tumor, MI, bleeding with warfarin.|No acute danger; after prolonged use, suppressed testosterone production can cause fatigue, low libido and depression.
+An oral steroid pill that builds muscle and weight but can damage the liver; FDA pulled it from the market in 2023.|Oxandrolone is an oral 17-alpha-alkylated anabolic steroid whose FDA approval was withdrawn in 2023, with boxed warnings for peliosis hepatis, liver tumors and atherogenic lipid changes.|"OX-and-LIVER": oral oxandrolone is tough on the liver (peliosis hepatis, tumors) and lowers HDL.|FDA withdrew approval June 28 2023.|17-alpha-alkylated oral anabolic steroids cause cholestatic jaundice, peliosis hepatis and hepatic adenoma or carcinoma.|Oxymetholone (Anadrol-50), stanozolol|Oxymetholone, nandrolone, methyltestosterone|No reversal agent
+`);
+DB.add("nandrolone-decanoate","Nandrolone Decanoate","HM",`
+Nandrolone decanoate|Deca-Durabolin (discontinued in the U.S.); compounded nandrolone decanoate injection|Nandrolone, "Deca"|Anabolic steroid|19-nortestosterone ester in oil; androgen receptor agonist|Schedule III
+A long-acting injectable anabolic steroid formerly used for anemia in kidney failure and now mainly seen as a compounded or nonmedical product.|Activates androgen receptors to build muscle and stimulate red blood cell production, with less masculinizing effect than testosterone.|Formerly labeled for anemia of renal insufficiency; replaced by erythropoiesis-stimulating agents; widely misused in bodybuilding.
+19-nortestosterone (testosterone lacking the C19 methyl group) esterified with decanoic acid for slow release from an IM oil depot; binds the androgen receptor, increases renal erythropoietin production and marrow erythropoiesis, and increases protein synthesis. Reduced by 5-alpha-reductase to the weaker androgen dihydronandrolone, giving a high anabolic-to-androgenic ratio; less aromatization than testosterone but has progestogenic activity.|Androgen receptor (some progesterone receptor activity)|Agonist|Increased hemoglobin and red cell mass, lean body mass and nitrogen retention; suppression of LH, FSH and spermatogenesis.
+Historical label: management of anemia of renal insufficiency (anemia with chronic renal failure)|Historical: palliative treatment of metastatic breast cancer in women (older labeling)|None|HIV wasting, osteoporosis, joint pain in testosterone regimens (off-label, limited evidence); nonmedical bodybuilding use
+Male breast or prostate cancer; breast cancer with hypercalcemia in women; pregnancy; nephrosis or nephrotic phase of nephritis (historical label)|Liver disease, heart failure or edema, coronary disease, polycythemia, warfarin therapy
+Peliosis hepatis and liver tumors (reported with androgens), lipid changes (lower HDL), virilization in women, edema, hypercalcemia, premature epiphyseal closure in children, polycythemia, abuse with cardiovascular and psychiatric effects.|Historical label boxed warning (anabolic steroid class): peliosis hepatis, liver cell tumors, and blood lipid changes associated with increased atherosclerosis risk|No FDA-approved nandrolone decanoate product is currently marketed in the U.S. (Deca-Durabolin and generics discontinued; Durabolin phenpropionate NDA withdrawn 2018); current supply is mostly compounded or illicit.
+Historical label (anemia of renal insufficiency): women 50 to 100 mg IM once weekly; men 100 to 200 mg IM once weekly; no currently marketed FDA-approved product|Historical label: ages 2 to 13 years 25 to 50 mg IM every 3 to 4 weeks|Not weight-based|200 mg weekly (historical label, men)|Weekly (historical); therapy re-evaluated if no hematologic response|Not applicable|Used historically in renal anemia; nephrosis contraindicated|Caution in liver disease
+IM|Not for IV use|-|Deep gluteal IM injection|-|-|-|-|-|Slow IM injection of oil|Historically 100 and 200 mg/mL in sesame oil with benzyl alcohol; compounded strengths vary|Not applicable|Historical label advised iron supplementation for optimal hematologic response; compounded products are not FDA-approved
+Days (hemoglobin rise over weeks to months)|About 1 to 2 days after IM|About 2 to 4 weeks|About 6 to 12 days for the decanoate ester depot|Hepatic (ester hydrolysis, then reduction to 19-norandrosterone)|Urine (19-norandrosterone is the doping marker; detectable for months)|Highly bound
+Acne, edema, virilization in women (hoarseness, hirsutism, menstrual changes), injection site pain, low libido|Polycythemia, hypertension, low HDL, gynecomastia, testicular atrophy, infertility|MI, stroke, thrombosis, cardiomyopathy, peliosis hepatis
+Warfarin (higher INR); insulin and oral hypoglycemics (lower glucose); corticosteroids (edema)|Other anabolic steroids|-|-|Commonly stacked with testosterone in bodybuilding, adding erythrocytosis, hypertension and lipid effects
+Increase possible|-|-|-|-|-|Mood changes, aggression, depression|May lower glucose|Hemoglobin and hematocrit, lipids, liver tests, calcium|Edema, signs of virilization
+Contraindicated (virilization of a female fetus)|Not recommended|Premature epiphyseal closure; bone age monitoring historically|Prostate and cardiovascular monitoring|Edema risk; historically used in renal anemia|Caution
+Chronic supraphysiologic use|Erythrocytosis, hypertension, acne, aggression, testicular atrophy, gynecomastia|Polycythemia with thrombosis, cardiomyopathy, MI; prolonged hypogonadism after stopping|Supportive; phlebotomy for severe erythrocytosis|None|None
+Not given by EMS.|"Deca" is a classic bodybuilding steroid; in a young muscular patient with chest pain, stroke, hypertension or new heart failure, ask about anabolic steroid use.|Source, dose, other steroids, injection habits (shared needles).|Blood pressure, signs of clot, mood.|Erythrocytosis, VTE, hypertension, liver injury.|Assuming a current FDA-approved product exists; IV injection of oil.|Testosterone stacks, warfarin.|Nandrolone (19-nortestosterone) metabolite 19-norandrosterone is the classic doping test marker; it was replaced for renal anemia by erythropoietin.
+Nonmedical anabolic steroid use most often; rarely historical renal anemia treatment or compounded TRT add-on.|Muscle gain, joint pain relief in bodybuilding culture, or (historically) anemia of kidney disease.|Steroid stacks, needle sharing, chest pain, leg swelling, mood changes, libido.|Polycythemia with clots, MI, stroke, hypertension, cardiomyopathy, liver injury, injection abscess.|Prolonged hypogonadism after stopping: fatigue, low libido, erectile dysfunction and depression with suicidality risk.
+An injectable steroid that builds muscle and red blood cells; once used for anemia in kidney failure, now mostly misused.|Nandrolone decanoate is a Schedule III injectable 19-nortestosterone anabolic steroid formerly labeled for anemia of renal insufficiency, now discontinued as an approved U.S. product.|"Deca for Decades-old renal anemia": nandrolone was used for kidney anemia before erythropoietin.|19-nortestosterone ester; high anabolic-to-androgenic ratio.|Androgens stimulate renal erythropoietin and erythropoiesis; anabolic steroid misuse causes erythrocytosis, low HDL, testicular atrophy and cardiomyopathy.|Testosterone cypionate, epoetin alfa (current renal anemia treatment)|Oxandrolone, testosterone enanthate, oxymetholone|No reversal agent
+`);
+DB.add("dhea","DHEA (Dehydroepiandrosterone)","HM",`
+Dehydroepiandrosterone (DHEA)|Many dietary supplement brands (no FDA-approved oral DHEA drug); vaginal prasterone (Intrarosa) is the only FDA-approved DHEA drug|DHEA|NOT FDA APPROVED - dietary supplement (adrenal androgen precursor)|Endogenous adrenal C19 steroid prohormone converted to androgens and estrogens|Not controlled (explicitly excluded from the federal anabolic steroid definition)
+A hormone supplement sold over the counter that the body can turn into testosterone and estrogen.|Acts as a building block for sex hormones; levels naturally fall with age.|Taken for aging, energy, libido, bone health, fertility (IVF) and bodybuilding, mostly with weak evidence.
+Adrenal zona reticularis steroid made from pregnenolone by CYP17A1 (17-alpha-hydroxylase and 17,20-lyase); circulates mostly as the sulfate DHEA-S. Peripheral tissues convert it by 3-beta-hydroxysteroid dehydrogenase to androstenedione, then to testosterone and DHT or, via aromatase, to estrone and estradiol (intracrine action). Little direct receptor activity of its own.|Indirect: androgen and estrogen receptors after conversion|Prohormone (precursor)|Raises DHEA-S, androstenedione and testosterone (most noticeable in women), and estrogens; possible small bone and libido effects.
+None as an oral drug (dietary supplement; not FDA-approved)|Vaginal prasterone (Intrarosa) is FDA-approved for postmenopausal dyspareunia from vulvovaginal atrophy (see prasterone)|None|Adrenal insufficiency in women (androgen replacement, limited evidence), diminished ovarian reserve before IVF, aging, depression, lupus (all off-label, mixed evidence)
+Hormone-sensitive cancer (breast, prostate, ovarian, uterine); pregnancy and breastfeeding|PCOS or hyperandrogenism, liver disease, psychiatric illness (mania reported), competitive athletes subject to drug testing
+Supplements are not reviewed by FDA for quality or potency, and content can differ from the label. Androgenic effects in women (acne, hirsutism, scalp hair loss, voice deepening), possible lowering of HDL, mood effects including mania, theoretical growth of hormone-sensitive cancers. Prohibited at all times by WADA (S1 anabolic agent).|None (not FDA-labeled)|Interferes with hormone-level interpretation (raises DHEA-S and testosterone); DHEA-S also serves as an adrenal tumor and CAH lab marker.
+No FDA-approved oral dose. Supplement products and studies commonly use 25 to 50 mg PO daily (study doses up to 75 mg daily in IVF protocols); not a labeled dose|Not recommended; not studied|Not applicable|No FDA-established maximum|Daily (supplement use)|Not applicable|No data|Avoid in liver disease (limited data)
+PO|-|-|-|-|Capsule or tablet once daily (supplement)|-|-|Vaginal insert for prasterone (Intrarosa, separate monograph)|Once daily|Not applicable|Not applicable|Product content is not verified by FDA; athletes may test positive
+Hormone changes within days|About 1 to 2 h (DHEA); DHEA-S later|About 24 h (DHEA-S reservoir)|DHEA about 15 to 30 min; DHEA-S about 10 to 20 h|Sulfation (SULT2A1) and peripheral conversion to androgens and estrogens|Urine (as sulfate and glucuronide conjugates)|Mostly albumin bound (DHEA-S)
+Acne, oily skin, hirsutism, scalp hair loss, insomnia|Voice deepening in women, menstrual changes, lower HDL, mania or irritability, gynecomastia in men|None well documented; theoretical hormone-sensitive tumor growth
+Aromatase inhibitors, tamoxifen, antiandrogens and hormone therapy (opposing or additive hormonal effects); possible CYP3A4 inhibition (limited data)|Androgens, estrogens|None known|No specific interaction|DHEA plus testosterone or estrogen therapy adds hormonal effects; may interfere with breast or prostate cancer endocrine therapy
+-|-|-|-|-|-|Mood changes, mania|May affect insulin sensitivity (inconsistent)|DHEA-S, testosterone, estradiol, lipids|Signs of androgen excess
+Avoid|Avoid|Not recommended; precocious androgen effects possible|Commonly taken for aging with limited benefit|No data|Avoid in liver disease
+Large supplement doses|Acne, hirsutism, irritability|Not well characterized|Stop supplement; supportive|None|None
+Not given by EMS.|DHEA is a common supplement that patients may not list as a medication; it can push hormone levels and cause androgen side effects in women.|Ask specifically about supplements, dose, and why it is taken.|Not applicable|Androgenic side effects, mood elevation or mania.|Assuming it is a regulated, FDA-approved drug; ignoring it on a medication list.|Hormone-sensitive cancer therapy (aromatase inhibitors, antiandrogens).|DHEA-S is made almost only by the adrenal gland, so a very high DHEA-S points to an adrenal source of androgen excess (adrenal tumor or CAH) rather than the ovary.
+Concern about aging, low libido, fatigue, infertility (IVF), adrenal insufficiency, or bodybuilding.|Self-directed supplement use or clinician-recommended for fertility or adrenal insufficiency.|Other supplements and hormones, cancer history, mood changes, athletic drug testing.|Mood disturbance or mania; rarely hormone-sensitive disease progression.|No withdrawal; hormone levels return to baseline.
+A hormone supplement that the body turns into testosterone and estrogen.|DHEA is an adrenal prohormone sold in the U.S. as a dietary supplement with no FDA-approved oral dose; vaginal prasterone (Intrarosa) is the only FDA-approved DHEA drug.|DHEA = Doesn't Have an Endorsed Amount: no FDA dose, a prohormone that becomes testosterone and estrogen.|DHEA-S is the marker of adrenal androgen production.|DHEA-S is a marker of adrenal androgen excess (adrenal tumor, CAH, adrenarche).|Prasterone (Intrarosa, vaginal DHEA), androstenedione (controlled)|Prasterone, androstenedione|Antiandrogens (spironolactone)
+`);
+DB.add("gonadorelin","Gonadorelin","HM",`
+Gonadorelin (gonadorelin acetate or hydrochloride; synthetic native GnRH)|Factrel (diagnostic; discontinued); Lutrepulse (pulsatile pump; discontinued); compounded gonadorelin injection|Gonadorelin, GnRH|NOT FDA APPROVED as currently sold - compounded GnRH used off-label|Synthetic gonadotropin-releasing hormone (GnRH) decapeptide; GnRH receptor agonist|Not controlled
+A man-made copy of the brain's GnRH hormone; the approved diagnostic product is discontinued, and current use is mostly compounded injections.|Stimulates the pituitary to release LH and FSH when given in pulses; continuous exposure shuts the pituitary down instead.|Historically used to test pituitary function; now used off-label by men's health clinics with testosterone to try to keep testicular size and fertility.
+Decapeptide identical to hypothalamic GnRH; binds the GnRH receptor (Gq-coupled, phospholipase C, IP3 and calcium) on pituitary gonadotropes, causing LH and FSH release. Pulsatile dosing (about every 60 to 120 min) mimics physiology; continuous or long-acting exposure downregulates receptors and suppresses gonadotropins, the principle behind leuprolide.|GnRH receptor (pituitary gonadotropes)|Agonist|Acute LH and FSH rise within 15 to 45 min; with pulsatile pump therapy, ovulation or spermatogenesis in hypothalamic hypogonadism.
+None currently marketed (Factrel was FDA-approved for evaluating pituitary gonadotropin reserve; Lutrepulse for hypothalamic amenorrhea; both discontinued)|Compounded use with testosterone therapy to maintain testicular size or LH (off-label, limited evidence)|None|Hypogonadotropic hypogonadism; post-steroid axis recovery; hCG substitute after hCG became a biologic (off-label, unproven)
+Hypersensitivity to gonadorelin or GnRH analogs; pregnancy|Hormone-dependent tumors, ovarian cysts, conditions worsened by sex steroid changes
+Hypersensitivity and anaphylaxis (reported with GnRH peptides), injection site reactions, headache, flushing; ovarian hyperstimulation and multiple pregnancy with pulsatile fertility use. Compounded products are not FDA-approved and have not been evaluated for safety, effectiveness or quality.|None|Very short half-life means intermittent once-daily or few-times-weekly SC injections used by clinics do not reproduce physiologic pulsatile GnRH; evidence for testicular preservation is limited. Gonadorelin does not appear on FDA 503A Category 1 or Category 2 bulk substance lists as of 2026; regulatory status should be checked.
+No current FDA-approved dose. Historical Factrel diagnostic dose: 100 mcg SC or IV once, with LH sampled before and at timed intervals after; compounded regimens have no FDA-approved dose|Historical Factrel: 12 years and older 2 mcg/kg (max 100 mcg); under 12 not established|Historical pediatric 2 mcg/kg|100 mcg single diagnostic dose (historical label)|Single test dose (diagnostic)|Historical Lutrepulse: pulsatile IV pump every 90 min|No data|No data
+SQ, IV|Historical diagnostic bolus or pulsatile pump|-|-|-|-|Compounded products usually given SC|-|-|Bolus|Compounded lyophilized vials reconstituted with bacteriostatic water; strengths vary|Not applicable|Compounded product quality is not FDA-verified; refrigerate per compounder
+LH rise within minutes|LH peak about 15 to 45 min|LH effect returns to baseline within hours|About 2 to 10 min|Rapid enzymatic peptide hydrolysis in plasma and tissues|Renal (inactive fragments)|Low
+Injection site pain, headache, flushing, nausea|Hypersensitivity, ovarian hyperstimulation (pulsatile fertility use)|Anaphylaxis (rare)
+Drugs affecting gonadotropins (testosterone, estrogens, GnRH agonists or antagonists, dopamine antagonists) can alter test results|GnRH agonists and antagonists|None|No specific interaction|Compounded combinations with testosterone, anastrozole or enclomiphene are common and not well studied
+-|-|-|-|-|-|-|-|LH, FSH, testosterone or estradiol|Injection site
+Avoid|Avoid|Historical diagnostic use in puberty evaluation|No specific data|No data|No data
+Limited data|Flushing, headache, nausea|Not well characterized|Supportive|None|None
+Not given by EMS.|Gonadorelin is common on medication lists from telehealth testosterone clinics, often alongside testosterone and an aromatase inhibitor.|Compounding source, dose frequency, other hormones.|Allergic reaction after injection.|Hypersensitivity reaction.|Confusing gonadorelin (native GnRH, short-acting) with long-acting GnRH agonists such as leuprolide that suppress the axis.|None major.|Pulsatile GnRH stimulates LH and FSH, while continuous GnRH agonism (leuprolide) suppresses them: same receptor, opposite clinical effect depending on pattern.
+Testosterone therapy from a men's health clinic, male hypogonadism, or fertility concerns.|Attempt to preserve testicular size or fertility on TRT, or axis recovery after steroids.|Full hormone regimen, injection sites, fertility goals.|Anaphylaxis (rare); the TRT regimen it accompanies carries polycythemia, clot and blood pressure risks.|No withdrawal; testicular effects of concurrent testosterone may become more evident.
+A copy of the brain hormone that tells the pituitary to release LH and FSH.|Gonadorelin is synthetic native GnRH; FDA-approved Factrel (diagnostic) is discontinued, and current gonadorelin products are compounded and not FDA-approved.|Pulse it to Push LH; Continuous use Crashes LH (leuprolide).|Half-life only minutes; physiologic GnRH is pulsatile.|Pulsatile GnRH stimulates gonadotropins; continuous GnRH agonists (leuprolide) suppress them, used for prostate cancer and precocious puberty.|Leuprolide (long-acting GnRH agonist), hCG|Leuprolide, nafarelin, hCG|GnRH antagonists (degarelix, cetrorelix, elagolix)
+`);
+DB.add("fluoxymesterone","Fluoxymesterone","HM",`
+Fluoxymesterone|Androxy; Halotestin (both discontinued in the U.S.)|Fluoxymesterone, "Halo"|Androgen; anabolic steroid|17-alpha-methylated, 9-alpha-fluoro, 11-beta-hydroxy testosterone derivative; androgen receptor agonist|Schedule III
+A potent oral androgen tablet formerly used for low testosterone, delayed puberty and breast cancer; no longer marketed in the U.S.|Activates androgen receptors to produce male sex characteristics and strength.|Historically used for male hypogonadism, delayed puberty and palliation of breast cancer; seen today as a nonmedical strength steroid.
+17-alpha-methylated testosterone analog with 9-alpha-fluoro and 11-beta-hydroxy groups; binds the androgen receptor with strong androgenic activity; the 17-alpha-alkyl group resists first-pass hepatic metabolism for oral activity but causes hepatotoxicity. Not significantly aromatized; inhibits 11-beta-hydroxysteroid dehydrogenase type 2.|Androgen receptor|Agonist|Androgenic and anabolic effects, LH and FSH suppression, lower HDL, increased hematocrit.
+Historical label: replacement therapy in male hypogonadism (primary or hypogonadotropic); delayed puberty in males; palliation of androgen-responsive inoperable breast cancer in women|-|None|No current marketed U.S. product; nonmedical strength use
+Male breast or prostate cancer; pregnancy; serious cardiac, hepatic or renal disease; hypersensitivity (historical label)|Liver disease, edema-prone conditions, warfarin therapy, hypercalcemia
+Cholestatic hepatitis and jaundice, peliosis hepatis, hepatic neoplasms including hepatocellular carcinoma, hypercalcemia in breast cancer, edema, virilization in women, premature epiphyseal closure, lipid changes.|None|No longer marketed in the U.S. (Androxy listed as discontinued); historical labeling advised periodic liver tests and stopping for jaundice.
+Historical label: male hypogonadism 5 to 20 mg PO daily; palliation of breast cancer in women 10 to 40 mg PO daily in divided doses for at least 3 months; no currently marketed U.S. product|Historical label: delayed puberty 2.5 to 20 mg daily (usually 2.5 to 10 mg) for a limited time such as 4 to 6 months, with bone age X-rays|Not weight-based|40 mg per day (historical, breast cancer)|Daily|Not applicable|Contraindicated in serious renal disease (historical)|Contraindicated in serious hepatic disease (historical)
+PO|-|-|-|-|Tablets (historically 2, 5 and 10 mg)|-|-|-|Daily or divided doses|Not applicable|Not applicable|Historical: liver tests periodically; stop for jaundice or abnormal liver tests
+Days to weeks|About 1 to 2 h|Hours to a day|About 9 h|Hepatic|Urine|About 98%
+Acne, virilization in women, edema, priapism, gynecomastia|Cholestatic jaundice, hypercalcemia, low HDL, polycythemia|Peliosis hepatis, hepatic tumors with hemorrhage
+Warfarin (higher INR); insulin and oral hypoglycemics; corticosteroids (edema)|Other 17-alpha-alkylated steroids|-|Additive hepatotoxicity|Stacking with other oral steroids increases cholestatic liver injury
+Increase possible (sodium retention)|-|-|-|-|-|Aggression, mood|May lower glucose|Liver tests, lipids, hematocrit, calcium|Jaundice, edema
+Contraindicated (virilization of a female fetus)|Not recommended|Premature epiphyseal closure|Prostate and edema risk|Contraindicated in serious disease|Contraindicated in serious disease
+Chronic supratherapeutic use|Jaundice, aggression, hypertension, acne|Cholestatic liver failure, peliosis hepatis rupture|Stop drug; supportive; hepatology evaluation|None|None
+Not given by EMS.|Fluoxymesterone ("Halotestin") is used illicitly by strength athletes for aggression and strength; it is among the most hepatotoxic oral androgens.|Source, dose, other oral steroids, jaundice, abdominal pain.|Liver signs, blood pressure, mood.|Jaundice, abnormal liver tests.|Assuming a current approved product exists.|Other oral anabolic steroids; warfarin.|Like all 17-alpha-alkylated oral androgens, fluoxymesterone causes cholestatic hepatitis and peliosis hepatis.
+Nonmedical strength or bodybuilding steroid use; rarely historical male hypogonadism or breast cancer therapy.|Strength, aggression for competition, or historical hormone therapy.|Steroid stacks, liver symptoms, chest pain, mood.|Liver injury, intra-abdominal hemorrhage, MI, polycythemia.|Suppressed testosterone production after prolonged use: fatigue, low libido, depression.
+A strong oral male-hormone pill no longer sold in the U.S. that can injure the liver.|Fluoxymesterone is a discontinued oral 17-alpha-methylated Schedule III androgen formerly labeled for male hypogonadism, delayed puberty and breast cancer palliation.|FLUOXymesterone FLOODs the liver: oral 17-alpha-methyl steroids cause cholestasis and peliosis.|17-alpha-methylated, fluorinated oral androgen.|Oral 17-alpha-alkylated androgens cause cholestatic jaundice and peliosis hepatis.|Fluoxetine (sound-alike); methyltestosterone|Methyltestosterone, oxandrolone, oxymetholone|No reversal agent
+`);
+DB.add("testosterone-pellets","Testosterone Pellets","HM",`
+Testosterone (crystalline pellets for subcutaneous implantation)|Testopel; compounded testosterone pellets (not FDA-approved)|Testosterone pellets|Androgen|Unesterified testosterone implant; androgen receptor agonist|Schedule III
+Small testosterone pellets placed under the skin in an office procedure, lasting about 3 to 6 months.|Slowly release testosterone to replace low male hormone levels.|Used for low testosterone in males and to induce puberty in hypogonadal boys.
+Crystalline testosterone dissolves slowly from SC pellets (about one-third absorbed in month 1, one-fourth in month 2, one-sixth in month 3); testosterone binds the nuclear androgen receptor directly and after 5-alpha-reductase conversion to DHT, and is aromatized to estradiol; suppresses LH and FSH by negative feedback.|Androgen receptor|Agonist|Steady testosterone levels for months; male secondary sex characteristics, erythropoiesis; suppression of LH, FSH and spermatogenesis.
+Testosterone replacement in males with primary hypogonadism or hypogonadotropic hypogonadism (Testopel label)|Stimulation of puberty in carefully selected males with delayed puberty (label)|None|Women (compounded pellets for libido or menopause, not FDA-approved); masculinizing gender-affirming therapy
+Men with breast cancer or known or suspected prostate cancer; pregnancy; hypersensitivity (label)|Uncontrolled hypertension, polycythemia, untreated sleep apnea, severe BPH symptoms, desire for fertility, skin infection at the site
+Pellet extrusion, implant site infection and fibrosis, polycythemia, venous thromboembolism, blood pressure increases, abuse, edema, gynecomastia, sleep apnea, worsening BPH, accelerated bone maturation in children.|None|Dose cannot be removed or quickly reduced once implanted. Diagnosis is confirmed by morning serum testosterone below normal on at least two days. Compounded pellets (especially those marketed to women) are not FDA-approved.
+150 to 450 mg SC every 3 to 6 months (2 to 6 pellets of 75 mg); label guide: two 75 mg pellets for each 25 mg of weekly testosterone propionate requirement (label)|Delayed puberty: lower end of the range for a limited period such as 4 to 6 months, guided by bone age (label)|Not weight-based|450 mg (6 pellets) per implantation (label range)|Every 3 to 6 months|Not applicable|No specific adjustment; edema risk|No specific adjustment; edema risk
+SQ|-|-|-|-|-|Implanted SC, usually upper buttock or hip, through a trocar under local anesthesia|-|Office procedure|Single implantation|75 mg pellets, sterile, single use|Not applicable|Sterile technique; keep site dry and limit strenuous activity for several days to reduce extrusion
+Days|About 1 month|3 to 4 months, up to 6 months|Released over months (free testosterone half-life 10 to 100 min)|Hepatic to estradiol, DHT and 17-ketosteroids|Urine (about 90%) and feces|About 98% (SHBG and albumin)
+Implant site pain, bruising, acne, increased hematocrit|Pellet extrusion, site infection or abscess, polycythemia, VTE, hypertension|Pulmonary embolism, MI or stroke with polycythemia
+Warfarin (higher INR); insulin (lower glucose); corticosteroids (edema)|Other androgens|-|-|Testosterone plus anticoagulant raises bleeding risk
+Increase possible|-|-|-|-|-|Mood changes|Can lower glucose|Hematocrit, testosterone, PSA, lipids|Implant site, sleep apnea symptoms
+Contraindicated|Not recommended|Delayed puberty only; bone age monitoring|More prostate and cardiovascular monitoring|Edema risk|Edema risk
+Implants at supraphysiologic doses|Erythrocytosis, hypertension, acne, mood changes|Polycythemia with thrombosis|Supportive; phlebotomy; surgical pellet removal is difficult|None|None
+Not given by EMS.|Pellet effects last months and cannot be easily stopped, so polycythemia or hypertension may persist.|Date of last implantation, site problems, other hormones.|Implant site infection, blood pressure, signs of clot.|Site infection, extrusion, severe erythrocytosis.|Treating compounded female pellets as FDA-approved; missing a site abscess.|Warfarin; other androgens.|Testopel is the FDA-approved pellet, dosed at 150 to 450 mg every 3 to 6 months; hormone pellets for women are compounded and unapproved.
+Male hypogonadism, delayed puberty, gender-affirming therapy, or compounded pellets in women for menopause or libido.|Long-acting testosterone without frequent injections.|When pellets were placed, site redness or drainage, chest pain, leg swelling, mood.|DVT or PE, polycythemia, hypertension, implant site abscess.|Levels decline gradually over months, with return of hypogonadal symptoms.
+Tiny testosterone pellets put under the skin that release hormone for a few months.|Testosterone pellets (Testopel) are Schedule III SC implants of 75 mg each, dosed 150 to 450 mg every 3 to 6 months for male hypogonadism.|PELLETS = Placed Every few months; Extrusion and Local infection are the procedure risks.|75 mg per pellet; lasts 3 to 6 months.|Exogenous testosterone suppresses LH and FSH and raises hematocrit, regardless of route.|Estradiol pellets (compounded)|Testosterone cypionate, testosterone undecanoate|Leuprolide, finasteride, spironolactone (anti-androgen effects)
+`);
+DB.add("estradiol-valerate","Estradiol Valerate Injection","HM",`
+Estradiol valerate (injection)|Delestrogen; generic estradiol valerate injection|Estradiol valerate|Estrogen|Esterified estradiol in oil; estrogen receptor agonist|Not controlled
+A long-acting estrogen shot in oil given into muscle about every 4 weeks.|Replaces estrogen, treating menopausal hot flashes and low estrogen states, and lowers testosterone in men with prostate cancer.|Used for menopausal symptoms, low estrogen from ovarian failure or removal, and palliation of advanced prostate cancer.
+Valerate ester slows release from the IM oil depot; esterases free 17-beta-estradiol, which binds nuclear estrogen receptors alpha and beta and regulates transcription; suppresses hypothalamic GnRH and pituitary LH and FSH, lowering testicular testosterone in men; increases hepatic synthesis of clotting factors, SHBG and triglycerides.|Estrogen receptors (ER-alpha, ER-beta)|Agonist|Relief of vasomotor symptoms and vaginal atrophy, endometrial proliferation, LH and FSH suppression, increased clotting factors.
+Moderate to severe vasomotor symptoms and vulvar and vaginal atrophy of menopause; hypoestrogenism due to hypogonadism, castration or primary ovarian failure; palliation of advanced androgen-dependent prostate cancer (label)|-|None|Feminizing gender-affirming hormone therapy (off-label, IM or SC)
+Undiagnosed abnormal genital bleeding; known, suspected or history of breast cancer; estrogen-dependent neoplasia; active or history of DVT or PE; active or recent arterial thromboembolic disease (stroke, MI); liver dysfunction; known protein C, protein S or antithrombin deficiency or thrombophilia; pregnancy (label)|Hypertension, smoking, migraine with aura, hypertriglyceridemia, gallbladder disease, hypocalcemia, hereditary angioedema
+Endometrial cancer with unopposed estrogen (add a progestin if uterus present), stroke and DVT, breast cancer, dementia in women 65 and older (WHI data), gallbladder disease, hypercalcemia in breast cancer with bone metastases, visual abnormalities, elevated triglycerides and pancreatitis, fluid retention.|Historically boxed: endometrial cancer, cardiovascular disorders, breast cancer and probable dementia. FDA began removing the cardiovascular, breast cancer and dementia boxed language from menopausal hormone therapy labels in Nov 2025, with labels updating product by product in 2026; check the current label for this product.|Use the lowest effective dose for the shortest duration consistent with goals; reassess every 3 to 6 months. Evaluate abnormal vaginal bleeding.
+Vasomotor symptoms or vulvovaginal atrophy, and hypoestrogenism from hypogonadism, castration or primary ovarian failure: 10 to 20 mg IM every 4 weeks; prostate cancer palliation: 30 mg or more IM every 1 to 2 weeks (label)|Not indicated in children (label)|Not weight-based|Label dosing ranges above; no single fixed maximum|Every 4 weeks (every 1 to 2 weeks for prostate cancer)|Not applicable|No specific adjustment|Contraindicated in liver dysfunction
+IM|Not for IV use|-|Deep upper outer gluteal IM with a dry needle and syringe|-|-|SC use is off-label (gender-affirming practice)|-|-|Slow IM injection of oil|10 mg/mL (castor oil), 20 mg/mL and 40 mg/mL (castor oil with benzyl benzoate and benzyl alcohol)|Not applicable|Concentration errors are possible between 10, 20 and 40 mg/mL vials; a wet needle can cloud the solution
+Days|About 2 days|About 2 to 3 weeks|Estradiol itself about 1 to 2 h; ester depot releases over weeks|Hepatic (CYP3A4) to estrone and estriol; enterohepatic recirculation|Urine (glucuronide and sulfate conjugates)|About 98% (SHBG and albumin)
+Breast tenderness, nausea, headache, bloating, irregular bleeding, injection site pain|DVT, hypertension, gallbladder disease, hypertriglyceridemia, endometrial hyperplasia|PE, stroke, MI, endometrial cancer, breast cancer
+CYP3A4 inducers (rifampin, carbamazepine, St John's wort lower levels) and inhibitors (raise levels); thyroid hormone (higher dose needed); lamotrigine (lower levels)|Other estrogens; tranexamic acid with caution (clot risk)|Grapefruit may raise levels|No specific interaction|Estrogen plus smoking increases clot and cardiovascular risk
+Periodic checks|-|-|-|-|Dyspnea or chest pain (PE)|Stroke symptoms, migraine changes|-|Estradiol level (gender-affirming therapy), lipids, liver tests, testosterone in prostate cancer|Breast and pelvic exams, abnormal bleeding
+Contraindicated|Can reduce milk quantity and quality; not recommended|Not indicated|Higher stroke, dementia and breast cancer risk in women over 65 (WHI)|No specific adjustment|Contraindicated in liver dysfunction
+Large doses|Nausea, vomiting, breast tenderness, withdrawal bleeding|Not usually life-threatening acutely|Supportive|None|None
+Not given by EMS.|Estrogen shots raise clot risk; consider PE or stroke in a patient on estradiol injections, including transgender women.|Dose, interval, last injection, smoking, clot history.|Leg swelling, chest pain, neurologic deficits.|Clot, stroke, abnormal bleeding.|Mixing up 10, 20 and 40 mg/mL vials; confusing valerate (every 4 weeks label, shorter acting) with cypionate.|Smoking; other estrogens.|Estrogens raise hepatic clotting factor and SHBG production; injections avoid first-pass effect but still raise VTE risk at high doses.
+Menopause, primary ovarian insufficiency, oophorectomy, advanced prostate cancer, or feminizing transgender hormone therapy.|Estrogen replacement or gender-affirming therapy.|Gender-affirming therapy (ask respectfully), other hormones (spironolactone, progestins), smoking, clot history.|DVT, PE, stroke, MI, gallbladder disease.|Hot flashes and return of symptoms; in gender-affirming therapy, mood effects and return of testosterone effects over weeks.
+An estrogen shot in oil given into muscle about once a month.|Estradiol valerate (Delestrogen) is an IM estrogen ester dosed 10 to 20 mg every 4 weeks for menopause and hypoestrogenism, and 30 mg or more every 1 to 2 weeks for prostate cancer palliation.|VALerate is the VALuable monthly shot for menopause and also used to chemically castrate prostate cancer.|10 to 20 mg IM every 4 weeks.|Unopposed estrogen in a woman with a uterus causes endometrial hyperplasia and cancer; add a progestin.|Estradiol cypionate (Depo-Estradiol, longer acting, lower mg dose)|Estradiol cypionate, conjugated estrogens|Tamoxifen, aromatase inhibitors (oppose estrogen effects)
+`);
+DB.add("estradiol-cypionate","Estradiol Cypionate Injection","HM",`
+Estradiol cypionate (injection)|Depo-Estradiol|Estradiol cypionate, "Depo E"|Estrogen|Esterified estradiol in cottonseed oil; estrogen receptor agonist|Not controlled
+A long-acting estrogen shot in cottonseed oil given into muscle every 3 to 4 weeks.|Replaces estrogen to treat menopausal symptoms and low estrogen from underactive ovaries.|Used for menopausal hot flashes and vaginal atrophy and for hypoestrogenism due to hypogonadism.
+Cypionate ester is released slowly from the IM oil depot and hydrolyzed to 17-beta-estradiol, which binds estrogen receptors alpha and beta to regulate gene transcription; suppresses hypothalamic GnRH and pituitary LH and FSH; increases hepatic clotting factors, SHBG and triglycerides.|Estrogen receptors (ER-alpha, ER-beta)|Agonist|Relief of vasomotor symptoms and atrophy, endometrial proliferation, gonadotropin suppression, increased clotting factors.
+Moderate to severe vasomotor symptoms and vulvar and vaginal atrophy of menopause; hypoestrogenism due to hypogonadism (label)|-|None|Feminizing gender-affirming hormone therapy (off-label, IM or SC)
+Undiagnosed abnormal genital bleeding; known, suspected or history of breast cancer; estrogen-dependent neoplasia; active or history of DVT or PE; active or recent arterial thromboembolic disease; liver dysfunction; thrombophilia; pregnancy (label)|Hypertension, smoking, migraine with aura, hypertriglyceridemia, gallbladder disease
+Endometrial cancer with unopposed estrogen, stroke and DVT, breast cancer, probable dementia in older women, gallbladder disease, hypertriglyceridemia, fluid retention, hypercalcemia in breast cancer with bone metastases.|Historically boxed: endometrial cancer, cardiovascular disorders, breast cancer and probable dementia. FDA began removing the cardiovascular, breast cancer and dementia boxed language from menopausal hormone therapy labels in Nov 2025, with product labels updating in 2026; check the current Depo-Estradiol label.|Add a progestin in women with a uterus; reassess need every 3 to 6 months.
+Vasomotor symptoms and vulvovaginal atrophy: 1 to 5 mg IM every 3 to 4 weeks; hypoestrogenism due to hypogonadism: 1.5 to 2 mg IM monthly (label)|Not indicated in children|Not weight-based|5 mg per dose (label, menopause)|Every 3 to 4 weeks|Not applicable|No specific adjustment|Contraindicated in liver dysfunction
+IM|Not for IV use|-|Deep IM injection|-|-|SC use is off-label (gender-affirming practice)|-|-|Slow IM injection of oil|5 mg/mL in cottonseed oil with chlorobutanol|Not applicable|IM use only per label; shake well
+Days|About 4 to 5 days|About 3 to 4 weeks (longer than valerate)|Estradiol about 1 to 2 h; ester depot releases over weeks|Hepatic (CYP3A4) to estrone and estriol; enterohepatic recirculation|Urine (conjugates)|About 98% (SHBG and albumin)
+Breast tenderness, nausea, headache, bloating, irregular bleeding|DVT, hypertension, gallbladder disease, hypertriglyceridemia, endometrial hyperplasia|PE, stroke, MI, endometrial and breast cancer
+CYP3A4 inducers and inhibitors; thyroid hormone (higher dose needed); lamotrigine (lower levels)|Other estrogens|Grapefruit may raise levels|No specific interaction|Estrogen plus smoking increases clot and cardiovascular risk
+Periodic checks|-|-|-|-|Dyspnea or chest pain (PE)|Stroke symptoms|-|Estradiol level (gender-affirming therapy), lipids, liver tests|Breast and pelvic exams, abnormal bleeding
+Contraindicated|Not recommended|Not indicated|Higher stroke and dementia risk in women over 65|No specific adjustment|Contraindicated in liver dysfunction
+Large doses|Nausea, breast tenderness, withdrawal bleeding|Not usually life-threatening acutely|Supportive|None|None
+Not given by EMS.|Estradiol cypionate is used in menopause and in feminizing gender-affirming therapy; clot risk matters for chest pain, dyspnea or stroke symptoms.|Dose, last injection, smoking, clot history.|Leg swelling, chest pain, neurologic deficits.|Clot, stroke, abnormal bleeding.|Confusing cypionate (5 mg/mL, 1 to 5 mg dose) with valerate (10 to 40 mg/mL, 10 to 20 mg dose); confusing Depo-Estradiol with Depo-Provera or Depo-Testosterone.|Smoking; other estrogens.|Same estradiol molecule as other estrogen products; the ester only changes how long the depot lasts.
+Menopause, hypogonadism, or feminizing transgender hormone therapy.|Estrogen replacement or gender-affirming therapy.|Gender-affirming therapy (ask respectfully), other hormones, smoking, clot history.|DVT, PE, stroke, MI.|Return of vasomotor symptoms; in gender-affirming therapy, return of testosterone effects over weeks.
+An estrogen shot given into muscle about once a month.|Estradiol cypionate (Depo-Estradiol) is an IM estrogen ester dosed 1 to 5 mg every 3 to 4 weeks for menopause and 1.5 to 2 mg monthly for hypogonadism.|CYPionate is the Cottonseed oil, Your Prolonged option: longer lasting and lower mg than valerate.|1 to 5 mg IM every 3 to 4 weeks.|Unopposed estrogen causes endometrial hyperplasia and cancer; add a progestin when the uterus is intact.|Estradiol valerate (Delestrogen), Depo-Provera (medroxyprogesterone), Depo-Testosterone (testosterone cypionate)|Estradiol valerate, estradiol oral|Tamoxifen, aromatase inhibitors (oppose estrogen effects)
+`);
+
+;
 DB.add("digoxin","Digoxin","HM ED CA",`
 Digoxin|Lanoxin; Digitek; Digox|Dig, Lanoxin|Antiarrhythmic; inotrope (cardiac glycoside)|Cardiac glycoside (digitalis glycoside); Na+/K+-ATPase inhibitor|Not controlled
 An old heart medicine made from the foxglove plant.|Makes the heart squeeze more strongly and slows conduction through the AV node so the heart rate drops.|Control ventricular rate in atrial fibrillation and improve symptoms in heart failure with reduced ejection fraction.
@@ -27624,518 +27836,4 @@ DB.FAM.push(
     members: [
       { id: "sitagliptin", key: "Prototype; renal adjust", diff: "First DPP-4 inhibitor; once daily, dose reduced as kidney function declines. Heart-failure neutral in its outcome trial; commonly combined with metformin." }
     ] }
-);
-
-;
-DB.FAM = DB.FAM || [];
-DB.FAM.push(
-
-  /* ===================== BRAIN & MOOD ===================== */
-
-  { id: "ssris", name: "SSRIs", clue: "-oxetine, -alopram, -traline", grp: "Brain & mood",
-    share: "All SSRIs block the serotonin reuptake transporter, raising serotonin in the synapse; full antidepressant effect takes about 4-6 weeks. Shared side effects include nausea, sexual dysfunction, insomnia or drowsiness, hyponatremia (SIADH, especially in older adults) and increased bleeding risk with NSAIDs or anticoagulants. All carry a boxed warning for suicidal thinking in patients under 25 and can cause serotonin syndrome with other serotonergic drugs (never combine with MAOIs).",
-    tips: [
-      "Half-life: fluoxetine is longest (weeks with its metabolite) so it rarely causes discontinuation symptoms; paroxetine is the worst for discontinuation.",
-      "QT: citalopram has a dose-dependent QT warning (max 40 mg/day, 20 mg if over 60).",
-      "Interactions: fluoxetine and paroxetine strongly inhibit CYP2D6; escitalopram and sertraline have the fewest interactions.",
-      "Paroxetine is the most anticholinergic and sedating and is avoided in pregnancy (cardiac defects).",
-      "Escitalopram is simply the active S-isomer of citalopram."
-    ],
-    members: [
-      { id: "fluoxetine", key: "Longest half-life", diff: "Active metabolite norfluoxetine lasts weeks, so missed doses and stopping are gentle, but a 5-week washout is needed before an MAOI. Activating (take in the morning) and a strong CYP2D6 inhibitor; approved for children and adolescents." },
-      { id: "sertraline", key: "Safe workhorse, GI upset", diff: "Most likely to cause diarrhea and GI upset; few interactions at usual doses. Often chosen after heart attack and during breastfeeding." },
-      { id: "paroxetine", key: "Anticholinergic, worst withdrawal", diff: "Most anticholinergic, sedating and weight-promoting SSRI with the harshest discontinuation syndrome due to its short half-life. Strong CYP2D6 inhibitor and avoided in pregnancy." },
-      { id: "citalopram", key: "QT prolongation", diff: "Causes dose-dependent QT prolongation, so the dose is capped (40 mg, or 20 mg in patients over 60 or with liver disease). Otherwise few drug interactions." },
-      { id: "escitalopram", key: "Cleanest S-isomer", diff: "The active S-enantiomer of citalopram, so it works at half the dose with less QT effect. Among the best tolerated with the fewest CYP interactions." }
-    ] },
-
-  { id: "snris", name: "SNRIs", clue: "-faxine, duloxetine", grp: "Brain & mood",
-    share: "SNRIs block reuptake of both serotonin and norepinephrine, treating depression and anxiety and helping chronic pain. They share SSRI effects (nausea, sexual dysfunction, hyponatremia, bleeding risk, serotonin syndrome, boxed suicidality warning) plus noradrenergic effects such as sweating, increased blood pressure and heart rate. Stopping abruptly causes discontinuation symptoms (dizziness, irritability, electric-shock sensations).",
-    tips: [
-      "Venlafaxine raises blood pressure the most (dose-related) and has the worst discontinuation syndrome.",
-      "Duloxetine has the broadest pain labeling (diabetic neuropathy, fibromyalgia, chronic musculoskeletal pain) but is avoided in liver disease and heavy alcohol use.",
-      "Desvenlafaxine is venlafaxine's active metabolite and bypasses CYP2D6.",
-      "Check blood pressure at baseline and during therapy for all SNRIs."
-    ],
-    members: [
-      { id: "venlafaxine", key: "BP rise, harsh withdrawal", diff: "Acts mostly like an SSRI at low doses and adds norepinephrine effect at higher doses, so blood pressure rises with dose. Short half-life means a harsh discontinuation syndrome; usually given as extended-release." },
-      { id: "desvenlafaxine", key: "Active metabolite, no 2D6", diff: "The active metabolite of venlafaxine, so it skips CYP2D6 metabolism and has few interactions. Mainly renally cleared, so the dose is limited in kidney disease." },
-      { id: "duloxetine", key: "Pain specialist, liver caution", diff: "Approved for diabetic neuropathic pain, fibromyalgia and chronic musculoskeletal pain as well as depression and anxiety. Avoid in liver disease, heavy alcohol use and severe kidney disease; moderate CYP2D6 inhibitor." }
-    ] },
-
-  { id: "tcas", name: "Tricyclic antidepressants", clue: "-triptyline, -ipramine, -epin", grp: "Brain & mood",
-    share: "TCAs block serotonin and norepinephrine reuptake but also block muscarinic, histamine and alpha-1 receptors and cardiac sodium channels. That causes dry mouth, constipation, urinary retention, sedation, orthostatic hypotension and weight gain. Overdose is deadly: wide QRS, arrhythmias, seizures and coma, treated with sodium bicarbonate.",
-    tips: [
-      "Tertiary amines (amitriptyline, doxepin) are more anticholinergic and sedating than secondary amines (nortriptyline).",
-      "Today they are used more for neuropathic pain, migraine prevention and sleep than for depression.",
-      "Watch the ECG: QRS over 100 ms in overdose means give sodium bicarbonate.",
-      "All are on the Beers list for older adults because of anticholinergic and fall risk."
-    ],
-    members: [
-      { id: "amitriptyline", key: "Most anticholinergic, pain", diff: "Tertiary amine with strong anticholinergic and sedating effects. Used at low bedtime doses for neuropathic pain, fibromyalgia and migraine prevention." },
-      { id: "nortriptyline", key: "Gentler secondary amine", diff: "The active metabolite of amitriptyline with less anticholinergic effect and less orthostatic hypotension, so it is the TCA preferred in older adults. Has a defined therapeutic blood level window." },
-      { id: "doxepin", key: "Low-dose sleep aid", diff: "At very low doses (3-6 mg) it acts almost purely as an H1 blocker and is approved for insomnia with sleep maintenance problems. Also used topically for itching." }
-    ] },
-
-  { id: "benzos", name: "Benzodiazepines", clue: "-azepam, -azolam", grp: "Brain & mood",
-    share: "Benzodiazepines enhance GABA-A receptor activity by increasing how often the chloride channel opens, causing anxiolysis, sedation, amnesia, muscle relaxation and anticonvulsant effects. Shared risks are respiratory depression (especially with opioids or alcohol), falls and confusion in older adults, dependence and dangerous withdrawal seizures if stopped abruptly. Flumazenil reverses them but can provoke seizures in chronic users.",
-    tips: [
-      "LOT (lorazepam, oxazepam, temazepam) skip oxidative liver metabolism, so they are preferred in liver disease and older adults.",
-      "Onset/duration: midazolam is fastest and shortest; diazepam is fast-onset but very long-lasting due to active metabolites.",
-      "Status epilepticus: IV lorazepam first-line; IM midazolam or rectal/intranasal diazepam if no IV.",
-      "Alprazolam's short half-life causes interdose anxiety and high misuse potential."
-    ],
-    members: [
-      { id: "alprazolam", key: "Short-acting panic drug", diff: "High-potency, short-acting oral anxiolytic used for panic disorder. Rapid relief but rebound anxiety between doses and high misuse and withdrawal risk; CYP3A4 substrate." },
-      { id: "diazepam", key: "Long-acting, active metabolites", diff: "Fast onset but very long half-life from active metabolites, which makes it useful for alcohol withdrawal and muscle spasm but risky in older adults. Rectal and intranasal forms treat seizure clusters." },
-      { id: "lorazepam", key: "Status epilepticus, LOT", diff: "First-line IV drug for status epilepticus and common for alcohol withdrawal and agitation. Glucuronidated with no active metabolites, so safer in liver disease; IV form contains propylene glycol that can accumulate." },
-      { id: "midazolam", key: "Fastest, procedural sedation", diff: "Water-soluble with the fastest onset and shortest duration, given IV, IM or intranasally for procedural sedation, seizures and ICU sedation. CYP3A4 substrate; accumulates with prolonged infusions and in kidney failure." },
-      { id: "temazepam", key: "Bedtime hypnotic", diff: "Used mainly for short-term insomnia. An LOT drug with no active metabolites, but still causes next-day drowsiness and falls in older adults." }
-    ] },
-
-  { id: "opioids", name: "Opioid analgesics", clue: "-morphone, -codone, fentanyl", grp: "Brain & mood",
-    share: "Opioids activate mu receptors in the brain and spinal cord to relieve pain. Shared effects are respiratory depression (the main cause of death), sedation, constipation (no tolerance develops), nausea, pinpoint pupils, itching and urinary retention, along with tolerance, dependence and misuse. Naloxone reverses them, and combining them with benzodiazepines or alcohol multiplies the overdose risk.",
-    tips: [
-      "Potency: fentanyl is roughly 100 times morphine; hydromorphone about 5-7 times morphine. Look-alike dosing errors are common.",
-      "Kidney failure: morphine's active metabolites build up; fentanyl and hydromorphone (with care) are preferred.",
-      "Methadone and buprenorphine are also used to treat opioid use disorder; methadone prolongs QT.",
-      "Tramadol adds serotonin/norepinephrine effects, lowering the seizure threshold and causing serotonin syndrome.",
-      "Buprenorphine is a partial agonist with a ceiling on respiratory depression and can precipitate withdrawal."
-    ],
-    members: [
-      { id: "morphine", key: "Reference standard", diff: "The benchmark all opioids are compared to. Releases histamine (itching, flushing, hypotension) and its active metabolites accumulate in kidney failure." },
-      { id: "hydromorphone", key: "Potent, renal-friendlier", diff: "About 5-7 times more potent than morphine, so mix-ups with morphine cause overdoses. Lacks morphine's problematic metabolite and is often used in kidney impairment with dose reduction." },
-      { id: "fentanyl", key: "100x potency, fast", diff: "Very potent and lipophilic with rapid onset and short IV duration and little histamine release, so it is favored in hemodynamically unstable patients. Transdermal patches are only for opioid-tolerant patients; heat speeds absorption, and rapid IV doses can cause chest wall rigidity." },
-      { id: "oxycodone", key: "Oral mainstay", diff: "Potent oral opioid with good bioavailability, available alone or combined with acetaminophen. CYP3A4 inhibitors raise its levels and overdose risk." },
-      { id: "hydrocodone", key: "Combo with acetaminophen", diff: "Mostly given combined with acetaminophen, so the acetaminophen limit often caps the dose. Also has antitussive use." },
-      { id: "methadone", key: "Long, QT, OUD therapy", diff: "Long and highly variable half-life means it accumulates for days, so dose changes are slow. Prolongs QT, has many CYP interactions, and adds NMDA blockade; used for both pain and opioid use disorder." },
-      { id: "buprenorphine", key: "Partial agonist, ceiling", diff: "High-affinity partial mu agonist with a ceiling on respiratory depression, used for opioid use disorder and pain. Can precipitate withdrawal if given while full agonists are on board, and is hard to displace with standard naloxone doses." },
-      { id: "tramadol", key: "Weak opioid plus SNRI", diff: "Weak mu agonist that also blocks serotonin and norepinephrine reuptake, so it can cause seizures and serotonin syndrome. A CYP2D6 prodrug, so effect varies with genetics; can cause hypoglycemia and hyponatremia." }
-    ] },
-
-  { id: "antipsychotics", name: "Antipsychotics", clue: "-peridol, -azine, -apine, -idone", grp: "Brain & mood",
-    share: "All antipsychotics block dopamine D2 receptors; atypicals also block 5-HT2A, which lowers the risk of movement side effects. Typicals cause more extrapyramidal symptoms (dystonia, akathisia, parkinsonism, tardive dyskinesia) and hyperprolactinemia, while atypicals cause more weight gain, diabetes and high lipids. All can prolong QT and cause neuroleptic malignant syndrome, and all carry a boxed warning for increased death in older adults with dementia.",
-    tips: [
-      "High-potency typicals (haloperidol) = more EPS; low-potency typicals (chlorpromazine) = more sedation, anticholinergic effects and hypotension.",
-      "Metabolic risk: clozapine and olanzapine worst; aripiprazole and ziprasidone best.",
-      "Clozapine is the only drug proven for treatment-resistant schizophrenia but needs ANC monitoring for agranulocytosis.",
-      "Prolactin and EPS among atypicals: risperidone highest.",
-      "Quetiapine (or clozapine) is preferred when psychosis occurs in Parkinson disease."
-    ],
-    members: [
-      { id: "haloperidol", key: "High-potency typical, EPS", diff: "High-potency first-generation agent used IV/IM for acute agitation and delirium and as a long-acting decanoate injection. Highest EPS risk; IV use prolongs QT, so monitor the ECG." },
-      { id: "chlorpromazine", key: "Low-potency typical, sedating", diff: "Low-potency phenothiazine: less EPS but marked sedation, anticholinergic effects and orthostatic hypotension. Also used for intractable hiccups and nausea." },
-      { id: "droperidol", key: "ED agitation, antiemetic", diff: "A butyrophenone like haloperidol but used mainly for nausea and rapid ED sedation of agitation. Carries a boxed warning for QT prolongation." },
-      { id: "prochlorperazine", key: "Used as antiemetic", diff: "A phenothiazine rarely used for psychosis today; mainly treats nausea and migraine. Causes akathisia and acute dystonia, especially IV." },
-      { id: "clozapine", key: "Treatment-resistant, agranulocytosis", diff: "Most effective antipsychotic and reduces suicide, reserved for treatment-resistant schizophrenia. Risks include agranulocytosis (ANC monitoring), myocarditis, seizures, severe constipation, drooling and major weight gain." },
-      { id: "olanzapine", key: "Most weight gain", diff: "Highly effective and sedating with the greatest weight gain and diabetes risk after clozapine. Available as an oral dissolving tablet and IM, and also used for chemo-induced nausea." },
-      { id: "quetiapine", key: "Sedating, low EPS", diff: "Very sedating with almost no EPS, so it is preferred in Parkinson disease and Lewy body dementia. Used for bipolar depression; causes orthostasis and metabolic effects." },
-      { id: "risperidone", key: "Most prolactin among atypicals", diff: "Behaves like a typical at higher doses, with the most EPS and prolactin elevation (gynecomastia, galactorrhea) of the atypicals. Available as long-acting injections." },
-      { id: "aripiprazole", key: "D2 partial agonist", diff: "A partial D2 agonist, so prolactin often falls and metabolic effects are mild. Akathisia is the classic side effect; also an add-on for depression." },
-      { id: "ziprasidone", key: "QT, take with food", diff: "Weight-neutral but prolongs QT more than most atypicals. Must be taken with a meal (about 500 calories) to be absorbed." }
-    ] },
-
-  { id: "antiseizure", name: "Antiseizure medications", clue: "-toin, -trigine, -racetam, -bapentin", grp: "Brain & mood",
-    share: "Antiseizure medications calm overactive neurons, mostly by blocking sodium or calcium channels or by boosting GABA or reducing glutamate. Shared effects include dizziness, drowsiness, ataxia, a class warning for suicidal thoughts, and breakthrough seizures if stopped abruptly. Many interact strongly through liver enzymes, and several are teratogenic.",
-    tips: [
-      "Enzyme inducers (phenytoin, carbamazepine, phenobarbital) lower levels of many drugs, including oral contraceptives and warfarin; valproate is an inhibitor.",
-      "Teratogenicity: valproate is worst (neural tube defects, lower IQ); lamotrigine and levetiracetam are preferred in pregnancy.",
-      "Rash/SJS: carbamazepine (HLA-B*1502) and lamotrigine (titrate slowly).",
-      "Levetiracetam and lacosamide are easy IV options with few interactions and no routine levels.",
-      "Ethosuximide is for absence seizures only; carbamazepine and phenytoin can worsen absence seizures."
-    ],
-    members: [
-      { id: "phenytoin", key: "Zero-order, narrow index", diff: "Zero-order kinetics, so small dose increases cause large level jumps; correct levels for low albumin. Causes gingival hyperplasia, hirsutism and nystagmus/ataxia; IV must be infused slowly (hypotension, arrhythmia, purple glove syndrome)." },
-      { id: "fosphenytoin", key: "Safer IV prodrug", diff: "Water-soluble prodrug of phenytoin dosed in phenytoin equivalents (PE). Can be infused faster or given IM with less tissue injury, but still needs cardiac monitoring." },
-      { id: "carbamazepine", key: "Autoinducer, HLA-B*1502", diff: "Induces its own metabolism and many others. Risks include SJS/TEN (screen Asian patients for HLA-B*1502), hyponatremia and aplastic anemia; also first-line for trigeminal neuralgia." },
-      { id: "valproic-acid", key: "Broad-spectrum, most teratogenic", diff: "Covers nearly every seizure type and bipolar disorder. Boxed warnings for hepatotoxicity, pancreatitis and major birth defects; also causes hyperammonemia, thrombocytopenia and weight gain, and inhibits lamotrigine metabolism." },
-      { id: "lamotrigine", key: "Slow titration, rash", diff: "Must be titrated slowly to avoid SJS, with even slower titration with valproate. Useful for bipolar depression and relatively safe in pregnancy; estrogen lowers its levels." },
-      { id: "levetiracetam", key: "Few interactions, mood effects", diff: "Renally cleared with almost no drug interactions and no need for levels, making it a go-to IV and oral choice. Main problem is irritability, anger or depression." },
-      { id: "lacosamide", key: "IV option, PR prolongation", diff: "Enhances slow sodium channel inactivation and is available IV. Can prolong the PR interval, so check an ECG in patients with conduction disease." },
-      { id: "ethosuximide", key: "Absence seizures only", diff: "Blocks T-type calcium channels in the thalamus and treats only absence seizures. GI upset is common." },
-      { id: "topiramate", key: "Weight loss, kidney stones", diff: "Causes weight loss, cognitive slowing and word-finding problems, kidney stones, metabolic acidosis and acute angle-closure glaucoma. Also used for migraine prevention." },
-      { id: "gabapentin", key: "Neuropathic pain, renal", diff: "Binds the alpha-2-delta calcium channel subunit; mostly used for neuropathic pain. Renally cleared with no liver interactions, but absorption is saturable and it adds to opioid respiratory depression." },
-      { id: "pregabalin", key: "Predictable gabapentin cousin", diff: "Same mechanism as gabapentin but with linear, predictable absorption and higher potency. Schedule V controlled; approved for fibromyalgia and neuropathic pain; causes edema and weight gain." },
-      { id: "phenobarbital", key: "Barbiturate, strong inducer", diff: "A barbiturate with a very long half-life that directly opens GABA-A chloride channels. Used for neonatal seizures, refractory status and alcohol withdrawal; causes heavy sedation and respiratory depression and induces many enzymes." }
-    ] },
-
-  { id: "stimulants", name: "ADHD medications", clue: "-phenidate, -amfetamine", grp: "Brain & mood",
-    share: "Stimulants increase dopamine and norepinephrine in the prefrontal cortex to improve attention and impulse control. Shared effects include decreased appetite, insomnia, weight loss, raised heart rate and blood pressure, and misuse potential (Schedule II). Non-stimulants work more slowly but are not controlled substances.",
-    tips: [
-      "Methylphenidate-type drugs block reuptake; amphetamines also force dopamine release.",
-      "Lisdexamfetamine is a prodrug with smoother action and less misuse potential.",
-      "Atomoxetine is not controlled, takes weeks to work and carries a suicidality warning.",
-      "Clonidine helps tics, sleep and hyperactivity but must not be stopped abruptly (rebound hypertension).",
-      "Screen for heart disease and family history of sudden cardiac death before stimulants."
-    ],
-    members: [
-      { id: "methylphenidate", key: "Reuptake blocker, many forms", diff: "Blocks dopamine and norepinephrine reuptake and comes in many short- and long-acting forms, including a patch. Often tried first in children." },
-      { id: "dexmethylphenidate", key: "Active isomer, half dose", diff: "The active d-isomer of methylphenidate, so it works at about half the dose. Same effects and cautions as methylphenidate." },
-      { id: "amphetamine-dextroamphetamine", key: "Releaser, mixed salts", diff: "Releases dopamine and norepinephrine as well as blocking reuptake, so it is more potent. Higher misuse potential; also used for narcolepsy." },
-      { id: "lisdexamfetamine", key: "Prodrug, smoother, binge eating", diff: "Inactive until red blood cell enzymes cleave off lysine, giving a smooth all-day effect and less misuse by snorting or injecting. Also approved for binge eating disorder." },
-      { id: "atomoxetine", key: "Non-stimulant NE reuptake", diff: "Selective norepinephrine reuptake inhibitor, not controlled, and useful with substance use or anxiety. Takes 2-4 weeks to work; boxed warning for suicidal thoughts; CYP2D6 substrate." },
-      { id: "clonidine", key: "Alpha-2 agonist, tics/sleep", diff: "Extended-release clonidine is a non-stimulant that calms hyperactivity and helps tics and insomnia. Causes sedation and hypotension; taper to avoid rebound hypertension." }
-    ] },
-
-  { id: "parkinsons", name: "Parkinson disease medications", clue: "-dopa, -pexole, -inirole", grp: "Brain & mood",
-    share: "Parkinson drugs restore dopamine signaling (by supplying dopamine, mimicking it or slowing its breakdown) or rebalance acetylcholine. Shared dopaminergic effects include nausea, orthostatic hypotension, hallucinations and confusion, and dyskinesias. Never combine with dopamine blockers like haloperidol or metoclopramide, which worsen symptoms.",
-    tips: [
-      "Carbidopa-levodopa is the most effective; it eventually causes wearing-off and dyskinesias.",
-      "Dopamine agonists (pramipexole, ropinirole) cause impulse control disorders and sudden sleep attacks.",
-      "Amantadine reduces levodopa-induced dyskinesias.",
-      "Benztropine treats tremor and drug-induced EPS but is avoided in older adults (anticholinergic).",
-      "Selegiline is an MAO-B inhibitor: serotonin syndrome risk with meperidine, tramadol and some antidepressants."
-    ],
-    members: [
-      { id: "carbidopa-levodopa", key: "Gold standard", diff: "Levodopa becomes dopamine in the brain while carbidopa blocks peripheral conversion, reducing nausea. Most effective, but high-protein meals compete with absorption and long use leads to wearing-off and dyskinesias." },
-      { id: "pramipexole", key: "Agonist, renal, impulse control", diff: "Non-ergot dopamine agonist also used for restless legs. Renally cleared; causes impulse control disorders (gambling, shopping), sleep attacks, hallucinations and leg edema." },
-      { id: "ropinirole", key: "Agonist, hepatic CYP1A2", diff: "Similar to pramipexole (Parkinson disease and restless legs, same impulse control risks) but metabolized by CYP1A2, so ciprofloxacin and smoking change its levels." },
-      { id: "bromocriptine", key: "Ergot agonist, prolactin", diff: "Older ergot-derived dopamine agonist now used mostly for hyperprolactinemia and acromegaly. Ergot structure carries fibrosis risk." },
-      { id: "selegiline", key: "MAO-B inhibitor", diff: "Slows dopamine breakdown for modest symptom benefit. Amphetamine metabolites can cause insomnia; serotonin syndrome risk with meperidine and other serotonergic drugs; the patch form treats depression." },
-      { id: "amantadine", key: "Anti-dyskinesia, NMDA", diff: "NMDA antagonist that reduces levodopa-induced dyskinesias. Renally cleared; causes livedo reticularis, ankle edema and hallucinations." },
-      { id: "benztropine", key: "Anticholinergic for tremor/EPS", diff: "Anticholinergic that helps tremor and treats drug-induced dystonia and parkinsonism. Avoided in older adults (confusion, urinary retention) and does not treat tardive dyskinesia." }
-    ] },
-
-  /* ===================== STOMACH ===================== */
-
-  { id: "ppis", name: "Proton pump inhibitors", clue: "-prazole", grp: "Stomach",
-    share: "PPIs irreversibly block the H+/K+ ATPase proton pump, the final step of acid secretion, making them the strongest acid suppressors. They work best taken 30-60 minutes before a meal. Long-term use is linked to C. difficile, pneumonia, fractures, low magnesium and low B12.",
-    tips: [
-      "Omeprazole inhibits CYP2C19 and can reduce clopidogrel activation; pantoprazole interacts least.",
-      "Pantoprazole is available IV for GI bleeding and NPO patients.",
-      "Deprescribe when no longer indicated; taper to limit rebound acid."
-    ],
-    members: [
-      { id: "omeprazole", key: "CYP2C19 interactions", diff: "Oral and over-the-counter. Inhibits CYP2C19, so it can reduce activation of clopidogrel and raise levels of some drugs." },
-      { id: "pantoprazole", key: "IV option, fewest interactions", diff: "Available IV for upper GI bleeding and stress ulcer prophylaxis. Has the fewest CYP interactions of the PPIs." }
-    ] },
-
-  { id: "h2blockers", name: "H2 receptor antagonists", clue: "-tidine", grp: "Stomach",
-    share: "H2 blockers block histamine-2 receptors on parietal cells, reducing acid secretion, especially at night. They are weaker than PPIs but work faster after the first dose. They are renally cleared and generally well tolerated.",
-    tips: [
-      "Weaker than PPIs; tolerance (tachyphylaxis) develops with continuous use.",
-      "Reduce the dose in kidney disease; confusion can occur in older adults.",
-      "Famotidine has far fewer interactions than cimetidine (the classic CYP inhibitor)."
-    ],
-    members: [
-      { id: "famotidine", key: "Renal dosing, few interactions", diff: "The main H2 blocker in use; oral or IV for GERD, ulcers and stress ulcer prophylaxis. Needs dose reduction in kidney disease to avoid confusion and QT effects." }
-    ] },
-
-  { id: "antiemetics", name: "Antiemetics", clue: "-setron, -pramide, -azine", grp: "Stomach",
-    share: "Antiemetics block the receptors that trigger vomiting: serotonin 5-HT3, dopamine D2, histamine H1 or muscarinic receptors in the gut, chemoreceptor trigger zone and vestibular system. Choosing one depends on the cause (chemo, post-op, motion sickness, gastroparesis). Several prolong QT, and dopamine blockers cause EPS.",
-    tips: [
-      "5-HT3 (ondansetron): chemo and post-op nausea; headache, constipation, QT.",
-      "D2 blockers (metoclopramide, prochlorperazine, droperidol): EPS and akathisia; avoid in Parkinson disease.",
-      "Antihistamine/anticholinergic (promethazine, scopolamine): motion sickness; sedation and confusion.",
-      "Metoclopramide is also prokinetic, so it is contraindicated in bowel obstruction.",
-      "Promethazine IV can cause severe tissue injury and is contraindicated under age 2."
-    ],
-    members: [
-      { id: "ondansetron", key: "5-HT3, chemo/post-op", diff: "Blocks 5-HT3 receptors in the gut and brain; first-line for chemo and post-op nausea. Little sedation or EPS, but causes headache, constipation and QT prolongation." },
-      { id: "metoclopramide", key: "D2 plus prokinetic", diff: "Blocks D2 and speeds gastric emptying, so it treats gastroparesis. Boxed warning for tardive dyskinesia (avoid over 12 weeks); contraindicated in bowel obstruction." },
-      { id: "prochlorperazine", key: "D2, migraine nausea", diff: "Phenothiazine D2 blocker effective for nausea and migraine headache. Causes akathisia and acute dystonia." },
-      { id: "promethazine", key: "H1, sedating, tissue injury", diff: "Phenothiazine with strong antihistamine effects, making it very sedating. IV can cause severe tissue injury and gangrene; contraindicated under age 2 (respiratory depression)." },
-      { id: "droperidol", key: "Potent D2, QT warning", diff: "Very effective, fast D2 blocker for post-op and ED nausea at low doses. Boxed warning for QT prolongation." },
-      { id: "scopolamine", key: "Patch, motion sickness", diff: "Antimuscarinic patch worn behind the ear, applied hours before travel or surgery. Causes dry mouth, blurred vision, confusion in older adults and a dilated pupil if touched to the eye." }
-    ] },
-
-  { id: "laxatives", name: "Laxatives", clue: "-codyl, sennosides, -ulose", grp: "Stomach",
-    share: "Laxatives relieve constipation by softening stool, drawing water into the bowel (osmotic) or stimulating bowel muscle (stimulant). Shared risks include cramping, diarrhea, dehydration and electrolyte imbalance. Avoid them in suspected bowel obstruction.",
-    tips: [
-      "Stimulants (senna, bisacodyl) are the backbone for opioid-induced constipation.",
-      "Osmotics (PEG, lactulose, magnesium) take 1-3 days; PEG is also the bowel prep.",
-      "Lactulose is the drug of choice for hepatic encephalopathy.",
-      "Avoid magnesium products in kidney failure.",
-      "Docusate alone has weak evidence."
-    ],
-    members: [
-      { id: "bisacodyl", key: "Stimulant, fast suppository", diff: "Stimulant laxative; oral works in 6-12 hours and the suppository in 15-60 minutes. Do not crush or take with antacids or milk (enteric coating)." },
-      { id: "sennosides", key: "Overnight stimulant", diff: "Plant-based stimulant taken at bedtime for a morning bowel movement. Standard for preventing opioid-induced constipation." },
-      { id: "docusate", key: "Stool softener only", diff: "Lets water into the stool to soften it but does not stimulate movement, and evidence for benefit is weak. Often paired with senna." },
-      { id: "polyethylene-glycol", key: "Gentle osmotic, bowel prep", diff: "Osmotic laxative that is well tolerated for chronic constipation and given in large volumes as colonoscopy prep. Takes 1-3 days at usual doses." },
-      { id: "lactulose", key: "Hepatic encephalopathy", diff: "Osmotic sugar that colonic bacteria break down, trapping ammonia as ammonium. Titrated to 2-3 soft stools daily in hepatic encephalopathy; causes bloating and gas." },
-      { id: "magnesium-hydroxide", key: "Saline laxative, antacid", diff: "Milk of magnesia; works within hours and also neutralizes acid. Avoid in kidney failure due to hypermagnesemia risk." }
-    ] },
-
-  /* ===================== INFECTION ===================== */
-
-  { id: "penicillins", name: "Penicillins", clue: "-cillin", grp: "Infection",
-    share: "Penicillins are beta-lactams that bind penicillin-binding proteins and block bacterial cell wall synthesis, killing growing bacteria. Shared issues include allergy (rash to anaphylaxis), diarrhea, C. difficile and seizures at very high doses in kidney failure. Many bacteria resist them with beta-lactamase enzymes, which inhibitors like clavulanate, sulbactam and tazobactam block.",
-    tips: [
-      "Natural (penicillin G): strep, syphilis. Aminopenicillins (amoxicillin, ampicillin): add some gram-negatives, Enterococcus, Listeria.",
-      "Antistaphylococcal (nafcillin, dicloxacillin): MSSA only, no MRSA.",
-      "Antipseudomonal: piperacillin-tazobactam.",
-      "A beta-lactamase inhibitor adds anaerobes and beta-lactamase-producing strains.",
-      "None cover MRSA or atypicals."
-    ],
-    members: [
-      { id: "penicillin-g", key: "Natural, syphilis/strep", diff: "IV or IM natural penicillin for strep, syphilis (IM benzathine form) and some meningitis. Easily destroyed by beta-lactamase." },
-      { id: "amoxicillin", key: "Oral aminopenicillin", diff: "Well-absorbed oral drug for otitis media, strep pharyngitis, sinusitis and H. pylori. Causes a rash in patients with mononucleosis." },
-      { id: "amoxicillin-clavulanate", key: "Adds clavulanate, bites", diff: "Clavulanate blocks beta-lactamase, adding anaerobes and resistant H. flu and Moraxella. Choice for bite wounds and treatment failures; more diarrhea than amoxicillin." },
-      { id: "ampicillin", key: "IV, Listeria/Enterococcus", diff: "IV aminopenicillin for Enterococcus and Listeria, added in meningitis for newborns and older adults. Paired with gentamicin for neonatal sepsis." },
-      { id: "ampicillin-sulbactam", key: "IV, anaerobes/Acinetobacter", diff: "IV ampicillin plus sulbactam for mixed infections like aspiration, bites and intra-abdominal infection. Sulbactam itself has activity against Acinetobacter." },
-      { id: "dicloxacillin", key: "Oral anti-staph", diff: "Oral beta-lactamase-resistant penicillin for MSSA skin infections. No MRSA coverage." },
-      { id: "nafcillin", key: "IV anti-staph, no renal dosing", diff: "IV drug of choice for serious MSSA infections like bacteremia and endocarditis. Cleared by the liver (no renal adjustment); vesicant that causes phlebitis, interstitial nephritis and neutropenia." },
-      { id: "piperacillin-tazobactam", key: "Antipseudomonal, broad", diff: "Broadest penicillin: Pseudomonas, gram-negatives, anaerobes and gram-positives (not MRSA). Common in sepsis; linked to more AKI when combined with vancomycin." }
-    ] },
-
-  { id: "cephalosporins", name: "Cephalosporins", clue: "cef-, ceph-", grp: "Infection",
-    share: "Cephalosporins are beta-lactams that block cell wall synthesis and are grouped into generations. Moving from 1st to 3rd generation, gram-negative coverage generally increases while gram-positive coverage decreases; 4th covers both plus Pseudomonas and 5th adds MRSA. Cross-reactivity with penicillin allergy is low (about 1-2%) and depends mostly on similar side chains.",
-    tips: [
-      "1st gen (cefazolin, cephalexin): skin, MSSA, surgical prophylaxis.",
-      "3rd gen (ceftriaxone, cefdinir): pneumonia, meningitis, gonorrhea, otitis.",
-      "4th gen (cefepime): Pseudomonas; neurotoxicity in kidney failure.",
-      "5th gen (ceftaroline): the only beta-lactam with MRSA coverage.",
-      "None cover Enterococcus, Listeria or atypicals."
-    ],
-    members: [
-      { id: "cefazolin", key: "1st gen IV, surgical prophylaxis", diff: "First-generation IV drug of choice for surgical prophylaxis and MSSA infections. Does not enter the CNS." },
-      { id: "cephalexin", key: "1st gen oral, cellulitis", diff: "Oral first-generation agent for cellulitis from strep or MSSA and simple UTIs. No MRSA coverage." },
-      { id: "cefdinir", key: "3rd gen oral, red stools", diff: "Oral third-generation drug for otitis media, sinusitis and community pneumonia. Can turn stools red when taken with iron." },
-      { id: "ceftriaxone", key: "3rd gen, meningitis, once daily", diff: "Once-daily IV/IM third-generation agent that reaches the CSF; used for pneumonia, meningitis, gonorrhea and pyelonephritis. Biliary elimination (no renal adjustment); avoid with IV calcium in neonates and in jaundiced newborns." },
-      { id: "cefepime", key: "4th gen, Pseudomonas", diff: "Fourth-generation agent covering Pseudomonas plus gram-positives; common in neutropenic fever. Accumulates in kidney failure and can cause encephalopathy and seizures." },
-      { id: "ceftaroline", key: "5th gen, MRSA", diff: "The only beta-lactam that covers MRSA, used for skin infections and community pneumonia. Does not cover Pseudomonas." }
-    ] },
-
-  { id: "fluoroquinolones", name: "Fluoroquinolones", clue: "-floxacin", grp: "Infection",
-    share: "Fluoroquinolones inhibit bacterial DNA gyrase and topoisomerase IV, killing bacteria with excellent oral absorption. Boxed warnings cover tendinitis and tendon rupture, peripheral neuropathy, CNS effects and myasthenia gravis worsening; they also prolong QT, cause blood sugar swings and aortic aneurysm, and raise C. difficile risk. Calcium, magnesium, iron, zinc and antacids block absorption, so separate doses.",
-    tips: [
-      "Ciprofloxacin: best gram-negative and Pseudomonas, weak for strep pneumoniae.",
-      "Levofloxacin: 'respiratory' fluoroquinolone covering pneumococcus and atypicals.",
-      "Ciprofloxacin inhibits CYP1A2 (theophylline, tizanidine).",
-      "Tendon risk is highest in older adults, steroid users and transplant patients.",
-      "Reserve for when alternatives fail because of the serious side effects."
-    ],
-    members: [
-      { id: "ciprofloxacin", key: "Gram-negative, Pseudomonas", diff: "Strongest gram-negative and Pseudomonas activity, used for complicated UTI and GI infections, but poor for strep pneumoniae so not used alone for pneumonia. Inhibits CYP1A2, raising theophylline and tizanidine levels." },
-      { id: "levofloxacin", key: "Respiratory fluoroquinolone", diff: "Covers strep pneumoniae and atypicals, so it treats community pneumonia alone; also covers Pseudomonas. Once daily with oral and IV doses nearly equal; more QT effect than ciprofloxacin." }
-    ] },
-
-  { id: "macrolides", name: "Macrolides", clue: "-thromycin", grp: "Infection",
-    share: "Macrolides bind the 50S ribosomal subunit and block bacterial protein synthesis. They cover atypicals (Mycoplasma, Chlamydia, Legionella), strep and H. flu, so they are mainstays for respiratory infections. All can prolong QT and cause GI upset.",
-    tips: [
-      "Azithromycin has a long half-life (short courses) and few CYP interactions.",
-      "Clarithromycin and erythromycin strongly inhibit CYP3A4 (statins, CCBs, colchicine).",
-      "Erythromycin causes the most GI upset and is used as a prokinetic.",
-      "All prolong QT; avoid with other QT drugs."
-    ],
-    members: [
-      { id: "azithromycin", key: "Long half-life, few interactions", diff: "Long tissue half-life allows 3-5 day courses and single-dose chlamydia treatment. Minimal CYP3A4 inhibition, but still prolongs QT." },
-      { id: "clarithromycin", key: "CYP3A4 inhibitor, H. pylori", diff: "Part of H. pylori regimens. Strong CYP3A4 inhibitor that raises statins, calcium channel blockers and colchicine; causes metallic taste." },
-      { id: "erythromycin", key: "GI motility, most GI upset", diff: "Stimulates motilin receptors, causing cramping but also used as a prokinetic for gastroparesis. Strong CYP3A4 inhibitor; eye ointment prevents neonatal conjunctivitis." }
-    ] },
-
-  { id: "carbapenems", name: "Carbapenems", clue: "-penem", grp: "Infection",
-    share: "Carbapenems are the broadest beta-lactams, covering most gram-positives, gram-negatives (including ESBL producers and Pseudomonas) and anaerobes. They do not cover MRSA, atypicals or E. faecium. They lower seizure threshold and dramatically lower valproic acid levels.",
-    tips: [
-      "Imipenem has the highest seizure risk; meropenem is preferred for meningitis.",
-      "Never combine with valproic acid; seizures can break through.",
-      "Reserve for resistant organisms (ESBL) to slow carbapenem resistance."
-    ],
-    members: [
-      { id: "imipenem-cilastatin", key: "Highest seizure risk", diff: "Cilastatin blocks kidney enzymes that would destroy imipenem. Has the highest seizure risk of the class, especially with kidney failure or CNS disease." },
-      { id: "meropenem", key: "Lower seizure, meningitis", diff: "Lower seizure risk and good CSF penetration, so it is the carbapenem used for meningitis. Needs renal dose adjustment." }
-    ] },
-
-  { id: "antifungals", name: "Antifungals", clue: "-azole, -fungin, amphotericin", grp: "Infection",
-    share: "Antifungals target structures unique to fungi: ergosterol in the membrane (azoles, amphotericin, terbinafine), the cell wall (echinocandins) or fungal DNA synthesis (flucytosine). The choice depends on the organism (yeast vs mold) and site. Azoles are major CYP inhibitors with many drug interactions.",
-    tips: [
-      "Yeasts: fluconazole (not C. krusei); echinocandins first-line for candidemia.",
-      "Molds: voriconazole for Aspergillus; amphotericin for mucormycosis.",
-      "Amphotericin B: nephrotoxicity, low K and Mg, infusion reactions; lipid forms are gentler.",
-      "Azoles inhibit CYP3A4/2C9: watch warfarin, statins, tacrolimus and QT.",
-      "Nystatin is not absorbed (topical/oral swish only)."
-    ],
-    members: [
-      { id: "fluconazole", key: "Yeast, oral, CSF", diff: "Excellent oral absorption and CSF/urine penetration for Candida and cryptococcal infections. No mold coverage; inhibits CYP2C9 and 3A4 (warfarin) and prolongs QT." },
-      { id: "voriconazole", key: "Aspergillus, visual changes", diff: "First-line for invasive aspergillosis. Causes visual disturbances, hallucinations, photosensitivity and skin cancer with long use; needs level monitoring and has many CYP interactions." },
-      { id: "amphotericin-b", key: "Broadest, nephrotoxic", diff: "Broadest, most potent IV antifungal for life-threatening infections (cryptococcal meningitis, mucormycosis). Causes nephrotoxicity, hypokalemia, hypomagnesemia and fever/rigors during infusion; saline loading and lipid formulations reduce toxicity." },
-      { id: "caspofungin", key: "Echinocandin, loading dose", diff: "IV echinocandin that blocks cell wall glucan synthesis; first-line for candidemia and well tolerated. Needs a loading dose and dose reduction in liver impairment; poor urine and CSF penetration." },
-      { id: "micafungin", key: "Echinocandin, no loading", diff: "Same uses and safety as caspofungin but no loading dose is needed. Also used for antifungal prophylaxis in stem cell transplant." },
-      { id: "flucytosine", key: "Partner for crypto meningitis", diff: "Given with amphotericin for cryptococcal meningitis; never alone because resistance develops quickly. Causes bone marrow suppression; renally cleared." },
-      { id: "nystatin", key: "Not absorbed, thrush", diff: "Not absorbed from the gut, so it acts only topically: oral swish for thrush and creams for skin candidiasis. No systemic toxicity." },
-      { id: "terbinafine", key: "Nail fungus, allylamine", diff: "Allylamine that blocks squalene epoxidase; oral therapy for toenail fungus taken for about 12 weeks. Can cause liver injury and taste loss; inhibits CYP2D6." }
-    ] },
-
-  { id: "antivirals", name: "Antivirals", clue: "-ciclovir, -vir, -navir", grp: "Infection",
-    share: "Antivirals block specific steps in viral replication, such as DNA or RNA polymerase, release from cells, or integration into host DNA, so each targets particular viruses. Most need renal dose adjustment. Herpes antivirals stop active replication but do not cure latent infection.",
-    tips: [
-      "Herpes (HSV/VZV): acyclovir and valacyclovir. CMV: ganciclovir or foscarnet.",
-      "Influenza: oseltamivir, best within 48 hours of symptoms.",
-      "HIV: combination therapy, e.g., tenofovir + emtricitabine + dolutegravir.",
-      "Ritonavir is used as a CYP3A4-inhibiting booster; expect many interactions.",
-      "Nephrotoxicity: IV acyclovir (hydrate), foscarnet, tenofovir disoproxil."
-    ],
-    members: [
-      { id: "acyclovir", key: "HSV/VZV, IV for encephalitis", diff: "Needs viral thymidine kinase to activate. IV is the drug for HSV encephalitis; crystal nephropathy with IV use, so hydrate; poor oral absorption needs frequent dosing." },
-      { id: "valacyclovir", key: "Oral prodrug, fewer doses", diff: "Prodrug of acyclovir with much better absorption, so dosing is less frequent. Used for shingles, cold sores and genital herpes suppression." },
-      { id: "ganciclovir", key: "CMV, bone marrow suppression", diff: "Treats CMV disease, especially in transplant and HIV patients. Major bone marrow suppression (neutropenia); hazardous drug handling." },
-      { id: "foscarnet", key: "Resistant CMV/HSV, electrolytes", diff: "Inhibits viral DNA polymerase directly without needing kinase activation, so it works against resistant CMV and HSV. Nephrotoxic and causes severe electrolyte shifts (calcium, magnesium, phosphate, potassium) and seizures." },
-      { id: "oseltamivir", key: "Influenza, neuraminidase", diff: "Neuraminidase inhibitor that stops influenza release from cells; works best within 48 hours but is given to all hospitalized patients. Nausea is common; rare neuropsychiatric effects in children." },
-      { id: "remdesivir", key: "IV COVID-19", diff: "IV RNA polymerase inhibitor for COVID-19. Monitor liver enzymes; can cause bradycardia." },
-      { id: "ribavirin", key: "Teratogenic, hemolysis", diff: "Broad nucleoside analog once central to hepatitis C therapy and occasionally inhaled for severe RSV. Causes hemolytic anemia and is highly teratogenic in both partners." },
-      { id: "sofosbuvir", key: "Hepatitis C cure", diff: "NS5B polymerase inhibitor in combination regimens that cure most hepatitis C. Severe bradycardia with amiodarone; screen for hepatitis B reactivation." },
-      { id: "tenofovir", key: "HIV, HBV, PrEP backbone", diff: "Nucleotide reverse transcriptase inhibitor for HIV, hepatitis B and PrEP. Disoproxil (TDF) can harm kidneys and bones; alafenamide (TAF) less so." },
-      { id: "emtricitabine", key: "Tenofovir partner, HBV flare", diff: "Nucleoside reverse transcriptase inhibitor paired with tenofovir for HIV treatment and PrEP. Well tolerated, but stopping can cause hepatitis B flares." },
-      { id: "zidovudine", key: "Anemia, perinatal use", diff: "The first HIV drug, now used mainly to prevent perinatal transmission. Causes bone marrow suppression (macrocytic anemia, neutropenia) and myopathy." },
-      { id: "efavirenz", key: "NNRTI, vivid dreams", diff: "Non-nucleoside reverse transcriptase inhibitor that causes vivid dreams, dizziness and depression, so it is taken at bedtime on an empty stomach. Induces CYP enzymes." },
-      { id: "dolutegravir", key: "Integrase inhibitor, high barrier", diff: "Integrase inhibitor with a high barrier to resistance; preferred in many first-line HIV regimens. Separate from calcium, iron and antacids; mildly raises creatinine without true kidney injury." },
-      { id: "ritonavir", key: "CYP3A4 booster", diff: "A protease inhibitor used at low dose to boost other drugs (including nirmatrelvir in Paxlovid) by strongly inhibiting CYP3A4. Causes major interactions with statins, inhaled fluticasone and many others." }
-    ] },
-
-  /* ===================== BREATHING & ALLERGY ===================== */
-
-  { id: "inhaledbronchodilators", name: "Inhaled bronchodilators", clue: "-terol, -tropium", grp: "Breathing & allergy",
-    share: "Bronchodilators open the airways by stimulating beta-2 receptors (beta agonists) or blocking muscarinic receptors (anticholinergics) on airway smooth muscle. Short-acting forms are rescue inhalers; long-acting forms are maintenance. Beta agonists cause tremor, tachycardia and low potassium; anticholinergics cause dry mouth and urinary retention.",
-    tips: [
-      "SABA (albuterol, levalbuterol) = rescue; LABA (salmeterol, formoterol) = maintenance.",
-      "Never use a LABA alone in asthma; always pair with an inhaled steroid.",
-      "SAMA (ipratropium) vs LAMA (tiotropium): ipratropium for acute flares; tiotropium once daily for COPD.",
-      "Formoterol has fast onset, so budesonide-formoterol can be both maintenance and rescue.",
-      "Racemic epinephrine is nebulized for croup and post-extubation stridor."
-    ],
-    members: [
-      { id: "albuterol", key: "SABA rescue", diff: "Short-acting beta-2 agonist for acute bronchospasm, working in minutes and lasting 4-6 hours. Causes tremor and tachycardia, and shifts potassium into cells (also used in hyperkalemia)." },
-      { id: "levalbuterol", key: "R-isomer SABA", diff: "The active R-isomer of albuterol, marketed as causing less tachycardia, though the real-world difference is small. More expensive." },
-      { id: "salmeterol", key: "LABA, slow onset", diff: "Long-acting beta agonist lasting 12 hours with slow onset, so it is never a rescue inhaler. Must be combined with an inhaled steroid in asthma." },
-      { id: "formoterol", key: "LABA, fast onset", diff: "Long-acting beta agonist with fast onset, allowing budesonide-formoterol to be used as both maintenance and reliever therapy (SMART). Never alone in asthma." },
-      { id: "ipratropium", key: "SAMA, acute flares", diff: "Short-acting muscarinic antagonist, often combined with albuterol in ED nebulizers for COPD and severe asthma. Causes dry mouth; avoid spraying in eyes (glaucoma)." },
-      { id: "tiotropium", key: "LAMA, once-daily COPD", diff: "Long-acting muscarinic antagonist taken once daily for COPD maintenance and as add-on in asthma. Not for rescue; causes dry mouth and urinary retention." },
-      { id: "racemic-epinephrine", key: "Nebulized for croup", diff: "Alpha effects shrink swollen upper airway tissue in croup and post-extubation stridor. Observe for 2-4 hours because swelling can rebound." }
-    ] },
-
-  { id: "steroids", name: "Corticosteroids", clue: "-sone, -olone, -nide", grp: "Breathing & allergy",
-    share: "Corticosteroids bind glucocorticoid receptors to switch off inflammatory and immune genes. Systemic use causes hyperglycemia, insomnia and mood changes, fluid retention, infection risk, and with long use osteoporosis, cataracts, weight gain and adrenal suppression (taper after more than about 2 weeks). Inhaled and topical forms limit systemic effects.",
-    tips: [
-      "Potency equivalents: hydrocortisone 20 mg = prednisone 5 mg = methylprednisolone 4 mg = dexamethasone 0.75 mg.",
-      "Mineralocorticoid effect: fludrocortisone > hydrocortisone > prednisone; dexamethasone has none.",
-      "Dexamethasone and betamethasone cross the placenta for fetal lung maturation.",
-      "Inhaled steroids (fluticasone, budesonide): rinse mouth to prevent thrush.",
-      "Never stop long-term steroids abruptly (adrenal crisis)."
-    ],
-    members: [
-      { id: "hydrocortisone", key: "Cortisol, stress dosing", diff: "Identical to natural cortisol with significant mineralocorticoid effect. Used for adrenal insufficiency, stress dosing and septic shock." },
-      { id: "prednisone", key: "Oral workhorse prodrug", diff: "Oral prodrug activated in the liver to prednisolone; used for asthma flares, COPD exacerbations and autoimmune disease. Intermediate duration." },
-      { id: "prednisolone", key: "Active form, liquid/eye", diff: "Active form of prednisone, so no liver activation is needed. Common as a liquid for children and as eye drops." },
-      { id: "methylprednisolone", key: "IV pulse dosing", diff: "Little mineralocorticoid effect, so it is used IV in high-dose pulses for MS flares, transplant rejection and severe lupus. Oral taper packs also exist." },
-      { id: "dexamethasone", key: "Most potent, long-acting", diff: "Very potent and long-acting with no mineralocorticoid effect. Used for cerebral edema, croup, bacterial meningitis, chemo nausea, severe COVID-19 and fetal lung maturity." },
-      { id: "betamethasone", key: "Fetal lungs, topical", diff: "Long-acting and potent; given IM before preterm birth to mature fetal lungs. High-potency topical forms treat skin disease." },
-      { id: "budesonide", key: "High first-pass, local action", diff: "Extensively broken down by the liver, so oral capsules act locally in Crohn disease and microscopic colitis. Also inhaled, nebulized for children and nasal." },
-      { id: "fluticasone", key: "Inhaled/nasal steroid", diff: "Inhaled for asthma/COPD (often with a LABA) and nasal for allergic rhinitis. Ritonavir can raise its levels and cause Cushing syndrome." },
-      { id: "fludrocortisone", key: "Mineralocorticoid", diff: "Acts almost purely like aldosterone to retain sodium and water. Used with hydrocortisone in Addison disease and for orthostatic hypotension; causes hypokalemia, edema and hypertension." }
-    ] },
-
-  { id: "antihistamines", name: "H1 antihistamines", clue: "-tadine, -tirizine, -amine", grp: "Breathing & allergy",
-    share: "H1 antihistamines block histamine receptors to relieve itching, sneezing, runny nose and hives. First-generation agents cross the blood-brain barrier and block muscarinic receptors, causing sedation, confusion and anticholinergic effects; second-generation agents largely do not. Antihistamines are adjuncts, not substitutes for epinephrine, in anaphylaxis.",
-    tips: [
-      "First generation (diphenhydramine, hydroxyzine, promethazine): sedating and anticholinergic, Beers list in older adults.",
-      "Second generation (cetirizine, loratadine, fexofenadine): once daily, little sedation.",
-      "Sedation among second generation: cetirizine most, fexofenadine least.",
-      "Fexofenadine absorption drops with fruit juice and aluminum/magnesium antacids.",
-      "Hydroxyzine and promethazine can prolong QT."
-    ],
-    members: [
-      { id: "diphenhydramine", key: "1st gen, very sedating", diff: "Strongly sedating and anticholinergic; used for allergic reactions, as an anaphylaxis adjunct and to treat acute dystonia. Causes confusion and urinary retention in older adults." },
-      { id: "hydroxyzine", key: "1st gen, itch and anxiety", diff: "Sedating antihistamine used for itching and as a non-addictive anxiolytic. Can prolong QT." },
-      { id: "promethazine", key: "1st gen, antiemetic", diff: "Phenothiazine antihistamine used mostly for nausea and motion sickness. Very sedating; IV can injure tissue and it is contraindicated under age 2." },
-      { id: "cetirizine", key: "2nd gen, most sedating", diff: "Metabolite of hydroxyzine; fast onset and effective for hives. The most likely second-generation agent to cause drowsiness; reduce dose in kidney disease." },
-      { id: "loratadine", key: "2nd gen, non-sedating", diff: "Once-daily and non-sedating at usual doses; slower onset than cetirizine." },
-      { id: "fexofenadine", key: "2nd gen, least sedating", diff: "Least sedating antihistamine, even at higher doses. Fruit juices and Al/Mg antacids reduce absorption." }
-    ] },
-
-  /* ===================== PAIN & CRITICAL CARE ===================== */
-
-  { id: "nsaids", name: "NSAIDs", clue: "-profen, -fenac, -coxib", grp: "Pain & critical care",
-    share: "NSAIDs block cyclooxygenase (COX) enzymes, reducing prostaglandins to relieve pain, fever and inflammation. Shared risks are GI ulcers and bleeding, kidney injury (especially with ACE inhibitors/ARBs and diuretics), fluid retention, raised blood pressure and heart attack/stroke risk. Avoid in late pregnancy (closure of the ductus arteriosus) and use cautiously in heart failure.",
-    tips: [
-      "Aspirin irreversibly inhibits COX (lasting platelet effect); other NSAIDs are reversible.",
-      "COX-2 selective (celecoxib): fewer ulcers, no antiplatelet effect, still CV risk.",
-      "Ketorolac is the potent IV/IM option, limited to 5 days.",
-      "Ibuprofen taken before aspirin can block aspirin's cardioprotection.",
-      "Naproxen may carry the lowest CV risk; diclofenac among the highest."
-    ],
-    members: [
-      { id: "aspirin", key: "Irreversible, antiplatelet", diff: "Irreversibly acetylates COX, so low doses give lasting antiplatelet effect for heart attack and stroke prevention. Avoid in children with viral illness (Reye syndrome); overdose causes tinnitus and mixed acid-base disorder." },
-      { id: "ibuprofen", key: "Short-acting, OTC, pediatric", diff: "Short half-life requiring dosing every 6-8 hours; common in children for fever. Taken before aspirin, it can block aspirin's antiplatelet effect." },
-      { id: "naproxen", key: "Twice-daily, lower CV risk", diff: "Longer half-life allows twice-daily dosing. May have the lowest cardiovascular risk among nonselective NSAIDs." },
-      { id: "ketorolac", key: "Potent IV/IM, 5-day limit", diff: "Injectable NSAID with opioid-like pain relief. Limited to 5 days total because of high GI bleeding and kidney injury risk; avoid in kidney impairment and bleeding risk." },
-      { id: "diclofenac", key: "Topical gel option", diff: "Topical gel treats joint pain with less systemic exposure. Oral form has higher cardiovascular and liver toxicity risk." },
-      { id: "meloxicam", key: "Once daily, COX-2 leaning", diff: "Long half-life allows once-daily dosing, and it is partially COX-2 preferential at lower doses. Common for osteoarthritis." },
-      { id: "celecoxib", key: "COX-2 selective", diff: "Selective COX-2 inhibitor with fewer ulcers and no platelet effect, useful with high GI risk. Cardiovascular and kidney risks remain; caution with sulfonamide allergy." }
-    ] },
-
-  { id: "nmbas", name: "Neuromuscular blockers", clue: "-curonium, -curium, succinylcholine", grp: "Pain & critical care",
-    share: "Neuromuscular blockers paralyze skeletal muscle by blocking acetylcholine at the nicotinic receptor, used for intubation and mechanical ventilation. They provide no sedation or pain relief, so the patient must always be sedated first (awareness under paralysis is terrifying). Monitor depth with train-of-four and be ready to ventilate.",
-    tips: [
-      "Depolarizing (succinylcholine) vs nondepolarizing (everything else).",
-      "Succinylcholine: fastest and shortest, but hyperkalemia and malignant hyperthermia risk.",
-      "Aminosteroids (rocuronium, vecuronium, pancuronium) are reversed by sugammadex.",
-      "Cisatracurium uses Hofmann elimination, so it is ideal in liver or kidney failure.",
-      "Neostigmine (with glycopyrrolate) reverses any nondepolarizer after partial recovery."
-    ],
-    members: [
-      { id: "succinylcholine", key: "Depolarizing, fastest", diff: "Depolarizes the endplate causing fasciculations, then paralysis in about 1 minute lasting 5-10 minutes. Contraindicated with hyperkalemia risk (burns or crush injury after 24 hours, denervation, prolonged immobility) and malignant hyperthermia history; prolonged with pseudocholinesterase deficiency." },
-      { id: "rocuronium", key: "Rapid nondepolarizer, RSI", diff: "Nondepolarizing aminosteroid with the fastest onset of its class at high doses, making it the main succinylcholine alternative for rapid sequence intubation. Fully reversible with sugammadex." },
-      { id: "vecuronium", key: "Intermediate, ICU, renal caution", diff: "Intermediate-acting aminosteroid with no cardiovascular effects, often used for ICU paralysis. Active metabolite accumulates in kidney failure, prolonging weakness; reversed by sugammadex." },
-      { id: "cisatracurium", key: "Organ-independent elimination", diff: "Broken down spontaneously in plasma (Hofmann elimination), so it is preferred in liver or kidney failure and for ICU infusions in ARDS. Not reversed by sugammadex." },
-      { id: "pancuronium", key: "Long-acting, tachycardia", diff: "Long-acting aminosteroid with vagolytic effect that raises heart rate. Renally cleared and rarely used now." }
-    ] },
-
-  { id: "sedatives", name: "Induction and ICU sedation agents", clue: "propofol, -midate, -medetomidine", grp: "Pain & critical care",
-    share: "These agents produce sedation or general anesthesia for intubation, procedures and ICU ventilation. All require airway monitoring; most depress breathing and blood pressure. Only ketamine provides meaningful pain relief, so analgesia must usually be added (analgesia-first sedation).",
-    tips: [
-      "Hemodynamics: etomidate is neutral; ketamine raises BP and HR; propofol and dexmedetomidine lower BP.",
-      "Breathing: ketamine and dexmedetomidine preserve respiratory drive.",
-      "Propofol: fast on/off, lipid calories, watch triglycerides and propofol infusion syndrome.",
-      "Etomidate suppresses adrenal cortisol production (single dose only).",
-      "Benzodiazepine infusions increase ICU delirium; propofol or dexmedetomidine are preferred."
-    ],
-    members: [
-      { id: "propofol", key: "Fast on/off, hypotension", diff: "Rapid onset and recovery for induction and ICU sedation, allowing daily wake-ups. Causes hypotension and apnea, no analgesia; lipid emulsion adds calories and triglycerides; prolonged high doses risk propofol infusion syndrome." },
-      { id: "etomidate", key: "Hemodynamically stable induction", diff: "Induction agent with minimal effect on blood pressure, ideal for unstable patients. Suppresses adrenal cortisol synthesis and causes myoclonus, so it is used as a single dose only." },
-      { id: "ketamine", key: "Dissociative, keeps breathing", diff: "NMDA antagonist producing dissociative anesthesia with strong pain relief, preserved airway reflexes and breathing, and bronchodilation. Raises heart rate and BP; causes emergence reactions, hypersalivation and rarely laryngospasm." },
-      { id: "dexmedetomidine", key: "Arousable, no resp depression", diff: "Alpha-2 agonist that provides calm, arousable sedation without respiratory depression, usable in non-intubated patients and may reduce delirium. Causes bradycardia and hypotension; not deep enough for paralysis." },
-      { id: "midazolam", key: "Benzo, amnesia, delirium risk", diff: "Short-acting benzodiazepine for procedures, seizures and ICU sedation, with good amnesia. Prolonged infusions accumulate and raise delirium risk; reversible with flumazenil." }
-    ] },
-
-  { id: "reversal", name: "Antidotes and reversal agents", clue: "match the antidote to the poison", grp: "Pain & critical care",
-    share: "Antidotes reverse a specific drug or toxin by blocking its receptor, binding it, replacing what it depletes or bypassing the damage. Most act faster than the toxin wears off, so re-dosing and observation are often needed. Supportive care (airway, breathing, circulation) always comes first.",
-    tips: [
-      "Opioids: naloxone. Benzodiazepines: flumazenil (rarely). Acetaminophen: N-acetylcysteine.",
-      "Anticoagulants: heparin = protamine; warfarin = vitamin K (plus PCC); dabigatran = idarucizumab; Xa inhibitors = 4-factor PCC (andexanet withdrawn in the US, 2025).",
-      "Paralytics: rocuronium/vecuronium = sugammadex; any nondepolarizer = neostigmine + glycopyrrolate.",
-      "Cholinergic toxicity (organophosphates) = atropine + pralidoxime; anticholinergic toxicity = physostigmine.",
-      "TCA (wide QRS) = sodium bicarbonate; beta blocker = glucagon; calcium channel blocker = calcium."
-    ],
-    members: [
-      { id: "naloxone", key: "Opioids", diff: "Competitive mu antagonist given IN, IM or IV. Its effect (30-90 min) can wear off before long-acting opioids, so watch for re-sedation; can precipitate withdrawal." },
-      { id: "flumazenil", key: "Benzodiazepines", diff: "Benzodiazepine receptor antagonist for procedural oversedation. Can trigger seizures in chronic benzodiazepine users or TCA overdose, so it is not given routinely in unknown overdoses." },
-      { id: "sugammadex", key: "Rocuronium/vecuronium", diff: "Encapsulates rocuronium (and vecuronium) to reverse even deep blockade within minutes. Reduces hormonal contraceptive effect (use backup for 7 days); rare anaphylaxis and bradycardia." },
-      { id: "neostigmine", key: "Nondepolarizing NMBAs", diff: "Cholinesterase inhibitor that raises acetylcholine to outcompete nondepolarizing blockers once some recovery has occurred. Given with glycopyrrolate to prevent bradycardia and secretions." },
-      { id: "protamine", key: "Heparin", diff: "Positively charged protein that binds and neutralizes heparin, fully for unfractionated and only partially for LMWH. Can cause hypotension and anaphylaxis (fish allergy, prior NPH insulin)." },
-      { id: "phytonadione", key: "Warfarin", diff: "Vitamin K restores clotting factor production but takes hours, so add 4-factor PCC for urgent bleeding. Give IV slowly due to rare anaphylactoid reactions." },
-      { id: "idarucizumab", key: "Dabigatran", diff: "Antibody fragment that binds dabigatran and reverses it within minutes. Specific to dabigatran only." },
-      { id: "andexanet-alfa", key: "Factor Xa inhibitors", diff: "Decoy factor Xa that binds apixaban and rivaroxaban. Carries a risk of thrombotic events after reversal." },
-      { id: "digoxin-immune-fab", key: "Digoxin", diff: "Antibody fragments bind digoxin for life-threatening arrhythmias or hyperkalemia from toxicity. Serum digoxin levels become unreliable after it is given." },
-      { id: "n-acetylcysteine", key: "Acetaminophen", diff: "Replenishes glutathione to detoxify acetaminophen's toxic metabolite; most effective within 8 hours, guided by the Rumack-Matthew nomogram. Oral tastes like rotten eggs; IV can cause anaphylactoid reactions." },
-      { id: "fomepizole", key: "Methanol/ethylene glycol", diff: "Blocks alcohol dehydrogenase so toxic alcohols are not converted to toxic acids. Often combined with dialysis." },
-      { id: "atropine", key: "Organophosphates, bradycardia", diff: "Muscarinic blocker for cholinergic toxicity; titrated until secretions dry, not to heart rate or pupils. Also first-line for symptomatic bradycardia." },
-      { id: "pralidoxime", key: "Organophosphates", diff: "Regenerates acetylcholinesterase before the bond ages, reversing nicotinic effects like muscle weakness. Given with atropine, which handles muscarinic symptoms." },
-      { id: "physostigmine", key: "Anticholinergic toxicity", diff: "Cholinesterase inhibitor that crosses into the brain to reverse anticholinergic delirium. Avoid in TCA overdose or wide QRS (risk of asystole and seizures)." },
-      { id: "glucagon", key: "Beta blockers, hypoglycemia", diff: "Raises cAMP in heart cells independent of beta receptors, used for beta blocker (and calcium channel blocker) overdose. Also treats hypoglycemia; vomiting is common." },
-      { id: "octreotide", key: "Sulfonylurea hypoglycemia", diff: "Suppresses insulin release to prevent recurrent hypoglycemia in sulfonylurea overdose after dextrose." },
-      { id: "sodium-bicarbonate", key: "TCAs, salicylates", diff: "Sodium load and alkalinization overcome sodium channel blockade in TCA overdose (QRS over 100 ms). Also alkalinizes urine to speed salicylate excretion." },
-      { id: "calcium-gluconate", key: "CCBs, hyperK, magnesium", diff: "Stabilizes the heart in hyperkalemia and reverses magnesium toxicity and calcium channel blocker overdose. Safer peripherally than calcium chloride." },
-      { id: "calcium-chloride", key: "CCBs, central line", diff: "About three times more elemental calcium than gluconate, preferred in cardiac arrest and severe calcium channel blocker overdose. Causes severe tissue injury if it extravasates, so a central line is preferred." },
-      { id: "hydroxocobalamin", key: "Cyanide", diff: "Binds cyanide to form cyanocobalamin (vitamin B12), used for smoke inhalation and nitroprusside toxicity. Turns skin and urine red and interferes with colorimetric lab tests." },
-      { id: "methylene-blue", key: "Methemoglobinemia", diff: "Converts methemoglobin back to hemoglobin. Contraindicated in G6PD deficiency; it is an MAO inhibitor, so it can cause serotonin syndrome with SSRIs." },
-      { id: "deferoxamine", key: "Iron", diff: "Chelates iron in severe iron poisoning; the iron complex turns urine reddish (vin rose). Rapid infusion causes hypotension." },
-      { id: "leucovorin", key: "Methotrexate", diff: "Supplies reduced folate that bypasses methotrexate's block of DHFR, rescuing normal cells. Also given for some other folate antagonist toxicities." },
-      { id: "glucarpidase", key: "Methotrexate (kidney failure)", diff: "Enzyme that breaks down circulating methotrexate when kidney failure delays clearance. Used with leucovorin." },
-      { id: "uridine-triacetate", key: "Fluorouracil/capecitabine", diff: "Oral antidote for fluorouracil or capecitabine overdose or early severe toxicity; must start within 96 hours." },
-      { id: "dimercaprol", key: "Arsenic, mercury, lead", diff: "IM chelator (BAL) in peanut oil for arsenic, mercury and severe lead poisoning. Painful injections; avoid with peanut allergy." },
-      { id: "succimer", key: "Oral lead chelator", diff: "Oral chelator used mainly for lead poisoning in children with elevated blood lead levels. Removing the lead source matters most." },
-      { id: "dantrolene", key: "Malignant hyperthermia", diff: "Blocks calcium release from muscle (ryanodine receptor) to reverse malignant hyperthermia from succinylcholine or volatile anesthetics. Also used for spasticity." }
-    ] }
-
 );
