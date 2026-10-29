@@ -460,10 +460,10 @@ function tabList() {
   if (S.view === "level" && isM(S.level)) L.push(["alts", "Drug Alternatives", "Can't order a drug? See same-class options and other drugs for the same problem, and how they differ."]);
   if (S.view === "gen") L.splice(1, 0, ["conds", "Conditions & Medicine Cautions", "Pick a condition to see which medicines mention it in their contraindications and warnings. Education only."]);
   if (S.view === "gen") L.splice(1, 0, ["families", "Drug Families", "Similar drugs side by side: beta blockers, statins, SSRIs and more, and what makes each one different."]);
-  if (hasBlood() && (!isF(S.level) || S.level === "pcc")) L.push(["flightp", "Flight Prep", "Gas laws, stresses of flight and hard critical care questions."]);
+  if (hasBlood() && !isF(S.level)) L.push(["flightp", "Flight Prep", "Gas laws, stresses of flight and hard critical care questions."]);
   if (hasBlood()) L.push(["blood", "Blood Products", "PRBCs, whole blood, plasma, MTP and transfusion reactions."]);
   if (hasHemo()) L.push(["hemo", "Hemodynamics", "A-lines, PA catheters, IABP, Impella, ECMO, LVAD and shock profiles."]);
-  if (hasLabs()) L.push(["labs", "Lab Values", labRoute() === "rn" ? "What each lab means for the meds you give." : labRoute() === "fl" ? "Labs for RSI, the vent, resuscitation and drips." : "Advanced labs, patterns and calculations."]);
+  if (hasLabs() && !(S.view === "level" && isF(S.level))) L.push(["labs", "Lab Values", labRoute() === "rn" ? "What each lab means for the meds you give." : labRoute() === "fl" ? "Labs for RSI, the vent, resuscitation and drips." : "Advanced labs, patterns and calculations."]);
   if (S.view === "level" && isF(S.level) && typeof FM_TABS !== "undefined") Object.keys(FM_TABS).forEach(function (k) { if (fmTierOk(FM_TABS[k][2], FM_TABS[k][3])) L.push([k, FM_TABS[k][0], FM_TABS[k][1]]); });
   if (S.level === "lvn" || S.level === "rn") L.push(["nbug", "Nursing Bug", "Assess, hold, labs, teaching: one skill at a time."]);
   var img = S.view === "level" && isI(S.level);
@@ -479,14 +479,13 @@ function tabList() {
 function tabName(k) { var t = tabList().filter(function (x) { return x[0] === k; })[0]; return t ? t[1] : k === "session" ? "Study session" : ""; }
 /* Hub tiles grouped into sections with short labels (UI cleanup, Oct 28 2026) */
 var HUB_GROUPS = [
-  ["Prolonged care", ["pcc", "fm_tiva", "pcc_vent", "pcc_nurse", "pcc_tele"]],
-  ["Field care", ["skills", "march", "fm_bleed", "fm_airway", "fm_pain", "fm_abx", "fm_head", "acls", "istat", "dive"]],
+  ["Field care", ["pcc", "pcc_icu", "march", "fm_trauma", "fm_care", "fm_adv"]],
   ["Look it up", ["registry", "families", "conds", "diseases", "illicit", "units", "body", "alts", "contrast", "labs", "blood", "hemo", "flightp"]],
   ["Food and vitamin compounds", ["vegc", "fruitc", "vitc"]],
   ["Study and practice", ["prep", "nbug", "cards", "scenarios", "tools", "games"]],
   ["Yours", ["mylist", "progress", "shop"]]
 ];
-var HUB_SHORT = { pcc_vent: "Vents, tubes and oxygen", pcc_nurse: "Turning, lines, eyes, skin", pcc_tele: "Consults and getting out", board: "Every field drug by class", acls: "Rhythm by rhythm", dive: "Dive tables, DCS and AGE", skills: "What this tier is trained to do", march: "The TCCC sequence and drill", fm_bleed: "Hemorrhage control, TXA, blood", fm_tiva: "Ketamine-based sedation", fm_head: "Herniation, 3% and 23.4% saline", fm_pain: "Wound pack, ketamine, esketamine", fm_abx: "Wounds, eye injury, burns", fm_airway: "Positioning to surgical airway", pcc: "Holding casualties for days", istat: "Point-of-care labs", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "Saved drugs and their interactions", tools: "Megacode, interactions, safety drills", scenarios: "Clinical cases", cards: "Flip, sort and master", games: "Match, crossword, scramble and more", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time", prep: "Timed tests with scores" };
+var HUB_SHORT = { pcc_icu: "TIVA, drips and the vent", fm_trauma: "Bleeding, airway, head injury", fm_care: "Pain, nausea, wounds, burns", fm_adv: "ACLS, i-STAT and dive", pcc_vent: "Vents, tubes and oxygen", pcc_nurse: "Turning, lines, eyes, skin", pcc_tele: "Consults and getting out", board: "Every field drug by class", acls: "Rhythm by rhythm", dive: "Dive tables, DCS and AGE", skills: "What this tier is trained to do", march: "Sequence, tier skills, drill", fm_bleed: "Hemorrhage control, TXA, blood", fm_tiva: "Ketamine-based sedation", fm_head: "Herniation, 3% and 23.4% saline", fm_pain: "Wound pack, ketamine, esketamine", fm_abx: "Wounds, eye injury, burns", fm_airway: "Positioning to surgical airway", pcc: "Long hold, nursing, flight prep", istat: "Point-of-care labs", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "Saved drugs and their interactions", tools: "Megacode, interactions, safety drills", scenarios: "Clinical cases", cards: "Flip, sort and master", games: "Match, crossword, scramble and more", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time", prep: "Timed tests with scores" };
 function hubView() {
   var L = tabList(), used = {}, c = '<nav class="hub2" aria-label="Sections">';
   function tile(t) {
@@ -494,9 +493,10 @@ function hubView() {
     var fmt = typeof FM_TABS !== "undefined" && (FM_TABS[t[0]] || (t[0] === "diseases" && S.view === "level" && isF(S.level)));
     return '<button class="hubtile t-' + t[0] + (fmt ? ' fmt' : '') + (proLocked(t[0]) ? ' locked' : '') + '" data-tab="' + t[0] + '">' + icon(t[0]) + '<span class="ht"><strong>' + esc(t[1]) + (proLocked(t[0]) ? ' ' + proBadge(t[0]) : '') + '</strong><span>' + esc(t[0] === "registry" && S.view !== "gen" ? "Every drug in your scope" : hubShort(t[0]) || t[2]) + '</span></span>' + (t[0] === "shop" ? '<span class="hubsticks">' + stickIcon(14) + sticks().toLocaleString() + '</span>' : t[0] === "mylist" && marks().length ? '<span class="hubsticks">' + marks().length + '</span>' : '') + '</button>';
   }
-  HUB_GROUPS.forEach(function (g) {
+  var fld = S.view === "level" && isF(S.level), groups = fld ? [HUB_GROUPS[0], HUB_GROUPS[1], ["Practice and progress", HUB_GROUPS[3][1].concat(HUB_GROUPS[4][1])]] : HUB_GROUPS;
+  groups.forEach(function (g, gi) {
     var items = L.filter(function (t) { return g[1].indexOf(t[0]) >= 0; }); if (!items.length) return;
-    c += '<h3 class="hubgh">' + esc(g[0]) + '</h3><div class="hub">' + items.map(tile).join("") + '</div>';
+    c += '<h3 class="hubgh">' + esc(g[0]) + '</h3><div class="hub' + (fld && gi === 2 ? ' minis' : '') + '">' + items.map(tile).join("") + '</div>';
   });
   var rest = L.filter(function (t) { return !used[t[0]]; });
   if (rest.length) c += '<h3 class="hubgh">More</h3><div class="hub">' + rest.map(tile).join("") + '</div>';
@@ -741,6 +741,7 @@ function flashcards() {
 }
 
 function viewLevel() {
+  if (S.view === "level" && isF(S.level) && typeof fmAlias === "function") fmAlias();
   if (!S.tab || (S.tab !== "hub" && S.tab !== "session" && !tabName(S.tab))) S.tab = "hub";
   if (S.tab !== "hub" && S.tab !== "session" && typeof proLocked === "function" && proLocked(S.tab)) { var lt = S.tab; S.tab = "hub"; setTimeout(function () { openPaywall(tabName(lt), tabTier(lt)); }, 0); }
   if (S.tab === "calc") S.tab = "hub";  /* Calc Lab was removed */
@@ -9458,22 +9459,29 @@ function fmTierOk(min, max) { var i = fmTierIdx(S.level); return i >= fmTierIdx(
 function fmTierName(k) { var l = (DB.FLEVELS || []).filter(function (x) { return x.key === k; })[0]; return l ? (l.short === "PCC" ? "Prolonged Casualty Care" : l.short + " (" + l.name + ")") : k; }
 /* field tabs on the Field Medic level hub: key -> [name, description] */
 var FM_TABS = {
-  skills: ["Tier Skills", "What this tier is trained to do, by MARCH-PAWS.", "asm", "cpp"],
-  march: ["MARCH-PAWS", "The TCCC sequence, step by step, and the tier drill.", "asm"],
-  fm_bleed: ["Bleeding & Shock", "Hemorrhage control, TXA, calcium and blood.", "asm"],
-  fm_airway: ["Airway & Breathing", "Positioning to cricothyroidotomy, chest seals, decompression.", "asm"],
-  fm_pain: ["Pain & Nausea", "The wound medication pack, ketamine and esketamine.", "cls"],
-  fm_abx: ["Antibiotics & Wounds", "Open wounds, penetrating eye injury and burns.", "cls"],
-  fm_head: ["Head Injury & Hypertonic Saline", "Herniation signs, 3% and 23.4% saline.", "cmc"],
-  acls: ["ACLS Algorithms", "Rhythm by rhythm: what comes next.", "cpp"],
-  istat: ["i-STAT Labs", "Point-of-care labs and how to read them.", "cpp"],
-  dive: ["Dive Medicine", "How dive tables work, DCS and arterial gas embolism.", "cpp"],
-  pcc: ["Prolonged Casualty Care", "Holding casualties for hours to weeks.", "pcc"],
-  fm_tiva: ["TIVA & Drips", "Ketamine-based sedation and infusions.", "pcc"],
-  pcc_vent: ["Ventilation & Airway Care", "Keeping a tube in and the lungs working for days.", "pcc"],
-  pcc_nurse: ["Nursing Care", "Turning, padding, lines, eyes, mouth and skin.", "pcc"],
-  pcc_tele: ["Teleconsult & Flight Prep", "Getting expert help, and getting the casualty out.", "pcc"]
+  pcc: ["Prolonged Care", "The long hold, nursing care, teleconsult and flight prep.", "pcc"],
+  pcc_icu: ["Drips & Ventilator", "TIVA, sedation drips and running a vent for days.", "pcc"],
+  march: ["MARCH-PAWS", "The TCCC sequence, your tier's skills and the drill.", "asm"],
+  fm_trauma: ["Trauma Care", "Bleeding and shock, airway and breathing, head injury.", "asm"],
+  fm_care: ["Pain & Antibiotics", "The wound medication pack, nausea, wounds, eyes and burns.", "cls"],
+  fm_adv: ["Advanced Care", "ACLS rhythms, i-STAT labs and dive medicine.", "cpp"]
 };
+/* combined tabs (Oct 28 2026, owner: fewer, cleaner tabs): group -> sub-tabs [key, label, minTier, maxTier] */
+var FM_GROUPS = {
+  pcc: [["pcc", "The long hold"], ["pcc_nurse", "Nursing"], ["pcc_tele", "Consult & flight"]],
+  pcc_icu: [["fm_tiva", "TIVA & drips"], ["pcc_vent", "Ventilator"]],
+  march: [["march", "MARCH-PAWS"], ["skills", "Tier skills", "asm", "cpp"], ["drill", "Check yourself"]],
+  fm_trauma: [["fm_bleed", "Bleeding"], ["fm_airway", "Airway"], ["fm_head", "Head injury", "cmc"]],
+  fm_care: [["fm_pain", "Pain & nausea"], ["fm_abx", "Antibiotics"]],
+  fm_adv: [["acls", "ACLS"], ["istat", "i-STAT"], ["dive", "Dive"]]
+};
+function fmWhere(k) { for (var g in FM_GROUPS) { var x = FM_GROUPS[g].filter(function (y) { return y[0] === k; })[0]; if (x) return FM_TABS[g][0] + ": " + x[1]; } return ""; }
+function fmSubsOf(g) { return (FM_GROUPS[g] || []).filter(function (x) { return fmTierOk(x[2], x[3]); }); }
+/* old tab keys (links inside lessons, saved state) open their group at the right sub-tab */
+function fmAlias() {
+  if (!S.tab || FM_TABS[S.tab]) return;
+  for (var g in FM_GROUPS) { if (FM_GROUPS[g].some(function (x) { return x[0] === S.tab; })) { S.fmSub = S.fmSub || {}; S.fmSub["g_" + g] = S.tab; S.tab = g; return; } }
+}
 if (typeof ICO !== "undefined") {
   ICO.skills = '<path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/>';
   ICO.board = '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14h18M9 4v16"/>';
@@ -9485,6 +9493,7 @@ if (typeof ICO !== "undefined") {
   ICO.march = '<path d="M4 6h16M4 12h10M4 18h7"/><circle cx="18" cy="16" r="3"/>';
   ICO.fm_bleed = FM_ART.drop; ICO.fm_tiva = FM_ART.drip; ICO.fm_head = FM_ART.brain; ICO.fm_pain = FM_ART.bolt; ICO.fm_abx = FM_ART.shield; ICO.fm_airway = FM_ART.lungs;
   ICO.pcc = '<path d="M3 20V9l9-5 9 5v11"/><path d="M9 20v-6h6v6M12 8v4M10 10h4"/>';
+  ICO.fm_trauma = ICO.fm_bleed; ICO.fm_care = ICO.fm_pain; ICO.fm_adv = ICO.acls; ICO.pcc_icu = ICO.fm_tiva;
   ICO.istat = '<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M10 6h4M9.5 17h5M10 10h4v4h-4z"/>';
 }
 /* the priority calls also join the Field Medic registry bank in Field Medic Practice */
@@ -9726,11 +9735,20 @@ document.addEventListener("click", function (e) { var b = e.target.closest && e.
 document.addEventListener("input", function (e) { if (e.target && e.target.id === "fmq") { S.fmq = e.target.value; clearTimeout(S.fmqT); S.fmqT = setTimeout(function () { var pos = e.target.selectionStart; render(); var f = document.getElementById("fmq"); if (f) { f.focus(); try { f.setSelectionRange(pos, pos); } catch (x) {} } }, 250); } });
 function fmKey(list, open) { return '<details class="fmkey"' + (open ? ' open' : '') + '><summary>Key ideas</summary><ul>' + list.map(function (k) { return '<li>' + esc(k) + '</li>'; }).join("") + '</ul></details>'; }
 /* Learn / Practice sub-tabs inside a field tab */
-function fmSubBar(k, labels) { var cur = fmSub(k), opts = typeof labels[0] === "string" ? [["learn", labels[0]], ["practice", labels[1]]] : labels; return '<div class="seg3 fmsub' + (opts.length > 2 ? ' three' : '') + '" role="tablist">' + opts.map(function (x) { return '<button role="tab" data-fmsub="' + k + '|' + x[0] + '" aria-pressed="' + (cur === x[0]) + '">' + x[1] + '</button>'; }).join("") + '</div>'; }
+function fmSubBar(k, labels) { var cur = fmSub(k), opts = typeof labels[0] === "string" ? [["learn", labels[0]], ["practice", labels[1]]] : labels; return '<div class="seg3 fmsub' + (k.indexOf("g_") === 0 ? ' fmgrp' : ' inner') + '" role="tablist">' + opts.map(function (x) { return '<button role="tab" data-fmsub="' + k + '|' + x[0] + '" aria-pressed="' + (cur === x[0]) + '">' + x[1] + '</button>'; }).join("") + '</div>'; }
 function fmSub(k) { return (S.fmSub || {})[k] || "learn"; }
 function fmSubIs(k) { return ((S.fmSub || {})[k] || "learn") === "practice"; }
 document.addEventListener("click", function (e) { var b = e.target.closest && e.target.closest("[data-fmsub]"); if (!b || typeof S === "undefined") return; e.preventDefault(); e.stopPropagation(); var p = b.getAttribute("data-fmsub").split("|"); S.fmSub = S.fmSub || {}; S.fmSub[p[0]] = p[1]; render(); }, true);
 function fieldTab(k) {
+  if (FM_GROUPS[k]) {
+    var subs = fmSubsOf(k), cur = (S.fmSub || {})["g_" + k];
+    if (!subs.some(function (x) { return x[0] === cur; })) cur = subs[0][0];
+    S.fmSub = S.fmSub || {}; S.fmSub["g_" + k] = cur;
+    return '<div class="fmwrap">' + (subs.length > 1 ? fmSubBar("g_" + k, subs) : '') + '</div>' + fieldTabBody(cur);
+  }
+  return fieldTabBody(k);
+}
+function fieldTabBody(k) {
   var c = '<div class="fmwrap">';
   if (k === "skills") {
     var cur = fmTierIdx(S.level), cats = [];
@@ -9742,16 +9760,14 @@ function fieldTab(k) {
     });
     var nxt = DB.FLEVELS[cur + 1];
     if (nxt) c += '<p class="muted small">Next: ' + esc(nxt.short === "PCC" ? nxt.name : nxt.short + ", " + nxt.name) + ' adds ' + FM_SKILLS.filter(function (x) { return x[0] === nxt.key; }).length + ' more skill areas. <button class="linkish" data-level="' + nxt.key + '">Open ' + esc(nxt.short) + '</button></p>';
-  } else if (k === "march" && fmSubIs("march")) {
-    c += fmSubBar("march", ["Learn", "Check yourself"]);
+  } else if (k === "drill") {
     var seen = fmSeen(), all = fmIds().filter(function (id) { return scopeFor(S.level).ids.indexOf(id) >= 0; }), n = all.filter(function (id) { return seen.indexOf(id) >= 0; }).length;
     c += '<section class="fmmarch" aria-label="MARCH-PAWS"><div class="fmletters">' + FM_MARCH.map(function (m, i) { return '<button class="fmlet' + (i >= 5 ? ' paws' : '') + '" data-fmstep="' + i + '" aria-pressed="' + (S.fmStep === i) + '" aria-label="' + esc(m[1]) + '">' + m[0] + '</button>'; }).join("") + '</div>' +
       (S.fmStep != null && FM_MARCH[S.fmStep] ? '<div class="fmstep"><strong>' + esc(FM_MARCH[S.fmStep][1]) + '</strong><p>' + esc(FM_MARCH[S.fmStep][2]) + '</p></div>' : '<p class="muted small fmhint">Say each step out loud, then tap the letter to check.</p>') + '</section>';
     c += '<button class="btn nrgo" data-act="fmdrill">Start the ' + esc((DB.FLEVELS.filter(function (l) { return l.key === S.level; })[0] || {}).short || "") + ' drill' + (PAYWALL && !isPro() ? ' ' + proBadge() : '') + '</button><p class="muted small">Priority calls in order, plus questions on the medications at this tier.</p>';
   } else if (k === "march") {
-    c += fmSubBar("march", ["Learn", "Check yourself"]);
     c += '<p class="fmlead">MARCH-PAWS is the order TCCC works a casualty: the five life threats first, then the care that keeps a casualty alive for the long haul.</p>';
-    c += '<ol class="fmmarchlist">' + FM_MARCH.map(function (m, i) { return '<li class="' + (i >= 5 ? 'paws' : '') + '"><span class="fmml">' + m[0] + '</span><div><strong>' + esc(m[1]) + '</strong><p>' + esc(m[2]) + '</p><button class="linkish" data-tab="fm_' + m[3] + '">Learn more in ' + esc(FM_TABS["fm_" + m[3]] ? FM_TABS["fm_" + m[3]][0] : "") + '</button></div></li>'; }).join("") + '</ol>';
+    c += '<ol class="fmmarchlist">' + FM_MARCH.map(function (m, i) { return '<li class="' + (i >= 5 ? 'paws' : '') + '"><span class="fmml">' + m[0] + '</span><div><strong>' + esc(m[1]) + '</strong><p>' + esc(m[2]) + '</p><button class="linkish" data-tab="fm_' + m[3] + '">Learn more in ' + esc(fmWhere("fm_" + m[3])) + '</button></div></li>'; }).join("") + '</ol>';
     c += '<h3 class="fmh">Phases of care</h3><ol class="pccday"><li><strong>Care Under Fire</strong><span>Return fire, get to cover, and stop life-threatening bleeding with a tourniquet only when it is tactically possible.</span></li><li><strong>Tactical Field Care</strong><span>Behind cover: the full MARCH-PAWS assessment and treatment, and the DD1380 card.</span></li><li><strong>Tactical Evacuation Care</strong><span>On the way out: the same care plus more equipment, oxygen, monitoring and handoff.</span></li><li><strong>Prolonged Casualty Care</strong><span>When evacuation is delayed: holding the casualty for hours to days.</span></li></ol>';
   } else if (k.indexOf("fm_") === 0) {
     var t = fmSec(k.slice(3)); if (!t) return "";
@@ -9761,7 +9777,7 @@ function fieldTab(k) {
     c += '<h3 class="fmh">The 10 core capabilities</h3><div class="pcccaps">' + PCC_CAPS.map(function (x, i) { return '<details class="pcccap"><summary><span class="pccn">' + (i + 1) + '</span>' + esc(x[0]) + '</summary><p>' + esc(x[1]) + '</p></details>'; }).join("") + '</div>';
     c += '<h3 class="fmh">The rhythm of a long hold</h3><ol class="pccday">' + PCC_DAY.map(function (x) { return '<li><strong>' + esc(x[0]) + '</strong><span>' + esc(x[1]) + '</span></li>'; }).join("") + '</ol>';
     c += '<h3 class="fmh">Drugs that run for days</h3>' + fmMedTiles(PCC_DRUGS.map(function (d) { return d[0]; }));
-    c += '<p class="muted small">Sedation drips are covered in TIVA &amp; Drips, and labs in i-STAT Labs.</p>';
+    c += '<p class="muted small">Sedation drips are covered in Drips &amp; Ventilator, and labs in Advanced Care.</p>';
   } else if (k === "board") {
     var f = S.fbf || "all";
     c += '<p class="fmlead">Every medication a combat paramedic works with, grouped and color-coded by what it does. Tap a drug for its full page. No doses are shown at the Field Medic level.</p>';
