@@ -359,10 +359,9 @@ function viewHome() {
    '<button class="route gen wide' + pt("gen") + '" data-go="gen">' + (S.pointGo === "gen" ? PT : '') + '<span class="eyebrow">Start here</span><h2>BugDex</h2><p>Every medication, explained in plain language. Search or browse.</p><span class="count">' + genN + ' medications</span><span class="sage">' + bugSVG("sage") + '</span></button>' +
    myListRoute() +
    '<button class="route evsmall" data-go="everyday"><span class="evs-ic" aria-hidden="true">' + bugArt(bugById("grub-everyday"), "", { mood: "happy" }) + '</span><span class="evs-tx"><strong>Everyday Health</strong><span>Medicine cabinet, small sicknesses, normal vitals</span></span><span class="evs-go" aria-hidden="true">&rsaquo;</span></button>' +
-   '</section><h3 class="homegh">Study by role</h3><section class="routes"><div class="minis fmrow">' +
+   '</section><h3 class="homegh">Study by role</h3><section class="routes"><div class="minis">' +
    mini("fm", "flevels", "Field Medic", "TCCC Tiers 1 to 4 and prolonged care", FIELD_BUG) +
    mini("ph", "levels", "Prehospital", "EMT to Flight Paramedic", "grub-medic") +
-   '</div><hr class="rolesep" aria-hidden="true"><div class="minis">' +
    mini("rn", "nlevels", "Nursing", "CNA, LVN/LPN and RN", "grub-nurse") +
    mini("md", "mlevels", "Medical School", "MS1 to Intern", "grub-doc") +
    mini("im", "ilevels", "Imaging", "X-ray, CT, MRI, NM and IR", "grub-imaging") +
