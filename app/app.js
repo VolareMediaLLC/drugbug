@@ -314,6 +314,7 @@ var UTIL_VIEWS = { settings: 1, easy: 1, classes: 1, admin: 1 };
 function go(view, opts) {
   if (UTIL_VIEWS[view] && !UTIL_VIEWS[S.view] && S.view !== view && S.view !== "terrarium") S.utilBack = { view: S.view, level: S.level, tab: S.tab };
   clearTimeout(S.qT); S.view = view; Object.assign(S, { pointGo: null, showFilt: false, onlyMarks: false, tool: null, shopF: null, tab: "hub", q: "", tags: {}, group: "all", scen: null, fc: null, nr: null, sess: null, prepNr: null, unit: null, fam: null, famq: "", cn: null, menu: false, mupop: false, fmq: "", trId: null }, opts || {});
+  if ((S.view === "flevels" || S.view === "field" || (S.view === "level" && isF(S.level))) && typeof fmUnlocked === "function" && !fmUnlocked()) { S.view = "home"; view = "home"; } /* Field Medic is hidden until a code is redeemed */
   Admin.on = view === "admin"; if (view === "level") store("lastLevel", S.level);
   var h = view === "home" ? "" : view === "admin" ? "admin" : view === "classes" ? "classes" : view === "settings" ? "settings" : view === "terrarium" ? "terrarium" : view === "levels" ? "prehospital" : view === "flevels" ? "fieldmedic" : view === "nlevels" ? "nursing" : view === "mlevels" ? "medschool" : view === "ilevels" ? "imaging" : view === "everyday" ? "everyday" : view === "field" ? "field" : view === "gen" ? "general" : view === "easy" ? "easy" : S.level;
   try { history.replaceState(null, "", h ? "#" + h : location.pathname); } catch (e) {}
@@ -360,7 +361,7 @@ function viewHome() {
    myListRoute() +
    '<button class="route evsmall" data-go="everyday"><span class="evs-ic" aria-hidden="true">' + bugArt(bugById("grub-everyday"), "", { mood: "happy" }) + '</span><span class="evs-tx"><strong>Everyday Health</strong><span>Medicine cabinet, small sicknesses, normal vitals</span></span><span class="evs-go" aria-hidden="true">&rsaquo;</span></button>' +
    '</section><h3 class="homegh">Study by role</h3><section class="routes"><div class="minis">' +
-   '<div class="fmcell">' + mini("fm", "flevels", "Field Medic", "TCCC Tiers 1 to 4 and prolonged care", FIELD_BUG) + '</div>' +
+   (typeof fmUnlocked === "function" && fmUnlocked() ? '<div class="fmcell">' + mini("fm", "flevels", 'Field Medic <span class="pill proto">Prototype</span>', "TCCC Tiers 1 to 4 and prolonged care", FIELD_BUG) + '</div>' : '') +
    mini("ph", "levels", "Prehospital", "EMT to Flight Paramedic", "grub-medic") +
    mini("rn", "nlevels", "Nursing", "CNA, LVN/LPN and RN", "grub-nurse") +
    mini("md", "mlevels", "Medical School", "MS1 to Intern", "grub-doc") +
@@ -403,7 +404,7 @@ function homeContinue() {
 }
 function viewLevels() {
   var rt = routeCtx(), nurse = rt === "rn", med = rt === "md", img = rt === "im", fm = rt === "fm", L = nurse ? DB.NLEVELS : med ? DB.MLEVELS : img ? DB.ILEVELS : fm ? DB.FLEVELS : DB.LEVELS;
-  var c = topbar() + '<header class="pagehead"><h1>' + (fm ? "Field Medic: choose your tier" : nurse ? "Nursing: choose your license" : med ? "Medical school: choose your year" : img ? "Imaging: choose your modality" : "Choose your level") + '</h1><p>' + (fm ? "Tactical Combat Casualty Care in four tiers, from every service member to the combat paramedic with prolonged casualty care. Each tier includes every skill and medication from the tiers before it." : img ? "Each modality covers the reaction cart and sedation drugs every tech needs, plus the contrast agents and radiopharmaceuticals for that modality." : med ? "Every year studies the full drug library; the exam prep, scenarios and focus change as you advance. Your bug evolves with you." : "Each level includes every drug from the levels before it. Your bug evolves as your scope grows.") + '</p></header><section class="levels' + (fm ? " flv" : (L.length === 3 || L.length === 5 ? " three" : "")) + '">';
+  var c = topbar() + '<header class="pagehead"><h1>' + (fm ? 'Field Medic: choose your tier <span class="pill proto">Prototype</span>' : nurse ? "Nursing: choose your license" : med ? "Medical school: choose your year" : img ? "Imaging: choose your modality" : "Choose your level") + '</h1><p>' + (fm ? "Tactical Combat Casualty Care in four tiers, from every service member to the combat paramedic with prolonged casualty care. Each tier includes every skill and medication from the tiers before it." : img ? "Each modality covers the reaction cart and sedation drugs every tech needs, plus the contrast agents and radiopharmaceuticals for that modality." : med ? "Every year studies the full drug library; the exam prep, scenarios and focus change as you advance. Your bug evolves with you." : "Each level includes every drug from the levels before it. Your bug evolves as your scope grows.") + '</p></header><section class="levels' + (fm ? " flv" : (L.length === 3 || L.length === 5 ? " three" : "")) + '">';
   L.forEach(function (l, i) {
     c += '<button class="lvcard ' + LVCLASS[l.key] + '" data-level="' + l.key + '"><span class="stage">' + levelBug(l.key) + '</span><span class="pip">' + (img ? esc(l.full).toUpperCase() : esc(scopeTag(l.key, i, L.length)).toUpperCase()) + '</span><h2>' + esc(l.name) + '</h2><span class="bugname">' + esc(l.bug) + '</span><p>' + esc(l.blurb) + '</p></button>';
   });
@@ -5752,11 +5753,35 @@ function gearBtn() { return '<button class="theme-btn gear" data-go="settings" a
 function setOpts(name, cur, list) { return '<div class="segs" role="radiogroup" aria-label="' + esc(name) + '">' + list.map(function (o) { return '<button class="seg" role="radio" data-set="' + esc(name) + '" data-val="' + esc(String(o[0])) + '" aria-checked="' + (String(cur) === String(o[0])) + '">' + esc(o[1]) + '</button>'; }).join("") + '</div>'; }
 function setTog(name, on, label) { return '<label class="tog"><input type="checkbox" data-settog="' + esc(name) + '"' + (on ? " checked" : "") + '><span class="tgl" aria-hidden="true"></span><span>' + esc(label) + '</span></label>'; }
 function setRow(label, help, ctl) { return '<div class="setrow"><div class="sl"><strong>' + esc(label) + '</strong>' + (help ? '<span class="muted small">' + esc(help) + '</span>' : '') + '</div><div class="sc">' + ctl + '</div></div>'; }
-function setCard(id, title, body) { return '<section class="setcard" id="set-' + id + '"><h2>' + esc(title) + '</h2>' + body + '</section>'; }
+function setCard(id, title, body) { return (S.setTab || "display") !== id ? "" : '<section class="setcard" id="set-' + id + '"><h2>' + esc(title) + '</h2>' + body + '</section>'; }
+/* hidden Field Medic (military) section: unlocked by a code, shown as a prototype (owner, Oct 28 2026). Only SHA-256 hashes ship. */
+var FM_CODES = { "3cffa3f08ba9410ebbf2ac347359f647fcc57eed26e4294a7991a5b6b9ed77ab": { days: 0 }, "327a19299989c959457c7697b6dd8cdb9ec2c1704fb4e12653389c086938b0e5": { days: 30 } };
+function fmUnlocked() { return !!store("fmUnlock"); }
+function fmPassActive() { var p = store("fmPass"); return !!(p && p.until > Date.now()); }
+function fmCodeTry(raw) {
+  var code = String(raw || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  if (!code) return;
+  if (!(window.crypto && crypto.subtle)) { alertMsg("This browser can't check codes."); return; }
+  crypto.subtle.digest("SHA-256", new TextEncoder().encode("drugbug-fm:" + code)).then(function (buf) {
+    var h = Array.prototype.map.call(new Uint8Array(buf), function (b) { return ("0" + b.toString(16)).slice(-2); }).join(""), hit = FM_CODES[h];
+    if (!hit) { if (typeof DEMO !== "undefined" && DEMO && typeof webCodeTry === "function") { webCodeTry(raw); S.setMsg = (typeof PRO !== "undefined" && PRO.msg) || ""; return render(); } return alertMsg("That code isn't valid. Check the spelling and try again."); }
+    store("fmUnlock", { ts: Date.now() });
+    var msg = "Code accepted. Field Medic (prototype) is now on your main menu.";
+    if (hit.days) { var old = store("fmPass"); if (old && old.h === h) msg = "This code is already active."; else { store("fmPass", { h: h, until: Date.now() + hit.days * 864e5 }); msg = "Code accepted. Field Medic (prototype) is unlocked, with full access to it until " + new Date(Date.now() + hit.days * 864e5).toLocaleDateString() + "."; } }
+    S.setMsg = msg; render(); window.scrollTo(0, 0);
+  });
+}
+function fmCodeRow() {
+  var on = fmUnlocked(), p = store("fmPass");
+  return setRow("Redeem a code", "Access codes from DrugBug unlock extra sections or time.", '<form class="inl" data-fmcode="1"><input class="pinput" id="fmcodein" maxlength="24" autocomplete="off" autocapitalize="characters" placeholder="Enter code"><button class="btn small" type="submit">Redeem</button></form>') +
+    (on ? setRow("Field Medic", "Prototype, unlocked on this device." + (p && p.until > Date.now() ? " Full access until " + new Date(p.until).toLocaleDateString() + "." : ""), '<span class="pill proto">Prototype</span><button class="btn small ghost" data-act="fmhide">Hide it</button>') : "");
+}
 function settingsView() {
   var s = SET(), P = Prog.d, ag = agreeRec(), c = topbar() + '<div class="settings lvl-gen"><header class="pagehead"><h1>Settings</h1><p>' + (!HASDB ? 'Saved on this device.' : 'Saved on this device. Your progress, bugs and scores also sync to your account.') + '</p></header>' + proCard();
   if (S.setMsg) { c += '<div class="presult good" role="status">' + esc(S.setMsg) + '</div>'; S.setMsg = ""; }
-  c += '<nav class="setnav">' + [["display", "Display"], ["study", "Study"], ["sound", "Sound"], ["protocols", "Protocols"]].concat(!canPrint() ? [] : [["print", "Printing"]], [["privacy", "Privacy & account"], ["about", "About"]]).map(function (x) { return '<a href="#set-' + x[0] + '" data-setjump="' + x[0] + '">' + x[1] + '</a>'; }).join("") + '</nav>';
+  var tabs = [["display", "Display"], ["study", "Study"], ["sound", "Sound"], ["protocols", "Protocols"]].concat(!canPrint() ? [] : [["print", "Printing"]], [["privacy", "Account"], ["feedback", "Feedback"], ["about", "About"]]);
+  if (!tabs.some(function (x) { return x[0] === S.setTab; })) S.setTab = "display";
+  c += '<nav class="settabs" role="tablist" aria-label="Settings sections">' + tabs.map(function (x) { return '<button role="tab" data-settab="' + x[0] + '" aria-selected="' + (S.setTab === x[0]) + '">' + x[1] + '</button>'; }).join("") + '</nav>';
   // display
   c += setCard("display", "Display",
     setRow("Theme", "", setOpts("theme", themePref(), [["dark", "Night shift (default)"], ["light", "Day shift"], ["system", "Match my device"]])) +
@@ -5803,7 +5828,12 @@ function settingsView() {
   pv += setRow("Download my data", "A file with your progress, scores, saved list and settings.", '<button class="btn small ghost" data-act="exportdata">Download</button>');
   pv += setRow("Reset my progress", "Clears mastery, XP, streaks, achievements and scores. Keeps your bugs, sticks, saved list and settings.", S.resetAsk ? '<span class="confirm">Reset everything? <button class="btn small again" data-act="resetyes">Reset</button><button class="btn small ghost" data-act="resetno">Cancel</button></span>' : '<button class="btn small ghost" data-act="resetask">Reset progress</button>');
   pv += setRow("Delete all my data", "Removes everything DrugBug stores about you, here and online. Cannot be undone.", '<button class="btn small again" data-legal="data">Delete…</button>');
-  c += setCard("privacy", "Privacy & account", (typeof accCard === "function" ? accCard() : "") + pv);
+  c += setCard("privacy", "Account & privacy", fmCodeRow() + (typeof accCard === "function" ? accCard() : "") + pv);
+  // feedback
+  c += setCard("feedback", "Feedback",
+    setRow("Send feedback", "Bugs, content corrections, ideas or anything else. It opens your email app.", '<button class="btn small" data-idea="1">Write feedback</button>') +
+    setRow("Report a problem on a page", "Every drug page also has a Report button at the bottom.", '<button class="btn small ghost" data-report="app||">Report a problem</button>') +
+    fbLimitsHTML(false));
   // about
   var all = Object.keys(DB.drugs), rv = reviewedCount(all);
   c += setCard("about", "About",
@@ -5849,6 +5879,7 @@ function settingsClick(t, a) {
     if (k === "nrN" || k === "nrMode" || k === "adaptive") S.nr = null;
     render(); var f = $('[data-set="' + k + '"][data-val="' + v + '"]'); if (f) f.focus(); return true;
   }
+  if (a.settab) { S.setTab = a.settab; render(); var tb = $('[data-settab="' + a.settab + '"]'); if (tb) tb.focus(); return true; }
   if (a.setjump) { var el = document.getElementById("set-" + a.setjump); if (el) el.scrollIntoView({ behavior: SET().motion ? "auto" : "smooth", block: "start" }); return true; }
   switch (a.act) {
     case "music": MU.armed = true; S.mupop = !S.mupop; render(); return true;
@@ -5859,6 +5890,7 @@ function settingsClick(t, a) {
     case "resetask": S.resetAsk = true; render(); return true;
     case "resetno": S.resetAsk = false; render(); return true;
     case "resetyes": resetProgress(); return true;
+    case "fmhide": try { localStorage.removeItem("drugbug:fmUnlock"); } catch (x) {} store("fmUnlock", null); S.setMsg = "Field Medic is hidden again. Redeem the code to bring it back."; render(); return true;
   }
   return false;
 }
@@ -5872,6 +5904,7 @@ document.addEventListener("change", function (e) {
 });
 document.addEventListener("submit", function (e) {
   var f = e.target; if (!f.getAttribute) return;
+  if (f.getAttribute("data-fmcode")) { e.preventDefault(); fmCodeTry((($("#fmcodein") || {}).value || "")); return; }
   if (f.getAttribute("data-setlb")) {
     e.preventDefault(); var nm = (($("#setlbname") || {}).value || "").trim(); if (!nm || isMinor()) return;
     if (!nameOk(nm)) { S.setMsg = ""; S.lbMsg = NAMEMSG; alertMsg(NAMEMSG); return; }
@@ -6740,6 +6773,7 @@ function webCodeTry(raw) {
 }
 function tier() {
   if (!PAYWALL) return "pro";
+  if (typeof fmPassActive === "function" && fmPassActive() && typeof S !== "undefined" && S.view === "level" && typeof isF === "function" && isF(S.level)) return "pro"; /* Field Medic month code */
   if (DEMO) return webPass() ? "pro" : "free";
   if (!NATIVE) return SET().previewTier || "pro";
   if (PRO.tier === "pro" || licenseActive()) return "pro";
@@ -8529,8 +8563,22 @@ sbSchedule(true);
    (the store decides whether it actually appears; Apple shows it at most 3 times a year). Never during a quiz or game.
    Ideas: a short form that opens the person's email app with their suggestion filled in, addressed to the DrugBug inbox. */
 var RV_MIN_SESS = 5, RV_GAP_DAYS = 120;
-var IDEA_TYPES = ["A feature I would like", "A drug to add", "A topic, exam or specialty to cover", "Something that is confusing", "Other"];
+var IDEA_TYPES = ["General feedback", "Something is wrong (a bug)", "A content correction", "A feature I would like", "A drug to add", "A topic, exam or specialty to cover", "Something that is confusing", "Other"];
 var ID = { open: null, sent: false, err: "" };
+/* what senders can and cannot include (owner, Oct 28 2026). Shown before anything is sent. */
+var FB_LIMITS = [
+  ["No patient information", "No names, dates of birth, record numbers, photos or any detail that could identify a patient (protected health information under HIPAA)."],
+  ["No classified or sensitive operational information", "No classified or controlled unclassified information (CUI), and nothing covered by operations security (OPSEC): unit names, locations, movements, mission or equipment details."],
+  ["Only what you have the right to share", "No agency protocols, internal documents, copyrighted material or other people's work without permission."],
+  ["Nothing about other people, nothing unlawful", "No personal information about anyone else, and nothing harassing, threatening, defamatory or illegal."],
+  ["Not for emergencies or medical advice", "Feedback is not monitored around the clock and DrugBug does not give individual medical advice. In an emergency, call 911."],
+  ["Use of your feedback", "By sending, you agree that Volare Media LLC may use, change and publish your suggestions to improve DrugBug, without payment, credit or any obligation to you."],
+  ["Privacy", "Feedback travels by email, so it is only as private as your email account. Your address and message are handled under the DrugBug Privacy Policy."]
+];
+function fbLimitsHTML(withBox) {
+  return '<div class="fblimits"><strong>Before you send</strong><ul>' + FB_LIMITS.map(function (x) { return '<li><b>' + esc(x[0]) + '.</b> ' + esc(x[1]) + '</li>'; }).join("") + '</ul>' +
+    (withBox ? '<label class="fbok"><input type="checkbox" id="idok"' + (ID.ok ? " checked" : "") + '> I have read this, and my message follows these limits.</label>' : '') + '<p class="muted small"><button class="linkish" data-legal="terms">Terms of Use</button> · <button class="linkish" data-legal="privacy">Privacy Policy</button></p></div>';
+}
 var idlg = document.createElement("div"); idlg.id = "idlg"; idlg.className = "sheet rsheet"; idlg.hidden = true; document.body.appendChild(idlg);
 
 function ideaEmail() { var c = window.DRUGBUG_CONFIG || {}; return c.supportEmail || CONTACT; }
@@ -8559,25 +8607,25 @@ function rateMaybe(sc) {
 /* Settings row: rate + send ideas */
 function ideasRow() {
   var u = rateUrl();
-  return setRow("Enjoying DrugBug?", (u ? "Ratings help other students find the app. " : "") + "Ideas go straight to the DrugBug team.",
-    (u ? '<a class="btn small ghost" href="' + esc(u) + '" target="_blank" rel="noopener">Rate DrugBug</a> ' : '') + '<button class="btn small ghost" data-idea="1">Send an idea</button>');
+  return setRow("Enjoying DrugBug?", (u ? "Ratings help other students find the app. " : "") + "Feedback and ideas go straight to the DrugBug team.",
+    (u ? '<a class="btn small ghost" href="' + esc(u) + '" target="_blank" rel="noopener">Rate DrugBug</a> ' : '') + '<button class="btn small ghost" data-idea="1">Send feedback</button>');
 }
-function openIdeas() { ID.open = { type: IDEA_TYPES[0], text: "" }; ID.sent = false; ID.err = ""; S.menu = false; drawIdeas(); idlg.hidden = false; var f = $("#idtext", idlg); if (f) f.focus(); }
+function openIdeas(type) { ID.open = { type: type || IDEA_TYPES[0], text: "" }; ID.sent = false; ID.err = ""; ID.ok = false; S.menu = false; drawIdeas(); idlg.hidden = false; var f = $("#idtext", idlg); if (f) f.focus(); }
 function closeIdeas() { idlg.hidden = true; idlg.innerHTML = ""; ID.open = null; }
 function ideaMail(o) {
   var lv = ctxKey(), lvn = lv === "gen" ? "All drugs" : lv ? levelObj(lv).name : "Home";
   var plat = isAndroid() ? "Android" : NATIVE ? "iPhone/iPad" : "Web";
   var body = o.text + "\n\n---\nType: " + o.type + "\nDrugBug " + APP_VERSION + " · " + plat + " · " + lvn + "\n";
-  return "mailto:" + ideaEmail() + "?subject=" + encodeURIComponent("DrugBug idea: " + o.type) + "&body=" + encodeURIComponent(body);
+  return "mailto:" + ideaEmail() + "?subject=" + encodeURIComponent("DrugBug feedback: " + o.type) + "&body=" + encodeURIComponent(body);
 }
 function drawIdeas() {
   var o = ID.open; if (!o) return;
-  var c = '<div class="panel" role="dialog" aria-modal="true" aria-label="Send an idea" tabindex="-1"><div class="navrow"><h2 class="dname">Send an idea</h2><span class="spacer"></span><button class="iconbtn" data-iact="close">Close</button></div>';
-  if (ID.sent) return idlg.innerHTML = c + '<div class="presult good" role="status">Your email app opened with your idea filled in. Tap Send there to reach the DrugBug team. Thank you!</div>' +
+  var c = '<div class="panel" role="dialog" aria-modal="true" aria-label="Send feedback" tabindex="-1"><div class="navrow"><h2 class="dname">Send feedback</h2><span class="spacer"></span><button class="iconbtn" data-iact="close">Close</button></div>';
+  if (ID.sent) return idlg.innerHTML = c + '<div class="presult good" role="status">Your email app opened with your message filled in. Tap Send there to reach the DrugBug team. Thank you!</div>' +
     '<p class="muted small">Email app did not open? Write to <a href="mailto:' + esc(ideaEmail()) + '">' + esc(ideaEmail()) + '</a>.</p><div class="actions"><button class="btn" data-iact="close">Done</button></div></div>';
-  c += '<p class="muted">Tell us what you want to see in DrugBug: drugs, features, specialties, exam topics, anything. Every idea is read.</p>';
-  c += '<div class="pform"><label>What kind of idea?<select class="pinput" id="idtype">' + IDEA_TYPES.map(function (t) { return '<option' + (o.type === t ? " selected" : "") + '>' + esc(t) + '</option>'; }).join("") + '</select></label>';
-  c += '<label>Your idea<textarea class="pinput" id="idtext" rows="6" maxlength="2000" placeholder="For example: add a quiz on pediatric doses">' + esc(o.text) + '</textarea></label>' + phiWarn();
+  c += '<p class="muted">Feedback, bugs, corrections and ideas go straight to the DrugBug team. Every message is read.</p>';
+  c += '<div class="pform"><label>What is it about?<select class="pinput" id="idtype">' + IDEA_TYPES.map(function (t) { return '<option' + (o.type === t ? " selected" : "") + '>' + esc(t) + '</option>'; }).join("") + '</select></label>';
+  c += '<label>Your message<textarea class="pinput" id="idtext" rows="6" maxlength="2000" placeholder="For example: the dose card for X looks wrong, or add a quiz on Y">' + esc(o.text) + '</textarea></label>' + fbLimitsHTML(true);
   if (ID.err) c += '<div class="presult" role="alert">' + esc(ID.err) + '</div>';
   c += '<p class="muted small">This opens your email app, so the team can reply to you there. Sent to ' + esc(ideaEmail()) + '.</p>';
   c += '<div class="actions"><button class="btn" data-iact="send">Write email</button><button class="btn ghost" data-iact="close">Cancel</button></div></div>';
@@ -8585,7 +8633,8 @@ function drawIdeas() {
 }
 function sendIdea() {
   var o = ID.open; o.type = $("#idtype", idlg).value; o.text = $("#idtext", idlg).value.trim();
-  if (o.text.length < 3) { ID.err = "Add a few words about your idea."; return drawIdeas(); }
+  if (o.text.length < 3) { ID.err = "Add a few words to your message."; return drawIdeas(); }
+  if (!($("#idok", idlg) || {}).checked) { ID.err = "Please confirm that your message follows the limits above."; return drawIdeas(); }
   ID.err = ""; window.location.href = ideaMail(o); ID.sent = true; drawIdeas();
 }
 idlg.addEventListener("click", function (e) {
@@ -8594,6 +8643,7 @@ idlg.addEventListener("click", function (e) {
   var a = t.getAttribute("data-iact"); if (a === "close") return closeIdeas(); if (a === "send") return sendIdea();
 });
 idlg.addEventListener("input", function (e) { if (ID.open && e.target.id === "idtext") ID.open.text = e.target.value; });
+idlg.addEventListener("change", function (e) { if (ID.open && e.target.id === "idok") ID.ok = e.target.checked; if (ID.open && e.target.id === "idtype") ID.open.type = e.target.value; });
 document.addEventListener("keydown", function (e) { if (e.key === "Escape" && ID.open) closeIdeas(); });
 
 /* ---------- Agency protocols (Pro): an agency code unlocks that agency's own protocol set ----------
