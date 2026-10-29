@@ -490,7 +490,8 @@ function hubView() {
   var L = tabList(), used = {}, c = '<nav class="hub2" aria-label="Sections">';
   function tile(t) {
     used[t[0]] = 1;
-    return '<button class="hubtile t-' + t[0] + (proLocked(t[0]) ? ' locked' : '') + '" data-tab="' + t[0] + '">' + icon(t[0]) + '<span class="ht"><strong>' + esc(t[1]) + (proLocked(t[0]) ? ' ' + proBadge(t[0]) : '') + '</strong><span>' + esc(t[0] === "registry" && S.view !== "gen" ? "Every drug in your scope" : HUB_SHORT[t[0]] || t[2]) + '</span></span>' + (t[0] === "shop" ? '<span class="hubsticks">' + stickIcon(14) + sticks().toLocaleString() + '</span>' : t[0] === "mylist" && marks().length ? '<span class="hubsticks">' + marks().length + '</span>' : '') + '</button>';
+    var fmt = typeof FM_TABS !== "undefined" && (FM_TABS[t[0]] || (t[0] === "diseases" && S.view === "level" && isF(S.level)));
+    return '<button class="hubtile t-' + t[0] + (fmt ? ' fmt' : '') + (proLocked(t[0]) ? ' locked' : '') + '" data-tab="' + t[0] + '">' + icon(t[0]) + '<span class="ht"><strong>' + esc(t[1]) + (proLocked(t[0]) ? ' ' + proBadge(t[0]) : '') + '</strong><span>' + esc(t[0] === "registry" && S.view !== "gen" ? "Every drug in your scope" : hubShort(t[0]) || t[2]) + '</span></span>' + (t[0] === "shop" ? '<span class="hubsticks">' + stickIcon(14) + sticks().toLocaleString() + '</span>' : t[0] === "mylist" && marks().length ? '<span class="hubsticks">' + marks().length + '</span>' : '') + '</button>';
   }
   HUB_GROUPS.forEach(function (g) {
     var items = L.filter(function (t) { return g[1].indexOf(t[0]) >= 0; }); if (!items.length) return;
@@ -502,6 +503,8 @@ function hubView() {
 }
 /* compact education strip: the first sentence stays visible, the rest opens with "More" (cleanup, Oct 28 2026) */
 function eduNote(lead, rest) { return '<details class="edunote" role="note"><summary><span class="edl">' + lead + '</span>' + (rest ? '<span class="edmore">More</span>' : '') + '</summary>' + (rest ? '<p>' + rest + '</p>' : '') + '</details>'; }
+/* one-line hooks; Field Medic levels get field wording for shared tabs */
+function hubShort(k) { if (S.view === "level" && isF(S.level) && k === "diseases") return "Trauma, environmental and field conditions"; return HUB_SHORT[k] || ""; }
 function sectionHead() {
   var where = S.view === "gen" ? "BugDex" : (levelObj(S.level) || {}).name || "";
   var inUnit = S.tab === "units" && S.unit;
@@ -509,7 +512,7 @@ function sectionHead() {
   var back = '<button class="backbtn" data-act="' + (S.tab === "session" ? "sessquit" : inUnit ? "unitsback" : "hub") + '"><span aria-hidden="true">&larr;</span> ' + (S.tab === "session" ? "Exit" : inUnit ? "Specialty Units" : esc(where)) + '</button>';
   if (S.tab === "session" || inUnit) return '<div class="sechead">' + back + '<h2>' + esc(tabName(S.tab)) + '</h2></div>';
   /* every tab opens with the same friendly header: icon bubble, name and a one-line hook (cleanup, Oct 28 2026) */
-  var sub = S.tab === "prep" ? "" : (HUB_SHORT[S.tab] || "");
+  var sub = S.tab === "prep" ? "" : hubShort(S.tab);
   return '<div class="sechead slim">' + back + '</div><div class="tabhero t-' + S.tab + '"><span class="thic">' + icon(S.tab) + '</span><div class="thtx"><h2>' + esc(tabName(S.tab)) + '</h2>' + (sub ? '<p>' + esc(sub) + '</p>' : '') + '</div></div>';
 }
 function prepName() {
@@ -9188,22 +9191,41 @@ ICO.diseases = '<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5c-2.6 2.4-2.6 1
   try { var st = document.createElement("style"); st.textContent = css; document.head.appendChild(st); } catch (e) {}
 })();
 function disAll() { return DB.DIS || {}; }
+/* Field Medic levels: the Disease Lab shows trauma, environmental and field conditions, grouped for the field (owner, Oct 28 2026) */
+var DIS_FIELD = [
+  ["Trauma & bleeding", ["hemorrhagic-trauma", "shock", "traumatic-brain-injury", "spinal-cord-injury", "pneumothorax", "burns", "fractures", "compartment-syndrome", "rhabdomyolysis", "dic", "cardiac-arrest"]],
+  ["Environmental", ["heat-stroke", "hypothermia", "drowning", "altitude-sickness", "decompression-sickness", "snakebite", "carbon-monoxide"]],
+  ["Chemical & toxic", ["organophosphate-poisoning", "cyanide-poisoning", "opioid-overdose", "benzodiazepine-overdose"]],
+  ["Infection & wounds", ["sepsis", "cellulitis", "osteomyelitis", "tetanus", "malaria", "rabies", "meningitis", "gastroenteritis", "tuberculosis"]],
+  ["Long-hold complications", ["ards", "pulmonary-embolism", "deep-vein-thrombosis", "hyperkalemia", "hyponatremia", "hypoglycemia", "diabetic-ketoacidosis", "status-epilepticus", "anaphylaxis", "ptsd"]]
+];
+function disFieldGroup(k) { var g = DIS_FIELD.filter(function (x) { return x[1].indexOf(k) >= 0; })[0]; return g ? g[0] : ""; }
+function disFieldMode() { return S.view === "level" && typeof isF === "function" && isF(S.level); }
+function disFieldIds(grp) { var D = disAll(), out = []; DIS_FIELD.forEach(function (g) { if (!grp || g[0] === grp) g[1].forEach(function (k) { if (D[k] && out.indexOf(k) < 0) out.push(k); }); }); return out; }
 function disLocked(id) { return typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier("plus") && !DIS_FREE[id]; }
 function disForDrug(drugId) { var D = disAll(); return Object.keys(D).filter(function (k) { return (D[k].drugs || []).indexOf(drugId) >= 0; }).sort(function (a, b) { return D[a].name.localeCompare(D[b].name); }); }
 function disMatch(e, q) { if (!q) return true; q = q.toLowerCase(); return (e.name + " " + (e.aka || []).join(" ") + " " + e.sys).toLowerCase().indexOf(q) >= 0; }
 function disListHTML() {
   var D = disAll(), q = (S.disQ || "").trim(), sys = S.disSys || "";
-  var ids = Object.keys(D).filter(function (k) { return (!sys || D[k].sys === sys) && disMatch(D[k], q); }).sort(function (a, b) { return D[a].name.localeCompare(D[b].name); });
+  var fm = disFieldMode(), pool = fm ? disFieldIds(sys) : Object.keys(D);
+  var ids = pool.filter(function (k) { return (fm || !sys || D[k].sys === sys) && disMatch(D[k], q); }).sort(function (a, b) { return D[a].name.localeCompare(D[b].name); });
   if (!ids.length) return '<p class="muted">No conditions match. Try another word.</p>';
   return '<p class="muted small">' + ids.length + ' condition' + (ids.length === 1 ? '' : 's') + '</p><div class="dislist">' + ids.map(function (k) {
     var e = D[k], lk = disLocked(k);
-    return '<button class="disitem' + (lk ? ' locked' : '') + '" data-dis="' + k + '"><strong>' + esc(e.name) + (lk && typeof tierBadge === "function" ? ' ' + tierBadge("plus") : DIS_FREE[k] && typeof PAYWALL !== "undefined" && PAYWALL && !hasTier("plus") ? ' <span class="pill">Free preview</span>' : '') + '</strong><span>' + esc(e.sys) + '</span></button>';
+    return '<button class="disitem' + (lk ? ' locked' : '') + '" data-dis="' + k + '"><strong>' + esc(e.name) + (lk && typeof tierBadge === "function" ? ' ' + tierBadge("plus") : DIS_FREE[k] && typeof PAYWALL !== "undefined" && PAYWALL && !hasTier("plus") ? ' <span class="pill">Free preview</span>' : '') + '</strong><span>' + esc(fm ? disFieldGroup(k) : e.sys) + '</span></button>';
   }).join("") + '</div>';
 }
 function disView() {
   var D = disAll();
   if (S.disId && D[S.disId] && !disLocked(S.disId)) return disDetail(S.disId);
   S.disId = null;
+  if (disFieldMode()) {
+    var fc = '<p class="muted">The conditions a field medic sees: trauma and shock, the environment, chemical exposures, wound and field infections, and the complications of a long hold. Each one goes from what goes wrong in the body to how it is treated. Education only.</p>';
+    if (typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier("plus")) fc += '<div class="callout evnote small"><strong>DrugBug Plus.</strong> The Disease Lab is part of DrugBug Plus.</div>';
+    fc += '<input class="pinput dissearch" id="disq" type="search" placeholder="Search conditions, like heat stroke or crush injury" aria-label="Search conditions" value="' + esc(S.disQ || "") + '">';
+    fc += '<div class="dischips fmdis" role="group" aria-label="Field groups"><button data-dissys="" aria-pressed="' + !S.disSys + '">All field (' + disFieldIds("").length + ')</button>' + DIS_FIELD.map(function (g) { return '<button data-dissys="' + esc(g[0]) + '" aria-pressed="' + (S.disSys === g[0]) + '">' + esc(g[0]) + '</button>'; }).join("") + '</div>';
+    return fc + '<div id="disout">' + disListHTML() + '</div>';
+  }
   var c = '<p class="muted">Step into the lab on a disease: where it came from, what goes wrong from the cell to each organ, why the symptoms happen, how it is diagnosed and how the drugs that treat it work. Education only.</p>';
   if (typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier("plus")) c += '<div class="callout evnote small"><strong>DrugBug Plus.</strong> Five conditions are open as a free preview: high blood pressure, type 2 diabetes, asthma, migraine and the flu. <button class="linkish" data-pw="open">See Plus</button></div>';
   if (typeof lang === "function" && lang() === "es") c += '<p class="dnote">La sección "Disease Lab" solo está disponible en inglés por ahora.</p>';
