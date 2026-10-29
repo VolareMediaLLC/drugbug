@@ -9430,17 +9430,17 @@ var FM_ART = {
   shield: '<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="M9 12l2 2 4-4"/>',
   lungs: '<path d="M12 4v8M12 12c-2 0-3-2-5-2-2 0-3 3-3 6 0 3 1 4 3 4s5-1 5-4zM12 12c2 0 3-2 5-2 2 0 3 3 3 6 0 3-1 4-3 4s-5-1-5-4z"/>'
 };
-var FIELD_BUG = { id: "fm", name: "Field Medic", body: "stag", c: ["#6f7d3c", "#2f3a17", "#d9e4b0"], acc: ["helmet", "goggles"] };
+var FIELD_BUG = { id: "fm", name: "Field Medic", body: "stag", c: ["#9bd44a", "#3f7a1f", "#f0ffd9"], acc: ["helmet", "goggles"] };
 if (typeof IMBUG !== "undefined") {
   IMBUG.field = FIELD_BUG;
   /* the bugs get tougher with each tier, like Prehospital: ant -> beetle -> mantis -> stag -> hercules */
-  IMBUG.asm = { name: "Tier 1", body: "ant", c: ["#c2b58a", "#7a6e47", "#ffffff"], acc: ["helmet"] };
-  IMBUG.cls = { name: "Tier 2", body: "beetle", c: ["#a3b18a", "#55603a", "#ffffff"], acc: ["helmet", "headset"] };
-  IMBUG.cmc = { name: "Tier 3", body: "mantis", c: ["#8fa35a", "#3f5a1f", "#ffffff"], acc: ["helmet", "goggles"] };
-  IMBUG.cpp = { name: "Tier 4", body: "stag", c: ["#6f7d3c", "#2f3a17", "#d9e4b0"], acc: ["helmet", "goggles", "headset"] };
-  IMBUG.pcc = { name: "Prolonged Casualty Care", body: "hercules", c: ["#d6b25e", "#5c4a22", "#fff3c4"], acc: ["headset", "goggles", "stars"] };
+  IMBUG.asm = { name: "Tier 1", body: "ant", c: ["#f2c46b", "#c0762a", "#fff4d6"], acc: ["helmet"] };
+  IMBUG.cls = { name: "Tier 2", body: "beetle", c: ["#7ee06a", "#2f8f3a", "#eaffe0"], acc: ["helmet", "headset"] };
+  IMBUG.cmc = { name: "Tier 3", body: "mantis", c: ["#3ee0b0", "#0f8a74", "#dcfff4"], acc: ["helmet", "goggles"] };
+  IMBUG.cpp = { name: "Tier 4", body: "stag", c: ["#5aa8ff", "#2440a8", "#e3efff"], acc: ["helmet", "goggles", "headset"] };
+  IMBUG.pcc = { name: "Prolonged Casualty Care", body: "hercules", c: ["#ffd25e", "#e0602a", "#fff3c4"], acc: ["headset", "goggles", "stars"] };
 }
-if (typeof LVB_FX !== "undefined") { LVB_FX.cpp = ["#b8c77a", "#7d8f45"]; LVB_FX.pcc = ["#ffd25e", "#d6b25e"]; }
+if (typeof LVB_FX !== "undefined") { LVB_FX.cpp = ["#9cc7ff", "#5aa8ff"]; LVB_FX.pcc = ["#ffd25e", "#d6b25e"]; }
 if (typeof LVB_QUIPS !== "undefined") {
   LVB_QUIPS.cpp = ["Tube confirmed: waveform.", "Blood on board.", "Ready for TACEVAC.", "Chest decompressed.", "Card is filled out."];
   LVB_QUIPS.pcc = ["Vitals trended.", "Drips checked.", "Urine output charted.", "Teleconsult on the line.", "Turned and padded."];
@@ -9655,12 +9655,12 @@ function fieldTab(k) {
     c += '<button class="btn nrgo" data-act="fmdrill">Start the ' + esc((DB.FLEVELS.filter(function (l) { return l.key === S.level; })[0] || {}).short || "") + ' drill' + (PAYWALL && !isPro() ? ' ' + proBadge() : '') + '</button><p class="muted small">Priority calls in order, plus questions on the medications at this tier.</p>';
   } else if (k.indexOf("fm_") === 0) {
     var t = fmSec(k.slice(3)); if (!t) return "";
-    c += '<div style="--fm:' + t[3] + '">' + fmKey(t[5], true) + fmCards(t[6]) + '</div>';
+    c += fmKey(t[5], true) + fmCards(t[6]);
   } else if (k === "pcc") {
     c += '<p class="fmlead">Prolonged casualty care starts when evacuation is delayed past normal timelines. A medic may hold one or more casualties for hours, days or even weeks, and the job turns into running a small ICU.</p>';
     c += '<h3 class="fmh">The 10 core capabilities</h3><div class="pcccaps">' + PCC_CAPS.map(function (x, i) { return '<details class="pcccap"><summary><span class="pccn">' + (i + 1) + '</span>' + esc(x[0]) + '</summary><p>' + esc(x[1]) + '</p></details>'; }).join("") + '</div>';
     c += '<h3 class="fmh">The rhythm of a long hold</h3><ol class="pccday">' + PCC_DAY.map(function (x) { return '<li><strong>' + esc(x[0]) + '</strong><span>' + esc(x[1]) + '</span></li>'; }).join("") + '</ol>';
-    c += '<h3 class="fmh">Drugs that run for days</h3><div style="--fm:#0f766e">' + fmCards(PCC_DRUGS) + '</div>';
+    c += '<h3 class="fmh">Drugs that run for days</h3>' + fmCards(PCC_DRUGS);
     c += '<p class="muted small">Sedation drips are covered in TIVA &amp; Drips, and labs in i-STAT Labs.</p>';
   } else if (k === "board") {
     var f = S.fbf || "all";
