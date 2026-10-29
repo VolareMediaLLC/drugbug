@@ -479,13 +479,13 @@ function tabList() {
 function tabName(k) { var t = tabList().filter(function (x) { return x[0] === k; })[0]; return t ? t[1] : k === "session" ? "Study session" : ""; }
 /* Hub tiles grouped into sections with short labels (UI cleanup, Oct 28 2026) */
 var HUB_GROUPS = [
-  ["Field care", ["skills", "march", "fm_bleed", "fm_airway", "fm_pain", "fm_abx", "fm_head", "istat", "fm_tiva", "pcc"]],
+  ["Field care", ["skills", "march", "fm_bleed", "fm_airway", "fm_pain", "fm_abx", "fm_head", "board", "acls", "istat", "dive", "fm_tiva", "pcc"]],
   ["Look it up", ["registry", "families", "conds", "diseases", "illicit", "units", "body", "alts", "contrast", "labs", "blood", "hemo", "flightp"]],
   ["Food and vitamin compounds", ["vegc", "fruitc", "vitc"]],
   ["Study and practice", ["prep", "nbug", "cards", "scenarios", "tools", "games"]],
   ["Yours", ["mylist", "progress", "shop"]]
 ];
-var HUB_SHORT = { skills: "What this tier is trained to do", march: "The TCCC sequence and drill", fm_bleed: "Hemorrhage control, TXA, blood", fm_tiva: "Ketamine-based sedation", fm_head: "Herniation, 3% and 23.4% saline", fm_pain: "Wound pack, ketamine, esketamine", fm_abx: "Wounds, eye injury, burns", fm_airway: "Positioning to surgical airway", pcc: "Holding casualties for days", istat: "Point-of-care labs", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "Saved drugs and their interactions", tools: "Megacode, interactions, safety drills", scenarios: "Clinical cases", cards: "Flip, sort and master", games: "Match, crossword, scramble and more", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time", prep: "Timed tests with scores" };
+var HUB_SHORT = { board: "Every field drug by class", acls: "Rhythm by rhythm", dive: "Dive tables, DCS and AGE", skills: "What this tier is trained to do", march: "The TCCC sequence and drill", fm_bleed: "Hemorrhage control, TXA, blood", fm_tiva: "Ketamine-based sedation", fm_head: "Herniation, 3% and 23.4% saline", fm_pain: "Wound pack, ketamine, esketamine", fm_abx: "Wounds, eye injury, burns", fm_airway: "Positioning to surgical airway", pcc: "Holding casualties for days", istat: "Point-of-care labs", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "Saved drugs and their interactions", tools: "Megacode, interactions, safety drills", scenarios: "Clinical cases", cards: "Flip, sort and master", games: "Match, crossword, scramble and more", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time", prep: "Timed tests with scores" };
 function hubView() {
   var L = tabList(), used = {}, c = '<nav class="hub2" aria-label="Sections">';
   function tile(t) {
@@ -9304,7 +9304,9 @@ var FM_SECS = [
      "Hypertonic saline is for those signs, not given ahead of time to prevent herniation. A saline flush follows it, and the site is watched for leaking.",
      "23.4% sodium chloride carries a similar osmotic load to 3% or 5% saline in a much smaller, lighter volume, which is why special operations medics carry it.",
      "Low oxygen and low blood pressure both worsen brain injury. TCCC targets an oxygen saturation of at least 92% in head injury.",
-     "Plasma is listed for moderate or severe head injury without bleeding. Hyperventilation is only a short bridge.",
+     "Plasma is listed for moderate or severe head injury without bleeding. Hyperventilation is only a short bridge; a ventilated casualty with capnography is kept at a normal end-tidal CO2.",
+     "Raised pressure care also includes raising the head and torso above 30 degrees when the casualty is not in shock, loosening any collar, and keeping the head straight.",
+     "Penetrating head wounds and open skull fractures are not automatically expectant. They get a surface dressing; nothing is packed into the wound cavity.",
      "Seizures are treated right away, and prolonged care guidance adds levetiracetam for seizure prevention when available."],
     [["sodium-chloride-23-4-percent", "Small bag, big pull", "Very concentrated salt solution that draws water out of swollen brain tissue to lower pressure inside the skull.", "Very high sodium, vein irritation and tissue injury if it leaks. A flush follows it."],
      ["hypertonic-saline-3-percent", "Standard hypertonic", "The more common hypertonic saline, with the same purpose in a larger volume.", "Sodium levels climb with repeated doses."],
@@ -9330,7 +9332,8 @@ var FM_SECS = [
      "By mouth if the casualty can swallow: cefadroxil first, cephalexin as the alternative.",
      "If not (shock or unconsciousness): ceftriaxone IV, IO or IM.",
      "Penetrating eye injury: a rapid visual acuity check, a rigid shield (not a pressure patch), and ceftriaxone or cefadroxil as soon as possible.",
-     "Burns alone are not a reason for field antibiotics. Burns over 20% get IV or IO fluids, and burned casualties lose heat fast.",
+     "Burns alone are not a reason for field antibiotics. TCCC treats a trauma casualty with burns, not a burn casualty with injuries: burns over 20% get IV or IO fluids, facial burns in closed spaces raise concern for inhalation injury, and burned casualties lose heat fast.",
+     "Abdominal evisceration: bleeding is controlled and the bowel rinsed and covered with a moist sterile or water-impermeable covering. One brief attempt to replace the contents is described only when there is no bowel leakage and bleeding is controlled; contents are not forced back, and the casualty takes nothing by mouth.",
      "Older TCCC versions used moxifloxacin and ertapenem. The 2026 update replaced them with these cephalosporins."],
     [["cefadroxil", "First by mouth", "Oral first-generation cephalosporin that covers common skin and wound bacteria.", "Allergy, especially with a serious penicillin allergy history."],
      ["cephalexin", "Backup by mouth", "Close relative of cefadroxil, the listed alternative.", "Taken more often during the day than cefadroxil."],
@@ -9360,7 +9363,7 @@ var FM_Q = [];
     "O|asm|A casualty in Tactical Field Care has a leg amputation, snoring respirations and a weak radial pulse. Put the MARCH priorities in order, from most important (first) to least important (last).|Control the massive bleeding;;Open and manage the airway;;Check respiration and treat chest wounds;;Treat circulation and shock;;Prevent hypothermia and protect the head|MARCH puts massive bleeding first because it kills fastest, then the airway, breathing, circulation, and finally hypothermia and head injury.",
     "S|cls|A casualty has an open chest wound. What does TCCC list for it?|A vented or non-vented chest seal|Packing the wound with gauze|Leaving the wound uncovered|Needle decompression before any seal|TCCC treats open and sucking chest wounds with a vented or non-vented chest seal, then monitors for a developing tension pneumothorax.",
     "O|cls|A casualty with a chest seal develops worsening shortness of breath and falling blood pressure. Put these actions in order, from first to last.|Burp or remove the chest seal;;Perform needle decompression if there is no improvement;;Reassess breathing and circulation;;Repeat decompression if the signs return|A seal can trap air and cause a tension pneumothorax. Burping or removing the seal lets the air out, needle decompression follows if that does not work, and the casualty is reassessed for recurrence.",
-    "S|cls|When does TCCC describe converting a tourniquet to a hemostatic or pressure dressing?|When the casualty is not in shock, can be closely watched, and the tourniquet has been on less than 2 hours|Whenever the bleeding seems to have stopped|Only after 6 hours have passed|Never; tourniquets are left until surgery|Conversion is considered only when the casualty is not in shock, can be monitored, the wound is not an amputation, and the tourniquet has been in place under 2 hours.",
+    "S|cls|When does TCCC describe converting a tourniquet to a hemostatic or pressure dressing?|When the casualty is not in shock, can be closely watched, and the tourniquet has been on less than 2 hours|Whenever the bleeding seems to have stopped|Only after 6 hours have passed|Only at surgery; tourniquets stay on until then|Conversion is considered only when the casualty is not in shock, can be monitored, the wound is not an amputation, and the tourniquet has been in place under 2 hours.",
     "S|cls|Which oral antibiotic is first-line for an open combat wound in the 2026 TCCC Guidelines?|Cefadroxil|Moxifloxacin|Amoxicillin|Doxycycline|The 2026 update replaced moxifloxacin with cefadroxil as the oral first-line choice, with cephalexin as the alternative.",
     "S|cls|A casualty with a forearm wound can still fight. Which pain option fits TCCC?|The Combat Wound Medication Pack|Intramuscular ketamine|An oral transmucosal fentanyl lozenge|IV morphine|Casualties who can stay in the fight use the oral Combat Wound Medication Pack (acetaminophen, meloxicam and, since 2026, suzetrigine), which does not sedate.",
     "S|cmc|TCCC lists TXA as soon as possible, but no later than how long after injury?|3 hours|1 hour|6 hours|12 hours|The benefit of TXA falls with time and may reverse after 3 hours, which is why TCCC sets that limit.",
@@ -9377,6 +9380,14 @@ var FM_Q = [];
     "S|cpp|What oxygen saturation does TCCC target in a casualty with moderate or severe head injury?|At least 92%|At least 85%|At least 88%|Exactly 100%|Low oxygen worsens brain injury. TCCC lists a target of at least 92% for head-injured casualties.",
     "S|cpp|Which monitoring tool is added at Tier 4?|Capnography (end-tidal CO2)|Pulse checks|Respiratory rate counts|The DD1380 card|Tier 4 adds capnography, point-of-care lactate, Foley catheters and urine output monitoring to the earlier tiers' vital signs.",
     "S|cpp|Why is 23.4% sodium chloride attractive to special operations medics?|It gives a similar osmotic load to 3% or 5% saline in a much smaller volume|It also replaces lost blood|It needs no IV or IO access|It prevents herniation when given early|The concentrated solution weighs and takes up far less space. Like other hypertonic saline, it is for herniation signs, followed by a flush.",
+    "O|cpp|An adult in ventricular fibrillation is getting high-quality CPR. Put these steps of the AHA shockable arrest sequence in order, from first to last.|Deliver the first shock;;Resume CPR for 2 minutes;;Rhythm check and second shock;;Give epinephrine during CPR;;Third shock, then an antiarrhythmic such as amiodarone or lidocaine|Shockable arrest alternates shocks with 2-minute CPR cycles. Epinephrine follows the second shock, and an antiarrhythmic follows the third.",
+    "O|cpp|An adult has a heart rate of 36, confusion and low blood pressure. Put these ACLS steps in order, from first to last.|Support airway and breathing, attach the monitor and get IV access;;Give atropine;;Start transcutaneous pacing or an epinephrine or dopamine infusion if atropine fails;;Seek expert consultation|Atropine comes first for unstable bradycardia. It is often ineffective in high-grade AV block, so pacing or a chronotropic infusion follows.",
+    "O|cpp|A stable adult has a regular, narrow-complex tachycardia. Put these ACLS steps in order, from first to last.|Attach the monitor, get IV access and a 12-lead;;Try vagal maneuvers;;Give adenosine;;Consider a calcium channel blocker or beta blocker|Stable regular narrow tachycardia moves from vagal maneuvers to adenosine, then to rate control with a calcium channel blocker or beta blocker.",
+    "S|cpp|A pulseless combat casualty with torso trauma is found during TACEVAC. What does TCCC list before considering CPR?|Bilateral needle decompression|An immediate shock with an AED|Hypertonic saline|Ondansetron|In traumatic arrest, TCCC lists bilateral needle decompression. CPR may be attempted only if there are no obviously fatal wounds and surgical care is close.",
+    "S|cpp|A diver who breathed compressed gas surfaces and becomes unconscious within minutes. What does the U.S. Navy Diving Manual say to assume?|Arterial gas embolism|Type I decompression sickness|Simple fatigue|Nitrogen narcosis|Any diver who breathed compressed gas and surfaces unconscious or with neurological symptoms within 10 minutes is assumed to have arterial gas embolism.",
+    "S|cpp|A diver has a deep, dull shoulder ache a few hours after a dive, with a normal full neurological exam. Which category fits?|Type I (pain-only) decompression sickness|Type II decompression sickness|Arterial gas embolism|Inner ear barotrauma|Joint pain with a dull, aching quality and no neurological findings is the classic Type I picture. Without a complete neurological exam, it is treated as Type II.",
+    "S|cpp|After a dive, a diver has a band of pain wrapping around the trunk. How does the Navy Diving Manual classify it?|As Type II DCS, a sign of spinal cord involvement|As Type I pain-only DCS|As a muscle strain|As normal post-dive fatigue|Pain in the chest, abdomen or hips, and girdle pain wrapping around the body, suggest spinal cord involvement and are treated as Type II.",
+    "S|cpp|Why does the Navy Diving Manual advise against giving pain medicine to make a DCS patient comfortable?|Pain may be the only way to localize the problem and track the treatment|Pain medicine causes more bubbles|Divers cannot take pain medicine for 24 hours|It is not allowed in a chamber|The pain marks where bubbles are and shows whether recompression is working, so masking it can hide the response.",
     "O|pcc|A casualty needs prolonged sedation during a long hold. Put these steps for a ketamine-based drip in order, from first to last.|Set up airway equipment, pulse oximetry and end-tidal CO2;;Start the ketamine drip in its own bag;;Add small pushes of an adjunct only if needed;;Trend the RASS score and vital signs|Prolonged casualty care guidance builds sedation on a ketamine drip with adjuncts only as needed, one drug per bag, and close monitoring.",
     "S|pcc|Why does prolonged care guidance run each sedation drug in its own bag?|Mixing drugs in one bag is untested and can form unsafe compounds|It saves IV fluid|It makes the drip run faster|One bag cannot hold two drugs|Each medicine runs separately so it can be adjusted or stopped on its own and to avoid untested mixtures.",
     "S|pcc|During a long hold, what does hourly urine output from a Foley mainly show?|Whether the kidneys are being perfused, a sign of adequate resuscitation|How much pain the casualty has|Whether antibiotics are working|The depth of sedation|Urine output is one of the most useful trends in prolonged care, because it reflects blood flow to the kidneys.",
@@ -9425,12 +9436,18 @@ var FM_TABS = {
   fm_pain: ["Pain & Nausea", "The wound medication pack, ketamine and esketamine.", "cls"],
   fm_abx: ["Antibiotics & Wounds", "Open wounds, penetrating eye injury and burns.", "cls"],
   fm_head: ["Head Injury & Hypertonic Saline", "Herniation signs, 3% and 23.4% saline.", "cmc"],
+  board: ["Field Drug Board", "Every field drug by class, color-coded, with what it is for.", "cpp"],
+  acls: ["ACLS Algorithms", "Rhythm by rhythm: what comes next.", "cpp"],
   istat: ["i-STAT Labs", "Point-of-care labs and how to read them.", "cpp"],
+  dive: ["Dive Medicine", "How dive tables work, DCS and arterial gas embolism.", "cpp"],
   fm_tiva: ["TIVA & Drips", "Ketamine-based sedation and infusions.", "pcc"],
   pcc: ["Prolonged Casualty Care", "Holding casualties for hours to weeks.", "pcc"]
 };
 if (typeof ICO !== "undefined") {
   ICO.skills = '<path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/>';
+  ICO.board = '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14h18M9 4v16"/>';
+  ICO.acls = '<path d="M3 12h4l2-6 4 12 2-6h6"/><circle cx="19" cy="6" r="2"/>';
+  ICO.dive = '<path d="M4 9a8 8 0 0 1 16 0v3H4z"/><path d="M8 12v4M16 12v4M3 20c2-1.5 4-1.5 6 0s4 1.5 6 0 4-1.5 6 0"/>';
   ICO.march = '<path d="M4 6h16M4 12h10M4 18h7"/><circle cx="18" cy="16" r="3"/>';
   ICO.fm_bleed = FM_ART.drop; ICO.fm_tiva = FM_ART.drip; ICO.fm_head = FM_ART.brain; ICO.fm_pain = FM_ART.bolt; ICO.fm_abx = FM_ART.shield; ICO.fm_airway = FM_ART.lungs;
   ICO.pcc = '<path d="M3 20V9l9-5 9 5v11"/><path d="M9 20v-6h6v6M12 8v4M10 10h4"/>';
@@ -9502,12 +9519,13 @@ var FM_SKILLS = [
   ["asm", "Respiration", "Assess and support breathing"], ["cls", "Respiration", "Vented chest seal and needle decompression"], ["cmc", "Respiration", "Supplemental oxygen"], ["cpp", "Respiration", "Automated ventilation, finger and tube thoracostomy"],
   ["asm", "Circulation", "Recognize hemorrhagic shock"], ["cmc", "Circulation", "IV and IO access, fluid warming, whole blood, plasma and red cells, TXA and calcium"],
   ["asm", "Hypothermia and head injury", "Hypothermia prevention and recognizing a head injury"], ["cls", "Hypothermia and head injury", "Active warming devices and AVPU mental status"], ["cmc", "Hypothermia and head injury", "Head injury treatment, including hypertonic saline for herniation signs"],
-  ["cls", "Pain", "Combat Wound Medication Pack (acetaminophen, meloxicam, suzetrigine)"], ["cmc", "Pain", "Ketamine (IM, IN, IV/IO), intranasal esketamine, ondansetron, naloxone, local lidocaine"],
+  ["cls", "Pain", "Combat Wound Medication Pack (acetaminophen, meloxicam, suzetrigine)"], ["cmc", "Pain", "Ketamine (IM, IN, IV/IO), intranasal esketamine, ondansetron, naloxone, local lidocaine"], ["cpp", "Pain", "Procedural (dissociative) ketamine sedation, midazolam for emergence reactions, ACLS drugs"],
   ["cls", "Antibiotics", "Oral antibiotics (cefadroxil or cephalexin)"], ["cmc", "Antibiotics", "IV, IO or IM ceftriaxone"],
   ["asm", "Wounds and burns", "Stop the burning process, burn dressings, rigid eye shield"], ["cmc", "Wounds and burns", "Burn fluid resuscitation, visual acuity check, wound care and stump dressing"],
   ["asm", "Splinting", "Fracture assessment"], ["cls", "Splinting", "Extremity splinting"], ["cmc", "Splinting", "Traction splinting"],
   ["asm", "Monitoring", "Pulse and respirations"], ["cmc", "Monitoring", "Pulse oximetry and electronic vital signs"], ["cpp", "Monitoring", "Capnography, point-of-care lactate, Foley catheter and urine output"],
   ["asm", "Documentation and evacuation", "DD1380 TCCC card, reporting to leadership, reassuring a conscious casualty"], ["cls", "Documentation and evacuation", "Casualty assessment, drags and carries, extrication, evacuation request and TACEVAC care"], ["cmc", "Documentation and evacuation", "Triage and the after-action report to the Joint Trauma System"],
+  ["cpp", "Circulation", "ACLS rhythm algorithms and cardiac monitoring"], ["cpp", "Prolonged care", "Dive casualty recognition: decompression sickness and arterial gas embolism"],
   ["pcc", "Prolonged care", "Long-duration sedation and analgesia drips, vasopressors and ventilator management"], ["pcc", "Prolonged care", "Nursing care: turning, padding, hygiene, line, tube and Foley care"], ["pcc", "Prolonged care", "Serial exams, ultrasound and i-STAT labs"], ["pcc", "Prolonged care", "Teleconsultation and preparing the casualty for flight"]
 ];
 /* clinical class labels for the drug cards (serious tone, owner Oct 28) */
@@ -9517,6 +9535,69 @@ var FM_CLASS = { "tranexamic-acid": "Antifibrinolytic", "calcium-chloride": "Cal
   "acetaminophen": "Analgesic", "meloxicam": "NSAID", "suzetrigine": "NaV1.8 blocker", "esketamine": "Dissociative (intranasal)", "ondansetron": "Antiemetic",
   "cefadroxil": "1st-gen cephalosporin", "cephalexin": "1st-gen cephalosporin", "ceftriaxone": "3rd-gen cephalosporin", "moxifloxacin": "Fluoroquinolone (earlier guideline)", "ertapenem": "Carbapenem (earlier guideline)",
   "etomidate": "Induction agent", "rocuronium": "Neuromuscular blocker", "succinylcholine": "Neuromuscular blocker", "famotidine": "H2 blocker" };
+/* Field Drug Board: color-coded class reference modeled on medics' own shorthand cards (no doses) */
+var FB_CLASSES = [["anal", "Analgesic", "#f59e0b"], ["sed", "Sedative / hypnotic", "#ef4444"], ["vent", "Ventricular arrhythmia", "#fb923c"], ["anti", "Antidote / electrolyte", "#eab308"], ["resp", "Breathing problem", "#0ea5e9"], ["achol", "Anticholinergic", "#d946ef"], ["emet", "Antiemetic", "#94a3b8"], ["nmba", "Neuromuscular blocker", "#84cc16"], ["svt", "Supraventricular arrhythmia", "#a1a1aa"], ["shock", "Shock and hemorrhage", "#64748b"]];
+var FB_DRUGS = [
+  ["aspirin", "anal", "Suspected acute coronary syndrome; mild pain", "Bleeding risk; avoided in active hemorrhage"], ["ketorolac", "anal", "Moderate pain (NSAID)", "Bleeding and kidney risk; avoided in hemorrhage"], ["acetaminophen", "anal", "Combat Wound Medication Pack", ""], ["meloxicam", "anal", "Combat Wound Medication Pack", ""], ["fentanyl", "anal", "Opioid analgesia (prolonged care)", "Removed from 2026 TCCC field analgesia"],
+  ["ketamine", "sed", "Analgesia, dissociative sedation, induction", "Not combined with benzodiazepines for pain control"], ["midazolam", "sed", "Seizures, ketamine emergence reactions", "Slowed breathing, especially with opioids"], ["diazepam", "sed", "Seizures", "Slowed breathing"], ["etomidate", "sed", "RSI induction", "Brief cortisol suppression"],
+  ["amiodarone", "vent", "Shockable arrest; stable monomorphic VT", "Hypotension"], ["lidocaine", "vent", "Alternative to amiodarone; local anesthesia", "Toxicity with high levels"], ["magnesium-sulfate", "vent", "Torsades de pointes", "Also used in asthma and eclampsia"],
+  ["flumazenil", "anti", "Benzodiazepine reversal", "Can trigger seizures in long-term benzodiazepine users"], ["amyl-nitrite", "anti", "Cyanide poisoning", "Hypotension"], ["mannitol", "anti", "Raised intracranial pressure", "Hypertonic saline is generally preferred in trauma"], ["calcium-gluconate", "anti", "Hyperkalemia, low calcium, calcium channel blocker overdose, high magnesium, blood transfusion", "Not mixed with sodium bicarbonate"], ["sodium-bicarbonate", "anti", "Metabolic acidosis, hyperkalemia, tricyclic overdose", "Not mixed with calcium"],
+  ["diphenhydramine", "resp", "Allergic reactions (H1 blocker)", "Sedation"], ["methylprednisolone", "resp", "Asthma, COPD, allergic reactions (steroid)", ""], ["albuterol", "resp", "Bronchospasm; also shifts potassium into cells", "Fast heart rate"], ["racemic-epinephrine", "resp", "Croup and upper-airway swelling", "Rebound swelling"], ["magnesium-sulfate", "resp", "Severe asthma; eclampsia", ""],
+  ["ipratropium", "achol", "Bronchospasm, paired with albuterol", ""], ["atropine", "achol", "Symptomatic bradycardia; organophosphate poisoning", "Often ineffective in high-grade AV block"],
+  ["ondansetron", "emet", "Nausea and vomiting", "Given slowly IV; QT prolongation"],
+  ["rocuronium", "nmba", "Paralysis for intubation (non-depolarizing)", "No breathing until it wears off"], ["succinylcholine", "nmba", "Paralysis for intubation (depolarizing)", "Raises potassium"],
+  ["adenosine", "svt", "Regular narrow-complex tachycardia", "Avoided with a delta wave (WPW)"], ["diltiazem", "svt", "Rate control in narrow tachycardia and atrial fibrillation", "Hypotension"], ["metoprolol", "svt", "Rate control (beta blocker)", "Hypotension, bronchospasm"],
+  ["dopamine", "shock", "Bradycardic hypotension; post-arrest blood pressure", ""], ["norepinephrine", "shock", "Distributive shock after volume", "Not a substitute for blood in hemorrhage"], ["tranexamic-acid", "shock", "Hemorrhage and significant head injury, within 3 hours of injury", ""], ["calcium-chloride", "shock", "After the first blood product", "Tissue injury if it leaks"]
+];
+/* ACLS: key, rhythm, example, unstable?, steps, note. General form of the AHA adult algorithms; no doses or joules. */
+var ACLS = [
+  ["vf", "Shockable arrest", "VF or pulseless VT", 1, ["High-quality CPR and the monitor-defibrillator", "A shock as soon as possible", "CPR resumed right away for 2 minutes, then a rhythm check", "Second shock, then epinephrine during CPR, repeated every few minutes", "Third shock, then an antiarrhythmic (amiodarone or lidocaine)", "An advanced airway with waveform capnography considered", "The H's and T's searched for and treated"], "Pauses in compressions are kept as short as possible. Rhythm checks come every 2 minutes."],
+  ["pea", "Non-shockable arrest", "PEA or asystole", 1, ["High-quality CPR and the monitor", "Epinephrine as soon as possible, repeated every few minutes", "Rhythm checks every 2 minutes, with a shock only if it becomes shockable", "An advanced airway with waveform capnography considered", "The H's and T's searched for and treated"], "A reversible cause is the main hope in PEA, so the H's and T's matter most here."],
+  ["tdp", "Polymorphic VT / torsades", "Torsades de pointes", 1, ["Pulseless or unstable: defibrillation (unsynchronized)", "CPR between shocks if pulseless", "Magnesium sulfate", "Electrolytes corrected and QT-prolonging drugs stopped", "Expert consultation"], "Varying QRS shapes usually prevent synchronization, so an unsynchronized shock is used."],
+  ["brady", "Unstable bradycardia", "Slow rate with hypotension, confusion, chest pain or shock", 1, ["Airway and breathing support, the monitor, IV access and a 12-lead", "Atropine", "If atropine fails: transcutaneous pacing, or an epinephrine or dopamine infusion", "Expert consultation"], "Atropine is often ineffective in second-degree type II and third-degree AV block."],
+  ["utach", "Unstable tachycardia", "Fast rate with hypotension, confusion, chest pain or shock", 1, ["Synchronized cardioversion, with sedation if time allows", "Higher energy if the rhythm persists", "Polymorphic VT: unsynchronized defibrillation instead", "Expert consultation"], "Instability caused by the rate itself is what calls for electricity."],
+  ["svt", "Stable narrow, regular", "For example SVT", 0, ["The monitor, IV access and a 12-lead", "Vagal maneuvers", "Adenosine", "If needed: a calcium channel blocker or beta blocker for rate control", "Expert consultation"], ""],
+  ["afib", "Stable narrow, irregular", "For example atrial fibrillation", 0, ["The monitor, IV access and a 12-lead", "Rate control with a calcium channel blocker or beta blocker", "Expert consultation"], "A delta wave (WPW) changes the plan: adenosine and AV nodal blockers are avoided and an expert is consulted."],
+  ["wide", "Stable wide, regular", "For example monomorphic VT", 0, ["The monitor, IV access and a 12-lead", "Adenosine only if regular and monomorphic", "An antiarrhythmic such as amiodarone", "Expert consultation"], "If it turns out to be SVT with aberrancy, the narrow-complex path applies."]
+];
+var ACLS_HT = ["Hypovolemia", "Hypoxia", "Hydrogen ion (acidosis)", "Hypo- or hyperkalemia", "Hypothermia", "Tension pneumothorax", "Tamponade (cardiac)", "Toxins", "Thrombosis (pulmonary)", "Thrombosis (coronary)"];
+/* Dive medicine (U.S. Navy Diving Manual Rev 7). No table values. */
+var DIVE_FLOW = [
+  ["Maximum depth", "The deepest corrected depth of the dive. It is the depth used to enter the table."],
+  ["Bottom time", "From leaving the surface to leaving the bottom, rounded up to the next whole minute."],
+  ["The schedule", "Depth and bottom time select a schedule: either within the no-decompression limit (straight to the surface) or a schedule with decompression stops."],
+  ["Repetitive group letter", "Each schedule ends with a letter showing how much nitrogen is left in the body."],
+  ["Surface interval", "Time on the surface lets nitrogen leave the body; a longer interval moves the diver to a lower letter."],
+  ["Residual nitrogen time", "For the next dive, minutes are added to bottom time to account for nitrogen still in the tissues."],
+  ["Equivalent single dive", "Residual nitrogen time plus the new bottom time selects the schedule for the repetitive dive."],
+  ["Altitude and flying", "Going to altitude after diving raises DCS risk. The required wait depends on the planned altitude change and the highest repetitive group in the past 24 hours."]
+];
+var DIVE_TERMS = [
+  ["No-decompression limit", "The longest time at a depth from which a diver can ascend straight to the surface without decompression stops."],
+  ["Decompression stop", "A set depth where a diver waits for a set time during ascent to let nitrogen leave the tissues."],
+  ["Residual nitrogen", "Extra nitrogen still dissolved in the tissues after surfacing, gradually eliminated during the surface interval."],
+  ["Repetitive dive", "Any dive made while residual nitrogen from an earlier dive remains."],
+  ["Surface decompression", "Skipping some in-water stops and making them up by recompressing the diver in a chamber on the surface."],
+  ["Exceptional exposure", "A dive with substantially higher risk of DCS, oxygen toxicity or exposure, which needs special approval."]
+];
+var DIVE_CATS = ["Arterial gas embolism", "Type I DCS", "Type II DCS", "Not recompression"];
+var DIVE_CASES = [
+  ["A diver surfaces after a fast ascent and, within minutes, becomes confused with weakness on one side.", 0, "Sudden neurological symptoms within 10 minutes of surfacing are assumed to be arterial gas embolism."],
+  ["Three hours after a dive, a diver reports a dull, deep ache in the elbow that is there at rest. The full neurological exam is normal.", 1, "Dull, localized joint pain with a normal neurological exam is Type I (pain-only) DCS."],
+  ["After a dive, a diver has pain wrapping around the trunk like a belt.", 2, "Girdle pain suggests spinal cord involvement and is treated as Type II."],
+  ["A diver has marbled, bluish, patchy skin on the trunk after a dive.", 2, "Cutis marmorata can precede serious DCS and is treated as Type II."],
+  ["A diver has mild itching with no rash and no other symptoms after a dive.", 3, "Itching alone is usually transient and does not need recompression. Observation continues."],
+  ["After a dive, a diver has a cough, chest pain on breathing in and rapid breathing.", 2, "These are the chokes, cardiopulmonary Type II DCS, which can progress to collapse."]
+];
+var DIVE_KEYS = [
+  "Any diver who breathed compressed gas and surfaces unconscious, loses consciousness or has obvious neurological symptoms within 10 minutes is assumed to have arterial gas embolism.",
+  "Decompression sickness can occur even within no-decompression limits. Most cases start within hours of surfacing, and nearly all within 24 hours.",
+  "Type I is pain-only (joints), skin or lymphatic. Type II covers neurological symptoms, the inner ear (staggers) and the lungs (chokes). Chest, abdominal, hip and girdle pain count as Type II.",
+  "ABCs come first. For a pulseless diver, CPR and an AED take priority over recompression, and defibrillation is not done at depth.",
+  "Recompression is the treatment. Oxygen treatment tables are used when available, with air tables only if oxygen is not. Treatment Table 6 covers AGE and Type II; Treatment Table 5 is a shorter table for pain-only cases with a normal full neurological exam. When in doubt, the longer table is used.",
+  "Pain medicine is not used to make a DCS patient comfortable, because the pain shows where the problem is and whether treatment is working.",
+  "After treatment the diver is observed for recurrence: 2 hours after pain-only symptoms and 6 hours after serious symptoms."
+];
 function fmSec(k) { return FM_SECS.filter(function (s) { return s[0] === k; })[0]; }
 function fmIds() { var o = []; FM_SECS.forEach(function (s) { s[6].forEach(function (d) { if (DB.drugs[d[0]] && o.indexOf(d[0]) < 0) o.push(d[0]); }); }); return o; }
 function fmSeen() { return store("fmSeen") || []; }
@@ -9559,6 +9640,31 @@ function fieldTab(k) {
     c += '<h3 class="fmh">The rhythm of a long hold</h3><ol class="pccday">' + PCC_DAY.map(function (x) { return '<li><strong>' + esc(x[0]) + '</strong><span>' + esc(x[1]) + '</span></li>'; }).join("") + '</ol>';
     c += '<h3 class="fmh">Drugs that run for days</h3><div style="--fm:#0f766e">' + fmCards(PCC_DRUGS) + '</div>';
     c += '<p class="muted small">Sedation drips are covered in TIVA &amp; Drips, and labs in i-STAT Labs.</p>';
+  } else if (k === "board") {
+    var f = S.fbf || "all";
+    c += '<p class="fmlead">Every medication a combat paramedic works with, grouped and color-coded by what it does. Tap a drug for its full page. No doses are shown at the Field Medic level.</p>';
+    c += '<div class="fbchips" role="group" aria-label="Filter by class"><button class="fbchip" data-fbf="all" aria-pressed="' + (f === "all") + '">All</button>' + FB_CLASSES.map(function (x) { return '<button class="fbchip" data-fbf="' + x[0] + '" aria-pressed="' + (f === x[0]) + '" style="--fb:' + x[2] + '">' + esc(x[1]) + '</button>'; }).join("") + '</div>';
+    FB_CLASSES.forEach(function (x) {
+      if (f !== "all" && f !== x[0]) return;
+      var rows = FB_DRUGS.filter(function (d) { return d[1] === x[0] && DB.drugs[d[0]]; }); if (!rows.length) return;
+      c += '<section class="fbsec" style="--fb:' + x[2] + '"><h3>' + esc(x[1]) + '</h3>' + rows.map(function (d) { return '<button class="fbrow" data-drug="' + d[0] + '"><strong>' + esc(nameOf(d[0])) + '</strong><span class="fbuse">' + esc(d[2]) + '</span>' + (d[3] ? '<span class="fbnote">' + esc(d[3]) + '</span>' : '') + '</button>'; }).join("") + '</section>';
+    });
+  } else if (k === "acls") {
+    var a = S.aclsK || ACLS[0][0], A = ACLS.filter(function (x) { return x[0] === a; })[0] || ACLS[0];
+    c += '<p class="fmlead">The adult ACLS rhythms as step sequences: what comes first and what comes next. Doses and energy settings are left out at the Field Medic level.</p>';
+    c += '<div class="aclspick">' + ACLS.map(function (x) { return '<button class="aclsbtn' + (x[3] ? ' unstable' : '') + '" data-acls="' + x[0] + '" aria-pressed="' + (x[0] === A[0]) + '"><strong>' + esc(x[1]) + '</strong><span>' + esc(x[2]) + '</span></button>'; }).join("") + '</div>';
+    c += '<section class="aclsflow"><h3>' + esc(A[1]) + '</h3><p class="muted small">' + esc(A[2]) + '</p><ol>' + A[4].map(function (st) { return '<li>' + esc(st) + '</li>'; }).join("") + '</ol>' + (A[5] ? '<p class="aclsnote">' + esc(A[5]) + '</p>' : '') + '</section>';
+    c += '<details class="fmkey"><summary>H\'s and T\'s (reversible causes)</summary><ul>' + ACLS_HT.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join("") + '</ul></details>';
+    c += '<p class="muted small">Field note: in combat trauma arrest, TCCC lists bilateral needle decompression, and CPR only when there are no obviously fatal wounds and surgical care is close. ACLS steps follow the general form of the American Heart Association adult algorithms. DrugBug is not affiliated with or endorsed by the AHA.</p>';
+  } else if (k === "dive") {
+    c += '<p class="fmlead">Dive medicine for medics supporting dive operations: how the U.S. Navy dive tables work, and how to recognize and route decompression sickness and arterial gas embolism. The actual tables, depths and times are intentionally not reproduced here.</p>';
+    c += '<div class="edunote" role="note"><span class="edl"><strong>Not for dive planning.</strong> Dive planning and treatment use the current U.S. Navy Diving Manual tables, under a Dive Supervisor and an Undersea Medical Officer.</span></div>';
+    c += '<h3 class="fmh">How a table is read</h3><ol class="pccday">' + DIVE_FLOW.map(function (x) { return '<li><strong>' + esc(x[0]) + '</strong><span>' + esc(x[1]) + '</span></li>'; }).join("") + '</ol>';
+    c += '<h3 class="fmh">Terms that matter</h3><div class="isref">' + DIVE_TERMS.map(function (x) { return '<details class="isrow"><summary><strong>' + esc(x[0]) + '</strong></summary><p>' + esc(x[1]) + '</p></details>'; }).join("") + '</div>';
+    c += '<h3 class="fmh">AGE or DCS?</h3><p class="muted small">Pick the best fit for each diver, then check.</p>';
+    c += DIVE_CASES.map(function (d, i) { return '<section class="iscase dvcase" data-dvcase="' + i + '"><p>' + esc(d[0]) + '</p><div class="dvopts">' + DIVE_CATS.map(function (o, j) { return '<button type="button" class="isval dvopt" data-dvo="' + j + '"><strong>' + esc(o) + '</strong></button>'; }).join("") + '</div><div class="isout" hidden></div></section>'; }).join("");
+    c += '<h3 class="fmh">Recognition and treatment</h3>' + fmKey(DIVE_KEYS, true);
+    c += '<p class="muted small">Based on the U.S. Navy Diving Manual, Revision 7 (Distribution A, approved for public release). DrugBug is not affiliated with the U.S. Navy.</p>';
   } else if (k === "istat") {
     c += '<p class="fmlead">The i-STAT is a handheld blood analyzer that runs a few drops of blood through a single-use cartridge in about 2 minutes, which brings ICU-style labs to a long hold.</p>';
     c += '<h3 class="fmh">Read the cartridge</h3><p class="muted small">Tap every value you think is off, then check.</p>';
@@ -9574,7 +9680,7 @@ function fieldView() { setTimeout(function () { go("flevels"); }, 0); return top
 /* clicks: handled before the app's own handler (capture); flips and lab checks without a re-render */
 document.addEventListener("click", function (e) {
   if (typeof S === "undefined" || S.view !== "level" || !isF(S.level)) return;
-  var t = e.target.closest && e.target.closest("[data-fmflip],[data-fmstep],[data-isv],[data-ischeck]"); if (!t) return;
+  var t = e.target.closest && e.target.closest("[data-fmflip],[data-fmstep],[data-isv],[data-ischeck],[data-fbf],[data-acls],[data-dvo]"); if (!t) return;
   e.preventDefault(); e.stopPropagation();
   if (t.hasAttribute("data-fmflip")) {
     var card = t.closest(".fmcard"); if (!card) return;
@@ -9589,6 +9695,16 @@ document.addEventListener("click", function (e) {
     sec.querySelectorAll(".isval").forEach(function (b) { var v = cs[3][+b.getAttribute("data-isv")], picked = b.getAttribute("aria-pressed") === "true", off = !!v[2]; b.classList.add(off ? (picked ? "hit" : "miss") : (picked ? "wrongpick" : "ok")); if (picked === off) right++; else wrong++; if (off) b.querySelector("strong").insertAdjacentHTML("beforeend", ' <em>' + (v[2] === "H" ? "high" : "low") + '</em>'); });
     out.hidden = false; out.innerHTML = '<strong>' + (wrong ? right + " of " + cs[3].length + " interpreted correctly." : "All values interpreted correctly.") + '</strong><ul>' + cs[3].filter(function (v) { return v[2]; }).map(function (v) { return '<li><strong>' + esc(v[0]) + ':</strong> ' + esc(v[3]) + '</li>'; }).join("") + '</ul>';
     t.hidden = true; if (!wrong && typeof earn === "function") { earn(2); saveProg(); out.insertAdjacentHTML("beforeend", "<p class=\"earned small\">+2 sticks</p>"); }
+    return;
+  }
+  if (t.hasAttribute("data-fbf")) { S.fbf = t.getAttribute("data-fbf"); render(); return; }
+  if (t.hasAttribute("data-acls")) { S.aclsK = t.getAttribute("data-acls"); render(); return; }
+  if (t.hasAttribute("data-dvo")) {
+    var dc = t.closest(".dvcase"); if (dc.classList.contains("done")) return; dc.classList.add("done");
+    var cs2 = DIVE_CASES[+dc.getAttribute("data-dvcase")], pick = +t.getAttribute("data-dvo"), good = pick === cs2[1];
+    dc.querySelectorAll(".dvopt").forEach(function (b) { var j = +b.getAttribute("data-dvo"); if (j === cs2[1]) b.classList.add("hit"); else if (j === pick) b.classList.add("wrongpick"); });
+    var o2 = dc.querySelector(".isout"); o2.hidden = false; o2.innerHTML = '<strong>' + (good ? "Correct." : "Best fit: " + esc(DIVE_CATS[cs2[1]]) + ".") + '</strong> ' + esc(cs2[2]);
+    if (good && typeof earn === "function") { earn(1); saveProg(); }
     return;
   }
   if (t.hasAttribute("data-fmstep")) { var i = +t.getAttribute("data-fmstep"); S.fmStep = S.fmStep === i ? null : i; render(); }
