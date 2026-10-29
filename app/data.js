@@ -212,7 +212,9 @@ DB.LEVELS = [
   { key: "paramedic", name: "Paramedic", bug: "Siren Beetle", color: "medic",
     blurb: "Advanced life support. Cardiac arrest and dysrhythmia drugs, opioid analgesia, sedation, and RSI where credentialed." },
   { key: "flight", name: "Flight Paramedic", bug: "Sky Hornet", color: "flight",
-    blurb: "Critical care transport. Infusions, vasopressors, thrombolytics, antidotes, OB transport drugs and full RSI." }
+    blurb: "Critical care transport. Infusions, vasopressors, thrombolytics, antidotes, OB transport drugs and full RSI." },
+  { key: "field", name: "Field Medic", bug: "Field Beetle", color: "field",
+    blurb: "TCCC Tier 4 combat paramedic and prolonged casualty care: trauma drugs, TIVA drips, whole blood and i-STAT labs. No doses listed." }
 ];
 DB.SCOPE = {
   emt: {
@@ -256,6 +258,12 @@ DB.SCOPE = {
     "methylene-blue": "", "n-acetylcysteine": "", "physostigmine": "", "betamethasone": "", "carboprost": "",
     "methylergonovine": "", "misoprostol": "", "nifedipine": "",
     "mannitol": "", "hypertonic-saline-3-percent": "", "prothrombin-complex-concentrate": "", "idarucizumab": "", "protamine": "", "andexanet-alfa": ""
+  },
+  /* Field Medic (owner, Oct 28 2026): TCCC Tier 4 + prolonged casualty care. Builds on every Prehospital scope; NO dose notes at this level. */
+  field: {
+    "sodium-chloride-23-4-percent": "", "suzetrigine": "", "esketamine": "", "meloxicam": "", "acetaminophen": "",
+    "cefadroxil": "", "cephalexin": "", "ceftriaxone": "", "ertapenem": "", "moxifloxacin": "", "calcium-gluconate": "",
+    "hetastarch": "", "lactated-ringers": "", "plasma-lyte": "", "famotidine": ""
   }
 };
 DB.scopeFor = function (levelKey) {
@@ -268,6 +276,7 @@ DB.scopeFor = function (levelKey) {
     Object.keys(m).forEach(function (id) { ids[id] = true; if (m[id] && keepNotes) notes[id] = m[id]; });
     if (k === levelKey) break;
   }
+  if (levelKey === "field") notes = {}; /* Field Medic shows no dose notes (owner choice: most TCCC uses are off-label) */
   return { ids: Object.keys(ids), notes: notes };
 };
 

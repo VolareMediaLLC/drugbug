@@ -29,8 +29,8 @@ var HIDE_MEDIC = { 6: [6, 7], 8: [6], 10: [2], 12: [1] };
 var TAGS = [["IM","Imaging"],["PH","Prehospital"],["ED","Emergency Department"],["ICU","ICU"],["CCT","Critical Care Transport"],["FL","Flight"],["HM","Home Medication"],["CA","Cardiac"],["RE","Respiratory"],["NE","Neurologic"],["TR","Trauma"],["OB","OB/GYN"],["PE","Pediatric"],["TX","Toxicology"],["BH","Behavioral"],["AN","Analgesia"],["SE","Sedation"],["RSI","RSI"],["VP","Vasopressor"],["AD","Antidote"]];
 var TAGNAME = {}; TAGS.forEach(function (t) { TAGNAME[t[0]] = t[1]; });
 var FILTER_TAGS = ["IM","CA","RE","NE","TR","OB","PE","TX","BH","AN","SE","RSI","VP","AD"];
-var LVCLASS = { rt: "lvl-rt", ct: "lvl-ct", mri: "lvl-mri", nm: "lvl-nm", ir: "lvl-ir", emt: "lvl-emt", aemt: "lvl-aemt", paramedic: "lvl-medic", flight: "lvl-flight", gen: "lvl-gen", cna: "lvl-cna", lvn: "lvl-lvn", rn: "lvl-rn", ms1: "lvl-ms1", ms3: "lvl-ms3", intern: "lvl-intern" };
-var TIER = { rt: 3, ct: 3, mri: 3, nm: 3, ir: 3, emt: 0, aemt: 1, paramedic: 2, flight: 3, gen: 3, cna: 0, lvn: 1, rn: 3, ms1: 3, ms3: 3, intern: 3 };
+var LVCLASS = { rt: "lvl-rt", ct: "lvl-ct", mri: "lvl-mri", nm: "lvl-nm", ir: "lvl-ir", emt: "lvl-emt", aemt: "lvl-aemt", paramedic: "lvl-medic", flight: "lvl-flight", field: "lvl-field", gen: "lvl-gen", cna: "lvl-cna", lvn: "lvl-lvn", rn: "lvl-rn", ms1: "lvl-ms1", ms3: "lvl-ms3", intern: "lvl-intern" };
+var TIER = { rt: 3, ct: 3, mri: 3, nm: 3, ir: 3, emt: 0, aemt: 1, paramedic: 2, flight: 3, field: 3, gen: 3, cna: 0, lvn: 1, rn: 3, ms1: 3, ms3: 3, intern: 3 };
 
 /* ---------- helpers ---------- */
 function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
@@ -115,7 +115,7 @@ function nrRight(x, ans) { var q = x.q; if (ans == null) return false; if (!q.t)
 function nrAnsText(x, ans) { if (ans == null || (Array.isArray(ans) && !ans.length)) return "No answer"; if (!Array.isArray(ans)) return ans; return x.q.t === "order" ? ans.map(function (v, k) { return (k + 1) + ". " + v; }).join("  ") : ans.join("; "); }
 function nameOf(id) { var d = DB.drugs[id]; if (d) return d.name; return id.split("-").map(function (w) { return w.charAt(0).toUpperCase() + w.slice(1); }).join(" "); }
 function isN(k) { return k === "cna" || k === "lvn" || k === "rn"; }
-function isEMSLv(k) { return k === "emt" || k === "aemt" || k === "paramedic" || k === "flight"; }
+function isEMSLv(k) { return k === "emt" || k === "aemt" || k === "paramedic" || k === "flight" || k === "field"; }
 function isM(k) { return k === "ms1" || k === "ms3" || k === "intern"; }
 function isI(k) { return k === "rt" || k === "ct" || k === "mri" || k === "nm" || k === "ir"; }
 function routeOfLevel(k) { return isN(k) ? "rn" : isM(k) ? "md" : isI(k) ? "im" : "ph"; }
@@ -350,7 +350,7 @@ function viewHome() {
   var genN = genIds().length;
   var PT = '<span class="pointer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v13M6 12l6 6 6-6" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Start here</span>';
   function pt(go) { return S.pointGo === go ? ' pointed' : ''; }
-  function mini(cls, go, title, line, bug) { return '<button class="route rmini ' + cls + pt(go) + '" data-go="' + go + '"' + '>' + (S.pointGo === go ? PT : '') + '<span class="mtx"><h2>' + title + '</h2><p>' + line + '</p></span><span class="mbug">' + bugArt(typeof bug === "string" ? bugById(bug) : bug, "", { mood: "happy" }) + '</span></button>'; }
+  function mini(cls, go, title, line, bug) { return '<button class="route rmini ' + cls + pt(go) + '" ' + (go.indexOf("level:") === 0 ? 'data-level="' + go.slice(6) + '"' : 'data-go="' + go + '"') + '>' + (S.pointGo === go ? PT : '') + '<span class="mtx"><h2>' + title + '</h2><p>' + line + '</p></span><span class="mbug">' + bugArt(typeof bug === "string" ? bugById(bug) : bug, "", { mood: "happy" }) + '</span></button>'; }
   return topbar() + homeTip() +
    heroHTML() +
    homeStart() + homeProgress() + (typeof trialBanner === "function" ? trialBanner() : '') +
@@ -359,8 +359,8 @@ function viewHome() {
    '<button class="route evsmall" data-go="everyday"><span class="evs-ic" aria-hidden="true">' + bugArt(bugById("grub-everyday"), "", { mood: "happy" }) + '</span><span class="evs-tx"><strong>Everyday Health</strong><span>Medicine cabinet, small sicknesses, normal vitals</span></span><span class="evs-go" aria-hidden="true">&rsaquo;</span></button>' +
    myListRoute() +
    '</section><h3 class="homegh">Study by role</h3><section class="routes"><div class="minis">' +
-   mini("fm", "field", "Field Medic", "TCCC Tier 4: trauma drugs, TIVA drips, 23.4% saline", FIELD_BUG) +
    mini("ph", "levels", "Prehospital", "EMT to Flight Paramedic", "grub-medic") +
+   mini("fm", "level:field", "Field Medic", "TCCC Tier 4 and prolonged care", FIELD_BUG) +
    mini("rn", "nlevels", "Nursing", "CNA, LVN/LPN and RN", "grub-nurse") +
    mini("md", "mlevels", "Medical School", "MS1 to Intern", "grub-doc") +
    mini("im", "ilevels", "Imaging", "X-ray, CT, MRI, NM and IR", "grub-imaging") +
@@ -409,7 +409,7 @@ function viewLevels() {
   return c + '</section><p class="disclaimer">' + (img ? "Who may inject contrast or give medications in imaging depends on your state, ARRT practice standards and facility policy. Always follow your radiologist and department protocols." : nurse ? "Nursing scope varies by state nurse practice act and facility policy. CNAs give medications only where state law and certification (such as medication aide) allow." : med ? "Independent study material for board-style learning. Always confirm doses and choices with current references and your supervising physician." : "Scope lists follow the National EMS Scope of Practice Model with common state additions. Your state or agency may differ.") + '</p>';
 }
 
-var SCOPE_TAG = { emt: "Basic life support", aemt: "Limited advanced life support", paramedic: "Advanced life support", flight: "Critical care transport",
+var SCOPE_TAG = { emt: "Basic life support", aemt: "Limited advanced life support", paramedic: "Advanced life support", flight: "Critical care transport", field: "TCCC Tier 4 · prolonged care",
   cna: "Basic patient care", lvn: "Practical nursing", rn: "Professional nursing", ms1: "Preclinical sciences", ms3: "Clinical rotations", intern: "First-year residency" };
 function scopeTag(key, i, tot) { return SCOPE_TAG[key] || ("Level " + (i + 1) + " of " + tot); }
 function band() {
@@ -463,6 +463,7 @@ function tabList() {
   if (hasBlood()) L.push(["blood", "Blood Products", "PRBCs, whole blood, plasma, MTP and transfusion reactions."]);
   if (hasHemo()) L.push(["hemo", "Hemodynamics", "A-lines, PA catheters, IABP, Impella, ECMO, LVAD and shock profiles."]);
   if (hasLabs()) L.push(["labs", "Lab Values", labRoute() === "rn" ? "What each lab means for the meds you give." : labRoute() === "fl" ? "Labs for RSI, the vent, resuscitation and drips." : "Advanced labs, patterns and calculations."]);
+  if (S.view === "level" && S.level === "field" && typeof FM_TABS !== "undefined") Object.keys(FM_TABS).forEach(function (k) { L.push([k, FM_TABS[k][0], FM_TABS[k][1]]); });
   if (S.level === "lvn" || S.level === "rn") L.push(["nbug", "Nursing Bug", "Assess, hold, labs, teaching: one skill at a time."]);
   var img = S.view === "level" && isI(S.level);
   if (img) L.splice(1, 0, ["contrast", "Contrast Safety", "Reactions, screening, eGFR, GBCA groups, nuclear medicine and IR safety."]);
@@ -477,12 +478,13 @@ function tabList() {
 function tabName(k) { var t = tabList().filter(function (x) { return x[0] === k; })[0]; return t ? t[1] : k === "session" ? "Study session" : ""; }
 /* Hub tiles grouped into sections with short labels (UI cleanup, Oct 28 2026) */
 var HUB_GROUPS = [
+  ["Field care", ["march", "fm_bleed", "fm_tiva", "fm_head", "fm_pain", "fm_abx", "fm_airway", "pcc", "istat"]],
   ["Look it up", ["registry", "families", "conds", "diseases", "illicit", "units", "body", "alts", "contrast", "labs", "blood", "hemo", "flightp"]],
   ["Food and vitamin compounds", ["vegc", "fruitc", "vitc"]],
   ["Study and practice", ["prep", "nbug", "cards", "scenarios", "tools", "games"]],
   ["Yours", ["mylist", "progress", "shop"]]
 ];
-var HUB_SHORT = { illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "Saved drugs and their interactions", tools: "Megacode, interactions, safety drills", scenarios: "Clinical cases", cards: "Flip, sort and master", games: "Match, crossword, scramble and more", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time", prep: "Timed tests with scores" };
+var HUB_SHORT = { march: "Tap through the TCCC flow", fm_bleed: "TXA, calcium, whole blood", fm_tiva: "Ketamine-based drips", fm_head: "Herniation and 23.4% saline", fm_pain: "Pill pack, ketamine, esketamine", fm_abx: "Wounds, eyes and burns", fm_airway: "Open it, protect it", pcc: "When you become the hospital", istat: "Read the cartridge", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "Saved drugs and their interactions", tools: "Megacode, interactions, safety drills", scenarios: "Clinical cases", cards: "Flip, sort and master", games: "Match, crossword, scramble and more", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time", prep: "Timed tests with scores" };
 function hubView() {
   var L = tabList(), used = {}, c = '<nav class="hub2" aria-label="Sections">';
   function tile(t) {
@@ -514,6 +516,7 @@ function prepName() {
   if (S.view === "level" && isI(S.level)) return "Imaging Exam Prep";
   if (S.view === "level" && isM(S.level)) return { ms1: "Step 1–Style Prep", ms3: "Step 2 CK–Style Prep", intern: "Step 3–Style Prep" }[S.level];
   if (S.view === "level" && S.level === "flight") return "Flight Certification Exam Prep";
+  if (S.view === "level" && S.level === "field") return "Field Medic Practice";
   return "Registry Exam Prep";
 }
 function groupOptions() {
@@ -736,7 +739,7 @@ function viewLevel() {
   if (!S.tab || (S.tab !== "hub" && S.tab !== "session" && !tabName(S.tab))) S.tab = "hub";
   if (S.tab !== "hub" && S.tab !== "session" && typeof proLocked === "function" && proLocked(S.tab)) { var lt = S.tab; S.tab = "hub"; setTimeout(function () { openPaywall(tabName(lt), tabTier(lt)); }, 0); }
   if (S.tab === "calc") S.tab = "hub";  /* Calc Lab was removed */
-  var body = S.tab === "hub" ? "" : (S.tab === "vegc" || S.tab === "fruitc" || S.tab === "vitc") && typeof compoundView === "function" ? compoundView(S.tab) : S.tab === "illicit" && typeof illicitView === "function" ? illicitView() : S.tab === "registry" ? registry() : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? (S.tab = "hub", "") : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "tools" ? toolsView() : flashcards();
+  var body = S.tab === "hub" ? "" : typeof fieldTab === "function" && S.level === "field" && FM_TABS[S.tab] ? fieldTab(S.tab) : (S.tab === "vegc" || S.tab === "fruitc" || S.tab === "vitc") && typeof compoundView === "function" ? compoundView(S.tab) : S.tab === "illicit" && typeof illicitView === "function" ? illicitView() : S.tab === "registry" ? registry() : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? (S.tab = "hub", "") : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "tools" ? toolsView() : flashcards();
   var msg = S.sessMsg ? '<div class="presult" role="status">' + esc(S.sessMsg) + '</div>' : ''; S.sessMsg = "";
   var notes = (S.tab === "calc" || S.tab === "tools" ? eduBanner() : '') + (["prep", "session", "nbug", "scenarios", "cards"].indexOf(S.tab) >= 0 ? esQNote() : '');
   if (S.tab === "hub") return topbar() + '<div class="' + ctxClass() + '">' + band() + protocolBanner() + dailyCard() + msg + hubView() + '</div>';
@@ -782,13 +785,14 @@ function addScore(r) { mergeScores([r]); saveLocal(); pushScoresToDb(); }
 function refreshScoresUI() { var el = $("#scorearea"); if (el) { el.outerHTML = scoreArea(); var n = $("#scorearea"); if (n) translateDom(n); } }
 
 /* ---------- Registry Exam Prep ---------- */
-var NRLV = { all: "All levels", emt: "EMT", aemt: "AEMT", paramedic: "Paramedic", flight: "Flight", gen: "Home & general meds", cna: "CNA", lvn: "LVN/LPN", rn: "RN", im: "Imaging", ms1: "Step 1", ms3: "Step 2 CK", intern: "Step 3" };
+var NRLV = { all: "All levels", emt: "EMT", aemt: "AEMT", paramedic: "Paramedic", flight: "Flight", field: "Field Medic", gen: "Home & general meds", cna: "CNA", lvn: "LVN/LPN", rn: "RN", im: "Imaging", ms1: "Step 1", ms3: "Step 2 CK", intern: "Step 3" };
 function nrLevelsFor(k) {
   /* each scope studies its OWN question bank only (no lower-scope questions); top scopes get no general pool */
   if (isI(k)) return ["im"];
   if (k === "gen") return ["gen"]; /* Everyday / BugDex: plain-language home & general med questions only (no flight questions); topped up by modules/qgen.js */
   if (k === "lvn") return ["lvn", "gen"];
   if (k === "paramedic") return ["paramedic", "gen"];
+  if (k === "field") return ["field", "flight"]; /* Field Medic: its own priority calls plus the critical care bank */
   if (["cna", "rn", "ms1", "ms3", "intern", "emt", "aemt", "flight"].indexOf(k) >= 0) return [k];
   return ["flight"];
 }
@@ -917,7 +921,7 @@ function nrPrep() {
   if (st.phase === "quiz") return nrQuiz(st);
   if (st.phase === "done") return nrDone(st) + scoreArea();
   var pool = nrPool(st.filter);
-  var nurse = nurseCtx(), exam = nurse ? { cna: "CNA state exam", lvn: "NCLEX-PN", rn: "NCLEX-RN" }[S.level] : medCtx() ? { ms1: "USMLE Step 1", ms3: "USMLE Step 2 CK", intern: "USMLE Step 3" }[S.level] : imCtx() ? "Imaging exam" : S.level === "flight" ? "Flight and critical care certification exam" : "NREMT";
+  var nurse = nurseCtx(), exam = nurse ? { cna: "CNA state exam", lvn: "NCLEX-PN", rn: "NCLEX-RN" }[S.level] : medCtx() ? { ms1: "USMLE Step 1", ms3: "USMLE Step 2 CK", intern: "USMLE Step 3" }[S.level] : imCtx() ? "Imaging exam" : S.level === "flight" ? "Flight and critical care certification exam" : S.level === "field" ? "Field medic" : "NREMT";
   var regN = regCount(), reg = st.kind === "reg", filters = nrLevelsFor(ctxKey()).concat(["all"]), n = Math.min(st.n, pool.length);
   /* one simple screen: pick a deck, a length and a mode, then go. Everything else sits under More options. */
   var c = '<section class="nrsetup nrfun"><div class="nrtop">' + myBugArt("nrbug") + '<p class="nrtag"><strong>' + esc(exam) + '-style practice.</strong> <span class="muted">Pick a deck, pick a length, go.</span></p></div>' + examPill(pool);
@@ -6163,7 +6167,7 @@ document.addEventListener("change", function (e) { if (e.target.id === "pfiles")
 document.addEventListener("input", function (e) { if (e.target.id === "plink") { PQ.link = e.target.value; var b = $('[data-pq="submit"]'); if (b) b.disabled = !(P.auth && (PQ.link.trim() || PQ.photos.length) && !PQ.busy); } });
 
 /* ---------- Lab values (RN, Flight, Med School) ---------- */
-function labRoute() { var k = S.level; return k === "rn" ? "rn" : k === "flight" ? "fl" : isM(k) ? "md" : null; }
+function labRoute() { var k = S.level; return k === "rn" ? "rn" : k === "flight" || k === "field" ? "fl" : isM(k) ? "md" : null; }
 function hasLabs() { return S.view === "level" && !!labRoute(); }
 var LABHEAD = { rn: "At the bedside", fl: "In the aircraft", md: "Interpretation" };
 var LABGRP_ORDER = ["Electrolytes", "Kidney & glucose", "Blood count", "Clotting", "Blood gas", "Cardiac & other", "Acid-base", "Kidney & sodium", "Calcium & endocrine", "Liver & pancreas", "Hematology", "Coagulation", "Inflammation & infection", "Drug levels & toxicology", "Cardio-metabolic"];
@@ -6283,7 +6287,7 @@ document.addEventListener("input", function (e) {
 
 /* ---------- Blood products (Flight), Hemodynamics (Flight + Med School), Drug Families (BugDex) ---------- */
 function flightRN() { return S.view === "level" && S.level === "rn" && typeof myUnit === "function" && myUnit("rn") === "flight"; }
-function hasBlood() { return S.view === "level" && (S.level === "flight" || flightRN()); }
+function hasBlood() { return S.view === "level" && (S.level === "flight" || S.level === "field" || flightRN()); }
 function hasHemo() { return S.view === "level" && (S.level === "flight" || isM(S.level) || flightRN() || (S.level === "rn" && typeof myUnit === "function" && myUnit("rn") === "icu")); }
 function critData(kind) { return kind === "flightp" ? DB.FLIGHTP : kind === "blood" ? DB.BLOOD : kind === "contrast" ? DB.CONTRAST : DB.HEMO; }
 function critKey(kind) { return kind === "flightp" ? "fl" : kind === "contrast" ? S.level : S.level === "rn" ? "fl" : labRoute(); }
@@ -8659,7 +8663,7 @@ function agpList(lines, d) {
 var AGP_ROLES = [["emt", "EMT"], ["aemt", "AEMT"], ["para", "Paramedic"]];
 function agpRole() {
   if (AGP.role) return AGP.role;
-  var lv = S.view === "level" ? S.level : ""; return lv === "paramedic" || lv === "flight" ? "para" : lv === "aemt" ? "aemt" : "emt";
+  var lv = S.view === "level" ? S.level : ""; return lv === "paramedic" || lv === "flight" || lv === "field" ? "para" : lv === "aemt" ? "aemt" : "emt";
 }
 function agpRoleChips() { var r = agpRole(); return '<div class="chips agroles" role="group" aria-label="Show protocols for"><span class="muted small">Show for:</span>' + AGP_ROLES.map(function (x) { return '<button class="chip" data-agp="role" data-agid="' + x[0] + '" aria-pressed="' + (r === x[0]) + '">' + x[1] + '</button>'; }).join("") + '</div>'; }
 function agpBlocks(it) { var r = agpRole(); return (it.mgmt || []).filter(function (m) { return r === "para" || (m.lv || "para") === "emt"; }); }
@@ -9248,8 +9252,9 @@ function disDrugSection(drugId) {
    Owner request Oct 28 2026. Education only, NO DOSES (owner choice: most TCCC uses are off-label).
    Content follows the CoTCCC TCCC Guidelines (01 May 2026) and JTS Prolonged Casualty Care guidance,
    written descriptively (tools/callwording/RULES.md: no imperatives, no always/never/must/should).
-   View: S.view === "field"; S.fmTab = section key or null (hub); S.fmStep = open MARCH-PAWS letter. */
-var FM_NOTE = "Education only. DrugBug lists no doses here. Field care follows the current CoTCCC guidelines, Joint Trauma System guidance, unit protocols and medical direction. Not affiliated with or endorsed by the CoTCCC, the Joint Trauma System or the Department of Defense.";
+   Field Medic is a Prehospital LEVEL (key "field", after Flight Paramedic) with the same hub as every level,
+   plus the field tabs below (FM_TABS). S.fmStep = open MARCH-PAWS letter. */
+var FM_NOTE = "Education only. DrugBug lists no doses at the Field Medic level. Field care follows the current CoTCCC guidelines, Joint Trauma System guidance, unit protocols and medical direction. Not affiliated with or endorsed by the CoTCCC, the Joint Trauma System or the Department of Defense.";
 /* MARCH-PAWS: letter, name, one line, section to jump to */
 var FM_MARCH = [
   ["M", "Massive hemorrhage", "Tourniquets, wound packing and junctional control first. TXA and blood come right behind.", "bleed"],
@@ -9350,7 +9355,7 @@ var FM_Q = [];
     "O|A casualty with a 30% body surface area burn also has a bleeding thigh wound and is in shock. Put these priorities in order, from most important (first) to least important (last).|Control the bleeding;;Treat the hemorrhagic shock;;Cover the burns with dry dressings and prevent hypothermia;;Start burn fluid resuscitation|TCCC states that hemorrhagic shock takes priority over burn shock. Burned casualties lose heat quickly, and burn fluids start once access is in and the bleeding is handled.",
     "O|A casualty needs prolonged sedation during a long hold. Put these steps for a ketamine-based drip in order, from first to last.|Set up airway equipment, pulse oximetry and end-tidal CO2;;Start the ketamine drip in its own bag;;Add small pushes of an adjunct only if needed;;Trend the RASS score and vital signs|Prolonged casualty care guidance builds sedation on a ketamine drip with adjuncts only as needed, one drug per bag, and close monitoring of sedation depth, breathing and blood pressure."
   ];
-  L.forEach(function (l) { var f = l.split("|"); var st = f[2].split(";;"); FM_Q.push({ reg: 1, t: "order", prio: 1, lv: "flight", cat: "trauma", d: "", fm: 1, q: f[1], x: f[3], w: [], opts: st.slice(), ok: st.slice(), a: st.map(function (p, k) { return (k + 1) + ". " + p; }).join("  ") }); });
+  L.forEach(function (l) { var f = l.split("|"); var st = f[2].split(";;"); FM_Q.push({ reg: 1, t: "order", prio: 1, lv: "field", cat: "trauma", d: "", fm: 1, q: f[1], x: f[3], w: [], opts: st.slice(), ok: st.slice(), a: st.map(function (p, k) { return (k + 1) + ". " + p; }).join("  ") }); });
 })();
 var FM_ART = {
   drop: '<path d="M12 3c3 4 6 7.5 6 11a6 6 0 0 1-12 0c0-3.5 3-7 6-11z"/>',
@@ -9361,52 +9366,150 @@ var FM_ART = {
   lungs: '<path d="M12 4v8M12 12c-2 0-3-2-5-2-2 0-3 3-3 6 0 3 1 4 3 4s5-1 5-4zM12 12c2 0 3-2 5-2 2 0 3 3 3 6 0 3-1 4-3 4s-5-1-5-4z"/>'
 };
 var FIELD_BUG = { id: "fm", name: "Field Beetle", body: "beetle", c: ["#a3b18a", "#4b5320", "#ffffff"], acc: ["helmet"] };
+if (typeof IMBUG !== "undefined") IMBUG.field = FIELD_BUG;
+/* field tabs on the Field Medic level hub: key -> [name, description] */
+var FM_TABS = {
+  march: ["MARCH-PAWS", "Walk the TCCC flow letter by letter, then run the field drill."],
+  fm_bleed: ["Bleeding & Shock", "TXA, calcium and the whole blood ladder."],
+  fm_tiva: ["TIVA & Drips", "Ketamine-based drips and the drugs that ride along."],
+  fm_head: ["Head Injury & 23.4%", "Herniation signs and hypertonic saline."],
+  fm_pain: ["Pain & Nausea", "The wound pill pack, ketamine and esketamine."],
+  fm_abx: ["Antibiotics & Wounds", "Open wounds, eye injuries and burns."],
+  fm_airway: ["Airway & Breathing", "Positioning to cric, chest seals and RSI drugs."],
+  pcc: ["Prolonged Casualty Care", "Days to weeks with a casualty: when the medic becomes the hospital."],
+  istat: ["i-STAT Labs", "Read the cartridge: what each value means for a casualty."]
+};
+if (typeof ICO !== "undefined") {
+  ICO.march = '<path d="M4 6h16M4 12h10M4 18h7"/><circle cx="18" cy="16" r="3"/>';
+  ICO.fm_bleed = FM_ART.drop; ICO.fm_tiva = FM_ART.drip; ICO.fm_head = FM_ART.brain; ICO.fm_pain = FM_ART.bolt; ICO.fm_abx = FM_ART.shield; ICO.fm_airway = FM_ART.lungs;
+  ICO.pcc = '<path d="M3 20V9l9-5 9 5v11"/><path d="M9 20v-6h6v6M12 8v4M10 10h4"/>';
+  ICO.istat = '<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M10 6h4M9.5 17h5M10 10h4v4h-4z"/>';
+}
+/* the priority calls also join the Field Medic registry bank in Field Medic Practice */
+if (typeof DB !== "undefined") { DB.RQ = DB.RQ || []; FM_Q.forEach(function (q) { DB.RQ.push(q); }); }
+/* Prolonged Casualty Care: the 10 core capabilities (Prolonged Field Care working group position paper, 2015) */
+var PCC_CAPS = [
+  ["Monitoring", "Vital sign trends on a flowsheet: blood pressure, pulse oximetry, end-tidal CO2, temperature and urine output through a Foley."],
+  ["Resuscitation", "Beyond crystalloid: fresh whole blood from a walking blood bank first, more blood products at higher levels."],
+  ["Ventilation & oxygen", "Bag-valve-mask with PEEP, oxygen concentrators, and a portable ventilator at the highest level."],
+  ["Airway", "A secured, cuffed airway, from a surgical cric to RSI, plus the sedation to keep it in."],
+  ["Sedation & pain", "From IV analgesia to a ketamine-based drip with adjuncts, run for days."],
+  ["Exam & diagnostics", "Repeated head-to-toe exams to catch missed injuries, plus ultrasound and point-of-care labs like the i-STAT."],
+  ["Nursing care", "Clean, warm, dry and padded: turning, pressure points, Foley and line care, oral and eye care, wound care."],
+  ["Surgical skills", "Chest tubes and crics at a minimum, fasciotomy, debridement and amputation at higher levels."],
+  ["Teleconsultation", "Calling a critical care consultant with the casualty's story, trends, labs and images."],
+  ["Prep for flight", "Packaging for evacuation and planning for altitude, cold, noise and vibration."]
+];
+var PCC_DAY = [
+  ["Continuously", "Vital signs, SpO2, end-tidal CO2 and RASS sedation score trended on a flowsheet."],
+  ["Every few hours", "Urine output totals, fluid in and out, temperature, and a repeat focused exam."],
+  ["On a schedule", "Turning and padding pressure points (often every 2 hours), and eye and mouth care for sedated casualties."],
+  ["Each day", "Dressing changes and wound checks, i-STAT labs, line and Foley checks, and a teleconsult update."],
+  ["Before a move", "Securing tubes and lines, re-checking the airway and drips, and handing over the trends."]
+];
+var PCC_DRUGS = [["ketamine", "Days-long sedation", "The base of most prolonged care sedation drips.", "Secretions, emergence reactions, rising blood pressure."],
+  ["norepinephrine", "Holding pressure", "Pressor drip when blood pressure stays low after bleeding control and volume.", "Tissue injury if it leaks from the vein."],
+  ["ceftriaxone", "Ongoing antibiotics", "Continues wound and infection coverage once the casualty cannot swallow.", "Allergy. Not mixed with calcium in the same line."],
+  ["famotidine", "Stomach shield", "Lowers stomach acid to help prevent stress ulcers in critically ill casualties.", "Confusion in older or kidney-impaired patients."],
+  ["levetiracetam", "Seizure shield", "Seizure prevention after significant head injury.", "Drowsiness and mood changes."],
+  ["ondansetron", "Nausea", "Nausea from injury, motion or opioids.", "Heart rhythm effects (QT prolongation)."]];
+/* i-STAT: cartridges, values, and "read the cartridge" cases. Ranges are typical adult reference ranges; they vary by cartridge, device and lab. */
+var ISTAT_CARTS = [
+  ["CHEM8+", "Chemistry", "Sodium, potassium, chloride, ionized calcium, glucose, BUN, creatinine, hematocrit, TCO2, plus calculated hemoglobin and anion gap."],
+  ["CG4+", "Blood gas + lactate", "pH, PCO2, PO2 and lactate, plus calculated bicarbonate, base excess and oxygen saturation."],
+  ["CG8+", "Gas + chemistry", "pH, PCO2, PO2, sodium, potassium, ionized calcium, glucose and hematocrit, plus calculated values."],
+  ["EG7+", "Gas + electrolytes", "pH, PCO2, PO2, sodium, potassium, ionized calcium and hematocrit."],
+  ["PT/INR", "Clotting", "Prothrombin time and INR, a window into clotting factor loss."],
+  ["TBI", "Brain injury markers", "GFAP and UCH-L1 from whole blood in about 15 minutes, FDA cleared in 2024 after Army and Abbott development, to help assess suspected head injury within 24 hours."]
+];
+var ISTAT_VALS = [
+  ["Lactate", "under 2 mmol/L", "Rises when tissues run short of oxygen. A climbing lactate in a casualty points to ongoing shock; a falling one suggests resuscitation is working."],
+  ["Base excess", "-2 to +2 mmol/L", "A base deficit (a negative number) measures how much acid shock has built up. Deeper deficits track with more blood loss."],
+  ["pH", "7.35 to 7.45", "Acidosis is one corner of the trauma lethal triad with cold and bleeding: acidic blood clots poorly."],
+  ["PCO2", "35 to 45 mmHg", "Shows how well the casualty (or the ventilator) is blowing off CO2. Comparing it with end-tidal CO2 helps tune ventilation."],
+  ["Ionized calcium", "1.12 to 1.32 mmol/L", "Falls with stored blood, because citrate binds calcium. Low calcium weakens clotting and heart contraction."],
+  ["Potassium", "3.5 to 5.0 mmol/L", "Climbs with crush injury, stored blood, acidosis and kidney injury. High potassium can cause deadly heart rhythms."],
+  ["Sodium", "135 to 145 mmol/L", "Climbs with hypertonic saline. Trending it shows how much salt load a head-injured casualty has received."],
+  ["Hemoglobin / Hct", "Hgb about 12 to 17 g/dL", "Lags behind early bleeding, because whole blood is lost all at once. A normal first value does not rule out hemorrhage."],
+  ["Glucose", "70 to 140 mg/dL", "Stress raises it, and both very high and low values harm an injured brain."],
+  ["Creatinine / BUN", "Cr 0.6 to 1.3 mg/dL", "Kidney function. Rising values follow shock, crush injury and muscle breakdown."],
+  ["INR", "about 0.9 to 1.2", "A rising INR means clotting factors are being used up or diluted."],
+  ["GFAP / UCH-L1", "test-specific cutoffs", "Brain injury proteins. A negative result can help show that a CT scan, and an evacuation for one, may not be needed."]
+];
+/* case: title, story, cartridge, values [name, value, flag ("H","L",""), why] */
+var ISTAT_CASES = [
+  ["After four units", "A casualty has received four units of cold-stored whole blood during a long hold.", "CG8+", [["pH", "7.28", "L", "Acidosis from shock that has not fully cleared."], ["Ionized calcium", "0.92 mmol/L", "L", "Citrate in stored blood binds calcium. This is why TCCC lists calcium after the first unit."], ["Potassium", "5.6 mmol/L", "H", "Stored red cells leak potassium, and acidosis pushes it higher."], ["Sodium", "141 mmol/L", "", "Normal."], ["Glucose", "128 mg/dL", "", "Mild stress rise, within the expected range."], ["Hematocrit", "34%", "L", "Lower than normal after major bleeding, even with transfusion."]]],
+  ["Crush injury", "A casualty was pinned under a collapsed wall for hours before extrication.", "CHEM8+", [["Potassium", "6.4 mmol/L", "H", "Damaged muscle releases potassium, a risk for deadly heart rhythms."], ["Creatinine", "2.1 mg/dL", "H", "Muscle breakdown products are injuring the kidneys."], ["BUN", "31 mg/dL", "H", "Rises with kidney injury and dehydration."], ["Ionized calcium", "1.02 mmol/L", "L", "Calcium binds to damaged muscle."], ["Sodium", "139 mmol/L", "", "Normal."], ["Glucose", "112 mg/dL", "", "Normal for a stressed casualty."]]],
+  ["Hypertonic saline", "A head-injured casualty received hypertonic saline twice for herniation signs.", "CHEM8+", [["Sodium", "157 mmol/L", "H", "Climbs with each hypertonic saline dose. The trend is followed before more is given."], ["Chloride", "122 mmol/L", "H", "Saline carries chloride too, which can add to acidosis."], ["Glucose", "196 mg/dL", "H", "High glucose harms an injured brain."], ["Potassium", "3.9 mmol/L", "", "Normal."], ["Creatinine", "0.9 mg/dL", "", "Normal."], ["Hematocrit", "41%", "", "Normal."]]],
+  ["Still in shock", "A casualty with a pelvic injury still has a weak radial pulse after the first unit of blood.", "CG4+", [["pH", "7.21", "L", "Significant acidosis from poor tissue perfusion."], ["PCO2", "30 mmHg", "L", "The casualty is breathing fast to blow off acid, a partial compensation."], ["Lactate", "6.8 mmol/L", "H", "Tissues are starved of oxygen: shock is ongoing."], ["Base excess", "-11 mmol/L", "L", "A deep base deficit tracks with heavy blood loss."], ["PO2", "92 mmHg", "", "Oxygenation is adequate."]]]
+];
 function fmSec(k) { return FM_SECS.filter(function (s) { return s[0] === k; })[0]; }
 function fmIds() { var o = []; FM_SECS.forEach(function (s) { s[6].forEach(function (d) { if (DB.drugs[d[0]] && o.indexOf(d[0]) < 0) o.push(d[0]); }); }); return o; }
 function fmSeen() { return store("fmSeen") || []; }
-function fieldView() {
-  var c = topbar(), t = S.fmTab && fmSec(S.fmTab);
-  c += '<div class="backrow"><button class="backbtn" ' + (t ? 'data-fmtab=""' : 'data-go="home"') + '><span aria-hidden="true">&larr;</span> ' + (t ? "Field Medic" : "Main menu") + '</button></div>';
-  if (!t) {
-    var seen = fmSeen(), all = fmIds(), n = all.filter(function (id) { return seen.indexOf(id) >= 0; }).length;
-    c += '<header class="fmhead"><span class="fmbug">' + bugArt(FIELD_BUG, "", { mood: "happy" }) + '</span><div><span class="fmtier">TCCC Tier 4</span><h1>Field Medic</h1><p>Combat paramedic level: trauma drugs, TIVA drips, head injury and the MARCH-PAWS flow.</p></div></header>';
-    c += '<section class="fmmarch" aria-label="MARCH-PAWS"><div class="fmletters">' + FM_MARCH.map(function (m, i) { return '<button class="fmlet' + (i === 5 ? ' paws' : '') + '" data-fmstep="' + i + '" aria-pressed="' + (S.fmStep === i) + '" aria-label="' + esc(m[1]) + '">' + m[0] + '</button>'; }).join("") + '</div>' +
-      (S.fmStep != null && FM_MARCH[S.fmStep] ? '<div class="fmstep"><strong>' + esc(FM_MARCH[S.fmStep][1]) + '</strong><p>' + esc(FM_MARCH[S.fmStep][2]) + '</p><button class="linkish" data-fmtab="' + FM_MARCH[S.fmStep][3] + '">Open ' + esc(fmSec(FM_MARCH[S.fmStep][3])[1]) + ' &rsaquo;</button></div>' : '<p class="muted small fmhint">Tap a letter to walk the MARCH-PAWS flow.</p>') + '</section>';
-    c += '<div class="fmprog"><span><strong>' + n + '</strong> of ' + all.length + ' field drugs explored</span><span class="cmptrack"><span class="cmpfill fmfill" style="width:' + (all.length ? Math.round(100 * n / all.length) : 0) + '%"></span></span></div>';
-    c += '<nav class="fmtiles" aria-label="Field Medic sections">' + FM_SECS.map(function (s) { return '<button class="fmtile" style="--fm:' + s[3] + '" data-fmtab="' + s[0] + '"><span class="fmart"><svg viewBox="0 0 24 24" aria-hidden="true">' + FM_ART[s[4]] + '</svg></span><strong>' + esc(s[1]) + '</strong><span>' + esc(s[2]) + '</span></button>'; }).join("") +
-      '<button class="fmtile drill" style="--fm:#64748b" data-act="fmdrill"><span class="fmart"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l5 5L20 6"/></svg></span><strong>Field drill' + (typeof proLocked === "function" && PAYWALL && !isPro() ? ' ' + proBadge() : '') + '</strong><span>Put-in-order calls and questions on these drugs.</span></button></nav>';
-    c += '<p class="muted small fmnote">' + esc(FM_NOTE) + '</p>';
-    return c;
-  }
-  var seen2 = fmSeen();
-  c += '<section class="fmsec" style="--fm:' + t[3] + '"><header class="fmsechead"><span class="fmart"><svg viewBox="0 0 24 24" aria-hidden="true">' + FM_ART[t[4]] + '</svg></span><div><h1>' + esc(t[1]) + '</h1><p>' + esc(t[2]) + '</p></div></header>';
-  c += '<details class="fmkey" open><summary>Key ideas</summary><ul>' + t[5].map(function (k) { return '<li>' + esc(k) + '</li>'; }).join("") + '</ul></details>';
-  c += '<p class="muted small">Tap a card to flip it.</p><div class="fmgrid">' + t[6].filter(function (d) { return DB.drugs[d[0]]; }).map(function (d) {
-    var nm = nameOf(d[0]), lk = typeof drugLocked === "function" && drugLocked(d[0]);
-    return '<div class="fmcard' + (seen2.indexOf(d[0]) >= 0 ? ' seen' : '') + '" data-fmid="' + d[0] + '"><div class="fmin"><button class="fmfront" type="button" data-fmflip="1"><span class="fmtag">' + esc(d[1]) + '</span><strong>' + esc(nm) + '</strong>' + (lk ? '<span class="lockpill">Plus</span>' : '') + '<span class="fmtap">Tap to flip</span></button>' +
+function fmCards(list, color) {
+  var seen = fmSeen();
+  return '<p class="muted small">Tap a card to flip it.</p><div class="fmgrid">' + list.filter(function (d) { return DB.drugs[d[0]]; }).map(function (d) {
+    var lk = typeof drugLocked === "function" && drugLocked(d[0]);
+    return '<div class="fmcard' + (seen.indexOf(d[0]) >= 0 ? ' seen' : '') + '" data-fmid="' + d[0] + '"><div class="fmin"><button class="fmfront" type="button" data-fmflip="1"><span class="fmtag">' + esc(d[1]) + '</span><strong>' + esc(nameOf(d[0])) + '</strong>' + (lk ? '<span class="lockpill">Plus</span>' : '') + '<span class="fmtap">Tap to flip</span></button>' +
       '<div class="fmback"><span class="cmpk">Why it is in the bag</span><p>' + esc(d[2]) + '</p><span class="cmpk">Watch for</span><p>' + esc(d[3]) + '</p><div class="cmpacts"><button class="btn small" type="button" data-drug="' + d[0] + '">Open page</button><button class="btn small ghost" type="button" data-fmflip="1">Flip back</button></div></div></div></div>';
-  }).join("") + '</div></section>';
-  c += '<p class="muted small fmnote">' + esc(FM_NOTE) + '</p>';
-  return c;
+  }).join("") + '</div>';
 }
-/* clicks: handled before the app's own handler (capture), flips without a re-render */
+function fmKey(list, open) { return '<details class="fmkey"' + (open ? ' open' : '') + '><summary>Key ideas</summary><ul>' + list.map(function (k) { return '<li>' + esc(k) + '</li>'; }).join("") + '</ul></details>'; }
+function fieldTab(k) {
+  var c = '<div class="fmwrap">';
+  if (k === "march") {
+    var seen = fmSeen(), all = fmIds(), n = all.filter(function (id) { return seen.indexOf(id) >= 0; }).length;
+    c += '<section class="fmmarch" aria-label="MARCH-PAWS"><div class="fmletters">' + FM_MARCH.map(function (m, i) { return '<button class="fmlet' + (i >= 5 ? ' paws' : '') + '" data-fmstep="' + i + '" aria-pressed="' + (S.fmStep === i) + '" aria-label="' + esc(m[1]) + '">' + m[0] + '</button>'; }).join("") + '</div>' +
+      (S.fmStep != null && FM_MARCH[S.fmStep] ? '<div class="fmstep"><strong>' + esc(FM_MARCH[S.fmStep][1]) + '</strong><p>' + esc(FM_MARCH[S.fmStep][2]) + '</p><button class="linkish" data-tab="fm_' + FM_MARCH[S.fmStep][3] + '">Open ' + esc(FM_TABS["fm_" + FM_MARCH[S.fmStep][3]][0]) + ' &rsaquo;</button></div>' : '<p class="muted small fmhint">Tap a letter to walk the MARCH-PAWS flow.</p>') + '</section>';
+    c += '<div class="fmprog"><span><strong>' + n + '</strong> of ' + all.length + ' field drugs explored</span><span class="cmptrack"><span class="cmpfill fmfill" style="width:' + (all.length ? Math.round(100 * n / all.length) : 0) + '%"></span></span></div>';
+    c += '<button class="btn nrgo" data-act="fmdrill">Run the field drill' + (PAYWALL && !isPro() ? ' ' + proBadge() : '') + ' <span aria-hidden="true">&rarr;</span></button><p class="muted small">Put-in-order field calls plus questions on the trauma drugs.</p>';
+  } else if (k.indexOf("fm_") === 0) {
+    var t = fmSec(k.slice(3)); if (!t) return "";
+    c += '<div style="--fm:' + t[3] + '">' + fmKey(t[5], true) + fmCards(t[6]) + '</div>';
+  } else if (k === "pcc") {
+    c += '<p class="fmlead">Prolonged casualty care starts when evacuation is delayed past normal timelines. A medic may hold one or more casualties for hours, days or even weeks, and the job turns into running a small ICU.</p>';
+    c += '<h3 class="fmh">The 10 core capabilities</h3><div class="pcccaps">' + PCC_CAPS.map(function (x, i) { return '<details class="pcccap"><summary><span class="pccn">' + (i + 1) + '</span>' + esc(x[0]) + '</summary><p>' + esc(x[1]) + '</p></details>'; }).join("") + '</div>';
+    c += '<h3 class="fmh">The rhythm of a long hold</h3><ol class="pccday">' + PCC_DAY.map(function (x) { return '<li><strong>' + esc(x[0]) + '</strong><span>' + esc(x[1]) + '</span></li>'; }).join("") + '</ol>';
+    c += '<h3 class="fmh">Drugs that run for days</h3><div style="--fm:#0f766e">' + fmCards(PCC_DRUGS) + '</div>';
+    c += '<p class="muted small">Sedation drips are covered in TIVA &amp; Drips, and labs in i-STAT Labs.</p>';
+  } else if (k === "istat") {
+    c += '<p class="fmlead">The i-STAT is a handheld blood analyzer that runs a few drops of blood through a single-use cartridge in about 2 minutes, which brings ICU-style labs to a long hold.</p>';
+    c += '<h3 class="fmh">Read the cartridge</h3><p class="muted small">Tap every value you think is off, then check.</p>';
+    c += ISTAT_CASES.map(function (cs, ci) { return '<section class="iscase" data-iscase="' + ci + '"><header><span class="iscart">' + esc(cs[2]) + '</span><strong>' + esc(cs[0]) + '</strong></header><p>' + esc(cs[1]) + '</p><div class="isvals">' + cs[3].map(function (v, vi) { return '<button type="button" class="isval" data-isv="' + vi + '" aria-pressed="false"><span>' + esc(v[0]) + '</span><strong>' + esc(v[1]) + '</strong></button>'; }).join("") + '</div><button class="btn small" type="button" data-ischeck="' + ci + '">Check</button><div class="isout" hidden></div></section>'; }).join("");
+    c += '<h3 class="fmh">What each value tells you</h3><div class="isref">' + ISTAT_VALS.map(function (v) { return '<details class="isrow"><summary><strong>' + esc(v[0]) + '</strong><span>' + esc(v[1]) + '</span></summary><p>' + esc(v[2]) + '</p></details>'; }).join("") + '</div>';
+    c += '<h3 class="fmh">Cartridges</h3><div class="iscarts">' + ISTAT_CARTS.map(function (x) { return '<div class="iscard"><span class="iscart">' + esc(x[0]) + '</span><strong>' + esc(x[1]) + '</strong><p>' + esc(x[2]) + '</p></div>'; }).join("") + '</div>';
+    c += '<p class="muted small">Ranges shown are typical adult reference ranges; each cartridge, device and lab sets its own. i-STAT is a trademark of Abbott. DrugBug is not affiliated with Abbott.</p>';
+  }
+  return c + '<p class="muted small fmnote">' + esc(FM_NOTE) + '</p></div>';
+}
+/* the old stand-alone view now opens the Field Medic level */
+function fieldView() { setTimeout(function () { go("level", { level: "field" }); }, 0); return topbar(); }
+/* clicks: handled before the app's own handler (capture); flips and lab checks without a re-render */
 document.addEventListener("click", function (e) {
-  if (typeof S === "undefined" || S.view !== "field") return;
-  var t = e.target.closest && e.target.closest("[data-fmflip],[data-fmtab],[data-fmstep]"); if (!t) return;
+  if (typeof S === "undefined" || S.view !== "level" || S.level !== "field") return;
+  var t = e.target.closest && e.target.closest("[data-fmflip],[data-fmstep],[data-isv],[data-ischeck]"); if (!t) return;
+  e.preventDefault(); e.stopPropagation();
   if (t.hasAttribute("data-fmflip")) {
-    var card = t.closest(".fmcard"); if (!card) return; e.preventDefault(); e.stopPropagation();
+    var card = t.closest(".fmcard"); if (!card) return;
     card.classList.toggle("flip"); var id = card.getAttribute("data-fmid"), s = fmSeen();
     if (id && s.indexOf(id) < 0) { s.push(id); store("fmSeen", s); card.classList.add("seen"); }
     return;
   }
-  e.preventDefault(); e.stopPropagation();
-  if (t.hasAttribute("data-fmstep")) { var i = +t.getAttribute("data-fmstep"); S.fmStep = S.fmStep === i ? null : i; render(); return; }
-  S.fmTab = t.getAttribute("data-fmtab") || null; S.fmStep = null; render(); window.scrollTo(0, 0);
+  if (t.hasAttribute("data-isv")) { if (t.closest(".iscase").classList.contains("done")) return; t.setAttribute("aria-pressed", t.getAttribute("aria-pressed") === "true" ? "false" : "true"); return; }
+  if (t.hasAttribute("data-ischeck")) {
+    var sec = t.closest(".iscase"), cs = ISTAT_CASES[+t.getAttribute("data-ischeck")], right = 0, wrong = 0, out = sec.querySelector(".isout");
+    sec.classList.add("done");
+    sec.querySelectorAll(".isval").forEach(function (b) { var v = cs[3][+b.getAttribute("data-isv")], picked = b.getAttribute("aria-pressed") === "true", off = !!v[2]; b.classList.add(off ? (picked ? "hit" : "miss") : (picked ? "wrongpick" : "ok")); if (picked === off) right++; else wrong++; if (off) b.querySelector("strong").insertAdjacentHTML("beforeend", ' <em>' + (v[2] === "H" ? "high" : "low") + '</em>'); });
+    out.hidden = false; out.innerHTML = '<strong>' + (wrong ? right + " of " + cs[3].length + " called right." : "All called right!") + '</strong><ul>' + cs[3].filter(function (v) { return v[2]; }).map(function (v) { return '<li><strong>' + esc(v[0]) + ':</strong> ' + esc(v[3]) + '</li>'; }).join("") + '</ul>';
+    t.hidden = true; if (!wrong && typeof earn === "function") { earn(2); saveProg(); out.insertAdjacentHTML("beforeend", "<p class=\"earned\">+2 sticks</p>"); }
+    return;
+  }
+  if (t.hasAttribute("data-fmstep")) { var i = +t.getAttribute("data-fmstep"); S.fmStep = S.fmStep === i ? null : i; render(); }
 }, true);
-/* the drill runs as a study session at the Flight level (priority calls + drug questions on these drugs) */
+/* the drill runs as a study session on this level (priority calls + drug questions on these drugs) */
 function fmDrill() {
   if (typeof PAYWALL !== "undefined" && PAYWALL && !isPro()) return openPaywall("The Field Medic drill", "pro");
-  go("level", { level: "flight" }); startSession("field");
+  startSession("field");
 }
 
 
