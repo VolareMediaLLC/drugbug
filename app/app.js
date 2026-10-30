@@ -993,7 +993,7 @@ function nrPrep() {
   if (regN && isF(ctxKey())) c += '<p class="muted small">' + regN + ' questions on medications, blood, trauma, prolonged care, ventilators, labs, CBRN, K9, dive and evacuation.</p>';
   else if (regN) c += '<div class="nrdecks" role="group" aria-label="Question type">' +
     '<button class="nrdeck" data-nrkind="drug" aria-pressed="' + !reg + '"><span class="nrdk-ic" aria-hidden="true">' + icon("pillq") + '</span><strong>Drug questions</strong><span class="nrdk-n">' + drugCount() + '</span><span class="nrdk-sub">Doses, actions, uses and side effects</span></button>' +
-    '<button class="nrdeck" data-nrkind="reg" aria-pressed="' + reg + '"><span class="nrdk-ic" aria-hidden="true">' + icon("ecg") + '</span><strong>Registry questions</strong><span class="nrdk-n">' + regN + '</span><span class="nrdk-sub">Airway, cardiology, trauma, medical and operations</span></button></div>';
+    '<button class="nrdeck" data-nrkind="reg" aria-pressed="' + reg + '"><span class="nrdk-ic" aria-hidden="true">' + icon("ecg") + '</span><strong>Registry-style questions</strong><span class="nrdk-n">' + regN + '</span><span class="nrdk-sub">Airway, cardiology, trauma, medical and operations</span></button></div>';
   (function () {
     var st2 = seenStats();
     if (st2.total) {
@@ -6969,7 +6969,7 @@ function openPaywall(why, need) { if (!PAYWALL) return; PRO.open = true; PRO.bus
 function closePaywall() { PRO.open = false; pwdlg.hidden = true; pwdlg.innerHTML = ""; }
 var PLAN_PERKS = {
   plus: ["Every medication in DrugBug, on every route: BugDex, Prehospital, Nursing, Medical School and Imaging", "Illicit and street drug education in the BugDex", "Probiotics plus the Vegetable, Fruit and Vitamin Compounds tabs", "My List: save your drugs and see in depth how they interact", "Drug Families, Drug Alternatives, Lab Values, Blood Products, Hemodynamics, Flight Prep, Specialty Units and Contrast Safety", "The Wormhole on every drug and the Disease Lab on 250 conditions: origin stories and how they work, cell to organ", "Flashcards for every drug", "All of Everyday Health", "Rare and seasonal bugs"],
-  pro: ["Everything in Plus (new subscribers can try Pro free for 7 days)", "Exam prep: NREMT, NCLEX, Step and registry-style practice tests, including select-all and put-in-order questions, plus Exam mode", "Practice quizzes", "Brain Games: memory match, crossword, scramble, Class Blitz and more", "Clinical scenarios and Megacode", "Study Tools: Questions, Megacode, Flashcards, Brain Games and Safety drills", "Medication Disease Identifier", "Nursing Bug skill practice", "Epic and Legendary bugs"]
+  pro: ["Everything in Plus (new subscribers can try Pro free for 7 days)", "Exam prep: NREMT-style, NCLEX-style, Step-style and Registry-style practice tests, including select-all and put-in-order questions, plus Exam mode", "Practice quizzes", "Brain Games: memory match, crossword, scramble, Class Blitz and more", "Clinical scenarios and Megacode", "Study Tools: Questions, Megacode, Flashcards, Brain Games and Safety drills", "Medication Disease Identifier", "Nursing Bug skill practice", "Epic and Legendary bugs"]
 };
 function drawPaywall() {
   if (!PRO.open) return;
