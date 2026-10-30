@@ -320,7 +320,9 @@ DB.NLEVELS = [
   { key: "lvn", name: "LVN / LPN", full: "Licensed Vocational / Practical Nurse", bug: "Busy Bee", color: "lvn",
     blurb: "Gives oral, SQ, IM, inhaled and topical meds, checks hold parameters, and reinforces teaching. PN licensure–style pharmacology." },
   { key: "rn", name: "RN", full: "Registered Nurse", bug: "Monarch Nurse", color: "rn",
-    blurb: "Full hospital pharmacology: IV push and drips, high-alert meds, critical care, L&D and ED. RN licensure–style pharmacology." }
+    blurb: "Full hospital pharmacology: IV push and drips, high-alert meds, critical care, L&D and ED. RN licensure–style pharmacology." },
+  { key: "flightrn", name: "Flight Nurse", full: "Flight / Transport Nurse", bug: "Night Monarch", color: "flightrn",
+    blurb: "Critical care in the aircraft: RSI, drips on pumps, blood products, ventilated, balloon-pump and ECMO patients, and the stresses of flight. CFRN-style pharmacology." }
 ];
 DB.NSCOPE_CNA = ("meclizine levocetirizine acetaminophen aspirin ibuprofen metformin insulin-glargine insulin-lispro insulin-nph glipizide lisinopril amlodipine " +
   "metoprolol furosemide hydrochlorothiazide warfarin apixaban clopidogrel atorvastatin levothyroxine omeprazole docusate sennosides " +
@@ -404,6 +406,7 @@ DB.NNOTES = {
 };
 DB._ncache = {};
 DB.nscopeFor = function (key) {
+  if (key === "flightrn") key = "rn"; /* Flight Nurse works from the full RN formulary (Oct 29 2026) */
   if (DB._ncache[key]) return DB._ncache[key];
   var ids = {};
   var all = Object.keys(DB.drugs);
@@ -798,8 +801,333 @@ DB.MEGACODE = [
        { t: "Give metoprolol for the tachycardia", fb: "Beta-blockade would worsen anaphylaxis." },
        { t: "Wait 30 minutes for the steroids to work", fb: "She needs vasopressor support now." } ] }
    ] }
+,
+ { id: "hyperk-arrest", title: "Arrest with a dialysis fistula", group: "adult", tag: "Cardiac arrest", age: "61-year-old man", kg: 84,
+   intro: "He missed dialysis for four days and collapsed at home. Family says he has end-stage renal disease. There is a fistula in the left arm.",
+   steps: [
+    { rhythm: "vf", vit: ["No pulse", "Fistula in left arm"], text: "The monitor shows coarse ventricular fibrillation. Before the arrest, family describe him complaining of weakness and tingling.", prompt: "First action?", secs: 15,
+      options: [
+       { t: "Defibrillate, resume CPR, and plan for calcium early given the dialysis history", ok: true, fb: "The rhythm still drives the first action. The missed-dialysis history should put calcium at the front of your reversible-cause list while CPR continues." },
+       { t: "Give calcium chloride 1 g before the first shock", fb: "VF gets a shock first. The calcium goes in during CPR, not instead of defibrillation." },
+       { t: "Hold the shock and start a bicarbonate infusion", fb: "Shocks are not held for drugs, and bicarbonate alone does not treat the membrane instability." },
+       { t: "Place an IV in the fistula arm for fast access", fb: "The fistula arm is avoided. Use the other arm or intraosseous access." } ] },
+    { rhythm: "vf", vit: ["No pulse", "IO in right tibia", "EtCO2 18 mmHg"], text: "Still VF after the second shock and epinephrine. Access is an IO in the right tibia.", prompt: "Which drug addresses the likely cause?", secs: 15,
+      options: [
+       { t: "Calcium chloride 1 g IV/IO (or calcium gluconate 3 g) to stabilize the myocardium", ok: true, fb: "In suspected hyperkalemic arrest, calcium is the membrane stabilizer and is given early. It does not lower potassium, but it buys the rhythm time."},
+       { t: "Regular insulin 10 units IV with dextrose as the first measure", fb: "Insulin and dextrose shift potassium, but they take 15 to 30 minutes. Calcium is the one that acts in minutes."},
+       { t: "Albuterol 2.5 mg nebulized", fb: "Nebulized albuterol shifts potassium but is useless in arrest with no ventilation through a nebulizer."},
+       { t: "Sodium polystyrene sulfonate per rectum", fb: "Binders act over hours and have no role in an arrest."} ] },
+    { rhythm: "vf", vit: ["No pulse", "EtCO2 20 mmHg"], text: "Calcium is in. Still VF. The potassium from a point-of-care sample reads 7.9 mmol/L.", prompt: "What do you add now?", secs: 18,
+      options: [
+       { t: "Regular insulin 10 units IV with dextrose, and sodium bicarbonate, while continuing the ACLS algorithm", ok: true, fb: "After calcium, the shifting agents go in: insulin with dextrose, and bicarbonate where acidosis is present. The ACLS algorithm continues unchanged alongside them."},
+       { t: "A second dose of calcium and nothing else", fb: "Repeat calcium is reasonable, but on its own it leaves the potassium where it is."},
+       { t: "Stop resuscitation; hyperkalemic arrest is not survivable", fb: "Hyperkalemic arrest is one of the more survivable arrests when the cause is treated, and prolonged efforts are often justified."},
+       { t: "Give amiodarone 300 mg and stop the potassium treatment", fb: "Amiodarone is still part of the algorithm, but abandoning the reversible cause is the error."} ] },
+    { rhythm: "sinus", hr: 104, vit: ["ROSC", "BP 92/58", "K 7.9"], text: "ROSC after the fifth shock. The potassium is still 7.9 and he is going to the ICU.", prompt: "What has to be arranged?", secs: 15,
+      options: [
+       { t: "Urgent dialysis, with the shifting agents continued as a bridge", ok: true, fb: "Only dialysis removes potassium in a patient with no kidney function. Calcium, insulin and bicarbonate are a bridge to it, not a treatment."},
+       { t: "Oral binder and recheck in six hours", fb: "Far too slow for a potassium of 7.9 after an arrest."},
+       { t: "Furosemide 80 mg IV", fb: "A diuretic needs working kidneys. In end-stage renal disease it does nothing."},
+       { t: "No further potassium treatment now that there is a pulse", fb: "The potassium that caused the arrest is still there and will cause another."} ] } ] },
+ { id: "tca-od", title: "Tricyclic overdose with a wide QRS", group: "adult", tag: "Toxicology", age: "24-year-old woman", kg: 62,
+   intro: "Found with an empty amitriptyline bottle. She is drowsy, then has a seizure in front of you.",
+   steps: [
+    { rhythm: "sinustachy", hr: 128, vit: ["BP 88/50", "QRS 142 ms", "Drowsy"], text: "The monitor shows a wide-complex tachycardia with a terminal R wave in aVR. She is hypotensive.", prompt: "What is the key treatment?", secs: 18,
+      options: [
+       { t: "Sodium bicarbonate boluses, titrated to narrowing of the QRS", ok: true, fb: "A QRS over about 100 ms in tricyclic overdose is the indication for sodium bicarbonate. The sodium load and the alkalinization both act on the blocked sodium channel."},
+       { t: "Amiodarone 150 mg for the wide-complex tachycardia", fb: "Amiodarone blocks sodium channels further and makes tricyclic toxicity worse. It is specifically avoided."},
+       { t: "Procainamide for the wide complexes", fb: "A class Ia sodium channel blocker on top of a sodium channel blocker overdose. This is the classic harmful choice."},
+       { t: "Synchronized cardioversion", fb: "This is not a primary dysrhythmia; it is sodium channel blockade. Cardioversion does not fix the channel."} ] },
+    { rhythm: "sinustachy", hr: 120, vit: ["QRS 118 ms", "BP 94/56"], text: "The QRS narrows after bicarbonate. She seizes again, briefly.", prompt: "What do you give for the seizure?", secs: 15,
+      options: [
+       { t: "A benzodiazepine", ok: true, fb: "Benzodiazepines are first-line. Seizures worsen the acidosis, which worsens the sodium channel blockade, so stopping them is part of the cardiac treatment."},
+       { t: "Phenytoin", fb: "Phenytoin is itself a sodium channel blocker and is avoided in tricyclic overdose."},
+       { t: "Flumazenil", fb: "Flumazenil can precipitate seizures and is contraindicated here."},
+       { t: "Physostigmine", fb: "Physostigmine in tricyclic overdose has been associated with asystole and is avoided."} ] },
+    { rhythm: "sinustachy", hr: 118, vit: ["BP 78/44 after a 1 L bolus", "QRS 124 ms"], text: "Her pressure stays low after fluid.", prompt: "What is the next step for the hypotension?", secs: 15,
+      options: [
+       { t: "More sodium bicarbonate, then norepinephrine if pressure remains low", ok: true, fb: "Bicarbonate treats both the QRS and much of the hypotension. A direct vasopressor such as norepinephrine is the usual next agent."},
+       { t: "Dopamine, because it releases endogenous norepinephrine", fb: "Tricyclics deplete norepinephrine stores, so an indirect agent works poorly. A direct vasopressor is preferred."},
+       { t: "A large fluid bolus and nothing else", fb: "The problem is vasodilation and myocardial depression from channel blockade, not volume."},
+       { t: "Flumazenil to improve her level of consciousness", fb: "Contraindicated, and it does nothing for blood pressure."} ] },
+    { rhythm: "sinustachy", hr: 110, vit: ["pH 7.48", "Na 152", "QRS 102 ms"], text: "After repeated bicarbonate the pH is 7.48 and sodium is 152.", prompt: "What now?", secs: 15,
+      options: [
+       { t: "Hold further bicarbonate boluses and watch the QRS, pH and sodium", ok: true, fb: "The endpoints are a narrowing QRS and a pH around 7.45 to 7.55. Past that, the sodium and alkalosis become their own problem."},
+       { t: "Continue bicarbonate at the same rate regardless of the pH", fb: "Alkalosis and hypernatremia are the limits on this treatment."},
+       { t: "Give hypertonic saline instead", fb: "Lipid emulsion and hypertonic saline have been reported, but the sodium here is already 152."},
+       { t: "Stop all treatment; the QRS is normal", fb: "Tricyclics redistribute, and the QRS can widen again. Monitoring continues."} ] } ] },
+ { id: "ob-hemorrhage", title: "Postpartum hemorrhage in transport", group: "adult", tag: "Obstetric", age: "29-year-old woman", kg: 78,
+   intro: "She delivered 40 minutes ago at a rural clinic. Bleeding has not stopped and the clinic is asking for transport.",
+   steps: [
+    { rhythm: "sinustachy", hr: 124, vit: ["BP 88/46", "Soaked pads", "Uterus boggy"], text: "The uterus is soft and above the umbilicus, and bleeding is brisk.", prompt: "What is the first action?", secs: 15,
+      options: [
+       { t: "Firm fundal massage while starting oxytocin and large-bore access", ok: true, fb: "Uterine atony causes most postpartum hemorrhage. Massage and a uterotonic are the first interventions and happen alongside resuscitation."},
+       { t: "Give tranexamic acid and wait for it to work", fb: "Tranexamic acid helps and should be given, but it does not replace massage and uterotonics."},
+       { t: "Pack the vagina and transport immediately", fb: "Packing does not address an atonic uterus, which is the source."},
+       { t: "Transfuse two units before anything else", fb: "Blood is given, but stopping the bleeding comes first and happens at the same time."} ] },
+    { rhythm: "sinustachy", hr: 128, vit: ["BP 84/44", "Still bleeding"], text: "Oxytocin is running and the uterus is firmer, but bleeding continues.", prompt: "Which second-line uterotonic fits her best? She has a history of asthma and her blood pressure is low.", secs: 20,
+      options: [
+       { t: "Misoprostol, since methylergonovine and carboprost both have cautions here", ok: true, fb: "Methylergonovine is cautioned in hypertension, and carboprost in asthma. With asthma and hypotension, misoprostol is the one without a direct conflict."},
+       { t: "Carboprost (15-methyl PGF2 alpha)", fb: "Carboprost can cause bronchospasm and is cautioned in asthma."},
+       { t: "Methylergonovine", fb: "It is cautioned in hypertension, and it is a vasoconstrictor; her pressure is low but the caution is about hypertension, so the asthma-safe choice is still preferred here."},
+       { t: "A second oxytocin bolus pushed rapidly", fb: "Rapid oxytocin boluses cause hypotension, which she cannot afford."} ] },
+    { rhythm: "sinustachy", hr: 132, vit: ["BP 78/40", "2 L crystalloid given"], text: "Two liters of crystalloid are in and she is more tachycardic, not less.", prompt: "What does she need?", secs: 15,
+      options: [
+       { t: "Blood products, with tranexamic acid if not already given", ok: true, fb: "She is bleeding, not dry. Crystalloid dilutes clotting factors; blood is the resuscitation fluid, and tranexamic acid within three hours reduces death from bleeding."},
+       { t: "A third liter of crystalloid", fb: "More crystalloid worsens dilutional coagulopathy."},
+       { t: "Norepinephrine to raise the pressure", fb: "A vasopressor in uncontrolled hemorrhage treats the number, not the problem."},
+       { t: "Hold all fluids until arrival", fb: "She needs volume, but it needs to be the right volume."} ] },
+    { rhythm: "sinustachy", hr: 118, vit: ["BP 94/58", "Bleeding slowing"], text: "She is improving with blood and uterotonics. You are 25 minutes out.", prompt: "What do you arrange en route?", secs: 15,
+      options: [
+       { t: "Call ahead so obstetrics, blood bank and an operating room are ready on arrival", ok: true, fb: "Ongoing postpartum hemorrhage needs definitive care: examination for retained products or tears, balloon tamponade, or surgery. The call ahead is the intervention."},
+       { t: "Stop the uterotonics now that bleeding has slowed", fb: "Atony recurs. The infusion continues."},
+       { t: "Divert to the nearest facility without obstetrics", fb: "Nearest is not always right when the definitive care is obstetric and surgical."},
+       { t: "No notification; she is stable now", fb: "Stability on uterotonics and blood is not stability."} ] } ] },
+ { id: "dka-peds", title: "Pediatric DKA with a headache", group: "peds", tag: "Endocrine", age: "9-year-old girl", kg: 28,
+   intro: "Three days of vomiting and deep breathing. Glucose reads HIGH on the meter. She is drowsy but rousable.",
+   steps: [
+    { rhythm: "sinustachy", hr: 134, vit: ["BP 96/58", "Kussmaul breathing", "pH 7.08"], text: "She is dehydrated with deep sighing respirations.", prompt: "What comes first?", secs: 15,
+      options: [
+       { t: "Careful isotonic fluid, roughly 10 mL/kg over an hour, before any insulin", ok: true, fb: "Fluid comes first, and in children it is given carefully. Insulin starts after the first hour; starting both at once raises the risk of cerebral edema."},
+       { t: "An insulin bolus of 0.1 units/kg followed by an infusion", fb: "Insulin boluses are not used in pediatric DKA; they add to the risk of cerebral edema."},
+       { t: "20 mL/kg boluses repeated until the tachycardia resolves", fb: "Aggressive bolusing is associated with cerebral edema in pediatric DKA. Fluid is deliberately measured."},
+       { t: "Sodium bicarbonate for a pH of 7.08", fb: "Bicarbonate in DKA is associated with cerebral edema in children and is avoided except in extreme circumstances."} ] },
+    { rhythm: "sinustachy", hr: 120, vit: ["K 3.2", "Glucose 480 mg/dL"], text: "The first potassium comes back at 3.2 mmol/L.", prompt: "What does that change?", secs: 15,
+      options: [
+       { t: "Replace potassium before starting insulin", ok: true, fb: "Insulin drives potassium into cells. Starting it with a potassium of 3.2 can cause a lethal hypokalemia, so replacement comes first."},
+       { t: "Start insulin and replace potassium at the same time", fb: "With a potassium already below 3.3, insulin waits."},
+       { t: "Nothing; the potassium will rise as the acidosis corrects", fb: "The opposite happens. Total body potassium is depleted and the measured value falls further with treatment."},
+       { t: "Give calcium for the low potassium", fb: "Calcium treats the cardiac effects of high potassium, not low."} ] },
+    { rhythm: "sinustachy", hr: 112, vit: ["Glucose 260 mg/dL", "Insulin infusion running"], text: "Glucose has fallen to 260 mg/dL on the infusion. The acidosis is only partly corrected.", prompt: "What do you do?", secs: 15,
+      options: [
+       { t: "Add dextrose to the fluid and keep the insulin running", ok: true, fb: "Insulin is what clears the ketones, so it keeps running. Dextrose is added once glucose falls to around 250 to 300 mg/dL to allow that."},
+       { t: "Stop the insulin infusion", fb: "Stopping insulin stops ketone clearance and the acidosis persists."},
+       { t: "Halve the insulin and give no dextrose", fb: "This slows ketone clearance; adding dextrose is the standard answer."},
+       { t: "Switch to subcutaneous insulin now", fb: "The transition happens after the acidosis resolves, with an overlap."} ] },
+    { rhythm: "sinusbrady", hr: 62, vit: ["BP 128/80", "New severe headache", "Drowsier"], text: "An hour later she complains of a severe headache, becomes harder to rouse, and the heart rate falls while the blood pressure rises.", prompt: "What is happening and what do you do?", secs: 20,
+      options: [
+       { t: "Cerebral edema: give hypertonic saline or mannitol immediately and raise the head of the bed", ok: true, fb: "Headache, falling heart rate with rising blood pressure and declining consciousness during DKA treatment is cerebral edema. Treatment is immediate and does not wait for imaging."},
+       { t: "Order a CT head and treat once it confirms edema", fb: "Treatment comes before imaging. Waiting costs the child."},
+       { t: "Increase the fluid rate to improve perfusion", fb: "More fluid worsens cerebral edema."},
+       { t: "Give more insulin to speed correction", fb: "Rapid correction is part of what causes this."} ] } ] },
+ { id: "massive-pe", title: "Massive pulmonary embolism", group: "adult", tag: "Respiratory", age: "52-year-old woman", kg: 95,
+   intro: "Sudden breathlessness and collapse three days after a knee replacement. She is hypotensive and hypoxic.",
+   steps: [
+    { rhythm: "sinustachy", hr: 128, vit: ["BP 82/50", "SpO2 85% on 15 L", "Clear lungs"], text: "Her lungs are clear, her neck veins are distended, and she is profoundly hypoxic.", prompt: "What fits best?", secs: 15,
+      options: [
+       { t: "Obstructive shock from a pulmonary embolism", ok: true, fb: "Sudden hypoxia with clear lungs, distended neck veins, hypotension and a recent orthopedic operation is the classic picture of a large embolism."},
+       { t: "Cardiogenic shock from an anterior infarct", fb: "Possible, but clear lungs with profound hypoxia and the recent surgery point elsewhere."},
+       { t: "Septic shock", fb: "Septic shock is usually warm and vasodilated, and does not produce this degree of sudden hypoxia with clear lungs."},
+       { t: "Tension pneumothorax", fb: "Worth excluding, but breath sounds are equal and the lungs are clear."} ] },
+    { rhythm: "sinustachy", hr: 132, vit: ["BP 78/44"], text: "You are considering fluid.", prompt: "How much fluid?", secs: 15,
+      options: [
+       { t: "A cautious bolus of about 500 mL, watching closely", ok: true, fb: "A small bolus can help, but the right ventricle is already failing against a high afterload. Overfilling it bows the septum and drops left-sided output further."},
+       { t: "Two liters wide open", fb: "This is the characteristic error. The failing right ventricle does not tolerate it."},
+       { t: "No fluid at all", fb: "A cautious bolus is reasonable; the caution is about volume, not about the idea."},
+       { t: "Fluid until the neck veins flatten", fb: "The neck veins are distended because of right ventricular failure, not volume. They will not flatten."} ] },
+    { rhythm: "sinustachy", hr: 134, vit: ["BP 74/40 after 500 mL"], text: "The pressure does not improve.", prompt: "What next?", secs: 15,
+      options: [
+       { t: "Start norepinephrine and arrange thrombolysis or thrombectomy", ok: true, fb: "Norepinephrine supports the right ventricle and the coronary perfusion that feeds it. The definitive treatment is removing or dissolving the clot."},
+       { t: "More fluid", fb: "More fluid worsens right ventricular distension."},
+       { t: "Anticoagulation alone and admit", fb: "Anticoagulation prevents more clot but does nothing for the clot causing the shock."},
+       { t: "Intubate first to fix the hypoxia", fb: "Intubation in massive embolism is high risk: positive pressure and induction drugs both reduce right-sided filling and can cause arrest."} ] },
+    { rhythm: "pea", vit: ["No pulse", "PEA at 40"], text: "During preparation she arrests into pulseless electrical activity.", prompt: "What do you do?", secs: 15,
+      options: [
+       { t: "High-quality CPR with epinephrine, and give thrombolysis during the arrest", ok: true, fb: "Confirmed or strongly suspected embolism is one of the accepted indications for thrombolysis during cardiac arrest, with CPR continued for 60 to 90 minutes afterward."},
+       { t: "CPR only, and withhold thrombolysis because CPR is a contraindication", fb: "CPR is not an absolute contraindication when the embolism is the cause of the arrest."},
+       { t: "Defibrillate the PEA", fb: "PEA is not a shockable rhythm."},
+       { t: "Stop after 20 minutes of PEA", fb: "After thrombolysis in this setting, prolonged CPR is specifically recommended."} ] } ] },
+ { id: "sepsis-shock", title: "Septic shock from a urinary source", group: "adult", tag: "Sepsis", age: "74-year-old woman", kg: 58,
+   intro: "Two days of confusion and fever from a nursing home. She is warm, flushed and hypotensive.",
+   steps: [
+    { rhythm: "sinustachy", hr: 118, vit: ["BP 84/48", "Temp 38.9 C (102 F)", "Lactate 4.6"], text: "She is warm and vasodilated, with a lactate of 4.6 mmol/L.", prompt: "What happens in the first hour?", secs: 18,
+      options: [
+       { t: "Cultures, broad-spectrum antibiotics and 30 mL/kg of crystalloid", ok: true, fb: "The first hour is cultures before antibiotics where it does not delay them, antibiotics early, fluid at about 30 mL/kg, and a lactate."},
+       { t: "Antibiotics only; hold fluid until the lactate returns", fb: "The fluid and the antibiotics both go in the first hour."},
+       { t: "Start norepinephrine first and give fluid afterward", fb: "Fluid comes first unless she is already fluid overloaded; the vasopressor follows if she stays hypotensive."},
+       { t: "Wait for a urine culture before any antibiotic", fb: "Every hour of delay in septic shock costs survival. Cultures are taken, then antibiotics go in."} ] },
+    { rhythm: "sinustachy", hr: 112, vit: ["BP 82/46 after 1.7 L", "MAP 58"], text: "After a weight-based bolus her mean pressure is still 58 mmHg.", prompt: "What next?", secs: 15,
+      options: [
+       { t: "Start norepinephrine, targeting a mean arterial pressure of about 65 mmHg", ok: true, fb: "Norepinephrine is first-line in septic shock, and the usual initial target is a mean arterial pressure of 65 mmHg."},
+       { t: "Dopamine, for its renal protective effect", fb: "Renal-dose dopamine does not protect kidneys and dopamine causes more dysrhythmias than norepinephrine."},
+       { t: "Another 2 L of crystalloid first", fb: "Past the initial resuscitation, more fluid in a vasodilated patient causes harm."},
+       { t: "Phenylephrine", fb: "A pure alpha agent drops cardiac output here; norepinephrine is preferred."} ] },
+    { rhythm: "sinustachy", hr: 104, vit: ["MAP 66 on norepinephrine", "Lactate 5.1"], text: "Her pressure is at target on norepinephrine, but the lactate has risen to 5.1.", prompt: "What does a rising lactate on an adequate pressure suggest?", secs: 18,
+      options: [
+       { t: "Perfusion is still inadequate; reassess volume, cardiac function and the source", ok: true, fb: "A mean pressure at target is not the same as adequate perfusion. A rising lactate prompts a re-look at volume status, cardiac output and whether the source is controlled."},
+       { t: "The lactate is from the norepinephrine and can be ignored", fb: "Catecholamines can raise lactate, but assuming that in septic shock is how source failure is missed."},
+       { t: "Raise the mean pressure target to 85 mmHg for everyone", fb: "Higher targets have not improved outcomes generally and cause more dysrhythmias."},
+       { t: "Stop the norepinephrine", fb: "This removes the pressure she needs."} ] },
+    { rhythm: "sinustachy", hr: 100, vit: ["Still on norepinephrine", "Hydronephrosis on ultrasound"], text: "Ultrasound shows a dilated obstructed kidney.", prompt: "What is the priority?", secs: 15,
+      options: [
+       { t: "Urgent drainage of the obstructed system", ok: true, fb: "Source control is the part of sepsis care that antibiotics cannot substitute for. An obstructed infected kidney has to be drained."},
+       { t: "Broaden the antibiotics further and continue", fb: "No antibiotic sterilizes an obstructed collecting system."},
+       { t: "Add a second vasopressor and reassess in the morning", fb: "Delaying drainage in an obstructed infected system costs lives."},
+       { t: "Increase the fluid rate", fb: "The problem is an undrained source."} ] } ] },
+ { id: "status-epi", title: "Status epilepticus", group: "adult", tag: "Neurologic", age: "34-year-old man", kg: 80,
+   intro: "Witnessed generalized seizure that has not stopped. It has been running for about eight minutes when you arrive.",
+   steps: [
+    { rhythm: "sinustachy", hr: 126, vit: ["Seizing", "SpO2 88%", "Glucose 104"], text: "He is still convulsing. Glucose is normal.", prompt: "What is first-line?", secs: 12,
+      options: [
+       { t: "An adequately dosed benzodiazepine", ok: true, fb: "Benzodiazepines are first-line, and the most common error is underdosing them. Intramuscular midazolam works when there is no line."},
+       { t: "Levetiracetam as the first drug", fb: "Second-line agents come after an adequate benzodiazepine dose, not instead of it."},
+       { t: "Immediate intubation with a paralytic", fb: "Paralysis stops the movement but not the seizure in the brain, and it hides it."},
+       { t: "Wait, since most seizures stop on their own within five minutes", fb: "Past five minutes this is status epilepticus and it is treated."} ] },
+    { rhythm: "sinustachy", hr: 122, vit: ["Still seizing after two doses"], text: "Two adequate benzodiazepine doses have not stopped it.", prompt: "What now?", secs: 15,
+      options: [
+       { t: "A second-line agent: levetiracetam, valproate or fosphenytoin", ok: true, fb: "The established second-line agents performed comparably in the ESETT trial. Which one is chosen matters less than giving one promptly at the right dose."},
+       { t: "A third and fourth benzodiazepine dose", fb: "After two adequate doses, moving to a second-line agent is the step."},
+       { t: "Start a propofol infusion without securing the airway", fb: "Infusional anesthetics come after second-line failure, and with the airway managed."},
+       { t: "Give magnesium", fb: "Magnesium is specific to eclampsia, not general status epilepticus."} ] },
+    { rhythm: "sinustachy", hr: 118, vit: ["Movements stopped", "Not waking up"], text: "The convulsions stop but he does not wake up over the next 20 minutes.", prompt: "What should be considered?", secs: 18,
+      options: [
+       { t: "Non-convulsive status epilepticus; he needs EEG monitoring", ok: true, fb: "A substantial proportion of people whose convulsions stop are still seizing electrically. Persistent coma after treated status is an indication for EEG."},
+       { t: "Normal post-ictal state; simply observe", fb: "A post-ictal period this prolonged is not assumed to be benign."},
+       { t: "The benzodiazepine dose was too high and he is oversedated", fb: "Possible, but non-convulsive status has to be excluded rather than assumed away."},
+       { t: "He is ready for discharge once he wakes", fb: "This needs a cause found and monitoring."} ] },
+    { rhythm: "sinustachy", hr: 110, vit: ["Na 118 on the first chemistry"], text: "The chemistry returns with a sodium of 118 mmol/L.", prompt: "What does that change?", secs: 15,
+      options: [
+       { t: "Give hypertonic saline; this is a seizure from severe hyponatremia", ok: true, fb: "Seizures from severe hyponatremia respond to a small bolus of hypertonic saline, and anticonvulsants alone often will not control them."},
+       { t: "Continue anticonvulsants only and correct sodium slowly", fb: "In an actively seizing patient with a sodium of 118, a controlled hypertonic bolus is the treatment."},
+       { t: "Give a large volume of normal saline rapidly", fb: "Isotonic saline corrects too slowly to stop the seizure and can worsen matters."},
+       { t: "Restrict fluid and observe", fb: "Fluid restriction is far too slow for a seizing patient."} ] } ] },
+ { id: "peds-anaphylaxis", title: "Pediatric anaphylaxis at school", group: "peds", tag: "Allergy", age: "7-year-old boy", kg: 24,
+   intro: "He ate a cookie at a party. Hives, coughing, and now he is sitting forward and hard to understand.",
+   steps: [
+    { rhythm: "sinustachy", hr: 142, vit: ["BP 82/44", "Stridor", "Hives"], text: "There is audible stridor and widespread urticaria.", prompt: "First drug and route?", secs: 12,
+      options: [
+       { t: "Intramuscular epinephrine into the lateral thigh, dosed by weight", ok: true, fb: "Intramuscular epinephrine in the anterolateral thigh is the first and most important treatment, and delay is what kills in anaphylaxis."},
+       { t: "Intravenous diphenhydramine first", fb: "Antihistamines treat hives and itch. They do nothing for airway swelling or shock."},
+       { t: "Nebulized albuterol first", fb: "Helpful for wheeze, but it is an adjunct, not the first drug."},
+       { t: "Intravenous methylprednisolone first", fb: "Steroids may reduce later symptoms and do nothing for the immediate reaction."} ] },
+    { rhythm: "sinustachy", hr: 138, vit: ["BP 80/42", "Still stridulous"], text: "Five minutes after the first dose he is only slightly better.", prompt: "What next?", secs: 15,
+      options: [
+       { t: "A second intramuscular epinephrine dose and a fluid bolus", ok: true, fb: "Repeat epinephrine every 5 to 15 minutes as needed. Anaphylactic shock is also a distributive shock, so fluid goes in alongside it."},
+       { t: "Switch to intravenous epinephrine push at the same dose", fb: "An intramuscular dose given intravenously is a tenfold overdose. Intravenous epinephrine is an infusion, carefully dosed."},
+       { t: "Wait another ten minutes before repeating", fb: "He is still symptomatic and hypotensive; the repeat is now."},
+       { t: "Give ranitidine and more diphenhydramine", fb: "Adjuncts do not substitute for epinephrine."} ] },
+    { rhythm: "sinustachy", hr: 130, vit: ["BP 88/50", "Improving"], text: "After the second dose and fluid he improves markedly. The parents want to take him home.", prompt: "What do you advise?", secs: 15,
+      options: [
+       { t: "Observation, because symptoms can return hours after the first reaction", ok: true, fb: "Biphasic reactions occur in a minority of patients hours after the initial episode, which is why observation and a prescribed auto-injector matter."},
+       { t: "Discharge now; he has had two doses and looks well", fb: "Two doses is a reason for more observation, not less."},
+       { t: "Discharge with antihistamines only", fb: "He leaves with an epinephrine auto-injector, instruction in its use, and an allergy referral."},
+       { t: "Admit for a week regardless", fb: "A period of observation is standard; a week is not."} ] },
+    { rhythm: "sinustachy", hr: 128, vit: ["BP 84/48 two hours later", "Wheeze returns"], text: "Two hours later the wheeze and hypotension return.", prompt: "What is this, and what do you do?", secs: 15,
+      options: [
+       { t: "A biphasic reaction: give epinephrine again and start an infusion if it keeps recurring", ok: true, fb: "This is exactly what the observation period is for. Repeat epinephrine, and a carefully dosed infusion for recurring or refractory anaphylaxis."},
+       { t: "Asthma; give albuterol only", fb: "Treating a returning anaphylaxis as asthma misses the shock."},
+       { t: "Anxiety after the earlier episode", fb: "He is hypotensive and wheezing. That is not anxiety."},
+       { t: "A steroid dose and reassurance", fb: "Steroids do not treat an active reaction."} ] } ] },
+ { id: "crush", title: "Crush injury under rubble", group: "adult", tag: "Trauma", age: "41-year-old man", kg: 88,
+   intro: "He has been pinned under a collapsed wall for about four hours. Extrication is five minutes away.",
+   steps: [
+    { rhythm: "sinustachy", hr: 112, vit: ["BP 104/62", "Legs pinned", "Awake"], text: "He is awake and talking, both legs trapped below the pelvis.", prompt: "What do you do before the weight comes off?", secs: 18,
+      options: [
+       { t: "Establish access and run fluid before release, and prepare for hyperkalemia", ok: true, fb: "Fluid before release is the key move in crush injury. Releasing the weight washes potassium, myoglobin and acid into the circulation, and a patient who is already volume loaded tolerates it far better."},
+       { t: "Release the weight immediately and treat afterward", fb: "Sudden release into an unresuscitated patient is the classic cause of crush syndrome arrest."},
+       { t: "Apply tourniquets above the crush and release", fb: "Routine tourniquets to prevent reperfusion are not recommended and sacrifice limbs."},
+       { t: "Give sodium bicarbonate only, and no fluid", fb: "Volume is the main treatment; bicarbonate is an adjunct."} ] },
+    { rhythm: "sinustachy", hr: 118, vit: ["Released", "Peaked T waves", "Dark urine"], text: "Immediately after release the monitor shows tall peaked T waves, and his urine is tea-colored.", prompt: "What do you give?", secs: 15,
+      options: [
+       { t: "Calcium for the membrane, then shifting agents, with fluid running", ok: true, fb: "Peaked T waves after release are hyperkalemia until proven otherwise. Calcium stabilizes the myocardium, then insulin with dextrose and bicarbonate shift potassium while fluid keeps running."},
+       { t: "Furosemide to clear the myoglobin", fb: "Diuretics in an underfilled patient worsen the kidney injury. Volume comes first."},
+       { t: "Nothing until a potassium level returns", fb: "Peaked T waves in this setting are treated on the spot."},
+       { t: "A potassium binder by mouth", fb: "Far too slow for an acute post-release rise."} ] },
+    { rhythm: "sinustachy", hr: 110, vit: ["Dark urine", "BP 108/64"], text: "His urine stays dark.", prompt: "What is the main treatment for the rhabdomyolysis?", secs: 15,
+      options: [
+       { t: "Large-volume fluid to maintain a good urine output", ok: true, fb: "Volume is the treatment for myoglobinuric kidney injury. Alkalinization and mannitol are debated adjuncts; fluid is not."},
+       { t: "Mannitol as the primary treatment", fb: "Mannitol is an adjunct with mixed evidence and is harmful in an underfilled patient."},
+       { t: "Early dialysis for everyone with dark urine", fb: "Dialysis is for established failure or refractory hyperkalemia, not prophylaxis."},
+       { t: "Fluid restriction to avoid overload", fb: "This is the opposite of the treatment."} ] },
+    { rhythm: "sinustachy", hr: 106, vit: ["Leg tense and painful", "Pulses present"], text: "One leg becomes tense and extremely painful. Pulses are still present.", prompt: "What are you thinking?", secs: 15,
+      options: [
+       { t: "Compartment syndrome, which needs urgent surgical assessment despite present pulses", ok: true, fb: "Pain out of proportion and a tense compartment are the early findings. Pulses are usually still present, and waiting for them to disappear means waiting too long."},
+       { t: "Pulses are present, so compartment syndrome is excluded", fb: "This is the classic and costly misunderstanding."},
+       { t: "Elevate the limb well above the heart", fb: "Elevation above heart level reduces perfusion pressure and can worsen it."},
+       { t: "Apply ice and reassess in an hour", fb: "Delay is what costs the limb."} ] } ] },
+ { id: "bbccb", title: "Beta blocker and calcium channel blocker overdose", group: "adult", tag: "Toxicology", age: "67-year-old man", kg: 90,
+   intro: "Found with empty bottles of metoprolol and diltiazem. He is bradycardic and hypotensive.",
+   steps: [
+    { rhythm: "sinusbrady", hr: 38, vit: ["BP 70/40", "Alert but clammy"], text: "He is bradycardic at 38 and hypotensive.", prompt: "What do you try first?", secs: 15,
+      options: [
+       { t: "Atropine and fluid, expecting limited effect, while preparing calcium and glucagon", ok: true, fb: "Atropine is reasonable to try and often does little in these overdoses. The important part is having the specific treatments ready rather than cycling atropine."},
+       { t: "Repeated atropine until the rate improves", fb: "Atropine rarely works here, and repeating it wastes the time these patients do not have."},
+       { t: "Transcutaneous pacing as the only treatment", fb: "Pacing may capture electrically without improving output; the drugs are still needed."},
+       { t: "Adenosine", fb: "Adenosine slows conduction further and is for narrow-complex tachycardia."} ] },
+    { rhythm: "sinusbrady", hr: 42, vit: ["BP 74/42"], text: "Atropine barely changes the rate.", prompt: "Which specific treatments now?", secs: 18,
+      options: [
+       { t: "High-dose calcium, glucagon, and high-dose insulin with dextrose", ok: true, fb: "Calcium works mainly on the calcium channel blocker, glucagon bypasses the blocked beta receptor, and high-dose insulin with dextrose improves myocardial contractility in both poisonings."},
+       { t: "Standard-dose insulin alone", fb: "The insulin here is high dose, far above diabetic dosing, with dextrose and close glucose and potassium monitoring."},
+       { t: "Epinephrine infusion as the only treatment", fb: "Catecholamines are used, but the receptor is blocked, so the specific antidotes matter more."},
+       { t: "Naloxone", fb: "No role in this poisoning."} ] },
+    { rhythm: "sinusbrady", hr: 48, vit: ["BP 82/48", "Glucose 58"], text: "He improves on high-dose insulin, but his glucose falls to 58 mg/dL.", prompt: "What do you do?", secs: 15,
+      options: [
+       { t: "Give dextrose and keep the insulin running, monitoring glucose and potassium closely", ok: true, fb: "Hypoglycemia is expected with high-dose insulin and is managed with dextrose, not by stopping the treatment that is working."},
+       { t: "Stop the insulin infusion", fb: "Stopping removes the treatment that is improving his contractility."},
+       { t: "Halve the insulin and give no dextrose", fb: "Dextrose is the answer to the hypoglycemia."},
+       { t: "Give glucagon for the hypoglycemia", fb: "Dextrose is the direct treatment, and glucagon is already being used for a different reason."} ] },
+    { rhythm: "sinusbrady", hr: 44, vit: ["BP 70/38 despite everything"], text: "Despite all of it, his pressure falls again.", prompt: "What is the next consideration?", secs: 15,
+      options: [
+       { t: "Lipid emulsion and extracorporeal support, with toxicology involved", ok: true, fb: "For refractory cardiovascular collapse from these overdoses, lipid emulsion and mechanical circulatory support are the rescue options, and toxicology guides them."},
+       { t: "More atropine", fb: "It did not work at the start and will not now."},
+       { t: "Activated charcoal by mouth in an obtunded patient", fb: "Not with an unprotected airway at this point."},
+       { t: "Accept that nothing more can be done", fb: "These poisonings are survivable with aggressive support, including extracorporeal options."} ] } ] },
+ { id: "burn-airway", title: "Structure fire with an airway burn", group: "adult", tag: "Trauma", age: "36-year-old man", kg: 82,
+   intro: "Pulled from a house fire. Soot around the mouth and nose, hoarse voice, singed nasal hair.",
+   steps: [
+    { rhythm: "sinustachy", hr: 118, vit: ["SpO2 99%", "Hoarse", "Soot in mouth"], text: "His saturation reads 99 percent on room air, but his voice is hoarse and there is soot in his mouth.", prompt: "What does the normal saturation tell you?", secs: 18,
+      options: [
+       { t: "Very little: a pulse oximeter reads carbon monoxide as oxygen", ok: true, fb: "A pulse oximeter cannot distinguish carboxyhemoglobin from oxyhemoglobin, so it reads high in carbon monoxide poisoning. High-flow oxygen goes on regardless of the number."},
+       { t: "He is well oxygenated and does not need oxygen", fb: "This is the trap. The number is falsely reassuring."},
+       { t: "He has no inhalation injury", fb: "Hoarseness, soot and singed hair are the findings that matter, not the saturation."},
+       { t: "His carbon monoxide level must be normal", fb: "The oximeter cannot tell you that."} ] },
+    { rhythm: "sinustachy", hr: 124, vit: ["Voice more hoarse", "Drooling"], text: "Over 20 minutes his voice worsens and he begins drooling.", prompt: "What is the decision?", secs: 15,
+      options: [
+       { t: "Secure the airway early, before swelling makes it impossible", ok: true, fb: "Airway swelling after an inhalation burn is progressive. The window for an easy intubation closes, and the decision is made early rather than when it fails."},
+       { t: "Wait until the saturation falls", fb: "By the time the saturation falls, the airway may be unintubatable."},
+       { t: "Give racemic epinephrine and observe for two hours", fb: "It may buy a little time but does not change the trajectory."},
+       { t: "Transport without an airway and let the burn center decide", fb: "A two-hour transport with a closing airway is how a surgical airway happens in the back of a moving vehicle."} ] },
+    { rhythm: "sinustachy", hr: 128, vit: ["Intubated", "Lactate 12", "BP 84/48"], text: "He is intubated. The lactate is 12 and he is hypotensive, which the burns alone do not explain.", prompt: "What should you treat?", secs: 18,
+      options: [
+       { t: "Cyanide poisoning from burning synthetics: give hydroxocobalamin", ok: true, fb: "A severe lactic acidosis with hypotension in an enclosed-space fire points to cyanide. Hydroxocobalamin treats it without inducing methemoglobinemia on top of the carbon monoxide."},
+       { t: "Sodium nitrite", fb: "Nitrites induce methemoglobin, which is dangerous when carbon monoxide is also present."},
+       { t: "The lactate is from the burn; treat with fluid alone", fb: "A lactate of 12 shortly after a fire is not explained by the burn."},
+       { t: "Methylene blue", fb: "That treats methemoglobinemia, a different problem."} ] },
+    { rhythm: "sinustachy", hr: 116, vit: ["40% TBSA", "Weight 82 kg"], text: "The burn is estimated at 40 percent of total body surface area.", prompt: "How is the fluid started?", secs: 18,
+      options: [
+       { t: "By a weight and burn-size formula, then titrated to urine output", ok: true, fb: "The formula is a starting point only. Urine output is the endpoint, and both under- and over-resuscitation cause harm."},
+       { t: "Run fluid wide open until the pressure normalizes", fb: "Over-resuscitation causes compartment syndrome and worsens the lungs."},
+       { t: "Maintenance fluid only for the first 24 hours", fb: "A 40 percent burn needs far more than maintenance."},
+       { t: "Colloid only, from the first hour", fb: "Crystalloid is the standard starting fluid in the first phase."} ] } ] },
+ { id: "neonatal", title: "Newborn who will not transition", group: "peds", tag: "Neonatal", age: "Term newborn", kg: 3.4,
+   intro: "Precipitous delivery in the back of the ambulance. The baby is limp, blue and not crying.",
+   steps: [
+    { rhythm: "sinusbrady", hr: 80, vit: ["Limp", "Apneic", "HR 80"], text: "The baby is apneic and limp with a heart rate of 80.", prompt: "What comes first?", secs: 12,
+      options: [
+       { t: "Warm, dry, stimulate and position, then positive pressure ventilation", ok: true, fb: "Almost every newborn who needs help needs ventilation, not compressions or drugs. Effective positive pressure ventilation is the single most important step."},
+       { t: "Start chest compressions immediately", fb: "Compressions begin only if the heart rate stays below 60 after 30 seconds of effective ventilation."},
+       { t: "Give epinephrine now", fb: "Drugs are rarely needed and come much later in the sequence."},
+       { t: "Suction deeply first in all cases", fb: "Routine deep suctioning is no longer recommended and can cause bradycardia."} ] },
+    { rhythm: "sinusbrady", hr: 54, vit: ["HR 54 after 30 s of PPV", "Chest not rising"], text: "After 30 seconds of ventilation the heart rate is 54 and you notice the chest is not rising.", prompt: "What do you do?", secs: 15,
+      options: [
+       { t: "Correct the ventilation before anything else", ok: true, fb: "A heart rate that is not improving almost always means the ventilation is not working. Reposition, clear the airway, check the seal, open the mouth, raise the pressure, consider an alternative airway."},
+       { t: "Start compressions at 3 to 1 straight away", fb: "Compressions on top of ineffective ventilation do not help. The ventilation is corrected first."},
+       { t: "Give epinephrine down the tube", fb: "Not before effective ventilation is established."},
+       { t: "Increase the oxygen to 100 percent and continue as you are", fb: "Oxygen without chest rise changes nothing."} ] },
+    { rhythm: "sinusbrady", hr: 48, vit: ["Chest rising now", "HR 48"], text: "The chest now rises well, but the heart rate is 48.", prompt: "Next?", secs: 12,
+      options: [
+       { t: "Begin compressions at 3 to 1 with ventilation, and increase oxygen", ok: true, fb: "With effective ventilation and a heart rate still under 60, compressions begin, coordinated 3 to 1 with breaths, and oxygen is increased."},
+       { t: "Continue ventilation alone and reassess in a minute", fb: "Under 60 after effective ventilation is the threshold for compressions."},
+       { t: "Compressions at 15 to 2", fb: "That is the pediatric two-rescuer ratio, not the newborn one."},
+       { t: "Give a fluid bolus", fb: "Volume is for suspected blood loss or shock, later in the sequence."} ] },
+    { rhythm: "sinusbrady", hr: 52, vit: ["HR 52 after 60 s of compressions"], text: "After a minute of coordinated compressions the heart rate is still 52.", prompt: "What now?", secs: 15,
+      options: [
+       { t: "Epinephrine, preferably by the umbilical venous route, and consider volume if blood loss is suspected", ok: true, fb: "This is where drugs finally enter. The umbilical vein is the preferred route, and a history of blood loss prompts volume."},
+       { t: "Sodium bicarbonate", fb: "Not recommended in neonatal resuscitation at this stage."},
+       { t: "Naloxone to reverse maternal opioids", fb: "Naloxone is not recommended as part of initial neonatal resuscitation."},
+       { t: "Stop; a minute of compressions without response means futility", fb: "Resuscitation continues; newborns recover from this."} ] } ] }
 ];
-DB.MEGA_LEVELS = { paramedic: 1, flight: 1, gen: 1, rn: 1, ms1: 1, ms3: 1, intern: 1 };
+DB.MEGA_LEVELS = { paramedic: 1, flight: 1, flightrn: 1, cpp: 1, gen: 1, rn: 1, ms1: 1, ms3: 1, intern: 1 };
 
 ;
 DB.add("acetaminophen","Acetaminophen","PH ED ICU CCT FL HM PE AN",`
@@ -1394,7 +1722,7 @@ Confirmed or suspected ethylene glycol or methanol poisoning|Diethylene glycol p
 Hypersensitivity to pyrazoles|None significant in toxic alcohol poisoning
 Venous irritation at high concentrations.|None|Must be diluted. Dose more often during dialysis.
 15 mg/kg IV load, then 10 mg/kg every 12 h x4 doses, then 15 mg/kg every 12 h until levels under 20 mg/dL|Same weight-based dosing|15 mg/kg load|Continue until EG/methanol under 20 mg/dL and pH normal|Every 12 h (every 4 h during dialysis)|Not continuous|Dialyzable: increase frequency during hemodialysis|No adjustment
-IV|Infusion over 30 min|Acceptable|-|-|-|-|-|-|Over 30 minutes|Dilute in at least 100 mL NS or D5W (concentrate solidifies below 25 C; warm to dissolve)|NS, D5W|Give early, even before levels return if history suggests ingestion.
+IV|Infusion over 30 min|Acceptable|-|-|-|-|-|-|Over 30 minutes|Dilute in at least 100 mL NS or D5W (concentrate solidifies below 25 C (77 F); warm to dissolve)|NS, D5W|Give early, even before levels return if history suggests ingestion.
 Within 1-2 h|Within 1-2 h|12 h|Variable (zero-order)|Hepatic|Renal|Not significant
 Headache, nausea, dizziness|Phlebitis, bradycardia, eosinophilia|Rare anaphylaxis
 Ethanol (mutual inhibition of metabolism)|Ethanol (unnecessary with fomepizole)|None|Ethanol and fomepizole inhibit each other's metabolism|Adjuncts: thiamine and pyridoxine (EG), folic/folinic acid (methanol), bicarbonate for acidosis
@@ -7598,7 +7926,7 @@ Bruxism, jaw clenching, sweating, tachycardia, mydriasis, nausea|Hyponatremia, h
 MAOIs (severe serotonin syndrome); SSRIs, SNRIs, linezolid, tramadol, dextromethorphan; ritonavir and CYP2D6 inhibitors (raise levels)|Serotonergic drugs, MAOIs|None|Dehydration and impaired judgment|Heat, crowds, exertion plus serotonergic drugs: hyperthermia and serotonin syndrome
 Hypertension|Tachycardia|Monitor rhythm|Continuous|If sedated|Rate|Confusion, seizures, clonus|Check|Sodium (critical), CK, creatinine, LFTs, coagulation|Core temperature; clonus and rigidity
 Not studied; avoid|Not applicable|Adolescents at festivals; accidental ingestion in toddlers causes agitation, seizures, hyperthermia|Not applicable|Higher toxicity|Higher toxicity
-No reliable toxic threshold; severe hyponatremia and hyperthermia occur at commonly encountered amounts in some people.|Agitation, hyperthermia, clonus, bruxism, diaphoresis, confusion|Seizure or coma from hyponatremia; hyperthermia over 40 C with rigidity, DIC and rhabdomyolysis; serotonin syndrome|Check sodium and glucose early. Severe symptomatic hyponatremia (seizure, coma): Off-label (per expert consensus): 3% hypertonic saline 100 mL IV bolus, may repeat up to 2 more times. Hyperthermia: rapid cooling (ice-water immersion when available). Agitation and seizures: benzodiazepines (lorazepam FDA label for status epilepticus: 4 mg IV slowly). Off-label (per toxicology references): cyproheptadine for serotonin toxicity. Restrict free water in hyponatremia.|None|None
+No reliable toxic threshold; severe hyponatremia and hyperthermia occur at commonly encountered amounts in some people.|Agitation, hyperthermia, clonus, bruxism, diaphoresis, confusion|Seizure or coma from hyponatremia; hyperthermia over 40 C (104 F) with rigidity, DIC and rhabdomyolysis; serotonin syndrome|Check sodium and glucose early. Severe symptomatic hyponatremia (seizure, coma): Off-label (per expert consensus): 3% hypertonic saline 100 mL IV bolus, may repeat up to 2 more times. Hyperthermia: rapid cooling (ice-water immersion when available). Agitation and seizures: benzodiazepines (lorazepam FDA label for status epilepticus: 4 mg IV slowly). Off-label (per toxicology references): cyproheptadine for serotonin toxicity. Restrict free water in hyponatremia.|None|None
 Not given by EMS.|Confused patient at a festival: check sodium and temperature, not just the drug screen.|Temperature, glucose, sodium if available, clonus, water intake|Temperature, mental status, seizures|Not applicable|Giving large volumes of hypotonic fluid to a hyponatremic patient|SSRIs, MAOIs, other stimulants|MDMA kills by two opposite water problems: too hot (hyperthermia) and too much water (hyponatremia).
 Not a home medicine|Recreational use|What was taken, how much water, other drugs, antidepressants, symptoms|Hyponatremic seizures, hyperthermia, serotonin syndrome|Low mood, fatigue for days (serotonin depletion)
 A party drug that floods the brain with serotonin and can overheat the body.|MDMA is a serotonin-releasing amphetamine causing hyperthermia, hyponatremia and serotonin syndrome.|Molly makes the body hold water (ADH release) while users drink lots of water, so sodium crashes: sodium is checked in any altered patient after MDMA.|Hyponatremia is from ADH release plus water drinking.|Check sodium in any altered patient after MDMA.|Methamphetamine, cathinones|MDA, methylone|Benzodiazepines, cooling, hypertonic saline (no antidote)
@@ -13570,7 +13898,7 @@ Local treatment of unresectable cutaneous, subcutaneous and nodal lesions in adu
 Immunocompromised patients (risk of disseminated herpetic infection); pregnancy|Close contacts who are pregnant or immunocompromised (exposure risk); concurrent antiviral therapy may reduce effect
 Accidental exposure of health care workers and close contacts, herpetic infection including herpetic keratitis, injection site complications (necrosis, ulceration, impaired healing), immune-mediated adverse reactions, plasmacytoma at the injection site, obstructive airway disorder from neck lesions|None|Live virus product handled with biohazard precautions; injection sites are covered with occlusive dressings; acyclovir is used if herpetic infection develops
 Intralesional: initial dose up to 4 mL at 10^6 (1 million) PFU/mL; second dose 3 weeks later up to 4 mL at 10^8 (100 million) PFU/mL; subsequent doses up to 4 mL at 10^8 PFU/mL 2 weeks after the previous treatment; total injection volume per treatment visit not to exceed 4 mL for all injected lesions combined (label, recurrent melanoma)|Not established (label)|Volume per lesion is based on lesion size per label|4 mL total per treatment visit|Continued for at least 6 months unless other treatment is indicated or no injectable lesions remain per label|Not applicable|No adjustment (not studied)|No adjustment (not studied)
-Intralesional|-|-|-|-|-|-|-|Intralesional injection into cutaneous, subcutaneous and nodal lesions, with ultrasound guidance for deeper nodes|Injected through a single insertion point with multiple tracks in a fanning pattern|Thawed from frozen storage at minus 90 to minus 70 C; personnel who are pregnant or immunocompromised do not prepare or administer it|Not mixed with other products|Largest lesions and new lesions are prioritized for injection per label; dressings and gloves are disposed of as biohazard waste
+Intralesional|-|-|-|-|-|-|-|Intralesional injection into cutaneous, subcutaneous and nodal lesions, with ultrasound guidance for deeper nodes|Injected through a single insertion point with multiple tracks in a fanning pattern|Thawed from frozen storage at minus 90 to minus 70 C (158 F); personnel who are pregnant or immunocompromised do not prepare or administer it|Not mixed with other products|Largest lesions and new lesions are prioritized for injection per label; dressings and gloves are disposed of as biohazard waste
 Local lysis over days to weeks|Responses typically develop over months|Durable responses lasting months to years in some patients|Not applicable (live virus)|Cleared by immune response|Viral DNA detectable at injection sites, in blood and urine for a short time|Not applicable
 Fatigue, chills, fever, nausea, influenza-like illness, injection site pain|Cellulitis, herpetic infection, injection site necrosis or ulceration, vitiligo|Disseminated herpetic infection in immunocompromised patients, obstructive airway disorder
 Acyclovir and other antiherpetic antivirals can interfere with T-VEC effectiveness|Antiherpetic antivirals, immunosuppressants|None known|No specific interaction|Combination with checkpoint inhibitors is investigational
@@ -14375,7 +14703,7 @@ Chironex fleckeri envenomation with cardiac arrest, reduced consciousness, cardi
 Known allergy or prior adverse reaction to the product (per Queensland Ambulance Service protocol)|Prior sheep-derived antivenom or allergy to sheep proteins (higher reaction risk)
 Hypersensitivity reactions including anaphylaxis; delayed serum sickness; a strong stinging sensation during injection per Queensland Ambulance Service protocol.|None (no FDA label)|Not effective for Irukandji syndrome (Carukia barnesi and related small box jellyfish) per toxinology references; clinical efficacy against cardiovascular collapse is debated.
 Not FDA approved; not available in the US. DrugBug does not list doses.|Not FDA approved; not available in the US. DrugBug does not list doses.|Not FDA approved; not available in the US. DrugBug does not list doses.|Not FDA approved; not available in the US. DrugBug does not list doses.|Not FDA approved; not available in the US. DrugBug does not list doses.|Not FDA approved; not available in the US. DrugBug does not list doses.|Not applicable (no labeled dose)|Not applicable (no labeled dose)
-IV|IV injection or infusion after dilution per Australian references|IO per Queensland Ambulance Service protocol|Older Australian references describe IM use|-|-|-|-|-|DrugBug does not list rates|Diluted in sodium chloride 0.9% per Australian references|Sodium chloride 0.9%|Ampoules contain 20,000 units in 1.5 to 4 mL, with volume varying by batch; stored at 2 to 8 C and protected from light per Queensland Ambulance Service protocol
+IV|IV injection or infusion after dilution per Australian references|IO per Queensland Ambulance Service protocol|Older Australian references describe IM use|-|-|-|-|-|DrugBug does not list rates|Diluted in sodium chloride 0.9% per Australian references|Sodium chloride 0.9%|Ampoules contain 20,000 units in 1.5 to 4 mL, with volume varying by batch; stored at 2 to 8 C (35.6-46.4 F) and protected from light per Queensland Ambulance Service protocol
 Not well characterized|Not well characterized|Not well characterized|Not well characterized for this product|Proteolysis|Not well characterized|Not applicable
 Stinging at the injection site, rash, urticaria|Early hypersensitivity reactions; serum sickness (fever, rash, joint and muscle pain) about 5 to 10 days later per references|Anaphylaxis
 No known drug interactions|-|None|None known|Beta-blockers can blunt the adrenaline response in anaphylaxis
@@ -15345,7 +15673,7 @@ Prevention of recurrence of CDI in adults 18 and older following antibiotic trea
 History of severe allergic reaction (e.g. anaphylaxis) to known product components (label)|Severe immunocompromise (limited data)
 Transmissible infectious agents: made from human stool, so a risk of transmitting infectious agents remains despite donor and stool screening (label). Acute allergic reactions and possible food allergens (label).|None|Not a treatment for active CDI (label). Single-dose product.
 150 mL rectally as a single dose, given 24 to 72 hours after the last dose of antibiotics for recurrent CDI (label, prevention of CDI recurrence, age 18 and older)|Not established under 18 years (label)|Not weight-based|Single 150 mL dose (label)|Single dose (label)|Not applicable (rectal suspension)|No adjustment described in label|No adjustment described in label
-Rectal|-|-|-|-|-|-|-|Rectal administration tube attached to a single-dose bag|Per label instructions|Stored in an ultracold freezer (-60 to -90 C); thawed in a refrigerator (2 to 8 C) for about 24 hours before use (label)|Not applicable|For rectal administration only (label); timing is 24 to 72 hours after the last CDI antibiotic dose.
+Rectal|-|-|-|-|-|-|-|Rectal administration tube attached to a single-dose bag|Per label instructions|Stored in an ultracold freezer (-60 to -90 C (-76--130 F)); thawed in a refrigerator (2 to 8 C (35.6-46.4 F)) for about 24 hours before use (label)|Not applicable|For rectal administration only (label); timing is 24 to 72 hours after the last CDI antibiotic dose.
 Not applicable (acts in the colon)|Not applicable|Efficacy measured at 8 weeks in trials|Not applicable (not absorbed systemically, label)|Not applicable|Fecal|Not applicable
 Abdominal pain, diarrhea, abdominal distention, flatulence, nausea (label)|Allergic reactions; possible transmission of infectious agents (label)|Theoretical serious infection from a transmitted pathogen
 Antibiotics given soon after dosing would be expected to reduce effect; label timing follows the last CDI antibiotic|Antibacterials around the time of dosing|May contain food allergens (label)|None known|-
@@ -15365,7 +15693,7 @@ Prevention of recurrence of CDI in adults 18 and older following antibacterial t
 None (label)|Severe immunocompromise (limited data)
 Transmissible infectious agents: made from human stool, so a risk of transmitting infectious agents remains despite screening and processing (label). Potential presence of food allergens (label).|None|Concurrent antibacterials are expected to kill the spores; the label advises against concurrent use.
 4 capsules PO once daily for 3 consecutive days on an empty stomach before the first meal, starting 2 to 4 days after completing antibacterial treatment for recurrent CDI, after 296 mL (10 oz) magnesium citrate the day before (label, age 18 and older)|Not established under 18 years (label)|Not weight-based|12 capsules per course (4 capsules daily for 3 days, label)|One 3-day course (label)|Not applicable|No adjustment described in label|No adjustment described in label
-PO|-|-|-|-|Capsules on an empty stomach before the first meal of the day|-|-|-|-|-|Not applicable|Bowel cleanse with 296 mL (10 oz) magnesium citrate the day before and at least 8 hours before the first dose, with no food or drink except a small amount of water for at least 8 hours before the first dose (label); stored at 2 to 25 C, not frozen (label).
+PO|-|-|-|-|Capsules on an empty stomach before the first meal of the day|-|-|-|-|-|Not applicable|Bowel cleanse with 296 mL (10 oz) magnesium citrate the day before and at least 8 hours before the first dose, with no food or drink except a small amount of water for at least 8 hours before the first dose (label); stored at 2 to 25 C (35.6-77 F), not frozen (label).
 Not applicable (acts in the gut)|Not applicable|Efficacy measured at 8 weeks in trials|Not applicable (acts in the gut)|Not applicable|Fecal|Not applicable
 Abdominal distension, fatigue, constipation, chills, diarrhea (label)|Possible transmission of infectious agents (label)|Theoretical serious infection from a transmitted pathogen
 Antibacterials given at the same time are expected to kill the spores (label advises against concurrent use)|Antibacterials during the 3-day course|May contain food allergens (label)|None known|-
@@ -15604,7 +15932,7 @@ A beta blocker pill, and also a common glaucoma eye drop.|Timolol is a nonselect
 DB.add("felodipine","Felodipine","HM",`
 Felodipine|Plendil (brand discontinued in US); generic felodipine extended-release|Felodipine|Antihypertensive|Dihydropyridine calcium channel blocker|Not controlled
 An extended-release tablet that lowers blood pressure.|Relaxes the smooth muscle of arteries so they widen and blood pressure falls.|Used to treat high blood pressure, alone or with other antihypertensives.
-Blocks voltage-gated L-type (Cav1.2) calcium channels in vascular smooth muscle, reducing calcium influx and causing arteriolar vasodilation; highly vascular selective with little negative inotropic or dromotropic effect at usual doses.|L-type voltage-gated calcium channel (alpha-1C subunit), vascular smooth muscle|Inhibitor (channel blocker)|Lowered peripheral vascular resistance and blood pressure; reflex tachycardia possible; precapillary vasodilation causing ankle edema.
+Blocks voltage-gated L-type (Cav1.2) calcium channels in vascular smooth muscle, reducing calcium influx and causing arteriolar vasodilation; highly vascular selective with little negative inotropic or dromotropic effect at usual doses.|L-type voltage-gated calcium channel (alpha-1C (33.8 F) subunit), vascular smooth muscle|Inhibitor (channel blocker)|Lowered peripheral vascular resistance and blood pressure; reflex tachycardia possible; precapillary vasodilation causing ankle edema.
 Hypertension (label)|Combination antihypertensive regimens|None|Raynaud phenomenon, chronic stable angina (off-label)
 Known hypersensitivity to felodipine or other components (label)|Hypotension, severe aortic stenosis, decompensated heart failure, hepatic impairment, strong CYP3A4 inhibitor use
 Hypotension and syncope, reflex tachycardia that can provoke angina, peripheral edema, gingival hyperplasia, increased exposure with hepatic impairment and in older adults.|None|Tablets are swallowed whole (not crushed or chewed); grapefruit juice can raise felodipine levels several-fold.
@@ -17947,7 +18275,7 @@ A one-dose flu pill.|Baloxavir is a single-dose oral cap-dependent endonuclease 
 DB.add("nirmatrelvir-ritonavir","Nirmatrelvir-Ritonavir","HM",`
 Nirmatrelvir and ritonavir|Paxlovid|Paxlovid|Antiviral (SARS-CoV-2)|SARS-CoV-2 main protease (Mpro, 3CL protease) inhibitor co-packaged with the CYP3A inhibitor ritonavir|Not controlled
 A 5-day oral antiviral pill pack for COVID-19.|Nirmatrelvir blocks the coronavirus protease that cuts viral polyproteins, and ritonavir keeps nirmatrelvir levels high.|Used for mild to moderate COVID-19 in adults at high risk of progression to severe disease.
-Nirmatrelvir is a peptidomimetic reversible covalent inhibitor of SARS-CoV-2 main protease (Mpro, 3C-like protease, nsp5), binding the catalytic cysteine (Cys145) and preventing cleavage of polyproteins pp1a and pp1ab into functional nonstructural proteins, which halts viral replication. Ritonavir has no SARS-CoV-2 activity and acts as a strong CYP3A4 inhibitor that raises nirmatrelvir concentrations (pharmacokinetic boosting).|SARS-CoV-2 Mpro (3CL protease); CYP3A4 (ritonavir)|Inhibitor|Reduced viral replication; lower risk of hospitalization or death in high-risk unvaccinated adults (EPIC-HR)
+Nirmatrelvir is a peptidomimetic reversible covalent inhibitor of SARS-CoV-2 main protease (Mpro, 3C (37.4 F)-like protease, nsp5), binding the catalytic cysteine (Cys145) and preventing cleavage of polyproteins pp1a and pp1ab into functional nonstructural proteins, which halts viral replication. Ritonavir has no SARS-CoV-2 activity and acts as a strong CYP3A4 inhibitor that raises nirmatrelvir concentrations (pharmacokinetic boosting).|SARS-CoV-2 Mpro (3CL protease); CYP3A4 (ritonavir)|Inhibitor|Reduced viral replication; lower risk of hospitalization or death in high-risk unvaccinated adults (EPIC-HR)
 Mild to moderate COVID-19 in adults at high risk for progression to severe COVID-19, including hospitalization or death (label)|-|Recognition as home COVID-19 therapy and a major drug interaction source|Long COVID (studied, off-label, without clear benefit in trials)
 Clinically significant hypersensitivity to nirmatrelvir or ritonavir; drugs highly dependent on CYP3A for clearance where high levels cause serious reactions; potent CYP3A inducers (label)|Severe hepatic impairment (Child-Pugh C, not recommended per label); severe renal impairment (label-specific regimen); uncontrolled or undiagnosed HIV-1 (protease inhibitor resistance)
 Drug interactions, hepatotoxicity, hypersensitivity including anaphylaxis, toxic epidermal necrolysis and Stevens-Johnson syndrome, HIV-1 protease inhibitor resistance in uncontrolled HIV, hypotension from interactions with calcium channel blockers|Yes: significant drug interactions; ritonavir CYP3A inhibition can raise concomitant drug levels to serious or life-threatening toxicity, and the full medication list is reviewed before prescribing per label.|Medication reconciliation before prescribing (the label includes an interaction table); renal function determines the dose pack; symptom rebound can occur after the course.
@@ -19397,7 +19725,7 @@ A two-in-one depression pill where one part helps the other last longer.|Dextrom
 DB.add("lurasidone","Lurasidone","HM BH",`
 Lurasidone|Latuda|Lurasidone|Second-generation (atypical) antipsychotic|Benzisothiazol derivative; D2 and 5-HT2A antagonist, 5-HT7 antagonist, 5-HT1A partial agonist|Not controlled
 A once-daily antipsychotic pill taken with a meal, used for schizophrenia and the depressive phase of bipolar disorder.|Blocks dopamine D2 and serotonin 5-HT2A and 5-HT7 receptors and partially stimulates 5-HT1A receptors.|Used for schizophrenia and for depressive episodes of bipolar I disorder.
-Antagonist at dopamine D2 and serotonin 5-HT2A receptors with high-affinity 5-HT7 antagonism and 5-HT1A partial agonism; minimal H1 and muscarinic binding, explaining low weight gain and low anticholinergic burden.|D2, 5-HT2A, 5-HT7, 5-HT1A, alpha-2C|Antagonist (D2, 5-HT2A, 5-HT7); partial agonist (5-HT1A)|Antipsychotic and antidepressant effects in bipolar depression, akathisia, mild prolactin rise, low metabolic impact.
+Antagonist at dopamine D2 and serotonin 5-HT2A receptors with high-affinity 5-HT7 antagonism and 5-HT1A partial agonism; minimal H1 and muscarinic binding, explaining low weight gain and low anticholinergic burden.|D2, 5-HT2A, 5-HT7, 5-HT1A, alpha-2C (35.6 F)|Antagonist (D2, 5-HT2A, 5-HT7); partial agonist (5-HT1A)|Antipsychotic and antidepressant effects in bipolar depression, akathisia, mild prolactin rise, low metabolic impact.
 Schizophrenia in patients 13 years and older (label)|Depressive episodes of bipolar I disorder in patients 10 years and older, as monotherapy or adjunct to lithium or valproate in adults (label)|Recognition of an antipsychotic in a patient with akathisia, dystonia or NMS|-
 Strong CYP3A4 inhibitors (e.g. ketoconazole, clarithromycin, ritonavir) and strong CYP3A4 inducers (e.g. rifampin, carbamazepine, St. John's wort, phenytoin); hypersensitivity (label)|Parkinson disease, dementia, seizure disorder, history of NMS
 Increased mortality in elderly dementia patients, suicidality, neuroleptic malignant syndrome, tardive dyskinesia, metabolic changes, hyperprolactinemia, leukopenia, orthostatic hypotension, seizures, dysphagia, mania.|Yes: increased mortality in elderly patients with dementia-related psychosis; suicidal thoughts and behaviors.|Taken with food (at least 350 calories) for adequate absorption; fasting glucose, lipids and weight are reviewed at baseline.
@@ -19453,8 +19781,8 @@ Risperidone's active form, given as a daily pill or a long-lasting shot.|Paliper
 `);
 DB.add("brexpiprazole","Brexpiprazole","HM BH",`
 Brexpiprazole|Rexulti|Brexpiprazole|Second-generation (atypical) antipsychotic|Serotonin-dopamine activity modulator; D2 and 5-HT1A partial agonist, 5-HT2A antagonist|Not controlled
-A once-daily antipsychotic pill related to aripiprazole, used for schizophrenia and as an add-on for depression.|Partially stimulates dopamine D2 and serotonin 5-HT1A receptors while blocking 5-HT2A and noradrenergic alpha-1B and alpha-2C receptors.|Used as add-on treatment for major depressive disorder, for schizophrenia, and for agitation associated with Alzheimer's dementia.
-Partial agonist at D2 and 5-HT1A receptors with lower intrinsic D2 activity than aripiprazole, and antagonist at 5-HT2A, alpha-1B and alpha-2C receptors; the profile is intended to lessen akathisia and activation compared with aripiprazole.|D2, D3, 5-HT1A (partial agonist); 5-HT2A, alpha-1B, alpha-2C (antagonist)|Partial agonist and antagonist|Antipsychotic, antidepressant augmentation and anti-agitation effects; weight gain; akathisia less common than with aripiprazole.
+A once-daily antipsychotic pill related to aripiprazole, used for schizophrenia and as an add-on for depression.|Partially stimulates dopamine D2 and serotonin 5-HT1A receptors while blocking 5-HT2A and noradrenergic alpha-1B and alpha-2C (35.6 F) receptors.|Used as add-on treatment for major depressive disorder, for schizophrenia, and for agitation associated with Alzheimer's dementia.
+Partial agonist at D2 and 5-HT1A receptors with lower intrinsic D2 activity than aripiprazole, and antagonist at 5-HT2A, alpha-1B and alpha-2C (35.6 F) receptors; the profile is intended to lessen akathisia and activation compared with aripiprazole.|D2, D3, 5-HT1A (partial agonist); 5-HT2A, alpha-1B, alpha-2C (antagonist)|Partial agonist and antagonist|Antipsychotic, antidepressant augmentation and anti-agitation effects; weight gain; akathisia less common than with aripiprazole.
 Adjunctive treatment of major depressive disorder in adults; schizophrenia in adults and pediatric patients 13 years and older (label)|Agitation associated with dementia due to Alzheimer's disease (label)|Recognition of an antipsychotic in an older adult with falls, sedation or NMS|-
 Hypersensitivity (label)|Dementia-related psychosis outside the agitation indication, seizure disorder, cardiovascular disease, history of NMS
 Increased mortality in elderly dementia patients, suicidality, neuroleptic malignant syndrome, tardive dyskinesia, metabolic changes, pathological gambling and other compulsive behaviors, orthostatic hypotension, falls, seizures.|Yes: increased mortality in elderly patients with dementia-related psychosis; suicidal thoughts and behaviors.|Dose adjustments are described for CYP2D6 poor metabolizers and for strong CYP2D6 or CYP3A4 inhibitors and inducers.
@@ -22769,7 +23097,7 @@ Diphtheria and tetanus toxoids and acellular pertussis vaccine adsorbed (DTaP)|D
 The childhood series of shots against diphtheria, tetanus and whooping cough.|Trains a young child's immune system to neutralize tetanus and diphtheria toxins and fight pertussis.|Used for the routine 5-dose childhood series from 6 weeks through 6 years.
 Formaldehyde-inactivated diphtheria and tetanus toxoids plus acellular pertussis antigens (detoxified pertussis toxin, filamentous hemagglutinin, pertactin and fimbriae types 2 and 3 in Daptacel) adsorbed to aluminum phosphate induce IgG antitoxins and antibodies against pertussis toxin and adhesins; acellular vaccines replaced whole-cell pertussis vaccine because of fewer febrile and neurologic reactions.|Diphtheria toxin, tetanus toxin, Bordetella pertussis antigens|Active immunization (toxoid antigens)|Primary immunity in infants and children, with waning pertussis protection after the fifth dose
 Active immunization against diphtheria, tetanus and pertussis as a 5-dose series in infants and children 6 weeks through 6 years of age (label)|Catch-up doses per the CDC/ACIP schedule guideline|None|None
-Severe allergic reaction to a previous dose or component; encephalopathy within 7 days of a pertussis-containing vaccine; progressive neurologic disorder, including infantile spasms, uncontrolled epilepsy or progressive encephalopathy, until stabilized (label)|Fever of 40.5 C or higher, collapse or shock-like state, persistent inconsolable crying of 3 hours or more, or seizures shortly after a prior dose; Guillain-Barre syndrome within 6 weeks of a prior tetanus toxoid vaccine
+Severe allergic reaction to a previous dose or component; encephalopathy within 7 days of a pertussis-containing vaccine; progressive neurologic disorder, including infantile spasms, uncontrolled epilepsy or progressive encephalopathy, until stabilized (label)|Fever of 40.5 C (104.9 F) or higher, collapse or shock-like state, persistent inconsolable crying of 3 hours or more, or seizures shortly after a prior dose; Guillain-Barre syndrome within 6 weeks of a prior tetanus toxoid vaccine
 Febrile seizures, hypotonic-hyporesponsive episodes, prolonged crying; apnea in premature infants; extensive limb swelling after the fourth or fifth dose|None|Anaphylaxis treatment is available; not for persons 7 years and older
 Not indicated in adults; licensed only for children 6 weeks through 6 years of age (label, Daptacel)|0.5 mL IM as a 5 dose series at 2, 4 and 6 months, 15 to 20 months, and 4 to 6 years of age; first dose as early as 6 weeks (label)|Not weight based|5 doses total|Doses at 2, 4 and 6 months (6 to 8 weeks apart), 15 to 20 months and 4 to 6 years (label)|Not applicable|No adjustment|No adjustment
 IM|-|-|0.5 mL into the anterolateral thigh in infants, deltoid in older children|-|-|-|-|-|Single injection|Shaken to a uniform suspension|Not applicable|ACIP prefers the same brand for the series when feasible
@@ -30258,7 +30586,7 @@ A shot that blocks two IL-17 signals.|Bimekizumab (Bimzelx) is a dual IL-17A/IL-
 DB.add("brodalumab","Brodalumab","HM",`
 Brodalumab|Siliq|Brodalumab|Biologic for psoriasis; IL-17 receptor antagonist|Human IgG2 monoclonal antibody against interleukin-17 receptor A (IL-17RA)|Not controlled
 A self-injected biologic for moderate to severe plaque psoriasis.|Blocks the shared IL-17 receptor so several IL-17 family cytokines cannot signal to skin cells.|Used for adults with moderate to severe plaque psoriasis who are candidates for systemic therapy or phototherapy and have not responded to or lost response with other systemic therapies.
-Human IgG2 monoclonal antibody that binds IL-17 receptor A (IL-17RA) and blocks signaling of IL-17A, IL-17F, the IL-17A/F heterodimer, IL-17C and IL-17E (IL-25); this suppresses keratinocyte activation, neutrophil recruitment and Th17-driven inflammatory chemokine release.|IL-17 receptor A (IL-17RA)|Antagonist (receptor-blocking antibody)|Reduced keratinocyte hyperproliferation and psoriatic plaque inflammation; impaired mucocutaneous antifungal (Candida) defense.
+Human IgG2 monoclonal antibody that binds IL-17 receptor A (IL-17RA) and blocks signaling of IL-17A, IL-17F, the IL-17A/F heterodimer, IL-17C (62.6 F) and IL-17E (IL-25); this suppresses keratinocyte activation, neutrophil recruitment and Th17-driven inflammatory chemokine release.|IL-17 receptor A (IL-17RA)|Antagonist (receptor-blocking antibody)|Reduced keratinocyte hyperproliferation and psoriatic plaque inflammation; impaired mucocutaneous antifungal (Candida) defense.
 Moderate to severe plaque psoriasis in adults who are candidates for systemic therapy or phototherapy and have failed to respond or have lost response to other systemic therapies (label)|-|None; recognition of an IL-17 pathway biologic in patients with infection, depression or suicidality|Psoriatic arthritis and axial spondyloarthritis (studied, not US labeled; off-label)
 Crohn's disease; clinically significant hypersensitivity to brodalumab or excipients (label)|Active serious infection, untreated latent TB, history of depression or suicidal behavior, inflammatory bowel disease
 Suicidal ideation and behavior, serious infections, tuberculosis reactivation, Crohn's disease, live vaccine avoidance.|Yes: suicidal ideation and behavior, including completed suicides, occurred in clinical trials; prescribing is limited to the SILIQ REMS Program.|TB screening is done before starting; patients and prescribers are counseled on mood changes under the REMS; live vaccines are avoided during treatment.
@@ -32041,120 +32369,3 @@ Advanced dry age-related macular degeneration (geographic atrophy).|Slowing loss
 An eye injection that blocks a complement protein to slow dry macular degeneration.|Pegcetacoplan is a pegylated C3 inhibitor given by intravitreal injection to slow geographic atrophy from AMD, and as Empaveli it treats PNH subcutaneously.|PEG the C3: pegcetacoplan blocks complement upstream at C3, while eculizumab and ravulizumab block further down at C5.|Targets C3, upstream of eculizumab's C5 target.|Pegcetacoplan inhibits C3 (proximal complement), while eculizumab, ravulizumab and avacincaptad pegol inhibit C5.|Avacincaptad pegol, eculizumab|Avacincaptad pegol (Izervay), iptacopan|None
 `);
 
-
-;
-// DrugBug new drugs batch n49
-DB.add("avacincaptad-pegol","Avacincaptad Pegol","HM",`
-Avacincaptad pegol|Izervay|Izervay|Complement inhibitor; intravitreal agent for geographic atrophy|Pegylated RNA aptamer complement C5 inhibitor|Not controlled
-An injection into the eye that slows geographic atrophy, the advanced dry form of macular degeneration.|Blocks complement protein C5, a part of the immune system linked to damage of retinal cells in dry AMD.|Used to slow the growth of geographic atrophy lesions secondary to age-related macular degeneration.
-Pegylated synthetic RNA aptamer that binds complement component C5 and blocks its cleavage by C5 convertase into C5a (anaphylatoxin) and C5b, preventing formation of the membrane attack complex (C5b-9) that is linked to retinal pigment epithelium and photoreceptor loss in geographic atrophy; upstream C3 activity is preserved.|Complement component C5|Inhibitor|Slower enlargement of geographic atrophy lesions; lost vision is not restored; systemic complement blockade is minimal at intravitreal doses.
-Geographic atrophy secondary to age-related macular degeneration (label)|-|None|-
-Ocular or periocular infections; active intraocular inflammation (label)|History of neovascular (wet) AMD in the treated eye; glaucoma or elevated intraocular pressure
-Endophthalmitis and retinal detachments after intravitreal injection; increased rate of neovascular (wet) AMD or choroidal neovascularization in treated eyes; transient increase in intraocular pressure after injection (label).|None|Patients are typically observed after injection for an intraocular pressure rise; new eye pain, redness, light sensitivity or vision loss after injection is associated with endophthalmitis or retinal detachment.
-2 mg (0.1 mL of 20 mg/mL solution) by intravitreal injection to each affected eye once monthly (approximately every 28 plus or minus 7 days) (label, geographic atrophy secondary to AMD)|Not established (label)|-|2 mg per eye per monthly injection (label)|Once monthly, approximately every 28 plus or minus 7 days (label)|-|No adjustment expected (minimal systemic exposure; not studied)|No adjustment expected (minimal systemic exposure; not studied)
-Intravitreal|-|-|-|-|-|-|-|Intravitreal injection by a retina specialist under aseptic technique|Single intravitreal injection|Single-dose vial of 20 mg/mL; 0.1 mL is drawn up per the label preparation steps|Not applicable|Topical anesthesia and a broad-spectrum microbicide are applied before injection; intraocular pressure and optic nerve perfusion are checked after injection; each vial treats one eye only.
-Delayed; slowing of lesion growth is seen over months|Not applicable (local effect)|About 1 month per injection|Long residence in the vitreous; systemic half-life not routinely cited|Expected to be degraded by endonucleases and exonucleases|Slow clearance from the vitreous; low systemic exposure|Not established
-Conjunctival hemorrhage, increased intraocular pressure, blurred vision, eye pain|Choroidal neovascularization (conversion to wet AMD), retinal detachment, intraocular inflammation|Endophthalmitis
-No formal drug interaction studies; no clinically significant interactions expected|-|None|None|Patients may also receive anti-VEGF injections for neovascular AMD, given as separate procedures
--|-|-|-|-|-|-|-|-|Intraocular pressure and optic nerve perfusion after injection; visual acuity; signs of endophthalmitis or retinal detachment; conversion to neovascular AMD
-No adequate human data; systemic exposure is low (label)|Unknown whether present in human milk|Not established|Most trial patients were 65 or older; no overall differences reported|Not studied|Not studied
-Not reported; each dose is 2 mg per eye|Increased intraocular pressure|Excess injected volume can raise intraocular pressure|Intraocular pressure monitoring and supportive ophthalmic care|None|None
-Not given by EMS.|Patients with geographic atrophy have central vision loss and higher fall risk; injections are given in retina clinics.|Eye infection, active inflammation, recent eye surgery, signs of wet AMD.|Eye pain, redness, light sensitivity, floaters or sudden vision loss after injection.|Ocular infection and active intraocular inflammation are labeled contraindications to injection.|Confusion with pegcetacoplan (Syfovre, a C3 inhibitor) or with anti-VEGF agents for wet AMD.|None known; anti-VEGF injections are separate procedures.|Avacincaptad pegol and pegcetacoplan were the first FDA-approved treatments for geographic atrophy (2023); neither restores lost vision.
-Dry age-related macular degeneration with geographic atrophy.|To slow the enlargement of geographic atrophy lesions.|Date of the last eye injection, new eye pain or vision change, other eye injections.|Endophthalmitis or retinal detachment after injection; falls related to low vision.|Missed injections are associated with continued lesion growth; no withdrawal syndrome.
-A monthly eye shot that slows the dry type of macular degeneration.|Avacincaptad pegol is an intravitreal complement C5-inhibiting RNA aptamer labeled for geographic atrophy secondary to AMD.|Avacincaptad is an aptamer that CAPTures C5 inside the eye to slow geographic atrophy (dry AMD); anti-VEGF drugs are for wet AMD.|Complement C5 inhibitor given by intravitreal injection once monthly.|Geographic atrophy (advanced dry AMD) treatments target complement: avacincaptad pegol blocks C5 and pegcetacoplan blocks C3, while anti-VEGF drugs treat wet AMD.|Pegcetacoplan (C3), pegaptanib (VEGF aptamer), eculizumab (systemic C5 antibody)|Pegcetacoplan intravitreal (Syfovre)|None
-`);
-DB.add("verteporfin","Verteporfin","HM",`
-Verteporfin|Visudyne|Visudyne; PDT|Photosensitizer for ocular photodynamic therapy|Benzoporphyrin derivative (light-activated)|Not controlled
-An IV medicine that is switched on by a special laser aimed at the eye.|Collects in abnormal blood vessels under the retina; when the laser light hits it, it damages and closes those vessels.|Used with laser light to treat abnormal leaking blood vessels under the macula (choroidal neovascularization).
-Benzoporphyrin derivative monoacid ring A carried in plasma mainly by lipoproteins and taken up by proliferating neovascular endothelium; activation by nonthermal 689 nm laser light in the presence of oxygen produces singlet oxygen and reactive oxygen radicals that damage endothelium, causing local thrombosis and occlusion of choroidal neovascular vessels.|Neovascular endothelial cells (light-activated; no receptor target)|Photosensitizer (cytotoxic when light-activated)|Selective closure of choroidal neovascular membranes with less damage to the overlying retina than thermal laser; temporary photosensitivity of skin and eyes.
-Predominantly classic subfoveal choroidal neovascularization due to age-related macular degeneration, pathologic myopia or presumed ocular histoplasmosis (label)|-|None|Central serous chorioretinopathy (often reduced-dose or reduced-fluence PDT), polypoidal choroidal vasculopathy, circumscribed choroidal hemangioma (off-label)
-Porphyria; known hypersensitivity to any component (label)|Moderate to severe hepatic impairment or biliary obstruction; photosensitivity disorders; pregnancy
-Extravasation with severe local pain, inflammation and photosensitivity reactions at the site; photosensitivity of skin and eyes after infusion with burns from direct sunlight or bright indoor light; severe decrease in vision within 7 days in a small percentage of patients; anaphylactic reactions (label).|None|Exposed skin and eyes are protected from direct sunlight and bright indoor light for 5 days per label; ordinary indoor light helps inactivate drug in the skin (photobleaching), and sunscreen does not protect.
-6 mg/m2 IV, diluted with 5% dextrose to a total volume of 30 mL and infused over 10 minutes at 3 mL/minute; 689 nm laser light starts 15 minutes after the start of the infusion at 50 J/cm2 and 600 mW/cm2 over 83 seconds (label, predominantly classic subfoveal CNV)|Not established (label)|6 mg/m2 body surface area (label)|6 mg/m2 per treatment (label)|Re-evaluation 3 months after treatment, with repeat treatment if leakage recurs (label)|30 mL over 10 minutes at 3 mL/minute (label)|No adjustment (negligible renal excretion)|Moderate to severe hepatic impairment or biliary obstruction: not studied, and caution is advised per label
-IV|Peripheral IV infusion by syringe pump through an in-line filter|-|-|-|-|-|-|Followed by 689 nm laser light delivered to the eye|30 mL over 10 minutes (3 mL/minute)|Reconstituted with 7 mL sterile water to 2 mg/mL; the dose is diluted with 5% dextrose to 30 mL, protected from light and used within 4 hours|5% Dextrose; incompatible with sodium chloride solutions (precipitation)|A free-flowing IV in a large arm vein (antecubital preferred) lowers extravasation risk; reconstituted solution is protected from light.
-Accumulates in neovasculature within minutes; laser applied 15 minutes after the start of infusion|End of infusion|Skin and eye photosensitivity precautions last 5 days per label|About 5 to 6 hours|Minor; hepatic and plasma esterases form a diacid metabolite|Mainly feces (biliary); negligible urinary excretion|Bound mainly to plasma lipoproteins and albumin
-Injection site reactions (pain, edema, inflammation), blurred or abnormal vision, visual field defects, infusion-related back pain|Severe decreased vision within 7 days, photosensitivity reactions and burns, extravasation injury|Anaphylaxis
-Other photosensitizers (tetracyclines, sulfonamides, phenothiazines, sulfonylureas, thiazides, griseofulvin) add to photosensitivity; calcium channel blockers, polymyxin B and radiation therapy can increase uptake into vascular endothelium; free radical scavengers and drugs that reduce clotting or vasoconstriction may lower activity (label)|Photosensitizing drugs|None|Ethanol is listed among free radical scavengers that may reduce activity|Photosensitizing drugs plus sun exposure in the 5 days after infusion
--|-|-|-|-|-|-|-|Liver function in hepatic disease|Infusion site for extravasation; skin and eye light exposure; visual acuity
-Limited human data; animal studies at high doses showed fetal effects|Present in human milk at low levels per label|Not established|Most patients treated are older adults; no specific adjustment|No adjustment|Reduced clearance expected; caution
-Overdose of drug or light can cause nonselective closure of normal retinal vessels and severe vision loss, plus prolonged photosensitivity|Severe vision decrease, prolonged skin photosensitivity|Vision loss and sunburn-like skin reactions after excess drug or light|Protection of skin and eyes from bright light for a longer period proportional to the overdose|None|None
-Not given by EMS.|Recently treated patients are photosensitive; prolonged exposure to sunlight or bright lights (including some exam and scene lighting) can cause burns.|Porphyria, liver disease, photosensitizing medications.|Infusion site, skin exposure to light, vision.|Extravasation leads to stopping the infusion and protecting the site from light per label.|Dilution with saline (precipitates); the belief that sunscreen protects (it does not).|Other photosensitizing drugs combined with sun exposure.|Verteporfin PDT has largely been replaced by anti-VEGF injections for wet AMD but remains in use for central serous chorioretinopathy and polypoidal choroidal vasculopathy.
-Wet age-related macular degeneration or other choroidal neovascularization; central serous chorioretinopathy.|Photodynamic therapy given in a retina clinic.|Date of the last PDT treatment and any burns or recent sun exposure.|Sunburn-like photosensitivity reactions and burns within 5 days of treatment; sudden vision loss.|Not a daily medicine; given as single treatments.
-A light-activated drug: an IV dye that a laser switches on inside the eye to shut down leaky blood vessels.|Verteporfin is a benzoporphyrin photosensitizer that 689 nm laser light activates to occlude choroidal neovascularization.|VertePORFIN is a PORPHYRIN: laser light turns it into toxic oxygen that seals leaky eye vessels, so porphyria is the contraindication.|6 mg/m2 IV over 10 minutes, laser at 15 minutes, then 5 days of light protection.|Photodynamic therapy works through light-activated generation of singlet oxygen (reactive oxygen species), and porphyria is the contraindication.|Anti-VEGF agents (ranibizumab, aflibercept), fluorescein angiography dye|Aminolevulinic acid and porfimer (other photodynamic agents)|None
-`);
-DB.add("lotilaner-ophthalmic","Lotilaner Ophthalmic","HM",`
-Lotilaner ophthalmic solution 0.25%|Xdemvy|Xdemvy|Ectoparasiticide eye drop|Isoxazoline; GABA-gated chloride channel inhibitor|Not controlled
-An eye drop that kills Demodex mites living in the eyelashes.|Paralyzes and kills mites by blocking their nerve chloride channels.|Used to treat Demodex blepharitis, eyelid inflammation caused by mite infestation.
-Isoxazoline that selectively inhibits mite gamma-aminobutyric acid (GABA)-gated chloride channels (GABA-Cl), blocking chloride influx and causing spastic paralysis and death of Demodex folliculorum and Demodex brevis mites; affinity for mammalian GABA-A channels is low.|Mite GABA-gated chloride channels (GABA-Cl)|Antagonist (channel inhibitor)|Mite eradication with resolution of collarettes (cylindrical dandruff) at the lash base and less eyelid redness.
-Demodex blepharitis (label)|-|None|-
-None (label)|Hypersensitivity to any component
-Risk of contamination of the dropper tip and solution; contact lenses are removed before instillation and reinserted at least 15 minutes after (label).|None|Other topical eye drugs are separated by at least 5 minutes per label.
-1 drop of 0.25% solution in each eye twice daily (approximately 12 hours apart) for 6 weeks (label, Demodex blepharitis)|Not established (label)|-|1 drop per eye twice daily (label)|A missed dose is followed by the next scheduled dose (label)|-|No adjustment (minimal systemic exposure)|No adjustment (minimal systemic exposure)
-Ophthalmic|-|-|-|-|-|-|-|Topical ophthalmic drops|1 drop per eye|Ready to use|Not applicable|Other topical eye drugs separated by at least 5 minutes; contact lenses removed before and reinserted at least 15 minutes after; dropper tip kept from touching the eye.
-Mite reduction within weeks; collarette cure assessed at the end of the 6-week course|Not applicable|Course lasts 6 weeks|Not routinely cited for ocular dosing; systemic exposure is low|Minimal systemic exposure|Not well characterized after ocular use|Not established for ocular use
-Instillation site stinging and burning (10%)|Chalazion or hordeolum, punctate keratitis (uncommon)|None reported
-No formal interaction studies; none clinically significant known|-|None|None|Other topical eye drugs spaced at least 5 minutes apart
--|-|-|-|-|-|-|-|-|Collarettes and eyelid redness; eye irritation
-No human data; systemic exposure is low after ocular use|No data; low systemic exposure|Not established|No overall differences reported|Not studied|Not studied
-Not expected with ocular use|Eye irritation|Accidental ingestion not well described|Supportive care; eye flushing for irritation|None|None
-Not given by EMS.|Demodex blepharitis presents with itchy, red eyelids and waxy collarettes at the base of the lashes.|Contact lens use and other eye drops.|Eye stinging or burning after drops.|Hypersensitivity is a reason the drug is discontinued.|Instillation with contact lenses in place; stopping before the 6-week course is complete.|None known.|Lotilaner belongs to the same isoxazoline class as veterinary flea and tick medicines and was the first FDA-approved treatment for Demodex blepharitis (2023).
-Demodex blepharitis.|To eradicate eyelash mites over a 6-week course.|Eye pain, vision change, contact lens use.|Rarely linked to emergencies; eye irritation.|Mites can repopulate, and symptoms can return.
-An eye drop that kills tiny mites living in the eyelashes.|Lotilaner 0.25% is an isoxazoline GABA-chloride channel inhibitor eye drop given twice daily for 6 weeks for Demodex blepharitis.|Lotilaner paralyzes Demodex mites by blocking their GABA chloride channels; dandruff-like collarettes at the lash base point to the diagnosis.|Collarettes (cylindrical dandruff) at the lash base are the hallmark of Demodex blepharitis.|Collarettes at the lash base are considered pathognomonic for Demodex blepharitis, treated with lotilaner, a mite-selective GABA-Cl channel inhibitor.|Ivermectin (glutamate-gated chloride channels), tea tree oil lid scrubs, permethrin|Veterinary isoxazolines (fluralaner, afoxolaner, sarolaner)|None
-`);
-DB.add("ciprofloxacin-ophthalmic","Ciprofloxacin Ophthalmic","HM",`
-Ciprofloxacin hydrochloride ophthalmic solution 0.3% (also 0.3% ointment)|Ciloxan; generics|Cipro eye drops|Ophthalmic fluoroquinolone antibiotic|Fluoroquinolone (DNA gyrase and topoisomerase IV inhibitor)|Not controlled
-An antibiotic eye drop from the fluoroquinolone family.|Kills bacteria by blocking enzymes they use to copy DNA.|Used for bacterial conjunctivitis and bacterial corneal ulcers.
-Inhibits bacterial DNA gyrase (topoisomerase II, mainly in gram-negative organisms) and topoisomerase IV (mainly in gram-positive organisms), trapping enzyme-DNA cleavage complexes, which blocks DNA replication and causes double-strand breaks; bactericidal and concentration dependent.|Bacterial DNA gyrase (GyrA/GyrB) and topoisomerase IV|Inhibitor|Bactericidal activity against Pseudomonas aeruginosa, Haemophilus influenzae, Staphylococcus aureus and some streptococci on the ocular surface.
-Corneal ulcers and bacterial conjunctivitis caused by susceptible organisms (label)|Contact lens-associated keratitis with Pseudomonas coverage|None|Otic use of the ophthalmic drops for otitis externa (off-label)
-History of hypersensitivity to ciprofloxacin or any component (label)|Hypersensitivity to other quinolones (cross-sensitivity); prolonged use (overgrowth)
-Hypersensitivity reactions, including anaphylaxis, reported with systemic quinolones; overgrowth of nonsusceptible organisms, including fungi, with prolonged use; white crystalline precipitate in the superficial cornea in about 17% of corneal ulcer patients (label).|None|Contact lenses are typically not worn during active bacterial conjunctivitis; the solution is not for injection into the eye.
-Corneal ulcer: 2 drops every 15 minutes for the first 6 hours, then 2 drops every 30 minutes for the rest of day 1, 2 drops hourly on day 2, and 2 drops every 4 hours on days 3 to 14 (label); bacterial conjunctivitis: 1 or 2 drops every 2 hours while awake for 2 days, then 1 or 2 drops every 4 hours while awake for the next 5 days (label)|Solution: safety and effectiveness below 1 year of age not established (label)|-|Per the label regimen for each indication|Treatment may continue beyond 14 days if corneal re-epithelialization has not occurred (label)|-|No adjustment|No adjustment
-Ophthalmic|-|-|-|-|-|-|-|Topical ophthalmic drops (ointment also available)|Per the label regimen|Ready to use|Not applicable|Dropper tip kept from touching the eye; other eye drops separated by several minutes.
-Bactericidal activity within hours; symptoms improve within 1 to 3 days|Not applicable|Frequent dosing per the regimen|About 4 hours systemically (minimal absorption)|Minimal systemic exposure|Tear turnover and nasolacrimal drainage; absorbed drug is cleared renally|20% to 40% (systemic)
-Local burning or discomfort, white crystalline corneal precipitate, crusting, foreign body sensation, bad taste|Corneal staining or keratopathy, superinfection|Anaphylaxis (rare)
-No significant interactions with ocular use; systemic quinolone interactions (theophylline, warfarin) are not expected at ocular doses|-|None|None|Multiple eye drops spaced about 5 minutes apart absorb better
--|-|-|-|-|-|-|-|-|Corneal healing, ulcer size, visual acuity
-Low systemic exposure; used if clearly needed|Systemic ciprofloxacin enters milk; ocular exposure is low|Solution not established below 1 year|No differences reported|No adjustment|No adjustment
-Not expected from ocular use|Eye irritation|Toxicity unlikely after ingestion of a bottle|Eye flushing with water or saline for topical overdose|None|None
-Not given by EMS.|Fluoroquinolone drops cover Pseudomonas, the classic contact lens-associated corneal ulcer organism.|Quinolone allergy, contact lens use.|Eye pain, worsening redness, a white spot on the cornea, vision change.|An allergic reaction is a reason the drug is discontinued.|Confusion between ophthalmic and otic ciprofloxacin products; stopping the corneal ulcer regimen early.|None significant at ocular doses.|A white crystalline corneal precipitate in about 17% of corneal ulcer patients is a classic Ciloxan finding; it does not preclude continued use.
-Bacterial conjunctivitis or corneal ulcer.|To treat an eye infection.|Contact lens use, eye pain, vision change.|Corneal perforation or vision loss from an untreated ulcer.|Infection can persist or worsen.
-An antibiotic eye drop for eye infections and corneal ulcers.|Ciprofloxacin 0.3% is a fluoroquinolone eye drop labeled for bacterial conjunctivitis and corneal ulcers, with strong Pseudomonas activity.|Cipro drops cover Pseudomonas, the classic corneal ulcer bug in contact lens wearers, by blocking bacterial DNA gyrase.|The corneal ulcer regimen starts at 2 drops every 15 minutes for 6 hours.|Fluoroquinolones inhibit DNA gyrase and topoisomerase IV; contact lens keratitis is classically Pseudomonas, covered by fluoroquinolone drops.|Ciprofloxacin otic, ofloxacin ophthalmic, systemic ciprofloxacin|Ofloxacin, moxifloxacin, gatifloxacin, levofloxacin and besifloxacin ophthalmic|None
-`);
-DB.add("tobramycin-dexamethasone-ophthalmic","Tobramycin-Dexamethasone Ophthalmic","HM",`
-Tobramycin 0.3% and dexamethasone 0.1% ophthalmic suspension (also ointment)|TobraDex; TobraDex ST (dexamethasone 0.05%); generics|TobraDex|Ophthalmic antibiotic-corticosteroid combination|Aminoglycoside plus glucocorticoid|Not controlled
-An eye drop that combines an antibiotic with a steroid.|Kills bacteria and calms eye inflammation at the same time.|Used for inflamed eyes when a bacterial infection is present or likely, such as after eye surgery.
-Tobramycin binds the bacterial 30S ribosomal subunit, causing mRNA misreading and blocking initiation of protein synthesis (bactericidal; oxygen-dependent uptake); dexamethasone binds cytosolic glucocorticoid receptors, inducing annexin A1 (lipocortin) to inhibit phospholipase A2 and suppressing NF-kB-driven cytokines, which lowers edema, fibrin deposition, capillary dilation and leukocyte migration.|Bacterial 30S ribosomal subunit; glucocorticoid receptor|Inhibitor (tobramycin); agonist (dexamethasone)|Antibacterial coverage of the ocular surface including Pseudomonas with less ocular inflammation; can raise intraocular pressure and delay healing.
-Steroid-responsive inflammatory ocular conditions where superficial bacterial ocular infection or a risk of bacterial ocular infection exists (label)|Postoperative inflammation after cataract surgery; blepharitis or blepharoconjunctivitis with inflammation|None|Otic use for otitis externa (off-label)
-Epithelial herpes simplex keratitis (dendritic keratitis), vaccinia, varicella and many other viral diseases of the cornea and conjunctiva; mycobacterial infection of the eye; fungal diseases of ocular structures; hypersensitivity to a component (label)|Glaucoma, thin cornea or sclera, recent cataract surgery (delayed healing)
-Prolonged use can cause elevated intraocular pressure and glaucoma with optic nerve damage, posterior subcapsular cataract, delayed wound healing, corneal or scleral perforation and secondary fungal or viral infection (including worsening herpes simplex); sensitivity to topical aminoglycosides (label).|None|Intraocular pressure is typically checked with use of 10 days or longer; not more than 20 mL is prescribed initially without further evaluation per label.
-1 or 2 drops into the conjunctival sac(s) every 4 to 6 hours; during the initial 24 to 48 hours, may be increased to 1 or 2 drops every 2 hours, then tapered as clinical signs improve (label)|Children 2 years and older: as for adults; below 2 years not established (label)|-|Not more than 20 mL prescribed initially without further evaluation (label)|Frequency decreased gradually as clinical signs improve (label)|-|No adjustment|No adjustment
-Ophthalmic|-|-|-|-|-|-|-|Topical ophthalmic suspension or ointment|Per the label regimen|Suspension is shaken well before use|Not applicable|Dropper tip kept from touching the eye; contact lenses are typically not worn while the eye is inflamed.
-Hours (anti-inflammatory effect)|Not applicable|4 to 6 hours per dose|Minimal systemic absorption|Absorbed dexamethasone is metabolized by hepatic CYP3A4|Absorbed tobramycin is cleared renally|Low for tobramycin
-Itching, eyelid swelling, conjunctival redness, increased intraocular pressure|Glaucoma, posterior subcapsular cataract, secondary fungal or herpes simplex keratitis, delayed healing|Corneal or scleral perforation
-Systemic aminoglycosides (total serum concentration monitored if used together, per label)|Other corticosteroids|None|None|Other topical aminoglycosides increase total exposure and sensitization risk
--|-|-|-|-|-|-|-|-|Intraocular pressure with use of 10 days or longer; slit-lamp examination; signs of fungal or herpes infection
-Corticosteroids are teratogenic in animals; ocular systemic exposure is low|Unknown; low systemic exposure|Not established below 2 years|No differences reported|No adjustment|No adjustment
-Not expected from ocular use|Punctate keratitis, redness, tearing, eyelid edema and itching|Topical overdose resembles the adverse reactions|Eye flushing with water|None|None
-Not given by EMS.|Steroid eye drops in a patient with a red, painful eye can worsen herpes simplex keratitis or fungal infection.|Herpes eye disease history, glaucoma, recent eye surgery, contact lens use.|Eye pain, vision change, halos (raised pressure).|Herpes simplex keratitis, fungal infection or a marked intraocular pressure rise are reasons the drug is discontinued.|Suspension not shaken; long refills without an eye pressure check; confusion of TobraDex with tobramycin alone.|Other ocular steroids (additive pressure rise).|Prolonged ophthalmic steroid use is classically associated with open-angle glaucoma and posterior subcapsular cataract.
-Postoperative eye inflammation, or blepharitis or conjunctivitis with inflammation.|To treat eye inflammation with a bacterial component.|Duration of use, eye pain, vision change, herpes history.|Steroid-induced glaucoma, worsening herpes keratitis, corneal perforation.|Abrupt stopping after long use can lead to rebound inflammation.
-An antibiotic plus steroid eye drop for inflamed, infected eyes.|TobraDex combines tobramycin, an aminoglycoside, with dexamethasone for steroid-responsive ocular inflammation with bacterial infection or risk of it.|TOBRA kills bacteria and DEX calms the fire, but the steroid can raise eye pressure and is avoided in herpes dendritic keratitis.|Contraindicated in epithelial herpes simplex (dendritic) keratitis and fungal eye infections.|Topical ocular steroids are contraindicated in herpes simplex dendritic keratitis and with prolonged use cause elevated intraocular pressure and posterior subcapsular cataracts.|Tobramycin ophthalmic alone (Tobrex), Maxitrol, TobraDex ST|Neomycin-polymyxin-dexamethasone (Maxitrol), loteprednol-tobramycin (Zylet)|None
-`);
-DB.add("neomycin-polymyxin-dexamethasone","Neomycin-Polymyxin-Dexamethasone","HM",`
-Neomycin sulfate, polymyxin B sulfate and dexamethasone 0.1% ophthalmic suspension (also ointment)|Maxitrol; generics|Maxitrol|Ophthalmic antibiotic-corticosteroid combination|Aminoglycoside plus polypeptide antibiotic plus glucocorticoid|Not controlled
-An eye drop combining two antibiotics with a steroid.|Kills bacteria and reduces eye inflammation.|Used for inflamed eyes when a bacterial infection is present or likely.
-Neomycin binds the bacterial 30S ribosomal subunit and causes mRNA misreading; polymyxin B is a cationic polypeptide that binds lipopolysaccharide and disrupts the outer and cytoplasmic membranes of gram-negative bacteria (including Pseudomonas) like a detergent; dexamethasone activates glucocorticoid receptors, inducing annexin A1 to inhibit phospholipase A2 and suppressing inflammatory gene transcription.|Bacterial 30S ribosome; gram-negative cell membrane (lipopolysaccharide and phospholipids); glucocorticoid receptor|Inhibitor (antibiotics); agonist (dexamethasone)|Broad ocular surface antibacterial coverage with less inflammation; the steroid can raise intraocular pressure and mask infection.
-Steroid-responsive inflammatory ocular conditions where bacterial infection or a risk of bacterial infection exists (label)|Postoperative ocular inflammation|None|-
-Epithelial herpes simplex keratitis (dendritic keratitis), vaccinia, varicella and other viral diseases of the cornea and conjunctiva; mycobacterial and fungal eye infections; known or suspected hypersensitivity to any ingredient or to other corticosteroids (label)|Glaucoma, thin cornea or sclera, known neomycin contact allergy
-Prolonged use can cause elevated intraocular pressure and glaucoma, posterior subcapsular cataract, delayed healing, perforation and secondary fungal or viral infection; neomycin sensitization with itching, redness and eyelid swelling (label).|None|Intraocular pressure is typically checked with use of 10 days or longer; not more than 20 mL is prescribed initially without further evaluation per label.
-1 to 2 drops in the conjunctival sac(s); in severe disease hourly, tapered to discontinuation as inflammation subsides; in mild disease up to 4 to 6 times daily (label)|Not established (label)|-|Not more than 20 mL prescribed initially without further evaluation (label)|Tapered to discontinuation as inflammation subsides (label)|-|No adjustment|No adjustment
-Ophthalmic|-|-|-|-|-|-|-|Topical ophthalmic suspension or ointment|Per the label regimen|Suspension is shaken well before use|Not applicable|Dropper tip kept from touching the eye; contact lenses are typically not worn while the eye is inflamed.
-Hours (anti-inflammatory effect)|Not applicable|Varies with dosing frequency|Minimal systemic absorption|Absorbed dexamethasone is metabolized by hepatic CYP3A4|Absorbed neomycin and polymyxin B are cleared renally|Low for the antibiotics
-Itching, redness, eyelid swelling (neomycin sensitivity), increased intraocular pressure|Glaucoma, posterior subcapsular cataract, secondary fungal or herpes simplex keratitis, delayed healing|Corneal or scleral perforation
-Other topical or systemic aminoglycosides (cumulative exposure and cross-sensitivity)|Other corticosteroids|None|None|Cross-sensitivity among aminoglycosides (kanamycin, paromomycin, streptomycin, gentamicin)
--|-|-|-|-|-|-|-|-|Intraocular pressure with use of 10 days or longer; slit-lamp examination; eyelid dermatitis; signs of fungal or herpes infection
-Corticosteroids are teratogenic in animals; ocular systemic exposure is low|Unknown; low systemic exposure|Not established|No differences reported|No adjustment|No adjustment
-Not expected from ocular use|Eye irritation, eyelid redness|Topical overdose resembles the adverse reactions|Eye flushing with water|None|None
-Not given by EMS.|Steroid eye drops in a patient with a red, painful eye can worsen herpes simplex keratitis or fungal infection.|Herpes eye disease history, glaucoma, neomycin allergy, recent eye surgery.|Eye pain, vision change, eyelid itching or rash.|Neomycin sensitization, herpes simplex keratitis or a marked intraocular pressure rise are reasons the drug is discontinued.|Suspension not shaken; long refills without an eye pressure check.|Other ocular steroids (additive pressure rise).|Neomycin is a leading cause of allergic contact dermatitis, so an itchy red eyelid on Maxitrol can be neomycin sensitivity rather than worsening infection.
-Postoperative eye inflammation or inflamed bacterial eye infection.|To treat eye inflammation with a bacterial component.|Duration of use, eye pain, vision change, herpes history, skin reactions to antibiotic ointments.|Steroid-induced glaucoma, worsening herpes keratitis, corneal perforation.|Abrupt stopping after long use can lead to rebound inflammation.
-Two antibiotics and a steroid in one eye drop for inflamed, infected eyes.|Maxitrol combines neomycin, polymyxin B and dexamethasone for steroid-responsive ocular inflammation with bacterial infection or risk of it.|Maxitrol pairs neomycin and polymyxin for bacteria with dexamethasone for swelling; neomycin often causes contact allergy, and steroids worsen herpes keratitis.|Neomycin sensitization and steroid-induced intraocular pressure rise are the key risks.|Neomycin is a classic cause of allergic contact dermatitis (type IV hypersensitivity), and ocular steroids are contraindicated in dendritic herpes simplex keratitis.|TobraDex, Neosporin ophthalmic (neomycin-polymyxin-gramicidin, no steroid)|Tobramycin-dexamethasone (TobraDex), neomycin-polymyxin-hydrocortisone|None
-`);
