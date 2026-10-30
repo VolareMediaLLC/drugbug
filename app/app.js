@@ -172,6 +172,7 @@ function antennae(c, curl) {
   if (curl) return '<path d="M90 48 Q78 20 64 26 Q56 32 64 36" stroke="' + c + '" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M110 48 Q122 20 136 26 Q144 32 136 36" stroke="' + c + '" stroke-width="4" fill="none" stroke-linecap="round"/>';
   return '<path d="M90 48 Q80 24 68 20" stroke="' + c + '" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M110 48 Q120 24 132 20" stroke="' + c + '" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="68" cy="20" r="6" fill="' + c + '"/><circle cx="132" cy="20" r="6" fill="' + c + '"/>';
 }
+var BOOTED = 0;   /* the boot splash is replaced by the first real render (owner, Oct 30 2026) */
 var IMBUG = { flightrn: { name: "Night Monarch", body: "butterfly", c: ["#f59e0b", "#7c2d12", "#fff7ed"], head: "#fb923c", ink: "#1c1917", wingC: "#fdba74", eyes: "fierce", acc: ["jethelmet", "aviscarf", "stetho"] }, rt: { name: "X-Ray Firefly", body: "firefly", c: ["#7dd3fc", "#0369a1", "#e0f2fe"], acc: ["goggles"] }, ct: { name: "Spiral Scarab", body: "scarab", c: ["#a5b4fc", "#4338ca", "#ffffff"], acc: ["headset"] }, mri: { name: "Magnet Moth", body: "moth", c: ["#c4b5fd", "#6d28d9", "#f5f3ff"], acc: ["bolt"] }, nm: { name: "Glow Worm", body: "caterpillar", c: ["#bef264", "#4d7c0f", "#ffffff"], acc: ["stars"] }, ir: { name: "Cath Cricket", body: "grasshopper", c: ["#5eead4", "#0f766e", "#ffffff"], acc: ["mask"] } };
 function bugSVG(kind) {
   if (IMBUG[kind] && typeof bugArt === "function") return bugArt(IMBUG[kind], "bug", { mood: "happy" });
@@ -358,7 +359,7 @@ function topbar() {
   if (S.view === "terrarium") c += '<span>/</span><span>Terrarium</span>';
   if (S.view === "everyday") c += '<span>/</span>' + (S.evTab ? '<button data-evtab="">Everyday Health</button>' : '<span>Everyday Health</span>');
   var extra = (!SOCIAL ? '' : '<button class="theme-btn" data-go="classes"' + (S.view === "classes" ? ' aria-current="page"' : '') + '>Classes</button>') + (Admin.can ? '<button class="theme-btn admin-btn" data-go="admin"' + (S.view === "admin" ? ' aria-current="page"' : '') + '><span class="lg">Control Center</span><span class="sm">Control Center</span></button>' : '') + '<button class="theme-btn easy-btn" data-act="easy"' + (S.view === "easy" ? ' aria-current="page"' : '') + '>Easy Learn</button><button class="theme-btn mob-only" data-act="openproto">Protocols</button>';
-  c += '</nav><span class="spacer"></span><div class="tbacts">' + stickChip() + '<span class="tbx">' + extra + '</span><button class="theme-btn srch-btn" data-act="gsearch" aria-label="Search all drugs" title="Search all drugs"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button><button class="theme-btn menu-btn" data-act="tbmenu" aria-expanded="' + !!S.menu + '" aria-label="More">More</button>' + musicBtn() + gearBtn() + '<span class="tbsticks" aria-label="' + sticks() + ' sticks">' + stickIcon(18) + '<strong>' + sticks().toLocaleString() + '</strong></span></div>' + (S.menu ? '<div class="tbmenu" role="menu">' + extra + '<button class="theme-btn" data-idea="1">Send an idea</button></div>' : '') + '</div>';
+  c += '</nav><span class="spacer"></span><div class="tbacts">' + stickChip() + '<span class="tbx">' + extra + '</span><button class="theme-btn srch-btn" data-act="gsearch" aria-label="Search all drugs" title="Search all drugs"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button><button class="theme-btn menu-btn" data-act="tbmenu" aria-expanded="' + !!S.menu + '" aria-label="More">More</button>' + musicBtn() + gearBtn() + (typeof funOn === "function" && !funOn() ? '' : '<span class="tbsticks" aria-label="' + sticks() + ' sticks">' + stickIcon(18) + '<strong>' + sticks().toLocaleString() + '</strong></span>') + '</div>' + (S.menu ? '<div class="tbmenu" role="menu">' + extra + '<button class="theme-btn" data-idea="1">Send an idea</button></div>' : '') + '</div>';
   return c + (typeof muPop === "function" ? muPop() : "") + backRow();
 }
 function backRow() {
@@ -414,7 +415,7 @@ function homeProgress() {
   return '<section class="progcard" aria-label="Your progress">' +
     '<div class="pstat"><span class="pk">Level</span><strong>' + L.lv + '</strong><span class="pbar" aria-hidden="true"><i style="width:' + pct + '%"></i></span><span class="pm">' + (L.need - L.into) + ' XP to level ' + (L.lv + 1) + '</span></div>' +
     '<div class="pstat"><span class="pk">Streak</span><strong>' + liveStreak() + '</strong><span class="pm">day' + (liveStreak() === 1 ? '' : 's') + ' in a row</span></div>' +
-    '<button class="pstat" data-goshop="1"><span class="pk">Your bug</span><strong>' + esc(stageName(st)) + '</strong><span class="pm">' + (nx ? esc(stageName(st + 1)) + ' at level ' + nx : 'Fully grown') + '</span></button>' +
+    (typeof funOn === "function" && !funOn() ? '' : '<button class="pstat" data-goshop="1"><span class="pk">Your bug</span><strong>' + esc(stageName(st)) + '</strong><span class="pm">' + (nx ? esc(stageName(st + 1)) + ' at level ' + nx : 'Fully grown') + '</span></button>') +
     '</section>';
 }
 function homeTip() {
@@ -480,7 +481,8 @@ var ICO = {
   vegc: '<path d="M12 21c-4-3-6-7-5-11 3 0 5 2 5 5 0-3 2-5 5-5 1 4-1 8-5 11z"/><path d="M12 6V3M10 4l2 2 2-2"/>',
   fruitc: '<circle cx="12" cy="14" r="7"/><path d="M12 7c0-2 1-4 3-4M12 7c-2-2-4-2-5-1"/>',
   vitc: '<rect x="5" y="9" width="14" height="7" rx="3.5" transform="rotate(-35 12 12.5)"/><path d="M10 9.5l4 6"/>',
-  shop: '<path d="M7 7h10l1 3v9a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-9z"/><path d="M6 4h12v3H6zM10 14c0-2 2-3 2-5 0 2 2 3 2 5a2 2 0 0 1-4 0z"/>'
+  shop: '<path d="M7 7h10l1 3v9a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-9z"/><path d="M6 4h12v3H6zM10 14c0-2 2-3 2-5 0 2 2 3 2 5a2 2 0 0 1-4 0z"/>',
+  micro: '<circle cx="9" cy="9" r="3"/><circle cx="16" cy="14" r="2.2"/><path d="M4 18c2-3 5-2 7-5"/><path d="M13 5c3 0 4 2 6 2"/><circle cx="6.5" cy="15.5" r="1.2"/>'
 };
 function icon(k) { return '<svg class="ico" viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (ICO[k] || '') + '</svg>'; }
 function tabList() {
@@ -490,6 +492,7 @@ function tabList() {
   if (S.view === "level" && isN(S.level) && unitsFor(S.level).length) L.push(["units", "Specialty Units", "ICU, ER, L&D, peds and more: the meds your unit uses."]);
   /* Questions moved inside Study Tools, Oct 29 2026 (owner) */
   /* Dose Cards removed Oct 27, 2026 (owner: too much liability) */
+  if (typeof MICRO !== "undefined" && ((S.view === "level" && isM(S.level)) || S.view === "gen")) L.push(["micro", "Microbiology", "Every bacterium, virus, fungus, prion and parasite, with a full card and a Wormhole on each one."]);
   if (S.view === "level" && isM(S.level)) L.push(["body", "Body Systems", "Pick a part of the body to see the drugs that act on it and the drugs that harm it."]);
   if (S.view === "level" && isM(S.level)) L.push(["alts", "Drug Alternatives", "Can't order a drug? See same-class options and other drugs for the same problem, and how they differ."]);
   if (S.view === "gen") L.splice(1, 0, ["conds", "Conditions & Medicine Cautions", "Pick a condition to see which medicines mention it in their contraindications and warnings. Education only."]);
@@ -517,14 +520,14 @@ function tabName(k) { var t = tabList().filter(function (x) { return x[0] === k;
 /* Hub tiles grouped into sections with short labels (UI cleanup, Oct 28 2026) */
 var HUB_GROUPS = [
   ["Field care", ["fm_cond", "fm_blood", "fm_hold", "fm_store", "fm_istat", "fm_dive", "fm_k9", "fm_anti", "fm_tele", "fm_trauma", "fm_care", "pcc", "pcc_icu", "fm_adv"]],
-  ["Look it up", ["registry", "families", "conds", "diseases", "illicit", "units", "body", "alts", "contrast", "labs", "blood", "hemo", "flightp"]],
+  ["Look it up", ["registry", "families", "conds", "diseases", "micro", "illicit", "units", "body", "alts", "contrast", "labs", "blood", "hemo", "flightp"]],
   ["Food and vitamin compounds", ["vegc", "fruitc", "vitc"]],
   ["Study and practice", ["tools", "scenarios", "nbug", "medlist"]],
   ["Yours", ["mylist", "progress", "shop"]]
 ];
-var HUB_SHORT = { fm_bio: "Bio, chem, rad and nuclear casualties", fm_ref: "Burns, vents, scores, handoff, K9, dive", medlist: "What a med list says about the patient", fm_store: "Heat, cold, light and mixing", fm_istat: "Values, cartridges and practice cases", fm_cond: "Trauma, medical and blood reactions, with types", fm_blood: "Whole blood, components, MTP, reactions", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "Saved drugs and their interactions", tools: "Questions, megacode, cards, games, drills", scenarios: "Clinical cases", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time" };
+var HUB_SHORT = { micro: "Bacteria, viruses, fungi, prions, parasites", fm_bio: "Bio, chem, rad and nuclear casualties", fm_ref: "Burns, vents, scores, handoff, K9, dive", medlist: "What a med list says about the patient", fm_store: "Heat, cold, light and mixing", fm_istat: "Values, cartridges and practice cases", fm_cond: "Trauma, medical and blood reactions, with types", fm_blood: "Whole blood, components, MTP, reactions", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "Saved drugs and their interactions", tools: "Questions, megacode, cards, games, drills", scenarios: "Clinical cases", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time" };
 function hubView() {
-  var L = tabList(), used = {}, c = '<nav class="hub2" aria-label="Sections">';
+  var L = tabList(), used = {}, c = (typeof learnTile === "function" ? learnTile() : "") + '<nav class="hub2" aria-label="Sections">';
   function tile(t) {
     used[t[0]] = 1;
     var fmt = typeof FM_TABS !== "undefined" && (FM_TABS[t[0]] || (t[0] === "diseases" && S.view === "level" && isF(S.level)));
@@ -535,6 +538,8 @@ function hubView() {
     var items = L.filter(function (t) { return g[1].indexOf(t[0]) >= 0; }); if (!items.length) return;
     c += '<h3 class="hubgh">' + esc(g[0]) + '</h3><div class="hub hubg' + (items.length % 2 ? ' odd' : '') + (items.length === 1 ? ' solo' : '') + (fld && gi === 2 ? ' minis' : '') + '">' + items.map(tile).join("") + '</div>';
   });
+  /* topics pinned out of the Field Reference get their own tiles here (owner, Oct 30 2026) */
+  if (fld && typeof fmPinTiles === "function") { var pt = fmPinTiles(); if (pt) c += '<h3 class="hubgh">Pinned</h3>' + pt; }
   if (fld) c += '<h3 class="hubgh">Your input</h3><button class="fmfeed" data-idea="fm"><span class="fmfi" aria-hidden="true">' + icon("ideas") + '</span><span class="fmft"><strong>Comments, requests and thoughts</strong><span>Tell the team what Combat Paramedic & Prolonged Care needs: topics, drugs, fixes or anything else. This section is in development, and your input shapes it.</span></span><span class="fmfgo" aria-hidden="true">&rsaquo;</span></button>';
   var rest = L.filter(function (t) { return !used[t[0]]; });
   if (rest.length) c += '<h3 class="hubgh">More</h3><div class="hub hubg' + (rest.length % 2 ? ' odd' : '') + '">' + rest.map(tile).join("") + '</div>';
@@ -784,10 +789,10 @@ function viewLevel() {
   if (!S.tab || (S.tab !== "hub" && S.tab !== "session" && !tabName(S.tab))) S.tab = "hub";
   if (S.tab !== "hub" && S.tab !== "session" && typeof proLocked === "function" && proLocked(S.tab)) { var lt = S.tab; S.tab = "hub"; setTimeout(function () { openPaywall(tabName(lt), tabTier(lt)); }, 0); }
   if (S.tab === "calc") S.tab = "hub";  /* Calc Lab was removed */
-  var body = S.tab === "hub" ? "" : typeof fieldTab === "function" && isF(S.level) && FM_TABS[S.tab] ? fieldTab(S.tab) : (S.tab === "vegc" || S.tab === "fruitc" || S.tab === "vitc") && typeof compoundView === "function" ? compoundView(S.tab) : S.tab === "illicit" && typeof illicitView === "function" ? illicitView() : S.tab === "registry" ? (S.view === "level" && isF(S.level) && typeof fieldMedsView === "function" ? fieldMedsView() : registry()) : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? (S.tab = "hub", "") : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "tools" ? toolsView() : S.tab === "medlist" ? (typeof medlistView === "function" ? medlistView() : "") : flashcards();
+  var body = S.tab === "hub" ? "" : typeof fieldTab === "function" && isF(S.level) && FM_TABS[S.tab] ? fieldTab(S.tab) : (S.tab === "vegc" || S.tab === "fruitc" || S.tab === "vitc") && typeof compoundView === "function" ? compoundView(S.tab) : S.tab === "illicit" && typeof illicitView === "function" ? illicitView() : S.tab === "registry" ? (S.view === "level" && isF(S.level) && typeof fieldMedsView === "function" ? fieldMedsView() : registry()) : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? (S.tab = "hub", "") : S.tab === "micro" && typeof microView === "function" ? microView() : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "tools" ? toolsView() : S.tab === "medlist" ? (typeof medlistView === "function" ? medlistView() : "") : flashcards();
   var msg = S.sessMsg ? '<div class="presult" role="status">' + esc(S.sessMsg) + '</div>' : ''; S.sessMsg = "";
   var notes = (S.tab === "calc" || S.tab === "tools" ? eduBanner() : '') + (["prep", "session", "nbug", "scenarios", "cards"].indexOf(S.tab) >= 0 ? esQNote() : '');
-  if (S.tab === "hub") return topbar() + '<div class="' + ctxClass() + '">' + band() + protocolBanner() + (isF(S.level) ? "" : dailyCard()) + msg + hubView() + '</div>';
+  if (S.tab === "hub") return topbar() + '<div class="' + ctxClass() + '">' + band() + protocolBanner() + (isF(S.level) ? "" : dailyCard()) + msg + (S.learn && S.learn.done && typeof learnDoneView === "function" ? learnDoneView() : "") + hubView() + '</div>';
   return topbar() + '<div class="' + ctxClass() + ' insection">' + sectionHead() + protocolBanner() + msg + notes + '<div id="tabbody">' + body + '</div></div>';
 }
 
@@ -1370,7 +1375,7 @@ function drawSheet() {
   DW.id = S.sheet.id;
   var id = S.sheet.id, d = DB.drugs[id], tier = TIER[ctxKey()], list = S.sheet.list, i = list.indexOf(S.sheet.anchor || id);
   var c = '<div class="panel ' + ctxClass() + '" tabindex="-1" role="dialog" aria-modal="true" aria-label="' + esc(nameOf(id)) + '">' + sheetMini(id, list, i) + '<div class="phead"><div class="navrow"><button class="iconbtn" data-act="close">Close</button><span class="spacer"></span>' +
-    (list.length > 1 ? '<button class="iconbtn" data-act="prev"' + (i <= 0 ? " disabled" : "") + '>Previous</button><button class="iconbtn" data-act="next"' + (i >= list.length - 1 ? " disabled" : "") + '>Next</button>' : '') + '</div>';
+    (list.length > 1 ? '<button class="iconbtn" data-act="prev"' + (i <= 0 ? " disabled" : "") + '>Previous</button><button class="iconbtn" data-act="next"' + (i >= list.length - 1 ? " disabled" : "") + '>Next</button>' : '') + '</div>' + (typeof learnBar === "function" ? learnBar() : '');
   if (!d) return sheet.innerHTML = c + '<h2 class="dname">' + esc(nameOf(id)) + '</h2></div><div class="pending-msg">This monograph has not been written yet.</div></div>';
   var sch = get(d, 0, 5), ctrl = /schedule|C-?I/i.test(sch) && !/not/i.test(sch);
   c += '<h2 class="dname">' + esc(d.name) + '</h2><div class="dsub">' + esc([get(d, 0, 1), get(d, 0, 3)].filter(Boolean).join(" · ")) + '</div>' + formsBar(id) + sayBtn(id) + '<div class="badges">' +
@@ -1402,8 +1407,9 @@ function closeSheet() { sheet.hidden = true; sheet.innerHTML = ""; S.sheet = nul
 /* ---------- render & events ---------- */
 function render() {
   var ok = agreeRec(); protoTab.hidden = !ok; protoTab.textContent = lang() === "es" ? "Protocolos" : "Protocols"; document.documentElement.lang = lang();
-  var html = needDisc() ? discView() : !ok && S.view !== "legal" ? gateView() : S.view === "legal" ? legalView() : needRole() ? roleView() : S.view === "home" ? viewHome() : (S.view === "levels" || S.view === "flevels" || S.view === "nlevels" || S.view === "mlevels" || S.view === "ilevels") ? viewLevels() : S.view === "easy" ? viewEasy() : S.view === "admin" ? viewAdmin() : S.view === "classes" ? classesView() : S.view === "settings" ? settingsView() : S.view === "terrarium" ? terrariumView() : S.view === "everyday" ? evView() : S.view === "field" && typeof fieldView === "function" ? fieldView() : viewLevel();
+  var html = needDisc() ? discView() : !ok && S.view !== "legal" ? gateView() : S.view === "legal" ? legalView() : (typeof needFun === "function" && needFun()) ? funView() : needRole() ? roleView() : S.view === "home" ? viewHome() : (S.view === "levels" || S.view === "flevels" || S.view === "nlevels" || S.view === "mlevels" || S.view === "ilevels") ? viewLevels() : S.view === "easy" ? viewEasy() : S.view === "admin" ? viewAdmin() : S.view === "classes" ? classesView() : S.view === "settings" ? settingsView() : S.view === "terrarium" ? ((typeof funOn === "function" && !funOn()) ? (S.view = "home", viewHome()) : terrariumView()) : S.view === "everyday" ? evView() : S.view === "field" && typeof fieldView === "function" ? fieldView() : viewLevel();
   app.innerHTML = html + footer();
+  if (BOOTED !== 1) { BOOTED = 1; try { document.body.classList.add("ready"); } catch (e) {} }
   if (typeof tourMaybe === "function") tourMaybe();
   if (S.proMsg) { var tst = document.createElement("div"); tst.className = "protoast"; tst.setAttribute("role", "status"); tst.textContent = S.proMsg; app.appendChild(tst); S.proMsg = ""; setTimeout(function () { if (tst.parentNode) tst.parentNode.removeChild(tst); }, 5000); }
   translateDom(app); drawBuddy();
@@ -1423,7 +1429,7 @@ document.addEventListener("click", function (e) {
   var a = t.dataset;
   if (S.view === "admin" && (a.atab || a.aedit || a.aqedit || a.asedit || a.arestore || a.aact || a.rqopen || a.psedit)) return adminClick(t);
   if (a.role) return pickRole(a.role);
-  if ((typeof deepClick === "function" && deepClick(t, a)) || (typeof disClick === "function" && disClick(t, a)) || (typeof gamesClick === "function" && S.tab === "games" && gamesClick(t, a)) || altsClick(t, a) || flClick(t, a) || aiClick(t, a) || critClick(t, a) || labsClick(t, a) || legalClick(t, a) || i18nClick(t, a) || printClick(t, a) || settingsClick(t, a) || buddyClick(t, a)) return;
+  if ((typeof microClick === "function" && microClick(t, a)) || (typeof deepClick === "function" && deepClick(t, a)) || (typeof disClick === "function" && disClick(t, a)) || (typeof gamesClick === "function" && S.tab === "games" && gamesClick(t, a)) || altsClick(t, a) || flClick(t, a) || aiClick(t, a) || critClick(t, a) || labsClick(t, a) || legalClick(t, a) || i18nClick(t, a) || printClick(t, a) || settingsClick(t, a) || buddyClick(t, a)) return;
   if (a.report) return openReport(a.report);
   if (a.idea) return openIdeas(a.idea === "fm" ? "Field Medic: comment, request or thought" : "");
   if (a.goEdit) { closeSheet(); go("admin"); A().tab = "drugs"; A().form = recordOf(a.goEdit); return render(); }
@@ -1461,6 +1467,7 @@ document.addEventListener("click", function (e) {
   if (a.buyok) { if (proBug(a.buyok)) return openPaywall("This bug", bugTier(bugById(a.buyok))); buyBug(a.buyok); S.shopBuy = null; render(); return window.scrollTo(0, 0); }
   if (a.equip) { equipBug(a.equip); render(); return window.scrollTo(0, 0); }
   if (a.goshop) {
+    if (typeof funOn === "function" && !funOn()) return;   /* the Terrarium is part of the fun */
     if (sheet && !sheet.hidden) closeSheet(); S.shopF = null;
     if (S.view !== "terrarium") S.terrBack = { view: S.view, level: S.level, tab: S.tab };
     var sf = a.shopf || null; go("terrarium"); if (sf) { S.shopF = sf; render(); } return;
@@ -1468,10 +1475,27 @@ document.addEventListener("click", function (e) {
   if (a.nradapt != null) { nrState().adaptive = a.nradapt === "1"; return render(); }
   if (a.golist) { if (typeof proLocked === "function" && proLocked("mylist")) return openPaywall(tabName("mylist"), tabTier("mylist")); return go("gen", { tab: "mylist" }); }
   if (a.go) return go(a.go);
+  if (a.act === "lrngo" && typeof learnStart === "function") { S.learn = null; return learnStart(); }
+  if (a.act === "lrnnext" && typeof learnNext === "function") return learnNext();
+  if (a.act === "lrnstop" && typeof learnStop === "function") return learnStop();
+  if (a.act === "lrnreset" && typeof learnReset === "function") return learnReset();
   if (a.level) {
     var LVFX = { flight: "blast", flightrn: "blast", cpp: "smoke" }, fx = S.view !== "level" ? LVFX[a.level] : null, lk = a.level;
-    if (fx === "blast" && typeof gfxBlastOff === "function") return gfxBlastOff(t, lk, function () { go("level", { level: lk }); });
-    if (fx === "smoke" && typeof gfxSmokeBomb === "function") return gfxSmokeBomb(t, function () { go("level", { level: lk }); });
+    /* the animation must never be able to swallow the tap: whatever happens, the level opens
+       (owner reported a level button doing nothing, Oct 30 2026) */
+    if (fx) {
+      var went = 0, goNow = function () {
+        if (went) return; went = 1;
+        try { go("level", { level: lk }); }
+        catch (e) { try { S.view = "level"; S.level = lk; S.tab = "hub"; render(); } catch (e2) { try { location.hash = lk; location.reload(); } catch (e3) {} } }
+      };
+      setTimeout(goNow, 900);
+      try {
+        if (fx === "blast" && typeof gfxBlastOff === "function") { gfxBlastOff(t, lk, goNow); return; }
+        if (fx === "smoke" && typeof gfxSmokeBomb === "function") { gfxSmokeBomb(t, goNow); return; }
+      } catch (e) { goNow(); return; }
+      goNow(); return;
+    }
     return go("level", { level: a.level });
   }
   if (a.unitopen) { S.unit = a.unitopen; render(); return window.scrollTo(0, 0); }
@@ -1718,7 +1742,7 @@ function heroHTML() {
   var rr = { rare: "rare", seasonal: "rare", epic: "epic", earned: "epic", legendary: "legendary" }[b.rar] || "common";
   var spk = rr === "legendary" ? '<i class="lsp s1" aria-hidden="true"></i><i class="lsp s2" aria-hidden="true"></i><i class="lsp s3" aria-hidden="true"></i><i class="lsp s4" aria-hidden="true"></i>' : rr === "epic" ? '<i class="lsp s1" aria-hidden="true"></i><i class="lsp s3" aria-hidden="true"></i>' : '';
   var hol = typeof holToday === "function" ? holToday() : null;
-  return '<section class="hero ha' + (hol ? ' hol hol-' + hol.id + (hol.base ? ' hol-' + hol.base : '') : '') + '">' + (hol ? holFx(hol) : '') + '<div class="hatx lr-' + rr + '">' + (rr === "legendary" ? '<svg class="lcrown" viewBox="0 0 64 44" aria-hidden="true"><path d="M4 40 L8 12 L22 26 L32 4 L42 26 L56 12 L60 40Z" fill="#fbbf24" stroke="#92400e" stroke-width="3" stroke-linejoin="round"/><circle cx="32" cy="6" r="4" fill="#f43f5e"/><circle cx="8" cy="12" r="3.5" fill="#38bdf8"/><circle cx="56" cy="12" r="3.5" fill="#38bdf8"/><rect x="6" y="34" width="52" height="6" rx="2" fill="#f59e0b"/></svg>' : '') + '<h1 class="logo">Drug<span>Bug</span></h1>' + spk + '</div><button class="hbub" data-goshop="1" aria-label="' + lbl + '"><span class="orb">' + myBugArt("herobug", null, hol ? holWear(hol) : null) + (typeof pkSide === "function" ? pkSide("hero") : "") + '</span>' + chip + '</button>' + tag + (hol ? holBanner(hol) : '') + '</section>';
+  return '<section class="hero ha' + (hol ? ' hol hol-' + hol.id + (hol.base ? ' hol-' + hol.base : '') : '') + '">' + (hol ? holFx(hol) : '') + '<div class="hatx lr-' + rr + '">' + (rr === "legendary" ? '<svg class="lcrown" viewBox="0 0 64 44" aria-hidden="true"><path d="M4 40 L8 12 L22 26 L32 4 L42 26 L56 12 L60 40Z" fill="#fbbf24" stroke="#92400e" stroke-width="3" stroke-linejoin="round"/><circle cx="32" cy="6" r="4" fill="#f43f5e"/><circle cx="8" cy="12" r="3.5" fill="#38bdf8"/><circle cx="56" cy="12" r="3.5" fill="#38bdf8"/><rect x="6" y="34" width="52" height="6" rx="2" fill="#f59e0b"/></svg>' : '') + '<h1 class="logo">Drug<span>Bug</span></h1>' + spk + '</div>' + (typeof funOn === "function" && !funOn() ? '' : '<button class="hbub" data-goshop="1" aria-label="' + lbl + '"><span class="orb">' + myBugArt("herobug", null, hol ? holWear(hol) : null) + (typeof pkSide === "function" ? pkSide("hero") : "") + '</span>' + chip + '</button>') + tag + (hol ? holBanner(hol) : '') + '</section>';
 }
 function topLayerOpen() { return ["pwdlg", "wdwdlg", "evodlg", "pkdlg", "chemdlg", "tourdlg", "rdlg", "idlg"].some(function (i) { var el = document.getElementById(i); return el && !el.hidden; }); }
 /* Android back button: closes the top layer or goes back one step; returns true when it handled it */
@@ -3275,7 +3299,13 @@ var BUGS = [
   { id: "airway-ace", name: "Airway Ace", body: "bee", c: ["#7dd3fc", "#0369a1", "#e0f2fe"], acc: ["goggles"], rar: "earned", price: 0, unlock: { group: "Respiratory", pct: 80, text: "Reach 80% mastery in Respiratory" } },
   { id: "neuro-navigator", name: "Neuro Navigator", body: "moth", c: ["#c4b5fd", "#5b21b6", "#ede9fe"], ink: "#2e1065", acc: ["headset"], rar: "earned", price: 0, unlock: { group: "Seizure / Antiepileptic", pct: 80, text: "Reach 80% mastery in Seizure / Antiepileptic" } },
   { id: "code-commander", name: "Code Commander", body: "stag", c: ["#fde68a", "#b45309", "#ffffff"], acc: ["crown", "stetho"], rar: "earned", price: 0, unlock: { mega: true, text: "Score 100% on 5 different Megacode cases" } },
-  { id: "calc-champion", name: "Calc Champion", body: "ant", c: ["#a5b4fc", "#3730a3"], acc: ["goggles"], rar: "earned", price: 0, unlock: { calc: 100, text: "Retired: earned in Calc Lab" }, retired: 1 }
+  { id: "calc-champion", name: "Calc Champion", body: "ant", c: ["#a5b4fc", "#3730a3"], acc: ["goggles"], rar: "earned", price: 0, unlock: { calc: 100, text: "Retired: earned in Calc Lab" }, retired: 1 },
+  /* Five bacteria hiding in Microbiology. The joke is that you can keep them as pets. (owner, Oct 30 2026) */
+  { id: "mb-cluster", name: "Goldie the Cluster", body: "caterpillar", c: ["#fcd34d", "#b45309", "#fffbeb"], head: "#fbbf24", ink: "#451a03", rar: "earned", price: 0, unlock: { micro: "staph-aureus", text: "Found in Microbiology" }, blurb: "A bunch of golden grapes that gave itself a name and a nose to live in. Coagulase positive, personality negative. Do not let it near your IV line." },
+  { id: "mb-chain", name: "Chainy the Strep", body: "ant", c: ["#f9a8d4", "#9d174d", "#fdf2f8"], head: "#f472b6", ink: "#500724", rar: "earned", price: 0, unlock: { micro: "strep-pyogenes", text: "Found in Microbiology" }, blurb: "Never travels alone, always in a chain. Swears it only wanted to live in your throat, and apologises in advance for your heart valves." },
+  { id: "mb-comma", name: "Comma the Vibrio", body: "snail", c: ["#5eead4", "#0f766e", "#ecfeff"], head: "#2dd4bf", ink: "#042f2e", rar: "earned", price: 0, unlock: { micro: "vibrio-cholerae", text: "Found in Microbiology" }, blurb: "Shaped like a punctuation mark, swims with one tail, and has strong opinions about cAMP. Keeps asking where the rice water is." },
+  { id: "mb-coil", name: "Corky the Spirochete", body: "stick", c: ["#a5b4fc", "#3730a3", "#eef2ff"], head: "#818cf8", ink: "#1e1b4b", rar: "earned", price: 0, unlock: { micro: "borrelia-burgdorferi", text: "Found in Microbiology" }, blurb: "A corkscrew that hitchhiked in on a tick, drew a bullseye on you, and now insists it is just here for the doxycycline." },
+  { id: "mb-yog", name: "Lacto the Good One", body: "grasshopper", c: ["#bbf7d0", "#15803d", "#ffffff"], head: "#86efac", ink: "#052e16", rar: "earned", price: 0, unlock: { micro: "lactobacillus", text: "Found in Microbiology" }, blurb: "The only bacterium in the Terrarium that is genuinely pleased to see you. Makes its own yoghurt. Resistant to vancomycin and to criticism." }
 ];
 var STYLES = [["classic", "Classic", 0, ""], ["obsidian", "Obsidian", 150, "brightness(.55) contrast(1.35) saturate(.8)"], ["neon", "Neon", 160, "saturate(2.4) brightness(1.15) contrast(1.1)"], ["bloodmoon", "Blood Moon", 180, "sepia(.6) hue-rotate(-40deg) saturate(3) brightness(.75)"], ["ghost", "Ghost", 170, "grayscale(1) brightness(1.35) opacity(.85)"], ["galaxy", "Galaxy", 220, "hue-rotate(250deg) saturate(1.8) brightness(.85) contrast(1.15)"], ["inverted", "Upside Down", 260, "invert(.88) hue-rotate(180deg)"], ["shiny", "Shiny", 60, "saturate(1.7) brightness(1.08) contrast(1.05)"], ["midnight", "Midnight", 90, "hue-rotate(200deg) saturate(1.3) brightness(.9)"], ["ember", "Ember", 90, "hue-rotate(320deg) saturate(1.5)"], ["frost", "Frost", 90, "hue-rotate(160deg) saturate(.75) brightness(1.12)"], ["toxic", "Toxic", 120, "hue-rotate(90deg) saturate(1.8)"], ["gold", "Gold", 200, "sepia(.9) saturate(2.6) hue-rotate(-12deg) brightness(1.05)"]];
 var MONTHS = ["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -3284,6 +3314,7 @@ function unlockMet(b) {
   var u = b.unlock; if (!u) return false;
   if (u.group) { var g = DB.GROUPS.filter(function (x) { return x.name === u.group; })[0]; if (!g) return false; var ids = visibleIds(g.ids).filter(function (id) { return DB.drugs[id]; }); return ids.length > 0 && masteryPct(ids) >= u.pct; }
   if (u.mega) return Object.keys(Prog.d.mega || {}).filter(function (k) { return Prog.d.mega[k] === 100; }).length >= 5;
+  if (u.micro) return !!(Prog.d.microFound || {})[u.micro];
   if (u.calc) return calcCorrect(Prog.d) >= u.calc;
   return false;
 }
@@ -3374,7 +3405,7 @@ function stylesView() {
     return '<div class="bugcard' + (on ? " eq" : "") + '">' + art + '<strong>' + esc(st[1]) + '</strong>' + (own ? '<span class="muted small">Owned</span>' : stickTag(st[2])) + '<div class="bact">' + (on ? '<span class="eqd">In use</span>' : own ? '<button class="btn small" data-style="' + st[0] + '">Use</button>' : '<button class="btn small' + (bal >= st[2] ? '' : ' ghost') + '" data-style="' + st[0] + '"' + (bal >= st[2] ? '' : ' disabled') + '>' + (bal >= st[2] ? 'Buy' : 'Need ' + (st[2] - bal) + ' more') + '</button>') + '</div></div>';
   }).join("") + '</div>';
 }
-function stickChip() { return '<button class="stickchip" data-goshop="1" aria-label="Terrarium"' + (S.view === "terrarium" ? ' aria-current="page"' : '') + '>' + myBugArt("mini") + '<span class="tlabel">Terrarium</span></button>'; }
+function stickChip() { if (typeof funOn === "function" && !funOn()) return ""; return '<button class="stickchip" data-goshop="1" aria-label="Terrarium"' + (S.view === "terrarium" ? ' aria-current="page"' : '') + '>' + myBugArt("mini") + '<span class="tlabel">Terrarium</span></button>'; }
 function terrariumView() {
   var f = S.shopF || "home", title = { bugs: "Bug Store", items: "Wardrobe", faces: "Faces", styles: "Colors", music: "Music" }[f];
   var head = f === "home" ? '<button class="backbtn" data-act="terrback"><span aria-hidden="true">&larr;</span> Studying</button><h2>Terrarium</h2>' : '<button class="backbtn" data-act="shopback"><span aria-hidden="true">&larr;</span> Terrarium</button><h2>' + title + '</h2>';
@@ -3774,7 +3805,7 @@ var QUIPS = {
   streak: ["Unstoppable!", "Combo!", "Look at you go!", "Streak mode!"],
   tap: ["Hi!", "Hey, that tickles!", "Study buddy reporting!", "Let's learn some meds.", "Bzzz.", "Need a break? Hydrate!"]
 };
-function buddyOn() { return SET().buddy !== false && !!agreeRec() && S.view !== "legal" && S.view !== "home" && S.view !== "terrarium" && S.view !== "admin"; }
+function buddyOn() { return SET().buddy !== false && (typeof funOn !== "function" || funOn()) && !!agreeRec() && S.view !== "legal" && S.view !== "home" && S.view !== "terrarium" && S.view !== "admin"; }
 function drawBuddy() {
   if (!buddyOn()) { buddy.hidden = true; return; }
   buddy.hidden = false;
@@ -5114,6 +5145,7 @@ function toggleComply(k, on) {
 
 /* click / change hooks */
 function legalClick(t, a) {
+  if (a.fun != null) { pickFun(a.fun === "1"); return true; }
   if (a.legal) { openLegal(a.legal); return true; }
   if (a.gage) return false;
   switch (a.act) {
@@ -5147,6 +5179,21 @@ function grubFix() { /* give each path its own starter beetle once (older builds
 }
 var ROLES = [["ev", "Everyday Health", "Not a clinician: medicines, vitamins and your body", "grub-everyday", "everyday"], ["ph", "Prehospital", "EMT, AEMT, Paramedic or Flight Paramedic", "grub-medic", "levels"], ["rn", "Nursing", "CNA, LVN/LPN or RN", "grub-nurse", "nlevels"], ["md", "Medical School", "MS1-MS2, MS3-MS4 or Intern", "grub-doc", "mlevels"], ["im", "Imaging", "X-ray, CT, MRI, nuclear medicine or IR", "grub-imaging", "ilevels"]];
 function needRole() { return !!agreeRec() && !Prog.d.role && S.view !== "legal"; }
+/* First open, straight after the disclaimer: how do you want the app to behave? (owner, Oct 30 2026) */
+function needFun() { return false; }   /* the choice now lives in the first card of the tour (owner, Oct 30 2026) */
+function funView() {
+  return '<div class="gate funpick"><h1>Serious, or seriously fun?</h1><p>DrugBug has a study buddy, bugs whose eyes follow you, little animations between sections and a hick bug named Hickory who will not stop talking. Some people love it. Some people want a drug reference and nothing else.</p>' +
+    '<div class="funrow">' +
+    '<button class="funcard plain" data-fun="0"><strong>Serious</strong><span>Just the medicine. No buddy, no animations, no chatter.</span></button>' +
+    '<button class="funcard yes" data-fun="1">' + (typeof bugSVG === "function" ? bugSVG("sage") : "") + '<strong>Seriously fun</strong><span>Everything above, on. This is how DrugBug is meant to feel.</span></button>' +
+    '</div><p class="muted small">Either way you get the same medicine, the same doses and the same questions. You can switch at any time in Settings.</p></div>';
+}
+function pickFun(on) {
+  setSet("fun", !!on);
+  if (!on) setSet("sfx", false);          /* serious means quiet too */
+  store("funAsked", 1);
+  try { render(); } catch (e) {}
+}
 function roleView() {
   return '<div class="gate rolepick"><h1>What are you studying for?</h1><p>Pick your path. You will get a starter beetle dressed for that path, and you can explore every route anytime.</p><button class="rolecard role-gen bugdexrole" data-role="none">' + bugSVG("sage") + '<span class="rtx"><strong>BugDex</strong><span>Every medication in DrugBug, A to Z, explained by Professor Sage. Great for anyone, or if you are not sure yet.</span><span class="rgrub">Starter: ' + esc(bugById(ROLES[0][3]).name) + ' · browse everything</span></span></button><div class="roles">' +
     ROLES.map(function (r) { return '<button class="rolecard role-' + r[0] + '" data-role="' + r[0] + '">' + bugArt(bugById(r[3]), "rolebug", { mood: "happy" }) + '<span class="rtx"><strong>' + r[1] + '</strong><span>' + r[2] + '</span><span class="rgrub">Starter: ' + esc(bugById(r[3]).name) + '</span></span></button>'; }).join("") +
@@ -5858,7 +5905,7 @@ function printClick(t, a) { if (a.print) { openPrint(a.print); return true; } re
 
 /* ---------- Settings: display, study preferences, sound, protocols, printing, privacy & account, about ---------- */
 var APP_VERSION = "1.1", APP_DATE = "2026-10-10";
-var SET_DEF = { text: "normal", contrast: false, motion: false, homeLevel: "", dailyGoal: 10, nrN: 25, nrMode: "practice", adaptive: true, megaTimer: "on", fullDefault: false, voiceRate: "normal", showPhon: true, sfx: true, music: true, musicVol: 40, printMode: "cards", printLang: "auto", printDense: false, state: "", buddy: true, weird: true, weirdAt: "12:00" };
+var SET_DEF = { text: "normal", contrast: false, motion: false, homeLevel: "", dailyGoal: 10, nrN: 25, nrMode: "practice", adaptive: true, megaTimer: "on", fullDefault: false, voiceRate: "normal", showPhon: true, fun: true, sfx: true, music: true, musicVol: 40, printMode: "cards", printLang: "auto", printDense: false, state: "", buddy: true, weird: true, weirdAt: "12:00" };
 function SET() { var s = store("settings") || {}; return Object.assign({}, SET_DEF, s); }
 function setSet(k, v) { var s = SET(); s[k] = v; store("settings", s); applySettings(); if (k === "music" || k === "musicVol") muSync(); if (k === "remind" || k === "remindAt") remindSync(); if ((k === "weird" || k === "weirdAt") && typeof wdwSync === "function") wdwSync(); }
 /* daily study reminder (iPhone app): the app tells iOS what to say; iOS shows it at the chosen time */
@@ -5906,6 +5953,7 @@ function setRow(label, help, ctl) { return '<div class="setrow"><div class="sl">
 function setCard(id, title, body) { return (S.setTab || "display") !== id ? "" : '<section class="setcard" id="set-' + id + '"><h2>' + esc(title) + '</h2>' + body + '</section>'; }
 /* hidden Field Medic (military) section: unlocked by a code, shown as a prototype (owner, Oct 28 2026). Only SHA-256 hashes ship. */
 var FM_CODES = { "3cffa3f08ba9410ebbf2ac347359f647fcc57eed26e4294a7991a5b6b9ed77ab": { days: 0 }, "327a19299989c959457c7697b6dd8cdb9ec2c1704fb4e12653389c086938b0e5": { days: 30 } };
+function funOn() { return SET().fun !== false; }   /* Seriously Fun mode: the bugs, the banter, the little animations */
 function fmUnlocked() { return !!store("fmUnlock"); }
 /* In the App Store build a code may unhide the section but not unlock paid features (Guideline 3.1.1: paid features go through in-app purchase). Debug pass Oct 29; owner to confirm. */
 function fmPassActive() { if (typeof NATIVE !== "undefined" && NATIVE) return false; var p = store("fmPass"); return !!(p && p.until > Date.now()); }
@@ -5937,6 +5985,7 @@ function settingsView() {
   c += '<nav class="settabs" role="tablist" aria-label="Settings sections">' + tabs.map(function (x) { return '<button role="tab" data-settab="' + x[0] + '" aria-selected="' + (S.setTab === x[0]) + '">' + x[1] + '</button>'; }).join("") + '</nav>';
   // display
   c += setCard("display", "Display",
+    setRow("Seriously Fun", "Everything playful: your bug and the Terrarium, the study buddy, bugs whose eyes follow you, Hickory\u2019s chatter, the level animations, holiday dressing, music and sound. Turn it off for a plain, quiet drug reference. The medicine, doses and questions never change.", setTog("fun", s.fun !== false, "Seriously Fun")) +
     setRow("Theme", "", setOpts("theme", themePref(), [["dark", "Night shift (default)"], ["light", "Day shift"], ["system", "Match my device"]])) +
     setRow("Text size", "", setOpts("text", s.text, [["normal", "Normal"], ["large", "Large"], ["xl", "Extra large"]])) +
     setRow("High contrast", "Darker text and borders.", setTog("contrast", s.contrast, "High contrast")) +
@@ -6128,7 +6177,7 @@ document.addEventListener("visibilitychange", function () { if (document.hidden)
    (archived in tools/music-synth-archive.js). Tracks are made offline with tools/musicgen. */
 var MU = { ctx: null, master: null, timer: null, playing: false, armed: false };
 var MU_VOL = { quiet: 30, medium: 60, loud: 100 };
-function muOn() { return SET().music !== false && !!agreeRec(); }
+function muOn() { return SET().music !== false && (typeof funOn !== "function" || funOn()) && !!agreeRec(); }
 /* Oct 27, 2026: all tracks are now recorded lo-fi loops (made offline from sampled instruments, see /home/claude/music),
    played from music/*.mp3. The old WebAudio tracks (Rookie Loop, Night Shift Lo-Fi, Rotor Wash, ...) were retired and
    anyone who bought one with sticks gets the sticks back (muRefundOld). */
@@ -6205,7 +6254,7 @@ function muGesture() {
 }
 function muSync() { if (muOn() && MU.armed && muLevel() > 0) muStart(); else muStop(); if (MU.master && MU.ctx) MU.master.gain.setTargetAtTime(muVol(), MU.ctx.currentTime, 0.05); var b = $(".musicbtn"); if (b && b.getAttribute("aria-pressed") !== String(muOn())) { b.setAttribute("aria-pressed", String(muOn())); b.innerHTML = muIcon(); } }
 function muIcon() { return '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M9 18.5a2.5 2.5 0 1 1-2-2.45V5l11-2v12.5a2.5 2.5 0 1 1-2-2.45V7.1L9 8.4z"/>' + (muOn() ? '' : '<path d="M3 3l18 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>') + '</svg>'; }
-function musicBtn() { return '<button class="theme-btn musicbtn" data-act="music" aria-pressed="' + muOn() + '" aria-label="Background music" title="Background music">' + muIcon() + '</button>'; }
+function musicBtn() { if (typeof funOn === "function" && !funOn()) return ""; return '<button class="theme-btn musicbtn" data-act="music" aria-pressed="' + muOn() + '" aria-label="Background music" title="Background music">' + muIcon() + '</button>'; }
 /* browsers only allow sound after a tap, so start on the first interaction */
 ["pointerdown", "keydown", "touchend", "click"].forEach(function (ev) { document.addEventListener(ev, function () { if (!MU.playing || (MU.ctx && MU.ctx.state !== "running")) muGesture(); }, { passive: true, capture: true }); });
 document.addEventListener("visibilitychange", function () { if (document.hidden) muStop(); else if (MU.armed) muSync(); });
@@ -6906,7 +6955,7 @@ var DEMO = CFG.demo === true && !NATIVE;
 function webPass() { var p = store("webPass"); return p && p.until > Date.now() ? p : null; }
 var WEBDEEP = 0;
 function webDeepLoad() { /* the demo ships Wormhole text for the free drugs only; a code holder gets the rest */
-  if (WEBDEEP || !DEMO || !webPass()) return; WEBDEEP = 1;
+  if (WEBDEEP || !DEMO || !(webPass() || !PAYWALL)) return; WEBDEEP = 1;   /* with the paywall off on the web demo, everyone gets the full Wormhole (owner, Oct 30 2026) */
   var sc = document.createElement("script"); sc.src = "deep.js"; sc.onload = function () { if (typeof render === "function") render(); }; sc.onerror = function () { WEBDEEP = 0; }; document.head.appendChild(sc);
 }
 function webCodeTry(raw) {
@@ -7063,6 +7112,14 @@ document.addEventListener("click", function (e) {
   Dex.db.doc("licenses/" + t.getAttribute("data-licend")).update({ until: Date.now() }).then(function () { LIC.list = null; render(); }, function () {});
 });
 
+/* With the paywall off on the web demo, pull the rest of the Wormhole text in the background,
+   after first paint, so opening the app stays fast. (owner, Oct 30 2026) */
+(function () {
+  if (typeof DEMO === "undefined" || !DEMO || PAYWALL) return;
+  var go = function () { try { webDeepLoad(); } catch (e) {} };
+  if (window.requestIdleCallback) requestIdleCallback(go, { timeout: 4000 }); else setTimeout(go, 2500);
+})();
+
 /* ---------- Drug Alternatives (medical route): "if this drug can't be ordered, what else is in the same class or treats the same thing?"
    Educational comparison only. Never says which drug to use; substitution is a prescriber/pharmacist decision. ---------- */
 var ALT_MODES = [
@@ -7182,7 +7239,7 @@ var TOUR = [
 var TR = { i: 0, open: false };
 var trdlg = document.createElement("div"); trdlg.id = "tourdlg"; trdlg.className = "sheet rsheet"; trdlg.hidden = true; document.body.appendChild(trdlg);
 function tourDone() { return TR.done || !!store("tourDone"); }
-function tourOpen(force) { if (TR.open || (!force && tourDone())) return; TR.open = true; TR.i = 0; drawTour(); trdlg.hidden = false; }
+function tourOpen(force) { if (TR.open || (!force && tourDone())) return; TR.open = true; TR.i = 0;   /* the Serious / Seriously fun choice lives in Settings now (owner, Oct 30 2026) */ drawTour(); trdlg.hidden = false; }
 function tourClose() { TR.done = true; TR.open = false; trdlg.hidden = true; trdlg.innerHTML = ""; store("tourDone", 1); if (typeof wdwSync === "function") setTimeout(wdwSync, 600); }
 function drawTour() {
   var t = TOUR[TR.i], last = TR.i === TOUR.length - 1;
@@ -7197,7 +7254,10 @@ document.addEventListener("click", function (e) {
   if (b.dataset.tour === "again") { TR.done = false; store("tourDone", null); return tourOpen(true); }
   if (TR.i < TOUR.length - 1) { TR.i++; drawTour(); } else tourClose();
 });
-function tourMaybe() { if (!tourDone() && agreeRec() && !needRole() && S.view === "home") setTimeout(function () { if (!tourDone() && S.view === "home") tourOpen(); }, 500); }
+function tourMaybe() {
+  if (tourDone() || !agreeRec() || needRole() || S.view !== "home") return;
+  setTimeout(function () { if (!tourDone() && S.view === "home") tourOpen(); }, 500);
+}
 
 document.addEventListener("keydown", function (e) { if (e.key === "Escape" && TR.open) tourClose(); });
 
@@ -7641,6 +7701,7 @@ function holOn(d) {
 }
 function holKey(h) { return h ? (h.base || h.id) : ""; }
 function holToday() {
+  if (typeof funOn === "function" && !funOn()) return null;   /* Serious mode: no holiday dressing */
   var s = SET(); /* always on: there is no user setting for holidays */
   /* the owner's preview only applies on the owner's device, and only for an hour after picking it; everyone else always gets the real date */
   var pv = s.holPreview && typeof Admin !== "undefined" && Admin.owner && s.holPreviewTs && Date.now() - s.holPreviewTs < 3600000 ? s.holPreview : "";
@@ -7962,7 +8023,7 @@ function pkArt(p, st) {
 }
 function pkSvg(p, cls, st) { return '<svg class="' + (cls || "") + '" viewBox="0 0 100 100" aria-hidden="true">' + pkArt(p, st) + '</svg>'; }
 
-function pkOn() { return SET().peek !== false; }
+function pkOn() { return SET().peek !== false && (typeof funOn !== "function" || funOn()); }
 var PK = { el: null, t: null, live: null, until: 0 };
 function pkCalm() {
   if (!pkOn() || document.hidden) return false;
@@ -8485,7 +8546,7 @@ function gmCatCrawl() {
 
 /* ===================== Game effects: little celebrations, all drawn on a top layer so redraws don't interrupt them ===================== */
 function gfxLayer() { var L = document.getElementById("gfx"); if (!L) { L = document.createElement("div"); L.id = "gfx"; L.setAttribute("aria-hidden", "true"); document.body.appendChild(L); } return L; }
-function gfxReduce() { return (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) || (typeof SET === "function" && SET().motion); }
+function gfxReduce() { return (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) || (typeof SET === "function" && SET().motion) || (typeof funOn === "function" && !funOn()); }
 function gfxAdd(html, css, ms) { var e = document.createElement("div"); e.className = "gfxi"; e.style.cssText = css || ""; e.innerHTML = html; gfxLayer().appendChild(e); setTimeout(function () { if (e.parentNode) e.parentNode.removeChild(e); }, ms || 1500); return e; }
 function gfxRect(sel) { var e = typeof sel === "string" ? document.querySelector(sel) : sel; if (!e) return null; var r = e.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height, cx: r.left + r.width / 2, cy: r.top + r.height / 2 }; }
 function gfxFly(e, path, ms, done) {
@@ -8634,9 +8695,10 @@ function gfxSparkle(r) {
 /* ---------- Wandering stick bug: now and then a stick insect wanders across the screen from any side.
    Tap him for sticks: he stops, turns to look at you, clearly bothered ("Hey!"), then sprints off. ---------- */
 var SB = { t: null, el: null, raf: 0, path: null, pos: null, ang: 0, state: "", t0: 0 };
-var SB_STICKS = 5, SB_DAY_MAX = 3;
+var SB_STICKS = 5, SB_DAY_MAX = 2;   /* rarer (owner, Oct 30 2026) */
 function sbCalm() {
   if (document.hidden) return false;
+  if (typeof funOn === "function" && !funOn()) return false;
   if (typeof needDisc === "function" && needDisc()) return false;
   if (typeof agreeRec === "function" && !agreeRec()) return false;
   if (typeof tourDone === "function" && !tourDone()) return false;
@@ -8656,7 +8718,7 @@ function sbArt(face, look) {
 }
 function sbSchedule(first) {
   clearTimeout(SB.t);
-  var lo = first ? 90 : 420, hi = first ? 300 : 900; /* seconds: first visit 1.5-5 min in, then every 7-15 min */
+  var lo = first ? 300 : 1500, hi = first ? 900 : 3000; /* seconds: first visit 5-15 min in, then every 25-50 min (owner, Oct 30 2026: rarer) */
   if (window.__SB_FAST) { lo = 1; hi = 2; }
   SB.t = setTimeout(sbShow, (lo + Math.random() * (hi - lo)) * 1000);
 }
@@ -8687,9 +8749,13 @@ function sbShow() {
   SB.path = sbPath(a, z, .5); SB.state = "walk"; SB.el = el; SB.ang = 0; SB.pos = a;
   el.addEventListener("click", sbTap);
   document.body.appendChild(el);
-  var last = performance.now();
-  (function step(now) {
-    if (!SB.el) return;
+  var last = performance.now(), born = last;
+  /* hard stop: whatever happens (a dropped frame loop, a backgrounded tab, a stuck state),
+     he leaves after this. He used to be able to freeze mid-screen. (owner, Oct 30 2026) */
+  clearTimeout(SB.life); SB.life = setTimeout(function () { if (SB.el === el) sbGone(); }, 40000);
+  SB.step = function step(now) {
+    if (!SB.el || SB.el !== el) return;
+    if (now - born > 38000) return sbGone();
     var dt = Math.min(0.05, (now - last) / 1000); last = now;
     var v = SB.state === "run" ? 420 : SB.state === "walk" ? 34 : 0, P = SB.path;
     if (v) {
@@ -8700,8 +8766,11 @@ function sbShow() {
       if (P.u >= 1) return sbGone();
     }
     if (SB.state === "walk" && !sbCalm()) sbRun(); /* he leaves quietly if a test or game opens */
-    SB.raf = requestAnimationFrame(step);
-  })(last);
+    /* if he is stopped and looking at you for too long, something went wrong: send him off */
+    if (SB.state === "look" && now - (SB.lookT || now) > 4000) sbRun();
+    SB.raf = requestAnimationFrame(function (t) { try { SB.step(t); } catch (e) { sbGone(); } });
+  };
+  SB.raf = requestAnimationFrame(function (t) { try { SB.step(t); } catch (e) { sbGone(); } });
 }
 /* off he goes toward any edge, in a near-straight line */
 function sbRun() {
@@ -8718,7 +8787,7 @@ function sbBadge() {
 function sbTap(e) {
   e.preventDefault(); e.stopPropagation();
   var el = SB.el; if (!el || SB.state !== "walk") return;
-  SB.state = "look";
+  SB.state = "look"; SB.lookT = performance.now();
   var P = Prog.d, t = typeof today === "function" ? today() : new Date().toDateString(), d = P.stickBug && P.stickBug.day === t ? P.stickBug : { day: t, n: 0 };
   d.n++; P.stickBug = d; earn(SB_STICKS); if (typeof saveProg === "function") saveProg();
   if (typeof gfxSnd === "function") gfxSnd("pop");
@@ -8733,7 +8802,9 @@ function sbTap(e) {
     if (typeof render === "function" && S.view !== "admin") setTimeout(render, 300);
   }, 1500);
 }
-function sbGone() { cancelAnimationFrame(SB.raf); if (SB.el && SB.el.parentNode) SB.el.parentNode.removeChild(SB.el); SB.el = null; SB.state = ""; sbSchedule(false); }
+function sbGone() { cancelAnimationFrame(SB.raf); clearTimeout(SB.life); if (SB.el && SB.el.parentNode) SB.el.parentNode.removeChild(SB.el); SB.el = null; SB.state = ""; SB.step = null; sbSchedule(false); }
+/* a backgrounded tab pauses animation frames; if he is still here when we come back, he leaves */
+document.addEventListener("visibilitychange", function () { if (!document.hidden && SB.el) sbGone(); });
 document.addEventListener("visibilitychange", function () { if (document.hidden && SB.el) sbGone(); });
 sbSchedule(true);
 
@@ -22343,21 +22414,37 @@ var FM_REF_EXTRA = [
   { id: "dive", t: "Dive tables and dive medicine", cat: "Environmental", kw: "dive, diving, decompression, Navy tables, no-stop, repetitive group, recompression", sum: "Navy Rev 7 calculator, tables and treatment tables.", view: "dive" },
   { id: "tele", t: "Teleconsult and handoff", cat: "Evacuation", kw: "teleconsult, telemedicine, ADVISOR, handoff, handover, MIST, 9-line, nine line, MEDEVAC, DD 1380, DD1380, TCCC card, flowsheet, SBAR, report", sum: "MIST, the 9-line, the DD 1380, the teleconsult script, the prolonged care flowsheet and SBAR, with practice cases.", view: "tele" }
 ];
+/* Pin any Field Reference topic onto the Field Medic menu, so the ones you use become
+   their own tiles on the main screen. (owner, Oct 30 2026) */
+function fmPins() { var P = Prog.d; return P.fmPins || (P.fmPins = []); }
+function fmPinned(id) { return fmPins().indexOf(id) >= 0; }
+function fmPinToggle(id) {
+  var L = fmPins(), i = L.indexOf(id);
+  if (i >= 0) L.splice(i, 1); else if (L.length < 12) L.push(id);
+  if (typeof saveProg === "function") saveProg();
+  render();
+}
+function fmPinBtn(id, big) {
+  var on = fmPinned(id);
+  return '<button class="pinbtn' + (on ? ' on' : '') + (big ? ' big' : '') + '" data-fmpin="' + esc(id) + '" aria-pressed="' + on + '" title="' + (on ? 'Remove from the menu' : 'Add to the menu') + '">' +
+    '<span class="pini" aria-hidden="true">' + (on ? '\u2605' : '\u2606') + '</span><span class="pintx">' + (on ? 'On the menu' : 'Add to menu') + '</span></button>';
+}
 function fmRefAll() { return (typeof FM_REF !== "undefined" ? FM_REF : []).concat(FM_REF_EXTRA).slice().sort(function (a, b) { return a.t.localeCompare(b.t); }); }
 function fmRefView() {
   var R = S.refId && fmRefAll().filter(function (x) { return x.id === S.refId; })[0];
   if (R) return fmRefDetail(R);
   var q = (S.refQ || "").trim().toLowerCase(), L = fmRefAll().filter(function (x) { return !q || (x.t + " " + x.kw + " " + x.cat + " " + x.sum).toLowerCase().indexOf(q) >= 0; });
-  var c = '<input class="pinput dissearch" id="refq" type="search" placeholder="Search: Parkland, vent settings, GCS, K9..." aria-label="Search the field reference" value="' + esc(S.refQ || "") + '">';
+  var c = '<p class="muted small">Tap the star on anything here to put it on the Field Medic menu as its own tile.' + (fmPins().length ? ' ' + fmPins().length + ' of 12 pinned.' : '') + '</p>';
+  c += '<input class="pinput dissearch" id="refq" type="search" placeholder="Search: Parkland, vent settings, GCS, K9..." aria-label="Search the field reference" value="' + esc(S.refQ || "") + '">';
   if (!L.length) return c + '<p class="muted">Nothing matches. Try another word.</p>';
   var letters = []; L.forEach(function (x) { var l = x.t.charAt(0).toUpperCase(); if (letters.indexOf(l) < 0) letters.push(l); });
   if (!q) c += '<div class="refaz">' + letters.map(function (l) { return '<button data-refjump="' + l + '">' + l + '</button>'; }).join("") + '</div>';
   var cur = "";
-  c += '<div class="reflist">' + L.map(function (x) { var l = x.t.charAt(0).toUpperCase(), h = ""; if (l !== cur) { cur = l; h = '<h3 class="refl" id="refl-' + l + '">' + l + '</h3>'; } return h + '<button class="refitem" data-ref="' + x.id + '"><strong>' + esc(x.t) + '</strong><span>' + esc(x.sum) + '</span><em>' + esc(x.cat) + '</em></button>'; }).join("") + '</div>';
+  c += '<div class="reflist">' + L.map(function (x) { var l = x.t.charAt(0).toUpperCase(), h = ""; if (l !== cur) { cur = l; h = '<h3 class="refl" id="refl-' + l + '">' + l + '</h3>'; } return h + '<div class="refrow"><button class="refitem" data-ref="' + x.id + '"><strong>' + esc(x.t) + '</strong><span>' + esc(x.sum) + '</span><em>' + esc(x.cat) + '</em></button>' + fmPinBtn(x.id) + '</div>'; }).join("") + '</div>';
   return c;
 }
 function fmRefDetail(R) {
-  var c = '<div class="backrow"><button class="backbtn" data-ref=""><span aria-hidden="true">&larr;</span> Field Reference</button></div>';
+  var c = '<div class="backrow"><button class="backbtn" data-ref=""><span aria-hidden="true">&larr;</span> Field Reference</button>' + fmPinBtn(R.id, 1) + '</div>';
   if (R.view === "k9") return c + (typeof fmK9View === "function" ? fmK9View() : "");
   if (R.view === "dive") return c + (typeof fieldTabBody === "function" ? fieldTabBody("dive") : "");
   if (R.view === "tele") return c + (typeof fmTeleView === "function" ? fmTeleView() : "");
@@ -22411,8 +22498,9 @@ document.addEventListener("input", function (e) {
   if (t.hasAttribute && t.hasAttribute("data-cf")) { var sec = t.closest("[data-calc]"), k = sec.getAttribute("data-calc"); S.calcV = S.calcV || {}; (S.calcV[k] = S.calcV[k] || {})[t.getAttribute("data-cf")] = t.value; var o = document.getElementById("calc-" + k); if (o) o.innerHTML = fmCalcOut(k); }
 });
 document.addEventListener("click", function (e) {
-  var t = e.target.closest && e.target.closest("[data-ref],[data-refjump]"); if (!t) return;
+  var t = e.target.closest && e.target.closest("[data-fmpin],[data-ref],[data-refjump]"); if (!t) return;
   e.preventDefault(); e.stopPropagation();
+  if (t.hasAttribute("data-fmpin")) { e.preventDefault(); e.stopPropagation(); return fmPinToggle(t.getAttribute("data-fmpin")); }
   if (t.hasAttribute("data-refjump")) { var h = document.getElementById("refl-" + t.getAttribute("data-refjump")); if (h) try { h.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (x) { h.scrollIntoView(); } return; }
   S.refId = t.getAttribute("data-ref") || null; render(); try { window.scrollTo(0, 0); } catch (x) {}
 }, true);
@@ -22440,6 +22528,25 @@ document.addEventListener("click", function (e) {
 
 /* Medications & Blood: blood products and topics sit under the medication board (owner: combine the tabs) */
 /* Medications and Blood are separate tabs again, Oct 29 2026 (owner) */
+
+/* the pinned topics, drawn as tiles on the Field Medic menu */
+function fmPinTiles() {
+  var L = fmPins(); if (!L.length) return "";
+  var all = fmRefAll(), out = [];
+  L.forEach(function (id) {
+    var x = all.filter(function (y) { return y.id === id; })[0]; if (!x) return;
+    out.push('<button class="hubtile fmt t-fm_ref" data-refpin="' + esc(x.id) + '">' + (typeof icon === "function" ? icon("fm_ref") : "") +
+      '<span class="ht"><strong>' + esc(x.t) + '</strong><span>' + esc(x.sum) + '</span></span><span class="hubsticks">&#9733;</span></button>');
+  });
+  if (!out.length) return "";
+  return '<div class="hub hubg' + (out.length % 2 ? ' odd' : '') + (out.length === 1 ? ' solo' : '') + '">' + out.join("") + '</div>';
+}
+document.addEventListener("click", function (e) {
+  var t = e.target.closest && e.target.closest("[data-refpin]"); if (!t) return;
+  e.preventDefault(); e.stopPropagation();
+  S.tab = "fm_ref"; S.refId = t.getAttribute("data-refpin"); S.refQ = "";
+  render(); try { window.scrollTo(0, 0); } catch (x) {}
+}, true);
 
 /* ===== Eye tracking + Flight Paramedic launch transition (owner, Oct 30 2026) =====
    Every bug's pupils follow the pointer. Pupils are already wrapped in <g class="pupils">
@@ -22534,6 +22641,374 @@ function gfxSmokeBomb(from, done) {
   setTimeout(function () { w.classList.add("skout"); }, 450);
   setTimeout(function () { if (w.parentNode) w.parentNode.removeChild(w); }, 820);
 }
+
+/* ===== LEARN: walk every drug in this bug's scope, at random, never repeating (owner, Oct 30 2026) =====
+   A big tab at the top of every level hub. It opens the full drug page for a drug you have not
+   seen here yet; tapping "Next drug" marks it done and serves another. Progress is kept per
+   speciality, so finishing Paramedic and finishing RN are two separate jobs with their own badges. */
+
+function learnKey() { return (typeof ctxKey === "function" && ctxKey()) || "gen"; }
+function learnAll() { var P = Prog.d; return P.learn || (P.learn = {}); }
+function learnSeen(k) { var L = learnAll(); k = k || learnKey(); return L[k] || (L[k] = {}); }
+/* the drugs this speciality counts: in scope, and ones the current plan can actually open */
+function learnPool(k) {
+  var ids = typeof scopeIds === "function" ? scopeIds() : [];
+  return ids.filter(function (id) { return DB.drugs[id] && !(typeof drugLocked === "function" && drugLocked(id)); });
+}
+function learnStats() {
+  var pool = learnPool(), SN = learnSeen(), done = 0, left = [];
+  pool.forEach(function (id) { if (SN[id]) done++; else left.push(id); });
+  return { total: pool.length, done: done, left: left, pct: pool.length ? Math.round(done / pool.length * 100) : 0 };
+}
+function learnName(k) {
+  k = k || learnKey();
+  if (k === "gen") return "the BugDex";
+  var o = typeof levelObj === "function" ? levelObj(k) : null;
+  return o ? o.name : k;
+}
+function learnMark(id) {
+  if (!id) return;
+  var SN = learnSeen();
+  if (SN[id]) return;
+  SN[id] = Date.now();
+  if (typeof checkAch === "function") checkAch();
+  if (typeof saveProg === "function") saveProg();
+}
+/* pick at random from what is left, so no two runs feel the same */
+function learnPick() {
+  var st = learnStats();
+  if (!st.left.length) return null;
+  return st.left[Math.floor(Math.random() * st.left.length)];
+}
+function learnStart() {
+  var id = learnPick();
+  if (!id) { S.learn = { key: learnKey(), done: true }; return render(); }
+  S.learn = { key: learnKey(), on: true };
+  if (typeof openSheet === "function") openSheet(id);
+}
+function learnNext() {
+  var cur = S.sheet && S.sheet.id;
+  learnMark(cur);
+  var id = learnPick();
+  if (!id) {
+    S.learn = { key: learnKey(), done: true };
+    if (typeof closeSheet === "function") closeSheet();
+    if (typeof gfxCheer === "function") try { gfxCheer(); } catch (e) {}
+    return render();
+  }
+  if (typeof openSheet === "function") openSheet(id);
+  try { var p = sheet && sheet.querySelector(".panel"); if (p) p.scrollTop = 0; } catch (e) {}
+}
+function learnStop() { learnMark(S.sheet && S.sheet.id); S.learn = null; if (typeof closeSheet === "function") closeSheet(); render(); }
+function learnReset() { var L = learnAll(); L[learnKey()] = {}; if (typeof saveProg === "function") saveProg(); S.learn = null; render(); }
+
+/* the bar that rides on top of the drug page while a LEARN run is going */
+function learnBar() {
+  if (!(S.learn && S.learn.on)) return "";
+  var st = learnStats(), n = st.done + 1;
+  return '<div class="lrnbar"><div class="lrnhd"><strong>L.E.A.R.N</strong><span class="muted small">' + n.toLocaleString() + ' of ' + st.total.toLocaleString() + ' in ' + esc(learnName()) + '</span></div>' +
+    '<div class="lrnmeter"><i style="width:' + Math.round(st.done / Math.max(1, st.total) * 100) + '%"></i></div>' +
+    '<div class="lrnacts"><button class="btn lrnnext" data-act="lrnnext">Next drug <span aria-hidden="true">&rarr;</span></button><button class="btn ghost small" data-act="lrnstop">Stop</button></div></div>';
+}
+
+/* Hickory, the LEARN bug: straw hat, three teeth, one pitchfork, no hurry.
+   Eyes sit in a .pupils group so he follows the cursor like every other bug. */
+/* ===== Hickory grows up =====
+   The more drugs you have been through across EVERY speciality, the better he talks.
+   Same five letters every time; the words behind them get fancier. */
+function learnTotal() { var L = (Prog.d && Prog.d.learn) || {}, n = 0; Object.keys(L).forEach(function (k) { n += Object.keys(L[k]).length; }); return n; }
+var LRN_STEPS = [0, 25, 100, 500, 2000];
+function learnPhase() { var n = learnTotal(), i = 0; for (var k = 0; k < LRN_STEPS.length; k++) if (n >= LRN_STEPS[k]) i = k; return i; }
+/* a star marks the letter that carries the acronym */
+var LRN_ACRONYM = [
+  "*L*earn *E*verything *A*nd *R*ead k*N*owledge",
+  "*L*earn *E*verything *A*nd *R*eview k*N*owledge",
+  "*L*earn *E*xtensively *A*nd *R*etain k*N*owledge",
+  "*L*asting *E*xpertise, *A*cquired, *R*eviewed, k*N*own",
+  "*L*ongitudinal *E*ncoding *A*nd *R*etrieval of k*N*owledge"
+];
+function learnStars(txt) {
+  var bits = String(txt).split("*"), out = "";
+  for (var i = 0; i < bits.length; i++) out += i % 2 ? "<b>" + esc(bits[i]) + "</b>" : esc(bits[i]);
+  return out;
+}
+/* him first, then your own bug answering back */
+var LRN_BANTER = [
+  [["Y'all gonna learn somethin' today, I reckon.", "That is the idea, yes."],
+   ["One at a time, like pullin' taters.", "Nobody says that."],
+   ["I ain't never met a drug I couldn't holler at.", "Please do not holler at the drugs."],
+   ["My cousin says medicine is just fancy soup.", "Okay, Hickory."],
+   ["I know three of 'em by heart already.", "There are two thousand."],
+   ["Back on the farm we just rubbed dirt on it.", "We are not doing that here."],
+   ["Is the long one the good one?", "That is not how any of this works."]],
+  [["I been readin' some. Don't tell nobody.", "Your secret is safe."],
+   ["You're gettin' the hang of this, partner.", "So are you, apparently."],
+   ["Found me a dictionary in the barn.", "And you opened it?"],
+   ["I can spell pharmacology now. Mostly.", "Mostly is a start."],
+   ["Turns out there's a reason for the long names.", "There usually is."],
+   ["I quit chewin' on the straw. Mostly.", "Progress."],
+   ["Few more of these and I'll be downright respectable.", "Let us not get ahead of ourselves."]],
+  [["I have started taking notes. Proper ones.", "Is that a second tooth?"],
+   ["Repetition is how it sticks. I read that somewhere.", "You read?"],
+   ["I would like to revisit the ones from Tuesday.", "Who taught you the word revisit?"],
+   ["I have opinions about renal dosing now.", "Nobody asked for those."],
+   ["The mechanism is the interesting part, really.", "Listen to you."],
+   ["I bought a shirt with a collar on it.", "I noticed."],
+   ["Did you know half of these come from plants?", "You mentioned. Four times."]],
+  [["Spaced repetition, properly applied, is remarkably effective.", "What happened to the pitchfork guy?"],
+   ["I have taken the liberty of alphabetizing the barn.", "Of course you have."],
+   ["Shall we continue? I have cleared my afternoon.", "You have an afternoon now?"],
+   ["I find the pharmacokinetics rather elegant.", "You find a lot of things elegant lately."],
+   ["One ought to review before one forgets.", "One ought to relax."],
+   ["I have been asked to chair a small committee.", "Of what?"],
+   ["My vocabulary has expanded considerably.", "We have all noticed."]],
+  [["Encoding specificity suggests we revisit these in context.", "I miss the pitchfork guy."],
+   ["I have been invited to give a talk.", "At the barn?"],
+   ["My thesis concerns retrieval practice. You are in the acknowledgements.", "Thank you?"],
+   ["I no longer recall what a tater is.", "That is the saddest thing you have said."],
+   ["Shall I summarize the literature, or would that belabor it?", "Belabor it. You will anyway."],
+   ["I have peer reviewers now. Three of them.", "Do they have pitchforks?"],
+   ["Knowledge, properly encoded, outlives us all.", "It is a drug app, Hickory."]]
+];
+
+/* what your bug says back when he recites the acronym */
+var LRN_ACR_REPLY = ["You have been working on that one.", "Still workshopping it, then.", "Better. Much better.", "Now you are just showing off.", "Nobody knows what that means."];
+function learnLines() {
+  var ph = learnPhase(), set = (LRN_BANTER[ph] || LRN_BANTER[0]).slice();
+  set.unshift(["@ACR", LRN_ACR_REPLY[ph] || LRN_ACR_REPLY[0]]);   /* the acronym is just another thing he says */
+  /* a different line each time he speaks, and never the same one twice in a row (owner, Oct 30 2026) */
+  var pick = Math.floor(Math.random() * set.length);
+  if (set.length > 1 && pick === LRN_LAST_LINE) pick = (pick + 1 + Math.floor(Math.random() * (set.length - 1))) % set.length;
+  LRN_LAST_LINE = pick;
+  return set[pick];
+}
+
+function learnBugSVG() {
+  var INKC = "#3f5420", ph = learnPhase(), c = "";
+  /* phase 0 overalls and gap teeth, phase 4 waistcoat, bow tie, full smile and a mortarboard */
+  c += '<svg class="hickbug bug" viewBox="0 0 200 200" role="img" aria-label="Hickory, the LEARN bug">' +
+    '<defs><linearGradient id="hickg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9bcb5a"/><stop offset="1" stop-color="#5f8f33"/></linearGradient></defs><g>';   /* no bob: he stands still (owner, Oct 30 2026) */
+  /* the pitchfork stays with him the whole way */
+  c += '<g class="hkfork"><path d="M168 192 L150 56" stroke="#a16207" stroke-width="6" stroke-linecap="round"/>' +
+    '<path d="M136 58 L139 28 M151 56 L151 24 M166 58 L163 28" stroke="#cbd5e1" stroke-width="5" stroke-linecap="round"/>' +
+    '<path d="M134 60 Q151 51 168 60" stroke="#cbd5e1" stroke-width="6" fill="none" stroke-linecap="round"/></g>';
+  c += (typeof legs === "function" ? legs(INKC, 6) : "") + (typeof antennae === "function" ? antennae(INKC) : "");
+  c += '<ellipse cx="100" cy="140" rx="42" ry="45" fill="url(#hickg)"/>';
+  /* what he is wearing */
+  if (ph <= 1) {
+    c += '<path d="M84 116 h32 v26 a16 16 0 0 1 -32 0z" fill="#3b67a8"/>' +
+      '<path d="M88 117 L79 100 M112 117 L121 100" stroke="#3b67a8" stroke-width="6.5" stroke-linecap="round"/>' +
+      '<circle cx="89" cy="122" r="2.8" fill="#e0b964"/><circle cx="111" cy="122" r="2.8" fill="#e0b964"/>';
+  } else if (ph === 2) {
+    /* overalls, but now over a proper collared shirt */
+    c += '<path d="M78 110 L100 124 L122 110 L118 102 L100 112 L82 102Z" fill="#f4f1e6"/>' +
+      '<path d="M84 118 h32 v24 a16 16 0 0 1 -32 0z" fill="#3b67a8"/>' +
+      '<path d="M88 119 L80 104 M112 119 L120 104" stroke="#3b67a8" stroke-width="6.5" stroke-linecap="round"/>' +
+      '<circle cx="89" cy="124" r="2.8" fill="#e0b964"/><circle cx="111" cy="124" r="2.8" fill="#e0b964"/>';
+  } else {
+    /* waistcoat and bow tie */
+    c += '<path d="M78 108 L100 122 L122 108 L118 100 L100 110 L82 100Z" fill="#f4f1e6"/>' +
+      '<path d="M80 110 Q68 134 76 170 L100 176 L124 170 Q132 134 120 110 L100 128Z" fill="' + (ph >= 4 ? "#3f3663" : "#4a3f2a") + '"/>' +
+      '<path d="M100 130 v40" stroke="' + (ph >= 4 ? "#2e2749" : "#3a311f") + '" stroke-width="2"/>' +
+      '<circle cx="94" cy="142" r="2.6" fill="#e0b964"/><circle cx="94" cy="156" r="2.6" fill="#e0b964"/>' +
+      '<path d="M100 112 l-13 -7 v14z M100 112 l13 -7 v14z" fill="#b3324a"/><circle cx="100" cy="112" r="4" fill="#8f2439"/>';
+    if (ph >= 4) c += '<rect x="112" y="140" width="12" height="7" rx="1.5" fill="#f4f1e6" transform="rotate(-6 118 143)"/>';
+  }
+  /* head and freckles (the freckles fade as he smartens up) */
+  c += '<circle cx="100" cy="74" r="30" fill="#8fbb52"/>';
+  c += '<g fill="#6d9440" opacity="' + (ph >= 3 ? ".35" : ph === 2 ? ".7" : "1") + '"><circle cx="76" cy="80" r="2.2"/><circle cx="71" cy="87" r="1.9"/><circle cx="81" cy="88" r="1.9"/><circle cx="124" cy="80" r="2.2"/><circle cx="129" cy="87" r="1.9"/><circle cx="119" cy="88" r="1.9"/></g>';
+  c += (typeof eyes === "function" ? eyes(74) : "");
+  /* the smile fills in: three gappy teeth, then four, then five, then a full row */
+  c += '<path d="M86 88 Q100 102 114 88 Q100 95 86 88Z" fill="#5d2233"/>';
+  if (ph === 0) c += '<rect x="91" y="89" width="6" height="7" rx="1.6" fill="#fff8e7"/><rect x="100" y="90" width="5" height="6" rx="1.6" fill="#fff8e7"/><rect x="108" y="88" width="4" height="4.5" rx="1.4" fill="#fff8e7"/>';
+  else if (ph === 1) c += '<rect x="89" y="89" width="6" height="7" rx="1.6" fill="#fff8e7"/><rect x="97" y="90" width="6" height="7" rx="1.6" fill="#fff8e7"/><rect x="105" y="89" width="5" height="6" rx="1.5" fill="#fff8e7"/><rect x="112" y="88" width="4" height="4.5" rx="1.4" fill="#fff8e7"/>';
+  else if (ph === 2) c += '<rect x="88" y="89" width="6" height="7.5" rx="1.6" fill="#fffaf0"/><rect x="95" y="90" width="6" height="8" rx="1.6" fill="#fffaf0"/><rect x="102" y="90" width="6" height="7.5" rx="1.6" fill="#fffaf0"/><rect x="109" y="89" width="5" height="6" rx="1.5" fill="#fffaf0"/>';
+  else c += '<path d="M88 88.5 Q100 99 112 88.5 Q100 93 88 88.5Z" fill="#ffffff"/>' + (ph === 3 ? '<path d="M94 90 v5 M100 91 v5 M106 90 v5" stroke="#e7e2d6" stroke-width="1.1"/>' : '');
+  /* straw in the corner of his mouth, only while he is still a farmer */
+  if (ph <= 1) c += '<path d="M115 92 Q133 88 142 77" stroke="#e3c77a" stroke-width="3" fill="none" stroke-linecap="round"/>';
+  /* hat: straw, then a neater straw, then the mortarboard */
+  if (ph < 4) {
+    c += '<ellipse cx="100" cy="56" rx="48" ry="11" fill="#e0b964"/>' +
+      '<path d="M78 56 Q76 26 100 24 Q124 26 122 56Z" fill="#edcb7c"/>' +
+      '<path d="M78 51 Q100 59 122 51" stroke="' + (ph >= 3 ? "#3f3663" : "#a9792c") + '" stroke-width="6" fill="none"/>' +
+      '<path d="M54 56 Q100 68 146 56" stroke="#c9a356" stroke-width="2.5" fill="none"/>';
+  } else {
+    c += '<path d="M72 50 Q100 30 128 50 L128 56 Q100 62 72 56Z" fill="#2e2749"/>' +
+      '<path d="M50 44 L100 28 L150 44 L100 60Z" fill="#3f3663"/><circle cx="100" cy="44" r="4" fill="#2e2749"/>' +
+      '<path d="M100 44 Q132 46 134 52 L134 70" stroke="#d4af37" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="134" cy="73" r="4" fill="#d4af37"/>';
+  }
+  /* reading glasses once he has done enough studying to need them */
+  if (ph >= 3) c += '<g fill="none" stroke="#4b5563" stroke-width="2.6"><circle cx="88" cy="74" r="12.5"/><circle cx="112" cy="74" r="12.5"/><path d="M100.5 73 h-1 M75.5 72 l-6 -3 M124.5 72 l6 -3"/></g>';
+  return c + '</g></svg>';
+}
+
+/* the big tab at the top of the hub */
+function learnTile() {
+  /* not on the Field Medic tiers: that section is in development and its own thing (owner, Oct 30 2026) */
+  if (typeof isF === "function" && S.view === "level" && isF(S.level)) return "";
+  var st = learnStats();
+  if (!st.total) return "";
+  var done = !st.left.length;
+  return '<button class="lrntab' + (done ? ' lrndone' : '') + '" data-act="lrngo"><span class="lrnic" aria-hidden="true">' + learnBugSVG() + '</span>' +
+    '<span class="lrntx"><strong>L.E.A.R.N</strong>' +
+
+    '<span class="lrnsub">' + (done ? 'You have been through every drug in ' + esc(learnName()) + '.' : 'Every drug in ' + esc(learnName()) + ', one at a time, in random order. Nothing repeats.') + '</span>' +
+    '<span class="lrnmeter sm"><i style="width:' + st.pct + '%"></i></span>' +
+    '<span class="lrnn">' + st.done.toLocaleString() + ' of ' + st.total.toLocaleString() + ' &middot; ' + st.pct + '%</span></span>' +
+    '<span class="lrngo" aria-hidden="true">' + (done ? '&#10003;' : '&rsaquo;') + '</span></button>';
+}
+
+
+/* Hickory pipes up on his own: a little bubble pops off him, he says his piece,
+   it goes away, and then your own bug answers back in its own bubble (owner, Oct 30 2026). */
+var LRN_SAID = 0, LRN_TMR = [], LRN_LAST_LINE = -1;
+function learnClearSay() {
+  LRN_TMR.forEach(clearTimeout); LRN_TMR = [];
+  var old = document.querySelector(".hksay"); if (old && old.parentNode) old.parentNode.removeChild(old);
+}
+function learnChatter(force) {
+  if (typeof gfxReduce === "function" && gfxReduce() && !force) return;
+  var tab = document.querySelector(".lrntab"); if (!tab) return;
+  var now = Date.now();
+  if (!force && now - LRN_SAID < 45000) return;   /* he is chatty, not annoying */
+  LRN_SAID = now;
+  learnClearSay();
+  var li = learnLines(), host = tab.querySelector(".lrnic") || tab;
+  var say = document.createElement("span");
+  say.className = "hksay";
+  say.setAttribute("role", "status");
+  say.innerHTML = li[0] === "@ACR" ? learnStars(LRN_ACRONYM[learnPhase()] || LRN_ACRONYM[0]) : esc(li[0]);
+  host.appendChild(say);
+  LRN_TMR.push(setTimeout(function () { say.classList.add("on"); }, 30));
+  LRN_TMR.push(setTimeout(function () { say.classList.remove("on"); }, 3400));
+  LRN_TMR.push(setTimeout(function () { if (say.parentNode) say.parentNode.removeChild(say); }, 3900));
+  /* your bug answers in its own bubble, the way it does when you tap it */
+  LRN_TMR.push(setTimeout(function () {
+    if (typeof buddySet === "function" && typeof buddyOn === "function" && buddyOn()) buddySet("think", li[1], 3200);
+  }, 3500));
+}
+/* he speaks up shortly after a hub comes into view */
+if (typeof render === "function") (function () {
+  var r = render;
+  render = function () {
+    var v = r.apply(this, arguments);
+    try {
+      if (S.tab === "hub" && document.querySelector(".lrntab")) { clearTimeout(LRN_TMR.hub); LRN_TMR.hub = setTimeout(function () { learnChatter(); }, 900); }
+      else learnClearSay();
+    } catch (e) {}
+    return v;
+  };
+})();
+
+/* the screen you land on when a speciality is finished */
+function learnDoneView() {
+  var st = learnStats();
+  return '<section class="lrnfin"><h2>Every drug in ' + esc(learnName()) + '</h2>' +
+    '<p>You have been through all ' + st.total.toLocaleString() + ' of them. That badge is yours.</p>' +
+    '<div class="actions"><button class="btn" data-act="hub">Back to ' + esc(learnName()) + '</button><button class="btn ghost" data-act="lrnreset">Start this one over</button></div></section>';
+}
+
+/* achievements: milestones across everything, plus one for finishing each speciality */
+(function () {
+  if (typeof ACH === "undefined") return;
+  function totalSeen(P) { var L = P.learn || {}, n = 0; Object.keys(L).forEach(function (k) { n += Object.keys(L[k]).length; }); return n; }
+  ACH.push(
+    ["lrn25", "25 drugs learned", function (P) { return totalSeen(P) >= 25; }],
+    ["lrn100", "100 drugs learned", function (P) { return totalSeen(P) >= 100; }],
+    ["lrn500", "500 drugs learned", function (P) { return totalSeen(P) >= 500; }],
+    ["lrn2000", "2,000 drugs learned", function (P) { return totalSeen(P) >= 2000; }]
+  );
+  /* one badge per speciality, awarded when every drug in that scope has been through LEARN */
+  function scopeFinished(key) {
+    var L = (Prog.d.learn || {})[key]; if (!L) return false;
+    var cur = S.view, lvl = S.level, ok = false;
+    try {
+      if (key === "gen") { S.view = "gen"; } else { S.view = "level"; S.level = key; }
+      var pool = learnPool();
+      ok = pool.length > 0 && pool.every(function (id) { return L[id]; });
+    } catch (e) { ok = false; }
+    S.view = cur; S.level = lvl;
+    return ok;
+  }
+  var KEYS = [];
+  try { KEYS = (DB.LEVELS || []).map(function (l) { return l.key; }).filter(function (k) { return !(typeof isF === "function" && isF(k)); }); } catch (e) {}
+  KEYS.push("gen");
+  KEYS.forEach(function (k) {
+    var nm = k === "gen" ? "the BugDex" : ((typeof levelObj === "function" && (levelObj(k) || {}).name) || k);
+    ACH.push(["lrnall_" + k, "Every drug in " + nm, function () { return scopeFinished(k); }]);
+  });
+})();
+
+/* ===== Microbiology tab: bacteria, viruses, prions, parasites (owner, Oct 30 2026) =====
+   Med school levels and the BugDex. Full board-style card with a Wormhole, in the drug-card shape.
+   Five organisms hide a collectible bug: open the card and it lands in your Terrarium. */
+
+var MICRO_EGG = { "staph-aureus": "mb-cluster", "strep-pyogenes": "mb-chain", "vibrio-cholerae": "mb-comma", "borrelia-burgdorferi": "mb-coil", "lactobacillus": "mb-yog" };
+function microList(k) { return (typeof MICRO === "undefined" ? [] : MICRO).filter(function (m) { return m.k === k; }); }
+function microById(id) { return (typeof MICRO === "undefined" ? [] : MICRO).filter(function (m) { return m.id === id; })[0]; }
+function microFound() { return Prog.d.microFound || (Prog.d.microFound = {}); }
+/* opening one of the five marks the bug as found; claiming it is still up to you */
+function microEgg(id) {
+  var bid = MICRO_EGG[id]; if (!bid) return;
+  var F = microFound(); if (F[id]) return;
+  F[id] = Date.now();
+  if (typeof saveProg === "function") saveProg();
+  var b = typeof bugById === "function" ? bugById(bid) : null;
+  if (!b || b.id !== bid) return;
+  var el = document.createElement("div");
+  el.className = "toast microtoast"; el.setAttribute("role", "status");
+  el.innerHTML = '<strong>Secret bug found: ' + esc(b.name) + '</strong><span>It is waiting in your Terrarium.</span>';
+  document.body.appendChild(el);
+  setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 4600);
+  try { if (typeof gfxSnd === "function") gfxSnd("sparkle"); } catch (e) {}
+}
+function microView() {
+  if (S.micro) return microCard(S.micro);
+  var k = S.microK || "bact", kinds = typeof MICRO_KINDS !== "undefined" ? MICRO_KINDS : [];
+  var c = '<div class="subbar" role="tablist" aria-label="Microbiology">' + kinds.map(function (x) {
+    return '<button class="subtab" role="tab" aria-selected="' + (x[0] === k) + '" data-mk="' + x[0] + '">' + esc(x[1]) + '<span class="subn">' + microList(x[0]).length + '</span></button>';
+  }).join("") + '</div>';
+  var kd = kinds.filter(function (x) { return x[0] === k; })[0];
+  if (kd) c += '<p class="muted small">' + esc(kd[2]) + '</p>';
+  var L = microList(k), q = (S.microQ || "").trim().toLowerCase();
+  if (q) L = L.filter(function (m) { return (m.nm + " " + (m.also || "") + " " + (m.g || "") + " " + (m.causes || "")).toLowerCase().indexOf(q) >= 0; });
+  c += '<input class="search" id="microq" type="search" placeholder="Search ' + esc(kd ? kd[1].toLowerCase() : "") + ', diseases or features" aria-label="Search microbiology" value="' + esc(S.microQ || "") + '">';
+  if (!L.length) return c + '<p class="empty">Nothing matches that yet.</p>';
+  var byG = {}, order = [];
+  L.forEach(function (m) { var g = m.g || "Other"; if (!byG[g]) { byG[g] = []; order.push(g); } byG[g].push(m); });
+  order.forEach(function (g) {
+    c += '<h3 class="eh small">' + esc(g) + '</h3><div class="grid">' + byG[g].map(function (m) {
+      return '<button class="tile" data-micro="' + esc(m.id) + '"><span class="nm">' + esc(m.nm) + '</span>' + (m.also ? '<span class="aka">' + esc(m.also) + '</span>' : '') + '<span class="cl">' + esc(String(m.plain || "").split(/(?<=\.)\s/)[0]) + '</span></button>';
+    }).join("") + '</div>';
+  });
+  return c + '<p class="muted small nrfine">Draft reference for study. Every card is being reviewed; confirm against a current microbiology or infectious disease source before relying on it.</p>';
+}
+function microRow(k, v) { return v ? '<div class="f"><div class="k">' + esc(k) + '</div><div class="v">' + esc(v) + '</div></div>' : ""; }
+function microCard(id) {
+  var m = microById(id); if (!m) { S.micro = null; return microView(); }
+  var c = '<button class="linkish subback" data-act="microback">&larr; All ' + esc(((typeof MICRO_KINDS !== "undefined" ? MICRO_KINDS : []).filter(function (x) { return x[0] === m.k; })[0] || ["", "organisms"])[1]).toLowerCase() + '</button>';
+  c += '<header class="pagehead"><h1>' + esc(m.nm) + '</h1>' + (m.also ? '<p class="muted">' + esc(m.also) + '</p>' : '') + '</header>';
+  if (m.cls) c += '<p class="scopenote">' + esc(m.cls) + '</p>';
+  if (m.plain) c += '<p class="plain">' + esc(m.plain) + '</p>';
+  c += '<details class="sec go" open><summary>What it is and what it does</summary><div class="fields">' +
+    microRow("Where it lives", m.live) + microRow("How it spreads", m.spread) + microRow("What it causes", m.causes) + '</div></details>';
+  c += '<details class="sec"><summary>Mechanism and virulence</summary><div class="fields">' + microRow("How it causes harm", m.mech) + '</div></details>';
+  c += '<details class="sec"><summary>Finding it</summary><div class="fields">' + microRow("In the lab", m.lab) + microRow("Mistaken for", m.look) + '</div></details>';
+  c += '<details class="sec dose"><summary>Treatment and prevention</summary><div class="fields">' +
+    microRow("First line", m.tx) + microRow("Alternatives", m.alt) + microRow("Resistance", m.res) + microRow("Prevention", m.prev) + '</div></details>';
+  if (m.mem && m.mem.length) c += '<details class="sec" open><summary>High yield</summary><div class="fields">' + m.mem.map(function (x) { return microRow(x[0], x[1]); }).join("") + '</div></details>';
+  if (m.worm && m.worm.length) c += '<details class="sec"><summary>The Wormhole</summary><div class="fields">' + m.worm.map(function (x) { return '<div class="f wf"><div class="k">' + esc(x[0]) + '</div><div class="v">' + esc(x[1]) + '</div></div>'; }).join("") + '</div></details>';
+  c += '<p class="muted small nrfine">Draft reference for study, not a treatment guide. Education only.</p>';
+  return c;
+}
+/* clicks */
+function microClick(t, a) {
+  if (a.mk) { S.microK = a.mk; S.micro = null; S.microQ = ""; render(); try { window.scrollTo(0, 0); } catch (e) {} return true; }
+  if (a.micro) { S.micro = a.micro; microEgg(a.micro); render(); try { window.scrollTo(0, 0); } catch (e) {} return true; }
+  if (a.act === "microback") { S.micro = null; render(); try { window.scrollTo(0, 0); } catch (e) {} return true; }
+  return false;
+}
+document.addEventListener("input", function (e) { if (e.target && e.target.id === "microq") { S.microQ = e.target.value; clearTimeout(S.microT); S.microT = setTimeout(function () { var p = e.target.selectionStart; render(); var f = document.getElementById("microq"); if (f) { f.focus(); try { f.setSelectionRange(p, p); } catch (x) {} } }, 250); } });
 
 
 /* ---------- boot ---------- */
