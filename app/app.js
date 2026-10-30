@@ -8506,7 +8506,9 @@ function gfxSnd(kind) {
   if (typeof SET !== "function" || !SET().sfx) return;
   try {
     var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
-    var c = SFX.ctx || (SFX.ctx = new AC()), t = c.currentTime;
+    var c = SFX.ctx || (SFX.ctx = new AC());
+    if (c.state === "suspended") { try { c.resume(); } catch (e) {} }
+    var t = c.currentTime;
     function tone(type, f0, f1, at, dur, v) { var o = c.createOscillator(), g = c.createGain(); o.type = type; o.frequency.setValueAtTime(f0, t + at); if (f1) o.frequency.exponentialRampToValueAtTime(f1, t + at + dur); g.gain.setValueAtTime(0.0001, t + at); g.gain.exponentialRampToValueAtTime(v || 0.15, t + at + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + at + dur); o.connect(g); g.connect(c.destination); o.start(t + at); o.stop(t + at + dur + 0.02); }
     function noise(at, dur, v, fq) { var n = c.sampleRate * dur, b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0); for (var i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n); var s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(); s.buffer = b; f.type = "lowpass"; f.frequency.value = fq || 900; g.gain.value = v || 0.25; s.connect(f); f.connect(g); g.connect(c.destination); s.start(t + at); }
     if (kind === "pop") tone("sine", 520, 1100, 0, 0.09, 0.16);
@@ -8521,7 +8523,10 @@ function gfxSnd(kind) {
     else if (kind === "sparkle") [1568, 2093, 2637].forEach(function (f, i) { tone("sine", f, 0, i * 0.06, 0.12, 0.07); });
     /* smoke grenade: the spoon pops, then the canister hisses as it builds (owner, Oct 30 2026) */
     else if (kind === "smokebomb") {
-      tone("square", 210, 58, 0, 0.07, 0.2); tone("sine", 120, 46, 0.01, 0.12, 0.14);
+      tone("square", 240, 62, 0, 0.06, 0.26); tone("sine", 130, 44, 0.01, 0.13, 0.2);   /* the spoon lets go */
+      noise(0, 0.05, 0.4, 2600);                                                          /* the crack of the pop */
+      tone("square", 300, 90, 0.13, 0.05, 0.16); noise(0.13, 0.04, 0.26, 2000);           /* it hits the ground */
+      tone("square", 260, 80, 0.23, 0.04, 0.12); noise(0.23, 0.035, 0.2, 1800);           /* and bounces once */
       var hn = Math.floor(c.sampleRate * 0.75), hb = c.createBuffer(1, hn, c.sampleRate), hd = hb.getChannelData(0), hi;
       for (hi = 0; hi < hn; hi++) { var u = hi / hn, env = u < 0.12 ? u / 0.12 : Math.pow(1 - (u - 0.12) / 0.88, 1.6); hd[hi] = (Math.random() * 2 - 1) * env; }
       var hs = c.createBufferSource(), hf = c.createBiquadFilter(), hp = c.createBiquadFilter(), hg = c.createGain();
@@ -22514,12 +22519,13 @@ function gfxSmokeBomb(from, done) {
   w.className = "smokebomb";
   w.setAttribute("aria-hidden", "true");
   var PUFF = [[0, -10, 1.00, 0], [-52, 22, 0.86, 30], [54, 16, 0.90, 46], [-26, -54, 0.78, 62], [30, -46, 0.82, 78], [4, 48, 0.94, 94]], i, c = '<span class="skhaze"></span>';
+  /* the bug is painted first, so every puff drawn after it passes in front and swallows him */
+  c += '<span class="skbug" style="left:' + r.cx + 'px;top:' + r.cy + 'px">' + gfxLevelBug("cpp") + '</span>';
   c += '<span class="skcan" style="left:' + r.cx + 'px;top:' + r.cy + 'px"></span>';
   for (i = 0; i < PUFF.length; i++) {
     var q = PUFF[i];
     c += '<span class="skpuff" style="left:' + (r.cx + q[0]) + 'px;top:' + (r.cy + q[1]) + 'px;--s:' + q[2] + ';animation-delay:' + q[3] + 'ms"></span>';
   }
-  c += '<span class="skbug" style="left:' + r.cx + 'px;top:' + r.cy + 'px">' + gfxLevelBug("cpp") + '</span>';
   w.innerHTML = c;
   document.body.appendChild(w);
   try { if (typeof gfxSnd === "function") gfxSnd("smokebomb"); } catch (e) {}
