@@ -5858,7 +5858,7 @@ function printClick(t, a) { if (a.print) { openPrint(a.print); return true; } re
 
 /* ---------- Settings: display, study preferences, sound, protocols, printing, privacy & account, about ---------- */
 var APP_VERSION = "1.1", APP_DATE = "2026-10-10";
-var SET_DEF = { text: "normal", contrast: false, motion: false, homeLevel: "", dailyGoal: 10, nrN: 25, nrMode: "practice", adaptive: true, megaTimer: "on", fullDefault: false, voiceRate: "normal", showPhon: true, sfx: false, music: true, musicVol: 40, printMode: "cards", printLang: "auto", printDense: false, state: "", buddy: true, weird: true, weirdAt: "12:00" };
+var SET_DEF = { text: "normal", contrast: false, motion: false, homeLevel: "", dailyGoal: 10, nrN: 25, nrMode: "practice", adaptive: true, megaTimer: "on", fullDefault: false, voiceRate: "normal", showPhon: true, sfx: true, music: true, musicVol: 40, printMode: "cards", printLang: "auto", printDense: false, state: "", buddy: true, weird: true, weirdAt: "12:00" };
 function SET() { var s = store("settings") || {}; return Object.assign({}, SET_DEF, s); }
 function setSet(k, v) { var s = SET(); s[k] = v; store("settings", s); applySettings(); if (k === "music" || k === "musicVol") muSync(); if (k === "remind" || k === "remindAt") remindSync(); if ((k === "weird" || k === "weirdAt") && typeof wdwSync === "function") wdwSync(); }
 /* daily study reminder (iPhone app): the app tells iOS what to say; iOS shows it at the chosen time */
@@ -5961,7 +5961,7 @@ function settingsView() {
     setRow("Written pronunciation", "Shows a guide like ep-ih-NEF-rin.", setTog("showPhon", s.showPhon, "Show pronunciation")) +
     setRow("Bug buddy", "Your bug on the side of the screen, reacting to your answers.", setTog("buddy", s.buddy, "Show my bug buddy")) +
     setRow("Background music", "Relaxed lo-fi beats while you study. You can also tap the music note at the top of any page.", setTog("music", s.music !== false, "Background music") + '<label class="muvol"><span>Volume</span><input type="range" min="0" max="100" step="5" id="muvolset" value="' + muLevel() + '" aria-label="Music volume"><output id="muvolsetv">' + muLevel() + '%</output></label>') +
-    setRow("Sound effects", "A short tone for right and wrong answers.", setTog("sfx", s.sfx, "Sound effects") + ' <button class="btn small ghost" data-act="sfxtest">Test</button>'));
+    setRow("Sound effects", "Answer tones, the game sounds and the level transitions.", setTog("sfx", s.sfx, "Sound effects") + ' <button class="btn small ghost" data-act="sfxtest">Test</button>'));
   // protocols
   var ap = activeProtocol(), sets = PS.sets.filter(function (p) { return p.status !== "unpublished"; });
   c += setCard("protocols", "Protocols",
