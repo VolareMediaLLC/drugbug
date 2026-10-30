@@ -38,7 +38,11 @@ details{background:var(--surface);border:1px solid var(--line);border-radius:12p
 .schools,.about,.faqh{margin-top:40px}
 .schools{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px 24px}
 .schools h2,.about h2,.faqh h2{margin-top:0}
-.about p{color:var(--muted);max-width:68ch}
+.about p{color:var(--muted);max-width:62ch}
+.abgrid{display:grid;grid-template-columns:260px 1fr;gap:26px;align-items:start}
+.abgrid img{width:100%;height:auto;border-radius:18px;border:1px solid var(--line);box-shadow:0 10px 30px rgba(0,0,0,.3);display:block}
+.abgrid h2{margin-top:0}
+@media (max-width:640px){.abgrid{grid-template-columns:1fr}.abgrid img{max-width:280px;margin:0 auto}}
 .about p.muted{font-size:15px}
 .btn:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
 @media (max-width:640px){.shots figure{flex-basis:200px}.shots img{width:200px}}
@@ -61,10 +65,13 @@ details{background:var(--surface);border:1px solid var(--line);border-radius:12p
 <ul class="perks"><li>Every route and every level, for every student</li><li>One tool across a whole curriculum instead of one per course</li><li>Questions levelled to each student's role, so a first-year and a senior get different work</li></ul>
 <p><a class="btn" href="mailto:VolareMediaLLC@gmail.com?subject=DrugBug%20for%20our%20program">Ask about group access</a></p></section>
 
-<section class="about"><h2>Who makes this</h2>
-<p>DrugBug is built by a working Paramedic, FP-C, who got tired of pharmacology being taught as a list to memorise. Every drug page says what the medicine actually does in the body, in plain language, before it says anything else.</p>
-<p>Content is drafted carefully, cited to FDA labeling where a dose is involved, and corrected when someone reports an error. There is a Report an error button on every drug page and every question, and every report is read.</p>
-<p class="muted">DrugBug is for study only. It is not a medical device and is not for clinical decision-making or patient care.</p></section>
+<section class="about"><div class="abgrid"><img src="adam.jpg" alt="Adam, the Paramedic who built DrugBug, hiking with his dog" loading="lazy" width="900" height="1124">
+<div><h2>Who makes this</h2>
+<p>I kept coming across medications I don&rsquo;t normally use, and I wanted a way to make them feel familiar. So I started building something that would put them in front of me often enough to get comfortable with them.</p>
+<p>The further I got, the more it became something I needed to share. DrugBug began to hatch.</p>
+<p>Every drug page says what the medicine actually does in the body, in plain language, before it says anything else. Doses are cited to FDA labeling, and there is a Report an error button on every drug page and every question. Every report is read.</p>
+<p class="muted">&mdash; Adam, Paramedic, FP-C</p>
+<p class="muted">DrugBug is for study only. It is not a medical device and is not for clinical decision-making or patient care.</p></div></div></section>
 
 <section class="faqh"><h2>Common questions</h2>
 <details><summary>Do I need to install anything to try it?</summary><p>No. <a href="app/">Open it in your browser</a>, pick a route and start. No account, no download.</p></details>
