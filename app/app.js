@@ -1468,7 +1468,12 @@ document.addEventListener("click", function (e) {
   if (a.nradapt != null) { nrState().adaptive = a.nradapt === "1"; return render(); }
   if (a.golist) { if (typeof proLocked === "function" && proLocked("mylist")) return openPaywall(tabName("mylist"), tabTier("mylist")); return go("gen", { tab: "mylist" }); }
   if (a.go) return go(a.go);
-  if (a.level) { if (a.level === "flight" && typeof gfxBlastOff === "function" && S.view !== "level") return gfxBlastOff(t, function () { go("level", { level: "flight" }); }); return go("level", { level: a.level }); }
+  if (a.level) {
+    var LVFX = { flight: "blast", flightrn: "blast", cpp: "smoke" }, fx = S.view !== "level" ? LVFX[a.level] : null, lk = a.level;
+    if (fx === "blast" && typeof gfxBlastOff === "function") return gfxBlastOff(t, lk, function () { go("level", { level: lk }); });
+    if (fx === "smoke" && typeof gfxSmokeBomb === "function") return gfxSmokeBomb(t, function () { go("level", { level: lk }); });
+    return go("level", { level: a.level });
+  }
   if (a.unitopen) { S.unit = a.unitopen; render(); return window.scrollTo(0, 0); }
   if (a.myunit) { var mu0 = store("nunit"); store("nunit", mu0 === a.myunit ? "" : a.myunit); UNITC = {}; return render(); }
   if (a.tab && proLocked(a.tab)) { var tn = tabName(a.tab); return openPaywall(tn, tabTier(a.tab)); }
@@ -8514,6 +8519,26 @@ function gfxSnd(kind) {
     else if (kind === "win") [523, 659, 784, 1047].forEach(function (f, i) { tone("triangle", f, 0, i * 0.09, 0.18, 0.13); });
     else if (kind === "zip") tone("sine", 400, 1600, 0, 0.18, 0.08);
     else if (kind === "sparkle") [1568, 2093, 2637].forEach(function (f, i) { tone("sine", f, 0, i * 0.06, 0.12, 0.07); });
+    /* smoke grenade: the spoon pops, then the canister hisses as it builds (owner, Oct 30 2026) */
+    else if (kind === "smokebomb") {
+      tone("square", 210, 58, 0, 0.07, 0.2); tone("sine", 120, 46, 0.01, 0.12, 0.14);
+      var hn = Math.floor(c.sampleRate * 0.75), hb = c.createBuffer(1, hn, c.sampleRate), hd = hb.getChannelData(0), hi;
+      for (hi = 0; hi < hn; hi++) { var u = hi / hn, env = u < 0.12 ? u / 0.12 : Math.pow(1 - (u - 0.12) / 0.88, 1.6); hd[hi] = (Math.random() * 2 - 1) * env; }
+      var hs = c.createBufferSource(), hf = c.createBiquadFilter(), hp = c.createBiquadFilter(), hg = c.createGain();
+      hs.buffer = hb; hf.type = "bandpass"; hf.frequency.value = 4200; hf.Q.value = 0.6; hp.type = "highpass"; hp.frequency.value = 1400; hg.gain.value = 0.3;
+      hs.connect(hf); hf.connect(hp); hp.connect(hg); hg.connect(c.destination); hs.start(t + 0.03);
+    }
+    /* helicopter: rotor thump under rushing air, for the flight launches */
+    else if (kind === "rotor") {
+      var rd = 0.95, rn = Math.floor(c.sampleRate * rd), rb = c.createBuffer(1, rn, c.sampleRate), rdat = rb.getChannelData(0), ri;
+      for (ri = 0; ri < rn; ri++) { var ru = ri / rn, renv = ru < 0.1 ? ru / 0.1 : Math.pow(1 - (ru - 0.1) / 0.9, 1.3); rdat[ri] = (Math.random() * 2 - 1) * renv; }
+      var rs = c.createBufferSource(), rf = c.createBiquadFilter(), rg = c.createGain(), lfo = c.createOscillator(), lg2 = c.createGain();
+      rs.buffer = rb; rf.type = "lowpass"; rf.frequency.value = 1500; rg.gain.value = 0.22;
+      lfo.type = "sawtooth"; lfo.frequency.setValueAtTime(11, t); lfo.frequency.linearRampToValueAtTime(17, t + rd); lg2.gain.value = 0.2;
+      lfo.connect(lg2); lg2.connect(rg.gain);
+      rs.connect(rf); rf.connect(rg); rg.connect(c.destination); rs.start(t); lfo.start(t); lfo.stop(t + rd);
+      tone("sine", 58, 44, 0, 0.9, 0.1);
+    }
   } catch (e) {}
 }
 
@@ -22456,25 +22481,52 @@ if (typeof render === "function") (function () { var r = render; render = functi
 
 /* ===== Flight Paramedic: the Sky Hornet blasts off, and the launch covers the page change =====
    Fired from the level card. Total time about 560 ms, then the level is already rendered behind it. */
-function gfxBlastOff(from, done) {
+function gfxLevelBug(key) { try { return typeof levelBug === "function" ? levelBug(key) : ""; } catch (e) { return ""; } }
+function gfxBlastOff(from, key, done) {
   if (typeof gfxReduce === "function" && gfxReduce()) return done();
   var r = typeof gfxRect === "function" ? gfxRect(from) : null;
   if (!r) return done();
-  var bug = "";
-  try { bug = typeof levelBug === "function" ? levelBug("flight") : ""; } catch (e) {}
+  var bug = gfxLevelBug(key);
   if (!bug) return done();
 
   var w = document.createElement("div");
-  w.className = "blastoff";
+  w.className = "blastoff bo-" + key;
   w.setAttribute("aria-hidden", "true");
   w.innerHTML = '<span class="bowash"></span><span class="borig" style="left:' + r.cx + 'px;top:' + r.cy + 'px">' +
-    '<span class="boflame"></span><span class="bobug">' + bug + '</span></span>';
+    '<span class="borotor"><i></i><i></i></span><span class="boflame"></span><span class="bobug">' + bug + '</span></span>';
   document.body.appendChild(w);
-  try { if (typeof gfxSnd === "function") gfxSnd("pop"); } catch (e) {}
+  try { if (typeof gfxSnd === "function") { gfxSnd("rotor"); setTimeout(function () { gfxSnd("whoosh"); }, 110); } } catch (e) {}
 
   setTimeout(function () { done(); }, 270);          /* page swaps at the peak of the wash */
   setTimeout(function () { w.classList.add("boout"); }, 340);
   setTimeout(function () { if (w.parentNode) w.parentNode.removeChild(w); }, 660);
+}
+
+/* ===== Combat Paramedic: smoke bomb, then you step through the cloud into the tier =====
+   The canister pops at the card, six puffs bloom out to cover the screen, the page changes
+   behind the thickest part of it, and the smoke thins out. About 700 ms end to end. */
+function gfxSmokeBomb(from, done) {
+  if (typeof gfxReduce === "function" && gfxReduce()) return done();
+  var r = typeof gfxRect === "function" ? gfxRect(from) : null;
+  if (!r) return done();
+
+  var w = document.createElement("div");
+  w.className = "smokebomb";
+  w.setAttribute("aria-hidden", "true");
+  var PUFF = [[0, -10, 1.00, 0], [-52, 22, 0.86, 30], [54, 16, 0.90, 46], [-26, -54, 0.78, 62], [30, -46, 0.82, 78], [4, 48, 0.94, 94]], i, c = '<span class="skhaze"></span>';
+  c += '<span class="skcan" style="left:' + r.cx + 'px;top:' + r.cy + 'px"></span>';
+  for (i = 0; i < PUFF.length; i++) {
+    var q = PUFF[i];
+    c += '<span class="skpuff" style="left:' + (r.cx + q[0]) + 'px;top:' + (r.cy + q[1]) + 'px;--s:' + q[2] + ';animation-delay:' + q[3] + 'ms"></span>';
+  }
+  c += '<span class="skbug" style="left:' + r.cx + 'px;top:' + r.cy + 'px">' + gfxLevelBug("cpp") + '</span>';
+  w.innerHTML = c;
+  document.body.appendChild(w);
+  try { if (typeof gfxSnd === "function") gfxSnd("smokebomb"); } catch (e) {}
+
+  setTimeout(function () { done(); }, 300);          /* the page changes inside the thickest part of the cloud */
+  setTimeout(function () { w.classList.add("skout"); }, 450);
+  setTimeout(function () { if (w.parentNode) w.parentNode.removeChild(w); }, 820);
 }
 
 
