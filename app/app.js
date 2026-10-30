@@ -1468,7 +1468,7 @@ document.addEventListener("click", function (e) {
   if (a.nradapt != null) { nrState().adaptive = a.nradapt === "1"; return render(); }
   if (a.golist) { if (typeof proLocked === "function" && proLocked("mylist")) return openPaywall(tabName("mylist"), tabTier("mylist")); return go("gen", { tab: "mylist" }); }
   if (a.go) return go(a.go);
-  if (a.level) return go("level", { level: a.level });
+  if (a.level) { if (a.level === "flight" && typeof gfxBlastOff === "function" && S.view !== "level") return gfxBlastOff(t, function () { go("level", { level: "flight" }); }); return go("level", { level: a.level }); }
   if (a.unitopen) { S.unit = a.unitopen; render(); return window.scrollTo(0, 0); }
   if (a.myunit) { var mu0 = store("nunit"); store("nunit", mu0 === a.myunit ? "" : a.myunit); UNITC = {}; return render(); }
   if (a.tab && proLocked(a.tab)) { var tn = tabName(a.tab); return openPaywall(tn, tabTier(a.tab)); }
@@ -22410,6 +22410,72 @@ document.addEventListener("click", function (e) {
 
 /* Medications & Blood: blood products and topics sit under the medication board (owner: combine the tabs) */
 /* Medications and Blood are separate tabs again, Oct 29 2026 (owner) */
+
+/* ===== Eye tracking + Flight Paramedic launch transition (owner, Oct 30 2026) =====
+   Every bug's pupils follow the pointer. Pupils are already wrapped in <g class="pupils">
+   by eyes() in app.js and eyeBall() in buddy.js, so nothing in the drawing code changes.
+   A CSS transform on an SVG <g> works in the element's own user space, so the offset is
+   given in viewBox units (bugs are drawn on a 200x200 box) and scales with the bug. */
+
+var EYE_MAX = 3.6;      /* viewBox units a pupil may travel from centre */
+var EYE_NEAR = 220;     /* px: closer than this and the eyes are at full stretch */
+var EYE_P = { x: -1, y: -1 }, EYE_RAF = 0, EYE_LIVE = 0;
+
+function eyeTrackOn() {
+  if (typeof gfxReduce === "function" && gfxReduce()) return false;
+  return !(window.matchMedia && matchMedia("(hover: none)").matches); /* no pointer to follow on touch */
+}
+function eyeFrame() {
+  EYE_RAF = 0;
+  var gs = document.querySelectorAll(".pupils"), vh = window.innerHeight, vw = window.innerWidth, i, n = 0;
+  for (i = 0; i < gs.length; i++) {
+    var g = gs[i], b;
+    try { b = g.getBoundingClientRect(); } catch (e) { continue; }
+    if (!b.width || b.bottom < -40 || b.top > vh + 40 || b.right < -40 || b.left > vw + 40) continue; /* offscreen: skip */
+    var cx = b.left + b.width / 2, cy = b.top + b.height / 2;
+    var dx = EYE_P.x - cx, dy = EYE_P.y - cy, d = Math.sqrt(dx * dx + dy * dy);
+    if (!d) continue;
+    var k = Math.min(1, d / EYE_NEAR) * EYE_MAX;
+    g.style.transform = "translate(" + (dx / d * k).toFixed(2) + "px," + (dy / d * k).toFixed(2) + "px)";
+    n++;
+  }
+  EYE_LIVE = n;
+}
+function eyeLook(x, y) {
+  if (!eyeTrackOn()) return;
+  EYE_P.x = x; EYE_P.y = y;
+  if (!EYE_RAF) EYE_RAF = requestAnimationFrame(eyeFrame);
+}
+try {
+  document.addEventListener("pointermove", function (e) { if (e.pointerType !== "touch") eyeLook(e.clientX, e.clientY); }, { passive: true });
+  document.addEventListener("scroll", function () { if (EYE_P.x >= 0) eyeLook(EYE_P.x, EYE_P.y); }, { passive: true, capture: true });
+  window.addEventListener("resize", function () { if (EYE_P.x >= 0) eyeLook(EYE_P.x, EYE_P.y); }, { passive: true });
+} catch (e) {}
+/* after any re-render the pupils are fresh elements, so point them again */
+if (typeof render === "function") (function () { var r = render; render = function () { var v = r.apply(this, arguments); if (EYE_P.x >= 0) eyeLook(EYE_P.x, EYE_P.y); return v; }; })();
+
+/* ===== Flight Paramedic: the Sky Hornet blasts off, and the launch covers the page change =====
+   Fired from the level card. Total time about 560 ms, then the level is already rendered behind it. */
+function gfxBlastOff(from, done) {
+  if (typeof gfxReduce === "function" && gfxReduce()) return done();
+  var r = typeof gfxRect === "function" ? gfxRect(from) : null;
+  if (!r) return done();
+  var bug = "";
+  try { bug = typeof levelBug === "function" ? levelBug("flight") : ""; } catch (e) {}
+  if (!bug) return done();
+
+  var w = document.createElement("div");
+  w.className = "blastoff";
+  w.setAttribute("aria-hidden", "true");
+  w.innerHTML = '<span class="bowash"></span><span class="borig" style="left:' + r.cx + 'px;top:' + r.cy + 'px">' +
+    '<span class="boflame"></span><span class="bobug">' + bug + '</span></span>';
+  document.body.appendChild(w);
+  try { if (typeof gfxSnd === "function") gfxSnd("pop"); } catch (e) {}
+
+  setTimeout(function () { done(); }, 270);          /* page swaps at the peak of the wash */
+  setTimeout(function () { w.classList.add("boout"); }, 340);
+  setTimeout(function () { if (w.parentNode) w.parentNode.removeChild(w); }, 660);
+}
 
 
 /* ---------- boot ---------- */
