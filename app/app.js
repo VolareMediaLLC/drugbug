@@ -172,7 +172,7 @@ function antennae(c, curl) {
   if (curl) return '<path d="M90 48 Q78 20 64 26 Q56 32 64 36" stroke="' + c + '" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M110 48 Q122 20 136 26 Q144 32 136 36" stroke="' + c + '" stroke-width="4" fill="none" stroke-linecap="round"/>';
   return '<path d="M90 48 Q80 24 68 20" stroke="' + c + '" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M110 48 Q120 24 132 20" stroke="' + c + '" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="68" cy="20" r="6" fill="' + c + '"/><circle cx="132" cy="20" r="6" fill="' + c + '"/>';
 }
-var BOOTED = 0;   /* the boot splash is replaced by the first real render (owner, Oct 30 2026) */
+var BOOTED = 0, LAST_ERR = "";   /* the boot splash is replaced by the first real render (owner, Oct 30 2026) */
 var IMBUG = { flightrn: { name: "Night Monarch", body: "butterfly", c: ["#f59e0b", "#7c2d12", "#fff7ed"], head: "#fb923c", ink: "#1c1917", wingC: "#fdba74", eyes: "fierce", acc: ["jethelmet", "aviscarf", "stetho"] }, rt: { name: "X-Ray Firefly", body: "firefly", c: ["#7dd3fc", "#0369a1", "#e0f2fe"], acc: ["goggles"] }, ct: { name: "Spiral Scarab", body: "scarab", c: ["#a5b4fc", "#4338ca", "#ffffff"], acc: ["headset"] }, mri: { name: "Magnet Moth", body: "moth", c: ["#c4b5fd", "#6d28d9", "#f5f3ff"], acc: ["bolt"] }, nm: { name: "Glow Worm", body: "caterpillar", c: ["#bef264", "#4d7c0f", "#ffffff"], acc: ["stars"] }, ir: { name: "Cath Cricket", body: "grasshopper", c: ["#5eead4", "#0f766e", "#ffffff"], acc: ["mask"] } };
 function bugSVG(kind) {
   if (IMBUG[kind] && typeof bugArt === "function") return bugArt(IMBUG[kind], "bug", { mood: "happy" });
@@ -1407,7 +1407,22 @@ function closeSheet() { sheet.hidden = true; sheet.innerHTML = ""; S.sheet = nul
 /* ---------- render & events ---------- */
 function render() {
   var ok = agreeRec(); protoTab.hidden = !ok; protoTab.textContent = lang() === "es" ? "Protocolos" : "Protocols"; document.documentElement.lang = lang();
-  var html = needDisc() ? discView() : !ok && S.view !== "legal" ? gateView() : S.view === "legal" ? legalView() : (typeof needFun === "function" && needFun()) ? funView() : needRole() ? roleView() : S.view === "home" ? viewHome() : (S.view === "levels" || S.view === "flevels" || S.view === "nlevels" || S.view === "mlevels" || S.view === "ilevels") ? viewLevels() : S.view === "easy" ? viewEasy() : S.view === "admin" ? viewAdmin() : S.view === "classes" ? classesView() : S.view === "settings" ? settingsView() : S.view === "terrarium" ? ((typeof funOn === "function" && !funOn()) ? (S.view = "home", viewHome()) : terrariumView()) : S.view === "everyday" ? evView() : S.view === "field" && typeof fieldView === "function" ? fieldView() : viewLevel();
+  var html;
+  /* A screen that fails to build used to leave the last one frozen on the page: the state had
+     already moved on, so buttons did nothing and nothing explained why. Now it says so and offers
+     a way out. (owner reported Flight Paramedic doing this, Oct 30 2026) */
+  try {
+    html = needDisc() ? discView() : !ok && S.view !== "legal" ? gateView() : S.view === "legal" ? legalView() : (typeof needFun === "function" && needFun()) ? funView() : needRole() ? roleView() : S.view === "home" ? viewHome() : (S.view === "levels" || S.view === "flevels" || S.view === "nlevels" || S.view === "mlevels" || S.view === "ilevels") ? viewLevels() : S.view === "easy" ? viewEasy() : S.view === "admin" ? viewAdmin() : S.view === "classes" ? classesView() : S.view === "settings" ? settingsView() : S.view === "terrarium" ? ((typeof funOn === "function" && !funOn()) ? (S.view = "home", viewHome()) : terrariumView()) : S.view === "everyday" ? evView() : S.view === "field" && typeof fieldView === "function" ? fieldView() : viewLevel();
+  } catch (err) {
+    LAST_ERR = (err && (err.message || err)) + "";
+    try { if (window.console) console.error("DrugBug render failed:", err); } catch (e) {}
+    html = '<section class="rendererr"><h2>That page did not open</h2>' +
+      '<p>Something went wrong building this screen, so it stopped rather than showing you half of it.</p>' +
+      '<p class="muted small">' + esc(LAST_ERR) + '</p>' +
+      '<div class="actions"><button class="btn" data-act="errhome">Back to the main menu</button>' +
+      '<button class="btn ghost" data-act="errreload">Reload the app</button>' +
+      '<button class="btn ghost" data-report="Render error: ' + esc(LAST_ERR) + '">Report this</button></div></section>';
+  }
   app.innerHTML = html + footer();
   if (BOOTED !== 1) { BOOTED = 1; try { document.body.classList.add("ready"); } catch (e) {} }
   if (typeof tourMaybe === "function") tourMaybe();
@@ -1479,6 +1494,8 @@ document.addEventListener("click", function (e) {
   if (a.act === "lrnnext" && typeof learnNext === "function") return learnNext();
   if (a.act === "lrnstop" && typeof learnStop === "function") return learnStop();
   if (a.act === "lrnreset" && typeof learnReset === "function") return learnReset();
+  if (a.act === "errhome") { try { S.sheet = null; S.tab = "hub"; S.tool = null; S.micro = null; go("home"); } catch (e) { location.hash = ""; location.reload(); } return; }
+  if (a.act === "errreload") { try { location.reload(); } catch (e) {} return; }
   if (a.level) {
     var LVFX = { flight: "blast", flightrn: "blast", cpp: "smoke" }, fx = S.view !== "level" ? LVFX[a.level] : null, lk = a.level;
     /* the animation must never be able to swallow the tap: whatever happens, the level opens
@@ -22775,8 +22792,8 @@ var LRN_BANTER = [
 var LRN_ACR_REPLY = ["You have been working on that one.", "Still workshopping it, then.", "Better. Much better.", "Now you are just showing off.", "Nobody knows what that means."];
 function learnLines() {
   var ph = learnPhase(), set = (LRN_BANTER[ph] || LRN_BANTER[0]).slice();
-  set.unshift(["@ACR", LRN_ACR_REPLY[ph] || LRN_ACR_REPLY[0]]);   /* the acronym is just another thing he says */
-  /* a different line each time he speaks, and never the same one twice in a row (owner, Oct 30 2026) */
+  /* the acronym is an occasional treat, not his catchphrase: about one time in eight (owner, Oct 30 2026) */
+  if (Math.random() < 0.12 && LRN_LAST_LINE !== -2) { LRN_LAST_LINE = -2; return ["@ACR", LRN_ACR_REPLY[ph] || LRN_ACR_REPLY[0]]; }
   var pick = Math.floor(Math.random() * set.length);
   if (set.length > 1 && pick === LRN_LAST_LINE) pick = (pick + 1 + Math.floor(Math.random() * (set.length - 1))) % set.length;
   LRN_LAST_LINE = pick;
@@ -22872,6 +22889,7 @@ function learnChatter(force) {
   var now = Date.now();
   if (!force && now - LRN_SAID < 45000) return;   /* he is chatty, not annoying */
   LRN_SAID = now;
+  if (!force && Math.random() < 0.45) return;     /* and often he just stands there (owner, Oct 30 2026) */
   learnClearSay();
   var li = learnLines(), host = tab.querySelector(".lrnic") || tab;
   var say = document.createElement("span");
