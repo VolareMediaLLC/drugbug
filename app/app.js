@@ -527,13 +527,21 @@ var HUB_GROUPS = [
 ];
 var HUB_SHORT = { micro: "Bacteria, viruses, fungi, prions, parasites", fm_bio: "Bio, chem, rad and nuclear casualties", fm_ref: "Burns, vents, scores, handoff, K9, dive", medlist: "What a med list says about the patient", fm_store: "Heat, cold, light and mixing", fm_istat: "Values, cartridges and practice cases", fm_cond: "Trauma, medical and blood reactions, with types", fm_blood: "Whole blood, components, MTP, reactions", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "Saved drugs and their interactions", tools: "Questions, megacode, cards, games, drills", scenarios: "Clinical cases", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time" };
 function hubView() {
-  var L = tabList(), used = {}, c = (typeof learnTile === "function" ? learnTile() : "") + '<nav class="hub2" aria-label="Sections">';
+  var L = tabList(), used = {}, lead = (typeof learnTile === "function" ? learnTile() : "");
+  /* one search box across the whole tier, at the top of the Combat Paramedic menu (owner, Oct 31 2026).
+     With a query typed, the results replace the tiles; clearing it brings the menu back. */
+  if (S.view === "level" && isF(S.level) && typeof fmsBar === "function") {
+    lead += fmsBar();
+    if (String(S.fmQ || "").trim()) return lead;
+  } else if (S.fmQ) { S.fmQ = ""; }
+  var c = lead + '<nav class="hub2" aria-label="Sections">';
   function tile(t) {
     used[t[0]] = 1;
     var fmt = typeof FM_TABS !== "undefined" && (FM_TABS[t[0]] || (t[0] === "diseases" && S.view === "level" && isF(S.level)));
     return '<button class="hubtile t-' + t[0] + (fmt ? ' fmt' : '') + (proLocked(t[0]) ? ' locked' : '') + '" data-tab="' + t[0] + '">' + icon(t[0]) + '<span class="ht"><strong>' + esc(t[1]) + (proLocked(t[0]) ? ' ' + proBadge(t[0]) : '') + '</strong><span>' + esc(t[0] === "registry" && S.view !== "gen" ? (S.view === "level" && isF(S.level) ? "Every drug and blood product" : "Every drug in your scope") : hubShort(t[0]) || t[2]) + '</span></span>' + (t[0] === "shop" ? '<span class="hubsticks">' + stickIcon(14) + sticks().toLocaleString() + '</span>' : t[0] === "mylist" && marks().length ? '<span class="hubsticks">' + marks().length + '</span>' : '') + '</button>';
   }
   var fld = S.view === "level" && isF(S.level), groups = fld ? [["Look it up", ["registry", "fm_blood", "fm_cond", "fm_store", "fm_istat", "fm_bio", "fm_ref"]], ["Study and practice", ["tools"]]] : HUB_GROUPS;
+
   groups.forEach(function (g, gi) {
     var items = L.filter(function (t) { return g[1].indexOf(t[0]) >= 0; }); if (!items.length) return;
     c += '<h3 class="hubgh">' + esc(g[0]) + '</h3><div class="hub hubg' + (items.length % 2 ? ' odd' : '') + (items.length === 1 ? ' solo' : '') + (fld && gi === 2 ? ' minis' : '') + '">' + items.map(tile).join("") + '</div>';
@@ -1556,7 +1564,8 @@ document.addEventListener("click", function (e) {
     case "filters": S.showFilt = !S.showFilt; return render();
     case "clearfilt": S.tags = {}; S.onlyMarks = false; S.group = "all"; return render();
     case "unitsback": S.unit = null; render(); return window.scrollTo(0, 0);
-    case "hub": S.unit = null; S.fam = null; S.cn = null; S.tab = "hub"; S.scen = null; S.fc = null; S.mega = null; clearInterval(MC.timer); S.tool = null; S.shopF = null; render(); return window.scrollTo(0, 0);
+    case "fmsclear": S.fmQ = ""; render(); return window.scrollTo(0, 0);
+    case "hub": S.unit = null; S.fam = null; S.cn = null; S.tab = "hub"; S.scen = null; S.fc = null; S.mega = null; clearInterval(MC.timer); S.tool = null; S.shopF = null; S.fmQ = ""; render(); return window.scrollTo(0, 0);
     case "easy": S.menu = false; if (S.view !== "easy") { S.easyScope = S.view === "level" ? S.level : S.view === "gen" ? "gen" : "all"; S.easyQ = ""; go("easy"); } return;
     case "weakgo": var stw = nrState(); stw.mode = "practice"; nrStart(weakPool().slice(0, 20)); S.nr.kind = "weak"; render(); return window.scrollTo(0, 0);
     case "exedit": S.exEdit = true; return render();
@@ -2996,7 +3005,7 @@ var BODYFIT = {
 };
 function fitG(body, slot, hy, svg) {
   var F = BODYFIT[body] || BODYFIT.beetle, T = F.t, k, tr;
-  if (slot === "hat" || slot === "face" || slot === "neck") { k = F.r / 30; if (k === 1 && hy === 74) return svg; tr = "translate(" + (100 - 100 * k).toFixed(2) + " " + (hy - 74 * k).toFixed(2) + ") scale(" + k.toFixed(3) + ")"; }
+  if (slot === "hat" || slot === "face" || slot === "neck" || slot === "hair") { k = F.r / 30; if (k === 1 && hy === 74) return svg; tr = "translate(" + (100 - 100 * k).toFixed(2) + " " + (hy - 74 * k).toFixed(2) + ") scale(" + k.toFixed(3) + ")"; }
   else if (slot === "outfit") { var sx = T[2] / 46, sy = T[3] / 48; if (sx === 1 && sy === 1 && T[1] === 140) return svg; tr = "translate(" + (T[0] - 100 * sx).toFixed(2) + " " + (T[1] - 140 * sy).toFixed(2) + ") scale(" + sx.toFixed(3) + " " + sy.toFixed(3) + ")"; }
   else if (slot === "back") { k = Math.max(.6, Math.min(1.1, T[3] / 48)); if (k === 1 && T[1] === 140) return svg; tr = "translate(" + (T[0] - 100 * k).toFixed(2) + " " + (T[1] - 140 * k).toFixed(2) + ") scale(" + k.toFixed(3) + ")"; }
   else if (slot === "held") { if (!F.R) return svg; tr = "translate(" + (F.R[0] - 160) + " " + (F.R[1] - 145) + ")"; }
@@ -3188,7 +3197,7 @@ function bugArt(b, cls, opt) {
 
 
   accs.forEach(function (a) { if (a !== "stars" && ACC[a]) s += ACC[a](hy); });
-  ["outfit", "neck", "face", "hat", "left", "held"].forEach(function (sl) { var it = ITEMS_BY[wear[sl]]; if (it) s += fitG(t, sl, hy, itemSVG(it, 74)); });
+  ["outfit", "neck", "hair", "face", "hat", "left", "held"].forEach(function (sl) { var it = ITEMS_BY[wear[sl]]; if (it) s += fitG(t, sl, hy, itemSVG(it, 74)); });
   if (wear.fx && ITEMS_BY[wear.fx] && !ITEMS_BY[wear.fx].under) s += itemSVG(ITEMS_BY[wear.fx], hy);
   var dk = false, ol = '';
   var sk = st === 1 ? (t === "larva" ? .9 : .8) : st === 2 ? .9 : 1;
@@ -3554,7 +3563,29 @@ function bugFace(y, mood, b, faceItem) {
 /* wearable items: slot hat | face | neck | back | held | fx */
 var ACC_SLOT = { jethelmet: "hat", aviscarf: "neck", crown: "hat", halo: "hat", cap: "hat", helmet: "hat", headset: "hat", flame: "hat", goggles: "face", mask: "face", stetho: "neck", bowtie: "neck", scarf: "neck", stars: "fx" };
 function hatY(y) { return y - 26; }
+/* a ring of curls sitting on the head: used by every perm (owner, Oct 30 2026) */
+function permDraw(y, dark, light, big) {
+  var k = big || 1, out = "", i, pts = [[70, y - 4], [74, y - 20], [86, y - 32], [100, y - 37], [114, y - 32], [126, y - 20], [130, y - 4], [128, y + 10], [72, y + 10]];
+  out += '<path d="M68 ' + (y + 6) + ' Q66 ' + (y - 40 * k) + ' 100 ' + (y - 44 * k) + ' Q134 ' + (y - 40 * k) + ' 132 ' + (y + 6) + ' Q122 ' + (y - 14) + ' 100 ' + (y - 16) + ' Q78 ' + (y - 14) + ' 68 ' + (y + 6) + 'Z" fill="' + dark + '"/>';
+  for (i = 0; i < pts.length; i++) {
+    var cx = 100 + (pts[i][0] - 100) * k, cy = y + (pts[i][1] - y) * k, r = (i % 2 ? 10 : 8.5) * k;
+    out += '<circle cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="' + r.toFixed(1) + '" fill="' + dark + '"/>';
+    out += '<circle cx="' + (cx + 2.5).toFixed(1) + '" cy="' + (cy - 2.5).toFixed(1) + '" r="' + (r * 0.42).toFixed(1) + '" fill="' + light + '"/>';
+  }
+  return out;
+}
+
 var ITEMS = [
+  /* Perms. The bugs have hair now. (owner, Oct 30 2026)
+     Drawn as a ring of curls around the head, which sits at 100,y with r=30.
+     The hair slot renders under the hat slot, so a bug can wear a perm and a hard hat. */
+  // perms and hair
+  { id: "perm", name: "The Perm", slot: "hair", price: 120, blurb: "Tight, proud and freshly set. Nobody asked, and yet.", draw: function (y) { return permDraw(y, "#7c4a21", "#9c6433"); } },
+  { id: "permblonde", name: "Frosted Tips Perm", slot: "hair", price: 140, blurb: "The salon called it dimensional. It is not.", draw: function (y) { return permDraw(y, "#c89b50", "#f3dca0"); } },
+  { id: "permpoodle", name: "Poodle Perm", slot: "hair", price: 180, blurb: "Volume beyond what the head can structurally justify.", draw: function (y) { return permDraw(y, "#3b2a24", "#5b4038", 1.34); } },
+  { id: "permgrey", name: "Church Perm", slot: "hair", price: 160, blurb: "Lavender set, holds in any weather, smells faintly of hairspray.", draw: function (y) { return permDraw(y, "#b9b3d6", "#ded9f0"); } },
+  { id: "permmullet", name: "Permed Mullet", slot: "hair", price: 200, blurb: "Business on top. A full perm having a party out back.", draw: function (y) { var t = y - 26; return '<path d="M70 ' + (y - 2) + ' Q62 ' + (y + 40) + ' 78 ' + (y + 54) + ' Q86 ' + (y + 30) + ' 82 ' + (y + 4) + 'Z" fill="#5b3a1c"/><path d="M130 ' + (y - 2) + ' Q138 ' + (y + 40) + ' 122 ' + (y + 54) + ' Q114 ' + (y + 30) + ' 118 ' + (y + 4) + 'Z" fill="#5b3a1c"/>' + [[74, y + 14], [80, y + 32], [78, y + 48], [126, y + 14], [120, y + 32], [122, y + 48]].map(function (p) { return '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="8" fill="#6d4722"/><circle cx="' + (p[0] + 2) + '" cy="' + (p[1] - 2) + '" r="3.4" fill="#8a5c2e"/>'; }).join("") + '<path d="M72 ' + (t + 16) + ' Q100 ' + (t - 2) + ' 128 ' + (t + 16) + ' L128 ' + (t + 22) + ' Q100 ' + (t + 8) + ' 72 ' + (t + 22) + 'Z" fill="#5b3a1c"/>'; } },
+  { id: "permrollers", name: "Still In Curlers", slot: "hair", price: 150, blurb: "Caught mid-set. The perm is not ready and neither are you.", draw: function (y) { var t = y - 24, out = ""; [[80, t + 2, -22], [100, t - 8, 0], [120, t + 2, 22], [72, t + 22, -38], [128, t + 22, 38]].forEach(function (p) { out += '<g transform="rotate(' + p[2] + ' ' + p[0] + ' ' + p[1] + ')"><rect x="' + (p[0] - 9) + '" y="' + (p[1] - 7) + '" width="18" height="14" rx="6" fill="#ff7aa8"/><path d="M' + (p[0] - 9) + ' ' + (p[1] - 2) + ' h18 M' + (p[0] - 9) + ' ' + (p[1] + 3) + ' h18" stroke="#e14b84" stroke-width="2"/></g>'; }); return out; } },
   // hats
   { id: "beanie", name: "Cozy Beanie", slot: "hat", price: 60, draw: function (y) { var t = hatY(y); return '<path d="M72 ' + (t + 6) + ' Q72 ' + (t - 26) + ' 100 ' + (t - 28) + ' Q128 ' + (t - 26) + ' 128 ' + (t + 6) + 'Z" fill="#ef4444"/><rect x="70" y="' + t + '" width="60" height="10" rx="5" fill="#fca5a5"/><circle cx="100" cy="' + (t - 30) + '" r="7" fill="#fff"/>'; } },
   { id: "ballcap", name: "Ball Cap", slot: "hat", price: 80, draw: function (y) { var t = hatY(y); return '<path d="M74 ' + (t + 6) + ' Q74 ' + (t - 22) + ' 100 ' + (t - 22) + ' Q126 ' + (t - 22) + ' 126 ' + (t + 6) + 'Z" fill="#2563eb"/><path d="M118 ' + (t + 4) + ' Q146 ' + (t + 2) + ' 150 ' + (t + 10) + ' L120 ' + (t + 10) + 'Z" fill="#1e40af"/><circle cx="100" cy="' + (t - 21) + '" r="3" fill="#1e40af"/>'; } },
@@ -3765,7 +3796,7 @@ function itemSVG(it, y) {
 function bugAct(svg) { if (!svg || (typeof lvbStill === "function" && lvbStill())) return; svg.querySelectorAll(".ac").forEach(function (g) { g.style.animation = "none"; void g.getBoundingClientRect(); g.style.animation = ""; g.style.animationDelay = "-5.5s"; }); }
 document.addEventListener("click", function (e) { var b = e.target.closest && e.target.closest(".mybug, #buddy"); if (b) bugAct(b.querySelector("svg.bug") || b.querySelector("svg")); });
 var ITEMS_BY = {}; ITEMS.forEach(function (it) { ITEMS_BY[it.id] = it; });
-var SLOTS = [["outfit", "Outfits"], ["hat", "Hats"], ["face", "Eyewear"], ["neck", "Neck"], ["back", "Back"], ["left", "Other hand"], ["held", "In hand"], ["fx", "Effects"]];
+var SLOTS = [["outfit", "Outfits"], ["hair", "Perms & Hair"], ["hat", "Hats"], ["face", "Eyewear"], ["neck", "Neck"], ["back", "Back"], ["left", "Other hand"], ["held", "In hand"], ["fx", "Effects"]];
 function myWear() { return Prog.d.wear || {}; }
 function ownsItem(id) { return (Prog.d.items || []).indexOf(id) >= 0; }
 function buyItem(id) {
@@ -4952,7 +4983,10 @@ function syncAgree() { if (!agreeRec() && Prog.d.agree && Prog.d.agree.v === LEG
 /* disclosure: shown every time the app is opened (cold start, and coming back after the app was in the background);
    the button unlocks after 5 seconds */
 var DISC_SECS = 5, DISC_AWAY = 15000;
-function needDisc() { return !S.discOk && !window.__DRUGBUG_SKIP_DISC && S.view !== "legal"; }
+/* The education-only notice is acknowledged once and then stays acknowledged (owner, Oct 31 2026).
+   It is tied to LEGAL_V, so a change to the legal documents shows it once more. */
+function discRec() { var d = store("discok"); return d && d.v === LEGAL_V ? d : null; }
+function needDisc() { return !S.discOk && !discRec() && !window.__DRUGBUG_SKIP_DISC && S.view !== "legal"; }
 function discView() {
   if (!S.discT0) S.discT0 = Date.now();
   var left = Math.max(0, DISC_SECS - Math.floor((Date.now() - S.discT0) / 1000));
@@ -4973,7 +5007,7 @@ function discTick() {
 }
 function acceptDisc() {
   if (!S.discT0 || Date.now() - S.discT0 < DISC_SECS * 1000) return;
-  S.discOk = true;
+  S.discOk = true; store("discok", { v: LEGAL_V, ts: Date.now() });
   if (S.discSheet && S.sheet && typeof sheet !== "undefined" && sheet) { sheet.hidden = false; app.setAttribute("aria-hidden", "true"); } S.discSheet = false;
   if (typeof muGesture === "function") muGesture();
   render(); window.scrollTo(0, 0);
@@ -4983,7 +5017,8 @@ function acceptDisc() {
 
 document.addEventListener("visibilitychange", function () {
   if (document.hidden) { S.discAway = Date.now(); return; }
-  if (S.discAway && Date.now() - S.discAway >= DISC_AWAY && S.discOk) { S.discOk = false; S.discT0 = 0; clearInterval(S.discTimer); S.discTimer = null; if (S.sheet && typeof sheet !== "undefined" && sheet) { sheet.hidden = true; S.discSheet = true; app.removeAttribute("aria-hidden"); } if (typeof closePrint === "function" && document.body.classList.contains("printing")) closePrint(); if (typeof closePaywall === "function") closePaywall(); if (typeof wdwClose === "function") wdwClose(); if (typeof evoClose === "function") evoClose(); if (typeof closeReport === "function") closeReport(); render(); window.scrollTo(0, 0); }
+  /* The notice is shown once per app launch. It used to reappear after 15 seconds away, which
+     fired every time someone checked a message mid-shift (owner, Oct 31 2026). */
   S.discAway = 0;
 });
 
@@ -9493,6 +9528,7 @@ function deepView(id) {
   /* 6 memory */
   var mem = [["Memory trick", get(d, 16, 2)], ["Key fact", get(d, 16, 3)], ["Most-tested fact", get(d, 16, 4)], ["Often confused with", get(d, 16, 5)], ["Similar drugs", get(d, 16, 6)], ["Opposite / reversal", get(d, 16, 7)]].filter(function (x) { return deepOk(x[1]); });
   if (mem.length) c += deepSec("🧠", "Make it stick", '<div class="mem">' + mem.map(function (x) { return '<div><b>' + x[0] + ':</b> ' + esc(x[1]) + '</div>'; }).join("") + '</div>');
+  if (typeof qaSection === "function") c += qaSection(id);
   if (e && e.fun) c += '<div class="fun"><b>Fun fact:</b> ' + esc(e.fun) + '</div>';
   if (typeof disDrugSection === "function") c += disDrugSection(id);
   /* 7 sources */
@@ -21149,6 +21185,43 @@ var FM_REF = [
     ],
     src: ["TCCC Guidelines 2024, Respiration/Breathing", "ATLS 10th ed. (adult site 5th ICS)", "JTS Prolonged Casualty Care Guidelines"] },
 
+  { id: "chesttube", t: "Chest tube (tube thoracostomy)", cat: "Field care", kw: "chest tube, tube thoracostomy, thoracostomy, pigtail, pneumothorax, hemothorax, hemopneumothorax, triangle of safety, 5th ICS, French size, autotransfusion, Heimlich, retained hemothorax",
+    sum: "Drainage of air or blood from the pleural space through a tube placed in the triangle of safety, for a casualty who cannot be managed with decompression alone.",
+    blocks: [
+      ["text", "Needle and finger decompression relieve a tension pneumothorax but do not drain anything. A tube is what manages an ongoing air leak or a hemothorax across a long hold or a flight, and in prolonged field care it converts a casualty who needs constant reassessment into one who can be monitored."],
+      ["table", [["Indication", "Notes"], ["Tension pneumothorax after decompression", "A decompressed tension re-accumulates; the tube is the definitive step"], ["Simple pneumothorax with respiratory compromise", "Small, stable, asymptomatic ones may be observed"], ["Any pneumothorax before flight", "Altitude expands trapped gas by Boyle's law"], ["Hemothorax or hemopneumothorax", "Drainage also measures the bleeding"], ["Positive pressure ventilation with a known pneumothorax", "Risk of converting to tension"], ["Open chest wound after a vented seal", "Seal plus tube, placed away from the wound"]]],
+      ["table", [["Landmark", "Detail"], ["Triangle of safety", "Lateral border of pectoralis major, lateral border of latissimus dorsi, a line at the level of the nipple, apex below the axilla"], ["Insertion space", "4th or 5th intercostal space, anterior to mid axillary line"], ["Rib relationship", "Over the top of the lower rib; the neurovascular bundle runs under each rib"], ["Direction", "Posterior and superior for air, posterior and inferior for blood"]]],
+      ["table", [["Casualty", "Common size"], ["Adult hemothorax or trauma", "28-32 French"], ["Adult pneumothorax only", "20-28 French, or a 14 French pigtail"], ["Pediatric", "Sized to the casualty, commonly 4 times the ETT size"], ["Pigtail catheters", "Effective for air and for thin fluid; clot blocks them more readily"]]],
+      ["list", ["Placement is a sterile procedure, ideally with local anesthetic and analgesia or sedation; blunt dissection over the rib into the pleural space, confirmation of the space before the tube is passed, then secure, connect and dress.", "Confirmation of placement in the field: fogging in the tube, air or blood return, breath sounds and work of breathing improving, and where available ultrasound (loss of lung sliding resolving) or chest radiograph.", "A tube is secured with suture and a dressing, and the connection points are taped, because a disconnection in a litter carry is a common cause of failure.", "Immediate drainage over 1,500 mL, or ongoing output over roughly 200 mL per hour for 2-4 hours, is the classic threshold for surgical consultation, and in the field it is a teleconsult and an evacuation priority.", "Autotransfusion of shed chest blood is described in austere settings where collection systems allow it; it is a teleconsult decision and is limited by defibrination of the collected blood."]],
+      ["list", ["Complications: injury to lung, liver, spleen, diaphragm or heart from placement too low or too medial; intercostal vessel bleeding; placement into the chest wall or subcutaneous tissue rather than the pleural space; tube kinking or clotting; infection and empyema; re-expansion pulmonary edema after rapid drainage of a large effusion; and retained hemothorax, which is the most common late problem.", "Placement below the nipple line risks the diaphragm and the abdominal organs, which rise with expiration.", "Subcutaneous emphysema around the site suggests the tube is not fully in the pleural space or that a side hole sits outside the chest wall."]],
+      ["text", "Flight consideration: trapped gas expands as cabin altitude rises, so an undrained pneumothorax that was tolerated on the ground can tension in the air. A tube placed before flight is drained to a collection system or a one-way valve rather than clamped."]
+    ],
+    src: ["JTS Prolonged Casualty Care Guidelines", "Emergency War Surgery, 5th ed., 2018", "ATLS 10th ed., Thoracic Trauma", "TCCC Guidelines 2024"] },
+
+  { id: "chestdrain", t: "Chest drainage systems (Pleur-evac and valves)", cat: "Field care", kw: "pleur-evac, pleuravac, pleurevac, chest drainage, three chamber, water seal, suction control, tidaling, bubbling, Heimlich valve, one way valve, dry suction, air leak, clamping",
+    sum: "The three-chamber system and its field alternatives: what the water seal and the bubbling are telling you, and how to read a drain that is not working.",
+    blocks: [
+      ["text", "A chest drainage unit does three jobs at once, and the classic Pleur-evac is simply those three jobs built into one disposable housing. Reading the unit is mostly a matter of knowing which chamber is doing what."],
+      ["table", [["Chamber", "Job", "What it tells you"], ["Collection", "Holds what drains out", "Volume and character of output over time"], ["Water seal (middle)", "One-way valve: air out, nothing back in", "Tidaling and air leaks"], ["Suction control", "Sets how much negative pressure is applied", "Wet systems bubble gently; dry systems show an indicator"]]],
+      ["table", [["Finding in the water seal", "Interpretation"], ["Tidaling: fluid rises on inspiration, falls on expiration", "Normal, and it means the tube is patent and in the pleural space (reversed in a ventilated casualty)"], ["Tidaling stops", "Lung re-expanded, or the tube is blocked, kinked or displaced"], ["Intermittent bubbling with cough or expiration", "An air leak that is resolving"], ["Continuous bubbling", "Ongoing air leak, from the lung or from a leak in the system itself"], ["New continuous bubbling in a stable casualty", "Suspect the system before the lung: connections, dressing, a side hole pulled out"], ["Vigorous bubbling in the suction chamber", "Wasted suction and evaporation; gentle bubbling is the target on a wet system"]]],
+      ["list", ["Locating a leak: clamp briefly and progressively from the chest toward the unit. If bubbling stops when the clamp is near the chest, the leak is the casualty or the insertion site; if it continues until the clamp reaches the unit, the leak is in the tubing or the unit.", "The unit is kept below the level of the chest so drainage runs downhill and nothing siphons back.", "Routine clamping of a bubbling tube is avoided, because occluding a tube with an ongoing air leak can produce a tension pneumothorax; brief clamping for leak hunting or a unit change is a different thing.", "Dependent loops of tubing collect fluid and stop drainage; the line is run straight to the unit.", "Stripping or aggressive milking of the tube generates large negative pressure and is described as harmful; gentle handling to clear a visible clot is the usual compromise.", "If the unit tips over or the water seal is lost, the seal is re-established; a tube briefly open to air is managed by restoring a seal rather than by clamping."]],
+      ["table", [["Field option", "Use and limits"], ["Three-chamber disposable unit", "Full function, bulky and fragile for a litter carry"], ["Dry suction units", "No water column to spill; useful for transport"], ["Heimlich one-way valve", "Light and rugged for air; blocks with blood and is orientation-dependent"], ["Improvised water seal", "Tube under 2 cm of water in a rigid container, kept upright and below the chest"], ["Glove or finger valve", "A described expedient only; unreliable for a long hold"]]],
+      ["text", "Transport and flight: the unit stays upright and below the casualty, suction is usually disconnected and the system left to water seal or gravity for the move, and a tube with an ongoing leak is left unclamped for transport. Output is recorded before and after the move, because a sudden change during a carry is a displaced tube until proven otherwise."],
+      ["list", ["Removal is a hospital decision; in prolonged care the tube generally stays until lung re-expansion is confirmed, the air leak has stopped and output has fallen, which is a teleconsult conversation rather than a field call.", "Hourly documentation in a long hold: output volume and character, tidaling present or absent, bubbling present or absent and whether it changed, dressing and connection check, and the casualty's work of breathing and oxygenation."]]
+    ],
+    src: ["JTS Prolonged Casualty Care Guidelines", "Emergency War Surgery, 5th ed., 2018", "ATLS 10th ed., Thoracic Trauma", "Manufacturer instructions for use, chest drainage units"] },
+
+  { id: "heimlich", t: "Heimlich valve and one-way chest valves", cat: "Field care", kw: "heimlich valve, one way valve, flutter valve, chest tube valve, McSwain dart, ambulatory chest drain, transport chest drainage, tactical chest drain, Asherman, vented seal",
+    sum: "A flutter valve that lets air out of the chest and nothing back in, with no water column: the usual way a chest tube travels.",
+    blocks: [
+      ["text", "The Heimlich valve is a rubber sleeve inside a clear plastic housing. Air leaving the chest pushes the sleeve open; anything trying to go the other way collapses it shut. It is the same physical idea as the water seal on a Pleur-evac, with the water removed, which is precisely why it suits a litter, a vehicle and an aircraft."],
+      ["table", [["Property", "Heimlich valve", "Three-chamber unit"], ["Weight and bulk", "A few ounces, pocket sized", "Bulky, rigid housing"], ["Orientation", "Direction of flow is marked and matters", "Upright and below the chest"], ["Spill risk", "None, no water column", "Water seal can spill if tipped"], ["Suction", "Cannot apply suction", "Wet or dry suction available"], ["Fluid handling", "Poor; clots and thick blood block it", "Collection chamber measures output"], ["Output measurement", "Needs a bag or dressing distal to the valve", "Graduated and readable"]]],
+      ["list", ["Best use is a pneumothorax or a predominantly air leak; it is the standard transport option for a chest tube when a drainage unit is impractical.", "The blue or marked end points toward the casualty and the outflow end away; reversed, it occludes the chest and a tension pneumothorax can follow, which is the single most important handling point on this card.", "Blood, clot and thick fluid are what defeat it. With a hemothorax the valve is paired with a collection bag, or a drainage unit is used instead, and patency is rechecked whenever drainage stops.", "A vented bag or a cut glove finger on the distal end keeps drainage off the casualty and the litter and lets output be measured.", "Fluttering of the sleeve with respiration is the equivalent of tidaling: it indicates the tube and valve are working. No movement means re-expansion, a blocked tube, a blocked valve or a displaced tube.", "The valve stays uncovered. Burying it in dressings or a casualty blanket is how a blockage goes unnoticed."]],
+      ["text", "Related devices the term gets applied to loosely: commercially vented chest seals for open chest wounds use the same one-way idea on the chest wall rather than on a tube, and needle-catheter devices with an integral flutter valve exist for decompression. They are separate products from a Heimlich valve on a thoracostomy tube and are not interchangeable with it."],
+      ["list", ["Flight: with no water column there is nothing to spill and nothing to siphon, and an expanding trapped gas volume vents continuously as cabin altitude rises, which is the reason the valve suits rotary and fixed-wing transport.", "Ambulatory use with a small-bore tube and a valve is described for stable, isolated pneumothorax, which in a prolonged hold can mean a casualty who walks rather than one who is litter-bound.", "Hourly checks in a long hold: valve orientation, fluttering present or absent, patency, distal bag volume, the insertion site dressing, and work of breathing."]]
+    ],
+    src: ["JTS Prolonged Casualty Care Guidelines", "Emergency War Surgery, 5th ed., 2018", "TCCC Guidelines 2024, Respiration/Breathing", "Manufacturer instructions for use, Heimlich chest drain valve"] },
+
   { id: "pcccheck", t: "PCC hourly and daily nursing checklist", cat: "Field care", kw: "prolonged casualty care, PCC, PFC, nursing checklist, hourly checks, long hold, flow sheet, ICU checklist",
     sum: "Recurring checks for a casualty held for hours to days without evacuation.",
     blocks: [
@@ -21156,6 +21229,21 @@ var FM_REF = [
       ["text", "Recording on a flow sheet (DD 1380 card plus PCC flow sheet) keeps trends visible and supports teleconsultation."]
     ],
     src: ["JTS Nursing Intervention in Prolonged Field Care CPG", "JTS Prolonged Casualty Care Guidelines (2021, updated)", "JTS Prolonged Field Care Flowsheet"] },
+
+  { id: "compartment", t: "Compartment syndrome and fasciotomy", cat: "Field care", kw: "compartment syndrome, fasciotomy, delta pressure, crush injury, crush syndrome, rhabdomyolysis, pain with passive stretch, 5 Ps, four compartments, reperfusion, tourniquet, escharotomy, Stryker",
+    sum: "Pressure inside a closed muscle compartment outruns perfusion; recognition is clinical and early, and the only definitive treatment is surgical release.",
+    blocks: [
+      ["text", "A fascial compartment is a closed box. When pressure inside it rises above the pressure perfusing the muscle, capillary flow stops while arterial pulses continue, so the limb dies from the inside out with a palpable pulse at the wrist or ankle. That single fact drives everything else on this card."],
+      ["list", ["Earliest and most reliable sign: pain out of proportion to the injury, and pain on passive stretch of the muscles in that compartment.", "Tense, wood-like compartment on palpation, and paresthesia in the nerve running through it (deep peroneal in the anterior leg gives first web space numbness).", "The classic 5 Ps (pain, paresthesia, pallor, pulselessness, poikilothermia) are late. Pulselessness is near the end, and present pulses do not rule the diagnosis out.", "A casualty who is sedated, intubated, obtunded or regionally blocked cannot report the early signs, so serial measured checks carry the weight instead."]],
+      ["table", [["Measured pressure", "Interpretation"], ["Delta pressure = diastolic BP minus compartment pressure", "The number that matters most"], ["Delta under 30 mmHg", "Commonly cited threshold for fasciotomy"], ["Absolute compartment pressure over 30 mmHg", "Older absolute threshold, less reliable in hypotension"], ["Normal resting", "Roughly 0-8 mmHg"]]],
+      ["text", "Delta pressure is used because a hypotensive casualty perfuses muscle poorly at a compartment pressure that would be tolerated with a normal blood pressure. Where a Stryker or arterial-line manometer is unavailable, the decision stays clinical."],
+      ["table", [["Region", "Compartments"], ["Lower leg", "Anterior, lateral, superficial posterior, deep posterior (4)"], ["Thigh", "Anterior, posterior, medial (3)"], ["Forearm", "Volar, dorsal, mobile wad (3)"], ["Upper arm", "Anterior, posterior (2)"], ["Foot", "Described as 4 to 9 depending on the reference"], ["Hand", "Interossei, thenar, hypothenar, adductor (10 by most descriptions)"], ["Abdomen", "Bladder pressure over 20-25 mmHg with new organ dysfunction"]]],
+      ["list", ["Lower leg is the most common site and is released through a two-incision approach, anterolateral and posteromedial, with all four compartments opened; a single-incision release that misses the deep posterior compartment is a recognized failure mode.", "Causes that matter in the field: crush and blast injury, vascular injury with reperfusion after repair or after prolonged tourniquet time, tight circumferential dressings, casts or splints, fractures (tibia most often), burns, snakebite, high-pressure injection injury and infiltrated infusions.", "Reperfusion is the common thread. A limb can look stable for hours and declare itself once flow returns, which is why a tourniquet conversion or a vascular repair starts a monitoring clock rather than ending one.", "Circumferential burns are released by escharotomy first, which cuts eschar only; fasciotomy is the separate, deeper procedure for true muscle compartment syndrome and is more often needed after electrical injury."]],
+      ["text", "Crush injury links compartment syndrome to crush syndrome: damaged muscle releases potassium, phosphate, myoglobin and urate, producing hyperkalemia, arrhythmia, and pigment-induced renal failure. Dark tea-colored urine, a urine dipstick positive for blood with no red cells on microscopy, and a rising creatine kinase are the markers. Hyperkalemia from reperfusion can arrive faster than the renal injury."],
+      ["list", ["Non-surgical measures while a decision is pending: all circumferential dressings, splints and casts opened to skin, the limb kept at heart level rather than elevated (elevation lowers arterial inflow without lowering compartment pressure), oxygen, pain control, and correction of hypotension.", "Hourly documented neurovascular checks with the compartment described rather than scored, so a trend is visible to the next provider.", "Fasciotomy is a surgical procedure performed under teleconsult or surgical direction. In prolonged field care, the decision is usually driven by evacuation timeline: a limb that will reach surgery within hours is monitored, while a delay measured in many hours with progressing signs shifts the risk calculus.", "After release the wounds are left open, with dressing changes, substantial fluid and protein loss through the open muscle, and delayed closure or grafting later."]],
+      ["text", "The two failure patterns described in the literature are opposite and both costly: a missed compartment syndrome, which ends in contracture, neurologic loss or amputation; and a late fasciotomy performed on muscle that is already dead, which opens a large wound for no functional gain and adds an infection risk. The window is the reason recognition sits so early on this card."]
+    ],
+    src: ["JTS Prolonged Casualty Care Guidelines", "Emergency War Surgery, 5th ed., 2018", "JTS Acute Extremity Compartment Syndrome and Fasciotomy CPG", "Tactical Combat Casualty Care Guidelines"] },
 
   { id: "woundcare", t: "Wound care basics", cat: "Field care", kw: "wound irrigation, wound care, dressing change, delayed primary closure, infection signs, debridement, NPWT",
     sum: "Irrigation, debridement of gross debris, open packing, frequent inspection; delayed closure for war wounds.",
@@ -23016,6 +23104,7 @@ function microCard(id) {
     microRow("First line", m.tx) + microRow("Alternatives", m.alt) + microRow("Resistance", m.res) + microRow("Prevention", m.prev) + '</div></details>';
   if (m.mem && m.mem.length) c += '<details class="sec" open><summary>High yield</summary><div class="fields">' + m.mem.map(function (x) { return microRow(x[0], x[1]); }).join("") + '</div></details>';
   if (m.worm && m.worm.length) c += '<details class="sec"><summary>The Wormhole</summary><div class="fields">' + m.worm.map(function (x) { return '<div class="f wf"><div class="k">' + esc(x[0]) + '</div><div class="v">' + esc(x[1]) + '</div></div>'; }).join("") + '</div></details>';
+  if (typeof qaMicroSection === "function") c += qaMicroSection(m.id);
   c += '<p class="muted small nrfine">Draft reference for study, not a treatment guide. Education only.</p>';
   return c;
 }
@@ -23027,6 +23116,162 @@ function microClick(t, a) {
   return false;
 }
 document.addEventListener("input", function (e) { if (e.target && e.target.id === "microq") { S.microQ = e.target.value; clearTimeout(S.microT); S.microT = setTimeout(function () { var p = e.target.selectionStart; render(); var f = document.getElementById("microq"); if (f) { f.focus(); try { f.setSelectionRange(p, p); } catch (x) {} } }, 250); } });
+
+/* ===== "But why?" — the answered-questions layer (owner, Oct 31 2026) =====
+   Every drug, bug, virus, fungus and parasite gets a list of real questions with real answers:
+   not quiz questions, not flashcards. The ones a curious person actually asks and most
+   references dodge. Why does isotretinoin cause birth defects, exactly. Why did anyone think
+   it would cure cancer. Why is the depression link still argued about.
+
+   Data: DB.QA["<drug id>"] and DB.QA["m:<micro id>"] = [[question, answer], ...]
+   Lives in data/qa*.js. Rendered inside the Wormhole on a drug page and at the bottom of a
+   microbiology card. Answers are plain prose, no bullet lists, written to be read. */
+(function () {
+  var css = '.qawrap{display:grid;gap:8px;margin-top:4px}' +
+    '.qaq{border:1px solid var(--line,rgba(127,127,127,.25));border-radius:12px;background:var(--surface,transparent);overflow:hidden}' +
+    '.qaq>summary{cursor:pointer;list-style:none;padding:11px 14px 11px 38px;position:relative;font-weight:700;line-height:1.4}' +
+    '.qaq>summary::-webkit-details-marker{display:none}' +
+    '.qaq>summary:before{content:"?";position:absolute;left:12px;top:50%;transform:translateY(-50%);width:19px;height:19px;border-radius:50%;background:var(--c,#6b3fbf);color:#fff;font-size:.74rem;font-weight:800;display:grid;place-items:center}' +
+    '.qaq[open]>summary{background:var(--surface-2,rgba(127,127,127,.1))}' +
+    '.qaq[open]>summary:before{content:"!"}' +
+    '.qaq .qaa{padding:4px 14px 13px;line-height:1.6}' +
+    '.qaq .qaa p{margin:8px 0}' +
+    '.qacount{font-size:.78rem;opacity:.7;font-weight:600;margin-left:6px}';
+  try { var st = document.createElement("style"); st.textContent = css; document.head.appendChild(st); } catch (e) {}
+})();
+function qaOf(key) { var L = (DB.QA || {})[key]; return L && L.length ? L : null; }
+/* one <details> per question; answers may contain blank-line-separated paragraphs */
+function qaBody(L) {
+  return '<div class="qawrap">' + L.map(function (x) {
+    var a = String(x[1] || "").split(/\n\s*\n/).map(function (p) { return '<p>' + esc(p.trim()) + '</p>'; }).join("");
+    return '<details class="qaq"><summary>' + esc(x[0]) + '</summary><div class="qaa">' + a + '</div></details>';
+  }).join("") + '</div>';
+}
+/* drug pages: a section inside the Wormhole */
+function qaSection(id) {
+  var L = qaOf(id); if (!L) return "";
+  return deepSec("🤔", 'But why?<span class="qacount">' + L.length + '</span>',
+    '<p class="dnote">The questions people actually ask about this one, answered properly. Draft study content.</p>' + qaBody(L));
+}
+/* microbiology cards */
+function qaMicroSection(id) {
+  var L = qaOf("m:" + id); if (!L) return "";
+  return '<details class="sec" open><summary>But why? (' + L.length + ')</summary><p class="muted small">Draft study content.</p>' + qaBody(L) + '</details>';
+}
+
+/* ===== Combat Paramedic menu search (owner, Oct 31 2026) =====
+   One box at the top of the CPP hub that looks across everything in the tier: Field Reference
+   topics and their keywords, every section, CBRN agents, trauma and field conditions, drug
+   storage and allied names, and every medication and blood product in scope.
+
+   Field Reference hits deep-link straight to the topic (data-refpin, the same route the pinned
+   tiles use). Medications and blood products open their drug sheet. Everything else opens the
+   section it lives in. */
+
+var FMS_INDEX = null, FMS_BUILT = 0;
+
+function fmsPush(L, label, sub, cat, kw, act) {
+  if (!label) return;
+  L.push({ l: String(label), s: String(sub || ""), c: cat, k: String(kw || "").toLowerCase(), a: act });
+}
+function fmsIndex() {
+  /* rebuilt when the drug table grows (blood products register lazily) */
+  var n = (typeof DB !== "undefined" && DB.drugs) ? Object.keys(DB.drugs).length : 0;
+  if (FMS_INDEX && FMS_BUILT === n) return FMS_INDEX;
+  var L = [];
+  try {
+    if (typeof FM_REF !== "undefined") FM_REF.forEach(function (x) {
+      if (x.view) fmsPush(L, x.t, x.sum, "Field Reference", x.kw, 'data-tab="fm_ref" data-refpin="' + esc(x.id) + '"');
+      else fmsPush(L, x.t, x.sum, "Field Reference", (x.kw || "") + " " + (x.cat || ""), 'data-refpin="' + esc(x.id) + '"');
+    });
+  } catch (e) {}
+  try {
+    if (typeof FM_TABS !== "undefined") Object.keys(FM_TABS).forEach(function (k) {
+      fmsPush(L, FM_TABS[k][0], FM_TABS[k][1], "Section", FM_TABS[k][0] + " " + FM_TABS[k][1], 'data-tab="' + k + '"');
+    });
+  } catch (e) {}
+  function agents(A, label) {
+    if (!A || !A.length) return;
+    A.forEach(function (x) { fmsPush(L, x.name, x.line || x.what, label, (x.name || "") + " " + (x.cat || "") + " " + (x.clue || ""), 'data-tab="fm_bio"'); });
+  }
+  try { agents(typeof FM_BIO !== "undefined" ? FM_BIO : null, "Biological agent"); } catch (e) {}
+  try { agents(typeof FM_CHEM !== "undefined" ? FM_CHEM : null, "Chemical agent"); } catch (e) {}
+  try { agents(typeof FM_RAD !== "undefined" ? FM_RAD : null, "Radiological"); } catch (e) {}
+  try {
+    if (typeof FM_TRAUMA !== "undefined") FM_TRAUMA.forEach(function (x) {
+      fmsPush(L, x.name, x.line || x.what, "Injury or illness", (x.name || "") + " " + (x.g || ""), 'data-tab="fm_cond"');
+    });
+  } catch (e) {}
+  try {
+    if (typeof FM_STORE !== "undefined") Object.keys(FM_STORE).forEach(function (id) {
+      var nm = (typeof nameOf === "function" ? nameOf(id) : id);
+      fmsPush(L, nm + " storage", "How it holds up in an aid bag", "Drug Storage", nm + " storage heat cold light", 'data-tab="fm_store"');
+    });
+  } catch (e) {}
+  try {
+    if (typeof FM_ALLIED !== "undefined") Object.keys(FM_ALLIED).forEach(function (id) {
+      var v = FM_ALLIED[id], nm = (typeof nameOf === "function" ? nameOf(id) : id);
+      var names = typeof v === "string" ? v : (v && (v.names || v.n || "")) || "";
+      fmsPush(L, nm + " (allied names)", String(names).slice(0, 90), "Allied Drug Names", nm + " " + names, 'data-tab="fm_allied"');
+    });
+  } catch (e) {}
+  /* medications and blood products in this tier */
+  try {
+    var ids = typeof scopeIds === "function" ? scopeIds() : [];
+    ids.forEach(function (id) {
+      var d = DB.drugs[id]; if (!d) return;
+      var cls = "";
+      try { cls = (String(d.s || "").trim().split("\n")[0] || "").split("|")[3] || ""; } catch (e2) {}
+      fmsPush(L, d.name || id, cls, d.blood ? "Blood product" : "Medication", (d.name || "") + " " + id.replace(/-/g, " ") + " " + cls, 'data-drug="' + esc(id) + '"');
+    });
+  } catch (e) {}
+  FMS_INDEX = L; FMS_BUILT = n;
+  return L;
+}
+/* score: title beats keyword beats summary; whole-word start beats mid-word */
+function fmsScore(x, q) {
+  var l = x.l.toLowerCase();
+  if (l === q) return 100;
+  if (l.indexOf(q) === 0) return 90;
+  if (new RegExp("\\b" + q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).test(l)) return 80;
+  if (l.indexOf(q) >= 0) return 70;
+  if (x.k.indexOf(q) >= 0) return 55;
+  if (x.s.toLowerCase().indexOf(q) >= 0) return 35;
+  return 0;
+}
+function fmsBar() {
+  var q = S.fmQ || "";
+  return '<div class="fmsearch"><input id="fmq" class="search" type="search" autocomplete="off" ' +
+    'placeholder="Search this tier: topics, drugs, agents, keywords" aria-label="Search Combat Paramedic" value="' + esc(q) + '">' +
+    (q ? '<button class="fmsx" data-act="fmsclear" aria-label="Clear search">&times;</button>' : '') + '</div>' + (q ? fmsResults(q) : "");
+}
+function fmsResults(q) {
+  q = String(q).trim().toLowerCase();
+  if (q.length < 2) return '<p class="muted small fmsnote">Keep typing to search.</p>';
+  var hits = [];
+  fmsIndex().forEach(function (x) { var s = fmsScore(x, q); if (s) hits.push([s, x]); });
+  hits.sort(function (a, b) { return b[0] - a[0] || a[1].l.length - b[1].l.length; });
+  if (!hits.length) return '<p class="empty fmsnote">Nothing in this tier matches that yet.</p>';
+  var shown = hits.slice(0, 40);
+  var c = '<p class="muted small fmsnote">' + hits.length + (hits.length === 1 ? ' match' : ' matches') + (hits.length > shown.length ? ', showing the closest ' + shown.length : '') + '</p><div class="fmsres">';
+  c += shown.map(function (h) {
+    var x = h[1];
+    return '<button class="fmsrow" ' + x.a + '><span class="fmsl"><strong>' + esc(x.l) + '</strong>' + (x.s ? '<span>' + esc(x.s.slice(0, 110)) + '</span>' : '') + '</span><em>' + esc(x.c) + '</em></button>';
+  }).join("");
+  return c + '</div>';
+}
+/* typing: debounce, re-render, keep focus and caret */
+document.addEventListener("input", function (e) {
+  if (!e.target || e.target.id !== "fmq") return;
+  S.fmQ = e.target.value;
+  clearTimeout(S.fmQT);
+  S.fmQT = setTimeout(function () {
+    var p = 0; try { p = e.target.selectionStart; } catch (x) {}
+    render();
+    var f = document.getElementById("fmq");
+    if (f) { f.focus(); try { f.setSelectionRange(p, p); } catch (x) {} }
+  }, 220);
+});
 
 
 /* ---------- boot ---------- */

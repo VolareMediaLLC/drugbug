@@ -1,3 +1,2820 @@
+// Interventional / invasive hemodynamics for flight (FP-C) and medical-school learners.
+// Plain ES5, ASCII only. Topics, shock profiles and questions.
+DB.HEMO = {
+  topics: [
+    /* ---------------- Foundations ---------------- */
+    { id: "determinants", grp: "Foundations", title: "Preload, afterload, contractility and the Frank-Starling curve", lv: ["fl","md"],
+      sum: "Stroke volume is set by preload, afterload and contractility, and heart rate times stroke volume gives cardiac output.",
+      rows: [
+        ["Preload", "The stretch on the ventricle at end-diastole (end-diastolic volume). Clinically estimated by CVP for the right side and PCWP for the left, but pressures are only rough surrogates for volume."],
+        ["Afterload", "The load the ventricle must overcome to eject, best described as wall stress (Laplace: wall stress = pressure x radius / 2 x wall thickness). SVR and aortic pressure are the bedside proxies for the LV; PVR for the RV."],
+        ["Contractility", "The intrinsic force of contraction independent of loading conditions. Raised by sympathetic tone and inotropes; lowered by ischemia, acidosis, hypoxia, sepsis and negative inotropes such as beta-blockers and calcium channel blockers."],
+        ["Frank-Starling curve", "More preload stretches sarcomeres and increases stroke volume up to a plateau. On the steep part a fluid bolus raises stroke volume; on the flat part it mainly raises filling pressure and causes congestion or pulmonary edema."],
+        ["Failing vs normal heart", "A failing ventricle has a flatter, lower Starling curve and is very afterload sensitive: lowering afterload raises its stroke volume much more than it would in a normal heart."]
+      ],
+      fl: [
+        ["In transport", "Tachycardia shortens diastolic filling time, so very fast rates can drop stroke volume. A sick heart that cannot raise stroke volume depends on heart rate, so do not reflexively slow a compensatory sinus tachycardia."],
+        ["Practical use", "Ask three questions in any hypotensive patient: is the tank full (preload), is the pump working (contractility), and are the pipes tight or loose (afterload)? The answer points to fluid, inotrope or vasopressor."]
+      ],
+      md: [
+        ["Pressure-volume loop", "Preload shifts the loop rightward along the EDPVR; afterload raises the ejection pressure and the end-systolic point along the ESPVR; contractility steepens the ESPVR slope (Ees). Stroke volume is the loop width."],
+        ["Afterload in shock", "Vasopressors raise afterload. In a failing LV this can lower stroke volume and raise filling pressure, which is why norepinephrine is often paired with an inotrope or mechanical support in cardiogenic shock."]
+      ],
+      pearl: "On the flat part of the Starling curve, more fluid only buys more pulmonary edema.",
+      drugs: ["dobutamine","nitroglycerin","furosemide"] },
+
+    { id: "normals", grp: "Foundations", title: "Normal hemodynamic values (MAP, CVP, PA pressures, PCWP, CO, CI, SVR, PVR, SvO2)", lv: ["fl","md"],
+      sum: "A short list of normal resting values anchors every hemodynamic interpretation.",
+      rows: [
+        ["Systemic", "MAP about 70-100 mmHg (usual shock target 65 or higher). CO about 4-8 L/min. CI about 2.5-4.0 L/min/m2. SVR about 800-1200 dynes-sec/cm5."],
+        ["Right heart", "CVP / RA pressure about 2-8 mmHg. RV pressure about 15-30 / 0-8 mmHg. PA pressure about 15-30 / 8-15 mmHg with a mean of about 10-20 mmHg."],
+        ["Wedge and PVR", "PCWP about 6-12 mmHg. PVR roughly 1-2 Wood units (about 80-160 dynes-sec/cm5); above 2 Wood units is elevated by current pulmonary hypertension definitions."],
+        ["Oxygen", "SvO2 (PA sample) about 60-80 percent, commonly quoted 65-75. ScvO2 (SVC sample) about 70 percent or higher. Normal oxygen extraction is about 25 percent."]
+      ],
+      fl: [
+        ["Exam anchors", "Know these cold for the FP-C: CVP 2-8, PA 15-30/8-15, PCWP 6-12, CO 4-8, CI 2.5-4, SVR 800-1200, SvO2 60-80."]
+      ],
+      md: [
+        ["Thresholds that matter", "Cardiogenic shock is classically CI below about 2.2 L/min/m2 with PCWP above about 15 mmHg. Pulmonary hypertension is mean PA pressure above 20 mmHg (2022 ESC/ERS); pre-capillary adds PCWP 15 or less and PVR above 2 Wood units."]
+      ],
+      pearl: "PCWP above about 18 mmHg is the classic threshold for hydrostatic pulmonary edema.",
+      drugs: [] },
+
+    { id: "formulas", grp: "Foundations", title: "Key formulas (MAP, CO = HR x SV, CI, SVR, PVR, CPP, DO2)", lv: ["fl","md"],
+      sum: "A handful of formulas let you calculate perfusion pressure, resistance and oxygen delivery at the bedside.",
+      rows: [
+        ["MAP and CO", "MAP = DBP + (SBP - DBP) / 3, or (SBP + 2 x DBP) / 3. CO = HR x SV. CI = CO / body surface area."],
+        ["Resistance", "SVR = 80 x (MAP - CVP) / CO, in dynes-sec/cm5. PVR = 80 x (mean PAP - PCWP) / CO. Dropping the 80 gives Wood units."],
+        ["Perfusion pressures", "Cerebral perfusion pressure = MAP - ICP (or CVP if higher); target about 60 mmHg or more in TBI. Coronary perfusion pressure = aortic diastolic pressure - LVEDP (PCWP is the usual surrogate)."],
+        ["Oxygen delivery", "CaO2 = (1.34 x Hb x SaO2) + (0.003 x PaO2) in mL O2/dL. DO2 = CO x CaO2 x 10, normally about 1000 mL/min. VO2 = CO x (CaO2 - CvO2) x 10, normally about 250 mL/min."]
+      ],
+      fl: [
+        ["Quick math", "The 80 in the SVR formula is a unit conversion. If the question gives Wood units, skip it. Watch units: CO in L/min, saturations as decimals in the CaO2 formula."]
+      ],
+      md: [
+        ["Other indices", "Cardiac power output = MAP x CO / 451 in watts; below about 0.6 W predicts mortality in cardiogenic shock. PAPi = (PA systolic - PA diastolic) / RA pressure; below about 0.9 in acute MI suggests RV failure. Transpulmonary gradient = mean PAP - PCWP."],
+        ["Fick", "Fick CO = VO2 / [(CaO2 - CvO2) x 10]. Assumed VO2 (about 125 mL/min/m2) makes estimated Fick less reliable in sick patients than measured VO2."]
+      ],
+      pearl: "Hemoglobin is the biggest lever in CaO2: dissolved oxygen (0.003 x PaO2) adds very little.",
+      drugs: [] },
+
+    { id: "fluidresp", grp: "Foundations", title: "Fluid responsiveness (passive leg raise, pulse pressure variation)", lv: ["fl","md"],
+      sum: "Fluid responsiveness means stroke volume rises about 10-15 percent after a fluid challenge, and static pressures predict it poorly.",
+      rows: [
+        ["Definition", "A patient is fluid responsive if a bolus raises stroke volume or cardiac output by about 10-15 percent. Only about half of unstable ICU patients are."],
+        ["Passive leg raise", "Moving the patient from semi-recumbent to legs raised returns roughly 300 mL of venous blood, a reversible self-bolus. A CO or SV rise of 10 percent or more (measured, not a BP guess) predicts response."],
+        ["Pulse pressure variation", "On controlled ventilation, PPV above about 12-13 percent predicts response, but only with sinus rhythm, no spontaneous breaths, tidal volume about 8 mL/kg and a closed chest."],
+        ["What does not work", "A single CVP or PCWP value is a poor predictor of fluid responsiveness except at the extremes."]
+      ],
+      fl: [
+        ["In the field", "Small reassessed boluses beat large blind ones. Crackles, rising work of breathing, JVD or an increasing oxygen need after a bolus mean stop and reassess."]
+      ],
+      md: [
+        ["Pitfalls", "PPV gives false positives in RV failure and with high intra-abdominal pressure, and is unreliable with arrhythmias or low tidal volumes. PLR is unreliable with intra-abdominal hypertension and is hard in trauma or pelvic fractures."]
+      ],
+      pearl: "Being fluid responsive does not mean the patient needs fluid; healthy people are fluid responsive too.",
+      drugs: [] },
+
+    /* ---------------- Monitoring lines ---------------- */
+    { id: "aline", grp: "Monitoring lines", title: "Arterial line: zeroing, leveling at the phlebostatic axis, square-wave test, over- and under-damping", lv: ["fl","md"],
+      sum: "An arterial line gives beat-to-beat pressure only if it is zeroed, leveled at the phlebostatic axis and optimally damped.",
+      rows: [
+        ["Setup", "Noncompliant tubing to a transducer, flush bag pressurized to 300 mmHg giving about 3 mL/hr. Radial is most common; femoral reads closer to central pressure in high-dose vasopressor states."],
+        ["Leveling and zeroing", "Level the transducer air-fluid interface at the phlebostatic axis (4th intercostal space, mid-axillary line, about the right atrium). Zero by opening to atmosphere. A transducer below the heart reads falsely high; above reads falsely low (about 7.5 mmHg per 10 cm)."],
+        ["Square-wave (fast flush) test", "Pull the flush and watch the recoil: optimal damping shows about 1.5-2 oscillations before returning to baseline. Fewer means overdamped; more means underdamped."],
+        ["Overdamped", "Rounded waveform, lost dicrotic notch, falsely low systolic and falsely high diastolic. Causes: air bubbles, clot, kinks, compliant tubing, loose connections, low flush bag pressure."],
+        ["Underdamped", "Spiky, ringing waveform with falsely high systolic and falsely low diastolic. Causes: long or extra tubing, stopcocks, stiff vessels, tachycardia, hyperdynamic states. MAP stays fairly accurate in both errors."]
+      ],
+      fl: [
+        ["In transport", "Re-level after moving the patient or changing stretcher height, and re-zero after significant altitude or cabin pressure changes and per device policy. Secure the line and transducer to the patient or stretcher so vibration and loading do not change height or dislodge it."],
+        ["Troubleshooting", "If the waveform suddenly dampens: check the patient first (is there a pulse and a cuff pressure?), then the wrist position, kinks, bubbles, the flush bag pressure and the stopcocks. Compare with a cuff pressure; treat MAP, not a suspicious systolic number."]
+      ],
+      md: [
+        ["Waveform clues", "A wide pulse pressure suggests aortic regurgitation or vasodilation; a slow-rising, low-amplitude (parvus et tardus) upstroke suggests aortic stenosis; pulsus alternans suggests severe LV dysfunction; large respiratory variation suggests hypovolemia or tamponade."],
+        ["Complications", "Thrombosis, distal ischemia, hematoma, infection and, with flushing, retrograde air or clot embolism. A radial-femoral gradient can make radial pressure underestimate central pressure in septic shock and after cardiopulmonary bypass."]
+      ],
+      pearl: "When damping is in doubt, trust the MAP: it is the least affected number.",
+      drugs: [] },
+
+    { id: "cvp", grp: "Monitoring lines", title: "Central venous pressure and its limits", lv: ["fl","md"],
+      sum: "CVP reflects right atrial pressure and the interaction of volume, RV function and intrathoracic pressure, not volume status alone.",
+      rows: [
+        ["What it measures", "Pressure in the SVC near the right atrium, normally about 2-8 mmHg. It approximates RV end-diastolic pressure when the tricuspid valve is normal."],
+        ["Waveform", "a wave = atrial contraction; c wave = tricuspid bulge at early systole; x descent = atrial relaxation; v wave = atrial filling with the tricuspid valve closed; y descent = tricuspid opening and RA emptying."],
+        ["How to read", "Read at end-expiration, at the mean of the a wave (or base of the c wave). Spontaneously breathing, end-expiration is just before the inspiratory dip; on positive pressure ventilation, it is just before the inspiratory rise."],
+        ["Limits", "A single CVP poorly predicts fluid responsiveness. It is raised by PEEP, RV failure, tricuspid regurgitation, tamponade, PE, tension pneumothorax and abdominal hypertension, regardless of volume."]
+      ],
+      fl: [
+        ["Useful trends", "A high or rising CVP with hypotension makes you think obstruction or RV failure (tamponade, PE, tension pneumothorax, RV infarct) rather than an empty tank. A very low CVP supports hypovolemia."]
+      ],
+      md: [
+        ["Waveform pathology", "Cannon a waves: AV dissociation (complete heart block, VT). Absent a waves: atrial fibrillation. Large cv / v waves: tricuspid regurgitation. Blunted y descent: tamponade. Steep y descent with Kussmaul sign: constrictive pericarditis or restrictive cardiomyopathy."],
+        ["Evidence", "Marik and colleagues showed a poor relationship between CVP and blood volume or fluid responsiveness; CVP as a resuscitation target (as in early goal-directed therapy) has been abandoned."]
+      ],
+      pearl: "CVP is more useful as a safety limit (stop when high and rising) than as a target.",
+      drugs: [] },
+
+    { id: "pac", grp: "Monitoring lines", title: "Pulmonary artery catheter: insertion waveforms (RA, RV, PA, wedge) and complications", lv: ["fl","md"],
+      sum: "The PA (Swan-Ganz) catheter measures right heart pressures, wedge pressure, cardiac output and mixed venous saturation.",
+      rows: [
+        ["Insertion sequence", "Floated balloon-up from the internal jugular or subclavian vein. From the right IJ, the RA is reached at about 15-20 cm, RV about 25-35 cm, PA about 40-50 cm, wedge about 45-55 cm."],
+        ["Waveforms", "RA: low with a and v waves. RV: tall systolic peak with diastolic near zero that rises through diastole. PA: similar systolic, but a dicrotic notch and a diastolic step-up (about 8-15). Wedge: low, atrial-like a and v waves."],
+        ["Balloon rules", "Inflate with no more than the rated volume (about 1.5 mL), never advance with the balloon down, never withdraw with it up, and never leave it wedged."],
+        ["Complications", "Arrhythmias in the RV (most common), RBBB (complete heart block if LBBB already present), PA rupture, pulmonary infarction, infection, thrombosis, knotting, balloon rupture, plus central line complications."]
+      ],
+      fl: [
+        ["In transport", "Keep the distal PA waveform displayed continuously so migration is seen at once. Secure the catheter and the sleeve; patient moves and turbulence can pull it back into the RV or push it forward into a wedge."],
+        ["Waveform changes", "A PA trace that becomes a wedge trace with the balloon down means distal migration: confirm the balloon is deflated and withdraw per protocol or call medical control. A trace that develops a near-zero diastolic means the tip fell back into the RV, with risk of ventricular ectopy."]
+      ],
+      md: [
+        ["Cardiac output", "Thermodilution CO is unreliable with significant tricuspid regurgitation and intracardiac shunts. An O2 saturation step-up of more than about 5-7 percent from RA to PA suggests a left-to-right shunt such as a post-MI VSD."],
+        ["Evidence", "Routine PAC use did not improve outcomes in broad ICU and heart failure populations (PAC-Man, ESCAPE). Observational data in cardiogenic shock suggest benefit from early full hemodynamic profiling to guide support."],
+        ["PA rupture", "Presents with hemoptysis after balloon inflation. Position bleeding side down, secure the airway, consider lung isolation, reverse anticoagulation, and arrange urgent embolization or surgery."]
+      ],
+      pearl: "Spontaneous wedge without balloon inflation means the catheter has migrated distally and must be pulled back.",
+      drugs: [] },
+
+    { id: "pcwp", grp: "Monitoring lines", title: "Wedge pressure interpretation (and when it misleads: mitral stenosis, PEEP, West zones)", lv: ["fl","md"],
+      sum: "PCWP estimates left atrial pressure and, by extension, LV end-diastolic pressure, but several conditions break that chain.",
+      rows: [
+        ["Concept", "With the balloon wedged, a static blood column connects the catheter tip to the left atrium, so PCWP approximates LA pressure, which approximates LVEDP when the mitral valve and LV are normal."],
+        ["How to read", "Read at end-expiration, at the mean of the a wave. Normal is about 6-12 mmHg. PA diastolic pressure is usually within a few mmHg of PCWP when PVR is normal."],
+        ["Overestimates LVEDP", "Mitral stenosis, mitral regurgitation (large v waves), high PEEP or auto-PEEP, catheter tip in West zone 1 or 2, pulmonary venous obstruction, and tachycardia."],
+        ["Underestimates LVEDP", "Stiff, noncompliant LV (late diastolic rise after the a wave) and acute aortic regurgitation (premature mitral closure)."]
+      ],
+      fl: [
+        ["What it tells you", "High PCWP plus low output means a failing left heart. Low PCWP plus low output means an empty tank or a right-sided or obstructive problem limiting LV filling."]
+      ],
+      md: [
+        ["West zones", "The tip must lie in zone 3 (below the left atrium, where pulmonary venous pressure exceeds alveolar pressure). Clues that it does not: PCWP higher than PA diastolic, PCWP swinging by more than half the airway pressure change, or lack of a and v waves."],
+        ["V waves and PEEP", "Large v waves (often more than about twice the mean wedge) suggest acute MR but also occur with VSD or a small noncompliant LA. PEEP is partly transmitted to the pleural space; rule-of-thumb corrections are imprecise, so trend values at a fixed PEEP."],
+        ["PADP-PCWP gradient", "A diastolic pulmonary gradient (PADP - PCWP) above about 5-7 mmHg suggests pre-capillary disease such as PE, ARDS, hypoxic vasoconstriction or pulmonary arterial hypertension."]
+      ],
+      pearl: "If PCWP is higher than PA diastolic pressure, suspect a non-zone-3 tip or a measurement error.",
+      drugs: [] },
+
+    { id: "svo2", grp: "Monitoring lines", title: "SvO2 / ScvO2 and oxygen delivery vs consumption", lv: ["fl","md"],
+      sum: "Mixed venous saturation reflects the balance between oxygen delivery and oxygen consumption.",
+      rows: [
+        ["Definition", "SvO2 is drawn from the PA (true mixed venous); ScvO2 from a central line tip in the SVC. Normal SvO2 is about 60-80 percent; ScvO2 about 70 percent or higher."],
+        ["Low SvO2", "Delivery is too low or consumption too high: low cardiac output, anemia, hypoxemia, or fever, shivering, seizures, pain, agitation and work of breathing."],
+        ["High SvO2", "Tissues are not extracting or the sample is contaminated: sepsis with microcirculatory shunting, cyanide or carbon monoxide poisoning, hypothermia, sedation or paralysis, left-to-right shunt, or a wedged catheter sampling arterialized blood."],
+        ["Delivery and consumption", "Normally DO2 is about 4 times VO2. As DO2 falls, extraction rises to keep VO2 stable until a critical DO2, after which VO2 falls, anaerobic metabolism begins and lactate rises."]
+      ],
+      fl: [
+        ["Practical use", "A falling ScvO2 trend is an early sign that the heart cannot meet demand. Before blaming the heart, control the things that burn oxygen: treat pain, shivering, agitation and patient-ventilator dyssynchrony."]
+      ],
+      md: [
+        ["ScvO2 vs SvO2", "In health ScvO2 runs a few percent below SvO2 (the kidneys extract little). In shock the order reverses because splanchnic extraction rises, so ScvO2 overestimates SvO2."],
+        ["Evidence", "Rivers early goal-directed therapy targeted ScvO2 70 percent or more; ProCESS, ARISE and ProMISe found no mortality benefit of protocolized EGDT over usual care. A normal or high ScvO2 does not exclude shock."]
+      ],
+      pearl: "A high SvO2 in a sick patient is not reassuring: think sepsis, cyanide or a wedged catheter.",
+      drugs: ["dobutamine","hydroxocobalamin"] },
+
+    /* ---------------- Shock ---------------- */
+    { id: "shockprofiles", grp: "Shock", title: "Shock profiles by hemodynamics", lv: ["fl","md"],
+      sum: "Each category of shock has a typical pattern of cardiac output, SVR and filling pressures that points to treatment.",
+      rows: [
+        ["Hypovolemic", "Low CO, high SVR, low CVP and PCWP. Treat the cause and replace volume (blood for hemorrhage)."],
+        ["Cardiogenic", "Low CO, high SVR, high PCWP (and often CVP), low SvO2. Treat with inotropes, vasopressors for hypotension, revascularization and mechanical support."],
+        ["Distributive", "Septic (early, warm): high or normal CO, low SVR, low or normal filling pressures, normal or high SvO2. Neurogenic: low SVR with bradycardia. Anaphylaxis: low SVR with capillary leak."],
+        ["Obstructive", "Tamponade, massive PE and tension pneumothorax: low CO, high SVR, high CVP. Tamponade equalizes diastolic pressures; PE leaves PCWP low or normal."]
+      ],
+      fl: [
+        ["Bedside version", "Cold and wet = cardiogenic. Cold and dry with flat neck veins = hypovolemic. Cold with distended neck veins and clear lungs = obstructive or RV failure. Warm and flushed = distributive."]
+      ],
+      md: [
+        ["Mixed shock", "Patients often combine types: septic cardiomyopathy, hemorrhage on top of cardiogenic shock, or late sepsis turning cold. Repeat the profile after each intervention instead of labeling once."]
+      ],
+      pearl: "High CVP plus low PCWP points to the right heart or the pulmonary circulation (RV infarct, PE).",
+      drugs: ["norepinephrine","dobutamine","epinephrine","vasopressin"] },
+
+    { id: "scai", grp: "Shock", title: "SCAI cardiogenic shock stages A-E", lv: ["fl","md"],
+      sum: "The SCAI classification stages cardiogenic shock from at risk (A) to extremis (E) and predicts mortality at every step.",
+      rows: [
+        ["A - At risk", "A patient at risk (for example large acute MI or decompensated heart failure) without signs of shock: normal blood pressure and perfusion."],
+        ["B - Beginning", "Relative hypotension or tachycardia (for example SBP below 90, MAP below 60 or a drop of more than 30 mmHg) without hypoperfusion; lactate normal."],
+        ["C - Classic", "Hypoperfusion requiring intervention beyond volume: inotropes, vasopressors or mechanical support. Typically cold and wet, lactate 2 or more, rising creatinine, low urine output."],
+        ["D - Deteriorating", "Failing to respond to initial therapy: worsening hypotension or perfusion, rising lactate, escalating drugs or adding devices after about 30 minutes of treatment."],
+        ["E - Extremis", "Actual or impending circulatory collapse: refractory cardiac arrest with ongoing CPR or ECPR, or multiple high-dose agents plus devices with very high lactate."]
+      ],
+      fl: [
+        ["Transport decisions", "Stage C and beyond usually needs a center with shock team, cath lab and mechanical support. Moving from C to D during transport (rising pressor need, new arrhythmias, worsening mental status) should trigger early notification of the receiving team."]
+      ],
+      md: [
+        ["Modifiers", "An A modifier is added for cardiac arrest, especially with coma. The 2022 update describes stages using lactate, hemodynamics and response to therapy rather than rigid cutoffs."],
+        ["Hemodynamic markers", "Cardiac power output below about 0.6 W and PAPi below about 0.9 (RV failure in MI) help identify who needs escalation and which ventricle needs support."]
+      ],
+      pearl: "Stage D is defined by trajectory: failure to improve despite initial therapy.",
+      drugs: ["norepinephrine","dobutamine","milrinone","epinephrine"] },
+
+    { id: "rvfailure", grp: "Shock", title: "Right ventricular failure (preload, avoid hypoxia/acidosis, pulmonary vasodilators)", lv: ["fl","md"],
+      sum: "The failing RV needs careful preload, preserved systemic pressure, low PVR and contractility support, and it collapses quickly with hypoxia, acidosis or a bad intubation.",
+      rows: [
+        ["Causes", "RV infarction, massive PE, pulmonary hypertension crisis, ARDS and high airway pressures, LV failure, and after LVAD or cardiac surgery."],
+        ["Preload", "RV infarct may need modest fluid, but an overfilled RV dilates, bows the septum into the LV and lowers LV output. CVP above about 12-15 mmHg or rising without improved output means stop fluid; diuresis may even help."],
+        ["Pressure and contractility", "Keep systemic pressure up to perfuse the RV (norepinephrine, vasopressin, which does not raise PVR much). Add dobutamine or milrinone for low output; milrinone also lowers PVR but causes hypotension."],
+        ["Lower PVR", "Correct hypoxia, hypercapnia and acidosis, avoid high PEEP and plateau pressures, and consider inhaled pulmonary vasodilators (inhaled nitric oxide or inhaled epoprostenol)."]
+      ],
+      fl: [
+        ["RV infarct in the field", "Inferior STEMI with hypotension and clear lungs: get right-sided leads (V4R ST elevation), avoid nitroglycerin and other preload reducers, give judicious fluid, and start a vasopressor early if pressure does not respond."],
+        ["Intubation danger", "Induction, apnea-related hypoxia and hypercapnia, and positive pressure ventilation can cause RV arrest. Optimize first, have a vasopressor running or ready, use hemodynamically gentle induction, preoxygenate well and use modest tidal volume and PEEP."]
+      ],
+      md: [
+        ["Hemodynamic signs", "RA pressure high relative to PCWP (RA/PCWP above about 0.8), low PAPi, and Kussmaul-like rise with ventricular interdependence. Echo: dilated RV, septal flattening (D sign), low TAPSE."],
+        ["Escalation", "Mechanical options include Impella RP, surgical RVAD and VA-ECMO. In PE, systemic thrombolysis, catheter-directed therapy or embolectomy treats the cause."]
+      ],
+      pearl: "In RV failure, hypoxia, hypercapnia and acidosis raise PVR; the intubation itself can be the fatal event.",
+      drugs: ["norepinephrine","vasopressin","milrinone","epoprostenol"] },
+
+    { id: "pressors", grp: "Shock", title: "Vasopressor and inotrope choice by hemodynamic profile", lv: ["fl","md"],
+      sum: "Match the drug to the defect: vasopressors for low SVR, inotropes for low output, and both when both fail.",
+      rows: [
+        ["Norepinephrine", "Alpha-1 with some beta-1. First-line for septic shock and the usual first vasopressor for hypotension in cardiogenic shock."],
+        ["Vasopressin and epinephrine", "Vasopressin (V1) is the usual second agent in septic shock, often at a fixed low dose, to reduce norepinephrine need. Epinephrine adds strong beta-1 effects and is used in anaphylaxis and refractory shock; it raises lactate."],
+        ["Phenylephrine", "Pure alpha-1. Useful when tachycardia is harmful (aortic stenosis, HOCM) or for brief anesthesia-related vasodilation; can cause reflex bradycardia and lower CO in a weak heart."],
+        ["Inotropes", "Dobutamine (beta-1, some beta-2 vasodilation) and milrinone (PDE-3 inhibitor, inodilator, renally cleared, longer half-life, useful with beta-blockade and pulmonary hypertension). Both can cause hypotension and arrhythmias."],
+        ["Other", "Dopamine has more arrhythmias than norepinephrine and is not first-line. Angiotensin II is an option for refractory vasodilatory shock; methylene blue is a rescue for vasoplegia."]
+      ],
+      fl: [
+        ["In transport", "Run vasopressors through a dedicated, secure line, ideally central, with a backup drip prepared and enough volume for the trip. Watch peripheral sites for extravasation; phentolamine is the antidote for catecholamine extravasation."],
+        ["Profile match", "Neurogenic shock with bradycardia: norepinephrine or dopamine plus atropine for bradycardia. Anaphylaxis: epinephrine. RV failure: norepinephrine or vasopressin, plus an inotrope if output is low."]
+      ],
+      md: [
+        ["Evidence", "SOAP II: dopamine and norepinephrine had similar overall mortality, but dopamine caused more arrhythmias and did worse in the cardiogenic shock subgroup. VASST: vasopressin added to norepinephrine did not reduce mortality overall. DOREMI: milrinone vs dobutamine in cardiogenic shock showed no significant difference."],
+        ["Afterload trade-off", "In cardiogenic shock, use the lowest vasopressor dose that maintains perfusion pressure, because rising afterload worsens LV output; add an inotrope or mechanical support rather than escalating pressors alone."]
+      ],
+      pearl: "Pressors fix the pipes; inotropes fix the pump. Know which one is broken.",
+      drugs: ["norepinephrine","vasopressin","epinephrine","phenylephrine"] },
+
+    /* ---------------- Mechanical circulatory support ---------------- */
+    { id: "iabp", grp: "Mechanical circulatory support", title: "Intra-aortic balloon pump (IABP)", lv: ["fl","md"],
+      sum: "A helium-filled balloon in the descending aorta inflates in diastole and deflates just before systole, raising coronary perfusion and lowering afterload.",
+      rows: [
+        ["How it works", "Diastolic inflation (at the dicrotic notch) augments diastolic pressure and coronary perfusion. Deflation just before systole creates a pressure drop that lowers afterload and myocardial oxygen demand. Adds roughly 0.5 L/min of output at most."],
+        ["Position", "Tip about 2-3 cm distal to the left subclavian artery origin (on CXR near the 2nd-3rd intercostal space or just above the carina); the bottom of the balloon should sit above the renal arteries."],
+        ["Indications", "Mechanical complications of MI (acute MR, VSD) as a bridge to surgery, refractory ischemia, some cardiogenic shock and high-risk PCI, and bridging to transplant or other support."],
+        ["Contraindications", "Moderate-severe aortic regurgitation, aortic dissection, aortic aneurysm, severe peripheral vascular disease, and uncontrolled bleeding or coagulopathy (relative)."]
+      ],
+      fl: [
+        ["In transport", "Bring the transport console, extra helium, enough battery, the manual, and the patient's pump settings. Watch left radial pulse (migration up) and urine output (migration down), and check the leg distal to the insertion site. Modern pumps auto-compensate helium volume for altitude; know how your model does it."],
+        ["Troubleshooting", "Blood or brown flecks in the helium line mean balloon rupture: stop pumping, clamp the line, keep the patient flat and arrange removal promptly because a clotted balloon can become entrapped. If the pump fails, follow the manufacturer guidance to avoid a balloon left still and deflated for long periods (thrombus risk)."],
+        ["CPR and defibrillation", "During CPR the ECG trigger fails; switch to pressure trigger (compressions trigger inflation) or internal/asynchronous mode per device guidance. Defibrillation is safe without disconnecting; stand clear of the console."]
+      ],
+      md: [
+        ["Evidence", "IABP-SHOCK II (2012) found no 30-day (or later) mortality benefit from routine IABP in AMI cardiogenic shock with early revascularization. Guidelines no longer recommend routine use; it remains reasonable for mechanical complications."],
+        ["Complications", "Limb ischemia, bleeding, thrombocytopenia, hemolysis, infection, balloon rupture with gas embolism, aortic dissection, and malposition causing left arm or renal or mesenteric ischemia. Usually anticoagulated with heparin (often omitted at 1:2 or less or when bleeding risk is high, per institution)."]
+      ],
+      pearl: "IABP improves supply (diastolic augmentation) and demand (afterload reduction) but adds little cardiac output.",
+      drugs: ["heparin"] },
+
+    { id: "iabptiming", grp: "Mechanical circulatory support", title: "IABP timing errors (early/late inflation, early/late deflation) and trigger modes", lv: ["fl","md"],
+      sum: "Correct timing inflates at the dicrotic notch and deflates just before systole; each of the four timing errors has a recognizable waveform and consequence.",
+      rows: [
+        ["Correct timing", "Inflation at the dicrotic notch gives a sharp V. Augmented diastolic pressure is usually above the unassisted systolic. Assisted aortic end-diastolic pressure is lower than unassisted, and assisted systolic is lower than unassisted systolic."],
+        ["Early inflation", "Balloon inflates before aortic valve closure: augmentation starts before the dicrotic notch. Causes premature aortic valve closure, raised LVEDV and LVEDP, raised wall stress, and possible aortic regurgitation."],
+        ["Late inflation", "Inflation well after the dicrotic notch: the notch is visible and the V is lost. Less diastolic augmentation and coronary perfusion, but not dangerous."],
+        ["Early deflation", "Sharp drop after augmentation with a U-shaped dip; assisted end-diastolic pressure equal to or lower than unassisted but rising again before systole. Little afterload reduction and possible retrograde coronary and carotid flow."],
+        ["Late deflation", "Assisted end-diastolic pressure equal to or above unassisted; the balloon is still inflated as the LV ejects. Raises afterload and oxygen demand. With early inflation, the most harmful errors."]
+      ],
+      fl: [
+        ["Trigger modes", "ECG trigger (R wave) is standard. Pressure trigger uses the arterial upstroke and is useful when the ECG is noisy. Pacer triggers (V or AV paced) follow pacing spikes. Internal/asynchronous mode fires at a set rate with no trigger, used only in arrest with no cardiac output."],
+        ["Flight issues", "Vibration, patient movement and electrocautery or radio interference can corrupt the ECG trigger. Use clean electrodes and leads, have the pump ECG on a direct cable when possible, and switch to pressure trigger if the ECG signal is lost. Check timing at 1:2 so assisted and unassisted beats can be compared."]
+      ],
+      md: [
+        ["Arrhythmias", "Modern pumps use automatic timing algorithms that adapt to AF and variable R-R intervals; deflation is often set to R-wave deflation in irregular rhythms. Very fast rates reduce benefit and may require 1:2."]
+      ],
+      pearl: "Late deflation and early inflation both make the LV work harder; late inflation and early deflation just waste benefit.",
+      drugs: [] },
+
+    { id: "impella", grp: "Mechanical circulatory support", title: "Impella (CP, 5.5, RP): P-levels, positioning, purge, suction and position alarms, hemolysis", lv: ["fl","md"],
+      sum: "Impella is a catheter-mounted axial flow pump that moves blood from the LV into the aorta (or from the IVC into the PA for RP), directly unloading the ventricle.",
+      rows: [
+        ["Devices", "Impella 2.5 and CP are placed percutaneously via the femoral artery (CP about 3.5-4 L/min). Impella 5.5 is placed surgically, usually via the axillary artery (up to about 5.5-6 L/min). Impella RP supports the RV, pumping from the IVC/RA into the PA."],
+        ["Positioning", "Left-sided pumps sit across the aortic valve: inlet in the LV (for CP about 3.5 cm below the aortic annulus), outlet in the ascending aorta. Position is confirmed by echo and the placement and motor current waveforms on the controller."],
+        ["P-levels and purge", "Support is set as P-levels (P-0 to P-9); flow depends on the P-level, preload and afterload. The purge system pushes a dextrose solution (with heparin, or a bicarbonate-based purge per protocol) through the motor to keep blood out."],
+        ["Contraindications", "LV thrombus, mechanical aortic valve, severe aortic stenosis or significant aortic regurgitation (relative), severe peripheral arterial disease, and VSD (risk of right-to-left shunting)."]
+      ],
+      fl: [
+        ["Alarms", "Suction alarm: the inlet is pulling against the LV wall because the LV is under-filled (hypovolemia, RV failure, tamponade) or the pump is mispositioned. Lower the P-level, check volume and RV function, and get position checked by echo. Position alarm: the motor current has lost its pulsatility, meaning the pump is entirely in the aorta or the LV."],
+        ["In transport", "Do not reposition the catheter in the field. Lock the repositioning sleeve, secure the catheter and console, keep the purge running, watch the access leg, and bring the controller power supply. Bumps and lifts can migrate the pump, so watch position waveforms after every move."],
+        ["CPR and defibrillation", "Manufacturer guidance is to reduce to P-2 during CPR and return to the prior level after ROSC (echo position check). Defibrillation does not require disconnecting the pump."]
+      ],
+      md: [
+        ["Evidence", "DanGer Shock (2024): in STEMI cardiogenic shock without coma, routine Impella CP lowered 180-day all-cause mortality compared with standard care, but with more bleeding, limb ischemia, renal replacement therapy and device complications. Earlier trials and registries were mixed."],
+        ["Hemolysis", "Caused mostly by malposition and suction. Watch plasma free hemoglobin, LDH, and dark (cola) urine; fix position, volume and P-level. Other complications: limb ischemia, bleeding, aortic valve injury, stroke, and pump thrombosis."],
+        ["Never at P-0 in place", "A left-sided Impella left in the LV at P-0 lets blood flow backward from aorta to LV (functional aortic regurgitation). Keep at least the minimum level or remove it."]
+      ],
+      pearl: "A suction alarm usually means an empty LV: think volume, RV failure or position before turning up the support.",
+      drugs: ["heparin","bivalirudin","sodium-bicarbonate","dextrose"] },
+
+    { id: "ecmo", grp: "Mechanical circulatory support", title: "ECMO: VA vs VV, flows, anticoagulation, Harlequin (north-south) syndrome, transport", lv: ["fl","md"],
+      sum: "ECMO drains venous blood through an oxygenator and returns it either to a vein (VV, lung support) or an artery (VA, heart and lung support).",
+      rows: [
+        ["VV vs VA", "VV ECMO (for example femoral drain and IJ return, or a dual-lumen IJ cannula) replaces lung function but relies on the native heart for blood pressure. VA ECMO (for example femoral vein to femoral artery) bypasses heart and lungs and supports circulation."],
+        ["Settings", "Pump speed (RPM) produces flow (L/min). Sweep gas flow mainly controls CO2 removal (more sweep, lower PaCO2). FdO2 and blood flow control oxygenation. VA flows are often about 3-5 L/min; VV runs a high fraction of cardiac output."],
+        ["Anticoagulation", "Usually unfractionated heparin monitored by anti-Xa, aPTT or ACT, with bivalirudin as an alternative (for example in HIT). Bleeding and thrombosis are both common and serious."],
+        ["Harlequin (north-south) syndrome", "With femoral VA ECMO, if the native heart recovers but the lungs are poor, the LV ejects deoxygenated blood to the coronaries, brain and right arm while the lower body gets oxygenated circuit blood. Monitor right radial SpO2 or ABG."]
+      ],
+      fl: [
+        ["In transport", "Transport is done with an ECMO specialist and a portable console. Clamps, a hand crank, backup oxygen, power and battery, and cannula securing are mandatory. Plan every move so lines cannot kink or pull; cannula dislodgement is lethal within minutes."],
+        ["Troubleshooting", "Chattering lines or falling flow with stable RPM mean poor venous drainage: hypovolemia, kinking, tamponade, or high intrathoracic pressure. Check lines, give volume and reduce RPM per protocol. Dark blood returning from the oxygenator means oxygenator failure or gas loss."],
+        ["CPR", "VA ECMO patients may have no pulsatility with adequate flow; check the circuit and MAP before starting compressions. On VV ECMO the native heart must pump, so cardiac arrest is treated with standard ACLS."]
+      ],
+      md: [
+        ["LV distension", "Retrograde VA flow raises LV afterload. Loss of arterial pulsatility, a closed aortic valve, rising PCWP and pulmonary edema signal LV distension; vent with IABP, Impella (ECPELLA), atrial septostomy or direct LV vent."],
+        ["Evidence", "ECLS-SHOCK (2023): early routine VA ECMO in AMI cardiogenic shock with revascularization did not reduce 30-day mortality and increased bleeding and vascular complications. In severe ARDS, CESAR and EOLIA (plus later meta-analyses) support VV ECMO in selected patients at experienced centers."],
+        ["Differential hypoxia fixes", "Improve native lung oxygenation (FiO2, PEEP), increase circuit flow, or add an upper-body return cannula (V-AV configuration)."]
+      ],
+      pearl: "On femoral VA ECMO, the right radial artery tells you what the brain and coronaries are getting.",
+      drugs: ["heparin","bivalirudin","argatroban","protamine"] },
+
+    { id: "lvad", grp: "Mechanical circulatory support", title: "LVAD (e.g. HeartMate 3): no pulse, Doppler MAP, alarms, suction events, CPR guidance", lv: ["fl","md"],
+      sum: "A continuous-flow LVAD pumps blood from the LV apex to the aorta, so patients often have no palpable pulse and need a Doppler pressure.",
+      rows: [
+        ["Basics", "HeartMate 3 is a centrifugal, magnetically levitated pump. A driveline exits the abdomen to a controller and two batteries or wall power. Parameters: speed (RPM, fixed), flow (estimated), power (watts) and pulsatility index."],
+        ["Blood pressure", "Pulses are usually absent or weak and SpO2 may not read. Use a Doppler at the brachial artery with a manual cuff: the first returning sound approximates MAP. Typical target MAP about 70-90 mmHg."],
+        ["Assessment", "Listen over the chest/upper abdomen for the pump hum, check the controller display and alarms, look at the driveline and connections, and assess perfusion clinically (mental status, skin, capillary refill, ETCO2)."],
+        ["Long-term issues", "Warfarin plus (often) aspirin, GI bleeding (acquired von Willebrand disease, AV malformations), driveline infection, pump thrombosis, stroke, RV failure and ventricular arrhythmias."]
+      ],
+      fl: [
+        ["Alarms and power", "Low-flow alarms point to low preload (hypovolemia, bleeding, RV failure, tamponade, arrhythmia) or obstruction. Power alarms or a silent pump are emergencies: check connections, change batteries one at a time (never both at once) and swap the controller only per manufacturer and VAD team guidance. Bring the patient's backup bag and call the VAD coordinator."],
+        ["CPR guidance", "AHA 2017: in an unresponsive LVAD patient, check for pump function and perfusion. If the pump is not working and perfusion is absent (for example MAP below about 50 and ETCO2 below about 20 mmHg), start chest compressions; the concern about dislodging the pump does not outweigh the need for perfusion. Defibrillate and pace as usual without disconnecting."],
+        ["Suction events and VT", "Low preload lets the LV wall collapse onto the inflow cannula, causing low flow and VT. Give fluid and treat the cause. Patients often tolerate VT or VF for a time because the LVAD keeps pumping, but RV output falls; treat per ACLS with an eye on mental status and perfusion."]
+      ],
+      md: [
+        ["Pump thrombosis", "Suggested by rising power, high calculated flow, hemolysis (LDH several times normal, plasma free hemoglobin, dark urine) and heart failure symptoms. Much less common with HeartMate 3 than older axial pumps."],
+        ["Evidence", "MOMENTUM 3 showed HeartMate 3 superior to the axial HeartMate II for survival free of disabling stroke or reoperation for malfunction. ARIES-HM3 showed omitting aspirin (warfarin alone) was noninferior for thrombotic events and reduced bleeding."]
+      ],
+      pearl: "In an LVAD patient, the absence of a pulse is normal; the absence of a hum and perfusion is not.",
+      drugs: ["warfarin","aspirin","heparin"] },
+
+    { id: "tvp", grp: "Mechanical circulatory support", title: "Transvenous and transcutaneous pacing: capture, sensing, failure modes", lv: ["fl","md"],
+      sum: "Pacing treats unstable bradycardia when drugs fail, and success requires both electrical and mechanical capture.",
+      rows: [
+        ["Transcutaneous pacing", "Pads anterior-posterior (or anterior-lateral). Set a rate (often 60-80), raise output (mA) until electrical capture, then confirm a pulse with each beat; set output a little above threshold (commonly about 10 mA above). Painful: give analgesia and sedation."],
+        ["Transvenous pacing", "A pacing wire through the right IJ or left subclavian into the RV apex. Settings: rate, output (mA) and sensitivity (mV). Capture threshold is ideally under about 1 mA; set output 2-3 times threshold."],
+        ["Capture", "Electrical capture: a pacing spike followed by a wide QRS and T wave in the opposite direction. Mechanical capture: a pulse or pleth waveform with each paced beat. Electrical capture without a pulse is PEA."],
+        ["Failure modes", "Failure to pace: no spikes (battery, disconnection, oversensing). Failure to capture: spikes with no QRS (lead migration, high threshold from ischemia, acidosis, hyperkalemia or drugs). Undersensing: spikes fire despite intrinsic beats. Oversensing: device is inhibited by T waves, muscle or artifact."]
+      ],
+      fl: [
+        ["In transport", "Confirm mechanical capture at the femoral pulse or by SpO2 pleth; avoid the carotid, where muscle twitch mimics a pulse. Recheck capture after every move, since pads and wires shift. Have pads on a TVP patient as backup."],
+        ["Fixes", "Loss of capture: increase mA, check connections, reposition the patient (left lateral can help a TVP wire), and fall back to transcutaneous pacing or drugs. Undersensing: make the device more sensitive (lower mV number). Oversensing: less sensitive (higher mV number) or asynchronous mode."]
+      ],
+      md: [
+        ["Modes", "VVI (demand) paces when no intrinsic beat is sensed; VOO (asynchronous) paces regardless and risks R-on-T. Atropine helps nodal block but not infranodal block (Mobitz II, third-degree with wide escape); use epinephrine, dopamine or pacing."],
+        ["TVP complications", "RV perforation (new pericardial effusion, change in paced QRS axis, diaphragmatic or chest wall pacing, rising threshold), arrhythmias, pneumothorax, infection and thrombosis."]
+      ],
+      pearl: "Never trust the monitor alone: a paced rhythm without a pulse is PEA.",
+      drugs: ["atropine","epinephrine","dopamine","isoproterenol"] },
+
+    /* ---------------- Interventional cardiology ---------------- */
+    { id: "cathlab", grp: "Interventional cardiology", title: "Cardiac cath basics: access site (radial vs femoral) care, retroperitoneal bleed, closure devices", lv: ["fl","md"],
+      sum: "Access-site complications are the most common problems after catheterization, and a retroperitoneal bleed can be lethal while hidden.",
+      rows: [
+        ["Radial vs femoral", "Radial access has fewer bleeding complications and allows early mobilization; in ACS it lowered bleeding and mortality in trials such as RIVAL (STEMI subgroup) and MATRIX. Femoral is used for large-bore devices (IABP, Impella, ECMO) and when radial fails."],
+        ["Radial care", "A compression band is gradually deflated over hours per protocol. Watch for hematoma, hand ischemia, and forearm compartment syndrome. Radial artery occlusion is usually silent because of ulnar collateral flow."],
+        ["Femoral care", "Bed rest with the leg straight and the head of the bed low for hours after sheath removal (shorter with closure devices). Check the site, distal pulses, and for back or flank pain."],
+        ["Closure devices", "Angio-Seal (collagen plug with an intra-arterial anchor), Perclose (suture) and others shorten bed rest but can fail, cause infection or limb ischemia; a closure device does not remove the need for site checks."]
+      ],
+      fl: [
+        ["Retroperitoneal bleed", "Suspect after femoral access with hypotension and tachycardia, back, flank or abdominal pain, and little or no visible groin hematoma. Treat for hemorrhagic shock (blood, stop anticoagulants), and alert the receiving facility; it needs imaging and often endovascular repair."],
+        ["Site bleeding in transport", "Hold firm manual pressure just proximal to the skin puncture (the arterial hole lies above the skin hole), for a sustained period. Keep the leg straight during loading and unloading and recheck the site and distal pulses after every move."]
+      ],
+      md: [
+        ["Risk factors", "High arterial puncture (above the inguinal ligament) is the main risk for retroperitoneal bleeding; low puncture (below the bifurcation) raises pseudoaneurysm and AV fistula risk. Also large sheaths, heavy anticoagulation, female sex, low body weight and older age."],
+        ["Other complications", "Pseudoaneurysm: pulsatile mass with a systolic bruit; ultrasound-guided thrombin injection or compression. AV fistula: continuous bruit. Contrast nephropathy, atheroembolism (livedo, eosinophilia), and stroke."]
+      ],
+      pearl: "Post-femoral cath hypotension with back pain and a soft groin is a retroperitoneal bleed until proven otherwise.",
+      drugs: ["heparin","bivalirudin","protamine"] },
+
+    { id: "pci", grp: "Interventional cardiology", title: "STEMI and PCI: door-to-balloon, antiplatelet and anticoagulant loading, cardiogenic shock and culprit-only PCI", lv: ["fl","md"],
+      sum: "STEMI care is a race to reperfusion, supported by antiplatelet and anticoagulant therapy and guided by shock-specific trial data.",
+      rows: [
+        ["Time targets", "Primary PCI: first medical contact to device 90 minutes or less, or 120 minutes or less when transfer is needed. If PCI cannot happen within 120 minutes, give fibrinolysis within 30 minutes of arrival unless contraindicated, then transfer."],
+        ["Antiplatelets", "Aspirin load plus a P2Y12 inhibitor (ticagrelor or prasugrel preferred for PCI; clopidogrel with fibrinolysis or when the others are unsuitable). Prasugrel is contraindicated after prior stroke or TIA. IV cangrelor is an option when oral loading is not possible."],
+        ["Anticoagulants", "Unfractionated heparin is the usual choice for primary PCI; bivalirudin is an alternative. Enoxaparin or fondaparinux are used with fibrinolysis. GP IIb/IIIa inhibitors are bailout agents for large thrombus or no-reflow."],
+        ["Cardiogenic shock", "Emergency revascularization improves survival (SHOCK trial at 6 months and long term). In multivessel disease with shock, treat the culprit lesion only at first (CULPRIT-SHOCK)."]
+      ],
+      fl: [
+        ["In transport", "Send the 12-lead and activation to the receiving cath lab, document drug times and doses given, place defib pads, and avoid nitrates with hypotension, RV infarct or recent PDE-5 inhibitor use. Monitor for reperfusion arrhythmias, bleeding after fibrinolysis, and evolving shock."]
+      ],
+      md: [
+        ["Evidence", "CULPRIT-SHOCK (2017): culprit-only PCI lowered 30-day death or renal replacement therapy compared with immediate multivessel PCI. In stable STEMI without shock, complete revascularization (staged or immediate) reduces future events (COMPLETE)."],
+        ["Reperfusion after lytics", "After fibrinolysis, transfer for angiography; rescue PCI for failed reperfusion (less than 50 percent ST resolution at 60-90 minutes, ongoing pain or instability), otherwise routine angiography within about 2-24 hours."]
+      ],
+      pearl: "In shock with multivessel disease, open the culprit first and come back for the rest later.",
+      drugs: ["aspirin","ticagrelor","prasugrel","heparin"] },
+
+    { id: "valves", grp: "Interventional cardiology", title: "Hemodynamics of aortic stenosis, aortic regurgitation, mitral regurgitation and tamponade (pulsus paradoxus, equalization of pressures)", lv: ["fl","md"],
+      sum: "Valve lesions and tamponade each have a signature pressure pattern and specific rules about rate, preload and afterload.",
+      rows: [
+        ["Aortic stenosis", "Fixed outflow obstruction: LV-aorta gradient, pulsus parvus et tardus. Severe AS: valve area under 1.0 cm2, mean gradient 40 mmHg or more, peak velocity 4 m/s or more. Keep preload, sinus rhythm and a normal-slow rate; avoid vasodilators; treat hypotension with an alpha agonist."],
+        ["Aortic regurgitation", "Chronic AR: wide pulse pressure, bounding pulses. Acute AR (dissection, endocarditis): sudden LV volume overload, pulmonary edema and shock without a wide pulse pressure. Avoid bradycardia (longer diastole means more regurgitation); IABP is contraindicated."],
+        ["Mitral regurgitation", "Acute MR (papillary muscle rupture, endocarditis) causes giant v waves on the wedge tracing and flash pulmonary edema. Afterload reduction (nitroprusside, IABP) promotes forward flow; urgent surgery is usually needed."],
+        ["Tamponade", "Pericardial pressure limits filling: equalization of diastolic pressures (RA, RV diastolic, PA diastolic and PCWP within about 5 mmHg), pulsus paradoxus (inspiratory SBP fall of more than 10 mmHg), and a blunted y descent. Beck triad: hypotension, JVD, muffled heart sounds."]
+      ],
+      fl: [
+        ["In transport", "Tamponade and AS are preload and rate dependent: give fluid, avoid sedatives that vasodilate, and be very careful with intubation and positive pressure, which can cause arrest. Pericardiocentesis is the definitive fix for tamponade; know your scope and protocol."]
+      ],
+      md: [
+        ["Tamponade vs constriction", "Tamponade: blunted y descent, pulsus paradoxus common, no Kussmaul sign. Constriction: prominent y descent with dip-and-plateau (square root) RV diastolic tracing, Kussmaul sign, ventricular discordance on simultaneous LV/RV tracings. Restrictive cardiomyopathy shows concordance."],
+        ["Low-flow AS", "Low-flow, low-gradient AS with reduced EF: dobutamine stress echo distinguishes true severe AS (valve area stays small as gradient rises) from pseudo-severe AS (valve area increases with flow)."]
+      ],
+      pearl: "Equal diastolic pressures plus pulsus paradoxus equals tamponade until proven otherwise.",
+      drugs: ["phenylephrine","nitroprusside","norepinephrine"] }
+  ],
+
+  profiles: [
+    { shock: "Hypovolemic", co: "Low", svr: "High", pcwp: "Low", cvp: "Low", svo2: "Low", note: "Hemorrhage or fluid loss. Cold, flat neck veins, narrow pulse pressure. Replace volume (blood for bleeding) and stop the loss." },
+    { shock: "Cardiogenic (LV)", co: "Low", svr: "High", pcwp: "High", cvp: "Normal or high", svo2: "Low", note: "Cold and wet: pulmonary edema. Inotropes, vasopressor for hypotension, revascularization, consider mechanical support." },
+    { shock: "RV failure", co: "Low", svr: "High", pcwp: "Low or normal", cvp: "High", svo2: "Low", note: "RV infarct, PE, pulmonary hypertension. JVD with clear lungs. Careful preload, avoid nitrates, keep systemic pressure up, lower PVR." },
+    { shock: "Distributive - septic (early, warm)", co: "High or normal", svr: "Low", pcwp: "Low or normal", cvp: "Low or normal", svo2: "Normal or high", note: "Warm, bounding pulses, wide pulse pressure. Fluids, antibiotics, norepinephrine first, add vasopressin. Late sepsis can turn cold with low CO." },
+    { shock: "Distributive - anaphylactic", co: "Low to normal", svr: "Low", pcwp: "Low", cvp: "Low", svo2: "Variable", note: "Vasodilation plus capillary leak. Epinephrine IM first, large fluid volumes, epinephrine infusion if refractory." },
+    { shock: "Neurogenic", co: "Low or normal", svr: "Low", pcwp: "Low", cvp: "Low", svo2: "Normal or variable", note: "Spinal cord injury at T6 or above. Hypotension with bradycardia and warm skin. Exclude hemorrhage first; vasopressor with chronotropy, atropine for bradycardia." },
+    { shock: "Obstructive - tamponade", co: "Low", svr: "High", pcwp: "High (equalized)", cvp: "High", svo2: "Low", note: "Diastolic pressures equalize within about 5 mmHg, pulsus paradoxus, blunted y descent. Fluid as a bridge, pericardiocentesis." },
+    { shock: "Obstructive - massive PE", co: "Low", svr: "High", pcwp: "Low or normal", cvp: "High", svo2: "Low", note: "High PA pressure (if RV can generate it), dilated RV, hypoxemia. Anticoagulate, thrombolysis or catheter or surgical embolectomy; avoid excessive fluid." }
+  ],
+
+  q: [
+    /* ================= Flight paramedic (fl) ================= */
+    { lv: "fl", topic: "aline", q: "During loading, the arterial line transducer slips and now hangs about 20 cm below the patient's phlebostatic axis. What happens to the displayed pressure?",
+      a: "It reads falsely high by roughly 15 mmHg", w: ["It reads falsely low by roughly 15 mmHg", "It is unchanged because the line was zeroed", "Only the waveform shape changes, not the numbers"],
+      x: "A transducer below the heart adds the weight of the fluid column, about 7.5 mmHg per 10 cm. Re-level at the 4th intercostal space mid-axillary line." },
+    { lv: "fl", topic: "aline", q: "A fast-flush test on an arterial line shows four sharp oscillations before the trace settles. The display reads 182/48. What is the best interpretation?",
+      a: "Underdamped: systolic overestimated; trust the MAP", w: ["Overdamped: systolic is underestimated, flush the line", "Optimally damped: treat the hypertension now", "Transducer is too high: re-level and re-zero"],
+      x: "More than about 2 oscillations means underdamping, which exaggerates systolic and lowers diastolic. MAP stays relatively accurate." },
+    { lv: "fl", topic: "aline", q: "You are flying a patient with an arterial line from a sea-level hospital to a cruising altitude. What is the best practice for pressure monitoring?",
+      a: "Re-zero the transducer at the phlebostatic axis", w: ["Raise the flush bag pressure to 500 mmHg to compensate", "Switch to cuff pressures only until landing", "Lower the transducer 10 cm to offset altitude"],
+      x: "Zeroing references atmospheric pressure, which changes with cabin altitude. Re-zero (and re-level) after significant altitude changes per protocol." },
+    { lv: "fl", topic: "formulas", q: "A patient's blood pressure is 90/45 mmHg. What is the approximate MAP?",
+      a: "60 mmHg", w: ["67 mmHg", "55 mmHg", "75 mmHg"],
+      x: "MAP = DBP + (SBP - DBP)/3 = 45 + 45/3 = 45 + 15 = 60 mmHg." },
+    { lv: "fl", topic: "formulas", q: "A head-injured patient has a MAP of 80 mmHg and an ICP of 25 mmHg. What is the cerebral perfusion pressure?",
+      a: "55 mmHg, below the usual target", w: ["105 mmHg, above the usual target", "80 mmHg, within the usual target", "65 mmHg, within the usual target"],
+      x: "CPP = MAP - ICP = 80 - 25 = 55 mmHg. TBI guidelines target roughly 60-70 mmHg, so this is low." },
+    { lv: "fl", topic: "cvp", q: "A patient with an inferior MI has a CVP waveform showing intermittent very large a waves. What do these suggest?",
+      a: "Atrial contraction against a closed tricuspid valve", w: ["Severe tricuspid regurgitation with large systolic backflow", "Atrial fibrillation with loss of organized atrial activity", "Cardiac tamponade with a blunted y descent"],
+      x: "Cannon a waves occur when the atrium contracts against a closed tricuspid valve, as in complete heart block or VT." },
+    { lv: "fl", topic: "pac", q: "In flight, the PA catheter distal trace changes from a PA waveform to a wedge waveform. The balloon has not been inflated. What should you do?",
+      a: "Confirm the balloon is down and withdraw per protocol", w: ["Inflate the balloon fully to confirm a true wedge reading", "Advance the catheter until the PA trace reappears", "Leave it in place and record the wedge pressure hourly"],
+      x: "Spontaneous wedge means distal migration with risk of pulmonary infarction or rupture; pull back per protocol or medical control." },
+    { lv: "fl", topic: "pac", q: "The PA catheter distal waveform now shows a systolic of 32 mmHg and a diastolic near 2 mmHg, and frequent PVCs appear. What happened?",
+      a: "The catheter tip has fallen back into the RV", w: ["The catheter has migrated into a wedged position", "The balloon has ruptured inside the pulmonary artery", "The transducer needs re-zeroing to atmosphere"],
+      x: "An RV waveform has a near-zero diastolic that rises through diastole, and an RV tip causes ectopy. Notify and reposition per protocol." },
+    { lv: "fl", topic: "pac", q: "Shortly after a wedge reading, a ventilated patient with a PA catheter develops bright red blood in the endotracheal tube. Which complication is most likely?",
+      a: "Pulmonary artery rupture", w: ["Pulmonary infarction from prolonged wedging", "Endotracheal tube cuff injury to the trachea", "Balloon rupture with helium embolism"],
+      x: "Hemoptysis after balloon inflation is PA rupture until proven otherwise; position bleeding side down and prepare for lung isolation." },
+    { lv: "fl", topic: "shockprofiles", q: "Readings: CVP 2 mmHg, PCWP 4 mmHg, CI 1.8 L/min/m2, SVR 1800 dynes-sec/cm5. Which shock state fits?",
+      a: "Hypovolemic shock", w: ["Cardiogenic shock", "Early septic shock", "Massive pulmonary embolism"],
+      x: "Low filling pressures, low output and high SVR is the classic hypovolemic profile." },
+    { lv: "fl", topic: "shockprofiles", q: "After a C5 spinal fracture, a patient has BP 78/40, HR 48 and warm, dry extremities. Which profile is expected?",
+      a: "Low SVR with low filling pressures", w: ["High SVR with high filling pressures", "Low CO with very high CVP", "High SVR with low filling pressures"],
+      x: "Neurogenic shock is loss of sympathetic tone: low SVR, venous pooling (low filling pressures) and unopposed vagal bradycardia." },
+    { lv: "fl", topic: "valves", q: "A stab wound patient has hypotension, JVD, muffled heart sounds and a 15 mmHg inspiratory drop in systolic pressure. What hemodynamic finding is expected on a PA catheter?",
+      a: "Equalization of right and left diastolic pressures", w: ["Very low CVP with a markedly elevated wedge pressure", "Giant v waves on the wedge tracing from acute MR", "Wide pulse pressure with a high cardiac index"],
+      x: "Tamponade equalizes diastolic pressures within about 5 mmHg and causes pulsus paradoxus." },
+    { lv: "fl", topic: "scai", q: "A post-MI patient has SBP 84, cool clammy skin, lactate 4.1 and is started on norepinephrine and dobutamine. What SCAI stage is this?",
+      a: "Stage C", w: ["Stage B", "Stage A", "Stage E"],
+      x: "Stage C is hypoperfusion requiring intervention beyond fluids (drugs or devices). Stage B is hypotension without hypoperfusion." },
+    { lv: "fl", topic: "scai", q: "During a 2-hour transport, a stage C cardiogenic shock patient needs a second and then third vasoactive drug and lactate is climbing. What does this represent?",
+      a: "Progression to stage D (deteriorating)", w: ["Stable stage C on appropriate therapy", "Stage B because the patient is on drugs", "Stage E because more than one drug is running"],
+      x: "Stage D is defined by deterioration despite initial treatment; it should prompt early notification and discussion of mechanical support." },
+    { lv: "fl", topic: "rvfailure", q: "An inferior STEMI patient is hypotensive with clear lungs and JVD; V4R shows ST elevation. What is the best initial approach?",
+      a: "Hold nitrates; give a cautious fluid bolus", w: ["Give nitroglycerin to relieve ischemic pain", "Give furosemide to reduce venous congestion", "Start a high-dose morphine infusion for pain"],
+      x: "RV infarction is preload dependent; nitrates, diuretics and opioid vasodilation can cause profound hypotension." },
+    { lv: "fl", topic: "rvfailure", q: "You must intubate a hypoxic patient with severe pulmonary hypertension before flight. Which approach best reduces the risk of arrest?",
+      a: "Preoxygenate and start a vasopressor before induction", w: ["Use a large induction dose to blunt the sympathetic surge", "Ventilate with high tidal volumes and high PEEP after intubation", "Allow permissive hypercapnia during a prolonged attempt"],
+      x: "Hypotension, hypoxia, hypercapnia and high airway pressures all worsen RV failure. Support systemic pressure and avoid apnea-related hypoxia." },
+    { lv: "fl", topic: "pressors", q: "A patient in septic shock remains at MAP 58 after an appropriate fluid bolus. Which vasopressor is first-line?",
+      a: "Norepinephrine", w: ["Dopamine", "Phenylephrine", "Dobutamine"],
+      x: "Norepinephrine is first-line in septic shock; dopamine causes more arrhythmias and dobutamine is an inotrope that can lower SVR." },
+    { lv: "fl", topic: "pressors", q: "A patient with known severe aortic stenosis becomes hypotensive and tachycardic after sedation. Which agent best fits the hemodynamic goal?",
+      a: "Phenylephrine, raising SVR without tachycardia", w: ["Dobutamine, raising contractility and heart rate", "Nitroglycerin, reducing preload and wall stress", "Milrinone, raising contractility with vasodilation"],
+      x: "In severe AS, coronary perfusion depends on diastolic pressure and diastolic time; a pure alpha agonist restores pressure without tachycardia." },
+    { lv: "fl", topic: "iabp", q: "Shortly after loading an IABP patient, the left radial pulse is lost while the right radial pulse is strong. What is the most likely cause?",
+      a: "The balloon has migrated up and is obstructing the left subclavian", w: ["The balloon has migrated down and is occluding the renal arteries", "The IABP timing has changed to late deflation", "The femoral insertion site has developed a hematoma"],
+      x: "The tip should lie just distal to the left subclavian artery; upward migration compromises left arm flow. Notify and plan repositioning with imaging." },
+    { lv: "fl", topic: "iabp", q: "During transport of an IABP patient, urine output falls sharply while blood pressure is unchanged. Which malposition should you suspect?",
+      a: "Balloon too low, occluding the renal arteries", w: ["Balloon too high, occluding the left subclavian", "Balloon tip lying high in the aortic arch", "Balloon tip lying in the ascending aorta"],
+      x: "A low-lying balloon can occlude renal arteries with each inflation. Report it; the receiving team should check position by imaging." },
+    { lv: "fl", topic: "iabp", q: "You notice brown flecks and blood in the IABP helium tubing. What is the correct immediate action?",
+      a: "Stop pumping, clamp the line, plan prompt removal", w: ["Increase the augmentation and continue pumping", "Flush the helium line with saline and keep pumping", "Change to 1:3 ratio and continue to destination"],
+      x: "Blood in the gas line means balloon rupture; continued pumping risks gas embolism, and a clotted balloon can become entrapped." },
+    { lv: "fl", topic: "iabp", q: "An IABP patient goes into cardiac arrest during transport. Which statement about the pump is correct?",
+      a: "Use pressure or internal trigger; defibrillate as usual", w: ["Turn the pump off and disconnect it before any shock", "Keep ECG trigger; the pump will follow the VF waveform", "Increase to maximal augmentation to replace compressions"],
+      x: "The ECG trigger fails in arrest; use pressure trigger with compressions or internal mode per device guidance. Modern consoles are isolated for defibrillation." },
+    { lv: "fl", topic: "iabptiming", q: "On a 1:2 IABP tracing, the assisted aortic end-diastolic pressure is higher than the unassisted end-diastolic pressure. Which timing error is this?",
+      a: "Late deflation", w: ["Early deflation", "Late inflation", "Early inflation"],
+      x: "In late deflation the balloon is still inflated as the LV starts to eject, raising afterload and oxygen demand." },
+    { lv: "fl", topic: "iabptiming", q: "The IABP inflation begins before the dicrotic notch on the arterial waveform. What is the main harm?",
+      a: "Premature aortic valve closure and raised LV wall stress", w: ["Retrograde coronary and carotid flow at end-diastole", "Only reduced augmentation with no direct harm", "Increased unassisted systolic pressure with each beat"],
+      x: "Early inflation closes the aortic valve before ejection is complete, raising LVEDV, LVEDP and oxygen demand, and can cause aortic regurgitation." },
+    { lv: "fl", topic: "iabptiming", q: "During a rough helicopter flight the IABP keeps losing its ECG trigger because of motion artifact. What is the best fix?",
+      a: "Switch to arterial pressure trigger", w: ["Switch to internal asynchronous trigger", "Stop pumping until landing", "Change the ratio from 1:1 to 1:3"],
+      x: "Pressure trigger uses the arterial upstroke and is the standard backup when the ECG signal is unreliable. Internal mode is only for arrest." },
+    { lv: "fl", topic: "impella", q: "An Impella CP patient triggers repeated suction alarms in flight and the BP is soft. What is the most likely cause and first step?",
+      a: "Under-filled LV; lower P-level and assess volume status", w: ["Pump thrombosis; raise P-level to clear the inlet", "Purge failure; stop the purge and continue at same level", "Aortic regurgitation; raise P-level to maximum support"],
+      x: "Suction means the inlet is pulling on the LV wall, usually from low preload, RV failure or malposition. Reduce support and address volume." },
+    { lv: "fl", topic: "impella", q: "The Impella controller shows a flat, non-pulsatile motor current waveform with a position alarm. What does this indicate?",
+      a: "The pump is fully in the aorta or fully in the LV", w: ["The pump is correctly placed across the aortic valve", "The purge pressure is too high and needs adjusting", "The patient is fluid overloaded and needs a diuretic"],
+      x: "Correct position gives a pulsatile motor current because inlet and outlet see different pressures. Flat current means both ends are on one side." },
+    { lv: "fl", topic: "impella", q: "Your Impella CP patient goes into cardiac arrest. Per manufacturer guidance, what should you do with the pump during CPR?",
+      a: "Reduce support to P-2 and continue CPR", w: ["Turn the pump to P-0 to prevent dislodgement", "Increase to P-9 to replace compressions", "Stop the purge and disconnect the controller"],
+      x: "Guidance is to lower to P-2 during compressions, then return to prior support with a position check after ROSC. P-0 causes backflow." },
+    { lv: "fl", topic: "impella", q: "Several hours into support, an Impella patient's urine turns dark cola-colored. Which complication should you suspect?",
+      a: "Hemolysis from malposition or suction", w: ["Rhabdomyolysis from the vascular access site", "Hematuria from heparin in the purge solution", "Contrast nephropathy from the cath procedure"],
+      x: "Dark urine on Impella support suggests hemolysis; check position, preload and P-level and report it." },
+    { lv: "fl", topic: "ecmo", q: "A patient on femoral VA ECMO has SpO2 99 percent on the foot but 82 percent on the right hand, and the native heart is now ejecting. What is this?",
+      a: "Differential (north-south) hypoxia", w: ["Oxygenator failure in the circuit", "Recirculation of returned blood", "Peripheral vasoconstriction artifact"],
+      x: "The recovering LV ejects poorly oxygenated blood from sick lungs to the upper body. Monitor the right radial and improve lung oxygenation or flow." },
+    { lv: "fl", topic: "ecmo", q: "During transport the ECMO lines begin to chatter and pump flow drops while RPM is unchanged. What is the most likely cause?",
+      a: "Inadequate venous drainage, as from hypovolemia", w: ["Oxygenator thrombosis raising post-membrane pressure", "Too much sweep gas flow through the oxygenator", "Air entering the circuit at the return cannula"],
+      x: "Chattering (chugging) means the drainage cannula is collapsing the vein. Check for kinks, give volume and lower RPM per protocol." },
+    { lv: "fl", topic: "ecmo", q: "A patient on VV ECMO has a PaCO2 of 65 mmHg with good oxygenation. Which change most directly lowers PaCO2?",
+      a: "Increase the sweep gas flow", w: ["Increase the FdO2 on the blender", "Decrease the pump speed", "Increase the ventilator PEEP"],
+      x: "Sweep gas flow drives CO2 removal across the membrane; FdO2 and blood flow mainly affect oxygenation." },
+    { lv: "fl", topic: "lvad", q: "You cannot palpate a radial pulse on an alert LVAD patient. How should you measure blood pressure?",
+      a: "Doppler and manual cuff; first sound is about MAP", w: ["Automatic cuff; average three readings to get the MAP", "Palpate the femoral pulse to estimate systolic", "Use SpO2 pleth amplitude to estimate pressure"],
+      x: "Continuous-flow LVADs often abolish palpable pulses; the Doppler opening pressure approximates MAP (target about 70-90)." },
+    { lv: "fl", topic: "lvad", q: "An LVAD patient is unresponsive, no pump hum is heard, the Doppler MAP is unobtainable and ETCO2 is 12 mmHg. What should you do?",
+      a: "Start compressions while troubleshooting the pump", w: ["Withhold compressions to avoid dislodging the pump", "Only change the batteries and reassess in 5 minutes", "Give epinephrine and wait for VAD team instructions"],
+      x: "AHA guidance: with absent pump function and poor perfusion (MAP under about 50, ETCO2 under about 20), compressions are indicated." },
+    { lv: "fl", topic: "lvad", q: "After a day of vomiting, an LVAD patient has low-flow alarms, dizziness and runs of VT. What is the most likely mechanism?",
+      a: "Low preload causing suction events", w: ["Pump thrombosis causing high power", "Driveline fracture causing pump stop", "Controller failure from a low battery"],
+      x: "Hypovolemia lets the LV collapse onto the inflow cannula (suction), lowering flow and triggering VT. Give fluid." },
+    { lv: "fl", topic: "tvp", q: "A transcutaneously paced patient shows pacer spikes at 70/min, but none are followed by a QRS. What is the problem and the fix?",
+      a: "Failure to capture; increase the output (mA)", w: ["Failure to sense; increase the sensitivity (mV)", "Oversensing; switch to asynchronous mode", "Failure to pace; replace the pacer battery"],
+      x: "Spikes without QRS complexes are loss of capture. Raise mA, check pad contact and placement, and confirm a pulse." },
+    { lv: "fl", topic: "tvp", q: "After achieving electrical capture with transcutaneous pacing, where is the best place to confirm mechanical capture?",
+      a: "Femoral pulse or SpO2 pleth", w: ["Carotid pulse on either side", "The ECG rhythm strip alone", "Radial pulse on the pad side"],
+      x: "Pacing causes muscle twitching that can mimic a carotid pulse; femoral pulse or a pleth waveform matched to paced beats is more reliable." },
+    { lv: "fl", topic: "tvp", q: "A transvenous pacer in demand mode fires spikes right after the patient's own QRS complexes, some landing on T waves. What is happening?",
+      a: "Undersensing; increase sensitivity", w: ["Oversensing; decrease sensitivity", "Loss of capture; increase the mA output", "Normal function in asynchronous mode"],
+      x: "Undersensing means intrinsic beats are missed, risking R-on-T. Lower the mV setting to increase sensitivity." },
+    { lv: "fl", topic: "cathlab", q: "Three hours after a femoral cath, a patient has BP 82/50, HR 124 and new back and flank pain, but the groin looks unremarkable. What is most likely?",
+      a: "Retroperitoneal hemorrhage", w: ["Vasovagal reaction to sheath removal", "Contrast-induced anaphylaxis", "Acute stent thrombosis with shock"],
+      x: "A high femoral puncture can bleed into the retroperitoneum with no visible hematoma. Treat for hemorrhagic shock and alert the receiving team." },
+    { lv: "fl", topic: "pci", q: "A STEMI patient is at a hospital without a cath lab; the expected time to PCI after transfer is 150 minutes and there are no contraindications. What is recommended?",
+      a: "Fibrinolysis within 30 minutes, then transfer", w: ["Transfer for primary PCI without fibrinolysis", "Fibrinolysis only after arrival at the PCI center", "Medical therapy only, then outpatient angiography"],
+      x: "When first-contact-to-device time will exceed 120 minutes, give fibrinolysis promptly and transfer for angiography or rescue PCI." },
+
+    /* ================= Medical student / physician (md) ================= */
+    { lv: "md", topic: "formulas", q: "MAP 70 mmHg, CVP 10 mmHg, cardiac output 3.0 L/min. What is the SVR?",
+      a: "1600 dynes-sec/cm5", w: ["1867 dynes-sec/cm5", "1333 dynes-sec/cm5", "2100 dynes-sec/cm5"],
+      x: "SVR = 80 x (MAP - CVP) / CO = 80 x 60 / 3 = 1600 dynes-sec/cm5 (elevated)." },
+    { lv: "md", topic: "formulas", q: "A patient has a cardiac output of 3.4 L/min and a body surface area of 2.0 m2. What is the cardiac index and its significance?",
+      a: "1.7 L/min/m2, consistent with cardiogenic shock", w: ["6.8 L/min/m2, consistent with high-output state", "2.7 L/min/m2, within the normal range", "1.4 L/min/m2, consistent with normal output"],
+      x: "CI = CO / BSA = 3.4 / 2.0 = 1.7 L/min/m2, below the roughly 2.2 threshold used for cardiogenic shock." },
+    { lv: "md", topic: "formulas", q: "Mean PA pressure 35 mmHg, PCWP 15 mmHg, cardiac output 4 L/min. What is the PVR?",
+      a: "5 Wood units (400 dynes-sec/cm5)", w: ["8.75 Wood units (700 dynes-sec/cm5)", "2.5 Wood units (200 dynes-sec/cm5)", "12.5 Wood units (1000 dynes-sec/cm5)"],
+      x: "PVR = (mPAP - PCWP) / CO = 20 / 4 = 5 Wood units; times 80 = 400 dynes-sec/cm5. Elevated (above 2 WU)." },
+    { lv: "md", topic: "formulas", q: "Aortic diastolic pressure 50 mmHg and LVEDP 25 mmHg. What is the coronary perfusion pressure?",
+      a: "25 mmHg", w: ["75 mmHg", "40 mmHg", "33 mmHg"],
+      x: "Coronary perfusion pressure = aortic diastolic pressure - LVEDP = 50 - 25 = 25 mmHg." },
+    { lv: "md", topic: "formulas", q: "CO 4 L/min, Hb 10 g/dL, SaO2 90 percent; ignore dissolved oxygen. What is the approximate oxygen delivery (DO2)?",
+      a: "About 480 mL O2/min", w: ["About 540 mL O2/min", "About 1000 mL O2/min", "About 400 mL O2/min"],
+      x: "CaO2 = 1.34 x 10 x 0.90 = 12.06 mL/dL. DO2 = 4 x 12.06 x 10 = 482 mL/min, about half of normal." },
+    { lv: "md", topic: "formulas", q: "A patient with cardiogenic shock has MAP 60 mmHg and CO 3.5 L/min. What is the cardiac power output?",
+      a: "About 0.47 W, below the prognostic threshold", w: ["About 0.47 W, above the prognostic threshold", "About 0.75 W, above the prognostic threshold", "About 2.1 W, within the normal range"],
+      x: "CPO = MAP x CO / 451 = 210 / 451 = 0.47 W. Below about 0.6 W predicts high mortality in cardiogenic shock." },
+    { lv: "md", topic: "formulas", q: "Measured VO2 is 250 mL/min, arterial O2 content 18 mL/dL and mixed venous O2 content 13 mL/dL. What is the Fick cardiac output?",
+      a: "5.0 L/min", w: ["2.5 L/min", "7.7 L/min", "3.2 L/min"],
+      x: "CO = VO2 / [(CaO2 - CvO2) x 10] = 250 / (5 x 10) = 5.0 L/min." },
+    { lv: "md", topic: "scai", q: "After an inferior MI, PA systolic is 28 mmHg, PA diastolic 16 mmHg and RA pressure 15 mmHg. What is the PAPi and what does it suggest?",
+      a: "0.8; suggests RV failure", w: ["1.9; suggests adequate RV function", "0.8; normal RV function", "2.9; isolated LV failure"],
+      x: "PAPi = (PASP - PADP) / RAP = 12 / 15 = 0.8. Below about 0.9 in acute MI predicts RV failure and need for RV support." },
+    { lv: "md", topic: "determinants", q: "A patient with acute decompensated HF has PCWP 28 mmHg. A 500 mL fluid bolus raises PCWP to 34 mmHg with no change in stroke volume. What does this show?",
+      a: "The LV is operating on the flat part of its Starling curve", w: ["The LV is operating on the steep part of its Starling curve", "Afterload is too low and needs a vasopressor", "The LV is underfilled and needs more fluid"],
+      x: "On the flat portion, preload increases raise filling pressure without improving stroke volume, causing pulmonary congestion." },
+    { lv: "md", topic: "fluidresp", q: "A spontaneously breathing septic patient has a 15 percent rise in stroke volume (by monitor) during a passive leg raise. What does this predict?",
+      a: "The patient will likely increase cardiac output with fluid", w: ["The patient is fluid overloaded and needs diuresis", "The patient has RV failure and needs inotropes", "The result is invalid because the patient breathes spontaneously"],
+      x: "A rise in SV or CO of about 10 percent or more with PLR predicts fluid responsiveness, and PLR works in spontaneously breathing patients." },
+    { lv: "md", topic: "fluidresp", q: "In which patient is pulse pressure variation most reliable for predicting fluid responsiveness?",
+      a: "Sedated, sinus rhythm, tidal volume 8 mL/kg", w: ["Awake, atrial fibrillation, spontaneous breaths", "Sedated, tidal volume 5 mL/kg, open chest", "Paralyzed, frequent PVCs, high abdominal pressure"],
+      x: "PPV requires controlled ventilation with adequate tidal volume, regular rhythm, no spontaneous effort and a closed chest." },
+    { lv: "md", topic: "normals", q: "Right heart cath: mean PAP 32 mmHg, PCWP 10 mmHg, PVR 4.5 Wood units. How is this classified?",
+      a: "Pre-capillary pulmonary hypertension", w: ["Isolated post-capillary pulmonary hypertension", "Normal pulmonary hemodynamics", "Combined pre- and post-capillary hypertension"],
+      x: "mPAP above 20 with PCWP 15 or less and PVR above 2 WU is pre-capillary PH (2022 ESC/ERS)." },
+    { lv: "md", topic: "cvp", q: "A CVP tracing shows large cv waves that merge into a single systolic wave and a steep y descent. What is the most likely cause?",
+      a: "Tricuspid regurgitation", w: ["Cardiac tamponade", "Complete heart block", "Severe tricuspid stenosis"],
+      x: "In TR, regurgitant flow during systole produces a large cv wave; tamponade blunts the y descent and AV dissociation gives cannon a waves." },
+    { lv: "md", topic: "pac", q: "A patient with known LBBB is having a PA catheter floated. Which complication is of particular concern?",
+      a: "Complete heart block from catheter-induced RBBB", w: ["Pulmonary artery rupture from LBBB-related dilation", "Ventricular septal rupture from the catheter tip", "Tricuspid valve stenosis from the balloon"],
+      x: "Passage through the RV can cause transient RBBB; with pre-existing LBBB this produces complete heart block. Have pacing available." },
+    { lv: "md", topic: "pac", q: "Day 4 after anterior MI, a patient has a new holosystolic murmur and shock. Saturations: SVC 60 percent, RA 61 percent, PA 80 percent. What is the diagnosis?",
+      a: "Ventricular septal rupture", w: ["Papillary muscle rupture with acute MR", "Free wall rupture with tamponade", "Right ventricular infarction"],
+      x: "An oxygen step-up between RA and PA localizes a left-to-right shunt at the ventricular level. Acute MR has no step-up but giant v waves." },
+    { lv: "md", topic: "pcwp", q: "In which condition does PCWP overestimate LV end-diastolic pressure?",
+      a: "Mitral stenosis", w: ["Acute aortic regurgitation", "Stiff, noncompliant left ventricle", "Severe hypovolemia"],
+      x: "With mitral stenosis, LA pressure (and PCWP) exceeds LVEDP because of the transmitral gradient. Acute AR and a stiff LV cause underestimation." },
+    { lv: "md", topic: "pcwp", q: "After an inferior MI, a patient develops flash pulmonary edema. The wedge tracing shows a mean of 24 mmHg with v waves reaching 55 mmHg. Most likely cause?",
+      a: "Papillary muscle rupture with acute MR", w: ["Ventricular septal rupture with left-to-right shunt", "Right ventricular infarction with low preload", "Cardiac tamponade from free wall rupture"],
+      x: "Giant v waves reflect regurgitant flow into a small, noncompliant LA. Inferior MI can rupture the posteromedial papillary muscle (single blood supply)." },
+    { lv: "md", topic: "pcwp", q: "On high PEEP, a patient's PCWP reads 22 mmHg while PA diastolic is 16 mmHg, and the wedge swings widely with each breath. What is most likely?",
+      a: "The catheter tip is not in West zone 3", w: ["The patient has severe pulmonary hypertension", "The patient has a large pericardial effusion", "The PCWP accurately reflects a high LVEDP"],
+      x: "PCWP should not exceed PADP. A wedge higher than PADP with large respiratory swings suggests alveolar pressure is being transmitted (zone 1 or 2)." },
+    { lv: "md", topic: "pcwp", q: "A hypoxic patient has PA diastolic 30 mmHg and PCWP 10 mmHg. What does the gradient suggest?",
+      a: "High pulmonary vascular resistance, as in PE", w: ["Left heart failure with high left atrial pressure", "Normal pulmonary vascular resistance", "Hypovolemia with low left atrial pressure"],
+      x: "A PADP - PCWP gradient above about 5-7 mmHg indicates pre-capillary disease: PE, ARDS, hypoxic vasoconstriction or PAH." },
+    { lv: "md", topic: "svo2", q: "A house-fire victim has lactate 11, normal cardiac output, SaO2 99 percent and SvO2 88 percent. What is the most likely explanation?",
+      a: "Cyanide blocking cellular oxygen use", w: ["Severe anemia lowering oxygen content", "Cardiogenic shock from carbon monoxide", "Increased oxygen consumption from burns"],
+      x: "High SvO2 with lactic acidosis means tissues are not extracting oxygen, as in cyanide poisoning. Treat with hydroxocobalamin." },
+    { lv: "md", topic: "svo2", q: "Cardiac output and SaO2 are unchanged, but SvO2 falls from 70 to 52 percent. Which cause fits best?",
+      a: "Acute blood loss lowering hemoglobin", w: ["Sepsis impairing tissue extraction", "Deep sedation and neuromuscular blockade", "A catheter tip migrated into wedge position"],
+      x: "SvO2 falls with low CO, low SaO2, low Hb or high VO2. With CO and SaO2 fixed, falling Hb (or rising VO2) is the cause." },
+    { lv: "md", topic: "shockprofiles", q: "CI 4.6 L/min/m2, SVR 520 dynes-sec/cm5, PCWP 8 mmHg, CVP 6 mmHg, SvO2 82 percent. Which shock state?",
+      a: "Early septic shock", w: ["Cardiogenic shock", "Hypovolemic shock", "Obstructive shock"],
+      x: "High output, low SVR, low-normal filling pressures and high SvO2 is the warm distributive profile." },
+    { lv: "md", topic: "shockprofiles", q: "Hypotensive patient: RA pressure 18 mmHg, PCWP 8 mmHg, CI 1.9 L/min/m2, clear lungs. Which diagnosis fits best?",
+      a: "Right ventricular infarction", w: ["Left ventricular anterior wall MI", "Cardiac tamponade", "Hypovolemic shock"],
+      x: "RA pressure much higher than PCWP (ratio above about 0.8) with low output is the RV failure pattern; tamponade would equalize the pressures." },
+    { lv: "md", topic: "pressors", q: "In SOAP II, how did dopamine compare with norepinephrine as first-line therapy in shock?",
+      a: "More arrhythmias; worse in cardiogenic shock", w: ["Lower mortality in the cardiogenic shock subgroup", "Fewer arrhythmias with similar overall mortality", "Better renal outcomes and lower overall mortality"],
+      x: "Overall mortality was similar, but dopamine caused more arrhythmias and was associated with higher mortality in cardiogenic shock." },
+    { lv: "md", topic: "rvfailure", q: "A patient with massive PE and RV failure is hypotensive. Which vasopressor property is most desirable?",
+      a: "Raises systemic pressure with little PVR effect", w: ["Strong pulmonary vasoconstriction to divert flow", "Pure venodilation to reduce RV preload", "Reflex bradycardia to prolong diastole"],
+      x: "Norepinephrine and vasopressin restore RV coronary perfusion; vasopressin has minimal effect on PVR. The goal is systemic pressure above PA pressure." },
+    { lv: "md", topic: "iabp", q: "What was the main finding of IABP-SHOCK II?",
+      a: "No mortality benefit from routine IABP use", w: ["Lower 30-day mortality with routine IABP use", "Higher stroke rates outweighing hemodynamic benefit", "Benefit only when IABP was placed before PCI"],
+      x: "Routine IABP in AMI cardiogenic shock with early revascularization did not reduce mortality at 30 days, 12 months or 6 years." },
+    { lv: "md", topic: "iabp", q: "Which condition is an absolute contraindication to IABP placement?",
+      a: "Moderate to severe aortic regurgitation", w: ["Acute severe mitral regurgitation", "Post-infarction ventricular septal rupture", "Refractory unstable angina"],
+      x: "Diastolic inflation would increase regurgitant flow into the LV. Acute MR and VSD are classic indications, not contraindications." },
+    { lv: "md", topic: "iabptiming", q: "Which tracing finding shows correctly timed IABP deflation?",
+      a: "Assisted end-diastolic pressure lower than unassisted", w: ["Assisted end-diastolic pressure higher than unassisted", "Assisted systolic higher than unassisted systolic", "Augmentation starting before the dicrotic notch"],
+      x: "Proper deflation drops aortic pressure just before systole, so assisted end-diastolic and assisted systolic pressures are lower than unassisted." },
+    { lv: "md", topic: "impella", q: "What did the DanGer Shock trial (2024) show for Impella CP in STEMI cardiogenic shock?",
+      a: "Lower 180-day mortality but more complications", w: ["No mortality difference but fewer complications", "Higher mortality from bleeding and limb ischemia", "Lower mortality only in comatose arrest survivors"],
+      x: "Impella CP reduced 180-day all-cause death in non-comatose STEMI shock but increased bleeding, limb ischemia and renal replacement therapy." },
+    { lv: "md", topic: "impella", q: "Which finding on pre-procedure echo is a contraindication to a left-sided Impella?",
+      a: "Left ventricular thrombus", w: ["LV ejection fraction of 15 percent", "Moderate mitral regurgitation", "Severe pulmonary hypertension"],
+      x: "The inlet in the LV can aspirate thrombus and cause stroke. A mechanical aortic valve is also a contraindication." },
+    { lv: "md", topic: "ecmo", q: "On peripheral VA ECMO, a patient loses arterial pulsatility, the aortic valve stops opening and PCWP climbs with pulmonary edema. What is the best next step?",
+      a: "LV venting, for example with an Impella", w: ["Increase VA ECMO flow to maximum support", "Convert to VV ECMO to reduce afterload", "Stop anticoagulation to allow LV recovery"],
+      x: "Retrograde flow raises LV afterload; a non-ejecting, distending LV needs unloading. More flow usually worsens it." },
+    { lv: "md", topic: "ecmo", q: "What did ECLS-SHOCK (2023) find about early VA ECMO in AMI cardiogenic shock with planned revascularization?",
+      a: "No mortality benefit and more bleeding", w: ["Large reduction in 30-day mortality", "Benefit only in patients older than 75", "Reduced need for renal replacement therapy"],
+      x: "Routine early VA ECMO did not reduce 30-day all-cause mortality and increased moderate or severe bleeding and peripheral vascular complications." },
+    { lv: "md", topic: "lvad", q: "An LVAD patient has dark urine, LDH 5 times normal and a steady rise in pump power. What is the leading diagnosis?",
+      a: "Pump thrombosis", w: ["Suction event from hypovolemia", "Driveline infection", "Aortic insufficiency"],
+      x: "Rising power with hemolysis is the classic signature of pump thrombosis; suction lowers flow and power." },
+    { lv: "md", topic: "tvp", q: "A temporary transvenous pacer intermittently stops pacing whenever the patient moves, producing pauses. Spikes are absent during pauses. Most likely problem?",
+      a: "Oversensing artifact; reduce sensitivity", w: ["Undersensing of native beats; raise sensitivity", "Loss of capture from lead migration; raise output", "Failure of the battery; replace the generator"],
+      x: "Pauses without spikes in demand mode during movement point to inhibition from sensed artifact. Raise the mV setting (less sensitive) or use asynchronous." },
+    { lv: "md", topic: "tvp", q: "A patient with third-degree AV block and a wide-complex escape at 32/min is hypotensive. Why is atropine likely to fail?",
+      a: "The block is infranodal, beyond vagal control", w: ["Atropine has no effect on the SA node", "The patient needs a higher atropine dose", "Atropine is contraindicated in all AV blocks"],
+      x: "Atropine acts on vagally mediated nodal block. Infranodal block (wide escape) needs pacing or a catecholamine such as epinephrine or dopamine." },
+    { lv: "md", topic: "cathlab", q: "Two days after femoral cath, a patient has a pulsatile groin mass with a systolic bruit. Ultrasound shows a neck connecting to the artery. What is the usual treatment?",
+      a: "Ultrasound-guided thrombin injection", w: ["Immediate open surgical repair of the artery", "Warm compresses and observation", "Systemic thrombolytic therapy"],
+      x: "This is a femoral pseudoaneurysm; most are treated with ultrasound-guided thrombin injection (small ones may close spontaneously)." },
+    { lv: "md", topic: "pci", q: "A STEMI patient with cardiogenic shock has a culprit LAD lesion and severe RCA and circumflex disease. What does CULPRIT-SHOCK support?",
+      a: "Culprit-lesion-only PCI at first", w: ["Immediate PCI of all significant lesions", "Emergency CABG for all three vessels", "Medical therapy and IABP before any PCI"],
+      x: "Culprit-only PCI lowered 30-day death or renal replacement therapy versus immediate multivessel PCI in shock." },
+    { lv: "md", topic: "pci", q: "A STEMI patient with a history of TIA is going for primary PCI. Which P2Y12 inhibitor should be avoided?",
+      a: "Prasugrel", w: ["Ticagrelor", "Clopidogrel", "Cangrelor"],
+      x: "Prasugrel is contraindicated after prior stroke or TIA because of net harm from intracranial bleeding in TRITON-TIMI 38." },
+    { lv: "md", topic: "valves", q: "Which hemodynamic finding best distinguishes constrictive pericarditis from cardiac tamponade?",
+      a: "Steep y descent with dip-and-plateau RV tracing", w: ["Equalization of diastolic pressures within 5 mmHg", "Elevated right atrial pressure with clear lungs", "Low cardiac output with high SVR"],
+      x: "Both cause equalized, elevated diastolic pressures, but constriction shows a steep y descent (square root sign) while tamponade blunts the y descent." },
+    { lv: "md", topic: "valves", q: "A patient with acute aortic regurgitation from endocarditis is hypotensive and in pulmonary edema. Which hemodynamic management is appropriate while awaiting surgery?",
+      a: "Avoid bradycardia; reduce afterload if tolerated", w: ["Place an IABP to augment diastolic coronary pressure", "Give beta-blockers to slow the heart rate", "Use phenylephrine to raise diastolic pressure"],
+      x: "Slow rates lengthen diastole and increase regurgitation; IABP is contraindicated. Vasodilators and inotropes bridge to urgent valve surgery." }
+  ]
+};
+
+;
+// Contrast and medication safety in imaging for radiologic technologists
+// (X-ray/fluoroscopy, CT, MRI, nuclear medicine, interventional radiology).
+// Sources: ACR Manual on Contrast Media (2024/2025), ACR Manual on MR Safety,
+// ARRT content specifications, SNMMI procedure standards, FDA labeling.
+// Plain ES5, ASCII only.
+DB.CONTRAST = {
+  topics: [
+    /* ---------------- Contrast reactions ---------------- */
+    { id: "rxtypes", grp: "Contrast reactions", title: "Allergic-like vs physiologic reactions", short: "Reaction types",
+      sum: "The ACR sorts acute contrast reactions into allergic-like and physiologic types, each graded mild, moderate or severe.",
+      rows: [
+        ["Allergic-like", "Look like an allergy: hives, itching, flushing with rash, facial or throat swelling, sneezing, wheezing, hypotension with a fast heart rate. They are treated like allergy, and a prior one is the strongest risk factor for another."],
+        ["Physiologic", "A direct effect of the contrast, not immune: nausea, vomiting, warmth, metallic taste, headache, dizziness, anxiety, vasovagal reactions, high blood pressure, arrhythmia or seizure. Premedication does not prevent them."],
+        ["Severity", "Mild: limited and self-resolving. Moderate: more pronounced and usually needs treatment. Severe: life-threatening and needs immediate treatment and an emergency response."],
+        ["Document", "Record the specific agent, the signs, severity, type (allergic-like or physiologic), treatment and outcome. 'Iodine allergy' is not an accurate entry."]
+      ],
+      pearl: "Only a prior allergic-like reaction to the same class of contrast is an indication for premedication; physiologic reactions are not.",
+      drugs: [], lv: ["rt","ct","mri","nm","ir"] },
+
+    { id: "rxmild", grp: "Contrast reactions", title: "Mild reactions", short: "Mild reactions",
+      sum: "Mild reactions are limited and usually resolve on their own, but the patient must be watched because some progress.",
+      rows: [
+        ["Looks like", "Allergic-like: limited hives or itching, limited skin swelling, itchy or scratchy throat, nasal congestion, sneezing, watery eyes. Physiologic: brief nausea or vomiting, warmth or chills, headache, dizziness, anxiety, altered taste."],
+        ["What to do", "Stop the injection if it is still running, keep the IV in place, check vital signs and tell the radiologist. Symptomatic hives may be treated with diphenhydramine (adult 25 to 50 mg PO, IM or IV per ACR table) if the radiologist orders it."],
+        ["Watch for", "Spreading hives, facial or throat swelling, hoarseness, wheezing, shortness of breath or a falling blood pressure, which mean the reaction has become moderate or severe."],
+        ["Before discharge", "Observe until symptoms are resolving, per department protocol. Diphenhydramine causes drowsiness, so the patient should not drive."]
+      ],
+      pearl: "Never leave a patient with even a mild reaction alone; keep the IV and keep watching until the radiologist clears them.",
+      drugs: ["diphenhydramine"], lv: ["rt","ct","mri","nm","ir"] },
+
+    { id: "rxmod", grp: "Contrast reactions", title: "Moderate reactions", short: "Moderate reactions",
+      sum: "Moderate reactions are more pronounced, often need treatment, and can progress to severe without it.",
+      rows: [
+        ["Looks like", "Allergic-like: diffuse hives, diffuse redness with stable vitals, facial swelling without trouble breathing, throat tightness or hoarseness without trouble breathing, wheezing with little or no hypoxia. Physiologic: prolonged vomiting, hypertensive urgency, isolated chest pain, vasovagal reaction that needs treatment."],
+        ["What to do", "Stop the injection, call the radiologist to the room, give oxygen 6 to 10 L/min by mask, monitor pulse oximetry and blood pressure, keep the IV. Treat by type: antihistamine for diffuse hives, albuterol for wheezing, IM epinephrine for throat or facial swelling, per ACR table and radiologist."],
+        ["Call for help", "Activate the emergency response team if breathing worsens, oxygen saturation drops or blood pressure falls."],
+        ["Document", "Agent, signs, time course, drugs given, response and disposition."]
+      ],
+      pearl: "Throat tightness or facial swelling is treated more aggressively than hives because the airway is at stake.",
+      drugs: ["diphenhydramine", "albuterol", "epinephrine"], lv: ["rt","ct","mri","nm","ir"] },
+
+    { id: "rxsevere", grp: "Contrast reactions", title: "Severe reactions and anaphylaxis", short: "Severe/anaphylaxis",
+      sum: "Severe reactions are life-threatening; IM epinephrine and an emergency response call come first.",
+      rows: [
+        ["Looks like", "Diffuse swelling or facial swelling with trouble breathing, redness with low blood pressure, stridor or laryngeal edema with hypoxia, wheezing with significant hypoxia, anaphylactic shock (low blood pressure with a fast heart rate). Severe physiologic: arrhythmia, seizure, hypertensive emergency, vasovagal reaction resistant to treatment."],
+        ["What to do", "Stop the injection, call the code or rapid response team, stay with the patient. Give oxygen 6 to 10 L/min, raise the legs if hypotensive, and give IM epinephrine 1 mg/mL, 0.3 mg (0.3 mL) in the anterolateral thigh or a 0.3 mg autoinjector for adults; may repeat per ACR table. Rapid IV normal saline or lactated Ringer's for hypotension."],
+        ["Beta-blocker patients", "Patients on beta-blockers may respond poorly to epinephrine; the ACR lists IV glucagon for refractory cases, ordered by the physician."],
+        ["Not first-line", "Antihistamines and corticosteroids do not treat airway swelling, bronchospasm or shock and must never delay epinephrine."]
+      ],
+      pearl: "Anaphylaxis = low blood pressure with a fast heart rate; vasovagal = low blood pressure with a slow heart rate.",
+      drugs: ["epinephrine", "glucagon"], lv: ["rt","ct","mri","nm","ir"] },
+
+    { id: "vasovagal", grp: "Contrast reactions", title: "Vasovagal reaction (bradycardia + hypotension)", short: "Vasovagal",
+      sum: "A vasovagal reaction is low blood pressure with a slow pulse, often with pallor and sweating, and no hives.",
+      rows: [
+        ["Looks like", "Pale, sweaty, lightheaded or fainting patient with hypotension and a heart rate under 60. It may follow anxiety, pain, a needle stick or the contrast injection itself."],
+        ["What to do", "Raise the legs, give oxygen 6 to 10 L/min, monitor vitals and give rapid IV normal saline or lactated Ringer's. If the patient stays bradycardic and hypotensive, the physician may give IV atropine per ACR table (adult 0.6 to 1 mg, repeatable to a 3 mg total)."],
+        ["Call for help", "Notify the radiologist immediately; call the emergency team if the patient does not improve or loses consciousness."],
+        ["Watch for", "Hives, wheezing or a rising heart rate, which point to anaphylaxis instead and call for epinephrine."]
+      ],
+      pearl: "Check the pulse: bradycardia plus hypotension is vasovagal; tachycardia plus hypotension is anaphylaxis until proven otherwise.",
+      drugs: ["atropine"], lv: ["rt","ct","mri","nm","ir"] },
+
+    { id: "bronchospasm", grp: "Contrast reactions", title: "Bronchospasm and laryngeal edema", short: "Airway reactions",
+      sum: "Wheezing is lower-airway bronchospasm; stridor and hoarseness are upper-airway laryngeal edema, which is more dangerous.",
+      rows: [
+        ["Bronchospasm", "Wheezing, cough, chest tightness. Give oxygen 6 to 10 L/min and albuterol by metered-dose inhaler, 2 puffs (90 mcg/puff), repeatable per ACR table. If severe or not improving, IM epinephrine 0.3 mg (1 mg/mL) for adults."],
+        ["Laryngeal edema", "Hoarseness, throat tightness, stridor, trouble speaking or swallowing. Give oxygen and IM epinephrine 0.3 mg; albuterol does not treat upper-airway swelling."],
+        ["Call for help", "Any stridor, falling oxygen saturation or trouble breathing means calling the emergency response team right away."],
+        ["Monitor", "Continuous pulse oximetry and frequent blood pressure checks; sit the patient up if blood pressure allows."]
+      ],
+      pearl: "Albuterol is for wheezing; epinephrine is for the swollen airway.",
+      drugs: ["albuterol", "epinephrine"], lv: ["rt","ct","mri","nm","ir"] },
+
+    { id: "rxkit", grp: "Contrast reactions", title: "The reaction cart: what's in it and when to use each drug", short: "Reaction cart",
+      sum: "Every area that gives contrast needs a stocked, checked reaction kit and staff who know what each item is for.",
+      rows: [
+        ["Airway and monitoring", "Oxygen with masks, suction, bag-valve mask, blood pressure cuff, pulse oximeter, AED. In MRI the cart and AED stay outside Zone IV."],
+        ["Epinephrine", "1 mg/mL (1:1000) for IM use, 0.3 mg for adults, or a 0.3 mg autoinjector (0.15 mg pediatric autoinjector). The 0.1 mg/mL (1:10,000) form is for slow IV use by a physician."],
+        ["Other drugs", "Diphenhydramine for hives, albuterol inhaler for wheezing, atropine for vasovagal bradycardia, IV normal saline or lactated Ringer's, labetalol or sublingual nitroglycerin for hypertensive crisis, a benzodiazepine for seizures, dextrose for hypoglycemia, as stocked per ACR and department protocol."],
+        ["Upkeep", "Check the cart on schedule for expired drugs, oxygen supply and working equipment, and know where it is before you start the injection."]
+      ],
+      pearl: "Mixing up the 1 mg/mL and 0.1 mg/mL epinephrine concentrations is a classic and dangerous error; the IM dose uses 1 mg/mL.",
+      drugs: ["epinephrine", "diphenhydramine", "albuterol", "atropine"], lv: ["rt","ct","mri","nm","ir"] },
+
+    { id: "delayed", grp: "Contrast reactions", title: "Delayed skin reactions", short: "Delayed reactions",
+      sum: "Delayed reactions appear 1 hour to 1 week after iodinated contrast, are usually mild skin rashes, and resolve on their own.",
+      rows: [
+        ["Looks like", "Itchy measles-like (maculopapular) rash, hives or skin swelling hours to days later. Rarely, severe reactions such as Stevens-Johnson syndrome occur."],
+        ["Who", "Reported more often with the iso-osmolar dimer iodixanol and in patients who received interleukin-2 therapy."],
+        ["What to do", "Most need only symptomatic care (antihistamines, topical steroids) directed by the physician. Blistering, mucosal sores, fever or a spreading rash need urgent medical evaluation."],
+        ["Related", "Contrast-induced salivary gland swelling ('iodide mumps') can occur in the days after injection and is usually self-limited."]
+      ],
+      pearl: "When a patient calls days later with a rash, document it as a delayed reaction to the specific agent so the next team knows.",
+      drugs: ["iodixanol"], lv: ["rt","ct","mri","nm","ir"] },
+
+    /* ---------------- Before contrast ---------------- */
+    { id: "screening", grp: "Before contrast", title: "Screening questions (prior reaction, asthma, kidney disease, metformin, pregnancy, lactation)", short: "Screening",
+      sum: "Screening before contrast looks for the few factors that change what the team does.",
+      rows: [
+        ["Prior reaction", "Ask what agent, what happened and how it was treated. A prior allergic-like reaction to the same class is the strongest risk factor and may lead to premedication or a different agent."],
+        ["Allergy and asthma", "Shellfish, seafood, povidone-iodine or topical iodine allergies are not contraindications and do not require premedication. Asthma and multiple allergies slightly raise risk; tell the radiologist but premedication is not routine."],
+        ["Kidney", "Ask about kidney disease, dialysis, kidney transplant, single kidney, kidney surgery or cancer, diabetes and age over 60, which trigger an eGFR check per protocol. Ask about metformin."],
+        ["Pregnancy and lactation", "Ask about possible pregnancy and breastfeeding so the radiologist can weigh the need for contrast and counsel the patient."],
+        ["Other", "Hyperthyroidism or planned radioactive iodine treatment, beta-blocker use, and for MRI, implants and devices."]
+      ],
+      pearl: "There is no such thing as an 'iodine allergy'; ask about prior reactions to contrast itself.",
+      drugs: ["metformin"], lv: ["rt","ct","mri","nm","ir"] },
+
+    { id: "premed", grp: "Before contrast", title: "Premedication for prior allergic-like reactions (13-hour and accelerated regimens, breakthrough)", short: "Premedication",
+      sum: "Corticosteroid and antihistamine premedication lowers but does not eliminate the risk of a repeat allergic-like reaction.",
+      rows: [
+        ["Who", "Patients with a prior allergic-like or unknown-type reaction to the same class of contrast, per radiologist. Not for physiologic reactions, shellfish allergy or allergies to unrelated drugs."],
+        ["13-hour oral", "Prednisone 50 mg PO at 13, 7 and 1 hour before contrast, plus diphenhydramine 50 mg IV, IM or PO 1 hour before. Alternative: methylprednisolone 32 mg PO at 12 and 2 hours before, with or without diphenhydramine 50 mg 1 hour before."],
+        ["Accelerated IV", "For urgent inpatient or ED cases: methylprednisolone 40 mg IV or hydrocortisone 200 mg IV every 4 hours until contrast, plus diphenhydramine 50 mg IV 1 hour before, for about 4 to 5 hours total. Steroids given less than 4 to 5 hours before have no proven benefit."],
+        ["Breakthrough", "Reactions can still occur despite premedication and tend to resemble the original reaction in severity. Have the reaction cart ready and treat them exactly like any other reaction. Changing to a different agent in the same class may also lower risk."]
+      ],
+      pearl: "Premedication never replaces readiness: a premedicated patient still needs a stocked reaction cart and staff in the room.",
+      drugs: ["prednisone", "methylprednisolone", "hydrocortisone", "diphenhydramine"], lv: ["rt","ct","mri","nm","ir"] },
+
+    { id: "egfr", grp: "Before contrast", title: "Kidney function: eGFR thresholds and CI-AKI vs PC-AKI", short: "eGFR and AKI",
+      sum: "Modern IV iodinated contrast poses meaningful kidney risk mainly when eGFR is below 30 or the patient has acute kidney injury.",
+      rows: [
+        ["PC-AKI vs CI-AKI", "Post-contrast AKI (PC-AKI) is any kidney injury within 48 hours after contrast, whatever the cause. Contrast-induced AKI (CI-AKI) is injury actually caused by the contrast and is much less common."],
+        ["Thresholds (ACR-NKF)", "eGFR 45 or higher: negligible risk. 30 to 44: risk case-by-case. Below 30 (not on dialysis) or AKI: higher risk; the radiologist weighs benefit and may order IV normal saline prophylaxis."],
+        ["Dialysis", "Anuric dialysis patients have no kidney function left to protect; extra or urgent dialysis after contrast is usually not needed."],
+        ["Technologist role", "Check that a required eGFR is on file and current per policy, flag values below threshold and AKI to the radiologist, and use the lowest diagnostic dose."]
+      ],
+      pearl: "The ACR-NKF cutoff to remember for IV iodinated contrast is eGFR below 30 mL/min/1.73 m2.",
+      drugs: ["iohexol", "iopamidol"], lv: ["rt","ct","mri","ir"] },
+
+    { id: "metformin", grp: "Before contrast", title: "Metformin and iodinated contrast", short: "Metformin",
+      sum: "Metformin only needs to be held when kidney function is poor or acutely worsening.",
+      rows: [
+        ["Why it matters", "If contrast caused kidney injury, metformin could build up and cause lactic acidosis, a rare but serious complication."],
+        ["No hold needed", "Patients with eGFR 30 or higher and no AKI can continue metformin."],
+        ["Hold", "Patients with AKI or eGFR below 30, or having arterial catheter studies with a high chance of emboli to the kidneys: hold metformin at the time of or before contrast and for 48 hours after."],
+        ["Restart", "Restart only after kidney function is rechecked and found stable, per the ordering provider."]
+      ],
+      pearl: "Gadolinium at MRI doses does not require holding metformin.",
+      drugs: ["metformin"], lv: ["rt","ct","ir"] },
+
+    { id: "pregnancy", grp: "Before contrast", title: "Pregnancy and breastfeeding with iodinated and gadolinium contrast", short: "Pregnancy/lactation",
+      sum: "Iodinated contrast may be given in pregnancy when needed; gadolinium is reserved for when it is essential; breastfeeding can usually continue.",
+      rows: [
+        ["Iodinated, pregnant", "Crosses the placenta, but no harm has been shown. Give it when needed for diagnosis; no extra neonatal thyroid testing beyond routine newborn screening is required."],
+        ["Gadolinium, pregnant", "Crosses the placenta and recirculates in amniotic fluid. Use only if it gives essential information that cannot wait until after delivery; the radiologist documents the decision, often with informed consent."],
+        ["Breastfeeding", "Less than 1 percent of the dose reaches breast milk and less than 1 percent of that is absorbed by the infant. Interruption is not needed for iodinated or gadolinium contrast."],
+        ["If the mother prefers", "She may pump and discard milk for 12 to 24 hours after the injection; this is her choice, not a requirement."]
+      ],
+      pearl: "Do not tell a breastfeeding mother she must stop after contrast; the ACR says it is safe to continue.",
+      drugs: [], lv: ["rt","ct","mri","ir"] },
+
+    /* ---------------- Iodinated contrast ---------------- */
+    { id: "iodinated", grp: "Iodinated contrast", title: "Low-osmolar vs iso-osmolar iodinated contrast", short: "LOCM vs IOCM",
+      sum: "Intravascular iodinated contrast today is nonionic low-osmolar (LOCM) or iso-osmolar (IOCM); high-osmolar agents are not used IV.",
+      rows: [
+        ["High-osmolar (HOCM)", "Ionic agents such as diatrizoate are several times the osmolality of blood and cause more reactions. Today they are used for oral, rectal or bladder use, not IV."],
+        ["Low-osmolar (LOCM)", "Nonionic monomers such as iohexol and iopamidol, about 2 to 3 times blood osmolality. The workhorse for CT and angiography."],
+        ["Iso-osmolar (IOCM)", "Iodixanol, a nonionic dimer, has the same osmolality as blood but higher viscosity, so warming matters more. It is often used for intra-arterial work because it causes less heat and pain."],
+        ["Label checks", "Confirm the agent, concentration (mg iodine/mL), route approval and expiration before use; not every agent is approved for intrathecal use."]
+      ],
+      pearl: "Only agents labeled for intrathecal use may be given intrathecally; accidental intrathecal ionic contrast can be fatal.",
+      drugs: ["iohexol", "iopamidol", "iodixanol", "diatrizoate"], lv: ["rt","ct","ir"] },
+
+    { id: "warming", grp: "Iodinated contrast", title: "Warming contrast and power injection (flow rates, IV size, PICC/port power-rated)", short: "Power injection",
+      sum: "Warm contrast, the right IV and a power-rated line keep high-rate injections safe.",
+      rows: [
+        ["Warming", "Warming iodinated contrast to body temperature (37 C (98.6 F)) lowers viscosity and injection pressure. The ACR notes it may reduce extravasation and adverse events, especially with viscous agents at high flow rates."],
+        ["IV size and site", "For flow rates above 3 mL/s, use a 20-gauge or larger catheter, preferably antecubital or forearm. A 22-gauge may tolerate up to about 3 mL/s. Avoid hand, wrist and small veins for high rates when possible."],
+        ["Test it", "Check blood return and do a saline test injection while feeling the site and asking about pain before the contrast run."],
+        ["Central lines", "Power inject only through a PICC or port labeled power-injectable, at or below the manufacturer's maximum flow rate; ports need a power-rated noncoring needle. A non-power-rated line can rupture."]
+      ],
+      pearl: "If you cannot confirm a central line is power-rated, do not power inject through it.",
+      drugs: ["iohexol", "iodixanol"], lv: ["ct","mri","ir"] },
+
+    { id: "extravasation", grp: "Iodinated contrast", title: "Extravasation: recognition and management (compartment syndrome warning signs)", short: "Extravasation",
+      sum: "Most contrast extravasations are minor, but a few cause compartment syndrome or skin injury and need a surgeon.",
+      rows: [
+        ["Recognize", "Swelling, tightness, pain or burning at the site, or the patient reports a change during the injection. Stop the injector immediately."],
+        ["Manage", "Remove the IV, elevate the limb above heart level, apply cold or warm compresses per protocol, notify the radiologist and document volume, agent, site and findings. Neither aspiration nor routine antidotes have proven benefit."],
+        ["Red flags", "Increasing swelling or pain after 2 to 4 hours, altered perfusion (slow capillary refill), changed sensation, weakness, or skin blistering or ulceration. These suggest compartment syndrome or skin injury and need urgent surgical consultation."],
+        ["Follow-up", "Give written instructions to return or call for worsening symptoms, and follow up per policy."]
+      ],
+      pearl: "Worsening pain, numbness or poor capillary refill after an extravasation is compartment syndrome until proven otherwise.",
+      drugs: [], lv: ["ct","mri","ir"] },
+
+    { id: "oralrectal", grp: "Iodinated contrast", title: "Oral and rectal contrast: barium vs water-soluble (perforation, aspiration)", short: "Oral/rectal contrast",
+      sum: "The choice between barium and water-soluble contrast depends on the risks of leak and aspiration.",
+      rows: [
+        ["Barium sulfate", "Best mucosal detail. Contraindicated when perforation is suspected because barium in the peritoneum or mediastinum causes severe inflammation. Can harden and impact in the colon; encourage fluids after."],
+        ["Water-soluble", "Used when perforation or leak is suspected, because it is absorbed if it escapes. Hyperosmolar ionic agents (diatrizoate) draw fluid into the bowel, which can dehydrate infants and frail patients."],
+        ["Aspiration risk", "Hyperosmolar water-soluble contrast is dangerous if aspirated and can cause pulmonary edema. For patients at risk of aspiration, use barium or a low-osmolar agent per radiologist."],
+        ["Reactions", "Allergic-like reactions to oral or rectal contrast are rare but possible; screen and keep the reaction cart available."]
+      ],
+      pearl: "Suspected perforation: water-soluble. Suspected aspiration: avoid hyperosmolar water-soluble.",
+      drugs: ["barium-sulfate", "diatrizoate", "iohexol"], lv: ["rt","ct"] },
+
+    { id: "thyroid", grp: "Iodinated contrast", title: "Iodinated contrast and the thyroid (hyperthyroidism, upcoming radioiodine therapy)", short: "Thyroid",
+      sum: "The large iodine load in contrast can trigger hyperthyroidism and blocks radioactive iodine uptake for weeks.",
+      rows: [
+        ["Hyperthyroidism risk", "Patients with untreated Graves disease or toxic multinodular goiter can develop iodine-induced hyperthyroidism; rarely thyroid storm. The radiologist and endocrinologist decide on timing."],
+        ["Radioiodine", "Contrast floods the thyroid with stable iodine and blocks uptake of I-123 or I-131 for several weeks (commonly 4 to 6 weeks or more per protocol). Avoid contrast before a planned thyroid scan or radioiodine therapy unless cleared."],
+        ["Infants", "Routine newborn thyroid screening covers babies whose mothers had contrast in pregnancy."],
+        ["Screen", "Ask about thyroid disease and any upcoming thyroid scan or radioiodine treatment before giving iodinated contrast."]
+      ],
+      pearl: "A contrast CT can cancel next week's radioiodine treatment; check before you inject.",
+      drugs: ["methimazole"], lv: ["rt","ct","nm","ir"] },
+
+    /* ---------------- Gadolinium and MRI ---------------- */
+    { id: "gbca", grp: "Gadolinium and MRI", title: "GBCA groups I/II/III and macrocyclic vs linear", short: "GBCA groups",
+      sum: "The ACR groups gadolinium agents by their risk of nephrogenic systemic fibrosis; group II agents have the lowest risk.",
+      rows: [
+        ["Group I (highest NSF risk)", "Gadodiamide, gadopentetate dimeglumine and gadoversetamide (the latter two no longer sold in the US). Contraindicated in patients at risk for NSF."],
+        ["Group II (lowest risk)", "Gadobenate, gadobutrol, gadoterate, gadoteridol, gadopiclenol and, since the 2024 ACR manual, gadoxetate. Very few or no unconfounded NSF cases."],
+        ["Group III", "Agents with limited data. Gadoxetate (Eovist) sat here for years until the 2024 ACR manual moved it to group II."],
+        ["Structure", "Macrocyclic agents (gadobutrol, gadoterate, gadoteridol, gadopiclenol) hold gadolinium more tightly than linear agents (gadobenate, gadoxetate, gadodiamide), so they release less."]
+      ],
+      pearl: "Group II plus macrocyclic is the safest pairing; gadobenate is group II but linear.",
+      drugs: ["gadobutrol", "gadoterate", "gadoxetate", "gadopiclenol"], lv: ["mri"] },
+
+    { id: "nsf", grp: "Gadolinium and MRI", title: "Nephrogenic systemic fibrosis", short: "NSF",
+      sum: "NSF is a rare, disabling fibrosis of skin and organs linked to gadolinium in patients with severe kidney disease.",
+      rows: [
+        ["Who is at risk", "Patients on dialysis, with eGFR below 30, or with AKI, given group I agents or high or repeated doses."],
+        ["Looks like", "Days to months after exposure: thickened, hardened skin of the limbs and trunk, joint contractures, and sometimes fibrosis of internal organs. It can be fatal."],
+        ["Prevention", "Use a group II agent at the standard or lowest diagnostic dose. For group II agents, the ACR considers eGFR screening optional. Avoid group I agents in at-risk patients."],
+        ["Dialysis patients", "Use a group II agent and coordinate the next dialysis soon after the scan when practical."]
+      ],
+      pearl: "Since group II agents became standard, new NSF cases have almost disappeared.",
+      drugs: ["gadobutrol", "gadoterate", "ferumoxytol"], lv: ["mri"] },
+
+    { id: "retention", grp: "Gadolinium and MRI", title: "Gadolinium retention in the brain", short: "Gd retention",
+      sum: "Small amounts of gadolinium stay in the brain and body after injection, more with linear agents, with no proven clinical harm.",
+      rows: [
+        ["What is seen", "After many doses, high T1 signal in the dentate nucleus and globus pallidus on unenhanced images. Retention also occurs in bone and skin."],
+        ["Which agents", "More with linear agents than macrocyclic agents; it occurs in people with normal kidney function."],
+        ["Clinical meaning", "No adverse health effects have been proven. The FDA requires a class warning and a Medication Guide for patients receiving a GBCA for the first time in outpatient settings."],
+        ["Practice", "Give gadolinium when it adds value, use the appropriate dose, and answer patient questions honestly."]
+      ],
+      pearl: "Retention is different from NSF: it happens with normal kidneys and has no proven harm.",
+      drugs: ["gadobenate", "gadobutrol"], lv: ["mri"] },
+
+    { id: "mrisafety", grp: "Gadolinium and MRI", title: "MRI zones and why the code team stays out of Zone IV", short: "MRI zones",
+      sum: "The MRI magnet is always on, so access is controlled in four zones and emergencies are handled outside the scanner room.",
+      rows: [
+        ["Zones", "Zone I: public. Zone II: reception and screening. Zone III: restricted, under the direct control of MR personnel. Zone IV: the scanner room itself."],
+        ["Projectile risk", "Oxygen tanks, IV poles, crash carts, defibrillators and stretchers can become projectiles. Only screened people and MR safe or MR conditional items enter Zone IV."],
+        ["Code in Zone IV", "Start CPR, call the code, and move the patient out of Zone IV to a prepared spot in Zone III while CPR continues. The code team and its equipment never enter Zone IV."],
+        ["Quench", "A quench does not happen instantly and is not routine for a code. It is reserved for emergencies such as a person pinned by a ferromagnetic object, or fire."]
+      ],
+      pearl: "Get the patient out to the team, never bring the team to the magnet.",
+      drugs: [], lv: ["mri"] },
+
+    { id: "mrisedation", grp: "Gadolinium and MRI", title: "Sedation and monitoring in the MRI suite", short: "MRI sedation",
+      sum: "Sedated patients in MRI are far from the team and the cart, so monitoring and rescue must be planned ahead.",
+      rows: [
+        ["Monitoring", "Use MR conditional monitors: fiberoptic pulse oximetry, MR conditional ECG leads and capnography, used within their labeled conditions."],
+        ["Burn prevention", "Avoid cable loops and skin-to-skin or skin-to-cable contact, use padding, and remove anything not MR conditional. Report heating complaints immediately."],
+        ["Rescue", "Reversal drugs, suction, oxygen and the reaction cart stay in Zone III. If the patient deteriorates, stop the scan and move the patient out of Zone IV."],
+        ["Staff", "A trained provider monitors the patient continuously, per department sedation policy; the technologist runs the scan and helps with removal."]
+      ],
+      pearl: "A standard pulse oximeter cable inside the bore can burn the patient; use only MR conditional monitoring.",
+      drugs: ["midazolam", "dexmedetomidine", "flumazenil", "naloxone"], lv: ["mri"] },
+
+    /* ---------------- Nuclear medicine ---------------- */
+    { id: "rpsafety", grp: "Nuclear medicine", title: "Radiopharmaceutical safety: time, distance, shielding, spills", short: "Radiopharm safety",
+      sum: "Limit time, maximize distance and use shielding; handle spills by containing them and calling the radiation safety officer.",
+      rows: [
+        ["Time and distance", "Work efficiently near sources and patients. Exposure follows the inverse square law: doubling the distance cuts the dose to one quarter."],
+        ["Shielding", "Use syringe shields, lead pigs and L-block shields. PET's 511 keV photons need thicker lead or tungsten shields."],
+        ["Right dose, right patient", "Verify the patient with two identifiers and the prescribed radiopharmaceutical, activity and route; assay every dose in the dose calibrator before giving it."],
+        ["Spills", "Warn others, contain the spill with absorbent paper, restrict the area, wear gloves, decontaminate from the outside in, survey, and notify the radiation safety officer per policy."]
+      ],
+      pearl: "Wrong patient, wrong drug, wrong route or a dose far off the prescription may be a reportable medical event; report it per policy, do not hide it.",
+      drugs: ["tc99m-medronate", "fdg-f18"], lv: ["nm"] },
+
+    { id: "stresstest", grp: "Nuclear medicine", title: "Pharmacologic stress: regadenoson, adenosine, dipyridamole, dobutamine and when to give aminophylline", short: "Pharmacologic stress",
+      sum: "Patients who cannot exercise are stressed with a vasodilator or with dobutamine, and aminophylline reverses vasodilator side effects.",
+      rows: [
+        ["Regadenoson", "0.4 mg rapid IV bolus over about 10 seconds, then a 5 mL saline flush, then the radiotracer 10 to 20 seconds later. Fixed dose, not weight-based."],
+        ["Adenosine and dipyridamole", "Adenosine is a weight-based infusion with a very short half-life, so stopping it ends most side effects. Dipyridamole works longer and more often needs aminophylline."],
+        ["Prep and contraindications", "Hold caffeine and other methylxanthines for at least 12 hours before vasodilator stress. Vasodilators are avoided in high-grade AV block or sick sinus without a pacemaker, hypotension and active bronchospasm. Dobutamine is the alternative for patients with bronchospasm."],
+        ["Aminophylline", "For severe or persistent vasodilator side effects (bronchospasm, AV block, chest pain, hypotension), 50 to 250 mg slow IV per regadenoson labeling and protocol. It is not used to stop a seizure caused by regadenoson."]
+      ],
+      pearl: "Coffee, tea, soda and chocolate block the vasodilators; always ask about caffeine before a regadenoson or adenosine study.",
+      drugs: ["regadenoson", "adenosine", "dobutamine", "aminophylline"], lv: ["nm"] },
+
+    { id: "fdgprep", grp: "Nuclear medicine", title: "FDG PET prep (fasting, glucose, insulin timing)", short: "FDG PET prep",
+      sum: "FDG competes with glucose, so fasting, a checked blood glucose and careful insulin timing are essential for a good scan.",
+      rows: [
+        ["Fasting", "Nothing but water for at least 4 to 6 hours; no dextrose-containing IV fluids or parenteral nutrition. Avoid strenuous exercise the day before."],
+        ["Glucose check", "Check blood glucose before injection. High glucose lowers tumor uptake; values above the department limit (commonly 150 to 200 mg/dL) go to the physician, and the scan may be rescheduled."],
+        ["Insulin", "Insulin drives FDG into muscle and fat. Per SNMMI, inject FDG at least 4 hours after rapid-acting subcutaneous insulin (longer for short-acting); do not give insulin just to rescue a high glucose right before injection without protocol."],
+        ["Uptake period", "Keep the patient warm, quiet and resting for the uptake period (about 60 minutes) to reduce muscle and brown fat uptake; have them void before imaging."]
+      ],
+      pearl: "A diabetic who just took rapid-acting insulin will have an FDG scan full of muscle uptake; check timing before you inject.",
+      drugs: ["fdg-f18", "insulin-lispro", "metformin"], lv: ["nm"] },
+
+    { id: "hida", grp: "Nuclear medicine", title: "HIDA scans: sincalide and morphine augmentation", short: "HIDA drugs",
+      sum: "Sincalide empties the gallbladder and morphine helps fill it; both are used in hepatobiliary scintigraphy.",
+      rows: [
+        ["Prep", "Fast at least 2 to 4 hours, but not more than about 24 hours. Prolonged fasting or TPN can leave a full gallbladder that will not fill; sincalide may be given beforehand per protocol. Opioids delay bile flow and are held per protocol."],
+        ["Sincalide", "A cholecystokinin analog that contracts the gallbladder. For ejection fraction, SNMMI recommends 0.02 mcg/kg infused over 60 minutes; a fast infusion causes cramping and nausea and gives unreliable results."],
+        ["Morphine", "If the gallbladder is not seen by about 60 minutes, morphine 0.04 mg/kg IV contracts the sphincter of Oddi and pushes bile into the gallbladder, then imaging continues about 30 minutes."],
+        ["Watch for", "Respiratory depression and nausea with morphine; abdominal cramping with sincalide."]
+      ],
+      pearl: "Gallbladder still not seen 30 minutes after morphine supports acute cholecystitis.",
+      drugs: ["sincalide", "morphine"], lv: ["nm"] },
+
+    { id: "ki", grp: "Nuclear medicine", title: "Potassium iodide thyroid blockade", short: "KI blockade",
+      sum: "Stable iodide saturates the thyroid so it does not take up radioactive iodine released from some agents or in emergencies.",
+      rows: [
+        ["When", "Before and after radioiodinated agents that release free iodine, such as I-123 or I-131 MIBG, per protocol. Also for radiological emergencies involving radioactive iodine under public health direction."],
+        ["How", "Potassium iodide or SSKI (or Lugol's solution) by mouth on the schedule set by the nuclear medicine physician, usually starting before injection and continuing a few days."],
+        ["Limits", "KI protects only the thyroid and only against radioactive iodine; it does nothing for other organs or other radionuclides."],
+        ["Screen", "Ask about prior reactions to iodide medications and thyroid disease; seafood or contrast reactions are not iodide allergies."]
+      ],
+      pearl: "KI is not given before diagnostic I-123 sodium iodide thyroid scans: the whole point there is thyroid uptake.",
+      drugs: ["potassium-iodide"], lv: ["nm"] },
+
+    { id: "nmlactation", grp: "Nuclear medicine", title: "Breastfeeding interruption after radiopharmaceuticals", short: "NM and lactation",
+      sum: "Breastfeeding guidance depends on the radiopharmaceutical, from no interruption to stopping completely.",
+      rows: [
+        ["Ask first", "Ask every patient of childbearing age about breastfeeding before the dose is given, so the physician can give specific instructions."],
+        ["F-18 FDG", "Current ACR-SNMMI guidance: interruption is not needed, but limit close contact (holding, feeding) for a few hours to reduce external exposure; expressed milk can be fed by another caregiver."],
+        ["Tc-99m agents", "Many need no interruption; some (such as pertechnetate or labeled cells) call for a short pause, typically up to 12 to 24 hours, per NRC and department tables."],
+        ["I-131 sodium iodide", "Breastfeeding must stop completely for this child. It should stop several weeks before therapy to reduce breast radiation dose; future children can be breastfed."]
+      ],
+      pearl: "I-131 therapy ends breastfeeding for this baby; most diagnostic Tc-99m studies need little or no interruption.",
+      drugs: ["fdg-f18", "tc99m-sestamibi"], lv: ["nm"] },
+
+    /* ---------------- Ultrasound and IR ---------------- */
+    { id: "uea", grp: "Ultrasound and IR", title: "Ultrasound enhancing agents (boxed warning, cardiopulmonary reactions)", short: "Ultrasound agents",
+      sum: "Microbubble ultrasound agents are very safe overall but carry an FDA boxed warning for serious cardiopulmonary reactions.",
+      rows: [
+        ["Agents", "Perflutren lipid or protein microspheres and sulfur hexafluoride lipid microspheres, used for echocardiography and, for some, liver and pediatric bladder imaging."],
+        ["Boxed warning", "Serious cardiopulmonary reactions, including fatal ones, have occurred during or within 30 minutes of injection. Have resuscitation equipment and trained staff available."],
+        ["Contraindications", "Known hypersensitivity to the agent or its components; some formulations contain PEG, and protein-shelled agents contain albumin."],
+        ["Kidney", "Microbubbles are not nephrotoxic and are exhaled through the lungs, so they are an option for patients with poor kidney function."]
+      ],
+      pearl: "Most serious microbubble reactions happen within 30 minutes; keep the patient where help is close for that window.",
+      drugs: ["perflutren", "sulfur-hexafluoride"], lv: ["rt","ct","ir"] },
+
+    { id: "sedation", grp: "Ultrasound and IR", title: "Moderate sedation in IR (midazolam, fentanyl, reversal, capnography)", short: "Moderate sedation",
+      sum: "Moderate sedation uses small titrated doses of midazolam and fentanyl with continuous monitoring and reversal agents ready.",
+      rows: [
+        ["Drugs", "Midazolam (benzodiazepine) for sedation and amnesia plus fentanyl (opioid) for pain, given in small increments by a credentialed provider or nurse per protocol."],
+        ["Monitoring", "Continuous pulse oximetry, ECG, blood pressure and capnography. Capnography shows hypoventilation and apnea earlier than pulse oximetry, especially in patients on oxygen."],
+        ["Oversedation", "Stimulate the patient, open the airway, give oxygen and assist ventilation first. Naloxone reverses opioids; flumazenil reverses benzodiazepines, both titrated per protocol."],
+        ["Cautions", "Reversal agents can wear off before the sedative, so watch for resedation. Flumazenil can trigger seizures in long-term benzodiazepine users."]
+      ],
+      pearl: "A flat capnography waveform means no ventilation: check the patient and airway first, not the monitor.",
+      drugs: ["midazolam", "fentanyl", "naloxone", "flumazenil"], lv: ["ir","ct"] },
+
+    { id: "irmeds", grp: "Ultrasound and IR", title: "Common IR medications (heparin, protamine, radial cocktail with verapamil/nitroglycerin, lidocaine, tPA)", short: "IR medications",
+      sum: "IR procedures rely on a handful of drugs whose main risks are bleeding, low blood pressure and toxicity.",
+      rows: [
+        ["Heparin and protamine", "Heparin prevents clot on catheters and wires, monitored by ACT per protocol. Protamine reverses heparin; give slowly because it can cause hypotension, bradycardia and anaphylaxis (higher risk with fish allergy, prior protamine or NPH insulin, vasectomy)."],
+        ["Radial cocktail", "Heparin plus verapamil and/or nitroglycerin through the radial sheath to prevent radial artery spasm and occlusion, doses per protocol. Watch for hypotension and bradycardia; the injection can burn."],
+        ["Lidocaine", "Local anesthetic at the access site. Toxicity signs: perioral numbness, metallic taste, tinnitus, confusion, then seizures and arrhythmias. Stop and call for help; lipid emulsion is the antidote."],
+        ["Alteplase (tPA)", "Catheter-directed thrombolysis for clot. Watch closely for bleeding at the access site and elsewhere and for neurologic changes."]
+      ],
+      pearl: "Read back every syringe and label every syringe on the sterile field; IR tables hold several clear liquids at once.",
+      drugs: ["heparin", "protamine", "verapamil", "alteplase"], lv: ["ir"] },
+
+    { id: "radiation", grp: "Ultrasound and IR", title: "Radiation safety: ALARA and patient dose", short: "Radiation safety",
+      sum: "ALARA means keeping patient and staff dose as low as reasonably achievable without losing diagnostic quality.",
+      rows: [
+        ["Staff", "Time, distance, shielding. Wear lead aprons and thyroid shields in fluoroscopy, stand on the image receptor side and step back during runs. Annual occupational limit is 50 mSv; the embryo/fetus of a declared pregnant worker is limited to 5 mSv over the pregnancy."],
+        ["Fluoroscopy patient dose", "Use pulsed fluoroscopy at the lowest usable rate, last-image hold, tight collimation, keep the patient close to the image receptor and far from the tube, and limit magnification."],
+        ["High-dose procedures", "Track reference air kerma or peak skin dose in long IR cases; doses above about 2 Gy can cause skin erythema, and the Joint Commission treats more than 15 Gy cumulative peak skin dose as a reviewable sentinel event."],
+        ["CT", "Use size- and indication-based protocols, check CTDIvol and DLP against dose notification values, and follow Image Gently and Image Wisely principles for children."]
+      ],
+      pearl: "Doubling your distance from the patient cuts your scatter dose to one quarter.",
+      drugs: [], lv: ["rt","ct","nm","ir"] }
+  ],
+
+  q: [
+    /* ---------- Everyone ---------- */
+    { topic: "rxtypes", q: "Seconds after an iodinated contrast injection, a patient reports warmth and mild nausea that fade within a minute. Vital signs are normal and there is no rash. How is this best classified?",
+      a: "Mild physiologic reaction", w: ["Mild allergic-like reaction", "Moderate allergic-like reaction", "Delayed hypersensitivity reaction"],
+      x: "Warmth and brief nausea are direct (physiologic) effects of contrast, not immune-mediated. They do not call for premedication next time." },
+    { topic: "rxmild", q: "During a contrast-enhanced scan a patient develops a few scattered hives on the chest. Vitals are stable and breathing is normal. What should the technologist do first?",
+      a: "Stop injecting, keep the IV, monitor, notify the radiologist", w: ["Give IM epinephrine 0.3 mg and call a code", "Remove the IV and send the patient to wait in the lobby for an hour", "Finish the scan, then mention the hives on the requisition form"],
+      x: "Limited hives are a mild allergic-like reaction. The patient needs observation with IV access and radiologist assessment, because mild reactions can progress." },
+    { topic: "rxsevere", q: "Two minutes after contrast, a patient has diffuse hives, wheezing, BP 72/40 and heart rate 128. Which drug should be given first?",
+      a: "Epinephrine 0.3 mg IM (1 mg/mL) in the thigh", w: ["Diphenhydramine 50 mg IV push over 1 to 2 minutes", "Methylprednisolone 40 mg IV push via the existing line", "Atropine 1 mg IV push, repeated every 3 to 5 minutes"],
+      x: "Hypotension with tachycardia and hives is anaphylaxis. IM epinephrine is first-line; antihistamines and steroids do not treat shock or airway compromise." },
+    { topic: "vasovagal", q: "After contrast a patient becomes pale and sweaty with BP 80/50 and heart rate 46. There are no hives or wheezing. What is the best initial management?",
+      a: "Elevate the legs, give oxygen and start rapid IV fluids", w: ["Give IM epinephrine and IV diphenhydramine right away", "Give an albuterol inhaler and sit the patient upright", "Give oral prednisone and observe for 30 minutes"],
+      x: "Hypotension with bradycardia is a vasovagal reaction. Leg elevation, oxygen and IV fluids come first, with atropine if it persists." },
+    { topic: "rxkit", q: "A patient taking metoprolol has anaphylaxis that is not improving after repeated IM epinephrine. Which drug on the ACR list may the physician add?",
+      a: "Glucagon IV", w: ["Labetalol IV", "Additional oral diphenhydramine", "Furosemide IV"],
+      x: "Beta-blockers can blunt the response to epinephrine. The ACR lists IV glucagon for these refractory patients." },
+    { topic: "bronchospasm", q: "A patient develops wheezing after contrast. SpO2 is 95% on room air and blood pressure is normal. What is the usual first treatment?",
+      a: "Oxygen by mask and an albuterol inhaler", w: ["IV diphenhydramine alone, then observation", "Atropine IV with the legs elevated", "A 1 liter IV fluid bolus and observation"],
+      x: "Mild bronchospasm is treated with oxygen and inhaled albuterol (2 puffs, repeatable). Escalate to IM epinephrine if it worsens." },
+    { topic: "bronchospasm", q: "A patient becomes hoarse after contrast and now has audible stridor with SpO2 falling to 88%. Which response is correct?",
+      a: "Oxygen, IM epinephrine and a call to the emergency team", w: ["Give an albuterol inhaler and recheck in 15 minutes", "Give diphenhydramine and observe in recovery", "Lay the patient flat with the legs raised and wait"],
+      x: "Stridor with hypoxia means laryngeal edema, a severe reaction. Albuterol does not treat upper-airway swelling; epinephrine does." },
+    { topic: "rxkit", q: "Which epinephrine concentration is used for the 0.3 mg intramuscular adult dose in a contrast reaction?",
+      a: "1 mg/mL (1:1000)", w: ["0.1 mg/mL (1:10,000)", "0.01 mg/mL (1:100,000)", "10 mg/mL (1:100)"],
+      x: "IM epinephrine uses 1 mg/mL, giving 0.3 mL for 0.3 mg. The 0.1 mg/mL concentration is for slow IV use by a physician." },
+    { topic: "rxsevere", q: "Why are corticosteroids not used as the main treatment of an acute severe contrast reaction?",
+      a: "They act too slowly to reverse swelling or shock", w: ["They raise the risk of contrast-induced kidney injury", "They are contraindicated after iodinated contrast", "They cancel out the effect of epinephrine"],
+      x: "Steroids take hours to work. Epinephrine, oxygen and fluids treat the acute reaction; steroids must not delay them." },
+    { topic: "screening", q: "A patient scheduled for contrast CT says she is allergic to shrimp. She has had contrast before without problems. What is appropriate?",
+      a: "Proceed; shellfish allergy is not an indication", w: ["Cancel and switch to a gadolinium-enhanced MRI", "Start the 13-hour premedication regimen", "Use only iso-osmolar contrast at half dose"],
+      x: "Shellfish allergy is not a contraindication and does not call for premedication. Only a prior allergic-like reaction to contrast does." },
+    { topic: "premed", q: "Which patient is the best candidate for premedication before iodinated contrast, per the ACR?",
+      a: "One who had diffuse hives after a prior contrast CT", w: ["One who vomited briefly after a prior contrast CT", "One with a severe allergy to shellfish", "One who fainted during a past blood draw"],
+      x: "Premedication targets prior allergic-like reactions to the same contrast class. Vomiting and fainting are physiologic, and shellfish allergy is not an indication." },
+    { topic: "premed", q: "Which is the ACR 13-hour oral premedication regimen?",
+      a: "Prednisone 50 mg at 13, 7 and 1 h before, plus diphenhydramine 50 mg 1 h before", w: ["Prednisone 50 mg 1 h before only, plus diphenhydramine 50 mg at 13 and 7 h before", "Diphenhydramine 50 mg at 13, 7 and 1 h before, with no steroid", "Methylprednisolone 32 mg 30 min before, plus an albuterol inhaler"],
+      x: "The standard regimen is prednisone 50 mg at 13, 7 and 1 hour plus diphenhydramine 50 mg 1 hour before contrast." },
+    { topic: "premed", q: "A premedicated patient with a prior moderate allergic-like reaction develops hives and throat tightness after contrast. Which statement is true?",
+      a: "It is treated like any other reaction", w: ["Premedication makes epinephrine unsafe to give", "Premedicated patients cannot have a true reaction", "The steroid dose should be repeated before other drugs"],
+      x: "Premedication reduces but does not eliminate risk. Breakthrough reactions often resemble the original in severity and are treated with the usual ACR approach." },
+    { topic: "delayed", q: "Two days after a contrast CT, a patient calls about an itchy red rash on the trunk with no fever, blisters or mouth sores. What is the most likely cause?",
+      a: "Delayed cutaneous reaction", w: ["Nephrogenic systemic fibrosis", "Iodine-induced thyroid storm", "Contrast-induced acute kidney injury"],
+      x: "Delayed reactions appear 1 hour to 1 week later, usually as a self-limited rash. Fever, blisters or mucosal sores would need urgent evaluation." },
+    { topic: "egfr", q: "According to the ACR-NKF consensus, below which eGFR is the risk of contrast-induced AKI from IV iodinated contrast considered meaningful?",
+      a: "30 mL/min/1.73 m2", w: ["60 mL/min/1.73 m2", "90 mL/min/1.73 m2", "15 mL/min/1.73 m2"],
+      x: "eGFR below 30 (not on dialysis) or AKI marks higher risk. Above 45 the risk is negligible; 30 to 44 is case-by-case." },
+
+    /* ---------- CT ---------- */
+    { lv: "ct", topic: "metformin", q: "A patient on metformin with eGFR 52 and no acute kidney injury is scheduled for contrast CT. What should happen with the metformin?",
+      a: "Continue it; no hold is needed", w: ["Hold it 48 hours before and after", "Hold it for 48 hours after the scan", "Cancel the contrast and scan without it"],
+      x: "With eGFR 30 or above and no AKI, the ACR says metformin need not be stopped." },
+    { lv: "ct", topic: "metformin", q: "An inpatient on metformin has eGFR 24 and needs contrast CT. What is the ACR recommendation?",
+      a: "Hold it for 48 h; restart once kidney function is stable", w: ["Continue metformin and encourage extra oral fluids", "Hold metformin for 12 hours after the scan only", "Stop metformin permanently and switch to insulin"],
+      x: "With eGFR below 30 or AKI, metformin is held at the time of contrast and for 48 hours, and restarted only once kidney function is stable." },
+    { lv: "ct", topic: "warming", q: "A CT angiogram calls for 5 mL/s. Which access is most appropriate?",
+      a: "A 20-gauge or larger antecubital IV", w: ["A 22-gauge IV in the back of the hand", "A PICC not labeled for power injection", "A port accessed with a standard noncoring needle"],
+      x: "Rates above 3 mL/s need a 20-gauge or larger catheter, ideally antecubital. Central lines must be labeled power-injectable and accessed with power-rated needles." },
+    { lv: "ct", topic: "warming", q: "Why is iodinated contrast warmed to body temperature before power injection?",
+      a: "It lowers viscosity and injection pressure", w: ["It makes the contrast iso-osmolar to blood", "It prevents delayed skin reactions entirely", "It removes the risk of contrast kidney injury"],
+      x: "Warming reduces viscosity, lowering injection pressure; the ACR notes this may reduce extravasation and adverse events, especially with viscous agents." },
+    { lv: "ct", topic: "extravasation", q: "Three hours after an 80 mL contrast extravasation in the forearm, the patient has increasing pain, numb fingers and slow capillary refill. What is needed?",
+      a: "Urgent surgical evaluation", w: ["A warm compress and discharge with instructions", "Needle aspiration of the contrast from the site", "A second compress and recheck at 24 hours"],
+      x: "Worsening pain, changed sensation and poor perfusion are red flags for compartment syndrome, which needs prompt surgical evaluation." },
+    { lv: "ct", topic: "extravasation", q: "During a power injection the patient says the arm suddenly feels tight, and swelling appears above the IV. After stopping the injector, which step is appropriate?",
+      a: "Remove the IV, elevate the arm, notify the radiologist", w: ["Restart at a lower flow rate to finish the scan", "Massage the area firmly to spread the contrast out", "Leave the IV in and inject saline to dilute the contrast"],
+      x: "Stop, remove the catheter, elevate the limb above heart level, apply compresses per protocol, notify the radiologist and document." },
+    { lv: "ct", topic: "iodinated", q: "Which iodinated contrast agent is iso-osmolar to blood?",
+      a: "Iodixanol", w: ["Iohexol", "Iopamidol", "Diatrizoate"],
+      x: "Iodixanol is a nonionic dimer with the same osmolality as blood. Iohexol and iopamidol are low-osmolar; diatrizoate is high-osmolar." },
+    { lv: "ct", topic: "thyroid", q: "A patient is scheduled for contrast CT and mentions radioactive iodine treatment for hyperthyroidism next week. What should the technologist do?",
+      a: "Pause and alert the radiologist and ordering team", w: ["Give contrast; it does not affect radioiodine", "Give potassium iodide first to protect the thyroid", "Give half the usual contrast dose to limit the iodine"],
+      x: "Iodinated contrast blocks thyroid uptake of radioiodine for weeks and could make the treatment ineffective, so the timing must be reviewed." },
+    { lv: "ct", topic: "egfr", q: "Which statement best describes post-contrast AKI (PC-AKI)?",
+      a: "AKI within 48 h of contrast, whatever the cause", w: ["AKI proven to be caused by the contrast itself", "A rise in creatinine only after intra-arterial contrast", "Kidney injury occurring 30 days after contrast"],
+      x: "PC-AKI is correlative: any AKI soon after contrast. CI-AKI implies the contrast caused it and is much less common." },
+    { lv: "ct", topic: "pregnancy", q: "A pregnant trauma patient needs a contrast CT of the abdomen. What is the ACR position on iodinated contrast?",
+      a: "Give it when needed for the diagnosis", w: ["It is contraindicated in all trimesters", "It requires a 13-hour premedication first", "It is allowed only after the first trimester ends"],
+      x: "Iodinated contrast can be given in pregnancy when needed. Routine newborn thyroid screening is sufficient; no extra testing is required." },
+
+    /* ---------- MRI ---------- */
+    { lv: "mri", topic: "gbca", q: "Which gadolinium-based contrast agent is in ACR group II?",
+      a: "Gadobutrol", w: ["Gadodiamide", "Gadopentetate dimeglumine", "Gadoversetamide"],
+      x: "Group II includes gadobenate, gadobutrol, gadoterate, gadoteridol and gadopiclenol. The other three are group I, with the highest NSF risk." },
+    { lv: "mri", topic: "gbca", q: "Which agent is taken up by hepatocytes and used for a hepatobiliary phase about 20 minutes after injection?",
+      a: "Gadoxetate", w: ["Gadobutrol", "Gadoterate", "Gadopiclenol"],
+      x: "Gadoxetate is a liver-specific agent (ACR group II since 2024) with about half of the dose excreted through the biliary system." },
+    { lv: "mri", topic: "nsf", q: "A patient on hemodialysis needs a contrast-enhanced MRI. Which approach follows ACR guidance?",
+      a: "Group II agent, then dialysis soon after", w: ["Use a group I agent at a reduced dose", "Gadolinium is absolutely contraindicated", "Use a double dose so one scan is enough"],
+      x: "Group II agents have negligible NSF risk. Use the standard or lowest diagnostic dose and schedule dialysis soon after when practical." },
+    { lv: "mri", topic: "nsf", q: "Weeks after a gadolinium MRI, a dialysis patient develops thick, hard skin on the legs and stiff knees. What should be suspected?",
+      a: "Nephrogenic systemic fibrosis", w: ["Delayed contrast urticaria", "Gadolinium retention in the brain", "Contrast-induced acute kidney injury"],
+      x: "NSF causes skin thickening and joint contractures in patients with severe kidney disease, mostly after group I agents." },
+    { lv: "mri", topic: "retention", q: "A patient with normal kidneys asks about gadolinium staying in the brain. Which statement is accurate?",
+      a: "Some stays, more with linear agents; no harm proven", w: ["It occurs only in patients who are on dialysis", "It is the same disease as nephrogenic systemic fibrosis", "Macrocyclic agents leave more than linear agents"],
+      x: "Retention is seen with normal kidneys, more with linear agents, and has no proven clinical harm. The FDA requires a Medication Guide." },
+    { lv: "mri", topic: "mrisafety", q: "A patient goes into cardiac arrest on the MRI table. What is the correct response?",
+      a: "Start CPR and move the patient out of Zone IV", w: ["Bring the crash cart and defibrillator into the scanner room", "Quench the magnet before anyone touches the patient", "Wait for the code team to arrive in Zone IV"],
+      x: "The code team and its ferromagnetic equipment must never enter Zone IV. CPR continues while the patient is moved to a prepared area in Zone III." },
+    { lv: "mri", topic: "mrisafety", q: "In the ACR MRI zone system, which zone is restricted and under the direct supervision of MR personnel, just outside the scanner room?",
+      a: "Zone III", w: ["Zone I", "Zone II", "Zone IV"],
+      x: "Zone III is restricted and controlled by MR personnel. Zone IV is the magnet room itself." },
+    { lv: "mri", topic: "mrisafety", q: "In which situation is an emergency magnet quench appropriate?",
+      a: "A person is pinned to the magnet by an oxygen tank", w: ["A patient has an anaphylactic reaction on the table", "A patient goes into cardiac arrest in the bore", "A claustrophobic patient panics during the scan"],
+      x: "A quench is for life-threatening entrapment by a ferromagnetic object or fire. A code is managed by removing the patient from Zone IV." },
+    { lv: "mri", topic: "mrisedation", q: "A sedated child needs pulse oximetry during MRI. What is the safest choice?",
+      a: "An MR conditional fiberoptic oximeter, cables unlooped", w: ["The standard ward oximeter with its cable taped down", "No monitoring at all, to avoid any risk of burns", "A standard oximeter placed just outside the bore"],
+      x: "Only MR conditional monitors should be used, and cables must not loop or touch skin directly, to prevent RF burns." },
+    { lv: "mri", topic: "pregnancy", q: "A woman 20 weeks pregnant is scheduled for brain MRI. When should gadolinium be given?",
+      a: "Only if essential and it cannot wait until delivery", w: ["Routinely, because it does not cross the placenta", "Never; it is absolutely contraindicated in pregnancy", "Only with a group I agent at half dose"],
+      x: "Gadolinium crosses the placenta and lingers in amniotic fluid, so the ACR reserves it for essential cases, documented by the radiologist." },
+
+    /* ---------- Nuclear medicine ---------- */
+    { lv: "nm", topic: "rpsafety", q: "A technologist moves from 1 meter to 2 meters from a patient injected with a radiopharmaceutical. How does the exposure rate change?",
+      a: "It drops to one quarter", w: ["It drops to one half", "It stays the same", "It drops to one eighth"],
+      x: "By the inverse square law, doubling distance reduces exposure to 1/(2 squared) = one quarter." },
+    { lv: "nm", topic: "rpsafety", q: "A small vial of Tc-99m spills on the hot lab counter. What is the first appropriate action?",
+      a: "Warn others and cover the spill with absorbent paper", w: ["Wipe it up quickly with bare hands and paper towels", "Leave the room and lock it for the next 24 hours", "Rinse the counter with water into the sink"],
+      x: "Contain the spill, restrict the area, wear gloves, clean from the outside in, survey and notify the radiation safety officer per policy." },
+    { lv: "nm", topic: "rpsafety", q: "Why do PET syringe shields need to be thicker or made of tungsten compared with Tc-99m shields?",
+      a: "PET emits higher-energy 511 keV photons", w: ["PET tracers have much longer physical half-lives", "PET doses are always larger in volume", "PET tracers emit mostly alpha particles"],
+      x: "Positron annihilation produces 511 keV photons, far more penetrating than the 140 keV photons of Tc-99m." },
+    { lv: "nm", topic: "stresstest", q: "What is the correct regadenoson administration for an adult myocardial perfusion study?",
+      a: "0.4 mg rapid bolus, saline flush, then tracer", w: ["Weight-based infusion over 6 minutes", "0.4 mg slow IV push over 5 minutes", "Tracer first, then regadenoson 1 minute later"],
+      x: "Regadenoson is a fixed 0.4 mg dose given over about 10 seconds, followed by a 5 mL saline flush and the radiotracer 10 to 20 seconds later." },
+    { lv: "nm", topic: "stresstest", q: "A patient arrives for a regadenoson stress test and drank two cups of coffee 3 hours ago. What is the concern?",
+      a: "It blocks adenosine receptors, weakening the stress", w: ["Caffeine increases the radiation dose", "Caffeine makes the tracer clear from the heart too fast", "There is no concern with vasodilator stress"],
+      x: "Caffeine and other methylxanthines antagonize adenosine receptors; they should be held at least 12 hours before vasodilator stress." },
+    { lv: "nm", topic: "stresstest", q: "Five minutes after regadenoson a patient has persistent wheezing and second-degree AV block. Which drug reverses these effects?",
+      a: "Aminophylline slow IV", w: ["Atropine IV push", "Adenosine IV push", "Dobutamine IV infusion"],
+      x: "Aminophylline is a methylxanthine that antagonizes adenosine receptors. Per labeling it is given 50 to 250 mg by slow IV injection." },
+    { lv: "nm", topic: "fdgprep", q: "A diabetic patient took rapid-acting insulin 1 hour ago and arrives for FDG PET. What is the correct action?",
+      a: "Delay the injection; insulin shifts FDG into muscle", w: ["Inject now, since the glucose is now low", "Give oral glucose and inject right away", "Inject now but double the FDG activity to compensate"],
+      x: "Insulin drives FDG into muscle and fat. SNMMI advises waiting at least 4 hours after rapid-acting insulin before FDG injection." },
+    { lv: "nm", topic: "hida", q: "During a HIDA scan the gallbladder is not seen at 60 minutes but tracer is in the bowel. What is commonly given next?",
+      a: "Morphine IV, then about 30 more minutes of imaging", w: ["A fast sincalide bolus, then repeat imaging for an hour", "Aminophylline IV to reverse the delay", "A second dose of tracer with no drug"],
+      x: "Morphine contracts the sphincter of Oddi and promotes gallbladder filling. Non-visualization after morphine supports acute cholecystitis." },
+    { lv: "nm", topic: "ki", q: "Why is potassium iodide given before and after I-123 MIBG imaging?",
+      a: "To block thyroid uptake of free radioiodine", w: ["To improve uptake in the adrenal tumor", "To prevent allergic-like reactions to the MIBG", "To speed renal clearance of the tracer"],
+      x: "Stable iodide saturates the thyroid so released radioiodine is not taken up. It protects only the thyroid." },
+    { lv: "nm", topic: "nmlactation", q: "A breastfeeding mother will receive I-131 sodium iodide therapy. What instruction is correct?",
+      a: "Stop breastfeeding this child completely", w: ["She can resume breastfeeding after 24 hours", "She can resume after 72 hours of pumping and discarding", "No interruption is needed with I-131"],
+      x: "I-131 concentrates in breast milk and would irradiate the infant's thyroid. Breastfeeding must stop for this child." },
+
+    /* ---------- IR ---------- */
+    { lv: "ir", topic: "sedation", q: "During moderate sedation with midazolam and fentanyl, the capnography waveform goes flat while the SpO2 is still 97% on oxygen. What does this suggest?",
+      a: "Apnea or airway obstruction", w: ["Normal deep sedation", "A pulse oximeter malfunction", "Hyperventilation from pain"],
+      x: "Capnography detects absent ventilation before oxygen saturation falls, especially on supplemental oxygen. Check the patient and airway immediately." },
+    { lv: "ir", topic: "sedation", q: "An oversedated patient receives naloxone and wakes up. Why must monitoring continue?",
+      a: "The reversal may wear off before the opioid", w: ["Naloxone itself causes deep sedation later", "Naloxone raises the risk of contrast reaction", "Naloxone stops working entirely after about 5 minutes"],
+      x: "Naloxone (and flumazenil) can wear off before the sedative, allowing resedation. Continue monitoring per protocol." },
+    { lv: "ir", topic: "irmeds", q: "At the end of a procedure protamine is given to reverse heparin. Which reaction should the team watch for?",
+      a: "Hypotension, bradycardia or anaphylaxis", w: ["Hypertensive crisis and tachycardia", "Hypoglycemia and new-onset seizures", "Delayed rash with no immediate effects"],
+      x: "Protamine can cause hypotension, bradycardia and anaphylaxis, so it is given slowly; risk is higher with prior protamine or NPH insulin exposure." },
+    { lv: "ir", topic: "irmeds", q: "What is the purpose of verapamil in a radial access cocktail?",
+      a: "To prevent radial artery spasm", w: ["To reverse heparin at sheath removal", "To prevent contrast nephropathy", "To provide local anesthesia at the site"],
+      x: "Verapamil (with or without nitroglycerin) relaxes the radial artery. Watch for hypotension and bradycardia." },
+    { lv: "ir", topic: "irmeds", q: "After a large amount of local lidocaine, a patient reports a metallic taste and ringing in the ears. What is happening?",
+      a: "Early local anesthetic systemic toxicity", w: ["A mild contrast allergic-like reaction", "A vasovagal reaction to the needle stick", "Expected effect of moderate sedation"],
+      x: "Perioral numbness, metallic taste and tinnitus are early signs of lidocaine toxicity, which can progress to seizures and arrhythmias. Stop and call for help." },
+
+    /* ---------- RT (X-ray and fluoroscopy) ---------- */
+    { lv: "rt", topic: "oralrectal", q: "A fluoroscopic study is ordered for a patient with suspected esophageal perforation. Which contrast is appropriate first?",
+      a: "Water-soluble contrast", w: ["Thick barium paste", "Thin barium sulfate", "Double-contrast barium with air"],
+      x: "Barium in the mediastinum or peritoneum causes severe inflammation, so water-soluble contrast is used when perforation is suspected." },
+    { lv: "rt", topic: "oralrectal", q: "A frail patient at high risk of aspiration needs an upper GI study. Which contrast should be avoided?",
+      a: "Hyperosmolar ionic water-soluble agent", w: ["Thin barium sulfate", "Low-osmolar nonionic contrast", "Barium mixed to a thin liquid consistency"],
+      x: "Aspirated hyperosmolar contrast (such as diatrizoate) can cause pulmonary edema. Barium or a low-osmolar agent is safer when aspiration is likely." },
+    { lv: "rt", topic: "radiation", q: "Which change reduces patient skin dose during fluoroscopy?",
+      a: "Bring the image receptor close to the patient", w: ["Move the X-ray tube closer to the patient's skin", "Use continuous instead of pulsed fluoroscopy", "Increase electronic magnification"],
+      x: "Keeping the receptor close and the tube far reduces skin entrance dose. Pulsed mode, collimation and less magnification also help." },
+    { lv: "rt", topic: "radiation", q: "What is the occupational dose limit for the embryo/fetus of a declared pregnant radiographer over the entire pregnancy?",
+      a: "5 mSv", w: ["50 mSv", "1 mSv", "150 mSv"],
+      x: "The NRC limit for the embryo/fetus of a declared pregnant worker is 5 mSv (0.5 rem) over the pregnancy; the adult annual limit is 50 mSv." },
+    { lv: "rt", topic: "rxtypes", q: "When documenting a contrast reaction after a fluoroscopic study, which entry is most useful?",
+      a: "Agent, signs, severity, treatment, outcome", w: ["Iodine allergy, avoid all iodine", "Patient had a reaction, premedicate before the next study", "Contrast intolerance, see old chart"],
+      x: "Recording the specific agent, reaction type and severity guides future decisions. 'Iodine allergy' is inaccurate and unhelpful." }
+  ]
+};
+
+;
+/* DrugBug - Blood products learning boxes (quick facts + Professor Sage notes) */
+DB.BLOODBOX = {
+  prbc: {
+    box: [
+      ["Contains", "Red cells only; no platelets or factors"],
+      ["Hematocrit", "About 55-65%"],
+      ["Volume", "300-350 mL per unit"],
+      ["Storage", "1-6 C (33.8-42.8 F); transport at 1-10 C (33.8-50 F)"],
+      ["Shelf life", "Up to 42 days (35 days in CPDA-1)"],
+      ["Filter", "170-260 micron blood filter"],
+      ["Mix only with", "0.9% NaCl"],
+      ["Expected effect", "Hgb up about 1 g/dL per unit (non-bleeding)"]
+    ],
+    plain: "PRBCs are just the red cells, the oxygen carriers. They help a patient carry oxygen again, but they bring no clotting factors or platelets to help stop bleeding.",
+    remember: "Red cells carry oxygen, not clots: PRBCs need plasma, platelets and calcium beside them.",
+    mistake: "Giving RBCs alone to a bleeding patient, which causes dilutional coagulopathy.",
+    flight: "Keep units in the validated cooler at 1-10 C (33.8-50 F) and warm them inline, since in shock they may run as fast as the line allows."
+  },
+  wholeblood: {
+    box: [
+      ["Contains", "Red cells, plasma and platelets in one bag"],
+      ["Donor", "Group O, low anti-A/anti-B titers"],
+      ["Titer cutoff", "Commonly under 1:200 to 1:256"],
+      ["Volume", "About 500 mL per unit"],
+      ["Storage", "Cold-stored at 1-6 C (33.8-42.8 F)"],
+      ["Shelf life", "21 days (CPD) or 35 days (CPDA-1)"],
+      ["Rh choice", "Rh-neg for females of childbearing potential"],
+      ["Watch for", "Hemolysis risk in non-O after large volumes"]
+    ],
+    plain: "Whole blood is the 'all-in-one' bag: red cells, plasma and platelets together. Because the donor is group O with low antibody levels, it can be given before we know the patient's type.",
+    remember: "LTOWB: O cells plus low-titer plasma = one bag, all parts, any type.",
+    mistake: "Forgetting that females of childbearing potential (often under 50) should get Rh-negative product when available.",
+    flight: "Only one bag to hang is a big win with limited crew and space, but it still rides in the cold cooler and needs warming."
+  },
+  plasma: {
+    box: [
+      ["Contains", "All clotting factors, fibrinogen, proteins C/S"],
+      ["Volume", "About 200-300 mL per unit"],
+      ["FFP storage", "-18 C (-0.4 F) or colder, up to 1 year"],
+      ["Thaw time", "20-30 minutes for FFP"],
+      ["Thawed life", "5 days at 1-6 C (33.8-42.8 F)"],
+      ["Universal donor", "Group AB (low-titer A as substitute)"],
+      ["Typical dose", "10-15 mL/kg"],
+      ["Watch for", "TRALI, allergy, TACO, citrate load"]
+    ],
+    plain: "Plasma is the yellow liquid part of blood that holds the clotting factors. We give it to help a bleeding patient form clots, not just to add volume.",
+    remember: "O for cells, AB for plasma: the universal donors flip.",
+    mistake: "Mixing up universal donors: group O is the universal red cell donor, but group AB is the universal plasma donor.",
+    flight: "FFP takes 20-30 minutes to thaw, so transport programs carry thawed or liquid plasma in the cooler instead."
+  },
+  platelets: {
+    box: [
+      ["Contains", "Platelets for primary hemostasis"],
+      ["Volume", "About 200-300 mL (apheresis)"],
+      ["Storage", "20-24 C (68-75.2 F) with gentle agitation"],
+      ["Shelf life", "5-7 days"],
+      ["Never", "Refrigerate or pack on ice (standard)"],
+      ["Filter", "Standard 170-260 micron filter"],
+      ["Expected effect", "Count up about 30,000-60,000/microL"],
+      ["Watch for", "Bacterial contamination, febrile, allergic"]
+    ],
+    plain: "Platelets are the tiny cell pieces that plug holes in vessels first. They are kept at room temperature, which keeps them working but lets bacteria grow more easily.",
+    remember: "Platelets like the room, not the cooler.",
+    mistake: "Putting standard platelets in the cold cooler with the red cells, which ruins them.",
+    flight: "Keep platelets out of the cold blood cooler and at room temperature, and suspect bacterial sepsis if fever, rigors and hypotension start soon after hanging them."
+  },
+  cryo: {
+    box: [
+      ["Contains", "Fibrinogen, VIII, vWF, XIII, fibronectin"],
+      ["Supplied as", "Pre-pooled 5- or 10-unit dose"],
+      ["Typical dose", "10 units (two 5-unit pools) adult"],
+      ["When", "Fibrinogen under 150-200 mg/dL"],
+      ["OB trigger", "Fibrinogen under 200 mg/dL"],
+      ["After thaw", "Room temp; do not refrigerate"],
+      ["Expires", "Commonly 4-6 hours after thaw"],
+      ["Filter", "Standard blood filter, give fairly quickly"]
+    ],
+    plain: "Cryo is a small, concentrated bag of fibrinogen, the glue that holds a clot together. We give it when fibrinogen runs low in a bleeding patient.",
+    remember: "Cryo = concentrated fibrinogen; fibrinogen falls first and hardest.",
+    mistake: "Refrigerating thawed cryo, which should be kept at room temperature.",
+    flight: "Thawed cryo has a short clock of hours and stays at room temperature, so it never goes in the cold cooler."
+  },
+  factor: {
+    box: [
+      ["4F-PCC has", "Factors II, VII, IX, X plus proteins C/S"],
+      ["Main use", "Warfarin reversal within minutes"],
+      ["INR 2 to under 4", "25 units/kg"],
+      ["INR 4-6", "35 units/kg"],
+      ["INR over 6", "50 units/kg"],
+      ["Always add", "Vitamin K IV with PCC for warfarin"],
+      ["Advantages", "No thaw, no ABO match, small volume"],
+      ["Watch for", "Thrombosis (boxed warning)"]
+    ],
+    plain: "Factor concentrates are tiny vials packed with specific clotting factors. They fix a known clotting problem quickly without the big volume of plasma.",
+    remember: "PCC + vitamin K: fast, small, no thaw.",
+    mistake: "Giving 4F-PCC for warfarin bleeding without also giving IV vitamin K.",
+    flight: "Room-temperature storage, no thawing and small volume make concentrates practical in a cramped aircraft."
+  },
+  abo: {
+    box: [
+      ["Universal RBC donor", "Group O"],
+      ["Universal RBC recipient", "Group AB"],
+      ["Universal plasma donor", "Group AB"],
+      ["Plasma substitute", "Low-titer group A"],
+      ["O-negative for", "Females of childbearing potential, children"],
+      ["O-positive OK", "Males and older females in emergencies"],
+      ["First step", "Draw type and screen before first unit"]
+    ],
+    plain: "Blood types are like locks and keys: the wrong red cells get attacked by the patient's antibodies. Plasma works the opposite way, so the universal donors switch.",
+    remember: "Cells: O gives to all. Plasma: AB gives to all.",
+    mistake: "Withholding blood from an exsanguinating patient because Rh-negative product is unavailable.",
+    flight: "Draw the type and screen tube before the first unit if you can, because after several units of O blood the patient's own type gets hard to read."
+  },
+  checks: {
+    box: [
+      ["Why", "Most fatal hemolysis is clerical error"],
+      ["Who", "Two qualified providers at the patient"],
+      ["Verify", "Two IDs, product, unit #, ABO/Rh, expiry"],
+      ["Inspect bag", "Leaks, clots, dark color, gas bubbles"],
+      ["Consent", "Informed if capacity; implied in emergency"],
+      ["Vitals", "Baseline, then within first 15 minutes"],
+      ["Document", "Unit #, times, volume, warmer, vitals"]
+    ],
+    plain: "Before blood goes in, two people check that this exact bag belongs to this exact patient. Most deadly reactions come from simple mix-ups, not bad blood.",
+    remember: "Right blood, right patient, two people, every time.",
+    mistake: "Skipping or rushing the bedside identity check, the main barrier against ABO-incompatible transfusion.",
+    flight: "With limited crew and noise in the cabin, still do the two-person check out loud and keep the tags for documentation."
+  },
+  admin: {
+    box: [
+      ["Filter", "170-260 micron blood set"],
+      ["Mix only with", "0.9% NaCl"],
+      ["Never with", "Dextrose, LR, or any medication"],
+      ["Access", "18 gauge or larger, central, or IO"],
+      ["Pressure bag", "Often up to 300 mmHg"],
+      ["Stable start", "Slow for the first 15 minutes"],
+      ["Time limit", "Finish within 4 hours of spiking"],
+      ["Set change", "Commonly every 4 hours"]
+    ],
+    plain: "Blood runs through a special filtered line, and only normal saline is allowed to share it. Other fluids can burst the red cells or make the blood clot in the tubing.",
+    remember: "Saline only: D5W bursts cells, LR clots them.",
+    mistake: "Running lactated Ringer's or a dextrose solution through the same line as blood.",
+    flight: "Remove air from bags before pressurizing and watch rapid infuser alarms for air, occlusion and overheating."
+  },
+  warming: {
+    box: [
+      ["Storage temp", "Blood stored at 1-6 C (33.8-42.8 F)"],
+      ["Danger zone", "Core temp below about 35 C (95 F)"],
+      ["Warmer limit", "Generally not above about 42 C (107.6 F)"],
+      ["Use", "FDA-cleared blood/fluid warmer"],
+      ["Never", "Microwave, hot water bath, heat packs"],
+      ["Prevent", "Cover early, warm cabin, warm fluids"],
+      ["Monitor", "Temp before transfusion and at handoff"]
+    ],
+    plain: "Cold blood makes a patient cold, and a cold patient can't clot well. So we warm the blood with a proper device and keep the patient warm too.",
+    remember: "Warm the blood AND the patient.",
+    mistake: "Warming only the blood while leaving the patient exposed, or using uncontrolled heat on the bag.",
+    flight: "Altitude and cold environments speed heat loss, so use the inline battery warmer and keep the cabin warm."
+  },
+  storage: {
+    box: [
+      ["Cold cooler", "RBCs, whole blood, plasma at 1-10 C (33.8-50 F)"],
+      ["Room temp", "Platelets and thawed cryo, 20-24 C (68-75.2 F)"],
+      ["Coolers", "Validated by blood bank for set time"],
+      ["Logs", "Data logger; check at set intervals"],
+      ["Out of range", "Units usually wasted"],
+      ["Spiked unit", "Cannot be returned to inventory"],
+      ["Stewardship", "Rotate units back before expiry"]
+    ],
+    plain: "Carried blood has to stay in the right temperature range, and we have to be able to prove it. If the record is broken, the unit usually cannot be used again.",
+    remember: "No log, no return. No platelets in the cold box.",
+    mistake: "Putting platelets in the cold blood cooler.",
+    flight: "Note the cooler pack time and expiration and avoid opening it unnecessarily during the mission."
+  },
+  mtp: {
+    box: [
+      ["Classic MT", "10+ units RBC in 24 hours"],
+      ["Early MT", "3+ units in 1 hour"],
+      ["ABC score", "Penetrating, SBP 90 or less, HR 120+, FAST+"],
+      ["ABC trigger", "Score of 2 or more"],
+      ["Shock index", "HR/SBP of 1.0 or more (some use 0.9)"],
+      ["Ratio", "1:1:1 plasma:platelets:RBC, or LTOWB"],
+      ["Adjuncts", "TXA within 3 h, calcium, warmth"]
+    ],
+    plain: "Massive transfusion means giving a lot of blood fast to someone bleeding badly. We spot them early with simple scores and give balanced products, not just red cells.",
+    remember: "ABC score of 2 or more, or shock index 1.0+: get the blood moving early.",
+    mistake: "Waiting too long to activate MTP; delays in activation kill more patients than ratios.",
+    flight: "Activate MTP early and notify the receiving trauma center from the air."
+  },
+  lethaldiamond: {
+    box: [
+      ["Corners", "Hypothermia, acidosis, coagulopathy, low Ca"],
+      ["Cold", "Core temp below about 35 C (95 F)"],
+      ["Acid fix", "Restore perfusion, not bicarbonate"],
+      ["Clotting", "Balanced products and TXA"],
+      ["Calcium target", "Ionized Ca commonly above 1.1 mmol/L"],
+      ["Avoid", "Large crystalloid volumes"]
+    ],
+    plain: "Cold, acid, bad clotting and low calcium each make the others worse, like a spiral. We break it by stopping bleeding, giving blood, keeping warm and replacing calcium.",
+    remember: "Cold, acid, can't clot, low calcium: four corners, one spiral.",
+    mistake: "Giving large crystalloid volumes, which dilute factors, cool the patient and add acidosis.",
+    flight: "Cover the patient early, warm the blood and keep the cabin warm to protect the hypothermia corner."
+  },
+  permissive: {
+    box: [
+      ["Typical SBP", "About 80-90 mmHg"],
+      ["Typical MAP", "About 50-65 mmHg"],
+      ["TCCC target", "Palpable radial pulse, normal mentation"],
+      ["How", "Small blood boluses, not crystalloid"],
+      ["TBI age 50-69", "SBP at least 100 mmHg"],
+      ["TBI 15-49 or over 70", "SBP at least 110 mmHg"],
+      ["TBI floor", "Avoid any SBP under 90"]
+    ],
+    plain: "In uncontrolled bleeding we accept a lower blood pressure so we don't blow off the clot. But a hurt brain needs pressure, so head injury changes the rule.",
+    remember: "Bleeding: low and slow. Brain: the brain wins.",
+    mistake: "Using permissive hypotension targets in a patient with traumatic brain injury.",
+    flight: "Permissive hypotension is a bridge of limited duration, so it only buys time until surgical control at the receiving facility."
+  },
+  txa: {
+    box: [
+      ["Action", "Blocks clot breakdown (antifibrinolytic)"],
+      ["Best timing", "Within 1 hour"],
+      ["Cutoff", "Not started after 3 hours"],
+      ["CRASH-2", "1 g over 10 min, then 1 g over 8 h"],
+      ["TCCC/JTS", "2 g IV/IO single slow push"],
+      ["PPH (WOMAN)", "1 g over 10 min; repeat 1 g if needed"],
+      ["Not for", "GI bleeding (HALT-IT)"],
+      ["Watch for", "Hypotension with rapid push; seizures"]
+    ],
+    plain: "TXA doesn't make clots, it protects the clots the body already made from being broken down. It helps most when given early.",
+    remember: "TXA: the earlier the better, never after 3.",
+    mistake: "Starting TXA when the time of injury or birth is unknown or more than 3 hours ago.",
+    flight: "Note the time of injury or birth on scene so you know if you are still inside the 3-hour window."
+  },
+  calcium: {
+    box: [
+      ["Why", "Citrate in units binds ionized calcium"],
+      ["Effects", "Poor clotting, hypotension, long QT"],
+      ["CaCl 10%", "About three times the elemental Ca"],
+      ["Ca gluconate 10%", "1 g in 10 mL"],
+      ["CaCl access", "Central, large-bore or IO (vesicant)"],
+      ["Typical dose", "1 g early, then every few units"],
+      ["Line rule", "Never in the same line as blood"]
+    ],
+    plain: "The preservative in blood grabs the patient's calcium. Calcium helps blood clot and the heart squeeze, so we give it back during big transfusions.",
+    remember: "Citrate steals calcium: give it back.",
+    mistake: "Mixing calcium into the same line as blood products, which can clot the tubing.",
+    flight: "Plan a separate reliable line for calcium chloride before you need it, since it cannot share the blood line."
+  },
+  viscoelastic: {
+    box: [
+      ["R / CT long", "Factors low: plasma or PCC"],
+      ["Angle / K", "Fibrinogen: cryo or concentrate"],
+      ["MA / MCF low", "Platelets plus fibrinogen"],
+      ["Low FIBTEM", "Points to fibrinogen"],
+      ["LY30 high", "Above about 3%: consider TXA"],
+      ["Speed", "Results in minutes"]
+    ],
+    plain: "TEG and ROTEM watch a clot form, get strong and break down. Each part of the picture tells you which blood product is missing.",
+    remember: "R = plasma, angle = cryo, MA = platelets, LY30 = TXA.",
+    mistake: "Relying on INR instead of the viscoelastic tracing to guide products in bleeding trauma.",
+    flight: "You usually won't run TEG/ROTEM in the aircraft, but you may be handed a report at handoff and should be able to read it."
+  },
+  reversal: {
+    box: [
+      ["Warfarin", "4F-PCC plus vitamin K 10 mg slow IV"],
+      ["Dabigatran", "Idarucizumab 5 g IV (two 2.5 g vials)"],
+      ["Xa inhibitors", "4F-PCC, commonly 50 units/kg"],
+      ["Heparin", "Protamine 1 mg per 100 units, max 50 mg"],
+      ["Enoxaparin", "Protamine only partial reversal"],
+      ["Antiplatelets", "No true reversal agent"],
+      ["Watch for", "Hypotension with rapid protamine"]
+    ],
+    plain: "Each blood thinner has its own antidote. To pick the right one you need to know which drug the patient takes and when they last took it.",
+    remember: "Name the thinner, time the dose, then pick the antidote.",
+    mistake: "Choosing a reversal agent without first confirming which anticoagulant and the time of the last dose.",
+    flight: "Get the medication list and last-dose time at the referring facility, because it is hard to find once you are airborne."
+  },
+  ahtr: {
+    box: [
+      ["Cause", "ABO mismatch, usually ID error"],
+      ["Amount", "Can occur after only a few mL"],
+      ["Signs awake", "Fever, flank pain, IV burning, doom"],
+      ["Signs sedated", "Hypotension, fever, oozing, dark urine"],
+      ["First step", "Stop; NS via new tubing"],
+      ["Urine goal", "Commonly around 100 mL/hr adult"],
+      ["Watch for", "DIC and acute kidney injury"]
+    ],
+    plain: "The patient's antibodies attack the wrong-type red cells right inside the vessels. It is almost always caused by a mix-up of who gets which bag.",
+    remember: "Wrong blood, wrong patient: stop, saline, check the label.",
+    mistake: "Missing it in a sedated patient, where unexplained hypotension and oozing may be the only signs.",
+    flight: "Many flight patients are intubated, so watch for new hypotension and bleeding from IV sites during any transfusion."
+  },
+  febrile: {
+    box: [
+      ["Definition", "38 C (100.4 F) or higher and rise of 1 C (33.8 F)+"],
+      ["Timing", "During or within about 4 hours"],
+      ["Cause", "Cytokines or antibodies to donor WBCs"],
+      ["Most common with", "Platelets"],
+      ["Diagnosis", "Only after ruling out worse causes"],
+      ["Treatment", "Stop unit, NS open, antipyretic"]
+    ],
+    plain: "Sometimes blood just gives a patient a fever from leftover white cell signals. But fever can also be the first sign of something worse, so we always stop first.",
+    remember: "Fever on blood = stop the unit, then think.",
+    mistake: "Labeling a fever as a benign febrile reaction without ruling out hemolysis or bacterial contamination.",
+    flight: "You cannot rule out hemolysis or sepsis in the aircraft, so restarting the same unit is generally not done in transport."
+  },
+  allergic: {
+    box: [
+      ["Cause", "Donor plasma proteins"],
+      ["Mild signs", "Hives and itching only"],
+      ["Mild treatment", "Pause, antihistamine"],
+      ["Restart?", "Maybe, if hives only and resolved"],
+      ["Severe signs", "Hypotension, bronchospasm, stridor"],
+      ["Severe treatment", "Stop, epinephrine IM, airway"],
+      ["Classic risk", "IgA deficiency with anti-IgA"]
+    ],
+    plain: "Some patients react to proteins in the donor's plasma. Hives alone are usually mild, but trouble breathing or low blood pressure means anaphylaxis.",
+    remember: "Hives only: pause. Wheeze and low BP: epinephrine.",
+    mistake: "Treating anaphylaxis with diphenhydramine alone instead of epinephrine.",
+    flight: "Communicate a severe reaction clearly at handoff, since future transfusions may need washed or IgA-deficient products."
+  },
+  trali: {
+    box: [
+      ["What", "Noncardiogenic pulmonary edema"],
+      ["Timing", "During or within 6 hours"],
+      ["Hypoxemia", "SpO2 under 90% RA or P/F 300 or less"],
+      ["Cause", "Donor anti-HLA/neutrophil antibodies"],
+      ["Highest risk", "Plasma-rich products"],
+      ["Clues", "Hypotension, fever, no diuretic response"],
+      ["Treatment", "Stop, oxygen, lung-protective vent"],
+      ["Recovery", "Most improve in 48-96 hours"]
+    ],
+    plain: "In TRALI, antibodies in the donor's blood make the patient's lungs leaky, even though the heart is fine. Oxygen falls and fluid fills the lungs.",
+    remember: "TRALI: low BP, fever, Lasix fails. TACO: high BP, JVD, Lasix works.",
+    mistake: "Giving diuretics, which can worsen the hypotension of TRALI.",
+    flight: "New hypoxemia during or after a plasma-rich transfusion means stopping the unit and supporting oxygenation and BP en route."
+  },
+  taco: {
+    box: [
+      ["What", "Hydrostatic pulmonary edema (overload)"],
+      ["Timing", "During or within 12 hours"],
+      ["Signs", "Hypertension, JVD, crackles, high BNP"],
+      ["Risk", "Elderly, heart or renal failure, infants"],
+      ["Treatment", "Stop/slow, sit up, O2, CPAP, diuretic"],
+      ["Prevent", "One unit at a time, reassess"]
+    ],
+    plain: "TACO happens when we pour fluid in faster than the heart can pump it out, so it backs up into the lungs.",
+    remember: "TACO = Too much, Too fast: high BP, wet lungs, Lasix helps.",
+    mistake: "Confusing TACO with TRALI; TACO comes with hypertension and JVD and responds to diuretics.",
+    flight: "Track total fluid in and out during long transports, especially in stable at-risk patients."
+  },
+  sepsisrxn: {
+    box: [
+      ["Highest risk", "Room-temperature platelets"],
+      ["RBC risk", "Cold-tolerant gram-negatives (Yersinia)"],
+      ["Fever", "Often 39 C (102.2 F)+ or a rise of 2 C (35.6 F)+"],
+      ["Signs", "Rigors, tachycardia, hypotension"],
+      ["Bag clues", "Clumps, odd color, gas bubbles"],
+      ["Treatment", "Stop, NS, fluids, vasopressors"],
+      ["Bag", "Return sealed to blood bank for culture"]
+    ],
+    plain: "If bacteria got into the bag, the patient gets a sudden high fever and goes into septic shock. Platelets are the usual culprit because they are stored warm.",
+    remember: "Platelets plus rigors plus shock = think bugs in the bag.",
+    mistake: "Discarding the bag instead of saving it sealed for culture.",
+    flight: "Inspect every bag before hanging it, and if sepsis is suspected, seal and keep the bag with the patient for the blood bank."
+  },
+  hyperk: {
+    box: [
+      ["Potassium source", "Leaks from stored red cells"],
+      ["K risk up", "Older or irradiated units, rapid rate"],
+      ["ECG signs", "Peaked T waves, wide QRS"],
+      ["First step", "Calcium to stabilize myocardium"],
+      ["Then shift", "Insulin plus dextrose, albuterol"],
+      ["Citrate binds", "Calcium and magnesium"],
+      ["Late acid-base", "Metabolic alkalosis from citrate"]
+    ],
+    plain: "Stored blood leaks potassium and carries citrate, so lots of fast blood can upset the body's salts. The heart is what we watch most closely.",
+    remember: "Peaked T on blood: calcium first, then shift.",
+    mistake: "Forgetting to check magnesium, which citrate also binds, after large-volume transfusion.",
+    flight: "Keep the cardiac monitor visible during rapid transfusion so you catch peaked T waves or bradycardia early."
+  },
+  reactionsteps: {
+    box: [
+      ["1. Stop", "Disconnect blood tubing at the hub"],
+      ["2. Line open", "0.9% NaCl through NEW tubing"],
+      ["3. Assess", "ABCs and vitals with temperature"],
+      ["4. Clerical", "Re-check ID against unit label"],
+      ["5. Notify", "Medical control and blood bank"],
+      ["6. Return", "Bag and tubing sealed; document"]
+    ],
+    plain: "When anything seems wrong during a transfusion, we follow the same steps before we know what kind of reaction it is.",
+    remember: "Stop, Saline (new line), Survey, Check, Call, Carry back the bag.",
+    mistake: "Flushing the old blood tubing to keep the line open, which pushes more product into the patient.",
+    flight: "Carry spare saline tubing so you can keep the line open with fresh tubing in the aircraft."
+  },
+  obhem: {
+    box: [
+      ["PPH definition", "1000 mL or more within 24 hours"],
+      ["Causes", "4 Ts: Tone, Trauma, Tissue, Thrombin"],
+      ["Most common", "Uterine atony (Tone)"],
+      ["OB shock index", "About 0.9 or higher is concerning"],
+      ["First line", "Fundal massage, oxytocin"],
+      ["TXA", "Within 3 hours of birth"],
+      ["Fibrinogen", "Under 200 mg/dL predicts severe PPH"],
+      ["Antepartum", "Left uterine displacement after 20 wk"]
+    ],
+    plain: "Bleeding around childbirth can become deadly fast, and young healthy mothers hide shock until late. A fast heart rate is often the first warning.",
+    remember: "4 Ts: Tone, Trauma, Tissue, Thrombin.",
+    mistake: "Trusting visual blood loss estimates, which usually underestimate loss.",
+    flight: "Displace the uterus left (or tilt) for antepartum transport after about 20 weeks, and prefer Rh-negative product."
+  },
+  gibleed: {
+    box: [
+      ["Stable threshold", "Hgb about 7 g/dL"],
+      ["With CV disease", "Hgb about 8 g/dL"],
+      ["Variceal risk", "Over-transfusion raises portal pressure"],
+      ["Varices", "Octreotide, antibiotics in cirrhosis"],
+      ["Ulcer", "IV proton pump inhibitor"],
+      ["Unstable", "Blood early, protect airway"],
+      ["TXA", "Not recommended (HALT-IT)"]
+    ],
+    plain: "In a stable GI bleed, giving less blood actually works better. But if the patient is crashing, we treat it like any big bleed.",
+    remember: "TXA helps trauma and PPH, not the gut.",
+    mistake: "Giving TXA for GI bleeding, which showed no mortality benefit and more clots.",
+    flight: "Hematemesis and altered mental status threaten the airway, so protect it before a long flight to definitive care."
+  },
+  peds: {
+    box: [
+      ["Blood volume", "Neonate 80-90, infant 75-80 mL/kg"],
+      ["Older child", "About 70 mL/kg"],
+      ["PRBC dose", "10-15 mL/kg"],
+      ["Expected effect", "Hgb up roughly 2-3 g/dL"],
+      ["Plasma", "10-15 mL/kg"],
+      ["Platelets", "About 5-10 mL/kg"],
+      ["Cryo", "About 1 unit per 5-10 kg"],
+      ["Peds MT", "40 mL/kg or more in 24 hours"]
+    ],
+    plain: "Kids get blood by weight, and a small amount for an adult can be a big part of a child's blood. So we measure carefully in mL per kg.",
+    remember: "Start at 10 mL/kg: a 20 kg child is about 200 mL.",
+    mistake: "Thinking a small-looking volume of blood loss is minor in an infant, when it can be a large percentage.",
+    flight: "Use syringe push-pull or a pump for precise volumes, warm all products, and use Rh-negative for girls when type is unknown."
+  },
+  refusal: {
+    box: [
+      ["Right", "Competent adults may refuse"],
+      ["First step", "Confirm capacity, explain risks"],
+      ["Document", "Informed refusal, ideally witnessed"],
+      ["Usually refused", "Whole blood, RBC, WBC, platelets, plasma"],
+      ["Ask about", "Albumin, cryo, factors, cell salvage"],
+      ["Minors", "Contact medical control"],
+      ["Alternatives", "Hemorrhage control, TXA, vitamin K"]
+    ],
+    plain: "A competent adult can say no to blood, even if it could save their life. Our job is to ask exactly what they will accept and use every other tool.",
+    remember: "'No blood' is not 'no everything': ask about each fraction.",
+    mistake: "Assuming a patient who refuses blood also refuses albumin, cryo or factor concentrates without asking.",
+    flight: "Look for a blood refusal card or advance directive before departure, and document the refusal before you lift."
+  }
+};
+
+;
+/* DrugBug - Hemodynamics learning boxes (quick facts + Professor Sage notes) */
+DB.HEMOBOX = {
+  determinants: {
+    box: [
+      ["Formula", "CO = heart rate x stroke volume"],
+      ["Preload", "End-diastolic stretch (volume)"],
+      ["Preload proxies", "CVP (right), PCWP (left); rough only"],
+      ["Afterload", "Wall stress to eject; SVR/aortic pressure (LV)"],
+      ["RV afterload", "PVR is the bedside proxy"],
+      ["Contractility up", "Sympathetic tone, inotropes"],
+      ["Contractility down", "Ischemia, acidosis, hypoxia, sepsis, BB/CCB"],
+      ["Starling plateau", "More fluid mostly raises filling pressure"]
+    ],
+    plain: "How much blood the heart pumps each beat depends on how full it is (preload), how hard it has to push (afterload) and how strong it squeezes (contractility). Multiply that by heart rate and you get cardiac output.",
+    remember: "Tank, pump, pipes: preload fills it, contractility squeezes it, afterload resists it.",
+    mistake: "Thinking more fluid always means more output; on the flat part of the Starling curve it mainly causes pulmonary edema.",
+    flight: "In a hypotensive patient, ask if the tank is full, the pump working and the pipes tight or loose, and do not reflexively slow a compensatory sinus tachycardia in a heart that depends on rate.",
+    wards: "On pressure-volume loops, preload shifts the loop right, afterload raises the end-systolic point and contractility steepens the ESPVR, which explains why pressors can drop stroke volume in a failing LV."
+  },
+  normals: {
+    box: [
+      ["MAP", "About 70-100 mmHg (shock target 65+)"],
+      ["CVP / RA", "About 2-8 mmHg"],
+      ["PA pressure", "About 15-30 / 8-15 mmHg, mean 10-20"],
+      ["PCWP", "About 6-12 mmHg"],
+      ["CO / CI", "4-8 L/min / 2.5-4.0 L/min/m2"],
+      ["SVR", "About 800-1200 dynes-sec/cm5"],
+      ["PVR", "About 1-2 Wood units; above 2 elevated"],
+      ["SvO2 / ScvO2", "About 60-80% / 70% or higher"]
+    ],
+    plain: "These are the normal resting numbers for pressure, flow and resistance. You need them as an anchor before you can say any reading is high or low.",
+    remember: "CVP 2-8, PA 15-30/8-15, wedge 6-12, CO 4-8, CI 2.5-4, SVR 800-1200.",
+    mistake: "Forgetting that normal oxygen extraction is only about 25 percent, which is why a normal SvO2 is about 60-80 percent.",
+    flight: "Know these values cold for the FP-C exam, because every transport monitor reading is interpreted against them.",
+    wards: "Remember the key thresholds: cardiogenic shock is classically CI below about 2.2 with PCWP above about 15, and pulmonary hypertension is mean PA pressure above 20 mmHg."
+  },
+  formulas: {
+    box: [
+      ["MAP", "DBP + (SBP - DBP) / 3"],
+      ["Cardiac output", "CO = HR x SV; CI = CO / BSA"],
+      ["SVR", "80 x (MAP - CVP) / CO"],
+      ["PVR", "80 x (mean PAP - PCWP) / CO"],
+      ["CPP (brain)", "MAP - ICP; target about 60+ in TBI"],
+      ["CaO2", "(1.34 x Hb x SaO2) + (0.003 x PaO2)"],
+      ["DO2", "CO x CaO2 x 10; normal about 1000 mL/min"],
+      ["VO2", "Normally about 250 mL/min"]
+    ],
+    plain: "A few simple equations let you work out perfusion pressure, vascular resistance and how much oxygen reaches the tissues. Most are just pressure differences divided by flow.",
+    remember: "Resistance = pressure drop / flow; the 80 is only a unit conversion to dynes.",
+    mistake: "Thinking PaO2 drives oxygen content; dissolved oxygen adds very little and hemoglobin is the biggest lever.",
+    flight: "Watch units on exam math: skip the 80 if the answer is in Wood units, keep CO in L/min and enter saturations as decimals in CaO2.",
+    wards: "Know the shock indices: cardiac power output (MAP x CO / 451) below about 0.6 W and PAPi below about 0.9 in acute MI flag high-risk patients."
+  },
+  fluidresp: {
+    box: [
+      ["Definition", "SV or CO rises about 10-15% after a bolus"],
+      ["How common", "Only about half of unstable ICU patients"],
+      ["PLR", "Self-bolus of roughly 300 mL, reversible"],
+      ["PLR positive", "Measured CO/SV up 10% or more"],
+      ["PPV positive", "Above about 12-13% on controlled ventilation"],
+      ["PPV needs", "Sinus rhythm, no own breaths, closed chest"],
+      ["Poor predictor", "Single CVP or PCWP value"],
+      ["Stop signs", "Crackles, JVD, more work of breathing"]
+    ],
+    plain: "A patient is fluid responsive if a fluid bolus makes the heart pump noticeably more blood. Single pressure readings like CVP predict this poorly.",
+    remember: "Responsive is not the same as needing fluid: healthy people are fluid responsive too.",
+    mistake: "Judging a passive leg raise by blood pressure instead of a measured change in cardiac output or stroke volume.",
+    flight: "Give small boluses and reassess each one, stopping if crackles, JVD, rising work of breathing or increasing oxygen need appear.",
+    wards: "PPV gives false positives in RV failure and high intra-abdominal pressure and is unreliable with arrhythmias or low tidal volumes, while PLR is hard in trauma or pelvic fractures."
+  },
+  aline: {
+    box: [
+      ["Flush bag", "Pressurized to 300 mmHg, about 3 mL/hr"],
+      ["Level at", "Phlebostatic axis: 4th ICS, mid-axillary"],
+      ["Height error", "About 7.5 mmHg per 10 cm"],
+      ["Below heart", "Reads falsely high (above reads low)"],
+      ["Square wave", "Optimal: about 1.5-2 oscillations"],
+      ["Overdamped", "Rounded, no notch; SBP low, DBP high"],
+      ["Underdamped", "Spiky; SBP high, DBP low"],
+      ["Most reliable", "MAP, in both damping errors"]
+    ],
+    plain: "An arterial line shows blood pressure beat by beat, but only if it is zeroed, leveled with the heart and properly damped. The fast-flush test tells you if damping is right.",
+    remember: "When damping is in doubt, trust the MAP.",
+    mistake: "Treating a suspicious systolic number from a dampened or ringing trace instead of checking the setup and using the MAP.",
+    flight: "Re-level after every move or stretcher height change, re-zero after significant altitude change per policy, and when the trace suddenly dampens check the patient's pulse and cuff pressure first.",
+    wards: "Read the waveform: wide pulse pressure suggests AR or vasodilation, parvus et tardus suggests AS and big respiratory variation suggests hypovolemia or tamponade."
+  },
+  cvp: {
+    box: [
+      ["What it measures", "SVC pressure near the right atrium"],
+      ["Normal", "About 2-8 mmHg"],
+      ["Read at", "End-expiration, mean of the a wave"],
+      ["a wave", "Atrial contraction"],
+      ["v wave", "Atrial filling, tricuspid closed"],
+      ["Raised by", "PEEP, RV failure, TR, tamponade, PE"],
+      ["Also raised by", "Tension pneumothorax, abdominal hypertension"],
+      ["Best use", "Safety limit, not a target"]
+    ],
+    plain: "CVP is the pressure near the right atrium. It reflects volume, right heart function and chest pressure all mixed together, not volume alone.",
+    remember: "CVP is a brake, not a gas pedal: stop when it is high and rising.",
+    mistake: "Using a single CVP value to decide whether a patient will respond to fluid.",
+    flight: "A high or rising CVP with hypotension should make you think of obstruction or RV failure (tamponade, PE, tension pneumothorax, RV infarct), while a very low CVP supports hypovolemia.",
+    wards: "Learn the waveform clues: cannon a waves mean AV dissociation, absent a waves mean AF, large v waves mean TR and a blunted y descent suggests tamponade."
+  },
+  pac: {
+    box: [
+      ["Measures", "Right heart pressures, wedge, CO, SvO2"],
+      ["RA depth (R IJ)", "About 15-20 cm"],
+      ["RV depth", "About 25-35 cm"],
+      ["PA / wedge depth", "About 40-50 cm / 45-55 cm"],
+      ["RV trace", "Tall systolic, diastolic near zero"],
+      ["PA trace", "Dicrotic notch, diastolic step-up"],
+      ["Balloon", "No more than rated volume (about 1.5 mL)"],
+      ["Top complication", "Arrhythmias in the RV"]
+    ],
+    plain: "The PA (Swan-Ganz) catheter is floated through the right heart into the pulmonary artery. It measures pressures, cardiac output and mixed venous oxygen saturation.",
+    remember: "Balloon up to advance, balloon down to withdraw, and never leave it wedged.",
+    mistake: "Missing a spontaneous wedge trace with the balloon down, which means the catheter has migrated distally and must be pulled back.",
+    flight: "Keep the distal PA waveform displayed at all times so migration into a wedge or back into the RV (near-zero diastolic, ectopy) is seen at once.",
+    wards: "Hemoptysis after balloon inflation suggests PA rupture: bleeding side down, secure the airway and arrange urgent embolization or surgery."
+  },
+  pcwp: {
+    box: [
+      ["Estimates", "LA pressure, then LVEDP"],
+      ["Normal", "About 6-12 mmHg"],
+      ["Read at", "End-expiration, mean of the a wave"],
+      ["Overestimates", "MS, MR, high PEEP, non-zone-3 tip"],
+      ["Underestimates", "Stiff LV, acute aortic regurgitation"],
+      ["Tip location", "Must be in West zone 3"],
+      ["Red flag", "PCWP higher than PA diastolic"],
+      ["Large v waves", "Often over about twice mean wedge; acute MR"]
+    ],
+    plain: "Wedge pressure estimates left atrial pressure, which usually reflects how full the left ventricle is. Valve disease, PEEP and a badly placed tip can break that link.",
+    remember: "High wedge + low output = failing left heart; low wedge + low output = empty or blocked.",
+    mistake: "Trusting a PCWP that reads higher than PA diastolic pressure instead of suspecting a non-zone-3 tip or measurement error.",
+    flight: "High PCWP with low output points to a failing left heart, while low PCWP with low output points to an empty tank or a right-sided or obstructive problem.",
+    wards: "A PADP minus PCWP gradient above about 5-7 mmHg suggests pre-capillary disease such as PE, ARDS or pulmonary arterial hypertension, and PEEP effects are best handled by trending at a fixed PEEP."
+  },
+  svo2: {
+    box: [
+      ["SvO2 normal", "About 60-80% (PA sample)"],
+      ["ScvO2 normal", "About 70% or higher (SVC sample)"],
+      ["Low means", "Low delivery or high consumption"],
+      ["Low causes", "Low CO, anemia, hypoxemia, fever, pain"],
+      ["High causes", "Sepsis, cyanide, CO poisoning, wedged PAC"],
+      ["DO2 vs VO2", "Normally DO2 is about 4 times VO2"],
+      ["Critical DO2", "VO2 falls, lactate rises"]
+    ],
+    plain: "Venous oxygen saturation shows how much oxygen is left after the tissues have taken what they need. It reflects the balance between oxygen delivery and oxygen use.",
+    remember: "Low SvO2: supply too small or demand too big. High SvO2 in a sick patient: tissues not extracting.",
+    mistake: "Feeling reassured by a high SvO2 in a sick patient, when it can mean sepsis, cyanide or a wedged catheter.",
+    flight: "A falling ScvO2 trend is an early sign the heart cannot meet demand, so first control what burns oxygen: pain, shivering, agitation and ventilator dyssynchrony.",
+    wards: "In shock ScvO2 overestimates SvO2, and since EGDT trials showed no mortality benefit, a normal or high ScvO2 does not exclude shock."
+  },
+  shockprofiles: {
+    box: [
+      ["Hypovolemic", "Low CO, high SVR, low CVP and PCWP"],
+      ["Cardiogenic", "Low CO, high SVR, high PCWP, low SvO2"],
+      ["Septic (early)", "High/normal CO, low SVR, normal/high SvO2"],
+      ["Neurogenic", "Low SVR with bradycardia"],
+      ["Anaphylaxis", "Low SVR with capillary leak"],
+      ["Obstructive", "Low CO, high SVR, high CVP"],
+      ["Tamponade", "Diastolic pressures equalize"],
+      ["PE", "High CVP, PCWP low or normal"]
+    ],
+    plain: "Each type of shock has its own pattern of cardiac output, vascular resistance and filling pressures. Recognizing the pattern points you toward the right treatment.",
+    remember: "Cold and wet = pump. Cold and dry = tank. Warm and flushed = pipes.",
+    mistake: "Labeling the shock type once and never rechecking, when patients often have mixed or evolving shock.",
+    flight: "Use the bedside version: cold and wet suggests cardiogenic, cold and dry with flat neck veins hypovolemic, distended neck veins with clear lungs obstructive or RV failure, and warm and flushed distributive.",
+    wards: "Repeat the hemodynamic profile after each intervention, because septic cardiomyopathy, hemorrhage on top of cardiogenic shock or late cold sepsis can change the picture."
+  },
+  scai: {
+    box: [
+      ["A - At risk", "Big MI or HF, normal BP and perfusion"],
+      ["B - Beginning", "Hypotension/tachycardia, lactate normal"],
+      ["B example", "SBP below 90 or MAP below 60"],
+      ["C - Classic", "Hypoperfusion needing drugs or devices"],
+      ["C lactate", "2 or more; rising creatinine, low UOP"],
+      ["D - Deteriorating", "No response after about 30 min of therapy"],
+      ["E - Extremis", "Collapse, ongoing CPR or ECPR"],
+      ["Arrest modifier", "Add A for cardiac arrest"]
+    ],
+    plain: "SCAI staging sorts cardiogenic shock from at risk (A) to extremis (E). The higher the stage, the higher the risk of death.",
+    remember: "A-B-C-D-E: At risk, Beginning, Classic, Deteriorating, Extremis.",
+    mistake: "Treating stage D as a fixed number cutoff, when it is defined by trajectory: failure to improve despite initial therapy.",
+    flight: "Stage C and beyond usually needs a center with a shock team, cath lab and mechanical support, and sliding from C to D in flight should prompt early notice to the receiving team.",
+    wards: "Use cardiac power output below about 0.6 W and PAPi below about 0.9 to help identify who needs escalation and which ventricle needs support."
+  },
+  rvfailure: {
+    box: [
+      ["Causes", "RV infarct, massive PE, PH crisis, ARDS"],
+      ["Fluid", "Modest only; overfilled RV crushes the LV"],
+      ["Stop fluid", "CVP above about 12-15 or rising, no gain"],
+      ["Pressors", "Norepinephrine, vasopressin"],
+      ["Inotropes", "Dobutamine or milrinone for low output"],
+      ["Lower PVR", "Fix hypoxia, hypercapnia, acidosis"],
+      ["Inhaled", "Nitric oxide or epoprostenol"],
+      ["Danger moment", "Intubation and positive pressure"]
+    ],
+    plain: "A failing right ventricle needs just enough filling, good systemic blood pressure and low lung resistance. It can collapse quickly with low oxygen, high carbon dioxide, acidosis or a rough intubation.",
+    remember: "Keep the RV oxygenated, not acidotic, not overfilled, and perfused.",
+    mistake: "Pushing more and more fluid into a dilated RV, which bows the septum into the LV and lowers output.",
+    flight: "Inferior STEMI with hypotension and clear lungs means right-sided leads, no nitroglycerin, judicious fluid and early vasopressor; before intubating, optimize, have a pressor ready and preoxygenate well.",
+    wards: "Look for RA pressure high relative to PCWP (RA/PCWP above about 0.8), low PAPi and on echo a dilated RV with septal flattening (D sign) and low TAPSE."
+  },
+  pressors: {
+    box: [
+      ["Norepinephrine", "Alpha-1, some beta-1; first-line septic"],
+      ["Vasopressin", "Usual second agent in septic shock"],
+      ["Epinephrine", "Strong beta-1; anaphylaxis, refractory shock"],
+      ["Phenylephrine", "Pure alpha-1; when tachycardia harms"],
+      ["Dobutamine", "Beta-1 inotrope, some vasodilation"],
+      ["Milrinone", "PDE-3 inodilator, renally cleared"],
+      ["Dopamine", "More arrhythmias; not first-line"],
+      ["Extravasation", "Phentolamine is the antidote"]
+    ],
+    plain: "Vasopressors tighten the blood vessels and inotropes make the heart squeeze harder. Pick the drug that fixes the part of the circulation that is failing.",
+    remember: "Pressors fix the pipes; inotropes fix the pump.",
+    mistake: "Escalating vasopressors alone in cardiogenic shock, when rising afterload worsens LV output and an inotrope or mechanical support is needed.",
+    flight: "Run pressors through a dedicated, secure line with a backup drip and enough volume for the trip, and watch peripheral sites for extravasation.",
+    wards: "Know the trials: SOAP II showed more arrhythmias with dopamine, VASST showed no overall mortality benefit of adding vasopressin and DOREMI found no significant difference between milrinone and dobutamine."
+  },
+  iabp: {
+    box: [
+      ["Inflates", "In diastole, at the dicrotic notch"],
+      ["Deflates", "Just before systole"],
+      ["Benefit", "More coronary perfusion, less afterload"],
+      ["Output added", "Roughly 0.5 L/min at most"],
+      ["Tip position", "About 2-3 cm below left subclavian"],
+      ["Bottom of balloon", "Above the renal arteries"],
+      ["Best indication", "Mechanical MI complications (MR, VSD)"],
+      ["Contraindications", "Mod-severe AR, dissection, aneurysm"]
+    ],
+    plain: "An IABP is a balloon in the aorta that inflates when the heart relaxes and deflates right before it pumps. That boosts blood to the coronary arteries and makes it easier for the heart to eject.",
+    remember: "IABP helps supply and demand, but adds little cardiac output.",
+    mistake: "Expecting a big rise in cardiac output from an IABP; it adds roughly 0.5 L/min at most.",
+    flight: "Watch the left radial pulse for upward migration and urine output for downward migration, and if blood or brown flecks appear in the helium line, stop pumping, clamp it and keep the patient flat.",
+    wards: "IABP-SHOCK II found no mortality benefit from routine IABP in AMI cardiogenic shock, so it is no longer routine but remains reasonable for mechanical complications."
+  },
+  iabptiming: {
+    box: [
+      ["Correct inflation", "At the dicrotic notch: a sharp V"],
+      ["Correct deflation", "Just before systole"],
+      ["Early inflation", "Before notch; harmful, raises LVEDP"],
+      ["Late inflation", "Notch visible; less benefit, not dangerous"],
+      ["Early deflation", "U-shaped dip; little afterload drop"],
+      ["Late deflation", "Balloon up during ejection; harmful"],
+      ["Standard trigger", "ECG R wave"],
+      ["Backup trigger", "Arterial pressure upstroke"]
+    ],
+    plain: "The balloon must inflate exactly at the dicrotic notch and deflate just before the heart pumps. Each of the four timing errors has its own waveform and effect.",
+    remember: "Early inflation and late deflation hurt the LV; late inflation and early deflation just waste benefit.",
+    mistake: "Thinking all timing errors are equally harmful, when early inflation and late deflation are the dangerous ones.",
+    flight: "Vibration, movement and radio interference can corrupt the ECG trigger, so use clean leads, switch to pressure trigger if the ECG is lost and check timing at 1:2.",
+    wards: "Modern pumps use automatic timing that adapts to AF, often with R-wave deflation in irregular rhythms, and very fast rates may require 1:2."
+  },
+  impella: {
+    box: [
+      ["Type", "Catheter axial flow pump, LV to aorta"],
+      ["Impella CP", "Femoral, about 3.5-4 L/min"],
+      ["Impella 5.5", "Surgical, axillary, up to about 5.5-6 L/min"],
+      ["Impella RP", "Right side: IVC/RA to PA"],
+      ["Support setting", "P-levels P-0 to P-9"],
+      ["Purge", "Dextrose solution keeps blood out of motor"],
+      ["Suction alarm", "Underfilled LV or malposition"],
+      ["During CPR", "Reduce to P-2"]
+    ],
+    plain: "Impella is a small pump on a catheter that sits across the aortic valve and moves blood from the left ventricle into the aorta. It directly unloads the heart.",
+    remember: "Suction alarm = empty LV: check volume, RV and position before turning up support.",
+    mistake: "Leaving a left-sided Impella in the LV at P-0, which lets blood flow backward like aortic regurgitation.",
+    flight: "Never reposition in the field: lock the sleeve, secure the catheter and console, keep the purge running and recheck position waveforms after every move.",
+    wards: "Watch for hemolysis (plasma free hemoglobin, LDH, cola urine), mostly from malposition and suction, and know DanGer Shock lowered mortality but with more bleeding and limb ischemia."
+  },
+  ecmo: {
+    box: [
+      ["VV ECMO", "Lung support; native heart gives BP"],
+      ["VA ECMO", "Heart and lung support"],
+      ["Pump speed", "RPM produces flow (L/min)"],
+      ["Sweep gas", "Mainly controls CO2 removal"],
+      ["Oxygenation", "FdO2 and blood flow"],
+      ["VA flow", "Often about 3-5 L/min"],
+      ["Anticoagulation", "Usually heparin; bivalirudin if HIT"],
+      ["Harlequin check", "Right radial SpO2 or ABG"]
+    ],
+    plain: "ECMO pulls blood out, puts oxygen in and removes CO2, then returns it to a vein (VV, lung support) or an artery (VA, heart and lung support).",
+    remember: "On femoral VA ECMO, the right radial shows what the brain and coronaries get.",
+    mistake: "Starting compressions on a VA ECMO patient just because there is no pulse, when there may be no pulsatility with adequate flow.",
+    flight: "Transport only with an ECMO specialist, clamps, hand crank, backup oxygen and power, and plan every move so lines cannot kink or pull, since cannula dislodgement is lethal within minutes.",
+    wards: "Watch for LV distension on VA ECMO (lost pulsatility, closed aortic valve, rising PCWP, pulmonary edema), which needs venting with IABP, Impella or another LV vent."
+  },
+  lvad: {
+    box: [
+      ["Device", "HeartMate 3: centrifugal, maglev pump"],
+      ["Pulse", "Often absent or weak; normal"],
+      ["Blood pressure", "Doppler + manual cuff: first sound = MAP"],
+      ["MAP target", "Typically about 70-90 mmHg"],
+      ["Check", "Pump hum, controller, driveline"],
+      ["Low flow", "Low preload or obstruction"],
+      ["Batteries", "Change one at a time, never both"],
+      ["CPR if", "Pump off and no perfusion"]
+    ],
+    plain: "An LVAD continuously pumps blood from the left ventricle to the aorta, so many patients have no pulse you can feel. Blood pressure is measured with a Doppler and a manual cuff.",
+    remember: "No pulse is normal; no hum and no perfusion is not.",
+    mistake: "Withholding chest compressions for fear of dislodging the pump when the pump is not working and perfusion is absent.",
+    flight: "For low-flow alarms think hypovolemia, bleeding, RV failure, tamponade or arrhythmia; bring the backup bag and call the VAD coordinator.",
+    wards: "Suspect pump thrombosis with rising power, high calculated flow, hemolysis and heart failure symptoms, and expect GI bleeding and driveline infection as long-term issues."
+  },
+  tvp: {
+    box: [
+      ["TCP pads", "Anterior-posterior or anterior-lateral"],
+      ["TCP rate", "Often 60-80"],
+      ["TCP output", "About 10 mA above capture threshold"],
+      ["TVP threshold", "Ideally under about 1 mA"],
+      ["TVP output", "2-3 times threshold"],
+      ["Electrical capture", "Spike, wide QRS, opposite T wave"],
+      ["Mechanical capture", "Pulse or pleth with each paced beat"],
+      ["Failure to capture", "Spikes with no QRS"]
+    ],
+    plain: "Pacing drives the heart when bradycardia is unstable and drugs fail. It only works if the electrical beat also makes a real pulse.",
+    remember: "A paced rhythm without a pulse is PEA: always feel for the beat.",
+    mistake: "Checking the carotid for capture during transcutaneous pacing, where muscle twitch mimics a pulse.",
+    flight: "Confirm mechanical capture at the femoral pulse or SpO2 pleth after every move, since pads and wires shift, and keep pads on a TVP patient as backup.",
+    wards: "Atropine helps nodal block but not infranodal block (Mobitz II, third-degree with wide escape), and a new effusion or rising threshold after TVP suggests RV perforation."
+  },
+  cathlab: {
+    box: [
+      ["Radial access", "Less bleeding, early mobilization"],
+      ["Femoral access", "For large-bore devices or radial failure"],
+      ["Radial care", "Band deflated gradually per protocol"],
+      ["Radial watch", "Hematoma, hand ischemia, compartment"],
+      ["Femoral care", "Leg straight, head of bed low"],
+      ["Closure devices", "Shorter bed rest; still need site checks"],
+      ["RP bleed signs", "Hypotension, back/flank pain, soft groin"],
+      ["Main RP risk", "High puncture above inguinal ligament"]
+    ],
+    plain: "After a heart catheterization, problems at the puncture site are the most common complication. A retroperitoneal bleed can be deadly because it hides inside the body.",
+    remember: "Hypotension + back pain + soft groin after femoral cath = retroperitoneal bleed until proven otherwise.",
+    mistake: "Ruling out bleeding because the groin looks fine; a retroperitoneal bleed often has little or no visible hematoma.",
+    flight: "For site bleeding, hold firm sustained pressure just proximal to the skin puncture, keep the leg straight during loading and recheck the site and distal pulses after every move.",
+    wards: "A pulsatile mass with a systolic bruit suggests pseudoaneurysm and a continuous bruit suggests AV fistula; also watch for contrast nephropathy and atheroembolism."
+  },
+  pci: {
+    box: [
+      ["FMC to device", "90 min or less (120 if transfer)"],
+      ["Lytics if", "PCI not possible within 120 min"],
+      ["Lytic timing", "Within 30 min of arrival"],
+      ["Antiplatelets", "Aspirin + P2Y12 inhibitor"],
+      ["Prasugrel avoid", "Prior stroke or TIA"],
+      ["PCI anticoagulant", "Usually unfractionated heparin"],
+      ["Shock + multivessel", "Culprit lesion only at first"],
+      ["Failed lytics", "Under 50% ST resolution at 60-90 min"]
+    ],
+    plain: "STEMI care is a race to open the blocked artery, backed up by antiplatelet and anticoagulant drugs. In cardiogenic shock, emergency revascularization improves survival.",
+    remember: "Open the culprit first in shock, and come back for the rest later.",
+    mistake: "Doing immediate multivessel PCI in shock, when CULPRIT-SHOCK favored culprit-only PCI first.",
+    flight: "Send the 12-lead ahead, document drug times and doses, place pads, avoid nitrates with hypotension, RV infarct or recent PDE-5 use, and watch for reperfusion arrhythmias and bleeding.",
+    wards: "After fibrinolysis, transfer for angiography: rescue PCI for failed reperfusion, otherwise routine angiography within about 2-24 hours."
+  },
+  valves: {
+    box: [
+      ["Severe AS", "Area under 1.0 cm2, mean gradient 40+"],
+      ["AS rules", "Keep preload, sinus rhythm, slow rate"],
+      ["Acute AR", "Shock and edema, no wide pulse pressure"],
+      ["AR rules", "Avoid bradycardia; no IABP"],
+      ["Acute MR", "Giant v waves, flash pulmonary edema"],
+      ["MR rules", "Afterload reduction helps forward flow"],
+      ["Tamponade", "Equal diastolic pressures within about 5"],
+      ["Pulsus paradoxus", "Inspiratory SBP fall over 10 mmHg"]
+    ],
+    plain: "Valve problems and tamponade each have a typical pressure pattern and their own rules for heart rate, filling and afterload. Matching the treatment to the lesion matters.",
+    remember: "Equal diastolic pressures + pulsus paradoxus = tamponade until proven otherwise.",
+    mistake: "Giving vasodilators in aortic stenosis instead of keeping preload and treating hypotension with an alpha agonist.",
+    flight: "Tamponade and AS depend on preload and rate, so give fluid, avoid vasodilating sedatives and be very careful with intubation and positive pressure, which can cause arrest.",
+    wards: "Tamponade shows a blunted y descent and no Kussmaul sign, while constriction shows a prominent y descent, square root sign and Kussmaul sign."
+  }
+};
+
+;
+/* DrugBug - Contrast safety learning boxes */
+DB.CONTRASTBOX = {
+  rxtypes: {
+    box: [["Two types","Allergic-like and physiologic"],["Grades","Mild, moderate or severe"],["Allergic-like","Hives, itching, swelling, wheeze, low BP"],["Physiologic","Nausea, warmth, vasovagal, arrhythmia"],["Biggest risk","Prior allergic-like reaction"],["Premedicate","Only for prior allergic-like, same class"],["Document","Agent, signs, severity, type, outcome"]],
+    plain: "Contrast reactions come in two kinds: allergic-like ones that look like an allergy, and physiologic ones that are a direct effect of the contrast. Each kind is graded mild, moderate or severe.",
+    remember: "Allergy look = allergic-like; body effect = physiologic. Premeds only help the allergic-like kind.",
+    mistake: "Charting \"iodine allergy\" instead of the specific agent, signs and type of reaction.",
+    dept: "At the scanner, name what you see (type and severity) so the radiologist and the chart get an accurate record for next time."
+  },
+  rxmild: {
+    box: [["Severity","Limited and self-resolving"],["Allergic-like","Limited hives, itch, sneezing, watery eyes"],["Physiologic","Brief nausea, warmth, headache, dizziness"],["First step","Stop injection, keep IV, check vitals"],["Who calls","Tell the radiologist"],["Treatment","Diphenhydramine 25 to 50 mg if ordered"],["Watch for","Spreading hives, throat swelling, wheeze"],["Discharge","No driving after diphenhydramine"]],
+    plain: "A mild reaction is small and usually goes away on its own. Stop the injection, keep the IV, check vitals and keep watching because some reactions get worse.",
+    remember: "Mild today can be moderate in minutes: keep the IV, keep watching.",
+    mistake: "Pulling the IV or leaving the patient alone because the reaction looks minor.",
+    dept: "In the scanner room, stop the injector, leave the IV in place and stay with the patient while you get the radiologist."
+  },
+  rxmod: {
+    box: [["Severity","More pronounced, often needs treatment"],["Allergic-like","Diffuse hives, facial swelling, wheeze"],["Physiologic","Prolonged vomiting, chest pain, vasovagal"],["First step","Stop injection, radiologist to room"],["Oxygen","6 to 10 L/min by mask"],["Treatment","Antihistamine, albuterol or IM epi by type"],["Call for help","Breathing worse, sats or BP falling"]],
+    plain: "A moderate reaction is stronger and usually needs treatment, or it can turn severe. Treatment depends on what you see: hives, wheezing or swelling of the face or throat.",
+    remember: "Hives get an antihistamine, wheeze gets albuterol, throat or face swelling gets IM epinephrine.",
+    mistake: "Treating throat tightness or facial swelling like plain hives, when the airway is at stake.",
+    dept: "Bring the radiologist into the room, start oxygen from the reaction cart and put on pulse oximetry and BP monitoring."
+  },
+  rxsevere: {
+    box: [["Severity","Life-threatening"],["Signs","Airway swelling, stridor, hypoxia, shock"],["First step","Stop injection, call code team"],["Drug","IM epinephrine 0.3 mg (1 mg/mL), thigh"],["Oxygen","6 to 10 L/min"],["Low BP","Raise legs, rapid IV saline or LR"],["Beta-blocker","Poor epi response; IV glucagon by MD"],["Not first-line","Antihistamines, steroids"]],
+    plain: "A severe reaction can kill, so call the emergency team and give IM epinephrine first. Antihistamines and steroids do not fix airway swelling, wheezing or shock.",
+    remember: "Low BP + fast pulse = anaphylaxis; low BP + slow pulse = vasovagal.",
+    mistake: "Giving an antihistamine or steroid first and delaying epinephrine.",
+    dept: "Stop the injector, call the code or rapid response team, stay with the patient and have the reaction cart epinephrine ready."
+  },
+  vasovagal: {
+    box: [["Signs","Pale, sweaty, faint, low BP"],["Heart rate","Under 60 (slow)"],["Triggers","Anxiety, pain, needle stick, injection"],["First step","Raise legs, oxygen 6 to 10 L/min"],["Fluids","Rapid IV saline or LR"],["Drug","IV atropine 0.6 to 1 mg by physician"],["Max atropine","3 mg total"],["Watch for","Hives, wheeze, rising heart rate"]],
+    plain: "A vasovagal reaction is low blood pressure with a slow pulse, often with a pale, sweaty patient and no hives. Raise the legs, give oxygen and fluids, and the physician may give atropine.",
+    remember: "Slow and low = vasovagal. Fast and low = anaphylaxis until proven otherwise.",
+    mistake: "Skipping the pulse check, so anaphylaxis gets treated as a simple faint.",
+    dept: "Check the pulse right away, raise the legs on the table and notify the radiologist immediately."
+  },
+  bronchospasm: {
+    box: [["Lower airway","Wheeze, cough, chest tightness"],["Upper airway","Hoarseness, stridor, throat tightness"],["Wheeze drug","Albuterol MDI, 2 puffs (90 mcg/puff)"],["Swelling drug","IM epinephrine 0.3 mg"],["Oxygen","6 to 10 L/min"],["Call for help","Any stridor, falling sats, hard breathing"],["Monitor","Continuous pulse ox, frequent BP"]],
+    plain: "Wheezing comes from tight lower airways and is treated with albuterol. Stridor or hoarseness means the upper airway is swelling, which is more dangerous and needs IM epinephrine.",
+    remember: "Albuterol is for wheezing; epinephrine is for the swollen airway.",
+    mistake: "Giving albuterol for stridor or throat swelling, which it does not treat.",
+    dept: "Sit the patient up if BP allows, keep continuous pulse oximetry on, and call the emergency team for any stridor."
+  },
+  rxkit: {
+    box: [["Airway","Oxygen, masks, suction, bag-valve mask"],["Monitoring","BP cuff, pulse oximeter, AED"],["IM epi","1 mg/mL (1:1000), 0.3 mg adult"],["Autoinjector","0.3 mg adult, 0.15 mg pediatric"],["IV epi","0.1 mg/mL (1:10,000), physician only"],["Other drugs","Diphenhydramine, albuterol, atropine"],["MRI","Cart and AED stay outside Zone IV"],["Upkeep","Check expiry, oxygen and equipment"]],
+    plain: "Every contrast area needs a stocked, checked reaction cart, and staff need to know what each drug is for. Epinephrine comes in two strengths that must not be mixed up.",
+    remember: "IM epinephrine = 1 mg/mL. The 0.1 mg/mL form is slow IV, physician only.",
+    mistake: "Drawing the IM dose from the 0.1 mg/mL concentration, or mixing up the two strengths.",
+    dept: "Know where the cart is before you start the injection and check it on schedule for expired drugs and working equipment."
+  },
+  delayed: {
+    box: [["Timing","1 hour to 1 week after contrast"],["Signs","Itchy measles-like rash, hives, swelling"],["Course","Usually mild, resolves on its own"],["More often","Iodixanol, prior interleukin-2"],["Treatment","Antihistamines, topical steroids"],["Red flags","Blisters, mouth sores, fever, spreading"],["Related","Iodide mumps (salivary swelling)"]],
+    plain: "Some patients get a rash hours to days after iodinated contrast. Most are mild and fade on their own, but blisters, mouth sores or fever need urgent care.",
+    remember: "Rash days later? Think contrast and chart the specific agent.",
+    mistake: "Not linking a rash days later to the contrast, so it never gets documented.",
+    dept: "When a patient calls back with a rash, document it as a delayed reaction to the specific agent and route it to the physician."
+  },
+  screening: {
+    box: [["Prior reaction","Agent, what happened, how treated"],["Not a risk","Shellfish, seafood, povidone-iodine"],["Slight risk","Asthma, multiple allergies"],["Kidney","Disease, dialysis, transplant, diabetes"],["Age","Over 60 triggers eGFR check per protocol"],["Ask about","Metformin, pregnancy, breastfeeding"],["Other","Thyroid, beta-blockers, MRI implants"]],
+    plain: "Screening looks for the few things that change the plan: a prior contrast reaction, kidney risk, metformin, pregnancy, breastfeeding and thyroid issues. Shellfish and iodine allergies do not count.",
+    remember: "There is no \"iodine allergy\": ask about prior reactions to contrast itself.",
+    mistake: "Treating a shellfish or povidone-iodine allergy as a reason to premedicate.",
+    dept: "At the screening desk, ask what agent and what reaction, and flag kidney, metformin, pregnancy and thyroid answers to the radiologist."
+  },
+  premed: {
+    box: [["Who","Prior allergic-like reaction, same class"],["Not for","Physiologic, shellfish, unrelated drugs"],["13-hour oral","Prednisone 50 mg at 13, 7 and 1 hour"],["Plus","Diphenhydramine 50 mg 1 hour before"],["Alternative","Methylprednisolone 32 mg at 12 and 2 h"],["Accelerated IV","Methylpred 40 mg or HC 200 mg IV q4h"],["Too late","Steroids under 4 to 5 hours: no benefit"],["Breakthrough","Can still happen; treat as usual"]],
+    plain: "Steroids plus an antihistamine lower, but do not remove, the chance of another allergic-like reaction. There is a 13-hour oral plan and a faster IV plan for urgent cases.",
+    remember: "Premeds lower risk, they do not erase it: the cart and staff still need to be ready.",
+    mistake: "Assuming a premedicated patient cannot react, so nobody is ready in the room.",
+    dept: "Confirm the premedication was given on schedule, have the reaction cart ready and treat any breakthrough reaction like any other."
+  },
+  egfr: {
+    box: [["PC-AKI","Any AKI within 48 hours, any cause"],["CI-AKI","Caused by contrast; much less common"],["eGFR 45+","Negligible risk"],["eGFR 30 to 44","Risk case-by-case"],["Below 30 or AKI","Higher risk; radiologist decides"],["Prevent","IV saline if ordered, lowest dose"],["Dialysis","Extra dialysis usually not needed"]],
+    plain: "Modern IV iodinated contrast is mainly a kidney concern when eGFR is below 30 or the patient has acute kidney injury. Kidney injury after contrast is not always caused by the contrast.",
+    remember: "Remember the ACR-NKF line: eGFR below 30 for IV iodinated contrast.",
+    mistake: "Blaming every kidney injury after a scan on the contrast (PC-AKI is not the same as CI-AKI).",
+    dept: "Check that a current eGFR is on file when policy requires it, flag low values or AKI to the radiologist and use the lowest diagnostic dose."
+  },
+  metformin: {
+    box: [["Risk","Buildup can cause lactic acidosis"],["No hold","eGFR 30 or higher and no AKI"],["Hold if","AKI or eGFR below 30"],["Also hold","Arterial studies with renal emboli risk"],["How long","At or before contrast, 48 hours after"],["Restart","After kidney function is rechecked"],["Gadolinium","MRI doses: no hold needed"]],
+    plain: "Metformin only needs to be held when kidney function is poor or getting worse. If held, it stays off for 48 hours and restarts once kidney function is rechecked and stable.",
+    remember: "eGFR 30+ and no AKI: keep the metformin going.",
+    mistake: "Holding metformin for every contrast patient or for gadolinium MRI.",
+    dept: "At screening, ask about metformin and pair the answer with the eGFR so only the patients who need a hold get one."
+  },
+  pregnancy: {
+    box: [["Iodinated","Give when needed; no harm shown"],["Newborn","Routine screening only"],["Gadolinium","Only if essential and cannot wait"],["Who decides","Radiologist documents, often consent"],["Milk transfer","Less than 1 percent of the dose"],["Breastfeeding","No interruption needed"],["Optional","Pump and discard 12 to 24 hours"]],
+    plain: "Iodinated contrast can be given in pregnancy when it is needed, while gadolinium is saved for when it is essential. Mothers can keep breastfeeding after either type.",
+    remember: "Breastfeeding continues after contrast; pumping and discarding is her choice only.",
+    mistake: "Telling a breastfeeding mother she must stop after contrast.",
+    dept: "At screening, ask about pregnancy and breastfeeding so the radiologist can weigh the need for contrast and counsel the patient."
+  },
+  iodinated: {
+    box: [["HOCM","Ionic, e.g. diatrizoate; not for IV"],["LOCM","Iohexol, iopamidol; 2 to 3x blood"],["IOCM","Iodixanol; same osmolality as blood"],["IOCM catch","Higher viscosity; warming matters"],["IOCM use","Intra-arterial: less heat and pain"],["Label checks","Agent, mg iodine/mL, route, expiry"],["Intrathecal","Only agents labeled for it"]],
+    plain: "IV iodinated contrast today is nonionic low-osmolar or iso-osmolar; the older high-osmolar ionic agents are kept for oral, rectal or bladder use. Always check the label for route approval.",
+    remember: "Not every bottle is intrathecal-safe: read the route on the label every time.",
+    mistake: "Assuming any iodinated agent can be given intrathecally; accidental intrathecal ionic contrast can be fatal.",
+    dept: "Before loading the injector, check agent, concentration, approved route and expiration on the label."
+  },
+  warming: {
+    box: [["Warm to","Body temperature (37 C (98.6 F))"],["Why warm","Lower viscosity and injection pressure"],["Over 3 mL/s","20-gauge or larger"],["22-gauge","Up to about 3 mL/s"],["Best site","Antecubital or forearm"],["Test it","Blood return, saline test, ask re pain"],["Central lines","Power-rated PICC or port only"]],
+    plain: "Warming the contrast, choosing a big enough IV and testing it first help high-rate injections go smoothly. Central lines may only be power injected if they are labeled power-injectable.",
+    remember: "Can't confirm the line is power-rated? Don't power inject through it.",
+    mistake: "Power injecting through a PICC or port without confirming it is power-rated, which can rupture it.",
+    dept: "At the injector, match flow rate to IV size, do a saline test while feeling the site, and stay at or below the line's maximum flow rate."
+  },
+  extravasation: {
+    box: [["Signs","Swelling, tightness, pain, burning"],["First step","Stop the injector"],["Manage","Remove IV, elevate limb above heart"],["Compress","Cold or warm, per protocol"],["Document","Volume, agent, site, findings"],["Red flags","Worse pain or swelling after 2 to 4 hours"],["Also urgent","Slow refill, numbness, blisters"],["Who calls","Surgeon for compartment signs"]],
+    plain: "Most contrast leaks into the tissue are minor, but a few cause compartment syndrome or skin injury. Stop the injector, remove the IV, elevate the limb and tell the radiologist.",
+    remember: "Worse pain, numbness or slow refill after a leak = compartment syndrome until proven otherwise.",
+    mistake: "Trying to aspirate or give a routine antidote, which have no proven benefit.",
+    dept: "Stop the injector at the first complaint, document the volume and site, and give the patient written return instructions."
+  },
+  oralrectal: {
+    box: [["Barium","Best mucosal detail"],["Barium no-go","Suspected perforation"],["Barium after","Encourage fluids (impaction)"],["Water-soluble","Use for suspected leak or perforation"],["Hyperosmolar","Can dehydrate infants, frail patients"],["Aspiration risk","Avoid hyperosmolar water-soluble"],["Reactions","Rare but possible; cart available"]],
+    plain: "Barium gives the best detail but is dangerous if it leaks out of the bowel. Water-soluble contrast is used for a suspected leak, but the hyperosmolar kind is dangerous if breathed into the lungs.",
+    remember: "Perforation: water-soluble. Aspiration: avoid hyperosmolar water-soluble.",
+    mistake: "Giving hyperosmolar water-soluble contrast to a patient at risk of aspiration.",
+    dept: "Confirm with the radiologist which agent fits the leak and aspiration risk, and keep the reaction cart available for oral or rectal studies too."
+  },
+  thyroid: {
+    box: [["Risk group","Untreated Graves, toxic goiter"],["Possible","Iodine-induced hyperthyroidism"],["Rare","Thyroid storm"],["Blocks","I-123 or I-131 uptake for weeks"],["Commonly","4 to 6 weeks or more per protocol"],["Screen for","Thyroid disease, planned scan or RAI"],["Infants","Routine newborn screening covers it"]],
+    plain: "The big iodine load in contrast can push some thyroids into overdrive and blocks radioactive iodine uptake for weeks. Ask about thyroid problems and any upcoming thyroid scan or treatment.",
+    remember: "A contrast CT today can cancel next week's radioiodine treatment.",
+    mistake: "Giving iodinated contrast without asking about a planned thyroid scan or radioiodine therapy.",
+    dept: "At screening, ask about thyroid disease and upcoming radioiodine plans, and hold for clearance before injecting if either is present."
+  },
+  gbca: {
+    box: [["Grouped by","Risk of NSF"],["Group I","Gadodiamide and others; highest risk"],["Group I use","Contraindicated if at risk for NSF"],["Group II","Gadobutrol, gadoterate, gadoteridol"],["Also group II","Gadobenate, gadopiclenol, gadoxetate"],["Group III","Limited data agents"],["Macrocyclic","Hold gadolinium more tightly"],["Linear","Gadobenate, gadoxetate, gadodiamide"]],
+    plain: "The ACR sorts gadolinium agents into groups by their risk of NSF, and group II has the lowest risk. Macrocyclic agents hold gadolinium more tightly than linear ones.",
+    remember: "Safest pairing: group II plus macrocyclic. Gadobenate is group II but linear.",
+    mistake: "Assuming every group II agent is macrocyclic, or that gadoxetate is still group III.",
+    dept: "In the MRI department, know which group and structure the stocked agents are so at-risk patients get a group II agent."
+  },
+  nsf: {
+    box: [["What","Fibrosis of skin and organs"],["At risk","Dialysis, eGFR below 30, or AKI"],["Trigger","Group I agents, high or repeat doses"],["Onset","Days to months after exposure"],["Signs","Thick hard skin, joint contractures"],["Prevent","Group II agent, lowest diagnostic dose"],["Dialysis","Dialysis soon after scan if practical"]],
+    plain: "NSF is a rare but disabling hardening of the skin and organs linked to gadolinium in people with severe kidney disease. Using group II agents has made new cases almost disappear.",
+    remember: "Bad kidneys + group I gadolinium = NSF risk. Group II keeps it rare.",
+    mistake: "Giving a group I agent or a high or repeated dose to a dialysis or low-eGFR patient.",
+    dept: "Flag dialysis, low eGFR and AKI patients so they get a group II agent at the lowest dose, and coordinate dialysis timing when practical."
+  },
+  retention: {
+    box: [["What","Small amounts stay in brain and body"],["Where","Dentate nucleus, globus pallidus"],["Also","Bone and skin"],["More with","Linear agents"],["Kidneys","Happens with normal kidney function"],["Harm","No proven adverse health effects"],["FDA","Class warning, Medication Guide"]],
+    plain: "Tiny amounts of gadolinium stay in the brain and body after injection, more with linear agents. No harm to health has been proven.",
+    remember: "Retention is not NSF: normal kidneys, no proven harm.",
+    mistake: "Confusing gadolinium retention with NSF.",
+    dept: "Give the Medication Guide to first-time outpatient GBCA patients and answer their questions honestly."
+  },
+  mrisafety: {
+    box: [["Zone I","Public"],["Zone II","Reception and screening"],["Zone III","Restricted, MR personnel control"],["Zone IV","The scanner room"],["Projectiles","Oxygen tanks, IV poles, carts, stretchers"],["Code","CPR, move patient out to Zone III"],["Quench","Not routine for a code; not instant"]],
+    plain: "The MRI magnet is always on, so access is controlled in four zones. In an emergency, the patient is moved out of the scanner room to the team, not the other way around.",
+    remember: "Get the patient out to the team; never bring the team to the magnet.",
+    mistake: "Letting the code team and crash cart run into Zone IV, or expecting a quench to fix a code.",
+    dept: "During a code, start CPR, call the code and move the patient out to the prepared spot in Zone III while CPR continues."
+  },
+  mrisedation: {
+    box: [["Monitoring","Fiberoptic pulse ox, MR ECG, capnography"],["Equipment","MR conditional, within labeled limits"],["Burns","No cable loops or skin contact"],["Burn prevent","Padding, remove non-MR items"],["Rescue","Drugs, suction, oxygen, cart in Zone III"],["Deteriorates","Stop scan, move out of Zone IV"],["Staff","Trained provider monitors constantly"]],
+    plain: "Sedated MRI patients are far from the team and the cart, so monitoring and rescue are planned ahead. Only MR conditional monitors are used, set up to avoid burns.",
+    remember: "Regular pulse ox cable in the bore can burn: MR conditional monitoring only.",
+    mistake: "Using a standard pulse oximeter cable inside the bore or letting cables loop on the skin.",
+    dept: "The technologist runs the scan and helps get the patient out of Zone IV fast, while rescue drugs and the cart wait in Zone III."
+  },
+  rpsafety: {
+    box: [["Principles","Time, distance, shielding"],["Distance","Double distance = one quarter dose"],["Shielding","Syringe shields, lead pigs, L-blocks"],["PET","511 keV: thicker lead or tungsten"],["Verify","Two IDs, drug, activity, route"],["Assay","Every dose in the dose calibrator"],["Spills","Contain, restrict, clean outside-in"],["Who calls","Radiation safety officer"]],
+    plain: "Limit time near sources, keep your distance and use shields. For spills, contain the area, clean from the outside in and call the radiation safety officer.",
+    remember: "Double the distance, quarter the dose.",
+    mistake: "Hiding a wrong-patient or wrong-dose error instead of reporting it per policy.",
+    dept: "In the hot lab, assay every dose, verify two identifiers, and keep spill supplies ready."
+  },
+  stresstest: {
+    box: [["Regadenoson","0.4 mg rapid IV over about 10 s"],["Then","5 mL saline flush, tracer 10 to 20 s"],["Adenosine","Weight-based, very short half-life"],["Hold","Caffeine at least 12 hours before"],["Avoid if","High-grade AV block, low BP, bronchospasm"],["Alternative","Dobutamine for bronchospasm"],["Reversal","Aminophylline 50 to 250 mg slow IV"],["Not for","Regadenoson seizures"]],
+    plain: "Patients who cannot exercise get a drug stress test, usually with a vasodilator such as regadenoson. Aminophylline reverses severe or lasting vasodilator side effects.",
+    remember: "Coffee, tea, soda and chocolate block the vasodilators: ask before you stress.",
+    mistake: "Not asking about caffeine before a regadenoson or adenosine study.",
+    dept: "Confirm caffeine was held, have the saline flush and tracer ready for the timing, and keep aminophylline nearby."
+  },
+  fdgprep: {
+    box: [["Fasting","Water only for at least 4 to 6 hours"],["No","Dextrose IV fluids or parenteral nutrition"],["Day before","Avoid strenuous exercise"],["Glucose","Check before injection"],["High glucose","Commonly 150 to 200 mg/dL limit"],["Insulin","FDG at least 4 h after rapid-acting"],["Uptake","About 60 minutes, warm and resting"]],
+    plain: "FDG competes with glucose, so the patient fasts, gets a glucose check, and insulin timing is checked. During uptake they rest quietly and stay warm.",
+    remember: "Recent rapid-acting insulin = FDG goes to muscle. Check the timing first.",
+    mistake: "Injecting FDG soon after rapid-acting insulin or giving insulin to rescue a high glucose without protocol.",
+    dept: "At the uptake room, check glucose and the last insulin dose before injecting, and keep the patient warm and quiet."
+  },
+  hida: {
+    box: [["Fasting","2 to 4 hours, not over about 24"],["Hold","Opioids per protocol"],["Sincalide","Contracts the gallbladder"],["EF dose","0.02 mcg/kg over 60 minutes"],["Morphine","0.04 mg/kg IV if GB not seen"],["When","Gallbladder not seen by about 60 min"],["Then","Image about 30 more minutes"],["Side effects","Cramping; morphine resp depression"]],
+    plain: "Sincalide squeezes the gallbladder to measure how well it empties, and morphine helps bile flow into it. Both are used in HIDA scans.",
+    remember: "Still no gallbladder 30 minutes after morphine supports acute cholecystitis.",
+    mistake: "Pushing sincalide fast, which causes cramping and nausea and unreliable results.",
+    dept: "Confirm fasting time and opioid hold at check-in, and give sincalide slowly over the full infusion time."
+  },
+  ki: {
+    box: [["Drug","Potassium iodide, SSKI or Lugol's"],["Purpose","Saturates thyroid against radioiodine"],["When","I-123 or I-131 MIBG, per protocol"],["Also","Radiological emergencies with iodine"],["Route","By mouth"],["Timing","Before injection, then a few days"],["Limits","Thyroid only, radioiodine only"],["Not before","Diagnostic I-123 thyroid scans"]],
+    plain: "Stable iodide fills up the thyroid so it does not soak up radioactive iodine. It only protects the thyroid and only against radioactive iodine.",
+    remember: "No KI before an I-123 thyroid scan: there, thyroid uptake is the whole point.",
+    mistake: "Treating a seafood or contrast reaction as an iodide allergy.",
+    dept: "Confirm the patient took KI on the physician's schedule before radioiodinated MIBG injections, and screen for prior iodide reactions."
+  },
+  nmlactation: {
+    box: [["Ask first","Breastfeeding, before the dose"],["F-18 FDG","No interruption; limit close contact"],["FDG milk","Expressed milk via another caregiver"],["Tc-99m","Many none; some up to 12 to 24 hours"],["I-131 therapy","Stop completely for this child"],["Before I-131","Stop several weeks before therapy"],["Future","Future children can breastfeed"]],
+    plain: "Breastfeeding advice depends on the radiopharmaceutical: some need no pause, some a short pause, and I-131 therapy means stopping for this child.",
+    remember: "I-131 therapy ends breastfeeding for this baby; most Tc-99m studies need little or none.",
+    mistake: "Not asking about breastfeeding until after the dose is given.",
+    dept: "Ask every patient of childbearing age about breastfeeding before dosing so the physician can give agent-specific instructions."
+  },
+  uea: {
+    box: [["Agents","Perflutren, sulfur hexafluoride"],["Uses","Echo; some liver, pediatric bladder"],["Boxed warning","Serious cardiopulmonary reactions"],["Timing","During or within 30 minutes"],["Have ready","Resuscitation gear, trained staff"],["Avoid if","Allergy to agent, PEG or albumin"],["Kidney","Not nephrotoxic; exhaled via lungs"]],
+    plain: "Microbubble ultrasound agents are very safe overall, but rare serious heart and lung reactions can happen soon after injection. They do not harm the kidneys.",
+    remember: "Microbubble danger window: the first 30 minutes. Keep help close.",
+    mistake: "Sending the patient away right after injection instead of keeping them near help.",
+    dept: "Keep resuscitation equipment and trained staff nearby, and keep the patient close to help for 30 minutes after injection."
+  },
+  sedation: {
+    box: [["Drugs","Midazolam plus fentanyl, small doses"],["Monitor","Pulse ox, ECG, BP, capnography"],["Capnography","Shows apnea earlier than pulse ox"],["First step","Stimulate, open airway, oxygen"],["Opioid reversal","Naloxone, titrated"],["Benzo reversal","Flumazenil, titrated"],["Watch for","Resedation as reversal wears off"],["Caution","Flumazenil seizures in chronic users"]],
+    plain: "Moderate sedation uses small, step-by-step doses of midazolam and fentanyl with continuous monitoring. Reversal drugs are ready, but airway and breathing support come first.",
+    remember: "Flat capnography line = no breathing. Check the patient, not the monitor.",
+    mistake: "Trusting pulse oximetry alone, which shows hypoventilation later than capnography.",
+    dept: "Keep capnography on, have naloxone and flumazenil ready, and watch for resedation after reversal."
+  },
+  irmeds: {
+    box: [["Heparin","Prevents clot; monitored by ACT"],["Protamine","Reverses heparin; give slowly"],["Protamine risk","Low BP, slow HR, anaphylaxis"],["Radial cocktail","Heparin + verapamil and/or NTG"],["Cocktail watch","Low BP, slow HR, burning"],["Lidocaine tox","Perioral numbness, tinnitus, seizures"],["Lido antidote","Lipid emulsion"],["Alteplase","Watch bleeding, neuro changes"]],
+    plain: "IR procedures use a small set of drugs whose main risks are bleeding, low blood pressure and toxicity. Many look alike as clear liquids, so labeling matters.",
+    remember: "Label and read back every syringe: IR tables hold several clear liquids at once.",
+    mistake: "Leaving syringes on the sterile field unlabeled.",
+    dept: "Help label every syringe on the field and watch for hypotension, bradycardia or bleeding during the case."
+  },
+  radiation: {
+    box: [["ALARA","As low as reasonably achievable"],["Staff","Time, distance, shielding"],["Annual limit","50 mSv occupational"],["Pregnant worker","5 mSv over the pregnancy"],["Fluoro","Pulsed, low rate, tight collimation"],["Skin dose","About 2 Gy: erythema possible"],["Sentinel","Over 15 Gy cumulative peak skin dose"],["CT","Check CTDIvol and DLP"]],
+    plain: "ALARA means keeping patient and staff radiation dose as low as reasonably possible without losing image quality. Time, distance and shielding protect staff.",
+    remember: "Double your distance from the patient, quarter your scatter dose.",
+    mistake: "Standing on the tube side or close in during runs instead of stepping back on the receptor side.",
+    dept: "In fluoroscopy and CT, use dose-saving settings, track dose in long cases and check against notification values."
+  }
+};
+
+;
+/* DrugBug - Flight Prep: Gas laws & flight physiology */
+DB.FLIGHTP = DB.FLIGHTP || { topics: [], q: [] };
+DB.FLIGHTP.topics.push(
+  /* ---------------- Gas laws ---------------- */
+  { id: "boyle", grp: "Gas laws", title: "Boyle's law",
+    sum: "At a constant temperature, the volume of a gas is inversely proportional to the pressure around it (P1 x V1 = P2 x V2).",
+    rows: [
+      ["The law", "P1 x V1 = P2 x V2 at constant temperature. When ambient pressure falls on ascent, any trapped gas expands; when pressure rises on descent, it shrinks."],
+      ["Reference pressures", "Sea level is 760 mmHg; about 656 mmHg at 4,000 ft, 609 mmHg at 6,000 ft, 565 mmHg at 8,000 ft, 523 mmHg at 10,000 ft and 380 mmHg at 18,000 ft."],
+      ["Worked example", "A 30 mL air-filled cuff at sea level taken to an 8,000 ft cabin: V2 = 30 x 760 / 565 = about 40 mL, a one-third increase."],
+      ["Key landmark", "At about 18,000 ft the pressure is half of sea level, so trapped gas doubles in volume. The largest change per 1,000 ft happens at lower altitudes."],
+      ["Clinical reach", "Explains pneumothorax enlargement, gastric and bowel distension, ear and sinus block, ETT and catheter cuff expansion, air splint and MAST pressure changes, and drip-rate changes from air in IV containers."]
+    ],
+    pearl: "Boyle's law is the trapped-gas law: anything with air in it gets bigger going up and smaller coming down, so check cuffs, tubes and splints at both ends of the flight.",
+    drugs: [] },
+
+  { id: "dalton", grp: "Gas laws", title: "Dalton's law",
+    sum: "The total pressure of a gas mixture equals the sum of the partial pressures of each gas in it.",
+    rows: [
+      ["The law", "PTotal = P1 + P2 + P3 ... Each gas exerts its own partial pressure, equal to its fraction of the mixture times the total pressure."],
+      ["Oxygen fraction", "Air is about 21% oxygen at every altitude. What falls with altitude is the barometric pressure, so the partial pressure of oxygen (PO2) falls."],
+      ["Worked example", "At sea level PO2 = 0.21 x 760 = about 160 mmHg. At 18,000 ft PO2 = 0.21 x 380 = about 80 mmHg."],
+      ["Water vapor", "Inspired air is fully humidified at 47 mmHg at body temperature regardless of altitude, so it takes a bigger share of the total pressure as you climb (PIO2 = FiO2 x [PB - 47])."],
+      ["Clinical reach", "Explains hypoxic hypoxia at altitude and is the basis for the FiO2 altitude correction: FiO2 x P1 / P2."]
+    ],
+    pearl: "Oxygen stays 21% all the way up; it is the pressure, not the percentage, that drops. Hypoxia at altitude is a partial pressure problem.",
+    drugs: [] },
+
+  { id: "charles", grp: "Gas laws", title: "Charles' law",
+    sum: "At a constant pressure, the volume of a gas is directly proportional to its absolute (Kelvin) temperature.",
+    rows: [
+      ["The law", "V1 / T1 = V2 / T2 at constant pressure, with temperature in Kelvin (C + 273)."],
+      ["Direction", "Warming a gas makes it expand; cooling it makes it contract."],
+      ["Worked example", "1,000 mL of gas at 27 C (300 K) cooled to -3 C (270 K): V2 = 1,000 x 270 / 300 = 900 mL."],
+      ["Altitude link", "Air temperature falls roughly 2 C per 1,000 ft of altitude, so cooling partly offsets Boyle's-law expansion, but in practice the pressure effect dominates."],
+      ["Clinical reach", "Cold cabins and cold ambient air shrink gas volumes in cuffs and equipment; warm cabins and sun-soaked equipment expand them."]
+    ],
+    pearl: "Always convert to Kelvin before using any temperature gas law; plugging Celsius into the formula gives nonsense answers.",
+    drugs: [] },
+
+  { id: "gay-lussac", grp: "Gas laws", title: "Gay-Lussac's law",
+    sum: "At a constant volume, the pressure of a gas is directly proportional to its absolute temperature.",
+    rows: [
+      ["The law", "P1 / T1 = P2 / T2 when the container cannot change size, with temperature in Kelvin."],
+      ["Direction", "Heating a rigid container raises the pressure inside; cooling it lowers the pressure."],
+      ["Worked example", "An oxygen cylinder at 2,000 psi and 20 C (293 K) heats to 50 C (323 K): P2 = 2,000 x 323 / 293 = about 2,205 psi."],
+      ["Cold effect", "A cylinder that cools on a cold ramp or at altitude reads a lower pressure even though no oxygen was used, so recheck the gauge after it warms."],
+      ["Clinical reach", "Explains why oxygen cylinders must not be stored in hot vehicles or near heat sources, and why gauge pressure varies with temperature."]
+    ],
+    pearl: "Gay-Lussac's law is the oxygen-cylinder law: heat a rigid tank and its pressure climbs, so keep cylinders out of hot aircraft and vehicle compartments.",
+    drugs: [] },
+
+  { id: "henry", grp: "Gas laws", title: "Henry's law",
+    sum: "The amount of gas dissolved in a liquid is directly proportional to the partial pressure of that gas above the liquid.",
+    rows: [
+      ["The law", "At a constant temperature, more pressure drives more gas into solution; less pressure lets it come back out as bubbles."],
+      ["Everyday picture", "A sealed soda holds dissolved CO2 under pressure; open it and the pressure drops, so bubbles form."],
+      ["Diving link", "Breathing compressed air at depth loads tissues with extra dissolved nitrogen. Ascending too fast, or flying soon after diving, lets that nitrogen form bubbles: decompression sickness."],
+      ["Oxygen therapy", "Hyperbaric oxygen raises dissolved oxygen in plasma by raising the oxygen partial pressure, which is also why high FiO2 increases dissolved O2."],
+      ["Clinical reach", "Explains decompression sickness, altitude-induced DCS, and the benefit of hyperbaric and high-flow oxygen."]
+    ],
+    pearl: "Henry's law is the dissolved-gas law: lower the pressure and gas comes out of solution, which is exactly what causes the bends.",
+    drugs: [] },
+
+  { id: "graham", grp: "Gas laws", title: "Graham's law",
+    sum: "A gas diffuses from higher to lower pressure at a rate inversely proportional to the square root of its molecular weight.",
+    rows: [
+      ["The law", "Rate of diffusion is proportional to 1 / square root of molecular weight. Lighter gases diffuse faster than heavier gases under the same conditions."],
+      ["Direction", "Gases always move from an area of higher partial pressure to an area of lower partial pressure until they equalize."],
+      ["Gas exchange", "Oxygen moves from alveolus to blood and from blood to tissue because each step is a pressure gradient. At altitude the alveolar PO2 falls, so the gradient that drives oxygen into blood shrinks."],
+      ["Combined with solubility", "Graham's law alone favors O2 (MW 32) over CO2 (MW 44), but CO2 is far more soluble, so overall CO2 crosses the membrane about 20 times faster."],
+      ["Clinical reach", "Explains why a smaller gradient at altitude slows oxygen loading and why CO2 elimination is rarely the first thing to fail."]
+    ],
+    pearl: "Gases go downhill: high pressure to low pressure. Altitude flattens the oxygen hill, so less oxygen rolls into the blood.",
+    drugs: [] },
+
+  { id: "fick", grp: "Gas laws", title: "Fick's law (diffusion)",
+    sum: "Diffusion across a membrane is proportional to surface area, the partial pressure difference and the gas's diffusion constant, and inversely proportional to membrane thickness.",
+    rows: [
+      ["The law", "Rate = (Area x Diffusion constant x [P1 - P2]) / Thickness."],
+      ["Things that help", "Large surface area, a steep partial pressure difference (higher FiO2 or pressure) and a highly soluble gas."],
+      ["Things that hurt", "Lost surface area (pneumonectomy, emphysema, atelectasis), thickened membrane (pulmonary edema, fibrosis, ARDS) and a smaller gradient (altitude)."],
+      ["Fix in flight", "Raise the gradient with oxygen (and PEEP to recruit area and push fluid back), or lower the cabin altitude to restore barometric pressure."],
+      ["Clinical reach", "A patient with a thick or small membrane already relies on a big gradient, so the drop in PO2 at altitude hurts them first and most."]
+    ],
+    pearl: "Fick's law tells you why the ARDS or pulmonary edema patient desaturates on climb: thick membrane plus a smaller gradient equals less diffusion.",
+    drugs: [] },
+
+  /* ---------------- Stresses of flight ---------------- */
+  { id: "hypoxia-types", grp: "Stresses of flight", title: "The four types of hypoxia",
+    sum: "Hypoxia is classified as hypoxic, hypemic, stagnant or histotoxic depending on whether the problem is getting O2 in, carrying it, delivering it or using it.",
+    rows: [
+      ["Hypoxic (hypoxemic)", "Not enough oxygen gets into the blood: low PO2 at altitude, airway obstruction, hypoventilation, V/Q mismatch, pneumonia, drowning."],
+      ["Hypemic (anemic)", "The blood cannot carry enough oxygen: anemia, hemorrhage, carbon monoxide poisoning, methemoglobinemia."],
+      ["Stagnant (ischemic)", "Oxygen-carrying blood does not flow well: shock, heart failure, low cardiac output, arterial occlusion, positive G-forces pooling blood, extreme cold."],
+      ["Histotoxic", "Cells cannot use the oxygen delivered: cyanide, hydrogen sulfide, alcohol and some narcotics interfere with cellular respiration."],
+      ["Monitoring trap", "SpO2 can look normal in hypemic (especially CO poisoning) and histotoxic hypoxia, so the oximeter does not rule out hypoxia."]
+    ],
+    pearl: "Think of the four steps: get it in (hypoxic), carry it (hypemic), move it (stagnant), use it (histotoxic). Altitude makes all four worse by lowering PO2.",
+    drugs: [] },
+
+  { id: "tuc-zones", grp: "Stresses of flight", title: "Time of useful consciousness, zones and cabin altitude",
+    sum: "TUC is the time a person can perform useful flying duties after losing oxygen supply; it shortens sharply with altitude and with rapid decompression.",
+    rows: [
+      ["Physiologic zones", "Physiologic (efficient) zone: sea level to about 10,000 ft (some texts say 12,000). Physiologic-deficient zone: about 10,000 to 50,000 ft. Space-equivalent zone: above about 50,000 ft."],
+      ["Stages of hypoxia", "Indifferent (0-10,000 ft), compensatory (10,000-15,000 ft), disturbance (15,000-20,000 ft), critical (20,000-25,000 ft)."],
+      ["TUC values (approx.)", "18,000 ft: 20-30 min; 22,000 ft: 5-10 min; 25,000 ft: 3-5 min; 30,000 ft: 1-2 min; 35,000 ft: 30-60 s; 40,000 ft: 15-20 s."],
+      ["Shortening factors", "Rapid decompression can cut TUC by up to half; exertion, smoking, fatigue, illness and alcohol also shorten it."],
+      ["Cabin altitude", "Pressurized fixed-wing aircraft usually keep the cabin at about 6,000-8,000 ft (8,000 ft is the usual regulatory maximum). A sea-level cabin is possible but limits how high the aircraft can cruise."]
+    ],
+    pearl: "After a decompression, put on your own oxygen mask first: TUC at cruise altitude can be under a minute, and an unconscious crew helps no one.",
+    drugs: [] },
+
+  { id: "flight-stresses", grp: "Stresses of flight", title: "Stresses of flight",
+    sum: "The classic stresses of flight act on crew and patient alike: hypoxia, barometric pressure changes, thermal changes, low humidity, noise, vibration, fatigue, G-forces, spatial disorientation and flicker vertigo.",
+    rows: [
+      ["Pressure and oxygen", "Decreased PO2 causes hypoxia; barometric pressure changes cause trapped-gas expansion and contraction."],
+      ["Thermal and humidity", "Temperature drops about 2 C per 1,000 ft, and humidity falls with altitude, drying mucous membranes and secretions and causing dehydration."],
+      ["Noise and vibration", "Rotor and engine noise can exceed 90-100 dB, so hearing protection is required; vibration increases fatigue and can interfere with monitors and assessment."],
+      ["Fatigue and G-forces", "Fatigue is the cumulative result of all the other stresses. Acceleration forces shift blood and fluids; positive G pools blood toward the feet."],
+      ["Spatial disorientation", "Mismatch between visual, vestibular and proprioceptive input; it causes motion sickness and is a major cause of crashes. Flicker vertigo from rotor or strobe light at about 4-20 flashes per second can cause nausea or seizures."]
+    ],
+    pearl: "The stresses are additive: a dehydrated, cold, fatigued crew member in a noisy, vibrating aircraft is impaired well before any single stress looks severe.",
+    drugs: ["ondansetron", "scopolamine"] },
+
+  { id: "trapped-gas", grp: "Stresses of flight", title: "Trapped gas in patients and equipment",
+    sum: "Any closed air space in the patient or the equipment expands on ascent and contracts on descent, so it must be decompressed, vented, filled with fluid or monitored.",
+    rows: [
+      ["Pneumothorax", "Can enlarge into a tension pneumothorax on ascent. Place a chest tube (or one-way valve) before flight when indicated, and reassess on climb."],
+      ["GI tract", "Stomach and bowel gas expand, causing pain, vomiting, aspiration risk and splinting of the diaphragm. Place and vent an NG/OG tube; never clamp it during ascent."],
+      ["Ear, sinus and teeth", "Ear block is most common on descent (pressure outside rises while the eustachian tube stays shut); sinus block and barodontalgia also occur. Valsalva, swallowing, decongestants per protocol; keep the patient awake on descent if possible."],
+      ["Cuffs and balloons", "ETT, tracheostomy and Foley balloons expand on ascent. Fill with sterile water or saline, or monitor cuff pressure (about 20-30 cmH2O) and adjust at altitude and after descent."],
+      ["Splints, MAST and IVs", "Air splints and MAST pressure rises on ascent (check distal circulation) and falls on descent. Air in IV bags or glass bottles changes drip rate, so use infusion pumps and remove air from bags."]
+    ],
+    pearl: "Ask at every phase of flight: what in this patient or on this stretcher has air in it? Then vent it, fill it with fluid, or check it on climb and on descent.",
+    drugs: [] },
+
+  { id: "dcs-age", grp: "Stresses of flight", title: "Decompression illness and arterial gas embolism",
+    sum: "Decompression illness covers decompression sickness (dissolved nitrogen forming bubbles) and arterial gas embolism (alveolar rupture sending air into arteries); both get worse with altitude.",
+    rows: [
+      ["Decompression sickness", "Henry's law: nitrogen loaded at depth bubbles out when pressure falls. Type I: joint pain (bends), skin marbling, lymphatic swelling. Type II: neurologic (spinal cord), pulmonary (chokes) and circulatory signs. Onset usually within hours of surfacing."],
+      ["Arterial gas embolism", "Boyle's law: a diver who ascends holding breath overexpands and ruptures alveoli; air enters pulmonary veins and the arterial circulation. Stroke-like signs or collapse usually within minutes (often under 10) of surfacing."],
+      ["Treatment", "100% oxygen by non-rebreather or tight mask, supine positioning, IV fluids per protocol, and transport to a hyperbaric chamber for recompression."],
+      ["Transport altitude", "Fly as low as safely possible (commonly under 1,000 ft above the departure point) in a helicopter, or use a fixed-wing aircraft pressurized to a sea-level cabin."],
+      ["Flying after diving", "Common guidance: wait at least 12 hours after a single no-decompression dive, 18 hours after repetitive or multiday dives, and substantially longer after decompression dives."]
+    ],
+    pearl: "Any diver with new symptoms is DCI until proven otherwise: 100% oxygen, flat, and keep the cabin as close to sea level as you can on the way to the chamber.",
+    drugs: [] }
+);
+
+DB.FLIGHTP.q.push(
+  /* Boyle */
+  { topic: "boyle", q: "An intubated patient's ETT cuff holds 30 mL of air at sea level. Ignoring tube compliance, about what volume will that air occupy at an 8,000 ft cabin altitude (565 mmHg)?",
+    a: "About 40 mL", w: ["About 22 mL", "About 30 mL", "About 60 mL"],
+    x: "Boyle's law: V2 = P1 x V1 / P2 = 760 x 30 / 565 = about 40.4 mL. The cuff volume rises by about one-third, which can raise cuff pressure enough to injure the tracheal mucosa." },
+  { topic: "boyle", q: "A trauma patient has a small, untreated 200 mL pneumothorax measured at sea level. If transported unpressurized to 10,000 ft (523 mmHg), about how large could it become?",
+    a: "About 290 mL", w: ["About 140 mL", "About 400 mL", "About 210 mL"],
+    x: "V2 = 760 x 200 / 523 = about 291 mL, roughly a 45% increase. This is why a pneumothorax is usually decompressed with a chest tube before flight." },
+  { topic: "boyle", q: "At roughly what altitude does a fixed amount of trapped gas double its sea-level volume?",
+    a: "18,000 ft", w: ["8,000 ft", "10,000 ft", "34,000 ft"],
+    x: "Barometric pressure at about 18,000 ft is 380 mmHg, half of sea level's 760 mmHg. By Boyle's law, halving the pressure doubles the volume." },
+  { topic: "boyle", q: "A patient's Foley balloon is inflated with air before a rotor-wing flight that climbs over a mountain pass. Which gas law predicts a problem, and when?",
+    a: "Boyle's law, as the balloon expands on climb", w: ["Henry's law, as gas leaves the urine on climb", "Charles' law, as the balloon shrinks on climb", "Dalton's law, as the balloon shrinks on descent"],
+    x: "Boyle's law predicts that air in a closed balloon expands as ambient pressure falls on ascent. Filling balloons and cuffs with sterile water or saline avoids the volume change." },
+
+  /* Dalton */
+  { topic: "dalton", q: "The fraction of oxygen in ambient air at 18,000 ft is closest to:",
+    a: "21%, the same as at sea level", w: ["About 10%, half of sea level", "About 15%, from lower air density", "About 30%, from nitrogen loss"],
+    x: "Dalton's law: air stays about 21% oxygen at all altitudes used in aviation. The barometric pressure falls, so the partial pressure of oxygen falls (about 0.21 x 380 = 80 mmHg at 18,000 ft)." },
+  { topic: "dalton", q: "What is the approximate partial pressure of oxygen in dry ambient air at sea level?",
+    a: "About 160 mmHg", w: ["About 100 mmHg", "About 210 mmHg", "About 760 mmHg"],
+    x: "PO2 = FiO2 x PB = 0.21 x 760 = about 160 mmHg. Once humidified in the airway (subtracting 47 mmHg water vapor) it is about 150 mmHg, and alveolar PO2 is about 100 mmHg." },
+  { topic: "dalton", q: "A patient on FiO2 0.40 at a sea-level hospital will fly with an 8,000 ft cabin (565 mmHg). Using FiO2 x P1 / P2, what FiO2 keeps the inspired PO2 about the same?",
+    a: "About 0.54", w: ["About 0.30", "About 0.44", "About 0.70"],
+    x: "0.40 x 760 / 565 = 304 / 565 = about 0.54. The FiO2 must rise because barometric pressure falls while the oxygen fraction stays the same." },
+  { topic: "dalton", q: "A ventilated ARDS patient needs FiO2 0.80 at sea level. With an 8,000 ft cabin (565 mmHg), the formula gives 0.80 x 760 / 565 = 1.08. What is the best plan?",
+    a: "Request a lower cabin altitude and optimize PEEP", w: ["Set FiO2 to 1.0, which fully corrects it", "Keep FiO2 at 0.80 since SpO2 is normal now", "Decrease PEEP to reduce barotrauma on climb"],
+    x: "No ventilator can deliver more than FiO2 1.0, so the needed PO2 can't be reached at that cabin altitude. Lowering the cabin altitude (up to a sea-level cabin) and optimizing PEEP are the remaining options." },
+
+  /* Charles */
+  { topic: "charles", q: "Charles' law describes the relationship between which two variables when pressure is held constant?",
+    a: "Volume and absolute temperature", w: ["Pressure and absolute temperature", "Volume and pressure", "Solubility and partial pressure"],
+    x: "Charles' law: V1/T1 = V2/T2 at constant pressure. Pressure with temperature at constant volume is Gay-Lussac's law; volume with pressure is Boyle's law." },
+  { topic: "charles", q: "A 1,000 mL air-filled bag at 27 C (300 K) is moved onto a winter ramp at -3 C (270 K) at the same pressure. What is its new volume?",
+    a: "About 900 mL", w: ["About 890 mL from a Celsius ratio", "About 1,110 mL", "About 1,000 mL"],
+    x: "V2 = V1 x T2 / T1 = 1,000 x 270 / 300 = 900 mL. Kelvin must be used; a ratio of Celsius values (-3 / 27) would give a meaningless negative volume." },
+  { topic: "charles", q: "On a hot summer day a crew leaves an air-filled pressure splint on a patient in direct sun on the helipad. What does Charles' law predict?",
+    a: "The air in the splint expands as it warms", w: ["The splint deflates because warm air is lighter", "Nothing changes unless altitude changes", "The splint pressure falls as oxygen dissolves"],
+    x: "At roughly constant pressure, gas volume rises with absolute temperature. A warming splint can tighten, so check distal pulses, movement and sensation." },
+  { topic: "charles", q: "Air temperature falls about 2 C per 1,000 ft. How does this cooling affect trapped gas during a climb?",
+    a: "It slightly offsets expansion; pressure effect wins", w: ["It fully cancels Boyle's-law expansion", "It doubles the expansion from Boyle's law", "It has no effect on trapped gas volume"],
+    x: "Cooling shrinks gas (Charles' law) while lower pressure expands it (Boyle's law). Over a typical climb the pressure drop is proportionally much larger, so trapped gas still expands." },
+
+  /* Gay-Lussac */
+  { topic: "gay-lussac", q: "An oxygen cylinder reads 2,000 psi at 20 C (293 K). After sitting in a hot ambulance it reaches 50 C (323 K). About what will the gauge read?",
+    a: "About 2,200 psi", w: ["About 1,815 psi", "About 5,000 psi", "About 2,000 psi"],
+    x: "Gay-Lussac's law: P2 = P1 x T2 / T1 = 2,000 x 323 / 293 = about 2,205 psi. In a rigid cylinder the volume can't change, so pressure rises with temperature." },
+  { topic: "gay-lussac", q: "Which gas law best explains why oxygen cylinders should not be stored in a hot vehicle compartment?",
+    a: "Gay-Lussac's law", w: ["Boyle's law", "Henry's law", "Graham's law of diffusion"],
+    x: "Gay-Lussac's law: at constant volume, gas pressure rises in direct proportion to absolute temperature. A heated rigid cylinder can over-pressurize." },
+  { topic: "gay-lussac", q: "A full oxygen cylinder checked inside a warm hangar reads lower after the aircraft sits on a frigid ramp, though no oxygen was used. What is the best explanation?",
+    a: "Cooling lowered the gas pressure in the rigid tank", w: ["Low ambient pressure drew gas out of the regulator", "The cold made oxygen dissolve into the tank wall", "Low humidity caused the gauge to read falsely"],
+    x: "At constant volume, cooling lowers pressure (Gay-Lussac's law). The gauge reading will recover as the cylinder warms; consider this when estimating oxygen duration in cold weather." },
+  { topic: "gay-lussac", q: "Gay-Lussac's law holds which variable constant?",
+    a: "Volume", w: ["Pressure", "Temperature", "Number of gas types"],
+    x: "Gay-Lussac's law describes pressure and absolute temperature in a fixed-volume container (P1/T1 = P2/T2)." },
+
+  /* Henry */
+  { topic: "henry", q: "A scuba diver develops joint pain and skin mottling 3 hours after a deep dive. Which gas law best explains the cause?",
+    a: "Henry's law", w: ["Boyle's law", "Charles' law", "Dalton's law"],
+    x: "Henry's law: dissolved gas is proportional to the partial pressure above the liquid. Nitrogen dissolved at depth comes out of solution as bubbles when pressure falls, causing decompression sickness." },
+  { topic: "henry", q: "Why does hyperbaric oxygen therapy increase oxygen delivery even when hemoglobin is already fully saturated?",
+    a: "It raises the oxygen dissolved in plasma", w: ["It makes hemoglobin carry more per gram", "It shifts the oxyhemoglobin curve right", "It increases red blood cell production"],
+    x: "By Henry's law, raising the oxygen partial pressure dissolves more oxygen directly in plasma. This dissolved oxygen can sustain tissues even when hemoglobin is impaired, as in CO poisoning." },
+  { topic: "henry", q: "Which everyday example best illustrates Henry's law?",
+    a: "Bubbles forming when a soda bottle is opened", w: ["A balloon shrinking in a freezer", "A tire gauge rising on a hot day", "Perfume spreading through a room"],
+    x: "Opening the bottle drops the pressure above the liquid, so dissolved CO2 comes out of solution as bubbles, the same process as nitrogen forming bubbles in decompression sickness." },
+  { topic: "henry", q: "Why can flying soon after a dive cause decompression sickness even if the dive itself was uneventful?",
+    a: "Lower cabin pressure lets residual nitrogen bubble out", w: ["Low humidity draws nitrogen into the joints", "Cold air makes nitrogen less soluble in blood", "Vibration breaks dissolved oxygen into bubbles"],
+    x: "Tissues still hold extra nitrogen after diving. Lowering ambient pressure further at altitude reduces how much gas can stay dissolved (Henry's law), so bubbles form." },
+
+  /* Graham */
+  { topic: "graham", q: "Graham's law states that a gas's rate of diffusion is inversely proportional to:",
+    a: "The square root of its molecular weight", w: ["Its partial pressure", "Its absolute temperature", "The thickness of the membrane"],
+    x: "Graham's law: lighter gases diffuse faster, with the rate inversely proportional to the square root of molecular weight. Membrane thickness belongs to Fick's law." },
+  { topic: "graham", q: "Which statement about gas movement across the alveolar-capillary membrane is consistent with Graham's law?",
+    a: "Gas moves from higher to lower partial pressure", w: ["Gas moves from lower to higher partial pressure", "Heavier gases always diffuse faster", "Gas moves only when the patient exhales"],
+    x: "Gases diffuse down their pressure gradient from high to low partial pressure, and lighter gases do so faster. Oxygen moves from alveolus to blood because alveolar PO2 is higher." },
+  { topic: "graham", q: "At altitude, why does oxygen enter the pulmonary capillary blood more slowly?",
+    a: "The alveolar-to-capillary PO2 gradient is smaller", w: ["The oxygen molecule becomes heavier", "The alveolar membrane becomes thicker", "Oxygen makes up less than 21% of air"],
+    x: "Lower barometric pressure lowers alveolar PO2, so the pressure difference driving oxygen into the blood shrinks and diffusion slows. The oxygen fraction and molecular weight do not change." },
+  { topic: "graham", q: "By Graham's law alone, O2 (MW 32) should diffuse slightly faster than CO2 (MW 44), yet CO2 actually crosses the lung about 20 times faster. Why?",
+    a: "CO2 is much more soluble in the membrane and blood", w: ["CO2 has the larger pressure gradient by far", "CO2 is actively pumped out by the alveoli", "Oxygen must first bind to the membrane wall"],
+    x: "Overall diffusion depends on both molecular weight and solubility. CO2's far higher solubility more than offsets its heavier weight, which is why hypercapnia is rarely the first failure from a diffusion problem." },
+
+  /* Fick */
+  { topic: "fick", q: "According to Fick's law, which change would decrease oxygen diffusion across the alveolar membrane?",
+    a: "Thickening of the membrane from pulmonary edema", w: ["Increasing the FiO2 from 0.40 to 0.60", "Recruiting collapsed alveoli with PEEP", "Descending to a lower cabin altitude"],
+    x: "Diffusion is inversely proportional to membrane thickness. Higher FiO2, lower altitude and alveolar recruitment all increase the gradient or surface area and improve diffusion." },
+  { topic: "fick", q: "A patient with a prior pneumonectomy desaturates during a climb in an unpressurized helicopter. Which two Fick's-law factors are working against him?",
+    a: "Reduced surface area and a smaller gradient", w: ["Thicker membrane and a lighter gas", "Increased surface area and higher ambient humidity", "Lower temperature and a larger gradient"],
+    x: "Losing a lung reduces surface area, and climbing lowers alveolar PO2, shrinking the pressure gradient. Both reduce diffusion under Fick's law." },
+  { topic: "fick", q: "An intubated patient with cardiogenic pulmonary edema has an SpO2 of 88% at a 6,000 ft cabin. Which intervention addresses the most Fick's-law factors at once?",
+    a: "Increase PEEP and increase FiO2", w: ["Increase respiratory rate alone", "Lower FiO2 to avoid oxygen toxicity", "Place the patient in Trendelenburg"],
+    x: "PEEP recruits surface area and helps push fluid out of the alveoli (thinner barrier), and higher FiO2 raises the pressure gradient. Rate changes mostly affect CO2." },
+  { topic: "fick", q: "In Fick's law, which variable appears in the denominator?",
+    a: "Membrane thickness", w: ["Partial pressure difference", "Surface area", "Diffusion constant"],
+    x: "Rate = Area x Diffusion constant x (P1 - P2) / Thickness. Thickness is the only factor that slows diffusion as it increases." },
+
+  /* Hypoxia types */
+  { topic: "hypoxia-types", q: "A house-fire victim has an SpO2 of 99% on standard pulse oximetry but is confused with a headache. A co-oximeter shows COHb of 28%. What type of hypoxia is present?",
+    a: "Hypemic", w: ["Hypoxic", "Stagnant", "Histotoxic"],
+    x: "Carbon monoxide binds hemoglobin and reduces its oxygen-carrying capacity, causing hypemic (anemic) hypoxia. Standard SpO2 reads COHb as oxyhemoglobin and looks falsely normal." },
+  { topic: "hypoxia-types", q: "A patient in cardiogenic shock has a normal hemoglobin and PaO2 but cool, mottled extremities and rising lactate. What type of hypoxia best fits?",
+    a: "Stagnant", w: ["Hypemic", "Histotoxic", "Hypoxic"],
+    x: "Stagnant (ischemic) hypoxia occurs when oxygen content is adequate but blood flow to tissues is poor, as in low cardiac output." },
+  { topic: "hypoxia-types", q: "An industrial worker exposed to cyanide has a high venous oxygen saturation and severe lactic acidosis. What type of hypoxia is this?",
+    a: "Histotoxic", w: ["Hypemic (anemic)", "Stagnant", "Hypoxic"],
+    x: "Cyanide blocks cytochrome oxidase, so cells cannot use delivered oxygen. Oxygen is left in venous blood, which is the hallmark of histotoxic hypoxia." },
+  { topic: "hypoxia-types", q: "A flight nurse at 12,000 ft in an unpressurized aircraft without supplemental oxygen develops euphoria and slowed reaction time. Which type of hypoxia is this?",
+    a: "Hypoxic", w: ["Hypemic", "Stagnant", "Histotoxic"],
+    x: "Hypoxic (hypoxemic) hypoxia results from inadequate oxygen reaching the blood, here from the low partial pressure of oxygen at altitude." },
+
+  /* TUC and zones */
+  { topic: "tuc-zones", q: "A pressurized aircraft cruising at 30,000 ft suffers a rapid decompression. What is the crew's first priority?",
+    a: "Don their own oxygen masks immediately", w: ["Place masks on the patient first", "Notify medical control about the decompression", "Check the patient's ETT cuff pressure"],
+    x: "Time of useful consciousness at about 30,000 ft is only 1-2 minutes, and rapid decompression shortens it further. Crew must secure their own oxygen first so they can then help the patient." },
+  { topic: "tuc-zones", q: "Approximately what is the time of useful consciousness at 25,000 ft for a resting, healthy person?",
+    a: "3-5 minutes", w: ["20-30 minutes", "15-20 seconds", "10-15 minutes"],
+    x: "Commonly cited TUC values: 18,000 ft 20-30 min, 22,000 ft 5-10 min, 25,000 ft 3-5 min, 30,000 ft 1-2 min, 35,000 ft 30-60 s, 40,000 ft 15-20 s." },
+  { topic: "tuc-zones", q: "Pressurized air medical aircraft usually maintain a cabin altitude in which range?",
+    a: "6,000-8,000 ft", w: ["Sea level to 2,000 ft", "10,000-12,000 ft", "14,000-16,000 ft"],
+    x: "Most pressurized aircraft hold the cabin at about 6,000-8,000 ft, with 8,000 ft as the usual regulatory maximum. A lower or sea-level cabin requires the aircraft to fly lower." },
+  { topic: "tuc-zones", q: "In which physiologic zone do healthy people first need supplemental oxygen to avoid significant hypoxia?",
+    a: "Physiologic-deficient zone", w: ["Physiologic (efficient) zone", "Space-equivalent zone", "Indifferent zone"],
+    x: "The physiologic-deficient zone starts at about 10,000 ft (some texts say 12,000) and extends to about 50,000 ft. Supplemental oxygen is needed there; above 50,000 ft a pressure suit is required." },
+
+  /* Stresses of flight */
+  { topic: "flight-stresses", q: "A paramedic notices nausea and dizziness while sunlight flickers through the rotor blades during a long flight. What is the most likely cause?",
+    a: "Flicker vertigo", w: ["Hypemic hypoxia", "Barodontalgia", "Middle ear block"],
+    x: "Flicker vertigo is caused by light flashing at about 4-20 times per second, such as sunlight through rotor blades. It can cause nausea, disorientation and, in susceptible people, seizures." },
+  { topic: "flight-stresses", q: "Which effect of altitude makes dehydration more likely during long transports?",
+    a: "Humidity falls as altitude rises", w: ["Oxygen fraction falls as altitude rises", "Temperature rises as altitude rises", "Gas solubility rises as altitude rises"],
+    x: "Air holds less moisture as altitude rises and aircraft cabins are very dry, increasing insensible losses from the airways and skin. Offer fluids and humidify oxygen when possible." },
+  { topic: "flight-stresses", q: "About how much does ambient air temperature drop for each 1,000 ft of altitude gained?",
+    a: "About 2 C (35.6 F)", w: ["About 0.5 C (32.9 F)", "About 5 C (41 F)", "About 10 C (50 F)"],
+    x: "The standard lapse rate is about 2 C (3.5 F) per 1,000 ft. Patients, especially burn, trauma and neonatal patients, need active warming." },
+  { topic: "flight-stresses", q: "During a night flight in clouds, the pilot reports feeling the aircraft is level while instruments show a banked turn. Which stress of flight is this?",
+    a: "Spatial disorientation", w: ["Flicker vertigo", "Acute altitude hypoxia", "Fatigue"],
+    x: "Spatial disorientation is a mismatch between visual, vestibular and proprioceptive cues. The vestibular system adapts to a sustained turn and signals level flight, so pilots must trust instruments." },
+
+  /* Trapped gas */
+  { topic: "trapped-gas", q: "A patient with a bowel obstruction is being flown to a tertiary center. What is the most important trapped-gas measure before lift-off?",
+    a: "Place an NG tube and leave it vented", w: ["Place an NG tube and clamp it", "Give an antiemetic and withhold the NG tube", "Position the patient in Trendelenburg"],
+    x: "Bowel and gastric gas expand on ascent and can cause vomiting, aspiration and diaphragm splinting. An NG or OG tube left open to vent or to suction lets the expanding gas escape." },
+  { topic: "trapped-gas", q: "When is a patient with a congested upper airway most likely to develop a middle ear block?",
+    a: "During descent", w: ["During ascent", "At cruising altitude", "During ground taxi"],
+    x: "On ascent, expanding middle ear gas vents passively through the eustachian tube. On descent, rising outside pressure pushes the eardrum inward and the swollen tube may not open, so swallowing, yawning or Valsalva help." },
+  { topic: "trapped-gas", q: "A patient in MAST (PASG) is flown from a sea-level scene to a hospital at 5,000 ft. What should the crew anticipate?",
+    a: "Garment pressure rising on climb and falling on descent", w: ["Garment pressure falling on climb and rising on descent", "No change, because the garment is a closed system", "Garment pressure falling only at cruising altitude"],
+    x: "The air in the garment expands as ambient pressure falls (Boyle's law), so pressure rises on climb; reassess distal circulation and release pressure as needed, then re-check on descent." },
+  { topic: "trapped-gas", q: "Gravity IV fluids are hanging in a bag that still contains an air pocket. What happens to the drip rate as the aircraft climbs?",
+    a: "It increases as the air pocket expands", w: ["It decreases as the air pocket expands", "It stays the same in a closed system", "It stops because of an air lock"],
+    x: "The expanding air in the container pushes fluid out faster on ascent, and the rate slows on descent. Removing air from bags and using infusion pumps prevents unintended rate changes." },
+
+  /* DCS and AGE */
+  { topic: "dcs-age", q: "A diver surfaces rapidly after holding her breath and within 2 minutes develops right-sided weakness and aphasia. What is the most likely diagnosis?",
+    a: "Arterial gas embolism", w: ["Type I decompression sickness", "Nitrogen narcosis", "Middle ear barotrauma"],
+    x: "Rapid onset of stroke-like signs within minutes of surfacing after a breath-hold ascent points to arterial gas embolism from alveolar rupture (Boyle's law). DCS usually starts later, often within hours." },
+  { topic: "dcs-age", q: "You are transporting a diver with suspected Type II decompression sickness by helicopter to a hyperbaric chamber. What is the best flight plan?",
+    a: "Fly as low as safely possible on 100% oxygen", w: ["Climb quickly to cruise to shorten flight time", "Fly at 8,000 ft and titrate oxygen to SpO2 94%", "Delay transport until symptoms resolve"],
+    x: "Any decrease in ambient pressure enlarges bubbles, so the aircraft should stay as low as safely possible (commonly under 1,000 ft above the departure point). 100% oxygen helps wash out nitrogen." },
+  { topic: "dcs-age", q: "A recreational diver completed a single no-decompression dive this morning and wants to fly home. Per common dive-medicine guidance, what is the minimum surface interval before flying?",
+    a: "12 hours", w: ["2 hours", "6 hours", "48 hours"],
+    x: "Commonly cited guidance is a minimum of 12 hours after a single no-decompression dive, 18 hours after repetitive or multiday diving, and substantially longer after dives requiring decompression stops." },
+  { topic: "dcs-age", q: "A diver with joint pain and a mottled rash after diving needs fixed-wing transport. If the aircraft can be pressurized, what cabin altitude is preferred?",
+    a: "Sea level (or the departure field elevation)", w: ["About 8,000 ft, the standard pressurized cabin", "About 5,000 ft to balance fuel use", "Any altitude if the patient is on oxygen"],
+    x: "A sea-level cabin prevents further pressure drop that would expand bubbles and draw more nitrogen out of solution, so the patient arrives with the least possible worsening." }
+);
+
+DB.FLIGHTPBOX = DB.FLIGHTPBOX || {};
+Object.assign(DB.FLIGHTPBOX, {
+  boyle: {
+    box: [
+      ["Formula", "P1 x V1 = P2 x V2"],
+      ["Held constant", "Temperature"],
+      ["Sea level", "760 mmHg"],
+      ["8,000 ft cabin", "565 mmHg (gas up about 1/3)"],
+      ["18,000 ft", "380 mmHg (gas doubles)"],
+      ["Example", "30 mL cuff to 8,000 ft = about 40 mL"]
+    ],
+    plain: "When the air around something gets thinner, gas trapped inside it spreads out and takes up more room. Going down, it squeezes back smaller.",
+    remember: "Boyle = balloon: up you go, it grows; down you come, it shrinks.",
+    mistake: "Only checking cuffs and tubes on climb and forgetting they shrink and leak or loosen on descent.",
+    flight: "Every air-filled space in the patient and the gear grows on climb, so vent, fill with fluid, or check pressures at altitude and again after landing."
+  },
+  dalton: {
+    box: [
+      ["Formula", "PTotal = P1 + P2 + P3 ..."],
+      ["O2 fraction", "About 21% at every altitude"],
+      ["Sea level PO2", "0.21 x 760 = about 160 mmHg"],
+      ["18,000 ft PO2", "0.21 x 380 = about 80 mmHg"],
+      ["Water vapor", "47 mmHg at body temperature"],
+      ["FiO2 correction", "FiO2 x P1 / P2"]
+    ],
+    plain: "Air is a mix of gases, and each one pushes with its own share of the total pressure. Higher up, the total push is lower, so oxygen's push is lower too.",
+    remember: "Percent stays put, pressure drops: 21% of less is less.",
+    mistake: "Thinking there is less oxygen 'percent' at altitude rather than a lower oxygen partial pressure.",
+    flight: "Raise the FiO2 as the cabin climbs: FiO2 x P1 / P2, for example 0.40 at sea level becomes about 0.54 at 8,000 ft."
+  },
+  charles: {
+    box: [
+      ["Formula", "V1 / T1 = V2 / T2"],
+      ["Held constant", "Pressure"],
+      ["Units", "Kelvin (C + 273)"],
+      ["Warmer", "Gas expands"],
+      ["Colder", "Gas contracts"],
+      ["Lapse rate", "About 2 C cooler per 1,000 ft"]
+    ],
+    plain: "Heat makes gas spread out and cold makes it pull together, as long as the outside pressure stays the same.",
+    remember: "Charles in the cold: the gas gets small.",
+    mistake: "Doing the math in Celsius instead of converting to Kelvin.",
+    flight: "Sun-heated or cold-soaked equipment changes volume on the ramp; recheck air splints and cuffs after big temperature changes."
+  },
+  "gay-lussac": {
+    box: [
+      ["Formula", "P1 / T1 = P2 / T2"],
+      ["Held constant", "Volume (rigid container)"],
+      ["Units", "Kelvin (C + 273)"],
+      ["Hotter", "Pressure rises"],
+      ["Colder", "Pressure falls"],
+      ["Example", "2,000 psi at 20 C (68 F) to 50 C (122 F) = about 2,205 psi"]
+    ],
+    plain: "In a container that cannot stretch, like an oxygen tank, heating the gas raises its pressure and cooling it lowers the pressure.",
+    remember: "Gay-Lussac = gas tank: heat the tank, the gauge climbs.",
+    mistake: "Assuming a lower gauge reading on a cold tank means oxygen was used or leaked.",
+    flight: "Keep oxygen cylinders out of hot compartments and remember cold-soaked tanks read low until they warm."
+  },
+  henry: {
+    box: [
+      ["Statement", "Dissolved gas proportional to partial pressure"],
+      ["Held constant", "Temperature"],
+      ["Classic example", "Opening a soda bottle"],
+      ["Disease", "Decompression sickness"],
+      ["Therapy link", "Hyperbaric O2 raises dissolved O2"],
+      ["Altitude effect", "Gas comes out of solution"]
+    ],
+    plain: "The harder a gas presses on a liquid, the more of it dissolves. Take the pressure away and the gas fizzes back out as bubbles.",
+    remember: "Henry = soda: pop the cap and the bubbles come out.",
+    mistake: "Confusing Henry's law (dissolved gas, DCS) with Boyle's law (gas volume, AGE and trapped gas).",
+    flight: "Flying lowers pressure further, so a recent diver can get or worsen the bends in the aircraft; keep the cabin low."
+  },
+  graham: {
+    box: [
+      ["Statement", "Rate inversely proportional to square root of MW"],
+      ["Direction", "High to low partial pressure"],
+      ["Lighter gas", "Diffuses faster"],
+      ["O2 vs CO2 (MW)", "32 vs 44"],
+      ["CO2 overall", "About 20x faster (solubility)"],
+      ["Altitude effect", "Smaller O2 gradient"]
+    ],
+    plain: "Gases spread out from crowded places to empty ones, and light gases do it faster than heavy ones.",
+    remember: "Graham: gases go downhill, light ones fastest.",
+    mistake: "Forgetting that solubility, not just weight, is why CO2 crosses the lung so much faster than O2.",
+    flight: "At altitude the oxygen 'hill' from alveolus to blood is smaller, so oxygen loads more slowly."
+  },
+  fick: {
+    box: [
+      ["Formula", "Area x D x (P1 - P2) / Thickness"],
+      ["Helps", "More area, bigger gradient, soluble gas"],
+      ["Hurts", "Thick membrane, lost area, small gradient"],
+      ["Thick membrane", "Edema, ARDS, fibrosis"],
+      ["Lost area", "Pneumonectomy, atelectasis, emphysema"],
+      ["Flight fixes", "Raise FiO2, add PEEP, lower cabin"]
+    ],
+    plain: "Oxygen crosses the lung faster when there is more lung surface, a thinner wall and a bigger push from high to low pressure.",
+    remember: "Fick: big area, thin wall, steep hill.",
+    mistake: "Increasing ventilator rate to fix hypoxemia when the problem is diffusion, which rate barely changes.",
+    flight: "Lung patients with thick or small membranes desaturate first on climb; plan higher FiO2, PEEP or a lower cabin before lift-off."
+  },
+  "hypoxia-types": {
+    box: [
+      ["Hypoxic", "O2 can't get in (altitude, V/Q)"],
+      ["Hypemic", "Can't carry it (anemia, CO)"],
+      ["Stagnant", "Can't move it (shock, low CO)"],
+      ["Histotoxic", "Can't use it (cyanide, alcohol)"],
+      ["SpO2 trap", "Falsely normal in CO poisoning"],
+      ["Altitude", "Worsens all four"]
+    ],
+    plain: "Oxygen has to get into the blood, ride on hemoglobin, be pumped to the tissues and then be used by cells. A break at any step is hypoxia.",
+    remember: "In, carry, move, use: hypoxic, hypemic, stagnant, histotoxic.",
+    mistake: "Trusting a normal SpO2 in carbon monoxide poisoning.",
+    flight: "Altitude stacks hypoxic hypoxia on top of whatever type the patient already has, so give oxygen early."
+  },
+  "tuc-zones": {
+    box: [
+      ["Physiologic zone", "Sea level to about 10,000 ft"],
+      ["Deficient zone", "About 10,000-50,000 ft"],
+      ["Space-equivalent", "Above about 50,000 ft"],
+      ["TUC 25,000 ft", "3-5 minutes"],
+      ["TUC 30,000 ft", "1-2 minutes"],
+      ["TUC 35,000 ft", "30-60 seconds"],
+      ["Cabin altitude", "Usually 6,000-8,000 ft"]
+    ],
+    plain: "Time of useful consciousness is how long you can still think and act after losing your oxygen. The higher you are, the shorter it gets.",
+    remember: "Mask yourself first: at cruise, TUC is about one breath-hold long.",
+    mistake: "Helping the patient before donning your own mask after a decompression.",
+    flight: "Know where the crew oxygen masks are and how to don them before every pressurized flight."
+  },
+  "flight-stresses": {
+    box: [
+      ["Pressure", "Hypoxia and trapped gas"],
+      ["Thermal", "About 2 C colder per 1,000 ft"],
+      ["Humidity", "Low; causes dehydration"],
+      ["Noise", "Often over 90 dB; use protection"],
+      ["Vibration", "Fatigue, monitor artifact"],
+      ["Flicker vertigo", "About 4-20 flashes per second"],
+      ["Other", "Fatigue, G-forces, disorientation"]
+    ],
+    plain: "Flying adds strains on the body: thin air, cold, dryness, noise, shaking, tiredness, pulling forces and confusing balance signals.",
+    remember: "The stresses add up: one alone is a nuisance, all together is impairment.",
+    mistake: "Forgetting the crew is affected too, not just the patient.",
+    flight: "Wear hearing protection, stay hydrated, warm the patient and rely on monitors and alarms since noise and vibration hide breath sounds."
+  },
+  "trapped-gas": {
+    box: [
+      ["Pneumothorax", "Chest tube before flight"],
+      ["Stomach / bowel", "NG/OG to vent, not clamped"],
+      ["Ears", "Block most common on descent"],
+      ["ETT / Foley cuffs", "Fill with saline or check pressure"],
+      ["Cuff pressure", "About 20-30 cmH2O"],
+      ["Air splints / MAST", "Tighten on climb, loosen on descent"],
+      ["IV bags", "Remove air; use pumps"]
+    ],
+    plain: "Anything holding air, inside the patient or on the equipment, will swell going up and shrink coming down.",
+    remember: "Vent it, fill it with fluid, or check it twice: climb and descent.",
+    mistake: "Clamping an NG tube for flight, which traps expanding gastric gas.",
+    flight: "Before lift-off, walk head to toe and list every air space; reassess each at altitude and after landing."
+  },
+  "dcs-age": {
+    box: [
+      ["DCS law", "Henry (nitrogen bubbles)"],
+      ["AGE law", "Boyle (alveolar rupture)"],
+      ["AGE onset", "Minutes, often under 10"],
+      ["DCS onset", "Usually within hours"],
+      ["Treatment", "100% O2, supine, fluids, HBO"],
+      ["Transport", "Fly low or sea-level cabin"],
+      ["Fly after diving", "12 h single dive, 18 h repetitive"]
+    ],
+    plain: "Divers can get gas bubbles in their tissues or arteries. Lower pressure makes those bubbles bigger, so they need oxygen and to stay as close to sea level as possible on the way to a chamber.",
+    remember: "Bubbles hate oxygen and love altitude: give 100% O2, keep it low.",
+    mistake: "Titrating oxygen to a normal SpO2 instead of giving 100% to wash out nitrogen.",
+    flight: "Request the lowest safe altitude in a helicopter or a sea-level cabin in a fixed-wing aircraft."
+  }
+});
+
+;
 /* DrugBug - Flight Prep: Critical care challenge (hard, FP-C / CFRN level) */
 DB.FLIGHTP = DB.FLIGHTP || { topics: [], q: [] };
 DB.FLIGHTP.topics.push(
@@ -20935,1010 +23752,4 @@ MICRO.push(
     ["Why the name changed and the abbreviation did not", "The human organism was shown to be a distinct species from the rat one, and in 2001 it was renamed Pneumocystis jirovecii after Otto Jirovec, the Czech parasitologist who described the human disease in premature infants. Clinicians, textbooks and examination questions had used PCP for Pneumocystis carinii pneumonia for decades, so the compromise was to keep PCP and read it as Pneumocystis pneumonia. Both PCP and PJP remain in use, which causes periodic confusion in the literature."],
     ["An epidemic announced by a drug order", "In 1981 Sandra Ford, a technician at the Centers for Disease Control, noticed that requests for pentamidine, a drug needed almost exclusively for Pneumocystis in malnourished infants and cancer patients, were arriving for previously healthy young men in Los Angeles and New York. Her observation, alongside the Kaposi sarcoma reports, was among the first signals of the AIDS epidemic. The organism was the sentinel disease of HIV for a decade, and its incidence curve has tracked antiretroviral access ever since."],
     ["Two forms, a missing culture and an unmovable gap", "Pneumocystis has never been reliably grown in continuous culture, which is extraordinary for an organism of this clinical importance and the reason there is no susceptibility testing, no standardized drug development pipeline and no vaccine. Its genome explains part of the difficulty: it has lost the pathways for amino acid synthesis and for sterol production and depends on the alveolar environment for both. Work with air-liquid interface epithelial cultures has made partial progress, but a century after its discovery the organism still largely refuses to leave the lung."]] }
-);
-
-;
-/* ===== Microbiology set 13: bite and zoonotic organisms, HACEK, remaining Enterobacterales, Tropheryma and Rothia (draft, Oct 30 2026) ===== */
-MICRO.push(
-{ id: "pasteurella-multocida", k: "bact", g: "Bite and zoonotic organisms", nm: "Pasteurella multocida", also: "P. multocida, the cat bite bacterium, formerly Bacterium multocidum",
-  cls: "Small Gram-negative coccobacillus with bipolar safety-pin staining, oxidase positive, catalase positive, indole positive, nonmotile, facultative anaerobe, grows on blood and chocolate agar but not on MacConkey",
-  plain: "The mouth bacterium of cats and dogs that turns a small bite into a hot, exquisitely painful wound within hours.",
-  live: "The oropharynx of animals, with carriage rates reaching roughly seventy to ninety percent of cats and half of dogs, as well as rabbits, pigs, cattle and birds. Human oral carriage is uncommon and usually follows close animal contact.",
-  spread: "Inoculation through a bite, scratch or lick over broken skin, with cat bites more dangerous than dog bites because the slender canine teeth drive organisms deep into tendon sheath and joint. Respiratory acquisition from infected animals accounts for a minority of pulmonary cases.",
-  causes: "Rapidly progressive cellulitis and lymphangitis at a bite site, often within twelve to twenty-four hours, with disproportionate pain and purulent discharge. Also tenosynovitis, septic arthritis and osteomyelitis when the inoculum reaches deep structures, abscess, bacteremia, endocarditis, meningitis, and in people with chronic lung disease, bronchitis, empyema and pneumonia. Peritonitis occurs in patients on peritoneal dialysis whose cats sleep near the tubing.",
-  mech: "A polysaccharide capsule, hyaluronic acid in type A strains, blocks phagocytosis and complement deposition. Lipopolysaccharide drives the brisk inflammatory response that produces so much pain and swelling so early. Outer membrane proteins and the filamentous hemagglutinin PfhB mediate adherence to respiratory epithelium. Iron acquisition through transferrin-binding proteins lets it grow in tissue fluid. It lacks the tissue-dissolving exotoxins of a necrotizing pathogen, so the picture is intense inflammation rather than extensive necrosis, although the dermonecrotic toxin of type D strains causes atrophic rhinitis in pigs.",
-  lab: "Gram stain of pus shows small bipolar-staining coccobacilli resembling safety pins. It grows on sheep blood and chocolate agar as nonhemolytic colonies with a faint musty or mushroom odor, fails to grow on MacConkey agar, and is oxidase, catalase and indole positive, a combination that distinguishes it from the Enterobacterales and from Haemophilus, which needs X and V factors. Mass spectrometry identifies it readily. Bite wounds are usually polymicrobial, so anaerobic culture is taken alongside.",
-  tx: "Amoxicillin-clavulanate is the usual choice for animal bite wounds because it covers this organism along with the oral anaerobes, streptococci and staphylococci that accompany it, and penicillin or ampicillin is highly active against the isolate alone. Parenteral ampicillin-sulbactam or ceftriaxone is used for deep infection, and tenosynovitis and septic arthritis need surgical washout.",
-  alt: "Doxycycline, a fluoroquinolone, trimethoprim-sulfamethoxazole or a second- or third-generation cephalosporin for penicillin allergy. First-generation cephalosporins, clindamycin, macrolides other than azithromycin, and vancomycin all have poor or unreliable activity, which is the practical pitfall, since several of these are otherwise standard skin infection drugs.",
-  res: "Acquired resistance is uncommon. A minority of isolates produce a ROB-1 beta-lactamase, making plain ampicillin unreliable, and reduced fluoroquinolone susceptibility is reported. The clinically important resistance is intrinsic rather than acquired: the organism is poorly covered by cephalexin, dicloxacillin, clindamycin and erythromycin.",
-  prev: "Thorough irrigation and inspection of bite wounds, with primary closure avoided in high-risk hand and puncture wounds, and prophylactic amoxicillin-clavulanate commonly given for cat bites, hand bites, deep punctures and bites in people who are immunosuppressed or asplenic. Tetanus and rabies assessment belongs to the same encounter. No vaccine exists for humans, although veterinary vaccines are used in livestock.",
-  look: "Capnocytophaga canimorsus, which follows dog bites in asplenic patients and causes fulminant sepsis rather than early local cellulitis. Staphylococcus aureus and group A streptococcus, which cause bite-wound infection more slowly, typically after twenty-four to forty-eight hours. Bartonella henselae, which causes cat scratch disease with regional lymphadenopathy weeks later. Eikenella corrodens in human bites, and Streptobacillus moniliformis after rat bites.",
-  mem: [["Most-tested fact", "A cat bite that becomes hot and intensely painful within a day is Pasteurella multocida, and amoxicillin-clavulanate is the drug that covers it along with the rest of the bite flora."],
-    ["Memory trick", "PASTEURella from the PET. Think safety-pin coccobacilli and remember that the usual skin drugs, cephalexin and clindamycin, miss it."],
-    ["Classic setting", "A cat bite on the hand twelve hours earlier, with a swollen tender finger, lymphangitic streaking and purulent drainage from a puncture over a tendon sheath."],
-    ["Step focus", "Cat bites to the hand carry the highest risk of tenosynovitis and septic arthritis because the teeth are needle-like and seed closed spaces."]],
-  worm: [["Named for Pasteur, who used it first", "Louis Pasteur studied fowl cholera in the 1870s, and the organism behind it, later named Pasteurella multocida, gave him the accident that founded vaccinology. A culture left on the bench over a summer holiday had lost its virulence, and chickens inoculated with it survived, then survived a fresh virulent challenge as well. Pasteur realized that attenuation by aging could be used deliberately. The species name multocida, many-killing, records the breadth of animals it kills rather than any special danger to humans."],
-    ["Why cat bites outrank dog bites", "Dogs crush and tear, producing wide wounds that bleed, drain and are easy to irrigate. Cat canines are thin, sharp and long, and they inject oral flora through a pinhole into tendon sheath, joint capsule or periosteum, then the skin closes over it. Combine that geometry with a carriage rate near eighty percent and the result is a reported infection rate for cat bites several times that of dog bites, concentrated in the hand, where the closed compartments are unforgiving."],
-    ["The drug that is usually right and the drugs that are usually wrong", "Most skin and soft tissue infection is treated with agents aimed at staphylococci and streptococci: cephalexin, dicloxacillin, clindamycin. Pasteurella is reliably resistant or unreliably susceptible to all three. Meanwhile it is exquisitely susceptible to plain penicillin, a drug long since abandoned for ordinary cellulitis. Animal bite wounds are therefore one of the few settings where the standard cellulitis reflex is actively misleading, which is why amoxicillin-clavulanate occupies such a fixed place in bite guidelines."],
-    ["A pathogen of the lungs people forget", "Beyond bites, Pasteurella colonizes damaged airways. Case series describe chronic bronchitis, bronchiectasis exacerbation and empyema in older adults with structural lung disease who keep cats or live on farms, with no bite anywhere in the history. The organism is often misreported as Haemophilus on a quick look, since both are small Gram-negative rods from sputum, and the distinction rests on growth without X and V factors and on a positive indole reaction."]] },
-
-{ id: "capnocytophaga-canimorsus", k: "bact", g: "Bite and zoonotic organisms", nm: "Capnocytophaga canimorsus", also: "C. canimorsus, dog bite septicemia organism, formerly CDC group DF-2, dysgonic fermenter 2",
-  cls: "Thin fusiform Gram-negative rod with tapered ends, capnophilic (needs added carbon dioxide), gliding motility, oxidase and catalase positive, fastidious and slow growing",
-  plain: "A slender bacterium from dog saliva that usually does nothing but can cause overwhelming sepsis in people without a working spleen.",
-  live: "The gingival flora of dogs and cats, present in a substantial proportion of healthy animals. It has no environmental reservoir and does not colonize healthy humans.",
-  spread: "Dog bites most often, also cat bites, scratches and licking of broken skin. A proportion of reported cases follow nothing more than close contact with a dog and no identifiable wound, which is one reason the exposure history is easy to miss.",
-  causes: "Fulminant sepsis with disseminated intravascular coagulation, purpura fulminans, acral gangrene and multiorgan failure, falling heavily on people who are asplenic, have alcohol use disorder, are on glucocorticoids or have a hematologic malignancy. Also meningitis, endocarditis, eye infection, septic arthritis and localized wound infection in otherwise healthy people. Reported mortality in bacteremic disease is roughly a quarter to a third.",
-  mech: "The organism resists killing by complement and by phagocytes: a sialidase harvests host sialic acid for its own surface, which blunts complement deposition, and it blocks the respiratory burst in macrophages and interferes with nitric oxide production. Gliding motility and surface proteins mediate adhesion. There is no classic exotoxin, so the explosive clinical picture is driven by lipopolysaccharide-triggered cytokine release in a host that cannot clear an encapsulated-style bloodstream organism, the same deficit that makes the asplenic patient vulnerable to pneumococcus.",
-  lab: "Blood cultures turn positive slowly, often after three to seven days, which means early cultures are reported as negative while the patient deteriorates. A buffy coat Gram stain can show the characteristic thin fusiform rods, sometimes inside neutrophils, and this bedside clue has made the diagnosis before culture in several reported cases. Growth needs blood or chocolate agar in five to ten percent carbon dioxide, and colonies may spread with gliding motility. Identification is by mass spectrometry or 16S sequencing, since biochemical panels perform poorly on this genus.",
-  tx: "A beta-lactam with beta-lactamase inhibitor such as ampicillin-sulbactam or piperacillin-tazobactam, or a carbapenem, is used for severe disease, alongside full support for septic shock. Penicillin G and third-generation cephalosporins are usually active, and amoxicillin-clavulanate is appropriate for wound infection and prophylaxis.",
-  alt: "Clindamycin, a carbapenem, doxycycline or a fluoroquinolone, guided by susceptibility where it can be obtained. Aminoglycosides and trimethoprim-sulfamethoxazole have poor activity.",
-  res: "Beta-lactamase production occurs in a minority of isolates and makes plain penicillin and ampicillin unreliable, which is the reason inhibitor combinations are favored in serious infection. Otherwise acquired resistance is limited, and the species remains predictably susceptible to carbapenems and clindamycin.",
-  prev: "Wound care and prophylactic amoxicillin-clavulanate after dog bites in people who are asplenic, cirrhotic, immunosuppressed or taking glucocorticoids, since this is the group in which the illness is lethal. Counseling at splenectomy conventionally covers the risk from dog bites alongside pneumococcal vaccination and the standby antibiotic supply. No vaccine exists.",
-  look: "Pasteurella multocida, which causes early local cellulitis after a cat bite rather than late systemic collapse. Neisseria meningitidis and Streptococcus pneumoniae, the other causes of purpura fulminans in an asplenic patient. Capnocytophaga canimorsus is also confused with the human oral Capnocytophaga species, which cause neutropenic bacteremia and periodontal disease rather than bite sepsis.",
-  mem: [["Most-tested fact", "Fulminant sepsis with purpura fulminans after a dog bite in a patient without a spleen is Capnocytophaga canimorsus, and blood cultures are slow to turn positive."],
-    ["Memory trick", "CANIMORSUS is Latin for dog bite. Capno means it craves carbon dioxide, and it hunts the asplenic."],
-    ["Classic setting", "A man who had a splenectomy years earlier after trauma, presenting three days after a puppy nipped his hand with hypotension, petechiae spreading to purpura and dusky fingers, with blood cultures still reported as no growth."],
-    ["Step focus", "Loss of splenic marginal zone filtration is the common thread linking this organism to pneumococcus, meningococcus and Haemophilus influenzae in the asplenic patient."]],
-  worm: [["From dysgonic fermenter 2 to a named species", "For years the Centers for Disease Control kept a set of fastidious Gram-negative rods that grew badly and fermented poorly, filed under the label dysgonic fermenter, or DF. DF-2 was recognized in the 1970s as an organism recovered from dog bite sepsis in patients who had lost their spleens. It received a proper name only in 1989, when it became Capnocytophaga canimorsus. The provisional label survived in the literature for a decade afterward, and older case reports are still indexed under DF-2."],
-    ["Why the spleen is the whole story", "The spleen filters slowly flowing blood past marginal zone macrophages and provides the IgM-producing B cells that coat poorly opsonized organisms. Without it, a bloodstream organism that resists complement can multiply with little restraint. Capnocytophaga canimorsus actively strips host sialic acid onto its surface and suppresses the phagocyte respiratory burst, so it is precisely the kind of pathogen the splenic step exists to handle. The clinical consequence is a disease that is mild or absent in most people and catastrophic in a defined minority."],
-    ["The culture that arrives too late", "This organism needs carbon dioxide and grows slowly, so automated blood culture systems may flag it only after several days. Patients have died with final cultures still pending. The workaround described in case reports is simple and old-fashioned: a Gram stain of the buffy coat or of a peripheral smear, where thin fusiform rods can sometimes be seen lying beside or within neutrophils. It is a reminder that microscopy still occasionally outruns incubators."],
-    ["How common is the exposure, and how rare the disease", "Something like a quarter to a half of healthy dogs carry the organism in their gingival crevices, and dog bites are counted in the millions each year in the United States alone. Reported human infections number in the hundreds across the whole literature. The arithmetic says the organism is nearly harmless to an intact host and that essentially all of its clinical weight rests on host factors, which is why prevention advice is directed at particular patients rather than at dogs."]] },
-
-{ id: "streptobacillus-moniliformis", k: "bact", g: "Bite and zoonotic organisms", nm: "Streptobacillus moniliformis", also: "S. moniliformis, rat bite fever organism, streptobacillary rat bite fever, Haverhill fever when foodborne",
-  cls: "Highly pleomorphic Gram-negative rod forming beaded chains and bulbous swellings, nonmotile, facultative anaerobe, fastidious and requiring serum-enriched media, oxidase and catalase negative",
-  plain: "A bacterium from rat mouths that causes fever, a rash on the palms and soles, and painful joints a few days after a bite.",
-  live: "The nasopharynx and oral cavity of wild and laboratory rats, carried by a majority of animals without disease, and also found in mice, gerbils and the animals that prey on them, including cats and dogs.",
-  spread: "Rat bites and scratches, handling of rats without a bite, and ingestion of milk, water or food contaminated with rodent excreta, which produces the foodborne form historically called Haverhill fever. Person-to-person transmission is not described.",
-  causes: "Streptobacillary rat bite fever: abrupt fever with rigors and myalgia two to ten days after exposure, then a maculopapular or petechial rash concentrated on the extremities including the palms and soles, and migratory asymmetric polyarthritis or true septic arthritis in roughly half of cases. The bite itself typically heals before symptoms begin. Complications include endocarditis on previously abnormal valves, myocarditis, pericarditis, meningitis, pneumonia and abscesses in liver, brain or soft tissue. Untreated mortality is reported around ten percent.",
-  mech: "Virulence is poorly characterized, which is itself notable for an organism described more than a century ago. It has no identified exotoxin and no capsule of established importance. It forms L-phase variants that lack a cell wall, which may help it persist and which complicates antibiotic thinking, since cell-wall-active drugs have nothing to act on in that state. Lipopolysaccharide-driven inflammation accounts for the fever and rash, while arthritis appears to combine direct joint invasion in some cases with an immune-mediated reactive pattern in others, since synovial cultures are frequently sterile.",
-  lab: "Culture is difficult: growth needs blood, serum or ascitic fluid enrichment, carbon dioxide, and up to a week, and the sodium polyanethol sulfonate used as an anticoagulant in many blood culture bottles inhibits it, which is a classic cause of false negative cultures. Gram stain shows long chains with beaded, bulbous swellings, the appearance that gave the name moniliformis, meaning necklace-like. Colonies may show fried-egg forms when L-phase variants appear. Diagnosis is increasingly made by 16S ribosomal RNA sequencing or polymerase chain reaction on blood or joint fluid.",
-  tx: "Penicillin G intravenously for severe disease, followed by oral penicillin or amoxicillin, with treatment extended and higher doses used for endocarditis. Ampicillin and ceftriaxone are also active. Penicillin remains the reference agent and resistance has not been a practical problem.",
-  alt: "Doxycycline for penicillin allergy, with clindamycin, erythromycin or a carbapenem as further options. Streptomycin or gentamicin was historically added for endocarditis. Doxycycline has the additional advantage of covering Spirillum minus, the cause of the Asian form of rat bite fever, when the two cannot be separated clinically.",
-  res: "No significant acquired resistance is documented, partly because the organism is encountered so rarely that systematic susceptibility data are thin. The L-phase variant, which lacks a cell wall, is intrinsically unaffected by beta-lactams while in that state, which has been suggested as a reason for occasional relapse after apparently adequate treatment.",
-  prev: "Gloves and careful handling in laboratory animal facilities, prompt washing of bites and scratches, rodent control in housing, and avoidance of unpasteurized milk. Post-exposure penicillin or doxycycline is sometimes given after a high-risk rat bite. Pet rats are a growing source in reported pediatric cases. No vaccine exists.",
-  look: "Spirillum minus, which causes sodoku, the Asian form of rat bite fever, with a longer incubation, an indurated ulcer at the bite site and little arthritis. Rocky Mountain spotted fever and secondary syphilis, which also produce rashes involving the palms and soles. Meningococcemia, disseminated gonococcal infection with its migratory arthritis and pustules, acute rheumatic fever, parvovirus B19 arthropathy and the initial presentation of juvenile idiopathic arthritis.",
-  mem: [["Most-tested fact", "Fever, a rash on the palms and soles, and migratory polyarthritis after a rat bite is streptobacillary rat bite fever, treated with penicillin."],
-    ["Memory trick", "MONILIFORMIS means like a necklace, for the beaded chains on Gram stain. Rat bite fever gives Fever, Rash and Arthritis: the FRA triad."],
-    ["Classic setting", "A child with a pet rat, or a laboratory animal technician, who develops rigors, a petechial rash on the hands and feet and a swollen knee about a week after a bite that has already healed."],
-    ["Step focus", "Sodium polyanethol sulfonate in blood culture bottles inhibits this organism, so negative cultures do not exclude it and molecular testing is often needed."]],
-  worm: [["Two diseases under one name", "Rat bite fever is really two illnesses. Streptobacillus moniliformis causes the form seen in the Americas and Europe, with a short incubation, rash on the extremities and arthritis. Spirillum minus, a spiral organism that has never been cultured on artificial media, causes sodoku in Asia, with a longer incubation, an ulcerating bite site, regional lymphadenopathy and relapsing fever but little joint involvement. Both respond to penicillin, which is fortunate, because distinguishing them at the bedside is close to impossible."],
-    ["Haverhill, Massachusetts, 1926", "An outbreak of fever, rash and joint pain affected several hundred people in Haverhill, Massachusetts, in 1926, with no rat bites in sight. The source turned out to be contaminated milk, and the organism was the same one recovered from rat bite fever. The foodborne form kept the town's name, and Haverhill fever remains the term for epidemic streptobacillary disease acquired by ingestion. It matters clinically because the bite, the single most useful clue, is absent."],
-    ["A necklace under the microscope", "Gram stains of this organism rarely look like a textbook rod. The cells form long, irregular, looping filaments interrupted by rounded swellings, so the chain resembles a string of beads, which is what moniliformis records. The same instability shows up in culture as L-phase variants, cell-wall-deficient forms that grow as fried-egg colonies. A laboratory unfamiliar with the genus can read the pleomorphism as contamination or as a mixed culture, which contributes to the organism's reputation for being missed."],
-    ["Pet rats changed who gets it", "Historically this was a disease of laboratory workers and of children in poor urban housing bitten by wild rats while sleeping. Fancy rats sold as pets have shifted the reported case mix toward children in comfortable households, where the exposure is affectionate rather than accidental and where the rat is frequently healthy. Several pediatric deaths have been reported in which rat bite fever was not considered because nobody asked about the pet, which is why the exposure question has become the practical teaching point."]] }
-);
-MICRO.push(
-{ id: "bartonella-quintana", k: "bact", g: "Bite and zoonotic organisms", nm: "Bartonella quintana", also: "Bartonella quintana, trench fever organism, formerly Rochalimaea quintana, urban trench fever",
-  cls: "Small fastidious Gram-negative rod, aerobic, oxidase and catalase negative, slow growing on blood-enriched media, facultatively intracellular with a preference for erythrocytes and endothelium",
-  plain: "The louse-borne bacterium that caused trench fever in the First World War and now causes relapsing fever and endocarditis among people who are homeless.",
-  live: "Humans are the only known reservoir. The vector is the human body louse, Pediculus humanus humanus, which carries the organism in its gut and sheds it in feces.",
-  spread: "Not by the louse bite itself but by scratching louse feces into bitten skin, so crowding, inability to wash clothing and body louse infestation define the epidemiology. Bacteremia in humans can persist for weeks to months, which maintains the cycle.",
-  causes: "Trench fever: fever that relapses at roughly five-day intervals, severe shin and bone pain, headache, conjunctival injection and splenomegaly. Also chronic asymptomatic or oligosymptomatic bacteremia, blood culture negative endocarditis on previously damaged or prosthetic valves, bacillary angiomatosis and peliosis hepatis in people with advanced HIV infection, and chronic lymphadenopathy.",
-  mech: "It invades erythrocytes and persists inside them, which creates a long-lasting bacteremia that the immune system reaches poorly and that the louse can harvest. Deformin and the Trw type IV secretion system mediate red cell entry, and the VirB type IV secretion system delivers Bep effector proteins into endothelial cells, where they inhibit apoptosis and drive proliferation. That endothelial reprogramming is what produces bacillary angiomatosis, a genuine bacterially induced vascular tumor. BadA, a trimeric autotransporter adhesin, binds fibronectin and triggers hypoxia-inducible factor signaling and vascular endothelial growth factor release.",
-  lab: "Blood cultures are usually sterile by routine methods, so diagnosis rests on serology by immunofluorescence, on polymerase chain reaction of blood or of a resected valve, and on prolonged culture with lysis-centrifugation on blood-enriched media. Warthin-Starry silver staining shows the organisms in tissue. Serologic cross-reaction with Bartonella henselae and with Coxiella burnetii is a recognized problem, so molecular confirmation on tissue is preferred when a valve is available.",
-  tx: "Doxycycline combined with gentamicin is the usual regimen for bacteremia, with the aminoglycoside given for the first fortnight, and doxycycline is continued for several weeks. Endocarditis is treated with doxycycline plus gentamicin for a prolonged course, and valve surgery is frequently required.",
-  alt: "Azithromycin or erythromycin for trench fever and for bacillary angiomatosis, with rifampin sometimes added in severe disease. Ceftriaxone is used as part of combination therapy for culture negative endocarditis before the organism is identified. Fluoroquinolones have activity but are less established.",
-  res: "Acquired resistance is not a recognized clinical problem, and isolates are susceptible to most agents in vitro. The difficulty is pharmacologic rather than genetic: the organism's intraerythrocytic niche shelters it from drugs that penetrate red cells poorly, which is the rationale for adding an aminoglycoside, and for the long courses used.",
-  prev: "Delousing, access to laundry and bathing facilities, and permethrin or ivermectin treatment for infestation, which in practice means that prevention of this infection is a question of housing rather than of medicine. No vaccine exists.",
-  look: "Bartonella henselae, which is cat associated and causes cat scratch lymphadenopathy. Coxiella burnetii, the other great cause of blood culture negative endocarditis, which cross-reacts serologically. Borrelia recurrentis, also louse borne, which causes relapsing fever with spirochetes visible on a smear. Rickettsia prowazekii, the louse-borne typhus organism, which shares the vector and the setting. Brucella and Tropheryma whipplei in the culture negative endocarditis differential.",
-  mem: [["Most-tested fact", "Bartonella quintana is louse borne with humans as the only reservoir, and it is a leading cause of blood culture negative endocarditis among people who are homeless."],
-    ["Memory trick", "QUINTANA for quintan fever, a relapse every fifth day. Body louse, shin pain and trenches."],
-    ["Classic setting", "A man living on the street with alcohol use disorder and body lice, presenting with weeks of fever, weight loss, a new aortic murmur and repeatedly negative blood cultures."],
-    ["Step focus", "Bacillary angiomatosis in advanced HIV infection can be caused by either B. quintana or B. henselae, and the Bep effectors delivered by a type IV secretion system drive the endothelial proliferation."]],
-  worm: [["The fever that emptied the trenches", "Trench fever appeared on the Western Front in 1915 and went on to affect something on the order of a million soldiers, producing more lost duty days in some sectors than enemy fire. It killed almost nobody, which is exactly why it mattered militarily: men were incapacitated for weeks by fever and shin pain and then relapsed. British and American research committees ran human transmission experiments on volunteers and established the body louse as the vector before the organism was ever cultured."],
-    ["Why quintan", "Classical descriptions recorded fever that returned every five days, counted inclusively in the old Roman fashion, hence quintana. The periodicity is thought to reflect waves of organisms emerging from infected erythrocytes into the plasma. Not every patient shows it, and modern presentations among people who are homeless are more often chronic low-grade bacteremia or endocarditis than textbook relapsing fever, so the name describes a pattern that was clearer in young healthy soldiers than it is in older patients with multiple illnesses."],
-    ["A bacterium that grows blood vessels", "Bacillary angiomatosis produces friable red vascular nodules in skin, bone and viscera that look histologically like a vascular tumor, and in the liver the same process gives blood-filled cystic spaces called peliosis. The mechanism is not inflammation but hijacked signaling: Bep effector proteins injected into endothelial cells block apoptosis and push proliferation, while BadA-driven signaling raises vascular endothelial growth factor. It is one of the clearest examples in bacteriology of a pathogen inducing a tumor-like lesion that regresses with antibiotics."],
-    ["Trench fever came back", "After the Second World War the disease was widely considered extinct. In the 1990s French and American groups reported Bartonella quintana bacteremia and endocarditis in people living on the streets of Marseille, Paris, Seattle and San Francisco, with body louse infestation as the common factor. The organism had never left; the conditions required for its vector had simply returned. It is now sometimes called urban trench fever, and it functions as a microbiological marker of extreme poverty."]] },
-
-{ id: "bartonella-bacilliformis", k: "bact", g: "Bite and zoonotic organisms", nm: "Bartonella bacilliformis", also: "Bartonella bacilliformis, Carrion disease organism, Oroya fever, verruga peruana",
-  cls: "Small motile Gram-negative rod with unipolar flagella, aerobic, highly fastidious, requires blood-enriched media at reduced temperature, facultatively intracellular in erythrocytes and endothelium",
-  plain: "A sandfly-borne bacterium of the Andean valleys that destroys red cells in an acute phase and then raises bleeding red skin nodules months later.",
-  live: "Humans are the principal reservoir, with asymptomatic bacteremic carriers maintaining transmission between outbreaks. A nonhuman reservoir has long been suspected but is not established.",
-  spread: "The bite of female Lutzomyia sandflies, chiefly Lutzomyia verrucarum, which breed in a narrow altitude band in the Andean valleys of Peru, Ecuador and Colombia, roughly between 500 and 3,200 meters. Transfusion-transmitted and congenital cases are reported.",
-  causes: "Two phases. Oroya fever: fever, profound hemolytic anemia with hematocrit values that can fall below ten percent, jaundice, hepatosplenomegaly and transient severe immunosuppression, with secondary salmonellosis, toxoplasmosis and other opportunistic infection, and untreated mortality historically reported above forty percent. Verruga peruana: months later, crops of red, friable, bleeding angiomatous papules and nodules on the face and limbs, which are disfiguring but rarely fatal. Endocarditis and neurologic involvement occur.",
-  mech: "The organism is a dedicated erythrocyte parasite. Flagella and the deformin protein allow it to indent and enter red cells, where it multiplies within vacuoles and inside the cytoplasm, and the parasitized cells are then removed by the spleen, which is the main mechanism of the anemia rather than direct lysis. In endothelial cells it induces proliferation through GroEL and other factors, producing the angiogenic nodules of the chronic phase, and it releases a mitogenic activity historically termed bacillary angiogenic factor. The acute phase suppresses cellular immunity, which explains the characteristic superinfections.",
-  lab: "In Oroya fever the organisms are visible on a Giemsa-stained peripheral blood smear inside and on erythrocytes, which makes this the one Bartonella routinely diagnosed by microscopy, and parasitized red cell counts can be very high. Culture on blood-enriched agar at around 28 degrees Celsius takes one to four weeks. Serology and polymerase chain reaction are used in the chronic phase and in low-level bacteremia, and Warthin-Starry staining demonstrates the organism in verruga tissue.",
-  tx: "Ciprofloxacin, or chloramphenicol combined with a beta-lactam, has been used for Oroya fever in Peruvian practice, with ceftriaxone favored in severe disease and in children, alongside transfusion for the anemia. Treatment of co-existing Salmonella infection is often needed. Verruga peruana responds to rifampin or to a macrolide such as azithromycin over several weeks.",
-  alt: "Doxycycline, with or without rifampin, and azithromycin. Chloramphenicol has a long history here because of its activity against both Bartonella and Salmonella, which is unusual in modern practice and reflects the particular problem of concurrent enteric fever.",
-  res: "Resistance is not well characterized because isolates are rarely tested and the endemic area is small. Treatment failure in verruga peruana and relapsing bacteremia after apparently adequate therapy are described, attributed mainly to the intracellular and intraerythrocytic reservoir rather than to acquired resistance.",
-  prev: "Insecticide-treated bed nets, residual spraying and avoidance of outdoor exposure at dusk in endemic valleys, along with screening of blood donors in endemic regions. Research on vaccines has not produced a licensed product, and control rests on vector measures.",
-  look: "Malaria and babesiosis, which also produce fever with intraerythrocytic organisms on a smear. Other causes of severe hemolytic anemia with fever, including sepsis in a patient with glucose-6-phosphate dehydrogenase deficiency. For the chronic phase, bacillary angiomatosis from B. henselae or B. quintana, pyogenic granuloma, Kaposi sarcoma and cutaneous leishmaniasis, which shares the sandfly vector and the geography.",
-  mem: [["Most-tested fact", "Bartonella bacilliformis causes a biphasic illness: Oroya fever with severe hemolytic anemia, then verruga peruana with vascular skin nodules, and it is transmitted by Lutzomyia sandflies in Andean valleys."],
-    ["Memory trick", "Two faces of Carrion disease: the Oroya railway for the deadly anemia, and verruga, a wart, for the bleeding red nodules that come later."],
-    ["Classic setting", "A traveler or resident in a Peruvian Andean valley with fever, jaundice and a hematocrit of twelve percent, with organisms seen on red cells on a Giemsa smear, followed months later by crops of red nodules on the face."],
-    ["Step focus", "Severe transient immunosuppression during Oroya fever explains the classic concurrent Salmonella infection, which is why historic regimens covered both organisms."]],
-  worm: [["Daniel Carrion's self-experiment", "In 1885 Daniel Alcides Carrion, a Peruvian medical student, argued that the acute fever of the Oroya railway workers and the chronic warts of verruga peruana were the same disease. To prove it he had blood from a verruga nodule inoculated into his own arm. He developed Oroya fever, documented his own course meticulously, and died of it at twenty-eight. The disease carries his name, Peru observes a national day of medicine on the anniversary of his death, and the organism was cultured by Alberto Barton in 1909."],
-    ["A disease defined by altitude", "Transmission is confined to the breeding range of Lutzomyia verrucarum, which occupies warm inter-Andean valleys at intermediate altitude. Below that band and above it the vector does not survive, so the endemic map is a set of ribbons along river valleys rather than a region. Outbreaks have followed road building, migration and climate-driven shifts in sandfly range, including transmission appearing in valleys with no previous history, and that sensitivity to altitude and temperature makes it a watched disease in climate change surveillance."],
-    ["The only Bartonella you can see on a smear", "Most Bartonella infections are diagnosed serologically or molecularly because bacteremia is low grade. In Oroya fever the organism parasitizes a very large fraction of circulating erythrocytes, so Giemsa staining shows red cells studded with small rods, and the smear is both diagnostic and prognostic. The historical consequence is that this species was identified and studied decades before its relatives, and that a Peruvian district hospital with a microscope can make the diagnosis in minutes."],
-    ["Angiogenesis as a bacterial strategy", "Verruga peruana lesions are histologically vascular proliferations, and the organism drives them by acting on endothelial cells rather than by inflaming tissue. The same capability appears across the genus, in bacillary angiomatosis caused by B. henselae and B. quintana. Why a blood-borne bacterium should cause its host to build new capillaries is debated; one proposal is that fresh vascular tissue provides a protected reservoir and a dense supply of the erythrocytes the organism depends on, making the nodules an engineered habitat rather than a symptom."]] },
-
-{ id: "rhodococcus-equi", k: "bact", g: "Bite and zoonotic organisms", nm: "Rhodococcus equi", also: "R. equi, Rhodococcus hoagii, formerly Corynebacterium equi, the foal pneumonia organism",
-  cls: "Aerobic Gram-positive coccobacillus with rod-to-coccus pleomorphism, partially acid fast, catalase positive, nonmotile, mycolic acid in the cell wall, salmon-pink mucoid colonies, facultatively intracellular in macrophages",
-  plain: "A soil bacterium of horse farms that causes slowly cavitating pneumonia in people with weakened cellular immunity.",
-  live: "Soil enriched by herbivore manure, especially horse and foal pasture, where it multiplies in dung. It colonizes the intestinal tract of horses, pigs and cattle, and is a major veterinary pathogen causing pyogranulomatous pneumonia in foals.",
-  spread: "Inhalation of contaminated dust, and less often ingestion or direct wound inoculation. There is no meaningful person-to-person transmission. A substantial minority of human cases report no identifiable animal or farm exposure, so the absence of a horse in the history does not exclude it.",
-  causes: "Subacute cavitary or nodular pneumonia with fever, cough, weight loss and night sweats, developing over weeks, in people with advanced HIV infection, solid organ or stem cell transplants, hematologic malignancy or prolonged glucocorticoid therapy. Bacteremia is frequent. Also brain abscess, lymphadenitis, osteomyelitis, pericarditis, peritonitis in patients on dialysis, endophthalmitis and skin or wound infection, including malakoplakia-like lesions in bowel and bladder.",
-  mech: "It is an intracellular pathogen of macrophages. The virulence-associated protein A, encoded on a plasmid, alters the phagosome so that it fails to acidify and does not fuse properly with lysosomes, allowing the organism to replicate inside the cell it was meant to be killed by. Mycolic acids and trehalose-containing glycolipids in the cell wall resist oxidative killing and lysozyme and account for the partial acid fastness. Cholesterol oxidase, sometimes called equi factor, cooperates with host enzymes to damage membranes. The resulting pyogranulomatous inflammation explains the slow cavitation and the resemblance to tuberculosis and nocardiosis.",
-  lab: "Growth on routine media within two to four days as salmon-pink to coral, mucoid colonies, which is the visual clue. Gram stain shows pleomorphic coccobacilli, and a modified acid-fast stain is often weakly positive, which makes the laboratory think of Nocardia or Mycobacterium first. It is catalase positive, urease positive and nonfermentative, and is frequently misidentified as a contaminating diphtheroid or Micrococcus because it looks like skin flora. Mass spectrometry and 16S sequencing give the definitive answer, and chest imaging typically shows upper lobe nodules or a thick-walled cavity.",
-  tx: "Combination therapy with at least two active agents is used, chosen from a macrolide, rifampin, a fluoroquinolone, vancomycin, a carbapenem or linezolid, with a parenteral induction phase for severe disease followed by prolonged oral therapy, often for several months, and antiretroviral therapy or reduction of immunosuppression is central to cure. Drainage or resection is occasionally needed for a persistent cavity or abscess.",
-  alt: "Aminoglycosides, trimethoprim-sulfamethoxazole, doxycycline and tigecycline have activity in some isolates. Macrolide plus rifampin is the long-standing veterinary and human combination because both penetrate macrophages well, which is the pharmacologic requirement that drives regimen design here.",
-  res: "Beta-lactams other than carbapenems perform poorly in vivo despite sometimes looking active on a plate, and monotherapy is associated with relapse, so resistance here is as much a matter of intracellular location as of enzymes. Macrolide and rifampin resistance has emerged in foal populations where mass prophylaxis was used, and those resistant equine strains have been found in human isolates, a direct veterinary-to-human resistance link.",
-  prev: "Attention to dust exposure on horse farms for people who are severely immunosuppressed, and restoration of cellular immunity where possible, which is the measure that actually changes outcome. Antiretroviral therapy has made the human disease much less common than it was in the 1980s and 1990s. No vaccine exists for humans, and equine prevention relies on management of foaling environments and hyperimmune plasma.",
-  look: "Mycobacterium tuberculosis and nontuberculous mycobacteria, which produce the same upper lobe cavitation in the same patients. Nocardia species, which are also partially acid fast, branching and neurotropic. Cryptococcus and Aspergillus in a nodular or cavitary pattern. Pulmonary malignancy. In the laboratory, Corynebacterium and Micrococcus, both of which this organism is misreported as when colonies are read as skin flora.",
-  mem: [["Most-tested fact", "Salmon-pink mucoid colonies from a partially acid-fast Gram-positive coccobacillus causing cavitary pneumonia in an immunocompromised patient points to Rhodococcus equi."],
-    ["Memory trick", "RHODO means rose: think pink colonies from the horse paddock. It hides inside macrophages, so the drugs chosen are the ones that get inside macrophages."],
-    ["Classic setting", "A kidney transplant recipient or a patient with advanced HIV infection and a low CD4 count presenting with six weeks of fever, weight loss, night sweats and a thick-walled right upper lobe cavity, having worked on a stud farm."],
-    ["Step focus", "Virulence depends on the plasmid-encoded VapA protein, which blocks phagosome acidification, which is why cure requires macrophage-penetrating drugs and recovery of cellular immunity."]],
-  worm: [["A veterinary pathogen that found a new host", "Rhodococcus equi was described in 1923 as the cause of suppurative pneumonia in foals, a leading killer on breeding farms, and for sixty years it was purely a veterinary concern. The first human cases appeared in the 1960s in patients on immunosuppressive drugs, then the numbers rose sharply during the early HIV epidemic. The organism had not changed; the human population had acquired a large group of hosts with impaired macrophage function, which is the only defense that matters against it."],
-    ["A long argument about the name", "The species has been shuffled between genera and names repeatedly: Corynebacterium equi, then Rhodococcus equi, and more recently a proposal that nomenclatural priority requires Rhodococcus hoagii. Clinical and veterinary literature has largely declined to follow, and most laboratories still report R. equi. The practical consequence is that a search for the organism or a guideline reference can miss material filed under the other name, which is a minor but real hazard in a disease rare enough that most clinicians will read the literature rather than recall it."],
-    ["How a plasmid makes a pathogen", "Virulent isolates carry a plasmid encoding VapA and related proteins. Lose the plasmid and the organism becomes an ordinary soil bacterium unable to survive in macrophages, and plasmid-free strains cause no disease in foals. VapA acts inside the phagosome to prevent acidification, holding the compartment at a pH where the organism grows comfortably. It is one of the cleanest demonstrations available that virulence can sit on a mobile genetic element rather than in the core genome."],
-    ["Resistance that started in horses", "From the 1990s onward many breeding farms treated or prophylaxed foals with a macrolide plus rifampin, often for weeks and often across whole crops of animals. Macrolide-resistant R. equi emerged in those populations and spread within farm soil. Human isolates carrying the same resistance determinants have since been reported. It is a well-documented instance of agricultural antibiotic use narrowing the human treatment options for a specific organism, in a disease where only a handful of drug combinations work at all."]] }
-);
-
-MICRO.push(
-{ id: "haemophilus-parainfluenzae", k: "bact", g: "HACEK and endocarditis organisms", nm: "Haemophilus parainfluenzae", also: "H. parainfluenzae, the H of HACEK",
-  cls: "Small pleomorphic Gram-negative rod, facultative anaerobe, requires V factor (nicotinamide adenine dinucleotide) but not X factor (hemin), oxidase positive, catalase variable, satellites around Staphylococcus aureus on blood agar",
-  plain: "A mouth bacterium that needs only one of the two growth factors its famous relative needs, and that occasionally settles on a heart valve.",
-  live: "The normal oropharyngeal flora of nearly all humans, where it outnumbers Haemophilus influenzae, and it is also found in dental plaque and the upper respiratory tract. There is no animal or environmental reservoir.",
-  spread: "Endogenous. It reaches the bloodstream across injured oral mucosa during dental disease, dental procedures or ordinary chewing and brushing, and from there lands on an abnormal valve. Respiratory spread occurs between people but rarely matters, since nearly everyone is already colonized.",
-  causes: "Subacute infective endocarditis, usually on a previously abnormal, bicuspid or prosthetic valve, with large friable vegetations and a notable rate of embolic events. Also bacteremia, brain abscess, empyema, biliary tract infection, septic arthritis, urethritis and, in people with structural lung disease, bronchitis and pneumonia. It is the commonest Haemophilus species recovered in HACEK endocarditis.",
-  mech: "Virulence is modest and adhesion based. Fimbriae and outer membrane proteins mediate attachment to oral epithelium and to fibrin-platelet deposits on damaged endothelium, and the organism aggregates platelets, which enlarges the vegetation it sits in. It has no polysaccharide capsule of the kind that makes H. influenzae type b invasive, which is precisely why it is a commensal with occasional endovascular opportunism rather than a cause of meningitis and epiglottitis. Its IgA protease and biofilm formation support persistence on mucosa.",
-  lab: "It grows on chocolate agar but not on plain sheep blood agar unless a V factor source is present, so it satellites around a streak of Staphylococcus aureus, and the X and V factor disk test, requiring V alone, is the classic separation from H. influenzae, which needs both. Modern laboratories use mass spectrometry or the porphyrin test rather than factor disks. In suspected endocarditis, automated blood culture systems now detect HACEK organisms within the standard five-day protocol in the large majority of cases, so the older teaching that cultures must be held for weeks no longer holds.",
-  tx: "Ceftriaxone is first line for HACEK endocarditis, given for four weeks on a native valve and six weeks on a prosthetic valve, and it has the practical advantage of once-daily outpatient administration.",
-  alt: "Ampicillin for a beta-lactamase negative isolate, ampicillin-sulbactam, a fluoroquinolone such as ciprofloxacin or levofloxacin for patients who cannot take beta-lactams, and a carbapenem. Aminoglycoside addition is no longer routinely recommended for HACEK endocarditis.",
-  res: "Beta-lactamase production, usually TEM-1, occurs in a minority of isolates and removes ampicillin as an empiric option, which is the main reason a third-generation cephalosporin became standard. Resistance to trimethoprim-sulfamethoxazole and to tetracyclines is reported, and isolates with reduced beta-lactam susceptibility through altered penicillin-binding proteins exist but remain uncommon.",
-  prev: "Dental hygiene and treatment of periodontal disease, which addresses the source. Antibiotic prophylaxis before dental procedures is restricted to patients at the highest cardiac risk, and amoxicillin, the usual prophylactic agent, covers this organism. No vaccine exists, and the conjugate vaccine against H. influenzae type b gives no protection here, since this species is unencapsulated.",
-  look: "Haemophilus influenzae, which requires both X and V factors. The other HACEK organisms, which share the clinical picture. Viridans streptococci, the commonest cause of subacute native valve endocarditis, which are Gram-positive. Coxiella burnetii, Bartonella and Tropheryma whipplei in genuinely culture negative endocarditis. Enterococci on a prosthetic valve.",
-  mem: [["Most-tested fact", "H. parainfluenzae needs V factor only, while H. influenzae needs both X and V factors, and it is the H in the HACEK group of endocarditis organisms."],
-    ["Memory trick", "HACEK: Haemophilus parainfluenzae, Aggregatibacter, Cardiobacterium, Eikenella, Kingella. Para needs only one factor, so remember PARA for PARtial requirement."],
-    ["Classic setting", "Several weeks of low-grade fever, fatigue and weight loss in an adult with a bicuspid aortic valve and untreated dental caries, with a large vegetation on echocardiography and a peripheral embolus."],
-    ["Step focus", "Ceftriaxone is the reference treatment for HACEK endocarditis, and the belief that these organisms require prolonged culture is largely historical with modern blood culture systems."]],
-  worm: [["An acronym built out of a shared habit", "HACEK was coined in the 1960s and 1970s to group fastidious Gram-negative organisms that lived in the mouth, grew slowly in carbon dioxide and caused endocarditis on damaged valves. The members are not closely related to each other taxonomically, and the grouping has survived purely because the clinical problem and the treatment are the same across all of them. Taxonomy has since moved several members into new genera, which is why the letters no longer map neatly onto current names."],
-    ["The misleading name of the whole genus", "Haemophilus means blood-loving, which describes the X and V factor requirement rather than any taste for the bloodstream, and influenzae records the mistaken belief, held during the 1890 pandemic, that H. influenzae caused influenza. So the species name of this organism contains an error about a virus, and the genus name contains a laboratory detail. Richard Pfeiffer isolated the bacterium from influenza patients in 1892, and it took forty years and the isolation of influenza virus to correct him."],
-    ["Why cultures are no longer held for weeks", "Classic teaching held that HACEK endocarditis required blood cultures incubated for two to four weeks, and that teaching came from the era of manual bottles examined by eye. Studies of modern continuously monitored systems found that essentially all HACEK isolates flag within five days, with a median of around three. Extended incubation is now reserved for specific questions, and persistently negative cultures in suspected endocarditis point toward Coxiella, Bartonella, Tropheryma or prior antibiotic exposure rather than toward a slow-growing HACEK organism."],
-    ["A commensal that outnumbers its pathogenic cousin", "Sampling of healthy adult throats recovers H. parainfluenzae far more often than H. influenzae, and it is among the more abundant members of the oral and salivary microbiome. Its genome lacks the capsule locus that makes H. influenzae type b invasive. The result is a pair of species sharing a genus and a habitat in which one caused a major pediatric killer eliminated by vaccination, and the other has spent the same period as an abundant harmless resident with an occasional appetite for a scarred valve."]] },
-
-{ id: "aggregatibacter-actinomycetemcomitans", k: "bact", g: "HACEK and endocarditis organisms", nm: "Aggregatibacter actinomycetemcomitans", also: "A. actinomycetemcomitans, Aa, formerly Actinobacillus actinomycetemcomitans, the A of HACEK",
-  cls: "Small nonmotile Gram-negative coccobacillus, capnophilic facultative anaerobe, catalase positive, oxidase variable, forms adherent colonies with an internal star-shaped figure on agar",
-  plain: "A mouth bacterium that destroys the bone around teeth in young people and can also infect a damaged heart valve.",
-  live: "Human dental plaque and the subgingival pocket, with detection in a minority of healthy mouths and in a much larger proportion of people with aggressive periodontitis. It is also found in the oral cavity of some primates. Family members of colonized individuals are frequently colonized by the same strain.",
-  spread: "Within households and between intimate contacts through saliva, and endogenously from the periodontal pocket into the bloodstream during dental disease, scaling or extraction.",
-  causes: "Localized aggressive periodontitis in adolescents and young adults, with rapid vertical bone loss around incisors and first molars and surprisingly little plaque or inflammation visible. Also HACEK infective endocarditis with large vegetations and a high embolic and surgical rate, brain and lung abscess, soft tissue and bone infection of the head and neck, endophthalmitis and prosthetic device infection. Its old species name records its historic recovery alongside Actinomyces in actinomycotic lesions.",
-  mech: "It makes leukotoxin A, a repeats-in-toxin cytolysin that kills human neutrophils and monocytes by targeting lymphocyte function-associated antigen 1, and the highly leukotoxic JP2 clone, which carries a deletion in the leukotoxin promoter and so overproduces the toxin, is strongly associated with severe early bone loss in people of West African descent. A cytolethal distending toxin arrests host cells in the cell cycle. Fimbriae, the extracellular matrix protein adhesin EmaA and tight biofilm formation anchor it in the periodontal pocket and on valve endothelium, and it invades gingival epithelial cells, which shelters it from both antibiotics and mechanical debridement.",
-  lab: "It needs carbon dioxide and grows slowly, forming small adherent colonies that often show a central star or crossed-cigar figure under low magnification, which is the classic morphologic clue. Selective media containing bacitracin and vancomycin are used for periodontal sampling, and identification is by mass spectrometry or sequencing. In endocarditis, routine automated blood cultures usually turn positive within five days, and polymerase chain reaction on a resected valve is used when cultures are negative after antibiotics.",
-  tx: "Ceftriaxone for HACEK endocarditis, four weeks on a native valve and six on a prosthetic valve. Periodontal disease is managed by mechanical debridement, with systemic amoxicillin plus metronidazole as the widely used adjunct, because mechanical therapy alone does not reach organisms that have invaded epithelium.",
-  alt: "Ampicillin-sulbactam, a fluoroquinolone, or a carbapenem for endocarditis. Doxycycline and azithromycin are used in periodontal regimens, and tetracycline has the additional property of concentrating in gingival fluid.",
-  res: "Beta-lactamase production is uncommon but reported, and it removes ampicillin as a reliable choice. The organism is intrinsically poorly susceptible to metronidazole as a single agent, which is part of the rationale for combining metronidazole with amoxicillin in periodontics rather than using either alone. Reduced susceptibility to tetracyclines and macrolides occurs after repeated courses.",
-  prev: "Periodontal screening of adolescents in affected families, since household transmission of the same strain is well documented, and mechanical plaque control with early treatment of bone loss. Antibiotic prophylaxis before dental work is restricted to patients at highest cardiac risk. No vaccine exists.",
-  look: "Other causes of aggressive periodontitis including Porphyromonas gingivalis and Tannerella forsythia. In endocarditis, the remaining HACEK organisms, viridans streptococci and Streptococcus gallolyticus. In the head and neck, Actinomyces israelii, which it historically accompanied, and Nocardia. Papillon-Lefevre syndrome, leukocyte adhesion deficiency and cyclic neutropenia in a young person with severe early bone loss.",
-  mem: [["Most-tested fact", "Aggregatibacter actinomycetemcomitans causes localized aggressive periodontitis in adolescents and is the A of the HACEK endocarditis group, and its leukotoxin kills neutrophils."],
-    ["Memory trick", "Actinomycetem-comitans means accompanying the Actinomyces, which is where it was first found. Look for the star in the center of the colony."],
-    ["Classic setting", "A fifteen-year-old with deep pockets and vertical bone loss around the incisors and first molars on radiograph, with minimal plaque, and a family history of early tooth loss."],
-    ["Step focus", "The JP2 clone overproduces leukotoxin because of a promoter deletion, which links a single genetic change to a severe clinical phenotype with a strong geographic and ancestral distribution."]],
-  worm: [["A name that records where it was found, not what it does", "Klinger described the organism in 1912 from actinomycotic lesions, where it was growing alongside Actinomyces, and named it for that company: actinomycetem comitans, accompanying the Actinomyces. It was placed in Actinobacillus for most of the twentieth century and moved to a new genus, Aggregatibacter, in 2006 on genetic grounds, the name referring to its habit of aggregating with other bacteria. Three names, none of which mentions periodontitis, which is what it is famous for."],
-    ["The JP2 clone and a question of ancestry", "In the 1980s a strain with a 530 base pair deletion in the leukotoxin promoter was isolated and labeled JP2. The deletion removes a repressive element, so the organism makes far more leukotoxin. Carriage of JP2 predicts rapid attachment loss in longitudinal studies of adolescents, and the clone is found overwhelmingly in individuals of West African descent, in Africa and in diaspora populations. Genomic dating suggests it arose in the Mediterranean region around two thousand years ago and traveled with human migration."],
-    ["Periodontitis as an infection with a host component", "For most of the twentieth century gum disease was explained by plaque accumulation and poor hygiene. Localized aggressive periodontitis undermined that account: the bone loss is severe, the plaque often minimal, the pattern symmetrical around specific teeth, and it clusters in families. The combination of a leukotoxin-producing organism and a susceptible neutrophil response produced the modern view, in which specific bacteria plus host immune characteristics determine who loses bone, and mechanical cleaning alone cannot resolve it."],
-    ["Why the colonies have stars in them", "Grown on agar under carbon dioxide, this organism forms small translucent colonies that stick firmly to the surface, and under transmitted light a dense internal figure resembling a four- or six-pointed star or a crossed cigar is visible. The figure arises from the organism's aggregating growth pattern within the colony. It is one of a small set of bacteria identifiable to genus by naked-eye colony morphology, which was useful in the decades before mass spectrometry and remains a satisfying bedside laboratory observation."]] },
-
-{ id: "cardiobacterium-hominis", k: "bact", g: "HACEK and endocarditis organisms", nm: "Cardiobacterium hominis", also: "C. hominis, the C of HACEK",
-  cls: "Pleomorphic Gram-negative rod with bulbous ends and rosette clustering, capnophilic facultative anaerobe, oxidase positive, catalase negative, indole positive, nonmotile",
-  plain: "A mouth bacterium named for the heart, because the valve is almost the only place it causes disease.",
-  live: "The normal flora of the human nose, mouth and throat, and of the gastrointestinal tract in some people. Carriage is common and causes no symptoms, and there is no animal reservoir.",
-  spread: "Endogenous translocation across oral or upper gastrointestinal mucosa, frequently after dental manipulation or in the presence of periodontal disease, followed by seeding of an abnormal valve.",
-  causes: "Infective endocarditis, which accounts for the overwhelming majority of all reported isolates of this organism, chiefly on the aortic or mitral valve and often on a previously abnormal or prosthetic valve. The course is subacute, with weeks to months of fever, weight loss and anemia, large vegetations, a high rate of embolic events including cerebral emboli and mycotic aneurysm, and frequent need for valve surgery. Rare reports describe meningitis, peritonitis, bacteremia without endocarditis and prosthetic joint infection.",
-  mech: "Virulence factors are poorly defined, which is a consistent theme across the HACEK group. Adherence to fibrin-platelet material on damaged endothelium, platelet aggregation and biofilm formation on valve tissue appear to be the essential capacities, and the organism grows slowly within the vegetation where phagocytes penetrate poorly. There is no identified exotoxin and no capsule of established significance, so tissue destruction is a consequence of the mechanical vegetation and of local inflammation rather than of toxin activity, which fits an indolent clinical course punctuated by embolic rather than septic catastrophes.",
-  lab: "Gram stain shows pleomorphic rods with one bulbous end, often in rosettes, teardrops or palisades, and the morphology is distinctive enough to suggest the genus. Growth needs increased carbon dioxide and humidity on blood or chocolate agar, is slow, and may take several days, although modern blood culture systems typically flag it within the standard five-day window. It is oxidase positive, catalase negative and indole positive, and the weak indole reaction requires xylene extraction to read. Mass spectrometry and 16S sequencing are now the usual means of identification.",
-  tx: "Ceftriaxone for four weeks on a native valve and six weeks on a prosthetic valve, in line with HACEK endocarditis recommendations generally.",
-  alt: "Ampicillin for a beta-lactamase negative isolate, ampicillin-sulbactam, a fluoroquinolone for patients unable to take beta-lactams, or a carbapenem. Valve replacement is required in a substantial minority because of large vegetations, embolism or valve destruction.",
-  res: "Beta-lactamase production is rare in this species, rarer than among Haemophilus and Aggregatibacter isolates, and most strains remain ampicillin susceptible. Because isolates are so uncommon, systematic susceptibility data are thin, and empiric therapy relies on the group recommendation rather than on species-specific surveillance.",
-  prev: "Oral hygiene and treatment of dental disease, with antibiotic prophylaxis before dental procedures limited to patients at highest cardiac risk. No vaccine exists.",
-  look: "The other HACEK organisms, especially Aggregatibacter and Haemophilus parainfluenzae, which share the clinical picture and the treatment. Viridans streptococci in subacute native valve endocarditis. Coxiella burnetii, Bartonella and Tropheryma whipplei when cultures remain negative. In the laboratory, Capnocytophaga and Dysgonomonas, which are also fastidious pleomorphic Gram-negative rods.",
-  mem: [["Most-tested fact", "Cardiobacterium hominis is essentially a cause of endocarditis and little else, and it is the C of the HACEK group."],
-    ["Memory trick", "CARDIO-bacterium of HOMINIS: a bacterium of the human heart. On the Gram stain look for rosettes of rods with one swollen end."],
-    ["Classic setting", "Two months of malaise, low-grade fever and weight loss in a man with a known bicuspid aortic valve, culminating in a stroke from an embolized vegetation."],
-    ["Step focus", "Large vegetations and a high embolic rate characterize HACEK endocarditis, and ceftriaxone is the reference therapy for all members of the group."]],
-  worm: [["A genus with a clinical name", "Most bacteria are named for a discoverer, a place or a shape. Cardiobacterium was named in 1964 by Tucker and colleagues for the organ it infects, which is unusual and slightly circular: the organism lives in the mouth and the name describes only the rare complication. The species epithet hominis, of humans, adds that this is a human organism without an animal reservoir. A second species, Cardiobacterium valvarum, was described in 2004 and also causes endocarditis, so the pattern holds across the genus."],
-    ["Why mycotic aneurysm turns up so often", "HACEK endocarditis builds unusually large and friable vegetations over weeks, and Cardiobacterium hominis is among the worst offenders. Fragments embolize, lodge in arterial walls, and the infected wall weakens into a mycotic aneurysm, most consequentially in the cerebral circulation. Reported series describe cerebral aneurysm and intracranial hemorrhage as presenting events. The practical result is that imaging of the brain vasculature is often considered in these patients even when the neurological examination is normal."],
-    ["The rosette on the slide", "Laboratory descriptions of this organism emphasize a pattern rarely seen in other Gram-negative rods: cells with one rounded swollen end arranged in clusters radiating from a central point, like a rosette or a bunch of teardrops. Before molecular identification, that appearance combined with slow capnophilic growth from the blood of a patient with subacute endocarditis was close to diagnostic. Mass spectrometry has made the skill unnecessary, but the morphology is still used as a teaching image."],
-    ["Rare organism, well-defined disease", "There are only a few hundred reported cases of Cardiobacterium hominis infection in the entire literature, and over ninety percent of them are endocarditis. That makes it an unusual situation in infectious disease: a pathogen whose clinical spectrum is essentially a single syndrome, with well-characterized features, because every case that has ever been published describes the same illness. The flip side is that the handful of non-endocarditis reports carry disproportionate weight, and basic questions about its virulence remain unanswered."]] },
-
-{ id: "eikenella-corrodens", k: "bact", g: "HACEK and endocarditis organisms", nm: "Eikenella corrodens", also: "E. corrodens, the E of HACEK, formerly Bacteroides corrodens",
-  cls: "Small nonmotile Gram-negative rod, facultative anaerobe requiring hemin and carbon dioxide, oxidase positive, catalase negative, asaccharolytic, colonies pit or corrode the agar surface",
-  plain: "A mouth bacterium that pits the surface of agar plates and that causes infection after human bites and in people who inject drugs licked from a needle.",
-  live: "Human dental plaque, gingival crevice and oropharynx, and the upper respiratory and genital tract in some people. It is a normal commensal with no animal or environmental reservoir of note.",
-  spread: "Endogenous from the mouth, and inoculation from one person's mouth into another's tissue. Human bite wounds and clenched fist injuries to the knuckle are the classic routes, as is needle licking before injection, and dental procedures seed the bloodstream.",
-  causes: "Human bite and clenched fist infections, including septic arthritis and osteomyelitis of the metacarpophalangeal joint. Head and neck infection including dental and periodontal abscess, sinusitis, cervical and submandibular abscess, and brain abscess, often polymicrobial with viridans streptococci. HACEK infective endocarditis, cellulitis and endocarditis in people who inject drugs, chest and lung infection after aspiration, and chorioamnionitis. It also appears in periodontal disease, particularly in people with neutrophil disorders.",
-  mech: "The organism is adhesive rather than destructive. Type IV pili mediate twitching motility, autoaggregation and adherence to epithelium and to fibrin-platelet material, and they also appear responsible for the corroding of agar. Lipopolysaccharide drives inflammation, and it synergizes markedly with other oral organisms, particularly viridans streptococci, in mixed abscesses, where each organism supports the growth of the other. It has no classic exotoxin, and the clinical severity of knuckle infections owes more to the anatomy of the closed joint space inoculated by a tooth than to organism virulence.",
-  lab: "Growth requires hemin and increased carbon dioxide, and colonies characteristically pit or corrode the agar beneath them and may have a faint bleach-like odor. It is oxidase positive, catalase negative and does not ferment carbohydrates, and it reduces nitrate. Importantly it is resistant to clindamycin, which is sometimes used as a laboratory clue, and that intrinsic resistance is the clinically relevant fact. Mass spectrometry identifies it readily, and routine blood culture systems recover it within the standard incubation period.",
-  tx: "Amoxicillin-clavulanate for bite and hand infection, since it covers this organism along with oral streptococci and anaerobes, and ampicillin-sulbactam when parenteral therapy is needed. Ceftriaxone for HACEK endocarditis for four to six weeks. Clenched fist injuries with joint penetration need surgical exploration and washout.",
-  alt: "Doxycycline, a fluoroquinolone, trimethoprim-sulfamethoxazole or a third-generation cephalosporin. A carbapenem for severe polymicrobial infection.",
-  res: "It is intrinsically resistant to clindamycin, metronidazole, erythromycin and the aminoglycosides, which is the single most important practical point, because clindamycin is otherwise a standard choice for bite wounds and oral infection and would leave this organism uncovered. Beta-lactamase production is uncommon but reported, making amoxicillin-clavulanate a safer empiric choice than amoxicillin alone.",
-  prev: "Irrigation, exploration and radiography of clenched fist injuries over the metacarpophalangeal joints, with wounds generally left open, prophylactic amoxicillin-clavulanate for human bites, and tetanus and bloodborne virus assessment. Dental hygiene reduces the oral reservoir. No vaccine exists.",
-  look: "Pasteurella multocida after animal bites, Staphylococcus aureus and group A streptococcus in bite wounds generally, and oral anaerobes such as Fusobacterium and Prevotella, which usually accompany it. In endocarditis, the other HACEK organisms. Capnocytophaga species from the human mouth. Actinomyces in chronic head and neck infection.",
-  mem: [["Most-tested fact", "Eikenella corrodens is the human bite and clenched fist organism, and it is intrinsically resistant to clindamycin, so amoxicillin-clavulanate is the drug that covers it."],
-    ["Memory trick", "CORRODENS corrodes the agar. Human bite equals Eikenella; animal bite equals Pasteurella. Clindamycin misses both."],
-    ["Classic setting", "A swollen, draining wound over the knuckle of a man who punched someone in the mouth three days earlier, with the joint capsule breached on exploration."],
-    ["Step focus", "Clenched fist injuries drive tooth flora into the metacarpophalangeal joint, so infection reaches joint and tendon sheath, and the antibiotic chosen has to cover an organism that is resistant to clindamycin."]],
-  worm: [["Pits in the plate", "Grown on blood agar, this organism produces small colonies that sink into the medium, leaving a visible depression if the colony is scraped away, and the corroded appearance gave it the species name. The mechanism is linked to its type IV pili and twitching motility, which drag the colony across and into the agar surface. It was originally filed as Bacteroides corrodens on the mistaken assumption that it was an obligate anaerobe, and separated out as Eikenella in 1972, named for the Dutch microbiologist Marinus Eiken."],
-    ["The fight bite", "A clenched fist striking a tooth produces a small laceration over the metacarpophalangeal joint. With the fist clenched, the extensor tendon and joint capsule sit directly beneath the skin, so the tooth penetrates them. The hand then opens, the tendon slides proximally, and the contaminated tract is sealed under intact skin in a different position. Hand surgeons treat this as a surgical emergency, because an untreated septic metacarpophalangeal joint can destroy the articular surface within days."],
-    ["Synergy with the streptococci next door", "In mixed oral infections this organism and viridans streptococci grow better together than either does alone, an effect demonstrated in both animal models and tissue culture. The streptococci supply metabolites and alter the local environment in ways that favor Eikenella, and the combination produces larger abscesses. Mixed cultures from head and neck and brain abscesses reflect this, and it is a reason why narrow-spectrum therapy aimed at a single isolate from a polymicrobial collection tends to disappoint."],
-    ["The needle lickers", "Case series from the 1970s and 1980s described Eikenella corrodens cellulitis, septic arthritis and endocarditis in people who injected drugs, and the shared behavior was licking the needle or the injection site beforehand, transferring oral flora directly into the vein or soft tissue. The same route explains occasional cases involving other mouth organisms. It is a useful illustration that the microbiology of injection-related infection follows the specific mechanics of the injection, not only the drug."]] }
-);
-
-MICRO.push(
-{ id: "kingella-kingae", k: "bact", g: "HACEK and endocarditis organisms", nm: "Kingella kingae", also: "K. kingae, the K of HACEK, formerly Moraxella kingae, Moraxella kingii",
-  cls: "Short Gram-negative coccobacillus in pairs and short chains with squared ends, facultative anaerobe, oxidase positive, catalase negative, beta-hemolytic on blood agar, capnophilic",
-  plain: "A throat bacterium of toddlers that is the commonest cause of bone and joint infection in children under four.",
-  live: "The posterior pharynx of young children, with carriage rising after about six months of age and peaking in the toddler years at perhaps ten to twelve percent in day care populations. Carriage is uncommon in adults and in infants under six months, who are protected by maternal antibody.",
-  spread: "Person to person by respiratory secretions and saliva among young children, with documented day care outbreaks and clusters of invasive disease. Invasive infection follows breaches in pharyngeal mucosa, so viral upper respiratory infection and stomatitis are recognized precipitants, after which the organism enters the bloodstream and seeds bone, joint or endocardium.",
-  causes: "Septic arthritis, osteomyelitis, spondylodiscitis and osteochondritis in children between about six months and four years, where it now rivals or exceeds Staphylococcus aureus in several European and Israeli series. Also occult bacteremia with a deceptively well-appearing child, endocarditis in both children and adults with a high complication rate, and rarely meningitis, endophthalmitis and pneumonia. The illness is often strikingly mild in its laboratory markers, with normal or near-normal white cell count and C-reactive protein.",
-  mech: "Type IV pili mediate adherence to respiratory epithelium and to synovium and are required for colonization. It produces a potent RTX-family cytotoxin, RtxA, which kills respiratory epithelial cells, synovial cells, macrophages and osteoblasts and is essential for invasion, and a polysaccharide capsule plus exopolysaccharide that resist complement and allow survival in blood. The combination of a toxin that breaches epithelium and a capsule that permits bacteremia explains an organism that is a harmless throat resident until a viral infection opens the door.",
-  lab: "It grows on blood and chocolate agar in carbon dioxide with small beta-hemolytic colonies that may pit the agar, is oxidase positive and catalase negative, which separates it from Neisseria and Moraxella. Recovery from joint fluid on solid media is poor, and inoculating synovial fluid or bone aspirate directly into a blood culture bottle markedly improves yield. Polymerase chain reaction targeting rtxA on joint fluid has substantially increased detection and is now the main reason the organism is recognized as a leading pediatric pathogen rather than a curiosity.",
-  tx: "A beta-lactam is the mainstay: cefazolin, ceftriaxone or ampicillin for susceptible isolates, with a short parenteral course followed by oral therapy for bone and joint infection, and a total course considerably shorter than for staphylococcal disease. Ceftriaxone for four to six weeks is used in endocarditis.",
-  alt: "Amoxicillin-clavulanate or a second- or third-generation cephalosporin orally, and a fluoroquinolone where beta-lactams cannot be used. Joint washout is needed less often than in staphylococcal arthritis, though hip involvement is still generally drained.",
-  res: "Most isolates are susceptible to penicillins and cephalosporins, and beta-lactamase production is reported at low rates that vary by region, in some surveys reaching a few percent, which is enough to favor an inhibitor combination or a cephalosporin empirically. It is intrinsically resistant to vancomycin and clindamycin, which matters because empiric therapy for pediatric bone and joint infection aimed at methicillin-resistant Staphylococcus aureus would miss it entirely.",
-  prev: "No vaccine exists. Hand hygiene and management of day care outbreaks, with prophylaxis for contacts considered after clusters of invasive disease. The main preventive gain has been diagnostic: recognizing the organism avoids prolonged inappropriate antistaphylococcal therapy.",
-  look: "Staphylococcus aureus, the other main cause of pediatric septic arthritis, which produces more toxic-looking children with higher inflammatory markers. Streptococcus pyogenes and Streptococcus pneumoniae. Haemophilus influenzae type b, which caused this syndrome before conjugate vaccination. Transient synovitis of the hip, which is the commonest alternative to septic arthritis in a limping toddler, and in sickle cell disease, Salmonella osteomyelitis and bone infarction.",
-  mem: [["Most-tested fact", "Kingella kingae is a leading cause of septic arthritis and osteomyelitis in children aged six months to four years, and inflammatory markers are often normal."],
-    ["Memory trick", "The KING of the toddler joint. It is beta-hemolytic, oxidase positive and catalase negative, and it is resistant to vancomycin, so empiric MRSA cover misses it."],
-    ["Classic setting", "An eighteen-month-old in day care who stops weight bearing after a few days of mouth ulcers and runny nose, is afebrile or barely febrile with a normal white cell count, and has joint fluid that is culture negative on plates but positive by polymerase chain reaction."],
-    ["Step focus", "Inoculating joint fluid into blood culture bottles and using nucleic acid amplification dramatically raises detection, which is why this organism was considered rare for decades."]],
-  worm: [["An organism that became common by being looked for", "Kingella kingae was described by Elizabeth King in the 1960s and considered a rare and mostly incidental isolate for thirty years. Then laboratories began putting pediatric joint fluid into blood culture bottles instead of only onto agar, and later applying polymerase chain reaction for the rtxA gene. Detection rates transformed. In several Israeli, French and Swiss series it is now the single commonest cause of osteoarticular infection in young children. The epidemiology did not change; the microbiology did."],
-    ["Why the child looks too well", "Compared with staphylococcal septic arthritis, Kingella disease produces lower fevers, lower white cell counts and lower C-reactive protein, and children are often described as well-appearing despite refusing to use a limb. The organism lacks the broad tissue-destroying arsenal of S. aureus, and its cytotoxin is narrowly targeted. The clinical consequence is uncomfortable: the usual decision rules for septic arthritis, built on inflammatory markers, perform poorly, and a reassuringly normal blood panel does not settle the question in a toddler who will not walk."],
-    ["A disease with a narrow window", "Carriage is essentially absent before six months, when maternal antibody persists, rises through the toddler years and falls away by school age, and invasive disease follows the same curve almost exactly. Infection also clusters in the weeks after viral upper respiratory illness or stomatitis, when the pharyngeal barrier is damaged. Few bacterial diseases have such a tightly bounded age and seasonal profile, and it makes the age of the child one of the most informative pieces of data in the whole presentation."],
-    ["Shorter courses and fewer operations", "Because the organism responds briskly to beta-lactams and destroys cartilage less aggressively, treatment practice diverged from the staphylococcal template. Series report successful outcomes with short intravenous courses followed by oral therapy for two to three weeks in total, and with aspiration rather than formal arthrotomy for many joints. This is one of the clearer modern examples of pathogen identification changing not only the drug but the duration and the need for surgery."]] },
-
-{ id: "abiotrophia-defectiva", k: "bact", g: "HACEK and endocarditis organisms", nm: "Abiotrophia defectiva", also: "A. defectiva, nutritionally variant streptococcus, nutritionally deficient streptococcus, formerly Streptococcus defectivus",
-  cls: "Gram-positive coccus in chains, catalase negative, facultative anaerobe, satellites around Staphylococcus aureus because it requires pyridoxal (vitamin B6) or L-cysteine, alpha-hemolytic or nonhemolytic when grown with supplementation",
-  plain: "A mouth streptococcus-like organism that cannot grow on an ordinary plate without added vitamin B6, so it was long mistaken for culture negative endocarditis.",
-  live: "The human oral cavity, especially dental plaque and the gingival crevice, and also the intestinal and genitourinary tract. It is a commensal in most people.",
-  spread: "Endogenous, entering the bloodstream across injured oral mucosa during dental disease or manipulation, and in the eye by direct inoculation during surgery or trauma.",
-  causes: "Infective endocarditis, which is its signature disease, with a notably high rate of embolic events, valve destruction, heart failure, relapse and need for surgery, and a reputation for being harder to cure than viridans streptococcal endocarditis. Also post-operative and post-traumatic endophthalmitis and keratitis, brain abscess, septic arthritis, osteomyelitis, pancreatic and breast abscess, and bacteremia in neutropenic patients with mucositis.",
-  mech: "Virulence centers on adhesion and on growth within vegetations. It binds fibronectin on damaged valve endothelium, produces exopolysaccharide and forms biofilm, which both anchors it and shelters it. Its dependence on pyridoxal reflects a defect in cysteine biosynthesis, and the thiol requirement is met in vivo by host tissue, so the nutritional handicap that cripples it on an agar plate is irrelevant inside a human. Tolerance to penicillin, meaning inhibition without killing, is common and is thought to underlie the high relapse rate, which is the reason combination therapy is favored.",
-  lab: "It grows in blood culture broth, which contains the necessary thiols, but fails to subculture onto blood agar, producing the classic picture of a broth that is positive and a plate that stays sterile. Growth appears as satellite colonies around a streak of Staphylococcus aureus or on media supplemented with pyridoxal or cysteine. It is catalase negative and PYR positive, and identification is by mass spectrometry or 16S sequencing, which also separates Abiotrophia from Granulicatella, a split made in 1995 and 2000 on genetic grounds.",
-  tx: "Penicillin or ampicillin combined with gentamicin for the first two weeks, continued as a beta-lactam for four to six weeks, following the regimen used for enterococcal and for relatively resistant streptococcal endocarditis rather than the simpler regimen used for viridans streptococci. Ceftriaxone is used for susceptible isolates. Valve surgery is required in a large fraction of cases.",
-  alt: "Vancomycin, with or without gentamicin, for penicillin allergy or for resistant isolates, and vancomycin plus rifampin has been used in relapse. Intravitreal antibiotics with vitrectomy for endophthalmitis.",
-  res: "Reduced penicillin susceptibility is common, with a substantial minority of isolates intermediate or resistant, and penicillin tolerance, in which the organism is inhibited but not killed, is frequent. Macrolide and clindamycin resistance occurs. This profile, rather than the nutritional quirk, is what makes the organism clinically troublesome, and it drives the use of synergistic aminoglycoside therapy.",
-  prev: "Dental hygiene and treatment of periodontal disease, with procedural prophylaxis restricted to patients at highest cardiac risk. Standard antisepsis in ocular surgery. No vaccine exists.",
-  look: "Granulicatella species, its close relative, which share the nutritional requirement and the clinical picture. Viridans streptococci, which grow freely on blood agar and respond better to treatment. Enterococci, whose endocarditis regimen resembles the one used here. Coxiella burnetii, Bartonella and Tropheryma whipplei, the organisms responsible for endocarditis that is genuinely culture negative rather than merely difficult to subculture.",
-  mem: [["Most-tested fact", "Abiotrophia defectiva is a nutritionally variant streptococcus that grows in blood culture broth but not on subculture, and it satellites around Staphylococcus aureus because it needs pyridoxal."],
-    ["Memory trick", "ABIOTROPHIA means life-nourishment deficiency, and DEFECTIVA says it is defective: it cannot make what it needs. B6 or bust."],
-    ["Classic setting", "A man with mitral valve prolapse and poor dentition with two months of fever, a positive blood culture bottle that yields nothing on the plate, and a large mitral vegetation with new regurgitation."],
-    ["Step focus", "Penicillin tolerance and reduced susceptibility explain the high relapse rate, which is why gentamicin is added for synergy as in enterococcal endocarditis."]],
-  worm: [["The endocarditis that looked culture negative", "Through the 1960s and 1970s a share of endocarditis cases produced blood culture broths that turned cloudy and then grew nothing when plated. Frenkel and Hirsch showed in 1961 that these organisms required a thiol compound, and that pyridoxal or cysteine restored growth. They were labeled nutritionally variant streptococci, a description rather than a taxonomy. The practical lesson was that a positive broth with a sterile plate is a finding, not a laboratory error, and it reduced the apparent rate of truly culture negative endocarditis."],
-    ["Why satellites appear", "Streaking a plate with Staphylococcus aureus and then cross-streaking the fastidious organism produces growth only in a narrow band beside the staphylococcal streak, where diffusing pyridoxal and other nutrients reach sufficient concentration. The same technique is used for Haemophilus influenzae, which needs V factor. It is an elegantly simple assay: the diffusion gradient does the dose-response experiment, and the width of the satellite zone reports how badly the organism needs the supplement."],
-    ["A genus split in two", "Nutritionally variant streptococci were moved out of Streptococcus into the genus Abiotrophia in 1995, and in 2000 most species were moved again into Granulicatella, leaving Abiotrophia defectiva alone in its genus. The reshuffling matters when reading the literature, because case series published before 2000 under Abiotrophia adiacens describe what is now Granulicatella adiacens. Clinically the two behave much alike, which is why guidelines treat them together and why many laboratories still report nutritionally variant streptococcus alongside the formal name."],
-    ["Harder to cure than it should be", "Series comparing this organism with viridans streptococcal endocarditis report higher rates of embolism, heart failure, valve surgery, relapse and death, despite the organism's unimpressive virulence repertoire. The explanation offered is pharmacologic: penicillin tolerance means the drug stops growth without killing, so sterilizing a vegetation requires either synergy from an aminoglycoside or removal of the infected tissue. It is a reminder that the minimum inhibitory concentration is not the same measurement as the minimum bactericidal concentration, and that for endocarditis the second one is what counts."]] },
-
-{ id: "granulicatella", k: "bact", g: "HACEK and endocarditis organisms", nm: "Granulicatella species", also: "G. adiacens, G. elegans, G. para-adiacens, nutritionally variant streptococci, formerly Abiotrophia adiacens and Streptococcus adjacens",
-  cls: "Gram-positive cocci in chains, catalase negative, facultative anaerobe, pyridoxal or cysteine dependent so they satellite around Staphylococcus aureus, alpha-hemolytic or nonhemolytic when supplemented",
-  plain: "The commoner group of vitamin-dependent mouth cocci that cause endocarditis and grow in blood culture bottles but not on the plate.",
-  live: "The human oral cavity and dental plaque, the gastrointestinal tract and the female genital tract. They are ordinary commensals, and Granulicatella adiacens is the species most often recovered from clinical material.",
-  spread: "Endogenous, from oral or gut mucosa into the bloodstream, typically where there is periodontal disease, a dental procedure or chemotherapy-induced mucositis. Direct inoculation occurs in ocular surgery and in penetrating trauma.",
-  causes: "Infective endocarditis on native and prosthetic valves, with a subacute course, large vegetations, frequent embolism and a substantial surgical rate. Bacteremia in neutropenic patients with mucositis, where these organisms are increasingly reported. Also endophthalmitis, keratitis, brain and dental abscess, osteomyelitis, spondylodiscitis, septic arthritis, prosthetic joint and vascular graft infection, pancreatitis-associated abscess and, rarely, central nervous system infection.",
-  mech: "Adherence and persistence rather than aggression. Fibronectin and collagen binding allow attachment to damaged endothelium, and exopolysaccharide production supports biofilm on valves and on prosthetic material. The thiol dependency is a biosynthetic gap in cysteine metabolism, trivially supplied by host tissue, so these organisms are fastidious only in the laboratory. Bactericidal tolerance to beta-lactams, with minimum bactericidal concentrations far above minimum inhibitory concentrations, is common and is the characteristic that makes them hard to eradicate from a vegetation.",
-  lab: "Blood culture broth supports growth, subculture to sheep blood agar often does not, and growth appears as satellites beside a Staphylococcus aureus streak or on pyridoxal-supplemented media. They are catalase negative and can be mistaken for viridans streptococci when growth is obtained. Mass spectrometry and 16S sequencing distinguish Granulicatella from Abiotrophia and identify species, and polymerase chain reaction on a resected valve is used when cultures were taken after antibiotics.",
-  tx: "Penicillin or ampicillin with gentamicin for synergy during the initial fortnight, with the beta-lactam continued for a total of four to six weeks and longer on prosthetic valves, following the regimen used for relatively resistant streptococci and enterococci. Ceftriaxone is used for fully susceptible isolates.",
-  alt: "Vancomycin with or without gentamicin for penicillin allergy or resistant isolates, and daptomycin or linezolid have been used in reports of refractory infection. Intravitreal therapy with vitrectomy for endophthalmitis, and removal of infected prosthetic material where feasible.",
-  res: "Reduced penicillin susceptibility is frequent, with many isolates intermediate and some frankly resistant, and resistance to macrolides, clindamycin and trimethoprim-sulfamethoxazole occurs. Beta-lactam tolerance is the recurring theme, so bactericidal activity rather than simple inhibition guides regimen choice. Vancomycin susceptibility has remained reliable.",
-  prev: "Oral and dental care, mucositis care during chemotherapy, and procedural prophylaxis limited to patients at highest cardiac risk. Aseptic technique in ophthalmic surgery. No vaccine exists.",
-  look: "Abiotrophia defectiva, the related nutritionally variant organism, which is clinically and microbiologically similar. Viridans streptococci, which grow without supplementation. Enterococci, for which a similar synergistic regimen is used. Truly culture negative endocarditis from Coxiella burnetii, Bartonella species and Tropheryma whipplei. In neutropenic bacteremia, viridans streptococci and Rothia mucilaginosa, which share the oral mucositis route.",
-  mem: [["Most-tested fact", "Granulicatella species are nutritionally variant streptococci requiring pyridoxal, and together with Abiotrophia they cause endocarditis that appears culture negative on solid media."],
-    ["Memory trick", "ADIACENS means adjacent: it grows adjacent to the staphylococcal streak. Granulicatella and Abiotrophia are the vitamin B6 cocci."],
-    ["Classic setting", "A patient receiving chemotherapy with severe oral mucositis and a positive blood culture bottle that will not subculture, or an adult with prosthetic valve endocarditis and repeatedly sterile plates."],
-    ["Step focus", "These organisms are treated like relatively resistant streptococci, with an aminoglycoside added for synergy, because beta-lactam tolerance drives relapse."]],
-  worm: [["A genus created twice", "What are now Granulicatella species began as Streptococcus adjacens and Streptococcus defectivus, were reclassified into Abiotrophia in 1995, and were then split again in 2000 when sequence data showed that Abiotrophia adiacens and its relatives belonged in a separate genus, Granulicatella, leaving Abiotrophia defectiva alone. The name derives from granule and catella, a small chain. Because the clinical literature straddles all three naming eras, the same organism appears under four different labels depending on publication date."],
-    ["The mucositis highway", "Intensive chemotherapy denudes the oral mucosa, and the barrier that normally keeps billions of mouth organisms out of the bloodstream disappears for days. Viridans streptococci are the best-known consequence, but Granulicatella species have been reported with rising frequency from neutropenic blood cultures, partly because mass spectrometry now names them instead of filing them as viridans streptococci. The source is not a hospital surface or a line but the patient's own mouth, which is why oral care protocols have become part of neutropenia management."],
-    ["Fastidious in the laboratory, comfortable in the host", "The thiol requirement that defeats these organisms on an agar plate is met everywhere in human tissue, where cysteine and glutathione are abundant. A pathogen can therefore appear almost unculturable while growing perfectly well on a heart valve. It is a general warning about inferring ecology from culture behavior, and it explains why historical estimates of culture negative endocarditis fell once pyridoxal supplementation and then molecular methods were introduced."],
-    ["Tolerance, not resistance", "Resistance means an organism grows despite a drug. Tolerance means it stops growing but does not die. For most infections the distinction is academic, since host defenses finish the job. Inside a vegetation, where neutrophils barely penetrate and the bacterial density is enormous, the drug has to do the killing itself, so tolerance becomes decisive. Granulicatella and Abiotrophia are the textbook illustration, and they are the reason endocarditis guidelines have long cared about bactericidal rather than merely inhibitory activity."]] }
-);
-
-MICRO.push(
-{ id: "shigella-sonnei", k: "bact", g: "Enterobacterales", nm: "Shigella sonnei", also: "S. sonnei, group D Shigella, formerly Bacillus dysenteriae Sonne",
-  cls: "Gram-negative rod, nonmotile, non-lactose-fermenting on primary isolation but a late lactose fermenter, non-hydrogen-sulfide-producing, lysine decarboxylase negative, ornithine decarboxylase positive, serogroup D with a single serotype",
-  plain: "The mildest of the dysentery bacteria and the one that causes most Shigella infection in wealthy countries, including day care and sexually transmitted outbreaks.",
-  live: "Humans and other primates only. There is no animal or environmental reservoir, and asymptomatic carriers shed for days to weeks after illness.",
-  spread: "Fecal-oral, with a very small infectious dose, on the order of ten to a hundred organisms, so person-to-person transmission dominates: hands, toys, shared bathrooms in day care, household contacts, and sexual contact involving oral-anal exposure, which drives outbreaks among men who have sex with men. Food, water and flies matter less here than for the other species.",
-  causes: "Shigellosis: watery diarrhea that may become dysenteric with blood, mucus, cramping, tenesmus and fever, typically milder and shorter than disease from S. flexneri or S. dysenteriae. Complications include dehydration, febrile seizures in young children, reactive arthritis, and rarely hemolytic uremic syndrome and toxic encephalopathy. Bacteremia is uncommon except in malnourished or immunocompromised patients.",
-  mech: "Invasion rather than toxin dominates. A large virulence plasmid encodes the type III secretion system and the IpaA through IpaD effectors, which are injected into M cells overlying Peyer patches in the colon. The organism is taken up, escapes the vacuole into the cytoplasm, polymerizes host actin to move within the cell and to push into neighbors without re-entering the lumen, and kills macrophages by inducing apoptosis. Shiga toxin production is absent or minimal in this species, which is a reason the illness is milder, and the bloody stool reflects destruction of colonic epithelium by invasion and inflammation.",
-  lab: "Stool culture on MacConkey, Hektoen or xylose lysine deoxycholate agar shows a non-lactose-fermenting, non-hydrogen-sulfide-producing colorless colony, and the organism is nonmotile and lysine decarboxylase negative, which separates Shigella from Salmonella. Delayed lactose fermentation and a positive ornithine decarboxylase reaction distinguish S. sonnei from the other serogroups, and it is serogroup D with one serotype. Multiplex nucleic acid amplification panels now detect Shigella and enteroinvasive E. coli together, since the two are genetically almost indistinguishable, and culture is still needed for susceptibility testing.",
-  tx: "Many cases are self-limited and managed with fluids, with antibiotics used to shorten illness and reduce shedding in children in day care, in food handlers, in health care workers and in people who are immunocompromised or severely ill. Azithromycin, ciprofloxacin or ceftriaxone are the usual choices, with the decision guided increasingly by local resistance data because this species carries so much of it.",
-  alt: "Ceftriaxone for resistant or invasive disease, pivmecillinam where available, and trimethoprim-sulfamethoxazole or ampicillin only when susceptibility is documented, which is now uncommon. Antimotility drugs such as loperamide are avoided in dysentery because they prolong toxin and organism contact with the mucosa.",
-  res: "This species is the resistance problem of the genus. Ampicillin and trimethoprim-sulfamethoxazole resistance is near universal in many regions, azithromycin resistance through mphA and ermB is rising, extended-spectrum beta-lactamases, chiefly CTX-M-15, are widespread, and fluoroquinolone resistance from gyrA and parC mutations on mobile elements has spread internationally. Multidrug-resistant and extensively drug-resistant lineages circulating among men who have sex with men have left some isolates with few oral options.",
-  prev: "Handwashing with soap, exclusion of symptomatic children and food handlers, safe water and sanitation, and counseling about sexual transmission in affected communities. No licensed vaccine exists, although conjugate and live attenuated candidates against this and other serogroups are in trials.",
-  look: "Shigella flexneri, which causes more severe and more classically dysenteric illness in lower-income settings. Enteroinvasive E. coli, which is genetically nearly identical. Campylobacter jejuni, the commonest bacterial cause of bloody diarrhea in high-income countries. Salmonella, which is motile, produces hydrogen sulfide and is lysine positive. Enterohemorrhagic E. coli, which gives bloody diarrhea with little fever and risks hemolytic uremic syndrome. Entamoeba histolytica in chronic or travel-associated dysentery.",
-  mem: [["Most-tested fact", "Shigella sonnei is serogroup D, is the predominant Shigella in high-income countries, causes the mildest disease, and carries the most antibiotic resistance."],
-    ["Memory trick", "Four serogroups, A to D: A is dysenteriae, B is flexneri, C is boydii, D is sonnei. Sonnei is the Simplest and most Sophisticated-country species."],
-    ["Classic setting", "A day care outbreak of diarrhea with some bloody stools among toddlers and their siblings, or clusters of dysentery among men who have sex with men with multidrug-resistant isolates."],
-    ["Step focus", "Shigella is nonmotile and lysine decarboxylase negative, while Salmonella is motile, lysine positive and produces hydrogen sulfide, and the infectious dose for Shigella is tiny."]],
-  worm: [["Named for a Dane who worked on dysentery", "Carl Olaf Sonne, a Danish bacteriologist, characterized this organism in 1915 while sorting out the confusing collection of dysentery bacilli recovered from patients. Kiyoshi Shiga had described the genus in 1897 during a Japanese epidemic, and the group was eventually arranged into four serogroups: A for dysenteriae, B for flexneri, C for boydii and D for sonnei. The lettering is purely historical, and it survives because serogroup remains clinically meaningful: it predicts severity, geography and resistance."],
-    ["The species that follows prosperity", "Across many countries the dominant Shigella species has shifted from flexneri to sonnei as water and sanitation improved. One explanation involves early-life exposure to Plesiomonas shigelloides, a waterborne organism that shares an antigen with S. sonnei and may confer cross-protection where surface water is drunk. Remove that exposure and the population loses the cross-immunity. The result is a bacterium whose rise tracks clean water, transmitted person to person rather than through water, and concentrated in day care centers rather than in villages."],
-    ["A dose of ten organisms", "Most enteric bacteria need thousands or millions of cells to cause disease, because stomach acid destroys the inoculum. Shigella needs on the order of ten to a hundred, making it one of the most infectious bacterial pathogens known by ingestion. The practical consequences are large: outbreaks spread through households and nurseries by hands and surfaces, swimming pools and shared bathrooms suffice, and handwashing rather than food safety is the central control measure. It also makes the organism a recurrent concern in deliberate contamination scenarios."],
-    ["Resistance in a sexually transmitted bacterium", "Since the 2010s public health agencies in Europe, North America and Asia have tracked multidrug-resistant and extensively drug-resistant S. sonnei lineages spreading through sexual networks among men who have sex with men, carrying extended-spectrum beta-lactamases together with azithromycin and ciprofloxacin resistance. The transmission route concentrates strains in dense networks where antibiotic exposure is also high, which is the classic recipe for resistance selection. Some isolates have been reported with no reliable oral treatment option, in an infection that is usually managed in the community."]] },
-
-{ id: "shigella-flexneri", k: "bact", g: "Enterobacterales", nm: "Shigella flexneri", also: "S. flexneri, group B Shigella, formerly Bacillus flexneri",
-  cls: "Gram-negative rod, nonmotile, non-lactose-fermenting, non-hydrogen-sulfide-producing, lysine decarboxylase negative, ornithine decarboxylase negative, serogroup B with multiple serotypes",
-  plain: "The dysentery bacterium that dominates in lower-income countries and causes the classic bloody, painful, small-volume diarrhea.",
-  live: "Humans and other primates only, with no animal or environmental reservoir. Convalescent and asymptomatic carriers shed the organism for weeks.",
-  spread: "Fecal-oral with an infectious dose of tens to hundreds of organisms, through contaminated hands, food, water and flies, with household and institutional transmission prominent. Crowding, displacement, poor sanitation and limited water supply drive epidemics, and refugee camps are a classic setting.",
-  causes: "Bacillary dysentery: fever and watery diarrhea progressing over a day or two to frequent small-volume stools containing blood and mucus, with cramping and tenesmus, and the illness is more severe and more prolonged than that caused by S. sonnei. It is a leading cause of moderate to severe diarrhea and of diarrhea-associated death in young children in South Asia and sub-Saharan Africa. Complications include dehydration, malnutrition and growth faltering after repeated episodes, protein-losing enteropathy, rectal prolapse in children, febrile seizures, toxic encephalopathy, intestinal perforation, reactive arthritis and hemolytic uremic syndrome.",
-  mech: "The virulence plasmid encodes a type III secretion system whose IpaB and IpaC effectors trigger membrane ruffling and uptake by M cells over colonic Peyer patches. The bacterium lyses the vacuole, reaches the cytoplasm, and uses IcsA to polymerize host actin into a tail that propels it through the cytoplasm and into adjacent cells, so it spreads laterally without ever re-entering the gut lumen where antibody and antibiotics are present. It induces apoptosis in macrophages, releasing interleukin-1 beta and recruiting neutrophils, whose transit across the epithelium further loosens the barrier and admits more organisms. Some strains carry Shiga toxin genes acquired by bacteriophage, which adds the possibility of hemolytic uremic syndrome.",
-  lab: "Stool culture yields colorless non-lactose-fermenting colonies without blackening on Hektoen or xylose lysine deoxycholate agar, and the isolate is nonmotile, lysine decarboxylase negative and ornithine decarboxylase negative, which separates it from S. sonnei. Serogrouping identifies group B and one of the numbered serotypes, with serotype 2a historically prominent. Fecal leukocytes and erythrocytes are abundant on microscopy, which is the hallmark of invasive rather than secretory diarrhea. Molecular stool panels detect Shigella and enteroinvasive E. coli as a single target.",
-  tx: "Oral or intravenous rehydration is the foundation, with antibiotics given for dysentery because they shorten illness, reduce complications and limit transmission, which contrasts with the more selective approach taken for milder Shigella sonnei disease. Ciprofloxacin, azithromycin or ceftriaxone are used according to local susceptibility, and zinc supplementation in children reduces duration and subsequent episodes.",
-  alt: "Pivmecillinam, cefixime or ceftriaxone, with ampicillin and trimethoprim-sulfamethoxazole reserved for documented susceptibility. Antimotility agents are avoided. Nutritional rehabilitation matters as much as the antibiotic in children with repeated infection.",
-  res: "Ampicillin and trimethoprim-sulfamethoxazole resistance is widespread, fluoroquinolone resistance has risen sharply in South Asia, and extended-spectrum beta-lactamase production and azithromycin resistance are both increasing. The World Health Organization lists fluoroquinolone-resistant Shigella among the priority pathogens for new drug development, which places a common childhood illness on the same list as hospital superbugs.",
-  prev: "Water, sanitation and hygiene measures, handwashing with soap, exclusive breastfeeding in infancy, which is protective, and case management that prevents the nutritional consequences. Several conjugate and live attenuated vaccines targeting the dominant S. flexneri serotypes together with S. sonnei are in clinical development, with serotype diversity the main obstacle.",
-  look: "Shigella sonnei, which causes milder illness and is ornithine positive. Enteroinvasive E. coli, essentially the same organism genetically. Campylobacter jejuni, Salmonella and enterohemorrhagic E. coli in bloody diarrhea. Entamoeba histolytica, which causes dysentery with fewer fecal leukocytes and may produce liver abscess. Inflammatory bowel disease presenting acutely, and intussusception in a child with blood in the stool.",
-  mem: [["Most-tested fact", "Shigella flexneri is serogroup B and the main cause of classic bacillary dysentery in lower-income countries, with invasion of colonic epithelium and abundant fecal leukocytes."],
-    ["Memory trick", "FLEXNERI is the FLEXible traveler through the cytoplasm: it builds an actin tail and pushes cell to cell. Blood, mucus and tenesmus, with small-volume stools."],
-    ["Classic setting", "A three-year-old in a crowded settlement with fever, twenty small bloody stools a day, painful straining and rectal prolapse, in an area with limited clean water."],
-    ["Step focus", "Shigella invades through M cells, escapes into the cytoplasm and spreads cell to cell using host actin, which is why the diarrhea is inflammatory and small volume rather than secretory and voluminous."]],
-  worm: [["Simon Flexner and a genus of four letters", "Simon Flexner, who went on to direct the Rockefeller Institute, described this organism in 1900 from dysentery cases in the Philippines, a few years after Kiyoshi Shiga identified the first member of the genus during an epidemic in Japan that sickened tens of thousands. The four serogroups were later lettered A through D. Flexner's brother Abraham wrote the report that reorganized American medical education, so the family name attaches both to a dysentery bacillus and to the modern medical school."],
-    ["Moving without ever leaving the cell", "Once inside a colonic epithelial cell, Shigella faces a choice: exit into the lumen, where antibody, bile and antibiotics wait, or go sideways. IcsA, placed at one pole of the bacterium, recruits the host's own actin nucleation machinery to build a comet tail that drives the organism forward, pushing a protrusion into the neighboring cell which is then engulfed. The bacterium crosses two membranes, dissolves them and repeats. The entire infection can therefore spread through an epithelial sheet without the organism re-entering extracellular space."],
-    ["Why dysentery stools are small", "Cholera and enterotoxigenic E. coli act on the small intestine and switch on chloride secretion, producing liters of fluid. Shigella destroys the colonic epithelium, which is the organ that reabsorbs water and senses distension. The result is frequent passage of tiny volumes of blood, mucus and pus with constant painful urgency, because the inflamed rectum signals a need to defecate that the volume does not justify. The difference between secretory and inflammatory diarrhea is visible at the bedside, and it points to different organisms and different risks."],
-    ["A vaccine blocked by serotypes", "An effective Shigella vaccine would prevent a large share of childhood diarrheal deaths, and protection after natural infection is real but serotype specific. S. flexneri alone has around fifteen serotypes and subserotypes, with regional distributions that shift, so coverage requires a multivalent product. Current candidates combine the common flexneri serotypes with S. sonnei, using conjugated O-antigen or generalized modules for membrane antigens. The scientific obstacle has never been immunogenicity; it has been deciding how many antigens are enough."]] },
-
-{ id: "salmonella-paratyphi", k: "bact", g: "Enterobacterales", nm: "Salmonella Paratyphi", also: "Salmonella enterica serovars Paratyphi A, B and C, paratyphoid fever, part of the enteric fever group",
-  cls: "Gram-negative rod, motile with peritrichous flagella, facultative anaerobe, non-lactose-fermenting, lysine decarboxylase positive, hydrogen sulfide variable (negative in Paratyphi A), restricted to humans",
-  plain: "The close relatives of the typhoid bacterium that cause a similar prolonged fever, usually a bit milder, and that are now a rising share of enteric fever in Asia.",
-  live: "Humans only, with no animal reservoir, which it shares with Salmonella Typhi and which distinguishes both from the thousands of nontyphoidal serovars. Chronic gallbladder carriage occurs but is less common than with Typhi. Paratyphi B variant Java is an exception, having an animal and environmental reservoir and causing gastroenteritis rather than enteric fever.",
-  spread: "Fecal-oral through contaminated water and food, especially street-vended food and drinks, shellfish and raw produce, with a moderate infectious dose. Transmission is concentrated in South and Southeast Asia, and most cases diagnosed in high-income countries are travel associated.",
-  causes: "Paratyphoid fever: a week or more of incubation, then stepwise rising fever, headache, abdominal discomfort, relative bradycardia, rose spots, hepatosplenomegaly and constipation more often than diarrhea early, with diarrhea appearing later. Complications mirror typhoid but are generally less frequent: intestinal hemorrhage and perforation from necrosis of Peyer patches in the third week, encephalopathy, myocarditis, osteomyelitis, and relapse. Paratyphi C can cause a septicemic illness with focal abscesses and osteomyelitis, particularly in people with sickle cell disease.",
-  mech: "The organism is taken up by M cells over ileal Peyer patches, survives inside macrophages within a Salmonella-containing vacuole maintained by the SPI-2 type III secretion system, and is carried through lymphatics to mesenteric nodes, liver, spleen and bone marrow, producing the bacteremia that causes the fever. SPI-1 effectors mediate the initial invasion. Paratyphi A lacks the Vi capsular polysaccharide that coats Typhi, which is clinically decisive in two ways: it may contribute to somewhat milder disease, and it means the Vi conjugate typhoid vaccines give no protection against it. Lipopolysaccharide O antigen and flagellar H antigens define the serovars.",
-  lab: "Blood culture is the main diagnostic test and has a yield of roughly half to three quarters in the first week, improved by larger volumes and by bone marrow culture, which remains the most sensitive sample. Stool and urine culture are positive later. The isolate is motile and lysine positive, which separates it from Shigella, and Paratyphi A fails to produce hydrogen sulfide, so it does not blacken Hektoen or xylose lysine deoxycholate agar, an appearance that can mislead. The Widal test is unreliable, and serologic and rapid antigen tests perform poorly, so culture and increasingly molecular detection carry the diagnosis.",
-  tx: "Azithromycin or ceftriaxone according to local resistance patterns, with a fluoroquinolone used where susceptibility is documented, and oral therapy for uncomplicated disease with parenteral therapy for severe illness. Dexamethasone is used in severe enteric fever with shock or encephalopathy, and surgery is required for perforation.",
-  alt: "Cefixime, a carbapenem for extensively drug-resistant isolates, and chloramphenicol, ampicillin or trimethoprim-sulfamethoxazole only where susceptibility is confirmed. Prolonged courses with ciprofloxacin, or cholecystectomy, are used to clear chronic carriage.",
-  res: "Fluoroquinolone resistance is now very common in South Asian Paratyphi A isolates, often through gyrA mutations that produce nalidixic acid resistance with raised ciprofloxacin minimum inhibitory concentrations and clinical failure despite an apparently susceptible report on older breakpoints. Azithromycin resistance has been reported, and multidrug resistance to the older first-line agents is widespread. The extensively drug-resistant clones that have dominated recent Typhi epidemiology in Pakistan are less prominent in Paratyphi, but the trend is in the same direction.",
-  prev: "Safe water, sanitation and food hygiene, which carry the burden of prevention, and handwashing. The crucial vaccine point is that Vi polysaccharide and Vi conjugate typhoid vaccines protect against Typhi only, since Paratyphi A has no Vi capsule, while the oral live attenuated Ty21a vaccine may give limited cross-protection against Paratyphi B. Bivalent vaccines covering Paratyphi A are in development.",
-  look: "Salmonella Typhi, which is clinically almost identical and is distinguished in the laboratory by serotyping and by the Vi antigen. Nontyphoidal Salmonella, which causes gastroenteritis with an animal reservoir. Malaria, dengue, rickettsial infection including scrub typhus, leptospirosis, brucellosis, visceral leishmaniasis, tuberculosis and amebic liver abscess, all of which present as undifferentiated fever in the same regions and are the real differential.",
-  mem: [["Most-tested fact", "Salmonella Paratyphi A lacks the Vi capsule, so Vi conjugate typhoid vaccines do not protect against it, and it is a growing share of enteric fever in South Asia."],
-    ["Memory trick", "PARA means beside: paratyphoid stands beside typhoid, same illness, usually milder, no Vi. Paratyphi A makes no hydrogen sulfide, so it does not blacken the agar."],
-    ["Classic setting", "A traveler returning from Nepal, Bangladesh or India with ten days of rising fever, headache, abdominal pain and relative bradycardia, with growth in blood cultures and a fluoroquinolone-resistant isolate."],
-    ["Step focus", "Enteric fever organisms are human restricted and invade through Peyer patches, with perforation and hemorrhage characteristically occurring in the third week."]],
-  worm: [["Three serovars that do not belong together", "Paratyphi A, B and C share a clinical syndrome and a name, but they are not each other's closest relatives. Genomic work shows that the ability to cause enteric fever arose more than once within Salmonella enterica, through convergent acquisition of similar capabilities, and Paratyphi B even contains a variant, Java, that behaves like an ordinary animal-associated gastroenteritis serovar. The grouping is therefore clinical convenience, which is a recurring theme in the naming of bacteria that cause one recognizable illness."],
-    ["The gap a successful vaccine opened", "Typhoid conjugate vaccines using the Vi capsular polysaccharide have been rolled out in Pakistan, Nepal, Malawi, Liberia and elsewhere with high efficacy. Paratyphi A has no Vi capsule and is untouched. Surveillance in several South Asian cities had already shown Paratyphi A rising to a third or more of enteric fever cases before the vaccines arrived. The expectation that successful typhoid vaccination will make paratyphoid a proportionally larger problem is one of the clearest predicted examples of pathogen replacement following an intervention."],
-    ["The Widal test refuses to die", "Developed by Georges Widal in 1896, this agglutination test for antibodies against O and H antigens remains in daily use across much of South Asia despite decades of evidence that it misclassifies a large share of patients in both directions, because prior exposure, vaccination and cross-reaction all raise titres. Its persistence reflects cost, availability and the absence of anything better at the same price, and it is a standing example of how a cheap bad test outcompetes an expensive good one in the absence of alternatives."],
-    ["Resistance that hides behind a breakpoint", "Many South Asian Paratyphi A isolates carry a single gyrA point mutation. On older laboratory criteria such isolates were reported ciprofloxacin susceptible, yet patients treated with the drug had prolonged fever and relapse. Laboratories added nalidixic acid screening as a surrogate, and breakpoints were eventually lowered. It is a well-documented case where the clinical observation of treatment failure corrected the laboratory definition of susceptibility rather than the other way around."]] },
-
-{ id: "cronobacter-sakazakii", k: "bact", g: "Enterobacterales", nm: "Cronobacter sakazakii", also: "C. sakazakii, formerly Enterobacter sakazakii, yellow-pigmented Enterobacter",
-  cls: "Gram-negative rod, motile, facultative anaerobe, lactose variable, yellow-pigmented colonies at room temperature, oxidase negative, catalase positive, notably desiccation tolerant",
-  plain: "A dry-tolerant bacterium that contaminates powdered infant formula and causes meningitis and brain abscess in newborns.",
-  live: "The environment, with a particular association with dry foods and dry food-manufacturing surfaces: powdered infant formula, powdered milk, starches, herbs, spices, nuts and dried teas. It persists for a year or more in dry powder, and it is found in food-processing plants, kitchens and hospital milk preparation areas.",
-  spread: "Ingestion of reconstituted powdered infant formula that was either intrinsically contaminated during manufacture or contaminated during preparation, with inadequate water temperature and prolonged holding at room temperature allowing a tiny inoculum to multiply. Contaminated feeding equipment, blenders, brushes and enteral feeding tubes are documented vehicles, and neonatal intensive care outbreaks have been traced to shared preparation equipment.",
-  causes: "Neonatal meningitis with a striking tendency to brain abscess, ventriculitis, infarction and cyst formation, with reported mortality historically between a quarter and half and severe neurodevelopmental impairment in most survivors. Also necrotizing enterocolitis, bacteremia and sepsis in preterm and low birth weight infants. In adults, chiefly older adults and immunocompromised patients, it causes bacteremia, wound infection, osteomyelitis, pneumonia and urinary tract infection, usually in a much less dramatic form.",
-  mech: "Outer membrane protein A mediates invasion of intestinal epithelium and of human brain microvascular endothelial cells, which is the step that distinguishes this organism from ordinary enteric bacteria and underlies its neurotropism. It survives within macrophages, and a zinc metalloprotease and enterotoxin contribute to intestinal injury. Extraordinary desiccation tolerance, supported by trehalose accumulation and specific stress response regulators, allows survival in powder with very low water activity, and the organism also forms biofilm on silicone and stainless steel, including feeding tubes. Capsule and lipopolysaccharide resist complement.",
-  lab: "It grows readily on routine media, with colonies developing a distinctive yellow pigment on tryptone soy agar after incubation at room temperature, and chromogenic media are used for food testing. It is a motile oxidase-negative Gram-negative rod and was long reported as Enterobacter sakazakii or as yellow-pigmented Enterobacter cloacae, so older records understate its frequency. Cerebrospinal fluid in neonatal cases shows a marked neutrophil pleocytosis, and cranial imaging is central because abscess and infarction may be present at diagnosis. Mass spectrometry and sequencing distinguish the several Cronobacter species.",
-  tx: "Treatment follows neonatal meningitis principles with an agent chosen on susceptibility, commonly a carbapenem such as meropenem for central nervous system disease because of good penetration, and historically ampicillin with gentamicin or a third-generation cephalosporin were used. Prolonged courses are needed, with repeated imaging, and neurosurgical drainage of abscess is frequently required.",
-  alt: "Ciprofloxacin, trimethoprim-sulfamethoxazole or an aminoglycoside according to susceptibility, and ceftriaxone or cefotaxime for susceptible isolates outside the setting of inducible resistance. Supportive neonatal intensive care and management of raised intracranial pressure are as important as the antibiotic.",
-  res: "Many isolates carry an inducible AmpC beta-lactamase, so they are intrinsically resistant to ampicillin and first-generation cephalosporins and can develop resistance to third-generation cephalosporins during therapy, which is the practical argument for a carbapenem in central nervous system infection. Extended-spectrum beta-lactamase producing and carbapenem-resistant isolates have been reported from food and from patients but remain uncommon.",
-  prev: "The central measure is the recognition that powdered infant formula is not a sterile product. Guidance covers reconstitution with water at around seventy degrees Celsius to kill the organism, immediate feeding, discarding leftovers, limiting hang time for enteral feeds, and preferring sterile liquid formula or pasteurized human milk for preterm and immunocompromised infants. Manufacturing controls, environmental monitoring in dry plants and microbiological criteria for formula intended for infants under six months are regulatory requirements in many countries. No vaccine exists.",
-  look: "Group B Streptococcus, E. coli K1 and Listeria monocytogenes, the standard causes of neonatal meningitis. Citrobacter koseri, which shares the striking tendency to form brain abscesses in neonates and is the closest clinical mimic. Serratia and Klebsiella in neonatal unit outbreaks. Herpes simplex encephalitis and inborn metabolic disease in a deteriorating newborn.",
-  mem: [["Most-tested fact", "Cronobacter sakazakii is acquired from powdered infant formula and causes neonatal meningitis with brain abscess, and reconstituting formula with water at about seventy degrees Celsius kills it."],
-    ["Memory trick", "Powdered formula plus a dry-loving yellow bug equals brain abscess in a newborn. Cronobacter and Citrobacter koseri are the two neonatal abscess makers."],
-    ["Classic setting", "A two-week-old formula-fed infant in a neonatal unit with fever, poor feeding, seizures and a cerebrospinal fluid neutrophil pleocytosis, with imaging showing a ring-enhancing lesion, and the same organism recovered from an opened tin of formula and the preparation blender."],
-    ["Step focus", "Powdered infant formula is not sterile, and desiccation tolerance is the property that lets this organism survive in it for months."]],
-  worm: [["Named twice, for two Japanese microbiologists and a Greek god", "The organism was recognized in 1980 as a yellow-pigmented variant of Enterobacter cloacae and named Enterobacter sakazakii after Riichi Sakazaki, who had worked extensively on enteric bacteria. In 2008 genetic analysis placed it in a new genus, Cronobacter, from Cronos, the Titan of Greek myth who devoured his own children, a deliberately pointed reference to the organism's effect on infants. It is one of the few bacterial genus names chosen as a warning rather than a description."],
-    ["A pathogen of a manufactured food", "Powdered infant formula cannot be sterilized without destroying it, so the industrial process ends with a dry powder that is low in water but not free of bacteria. Cronobacter survives that environment better than almost anything else, and a handful of cells per tin can multiply to an infectious dose if the reconstituted feed sits warm for hours. The epidemiology therefore sits precisely at the intersection of a manufacturing limitation and a domestic practice, and essentially all prevention guidance addresses one or the other."],
-    ["Why seventy degrees", "Recommendations to reconstitute powdered formula with water at about seventy degrees Celsius came from quantitative microbial risk assessment rather than from tradition: that temperature reduces Cronobacter by several orders of magnitude while leaving the nutritional content of the formula largely intact, and lower temperatures do not. The advice remains contested in practice because it conflicts with the convenience of room-temperature preparation and with concern about scalding, and uptake has been uneven, which is visible in continued sporadic cases."],
-    ["Small numbers, large consequences", "Confirmed invasive Cronobacter infections are counted in a few cases per year in most national surveillance systems, which makes it statistically rare and epidemiologically awkward: outbreaks are small, detection depends on a laboratory speciating an organism correctly, and historical cases hide under the name Enterobacter. What drives the attention is the outcome. Neonatal meningitis with abscess leaves most survivors with significant disability, so even a handful of cases justifies the regulatory architecture built around infant formula manufacture."]] }
-);
-
-MICRO.push(
-{ id: "providencia-stuartii", k: "bact", g: "Enterobacterales", nm: "Providencia stuartii", also: "P. stuartii, formerly Proteus inconstans, a member of the Proteus-Providencia-Morganella tribe",
-  cls: "Gram-negative rod, motile but not swarming, facultative anaerobe, lactose negative, urease positive in most isolates, indole positive, citrate positive, phenylalanine deaminase positive, hydrogen sulfide negative",
-  plain: "A urease-producing relative of Proteus that colonizes long-term urinary catheters and encrusts them with stone.",
-  live: "The environment and the human gastrointestinal tract, and above all the biofilm on indwelling urinary catheters and in long-term care facilities, where it is recovered from a substantial share of residents with chronic catheters. It is also found in water and soil and on the skin of patients with chronic wounds.",
-  spread: "Horizontal transmission in long-term care and hospital settings on hands, gloves and equipment, with the catheter itself serving as the reservoir once colonized. It ascends the catheter lumen and the periurethral space to reach the bladder.",
-  causes: "Catheter-associated urinary tract infection and chronic bacteriuria, frequently polymicrobial and frequently asymptomatic, with catheter encrustation and blockage. Also bacteremia originating from the urinary tract, which carries appreciable mortality in frail older adults, surgical wound and burn infection, pneumonia in ventilated patients, and occasional endocarditis, meningitis after neurosurgery and intra-abdominal infection. Outbreaks in intensive care and long-term care units are well documented.",
-  mech: "Urease splits urea into ammonia and carbon dioxide, raising urinary pH so that struvite and apatite precipitate onto the catheter surface, which both blocks the catheter and shelters the organism. The mannose-resistant Proteus-like fimbriae and MR/K hemagglutinin mediate adherence specifically to catheter material and to uroepithelium, which is why this organism is so closely tied to devices rather than to the uncatheterized bladder. It forms dense biofilm, often with Proteus mirabilis, and the two cooperate in crystalline biofilm formation. Lipopolysaccharide drives the systemic response when bacteremia occurs, and there is no important exotoxin.",
-  lab: "A lactose-negative, hydrogen-sulfide-negative, indole-positive, citrate-positive Gram-negative rod that deaminates phenylalanine, which places it in the Proteus group, and unlike Proteus it does not swarm across the agar. Most isolates are urease positive, although this is variable and weaker than in Proteus. Automated identification systems handle it reliably. The interpretive problem is clinical rather than technical: distinguishing colonization of a catheter from infection requires symptoms, since bacteriuria is nearly universal in long-term catheterized patients.",
-  tx: "Asymptomatic bacteriuria in a catheterized patient is generally not treated, because treatment selects resistance without benefit. Symptomatic infection is treated according to susceptibility, commonly with a carbapenem, piperacillin-tazobactam, cefepime or an aminoglycoside, and catheter replacement at the start of therapy is standard because the old catheter harbors biofilm the drug cannot reach.",
-  alt: "A fluoroquinolone or trimethoprim-sulfamethoxazole where susceptibility allows, and ceftazidime-avibactam or other newer agents for highly resistant isolates. Amikacin often retains activity when other agents do not.",
-  res: "This organism is intrinsically resistant to a long list of agents, which is its clinical signature. It carries a chromosomal inducible AmpC beta-lactamase, giving resistance to ampicillin and early cephalosporins, and it is intrinsically resistant to tetracyclines, to nitrofurantoin, to colistin and polymyxins through lipopolysaccharide modification, and relatively resistant to tigecycline. Acquired extended-spectrum beta-lactamases and carbapenemases are increasingly reported, and the combination can leave very few options in a frail patient.",
-  prev: "Avoiding unnecessary catheterization and removing catheters promptly, closed drainage systems, hand hygiene, and in long-term care, scheduled catheter changes and avoidance of antibiotic treatment for asymptomatic bacteriuria so that resistance is not selected. Antimicrobial stewardship in long-term care facilities is the measure with the clearest effect on this organism. No vaccine exists.",
-  look: "Proteus mirabilis, which swarms on agar, is a stronger urease producer and shares the catheter encrustation and struvite stone story. Morganella morganii, its close relative, which is also intrinsically resistant to many agents. Klebsiella and E. coli in catheter-associated infection. Pseudomonas aeruginosa in long-term catheterized patients. Corynebacterium urealyticum, another urease producer that encrusts catheters and bladders.",
-  mem: [["Most-tested fact", "Providencia stuartii is a urease-producing Enterobacterales organism of long-term urinary catheters, intrinsically resistant to nitrofurantoin, tetracyclines and polymyxins."],
-    ["Memory trick", "PROVIDENCIA PROVIDES a crust on the catheter. Think of the urease trio in the urinary tract: Proteus, Providencia, Corynebacterium urealyticum."],
-    ["Classic setting", "A nursing home resident with a long-term indwelling catheter that keeps blocking, with gritty encrustation on the removed catheter and a multidrug-resistant Gram-negative rod in the urine."],
-    ["Step focus", "Bacteriuria in a long-term catheterized patient is usually colonization, and treating it without symptoms selects resistance rather than helping, while the catheter itself is changed when infection is treated."]],
-  worm: [["A genus named for a city", "Providencia was named in 1951 for Providence, Rhode Island, where Kauffmann and Edwards worked on the taxonomy of these organisms, and the species honors Charles Stuart, who studied the group. Before that the organisms were filed in Proteus, as Proteus inconstans, a name that recorded the frustration of trying to characterize them reproducibly. The modern genus contains several species, with P. stuartii dominating human catheter-associated disease and P. alcalifaciens turning up in travel-associated diarrhea."],
-    ["The crystalline biofilm", "A urease-positive organism in a catheterized bladder sets off a chemical sequence: urea becomes ammonia, pH climbs above about seven, and magnesium ammonium phosphate crystallizes out of solution onto the catheter. The crystals incorporate bacteria and form a gritty crystalline biofilm that first roughens the drainage eye and then blocks the lumen entirely, causing retention and sometimes upper tract damage. Laboratory models of this process, developed largely with Proteus mirabilis and Providencia, are used to test catheter coatings, almost none of which have performed well in trials."],
-    ["Intrinsic resistance as a defining feature", "Most discussion of resistance concerns genes that organisms acquire. Providencia stuartii is interesting because so much of its resistance is built in: lipopolysaccharide modification that makes polymyxins inactive, efflux and permeability features that exclude tetracyclines, and a chromosomal AmpC enzyme. Nitrofurantoin, the standard agent for cystitis, is useless against it. The practical consequence is that a urine culture reporting this organism immediately removes most of the convenient oral options before any acquired resistance is considered."],
-    ["The asymptomatic bacteriuria problem in one organism", "Nearly every patient with a urinary catheter in place for a month has bacteriuria, and this organism is one of the commonest residents. Repeated treatment of positive cultures in the absence of symptoms has been shown not to reduce symptomatic infection, while it reliably produces more resistant flora, Clostridioides difficile infection and adverse drug events. Providencia stuartii has therefore become a standard teaching case in stewardship, where the right action in response to a positive culture is frequently to take no antibiotic action at all."]] },
-
-{ id: "edwardsiella-tarda", k: "bact", g: "Enterobacterales", nm: "Edwardsiella tarda", also: "E. tarda, formerly Asakusa group, Bartholomew group, the fish pathogen Edwardsiella",
-  cls: "Gram-negative rod, motile, facultative anaerobe, lactose negative, hydrogen sulfide positive, indole positive, lysine decarboxylase positive, citrate negative, biochemically inert compared with other Enterobacterales",
-  plain: "A fish and reptile bacterium that occasionally causes gastroenteritis, deep wound infection or liver abscess in people exposed to water, fish or turtles.",
-  live: "Freshwater and brackish water and the intestinal tract of fish, eels, catfish, turtles, snakes, alligators and amphibians, with high carriage in aquaculture ponds. It is a significant pathogen of farmed fish worldwide, causing emphysematous putrefactive disease in catfish and edwardsiellosis in eels.",
-  spread: "Ingestion of contaminated water, raw or undercooked fish and shellfish, and contact with reptiles, aquarium water or fish-handling injuries. Wound inoculation from fish spines and fish-cleaning cuts is the route for soft tissue disease, and ingestion is the route for enteric illness. Person-to-person transmission is not described.",
-  causes: "Gastroenteritis, which is the commonest presentation, ranging from watery diarrhea to a dysenteric illness and occasionally a prolonged enteric-fever-like syndrome. Also wound infection and necrotizing soft tissue infection after fish-handling injuries, bacteremia and sepsis with high mortality in patients with cirrhosis, hemochromatosis, iron overload or hematologic malignancy, liver and other intra-abdominal abscess, cholangitis, peritonitis, meningitis in neonates, and osteomyelitis. Gas-forming infections are described.",
-  mech: "It is a facultative intracellular organism that survives inside macrophages and epithelial cells and resists serum complement, which underlies its ability to produce deep abscess and bacteremia rather than only a mucosal illness. Two type III secretion systems and a type VI secretion system deliver effectors that block phagosome maturation and interfere with the host inflammatory response. It produces hemolysins, a dermatotoxin and catalases that counter oxidative killing, and it acquires iron efficiently, which is thought to explain the striking predilection for patients with iron overload and cirrhosis. Flagellar motility and adhesins mediate attachment to intestinal epithelium.",
-  lab: "It grows on routine enteric media as a lactose-negative colony that blackens hydrogen-sulfide-indicating agars such as Hektoen or xylose lysine deoxycholate, so it can be mistaken for Salmonella on a plate. Unlike Salmonella it is indole positive and citrate negative, and it is biochemically unreactive compared with most Enterobacterales, which is what tarda, meaning slow, records. Automated systems identify it, and recovery from stool is often not attempted unless the laboratory is asked, since routine stool protocols are aimed at other organisms.",
-  tx: "Most isolates are susceptible to a wide range of agents, and treatment is guided by susceptibility: a fluoroquinolone, a third-generation cephalosporin such as ceftriaxone, piperacillin-tazobactam, trimethoprim-sulfamethoxazole or a carbapenem for severe disease. Enteritis in a healthy person is often self-limited and managed with fluids. Necrotizing soft tissue infection requires urgent debridement, and abscesses require drainage.",
-  alt: "Aminoglycosides, tetracyclines and chloramphenicol have activity. In a patient with cirrhosis presenting with sepsis after seafood exposure, empiric cover for Vibrio vulnificus with a third-generation cephalosporin plus doxycycline will also treat this organism, which is a convenient overlap.",
-  res: "Acquired resistance is uncommon in human isolates, and the species remains predictably susceptible to most agents, which distinguishes it from the hospital Enterobacterales. Resistance to tetracyclines and quinolones has emerged in aquaculture isolates where those drugs are used in fish farming, and plasmid-mediated resistance has been transferred experimentally, so the aquaculture reservoir is watched.",
-  prev: "Cooking fish and shellfish adequately, hand hygiene after handling fish, turtles and aquarium water, prompt cleaning of fish-handling wounds, and avoidance of raw seafood and of aquarium and pond water contact by people with cirrhosis, iron overload or immunosuppression, who carry nearly all the severe disease. No vaccine exists for humans, while vaccines are used in aquaculture.",
-  look: "Salmonella, which also blackens hydrogen sulfide media and causes enteric fever and gastroenteritis, and which is indole negative. Vibrio vulnificus, the other great seafood-associated killer of patients with cirrhosis, which produces bullous cellulitis and sepsis. Aeromonas hydrophila and Plesiomonas shigelloides, which share the freshwater and fish association. Shewanella algae. For liver abscess, Klebsiella pneumoniae and Entamoeba histolytica.",
-  mem: [["Most-tested fact", "Edwardsiella tarda blackens hydrogen sulfide media like Salmonella but is indole positive, and it causes severe disease in people with cirrhosis or iron overload after fish or water exposure."],
-    ["Memory trick", "EDWARDSiella comes from the water: fish, eels and turtles. TARDA means slow, for its sluggish biochemical reactions."],
-    ["Classic setting", "A man with cirrhosis and hemochromatosis who develops fever, hypotension and a rapidly spreading leg infection a day after cleaning catfish, or a child with diarrhea whose family keeps a pet turtle."],
-    ["Step focus", "Iron overload and cirrhosis are the shared risk factors for this organism and for Vibrio vulnificus, and both follow seafood or water exposure."]],
-  worm: [["A genus assembled from leftovers", "Through the 1950s laboratories accumulated hydrogen-sulfide-producing enteric isolates that were not Salmonella and did not fit anywhere, filed under provisional labels such as the Asakusa group in Japan and the Bartholomew group in the United States. In 1965 Ewing and colleagues consolidated them into a new genus named for Philip R. Edwards, an American bacteriologist who had spent a career on enteric taxonomy. The species epithet tarda records the organism's slow and unimpressive biochemical behavior, which is precisely why it had resisted classification."],
-    ["A disease of iron", "Severe Edwardsiella infection falls overwhelmingly on patients with cirrhosis, hereditary hemochromatosis, thalassemia requiring transfusion or other iron-loaded states. The organism scavenges iron efficiently, and free iron in serum removes one of the host's oldest nonspecific defenses, nutritional immunity, in which transferrin and lactoferrin starve invading bacteria. The same pattern appears with Vibrio vulnificus, Yersinia enterocolitica and Listeria, and it is one of the clearest clinical demonstrations that iron availability, not just immune cell function, determines who gets invasive bacterial disease."],
-    ["The turtle in the house", "Small pet turtles were banned from sale in the United States in 1975 because of Salmonella transmission to children, and the same animals carry Edwardsiella tarda. Case reports of pediatric gastroenteritis and of neonatal meningitis have been traced to household reptiles and to the water in which they were kept. The exposure is typically not disclosed unless asked about, since families rarely connect an aquarium to an intestinal illness, and the organism is not sought in routine stool culture protocols."],
-    ["A major problem for fish, a minor one for people", "Edwardsiella causes enormous losses in catfish, eel and tilapia farming, and most of what is known about its type III and type VI secretion systems comes from veterinary and aquaculture research rather than from human medicine. Vaccines and selective breeding for resistance are active fields in aquaculture. Human cases number in the hundreds across the literature. It is a useful reminder that the research effort behind a pathogen's molecular biology sometimes reflects an agricultural economy rather than a clinical burden."]] },
-
-{ id: "hafnia-alvei", k: "bact", g: "Enterobacterales", nm: "Hafnia alvei", also: "H. alvei, formerly Enterobacter alvei, Enterobacter hafniae, Hafnia group",
-  cls: "Gram-negative rod, motile, facultative anaerobe, lactose negative, hydrogen sulfide negative, indole negative, lysine decarboxylase positive, ornithine decarboxylase positive, Voges-Proskauer positive at 22 degrees but often negative at 37 degrees",
-  plain: "An uncommon environmental member of the coliform family that occasionally causes opportunistic infection and is better known as a cheese-ripening organism.",
-  live: "Soil, water, sewage and dairy products, and the intestinal tract of humans, birds and many mammals, including bees, which is where the species name alvei, of the beehive, originates. It is used deliberately in cheese ripening and appears in the flora of fermented foods and of refrigerated meat and fish, where it contributes to spoilage.",
-  spread: "Mostly endogenous from gut colonization in patients who are immunosuppressed or who have had broad-spectrum antibiotics, and from the environment through food, water and contaminated hospital equipment. Nosocomial clusters linked to devices and to contaminated solutions have been reported, and there is no significant person-to-person spread in healthy people.",
-  causes: "Opportunistic infection in patients with cancer, hematologic malignancy, cirrhosis, diabetes, burns, recent abdominal surgery or indwelling devices: bacteremia often from a line or an abdominal source, pneumonia and ventilator-associated pneumonia, wound and burn infection, urinary tract infection, peritonitis including spontaneous bacterial peritonitis, cholangitis, and rarely meningitis, endocarditis and septic arthritis. Its role as a cause of diarrhea has been proposed for decades and remains unsettled, with some isolates from diarrheal stool later shown to be attaching and effacing E. coli misidentified as Hafnia.",
-  mech: "Virulence is limited and no dedicated toxin or invasion system of established importance has been identified, which is consistent with an organism that causes disease almost exclusively in compromised hosts. It possesses lipopolysaccharide that drives the septic response, flagellar motility, siderophore-mediated iron uptake and the ability to form biofilm on plastic, which accounts for line-associated bacteremia. A beta-lactamase and the usual Enterobacterales permeability barriers contribute more to its clinical nuisance value than any aggressive mechanism does.",
-  lab: "A motile, lactose-negative, indole-negative, hydrogen-sulfide-negative Gram-negative rod that is lysine and ornithine decarboxylase positive. The characteristic laboratory quirk is that the Voges-Proskauer and citrate reactions are positive when incubated at room temperature and frequently negative at 37 degrees, which caused decades of misidentification before automated systems and mass spectrometry. It can be misreported as Salmonella on serologic grounds because some strains agglutinate with Salmonella antisera, and it is also confused with Serratia and Enterobacter.",
-  tx: "Therapy follows susceptibility testing, commonly with a carbapenem, piperacillin-tazobactam, cefepime, a fluoroquinolone or an aminoglycoside, alongside removal of an infected line and drainage or source control where there is a collection.",
-  alt: "Trimethoprim-sulfamethoxazole, ceftriaxone for susceptible isolates where inducible resistance is not a concern, or newer beta-lactam and beta-lactamase inhibitor combinations for resistant isolates.",
-  res: "Most isolates carry a chromosomal inducible AmpC beta-lactamase, so they are resistant to ampicillin, amoxicillin-clavulanate and first- and second-generation cephalosporins, and third-generation cephalosporin therapy can select derepressed mutants during treatment, which is the reason a carbapenem or cefepime is favored in serious infection. Acquired extended-spectrum beta-lactamases and, rarely, carbapenemases are reported.",
-  prev: "Standard infection control, line care, source control and antimicrobial stewardship, with no organism-specific measures. The food industry interest runs the other way, since the organism is deliberately used in some cheese production, and its safety in that role has been assessed by food authorities. No vaccine exists.",
-  look: "Serratia marcescens and Enterobacter cloacae, with which it shares inducible AmpC resistance and the opportunistic niche. Salmonella, because of occasional serologic cross-reaction and a similar colony appearance on enteric media, though Hafnia does not produce hydrogen sulfide. Citrobacter and Morganella. In diarrheal illness, attaching and effacing E. coli, which has been shown to account for some cases historically attributed to this organism.",
-  mem: [["Most-tested fact", "Hafnia alvei is an inducible AmpC-producing opportunist whose Voges-Proskauer and citrate reactions are positive at 22 degrees and often negative at 37 degrees."],
-    ["Memory trick", "HAFNIA is the Latin name for Copenhagen, and ALVEI means of the beehive. A Danish bug from a beehive that turns up in cheese and in immunocompromised patients."],
-    ["Classic setting", "A patient with hematologic malignancy and a central line who develops bacteremia with a Gram-negative rod that the laboratory first reports as Enterobacter, with ampicillin resistance on the panel."],
-    ["Step focus", "Inducible AmpC beta-lactamase links this organism to Serratia, Providencia, indole-positive Proteus, Citrobacter and Enterobacter, the group in which third-generation cephalosporin therapy can fail during treatment."]],
-  worm: [["A genus named after Copenhagen", "Hafnia is the medieval Latin name for Copenhagen, chosen by the Danish bacteriologist Vagn Moller in 1954 when he separated these organisms from Enterobacter. The species name alvei, meaning of the beehive, dates to an earlier description of a bacterium isolated from diseased honeybee larvae. The combination produces a name in which neither half refers to anything a clinician will encounter, which is a fair summary of the organism's standing in human medicine."],
-    ["The temperature-dependent biochemistry", "For years this organism confounded identification schemes because its Voges-Proskauer and citrate reactions came out positive in some laboratories and negative in others. The explanation turned out to be incubation temperature: at 22 degrees Celsius the reactions are usually positive, at 37 degrees frequently negative. Identification keys had assumed a single standard condition. It is a neat illustration of how a phenotypic taxonomy built on biochemical reactions carries hidden assumptions, and part of the reason sequencing and mass spectrometry displaced those schemes so quickly."],
-    ["A bacterium in the cheese", "Strains of Hafnia alvei are used as ripening cultures in some soft and semi-soft cheeses, where they contribute to aroma development, and the organism is a natural member of the raw milk flora. European food safety assessment has examined its suitability for deliberate use, weighing its occasional opportunistic pathogenicity and its AmpC beta-lactamase against the absence of transmissible virulence determinants. It sits in the small category of organisms that are simultaneously a food ingredient and a name on a blood culture report."],
-    ["The diarrhea that was not Hafnia", "Through the 1980s and 1990s a series of papers proposed Hafnia alvei as a cause of diarrhea, supported by isolates from patients and by animal studies. Later molecular work on the key strains showed that several were in fact attaching and effacing E. coli that had been misidentified, and the apparent virulence belonged to the misassigned organisms. The association is now regarded as unproven. It is a useful case study in how a pathogenic reputation can be built on misidentification and then take decades to dismantle."]] }
-);
-
-MICRO.push(
-{ id: "tropheryma-whipplei", k: "bact", g: "Other bacteria", nm: "Tropheryma whipplei", also: "T. whipplei, Whipple disease organism, formerly Tropheryma whippelii, intestinal lipodystrophy",
-  cls: "Gram-positive actinobacterium with a trilaminar cell wall, rod shaped, nonmotile, reduced genome, obligately host associated, not cultivable on routine media and grown only in cell culture",
-  plain: "A rare bacterium that fills the small intestine with foamy macrophages and causes years of weight loss, diarrhea and arthritis before anyone suspects an infection.",
-  live: "Humans and the environment, particularly sewage, where it is detected by molecular methods. Asymptomatic carriage in stool is found in a few percent of healthy adults in Europe and at much higher rates in some African populations and in sewage workers, so exposure is far commoner than disease.",
-  spread: "Fecal-oral and possibly oral-oral, with evidence of transmission within families and higher carriage in people with occupational sewage exposure. Disease requires host susceptibility, which is thought to involve a defect in macrophage handling of the organism and is associated with particular HLA alleles.",
-  causes: "Classic Whipple disease: a prodrome of migratory seronegative arthralgia or arthritis lasting years, then weight loss, chronic diarrhea, steatorrhea and malabsorption with hypoalbuminemia, lymphadenopathy and hyperpigmentation. Also localized forms without intestinal disease: blood culture negative endocarditis, isolated neurological disease with cognitive decline, supranuclear ophthalmoplegia and the characteristic oculomasticatory myorhythmia, uveitis, spondylodiscitis, pulmonary and pleural disease, and in children acute gastroenteritis, pneumonia and bacteremia. Immune reconstitution inflammatory syndrome can follow the start of treatment.",
-  mech: "The organism has a markedly reduced genome and depends on the host for many amino acids, which is why it cannot be grown on ordinary media. It is taken up by intestinal macrophages, where it blocks phagosome maturation and replicates, inducing an interleukin-16-rich, alternatively activated macrophage phenotype that fails to kill it. The accumulated organisms and their glycoprotein-rich degradation products distend macrophages in the lamina propria, which obstructs lymphatic drainage and produces fat malabsorption, so the disease was originally described as a lipodystrophy. Disease occurs only in people whose macrophages fail to clear the organism, making host immunology as decisive as the bacterium.",
-  lab: "Duodenal biopsy shows a lamina propria packed with foamy macrophages whose contents stain magenta with periodic acid-Schiff and resist diastase digestion, and the organisms are visible on electron microscopy with a trilaminar wall. Polymerase chain reaction on biopsy, stool, saliva, cerebrospinal fluid, joint fluid or a resected valve confirms the diagnosis, and immunohistochemistry is used on tissue. Cerebrospinal fluid testing is performed even without neurologic symptoms because occult central nervous system involvement changes treatment. The periodic acid-Schiff positive macrophage is also seen with Mycobacterium avium complex, so acid-fast staining is done alongside.",
-  tx: "Induction with ceftriaxone or meropenem intravenously for two weeks, chosen for central nervous system penetration, followed by oral trimethoprim-sulfamethoxazole for a year or longer, has been the long-standing approach, and a randomized trial supported this over earlier regimens. An alternative regimen of doxycycline plus hydroxychloroquine, with the hydroxychloroquine raising vacuolar pH so that doxycycline becomes bactericidal against the intracellular organism, is favored by some groups, with sulfamethoxazole added for central nervous system disease.",
-  alt: "Doxycycline with hydroxychloroquine followed by lifelong doxycycline in relapsing disease, and corticosteroids for immune reconstitution inflammatory syndrome. Valve surgery for endocarditis. Relapse, particularly in the central nervous system, is the central problem and drives the long durations used.",
-  res: "Trimethoprim is intrinsically inactive because the organism lacks the folate pathway target, so the activity of trimethoprim-sulfamethoxazole rests entirely on the sulfamethoxazole component, and acquired sulfonamide resistance through folP mutation has been described in treatment failures. In vitro the organism is not killed by doxycycline alone at lysosomal pH, which is the rationale for adding hydroxychloroquine. Beta-lactams are active, which is why induction uses a cephalosporin or carbapenem.",
-  prev: "No vaccine and no established preventive measure, and since carriage is common while disease is rare, prevention is not a practical target. Sanitation and hygiene reduce exposure. The clinically important measure is secondary: long treatment and prolonged follow-up with repeated molecular testing to detect relapse.",
-  look: "Mycobacterium avium complex infection in advanced HIV, which produces periodic acid-Schiff positive foamy macrophages in the duodenum and is distinguished by acid-fast staining. Celiac disease, small intestinal bacterial overgrowth, lymphoma and Crohn disease in chronic malabsorption. Seronegative spondyloarthropathy and rheumatoid arthritis during the arthritic prodrome, which is where immunosuppressive treatment can unmask fulminant disease. Coxiella burnetii and Bartonella in culture negative endocarditis. Sarcoidosis and macrophage storage disorders.",
-  mem: [["Most-tested fact", "Periodic acid-Schiff positive foamy macrophages in the duodenal lamina propria are the hallmark of Whipple disease, and the organism is Tropheryma whipplei."],
-    ["Memory trick", "TROPHERYMA means nourishment barrier, for the malabsorption. Think of a middle-aged white man with years of joint pain, then diarrhea and weight loss. Arthritis comes first."],
-    ["Classic setting", "A man in his fifties, often a farmer or sewage worker, with eight years of migratory seronegative arthritis treated with immunosuppressants, who then develops diarrhea, twenty kilograms of weight loss and lymphadenopathy."],
-    ["Step focus", "The trimethoprim component is inactive against this organism, so trimethoprim-sulfamethoxazole works through sulfamethoxazole alone, and central nervous system involvement is sought even when the patient has no neurologic symptoms."]],
-  worm: [["A pathologist who got it right in 1907", "George Hoyt Whipple described a missionary doctor who died after years of weight loss, diarrhea and arthritis, found intestinal lymphatics stuffed with fat-laden macrophages, and named the condition intestinal lipodystrophy. He also noted rod-shaped structures in a silver-stained section and wrote that an infectious cause should be considered. Nobody followed that suggestion for decades. Whipple went on to win a Nobel Prize for work on liver therapy in anemia, and his first paper's throwaway observation turned out to be the answer."],
-    ["Forty years from antibiotic response to a name", "In the 1950s patients began responding to antibiotics, which settled that the disease was infectious, and electron microscopy in the 1960s showed bacteria inside the macrophages. The organism still could not be cultured. Its identity was established in 1991 and 1992 by amplifying and sequencing ribosomal RNA genes directly from infected tissue, placing it among the actinobacteria, and it was finally grown in human fibroblast culture in 2000. It is one of the landmark cases for culture-independent identification of a pathogen."],
-    ["Common exposure, rare disease", "Molecular surveys find the organism in the stool of a few percent of healthy Europeans, in a much larger share of sewage workers and of children in parts of Africa, and in saliva and gastric fluid. Classic Whipple disease, by contrast, is reported at roughly one case per million people per year and falls overwhelmingly on middle-aged men of European descent. That mismatch points squarely at the host: specific HLA associations and a demonstrable failure of macrophages to degrade the organism distinguish patients from the many carriers."],
-    ["The arthritis that comes first and gets treated wrongly", "The joint symptoms typically precede intestinal disease by years, are migratory, seronegative and nondestructive, and are routinely diagnosed as seronegative spondyloarthropathy. Patients are then given glucocorticoids, methotrexate or tumor necrosis factor inhibitors, and several series document rapid deterioration into florid Whipple disease when that happens. It has become one of the standard reasons to reconsider the diagnosis in a seronegative arthritis that worsens on immunosuppression, particularly when weight loss or diarrhea appears."]] },
-
-{ id: "rothia-mucilaginosa", k: "bact", g: "Other bacteria", nm: "Rothia mucilaginosa", also: "R. mucilaginosa, formerly Stomatococcus mucilaginosus, Micrococcus mucilaginosus",
-  cls: "Gram-positive coccus in pairs, tetrads and clusters, catalase negative or weakly positive, coagulase negative, nonmotile, facultative anaerobe, forms adherent sticky mucoid colonies, resistant to bacitracin and to lysostaphin",
-  plain: "A sticky mouth coccus that causes bacteremia in patients with chemotherapy mucositis and can seed heart valves and the central nervous system.",
-  live: "The human oral cavity, where it is a normal and abundant resident of saliva, tongue and dental plaque, and the upper respiratory tract. It colonizes the airways in cystic fibrosis and bronchiectasis and is often recovered from sputum there.",
-  spread: "Endogenous. It crosses into the bloodstream through ulcerated oral mucosa during chemotherapy-induced mucositis, or along a central venous catheter, and it is inoculated directly in ocular surgery and in neurosurgical procedures and shunt placement.",
-  causes: "Bacteremia in neutropenic patients with hematologic malignancy or after stem cell transplant, where it is one of the recognized oral-flora organisms alongside viridans streptococci and can progress to septic shock and acute respiratory distress. Also infective endocarditis on native and prosthetic valves, which is often indolent but destructive, central nervous system infection including meningitis, brain abscess and ventriculoperitoneal shunt infection, peritonitis in patients on peritoneal dialysis, catheter-related infection, endophthalmitis, keratitis, prosthetic joint infection, pneumonia, and chronic airway colonization in cystic fibrosis of uncertain pathogenic significance.",
-  mech: "Its defining feature is an abundant extracellular polysaccharide slime that makes colonies sticky and mediates adherence to tooth enamel, to plastic catheters, to prosthetic valve material and to shunt tubing, and that supports biofilm in which the organism divides slowly and resists antibiotics and phagocytes. It adheres to fibrin-platelet deposits on damaged endothelium, which accounts for the endocarditis. No exotoxin of consequence has been described, so invasive disease depends on a breached barrier and a neutropenic or immunosuppressed host rather than on aggressive virulence, and the severity in neutropenic bacteremia reflects the absence of neutrophils rather than any special potency.",
-  lab: "It grows on blood agar as nonhemolytic, white to grayish, strikingly sticky mucoid colonies that adhere to the agar and are difficult to pick up with a loop, which is the most useful clue at the bench. It is a Gram-positive coccus in tetrads, variably catalase positive, and resistant to bacitracin and to lysostaphin, which separates it from staphylococci and micrococci. Because it resembles a coagulase-negative staphylococcus or a micrococcus, it was historically dismissed as a contaminant, and mass spectrometry or 16S sequencing is now what names it. Repeated positive cultures from a neutropenic patient are taken seriously rather than discarded.",
-  tx: "Treatment follows susceptibility, with vancomycin commonly used in neutropenic bacteremia because penicillin resistance occurs and because empiric Gram-positive cover in that setting is usually vancomycin. Penicillin, ampicillin or a third-generation cephalosporin is appropriate for susceptible isolates, and endocarditis is treated with a prolonged beta-lactam or vancomycin course, often with an aminoglycoside added for synergy.",
-  alt: "Linezolid, daptomycin, clindamycin, rifampin as a companion agent in device infection, or a carbapenem, guided by susceptibility. Removal of an infected catheter, shunt or prosthesis is frequently decisive, as it is for other slime-producing device organisms.",
-  res: "Reduced penicillin susceptibility and frank penicillin resistance are reported in a significant minority of isolates, and resistance to trimethoprim-sulfamethoxazole, erythromycin and clindamycin occurs. Vancomycin susceptibility has remained reliable. The organism is intrinsically resistant to bacitracin and to lysostaphin, which are laboratory identification features rather than therapeutic issues.",
-  prev: "Oral and dental assessment before chemotherapy and intensive oral care during it, which addresses the reservoir and the route together, along with central line care and prophylaxis strategies in profound neutropenia. Aseptic technique in neurosurgical and ophthalmic procedures. No vaccine exists.",
-  look: "Coagulase-negative staphylococci, for which it is most often mistaken, and Micrococcus species, which also form tetrads but are bacitracin susceptible and lysostaphin resistant in a different pattern. Viridans streptococci and Granulicatella species, which share the mucositis-associated neutropenic bacteremia niche. Other Rothia species including R. dentocariosa, which also causes endocarditis. In sputum from cystic fibrosis, Staphylococcus aureus and the usual airway flora, where distinguishing colonization from infection is the real question.",
-  mem: [["Most-tested fact", "Rothia mucilaginosa is a sticky mucoid Gram-positive coccus from the mouth that causes bacteremia in neutropenic patients with mucositis and is often dismissed as a contaminant."],
-    ["Memory trick", "MUCILAGINOSA means slimy. Colonies stick to the plate like glue, and the slime is what lets it stick to catheters and valves too."],
-    ["Classic setting", "A patient with acute leukemia on day ten after induction chemotherapy, with severe oral mucositis, fever and a Gram-positive coccus in blood cultures that the laboratory initially reports as a probable skin contaminant."],
-    ["Step focus", "Oral mucositis is the portal for this organism along with viridans streptococci and Granulicatella, and empiric vancomycin is used because penicillin resistance occurs."]],
-  worm: [["A name that changed when the slime was explained", "The organism was described as Micrococcus mucilaginosus, then moved in 1982 into a genus of its own, Stomatococcus, meaning mouth coccus, and finally transferred in 2000 to Rothia, named for the American microbiologist Genevieve Roth, on the basis of genetic relatedness to Rothia dentocariosa. Three names in fifty years, all of which appear in the clinical literature. The only constant has been mucilaginosa, because the slime is the one feature nobody has ever disputed."],
-    ["The contaminant that is not", "A Gram-positive coccus in a single blood culture bottle is usually skin flora, and for decades this organism was discarded on that basis, particularly when laboratories reported it as Micrococcus. Case series from hematology units in the 1980s onward established that in a neutropenic patient with mucositis, these isolates frequently represent genuine bacteremia with a real risk of shock. The result is a species-specific exception to a generally sound rule, which is why the identification matters as much as the culture result."],
-    ["Slime as a career", "Extracellular polysaccharide allows this organism to glue itself to tooth enamel in the mouth, which is its natural job, and the same polymer sticks it equally well to silicone shunt tubing, polyurethane catheters and Dacron valve rings. Device infections with this organism therefore arise not from any adaptation to medicine but from material science coincidence: the surfaces humans implant resemble, to a sticky bacterium, the surfaces it already lives on. The clinical consequence is that removing the device usually outperforms adding another drug."],
-    ["An organism rising with transplantation", "Reports of invasive Rothia mucilaginosa have increased, and the likeliest explanation has two parts. The number of patients with profound chemotherapy-induced mucositis and central venous access has grown, and mass spectrometry now names organisms that would once have been reported as coagulase-negative staphylococci or micrococci and ignored. A pathogen can become visible either because there are more cases or because the laboratory stopped discarding them, and here both appear to have happened at once."]] }
-);
-
-
-;
-/* ===== Microbiology set 14: reoviruses, astro and caliciviruses, hepatitis D and E, henipaviruses, bunyaviruses, arenaviruses, HIV-2, HTLV-2 and bat lyssavirus (draft, Oct 30 2026) ===== */
-MICRO.push(
-{ id: "rotavirus", k: "vir", g: "Reoviruses", nm: "Rotavirus", also: "RV, rotavirus A, infantile gastroenteritis virus, wheel virus",
-  cls: "Double-stranded RNA, eleven segments, non-enveloped, triple-layered icosahedral capsid, genus Rotavirus, family Sedoreoviridae within the reovirus group",
-  plain: "The wheel-shaped gut virus that was the leading cause of severe infant diarrhea worldwide until vaccines arrived.",
-  live: "Humans are the reservoir for the strains that infect humans, with animal rotaviruses in cattle, pigs and poultry occasionally reassorting into human strains. The virus is shed in enormous numbers, up to a trillion particles per gram of stool, and survives on hands, toys and surfaces for days.",
-  spread: "Fecal-oral, with a very small infectious dose of perhaps ten to a hundred particles. Household and day-care transmission dominates, aided by contaminated hands, fomites and shared surfaces. Water and food-borne spread occurs, and respiratory droplet spread has been proposed but is not established.",
-  causes: "Acute gastroenteritis in infants and young children, classically between six months and two years, with one to three days of vomiting followed by profuse watery diarrhea lasting up to a week, low-grade fever and isotonic or hypernatremic dehydration. Severe disease concentrates in the first two years because later infections are blunted by partial immunity. Extraintestinal findings include transient transaminase elevation, and reports link infection to febrile seizures, benign infantile convulsions and, rarely, intussusception. Reinfection in adults is usually mild or silent, and chronic infection occurs in children with severe combined immunodeficiency.",
-  mech: "The outer capsid proteins VP4 and VP7, which define the P and G serotypes, mediate attachment to histo-blood group antigens and sialylated glycans on mature enterocytes at the villus tip, and VP4 is cleaved by intestinal trypsin to make the particle infectious, so the gut lumen activates the virus that infects it. Replication destroys the absorptive villous enterocytes while leaving the secretory crypt cells intact, producing villous blunting, loss of brush border lactase and sucrase, and an osmotic diarrhea from undigested disaccharides. The nonstructural protein NSP4 is a genuine viral enterotoxin: it raises intracellular calcium, drives chloride secretion through a calcium-dependent route independent of cAMP, and stimulates the enteric nervous system, so a secretory component is layered on top of the malabsorptive one. Enteric nerve activation also explains the prominent vomiting and the response of some children to antisecretory agents. Because the genome is segmented, co-infection allows reassortment, which is how new human strains and the reassortant vaccines are generated.",
-  lab: "Stool enzyme immunoassay or lateral flow antigen testing is the usual clinical method and is rapid and sensitive. Multiplex nucleic acid panels on stool now detect it alongside other enteric pathogens, and reverse transcription PCR with G and P typing is used for surveillance. Electron microscopy shows the wheel-like particle with short spokes radiating from a hub, which gave the virus its name from the Latin rota. Stool is negative for blood and leukocytes, and the biochemistry shows an isotonic or hypernatremic dehydration with a non-anion-gap acidosis from bicarbonate loss.",
-  tx: "Oral rehydration solution is the treatment, with intravenous isotonic fluid reserved for shock, intractable vomiting or failed oral therapy, and early refeeding once rehydrated. Zinc supplementation shortens diarrhea and reduces recurrence in young children in low-income settings. No antiviral is licensed.",
-  alt: "Ondansetron reduces vomiting enough to allow oral rehydration to succeed in the emergency department. Racecadotril, an enkephalinase inhibitor, is used in some countries as an antisecretory agent, and certain probiotic strains shorten the illness modestly. Antimotility agents are generally avoided in young children, and nitazoxanide has been studied with inconsistent results.",
-  res: "Not applicable in the absence of antiviral therapy. The analogous problem is immunological escape: the vaccines were built around the G and P types circulating when they were designed, and surveillance watches for strains such as G2P[4] and the emerging G9 and G12 lineages that are less well matched, although cross-protection has so far held up better than feared.",
-  prev: "Live oral vaccines given in infancy are the central measure. Rotarix is a monovalent attenuated human strain and RotaTeq a pentavalent human-bovine reassortant, and both markedly reduce severe disease, hospitalization and death, with substantial indirect protection of unvaccinated older children. An earlier vaccine, RotaShield, was withdrawn in 1999 after an association with intussusception; the current vaccines carry a much smaller excess risk, concentrated in the week after the first dose, which is why the schedule is completed early in infancy. Hand hygiene helps but is a weak brake on a virus with this infectious dose.",
-  look: "Norovirus, which affects all ages, brings more vomiting and a shorter course, and causes winter outbreaks in closed settings. Sapovirus and astrovirus, which produce a milder version of the same illness. Enterotoxigenic E. coli and cholera, which cause secretory diarrhea without villous injury. Invasive bacterial dysentery, which brings fever, blood and fecal leukocytes. Intussusception itself, which presents with vomiting and bloody stool and is both a differential and a rare complication. Cow's milk protein intolerance and post-infectious lactase deficiency explain diarrhea persisting after the virus clears.",
-  mem: [["Most-tested fact", "Rotavirus destroys villous tip enterocytes and secretes NSP4, a viral enterotoxin, so the diarrhea is both osmotic from lost disaccharidases and secretory from raised intracellular calcium."],
-    ["Memory trick", "ROTA for the wheel on electron microscopy, and remember the segmented double-stranded RNA: eleven segments, so it reassorts, and the vaccines themselves are reassortants."],
-    ["Classic setting", "A nine-month-old in winter with two days of vomiting then watery diarrhea ten times a day, sunken eyes, a sodium of 150 and a bicarbonate of 14, with no blood in the stool."],
-    ["Step focus", "Live oral vaccine in infancy, the historic RotaShield withdrawal over intussusception, and the osmotic plus secretory mechanism are the three points that recur."]],
-  worm: [["A wheel seen in Melbourne", "Ruth Bishop and colleagues at the Royal Children's Hospital in Melbourne were looking for the cause of infant gastroenteritis that no bacterium explained. In 1973 they examined duodenal biopsies by electron microscopy and found virus particles packed into the epithelium, then found the same particles in stool. Thomas Flewett in Birmingham named them rotaviruses for the wheel-like appearance, a hub with short radiating spokes inside a smooth rim. Within a few years the agent behind the commonest severe childhood illness on earth had a name and a picture."],
-    ["The enterotoxin nobody expected from a virus", "Enterotoxins were thought to be a bacterial device, the business of cholera and enterotoxigenic E. coli. In the 1990s Mary Estes and colleagues showed that rotavirus NSP4, a nonstructural glycoprotein, raises intracellular calcium and provokes chloride secretion when given to young mice, with no virus present at all. It was the first viral enterotoxin described. The finding explained why diarrhea can begin before much villous damage is visible and why the fluid loss outruns what simple malabsorption would predict."],
-    ["The vaccine that was withdrawn", "RotaShield, a rhesus-human reassortant, was licensed in the United States in 1998. Within a year post-marketing surveillance detected a cluster of intussusception cases shortly after the first dose, at roughly one excess case per ten thousand infants, and the manufacturer withdrew it. The episode delayed rotavirus vaccination worldwide by almost a decade, including in countries where the disease killed hundreds of thousands of children annually. The replacement vaccines were therefore tested in trials of sixty to seventy thousand infants, powered specifically to measure that one outcome."],
-    ["Why it hits the gut at a particular age", "Newborns are partly protected by maternal antibody and by breast milk, and the receptors the virus uses are developmentally regulated, so severe disease concentrates between about six and twenty-four months, as passive protection fades and before natural infection has built immunity. Blood group also matters: the P[8] strains that dominate human infection bind Lewis and secretor histo-blood group antigens, so non-secretor children are relatively resistant and were observed to be underrepresented among both cases and vaccine responders."]] },
-
-{ id: "colorado-tick-fever-virus", k: "vir", g: "Reoviruses", nm: "Colorado tick fever virus", also: "CTFV, mountain tick fever, mountain fever, American mountain tick fever",
-  cls: "Double-stranded RNA, twelve segments, non-enveloped, double-layered icosahedral capsid, genus Coltivirus, family Spinareoviridae within the reovirus group",
-  plain: "A tick-borne mountain virus of the western United States that hides inside red blood cells and causes days of fever that come and go.",
-  live: "Small mammals of montane forest, particularly golden-mantled ground squirrels, chipmunks, porcupines and deer mice, maintain the virus, and the Rocky Mountain wood tick Dermacentor andersoni is both vector and long-term reservoir, since infected ticks remain infected for life through their molts.",
-  spread: "Bite of an adult Dermacentor andersoni tick, almost always between March and September and at elevations of roughly 1,200 to 3,000 meters. Transmission by blood transfusion has been documented because viremia persists for weeks, and rare laboratory and needlestick cases are recorded. There is no person-to-person spread by casual contact.",
-  causes: "An abrupt influenza-like illness three to six days after the bite, with high fever, severe headache, retro-orbital pain, photophobia, myalgia and prostration, usually without a rash. Roughly half of patients experience the characteristic saddleback pattern: two or three days of fever, a remission of a day or two, then a second febrile period, which is the feature the disease is remembered for. Leukopenia and thrombocytopenia are typical. Convalescence can be slow in adults, with weeks of fatigue. Children occasionally develop meningitis, encephalitis or a hemorrhagic syndrome, and these severe outcomes are concentrated in those under ten.",
-  mech: "The virus is unusual among arboviruses in that it infects erythroid precursor cells in the bone marrow. Mature red cells released from those precursors carry virus inside them, and because the erythrocyte has no machinery to clear an intracellular virus and is not surveyed by antibody, the infection rides in the circulation for the lifespan of the cell. This is the basis of a viremia that persists for four to six weeks after symptoms resolve, long after neutralizing antibody has appeared, and it is why the virus is transmissible by transfusion well into convalescence. Infection of marrow precursors also explains the leukopenia and thrombocytopenia, which reflect suppression of several lineages rather than peripheral destruction. The biphasic fever is thought to track successive waves of release from the marrow. Central nervous system disease in children appears to follow direct invasion rather than an immune mechanism.",
-  lab: "Reverse transcription PCR on whole blood, not serum, is the method of choice, because the virus is inside the red cells; the same reasoning makes immunofluorescent staining of a blood smear for viral antigen in erythrocytes a historic and still useful test. Antibody appears relatively late, often after two weeks, so acute serology is frequently negative and paired sera are needed. The blood count characteristically shows leukopenia with a left shift and mild thrombocytopenia. Cerebrospinal fluid in the rare neurologic case shows a lymphocytic pleocytosis.",
-  tx: "Supportive care with antipyretics, analgesia and fluids. The illness is self-limited in nearly all adults and no antiviral is licensed. Deferral from blood donation for six months after the illness addresses the prolonged viremia.",
-  alt: "No established alternative therapy. Salicylates are generally avoided given the thrombocytopenia and the pediatric context, and ribavirin has been examined in vitro without clinical data.",
-  res: "Not applicable in the absence of antiviral therapy.",
-  prev: "Avoiding tick habitat in the Rocky Mountain spring and summer, permethrin-treated clothing, repellents, daily skin checks and prompt tick removal. No vaccine exists, and the small number of annual cases makes one unlikely. Blood donation deferral after recent illness or recent tick bite in endemic areas is the transfusion safeguard.",
-  look: "Rocky Mountain spotted fever, which shares the tick, the region and the season but brings a rash spreading from wrists and ankles and is treated urgently with doxycycline, so it is the diagnosis that cannot wait. Tularemia and tick-borne relapsing fever, which also relapse. Anaplasmosis and ehrlichiosis, which cause leukopenia and thrombocytopenia with transaminase rise. Influenza and other viral syndromes outside tick season. Heartland and Bourbon virus infections in a different geography. The old term mountain fever covered several of these at once.",
-  mem: [["Most-tested fact", "The virus infects erythroid precursors and persists inside circulating red cells, so viremia lasts weeks, PCR is run on whole blood, and the illness is transmissible by transfusion during convalescence."],
-    ["Memory trick", "Colorado tick fever is the saddleback fever: up, down, up again. Twelve segments of double-stranded RNA, a Dermacentor tick and a red cell hideout."],
-    ["Classic setting", "A hiker returning from the Colorado Rockies in June with a removed tick, three days of high fever and headache, a brief well day, then fever again, with a white count of 2,800 and no rash."],
-    ["Step focus", "Compare it with Rocky Mountain spotted fever, which shares vector and region but has a centripetal petechial rash and needs doxycycline, while Colorado tick fever has no rash and no specific therapy."]],
-  worm: [["The fever the pioneers called mountain fever", "Travelers on the overland trails to Oregon and California described mountain fever as a routine hazard of the high country, and the term swept together typhoid, Rocky Mountain spotted fever, relapsing fever and this virus. Reports of a short biphasic tick-associated fever in Colorado appeared from the 1850s. The illness was separated from spotted fever clinically in 1930 by Becker, who noted the absence of rash, and the virus was isolated in 1946 by Florio and colleagues, who also demonstrated transmission by Dermacentor andersoni."],
-    ["A virus that chose the one cell with no defenses", "Most viruses need a cell with ribosomes and a nucleus. Colorado tick fever virus infects the nucleated erythroid precursor, and the progeny then sit inside cells that extrude their nucleus and ribosomes on the way to becoming mature red cells. The result is a sealed compartment that antibody cannot enter, that presents no antigen on its surface for cytotoxic T cells to recognize, and that circulates for about 120 days. Prolonged viremia is not a failure of the immune response but a consequence of where the virus parked."],
-    ["Why the blood bank cares about a self-limited illness", "A patient feeling entirely well six weeks after Colorado tick fever can still carry infectious virus in their red cells, and transfusion-transmitted cases have been reported. The same intra-erythrocytic persistence that makes the illness harmless to the convalescent host makes the donated unit a vehicle. It is a small, clear example of a general principle in transfusion medicine: the relevant question about a donor is not whether they are sick but whether their blood is sterile, and the two are not the same."],
-    ["Twelve segments and a quiet relative", "Coltiviruses carry twelve genome segments, the most of any reovirus group that infects humans, and the segmentation again raises the prospect of reassortment, although recognized human strains are closely related. Eyach virus, a European coltivirus carried by Ixodes ticks, is its nearest relative and has been associated serologically with neurologic illness in Germany and France without a firmly established disease. The group as a whole is an instructive reminder that the reoviruses reach far beyond rotavirus."]] }
-);
-
-MICRO.push(
-{ id: "astrovirus", k: "vir", g: "Astroviruses", nm: "Astrovirus", also: "HAstV, human astrovirus, classic astrovirus serotypes 1 to 8, MLB and VA clades",
-  cls: "Positive-sense single-stranded RNA, non-segmented, non-enveloped, icosahedral capsid with a five or six-pointed star outline on electron microscopy, genus Mamastrovirus, family Astroviridae",
-  plain: "A small star-shaped gut virus that causes a mild watery diarrhea in young children and a much more serious illness in people without working immunity.",
-  live: "Humans carry the classic serotypes, and distinct astroviruses circulate in cattle, pigs, mink, poultry and bats, with mink and avian strains causing systemic disease in those hosts. Asymptomatic shedding in children is common, which keeps the virus in circulation between outbreaks. The non-enveloped capsid is stable in the environment and resists many disinfectants.",
-  spread: "Fecal-oral, through contaminated hands, surfaces, food and water. Outbreaks occur in day-care centers, schools, pediatric wards, military units and residential homes for older adults, and shellfish and drinking water have been implicated in point-source events.",
-  causes: "Acute watery diarrhea in infants and children, usually milder and shorter than rotavirus, lasting two to four days with low-grade fever, abdominal discomfort, vomiting in a minority and dehydration that rarely becomes severe. It accounts for a consistent minority of childhood gastroenteritis worldwide and a share of traveler's diarrhea. In older adults it causes outbreak diarrhea in institutions. The important exception is the immunocompromised host: in children with primary immunodeficiency and in recipients of hematopoietic stem cell or solid organ transplants it can cause prolonged, high-volume diarrhea lasting months, and the newer MLB and VA clades have been recovered from cases of encephalitis and meningitis in profoundly immunosuppressed patients.",
-  mech: "The capsid spike binds enterocyte receptors in the small intestine, and the virus replicates in the mature epithelium of the villus. Histology shows surprisingly little destruction compared with rotavirus: villous architecture is largely preserved and inflammation is mild, which fits the milder clinical course. Current work indicates that much of the diarrhea comes from disruption of the epithelial barrier rather than cell death, because the capsid protein itself increases paracellular permeability by rearranging tight junction proteins including occludin, an effect reproducible with purified capsid and no replication at all. The virus also encodes several strategies to blunt innate signaling, limiting interferon induction, which helps explain both the asymptomatic carriage in healthy children and the runaway infection when T-cell and antibody responses are absent. Neuroinvasion in immunocompromised patients appears to be direct, with virus recovered from brain tissue.",
-  lab: "Multiplex nucleic acid panels on stool are now the usual route to the diagnosis, and reverse transcription PCR with clade-specific primers is used in research and outbreak work, since standard panels may miss the divergent MLB and VA viruses. Enzyme immunoassays exist for the classic serotypes. Electron microscopy of stool shows a 28 to 30 nanometer particle, and in a fraction of particles the surface outline is a five or six-pointed star, which is what gave the family its name from the Greek astron. Stool shows no blood or leukocytes.",
-  tx: "Oral rehydration and continued feeding, with intravenous fluid when oral therapy fails. In transplant and immunodeficient patients the decisive intervention is restoring immune function, by reducing immunosuppression where the graft allows or by immune reconstitution, since the infection generally persists until the host can clear it. No licensed antiviral exists.",
-  alt: "Nitazoxanide, ribavirin and oral or intravenous immunoglobulin have each been reported in small case series of chronic infection in immunocompromised patients with mixed results, and none has trial support. Zinc is used in young children with diarrhea in line with general practice rather than for this virus specifically.",
-  res: "Not applicable in the absence of established antiviral therapy.",
-  prev: "Hand hygiene with soap and water, environmental cleaning with agents effective against non-enveloped viruses, exclusion of symptomatic staff and children from group settings, safe water and shellfish handling. There is no vaccine for human astrovirus, although vaccines are used in poultry against avian strains.",
-  look: "Rotavirus, which is more severe with greater dehydration and is detected by rapid antigen test. Norovirus, which produces more vomiting across all ages and sharper outbreaks. Sapovirus, which is clinically almost indistinguishable. Enteric adenovirus, which causes a longer diarrhea in infants. In the immunocompromised patient the differential widens to cytomegalovirus colitis, cryptosporidiosis, Clostridioides difficile, graft-versus-host disease of the gut and mycophenolate-associated diarrhea, and stool testing is used to separate them.",
-  mem: [["Most-tested fact", "Astrovirus causes a mild, self-limited watery diarrhea in young children, but in immunocompromised and transplant patients it causes prolonged diarrhea and, rarely, encephalitis."],
-    ["Memory trick", "Astro for the star outline on electron microscopy. A star-shaped, non-enveloped, positive-sense RNA virus that loosens tight junctions rather than killing cells."],
-    ["Classic setting", "A day-care outbreak of three days of watery diarrhea in toddlers who all recover, or months of high-volume diarrhea in a child after stem cell transplant with astrovirus on a stool panel."],
-    ["Step focus", "The barrier mechanism is the distinguishing point: capsid protein disrupts occludin and increases paracellular permeability, so diarrhea occurs with little villous destruction."]],
-  worm: [["Found by looking at the stool of babies with diarrhea", "In 1975 June Appleton and Marion Higgins in Britain used electron microscopy on stools from an outbreak of neonatal diarrhea and described small round particles unlike any known agent. In the same year Madeley and Cosgrove in Glasgow published images of similar particles with a distinct five or six-pointed star on the surface and proposed the name astrovirus. The discovery belongs to the brief era, roughly 1970 to 1980, in which the electron microscope opened the viral causes of gastroenteritis one picture at a time."],
-    ["A virus that opens the door instead of breaking it", "Most enteric viruses cause diarrhea by destroying absorptive cells, and the extent of villous damage usually tracks the severity of fluid loss. Astrovirus does something different. Work in cell monolayers showed that purified, replication-incompetent capsid protein alone increased permeability and redistributed occludin at the tight junction. The epithelium leaks without dying. It gave enteric virology a second mechanism to think with and helped explain an illness whose biopsy findings look far too benign for the symptoms."],
-    ["The clades that the tests could not see", "For three decades human astroviruses meant eight closely related classic serotypes. Then metagenomic sequencing of stool from Melbourne in 2008 found a virus, MLB1, so divergent that standard primers and antibodies missed it entirely, and the VA clades followed from Virginia. These viruses turn out to be widespread, and serosurveys suggest most adults have met them. It is a general lesson about diagnostic blind spots: a pathogen absent from the results may simply be absent from the assay."],
-    ["Encephalitis from a diarrhea virus", "Astroviruses cause fatal neurologic disease in mink and in young cattle, so neuroinvasion was known in veterinary medicine long before it was seen in people. Since 2010 a small number of cases have been reported in profoundly immunosuppressed patients, including a child with X-linked agammaglobulinemia and recipients of transplants, with virus detected in brain tissue by sequencing rather than by any routine test. The cases are rare, but they shifted astrovirus from a purely enteric agent to one capable of reaching the central nervous system when immunity fails."]] },
-
-{ id: "sapovirus", k: "vir", g: "Caliciviruses", nm: "Sapovirus", also: "Sapporo virus, SaV, human calicivirus, formerly classic human calicivirus",
-  cls: "Positive-sense single-stranded RNA, non-segmented, non-enveloped, icosahedral capsid with cup-shaped surface depressions and a Star of David outline, genus Sapovirus, family Caliciviridae",
-  plain: "Norovirus's quieter cousin, a cup-shaped gut virus that causes vomiting and diarrhea mostly in young children and in institutional outbreaks.",
-  live: "Humans carry the genogroups that infect humans, GI, GII, GIV and GV, while pigs, dogs, mink, sea lions and bats carry their own. Pig sapoviruses are genetically close enough to human GIII to have raised questions about zoonotic potential, although human infection from pigs has not been demonstrated. The capsid is environmentally stable and resists alcohol-based hand sanitizer, chlorination at low doses and drying.",
-  spread: "Fecal-oral, with person-to-person spread dominating and a small infectious dose. Vomitus aerosols contaminate surfaces in the way they do for norovirus. Food-borne and water-borne outbreaks are reported, including shellfish and prepared food handled by an infected worker. Shedding continues for one to four weeks after symptoms resolve, which sustains transmission in nurseries.",
-  causes: "Acute gastroenteritis with vomiting, which is often the leading symptom, watery non-bloody diarrhea, abdominal cramps, low-grade fever and malaise, typically lasting two to four days. It is chiefly a disease of children under five, where it ranks behind rotavirus and norovirus but ahead of most other causes, and in settings with rotavirus vaccination its relative share has risen. Outbreaks occur in day-care centers, schools, hospitals, long-term care homes, cruise ships and military units, with older adults suffering more dehydration. Prolonged infection is described in transplant recipients and in children with immunodeficiency, and rare reports link it to necrotizing enterocolitis in neonates.",
-  mech: "The virus replicates in small intestinal enterocytes and, like other caliciviruses, produces a reversible malabsorptive picture with villous shortening, crypt hyperplasia and delayed gastric emptying, the last of which fits the prominence of vomiting. Unlike norovirus it does not use histo-blood group antigens as its principal attachment factor, and bile acids act as a cofactor for entry in cultured cells, which was the key to finally growing the virus in human intestinal enteroids after decades of failure. The genome is organized differently from norovirus, with the major capsid protein encoded in the same open reading frame as the nonstructural polyprotein, a distinction that matters for classification and for the design of expression systems. Immunity is genogroup-specific and incomplete, so repeated infections with different genotypes occur through childhood.",
-  lab: "Reverse transcription PCR on stool, usually as part of a multiplex gastrointestinal panel, is the diagnostic method, and genotyping of the capsid and polymerase regions is used in outbreak investigation. There is no widely used antigen test. Electron microscopy of stool shows a 30 to 38 nanometer particle whose cup-like depressions give a six-pointed Star of David outline, a morphology distinct enough to separate it from the fuzzier, less structured norovirus particle in classic descriptions. Routine bloods show the changes of dehydration only, and stool has no blood or leukocytes.",
-  tx: "Oral rehydration solution, continued feeding and intravenous fluid when vomiting defeats oral therapy. Ondansetron is used for vomiting in children in the emergency setting. The illness is self-limited in immunocompetent people and no antiviral is licensed.",
-  alt: "Nitazoxanide and immunoglobulin have been tried in persistent infection in immunocompromised patients, by analogy with norovirus, without controlled evidence. Reduction of immunosuppression where the clinical situation permits is the measure most often associated with clearance.",
-  res: "Not applicable in the absence of antiviral therapy. The practically relevant resistance is environmental: alcohol hand rub is unreliable against non-enveloped caliciviruses, so soap and water and chlorine-based surface cleaning carry outbreak control.",
-  prev: "Handwashing with soap and water rather than alcohol gel, prompt cleaning of vomit with a chlorine-releasing agent, exclusion of symptomatic food handlers and staff for 48 hours after symptoms settle, cohorting in outbreaks, and safe shellfish and water supply. No vaccine exists, and the norovirus vaccine candidates in development do not cover it.",
-  look: "Norovirus, which is clinically almost identical and far commoner in adults, and the two are separated only by laboratory testing. Rotavirus, which causes more profuse and prolonged diarrhea in the unvaccinated infant. Astrovirus and enteric adenovirus. Bacterial food poisoning from preformed toxin, which has a shorter incubation and prominent vomiting. Clostridioides difficile in anyone recently given antibiotics, and in institutional outbreaks it is the main alternative explanation for a ward closure.",
-  mem: [["Most-tested fact", "Sapovirus is a calicivirus that causes norovirus-like gastroenteritis, mainly in children under five, and it is distinguished from norovirus by sequencing rather than by any clinical feature."],
-    ["Memory trick", "Sapporo for sapovirus, the city where it was found. Calicivirus comes from calix, a cup, and the cup-shaped pits give the Star of David outline on electron microscopy."],
-    ["Classic setting", "A nursery closed for three days by vomiting and diarrhea in toddlers and two staff, with a stool panel returning sapovirus rather than the expected norovirus."],
-    ["Step focus", "Alcohol hand rub does not reliably inactivate non-enveloped caliciviruses, so soap and water plus chlorine cleaning is what interrupts transmission."]],
-  worm: [["An outbreak in a Sapporo orphanage", "In 1977 an outbreak of gastroenteritis in a home for infants in Sapporo, Japan, yielded a virus with cup-shaped surface depressions on electron microscopy. Chiba and colleagues characterized it, and the prototype became Sapporo virus. For years these agents were called the classic human caliciviruses, to distinguish them from the small round structured viruses that would become noroviruses. Sequencing in the 1990s showed the two groups were distinct genera with different genome organization, and the genus took the name Sapovirus from the city."],
-    ["Thirty years of not being able to grow it", "Human caliciviruses defeated cell culture for decades, which blocked work on neutralization, inactivation and vaccines. The breakthrough for sapovirus came with human intestinal enteroid cultures and the discovery that bile acids are required for efficient replication, allowing the virus to be propagated from 2020. The same dependence on an ordinary intestinal constituent explains part of the earlier failure: the laboratory had been offering the virus a gut that was missing one of its chemicals."],
-    ["The share that grew when rotavirus shrank", "Rotavirus vaccination removed the dominant cause of severe childhood gastroenteritis from many countries, and surveillance then showed sapovirus and norovirus accounting for a larger proportion of what remained. The absolute burden of sapovirus did not obviously rise; the denominator changed. It is a routine but easily misread epidemiological effect, and it matters because the viruses left behind are the ones for which no vaccine exists and against which alcohol-based hand hygiene performs poorly."],
-    ["Why a cup-shaped virus resists the hand gel", "Alcohol works largely by disrupting lipid envelopes and denaturing surface proteins. A non-enveloped calicivirus has a tough protein shell, no lipid to dissolve, and tolerates drying, acid and modest chlorine. Outbreak control therefore depends on physically removing particles by washing with soap and water and on oxidizing agents such as hypochlorite on surfaces. Hospitals that moved wholesale to alcohol dispensers in the 2000s found that calicivirus outbreaks were the clearest exception to the gains, and handwashing basins stayed."]] }
-);
-
-MICRO.push(
-{ id: "hepatitis-d-virus", k: "vir", g: "Hepatitis viruses", nm: "Hepatitis D virus", also: "HDV, delta agent, hepatitis delta virus, the delta antigen",
-  cls: "Negative-sense single-stranded circular RNA, non-segmented, enveloped in hepatitis B surface antigen, rod-shaped ribonucleoprotein, genus Deltavirus, family Kolmioviridae; a defective satellite virus",
-  plain: "A tiny parasitic virus that cannot leave a cell without borrowing hepatitis B's coat, and which makes hepatitis B far more destructive.",
-  live: "Humans with chronic hepatitis B are the only reservoir of consequence, so the geography of hepatitis D is drawn inside the geography of hepatitis B. Prevalence is highest in Mongolia, Moldova and parts of West and Central Africa, the Amazon basin, Pakistan and the eastern Mediterranean, with pockets in southern Italy and in people who inject drugs in high-income countries. Deltavirus-like agents have since been found in snakes, birds, fish and insects without a helper hepadnavirus, which upended the idea that the family needs one.",
-  spread: "Percutaneous and sexual, the same routes as hepatitis B: shared injecting equipment, unsafe injections and transfusion, tattooing and household percutaneous exposure. Perinatal transmission occurs but is much less efficient than for hepatitis B alone. Two patterns matter: coinfection, where both viruses arrive together in a susceptible person, and superinfection, where hepatitis D arrives in someone already chronically infected with hepatitis B.",
-  causes: "Coinfection produces an acute hepatitis that is often severe and sometimes biphasic, with a higher rate of fulminant liver failure than hepatitis B alone, but it usually resolves because clearance of hepatitis B removes the helper. Superinfection almost always becomes chronic and is the most aggressive form of chronic viral hepatitis known, with accelerated progression to cirrhosis in a substantial minority within a decade, a high rate of hepatic decompensation and an increased risk of hepatocellular carcinoma. Flares of transaminase elevation, early portal hypertension and a poor response to conventional antiviral therapy are characteristic.",
-  mech: "The genome is about 1,700 nucleotides, the smallest of any animal virus, is circular, folds into a rod by extensive internal base pairing, and resembles a plant viroid more than a conventional virus. It encodes only one protein, the delta antigen, in two forms. The small delta antigen supports replication; the large form, created when host ADAR1 edits the RNA to extend the reading frame, shuts replication down and is required for packaging, so a host editing enzyme controls the switch from replication to assembly. Replication uses host RNA polymerase II, an enzyme that normally transcribes DNA, acting on an RNA template, and proceeds through a rolling circle with self-cleaving ribozyme activity encoded in the RNA itself. The virus makes no envelope and no polymerase of its own; it steals hepatitis B surface antigen to leave the cell and to re-enter the next hepatocyte through the bile acid transporter NTCP. Injury appears to be largely immune-mediated, and the interaction suppresses hepatitis B replication, so hepatitis B DNA is often low or undetectable while the liver is being damaged.",
-  lab: "Testing for total anti-HDV antibody in anyone with hepatitis B surface antigen positivity identifies exposure, and a positive result is followed by HDV RNA by reverse transcription PCR to confirm active infection and to quantify it. IgM anti-HDV and delta antigen in liver tissue by immunohistochemistry are used in particular settings. The pattern of a high transaminase with a suppressed or undetectable hepatitis B DNA in a surface antigen positive patient is the classic clue. Genotype 1 predominates worldwide, with genotype 3 in the Amazon associated with fulminant disease. Standardization of RNA assays has historically been poor, which complicates comparison between studies.",
-  tx: "Pegylated interferon alfa, usually for 48 weeks, was for decades the only option and produces sustained virological response in a minority, with frequent relapse and considerable toxicity. Bulevirtide, an entry inhibitor derived from the hepatitis B preS1 domain that blocks NTCP, is approved in the European Union and achieves combined virological and biochemical response in a majority of treated patients, used long term rather than as a finite course. Nucleoside analogues for hepatitis B do not treat hepatitis D, although they are continued where hepatitis B replication warrants it. Liver transplantation is effective in decompensated disease, and hepatitis B immune globulin and antivirals protect the graft.",
-  alt: "Lonafarnib, a prenylation inhibitor that blocks the farnesylation of the large delta antigen and so prevents assembly, is used with ritonavir boosting and often with interferon in combination regimens, and nucleic acid polymers targeting surface antigen secretion are in trials. Combination of bulevirtide with pegylated interferon improves response rates over either alone in reported studies.",
-  res: "Resistance to bulevirtide has not emerged as a clinical problem to date, which fits a target that is a host receptor rather than a viral protein. Lonafarnib resistance substitutions in the delta antigen have been described in vitro. The dominant obstacle remains the high relapse rate after interferon rather than classical drug resistance.",
-  prev: "Hepatitis B vaccination prevents hepatitis D completely, because without hepatitis B surface antigen the delta agent cannot propagate, and this is the clearest case in medicine of one vaccine covering two viruses. For those already chronically infected with hepatitis B, prevention rests on avoiding further percutaneous and sexual exposure, harm reduction and needle exchange, blood supply screening, and screening of hepatitis B patients so that infected partners and households can be managed. No specific hepatitis D vaccine exists or is needed.",
-  look: "Hepatitis B flare from immune reactivation or from stopping antivirals, which raises hepatitis B DNA rather than suppressing it. Acute hepatitis A or E superimposed on chronic hepatitis B. Hepatitis C coinfection. Autoimmune hepatitis, drug-induced liver injury and alcohol-related hepatitis in a patient who also carries hepatitis B. Hepatocellular carcinoma presenting as decompensation. The practical point is that an unexplained flare or unusually rapid cirrhosis in a hepatitis B patient is the setting in which hepatitis D is found.",
-  mem: [["Most-tested fact", "Hepatitis D is a defective virus that requires hepatitis B surface antigen as its envelope, so hepatitis B vaccination prevents it, and superinfection carries a far worse prognosis than coinfection."],
-    ["Memory trick", "Delta needs a Donor coat. Coinfection resolves because B clears; superinfection is chronic because B is already there to stay."],
-    ["Classic setting", "A patient with long-standing hepatitis B from Mongolia or Moldova with a transaminase of 400, an undetectable hepatitis B DNA and early portal hypertension, in whom anti-HDV is positive."],
-    ["Step focus", "The smallest animal virus genome, circular RNA with ribozyme activity, one protein edited by host ADAR1 into two forms, transcribed by host RNA polymerase II, and entry through NTCP."]],
-  worm: [["An antigen that did not fit", "In 1977 Mario Rizzetto, working in Turin, stained liver biopsies from patients with hepatitis B and found a nuclear antigen in some of them that none of the known hepatitis B reagents matched. He called it the delta antigen, following the alphabet after the known hepatitis B antigens. Transmission experiments in chimpanzees at the United States National Institutes of Health with Robert Purcell showed that delta needed hepatitis B to propagate. A marker that looked at first like an unusual variant of hepatitis B turned out to be a separate organism living inside its infections."],
-    ["A virus that behaves like a plant pathogen", "The hepatitis D genome is circular, rod-shaped by internal base pairing, around 1,700 nucleotides long, and contains self-cleaving ribozyme domains. These are the defining features of viroids, the tiny infectious RNAs of potatoes and chrysanthemums, which encode no protein at all. Hepatitis D encodes one. The resemblance is strong enough that its evolutionary origin remains contested: a plant viroid that acquired a gene, a human cellular RNA that escaped, or something older than both. Its taxonomic family was separated from all other viruses for decades."],
-    ["One letter of host editing, two jobs for one gene", "The delta antigen comes in a small and a large form from the same open reading frame. The difference is a single nucleotide: the host enzyme ADAR1, an adenosine deaminase that normally edits cellular RNAs, converts an adenosine to inosine at the amber stop codon, extending the protein by nineteen amino acids. The small form drives replication; the extended form stops it and is farnesylated so it can be packaged. The virus has outsourced the timing of its own life cycle to a host enzyme, and the drug lonafarnib attacks that step."],
-    ["The vaccine that prevents a virus it was not designed for", "Hepatitis B vaccination induces antibody to surface antigen. Without surface antigen, hepatitis D can replicate inside a cell but cannot build a particle to leave it, so it cannot establish infection in a vaccinated person. Universal infant hepatitis B immunization, rolled out from the 1980s and 1990s, drove hepatitis D prevalence down sharply in Italy, Taiwan and elsewhere, and the decline happened without anyone targeting delta. Where hepatitis B coverage has lagged, or where adults remain chronically infected, hepatitis D has persisted and in places rebounded with injecting drug use and migration."]] },
-
-{ id: "hepatitis-e-virus", k: "vir", g: "Hepatitis viruses", nm: "Hepatitis E virus", also: "HEV, enterically transmitted non-A non-B hepatitis, epidemic non-A non-B hepatitis",
-  cls: "Positive-sense single-stranded RNA, non-segmented, non-enveloped when shed in feces and quasi-enveloped in blood, icosahedral capsid, genus Paslahepevirus, family Hepeviridae; genotypes 1 to 4 infect humans",
-  plain: "A water-borne and pork-borne hepatitis virus that is usually self-limited, is unusually dangerous in pregnancy, and becomes chronic in transplant patients.",
-  live: "Genotypes 1 and 2 are human viruses of regions with poor sanitation in Asia, Africa and Central America. Genotypes 3 and 4 are zoonoses of domestic pigs, wild boar and deer, widespread in Europe, North America, Japan and China, with rabbits, camels and rats carrying related viruses. In high-income countries the pig is the reservoir and human infection is incidental, which is why seroprevalence can exceed a quarter of adults in parts of France while clinical hepatitis E is uncommon.",
-  spread: "For genotypes 1 and 2, fecal contamination of drinking water, producing large epidemics after floods and in displacement camps, with little person-to-person spread. For genotypes 3 and 4, consumption of undercooked pork, pork liver sausage, wild boar, venison and shellfish, and the virus survives light cooking in liver products. Transfusion transmission is established and has led to blood donor screening in several countries. Vertical transmission occurs and is efficient in the third trimester. Occupational exposure in pig farmers and veterinarians is documented serologically.",
-  causes: "Most infections are asymptomatic or produce a short anicteric illness. Acute hepatitis E brings malaise, nausea, anorexia, right upper quadrant discomfort, jaundice, dark urine and pale stool, with transaminases often in the thousands, resolving over four to six weeks. Fulminant hepatic failure occurs in a small proportion and far more often when chronic liver disease is already present. Pregnancy is the striking exception: genotype 1 infection in the third trimester carries a case fatality reported between 15 and 25 percent, with fulminant failure, obstetric hemorrhage, eclampsia-like presentations, stillbirth and preterm delivery. Genotype 3 causes chronic infection in solid organ transplant recipients, in advanced HIV and in hematological malignancy, progressing to cirrhosis within a few years if untreated. Extrahepatic disease is well described, particularly Guillain-Barre syndrome, neuralgic amyotrophy of the brachial plexus, encephalitis, glomerulonephritis, pancreatitis and thrombocytopenia.",
-  mech: "The virus reaches the liver through the portal circulation and replicates in hepatocytes, and the open reading frame 1 polyprotein supplies the replication machinery while ORF2 forms the capsid and ORF3 a small phosphoprotein required for release. Particles leaving the basolateral surface into blood are wrapped in host lipid and ORF3, a quasi-envelope that hides capsid epitopes from antibody and probably explains chronic infection in the immunosuppressed, while particles shed into bile are stripped of lipid by bile salts and emerge from the gut as robust non-enveloped virions suited to fecal-oral spread. One virus therefore wears two coats for two jobs. Hepatocyte injury is immune-mediated, which is why transaminases peak as the virus falls and why reducing immunosuppression can precipitate a flare and also clearance. The severity in pregnancy is not fully explained but is associated with the high estrogen and progesterone state, reduced cell-mediated immunity, higher viral loads and altered hepatic regeneration, and genotype 1 appears intrinsically more dangerous in this setting than genotype 3.",
-  lab: "Anti-HEV IgM with anti-HEV IgG is the usual first step in acute illness, with HEV RNA by reverse transcription PCR in serum or stool to confirm, to detect infection before antibody appears and to diagnose chronic infection, where serology is unreliable in the immunosuppressed. Persistence of RNA beyond three months defines chronic infection. Transaminases are typically far above the alkaline phosphatase, with bilirubin rising later, and the prothrombin time and lactate are the measures that identify liver failure. Genotyping distinguishes an imported water-borne genotype 1 from a locally acquired food-borne genotype 3.",
-  tx: "Acute infection in an immunocompetent person is managed supportively, with attention to hydration, avoidance of hepatotoxins and alcohol, and monitoring of coagulation and encephalopathy for the minority who deteriorate. In chronic infection after transplantation, reduction of immunosuppression where the graft allows clears the virus in roughly a third. When it does not, ribavirin monotherapy for three months clears most of the remainder, with extension and retreatment for relapse. Pregnancy is managed with intensive obstetric and hepatology support, and ribavirin is avoided because it is teratogenic.",
-  alt: "Pegylated interferon has been used in liver transplant recipients, where it carries a rejection risk, and is generally avoided in other solid organ grafts. Sofosbuvir has been examined with disappointing results. Liver transplantation is used for fulminant failure, and reports describe its use in pregnancy-associated failure.",
-  res: "Ribavirin failure is associated with the G1634R substitution in the viral polymerase, which has been described in treated transplant recipients, and with inadequate drug exposure, anemia-driven dose reduction and persistent deep immunosuppression. True high-level resistance is uncommon, and relapse more often reflects host immunity than a resistant virus.",
-  prev: "Safe drinking water, sanitation and excreta management for the epidemic genotypes, and in outbreaks, chlorination and boiling. For the zoonotic genotypes, thorough cooking of pork, pork liver products, wild boar and venison, since the virus survives rare cooking and some curing processes, and care in handling raw pig liver. Blood donor nucleic acid screening is in place in parts of Europe, Japan and elsewhere. Hecolin, a recombinant capsid vaccine, is licensed in China and has shown high efficacy over several years but is not available in most countries; it was deployed in an outbreak setting in South Sudan in 2022.",
-  look: "Hepatitis A, which has the same enteric route and a very similar acute picture, so the two are separated serologically. Hepatitis B and C in acute presentation. Drug-induced liver injury, which is the commonest misdiagnosis in high-income countries where locally acquired hepatitis E is not suspected. Alcohol-related hepatitis, autoimmune hepatitis, which can be wrongly diagnosed and treated with steroids in a patient with hepatitis E, ischemic hepatitis and biliary obstruction. In pregnancy, acute fatty liver of pregnancy, HELLP syndrome and intrahepatic cholestasis of pregnancy.",
-  mem: [["Most-tested fact", "Hepatitis E carries a case fatality of 15 to 25 percent in the third trimester of pregnancy with genotype 1, and causes chronic infection in transplant recipients treated with ribavirin."],
-    ["Memory trick", "Hepatitis E for Expectant mothers and for Eating undercooked pork. Enteric route, no envelope in stool, and the same clinical picture as hepatitis A with a far worse obstetric story."],
-    ["Classic setting", "A displacement camp after monsoon flooding with hundreds of cases of jaundice and deaths concentrated among pregnant women, or an older man in France with a transaminase of 1,500 three weeks after eating figatellu sausage."],
-    ["Step focus", "Quasi-enveloped in blood and non-enveloped in stool, immune-mediated injury, chronicity only in the immunosuppressed, ribavirin for chronic disease, and the recombinant vaccine licensed only in China."]],
-  worm: [["A virus found by swallowing it", "An epidemic of non-A non-B hepatitis in Kashmir in 1978 and earlier outbreaks in Delhi pointed to a water-borne agent distinct from hepatitis A. In 1983 Mikhail Balayan, a Soviet virologist, could not obtain human volunteers for a transmission study, so he filtered a pooled stool suspension from Soviet soldiers with hepatitis in Afghanistan, drank it himself, developed hepatitis, and recovered 27 to 30 nanometer virus-like particles from his own stool. The genome was cloned in 1990 by Reyes and colleagues. Self-experimentation of that kind would not pass a modern ethics committee, and the virus would have been found anyway, but the particle was his."],
-    ["Two coats for two destinations", "A virus shed into water needs a tough shell that survives the environment and gastric acid. A virus circulating in a host's blood does better hidden from antibody. Hepatitis E does both by using the same capsid with and without a host-derived lipid wrapper: ORF3 drives release of lipid-cloaked particles into blood, while bile salts strip that lipid from particles passing through the biliary tree, so the virus that leaves the body is naked and the virus inside it is not. The discovery, made around 2010, resolved the long-standing puzzle of how a non-enveloped virus could persist in the presence of neutralizing antibody."],
-    ["The pregnancy problem that has no clean answer", "Very few infections kill one in five pregnant women, and hepatitis E genotype 1 in the third trimester is one of them. Proposed explanations include the physiological shift away from cell-mediated immunity in late pregnancy, direct effects of high estrogen and progesterone on viral replication and hepatocyte regeneration, higher viral loads, reduced expression of progesterone receptor variants, and nutritional factors including folate deficiency in affected populations. Genotype 3, which infects many pregnant women in Europe, does not show the same mortality, so the virus and not only the host state is involved. The mechanism remains genuinely unsettled."],
-    ["A hepatitis diagnosed as a drug reaction", "In the 1990s hepatitis E was taught as a tropical, water-borne disease of travelers. Then seroprevalence studies in southwest France, the Netherlands and the United Kingdom found that a large minority of local adults had antibody, and that locally acquired genotype 3 was causing acute hepatitis in people who had not left the country. Retrospective testing of stored sera from patients labeled with drug-induced liver injury or seronegative autoimmune hepatitis found hepatitis E in a measurable share. The virus had been endemic all along in the pig population, and the diagnosis was missed because nobody tested for it at home."]] }
-);
-
-MICRO.push(
-{ id: "nipah-virus", k: "vir", g: "Paramyxoviruses", nm: "Nipah virus", also: "NiV, Nipah henipavirus, Malaysian and Bangladesh strains",
-  cls: "Negative-sense single-stranded RNA, non-segmented, enveloped, helical nucleocapsid in a pleomorphic particle, genus Henipavirus, family Paramyxoviridae; a biosafety level 4 agent",
-  plain: "A bat virus that causes encephalitis with a case fatality around three quarters and has no licensed treatment or vaccine.",
-  live: "Large fruit bats of the genus Pteropus, the flying foxes, are the natural reservoir across South and Southeast Asia, Australia and East Africa, and they carry the virus without evident illness, shedding it in saliva, urine and partly eaten fruit. Pigs served as the amplifying host in the original Malaysian outbreak, and horses, goats, dogs and cats can be infected.",
-  spread: "Three routes, which differ by region. In Malaysia and Singapore in 1998 and 1999, bat-contaminated fruit dropped into pig pens, pigs amplified the virus and transmitted it to farmers and abattoir workers by respiratory secretions. In Bangladesh and India the dominant route is drinking raw date palm sap collected overnight in open pots that bats visit and contaminate. Person-to-person transmission through close contact with respiratory secretions and body fluids is well documented in the Bangladesh and Indian outbreaks, including nosocomial spread and clusters around a single index case, and some individuals have transmitted to many contacts.",
-  causes: "An incubation of four days to two weeks, occasionally much longer, followed by fever, headache, myalgia, vomiting and sore throat, progressing in most symptomatic patients to encephalitis with drowsiness, confusion, seizures, brainstem signs, segmental myoclonus, areflexia, hypotonia and coma within a few days. Acute respiratory distress is prominent in the Bangladesh and Indian strains and was less so in Malaysia. Case fatality has ranged from roughly 40 percent in Malaysia to 70 percent or more in Bangladesh and Kerala. Among survivors, a third or more have persistent neurologic deficits, and relapsing or late-onset encephalitis can appear months to years after recovery or after an apparently asymptomatic infection.",
-  mech: "The attachment glycoprotein G binds ephrin-B2 and ephrin-B3, which are highly conserved host molecules expressed on endothelium and on neurons, and this receptor choice explains both the broad host range across mammals and the dual vascular and neurologic disease. The fusion protein F then drives membrane fusion, and the virus spreads cell to cell by forming syncytia. Infection of small vessel endothelium in the brain produces vasculitis, thrombosis and microinfarction, which is the histological signature, alongside direct neuronal infection with inclusion bodies. Ephrin-B3 is concentrated in the brainstem and spinal cord, which fits the segmental myoclonus and autonomic instability. The V and W proteins, produced from the P gene by RNA editing, block STAT1 signaling and interferon induction, and the W protein is carried into the nucleus, so the innate response is suppressed at several points. Relapsing encephalitis reflects virus persisting in the central nervous system after systemic clearance.",
-  lab: "Reverse transcription PCR on throat and nasal swabs, blood, urine and cerebrospinal fluid during acute illness is the main test, with IgM and IgG capture ELISA and virus neutralization used for later diagnosis and serosurveys. Virus isolation requires biosafety level 4 containment. Magnetic resonance imaging shows multiple small, scattered, subcortical and deep white matter lesions, best seen on diffusion-weighted and T2 sequences, a pattern distinct enough to raise the diagnosis. Cerebrospinal fluid shows a modest lymphocytic pleocytosis with raised protein. Immunohistochemistry on postmortem brain shows viral antigen in endothelium and neurons with syncytial giant cells.",
-  tx: "Intensive supportive care: airway protection, mechanical ventilation, seizure control and management of autonomic instability. Ribavirin was used in Malaysia in an open-label study with a reported reduction in mortality that was not confirmed in later analyses, and it is sometimes given in the absence of anything better. m102.4, a human monoclonal antibody against the G glycoprotein, has been given on compassionate grounds to exposed individuals and in a phase 1 trial, and is the most advanced specific option.",
-  alt: "Remdesivir protected non-human primates against lethal challenge and has been used in exposure management. Favipiravir and the fusion inhibitor peptides have shown activity in animal models. No agent has established efficacy in a controlled human trial, and management of contacts rests on isolation and monitoring.",
-  res: "Not applicable, as no antiviral is in established clinical use, and no resistance patterns have been defined.",
-  prev: "Avoiding consumption of raw date palm sap or covering collection pots with bamboo skirts, which has been shown to reduce bat access, avoiding fruit that may have been bitten by bats, and separating pig farms from fruit trees. In the Malaysian outbreak control required the culling of more than a million pigs. Case isolation with airborne and contact precautions, personal protective equipment for health workers, safe burial practices and contact tracing contain human-to-human spread. A ChAdOx1 vectored vaccine and an mRNA candidate have entered early human trials, and the equine Hendra virus vaccine based on soluble G protein gives cross-protection in animals; none is licensed for human use.",
-  look: "Japanese encephalitis, which shares the region and the season and is the main alternative in an encephalitis outbreak in South Asia. Herpes simplex encephalitis, which is treatable and is excluded early. Cerebral malaria, bacterial and tuberculous meningitis, enterovirus and rabies encephalitis. Acute disseminated encephalomyelitis. Scrub typhus, which causes encephalopathy in the same geography and responds to doxycycline. Chandipura virus in India. Hendra virus in Australia, which is its nearest relative and occupationally rather than food acquired.",
-  mem: [["Most-tested fact", "Nipah virus uses ephrin-B2 and ephrin-B3 as receptors, which are expressed on endothelium and neurons, giving a vasculitis-driven encephalitis with a case fatality of 40 to 75 percent."],
-    ["Memory trick", "Nipah comes from bats to pigs to people in Malaysia, and from bats through raw date palm sap to people in Bangladesh. Pigs squeal, patients seize, and the MRI is full of small scattered white matter dots."],
-    ["Classic setting", "A cluster of farm workers in Malaysia in 1998 with encephalitis after a respiratory illness in their pigs, or a family in Bangladesh in January who shared raw date palm sap and then infected two nurses."],
-    ["Step focus", "Segmental myoclonus, relapsing encephalitis months later, syncytium formation and the V and W proteins blocking STAT1 are the specific points, alongside the lack of any licensed vaccine or antiviral."]],
-  worm: [["Named for a village, mistaken for a different virus", "The outbreak began among pig farmers in Perak, Malaysia, in late 1998 and was initially attributed to Japanese encephalitis, so control efforts focused on mosquito spraying and vaccination while the epidemic spread with the pig trade to Negeri Sembilan and Selangor and on to abattoir workers in Singapore. Kaw Bing Chua, a virologist at the University of Malaya, isolated an unexpected paramyxovirus from the cerebrospinal fluid of a patient from the village of Sungai Nipah. Recognizing the wrong pathogen for several months cost lives, more than a million culled pigs and an industry."],
-    ["The sap collector's pot", "In Bangladesh, date palm sap is harvested by shaving the trunk and leaving an open clay pot overnight to collect the flow, and the sweet sap is drunk fresh at dawn. Infrared camera studies showed Pteropus bats visiting the pots to lick the stream and urinating into them. Outbreaks cluster in the sap season from December to April, and a simple bamboo skirt over the collection site keeps the bats out. It is a rare instance of a biosafety level 4 pathogen whose transmission can be interrupted with a piece of woven bamboo."],
-    ["A receptor too useful to change", "Ephrin-B2 and ephrin-B3 guide axon growth and blood vessel patterning and are almost identical across mammals, because an animal cannot easily tolerate mutations in them. By binding these molecules, Nipah virus gained a receptor that is present in bats, pigs, horses, cats and humans alike, which is why it crosses species so readily, and one that the host cannot afford to alter as an escape strategy. The distribution of ephrin-B3 in brainstem and spinal cord also maps onto the myoclonus and autonomic collapse that make the illness so lethal."],
-    ["The encephalitis that comes back", "A proportion of Nipah survivors, and a smaller number of people who were infected without acute illness, develop encephalitis months or years later, with a different clinical pattern of focal seizures and cortical signs and a different pathology showing neuronal infection without vasculitis. The virus evidently persists somewhere in the central nervous system after the acute illness is over. The closest parallel is subacute sclerosing panencephalitis after measles, another paramyxovirus, and it means that survival from the acute illness is not the end of the clinical story."]] },
-
-{ id: "hendra-virus", k: "vir", g: "Paramyxoviruses", nm: "Hendra virus", also: "HeV, equine morbillivirus, acute equine respiratory syndrome virus",
-  cls: "Negative-sense single-stranded RNA, non-segmented, enveloped, helical nucleocapsid, genus Henipavirus, family Paramyxoviridae; a biosafety level 4 agent",
-  plain: "An Australian flying fox virus that kills horses and the few people who get too close to them.",
-  live: "Pteropus flying foxes along the eastern and northern Australian coast, chiefly the black and spectacled flying foxes, carry the virus without disease and shed it in urine, birth products and saliva, with shedding peaking in winter in subtropical Queensland and New South Wales. Horses are a dead-end amplifying host that becomes severely ill. A single case in a dog with seroconversion has been recorded.",
-  spread: "From bats to horses, probably when horses graze pasture or feed contaminated with flying fox urine or spat-out fruit beneath roosting trees. From horses to humans through close contact with respiratory secretions, blood, nasal discharge or tissues, with all recorded human cases arising from unprotected exposure to a sick or dying horse or a postmortem examination of one. There is no evidence of human-to-human transmission and no evidence of direct bat-to-human transmission.",
-  causes: "In horses, an acute febrile illness with respiratory distress, frothy nasal discharge, ataxia, head pressing and sudden death, with a case fatality around 75 percent. In humans, seven cases have been recorded since 1994 with four deaths. The clinical pictures have included an influenza-like illness progressing to pneumonitis and respiratory failure, and encephalitis with fever, headache, seizures and coma, sometimes after a long interval, including one case in which encephalitis appeared thirteen months after a mild initial illness. Myalgia, lethargy and sore throat open the illness, and progression can be rapid.",
-  mech: "Like Nipah virus it attaches through the G glycoprotein to ephrin-B2 and ephrin-B3 on endothelium and neurons, then fuses with the F protein and spreads by syncytium formation. The result in both horses and people is a systemic vasculitis with endothelial syncytia, alveolar damage, pulmonary edema and hemorrhage, and infection of brain vessels and neurons. The P gene yields V and W proteins that antagonize interferon production and STAT1-dependent signaling, holding back the innate response. The dual pulmonary and neurologic presentation reflects where its receptor is expressed rather than two different tropisms, and the long latency before encephalitis in one case indicates the same capacity for central nervous system persistence seen with Nipah.",
-  lab: "Reverse transcription PCR on respiratory secretions, blood, urine and cerebrospinal fluid, performed in high containment, with serology by neutralization or ELISA for later confirmation and for surveillance of horses and bats. Virus isolation needs biosafety level 4 facilities. Imaging in the human encephalitic cases showed multifocal cortical and subcortical lesions. Veterinary diagnosis in Australia is a notifiable, government-managed process, and testing of a sick horse is arranged before postmortem examination precisely because the postmortem is where people have been infected.",
-  tx: "Supportive intensive care. Ribavirin was given in some of the human cases without clear benefit. The monoclonal antibody m102.4, raised against the henipavirus G glycoprotein, was developed in part for this virus and has been given to exposed people in Australia and the United States as post-exposure prophylaxis under compassionate protocols; it protected African green monkeys against lethal challenge.",
-  alt: "Remdesivir and favipiravir have shown activity in animal models of henipavirus infection. Fusion inhibitor peptides modeled on the F protein heptad repeat are experimental. For horses, there is no treatment and affected animals are euthanized.",
-  res: "Not applicable, as no antiviral is established in clinical use.",
-  prev: "The decisive measure has been veterinary: Equivac HeV, a subunit vaccine based on the soluble G glycoprotein, was licensed for horses in Australia in 2012 and breaks the only link by which humans have ever been infected, so vaccinating horses protects people. Alongside it, keeping horses away from flowering and fruiting trees where flying foxes feed, covering feed and water, personal protective equipment for anyone handling a sick horse, and a prohibition on private postmortem examination of horses that die suddenly. The same soluble G platform underlies human henipavirus vaccine candidates, and m102.4 is held for post-exposure use. Flying foxes are a protected species, and culling has been rejected on both ecological and epidemiological grounds.",
-  look: "Australian bat lyssavirus, the other fatal bat-borne infection in the same geography, which follows a bat bite rather than horse contact. Nipah virus, its near-identical relative in Asia. Murray Valley encephalitis, Kunjin and Japanese encephalitis viruses in northern Australia. Q fever and leptospirosis in people with animal contact. Influenza and community-acquired pneumonia at the start of the illness. In the horse, African horse sickness, equine influenza and botulism were the differentials considered in 1994.",
-  mem: [["Most-tested fact", "Every human Hendra virus case has come from close contact with an infected horse, so the horse vaccine is the human public health intervention."],
-    ["Memory trick", "Hendra is the Horse henipavirus of Australia; Nipah is the pig and date palm sap henipavirus of Asia. Both bind ephrin-B2 and B3, both came from flying foxes."],
-    ["Classic setting", "A Queensland veterinarian or stablehand who nursed a horse through sudden respiratory collapse without a mask, and who develops pneumonitis or encephalitis one to two weeks later."],
-    ["Step focus", "Seven human cases, four deaths, no human-to-human transmission, a licensed equine vaccine, and the monoclonal antibody m102.4 as post-exposure prophylaxis."]],
-  worm: [["A stable in a Brisbane suburb", "In September 1994 a highly regarded thoroughbred trainer, Vic Rail, and his stable foreman fell ill after nursing a mare that died suddenly at a stable in Hendra, a suburb of Brisbane. Thirteen more horses died. Rail died of respiratory failure; the foreman survived. The agent isolated at the Australian Animal Health Laboratory in Geelong was a new paramyxovirus, named equine morbillivirus and later Hendra virus after the suburb. Retrospective work found an earlier fatal case in Mackay, where a farmer had developed encephalitis thirteen months after exposure to sick horses."],
-    ["Two bat viruses, found four years apart, that turned out to be cousins", "When the Malaysian encephalitis outbreak was finally identified in 1999, the isolate proved to be closely related to the Australian horse virus, and the two were placed in a new genus, Henipavirus, from Hendra and Nipah. The pairing reframed both: these were not freak local events but members of a group carried by Pteropus bats across a range stretching from Australia to West Africa, with human disease appearing wherever an intermediate host or a food chain brought bat secretions into human reach."],
-    ["The vaccine that protects people by immunizing animals", "Hendra virus has killed four of the seven people it has infected, which is too few to support a human vaccine trial and too lethal to ignore. The solution was oblique: because every human case came through a horse, a vaccine for horses was developed from the soluble G glycoprotein and licensed in 2012. Uptake has been partial, and debates about cost and perceived side effects have limited coverage, but no vaccinated horse has developed the disease, and no human case has arisen from a vaccinated horse. It is one of the clearest examples of the One Health argument in practice."],
-    ["Why the spillovers are increasing", "Hendra virus spillovers have clustered in winter and have become more frequent since the 1990s. Flying fox populations have shifted from continuous forest to urban and agricultural landscapes as native nectar sources were cleared, and food shortages following drought and extreme weather are associated with nutritional stress, lower immune competence and increased viral shedding. Horses kept on pasture under fig and eucalypt trees then meet the shedding bats. The driver of the outbreaks, on this reading, sits in land clearing and climate rather than in anything the virus has changed."]] }
-);
-
-MICRO.push(
-{ id: "rift-valley-fever-virus", k: "vir", g: "Bunyaviruses", nm: "Rift Valley fever virus", also: "RVFV, enzootic hepatitis virus, Rift Valley fever phlebovirus",
-  cls: "Negative-sense and ambisense single-stranded RNA, three segments named large, medium and small, enveloped, helical nucleocapsids, genus Phlebovirus, family Phenuiviridae within the bunyavirus group",
-  plain: "A mosquito-borne African livestock virus that causes abortion storms in sheep and cattle and a hemorrhagic or blinding illness in the people who handle them.",
-  live: "Aedes mosquitoes of several species maintain the virus between epidemics by transovarial transmission, with eggs surviving years in dry soil of shallow depressions called dambos and hatching after heavy rain. Sheep, goats, cattle and camels are amplifying hosts with very high viremia, and wild ruminants contribute. The geography covers sub-Saharan and East Africa, Egypt, Madagascar, Mayotte, Saudi Arabia and Yemen.",
-  spread: "Two routes of very different weight. The mosquito route starts outbreaks, with Aedes species hatching after unusually heavy rainfall and Culex species amplifying transmission among livestock. The occupational route causes most human cases: direct contact with blood, tissue, amniotic fluid or aborted fetuses of infected animals during slaughter, butchery, veterinary work or assisting a birth, with transmission through broken skin, mucous membranes and probably aerosol. Consumption of raw milk is implicated. Laboratory infection is well recorded. Vertical transmission in humans occurs, and there is no established person-to-person spread.",
-  causes: "In livestock, near-total abortion in pregnant ewes and high mortality in lambs, which is the agricultural signature that precedes human cases. In people, most infections are mild: an abrupt influenza-like illness with fever, severe headache, retro-orbital pain, myalgia, backache, photophobia and prostration lasting four to seven days, sometimes biphasic. Roughly one to two percent develop severe disease, which takes three forms that can overlap. Hepatic and hemorrhagic disease, with jaundice, petechiae, gum and gastrointestinal bleeding, disseminated intravascular coagulation and shock, carries a high case fatality. Ocular disease, in up to one in ten, appears one to three weeks later as macular and paramacular retinitis, retinal hemorrhage and vasculitis, leaving permanent central visual loss in half of those affected. Meningoencephalitis, also delayed by one to four weeks, presents with confusion, hallucinations, vertigo and focal deficits.",
-  mech: "The large segment encodes the polymerase, the medium segment the Gn and Gc envelope glycoproteins and the NSm protein, and the small segment is ambisense, encoding the nucleoprotein in one direction and the nonstructural NSs protein in the other. NSs is the principal virulence factor and acts in the nucleus: it forms filaments, sequesters the TFIIH subunit p44 and promotes degradation of PKR, and so shuts down host transcription and interferon production, which is why high viremia develops before the immune response engages. NSm blocks apoptosis, prolonging the life of infected cells. The virus is strongly hepatotropic, producing extensive hepatocellular necrosis that drives the coagulopathy through loss of synthetic function alongside consumptive coagulopathy. The delayed retinitis and encephalitis appear after viremia has cleared and are thought to combine residual virus in those compartments with an immune response, which is why they follow the acute illness rather than accompanying it, and why immunosuppression is not an obvious treatment.",
-  lab: "Reverse transcription PCR on serum during the first week, when viral loads are very high, is the main test, with antigen capture ELISA and virus isolation in containment. IgM capture ELISA becomes positive within about four days and is used for the delayed ocular and neurologic presentations, when PCR is often negative. Transaminases rise steeply, the platelet count falls, and a prolonged prothrombin time with a rising bilirubin marks the severe hepatic form. Retinal examination identifies macular lesions. In animals, abortion material and liver are tested, and veterinary surveillance is the early warning system.",
-  tx: "Supportive care, with transfusion of blood products for bleeding, renal replacement therapy, and intensive care for shock and encephalopathy. No antiviral is licensed. Ribavirin has activity in vitro and in animals but was associated with a worrying excess of neurologic disease when trialed in a related phlebovirus infection, and it is not recommended.",
-  alt: "Convalescent plasma and interferon have been used experimentally. Favipiravir shows efficacy in rodent models. Ocular disease is managed by ophthalmologists with topical and sometimes systemic corticosteroids, although the evidence is weak and the natural history is of slow partial recovery.",
-  res: "Not applicable in the absence of antiviral therapy.",
-  prev: "Livestock vaccination before an outbreak is the central measure, using inactivated vaccine or the live attenuated Smithburn and Clone 13 strains, with the caveat that live vaccines can themselves cause abortion in pregnant animals, so timing matters. During outbreaks, bans on animal movement and slaughter, personal protective equipment for abattoir and veterinary workers, avoidance of raw milk and of handling aborted material, and vector control. Rainfall and sea surface temperature forecasting gives a predictive warning months ahead, and has been used to issue alerts in East Africa. No human vaccine is licensed; an inactivated candidate has been used in laboratory workers under special arrangements and a ChAdOx1 vectored vaccine has reached early human trials.",
-  look: "Crimean-Congo hemorrhagic fever, which is tick-borne, also occupational and transmissible person to person. Severe malaria and blackwater fever. Leptospirosis, with jaundice and renal failure in people with animal and water contact. Q fever and brucellosis in abattoir workers. Yellow fever, Ebola and Marburg disease in the hemorrhagic presentation. Dengue and chikungunya in the undifferentiated febrile phase. For the ocular disease, Behcet disease, toxoplasmosis and cytomegalovirus retinitis, and for the encephalitis, West Nile and other arboviral encephalitides.",
-  mem: [["Most-tested fact", "Rift Valley fever is announced by abortion storms and lamb deaths in livestock, and human disease is mainly occupational, with delayed macular retinitis causing permanent visual loss in a tenth of patients."],
-    ["Memory trick", "Three segments like all bunyaviruses: Large for polymerase, Medium for membrane glycoproteins, Small for nucleoprotein. Rift Valley fever hits the Retina, the River valley after Rain, and the Ruminants."],
-    ["Classic setting", "An abattoir worker in Kenya after exceptionally heavy El Nino rains, with fever and jaundice, a platelet count of 30,000 and a transaminase of 2,000, or a herder who presents three weeks later with a blind spot in the center of vision."],
-    ["Step focus", "NSs shuts down host transcription and interferon, the virus is hepatotropic, and the ocular and neurologic complications are delayed until after viremia has cleared."]],
-  worm: [["An abortion storm in Kenya in 1931", "In 1930 and 1931 sheep farmers near Lake Naivasha in the Kenyan Rift Valley lost almost every lamb and nearly every pregnancy on affected farms. Richard Daubney and John Hudson investigated, transmitted the agent through filtered material to sheep and mice, and showed that the farm workers who handled the carcasses developed the same fever. They published it as an enzootic hepatitis in 1931. For forty years it remained a veterinary problem of East Africa, important to livestock economies and almost unknown to human medicine."],
-    ["The Egyptian epidemic that changed the assessment", "In 1977 and 1978 the virus appeared in the Nile delta and valley, in a population and a livestock system that had never met it. Estimates run to around 200,000 human infections and roughly 600 deaths, with widespread ocular disease and encephalitis. How the virus reached Egypt is still argued: infected animals moved north along trade routes from Sudan, possibly aided by the altered hydrology after the Aswan High Dam. The outbreak established Rift Valley fever as a human pathogen capable of epidemic spread outside its historic range, and its arrival in Saudi Arabia and Yemen in 2000 confirmed the point."],
-    ["Eggs that wait years in dry mud", "Aedes mosquitoes of the dambo depressions lay eggs that are desiccation resistant and remain viable in dry soil for years, and a proportion of those eggs already contain the virus by transovarial transmission. When unusually heavy rain floods the depressions, infected adults emerge directly, so an outbreak does not need to be imported. This makes rainfall the proximate trigger, and because East African rainfall anomalies track El Nino conditions, outbreak risk can be forecast from sea surface temperatures months in advance. Rift Valley fever became one of the first infectious diseases for which climate-based prediction was operational."],
-    ["A virus that blinds after it has gone", "Patients who have recovered from the febrile illness can lose central vision one to three weeks later, from retinitis and vasculitis centered on the macula. By then viremia has usually cleared and PCR is negative, so the diagnosis rests on IgM and on the retinal appearance. About half are left with permanent scotoma. The delay points to an immunopathologic component, but the eye is also an immune-privileged compartment where virus may persist, and the two explanations have not been separated, which is why no treatment has clear support."]] },
-
-{ id: "sin-nombre-virus", k: "vir", g: "Bunyaviruses", nm: "Sin Nombre virus", also: "SNV, Muerto Canyon virus, Four Corners virus, the nameless virus",
-  cls: "Negative-sense single-stranded RNA, three segments, enveloped, helical nucleocapsids, genus Orthohantavirus, family Hantaviridae within the bunyavirus group; the New World pulmonary group",
-  plain: "The North American deer mouse virus that causes a sudden, often fatal flooding of the lungs in previously healthy young adults.",
-  live: "The deer mouse, Peromyscus maniculatus, which is one of the most abundant mammals in North America and is infected persistently and without illness, shedding virus in urine, feces and saliva for months. Prevalence in local mouse populations rises after years of good food supply, which follows wet winters, and the virus does not persist in the environment for long outside aerosolized particles.",
-  spread: "Inhalation of aerosolized rodent urine, droppings or nesting material, classically when sweeping, vacuuming or disturbing dust in a cabin, shed, barn or crawl space that mice have occupied over winter. Rodent bites transmit rarely. There is no person-to-person transmission of Sin Nombre virus, which distinguishes it from Andes virus in South America, and no vector is involved.",
-  causes: "Hantavirus cardiopulmonary syndrome. After an incubation of one to five weeks, a prodrome of three to six days with fever, myalgia, headache, dizziness and often nausea, vomiting and abdominal pain, characteristically without cough, coryza or sore throat. The cardiopulmonary phase then begins abruptly with cough and breathlessness, and within hours progresses to non-cardiogenic pulmonary edema, profound hypoxemia and cardiogenic shock from myocardial depression with a low cardiac index and high systemic vascular resistance. Case fatality is approximately 35 to 40 percent, with most deaths in the first 48 hours of the pulmonary phase. Survivors recover lung function well, with a diuretic phase and convalescence over weeks. Renal failure is much less prominent than in the Old World hantaviruses.",
-  mech: "The virus enters through the respiratory tract and infects pulmonary capillary endothelium using beta-3 integrins and, for cell entry, protocadherin-1 as a receptor, replicating in endothelium without destroying it. The permeability that floods the alveoli is therefore not cytolysis but a functional failure of the barrier: infected endothelium shows disrupted VE-cadherin junctions, enhanced vascular endothelial growth factor signaling and loss of integrin-mediated barrier maintenance, while a vigorous cytotoxic T-cell and cytokine response against infected cells adds to the leak. This is why the illness explodes just as the immune response matures, why viral load and T-cell response both correlate with severity, and why immunosuppression is a theoretically attractive but unproven approach. Myocardial depression appears to be cytokine-mediated. Thrombocytopenia with hemoconcentration reflects platelet consumption on activated endothelium and plasma leaving the circulation.",
-  lab: "The triad that identifies it early, described from the original outbreak, is thrombocytopenia, hemoconcentration with a rising hematocrit, and left shift with immunoblasts and large atypical lymphocytes on the blood film, together with a low or normal white count and absent eosinophils. A hantavirus IgM and IgG ELISA or immunoblot is usually positive by the time of presentation because the pulmonary phase coincides with seroconversion, and reverse transcription PCR on whole blood confirms it. Chest radiography shows bilateral interstitial then alveolar infiltrates with a normal heart size, and echocardiography shows depressed function with low filling pressures, which separates it from cardiogenic edema. A raised lactate and a falling cardiac index predict death.",
-  tx: "Early transfer to an intensive care unit with extracorporeal membrane oxygenation capability is the single most important step, since the illness is survivable if oxygenation and circulation can be supported through the 48-hour window. Management is cautious with fluids, because the leak worsens with volume, and uses inotropes and vasopressors for the cardiogenic component and lung-protective ventilation. Venoarterial extracorporeal membrane oxygenation has markedly improved survival in refractory cases.",
-  alt: "Ribavirin is effective in Old World hantavirus disease with renal syndrome but did not improve outcome in a controlled trial in hantavirus cardiopulmonary syndrome. Corticosteroids were studied in a randomized trial in Chile without benefit. Convalescent plasma with high neutralizing titers has been studied in Andes virus infection, and monoclonal antibodies against the Gn and Gc glycoproteins are in development.",
-  res: "Not applicable in the absence of effective antiviral therapy.",
-  prev: "Rodent exclusion and control around homes and outbuildings, sealing entry points, storing food in sealed containers and removing nesting material. Airing out closed buildings before cleaning, wetting dust and droppings with disinfectant rather than sweeping or vacuuming dry, and using gloves and a fitted respirator for heavy contamination. Public health advisories accompany years of high rodent abundance. No licensed vaccine exists in North America, although Hantavax, an inactivated vaccine against the Old World viruses, is used in Korea.",
-  look: "Community-acquired pneumonia and influenza, which the prodrome resembles but which usually bring cough and upper respiratory symptoms from the start. Plague and tularemia in the same western geography. Leptospirosis. Acute respiratory distress syndrome from sepsis of any cause. Severe COVID-19. Myocarditis. Acute leukemia, given the atypical cells on the film. Coccidioidomycosis in the southwest. In the febrile prodrome the illness looks entirely unremarkable, which is why the blood film is so useful.",
-  mem: [["Most-tested fact", "Hantavirus cardiopulmonary syndrome from Sin Nombre virus follows aerosolized deer mouse droppings, causes non-cardiogenic pulmonary edema with cardiogenic shock, and carries a case fatality near 40 percent, with no person-to-person spread."],
-    ["Memory trick", "Sin Nombre means without a name. Think deer mouse, dusty cabin, and a triad of thrombocytopenia, hemoconcentration and immunoblasts on the smear. Old World hantaviruses hit the kidney; New World hantaviruses hit the lung."],
-    ["Classic setting", "A healthy 28-year-old in New Mexico or Arizona who swept out a cabin a fortnight ago, with four days of fever and myalgia and then breathlessness, a hematocrit of 52, a platelet count of 70,000 and bilateral infiltrates with a normal heart size."],
-    ["Step focus", "Beta-3 integrin and protocadherin-1 entry, non-cytolytic endothelial permeability driven by the immune response, careful fluid management and extracorporeal support rather than ribavirin."]],
-  worm: [["The outbreak that had no name", "In May 1993 a young Navajo man collapsed and died of respiratory failure on the way to a hospital in New Mexico, days after his fiancee had died the same way. Within weeks the Indian Health Service and the Centers for Disease Control had a cluster of young, fit people dying of a fulminant pneumonia in the Four Corners region. Serology cross-reacted with hantaviruses, which until then meant kidney disease, and Stuart Nichol amplified the genome from autopsy tissue within a month. Naming it was contentious: Muerto Canyon and Four Corners were rejected as stigmatizing, and it became Sin Nombre, the one without a name."],
-    ["The elders who knew the pattern", "Navajo medical and traditional knowledge holders told investigators that the illness resembled outbreaks remembered from 1918 and 1933 and 1934, and that these had followed years of heavy pinyon nut harvests, when mice were abundant, and that mice and human dwellings were to be kept apart. The 1993 outbreak had followed a wet El Nino winter with an unusually heavy pinyon crop and a tenfold increase in deer mouse numbers. The ecological prediction embedded in that oral tradition matched the epidemiology, and it was correct before the virus was identified."],
-    ["Immunity as the cause of the damage", "Sin Nombre virus does not kill the endothelial cells it infects. Severity tracks the intensity of the cytotoxic T-cell response and the cytokine environment, and the pulmonary phase begins as antibody appears. The implication is uncomfortable: the clinical catastrophe is largely the host clearing the virus, and by the time a patient is ill, antiviral therapy has little left to do. It is a mechanistic cousin of severe dengue, and it is the main argument for why supportive bridging through 48 hours, rather than drug therapy, has been where survival gains have come from."],
-    ["The hantavirus that stayed put", "Sin Nombre virus has never been shown to pass between people, while Andes virus in Argentina and Chile clearly does, with documented chains and nosocomial clusters. The two viruses are closely related and cause the same syndrome. The difference is believed to lie in the glycoproteins and in the extent of virus in respiratory secretions, and it has practical consequences: contacts of a Sin Nombre case need no isolation, while an Andes virus case does, and the Yosemite outbreak of 2012 required no quarantine at all despite ten cases and three deaths."]] }
-);
-
-MICRO.push(
-{ id: "hantaan-virus", k: "vir", g: "Bunyaviruses", nm: "Hantaan virus", also: "HTNV, Korean hemorrhagic fever virus, epidemic hemorrhagic fever virus, the prototype hantavirus",
-  cls: "Negative-sense single-stranded RNA, three segments, enveloped, helical nucleocapsids, genus Orthohantavirus, family Hantaviridae within the bunyavirus group; the prototype of the genus",
-  plain: "The Korean field mouse virus that causes the severe form of hemorrhagic fever with renal syndrome, in five distinct clinical stages.",
-  live: "The striped field mouse, Apodemus agrarius, across Korea, northeastern China, far eastern Russia and parts of Central Europe, infected chronically and without illness and shedding virus in urine, feces and saliva. Rodent populations rise in autumn after the rice and grain harvest, which is when human cases cluster.",
-  spread: "Inhalation of aerosolized rodent excreta, most often during agricultural work in harvested fields, during military field exercises, in grain stores and in rural dwellings. Rodent bites and contamination of broken skin transmit occasionally. Laboratory-acquired infection from infected colony rodents was historically important. There is no person-to-person spread.",
-  causes: "Hemorrhagic fever with renal syndrome in its severe form, with a case fatality of roughly 5 to 15 percent. The classic illness runs in five stages. A febrile stage of three to seven days with high fever, severe headache, back and abdominal pain, flushing of the face and neck, conjunctival injection and a palatal and axillary petechial rash. A hypotensive stage of hours to two days with shock, thrombocytopenia, leukocytosis and bleeding. An oliguric stage of three to seven days with acute kidney injury, hypertension, pulmonary edema and the greatest risk of fatal hemorrhage, including intracranial and retroperitoneal bleeding. A diuretic stage with polyuria of several liters a day and the risk of dehydration and electrolyte collapse. Finally a convalescent stage lasting weeks to months. Proteinuria is characteristic and often heavy.",
-  mech: "The virus infects vascular endothelium throughout the body, with a particular concentration in the renal medulla, and uses beta-3 integrins for entry. As with the other hantaviruses it is not cytolytic, and the disease reflects a functional increase in vascular permeability combined with an intense immune response to infected endothelium. Loss of barrier function produces the retroperitoneal edema, hemoconcentration and hypotensive stage, while the renal medullary involvement produces interstitial hemorrhage and necrosis with tubular obstruction, which is the anatomical basis of the oliguric phase. Thrombocytopenia arises from platelet activation and consumption on infected endothelium and from the nucleocapsid protein binding platelets through integrin, and the bleeding reflects thrombocytopenia and vascular fragility rather than a primary clotting factor deficiency, although disseminated intravascular coagulation occurs. Nonstructural and nucleocapsid proteins interfere with interferon induction early, and recovery of the endothelium is complete, which is why survivors generally regain renal function.",
-  lab: "IgM and IgG by ELISA or immunofluorescence, which are usually positive at presentation because symptoms begin as antibody appears, with reverse transcription PCR on blood or urine in the early febrile stage and for genotyping. Neutralization distinguishes Hantaan from Seoul and Puumala viruses. Laboratory findings follow the stages: leukocytosis with a left shift, thrombocytopenia, rising hematocrit in the leak phase, then a rising creatinine with heavy proteinuria, hematuria and sometimes nephrotic-range protein loss. Chest radiography may show pulmonary edema in the oliguric phase.",
-  tx: "Careful supportive management guided by the stage, which is the whole of the therapeutic art here: cautious fluids and vasopressors in the hypotensive stage, fluid restriction, management of hyperkalemia and acidosis and timely renal replacement therapy in the oliguric stage, and generous replacement in the diuretic stage. Platelet and red cell transfusion for significant bleeding, and avoidance of nephrotoxins and of invasive procedures while the platelet count is low. Intravenous ribavirin given within the first four to five days of illness reduced mortality and the severity of renal failure in a placebo-controlled trial in China, which makes this one of the few hantavirus infections with an antiviral of demonstrated benefit.",
-  alt: "Hemodialysis or continuous renal replacement therapy as required, which transformed outcome long before antivirals existed. Corticosteroids have been used without established benefit.",
-  res: "No clinically defined antiviral resistance. The limitation on ribavirin is the narrow window of benefit early in illness, and dose-limiting hemolytic anemia rather than viral resistance.",
-  prev: "Rodent control in and around dwellings, grain stores and barracks, avoidance of raising dust in rodent-infested areas, wetting and disinfecting contaminated material rather than sweeping, and protective equipment and respirators for high-exposure work. Hantavax, a formalin-inactivated whole-virus vaccine derived from Hantaan virus, is licensed in South Korea and used in high-risk groups including soldiers and farmers, with immunogenicity data stronger than clinical efficacy data. Laboratory rodent colonies are screened.",
-  look: "Leptospirosis, which shares the agricultural exposure, the renal failure and the conjunctival suffusion and is treatable with penicillin or doxycycline, so it is the diagnosis to exclude first. Scrub typhus and other rickettsial infections in the same region. Severe dengue, which also produces thrombocytopenia with plasma leakage. Crimean-Congo hemorrhagic fever. Acute post-infectious glomerulonephritis, IgA nephropathy and acute interstitial nephritis. Thrombotic thrombocytopenic purpura and hemolytic uremic syndrome. Sepsis with acute kidney injury.",
-  mem: [["Most-tested fact", "Hantaan virus causes hemorrhagic fever with renal syndrome in five stages, febrile, hypotensive, oliguric, diuretic and convalescent, and early intravenous ribavirin reduces mortality."],
-    ["Memory trick", "The Hantaan River gave the whole genus its name. Old World Apodemus mouse, renal syndrome; New World Peromyscus mouse, pulmonary syndrome. Five stages: Fever, Fall in pressure, Failure of urine, Flood of urine, Fitness returns."],
-    ["Classic setting", "A Korean farmer or a soldier on autumn field exercises with five days of fever, flank pain, a palatal petechial rash, a platelet count of 40,000 and then a creatinine climbing with three grams of proteinuria."],
-    ["Step focus", "This is the prototype hantavirus, the renal medulla is the target, ribavirin works only in the first few days, and Hantavax is the licensed vaccine in Korea."]],
-  worm: [["Three thousand cases and no answer for twenty-five years", "United Nations forces in Korea between 1951 and 1954 recorded more than three thousand cases of a severe febrile illness with shock, kidney failure and bleeding, with a mortality of around 10 percent, and no cause was found. Japanese and Soviet physicians had described similar outbreaks in Manchuria and the Amur region since the 1930s. The agent evaded isolation for a quarter of a century. In 1976 Ho Wang Lee, working in Seoul, detected antigen in the lung tissue of striped field mice caught near the Hantaan River, and the prototype virus and the genus were named after that river."],
-    ["The rodents in the laboratory", "Once Hantaan virus was known, serological surveys found that laboratory rat colonies in Japan, Korea, Belgium and elsewhere carried related viruses, and outbreaks of hemorrhagic fever among laboratory workers and animal handlers were traced to them. Several institutions had to destroy entire colonies. The episode established routine hantavirus screening of laboratory rodents and is one reason Seoul virus, the rat-borne relative, is found worldwide: it travelled with its host in ships and in research animals."],
-    ["Five stages that actually happen in order", "Few infectious diseases divide so cleanly into sequential phases, and the staging is not academic. Fluid given generously in the hypotensive stage becomes pulmonary edema in the oliguric stage that follows it, and fluid withheld in the diuretic stage produces collapse. Mortality fell substantially once clinicians managed each stage on its own terms and once dialysis was available for the oliguric phase. It remains one of the clearest examples of an illness where the treatment changes direction every few days according to where in the natural history the patient sits."],
-    ["Named places, borrowed names", "The Hantaan River was a front line of the Korean War, and the virus that took its name gave the genus Hantavirus, the family Hantaviridae, and, by extension, the name used for the North American pulmonary disease forty years later. A river in a divided peninsula therefore labels a group of viruses carried by rodents on every inhabited continent, most of which have nothing to do with Korea. Taxonomy records the history of its own discovery as much as the biology of its subjects."]] },
-
-{ id: "puumala-virus", k: "vir", g: "Bunyaviruses", nm: "Puumala virus", also: "PUUV, nephropathia epidemica virus, epidemic nephropathy virus",
-  cls: "Negative-sense single-stranded RNA, three segments, enveloped, helical nucleocapsids, genus Orthohantavirus, family Hantaviridae within the bunyavirus group",
-  plain: "The European bank vole virus that causes a mild form of hantavirus kidney disease, with sudden short-sightedness as its oddest feature.",
-  live: "The bank vole, Myodes glareolus, across Scandinavia, Finland, the Baltic states, Russia, Germany, Belgium, France and the Balkans, infected persistently without illness. Vole numbers cycle on a three to four year rhythm in northern Europe, driven in part by masting of beech and spruce, and human incidence rises and falls with those cycles. It is the commonest cause of hantavirus disease in Europe, with Finland reporting over a thousand cases in peak years.",
-  spread: "Inhalation of aerosolized vole urine, droppings or saliva, typically when cleaning summer cottages, woodsheds, barns and cellars, during forestry work, farming or military exercises in forest, or when handling firewood and hay. Risk is highest in late autumn and winter when voles move indoors. There is no person-to-person transmission.",
-  causes: "Nephropathia epidemica, a mild form of hemorrhagic fever with renal syndrome, with a case fatality of roughly 0.1 to 0.4 percent. Most infections are asymptomatic or produce a brief febrile illness. Symptomatic disease begins abruptly after two to four weeks with high fever, headache, severe back and abdominal pain, nausea and vomiting, and then acute kidney injury with proteinuria, microscopic hematuria and a creatinine that usually peaks in the second week and returns to normal, with dialysis needed in a minority. Thrombocytopenia is usual and bleeding is generally limited to petechiae and epistaxis. Two features are characteristic: transient myopia from a change in anterior chamber depth and lens thickness, sometimes marked enough that patients notice their glasses no longer work, and transient hypophyseal involvement with pituitary hemorrhage described in severe cases, occasionally leaving hypopituitarism. Pulmonary involvement is mild compared with the New World hantaviruses.",
-  mech: "The virus infects capillary endothelium, with a predilection for the renal medulla, entering through beta-3 integrin and related receptors, and replicates without killing the cell. Disease results from increased vascular permeability and an intense cellular immune response, so the illness coincides with seroconversion and severity correlates with the strength of the T-cell response and with certain HLA types, with HLA-B8 and DR3 associated with more severe disease and HLA-B27 with milder illness. Tubulointerstitial nephritis with medullary hemorrhage and edema produces the renal injury, and the proteinuria is partly glomerular, with podocyte involvement described, and partly tubular. The transient myopia is attributed to ciliary body edema and lens swelling from the same capillary leak, an entirely reversible optical change rather than retinal disease. Recovery of the endothelium is complete, which is why long-term renal outcome is usually good, although hypertension and proteinuria have been reported years later in some cohorts.",
-  lab: "IgM and IgG by ELISA or immunochromatographic rapid test, which are positive in nearly all patients at presentation, with reverse transcription PCR on blood useful in the first days and for typing. The picture is a raised creatinine with proteinuria, hematuria, leukocytosis, thrombocytopenia and a raised C-reactive protein, often with a mildly raised transaminase and lactate dehydrogenase. Ultrasound shows enlarged kidneys. In Finland and Sweden the diagnosis is made so commonly that rapid bedside tests are routine, and renal biopsy, which shows acute tubulointerstitial nephritis with medullary hemorrhage, is rarely needed.",
-  tx: "Supportive care, with analgesia, antiemetics, careful fluid balance across the oliguric and diuretic phases, avoidance of nonsteroidal anti-inflammatory drugs and other nephrotoxins, and renal replacement therapy for the minority who need it. Almost all patients recover fully, and the illness is managed on a general medical ward or at home.",
-  alt: "No antiviral is established. Ribavirin has not been shown to help in this mild form, and its use is confined to the more severe Asian disease. Corticosteroids have been reported in individual severe cases without evidence.",
-  res: "Not applicable in the absence of antiviral therapy.",
-  prev: "Rodent-proofing cottages, sheds and cellars, ventilating closed buildings before cleaning, wetting dust and droppings with disinfectant rather than sweeping, gloves and respiratory protection for heavy cleaning or forestry work, and care with firewood and hay in peak vole years. Public health notices in Finland and Sweden follow vole population forecasts. No vaccine is licensed in Europe, and the Korean inactivated vaccine does not cover this virus well because it is built on Hantaan virus.",
-  look: "Leptospirosis, acute post-infectious and IgA glomerulonephritis, and acute interstitial nephritis from drugs, which share the renal picture. Tick-borne encephalitis and Lyme disease in the same forest exposure, and tularemia in Scandinavia. Influenza and other viral illness in the febrile phase. Appendicitis and other surgical abdominal pain, since the flank and abdominal pain can be severe enough to prompt imaging or laparotomy. Thrombotic microangiopathy. Hantaan and Dobrava-Belgrade viruses, which cause a more severe version of the same syndrome in overlapping parts of Europe.",
-  mem: [["Most-tested fact", "Puumala virus causes nephropathia epidemica, the mild European hantavirus renal syndrome carried by the bank vole, with transient myopia as its characteristic quirk and a case fatality well under one percent."],
-    ["Memory trick", "Puumala is named after a Finnish municipality. Bank vole, Finnish summer cottage, flank pain and blurred vision that corrects itself. Severe Asian renal disease is Hantaan; mild European renal disease is Puumala."],
-    ["Classic setting", "A Finnish forestry worker in November with four days of fever, severe lumbar pain, a creatinine of 300, two grams of proteinuria, a platelet count of 90,000 and a complaint that reading glasses have suddenly stopped working."],
-    ["Step focus", "It is the commonest hantavirus infection in Europe, HLA type influences severity, the kidney recovers fully in nearly all cases, and the myopia comes from lens and ciliary body swelling rather than retinal disease."]],
-  worm: [["An epidemic nephropathy described before anyone had a virus", "Scandinavian physicians described nephropathia epidemica in the 1930s, with Myhrman in Sweden and Zetterholm reporting clusters of acute nephritis with fever and back pain in rural populations, and the condition was known in Finland as a familiar seasonal illness long before the agent was identified. Only after Ho Wang Lee's isolation of Hantaan virus in 1976 did serology link the Scandinavian disease to the same group, and in 1980 the Finnish virus was isolated and named after the municipality of Puumala, where a key patient lived."],
-    ["A disease that follows the beech mast", "Bank vole numbers in northern Europe oscillate on a three to four year cycle, and in central Europe they surge in the year after a heavy beech masting, when the forest floor is covered in nuts. Human Puumala cases track those peaks closely enough that incidence can be forecast from seed production and winter temperature. The German outbreak years of 2007, 2010 and 2012 were all mast-driven. It is one of the better documented examples of a human infectious disease whose incidence is set by a tree's reproductive schedule."],
-    ["The spectacles that stop working", "Patients with nephropathia epidemica sometimes report a sudden shift of several diopters toward myopia, and ophthalmic measurement shows a shallower anterior chamber and a thicker, more forward lens. The cause is capillary leak in the ciliary body, the same physiology that is flooding the renal medulla, expressed in an organ where small changes in geometry produce an immediately noticeable symptom. It resolves within one to two weeks without treatment. Few findings so directly let a patient perceive a change in their own microvascular permeability."],
-    ["Genes that decide how ill you get", "Finnish and Swedish studies found that patients carrying HLA-B8 and DR3 had more severe disease, with higher creatinine and greater need for dialysis, while HLA-B27 carriers had milder illness. Since the damage is largely immune-mediated rather than cytolytic, the strength and specificity of the T-cell response is a plausible determinant of severity, and the HLA associations support that reading. It also means that two people infected from the same woodshed can have quite different illnesses, and the difference lies in the host rather than the dose."]] }
-);
-
-MICRO.push(
-{ id: "andes-virus", k: "vir", g: "Bunyaviruses", nm: "Andes virus", also: "ANDV, Andes orthohantavirus, the South American pulmonary hantavirus",
-  cls: "Negative-sense single-stranded RNA, three segments, enveloped, helical nucleocapsids, genus Orthohantavirus, family Hantaviridae within the bunyavirus group",
-  plain: "The South American hantavirus that causes the same lethal lung flooding as its North American cousin and is the only hantavirus clearly transmitted between people.",
-  live: "The long-tailed pygmy rice rat, Oligoryzomys longicaudatus, in the temperate forests and shrublands of southern and central Chile and the Andean and Patagonian regions of Argentina, infected persistently without illness. Related rice rats carry closely related viruses further north in Brazil, Paraguay, Bolivia and Uruguay. Rodent abundance rises after the mast flowering and seeding of native bamboo, which occurs at long intervals and is followed by outbreak years.",
-  spread: "Inhalation of aerosolized rodent excreta, classically during camping, woodcutting, work in rural outbuildings and cleaning of holiday cabins in forested areas. The distinguishing feature is person-to-person transmission, which has been documented repeatedly in Argentina and Chile through close and prolonged contact with a case in the prodrome or early cardiopulmonary phase, with clusters among household members, sexual partners and health care workers, and chains extending over several generations of cases. Virus is detectable in saliva and respiratory secretions before symptoms, which is thought to be the basis.",
-  causes: "Hantavirus cardiopulmonary syndrome, essentially identical to the Sin Nombre virus disease: a prodrome of three to six days with fever, myalgia, headache and gastrointestinal symptoms without upper respiratory features, then an abrupt cardiopulmonary phase with non-cardiogenic pulmonary edema, severe hypoxemia and cardiogenic shock. Case fatality is approximately 30 to 40 percent. Renal involvement and hemorrhagic manifestations are somewhat more frequent than with Sin Nombre virus, which places it partway toward the Old World pattern. A proportion of infections are mild or subclinical, identified by serosurvey.",
-  mech: "The virus infects pulmonary microvascular endothelium through beta-3 integrin and protocadherin-1 without lysing it, and alveolar flooding results from a functional collapse of the endothelial barrier combined with an intense cytotoxic T-cell and cytokine response, so the explosive clinical deterioration coincides with the maturing immune response and with peak viral load. Loss of VE-cadherin junctional integrity and enhanced vascular endothelial growth factor signaling are the documented endothelial changes. Myocardial depression is cytokine-mediated and produces the low cardiac index that distinguishes this shock from septic shock. Thrombocytopenia with hemoconcentration reflects platelet consumption and plasma loss. Why this virus transmits between humans while its relatives do not is not settled, but higher and earlier viral loads in saliva and respiratory secretions, and differences in the Gn and Gc glycoproteins, are the leading explanations.",
-  lab: "The same early triad as Sin Nombre virus is used: thrombocytopenia, hemoconcentration and immunoblasts with large atypical lymphocytes on the blood film. IgM and IgG serology is positive at presentation, and reverse transcription PCR on whole blood confirms it and can detect virus during the prodrome, which is what allows prospective monitoring of contacts. Chest radiography shows bilateral infiltrates with a normal cardiac silhouette, and echocardiography shows depressed systolic function with low filling pressures. A rising lactate and a falling cardiac index mark the patients who need mechanical circulatory support.",
-  tx: "Early recognition and transfer to a center with extracorporeal membrane oxygenation, cautious fluid administration, inotropes and vasopressors for the cardiogenic component, and lung-protective ventilation. Venoarterial extracorporeal membrane oxygenation has substantially improved survival in Chile and Argentina for patients who reach it in time, and the window that has to be crossed is approximately 48 hours.",
-  alt: "A randomized trial of methylprednisolone in Chile showed no benefit. Ribavirin was ineffective in the pulmonary syndrome. Convalescent plasma with high neutralizing antibody titers was associated with reduced mortality in observational work in Argentina, and fully human monoclonal antibodies against the Gn and Gc glycoproteins, and a DNA vaccine that raises neutralizing antibody, are under development with this virus as a principal target.",
-  res: "Not applicable in the absence of effective antiviral therapy.",
-  prev: "Rodent control and exclusion around rural dwellings, ventilating and wet-cleaning closed cabins rather than sweeping, care with woodpiles and stored grain, and avoidance of sleeping on the ground in infested areas. Because this virus transmits between people, cases are managed with contact and droplet or airborne precautions and personal protective equipment, close contacts are placed under symptom surveillance for up to six weeks, and public health authorities in Chile and Argentina trace contacts, which is not done for Sin Nombre virus. Outbreak warnings follow bamboo masting and rodent irruptions. No licensed vaccine exists.",
-  look: "Severe community-acquired pneumonia, influenza and severe COVID-19. Leptospirosis, which is common in the same rural geography. Acute respiratory distress syndrome from any cause. Fulminant myocarditis. Sepsis with multiorgan failure. Acute leukemia, prompted by the atypical cells on the smear. Sin Nombre virus infection in a North American exposure history, and the Old World hantaviruses where renal features dominate. In the prodrome the illness looks like a routine viral syndrome, and the blood film is the distinguishing investigation.",
-  mem: [["Most-tested fact", "Andes virus is the only hantavirus with well-documented person-to-person transmission, so cases are isolated and contacts traced, unlike Sin Nombre virus infection."],
-    ["Memory trick", "Andes is the sociable hantavirus: it goes from person to person. Same lungs, same 40 percent mortality, same rice rat ecology, but add contact precautions."],
-    ["Classic setting", "A Patagonian family in which a camper develops fever then respiratory failure, and three weeks later his partner and the nurse who cared for him present with the same illness."],
-    ["Step focus", "Extracorporeal membrane oxygenation and cautious fluid management rather than ribavirin or steroids, and the 48-hour window that determines survival."]],
-  worm: [["An outbreak that broke a rule", "In late 1996 an outbreak of hantavirus cardiopulmonary syndrome in El Bolson, in Argentine Patagonia, produced twenty cases with a clear epidemiological structure: physicians who had cared for patients fell ill, as did family members who had never been in rodent-infested buildings, and the sequence of cases followed contact rather than exposure. One physician infected in El Bolson travelled to Buenos Aires and started a cluster there. Genetic sequencing showed identical viruses in epidemiologically linked cases. Person-to-person transmission of a hantavirus had been considered impossible, and this outbreak ended that."],
-    ["Bamboo that flowers once a generation", "Chusquea bamboo in the temperate forests of Chile and Argentina flowers and seeds synchronously at intervals of a decade or more, then dies back. The seed glut produces an irruption of rice rat populations, locally called a ratada, and human hantavirus cases follow within months. Because the masting is visible and predictable, public health services can issue warnings years in advance of the rodent peak. The pattern is the southern hemisphere counterpart of pinyon nuts in the American southwest and beech mast in Germany, and it recurs so reliably across continents that rodent-borne hantavirus disease is better described as a forestry phenomenon than a seasonal one."],
-    ["The case for extracorporeal support", "Hantavirus cardiopulmonary syndrome kills in about 48 hours through a combination of alveolar flooding and myocardial depression, both of which reverse if the patient survives them. That makes it almost ideally suited to venoarterial extracorporeal membrane oxygenation, which takes over gas exchange and circulation while the endothelium repairs. Series from Chile and from New Mexico report survival in a majority of patients who are cannulated before cardiac arrest, against an expected mortality near 100 percent in refractory shock. The intervention does nothing to the virus; it simply buys the two days."],
-    ["Monitoring the contacts of a lethal virus", "Because Andes virus can be detected by PCR in blood and saliva during the prodrome, Chilean and Argentine investigators were able to follow household contacts of cases prospectively, swabbing and bleeding them before any symptoms. The studies confirmed presymptomatic viremia and shedding, identified transmission chains, and established the six-week surveillance window now used. It is an unusual situation in which the ability to detect a pathogen before illness changed public health practice for a disease with no treatment, by making it possible to get the next patient to an intensive care unit at the right hour."]] },
-
-{ id: "seoul-virus", k: "vir", g: "Bunyaviruses", nm: "Seoul virus", also: "SEOV, Seoul orthohantavirus, rat-borne hantavirus",
-  cls: "Negative-sense single-stranded RNA, three segments, enveloped, helical nucleocapsids, genus Orthohantavirus, family Hantaviridae within the bunyavirus group",
-  plain: "The rat hantavirus that travelled the world in ships and now causes a mild kidney illness, often with hepatitis, in city dwellers and pet rat owners.",
-  live: "The brown rat, Rattus norvegicus, and the black rat, Rattus rattus, infected persistently without illness. Because these rats accompanied human shipping for centuries, this is the only hantavirus with a genuinely global distribution, present in Asia, Europe, the Americas and Africa, in docks, sewers, farms and inner cities. Pet and feeder rats bred commercially form a distinct and well-documented reservoir, with infected breeding colonies traced across several countries.",
-  spread: "Inhalation of aerosolized rat urine, droppings or saliva, and contamination of broken skin, with rat bites transmitting occasionally. Exposure settings include urban rodent infestation, agricultural and dockside work, sewer and pest control work, laboratory rat colonies and, increasingly recognized, keeping or breeding pet rats. There is no person-to-person transmission.",
-  causes: "A generally mild form of hemorrhagic fever with renal syndrome, with case fatality around one percent or less, although severe disease occurs. Fever, headache, myalgia, back and abdominal pain, with conjunctival injection and petechiae, followed by acute kidney injury with proteinuria and hematuria that is usually moderate and resolves. Thrombocytopenia and leukocytosis are typical. A distinguishing feature compared with other hantaviruses is prominent hepatic involvement, with raised transaminases and sometimes jaundice, so hepatitis with renal impairment is the characteristic combination. Many infections are asymptomatic, and serosurveys among people who inject drugs, homeless populations and pet rat owners have found substantial unrecognized exposure.",
-  mech: "The virus infects vascular endothelium, including the renal medulla and the liver, entering through beta-3 integrin, and replicates without lysing cells, so disease follows increased vascular permeability and an immune response directed at infected endothelium, in the same pattern as the other hantaviruses. The relatively prominent hepatic involvement reflects greater replication in liver endothelium and Kupffer cells. The nucleocapsid and glycoprotein products interfere with interferon induction and with tumor necrosis factor signaling. Severity is milder than with Hantaan virus despite close genetic relationship, and the difference appears to lie in glycoprotein-determined tropism and in the strength of the host inflammatory response rather than in any one virulence gene. Endothelial recovery is complete, so long-term renal outcome is generally good, although chronic kidney disease and hypertension have been reported after infection.",
-  lab: "IgM and IgG by ELISA or immunofluorescence, which cross-react with other hantaviruses, so neutralization or reverse transcription PCR with sequencing is needed to identify the species, and this matters epidemiologically because finding Seoul virus points the investigation at rats rather than at voles or field mice. The laboratory picture is a raised creatinine with proteinuria and hematuria, thrombocytopenia, leukocytosis, and transaminases that are often disproportionately high for a renal syndrome. Rodent trapping and testing, including of pet and feeder rat colonies, is part of case investigation.",
-  tx: "Supportive management with attention to fluid balance across the oliguric and diuretic phases, avoidance of nephrotoxic drugs, and renal replacement therapy for the minority who need it. Most patients recover fully. Ribavirin has established benefit in severe hemorrhagic fever with renal syndrome when given early and has been used in severe Seoul virus infection, although the mildness of most cases means it is rarely required.",
-  alt: "Dialysis as needed. No other specific therapy is established.",
-  res: "No clinically defined antiviral resistance.",
-  prev: "Urban rodent control, secure refuse management, rodent exclusion from dwellings and workplaces, protective equipment and respirators for pest control and sewer work, and wet cleaning rather than dry sweeping of contaminated areas. For pet rat owners and breeders, hand hygiene after handling animals and bedding, avoidance of handling bedding dust, screening and withdrawal of infected breeding colonies, and advice to pregnant and immunocompromised owners. Laboratory rat colonies are screened routinely, a practice that dates from hantavirus outbreaks among animal handlers in the 1970s and 1980s. Hantavax, built on Hantaan virus, gives some cross-protection but is licensed only in Korea.",
-  look: "Leptospirosis, which is the closest mimic, shares the urban rat exposure, and produces renal failure with hepatitis and conjunctival suffusion, so it is excluded first and treated empirically. Acute viral hepatitis A and E. Rat bite fever from Streptobacillus moniliformis in someone bitten by a rat. Acute interstitial nephritis and glomerulonephritis. Dengue. Thrombotic microangiopathy. Puumala and Hantaan virus infection where the geography and rodent exposure differ.",
-  mem: [["Most-tested fact", "Seoul virus is carried by brown and black rats, is therefore the only hantavirus with a worldwide distribution, and causes a mild renal syndrome with notably prominent hepatitis."],
-    ["Memory trick", "Seoul sails. Rats on ships carried it everywhere, so it is the cosmopolitan hantavirus. Rat plus kidney plus liver, and in modern practice think pet rat breeder."],
-    ["Classic setting", "An outbreak among pet rat breeders in the United States or England with fever, headache, a creatinine of 200 and a transaminase of 400, traced to an infected commercial rattery, or a city dweller with an infested apartment."],
-    ["Step focus", "Leptospirosis is the differential that has to be excluded because it is treatable, and species identification requires neutralization or sequencing since hantavirus serology cross-reacts."]],
-  worm: [["The virus that travelled with the brown rat", "Rattus norvegicus spread out of Asia along human trade routes and reached Europe in the eighteenth century and the Americas soon after, carried in the holds of ships. Seoul virus went with it. The consequence is that a hantavirus first isolated in urban rats in Seoul in the early 1980s by Ho Wang Lee and colleagues now has a distribution that follows shipping lanes and port cities rather than any natural habitat. Phylogenetic studies of the virus reconstruct rat migration history, and the virus's family tree is in part a map of global commerce."],
-    ["Outbreaks in the laboratory, then in the living room", "During the 1970s and 1980s hemorrhagic fever outbreaks occurred among laboratory workers in Japan, Korea, Belgium, the United Kingdom and elsewhere, traced to infected laboratory rat colonies, and entire colonies were destroyed. Routine screening followed. Three decades later the same virus reappeared in a new setting: in 2016 and 2017 investigations in the United States, Canada, England, France and the Netherlands found Seoul virus circulating in commercial and hobby rat breeding networks, with infections in owners. The reservoir had moved from the dock to the pet shop, and the control measures had to be reinvented for a different industry."],
-    ["Hepatitis where a nephritis was expected", "Among the Old World hantaviruses, Seoul virus is the one most consistently associated with raised transaminases and occasionally jaundice, to the extent that reports describe patients initially worked up for viral hepatitis. The liver involvement reflects replication in hepatic endothelium and Kupffer cells. Clinically it creates a trap, because the combination of fever, renal impairment and hepatitis in someone with rat exposure is also exactly the presentation of leptospirosis, which is treatable with antibiotics and dangerous to miss, so empirical doxycycline or penicillin is frequently started while serology is awaited."],
-    ["The infection nobody was testing for", "Serosurveys have repeatedly found Seoul virus antibody in populations with heavy rat exposure and no history of recognized hantavirus illness: people who inject drugs in Baltimore, homeless populations, inner-city residents in several countries. Where the illness is mild and the test is not ordered, the infection is invisible. Some of that antibody prevalence has been linked statistically with hypertension and chronic kidney disease, which raises the possibility that a globally distributed virus contributes quietly to chronic renal morbidity, though the association is not established as causal."]] }
-);
-
-MICRO.push(
-{ id: "oropouche-virus", k: "vir", g: "Bunyaviruses", nm: "Oropouche virus", also: "OROV, Oropouche fever virus, sloth fever",
-  cls: "Negative-sense single-stranded RNA, three segments, enveloped, helical nucleocapsids, genus Orthobunyavirus, family Peribunyaviridae within the bunyavirus group; a reassortant of the Simbu serogroup",
-  plain: "An Amazonian midge-borne virus that causes a relapsing dengue-like fever, has spread widely since 2023 and has now been linked to fetal harm.",
-  live: "A sylvatic cycle involving pale-throated sloths, non-human primates and birds, with forest mosquitoes as vectors, maintains the virus in the Amazon basin. The urban cycle runs between humans and the biting midge Culicoides paraensis, a tiny insect that breeds in rotting banana stems and plantation debris, with Culex quinquefasciatus implicated as a secondary vector. Endemic to Brazil, Peru, Colombia, Ecuador, Bolivia, Panama and Trinidad, with a large expansion since late 2023 into new areas of Brazil, Cuba and neighboring countries, and travel-associated cases in Europe and North America.",
-  spread: "Bite of Culicoides paraensis midges, which are so small they pass through ordinary mosquito netting, bite outdoors around dawn and dusk and reach very high densities near plantations and urban debris. Humans develop viremia high enough to infect midges, so no animal host is needed to sustain an urban epidemic. Vertical transmission has been documented with virus found in fetal and placental tissue, and a small number of cases of possible sexual transmission and transmission in blood have been raised but not established.",
-  causes: "An abrupt febrile illness four to eight days after the bite, with high fever, intense headache, retro-orbital pain, myalgia, arthralgia, chills, photophobia, dizziness, nausea and sometimes a maculopapular rash, lasting two to seven days. Its most characteristic feature is relapse: a substantial proportion of patients, in some series more than half, have a second or even third episode of fever and symptoms days to weeks after apparent recovery. Aseptic meningitis and meningoencephalitis occur in a small percentage, with headache, neck stiffness and a lymphocytic cerebrospinal fluid pleocytosis, and are the main cause of hospitalization. Deaths were not reported for sixty years, and the first fatal cases were recorded in Brazil in 2024, in young adults with a dengue-like hemorrhagic picture. Since 2024 infection in pregnancy has been associated with fetal death, miscarriage and congenital abnormality including microcephaly, with viral RNA recovered from fetal tissue.",
-  mech: "The three segments encode the polymerase, the Gn and Gc glycoproteins with the NSm protein, and the nucleoprotein with the NSs protein. NSs is an interferon antagonist that suppresses host transcription, which permits the high viremia required to infect a midge. The virus has an unusual evolutionary history of reassortment, exchanging segments with related Simbu serogroup viruses such as Iquitos and Madre de Dios virus, and the strain driving the 2023 to 2024 expansion is a novel reassortant with a different medium segment, which is the leading hypothesis for its increased transmissibility and apparent virulence. Neuroinvasion appears to be direct, with virus recoverable from cerebrospinal fluid. The mechanism of relapse is not established and may reflect persistence in a protected site with secondary release rather than reinfection, since it occurs before antibody has waned. Vertical transmission involves placental infection, and the Simbu serogroup to which it belongs contains Akabane and Schmallenberg viruses, which are well-known causes of congenital brain malformation in livestock, so teratogenicity within this group was expected biologically before it was observed in humans.",
-  lab: "Reverse transcription PCR on serum in the first five to seven days, and on cerebrospinal fluid in neurologic disease, is the main test, with IgM capture ELISA thereafter and plaque reduction neutralization for confirmation. In practice the single greatest diagnostic problem is that the illness is clinically indistinguishable from dengue and that most laboratories in endemic areas do not test for it, so a dengue-negative dengue-like illness is the setting in which it is found. Blood counts show leukopenia with lymphopenia and mild thrombocytopenia, and transaminases may be mildly raised, but the profound thrombocytopenia of severe dengue is unusual. In pregnancy, testing of amniotic fluid, placenta and fetal tissue has been used.",
-  tx: "Supportive care with rest, fluids and acetaminophen for fever and pain, and nonsteroidal anti-inflammatory drugs are commonly avoided until dengue is excluded because of bleeding risk. Meningitis is managed supportively once bacterial and herpes causes are excluded. No antiviral is licensed.",
-  alt: "No established alternative therapy. Antiemetics and analgesia as required.",
-  res: "Not applicable in the absence of antiviral therapy.",
-  prev: "Vector control is harder than for mosquitoes because Culicoides midges pass through standard netting and breed in decaying plant material rather than standing water, so measures include fine-mesh screens, repellents containing DEET or icaridin applied in the hours around dawn and dusk, removal of rotting banana and cacao debris near dwellings, and insecticide treatment of breeding sites. Public health guidance since 2024 has advised that pregnant women consider deferring non-essential travel to areas of active transmission. There is no vaccine and no antiviral, and surveillance capacity in endemic countries is the limiting factor in understanding the current expansion.",
-  look: "Dengue, which is the overwhelming clinical and epidemiological differential and causes far more thrombocytopenia and plasma leakage. Zika and chikungunya, which share the region, with chikungunya distinguished by persistent arthritis and Zika by conjunctivitis and pruritic rash. Malaria. Leptospirosis. Yellow fever. Mayaro virus. Enteroviral and other viral meningitis. In the congenital setting, Zika, cytomegalovirus, toxoplasmosis, rubella and syphilis. The relapsing fever pattern also raises malaria and borreliosis.",
-  mem: [["Most-tested fact", "Oropouche fever is transmitted by Culicoides paraensis midges rather than mosquitoes, is clinically indistinguishable from dengue, and characteristically relapses days to weeks after apparent recovery."],
-    ["Memory trick", "Oropouche is the midge virus, also called sloth fever for its forest reservoir. Three segments, Simbu serogroup, and a fever that comes back for an encore."],
-    ["Classic setting", "A traveler returning from the Brazilian Amazon or Cuba in 2024 with five days of fever, retro-orbital headache and myalgia, negative dengue testing, apparent recovery, and then another two days of fever ten days later."],
-    ["Step focus", "The 2023 to 2024 expansion involved a novel reassortant, the first deaths and the first reports of fetal loss and congenital abnormality were recorded in 2024, and relatives in the Simbu serogroup are established teratogens in livestock."]],
-  worm: [["A charcoal worker in Trinidad, 1955", "The virus was first isolated from the blood of a febrile forest worker near the Oropouche River in Trinidad in 1955 and named for the river. Two years later it was recovered from a pale-throated sloth during road construction in Brazil, which gave rise to the informal name sloth fever. Between then and 2000 it caused repeated urban epidemics in the Brazilian Amazon, with estimates of half a million infections, and was regarded within Latin American virology as a major cause of fever that the rest of the world had essentially never heard of."],
-    ["The insect that goes through the net", "Culicoides paraensis is about one to three millimeters long, small enough to pass through the mesh of ordinary mosquito nets and most window screens, and it breeds not in standing water but in rotting banana stems, cacao husks and plantation litter. Every assumption built into arbovirus control for Aedes mosquitoes fails against it: there are no containers to empty, the netting does not exclude it, and larviciding water bodies accomplishes nothing. An urban epidemic of Oropouche fever is therefore considerably harder to interrupt than one of dengue, with fewer tools available."],
-    ["Segments that trade places", "Orthobunyaviruses with three genome segments reassort readily when two viruses infect the same cell, and Oropouche virus has done so repeatedly, giving rise to Iquitos virus, Madre de Dios virus and other relatives that share some of its segments. The lineage responsible for the explosive spread from late 2023, which reached Cuba and produced travel-associated cases across Europe and North America, carries a reassorted medium segment encoding the surface glycoproteins. If increased transmissibility and the newly reported severe outcomes are genuinely linked to that exchange, it is a live demonstration of segment reassortment generating an epidemic phenotype, the mechanism usually taught with influenza."],
-    ["A teratogen the veterinary literature predicted", "Oropouche virus belongs to the Simbu serogroup, which also contains Akabane virus and Schmallenberg virus, both long established as causes of abortion, arthrogryposis and hydranencephaly in cattle and sheep, and both notorious in veterinary medicine for crossing the placenta and damaging the fetal brain. When reports emerged in 2024 of fetal death, miscarriage and microcephaly associated with Oropouche infection in pregnancy, with viral RNA in fetal tissue, the finding was novel for human medicine and entirely unsurprising to anyone who knew the serogroup. It is a reminder of how much human arbovirology sits unread in veterinary journals."]] },
-
-{ id: "heartland-virus", k: "vir", g: "Bunyaviruses", nm: "Heartland virus", also: "HRTV, Heartland bandavirus",
-  cls: "Negative-sense and ambisense single-stranded RNA, three segments, enveloped, helical nucleocapsids, genus Bandavirus, family Phenuiviridae within the bunyavirus group; closely related to the Asian SFTS virus",
-  plain: "A lone star tick virus of the American midwest and southeast that causes fever with low white cells and platelets in older adults, and does not respond to the doxycycline they are usually given first.",
-  live: "White-tailed deer, raccoons, coyotes, moose and other wild mammals show antibody across a wide area of the central, southern and eastern United States, indicating much broader circulation than the small number of human cases suggests. The lone star tick, Amblyomma americanum, is the vector and probably also a reservoir, since the virus has been detected in nymphs and adults in multiple states and transstadial maintenance is likely.",
-  spread: "Bite of an Amblyomma americanum tick, chiefly in late spring and summer, with nearly all patients reporting tick bites or heavy tick exposure in the weeks before illness. Most recognized cases have occurred in Missouri, Tennessee, Arkansas, Oklahoma, Kansas, Kentucky, Illinois, Indiana, Georgia and North Carolina. No person-to-person transmission has been documented, although the closely related SFTS virus in Asia does transmit through contact with blood and body fluids, which is a reason for caution.",
-  causes: "Fewer than seventy cases had been reported in the United States at the time of writing, nearly all in adults over fifty and many with underlying conditions. The illness begins with fever, marked fatigue, anorexia, headache, myalgia, nausea and diarrhea, and the cardinal laboratory features are leukopenia, especially lymphopenia, and thrombocytopenia, with raised transaminases. Hospitalization is usual and recovery is often slow, with weeks of fatigue, anorexia and headache afterward. Severe cases develop multiorgan dysfunction, bleeding, encephalopathy and hemophagocytic lymphohistiocytosis, and a small number of deaths have been reported, almost entirely in older patients with comorbidity. The spectrum almost certainly includes mild and unrecognized infection, since serosurveys of wildlife indicate far more transmission than the case count implies.",
-  mech: "The virus belongs to the same genus as Dabie bandavirus, the agent of severe fever with thrombocytopenia syndrome in China, Japan and Korea, and the mechanisms are assumed to be closely parallel. The small segment is ambisense and encodes a nonstructural protein that antagonizes interferon induction and sequesters signaling components into cytoplasmic inclusions, which permits high early viral loads. The virus replicates in reticuloendothelial tissue, particularly lymph node, spleen and bone marrow, and infects monocytes and macrophages, producing the lymphoid depletion and the marrow suppression that account for the leukopenia and thrombocytopenia. Severe disease in the related Asian virus is accompanied by massive macrophage activation and a cytokine surge with the features of hemophagocytic lymphohistiocytosis, which has also been reported with Heartland virus, and this immune dysregulation rather than direct tissue destruction appears to drive the fatal cases. Older age and reduced immune reserve are the strongest risk factors identified.",
-  lab: "Reverse transcription PCR on whole blood or serum during acute illness, and serology by IgM and IgG ELISA with plaque reduction neutralization, are available through public health reference laboratories rather than routine clinical laboratories, which is itself a barrier to diagnosis. The clinical clue is the combination of leukopenia with lymphopenia, thrombocytopenia and raised transaminases in a febrile patient with tick exposure who has already failed to improve on doxycycline, since that combination otherwise suggests ehrlichiosis or anaplasmosis. A blood film and marrow examination in severe cases may show hemophagocytosis, and ferritin, triglycerides and soluble CD25 are raised when hemophagocytic lymphohistiocytosis develops.",
-  tx: "Supportive care, with fluids, transfusion support for significant thrombocytopenia or bleeding, and intensive care for organ failure. No antiviral is licensed, and doxycycline, which is almost always started empirically and appropriately for the tick-borne bacterial infections, has no effect on this virus, so persistent illness on doxycycline is a diagnostic signal rather than a treatment failure to be escalated with more antibiotics.",
-  alt: "Favipiravir has activity against the related SFTS virus in animal models and has been studied clinically in Japan and China, and ribavirin has been used against SFTS virus without clear benefit. Reports describe corticosteroids, intravenous immunoglobulin and etoposide-containing regimens in Heartland virus cases complicated by hemophagocytic lymphohistiocytosis, drawing on protocols for that syndrome rather than on antiviral logic, and the evidence is anecdotal.",
-  res: "Not applicable in the absence of established antiviral therapy.",
-  prev: "Avoidance of tick habitat in the midwest and southeast during spring and summer, permethrin-treated clothing, repellents, tucking trousers into socks, daily full-body tick checks and prompt removal of attached ticks, since Amblyomma americanum nymphs are small and aggressive questers. Landscape management to reduce tick habitat around homes and deer exclusion help. No vaccine exists for Heartland virus, and the small case numbers make development unlikely, although SFTS virus vaccine work in Asia is relevant.",
-  look: "Human monocytic ehrlichiosis from Ehrlichia chaffeensis and anaplasmosis from Anaplasma phagocytophilum, which share the tick, the region, the season and the laboratory picture of leukopenia, thrombocytopenia and raised transaminases almost exactly, and which respond to doxycycline, so they are treated empirically. Rocky Mountain spotted fever. Tularemia and Bourbon virus infection, the latter also from Amblyomma americanum in the same states. Acute leukemia and other marrow disorders. Sepsis. Drug reactions. Primary hemophagocytic lymphohistiocytosis and other causes of macrophage activation.",
-  mem: [["Most-tested fact", "Heartland virus causes a febrile illness with leukopenia, thrombocytopenia and raised transaminases in older adults bitten by the lone star tick, and the distinguishing clinical feature is failure to improve on doxycycline."],
-    ["Memory trick", "Heartland is the heartland of America: Missouri and Tennessee, lone star tick, and a blood count that looks like ehrlichiosis but does not answer to doxycycline. Its Asian cousin is SFTS virus."],
-    ["Classic setting", "A 68-year-old Missouri farmer in June with two weeks of fever and exhaustion, multiple tick bites, a white count of 2,000 with lymphopenia, platelets of 60,000, transaminases of 200, and no response to a week of doxycycline."],
-    ["Step focus", "It is a bandavirus closely related to the SFTS virus of China, Japan and Korea, severe cases show hemophagocytic lymphohistiocytosis, and testing is done through public health reference laboratories."]],
-  worm: [["Two farmers in Missouri who did not get better", "In 2009 two men in northwestern Missouri were admitted with fever, leukopenia and thrombocytopenia after tick bites, were treated for presumed ehrlichiosis, and failed to improve on doxycycline. No Ehrlichia was found. Investigators at the Centers for Disease Control eventually recovered a novel phlebovirus from their blood and published it in 2012, naming it after the Heartland region. The route to the discovery was entirely clinical: two patients whose illness did not match the drug they were given, and physicians who treated that mismatch as information rather than noise."],
-    ["The Asian relative found at almost the same time", "In 2011 Chinese investigators described severe fever with thrombocytopenia syndrome, caused by a new bandavirus carried by Haemaphysalis longicornis ticks, with case fatality initially reported above 10 percent and documented person-to-person transmission through blood contact. Heartland virus turned out to be its close relative on the other side of the world, found independently within a year. The pairing gave each virus a reference point, and much of what is assumed about Heartland virus pathogenesis is extrapolated from the far larger Asian literature on SFTS."],
-    ["A tick that is expanding its range", "Amblyomma americanum, the lone star tick, has spread north and west over recent decades with deer populations, land use change and milder winters, and it is an unusually aggressive human-biting tick at all three life stages. It carries Ehrlichia chaffeensis, Francisella tularensis, Bourbon virus, Heartland virus and the alpha-gal allergen responsible for mammalian meat allergy. As its range grows, the geography of several unrelated diseases grows with it, which is why the tick rather than any one pathogen is the object of surveillance."],
-    ["Wildlife antibody against a short case list", "Serosurveys of white-tailed deer, raccoons and other mammals have found Heartland virus antibody across a dozen or more states, in some areas at high prevalence, while the cumulative human case count remains under seventy. Either human infection is rare despite abundant exposure, or most of it is mild and never tested, since the diagnostic assays sit in reference laboratories and are ordered only when a tick-borne illness defies doxycycline. The gap between the wildlife serology and the case register is probably the most informative thing known about this virus."]] }
-);
-
-MICRO.push(
-{ id: "lcmv", k: "vir", g: "Arenaviruses", nm: "Lymphocytic choriomeningitis virus", also: "LCMV, lymphocytic choriomeningitis, the prototype arenavirus, the mouse meningitis virus",
-  cls: "Negative-sense and ambisense single-stranded RNA, two segments named large and small, enveloped, pleomorphic particles containing host ribosomes that give a sandy appearance, genus Mammarenavirus, family Arenaviridae; Old World group, the prototype arenavirus",
-  plain: "A common house mouse virus that usually causes a mild flu or meningitis in adults but devastates the brain and eye of a fetus.",
-  live: "The common house mouse, Mus musculus, worldwide, which is infected in utero or perinatally and becomes a lifelong carrier through immune tolerance, shedding virus in urine, saliva, feces, nasal secretions and milk for life without illness. Pet and laboratory mice and, importantly, pet hamsters and guinea pigs become infected from wild mice and can then transmit. Seroprevalence in human populations is around 2 to 5 percent in surveys.",
-  spread: "Inhalation of aerosolized rodent urine, droppings or nesting material, contamination of broken skin and mucous membranes, ingestion of contaminated food, and rodent bites. Most human infections follow exposure to wild mice in homes with infestation, or to pet rodents, particularly hamsters, and outbreaks have been traced to commercial hamster distributors. Vertical transmission across the placenta is the route that causes the most serious disease. Transmission by organ transplantation is documented and has produced clusters of fatal infection in several recipients from a single donor. Laboratory-acquired infection is well recorded, and person-to-person spread does not otherwise occur.",
-  causes: "About a third of infections are asymptomatic. In immunocompetent adults, a biphasic illness: after one to two weeks, a febrile phase with headache, malaise, myalgia, anorexia, nausea, photophobia and sometimes a sore throat and cough, lasting about a week, followed in a proportion of patients by a second phase of aseptic meningitis with severe headache and neck stiffness, or less often meningoencephalitis, myelitis, Guillain-Barre-like illness, orchitis, parotitis, arthritis or myocarditis. Recovery is usual and mortality under one percent. The important exception is congenital infection, where maternal infection in the first or second trimester can cause spontaneous abortion, or a surviving infant with hydrocephalus, periventricular calcification, microcephaly or macrocephaly, chorioretinitis with chorioretinal scars, nystagmus and severe neurodevelopmental impairment, with mortality around a third in the first two years. Infection in transplant recipients is usually fatal, with hepatitis, coagulopathy and multiorgan failure.",
-  mech: "The virus binds alpha-dystroglycan on many cell types and replicates in meningeal and choroid plexus cells and in a wide range of tissues without destroying them, since arenaviruses are generally non-cytopathic. The classic experimental result, and the reason this virus occupies a central place in immunology, is that the meningitis is caused by the cytotoxic T-cell response and not by the virus: mice depleted of T cells survive intracerebral inoculation and become carriers, while immunocompetent mice die of their own immune reaction. The same logic explains the human biphasic illness, in which the neurologic phase coincides with the maturing cellular response. In the fetus, infection occurs in a host that cannot mount that response and that is still building its brain, so the virus persists in neural tissue and in the retina, disrupting neuronal migration and causing ependymal infection with aqueductal stenosis and hydrocephalus, periventricular calcification and chorioretinal scarring. In adults with profound T-cell suppression after transplantation, the absence of the response permits uncontrolled replication with direct hepatic and multiorgan injury, which is why the same virus can be lethal both when the immune system acts and when it cannot.",
-  lab: "Cerebrospinal fluid in the meningitic phase shows a striking lymphocytic pleocytosis, which can exceed a thousand cells per microliter and is frequently higher than in other viral meningitides, with a low glucose in a substantial minority and a raised protein, a combination that can suggest tuberculous or fungal meningitis. Diagnosis is by IgM and IgG by ELISA or immunofluorescence on serum and cerebrospinal fluid, and by reverse transcription PCR on cerebrospinal fluid, blood or tissue. In suspected congenital infection, serology in mother and infant with imaging showing periventricular calcification and hydrocephalus, and ophthalmic examination for chorioretinal scars, make the diagnosis, and the key practical point is that it is not included in routine congenital infection panels and has to be requested. Transaminases and the platelet count are often mildly abnormal in acute adult infection.",
-  tx: "Supportive care, analgesia and management of raised intracranial pressure where needed; the adult illness is self-limited in almost all cases. In transplant-associated infection, reduction of immunosuppression and intravenous ribavirin have been used, with poor results given how late the diagnosis is usually made. Congenital disease is managed by shunting for hydrocephalus and by developmental, visual and neurologic support.",
-  alt: "Ribavirin has in vitro and animal activity against arenaviruses and is the only candidate agent, used off-label in severe cases. No controlled trial exists.",
-  res: "Not applicable in the absence of established antiviral therapy. The analogous concept with this virus is immunological rather than pharmacological: the fetus and the transplant recipient cannot mount the T-cell response that both causes the illness in a healthy adult and clears the infection, so the outcome is determined by host immune competence rather than by any property of the virus.",
-  prev: "Rodent control and exclusion in homes and workplaces, wet cleaning rather than dry sweeping of droppings, gloves and respiratory protection for heavy contamination, and hand hygiene after handling rodents or their bedding. Pregnant women are advised to avoid contact with pet rodents and with wild mouse infestation and to delegate cage cleaning. Laboratory and commercial rodent colonies are screened, and the organ transplant clusters led to review of donor screening for encephalitis of unknown cause. No vaccine exists.",
-  look: "Enteroviral meningitis, which is far commoner and has a lower cell count. Herpes simplex and varicella zoster meningitis, mumps, West Nile virus and HIV seroconversion. Tuberculous and cryptococcal meningitis, because of the low cerebrospinal fluid glucose and high cell count. Leptospirosis. In the congenital setting the differential is the classic group: cytomegalovirus, which calcifies periventricularly and is the closest mimic, toxoplasmosis, which causes diffuse calcification and chorioretinitis, rubella, syphilis and Zika virus, and LCMV is the member of that group most often omitted from testing.",
-  mem: [["Most-tested fact", "LCMV meningitis is caused by the cytotoxic T-cell response rather than by the virus itself, and congenital infection causes hydrocephalus, periventricular calcification and chorioretinitis, closely mimicking congenital toxoplasmosis and cytomegalovirus."],
-    ["Memory trick", "LCMV is the immunologist's virus: Lymphocytic because the cerebrospinal fluid is full of lymphocytes and because T cells cause the disease. House mouse or pet hamster, and a very high cerebrospinal fluid cell count with a low glucose."],
-    ["Classic setting", "A young adult with a mouse-infested apartment or a new pet hamster, a week of fever then severe headache and neck stiffness, with 900 lymphocytes and a glucose of 2.0 in the cerebrospinal fluid; or an infant with hydrocephalus and chorioretinal scars whose congenital infection screen was negative because LCMV was not on it."],
-    ["Step focus", "Alpha-dystroglycan is the receptor, arenaviruses are non-cytopathic, the two segments are ambisense, and transplant-transmitted infection is usually fatal."]],
-  worm: [["The virus that built modern immunology", "Charles Armstrong and Ralph Lillie isolated LCMV in 1933 from a patient during a St Louis encephalitis investigation, but its importance lies in what it taught. Peter Doherty and Rolf Zinkernagel used it in the early 1970s to show that cytotoxic T cells recognize virus-infected cells only when the cells carry the same major histocompatibility molecules as the responding animal, the discovery of MHC restriction, for which they shared the Nobel Prize in 1996. Immune tolerance, T-cell exhaustion, the original antigenic sin of memory responses and much of what is known about chronic viral infection were worked out in this system."],
-    ["Killed by your own T cells", "Inoculate an adult mouse into the brain with LCMV and it dies of meningitis within a fortnight. Do the same to a mouse whose T cells have been removed and it survives, becoming a healthy lifelong carrier shedding virus in its urine. The lesion is the response, not the agent. This single experiment, performed and repeated from the 1950s onward, established immunopathology as a category of disease and gave a mechanism that has since been invoked for hepatitis B, dengue, hantavirus pulmonary syndrome and severe COVID-19."],
-    ["The congenital infection nobody tests for", "Congenital LCMV produces hydrocephalus, periventricular calcification and chorioretinal scarring, which is the picture of congenital toxoplasmosis or cytomegalovirus. Because the standard congenital infection panel does not include it, series of children with unexplained hydrocephalus and chorioretinitis have found LCMV antibody in a measurable minority when it was specifically sought. The virus is common in house mice, and the exposures that matter, an infested basement or a pet hamster, are so ordinary that they are not asked about. The diagnosis is missed mainly because it is not requested."],
-    ["Organs from a single donor", "In 2003 and again in 2005, clusters of fatal illness occurred in recipients of organs from single donors in the United States, with hepatitis, coagulopathy and multiorgan failure appearing within weeks of transplantation. LCMV was identified in the recipients and traced in one instance to a pet hamster in the donor's household. With their T-cell responses pharmacologically suppressed, the recipients could neither mount the immunopathology that makes the illness in a healthy adult nor control the virus, and nearly all died. It is the clearest demonstration that for a non-cytopathic virus, the immune response is simultaneously the disease and the cure."]] },
-
-{ id: "junin-virus", k: "vir", g: "Arenaviruses", nm: "Junin virus", also: "JUNV, Argentine hemorrhagic fever virus, mal de los rastrojos, stubble disease virus",
-  cls: "Negative-sense and ambisense single-stranded RNA, two segments, enveloped, pleomorphic particles with a sandy granular interior from incorporated ribosomes, genus Mammarenavirus, family Arenaviridae; New World clade B",
-  plain: "The Argentine maize-field virus that causes a hemorrhagic fever with neurological signs, now controlled by a vaccine developed in Argentina.",
-  live: "The drylands vesper mouse, Calomys musculinus, and to a lesser extent Calomys laucha, rodents of the field margins and fencerows of the humid pampas, infected chronically and shedding virus in urine and saliva with little illness. The endemic area is a region of intensive maize and soy cultivation in Buenos Aires, Cordoba, Santa Fe and La Pampa provinces, which expanded steadily from about 16,000 square kilometers in the 1950s to more than 150,000, affecting a population of several million.",
-  spread: "Inhalation of aerosolized rodent urine and of dust containing rodent material, and contamination of broken skin and mucous membranes, overwhelmingly during mechanized maize harvesting in the autumn months of March to June, when harvesters raise dust and disturb rodent nests in the stubble. The old name mal de los rastrojos, stubble disease, records the setting precisely. Cases are concentrated in adult male agricultural workers. Rare person-to-person transmission has been reported, including sexual transmission during convalescence and a small number of nosocomial events, and laboratory infection is a recognized hazard.",
-  causes: "After one to two weeks, an insidious onset over several days of fever, malaise, headache, retro-orbital pain, myalgia, lumbar pain, anorexia and nausea, with a characteristic examination showing flushing of the face, neck and chest, conjunctival injection, periorbital edema, a petechial rash in the axillae, a hemorrhagic enanthem of the palate and gingival bleeding. By the second week roughly a quarter to a third of patients progress to one or more of three syndromes: hemorrhagic, with bleeding from gums, nose, gut and uterus and disseminated intravascular coagulation; neurologic, with tremor of the tongue and hands, ataxia, irritability, confusion, seizures and coma; and shock with capillary leak and oliguria. Marked leukopenia and thrombocytopenia are almost universal and are a diagnostic hallmark. Untreated case fatality is 15 to 30 percent. A late neurologic syndrome with cerebellar signs can follow treatment with immune plasma in a small percentage of patients.",
-  mech: "The glycoprotein binds transferrin receptor 1, a receptor used by all the pathogenic New World arenaviruses, which gives the virus access to actively dividing and iron-hungry cells including bone marrow precursors and endothelium, and the human form of the receptor is bound efficiently while the rodent form of related non-pathogenic viruses is not, so receptor usage largely determines which arenaviruses cause human disease. Replication is non-cytopathic, and the illness is driven by interferon and cytokine dysregulation with very high circulating interferon alfa levels, endothelial dysfunction and capillary leak, and by marrow suppression producing the profound leukopenia and thrombocytopenia. Platelet function is impaired in addition to the low count, which is why bleeding occurs at platelet levels that would not usually cause it. The small segment is ambisense, encoding the nucleoprotein and a zinc-binding Z matrix protein; the nucleoprotein degrades double-stranded RNA and suppresses interferon induction early. Immunity after infection is durable, and the timing of the illness relative to antibody appearance is what makes passive immunization effective.",
-  lab: "The near-constant finding of leukopenia below 2,500 and thrombocytopenia below 100,000 in a febrile harvester from the endemic zone is sufficiently characteristic that it is used to select patients for treatment before confirmation. Reverse transcription PCR on blood, antigen detection and virus isolation in containment confirm the diagnosis, with IgM and IgG by ELISA appearing from the end of the first week and a rising titer in convalescence. Proteinuria with distinctive large vacuolated cells in the urine sediment is described. Coagulation studies, transaminases and creatinine are followed for the severe forms.",
-  tx: "Transfusion of immune plasma from convalescent donors with a defined titer of neutralizing antibody, given within the first eight days of illness, reduces mortality from roughly 15 to 30 percent to about one percent, and is the established treatment, delivered through a national network of plasma banks in Argentina. Beyond day eight it is much less effective. Supportive care includes careful fluid management, transfusion for bleeding, and intensive care for shock and neurologic deterioration. The late neurologic syndrome that follows plasma therapy in a small percentage of patients is self-limited in most cases.",
-  alt: "Ribavirin has activity against arenaviruses and has been used when immune plasma is unavailable or the patient presents late, with some evidence of benefit in reducing mortality, and it is the fallback agent. Favipiravir has shown efficacy in animal models.",
-  res: "No clinically defined antiviral resistance. The practical limitation on immune plasma is the eight-day window and the logistics of maintaining a titered plasma supply, not resistance.",
-  prev: "Candid 1, a live attenuated vaccine derived from the Junin virus XJ strain and developed through collaboration between Argentine institutions and the United States Army, has been licensed in Argentina since 1991 and has been given to several hundred thousand agricultural workers in the endemic zone, with efficacy around 95 percent and a sharp fall in reported cases. Local production at Argentina's Instituto Nacional de Enfermedades Virales Humanas secured supply. Alongside vaccination, rodent control is largely impractical across the pampas, so measures focus on enclosed harvester cabs, dust suppression and avoiding sleeping in the fields.",
-  look: "Leptospirosis, which shares the agricultural exposure, and hantavirus infection, which occurs in the same region with Andes virus. Dengue. Severe falciparum malaria in travelers. Acute leukemia or aplastic anemia, given the pancytopenia. Sepsis with disseminated intravascular coagulation. Thrombotic thrombocytopenic purpura. Machupo virus infection in Bolivia and the other South American arenaviruses, which are clinically indistinguishable and separated by geography and laboratory testing.",
-  mem: [["Most-tested fact", "Argentine hemorrhagic fever is treated with convalescent immune plasma given within the first eight days, which cuts mortality from 15 to 30 percent down to about one percent, and prevented by the live attenuated Candid 1 vaccine."],
-    ["Memory trick", "Junin is the maize harvest fever, mal de los rastrojos, the disease of the stubble. New World arenaviruses enter through transferrin receptor 1; Old World arenaviruses like Lassa and LCMV use alpha-dystroglycan."],
-    ["Classic setting", "A male maize harvester in Buenos Aires province in April with a week of fever, flushed face, axillary petechiae, a tongue tremor, a white count of 1,800 and platelets of 60,000."],
-    ["Step focus", "Leukopenia with thrombocytopenia is near universal and is used to start treatment before confirmation, and the late neurologic syndrome after immune plasma is a recognized complication."]],
-  worm: [["A disease that grew with the plough", "Argentine hemorrhagic fever was first described in the early 1950s among maize harvesters near Junin, in Buenos Aires province, and the virus was isolated in 1958. The endemic area then expanded almost tenfold over four decades, not because the virus changed but because the agricultural frontier did: mechanized maize and soy cultivation created the weedy field margins and fencerow habitat that Calomys musculinus prefers, and herbicide use favored the grasses it nests in. The epidemic map is essentially a map of agricultural intensification on the pampas."],
-    ["Plasma from the people who survived", "Argentine clinicians observed that patients given blood from recovered neighbors seemed to do better, and in the 1970s Julio Maiztegui conducted a randomized, double-blind trial of immune plasma with a standardized neutralizing antibody titer. Mortality fell from 16 percent to roughly one percent in those treated within eight days. It remains one of the most striking treatment effects ever demonstrated for a viral hemorrhagic fever, it was achieved with no antiviral drug at all, and it required building a national network of titered plasma banks to deliver. Maiztegui died of a heart attack in 1993, and the national institute in Pergamino carries his name."],
-    ["A vaccine made in Argentina for Argentina", "Candid 1 was attenuated from the Junin XJ strain through passage work, developed jointly by Argentine scientists and the Salk Institute and the United States Army Medical Research Institute of Infectious Diseases, and shown effective in a placebo-controlled trial among male agricultural workers published in 1998. Argentina then established domestic manufacture. Reported cases fell from hundreds a year to a handful. It is one of very few vaccines developed primarily for a disease of a single country's rural workforce, and it exists largely because a national institute decided it would."],
-    ["One receptor divides the family", "The pathogenic New World arenaviruses, Junin, Machupo, Guanarito, Sabia and Chapare, all enter cells through transferrin receptor 1, and they bind the human version of that receptor efficiently. Their non-pathogenic relatives, which are often closely related and share the same rodent habitats, use it poorly or use a different receptor. A single amino acid region in the receptor-binding site therefore separates a laboratory curiosity from a hemorrhagic fever agent, and it provides a reason to look carefully at any new arenavirus isolate's glycoprotein before deciding how dangerous it is."]] },
-
-{ id: "machupo-virus", k: "vir", g: "Arenaviruses", nm: "Machupo virus", also: "MACV, Bolivian hemorrhagic fever virus, black typhus, tifu negro",
-  cls: "Negative-sense and ambisense single-stranded RNA, two segments, enveloped, pleomorphic particles with incorporated ribosomes, genus Mammarenavirus, family Arenaviridae; New World clade B",
-  plain: "The Bolivian relative of the Argentine virus, carried by a savannah mouse, which caused a notorious village epidemic in the 1960s and still appears sporadically.",
-  live: "The large vesper mouse, Calomys callosus, of the savannahs and gallery forests of the Beni department in lowland northeastern Bolivia, infected chronically with persistent shedding in urine and saliva. The rodent readily enters houses and grain stores, which is what distinguishes the epidemiology from Junin virus: Machupo virus infection is domestic rather than occupational, so it strikes whole families including women and children, and clusters within households and villages.",
-  spread: "Inhalation of aerosolized rodent urine and dust, ingestion of food contaminated with rodent urine, and contamination of broken skin, all typically occurring inside houses and grain stores. Person-to-person transmission is better documented for this virus than for Junin virus, with a nosocomial cluster in Cochabamba in 1971 arising from a single patient and a family cluster in 1994, and it is the main reason cases are isolated with barrier precautions. Laboratory-acquired infection is a recognized hazard and the virus is handled at biosafety level 4.",
-  causes: "After an incubation of one to two weeks, a gradual onset of fever, headache, myalgia, arthralgia, lumbar pain, retro-orbital pain, anorexia and prostration, with flushing, conjunctival injection, a palatal enanthem, generalized lymphadenopathy and often a fine tremor. By the end of the first week a substantial proportion develop bleeding from gums, nose, gastrointestinal tract and uterus, petechiae, hypotension and shock, and neurologic disease with tremor, ataxia, seizures and coma. Marked leukopenia and thrombocytopenia are characteristic, as in Argentine hemorrhagic fever. Case fatality is in the range of 20 to 30 percent untreated. Alopecia and a delayed cerebellar syndrome are described in convalescence. Outbreaks have been small and sporadic since the 1960s, with clusters in 1971, 1994, 2007 and later years, and most cases now occur in rural Beni.",
-  mech: "Entry is through transferrin receptor 1, the shared receptor of the pathogenic New World arenaviruses, which gives access to dividing and iron-avid cells including bone marrow precursors and endothelium and largely accounts for which members of the family are dangerous to humans. Replication is non-cytopathic, and the disease emerges from immune and cytokine dysregulation with high interferon levels, endothelial dysfunction and capillary leak rather than from direct destruction of tissue. Pancytopenia reflects marrow suppression, and bleeding reflects both thrombocytopenia and impaired platelet function, which is why hemorrhage occurs at counts that would ordinarily be tolerated. The nucleoprotein suppresses interferon induction by degrading double-stranded RNA intermediates, and the Z protein drives budding. Neurologic involvement in the acute illness and the delayed cerebellar syndrome in convalescence mirror the pattern seen with Junin virus.",
-  lab: "Leukopenia and thrombocytopenia in a febrile patient from the Beni endemic area are the practical clue. Confirmation is by reverse transcription PCR on blood, antigen detection, virus isolation in biosafety level 4 containment, and IgM and IgG ELISA with a rising titer. Coagulation studies, transaminases, creatinine and urinalysis are followed. Rodent trapping and testing in affected villages forms part of outbreak response, and distinguishing this virus from Chapare virus, another Bolivian arenavirus that causes an identical illness and was identified in 2004 near Cochabamba, requires sequencing.",
-  tx: "Supportive care with careful fluid management, transfusion support for bleeding, and intensive care for shock and neurologic deterioration. Immune plasma, which is so effective in Argentine hemorrhagic fever, has been used by analogy and in individual cases, but no titered plasma bank system exists for this virus, which is the central difference in what can be offered. Intravenous ribavirin has been used, with the best evidence for arenavirus efficacy coming from Lassa fever and with reports of use in Bolivian hemorrhagic fever, and it is the agent most often given.",
-  alt: "Favipiravir is effective in animal models of New World arenavirus infection. Convalescent plasma when available. No controlled trial has been conducted in this disease, and case numbers make one unlikely.",
-  res: "No clinically defined antiviral resistance.",
-  prev: "Rodent control in and around houses and grain stores, which worked spectacularly in the 1960s epidemic, together with rodent-proof food storage, sealing of dwellings and avoidance of raising dust where rodents have been. Because person-to-person transmission occurs, cases are isolated with contact, droplet and airborne precautions and health care workers use full protective equipment. There is no licensed vaccine, although the Junin virus Candid 1 vaccine provides some cross-protection in animal models and has been considered for laboratory workers, and the virus is handled only in maximum containment laboratories.",
-  look: "Junin virus and Chapare virus infection, which are clinically indistinguishable and separated by geography and sequencing. Yellow fever, dengue and other hemorrhagic fevers. Severe falciparum malaria. Leptospirosis. Typhoid. Acute leukemia and aplastic anemia, given the pancytopenia. Sepsis with disseminated intravascular coagulation. Hantavirus infection in the same part of South America. The local historical name black typhus reflects the resemblance to severe louse-borne typhus.",
-  mem: [["Most-tested fact", "Machupo virus causes Bolivian hemorrhagic fever, is carried by Calomys callosus, which enters houses, so the exposure is domestic and whole families are affected, unlike the occupational pattern of Junin virus."],
-    ["Memory trick", "Both South American arenaviruses enter through transferrin receptor 1. Junin is the harvester in Argentina; Machupo is the household in Bolivia. Leukopenia plus thrombocytopenia plus bleeding plus tremor in both."],
-    ["Classic setting", "A family in a village in the Bolivian Beni with several members ill over two weeks with fever, gum bleeding, a tremor, a white count of 1,500 and platelets of 50,000, with mice in the grain store."],
-    ["Step focus", "Person-to-person transmission is better documented than for Junin virus, which is why isolation and barrier precautions are used, and no vaccine or titered immune plasma program exists for it."]],
-  worm: [["The epidemic that was stopped by trapping mice", "Between 1962 and 1964 an outbreak in and around San Joaquin in the Bolivian Beni affected several hundred people with a case fatality near 20 percent, and the virus was isolated in 1963 by Karl Johnson and colleagues and named after the Machupo River. Field investigation identified Calomys callosus in the houses. A systematic rodent trapping campaign in the town, organized with the community, ended the epidemic within months. It remains one of the cleanest demonstrations in the history of viral hemorrhagic fever that identifying a reservoir can be enough to stop an outbreak without any drug or vaccine."],
-    ["A disease of the house, not of the harvest", "Junin and Machupo viruses are close relatives causing near-identical illness, but their reservoirs behave differently. Calomys musculinus lives in field margins and is encountered by men driving harvesters, so Argentine hemorrhagic fever is an occupational disease of adult males in autumn. Calomys callosus enters dwellings and grain stores, so Bolivian hemorrhagic fever strikes families indoors, with women and children affected, and clusters by household. Two viruses with the same pathogenesis produce two quite different epidemiologies because of where their rodents choose to live."],
-    ["A nosocomial chain in Cochabamba", "In 1971 a patient was transferred from the Beni to Cochabamba, outside the endemic zone, and infected five people in the hospital, four of whom died. A further family cluster occurred in 1994. Person-to-person spread of New World arenaviruses is uncommon but real, and these events established barrier nursing for Bolivian hemorrhagic fever. They also set a pattern that has recurred with Chapare virus, including a 2019 cluster in La Paz involving health workers, which was the event that confirmed Chapare virus as a second Bolivian hemorrhagic fever agent capable of nosocomial transmission."],
-    ["The treatment that exists next door", "Argentine hemorrhagic fever has a vaccine and a national titered immune plasma network, and mortality has fallen to about one percent. Bolivian hemorrhagic fever has neither, and mortality remains 20 to 30 percent, despite being caused by a virus in the same clade with the same receptor and the same pathogenesis. The difference is not biological. Argentina had a few hundred cases a year in a politically significant agricultural workforce and built the institutions to answer it; Bolivia has sporadic clusters in a remote lowland department. The gap between the two diseases is a statement about resources and attention rather than about virology."]] }
-);
-
-MICRO.push(
-{ id: "hiv-2", k: "vir", g: "Retroviruses", nm: "Human immunodeficiency virus type 2", also: "HIV-2, the West African HIV, LAV-2",
-  cls: "Positive-sense single-stranded RNA, two identical copies, diploid, enveloped, conical capsid, reverse transcribing, genus Lentivirus, subfamily Orthoretrovirinae, family Retroviridae; groups A to I",
-  plain: "A second, less transmissible and slower AIDS virus confined largely to West Africa, which resists some of the drugs used for HIV-1.",
-  live: "Humans, with the virus derived from simian immunodeficiency virus of the sooty mangabey, a monkey of the West African forests that is hunted and kept as a pet. At least nine separate cross-species transmissions have been identified, labeled groups A to I, of which only groups A and B spread epidemically among people. Prevalence is highest in Guinea-Bissau, Senegal, The Gambia, Cape Verde, Guinea, Sierra Leone, Cote d'Ivoire and Mali, with secondary foci in Portugal, France, Angola, Mozambique and parts of India linked to historical migration and trade.",
-  spread: "The same routes as HIV-1, namely sexual contact, blood exposure through transfusion and shared injecting equipment, and mother-to-child transmission during pregnancy, delivery and breastfeeding, but each route is substantially less efficient. Sexual transmission probability per act is estimated at a fraction of that for HIV-1, and vertical transmission occurs in roughly one to four percent of untreated pregnancies compared with 20 to 40 percent for HIV-1, which is the single most striking epidemiological difference and the reason the virus has stayed largely within West Africa rather than becoming pandemic.",
-  causes: "Infection follows the same stages as HIV-1 but far more slowly. A large proportion of people infected with HIV-2 are long-term non-progressors with stable CD4 counts and low or undetectable plasma viral load for decades, and some never progress. In those who do progress, the result is indistinguishable from HIV-1 disease: progressive CD4 depletion with oral and esophageal candidiasis, tuberculosis, bacterial pneumonia, Pneumocystis pneumonia, cryptococcal meningitis, cerebral toxoplasmosis, cytomegalovirus retinitis, Kaposi sarcoma and other AIDS-defining conditions, and HIV-associated nephropathy and dementia. Median time to AIDS without treatment is measured in decades rather than years. Dual infection with HIV-1 occurs in West Africa, and in that setting HIV-1 generally dominates the clinical course.",
-  mech: "The genome and life cycle match HIV-1 closely: gp120 and gp41 mediate entry through CD4 and the coreceptors CCR5 and CXCR4, reverse transcriptase copies the RNA to DNA, integrase inserts the provirus, and protease matures the particle. It encodes Vpx, an accessory protein that HIV-1 lacks, which degrades the host restriction factor SAMHD1 and so allows efficient infection of myeloid and resting cells, while HIV-1 instead carries Vpu. The clinical difference is quantitative: plasma viral loads are typically one to two logs lower than in HIV-1 at the same CD4 count, and viral replication is better contained, which is attributed to more effective CD8 T-cell and natural killer cell responses, broader and more potent neutralizing antibody and a lower intrinsic replicative capacity. The crucial pharmacological difference lies in the reverse transcriptase: natural polymorphisms in the non-nucleoside binding pocket mean that HIV-2 is intrinsically resistant to all non-nucleoside reverse transcriptase inhibitors including efavirenz, nevirapine, rilpivirine and doravirine. The fusion inhibitor enfuvirtide is also inactive, and among protease inhibitors only a subset, chiefly darunavir, lopinavir and saquinavir, retain reliable activity.",
-  lab: "Modern fourth-generation and multiplex immunoassays detect and differentiate HIV-1 and HIV-2 antibodies, and the critical practical point is that an HIV-1 nucleic acid test does not detect HIV-2, so a reactive antibody screen with an undetectable HIV-1 viral load raises HIV-2 rather than excluding infection. Confirmation uses an HIV-2 specific immunoassay or immunoblot and an HIV-2 specific quantitative PCR, which has limited availability and poor standardization, and a large minority of untreated patients have an undetectable HIV-2 load even with progressive disease. Monitoring therefore relies more on the CD4 count and trend than on viral load. Genotypic resistance testing requires HIV-2 specific assays and interpretation algorithms, since HIV-1 algorithms misclassify its polymorphisms.",
-  tx: "Antiretroviral therapy with an integrase strand transfer inhibitor, usually dolutegravir or bictegravir, combined with two nucleoside reverse transcriptase inhibitors such as tenofovir with emtricitabine or lamivudine, is the preferred approach, since integrase inhibitors and nucleosides retain full activity. A boosted protease inhibitor regimen with darunavir and ritonavir is the main alternative. Treatment is offered to everyone diagnosed, as for HIV-1, with the understanding that CD4 recovery is often slower and that the evidence base is observational cohorts rather than randomized trials. Opportunistic infection prophylaxis and treatment follow the same rules as for HIV-1.",
-  alt: "Maraviroc is active against CCR5-tropic strains but tropism testing for HIV-2 is poorly standardized. Protease inhibitors other than darunavir, lopinavir and saquinavir have reduced activity. Non-nucleoside reverse transcriptase inhibitors and enfuvirtide have no role at all, and this is the most consequential prescribing difference from HIV-1.",
-  res: "Intrinsic resistance to all non-nucleoside reverse transcriptase inhibitors and to enfuvirtide, and reduced susceptibility to several protease inhibitors, is present before any treatment. Acquired resistance develops on therapy with distinct mutational pathways, with the integrase mutations at positions 143, 148 and 155 and the nucleoside-associated K65R and M184V appearing, often faster than in HIV-1 because fewer active drugs are available and because virological monitoring is harder. Virological failure is frequently detected late precisely because the viral load assay is unreliable or unavailable.",
-  prev: "The same measures as for HIV-1, which cover both viruses: condoms, voluntary medical male circumcision, blood supply screening with assays that detect HIV-2, harm reduction and needle and syringe programs, and antiretroviral therapy in pregnancy with avoidance of breastfeeding where safe alternatives exist. Tenofovir-based pre-exposure prophylaxis is expected to be effective, since the nucleosides are active, but the clinical trial evidence is for HIV-1. Post-exposure prophylaxis regimens for a known HIV-2 source avoid non-nucleoside agents. No vaccine exists. Incidence has fallen markedly in West Africa since the 1990s, partly through the same prevention efforts and partly for reasons that are not fully understood.",
-  look: "HIV-1 infection, which is the principal alternative and which can coexist. Other causes of CD4 lymphopenia including idiopathic CD4 lymphocytopenia, sarcoidosis, lymphoma and immunosuppressive therapy. HTLV-1 infection, which is also endemic in West Africa and also a retrovirus but causes leukemia and myelopathy rather than immunodeficiency. In a patient with a reactive HIV screening test and an undetectable HIV-1 viral load, the differential is HIV-2 infection, a false positive screen, an elite controller with HIV-1, or someone already taking antiretroviral therapy.",
-  mem: [["Most-tested fact", "HIV-2 is intrinsically resistant to all non-nucleoside reverse transcriptase inhibitors and to enfuvirtide, so regimens use integrase inhibitors or boosted darunavir with two nucleosides."],
-    ["Memory trick", "HIV-2 is the Two of West Africa: twice as slow, far less transmissible, from the sooty mangabey rather than the chimpanzee, and an HIV-1 viral load test will not see it."],
-    ["Classic setting", "A patient from Guinea-Bissau or Senegal with a reactive HIV antibody screen, a CD4 count of 250, oral candidiasis and an undetectable HIV-1 RNA, in whom a differentiating assay returns HIV-2."],
-    ["Step focus", "Vertical transmission is one to four percent rather than 20 to 40 percent, many patients are long-term non-progressors, and plasma viral load is often undetectable even with progressive disease, so CD4 count drives monitoring."]],
-  worm: [["A different monkey, a different epidemic", "HIV-1 came from chimpanzees in Central Africa; HIV-2 came from the sooty mangabey, Cercocebus atys, of the Upper Guinean forests, where the simian virus infects a large proportion of wild monkeys without causing disease. The virus was isolated in 1986 by Francois Clavel, Luc Montagnier and colleagues from West African patients with AIDS whose serology did not fit HIV-1. At least nine independent transmissions from mangabeys to people have been identified, almost certainly through hunting and butchery, which means the species barrier has been crossed repeatedly, and only two of those nine events produced an epidemic at all."],
-    ["The virus that stayed home", "HIV-1 group M reached every country on earth within three decades. HIV-2 remained concentrated in West Africa and in the countries with the closest historical ties to it, and its prevalence has been falling since the 1990s rather than rising. The reason appears to be arithmetic rather than geography: per-act sexual transmission and vertical transmission are both several-fold lower, so the basic reproduction number sits close to the threshold for sustained spread. A small difference in transmissibility, compounded over generations of transmission, is the difference between a pandemic and a regional endemic infection."],
-    ["Natural resistance to a whole drug class", "Non-nucleoside reverse transcriptase inhibitors bind a hydrophobic pocket adjacent to the active site of HIV-1 reverse transcriptase. HIV-2's reverse transcriptase differs at several positions lining that pocket, including residues corresponding to 181 and 188, which in HIV-1 are the classic acquired resistance sites. HIV-2 therefore arrives already resistant to efavirenz, nevirapine, rilpivirine and doravirine, having never met them. The same principle, resistance as an incidental consequence of normal structure rather than selection, explains vancomycin resistance in lactobacilli, and in both cases the clinical error is to assume a drug class that works on the usual organism will work on the relative."],
-    ["Monitoring without a viral load", "Antiretroviral care for HIV-1 is built around plasma RNA quantification: suppression defines success, rebound defines failure, and resistance testing follows rebound. For HIV-2 the assays are specialist, poorly standardized across laboratories, and frequently report an undetectable result in untreated patients who are nevertheless losing CD4 cells. Clinicians are therefore returned to the position of the late 1980s, following CD4 counts and clinical events. It is a reminder of how much modern HIV practice depends on one laboratory test, and of what care looks like when that test is not available."]] },
-
-{ id: "htlv-2", k: "vir", g: "Retroviruses", nm: "Human T-lymphotropic virus type 2", also: "HTLV-II, human T-cell lymphotropic virus type 2, human T-cell leukemia virus type 2",
-  cls: "Positive-sense single-stranded RNA, two identical copies, diploid, enveloped, reverse transcribing, genus Deltaretrovirus, family Retroviridae; subtypes 2a, 2b, 2c and 2d",
-  plain: "A close relative of the leukemia virus HTLV-1 that is common in Amerindian peoples and in people who inject drugs, and which causes far less disease.",
-  live: "Humans, with ancient endemic foci among Amerindian populations of the Americas, including Guaymi in Panama, Pueblo and Navajo peoples, Brazilian Amazonian groups such as the Kayapo, and among Pygmy peoples of Central Africa, where prevalence can reach double figures in percentage terms. Superimposed on these ancient foci is a second, modern distribution among people who inject drugs in North America, Europe, Vietnam and Brazil, reaching prevalences of 10 to 20 percent in some cohorts. The virus is closely related to simian T-lymphotropic virus of bonobos and other primates.",
-  spread: "Breastfeeding, which is the most efficient route and sustains the endemic foci, with transmission rising with duration of feeding. Sexual transmission, which is relatively inefficient and appears to favor male-to-female direction. Blood exposure through transfusion of cellular products and, dominantly in the modern epidemic, shared needles and syringes, since the virus is carried inside lymphocytes and plasma-derived products do not transmit it. Transmission requires transfer of infected cells, which is why leukodepletion and donor screening have been effective.",
-  causes: "Most carriers remain asymptomatic for life, and the central message of this organism is how little disease it causes compared with HTLV-1. No form of leukemia or lymphoma has been causally established, although scattered reports describe large granular lymphocytic leukemia, hairy cell leukemia variants and cutaneous lymphoma in carriers, and a modest excess of lymphoproliferative disease appears in some cohorts. A myelopathy clinically similar to HTLV-1-associated myelopathy and tropical spastic paraparesis, with spastic paraparesis, bladder dysfunction and sensory changes, occurs rarely and generally more mildly and later. Associations reported in cohort studies include increased rates of pneumonia, bronchitis, bladder and kidney infection, arthritis, asthma and dermatitis, a mild lymphocytosis, and increased all-cause mortality in some but not all series. Peripheral neuropathy, ataxia and cognitive changes have been described. Coinfection with HIV-1 is frequent in injecting cohorts.",
-  mech: "The virus infects T lymphocytes, with a preference for the CD8 compartment in contrast to HTLV-1's preference for CD4 cells, which is one of the principal biological differences between them. Entry involves glucose transporter 1, neuropilin-1 and heparan sulfate proteoglycans. After reverse transcription and integration the provirus persists, and spread within the host occurs chiefly by cell-to-cell contact and by clonal expansion of infected cells rather than by free virions. The regulatory protein Tax2 transactivates the viral promoter and activates NF-kappaB, driving proliferation of the infected cell, and the antisense protein APH-2 represses viral transcription. The reduced oncogenic potential compared with HTLV-1 is attributed to differences in these regulatory proteins: Tax2 lacks the PDZ-binding motif present in Tax1 and is a weaker transforming protein in experimental systems, and APH-2, unlike HTLV-1's HBZ, does not promote proliferation and is less stable. Proviral load is generally lower than in HTLV-1 infection. The preference for CD8 cells, which do not have the same proliferative drive as CD4 cells in this context, is a further part of the explanation.",
-  lab: "Screening is by enzyme immunoassay or chemiluminescent assay detecting antibody to HTLV-1 and HTLV-2 together, since the two cross-react extensively, followed by a line immunoassay or Western blot with type-specific peptides to discriminate them, or by type-specific real-time PCR, which also quantifies proviral load. The distinction matters because the counseling, prognosis and surveillance differ sharply between the two viruses. A mild lymphocytosis is common. In suspected myelopathy, magnetic resonance imaging of the cord and brain, cerebrospinal fluid examination with antibody index and proviral load, and exclusion of other causes are undertaken. Blood services in many countries screen for HTLV-1 and HTLV-2 together, and leukodepletion of components reduces residual risk.",
-  tx: "No antiviral treatment is established or indicated for asymptomatic carriage, and the great majority of carriers need only counseling on transmission and reassurance that the risks differ from HTLV-1. Associated myelopathy is managed as for HTLV-1-associated myelopathy, with physiotherapy, antispasmodics such as baclofen or tizanidine, management of neurogenic bladder, and corticosteroids used in some centers during active inflammation, with modest and often temporary benefit.",
-  alt: "Zidovudine with lamivudine, interferon alfa and antiretroviral agents have been tried in HTLV-associated myelopathy without convincing benefit, since the disease is driven by clonal expansion and immune response rather than by ongoing reverse transcription. Reports in individual patients describe methotrexate, intravenous immunoglobulin and plasma exchange.",
-  res: "Not applicable, as no antiviral therapy is in established use.",
-  prev: "Avoidance of breastfeeding by infected mothers where safe formula feeding is available, which is the measure that has reduced vertical transmission for both HTLV types in Japan and elsewhere, with short-duration feeding and freeze-thawing of expressed milk as alternatives where formula is not safe. Blood and organ donor screening with assays detecting both types, and leukodepletion. Condom use and partner testing. Harm reduction, needle and syringe programs and opioid agonist therapy, which are what reduced incidence among people who inject drugs in North America and Europe. No vaccine exists.",
-  look: "HTLV-1 infection, which is the critical distinction and carries a 2 to 5 percent lifetime risk of adult T-cell leukemia and lymphoma and a similar small risk of myelopathy, neither of which is established for HTLV-2. HIV infection, which shares the injecting and sexual routes and is frequently coinfected. Multiple sclerosis, which is the main alternative diagnosis in a progressive spastic paraparesis, along with cord compression, vitamin B12 deficiency, copper deficiency, hereditary spastic paraplegia, neurosyphilis and primary progressive forms of demyelinating disease. In a patient with lymphocytosis, chronic lymphocytic leukemia and large granular lymphocytic leukemia.",
-  mem: [["Most-tested fact", "HTLV-2 shares the transmission routes of HTLV-1 but has no established causal link to adult T-cell leukemia, and it preferentially infects CD8 rather than CD4 T cells."],
-    ["Memory trick", "HTLV-1 is the one that causes leukemia and myelopathy. HTLV-2 is the quiet twin: CD8 cells, needle sharing and Amerindian populations, with very little disease. Both are spread by breast milk, blood and sex, and both need infected cells rather than plasma."],
-    ["Classic setting", "A person who injects drugs in Brooklyn or Sao Paulo with a reactive HTLV screening assay, in whom type-specific testing returns HTLV-2 and who has no symptoms, or a member of an Amazonian or Pueblo community identified in a seroprevalence survey."],
-    ["Step focus", "Discriminatory testing after a combined HTLV-1 and HTLV-2 screen is the key laboratory step, because the prognosis and counseling differ entirely between the two types."]],
-  worm: [["Found in a leukemia that turned out to be unrelated", "In 1982 Robert Gallo's laboratory isolated a new retrovirus from a patient with a T-cell variant of hairy cell leukemia and named it HTLV-II, following the HTLV-I isolated two years earlier from adult T-cell leukemia. The naming embedded an expectation that was never confirmed: decades of cohort study have failed to establish that HTLV-2 causes that leukemia or any other. The virus retains a name built around a disease association it does not have, which is a recurring hazard of naming organisms after the patient they were first found in."],
-    ["Two deep histories in one virus", "HTLV-2 has two quite separate epidemiologies. One is ancient: endemic infection in Amerindian peoples from Panama to Brazil and in Central African Pygmy populations, with molecular dating consistent with the virus having accompanied human migrations for many thousands of years, including across the Bering land bridge. The other is a few decades old: transmission among people who inject drugs in cities of North America, Europe and Southeast Asia, where subtype 2a and 2b strains spread through shared needles from the 1960s onward. The same virus therefore documents both prehistoric migration and a modern drug epidemic."],
-    ["Why one twin transforms and the other does not", "HTLV-1 and HTLV-2 are about 65 percent identical in sequence, share receptors and routes, and yet one causes a lethal leukemia in a small percentage of carriers and the other appears not to. The differences localize to the regulatory proteins. Tax1 carries a PDZ-binding motif that Tax2 lacks and is the stronger transforming protein. HTLV-1 also encodes HBZ, an antisense protein that supports proliferation and persistence of infected clones, while HTLV-2's equivalent, APH-2, represses transcription without promoting proliferation. HTLV-2 is thus an informative natural control experiment for the oncogenesis of its relative."],
-    ["Screening that finds the harmless one", "Blood services screen with assays that detect antibody to both HTLV types together, because the two cross-react. In North America and Europe a substantial share of reactive donations turn out to be HTLV-2, reflecting the injecting-related epidemic rather than the leukemia-associated virus. Donors are deferred and counseled either way, and discriminatory testing then determines what they are told about their own risk. It is a routine but instructive situation in screening: the test is designed around the dangerous pathogen and, in some populations, mostly finds its benign relative."]] },
-
-{ id: "australian-bat-lyssavirus", k: "vir", g: "Rhabdoviruses", nm: "Australian bat lyssavirus", also: "ABLV, Australian bat lyssavirus genotype 7, pteropid and insectivorous bat variants",
-  cls: "Negative-sense single-stranded RNA, non-segmented, enveloped, bullet-shaped particle with helical nucleocapsid, genus Lyssavirus, family Rhabdoviridae; lyssavirus genotype 7, phylogroup I with rabies virus",
-  plain: "Australia's own rabies virus, carried by flying foxes and small insectivorous bats, which has killed all three people known to have caught it.",
-  live: "Flying foxes of the genus Pteropus, the black, grey-headed, little red and spectacled species, across coastal and northern Australia, and the yellow-bellied sheathtail bat, Saccolaimus flaviventris, which carries a genetically distinct variant. Serological and molecular surveys find evidence of infection in a small percentage of apparently healthy wild bats and a higher proportion of sick, injured or orphaned bats, which is precisely the group members of the public pick up. The virus is present in all mainland Australian states, and Australia is otherwise free of classical rabies.",
-  spread: "Bite or scratch from an infected bat, with saliva entering a wound or mucous membrane, exactly as for rabies virus. All recognized human cases followed handling of a bat, typically an injured or distressed animal picked up by a member of the public or handled by a wildlife carer. Two confirmed cases in horses occurred in Queensland in 2013. There is no evidence of transmission from bat urine, feces, blood or from being near a bat roost, and no documented human-to-human transmission, although the theoretical risk through transplantation is handled as for rabies.",
-  causes: "Three human cases have been confirmed since 1996 and all three died. A fourth case was reported in New South Wales in 2025 following a bat bite. The illness is clinically indistinguishable from rabies: a prodrome with fever, headache, malaise and often pain or paresthesia at the site of the original wound, then an encephalitic phase with agitation, confusion, hallucinations, hydrophobia, aerophobia, hypersalivation, autonomic instability, seizures and coma, or a paralytic presentation with ascending weakness. Death follows within days to a few weeks of symptom onset despite intensive care. Incubation has ranged from a few weeks to more than two years, with one case presenting 27 months after the bite, which carries the same implication as for rabies: a remote bat contact remains relevant history.",
-  mech: "The glycoprotein binds nicotinic acetylcholine receptor, neural cell adhesion molecule and p75 neurotrophin receptor at the neuromuscular junction, and the virus enters peripheral nerve endings and travels centripetally by retrograde fast axonal transport along microtubules using the dynein motor, at a rate measured in millimeters per day, which is why the incubation period depends on the distance from the wound to the central nervous system and why it can be extraordinarily long. Because the virus remains inside axons during this journey it is invisible to the immune system and to circulating antibody, which is the entire rationale for post-exposure prophylaxis: vaccine and immunoglobulin work only before the virus enters a nerve. Once in the central nervous system it replicates in neurons with remarkably little inflammatory destruction, producing Negri bodies, and spreads centrifugally to salivary glands and other organs. The phosphoprotein blocks interferon signaling and the matrix protein regulates the balance between transcription and replication. The virus falls in phylogroup I with rabies virus, which is why rabies vaccine and rabies immunoglobulin neutralize it, and this cross-protection is the single most important clinical fact about it.",
-  lab: "Antemortem testing mirrors rabies diagnostics: reverse transcription PCR on saliva, nuchal skin biopsy containing hair follicles, cerebrospinal fluid and urine, with repeat sampling because shedding is intermittent, together with serology for neutralizing antibody in serum and cerebrospinal fluid in an unvaccinated patient. Postmortem diagnosis uses direct fluorescent antibody testing and PCR on brain tissue with Negri bodies on histology. Testing of the implicated bat, where the animal has been retained, is performed by state and national reference laboratories and can resolve exposure risk quickly. Magnetic resonance imaging shows changes in brainstem, hippocampus and basal ganglia late in the illness. Standard rabies serology and antigen tests detect this virus because of the antigenic relationship.",
-  tx: "No effective treatment exists once encephalitis has begun, and all confirmed cases have died. Management is palliative and supportive in intensive care, with sedation, seizure control and attention to family and staff. The Milwaukee protocol of therapeutic coma with antivirals, used in rabies, has not produced survival here and has fallen out of favor generally. The clinically decisive intervention sits entirely before symptoms: immediate and thorough wound washing with soap and water for fifteen minutes, application of a virucidal agent such as povidone-iodine, and post-exposure prophylaxis with rabies vaccine and, for a previously unvaccinated person, human rabies immunoglobulin infiltrated into and around the wound.",
-  alt: "Pre-exposure rabies vaccination for bat handlers, wildlife carers, veterinarians and laboratory workers, with serological monitoring and boosters, simplifies post-exposure management to vaccine alone. For a previously vaccinated person, post-exposure treatment is two vaccine doses without immunoglobulin. No antiviral has demonstrated benefit.",
-  res: "Not applicable, as no antiviral therapy is in use. The relevant concept is cross-neutralization: rabies biologicals protect against the phylogroup I lyssaviruses, which include this virus, European bat lyssaviruses and Duvenhage virus, but not reliably against the phylogroup II African viruses such as Lagos bat virus and Mokola virus, so vaccine coverage is a question of phylogroup rather than of species.",
-  prev: "The central public health message in Australia is that members of the public leave bats alone and report an injured or grounded bat to a wildlife rescue service rather than picking it up, since every human case has followed hand contact with a sick animal. Pre-exposure rabies vaccination of bat handlers, wildlife carers, veterinarians and relevant laboratory staff, and post-exposure prophylaxis for anyone bitten or scratched by a bat anywhere in Australia regardless of how minor the wound looks. Vaccination of horses in affected areas is not routine, and the equine cases were managed as notifiable incidents. Public awareness campaigns run each summer when bat contact rises, and flying foxes remain a protected species with culling rejected.",
-  look: "Classical rabies acquired overseas, which is the main alternative in a returning traveler and is clinically identical. Hendra virus infection in the same geography, which follows horse rather than bat contact. Herpes simplex encephalitis, which is treatable and is excluded urgently. Murray Valley encephalitis, Kunjin and Japanese encephalitis viruses in northern Australia. Autoimmune encephalitis including NMDA receptor antibody disease, which can present with agitation and autonomic instability. Tetanus, drug toxicity, serotonin syndrome and psychiatric illness in the early agitated phase. Guillain-Barre syndrome for the paralytic form.",
-  mem: [["Most-tested fact", "Australian bat lyssavirus is a phylogroup I lyssavirus, so standard rabies vaccine and rabies immunoglobulin cross-protect against it, and post-exposure prophylaxis is given after any bat bite or scratch in Australia."],
-    ["Memory trick", "Australia has no rabies but it has lyssavirus genotype 7 in its bats. Same bullet-shaped virus, same retrograde axonal transport, same Negri bodies, same one hundred percent mortality, and the same rabies vaccine works."],
-    ["Classic setting", "A Queensland wildlife carer or a child who picked up a grounded flying fox months or years earlier, presenting with fever, pain at the old wound, then agitation, hypersalivation and hydrophobia."],
-    ["Step focus", "The long and variable incubation period, which has reached 27 months, means a remote bat contact remains relevant history, and post-exposure prophylaxis is still offered long after an untreated exposure."]],
-  worm: [["A virus found in a flying fox in 1996", "In May 1996 a sick juvenile black flying fox was found near Ballina in New South Wales with neurological signs, and brain tissue tested at the Australian Animal Health Laboratory contained a lyssavirus. Within months a wildlife carer in Rockhampton, Queensland, who had been scratched by a bat, died of an encephalitis in which the same virus was identified, and retrospective testing of stored tissue confirmed a second case from 1996. Australia had regarded itself as free of lyssaviruses, and the assumption was overturned twice in one year, from a dead bat and a dead carer."],
-    ["Phylogroups decide whether the vaccine works", "Lyssaviruses are divided into phylogroups by glycoprotein relatedness, and this is not an academic classification. Rabies vaccine and rabies immunoglobulin neutralize phylogroup I viruses, which include classical rabies, Australian bat lyssavirus, European bat lyssaviruses 1 and 2, Duvenhage virus and Irkut virus. They do not reliably neutralize phylogroup II viruses such as Mokola and Lagos bat virus, for which no protective biological exists. Australia's situation is therefore fortunate rather than engineered: its indigenous lyssavirus happens to sit in the group the existing vaccine covers."],
-    ["An incubation measured in years", "One Australian case presented 27 months after the bat bite, and rabies incubation periods of several years have been documented elsewhere. The virus's journey from a peripheral nerve ending to the brainstem by retrograde axonal transport is slow, and there is evidence that the virus can remain at or near the inoculation site for a prolonged period before entering a nerve. Clinically this has two consequences: a bat contact from years ago remains relevant history in an unexplained encephalitis, and post-exposure prophylaxis is still offered to someone who reports an untreated bite long after the event, because the nerve may not yet have been entered."],
-    ["Four cases, and the public health message that follows from them", "Three confirmed deaths from 1996 to 2013 and a further case reported in 2025 make this one of the rarest recognized human infections in a high-income country, and yet it shapes Australian practice: thousands of courses of post-exposure prophylaxis are given each year after bat contact. The justification is the arithmetic of a disease with essentially complete mortality, no treatment, and a safe and effective preventive given before symptoms. It is the clearest routine example in medicine of prophylaxis for an exposure almost certain to be harmless, because the alternative outcome is not survivable."]] }
 );

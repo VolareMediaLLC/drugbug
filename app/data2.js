@@ -6058,6 +6058,617 @@ An estrogen shot given into muscle about once a month.|Estradiol cypionate (Depo
 `);
 
 ;
+// DrugBug new drugs: folate forms and one-carbon metabolism reference cards (folate batch)
+DB.add("folate-dietary","Folate (dietary folate, food form)","HM",`
+Dietary folate (food folate; pteroylpolyglutamates, mainly 5-methyltetrahydrofolate polyglutamates)|Not a branded product; supplied by foods and by fortified grain products (no FDA-approved drug product for food folate itself)|Folate, vitamin B9 from food|NOT FDA APPROVED - nutrient obtained from food, not a drug product (the synthetic form folic acid is the FDA-approved drug, DrugBug id folic-acid)|Water-soluble B vitamin; reduced folate polyglutamates serving as one-carbon carriers|Not controlled
+The naturally occurring folate in leafy greens, legumes, liver, citrus and asparagus, present mostly as reduced folates carrying a tail of several glutamate residues. Education only: DrugBug is not telling anyone to use this.|Supplies one-carbon units for purine and thymidylate synthesis and for the methylation cycle, after the glutamate tail is trimmed and the folate is absorbed as a monoglutamate.|Food folate is the dietary source of vitamin B9; adequate intake before and during early pregnancy is linked to lower rates of neural tube defects, and the prevention trials that led to US policy used synthetic folic acid rather than food folate.
+Food folates are pteroylpolyglutamates that cannot cross the enterocyte membrane intact: glutamate carboxypeptidase II (folylpoly-gamma-glutamate carboxypeptidase, GCPII, on the jejunal brush border) hydrolyzes the gamma-linked glutamate tail to the monoglutamate, which enters through the proton-coupled folate transporter (PCFT, SLC46A1) at the acidic jejunal surface and is largely converted in the enterocyte and liver to 5-methyltetrahydrofolate, the form that circulates; synthetic folic acid is fully oxidized pteroylmonoglutamate and instead requires two reductions by dihydrofolate reductase (DHFR, folic acid to dihydrofolate to tetrahydrofolate), a step with low capacity in humans, so intakes above roughly 200 to 400 micrograms leave unmetabolized folic acid circulating in serum; inside cells folylpolyglutamate synthase re-adds glutamates to trap folate and raise its affinity for the one-carbon enzymes.|GCPII and PCFT (absorption); DHFR (needed for folic acid, not for reduced food folate); folylpolyglutamate synthase (intracellular retention)|Vitamin cofactor source|Maintains the tetrahydrofolate pool used for purine synthesis, thymidylate synthesis and remethylation of homocysteine to methionine; low folate status produces megaloblastic anemia with hypersegmented neutrophils and raised homocysteine with normal methylmalonic acid.
+Dietary source of vitamin B9 and of the body tetrahydrofolate pool|Food folate contributes to folate status in pregnancy, megaloblastic anemia, malabsorption and alcohol use disorder; the neural tube defect prevention evidence and the US fortification program used folic acid|Recognize: dietary history in suspected folate deficiency; no EMS product|None (food is not an FDA-regulated indication)
+None established (food folate has no FDA label)|Untreated B12 deficiency is the setting in which raising folate intake corrects the anemia while neurologic damage continues
+Not FDA approved and not a drug product: food folate is obtained from the diet, and fortified foods and supplements are not reviewed by FDA for effectiveness the way drugs are. Since 1998 FDA has required enriched cereal grain products in the US to be fortified with folic acid, and neural tube defect prevalence fell by roughly a third in the years after; corn masa flour was added as a permitted fortification vehicle in 2016. Folate intake above about 1 milligram per day of folic acid equivalents is the level at which the US tolerable upper intake level is set, based on masking of B12 deficiency rather than on direct toxicity of food folate.|None (food folate has no FDA label)|Dietary folate equivalents (DFE) account for the higher bioavailability of the synthetic form: 1 microgram DFE equals 1 microgram food folate, 0.6 microgram folic acid taken with food, or 0.5 microgram folic acid taken on an empty stomach. Food folate is heat-labile and water-soluble, so boiling and prolonged storage reduce the folate content of vegetables.
+Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not applicable (no labeled dose)|Not applicable (no labeled dose)
+PO (foods; fortified enriched grain products)|-|-|-|-|Leafy greens, legumes, liver, citrus, asparagus, and folic acid-fortified breads, cereals, pasta, rice and corn masa flour|-|-|-|Not applicable|Not applicable|Not applicable|Food folate bioavailability is roughly half that of folic acid, which is why intakes are expressed as dietary folate equivalents
+Not well defined (dietary intake)|Serum folate rises within hours of a folate-rich meal|Body stores last weeks to a few months|Plasma 5-methyltetrahydrofolate turns over in hours; whole-body folate stores of roughly 10 to 30 milligrams deplete over about 3 to 4 months on a folate-poor diet|Polyglutamate tail removed by GCPII at the brush border; reduced and methylated in enterocyte and liver to 5-methyltetrahydrofolate; re-polyglutamated inside cells|Renal and biliary, with enterohepatic recirculation of folate|Moderate (bound to albumin and to folate-binding proteins in plasma)
+None attributed to food folate at dietary intakes|None attributed to food folate|None attributed to food folate
+Phenytoin, fosphenytoin, phenobarbital, primidone, methotrexate, trimethoprim, sulfasalazine and triamterene interact with folate status or folate-dependent enzymes (described mainly for folic acid)|Antifolates such as methotrexate, trimethoprim and pyrimethamine act on the same pathway|Leafy greens, legumes, liver, citrus and asparagus are rich sources; enriched grain products carry added folic acid|Alcohol use disorder is a leading cause of folate deficiency through poor intake, impaired jejunal absorption and reduced enterohepatic recirculation|Folate and B12 both feed methionine synthase, so folate repletion can normalize the blood count of B12 deficiency while nerve damage progresses
+-|-|-|-|-|-|Position sense, vibration sense and gait when B12 deficiency is also possible|-|CBC with MCV and peripheral smear, serum folate, red cell folate, serum B12, homocysteine and methylmalonic acid|Diet history, alcohol use, pregnancy status
+Folate needs rise in pregnancy and the periconceptional period; the neural tube defect prevention trials and the US fortification program used folic acid, and food folate alone is less bioavailable|Folate needs rise during breastfeeding and folate passes into breast milk|Infants and children obtain folate from milk, formula and food; growth raises folate requirements|Older adults with low intake or atrophic gastritis can have low folate along with low B12|Folate is dialyzable and losses occur during hemodialysis|Alcohol-related liver disease is associated with low folate stores
+No toxic dose is established for food folate, and no upper intake level is set for folate from food; the US upper intake level of 1 milligram per day applies to folic acid from supplements and fortified foods|No characteristic toxicity from food folate|No characteristic overdose syndrome described|Supportive care|None|None
+Not given by EMS.|Dietary folate deficiency is a common cause of megaloblastic anemia in alcohol use disorder, malabsorption and poor intake, and it develops in months rather than years because folate stores are small compared with B12 stores.|Diet history, alcohol use, pregnancy status, antiseizure medicines, methotrexate, bariatric or small bowel surgery.|Not applicable|Not applicable|Treating the terms folate and folic acid as identical; folate is the family of food forms, folic acid is the synthetic fully oxidized form used in fortification and supplements.|Methotrexate and trimethoprim (antifolates); phenytoin and related antiseizure drugs|Food folate deficiency gives megaloblastic anemia with hypersegmented neutrophils, raised homocysteine and NORMAL methylmalonic acid, which separates it from B12 deficiency, where both homocysteine and methylmalonic acid are raised.
+Poor diet, alcohol use disorder, pregnancy, celiac disease or other small bowel malabsorption, hemolytic anemia with high folate turnover.|Dietary advice, a prenatal product or a fortified diet rather than a prescribed drug.|Diet, alcohol use, pregnancy status, seizure medicines, methotrexate.|Megaloblastic anemia with fatigue and dyspnea; high homocysteine; in pregnancy, neural tube defects in the fetus.|Folate stores deplete over about 3 to 4 months, which is faster than the years it takes for B12 stores to run out.
+The folate your body gets from food, which has a tail of extra glutamates that the gut has to cut off before it can be absorbed.|Dietary folate is a polyglutamate that intestinal glutamate carboxypeptidase II trims to a monoglutamate for absorption as 5-methyltetrahydrofolate, so unlike synthetic folic acid it bypasses the low-capacity dihydrofolate reductase step and leaves no unmetabolized folic acid in serum.|Food folate comes with a TAIL that gets CUT; folic acid comes bare but needs DHFR twice.|Food folate is about half as bioavailable as folic acid, which is why intake is measured in dietary folate equivalents.|Folate deficiency causes megaloblastic anemia with hypersegmented neutrophils and raised homocysteine with normal methylmalonic acid; B12 deficiency raises both, and US grain fortification with folic acid since 1998 was followed by a fall of roughly a third in neural tube defects.|Folic acid (DrugBug id folic-acid), the synthetic fortification and supplement form; vitamin B12|Folic acid, L-methylfolate, folinic acid (leucovorin)|Methotrexate and other antifolates
+`);
+DB.add("folinic-acid","Folinic Acid (5-formyltetrahydrofolate, calcium folinate)","HM",`
+Folinic acid (5-formyltetrahydrofolate; calcium folinate; leucovorin calcium; levoleucovorin is the active L-isomer)|Sold as a dietary supplement under many brands; the identical molecule is marketed as the FDA-approved drug leucovorin calcium and as Fusilev and Khapzory (levoleucovorin) - DrugBug id leucovorin|Folinic acid, leucovorin|Dietary supplement when sold as folinic acid (NOT FDA APPROVED in that form); the same chemical entity is an FDA-approved drug as leucovorin calcium|Reduced folate (formyl-tetrahydrofolate); one-carbon carrier that enters the folate cycle downstream of dihydrofolate reductase|Not controlled
+A reduced, already-active folate carrying a formyl group at N5, stable on the shelf and interconvertible with the other tetrahydrofolate forms inside cells. Education only: DrugBug is not telling anyone to use this.|Enters the folate pool without needing dihydrofolate reductase, so it restores tetrahydrofolate, thymidylate and purine synthesis even when that enzyme is blocked by methotrexate or another dihydrofolate reductase inhibitor.|As the drug leucovorin it is used to rescue normal cells after high-dose methotrexate, to treat methotrexate overdose and megaloblastic anemia, and to potentiate fluorouracil in colorectal cancer; as a supplement, folinic acid is marketed for folate support and is used in research on cerebral folate deficiency.
+5-formyltetrahydrofolate is a reduced folate at the tetrahydro oxidation level, so it bypasses the dihydrofolate reductase (DHFR) step entirely; methenyltetrahydrofolate synthetase converts it to 5,10-methenyl-THF, which interconverts through 5,10-methylene-THF (via methylenetetrahydrofolate dehydrogenase) and 10-formyl-THF, filling the whole one-carbon pool: 10-formyl-THF donates carbons 2 and 8 of the purine ring through GAR and AICAR transformylases, 5,10-methylene-THF donates a carbon plus a hydride to thymidylate synthase to convert dUMP to dTMP, and 5-methyl-THF feeds B12-dependent methionine synthase; in the fluorouracil interaction the expanded 5,10-methylene-THF pool stabilizes the covalent ternary complex of thymidylate synthase with the active fluorouracil metabolite FdUMP, prolonging enzyme inhibition.|Enters the folate cofactor pool directly; downstream targets are thymidylate synthase, GAR and AICAR transformylases and methionine synthase; reduced folate carrier (SLC19A1) and proton-coupled folate transporter mediate uptake|Vitamin cofactor (reduced, active form); not an enzyme inhibitor itself|Restores DNA and RNA precursor synthesis during DHFR blockade; expands the 5,10-methylene-THF pool, which increases fluorouracil cytotoxicity rather than reducing it.
+As leucovorin: rescue after high-dose methotrexate, treatment of methotrexate overdose or impaired methotrexate elimination, megaloblastic anemia from folate deficiency when oral therapy is not feasible, and combination with fluorouracil in advanced colorectal cancer|Also used with pyrimethamine for toxoplasmosis to limit bone marrow suppression, and as glucarpidase-era supportive care; folinic acid as a supplement has been studied in cerebral folate deficiency, autism spectrum disorder and folate receptor autoantibody-positive patients, with limited evidence|Recognize: oncology or rheumatology patient on methotrexate or fluorouracil; no EMS indication|Off-label and investigational: cerebral folate deficiency, folate receptor alpha autoantibody-positive developmental disorders, methotrexate-related mucositis
+None established for the supplement form (no FDA label for folinic acid sold as a supplement); for the drug leucovorin, pernicious anemia and other megaloblastic anemias secondary to vitamin B12 deficiency are labeled contraindications because a hematologic remission can occur while neurologic manifestations progress|Untreated B12 deficiency; prior hypersensitivity to folic acid or folinic acid products
+Not FDA approved as a dietary supplement: supplements are not reviewed by FDA for safety or effectiveness before sale, and content can vary between brands. The leucovorin label carries no boxed warning but notes that it does not protect against methotrexate-induced nephrotoxicity, that delayed or inadequate rescue is associated with methotrexate toxicity, and that leucovorin increases fluorouracil toxicity as well as its activity, with diarrhea, mucositis and myelosuppression described. Folinic acid is a reduced folate with much greater ability to reverse dihydrofolate reductase blockade than folic acid has.|None (leucovorin has no boxed warning; folinic acid supplements have no FDA label)|Levoleucovorin is the pharmacologically active L-isomer and is dosed at half the leucovorin calcium amount in oncology labeling. Glucarpidase is a separate recombinant enzyme that cleaves circulating methotrexate and is not a folate. In cerebral folate deficiency, CSF 5-methyltetrahydrofolate is low despite normal serum folate, and folate receptor alpha autoantibodies or FOLR1 mutations blocking choroid plexus folate transport are described causes; folinic acid is used in that setting because it reaches the CNS by routes not dependent on the blocked receptor.
+Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not applicable for the supplement form (no labeled dose); the leucovorin entry covers the drug product|Not applicable for the supplement form (no labeled dose); the leucovorin entry covers the drug product
+PO as the supplement (tablets, capsules); the drug leucovorin is also given IV and IM|Drug product only (see DrugBug id leucovorin)|Not described|Drug product only (see DrugBug id leucovorin)|-|Tablets, capsules|-|-|-|Not applicable for the supplement form|Not applicable for the supplement form|Not applicable for the supplement form|Oral absorption of reduced folates saturates at higher amounts, which is why the parenteral drug product exists for rescue after high-dose methotrexate
+Not well defined for the supplement; serum folate activity rises within hours after oral intake|Within about 1 to 2 hours orally for total reduced folates (drug data)|Hours; the folate pool it fills persists longer|Roughly 3 to 6 hours for 5-methyltetrahydrofolate, the main circulating metabolite (drug data)|Converted in intestinal mucosa and liver through 5,10-methenyl-THF and 5,10-methylene-THF to 5-methyltetrahydrofolate and the other tetrahydrofolate forms|Renal, mostly as 5-methyltetrahydrofolate and folate metabolites|Low to moderate
+Nausea, GI upset; with the drug product, injection site reactions|Masking of B12 deficiency (blood count corrects while neurologic damage continues); with fluorouracil, increased diarrhea, mucositis and myelosuppression|Severe mucositis, diarrhea and myelosuppression when combined with fluorouracil; anaphylactoid reactions to the injectable drug are rare
+Methotrexate (reversed by folinic acid), fluorouracil and capecitabine (potentiated), pyrimethamine and trimethoprim-sulfamethoxazole (bone marrow effects limited), phenytoin, fosphenytoin, phenobarbital and primidone (lower levels reported with folates)|Antifolate chemotherapy when the antifolate effect is the goal; folinic acid interferes with the antitumor effect of methotrexate if given too early or in too high an amount|Food has no major described effect on the supplement|Alcohol use disorder is linked to folate deficiency|The fluorouracil combination is a deliberate potentiation, not an error: folinic acid stabilizes the thymidylate synthase ternary complex and increases both activity and toxicity
+-|-|-|-|-|-|Developmental and neurologic status in cerebral folate deficiency|-|CBC with differential, serum methotrexate level and creatinine during rescue, serum B12 and methylmalonic acid before attributing anemia to folate, CSF 5-methyltetrahydrofolate in cerebral folate deficiency|Mucositis and diarrhea when combined with fluorouracil
+Folate needs rise in pregnancy; leucovorin is used in pregnancy when methotrexate rescue is needed, and supplement products are not FDA reviewed|Folates pass into breast milk; the drug label notes limited data|Leucovorin is used in pediatric oncology and in toxoplasmosis; folinic acid supplements have no FDA-labeled pediatric dose|Reduced methotrexate clearance in older adults raises the importance of rescue timing in oncology practice|Impaired renal function delays methotrexate clearance and prolongs the rescue period|No specific supplement data
+No toxic dose is established for folinic acid itself; harm in practice comes from timing and from the fluorouracil combination rather than from folate toxicity|Nausea and GI upset at high oral intakes|No characteristic overdose syndrome; excess folinic acid given too early during methotrexate therapy reduces the intended antitumor effect|Supportive care|None (folinic acid is itself the antidote for methotrexate, and glucarpidase is the separate methotrexate-cleaving enzyme)|Folinic acid is the rescue agent for methotrexate and other dihydrofolate reductase inhibitors
+Not given by EMS.|A patient on high-dose methotrexate who missed leucovorin doses or whose methotrexate clearance is delayed can present with mucositis, pancytopenia, acute kidney injury and sepsis days after the infusion.|Methotrexate or fluorouracil therapy and timing, renal function, B12 status, other folate products.|Not applicable|Not applicable|Confusing folic acid with folinic acid: folic acid is fully oxidized and depends on dihydrofolate reductase, so it does not rescue a patient whose dihydrofolate reductase is blocked by methotrexate.|Fluorouracil and capecitabine (increased toxicity along with increased activity); folinic acid given early in a methotrexate cycle blunts the intended effect|Folinic acid bypasses dihydrofolate reductase, which is why it rescues methotrexate toxicity, and it POTENTIATES fluorouracil by expanding the 5,10-methylene-THF pool that stabilizes the FdUMP-thymidylate synthase ternary complex.
+Methotrexate therapy for cancer or rheumatologic disease, fluorouracil-based colorectal cancer chemotherapy, toxoplasmosis treatment with pyrimethamine, cerebral folate deficiency.|Prescribed rescue or potentiation in oncology, bone marrow protection with pyrimethamine, or a self-selected folate supplement.|Chemotherapy regimen and last dose, methotrexate levels, kidney function, mouth sores, fever, other folate products.|Methotrexate toxicity with mucositis, pancytopenia and renal failure if rescue is delayed; severe diarrhea and neutropenia in fluorouracil regimens.|Stopping rescue early during a high-dose methotrexate cycle allows methotrexate toxicity to progress.
+A ready-made folate that works even when a drug has blocked the enzyme that normally activates folic acid.|Folinic acid is 5-formyltetrahydrofolate, a reduced folate that enters the one-carbon pool downstream of dihydrofolate reductase, making it the rescue agent after high-dose methotrexate and the potentiator of fluorouracil through stabilization of the thymidylate synthase ternary complex.|FolINic acid is already IN the cycle; folic acid still needs DHFR to get in.|Levoleucovorin is the active L-isomer and is used at half the leucovorin calcium amount in oncology labeling.|Leucovorin (folinic acid) rescues methotrexate toxicity because it bypasses dihydrofolate reductase, and it INCREASES fluorouracil activity by stabilizing the ternary complex of FdUMP, 5,10-methylene-THF and thymidylate synthase.|Folic acid (DrugBug id folic-acid), which cannot rescue dihydrofolate reductase blockade; L-methylfolate|Leucovorin calcium (DrugBug id leucovorin), levoleucovorin, L-methylfolate, folic acid|Methotrexate (folinic acid is its rescue agent); glucarpidase is the separate methotrexate-cleaving enzyme
+`);
+DB.add("tetrahydrofolate","Tetrahydrofolate (THF, the central folate carrier)","HM",`
+Tetrahydrofolate (THF; tetrahydropteroylglutamate; intracellular forms are polyglutamates)|Not a marketed product and not sold as a supplement; this is a biochemistry reference card (no FDA-approved drug product and no supplement product)|Not applicable - THF is a metabolite, not a product|NOT A DRUG OR SUPPLEMENT - endogenous metabolite included as a biochemistry and board reference card|Fully reduced pteridine cofactor; the parent one-carbon carrier of the folate family|Not controlled
+The fully reduced core folate molecule inside cells, the carrier onto which one-carbon units are loaded and from which they are handed to the enzymes that build DNA and recycle methionine. Education only: DrugBug describes this for study and does not present it as a product.|Accepts one-carbon units at the N5 and N10 nitrogens and shuttles them, at three oxidation states, into purine synthesis, thymidylate synthesis and the methylation cycle.|Included as a reference card because the folate pathway is a high-yield topic: methotrexate, trimethoprim and pyrimethamine all act by starving cells of tetrahydrofolate, and folate and B12 deficiency are understood through this cycle.
+Tetrahydrofolate carries one-carbon units on N5, on N10, or bridged across both, at three oxidation states: most reduced is 5-methyl-THF (methyl level), intermediate is 5,10-methylene-THF (formaldehyde level), and most oxidized are 5,10-methenyl-THF, 10-formyl-THF and 5-formyl-THF (formate level); serine hydroxymethyltransferase (SHMT, with pyridoxal phosphate) transfers the serine beta-carbon to THF to give 5,10-methylene-THF plus glycine, the main entry point for one-carbon units, with glycine cleavage system, dimethylglycine and sarcosine dehydrogenases and formate via MTHFD1 as other sources; 5,10-methylene-THF gives its carbon plus a hydride to thymidylate synthase, converting dUMP to dTMP and oxidizing the cofactor to dihydrofolate, which dihydrofolate reductase (DHFR) reduces back to THF using NADPH; 10-formyl-THF donates carbon 8 and carbon 2 of the purine ring through GAR transformylase (GART) and AICAR transformylase (ATIC) and releases THF directly; methylenetetrahydrofolate reductase (MTHFR, FAD-dependent) irreversibly reduces 5,10-methylene-THF to 5-methyl-THF, which only B12-dependent methionine synthase can unload, regenerating THF and methionine, so B12 deficiency traps the pool as 5-methyl-THF (the methyl trap); bacteria make their own folate from GTP, PABA and glutamate, which is why sulfonamides and bacterial dihydrofolate reductase inhibitors are selective.|Carried by and regenerated through dihydrofolate reductase and methionine synthase; delivers carbons to thymidylate synthase, GAR and AICAR transformylases and SHMT; transported by the reduced folate carrier (SLC19A1), the proton-coupled folate transporter (SLC46A1) and folate receptor alpha|Cofactor (carrier), not an agonist, antagonist or inhibitor|Sustains thymidylate and purine synthesis, so a falling THF pool stalls DNA replication and produces megaloblastic changes; also sustains the methionine and S-adenosylmethionine supply for methylation reactions.
+Not a therapeutic agent: THF is the endogenous cofactor whose depletion explains megaloblastic anemia, antifolate chemotherapy and antifolate antimicrobial therapy|Understanding the targets of methotrexate and pemetrexed (human DHFR and thymidylate synthase), trimethoprim and pyrimethamine (bacterial and protozoal DHFR), sulfonamides (bacterial dihydropteroate synthase) and fluorouracil (thymidylate synthase)|Not applicable - no EMS product|Not applicable - no clinical uses
+Not applicable - THF is not administered as a product|Not applicable - THF is not administered as a product
+Not a drug or supplement: there is no THF product, no FDA label and no clinical dosing. The clinical relevance is the opposite direction, namely what happens when the pool is depleted: methotrexate and pemetrexed deplete reduced folates in human cells, trimethoprim and pyrimethamine inhibit microbial dihydrofolate reductase, and inherited MTHFD1, DHFR and MTHFR defects or severe dietary folate deficiency produce megaloblastic changes, raised homocysteine and, in the fetus, neural tube defects.|None (no FDA label)|Folinic acid (5-formyltetrahydrofolate) and L-methylfolate are the marketed reduced folates that feed this pool directly, while folic acid requires two dihydrofolate reductase reductions to reach the tetrahydro level.
+Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not applicable (no labeled dose)|Not applicable (no labeled dose)
+Not administered (endogenous metabolite)|-|-|-|-|-|-|-|-|Not applicable|Not applicable|Not applicable|THF is generated inside cells from dietary folate, folic acid or a reduced folate product; it is not given as such
+Not applicable (endogenous)|Not applicable (endogenous)|Not applicable (endogenous)|Intracellular polyglutamate forms are retained for days to weeks; plasma 5-methyltetrahydrofolate turns over in hours|Interconverted among 5-methyl, 5,10-methylene, 5,10-methenyl, 10-formyl and 5-formyl forms; oxidized to dihydrofolate by thymidylate synthase and reduced back by dihydrofolate reductase|Folate catabolites such as p-aminobenzoylglutamate appear in urine; intact folates are excreted in urine and bile|Bound to folate-binding proteins and to folate-dependent enzymes inside cells
+Not applicable (not administered)|Not applicable (not administered)|Not applicable (not administered)
+Not applicable as a product; the pathway is the site of action of methotrexate, pemetrexed, fluorouracil, trimethoprim, pyrimethamine, sulfonamides, phenytoin and trimethoprim-sulfamethoxazole|Antifolates deplete the pool by design|Dietary folate, folic acid-fortified grains and reduced folate products supply the pool|Alcohol use disorder depletes folate stores and lowers the THF pool|B12 deficiency traps folate as 5-methyl-THF because methionine synthase is the only exit from that form, which is why folate repletion alone can correct the anemia while nerve damage progresses
+-|-|-|-|-|-|Neurologic examination in suspected B12 or folate deficiency|-|CBC with MCV and smear for hypersegmented neutrophils, serum and red cell folate, serum B12, homocysteine, methylmalonic acid; methotrexate levels during rescue|Not measured directly in clinical practice; THF pools are assessed indirectly
+Folate demand rises in pregnancy and a depleted pool is linked to neural tube defects; antifolates such as methotrexate are teratogenic|Folate demand rises during lactation|Rapid growth raises folate demand; inherited folate transport and metabolism defects present in infancy and childhood|Low folate intake and low B12 are both more common in older adults|Reduced renal function delays methotrexate clearance and prolongs antifolate depletion of the pool|Liver disease is associated with depleted folate stores
+Not applicable - THF is not administered|Not applicable|Not applicable|Not applicable|Not applicable|Folinic acid (leucovorin) restores the pool when dihydrofolate reductase is blocked
+Not given by EMS.|Methotrexate toxicity is a folate-depletion syndrome: mucositis, pancytopenia and acute kidney injury reflect a collapsed tetrahydrofolate pool, and leucovorin refills it while glucarpidase removes the drug.|Not applicable - no product to check.|Not applicable - no product to monitor.|Not applicable|Mixing up the two regeneration routes: dihydrofolate reductase regenerates THF after thymidylate synthase, while methionine synthase regenerates it from 5-methyl-THF, and only the second one needs B12.|Antifolates combined with one another, or with fluorouracil, deepen depletion of the pool|Trimethoprim and pyrimethamine inhibit dihydrofolate reductase with much higher affinity for the bacterial and protozoal enzymes than for the human one, which is the basis of their selectivity.
+Not applicable - THF is not a prescribed or purchased product; the card explains why folate drugs and deficiencies behave as they do.|Not applicable.|Folate and B12 intake, methotrexate or trimethoprim therapy, alcohol use.|A depleted pool from antifolate therapy or severe deficiency produces megaloblastic anemia, pancytopenia and mucositis.|Not applicable.
+The hub molecule that carries single carbon atoms around the cell so DNA bases and methionine can be built.|Tetrahydrofolate is the central one-carbon carrier, loading units at N5 and N10 and feeding 10-formyl-THF to purine synthesis and 5,10-methylene-THF to thymidylate synthase, and it is regenerated by dihydrofolate reductase and by B12-dependent methionine synthase.|THF carries carbons at N5 and N10: METHYL for methionine, METHYLENE for thymidylate, FORMYL for purines.|Thymidylate synthase is the only folate reaction that oxidizes the cofactor to dihydrofolate, which is why dihydrofolate reductase is needed to keep DNA synthesis going.|Methotrexate inhibits human dihydrofolate reductase, trimethoprim the bacterial enzyme and pyrimethamine the protozoal enzyme; blocking it strands folate as dihydrofolate and starves thymidylate and purine synthesis, and leucovorin (folinic acid) rescues because it enters below that step.|Dihydrofolate (the oxidized product of the thymidylate synthase reaction); tetrahydrobiopterin (BH4), a separate pteridine cofactor for aromatic amino acid hydroxylases|Folinic acid (5-formyl-THF), L-methylfolate (5-methyl-THF), folic acid, dihydrofolate|Methotrexate, trimethoprim and pyrimethamine deplete the pool; folinic acid restores it
+`);
+
+;
+// DrugBug new drugs: folate cycle intermediates (biochemistry reference batch)
+DB.add("dihydrofolate","Dihydrofolate (DHF, the folate cycle intermediate)","HM",`
+Dihydrofolate (DHF; 7,8-dihydrofolate; 7,8-dihydropteroylglutamate)|None (not a marketed product); appears only as a pathway intermediate in biochemistry references|Not used by EMS|NOT FDA APPROVED - biochemistry pathway intermediate, not a marketed product|Partially reduced pteroylglutamate; the two-electron-reduced folate standing between folate and tetrahydrofolate|Not controlled
+A partially reduced form of folate that exists inside cells as a step in the folate cycle rather than as a drug anyone takes. Education only: this is a board reference card, not a product.|Is generated each time thymidylate synthase makes dTMP, and is converted back to tetrahydrofolate by dihydrofolate reductase using NADPH, which keeps the one-carbon pool turning over.|Included as a study reference because dihydrofolate reductase, the enzyme that reduces it, is the target of methotrexate, trimethoprim and pyrimethamine.
+Thymidylate synthase transfers the one-carbon unit of 5,10-methylenetetrahydrofolate to dUMP and simultaneously oxidizes the folate cofactor, so the carbon leaves at the methyl oxidation state as dTMP while the pterin ring is left two electrons short as dihydrofolate; dihydrofolate reductase (DHFR) then reduces the N5-N6 double bond using NADPH as hydride donor to regenerate tetrahydrofolate, which serine hydroxymethyltransferase recharges with a carbon from serine; because thymidylate synthase is the only folate-dependent reaction that oxidizes its cofactor, DHFR is the single recycling step for the entire one-carbon pool, and blocking it traps folate as dihydrofolate and starves thymidylate and purine synthesis; synthetic folic acid is fully oxidized and needs two successive DHFR reductions (folate to dihydrofolate to tetrahydrofolate) before it can carry a carbon, and human DHFR handles folic acid slowly, which is why unmetabolized folic acid appears in blood after large intakes.|Dihydrofolate reductase (DHFR, the enzyme acting on it); thymidylate synthase (the enzyme producing it)|Enzyme substrate (not an agonist or inhibitor)|Its accumulation marks DHFR blockade; the resulting shortage of tetrahydrofolate, 5,10-methylenetetrahydrofolate and 10-formyltetrahydrofolate halts thymidylate and purine synthesis and produces megaloblastic changes in dividing cells.
+Not an approved or marketed agent; studied as a biochemical intermediate|Appears in teaching on antifolate pharmacology: methotrexate and pemetrexed against human DHFR, trimethoprim against bacterial DHFR, pyrimethamine against protozoal DHFR, and leucovorin rescue which supplies reduced folate downstream of the block|Recognize: not administered; relevant when a patient takes methotrexate, trimethoprim-sulfamethoxazole or pyrimethamine|None (no FDA-recognized indication)
+None established (no FDA label; not a therapeutic product)|Not applicable
+Not FDA approved and not a marketed product: dihydrofolate is a metabolic intermediate described in pharmacology and biochemistry texts. The clinically important point is the enzyme that reduces it. Antifolates that block DHFR cause megaloblastic anemia, mucositis and myelosuppression, and leucovorin (folinic acid) bypasses the blocked step because it is already reduced.|None (no FDA label)|Selectivity among DHFR inhibitors comes from differences in enzyme structure across species: methotrexate binds human DHFR with high affinity, trimethoprim binds bacterial DHFR roughly tens of thousands of times more tightly than the human enzyme, and pyrimethamine favors protozoal DHFR in Plasmodium and Toxoplasma. Sulfonamides act upstream at dihydropteroate synthase, which humans lack, giving sequential blockade when paired with a DHFR inhibitor.
+Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not applicable (no labeled dose)|Not applicable (no labeled dose)
+Not administered by any route; an endogenous intermediate|-|-|-|-|-|-|-|-|Not applicable|Not applicable|Not applicable|Unstable and readily oxidized outside cells, which is one reason it is not formulated as a product
+Not applicable (endogenous intermediate)|Not applicable|Not applicable|Turns over in seconds to minutes inside cells under normal DHFR activity|Reduced to tetrahydrofolate by DHFR with NADPH; polyglutamated by folylpolyglutamate synthase for intracellular retention|Not applicable as a drug; folate metabolites leave in urine and bile|Bound to folate-binding proteins and to DHFR itself
+Not applicable (not administered)|Not applicable|Not applicable
+Not applicable as a drug; the relevant interactions belong to DHFR inhibitors such as methotrexate, trimethoprim, pyrimethamine and proguanil|Antifolates when folate-dependent toxicity is a concern|Dietary folates are already reduced, so they enter the cycle without the two DHFR steps that folic acid needs|Alcohol use disorder lowers folate status and worsens antifolate toxicity|Trimethoprim with methotrexate adds two antifolate effects and has been linked to pancytopenia; sulfonamides plus a DHFR inhibitor give sequential blockade of the same pathway
+-|-|-|-|-|-|-|-|Not measured clinically; CBC with MCV, folate and homocysteine are the practical markers of a blocked folate cycle|Mucosal surfaces for antifolate-related stomatitis
+Not applicable as a product; DHFR inhibitors such as methotrexate are known teratogens, and aminopterin-type embryopathy is the classic description|Not applicable as a product|No FDA-labeled pediatric dose|No specific data|No specific data; methotrexate clearance falls with renal impairment|No specific data
+Not applicable (not administered)|Not applicable|Not applicable|Not applicable|None|Leucovorin (folinic acid) and levoleucovorin bypass a DHFR block by entering the cycle already reduced; glucarpidase cleaves circulating methotrexate
+Not given by EMS.|A patient on low-dose weekly methotrexate who has taken it daily by mistake can present with mucositis, pancytopenia and sepsis days later, and the folate pathway is the reason.|Methotrexate dosing schedule, trimethoprim-sulfamethoxazole use, renal function, folic acid or leucovorin supplementation.|Not applicable|Not applicable|Confusing folic acid with folinic acid (leucovorin): folic acid still needs DHFR, so it does not rescue a DHFR block, while folinic acid does.|Methotrexate plus trimethoprim-sulfamethoxazole; methotrexate plus NSAIDs or probenecid, which reduce its renal clearance|DHFR is the only route back from dihydrofolate to tetrahydrofolate, which makes it a single point of failure for thymidylate and purine synthesis and explains why antifolates hit rapidly dividing tissues such as marrow and gut mucosa first.
+Rheumatoid arthritis, psoriasis, ectopic pregnancy or cancer treatment if methotrexate is on the list; urinary or respiratory infection or Pneumocystis prophylaxis if trimethoprim is on it; toxoplasmosis if pyrimethamine is.|Not taken as a product; it is the intermediate that the patient's antifolate drug acts on.|All folate antagonists, folic acid or leucovorin use, alcohol intake, kidney function.|Not applicable for the intermediate itself; the drugs that act on it cause myelosuppression and mucositis.|No withdrawal syndrome.
+The halfway form of folate that the body remakes into usable folate with one enzyme, and that one enzyme is what antifolate drugs attack.|Dihydrofolate is produced when thymidylate synthase oxidizes 5,10-methylenetetrahydrofolate to make dTMP and is reduced back to tetrahydrofolate by NADPH-dependent dihydrofolate reductase, the choke point blocked by methotrexate, trimethoprim and pyrimethamine.|DHF needs DHFR: one letter apart, one enzyme between them.|Folic acid is fully oxidized and needs two DHFR passes, so it cannot rescue a DHFR block.|Methotrexate inhibits human DHFR, trimethoprim bacterial DHFR and pyrimethamine protozoal DHFR; leucovorin (folinic acid) rescues the block because it is already reduced, while folic acid does not.|Tetrahydrofolate (THF); folic acid (DrugBug id folic-acid); folinic acid (leucovorin)|Tetrahydrofolate, 5,10-methylenetetrahydrofolate, 10-formyltetrahydrofolate, folic acid, leucovorin|Leucovorin (folinic acid), which restores reduced folate downstream of a DHFR block
+`);
+DB.add("methylene-thf","5,10-Methylenetetrahydrofolate (the thymidylate donor)","HM",`
+5,10-Methylenetetrahydrofolate (5,10-methylene-THF; CH2-THF)|None (not a marketed product); appears only as a pathway intermediate in biochemistry references|Not used by EMS|NOT FDA APPROVED - biochemistry pathway intermediate, not a marketed product|Reduced folate carrying a one-carbon unit bridged across N5 and N10 at the formaldehyde oxidation state|Not controlled
+The folate form that carries a single carbon bridged between two nitrogens of the pterin ring, existing inside cells as a metabolic intermediate rather than as a drug. Education only: this is a board reference card, not a product.|Hands its one-carbon unit to dUMP to make dTMP for DNA synthesis, and is the branch point that MTHFR commits to methylation by reducing it to 5-methyltetrahydrofolate.|Included as a study reference because it is the substrate of thymidylate synthase (the 5-fluorouracil target) and of MTHFR (the C677T variant enzyme).
+Serine hydroxymethyltransferase (SHMT1 in cytosol, SHMT2 in mitochondria) transfers the beta-carbon of serine to tetrahydrofolate using pyridoxal 5-phosphate from vitamin B6, yielding glycine and 5,10-methylene-THF at the formaldehyde oxidation state; the glycine cleavage system and the mitochondrial MTHFD enzymes acting on formate provide additional input. Thymidylate synthase then uses this single cofactor for two jobs at once, donating the carbon to the C5 position of dUMP and donating a hydride from the folate C6 to reduce that carbon to a methyl group, so the product is dTMP plus dihydrofolate rather than tetrahydrofolate, and dihydrofolate reductase with NADPH is required to close the loop. Alternatively, methylenetetrahydrofolate reductase (MTHFR) uses FAD and NADPH to reduce the one-carbon unit all the way to a methyl group, giving 5-methyltetrahydrofolate; this step is physiologically irreversible and commits that carbon to the methionine synthase reaction, which makes the B12-dependent step the only exit and underlies the methyl-folate trap in B12 deficiency.|Thymidylate synthase (TYMS) and methylenetetrahydrofolate reductase (MTHFR) use it as substrate; serine hydroxymethyltransferase with PLP produces it|Enzyme substrate and one-carbon donor (not an agonist or inhibitor)|Supplies the carbon for dTMP and therefore for DNA replication and repair; through MTHFR it supplies the methyl group that regenerates methionine and S-adenosylmethionine and lowers homocysteine.
+Not an approved or marketed agent; studied as a biochemical intermediate|Appears in teaching on 5-fluorouracil and capecitabine pharmacology, leucovorin modulation of 5-fluorouracil, methotrexate and pemetrexed toxicity, MTHFR genetics and homocysteine metabolism|Recognize: not administered; relevant when a patient takes 5-fluorouracil, capecitabine, methotrexate, pemetrexed or folate products|None (no FDA-recognized indication)
+None established (no FDA label; not a therapeutic product)|Not applicable
+Not FDA approved and not a marketed product: 5,10-methylenetetrahydrofolate is a metabolic intermediate described in pharmacology and biochemistry texts. The clinically important points are its two consuming enzymes. Shortage of this cofactor, whether from folate deficiency or from antifolate drugs, produces megaloblastic anemia because dTMP runs short while DNA replication continues, and it is the biochemical basis of the dUMP-for-dTMP misincorporation and nuclear-cytoplasmic asynchrony seen on blood smear and marrow.|None (no FDA label)|The MTHFR C677T polymorphism (alanine to valine at codon 222) produces a thermolabile enzyme with reduced activity; homozygotes have mildly higher homocysteine, particularly with low folate intake, and major genetics and obstetric groups do not endorse routine MTHFR testing because outcomes are not changed by knowing the result. Dihydrofolate and methotrexate polyglutamates also inhibit MTHFR and thymidylate synthase directly, adding to the DHFR block.
+Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not applicable (no labeled dose)|Not applicable (no labeled dose)
+Not administered by any route; an endogenous intermediate|-|-|-|-|-|-|-|-|Not applicable|Not applicable|Not applicable|Chemically labile: the N5-N10 methylene bridge exists in equilibrium with tetrahydrofolate plus formaldehyde, which is one reason it is not formulated as a product
+Not applicable (endogenous intermediate)|Not applicable|Not applicable|Turns over in seconds to minutes inside cells|Consumed by thymidylate synthase (yielding dihydrofolate) or reduced by MTHFR to 5-methyltetrahydrofolate; interconverted with 10-formyl and 5-formimino forms by MTHFD1|Not applicable as a drug; folate metabolites leave in urine and bile|Bound to folate-dependent enzymes and folate-binding proteins
+Not applicable (not administered)|Not applicable|Not applicable
+Not applicable as a drug; the relevant interactions belong to 5-fluorouracil, capecitabine, methotrexate, pemetrexed and folate products|Antifolates and fluoropyrimidines when folate-dependent toxicity is a concern|Folate from leafy greens, legumes and fortified grains feeds this pool through tetrahydrofolate; vitamin B6 is needed for the serine hydroxymethyltransferase step|Alcohol use disorder lowers folate status and impairs one-carbon metabolism|Leucovorin raises intracellular reduced folate and stabilizes the FdUMP-thymidylate synthase complex, which increases both the efficacy and the mucosal and marrow toxicity of 5-fluorouracil
+-|-|-|-|-|-|-|-|Not measured clinically; CBC with MCV, serum and red cell folate, homocysteine and methylmalonic acid are the practical markers, and DPYD genotyping is used before fluoropyrimidines|Mucosa and blood counts during fluoropyrimidine or antifolate therapy
+Not applicable as a product; folate adequacy around conception is linked to lower neural tube defect risk, and the MTHFR C677T variant has been studied in this context with inconsistent results|Not applicable as a product|No FDA-labeled pediatric dose|No specific data|No specific data|No specific data
+Not applicable (not administered)|Not applicable|Not applicable|Not applicable|None|Uridine triacetate is the agent used for 5-fluorouracil or capecitabine overdose; leucovorin and glucarpidase relate to methotrexate
+Not given by EMS.|Severe diarrhea, mucositis and neutropenia within days of starting capecitabine or 5-fluorouracil raises the question of DPYD deficiency, since dihydropyrimidine dehydrogenase normally clears most of the drug.|Fluoropyrimidine or antifolate use, folate and B12 status, vitamin B6 intake, MCV on recent labs.|Not applicable|Not applicable|Treating the MTHFR C677T variant as a disease that calls for methylfolate; evidence that it changes outcomes is lacking.|5-fluorouracil with leucovorin (increased activity and toxicity); methotrexate with trimethoprim-sulfamethoxazole|5-fluorouracil becomes FdUMP, which forms a covalent ternary complex with thymidylate synthase and 5,10-methylene-THF, locking the enzyme; leucovorin raises the folate cofactor and stabilizes that complex, which is why it is added to 5-fluorouracil in colorectal cancer regimens and also increases stomatitis and myelosuppression.
+Colorectal, breast or head and neck cancer if 5-fluorouracil or capecitabine is on the list; rheumatoid arthritis or psoriasis if methotrexate is; high homocysteine or a reported MTHFR variant if methylfolate is.|Not taken as a product; it is the cofactor that the patient's chemotherapy or antifolate acts through.|Chemotherapy schedule, folate and B12 products, alcohol intake, recent blood counts.|Not applicable for the intermediate itself; the drugs that act on it cause neutropenic sepsis, mucositis and diarrhea.|No withdrawal syndrome.
+The folate form that hands a carbon to DNA to build the T in A-T, and the one an enzyme can lock away for methylation instead.|5,10-Methylenetetrahydrofolate is made from tetrahydrofolate and serine by PLP-dependent serine hydroxymethyltransferase, donates both the carbon and the reducing equivalents to thymidylate synthase (so dihydrofolate comes out), and is irreversibly reduced by MTHFR to 5-methyltetrahydrofolate at the committed branch point.|Methylene makes the methyl of thymine: CH2-THF to dTMP, and the folate pays for it by becoming DHF.|MTHFR is the one-way gate into the methylation branch, so methionine synthase with B12 is the only way back out.|5-fluorouracil is converted to FdUMP, which traps thymidylate synthase in a ternary complex with 5,10-methylene-THF, and leucovorin stabilizes that complex; thymidylate synthase is also the reason dihydrofolate rather than tetrahydrofolate is released.|5-Methyltetrahydrofolate (L-methylfolate, DrugBug id l-methylfolate); 10-formyltetrahydrofolate; dihydrofolate|Tetrahydrofolate, dihydrofolate, 10-formyltetrahydrofolate, 5-methyltetrahydrofolate, leucovorin|Leucovorin (folinic acid), which replenishes reduced folate pools
+`);
+DB.add("formyl-thf","10-Formyltetrahydrofolate (the purine donor)","HM",`
+10-Formyltetrahydrofolate (10-formyl-THF; 10-CHO-THF)|None (not a marketed product); appears only as a pathway intermediate in biochemistry references|Not used by EMS|NOT FDA APPROVED - biochemistry pathway intermediate, not a marketed product|Reduced folate carrying a one-carbon unit on N10 at the formate oxidation state|Not controlled
+The folate form that carries a carbon at the formate oxidation state on the N10 nitrogen, existing inside cells as a metabolic intermediate rather than as a drug. Education only: this is a board reference card, not a product.|Donates the two carbons that become C2 and C8 of the purine ring during de novo purine synthesis, and supplies the formyl group that starts bacterial and mitochondrial protein synthesis.|Included as a study reference because the two transformylases that use it are inhibited directly by methotrexate polyglutamates and because the blocked second step causes AICAR to accumulate.
+MTHFD1, a trifunctional cytosolic enzyme, oxidizes 5,10-methylene-THF to 5,10-methenyl-THF (dehydrogenase, NADP+) and hydrolyzes the bridge to 10-formyl-THF (cyclohydrolase); the same enzyme and the mitochondrial MTHFD1L and ALDH1L2 route let formate from mitochondrial one-carbon metabolism enter the cytosolic pool through 10-formyl-THF synthetase activity. In de novo purine synthesis 10-formyl-THF is used twice: glycinamide ribonucleotide transformylase (GART, step 3) formylates GAR to supply the carbon that becomes C8, and AICAR transformylase (ATIC, step 9) formylates AICAR to supply the carbon that becomes C2, each releasing tetrahydrofolate; the ring is then closed by IMP cyclohydrolase to give IMP. Methotrexate polyglutamates, retained in cells for weeks, inhibit GART and ATIC directly in addition to the DHFR block, and the ATIC step is where AICAR backs up. Methionyl-tRNA formyltransferase uses 10-formyl-THF to make formylmethionyl-tRNA, the initiator in bacteria and in mitochondria, and the pathway is the target of the antifolate pemetrexed through GART as well as thymidylate synthase.|GAR transformylase (GART) and AICAR transformylase (ATIC) use it as substrate; MTHFD1 produces it; methionyl-tRNA formyltransferase also uses it|Enzyme substrate and one-carbon donor (not an agonist or inhibitor)|Supplies purine ring carbons C2 and C8 for DNA, RNA, ATP and GTP; supports formylmethionine-initiated translation in bacteria and mitochondria; its depletion halts purine synthesis and contributes to the antiproliferative effect of antifolates.
+Not an approved or marketed agent; studied as a biochemical intermediate|Appears in teaching on methotrexate and pemetrexed pharmacology, purine synthesis and its inhibitors, AICAR and AMP-activated protein kinase biology, and the formylmethionine start codon|Recognize: not administered; relevant when a patient takes methotrexate or pemetrexed, and in discussions of why low-dose methotrexate is anti-inflammatory|None (no FDA-recognized indication)
+None established (no FDA label; not a therapeutic product)|Not applicable
+Not FDA approved and not a marketed product: 10-formyltetrahydrofolate is a metabolic intermediate described in pharmacology and biochemistry texts. The clinically relevant points are the enzymes that consume it. Low-dose weekly methotrexate for rheumatoid arthritis is accompanied by folic acid supplementation, which reduces stomatitis, nausea and transaminase elevation without abolishing the anti-inflammatory effect, and this difference is usually explained by the ATIC and adenosine mechanism rather than by antiproliferative folate depletion.|None (no FDA label)|Folinic acid (leucovorin) enters this pool directly: 5-formyltetrahydrofolate is isomerized to 5,10-methenyl-THF and then to 10-formyl-THF and 5,10-methylene-THF, which is why it rescues both purine and thymidylate synthesis downstream of a DHFR block. Pemetrexed inhibits thymidylate synthase, DHFR and GART, and its labeling pairs it with folic acid and vitamin B12 supplementation to limit myelosuppression and mucositis.
+Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not applicable (no labeled dose)|Not applicable (no labeled dose)
+Not administered by any route; an endogenous intermediate|-|-|-|-|-|-|-|-|Not applicable|Not applicable|Not applicable|Interconverts readily with 5,10-methenyl-THF depending on pH, which is one reason it is not formulated as a product
+Not applicable (endogenous intermediate)|Not applicable|Not applicable|Turns over in seconds to minutes inside cells|Consumed by GART and ATIC (releasing tetrahydrofolate); oxidized to formate and tetrahydrofolate by ALDH1L1 (10-formyl-THF dehydrogenase), which drains excess one-carbon units|Not applicable as a drug; folate metabolites leave in urine and bile, and the carbon can leave as CO2 after formate oxidation|Bound to folate-dependent enzymes and folate-binding proteins
+Not applicable (not administered)|Not applicable|Not applicable
+Not applicable as a drug; the relevant interactions belong to methotrexate, pemetrexed and folate products|Antifolates when folate-dependent toxicity is a concern|Dietary folate feeds this pool through tetrahydrofolate; histidine catabolism also feeds one-carbon units in through formiminoglutamate, the basis of the older FIGLU test for folate deficiency|Alcohol use disorder lowers folate status and impairs one-carbon metabolism|NSAIDs, proton pump inhibitors, probenecid and penicillins reduce renal clearance of methotrexate and raise its levels; trimethoprim-sulfamethoxazole adds a second antifolate effect
+-|-|-|-|-|-|-|-|Not measured clinically; CBC, transaminases, creatinine and methotrexate levels after high-dose therapy are the practical measures|Mucosa, and chest symptoms given methotrexate pneumonitis
+Not applicable as a product; methotrexate and pemetrexed are contraindicated in pregnancy per labeling, and methotrexate is used deliberately in ectopic pregnancy|Not applicable as a product|No FDA-labeled pediatric dose|No specific data|No specific data; methotrexate and pemetrexed clearance fall with renal impairment|No specific data
+Not applicable (not administered)|Not applicable|Not applicable|Not applicable|None|Leucovorin rescue and glucarpidase relate to methotrexate, not to this intermediate
+Not given by EMS.|AICAR accumulating behind a blocked ATIC step inhibits AMP deaminase and adenosine deaminase, which raises extracellular adenosine; adenosine acting at A2A receptors is the leading proposed explanation for the anti-inflammatory effect of low-dose methotrexate, and it also offers a mechanism for the report that caffeine, an adenosine receptor antagonist, blunts that effect.|Methotrexate or pemetrexed schedule, folic acid supplementation, renal function, caffeine intake.|Not applicable|Not applicable|Assuming folic acid supplementation reduces methotrexate efficacy in rheumatoid arthritis; labeling and practice pair the two to limit mucosal and hepatic toxicity.|Methotrexate with NSAIDs, trimethoprim-sulfamethoxazole, proton pump inhibitors or probenecid|Purine synthesis takes its carbons from several donors, and the two folate-derived ones are C2 and C8, both delivered by 10-formyl-THF; the rest come from glycine (C4, C5, N7), aspartate (N1), glutamine (N3, N9) and CO2 (C6).
+Rheumatoid arthritis, psoriasis, Crohn disease or cancer if methotrexate is on the list; mesothelioma or non-squamous lung cancer if pemetrexed is.|Not taken as a product; it is the cofactor that the patient's antifolate acts on.|Methotrexate day of the week, folic acid use, kidney function, new cough or mouth sores.|Not applicable for the intermediate itself; the drugs that act on it cause pancytopenia, mucositis, hepatotoxicity and pneumonitis.|No withdrawal syndrome.
+The folate form that delivers two of the carbons used to build purine rings, the A and G letters of DNA.|10-Formyltetrahydrofolate donates carbons 2 and 8 of the purine ring through AICAR transformylase and GAR transformylase, is made from 5,10-methylene-THF by MTHFD1, and is the step whose blockade by methotrexate polyglutamates causes AICAR to accumulate and adenosine to rise.|Formyl feeds the purine Frame at C2 and C8; fMet starts the bacterial message.|Methotrexate polyglutamates inhibit GART and ATIC directly, not only DHFR.|10-Formyl-THF supplies purine carbons C2 and C8 via GAR and AICAR transformylase; methotrexate blocks DHFR and these transformylases, and the resulting AICAR buildup raising adenosine is the proposed mechanism of low-dose methotrexate in rheumatoid arthritis.|5,10-Methylenetetrahydrofolate (the thymidylate donor, DrugBug id methylene-thf); 5-formyltetrahydrofolate (leucovorin)|Tetrahydrofolate, 5,10-methylene-THF, 5,10-methenyl-THF, dihydrofolate, leucovorin|Leucovorin (folinic acid), which restores purine and thymidylate synthesis downstream of a DHFR block
+`);
+
+;
+// DrugBug new drugs: active coenzyme forms of B vitamins (vitamin batch 2)
+DB.add("adenosylcobalamin","Adenosylcobalamin (coenzyme B12, cobamamide)","HM",`
+Adenosylcobalamin (adenosyl-B12; 5'-deoxyadenosylcobalamin; cobamamide; dibencozide)|Many dietary supplement brands, often sold as dibencozide or coenzyme B12 (no FDA-approved drug product in the US)|Adenosyl B12, coenzyme B12|NOT FDA APPROVED - dietary supplement (vitamin B12 coenzyme form)|Cobalamin (cobalt-containing corrinoid) with a 5'-deoxyadenosyl group in the upper axial position; one of the two coenzyme forms of B12|Not controlled
+The mitochondrial coenzyme form of vitamin B12, sold as tablets, capsules and sublingual lozenges under names such as dibencozide and coenzyme B12. Education only: DrugBug is not telling anyone to use this.|Serves as the cofactor for methylmalonyl-CoA mutase, the mitochondrial enzyme that rearranges L-methylmalonyl-CoA to succinyl-CoA so that propionate from odd-chain fatty acids, cholesterol side chains and the amino acids valine, isoleucine, methionine and threonine can enter the citric acid cycle.|Marketed for energy, athletic performance, appetite and nerve health; all B12 forms are processed inside cells into the same two coenzymes, and evidence that adenosylcobalamin works better than cyanocobalamin is limited.
+Absorbed like other cobalamins using gastric acid and pepsin, haptocorrin, pancreatic proteases, intrinsic factor from gastric parietal cells and the cubilin-amnionless receptor in the terminal ileum, then carried on transcobalamin II and taken up by the transcobalamin receptor CD320; in the lysosome and cytosol the chaperones MMACHC (cblC) and MMADHC (cblD) strip the upper ligand, after which the mitochondrial proteins MMAB (cblB, an ATP:cob(I)alamin adenosyltransferase) and MMAA (cblA, a G-protein chaperone) build and load adenosylcobalamin onto methylmalonyl-CoA mutase (MMUT), where the cobalt-carbon bond breaks homolytically to generate a 5'-deoxyadenosyl radical that drives a 1,2-carbon skeleton rearrangement; propionyl-CoA carboxylase (biotin-dependent) and methylmalonyl-CoA epimerase supply the substrate.|Methylmalonyl-CoA mutase (cofactor); MMAA and MMAB (assembly); intrinsic factor-cubilin receptor and transcobalamin II (uptake and transport)|Vitamin cofactor|Allows propionyl-CoA to be converted to succinyl-CoA and enter the citric acid cycle as an anaplerotic substrate; when the pathway is blocked, methylmalonic acid and propionylcarnitine accumulate in blood and urine.
+Claimed uses (not proven): energy, athletic performance and muscle mass, appetite stimulation, nerve health|Studied in: B12 deficiency (all forms can correct deficiency); hydroxocobalamin and vitamin B12 in high doses are used under specialist care in cobalamin-responsive methylmalonic acidemia; small studies of dibencozide marketed to athletes|Recognize: home supplement in patients with B12 deficiency, long-term metformin or proton pump inhibitor use, bariatric surgery, ileal resection or a vegan diet|None (no FDA-recognized indication)
+None established (no FDA label)|Known allergy to cobalt or cobalamin
+Not FDA approved: dietary supplements are not reviewed by FDA for safety or effectiveness before sale, and content can vary between brands. Serum B12 can be normal in early or functional deficiency, and methylmalonic acid is the more sensitive marker because the mutase reaction fails without adenosylcobalamin. FDA-approved B12 products in the US are cyanocobalamin (injection, nasal spray) and hydroxocobalamin.|None (no FDA label)|Inherited defects in adenosylcobalamin handling cause isolated methylmalonic acidemia: cblA (MMAA) and cblB (MMAB) forms are often responsive to high-dose B12, while mut-type mutase defects usually are not; cblC and cblF defects impair both coenzymes and raise methylmalonic acid and homocysteine together.
+Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not applicable (no labeled dose)|Not applicable (no labeled dose)
+PO, sublingual (tablets, capsules, lozenges)|-|-|-|-|Tablets, capsules, lozenges|-|-|-|Not applicable|Not applicable|Not applicable|Sublingual products are largely swallowed and absorbed in the gut; adenosylcobalamin is light-sensitive and degrades on exposure to light
+Not well defined|Not well defined|Long (liver stores last years)|About 6 days in plasma for cobalamin in general; hepatic stores turn over far more slowly|Processed inside cells through the shared cobalamin trafficking pathway to methylcobalamin in the cytosol and adenosylcobalamin in mitochondria|Bile with enterohepatic recirculation, and urine|High (bound to transcobalamin II and haptocorrin)
+Generally well tolerated; mild GI upset, headache and acne-like rash reported with B12 products|Low potassium early in treatment of severe megaloblastic anemia as new red cells take up potassium; unmasking of polycythemia vera as anemia corrects|None well established for oral intake
+Metformin, proton pump inhibitors and H2 blockers lower B12 absorption over time; nitrous oxide inactivates cobalamin|Not applicable|Present naturally only in animal foods such as meat, fish, eggs and dairy, and in fortified foods|Heavy alcohol use is linked to poor B12 status|Folic acid or L-methylfolate can correct megaloblastic anemia while B12-related neurologic damage continues, which is the masking effect
+-|-|-|-|-|-|Paresthesias, gait, proprioception and vibration sense in suspected deficiency|-|CBC with MCV, serum B12, methylmalonic acid and homocysteine; potassium early in treatment of severe anemia|Reticulocyte response during treatment of megaloblastic anemia
+Needs rise slightly in pregnancy; supplement products are not FDA reviewed|Passes into breast milk; breastfed infants of B12-deficient mothers, including unsupplemented vegans, are at risk of deficiency and developmental regression|No FDA-labeled pediatric dose; high-dose B12 is used under specialist care in cobalamin-responsive methylmalonic acidemia|Older adults absorb less food-bound B12 because of atrophic gastritis and achlorhydria|Methylmalonic acid rises in kidney failure independently of B12 status, which limits its usefulness as a marker|The liver holds most of the body stores of B12
+No toxic dose established; no tolerable upper intake level has been set for B12|Acne-like rash reported with high intake|No characteristic overdose syndrome described|Supportive care|None|None
+Not given by EMS.|Methylmalonic acidemia presents in infants with vomiting, lethargy, hypotonia, a high anion gap metabolic acidosis, ketosis, hyperammonemia and hypoglycemia, often after a protein load or an intercurrent illness.|Metformin or acid-suppressing drugs, bariatric surgery or ileal resection, vegan diet, nitrous oxide use, newborn screening results.|Not applicable|Not applicable|Treating a macrocytic anemia with folate alone without checking B12 status; assuming a normal serum B12 excludes functional deficiency.|Nitrous oxide (inactivates cobalamin)|Propionyl-CoA from odd-chain fatty acids and from valine, isoleucine, methionine and threonine enters the citric acid cycle only through the biotin-dependent carboxylase and the B12-dependent mutase, so biotin deficiency and B12 deficiency both raise organic acids in this pathway.
+B12 deficiency, pernicious anemia, bariatric surgery or ileal resection, vegan diet, long-term metformin or proton pump inhibitor use, inherited methylmalonic acidemia.|Diagnosed deficiency, or a self-selected supplement taken for energy or muscle.|Diabetes medicines, acid reducers, nitrous oxide use, diet, prior gastric or bowel surgery.|Neurologic and hematologic complications of B12 deficiency if intake or absorption falls; metabolic decompensation in inherited methylmalonic acidemia.|Deficiency can return over months to years in people with poor absorption.
+The form of vitamin B12 that works inside mitochondria to help burn odd bits of fat and protein for energy.|Adenosylcobalamin is the mitochondrial coenzyme form of B12 that supports methylmalonyl-CoA mutase in converting methylmalonyl-CoA to succinyl-CoA; loss of this reaction raises methylmalonic acid, and cblA and cblB defects cause B12-responsive methylmalonic acidemia.|ADenosyl-B12 handles the ADvanced step in the mitochondria: Methylmalonyl to succinyl.|Methylmalonic acid is the more sensitive marker of B12 deficiency than serum B12 itself.|B12 deficiency raises both methylmalonic acid and homocysteine, while folate deficiency raises homocysteine only, because methylmalonyl-CoA mutase needs adenosylcobalamin and has no folate step.|Methylcobalamin (DrugBug id methylcobalamin); cyanocobalamin (DrugBug id cyanocobalamin)|Cyanocobalamin, hydroxocobalamin, methylcobalamin|None
+`);
+DB.add("cocarboxylase","Thiamine Pyrophosphate (cocarboxylase, TPP, active vitamin B1)","HM",`
+Thiamine pyrophosphate (TPP; thiamine diphosphate, ThDP; cocarboxylase)|Sold abroad as cocarboxylase injection in some countries; sold in the US only as a dietary supplement ingredient (no FDA-approved drug product in the US)|Cocarboxylase, TPP|NOT FDA APPROVED in the US - dietary supplement ingredient (active vitamin B1 coenzyme); an injectable product exists in some other countries|Pyrophosphate ester of thiamine; thiazolium-ring coenzyme|Not controlled
+The active coenzyme form of vitamin B1, formed inside cells from thiamine and sold abroad as an injection called cocarboxylase and in the US as a supplement ingredient. Education only: DrugBug is not telling anyone to use this.|Serves as the cofactor for the four classic TPP-dependent enzymes: pyruvate dehydrogenase, alpha-ketoglutarate dehydrogenase, branched-chain alpha-ketoacid dehydrogenase and transketolase, all of which handle a carbanion intermediate on the thiazolium ring.|Marketed for fatigue, metabolic support and thiamine deficiency; the FDA-approved US product for thiamine deficiency and Wernicke encephalopathy is thiamine hydrochloride injection.
+Thiamine enters cells on the SLC19A2 (ThTr1) and SLC19A3 (ThTr2) transporters, and thiamine pyrophosphokinase (TPK1) adds two phosphates from ATP to make TPP, which the mitochondrial carrier SLC25A19 moves into mitochondria; the C2 carbon of the thiazolium ring loses its proton to form an ylide carbanion that attacks the carbonyl of an alpha-ketoacid, stabilizing the negative charge during decarboxylation; pyruvate dehydrogenase converts pyruvate to acetyl-CoA, alpha-ketoglutarate dehydrogenase drives the rate-limiting step of the citric acid cycle, branched-chain alpha-ketoacid dehydrogenase degrades leucine, isoleucine and valine, and transketolase moves two-carbon ketol units in the non-oxidative pentose phosphate pathway; the three dehydrogenase complexes also need lipoic acid, coenzyme A, FAD and NAD+.|Pyruvate dehydrogenase, alpha-ketoglutarate dehydrogenase, branched-chain alpha-ketoacid dehydrogenase, transketolase (cofactor); thiamine pyrophosphokinase (forming enzyme)|Vitamin cofactor (active form)|Supports oxidative decarboxylation of pyruvate and alpha-ketoglutarate, branched-chain amino acid catabolism and NADPH and ribose-5-phosphate generation; when TPP is low, pyruvate and lactate accumulate and ATP production falls in high-demand tissues.
+Claimed uses (not proven in the US): fatigue, metabolic support, thiamine deficiency|Studied in: thiamine deficiency states; cocarboxylase injection is used in some countries for metabolic and cardiac indications with limited modern trial evidence; high-dose thiamine in thiamine-responsive maple syrup urine disease and in thiamine-responsive megaloblastic anemia syndrome (SLC19A2 mutations)|Recognize: home supplement, or a medication brought from abroad|None (no FDA-recognized indication in the US)
+None established (no FDA label in the US)|Known allergy to thiamine or product ingredients; anaphylaxis has been reported with parenteral thiamine products
+Not FDA approved in the US: dietary supplements are not reviewed by FDA for safety or effectiveness before sale, and content can vary between brands. Thiamine stores last only a few weeks, so deficiency can appear quickly with alcohol use disorder, hyperemesis, bariatric surgery, refeeding or prolonged parenteral nutrition without vitamins. Glucose loads increase demand on TPP-dependent enzymes, which is the basis for the long-standing practice of giving thiamine along with or before dextrose in at-risk patients.|None (no FDA label in the US)|Related to thiamine (DrugBug id thiamine), the FDA-approved injectable form used for Wernicke encephalopathy and thiamine deficiency, and to benfotiamine (DrugBug id benfotiamine), a lipophilic oral thiamine prodrug.
+Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not applicable (no labeled dose)|Not applicable (no labeled dose)
+PO in the US (tablets, capsules, powders); IM and IV cocarboxylase products exist in some other countries|Not applicable in the US (no FDA-approved injectable product)|-|Not applicable in the US|-|Tablets, capsules, powders|-|-|-|Not applicable|Not applicable|Not applicable|Phosphorylated forms are dephosphorylated by intestinal alkaline phosphatase before absorption, so oral TPP is absorbed as thiamine
+Not well defined|Not well defined|Not well defined|Plasma thiamine half-life is short (hours); whole-body stores last roughly 2 to 3 weeks|Dephosphorylated to thiamine before absorption, then rephosphorylated inside cells by thiamine pyrophosphokinase|Renal (thiamine and metabolites; excess is cleared rapidly in urine)|Low for thiamine; TPP in blood is largely inside red cells
+Generally well tolerated orally; GI upset reported|Anaphylaxis and injection site reactions have been reported with parenteral thiamine products|Anaphylaxis with parenteral administration (rare)
+No well-documented major oral drug interactions|Not applicable|Thiamine is found in whole grains, pork, legumes, nuts and fortified grains; polished white rice is low in thiamine, and raw fish and some teas contain thiaminases or antithiamine factors|Alcohol use disorder lowers thiamine absorption through ThTr1, reduces hepatic storage and impairs conversion to TPP|Loop diuretics increase urinary thiamine loss; glucose and refeeding increase demand for TPP-dependent enzymes
+Wet beriberi presents with a high-output state, wide pulse pressure and warm extremities|Tachycardia in wet beriberi|-|-|-|Dyspnea and orthopnea in wet beriberi with heart failure|Mental status, extraocular movements, nystagmus and gait ataxia in suspected Wernicke encephalopathy|Checked alongside thiamine in patients receiving dextrose|Erythrocyte transketolase activity with and without added TPP (the thiamine pyrophosphate effect), whole blood thiamine and TPP by chromatography, lactate, magnesium and phosphate during refeeding|Lower extremity sensation and strength in dry beriberi
+Thiamine requirements rise in pregnancy, and hyperemesis gravidarum is a recognized cause of Wernicke encephalopathy|Thiamine passes into breast milk, and infantile beriberi is described in breastfed infants of thiamine-deficient mothers|No FDA-labeled pediatric dose in the US; high-dose thiamine is used under specialist care in thiamine-responsive maple syrup urine disease and in thiamine-responsive megaloblastic anemia syndrome|Older adults with poor intake, diuretic use or heart failure are described with low thiamine status|Water-soluble vitamins are lost during dialysis|Liver disease reduces hepatic thiamine stores and conversion to TPP
+No toxic dose established for oral intake; excess is excreted in urine|No characteristic oral toxicity|No characteristic overdose syndrome described; anaphylactoid reactions have been reported with rapid parenteral thiamine|Supportive care|None|None
+Not given by EMS.|The classic Wernicke triad of confusion, ophthalmoplegia with nystagmus and gait ataxia is incomplete in most patients, and isolated confusion is the most common presentation; Korsakoff syndrome adds anterograde amnesia with confabulation and is linked to mammillary body and dorsomedial thalamic damage.|Alcohol use, hyperemesis or persistent vomiting, bariatric surgery, dialysis, parenteral nutrition, diuretic use, recent refeeding.|Not applicable|Not applicable|Confusing an oral TPP supplement with the FDA-approved IV thiamine used in hospital for Wernicke encephalopathy; confusing cocarboxylase with carboxylase enzymes or with biotin.|None well established|Thiamine deficiency raises pyruvate and lactate because pyruvate dehydrogenase stalls, and alpha-ketoglutarate dehydrogenase failure further impairs the citric acid cycle; glucose given without thiamine in a deficient patient has been described as precipitating Wernicke encephalopathy.
+Alcohol use disorder, malnutrition, hyperemesis, bariatric surgery, heart failure, dialysis, inherited thiamine-responsive disorders.|Self-selected fatigue or energy supplement, or a product obtained outside the US.|Alcohol use, diet, vomiting, prior bariatric surgery, diuretics, other B vitamin products.|Unlikely to cause emergencies alone; untreated thiamine deficiency contributes to Wernicke encephalopathy and high-output heart failure.|No withdrawal syndrome; thiamine stores fall within weeks if intake stops in a person with poor absorption.
+The ready-to-use form of vitamin B1 that four key energy enzymes need to work.|Thiamine pyrophosphate, made from thiamine by thiamine pyrophosphokinase, is the coenzyme for pyruvate dehydrogenase, alpha-ketoglutarate dehydrogenase, branched-chain alpha-ketoacid dehydrogenase and transketolase, and its deficiency causes Wernicke-Korsakoff syndrome and beriberi.|Ask for a TPP BAT: Branched-chain ketoacid dehydrogenase, Alpha-ketoglutarate dehydrogenase and Transketolase, plus Pyruvate dehydrogenase.|Erythrocyte transketolase activation by added TPP is the classic functional assay of thiamine status.|Thiamine deficiency causes Wernicke encephalopathy with confusion, ophthalmoplegia and ataxia, Korsakoff amnesia with confabulation, dry beriberi with symmetric peripheral neuropathy and wet beriberi with high-output dilated cardiomyopathy; red cell transketolase activity is the functional test.|Thiamine hydrochloride (DrugBug id thiamine); biotin, the cofactor for carboxylases rather than for decarboxylases|Thiamine, benfotiamine, sulbutiamine, fursultiamine, allithiamine|None
+`);
+DB.add("sulbutiamine","Sulbutiamine (lipophilic thiamine disulfide)","HM",`
+Sulbutiamine (isobutyryl thiamine disulfide; bisibuthiamine)|Arcalion and Enerion outside the US; many dietary supplement brands in the US (no FDA-approved drug product)|Sulbutiamine|NOT FDA APPROVED - dietary supplement in the US (synthetic thiamine derivative); a prescription product in some other countries|Synthetic thiamine disulfide; lipophilic thiamine derivative|Not controlled
+A synthetic molecule made of two modified thiamine units joined by a disulfide bridge, which makes it lipophilic; it is a prescription product for asthenia in some countries and a supplement sold for fatigue in the US. Education only: DrugBug is not telling anyone to use this.|Crosses lipid membranes and the blood-brain barrier more readily than water-soluble thiamine salts, then is reduced and converted to thiamine and thiamine pyrophosphate, the cofactor for pyruvate dehydrogenase, alpha-ketoglutarate dehydrogenase, branched-chain alpha-ketoacid dehydrogenase and transketolase.|Marketed for fatigue, asthenia, concentration and mood; human evidence is limited and comes largely from small or older trials, and it is not FDA approved.
+The disulfide bridge is reduced by thiols such as glutathione after absorption, releasing two modified thiamine molecules whose esterified side chains are cleaved by esterases to thiamine, which thiamine pyrophosphokinase converts to thiamine pyrophosphate; because the intact molecule is lipophilic it enters cells by passive diffusion rather than depending on the SLC19A2 and SLC19A3 thiamine transporters, and it raises brain thiamine and thiamine phosphate ester levels more than equivalent thiamine salts in animal studies; animal work also describes changes in cholinergic, dopaminergic and glutamatergic signaling in the prefrontal cortex and hippocampus, which is the proposed basis for the claimed effects on fatigue and attention.|TPP-dependent enzymes after conversion: pyruvate dehydrogenase, alpha-ketoglutarate dehydrogenase, branched-chain alpha-ketoacid dehydrogenase, transketolase|Vitamin prodrug|Raises blood and brain thiamine and thiamine pyrophosphate more than thiamine salts in animal studies; effects on human fatigue and cognition are inconsistent across small trials.
+Claimed uses (not proven): fatigue and asthenia, concentration, memory, mood, erectile dysfunction in diabetes|Studied in: small trials of asthenia and post-infectious fatigue conducted mainly outside the US; small studies in diabetic erectile dysfunction and in Alzheimer disease as an add-on, with limited and inconsistent results|Recognize: home supplement or nootropic product, or a prescription product brought from abroad|None (no FDA-recognized indication)
+None established (no FDA label)|Known allergy to thiamine or product ingredients; bipolar disorder has been raised as a concern in case reports of activation
+Not FDA approved: dietary supplements are not reviewed by FDA for safety or effectiveness before sale, and content can vary between brands. Sulbutiamine has not been studied as a replacement for parenteral thiamine in Wernicke encephalopathy, which is managed in hospital with IV thiamine. Case reports describe tolerance with escalating self-directed use and a withdrawal-like return of fatigue and low mood after stopping, and activation or mania has been reported in people with bipolar disorder.|None (no FDA label)|Related to thiamine (DrugBug id thiamine) and to benfotiamine (DrugBug id benfotiamine); sulbutiamine is a disulfide, while benfotiamine is an S-acyl phosphate prodrug, and both are described as lipophilic thiamine derivatives.
+Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not applicable (no labeled dose)|Not applicable (no labeled dose)
+PO (tablets, capsules, powders)|-|-|-|-|Tablets, capsules, powders|-|-|-|Not applicable|Not applicable|Not applicable|Lipophilic, so absorption is high and less dependent on the saturable thiamine transporters; often sold in nootropic blends with other B vitamins or choline products
+Within about an hour in pharmacokinetic studies|Within a few hours for blood thiamine|Not well defined|Short (a few hours in plasma)|Disulfide reduced by thiols, side chains cleaved by esterases to thiamine, then phosphorylated to thiamine pyrophosphate|Renal (thiamine and metabolites)|Not well defined
+Generally well tolerated in short trials; headache, nausea, insomnia, agitation, skin rash|Activation, hypomania or mania reported in people with bipolar disorder; tolerance and dependence-like escalating use described in case reports|None well established
+No well-documented major drug interactions|Not applicable|Thiamine is found in whole grains, pork, legumes and fortified grains|Alcohol use disorder lowers thiamine absorption and stores|Often stacked with other nootropic supplements, which complicates attribution of adverse effects
+-|-|-|-|-|-|Mental status, mood, extraocular movements and gait in suspected thiamine deficiency; agitation or activation in mood disorders|-|Not routinely measured; whole blood thiamine or erythrocyte transketolase activity in a deficiency workup or in research|Sleep and fatigue symptoms
+Not studied in pregnancy; supplement products are not FDA reviewed|Not studied|No FDA-labeled pediatric dose|No specific data|No specific data; water-soluble thiamine is lost in dialysis|No specific data
+No toxic dose established|No characteristic toxicity; headache, agitation and insomnia reported at higher self-directed intakes|No characteristic overdose syndrome described|Supportive care|None|None
+Not given by EMS.|A patient taking an oral thiamine derivative can still be thiamine deficient, and a lipophilic supplement does not substitute for hospital IV thiamine in suspected Wernicke encephalopathy.|Alcohol use, malnutrition, bariatric surgery, bipolar disorder, other nootropic supplements.|Not applicable|Not applicable|Confusing sulbutiamine with benfotiamine or with FDA-approved thiamine injection; assuming a nootropic supplement has FDA-reviewed evidence behind its claims.|None well established|Lipophilic thiamine derivatives such as sulbutiamine and benfotiamine bypass the saturable SLC19A2 and SLC19A3 transporters that limit absorption of ordinary thiamine salts, which is why they raise blood and brain thiamine levels more.
+Chronic fatigue, asthenia, interest in nootropics; alcohol use disorder or malnutrition.|Self-selected supplement for fatigue or focus, or a prescription product obtained abroad.|Other supplements and nootropics, alcohol use, psychiatric history, diet.|Unlikely to cause emergencies alone; agitation or mania reported in bipolar disorder.|Case reports describe return of fatigue and low mood after stopping heavy self-directed use.
+A lab-made, fat-soluble version of vitamin B1 that gets into the brain more easily and is sold for tiredness.|Sulbutiamine is a lipophilic disulfide dimer of two modified thiamine molecules that crosses the blood-brain barrier readily and is converted to thiamine and thiamine pyrophosphate; it is prescribed for asthenia in some countries, sold as a supplement in the US, and supported by limited evidence.|SULbutiamine is two thiamines held by SULfur, and sulfur-linked fat gets into the brain.|It is not FDA approved and is not a substitute for IV thiamine in Wernicke encephalopathy.|Thiamine deficiency causes Wernicke encephalopathy with confusion, ophthalmoplegia and ataxia plus dry and wet beriberi, and thiamine pyrophosphate is the cofactor for pyruvate dehydrogenase, alpha-ketoglutarate dehydrogenase, branched-chain alpha-ketoacid dehydrogenase and transketolase.|Benfotiamine (DrugBug id benfotiamine); thiamine (DrugBug id thiamine)|Thiamine, benfotiamine, fursultiamine, allithiamine, cocarboxylase|None
+`);
+DB.add("riboflavin-5-phosphate","Riboflavin-5-Phosphate (FMN, active vitamin B2)","HM",`
+Riboflavin-5-phosphate (flavin mononucleotide, FMN; riboflavin 5'-phosphate sodium)|Many dietary supplement brands, often labeled activated or active B2 (no FDA-approved drug product); used as a color additive in some products|Active B2, FMN|NOT FDA APPROVED - dietary supplement (active vitamin B2 coenzyme form)|Phosphorylated isoalloxazine (flavin) coenzyme; water-soluble B vitamin form|Not controlled
+A coenzyme form of vitamin B2 made inside cells from riboflavin, sold as a supplement marketed as an activated form of B2. Education only: DrugBug is not telling anyone to use this.|Acts with FAD as the redox-active flavin cofactor of flavoproteins, cycling between oxidized flavin, flavin semiquinone and reduced FMNH2 or FADH2 to carry one or two electrons in oxidation-reduction reactions throughout metabolism.|Marketed for energy, migraine prevention, eye health and riboflavin deficiency; high-dose riboflavin has been studied in migraine prevention, and all B2 forms are interconverted inside cells.
+Riboflavin is taken up by the transporters RFVT1, RFVT2 and RFVT3 (SLC52A1-3), and riboflavin kinase phosphorylates it to FMN, which FAD synthetase (FLAD1) adenylylates to FAD; FMN is the flavin of NADH dehydrogenase (complex I) and of pyridoxine 5'-phosphate oxidase, which activates vitamin B6, while FAD is the flavin of succinate dehydrogenase (complex II), the acyl-CoA dehydrogenases of fatty acid beta-oxidation with their electron transfer flavoprotein and ETF dehydrogenase, glutathione reductase, xanthine oxidase, monoamine oxidase and methylenetetrahydrofolate reductase (MTHFR); through glutathione reductase, riboflavin status supports regeneration of reduced glutathione, and through MTHFR and pyridoxine oxidase it ties B2 status to folate, homocysteine and B6 metabolism.|Riboflavin kinase and FAD synthetase (forming enzymes); complex I, complex II and succinate dehydrogenase, acyl-CoA dehydrogenases and ETF, glutathione reductase, MTHFR, pyridoxine 5'-phosphate oxidase (flavoproteins)|Vitamin cofactor (active form)|Supports electron transport, fatty acid beta-oxidation, antioxidant defense through glutathione reductase, folate cycling and activation of vitamin B6; riboflavin deficiency secondarily impairs B6 activation and raises homocysteine in people with the MTHFR 677TT genotype.
+Claimed uses (not proven): energy, migraine prevention, eye health, activated B2 for people with MTHFR variants|Studied in: high-dose oral riboflavin for migraine prevention, where small randomized trials and open studies reported fewer attacks and headache guidelines list riboflavin among supplements with limited evidence; riboflavin-responsive multiple acyl-CoA dehydrogenase deficiency (MADD, glutaric acidemia type II) from ETFDH mutations and riboflavin transporter deficiency (Brown-Vialetto-Van Laere syndrome), both managed under specialist care; riboflavin is also used with ultraviolet A light in corneal cross-linking for keratoconus|Recognize: home supplement, migraine prevention regimen, or a product in a B-complex or prenatal vitamin|None (no FDA-recognized indication)
+None established (no FDA label)|Known allergy to product ingredients
+Not FDA approved: dietary supplements are not reviewed by FDA for safety or effectiveness before sale, and content can vary between brands. Riboflavin is absorbed by a saturable transport process, so absorption from a single large dose is limited and the remainder is excreted in urine. Riboflavin and FMN are light-sensitive, which is why milk sold in clear containers loses riboflavin and why phototherapy can lower riboflavin in neonates.|None (no FDA label)|Riboflavin deficiency rarely occurs alone and usually accompanies other B vitamin deficiencies in malnutrition, alcohol use disorder or malabsorption; its classic features are angular stomatitis, cheilosis, glossitis, seborrheic dermatitis, normochromic normocytic anemia and corneal neovascularization.
+Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not applicable (no labeled dose)|Not applicable (no labeled dose)
+PO (tablets, capsules, powders; also in B-complex and prenatal products)|-|-|-|-|Tablets, capsules, powders; foods|-|-|-|Not applicable|Not applicable|Not applicable|Phosphorylated forms are dephosphorylated by intestinal alkaline phosphatase before absorption, so oral FMN is absorbed as riboflavin; absorption is saturable and improves when taken with food
+Within about an hour for absorption|Roughly 1 to 2 hours for plasma riboflavin|Not well defined|About 1 to 2 hours in plasma for free riboflavin; tissue flavoprotein-bound flavins turn over much more slowly|Converted by riboflavin kinase to FMN and by FAD synthetase to FAD, mostly bound to flavoproteins; small amounts hydroxylated and conjugated|Renal (free riboflavin and metabolites in urine)|Moderate (albumin and immunoglobulins); tissue flavins are largely protein-bound as enzyme cofactors
+Bright yellow urine (flavinuria), which is expected and harmless; occasional diarrhea and polyuria at high intake|None well established|None well established
+No well-documented major drug interactions|Not applicable|Found in milk and dairy, eggs, liver, meat, green vegetables and fortified grains; light exposure degrades riboflavin in milk|Alcohol use disorder reduces riboflavin absorption and is a common setting for combined B vitamin deficiency|Riboflavin status affects MTHFR activity and homocysteine, and FMN-dependent pyridoxine 5-phosphate oxidase is needed to activate vitamin B6, so low B2 can blunt the effect of B6 and folate
+-|-|-|-|-|-|Peripheral neuropathy, weakness, bulbar symptoms and hearing loss in riboflavin transporter deficiency|-|Not routinely measured; erythrocyte glutathione reductase activity coefficient is the classic functional assay, and urinary riboflavin excretion is used in research; acylcarnitine profile and urine organic acids in suspected MADD|Headache frequency when used for migraine prevention
+Requirements rise in pregnancy; riboflavin is a component of most prenatal vitamins|Passes into breast milk; requirements rise during breastfeeding|No FDA-labeled pediatric dose; high-dose riboflavin is used under specialist care in riboflavin-responsive MADD and riboflavin transporter deficiency, and phototherapy can lower neonatal riboflavin|No specific adjustment described|Water-soluble vitamins are lost during dialysis|Riboflavin status is often low in alcohol-related liver disease along with other B vitamins
+No toxic dose established; no tolerable upper intake level has been set for riboflavin because absorption is saturable and excess is excreted|Bright yellow urine; diarrhea and polyuria reported at high intake|No characteristic overdose syndrome described|Supportive care|None|None
+Not given by EMS.|Bright yellow or fluorescent yellow urine in a patient on supplements is usually riboflavin rather than a sign of liver disease, rhabdomyolysis or poisoning.|Supplement and B-complex use, migraine regimen, alcohol use, diet, newborn screening results in infants with hypotonia or metabolic crisis.|Not applicable|Not applicable|Mistaking riboflavin-induced yellow urine for bilirubin or myoglobin; confusing riboflavin (B2) with niacin (B3) or pyridoxine (B6).|None well established|Multiple acyl-CoA dehydrogenase deficiency (glutaric acidemia type II) from ETFA, ETFB or ETFDH mutations presents with hypoketotic hypoglycemia, metabolic acidosis, a smell of sweaty feet, weakness and cardiomyopathy, and the ETFDH form is often riboflavin-responsive because the flavin cofactor stabilizes the mutant protein.
+Migraine, malnutrition or alcohol use disorder, pregnancy, inherited riboflavin-responsive metabolic disorders.|Migraine prevention regimen, prenatal or B-complex vitamin, or a self-selected activated B vitamin product.|Headache pattern and other migraine medicines, other supplements, diet, alcohol use.|Unlikely to cause emergencies alone.|No withdrawal syndrome; migraine frequency may return to baseline.
+The active form of vitamin B2, the yellow vitamin that helps enzymes move electrons around.|Riboflavin-5-phosphate (FMN) is made from riboflavin by riboflavin kinase and converted to FAD by FAD synthetase, serving as the flavin cofactor for complex I and II, acyl-CoA dehydrogenases, glutathione reductase, MTHFR and pyridoxine oxidase; it is studied at high dose in migraine prevention and in riboflavin-responsive MADD.|FlavinS are yellow: riboFLAVIN turns urine bright yellow and Flavoproteins carry electrons.|Riboflavin absorption is saturable, so high doses mostly end up in the urine as bright yellow flavin.|Riboflavin deficiency causes angular stomatitis, cheilosis, glossitis, seborrheic dermatitis, corneal neovascularization and normocytic anemia, and the functional test is the erythrocyte glutathione reductase activity coefficient.|Niacin (vitamin B3, DrugBug id niacin); pyridoxine (vitamin B6)|Riboflavin, FAD, riboflavin 5-phosphate sodium|None
+`);
+
+;
+// DrugBug new drugs: more vitamin forms and vitamin-like cofactors (vitamin batch 2)
+DB.add("nicotinamide","Nicotinamide (niacinamide, vitamin B3 amide form)","HM",`
+Nicotinamide (niacinamide; pyridine-3-carboxamide)|Many dietary supplement brands; B-complex products and multivitamins; topical skin products (no FDA-approved oral drug product)|Niacinamide, nicotinamide|NOT FDA APPROVED - dietary supplement (vitamin B3 form) and topical cosmetic ingredient|Amide form of nicotinic acid; NAD+ precursor through the salvage pathway|Not controlled
+The amide form of vitamin B3, sold as oral tablets and capsules and used widely in skin care products. Education only: DrugBug is not telling anyone to use this.|Is converted to NAD+ through the salvage pathway, supplying the coenzyme for hundreds of dehydrogenases and the substrate for sirtuins, PARPs and CD38; unlike nicotinic acid it does not act on the niacin receptor.|Marketed and studied for skin cancer chemoprevention, acne, rosacea and pellagra, and used as an oral phosphate-lowering agent in research in kidney disease.
+Nicotinamide is condensed with 5-phosphoribosyl-1-pyrophosphate by nicotinamide phosphoribosyltransferase (NAMPT), the rate-limiting salvage step, giving nicotinamide mononucleotide (NMN), which NMN adenylyltransferases (NMNAT1-3) convert to NAD+; NAD kinase then makes NADP+; nicotinamide is also a product inhibitor of the NAD+-consuming enzymes sirtuin deacylases and PARPs at high concentrations; it is cleared by nicotinamide N-methyltransferase (NNMT), which uses S-adenosylmethionine to form N1-methylnicotinamide; de novo synthesis instead runs from tryptophan through the kynurenine pathway, where kynureninase needs pyridoxal-5-phosphate and kynurenine hydroxylase needs riboflavin, at roughly 60 mg of tryptophan per 1 mg of niacin equivalent; nicotinamide does not bind the hydroxycarboxylic acid receptor GPR109A (HCA2), so it produces neither prostaglandin D2-mediated flushing nor the LDL-lowering and HDL-raising effects of nicotinic acid.|NAMPT (substrate); NAD+-dependent dehydrogenases, sirtuins and PARPs downstream; no activity at GPR109A|NAD+ precursor (vitamin); weak inhibitor of sirtuins and PARPs at high concentrations|Raises NAD+ and NADP+ pools; corrects pellagra; lowers intestinal phosphate absorption by inhibiting the sodium-phosphate cotransporter NaPi-2b in studies; does not change LDL cholesterol.
+Claimed and studied uses: prevention of nonmelanoma skin cancer in high-risk skin, acne and rosacea (topical), correction of vitamin B3 deficiency (pellagra)|Studied in: the ONTRAC randomized trial, where oral nicotinamide reduced new nonmelanoma skin cancers in high-risk patients, while the later ONTRANS trial in organ transplant recipients did not show benefit; topical trials in acne and rosacea; the ENDIT trial in type 1 diabetes prevention, which was negative; phosphate lowering in dialysis patients|Recognize: home supplement, dermatology product, or part of a B-complex product|None (no FDA-recognized indication)
+None established (no FDA label)|Known allergy to product ingredients; thrombocytopenia has been described with phosphate-lowering use in kidney disease
+Not FDA approved: dietary supplements are not reviewed by FDA for safety or effectiveness before sale, and content can vary between brands. Liver injury has been reported with gram-level oral intake of nicotinamide, including sustained-release products, so it is not a harmless unlimited vitamin at high intake. The tolerable upper intake level for niacin is based on flushing from nicotinic acid and does not describe nicotinamide toxicity well.|None (no FDA label)|Classic contrast: nicotinic acid (niacin) causes cutaneous flushing through GPR109A and prostaglandin D2 and lowers LDL, while nicotinamide does neither; nicotinamide also does not cause the hyperuricemia, hyperglycemia and hepatotoxicity pattern associated with high-dose prescription niacin, although liver injury is still described at very high intake.
+Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not applicable (no labeled dose)|Not applicable (no labeled dose)
+PO (tablets, capsules); topical (creams, serums, gels)|-|-|-|-|Tablets, capsules, B-complex products|-|-|Topical creams, serums and gels in acne, rosacea and general skin care|Not applicable|Not applicable|Not applicable|Labels may state nicotinamide, niacinamide or niacin equivalents; sustained-release oral forms have been linked to liver injury
+Not well defined for oral intake|About 1 hour for plasma nicotinamide|Not well defined|Several hours in plasma|Hepatic: methylated by nicotinamide N-methyltransferase to N1-methylnicotinamide, then oxidized to pyridone derivatives; also salvaged to NAD+ by NAMPT|Renal (N1-methylnicotinamide and 2-pyridone metabolites)|Low
+Generally well tolerated; nausea and GI upset at higher intake; mild local irritation with topical products|Hepatotoxicity at gram-level oral intake, including with sustained-release products; thrombocytopenia described in dialysis studies|Severe hepatic injury in rare reports of very high intake
+No well-documented major drug interactions at supplement intake; carbamazepine levels have been reported to rise with nicotinamide|Not applicable|Niacin equivalents come from meat, fish, poultry, legumes and fortified grains, and from dietary tryptophan|Heavy alcohol use is a common cause of pellagra through poor intake and malabsorption|Adds to total vitamin B3 intake from multivitamins, B-complex products and niacin products; large nicotinamide intake consumes S-adenosylmethionine methyl groups through NNMT
+-|-|-|-|-|-|Mental status in suspected pellagra|-|Liver enzymes with high oral intake; platelet count in phosphate-lowering studies; serum phosphate in that setting|Skin findings
+Food intake considered compatible; high-dose supplement use is not well studied in pregnancy|Passes into breast milk; food intake considered compatible|No FDA-labeled pediatric dose|Skin cancer chemoprevention studies enrolled mostly older adults|Nicotinamide accumulates in advanced kidney disease, and phosphate-lowering studies were done in dialysis patients|Liver injury is the dose-limiting concern at high intake
+No toxic dose established for supplement intake; hepatotoxicity is described at gram-level daily intake|Nausea, vomiting, right upper quadrant pain and raised transaminases in reported liver injury|No characteristic acute overdose syndrome; subacute hepatitis is the pattern described|Supportive care; liver enzyme follow-up|None|None
+Not given by EMS.|Pellagra still occurs with alcohol use disorder, malabsorption, carcinoid syndrome, Hartnup disease and isoniazid use, and it can present with confusion and diarrhea rather than an obvious rash.|Alcohol use, nutrition, isoniazid use, diarrhea, sun-exposed rash, other B3 products.|Not applicable|Not applicable|Expecting nicotinamide to lower LDL or to cause flushing like nicotinic acid; assuming any product labeled vitamin B3 is interchangeable for lipid effects.|None well established|Pellagra gives the three Ds of dermatitis in sun-exposed skin (the Casal necklace), diarrhea and dementia, with death as the fourth if untreated; carcinoid syndrome shunts tryptophan into serotonin and Hartnup disease impairs neutral amino acid transport, so both can produce pellagra-like findings.
+Pellagra risk from alcohol use disorder or malabsorption; acne or rosacea; a history of nonmelanoma skin cancer; chronic kidney disease.|Dermatology recommendation, skin cancer prevention, or a self-selected B vitamin product.|Other B3 products, liver disease, alcohol use, skin cancer history.|Unlikely to cause emergencies alone; liver injury with very high intake.|Pellagra features can return in people with poor intake or malabsorption.
+The flush-free form of vitamin B3 that the body turns into NAD+.|Nicotinamide is the amide form of vitamin B3 that enters NAD+ synthesis through NAMPT in the salvage pathway, treats pellagra, reduced new nonmelanoma skin cancers in the ONTRAC trial, and lacks both the GPR109A flushing and the LDL-lowering effect of nicotinic acid.|niacinAMIDE is the AMIABLE one: no flush, no lipid effect.|NAMPT is the rate-limiting enzyme of the NAD+ salvage pathway.|Nicotinic acid flushes and lowers LDL through GPR109A and prostaglandin D2; nicotinamide does neither, yet both correct pellagra, whose classic triad is dermatitis, diarrhea and dementia.|Niacin (nicotinic acid, DrugBug id niacin); nicotinamide riboside (DrugBug id nicotinamide-riboside)|Niacin, nicotinamide riboside, nicotinamide mononucleotide (NMN)|None
+`);
+DB.add("nmn","Nicotinamide Mononucleotide (NMN, NAD+ precursor)","HM",`
+Nicotinamide mononucleotide (NMN; beta-nicotinamide mononucleotide)|Many dietary supplement brands sold online (no FDA-approved drug product; FDA considers NMN an excluded ingredient for dietary supplements)|NMN, NAD booster|NOT FDA APPROVED - marketed as a dietary supplement (vitamin B3-derived nucleotide, NAD+ precursor)|Nicotinamide riboside 5-phosphate; the immediate nucleotide precursor of NAD+|Not controlled
+A phosphorylated vitamin B3 nucleotide sitting one enzymatic step from NAD+, sold online as an anti-aging supplement. Education only: DrugBug is not telling anyone to use this.|Is adenylylated to NAD+, the hydride carrier for dehydrogenases and the substrate consumed by sirtuins, PARPs and CD38.|Marketed for healthy aging, energy and metabolic health; human studies are early, small and mostly short-term, and FDA has taken the position that NMN cannot lawfully be sold as a dietary supplement.
+NMN adenylyltransferases NMNAT1 (nucleus), NMNAT2 (cytosol and axons) and NMNAT3 (mitochondria) transfer an adenylyl group from ATP to NMN to form NAD+ in the final step of the salvage pathway; NMN itself is made by nicotinamide phosphoribosyltransferase (NAMPT) from nicotinamide and PRPP, or by nicotinamide riboside kinases NRK1 and NRK2 from nicotinamide riboside; extracellular NMN is largely dephosphorylated by the ectonucleotidase CD73 to nicotinamide riboside before cell entry, and a direct NMN transporter (SLC12A8) has been proposed in mice; NAD+ is then consumed by sirtuin deacylases, PARP DNA-repair enzymes and CD38, and the axon survival factor SARM1 is a NAD+-cleaving enzyme whose activation follows NMNAT2 loss; NMN does not bind GPR109A, so there is no flushing and no nicotinic acid-type lipid effect.|NMNAT1-3 (substrate); NAD+-dependent dehydrogenases, sirtuins, PARPs and CD38 downstream|NAD+ precursor (nucleotide)|Raises blood NAD+ metabolites in human studies; improvements in insulin sensitivity, walking endurance and aging measures have been reported in small trials and extensively in mice, without established clinical benefit in people.
+Claimed uses (not proven): anti-aging, energy, metabolic health, muscle function, cognition|Studied in: small short-term randomized trials reporting higher blood NAD+ and occasional changes in insulin sensitivity, aerobic capacity or walking distance; large mouse literature on aging, metabolism and neuroprotection|Recognize: home anti-aging or wellness supplement, often bought online|None (no FDA-recognized indication)
+None established (no FDA label)|Known allergy to product ingredients; limited safety data in pregnancy, lactation and children
+Not FDA approved: there is no approved NMN drug product, and FDA has concluded that NMN is excluded from the dietary supplement definition because it was authorized for investigation as a new drug before being marketed as a supplement, so products sold as NMN supplements are outside that framework and their identity and content can vary widely between brands. Long-term human safety data do not exist, and raising NAD+ has not been shown to slow human aging.|None (no FDA label)|Related to nicotinamide riboside (DrugBug id nicotinamide-riboside), which sits one step upstream and is marketed as a new dietary ingredient, and to nicotinamide (DrugBug id nicotinamide) and niacin (DrugBug id niacin).
+Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not applicable (no labeled dose)|Not applicable (no labeled dose)
+PO (capsules, tablets, sublingual tablets, powders)|-|-|-|-|Capsules, tablets, powders|-|-|Sublingual and liposomal products are marketed, with little comparative absorption data|Not applicable|Not applicable|Not applicable|Independent testing has found wide variation between labeled and actual NMN content; often sold alongside resveratrol and other NAD+ products
+Not well defined|Blood NAD+ metabolites rise within hours in studies|Not well defined|Not well defined for NMN itself; plasma NMN is cleared within hours|Dephosphorylated by CD73 to nicotinamide riboside, cleaved to nicotinamide, and rebuilt to NAD+; nicotinamide is methylated by NNMT|Renal (N1-methylnicotinamide and other niacin metabolites)|Not well defined
+Generally well tolerated in short trials; nausea, bloating, diarrhea, headache and flushing-like sensations reported|None well established|None well established
+No well-documented major drug interactions|Not applicable|Trace amounts are present in foods such as edamame, broccoli, avocado and beef; niacin equivalents come mainly from protein foods and fortified grains|No specific interaction|Adds to total vitamin B3 intake from multivitamins and other NAD+ precursor products; often combined with resveratrol in marketed stacks
+-|-|-|-|-|-|-|-|Not routinely measured; whole blood NAD+ is a research measure|-
+Not studied in pregnancy; products are outside the FDA supplement framework|Not studied|No FDA-labeled pediatric dose|Most marketing targets older adults, and trials in this group are short|No specific data|No specific data
+No toxic dose established|No characteristic toxicity|No characteristic overdose syndrome described|Supportive care|None|None
+Not given by EMS.|NMN is sold widely despite the FDA position that it is not a lawful dietary supplement, and product content has been found to differ from the label in independent testing.|Online supplement purchases, other NAD+ products, niacin use.|Not applicable|Not applicable|Treating NMN and nicotinamide riboside as proven anti-aging therapy; assuming an NMN product contains what the label states.|None well established|NAD+ is supplied mainly by the salvage pathway, where NAMPT makes NMN from nicotinamide and NMNAT enzymes make NAD+; de novo synthesis from tryptophan is minor and depends on pyridoxal-5-phosphate, which is why B6 deficiency can produce pellagra-like findings.
+Interest in healthy aging, energy or metabolic supplements.|Self-selected wellness supplement bought online.|Other supplements, niacin products, what the label claims.|Unlikely to cause emergencies alone.|No withdrawal syndrome.
+A vitamin B3 molecule that is one chemical step away from NAD+.|Nicotinamide mononucleotide is converted to NAD+ by NMNAT1-3 and is marketed to raise NAD+, but FDA regards it as excluded from the dietary supplement definition because it was investigated as a new drug, and human evidence is early and short-term.|NMN is NAD+ Minus Nothing much: one step to go.|CD73 dephosphorylates extracellular NMN to nicotinamide riboside before cells take it up.|The NAD+ salvage pathway runs nicotinamide to NMN by NAMPT, the rate-limiting step, then NMN to NAD+ by NMNAT; severe vitamin B3 deficiency causes pellagra with dermatitis, diarrhea and dementia.|Nicotinamide riboside (DrugBug id nicotinamide-riboside); nicotinamide (DrugBug id nicotinamide)|Nicotinamide riboside, nicotinamide, niacin|None
+`);
+DB.add("dexpanthenol","Dexpanthenol (provitamin B5, alcohol form of pantothenic acid)","HM",`
+Dexpanthenol (D-panthenol; the alcohol analog of D-pantothenic acid)|Ilopan and generic dexpanthenol injection (FDA-approved); Panthoderm and many topical creams, ointments, nasal sprays, eye drops and hair products|Dexpanthenol, panthenol|Provitamin B5 (vitamin B5 precursor); GI motility agent by historical labeling; topical emollient|Alcohol form of pantothenic acid; precursor of coenzyme A and 4'-phosphopantetheine|Not controlled
+The alcohol form of vitamin B5, available as an FDA-approved injection with an older labeled use in postoperative intestinal atony and as a very common ingredient in skin, wound, nasal and eye preparations. Education only: DrugBug is not telling anyone to use this.|Is oxidized in the body to pantothenic acid and built into coenzyme A, the universal acyl group carrier, and into the 4'-phosphopantetheine arm of acyl carrier protein; applied topically it acts as a humectant that holds water in the stratum corneum.|Used by injection for prevention and treatment of paralytic ileus and intestinal atony after surgery, an indication supported by weak evidence, and used topically for dry, irritated, abraded or healing skin and mucosa.
+Dexpanthenol is oxidized to pantothenate, which pantothenate kinase (PANK1-3) phosphorylates in the rate-limiting step of coenzyme A synthesis, followed by condensation with cysteine (PPC synthetase), decarboxylation (PPC decarboxylase) to pantetheine-4-phosphate, adenylylation and phosphorylation by the bifunctional CoA synthase to give coenzyme A; CoA forms thioesters such as acetyl-CoA, malonyl-CoA, succinyl-CoA and HMG-CoA, and its 4'-phosphopantetheine group is transferred to acyl carrier protein, where the long swinging thiol arm shuttles the growing acyl chain between the condensing, reducing and dehydrating domains of fatty acid synthase; the proposed GI effect is an increase in acetyl-CoA available for acetylcholine synthesis by choline acetyltransferase, raising cholinergic tone in gut smooth muscle, a mechanism that remains poorly substantiated.|Pantothenate kinase (PANK1-3) and coenzyme A synthesis enzymes (substrate); choline acetyltransferase pathway indirectly through acetyl-CoA|Vitamin precursor (provitamin)|Supplies coenzyme A and acyl carrier protein for fatty acid synthesis and oxidation, the citric acid cycle, heme synthesis through succinyl-CoA, and acetylcholine synthesis; topically improves stratum corneum hydration and epidermal barrier repair in studies.
+Injection: prevention of paralytic ileus and treatment of intestinal atony or distension after surgery, as stated in the approved label|Topical: dry or chapped skin, abrasions, minor wounds, diaper dermatitis, nipple fissures, nasal dryness and dry eye preparations|Not an EMS medication; recognize: topical skin or nasal product, or an inpatient injection|Off-label and investigational: adjunct in nerve injury and radiation dermatitis studies, and hair and nail products, with limited evidence
+Mechanical obstruction of the GI tract (as stated in the injection label); hemophilia (the injection label describes this contraindication because dexpanthenol may prolong bleeding time)|Known hypersensitivity to dexpanthenol or product components; ileus of uncertain cause
+The injection label describes allergic reactions, including rare anaphylaxis, and advises against use within 1 hour of succinylcholine because of reported respiratory difficulty. Evidence that the injection shortens postoperative ileus is weak and comes largely from older uncontrolled work, and the product is now little used. Contact dermatitis to topical panthenol is well described.|None (no boxed warning)|Potassium levels are mentioned in the injection label in the context of intestinal atony, since hypokalemia itself reduces gut motility. Topical products are generally OTC and are among the most widely used wound and skin care ingredients worldwide.
+Injection label: 250 to 500 mg intramuscularly, repeated in 2 hours, then every 6 hours until the risk of paralytic ileus has passed|Injection label describes weight-based intramuscular dosing of about 11 mg per kg, repeated as described in the label|About 11 mg per kg intramuscularly in the pediatric label|No absolute maximum stated in the label beyond the repeat schedule described|Label repeat interval is 2 hours after the first dose, then every 6 hours|IV use is by slow infusion only, with the dose diluted in a large-volume fluid; the label does not describe a fixed infusion rate for undiluted drug|No labeled renal adjustment|No labeled hepatic adjustment
+IM, IV (diluted infusion only), topical, intranasal, ophthalmic|Diluted in a large volume of compatible fluid and infused slowly; not given as an undiluted IV push per the label|-|Preferred route in the label, given undiluted into a large muscle|Nasal sprays and gels contain dexpanthenol as a moisturizing ingredient|-|-|-|Topical creams, ointments, lotions, eye drops and hair products|Slow infusion when the IV route is used|Dilute the IV dose in dextrose or lactated Ringer solution per the label|Dextrose solutions and lactated Ringer solution per the label|The label describes intramuscular use as the usual route and slow diluted infusion for IV use
+Not clearly defined for the GI effect; topical hydration effects build over days|Plasma pantothenate rises within hours after injection|Label repeat schedule is every 6 hours|Not well defined|Oxidized to pantothenic acid, then incorporated into coenzyme A by pantothenate kinase and downstream enzymes|Renal (pantothenic acid, largely unchanged)|Low
+Injection: itching, tingling, generalized dermatitis, redness at the injection site, diarrhea and intestinal colic|Allergic reactions, including rare anaphylaxis with the injection; prolonged bleeding time described in hemophilia|Anaphylaxis (rare, reported with the injection)
+Succinylcholine (the label describes avoiding dexpanthenol within 1 hour because of reported respiratory difficulty)|Depolarizing neuromuscular blockers, per the label timing statement|No specific food interaction; pantothenic acid is present in nearly all foods|No specific interaction|The label mentions that it may add to the effect of parasympathomimetic agents; hypokalemia reduces gut motility independently
+Monitored as part of routine postoperative care|Monitored as part of routine postoperative care|-|-|-|Respiratory difficulty has been reported when given close to succinylcholine|-|-|Potassium in postoperative intestinal atony; no routine drug-specific labs|Bowel sounds, abdominal distension and passage of flatus in the labeled GI use; skin condition with topical use
+Pregnancy category C historically; no adequate human studies; topical use is widespread and considered low risk|Pantothenic acid passes into breast milk; topical use on nipple fissures is common|Pediatric intramuscular dosing appears in the injection label; topical use is common in diaper dermatitis|No specific labeled adjustment|No labeled adjustment; pantothenate is renally excreted|No labeled adjustment
+No toxic dose established; pantothenate and its alcohol form have very low acute toxicity|Diarrhea, intestinal colic and itching at high exposure|No characteristic overdose syndrome described|Supportive care|None|None
+Not given by EMS.|Dexpanthenol injection is an older product with a labeled indication for postoperative ileus that rests on weak evidence, while the same molecule is one of the most widely used topical skin repair ingredients.|Mechanical bowel obstruction, bleeding disorders, recent succinylcholine, allergy history.|Abdominal distension, bowel sounds, passage of flatus, injection site reaction.|Signs of allergic reaction or evidence that the ileus is mechanical.|Confusing dexpanthenol with pantoprazole or with pantothenic acid supplements; giving the injection undiluted by the IV route rather than intramuscularly or as a diluted infusion.|Succinylcholine within 1 hour (respiratory difficulty reported in the label)|Dexpanthenol is simply the alcohol form of vitamin B5, so its real biochemistry is the coenzyme A story: pantothenate kinase is the rate-limiting step, and the 4-phosphopantetheine arm of acyl carrier protein is what carries the growing chain in fatty acid synthase.
+Postoperative ileus or intestinal atony (injection); dry, irritated or healing skin, diaper dermatitis, nasal dryness or dry eye (topical).|An inpatient order after abdominal surgery, or a household skin, wound or nasal care product.|Recent surgery, bowel symptoms, skin products in use, allergy history.|Allergic reaction is the main concern; the injection has no significant hemodynamic effect.|No withdrawal syndrome.
+The alcohol form of vitamin B5 that the body turns into coenzyme A, used in skin creams and in an older injection for a sluggish bowel.|Dexpanthenol is converted to pantothenic acid and then coenzyme A and acyl carrier protein; its FDA-approved injection is labeled for postoperative ileus and intestinal atony on weak evidence, while topical panthenol is widely used for skin and mucosal repair.|PANTHENOL PAINTS the skin and feeds the PANTOTHENATE pathway.|Pantothenate kinase catalyzes the rate-limiting step of coenzyme A synthesis.|Pantothenic acid (vitamin B5) is the precursor of coenzyme A and of the 4-phosphopantetheine prosthetic group of acyl carrier protein in fatty acid synthase.|Pantoprazole (similar-looking name); pantothenic acid supplements; pantethine|Pantothenic acid (DrugBug id pantothenic-acid), pantethine, calcium pantothenate|None
+`);
+DB.add("pyridoxal-5-phosphate","Pyridoxal-5-Phosphate (P5P, active vitamin B6)","HM",`
+Pyridoxal-5-phosphate (P5P; PLP; pyridoxal phosphate monohydrate)|Many dietary supplement brands and B-complex products (no FDA-approved drug product; FDA-approved B6 products are pyridoxine hydrochloride tablets and injection)|P5P, active B6|NOT FDA APPROVED - dietary supplement (active vitamin B6 coenzyme)|Phosphorylated aldehyde form of vitamin B6; coenzyme for transaminases, decarboxylases and other PLP-dependent enzymes|Not controlled
+The active coenzyme form of vitamin B6, sold as a supplement and marketed as a form that does not need to be activated by the liver. Education only: DrugBug is not telling anyone to use this.|Forms Schiff base intermediates with amino acid substrates, acting as the electron sink that allows transamination, decarboxylation, racemization, deamination and beta-elimination reactions throughout metabolism.|Marketed for neuropathy, nausea in pregnancy, premenstrual symptoms, homocysteine lowering and energy; the FDA-approved form for vitamin B6 deficiency and for isoniazid toxicity is pyridoxine, not P5P.
+The three dietary B6 vitamers, pyridoxine, pyridoxal and pyridoxamine, are phosphorylated by pyridoxal kinase, and pyridoxine-5-phosphate oxidase (PNPO), a flavin mononucleotide enzyme that ties riboflavin status to B6 status, oxidizes pyridoxine-5-phosphate and pyridoxamine-5-phosphate to pyridoxal-5-phosphate; circulating PLP is bound to albumin and is dephosphorylated by alkaline phosphatase at the cell surface before uptake and rephosphorylation; PLP forms an internal aldimine with an active-site lysine and then a Schiff base with the substrate amino group, stabilizing carbanion intermediates for transaminases (AST and ALT), decarboxylases (DOPA decarboxylase making dopamine, glutamate decarboxylase making GABA, histidine decarboxylase making histamine), delta-aminolevulinic acid synthase in the rate-limiting step of heme synthesis, cystathionine beta-synthase and cystathionine gamma-lyase in transsulfuration of homocysteine to cysteine, serine hydroxymethyltransferase in folate one-carbon metabolism, kynureninase in the tryptophan-to-niacin pathway, glycogen phosphorylase, and sphingoid base synthesis.|Over 140 PLP-dependent enzymes, including transaminases, decarboxylases, ALA synthase, cystathionine beta-synthase, SHMT, kynureninase and glycogen phosphorylase (coenzyme)|Vitamin coenzyme (active form)|Supports neurotransmitter synthesis (GABA, dopamine, serotonin, histamine), heme synthesis, homocysteine disposal, amino acid metabolism and glycogen breakdown; corrects B6 deficiency and the seizures of pyridoxine-responsive epilepsies.
+Claimed uses (not proven): peripheral neuropathy, nausea of pregnancy, premenstrual symptoms, homocysteine lowering, kidney stones|Studied in: pyridoxine-dependent and pyridoxine-responsive epilepsies, where PNPO deficiency responds specifically to pyridoxal phosphate rather than pyridoxine; B6 deficiency from isoniazid; sideroblastic anemia; homocysteine-lowering trials that did not reduce cardiovascular events|Recognize: home supplement or B-complex component, common in patients on isoniazid, in pregnancy products, and in neuropathy formulas|None (no FDA-recognized indication)
+None established (no FDA label)|Levodopa without carbidopa (B6 enhances peripheral DOPA decarboxylase activity and reduces the effect); known allergy to product ingredients
+Not FDA approved: dietary supplements are not reviewed by FDA for safety or effectiveness before sale, and content can vary between brands. Chronic high-dose vitamin B6 in any form is a well-documented cause of dose-dependent sensory peripheral neuropathy from dorsal root ganglion injury, with numbness, burning feet and sensory ataxia, and cases have been reported at intakes far below the gram-level doses once assumed necessary; a tolerable upper intake level has been set for adults.|None (no FDA label)|The FDA-approved pyridoxine products carry the labeled uses for B6 deficiency and as the antidote for isoniazid overdose; the doxylamine-pyridoxine combination (Diclegis, Bonjesta) is FDA-approved for nausea and vomiting of pregnancy and contains pyridoxine, not P5P.
+Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not applicable (no labeled dose)|Not applicable (no labeled dose)
+PO (tablets, capsules, sublingual tablets)|-|-|-|-|Tablets, capsules, B-complex products|-|-|Compounded pyridoxal phosphate has been used in specialist care of PNPO deficiency|Not applicable|Not applicable|Not applicable|Oral P5P is dephosphorylated in the gut before absorption, so it enters the same pool as pyridoxine; labels may state P5P content or B6 equivalents
+Not well defined|A few hours for plasma B6 vitamers|Not well defined|Plasma PLP turns over over days; total body stores, largely bound to muscle glycogen phosphorylase, last weeks|Dephosphorylated by intestinal and tissue alkaline phosphatase, rephosphorylated by pyridoxal kinase, and oxidized by aldehyde oxidase and NAD-dependent dehydrogenase to 4-pyridoxic acid|Renal (4-pyridoxic acid)|High (PLP is bound to albumin in plasma and to glycogen phosphorylase in muscle)
+Generally well tolerated at ordinary intake; nausea, headache, somnolence and photosensitivity reported|Dose-dependent sensory peripheral neuropathy and sensory ataxia with chronic high intake; reduced levodopa effect when carbidopa is absent|None well established for oral intake
+Isoniazid, cycloserine, hydralazine and penicillamine react with pyridoxal and deplete B6; levodopa without carbidopa (reduced effect); phenytoin and phenobarbital levels have been reported to fall with large B6 intake|Carbonyl-reactive hydrazine and thiol drugs that antagonize B6|Meat, fish, poultry, potatoes, bananas, chickpeas and fortified cereals supply B6|Alcohol use disorder lowers B6 status, partly because acetaldehyde promotes PLP breakdown|PNPO needs riboflavin-derived FMN, so B2 status affects B6 activation; B6, B12 and folate all participate in homocysteine disposal, B6 through transsulfuration
+-|-|-|-|-|-|Sensation, vibration and position sense, gait and reflexes, given the neuropathy risk with high intake|-|Plasma PLP in deficiency workup; CBC and iron studies with ring sideroblasts in sideroblastic anemia; homocysteine|Neuropathy symptoms over time
+Pyridoxine is used for nausea and vomiting of pregnancy in an FDA-approved combination product; P5P supplements are not FDA reviewed|Passes into breast milk; very large maternal intake has been linked to reduced milk production in older reports|No FDA-labeled pediatric dose for P5P; pyridoxal phosphate is used under specialist care in PNPO deficiency|Older adults commonly have low plasma PLP, and high-dose supplement neuropathy is also described in this group|Hemodialysis removes water-soluble vitamins, and B6 status is often low in dialysis patients|No specific data
+No single toxic dose; sensory neuropathy is dose and duration dependent and has been reported well below the gram-level intakes historically described|Numbness and burning in the feet and hands, loss of vibration and position sense, sensory ataxia and a positive Romberg sign|Progressive sensory ganglionopathy that improves slowly after intake stops, sometimes incompletely|Stopping the exposure and supportive care; recovery can take months|None|None
+Not given by EMS.|Isoniazid overdose causes refractory seizures and lactic acidosis because isoniazid depletes pyridoxal phosphate and so GABA synthesis, and pyridoxine is the specific antidote given gram for gram with the ingested dose.|Isoniazid, hydralazine, penicillamine or cycloserine use, high-dose B vitamin supplements, levodopa without carbidopa, numbness or unsteady gait.|Not applicable|Not applicable|Assuming B6 is harmless at any dose; confusing the FDA-approved pyridoxine products with P5P supplements; giving plain levodopa with B6.|Isoniazid (B6 depletion with neuropathy and seizures); levodopa without carbidopa|Pyridoxine-dependent epilepsy is caused by ALDH7A1 (antiquitin) deficiency, in which accumulated alpha-aminoadipic semialdehyde and its cyclic form condense with pyridoxal phosphate and inactivate it, giving neonatal seizures that respond to pyridoxine rather than to standard antiseizure drugs; PNPO deficiency instead responds to pyridoxal phosphate itself.
+Tuberculosis treatment with isoniazid, peripheral neuropathy, nausea of pregnancy, sideroblastic anemia, homocystinuria, alcohol use disorder, dialysis.|Prevention of isoniazid neuropathy, a diagnosed B6-responsive condition, or a self-selected supplement.|Isoniazid and other B6-depleting drugs, levodopa products, total B6 intake across products, numbness or gait change.|Sensory neuropathy with chronic high intake; loss of levodopa effect in Parkinson disease when carbidopa is absent.|B6 deficiency can recur in people taking isoniazid or on dialysis; neuropathy from excess improves slowly after stopping.
+The ready-to-use form of vitamin B6 that enzymes grab to move amino groups around.|Pyridoxal-5-phosphate is the active B6 coenzyme made by pyridoxal kinase and the FMN enzyme PNPO, serving transaminases, decarboxylases, ALA synthase, cystathionine beta-synthase, SHMT and glycogen phosphorylase; deficiency from isoniazid causes neuropathy, seizures and sideroblastic anemia, and chronic excess causes sensory neuropathy.|B6 is the amino acid handyman: Transaminate, Decarboxylate, make heme, make GABA. Too little gives seizures, too much gives numb feet.|PNPO is a riboflavin (FMN) enzyme, so B2 status controls B6 activation.|Isoniazid causes vitamin B6 deficiency with peripheral neuropathy and, in overdose, refractory seizures reversed by pyridoxine; B6 deficiency also causes sideroblastic anemia because ALA synthase needs pyridoxal phosphate.|Pyridoxine hydrochloride (the FDA-approved form); pyridostigmine (similar-looking name)|Pyridoxine, pyridoxamine, pyridoxal|None
+`);
+DB.add("inositol","Inositol (myo-inositol, vitamin-like compound)","HM",`
+Inositol (myo-inositol; D-chiro-inositol; inositol hexaphosphate is phytic acid)|Many dietary supplement brands, often a myo-inositol and D-chiro-inositol blend; also sold as inositol nicotinate (no FDA-approved drug product)|Inositol, myo-inositol|NOT FDA APPROVED - dietary supplement (vitamin-like cyclic polyol)|Cyclohexanehexol; precursor of phosphatidylinositol and the inositol phosphate second messengers|Not controlled
+A six-carbon sugar alcohol that the body makes from glucose and also obtains from food, sold as a powder or capsule and often paired with D-chiro-inositol. Education only: DrugBug is not telling anyone to use this.|Is built into phosphatidylinositol in cell membranes, the source of PIP2 and of the IP3, DAG and PIP3 signaling molecules, and also acts as an organic osmolyte in brain and kidney.|Marketed and studied for polycystic ovary syndrome, insulin resistance, gestational diabetes prevention, anxiety and obsessive-compulsive symptoms; evidence is mostly small trials and is strongest, though still limited, in PCOS.
+Glucose-6-phosphate is converted to inositol-3-phosphate by inositol-3-phosphate synthase (ISYNA1) and then to free myo-inositol by inositol monophosphatase (IMPA1), the enzyme that lithium inhibits; cells take up inositol through the sodium-dependent transporters SLC5A3 (SMIT1) and SLC5A11 and the proton-coupled HMIT; CDP-diacylglycerol and inositol are joined to form phosphatidylinositol, which PI4-kinase and PIP5-kinase phosphorylate to PI(4,5)P2; Gq-coupled receptors activate phospholipase C beta, which cleaves PIP2 into inositol-1,4,5-trisphosphate, releasing calcium from endoplasmic reticulum IP3 receptors, and diacylglycerol, which with calcium activates protein kinase C; PI3-kinase instead phosphorylates PIP2 to PIP3 downstream of the insulin receptor, recruiting Akt through PDK1, and inositol phosphoglycan mediators derived from glycosylphosphatidylinositol have been proposed to carry part of the insulin signal; an epimerase converts myo-inositol to D-chiro-inositol, and the ratio of the two is altered in insulin-resistant tissues.|Phosphatidylinositol and PIP2 pools (precursor); downstream PLC-IP3-calcium, DAG-PKC and PI3K-Akt signaling; SMIT1 transporters (uptake)|Nutrient precursor; osmolyte|Supplies membrane phosphoinositides and second messengers; improves insulin sensitivity measures and ovulation rates in some PCOS trials; serves as a major organic osmolyte in brain, kidney medulla and nerve.
+Claimed and studied uses: polycystic ovary syndrome (ovulation, cycle regularity, insulin resistance, hyperandrogenism), gestational diabetes prevention, anxiety and panic, obsessive-compulsive symptoms, lithium-induced psoriasis|Studied in: PCOS trials comparing myo-inositol with metformin and myo-inositol plus D-chiro-inositol blends; randomized trials of myo-inositol for gestational diabetes prevention, mostly from single centers; the PONTI pilot study of inositol in folate-resistant neural tube defect recurrence; small psychiatric trials; neonatal respiratory distress trials in preterm infants, where an inositol trial was stopped for harm signals|Recognize: home supplement in women with PCOS or fertility concerns, or in pregnancy|None (no FDA-recognized indication)
+None established (no FDA label)|Known allergy to product ingredients; limited data in pregnancy despite widespread use in PCOS and prenatal products
+Not FDA approved: dietary supplements are not reviewed by FDA for safety or effectiveness before sale, and content can vary between brands, including the myo-inositol to D-chiro-inositol ratio. A randomized trial of inositol supplementation in extremely preterm infants was stopped early because of a worse outcome signal in the treated group, which is a reminder that a naturally occurring nutrient can still cause harm in a vulnerable population. Trials in PCOS and gestational diabetes are mostly small and single-center.|None (no FDA label)|Inositol nicotinate (inositol hexanicotinate) is marketed as flush-free niacin and is a different product; phytic acid (inositol hexaphosphate) in grains and legumes binds iron, zinc and calcium and reduces their absorption.
+Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not applicable (no labeled dose)|Not applicable (no labeled dose)
+PO (powders, capsules, tablets)|-|-|-|-|Powders dissolved in water, capsules, tablets|-|-|Intravenous inositol was used in preterm infant research protocols, not as a marketed product|Not applicable|Not applicable|Not applicable|Products commonly combine myo-inositol with D-chiro-inositol in a fixed ratio, often alongside folate; powders are mildly sweet
+Not well defined|Plasma myo-inositol rises within a few hours of oral intake|Not well defined|A few hours in plasma; tissue pools turn over more slowly|Partly oxidized by myo-inositol oxygenase in kidney to D-glucuronate and entering the pentose phosphate pathway; partly incorporated into phosphatidylinositol|Renal (filtered and largely reabsorbed by SGLT-type transporters; urinary loss rises in hyperglycemia)|Low
+Generally well tolerated; nausea, gas, bloating, loose stools, headache and dizziness, mainly at higher intake|None well established in adults|A randomized trial in extremely preterm infants was stopped for a worse outcome signal
+No well-documented major drug interactions|Not applicable|Found in fruits, beans, grains and nuts, largely as phytic acid, which also reduces mineral absorption|No specific interaction|Often combined with folic acid in PCOS and prenatal products; lithium inhibits inositol monophosphatase, and inositol has been studied for lithium-induced psoriasis
+-|-|-|-|-|-|-|Glucose tolerance measures in PCOS and gestational diabetes studies|Glucose, insulin, androgens and menstrual pattern in PCOS use; serum sodium when osmotic demyelination is a concern for other reasons|Ovulation and cycle regularity in PCOS use
+Widely used in PCOS and prenatal products and studied for gestational diabetes prevention, but supplement products are not FDA reviewed and trial data are limited|Myo-inositol is naturally abundant in human milk; supplement use is not well studied|No FDA-labeled pediatric dose; an inositol trial in extremely preterm infants was stopped early for harm|No specific data|Urinary inositol loss rises with hyperglycemia and glycosuria; plasma levels rise in advanced kidney disease|No specific data
+No toxic dose established in adults|GI upset at high intake|No characteristic overdose syndrome described in adults|Supportive care|None|None
+Not given by EMS.|Myo-inositol is one of the brain organic osmolytes depleted in chronic hyponatremia, which is why rapid correction of sodium is linked to osmotic demyelination of the pons.|PCOS, fertility treatment, pregnancy, other supplements, psychiatric medicines including lithium.|Not applicable|Not applicable|Confusing myo-inositol supplements with inositol nicotinate, the flush-free niacin product; assuming a naturally occurring nutrient is risk-free in every population.|None well established|Phosphatidylinositol 4,5-bisphosphate is cleaved by phospholipase C into IP3, which opens endoplasmic reticulum calcium channels, and DAG, which activates protein kinase C; lithium inhibits inositol monophosphatase and inositol polyphosphate 1-phosphatase, depleting the inositol pool, which is the classic explanation offered for its mood effect and for its narrow therapeutic index concerns.
+Polycystic ovary syndrome, insulin resistance, fertility treatment, pregnancy, anxiety or obsessive-compulsive symptoms.|A clinician suggestion for PCOS or a self-selected fertility or metabolic supplement.|PCOS diagnosis, pregnancy, metformin use, lithium use, other supplements.|Unlikely to cause emergencies alone.|No withdrawal syndrome.
+A sugar-like molecule the body uses to build the membrane lipids that carry calcium signals inside cells.|Inositol is a cyclic polyol and the precursor of phosphatidylinositol and PIP2, the source of the IP3-calcium and DAG-PKC second messengers and of PIP3 in insulin signaling; it is studied in PCOS and gestational diabetes prevention and serves as a brain and kidney osmolyte.|Inositol builds PIP2, the fuse that PLC lights to release calcium.|Lithium inhibits inositol monophosphatase and depletes inositol.|PIP2 is split by phospholipase C into IP3, which releases calcium from the endoplasmic reticulum, and DAG, which activates protein kinase C.|Inositol nicotinate (flush-free niacin); phytic acid (inositol hexaphosphate)|D-chiro-inositol, inositol nicotinate, pinitol|None
+`);
+
+;
+// DrugBug new drugs: vitamin D metabolites and analogs, vitamin K forms, tocotrienols (vitamin batch 2)
+DB.add("ergocalciferol","Ergocalciferol (Vitamin D2)","HM",`
+Ergocalciferol (vitamin D2; irradiated ergosterol)|Drisdol; Calciferol; generic ergocalciferol 50,000 IU (1.25 mg) capsules and 8,000 IU per mL oral solution|Vitamin D2|Vitamin D (FDA-approved prescription vitamin D2 product; low-dose forms also sold over the counter)|Secosteroid prohormone of plant and fungal origin; converted to 1,25-dihydroxyvitamin D2, a vitamin D receptor agonist|Not controlled
+A prescription form of vitamin D made by shining ultraviolet light on ergosterol from yeast and fungi, supplied mainly as 50,000 IU capsules and as an oral solution.|Is hydroxylated in the liver and then the kidney into an active hormone that raises calcium and phosphate absorption from the gut and suppresses parathyroid hormone.|Used for vitamin D deficiency, and labeled for hypoparathyroidism, familial hypophosphatemia and refractory (vitamin D resistant) rickets.
+Ultraviolet B light opens the B ring of ergosterol to give previtamin D2, which isomerizes to ergocalciferol; hepatic CYP2R1 (with CYP27A1) 25-hydroxylates it to 25-hydroxyvitamin D2, and renal proximal tubule CYP27B1 (1-alpha-hydroxylase, stimulated by PTH and suppressed by FGF23, phosphate and calcitriol itself) adds the 1-alpha hydroxyl to give 1,25-dihydroxyvitamin D2; this binds the nuclear vitamin D receptor (VDR), which heterodimerizes with retinoid X receptor at vitamin D response elements to induce calbindin-D9k, TRPV6 and PMCA1b for intestinal calcium transport, NaPi-2b for phosphate, and RANKL on osteoblasts, and to suppress PTH gene transcription; CYP24A1 24-hydroxylates both the substrate and the hormone toward inactive calcitroic acid.|Vitamin D receptor (VDR-RXR nuclear receptor); CYP2R1 and CYP27B1 as activating enzymes; CYP24A1 as the inactivating enzyme|Agonist (after two hydroxylation steps)|Higher intestinal calcium and phosphate absorption, higher renal calcium reabsorption, bone remodeling, and lower PTH secretion.
+Vitamin D deficiency with the rickets or osteomalacia it causes; labeled indications are hypoparathyroidism, familial hypophosphatemia and refractory rickets|Deficiency in malabsorption (celiac disease, cystic fibrosis, bariatric surgery, cholestasis) and with enzyme-inducing antiseizure drugs|None|Vitamin D repletion within osteoporosis regimens and in anticonvulsant-associated osteomalacia
+Hypercalcemia; vitamin D toxicity; malabsorption syndromes (per label); hypersensitivity to the product|Hyperphosphatemia, hypercalciuria, nephrolithiasis, digoxin therapy, sarcoidosis and other granulomatous disease, immobilization, advanced renal impairment where 1-alpha-hydroxylation is lost
+Excessive intake causes hypercalcemia, hypercalciuria, nephrocalcinosis and soft tissue calcification; because D2 and its metabolites are fat-soluble and stored, toxicity can persist for weeks after the product is stopped; the label notes that vitamin D given with phosphate in familial hypophosphatemia raises the risk of metastatic calcification.|None|Serum calcium, phosphorus and 25-hydroxyvitamin D are followed during treatment, more closely at the high labeled doses; intake of other vitamin D products is reviewed because effects are additive; in advanced CKD the kidney cannot complete 1-alpha-hydroxylation, so an already activated analog is used instead.
+Label, refractory rickets: 12,000 to 500,000 IU daily. Label, hypoparathyroidism: 50,000 to 200,000 IU daily together with calcium lactate. Label, familial hypophosphatemia: 10,000 to 80,000 IU daily with phosphate supplementation. For simple deficiency a commonly described regimen is one 50,000 IU capsule weekly for 8 to 12 weeks followed by a maintenance amount, which is practice rather than labeled dosing|Label, refractory rickets in children: 12,000 to 500,000 IU daily. Label, hypoparathyroidism in children: 50,000 to 200,000 IU daily with calcium lactate. The dietary reference intake is 400 IU daily for infants and 600 IU daily for children|Not weight based|No fixed ceiling in the label; the labeled range reaches 500,000 IU daily in refractory rickets, and dosing is guided by serum calcium and 25-hydroxyvitamin D|Daily in the labeled indications; weekly 50,000 IU dosing is the common deficiency practice pattern|Not applicable (oral product)|No numeric adjustment in the label; renal failure blocks CYP27B1, so calcitriol, calcifediol, paricalcitol or doxercalciferol are used in advanced CKD|No numeric adjustment in the label; severe liver disease and cholestasis impair both 25-hydroxylation and fat absorption
+PO (capsules, oral solution); an oil-based intramuscular ergocalciferol injection is no longer marketed in the US|-|-|Historic oil-based injection for malabsorption; not currently marketed in the US|-|Capsules 50,000 IU (1.25 mg); oral solution 8,000 IU per mL; low-dose over-the-counter tablets and drops|-|-|-|Not applicable|Not applicable; the oral solution is measured with a calibrated dropper|Not applicable|Fat-soluble: absorption rises when taken with a fat-containing meal and falls with orlistat, bile acid sequestrants, mineral oil and fat malabsorption
+Serum 25-hydroxyvitamin D rises over days to weeks; calcium effects over about 10 to 14 days|Serum 25-hydroxyvitamin D2 peaks roughly 1 to 2 weeks after a 50,000 IU dose|Weeks (stored in adipose tissue and liver)|Parent ergocalciferol about 24 hours in plasma; 25-hydroxyvitamin D2 roughly 2 weeks, shorter than the 2 to 3 weeks typical of 25-hydroxyvitamin D3|Hepatic CYP2R1 and CYP27A1 25-hydroxylation, then renal CYP27B1 1-alpha-hydroxylation; inactivated by CYP24A1 to 24-hydroxy metabolites and calcitroic acid|Mainly bile and feces; little unchanged drug in urine|Very high (vitamin D binding protein and albumin); 25-hydroxyvitamin D2 binds vitamin D binding protein less tightly than the D3 metabolite
+Early hypervitaminosis D symptoms: weakness, fatigue, headache, nausea, dry mouth, metallic taste, constipation, polyuria, polydipsia|Hypercalcemia, hypercalciuria, nephrolithiasis, nephrocalcinosis with irreversible renal impairment, vascular and soft tissue calcification, pancreatitis|Hypercalcemic crisis with arrhythmias (greater risk in digoxin users), coma and acute renal failure
+Thiazide diuretics (additive hypercalcemia); digoxin (hypercalcemia raises arrhythmia risk); cholestyramine, colestipol, orlistat and mineral oil (lower absorption); phenytoin, phenobarbital, carbamazepine and rifampin (induce CYP24A1 and raise clearance of vitamin D metabolites); ketoconazole (inhibits CYP27B1 and lowers calcitriol); magnesium-containing antacids in CKD (hypermagnesemia); other vitamin D analogs and calcium products (additive)|Other vitamin D analogs and high-dose calcium products taken at the same time; thiazides in hypercalcemia-prone patients|Fatty fish, egg yolk, ultraviolet-treated mushrooms and fortified milk supply vitamin D; a fat-containing meal improves absorption|No specific interaction; alcohol use disorder is associated with poor nutrition and liver disease|With phosphate in familial hypophosphatemia the label notes a risk of metastatic calcification; with thiazides and calcium supplements, hypercalcemia risk adds up
+-|-|Marked hypercalcemia can shorten the QT interval and provoke arrhythmias, especially in digoxin users|-|-|-|Confusion, weakness and lethargy accompany hypercalcemia|-|Serum calcium with albumin or ionized calcium, phosphorus, creatinine, alkaline phosphatase, 25-hydroxyvitamin D, PTH and urine calcium|Calcium-phosphate product; hydration and urine output when toxicity is suspected
+Vitamin D requirements continue in pregnancy; amounts far above requirements have been associated with fetal hypercalcemia, and the label advises caution above recommended intakes|Vitamin D and 25-hydroxyvitamin D pass into breast milk in small amounts; unsupplemented breastfed infants are a recognized deficiency group|Labeled for refractory rickets and hypoparathyroidism in children; nutritional rickets is the classic pediatric deficiency disease|Skin synthesis falls with age and deficiency is common; sensitivity to hypercalcemia is greater|Advanced CKD blocks CYP27B1, so 25-hydroxyvitamin D2 accumulates without activation|Cholestasis and severe hepatocellular disease impair fat absorption and 25-hydroxylation
+No single threshold; sustained intake far above requirements, for example tens of thousands of IU daily for months or a dosing error with 50,000 IU capsules, has produced hypervitaminosis D; the tolerable upper intake level for adults is 4,000 IU daily|Hypercalcemia: weakness, polyuria, polydipsia, nausea, vomiting, constipation, confusion, bone pain, nephrocalcinosis|Subacute hypercalcemia with dehydration and acute kidney injury; a high 25-hydroxyvitamin D with a suppressed PTH points to exogenous vitamin D rather than hyperparathyroidism or granulomatous disease|Stopping vitamin D and calcium intake, a low-calcium diet, isotonic fluids, loop diuretics after volume repletion, glucocorticoids, and calcitonin or a bisphosphonate for severe hypercalcemia, with dialysis in refractory cases; because D2 is stored in fat, hypercalcemia can last weeks|None|None
+Not given by EMS.|A patient on 50,000 IU capsules who becomes weak, confused, constipated and polyuric may be hypercalcemic, and hypercalcemia with digoxin raises arrhythmia risk.|Serum calcium, phosphorus, renal function and other vitamin D products are typically reviewed before dose changes.|Calcium, phosphorus, 25-hydroxyvitamin D and renal function.|Hypercalcemia is the classic reason a vitamin D product is held per label.|Taking the weekly 50,000 IU capsule daily; stacking a prescription D2 capsule on top of an over-the-counter D3 supplement; confusing IU with mcg, since 40 IU equals 1 mcg.|Thiazides, digoxin and high-dose calcium products.|Ergocalciferol is a prohormone that needs an intact liver for CYP2R1 and intact kidneys for CYP27B1, so it corrects nutritional deficiency but does not substitute for calcitriol in advanced CKD.
+Vitamin D deficiency, osteomalacia or rickets, malabsorption, hypoparathyroidism, familial hypophosphatemia, or long-term antiseizure drug use.|A low 25-hydroxyvitamin D level, or one of the labeled metabolic bone conditions.|Calcium supplements, other vitamin D products, thiazides, digoxin, kidney stones, and how often the capsule is taken.|Hypercalcemia with arrhythmia, kidney injury or kidney stones.|No withdrawal syndrome; stores last weeks and deficiency returns slowly.
+The prescription vitamin D made from yeast and fungi, usually one large capsule a week.|Ergocalciferol is plant- and fungus-derived vitamin D2 that needs hepatic CYP2R1 and renal CYP27B1 activation to become a VDR agonist, and it raises serum 25-hydroxyvitamin D less durably than D3 in most head-to-head comparisons because 25-hydroxyvitamin D2 binds vitamin D binding protein less tightly and is cleared faster.|D2 comes from the Dough and the Dirt (yeast and fungi); D3 comes from the Dermis.|40 IU of vitamin D equals 1 mcg, so a 50,000 IU capsule is 1.25 mg.|Vitamin D deficiency causes rickets in children and osteomalacia in adults, with low or low-normal calcium, low phosphate, high alkaline phosphatase and high PTH; CKD destroys the renal CYP27B1 step, which is why renal osteodystrophy is treated with an activated analog rather than D2 or D3.|Cholecalciferol (vitamin D3, DrugBug id cholecalciferol); calcitriol (DrugBug id calcitriol); calcifediol|Cholecalciferol, calcifediol, calcitriol, alfacalcidol, paricalcitol, doxercalciferol|Calcitonin, bisphosphonates and glucocorticoids oppose vitamin D-driven hypercalcemia
+`);
+DB.add("calcifediol","Calcifediol (25-hydroxyvitamin D3, Rayaldee)","HM",`
+Calcifediol (25-hydroxyvitamin D3; calcidiol; 25-OH-D3)|Rayaldee (extended-release capsules)|Calcifediol|Vitamin D prohormone (FDA-approved extended-release prescription product)|25-hydroxylated vitamin D3 metabolite; converted to calcitriol, a vitamin D receptor agonist|Not controlled
+The liver-made metabolite of vitamin D3 that laboratories measure as a serum vitamin D level, supplied as a 30 mcg extended-release capsule.|Raises serum 25-hydroxyvitamin D gradually so the kidney and other tissues can form calcitriol, which lowers parathyroid hormone.|Approved for secondary hyperparathyroidism in adults with stage 3 or 4 chronic kidney disease and a serum total 25-hydroxyvitamin D below 30 ng per mL.
+Calcifediol is vitamin D3 that has already undergone hepatic CYP2R1 25-hydroxylation, so it skips that step and raises serum 25-hydroxyvitamin D directly; renal proximal tubule CYP27B1 (1-alpha-hydroxylase) and extrarenal CYP27B1 in parathyroid, immune and other tissues then form 1,25-dihydroxyvitamin D3 (calcitriol), which binds the nuclear vitamin D receptor with its retinoid X receptor partner to suppress PTH gene transcription, raise parathyroid calcium-sensing receptor and VDR expression, and increase intestinal TRPV6 and calbindin; the extended-release design releases drug over hours, which avoids the peak that strongly induces CYP24A1 and wastes substrate.|Vitamin D receptor (as calcitriol); CYP27B1 as the one remaining activating step; CYP24A1 as the catabolic enzyme|Agonist (after one hydroxylation step)|Lower plasma intact PTH, higher serum 25-hydroxyvitamin D and calcitriol, with modest rises in serum calcium and phosphate.
+Secondary hyperparathyroidism in adults with stage 3 or 4 CKD and serum total 25-hydroxyvitamin D below 30 ng per mL (label)|Vitamin D insufficiency; immediate-release calcifediol is used outside the US for deficiency and malabsorption|None|Vitamin D repletion in malabsorption, cholestasis or obesity, where 25-hydroxylation or bioavailability of nutritional D3 is limited
+Hypercalcemia; vitamin D toxicity; hypersensitivity to calcifediol or any component (label)|Stage 5 CKD or dialysis, where the label states it has not been studied; hyperphosphatemia, digoxin therapy, granulomatous disease, concurrent use of other vitamin D compounds
+Can cause hypercalcemia, hyperphosphatemia and adynamic bone disease if PTH is oversuppressed; hypercalcemia raises the risk of digitalis toxicity; effects are additive with other vitamin D compounds and with calcium-based phosphate binders.|None|The label describes measuring serum calcium, phosphorus, 25-hydroxyvitamin D and intact PTH before starting, at about 3 months, and after dose changes; capsules are swallowed whole rather than crushed or chewed; it has not been studied in stage 5 CKD or on dialysis.
+Label: 30 mcg once daily at bedtime; the dose may be raised to 60 mcg once daily after about 3 months if intact PTH remains above the target range, provided serum calcium is below 9.8 mg per dL, phosphorus below 5.5 mg per dL and 25-hydroxyvitamin D below 100 ng per mL|Safety and effectiveness in patients under 18 years have not been established (label)|Not weight based|60 mcg once daily (label)|Once daily; the label titrates at intervals of about 3 months|Not applicable (oral product)|No adjustment within stage 3 to 4 CKD, the labeled population; not studied in stage 5 CKD or on dialysis|No labeled adjustment; hepatic function matters less than for nutritional D3 because the 25-hydroxylation step is already complete
+PO (extended-release capsules)|-|-|-|-|Extended-release capsules 30 mcg|-|-|-|Not applicable|Not applicable|Not applicable|The label describes swallowing the capsule whole at bedtime; crushing or chewing defeats the extended-release design
+Serum 25-hydroxyvitamin D rises over weeks; intact PTH falls over weeks to a few months|Plasma 25-hydroxyvitamin D3 peaks about 11 hours after a dose; steady state at about 3 months|Weeks after stopping, reflecting the long metabolite half-life|About 11 days|Renal and extrarenal CYP27B1 1-alpha-hydroxylation to calcitriol; CYP24A1 24-hydroxylation to inactive metabolites and calcitroic acid|Mainly biliary and fecal as metabolites|Greater than 98 percent (vitamin D binding protein and albumin)
+In trials: anemia, nasopharyngitis, raised blood creatinine, dyspnea, cough, congestive heart failure, constipation and bronchitis were reported|Hypercalcemia, hyperphosphatemia, oversuppression of PTH with adynamic bone disease, nephrolithiasis, vascular calcification|Hypercalcemic crisis with arrhythmias, particularly in patients on digitalis glycosides
+Digoxin and other digitalis glycosides (hypercalcemia raises toxicity risk); thiazides (additive hypercalcemia); other vitamin D analogs and calcium products (additive); cholestyramine, orlistat and mineral oil (lower absorption); phenytoin, phenobarbital, carbamazepine and rifampin (induce CYP24A1 and lower 25-hydroxyvitamin D); ketoconazole and other azoles (inhibit CYP27B1 and CYP24A1)|Other vitamin D compounds taken at the same time|Fat-containing meals aid absorption of vitamin D compounds generally; the labeled dose is taken at bedtime|No specific interaction|With calcium-based phosphate binders and calcimimetics, the net effect on calcium, phosphate and PTH is what is followed
+-|-|Hypercalcemia can shorten the QT interval and provoke arrhythmias in digitalis users|-|-|-|Confusion and weakness accompany hypercalcemia|-|Serum calcium, phosphorus, intact PTH, 25-hydroxyvitamin D, creatinine and eGFR|Calcium-phosphate product and imaging evidence of vascular calcification
+No adequate human data; excessive vitamin D activity in pregnancy is associated with fetal hypercalcemia|25-hydroxyvitamin D passes into human milk; infant calcium status is the practical concern|Safety and effectiveness under 18 years not established (label)|No overall difference in trials; many CKD patients are older and more sensitive to hypercalcemia|Stage 3 to 4 CKD is the labeled population; not studied in stage 5 CKD or dialysis|Not studied in hepatic impairment; the 25-hydroxylation step is already complete
+No specific toxic dose; excessive dosing produces hypervitaminosis D|Hypercalcemia: weakness, polyuria, polydipsia, nausea, constipation, confusion|Hypercalcemia with hyperphosphatemia, dehydration and worsening renal function; the long half-life means it resolves more slowly than calcitriol toxicity|Stopping the drug and other vitamin D and calcium products, a low-calcium diet, isotonic fluids, loop diuretics after volume repletion, and calcitonin or a bisphosphonate for severe hypercalcemia|None|None
+Not given by EMS.|A CKD patient on Rayaldee who is weak, confused, constipated and polyuric may be hypercalcemic; disordered calcium, phosphate and PTH are routine in this population.|Serum calcium, phosphorus, PTH and other vitamin D products are typically reviewed before dose changes.|Calcium, phosphorus, intact PTH and 25-hydroxyvitamin D.|Hypercalcemia, hyperphosphatemia or an oversuppressed PTH are the labeled reasons the dose is held or lowered.|Crushing or chewing the extended-release capsule; adding it on top of an over-the-counter vitamin D3 supplement; expecting it to work in dialysis patients, where it has not been studied.|Digoxin, thiazides and other vitamin D analogs.|Calcifediol is the molecule a serum vitamin D level measures, which is why a 25-hydroxyvitamin D result reflects stores while a 1,25-dihydroxyvitamin D level reflects hormone activity.
+Stage 3 or 4 chronic kidney disease with secondary hyperparathyroidism and low vitamin D.|A raised PTH with a 25-hydroxyvitamin D below 30 ng per mL in CKD.|Kidney disease stage and dialysis status, phosphate binders, calcium supplements, other vitamin D products, digoxin.|Hypercalcemia with arrhythmia, or worsening renal function.|No withdrawal syndrome; PTH drifts back up over weeks to months.
+The storage form of vitamin D, given as a slow-release capsule when the kidneys are failing.|Calcifediol is 25-hydroxyvitamin D3 in an extended-release capsule approved for secondary hyperparathyroidism in stage 3 to 4 CKD with vitamin D insufficiency, and it skips hepatic 25-hydroxylation while still depending on CYP27B1 to become calcitriol.|CalciFEDiol is the stored, well-FED form the lab measures; calciTRIol is the fully activated hormone.|A serum vitamin D level is a 25-hydroxyvitamin D level, which is calcifediol.|25-hydroxyvitamin D is the marker of vitamin D stores because of its long half-life, while 1,25-dihydroxyvitamin D is tightly regulated by PTH, FGF23 and phosphate and stays near normal until late disease.|Calcitriol (DrugBug id calcitriol), the fully active hormone; cholecalciferol (DrugBug id cholecalciferol), nutritional D3|Calcitriol, paricalcitol, doxercalciferol, alfacalcidol, ergocalciferol, cholecalciferol|Cinacalcet and etelcalcetide lower PTH through the calcium-sensing receptor instead
+`);
+DB.add("alfacalcidol","Alfacalcidol (1-alpha-hydroxyvitamin D3)","HM",`
+Alfacalcidol (1-alpha-hydroxycholecalciferol; 1-alpha-hydroxyvitamin D3)|One-Alpha, Alfarol, Alpha D3, Etalpha and others outside the US (no FDA-approved US product)|Alfacalcidol|NOT FDA APPROVED IN THE US - prescription vitamin D analog in many other countries|1-alpha-hydroxylated secosteroid prodrug of calcitriol|Not controlled
+A vitamin D analog that already carries the 1-alpha hydroxyl group, prescribed widely in Japan, Europe and the UK but not approved in the United States. Education only: DrugBug is not telling anyone to use this.|Needs only hepatic 25-hydroxylation to become calcitriol, so it works when the kidney can no longer perform 1-alpha-hydroxylation.|Used abroad for renal osteodystrophy and secondary hyperparathyroidism in CKD, hypoparathyroidism, vitamin D-dependent rickets and osteoporosis.
+The 1-alpha hydroxyl is already present, so hepatic CYP2R1 and CYP27A1 25-hydroxylation is the only activating step needed, producing 1,25-dihydroxyvitamin D3 (calcitriol) and bypassing renal CYP27B1, the step lost in chronic kidney disease; calcitriol binds the nuclear vitamin D receptor, which heterodimerizes with retinoid X receptor at vitamin D response elements to induce calbindin, TRPV6 and PMCA1b for intestinal calcium absorption, NaPi-2b for phosphate, and RANKL on osteoblasts, and to suppress PTH gene transcription in the parathyroid gland; CYP24A1 inactivates the hormone toward calcitroic acid.|Vitamin D receptor (as calcitriol); CYP2R1 and CYP27A1 as the activating step; CYP24A1 as the inactivating enzyme|Prodrug, then agonist|Higher intestinal calcium and phosphate absorption and lower PTH, with slightly slower onset and offset than calcitriol itself.
+Not FDA approved in the US; abroad it is used for renal osteodystrophy and secondary hyperparathyroidism in CKD and dialysis|Abroad: hypoparathyroidism, pseudohypoparathyroidism, vitamin D-dependent rickets type 1, hypophosphatemic rickets, and osteoporosis (particularly in Japan)|Recognize: may appear on a medication list for a patient who obtained medicines outside the US|None in the US (no FDA-recognized indication)
+None established in the US (no FDA label); foreign labels list hypercalcemia, metastatic calcification and hypersensitivity|Hyperphosphatemia, digoxin therapy, nephrolithiasis, immobilization, granulomatous disease
+Not FDA approved in the US, so no FDA-reviewed labeling exists. The predictable hazard of any activated vitamin D analog is hypercalcemia with hypercalciuria, nephrocalcinosis and vascular calcification, and effects are additive with calcium supplements, calcium-based phosphate binders and other vitamin D products.|None (no FDA label)|Related to calcitriol (DrugBug id calcitriol), the FDA-approved fully activated analog, and to doxercalciferol (DrugBug id doxercalciferol), which is 1-alpha-hydroxyvitamin D2 and shares the same prodrug design of needing hepatic 25-hydroxylation.
+Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not applicable (no labeled dose)|Not applicable (no labeled dose)
+PO abroad (capsules, oral drops); intravenous formulations exist abroad for dialysis units|Not applicable in the US|-|-|-|Capsules and oral solution abroad|-|-|-|Not applicable|Not applicable|Not applicable|Foreign products are dosed in micrograms, the same unit used for calcitriol, which invites mix-ups between the two
+Hours, after hepatic conversion; slower than calcitriol itself|Calcitriol levels peak roughly 8 to 12 hours after an oral dose|Days of biologic effect|Parent alfacalcidol is cleared within hours; the calcitriol formed has a half-life of about 5 to 8 hours|Hepatic 25-hydroxylation by CYP2R1 and CYP27A1 to calcitriol; CYP24A1 inactivation|Mainly bile and feces|Very high (vitamin D binding protein)
+Hypercalcemia symptoms: weakness, headache, nausea, constipation, polyuria|Hypercalcemia, hypercalciuria, nephrocalcinosis, vascular and soft tissue calcification, adynamic bone disease from PTH oversuppression|Hypercalcemic arrhythmias, particularly in digoxin users
+Digoxin (hypercalcemia raises arrhythmia risk); thiazides (additive hypercalcemia); calcium supplements and calcium-based phosphate binders (additive); magnesium-containing antacids in dialysis (hypermagnesemia); cholestyramine and orlistat (lower absorption); phenytoin, phenobarbital and rifampin (raise clearance)|Other vitamin D analogs taken at the same time|Dietary calcium affects the calcium response|No specific interaction|With calcium supplements and thiazides, hypercalcemia risk adds up
+-|-|Hypercalcemia can shorten the QT interval and provoke arrhythmias in digoxin users|-|-|-|Confusion and weakness accompany hypercalcemia|-|Calcium, phosphorus, PTH, alkaline phosphatase, creatinine and urine calcium|Calcium-phosphate product
+No FDA labeling; excessive vitamin D activity in pregnancy is associated with fetal hypercalcemia|No FDA labeling; active analogs pass into milk in small amounts and infant calcium is the practical concern|No FDA-labeled pediatric dose; used abroad in vitamin D-dependent rickets|No FDA labeling; older adults are more sensitive to hypercalcemia|The point of the molecule is that it works in renal failure, since renal CYP27B1 is bypassed|Severe liver disease limits the 25-hydroxylation step this prodrug depends on, a limitation calcitriol does not share
+No established toxic dose; toxicity takes the form of hypercalcemia|Weakness, polyuria, polydipsia, nausea, confusion, constipation, arrhythmias|Hypercalcemia that resolves over days once the drug is stopped, faster than with ergocalciferol or cholecalciferol because the analog is not stored in fat|Stopping the drug and calcium intake, a low-calcium diet, isotonic fluids, loop diuretics after volume repletion, and calcitonin or a bisphosphonate in severe cases|None|None
+Not given by EMS.|Alfacalcidol is not a US product, so seeing it suggests medicines obtained abroad; the picture to recognize is hypercalcemia in a CKD or hypoparathyroid patient.|Calcium, phosphorus, PTH and other vitamin D products are typically reviewed before dose changes.|Calcium, phosphorus and PTH.|Hypercalcemia is the classic reason an activated vitamin D analog is held.|Confusing alfacalcidol micrograms with calcitriol micrograms; assuming a US pharmacy can supply it.|Digoxin, thiazides and calcium supplements.|Alfacalcidol needs only the liver, calcitriol needs neither liver nor kidney activation, and ergocalciferol and cholecalciferol need both.
+Chronic kidney disease or dialysis, hypoparathyroidism, vitamin D-dependent rickets, or osteoporosis treated outside the US.|Low calcium or high PTH in CKD, or replacement after loss of parathyroid function.|Where the medicine was obtained, calcium supplements, digoxin, cramps or tingling, confusion.|Hypercalcemia with arrhythmia, or hypocalcemic tetany if doses are missed in hypoparathyroidism.|Hypocalcemia with tetany or seizures can develop within days in hypoparathyroidism.
+A vitamin D that only needs the liver, not the kidney, to be switched on.|Alfacalcidol is 1-alpha-hydroxyvitamin D3, a prodrug that hepatic 25-hydroxylation converts to calcitriol so it bypasses the failing kidney; it is widely used abroad and is not FDA approved in the US.|ALFA already has the alpha hydroxyl, so the kidney is off the hook.|Not FDA approved in the United States.|The kidney performs 1-alpha-hydroxylation through CYP27B1, so CKD causes low calcitriol with hypocalcemia, hyperphosphatemia and secondary hyperparathyroidism, and analogs that are already 1-alpha-hydroxylated work when that step is lost.|Calcitriol (DrugBug id calcitriol); doxercalciferol (DrugBug id doxercalciferol), the FDA-approved 1-alpha-hydroxyvitamin D2 prodrug|Calcitriol, doxercalciferol, paricalcitol, calcifediol|Cinacalcet lowers PTH through the calcium-sensing receptor instead
+`);
+DB.add("menadione","Menadione (Vitamin K3, synthetic)","HM",`
+Menadione (vitamin K3; 2-methyl-1,4-naphthoquinone); menadione sodium bisulfite and menadione sodium bisulfite complex|No human product in the US; veterinary and animal feed products contain menadione sodium bisulfite complex (MSBC) or menadione dimethylpyrimidinol bisulfite (MPB)|Vitamin K3|NOT FDA APPROVED FOR HUMAN USE in the US - synthetic vitamin K precursor retained in veterinary medicine and animal feed|Synthetic naphthoquinone with no isoprenoid side chain; prenylated in tissue to menaquinone-4|Not controlled
+A cheap water-soluble synthetic form of vitamin K that lacks the fat-soluble side chain of K1 and K2; it was used in people decades ago and was withdrawn from human use after harm in newborns. Education only: DrugBug is not telling anyone to use this.|Is prenylated in tissue to menaquinone-4, which then serves as the cofactor for gamma-glutamyl carboxylase, but it also redox cycles and generates oxidative stress.|Used today as a vitamin K source in animal feed and veterinary products; it is not used in humans in the US.
+Menadione is the bare naphthoquinone ring shared by all vitamin K forms; UBIAD1 prenylates it with geranylgeranyl pyrophosphate to menaquinone-4, and the reduced hydroquinone is the cofactor for gamma-glutamyl carboxylase (GGCX), which carboxylates glutamate residues to gamma-carboxyglutamate in factors II, VII, IX and X, proteins C, S and Z, osteocalcin and matrix Gla protein; the vitamin K 2,3-epoxide formed is recycled by vitamin K epoxide reductase (VKORC1, the warfarin target) and by NQO1; separately, menadione undergoes one-electron reduction to a semiquinone that redox cycles with oxygen to generate superoxide and hydrogen peroxide and conjugates glutathione, depleting glutathione and oxidizing hemoglobin, which is why red cells short of G6PD-derived NADPH hemolyze.|Gamma-glutamyl carboxylase (as the menaquinone-4 formed from it); UBIAD1 prenyltransferase; VKORC1 and NQO1 for quinone recycling|Vitamin cofactor precursor, and also a redox-cycling oxidant|Supports gamma-carboxylation of clotting factors and Gla proteins, and generates reactive oxygen species with glutathione depletion.
+None in humans in the US (withdrawn from human use)|Animal feed and veterinary vitamin K supplementation; used historically for vitamin K deficiency and newborn prophylaxis before phytonadione replaced it|Recognize: not a human product, so menadione on a label points to a veterinary or animal feed item or an imported supplement|None recognized in the US
+Human use in the US (no approved human product), and neonates in particular because of hemolysis and kernicterus; G6PD deficiency|Imported supplements containing menadione; vitamin K antagonist therapy, where vitamin K activity lowers the INR
+Not approved for human use in the US. Menadione caused dose-related hemolytic anemia, hyperbilirubinemia and kernicterus in newborns through oxidative stress that immature red cells and immature glucuronidation could not handle, and it caused hemolysis in G6PD deficiency and in treated mothers; large parenteral doses in adults were associated with hemolysis and liver injury. FDA removed menadione from over-the-counter human use, and no human dose is recognized.|None (no FDA human label)|Phytonadione (vitamin K1, DrugBug id phytonadione) is the form used in people, including the 0.5 to 1 mg intramuscular dose given to newborns to prevent vitamin K deficiency bleeding; the difference between K1 and K3 in the newborn is the point of the comparison.
+Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not applicable (no labeled dose)|Not applicable (no labeled dose)
+No human route in the US; animal feed premixes and veterinary injectables exist|Not applicable in humans|-|-|-|Not applicable in humans|-|-|Animal feed additive (menadione sodium bisulfite complex) and veterinary products|Not applicable|Not applicable|Not applicable|Water-soluble, unlike phytonadione and the menaquinones, which need bile and dietary fat for absorption
+Not applicable in humans; historic parenteral use acted within hours|Not characterized for human use|Short; it is not stored in fat like the fat-soluble K forms|Hours (water-soluble and rapidly excreted)|Prenylated by UBIAD1 to menaquinone-4 in tissue; also reduced by NQO1 and conjugated with glutathione, sulfate and glucuronide|Urine as conjugates, and bile|Low compared with phytonadione and the menaquinones
+Historic human use: injection site reactions, flushing, taste changes|Hemolytic anemia, hyperbilirubinemia, oxidative hemoglobin injury, and liver injury with large doses|Kernicterus in neonates and severe hemolysis in G6PD deficiency, which is why human use ended
+Vitamin K antagonists such as warfarin (vitamin K activity lowers the INR); other oxidant drugs in G6PD deficiency (additive hemolysis); sulfonamides and other bilirubin-displacing drugs in neonates (additive kernicterus risk)|Oxidant drugs in G6PD deficiency; vitamin K antagonists|Not a human dietary form of vitamin K; dietary K1 comes from leafy greens and K2 from fermented foods and animal products|No specific interaction|Combined oxidative stressors in a newborn or a G6PD-deficient patient describe the historic disaster scenario
+-|-|-|Falling saturation accompanies severe hemolysis or oxidative hemoglobin injury|-|-|Lethargy, poor feeding, hypotonia and later opisthotonos describe the historic kernicterus picture|-|CBC with reticulocytes and smear, total and direct bilirubin, LDH, haptoglobin, G6PD activity, INR|Jaundice in a newborn
+Not used in humans; historic use near delivery caused hemolysis and jaundice in the newborn|Not used in humans|Historically contraindicated in neonates because of hemolytic anemia, hyperbilirubinemia and kernicterus|Not used in humans|No data|Large parenteral doses were associated with liver injury
+No human toxic dose is defined; harm in newborns occurred at doses once used for prophylaxis|Hemolysis, jaundice, dark urine, back and abdominal pain, anemia|Hemolytic anemia with hyperbilirubinemia; in neonates, bilirubin encephalopathy|Stopping exposure, supportive care, hydration, transfusion for severe hemolysis, and phototherapy or exchange transfusion for severe neonatal hyperbilirubinemia|None|None
+Not given by EMS.|Menadione is the vitamin K form that is not used in people in the US; a jaundiced, lethargic newborn with hemolysis is the historic picture that ended its human use.|Not applicable|Not applicable|Not applicable|Treating any product labeled vitamin K as interchangeable; menadione on a pet food or feed label is not the human vitamin K product.|Oxidant drugs in G6PD deficiency; vitamin K antagonists.|Phytonadione (K1) is the form given to newborns at birth, while menadione (K3) caused hemolysis and kernicterus in them, which is the classic distinction between the two.
+Not a human medication; its presence points to a veterinary or animal feed product or an imported supplement.|It is not prescribed to people in the US.|Imported supplements, veterinary products in the home, G6PD deficiency.|Hemolysis in G6PD deficiency, and neonatal jaundice historically.|Not applicable (no human therapeutic use).
+The cheap synthetic vitamin K used in animal feed and not in people.|Menadione is synthetic water-soluble vitamin K3 that tissues prenylate to menaquinone-4 through UBIAD1, but its redox cycling caused hemolytic anemia and kernicterus in neonates, so it is not used in humans in the US.|K3 means three strikes: hemolysis, jaundice, kernicterus.|Water-soluble, unlike vitamin K1 and the menaquinones.|Menadione (vitamin K3) caused hemolytic anemia and kernicterus in neonates through oxidative stress, which is why newborn vitamin K prophylaxis uses phytonadione (K1); G6PD deficiency makes that oxidative hemolysis worse.|Phytonadione (vitamin K1, DrugBug id phytonadione); menaquinone-4 (vitamin K2 MK-4)|Phytonadione, menaquinone-4, menaquinone-7|Warfarin is the vitamin K antagonist, and phytonadione is the form used to reverse it
+`);
+DB.add("menaquinone-4","Menaquinone-4 (Vitamin K2 MK-4, menatetrenone)","HM",`
+Menaquinone-4 (MK-4; menatetrenone; vitamin K2)|Glakay (prescription osteoporosis product in Japan); many dietary supplement brands in the US (no FDA-approved US product)|Vitamin K2, MK-4|NOT FDA APPROVED IN THE US - dietary supplement here, prescription osteoporosis drug in Japan|Menaquinone with a 4-unit isoprenoid (geranylgeranyl) side chain; fat-soluble vitamin K form|Not controlled
+The short-chain form of vitamin K2 that human tissue makes for itself from vitamin K1 and from menadione, sold as a supplement in the US and prescribed for osteoporosis in Japan. Education only: DrugBug is not telling anyone to use this.|Acts as the cofactor for gamma-glutamyl carboxylase, activating clotting factors II, VII, IX and X, proteins C, S and Z, osteocalcin and matrix Gla protein.|Marketed for bone and vascular health; evidence outside Japanese osteoporosis studies is limited and mixed.
+Phylloquinone (K1) and menadione (K3) are converted in tissue to MK-4 by UBIAD1, a geranylgeranyl transferase, with the highest MK-4 concentrations in brain, pancreas, salivary gland, arterial wall and bone; the reduced hydroquinone is the cofactor for gamma-glutamyl carboxylase (GGCX), which carboxylates specific glutamate residues to gamma-carboxyglutamate (Gla) so the protein can bind calcium and phospholipid, and the vitamin K 2,3-epoxide formed is recycled by vitamin K epoxide reductase (VKORC1, which warfarin inhibits) and by NQO1 on a warfarin-resistant salvage route; MK-4 is also described as a ligand for the nuclear receptor SXR/PXR, which is a proposed route for its bone effects.|Gamma-glutamyl carboxylase (cofactor); VKORC1 and NQO1 (epoxide recycling); UBIAD1 (its own synthesis); SXR/PXR (proposed)|Vitamin cofactor, and a proposed nuclear receptor ligand|Carboxylates clotting factors and the Gla proteins osteocalcin and matrix Gla protein; lowers undercarboxylated osteocalcin.
+Claimed uses (not proven in the US): bone health, fracture prevention, prevention of vascular calcification|Studied in: osteoporosis, where it is an approved prescription product in Japan; trials of fracture risk and bone quality elsewhere with mixed results|Recognize: home supplement, often combined with vitamin D3; relevant in patients taking warfarin|None in the US (no FDA-recognized indication)
+None established in the US (no FDA label)|Warfarin or other vitamin K antagonist therapy (vitamin K activity lowers the INR); known hypersensitivity to product ingredients
+Not FDA approved in the US: dietary supplements are not reviewed by FDA for safety or effectiveness before sale, and content varies between brands. Any vitamin K form can reduce the effect of warfarin and lower the INR. MK-4 has a much shorter plasma half-life than MK-7, so a single supplement dose is cleared within hours while MK-7 circulates for days.|None (no FDA label)|Related to phytonadione (vitamin K1, DrugBug id phytonadione), the FDA-approved form used for warfarin reversal and newborn prophylaxis, and to menaquinone-7 (DrugBug id menaquinone-7), the long half-life K2 from natto.
+Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not applicable (no labeled dose)|Not applicable (no labeled dose)
+PO (tablets, capsules, softgels, often combined with vitamin D3)|-|-|-|-|Tablets, capsules, softgels|-|-|-|Not applicable|Not applicable|Not applicable|Fat-soluble: absorption rises with dietary fat and falls with orlistat, bile acid sequestrants and mineral oil
+Hours (absorbed with fat into chylomicrons)|Plasma levels peak about 4 to 6 hours after a dose|Hours to about a day in plasma; tissue effects last longer|Roughly 1 to 2 hours in plasma, far shorter than the roughly 3 days reported for MK-7|Hepatic side chain shortening and conjugation; tissue interconversion by UBIAD1|Bile (feces) and urine as metabolites|Carried in lipoproteins including chylomicrons and LDL
+Generally well tolerated in studies; GI upset|Reduced warfarin effect with a lower INR, and clotting risk in patients on vitamin K antagonists|None well established for oral intake alone
+Warfarin and other vitamin K antagonists (reduced anticoagulant effect, lower INR)|Vitamin K antagonists|Egg yolk, butter, cheese, chicken and fermented foods supply MK-4 and other menaquinones; leafy greens supply K1|No specific interaction|Orlistat, bile acid sequestrants and mineral oil lower fat-soluble vitamin absorption; direct oral anticoagulants inhibit factor Xa or thrombin directly and are not opposed by vitamin K
+-|-|-|-|-|-|-|-|INR in patients taking warfarin|Signs of clotting or bleeding when the INR shifts
+Food intake considered compatible; supplement products are not FDA reviewed|Vitamin K passes into breast milk in small amounts, which is part of why breastfed newborns are at risk of vitamin K deficiency bleeding without prophylaxis|No FDA-labeled pediatric dose; newborn prophylaxis uses phytonadione|No specific adjustment; warfarin use is common in older adults|No specific data|Liver disease impairs clotting factor synthesis regardless of vitamin K intake
+No toxic dose established; no tolerable upper intake level has been set for vitamin K|No characteristic toxicity|No characteristic overdose syndrome described; in warfarin users, intake lowers the INR|Supportive care|None|None
+Not given by EMS.|A warfarin patient with an unexpectedly low INR may have started a K2 product; MK-4 clears within hours while MK-7 lingers for days.|Warfarin use, recent INR, other vitamin K products.|Not applicable|Not applicable|Treating MK-4 and MK-7 as interchangeable; assuming a bone supplement cannot move the INR.|Warfarin (reduced anticoagulant effect).|MK-4 is made in human tissue by UBIAD1 from phylloquinone and from menadione, so it is both a dietary form and an endogenous one.
+Interest in bone or vascular health; osteoporosis.|Self-selected supplement, often with vitamin D3, or a prescription obtained in Japan.|Warfarin use, INR history, other supplements.|Clotting events from a reduced warfarin effect.|No withdrawal syndrome; the INR can rise again in a warfarin user who stops it.
+The short-tail form of vitamin K2 that the body makes for itself.|Menaquinone-4 is the tissue-synthesized short-chain vitamin K2 that UBIAD1 forms from phylloquinone and menadione, it serves as the gamma-glutamyl carboxylase cofactor within the VKORC1 recycling cycle, it is a prescription osteoporosis product in Japan, and it is not FDA approved in the US.|MK-4 has 4 units and lasts hours; MK-7 has 7 and lasts days.|Not FDA approved in the United States.|All vitamin K forms work through gamma-glutamyl carboxylase to carboxylate factors II, VII, IX and X and proteins C and S, and warfarin blocks VKORC1 recycling of vitamin K, which is why vitamin K intake lowers the INR.|Menaquinone-7 (DrugBug id menaquinone-7); menadione (vitamin K3, DrugBug id menadione); phytonadione (vitamin K1, DrugBug id phytonadione)|Phytonadione, menaquinone-7, menadione|Warfarin (vitamin K antagonist)
+`);
+DB.add("tocotrienols","Tocotrienols (the other vitamin E family)","HM",`
+Tocotrienols (alpha-, beta-, gamma- and delta-tocotrienol); tocotrienol-rich fraction (TRF)|Many dietary supplement brands, often labeled annatto, palm or rice bran tocotrienols (no FDA-approved drug product)|Tocotrienols|NOT FDA APPROVED - dietary supplement (vitamin E family)|Vitamin E vitamers: chromanol ring with an unsaturated farnesyl side chain carrying three double bonds, unlike the saturated phytyl tail of the tocopherols|Not controlled
+The four less familiar members of the vitamin E family, concentrated in annatto seed, palm fruit and rice bran rather than in the vegetable oils that supply alpha-tocopherol. Education only: DrugBug is not telling anyone to use this.|Act as chain-breaking lipid antioxidants and, unlike alpha-tocopherol, trigger degradation of HMG-CoA reductase; the liver clears them quickly because alpha-tocopherol transfer protein does not retain them.|Marketed for cholesterol, fatty liver, bone and neuroprotection; trial results are inconsistent and there is no FDA-recognized use.
+Tocotrienols are absorbed with dietary fat into chylomicrons; in the hepatocyte, alpha-tocopherol transfer protein (TTPA, the alpha-TTP whose loss-of-function mutation causes ataxia with vitamin E deficiency) binds alpha-tocopherol with high affinity and loads it into nascent VLDL for recirculation, while tocotrienols and the non-alpha tocopherols are bound poorly, are preferentially omega-hydroxylated by CYP4F2 with CYP3A4 and excreted in bile as carboxyethyl-hydroxychroman metabolites, so their plasma half-lives are only hours; the chromanol hydroxyl donates a hydrogen atom to lipid peroxyl radicals and terminates chain propagation in membranes, with the resulting tocotrienoxyl radical regenerated by ascorbate; separately, the farnesyl tail drives post-translational degradation of HMG-CoA reductase and reduces SREBP-2 processing, lowering cholesterol synthesis, and gamma- and delta-tocotrienol inhibit NF-kB signaling in cell studies.|Alpha-tocopherol transfer protein (poorly bound, which explains rapid clearance); CYP4F2 and CYP3A4 (catabolism); HMG-CoA reductase (post-translational degradation); lipid peroxyl radicals (chemical target)|Antioxidant; indirect inhibitor of HMG-CoA reductase|Membrane lipid protection, lower cholesterol synthesis in some studies, and rapid clearance with little tissue accumulation compared with alpha-tocopherol.
+Claimed uses (not proven): cholesterol lowering, fatty liver, bone health, neuroprotection in stroke and neuropathy, radioprotection|Studied in: hypercholesterolemia (small trials with inconsistent results, some showing that co-ingested alpha-tocopherol blunts the lipid effect), nonalcoholic fatty liver disease, bone density, diabetic neuropathy|Recognize: home supplement, often labeled annatto or palm tocotrienol complex|None (no FDA-recognized indication)
+None established (no FDA label)|Anticoagulant or antiplatelet therapy, since high-dose vitamin E products have been associated with bleeding and with interference in vitamin K-dependent carboxylation; known allergy to product ingredients
+Not FDA approved: dietary supplements are not reviewed by FDA for safety or effectiveness before sale, and content varies between brands. High-dose vitamin E intake has been associated with bleeding, particularly alongside anticoagulants or low vitamin K, and large alpha-tocopherol trials found no cardiovascular benefit with signals for higher all-cause mortality at high doses and more hemorrhagic stroke. The tolerable upper intake level of 1,000 mg daily applies to alpha-tocopherol, and no upper level has been set for tocotrienols.|None (no FDA label)|Related to vitamin E (alpha-tocopherol, DrugBug id vitamin-e), the only vitamer that meets the human vitamin E requirement, since alpha-tocopherol transfer protein retains it and dietary reference intakes are expressed in alpha-tocopherol alone.
+Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not FDA approved. No FDA-labeled dose; DrugBug does not list doses.|Not applicable (no labeled dose)|Not applicable (no labeled dose)
+PO (softgels, capsules of tocotrienol-rich fractions from annatto, palm or rice bran)|-|-|-|-|Softgels and capsules|-|-|Topical cosmetic preparations|Not applicable|Not applicable|Not applicable|Fat-soluble: absorption rises with a fat-containing meal, and co-ingested alpha-tocopherol has been reported to lower tocotrienol absorption and speed its clearance
+Hours (chylomicron absorption)|Plasma levels peak about 2 to 4 hours after an oral dose|Hours; little tissue accumulation|Roughly 2 to 5 hours, far shorter than the roughly 2 days reported for alpha-tocopherol|Hepatic omega-hydroxylation by CYP4F2 with CYP3A4, then beta-oxidation to carboxyethyl-hydroxychroman metabolites with conjugation|Mainly bile and feces; metabolites also appear in urine|High; carried in lipoproteins rather than held by a specific transport protein
+Generally well tolerated in trials; GI upset, nausea, headache|Bleeding tendency with high-dose vitamin E products, especially alongside anticoagulants or low vitamin K|None well established for oral intake alone
+Warfarin and antiplatelet drugs (bleeding risk with high-dose vitamin E); alpha-tocopherol (lowers tocotrienol absorption and blunts the reported lipid effect); statins (overlapping effect on cholesterol synthesis); CYP3A4 substrates in theory, since CYP3A4 participates in tocotrienol catabolism; orlistat, bile acid sequestrants and mineral oil (lower absorption)|Anticoagulants and antiplatelet drugs at high vitamin E doses|Annatto seed, palm oil, rice bran, barley and oats are the dietary sources; most vegetable oils supply tocopherols instead|No specific interaction|In mixed vitamin E products that contain alpha-tocopherol, the tocotrienol levels achieved are lower
+-|-|-|-|-|-|-|-|Lipid panel in studies of the lipid effect; INR in patients on warfarin; CBC if bleeding is suspected|Bruising or bleeding
+No data for tocotrienol products in pregnancy; alpha-tocopherol is the form used in prenatal products|No data; alpha-tocopherol is the form measured in breast milk|No FDA-labeled pediatric dose; premature infants are a recognized vitamin E deficiency group with hemolytic anemia|No specific data; bleeding risk from high-dose vitamin E matters more in older adults on anticoagulants|No specific data|Biliary excretion is the main route, so cholestasis slows clearance, and fat malabsorption lowers absorption of all vitamin E forms
+No toxic dose established for tocotrienols; the 1,000 mg daily upper intake level applies to alpha-tocopherol|No characteristic toxicity; high-dose vitamin E is associated with bleeding|No characteristic overdose syndrome described|Supportive care; phytonadione has been used for vitamin E-associated coagulopathy|None|None
+Not given by EMS.|Tocotrienols are a vitamin E supplement, so the practical issue is bleeding risk and interaction with warfarin rather than any acute effect.|Anticoagulant and antiplatelet use, bleeding history, other vitamin E products.|Not applicable|Not applicable|Treating tocotrienols as interchangeable with alpha-tocopherol, or reading a vitamin E label as alpha-tocopherol content; the two behave differently in the liver.|Warfarin and antiplatelet drugs at high doses.|Vitamin E activity in human nutrition is defined by alpha-tocopherol because hepatic alpha-tocopherol transfer protein selectively retains it and sends the other vitamers to CYP4F2 for disposal.
+Interest in cholesterol, fatty liver or general antioxidant use; sometimes taken alongside statin therapy.|Self-selected supplement, often as annatto or palm tocotrienol.|Anticoagulants, antiplatelet drugs, statins, other vitamin E products.|Bleeding, particularly alongside anticoagulants.|No withdrawal syndrome.
+The other half of the vitamin E family, from annatto and palm, which the body throws away quickly.|Tocotrienols are the four unsaturated-tail vitamin E vitamers that alpha-tocopherol transfer protein retains poorly and CYP4F2 clears rapidly, and they lower cholesterol synthesis by degrading HMG-CoA reductase in studies, with inconsistent clinical results and no FDA approval.|TocoTRIEnol has TRIple double bonds in its tail; tocopherol has none.|Not FDA approved; dietary reference intakes for vitamin E count alpha-tocopherol only.|Vitamin E deficiency causes hemolytic anemia and a spinocerebellar syndrome with ataxia, areflexia and loss of position and vibration sense that resembles Friedreich ataxia; mutations in alpha-tocopherol transfer protein cause ataxia with isolated vitamin E deficiency, and abetalipoproteinemia and fat malabsorption are the classic acquired causes.|Vitamin E (alpha-tocopherol, DrugBug id vitamin-e); the non-alpha tocopherols|Alpha-tocopherol, gamma-tocopherol, tocopheryl acetate|Phytonadione (vitamin K) for vitamin E-associated coagulopathy
+`);
+
+;
+// DrugBug new drugs batch v67
+DB.add("polio-vaccine-oral","Polio Vaccine Oral (OPV, Sabin)","HM PE TR",`
+Poliovirus Vaccine Live Oral (Sabin strains)|No US brand; supplied through WHO and UNICEF programs as trivalent OPV (tOPV), bivalent types 1 and 3 OPV (bOPV), monovalent OPV and novel oral poliovirus vaccine type 2 (nOPV2)|OPV|Vaccine (live attenuated viral, oral); not licensed or distributed in the US|Live attenuated poliovirus types 1, 2 and 3 (Sabin strains) or genetically stabilized type 2 virus (nOPV2)|Not controlled
+A live weakened poliovirus given as drops in the mouth.|The weakened virus grows in the lining of the gut and teaches the immune system to block poliovirus at the intestine and in the blood.|Used outside the US to prevent poliomyelitis and to interrupt person-to-person spread of poliovirus in routine immunization and outbreak response.
+Live attenuated Sabin polioviruses are swallowed and replicate in the oropharyngeal and intestinal mucosa, where whole-virion capsid antigens (VP1 to VP4) are presented without any adjuvant; replication in gut-associated lymphoid tissue drives secretory IgA at the intestinal mucosa along with serum neutralizing IgG, and the attenuating point mutations lie mainly in domain V of the 5 prime noncoding internal ribosome entry site and in the capsid genes, which lowers neurovirulence; the live oral platform was chosen because poliovirus is an enteric fecal-oral pathogen, so mucosal IgA limits intestinal replication and fecal shedding in a way that injected inactivated vaccine does not, and nOPV2 carries additional engineered changes including a stabilized domain V, a relocated cre element and modified nonstructural sequences that make reversion toward neurovirulence less likely.|Poliovirus types 1, 2 and 3 capsid antigens VP1 to VP4, presented at intestinal mucosal lymphoid tissue|Active immunization (live replicating attenuated antigen; no adjuvant)|Intestinal secretory IgA plus serum neutralizing IgG; vaccine virus is shed in stool for weeks and can immunize unvaccinated close contacts by secondary spread, which is the basis for its ability to interrupt poliovirus transmission in a community
+Prevention of poliomyelitis and interruption of poliovirus transmission in countries that use oral polio vaccine in routine immunization and in supplementary immunization activities (WHO prequalified products)|Outbreak response campaigns, in which nOPV2 or a monovalent product matched to the circulating type is deployed, and national immunization days (WHO guidance)|-|-
+Severe allergic reaction to a prior dose or a vaccine component; primary immunodeficiency such as severe combined immunodeficiency or agammaglobulinemia, in which prolonged vaccine virus replication has been documented (product information and WHO guidance)|Household contacts who are immunocompromised; acute moderate or severe illness; ongoing immunosuppressive therapy
+Vaccine-associated paralytic poliomyelitis (VAPP) in a recipient or a contact, reported on the order of one case per several hundred thousand to one million first doses, and circulating vaccine-derived poliovirus (cVDPV) when shed vaccine virus reverts and spreads through under-immunized populations; prolonged excretion of immunodeficiency-associated vaccine-derived poliovirus (iVDPV) in people with B-cell defects.|None|Vaccine virus is shed in stool, so hand and diaper hygiene is addressed in program guidance; type 2 vaccine virus accounted for most cVDPV outbreaks, which is why trivalent OPV was withdrawn from routine use in 2016 in favor of bivalent OPV and why nOPV2 was developed for type 2 outbreak response.
+Not used in US practice; WHO programs give 2 drops by mouth per dose, with the drop volume specified by the manufacturer|2 drops by mouth at birth where a birth dose is used, then at about 6, 10 and 14 weeks of age, with additional campaign doses during supplementary immunization activities (WHO schedules)|Not weight based|One dose per visit|Repeat doses follow the national schedule and campaign rounds; program guidance describes replacing a dose that is spat out or vomited shortly after administration|-|Not applicable|Not applicable
+PO|-|-|-|-|Yes, 2 drops placed on the tongue or into the cheek pouch from a single-use dropper vial|-|-|-|Oral, over a few seconds|Ready-to-use liquid kept frozen or refrigerated and monitored with a vaccine vial monitor; not diluted|Not applicable|Feeding and breastfeeding are not restricted around the dose, and the product is not injected
+Mucosal and humoral antibody over about 2 to 4 weeks after a dose|Highest antibody after completion of the series|Immunity after a complete series appears long lasting, while intestinal immunity wanes over years|Not applicable (vaccine)|Replication in oropharyngeal and intestinal epithelium followed by immune clearance|Vaccine virus shed in stool for roughly 4 to 6 weeks and in the oropharynx for a shorter period|Not applicable
+Low-grade fever, loose stools, fussiness|Vaccine-associated paralytic poliomyelitis in a recipient or a close contact|Paralytic poliomyelitis with respiratory muscle involvement; prolonged vaccine virus excretion with paralysis in primary B-cell immunodeficiency
+Immunosuppressants and recent immunoglobulin or blood products can blunt the response|Immunosuppressants and chemotherapy|No food restriction, and breastfeeding is not withheld around dosing|Not applicable|Given at the same visit as other routine infant vaccines in WHO schedules
+-|-|-|-|-|-|New limb weakness or asymmetric flaccid paralysis in the weeks after a dose|-|Stool and oropharyngeal poliovirus culture with genomic sequencing when acute flaccid paralysis is investigated|Acute flaccid paralysis surveillance with two stool specimens is the standard case-finding method in eradication programs
+Pregnancy is not listed as a contraindication in WHO program guidance, and data are limited|Compatible with breastfeeding|The main target population is infants and young children|Rarely given to adults; adults in endemic settings may receive campaign doses|No adjustment|No adjustment
+No overdose syndrome described; extra drops have no specific toxicity|Not applicable|Not applicable|Supportive care|None|None
+Not given by EMS.|Acute flaccid paralysis with fever and asymmetric weakness in a child who recently traveled or recently received oral polio vaccine raises concern for poliomyelitis or vaccine-associated paralytic polio, and poliovirus spreads by the fecal-oral route.|Immune status, family history of immunodeficiency and prior dose history are reviewed in program settings.|New weakness, bulbar signs and respiratory effort in the weeks after a dose.|A diagnosis of primary immunodeficiency in the recipient or a household contact is a contraindication to further doses in product information.|Giving the oral product by injection; using a formulation other than the one the program specifies for the circulating type; using vials whose vaccine vial monitor shows heat exposure.|Immunosuppressive therapy in the recipient, and an immunocompromised household contact exposed to shed vaccine virus.|The US stopped using oral polio vaccine in 2000 and has used inactivated vaccine alone since then, while oral vaccine remains the main tool for interrupting transmission globally because of the intestinal IgA and secondary spread it produces.
+No disease; vaccination given abroad or during a campaign.|Routine infant immunization or an outbreak response campaign outside the US.|Travel history, immunization history and any recent limb weakness.|Vaccine-associated paralytic polio with respiratory failure, rarely.|Not applicable; an incomplete series leaves partial intestinal and serum immunity.
+Polio drops by mouth that use a live weakened virus to protect the gut and keep the virus from spreading.|Oral polio vaccine is a live attenuated Sabin vaccine that produces intestinal IgA and spreads secondarily to contacts, which interrupts transmission, at the cost of rare vaccine-associated paralysis and vaccine-derived poliovirus.|Salk equals Shot, killed, serum IgG; Sabin equals Swallowed, live, mucosal IgA.|Type 2 vaccine virus caused most circulating vaccine-derived poliovirus, which is why nOPV2 was engineered for greater genetic stability.|OPV (Sabin) is live and oral, gives mucosal IgA with secondary spread to contacts, and can revert to cause vaccine-associated paralytic polio and circulating vaccine-derived poliovirus; IPV (Salk) is killed and injected, gives serum IgG without intestinal immunity, and cannot cause paralysis; the US has used IPV alone since 2000.|Inactivated polio vaccine (Salk, IPOL)|Rotavirus vaccine, oral typhoid Ty21a vaccine, oral cholera vaccine|None
+`);
+DB.add("influenza-vaccine-live","Influenza Vaccine Live Attenuated (LAIV, FluMist)","HM PE",`
+Influenza Vaccine Live Attenuated, Quadrivalent (LAIV4)|FluMist Quadrivalent; FluMist Home, the presentation approved for self or caregiver administration|Nasal flu vaccine|Vaccine (live attenuated viral, intranasal)|Cold-adapted, temperature-sensitive live attenuated influenza A and B reassortant viruses|Not controlled
+A nasal spray flu vaccine containing live influenza viruses weakened so that they grow only in the cool nose and throat.|Limited replication in the nasal lining produces local antibody and T-cell responses against the season's influenza strains.|Used to prevent seasonal influenza in people 2 through 49 years of age.
+Each of the four vaccine strains is a reassortant carrying the hemagglutinin and neuraminidase genes of a current seasonal influenza A or B strain on the six internal genes of the cold-adapted master donor viruses A/Ann Arbor/6/60 and B/Ann Arbor/1/66; mutations in the polymerase genes PB1 and PB2 and in NP make the virus cold-adapted and temperature-sensitive, so it replicates at the roughly 25 to 33 degrees Celsius of the nasopharynx and is restricted at the 37 degrees Celsius and above of the lower airway, which confines replication to the upper respiratory tract; that local replication raises secretory IgA against hemagglutinin at the mucosal surface where influenza enters, along with serum IgG and cross-reactive CD4 and CD8 T-cell responses, and no adjuvant is used because the replicating virus itself supplies the innate signal; the live mucosal platform was chosen for a respiratory pathogen in order to mimic natural infection at the portal of entry without producing lower airway disease.|Influenza A (H1N1 and H3N2) and influenza B hemagglutinin and neuraminidase antigens presented at the nasopharyngeal mucosa|Active immunization (live replicating attenuated antigen; no adjuvant)|Mucosal secretory IgA, serum IgG and cellular immunity; vaccine virus is shed from the nose for several days, and transmission to contacts has been documented as uncommon
+Active immunization for the prevention of influenza disease caused by the influenza A subtype viruses and type B viruses contained in the vaccine, in persons 2 through 49 years of age (label)|Annual seasonal vaccination as one of the options listed in the CDC and ACIP schedule for nonpregnant persons 2 through 49 years; the FDA approved a self-administered or caregiver-administered presentation in 2024 for the same age range, with a person 18 or older performing the administration|-|-
+Severe allergic reaction, including anaphylaxis, to any component of the vaccine or to a previous dose of any influenza vaccine; concomitant aspirin or salicylate therapy in children and adolescents; children 2 through 4 years of age with asthma or a history of wheezing within the past 12 months; immunocompromised states from disease or therapy, including anatomic or functional asplenia, cochlear implant and active cerebrospinal fluid leak; close contacts and caregivers of severely immunosuppressed persons who require a protected environment (label)|Pregnancy, which the label describes as a population in which the vaccine is not recommended; asthma in persons 5 years and older; chronic metabolic, renal, hepatic, cardiac or neurologic disease; moderate or severe acute illness; nasal congestion that may impede delivery; receipt of an influenza antiviral within the interval described in the label
+Wheezing and asthma exacerbation, mainly in young children; Guillain-Barre syndrome within 6 weeks of a prior influenza vaccine; vaccine virus shedding with potential transmission to severely immunocompromised contacts; reduced response in immunocompromised recipients.|None|Influenza antiviral drugs can inactivate the vaccine virus, and the label describes intervals around oseltamivir, zanamivir, peramivir and baloxavir; the product is given only intranasally and is not injected.
+0.2 mL intranasally as a single dose each influenza season for persons 18 through 49 years, given as 0.1 mL into each nostril (label)|Ages 2 through 17 years: 0.2 mL intranasally as a single dose; children 2 through 8 years who have not previously received influenza vaccine receive two doses at least 4 weeks apart (label)|Not weight based|One dose per season in persons 9 years and older|Annual revaccination each season, with two doses in the first season for previously unvaccinated children 2 through 8 years (label)|Not applicable|No adjustment|No adjustment
+IN|-|-|-|Yes, 0.1 mL sprayed into each nostril from the single-use prefilled sprayer with the recipient upright and breathing normally|-|-|-|Not for injection by any route|One spray per nostril|Ready-to-use refrigerated prefilled sprayer with a dose-divider clip; not reconstituted or diluted|Not applicable|Sneezing or congestion after the spray is not a reason to repeat the dose per label; it can be given at the same visit as other vaccines, while other live injectable vaccines are either given the same day or separated by 4 weeks per ACIP general guidance
+Mucosal and serum antibody over about 2 weeks|About 2 to 4 weeks after vaccination|One influenza season, with protection waning over months|Not applicable (vaccine)|Limited replication in nasopharyngeal epithelium followed by immune clearance|Vaccine virus shed from the nasopharynx for several days, longer in young children|Not applicable
+Runny or stuffy nose, headache, sore throat, decreased appetite, low-grade fever, myalgia, and wheezing in young children|Wheezing or asthma exacerbation, especially in children under 5 years; syncope; Guillain-Barre syndrome reported rarely after influenza vaccines|Anaphylaxis (rare); severe vaccine-strain illness in unrecognized immunodeficiency
+Influenza antivirals (oseltamivir, zanamivir, peramivir, baloxavir) can inactivate the vaccine virus; aspirin and salicylates in children and adolescents are a labeled contraindication; immunosuppressants reduce the response and raise the risk of vaccine-strain illness|Immunosuppressants, chemotherapy, high-dose corticosteroids, and influenza antivirals within the labeled intervals|No food interaction|No interaction|Can be given with other age-appropriate vaccines at the same visit
+Observation for syncope after administration|-|-|-|-|Wheeze, cough or stridor after administration, particularly in young children with reactive airways|Guillain-Barre symptoms in the following weeks|-|-|About 15 minutes of observation for syncope per ACIP general guidance
+The label describes the live product as not recommended in pregnancy; the ACIP schedule lists inactivated and recombinant products as the options in pregnancy|Available data do not show a safety concern during breastfeeding, and the ACIP lists breastfeeding as compatible|Licensed from 2 years of age; contraindicated in children 2 through 4 years with asthma or recent wheezing, and at any pediatric age with aspirin or salicylate therapy|Not licensed beyond 49 years of age|No adjustment|No adjustment
+No overdose toxicity described; larger than labeled volumes have been given without unusual events|Not applicable|Nasal irritation and congestion|Supportive care|None|None
+Not given by EMS.|Wheezing in a young child within days of a nasal influenza vaccine can reflect vaccine-related bronchospasm, and the nasal product contains live virus that is shed for several days.|Age, asthma and wheezing history, aspirin therapy, the immune status of the recipient and of household contacts, and recent influenza antiviral use are reviewed before administration.|Wheeze, work of breathing and allergic symptoms after administration, and fainting in adolescents and adults.|Anaphylaxis to a prior influenza vaccine is a contraindication to further doses per label.|Injecting the nasal product; giving it to a child 2 through 4 years old with asthma or recent wheezing; giving it inside the labeled interval around an influenza antiviral; repeating a dose after a sneeze.|Influenza antivirals, immunosuppressive therapy, and aspirin or salicylates in children and adolescents.|LAIV is cold-adapted and temperature-sensitive, so it replicates in the nose but not the lower airway; it is the only live influenza vaccine, while the inactivated and recombinant products contain no live virus and raise serum IgG without mucosal IgA.
+No disease; seasonal influenza prevention.|Routine annual vaccination in a person 2 through 49 years of age who is not pregnant and not immunocompromised.|Date of vaccination, respiratory symptoms since then, and asthma history.|Bronchospasm in a child with reactive airways, and rarely anaphylaxis.|Not applicable; protection wanes over the season and the schedules call for annual dosing with updated strains.
+A flu vaccine sprayed into the nose that uses live virus weakened so that it grows only where the air is cool.|FluMist is a cold-adapted, temperature-sensitive live attenuated quadrivalent influenza vaccine given as 0.2 mL intranasally to nonpregnant, non-immunocompromised persons 2 through 49 years.|Cold-adapted means nose only: it grows at nose temperature and stalls at lung temperature.|It raises mucosal secretory IgA at the site where influenza enters, which the injected inactivated vaccine does not.|LAIV is the live attenuated, cold-adapted, temperature-sensitive intranasal influenza vaccine that produces mucosal IgA; it is contraindicated in immunocompromised persons, in children 2 through 4 with asthma or recent wheezing and with pediatric aspirin therapy, and is not recommended in pregnancy per label, while inactivated and recombinant vaccines are the non-live alternatives.|Inactivated injectable influenza vaccine and recombinant Flublok|Other live attenuated vaccines: MMR, varicella, oral polio vaccine, rotavirus vaccine, yellow fever vaccine|None
+`);
+DB.add("ebola-vaccine","Ebola Vaccine (Ervebo and the Zabdeno-Mvabea regimen)","HM TR",`
+Ebola Zaire Vaccine, live recombinant (rVSV-ZEBOV-GP), and the two-dose Ad26.ZEBOV plus MVA-BN-Filo regimen|Ervebo (rVSV-ZEBOV-GP, single dose); Zabdeno (Ad26.ZEBOV) followed by Mvabea (MVA-BN-Filo), authorized in the European Union|Ebola vaccine|Vaccine (live recombinant viral vector for Ervebo; replication-incompetent and replication-limited viral vectors for the Zabdeno and Mvabea regimen); Ervebo is FDA licensed, and the Zabdeno and Mvabea regimen is not licensed in the US|Live attenuated recombinant vesicular stomatitis virus expressing Zaire ebolavirus glycoprotein; adenovirus type 26 and modified vaccinia Ankara vectors expressing filovirus antigens|Not controlled
+A vaccine built by replacing a harmless animal virus's own surface protein with the Ebola surface protein.|The vector virus carries the Ebola glycoprotein into the body so the immune system makes antibodies against it, with no Ebola virus present.|Used to protect against Ebola virus disease caused by Zaire ebolavirus, including ring vaccination of contacts during outbreaks and preventive vaccination of front-line workers.
+Ervebo is a live, replication-competent recombinant vesicular stomatitis virus (Indiana strain) in which the gene for the VSV G glycoprotein is deleted and replaced by the gene for the Zaire ebolavirus (Kikwit strain) surface glycoprotein GP, so the vector displays Ebola GP as its only attachment protein, enters cells through GP, replicates transiently and generates GP-specific binding and neutralizing IgG together with CD4 and CD8 T-cell responses; no adjuvant is included because the replicating vector supplies its own innate stimulation through RIG-I and toll-like receptor signaling, and a replicating vector was chosen to give rapid single-dose immunity suited to outbreak ring vaccination; the alternative regimen primes with a replication-incompetent adenovirus type 26 vector encoding Zaire ebolavirus GP and boosts about 8 weeks later with a replication-limited modified vaccinia Ankara vector encoding glycoproteins of Zaire ebolavirus, Sudan ebolavirus and Marburg virus plus Tai Forest ebolavirus nucleoprotein, a heterologous prime-boost designed for durable preventive immunity rather than outbreak speed.|Zaire ebolavirus envelope glycoprotein GP, which mediates viral attachment and NPC1-dependent entry|Active immunization (live recombinant viral vector antigen delivery; no adjuvant)|GP-specific antibody detectable from about 14 days after a single Ervebo dose, plus cellular immunity; transient vector viremia with low-level detection of vector material in blood, saliva and urine in the first days to weeks
+Prevention of disease caused by Zaire ebolavirus; the original 2019 US approval covered individuals 18 years of age and older, and labeling in some other jurisdictions extends to children from 1 year of age (Ervebo)|Ring vaccination of contacts and contacts of contacts during Zaire ebolavirus outbreaks, and preventive vaccination of health care and front-line workers in at-risk countries (WHO guidance); the two-dose Zabdeno and Mvabea regimen is authorized in the European Union for preventive use from 1 year of age|-|-
+Severe allergic reaction, including anaphylaxis, to any component of the vaccine, such as rice protein, or to a previous dose (Ervebo label)|Immunocompromising conditions and immunosuppressive therapy, pregnancy and breastfeeding, for which data are limited and outbreak use is addressed in WHO and national guidance; close contact with severely immunocompromised persons, young infants and pregnant women during the shedding period
+Live replicating vector with transient viremia and shedding detected in blood, saliva, urine and semen; arthralgia and arthritis, occasionally with vesicular skin lesions in which vaccine virus has been detected; influenza-like illness with fever in the first days; reduced response with immunosuppression.|None|Product information describes blood donation deferral and avoidance of close contact with susceptible people and animals in the weeks after vaccination; the vaccine covers Zaire ebolavirus only and not Sudan ebolavirus, Bundibugyo ebolavirus or Marburg virus.
+Single 1 mL dose IM (Ervebo label)|Pediatric use follows the age range in the applicable labeling, at the same 1 mL IM dose|Not weight based|One 1 mL dose of Ervebo; two doses in total for the Zabdeno and Mvabea regimen|Additional Ervebo doses are not part of the label; the Zabdeno prime is followed by the Mvabea boost about 8 weeks later, and European labeling describes a Zabdeno booster for people at continued risk|-|No adjustment|No adjustment
+IM|-|-|Yes, 1 mL into the deltoid, in the arm opposite any other vaccine given at the same visit|-|-|-|-|Frozen product thawed before use and handled as a live recombinant organism|Single injection|Thawed and gently swirled, not diluted; Zabdeno and Mvabea are separate products given 8 weeks apart|Not applicable|Product information describes separating other vaccines from Ervebo, and the vial is kept frozen until shortly before administration
+Antibody from about 14 days after a single dose, which is why the ring vaccination analysis counted cases from day 10 onward|Peak antibody about 28 days after vaccination|Antibody persists for at least 2 years in follow-up studies|Not applicable (vaccine)|Transient vector replication followed by immune clearance|Vector material detectable in blood, saliva and urine for days to a few weeks|Not applicable
+Injection site pain, swelling and redness, headache, fever, chills, myalgia, fatigue, arthralgia|Arthritis with joint swelling that can last weeks, and vesicular or maculopapular skin lesions in which vaccine virus has been detected|Anaphylaxis (rare); severe vector illness in profound immunodeficiency is a theoretical concern
+Immunosuppressants, chemotherapy, high-dose corticosteroids, and recent immunoglobulin or blood products can reduce the response|Immunosuppressants and biologic immunomodulators|No food interaction|No interaction|Coadministration data with other vaccines are limited, and product information describes separating other vaccines from Ervebo
+Observation for syncope after injection|-|-|-|-|Wheeze or stridor with an allergic reaction|-|-|-|Temperature, joint symptoms and new skin lesions in the weeks after vaccination
+Data in pregnancy are limited; WHO guidance addresses use in pregnant women during Zaire ebolavirus outbreaks in light of the high case fatality of the disease|Data during breastfeeding are limited, and vaccine virus has been detected in breast milk in a small number of reports|The approved age range varies by jurisdiction, and pediatric data come from trial and outbreak settings|No specific adjustment; data in older adults are limited|No adjustment|No adjustment
+No overdose syndrome described|Not applicable|Not applicable|Supportive care|None|None
+Not given by EMS.|Ervebo is a live replicating vector that can cause fever, arthritis and vesicular skin lesions in the first weeks, and a vaccinated person with fever in an outbreak setting is still evaluated for Ebola virus disease itself.|Allergy history, immune status, pregnancy, and the immune status of close household contacts are reviewed before vaccination.|Fever, joint swelling, skin vesicles and allergic symptoms in the days to weeks after the dose.|Anaphylaxis to a prior dose or component is a contraindication to further doses per label.|Expecting protection against Sudan ebolavirus or Marburg virus; mishandling the frozen product; confusing single-dose Ervebo with the two-dose Zabdeno and Mvabea regimen.|Immunosuppressive therapy, and close contact with severely immunocompromised persons during the shedding window.|The Ebola ca Suffit ring vaccination trial in Guinea in 2015 was cluster-randomized to immediate or 21-day delayed vaccination of contacts and contacts of contacts, and no cases arose 10 or more days after immediate vaccination, which is the design most often cited for this vaccine.
+No disease; occupational or outbreak-related vaccination, often in a health care worker, laboratory worker or person returning from an outbreak zone.|Front-line or health care work in an at-risk country, status as a contact of a confirmed case, or laboratory work with filoviruses.|Travel and exposure history, date of vaccination, and current fever or bleeding.|Vaccine-related fever and arthritis, which can be mistaken for early Ebola virus disease.|Not applicable for the single-dose product; an incomplete two-dose regimen leaves a primed but unboosted response.
+A harmless animal virus is rebuilt to wear the Ebola surface protein, so the body learns to fight Ebola without ever meeting it.|Ervebo is a live recombinant vesicular stomatitis virus whose own glycoprotein gene is replaced by Zaire ebolavirus GP, given as a single IM dose and used for ring vaccination, while Zabdeno followed by Mvabea is a two-dose adenovirus 26 and modified vaccinia Ankara regimen authorized outside the US.|VSV wearing an Ebola coat: the vector keeps its body and borrows Ebola's glycoprotein.|It covers Zaire ebolavirus only, not Sudan ebolavirus, Bundibugyo ebolavirus or Marburg virus.|Ervebo is a live, replication-competent recombinant VSV with its G gene replaced by Zaire ebolavirus GP, it is species specific to Zaire ebolavirus, and its efficacy evidence came from the cluster-randomized ring vaccination trial in Guinea.|The two-dose Zabdeno and Mvabea regimen, and other viral vector vaccines such as the Ad26 and ChAdOx1 COVID-19 vaccines|Yellow fever 17D vaccine and other live viral vaccines; adenovirus-vectored and modified vaccinia Ankara-vectored vaccines|None
+`);
+DB.add("malaria-vaccine","Malaria Vaccine (RTS,S/AS01 and R21/Matrix-M)","HM PE TR",`
+Malaria vaccine, Plasmodium falciparum circumsporozoite protein virus-like particle (RTS,S/AS01 and R21/Matrix-M)|Mosquirix (RTS,S/AS01E); R21/Matrix-M|Malaria vaccine|Vaccine (adjuvanted recombinant protein subunit presented as a virus-like particle); WHO prequalified for use in malaria-endemic countries and not licensed in the United States|Recombinant Plasmodium falciparum circumsporozoite protein fused to hepatitis B surface antigen, adjuvanted with AS01 or with Matrix-M|Not controlled
+A protein vaccine made from a piece of the malaria parasite joined to the hepatitis B surface protein, so the two assemble into tiny virus-like particles.|It raises antibodies against the coat of the sporozoite, the parasite form a mosquito injects, so the parasite is blocked before it establishes infection in the liver.|Used in young children in regions with moderate to high Plasmodium falciparum transmission to reduce malaria illness, severe malaria and malaria deaths.
+Both products are recombinant protein subunit vaccines presented as virus-like particles: the RTS,S antigen fuses the central NANP tetrapeptide repeat region and C-terminal T-cell epitopes of the Plasmodium falciparum circumsporozoite protein (the R and T portions) to hepatitis B surface antigen (S), coexpressed in Saccharomyces cerevisiae with free HBsAg so that the construct self-assembles into particles, while R21 fuses a similar circumsporozoite segment to HBsAg expressed in Pichia pastoris with essentially no excess HBsAg, giving a higher density of circumsporozoite protein on the particle surface; particulate repetitive antigen display crosslinks B-cell receptors efficiently, and the adjuvants supply the innate signal a purified protein lacks, AS01 being a liposomal combination of the TLR4 agonist monophosphoryl lipid A with the Quillaja saponin QS-21, and Matrix-M being a saponin, cholesterol and phospholipid matrix particle; the result is high-titer anti-NANP IgG with circumsporozoite-specific CD4 T cells, and a pre-erythrocytic subunit platform was chosen because the sporozoite stage is numerically small and lasts only minutes to hours before reaching the liver, so antibody can immobilize sporozoites and block hepatocyte invasion, whereas the vaccine has no action on blood-stage parasites once liver-stage schizonts rupture.|Plasmodium falciparum circumsporozoite protein on the sporozoite surface; antibody blocks sporozoite motility and hepatocyte invasion|Active immunization (adjuvanted recombinant subunit virus-like particle antigen)|Anti-circumsporozoite IgG and CD4 T-cell responses that reduce clinical and severe malaria; titers and protection wane over the first years, and the fourth dose restores part of the effect
+Prevention of Plasmodium falciparum malaria in children living in regions with moderate to high transmission, given as a four-dose schedule beginning at about 5 to 6 months of age (WHO recommendation: RTS,S in 2021 and R21 in 2023)|Seasonal delivery timed ahead of the peak transmission season, and combined use with seasonal malaria chemoprevention, which trials found more effective than either measure alone|-|-
+Severe allergic reaction to a prior dose or to a vaccine component (product information)|Moderate or severe acute illness including acute malaria; immunocompromising conditions, for which data are limited; the product is not a treatment for malaria, and the published programs use it alongside bed nets, chemoprevention and prompt diagnosis and treatment rather than in place of them
+Febrile reactions in the days after a dose, with febrile seizures reported mainly within about 7 days; numerical imbalances in meningitis and in cerebral malaria cases were observed in the RTS,S phase 3 trial without an established causal relationship and were followed in the pilot implementation program; efficacy is partial and wanes, so other malaria prevention measures continued alongside vaccination in every program studied.|None|These products cover Plasmodium falciparum only and not Plasmodium vivax or the other human malaria species; neither is licensed in the US, and neither is available as a travel vaccine.
+Not part of the WHO recommendation in adults; the schedules studied are in young children|0.5 mL IM per dose in a four-dose schedule: RTS,S at about 5, 6 and 7 months of age with a fourth dose roughly 12 to 18 months after the third, and R21 in a comparable three-dose primary series with a booster about 12 months later (WHO recommendation and product information)|Not weight based|Four doses in the recommended schedule|The fourth dose about a year after the primary series restores part of the waning protection, and data on further boosters are accumulating|-|Not applicable|Not applicable
+IM|-|-|Yes, 0.5 mL into the anterolateral thigh in infants and young children|-|-|-|-|-|Single injection|Lyophilized antigen reconstituted with the supplied adjuvant suspension immediately before use, so the adjuvant serves as the diluent|Supplied adjuvant only|Given with other routine childhood vaccines at separate injection sites in the pilot programs, and not mixed in a syringe with other vaccines
+Anti-circumsporozoite antibody rises over about 1 month after the primary series|Peak antibody about 1 month after the third dose|Protection is greatest in the first year and declines substantially thereafter, with a booster partly restoring it|Not applicable (vaccine)|Antigen processing by the immune system|Not applicable|Not applicable
+Injection site pain and swelling, fever, irritability, drowsiness, reduced appetite|Febrile seizure within about 7 days of a dose|Anaphylaxis (rare)
+Immunosuppressive therapy and HIV-related immunosuppression may reduce the response|Immunosuppressants|No food interaction|Not applicable|Coadministered with routine childhood vaccines and used alongside seasonal malaria chemoprevention in the programs studied, with additive benefit reported for the combination
+-|-|-|-|-|-|Seizure activity in the first week after a dose|-|Malaria rapid diagnostic test or blood smear when fever occurs, since vaccination does not exclude malaria|Temperature after dosing, and completion of the four-dose schedule
+Not studied in pregnancy; the target population is young children|Not applicable|The recommendation and the supporting data are in children, starting at about 5 months of age|Not studied|No adjustment|No adjustment
+No overdose syndrome described|Not applicable|Not applicable|Supportive care|None|None
+Not given by EMS.|A vaccinated child with fever can still have malaria, because protection is partial, so fever in a child from an endemic area is evaluated with a rapid diagnostic test or blood smear in standard practice.|Age, dose number within the schedule, acute illness and prior reactions are reviewed before a dose in program settings.|Fever and seizure activity in the week after a dose, and completion of the remaining doses.|Anaphylaxis to a prior dose is a contraindication to further doses per product information.|Treating the vaccine as a substitute for bed nets, chemoprevention or antimalarial treatment; schedules that stop before the fourth dose; reconstituting with a saline diluent instead of the supplied adjuvant.|None clinically important.|Efficacy against clinical malaria was about 36 percent over 4 years with RTS,S in the phase 3 trial and in a broadly similar range for R21, with larger reductions in severe malaria and in all-cause mortality seen in the pilot implementation program; the effect is real but modest and waning, and it is additive to other malaria control measures.
+No disease; residence in or arrival from a malaria-endemic region with routine childhood vaccination.|Routine childhood malaria vaccination in a country that has introduced a WHO-recommended malaria vaccine.|Travel and residence history, doses received, antimalarial chemoprevention, and current fever.|Not an emergency in itself; post-dose fever can coincide with real malaria, and febrile seizure has been reported.|Not applicable; an incomplete schedule leaves lower and faster-waning protection.
+A shot made from a piece of the malaria parasite's outer coat stuck onto the hepatitis B surface protein, so it forms tiny balls the immune system notices, given with an ingredient that strengthens the response.|RTS,S/AS01 and R21/Matrix-M are adjuvanted circumsporozoite protein virus-like particle vaccines that block sporozoite invasion of the liver, given as four doses to young children in endemic regions, with modest and waning efficacy.|RTS,S equals Repeats and T-cell epitopes of circumsporozoite protein on the S of hepatitis B; it stops the sporozoite before the liver, not the parasite in the blood.|It targets the pre-erythrocytic sporozoite stage, so it does not clear blood-stage parasites and a vaccinated child can still develop malaria.|RTS,S/AS01 is a recombinant circumsporozoite protein and hepatitis B surface antigen fusion that self-assembles into a virus-like particle with the AS01 liposomal monophosphoryl lipid A and QS-21 adjuvant; it targets the pre-erythrocytic stage by blocking sporozoite invasion of hepatocytes and gives partial, waning protection, and R21/Matrix-M is the higher circumsporozoite-density, saponin-adjuvanted successor.|Hepatitis B vaccine, which also uses hepatitis B surface antigen particles, and the HPV virus-like particle vaccine|Hepatitis B and HPV virus-like particle vaccines, and the Matrix-M adjuvanted protein subunit COVID-19 vaccine|None
+`);
+
+;
+// DrugBug 1.1: vaccine expansion (combination, oral live, toxoid and historical products).
+// DrugBug new drugs batch m68
+DB.add("mmrv-vaccine","MMRV Vaccine (ProQuad)","HM PE",`
+Measles, Mumps, Rubella and Varicella Virus Vaccine Live (MMRV)|ProQuad (Merck)|MMRV|Vaccine (live attenuated viral, combination)|Live attenuated measles, mumps, rubella and varicella virus vaccine|Not controlled
+A single live, weakened four-virus shot that covers measles, mumps, rubella and chickenpox.|Produces a mild, usually silent infection with weakened viruses that leaves lasting antibody and T-cell memory against all four.|Used to prevent measles, mumps, rubella and varicella in children 12 months through 12 years of age with one injection instead of two.
+Live attenuated viruses, the measles Enders attenuated Edmonston strain, the mumps Jeryl Lynn strain, the rubella Wistar RA 27/3 strain and the varicella Oka/Merck strain, replicate briefly in the vaccinee and induce neutralizing IgG together with virus-specific CD4 and CD8 memory, the same pattern that follows natural infection. A live attenuated platform suits these four viruses because limited replication presents the whole antigenic repertoire and produces broad, durable, often lifelong immunity that killed or subunit antigens have not matched for measles and rubella; no adjuvant is used because the replicating virus itself supplies the innate signals. The varicella titer in MMRV is higher than in single-antigen varicella vaccine so that varicella seroconversion still occurs while measles virus is replicating in the same host.|Measles hemagglutinin and fusion proteins, mumps hemagglutinin-neuraminidase, rubella E1 and E2 glycoproteins, and varicella-zoster glycoproteins gE, gB and gH|Active immunization (live replicating antigen, no adjuvant)|Seroconversion in roughly 97% or more for measles, mumps and rubella and about 99% for varicella after one dose; fever and a measles-like or varicella-like rash 5 to 12 days later; a higher febrile seizure rate than separate MMR and varicella when the first dose falls at 12 to 23 months.
+Active immunization against measles, mumps, rubella and varicella in children 12 months through 12 years of age (label)|Catch-up and second-dose use within the CDC/ACIP childhood schedule|Recognition of recent vaccination as a cause of fever, rash or a febrile seizure 1 to 2 weeks later|-
+Severe allergic reaction to a prior dose or to a component including neomycin and gelatin; severe immunodeficiency, including leukemia, lymphoma, other marrow or lymphatic malignancy, high-dose immunosuppressive therapy, AIDS or symptomatic HIV with severe immunosuppression; pregnancy; active untreated tuberculosis; family history of congenital or hereditary immunodeficiency until immune competence is established (label)|Moderate or severe acute illness; recent immune globulin or blood products; personal or family history of seizures or any condition that lowers the seizure threshold; history of thrombocytopenia; salicylate therapy
+Febrile seizures occur about twice as often in the 5 to 12 days after a first dose of MMRV at 12 to 23 months of age as after separate MMR and varicella given at the same visit, an excess on the order of 1 additional febrile seizure per 2300 to 2600 children vaccinated; higher fever rates than with the separate vaccines; thrombocytopenia; vaccine-strain varicella rash with rare transmission to susceptible contacts; disseminated vaccine virus in severely immunocompromised recipients.|None|Salicylates are avoided for 6 weeks after a varicella-containing vaccine per label because of Reye syndrome concern; pregnancy is avoided for 3 months after vaccination per label; tuberculin reactivity can be suppressed for several weeks, so testing is done the same day or 4 to 6 weeks later; ACIP describes separate MMR and varicella as the option that avoids the excess febrile seizure risk for a first dose at 12 to 47 months.
+Not indicated; licensed only through 12 years of age (label)|0.5 mL SC per dose, with the first dose at 12 to 15 months and the second at 4 to 6 years of age (label)|Not weight based|0.5 mL per dose|At least 3 months between doses when both doses are MMRV (label)|Not applicable|No adjustment|No adjustment
+SC|-|-|-|-|-|Yes (outer upper arm or anterolateral thigh)|-|-|Single injection|Lyophilized vaccine stored frozen and reconstituted only with the supplied sterile diluent, then given promptly|Not applicable|Not mixed in a syringe with other vaccines; the label directs subcutaneous administration
+Antibodies develop over about 2 to 6 weeks|About 4 to 6 weeks after each dose|Long lasting after 2 doses; measles and rubella immunity is likely lifelong, while mumps and varicella protection can wane|Not applicable (vaccine)|Not applicable (antigens processed by the immune system)|Not applicable|Not applicable
+Injection-site pain and redness, fever, irritability, measles-like or varicella-like rash|Febrile seizures, transient thrombocytopenia, parotitis, vaccine-strain herpes zoster|Anaphylaxis (rare); disseminated vaccine-strain infection in severely immunocompromised recipients
+Immune globulin and blood products interfere with the live components, with deferral intervals of 3 to 11 months per CDC/ACIP; herpes antivirals such as acyclovir and valacyclovir near the time of vaccination can reduce the varicella response; other live vaccines are given the same day or at least 28 days apart|Immunosuppressants, chemotherapy, high-dose corticosteroids, salicylates in children|No food interaction|No interaction|MMRV replaces separate MMR and varicella injections at one visit, which halves the number of injections while carrying the higher first-dose febrile seizure rate in toddlers
+-|-|-|-|-|-|Febrile seizure risk 5 to 12 days after a first dose in 12 to 23 month olds|-|Measles, mumps, rubella and varicella IgG document immunity when records are missing|Temperature, rash and injection site; observation for syncope and allergic reaction
+Contraindicated in pregnancy (live vaccine); pregnancy is avoided for 3 months after a dose per label|Compatible with breastfeeding|Licensed 12 months through 12 years; ACIP notes separate MMR and varicella as the lower febrile seizure option for a first dose at 12 to 47 months|Not applicable|No adjustment|No adjustment
+No overdose toxicity described; an extra dose is not associated with serious harm|Not applicable|Not applicable|Supportive care; epinephrine for anaphylaxis|None|None
+Not given by EMS.|A febrile seizure in a toddler 5 to 12 days after MMRV is a recognized vaccine-associated event and is usually benign; the fever peak of a live measles-containing vaccine falls in that second week rather than on the day of the injection.|Age, pregnancy, immune status, recent blood products or immune globulin, salicylate use and prior reactions are reviewed before vaccination.|Fever and rash over the following 2 weeks; syncope and allergic reaction in the first minutes.|Anaphylaxis after a prior dose is a contraindication to further doses per label.|Giving MMRV to a child 13 years or older or to an immunocompromised child; giving it IM when the label directs SC; reconstituting with the wrong diluent; loss of potency from improper frozen storage.|Immunosuppressive therapy, recent immune globulin or transfusion, aspirin in children.|One MMRV injection replaces two, but a first dose at 12 to 23 months doubles the febrile seizure rate compared with MMR and varicella given separately at the same visit.
+No disease; MMRV is routine childhood immunization.|The routine 12 to 15 month visit or the 4 to 6 year dose, given as one injection rather than two.|Date of vaccination and any fever, rash or seizure since.|Febrile seizure in a toddler, anaphylaxis (rare) or transient thrombocytopenia with bruising.|Not applicable (one-time doses); an incomplete series leaves the child susceptible to measles and varicella.
+Four live but weakened viruses in one shot, teaching the body to fight measles, mumps, rubella and chickenpox.|MMRV is a live attenuated combination vaccine licensed for children 12 months through 12 years that delivers MMR and varicella protection in a single injection.|MMRV is four for the price of one injection, and the price is twice the febrile seizures on a first dose in toddlers.|Licensed 12 months through 12 years, stored frozen, given subcutaneously.|MMRV carries about double the febrile seizure risk of separate MMR plus varicella when the first dose is given at 12 to 23 months, roughly 1 extra febrile seizure per 2300 to 2600 children.|MMR plus separate varicella vaccine; Varivax; Shingrix|MMR vaccine, varicella vaccine, Priorix|None (immune globulin gives passive measles or varicella protection for those who cannot receive a live vaccine)
+`);
+DB.add("hepatitis-ab-vaccine","Hepatitis A and B Combination Vaccine (Twinrix)","HM",`
+Hepatitis A (inactivated) and Hepatitis B (recombinant) Vaccine|Twinrix (GSK)|Twinrix|Vaccine (inactivated viral plus recombinant subunit, combination)|Formalin-inactivated hepatitis A virus with recombinant hepatitis B surface antigen, aluminum adsorbed|Not controlled
+A single shot that carries both the killed hepatitis A vaccine and the hepatitis B surface protein vaccine.|Raises neutralizing anti-HAV antibody and anti-HBs antibody at the same time.|Used to immunize adults against both hepatitis A and hepatitis B, commonly before travel or when risk factors for both infections are present.
+Two non-replicating antigens share one aluminum adjuvant: whole hepatitis A virus of the HM175 strain grown in MRC-5 cells and killed with formalin, and hepatitis B surface antigen produced recombinantly in Saccharomyces cerevisiae yeast. Aluminum hydroxide and aluminum phosphate hold the antigens at the injection site and drive a helper-T-cell-dependent, antibody-predominant response, so B cells make neutralizing anti-HAV IgG and anti-HBs IgG. A killed whole-virus platform suits hepatitis A because the intact capsid displays the neutralizing epitopes and the virus grows well in cell culture, while a recombinant subunit platform suits hepatitis B because HBsAg self-assembles into immunogenic 22 nm particles and the virus is not conveniently cultured. Neither antigen replicates, so the product carries no infection risk and relies on the adjuvant for potency.|Hepatitis A virus capsid antigens and hepatitis B surface antigen (HBsAg)|Active immunization (inactivated and recombinant antigens with aluminum adjuvant)|Anti-HAV seroconversion in nearly all recipients by about 1 month after the second dose and anti-HBs of 10 mIU per mL or more in roughly 95% after the third dose; hepatitis A protection probably 20 years or more and hepatitis B protection long term in those who respond.
+Active immunization against disease caused by hepatitis A virus and against infection by all known subtypes of hepatitis B virus in persons 18 years of age and older (label)|Pre-travel immunization for adults needing both antigens, and risk-based use in chronic liver disease, men who have sex with men, people who use drugs and occupational bloodborne exposure per CDC/ACIP|-|-
+Severe allergic reaction to a prior dose of this product, to a hepatitis A or hepatitis B vaccine, or to a component including neomycin and yeast (label)|Moderate or severe acute illness; latex sensitivity with some prefilled syringe tip caps; immunosuppression, which reduces the response
+Syncope; reduced response with hemodialysis, obesity, smoking, advancing age, diabetes and immunosuppression; the product does not treat established hepatitis B infection and gives no protection against hepatitis C or E, although preventing hepatitis B also prevents hepatitis D, which cannot occur without it.|None|The hepatitis A antigen content of each dose is half the adult single-antigen dose, which is why the standard combination series runs to 3 doses rather than the 2 doses of an adult hepatitis A vaccine; an accelerated 4-dose schedule is also labeled for travel on short notice.
+1 mL IM at 0, 1 and 6 months; an accelerated schedule of 1 mL on day 0, day 7 and day 21 to 30 followed by a booster dose at 12 months is also labeled (label, 18 years and older)|Not indicated; licensed from 18 years of age in the US, where separate pediatric hepatitis A and hepatitis B vaccines are used (label)|Not weight based|1 mL per dose|Standard doses at 0, 1 and 6 months, or accelerated doses on days 0, 7 and 21 to 30 with a 12-month booster (label)|Not applicable|No adjustment; higher-antigen single-antigen hepatitis B products are the ones labeled for dialysis patients|No adjustment
+IM|-|-|Yes (deltoid)|-|-|-|-|-|Single injection|Shaken well to a uniform cloudy white suspension; not diluted and not mixed in a syringe with other vaccines|Not applicable|Not given IV, SC or intradermally; gluteal injection is associated with a lower anti-HBs response
+Anti-HAV within about 2 to 4 weeks of the first dose; anti-HBs after the second and third doses|About 1 month after the final dose|Hepatitis A protection probably 20 years or more; hepatitis B protection long term in those reaching 10 mIU per mL|Not applicable (vaccine)|Not applicable (antigens processed by the immune system)|Not applicable|Not applicable
+Injection-site soreness, redness and swelling, headache, fatigue, low-grade fever, nausea|Syncope, urticaria|Anaphylaxis (rare)
+Immunosuppressants and chemotherapy reduce response; immune globulin given at the same visit at a separate site still allows a protective response to these inactivated antigens, unlike its effect on live viral vaccines|Immunosuppressants, high-dose corticosteroids, chemotherapy|No food interaction|No interaction|Single-antigen and combination doses can be counted toward either antigen once each antigen has received the labeled number of doses, as the CDC schedule describes
+-|-|-|-|-|-|-|-|Anti-HBs 1 to 2 months after the final dose documents response in health care workers, dialysis patients and infants of HBsAg-positive mothers; anti-HAV is not routinely checked after vaccination|Observation for syncope and allergic reaction
+Inactivated and recombinant antigens with no evidence of fetal harm; the CDC schedule describes hepatitis A and B vaccination in pregnancy when risk is present|Compatible with breastfeeding|Not licensed under 18 years of age in the US|Response is somewhat lower with advancing age|No adjustment; dialysis patients need the higher hepatitis B antigen content that this combination does not provide|Chronic liver disease raises the severity of acute hepatitis A and B, and the CDC schedule lists these patients among those vaccinated
+No overdose toxicity described|Not applicable|Not applicable|Supportive care; epinephrine for anaphylaxis|None|None
+Not given by EMS.|Hepatitis B is the bloodborne occupational risk behind needlestick protocols, and anti-HBs of 10 mIU per mL or more after the series marks a responder; this product covers the fecal-oral hepatitis A virus and the bloodborne hepatitis B virus in one injection.|Age (18 and older in the US), dose number and interval, allergy to yeast or neomycin, and pregnancy status are reviewed before vaccination.|Syncope and allergic reaction in the minutes after injection; local soreness for a day or two.|Anaphylaxis after a prior dose is a contraindication to further doses per label.|Treating the 3-dose combination series as equivalent to the 2-dose adult hepatitis A series; omitting the 12-month booster of the accelerated schedule; giving a pediatric single-antigen volume; gluteal injection.|None clinically important.|Each dose carries 720 EL.U. of hepatitis A antigen, half the adult single-antigen dose, alongside a full 20 mcg of HBsAg, which is why hepatitis A protection takes 3 combination doses instead of 2.
+No disease; vaccination for travel, occupational risk, liver disease or other risk for both viruses.|Planned travel to an area where hepatitis A is endemic, health care or public safety work, chronic liver disease, or risk factors for bloodborne or fecal-oral exposure.|Dose dates, whether the series was completed, and any allergic symptoms after a dose.|Anaphylaxis (rare) or syncope.|Not applicable; an incomplete series leaves protection against one or both viruses short of the labeled schedule.
+One shot that carries both the killed hepatitis A vaccine and the hepatitis B protein vaccine.|Twinrix is a combination inactivated hepatitis A and recombinant hepatitis B vaccine for adults, given at 0, 1 and 6 months or on an accelerated travel schedule.|Twin antigens, triple doses: the half-strength hepatitis A component is why the combination takes 3 doses while hepatitis A alone takes 2.|Licensed 18 years and older; 0, 1 and 6 months, or days 0, 7 and 21 to 30 plus a 12-month booster.|Hepatitis A vaccine is inactivated whole virus and hepatitis B vaccine is recombinant HBsAg; isolated anti-HBs indicates vaccination, while anti-HBc indicates past or present infection.|Hepatitis A vaccine alone (Havrix, Vaqta) and hepatitis B vaccine alone (Engerix-B, Recombivax HB, Heplisav-B)|Havrix, Vaqta, Engerix-B, Recombivax HB|Immune globulin and hepatitis B immune globulin give passive protection rather than reversal
+`);
+DB.add("adenovirus-vaccine","Adenovirus Type 4 and Type 7 Vaccine (live, oral)","HM RE",`
+Adenovirus Type 4 and Adenovirus Type 7 Vaccine, Live, Oral|No brand name; supplied by Barr Labs, a Teva subsidiary|Adenovirus vaccine|Vaccine (live, non-attenuated, enteric-coated oral)|Live wild-type adenovirus serotypes 4 and 7 in enteric-coated tablets|Not controlled
+Two swallowed tablets of live adenovirus that survive the stomach and prevent the respiratory illness the same virus causes in the lungs.|Lets the virus replicate harmlessly in the intestine, where it raises serotype-specific neutralizing antibody that protects the respiratory tract.|Used to prevent febrile acute respiratory disease caused by adenovirus types 4 and 7 in United States military personnel 17 through 50 years of age.
+Live, non-attenuated wild-type adenovirus type 4 and type 7 are supplied in separate enteric-coated tablets that pass the stomach intact and release virus in the small intestine, where it replicates in enterocytes and produces an essentially asymptomatic enteric infection instead of respiratory disease. That replication raises serotype-specific neutralizing IgG against the hexon and fiber capsid proteins plus mucosal antibody, and circulating neutralizing antibody prevents febrile acute respiratory disease on later respiratory exposure. A live non-attenuated platform given by the enteric route was chosen because adenovirus is pathogenic in the respiratory tract but benign in the gut, so changing the route of entry turns the same unmodified virus that causes barracks outbreaks into the immunogen; natural-infection-strength immunity follows a single oral course and no adjuvant is needed.|Adenovirus type 4 and type 7 capsid proteins, chiefly hexon and fiber, presented from intestinal replication|Active immunization (live replicating antigen, no adjuvant)|Neutralizing antibody rises in the great majority of recipients within about 1 to 2 months; fielding has been followed by large reductions in adenovirus-associated febrile respiratory illness in recruit populations; vaccine virus is shed in stool for up to about 28 days.
+Active immunization for the prevention of febrile acute respiratory disease caused by adenovirus types 4 and 7 in military personnel 17 through 50 years of age (label)|None; the product is not licensed for civilian use and is distributed through the military health system|Recognition during recruit training that a trainee may have received live oral adenovirus vaccine tablets in the preceding weeks|-
+Severe allergic reaction to a prior dose or to a component; the label states the vaccine is not for use in pregnant women (label)|Breastfeeding; immunodeficiency or immunosuppressive therapy; close contact with immunocompromised or pregnant household members, because vaccine virus is shed in stool; inability to swallow a tablet whole
+Live virus is shed in stool for up to about 28 days after vaccination, so transmission to close contacts is possible and the label emphasizes hand hygiene; the tablets are swallowed whole because chewing or crushing destroys the enteric coating and exposes the respiratory tract to live virus; the vaccine covers only serotypes 4 and 7 and not the other adenovirus serotypes.|None|Gastrointestinal, headache and upper respiratory symptoms occurred at rates close to placebo in the licensure trial; no inactivated adenovirus vaccine is licensed in the United States, so there is no interchangeable product.
+One tablet of type 4 and one tablet of type 7 swallowed whole together as a single oral course in persons 17 through 50 years of age (label)|Not established; licensed from 17 years of age (label)|Not weight based|One tablet of each type as a single course|No booster course is described in the label|Not applicable|No adjustment|No adjustment
+PO|-|-|-|-|Yes (two enteric-coated tablets swallowed whole with liquid)|-|-|-|Single oral course|Not reconstituted; refrigerated storage with protection from moisture per label|Not applicable|Swallowed whole and not chewed, crushed or split, because the enteric coating is what directs the virus to the intestine
+Neutralizing antibody rises over several weeks|About 1 to 2 months|Protection described over the training period and beyond; long-term durability is not fully characterized|Not applicable (vaccine)|Not applicable (virus replicates in the gut and antigens are processed by the immune system)|Vaccine virus shed in stool for up to about 28 days|Not applicable
+Upper respiratory symptoms, nasal congestion, headache, cough, abdominal pain, diarrhea, nausea and low-grade fever, reported at rates similar to placebo|Hypersensitivity reactions|Anaphylaxis (rare); disseminated adenovirus infection is a theoretical concern in severe immunodeficiency
+Immunosuppressants and chemotherapy may reduce the response and raise the risk associated with a live vaccine|Immunosuppressants, high-dose corticosteroids, chemotherapy|No specific food interaction; the tablets are taken with liquid per label|No interaction|Given alongside the other vaccines used in recruit in-processing; the live enteric route is not subject to the immune globulin interference that affects live injected viral vaccines
+-|-|-|-|-|Fever, sore throat and cough in the weeks after vaccination|-|-|Serotype-specific neutralizing antibody titers in research and outbreak investigations|Gastrointestinal symptoms and hand hygiene while virus is shed in stool
+The label states the vaccine is not for use in pregnancy|Caution; data are limited|Not established under 17 years of age|Licensed through 50 years of age|No adjustment|No adjustment
+No overdose toxicity described|Not applicable|Not applicable|Supportive care|None|None
+Not given by EMS.|Adenovirus types 4 and 7 were the classic cause of explosive febrile acute respiratory disease in basic training, with fever, pharyngitis and pneumonia moving rapidly through crowded barracks and berthing; the oral tablets are part of recruit in-processing, which is why a trainee may report swallowing vaccine tablets rather than receiving a shot.|Pregnancy, immune status, household contacts who are pregnant or immunocompromised, and the ability to swallow a tablet whole are reviewed before the course.|Gastrointestinal and upper respiratory symptoms, and hand hygiene while virus is shed in stool for up to about 28 days.|Severe allergic reaction to a prior dose is a contraindication to further doses per label.|Chewing or crushing the tablets, which defeats the enteric coating; assuming protection against other adenovirus serotypes or against the other causes of recruit respiratory illness.|Immunosuppressive therapy; close household contact with an immunocompromised person during the shedding period.|US adenovirus vaccine production stopped in the 1990s and the last doses ran out in 1999, after which febrile acute respiratory disease returned to recruit training centers at high rates; a new live oral vaccine was licensed and fielded in 2011 and adenovirus-associated disease in recruits fell sharply, which is the clearest modern example of a vaccine withdrawal and reintroduction measured in one population.
+No disease; it marks current or recent US military service, usually recruit training.|Routine in-processing immunization for military personnel 17 through 50 years of age.|The date of the vaccine course, any fever or respiratory symptoms, and household contacts who are pregnant or immunocompromised.|Febrile respiratory illness in a training environment, which has many causes besides adenovirus.|Not applicable; the label describes a single oral course.
+Two tablets of live virus swallowed on purpose, because in the gut the virus is harmless yet still teaches the body to fight the lung infection it would otherwise cause.|A live non-attenuated oral adenovirus type 4 and type 7 vaccine licensed only for US military personnel 17 through 50 years of age to prevent febrile acute respiratory disease.|Swallow the enemy: the enteric coating sends live adenovirus to the gut, where it immunizes instead of infecting the lungs.|Enteric-coated live virus, swallowed whole, shed in stool for up to about 28 days.|Adenovirus types 4 and 7 cause epidemic febrile acute respiratory disease and pharyngoconjunctival fever in military recruits; the live oral vaccine is the only adenovirus vaccine licensed in the US and its use is restricted to military personnel.|Oral polio vaccine and oral typhoid Ty21a, the other live oral vaccines; injected inactivated respiratory vaccines|Oral typhoid vaccine Ty21a, rotavirus vaccine, oral polio vaccine|None
+`);
+DB.add("dt-vaccine","DT Vaccine (pediatric diphtheria and tetanus toxoids)","HM PE",`
+Diphtheria and Tetanus Toxoids Adsorbed (DT), pediatric formulation|Supplied in the US as generically labeled pediatric DT; supply has been limited at times|DT|Vaccine (toxoid), pediatric|Full-strength diphtheria and tetanus toxoids, aluminum adsorbed, without pertussis antigens|Not controlled
+The childhood diphtheria and tetanus shot with the whooping cough part left out.|Teaches the immune system to make antibodies that neutralize diphtheria and tetanus toxins.|Used in children under 7 years of age when a pertussis-containing vaccine is not being given, such as when a contraindication to pertussis vaccine exists.
+Diphtheria toxin and tetanus toxin are inactivated with formaldehyde, which cross-links the protein and abolishes enzymatic activity while preserving the conformational epitopes, so the resulting toxoids raise neutralizing antitoxin with no toxic effect; adsorption onto aluminum salts creates an antigen depot and drives a helper-T-cell-dependent IgG response. Antitetanus antibody binds tetanospasmin before it reaches motor nerve terminals and travels retrograde to cleave synaptobrevin in spinal inhibitory interneurons, and antidiphtheria antibody blocks the B fragment from delivering the A fragment that ADP-ribosylates elongation factor 2. A toxoid platform suits both pathogens because the disease is produced entirely by a single secreted exotoxin rather than by bacterial invasion, so neutralizing the toxin is sufficient and immunity against the organism itself is not required.|Diphtheria toxin and tetanus toxin (tetanospasmin)|Active immunization (toxoid antigens with aluminum adjuvant)|Protective antitoxin in nearly all children after the primary series; antitoxin wanes over roughly a decade, which underlies the booster intervals in the published schedule; no pertussis protection whatever.
+Active immunization against diphtheria and tetanus in infants and children from 6 weeks through 6 years of age (label)|Completion of the diphtheria and tetanus series in a child with a contraindication to pertussis-containing vaccine, such as encephalopathy within 7 days of a prior pertussis dose, as the CDC/ACIP schedule describes|Recognition that a child vaccinated with DT carries no pertussis protection|-
+Severe allergic reaction to a previous dose of a diphtheria or tetanus toxoid containing vaccine or to a component (label)|Guillain-Barre syndrome within 6 weeks of a prior tetanus toxoid containing vaccine; history of an Arthus-type reaction after a prior dose; moderate or severe acute illness
+Arthus-type hypersensitivity with closely spaced doses; extensive limb swelling; syncope; Guillain-Barre syndrome reported after tetanus toxoid containing vaccines; no pertussis component, so a child receiving DT remains susceptible during community pertussis activity.|None|Not labeled for persons 7 years of age and older, who receive the reduced-diphtheria Td or Tdap products instead; pediatric DT is a low-volume product because combination vaccines cover nearly all children, and supply has been intermittent.
+Not indicated; licensed through 6 years of age, with Td and Tdap labeled from 7 years (label)|0.5 mL IM; the primary series and reinforcing doses follow the product labeling and the CDC/ACIP catch-up tables, generally 3 primary doses with later reinforcing doses around 15 to 20 months and at 4 to 6 years of age|Not weight based|0.5 mL per dose|Intervals of about 4 to 8 weeks between primary doses, with later reinforcing doses per label and the CDC/ACIP schedule|Not applicable|No adjustment|No adjustment
+IM|-|-|0.5 mL into the anterolateral thigh in infants or the deltoid in older children|-|-|-|-|-|Single injection|Shaken to a uniform suspension; not diluted|Not applicable|Not mixed in a syringe with other vaccines
+Protective antitoxin after the primary series|About 1 month after each dose|Roughly 10 years of antitoxin protection, the basis of decennial boosters|Not applicable (vaccine)|Not applicable (antigens processed by the immune system)|Not applicable|Not applicable
+Injection-site pain, redness and swelling, low-grade fever, fussiness, drowsiness|Arthus reaction, extensive limb swelling, syncope|Anaphylaxis (rare)
+Immunosuppressants and chemotherapy reduce the antibody response|Immunosuppressants, high-dose corticosteroids, chemotherapy|No food interaction|No interaction|Tetanus immune globulin can be given at a separate site for a tetanus-prone wound in an incompletely immunized child, supplying immediate passive antitoxin while the toxoid raises active immunity
+-|-|-|-|-|-|Any seizure or neurologic change after a dose|-|Tetanus and diphtheria antitoxin titers in immunodeficiency work-up or research|Temperature and injection site; observation for syncope
+Not applicable (pediatric product); Tdap is the tetanus-containing product labeled for use in pregnancy|Not applicable|Licensed 6 weeks through 6 years of age|Not applicable|No adjustment|No adjustment
+Not applicable|-|Not applicable|Supportive care; epinephrine for anaphylaxis|None|None
+Not given by EMS.|Four tetanus-containing products are easy to confuse: DTaP and DT are full-strength pediatric products for children under 7, Tdap and Td carry reduced diphtheria antigen for people 7 and older, and DT and Td are the two with no pertussis component at all.|Age, prior reactions, the reason pertussis antigen is being omitted, and the dose number in the series are reviewed before vaccination.|Local reaction, fever and syncope.|Anaphylaxis after a prior dose is a contraindication to further doses per label.|Giving DT to a person 7 years or older; giving Td to a child under 7; assuming DT provides pertussis protection.|None major.|Capital D means full-strength diphtheria toxoid for children under 7, lowercase d means reduced diphtheria for ages 7 and older, and the absence of a P or p means no pertussis component.
+No disease; it indicates childhood immunization in which the pertussis antigen was omitted, often because of a contraindication to pertussis vaccine.|A contraindication to pertussis-containing vaccine, such as encephalopathy within 7 days of a prior dose, or a parental decision recorded in the chart.|Which tetanus-containing product was given and when, and whether pertussis vaccine was ever received.|Pertussis in an unprotected young child; local reaction or anaphylaxis after a dose (rare).|Not applicable (series doses); an incomplete series leaves antitoxin below protective levels.
+The childhood tetanus and diphtheria shot without the whooping cough part.|DT is the full-strength pediatric diphtheria and tetanus toxoid vaccine for children 6 weeks through 6 years of age when pertussis antigen is being left out.|Big letters for little kids: DTaP and DT are full strength for under 7, Td and Tdap are reduced for 7 and over, and the two without a P carry no pertussis.|Licensed 6 weeks through 6 years of age; no pertussis component.|Toxoids are formaldehyde-inactivated exotoxins that still raise neutralizing antitoxin; diphtheria toxin ADP-ribosylates elongation factor 2 while tetanospasmin cleaves synaptobrevin and blocks GABA and glycine release.|DTaP (contains acellular pertussis) and Td (reduced diphtheria, ages 7 and older)|DTaP, Td, Tdap, tetanus toxoid|Tetanus immune globulin provides immediate passive antitoxin rather than reversal
+`);
+DB.add("tetanus-toxoid","Tetanus Toxoid (single-antigen, historical)","HM",`
+Tetanus Toxoid Adsorbed, single antigen|Formerly supplied as Tetanus Toxoid Adsorbed; no single-antigen tetanus product is distributed in the United States|Tetanus toxoid, TT|Vaccine (toxoid), single antigen, historical|Formaldehyde-inactivated tetanus toxin adsorbed to aluminum salts|Not controlled
+The old tetanus-only shot, a historical product that combination tetanus vaccines replaced.|Raised antibodies that neutralize tetanus toxin before it could reach nerve endings.|Historically used for primary tetanus immunization, boosters and wound prophylaxis; this card is historical and comparative, because single-antigen tetanus toxoid is no longer distributed in the US and the tetanus antigen is now supplied in Td, Tdap, DT and DTaP.
+Tetanospasmin, the exotoxin of Clostridium tetani, is treated with formaldehyde, which cross-links the protein and destroys enzymatic activity while leaving the antigenic surface recognizable, so the toxoid raises neutralizing IgG antitoxin with no toxic effect; aluminum adsorption forms a depot and recruits helper T cells. The resulting antitoxin binds circulating toxin before it enters motor nerve terminals, preventing retrograde axonal transport to spinal inhibitory interneurons where the toxin light chain would cleave synaptobrevin (VAMP) and halt GABA and glycine release. A toxoid platform was used because tetanus is caused entirely by the toxin of a wound-dwelling spore former rather than by bacterial spread, and because natural infection confers no immunity, so protection has to come from a toxin-directed vaccine.|Tetanus toxin (tetanospasmin), neutralized in the circulation before it reaches the neuronal SNARE machinery|Active immunization (toxoid antigen with aluminum adjuvant)|A serum antitoxin level of about 0.01 IU per mL or more by neutralization assay has conventionally been regarded as protective; titers rise over about 2 to 4 weeks after a booster and decline over roughly a decade.
+Historically, active immunization against tetanus (former label)|Historically, primary immunization, decennial boosters and tetanus prophylaxis in wound management, roles now filled by Td and Tdap per CDC/ACIP|Recognition of tetanus immunization history during wound assessment|-
+Severe allergic reaction to a previous tetanus toxoid containing vaccine or to a component (former label)|Guillain-Barre syndrome within 6 weeks of a prior tetanus toxoid dose; history of an Arthus-type reaction; moderate or severe acute illness
+Arthus-type hypersensitivity with frequent boosters; brachial neuritis; Guillain-Barre syndrome reported after tetanus toxoid containing vaccines; syncope; the single-antigen product carried no diphtheria or pertussis antigen, which is the main reason combination products replaced it.|None|No single-antigen tetanus toxoid is distributed in the United States, so published tetanus wound-management tables now refer to Td or Tdap; the entry remains useful as the active-immunity comparison for tetanus immune globulin.
+Historically 0.5 mL IM for a booster, with a primary series of 3 doses in previously unvaccinated persons (former label); tetanus antigen is now given as Td or Tdap|Historically 0.5 mL IM; pediatric tetanus antigen is now given as DTaP or DT|Not weight based|0.5 mL per dose|Booster intervals of about 10 years were described, and about 5 years in the setting of a tetanus-prone wound|Not applicable|No adjustment|No adjustment
+IM|-|-|0.5 mL into the deltoid|-|-|-|-|-|Single injection|Shaken to a uniform suspension|Not applicable|A fluid, non-adsorbed tetanus toxoid also existed historically and was less immunogenic than the adsorbed product
+Antitoxin rise within about 1 to 2 weeks after a booster in a primed person|About 1 month|About 10 years|Not applicable (vaccine); by contrast passive tetanus immune globulin has a half-life of roughly 3 to 4 weeks|Not applicable (antigen processed by the immune system)|Not applicable|Not applicable
+Injection-site pain, redness and swelling, low-grade fever, malaise|Arthus reaction, brachial neuritis, syncope|Anaphylaxis (rare)
+Immunosuppressants and chemotherapy reduce the antibody response|Immunosuppressants, high-dose corticosteroids, chemotherapy|No food interaction|No interaction|Tetanus immune globulin was given at a separate site with a separate syringe so that passive antitoxin did not neutralize the toxoid at the injection site
+-|-|-|-|-|-|Arm weakness or sensory change after injection raises concern for brachial neuritis|-|Tetanus antitoxin titer, with about 0.01 IU per mL by neutralization regarded as protective|Injection site reaction; observation for syncope
+Tetanus antigen in pregnancy is now given as Tdap, which the ACIP guideline describes in each pregnancy at 27 through 36 weeks|Compatible|Pediatric tetanus antigen is now given as DTaP or DT|Older adults are the group most often found underimmunized against tetanus in the US|No adjustment|No adjustment
+Not applicable|-|Not applicable|Supportive care; epinephrine for anaphylaxis|None|None
+Not given by EMS.|Tetanus toxoid produces active immunity that takes weeks to build, while human tetanus immune globulin supplies ready-made antitoxin that acts within hours but lasts only weeks: the classic active versus passive immunity pair, given at separate sites when both are used for a tetanus-prone wound in an incompletely immunized patient.|Tetanus vaccination history and dates, prior reactions and the nature of the wound were reviewed before administration.|Local reaction, syncope, and arm weakness suggesting brachial neuritis.|Anaphylaxis after a prior dose was a contraindication to further doses.|Recording a tetanus shot without noting which combination product was used; assuming a tetanus-only product is still available; drawing immune globulin and toxoid into one syringe.|None major.|Natural tetanus infection confers no immunity, because the lethal dose of tetanospasmin is far below the immunogenic dose, so a survivor of tetanus still lacks protective antitoxin and the toxoid series is the only source of it.
+Recent wound care or catch-up immunization in a historical record; a current chart entry would name Td or Tdap.|Historically a decennial booster or wound prophylaxis.|The date of the last tetanus-containing vaccine and which product it was.|Not applicable.|Not applicable (one-time doses); antitoxin titers fall over about a decade without boosters.
+The old tetanus-only shot, made from the tetanus toxin itself with its poison switched off; combination shots have replaced it.|Single-antigen tetanus toxoid is a historical adsorbed toxoid vaccine, no longer distributed in the US, whose role has been taken over by Td, Tdap, DT and DTaP.|Toxoid teaches, globulin lends: the toxoid builds your own antitoxin over weeks, while tetanus immune globulin lends you someone else's for a few weeks.|No longer distributed in the US; tetanus antigen is supplied only in combination products.|Tetanus toxoid gives active immunity while tetanus immune globulin gives immediate passive immunity, and both are used at separate sites for a tetanus-prone wound in a patient with fewer than 3 documented toxoid doses.|Tetanus immune globulin (passive antibody, not a vaccine) and equine tetanus antitoxin (historical)|Td, Tdap, DT, DTaP|Tetanus immune globulin provides passive antitoxin; a vaccine has no reversal agent
+`);
+DB.add("zoster-live-vaccine","Zoster Vaccine Live (Zostavax, discontinued)","HM",`
+Zoster Vaccine Live|Zostavax (Merck), discontinued in the United States in 2020|Shingles vaccine (older live product)|Vaccine (live attenuated viral), discontinued in the US|High-potency live attenuated varicella-zoster virus, Oka/Merck strain|Not controlled
+The original live shingles vaccine, a single high-potency weakened chickenpox-virus shot that is no longer sold in the US.|Boosted the existing varicella-zoster immunity of older adults so that latent virus was less likely to reactivate.|Historically given as a single dose to reduce herpes zoster and postherpetic neuralgia in adults 50 years and older; this card is historical and comparative, because the product was discontinued in the US in 2020 after the recombinant adjuvanted zoster vaccine proved more effective and more durable.
+The same live attenuated Oka/Merck varicella-zoster virus used in childhood varicella vaccine was supplied at far higher titer, on the order of 19,400 plaque-forming units per dose and more than ten times the potency of the pediatric varicella product. In an already-immune older adult the virus replicates briefly and acts as a booster rather than a primary immunization, re-expanding VZV-specific CD4 memory T cells whose age-related decline (immunosenescence) permits latent virus in dorsal root ganglia to reactivate. A live attenuated platform was chosen because replicating virus presents the whole antigenic repertoire and had already proved immunogenic for primary varicella, but that same replication is why the product was contraindicated in significant immunocompromise, and the cell-mediated boost it produced waned within several years.|Varicella-zoster virus glycoproteins and other viral antigens, boosting VZV-specific cell-mediated immunity|Active immunization (live replicating antigen, no adjuvant)|In the Shingles Prevention Study a single dose reduced herpes zoster incidence by about 51% and postherpetic neuralgia by about 67% in adults 60 and older, with efficacy against zoster around 38% in those 70 and older and further decline over the following years.
+Historically, prevention of herpes zoster in persons 50 years of age and older (former label)|None current; the recombinant adjuvanted zoster vaccine now carries the US zoster indication, including for adults 18 and older at increased risk from immunodeficiency or immunosuppression|Recognition, in the historical setting, of a vaccine-strain varicella-like or zoster-like rash in a recently vaccinated older adult|-
+Severe allergic reaction to gelatin, neomycin or any component; primary or acquired immunodeficiency states including leukemia, lymphoma, AIDS or other clinical manifestations of HIV, cellular immune deficiency and high-dose immunosuppressive therapy; pregnancy (former label)|Moderate or severe acute illness; recent or planned immunosuppressive therapy; an active herpes zoster episode; recent immune globulin or blood products
+As a live vaccine it could cause disseminated vaccine-strain infection in immunocompromised recipients, the central safety limitation that the non-live recombinant product removed; vaccine-strain zoster and varicella-like rash were reported; syncope.|None|Herpes antivirals active against varicella-zoster virus around the time of vaccination could limit replication and reduce the response; the product was not interchangeable with the recombinant adjuvanted vaccine, and a person who received the live product can subsequently receive the recombinant series as the CDC/ACIP schedule describes.
+Historically a single 0.65 mL dose SC in persons 50 years of age and older (former label)|Not established; not a pediatric product|Not weight based|0.65 mL as a single dose|No booster dose was described in the label|Not applicable|No adjustment|No adjustment
+SC|-|-|-|-|-|Yes (deltoid region of the upper arm)|-|-|Single injection|Lyophilized vaccine stored frozen, reconstituted only with the supplied diluent and given within about 30 minutes|Not applicable|Given subcutaneously rather than intramuscularly, in contrast with the recombinant adjuvanted vaccine
+Immune boost over several weeks|About 6 weeks|Efficacy waned substantially within about 5 to 8 years|Not applicable (vaccine)|Not applicable (antigens processed by the immune system)|Not applicable|Not applicable
+Injection-site erythema, pain, swelling and itching, headache|Varicella-like or zoster-like rash from vaccine strain, syncope|Anaphylaxis (rare); disseminated vaccine-strain infection in immunocompromised recipients
+Immunosuppressants, high-dose corticosteroids and chemotherapy (live vaccine contraindication and reduced response); acyclovir, valacyclovir and famciclovir near the time of vaccination; immune globulin and blood products|Immunosuppressants, chemotherapy, antivirals active against herpesviruses|No food interaction|No interaction|A prior dose of the live vaccine does not preclude later vaccination with the recombinant adjuvanted product, which the CDC/ACIP schedule addresses
+-|-|-|-|-|-|-|-|VZV IgG does not reliably indicate protection against zoster|Injection site and any rash; observation for syncope and allergic reaction
+Contraindicated in pregnancy (live vaccine)|Not applicable in practice (older adult product)|Not a pediatric product; the pediatric Oka/Merck product is varicella vaccine at much lower titer|The intended population was adults 50 and older, in whom waning cell-mediated immunity drives zoster risk|No adjustment|No adjustment
+No overdose toxicity described|Not applicable|Not applicable|Supportive care; epinephrine for anaphylaxis; antiviral therapy for disseminated vaccine-strain infection|None|None
+Not given by EMS.|Zostavax and Varivax were the same attenuated Oka/Merck virus at different potencies, which is why the high-titer adult product worked as an immune booster rather than a primary immunization.|Immune status, pregnancy, gelatin and neomycin allergy and current antiviral therapy were reviewed before administration in the historical setting.|Injection-site reaction, rash and syncope.|Anaphylaxis after a prior dose was a contraindication to further doses.|Confusing Zostavax with Varivax or with the recombinant Shingrix; giving the live product IM; giving it to an immunocompromised patient.|Immunosuppressive therapy; herpes antivirals near the time of vaccination.|Zostavax was one live attenuated SC dose with roughly 51% efficacy that waned within years, while the recombinant adjuvanted vaccine is a non-live 2-dose IM series with about 90% or greater efficacy that is also usable in immunocompromised adults, the comparison behind US discontinuation in 2020.
+No disease; it indicates adult zoster vaccination before 2020.|Historical shingles prevention in an adult 50 or older; a current record would list the recombinant adjuvanted vaccine.|Which zoster vaccine was received and when, and whether a 2-dose recombinant series was completed.|Vaccine-strain rash or disseminated infection in a patient not recognized as immunocompromised (rare and historical).|Not applicable (single dose); protection waned over years regardless.
+The old live shingles shot, a strong dose of weakened chickenpox virus, taken off the US market because a newer non-live vaccine works better and lasts longer.|Zostavax was a single-dose live attenuated high-titer Oka/Merck zoster vaccine, discontinued in the US in 2020 in favor of the recombinant adjuvanted product.|Live and fading versus recombinant and lasting: Zostavax was one live SC shot with about half the protection, Shingrix is two non-live IM shots with about 90%.|Discontinued in the US in 2020; contraindicated in significant immunocompromise because it was live.|Zostavax was live attenuated Oka/Merck virus at more than ten times varicella vaccine potency, roughly 51% effective against zoster with waning protection and contraindicated in immunocompromise; the recombinant gE plus AS01B vaccine replaced it because it is non-live, about 90% or more effective, more durable and usable in immunosuppression.|Varicella vaccine (same strain at lower titer) and the recombinant adjuvanted zoster vaccine|Varivax, ProQuad, Shingrix|Varicella-zoster immune globulin provides passive protection rather than reversal
+`);
+
+;
 DB.add("digoxin","Digoxin","HM ED CA",`
 Digoxin|Lanoxin; Digitek; Digox|Dig, Lanoxin|Antiarrhythmic; inotrope (cardiac glycoside)|Cardiac glycoside (digitalis glycoside); Na+/K+-ATPase inhibitor|Not controlled
 An old heart medicine made from the foxglove plant.|Makes the heart squeeze more strongly and slows conduction through the AV node so the heart rate drops.|Control ventricular rate in atrial fibrillation and improve symptoms in heart failure with reduced ejection fraction.
@@ -6085,7 +6696,7 @@ Replaces the major intracellular cation, maintaining the resting membrane potent
 Hypokalemia treatment and prevention|Prevention of hypokalemia with loop or thiazide diuretics; hypokalemia in digoxin therapy; DKA potassium replacement once K under 5.3 and urine output adequate|Recognize as home medication (usually with a diuretic); some critical care transport protocols continue running KCl infusions|Metabolic alkalosis with hypokalemia (chloride also needed)
 Hyperkalemia; severe renal impairment with oliguria or anuria; untreated Addison disease; solid oral forms in patients with delayed GI transit or esophageal compression|Renal impairment; potassium-sparing diuretics, ACE inhibitors, ARBs; acidosis; burns or crush injury (cell breakdown); heart block
 Hyperkalemia can cause fatal cardiac arrest; IV potassium concentrate is a high-alert medication and must never be given undiluted or by IV push.|No FDA boxed warning, but concentrated KCl injection is an ISMP high-alert medication: never IV push, never IM or SQ.|Solid oral forms can cause GI ulceration, bleeding, or stricture; check renal function and urine output before IV replacement; correct magnesium too, or potassium will not stay up.
-Prevention: 20 mEq PO daily. Treatment: 40-100 mEq/day PO in divided doses (usually no more than 20-40 mEq per dose). IV: 10-20 mEq per hour as ordered, total guided by repeat potassium levels.|PO 1-2 mEq/kg/day in divided doses; IV 0.5-1 mEq/kg per dose (max usually 40 mEq) infused over 1-2 h with continuous ECG|Pediatric 0.5-1 mEq/kg per dose|PO: about 40 mEq per single dose; IV peripheral: typically 10 mEq/h; IV central with cardiac monitor: up to 20 mEq/h (40 mEq/h only in extreme cases per protocol); usual total 200 mEq/day IV|Recheck potassium level before repeating doses|Premixed bags (e.g., 10 mEq/100 mL, 20 mEq/100 mL central) on an infusion pump only|Reduce dose; avoid in oliguria or anuria; monitor closely|No adjustment
+Prevention: 20 mEq PO daily. Treatment: 40-100 mEq/day PO in divided doses (usually no more than 20-40 mEq per dose). IV: 10-20 mEq per hour as ordered, total guided by repeat potassium levels.|PO 1-2 mEq/kg/day in divided doses; IV 0.5-1 mEq/kg per dose (max usually 40 mEq) infused over 1-2 h with continuous ECG|Pediatric 0.5-1 mEq/kg per dose|PO: label states no more than 20 mEq in a single dose (divide totals above 20 mEq/day); IV peripheral: typically 10 mEq/h; IV central with cardiac monitor: up to 20 mEq/h (40 mEq/h only in extreme cases per protocol); usual total 200 mEq/day IV|Recheck potassium level before repeating doses|Premixed bags (e.g., 10 mEq/100 mL, 20 mEq/100 mL central) on an infusion pump only|Reduce dose; avoid in oliguria or anuria; monitor closely|No adjustment
 PO, IV|Diluted infusion only via pump; never IV push|Not standard|NEVER|-|ER tablets, capsules, powder packets, oral solution|NEVER|-|-|IV peripheral usually max 10 mEq/h; central up to 20 mEq/h with cardiac monitoring|Use premixed bags whenever possible; if added to a bag, invert and mix well (prevents layering of concentrated potassium); powder and liquid must be diluted in at least 4-8 oz of water or juice|NS, D5W, half NS, LR (common premixed in NS)|PO: take with food and a full glass of water; swallow ER tablets whole, do not crush or chew (some tabs may be split or dissolved per label); sit upright. IV: use a pump, check site often (burning and phlebitis common, extravasation causes tissue damage), confirm urine output at least 30 mL/h before IV potassium
 PO 1-2 h; IV immediate|PO 1-2 h (ER 4-6 h)|Variable; depends on ongoing losses|Not applicable (distributes into cells)|Not metabolized|Renal (about 90%), feces (about 10%)|Not significant
 Nausea, vomiting, abdominal discomfort, diarrhea, flatulence; IV site pain and phlebitis|GI ulceration or bleeding (solid forms), hyperkalemia, extravasation tissue injury, muscle weakness, paresthesias|Severe hyperkalemia with cardiac arrest (especially IV push or rapid infusion), ventricular dysrhythmias
@@ -6548,7 +7159,7 @@ Binds the ryanodine receptor RyR1 on the sarcoplasmic reticulum of skeletal musc
 Malignant hyperthermia (treatment and prevention)|Spasticity from spinal cord injury, stroke, cerebral palsy, MS|Not typically EMS; critical care transport may carry for MH|Neuroleptic malignant syndrome; serotonin syndrome (limited)
 Active hepatic disease (oral chronic use)|Cardiac or pulmonary disease; females and over age 35 (hepatotoxicity)
 Hepatotoxicity with chronic oral use.|Boxed (oral): potentially fatal hepatotoxicity|Muscle weakness, phlebitis, high pH (extravasation).
-MH treatment: at least 1 mg/kg rapid IV push, repeat until signs subside, max cumulative 10 mg/kg. MH prevention: 2.5 mg/kg IV over at least 1 min starting about 75 min before surgery. Post-crisis: 4-8 mg/kg/day PO in 4 divided doses for 1-3 days. Spasticity: 25-100 mg PO 3-4 times daily. Off-label (per MHAUS): 2.5 mg/kg IV initial MH dose|MH: same mg/kg as adult (at least 1 mg/kg IV push, max cumulative 10 mg/kg). Off-label (per MHAUS): 2.5 mg/kg IV|1 mg/kg minimum (MH treatment); 2.5 mg/kg (MH prevention)|10 mg/kg cumulative (MH); oral 400 mg/day. Off-label (per MHAUS): may exceed 10 mg/kg|Repeat until signs subside (max cumulative 10 mg/kg)|FDA label post-crisis: 4-8 mg/kg/day PO in 4 divided doses for 1-3 days. Off-label (per MHAUS): 1 mg/kg IV every 4-6 h for 24 h|No adjustment|Avoid oral in hepatic disease
+MH crisis: 2.5 mg/kg IV rapidly, repeated until signs subside. MH prevention: 2.5 mg/kg IV starting about 75 min before anesthesia. Rate differs by product: Ryanodex is given over at least 1 min, while Dantrium IV and Revonto (20 mg lyophilized vials) are infused over approximately 1 hour for the prophylactic dose|MH: same mg/kg as adult (at least 1 mg/kg IV push, max cumulative 10 mg/kg). Off-label (per MHAUS): 2.5 mg/kg IV|1 mg/kg minimum (MH treatment); 2.5 mg/kg (MH prevention)|10 mg/kg cumulative (MH); oral 400 mg/day. Off-label (per MHAUS): may exceed 10 mg/kg|Repeat until signs subside (max cumulative 10 mg/kg)|FDA label post-crisis: 4-8 mg/kg/day PO in 4 divided doses for 1-3 days. Off-label (per MHAUS): 1 mg/kg IV every 4-6 h for 24 h|No adjustment|Avoid oral in hepatic disease
 IV, PO|Rapid IV push (MH treatment); over at least 1 min (MH prevention)|-|-|-|Capsules for spasticity|-|-|-|Rapid|Dantrium 20 mg with 60 mL sterile water; Ryanodex 250 mg in 5 mL|Sterile water only (no D5W, NS)|Large volume; mannitol in vial; many vials needed
 IV minutes|Minutes|4-6 h|IV 4-8 h; oral 9 h|Hepatic|Renal and bile|High
 Muscle weakness, drowsiness, dizziness, diarrhea|Hepatitis, phlebitis|Fulminant hepatic failure
@@ -24416,2820 +25027,3 @@ DB.BLOOD = {
       x: "A competent adult may refuse; clarify acceptable alternatives (some accept fractions or factor concentrates) and use non-blood measures such as TXA and hemorrhage control." }
   ]
 };
-
-;
-// Interventional / invasive hemodynamics for flight (FP-C) and medical-school learners.
-// Plain ES5, ASCII only. Topics, shock profiles and questions.
-DB.HEMO = {
-  topics: [
-    /* ---------------- Foundations ---------------- */
-    { id: "determinants", grp: "Foundations", title: "Preload, afterload, contractility and the Frank-Starling curve", lv: ["fl","md"],
-      sum: "Stroke volume is set by preload, afterload and contractility, and heart rate times stroke volume gives cardiac output.",
-      rows: [
-        ["Preload", "The stretch on the ventricle at end-diastole (end-diastolic volume). Clinically estimated by CVP for the right side and PCWP for the left, but pressures are only rough surrogates for volume."],
-        ["Afterload", "The load the ventricle must overcome to eject, best described as wall stress (Laplace: wall stress = pressure x radius / 2 x wall thickness). SVR and aortic pressure are the bedside proxies for the LV; PVR for the RV."],
-        ["Contractility", "The intrinsic force of contraction independent of loading conditions. Raised by sympathetic tone and inotropes; lowered by ischemia, acidosis, hypoxia, sepsis and negative inotropes such as beta-blockers and calcium channel blockers."],
-        ["Frank-Starling curve", "More preload stretches sarcomeres and increases stroke volume up to a plateau. On the steep part a fluid bolus raises stroke volume; on the flat part it mainly raises filling pressure and causes congestion or pulmonary edema."],
-        ["Failing vs normal heart", "A failing ventricle has a flatter, lower Starling curve and is very afterload sensitive: lowering afterload raises its stroke volume much more than it would in a normal heart."]
-      ],
-      fl: [
-        ["In transport", "Tachycardia shortens diastolic filling time, so very fast rates can drop stroke volume. A sick heart that cannot raise stroke volume depends on heart rate, so do not reflexively slow a compensatory sinus tachycardia."],
-        ["Practical use", "Ask three questions in any hypotensive patient: is the tank full (preload), is the pump working (contractility), and are the pipes tight or loose (afterload)? The answer points to fluid, inotrope or vasopressor."]
-      ],
-      md: [
-        ["Pressure-volume loop", "Preload shifts the loop rightward along the EDPVR; afterload raises the ejection pressure and the end-systolic point along the ESPVR; contractility steepens the ESPVR slope (Ees). Stroke volume is the loop width."],
-        ["Afterload in shock", "Vasopressors raise afterload. In a failing LV this can lower stroke volume and raise filling pressure, which is why norepinephrine is often paired with an inotrope or mechanical support in cardiogenic shock."]
-      ],
-      pearl: "On the flat part of the Starling curve, more fluid only buys more pulmonary edema.",
-      drugs: ["dobutamine","nitroglycerin","furosemide"] },
-
-    { id: "normals", grp: "Foundations", title: "Normal hemodynamic values (MAP, CVP, PA pressures, PCWP, CO, CI, SVR, PVR, SvO2)", lv: ["fl","md"],
-      sum: "A short list of normal resting values anchors every hemodynamic interpretation.",
-      rows: [
-        ["Systemic", "MAP about 70-100 mmHg (usual shock target 65 or higher). CO about 4-8 L/min. CI about 2.5-4.0 L/min/m2. SVR about 800-1200 dynes-sec/cm5."],
-        ["Right heart", "CVP / RA pressure about 2-8 mmHg. RV pressure about 15-30 / 0-8 mmHg. PA pressure about 15-30 / 8-15 mmHg with a mean of about 10-20 mmHg."],
-        ["Wedge and PVR", "PCWP about 6-12 mmHg. PVR roughly 1-2 Wood units (about 80-160 dynes-sec/cm5); above 2 Wood units is elevated by current pulmonary hypertension definitions."],
-        ["Oxygen", "SvO2 (PA sample) about 60-80 percent, commonly quoted 65-75. ScvO2 (SVC sample) about 70 percent or higher. Normal oxygen extraction is about 25 percent."]
-      ],
-      fl: [
-        ["Exam anchors", "Know these cold for the FP-C: CVP 2-8, PA 15-30/8-15, PCWP 6-12, CO 4-8, CI 2.5-4, SVR 800-1200, SvO2 60-80."]
-      ],
-      md: [
-        ["Thresholds that matter", "Cardiogenic shock is classically CI below about 2.2 L/min/m2 with PCWP above about 15 mmHg. Pulmonary hypertension is mean PA pressure above 20 mmHg (2022 ESC/ERS); pre-capillary adds PCWP 15 or less and PVR above 2 Wood units."]
-      ],
-      pearl: "PCWP above about 18 mmHg is the classic threshold for hydrostatic pulmonary edema.",
-      drugs: [] },
-
-    { id: "formulas", grp: "Foundations", title: "Key formulas (MAP, CO = HR x SV, CI, SVR, PVR, CPP, DO2)", lv: ["fl","md"],
-      sum: "A handful of formulas let you calculate perfusion pressure, resistance and oxygen delivery at the bedside.",
-      rows: [
-        ["MAP and CO", "MAP = DBP + (SBP - DBP) / 3, or (SBP + 2 x DBP) / 3. CO = HR x SV. CI = CO / body surface area."],
-        ["Resistance", "SVR = 80 x (MAP - CVP) / CO, in dynes-sec/cm5. PVR = 80 x (mean PAP - PCWP) / CO. Dropping the 80 gives Wood units."],
-        ["Perfusion pressures", "Cerebral perfusion pressure = MAP - ICP (or CVP if higher); target about 60 mmHg or more in TBI. Coronary perfusion pressure = aortic diastolic pressure - LVEDP (PCWP is the usual surrogate)."],
-        ["Oxygen delivery", "CaO2 = (1.34 x Hb x SaO2) + (0.003 x PaO2) in mL O2/dL. DO2 = CO x CaO2 x 10, normally about 1000 mL/min. VO2 = CO x (CaO2 - CvO2) x 10, normally about 250 mL/min."]
-      ],
-      fl: [
-        ["Quick math", "The 80 in the SVR formula is a unit conversion. If the question gives Wood units, skip it. Watch units: CO in L/min, saturations as decimals in the CaO2 formula."]
-      ],
-      md: [
-        ["Other indices", "Cardiac power output = MAP x CO / 451 in watts; below about 0.6 W predicts mortality in cardiogenic shock. PAPi = (PA systolic - PA diastolic) / RA pressure; below about 0.9 in acute MI suggests RV failure. Transpulmonary gradient = mean PAP - PCWP."],
-        ["Fick", "Fick CO = VO2 / [(CaO2 - CvO2) x 10]. Assumed VO2 (about 125 mL/min/m2) makes estimated Fick less reliable in sick patients than measured VO2."]
-      ],
-      pearl: "Hemoglobin is the biggest lever in CaO2: dissolved oxygen (0.003 x PaO2) adds very little.",
-      drugs: [] },
-
-    { id: "fluidresp", grp: "Foundations", title: "Fluid responsiveness (passive leg raise, pulse pressure variation)", lv: ["fl","md"],
-      sum: "Fluid responsiveness means stroke volume rises about 10-15 percent after a fluid challenge, and static pressures predict it poorly.",
-      rows: [
-        ["Definition", "A patient is fluid responsive if a bolus raises stroke volume or cardiac output by about 10-15 percent. Only about half of unstable ICU patients are."],
-        ["Passive leg raise", "Moving the patient from semi-recumbent to legs raised returns roughly 300 mL of venous blood, a reversible self-bolus. A CO or SV rise of 10 percent or more (measured, not a BP guess) predicts response."],
-        ["Pulse pressure variation", "On controlled ventilation, PPV above about 12-13 percent predicts response, but only with sinus rhythm, no spontaneous breaths, tidal volume about 8 mL/kg and a closed chest."],
-        ["What does not work", "A single CVP or PCWP value is a poor predictor of fluid responsiveness except at the extremes."]
-      ],
-      fl: [
-        ["In the field", "Small reassessed boluses beat large blind ones. Crackles, rising work of breathing, JVD or an increasing oxygen need after a bolus mean stop and reassess."]
-      ],
-      md: [
-        ["Pitfalls", "PPV gives false positives in RV failure and with high intra-abdominal pressure, and is unreliable with arrhythmias or low tidal volumes. PLR is unreliable with intra-abdominal hypertension and is hard in trauma or pelvic fractures."]
-      ],
-      pearl: "Being fluid responsive does not mean the patient needs fluid; healthy people are fluid responsive too.",
-      drugs: [] },
-
-    /* ---------------- Monitoring lines ---------------- */
-    { id: "aline", grp: "Monitoring lines", title: "Arterial line: zeroing, leveling at the phlebostatic axis, square-wave test, over- and under-damping", lv: ["fl","md"],
-      sum: "An arterial line gives beat-to-beat pressure only if it is zeroed, leveled at the phlebostatic axis and optimally damped.",
-      rows: [
-        ["Setup", "Noncompliant tubing to a transducer, flush bag pressurized to 300 mmHg giving about 3 mL/hr. Radial is most common; femoral reads closer to central pressure in high-dose vasopressor states."],
-        ["Leveling and zeroing", "Level the transducer air-fluid interface at the phlebostatic axis (4th intercostal space, mid-axillary line, about the right atrium). Zero by opening to atmosphere. A transducer below the heart reads falsely high; above reads falsely low (about 7.5 mmHg per 10 cm)."],
-        ["Square-wave (fast flush) test", "Pull the flush and watch the recoil: optimal damping shows about 1.5-2 oscillations before returning to baseline. Fewer means overdamped; more means underdamped."],
-        ["Overdamped", "Rounded waveform, lost dicrotic notch, falsely low systolic and falsely high diastolic. Causes: air bubbles, clot, kinks, compliant tubing, loose connections, low flush bag pressure."],
-        ["Underdamped", "Spiky, ringing waveform with falsely high systolic and falsely low diastolic. Causes: long or extra tubing, stopcocks, stiff vessels, tachycardia, hyperdynamic states. MAP stays fairly accurate in both errors."]
-      ],
-      fl: [
-        ["In transport", "Re-level after moving the patient or changing stretcher height, and re-zero after significant altitude or cabin pressure changes and per device policy. Secure the line and transducer to the patient or stretcher so vibration and loading do not change height or dislodge it."],
-        ["Troubleshooting", "If the waveform suddenly dampens: check the patient first (is there a pulse and a cuff pressure?), then the wrist position, kinks, bubbles, the flush bag pressure and the stopcocks. Compare with a cuff pressure; treat MAP, not a suspicious systolic number."]
-      ],
-      md: [
-        ["Waveform clues", "A wide pulse pressure suggests aortic regurgitation or vasodilation; a slow-rising, low-amplitude (parvus et tardus) upstroke suggests aortic stenosis; pulsus alternans suggests severe LV dysfunction; large respiratory variation suggests hypovolemia or tamponade."],
-        ["Complications", "Thrombosis, distal ischemia, hematoma, infection and, with flushing, retrograde air or clot embolism. A radial-femoral gradient can make radial pressure underestimate central pressure in septic shock and after cardiopulmonary bypass."]
-      ],
-      pearl: "When damping is in doubt, trust the MAP: it is the least affected number.",
-      drugs: [] },
-
-    { id: "cvp", grp: "Monitoring lines", title: "Central venous pressure and its limits", lv: ["fl","md"],
-      sum: "CVP reflects right atrial pressure and the interaction of volume, RV function and intrathoracic pressure, not volume status alone.",
-      rows: [
-        ["What it measures", "Pressure in the SVC near the right atrium, normally about 2-8 mmHg. It approximates RV end-diastolic pressure when the tricuspid valve is normal."],
-        ["Waveform", "a wave = atrial contraction; c wave = tricuspid bulge at early systole; x descent = atrial relaxation; v wave = atrial filling with the tricuspid valve closed; y descent = tricuspid opening and RA emptying."],
-        ["How to read", "Read at end-expiration, at the mean of the a wave (or base of the c wave). Spontaneously breathing, end-expiration is just before the inspiratory dip; on positive pressure ventilation, it is just before the inspiratory rise."],
-        ["Limits", "A single CVP poorly predicts fluid responsiveness. It is raised by PEEP, RV failure, tricuspid regurgitation, tamponade, PE, tension pneumothorax and abdominal hypertension, regardless of volume."]
-      ],
-      fl: [
-        ["Useful trends", "A high or rising CVP with hypotension makes you think obstruction or RV failure (tamponade, PE, tension pneumothorax, RV infarct) rather than an empty tank. A very low CVP supports hypovolemia."]
-      ],
-      md: [
-        ["Waveform pathology", "Cannon a waves: AV dissociation (complete heart block, VT). Absent a waves: atrial fibrillation. Large cv / v waves: tricuspid regurgitation. Blunted y descent: tamponade. Steep y descent with Kussmaul sign: constrictive pericarditis or restrictive cardiomyopathy."],
-        ["Evidence", "Marik and colleagues showed a poor relationship between CVP and blood volume or fluid responsiveness; CVP as a resuscitation target (as in early goal-directed therapy) has been abandoned."]
-      ],
-      pearl: "CVP is more useful as a safety limit (stop when high and rising) than as a target.",
-      drugs: [] },
-
-    { id: "pac", grp: "Monitoring lines", title: "Pulmonary artery catheter: insertion waveforms (RA, RV, PA, wedge) and complications", lv: ["fl","md"],
-      sum: "The PA (Swan-Ganz) catheter measures right heart pressures, wedge pressure, cardiac output and mixed venous saturation.",
-      rows: [
-        ["Insertion sequence", "Floated balloon-up from the internal jugular or subclavian vein. From the right IJ, the RA is reached at about 15-20 cm, RV about 25-35 cm, PA about 40-50 cm, wedge about 45-55 cm."],
-        ["Waveforms", "RA: low with a and v waves. RV: tall systolic peak with diastolic near zero that rises through diastole. PA: similar systolic, but a dicrotic notch and a diastolic step-up (about 8-15). Wedge: low, atrial-like a and v waves."],
-        ["Balloon rules", "Inflate with no more than the rated volume (about 1.5 mL), never advance with the balloon down, never withdraw with it up, and never leave it wedged."],
-        ["Complications", "Arrhythmias in the RV (most common), RBBB (complete heart block if LBBB already present), PA rupture, pulmonary infarction, infection, thrombosis, knotting, balloon rupture, plus central line complications."]
-      ],
-      fl: [
-        ["In transport", "Keep the distal PA waveform displayed continuously so migration is seen at once. Secure the catheter and the sleeve; patient moves and turbulence can pull it back into the RV or push it forward into a wedge."],
-        ["Waveform changes", "A PA trace that becomes a wedge trace with the balloon down means distal migration: confirm the balloon is deflated and withdraw per protocol or call medical control. A trace that develops a near-zero diastolic means the tip fell back into the RV, with risk of ventricular ectopy."]
-      ],
-      md: [
-        ["Cardiac output", "Thermodilution CO is unreliable with significant tricuspid regurgitation and intracardiac shunts. An O2 saturation step-up of more than about 5-7 percent from RA to PA suggests a left-to-right shunt such as a post-MI VSD."],
-        ["Evidence", "Routine PAC use did not improve outcomes in broad ICU and heart failure populations (PAC-Man, ESCAPE). Observational data in cardiogenic shock suggest benefit from early full hemodynamic profiling to guide support."],
-        ["PA rupture", "Presents with hemoptysis after balloon inflation. Position bleeding side down, secure the airway, consider lung isolation, reverse anticoagulation, and arrange urgent embolization or surgery."]
-      ],
-      pearl: "Spontaneous wedge without balloon inflation means the catheter has migrated distally and must be pulled back.",
-      drugs: [] },
-
-    { id: "pcwp", grp: "Monitoring lines", title: "Wedge pressure interpretation (and when it misleads: mitral stenosis, PEEP, West zones)", lv: ["fl","md"],
-      sum: "PCWP estimates left atrial pressure and, by extension, LV end-diastolic pressure, but several conditions break that chain.",
-      rows: [
-        ["Concept", "With the balloon wedged, a static blood column connects the catheter tip to the left atrium, so PCWP approximates LA pressure, which approximates LVEDP when the mitral valve and LV are normal."],
-        ["How to read", "Read at end-expiration, at the mean of the a wave. Normal is about 6-12 mmHg. PA diastolic pressure is usually within a few mmHg of PCWP when PVR is normal."],
-        ["Overestimates LVEDP", "Mitral stenosis, mitral regurgitation (large v waves), high PEEP or auto-PEEP, catheter tip in West zone 1 or 2, pulmonary venous obstruction, and tachycardia."],
-        ["Underestimates LVEDP", "Stiff, noncompliant LV (late diastolic rise after the a wave) and acute aortic regurgitation (premature mitral closure)."]
-      ],
-      fl: [
-        ["What it tells you", "High PCWP plus low output means a failing left heart. Low PCWP plus low output means an empty tank or a right-sided or obstructive problem limiting LV filling."]
-      ],
-      md: [
-        ["West zones", "The tip must lie in zone 3 (below the left atrium, where pulmonary venous pressure exceeds alveolar pressure). Clues that it does not: PCWP higher than PA diastolic, PCWP swinging by more than half the airway pressure change, or lack of a and v waves."],
-        ["V waves and PEEP", "Large v waves (often more than about twice the mean wedge) suggest acute MR but also occur with VSD or a small noncompliant LA. PEEP is partly transmitted to the pleural space; rule-of-thumb corrections are imprecise, so trend values at a fixed PEEP."],
-        ["PADP-PCWP gradient", "A diastolic pulmonary gradient (PADP - PCWP) above about 5-7 mmHg suggests pre-capillary disease such as PE, ARDS, hypoxic vasoconstriction or pulmonary arterial hypertension."]
-      ],
-      pearl: "If PCWP is higher than PA diastolic pressure, suspect a non-zone-3 tip or a measurement error.",
-      drugs: [] },
-
-    { id: "svo2", grp: "Monitoring lines", title: "SvO2 / ScvO2 and oxygen delivery vs consumption", lv: ["fl","md"],
-      sum: "Mixed venous saturation reflects the balance between oxygen delivery and oxygen consumption.",
-      rows: [
-        ["Definition", "SvO2 is drawn from the PA (true mixed venous); ScvO2 from a central line tip in the SVC. Normal SvO2 is about 60-80 percent; ScvO2 about 70 percent or higher."],
-        ["Low SvO2", "Delivery is too low or consumption too high: low cardiac output, anemia, hypoxemia, or fever, shivering, seizures, pain, agitation and work of breathing."],
-        ["High SvO2", "Tissues are not extracting or the sample is contaminated: sepsis with microcirculatory shunting, cyanide or carbon monoxide poisoning, hypothermia, sedation or paralysis, left-to-right shunt, or a wedged catheter sampling arterialized blood."],
-        ["Delivery and consumption", "Normally DO2 is about 4 times VO2. As DO2 falls, extraction rises to keep VO2 stable until a critical DO2, after which VO2 falls, anaerobic metabolism begins and lactate rises."]
-      ],
-      fl: [
-        ["Practical use", "A falling ScvO2 trend is an early sign that the heart cannot meet demand. Before blaming the heart, control the things that burn oxygen: treat pain, shivering, agitation and patient-ventilator dyssynchrony."]
-      ],
-      md: [
-        ["ScvO2 vs SvO2", "In health ScvO2 runs a few percent below SvO2 (the kidneys extract little). In shock the order reverses because splanchnic extraction rises, so ScvO2 overestimates SvO2."],
-        ["Evidence", "Rivers early goal-directed therapy targeted ScvO2 70 percent or more; ProCESS, ARISE and ProMISe found no mortality benefit of protocolized EGDT over usual care. A normal or high ScvO2 does not exclude shock."]
-      ],
-      pearl: "A high SvO2 in a sick patient is not reassuring: think sepsis, cyanide or a wedged catheter.",
-      drugs: ["dobutamine","hydroxocobalamin"] },
-
-    /* ---------------- Shock ---------------- */
-    { id: "shockprofiles", grp: "Shock", title: "Shock profiles by hemodynamics", lv: ["fl","md"],
-      sum: "Each category of shock has a typical pattern of cardiac output, SVR and filling pressures that points to treatment.",
-      rows: [
-        ["Hypovolemic", "Low CO, high SVR, low CVP and PCWP. Treat the cause and replace volume (blood for hemorrhage)."],
-        ["Cardiogenic", "Low CO, high SVR, high PCWP (and often CVP), low SvO2. Treat with inotropes, vasopressors for hypotension, revascularization and mechanical support."],
-        ["Distributive", "Septic (early, warm): high or normal CO, low SVR, low or normal filling pressures, normal or high SvO2. Neurogenic: low SVR with bradycardia. Anaphylaxis: low SVR with capillary leak."],
-        ["Obstructive", "Tamponade, massive PE and tension pneumothorax: low CO, high SVR, high CVP. Tamponade equalizes diastolic pressures; PE leaves PCWP low or normal."]
-      ],
-      fl: [
-        ["Bedside version", "Cold and wet = cardiogenic. Cold and dry with flat neck veins = hypovolemic. Cold with distended neck veins and clear lungs = obstructive or RV failure. Warm and flushed = distributive."]
-      ],
-      md: [
-        ["Mixed shock", "Patients often combine types: septic cardiomyopathy, hemorrhage on top of cardiogenic shock, or late sepsis turning cold. Repeat the profile after each intervention instead of labeling once."]
-      ],
-      pearl: "High CVP plus low PCWP points to the right heart or the pulmonary circulation (RV infarct, PE).",
-      drugs: ["norepinephrine","dobutamine","epinephrine","vasopressin"] },
-
-    { id: "scai", grp: "Shock", title: "SCAI cardiogenic shock stages A-E", lv: ["fl","md"],
-      sum: "The SCAI classification stages cardiogenic shock from at risk (A) to extremis (E) and predicts mortality at every step.",
-      rows: [
-        ["A - At risk", "A patient at risk (for example large acute MI or decompensated heart failure) without signs of shock: normal blood pressure and perfusion."],
-        ["B - Beginning", "Relative hypotension or tachycardia (for example SBP below 90, MAP below 60 or a drop of more than 30 mmHg) without hypoperfusion; lactate normal."],
-        ["C - Classic", "Hypoperfusion requiring intervention beyond volume: inotropes, vasopressors or mechanical support. Typically cold and wet, lactate 2 or more, rising creatinine, low urine output."],
-        ["D - Deteriorating", "Failing to respond to initial therapy: worsening hypotension or perfusion, rising lactate, escalating drugs or adding devices after about 30 minutes of treatment."],
-        ["E - Extremis", "Actual or impending circulatory collapse: refractory cardiac arrest with ongoing CPR or ECPR, or multiple high-dose agents plus devices with very high lactate."]
-      ],
-      fl: [
-        ["Transport decisions", "Stage C and beyond usually needs a center with shock team, cath lab and mechanical support. Moving from C to D during transport (rising pressor need, new arrhythmias, worsening mental status) should trigger early notification of the receiving team."]
-      ],
-      md: [
-        ["Modifiers", "An A modifier is added for cardiac arrest, especially with coma. The 2022 update describes stages using lactate, hemodynamics and response to therapy rather than rigid cutoffs."],
-        ["Hemodynamic markers", "Cardiac power output below about 0.6 W and PAPi below about 0.9 (RV failure in MI) help identify who needs escalation and which ventricle needs support."]
-      ],
-      pearl: "Stage D is defined by trajectory: failure to improve despite initial therapy.",
-      drugs: ["norepinephrine","dobutamine","milrinone","epinephrine"] },
-
-    { id: "rvfailure", grp: "Shock", title: "Right ventricular failure (preload, avoid hypoxia/acidosis, pulmonary vasodilators)", lv: ["fl","md"],
-      sum: "The failing RV needs careful preload, preserved systemic pressure, low PVR and contractility support, and it collapses quickly with hypoxia, acidosis or a bad intubation.",
-      rows: [
-        ["Causes", "RV infarction, massive PE, pulmonary hypertension crisis, ARDS and high airway pressures, LV failure, and after LVAD or cardiac surgery."],
-        ["Preload", "RV infarct may need modest fluid, but an overfilled RV dilates, bows the septum into the LV and lowers LV output. CVP above about 12-15 mmHg or rising without improved output means stop fluid; diuresis may even help."],
-        ["Pressure and contractility", "Keep systemic pressure up to perfuse the RV (norepinephrine, vasopressin, which does not raise PVR much). Add dobutamine or milrinone for low output; milrinone also lowers PVR but causes hypotension."],
-        ["Lower PVR", "Correct hypoxia, hypercapnia and acidosis, avoid high PEEP and plateau pressures, and consider inhaled pulmonary vasodilators (inhaled nitric oxide or inhaled epoprostenol)."]
-      ],
-      fl: [
-        ["RV infarct in the field", "Inferior STEMI with hypotension and clear lungs: get right-sided leads (V4R ST elevation), avoid nitroglycerin and other preload reducers, give judicious fluid, and start a vasopressor early if pressure does not respond."],
-        ["Intubation danger", "Induction, apnea-related hypoxia and hypercapnia, and positive pressure ventilation can cause RV arrest. Optimize first, have a vasopressor running or ready, use hemodynamically gentle induction, preoxygenate well and use modest tidal volume and PEEP."]
-      ],
-      md: [
-        ["Hemodynamic signs", "RA pressure high relative to PCWP (RA/PCWP above about 0.8), low PAPi, and Kussmaul-like rise with ventricular interdependence. Echo: dilated RV, septal flattening (D sign), low TAPSE."],
-        ["Escalation", "Mechanical options include Impella RP, surgical RVAD and VA-ECMO. In PE, systemic thrombolysis, catheter-directed therapy or embolectomy treats the cause."]
-      ],
-      pearl: "In RV failure, hypoxia, hypercapnia and acidosis raise PVR; the intubation itself can be the fatal event.",
-      drugs: ["norepinephrine","vasopressin","milrinone","epoprostenol"] },
-
-    { id: "pressors", grp: "Shock", title: "Vasopressor and inotrope choice by hemodynamic profile", lv: ["fl","md"],
-      sum: "Match the drug to the defect: vasopressors for low SVR, inotropes for low output, and both when both fail.",
-      rows: [
-        ["Norepinephrine", "Alpha-1 with some beta-1. First-line for septic shock and the usual first vasopressor for hypotension in cardiogenic shock."],
-        ["Vasopressin and epinephrine", "Vasopressin (V1) is the usual second agent in septic shock, often at a fixed low dose, to reduce norepinephrine need. Epinephrine adds strong beta-1 effects and is used in anaphylaxis and refractory shock; it raises lactate."],
-        ["Phenylephrine", "Pure alpha-1. Useful when tachycardia is harmful (aortic stenosis, HOCM) or for brief anesthesia-related vasodilation; can cause reflex bradycardia and lower CO in a weak heart."],
-        ["Inotropes", "Dobutamine (beta-1, some beta-2 vasodilation) and milrinone (PDE-3 inhibitor, inodilator, renally cleared, longer half-life, useful with beta-blockade and pulmonary hypertension). Both can cause hypotension and arrhythmias."],
-        ["Other", "Dopamine has more arrhythmias than norepinephrine and is not first-line. Angiotensin II is an option for refractory vasodilatory shock; methylene blue is a rescue for vasoplegia."]
-      ],
-      fl: [
-        ["In transport", "Run vasopressors through a dedicated, secure line, ideally central, with a backup drip prepared and enough volume for the trip. Watch peripheral sites for extravasation; phentolamine is the antidote for catecholamine extravasation."],
-        ["Profile match", "Neurogenic shock with bradycardia: norepinephrine or dopamine plus atropine for bradycardia. Anaphylaxis: epinephrine. RV failure: norepinephrine or vasopressin, plus an inotrope if output is low."]
-      ],
-      md: [
-        ["Evidence", "SOAP II: dopamine and norepinephrine had similar overall mortality, but dopamine caused more arrhythmias and did worse in the cardiogenic shock subgroup. VASST: vasopressin added to norepinephrine did not reduce mortality overall. DOREMI: milrinone vs dobutamine in cardiogenic shock showed no significant difference."],
-        ["Afterload trade-off", "In cardiogenic shock, use the lowest vasopressor dose that maintains perfusion pressure, because rising afterload worsens LV output; add an inotrope or mechanical support rather than escalating pressors alone."]
-      ],
-      pearl: "Pressors fix the pipes; inotropes fix the pump. Know which one is broken.",
-      drugs: ["norepinephrine","vasopressin","epinephrine","phenylephrine"] },
-
-    /* ---------------- Mechanical circulatory support ---------------- */
-    { id: "iabp", grp: "Mechanical circulatory support", title: "Intra-aortic balloon pump (IABP)", lv: ["fl","md"],
-      sum: "A helium-filled balloon in the descending aorta inflates in diastole and deflates just before systole, raising coronary perfusion and lowering afterload.",
-      rows: [
-        ["How it works", "Diastolic inflation (at the dicrotic notch) augments diastolic pressure and coronary perfusion. Deflation just before systole creates a pressure drop that lowers afterload and myocardial oxygen demand. Adds roughly 0.5 L/min of output at most."],
-        ["Position", "Tip about 2-3 cm distal to the left subclavian artery origin (on CXR near the 2nd-3rd intercostal space or just above the carina); the bottom of the balloon should sit above the renal arteries."],
-        ["Indications", "Mechanical complications of MI (acute MR, VSD) as a bridge to surgery, refractory ischemia, some cardiogenic shock and high-risk PCI, and bridging to transplant or other support."],
-        ["Contraindications", "Moderate-severe aortic regurgitation, aortic dissection, aortic aneurysm, severe peripheral vascular disease, and uncontrolled bleeding or coagulopathy (relative)."]
-      ],
-      fl: [
-        ["In transport", "Bring the transport console, extra helium, enough battery, the manual, and the patient's pump settings. Watch left radial pulse (migration up) and urine output (migration down), and check the leg distal to the insertion site. Modern pumps auto-compensate helium volume for altitude; know how your model does it."],
-        ["Troubleshooting", "Blood or brown flecks in the helium line mean balloon rupture: stop pumping, clamp the line, keep the patient flat and arrange removal promptly because a clotted balloon can become entrapped. If the pump fails, follow the manufacturer guidance to avoid a balloon left still and deflated for long periods (thrombus risk)."],
-        ["CPR and defibrillation", "During CPR the ECG trigger fails; switch to pressure trigger (compressions trigger inflation) or internal/asynchronous mode per device guidance. Defibrillation is safe without disconnecting; stand clear of the console."]
-      ],
-      md: [
-        ["Evidence", "IABP-SHOCK II (2012) found no 30-day (or later) mortality benefit from routine IABP in AMI cardiogenic shock with early revascularization. Guidelines no longer recommend routine use; it remains reasonable for mechanical complications."],
-        ["Complications", "Limb ischemia, bleeding, thrombocytopenia, hemolysis, infection, balloon rupture with gas embolism, aortic dissection, and malposition causing left arm or renal or mesenteric ischemia. Usually anticoagulated with heparin (often omitted at 1:2 or less or when bleeding risk is high, per institution)."]
-      ],
-      pearl: "IABP improves supply (diastolic augmentation) and demand (afterload reduction) but adds little cardiac output.",
-      drugs: ["heparin"] },
-
-    { id: "iabptiming", grp: "Mechanical circulatory support", title: "IABP timing errors (early/late inflation, early/late deflation) and trigger modes", lv: ["fl","md"],
-      sum: "Correct timing inflates at the dicrotic notch and deflates just before systole; each of the four timing errors has a recognizable waveform and consequence.",
-      rows: [
-        ["Correct timing", "Inflation at the dicrotic notch gives a sharp V. Augmented diastolic pressure is usually above the unassisted systolic. Assisted aortic end-diastolic pressure is lower than unassisted, and assisted systolic is lower than unassisted systolic."],
-        ["Early inflation", "Balloon inflates before aortic valve closure: augmentation starts before the dicrotic notch. Causes premature aortic valve closure, raised LVEDV and LVEDP, raised wall stress, and possible aortic regurgitation."],
-        ["Late inflation", "Inflation well after the dicrotic notch: the notch is visible and the V is lost. Less diastolic augmentation and coronary perfusion, but not dangerous."],
-        ["Early deflation", "Sharp drop after augmentation with a U-shaped dip; assisted end-diastolic pressure equal to or lower than unassisted but rising again before systole. Little afterload reduction and possible retrograde coronary and carotid flow."],
-        ["Late deflation", "Assisted end-diastolic pressure equal to or above unassisted; the balloon is still inflated as the LV ejects. Raises afterload and oxygen demand. With early inflation, the most harmful errors."]
-      ],
-      fl: [
-        ["Trigger modes", "ECG trigger (R wave) is standard. Pressure trigger uses the arterial upstroke and is useful when the ECG is noisy. Pacer triggers (V or AV paced) follow pacing spikes. Internal/asynchronous mode fires at a set rate with no trigger, used only in arrest with no cardiac output."],
-        ["Flight issues", "Vibration, patient movement and electrocautery or radio interference can corrupt the ECG trigger. Use clean electrodes and leads, have the pump ECG on a direct cable when possible, and switch to pressure trigger if the ECG signal is lost. Check timing at 1:2 so assisted and unassisted beats can be compared."]
-      ],
-      md: [
-        ["Arrhythmias", "Modern pumps use automatic timing algorithms that adapt to AF and variable R-R intervals; deflation is often set to R-wave deflation in irregular rhythms. Very fast rates reduce benefit and may require 1:2."]
-      ],
-      pearl: "Late deflation and early inflation both make the LV work harder; late inflation and early deflation just waste benefit.",
-      drugs: [] },
-
-    { id: "impella", grp: "Mechanical circulatory support", title: "Impella (CP, 5.5, RP): P-levels, positioning, purge, suction and position alarms, hemolysis", lv: ["fl","md"],
-      sum: "Impella is a catheter-mounted axial flow pump that moves blood from the LV into the aorta (or from the IVC into the PA for RP), directly unloading the ventricle.",
-      rows: [
-        ["Devices", "Impella 2.5 and CP are placed percutaneously via the femoral artery (CP about 3.5-4 L/min). Impella 5.5 is placed surgically, usually via the axillary artery (up to about 5.5-6 L/min). Impella RP supports the RV, pumping from the IVC/RA into the PA."],
-        ["Positioning", "Left-sided pumps sit across the aortic valve: inlet in the LV (for CP about 3.5 cm below the aortic annulus), outlet in the ascending aorta. Position is confirmed by echo and the placement and motor current waveforms on the controller."],
-        ["P-levels and purge", "Support is set as P-levels (P-0 to P-9); flow depends on the P-level, preload and afterload. The purge system pushes a dextrose solution (with heparin, or a bicarbonate-based purge per protocol) through the motor to keep blood out."],
-        ["Contraindications", "LV thrombus, mechanical aortic valve, severe aortic stenosis or significant aortic regurgitation (relative), severe peripheral arterial disease, and VSD (risk of right-to-left shunting)."]
-      ],
-      fl: [
-        ["Alarms", "Suction alarm: the inlet is pulling against the LV wall because the LV is under-filled (hypovolemia, RV failure, tamponade) or the pump is mispositioned. Lower the P-level, check volume and RV function, and get position checked by echo. Position alarm: the motor current has lost its pulsatility, meaning the pump is entirely in the aorta or the LV."],
-        ["In transport", "Do not reposition the catheter in the field. Lock the repositioning sleeve, secure the catheter and console, keep the purge running, watch the access leg, and bring the controller power supply. Bumps and lifts can migrate the pump, so watch position waveforms after every move."],
-        ["CPR and defibrillation", "Manufacturer guidance is to reduce to P-2 during CPR and return to the prior level after ROSC (echo position check). Defibrillation does not require disconnecting the pump."]
-      ],
-      md: [
-        ["Evidence", "DanGer Shock (2024): in STEMI cardiogenic shock without coma, routine Impella CP lowered 180-day all-cause mortality compared with standard care, but with more bleeding, limb ischemia, renal replacement therapy and device complications. Earlier trials and registries were mixed."],
-        ["Hemolysis", "Caused mostly by malposition and suction. Watch plasma free hemoglobin, LDH, and dark (cola) urine; fix position, volume and P-level. Other complications: limb ischemia, bleeding, aortic valve injury, stroke, and pump thrombosis."],
-        ["Never at P-0 in place", "A left-sided Impella left in the LV at P-0 lets blood flow backward from aorta to LV (functional aortic regurgitation). Keep at least the minimum level or remove it."]
-      ],
-      pearl: "A suction alarm usually means an empty LV: think volume, RV failure or position before turning up the support.",
-      drugs: ["heparin","bivalirudin","sodium-bicarbonate","dextrose"] },
-
-    { id: "ecmo", grp: "Mechanical circulatory support", title: "ECMO: VA vs VV, flows, anticoagulation, Harlequin (north-south) syndrome, transport", lv: ["fl","md"],
-      sum: "ECMO drains venous blood through an oxygenator and returns it either to a vein (VV, lung support) or an artery (VA, heart and lung support).",
-      rows: [
-        ["VV vs VA", "VV ECMO (for example femoral drain and IJ return, or a dual-lumen IJ cannula) replaces lung function but relies on the native heart for blood pressure. VA ECMO (for example femoral vein to femoral artery) bypasses heart and lungs and supports circulation."],
-        ["Settings", "Pump speed (RPM) produces flow (L/min). Sweep gas flow mainly controls CO2 removal (more sweep, lower PaCO2). FdO2 and blood flow control oxygenation. VA flows are often about 3-5 L/min; VV runs a high fraction of cardiac output."],
-        ["Anticoagulation", "Usually unfractionated heparin monitored by anti-Xa, aPTT or ACT, with bivalirudin as an alternative (for example in HIT). Bleeding and thrombosis are both common and serious."],
-        ["Harlequin (north-south) syndrome", "With femoral VA ECMO, if the native heart recovers but the lungs are poor, the LV ejects deoxygenated blood to the coronaries, brain and right arm while the lower body gets oxygenated circuit blood. Monitor right radial SpO2 or ABG."]
-      ],
-      fl: [
-        ["In transport", "Transport is done with an ECMO specialist and a portable console. Clamps, a hand crank, backup oxygen, power and battery, and cannula securing are mandatory. Plan every move so lines cannot kink or pull; cannula dislodgement is lethal within minutes."],
-        ["Troubleshooting", "Chattering lines or falling flow with stable RPM mean poor venous drainage: hypovolemia, kinking, tamponade, or high intrathoracic pressure. Check lines, give volume and reduce RPM per protocol. Dark blood returning from the oxygenator means oxygenator failure or gas loss."],
-        ["CPR", "VA ECMO patients may have no pulsatility with adequate flow; check the circuit and MAP before starting compressions. On VV ECMO the native heart must pump, so cardiac arrest is treated with standard ACLS."]
-      ],
-      md: [
-        ["LV distension", "Retrograde VA flow raises LV afterload. Loss of arterial pulsatility, a closed aortic valve, rising PCWP and pulmonary edema signal LV distension; vent with IABP, Impella (ECPELLA), atrial septostomy or direct LV vent."],
-        ["Evidence", "ECLS-SHOCK (2023): early routine VA ECMO in AMI cardiogenic shock with revascularization did not reduce 30-day mortality and increased bleeding and vascular complications. In severe ARDS, CESAR and EOLIA (plus later meta-analyses) support VV ECMO in selected patients at experienced centers."],
-        ["Differential hypoxia fixes", "Improve native lung oxygenation (FiO2, PEEP), increase circuit flow, or add an upper-body return cannula (V-AV configuration)."]
-      ],
-      pearl: "On femoral VA ECMO, the right radial artery tells you what the brain and coronaries are getting.",
-      drugs: ["heparin","bivalirudin","argatroban","protamine"] },
-
-    { id: "lvad", grp: "Mechanical circulatory support", title: "LVAD (e.g. HeartMate 3): no pulse, Doppler MAP, alarms, suction events, CPR guidance", lv: ["fl","md"],
-      sum: "A continuous-flow LVAD pumps blood from the LV apex to the aorta, so patients often have no palpable pulse and need a Doppler pressure.",
-      rows: [
-        ["Basics", "HeartMate 3 is a centrifugal, magnetically levitated pump. A driveline exits the abdomen to a controller and two batteries or wall power. Parameters: speed (RPM, fixed), flow (estimated), power (watts) and pulsatility index."],
-        ["Blood pressure", "Pulses are usually absent or weak and SpO2 may not read. Use a Doppler at the brachial artery with a manual cuff: the first returning sound approximates MAP. Typical target MAP about 70-90 mmHg."],
-        ["Assessment", "Listen over the chest/upper abdomen for the pump hum, check the controller display and alarms, look at the driveline and connections, and assess perfusion clinically (mental status, skin, capillary refill, ETCO2)."],
-        ["Long-term issues", "Warfarin plus (often) aspirin, GI bleeding (acquired von Willebrand disease, AV malformations), driveline infection, pump thrombosis, stroke, RV failure and ventricular arrhythmias."]
-      ],
-      fl: [
-        ["Alarms and power", "Low-flow alarms point to low preload (hypovolemia, bleeding, RV failure, tamponade, arrhythmia) or obstruction. Power alarms or a silent pump are emergencies: check connections, change batteries one at a time (never both at once) and swap the controller only per manufacturer and VAD team guidance. Bring the patient's backup bag and call the VAD coordinator."],
-        ["CPR guidance", "AHA 2017: in an unresponsive LVAD patient, check for pump function and perfusion. If the pump is not working and perfusion is absent (for example MAP below about 50 and ETCO2 below about 20 mmHg), start chest compressions; the concern about dislodging the pump does not outweigh the need for perfusion. Defibrillate and pace as usual without disconnecting."],
-        ["Suction events and VT", "Low preload lets the LV wall collapse onto the inflow cannula, causing low flow and VT. Give fluid and treat the cause. Patients often tolerate VT or VF for a time because the LVAD keeps pumping, but RV output falls; treat per ACLS with an eye on mental status and perfusion."]
-      ],
-      md: [
-        ["Pump thrombosis", "Suggested by rising power, high calculated flow, hemolysis (LDH several times normal, plasma free hemoglobin, dark urine) and heart failure symptoms. Much less common with HeartMate 3 than older axial pumps."],
-        ["Evidence", "MOMENTUM 3 showed HeartMate 3 superior to the axial HeartMate II for survival free of disabling stroke or reoperation for malfunction. ARIES-HM3 showed omitting aspirin (warfarin alone) was noninferior for thrombotic events and reduced bleeding."]
-      ],
-      pearl: "In an LVAD patient, the absence of a pulse is normal; the absence of a hum and perfusion is not.",
-      drugs: ["warfarin","aspirin","heparin"] },
-
-    { id: "tvp", grp: "Mechanical circulatory support", title: "Transvenous and transcutaneous pacing: capture, sensing, failure modes", lv: ["fl","md"],
-      sum: "Pacing treats unstable bradycardia when drugs fail, and success requires both electrical and mechanical capture.",
-      rows: [
-        ["Transcutaneous pacing", "Pads anterior-posterior (or anterior-lateral). Set a rate (often 60-80), raise output (mA) until electrical capture, then confirm a pulse with each beat; set output a little above threshold (commonly about 10 mA above). Painful: give analgesia and sedation."],
-        ["Transvenous pacing", "A pacing wire through the right IJ or left subclavian into the RV apex. Settings: rate, output (mA) and sensitivity (mV). Capture threshold is ideally under about 1 mA; set output 2-3 times threshold."],
-        ["Capture", "Electrical capture: a pacing spike followed by a wide QRS and T wave in the opposite direction. Mechanical capture: a pulse or pleth waveform with each paced beat. Electrical capture without a pulse is PEA."],
-        ["Failure modes", "Failure to pace: no spikes (battery, disconnection, oversensing). Failure to capture: spikes with no QRS (lead migration, high threshold from ischemia, acidosis, hyperkalemia or drugs). Undersensing: spikes fire despite intrinsic beats. Oversensing: device is inhibited by T waves, muscle or artifact."]
-      ],
-      fl: [
-        ["In transport", "Confirm mechanical capture at the femoral pulse or by SpO2 pleth; avoid the carotid, where muscle twitch mimics a pulse. Recheck capture after every move, since pads and wires shift. Have pads on a TVP patient as backup."],
-        ["Fixes", "Loss of capture: increase mA, check connections, reposition the patient (left lateral can help a TVP wire), and fall back to transcutaneous pacing or drugs. Undersensing: make the device more sensitive (lower mV number). Oversensing: less sensitive (higher mV number) or asynchronous mode."]
-      ],
-      md: [
-        ["Modes", "VVI (demand) paces when no intrinsic beat is sensed; VOO (asynchronous) paces regardless and risks R-on-T. Atropine helps nodal block but not infranodal block (Mobitz II, third-degree with wide escape); use epinephrine, dopamine or pacing."],
-        ["TVP complications", "RV perforation (new pericardial effusion, change in paced QRS axis, diaphragmatic or chest wall pacing, rising threshold), arrhythmias, pneumothorax, infection and thrombosis."]
-      ],
-      pearl: "Never trust the monitor alone: a paced rhythm without a pulse is PEA.",
-      drugs: ["atropine","epinephrine","dopamine","isoproterenol"] },
-
-    /* ---------------- Interventional cardiology ---------------- */
-    { id: "cathlab", grp: "Interventional cardiology", title: "Cardiac cath basics: access site (radial vs femoral) care, retroperitoneal bleed, closure devices", lv: ["fl","md"],
-      sum: "Access-site complications are the most common problems after catheterization, and a retroperitoneal bleed can be lethal while hidden.",
-      rows: [
-        ["Radial vs femoral", "Radial access has fewer bleeding complications and allows early mobilization; in ACS it lowered bleeding and mortality in trials such as RIVAL (STEMI subgroup) and MATRIX. Femoral is used for large-bore devices (IABP, Impella, ECMO) and when radial fails."],
-        ["Radial care", "A compression band is gradually deflated over hours per protocol. Watch for hematoma, hand ischemia, and forearm compartment syndrome. Radial artery occlusion is usually silent because of ulnar collateral flow."],
-        ["Femoral care", "Bed rest with the leg straight and the head of the bed low for hours after sheath removal (shorter with closure devices). Check the site, distal pulses, and for back or flank pain."],
-        ["Closure devices", "Angio-Seal (collagen plug with an intra-arterial anchor), Perclose (suture) and others shorten bed rest but can fail, cause infection or limb ischemia; a closure device does not remove the need for site checks."]
-      ],
-      fl: [
-        ["Retroperitoneal bleed", "Suspect after femoral access with hypotension and tachycardia, back, flank or abdominal pain, and little or no visible groin hematoma. Treat for hemorrhagic shock (blood, stop anticoagulants), and alert the receiving facility; it needs imaging and often endovascular repair."],
-        ["Site bleeding in transport", "Hold firm manual pressure just proximal to the skin puncture (the arterial hole lies above the skin hole), for a sustained period. Keep the leg straight during loading and unloading and recheck the site and distal pulses after every move."]
-      ],
-      md: [
-        ["Risk factors", "High arterial puncture (above the inguinal ligament) is the main risk for retroperitoneal bleeding; low puncture (below the bifurcation) raises pseudoaneurysm and AV fistula risk. Also large sheaths, heavy anticoagulation, female sex, low body weight and older age."],
-        ["Other complications", "Pseudoaneurysm: pulsatile mass with a systolic bruit; ultrasound-guided thrombin injection or compression. AV fistula: continuous bruit. Contrast nephropathy, atheroembolism (livedo, eosinophilia), and stroke."]
-      ],
-      pearl: "Post-femoral cath hypotension with back pain and a soft groin is a retroperitoneal bleed until proven otherwise.",
-      drugs: ["heparin","bivalirudin","protamine"] },
-
-    { id: "pci", grp: "Interventional cardiology", title: "STEMI and PCI: door-to-balloon, antiplatelet and anticoagulant loading, cardiogenic shock and culprit-only PCI", lv: ["fl","md"],
-      sum: "STEMI care is a race to reperfusion, supported by antiplatelet and anticoagulant therapy and guided by shock-specific trial data.",
-      rows: [
-        ["Time targets", "Primary PCI: first medical contact to device 90 minutes or less, or 120 minutes or less when transfer is needed. If PCI cannot happen within 120 minutes, give fibrinolysis within 30 minutes of arrival unless contraindicated, then transfer."],
-        ["Antiplatelets", "Aspirin load plus a P2Y12 inhibitor (ticagrelor or prasugrel preferred for PCI; clopidogrel with fibrinolysis or when the others are unsuitable). Prasugrel is contraindicated after prior stroke or TIA. IV cangrelor is an option when oral loading is not possible."],
-        ["Anticoagulants", "Unfractionated heparin is the usual choice for primary PCI; bivalirudin is an alternative. Enoxaparin or fondaparinux are used with fibrinolysis. GP IIb/IIIa inhibitors are bailout agents for large thrombus or no-reflow."],
-        ["Cardiogenic shock", "Emergency revascularization improves survival (SHOCK trial at 6 months and long term). In multivessel disease with shock, treat the culprit lesion only at first (CULPRIT-SHOCK)."]
-      ],
-      fl: [
-        ["In transport", "Send the 12-lead and activation to the receiving cath lab, document drug times and doses given, place defib pads, and avoid nitrates with hypotension, RV infarct or recent PDE-5 inhibitor use. Monitor for reperfusion arrhythmias, bleeding after fibrinolysis, and evolving shock."]
-      ],
-      md: [
-        ["Evidence", "CULPRIT-SHOCK (2017): culprit-only PCI lowered 30-day death or renal replacement therapy compared with immediate multivessel PCI. In stable STEMI without shock, complete revascularization (staged or immediate) reduces future events (COMPLETE)."],
-        ["Reperfusion after lytics", "After fibrinolysis, transfer for angiography; rescue PCI for failed reperfusion (less than 50 percent ST resolution at 60-90 minutes, ongoing pain or instability), otherwise routine angiography within about 2-24 hours."]
-      ],
-      pearl: "In shock with multivessel disease, open the culprit first and come back for the rest later.",
-      drugs: ["aspirin","ticagrelor","prasugrel","heparin"] },
-
-    { id: "valves", grp: "Interventional cardiology", title: "Hemodynamics of aortic stenosis, aortic regurgitation, mitral regurgitation and tamponade (pulsus paradoxus, equalization of pressures)", lv: ["fl","md"],
-      sum: "Valve lesions and tamponade each have a signature pressure pattern and specific rules about rate, preload and afterload.",
-      rows: [
-        ["Aortic stenosis", "Fixed outflow obstruction: LV-aorta gradient, pulsus parvus et tardus. Severe AS: valve area under 1.0 cm2, mean gradient 40 mmHg or more, peak velocity 4 m/s or more. Keep preload, sinus rhythm and a normal-slow rate; avoid vasodilators; treat hypotension with an alpha agonist."],
-        ["Aortic regurgitation", "Chronic AR: wide pulse pressure, bounding pulses. Acute AR (dissection, endocarditis): sudden LV volume overload, pulmonary edema and shock without a wide pulse pressure. Avoid bradycardia (longer diastole means more regurgitation); IABP is contraindicated."],
-        ["Mitral regurgitation", "Acute MR (papillary muscle rupture, endocarditis) causes giant v waves on the wedge tracing and flash pulmonary edema. Afterload reduction (nitroprusside, IABP) promotes forward flow; urgent surgery is usually needed."],
-        ["Tamponade", "Pericardial pressure limits filling: equalization of diastolic pressures (RA, RV diastolic, PA diastolic and PCWP within about 5 mmHg), pulsus paradoxus (inspiratory SBP fall of more than 10 mmHg), and a blunted y descent. Beck triad: hypotension, JVD, muffled heart sounds."]
-      ],
-      fl: [
-        ["In transport", "Tamponade and AS are preload and rate dependent: give fluid, avoid sedatives that vasodilate, and be very careful with intubation and positive pressure, which can cause arrest. Pericardiocentesis is the definitive fix for tamponade; know your scope and protocol."]
-      ],
-      md: [
-        ["Tamponade vs constriction", "Tamponade: blunted y descent, pulsus paradoxus common, no Kussmaul sign. Constriction: prominent y descent with dip-and-plateau (square root) RV diastolic tracing, Kussmaul sign, ventricular discordance on simultaneous LV/RV tracings. Restrictive cardiomyopathy shows concordance."],
-        ["Low-flow AS", "Low-flow, low-gradient AS with reduced EF: dobutamine stress echo distinguishes true severe AS (valve area stays small as gradient rises) from pseudo-severe AS (valve area increases with flow)."]
-      ],
-      pearl: "Equal diastolic pressures plus pulsus paradoxus equals tamponade until proven otherwise.",
-      drugs: ["phenylephrine","nitroprusside","norepinephrine"] }
-  ],
-
-  profiles: [
-    { shock: "Hypovolemic", co: "Low", svr: "High", pcwp: "Low", cvp: "Low", svo2: "Low", note: "Hemorrhage or fluid loss. Cold, flat neck veins, narrow pulse pressure. Replace volume (blood for bleeding) and stop the loss." },
-    { shock: "Cardiogenic (LV)", co: "Low", svr: "High", pcwp: "High", cvp: "Normal or high", svo2: "Low", note: "Cold and wet: pulmonary edema. Inotropes, vasopressor for hypotension, revascularization, consider mechanical support." },
-    { shock: "RV failure", co: "Low", svr: "High", pcwp: "Low or normal", cvp: "High", svo2: "Low", note: "RV infarct, PE, pulmonary hypertension. JVD with clear lungs. Careful preload, avoid nitrates, keep systemic pressure up, lower PVR." },
-    { shock: "Distributive - septic (early, warm)", co: "High or normal", svr: "Low", pcwp: "Low or normal", cvp: "Low or normal", svo2: "Normal or high", note: "Warm, bounding pulses, wide pulse pressure. Fluids, antibiotics, norepinephrine first, add vasopressin. Late sepsis can turn cold with low CO." },
-    { shock: "Distributive - anaphylactic", co: "Low to normal", svr: "Low", pcwp: "Low", cvp: "Low", svo2: "Variable", note: "Vasodilation plus capillary leak. Epinephrine IM first, large fluid volumes, epinephrine infusion if refractory." },
-    { shock: "Neurogenic", co: "Low or normal", svr: "Low", pcwp: "Low", cvp: "Low", svo2: "Normal or variable", note: "Spinal cord injury at T6 or above. Hypotension with bradycardia and warm skin. Exclude hemorrhage first; vasopressor with chronotropy, atropine for bradycardia." },
-    { shock: "Obstructive - tamponade", co: "Low", svr: "High", pcwp: "High (equalized)", cvp: "High", svo2: "Low", note: "Diastolic pressures equalize within about 5 mmHg, pulsus paradoxus, blunted y descent. Fluid as a bridge, pericardiocentesis." },
-    { shock: "Obstructive - massive PE", co: "Low", svr: "High", pcwp: "Low or normal", cvp: "High", svo2: "Low", note: "High PA pressure (if RV can generate it), dilated RV, hypoxemia. Anticoagulate, thrombolysis or catheter or surgical embolectomy; avoid excessive fluid." }
-  ],
-
-  q: [
-    /* ================= Flight paramedic (fl) ================= */
-    { lv: "fl", topic: "aline", q: "During loading, the arterial line transducer slips and now hangs about 20 cm below the patient's phlebostatic axis. What happens to the displayed pressure?",
-      a: "It reads falsely high by roughly 15 mmHg", w: ["It reads falsely low by roughly 15 mmHg", "It is unchanged because the line was zeroed", "Only the waveform shape changes, not the numbers"],
-      x: "A transducer below the heart adds the weight of the fluid column, about 7.5 mmHg per 10 cm. Re-level at the 4th intercostal space mid-axillary line." },
-    { lv: "fl", topic: "aline", q: "A fast-flush test on an arterial line shows four sharp oscillations before the trace settles. The display reads 182/48. What is the best interpretation?",
-      a: "Underdamped: systolic overestimated; trust the MAP", w: ["Overdamped: systolic is underestimated, flush the line", "Optimally damped: treat the hypertension now", "Transducer is too high: re-level and re-zero"],
-      x: "More than about 2 oscillations means underdamping, which exaggerates systolic and lowers diastolic. MAP stays relatively accurate." },
-    { lv: "fl", topic: "aline", q: "You are flying a patient with an arterial line from a sea-level hospital to a cruising altitude. What is the best practice for pressure monitoring?",
-      a: "Re-zero the transducer at the phlebostatic axis", w: ["Raise the flush bag pressure to 500 mmHg to compensate", "Switch to cuff pressures only until landing", "Lower the transducer 10 cm to offset altitude"],
-      x: "Zeroing references atmospheric pressure, which changes with cabin altitude. Re-zero (and re-level) after significant altitude changes per protocol." },
-    { lv: "fl", topic: "formulas", q: "A patient's blood pressure is 90/45 mmHg. What is the approximate MAP?",
-      a: "60 mmHg", w: ["67 mmHg", "55 mmHg", "75 mmHg"],
-      x: "MAP = DBP + (SBP - DBP)/3 = 45 + 45/3 = 45 + 15 = 60 mmHg." },
-    { lv: "fl", topic: "formulas", q: "A head-injured patient has a MAP of 80 mmHg and an ICP of 25 mmHg. What is the cerebral perfusion pressure?",
-      a: "55 mmHg, below the usual target", w: ["105 mmHg, above the usual target", "80 mmHg, within the usual target", "65 mmHg, within the usual target"],
-      x: "CPP = MAP - ICP = 80 - 25 = 55 mmHg. TBI guidelines target roughly 60-70 mmHg, so this is low." },
-    { lv: "fl", topic: "cvp", q: "A patient with an inferior MI has a CVP waveform showing intermittent very large a waves. What do these suggest?",
-      a: "Atrial contraction against a closed tricuspid valve", w: ["Severe tricuspid regurgitation with large systolic backflow", "Atrial fibrillation with loss of organized atrial activity", "Cardiac tamponade with a blunted y descent"],
-      x: "Cannon a waves occur when the atrium contracts against a closed tricuspid valve, as in complete heart block or VT." },
-    { lv: "fl", topic: "pac", q: "In flight, the PA catheter distal trace changes from a PA waveform to a wedge waveform. The balloon has not been inflated. What should you do?",
-      a: "Confirm the balloon is down and withdraw per protocol", w: ["Inflate the balloon fully to confirm a true wedge reading", "Advance the catheter until the PA trace reappears", "Leave it in place and record the wedge pressure hourly"],
-      x: "Spontaneous wedge means distal migration with risk of pulmonary infarction or rupture; pull back per protocol or medical control." },
-    { lv: "fl", topic: "pac", q: "The PA catheter distal waveform now shows a systolic of 32 mmHg and a diastolic near 2 mmHg, and frequent PVCs appear. What happened?",
-      a: "The catheter tip has fallen back into the RV", w: ["The catheter has migrated into a wedged position", "The balloon has ruptured inside the pulmonary artery", "The transducer needs re-zeroing to atmosphere"],
-      x: "An RV waveform has a near-zero diastolic that rises through diastole, and an RV tip causes ectopy. Notify and reposition per protocol." },
-    { lv: "fl", topic: "pac", q: "Shortly after a wedge reading, a ventilated patient with a PA catheter develops bright red blood in the endotracheal tube. Which complication is most likely?",
-      a: "Pulmonary artery rupture", w: ["Pulmonary infarction from prolonged wedging", "Endotracheal tube cuff injury to the trachea", "Balloon rupture with helium embolism"],
-      x: "Hemoptysis after balloon inflation is PA rupture until proven otherwise; position bleeding side down and prepare for lung isolation." },
-    { lv: "fl", topic: "shockprofiles", q: "Readings: CVP 2 mmHg, PCWP 4 mmHg, CI 1.8 L/min/m2, SVR 1800 dynes-sec/cm5. Which shock state fits?",
-      a: "Hypovolemic shock", w: ["Cardiogenic shock", "Early septic shock", "Massive pulmonary embolism"],
-      x: "Low filling pressures, low output and high SVR is the classic hypovolemic profile." },
-    { lv: "fl", topic: "shockprofiles", q: "After a C5 spinal fracture, a patient has BP 78/40, HR 48 and warm, dry extremities. Which profile is expected?",
-      a: "Low SVR with low filling pressures", w: ["High SVR with high filling pressures", "Low CO with very high CVP", "High SVR with low filling pressures"],
-      x: "Neurogenic shock is loss of sympathetic tone: low SVR, venous pooling (low filling pressures) and unopposed vagal bradycardia." },
-    { lv: "fl", topic: "valves", q: "A stab wound patient has hypotension, JVD, muffled heart sounds and a 15 mmHg inspiratory drop in systolic pressure. What hemodynamic finding is expected on a PA catheter?",
-      a: "Equalization of right and left diastolic pressures", w: ["Very low CVP with a markedly elevated wedge pressure", "Giant v waves on the wedge tracing from acute MR", "Wide pulse pressure with a high cardiac index"],
-      x: "Tamponade equalizes diastolic pressures within about 5 mmHg and causes pulsus paradoxus." },
-    { lv: "fl", topic: "scai", q: "A post-MI patient has SBP 84, cool clammy skin, lactate 4.1 and is started on norepinephrine and dobutamine. What SCAI stage is this?",
-      a: "Stage C", w: ["Stage B", "Stage A", "Stage E"],
-      x: "Stage C is hypoperfusion requiring intervention beyond fluids (drugs or devices). Stage B is hypotension without hypoperfusion." },
-    { lv: "fl", topic: "scai", q: "During a 2-hour transport, a stage C cardiogenic shock patient needs a second and then third vasoactive drug and lactate is climbing. What does this represent?",
-      a: "Progression to stage D (deteriorating)", w: ["Stable stage C on appropriate therapy", "Stage B because the patient is on drugs", "Stage E because more than one drug is running"],
-      x: "Stage D is defined by deterioration despite initial treatment; it should prompt early notification and discussion of mechanical support." },
-    { lv: "fl", topic: "rvfailure", q: "An inferior STEMI patient is hypotensive with clear lungs and JVD; V4R shows ST elevation. What is the best initial approach?",
-      a: "Hold nitrates; give a cautious fluid bolus", w: ["Give nitroglycerin to relieve ischemic pain", "Give furosemide to reduce venous congestion", "Start a high-dose morphine infusion for pain"],
-      x: "RV infarction is preload dependent; nitrates, diuretics and opioid vasodilation can cause profound hypotension." },
-    { lv: "fl", topic: "rvfailure", q: "You must intubate a hypoxic patient with severe pulmonary hypertension before flight. Which approach best reduces the risk of arrest?",
-      a: "Preoxygenate and start a vasopressor before induction", w: ["Use a large induction dose to blunt the sympathetic surge", "Ventilate with high tidal volumes and high PEEP after intubation", "Allow permissive hypercapnia during a prolonged attempt"],
-      x: "Hypotension, hypoxia, hypercapnia and high airway pressures all worsen RV failure. Support systemic pressure and avoid apnea-related hypoxia." },
-    { lv: "fl", topic: "pressors", q: "A patient in septic shock remains at MAP 58 after an appropriate fluid bolus. Which vasopressor is first-line?",
-      a: "Norepinephrine", w: ["Dopamine", "Phenylephrine", "Dobutamine"],
-      x: "Norepinephrine is first-line in septic shock; dopamine causes more arrhythmias and dobutamine is an inotrope that can lower SVR." },
-    { lv: "fl", topic: "pressors", q: "A patient with known severe aortic stenosis becomes hypotensive and tachycardic after sedation. Which agent best fits the hemodynamic goal?",
-      a: "Phenylephrine, raising SVR without tachycardia", w: ["Dobutamine, raising contractility and heart rate", "Nitroglycerin, reducing preload and wall stress", "Milrinone, raising contractility with vasodilation"],
-      x: "In severe AS, coronary perfusion depends on diastolic pressure and diastolic time; a pure alpha agonist restores pressure without tachycardia." },
-    { lv: "fl", topic: "iabp", q: "Shortly after loading an IABP patient, the left radial pulse is lost while the right radial pulse is strong. What is the most likely cause?",
-      a: "The balloon has migrated up and is obstructing the left subclavian", w: ["The balloon has migrated down and is occluding the renal arteries", "The IABP timing has changed to late deflation", "The femoral insertion site has developed a hematoma"],
-      x: "The tip should lie just distal to the left subclavian artery; upward migration compromises left arm flow. Notify and plan repositioning with imaging." },
-    { lv: "fl", topic: "iabp", q: "During transport of an IABP patient, urine output falls sharply while blood pressure is unchanged. Which malposition should you suspect?",
-      a: "Balloon too low, occluding the renal arteries", w: ["Balloon too high, occluding the left subclavian", "Balloon tip lying high in the aortic arch", "Balloon tip lying in the ascending aorta"],
-      x: "A low-lying balloon can occlude renal arteries with each inflation. Report it; the receiving team should check position by imaging." },
-    { lv: "fl", topic: "iabp", q: "You notice brown flecks and blood in the IABP helium tubing. What is the correct immediate action?",
-      a: "Stop pumping, clamp the line, plan prompt removal", w: ["Increase the augmentation and continue pumping", "Flush the helium line with saline and keep pumping", "Change to 1:3 ratio and continue to destination"],
-      x: "Blood in the gas line means balloon rupture; continued pumping risks gas embolism, and a clotted balloon can become entrapped." },
-    { lv: "fl", topic: "iabp", q: "An IABP patient goes into cardiac arrest during transport. Which statement about the pump is correct?",
-      a: "Use pressure or internal trigger; defibrillate as usual", w: ["Turn the pump off and disconnect it before any shock", "Keep ECG trigger; the pump will follow the VF waveform", "Increase to maximal augmentation to replace compressions"],
-      x: "The ECG trigger fails in arrest; use pressure trigger with compressions or internal mode per device guidance. Modern consoles are isolated for defibrillation." },
-    { lv: "fl", topic: "iabptiming", q: "On a 1:2 IABP tracing, the assisted aortic end-diastolic pressure is higher than the unassisted end-diastolic pressure. Which timing error is this?",
-      a: "Late deflation", w: ["Early deflation", "Late inflation", "Early inflation"],
-      x: "In late deflation the balloon is still inflated as the LV starts to eject, raising afterload and oxygen demand." },
-    { lv: "fl", topic: "iabptiming", q: "The IABP inflation begins before the dicrotic notch on the arterial waveform. What is the main harm?",
-      a: "Premature aortic valve closure and raised LV wall stress", w: ["Retrograde coronary and carotid flow at end-diastole", "Only reduced augmentation with no direct harm", "Increased unassisted systolic pressure with each beat"],
-      x: "Early inflation closes the aortic valve before ejection is complete, raising LVEDV, LVEDP and oxygen demand, and can cause aortic regurgitation." },
-    { lv: "fl", topic: "iabptiming", q: "During a rough helicopter flight the IABP keeps losing its ECG trigger because of motion artifact. What is the best fix?",
-      a: "Switch to arterial pressure trigger", w: ["Switch to internal asynchronous trigger", "Stop pumping until landing", "Change the ratio from 1:1 to 1:3"],
-      x: "Pressure trigger uses the arterial upstroke and is the standard backup when the ECG signal is unreliable. Internal mode is only for arrest." },
-    { lv: "fl", topic: "impella", q: "An Impella CP patient triggers repeated suction alarms in flight and the BP is soft. What is the most likely cause and first step?",
-      a: "Under-filled LV; lower P-level and assess volume status", w: ["Pump thrombosis; raise P-level to clear the inlet", "Purge failure; stop the purge and continue at same level", "Aortic regurgitation; raise P-level to maximum support"],
-      x: "Suction means the inlet is pulling on the LV wall, usually from low preload, RV failure or malposition. Reduce support and address volume." },
-    { lv: "fl", topic: "impella", q: "The Impella controller shows a flat, non-pulsatile motor current waveform with a position alarm. What does this indicate?",
-      a: "The pump is fully in the aorta or fully in the LV", w: ["The pump is correctly placed across the aortic valve", "The purge pressure is too high and needs adjusting", "The patient is fluid overloaded and needs a diuretic"],
-      x: "Correct position gives a pulsatile motor current because inlet and outlet see different pressures. Flat current means both ends are on one side." },
-    { lv: "fl", topic: "impella", q: "Your Impella CP patient goes into cardiac arrest. Per manufacturer guidance, what should you do with the pump during CPR?",
-      a: "Reduce support to P-2 and continue CPR", w: ["Turn the pump to P-0 to prevent dislodgement", "Increase to P-9 to replace compressions", "Stop the purge and disconnect the controller"],
-      x: "Guidance is to lower to P-2 during compressions, then return to prior support with a position check after ROSC. P-0 causes backflow." },
-    { lv: "fl", topic: "impella", q: "Several hours into support, an Impella patient's urine turns dark cola-colored. Which complication should you suspect?",
-      a: "Hemolysis from malposition or suction", w: ["Rhabdomyolysis from the vascular access site", "Hematuria from heparin in the purge solution", "Contrast nephropathy from the cath procedure"],
-      x: "Dark urine on Impella support suggests hemolysis; check position, preload and P-level and report it." },
-    { lv: "fl", topic: "ecmo", q: "A patient on femoral VA ECMO has SpO2 99 percent on the foot but 82 percent on the right hand, and the native heart is now ejecting. What is this?",
-      a: "Differential (north-south) hypoxia", w: ["Oxygenator failure in the circuit", "Recirculation of returned blood", "Peripheral vasoconstriction artifact"],
-      x: "The recovering LV ejects poorly oxygenated blood from sick lungs to the upper body. Monitor the right radial and improve lung oxygenation or flow." },
-    { lv: "fl", topic: "ecmo", q: "During transport the ECMO lines begin to chatter and pump flow drops while RPM is unchanged. What is the most likely cause?",
-      a: "Inadequate venous drainage, as from hypovolemia", w: ["Oxygenator thrombosis raising post-membrane pressure", "Too much sweep gas flow through the oxygenator", "Air entering the circuit at the return cannula"],
-      x: "Chattering (chugging) means the drainage cannula is collapsing the vein. Check for kinks, give volume and lower RPM per protocol." },
-    { lv: "fl", topic: "ecmo", q: "A patient on VV ECMO has a PaCO2 of 65 mmHg with good oxygenation. Which change most directly lowers PaCO2?",
-      a: "Increase the sweep gas flow", w: ["Increase the FdO2 on the blender", "Decrease the pump speed", "Increase the ventilator PEEP"],
-      x: "Sweep gas flow drives CO2 removal across the membrane; FdO2 and blood flow mainly affect oxygenation." },
-    { lv: "fl", topic: "lvad", q: "You cannot palpate a radial pulse on an alert LVAD patient. How should you measure blood pressure?",
-      a: "Doppler and manual cuff; first sound is about MAP", w: ["Automatic cuff; average three readings to get the MAP", "Palpate the femoral pulse to estimate systolic", "Use SpO2 pleth amplitude to estimate pressure"],
-      x: "Continuous-flow LVADs often abolish palpable pulses; the Doppler opening pressure approximates MAP (target about 70-90)." },
-    { lv: "fl", topic: "lvad", q: "An LVAD patient is unresponsive, no pump hum is heard, the Doppler MAP is unobtainable and ETCO2 is 12 mmHg. What should you do?",
-      a: "Start compressions while troubleshooting the pump", w: ["Withhold compressions to avoid dislodging the pump", "Only change the batteries and reassess in 5 minutes", "Give epinephrine and wait for VAD team instructions"],
-      x: "AHA guidance: with absent pump function and poor perfusion (MAP under about 50, ETCO2 under about 20), compressions are indicated." },
-    { lv: "fl", topic: "lvad", q: "After a day of vomiting, an LVAD patient has low-flow alarms, dizziness and runs of VT. What is the most likely mechanism?",
-      a: "Low preload causing suction events", w: ["Pump thrombosis causing high power", "Driveline fracture causing pump stop", "Controller failure from a low battery"],
-      x: "Hypovolemia lets the LV collapse onto the inflow cannula (suction), lowering flow and triggering VT. Give fluid." },
-    { lv: "fl", topic: "tvp", q: "A transcutaneously paced patient shows pacer spikes at 70/min, but none are followed by a QRS. What is the problem and the fix?",
-      a: "Failure to capture; increase the output (mA)", w: ["Failure to sense; increase the sensitivity (mV)", "Oversensing; switch to asynchronous mode", "Failure to pace; replace the pacer battery"],
-      x: "Spikes without QRS complexes are loss of capture. Raise mA, check pad contact and placement, and confirm a pulse." },
-    { lv: "fl", topic: "tvp", q: "After achieving electrical capture with transcutaneous pacing, where is the best place to confirm mechanical capture?",
-      a: "Femoral pulse or SpO2 pleth", w: ["Carotid pulse on either side", "The ECG rhythm strip alone", "Radial pulse on the pad side"],
-      x: "Pacing causes muscle twitching that can mimic a carotid pulse; femoral pulse or a pleth waveform matched to paced beats is more reliable." },
-    { lv: "fl", topic: "tvp", q: "A transvenous pacer in demand mode fires spikes right after the patient's own QRS complexes, some landing on T waves. What is happening?",
-      a: "Undersensing; increase sensitivity", w: ["Oversensing; decrease sensitivity", "Loss of capture; increase the mA output", "Normal function in asynchronous mode"],
-      x: "Undersensing means intrinsic beats are missed, risking R-on-T. Lower the mV setting to increase sensitivity." },
-    { lv: "fl", topic: "cathlab", q: "Three hours after a femoral cath, a patient has BP 82/50, HR 124 and new back and flank pain, but the groin looks unremarkable. What is most likely?",
-      a: "Retroperitoneal hemorrhage", w: ["Vasovagal reaction to sheath removal", "Contrast-induced anaphylaxis", "Acute stent thrombosis with shock"],
-      x: "A high femoral puncture can bleed into the retroperitoneum with no visible hematoma. Treat for hemorrhagic shock and alert the receiving team." },
-    { lv: "fl", topic: "pci", q: "A STEMI patient is at a hospital without a cath lab; the expected time to PCI after transfer is 150 minutes and there are no contraindications. What is recommended?",
-      a: "Fibrinolysis within 30 minutes, then transfer", w: ["Transfer for primary PCI without fibrinolysis", "Fibrinolysis only after arrival at the PCI center", "Medical therapy only, then outpatient angiography"],
-      x: "When first-contact-to-device time will exceed 120 minutes, give fibrinolysis promptly and transfer for angiography or rescue PCI." },
-
-    /* ================= Medical student / physician (md) ================= */
-    { lv: "md", topic: "formulas", q: "MAP 70 mmHg, CVP 10 mmHg, cardiac output 3.0 L/min. What is the SVR?",
-      a: "1600 dynes-sec/cm5", w: ["1867 dynes-sec/cm5", "1333 dynes-sec/cm5", "2100 dynes-sec/cm5"],
-      x: "SVR = 80 x (MAP - CVP) / CO = 80 x 60 / 3 = 1600 dynes-sec/cm5 (elevated)." },
-    { lv: "md", topic: "formulas", q: "A patient has a cardiac output of 3.4 L/min and a body surface area of 2.0 m2. What is the cardiac index and its significance?",
-      a: "1.7 L/min/m2, consistent with cardiogenic shock", w: ["6.8 L/min/m2, consistent with high-output state", "2.7 L/min/m2, within the normal range", "1.4 L/min/m2, consistent with normal output"],
-      x: "CI = CO / BSA = 3.4 / 2.0 = 1.7 L/min/m2, below the roughly 2.2 threshold used for cardiogenic shock." },
-    { lv: "md", topic: "formulas", q: "Mean PA pressure 35 mmHg, PCWP 15 mmHg, cardiac output 4 L/min. What is the PVR?",
-      a: "5 Wood units (400 dynes-sec/cm5)", w: ["8.75 Wood units (700 dynes-sec/cm5)", "2.5 Wood units (200 dynes-sec/cm5)", "12.5 Wood units (1000 dynes-sec/cm5)"],
-      x: "PVR = (mPAP - PCWP) / CO = 20 / 4 = 5 Wood units; times 80 = 400 dynes-sec/cm5. Elevated (above 2 WU)." },
-    { lv: "md", topic: "formulas", q: "Aortic diastolic pressure 50 mmHg and LVEDP 25 mmHg. What is the coronary perfusion pressure?",
-      a: "25 mmHg", w: ["75 mmHg", "40 mmHg", "33 mmHg"],
-      x: "Coronary perfusion pressure = aortic diastolic pressure - LVEDP = 50 - 25 = 25 mmHg." },
-    { lv: "md", topic: "formulas", q: "CO 4 L/min, Hb 10 g/dL, SaO2 90 percent; ignore dissolved oxygen. What is the approximate oxygen delivery (DO2)?",
-      a: "About 480 mL O2/min", w: ["About 540 mL O2/min", "About 1000 mL O2/min", "About 400 mL O2/min"],
-      x: "CaO2 = 1.34 x 10 x 0.90 = 12.06 mL/dL. DO2 = 4 x 12.06 x 10 = 482 mL/min, about half of normal." },
-    { lv: "md", topic: "formulas", q: "A patient with cardiogenic shock has MAP 60 mmHg and CO 3.5 L/min. What is the cardiac power output?",
-      a: "About 0.47 W, below the prognostic threshold", w: ["About 0.47 W, above the prognostic threshold", "About 0.75 W, above the prognostic threshold", "About 2.1 W, within the normal range"],
-      x: "CPO = MAP x CO / 451 = 210 / 451 = 0.47 W. Below about 0.6 W predicts high mortality in cardiogenic shock." },
-    { lv: "md", topic: "formulas", q: "Measured VO2 is 250 mL/min, arterial O2 content 18 mL/dL and mixed venous O2 content 13 mL/dL. What is the Fick cardiac output?",
-      a: "5.0 L/min", w: ["2.5 L/min", "7.7 L/min", "3.2 L/min"],
-      x: "CO = VO2 / [(CaO2 - CvO2) x 10] = 250 / (5 x 10) = 5.0 L/min." },
-    { lv: "md", topic: "scai", q: "After an inferior MI, PA systolic is 28 mmHg, PA diastolic 16 mmHg and RA pressure 15 mmHg. What is the PAPi and what does it suggest?",
-      a: "0.8; suggests RV failure", w: ["1.9; suggests adequate RV function", "0.8; normal RV function", "2.9; isolated LV failure"],
-      x: "PAPi = (PASP - PADP) / RAP = 12 / 15 = 0.8. Below about 0.9 in acute MI predicts RV failure and need for RV support." },
-    { lv: "md", topic: "determinants", q: "A patient with acute decompensated HF has PCWP 28 mmHg. A 500 mL fluid bolus raises PCWP to 34 mmHg with no change in stroke volume. What does this show?",
-      a: "The LV is operating on the flat part of its Starling curve", w: ["The LV is operating on the steep part of its Starling curve", "Afterload is too low and needs a vasopressor", "The LV is underfilled and needs more fluid"],
-      x: "On the flat portion, preload increases raise filling pressure without improving stroke volume, causing pulmonary congestion." },
-    { lv: "md", topic: "fluidresp", q: "A spontaneously breathing septic patient has a 15 percent rise in stroke volume (by monitor) during a passive leg raise. What does this predict?",
-      a: "The patient will likely increase cardiac output with fluid", w: ["The patient is fluid overloaded and needs diuresis", "The patient has RV failure and needs inotropes", "The result is invalid because the patient breathes spontaneously"],
-      x: "A rise in SV or CO of about 10 percent or more with PLR predicts fluid responsiveness, and PLR works in spontaneously breathing patients." },
-    { lv: "md", topic: "fluidresp", q: "In which patient is pulse pressure variation most reliable for predicting fluid responsiveness?",
-      a: "Sedated, sinus rhythm, tidal volume 8 mL/kg", w: ["Awake, atrial fibrillation, spontaneous breaths", "Sedated, tidal volume 5 mL/kg, open chest", "Paralyzed, frequent PVCs, high abdominal pressure"],
-      x: "PPV requires controlled ventilation with adequate tidal volume, regular rhythm, no spontaneous effort and a closed chest." },
-    { lv: "md", topic: "normals", q: "Right heart cath: mean PAP 32 mmHg, PCWP 10 mmHg, PVR 4.5 Wood units. How is this classified?",
-      a: "Pre-capillary pulmonary hypertension", w: ["Isolated post-capillary pulmonary hypertension", "Normal pulmonary hemodynamics", "Combined pre- and post-capillary hypertension"],
-      x: "mPAP above 20 with PCWP 15 or less and PVR above 2 WU is pre-capillary PH (2022 ESC/ERS)." },
-    { lv: "md", topic: "cvp", q: "A CVP tracing shows large cv waves that merge into a single systolic wave and a steep y descent. What is the most likely cause?",
-      a: "Tricuspid regurgitation", w: ["Cardiac tamponade", "Complete heart block", "Severe tricuspid stenosis"],
-      x: "In TR, regurgitant flow during systole produces a large cv wave; tamponade blunts the y descent and AV dissociation gives cannon a waves." },
-    { lv: "md", topic: "pac", q: "A patient with known LBBB is having a PA catheter floated. Which complication is of particular concern?",
-      a: "Complete heart block from catheter-induced RBBB", w: ["Pulmonary artery rupture from LBBB-related dilation", "Ventricular septal rupture from the catheter tip", "Tricuspid valve stenosis from the balloon"],
-      x: "Passage through the RV can cause transient RBBB; with pre-existing LBBB this produces complete heart block. Have pacing available." },
-    { lv: "md", topic: "pac", q: "Day 4 after anterior MI, a patient has a new holosystolic murmur and shock. Saturations: SVC 60 percent, RA 61 percent, PA 80 percent. What is the diagnosis?",
-      a: "Ventricular septal rupture", w: ["Papillary muscle rupture with acute MR", "Free wall rupture with tamponade", "Right ventricular infarction"],
-      x: "An oxygen step-up between RA and PA localizes a left-to-right shunt at the ventricular level. Acute MR has no step-up but giant v waves." },
-    { lv: "md", topic: "pcwp", q: "In which condition does PCWP overestimate LV end-diastolic pressure?",
-      a: "Mitral stenosis", w: ["Acute aortic regurgitation", "Stiff, noncompliant left ventricle", "Severe hypovolemia"],
-      x: "With mitral stenosis, LA pressure (and PCWP) exceeds LVEDP because of the transmitral gradient. Acute AR and a stiff LV cause underestimation." },
-    { lv: "md", topic: "pcwp", q: "After an inferior MI, a patient develops flash pulmonary edema. The wedge tracing shows a mean of 24 mmHg with v waves reaching 55 mmHg. Most likely cause?",
-      a: "Papillary muscle rupture with acute MR", w: ["Ventricular septal rupture with left-to-right shunt", "Right ventricular infarction with low preload", "Cardiac tamponade from free wall rupture"],
-      x: "Giant v waves reflect regurgitant flow into a small, noncompliant LA. Inferior MI can rupture the posteromedial papillary muscle (single blood supply)." },
-    { lv: "md", topic: "pcwp", q: "On high PEEP, a patient's PCWP reads 22 mmHg while PA diastolic is 16 mmHg, and the wedge swings widely with each breath. What is most likely?",
-      a: "The catheter tip is not in West zone 3", w: ["The patient has severe pulmonary hypertension", "The patient has a large pericardial effusion", "The PCWP accurately reflects a high LVEDP"],
-      x: "PCWP should not exceed PADP. A wedge higher than PADP with large respiratory swings suggests alveolar pressure is being transmitted (zone 1 or 2)." },
-    { lv: "md", topic: "pcwp", q: "A hypoxic patient has PA diastolic 30 mmHg and PCWP 10 mmHg. What does the gradient suggest?",
-      a: "High pulmonary vascular resistance, as in PE", w: ["Left heart failure with high left atrial pressure", "Normal pulmonary vascular resistance", "Hypovolemia with low left atrial pressure"],
-      x: "A PADP - PCWP gradient above about 5-7 mmHg indicates pre-capillary disease: PE, ARDS, hypoxic vasoconstriction or PAH." },
-    { lv: "md", topic: "svo2", q: "A house-fire victim has lactate 11, normal cardiac output, SaO2 99 percent and SvO2 88 percent. What is the most likely explanation?",
-      a: "Cyanide blocking cellular oxygen use", w: ["Severe anemia lowering oxygen content", "Cardiogenic shock from carbon monoxide", "Increased oxygen consumption from burns"],
-      x: "High SvO2 with lactic acidosis means tissues are not extracting oxygen, as in cyanide poisoning. Treat with hydroxocobalamin." },
-    { lv: "md", topic: "svo2", q: "Cardiac output and SaO2 are unchanged, but SvO2 falls from 70 to 52 percent. Which cause fits best?",
-      a: "Acute blood loss lowering hemoglobin", w: ["Sepsis impairing tissue extraction", "Deep sedation and neuromuscular blockade", "A catheter tip migrated into wedge position"],
-      x: "SvO2 falls with low CO, low SaO2, low Hb or high VO2. With CO and SaO2 fixed, falling Hb (or rising VO2) is the cause." },
-    { lv: "md", topic: "shockprofiles", q: "CI 4.6 L/min/m2, SVR 520 dynes-sec/cm5, PCWP 8 mmHg, CVP 6 mmHg, SvO2 82 percent. Which shock state?",
-      a: "Early septic shock", w: ["Cardiogenic shock", "Hypovolemic shock", "Obstructive shock"],
-      x: "High output, low SVR, low-normal filling pressures and high SvO2 is the warm distributive profile." },
-    { lv: "md", topic: "shockprofiles", q: "Hypotensive patient: RA pressure 18 mmHg, PCWP 8 mmHg, CI 1.9 L/min/m2, clear lungs. Which diagnosis fits best?",
-      a: "Right ventricular infarction", w: ["Left ventricular anterior wall MI", "Cardiac tamponade", "Hypovolemic shock"],
-      x: "RA pressure much higher than PCWP (ratio above about 0.8) with low output is the RV failure pattern; tamponade would equalize the pressures." },
-    { lv: "md", topic: "pressors", q: "In SOAP II, how did dopamine compare with norepinephrine as first-line therapy in shock?",
-      a: "More arrhythmias; worse in cardiogenic shock", w: ["Lower mortality in the cardiogenic shock subgroup", "Fewer arrhythmias with similar overall mortality", "Better renal outcomes and lower overall mortality"],
-      x: "Overall mortality was similar, but dopamine caused more arrhythmias and was associated with higher mortality in cardiogenic shock." },
-    { lv: "md", topic: "rvfailure", q: "A patient with massive PE and RV failure is hypotensive. Which vasopressor property is most desirable?",
-      a: "Raises systemic pressure with little PVR effect", w: ["Strong pulmonary vasoconstriction to divert flow", "Pure venodilation to reduce RV preload", "Reflex bradycardia to prolong diastole"],
-      x: "Norepinephrine and vasopressin restore RV coronary perfusion; vasopressin has minimal effect on PVR. The goal is systemic pressure above PA pressure." },
-    { lv: "md", topic: "iabp", q: "What was the main finding of IABP-SHOCK II?",
-      a: "No mortality benefit from routine IABP use", w: ["Lower 30-day mortality with routine IABP use", "Higher stroke rates outweighing hemodynamic benefit", "Benefit only when IABP was placed before PCI"],
-      x: "Routine IABP in AMI cardiogenic shock with early revascularization did not reduce mortality at 30 days, 12 months or 6 years." },
-    { lv: "md", topic: "iabp", q: "Which condition is an absolute contraindication to IABP placement?",
-      a: "Moderate to severe aortic regurgitation", w: ["Acute severe mitral regurgitation", "Post-infarction ventricular septal rupture", "Refractory unstable angina"],
-      x: "Diastolic inflation would increase regurgitant flow into the LV. Acute MR and VSD are classic indications, not contraindications." },
-    { lv: "md", topic: "iabptiming", q: "Which tracing finding shows correctly timed IABP deflation?",
-      a: "Assisted end-diastolic pressure lower than unassisted", w: ["Assisted end-diastolic pressure higher than unassisted", "Assisted systolic higher than unassisted systolic", "Augmentation starting before the dicrotic notch"],
-      x: "Proper deflation drops aortic pressure just before systole, so assisted end-diastolic and assisted systolic pressures are lower than unassisted." },
-    { lv: "md", topic: "impella", q: "What did the DanGer Shock trial (2024) show for Impella CP in STEMI cardiogenic shock?",
-      a: "Lower 180-day mortality but more complications", w: ["No mortality difference but fewer complications", "Higher mortality from bleeding and limb ischemia", "Lower mortality only in comatose arrest survivors"],
-      x: "Impella CP reduced 180-day all-cause death in non-comatose STEMI shock but increased bleeding, limb ischemia and renal replacement therapy." },
-    { lv: "md", topic: "impella", q: "Which finding on pre-procedure echo is a contraindication to a left-sided Impella?",
-      a: "Left ventricular thrombus", w: ["LV ejection fraction of 15 percent", "Moderate mitral regurgitation", "Severe pulmonary hypertension"],
-      x: "The inlet in the LV can aspirate thrombus and cause stroke. A mechanical aortic valve is also a contraindication." },
-    { lv: "md", topic: "ecmo", q: "On peripheral VA ECMO, a patient loses arterial pulsatility, the aortic valve stops opening and PCWP climbs with pulmonary edema. What is the best next step?",
-      a: "LV venting, for example with an Impella", w: ["Increase VA ECMO flow to maximum support", "Convert to VV ECMO to reduce afterload", "Stop anticoagulation to allow LV recovery"],
-      x: "Retrograde flow raises LV afterload; a non-ejecting, distending LV needs unloading. More flow usually worsens it." },
-    { lv: "md", topic: "ecmo", q: "What did ECLS-SHOCK (2023) find about early VA ECMO in AMI cardiogenic shock with planned revascularization?",
-      a: "No mortality benefit and more bleeding", w: ["Large reduction in 30-day mortality", "Benefit only in patients older than 75", "Reduced need for renal replacement therapy"],
-      x: "Routine early VA ECMO did not reduce 30-day all-cause mortality and increased moderate or severe bleeding and peripheral vascular complications." },
-    { lv: "md", topic: "lvad", q: "An LVAD patient has dark urine, LDH 5 times normal and a steady rise in pump power. What is the leading diagnosis?",
-      a: "Pump thrombosis", w: ["Suction event from hypovolemia", "Driveline infection", "Aortic insufficiency"],
-      x: "Rising power with hemolysis is the classic signature of pump thrombosis; suction lowers flow and power." },
-    { lv: "md", topic: "tvp", q: "A temporary transvenous pacer intermittently stops pacing whenever the patient moves, producing pauses. Spikes are absent during pauses. Most likely problem?",
-      a: "Oversensing artifact; reduce sensitivity", w: ["Undersensing of native beats; raise sensitivity", "Loss of capture from lead migration; raise output", "Failure of the battery; replace the generator"],
-      x: "Pauses without spikes in demand mode during movement point to inhibition from sensed artifact. Raise the mV setting (less sensitive) or use asynchronous." },
-    { lv: "md", topic: "tvp", q: "A patient with third-degree AV block and a wide-complex escape at 32/min is hypotensive. Why is atropine likely to fail?",
-      a: "The block is infranodal, beyond vagal control", w: ["Atropine has no effect on the SA node", "The patient needs a higher atropine dose", "Atropine is contraindicated in all AV blocks"],
-      x: "Atropine acts on vagally mediated nodal block. Infranodal block (wide escape) needs pacing or a catecholamine such as epinephrine or dopamine." },
-    { lv: "md", topic: "cathlab", q: "Two days after femoral cath, a patient has a pulsatile groin mass with a systolic bruit. Ultrasound shows a neck connecting to the artery. What is the usual treatment?",
-      a: "Ultrasound-guided thrombin injection", w: ["Immediate open surgical repair of the artery", "Warm compresses and observation", "Systemic thrombolytic therapy"],
-      x: "This is a femoral pseudoaneurysm; most are treated with ultrasound-guided thrombin injection (small ones may close spontaneously)." },
-    { lv: "md", topic: "pci", q: "A STEMI patient with cardiogenic shock has a culprit LAD lesion and severe RCA and circumflex disease. What does CULPRIT-SHOCK support?",
-      a: "Culprit-lesion-only PCI at first", w: ["Immediate PCI of all significant lesions", "Emergency CABG for all three vessels", "Medical therapy and IABP before any PCI"],
-      x: "Culprit-only PCI lowered 30-day death or renal replacement therapy versus immediate multivessel PCI in shock." },
-    { lv: "md", topic: "pci", q: "A STEMI patient with a history of TIA is going for primary PCI. Which P2Y12 inhibitor should be avoided?",
-      a: "Prasugrel", w: ["Ticagrelor", "Clopidogrel", "Cangrelor"],
-      x: "Prasugrel is contraindicated after prior stroke or TIA because of net harm from intracranial bleeding in TRITON-TIMI 38." },
-    { lv: "md", topic: "valves", q: "Which hemodynamic finding best distinguishes constrictive pericarditis from cardiac tamponade?",
-      a: "Steep y descent with dip-and-plateau RV tracing", w: ["Equalization of diastolic pressures within 5 mmHg", "Elevated right atrial pressure with clear lungs", "Low cardiac output with high SVR"],
-      x: "Both cause equalized, elevated diastolic pressures, but constriction shows a steep y descent (square root sign) while tamponade blunts the y descent." },
-    { lv: "md", topic: "valves", q: "A patient with acute aortic regurgitation from endocarditis is hypotensive and in pulmonary edema. Which hemodynamic management is appropriate while awaiting surgery?",
-      a: "Avoid bradycardia; reduce afterload if tolerated", w: ["Place an IABP to augment diastolic coronary pressure", "Give beta-blockers to slow the heart rate", "Use phenylephrine to raise diastolic pressure"],
-      x: "Slow rates lengthen diastole and increase regurgitation; IABP is contraindicated. Vasodilators and inotropes bridge to urgent valve surgery." }
-  ]
-};
-
-;
-// Contrast and medication safety in imaging for radiologic technologists
-// (X-ray/fluoroscopy, CT, MRI, nuclear medicine, interventional radiology).
-// Sources: ACR Manual on Contrast Media (2024/2025), ACR Manual on MR Safety,
-// ARRT content specifications, SNMMI procedure standards, FDA labeling.
-// Plain ES5, ASCII only.
-DB.CONTRAST = {
-  topics: [
-    /* ---------------- Contrast reactions ---------------- */
-    { id: "rxtypes", grp: "Contrast reactions", title: "Allergic-like vs physiologic reactions", short: "Reaction types",
-      sum: "The ACR sorts acute contrast reactions into allergic-like and physiologic types, each graded mild, moderate or severe.",
-      rows: [
-        ["Allergic-like", "Look like an allergy: hives, itching, flushing with rash, facial or throat swelling, sneezing, wheezing, hypotension with a fast heart rate. They are treated like allergy, and a prior one is the strongest risk factor for another."],
-        ["Physiologic", "A direct effect of the contrast, not immune: nausea, vomiting, warmth, metallic taste, headache, dizziness, anxiety, vasovagal reactions, high blood pressure, arrhythmia or seizure. Premedication does not prevent them."],
-        ["Severity", "Mild: limited and self-resolving. Moderate: more pronounced and usually needs treatment. Severe: life-threatening and needs immediate treatment and an emergency response."],
-        ["Document", "Record the specific agent, the signs, severity, type (allergic-like or physiologic), treatment and outcome. 'Iodine allergy' is not an accurate entry."]
-      ],
-      pearl: "Only a prior allergic-like reaction to the same class of contrast is an indication for premedication; physiologic reactions are not.",
-      drugs: [], lv: ["rt","ct","mri","nm","ir"] },
-
-    { id: "rxmild", grp: "Contrast reactions", title: "Mild reactions", short: "Mild reactions",
-      sum: "Mild reactions are limited and usually resolve on their own, but the patient must be watched because some progress.",
-      rows: [
-        ["Looks like", "Allergic-like: limited hives or itching, limited skin swelling, itchy or scratchy throat, nasal congestion, sneezing, watery eyes. Physiologic: brief nausea or vomiting, warmth or chills, headache, dizziness, anxiety, altered taste."],
-        ["What to do", "Stop the injection if it is still running, keep the IV in place, check vital signs and tell the radiologist. Symptomatic hives may be treated with diphenhydramine (adult 25 to 50 mg PO, IM or IV per ACR table) if the radiologist orders it."],
-        ["Watch for", "Spreading hives, facial or throat swelling, hoarseness, wheezing, shortness of breath or a falling blood pressure, which mean the reaction has become moderate or severe."],
-        ["Before discharge", "Observe until symptoms are resolving, per department protocol. Diphenhydramine causes drowsiness, so the patient should not drive."]
-      ],
-      pearl: "Never leave a patient with even a mild reaction alone; keep the IV and keep watching until the radiologist clears them.",
-      drugs: ["diphenhydramine"], lv: ["rt","ct","mri","nm","ir"] },
-
-    { id: "rxmod", grp: "Contrast reactions", title: "Moderate reactions", short: "Moderate reactions",
-      sum: "Moderate reactions are more pronounced, often need treatment, and can progress to severe without it.",
-      rows: [
-        ["Looks like", "Allergic-like: diffuse hives, diffuse redness with stable vitals, facial swelling without trouble breathing, throat tightness or hoarseness without trouble breathing, wheezing with little or no hypoxia. Physiologic: prolonged vomiting, hypertensive urgency, isolated chest pain, vasovagal reaction that needs treatment."],
-        ["What to do", "Stop the injection, call the radiologist to the room, give oxygen 6 to 10 L/min by mask, monitor pulse oximetry and blood pressure, keep the IV. Treat by type: antihistamine for diffuse hives, albuterol for wheezing, IM epinephrine for throat or facial swelling, per ACR table and radiologist."],
-        ["Call for help", "Activate the emergency response team if breathing worsens, oxygen saturation drops or blood pressure falls."],
-        ["Document", "Agent, signs, time course, drugs given, response and disposition."]
-      ],
-      pearl: "Throat tightness or facial swelling is treated more aggressively than hives because the airway is at stake.",
-      drugs: ["diphenhydramine", "albuterol", "epinephrine"], lv: ["rt","ct","mri","nm","ir"] },
-
-    { id: "rxsevere", grp: "Contrast reactions", title: "Severe reactions and anaphylaxis", short: "Severe/anaphylaxis",
-      sum: "Severe reactions are life-threatening; IM epinephrine and an emergency response call come first.",
-      rows: [
-        ["Looks like", "Diffuse swelling or facial swelling with trouble breathing, redness with low blood pressure, stridor or laryngeal edema with hypoxia, wheezing with significant hypoxia, anaphylactic shock (low blood pressure with a fast heart rate). Severe physiologic: arrhythmia, seizure, hypertensive emergency, vasovagal reaction resistant to treatment."],
-        ["What to do", "Stop the injection, call the code or rapid response team, stay with the patient. Give oxygen 6 to 10 L/min, raise the legs if hypotensive, and give IM epinephrine 1 mg/mL, 0.3 mg (0.3 mL) in the anterolateral thigh or a 0.3 mg autoinjector for adults; may repeat per ACR table. Rapid IV normal saline or lactated Ringer's for hypotension."],
-        ["Beta-blocker patients", "Patients on beta-blockers may respond poorly to epinephrine; the ACR lists IV glucagon for refractory cases, ordered by the physician."],
-        ["Not first-line", "Antihistamines and corticosteroids do not treat airway swelling, bronchospasm or shock and must never delay epinephrine."]
-      ],
-      pearl: "Anaphylaxis = low blood pressure with a fast heart rate; vasovagal = low blood pressure with a slow heart rate.",
-      drugs: ["epinephrine", "glucagon"], lv: ["rt","ct","mri","nm","ir"] },
-
-    { id: "vasovagal", grp: "Contrast reactions", title: "Vasovagal reaction (bradycardia + hypotension)", short: "Vasovagal",
-      sum: "A vasovagal reaction is low blood pressure with a slow pulse, often with pallor and sweating, and no hives.",
-      rows: [
-        ["Looks like", "Pale, sweaty, lightheaded or fainting patient with hypotension and a heart rate under 60. It may follow anxiety, pain, a needle stick or the contrast injection itself."],
-        ["What to do", "Raise the legs, give oxygen 6 to 10 L/min, monitor vitals and give rapid IV normal saline or lactated Ringer's. If the patient stays bradycardic and hypotensive, the physician may give IV atropine per ACR table (adult 0.6 to 1 mg, repeatable to a 3 mg total)."],
-        ["Call for help", "Notify the radiologist immediately; call the emergency team if the patient does not improve or loses consciousness."],
-        ["Watch for", "Hives, wheezing or a rising heart rate, which point to anaphylaxis instead and call for epinephrine."]
-      ],
-      pearl: "Check the pulse: bradycardia plus hypotension is vasovagal; tachycardia plus hypotension is anaphylaxis until proven otherwise.",
-      drugs: ["atropine"], lv: ["rt","ct","mri","nm","ir"] },
-
-    { id: "bronchospasm", grp: "Contrast reactions", title: "Bronchospasm and laryngeal edema", short: "Airway reactions",
-      sum: "Wheezing is lower-airway bronchospasm; stridor and hoarseness are upper-airway laryngeal edema, which is more dangerous.",
-      rows: [
-        ["Bronchospasm", "Wheezing, cough, chest tightness. Give oxygen 6 to 10 L/min and albuterol by metered-dose inhaler, 2 puffs (90 mcg/puff), repeatable per ACR table. If severe or not improving, IM epinephrine 0.3 mg (1 mg/mL) for adults."],
-        ["Laryngeal edema", "Hoarseness, throat tightness, stridor, trouble speaking or swallowing. Give oxygen and IM epinephrine 0.3 mg; albuterol does not treat upper-airway swelling."],
-        ["Call for help", "Any stridor, falling oxygen saturation or trouble breathing means calling the emergency response team right away."],
-        ["Monitor", "Continuous pulse oximetry and frequent blood pressure checks; sit the patient up if blood pressure allows."]
-      ],
-      pearl: "Albuterol is for wheezing; epinephrine is for the swollen airway.",
-      drugs: ["albuterol", "epinephrine"], lv: ["rt","ct","mri","nm","ir"] },
-
-    { id: "rxkit", grp: "Contrast reactions", title: "The reaction cart: what's in it and when to use each drug", short: "Reaction cart",
-      sum: "Every area that gives contrast needs a stocked, checked reaction kit and staff who know what each item is for.",
-      rows: [
-        ["Airway and monitoring", "Oxygen with masks, suction, bag-valve mask, blood pressure cuff, pulse oximeter, AED. In MRI the cart and AED stay outside Zone IV."],
-        ["Epinephrine", "1 mg/mL (1:1000) for IM use, 0.3 mg for adults, or a 0.3 mg autoinjector (0.15 mg pediatric autoinjector). The 0.1 mg/mL (1:10,000) form is for slow IV use by a physician."],
-        ["Other drugs", "Diphenhydramine for hives, albuterol inhaler for wheezing, atropine for vasovagal bradycardia, IV normal saline or lactated Ringer's, labetalol or sublingual nitroglycerin for hypertensive crisis, a benzodiazepine for seizures, dextrose for hypoglycemia, as stocked per ACR and department protocol."],
-        ["Upkeep", "Check the cart on schedule for expired drugs, oxygen supply and working equipment, and know where it is before you start the injection."]
-      ],
-      pearl: "Mixing up the 1 mg/mL and 0.1 mg/mL epinephrine concentrations is a classic and dangerous error; the IM dose uses 1 mg/mL.",
-      drugs: ["epinephrine", "diphenhydramine", "albuterol", "atropine"], lv: ["rt","ct","mri","nm","ir"] },
-
-    { id: "delayed", grp: "Contrast reactions", title: "Delayed skin reactions", short: "Delayed reactions",
-      sum: "Delayed reactions appear 1 hour to 1 week after iodinated contrast, are usually mild skin rashes, and resolve on their own.",
-      rows: [
-        ["Looks like", "Itchy measles-like (maculopapular) rash, hives or skin swelling hours to days later. Rarely, severe reactions such as Stevens-Johnson syndrome occur."],
-        ["Who", "Reported more often with the iso-osmolar dimer iodixanol and in patients who received interleukin-2 therapy."],
-        ["What to do", "Most need only symptomatic care (antihistamines, topical steroids) directed by the physician. Blistering, mucosal sores, fever or a spreading rash need urgent medical evaluation."],
-        ["Related", "Contrast-induced salivary gland swelling ('iodide mumps') can occur in the days after injection and is usually self-limited."]
-      ],
-      pearl: "When a patient calls days later with a rash, document it as a delayed reaction to the specific agent so the next team knows.",
-      drugs: ["iodixanol"], lv: ["rt","ct","mri","nm","ir"] },
-
-    /* ---------------- Before contrast ---------------- */
-    { id: "screening", grp: "Before contrast", title: "Screening questions (prior reaction, asthma, kidney disease, metformin, pregnancy, lactation)", short: "Screening",
-      sum: "Screening before contrast looks for the few factors that change what the team does.",
-      rows: [
-        ["Prior reaction", "Ask what agent, what happened and how it was treated. A prior allergic-like reaction to the same class is the strongest risk factor and may lead to premedication or a different agent."],
-        ["Allergy and asthma", "Shellfish, seafood, povidone-iodine or topical iodine allergies are not contraindications and do not require premedication. Asthma and multiple allergies slightly raise risk; tell the radiologist but premedication is not routine."],
-        ["Kidney", "Ask about kidney disease, dialysis, kidney transplant, single kidney, kidney surgery or cancer, diabetes and age over 60, which trigger an eGFR check per protocol. Ask about metformin."],
-        ["Pregnancy and lactation", "Ask about possible pregnancy and breastfeeding so the radiologist can weigh the need for contrast and counsel the patient."],
-        ["Other", "Hyperthyroidism or planned radioactive iodine treatment, beta-blocker use, and for MRI, implants and devices."]
-      ],
-      pearl: "There is no such thing as an 'iodine allergy'; ask about prior reactions to contrast itself.",
-      drugs: ["metformin"], lv: ["rt","ct","mri","nm","ir"] },
-
-    { id: "premed", grp: "Before contrast", title: "Premedication for prior allergic-like reactions (13-hour and accelerated regimens, breakthrough)", short: "Premedication",
-      sum: "Corticosteroid and antihistamine premedication lowers but does not eliminate the risk of a repeat allergic-like reaction.",
-      rows: [
-        ["Who", "Patients with a prior allergic-like or unknown-type reaction to the same class of contrast, per radiologist. Not for physiologic reactions, shellfish allergy or allergies to unrelated drugs."],
-        ["13-hour oral", "Prednisone 50 mg PO at 13, 7 and 1 hour before contrast, plus diphenhydramine 50 mg IV, IM or PO 1 hour before. Alternative: methylprednisolone 32 mg PO at 12 and 2 hours before, with or without diphenhydramine 50 mg 1 hour before."],
-        ["Accelerated IV", "For urgent inpatient or ED cases: methylprednisolone 40 mg IV or hydrocortisone 200 mg IV every 4 hours until contrast, plus diphenhydramine 50 mg IV 1 hour before, for about 4 to 5 hours total. Steroids given less than 4 to 5 hours before have no proven benefit."],
-        ["Breakthrough", "Reactions can still occur despite premedication and tend to resemble the original reaction in severity. Have the reaction cart ready and treat them exactly like any other reaction. Changing to a different agent in the same class may also lower risk."]
-      ],
-      pearl: "Premedication never replaces readiness: a premedicated patient still needs a stocked reaction cart and staff in the room.",
-      drugs: ["prednisone", "methylprednisolone", "hydrocortisone", "diphenhydramine"], lv: ["rt","ct","mri","nm","ir"] },
-
-    { id: "egfr", grp: "Before contrast", title: "Kidney function: eGFR thresholds and CI-AKI vs PC-AKI", short: "eGFR and AKI",
-      sum: "Modern IV iodinated contrast poses meaningful kidney risk mainly when eGFR is below 30 or the patient has acute kidney injury.",
-      rows: [
-        ["PC-AKI vs CI-AKI", "Post-contrast AKI (PC-AKI) is any kidney injury within 48 hours after contrast, whatever the cause. Contrast-induced AKI (CI-AKI) is injury actually caused by the contrast and is much less common."],
-        ["Thresholds (ACR-NKF)", "eGFR 45 or higher: negligible risk. 30 to 44: risk case-by-case. Below 30 (not on dialysis) or AKI: higher risk; the radiologist weighs benefit and may order IV normal saline prophylaxis."],
-        ["Dialysis", "Anuric dialysis patients have no kidney function left to protect; extra or urgent dialysis after contrast is usually not needed."],
-        ["Technologist role", "Check that a required eGFR is on file and current per policy, flag values below threshold and AKI to the radiologist, and use the lowest diagnostic dose."]
-      ],
-      pearl: "The ACR-NKF cutoff to remember for IV iodinated contrast is eGFR below 30 mL/min/1.73 m2.",
-      drugs: ["iohexol", "iopamidol"], lv: ["rt","ct","mri","ir"] },
-
-    { id: "metformin", grp: "Before contrast", title: "Metformin and iodinated contrast", short: "Metformin",
-      sum: "Metformin only needs to be held when kidney function is poor or acutely worsening.",
-      rows: [
-        ["Why it matters", "If contrast caused kidney injury, metformin could build up and cause lactic acidosis, a rare but serious complication."],
-        ["No hold needed", "Patients with eGFR 30 or higher and no AKI can continue metformin."],
-        ["Hold", "Patients with AKI or eGFR below 30, or having arterial catheter studies with a high chance of emboli to the kidneys: hold metformin at the time of or before contrast and for 48 hours after."],
-        ["Restart", "Restart only after kidney function is rechecked and found stable, per the ordering provider."]
-      ],
-      pearl: "Gadolinium at MRI doses does not require holding metformin.",
-      drugs: ["metformin"], lv: ["rt","ct","ir"] },
-
-    { id: "pregnancy", grp: "Before contrast", title: "Pregnancy and breastfeeding with iodinated and gadolinium contrast", short: "Pregnancy/lactation",
-      sum: "Iodinated contrast may be given in pregnancy when needed; gadolinium is reserved for when it is essential; breastfeeding can usually continue.",
-      rows: [
-        ["Iodinated, pregnant", "Crosses the placenta, but no harm has been shown. Give it when needed for diagnosis; no extra neonatal thyroid testing beyond routine newborn screening is required."],
-        ["Gadolinium, pregnant", "Crosses the placenta and recirculates in amniotic fluid. Use only if it gives essential information that cannot wait until after delivery; the radiologist documents the decision, often with informed consent."],
-        ["Breastfeeding", "Less than 1 percent of the dose reaches breast milk and less than 1 percent of that is absorbed by the infant. Interruption is not needed for iodinated or gadolinium contrast."],
-        ["If the mother prefers", "She may pump and discard milk for 12 to 24 hours after the injection; this is her choice, not a requirement."]
-      ],
-      pearl: "Do not tell a breastfeeding mother she must stop after contrast; the ACR says it is safe to continue.",
-      drugs: [], lv: ["rt","ct","mri","ir"] },
-
-    /* ---------------- Iodinated contrast ---------------- */
-    { id: "iodinated", grp: "Iodinated contrast", title: "Low-osmolar vs iso-osmolar iodinated contrast", short: "LOCM vs IOCM",
-      sum: "Intravascular iodinated contrast today is nonionic low-osmolar (LOCM) or iso-osmolar (IOCM); high-osmolar agents are not used IV.",
-      rows: [
-        ["High-osmolar (HOCM)", "Ionic agents such as diatrizoate are several times the osmolality of blood and cause more reactions. Today they are used for oral, rectal or bladder use, not IV."],
-        ["Low-osmolar (LOCM)", "Nonionic monomers such as iohexol and iopamidol, about 2 to 3 times blood osmolality. The workhorse for CT and angiography."],
-        ["Iso-osmolar (IOCM)", "Iodixanol, a nonionic dimer, has the same osmolality as blood but higher viscosity, so warming matters more. It is often used for intra-arterial work because it causes less heat and pain."],
-        ["Label checks", "Confirm the agent, concentration (mg iodine/mL), route approval and expiration before use; not every agent is approved for intrathecal use."]
-      ],
-      pearl: "Only agents labeled for intrathecal use may be given intrathecally; accidental intrathecal ionic contrast can be fatal.",
-      drugs: ["iohexol", "iopamidol", "iodixanol", "diatrizoate"], lv: ["rt","ct","ir"] },
-
-    { id: "warming", grp: "Iodinated contrast", title: "Warming contrast and power injection (flow rates, IV size, PICC/port power-rated)", short: "Power injection",
-      sum: "Warm contrast, the right IV and a power-rated line keep high-rate injections safe.",
-      rows: [
-        ["Warming", "Warming iodinated contrast to body temperature (37 C (98.6 F)) lowers viscosity and injection pressure. The ACR notes it may reduce extravasation and adverse events, especially with viscous agents at high flow rates."],
-        ["IV size and site", "For flow rates above 3 mL/s, use a 20-gauge or larger catheter, preferably antecubital or forearm. A 22-gauge may tolerate up to about 3 mL/s. Avoid hand, wrist and small veins for high rates when possible."],
-        ["Test it", "Check blood return and do a saline test injection while feeling the site and asking about pain before the contrast run."],
-        ["Central lines", "Power inject only through a PICC or port labeled power-injectable, at or below the manufacturer's maximum flow rate; ports need a power-rated noncoring needle. A non-power-rated line can rupture."]
-      ],
-      pearl: "If you cannot confirm a central line is power-rated, do not power inject through it.",
-      drugs: ["iohexol", "iodixanol"], lv: ["ct","mri","ir"] },
-
-    { id: "extravasation", grp: "Iodinated contrast", title: "Extravasation: recognition and management (compartment syndrome warning signs)", short: "Extravasation",
-      sum: "Most contrast extravasations are minor, but a few cause compartment syndrome or skin injury and need a surgeon.",
-      rows: [
-        ["Recognize", "Swelling, tightness, pain or burning at the site, or the patient reports a change during the injection. Stop the injector immediately."],
-        ["Manage", "Remove the IV, elevate the limb above heart level, apply cold or warm compresses per protocol, notify the radiologist and document volume, agent, site and findings. Neither aspiration nor routine antidotes have proven benefit."],
-        ["Red flags", "Increasing swelling or pain after 2 to 4 hours, altered perfusion (slow capillary refill), changed sensation, weakness, or skin blistering or ulceration. These suggest compartment syndrome or skin injury and need urgent surgical consultation."],
-        ["Follow-up", "Give written instructions to return or call for worsening symptoms, and follow up per policy."]
-      ],
-      pearl: "Worsening pain, numbness or poor capillary refill after an extravasation is compartment syndrome until proven otherwise.",
-      drugs: [], lv: ["ct","mri","ir"] },
-
-    { id: "oralrectal", grp: "Iodinated contrast", title: "Oral and rectal contrast: barium vs water-soluble (perforation, aspiration)", short: "Oral/rectal contrast",
-      sum: "The choice between barium and water-soluble contrast depends on the risks of leak and aspiration.",
-      rows: [
-        ["Barium sulfate", "Best mucosal detail. Contraindicated when perforation is suspected because barium in the peritoneum or mediastinum causes severe inflammation. Can harden and impact in the colon; encourage fluids after."],
-        ["Water-soluble", "Used when perforation or leak is suspected, because it is absorbed if it escapes. Hyperosmolar ionic agents (diatrizoate) draw fluid into the bowel, which can dehydrate infants and frail patients."],
-        ["Aspiration risk", "Hyperosmolar water-soluble contrast is dangerous if aspirated and can cause pulmonary edema. For patients at risk of aspiration, use barium or a low-osmolar agent per radiologist."],
-        ["Reactions", "Allergic-like reactions to oral or rectal contrast are rare but possible; screen and keep the reaction cart available."]
-      ],
-      pearl: "Suspected perforation: water-soluble. Suspected aspiration: avoid hyperosmolar water-soluble.",
-      drugs: ["barium-sulfate", "diatrizoate", "iohexol"], lv: ["rt","ct"] },
-
-    { id: "thyroid", grp: "Iodinated contrast", title: "Iodinated contrast and the thyroid (hyperthyroidism, upcoming radioiodine therapy)", short: "Thyroid",
-      sum: "The large iodine load in contrast can trigger hyperthyroidism and blocks radioactive iodine uptake for weeks.",
-      rows: [
-        ["Hyperthyroidism risk", "Patients with untreated Graves disease or toxic multinodular goiter can develop iodine-induced hyperthyroidism; rarely thyroid storm. The radiologist and endocrinologist decide on timing."],
-        ["Radioiodine", "Contrast floods the thyroid with stable iodine and blocks uptake of I-123 or I-131 for several weeks (commonly 4 to 6 weeks or more per protocol). Avoid contrast before a planned thyroid scan or radioiodine therapy unless cleared."],
-        ["Infants", "Routine newborn thyroid screening covers babies whose mothers had contrast in pregnancy."],
-        ["Screen", "Ask about thyroid disease and any upcoming thyroid scan or radioiodine treatment before giving iodinated contrast."]
-      ],
-      pearl: "A contrast CT can cancel next week's radioiodine treatment; check before you inject.",
-      drugs: ["methimazole"], lv: ["rt","ct","nm","ir"] },
-
-    /* ---------------- Gadolinium and MRI ---------------- */
-    { id: "gbca", grp: "Gadolinium and MRI", title: "GBCA groups I/II/III and macrocyclic vs linear", short: "GBCA groups",
-      sum: "The ACR groups gadolinium agents by their risk of nephrogenic systemic fibrosis; group II agents have the lowest risk.",
-      rows: [
-        ["Group I (highest NSF risk)", "Gadodiamide, gadopentetate dimeglumine and gadoversetamide (the latter two no longer sold in the US). Contraindicated in patients at risk for NSF."],
-        ["Group II (lowest risk)", "Gadobenate, gadobutrol, gadoterate, gadoteridol, gadopiclenol and, since the 2024 ACR manual, gadoxetate. Very few or no unconfounded NSF cases."],
-        ["Group III", "Agents with limited data. Gadoxetate (Eovist) sat here for years until the 2024 ACR manual moved it to group II."],
-        ["Structure", "Macrocyclic agents (gadobutrol, gadoterate, gadoteridol, gadopiclenol) hold gadolinium more tightly than linear agents (gadobenate, gadoxetate, gadodiamide), so they release less."]
-      ],
-      pearl: "Group II plus macrocyclic is the safest pairing; gadobenate is group II but linear.",
-      drugs: ["gadobutrol", "gadoterate", "gadoxetate", "gadopiclenol"], lv: ["mri"] },
-
-    { id: "nsf", grp: "Gadolinium and MRI", title: "Nephrogenic systemic fibrosis", short: "NSF",
-      sum: "NSF is a rare, disabling fibrosis of skin and organs linked to gadolinium in patients with severe kidney disease.",
-      rows: [
-        ["Who is at risk", "Patients on dialysis, with eGFR below 30, or with AKI, given group I agents or high or repeated doses."],
-        ["Looks like", "Days to months after exposure: thickened, hardened skin of the limbs and trunk, joint contractures, and sometimes fibrosis of internal organs. It can be fatal."],
-        ["Prevention", "Use a group II agent at the standard or lowest diagnostic dose. For group II agents, the ACR considers eGFR screening optional. Avoid group I agents in at-risk patients."],
-        ["Dialysis patients", "Use a group II agent and coordinate the next dialysis soon after the scan when practical."]
-      ],
-      pearl: "Since group II agents became standard, new NSF cases have almost disappeared.",
-      drugs: ["gadobutrol", "gadoterate", "ferumoxytol"], lv: ["mri"] },
-
-    { id: "retention", grp: "Gadolinium and MRI", title: "Gadolinium retention in the brain", short: "Gd retention",
-      sum: "Small amounts of gadolinium stay in the brain and body after injection, more with linear agents, with no proven clinical harm.",
-      rows: [
-        ["What is seen", "After many doses, high T1 signal in the dentate nucleus and globus pallidus on unenhanced images. Retention also occurs in bone and skin."],
-        ["Which agents", "More with linear agents than macrocyclic agents; it occurs in people with normal kidney function."],
-        ["Clinical meaning", "No adverse health effects have been proven. The FDA requires a class warning and a Medication Guide for patients receiving a GBCA for the first time in outpatient settings."],
-        ["Practice", "Give gadolinium when it adds value, use the appropriate dose, and answer patient questions honestly."]
-      ],
-      pearl: "Retention is different from NSF: it happens with normal kidneys and has no proven harm.",
-      drugs: ["gadobenate", "gadobutrol"], lv: ["mri"] },
-
-    { id: "mrisafety", grp: "Gadolinium and MRI", title: "MRI zones and why the code team stays out of Zone IV", short: "MRI zones",
-      sum: "The MRI magnet is always on, so access is controlled in four zones and emergencies are handled outside the scanner room.",
-      rows: [
-        ["Zones", "Zone I: public. Zone II: reception and screening. Zone III: restricted, under the direct control of MR personnel. Zone IV: the scanner room itself."],
-        ["Projectile risk", "Oxygen tanks, IV poles, crash carts, defibrillators and stretchers can become projectiles. Only screened people and MR safe or MR conditional items enter Zone IV."],
-        ["Code in Zone IV", "Start CPR, call the code, and move the patient out of Zone IV to a prepared spot in Zone III while CPR continues. The code team and its equipment never enter Zone IV."],
-        ["Quench", "A quench does not happen instantly and is not routine for a code. It is reserved for emergencies such as a person pinned by a ferromagnetic object, or fire."]
-      ],
-      pearl: "Get the patient out to the team, never bring the team to the magnet.",
-      drugs: [], lv: ["mri"] },
-
-    { id: "mrisedation", grp: "Gadolinium and MRI", title: "Sedation and monitoring in the MRI suite", short: "MRI sedation",
-      sum: "Sedated patients in MRI are far from the team and the cart, so monitoring and rescue must be planned ahead.",
-      rows: [
-        ["Monitoring", "Use MR conditional monitors: fiberoptic pulse oximetry, MR conditional ECG leads and capnography, used within their labeled conditions."],
-        ["Burn prevention", "Avoid cable loops and skin-to-skin or skin-to-cable contact, use padding, and remove anything not MR conditional. Report heating complaints immediately."],
-        ["Rescue", "Reversal drugs, suction, oxygen and the reaction cart stay in Zone III. If the patient deteriorates, stop the scan and move the patient out of Zone IV."],
-        ["Staff", "A trained provider monitors the patient continuously, per department sedation policy; the technologist runs the scan and helps with removal."]
-      ],
-      pearl: "A standard pulse oximeter cable inside the bore can burn the patient; use only MR conditional monitoring.",
-      drugs: ["midazolam", "dexmedetomidine", "flumazenil", "naloxone"], lv: ["mri"] },
-
-    /* ---------------- Nuclear medicine ---------------- */
-    { id: "rpsafety", grp: "Nuclear medicine", title: "Radiopharmaceutical safety: time, distance, shielding, spills", short: "Radiopharm safety",
-      sum: "Limit time, maximize distance and use shielding; handle spills by containing them and calling the radiation safety officer.",
-      rows: [
-        ["Time and distance", "Work efficiently near sources and patients. Exposure follows the inverse square law: doubling the distance cuts the dose to one quarter."],
-        ["Shielding", "Use syringe shields, lead pigs and L-block shields. PET's 511 keV photons need thicker lead or tungsten shields."],
-        ["Right dose, right patient", "Verify the patient with two identifiers and the prescribed radiopharmaceutical, activity and route; assay every dose in the dose calibrator before giving it."],
-        ["Spills", "Warn others, contain the spill with absorbent paper, restrict the area, wear gloves, decontaminate from the outside in, survey, and notify the radiation safety officer per policy."]
-      ],
-      pearl: "Wrong patient, wrong drug, wrong route or a dose far off the prescription may be a reportable medical event; report it per policy, do not hide it.",
-      drugs: ["tc99m-medronate", "fdg-f18"], lv: ["nm"] },
-
-    { id: "stresstest", grp: "Nuclear medicine", title: "Pharmacologic stress: regadenoson, adenosine, dipyridamole, dobutamine and when to give aminophylline", short: "Pharmacologic stress",
-      sum: "Patients who cannot exercise are stressed with a vasodilator or with dobutamine, and aminophylline reverses vasodilator side effects.",
-      rows: [
-        ["Regadenoson", "0.4 mg rapid IV bolus over about 10 seconds, then a 5 mL saline flush, then the radiotracer 10 to 20 seconds later. Fixed dose, not weight-based."],
-        ["Adenosine and dipyridamole", "Adenosine is a weight-based infusion with a very short half-life, so stopping it ends most side effects. Dipyridamole works longer and more often needs aminophylline."],
-        ["Prep and contraindications", "Hold caffeine and other methylxanthines for at least 12 hours before vasodilator stress. Vasodilators are avoided in high-grade AV block or sick sinus without a pacemaker, hypotension and active bronchospasm. Dobutamine is the alternative for patients with bronchospasm."],
-        ["Aminophylline", "For severe or persistent vasodilator side effects (bronchospasm, AV block, chest pain, hypotension), 50 to 250 mg slow IV per regadenoson labeling and protocol. It is not used to stop a seizure caused by regadenoson."]
-      ],
-      pearl: "Coffee, tea, soda and chocolate block the vasodilators; always ask about caffeine before a regadenoson or adenosine study.",
-      drugs: ["regadenoson", "adenosine", "dobutamine", "aminophylline"], lv: ["nm"] },
-
-    { id: "fdgprep", grp: "Nuclear medicine", title: "FDG PET prep (fasting, glucose, insulin timing)", short: "FDG PET prep",
-      sum: "FDG competes with glucose, so fasting, a checked blood glucose and careful insulin timing are essential for a good scan.",
-      rows: [
-        ["Fasting", "Nothing but water for at least 4 to 6 hours; no dextrose-containing IV fluids or parenteral nutrition. Avoid strenuous exercise the day before."],
-        ["Glucose check", "Check blood glucose before injection. High glucose lowers tumor uptake; values above the department limit (commonly 150 to 200 mg/dL) go to the physician, and the scan may be rescheduled."],
-        ["Insulin", "Insulin drives FDG into muscle and fat. Per SNMMI, inject FDG at least 4 hours after rapid-acting subcutaneous insulin (longer for short-acting); do not give insulin just to rescue a high glucose right before injection without protocol."],
-        ["Uptake period", "Keep the patient warm, quiet and resting for the uptake period (about 60 minutes) to reduce muscle and brown fat uptake; have them void before imaging."]
-      ],
-      pearl: "A diabetic who just took rapid-acting insulin will have an FDG scan full of muscle uptake; check timing before you inject.",
-      drugs: ["fdg-f18", "insulin-lispro", "metformin"], lv: ["nm"] },
-
-    { id: "hida", grp: "Nuclear medicine", title: "HIDA scans: sincalide and morphine augmentation", short: "HIDA drugs",
-      sum: "Sincalide empties the gallbladder and morphine helps fill it; both are used in hepatobiliary scintigraphy.",
-      rows: [
-        ["Prep", "Fast at least 2 to 4 hours, but not more than about 24 hours. Prolonged fasting or TPN can leave a full gallbladder that will not fill; sincalide may be given beforehand per protocol. Opioids delay bile flow and are held per protocol."],
-        ["Sincalide", "A cholecystokinin analog that contracts the gallbladder. For ejection fraction, SNMMI recommends 0.02 mcg/kg infused over 60 minutes; a fast infusion causes cramping and nausea and gives unreliable results."],
-        ["Morphine", "If the gallbladder is not seen by about 60 minutes, morphine 0.04 mg/kg IV contracts the sphincter of Oddi and pushes bile into the gallbladder, then imaging continues about 30 minutes."],
-        ["Watch for", "Respiratory depression and nausea with morphine; abdominal cramping with sincalide."]
-      ],
-      pearl: "Gallbladder still not seen 30 minutes after morphine supports acute cholecystitis.",
-      drugs: ["sincalide", "morphine"], lv: ["nm"] },
-
-    { id: "ki", grp: "Nuclear medicine", title: "Potassium iodide thyroid blockade", short: "KI blockade",
-      sum: "Stable iodide saturates the thyroid so it does not take up radioactive iodine released from some agents or in emergencies.",
-      rows: [
-        ["When", "Before and after radioiodinated agents that release free iodine, such as I-123 or I-131 MIBG, per protocol. Also for radiological emergencies involving radioactive iodine under public health direction."],
-        ["How", "Potassium iodide or SSKI (or Lugol's solution) by mouth on the schedule set by the nuclear medicine physician, usually starting before injection and continuing a few days."],
-        ["Limits", "KI protects only the thyroid and only against radioactive iodine; it does nothing for other organs or other radionuclides."],
-        ["Screen", "Ask about prior reactions to iodide medications and thyroid disease; seafood or contrast reactions are not iodide allergies."]
-      ],
-      pearl: "KI is not given before diagnostic I-123 sodium iodide thyroid scans: the whole point there is thyroid uptake.",
-      drugs: ["potassium-iodide"], lv: ["nm"] },
-
-    { id: "nmlactation", grp: "Nuclear medicine", title: "Breastfeeding interruption after radiopharmaceuticals", short: "NM and lactation",
-      sum: "Breastfeeding guidance depends on the radiopharmaceutical, from no interruption to stopping completely.",
-      rows: [
-        ["Ask first", "Ask every patient of childbearing age about breastfeeding before the dose is given, so the physician can give specific instructions."],
-        ["F-18 FDG", "Current ACR-SNMMI guidance: interruption is not needed, but limit close contact (holding, feeding) for a few hours to reduce external exposure; expressed milk can be fed by another caregiver."],
-        ["Tc-99m agents", "Many need no interruption; some (such as pertechnetate or labeled cells) call for a short pause, typically up to 12 to 24 hours, per NRC and department tables."],
-        ["I-131 sodium iodide", "Breastfeeding must stop completely for this child. It should stop several weeks before therapy to reduce breast radiation dose; future children can be breastfed."]
-      ],
-      pearl: "I-131 therapy ends breastfeeding for this baby; most diagnostic Tc-99m studies need little or no interruption.",
-      drugs: ["fdg-f18", "tc99m-sestamibi"], lv: ["nm"] },
-
-    /* ---------------- Ultrasound and IR ---------------- */
-    { id: "uea", grp: "Ultrasound and IR", title: "Ultrasound enhancing agents (boxed warning, cardiopulmonary reactions)", short: "Ultrasound agents",
-      sum: "Microbubble ultrasound agents are very safe overall but carry an FDA boxed warning for serious cardiopulmonary reactions.",
-      rows: [
-        ["Agents", "Perflutren lipid or protein microspheres and sulfur hexafluoride lipid microspheres, used for echocardiography and, for some, liver and pediatric bladder imaging."],
-        ["Boxed warning", "Serious cardiopulmonary reactions, including fatal ones, have occurred during or within 30 minutes of injection. Have resuscitation equipment and trained staff available."],
-        ["Contraindications", "Known hypersensitivity to the agent or its components; some formulations contain PEG, and protein-shelled agents contain albumin."],
-        ["Kidney", "Microbubbles are not nephrotoxic and are exhaled through the lungs, so they are an option for patients with poor kidney function."]
-      ],
-      pearl: "Most serious microbubble reactions happen within 30 minutes; keep the patient where help is close for that window.",
-      drugs: ["perflutren", "sulfur-hexafluoride"], lv: ["rt","ct","ir"] },
-
-    { id: "sedation", grp: "Ultrasound and IR", title: "Moderate sedation in IR (midazolam, fentanyl, reversal, capnography)", short: "Moderate sedation",
-      sum: "Moderate sedation uses small titrated doses of midazolam and fentanyl with continuous monitoring and reversal agents ready.",
-      rows: [
-        ["Drugs", "Midazolam (benzodiazepine) for sedation and amnesia plus fentanyl (opioid) for pain, given in small increments by a credentialed provider or nurse per protocol."],
-        ["Monitoring", "Continuous pulse oximetry, ECG, blood pressure and capnography. Capnography shows hypoventilation and apnea earlier than pulse oximetry, especially in patients on oxygen."],
-        ["Oversedation", "Stimulate the patient, open the airway, give oxygen and assist ventilation first. Naloxone reverses opioids; flumazenil reverses benzodiazepines, both titrated per protocol."],
-        ["Cautions", "Reversal agents can wear off before the sedative, so watch for resedation. Flumazenil can trigger seizures in long-term benzodiazepine users."]
-      ],
-      pearl: "A flat capnography waveform means no ventilation: check the patient and airway first, not the monitor.",
-      drugs: ["midazolam", "fentanyl", "naloxone", "flumazenil"], lv: ["ir","ct"] },
-
-    { id: "irmeds", grp: "Ultrasound and IR", title: "Common IR medications (heparin, protamine, radial cocktail with verapamil/nitroglycerin, lidocaine, tPA)", short: "IR medications",
-      sum: "IR procedures rely on a handful of drugs whose main risks are bleeding, low blood pressure and toxicity.",
-      rows: [
-        ["Heparin and protamine", "Heparin prevents clot on catheters and wires, monitored by ACT per protocol. Protamine reverses heparin; give slowly because it can cause hypotension, bradycardia and anaphylaxis (higher risk with fish allergy, prior protamine or NPH insulin, vasectomy)."],
-        ["Radial cocktail", "Heparin plus verapamil and/or nitroglycerin through the radial sheath to prevent radial artery spasm and occlusion, doses per protocol. Watch for hypotension and bradycardia; the injection can burn."],
-        ["Lidocaine", "Local anesthetic at the access site. Toxicity signs: perioral numbness, metallic taste, tinnitus, confusion, then seizures and arrhythmias. Stop and call for help; lipid emulsion is the antidote."],
-        ["Alteplase (tPA)", "Catheter-directed thrombolysis for clot. Watch closely for bleeding at the access site and elsewhere and for neurologic changes."]
-      ],
-      pearl: "Read back every syringe and label every syringe on the sterile field; IR tables hold several clear liquids at once.",
-      drugs: ["heparin", "protamine", "verapamil", "alteplase"], lv: ["ir"] },
-
-    { id: "radiation", grp: "Ultrasound and IR", title: "Radiation safety: ALARA and patient dose", short: "Radiation safety",
-      sum: "ALARA means keeping patient and staff dose as low as reasonably achievable without losing diagnostic quality.",
-      rows: [
-        ["Staff", "Time, distance, shielding. Wear lead aprons and thyroid shields in fluoroscopy, stand on the image receptor side and step back during runs. Annual occupational limit is 50 mSv; the embryo/fetus of a declared pregnant worker is limited to 5 mSv over the pregnancy."],
-        ["Fluoroscopy patient dose", "Use pulsed fluoroscopy at the lowest usable rate, last-image hold, tight collimation, keep the patient close to the image receptor and far from the tube, and limit magnification."],
-        ["High-dose procedures", "Track reference air kerma or peak skin dose in long IR cases; doses above about 2 Gy can cause skin erythema, and the Joint Commission treats more than 15 Gy cumulative peak skin dose as a reviewable sentinel event."],
-        ["CT", "Use size- and indication-based protocols, check CTDIvol and DLP against dose notification values, and follow Image Gently and Image Wisely principles for children."]
-      ],
-      pearl: "Doubling your distance from the patient cuts your scatter dose to one quarter.",
-      drugs: [], lv: ["rt","ct","nm","ir"] }
-  ],
-
-  q: [
-    /* ---------- Everyone ---------- */
-    { topic: "rxtypes", q: "Seconds after an iodinated contrast injection, a patient reports warmth and mild nausea that fade within a minute. Vital signs are normal and there is no rash. How is this best classified?",
-      a: "Mild physiologic reaction", w: ["Mild allergic-like reaction", "Moderate allergic-like reaction", "Delayed hypersensitivity reaction"],
-      x: "Warmth and brief nausea are direct (physiologic) effects of contrast, not immune-mediated. They do not call for premedication next time." },
-    { topic: "rxmild", q: "During a contrast-enhanced scan a patient develops a few scattered hives on the chest. Vitals are stable and breathing is normal. What should the technologist do first?",
-      a: "Stop injecting, keep the IV, monitor, notify the radiologist", w: ["Give IM epinephrine 0.3 mg and call a code", "Remove the IV and send the patient to wait in the lobby for an hour", "Finish the scan, then mention the hives on the requisition form"],
-      x: "Limited hives are a mild allergic-like reaction. The patient needs observation with IV access and radiologist assessment, because mild reactions can progress." },
-    { topic: "rxsevere", q: "Two minutes after contrast, a patient has diffuse hives, wheezing, BP 72/40 and heart rate 128. Which drug should be given first?",
-      a: "Epinephrine 0.3 mg IM (1 mg/mL) in the thigh", w: ["Diphenhydramine 50 mg IV push over 1 to 2 minutes", "Methylprednisolone 40 mg IV push via the existing line", "Atropine 1 mg IV push, repeated every 3 to 5 minutes"],
-      x: "Hypotension with tachycardia and hives is anaphylaxis. IM epinephrine is first-line; antihistamines and steroids do not treat shock or airway compromise." },
-    { topic: "vasovagal", q: "After contrast a patient becomes pale and sweaty with BP 80/50 and heart rate 46. There are no hives or wheezing. What is the best initial management?",
-      a: "Elevate the legs, give oxygen and start rapid IV fluids", w: ["Give IM epinephrine and IV diphenhydramine right away", "Give an albuterol inhaler and sit the patient upright", "Give oral prednisone and observe for 30 minutes"],
-      x: "Hypotension with bradycardia is a vasovagal reaction. Leg elevation, oxygen and IV fluids come first, with atropine if it persists." },
-    { topic: "rxkit", q: "A patient taking metoprolol has anaphylaxis that is not improving after repeated IM epinephrine. Which drug on the ACR list may the physician add?",
-      a: "Glucagon IV", w: ["Labetalol IV", "Additional oral diphenhydramine", "Furosemide IV"],
-      x: "Beta-blockers can blunt the response to epinephrine. The ACR lists IV glucagon for these refractory patients." },
-    { topic: "bronchospasm", q: "A patient develops wheezing after contrast. SpO2 is 95% on room air and blood pressure is normal. What is the usual first treatment?",
-      a: "Oxygen by mask and an albuterol inhaler", w: ["IV diphenhydramine alone, then observation", "Atropine IV with the legs elevated", "A 1 liter IV fluid bolus and observation"],
-      x: "Mild bronchospasm is treated with oxygen and inhaled albuterol (2 puffs, repeatable). Escalate to IM epinephrine if it worsens." },
-    { topic: "bronchospasm", q: "A patient becomes hoarse after contrast and now has audible stridor with SpO2 falling to 88%. Which response is correct?",
-      a: "Oxygen, IM epinephrine and a call to the emergency team", w: ["Give an albuterol inhaler and recheck in 15 minutes", "Give diphenhydramine and observe in recovery", "Lay the patient flat with the legs raised and wait"],
-      x: "Stridor with hypoxia means laryngeal edema, a severe reaction. Albuterol does not treat upper-airway swelling; epinephrine does." },
-    { topic: "rxkit", q: "Which epinephrine concentration is used for the 0.3 mg intramuscular adult dose in a contrast reaction?",
-      a: "1 mg/mL (1:1000)", w: ["0.1 mg/mL (1:10,000)", "0.01 mg/mL (1:100,000)", "10 mg/mL (1:100)"],
-      x: "IM epinephrine uses 1 mg/mL, giving 0.3 mL for 0.3 mg. The 0.1 mg/mL concentration is for slow IV use by a physician." },
-    { topic: "rxsevere", q: "Why are corticosteroids not used as the main treatment of an acute severe contrast reaction?",
-      a: "They act too slowly to reverse swelling or shock", w: ["They raise the risk of contrast-induced kidney injury", "They are contraindicated after iodinated contrast", "They cancel out the effect of epinephrine"],
-      x: "Steroids take hours to work. Epinephrine, oxygen and fluids treat the acute reaction; steroids must not delay them." },
-    { topic: "screening", q: "A patient scheduled for contrast CT says she is allergic to shrimp. She has had contrast before without problems. What is appropriate?",
-      a: "Proceed; shellfish allergy is not an indication", w: ["Cancel and switch to a gadolinium-enhanced MRI", "Start the 13-hour premedication regimen", "Use only iso-osmolar contrast at half dose"],
-      x: "Shellfish allergy is not a contraindication and does not call for premedication. Only a prior allergic-like reaction to contrast does." },
-    { topic: "premed", q: "Which patient is the best candidate for premedication before iodinated contrast, per the ACR?",
-      a: "One who had diffuse hives after a prior contrast CT", w: ["One who vomited briefly after a prior contrast CT", "One with a severe allergy to shellfish", "One who fainted during a past blood draw"],
-      x: "Premedication targets prior allergic-like reactions to the same contrast class. Vomiting and fainting are physiologic, and shellfish allergy is not an indication." },
-    { topic: "premed", q: "Which is the ACR 13-hour oral premedication regimen?",
-      a: "Prednisone 50 mg at 13, 7 and 1 h before, plus diphenhydramine 50 mg 1 h before", w: ["Prednisone 50 mg 1 h before only, plus diphenhydramine 50 mg at 13 and 7 h before", "Diphenhydramine 50 mg at 13, 7 and 1 h before, with no steroid", "Methylprednisolone 32 mg 30 min before, plus an albuterol inhaler"],
-      x: "The standard regimen is prednisone 50 mg at 13, 7 and 1 hour plus diphenhydramine 50 mg 1 hour before contrast." },
-    { topic: "premed", q: "A premedicated patient with a prior moderate allergic-like reaction develops hives and throat tightness after contrast. Which statement is true?",
-      a: "It is treated like any other reaction", w: ["Premedication makes epinephrine unsafe to give", "Premedicated patients cannot have a true reaction", "The steroid dose should be repeated before other drugs"],
-      x: "Premedication reduces but does not eliminate risk. Breakthrough reactions often resemble the original in severity and are treated with the usual ACR approach." },
-    { topic: "delayed", q: "Two days after a contrast CT, a patient calls about an itchy red rash on the trunk with no fever, blisters or mouth sores. What is the most likely cause?",
-      a: "Delayed cutaneous reaction", w: ["Nephrogenic systemic fibrosis", "Iodine-induced thyroid storm", "Contrast-induced acute kidney injury"],
-      x: "Delayed reactions appear 1 hour to 1 week later, usually as a self-limited rash. Fever, blisters or mucosal sores would need urgent evaluation." },
-    { topic: "egfr", q: "According to the ACR-NKF consensus, below which eGFR is the risk of contrast-induced AKI from IV iodinated contrast considered meaningful?",
-      a: "30 mL/min/1.73 m2", w: ["60 mL/min/1.73 m2", "90 mL/min/1.73 m2", "15 mL/min/1.73 m2"],
-      x: "eGFR below 30 (not on dialysis) or AKI marks higher risk. Above 45 the risk is negligible; 30 to 44 is case-by-case." },
-
-    /* ---------- CT ---------- */
-    { lv: "ct", topic: "metformin", q: "A patient on metformin with eGFR 52 and no acute kidney injury is scheduled for contrast CT. What should happen with the metformin?",
-      a: "Continue it; no hold is needed", w: ["Hold it 48 hours before and after", "Hold it for 48 hours after the scan", "Cancel the contrast and scan without it"],
-      x: "With eGFR 30 or above and no AKI, the ACR says metformin need not be stopped." },
-    { lv: "ct", topic: "metformin", q: "An inpatient on metformin has eGFR 24 and needs contrast CT. What is the ACR recommendation?",
-      a: "Hold it for 48 h; restart once kidney function is stable", w: ["Continue metformin and encourage extra oral fluids", "Hold metformin for 12 hours after the scan only", "Stop metformin permanently and switch to insulin"],
-      x: "With eGFR below 30 or AKI, metformin is held at the time of contrast and for 48 hours, and restarted only once kidney function is stable." },
-    { lv: "ct", topic: "warming", q: "A CT angiogram calls for 5 mL/s. Which access is most appropriate?",
-      a: "A 20-gauge or larger antecubital IV", w: ["A 22-gauge IV in the back of the hand", "A PICC not labeled for power injection", "A port accessed with a standard noncoring needle"],
-      x: "Rates above 3 mL/s need a 20-gauge or larger catheter, ideally antecubital. Central lines must be labeled power-injectable and accessed with power-rated needles." },
-    { lv: "ct", topic: "warming", q: "Why is iodinated contrast warmed to body temperature before power injection?",
-      a: "It lowers viscosity and injection pressure", w: ["It makes the contrast iso-osmolar to blood", "It prevents delayed skin reactions entirely", "It removes the risk of contrast kidney injury"],
-      x: "Warming reduces viscosity, lowering injection pressure; the ACR notes this may reduce extravasation and adverse events, especially with viscous agents." },
-    { lv: "ct", topic: "extravasation", q: "Three hours after an 80 mL contrast extravasation in the forearm, the patient has increasing pain, numb fingers and slow capillary refill. What is needed?",
-      a: "Urgent surgical evaluation", w: ["A warm compress and discharge with instructions", "Needle aspiration of the contrast from the site", "A second compress and recheck at 24 hours"],
-      x: "Worsening pain, changed sensation and poor perfusion are red flags for compartment syndrome, which needs prompt surgical evaluation." },
-    { lv: "ct", topic: "extravasation", q: "During a power injection the patient says the arm suddenly feels tight, and swelling appears above the IV. After stopping the injector, which step is appropriate?",
-      a: "Remove the IV, elevate the arm, notify the radiologist", w: ["Restart at a lower flow rate to finish the scan", "Massage the area firmly to spread the contrast out", "Leave the IV in and inject saline to dilute the contrast"],
-      x: "Stop, remove the catheter, elevate the limb above heart level, apply compresses per protocol, notify the radiologist and document." },
-    { lv: "ct", topic: "iodinated", q: "Which iodinated contrast agent is iso-osmolar to blood?",
-      a: "Iodixanol", w: ["Iohexol", "Iopamidol", "Diatrizoate"],
-      x: "Iodixanol is a nonionic dimer with the same osmolality as blood. Iohexol and iopamidol are low-osmolar; diatrizoate is high-osmolar." },
-    { lv: "ct", topic: "thyroid", q: "A patient is scheduled for contrast CT and mentions radioactive iodine treatment for hyperthyroidism next week. What should the technologist do?",
-      a: "Pause and alert the radiologist and ordering team", w: ["Give contrast; it does not affect radioiodine", "Give potassium iodide first to protect the thyroid", "Give half the usual contrast dose to limit the iodine"],
-      x: "Iodinated contrast blocks thyroid uptake of radioiodine for weeks and could make the treatment ineffective, so the timing must be reviewed." },
-    { lv: "ct", topic: "egfr", q: "Which statement best describes post-contrast AKI (PC-AKI)?",
-      a: "AKI within 48 h of contrast, whatever the cause", w: ["AKI proven to be caused by the contrast itself", "A rise in creatinine only after intra-arterial contrast", "Kidney injury occurring 30 days after contrast"],
-      x: "PC-AKI is correlative: any AKI soon after contrast. CI-AKI implies the contrast caused it and is much less common." },
-    { lv: "ct", topic: "pregnancy", q: "A pregnant trauma patient needs a contrast CT of the abdomen. What is the ACR position on iodinated contrast?",
-      a: "Give it when needed for the diagnosis", w: ["It is contraindicated in all trimesters", "It requires a 13-hour premedication first", "It is allowed only after the first trimester ends"],
-      x: "Iodinated contrast can be given in pregnancy when needed. Routine newborn thyroid screening is sufficient; no extra testing is required." },
-
-    /* ---------- MRI ---------- */
-    { lv: "mri", topic: "gbca", q: "Which gadolinium-based contrast agent is in ACR group II?",
-      a: "Gadobutrol", w: ["Gadodiamide", "Gadopentetate dimeglumine", "Gadoversetamide"],
-      x: "Group II includes gadobenate, gadobutrol, gadoterate, gadoteridol and gadopiclenol. The other three are group I, with the highest NSF risk." },
-    { lv: "mri", topic: "gbca", q: "Which agent is taken up by hepatocytes and used for a hepatobiliary phase about 20 minutes after injection?",
-      a: "Gadoxetate", w: ["Gadobutrol", "Gadoterate", "Gadopiclenol"],
-      x: "Gadoxetate is a liver-specific agent (ACR group II since 2024) with about half of the dose excreted through the biliary system." },
-    { lv: "mri", topic: "nsf", q: "A patient on hemodialysis needs a contrast-enhanced MRI. Which approach follows ACR guidance?",
-      a: "Group II agent, then dialysis soon after", w: ["Use a group I agent at a reduced dose", "Gadolinium is absolutely contraindicated", "Use a double dose so one scan is enough"],
-      x: "Group II agents have negligible NSF risk. Use the standard or lowest diagnostic dose and schedule dialysis soon after when practical." },
-    { lv: "mri", topic: "nsf", q: "Weeks after a gadolinium MRI, a dialysis patient develops thick, hard skin on the legs and stiff knees. What should be suspected?",
-      a: "Nephrogenic systemic fibrosis", w: ["Delayed contrast urticaria", "Gadolinium retention in the brain", "Contrast-induced acute kidney injury"],
-      x: "NSF causes skin thickening and joint contractures in patients with severe kidney disease, mostly after group I agents." },
-    { lv: "mri", topic: "retention", q: "A patient with normal kidneys asks about gadolinium staying in the brain. Which statement is accurate?",
-      a: "Some stays, more with linear agents; no harm proven", w: ["It occurs only in patients who are on dialysis", "It is the same disease as nephrogenic systemic fibrosis", "Macrocyclic agents leave more than linear agents"],
-      x: "Retention is seen with normal kidneys, more with linear agents, and has no proven clinical harm. The FDA requires a Medication Guide." },
-    { lv: "mri", topic: "mrisafety", q: "A patient goes into cardiac arrest on the MRI table. What is the correct response?",
-      a: "Start CPR and move the patient out of Zone IV", w: ["Bring the crash cart and defibrillator into the scanner room", "Quench the magnet before anyone touches the patient", "Wait for the code team to arrive in Zone IV"],
-      x: "The code team and its ferromagnetic equipment must never enter Zone IV. CPR continues while the patient is moved to a prepared area in Zone III." },
-    { lv: "mri", topic: "mrisafety", q: "In the ACR MRI zone system, which zone is restricted and under the direct supervision of MR personnel, just outside the scanner room?",
-      a: "Zone III", w: ["Zone I", "Zone II", "Zone IV"],
-      x: "Zone III is restricted and controlled by MR personnel. Zone IV is the magnet room itself." },
-    { lv: "mri", topic: "mrisafety", q: "In which situation is an emergency magnet quench appropriate?",
-      a: "A person is pinned to the magnet by an oxygen tank", w: ["A patient has an anaphylactic reaction on the table", "A patient goes into cardiac arrest in the bore", "A claustrophobic patient panics during the scan"],
-      x: "A quench is for life-threatening entrapment by a ferromagnetic object or fire. A code is managed by removing the patient from Zone IV." },
-    { lv: "mri", topic: "mrisedation", q: "A sedated child needs pulse oximetry during MRI. What is the safest choice?",
-      a: "An MR conditional fiberoptic oximeter, cables unlooped", w: ["The standard ward oximeter with its cable taped down", "No monitoring at all, to avoid any risk of burns", "A standard oximeter placed just outside the bore"],
-      x: "Only MR conditional monitors should be used, and cables must not loop or touch skin directly, to prevent RF burns." },
-    { lv: "mri", topic: "pregnancy", q: "A woman 20 weeks pregnant is scheduled for brain MRI. When should gadolinium be given?",
-      a: "Only if essential and it cannot wait until delivery", w: ["Routinely, because it does not cross the placenta", "Never; it is absolutely contraindicated in pregnancy", "Only with a group I agent at half dose"],
-      x: "Gadolinium crosses the placenta and lingers in amniotic fluid, so the ACR reserves it for essential cases, documented by the radiologist." },
-
-    /* ---------- Nuclear medicine ---------- */
-    { lv: "nm", topic: "rpsafety", q: "A technologist moves from 1 meter to 2 meters from a patient injected with a radiopharmaceutical. How does the exposure rate change?",
-      a: "It drops to one quarter", w: ["It drops to one half", "It stays the same", "It drops to one eighth"],
-      x: "By the inverse square law, doubling distance reduces exposure to 1/(2 squared) = one quarter." },
-    { lv: "nm", topic: "rpsafety", q: "A small vial of Tc-99m spills on the hot lab counter. What is the first appropriate action?",
-      a: "Warn others and cover the spill with absorbent paper", w: ["Wipe it up quickly with bare hands and paper towels", "Leave the room and lock it for the next 24 hours", "Rinse the counter with water into the sink"],
-      x: "Contain the spill, restrict the area, wear gloves, clean from the outside in, survey and notify the radiation safety officer per policy." },
-    { lv: "nm", topic: "rpsafety", q: "Why do PET syringe shields need to be thicker or made of tungsten compared with Tc-99m shields?",
-      a: "PET emits higher-energy 511 keV photons", w: ["PET tracers have much longer physical half-lives", "PET doses are always larger in volume", "PET tracers emit mostly alpha particles"],
-      x: "Positron annihilation produces 511 keV photons, far more penetrating than the 140 keV photons of Tc-99m." },
-    { lv: "nm", topic: "stresstest", q: "What is the correct regadenoson administration for an adult myocardial perfusion study?",
-      a: "0.4 mg rapid bolus, saline flush, then tracer", w: ["Weight-based infusion over 6 minutes", "0.4 mg slow IV push over 5 minutes", "Tracer first, then regadenoson 1 minute later"],
-      x: "Regadenoson is a fixed 0.4 mg dose given over about 10 seconds, followed by a 5 mL saline flush and the radiotracer 10 to 20 seconds later." },
-    { lv: "nm", topic: "stresstest", q: "A patient arrives for a regadenoson stress test and drank two cups of coffee 3 hours ago. What is the concern?",
-      a: "It blocks adenosine receptors, weakening the stress", w: ["Caffeine increases the radiation dose", "Caffeine makes the tracer clear from the heart too fast", "There is no concern with vasodilator stress"],
-      x: "Caffeine and other methylxanthines antagonize adenosine receptors; they should be held at least 12 hours before vasodilator stress." },
-    { lv: "nm", topic: "stresstest", q: "Five minutes after regadenoson a patient has persistent wheezing and second-degree AV block. Which drug reverses these effects?",
-      a: "Aminophylline slow IV", w: ["Atropine IV push", "Adenosine IV push", "Dobutamine IV infusion"],
-      x: "Aminophylline is a methylxanthine that antagonizes adenosine receptors. Per labeling it is given 50 to 250 mg by slow IV injection." },
-    { lv: "nm", topic: "fdgprep", q: "A diabetic patient took rapid-acting insulin 1 hour ago and arrives for FDG PET. What is the correct action?",
-      a: "Delay the injection; insulin shifts FDG into muscle", w: ["Inject now, since the glucose is now low", "Give oral glucose and inject right away", "Inject now but double the FDG activity to compensate"],
-      x: "Insulin drives FDG into muscle and fat. SNMMI advises waiting at least 4 hours after rapid-acting insulin before FDG injection." },
-    { lv: "nm", topic: "hida", q: "During a HIDA scan the gallbladder is not seen at 60 minutes but tracer is in the bowel. What is commonly given next?",
-      a: "Morphine IV, then about 30 more minutes of imaging", w: ["A fast sincalide bolus, then repeat imaging for an hour", "Aminophylline IV to reverse the delay", "A second dose of tracer with no drug"],
-      x: "Morphine contracts the sphincter of Oddi and promotes gallbladder filling. Non-visualization after morphine supports acute cholecystitis." },
-    { lv: "nm", topic: "ki", q: "Why is potassium iodide given before and after I-123 MIBG imaging?",
-      a: "To block thyroid uptake of free radioiodine", w: ["To improve uptake in the adrenal tumor", "To prevent allergic-like reactions to the MIBG", "To speed renal clearance of the tracer"],
-      x: "Stable iodide saturates the thyroid so released radioiodine is not taken up. It protects only the thyroid." },
-    { lv: "nm", topic: "nmlactation", q: "A breastfeeding mother will receive I-131 sodium iodide therapy. What instruction is correct?",
-      a: "Stop breastfeeding this child completely", w: ["She can resume breastfeeding after 24 hours", "She can resume after 72 hours of pumping and discarding", "No interruption is needed with I-131"],
-      x: "I-131 concentrates in breast milk and would irradiate the infant's thyroid. Breastfeeding must stop for this child." },
-
-    /* ---------- IR ---------- */
-    { lv: "ir", topic: "sedation", q: "During moderate sedation with midazolam and fentanyl, the capnography waveform goes flat while the SpO2 is still 97% on oxygen. What does this suggest?",
-      a: "Apnea or airway obstruction", w: ["Normal deep sedation", "A pulse oximeter malfunction", "Hyperventilation from pain"],
-      x: "Capnography detects absent ventilation before oxygen saturation falls, especially on supplemental oxygen. Check the patient and airway immediately." },
-    { lv: "ir", topic: "sedation", q: "An oversedated patient receives naloxone and wakes up. Why must monitoring continue?",
-      a: "The reversal may wear off before the opioid", w: ["Naloxone itself causes deep sedation later", "Naloxone raises the risk of contrast reaction", "Naloxone stops working entirely after about 5 minutes"],
-      x: "Naloxone (and flumazenil) can wear off before the sedative, allowing resedation. Continue monitoring per protocol." },
-    { lv: "ir", topic: "irmeds", q: "At the end of a procedure protamine is given to reverse heparin. Which reaction should the team watch for?",
-      a: "Hypotension, bradycardia or anaphylaxis", w: ["Hypertensive crisis and tachycardia", "Hypoglycemia and new-onset seizures", "Delayed rash with no immediate effects"],
-      x: "Protamine can cause hypotension, bradycardia and anaphylaxis, so it is given slowly; risk is higher with prior protamine or NPH insulin exposure." },
-    { lv: "ir", topic: "irmeds", q: "What is the purpose of verapamil in a radial access cocktail?",
-      a: "To prevent radial artery spasm", w: ["To reverse heparin at sheath removal", "To prevent contrast nephropathy", "To provide local anesthesia at the site"],
-      x: "Verapamil (with or without nitroglycerin) relaxes the radial artery. Watch for hypotension and bradycardia." },
-    { lv: "ir", topic: "irmeds", q: "After a large amount of local lidocaine, a patient reports a metallic taste and ringing in the ears. What is happening?",
-      a: "Early local anesthetic systemic toxicity", w: ["A mild contrast allergic-like reaction", "A vasovagal reaction to the needle stick", "Expected effect of moderate sedation"],
-      x: "Perioral numbness, metallic taste and tinnitus are early signs of lidocaine toxicity, which can progress to seizures and arrhythmias. Stop and call for help." },
-
-    /* ---------- RT (X-ray and fluoroscopy) ---------- */
-    { lv: "rt", topic: "oralrectal", q: "A fluoroscopic study is ordered for a patient with suspected esophageal perforation. Which contrast is appropriate first?",
-      a: "Water-soluble contrast", w: ["Thick barium paste", "Thin barium sulfate", "Double-contrast barium with air"],
-      x: "Barium in the mediastinum or peritoneum causes severe inflammation, so water-soluble contrast is used when perforation is suspected." },
-    { lv: "rt", topic: "oralrectal", q: "A frail patient at high risk of aspiration needs an upper GI study. Which contrast should be avoided?",
-      a: "Hyperosmolar ionic water-soluble agent", w: ["Thin barium sulfate", "Low-osmolar nonionic contrast", "Barium mixed to a thin liquid consistency"],
-      x: "Aspirated hyperosmolar contrast (such as diatrizoate) can cause pulmonary edema. Barium or a low-osmolar agent is safer when aspiration is likely." },
-    { lv: "rt", topic: "radiation", q: "Which change reduces patient skin dose during fluoroscopy?",
-      a: "Bring the image receptor close to the patient", w: ["Move the X-ray tube closer to the patient's skin", "Use continuous instead of pulsed fluoroscopy", "Increase electronic magnification"],
-      x: "Keeping the receptor close and the tube far reduces skin entrance dose. Pulsed mode, collimation and less magnification also help." },
-    { lv: "rt", topic: "radiation", q: "What is the occupational dose limit for the embryo/fetus of a declared pregnant radiographer over the entire pregnancy?",
-      a: "5 mSv", w: ["50 mSv", "1 mSv", "150 mSv"],
-      x: "The NRC limit for the embryo/fetus of a declared pregnant worker is 5 mSv (0.5 rem) over the pregnancy; the adult annual limit is 50 mSv." },
-    { lv: "rt", topic: "rxtypes", q: "When documenting a contrast reaction after a fluoroscopic study, which entry is most useful?",
-      a: "Agent, signs, severity, treatment, outcome", w: ["Iodine allergy, avoid all iodine", "Patient had a reaction, premedicate before the next study", "Contrast intolerance, see old chart"],
-      x: "Recording the specific agent, reaction type and severity guides future decisions. 'Iodine allergy' is inaccurate and unhelpful." }
-  ]
-};
-
-;
-/* DrugBug - Blood products learning boxes (quick facts + Professor Sage notes) */
-DB.BLOODBOX = {
-  prbc: {
-    box: [
-      ["Contains", "Red cells only; no platelets or factors"],
-      ["Hematocrit", "About 55-65%"],
-      ["Volume", "300-350 mL per unit"],
-      ["Storage", "1-6 C (33.8-42.8 F); transport at 1-10 C (33.8-50 F)"],
-      ["Shelf life", "Up to 42 days (35 days in CPDA-1)"],
-      ["Filter", "170-260 micron blood filter"],
-      ["Mix only with", "0.9% NaCl"],
-      ["Expected effect", "Hgb up about 1 g/dL per unit (non-bleeding)"]
-    ],
-    plain: "PRBCs are just the red cells, the oxygen carriers. They help a patient carry oxygen again, but they bring no clotting factors or platelets to help stop bleeding.",
-    remember: "Red cells carry oxygen, not clots: PRBCs need plasma, platelets and calcium beside them.",
-    mistake: "Giving RBCs alone to a bleeding patient, which causes dilutional coagulopathy.",
-    flight: "Keep units in the validated cooler at 1-10 C (33.8-50 F) and warm them inline, since in shock they may run as fast as the line allows."
-  },
-  wholeblood: {
-    box: [
-      ["Contains", "Red cells, plasma and platelets in one bag"],
-      ["Donor", "Group O, low anti-A/anti-B titers"],
-      ["Titer cutoff", "Commonly under 1:200 to 1:256"],
-      ["Volume", "About 500 mL per unit"],
-      ["Storage", "Cold-stored at 1-6 C (33.8-42.8 F)"],
-      ["Shelf life", "21 days (CPD) or 35 days (CPDA-1)"],
-      ["Rh choice", "Rh-neg for females of childbearing potential"],
-      ["Watch for", "Hemolysis risk in non-O after large volumes"]
-    ],
-    plain: "Whole blood is the 'all-in-one' bag: red cells, plasma and platelets together. Because the donor is group O with low antibody levels, it can be given before we know the patient's type.",
-    remember: "LTOWB: O cells plus low-titer plasma = one bag, all parts, any type.",
-    mistake: "Forgetting that females of childbearing potential (often under 50) should get Rh-negative product when available.",
-    flight: "Only one bag to hang is a big win with limited crew and space, but it still rides in the cold cooler and needs warming."
-  },
-  plasma: {
-    box: [
-      ["Contains", "All clotting factors, fibrinogen, proteins C/S"],
-      ["Volume", "About 200-300 mL per unit"],
-      ["FFP storage", "-18 C (-0.4 F) or colder, up to 1 year"],
-      ["Thaw time", "20-30 minutes for FFP"],
-      ["Thawed life", "5 days at 1-6 C (33.8-42.8 F)"],
-      ["Universal donor", "Group AB (low-titer A as substitute)"],
-      ["Typical dose", "10-15 mL/kg"],
-      ["Watch for", "TRALI, allergy, TACO, citrate load"]
-    ],
-    plain: "Plasma is the yellow liquid part of blood that holds the clotting factors. We give it to help a bleeding patient form clots, not just to add volume.",
-    remember: "O for cells, AB for plasma: the universal donors flip.",
-    mistake: "Mixing up universal donors: group O is the universal red cell donor, but group AB is the universal plasma donor.",
-    flight: "FFP takes 20-30 minutes to thaw, so transport programs carry thawed or liquid plasma in the cooler instead."
-  },
-  platelets: {
-    box: [
-      ["Contains", "Platelets for primary hemostasis"],
-      ["Volume", "About 200-300 mL (apheresis)"],
-      ["Storage", "20-24 C (68-75.2 F) with gentle agitation"],
-      ["Shelf life", "5-7 days"],
-      ["Never", "Refrigerate or pack on ice (standard)"],
-      ["Filter", "Standard 170-260 micron filter"],
-      ["Expected effect", "Count up about 30,000-60,000/microL"],
-      ["Watch for", "Bacterial contamination, febrile, allergic"]
-    ],
-    plain: "Platelets are the tiny cell pieces that plug holes in vessels first. They are kept at room temperature, which keeps them working but lets bacteria grow more easily.",
-    remember: "Platelets like the room, not the cooler.",
-    mistake: "Putting standard platelets in the cold cooler with the red cells, which ruins them.",
-    flight: "Keep platelets out of the cold blood cooler and at room temperature, and suspect bacterial sepsis if fever, rigors and hypotension start soon after hanging them."
-  },
-  cryo: {
-    box: [
-      ["Contains", "Fibrinogen, VIII, vWF, XIII, fibronectin"],
-      ["Supplied as", "Pre-pooled 5- or 10-unit dose"],
-      ["Typical dose", "10 units (two 5-unit pools) adult"],
-      ["When", "Fibrinogen under 150-200 mg/dL"],
-      ["OB trigger", "Fibrinogen under 200 mg/dL"],
-      ["After thaw", "Room temp; do not refrigerate"],
-      ["Expires", "Commonly 4-6 hours after thaw"],
-      ["Filter", "Standard blood filter, give fairly quickly"]
-    ],
-    plain: "Cryo is a small, concentrated bag of fibrinogen, the glue that holds a clot together. We give it when fibrinogen runs low in a bleeding patient.",
-    remember: "Cryo = concentrated fibrinogen; fibrinogen falls first and hardest.",
-    mistake: "Refrigerating thawed cryo, which should be kept at room temperature.",
-    flight: "Thawed cryo has a short clock of hours and stays at room temperature, so it never goes in the cold cooler."
-  },
-  factor: {
-    box: [
-      ["4F-PCC has", "Factors II, VII, IX, X plus proteins C/S"],
-      ["Main use", "Warfarin reversal within minutes"],
-      ["INR 2 to under 4", "25 units/kg"],
-      ["INR 4-6", "35 units/kg"],
-      ["INR over 6", "50 units/kg"],
-      ["Always add", "Vitamin K IV with PCC for warfarin"],
-      ["Advantages", "No thaw, no ABO match, small volume"],
-      ["Watch for", "Thrombosis (boxed warning)"]
-    ],
-    plain: "Factor concentrates are tiny vials packed with specific clotting factors. They fix a known clotting problem quickly without the big volume of plasma.",
-    remember: "PCC + vitamin K: fast, small, no thaw.",
-    mistake: "Giving 4F-PCC for warfarin bleeding without also giving IV vitamin K.",
-    flight: "Room-temperature storage, no thawing and small volume make concentrates practical in a cramped aircraft."
-  },
-  abo: {
-    box: [
-      ["Universal RBC donor", "Group O"],
-      ["Universal RBC recipient", "Group AB"],
-      ["Universal plasma donor", "Group AB"],
-      ["Plasma substitute", "Low-titer group A"],
-      ["O-negative for", "Females of childbearing potential, children"],
-      ["O-positive OK", "Males and older females in emergencies"],
-      ["First step", "Draw type and screen before first unit"]
-    ],
-    plain: "Blood types are like locks and keys: the wrong red cells get attacked by the patient's antibodies. Plasma works the opposite way, so the universal donors switch.",
-    remember: "Cells: O gives to all. Plasma: AB gives to all.",
-    mistake: "Withholding blood from an exsanguinating patient because Rh-negative product is unavailable.",
-    flight: "Draw the type and screen tube before the first unit if you can, because after several units of O blood the patient's own type gets hard to read."
-  },
-  checks: {
-    box: [
-      ["Why", "Most fatal hemolysis is clerical error"],
-      ["Who", "Two qualified providers at the patient"],
-      ["Verify", "Two IDs, product, unit #, ABO/Rh, expiry"],
-      ["Inspect bag", "Leaks, clots, dark color, gas bubbles"],
-      ["Consent", "Informed if capacity; implied in emergency"],
-      ["Vitals", "Baseline, then within first 15 minutes"],
-      ["Document", "Unit #, times, volume, warmer, vitals"]
-    ],
-    plain: "Before blood goes in, two people check that this exact bag belongs to this exact patient. Most deadly reactions come from simple mix-ups, not bad blood.",
-    remember: "Right blood, right patient, two people, every time.",
-    mistake: "Skipping or rushing the bedside identity check, the main barrier against ABO-incompatible transfusion.",
-    flight: "With limited crew and noise in the cabin, still do the two-person check out loud and keep the tags for documentation."
-  },
-  admin: {
-    box: [
-      ["Filter", "170-260 micron blood set"],
-      ["Mix only with", "0.9% NaCl"],
-      ["Never with", "Dextrose, LR, or any medication"],
-      ["Access", "18 gauge or larger, central, or IO"],
-      ["Pressure bag", "Often up to 300 mmHg"],
-      ["Stable start", "Slow for the first 15 minutes"],
-      ["Time limit", "Finish within 4 hours of spiking"],
-      ["Set change", "Commonly every 4 hours"]
-    ],
-    plain: "Blood runs through a special filtered line, and only normal saline is allowed to share it. Other fluids can burst the red cells or make the blood clot in the tubing.",
-    remember: "Saline only: D5W bursts cells, LR clots them.",
-    mistake: "Running lactated Ringer's or a dextrose solution through the same line as blood.",
-    flight: "Remove air from bags before pressurizing and watch rapid infuser alarms for air, occlusion and overheating."
-  },
-  warming: {
-    box: [
-      ["Storage temp", "Blood stored at 1-6 C (33.8-42.8 F)"],
-      ["Danger zone", "Core temp below about 35 C (95 F)"],
-      ["Warmer limit", "Generally not above about 42 C (107.6 F)"],
-      ["Use", "FDA-cleared blood/fluid warmer"],
-      ["Never", "Microwave, hot water bath, heat packs"],
-      ["Prevent", "Cover early, warm cabin, warm fluids"],
-      ["Monitor", "Temp before transfusion and at handoff"]
-    ],
-    plain: "Cold blood makes a patient cold, and a cold patient can't clot well. So we warm the blood with a proper device and keep the patient warm too.",
-    remember: "Warm the blood AND the patient.",
-    mistake: "Warming only the blood while leaving the patient exposed, or using uncontrolled heat on the bag.",
-    flight: "Altitude and cold environments speed heat loss, so use the inline battery warmer and keep the cabin warm."
-  },
-  storage: {
-    box: [
-      ["Cold cooler", "RBCs, whole blood, plasma at 1-10 C (33.8-50 F)"],
-      ["Room temp", "Platelets and thawed cryo, 20-24 C (68-75.2 F)"],
-      ["Coolers", "Validated by blood bank for set time"],
-      ["Logs", "Data logger; check at set intervals"],
-      ["Out of range", "Units usually wasted"],
-      ["Spiked unit", "Cannot be returned to inventory"],
-      ["Stewardship", "Rotate units back before expiry"]
-    ],
-    plain: "Carried blood has to stay in the right temperature range, and we have to be able to prove it. If the record is broken, the unit usually cannot be used again.",
-    remember: "No log, no return. No platelets in the cold box.",
-    mistake: "Putting platelets in the cold blood cooler.",
-    flight: "Note the cooler pack time and expiration and avoid opening it unnecessarily during the mission."
-  },
-  mtp: {
-    box: [
-      ["Classic MT", "10+ units RBC in 24 hours"],
-      ["Early MT", "3+ units in 1 hour"],
-      ["ABC score", "Penetrating, SBP 90 or less, HR 120+, FAST+"],
-      ["ABC trigger", "Score of 2 or more"],
-      ["Shock index", "HR/SBP of 1.0 or more (some use 0.9)"],
-      ["Ratio", "1:1:1 plasma:platelets:RBC, or LTOWB"],
-      ["Adjuncts", "TXA within 3 h, calcium, warmth"]
-    ],
-    plain: "Massive transfusion means giving a lot of blood fast to someone bleeding badly. We spot them early with simple scores and give balanced products, not just red cells.",
-    remember: "ABC score of 2 or more, or shock index 1.0+: get the blood moving early.",
-    mistake: "Waiting too long to activate MTP; delays in activation kill more patients than ratios.",
-    flight: "Activate MTP early and notify the receiving trauma center from the air."
-  },
-  lethaldiamond: {
-    box: [
-      ["Corners", "Hypothermia, acidosis, coagulopathy, low Ca"],
-      ["Cold", "Core temp below about 35 C (95 F)"],
-      ["Acid fix", "Restore perfusion, not bicarbonate"],
-      ["Clotting", "Balanced products and TXA"],
-      ["Calcium target", "Ionized Ca commonly above 1.1 mmol/L"],
-      ["Avoid", "Large crystalloid volumes"]
-    ],
-    plain: "Cold, acid, bad clotting and low calcium each make the others worse, like a spiral. We break it by stopping bleeding, giving blood, keeping warm and replacing calcium.",
-    remember: "Cold, acid, can't clot, low calcium: four corners, one spiral.",
-    mistake: "Giving large crystalloid volumes, which dilute factors, cool the patient and add acidosis.",
-    flight: "Cover the patient early, warm the blood and keep the cabin warm to protect the hypothermia corner."
-  },
-  permissive: {
-    box: [
-      ["Typical SBP", "About 80-90 mmHg"],
-      ["Typical MAP", "About 50-65 mmHg"],
-      ["TCCC target", "Palpable radial pulse, normal mentation"],
-      ["How", "Small blood boluses, not crystalloid"],
-      ["TBI age 50-69", "SBP at least 100 mmHg"],
-      ["TBI 15-49 or over 70", "SBP at least 110 mmHg"],
-      ["TBI floor", "Avoid any SBP under 90"]
-    ],
-    plain: "In uncontrolled bleeding we accept a lower blood pressure so we don't blow off the clot. But a hurt brain needs pressure, so head injury changes the rule.",
-    remember: "Bleeding: low and slow. Brain: the brain wins.",
-    mistake: "Using permissive hypotension targets in a patient with traumatic brain injury.",
-    flight: "Permissive hypotension is a bridge of limited duration, so it only buys time until surgical control at the receiving facility."
-  },
-  txa: {
-    box: [
-      ["Action", "Blocks clot breakdown (antifibrinolytic)"],
-      ["Best timing", "Within 1 hour"],
-      ["Cutoff", "Not started after 3 hours"],
-      ["CRASH-2", "1 g over 10 min, then 1 g over 8 h"],
-      ["TCCC/JTS", "2 g IV/IO single slow push"],
-      ["PPH (WOMAN)", "1 g over 10 min; repeat 1 g if needed"],
-      ["Not for", "GI bleeding (HALT-IT)"],
-      ["Watch for", "Hypotension with rapid push; seizures"]
-    ],
-    plain: "TXA doesn't make clots, it protects the clots the body already made from being broken down. It helps most when given early.",
-    remember: "TXA: the earlier the better, never after 3.",
-    mistake: "Starting TXA when the time of injury or birth is unknown or more than 3 hours ago.",
-    flight: "Note the time of injury or birth on scene so you know if you are still inside the 3-hour window."
-  },
-  calcium: {
-    box: [
-      ["Why", "Citrate in units binds ionized calcium"],
-      ["Effects", "Poor clotting, hypotension, long QT"],
-      ["CaCl 10%", "About three times the elemental Ca"],
-      ["Ca gluconate 10%", "1 g in 10 mL"],
-      ["CaCl access", "Central, large-bore or IO (vesicant)"],
-      ["Typical dose", "1 g early, then every few units"],
-      ["Line rule", "Never in the same line as blood"]
-    ],
-    plain: "The preservative in blood grabs the patient's calcium. Calcium helps blood clot and the heart squeeze, so we give it back during big transfusions.",
-    remember: "Citrate steals calcium: give it back.",
-    mistake: "Mixing calcium into the same line as blood products, which can clot the tubing.",
-    flight: "Plan a separate reliable line for calcium chloride before you need it, since it cannot share the blood line."
-  },
-  viscoelastic: {
-    box: [
-      ["R / CT long", "Factors low: plasma or PCC"],
-      ["Angle / K", "Fibrinogen: cryo or concentrate"],
-      ["MA / MCF low", "Platelets plus fibrinogen"],
-      ["Low FIBTEM", "Points to fibrinogen"],
-      ["LY30 high", "Above about 3%: consider TXA"],
-      ["Speed", "Results in minutes"]
-    ],
-    plain: "TEG and ROTEM watch a clot form, get strong and break down. Each part of the picture tells you which blood product is missing.",
-    remember: "R = plasma, angle = cryo, MA = platelets, LY30 = TXA.",
-    mistake: "Relying on INR instead of the viscoelastic tracing to guide products in bleeding trauma.",
-    flight: "You usually won't run TEG/ROTEM in the aircraft, but you may be handed a report at handoff and should be able to read it."
-  },
-  reversal: {
-    box: [
-      ["Warfarin", "4F-PCC plus vitamin K 10 mg slow IV"],
-      ["Dabigatran", "Idarucizumab 5 g IV (two 2.5 g vials)"],
-      ["Xa inhibitors", "4F-PCC, commonly 50 units/kg"],
-      ["Heparin", "Protamine 1 mg per 100 units, max 50 mg"],
-      ["Enoxaparin", "Protamine only partial reversal"],
-      ["Antiplatelets", "No true reversal agent"],
-      ["Watch for", "Hypotension with rapid protamine"]
-    ],
-    plain: "Each blood thinner has its own antidote. To pick the right one you need to know which drug the patient takes and when they last took it.",
-    remember: "Name the thinner, time the dose, then pick the antidote.",
-    mistake: "Choosing a reversal agent without first confirming which anticoagulant and the time of the last dose.",
-    flight: "Get the medication list and last-dose time at the referring facility, because it is hard to find once you are airborne."
-  },
-  ahtr: {
-    box: [
-      ["Cause", "ABO mismatch, usually ID error"],
-      ["Amount", "Can occur after only a few mL"],
-      ["Signs awake", "Fever, flank pain, IV burning, doom"],
-      ["Signs sedated", "Hypotension, fever, oozing, dark urine"],
-      ["First step", "Stop; NS via new tubing"],
-      ["Urine goal", "Commonly around 100 mL/hr adult"],
-      ["Watch for", "DIC and acute kidney injury"]
-    ],
-    plain: "The patient's antibodies attack the wrong-type red cells right inside the vessels. It is almost always caused by a mix-up of who gets which bag.",
-    remember: "Wrong blood, wrong patient: stop, saline, check the label.",
-    mistake: "Missing it in a sedated patient, where unexplained hypotension and oozing may be the only signs.",
-    flight: "Many flight patients are intubated, so watch for new hypotension and bleeding from IV sites during any transfusion."
-  },
-  febrile: {
-    box: [
-      ["Definition", "38 C (100.4 F) or higher and rise of 1 C (33.8 F)+"],
-      ["Timing", "During or within about 4 hours"],
-      ["Cause", "Cytokines or antibodies to donor WBCs"],
-      ["Most common with", "Platelets"],
-      ["Diagnosis", "Only after ruling out worse causes"],
-      ["Treatment", "Stop unit, NS open, antipyretic"]
-    ],
-    plain: "Sometimes blood just gives a patient a fever from leftover white cell signals. But fever can also be the first sign of something worse, so we always stop first.",
-    remember: "Fever on blood = stop the unit, then think.",
-    mistake: "Labeling a fever as a benign febrile reaction without ruling out hemolysis or bacterial contamination.",
-    flight: "You cannot rule out hemolysis or sepsis in the aircraft, so restarting the same unit is generally not done in transport."
-  },
-  allergic: {
-    box: [
-      ["Cause", "Donor plasma proteins"],
-      ["Mild signs", "Hives and itching only"],
-      ["Mild treatment", "Pause, antihistamine"],
-      ["Restart?", "Maybe, if hives only and resolved"],
-      ["Severe signs", "Hypotension, bronchospasm, stridor"],
-      ["Severe treatment", "Stop, epinephrine IM, airway"],
-      ["Classic risk", "IgA deficiency with anti-IgA"]
-    ],
-    plain: "Some patients react to proteins in the donor's plasma. Hives alone are usually mild, but trouble breathing or low blood pressure means anaphylaxis.",
-    remember: "Hives only: pause. Wheeze and low BP: epinephrine.",
-    mistake: "Treating anaphylaxis with diphenhydramine alone instead of epinephrine.",
-    flight: "Communicate a severe reaction clearly at handoff, since future transfusions may need washed or IgA-deficient products."
-  },
-  trali: {
-    box: [
-      ["What", "Noncardiogenic pulmonary edema"],
-      ["Timing", "During or within 6 hours"],
-      ["Hypoxemia", "SpO2 under 90% RA or P/F 300 or less"],
-      ["Cause", "Donor anti-HLA/neutrophil antibodies"],
-      ["Highest risk", "Plasma-rich products"],
-      ["Clues", "Hypotension, fever, no diuretic response"],
-      ["Treatment", "Stop, oxygen, lung-protective vent"],
-      ["Recovery", "Most improve in 48-96 hours"]
-    ],
-    plain: "In TRALI, antibodies in the donor's blood make the patient's lungs leaky, even though the heart is fine. Oxygen falls and fluid fills the lungs.",
-    remember: "TRALI: low BP, fever, Lasix fails. TACO: high BP, JVD, Lasix works.",
-    mistake: "Giving diuretics, which can worsen the hypotension of TRALI.",
-    flight: "New hypoxemia during or after a plasma-rich transfusion means stopping the unit and supporting oxygenation and BP en route."
-  },
-  taco: {
-    box: [
-      ["What", "Hydrostatic pulmonary edema (overload)"],
-      ["Timing", "During or within 12 hours"],
-      ["Signs", "Hypertension, JVD, crackles, high BNP"],
-      ["Risk", "Elderly, heart or renal failure, infants"],
-      ["Treatment", "Stop/slow, sit up, O2, CPAP, diuretic"],
-      ["Prevent", "One unit at a time, reassess"]
-    ],
-    plain: "TACO happens when we pour fluid in faster than the heart can pump it out, so it backs up into the lungs.",
-    remember: "TACO = Too much, Too fast: high BP, wet lungs, Lasix helps.",
-    mistake: "Confusing TACO with TRALI; TACO comes with hypertension and JVD and responds to diuretics.",
-    flight: "Track total fluid in and out during long transports, especially in stable at-risk patients."
-  },
-  sepsisrxn: {
-    box: [
-      ["Highest risk", "Room-temperature platelets"],
-      ["RBC risk", "Cold-tolerant gram-negatives (Yersinia)"],
-      ["Fever", "Often 39 C (102.2 F)+ or a rise of 2 C (35.6 F)+"],
-      ["Signs", "Rigors, tachycardia, hypotension"],
-      ["Bag clues", "Clumps, odd color, gas bubbles"],
-      ["Treatment", "Stop, NS, fluids, vasopressors"],
-      ["Bag", "Return sealed to blood bank for culture"]
-    ],
-    plain: "If bacteria got into the bag, the patient gets a sudden high fever and goes into septic shock. Platelets are the usual culprit because they are stored warm.",
-    remember: "Platelets plus rigors plus shock = think bugs in the bag.",
-    mistake: "Discarding the bag instead of saving it sealed for culture.",
-    flight: "Inspect every bag before hanging it, and if sepsis is suspected, seal and keep the bag with the patient for the blood bank."
-  },
-  hyperk: {
-    box: [
-      ["Potassium source", "Leaks from stored red cells"],
-      ["K risk up", "Older or irradiated units, rapid rate"],
-      ["ECG signs", "Peaked T waves, wide QRS"],
-      ["First step", "Calcium to stabilize myocardium"],
-      ["Then shift", "Insulin plus dextrose, albuterol"],
-      ["Citrate binds", "Calcium and magnesium"],
-      ["Late acid-base", "Metabolic alkalosis from citrate"]
-    ],
-    plain: "Stored blood leaks potassium and carries citrate, so lots of fast blood can upset the body's salts. The heart is what we watch most closely.",
-    remember: "Peaked T on blood: calcium first, then shift.",
-    mistake: "Forgetting to check magnesium, which citrate also binds, after large-volume transfusion.",
-    flight: "Keep the cardiac monitor visible during rapid transfusion so you catch peaked T waves or bradycardia early."
-  },
-  reactionsteps: {
-    box: [
-      ["1. Stop", "Disconnect blood tubing at the hub"],
-      ["2. Line open", "0.9% NaCl through NEW tubing"],
-      ["3. Assess", "ABCs and vitals with temperature"],
-      ["4. Clerical", "Re-check ID against unit label"],
-      ["5. Notify", "Medical control and blood bank"],
-      ["6. Return", "Bag and tubing sealed; document"]
-    ],
-    plain: "When anything seems wrong during a transfusion, we follow the same steps before we know what kind of reaction it is.",
-    remember: "Stop, Saline (new line), Survey, Check, Call, Carry back the bag.",
-    mistake: "Flushing the old blood tubing to keep the line open, which pushes more product into the patient.",
-    flight: "Carry spare saline tubing so you can keep the line open with fresh tubing in the aircraft."
-  },
-  obhem: {
-    box: [
-      ["PPH definition", "1000 mL or more within 24 hours"],
-      ["Causes", "4 Ts: Tone, Trauma, Tissue, Thrombin"],
-      ["Most common", "Uterine atony (Tone)"],
-      ["OB shock index", "About 0.9 or higher is concerning"],
-      ["First line", "Fundal massage, oxytocin"],
-      ["TXA", "Within 3 hours of birth"],
-      ["Fibrinogen", "Under 200 mg/dL predicts severe PPH"],
-      ["Antepartum", "Left uterine displacement after 20 wk"]
-    ],
-    plain: "Bleeding around childbirth can become deadly fast, and young healthy mothers hide shock until late. A fast heart rate is often the first warning.",
-    remember: "4 Ts: Tone, Trauma, Tissue, Thrombin.",
-    mistake: "Trusting visual blood loss estimates, which usually underestimate loss.",
-    flight: "Displace the uterus left (or tilt) for antepartum transport after about 20 weeks, and prefer Rh-negative product."
-  },
-  gibleed: {
-    box: [
-      ["Stable threshold", "Hgb about 7 g/dL"],
-      ["With CV disease", "Hgb about 8 g/dL"],
-      ["Variceal risk", "Over-transfusion raises portal pressure"],
-      ["Varices", "Octreotide, antibiotics in cirrhosis"],
-      ["Ulcer", "IV proton pump inhibitor"],
-      ["Unstable", "Blood early, protect airway"],
-      ["TXA", "Not recommended (HALT-IT)"]
-    ],
-    plain: "In a stable GI bleed, giving less blood actually works better. But if the patient is crashing, we treat it like any big bleed.",
-    remember: "TXA helps trauma and PPH, not the gut.",
-    mistake: "Giving TXA for GI bleeding, which showed no mortality benefit and more clots.",
-    flight: "Hematemesis and altered mental status threaten the airway, so protect it before a long flight to definitive care."
-  },
-  peds: {
-    box: [
-      ["Blood volume", "Neonate 80-90, infant 75-80 mL/kg"],
-      ["Older child", "About 70 mL/kg"],
-      ["PRBC dose", "10-15 mL/kg"],
-      ["Expected effect", "Hgb up roughly 2-3 g/dL"],
-      ["Plasma", "10-15 mL/kg"],
-      ["Platelets", "About 5-10 mL/kg"],
-      ["Cryo", "About 1 unit per 5-10 kg"],
-      ["Peds MT", "40 mL/kg or more in 24 hours"]
-    ],
-    plain: "Kids get blood by weight, and a small amount for an adult can be a big part of a child's blood. So we measure carefully in mL per kg.",
-    remember: "Start at 10 mL/kg: a 20 kg child is about 200 mL.",
-    mistake: "Thinking a small-looking volume of blood loss is minor in an infant, when it can be a large percentage.",
-    flight: "Use syringe push-pull or a pump for precise volumes, warm all products, and use Rh-negative for girls when type is unknown."
-  },
-  refusal: {
-    box: [
-      ["Right", "Competent adults may refuse"],
-      ["First step", "Confirm capacity, explain risks"],
-      ["Document", "Informed refusal, ideally witnessed"],
-      ["Usually refused", "Whole blood, RBC, WBC, platelets, plasma"],
-      ["Ask about", "Albumin, cryo, factors, cell salvage"],
-      ["Minors", "Contact medical control"],
-      ["Alternatives", "Hemorrhage control, TXA, vitamin K"]
-    ],
-    plain: "A competent adult can say no to blood, even if it could save their life. Our job is to ask exactly what they will accept and use every other tool.",
-    remember: "'No blood' is not 'no everything': ask about each fraction.",
-    mistake: "Assuming a patient who refuses blood also refuses albumin, cryo or factor concentrates without asking.",
-    flight: "Look for a blood refusal card or advance directive before departure, and document the refusal before you lift."
-  }
-};
-
-;
-/* DrugBug - Hemodynamics learning boxes (quick facts + Professor Sage notes) */
-DB.HEMOBOX = {
-  determinants: {
-    box: [
-      ["Formula", "CO = heart rate x stroke volume"],
-      ["Preload", "End-diastolic stretch (volume)"],
-      ["Preload proxies", "CVP (right), PCWP (left); rough only"],
-      ["Afterload", "Wall stress to eject; SVR/aortic pressure (LV)"],
-      ["RV afterload", "PVR is the bedside proxy"],
-      ["Contractility up", "Sympathetic tone, inotropes"],
-      ["Contractility down", "Ischemia, acidosis, hypoxia, sepsis, BB/CCB"],
-      ["Starling plateau", "More fluid mostly raises filling pressure"]
-    ],
-    plain: "How much blood the heart pumps each beat depends on how full it is (preload), how hard it has to push (afterload) and how strong it squeezes (contractility). Multiply that by heart rate and you get cardiac output.",
-    remember: "Tank, pump, pipes: preload fills it, contractility squeezes it, afterload resists it.",
-    mistake: "Thinking more fluid always means more output; on the flat part of the Starling curve it mainly causes pulmonary edema.",
-    flight: "In a hypotensive patient, ask if the tank is full, the pump working and the pipes tight or loose, and do not reflexively slow a compensatory sinus tachycardia in a heart that depends on rate.",
-    wards: "On pressure-volume loops, preload shifts the loop right, afterload raises the end-systolic point and contractility steepens the ESPVR, which explains why pressors can drop stroke volume in a failing LV."
-  },
-  normals: {
-    box: [
-      ["MAP", "About 70-100 mmHg (shock target 65+)"],
-      ["CVP / RA", "About 2-8 mmHg"],
-      ["PA pressure", "About 15-30 / 8-15 mmHg, mean 10-20"],
-      ["PCWP", "About 6-12 mmHg"],
-      ["CO / CI", "4-8 L/min / 2.5-4.0 L/min/m2"],
-      ["SVR", "About 800-1200 dynes-sec/cm5"],
-      ["PVR", "About 1-2 Wood units; above 2 elevated"],
-      ["SvO2 / ScvO2", "About 60-80% / 70% or higher"]
-    ],
-    plain: "These are the normal resting numbers for pressure, flow and resistance. You need them as an anchor before you can say any reading is high or low.",
-    remember: "CVP 2-8, PA 15-30/8-15, wedge 6-12, CO 4-8, CI 2.5-4, SVR 800-1200.",
-    mistake: "Forgetting that normal oxygen extraction is only about 25 percent, which is why a normal SvO2 is about 60-80 percent.",
-    flight: "Know these values cold for the FP-C exam, because every transport monitor reading is interpreted against them.",
-    wards: "Remember the key thresholds: cardiogenic shock is classically CI below about 2.2 with PCWP above about 15, and pulmonary hypertension is mean PA pressure above 20 mmHg."
-  },
-  formulas: {
-    box: [
-      ["MAP", "DBP + (SBP - DBP) / 3"],
-      ["Cardiac output", "CO = HR x SV; CI = CO / BSA"],
-      ["SVR", "80 x (MAP - CVP) / CO"],
-      ["PVR", "80 x (mean PAP - PCWP) / CO"],
-      ["CPP (brain)", "MAP - ICP; target about 60+ in TBI"],
-      ["CaO2", "(1.34 x Hb x SaO2) + (0.003 x PaO2)"],
-      ["DO2", "CO x CaO2 x 10; normal about 1000 mL/min"],
-      ["VO2", "Normally about 250 mL/min"]
-    ],
-    plain: "A few simple equations let you work out perfusion pressure, vascular resistance and how much oxygen reaches the tissues. Most are just pressure differences divided by flow.",
-    remember: "Resistance = pressure drop / flow; the 80 is only a unit conversion to dynes.",
-    mistake: "Thinking PaO2 drives oxygen content; dissolved oxygen adds very little and hemoglobin is the biggest lever.",
-    flight: "Watch units on exam math: skip the 80 if the answer is in Wood units, keep CO in L/min and enter saturations as decimals in CaO2.",
-    wards: "Know the shock indices: cardiac power output (MAP x CO / 451) below about 0.6 W and PAPi below about 0.9 in acute MI flag high-risk patients."
-  },
-  fluidresp: {
-    box: [
-      ["Definition", "SV or CO rises about 10-15% after a bolus"],
-      ["How common", "Only about half of unstable ICU patients"],
-      ["PLR", "Self-bolus of roughly 300 mL, reversible"],
-      ["PLR positive", "Measured CO/SV up 10% or more"],
-      ["PPV positive", "Above about 12-13% on controlled ventilation"],
-      ["PPV needs", "Sinus rhythm, no own breaths, closed chest"],
-      ["Poor predictor", "Single CVP or PCWP value"],
-      ["Stop signs", "Crackles, JVD, more work of breathing"]
-    ],
-    plain: "A patient is fluid responsive if a fluid bolus makes the heart pump noticeably more blood. Single pressure readings like CVP predict this poorly.",
-    remember: "Responsive is not the same as needing fluid: healthy people are fluid responsive too.",
-    mistake: "Judging a passive leg raise by blood pressure instead of a measured change in cardiac output or stroke volume.",
-    flight: "Give small boluses and reassess each one, stopping if crackles, JVD, rising work of breathing or increasing oxygen need appear.",
-    wards: "PPV gives false positives in RV failure and high intra-abdominal pressure and is unreliable with arrhythmias or low tidal volumes, while PLR is hard in trauma or pelvic fractures."
-  },
-  aline: {
-    box: [
-      ["Flush bag", "Pressurized to 300 mmHg, about 3 mL/hr"],
-      ["Level at", "Phlebostatic axis: 4th ICS, mid-axillary"],
-      ["Height error", "About 7.5 mmHg per 10 cm"],
-      ["Below heart", "Reads falsely high (above reads low)"],
-      ["Square wave", "Optimal: about 1.5-2 oscillations"],
-      ["Overdamped", "Rounded, no notch; SBP low, DBP high"],
-      ["Underdamped", "Spiky; SBP high, DBP low"],
-      ["Most reliable", "MAP, in both damping errors"]
-    ],
-    plain: "An arterial line shows blood pressure beat by beat, but only if it is zeroed, leveled with the heart and properly damped. The fast-flush test tells you if damping is right.",
-    remember: "When damping is in doubt, trust the MAP.",
-    mistake: "Treating a suspicious systolic number from a dampened or ringing trace instead of checking the setup and using the MAP.",
-    flight: "Re-level after every move or stretcher height change, re-zero after significant altitude change per policy, and when the trace suddenly dampens check the patient's pulse and cuff pressure first.",
-    wards: "Read the waveform: wide pulse pressure suggests AR or vasodilation, parvus et tardus suggests AS and big respiratory variation suggests hypovolemia or tamponade."
-  },
-  cvp: {
-    box: [
-      ["What it measures", "SVC pressure near the right atrium"],
-      ["Normal", "About 2-8 mmHg"],
-      ["Read at", "End-expiration, mean of the a wave"],
-      ["a wave", "Atrial contraction"],
-      ["v wave", "Atrial filling, tricuspid closed"],
-      ["Raised by", "PEEP, RV failure, TR, tamponade, PE"],
-      ["Also raised by", "Tension pneumothorax, abdominal hypertension"],
-      ["Best use", "Safety limit, not a target"]
-    ],
-    plain: "CVP is the pressure near the right atrium. It reflects volume, right heart function and chest pressure all mixed together, not volume alone.",
-    remember: "CVP is a brake, not a gas pedal: stop when it is high and rising.",
-    mistake: "Using a single CVP value to decide whether a patient will respond to fluid.",
-    flight: "A high or rising CVP with hypotension should make you think of obstruction or RV failure (tamponade, PE, tension pneumothorax, RV infarct), while a very low CVP supports hypovolemia.",
-    wards: "Learn the waveform clues: cannon a waves mean AV dissociation, absent a waves mean AF, large v waves mean TR and a blunted y descent suggests tamponade."
-  },
-  pac: {
-    box: [
-      ["Measures", "Right heart pressures, wedge, CO, SvO2"],
-      ["RA depth (R IJ)", "About 15-20 cm"],
-      ["RV depth", "About 25-35 cm"],
-      ["PA / wedge depth", "About 40-50 cm / 45-55 cm"],
-      ["RV trace", "Tall systolic, diastolic near zero"],
-      ["PA trace", "Dicrotic notch, diastolic step-up"],
-      ["Balloon", "No more than rated volume (about 1.5 mL)"],
-      ["Top complication", "Arrhythmias in the RV"]
-    ],
-    plain: "The PA (Swan-Ganz) catheter is floated through the right heart into the pulmonary artery. It measures pressures, cardiac output and mixed venous oxygen saturation.",
-    remember: "Balloon up to advance, balloon down to withdraw, and never leave it wedged.",
-    mistake: "Missing a spontaneous wedge trace with the balloon down, which means the catheter has migrated distally and must be pulled back.",
-    flight: "Keep the distal PA waveform displayed at all times so migration into a wedge or back into the RV (near-zero diastolic, ectopy) is seen at once.",
-    wards: "Hemoptysis after balloon inflation suggests PA rupture: bleeding side down, secure the airway and arrange urgent embolization or surgery."
-  },
-  pcwp: {
-    box: [
-      ["Estimates", "LA pressure, then LVEDP"],
-      ["Normal", "About 6-12 mmHg"],
-      ["Read at", "End-expiration, mean of the a wave"],
-      ["Overestimates", "MS, MR, high PEEP, non-zone-3 tip"],
-      ["Underestimates", "Stiff LV, acute aortic regurgitation"],
-      ["Tip location", "Must be in West zone 3"],
-      ["Red flag", "PCWP higher than PA diastolic"],
-      ["Large v waves", "Often over about twice mean wedge; acute MR"]
-    ],
-    plain: "Wedge pressure estimates left atrial pressure, which usually reflects how full the left ventricle is. Valve disease, PEEP and a badly placed tip can break that link.",
-    remember: "High wedge + low output = failing left heart; low wedge + low output = empty or blocked.",
-    mistake: "Trusting a PCWP that reads higher than PA diastolic pressure instead of suspecting a non-zone-3 tip or measurement error.",
-    flight: "High PCWP with low output points to a failing left heart, while low PCWP with low output points to an empty tank or a right-sided or obstructive problem.",
-    wards: "A PADP minus PCWP gradient above about 5-7 mmHg suggests pre-capillary disease such as PE, ARDS or pulmonary arterial hypertension, and PEEP effects are best handled by trending at a fixed PEEP."
-  },
-  svo2: {
-    box: [
-      ["SvO2 normal", "About 60-80% (PA sample)"],
-      ["ScvO2 normal", "About 70% or higher (SVC sample)"],
-      ["Low means", "Low delivery or high consumption"],
-      ["Low causes", "Low CO, anemia, hypoxemia, fever, pain"],
-      ["High causes", "Sepsis, cyanide, CO poisoning, wedged PAC"],
-      ["DO2 vs VO2", "Normally DO2 is about 4 times VO2"],
-      ["Critical DO2", "VO2 falls, lactate rises"]
-    ],
-    plain: "Venous oxygen saturation shows how much oxygen is left after the tissues have taken what they need. It reflects the balance between oxygen delivery and oxygen use.",
-    remember: "Low SvO2: supply too small or demand too big. High SvO2 in a sick patient: tissues not extracting.",
-    mistake: "Feeling reassured by a high SvO2 in a sick patient, when it can mean sepsis, cyanide or a wedged catheter.",
-    flight: "A falling ScvO2 trend is an early sign the heart cannot meet demand, so first control what burns oxygen: pain, shivering, agitation and ventilator dyssynchrony.",
-    wards: "In shock ScvO2 overestimates SvO2, and since EGDT trials showed no mortality benefit, a normal or high ScvO2 does not exclude shock."
-  },
-  shockprofiles: {
-    box: [
-      ["Hypovolemic", "Low CO, high SVR, low CVP and PCWP"],
-      ["Cardiogenic", "Low CO, high SVR, high PCWP, low SvO2"],
-      ["Septic (early)", "High/normal CO, low SVR, normal/high SvO2"],
-      ["Neurogenic", "Low SVR with bradycardia"],
-      ["Anaphylaxis", "Low SVR with capillary leak"],
-      ["Obstructive", "Low CO, high SVR, high CVP"],
-      ["Tamponade", "Diastolic pressures equalize"],
-      ["PE", "High CVP, PCWP low or normal"]
-    ],
-    plain: "Each type of shock has its own pattern of cardiac output, vascular resistance and filling pressures. Recognizing the pattern points you toward the right treatment.",
-    remember: "Cold and wet = pump. Cold and dry = tank. Warm and flushed = pipes.",
-    mistake: "Labeling the shock type once and never rechecking, when patients often have mixed or evolving shock.",
-    flight: "Use the bedside version: cold and wet suggests cardiogenic, cold and dry with flat neck veins hypovolemic, distended neck veins with clear lungs obstructive or RV failure, and warm and flushed distributive.",
-    wards: "Repeat the hemodynamic profile after each intervention, because septic cardiomyopathy, hemorrhage on top of cardiogenic shock or late cold sepsis can change the picture."
-  },
-  scai: {
-    box: [
-      ["A - At risk", "Big MI or HF, normal BP and perfusion"],
-      ["B - Beginning", "Hypotension/tachycardia, lactate normal"],
-      ["B example", "SBP below 90 or MAP below 60"],
-      ["C - Classic", "Hypoperfusion needing drugs or devices"],
-      ["C lactate", "2 or more; rising creatinine, low UOP"],
-      ["D - Deteriorating", "No response after about 30 min of therapy"],
-      ["E - Extremis", "Collapse, ongoing CPR or ECPR"],
-      ["Arrest modifier", "Add A for cardiac arrest"]
-    ],
-    plain: "SCAI staging sorts cardiogenic shock from at risk (A) to extremis (E). The higher the stage, the higher the risk of death.",
-    remember: "A-B-C-D-E: At risk, Beginning, Classic, Deteriorating, Extremis.",
-    mistake: "Treating stage D as a fixed number cutoff, when it is defined by trajectory: failure to improve despite initial therapy.",
-    flight: "Stage C and beyond usually needs a center with a shock team, cath lab and mechanical support, and sliding from C to D in flight should prompt early notice to the receiving team.",
-    wards: "Use cardiac power output below about 0.6 W and PAPi below about 0.9 to help identify who needs escalation and which ventricle needs support."
-  },
-  rvfailure: {
-    box: [
-      ["Causes", "RV infarct, massive PE, PH crisis, ARDS"],
-      ["Fluid", "Modest only; overfilled RV crushes the LV"],
-      ["Stop fluid", "CVP above about 12-15 or rising, no gain"],
-      ["Pressors", "Norepinephrine, vasopressin"],
-      ["Inotropes", "Dobutamine or milrinone for low output"],
-      ["Lower PVR", "Fix hypoxia, hypercapnia, acidosis"],
-      ["Inhaled", "Nitric oxide or epoprostenol"],
-      ["Danger moment", "Intubation and positive pressure"]
-    ],
-    plain: "A failing right ventricle needs just enough filling, good systemic blood pressure and low lung resistance. It can collapse quickly with low oxygen, high carbon dioxide, acidosis or a rough intubation.",
-    remember: "Keep the RV oxygenated, not acidotic, not overfilled, and perfused.",
-    mistake: "Pushing more and more fluid into a dilated RV, which bows the septum into the LV and lowers output.",
-    flight: "Inferior STEMI with hypotension and clear lungs means right-sided leads, no nitroglycerin, judicious fluid and early vasopressor; before intubating, optimize, have a pressor ready and preoxygenate well.",
-    wards: "Look for RA pressure high relative to PCWP (RA/PCWP above about 0.8), low PAPi and on echo a dilated RV with septal flattening (D sign) and low TAPSE."
-  },
-  pressors: {
-    box: [
-      ["Norepinephrine", "Alpha-1, some beta-1; first-line septic"],
-      ["Vasopressin", "Usual second agent in septic shock"],
-      ["Epinephrine", "Strong beta-1; anaphylaxis, refractory shock"],
-      ["Phenylephrine", "Pure alpha-1; when tachycardia harms"],
-      ["Dobutamine", "Beta-1 inotrope, some vasodilation"],
-      ["Milrinone", "PDE-3 inodilator, renally cleared"],
-      ["Dopamine", "More arrhythmias; not first-line"],
-      ["Extravasation", "Phentolamine is the antidote"]
-    ],
-    plain: "Vasopressors tighten the blood vessels and inotropes make the heart squeeze harder. Pick the drug that fixes the part of the circulation that is failing.",
-    remember: "Pressors fix the pipes; inotropes fix the pump.",
-    mistake: "Escalating vasopressors alone in cardiogenic shock, when rising afterload worsens LV output and an inotrope or mechanical support is needed.",
-    flight: "Run pressors through a dedicated, secure line with a backup drip and enough volume for the trip, and watch peripheral sites for extravasation.",
-    wards: "Know the trials: SOAP II showed more arrhythmias with dopamine, VASST showed no overall mortality benefit of adding vasopressin and DOREMI found no significant difference between milrinone and dobutamine."
-  },
-  iabp: {
-    box: [
-      ["Inflates", "In diastole, at the dicrotic notch"],
-      ["Deflates", "Just before systole"],
-      ["Benefit", "More coronary perfusion, less afterload"],
-      ["Output added", "Roughly 0.5 L/min at most"],
-      ["Tip position", "About 2-3 cm below left subclavian"],
-      ["Bottom of balloon", "Above the renal arteries"],
-      ["Best indication", "Mechanical MI complications (MR, VSD)"],
-      ["Contraindications", "Mod-severe AR, dissection, aneurysm"]
-    ],
-    plain: "An IABP is a balloon in the aorta that inflates when the heart relaxes and deflates right before it pumps. That boosts blood to the coronary arteries and makes it easier for the heart to eject.",
-    remember: "IABP helps supply and demand, but adds little cardiac output.",
-    mistake: "Expecting a big rise in cardiac output from an IABP; it adds roughly 0.5 L/min at most.",
-    flight: "Watch the left radial pulse for upward migration and urine output for downward migration, and if blood or brown flecks appear in the helium line, stop pumping, clamp it and keep the patient flat.",
-    wards: "IABP-SHOCK II found no mortality benefit from routine IABP in AMI cardiogenic shock, so it is no longer routine but remains reasonable for mechanical complications."
-  },
-  iabptiming: {
-    box: [
-      ["Correct inflation", "At the dicrotic notch: a sharp V"],
-      ["Correct deflation", "Just before systole"],
-      ["Early inflation", "Before notch; harmful, raises LVEDP"],
-      ["Late inflation", "Notch visible; less benefit, not dangerous"],
-      ["Early deflation", "U-shaped dip; little afterload drop"],
-      ["Late deflation", "Balloon up during ejection; harmful"],
-      ["Standard trigger", "ECG R wave"],
-      ["Backup trigger", "Arterial pressure upstroke"]
-    ],
-    plain: "The balloon must inflate exactly at the dicrotic notch and deflate just before the heart pumps. Each of the four timing errors has its own waveform and effect.",
-    remember: "Early inflation and late deflation hurt the LV; late inflation and early deflation just waste benefit.",
-    mistake: "Thinking all timing errors are equally harmful, when early inflation and late deflation are the dangerous ones.",
-    flight: "Vibration, movement and radio interference can corrupt the ECG trigger, so use clean leads, switch to pressure trigger if the ECG is lost and check timing at 1:2.",
-    wards: "Modern pumps use automatic timing that adapts to AF, often with R-wave deflation in irregular rhythms, and very fast rates may require 1:2."
-  },
-  impella: {
-    box: [
-      ["Type", "Catheter axial flow pump, LV to aorta"],
-      ["Impella CP", "Femoral, about 3.5-4 L/min"],
-      ["Impella 5.5", "Surgical, axillary, up to about 5.5-6 L/min"],
-      ["Impella RP", "Right side: IVC/RA to PA"],
-      ["Support setting", "P-levels P-0 to P-9"],
-      ["Purge", "Dextrose solution keeps blood out of motor"],
-      ["Suction alarm", "Underfilled LV or malposition"],
-      ["During CPR", "Reduce to P-2"]
-    ],
-    plain: "Impella is a small pump on a catheter that sits across the aortic valve and moves blood from the left ventricle into the aorta. It directly unloads the heart.",
-    remember: "Suction alarm = empty LV: check volume, RV and position before turning up support.",
-    mistake: "Leaving a left-sided Impella in the LV at P-0, which lets blood flow backward like aortic regurgitation.",
-    flight: "Never reposition in the field: lock the sleeve, secure the catheter and console, keep the purge running and recheck position waveforms after every move.",
-    wards: "Watch for hemolysis (plasma free hemoglobin, LDH, cola urine), mostly from malposition and suction, and know DanGer Shock lowered mortality but with more bleeding and limb ischemia."
-  },
-  ecmo: {
-    box: [
-      ["VV ECMO", "Lung support; native heart gives BP"],
-      ["VA ECMO", "Heart and lung support"],
-      ["Pump speed", "RPM produces flow (L/min)"],
-      ["Sweep gas", "Mainly controls CO2 removal"],
-      ["Oxygenation", "FdO2 and blood flow"],
-      ["VA flow", "Often about 3-5 L/min"],
-      ["Anticoagulation", "Usually heparin; bivalirudin if HIT"],
-      ["Harlequin check", "Right radial SpO2 or ABG"]
-    ],
-    plain: "ECMO pulls blood out, puts oxygen in and removes CO2, then returns it to a vein (VV, lung support) or an artery (VA, heart and lung support).",
-    remember: "On femoral VA ECMO, the right radial shows what the brain and coronaries get.",
-    mistake: "Starting compressions on a VA ECMO patient just because there is no pulse, when there may be no pulsatility with adequate flow.",
-    flight: "Transport only with an ECMO specialist, clamps, hand crank, backup oxygen and power, and plan every move so lines cannot kink or pull, since cannula dislodgement is lethal within minutes.",
-    wards: "Watch for LV distension on VA ECMO (lost pulsatility, closed aortic valve, rising PCWP, pulmonary edema), which needs venting with IABP, Impella or another LV vent."
-  },
-  lvad: {
-    box: [
-      ["Device", "HeartMate 3: centrifugal, maglev pump"],
-      ["Pulse", "Often absent or weak; normal"],
-      ["Blood pressure", "Doppler + manual cuff: first sound = MAP"],
-      ["MAP target", "Typically about 70-90 mmHg"],
-      ["Check", "Pump hum, controller, driveline"],
-      ["Low flow", "Low preload or obstruction"],
-      ["Batteries", "Change one at a time, never both"],
-      ["CPR if", "Pump off and no perfusion"]
-    ],
-    plain: "An LVAD continuously pumps blood from the left ventricle to the aorta, so many patients have no pulse you can feel. Blood pressure is measured with a Doppler and a manual cuff.",
-    remember: "No pulse is normal; no hum and no perfusion is not.",
-    mistake: "Withholding chest compressions for fear of dislodging the pump when the pump is not working and perfusion is absent.",
-    flight: "For low-flow alarms think hypovolemia, bleeding, RV failure, tamponade or arrhythmia; bring the backup bag and call the VAD coordinator.",
-    wards: "Suspect pump thrombosis with rising power, high calculated flow, hemolysis and heart failure symptoms, and expect GI bleeding and driveline infection as long-term issues."
-  },
-  tvp: {
-    box: [
-      ["TCP pads", "Anterior-posterior or anterior-lateral"],
-      ["TCP rate", "Often 60-80"],
-      ["TCP output", "About 10 mA above capture threshold"],
-      ["TVP threshold", "Ideally under about 1 mA"],
-      ["TVP output", "2-3 times threshold"],
-      ["Electrical capture", "Spike, wide QRS, opposite T wave"],
-      ["Mechanical capture", "Pulse or pleth with each paced beat"],
-      ["Failure to capture", "Spikes with no QRS"]
-    ],
-    plain: "Pacing drives the heart when bradycardia is unstable and drugs fail. It only works if the electrical beat also makes a real pulse.",
-    remember: "A paced rhythm without a pulse is PEA: always feel for the beat.",
-    mistake: "Checking the carotid for capture during transcutaneous pacing, where muscle twitch mimics a pulse.",
-    flight: "Confirm mechanical capture at the femoral pulse or SpO2 pleth after every move, since pads and wires shift, and keep pads on a TVP patient as backup.",
-    wards: "Atropine helps nodal block but not infranodal block (Mobitz II, third-degree with wide escape), and a new effusion or rising threshold after TVP suggests RV perforation."
-  },
-  cathlab: {
-    box: [
-      ["Radial access", "Less bleeding, early mobilization"],
-      ["Femoral access", "For large-bore devices or radial failure"],
-      ["Radial care", "Band deflated gradually per protocol"],
-      ["Radial watch", "Hematoma, hand ischemia, compartment"],
-      ["Femoral care", "Leg straight, head of bed low"],
-      ["Closure devices", "Shorter bed rest; still need site checks"],
-      ["RP bleed signs", "Hypotension, back/flank pain, soft groin"],
-      ["Main RP risk", "High puncture above inguinal ligament"]
-    ],
-    plain: "After a heart catheterization, problems at the puncture site are the most common complication. A retroperitoneal bleed can be deadly because it hides inside the body.",
-    remember: "Hypotension + back pain + soft groin after femoral cath = retroperitoneal bleed until proven otherwise.",
-    mistake: "Ruling out bleeding because the groin looks fine; a retroperitoneal bleed often has little or no visible hematoma.",
-    flight: "For site bleeding, hold firm sustained pressure just proximal to the skin puncture, keep the leg straight during loading and recheck the site and distal pulses after every move.",
-    wards: "A pulsatile mass with a systolic bruit suggests pseudoaneurysm and a continuous bruit suggests AV fistula; also watch for contrast nephropathy and atheroembolism."
-  },
-  pci: {
-    box: [
-      ["FMC to device", "90 min or less (120 if transfer)"],
-      ["Lytics if", "PCI not possible within 120 min"],
-      ["Lytic timing", "Within 30 min of arrival"],
-      ["Antiplatelets", "Aspirin + P2Y12 inhibitor"],
-      ["Prasugrel avoid", "Prior stroke or TIA"],
-      ["PCI anticoagulant", "Usually unfractionated heparin"],
-      ["Shock + multivessel", "Culprit lesion only at first"],
-      ["Failed lytics", "Under 50% ST resolution at 60-90 min"]
-    ],
-    plain: "STEMI care is a race to open the blocked artery, backed up by antiplatelet and anticoagulant drugs. In cardiogenic shock, emergency revascularization improves survival.",
-    remember: "Open the culprit first in shock, and come back for the rest later.",
-    mistake: "Doing immediate multivessel PCI in shock, when CULPRIT-SHOCK favored culprit-only PCI first.",
-    flight: "Send the 12-lead ahead, document drug times and doses, place pads, avoid nitrates with hypotension, RV infarct or recent PDE-5 use, and watch for reperfusion arrhythmias and bleeding.",
-    wards: "After fibrinolysis, transfer for angiography: rescue PCI for failed reperfusion, otherwise routine angiography within about 2-24 hours."
-  },
-  valves: {
-    box: [
-      ["Severe AS", "Area under 1.0 cm2, mean gradient 40+"],
-      ["AS rules", "Keep preload, sinus rhythm, slow rate"],
-      ["Acute AR", "Shock and edema, no wide pulse pressure"],
-      ["AR rules", "Avoid bradycardia; no IABP"],
-      ["Acute MR", "Giant v waves, flash pulmonary edema"],
-      ["MR rules", "Afterload reduction helps forward flow"],
-      ["Tamponade", "Equal diastolic pressures within about 5"],
-      ["Pulsus paradoxus", "Inspiratory SBP fall over 10 mmHg"]
-    ],
-    plain: "Valve problems and tamponade each have a typical pressure pattern and their own rules for heart rate, filling and afterload. Matching the treatment to the lesion matters.",
-    remember: "Equal diastolic pressures + pulsus paradoxus = tamponade until proven otherwise.",
-    mistake: "Giving vasodilators in aortic stenosis instead of keeping preload and treating hypotension with an alpha agonist.",
-    flight: "Tamponade and AS depend on preload and rate, so give fluid, avoid vasodilating sedatives and be very careful with intubation and positive pressure, which can cause arrest.",
-    wards: "Tamponade shows a blunted y descent and no Kussmaul sign, while constriction shows a prominent y descent, square root sign and Kussmaul sign."
-  }
-};
-
-;
-/* DrugBug - Contrast safety learning boxes */
-DB.CONTRASTBOX = {
-  rxtypes: {
-    box: [["Two types","Allergic-like and physiologic"],["Grades","Mild, moderate or severe"],["Allergic-like","Hives, itching, swelling, wheeze, low BP"],["Physiologic","Nausea, warmth, vasovagal, arrhythmia"],["Biggest risk","Prior allergic-like reaction"],["Premedicate","Only for prior allergic-like, same class"],["Document","Agent, signs, severity, type, outcome"]],
-    plain: "Contrast reactions come in two kinds: allergic-like ones that look like an allergy, and physiologic ones that are a direct effect of the contrast. Each kind is graded mild, moderate or severe.",
-    remember: "Allergy look = allergic-like; body effect = physiologic. Premeds only help the allergic-like kind.",
-    mistake: "Charting \"iodine allergy\" instead of the specific agent, signs and type of reaction.",
-    dept: "At the scanner, name what you see (type and severity) so the radiologist and the chart get an accurate record for next time."
-  },
-  rxmild: {
-    box: [["Severity","Limited and self-resolving"],["Allergic-like","Limited hives, itch, sneezing, watery eyes"],["Physiologic","Brief nausea, warmth, headache, dizziness"],["First step","Stop injection, keep IV, check vitals"],["Who calls","Tell the radiologist"],["Treatment","Diphenhydramine 25 to 50 mg if ordered"],["Watch for","Spreading hives, throat swelling, wheeze"],["Discharge","No driving after diphenhydramine"]],
-    plain: "A mild reaction is small and usually goes away on its own. Stop the injection, keep the IV, check vitals and keep watching because some reactions get worse.",
-    remember: "Mild today can be moderate in minutes: keep the IV, keep watching.",
-    mistake: "Pulling the IV or leaving the patient alone because the reaction looks minor.",
-    dept: "In the scanner room, stop the injector, leave the IV in place and stay with the patient while you get the radiologist."
-  },
-  rxmod: {
-    box: [["Severity","More pronounced, often needs treatment"],["Allergic-like","Diffuse hives, facial swelling, wheeze"],["Physiologic","Prolonged vomiting, chest pain, vasovagal"],["First step","Stop injection, radiologist to room"],["Oxygen","6 to 10 L/min by mask"],["Treatment","Antihistamine, albuterol or IM epi by type"],["Call for help","Breathing worse, sats or BP falling"]],
-    plain: "A moderate reaction is stronger and usually needs treatment, or it can turn severe. Treatment depends on what you see: hives, wheezing or swelling of the face or throat.",
-    remember: "Hives get an antihistamine, wheeze gets albuterol, throat or face swelling gets IM epinephrine.",
-    mistake: "Treating throat tightness or facial swelling like plain hives, when the airway is at stake.",
-    dept: "Bring the radiologist into the room, start oxygen from the reaction cart and put on pulse oximetry and BP monitoring."
-  },
-  rxsevere: {
-    box: [["Severity","Life-threatening"],["Signs","Airway swelling, stridor, hypoxia, shock"],["First step","Stop injection, call code team"],["Drug","IM epinephrine 0.3 mg (1 mg/mL), thigh"],["Oxygen","6 to 10 L/min"],["Low BP","Raise legs, rapid IV saline or LR"],["Beta-blocker","Poor epi response; IV glucagon by MD"],["Not first-line","Antihistamines, steroids"]],
-    plain: "A severe reaction can kill, so call the emergency team and give IM epinephrine first. Antihistamines and steroids do not fix airway swelling, wheezing or shock.",
-    remember: "Low BP + fast pulse = anaphylaxis; low BP + slow pulse = vasovagal.",
-    mistake: "Giving an antihistamine or steroid first and delaying epinephrine.",
-    dept: "Stop the injector, call the code or rapid response team, stay with the patient and have the reaction cart epinephrine ready."
-  },
-  vasovagal: {
-    box: [["Signs","Pale, sweaty, faint, low BP"],["Heart rate","Under 60 (slow)"],["Triggers","Anxiety, pain, needle stick, injection"],["First step","Raise legs, oxygen 6 to 10 L/min"],["Fluids","Rapid IV saline or LR"],["Drug","IV atropine 0.6 to 1 mg by physician"],["Max atropine","3 mg total"],["Watch for","Hives, wheeze, rising heart rate"]],
-    plain: "A vasovagal reaction is low blood pressure with a slow pulse, often with a pale, sweaty patient and no hives. Raise the legs, give oxygen and fluids, and the physician may give atropine.",
-    remember: "Slow and low = vasovagal. Fast and low = anaphylaxis until proven otherwise.",
-    mistake: "Skipping the pulse check, so anaphylaxis gets treated as a simple faint.",
-    dept: "Check the pulse right away, raise the legs on the table and notify the radiologist immediately."
-  },
-  bronchospasm: {
-    box: [["Lower airway","Wheeze, cough, chest tightness"],["Upper airway","Hoarseness, stridor, throat tightness"],["Wheeze drug","Albuterol MDI, 2 puffs (90 mcg/puff)"],["Swelling drug","IM epinephrine 0.3 mg"],["Oxygen","6 to 10 L/min"],["Call for help","Any stridor, falling sats, hard breathing"],["Monitor","Continuous pulse ox, frequent BP"]],
-    plain: "Wheezing comes from tight lower airways and is treated with albuterol. Stridor or hoarseness means the upper airway is swelling, which is more dangerous and needs IM epinephrine.",
-    remember: "Albuterol is for wheezing; epinephrine is for the swollen airway.",
-    mistake: "Giving albuterol for stridor or throat swelling, which it does not treat.",
-    dept: "Sit the patient up if BP allows, keep continuous pulse oximetry on, and call the emergency team for any stridor."
-  },
-  rxkit: {
-    box: [["Airway","Oxygen, masks, suction, bag-valve mask"],["Monitoring","BP cuff, pulse oximeter, AED"],["IM epi","1 mg/mL (1:1000), 0.3 mg adult"],["Autoinjector","0.3 mg adult, 0.15 mg pediatric"],["IV epi","0.1 mg/mL (1:10,000), physician only"],["Other drugs","Diphenhydramine, albuterol, atropine"],["MRI","Cart and AED stay outside Zone IV"],["Upkeep","Check expiry, oxygen and equipment"]],
-    plain: "Every contrast area needs a stocked, checked reaction cart, and staff need to know what each drug is for. Epinephrine comes in two strengths that must not be mixed up.",
-    remember: "IM epinephrine = 1 mg/mL. The 0.1 mg/mL form is slow IV, physician only.",
-    mistake: "Drawing the IM dose from the 0.1 mg/mL concentration, or mixing up the two strengths.",
-    dept: "Know where the cart is before you start the injection and check it on schedule for expired drugs and working equipment."
-  },
-  delayed: {
-    box: [["Timing","1 hour to 1 week after contrast"],["Signs","Itchy measles-like rash, hives, swelling"],["Course","Usually mild, resolves on its own"],["More often","Iodixanol, prior interleukin-2"],["Treatment","Antihistamines, topical steroids"],["Red flags","Blisters, mouth sores, fever, spreading"],["Related","Iodide mumps (salivary swelling)"]],
-    plain: "Some patients get a rash hours to days after iodinated contrast. Most are mild and fade on their own, but blisters, mouth sores or fever need urgent care.",
-    remember: "Rash days later? Think contrast and chart the specific agent.",
-    mistake: "Not linking a rash days later to the contrast, so it never gets documented.",
-    dept: "When a patient calls back with a rash, document it as a delayed reaction to the specific agent and route it to the physician."
-  },
-  screening: {
-    box: [["Prior reaction","Agent, what happened, how treated"],["Not a risk","Shellfish, seafood, povidone-iodine"],["Slight risk","Asthma, multiple allergies"],["Kidney","Disease, dialysis, transplant, diabetes"],["Age","Over 60 triggers eGFR check per protocol"],["Ask about","Metformin, pregnancy, breastfeeding"],["Other","Thyroid, beta-blockers, MRI implants"]],
-    plain: "Screening looks for the few things that change the plan: a prior contrast reaction, kidney risk, metformin, pregnancy, breastfeeding and thyroid issues. Shellfish and iodine allergies do not count.",
-    remember: "There is no \"iodine allergy\": ask about prior reactions to contrast itself.",
-    mistake: "Treating a shellfish or povidone-iodine allergy as a reason to premedicate.",
-    dept: "At the screening desk, ask what agent and what reaction, and flag kidney, metformin, pregnancy and thyroid answers to the radiologist."
-  },
-  premed: {
-    box: [["Who","Prior allergic-like reaction, same class"],["Not for","Physiologic, shellfish, unrelated drugs"],["13-hour oral","Prednisone 50 mg at 13, 7 and 1 hour"],["Plus","Diphenhydramine 50 mg 1 hour before"],["Alternative","Methylprednisolone 32 mg at 12 and 2 h"],["Accelerated IV","Methylpred 40 mg or HC 200 mg IV q4h"],["Too late","Steroids under 4 to 5 hours: no benefit"],["Breakthrough","Can still happen; treat as usual"]],
-    plain: "Steroids plus an antihistamine lower, but do not remove, the chance of another allergic-like reaction. There is a 13-hour oral plan and a faster IV plan for urgent cases.",
-    remember: "Premeds lower risk, they do not erase it: the cart and staff still need to be ready.",
-    mistake: "Assuming a premedicated patient cannot react, so nobody is ready in the room.",
-    dept: "Confirm the premedication was given on schedule, have the reaction cart ready and treat any breakthrough reaction like any other."
-  },
-  egfr: {
-    box: [["PC-AKI","Any AKI within 48 hours, any cause"],["CI-AKI","Caused by contrast; much less common"],["eGFR 45+","Negligible risk"],["eGFR 30 to 44","Risk case-by-case"],["Below 30 or AKI","Higher risk; radiologist decides"],["Prevent","IV saline if ordered, lowest dose"],["Dialysis","Extra dialysis usually not needed"]],
-    plain: "Modern IV iodinated contrast is mainly a kidney concern when eGFR is below 30 or the patient has acute kidney injury. Kidney injury after contrast is not always caused by the contrast.",
-    remember: "Remember the ACR-NKF line: eGFR below 30 for IV iodinated contrast.",
-    mistake: "Blaming every kidney injury after a scan on the contrast (PC-AKI is not the same as CI-AKI).",
-    dept: "Check that a current eGFR is on file when policy requires it, flag low values or AKI to the radiologist and use the lowest diagnostic dose."
-  },
-  metformin: {
-    box: [["Risk","Buildup can cause lactic acidosis"],["No hold","eGFR 30 or higher and no AKI"],["Hold if","AKI or eGFR below 30"],["Also hold","Arterial studies with renal emboli risk"],["How long","At or before contrast, 48 hours after"],["Restart","After kidney function is rechecked"],["Gadolinium","MRI doses: no hold needed"]],
-    plain: "Metformin only needs to be held when kidney function is poor or getting worse. If held, it stays off for 48 hours and restarts once kidney function is rechecked and stable.",
-    remember: "eGFR 30+ and no AKI: keep the metformin going.",
-    mistake: "Holding metformin for every contrast patient or for gadolinium MRI.",
-    dept: "At screening, ask about metformin and pair the answer with the eGFR so only the patients who need a hold get one."
-  },
-  pregnancy: {
-    box: [["Iodinated","Give when needed; no harm shown"],["Newborn","Routine screening only"],["Gadolinium","Only if essential and cannot wait"],["Who decides","Radiologist documents, often consent"],["Milk transfer","Less than 1 percent of the dose"],["Breastfeeding","No interruption needed"],["Optional","Pump and discard 12 to 24 hours"]],
-    plain: "Iodinated contrast can be given in pregnancy when it is needed, while gadolinium is saved for when it is essential. Mothers can keep breastfeeding after either type.",
-    remember: "Breastfeeding continues after contrast; pumping and discarding is her choice only.",
-    mistake: "Telling a breastfeeding mother she must stop after contrast.",
-    dept: "At screening, ask about pregnancy and breastfeeding so the radiologist can weigh the need for contrast and counsel the patient."
-  },
-  iodinated: {
-    box: [["HOCM","Ionic, e.g. diatrizoate; not for IV"],["LOCM","Iohexol, iopamidol; 2 to 3x blood"],["IOCM","Iodixanol; same osmolality as blood"],["IOCM catch","Higher viscosity; warming matters"],["IOCM use","Intra-arterial: less heat and pain"],["Label checks","Agent, mg iodine/mL, route, expiry"],["Intrathecal","Only agents labeled for it"]],
-    plain: "IV iodinated contrast today is nonionic low-osmolar or iso-osmolar; the older high-osmolar ionic agents are kept for oral, rectal or bladder use. Always check the label for route approval.",
-    remember: "Not every bottle is intrathecal-safe: read the route on the label every time.",
-    mistake: "Assuming any iodinated agent can be given intrathecally; accidental intrathecal ionic contrast can be fatal.",
-    dept: "Before loading the injector, check agent, concentration, approved route and expiration on the label."
-  },
-  warming: {
-    box: [["Warm to","Body temperature (37 C (98.6 F))"],["Why warm","Lower viscosity and injection pressure"],["Over 3 mL/s","20-gauge or larger"],["22-gauge","Up to about 3 mL/s"],["Best site","Antecubital or forearm"],["Test it","Blood return, saline test, ask re pain"],["Central lines","Power-rated PICC or port only"]],
-    plain: "Warming the contrast, choosing a big enough IV and testing it first help high-rate injections go smoothly. Central lines may only be power injected if they are labeled power-injectable.",
-    remember: "Can't confirm the line is power-rated? Don't power inject through it.",
-    mistake: "Power injecting through a PICC or port without confirming it is power-rated, which can rupture it.",
-    dept: "At the injector, match flow rate to IV size, do a saline test while feeling the site, and stay at or below the line's maximum flow rate."
-  },
-  extravasation: {
-    box: [["Signs","Swelling, tightness, pain, burning"],["First step","Stop the injector"],["Manage","Remove IV, elevate limb above heart"],["Compress","Cold or warm, per protocol"],["Document","Volume, agent, site, findings"],["Red flags","Worse pain or swelling after 2 to 4 hours"],["Also urgent","Slow refill, numbness, blisters"],["Who calls","Surgeon for compartment signs"]],
-    plain: "Most contrast leaks into the tissue are minor, but a few cause compartment syndrome or skin injury. Stop the injector, remove the IV, elevate the limb and tell the radiologist.",
-    remember: "Worse pain, numbness or slow refill after a leak = compartment syndrome until proven otherwise.",
-    mistake: "Trying to aspirate or give a routine antidote, which have no proven benefit.",
-    dept: "Stop the injector at the first complaint, document the volume and site, and give the patient written return instructions."
-  },
-  oralrectal: {
-    box: [["Barium","Best mucosal detail"],["Barium no-go","Suspected perforation"],["Barium after","Encourage fluids (impaction)"],["Water-soluble","Use for suspected leak or perforation"],["Hyperosmolar","Can dehydrate infants, frail patients"],["Aspiration risk","Avoid hyperosmolar water-soluble"],["Reactions","Rare but possible; cart available"]],
-    plain: "Barium gives the best detail but is dangerous if it leaks out of the bowel. Water-soluble contrast is used for a suspected leak, but the hyperosmolar kind is dangerous if breathed into the lungs.",
-    remember: "Perforation: water-soluble. Aspiration: avoid hyperosmolar water-soluble.",
-    mistake: "Giving hyperosmolar water-soluble contrast to a patient at risk of aspiration.",
-    dept: "Confirm with the radiologist which agent fits the leak and aspiration risk, and keep the reaction cart available for oral or rectal studies too."
-  },
-  thyroid: {
-    box: [["Risk group","Untreated Graves, toxic goiter"],["Possible","Iodine-induced hyperthyroidism"],["Rare","Thyroid storm"],["Blocks","I-123 or I-131 uptake for weeks"],["Commonly","4 to 6 weeks or more per protocol"],["Screen for","Thyroid disease, planned scan or RAI"],["Infants","Routine newborn screening covers it"]],
-    plain: "The big iodine load in contrast can push some thyroids into overdrive and blocks radioactive iodine uptake for weeks. Ask about thyroid problems and any upcoming thyroid scan or treatment.",
-    remember: "A contrast CT today can cancel next week's radioiodine treatment.",
-    mistake: "Giving iodinated contrast without asking about a planned thyroid scan or radioiodine therapy.",
-    dept: "At screening, ask about thyroid disease and upcoming radioiodine plans, and hold for clearance before injecting if either is present."
-  },
-  gbca: {
-    box: [["Grouped by","Risk of NSF"],["Group I","Gadodiamide and others; highest risk"],["Group I use","Contraindicated if at risk for NSF"],["Group II","Gadobutrol, gadoterate, gadoteridol"],["Also group II","Gadobenate, gadopiclenol, gadoxetate"],["Group III","Limited data agents"],["Macrocyclic","Hold gadolinium more tightly"],["Linear","Gadobenate, gadoxetate, gadodiamide"]],
-    plain: "The ACR sorts gadolinium agents into groups by their risk of NSF, and group II has the lowest risk. Macrocyclic agents hold gadolinium more tightly than linear ones.",
-    remember: "Safest pairing: group II plus macrocyclic. Gadobenate is group II but linear.",
-    mistake: "Assuming every group II agent is macrocyclic, or that gadoxetate is still group III.",
-    dept: "In the MRI department, know which group and structure the stocked agents are so at-risk patients get a group II agent."
-  },
-  nsf: {
-    box: [["What","Fibrosis of skin and organs"],["At risk","Dialysis, eGFR below 30, or AKI"],["Trigger","Group I agents, high or repeat doses"],["Onset","Days to months after exposure"],["Signs","Thick hard skin, joint contractures"],["Prevent","Group II agent, lowest diagnostic dose"],["Dialysis","Dialysis soon after scan if practical"]],
-    plain: "NSF is a rare but disabling hardening of the skin and organs linked to gadolinium in people with severe kidney disease. Using group II agents has made new cases almost disappear.",
-    remember: "Bad kidneys + group I gadolinium = NSF risk. Group II keeps it rare.",
-    mistake: "Giving a group I agent or a high or repeated dose to a dialysis or low-eGFR patient.",
-    dept: "Flag dialysis, low eGFR and AKI patients so they get a group II agent at the lowest dose, and coordinate dialysis timing when practical."
-  },
-  retention: {
-    box: [["What","Small amounts stay in brain and body"],["Where","Dentate nucleus, globus pallidus"],["Also","Bone and skin"],["More with","Linear agents"],["Kidneys","Happens with normal kidney function"],["Harm","No proven adverse health effects"],["FDA","Class warning, Medication Guide"]],
-    plain: "Tiny amounts of gadolinium stay in the brain and body after injection, more with linear agents. No harm to health has been proven.",
-    remember: "Retention is not NSF: normal kidneys, no proven harm.",
-    mistake: "Confusing gadolinium retention with NSF.",
-    dept: "Give the Medication Guide to first-time outpatient GBCA patients and answer their questions honestly."
-  },
-  mrisafety: {
-    box: [["Zone I","Public"],["Zone II","Reception and screening"],["Zone III","Restricted, MR personnel control"],["Zone IV","The scanner room"],["Projectiles","Oxygen tanks, IV poles, carts, stretchers"],["Code","CPR, move patient out to Zone III"],["Quench","Not routine for a code; not instant"]],
-    plain: "The MRI magnet is always on, so access is controlled in four zones. In an emergency, the patient is moved out of the scanner room to the team, not the other way around.",
-    remember: "Get the patient out to the team; never bring the team to the magnet.",
-    mistake: "Letting the code team and crash cart run into Zone IV, or expecting a quench to fix a code.",
-    dept: "During a code, start CPR, call the code and move the patient out to the prepared spot in Zone III while CPR continues."
-  },
-  mrisedation: {
-    box: [["Monitoring","Fiberoptic pulse ox, MR ECG, capnography"],["Equipment","MR conditional, within labeled limits"],["Burns","No cable loops or skin contact"],["Burn prevent","Padding, remove non-MR items"],["Rescue","Drugs, suction, oxygen, cart in Zone III"],["Deteriorates","Stop scan, move out of Zone IV"],["Staff","Trained provider monitors constantly"]],
-    plain: "Sedated MRI patients are far from the team and the cart, so monitoring and rescue are planned ahead. Only MR conditional monitors are used, set up to avoid burns.",
-    remember: "Regular pulse ox cable in the bore can burn: MR conditional monitoring only.",
-    mistake: "Using a standard pulse oximeter cable inside the bore or letting cables loop on the skin.",
-    dept: "The technologist runs the scan and helps get the patient out of Zone IV fast, while rescue drugs and the cart wait in Zone III."
-  },
-  rpsafety: {
-    box: [["Principles","Time, distance, shielding"],["Distance","Double distance = one quarter dose"],["Shielding","Syringe shields, lead pigs, L-blocks"],["PET","511 keV: thicker lead or tungsten"],["Verify","Two IDs, drug, activity, route"],["Assay","Every dose in the dose calibrator"],["Spills","Contain, restrict, clean outside-in"],["Who calls","Radiation safety officer"]],
-    plain: "Limit time near sources, keep your distance and use shields. For spills, contain the area, clean from the outside in and call the radiation safety officer.",
-    remember: "Double the distance, quarter the dose.",
-    mistake: "Hiding a wrong-patient or wrong-dose error instead of reporting it per policy.",
-    dept: "In the hot lab, assay every dose, verify two identifiers, and keep spill supplies ready."
-  },
-  stresstest: {
-    box: [["Regadenoson","0.4 mg rapid IV over about 10 s"],["Then","5 mL saline flush, tracer 10 to 20 s"],["Adenosine","Weight-based, very short half-life"],["Hold","Caffeine at least 12 hours before"],["Avoid if","High-grade AV block, low BP, bronchospasm"],["Alternative","Dobutamine for bronchospasm"],["Reversal","Aminophylline 50 to 250 mg slow IV"],["Not for","Regadenoson seizures"]],
-    plain: "Patients who cannot exercise get a drug stress test, usually with a vasodilator such as regadenoson. Aminophylline reverses severe or lasting vasodilator side effects.",
-    remember: "Coffee, tea, soda and chocolate block the vasodilators: ask before you stress.",
-    mistake: "Not asking about caffeine before a regadenoson or adenosine study.",
-    dept: "Confirm caffeine was held, have the saline flush and tracer ready for the timing, and keep aminophylline nearby."
-  },
-  fdgprep: {
-    box: [["Fasting","Water only for at least 4 to 6 hours"],["No","Dextrose IV fluids or parenteral nutrition"],["Day before","Avoid strenuous exercise"],["Glucose","Check before injection"],["High glucose","Commonly 150 to 200 mg/dL limit"],["Insulin","FDG at least 4 h after rapid-acting"],["Uptake","About 60 minutes, warm and resting"]],
-    plain: "FDG competes with glucose, so the patient fasts, gets a glucose check, and insulin timing is checked. During uptake they rest quietly and stay warm.",
-    remember: "Recent rapid-acting insulin = FDG goes to muscle. Check the timing first.",
-    mistake: "Injecting FDG soon after rapid-acting insulin or giving insulin to rescue a high glucose without protocol.",
-    dept: "At the uptake room, check glucose and the last insulin dose before injecting, and keep the patient warm and quiet."
-  },
-  hida: {
-    box: [["Fasting","2 to 4 hours, not over about 24"],["Hold","Opioids per protocol"],["Sincalide","Contracts the gallbladder"],["EF dose","0.02 mcg/kg over 60 minutes"],["Morphine","0.04 mg/kg IV if GB not seen"],["When","Gallbladder not seen by about 60 min"],["Then","Image about 30 more minutes"],["Side effects","Cramping; morphine resp depression"]],
-    plain: "Sincalide squeezes the gallbladder to measure how well it empties, and morphine helps bile flow into it. Both are used in HIDA scans.",
-    remember: "Still no gallbladder 30 minutes after morphine supports acute cholecystitis.",
-    mistake: "Pushing sincalide fast, which causes cramping and nausea and unreliable results.",
-    dept: "Confirm fasting time and opioid hold at check-in, and give sincalide slowly over the full infusion time."
-  },
-  ki: {
-    box: [["Drug","Potassium iodide, SSKI or Lugol's"],["Purpose","Saturates thyroid against radioiodine"],["When","I-123 or I-131 MIBG, per protocol"],["Also","Radiological emergencies with iodine"],["Route","By mouth"],["Timing","Before injection, then a few days"],["Limits","Thyroid only, radioiodine only"],["Not before","Diagnostic I-123 thyroid scans"]],
-    plain: "Stable iodide fills up the thyroid so it does not soak up radioactive iodine. It only protects the thyroid and only against radioactive iodine.",
-    remember: "No KI before an I-123 thyroid scan: there, thyroid uptake is the whole point.",
-    mistake: "Treating a seafood or contrast reaction as an iodide allergy.",
-    dept: "Confirm the patient took KI on the physician's schedule before radioiodinated MIBG injections, and screen for prior iodide reactions."
-  },
-  nmlactation: {
-    box: [["Ask first","Breastfeeding, before the dose"],["F-18 FDG","No interruption; limit close contact"],["FDG milk","Expressed milk via another caregiver"],["Tc-99m","Many none; some up to 12 to 24 hours"],["I-131 therapy","Stop completely for this child"],["Before I-131","Stop several weeks before therapy"],["Future","Future children can breastfeed"]],
-    plain: "Breastfeeding advice depends on the radiopharmaceutical: some need no pause, some a short pause, and I-131 therapy means stopping for this child.",
-    remember: "I-131 therapy ends breastfeeding for this baby; most Tc-99m studies need little or none.",
-    mistake: "Not asking about breastfeeding until after the dose is given.",
-    dept: "Ask every patient of childbearing age about breastfeeding before dosing so the physician can give agent-specific instructions."
-  },
-  uea: {
-    box: [["Agents","Perflutren, sulfur hexafluoride"],["Uses","Echo; some liver, pediatric bladder"],["Boxed warning","Serious cardiopulmonary reactions"],["Timing","During or within 30 minutes"],["Have ready","Resuscitation gear, trained staff"],["Avoid if","Allergy to agent, PEG or albumin"],["Kidney","Not nephrotoxic; exhaled via lungs"]],
-    plain: "Microbubble ultrasound agents are very safe overall, but rare serious heart and lung reactions can happen soon after injection. They do not harm the kidneys.",
-    remember: "Microbubble danger window: the first 30 minutes. Keep help close.",
-    mistake: "Sending the patient away right after injection instead of keeping them near help.",
-    dept: "Keep resuscitation equipment and trained staff nearby, and keep the patient close to help for 30 minutes after injection."
-  },
-  sedation: {
-    box: [["Drugs","Midazolam plus fentanyl, small doses"],["Monitor","Pulse ox, ECG, BP, capnography"],["Capnography","Shows apnea earlier than pulse ox"],["First step","Stimulate, open airway, oxygen"],["Opioid reversal","Naloxone, titrated"],["Benzo reversal","Flumazenil, titrated"],["Watch for","Resedation as reversal wears off"],["Caution","Flumazenil seizures in chronic users"]],
-    plain: "Moderate sedation uses small, step-by-step doses of midazolam and fentanyl with continuous monitoring. Reversal drugs are ready, but airway and breathing support come first.",
-    remember: "Flat capnography line = no breathing. Check the patient, not the monitor.",
-    mistake: "Trusting pulse oximetry alone, which shows hypoventilation later than capnography.",
-    dept: "Keep capnography on, have naloxone and flumazenil ready, and watch for resedation after reversal."
-  },
-  irmeds: {
-    box: [["Heparin","Prevents clot; monitored by ACT"],["Protamine","Reverses heparin; give slowly"],["Protamine risk","Low BP, slow HR, anaphylaxis"],["Radial cocktail","Heparin + verapamil and/or NTG"],["Cocktail watch","Low BP, slow HR, burning"],["Lidocaine tox","Perioral numbness, tinnitus, seizures"],["Lido antidote","Lipid emulsion"],["Alteplase","Watch bleeding, neuro changes"]],
-    plain: "IR procedures use a small set of drugs whose main risks are bleeding, low blood pressure and toxicity. Many look alike as clear liquids, so labeling matters.",
-    remember: "Label and read back every syringe: IR tables hold several clear liquids at once.",
-    mistake: "Leaving syringes on the sterile field unlabeled.",
-    dept: "Help label every syringe on the field and watch for hypotension, bradycardia or bleeding during the case."
-  },
-  radiation: {
-    box: [["ALARA","As low as reasonably achievable"],["Staff","Time, distance, shielding"],["Annual limit","50 mSv occupational"],["Pregnant worker","5 mSv over the pregnancy"],["Fluoro","Pulsed, low rate, tight collimation"],["Skin dose","About 2 Gy: erythema possible"],["Sentinel","Over 15 Gy cumulative peak skin dose"],["CT","Check CTDIvol and DLP"]],
-    plain: "ALARA means keeping patient and staff radiation dose as low as reasonably possible without losing image quality. Time, distance and shielding protect staff.",
-    remember: "Double your distance from the patient, quarter your scatter dose.",
-    mistake: "Standing on the tube side or close in during runs instead of stepping back on the receptor side.",
-    dept: "In fluoroscopy and CT, use dose-saving settings, track dose in long cases and check against notification values."
-  }
-};
-
-;
-/* DrugBug - Flight Prep: Gas laws & flight physiology */
-DB.FLIGHTP = DB.FLIGHTP || { topics: [], q: [] };
-DB.FLIGHTP.topics.push(
-  /* ---------------- Gas laws ---------------- */
-  { id: "boyle", grp: "Gas laws", title: "Boyle's law",
-    sum: "At a constant temperature, the volume of a gas is inversely proportional to the pressure around it (P1 x V1 = P2 x V2).",
-    rows: [
-      ["The law", "P1 x V1 = P2 x V2 at constant temperature. When ambient pressure falls on ascent, any trapped gas expands; when pressure rises on descent, it shrinks."],
-      ["Reference pressures", "Sea level is 760 mmHg; about 656 mmHg at 4,000 ft, 609 mmHg at 6,000 ft, 565 mmHg at 8,000 ft, 523 mmHg at 10,000 ft and 380 mmHg at 18,000 ft."],
-      ["Worked example", "A 30 mL air-filled cuff at sea level taken to an 8,000 ft cabin: V2 = 30 x 760 / 565 = about 40 mL, a one-third increase."],
-      ["Key landmark", "At about 18,000 ft the pressure is half of sea level, so trapped gas doubles in volume. The largest change per 1,000 ft happens at lower altitudes."],
-      ["Clinical reach", "Explains pneumothorax enlargement, gastric and bowel distension, ear and sinus block, ETT and catheter cuff expansion, air splint and MAST pressure changes, and drip-rate changes from air in IV containers."]
-    ],
-    pearl: "Boyle's law is the trapped-gas law: anything with air in it gets bigger going up and smaller coming down, so check cuffs, tubes and splints at both ends of the flight.",
-    drugs: [] },
-
-  { id: "dalton", grp: "Gas laws", title: "Dalton's law",
-    sum: "The total pressure of a gas mixture equals the sum of the partial pressures of each gas in it.",
-    rows: [
-      ["The law", "PTotal = P1 + P2 + P3 ... Each gas exerts its own partial pressure, equal to its fraction of the mixture times the total pressure."],
-      ["Oxygen fraction", "Air is about 21% oxygen at every altitude. What falls with altitude is the barometric pressure, so the partial pressure of oxygen (PO2) falls."],
-      ["Worked example", "At sea level PO2 = 0.21 x 760 = about 160 mmHg. At 18,000 ft PO2 = 0.21 x 380 = about 80 mmHg."],
-      ["Water vapor", "Inspired air is fully humidified at 47 mmHg at body temperature regardless of altitude, so it takes a bigger share of the total pressure as you climb (PIO2 = FiO2 x [PB - 47])."],
-      ["Clinical reach", "Explains hypoxic hypoxia at altitude and is the basis for the FiO2 altitude correction: FiO2 x P1 / P2."]
-    ],
-    pearl: "Oxygen stays 21% all the way up; it is the pressure, not the percentage, that drops. Hypoxia at altitude is a partial pressure problem.",
-    drugs: [] },
-
-  { id: "charles", grp: "Gas laws", title: "Charles' law",
-    sum: "At a constant pressure, the volume of a gas is directly proportional to its absolute (Kelvin) temperature.",
-    rows: [
-      ["The law", "V1 / T1 = V2 / T2 at constant pressure, with temperature in Kelvin (C + 273)."],
-      ["Direction", "Warming a gas makes it expand; cooling it makes it contract."],
-      ["Worked example", "1,000 mL of gas at 27 C (300 K) cooled to -3 C (270 K): V2 = 1,000 x 270 / 300 = 900 mL."],
-      ["Altitude link", "Air temperature falls roughly 2 C per 1,000 ft of altitude, so cooling partly offsets Boyle's-law expansion, but in practice the pressure effect dominates."],
-      ["Clinical reach", "Cold cabins and cold ambient air shrink gas volumes in cuffs and equipment; warm cabins and sun-soaked equipment expand them."]
-    ],
-    pearl: "Always convert to Kelvin before using any temperature gas law; plugging Celsius into the formula gives nonsense answers.",
-    drugs: [] },
-
-  { id: "gay-lussac", grp: "Gas laws", title: "Gay-Lussac's law",
-    sum: "At a constant volume, the pressure of a gas is directly proportional to its absolute temperature.",
-    rows: [
-      ["The law", "P1 / T1 = P2 / T2 when the container cannot change size, with temperature in Kelvin."],
-      ["Direction", "Heating a rigid container raises the pressure inside; cooling it lowers the pressure."],
-      ["Worked example", "An oxygen cylinder at 2,000 psi and 20 C (293 K) heats to 50 C (323 K): P2 = 2,000 x 323 / 293 = about 2,205 psi."],
-      ["Cold effect", "A cylinder that cools on a cold ramp or at altitude reads a lower pressure even though no oxygen was used, so recheck the gauge after it warms."],
-      ["Clinical reach", "Explains why oxygen cylinders must not be stored in hot vehicles or near heat sources, and why gauge pressure varies with temperature."]
-    ],
-    pearl: "Gay-Lussac's law is the oxygen-cylinder law: heat a rigid tank and its pressure climbs, so keep cylinders out of hot aircraft and vehicle compartments.",
-    drugs: [] },
-
-  { id: "henry", grp: "Gas laws", title: "Henry's law",
-    sum: "The amount of gas dissolved in a liquid is directly proportional to the partial pressure of that gas above the liquid.",
-    rows: [
-      ["The law", "At a constant temperature, more pressure drives more gas into solution; less pressure lets it come back out as bubbles."],
-      ["Everyday picture", "A sealed soda holds dissolved CO2 under pressure; open it and the pressure drops, so bubbles form."],
-      ["Diving link", "Breathing compressed air at depth loads tissues with extra dissolved nitrogen. Ascending too fast, or flying soon after diving, lets that nitrogen form bubbles: decompression sickness."],
-      ["Oxygen therapy", "Hyperbaric oxygen raises dissolved oxygen in plasma by raising the oxygen partial pressure, which is also why high FiO2 increases dissolved O2."],
-      ["Clinical reach", "Explains decompression sickness, altitude-induced DCS, and the benefit of hyperbaric and high-flow oxygen."]
-    ],
-    pearl: "Henry's law is the dissolved-gas law: lower the pressure and gas comes out of solution, which is exactly what causes the bends.",
-    drugs: [] },
-
-  { id: "graham", grp: "Gas laws", title: "Graham's law",
-    sum: "A gas diffuses from higher to lower pressure at a rate inversely proportional to the square root of its molecular weight.",
-    rows: [
-      ["The law", "Rate of diffusion is proportional to 1 / square root of molecular weight. Lighter gases diffuse faster than heavier gases under the same conditions."],
-      ["Direction", "Gases always move from an area of higher partial pressure to an area of lower partial pressure until they equalize."],
-      ["Gas exchange", "Oxygen moves from alveolus to blood and from blood to tissue because each step is a pressure gradient. At altitude the alveolar PO2 falls, so the gradient that drives oxygen into blood shrinks."],
-      ["Combined with solubility", "Graham's law alone favors O2 (MW 32) over CO2 (MW 44), but CO2 is far more soluble, so overall CO2 crosses the membrane about 20 times faster."],
-      ["Clinical reach", "Explains why a smaller gradient at altitude slows oxygen loading and why CO2 elimination is rarely the first thing to fail."]
-    ],
-    pearl: "Gases go downhill: high pressure to low pressure. Altitude flattens the oxygen hill, so less oxygen rolls into the blood.",
-    drugs: [] },
-
-  { id: "fick", grp: "Gas laws", title: "Fick's law (diffusion)",
-    sum: "Diffusion across a membrane is proportional to surface area, the partial pressure difference and the gas's diffusion constant, and inversely proportional to membrane thickness.",
-    rows: [
-      ["The law", "Rate = (Area x Diffusion constant x [P1 - P2]) / Thickness."],
-      ["Things that help", "Large surface area, a steep partial pressure difference (higher FiO2 or pressure) and a highly soluble gas."],
-      ["Things that hurt", "Lost surface area (pneumonectomy, emphysema, atelectasis), thickened membrane (pulmonary edema, fibrosis, ARDS) and a smaller gradient (altitude)."],
-      ["Fix in flight", "Raise the gradient with oxygen (and PEEP to recruit area and push fluid back), or lower the cabin altitude to restore barometric pressure."],
-      ["Clinical reach", "A patient with a thick or small membrane already relies on a big gradient, so the drop in PO2 at altitude hurts them first and most."]
-    ],
-    pearl: "Fick's law tells you why the ARDS or pulmonary edema patient desaturates on climb: thick membrane plus a smaller gradient equals less diffusion.",
-    drugs: [] },
-
-  /* ---------------- Stresses of flight ---------------- */
-  { id: "hypoxia-types", grp: "Stresses of flight", title: "The four types of hypoxia",
-    sum: "Hypoxia is classified as hypoxic, hypemic, stagnant or histotoxic depending on whether the problem is getting O2 in, carrying it, delivering it or using it.",
-    rows: [
-      ["Hypoxic (hypoxemic)", "Not enough oxygen gets into the blood: low PO2 at altitude, airway obstruction, hypoventilation, V/Q mismatch, pneumonia, drowning."],
-      ["Hypemic (anemic)", "The blood cannot carry enough oxygen: anemia, hemorrhage, carbon monoxide poisoning, methemoglobinemia."],
-      ["Stagnant (ischemic)", "Oxygen-carrying blood does not flow well: shock, heart failure, low cardiac output, arterial occlusion, positive G-forces pooling blood, extreme cold."],
-      ["Histotoxic", "Cells cannot use the oxygen delivered: cyanide, hydrogen sulfide, alcohol and some narcotics interfere with cellular respiration."],
-      ["Monitoring trap", "SpO2 can look normal in hypemic (especially CO poisoning) and histotoxic hypoxia, so the oximeter does not rule out hypoxia."]
-    ],
-    pearl: "Think of the four steps: get it in (hypoxic), carry it (hypemic), move it (stagnant), use it (histotoxic). Altitude makes all four worse by lowering PO2.",
-    drugs: [] },
-
-  { id: "tuc-zones", grp: "Stresses of flight", title: "Time of useful consciousness, zones and cabin altitude",
-    sum: "TUC is the time a person can perform useful flying duties after losing oxygen supply; it shortens sharply with altitude and with rapid decompression.",
-    rows: [
-      ["Physiologic zones", "Physiologic (efficient) zone: sea level to about 10,000 ft (some texts say 12,000). Physiologic-deficient zone: about 10,000 to 50,000 ft. Space-equivalent zone: above about 50,000 ft."],
-      ["Stages of hypoxia", "Indifferent (0-10,000 ft), compensatory (10,000-15,000 ft), disturbance (15,000-20,000 ft), critical (20,000-25,000 ft)."],
-      ["TUC values (approx.)", "18,000 ft: 20-30 min; 22,000 ft: 5-10 min; 25,000 ft: 3-5 min; 30,000 ft: 1-2 min; 35,000 ft: 30-60 s; 40,000 ft: 15-20 s."],
-      ["Shortening factors", "Rapid decompression can cut TUC by up to half; exertion, smoking, fatigue, illness and alcohol also shorten it."],
-      ["Cabin altitude", "Pressurized fixed-wing aircraft usually keep the cabin at about 6,000-8,000 ft (8,000 ft is the usual regulatory maximum). A sea-level cabin is possible but limits how high the aircraft can cruise."]
-    ],
-    pearl: "After a decompression, put on your own oxygen mask first: TUC at cruise altitude can be under a minute, and an unconscious crew helps no one.",
-    drugs: [] },
-
-  { id: "flight-stresses", grp: "Stresses of flight", title: "Stresses of flight",
-    sum: "The classic stresses of flight act on crew and patient alike: hypoxia, barometric pressure changes, thermal changes, low humidity, noise, vibration, fatigue, G-forces, spatial disorientation and flicker vertigo.",
-    rows: [
-      ["Pressure and oxygen", "Decreased PO2 causes hypoxia; barometric pressure changes cause trapped-gas expansion and contraction."],
-      ["Thermal and humidity", "Temperature drops about 2 C per 1,000 ft, and humidity falls with altitude, drying mucous membranes and secretions and causing dehydration."],
-      ["Noise and vibration", "Rotor and engine noise can exceed 90-100 dB, so hearing protection is required; vibration increases fatigue and can interfere with monitors and assessment."],
-      ["Fatigue and G-forces", "Fatigue is the cumulative result of all the other stresses. Acceleration forces shift blood and fluids; positive G pools blood toward the feet."],
-      ["Spatial disorientation", "Mismatch between visual, vestibular and proprioceptive input; it causes motion sickness and is a major cause of crashes. Flicker vertigo from rotor or strobe light at about 4-20 flashes per second can cause nausea or seizures."]
-    ],
-    pearl: "The stresses are additive: a dehydrated, cold, fatigued crew member in a noisy, vibrating aircraft is impaired well before any single stress looks severe.",
-    drugs: ["ondansetron", "scopolamine"] },
-
-  { id: "trapped-gas", grp: "Stresses of flight", title: "Trapped gas in patients and equipment",
-    sum: "Any closed air space in the patient or the equipment expands on ascent and contracts on descent, so it must be decompressed, vented, filled with fluid or monitored.",
-    rows: [
-      ["Pneumothorax", "Can enlarge into a tension pneumothorax on ascent. Place a chest tube (or one-way valve) before flight when indicated, and reassess on climb."],
-      ["GI tract", "Stomach and bowel gas expand, causing pain, vomiting, aspiration risk and splinting of the diaphragm. Place and vent an NG/OG tube; never clamp it during ascent."],
-      ["Ear, sinus and teeth", "Ear block is most common on descent (pressure outside rises while the eustachian tube stays shut); sinus block and barodontalgia also occur. Valsalva, swallowing, decongestants per protocol; keep the patient awake on descent if possible."],
-      ["Cuffs and balloons", "ETT, tracheostomy and Foley balloons expand on ascent. Fill with sterile water or saline, or monitor cuff pressure (about 20-30 cmH2O) and adjust at altitude and after descent."],
-      ["Splints, MAST and IVs", "Air splints and MAST pressure rises on ascent (check distal circulation) and falls on descent. Air in IV bags or glass bottles changes drip rate, so use infusion pumps and remove air from bags."]
-    ],
-    pearl: "Ask at every phase of flight: what in this patient or on this stretcher has air in it? Then vent it, fill it with fluid, or check it on climb and on descent.",
-    drugs: [] },
-
-  { id: "dcs-age", grp: "Stresses of flight", title: "Decompression illness and arterial gas embolism",
-    sum: "Decompression illness covers decompression sickness (dissolved nitrogen forming bubbles) and arterial gas embolism (alveolar rupture sending air into arteries); both get worse with altitude.",
-    rows: [
-      ["Decompression sickness", "Henry's law: nitrogen loaded at depth bubbles out when pressure falls. Type I: joint pain (bends), skin marbling, lymphatic swelling. Type II: neurologic (spinal cord), pulmonary (chokes) and circulatory signs. Onset usually within hours of surfacing."],
-      ["Arterial gas embolism", "Boyle's law: a diver who ascends holding breath overexpands and ruptures alveoli; air enters pulmonary veins and the arterial circulation. Stroke-like signs or collapse usually within minutes (often under 10) of surfacing."],
-      ["Treatment", "100% oxygen by non-rebreather or tight mask, supine positioning, IV fluids per protocol, and transport to a hyperbaric chamber for recompression."],
-      ["Transport altitude", "Fly as low as safely possible (commonly under 1,000 ft above the departure point) in a helicopter, or use a fixed-wing aircraft pressurized to a sea-level cabin."],
-      ["Flying after diving", "Common guidance: wait at least 12 hours after a single no-decompression dive, 18 hours after repetitive or multiday dives, and substantially longer after decompression dives."]
-    ],
-    pearl: "Any diver with new symptoms is DCI until proven otherwise: 100% oxygen, flat, and keep the cabin as close to sea level as you can on the way to the chamber.",
-    drugs: [] }
-);
-
-DB.FLIGHTP.q.push(
-  /* Boyle */
-  { topic: "boyle", q: "An intubated patient's ETT cuff holds 30 mL of air at sea level. Ignoring tube compliance, about what volume will that air occupy at an 8,000 ft cabin altitude (565 mmHg)?",
-    a: "About 40 mL", w: ["About 22 mL", "About 30 mL", "About 60 mL"],
-    x: "Boyle's law: V2 = P1 x V1 / P2 = 760 x 30 / 565 = about 40.4 mL. The cuff volume rises by about one-third, which can raise cuff pressure enough to injure the tracheal mucosa." },
-  { topic: "boyle", q: "A trauma patient has a small, untreated 200 mL pneumothorax measured at sea level. If transported unpressurized to 10,000 ft (523 mmHg), about how large could it become?",
-    a: "About 290 mL", w: ["About 140 mL", "About 400 mL", "About 210 mL"],
-    x: "V2 = 760 x 200 / 523 = about 291 mL, roughly a 45% increase. This is why a pneumothorax is usually decompressed with a chest tube before flight." },
-  { topic: "boyle", q: "At roughly what altitude does a fixed amount of trapped gas double its sea-level volume?",
-    a: "18,000 ft", w: ["8,000 ft", "10,000 ft", "34,000 ft"],
-    x: "Barometric pressure at about 18,000 ft is 380 mmHg, half of sea level's 760 mmHg. By Boyle's law, halving the pressure doubles the volume." },
-  { topic: "boyle", q: "A patient's Foley balloon is inflated with air before a rotor-wing flight that climbs over a mountain pass. Which gas law predicts a problem, and when?",
-    a: "Boyle's law, as the balloon expands on climb", w: ["Henry's law, as gas leaves the urine on climb", "Charles' law, as the balloon shrinks on climb", "Dalton's law, as the balloon shrinks on descent"],
-    x: "Boyle's law predicts that air in a closed balloon expands as ambient pressure falls on ascent. Filling balloons and cuffs with sterile water or saline avoids the volume change." },
-
-  /* Dalton */
-  { topic: "dalton", q: "The fraction of oxygen in ambient air at 18,000 ft is closest to:",
-    a: "21%, the same as at sea level", w: ["About 10%, half of sea level", "About 15%, from lower air density", "About 30%, from nitrogen loss"],
-    x: "Dalton's law: air stays about 21% oxygen at all altitudes used in aviation. The barometric pressure falls, so the partial pressure of oxygen falls (about 0.21 x 380 = 80 mmHg at 18,000 ft)." },
-  { topic: "dalton", q: "What is the approximate partial pressure of oxygen in dry ambient air at sea level?",
-    a: "About 160 mmHg", w: ["About 100 mmHg", "About 210 mmHg", "About 760 mmHg"],
-    x: "PO2 = FiO2 x PB = 0.21 x 760 = about 160 mmHg. Once humidified in the airway (subtracting 47 mmHg water vapor) it is about 150 mmHg, and alveolar PO2 is about 100 mmHg." },
-  { topic: "dalton", q: "A patient on FiO2 0.40 at a sea-level hospital will fly with an 8,000 ft cabin (565 mmHg). Using FiO2 x P1 / P2, what FiO2 keeps the inspired PO2 about the same?",
-    a: "About 0.54", w: ["About 0.30", "About 0.44", "About 0.70"],
-    x: "0.40 x 760 / 565 = 304 / 565 = about 0.54. The FiO2 must rise because barometric pressure falls while the oxygen fraction stays the same." },
-  { topic: "dalton", q: "A ventilated ARDS patient needs FiO2 0.80 at sea level. With an 8,000 ft cabin (565 mmHg), the formula gives 0.80 x 760 / 565 = 1.08. What is the best plan?",
-    a: "Request a lower cabin altitude and optimize PEEP", w: ["Set FiO2 to 1.0, which fully corrects it", "Keep FiO2 at 0.80 since SpO2 is normal now", "Decrease PEEP to reduce barotrauma on climb"],
-    x: "No ventilator can deliver more than FiO2 1.0, so the needed PO2 can't be reached at that cabin altitude. Lowering the cabin altitude (up to a sea-level cabin) and optimizing PEEP are the remaining options." },
-
-  /* Charles */
-  { topic: "charles", q: "Charles' law describes the relationship between which two variables when pressure is held constant?",
-    a: "Volume and absolute temperature", w: ["Pressure and absolute temperature", "Volume and pressure", "Solubility and partial pressure"],
-    x: "Charles' law: V1/T1 = V2/T2 at constant pressure. Pressure with temperature at constant volume is Gay-Lussac's law; volume with pressure is Boyle's law." },
-  { topic: "charles", q: "A 1,000 mL air-filled bag at 27 C (300 K) is moved onto a winter ramp at -3 C (270 K) at the same pressure. What is its new volume?",
-    a: "About 900 mL", w: ["About 890 mL from a Celsius ratio", "About 1,110 mL", "About 1,000 mL"],
-    x: "V2 = V1 x T2 / T1 = 1,000 x 270 / 300 = 900 mL. Kelvin must be used; a ratio of Celsius values (-3 / 27) would give a meaningless negative volume." },
-  { topic: "charles", q: "On a hot summer day a crew leaves an air-filled pressure splint on a patient in direct sun on the helipad. What does Charles' law predict?",
-    a: "The air in the splint expands as it warms", w: ["The splint deflates because warm air is lighter", "Nothing changes unless altitude changes", "The splint pressure falls as oxygen dissolves"],
-    x: "At roughly constant pressure, gas volume rises with absolute temperature. A warming splint can tighten, so check distal pulses, movement and sensation." },
-  { topic: "charles", q: "Air temperature falls about 2 C per 1,000 ft. How does this cooling affect trapped gas during a climb?",
-    a: "It slightly offsets expansion; pressure effect wins", w: ["It fully cancels Boyle's-law expansion", "It doubles the expansion from Boyle's law", "It has no effect on trapped gas volume"],
-    x: "Cooling shrinks gas (Charles' law) while lower pressure expands it (Boyle's law). Over a typical climb the pressure drop is proportionally much larger, so trapped gas still expands." },
-
-  /* Gay-Lussac */
-  { topic: "gay-lussac", q: "An oxygen cylinder reads 2,000 psi at 20 C (293 K). After sitting in a hot ambulance it reaches 50 C (323 K). About what will the gauge read?",
-    a: "About 2,200 psi", w: ["About 1,815 psi", "About 5,000 psi", "About 2,000 psi"],
-    x: "Gay-Lussac's law: P2 = P1 x T2 / T1 = 2,000 x 323 / 293 = about 2,205 psi. In a rigid cylinder the volume can't change, so pressure rises with temperature." },
-  { topic: "gay-lussac", q: "Which gas law best explains why oxygen cylinders should not be stored in a hot vehicle compartment?",
-    a: "Gay-Lussac's law", w: ["Boyle's law", "Henry's law", "Graham's law of diffusion"],
-    x: "Gay-Lussac's law: at constant volume, gas pressure rises in direct proportion to absolute temperature. A heated rigid cylinder can over-pressurize." },
-  { topic: "gay-lussac", q: "A full oxygen cylinder checked inside a warm hangar reads lower after the aircraft sits on a frigid ramp, though no oxygen was used. What is the best explanation?",
-    a: "Cooling lowered the gas pressure in the rigid tank", w: ["Low ambient pressure drew gas out of the regulator", "The cold made oxygen dissolve into the tank wall", "Low humidity caused the gauge to read falsely"],
-    x: "At constant volume, cooling lowers pressure (Gay-Lussac's law). The gauge reading will recover as the cylinder warms; consider this when estimating oxygen duration in cold weather." },
-  { topic: "gay-lussac", q: "Gay-Lussac's law holds which variable constant?",
-    a: "Volume", w: ["Pressure", "Temperature", "Number of gas types"],
-    x: "Gay-Lussac's law describes pressure and absolute temperature in a fixed-volume container (P1/T1 = P2/T2)." },
-
-  /* Henry */
-  { topic: "henry", q: "A scuba diver develops joint pain and skin mottling 3 hours after a deep dive. Which gas law best explains the cause?",
-    a: "Henry's law", w: ["Boyle's law", "Charles' law", "Dalton's law"],
-    x: "Henry's law: dissolved gas is proportional to the partial pressure above the liquid. Nitrogen dissolved at depth comes out of solution as bubbles when pressure falls, causing decompression sickness." },
-  { topic: "henry", q: "Why does hyperbaric oxygen therapy increase oxygen delivery even when hemoglobin is already fully saturated?",
-    a: "It raises the oxygen dissolved in plasma", w: ["It makes hemoglobin carry more per gram", "It shifts the oxyhemoglobin curve right", "It increases red blood cell production"],
-    x: "By Henry's law, raising the oxygen partial pressure dissolves more oxygen directly in plasma. This dissolved oxygen can sustain tissues even when hemoglobin is impaired, as in CO poisoning." },
-  { topic: "henry", q: "Which everyday example best illustrates Henry's law?",
-    a: "Bubbles forming when a soda bottle is opened", w: ["A balloon shrinking in a freezer", "A tire gauge rising on a hot day", "Perfume spreading through a room"],
-    x: "Opening the bottle drops the pressure above the liquid, so dissolved CO2 comes out of solution as bubbles, the same process as nitrogen forming bubbles in decompression sickness." },
-  { topic: "henry", q: "Why can flying soon after a dive cause decompression sickness even if the dive itself was uneventful?",
-    a: "Lower cabin pressure lets residual nitrogen bubble out", w: ["Low humidity draws nitrogen into the joints", "Cold air makes nitrogen less soluble in blood", "Vibration breaks dissolved oxygen into bubbles"],
-    x: "Tissues still hold extra nitrogen after diving. Lowering ambient pressure further at altitude reduces how much gas can stay dissolved (Henry's law), so bubbles form." },
-
-  /* Graham */
-  { topic: "graham", q: "Graham's law states that a gas's rate of diffusion is inversely proportional to:",
-    a: "The square root of its molecular weight", w: ["Its partial pressure", "Its absolute temperature", "The thickness of the membrane"],
-    x: "Graham's law: lighter gases diffuse faster, with the rate inversely proportional to the square root of molecular weight. Membrane thickness belongs to Fick's law." },
-  { topic: "graham", q: "Which statement about gas movement across the alveolar-capillary membrane is consistent with Graham's law?",
-    a: "Gas moves from higher to lower partial pressure", w: ["Gas moves from lower to higher partial pressure", "Heavier gases always diffuse faster", "Gas moves only when the patient exhales"],
-    x: "Gases diffuse down their pressure gradient from high to low partial pressure, and lighter gases do so faster. Oxygen moves from alveolus to blood because alveolar PO2 is higher." },
-  { topic: "graham", q: "At altitude, why does oxygen enter the pulmonary capillary blood more slowly?",
-    a: "The alveolar-to-capillary PO2 gradient is smaller", w: ["The oxygen molecule becomes heavier", "The alveolar membrane becomes thicker", "Oxygen makes up less than 21% of air"],
-    x: "Lower barometric pressure lowers alveolar PO2, so the pressure difference driving oxygen into the blood shrinks and diffusion slows. The oxygen fraction and molecular weight do not change." },
-  { topic: "graham", q: "By Graham's law alone, O2 (MW 32) should diffuse slightly faster than CO2 (MW 44), yet CO2 actually crosses the lung about 20 times faster. Why?",
-    a: "CO2 is much more soluble in the membrane and blood", w: ["CO2 has the larger pressure gradient by far", "CO2 is actively pumped out by the alveoli", "Oxygen must first bind to the membrane wall"],
-    x: "Overall diffusion depends on both molecular weight and solubility. CO2's far higher solubility more than offsets its heavier weight, which is why hypercapnia is rarely the first failure from a diffusion problem." },
-
-  /* Fick */
-  { topic: "fick", q: "According to Fick's law, which change would decrease oxygen diffusion across the alveolar membrane?",
-    a: "Thickening of the membrane from pulmonary edema", w: ["Increasing the FiO2 from 0.40 to 0.60", "Recruiting collapsed alveoli with PEEP", "Descending to a lower cabin altitude"],
-    x: "Diffusion is inversely proportional to membrane thickness. Higher FiO2, lower altitude and alveolar recruitment all increase the gradient or surface area and improve diffusion." },
-  { topic: "fick", q: "A patient with a prior pneumonectomy desaturates during a climb in an unpressurized helicopter. Which two Fick's-law factors are working against him?",
-    a: "Reduced surface area and a smaller gradient", w: ["Thicker membrane and a lighter gas", "Increased surface area and higher ambient humidity", "Lower temperature and a larger gradient"],
-    x: "Losing a lung reduces surface area, and climbing lowers alveolar PO2, shrinking the pressure gradient. Both reduce diffusion under Fick's law." },
-  { topic: "fick", q: "An intubated patient with cardiogenic pulmonary edema has an SpO2 of 88% at a 6,000 ft cabin. Which intervention addresses the most Fick's-law factors at once?",
-    a: "Increase PEEP and increase FiO2", w: ["Increase respiratory rate alone", "Lower FiO2 to avoid oxygen toxicity", "Place the patient in Trendelenburg"],
-    x: "PEEP recruits surface area and helps push fluid out of the alveoli (thinner barrier), and higher FiO2 raises the pressure gradient. Rate changes mostly affect CO2." },
-  { topic: "fick", q: "In Fick's law, which variable appears in the denominator?",
-    a: "Membrane thickness", w: ["Partial pressure difference", "Surface area", "Diffusion constant"],
-    x: "Rate = Area x Diffusion constant x (P1 - P2) / Thickness. Thickness is the only factor that slows diffusion as it increases." },
-
-  /* Hypoxia types */
-  { topic: "hypoxia-types", q: "A house-fire victim has an SpO2 of 99% on standard pulse oximetry but is confused with a headache. A co-oximeter shows COHb of 28%. What type of hypoxia is present?",
-    a: "Hypemic", w: ["Hypoxic", "Stagnant", "Histotoxic"],
-    x: "Carbon monoxide binds hemoglobin and reduces its oxygen-carrying capacity, causing hypemic (anemic) hypoxia. Standard SpO2 reads COHb as oxyhemoglobin and looks falsely normal." },
-  { topic: "hypoxia-types", q: "A patient in cardiogenic shock has a normal hemoglobin and PaO2 but cool, mottled extremities and rising lactate. What type of hypoxia best fits?",
-    a: "Stagnant", w: ["Hypemic", "Histotoxic", "Hypoxic"],
-    x: "Stagnant (ischemic) hypoxia occurs when oxygen content is adequate but blood flow to tissues is poor, as in low cardiac output." },
-  { topic: "hypoxia-types", q: "An industrial worker exposed to cyanide has a high venous oxygen saturation and severe lactic acidosis. What type of hypoxia is this?",
-    a: "Histotoxic", w: ["Hypemic (anemic)", "Stagnant", "Hypoxic"],
-    x: "Cyanide blocks cytochrome oxidase, so cells cannot use delivered oxygen. Oxygen is left in venous blood, which is the hallmark of histotoxic hypoxia." },
-  { topic: "hypoxia-types", q: "A flight nurse at 12,000 ft in an unpressurized aircraft without supplemental oxygen develops euphoria and slowed reaction time. Which type of hypoxia is this?",
-    a: "Hypoxic", w: ["Hypemic", "Stagnant", "Histotoxic"],
-    x: "Hypoxic (hypoxemic) hypoxia results from inadequate oxygen reaching the blood, here from the low partial pressure of oxygen at altitude." },
-
-  /* TUC and zones */
-  { topic: "tuc-zones", q: "A pressurized aircraft cruising at 30,000 ft suffers a rapid decompression. What is the crew's first priority?",
-    a: "Don their own oxygen masks immediately", w: ["Place masks on the patient first", "Notify medical control about the decompression", "Check the patient's ETT cuff pressure"],
-    x: "Time of useful consciousness at about 30,000 ft is only 1-2 minutes, and rapid decompression shortens it further. Crew must secure their own oxygen first so they can then help the patient." },
-  { topic: "tuc-zones", q: "Approximately what is the time of useful consciousness at 25,000 ft for a resting, healthy person?",
-    a: "3-5 minutes", w: ["20-30 minutes", "15-20 seconds", "10-15 minutes"],
-    x: "Commonly cited TUC values: 18,000 ft 20-30 min, 22,000 ft 5-10 min, 25,000 ft 3-5 min, 30,000 ft 1-2 min, 35,000 ft 30-60 s, 40,000 ft 15-20 s." },
-  { topic: "tuc-zones", q: "Pressurized air medical aircraft usually maintain a cabin altitude in which range?",
-    a: "6,000-8,000 ft", w: ["Sea level to 2,000 ft", "10,000-12,000 ft", "14,000-16,000 ft"],
-    x: "Most pressurized aircraft hold the cabin at about 6,000-8,000 ft, with 8,000 ft as the usual regulatory maximum. A lower or sea-level cabin requires the aircraft to fly lower." },
-  { topic: "tuc-zones", q: "In which physiologic zone do healthy people first need supplemental oxygen to avoid significant hypoxia?",
-    a: "Physiologic-deficient zone", w: ["Physiologic (efficient) zone", "Space-equivalent zone", "Indifferent zone"],
-    x: "The physiologic-deficient zone starts at about 10,000 ft (some texts say 12,000) and extends to about 50,000 ft. Supplemental oxygen is needed there; above 50,000 ft a pressure suit is required." },
-
-  /* Stresses of flight */
-  { topic: "flight-stresses", q: "A paramedic notices nausea and dizziness while sunlight flickers through the rotor blades during a long flight. What is the most likely cause?",
-    a: "Flicker vertigo", w: ["Hypemic hypoxia", "Barodontalgia", "Middle ear block"],
-    x: "Flicker vertigo is caused by light flashing at about 4-20 times per second, such as sunlight through rotor blades. It can cause nausea, disorientation and, in susceptible people, seizures." },
-  { topic: "flight-stresses", q: "Which effect of altitude makes dehydration more likely during long transports?",
-    a: "Humidity falls as altitude rises", w: ["Oxygen fraction falls as altitude rises", "Temperature rises as altitude rises", "Gas solubility rises as altitude rises"],
-    x: "Air holds less moisture as altitude rises and aircraft cabins are very dry, increasing insensible losses from the airways and skin. Offer fluids and humidify oxygen when possible." },
-  { topic: "flight-stresses", q: "About how much does ambient air temperature drop for each 1,000 ft of altitude gained?",
-    a: "About 2 C (35.6 F)", w: ["About 0.5 C (32.9 F)", "About 5 C (41 F)", "About 10 C (50 F)"],
-    x: "The standard lapse rate is about 2 C (3.5 F) per 1,000 ft. Patients, especially burn, trauma and neonatal patients, need active warming." },
-  { topic: "flight-stresses", q: "During a night flight in clouds, the pilot reports feeling the aircraft is level while instruments show a banked turn. Which stress of flight is this?",
-    a: "Spatial disorientation", w: ["Flicker vertigo", "Acute altitude hypoxia", "Fatigue"],
-    x: "Spatial disorientation is a mismatch between visual, vestibular and proprioceptive cues. The vestibular system adapts to a sustained turn and signals level flight, so pilots must trust instruments." },
-
-  /* Trapped gas */
-  { topic: "trapped-gas", q: "A patient with a bowel obstruction is being flown to a tertiary center. What is the most important trapped-gas measure before lift-off?",
-    a: "Place an NG tube and leave it vented", w: ["Place an NG tube and clamp it", "Give an antiemetic and withhold the NG tube", "Position the patient in Trendelenburg"],
-    x: "Bowel and gastric gas expand on ascent and can cause vomiting, aspiration and diaphragm splinting. An NG or OG tube left open to vent or to suction lets the expanding gas escape." },
-  { topic: "trapped-gas", q: "When is a patient with a congested upper airway most likely to develop a middle ear block?",
-    a: "During descent", w: ["During ascent", "At cruising altitude", "During ground taxi"],
-    x: "On ascent, expanding middle ear gas vents passively through the eustachian tube. On descent, rising outside pressure pushes the eardrum inward and the swollen tube may not open, so swallowing, yawning or Valsalva help." },
-  { topic: "trapped-gas", q: "A patient in MAST (PASG) is flown from a sea-level scene to a hospital at 5,000 ft. What should the crew anticipate?",
-    a: "Garment pressure rising on climb and falling on descent", w: ["Garment pressure falling on climb and rising on descent", "No change, because the garment is a closed system", "Garment pressure falling only at cruising altitude"],
-    x: "The air in the garment expands as ambient pressure falls (Boyle's law), so pressure rises on climb; reassess distal circulation and release pressure as needed, then re-check on descent." },
-  { topic: "trapped-gas", q: "Gravity IV fluids are hanging in a bag that still contains an air pocket. What happens to the drip rate as the aircraft climbs?",
-    a: "It increases as the air pocket expands", w: ["It decreases as the air pocket expands", "It stays the same in a closed system", "It stops because of an air lock"],
-    x: "The expanding air in the container pushes fluid out faster on ascent, and the rate slows on descent. Removing air from bags and using infusion pumps prevents unintended rate changes." },
-
-  /* DCS and AGE */
-  { topic: "dcs-age", q: "A diver surfaces rapidly after holding her breath and within 2 minutes develops right-sided weakness and aphasia. What is the most likely diagnosis?",
-    a: "Arterial gas embolism", w: ["Type I decompression sickness", "Nitrogen narcosis", "Middle ear barotrauma"],
-    x: "Rapid onset of stroke-like signs within minutes of surfacing after a breath-hold ascent points to arterial gas embolism from alveolar rupture (Boyle's law). DCS usually starts later, often within hours." },
-  { topic: "dcs-age", q: "You are transporting a diver with suspected Type II decompression sickness by helicopter to a hyperbaric chamber. What is the best flight plan?",
-    a: "Fly as low as safely possible on 100% oxygen", w: ["Climb quickly to cruise to shorten flight time", "Fly at 8,000 ft and titrate oxygen to SpO2 94%", "Delay transport until symptoms resolve"],
-    x: "Any decrease in ambient pressure enlarges bubbles, so the aircraft should stay as low as safely possible (commonly under 1,000 ft above the departure point). 100% oxygen helps wash out nitrogen." },
-  { topic: "dcs-age", q: "A recreational diver completed a single no-decompression dive this morning and wants to fly home. Per common dive-medicine guidance, what is the minimum surface interval before flying?",
-    a: "12 hours", w: ["2 hours", "6 hours", "48 hours"],
-    x: "Commonly cited guidance is a minimum of 12 hours after a single no-decompression dive, 18 hours after repetitive or multiday diving, and substantially longer after dives requiring decompression stops." },
-  { topic: "dcs-age", q: "A diver with joint pain and a mottled rash after diving needs fixed-wing transport. If the aircraft can be pressurized, what cabin altitude is preferred?",
-    a: "Sea level (or the departure field elevation)", w: ["About 8,000 ft, the standard pressurized cabin", "About 5,000 ft to balance fuel use", "Any altitude if the patient is on oxygen"],
-    x: "A sea-level cabin prevents further pressure drop that would expand bubbles and draw more nitrogen out of solution, so the patient arrives with the least possible worsening." }
-);
-
-DB.FLIGHTPBOX = DB.FLIGHTPBOX || {};
-Object.assign(DB.FLIGHTPBOX, {
-  boyle: {
-    box: [
-      ["Formula", "P1 x V1 = P2 x V2"],
-      ["Held constant", "Temperature"],
-      ["Sea level", "760 mmHg"],
-      ["8,000 ft cabin", "565 mmHg (gas up about 1/3)"],
-      ["18,000 ft", "380 mmHg (gas doubles)"],
-      ["Example", "30 mL cuff to 8,000 ft = about 40 mL"]
-    ],
-    plain: "When the air around something gets thinner, gas trapped inside it spreads out and takes up more room. Going down, it squeezes back smaller.",
-    remember: "Boyle = balloon: up you go, it grows; down you come, it shrinks.",
-    mistake: "Only checking cuffs and tubes on climb and forgetting they shrink and leak or loosen on descent.",
-    flight: "Every air-filled space in the patient and the gear grows on climb, so vent, fill with fluid, or check pressures at altitude and again after landing."
-  },
-  dalton: {
-    box: [
-      ["Formula", "PTotal = P1 + P2 + P3 ..."],
-      ["O2 fraction", "About 21% at every altitude"],
-      ["Sea level PO2", "0.21 x 760 = about 160 mmHg"],
-      ["18,000 ft PO2", "0.21 x 380 = about 80 mmHg"],
-      ["Water vapor", "47 mmHg at body temperature"],
-      ["FiO2 correction", "FiO2 x P1 / P2"]
-    ],
-    plain: "Air is a mix of gases, and each one pushes with its own share of the total pressure. Higher up, the total push is lower, so oxygen's push is lower too.",
-    remember: "Percent stays put, pressure drops: 21% of less is less.",
-    mistake: "Thinking there is less oxygen 'percent' at altitude rather than a lower oxygen partial pressure.",
-    flight: "Raise the FiO2 as the cabin climbs: FiO2 x P1 / P2, for example 0.40 at sea level becomes about 0.54 at 8,000 ft."
-  },
-  charles: {
-    box: [
-      ["Formula", "V1 / T1 = V2 / T2"],
-      ["Held constant", "Pressure"],
-      ["Units", "Kelvin (C + 273)"],
-      ["Warmer", "Gas expands"],
-      ["Colder", "Gas contracts"],
-      ["Lapse rate", "About 2 C cooler per 1,000 ft"]
-    ],
-    plain: "Heat makes gas spread out and cold makes it pull together, as long as the outside pressure stays the same.",
-    remember: "Charles in the cold: the gas gets small.",
-    mistake: "Doing the math in Celsius instead of converting to Kelvin.",
-    flight: "Sun-heated or cold-soaked equipment changes volume on the ramp; recheck air splints and cuffs after big temperature changes."
-  },
-  "gay-lussac": {
-    box: [
-      ["Formula", "P1 / T1 = P2 / T2"],
-      ["Held constant", "Volume (rigid container)"],
-      ["Units", "Kelvin (C + 273)"],
-      ["Hotter", "Pressure rises"],
-      ["Colder", "Pressure falls"],
-      ["Example", "2,000 psi at 20 C (68 F) to 50 C (122 F) = about 2,205 psi"]
-    ],
-    plain: "In a container that cannot stretch, like an oxygen tank, heating the gas raises its pressure and cooling it lowers the pressure.",
-    remember: "Gay-Lussac = gas tank: heat the tank, the gauge climbs.",
-    mistake: "Assuming a lower gauge reading on a cold tank means oxygen was used or leaked.",
-    flight: "Keep oxygen cylinders out of hot compartments and remember cold-soaked tanks read low until they warm."
-  },
-  henry: {
-    box: [
-      ["Statement", "Dissolved gas proportional to partial pressure"],
-      ["Held constant", "Temperature"],
-      ["Classic example", "Opening a soda bottle"],
-      ["Disease", "Decompression sickness"],
-      ["Therapy link", "Hyperbaric O2 raises dissolved O2"],
-      ["Altitude effect", "Gas comes out of solution"]
-    ],
-    plain: "The harder a gas presses on a liquid, the more of it dissolves. Take the pressure away and the gas fizzes back out as bubbles.",
-    remember: "Henry = soda: pop the cap and the bubbles come out.",
-    mistake: "Confusing Henry's law (dissolved gas, DCS) with Boyle's law (gas volume, AGE and trapped gas).",
-    flight: "Flying lowers pressure further, so a recent diver can get or worsen the bends in the aircraft; keep the cabin low."
-  },
-  graham: {
-    box: [
-      ["Statement", "Rate inversely proportional to square root of MW"],
-      ["Direction", "High to low partial pressure"],
-      ["Lighter gas", "Diffuses faster"],
-      ["O2 vs CO2 (MW)", "32 vs 44"],
-      ["CO2 overall", "About 20x faster (solubility)"],
-      ["Altitude effect", "Smaller O2 gradient"]
-    ],
-    plain: "Gases spread out from crowded places to empty ones, and light gases do it faster than heavy ones.",
-    remember: "Graham: gases go downhill, light ones fastest.",
-    mistake: "Forgetting that solubility, not just weight, is why CO2 crosses the lung so much faster than O2.",
-    flight: "At altitude the oxygen 'hill' from alveolus to blood is smaller, so oxygen loads more slowly."
-  },
-  fick: {
-    box: [
-      ["Formula", "Area x D x (P1 - P2) / Thickness"],
-      ["Helps", "More area, bigger gradient, soluble gas"],
-      ["Hurts", "Thick membrane, lost area, small gradient"],
-      ["Thick membrane", "Edema, ARDS, fibrosis"],
-      ["Lost area", "Pneumonectomy, atelectasis, emphysema"],
-      ["Flight fixes", "Raise FiO2, add PEEP, lower cabin"]
-    ],
-    plain: "Oxygen crosses the lung faster when there is more lung surface, a thinner wall and a bigger push from high to low pressure.",
-    remember: "Fick: big area, thin wall, steep hill.",
-    mistake: "Increasing ventilator rate to fix hypoxemia when the problem is diffusion, which rate barely changes.",
-    flight: "Lung patients with thick or small membranes desaturate first on climb; plan higher FiO2, PEEP or a lower cabin before lift-off."
-  },
-  "hypoxia-types": {
-    box: [
-      ["Hypoxic", "O2 can't get in (altitude, V/Q)"],
-      ["Hypemic", "Can't carry it (anemia, CO)"],
-      ["Stagnant", "Can't move it (shock, low CO)"],
-      ["Histotoxic", "Can't use it (cyanide, alcohol)"],
-      ["SpO2 trap", "Falsely normal in CO poisoning"],
-      ["Altitude", "Worsens all four"]
-    ],
-    plain: "Oxygen has to get into the blood, ride on hemoglobin, be pumped to the tissues and then be used by cells. A break at any step is hypoxia.",
-    remember: "In, carry, move, use: hypoxic, hypemic, stagnant, histotoxic.",
-    mistake: "Trusting a normal SpO2 in carbon monoxide poisoning.",
-    flight: "Altitude stacks hypoxic hypoxia on top of whatever type the patient already has, so give oxygen early."
-  },
-  "tuc-zones": {
-    box: [
-      ["Physiologic zone", "Sea level to about 10,000 ft"],
-      ["Deficient zone", "About 10,000-50,000 ft"],
-      ["Space-equivalent", "Above about 50,000 ft"],
-      ["TUC 25,000 ft", "3-5 minutes"],
-      ["TUC 30,000 ft", "1-2 minutes"],
-      ["TUC 35,000 ft", "30-60 seconds"],
-      ["Cabin altitude", "Usually 6,000-8,000 ft"]
-    ],
-    plain: "Time of useful consciousness is how long you can still think and act after losing your oxygen. The higher you are, the shorter it gets.",
-    remember: "Mask yourself first: at cruise, TUC is about one breath-hold long.",
-    mistake: "Helping the patient before donning your own mask after a decompression.",
-    flight: "Know where the crew oxygen masks are and how to don them before every pressurized flight."
-  },
-  "flight-stresses": {
-    box: [
-      ["Pressure", "Hypoxia and trapped gas"],
-      ["Thermal", "About 2 C colder per 1,000 ft"],
-      ["Humidity", "Low; causes dehydration"],
-      ["Noise", "Often over 90 dB; use protection"],
-      ["Vibration", "Fatigue, monitor artifact"],
-      ["Flicker vertigo", "About 4-20 flashes per second"],
-      ["Other", "Fatigue, G-forces, disorientation"]
-    ],
-    plain: "Flying adds strains on the body: thin air, cold, dryness, noise, shaking, tiredness, pulling forces and confusing balance signals.",
-    remember: "The stresses add up: one alone is a nuisance, all together is impairment.",
-    mistake: "Forgetting the crew is affected too, not just the patient.",
-    flight: "Wear hearing protection, stay hydrated, warm the patient and rely on monitors and alarms since noise and vibration hide breath sounds."
-  },
-  "trapped-gas": {
-    box: [
-      ["Pneumothorax", "Chest tube before flight"],
-      ["Stomach / bowel", "NG/OG to vent, not clamped"],
-      ["Ears", "Block most common on descent"],
-      ["ETT / Foley cuffs", "Fill with saline or check pressure"],
-      ["Cuff pressure", "About 20-30 cmH2O"],
-      ["Air splints / MAST", "Tighten on climb, loosen on descent"],
-      ["IV bags", "Remove air; use pumps"]
-    ],
-    plain: "Anything holding air, inside the patient or on the equipment, will swell going up and shrink coming down.",
-    remember: "Vent it, fill it with fluid, or check it twice: climb and descent.",
-    mistake: "Clamping an NG tube for flight, which traps expanding gastric gas.",
-    flight: "Before lift-off, walk head to toe and list every air space; reassess each at altitude and after landing."
-  },
-  "dcs-age": {
-    box: [
-      ["DCS law", "Henry (nitrogen bubbles)"],
-      ["AGE law", "Boyle (alveolar rupture)"],
-      ["AGE onset", "Minutes, often under 10"],
-      ["DCS onset", "Usually within hours"],
-      ["Treatment", "100% O2, supine, fluids, HBO"],
-      ["Transport", "Fly low or sea-level cabin"],
-      ["Fly after diving", "12 h single dive, 18 h repetitive"]
-    ],
-    plain: "Divers can get gas bubbles in their tissues or arteries. Lower pressure makes those bubbles bigger, so they need oxygen and to stay as close to sea level as possible on the way to a chamber.",
-    remember: "Bubbles hate oxygen and love altitude: give 100% O2, keep it low.",
-    mistake: "Titrating oxygen to a normal SpO2 instead of giving 100% to wash out nitrogen.",
-    flight: "Request the lowest safe altitude in a helicopter or a sea-level cabin in a fixed-wing aircraft."
-  }
-});
