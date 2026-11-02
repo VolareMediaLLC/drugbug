@@ -1,7 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>DrugBug Terms of Use</title><meta name="description" content="The terms for using DrugBug, including educational use only, subscriptions and limitations.">
 <link rel="canonical" href="https://drugbugapp.com/terms.html">
-<link rel="icon" href="icon.png"><link rel="icon" type="image/png" sizes="32x32" href="favicon.ico">
+<link rel="icon" type="image/png" sizes="48x48" href="icon-48.png"><link rel="icon" type="image/png" sizes="1024x1024" href="icon.png"><link rel="icon" type="image/x-icon" href="favicon.ico">
 <link rel="apple-touch-icon" href="icon-180.png">
 <meta name="theme-color" content="#13111c">
 <meta property="og:type" content="website"><meta property="og:site_name" content="DrugBug">
@@ -38,7 +38,15 @@ details{background:var(--surface);border:1px solid var(--line);border-radius:12p
 .schools,.about,.faqh{margin-top:40px}
 .schools{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px 24px}
 .schools h2,.about h2,.faqh h2{margin-top:0}
-.about p{color:var(--muted);max-width:68ch}
+.about p{color:var(--muted);max-width:62ch}
+.abgrid{display:grid;grid-template-columns:260px 1fr;gap:26px;align-items:center}
+.sagegrid{display:grid;grid-template-columns:220px 1fr;gap:26px;align-items:center}
+.sagegrid img{width:100%;height:auto}
+.plead{max-width:62ch;color:var(--muted)}
+.plead.small{font-size:14px;margin-top:14px}
+.abgrid img{width:100%;height:auto;border-radius:18px;border:1px solid var(--line);box-shadow:0 10px 30px rgba(0,0,0,.3);display:block}
+.abgrid h2{margin-top:0}
+@media (max-width:640px){.abgrid{grid-template-columns:1fr}.abgrid img{max-width:280px;margin:0 auto}.sagegrid{grid-template-columns:1fr}.sagegrid img{max-width:200px;margin:0 auto}}
 .about p.muted{font-size:15px}
 .btn:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
 @media (max-width:640px){.shots figure{flex-basis:200px}.shots img{width:200px}}
