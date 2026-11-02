@@ -2467,7 +2467,8 @@ function dailyCard() {
 function progressView() {
   var ids = scopeIds().filter(function (id) { return DB.drugs[id]; }), lv = xpLevel(Prog.d.xp), P = Prog.d;
   var counts = {}; MLEVELS.forEach(function (m) { counts[m[0]] = 0; }); ids.forEach(function (id) { counts[mastery(id)]++; });
-  var c = '<section class="progress"><div class="stats">' +
+  var c = (typeof accNudge === "function" ? accNudge() : "") +   /* the quiet account offer, once there is something worth keeping */
+    '<section class="progress"><div class="stats">' +
     '<div class="stat"><span class="lbl">Level</span><span class="num">' + lv.lv + '</span><span class="xpbar" role="img" aria-label="' + lv.into + ' of ' + lv.need + ' XP to the next level"><i style="width:' + Math.round(100 * lv.into / lv.need) + '%"></i></span></div>' +
     '<div class="stat"><span class="lbl">Streak</span><span class="num">' + liveStreak() + '</span><span class="muted small">best ' + (P.best || 0) + ' days</span></div>' +
     '<div class="stat"><span class="lbl">Mastered here</span><span class="num">' + counts.mastered + '</span><span class="muted small">of ' + ids.length + ' drugs</span></div>' +
@@ -3418,6 +3419,7 @@ function shopView() {
   if (f === "home") {
     c += '<div class="shophead"><div class="mybug">' + myBugArt("big") + (typeof pkSide === "function" ? pkSide("terr") : "") + '</div><div class="shtx"><span class="eyebrow">Your bug</span><h2>' + esc(me.name) + '</h2>' + stageLine() + '<p class="balance">' + stickIcon(24) + '<strong>' + bal.toLocaleString() + '</strong> sticks</p></div></div>';
     if (S.shopMsg) { c += '<div class="presult good" role="status">' + esc(S.shopMsg) + '</div>'; S.shopMsg = ""; }
+    if (typeof accNudge === "function") c += accNudge();   /* the quiet offer, once they have something to lose */
     var mine = BUGS.filter(function (b) { return owned(b.id); });
     if (Admin.owner && !owned("admin-stickbug")) c += '<div class="adminbug">' + bugArt(bugById("admin-stickbug"), "", {}) + '<div><strong>Your administrator bug is ready</strong><p class="muted small">A stick bug that only you can use. Dress it up in the Wardrobe like any other bug.</p><button class="btn small" data-claim="admin-stickbug">Claim it</button></div></div>';
     c += tankHTML(mine, true);
@@ -5147,6 +5149,12 @@ var LEGAL_PAGES = {
   data: ["Your data", function () {
     var c = L("What you can do here", ["Leave the leaderboard or a school competition, or delete everything DrugBug stores about you."]);
     c += '<div class="actions">' + (Prog.d.lbName ? '<button class="btn ghost" data-act="lbleave">Leave the leaderboard</button>' : '') + (SOCIAL ? '<button class="btn ghost" data-go="classes">Manage my classes</button>' : '') + '</div>';
+    /* Take a copy with you (owner, Nov 1 2026). Depending on where you live this is a right, not a
+       courtesy: GDPR article 20 and the CCPA both cover it. The whole account is one JSON document,
+       so honouring it properly is cheaper than answering the emails by hand. */
+    c += '<h2>Download a copy of my data</h2><p>Everything DrugBug holds for you, as a JSON file: your progress and mastery, scores, streaks, achievements, saved list, Terrarium, LEARN history and any purchases. Nothing leaves your device to produce it.</p>';
+    c += '<div class="actions"><button class="btn ghost" data-act="dataexport">Download my data</button></div>';
+    if (S.expMsg) c += '<p class="presult good" role="status">' + esc(S.expMsg) + '</p>';
     c += '<h2>Delete my DrugBug data</h2><p>This deletes your progress, scores, saved list, leaderboard and competition entries, error reports, protocol requests, and everything stored on this device. It cannot be undone.</p>';
     if (S.delState === "ask") c += '<div class="confirm" role="alert">Delete all of your DrugBug data? <button class="btn small again" data-act="delyes">Yes, delete everything</button> <button class="btn small ghost" data-act="delno">Cancel</button></div>';
     else if (S.delState === "busy") c += '<p class="muted">Deleting…</p>';
@@ -5164,6 +5172,46 @@ function legalView() {
 }
 function openLegal(k) { if (S.view !== "legal") S.legalBack = { view: S.view, tab: S.tab, level: S.level }; S.legal = k; S.delState = null; if (S.sheet) closeSheet(); S.view = "legal"; render(); window.scrollTo(0, 0); }
 function legalBack() { var b = S.legalBack || { view: "home" }; S.view = b.view === "legal" ? "home" : b.view; if (b.tab) S.tab = b.tab; if (b.level) S.level = b.level; render(); window.scrollTo(0, 0); }
+
+/* ---------- take a copy with you ----------
+   Built from what is on this device, which after a sync is the same as what is in the account.
+   No server call, so it works offline and cannot fail halfway. */
+function exportMyData() {
+  try {
+    var out = {
+      exportedAt: new Date().toISOString(),
+      app: "DrugBug",
+      note: "Your DrugBug data. Progress, scores and settings as stored on this device and in your account.",
+      account: null,
+      progress: Prog.d,
+      settings: (typeof SET === "function" ? SET() : null),
+      scores: (typeof Scores !== "undefined" && Scores.items) || [],
+      device: {}
+    };
+    try {
+      var st = typeof ACCT !== "undefined" && ACCT.api && ACCT.api.state ? ACCT.api.state() : null;
+      if (st) out.account = { signedIn: !!st.signedIn, provider: st.provider || "", email: st.email || "", accountId: st.uid || (typeof Prog !== "undefined" ? Prog.uid : "") || "" };
+    } catch (e) {}
+    /* anything else DrugBug put in this browser, minus the agency protocol code, which is a
+       decryption key and does not belong in a file people email around */
+    try {
+      Object.keys(localStorage).forEach(function (k) {
+        if (k.indexOf("drugbug:") !== 0) return;
+        var short = k.slice(8);
+        if (short === "protocol" || short === "fmUnlock" || short === "agree") return;
+        try { out.device[short] = JSON.parse(localStorage.getItem(k)); } catch (e2) { out.device[short] = localStorage.getItem(k); }
+      });
+    } catch (e) {}
+    var blob = new Blob([JSON.stringify(out, null, 2)], { type: "application/json" });
+    var url = URL.createObjectURL(blob), a = document.createElement("a");
+    a.href = url;
+    a.download = "drugbug-my-data-" + new Date().toISOString().slice(0, 10) + ".json";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function () { try { URL.revokeObjectURL(url); } catch (e) {} }, 4000);
+    S.expMsg = "Downloaded. Your agency protocol code is left out on purpose: it is a decryption key.";
+  } catch (e) { S.expMsg = "That did not work. Email " + CONTACT + " and we will send it to you."; }
+  render();
+}
 
 /* delete my data */
 /* deletes every cloud record DrugBug keeps for this account; cb(allOk, hadDb) */
@@ -5262,6 +5310,7 @@ function legalClick(t, a) {
     case "gateok": acceptGate(); return true;
     case "discok": acceptDisc(); return true;
     case "legalback": legalBack(); return true;
+    case "dataexport": exportMyData(); return true;
     case "delask": S.delState = "ask"; render(); return true;
     case "delno": S.delState = null; render(); return true;
     case "delyes": deleteMyData(); return true;
@@ -7668,6 +7717,40 @@ var ACC_LOCAL = ["progress", "nrscores", "lastLevel", "nunit", "protocol", "revi
 function accClearLocal() { try { ACC_LOCAL.forEach(function (k) { localStorage.removeItem("drugbug:" + k); }); Object.keys(localStorage).forEach(function (k) { if (k.indexOf("drugbug:scen:") === 0) localStorage.removeItem(k); }); } catch (e) {} }
 function accDone(text) { ACCT.busy = false; ACCT.msg = text || ""; try { sessionStorage.setItem("drugbug:accmsg", ACCT.msg); } catch (e) {} setTimeout(function () { location.reload(); }, 300); }
 function accFail(e) { ACCT.busy = false; ACCT.msg = ACCT.api ? ACCT.api.error(e) : "Something went wrong."; render(); }
+/* ===== The quiet offer (owner, Nov 1 2026) =====
+   Accounts are optional and the app never asks on arrival: someone looking up a drug mid-shift should
+   get the drug, not a sign-up wall. But optional should not mean invisible. Without an account the
+   website keeps progress in this browser only, so a person can study for months and lose the lot when
+   they clear site data or pick up their phone, having never been told an account existed.
+
+   So: say nothing until they have actually built something worth keeping, then say it once, quietly,
+   where they are already looking at what they have built. Dismissed is dismissed, for good. */
+var ACC_NUDGE_STICKS = 50, ACC_NUDGE_STREAK = 3, ACC_NUDGE_LEARN = 25;
+function accInvested() {
+  try {
+    if (typeof sticks === "function" && sticks() >= ACC_NUDGE_STICKS) return true;
+    if ((Prog.d.streak || 0) >= ACC_NUDGE_STREAK) return true;
+    if (typeof learnTotal === "function" && learnTotal() >= ACC_NUDGE_LEARN) return true;
+  } catch (e) {}
+  return false;
+}
+function accNudgeOk() {
+  if (!ACCT.api) return false;                        /* no backend on this build */
+  if (NATIVE) return false;                           /* the phone app has its own onboarding */
+  var s = ACCT.api.state() || {}; if (s.signedIn) return false;
+  if (store("accnudge")) return false;                /* they said no once; that is the answer */
+  return accInvested();
+}
+/* One line, where they are already looking at what they have earned. */
+function accNudge() {
+  if (!accNudgeOk()) return "";
+  return '<div class="accnudge"><span class="annx" aria-hidden="true">' +
+    '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11V8a7 7 0 0 1 14 0v3"/><rect x="4" y="11" width="16" height="10" rx="2.5"/></svg></span>' +
+    '<span class="antx"><strong>This is all saved in this browser only.</strong> Make a free account and it follows you to your phone, and survives clearing your history.</span>' +
+    '<span class="anact"><button class="btn small" data-acc="nudgego">Make an account</button>' +
+    '<button class="linkish small" data-acc="nudgeno">Not now</button></span></div>';
+}
+
 function accAppleMark() { return '<svg class="accmark" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M16.4 12.7c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.2-2.8.8-3.6.8-.7 0-1.9-.8-3.1-.8-1.6 0-3.1.9-3.9 2.4-1.7 2.9-.4 7.2 1.2 9.5.8 1.2 1.8 2.5 3 2.4 1.2 0 1.6-.8 3.1-.8s1.9.8 3.1.7c1.3 0 2.1-1.2 2.9-2.3.9-1.3 1.3-2.6 1.3-2.7 0 0-2.5-1-2.6-3.9zM14.1 5.9c.7-.8 1.1-2 1-3.1-1 0-2.2.7-2.9 1.5-.6.7-1.2 1.9-1 3 1.1.1 2.2-.6 2.9-1.4z"/></svg> '; }
 function accGoogleMark() { return '<svg class="accmark" viewBox="0 0 48 48" width="15" height="15" aria-hidden="true"><path fill="#4285F4" d="M45.1 24.5c0-1.6-.1-2.7-.4-4H24v7.3h12.1c-.2 1.8-1.6 4.6-4.5 6.5l-.1.3 6.5 5 .5.1c4.1-3.8 6.6-9.5 6.6-15.2z"/><path fill="#34A853" d="M24 46c5.9 0 10.9-2 14.5-5.3l-6.9-5.4c-1.8 1.3-4.3 2.2-7.6 2.2-5.8 0-10.7-3.8-12.5-9.1l-.3028.1L4 33.7l-.1.2C7.5 41.1 15.1 46 24 46z"/><path fill="#FBBC05" d="M11.5 28.4c-.5-1.4-.7-2.9-.7-4.4s.3-3 .7-4.4v-.3L4.6 14l-.2.1C2.9 17 2 20.4 2 24s.9 7 2.4 9.9l7.1-5.5z"/><path fill="#EB4335" d="M24 10.5c4.1 0 6.9 1.8 8.5 3.3l6.2-6C34.9 4.4 29.9 2 24 2 15.1 2 7.5 6.9 4.4 14.1l7.1 5.5C13.3 14.3 18.2 10.5 24 10.5z"/></svg> '; }
 function accCard() {
@@ -7707,6 +7790,8 @@ document.addEventListener("click", function (e) {
   var a = t.getAttribute("data-acc");
   if (t.getAttribute("data-accgo")) { ACCT.go = t.getAttribute("data-accgo"); return; } /* handled by submit */
   ACCT.msg = "";
+  if (a === "nudgeno") { store("accnudge", 1); return render(); }
+  if (a === "nudgego") { S.view = "settings"; S.setTab = "privacy"; render(); window.scrollTo(0, 0); var el = document.getElementById("set-privacy"); if (el) el.scrollIntoView({ block: "start" }); return; }
   if (a === "mode") { ACCT.mode = t.getAttribute("data-m") || ""; return render(); }
   if (a === "google") { ACCT.busy = true; render(); return ACCT.api.signInGoogle().then(function (r) { accDone(r.switched ? "Signed in. This device's progress was merged into your account." : "Account created. Your progress is now backed up."); }, function (er) { var mm = ACCT.api.error(er); if (!mm) { ACCT.busy = false; return render(); } accFail(er); }); }
   if (a === "apple") { ACCT.busy = true; render(); return ACCT.api.signInApple().then(function (r) { accDone(r.switched ? "Signed in. This phone's progress was merged into your account." : "Account created. Your progress is now backed up."); }, function (er) { if (/cancel/i.test(er && er.message || "")) { ACCT.busy = false; return render(); } accFail(er); }); }

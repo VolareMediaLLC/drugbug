@@ -1,4 +1,5 @@
 /* DrugBug settings for the website build (dist/ and drugbug.app).
+   The live site is drugbugapp.com (the CNAME in the repo), not drugbug.app.
    The iPhone build has its own copy at tools/ios/app-config.js; keep the Firebase block identical
    between them, because the two apps have to share one account and one database.
 
@@ -6,7 +7,7 @@
    anything: what actually protects the data is the Firestore security rules (tools/firestore.rules).
    Firebase project: DrugBug (drugbug-69d42), owned by volaremediallc@gmail.com. */
 window.DRUGBUG_CONFIG = Object.assign({
-  site: "https://drugbug.app",
+  site: "https://drugbugapp.com",
   supportEmail: "VolareMediaLLC@gmail.com",
   firebase: {
     apiKey: "AIzaSyC7cNkPSpPqfHPLNSY54u8QSL1jnaYsVMM",
