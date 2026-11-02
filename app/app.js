@@ -474,7 +474,9 @@ var ICO = {
   scenarios: '<path d="M4 6h16v11H8l-4 4z"/><path d="M8 10h8M8 13h5"/>',
   games: '<rect x="2" y="7" width="20" height="11" rx="5"/><path d="M7 11v3M5.5 12.5h3"/><circle cx="15.5" cy="11.5" r="1"/><circle cx="18" cy="14" r="1"/>',
   cards: '<rect x="3" y="7" width="13" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-3"/>',
-  mylist: '<path d="M6 3h12v18l-6-4-6 4z"/><path d="M9.5 9.5l2 2 3.5-3.5"/>',
+  mylist: '<path d="M6 3h12v18l-6-4-6 4z"/><path d="M9.5 9.5l2 2 3.5-3.5"/>', /* Medication Disease Identifier: a med list under a magnifier. It was the one hub tile with no
+     icon at all, so icon() rendered an empty <svg> and the tile had a blank gap. (owner, Nov 3 2026) */
+  medlist: '<path d="M5 3h10l4 4v5"/><path d="M15 3v4h4"/><path d="M8 9h5M8 12.5h4"/><circle cx="15.5" cy="16.5" r="3.5"/><path d="M18.2 19.2L21 22"/>',
   progress: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
   contrast: '<circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 0 0 16z" fill="currentColor"/>',
   families: '<circle cx="7" cy="7" r="3"/><circle cx="17" cy="7" r="3"/><circle cx="12" cy="17" r="3"/><path d="M9.5 8.5l1.5 6M14.5 8.5l-1.5 6M10 7h4"/>',
@@ -673,10 +675,59 @@ function registry() {
 /* Long lists: the first TILE_FIRST tiles render at once, the rest are added in small batches right after,
    so opening a list of 1,300+ drugs stays quick. TILE_LISTS keeps the full order for Previous/Next. */
 var TILE_FIRST = 120, TILE_TOK = 0, TILE_LISTS = {};
+/* Locked drugs are not mixed in with the ones you can actually open (owner, Nov 3 2026).
+   On Free the great majority of a 1,300-drug list is locked, and scattering those through the grid
+   means scrolling past medicine you cannot read to find the handful you can. So the list splits:
+   everything you have first, then one row that opens the rest, clearly marked as locked.
+
+   The locked tiles are not built until that row is opened. On Free that is most of the list, so not
+   rendering them is also the single biggest thing keeping these screens quick. */
 function tiles(ids) {
   if (!ids.length) return '<div class="empty">No drugs match. Clear a filter or try another search.</div>';
+  if (typeof PAYWALL !== "undefined" && PAYWALL && typeof drugLocked === "function") {
+    var free = [], lock = [];
+    for (var i = 0; i < ids.length; i++) (drugLocked(ids[i]) ? lock : free).push(ids[i]);
+    if (lock.length) {
+      var ltok = ++TILE_TOK;
+      TILE_LISTS[ltok] = ids.slice();          /* Previous/Next still walks the whole list */
+      LOCK_LISTS[ltok] = lock; tilePrune();
+      return (free.length ? tilesCore(free) : '<div class="empty">None of these are in your plan yet.</div>') +
+        '<details class="lockwrap" data-locktok="' + ltok + '"><summary><span class="lkn">' + lock.length.toLocaleString() +
+        ' more medication' + (lock.length === 1 ? '' : 's') + '</span><span class="lksub">In ' +
+        TIER_NAME[drugTier(lock[0])] + ' and above · tap to look</span></summary><div class="grid lockgrid"></div></details>';
+    }
+  }
+  return tilesCore(ids);
+}
+var LOCK_LISTS = {};
+/* TILE_LISTS used to be emptied on every long render. It is not any more, because one render can
+   record two entries (the free list and the locked one), so instead drop anything more than a few
+   renders old - enough for Previous/Next on what is still on screen, without growing forever. */
+function tilePrune() {
+  Object.keys(TILE_LISTS).forEach(function (k) { if (TILE_TOK - k > 4) delete TILE_LISTS[k]; });
+  Object.keys(LOCK_LISTS).forEach(function (k) { if (TILE_TOK - k > 4) delete LOCK_LISTS[k]; });
+}
+/* Fill a locked section the first time it is opened, in the same batches as a long free list. */
+document.addEventListener("toggle", function (e) {
+  var d = e.target;
+  if (!d || !d.classList || !d.classList.contains("lockwrap") || !d.open) return;
+  var g = d.querySelector(".lockgrid"); if (!g || g.getAttribute("data-filled")) return;
+  g.setAttribute("data-filled", "1");
+  var rest = (LOCK_LISTS[d.getAttribute("data-locktok")] || []).slice();
+  (function step() {
+    var box = document.createElement("div");
+    box.innerHTML = tilesHTML(rest.splice(0, 200));
+    if (typeof translateDom === "function" && lang() === "es") translateDom(box);
+    while (box.firstChild) g.appendChild(box.firstChild);
+    if (rest.length) setTimeout(step, 16);
+  })();
+}, true);
+function tilesCore(ids) {
+  if (!ids.length) return '<div class="empty">No drugs match. Clear a filter or try another search.</div>';
   if (ids.length <= TILE_FIRST + 40) return tilesHTML(ids);
-  var tok = ++TILE_TOK, rest = ids.slice(TILE_FIRST); TILE_LISTS = {}; TILE_LISTS[tok] = ids.slice();
+  /* was TILE_LISTS = {} here, which wiped the entry tiles() had just recorded for the locked
+     section of this same render and broke Previous/Next inside it */
+  var tok = ++TILE_TOK, rest = ids.slice(TILE_FIRST); TILE_LISTS[tok] = ids.slice(); tilePrune();
   setTimeout(function step() {
     var m = document.querySelector('.tilemore[data-tok="' + tok + '"]'); if (!m) return;
     var box = document.createElement("div"); box.innerHTML = tilesHTML(rest.splice(0, 200)); if (typeof translateDom === "function" && lang() === "es") translateDom(box);
