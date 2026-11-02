@@ -1904,7 +1904,8 @@ body:has(#app > .gate){padding-inline:12px;padding-block:0;margin:0}#app:has(> .
   .terrtiles{grid-template-columns:1fr 1fr}
   .pickbug{width:108px}.pickbug .bug{width:80px;height:80px}
 }
-.tbsticks{margin-left:auto;display:inline-flex;align-items:center;gap:5px;font:800 17px var(--f-body);color:var(--ink);padding:0 2px 0 8px;white-space:nowrap}
+.tbsticks{margin-left:auto;display:inline-flex;align-items:center;gap:5px;font:800 17px var(--f-body);color:var(--ink);padding:3px 8px 3px 8px;white-space:nowrap;background:none;border:1px solid transparent;border-radius:11px;cursor:pointer;transition:background .14s,border-color .14s}
+.tbsticks:hover,.tbsticks:focus-visible{background:var(--surface-2);border-color:var(--line)}
 .stickchip{padding-right:14px}
 @media (max-width:640px){.tbacts{-webkit-mask-image:none!important;mask-image:none!important}}
 .stampwrap{display:inline-flex;align-items:center;vertical-align:middle;white-space:nowrap}

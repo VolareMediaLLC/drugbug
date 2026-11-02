@@ -359,7 +359,7 @@ function topbar() {
   if (S.view === "terrarium") c += '<span>/</span><span>Terrarium</span>';
   if (S.view === "everyday") c += '<span>/</span>' + (S.evTab ? '<button data-evtab="">Everyday Health</button>' : '<span>Everyday Health</span>');
   var extra = (!SOCIAL ? '' : '<button class="theme-btn" data-go="classes"' + (S.view === "classes" ? ' aria-current="page"' : '') + '>Classes</button>') + (Admin.can ? '<button class="theme-btn admin-btn" data-go="admin"' + (S.view === "admin" ? ' aria-current="page"' : '') + '><span class="lg">Control Center</span><span class="sm">Control Center</span></button>' : '') + '<button class="theme-btn easy-btn" data-act="easy"' + (S.view === "easy" ? ' aria-current="page"' : '') + '>Easy Learn</button><button class="theme-btn mob-only" data-act="openproto">Protocols</button>';
-  c += '</nav><span class="spacer"></span><div class="tbacts">' + stickChip() + '<span class="tbx">' + extra + '</span><button class="theme-btn srch-btn" data-act="gsearch" aria-label="Search all drugs" title="Search all drugs"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button><button class="theme-btn menu-btn" data-act="tbmenu" aria-expanded="' + !!S.menu + '" aria-label="More">More</button>' + musicBtn() + gearBtn() + (typeof funOn === "function" && !funOn() ? '' : '<span class="tbsticks" aria-label="' + sticks() + ' sticks">' + stickIcon(18) + '<strong>' + sticks().toLocaleString() + '</strong></span>') + '</div>' + (S.menu ? '<div class="tbmenu" role="menu">' + extra + '<button class="theme-btn" data-idea="1">Send an idea</button></div>' : '') + '</div>';
+  c += '</nav><span class="spacer"></span><div class="tbacts">' + stickChip() + '<span class="tbx">' + extra + '</span><button class="theme-btn srch-btn" data-act="gsearch" aria-label="Search all drugs" title="Search all drugs"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button><button class="theme-btn menu-btn" data-act="tbmenu" aria-expanded="' + !!S.menu + '" aria-label="More">More</button>' + musicBtn() + gearBtn() + (typeof funOn === "function" && !funOn() ? '' : '<button class="tbsticks" data-goshop="1" data-shopf="sticks" aria-label="' + sticks() + ' sticks. Get more sticks" title="Get Sticks">' + stickIcon(18) + '<strong>' + sticks().toLocaleString() + '</strong></button>') + '</div>' + (S.menu ? '<div class="tbmenu" role="menu">' + extra + '<button class="theme-btn" data-idea="1">Send an idea</button></div>' : '') + '</div>';
   return c + (typeof muPop === "function" ? muPop() : "") + backRow();
 }
 function backRow() {
@@ -24956,8 +24956,8 @@ function wzPlanStep() {
     c += '<p class="wzsub">Medications explained plainly, for the people who give them. Pick a path, study, grow a bug.</p>' +
       '<div class="wzfree"><span class="wzfreetag">Free</span><strong>Everything, at no cost</strong>' +
       '<span class="wzpl"><em>Every medication on every route</em><em>Flashcards, questions and practice tests</em><em>The 5-minute daily and your streak</em><em>Sticks, bugs and the Terrarium</em></span>' +
-      '<span class="muted small">Sticks are earned by studying. You can buy more if you would rather not wait, and nothing is locked behind them.</span></div>' +
-      '<div class="actions"><button class="btn big" data-wz="next" data-plan="free">Start free</button></div>' + wzFlashNote();
+      '</div>' +
+      '<div class="actions"><button class="btn big" data-wz="next" data-plan="free">Start free</button></div>';
     return c;
   }
   var freeWeek = typeof trialEligible === "function" && trialEligible();
@@ -24967,16 +24967,6 @@ function wzPlanStep() {
     wzPlanCard("pro", TIER_NAME.pro.replace("DrugBug ", ""), PLANS.pro.m + "/mo", freeWeek ? "1 week free, then " + PLANS.pro.m + " a month" : PLANS.pro.y + " a year", ["Everything in Plus", "Practice tests, scenarios and Megacode", "Brain games and the study tools"], "best") +
     '</div><p class="muted small">' + (freeWeek ? "The free week is run by the App Store and renews into Pro unless you cancel first. " : "") + 'Payment is charged to your Apple Account. Manage or cancel in Settings, your name, Subscriptions.</p>';
   return c;
-}
-/* Photosensitivity notice, shown once on the way in (owner, Nov 1 2026). The flashes in the level
-   animations are single or below three a second, which is the published limit, but someone with
-   photosensitive epilepsy should be told before they meet one rather than after. */
-function wzFlashNote() {
-  if (typeof SET === "function" && SET().motion) return "";
-  return '<div class="wzflash"><span class="wzfi" aria-hidden="true">' +
-    '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/></svg></span>' +
-    '<span class="wzft"><strong>A note on flashing.</strong> Short animations play between sections and a few of them flash, like an ambulance light bar or a cardioversion. They are kept below three flashes a second, the published limit for photosensitive seizures. If you have photosensitive epilepsy you can switch every animation off now, or later in Settings.</span>' +
-    '<button class="btn small ghost" data-wz="nomotion">Turn animations off</button></div>';
 }
 function wzAcctStep() {
   var hasApple = ACCT.api && typeof ACCT.api.hasApple === "function" ? ACCT.api.hasApple() : NATIVE;
