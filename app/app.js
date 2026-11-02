@@ -2404,7 +2404,9 @@ function finishSession() {
   setTimeout(toastAch, 300);
   if (typeof rateMaybe === "function" && ss.kind !== "class" && ss.kind !== "assign") rateMaybe(sc);
 }
-function endSession() { var back = S.prevTab || "hub"; S.sess = null; S.tab = back; S.nr = S.prepNr || null; S.prepNr = null; S.scen = null; render(); window.scrollTo(0, 0); }
+function endSession() { var back = S.prevTab || "hub"; S.sess = null; S.tab = back; S.nr = S.prepNr || null; S.prepNr = null; S.scen = null; render(); window.scrollTo(0, 0);
+  /* the plans sheet, once, after the sticks have actually been earned (modules/welcome.js) */
+  if (typeof planMaybe === "function") setTimeout(planMaybe, 500); }
 
 var STEPNAME = { learn: "Learn", quiz: "Questions", weak: "Weak areas", scen: "Clinical application", review: "Review", done: "Mastery" };
 function sessionView() {
@@ -6418,7 +6420,7 @@ function muStart(force) {
     clearInterval(MU.timer);
     MU.master.gain.cancelScheduledValues(c.currentTime); MU.master.gain.setValueAtTime(0.0001, c.currentTime); MU.master.gain.linearRampToValueAtTime(muVol(), c.currentTime + 0.4);
     MU.nextT = c.currentTime + 0.1; MU.playing = true;
-    MU.timer = setInterval(muTick, 40); muTick();
+    MU.timer = setInterval(muTick, 250); muTick();
   } catch (e) { MU.playing = false; clearInterval(MU.timer); MU.timer = null; }
 }
 function muStop() { clearInterval(MU.timer); MU.timer = null; MU.playing = false; try { if (MU.ctx && MU.ctx.state === "running") MU.ctx.suspend(); } catch (e) {} }
@@ -7719,6 +7721,7 @@ function accInit() {
   if (!window.claude || typeof window.claude.use !== "function") return;
   window.claude.use("account").then(function (a) {
     if (!a) return; ACCT.api = a; ACCT.st = a.state();
+    render();   /* the first-run account step waits on this (modules/welcome.js) */
     a.onChange(function (s) { ACCT.st = s; if (S.view === "settings") render(); });
     if (S.view === "settings") render();
   }).catch(function () {});
@@ -24804,8 +24807,8 @@ function voiceBlip(c, kind, t, syl, i, n) {
 /* ---------- the shop section ---------- */
 function voicesView() {
   var bal = sticks(), cur = myVoice();
-  var c = '<p class="muted">Your bug does not speak English. It makes its own noise, a blip a syllable, so the same line sounds the same way twice. Buy a voice with sticks, then tap Use. Hickory keeps his own drawl: he is not for hire.</p>';
-  c += '<p class="vxhick"><button class="btn small ghost" data-voicepv="hick">Hear Hickory</button> <span class="muted small">Country bug gibberish, as standard.</span></p>';
+  /* The explanation is gone (owner, Nov 2 2026): you can hear what a voice is by tapping one. */
+  var c = '<p class="vxhick"><button class="btn small ghost" data-voicepv="hick">Hear Hickory</button></p>';
   var TIERS = [["starter", "Free"], ["common", "Common"], ["rare", "Rare"], ["epic", "Epic"], ["legendary", "Legendary"]];
   TIERS.forEach(function (tr) {
     var L = VOICES.filter(function (v) { return v.rar === tr[0]; });
@@ -25027,76 +25030,41 @@ function walletClear() {
   try { store("wallet", null); } catch (e) {}
 }
 
-/* ---------- First run: pick a plan, then make an account (owner, Nov 1 2026) ----------
-   Replaces the quiet in-app nudge that nobody found. The order is the one people expect from an app:
-   see what it costs, then create the account that holds it.
+/* ---------- First run, and the plans prompt (owner, Nov 2 2026) ----------
+   The order the owner asked for: agree to everything, make an account straight away, then the quick
+   tour. Plans are NOT part of arriving any more. A pricing table is a terrible first impression for
+   someone who has not seen a single drug page yet, and it was the blandest screen in the app.
 
-   Two screens, both before the path picker:
-     1. Plan.   With the paywall off (today) this is one card: DrugBug is free, start free.
-                With it on it is Free / Plus / Pro, and Pro's App Store free week if the store says
-                this Apple Account is still eligible. A paid pick creates the account first and opens
-                the App Store sheet after, which is the only order that works: the subscription has to
-                land on an account that exists.
-     2. Account. The point of the whole flow. One tap with Google (web) or Apple (phone), or email.
-                "Maybe later" is there, small, because someone who opened drugbugapp.com mid-shift to
-                check a dose should still get the dose.
+   So plans moved to the moment they have actually earned something: PLAN_AT sticks. By then the
+   person knows what a stick is, has answered questions to get them, and the pitch can be about what
+   they have been doing rather than about money. Shown once, dismissable, never nagged again. */
 
-   Marked done the moment they act, in either direction, so nobody sees it twice. Signing in reloads
-   the page (accDone), so the flag is written before the sign-in call, not after it. */
+var WZ = { step: "acct", plan: "" };
+var PLAN_AT = 30;                       /* sticks earned before the plans sheet appears */
 
-var WZ = { step: "plan", plan: "" };
 function welcomeDone() { return !!store("welcome"); }
-function welcomeFinish(flag) { store("welcome", 1); if (flag) store("accnudge", 1); WZ.step = "plan"; render(); window.scrollTo(0, 0); }
+function welcomeFinish(flag) { store("welcome", 1); if (flag) store("accnudge", 1); render(); window.scrollTo(0, 0); }
 function needWelcome() {
   if (!agreeRec() || welcomeDone()) return false;
   if (S.view === "legal") return false;
   if (typeof needDisc === "function" && needDisc()) return false;
+  if (!wzCanAccount()) return false;   /* backend not ready yet, absent, or already signed in */
   return true;
 }
-/* The account step is worth showing only when there is a backend to make an account on and they are
-   not already signed in. Without one, picking a plan ends the flow. */
 function wzCanAccount() {
-  if (!ACCT || !ACCT.api) return false;
+  if (typeof ACCT === "undefined" || !ACCT || !ACCT.api) return false;
   var s = ACCT.api.state() || {};
   return !s.signedIn;
 }
 
-function wzPlanCard(id, name, price, note, lines, cls) {
-  return '<button class="wzplan ' + (cls || "") + '" data-wz="plan" data-plan="' + id + '">' +
-    '<span class="wzpn">' + esc(name) + '</span><span class="wzpp">' + esc(price) + '</span>' +
-    (note ? '<span class="wzpnote">' + esc(note) + '</span>' : '') +
-    '<span class="wzpl">' + lines.map(function (x) { return '<em>' + esc(x) + '</em>'; }).join("") + '</span></button>';
-}
-function wzPlanStep() {
-  var c = '<div class="wzart">' + (typeof bugArt === "function" && typeof bugById === "function" ? bugArt(bugById("grub-medic"), "wzbug", { mood: "happy" }) : (typeof bugSVG === "function" ? bugSVG("sage") : "")) + '</div>';
-  c += '<h1>Welcome to DrugBug</h1>';
-  if (!PAYWALL) {
-    c += '<p class="wzsub">Medications explained plainly, for the people who give them. Pick a path, study, grow a bug.</p>' +
-      '<div class="wzfree"><span class="wzfreetag">Free</span><strong>Everything, at no cost</strong>' +
-      '<span class="wzpl"><em>Every medication on every route</em><em>Flashcards, questions and practice tests</em><em>The 5-minute daily and your streak</em><em>Sticks, bugs and the Terrarium</em></span>' +
-      '</div>' +
-      '<div class="actions"><button class="btn big" data-wz="next" data-plan="free">Start free</button></div>';
-    return c;
-  }
-  var freeWeek = NATIVE && typeof trialEligible === "function" && trialEligible();
-  c += '<p class="wzsub">Start free. ' + (NATIVE ? 'Move up whenever you want, and cancel in your Apple Account settings at any time.' : 'Plus and Pro are opening soon; tell us which one you want and we will let you know.') + '</p><div class="wzplans">' +
-    wzPlanCard("free", "Free", "$0", "", ["About 40 common medications", "The 5-minute daily and your streak", "Small Sickness Guide and normal vitals"], "") +
-    wzPlanCard("plus", TIER_NAME.plus.replace("DrugBug ", ""), PLANS.plus.m + "/mo", PLANS.plus.y + " a year", ["Every medication on every route", "My List, interactions and drug families", "Lab values, blood products, flight prep"], "") +
-    wzPlanCard("pro", TIER_NAME.pro.replace("DrugBug ", ""), PLANS.pro.m + "/mo", freeWeek ? "1 week free, then " + PLANS.pro.m + " a month" : PLANS.pro.y + " a year", ["Everything in Plus", "Practice tests, scenarios and Megacode", "Brain games and the study tools"], "best") +
-    '</div><p class="muted small">' + (NATIVE
-      ? (freeWeek ? "The free week is run by the App Store and renews into Pro unless you cancel first. " : "") + 'Payment is charged to your Apple Account. Manage or cancel in Settings, your name, Subscriptions.'
-      : 'Everything is unlocked on the website while the paid plans are being built. Nothing is charged today.') + '</p>';
-  return c;
-}
 function wzAcctStep() {
   var hasApple = ACCT.api && typeof ACCT.api.hasApple === "function" ? ACCT.api.hasApple() : NATIVE;
   var one = hasApple
     ? '<button class="btn big" data-acc="apple"' + (ACCT.busy ? " disabled" : "") + '>' + accAppleMark() + 'Continue with Apple</button>'
     : (ACCT.api && typeof ACCT.api.signInGoogle === "function" ? '<button class="btn big" data-acc="google"' + (ACCT.busy ? " disabled" : "") + '>' + accGoogleMark() + 'Continue with Google</button>' : '');
-  var c = '<div class="wzart wzlock"><svg viewBox="0 0 24 24" width="46" height="46" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11V8a7 7 0 0 1 14 0v3"/><rect x="4" y="11" width="16" height="10" rx="2.5"/></svg></div>' +
-    '<h1>Make your account</h1>' +
-    (WZ.plan && WZ.plan !== "free" ? '<p class="presult good">' + esc(TIER_NAME[WZ.plan] + " noted. It is not open yet, so you are on Free for now, with everything unlocked on the website.") + '</p>' : '') +
-    '<p class="wzsub">Without one, everything you study is kept in this browser only: it does not follow you to your phone, and clearing your history clears it. An account takes one tap and is free.</p>';
+  var c = '<div class="wzart">' + (typeof bugArt === "function" && typeof bugById === "function" ? bugArt(bugById("grub-medic"), "wzbug", { mood: "happy" }) : "") + '</div>' +
+    '<h1>Let’s get you a bug</h1>' +
+    '<p class="wzsub">Make an account and your bug, your sticks and everything you learn follow you to your phone. Skip it and they live in this browser only, until you clear your history.</p>';
   if (ACCT.msg) c += '<p class="presult" role="status">' + esc(ACCT.msg) + '</p>';
   c += '<div class="wzacct"><div class="actions">' + one +
     '<button class="btn ghost" data-acc="mode" data-m="' + (ACCT.mode === "email" ? "" : "email") + '">' + (ACCT.mode === "email" ? "Hide email sign-up" : "Use email instead") + '</button></div>';
@@ -25105,44 +25073,64 @@ function wzAcctStep() {
       '<label>Password (8+ characters)<input class="pinput" id="accpw" type="password" autocomplete="new-password" minlength="8" required></label>' +
       '<div class="actions"><button class="btn" type="submit" data-accgo="create">Create account</button><button class="btn ghost" type="submit" data-accgo="signin">I already have one</button></div></form>';
   }
-  c += '</div><p class="muted small">We never show your email or your account to anyone else. You can delete your account, and everything in it, from Settings.</p>' +
+  c += '</div><p class="muted small">Your email is never shown to anyone else, and you can delete the account and everything in it from Settings.</p>' +
     '<div class="wzlater"><button class="linkish" data-wz="later">Maybe later</button></div>';
   return c;
 }
-function welcomeView() {
-  var step = WZ.step === "acct" && wzCanAccount() ? "acct" : "plan";
-  return '<div class="gate wz wz-' + step + '">' + (step === "acct" ? wzAcctStep() : wzPlanStep()) + '</div>';
-}
+function welcomeView() { return '<div class="gate wz wz-acct">' + wzAcctStep() + '</div>'; }
 
 document.addEventListener("click", function (e) {
-  /* any account button pressed inside the welcome flow ends the flow: the sign-in reloads the page,
-     so the flag has to be written before the call, not after it */
+  /* any account button pressed in the welcome flow ends the flow: the sign-in reloads the page, so
+     the flag has to be written before the call, not after it */
   var ab = e.target.closest && e.target.closest(".wzacct [data-acc],.wzacct [data-accgo]");
   if (ab && ab.getAttribute("data-acc") !== "mode") store("welcome", 1);
-
   var b = e.target.closest && e.target.closest("[data-wz]"); if (!b) return;
-  var w = b.getAttribute("data-wz");
-  if (w === "nomotion") { if (typeof setSet === "function") setSet("motion", true); render(); return; }
-  if (w === "later") return welcomeFinish(0);
-  if (w === "plan" || w === "next") {
-    WZ.plan = b.getAttribute("data-plan") || "free";
-    if (WZ.plan !== "free") { Prog.d.wantPlan = WZ.plan; saveProg(); try { sessionStorage.setItem("drugbug:wzplan", WZ.plan); } catch (x) {} }
-    if (!wzCanAccount()) { welcomeFinish(1); return wzPending(); }
-    WZ.step = "acct"; render(); window.scrollTo(0, 0); return;
-  }
+  if (b.getAttribute("data-wz") === "later") return welcomeFinish(0);
 }, true);
 document.addEventListener("submit", function (e) {
   var f = e.target; if (f && f.closest && f.closest(".wzacct")) store("welcome", 1);
 }, true);
-/* A paid pick needs an account first, and creating one reloads the page, so the choice rides in
-   sessionStorage and the App Store sheet opens on the way back. */
-function wzPending() {
-  var p = ""; try { p = sessionStorage.getItem("drugbug:wzplan") || ""; sessionStorage.removeItem("drugbug:wzplan"); } catch (x) {}
-  if (!p || p === "free") return;
-  if (NATIVE && typeof openPaywall === "function" && PAYWALL) return setTimeout(function () { openPaywall("", p); }, 600);
-  S.proMsg = TIER_NAME[p] + " is not open yet. You are on Free, with everything unlocked on the website, and we will tell you when it opens.";
-  if (typeof render === "function") render();
+
+/* ---------- The plans sheet, at PLAN_AT sticks ---------- */
+var plandlg = document.createElement("div"); plandlg.id = "plandlg"; plandlg.className = "sheet rsheet"; plandlg.hidden = true; document.body.appendChild(plandlg);
+
+function planSeen() { return !!store("planSeen"); }
+function planMaybe() {
+  if (planSeen() || !PAYWALL) return;
+  if (!agreeRec() || needRole() || (typeof needDisc === "function" && needDisc()) || needWelcome()) return;
+  if ((Prog.d.earned || 0) < PLAN_AT) return;
+  if (S.sess || S.nr) return;                     /* never interrupt a session mid-question */
+  store("planSeen", 1);
+  planOpen();
 }
+function planOpen() {
+  var freeWeek = NATIVE && typeof trialEligible === "function" && trialEligible();
+  var n = (Prog.d.earned || 0).toLocaleString();
+  var card = function (name, price, year, lines, best) {
+    return '<div class="wzplan' + (best ? ' best' : '') + '"><span class="wzpn">' + esc(name) + '</span><span class="wzpp">' + esc(price) + '</span>' +
+      (year ? '<span class="wzpnote">' + esc(year) + '</span>' : '') +
+      '<span class="wzpl">' + lines.map(function (x) { return '<em>' + esc(x) + '</em>'; }).join("") + '</span></div>';
+  };
+  plandlg.innerHTML = '<div class="panel planpanel" role="dialog" aria-modal="true" aria-label="DrugBug plans" tabindex="-1">' +
+    '<div class="planart">' + (typeof myBugArt === "function" ? myBugArt("planbug") : "") + '</div>' +
+    '<h2>' + n + ' sticks. Look at you.</h2>' +
+    '<p class="muted">That is ' + n + ' sticks you did not have an hour ago, and every one of them came from answering something. Here is what the rest of DrugBug looks like when you want it.</p>' +
+    '<div class="wzplans">' +
+      card("Free", "$0", "", ["About 40 common medications", "The 5-minute daily and your streak", "Small Sickness Guide and vitals"], false) +
+      card("Plus", PLANS.plus.m + "/mo", PLANS.plus.y + " a year", ["Every medication on every route", "My List, interactions, drug families", "Labs, blood products, flight prep"], false) +
+      card("Pro", PLANS.pro.m + "/mo", freeWeek ? "1 week free first" : PLANS.pro.y + " a year", ["Everything in Plus", "Practice tests, scenarios, Megacode", "Brain games and the study tools"], true) +
+    '</div>' +
+    '<p class="muted small">' + (NATIVE ? 'Charged to your Apple Account. Cancel any time in Settings.' : 'Nothing is for sale yet and nothing is locked: the whole app is open on the website while the paid plans are being built. This is a heads-up, not a checkout.') + '</p>' +
+    '<div class="actions"><button class="btn" data-plan-close="1">Back to the bugs</button></div></div>';
+  if (typeof translateDom === "function") translateDom(plandlg);
+  plandlg.hidden = false;
+  var p = plandlg.querySelector(".panel"); if (p) p.focus();
+}
+function planClose() { plandlg.hidden = true; plandlg.innerHTML = ""; }
+document.addEventListener("click", function (e) {
+  if (e.target.closest && e.target.closest("[data-plan-close]")) planClose();
+});
+document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !plandlg.hidden) planClose(); });
 
 
 /* ---------- boot ---------- */
@@ -25162,5 +25150,5 @@ if (!h) {
 render();
 /* Control Center edits baked into the build (tools/bake_edits.py) so the iPhone app has them without a database */
 if (DB.BAKED) { try { (DB.BAKED.drugdex || []).forEach(applyRecord); CR_TYPES.forEach(function (t) { if (t[0] !== "drug") crItems(t[0]); }); (DB.BAKED.content || []).forEach(applyContent); } catch (e) { } }
-Dex.load(); initProg(); if (typeof grubFix === "function") grubFix(); if (agreeRec() && typeof trialBegin === "function") trialBegin(); setTimeout(function () { if (typeof remindSync === "function") remindSync(); if (typeof wdwSync === "function") wdwSync(); if (typeof watchSync === "function") watchSync(); }, 1500); initAdmin(); initLegal(); if (typeof accInit === "function") accInit(); if (typeof walletInit === "function") walletInit(); setTimeout(loadProtocolSets, 400); if (typeof wzPending === "function") setTimeout(wzPending, 900);
+Dex.load(); initProg(); if (typeof grubFix === "function") grubFix(); if (agreeRec() && typeof trialBegin === "function") trialBegin(); setTimeout(function () { if (typeof remindSync === "function") remindSync(); if (typeof wdwSync === "function") wdwSync(); if (typeof watchSync === "function") watchSync(); }, 1500); initAdmin(); initLegal(); if (typeof accInit === "function") accInit(); if (typeof walletInit === "function") walletInit(); setTimeout(loadProtocolSets, 400);
 })();
