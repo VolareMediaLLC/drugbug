@@ -107,11 +107,39 @@ DB.GROUPS = [
 {side:"gen", name:"Over-the-Counter Remedies", list:"acetaminophen,ibuprofen,naproxen,aspirin,dextromethorphan,guaifenesin,cough-drops-menthol,saline-nasal-spray,pseudoephedrine,phenylephrine,oxymetazoline,loratadine,cetirizine,fexofenadine,diphenhydramine,meclizine,dimenhydrinate,famotidine,omeprazole,calcium-carbonate,bismuth-subsalicylate,simethicone,loperamide,docusate,sennosides,bisacodyl,polyethylene-glycol,benzocaine,clotrimazole,miconazole,terbinafine-topical,triple-antibiotic-ointment,docosanol,calamine,hydrocortisone-cream,melatonin,electrolyte-oral-rehydration"},
 ];
 // Monograph loader: one line per template section (17 lines), fields separated by "|".
+//
+// PARSED LAZILY (owner, Nov 3 2026). This runs about 2,000 times while the page is loading, and
+// it used to split and trim every field of every monograph up front - roughly 2,000 drugs x 17
+// sections x a dozen fields - before anybody had looked at a single drug. A profile of a cold load
+// put DB.add and its caller at the top of the list by a wide margin, and those are the long tasks
+// that made the first few seconds feel like treacle.
+//
+// Almost nothing needs `s`. Lists, search, groups and scopes need id, name and tags. `s` is needed
+// only when a drug page is actually opened, which is one drug at a time. So the raw text is kept
+// and split on first read, then cached in place of the getter. A setter is kept because
+// modules/dex.js assigns `d.s` outright when a Firestore document overrides the bundled copy.
+function dbParseS(text) {
+  return text.split("\n").map(function (l) { return l.trim(); }).filter(Boolean)
+    .map(function (l) { return l.split("|").map(function (f) { f = f.trim(); return f === "-" ? "" : f; }); });
+}
+DB.seen = DB.seen || {};
 DB.add = function (id, name, tags, text) {
-  var lines = text.split("\n").map(function (l) { return l.trim(); }).filter(Boolean);
-  DB.drugs[id] = { id: id, name: name, tags: tags.split(/\s+/).filter(Boolean),
-    s: lines.map(function (l) { return l.split("|").map(function (f) { f = f.trim(); return f === "-" ? "" : f; }); }) };
-  if (DB.order.indexOf(id) < 0) DB.order.push(id);
+  var d = { id: id, name: name, tags: tags.split(/\s+/).filter(Boolean) };
+  Object.defineProperty(d, "t_", { value: text, writable: true, enumerable: false, configurable: true });
+  Object.defineProperty(d, "s", {
+    configurable: true, enumerable: true,
+    get: function () {
+      var v = dbParseS(this.t_);
+      Object.defineProperty(this, "s", { value: v, writable: true, enumerable: true, configurable: true });
+      return v;
+    },
+    set: function (v) {
+      Object.defineProperty(this, "s", { value: v, writable: true, enumerable: true, configurable: true });
+    }
+  });
+  DB.drugs[id] = d;
+  /* was DB.order.indexOf(id) - a linear scan per drug, so O(n^2) over two thousand of them */
+  if (!DB.seen[id]) { DB.seen[id] = 1; DB.order.push(id); }
 };
 DB.GROUPS.forEach(function (g) { g.ids = g.list.split(",").map(function (n) { return DB.slug(n.trim()); }); });
 // National Registry-style question loader: level|drug|question|correct|wrong|wrong|wrong|explanation

@@ -1434,6 +1434,13 @@ html[data-motion="reduce"] *,html[data-motion="reduce"] *::before,html[data-moti
   .tabs{-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent);padding-right:28px}
   .easy-btn{font-size:12px}
   .tbacts>*{flex:none}
+  /* The stick count was falling off the end of the bar on phones (owner, Nov 3 2026).
+     On mobile .tbacts turns into a horizontal scroller with a fade mask over its right edge, and
+     .tbsticks carries margin-left:auto - so the one control people actually reach for was pushed
+     to the far end of a scroll region and left sitting under the fade, half out of sight.
+     Moving it to the FRONT of the row and pinning it there means it is always on screen, and the
+     fade only ever eats the overflow buttons it was meant for. */
+  .tbsticks{order:-1;margin-left:0;position:sticky;left:0;z-index:1;background:var(--bg);padding-right:8px}
   .mob-only{display:inline-flex}
   .proto-tab{display:none}
   .band{grid-template-columns:auto 1fr;gap:12px;padding:12px 14px;border-radius:18px}
@@ -1491,7 +1498,21 @@ html[data-motion="reduce"] *,html[data-motion="reduce"] *::before,html[data-moti
 .filtpanel .sel{max-width:420px}
 .ctypel{display:flex;align-items:center;gap:10px;font-weight:700;margin:4px 0 12px;flex-wrap:wrap}.ctypel .sel{max-width:360px}
 @media (max-width:640px){.hub{grid-template-columns:1fr 1fr;gap:10px}.hubtile{flex-direction:column;align-items:flex-start;gap:8px;padding:12px;min-height:0}.hubtile .ht strong{font-size:16px}.hubtile .ht span{font-size:12.5px}.hubtile .ico{width:38px;height:38px;padding:7px}.sechead{gap:8px}.hub.sub{grid-template-columns:1fr 1fr}}
-html,body{overflow-x:clip}
+/* Scroll feel on a phone (owner, Nov 3 2026). Three separate things were making it slippery:
+
+   overflow-x:clip already stopped the page scrolling sideways, but touch-action:auto still let the
+   browser interpret a slightly diagonal swipe as a horizontal pan - so a thumb drag could shove the
+   whole view left or right, or trip the back-swipe gesture, mid-scroll. pan-y says this page scrolls
+   one way only, and the browser stops guessing.
+
+   overscroll-behavior was auto, so pulling past the top or bottom handed the gesture to the browser
+   and gave the rubber-band bounce. contain keeps the pull inside the page.
+
+   The horizontal strips that DO scroll (tabs, the top bar, chip rows) get overscroll-behavior-x
+   contain of their own, so flicking one to its end stops there instead of chaining the leftover
+   momentum into the page behind it. */
+html,body{overflow-x:clip;overscroll-behavior:contain;touch-action:pan-y}
+.tabs,.tbacts,.subbar,.fchips,.settabs,.pickrow,.tablewrap,.tblwrap,.dvscroll,.xwrap{overscroll-behavior-x:contain;touch-action:pan-x pan-y}
 .filtpanel{min-width:0}.filtpanel .chips{flex-wrap:wrap;overflow:visible}.filtpanel .sel{width:100%;max-width:420px;min-width:0}
 .stickchip .tlabel{font-family:var(--f-display);font-weight:800;margin:0 2px}@media (max-width:430px){.stickchip .tlabel{display:none}.stickchip{padding:4px 8px 4px 4px}}.stickchip[aria-current="page"]{border-color:var(--lg2)}
 @media (max-width:640px){.stickchip .tlabel{font-size:13px}}

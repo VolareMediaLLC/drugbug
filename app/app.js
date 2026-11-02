@@ -1027,7 +1027,7 @@ function nrPrep() {
   if (isF(ctxKey())) st.kind = "reg";
   var regN = regCount(), reg = st.kind === "reg", filters = nrLevelsFor(ctxKey()).concat(["all"]), n = Math.min(st.n, pool.length);
   /* one simple screen: pick a deck, a length and a mode, then go. Everything else sits under More options. */
-  var c = '<section class="nrsetup nrfun"><div class="nrtop">' + myBugArt("nrbug") + '<p class="nrtag"><strong>' + esc(exam) + '-style practice.</strong> <span class="muted">' + (isF(ctxKey()) ? 'Pick a length, go.' : 'Pick a deck, pick a length, go.') + '</span></p></div>' + examPill(pool);
+  var c = '<section class="nrsetup nrfun"><div class="nrtop">' + myBugArt("nrbug", null, null, myStage()) + '<p class="nrtag"><strong>' + esc(exam) + '-style practice.</strong> <span class="muted">' + (isF(ctxKey()) ? 'Pick a length, go.' : 'Pick a deck, pick a length, go.') + '</span></p></div>' + examPill(pool);
   if (regN && isF(ctxKey())) c += '<p class="muted small">' + regN + ' questions on medications, blood, trauma, prolonged care, ventilators, labs, CBRN, K9, dive and evacuation.</p>';
   else if (regN) c += '<div class="nrdecks" role="group" aria-label="Question type">' +
     '<button class="nrdeck" data-nrkind="drug" aria-pressed="' + !reg + '"><span class="nrdk-ic" aria-hidden="true">' + icon("pillq") + '</span><strong>Drug questions</strong><span class="nrdk-n">' + drugCount() + '</span><span class="nrdk-sub">Doses, actions, uses and side effects</span></button>' +
@@ -3125,9 +3125,12 @@ function bugArt(b, cls, opt) {
   /* Legend used to wear four to six sparkles and read as cluttered (owner, Nov 2 2026). One sparkle
      remains as a highlight; the status now comes from a slow gold halo ring and a warm pool of light
      under the bug, which read as "finished" without the glitter. */
-  if (st === 5) under += '<circle class="lgring" cx="100" cy="118" r="88" fill="none" stroke="' + GOLD + '" stroke-width="2.5" stroke-opacity=".55" stroke-dasharray="10 16" stroke-linecap="round"/>' +
-    '<ellipse class="lgpool" cx="100" cy="188" rx="58" ry="11" fill="' + GOLD + '" opacity=".22"/>' +
-    sparkleP(168, 52, 7, "#fff6a8") + (b.rar === "legendary" ? sparkleP(32, 168, 6, GOLD) : "");
+  /* Max evolution used to carry a dashed ring orbiting the bug and sparkle stars in the corners.
+     The owner asked for them gone (Nov 3 2026): the bug is the thing worth looking at, and the
+     decoration was reading as clutter rather than as an achievement. What stays is the soft gold
+     glow behind it (st >= 4, above) and the pool of light it stands in - a bug lit differently,
+     rather than a bug wearing jewellery. */
+  if (st === 5) under += '<ellipse class="lgpool" cx="100" cy="188" rx="58" ry="11" fill="' + GOLD + '" opacity=".22"/>';
   var accs = (b.acc || []).filter(function (a) { var sl = ACC_SLOT[a]; return !(sl && wear[sl]); });
   if (accs.indexOf("stars") >= 0) s += ACC.stars();
   if (wear.fx && ITEMS_BY[wear.fx] && ITEMS_BY[wear.fx].under) s += itemSVG(ITEMS_BY[wear.fx], 74);
@@ -3446,7 +3449,7 @@ function shopView() {
   var f = S.shopF || "home", me = myBug(), bal = sticks();
   var c = '<section class="shop">';
   if (f === "home") {
-    c += '<div class="shophead"><div class="mybug">' + myBugArt("big") + (typeof pkSide === "function" ? pkSide("terr") : "") + '</div><div class="shtx"><span class="eyebrow">Your bug</span><h2>' + esc(me.name) + '</h2>' + stageLine() + '<p class="balance">' + stickIcon(24) + '<strong>' + bal.toLocaleString() + '</strong> sticks</p></div></div>';
+    c += '<div class="shophead"><div class="mybug">' + myBugArt("big", null, null, myStage()) + (typeof pkSide === "function" ? pkSide("terr") : "") + '</div><div class="shtx"><span class="eyebrow">Your bug</span><h2>' + esc(me.name) + '</h2>' + stageLine() + '<p class="balance">' + stickIcon(24) + '<strong>' + bal.toLocaleString() + '</strong> sticks</p></div></div>';
     if (S.shopMsg) { c += '<div class="presult good" role="status">' + esc(S.shopMsg) + '</div>'; S.shopMsg = ""; }
     var mine = BUGS.filter(function (b) { return owned(b.id); });
     if (Admin.owner && !owned("admin-stickbug")) c += '<div class="adminbug">' + bugArt(bugById("admin-stickbug"), "", {}) + '<div><strong>Your administrator bug is ready</strong><p class="muted small">A stick bug that only you can use. Dress it up in the Wardrobe like any other bug.</p><button class="btn small" data-claim="admin-stickbug">Claim it</button></div></div>';
@@ -4889,7 +4892,7 @@ function lbView() {
   if (!CL.lb) { CL.lb = "loading"; if (Prog.db) Prog.db.collection("leaderboard").where("week", "==", weekKey()).limit(200).get().then(function (qs) { CL.lb = qs.docs.filter(function (d) { return LG.blocked.indexOf(d.id) < 0; }).map(function (d) { return d.data(); }).filter(function (r) { return nameOk(r.name); }).sort(function (a, b) { return b.weekXp - a.weekXp; }).slice(0, 20); render(); }).catch(function () { CL.lb = []; render(); }); else CL.lb = []; }
   if (CL.lb === "loading") return c + '<p class="muted">Loading…</p>';
   var L = CL.lb.length ? CL.lb : [{ name: P.lbName, weekXp: myWeekXp() }];
-  return c + '<ol class="lb">' + L.map(function (r, i) { return '<li class="' + (r.name === P.lbName ? "me" : "") + '"><span class="rk">' + (i + 1) + '</span><span class="lbav">' + (r.name === P.lbName ? myBugArt("lbbug") : lbAvatar(r.av)) + '</span><span class="nm">' + esc(r.name) + '</span><span class="xp">' + (r.weekXp || 0).toLocaleString() + ' XP</span></li>'; }).join("") + '</ol><p class="muted small">Weekly XP resets every Monday. Showing as <strong>' + esc(P.lbName) + '</strong> · <button class="linkish" data-act="lbleave">Leave the leaderboard</button></p>';
+  return c + '<ol class="lb">' + L.map(function (r, i) { return '<li class="' + (r.name === P.lbName ? "me" : "") + '"><span class="rk">' + (i + 1) + '</span><span class="lbav">' + (r.name === P.lbName ? myBugArt("lbbug", null, null, myStage()) : lbAvatar(r.av)) + '</span><span class="nm">' + esc(r.name) + '</span><span class="xp">' + (r.weekXp || 0).toLocaleString() + ' XP</span></li>'; }).join("") + '</ol><p class="muted small">Weekly XP resets every Monday. Showing as <strong>' + esc(P.lbName) + '</strong> · <button class="linkish" data-act="lbleave">Leave the leaderboard</button></p>';
 }
 
 /* ---------- Clinical review queue + protocol sets (Control Center) and protocol-aware content ---------- */
@@ -7271,7 +7274,7 @@ function drawPaywall() {
   if (!PRO.open) return;
   var site = CFG.site || "", cur = tier();
   var c = '<div class="panel pwpanel" role="dialog" aria-modal="true" aria-label="DrugBug plans" tabindex="-1"><div class="navrow"><span class="spacer"></span><button class="iconbtn" data-pw="close">Close</button></div>';
-  c += '<div class="pwhead">' + myBugArt("pwbug") + '<div><h2>DrugBug Plus and Pro</h2><p class="muted">' + (PRO.why ? esc(PRO.why) + ' is part of ' + TIER_NAME[PRO.need] + '. ' : '') + 'Your plan: ' + esc(proLabel()) + '</p></div></div>';
+  c += '<div class="pwhead">' + myBugArt("pwbug", null, null, myStage()) + '<div><h2>DrugBug Plus and Pro</h2><p class="muted">' + (PRO.why ? esc(PRO.why) + ' is part of ' + TIER_NAME[PRO.need] + '. ' : '') + 'Your plan: ' + esc(proLabel()) + '</p></div></div>';
   var canBuy = NATIVE && hasStore();
   /* Show the plans and the buttons whenever subscriptions are on for the web, WITHOUT first asking
      whether the backend is reachable. If it is not - Firebase blocked, offline, an ad blocker eating
@@ -7519,7 +7522,7 @@ function tourOpen(force) { if (TR.open || (!force && tourDone())) return; TR.ope
 function tourClose() { TR.done = true; TR.open = false; trdlg.hidden = true; trdlg.innerHTML = ""; store("tourDone", 1); if (typeof wdwSync === "function") setTimeout(wdwSync, 600); }
 function drawTour() {
   var t = TOUR[TR.i], last = TR.i === TOUR.length - 1;
-  trdlg.innerHTML = '<div class="panel tourpanel" role="dialog" aria-modal="true" aria-label="' + esc(t[0]) + '" tabindex="-1"><div class="tourart">' + (t[2] === "sticks" ? '<div class="tourbig">' + stickTag(3) + '</div>' : myBugArt("tourbug")) + '</div>' +
+  trdlg.innerHTML = '<div class="panel tourpanel" role="dialog" aria-modal="true" aria-label="' + esc(t[0]) + '" tabindex="-1"><div class="tourart">' + (t[2] === "sticks" ? '<div class="tourbig">' + stickTag(3) + '</div>' : myBugArt("tourbug", null, null, myStage())) + '</div>' +
     '<h2>' + esc(t[0]) + '</h2><p>' + esc(t[1]) + '</p><div class="tourdots">' + TOUR.map(function (x, i) { return '<i class="' + (i === TR.i ? "on" : "") + '"></i>'; }).join("") + '</div>' +
     '<div class="actions"><button class="btn small ghost" data-tour="skip">' + (last ? "Close" : "Skip") + '</button><button class="btn" data-tour="next">' + (last ? "Let's go" : "Next") + '</button></div></div>';
   translateDom(trdlg); var p = trdlg.querySelector(".panel"); if (p) p.focus();
@@ -8963,7 +8966,7 @@ function gfxSnd(kind) {
 /* your own bug pops up and dances */
 function gfxCheer() {
   if (typeof myBugArt !== "function") return;
-  var e = gfxAdd('<div class="gfxcheer">' + myBugArt("gfxbug", "joy") + '<span class="gfxsay">Nice!</span></div>', "", 2600);
+  var e = gfxAdd('<div class="gfxcheer">' + myBugArt("gfxbug", "joy", null, myStage()) + '<span class="gfxsay">Nice!</span></div>', "", 2600);
   gfxSnd("win");
 }
 /* "New best!" banner with falling leaf confetti */
@@ -25373,7 +25376,7 @@ function planOpen() {
       '<span class="wzpl">' + lines.map(function (x) { return '<em>' + esc(x) + '</em>'; }).join("") + '</span></div>';
   };
   plandlg.innerHTML = '<div class="panel planpanel" role="dialog" aria-modal="true" aria-label="DrugBug plans" tabindex="-1">' +
-    '<div class="planart">' + (typeof myBugArt === "function" ? myBugArt("tourbug", "joy") : "") + '</div>' +
+    '<div class="planart">' + (typeof myBugArt === "function" ? myBugArt("tourbug", "joy", null, myStage()) : "") + '</div>' +
     '<p class="plankick">' + (typeof stickIcon === "function" ? stickIcon(18) + stickIcon(18) + stickIcon(18) : "") + '</p>' +
     '<h2>' + n + ' sticks. Look at you.</h2>' +
     '<p class="muted">Every one of those came from answering something. Nothing in DrugBug is locked away from you \u2014 every test, game and scenario is already yours. What you buy is more medicine to point them at.</p>' +
