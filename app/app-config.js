@@ -7,10 +7,15 @@
    anything: what actually protects the data is the Firestore security rules (tools/firestore.rules).
    Firebase project: DrugBug (drugbug-69d42), owned by volaremediallc@gmail.com. */
 window.DRUGBUG_CONFIG = Object.assign({
-  /* The plans are shown (first run, paywall sheet, PLUS/PRO badges) but the website itself stays
-     unlocked until there is a way to pay on it: tier() returns pro for a non-native build, so nobody
-     meets a wall they cannot pay past. Flip that line in modules/pro.js the day Stripe is live. */
   paywall: true,
+  /* Plus and Pro are now BUYABLE on the website (Stripe live, Nov 2 2026), so the website can
+     finally mean what the badges say. While this was false, tier() returned pro for every web
+     visitor on purpose - nobody should meet a wall they have no way to pay past. It is true now
+     because there is a working checkout behind it.
+
+     Turning this off again is the safe rollback: it unlocks everything for everyone and breaks
+     nothing, because paid access is read from subs/{uid} and simply stops being consulted. */
+  webSubs: true,
   site: "https://drugbugapp.com",
   /* Base URL of the deployed Cloud Functions (functions/index.js). Empty until they are deployed,
      and while it is empty the web Get Sticks screen says the packs are not open yet rather than

@@ -7092,8 +7092,15 @@ var CFG = window.DRUGBUG_CONFIG || {};
 /* Beta switch: subscriptions stay built in but turned off until DRUGBUG_CONFIG.paywall = true (app-config.js).
    While off, everything is unlocked and no paywall, prices or store calls appear. */
 var PAYWALL = CFG.paywall === true;
-/* Tiers (updated Oct 28, 2026, owner): Free forever; Plus $4.99/mo or $39.99/yr; Pro $9.99/mo or $79.99/yr.
-   Pro has a 1-week free introductory offer through the App Store (Apple-run trial).
+/* Plus and Pro for sale on the website through Stripe (modules/sub.js, functions/index.js).
+   Off until the live price IDs exist in the functions config and DRUGBUG_CONFIG.webSubs = true,
+   because a paywall with no working buy button is worse than no paywall at all. */
+var WEBSUBS = CFG.webSubs === true && CFG.paywall === true;
+/* Tiers (repriced Nov 3 2026, owner): Free forever; Plus $5.99/mo or $49.99/yr; Pro $11.99/mo or $99.99/yr.
+   Priced against the market rather than under it: the nearest comparable EMS study app charges
+   $89.99/yr for a far smaller product. Raising a price later costs a customer's trust; starting
+   there and discounting never does. App Store Connect and Google Play must be set to MATCH these
+   before either store ships, or the same plan costs two different amounts.
    Free: ~40 common medications with flashcards, the daily 5-min DrugBug, Small Sickness Guide, Normal Vitals & Labs, basic progress.
    Plus: ACCESS to everything: every drug page on every route (BugDex, Prehospital, Nursing, Medical School, Imaging), probiotics,
          food and vitamin compounds, My List with in-depth interactions, Drug Families, Drug Alternatives, Lab Values, Blood Products,
@@ -7103,8 +7110,8 @@ var PAYWALL = CFG.paywall === true;
          Wormhole deep dives (drug Wormhole and Disease Lab) are Plus (Oct 28 2026). */
 var TIER_RANK = { free: 0, plus: 1, pro: 2 }, TIER_NAME = { free: "DrugBug Free", plus: "DrugBug Plus", pro: "DrugBug Pro" };
 var PLANS = {
-  plus: { monthly: "com.volaremedia.drugbug.plus.monthly", annual: "com.volaremedia.drugbug.plus.annual", m: "$4.99", y: "$39.99" },
-  pro: { monthly: "com.volaremedia.drugbug.pro.monthly", annual: "com.volaremedia.drugbug.pro.annual", m: "$9.99", y: "$79.99" }
+  plus: { monthly: "com.volaremedia.drugbug.plus.monthly", annual: "com.volaremedia.drugbug.plus.annual", m: "$5.99", y: "$49.99" },
+  pro: { monthly: "com.volaremedia.drugbug.pro.monthly", annual: "com.volaremedia.drugbug.pro.annual", m: "$11.99", y: "$99.99" }
 };
 var PRO_IDS = { monthly: PLANS.pro.monthly, annual: PLANS.pro.annual };
 var DAYMS = 86400000;   /* the 7-day trial is gone (owner, Nov 2 2026) */
@@ -7178,7 +7185,18 @@ function tier() {
   if (typeof giftPro === "function" && giftPro()) return "pro";   /* a gift code (modules/gift.js) */
   if (typeof fmPassActive === "function" && fmPassActive() && typeof S !== "undefined" && S.view === "level" && typeof isF === "function" && isF(S.level)) return "pro"; /* Field Medic month code */
   if (DEMO) return webPass() ? "pro" : "free";
-  if (!NATIVE) return SET().previewTier || "pro";
+  if (!NATIVE) {
+    /* The website used to be unconditionally full access, because nothing was for sale on it and
+       locking people out of a thing they could not buy is just a worse app. Now that Plus and Pro
+       can be bought here, the web has to mean what it says - but only once there is something to
+       buy, which is what WEBSUBS gates. Until DRUGBUG_CONFIG.webSubs is true the old behaviour
+       stands exactly as before, so turning this on is a config change and not a code change.
+       (owner, Nov 2 2026) */
+    if (!WEBSUBS) return SET().previewTier || "pro";
+    var pv = SET().previewTier;
+    if (pv && typeof Admin !== "undefined" && Admin.on) return pv;   /* owner's "Preview as", Settings */
+    return (typeof subTier === "function" && subTier()) || "free";
+  }
   if (PRO.tier === "pro" || licenseActive()) return "pro";
   return PRO.tier === "plus" ? "plus" : "free";
 }
@@ -7211,7 +7229,11 @@ function proBadge(tab) { return tierBadge(tab ? tabTier(tab) : "pro"); }
 function proLabel() {
   if (!PAYWALL) return "Beta: everything is unlocked. Subscriptions are turned off for now.";
   if (DEMO) return webPass() ? "DrugBug Pro (access code) until " + new Date(webPass().until).toLocaleDateString() : "DrugBug Free (web demo)";
-  if (!NATIVE) return "Web preview as " + TIER_NAME[tier()];
+  if (!NATIVE) {
+    if (!WEBSUBS) return "Web preview as " + TIER_NAME[tier()];
+    if (typeof subActive === "function" && subActive()) return subLabel();
+    return TIER_NAME[tier()];
+  }
   if (PRO.store) return TIER_NAME[PRO.tier] + " active" + (PRO.offer ? " · offer code" : "") + (PRO.expires ? " · renews or ends " + new Date(PRO.expires).toLocaleDateString() : "");
   if (licenseActive()) return "School license (" + Prog.d.license.code + ") until " + new Date(Prog.d.license.until).toLocaleDateString();
   if (typeof giftPro === "function" && giftPro()) return "DrugBug Pro from a code until " + new Date(Prog.d.proGift.until).toLocaleDateString();
@@ -7251,6 +7273,35 @@ function drawPaywall() {
   var c = '<div class="panel pwpanel" role="dialog" aria-modal="true" aria-label="DrugBug plans" tabindex="-1"><div class="navrow"><span class="spacer"></span><button class="iconbtn" data-pw="close">Close</button></div>';
   c += '<div class="pwhead">' + myBugArt("pwbug") + '<div><h2>DrugBug Plus and Pro</h2><p class="muted">' + (PRO.why ? esc(PRO.why) + ' is part of ' + TIER_NAME[PRO.need] + '. ' : '') + 'Your plan: ' + esc(proLabel()) + '</p></div></div>';
   var canBuy = NATIVE && hasStore();
+  /* Show the plans and the buttons whenever subscriptions are on for the web, WITHOUT first asking
+     whether the backend is reachable. If it is not - Firebase blocked, offline, an ad blocker eating
+     the SDK - the old branch below would tell a web visitor "Plans are purchased in the DrugBug
+     iPhone app", which is both false and a dead end: they are on Free, behind a wall, being pointed
+     at an app that does not exist yet. Better to draw the real prices and let subBuy() say what is
+     actually wrong when it is pressed. (owner, Nov 3 2026) */
+  var webBuy = WEBSUBS && !NATIVE && !DEMO;
+  if (webBuy) {
+    /* On the web the prices come from PLANS (and from Stripe at checkout), not from StoreKit, so
+       there is nothing to wait for and the buttons can be drawn immediately. */
+    ["plus", "pro"].forEach(function (t) {
+      var P = PLANS[t], own = subTier() === t;
+      c += '<section class="pwtier pw-' + t + '"><h3>' + TIER_NAME[t] + (own ? ' <span class="pill good">Your plan</span>' : '') + '</h3>' +
+        '<ul class="pwperks">' + PLAN_PERKS[t].map(function (x) { return '<li><span>' + esc(x) + '</span></li>'; }).join("") + '</ul>';
+      if (!own) c += '<div class="pwplans">' +
+        '<button class="pwplan best" data-pw="wbuy" data-plan="' + t + '_annual"' + (PRO.busy ? " disabled" : "") + '><span class="pwtag">Best value</span><strong>' + esc(P.y) + ' / year</strong><span>Billed yearly, renews automatically. Cancel any time.</span></button>' +
+        '<button class="pwplan" data-pw="wbuy" data-plan="' + t + '_monthly"' + (PRO.busy ? " disabled" : "") + '><strong>' + esc(P.m) + ' / month</strong><span>Billed monthly, renews automatically. Cancel any time.</span></button>' +
+        '</div>';
+      c += '</section>';
+    });
+    if (PRO.busy) c += '<p class="muted small" role="status">Opening checkout…</p>';
+    if (PRO.msg) c += '<div class="presult" role="alert">' + esc(PRO.msg) + '</div>';
+    if (subActive()) c += '<div class="pwrow"><button class="linkish" data-pw="wmanage">Manage or cancel your subscription</button></div>';
+    c += '<p class="muted small">DrugBug Free stays free forever: every tool in the app, over about 40 common medications.</p>';
+    c += '<p class="muted small pwfine">Payment is taken by Stripe; DrugBug never sees your card. Subscriptions renew automatically until cancelled, and you can cancel any time from Manage subscription above. Cancelling stops future renewals and your plan stays active until the end of the period you have paid for. DrugBug is for education only, not for patient care.' +
+      (site ? ' <a href="' + esc(site) + '/terms.html" target="_blank" rel="noopener">Terms of Use</a> · <a href="' + esc(site) + '/privacy.html" target="_blank" rel="noopener">Privacy Policy</a>' : '') + '</p>';
+    pwdlg.innerHTML = c + '</div>'; translateDom(pwdlg);
+    return;
+  }
   if (!canBuy) c += '<div class="presult">' + (DEMO && webPass() ? 'Your access code has DrugBug Pro unlocked in this browser until ' + new Date(webPass().until).toLocaleDateString() + '. Plus and Pro subscriptions come with the DrugBug iPhone app.' : DEMO ? 'This is the free web demo. Plus and Pro come with the DrugBug iPhone app, coming soon to the App Store.' : 'Plans are purchased in the DrugBug iPhone app.') + '</div>';
   ["plus", "pro"].forEach(function (t) {
     var P = PLANS[t], pm = prodOf(P.monthly), py = prodOf(P.annual), m = pm ? pm.price : P.m, y = py ? py.price : P.y, own = PRO.store && PRO.tier === t;
@@ -7288,7 +7339,10 @@ function applyCode(code) {
 function proCard() {
   if (!PAYWALL) return '<div class="procard"><div><strong>DrugBug Beta</strong><span class="muted small">' + esc(proLabel()) + '</span></div></div>';
   var c = '<div class="procard"><div><strong>' + TIER_NAME[tier()] + '</strong><span class="muted small">' + esc(proLabel()) + '</span></div><div class="actions">';
-  if (!NATIVE && !DEMO) c += '<label class="small">Preview as <select class="pinput" id="pvtier">' + ["free", "plus", "pro"].map(function (t) { return '<option value="' + t + '"' + (tier() === t ? " selected" : "") + '>' + TIER_NAME[t] + '</option>'; }).join("") + '</select></label>';
+  /* "Preview as" is an owner tool. With WEBSUBS on, tier() ignores it for everyone but an admin, so
+     leaving the control on screen for ordinary visitors only invites them to try switching to Pro
+     and watch nothing happen. (owner, Nov 3 2026) */
+  if (!NATIVE && !DEMO && (!WEBSUBS || (typeof Admin !== "undefined" && Admin.on))) c += '<label class="small">Preview as <select class="pinput" id="pvtier">' + ["free", "plus", "pro"].map(function (t) { return '<option value="' + t + '"' + (tier() === t ? " selected" : "") + '>' + TIER_NAME[t] + '</option>'; }).join("") + '</select></label>';
   if (!(PRO.store && PRO.tier === "pro")) c += '<button class="btn small" data-pw="open">See plans</button>';
   if (NATIVE) c += '<button class="btn small ghost" data-pw="redeem">Redeem code</button><button class="btn small ghost" data-pw="restore">Restore purchases</button>' + (PRO.store ? '<button class="btn small ghost" data-pw="manage">Manage subscription</button>' : '');
   return c + '</div></div>';
@@ -7299,6 +7353,8 @@ document.addEventListener("click", function (e) {
   if (a === "close") return closePaywall();
   if (a === "open") return openPaywall("");
   if (a === "buy") { PRO.busy = true; PRO.msg = ""; drawPaywall(); clearTimeout(PRO.busyT); PRO.busyT = setTimeout(function () { if (PRO.busy) { PRO.busy = false; PRO.msg = "No answer from the store yet. Try again in a moment."; drawPaywall(); } }, 60000); if (!storeCall("buy", { id: t.getAttribute("data-pid") })) { PRO.busy = false; PRO.msg = "Purchases work in the DrugBug iPhone app."; drawPaywall(); } return; }
+  if (a === "wbuy") { if (typeof subBuy === "function") subBuy(t.getAttribute("data-plan")); return; }
+  if (a === "wmanage") { if (typeof subManage === "function") subManage(); return; }
   if (a === "restore") { PRO.restoring = true; PRO.msg = "Checking your purchases…"; drawPaywall(); if (!storeCall("restore")) { PRO.msg = "Restore works in the DrugBug iPhone app."; drawPaywall(); } return; }
   if (a === "manage") { storeCall("manage"); return; }
   if (a === "redeem") { PRO.msg = ""; if (!storeCall("redeem")) { PRO.msg = "Offer codes are redeemed in the DrugBug iPhone app."; drawPaywall(); } return; }
@@ -7766,7 +7822,7 @@ function accInit() {
   }).catch(function () {});
 }
 var ACC_LOCAL = ["progress", "nrscores", "lastLevel", "nunit", "protocol", "reviewer"];
-function accClearLocal() { try { if (typeof walletClear === "function") walletClear(); ACC_LOCAL.forEach(function (k) { localStorage.removeItem("drugbug:" + k); }); Object.keys(localStorage).forEach(function (k) { if (k.indexOf("drugbug:scen:") === 0) localStorage.removeItem(k); }); } catch (e) {} }
+function accClearLocal() { try { if (typeof walletClear === "function") walletClear(); if (typeof subClear === "function") subClear(); ACC_LOCAL.forEach(function (k) { localStorage.removeItem("drugbug:" + k); }); Object.keys(localStorage).forEach(function (k) { if (k.indexOf("drugbug:scen:") === 0) localStorage.removeItem(k); }); } catch (e) {} }
 function accDone(text) { ACCT.busy = false; ACCT.msg = text || ""; try { sessionStorage.setItem("drugbug:accmsg", ACCT.msg); } catch (e) {} setTimeout(function () { location.reload(); }, 300); }
 function accFail(e) { ACCT.busy = false; ACCT.msg = ACCT.api ? ACCT.api.error(e) : "Something went wrong."; render(); }
 /* ===== The quiet offer (owner, Nov 1 2026) =====
@@ -25069,6 +25125,173 @@ function walletClear() {
   try { store("wallet", null); } catch (e) {}
 }
 
+/* ---------- Plus and Pro bought on the web (owner, Nov 2 2026) ----------
+   The twin of modules/wallet.js, and deliberately shaped like it, but with one difference that
+   runs through everything below: a wallet is a number, and a subscription is a DEADLINE.
+
+   A stick balance is only ever wrong if a payment is missed. A plan is wrong the moment the clock
+   passes a date, with nothing arriving to tell the app so. So nothing here trusts a stored `tier`
+   on its own: every read compares `until` against the clock, and a lapsed document grants nothing
+   even if it still says "pro". The server writes what it knows; time decides whether it still
+   counts.
+
+   That also makes offline correct for free. Someone studying in the back of a truck with no signal
+   keeps the plan they paid for until the day it actually runs out, and loses it that day, without
+   a network round trip in either direction.
+
+       subs/{uid}  { tier: "plus"|"pro"|"", until: <ms>, status, cancelAt, customer, sub, ... }
+
+   Written only by a Cloud Function after Stripe says so (functions/index.js setEntitlement), and
+   read-only to the browser (tools/firestore.rules). */
+
+var SUB = { tier: "", until: 0, status: "", cancelAt: 0, loaded: false, unsub: null, uid: null, hooked: false };
+
+function subCache() { var s = store("sub"); return s && typeof s.until === "number" ? s : null; }
+
+/* The only question the rest of the app asks. Returns "plus", "pro" or "" - never a stored tier
+   that has run out. */
+function subTier() { return SUB.until > Date.now() ? (SUB.tier || "") : ""; }
+function subActive() { return !!subTier(); }
+function subDaysLeft() { return subActive() ? Math.ceil((SUB.until - Date.now()) / 86400000) : 0; }
+function subLabel() {
+  if (!subActive()) return "";
+  var d = new Date(SUB.until).toLocaleDateString();
+  if (SUB.cancelAt) return TIER_NAME[subTier()] + " until " + d + " (not renewing)";
+  if (SUB.status === "past_due") return TIER_NAME[subTier()] + " — your card was declined. Update it by " + d + ".";
+  return TIER_NAME[subTier()] + " · renews " + d;
+}
+
+function subInit() {
+  var c = subCache();
+  if (c) { SUB.tier = c.tier || ""; SUB.until = c.until || 0; SUB.status = c.status || ""; SUB.cancelAt = c.cancelAt || 0; }
+  /* Coming back from Stripe (success_url carries ?sub=1). Same reasoning as the wallet's ?bought=1:
+     say thank you off the redirect, not off the document changing, because after a redirect the
+     first snapshot is a first load and reading a welcome into it would be guesswork. __DBQ is
+     captured by the inline script in index.html before app.js rewrites the URL. */
+  try {
+    if (/[?&]sub=1/.test(window.__DBQ || "")) {
+      S.proMsg = "Thank you. Your plan is being switched on and will be active in a moment.";
+      history.replaceState(null, "", location.pathname);
+    }
+  } catch (e) {}
+
+  subArm();
+
+  if (!window.claude || typeof window.claude.use !== "function") return;
+  Promise.all([window.claude.use("db"), window.claude.use("user")]).then(function (r) {
+    var db = r[0], user = r[1]; if (!db || !user) return;
+    return user.id().then(function (uid) {
+      if (!uid) return;
+      subWatch(db, uid);
+      if (!SUB.hooked && typeof ACCT !== "undefined" && ACCT.api && typeof ACCT.api.onChange === "function") {
+        SUB.hooked = true;
+        ACCT.api.onChange(function () { user.id().then(function (u2) { if (u2 && u2 !== SUB.uid) subWatch(db, u2); }); });
+      }
+    });
+  }).catch(function () {});
+}
+
+function subWatch(db, uid) {
+  if (SUB.uid === uid && SUB.unsub) return;
+  if (SUB.unsub) { try { SUB.unsub(); } catch (e) {} SUB.unsub = null; }
+  SUB.uid = uid;
+  try {
+    SUB.unsub = db.doc("subs/" + uid).onSnapshot(function (snap) {
+      /* Offline persistence fires every read twice, cache first. Before the cache has ever seen
+         this document the cache snapshot says "does not exist", which would read as no plan and
+         flash a paywall at somebody who is paying. A cache snapshot may extend the plan but never
+         shorten it; only the server is believed when access goes away. (Same guard as wallet.js,
+         same bug, which cost an evening the first time.) */
+      var fromCache = !!(snap && snap.metadata && snap.metadata.fromCache);
+      var has = !!(snap && snap.exists);
+      var d = has ? (snap.data() || {}) : {};
+      var until = Number(d.until) || 0;
+      if (fromCache && (!has || until < SUB.until)) return;
+
+      var wasTier = subTier(), first = !SUB.loaded;
+      var same = until === SUB.until && (d.tier || "") === SUB.tier && (d.status || "") === SUB.status && (d.cancelAt || 0) === SUB.cancelAt;
+      if (same && !first) return;                 /* nothing changed: do not re-render */
+
+      SUB.tier = d.tier || ""; SUB.until = until; SUB.status = d.status || ""; SUB.cancelAt = d.cancelAt || 0;
+      SUB.loaded = true;
+      store("sub", { tier: SUB.tier, until: SUB.until, status: SUB.status, cancelAt: SUB.cancelAt, uid: uid });
+
+      if (!first && !wasTier && subTier()) S.proMsg = "Welcome to " + TIER_NAME[subTier()] + "!";
+      subArm();
+      if (typeof render === "function") render();
+    }, function () { /* offline or not allowed: the cached document stands until it expires */ });
+  } catch (e) {}
+}
+
+/* Access ends on a date, and a date passes while the app is open and nothing happens. Without this
+   a person who left DrugBug open overnight keeps Pro until they next reload. One timer, set for the
+   moment it lapses, and only when that moment is close enough to matter. */
+function subArm() {
+  clearTimeout(SUB.t);
+  if (!SUB.until) return;
+  var ms = SUB.until - Date.now();
+  if (ms <= 0 || ms > 86400000) return;           /* already gone, or far enough away to catch on the next load */
+  SUB.t = setTimeout(function () { if (typeof render === "function") render(); }, ms + 1000);
+}
+
+function subClear() {
+  if (SUB.unsub) { try { SUB.unsub(); } catch (e) {} }
+  clearTimeout(SUB.t);
+  SUB.unsub = null; SUB.tier = ""; SUB.until = 0; SUB.status = ""; SUB.cancelAt = 0; SUB.loaded = false; SUB.uid = null;
+  try { store("sub", null); } catch (e) {}
+}
+
+/* ---- buying, and managing ----
+   Callable functions are reached the same way modules/iap.js reaches createCheckout: a POST to
+   DRUGBUG_CONFIG.functionsUrl carrying the Firebase ID token, with the callable envelope
+   ({data:...} in, {result:...} out). There is no window.claude "fn" capability; db and user come
+   through claude.use, function calls do not. */
+function subCanBuy() {
+  return !NATIVE && !DEMO && !!((window.DRUGBUG_CONFIG || {}).functionsUrl) &&
+    !!(typeof ACCT !== "undefined" && ACCT && ACCT.api && typeof ACCT.api.token === "function");
+}
+function subCall(name, data) {
+  var base = (window.DRUGBUG_CONFIG || {}).functionsUrl;
+  if (!base) return Promise.reject(new Error("no backend"));
+  return ACCT.api.token().then(function (tok) {
+    if (!tok) throw new Error("no token");
+    return fetch(base.replace(/\/$/, "") + "/" + name, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + tok },
+      body: JSON.stringify({ data: data || {} })
+    });
+  }).then(function (r) { return r.json(); }).then(function (j) {
+    var url = j && j.result && j.result.url;
+    if (!url) throw new Error((j && j.error && j.error.message) || "no url");
+    return url;
+  });
+}
+function subBuy(plan) {
+  /* Say which thing is wrong, not "something is wrong". Each of these is a different problem with a
+     different fix, and telling someone the wrong one wastes their time. */
+  if (!(window.DRUGBUG_CONFIG || {}).functionsUrl) { PRO.msg = "Subscriptions are not switched on in this version yet."; return drawPaywall(); }
+  if (!ACCT || !ACCT.api) { PRO.msg = "Can’t reach the DrugBug account service right now. Check your connection and try again in a moment."; return drawPaywall(); }
+  var st = ACCT.api.state() || {};
+  if (!st.signedIn) { PRO.msg = "Make an account first, so your plan follows you to your phone."; return drawPaywall(); }
+  PRO.busy = true; PRO.msg = ""; drawPaywall();
+  clearTimeout(PRO.busyT);
+  PRO.busyT = setTimeout(function () { if (PRO.busy) { PRO.busy = false; PRO.msg = "No answer yet. Try again in a moment."; drawPaywall(); } }, 30000);
+  subCall("createSubCheckout", { plan: plan }).then(function (url) {
+    location.href = url;
+  }).catch(function (e) {
+    PRO.busy = false; clearTimeout(PRO.busyT);
+    PRO.msg = "Could not open checkout. " + ((e && e.message) || "Try again in a moment.");
+    drawPaywall();
+  });
+}
+function subManage() {
+  if (!subCanBuy()) return;
+  PRO.busy = true; drawPaywall();
+  subCall("billingPortal", {}).then(function (url) {
+    location.href = url;
+  }).catch(function () { PRO.busy = false; PRO.msg = "Could not open the billing page just now."; drawPaywall(); });
+}
+
 /* ---------- First run, and the plans prompt (owner, Nov 2 2026) ----------
    The order the owner asked for: agree to everything, make an account straight away, then the quick
    tour. Plans are NOT part of arriving any more. A pricing table is a terrible first impression for
@@ -25159,7 +25382,9 @@ function planOpen() {
       card("Plus", PLANS.plus.m + "/mo", PLANS.plus.y + " a year", ["All 2,000+ medications to read", "Every route: EMS, nursing, med school, imaging", "Interactions, families, labs, blood products"], false) +
       card("Pro", PLANS.pro.m + "/mo", PLANS.pro.y + " a year", ["Everything in Plus", "Plus the drills over all of it", "Every test, game and scenario, every drug"], true) +
     '</div>' +
-    '<p class="muted small">' + (NATIVE ? 'Charged to your Apple Account. Cancel any time in Settings.' : 'Nothing is for sale yet and nothing is locked: the whole app is open on the website while the paid plans are being built. This is a heads-up, not a checkout.') + '</p>' +
+    '<p class="muted small">' + (NATIVE ? 'Charged to your Apple Account. Cancel any time in Settings.'
+      : (typeof WEBSUBS !== "undefined" && WEBSUBS) ? 'Billed by Stripe. Cancel any time, and your plan runs to the end of the period you paid for.'
+      : 'Plus and Pro are still being built, and nothing is locked on the website in the meantime. Stick packs are for sale now if you want to skip the wait on a bug.') + '</p>' +
     '<div class="actions planfoot"><button class="btn" data-plan-close="1">Back to the bugs</button></div></div>';
   if (typeof translateDom === "function") translateDom(plandlg);
   plandlg.hidden = false;
@@ -25189,5 +25414,5 @@ if (!h) {
 render();
 /* Control Center edits baked into the build (tools/bake_edits.py) so the iPhone app has them without a database */
 if (DB.BAKED) { try { (DB.BAKED.drugdex || []).forEach(applyRecord); CR_TYPES.forEach(function (t) { if (t[0] !== "drug") crItems(t[0]); }); (DB.BAKED.content || []).forEach(applyContent); } catch (e) { } }
-Dex.load(); initProg(); if (typeof grubFix === "function") grubFix(); if (agreeRec() && typeof trialBegin === "function") trialBegin(); setTimeout(function () { if (typeof remindSync === "function") remindSync(); if (typeof wdwSync === "function") wdwSync(); if (typeof watchSync === "function") watchSync(); }, 1500); initAdmin(); initLegal(); if (typeof accInit === "function") accInit(); if (typeof walletInit === "function") walletInit(); setTimeout(loadProtocolSets, 400);
+Dex.load(); initProg(); if (typeof grubFix === "function") grubFix(); if (agreeRec() && typeof trialBegin === "function") trialBegin(); setTimeout(function () { if (typeof remindSync === "function") remindSync(); if (typeof wdwSync === "function") wdwSync(); if (typeof watchSync === "function") watchSync(); }, 1500); initAdmin(); initLegal(); if (typeof accInit === "function") accInit(); if (typeof walletInit === "function") walletInit(); if (typeof subInit === "function") subInit(); setTimeout(loadProtocolSets, 400);
 })();
