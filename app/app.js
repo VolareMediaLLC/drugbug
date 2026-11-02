@@ -2163,6 +2163,28 @@ function mergeProg(remote) {
   ["mega", "miss"].forEach(function (k) { if (R[k] && typeof R[k] === "object") { L[k] = L[k] || {}; Object.keys(R[k]).forEach(function (x) { var a = L[k][x], b = R[k][x]; L[k][x] = typeof a === "number" && typeof b === "number" ? Math.max(a, b) : (a === undefined ? b : a); }); } });
   if (R.exam && typeof R.exam === "object") L.exam = Object.assign({}, R.exam, L.exam || {});
   if (R.license && R.license.until && (!L.license || (L.license.until || 0) < R.license.until)) L.license = R.license;
+  /* ===== fields added Oct-Nov 2026; without these the catch-all below drops the account's copy
+     whenever this device has one of its own, which silently loses a speciality's worth of LEARN
+     reading and can drop rows out of the purchase ledger (owner, Nov 1 2026). ===== */
+  /* LEARN: a seen-set per speciality. Union both ways, keeping the earlier timestamp for a card
+     read on both devices, because that is when it was actually first read. */
+  if (R.learn && typeof R.learn === "object") {
+    L.learn = L.learn || {};
+    Object.keys(R.learn).forEach(function (key) {
+      var lk = L.learn[key] = L.learn[key] || {}, rk = R.learn[key] || {};
+      Object.keys(rk).forEach(function (id) { if (!lk[id] || rk[id] < lk[id]) lk[id] = rk[id]; });
+    });
+  }
+  /* things you own: union, same as items and faces above */
+  ["borders", "voices"].forEach(function (k) { L[k] = (L[k] || []).concat((R[k] || []).filter(function (x) { return (L[k] || []).indexOf(x) < 0; })); });
+  /* the purchase ledger: union by transaction id, never drop a row. A dropped row is a receipt
+     that can be replayed, so this one matters more than it looks. */
+  if (R.buys && typeof R.buys === "object") { L.buys = L.buys || {}; Object.keys(R.buys).forEach(function (t) { if (!L.buys[t]) L.buys[t] = R.buys[t]; }); }
+  /* sticks bought is the sum of the ledger, so recompute it rather than trusting either side */
+  if (L.buys) { var tot = 0; Object.keys(L.buys).forEach(function (t) { tot += (L.buys[t] && L.buys[t].n) || 0; }); L.bought = tot; }
+  /* what is equipped follows the same "newest device wins" rule as the outfit and face */
+  if (avNewer) { if (R.border) L.border = R.border; if (R.voice) L.voice = R.voice; if (R.track) L.track = R.track; }
+  if (R.muRefunded) L.muRefunded = 1;
   Object.keys(R).forEach(function (k) { if (L[k] === undefined) L[k] = R[k]; });
 }
 function initProg() {
@@ -3401,7 +3423,9 @@ function shopView() {
     c += tankHTML(mine, true);
     if (typeof peekView === "function") c += peekView();
     var nb = mine.length, ni = ITEMS.filter(function (it) { return ownsItem(it.id); }).length, nf = FACES.filter(function (x) { return faceAvail(x[0]); }).length, ns = 1 + (Prog.d.styles || []).length;
-    c += '<div class="pickhead"><h3>Dress it up</h3></div><div class="hub sub terrtiles">' + [["bugs", "Bug Store", nb + " of " + shopBugs().length + " collected"], ["items", "Wardrobe", ni + " of " + ITEMS.length + " owned"], ["faces", "Faces", nf + " of " + FACES.length + " unlocked"], ["styles", "Colors", ns + " of " + STYLES.length + " owned"], ["borders", "Drug Borders", (typeof BORDERS === "undefined" ? "" : (BORDERS.filter(function (b) { return ownsBorder(b.id); }).length) + " of " + BORDERS.length + " owned")], ["voices", "Voices", (typeof VOICES === "undefined" ? "" : VOICES.filter(function (v) { return ownsVoice(v.id); }).length + " of " + VOICES.length + " owned")], ["sticks", "Get Sticks", "Stick packs, if you would rather not grind"], ["music", "Music", shownTracks().filter(function (t) { return ownsTrack(t.id); }).length + " of " + shownTracks().length + " tracks"]].map(function (x) { return '<button class="hubtile" data-shopf="' + x[0] + '"><span class="ht"><strong>' + x[1] + '</strong><span>' + esc(x[2]) + '</span></span></button>'; }).join("") + '</div>';
+    /* Get Sticks sits at the top, on its own, above the things you spend them on (owner, Nov 1 2026) */
+    c += '<button class="hubtile terrsticks" data-shopf="sticks"><span class="ht"><strong>' + (typeof stickIcon === "function" ? stickIcon(20) : "") + 'Get Sticks</strong><span>Stick packs, for when you want the bug now</span></span><span class="tsgo" aria-hidden="true">&rsaquo;</span></button>';
+    c += '<div class="pickhead"><h3>Dress it up</h3></div><div class="hub sub terrtiles">' + [["bugs", "Bug Store", nb + " of " + shopBugs().length + " collected"], ["items", "Wardrobe", ni + " of " + ITEMS.length + " owned"], ["faces", "Faces", nf + " of " + FACES.length + " unlocked"], ["styles", "Colors", ns + " of " + STYLES.length + " owned"], ["borders", "Drug Borders", (typeof BORDERS === "undefined" ? "" : (BORDERS.filter(function (b) { return ownsBorder(b.id); }).length) + " of " + BORDERS.length + " owned")], ["voices", "Voices", (typeof VOICES === "undefined" ? "" : VOICES.filter(function (v) { return ownsVoice(v.id); }).length + " of " + VOICES.length + " owned")], ["music", "Music", shownTracks().filter(function (t) { return ownsTrack(t.id); }).length + " of " + shownTracks().length + " tracks"]].map(function (x) { return '<button class="hubtile" data-shopf="' + x[0] + '"><span class="ht"><strong>' + x[1] + '</strong><span>' + esc(x[2]) + '</span></span></button>'; }).join("") + '</div>';
     return c + '</section>';
   }
   if (S.shopMsg) { c += '<div class="presult good" role="status">' + esc(S.shopMsg) + '</div>'; S.shopMsg = ""; }
@@ -7644,6 +7668,8 @@ var ACC_LOCAL = ["progress", "nrscores", "lastLevel", "nunit", "protocol", "revi
 function accClearLocal() { try { ACC_LOCAL.forEach(function (k) { localStorage.removeItem("drugbug:" + k); }); Object.keys(localStorage).forEach(function (k) { if (k.indexOf("drugbug:scen:") === 0) localStorage.removeItem(k); }); } catch (e) {} }
 function accDone(text) { ACCT.busy = false; ACCT.msg = text || ""; try { sessionStorage.setItem("drugbug:accmsg", ACCT.msg); } catch (e) {} setTimeout(function () { location.reload(); }, 300); }
 function accFail(e) { ACCT.busy = false; ACCT.msg = ACCT.api ? ACCT.api.error(e) : "Something went wrong."; render(); }
+function accAppleMark() { return '<svg class="accmark" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M16.4 12.7c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.2-2.8.8-3.6.8-.7 0-1.9-.8-3.1-.8-1.6 0-3.1.9-3.9 2.4-1.7 2.9-.4 7.2 1.2 9.5.8 1.2 1.8 2.5 3 2.4 1.2 0 1.6-.8 3.1-.8s1.9.8 3.1.7c1.3 0 2.1-1.2 2.9-2.3.9-1.3 1.3-2.6 1.3-2.7 0 0-2.5-1-2.6-3.9zM14.1 5.9c.7-.8 1.1-2 1-3.1-1 0-2.2.7-2.9 1.5-.6.7-1.2 1.9-1 3 1.1.1 2.2-.6 2.9-1.4z"/></svg> '; }
+function accGoogleMark() { return '<svg class="accmark" viewBox="0 0 48 48" width="15" height="15" aria-hidden="true"><path fill="#4285F4" d="M45.1 24.5c0-1.6-.1-2.7-.4-4H24v7.3h12.1c-.2 1.8-1.6 4.6-4.5 6.5l-.1.3 6.5 5 .5.1c4.1-3.8 6.6-9.5 6.6-15.2z"/><path fill="#34A853" d="M24 46c5.9 0 10.9-2 14.5-5.3l-6.9-5.4c-1.8 1.3-4.3 2.2-7.6 2.2-5.8 0-10.7-3.8-12.5-9.1l-.3028.1L4 33.7l-.1.2C7.5 41.1 15.1 46 24 46z"/><path fill="#FBBC05" d="M11.5 28.4c-.5-1.4-.7-2.9-.7-4.4s.3-3 .7-4.4v-.3L4.6 14l-.2.1C2.9 17 2 20.4 2 24s.9 7 2.4 9.9l7.1-5.5z"/><path fill="#EB4335" d="M24 10.5c4.1 0 6.9 1.8 8.5 3.3l6.2-6C34.9 4.4 29.9 2 24 2 15.1 2 7.5 6.9 4.4 14.1l7.1 5.5C13.3 14.3 18.2 10.5 24 10.5z"/></svg> '; }
 function accCard() {
   if (!ACCT.api) return "";
   var s = ACCT.api.state() || {}, c = "", m = ACCT.mode;
@@ -7651,7 +7677,7 @@ function accCard() {
   if (flash && !ACCT.msg) ACCT.msg = flash;
   if (ACCT.msg) c += '<p class="presult" role="status">' + esc(ACCT.msg) + '</p>';
   if (s.signedIn) {
-    c += setRow("Signed in", (s.provider === "apple" ? "With Apple" : "With email") + (s.email ? " · " + (/privaterelay\.appleid\.com$/i.test(s.email) ? "Hide My Email address" : s.email) : "") + (s.provider === "email" && !s.emailVerified ? " · email not verified yet" : ""), '<button class="btn small ghost" data-acc="signout">Sign out</button>');
+    c += setRow("Signed in", (s.provider === "apple" ? "With Apple" : s.provider === "google" ? "With Google" : "With email") + (s.email ? " · " + (/privaterelay\.appleid\.com$/i.test(s.email) ? "Hide My Email address" : s.email) : "") + (s.provider === "email" && !s.emailVerified ? " · email not verified yet" : ""), '<button class="btn small ghost" data-acc="signout">Sign out</button>');
     c += setRow("Sync", "Your progress, scores, My List and Terrarium are saved to your account and sync to your other devices.", "");
     if (ACCT.del) {
       c += '<div class="presult"><strong>Delete your DrugBug account?</strong> This permanently deletes your account and everything stored with it: progress, scores, saved list, Terrarium, error reports and protocol requests. It cannot be undone. App Store subscriptions are not cancelled automatically; cancel them in iPhone Settings → your name → Subscriptions.' +
@@ -7661,7 +7687,13 @@ function accCard() {
     return c;
   }
   c += setRow("Account (optional)", "DrugBug works without an account. Create one to back up your progress and sync it across devices. We never show your email or account to other users.", "");
-  c += '<div class="actions"><button class="btn small" data-acc="apple"' + (ACCT.busy ? " disabled" : "") + '> Sign in with Apple</button><button class="btn small ghost" data-acc="mode" data-m="' + (m === "email" ? "" : "email") + '">' + (m === "email" ? "Hide email sign-in" : "Use email instead") + '</button></div>';
+  /* Sign in with Apple needs the native AuthenticationServices bridge, so it only appears in the
+     iPhone app; the website offers Google instead (owner, Nov 1 2026). Email works in both. */
+  var hasApple = typeof ACCT.api.hasApple === "function" ? ACCT.api.hasApple() : true;
+  var oneTap = hasApple
+    ? '<button class="btn small" data-acc="apple"' + (ACCT.busy ? " disabled" : "") + '>' + accAppleMark() + 'Sign in with Apple</button>'
+    : (typeof ACCT.api.signInGoogle === "function" ? '<button class="btn small" data-acc="google"' + (ACCT.busy ? " disabled" : "") + '>' + accGoogleMark() + 'Sign in with Google</button>' : '');
+  c += '<div class="actions">' + oneTap + '<button class="btn small ghost" data-acc="mode" data-m="' + (m === "email" ? "" : "email") + '">' + (m === "email" ? "Hide email sign-in" : "Use email instead") + '</button></div>';
   if (m === "email" || m === "reset") {
     c += '<form class="pform" data-accform="1"><label>Email<input class="pinput" id="accemail" type="email" autocomplete="email" autocapitalize="none" required></label>' +
       (m === "reset" ? '' : '<label>Password (8+ characters)<input class="pinput" id="accpw" type="password" autocomplete="current-password" minlength="8" required></label>') +
@@ -7676,6 +7708,7 @@ document.addEventListener("click", function (e) {
   if (t.getAttribute("data-accgo")) { ACCT.go = t.getAttribute("data-accgo"); return; } /* handled by submit */
   ACCT.msg = "";
   if (a === "mode") { ACCT.mode = t.getAttribute("data-m") || ""; return render(); }
+  if (a === "google") { ACCT.busy = true; render(); return ACCT.api.signInGoogle().then(function (r) { accDone(r.switched ? "Signed in. This device's progress was merged into your account." : "Account created. Your progress is now backed up."); }, function (er) { var mm = ACCT.api.error(er); if (!mm) { ACCT.busy = false; return render(); } accFail(er); }); }
   if (a === "apple") { ACCT.busy = true; render(); return ACCT.api.signInApple().then(function (r) { accDone(r.switched ? "Signed in. This phone's progress was merged into your account." : "Account created. Your progress is now backed up."); }, function (er) { if (/cancel/i.test(er && er.message || "")) { ACCT.busy = false; return render(); } accFail(er); }); }
   if (a === "signout") { if (typeof flushProg === "function") flushProg(); ACCT.busy = true; var waitN = 0; return (function waitSave() { if (Prog.saving && waitN++ < 40) return setTimeout(waitSave, 250); if (Prog.dirty && Prog.db && waitN < 40 && typeof flushProg === "function") { flushProg(); waitN++; return setTimeout(waitSave, 250); } (function () { ACCT.api.signOut().then(function () { accClearLocal(); accDone("Signed out. Your progress is safe in your account."); }, accFail); })(); })(); }
   if (a === "delask") { ACCT.del = true; return render(); }
@@ -23874,8 +23907,28 @@ function txArt(key, r) {
         '</svg></span>' +
         '<span class="txpill-rain">' + (function () { var s = "", i; for (i = 0; i < 14; i++) s += '<i style="left:' + (8 + i * 6.4).toFixed(0) + '%;animation-delay:' + (300 + i % 7 * 34) + 'ms;--h:' + ["#f8fafc", "#fde68a", "#bfdbfe", "#fecaca", "#e2e8f0"][i % 5] + '"></i>'; return s; })() + '</span>' +
         '<span class="txbug" ' + at + '>' + bug + '</span>';
-    case "rn": /* the drip chamber, then the line fills the screen */
-      return '<span class="txchamber" ' + at + '><i></i><i></i><i></i></span><span class="txfill"></span><span class="txbug" ' + at + '>' + bug + '</span>';
+    case "rn": /* a bag on a pole, the pump running it, and the line filling the screen */
+      return '<span class="txpump" ' + at + '>' +
+        '<svg viewBox="0 0 150 300" aria-hidden="true">' +
+        '<rect x="70" y="0" width="7" height="300" rx="3.5" fill="#94a3b8"/>' +          /* the pole */
+        '<path d="M40 16 h44 v9 h-44z" fill="#94a3b8"/>' +                               /* the hanger */
+        '<path d="M44 25 h36 l-4 70 a14 14 0 0 1 -28 0z" fill="rgba(186,230,253,.4)" stroke="#bae6fd" stroke-width="2.5"/>' +
+        '<path d="M46 56 h32 l-3 39 a13 13 0 0 1 -26 0z" fill="rgba(56,189,248,.65)"/>' +   /* the fluid left in the bag */
+        '<text x="62" y="48" font-size="11" font-family="monospace" fill="#0c4a6e" text-anchor="middle">NS</text>' +
+        '<rect x="54" y="100" width="18" height="34" rx="7" fill="rgba(226,232,240,.3)" stroke="#e2e8f0" stroke-width="2.5"/>' +  /* the drip chamber */
+        '<g class="txdrop3"><circle cx="63" cy="107" r="3.6" fill="#bae6fd"/></g>' +
+        '<g class="txdrop3" style="animation-delay:.11s"><circle cx="63" cy="107" r="3.6" fill="#bae6fd"/></g>' +
+        '<g class="txdrop3" style="animation-delay:.22s"><circle cx="63" cy="107" r="3.6" fill="#bae6fd"/></g>' +
+        '<path d="M63 134 v16 M63 212 v80" stroke="#bae6fd" stroke-width="3.5" fill="none"/>' +   /* the tubing above and below */
+        '<rect x="14" y="150" width="98" height="62" rx="8" fill="#334155" stroke="#1e293b" stroke-width="3"/>' +  /* the pump */
+        '<rect x="22" y="158" width="62" height="26" rx="4" fill="#052e16"/>' +           /* the screen */
+        '<text x="53" y="176" font-size="15" font-family="monospace" fill="#4ade80" text-anchor="middle">125</text>' +
+        '<text x="99" y="166" font-size="8" font-family="monospace" fill="#94a3b8" text-anchor="middle">mL/h</text>' +
+        '<g class="txled"><circle cx="99" cy="177" r="4.5" fill="#4ade80"/></g>' +        /* the running light */
+        '<rect x="22" y="190" width="14" height="13" rx="3" fill="#64748b"/><rect x="40" y="190" width="14" height="13" rx="3" fill="#64748b"/>' +
+        '<rect x="58" y="190" width="14" height="13" rx="3" fill="#64748b"/><rect x="76" y="190" width="28" height="13" rx="3" fill="#15803d"/>' +
+        '<path d="M63 150 v62" stroke="#bae6fd" stroke-width="3" opacity=".6"/>' +        /* the line through the channel */
+        '</svg></span><span class="txfill"></span><span class="txbug" ' + at + '>' + bug + '</span>';
     case "ms1": /* a page of the atlas turns over the screen */
       return '<span class="txpage"></span><span class="txpage txpage2"></span><span class="txbug" ' + at + '>' + bug + '</span>';
     case "ms3": /* a penlight sweeps the room */
@@ -24022,9 +24075,16 @@ function txSnd(kind) {
       }
       for (i = 0; i < 5; i++) { tone("sine", 1500 + Math.random() * 800, 700, 0.44 + i * 0.05, 0.04, 0.075); nz(0.44 + i * 0.05, 0.02, 0.055, "highpass", 4200); }
       tone("sine", 420, 250, 0.68, 0.1, 0.07);
-    } else if (kind === "txdrip") {      /* three drops in the chamber, then a pump beep */
-      [0, 0.17, 0.34].forEach(function (d, k) { tone("sine", 1000 - k * 50, 2000, d, 0.055, 0.1); nz(d, 0.03, 0.05, "highpass", 3600); });
-      tone("square", 1760, 1760, 0.5, 0.07, 0.05); tone("square", 1760, 1760, 0.62, 0.07, 0.05);
+    } else if (kind === "txdrip") {      /* drops in the chamber, the pump motor stepping, then the start beeps */
+      [0, 0.15, 0.3, 0.45].forEach(function (d, k) { tone("sine", 1050 - k * 40, 2100, d, 0.05, 0.13); nz(d, 0.028, 0.07, "highpass", 3800); });
+      var pn = Math.floor(c.sampleRate * 0.56), pb = c.createBuffer(1, pn, c.sampleRate), pd = pb.getChannelData(0), pi;
+      for (pi = 0; pi < pn; pi++) { var pu = pi / pn; pd[pi] = (Math.random() * 2 - 1) * (pu < 0.08 ? pu / 0.08 : Math.pow(1 - (pu - 0.08) / 0.92, 0.7)); }
+      var ps = c.createBufferSource(), pf = c.createBiquadFilter(), pg = c.createGain(), pl = c.createOscillator(), plg = c.createGain();
+      ps.buffer = pb; pf.type = "bandpass"; pf.frequency.value = 520; pf.Q.value = 2.4; pg.gain.value = 0.13;
+      pl.type = "square"; pl.frequency.value = 11; plg.gain.value = 0.1; pl.connect(plg); plg.connect(pg.gain);   /* the peristaltic step */
+      ps.connect(pf); pf.connect(pg); pg.connect(out); ps.start(t + 0.1); pl.start(t + 0.1); pl.stop(t + 0.68);
+      tone("sine", 88, 88, 0.1, 0.5, 0.05, 11, 4);
+      tone("square", 2093, 2093, 0.56, 0.06, 0.11); tone("square", 2093, 2093, 0.68, 0.08, 0.11);  /* running */
     } else if (kind === "txatlas") {     /* the spine cracks and a page turns */
       nz(0, 0.06, 0.16, "lowpass", 600);
       nz(0.08, 0.34, 0.13, "highpass", 2600, 5200);
@@ -24460,7 +24520,7 @@ function voiceSay(text, voiceId) {
     var now = c.currentTime;
     if (VX.until && VX.until > now + 0.05) { try { VX.out.gain.setValueAtTime(0.0001, now); VX.out.gain.setValueAtTime(1, now + 0.03); } catch (e) {} }
     var S0 = voiceSyl(text); if (!S0.length) return;
-    var gap = V.kind === "drawl" ? 0.145 : V.kind === "whisper" ? 0.1 : V.kind === "boom" ? 0.16 : V.kind === "click" ? 0.075 : 0.086;
+    var gap = V.kind === "drawl" ? 0.215 : V.kind === "whisper" ? 0.1 : V.kind === "boom" ? 0.16 : V.kind === "click" ? 0.075 : V.kind === "chirp" ? 0.105 : 0.086;
     var t0 = now + 0.02;
     for (var i = 0; i < S0.length; i++) voiceBlip(c, V.kind, t0 + i * gap, S0[i], i, S0.length);
     VX.until = t0 + S0.length * gap + 0.4;
@@ -24491,16 +24551,52 @@ function voiceBlip(c, kind, t, syl, i, n) {
   }
   var p = syl.p, lift = last ? 1.18 : syl.end ? 1.06 : 1;   /* phrases lift at the end */
   switch (kind) {
-    case "drawl":    /* Hickory: low, slow, a slide on every syllable and a sag at the end */
-      var base = 150 + p * 85;
-      tone("sawtooth", base, base * (last ? 0.72 : 1.14) * lift, 0.14, 0.085, 5.5, 9);
-      tone("triangle", base * 2, base * 2 * (last ? 0.72 : 1.14), 0.11, 0.03, 5.5, 14);
-      nz(0.035, 0.035, "bandpass", 1300 + p * 700, 0, 3);
+    case "drawl":    /* Hickory, properly country: every vowel gets stretched and bent.
+                        A drawl is a diphthong where there should be one sound, so each syllable
+                        slides UP into the vowel and then falls away from it, and the last one of
+                        a phrase sags a long way down. Two nasal formants give it the twang. */
+      var base = 128 + p * 62;
+      var peak = base * (1.26 + p * 0.1), land = base * (last ? 0.62 : 0.93);
+      var o1 = c.createOscillator(), g1 = c.createGain(), f1 = c.createBiquadFilter(), f2 = c.createBiquadFilter();
+      o1.type = "sawtooth";
+      o1.frequency.setValueAtTime(base * 0.86, t);
+      o1.frequency.linearRampToValueAtTime(peak, t + 0.085);       /* the slide up into the vowel */
+      o1.frequency.linearRampToValueAtTime(land, t + 0.26);        /* and the long fall off it */
+      /* two resonances around 700 and 1800 Hz: that nasal, through-the-nose quality */
+      f1.type = "bandpass"; f1.frequency.value = 660 + p * 180; f1.Q.value = 3.2;
+      f2.type = "peaking"; f2.frequency.value = 1750 + p * 320; f2.Q.value = 2.6; f2.gain.value = 11;
+      g1.gain.setValueAtTime(0.0001, t);
+      g1.gain.exponentialRampToValueAtTime(0.1, t + 0.035);
+      g1.gain.setValueAtTime(0.1, t + 0.15);
+      g1.gain.exponentialRampToValueAtTime(0.0001, t + 0.28);
+      o1.connect(f1); f1.connect(f2); f2.connect(g1); g1.connect(out);
+      o1.start(t); o1.stop(t + 0.3);
+      var wob = c.createOscillator(), wg = c.createGain();          /* a lazy wobble, not a vibrato */
+      wob.frequency.value = 4.2; wg.gain.value = 5; wob.connect(wg); wg.connect(o1.frequency);
+      wob.start(t); wob.stop(t + 0.3);
+      /* a soft breathy edge under it, the way a drawl trails air */
+      nz(0.1, 0.028, "bandpass", 900 + p * 500, 1400, 1.8);
       break;
-    case "chirp":    /* cricket: two fast high ticks */
-      tone("square", 2700 + p * 1400, (2900 + p * 1400) * lift, 0.028, 0.055);
-      tone("square", 2900 + p * 1500, (3200 + p * 1500) * lift, 0.03, 0.05);
-      nz(0.02, 0.03, "highpass", 5200);
+    case "chirp":    /* a real cricket chirp is a pulse train, not a beep: the wing file is drawn
+                        across the scraper three or four times in a burst, each stroke a few
+                        milliseconds of almost-pure tone near 4.5 kHz with a hard edge on it. */
+      var cf = 4200 + p * 1100, pulses = 3 + (i % 2);
+      for (var ci = 0; ci < pulses; ci++) {
+        var ct = t + ci * 0.019, co = c.createOscillator(), cg = c.createGain();
+        co.type = "sine"; co.frequency.setValueAtTime(cf * lift, ct);
+        co.frequency.linearRampToValueAtTime(cf * lift * 0.985, ct + 0.011);  /* each stroke dips slightly */
+        cg.gain.setValueAtTime(0.0001, ct);
+        cg.gain.exponentialRampToValueAtTime(0.085, ct + 0.0016);             /* the hard attack of the scrape */
+        cg.gain.exponentialRampToValueAtTime(0.0001, ct + 0.012);
+        co.connect(cg); cg.connect(out); co.start(ct); co.stop(ct + 0.014);
+        /* the second harmonic the wing gives off, quieter */
+        var ch = c.createOscillator(), hg = c.createGain();
+        ch.type = "sine"; ch.frequency.value = cf * 2 * lift;
+        hg.gain.setValueAtTime(0.0001, ct); hg.gain.exponentialRampToValueAtTime(0.016, ct + 0.0016);
+        hg.gain.exponentialRampToValueAtTime(0.0001, ct + 0.009);
+        ch.connect(hg); hg.connect(out); ch.start(ct); ch.stop(ct + 0.011);
+        nz(0.004, 0.022, "bandpass", cf, 0, 9);                               /* the rasp of the file itself */
+      }
       break;
     case "buzz":
       tone("sawtooth", 190 + p * 120, (190 + p * 120) * lift, 0.075, 0.06, 36, 24);
