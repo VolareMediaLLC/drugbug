@@ -380,7 +380,16 @@ function viewHome() {
   var hcls = HOL ? ' hol hol-' + HOL.id + (HOL.base ? ' hol-' + HOL.base : '') : '';
   var PT = '<span class="pointer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v13M6 12l6 6 6-6" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Start here</span>';
   function pt(go) { return S.pointGo === go ? ' pointed' : ''; }
-  function mini(cls, go, title, line, bug) { return '<button class="route rmini ' + cls + pt(go) + '" ' + (go.indexOf("level:") === 0 ? 'data-level="' + go.slice(6) + '"' : 'data-go="' + go + '"') + '>' + (S.pointGo === go ? PT : '') + '<span class="mtx"><h2>' + title + '</h2><p>' + line + '</p></span><span class="mbug">' + bugArt(typeof bug === "string" ? bugById(bug) : bug, "", { mood: "happy" }) + '</span></button>'; }
+  /* The route cards now wear the same bug you meet when you pick a level inside that route, rather
+     than a generic grub: the top of each ladder, drawn by levelBug() with its own tier effects.
+     (owner, Nov 2 2026) */
+  var ROUTE_BUG = { ph: "flight", rn: "rn", md: "intern", im: "ir" };
+  function mini(cls, go, title, line, bug) {
+    var lk = ROUTE_BUG[cls];
+    var art = lk && typeof levelBug === "function" ? levelBug(lk)
+      : bugArt(typeof bug === "string" ? bugById(bug) : bug, "", { mood: "happy" });
+    return '<button class="route rmini ' + cls + pt(go) + '" ' + (go.indexOf("level:") === 0 ? 'data-level="' + go.slice(6) + '"' : 'data-go="' + go + '"') + '>' + (S.pointGo === go ? PT : '') + '<span class="mtx"><h2>' + title + '</h2><p>' + line + '</p></span><span class="mbug">' + art + '</span></button>';
+  }
   return topbar() + '<div class="homewrap' + hcls + '" data-hol="' + (HOL ? esc(holKey(HOL)) : '') + '">' + homeTip() +
    heroHTML() +
    homeStart() + homeProgress() + (typeof trialBanner === "function" ? trialBanner() : '') +
@@ -3113,7 +3122,12 @@ function bugArt(b, cls, opt) {
   }
   var under = "";
   if (st >= 4) under += '<circle cx="100" cy="120" r="' + (st === 5 ? 96 : 84) + '" fill="url(#' + id + 'a)"/>';
-  if (st === 5) under += sparkleP(28, 40, 9, GOLD) + sparkleP(174, 56, 7, "#fff6a8") + sparkleP(170, 170, 6, GOLD) + sparkleP(30, 166, 5, "#fff6a8") + (b.rar === "legendary" ? sparkleP(150, 22, 6, "#fff6a8") + sparkleP(50, 196, 5, GOLD) : "");
+  /* Legend used to wear four to six sparkles and read as cluttered (owner, Nov 2 2026). One sparkle
+     remains as a highlight; the status now comes from a slow gold halo ring and a warm pool of light
+     under the bug, which read as "finished" without the glitter. */
+  if (st === 5) under += '<circle class="lgring" cx="100" cy="118" r="88" fill="none" stroke="' + GOLD + '" stroke-width="2.5" stroke-opacity=".55" stroke-dasharray="10 16" stroke-linecap="round"/>' +
+    '<ellipse class="lgpool" cx="100" cy="188" rx="58" ry="11" fill="' + GOLD + '" opacity=".22"/>' +
+    sparkleP(168, 52, 7, "#fff6a8") + (b.rar === "legendary" ? sparkleP(32, 168, 6, GOLD) : "");
   var accs = (b.acc || []).filter(function (a) { var sl = ACC_SLOT[a]; return !(sl && wear[sl]); });
   if (accs.indexOf("stars") >= 0) s += ACC.stars();
   if (wear.fx && ITEMS_BY[wear.fx] && ITEMS_BY[wear.fx].under) s += itemSVG(ITEMS_BY[wear.fx], 74);
@@ -3932,7 +3946,7 @@ function drawBuddy() {
   if (!buddyOn()) { buddy.hidden = true; return; }
   buddy.hidden = false;
   var mood = BD.mood || myFace(); buddy.className = "buddy m-" + mood;
-  buddy.innerHTML = (BD.msg ? '<div class="bubble" role="status">' + esc(BD.msg) + '</div>' : '<div class="bubble" role="status" hidden></div>') + '<button class="bbtn" data-buddy="1" aria-label="Your bug, ' + esc(myBug().name) + '. Tap to say hi.">' + myBugArt("buddyart", mood) + (typeof pkSide === "function" ? pkSide("bud") : "") + '</button>';
+  buddy.innerHTML = (BD.msg ? '<div class="bubble" role="status">' + esc(BD.msg) + '</div>' : '<div class="bubble" role="status" hidden></div>') + '<button class="bbtn" data-buddy="1" aria-label="Your bug, ' + esc(myBug().name) + '. Tap to say hi.">' + myBugArt("buddyart", mood, null, (typeof myStage === "function" ? myStage() : null)) + (typeof pkSide === "function" ? pkSide("bud") : "") + '</button>';
 }
 function buddySet(mood, msg, ms) {
   BD.mood = mood; BD.msg = msg || ""; drawBuddy();

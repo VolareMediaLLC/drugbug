@@ -1761,6 +1761,13 @@ button.pstat{cursor:pointer}button.pstat:hover{border-color:var(--flight)}
 .planpanel .wzplan:hover{transform:none;border-color:var(--line)}
 .planpanel .wzplan.best:hover{border-color:var(--gen)}
 .planpanel .actions{justify-content:center}
+/* Legend bugs: a slow halo and a breathing pool of light instead of a fistful of sparkles */
+@media (prefers-reduced-motion:no-preference){
+  :root[data-motion="full"] .lgring{transform-origin:100px 118px;animation:lgspin 14s linear infinite}
+  :root[data-motion="full"] .lgpool{transform-origin:100px 188px;animation:lgbreath 3.6s ease-in-out infinite}
+}
+@keyframes lgspin{to{transform:rotate(360deg)}}
+@keyframes lgbreath{0%,100%{opacity:.16;transform:scaleX(.92)}50%{opacity:.3;transform:scaleX(1.06)}}
 .wzflash{display:flex;align-items:flex-start;gap:11px;text-align:left;margin:18px 0 0;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--surface-2);flex-wrap:wrap}
 .wzflash .wzfi{flex:0 0 auto;color:var(--gold,#f2ac17);margin-top:1px}
 .wzflash .wzft{flex:1;min-width:200px;font-size:13px;line-height:1.5;color:var(--muted)}
