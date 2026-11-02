@@ -7,6 +7,10 @@
    anything: what actually protects the data is the Firestore security rules (tools/firestore.rules).
    Firebase project: DrugBug (drugbug-69d42), owned by volaremediallc@gmail.com. */
 window.DRUGBUG_CONFIG = Object.assign({
+  /* The plans are shown (first run, paywall sheet, PLUS/PRO badges) but the website itself stays
+     unlocked until there is a way to pay on it: tier() returns pro for a non-native build, so nobody
+     meets a wall they cannot pay past. Flip that line in modules/pro.js the day Stripe is live. */
+  paywall: true,
   site: "https://drugbugapp.com",
   supportEmail: "VolareMediaLLC@gmail.com",
   firebase: {

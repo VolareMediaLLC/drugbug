@@ -24960,12 +24960,14 @@ function wzPlanStep() {
       '<div class="actions"><button class="btn big" data-wz="next" data-plan="free">Start free</button></div>';
     return c;
   }
-  var freeWeek = typeof trialEligible === "function" && trialEligible();
-  c += '<p class="wzsub">Start free. Move up whenever you want, and cancel in your Apple Account settings at any time.</p><div class="wzplans">' +
+  var freeWeek = NATIVE && typeof trialEligible === "function" && trialEligible();
+  c += '<p class="wzsub">Start free. ' + (NATIVE ? 'Move up whenever you want, and cancel in your Apple Account settings at any time.' : 'Plus and Pro are opening soon; tell us which one you want and we will let you know.') + '</p><div class="wzplans">' +
     wzPlanCard("free", "Free", "$0", "", ["About 40 common medications", "The 5-minute daily and your streak", "Small Sickness Guide and normal vitals"], "") +
     wzPlanCard("plus", TIER_NAME.plus.replace("DrugBug ", ""), PLANS.plus.m + "/mo", PLANS.plus.y + " a year", ["Every medication on every route", "My List, interactions and drug families", "Lab values, blood products, flight prep"], "") +
     wzPlanCard("pro", TIER_NAME.pro.replace("DrugBug ", ""), PLANS.pro.m + "/mo", freeWeek ? "1 week free, then " + PLANS.pro.m + " a month" : PLANS.pro.y + " a year", ["Everything in Plus", "Practice tests, scenarios and Megacode", "Brain games and the study tools"], "best") +
-    '</div><p class="muted small">' + (freeWeek ? "The free week is run by the App Store and renews into Pro unless you cancel first. " : "") + 'Payment is charged to your Apple Account. Manage or cancel in Settings, your name, Subscriptions.</p>';
+    '</div><p class="muted small">' + (NATIVE
+      ? (freeWeek ? "The free week is run by the App Store and renews into Pro unless you cancel first. " : "") + 'Payment is charged to your Apple Account. Manage or cancel in Settings, your name, Subscriptions.'
+      : 'Everything is unlocked on the website while the paid plans are being built. Nothing is charged today.') + '</p>';
   return c;
 }
 function wzAcctStep() {
@@ -24974,7 +24976,9 @@ function wzAcctStep() {
     ? '<button class="btn big" data-acc="apple"' + (ACCT.busy ? " disabled" : "") + '>' + accAppleMark() + 'Continue with Apple</button>'
     : (ACCT.api && typeof ACCT.api.signInGoogle === "function" ? '<button class="btn big" data-acc="google"' + (ACCT.busy ? " disabled" : "") + '>' + accGoogleMark() + 'Continue with Google</button>' : '');
   var c = '<div class="wzart wzlock"><svg viewBox="0 0 24 24" width="46" height="46" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11V8a7 7 0 0 1 14 0v3"/><rect x="4" y="11" width="16" height="10" rx="2.5"/></svg></div>' +
-    '<h1>Make your account</h1><p class="wzsub">Without one, everything you study is kept in this browser only: it does not follow you to your phone, and clearing your history clears it. An account takes one tap and is free.</p>';
+    '<h1>Make your account</h1>' +
+    (WZ.plan && WZ.plan !== "free" ? '<p class="presult good">' + esc(TIER_NAME[WZ.plan] + " noted. It is not open yet, so you are on Free for now, with everything unlocked on the website.") + '</p>' : '') +
+    '<p class="wzsub">Without one, everything you study is kept in this browser only: it does not follow you to your phone, and clearing your history clears it. An account takes one tap and is free.</p>';
   if (ACCT.msg) c += '<p class="presult" role="status">' + esc(ACCT.msg) + '</p>';
   c += '<div class="wzacct"><div class="actions">' + one +
     '<button class="btn ghost" data-acc="mode" data-m="' + (ACCT.mode === "email" ? "" : "email") + '">' + (ACCT.mode === "email" ? "Hide email sign-up" : "Use email instead") + '</button></div>';
@@ -25004,7 +25008,7 @@ document.addEventListener("click", function (e) {
   if (w === "later") return welcomeFinish(0);
   if (w === "plan" || w === "next") {
     WZ.plan = b.getAttribute("data-plan") || "free";
-    if (WZ.plan !== "free") { try { sessionStorage.setItem("drugbug:wzplan", WZ.plan); } catch (x) {} }
+    if (WZ.plan !== "free") { Prog.d.wantPlan = WZ.plan; saveProg(); try { sessionStorage.setItem("drugbug:wzplan", WZ.plan); } catch (x) {} }
     if (!wzCanAccount()) { welcomeFinish(1); return wzPending(); }
     WZ.step = "acct"; render(); window.scrollTo(0, 0); return;
   }
@@ -25016,7 +25020,10 @@ document.addEventListener("submit", function (e) {
    sessionStorage and the App Store sheet opens on the way back. */
 function wzPending() {
   var p = ""; try { p = sessionStorage.getItem("drugbug:wzplan") || ""; sessionStorage.removeItem("drugbug:wzplan"); } catch (x) {}
-  if (p && p !== "free" && typeof openPaywall === "function" && PAYWALL) setTimeout(function () { openPaywall("", p); }, 600);
+  if (!p || p === "free") return;
+  if (NATIVE && typeof openPaywall === "function" && PAYWALL) return setTimeout(function () { openPaywall("", p); }, 600);
+  S.proMsg = TIER_NAME[p] + " is not open yet. You are on Free, with everything unlocked on the website, and we will tell you when it opens.";
+  if (typeof render === "function") render();
 }
 
 
