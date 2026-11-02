@@ -1436,7 +1436,7 @@ function render() {
      already moved on, so buttons did nothing and nothing explained why. Now it says so and offers
      a way out. (owner reported Flight Paramedic doing this, Oct 30 2026) */
   try {
-    html = needDisc() ? discView() : !ok && S.view !== "legal" ? gateView() : S.view === "legal" ? legalView() : (typeof needFun === "function" && needFun()) ? funView() : needRole() ? roleView() : S.view === "home" ? viewHome() : (S.view === "levels" || S.view === "flevels" || S.view === "nlevels" || S.view === "mlevels" || S.view === "ilevels") ? viewLevels() : S.view === "easy" ? viewEasy() : S.view === "admin" ? viewAdmin() : S.view === "classes" ? classesView() : S.view === "settings" ? settingsView() : S.view === "terrarium" ? ((typeof funOn === "function" && !funOn()) ? (S.view = "home", viewHome()) : terrariumView()) : S.view === "everyday" ? evView() : S.view === "field" && typeof fieldView === "function" ? fieldView() : viewLevel();
+    html = needDisc() ? discView() : !ok && S.view !== "legal" ? gateView() : S.view === "legal" ? legalView() : (typeof needFun === "function" && needFun()) ? funView() : (typeof needWelcome === "function" && needWelcome()) ? welcomeView() : needRole() ? roleView() : S.view === "home" ? viewHome() : (S.view === "levels" || S.view === "flevels" || S.view === "nlevels" || S.view === "mlevels" || S.view === "ilevels") ? viewLevels() : S.view === "easy" ? viewEasy() : S.view === "admin" ? viewAdmin() : S.view === "classes" ? classesView() : S.view === "settings" ? settingsView() : S.view === "terrarium" ? ((typeof funOn === "function" && !funOn()) ? (S.view = "home", viewHome()) : terrariumView()) : S.view === "everyday" ? evView() : S.view === "field" && typeof fieldView === "function" ? fieldView() : viewLevel();
   } catch (err) {
     LAST_ERR = (err && (err.message || err)) + "";
     try { if (window.console) console.error("DrugBug render failed:", err); } catch (e) {}
@@ -3419,7 +3419,6 @@ function shopView() {
   if (f === "home") {
     c += '<div class="shophead"><div class="mybug">' + myBugArt("big") + (typeof pkSide === "function" ? pkSide("terr") : "") + '</div><div class="shtx"><span class="eyebrow">Your bug</span><h2>' + esc(me.name) + '</h2>' + stageLine() + '<p class="balance">' + stickIcon(24) + '<strong>' + bal.toLocaleString() + '</strong> sticks</p></div></div>';
     if (S.shopMsg) { c += '<div class="presult good" role="status">' + esc(S.shopMsg) + '</div>'; S.shopMsg = ""; }
-    if (typeof accNudge === "function") c += accNudge();   /* the quiet offer, once they have something to lose */
     var mine = BUGS.filter(function (b) { return owned(b.id); });
     if (Admin.owner && !owned("admin-stickbug")) c += '<div class="adminbug">' + bugArt(bugById("admin-stickbug"), "", {}) + '<div><strong>Your administrator bug is ready</strong><p class="muted small">A stick bug that only you can use. Dress it up in the Wardrobe like any other bug.</p><button class="btn small" data-claim="admin-stickbug">Claim it</button></div></div>';
     c += tankHTML(mine, true);
@@ -5142,6 +5141,7 @@ var LEGAL_PAGES = {
     return L("Not affiliated", [NONAFF + " Exam names describe subjects DrugBug covers. Practice questions are original and are not official items from any exam.", "Resuscitation content is written from published resuscitation guidelines. DrugBug is not an AHA course, does not provide ACLS or PALS certification, and is not reviewed by AHA."]) +
       L("Not a medical device", ["Every simulation in DrugBug (such as Megacode and clinical scenarios) uses fictional practice patients and is not for real human patients. DrugBug is educational software. It is not intended for clinical decision support, diagnosis or treatment of real patients, and it has not been cleared or approved by the FDA. Calculators and interaction notes are practice tools for learning."]) +
       L("Safety medication lists", ["High-alert medication drills are adapted from the ISMP List of High-Alert Medications, and look-alike/sound-alike pairs are informed by the ISMP List of Confused Drug Names and FDA/ISMP tall-man lettering guidance. ISMP lists © Institute for Safe Medication Practices (ISMP), used for education with attribution. DrugBug is not affiliated with ISMP. Consult ismp.org for the current lists."]) +
+      L("Flashing and animation", ["DrugBug plays short animations between sections, and a few of them flash: an ambulance light bar, a cardioversion, an x-ray exposure. They are kept brief and below three flashes per second, which is the published limit for photosensitive seizures, but anyone with photosensitive epilepsy may prefer them off. Settings, Reduce motion turns off every animation and flash in the app, and DrugBug also follows the reduced-motion setting on your phone or computer on its own."]) +
       L("Protocols", ["Agency and facility protocols shown in DrugBug are used with the written permission of their owners and remain their property. National default scopes follow publicly available scope-of-practice models and may differ from your state or agency."]) +
       L("How content is made", ["Drug monographs, questions and scenarios are original writing. Some content was drafted with AI assistance. Each drug shows its content review status. A content review checks educational accuracy against standard references at a point in time; it is not a guarantee that the content is complete, current or error-free. Content marked as draft has not yet been reviewed."]) +
       L("Pronunciation", ["Spoken pronunciations use your device's built-in voice and may not be perfect."]);
@@ -6148,7 +6148,7 @@ function settingsView() {
     setRow("Theme", "", setOpts("theme", themePref(), [["dark", "Night shift (default)"], ["light", "Day shift"], ["system", "Match my device"]])) +
     setRow("Text size", "", setOpts("text", s.text, [["normal", "Normal"], ["large", "Large"], ["xl", "Extra large"]])) +
     setRow("High contrast", "Darker text and borders.", setTog("contrast", s.contrast, "High contrast")) +
-        setRow("Reduce motion", "Turns off card flips and animations.", setTog("motion", s.motion, "Reduce motion")));
+        setRow("Reduce motion", "Turns off card flips, animations and the flashing in level transitions.", setTog("motion", s.motion, "Reduce motion")));
   // study
   var lvls = DB.LEVELS.concat(DB.NLEVELS, DB.MLEVELS);
   c += setCard("study", "Study preferences",
@@ -6284,7 +6284,7 @@ Object.assign(ES_UI, {
   "Display": "Pantalla", "Study": "Estudio", "Sound": "Sonido", "Printing": "Impresión", "Privacy & account": "Privacidad y cuenta", "About": "Acerca de",
   "Match my device": "Igual que mi dispositivo", "Light": "Claro", "Dark": "Oscuro", "Language": "Idioma", "Drug pages and menus. Questions stay in English for now.": "Páginas de medicamentos y menús. Las preguntas siguen en inglés por ahora.",
   "Text size": "Tamaño del texto", "Normal": "Normal", "Large": "Grande", "Extra large": "Muy grande", "High contrast": "Alto contraste", "Darker text and borders.": "Texto y bordes más oscuros.",
-  "Reduce motion": "Reducir movimiento", "Turns off card flips and animations.": "Desactiva los giros de tarjetas y las animaciones.",
+  "Reduce motion": "Reducir movimiento", "Turns off card flips, animations and the flashing in level transitions.": "Desactiva los giros de tarjetas, las animaciones y los destellos de las transiciones.",
   "Study preferences": "Preferencias de estudio", "Open DrugBug to": "Abrir DrugBug en", "Skip the route picker and start on your level.": "Saltar la selección de ruta y empezar en su nivel.", "The home page": "La página de inicio",
   "Daily goal": "Meta diaria", "Questions in the Daily DrugBug.": "Preguntas del DrugBug diario.", "Exam prep length": "Largo de la preparación", "Default number of questions.": "Número de preguntas predeterminado.", "Exam prep mode": "Modo de preparación", "Exam": "Examen", "Adaptive": "Adaptativo",
   "Megacode timer": "Reloj del Megacode", "Relaxed doubles the time. Off removes the clock.": "Relajado duplica el tiempo. Apagado quita el reloj.", "On": "Encendido", "Relaxed": "Relajado", "Off": "Apagado",
@@ -24816,6 +24816,115 @@ document.addEventListener("click", function (e) {
   saveProg(); render(); window.scrollTo(0, 0);
 });
 
+/* ---------- First run: pick a plan, then make an account (owner, Nov 1 2026) ----------
+   Replaces the quiet in-app nudge that nobody found. The order is the one people expect from an app:
+   see what it costs, then create the account that holds it.
+
+   Two screens, both before the path picker:
+     1. Plan.   With the paywall off (today) this is one card: DrugBug is free, start free.
+                With it on it is Free / Plus / Pro, and Pro's App Store free week if the store says
+                this Apple Account is still eligible. A paid pick creates the account first and opens
+                the App Store sheet after, which is the only order that works: the subscription has to
+                land on an account that exists.
+     2. Account. The point of the whole flow. One tap with Google (web) or Apple (phone), or email.
+                "Maybe later" is there, small, because someone who opened drugbugapp.com mid-shift to
+                check a dose should still get the dose.
+
+   Marked done the moment they act, in either direction, so nobody sees it twice. Signing in reloads
+   the page (accDone), so the flag is written before the sign-in call, not after it. */
+
+var WZ = { step: "plan", plan: "" };
+function welcomeDone() { return !!store("welcome"); }
+function welcomeFinish(flag) { store("welcome", 1); if (flag) store("accnudge", 1); WZ.step = "plan"; render(); window.scrollTo(0, 0); }
+function needWelcome() {
+  if (!agreeRec() || welcomeDone()) return false;
+  if (S.view === "legal") return false;
+  if (typeof needDisc === "function" && needDisc()) return false;
+  return true;
+}
+/* The account step is worth showing only when there is a backend to make an account on and they are
+   not already signed in. Without one, picking a plan ends the flow. */
+function wzCanAccount() {
+  if (!ACCT || !ACCT.api) return false;
+  var s = ACCT.api.state() || {};
+  return !s.signedIn;
+}
+
+function wzPlanCard(id, name, price, note, lines, cls) {
+  return '<button class="wzplan ' + (cls || "") + '" data-wz="plan" data-plan="' + id + '">' +
+    '<span class="wzpn">' + esc(name) + '</span><span class="wzpp">' + esc(price) + '</span>' +
+    (note ? '<span class="wzpnote">' + esc(note) + '</span>' : '') +
+    '<span class="wzpl">' + lines.map(function (x) { return '<em>' + esc(x) + '</em>'; }).join("") + '</span></button>';
+}
+function wzPlanStep() {
+  var c = '<div class="wzart">' + (typeof bugArt === "function" && typeof bugById === "function" ? bugArt(bugById("grub-medic"), "wzbug", { mood: "happy" }) : (typeof bugSVG === "function" ? bugSVG("sage") : "")) + '</div>';
+  c += '<h1>Welcome to DrugBug</h1>';
+  if (!PAYWALL) {
+    c += '<p class="wzsub">Medications explained plainly, for the people who give them. Pick a path, study, grow a bug.</p>' +
+      '<div class="wzfree"><span class="wzfreetag">Free</span><strong>Everything, at no cost</strong>' +
+      '<span class="wzpl"><em>Every medication on every route</em><em>Flashcards, questions and practice tests</em><em>The 5-minute daily and your streak</em><em>Sticks, bugs and the Terrarium</em></span>' +
+      '<span class="muted small">Sticks are earned by studying. You can buy more if you would rather not wait, and nothing is locked behind them.</span></div>' +
+      '<div class="actions"><button class="btn big" data-wz="next" data-plan="free">Start free</button></div>';
+    return c;
+  }
+  var freeWeek = typeof trialEligible === "function" && trialEligible();
+  c += '<p class="wzsub">Start free. Move up whenever you want, and cancel in your Apple Account settings at any time.</p><div class="wzplans">' +
+    wzPlanCard("free", "Free", "$0", "", ["About 40 common medications", "The 5-minute daily and your streak", "Small Sickness Guide and normal vitals"], "") +
+    wzPlanCard("plus", TIER_NAME.plus.replace("DrugBug ", ""), PLANS.plus.m + "/mo", PLANS.plus.y + " a year", ["Every medication on every route", "My List, interactions and drug families", "Lab values, blood products, flight prep"], "") +
+    wzPlanCard("pro", TIER_NAME.pro.replace("DrugBug ", ""), PLANS.pro.m + "/mo", freeWeek ? "1 week free, then " + PLANS.pro.m + " a month" : PLANS.pro.y + " a year", ["Everything in Plus", "Practice tests, scenarios and Megacode", "Brain games and the study tools"], "best") +
+    '</div><p class="muted small">' + (freeWeek ? "The free week is run by the App Store and renews into Pro unless you cancel first. " : "") + 'Payment is charged to your Apple Account. Manage or cancel in Settings, your name, Subscriptions.</p>';
+  return c;
+}
+function wzAcctStep() {
+  var hasApple = ACCT.api && typeof ACCT.api.hasApple === "function" ? ACCT.api.hasApple() : NATIVE;
+  var one = hasApple
+    ? '<button class="btn big" data-acc="apple"' + (ACCT.busy ? " disabled" : "") + '>' + accAppleMark() + 'Continue with Apple</button>'
+    : (ACCT.api && typeof ACCT.api.signInGoogle === "function" ? '<button class="btn big" data-acc="google"' + (ACCT.busy ? " disabled" : "") + '>' + accGoogleMark() + 'Continue with Google</button>' : '');
+  var c = '<div class="wzart wzlock"><svg viewBox="0 0 24 24" width="46" height="46" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11V8a7 7 0 0 1 14 0v3"/><rect x="4" y="11" width="16" height="10" rx="2.5"/></svg></div>' +
+    '<h1>Make your account</h1><p class="wzsub">Without one, everything you study is kept in this browser only: it does not follow you to your phone, and clearing your history clears it. An account takes one tap and is free.</p>';
+  if (ACCT.msg) c += '<p class="presult" role="status">' + esc(ACCT.msg) + '</p>';
+  c += '<div class="wzacct"><div class="actions">' + one +
+    '<button class="btn ghost" data-acc="mode" data-m="' + (ACCT.mode === "email" ? "" : "email") + '">' + (ACCT.mode === "email" ? "Hide email sign-up" : "Use email instead") + '</button></div>';
+  if (ACCT.mode === "email") {
+    c += '<form class="pform" data-accform="1"><label>Email<input class="pinput" id="accemail" type="email" autocomplete="email" autocapitalize="none" required></label>' +
+      '<label>Password (8+ characters)<input class="pinput" id="accpw" type="password" autocomplete="new-password" minlength="8" required></label>' +
+      '<div class="actions"><button class="btn" type="submit" data-accgo="create">Create account</button><button class="btn ghost" type="submit" data-accgo="signin">I already have one</button></div></form>';
+  }
+  c += '</div><p class="muted small">We never show your email or your account to anyone else. You can delete your account, and everything in it, from Settings.</p>' +
+    '<div class="wzlater"><button class="linkish" data-wz="later">Maybe later</button></div>';
+  return c;
+}
+function welcomeView() {
+  var step = WZ.step === "acct" && wzCanAccount() ? "acct" : "plan";
+  return '<div class="gate wz wz-' + step + '">' + (step === "acct" ? wzAcctStep() : wzPlanStep()) + '</div>';
+}
+
+document.addEventListener("click", function (e) {
+  /* any account button pressed inside the welcome flow ends the flow: the sign-in reloads the page,
+     so the flag has to be written before the call, not after it */
+  var ab = e.target.closest && e.target.closest(".wzacct [data-acc],.wzacct [data-accgo]");
+  if (ab && ab.getAttribute("data-acc") !== "mode") store("welcome", 1);
+
+  var b = e.target.closest && e.target.closest("[data-wz]"); if (!b) return;
+  var w = b.getAttribute("data-wz");
+  if (w === "later") return welcomeFinish(0);
+  if (w === "plan" || w === "next") {
+    WZ.plan = b.getAttribute("data-plan") || "free";
+    if (WZ.plan !== "free") { try { sessionStorage.setItem("drugbug:wzplan", WZ.plan); } catch (x) {} }
+    if (!wzCanAccount()) { welcomeFinish(1); return wzPending(); }
+    WZ.step = "acct"; render(); window.scrollTo(0, 0); return;
+  }
+}, true);
+document.addEventListener("submit", function (e) {
+  var f = e.target; if (f && f.closest && f.closest(".wzacct")) store("welcome", 1);
+}, true);
+/* A paid pick needs an account first, and creating one reloads the page, so the choice rides in
+   sessionStorage and the App Store sheet opens on the way back. */
+function wzPending() {
+  var p = ""; try { p = sessionStorage.getItem("drugbug:wzplan") || ""; sessionStorage.removeItem("drugbug:wzplan"); } catch (x) {}
+  if (p && p !== "free" && typeof openPaywall === "function" && PAYWALL) setTimeout(function () { openPaywall("", p); }, 600);
+}
+
 
 /* ---------- boot ---------- */
 rebuildIndex();
@@ -24834,5 +24943,5 @@ if (!h) {
 render();
 /* Control Center edits baked into the build (tools/bake_edits.py) so the iPhone app has them without a database */
 if (DB.BAKED) { try { (DB.BAKED.drugdex || []).forEach(applyRecord); CR_TYPES.forEach(function (t) { if (t[0] !== "drug") crItems(t[0]); }); (DB.BAKED.content || []).forEach(applyContent); } catch (e) { } }
-Dex.load(); initProg(); if (typeof grubFix === "function") grubFix(); if (agreeRec() && typeof trialBegin === "function") trialBegin(); setTimeout(function () { if (typeof remindSync === "function") remindSync(); if (typeof wdwSync === "function") wdwSync(); if (typeof watchSync === "function") watchSync(); }, 1500); initAdmin(); initLegal(); if (typeof accInit === "function") accInit(); setTimeout(loadProtocolSets, 400);
+Dex.load(); initProg(); if (typeof grubFix === "function") grubFix(); if (agreeRec() && typeof trialBegin === "function") trialBegin(); setTimeout(function () { if (typeof remindSync === "function") remindSync(); if (typeof wdwSync === "function") wdwSync(); if (typeof watchSync === "function") watchSync(); }, 1500); initAdmin(); initLegal(); if (typeof accInit === "function") accInit(); setTimeout(loadProtocolSets, 400); if (typeof wzPending === "function") setTimeout(wzPending, 900);
 })();

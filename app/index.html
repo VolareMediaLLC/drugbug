@@ -504,19 +504,19 @@ table.suffix td{white-space:normal}
 .lvtrans .txdim{position:absolute;inset:0;background:rgba(10,8,20,.95);opacity:0;animation:txdim .5s ease-out forwards}
 @keyframes txdim{0%{opacity:0}38%{opacity:1}100%{opacity:1}}
 .lvtrans .txflash{position:absolute;inset:0;background:#fff;opacity:0;animation:txflash .5s ease-out forwards}
-@keyframes txflash{0%{opacity:0}18%{opacity:.95}100%{opacity:.9}}
+@keyframes txflash{0%{opacity:0}18%{opacity:.8}100%{opacity:.78}}
 
 /* EMT: the box rolls out hot */
 .tx-siren .txbar{position:absolute;inset:0;background:linear-gradient(90deg,rgba(220,38,38,.96),rgba(37,99,235,.96));opacity:0;animation:txbar .58s ease-out forwards}
-@keyframes txbar{0%{opacity:0}38%{opacity:.98}100%{opacity:.98}}
-.tx-siren .txbar::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(37,99,235,.96),rgba(220,38,38,.96));animation:txbarf .16s steps(1) infinite}
+@keyframes txbar{0%{opacity:0}38%{opacity:.8}100%{opacity:.8}}
+.tx-siren .txbar::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(37,99,235,.96),rgba(220,38,38,.96));animation:txbarf .4s steps(1) infinite}
 @keyframes txbarf{0%,49%{opacity:0}50%,100%{opacity:1}}
 .tx-siren .txamb{position:absolute;left:-40%;top:50%;width:46%;max-width:420px;margin-top:-6%;animation:txamb .66s cubic-bezier(.3,.1,.2,1) forwards}
 .tx-siren .txamb svg{width:100%;height:auto;filter:drop-shadow(0 10px 22px rgba(0,0,0,.5))}
 @keyframes txamb{0%{left:-50%}100%{left:105%}}
 .tx-siren .txlights{position:absolute;left:22%;top:-10%;width:26%;height:16%;display:flex;gap:6%}
-.tx-siren .txlights i{flex:1;border-radius:4px;background:#dc2626;animation:txlt .18s steps(1) infinite}
-.tx-siren .txlights i:last-child{background:#2563eb;animation-delay:.09s}
+.tx-siren .txlights i{flex:1;border-radius:4px;background:#dc2626;animation:txlt .36s steps(1) infinite}
+.tx-siren .txlights i:last-child{background:#2563eb;animation-delay:.18s}
 @keyframes txlt{0%,49%{opacity:1;box-shadow:0 0 26px currentColor}50%,100%{opacity:.25;box-shadow:none}}
 
 /* AEMT: the stick and the flash */
@@ -531,7 +531,7 @@ table.suffix td{white-space:normal}
 .tx-shock .txcharge{position:absolute;inset:0;background:radial-gradient(90% 70% at 50% 50%,rgba(250,204,21,.5),rgba(8,8,16,.95) 70%);opacity:0;animation:txchg .36s ease-in forwards}
 @keyframes txchg{0%{opacity:0;transform:scale(1.25)}100%{opacity:1;transform:scale(1)}}
 .tx-shock .txflash{animation:txshk .55s ease-out forwards}
-@keyframes txshk{0%,54%{opacity:0}60%{opacity:1}100%{opacity:.86}}
+@keyframes txshk{0%,54%{opacity:0}62%{opacity:.82}100%{opacity:.78}}
 .tx-shock .txecg{position:absolute;left:0;top:50%;width:100%;height:120px;margin-top:-60px;opacity:0;stroke-dasharray:1400;stroke-dashoffset:1400;animation:txecg .6s .1s ease-out forwards}
 @keyframes txecg{0%{opacity:0;stroke-dashoffset:1400}25%{opacity:1}100%{opacity:1;stroke-dashoffset:0}}
 .tx-shock .txpad{position:absolute;top:50%;width:92px;height:92px;margin-top:-46px;border-radius:14px;background:linear-gradient(160deg,#e2e8f0,#94a3b8);box-shadow:0 8px 20px rgba(0,0,0,.5)}
@@ -614,7 +614,7 @@ table.suffix td{white-space:normal}
 /* RT: the exposure */
 .tx-xray .txneg{position:absolute;inset:0;background:radial-gradient(90% 80% at 50% 50%,#1e293b,#020617);opacity:0;animation:txdim .35s ease-out forwards}
 .tx-xray .txflashw{animation:txxr .58s ease-out forwards}
-@keyframes txxr{0%,36%{opacity:0}42%{opacity:1}64%{opacity:.5}100%{opacity:.92}}
+@keyframes txxr{0%,36%{opacity:0}44%{opacity:.85}64%{opacity:.5}100%{opacity:.85}}
 
 /* CT: the gantry */
 .tx-gantry .txring{position:absolute;left:50%;top:50%;width:70vmin;height:70vmin;margin:-35vmin 0 0 -35vmin;border-radius:50%;border:16px solid rgba(165,180,252,.9);border-top-color:rgba(67,56,202,.95);border-right-color:rgba(99,102,241,.6);animation:txring .64s cubic-bezier(.3,0,.3,1) forwards}
@@ -1675,6 +1675,33 @@ button.pstat{cursor:pointer}button.pstat:hover{border-color:var(--flight)}
 .t-families{--c:var(--gen);--cs:var(--gen-soft)}.t-blood{--c:#dc2626;--cs:rgba(220,38,38,.14)}.t-hemo{--c:#db2777;--cs:rgba(219,39,119,.14)}
 .hemotab td.hv.hi{color:#dc2626;font-weight:700}.hemotab td.hv.lo{color:#2563eb;font-weight:700}
 :root[data-theme="dark"] .hemotab td.hv.hi{color:#f87171}:root[data-theme="dark"] .hemotab td.hv.lo{color:#60a5fa}
+/* First run: plan, then account (owner, Nov 1 2026) */
+.wz{max-width:680px;text-align:center}
+.wz h1{font-family:var(--f-display);font-size:30px;margin:10px 0 6px}
+.wz .wzsub{color:var(--muted);line-height:1.5;margin:0 auto 18px;max-width:46ch}
+.wz .wzart{display:flex;justify-content:center;align-items:center;min-height:92px}
+.wz .wzart .wzbug,.wz .wzart svg{width:92px;height:92px}
+.wz .wzlock{color:var(--accent,#7dd3fc)}
+.wz .actions{justify-content:center;flex-wrap:wrap}
+.wz .btn.big{font-size:17px;padding:13px 26px;border-radius:14px}
+.wz .pform{max-width:380px;margin:14px auto 0;text-align:left}
+.wz .presult{text-align:left}
+.wzfree{border:2px solid color-mix(in srgb,var(--gen) 45%,var(--line));border-radius:20px;padding:18px;text-align:left;background:linear-gradient(150deg,color-mix(in srgb,var(--gen) 13%,var(--surface)),var(--surface));margin-bottom:16px}
+.wzfree strong{display:block;font-family:var(--f-display);font-size:23px;margin:4px 0 8px}
+.wzfreetag{display:inline-block;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:800;color:var(--gen)}
+.wzpl{display:block;margin:0 0 10px}
+.wzpl em{display:block;font-style:normal;font-size:14px;line-height:1.5;color:var(--muted);padding-left:20px;position:relative}
+.wzpl em::before{content:"";position:absolute;left:3px;top:.55em;width:7px;height:7px;border-radius:50%;background:var(--gen);opacity:.75}
+.wzplans{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:4px 0 14px}
+.wzplan{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:2px;border:2px solid var(--line);background:var(--surface);border-radius:18px;padding:16px;color:var(--ink);font:inherit;transition:transform .14s,border-color .14s}
+.wzplan:hover{transform:translateY(-3px);border-color:var(--gen)}
+.wzplan.best{border-color:var(--gen);background:linear-gradient(150deg,color-mix(in srgb,var(--gen) 14%,var(--surface)),var(--surface))}
+.wzpn{font-family:var(--f-display);font-size:21px}
+.wzpp{font-weight:800;font-size:15px}
+.wzpnote{font-size:12.5px;color:var(--gen);font-weight:700;margin-bottom:6px}
+.wzlater{margin-top:16px}
+.wzlater .linkish{font-size:13.5px;color:var(--muted)}
+@media (max-width:620px){.wzplans{grid-template-columns:1fr}.wz h1{font-size:25px}}
 .rolepick{max-width:860px}
 /* first screens (education notice, path picker): centered on the page instead of stuck at the top */
 #app:has(> .gate){min-height:calc(100vh - 48px);min-height:calc(100dvh - 48px);display:flex;flex-direction:column;justify-content:center}
