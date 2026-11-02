@@ -561,22 +561,30 @@ table.suffix td{white-space:normal}
 @keyframes txdrill{0%{transform:translateY(-70px) rotate(-6deg)}70%{transform:translateY(34px) rotate(0)}100%{transform:translateY(28px)}}
 .tx-io .txblood{position:absolute;inset:0;background:radial-gradient(90% 80% at 50% 56%,rgba(185,28,28,.96),rgba(69,10,10,.98) 70%);opacity:0;animation:txdim .5s .16s ease-out forwards}
 
-/* CNA: the cuff */
-.tx-cuff .txcuff{position:absolute;inset:0;border:0 solid #1e3a8a;background:rgba(15,23,42,.6);box-sizing:border-box;animation:txcuffa .62s cubic-bezier(.4,0,.3,1) forwards}
-@keyframes txcuffa{0%{border-width:0;background:rgba(15,23,42,0)}72%{border-width:34vmin;background:rgba(15,23,42,.9)}100%{border-width:30vmin;background:rgba(15,23,42,.92)}}
-.tx-cuff .txgauge{position:absolute;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;background:#f8fafc;border:7px solid #0f172a;opacity:0;animation:txgauge .6s .06s ease-out forwards}
-.tx-cuff .txgauge i{position:absolute;left:50%;bottom:50%;width:4px;height:40%;margin-left:-2px;background:#dc2626;transform-origin:50% 100%;animation:txneedle .62s cubic-bezier(.3,0,.4,1) forwards}
-@keyframes txgauge{0%{opacity:0;transform:scale(.5)}40%{opacity:1;transform:scale(1)}100%{opacity:1;transform:scale(1)}}
-@keyframes txneedle{0%{transform:rotate(-140deg)}70%{transform:rotate(120deg)}100%{transform:rotate(-20deg)}}
+/* CNA: the bed rolls down the hall */
+.tx-bed .txhall{position:absolute;inset:0;background:linear-gradient(180deg,rgba(203,213,225,.95) 0 46%,rgba(148,163,184,.96) 46% 52%,rgba(226,232,240,.96) 52% 100%);opacity:0;animation:txdim .4s ease-out forwards}
+.tx-bed .txhall::after{content:"";position:absolute;left:0;right:0;top:52%;bottom:0;background:repeating-linear-gradient(90deg,rgba(148,163,184,.3) 0 58px,transparent 58px 62px);animation:txhallrun .66s linear forwards}
+@keyframes txhallrun{0%{transform:translateX(0)}100%{transform:translateX(-62px)}}
+.tx-bed .txbed{position:absolute;left:-60%;top:46%;width:72%;max-width:520px;margin-top:-9%;animation:txbedroll .68s cubic-bezier(.25,.1,.25,1) forwards}
+.tx-bed .txbed svg{width:100%;height:auto;filter:drop-shadow(0 12px 22px rgba(0,0,0,.4))}
+@keyframes txbedroll{0%{left:-62%}100%{left:96%}}
+.tx-bed .txwheel{transform-origin:center;animation:txspin .34s linear infinite}
+@keyframes txspin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+.tx-bed .txbug{animation-delay:.1s}
 
-/* LVN: the med pass */
-.tx-pills .txpill-rain{position:absolute;inset:0;background:rgba(12,14,24,.97);opacity:0;animation:txdim .42s ease-out forwards}
-.tx-pills .txpill-rain i{position:absolute;top:-8%;width:26px;height:15px;border-radius:9px;background:var(--h);box-shadow:inset 0 -5px 0 rgba(0,0,0,.18);animation:txpill .62s cubic-bezier(.4,0,.7,1) forwards}
-@keyframes txpill{0%{top:-8%;transform:rotate(0)}100%{top:108%;transform:rotate(420deg)}}
-.tx-pills .txcup{position:absolute;width:104px;height:78px;margin:-39px 0 0 -52px;background:rgba(248,250,252,.4);border:4px solid rgba(248,250,252,.85);border-radius:6px 6px 22px 22px;opacity:0;animation:txgauge .5s ease-out forwards}
+/* LVN: the bottle gets a shake */
+.tx-bottle .txshelf{position:absolute;inset:0;background:linear-gradient(180deg,rgba(28,25,23,.96),rgba(12,10,9,.98));opacity:0;animation:txdim .4s ease-out forwards}
+.tx-bottle .txbottle{position:absolute;width:150px;height:234px;margin:-150px 0 0 -75px;opacity:0;transform-origin:50% 92%;animation:txshake .62s cubic-bezier(.3,0,.3,1) forwards}
+.tx-bottle .txbottle svg{width:100%;height:100%;filter:drop-shadow(0 10px 20px rgba(0,0,0,.55))}
+@keyframes txshake{0%{opacity:0;transform:scale(.6) rotate(0)}18%{opacity:1;transform:scale(1) rotate(-15deg)}30%{transform:rotate(14deg)}42%{transform:rotate(-13deg)}54%{transform:rotate(12deg)}66%{transform:rotate(-8deg)}78%{transform:rotate(6deg)}100%{opacity:1;transform:rotate(168deg)}}
+.tx-bottle .txrattle{animation:txrattle .09s ease-in-out 6 alternate}
+@keyframes txrattle{0%{transform:translate(-4px,2px)}100%{transform:translate(5px,-3px)}}
+.tx-bottle .txpill-rain{position:absolute;inset:0}
+.tx-bottle .txpill-rain i{position:absolute;top:28%;width:24px;height:14px;border-radius:9px;background:var(--h);box-shadow:inset 0 -4px 0 rgba(0,0,0,.16);animation:txpill .44s cubic-bezier(.4,0,.7,1) forwards}
+@keyframes txpill{0%{top:28%;transform:rotate(0);opacity:1}100%{top:108%;transform:rotate(420deg);opacity:1}}
 
 /* RN: the drip chamber */
-.tx-drip .txchamber{position:absolute;width:76px;height:132px;margin:-66px 0 0 -38px;border:4px solid rgba(226,232,240,.9);border-radius:12px 12px 20px 20px;background:rgba(226,232,240,.14);opacity:0;animation:txgauge .45s ease-out forwards}
+.tx-drip .txchamber{position:absolute;width:92px;height:158px;margin:-79px 0 0 -46px;border:5px solid rgba(226,232,240,.95);border-radius:12px 12px 20px 20px;background:rgba(226,232,240,.14);opacity:0;animation:txgauge .45s ease-out forwards}
 .tx-drip .txchamber i{position:absolute;left:50%;top:16%;width:11px;height:11px;margin-left:-5.5px;border-radius:50%;background:#bae6fd;animation:txdrop2 .3s linear infinite}
 .tx-drip .txchamber i:nth-child(2){animation-delay:.1s}
 .tx-drip .txchamber i:nth-child(3){animation-delay:.2s}
@@ -1323,6 +1331,48 @@ html[data-motion="reduce"] *,html[data-motion="reduce"] *::before,html[data-moti
 .iapblurb{line-height:1.4;min-height:2.6em}
 .iapcard .btn{margin-top:4px;width:100%}
 .iapfine{line-height:1.5;margin-top:14px}
+
+/* ===== Voices (owner, Nov 1 2026). modules/voices.js ===== */
+.vxhick{margin:6px 0 14px}
+.vxgrid .vxcard{align-items:stretch;text-align:center}
+.vxwave{display:block;margin:4px auto 6px;color:var(--accent,#7dd3fc);opacity:.9}
+.vxcard .vxblurb{line-height:1.45;min-height:3.6em}
+.vxcard.eq .vxwave{color:var(--ok,#4ade80)}
+
+/* ===== Thanksgiving on the whole main menu (owner, Nov 1 2026) ===== */
+.homewrap{position:relative}
+.homewrap.hol-thanksgiving{--tg1:#d97706;--tg2:#b45309;--tg3:#9a3412;--tg4:#ca8a04}
+.homewrap.hol-thanksgiving .homegh{color:var(--tg1);letter-spacing:.04em}
+.homewrap.hol-thanksgiving .homegh::after{content:"";display:block;height:2px;margin-top:5px;border-radius:2px;background:linear-gradient(90deg,var(--tg1),var(--tg4) 40%,transparent)}
+.homewrap.hol-thanksgiving .route{border-color:color-mix(in srgb,var(--tg1) 36%,var(--line))}
+.homewrap.hol-thanksgiving .route.gen{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--tg4) 34%,transparent)}
+.homewrap.hol-thanksgiving .route::after{content:"";position:absolute;right:10px;top:10px;width:16px;height:16px;opacity:.5;pointer-events:none;background:no-repeat center/contain url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23d97706'%3E%3Cpath d='M4 20 C4 10 10 4 21 3 C20 14 14 20 4 20Z'/%3E%3C/svg%3E")}
+.homewrap.hol-thanksgiving .route{position:relative}
+/* a thin strip of leaves drifting behind the menu, well under the text */
+.homewrap.hol-thanksgiving::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;opacity:.09;
+ background:no-repeat 6% 14%/30px url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23b45309'%3E%3Cpath d='M4 20 C4 10 10 4 21 3 C20 14 14 20 4 20Z'/%3E%3C/svg%3E"),
+ no-repeat 88% 31%/38px url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ea580c'%3E%3Cpath d='M12 22 C7 22 5 17 5 13 L19 13 C19 17 17 22 12 22Z'/%3E%3Cpath d='M4 9 Q12 5 20 9 Q20 13 12 13 Q4 13 4 9Z' fill='%2378350f'/%3E%3C/svg%3E"),
+ no-repeat 14% 62%/34px url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ca8a04'%3E%3Cpath d='M12 22 V8' stroke='%23ca8a04' stroke-width='1.8'/%3E%3Cellipse cx='9.4' cy='8' rx='2' ry='3.1'/%3E%3Cellipse cx='14.6' cy='8' rx='2' ry='3.1'/%3E%3Cellipse cx='12' cy='4.4' rx='2' ry='3.3'/%3E%3C/svg%3E"),
+ no-repeat 82% 84%/30px url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%239a3412'%3E%3Cpath d='M4 20 C4 10 10 4 21 3 C20 14 14 20 4 20Z'/%3E%3C/svg%3E")}
+.homewrap.hol-thanksgiving > *{position:relative;z-index:1}
+
+/* ===== Get Sticks, made less like a checkout (owner, Nov 1 2026) ===== */
+.iaphead{display:flex;align-items:center;gap:14px;border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin:0 0 14px;background:linear-gradient(120deg,color-mix(in srgb,#f59e0b 10%,transparent),transparent 65%)}
+.iaphead .iapjar{flex:0 0 auto}
+.iaphead .iaphtx{flex:1;min-width:0}
+.iaphead h2{margin:0 0 2px;font-size:1.5rem;line-height:1.1}
+.iapcard{position:relative;overflow:hidden}
+.iapcard .iapart{display:block;margin:2px auto 2px}
+.iapcard.hasbonus::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 70% at 50% 0,color-mix(in srgb,#fbbf24 16%,transparent),transparent 70%)}
+.iapcard > *{position:relative}
+.iapbest{position:absolute;top:0;right:0;z-index:2;background:#f59e0b;color:#1c1917;font-size:10.5px;font-weight:800;letter-spacing:.07em;padding:3px 9px;border-bottom-left-radius:10px}
+.iapcard:hover .iapart .sway{animation:iapsway 1.1s ease-in-out infinite}
+@keyframes iapsway{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+.iapper{font-size:11px;color:var(--muted)}
+.iapwhy{border:1px dashed var(--line);border-radius:14px;padding:12px 14px;margin:16px 0 8px;line-height:1.5}
+.iapwhy h3{margin:0 0 6px;font-size:1rem}
+.iapwhy ul{margin:4px 0 0;padding-left:20px;line-height:1.55}
+@media (prefers-reduced-motion:reduce){.iapcard .iapart .sway{animation:none}}
 .bodywrap{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;margin:8px 0}.bodyfig{display:flex;flex-direction:column;align-items:center;gap:6px;width:150px}.bodylist{flex:1;min-width:220px}
 .bodymap{width:130px;height:auto}.bodymap .bzone{cursor:pointer}.bodymap .bzone *{fill:var(--surface);stroke:var(--muted);stroke-width:2;transition:fill .15s}.bodymap .bzone:hover *,.bodymap .bzone:focus *{fill:var(--line)}.bodymap .bzone.on *{fill:var(--ok);stroke:var(--ok)}
 .dcw{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0}.dcw .pinput{width:100px}

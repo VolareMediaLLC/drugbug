@@ -1,3 +1,225 @@
+/* EMS "On a call" lines, 1.1 targeted therapy (kinase and other inhibitors). Descriptive education only (tools/callwording/RULES.md). */
+Object.assign(DB.CALL, {
+"imetelstat": "Imetelstat suggests lower-risk myelodysplastic syndrome with transfusion-dependent anemia. Bleeding or fever in the weeks after an infusion can reflect its very low platelet and neutrophil counts.",
+"dasatinib": "Dasatinib is a home leukemia pill that suggests CML or Ph+ ALL. New shortness of breath is classically linked to pleural effusion, and bleeding or fever can reflect low blood counts.",
+"nilotinib": "Nilotinib is a twice-daily CML capsule with a boxed warning for QT prolongation. Fainting or palpitations can reflect torsades, especially with low potassium or magnesium or other QT drugs.",
+"bosutinib": "Bosutinib is a daily CML pill known for diarrhea. Weakness or dizziness can reflect dehydration and electrolyte loss, and yellow skin or dark urine is linked to liver toxicity.",
+"ponatinib": "Ponatinib suggests resistant CML or Ph+ ALL, often with the T315I mutation. Chest pain, stroke symptoms, limb ischemia or new heart failure are linked to its boxed warning for arterial clots.",
+"asciminib": "Asciminib is a daily CML pill that works at a different site than older TKIs. Belly pain can reflect pancreatitis, and fever or bleeding can reflect low blood counts.",
+"erlotinib": "Erlotinib suggests EGFR-mutated lung cancer or pancreatic cancer. An acne-like rash is expected, while new cough, low oxygen saturation or fever can reflect interstitial lung disease.",
+"gefitinib": "Gefitinib suggests EGFR-mutated metastatic lung cancer. Rash and diarrhea are typical, while new shortness of breath or fever can reflect interstitial lung disease, and warfarin users are linked to bleeding."
+});
+;
+Object.assign(DB.CALL, {
+"afatinib": "Afatinib suggests EGFR-mutant lung cancer. Severe diarrhea from this pill can cause dehydration and kidney injury, and new shortness of breath can reflect drug-related lung inflammation.",
+"osimertinib": "Osimertinib suggests EGFR-mutant lung cancer. Fainting or palpitations can reflect QT prolongation, and new shortness of breath is linked to pneumonitis or heart failure from this drug.",
+"dacomitinib": "Dacomitinib suggests EGFR-mutant metastatic lung cancer. Diarrhea with dehydration and acneiform rash are common, and new cough or shortness of breath can reflect drug-related lung inflammation.",
+"lazertinib": "Lazertinib, usually paired with IV amivantamab, suggests EGFR-mutant lung cancer. This combination carries a high clot risk, so leg swelling or sudden dyspnea can reflect DVT or pulmonary embolism, often on a blood thinner.",
+"sunvozertinib": "Sunvozertinib suggests lung cancer with an EGFR exon 20 insertion. Persistent diarrhea can cause dehydration, and new cough or shortness of breath can reflect drug-related pneumonitis.",
+"zongertinib": "Zongertinib suggests HER2-mutant lung cancer. Jaundice or fatigue can reflect drug liver injury, and swelling or shortness of breath is linked to reduced heart function or pneumonitis.",
+"sevabertinib": "Sevabertinib suggests HER2-mutant lung cancer. Frequent diarrhea from this pill can cause dehydration and low potassium, and new shortness of breath can reflect pneumonitis or heart dysfunction.",
+"lapatinib": "Lapatinib suggests HER2-positive metastatic breast cancer, often with capecitabine. Jaundice can reflect its boxed liver toxicity, and fainting, palpitations or dyspnea are linked to QT prolongation or reduced heart function."
+});
+;
+Object.assign(DB.CALL, {
+"neratinib": "Neratinib is a home pill that suggests HER2-positive breast cancer. Severe diarrhea is very common with it, so dehydration, low potassium and kidney injury are linked findings.",
+"tucatinib": "Tucatinib suggests HER2-positive breast cancer, often with brain metastases, or colorectal cancer. Diarrhea, jaundice and new neurologic symptoms from brain disease are relevant findings.",
+"crizotinib": "Crizotinib suggests ALK- or ROS1-positive lung cancer or ALK-positive lymphoma. A slow pulse, fainting, vision changes or new shortness of breath from pneumonitis are known effects.",
+"ceritinib": "Ceritinib suggests ALK-positive lung cancer. Vomiting, diarrhea with dehydration, high blood glucose, slow heart rate and new breathing trouble from pneumonitis are linked to this drug.",
+"alectinib": "Alectinib suggests ALK-positive lung cancer. A slow pulse, muscle pain or weakness with high CPK, jaundice and new shortness of breath are known effects of this drug.",
+"brigatinib": "Brigatinib suggests ALK-positive lung cancer. New shortness of breath or hypoxia in the first week or after a dose increase can signal early pneumonitis, and high blood pressure is common.",
+"lorlatinib": "Lorlatinib suggests ALK-positive lung cancer. Confusion, mood change, hallucinations or seizures can be drug effects, and fainting can reflect AV block linked to this drug.",
+"ensartinib": "Ensartinib suggests ALK-positive lung cancer. Rash and itching are common, while new cough or shortness of breath can signal pneumonitis and a slow pulse is a known effect."
+});
+;
+Object.assign(DB.CALL, {
+"entrectinib": "Entrectinib suggests ROS1-positive lung cancer or an NTRK fusion tumor, often with brain metastases. Dizziness, confusion and falls are common, and new dyspnea with leg swelling can reflect drug-related heart failure.",
+"larotrectinib": "Larotrectinib suggests an NTRK fusion cancer in an adult or child, such as infantile fibrosarcoma. Dizziness, confusion and gait changes are known effects, and falls can cause fractures.",
+"repotrectinib": "Repotrectinib suggests ROS1-positive lung cancer or an NTRK fusion tumor. Dizziness and unsteady gait are very common and linked to falls, and new cough or dyspnea can reflect pneumonitis.",
+"taletrectinib": "Taletrectinib suggests ROS1-positive lung cancer. Diarrhea and vomiting are common and can cause dehydration, and fainting or palpitations can reflect QT prolongation from this drug.",
+"capmatinib": "Capmatinib suggests MET exon 14 lung cancer, often in an older adult. Leg swelling is common and expected, while new cough, fever or dyspnea can reflect drug-related pneumonitis.",
+"tepotinib": "Tepotinib suggests MET exon 14 lung cancer, often in an older adult. Marked leg edema is typical of this drug, and new dyspnea or cough can reflect interstitial lung disease.",
+"selpercatinib": "Selpercatinib suggests RET-altered lung or medullary thyroid cancer. High blood pressure, bleeding, QT prolongation and liver injury are known effects, and dry mouth and swelling are common.",
+"pralsetinib": "Pralsetinib suggests RET fusion lung or thyroid cancer. Fever with cough can reflect pneumonia or pneumonitis in a patient with low white counts, and high blood pressure and bleeding are known effects."
+});
+;
+Object.assign(DB.CALL, {
+"sotorasib": "Sotorasib suggests KRAS G12C lung or colorectal cancer. Diarrhea with dehydration, yellow skin from hepatotoxicity, and new cough or hypoxia from pneumonitis are its known serious effects.",
+"adagrasib": "Adagrasib suggests KRAS G12C lung or colorectal cancer. Vomiting and diarrhea are very common, and electrolyte loss plus drug-related QTc prolongation can lead to syncope or torsades.",
+"dabrafenib": "Dabrafenib, usually with trametinib, suggests BRAF-mutant melanoma, lung or thyroid cancer. High fever with rigors, hypotension and kidney injury is a known drug reaction that can resemble sepsis.",
+"trametinib": "Trametinib, usually with dabrafenib, suggests BRAF-mutant cancer. It is linked to fever, heart failure, blood clots, bleeding and sudden vision changes from retinal fluid.",
+"vemurafenib": "Vemurafenib suggests BRAF V600E melanoma or Erdheim-Chester disease. Severe sunburn from photosensitivity and QT prolongation with syncope or palpitations are known effects.",
+"cobimetinib": "Cobimetinib, usually with vemurafenib, suggests BRAF-mutant melanoma or a histiocytic disorder. Blurry vision, muscle breakdown with dark urine, bleeding and severe sunburn are linked effects.",
+"encorafenib": "Encorafenib suggests BRAF-mutant melanoma, lung cancer or colorectal cancer. QT prolongation with syncope, bleeding, heart failure and vision changes are known effects.",
+"binimetinib": "Binimetinib, taken with encorafenib, suggests BRAF-mutant melanoma or lung cancer. Blood clots, heart failure, blurry vision from retinal fluid and muscle breakdown are linked effects."
+});
+;
+Object.assign(DB.CALL, {
+"tovorafenib": "Tovorafenib suggests a child with a BRAF-altered low-grade brain tumor on once-weekly targeted therapy. Bleeding, including intracranial hemorrhage, severe rash and new neurologic changes are linked to this drug or the tumor.",
+"avutometinib-defactinib": "Avutometinib-defactinib suggests recurrent low-grade serous ovarian cancer. Sudden vision changes, severe rash, and muscle pain with dark urine from rhabdomyolysis are known effects of this pill combination.",
+"selumetinib": "Selumetinib suggests neurofibromatosis type 1 with plexiform neurofibromas. Dyspnea or edema can reflect drug-related reduced ejection fraction, and vision changes and severe diarrhea are known effects.",
+"mirdametinib": "Mirdametinib suggests neurofibromatosis type 1 with plexiform neurofibromas in an adult or child. Vision changes, reduced heart function and rash are known effects of this MEK inhibitor.",
+"sorafenib": "Sorafenib suggests liver, kidney or thyroid cancer, often with cirrhosis. Bleeding, chest pain from cardiac ischemia, high blood pressure and painful peeling hands and feet are linked to this drug.",
+"sunitinib": "Sunitinib suggests kidney cancer, GIST or a pancreatic neuroendocrine tumor. Hepatotoxicity, heart failure, hypertension, hypoglycemia and bleeding are linked to it, and its yellow skin tint can resemble jaundice.",
+"pazopanib": "Pazopanib suggests advanced kidney cancer or soft tissue sarcoma. Jaundice from hepatotoxicity, QT prolongation with syncope, high blood pressure and bleeding are known risks of this drug.",
+"axitinib": "Axitinib suggests advanced kidney cancer, often with immunotherapy. Severe hypertension, headache with seizures from PRES, and bleeding are known effects, and immune-related colitis or hepatitis can come from the partner drug."
+});
+;
+Object.assign(DB.CALL, {
+"cabozantinib": "Cabozantinib suggests advanced kidney, liver or thyroid cancer. Bleeding, severe abdominal pain from perforation, very high blood pressure and dehydration from diarrhea are linked to this drug.",
+"lenvatinib": "Lenvatinib suggests thyroid, kidney, liver or endometrial cancer, often with pembrolizumab. Very high blood pressure, bleeding, dehydration from diarrhea and QT prolongation are known effects.",
+"regorafenib": "Regorafenib suggests late-stage colorectal cancer, GIST or liver cancer. Jaundice or confusion can reflect its boxed-warning liver toxicity, and bleeding, painful blistered hands and feet and high blood pressure are linked to it.",
+"vandetanib": "Vandetanib suggests medullary thyroid cancer. Syncope or palpitations can reflect QT prolongation and torsades, a boxed-warning risk that persists for weeks because of its very long half-life.",
+"tivozanib": "Tivozanib suggests advanced kidney cancer after several prior treatments. Very high blood pressure, chest pain, heart failure symptoms and bleeding are linked to this drug.",
+"fruquintinib": "Fruquintinib suggests metastatic colorectal cancer after multiple prior treatments. High blood pressure, GI bleeding and abdominal pain from bowel perforation are known effects.",
+"ibrutinib": "Ibrutinib suggests CLL, Waldenstrom macroglobulinemia or chronic GVHD. New atrial fibrillation, easy bleeding and serious bleeding after a fall or head injury are classic effects of this drug.",
+"acalabrutinib": "Acalabrutinib suggests CLL or mantle cell lymphoma. Bleeding after minor trauma, infections and atrial fibrillation are linked to this drug, and headache is common in the first weeks."
+});
+;
+Object.assign(DB.CALL, {
+"zanubrutinib": "Zanubrutinib suggests CLL or another B-cell lymphoma. It is linked to bleeding, including intracranial bleeding after minor head trauma, atrial fibrillation and serious infections, and fever can signal neutropenic infection.",
+"pirtobrutinib": "Pirtobrutinib suggests relapsed CLL or mantle cell lymphoma after earlier BTK inhibitor therapy. Bleeding, atrial fibrillation and serious infections are known risks, and fever can signal neutropenic sepsis.",
+"idelalisib": "Idelalisib suggests relapsed CLL. Severe diarrhea, abdominal pain, cough with hypoxia, jaundice or fever are linked to its boxed-warning colitis, pneumonitis, liver injury and infections, including PJP.",
+"duvelisib": "Duvelisib suggests heavily treated CLL or SLL. Fever, severe diarrhea, blistering rash or new cough with hypoxia are linked to its boxed-warning infections, colitis, skin reactions and pneumonitis.",
+"alpelisib": "Alpelisib suggests PIK3CA-mutated metastatic breast cancer. Confusion, thirst, polyuria or vomiting can reflect drug-induced hyperglycemia or ketoacidosis, and a blistering rash is linked to severe skin reactions.",
+"inavolisib": "Inavolisib suggests PIK3CA-mutated metastatic breast cancer treated with palbociclib and fulvestrant. Marked hyperglycemia, dehydration from diarrhea or mouth sores, and neutropenic fever are known risks.",
+"capivasertib": "Capivasertib suggests advanced breast or prostate cancer on targeted therapy. Hyperglycemia, dehydration from diarrhea and severe rash are known effects, and it is taken 4 days on and 3 days off each week.",
+"everolimus": "Everolimus suggests breast, kidney or neuroendocrine cancer, tuberous sclerosis, or an organ transplant. Pneumonitis, infections, mouth ulcers, hyperglycemia and angioedema, especially with ACE inhibitors, are known effects."
+});
+;
+Object.assign(DB.CALL, {
+"temsirolimus": "Temsirolimus suggests advanced kidney cancer treated with weekly infusions. Fever, new cough or hypoxia can reflect infection or pneumonitis, and high blood glucose is a known effect.",
+"palbociclib": "Palbociclib suggests hormone receptor-positive metastatic breast cancer. Neutropenia is very common, so fever can signal neutropenic infection, and new cough or dyspnea can reflect drug-related pneumonitis.",
+"ribociclib": "Ribociclib suggests hormone receptor-positive breast cancer. It prolongs the QT interval, so syncope or palpitations can reflect torsades, and it can also cause hepatotoxicity and neutropenia.",
+"abemaciclib": "Abemaciclib suggests hormone receptor-positive breast cancer. Diarrhea is very common and can lead to dehydration and kidney injury, and leg swelling or dyspnea can reflect venous thromboembolism.",
+"ruxolitinib": "Ruxolitinib suggests myelofibrosis, polycythemia vera or graft-versus-host disease. Low platelets, infections including shingles, and a symptom rebound with fever after abrupt stopping are known risks.",
+"fedratinib": "Fedratinib suggests myelofibrosis. Its boxed warning is Wernicke encephalopathy, so confusion, unsteady gait or abnormal eye movements, especially with vomiting or poor intake, can reflect thiamine deficiency.",
+"pacritinib": "Pacritinib suggests myelofibrosis with very low platelets. Bleeding risk is high, diarrhea is common, and syncope can reflect QT prolongation.",
+"momelotinib": "Momelotinib suggests myelofibrosis with anemia. Infections, low platelets and liver injury are known risks, and the patient may have a history of transfusions."
+});
+;
+Object.assign(DB.CALL, {
+"midostaurin": "Midostaurin suggests FLT3-mutated AML on chemotherapy or advanced systemic mastocytosis. Fever after chemotherapy can signal neutropenic sepsis, and new cough or shortness of breath is linked to pneumonitis.",
+"gilteritinib": "Gilteritinib suggests relapsed FLT3-mutated AML. Fever, breathlessness and rapid weight gain can reflect differentiation syndrome, and headache with seizures or vision change is linked to PRES.",
+"quizartinib": "Quizartinib suggests FLT3-ITD positive AML. Fainting, palpitations or cardiac arrest can reflect QT prolongation and torsades, especially with vomiting, diarrhea or new azole antifungals.",
+"ivosidenib": "Ivosidenib suggests IDH1-mutated AML, MDS or cholangiocarcinoma. Fever, hypoxia and swelling can reflect differentiation syndrome, and fainting or new leg weakness are linked to QT prolongation and Guillain-Barre syndrome.",
+"enasidenib": "Enasidenib suggests relapsed IDH2-mutated AML. Fever, breathlessness, bone pain and rapid weight gain can reflect differentiation syndrome, and yellow skin is often a harmless indirect bilirubin rise.",
+"olutasidenib": "Olutasidenib suggests relapsed IDH1-mutated AML. Fever, hypoxia and rapid weight gain can reflect differentiation syndrome, and jaundice or dark urine are linked to drug liver injury.",
+"vorasidenib": "Vorasidenib suggests an IDH-mutant low-grade brain tumor. Seizures are usually from the tumor itself, and jaundice, dark urine or belly pain are linked to drug liver injury.",
+"revumenib": "Revumenib suggests relapsed KMT2A or NPM1 leukemia, sometimes in children. Fever with breathlessness and weight gain can reflect differentiation syndrome, and fainting or palpitations are linked to QT prolongation."
+});
+;
+Object.assign(DB.CALL, {
+"ziftomenib": "Ziftomenib suggests relapsed NPM1-mutated acute myeloid leukemia. Fever, hypoxia, edema and hypotension can reflect differentiation syndrome rather than infection alone, and QT prolongation is a known effect.",
+"erdafitinib": "Erdafitinib suggests advanced bladder or urothelial cancer with an FGFR3 alteration. Sudden vision changes, mouth sores, diarrhea with dehydration and high phosphate are known effects.",
+"pemigatinib": "Pemigatinib suggests bile duct cancer with an FGFR2 fusion or a rare FGFR1 blood neoplasm. Vision changes, diarrhea and high phosphate are known effects, and fever with jaundice can reflect cholangitis.",
+"futibatinib": "Futibatinib suggests intrahepatic bile duct cancer with an FGFR2 fusion. Vision changes, high phosphate and liver test rise are known effects, and fever with jaundice can reflect cholangitis.",
+"avapritinib": "Avapritinib suggests GIST or systemic mastocytosis. Sudden severe headache, vomiting or confusion is linked to intracranial hemorrhage, and memory problems and facial or leg swelling are common.",
+"ripretinib": "Ripretinib suggests advanced GIST after several prior treatments. Hypertension, hand-foot pain, hair loss and new skin lesions are common, and dyspnea with edema can reflect cardiac dysfunction.",
+"olaparib": "Olaparib suggests BRCA-related ovarian, breast, pancreatic or prostate cancer. Fatigue and pallor from anemia are common, and new dyspnea can reflect pneumonitis or pulmonary embolism.",
+"niraparib": "Niraparib suggests ovarian cancer on maintenance therapy. Low platelets with bruising or bleeding are common, and severe hypertension with headache or confusion can reflect hypertensive crisis or PRES."
+});
+;
+Object.assign(DB.CALL, {
+"rucaparib": "Rucaparib is a home PARP inhibitor pill that suggests BRCA-mutated ovarian or prostate cancer. Fatigue, bleeding or fever can reflect anemia, low platelets or neutropenia, and sunburn-like rash is a known effect.",
+"talazoparib": "Talazoparib suggests BRCA-mutated breast cancer or metastatic prostate cancer. Severe anemia is common, so fatigue, pallor or shortness of breath can reflect a low hemoglobin, and fever can signal neutropenic infection.",
+"glasdegib": "Glasdegib suggests AML in an older or frail adult on low-dose cytarabine. Fever can signal neutropenic sepsis, and syncope or palpitations are linked to QT prolongation from this drug.",
+"sonidegib": "Sonidegib suggests advanced basal cell skin cancer. Muscle pain, weakness and dark urine are linked to drug-related CK elevation and rhabdomyolysis, and the drug persists for months after stopping.",
+"vismodegib": "Vismodegib suggests advanced basal cell skin cancer. Muscle cramps, taste loss and weight loss are common, and a blistering or peeling rash is linked to rare severe skin reactions.",
+"pexidartinib": "Pexidartinib suggests a tenosynovial giant cell tumor of a joint. Jaundice, dark urine or abdominal pain can signal serious drug-induced liver injury, the reason for its boxed warning.",
+"vimseltinib": "Vimseltinib is a twice-weekly pill for a tenosynovial giant cell joint tumor. Swelling around the eyes is a common drug effect, and daily dosing by mistake is a recognized error risk.",
+"belzutifan": "Belzutifan suggests von Hippel-Lindau disease, kidney cancer or pheochromocytoma. Low SpO2, exertional shortness of breath and anemia are known effects of this drug."
+});
+
+;
+/* EMS "On a call" lines, 1.1 antibodies, bispecifics and antibody-drug conjugates. Descriptive education only (tools/callwording/RULES.md). */
+Object.assign(DB.CALL, {
+"nirogacestat": "Nirogacestat suggests treatment for a desmoid tumor. Diarrhea is very common and can cause dehydration with low potassium and phosphate, and missed periods in young women are a known drug effect.",
+"dordaviprone": "Dordaviprone suggests an H3 K27M-mutant diffuse midline glioma, often in a child or young adult. It is taken once weekly, and hives, facial swelling or syncope can reflect hypersensitivity or QT prolongation.",
+"pertuzumab": "Pertuzumab suggests HER2-positive breast cancer treated with trastuzumab and chemotherapy. New dyspnea, orthopnea or leg swelling can reflect antibody-related heart failure, and diarrhea with fever can signal neutropenic illness.",
+"margetuximab": "Margetuximab suggests heavily pretreated metastatic HER2-positive breast cancer. Dyspnea or edema can reflect cumulative HER2 and anthracycline cardiotoxicity, and fever after chemotherapy can signal neutropenic sepsis.",
+"obinutuzumab": "Obinutuzumab suggests CLL, follicular lymphoma or lupus nephritis. Hypotension, rigors and dyspnea are common around infusions, and fever can signal serious infection from B-cell depletion and neutropenia.",
+"ofatumumab": "Ofatumumab (Kesimpta) suggests relapsing multiple sclerosis treated with a monthly self-injection. Fever and chills after injections are common, and B-cell depletion is associated with serious infections and hepatitis B reactivation.",
+"ramucirumab": "Ramucirumab suggests advanced gastric, lung, colorectal or liver cancer. As an antiangiogenic drug it is linked to severe hypertension, bleeding, bowel perforation, poor wound healing and arterial events such as MI or stroke.",
+"cetuximab": "Cetuximab suggests colorectal or head and neck cancer. An acne-like rash is typical, low magnesium can cause cramps or arrhythmia, and infusion reactions can be severe, especially with alpha-gal (red meat) allergy."
+});
+;
+Object.assign(DB.CALL, {
+"panitumumab": "Panitumumab suggests metastatic colorectal cancer. Its acne-like rash can become infected, and low magnesium or potassium from the drug can cause cramps, weakness or arrhythmia.",
+"necitumumab": "Necitumumab suggests squamous lung cancer on gemcitabine and cisplatin. It carries a boxed warning for cardiopulmonary arrest and low magnesium, and clots in legs, lungs or brain are known risks.",
+"amivantamab": "Amivantamab suggests EGFR-mutated lung cancer. Leg swelling, chest pain or sudden dyspnea can reflect a blood clot, especially with lazertinib, and new cough can signal pneumonitis.",
+"daratumumab": "Daratumumab suggests multiple myeloma. It makes blood bank antibody screens panreactive for months, which can delay crossmatched blood, and fever points toward infection from low immunity.",
+"isatuximab": "Isatuximab suggests relapsed multiple myeloma. Fever can signal neutropenic infection, and like daratumumab it interferes with blood bank crossmatching for months.",
+"elotuzumab": "Elotuzumab suggests relapsed multiple myeloma treated with lenalidomide or pomalidomide and dexamethasone. Infection, shingles and blood clots from the partner drugs are known risks.",
+"alemtuzumab": "Alemtuzumab suggests CLL or multiple sclerosis. It suppresses immunity for many months, so fever can reflect opportunistic infection, and bruising or bleeding can reflect autoimmune low platelets.",
+"dinutuximab": "Dinutuximab suggests a child with high-risk neuroblastoma, usually with a central line. Fever can signal line infection, and weakness, vision changes or seizures are recognized neurotoxicities."
+});
+;
+Object.assign(DB.CALL, {
+"naxitamab": "Naxitamab suggests a child with relapsed high-risk neuroblastoma. Severe nerve pain, high blood pressure, breathing reactions, weakness or urinary retention after an infusion are linked to this antibody.",
+"mogamulizumab": "Mogamulizumab suggests mycosis fungoides or Sezary syndrome, a skin T-cell lymphoma. A spreading rash, blisters or mouth sores can signal a serious drug reaction, and fever can reflect infection.",
+"tafasitamab": "Tafasitamab with lenalidomide suggests relapsed large B-cell or follicular lymphoma. Fever can signal neutropenic infection, and leg swelling or sudden shortness of breath are linked to lenalidomide clots.",
+"zolbetuximab": "Zolbetuximab suggests advanced stomach or gastroesophageal junction cancer on chemotherapy. Heavy vomiting is its signature effect and can lead to dehydration, low potassium and kidney injury.",
+"nivolumab": "Nivolumab is an immunotherapy for many cancers. Diarrhea, cough, low blood pressure, very high glucose or chest pain can reflect immune-related colitis, pneumonitis, adrenal crisis, DKA or myocarditis, even months later.",
+"nivolumab-relatlimab": "Nivolumab-relatlimab suggests advanced melanoma on immunotherapy. Chest pain, palpitations, diarrhea, shortness of breath or very high glucose can reflect immune-related myocarditis, colitis, pneumonitis or DKA.",
+"ipilimumab": "Ipilimumab suggests melanoma or another cancer on combination immunotherapy. Diarrhea can signal immune colitis, and headache with fatigue or low blood pressure is linked to hypophysitis and adrenal insufficiency.",
+"tremelimumab": "Tremelimumab suggests liver or lung cancer on immunotherapy with durvalumab. Diarrhea, jaundice, confusion or shortness of breath can reflect immune-related colitis, hepatitis or pneumonitis.",
+});
+;
+Object.assign(DB.CALL, {
+"atezolizumab": "Atezolizumab suggests lung cancer, liver cancer or melanoma on immunotherapy. Diarrhea, dyspnea, confusion or hypotension can reflect immune-mediated colitis, pneumonitis or adrenal crisis, even months after the last infusion.",
+"durvalumab": "Durvalumab suggests lung cancer, often Stage III after chemoradiation. New cough, dyspnea or hypoxia can reflect immune or radiation pneumonitis, and hypotension with fatigue can reflect adrenal insufficiency.",
+"avelumab": "Avelumab suggests Merkel cell skin cancer or bladder cancer on maintenance immunotherapy. Fever, chills or dyspnea near an infusion can be an infusion reaction, and diarrhea or hypotension can be immune-mediated.",
+"cemiplimab": "Cemiplimab suggests advanced skin squamous cell or basal cell cancer, or lung cancer, often in an older adult. Diarrhea, dyspnea or hypotension can be immune-mediated, and transplant recipients can develop organ rejection.",
+"dostarlimab": "Dostarlimab suggests endometrial cancer or a mismatch repair-deficient tumor. Fever during chemotherapy cycles can signal neutropenic sepsis, while diarrhea, dyspnea or hypotension can reflect immune-mediated toxicity.",
+"retifanlimab": "Retifanlimab suggests Merkel cell skin cancer or anal cancer on immunotherapy. Diarrhea, new dyspnea, confusion or hypotension can reflect immune-mediated colitis, pneumonitis or endocrine injury such as adrenal insufficiency.",
+"toripalimab": "Toripalimab suggests nasopharyngeal cancer, often after head and neck radiation. Fever during chemotherapy can signal neutropenic sepsis, and fatigue, hypotension or dyspnea can reflect immune-mediated thyroid, adrenal or lung injury.",
+"tislelizumab": "Tislelizumab suggests esophageal or stomach cancer, often with weight loss and poor intake. Fever during chemotherapy can signal neutropenic sepsis, and diarrhea, dyspnea or hypotension can reflect immune-mediated toxicity."
+});
+;
+Object.assign(DB.CALL, {
+"penpulimab": "Penpulimab suggests nasopharyngeal cancer on immunotherapy. Diarrhea, cough, rash, extreme fatigue or high glucose can reflect immune-mediated organ inflammation, which can appear months after a dose.",
+"cosibelimab": "Cosibelimab suggests advanced skin squamous cell cancer on immunotherapy. Diarrhea, cough, rash, fatigue, high glucose or low blood pressure can reflect immune-mediated organ inflammation, even months later.",
+"blinatumomab": "Blinatumomab suggests B-cell leukemia, often with a portable pump running a continuous infusion. Fever, low blood pressure, tremor, confusion or seizures are linked to cytokine release and neurotoxicity, and flushing the line delivers a bolus.",
+"teclistamab": "Teclistamab suggests relapsed multiple myeloma on a bispecific antibody. Fever, low blood pressure or confusion after recent dosing can signal cytokine release syndrome, and serious infections are common.",
+"talquetamab": "Talquetamab suggests relapsed multiple myeloma on a bispecific antibody. Taste loss and trouble swallowing are linked to dehydration and weight loss, and fever or confusion can signal cytokine release syndrome.",
+"elranatamab": "Elranatamab suggests relapsed multiple myeloma on a bispecific antibody. Fever, low blood pressure or confusion after recent dosing can signal cytokine release syndrome, and serious infections are common.",
+"linvoseltamab": "Linvoseltamab suggests relapsed multiple myeloma on an IV bispecific antibody. Fever, low blood pressure or confusion after a recent infusion can signal cytokine release syndrome, and serious infections are common.",
+"epcoritamab": "Epcoritamab suggests relapsed B-cell lymphoma on a bispecific antibody. Fever, low blood pressure or confusion in the first weeks can signal cytokine release syndrome, and infection risk stays high."
+});
+;
+Object.assign(DB.CALL, {
+"glofitamab": "Glofitamab suggests relapsed large B-cell lymphoma on a bispecific antibody. Fever, low blood pressure or confusion after early doses can signal cytokine release syndrome, and infection risk stays high for months.",
+"mosunetuzumab": "Mosunetuzumab suggests relapsed follicular lymphoma on a bispecific antibody. Fever, low blood pressure or confusion after early doses can signal cytokine release syndrome, and serious infections are common.",
+"tarlatamab": "Tarlatamab suggests small cell lung cancer on a T-cell engager. Fever, low blood pressure, confusion, trouble speaking or seizures in the days after early doses are linked to cytokine release and neurotoxicity.",
+"zanidatamab": "Zanidatamab suggests HER2-positive biliary or stomach and esophageal cancer. Severe diarrhea with dehydration and kidney injury is its boxed toxicity, and shortness of breath or swelling can reflect heart failure.",
+"zenocutuzumab": "Zenocutuzumab suggests lung or pancreatic cancer with an NRG1 gene fusion. Infusion reactions, new cough or shortness of breath from lung inflammation, and heart failure are its key risks.",
+"tebentafusp": "Tebentafusp suggests metastatic uveal melanoma, an eye cancer that spreads to the liver. Fever, chills, low blood pressure and rash after weekly infusions reflect cytokine release, most often in the first three doses."
+});
+;
+Object.assign(DB.CALL, {
+"ado-trastuzumab-emtansine": "Kadcyla suggests HER2-positive breast cancer treatment. Bleeding with low platelets, jaundice, shortness of breath or leg swelling can reflect its liver, platelet and heart toxicities.",
+"trastuzumab-deruxtecan": "Enhertu suggests HER2-expressing breast, lung or stomach cancer treatment. New cough, shortness of breath, fever or low oxygen is linked to drug-induced pneumonitis, which has been fatal.",
+"sacituzumab-govitecan": "Trodelvy suggests metastatic breast cancer treatment. Fever can signal neutropenic sepsis, and heavy diarrhea can cause dehydration and kidney injury in the days after a dose.",
+"datopotamab-deruxtecan": "Datroway suggests treated breast cancer or EGFR-mutated lung cancer. Mouth sores, eye irritation and new cough or shortness of breath are its hallmark effects, and pneumonitis is the most serious.",
+"enfortumab-vedotin": "Padcev suggests bladder or urothelial cancer treatment. Blistering rash, very high glucose or DKA even without diabetes, and numbness causing falls are known effects.",
+"tisotumab-vedotin": "Tivdak suggests recurrent cervical cancer treatment. Eye pain or vision loss and nosebleeds or other bleeding are its classic effects, and pneumonitis can cause shortness of breath.",
+"mirvetuximab-soravtansine": "Elahere suggests platinum-resistant ovarian cancer treatment. Blurred vision from corneal toxicity and numbness can contribute to falls, and new cough or dyspnea is linked to pneumonitis.",
+"brentuximab-vedotin": "Adcetris suggests Hodgkin or T-cell lymphoma treatment. Fever can signal neutropenic sepsis, and new confusion or weakness is associated with PML, a rare brain infection."
+});
+;
+Object.assign(DB.CALL, {
+"polatuzumab-vedotin": "Polatuzumab suggests treatment for diffuse large B-cell lymphoma. Fever after a cycle can signal neutropenic sepsis, and new numbness or weakness in the hands and feet is linked to its MMAE payload.",
+"loncastuximab-tesirine": "Loncastuximab suggests relapsed large B-cell lymphoma. Swelling, rapid weight gain and shortness of breath can reflect fluid retention or pleural effusion, and fever can signal neutropenic infection.",
+"inotuzumab-ozogamicin": "Inotuzumab suggests relapsed B-cell acute lymphoblastic leukemia. Abdominal pain, jaundice, ascites or rapid weight gain are linked to hepatic veno-occlusive disease, and fever or bleeding reflect low blood counts.",
+"gemtuzumab-ozogamicin": "Gemtuzumab suggests acute myeloid leukemia treatment. Fever, bleeding and bruising reflect prolonged low counts, while abdominal swelling, jaundice or weight gain are linked to hepatic veno-occlusive disease.",
+"belantamab-mafodotin": "Belantamab suggests multiple myeloma treatment. Blurred vision from corneal toxicity can contribute to falls or car crashes, and low platelets increase bleeding risk after trauma.",
+"telisotuzumab-vedotin": "Telisotuzumab suggests previously treated non-small cell lung cancer. New shortness of breath or hypoxia can reflect pneumonitis, and numbness or weakness in the feet is linked to neuropathy and falls.",
+"tagraxofusp": "Tagraxofusp suggests treatment for a rare blood cancer (BPDCN). Hypotension, rapid weight gain, edema and low albumin in the days after dosing are linked to capillary leak syndrome.",
+"denileukin-diftitox": "Denileukin diftitox suggests cutaneous T-cell lymphoma treatment. Hypotension, swelling and rapid weight gain after a dosing week are linked to capillary leak syndrome, and fever or rigors can reflect infusion reactions."
+});
+
+;
 /* EMS "On a call" lines, 1.1 hormonal, cell/gene, radiopharmaceutical and supportive oncology. Descriptive education only (tools/callwording/RULES.md). */
 Object.assign(DB.CALL, {
 "toremifene": "Toremifene suggests metastatic breast cancer on hormone therapy. It carries a boxed QT warning, so fainting or palpitations, especially with vomiting, low potassium or new antibiotics, can reflect torsade de pointes.",
@@ -35911,727 +36133,6 @@ Object.assign(DB.DEEP, {
   "Edelman ER et al. Licorice, lisinopril, and Laennec. N Engl J Med, 2020",
   "FDA consumer update: black licorice, trick or treat?",
   "Omar HR et al. Licorice abuse: time to send a warning message. Ther Adv Endocrinol Metab, 2012"
- ]
-}
-});
-
-;
-DB.DEEP = DB.DEEP || {};
-Object.assign(DB.DEEP, {
-"hypoglycin-a": {
- "origin": "Hypoglycin A is not a drug and has no approved US product of any kind. It is a non-protein amino acid made by trees of the soapberry family, above all ackee (Blighia sapida), a West African tree whose genus honors Captain William Bligh, who carried specimens to Kew in 1793. Ackee traveled to Jamaica in the 18th century and the ripe arils became the national dish with saltfish. A seasonal killer of children called the vomiting sickness of Jamaica was described through the 19th century, and Harold Scott's work around 1916 tied it to unripe ackee. In 1954 and 1955 Cedric Hassall and Karl Reyle, at the University College of the West Indies, isolated the responsible compounds and named them hypoglycin A and B. Kay Tanaka, Eric Kean and Barbara Johnson published the metabolic explanation in the New England Journal of Medicine in 1976. A chemical relative, methylenecyclopropylglycine (MCPG), sits in lychee seeds and unripe lychee fruit, and in 2017 it closed one of the great open questions in field epidemiology.",
- "timeline": [
-  [
-   "1793",
-   "William Bligh carries ackee from Jamaica to Kew, and the genus Blighia is later named for him."
-  ],
-  [
-   "1916",
-   "Harold Scott links Jamaican vomiting sickness to unripe ackee fruit."
-  ],
-  [
-   "1955",
-   "Hassall and Reyle isolate hypoglycin A and B from ackee in Jamaica."
-  ],
-  [
-   "1976",
-   "Tanaka, Kean and Johnson describe the block in fatty acid oxidation in two poisoned patients."
-  ],
-  [
-   "1995",
-   "Yearly clusters of acute encephalopathy in children begin to be recorded in Muzaffarpur, Bihar, during the lychee harvest."
-  ],
-  [
-   "2017",
-   "A case-control study in Lancet Global Health identifies hypoglycin A and MCPG metabolites in the Muzaffarpur children."
-  ]
- ],
- "cell": "Hypoglycin A is a protoxin. Mitochondria transaminate it and then run it through the branched-chain alpha-ketoacid dehydrogenase complex, which produces methylenecyclopropylacetyl-CoA (MCPA-CoA). The strained methylenecyclopropyl ring makes MCPA-CoA a mechanism-based, essentially irreversible inhibitor of the flavin acyl-CoA dehydrogenases: short-chain and medium-chain acyl-CoA dehydrogenase, isovaleryl-CoA dehydrogenase and glutaryl-CoA dehydrogenase. Beta-oxidation stops at its first dehydrogenation step. Three things follow. Acetyl-CoA is no longer generated, so ketogenesis fails and pyruvate carboxylase loses its allosteric activator. NADH and FADH2 from fat oxidation disappear, removing the reducing equivalents and ATP that gluconeogenesis runs on. And CoA and carnitine are trapped as MCPA conjugates, so acyl groups spill out as dicarboxylic acids and as MCPA-carnitine and MCPA-glycine in urine. The biochemical picture is an acquired multiple acyl-CoA dehydrogenase deficiency. MCPG from lychee is handled the same way and yields MCPF-CoA, which hits the same enzymes.",
- "body": [
-  [
-   "Liver",
-   "Fatty acid oxidation and gluconeogenesis both fail, and fat accumulates in hepatocytes with rising transaminases, a picture resembling Reye syndrome."
-  ],
-  [
-   "Blood glucose",
-   "Once hepatic glycogen is used up there is no second line, so glucose falls steeply, and ketones stay low or absent because acetyl-CoA is not being made."
-  ],
-  [
-   "Brain",
-   "The brain loses glucose and has no ketones to fall back on, producing drowsiness, seizures, encephalopathy and coma."
-  ],
-  [
-   "Stomach and gut",
-   "Early and often violent vomiting, which gave the illness its old name and also empties out anything left to absorb."
-  ],
-  [
-   "Skeletal muscle",
-   "Muscle depends heavily on fat oxidation between meals, so weakness and hypotonia are common and creatine kinase can rise."
-  ],
-  [
-   "Kidney",
-   "Clears the accumulated organic acids and conjugates, so urine organic acid testing carries the fingerprint of the poisoning."
-  ]
- ],
- "journey": "Hypoglycin A is an amino acid and is absorbed readily from the gut, probably on neutral amino acid transporters, then distributes through body water. It does essentially nothing until mitochondria convert it to MCPA-CoA, which is why there is a latency of hours between the meal and the metabolic collapse. Content in ackee is highest in unripe arils and in the seeds, and falls steeply in the arils once the pod opens naturally on the tree. Elimination is renal, as MCPA-glycine and MCPA-carnitine conjugates plus medium-chain dicarboxylic acids. Because the enzyme inhibition is covalent, recovery waits on new enzyme protein rather than on clearance of the toxin, and low glucose can recur for many hours.",
- "sidefx": "Everything traces to one block. Vomiting comes first and is probably a direct gut and central effect of the toxin. Then the fatty acid oxidation lesion declares itself: hypoketotic hypoglycemia, metabolic acidosis from lactate and dicarboxylic acids, hepatic steatosis with transaminase elevation, muscle weakness and secondary carnitine depletion. Severity tracks glycogen reserve, which is why the illness concentrates in children, in people who are undernourished, and in anyone who ate the fruit and then went without a meal. Seizures and coma are consequences of the glucose level rather than separate toxic effects, and the classic diagnostic trap is a child without diabetes whose encephalopathy is read as infection while the glucose goes unmeasured.",
- "fun": "The Muzaffarpur investigation is a model of field epidemiology: for two decades children in the lychee belt of Bihar died each May and June of an encephalopathy blamed on heat, viruses and pesticides, and the 2017 case-control study found instead that the sick children had eaten lychees in the orchards, skipped the evening meal, and had hypoglycin A and MCPG metabolites in their urine. A metabolic poisoning had been masquerading as viral encephalitis.",
- "src": [
-  "Tanaka K, Kean EA, Johnson B. Jamaican vomiting sickness: biochemical investigation of two cases. N Engl J Med, 1976",
-  "Shrivastava A et al. Association of acute toxic encephalopathy with litchi consumption in an outbreak in Muzaffarpur, India, 2014: a case-control study. Lancet Global Health, 2017",
-  "Hassall CH, Reyle K. Hypoglycin A and B, two biologically active polypeptides from Blighia sapida. Biochem J, 1955",
-  "FDA Import Alert 21-11 (ackee)"
- ]
-},
-"vicine-convicine": {
- "origin": "Vicine and convicine are pyrimidine glucosides made by the fava or broad bean, Vicia faba, and they are food constituents rather than medicines: there is no approved US drug product containing either, and none has ever been sought. Fava beans have been a Mediterranean and Middle Eastern staple since antiquity, and so has the knowledge that they occasionally make someone catastrophically ill. Pythagoras is said to have forbidden beans to his followers, which later writers enjoyed connecting to the disease. Italian physicians described the syndrome carefully in the 1890s and gave it the name favism: a child, usually a boy, eating fresh fava beans and then turning pale and yellow with dark urine within a day. The mechanism came apart in the 1950s. In 1956 Paul Carson, Charles Flanagan and Alf Alving showed in Science that primaquine-induced hemolysis was caused by deficiency of glucose-6-phosphate dehydrogenase, and in 1957 Giuseppe Sansone and Giorgio Segni showed that favism patients had the same enzyme defect. Jacob Mager, Mordechai Chevion and colleagues then identified the aglycones divicine and isouramil as the oxidants doing the damage.",
- "timeline": [
-  [
-   "1890s",
-   "Italian clinicians describe the syndrome in detail and name it favism."
-  ],
-  [
-   "1949",
-   "J.B.S. Haldane proposes that malaria has shaped the frequency of human red cell disorders."
-  ],
-  [
-   "1956",
-   "Carson, Flanagan, Ickes and Alving identify G6PD deficiency behind primaquine hemolysis."
-  ],
-  [
-   "1957",
-   "Sansone and Segni show that favism patients are G6PD deficient."
-  ],
-  [
-   "1982",
-   "Chevion, Navok, Glaser and Mager characterize divicine and isouramil as the red cell oxidants."
-  ],
-  [
-   "1989",
-   "Breeders identify a fava line with very low vicine and convicine, opening the way to low-toxin varieties."
-  ]
- ],
- "cell": "Vicine and convicine are themselves fairly inert. Beta-glucosidases, largely bacterial, hydrolyze them in the gut to the aglycones divicine and isouramil. These are redox-active pyrimidines that autoxidize, cycling between reduced and oxidized forms and generating superoxide and hydrogen peroxide while consuming reduced glutathione. A red cell has one way to regenerate glutathione: NADPH from the oxidative arm of the pentose phosphate pathway, whose rate-limiting enzyme is glucose-6-phosphate dehydrogenase. With normal G6PD activity the cell keeps up. In G6PD deficiency NADPH supply is capped, glutathione is consumed, and the oxidant front reaches hemoglobin and the membrane. Hemoglobin is oxidized to methemoglobin and then to denatured hemichromes that precipitate as Heinz bodies, which tether to the inner membrane; band 3 and spectrin are cross-linked by disulfide bonds; lipids peroxidize. The cell loses deformability, splenic macrophages bite pieces out of it, leaving bite cells, and the most damaged cells lyse inside the vessels.",
- "body": [
-  [
-   "Red blood cells",
-   "The target. Oldest cells, with the lowest residual G6PD activity, hemolyze first, so the episode is self-limited as that cohort is cleared."
-  ],
-  [
-   "Spleen",
-   "Removes Heinz-body-laden cells and produces the bite cells and spherocytes seen on the smear, plus splenic enlargement and tenderness."
-  ],
-  [
-   "Kidney",
-   "Free hemoglobin filtered from intravascular hemolysis gives cola-colored urine and can injure tubules, so acute kidney injury is the serious complication."
-  ],
-  [
-   "Liver and skin",
-   "Heme load overwhelms conjugation, so unconjugated bilirubin rises and jaundice appears within a day."
-  ],
-  [
-   "Heart and circulation",
-   "Abrupt loss of oxygen-carrying capacity produces tachycardia, a flow murmur, and in severe episodes hypotension and high-output failure."
-  ],
-  [
-   "Bone marrow",
-   "Responds with reticulocytosis over several days, which is also why a G6PD assay drawn during the crisis can read falsely normal."
-  ]
- ],
- "journey": "These are dietary glucosides, so the journey is short. Little intact vicine or convicine is thought to be absorbed; the important step is hydrolysis in the gut lumen by bacterial beta-glucosidases, and the aglycones divicine and isouramil are absorbed and reach the circulation. Onset of hemolysis is roughly 5 to 24 hours after the meal, which fits the time needed for microbial hydrolysis and absorption rather than for any slow distribution. The aglycones are chemically unstable and short lived, which is part of why fresh or raw beans, with the highest glucoside content, are linked to the worst episodes. Hemolysis then runs its own course over one to three days as the vulnerable red cell cohort is destroyed, long after the chemistry has cleared.",
- "sidefx": "There is only one mechanism and therefore one syndrome: acute oxidative hemolysis in a person whose red cells cannot regenerate glutathione fast enough. Pallor, fatigue, jaundice, back or abdominal pain and dark urine all follow from it, and the severity scales with the G6PD variant, the amount eaten and whether the beans were fresh. The Mediterranean variant, with very low residual activity, is classically tied to the severe episodes. People with normal G6PD activity eat fava beans without consequence, which is why this is a food rather than a recognized poison. Reported hemolysis in breastfed infants after maternal intake points to transfer of the aglycones in milk. Infection raises background oxidant stress and can make a given exposure worse.",
- "fun": "Favism is a window onto natural selection. G6PD deficiency is the most common enzyme defect in humans, and its distribution maps onto historical malaria, because the oxidant-poor red cell is a worse home for Plasmodium falciparum; a 1995 Nature study in Africa estimated that the A-minus variant cut severe malaria risk by roughly half. The same genotype that bought protection against malaria is the one that turns a plate of fresh fava beans into a hemolytic crisis.",
- "src": [
-  "Luzzatto L, Ally M, Notaro R. Glucose-6-phosphate dehydrogenase deficiency. Blood, 2020",
-  "Chevion M, Navok T, Glaser G, Mager J. The chemistry of favism-inducing compounds. Eur J Biochem, 1982",
-  "Ruwende C et al. Natural selection of hemi- and heterozygotes for G6PD deficiency in Africa by resistance to severe malaria. Nature, 1995",
-  "Carson PE, Flanagan CL, Ickes CE, Alving AS. Enzymatic deficiency in primaquine-sensitive erythrocytes. Science, 1956"
- ]
-},
-"solanine": {
- "origin": "Alpha-solanine is a steroidal glycoalkaloid made by the potato plant, Solanum tuberosum, and it travels with a near-twin, alpha-chaconine. Both are built on the same aglycone, solanidine, with different sugar chains. They are not drugs and there is no approved US product containing them; they are plant defense chemicals and a food safety problem. Solanine was isolated in 1820 by the French pharmacist Desfosses, working with black nightshade berries, and it gave its name to the whole class. The potato makes glycoalkaloids in its leaves, flowers, sprouts and the thin layer under the peel, and production rises sharply with light exposure, mechanical damage, sprouting and poor storage. Light also drives chlorophyll synthesis, which is why green potatoes are a warning sign even though the green pigment itself is harmless: the greening and the glycoalkaloid rise are two consequences of the same light exposure. Human poisoning is usually traced to tubers stored badly, sprouted, or eaten with peel and sprouts included, and the toxin is bitter, which is the plant giving its own warning.",
- "timeline": [
-  [
-   "1820",
-   "Desfosses isolates solanine from nightshade berries, naming the glycoalkaloid class."
-  ],
-  [
-   "1967",
-   "The Lenape potato, bred for chipping, is released in the United States."
-  ],
-  [
-   "1970",
-   "Lenape is withdrawn after reports of illness, and its glycoalkaloid content is found to be unusually high."
-  ],
-  [
-   "1979",
-   "An outbreak at a south London school is investigated and published as suspected solanine poisoning."
-  ],
-  [
-   "1990s",
-   "An informal limit near 200 mg total glycoalkaloid per kilogram becomes the working ceiling in potato breeding programs."
-  ]
- ],
- "cell": "Solanine and chaconine act in two ways at once. First, they are amphipathic: the solanidine steroid end inserts into membranes and binds 3-beta-hydroxy sterols, mainly cholesterol, while the sugar chains stay in the aqueous phase. Bound molecules aggregate into sterol complexes that distort the bilayer and open pores, which lyses cells outright; chaconine is the more potent of the two and the pair act synergistically. This is the basis of the intestinal injury, and it is the same chemistry that makes these compounds hemolytic in a test tube. Second, both reversibly inhibit cholinesterases, with more effect on butyrylcholinesterase than on acetylcholinesterase. The inhibition is weak compared with pharmaceutical or insecticidal anticholinesterases, so a full cholinergic crisis is not the usual picture, but it contributes the headache, drowsiness, confusion and occasional bradycardia seen in larger exposures. Glycoalkaloids are heat stable and survive boiling, frying and baking, so cooking does not undo either mechanism.",
- "body": [
-  [
-   "Stomach and small intestine",
-   "Membrane disruption injures the epithelium directly, giving a burning sensation in the mouth and throat, vomiting, cramping abdominal pain and diarrhea within hours."
-  ],
-  [
-   "Fluid and electrolytes",
-   "Vomiting and diarrhea drive dehydration, hypotension and electrolyte loss, which account for most of the illness in practice."
-  ],
-  [
-   "Central nervous system",
-   "Cholinesterase inhibition plus systemic illness produce headache, dizziness, drowsiness and confusion, and in historical severe cases depressed consciousness."
-  ],
-  [
-   "Autonomic system",
-   "Cholinergic excess can show as sweating, salivation, small pupils and slowing of the heart, although these are inconsistent."
-  ],
-  [
-   "Red blood cells",
-   "Sterol binding is hemolytic in vitro, which is a useful demonstration of the mechanism rather than a prominent clinical finding."
-  ]
- ],
- "journey": "Glycoalkaloids are poorly absorbed intact, which is the main reason that ordinary potatoes are safe to eat. Gut bacteria and intestinal enzymes hydrolyze the sugar chains off, giving solanidine, which is better absorbed and is detectable in human plasma with a long residence time measured in days. Hepatic metabolism and biliary plus urinary excretion handle the rest, and fecal loss of unabsorbed glycoalkaloid dominates. Because the injury is a local membrane effect in the gut lumen, symptoms begin within a few hours of the meal and track the dose swallowed rather than any blood level. Peeling removes most of the content, since it concentrates in the peel, the eyes and the sprouts, but heat does not: these molecules are stable to normal cooking temperatures.",
- "sidefx": "The two mechanisms separate the clinical picture into two halves. The membrane-lytic effect gives the gastrointestinal illness, which is early, dose-related and responsible for the dehydration that makes people sick enough to be admitted. The cholinesterase effect contributes the neurologic layer on top, which is what distinguishes a solanine outbreak from ordinary infectious gastroenteritis in a group who shared a meal. A bitter or burning taste often precedes the illness and is the plant's own dose signal. One historical claim has not held up: in 1972 blighted potatoes were proposed as a cause of neural tube defects, and animal work raised the question, but human studies have not confirmed a link.",
- "fun": "The Lenape potato is the cautionary tale of potato breeding. Released in 1967 as a high-solids chipping variety, it was withdrawn in 1970 after people who ate it became ill, and it turned out to carry several times the usual glycoalkaloid load, most likely inherited from a wild Solanum parent used for disease resistance. Breeders have screened for glycoalkaloid content ever since, and Lenape itself survives as a parent in the pedigrees of later varieties.",
- "src": [
-  "McMillan M, Thompson JC. An outbreak of suspected solanine poisoning in schoolboys. Q J Med, 1979",
-  "Friedman M. Potato glycoalkaloids and metabolites: roles in the plant and in the diet. J Agric Food Chem, 2006",
-  "FDA Bad Bug Book, 2nd edition (plant toxins: glycoalkaloids)",
-  "Goldman IL et al. historical review of the Lenape potato release and withdrawal"
- ]
-},
-"persin": {
- "origin": "Persin is a toxin made by the avocado tree, Persea americana, and it is not a drug: there is no approved US product containing it and none has been proposed. The toxicity was known long before the molecule was. Veterinarians had reported for decades that avocado leaves and fruit killed caged birds, caused sudden mastitis and a collapse in milk yield in goats and cattle, and produced head and neck swelling with heart damage in horses. In 1989 Hargis and colleagues published a description of avocado intoxication in caged birds in the Journal of the American Veterinary Medical Association, and in 1995 Peter Oelrichs and co-workers in Australia isolated the responsible compound from avocado leaves, named it persin, and showed that it produced necrosis of the secretory epithelium of the lactating mammary gland and of heart muscle. Persin is a long-chain fatty acid derivative, structurally in the neighborhood of the annonaceous acetogenins. Interest since then has come from two directions: veterinary toxicology, and laboratory cancer research, where persin kills cultured breast cancer cells.",
- "timeline": [
-  [
-   "1980s",
-   "Veterinary reports of avocado killing caged birds and of mastitis and cardiac injury in livestock have accumulated."
-  ],
-  [
-   "1989",
-   "Hargis and colleagues publish a clinical and pathologic description of avocado intoxication in caged birds."
-  ],
-  [
-   "1995",
-   "Oelrichs and colleagues isolate and name persin and reproduce mammary and myocardial necrosis with it."
-  ],
-  [
-   "2006",
-   "Laboratory work reports that persin induces apoptosis in breast cancer cell lines and interacts with tamoxifen in vitro."
-  ]
- ],
- "cell": "The mechanism is genuinely incompletely defined, and honest cards say so. What is reproducible is the target tissue: persin produces necrosis of the secretory epithelium of the lactating mammary gland and of cardiac myocytes in susceptible species, with sterile inflammation, edema and, in birds, pericardial effusion. The structural kinship with the annonaceous acetogenins, which are potent inhibitors of mitochondrial complex I, makes mitochondrial poisoning of highly oxidative tissue the leading hypothesis, and it would explain why actively secreting mammary epithelium and bird myocardium, two tissues with extreme metabolic demand, are the ones that die. In cultured human breast cancer cells persin behaves as a microtubule-stabilizing agent and triggers an apoptotic program with ceramide accumulation and caspase activation, and sensitizes cells to tamoxifen. That is cell culture data, at concentrations well above anything a diet provides, and it has not been shown to mean anything in an animal or a person. Human avocado reactions are a separate matter entirely and are immunologic, not toxic.",
- "body": [
-  [
-   "Mammary gland (animals)",
-   "The signature lesion: necrosis of secretory epithelium in lactating goats, cattle, rabbits and mice, with a sterile mastitis and an abrupt fall in milk."
-  ],
-  [
-   "Heart (animals)",
-   "Myocardial necrosis with heart failure, pericardial and subcutaneous edema, and sudden death, most dramatic in small caged birds."
-  ],
-  [
-   "Respiratory system (birds)",
-   "Caged birds show labored breathing and fluffed feathers before collapse, largely a consequence of cardiac failure and effusion."
-  ],
-  [
-   "Head and neck (horses)",
-   "Horses develop striking edema of the face, tongue and neck along with cardiac injury."
-  ],
-  [
-   "Humans",
-   "No recognized toxic syndrome from eating avocado fruit; the clinically relevant human problem is allergy to avocado proteins, not persin."
-  ]
- ],
- "journey": "Persin is lipophilic and reaches animals by the oral route when they eat leaves, bark, skin, seed or fruit; absorption, distribution and clearance have not been characterized in any species, and no validated assay exists for routine use. Concentration is the whole story. The leaves and bark carry by far the most, the skin and seed less, and the ripe flesh that people eat the least, and Guatemalan-type cultivars are reported to be more toxic to animals than West Indian types. For humans the practical pharmacokinetics are that very little persin is present in the food as eaten, and what is present is diluted into a large body with no identified sensitive target tissue, so the compound does not accumulate anywhere that matters.",
- "sidefx": "In animals the adverse effects and the mechanism are the same thing: the toxin kills the tissues it reaches, and the clinical picture is read off which tissue that is, lactating mammary gland or myocardium. Species sensitivity varies enormously, with small birds at one extreme and dogs and cats relatively resistant, which points to differences in metabolic handling rather than in exposure. In people the two avocado-related problems are both unrelated to persin: allergy, mediated by avocado proteins including the class I chitinase Pers a 1, which cross-reacts with latex hevein and places avocado in the latex-fruit syndrome alongside banana, kiwi and chestnut, and a handful of case reports of avocado intake lowering the INR in patients taking warfarin.",
- "fun": "Avocado is one of the few foods that is genuinely lethal to a pet budgerigar and genuinely harmless to the person feeding it, which makes it a good test of whether someone understands that toxicity is a property of a dose in a species rather than of a molecule. The avocado problem people actually present with is an allergy to a chitinase that happens to look like a latex protein.",
- "src": [
-  "Oelrichs PB et al. Isolation and identification of a compound from avocado (Persea americana) leaves which causes necrosis of the acinar epithelium of the lactating mammary gland and the myocardium. Natural Toxins, 1995",
-  "Hargis AM et al. Avocado (Persea americana) intoxication in caged birds. J Am Vet Med Assoc, 1989",
-  "Butt AJ et al. A novel plant toxin, persin, with in vivo activity in the mammary gland, induces Bim-dependent apoptosis in human breast cancer cells. Mol Cancer Ther, 2006",
-  "Sanchez-Monge R et al. Class I chitinases, the panallergens responsible for the latex-fruit syndrome. J Allergy Clin Immunol, 2000"
- ]
-},
-"phytohemagglutinin": {
- "origin": "Phytohemagglutinin, PHA, is a lectin made by the common bean Phaseolus vulgaris and concentrated in red kidney beans. It is a seed defense protein and a food safety hazard, not a medicine: there is no approved US drug product containing it, and the only legitimate use of purified PHA is as a laboratory reagent. Plant lectins entered science in 1888 when Hermann Stillmark, in Dorpat, found that castor bean extract agglutinated red cells and named the active principle ricin. Bean lectins that clumped erythrocytes were called hemagglutinins, hence the name. PHA then had a second career that had nothing to do with beans: in 1960 Peter Nowell, in Philadelphia, reported that PHA drove normal human leukocytes into mitosis, and that single observation made human cytogenetics practical, because for the first time a clinician could get dividing lymphocytes from a blood sample and look at chromosomes. Human karyotyping, and much of what followed in the genetics of chromosomal disease, rests on a kidney bean protein. Food poisoning outbreaks were characterized separately, notably in British surveillance reported by Noah and colleagues in 1980.",
- "timeline": [
-  [
-   "1888",
-   "Stillmark describes plant hemagglutinins in castor bean, founding lectin biology."
-  ],
-  [
-   "1960",
-   "Nowell shows PHA is a mitogen for human lymphocytes, making routine karyotyping possible."
-  ],
-  [
-   "1970s",
-   "British surveillance begins recording clusters of rapid-onset vomiting traced to red kidney beans."
-  ],
-  [
-   "1980",
-   "Noah and colleagues publish an account of food poisoning from raw red kidney beans in the BMJ."
-  ],
-  [
-   "1980s",
-   "Heating experiments show that warming beans below boiling can raise rather than lower their toxicity."
-  ]
- ],
- "cell": "PHA is a tetrameric glycoprotein assembled from two subunit types, E and L, giving five isoforms; the E subunit agglutinates erythrocytes and the L subunit acts on leukocytes. Each subunit carries a carbohydrate recognition domain that binds complex N-linked oligosaccharides, so PHA sticks to the sugar side chains of cell surface glycoproteins and, because it is multivalent, cross-links them. In the gut the relevant target is the brush border glycocalyx. PHA binds enterocyte surface glycoproteins, resists digestion by gastric and pancreatic proteases well enough to arrive intact, disrupts microvilli, is taken up into enterocytes, and breaks the epithelial barrier, provoking fluid secretion, mucosal injury and vomiting. On lymphocytes the same cross-linking chemistry has a different consequence: clustering of glycosylated surface receptors including the T cell receptor complex and CD2 delivers a polyclonal activating signal through the normal TCR pathway, which is why PHA is a T cell mitogen in the laboratory and why lymphocyte proliferation to PHA is a standard test of T cell function.",
- "body": [
-  [
-   "Stomach and small intestine",
-   "The site of injury. Lectin binding strips and distorts microvilli and opens the barrier, producing nausea and profuse vomiting one to three hours after the meal, then cramping and diarrhea."
-  ],
-  [
-   "Fluid balance",
-   "Vomiting and diarrhea are the clinically important effect, and dehydration is the reason anyone needs care."
-  ],
-  [
-   "Red blood cells",
-   "Agglutinates erythrocytes in a test tube, the property it is named for; this is a laboratory phenomenon rather than something that happens in a poisoned person."
-  ],
-  [
-   "Immune system",
-   "Cross-links T cell surface glycoproteins and drives polyclonal proliferation, which is the basis of its use as a mitogen in immune function testing and karyotyping."
-  ],
-  [
-   "Recovery",
-   "The epithelium turns over quickly, so the illness is typically over within several hours to a day with no lasting injury."
-  ]
- ],
- "journey": "There is almost no pharmacokinetics here, because PHA works in the lumen. It is a protein, and a tough one: the lectin fold is compact and partly resistant to gastric acid and to pancreatic proteases, which is exactly what lets a dietary protein reach the small bowel with its binding sites intact. Small amounts are endocytosed by enterocytes and traces can cross into the circulation in animal studies, but systemic exposure is not what makes people sick. Whatever is not bound is digested or passes in the stool. The determinant of illness is how much active lectin survived the cooking, measured in hemagglutinating units: raw beans carry tens of thousands, and thoroughly boiled beans a small fraction of that.",
- "sidefx": "The entire syndrome is the mechanism acting on one tissue, so there is nothing to explain beyond the gut. Onset is fast because no absorption or metabolism is required, vomiting is prominent because the injury is to the upper small bowel, and recovery is quick because enterocytes are replaced within days. Outbreaks come in clusters, since everyone at the table ate the same dish, which is the clue that separates this from a viral illness. Canned kidney beans are already cooked and are not a source. The hazard is dried beans prepared gently, and soaking alone does not inactivate the lectin.",
- "fun": "A slow cooker is the specific hazard, and for a counterintuitive reason: heating kidney beans to around 80 degrees Celsius, the range a low setting reaches, has been reported to make them up to five times more toxic than raw beans, apparently by partly unfolding the protein into a form that binds more avidly while leaving it far from denatured. Reaching a full rolling boil destroys the lectin, so the dangerous preparation is the one that gets warm and stays warm.",
- "src": [
-  "Noah ND et al. Food poisoning from raw red kidney beans. BMJ, 1980",
-  "Nowell PC. Phytohemagglutinin: an initiator of mitosis in cultures of normal human leukocytes. Cancer Research, 1960",
-  "FDA Bad Bug Book, 2nd edition (phytohaemagglutinin)",
-  "Pusztai A, Bardocz S. Biological effects of plant lectins on the gastrointestinal tract. Trends in Glycoscience and Glycotechnology, 1996"
- ]
-},
-"myristicin": {
- "origin": "Myristicin is an alkenylbenzene from nutmeg and mace, the seed and the seed covering of Myristica fragrans, a tree native to the Banda Islands of the Moluccas. It is a spice constituent, not a drug, and there is no approved US product containing it. Nutmeg was one of the most valuable commodities in the world for two centuries, and the Dutch East India Company fought and depopulated islands to hold the monopoly. Its capacity to derange people has been recorded almost as long. A frequently cited 16th century account describes an English woman who became deliriously intoxicated after eating a dozen nutmegs, and in 1829 the Czech physiologist Jan Evangelista Purkinje swallowed three nutmegs and left a careful record of the headache, delirium and days of dullness that followed. Myristicin was isolated from nutmeg oil in the late 19th century. Andrew Weil brought the subject into modern pharmacology with a 1965 review in Economic Botany, and the clearest contemporary data come from poison center case series, notably a ten-year Illinois Poison Center review published in 2014, which found most exposures to be deliberate and most of those in teenagers.",
- "timeline": [
-  [
-   "1576",
-   "An early account describes a woman intoxicated and delirious after eating a dozen nutmegs."
-  ],
-  [
-   "1829",
-   "Purkinje records his own prolonged nutmeg intoxication after eating three nutmegs."
-  ],
-  [
-   "1890",
-   "Myristicin is isolated and characterized from nutmeg oil."
-  ],
-  [
-   "1965",
-   "Andrew Weil reviews nutmeg as an intoxicant in Economic Botany."
-  ],
-  [
-   "2014",
-   "A ten-year Illinois Poison Center series describes 32 nutmeg exposures, most intentional and most in adolescents."
-  ]
- ],
- "cell": "The mechanism is not settled, and the honest summary is that nutmeg intoxication is a syndrome in search of a receptor. Nutmeg oil is a mixture, and myristicin travels with elemicin, safrole and terpenes, so attributing effects to one molecule is already an assumption. Myristicin is a weak reversible inhibitor of monoamine oxidase in vitro, which could contribute to the sympathetic features. The most repeated hypothesis is hepatic CYP-mediated conversion of myristicin to an amphetamine, 3-methoxy-4,5-methylenedioxyamphetamine, and of elemicin to trimethoxyamphetamine, by amination of the allyl side chain; this is chemically plausible, has been demonstrated in vitro, and has not been confirmed as a meaningful pathway in humans, where the metabolite has not been reliably found. Anticholinergic-like and serotonergic actions have both been proposed on the basis of the clinical picture rather than binding data. Myristicin also inhibits several CYP enzymes and induces others, which is a more solid finding than any receptor claim.",
- "body": [
-  [
-   "Central nervous system",
-   "Hours after ingestion, agitation, anxiety, visual distortions and hallucinations, a characteristic sense of impending doom, and a prolonged foggy aftermath."
-  ],
-  [
-   "Autonomic system",
-   "A peripheral picture that mimics anticholinergic poisoning: dry mouth, flushed skin, tachycardia, palpitations and sometimes urinary retention."
-  ],
-  [
-   "Eyes",
-   "The informative exception. Pupils are often normal or small rather than dilated, which is what separates this from a true anticholinergic toxidrome."
-  ],
-  [
-   "Stomach and gut",
-   "Nausea, repeated vomiting and abdominal pain, prominent enough that gastrointestinal misery dominates the early hours."
-  ],
-  [
-   "Liver",
-   "Metabolizes myristicin through CYP enzymes, and myristicin in turn inhibits and induces CYP activity, a theoretical interaction route."
-  ]
- ],
- "journey": "Myristicin is lipophilic and absorbed from the gut, but onset is strikingly delayed, commonly three to eight hours after ingestion, which is longer than absorption alone explains and is one of the arguments for an active metabolite. Distribution is wide, with ready entry into the brain. Metabolism is hepatic and CYP-dependent, with demethylenation and side-chain oxidation, and renal excretion of conjugated metabolites. Duration is the other oddity: effects commonly run 24 hours and have been described lasting two to three days, far longer than the parent compound's presence would predict. The combination of long latency and long duration is the practical signature, and it is also the reason people who take more while waiting for something to happen end up considerably worse.",
- "sidefx": "There is not much separation between the effect and the adverse effect here, because the whole exposure is unwanted. The gastrointestinal distress is probably direct irritation from the oil. The tachycardia, flushing and dry mouth follow whatever sympathetic and anticholinergic-like actions the mixture has, and the agitation, distorted perception and dysphoria are central. Severe outcomes are rare, and the deaths reported in the literature generally involved other substances. The long tail of fatigue, headache and dulled thinking over following days is characteristic enough to have its own informal name. Pediatric exposures are usually accidental ingestions of kitchen spice rather than experimentation.",
- "fun": "Nutmeg has a reputation as a free legal high and almost no reputation as a pleasant one, and the case series explain why: the reliable effects are many hours of nausea and vomiting, a racing heart, dry mouth, dread and confusion, then a day or more of feeling poisoned. It is the rare intoxicant whose main deterrent is simply what it does, and repeat exposures in poison center data are uncommon.",
- "src": [
-  "Ehrenpreis JE, DesLauriers C, Lank P, Armstrong PK, Leikin JB. Nutmeg poisonings: a retrospective review of 10 years experience from the Illinois Poison Center, 2001-2011. J Med Toxicol, 2014",
-  "Weil AT. Nutmeg as a narcotic. Economic Botany, 1965",
-  "Goldstein Hoffman R et al. review of myristicin pharmacology and nutmeg intoxication, Clinical Toxicology literature",
-  "Goldfrank's Toxicologic Emergencies (plants and herbal preparations)"
- ]
-},
-"dmaa": {
- "origin": "DMAA, 1,3-dimethylamylamine or methylhexanamine, is a synthetic aliphatic amine with an unusual double life. Eli Lilly patented it in 1944 and sold it as Forthane, a nasal inhaler for congestion, and withdrew it from the market in the early 1980s. It reappeared around 2006 as an ingredient in sports supplements, introduced by the chemist Patrick Arnold, who marketed it as geranamine on the premise that it occurs naturally in geranium, Pelargonium graveolens. That premise rested largely on a 1996 Chinese report of trace methylhexanamine in geranium oil, and repeated independent analyses through 2011 and 2012 failed to find it, or found only amounts consistent with contamination. The working consensus is that the DMAA in supplements was synthetic. It has had no approved US drug product in its supplement incarnation, and the FDA has stated that it is not a lawful dietary ingredient. It sold enormously in pre-workout powders such as Jack3d and in weight-loss products, and the history that followed is regulatory and forensic rather than therapeutic.",
- "timeline": [
-  [
-   "1944",
-   "Eli Lilly patents methylhexanamine and later markets it as the nasal inhaler Forthane."
-  ],
-  [
-   "1983",
-   "Forthane is withdrawn from the US market."
-  ],
-  [
-   "2006",
-   "DMAA appears in sports supplements as geranamine, with a claimed geranium origin."
-  ],
-  [
-   "2010",
-   "The World Anti-Doping Agency lists methylhexaneamine as a prohibited specified stimulant."
-  ],
-  [
-   "2011",
-   "Two US soldiers die after collapsing during physical training with DMAA detected, and the Department of Defense pulls DMAA products from military exchanges pending a safety review."
-  ],
-  [
-   "2013",
-   "FDA sends warning letters to DMAA marketers, declares it not a lawful dietary ingredient, and seizes product; litigation upholding the agency runs to 2019."
-  ]
- ],
- "cell": "DMAA is a simple branched aliphatic primary amine, structurally in the family of the old sympathomimetic amines such as tuaminoheptane and propylhexedrine, and lacking the catechol ring of the endogenous transmitters. It acts indirectly. As a substrate for the norepinephrine transporter it is carried into sympathetic nerve terminals, where it both blocks reuptake and displaces stored norepinephrine into the synapse, with weaker activity at the dopamine transporter. The released norepinephrine then does the work: alpha-1 receptor activation on vascular smooth muscle raises peripheral resistance, and beta-1 activation in the heart raises rate and contractility. Direct receptor affinity is low, so the pharmacology is that of a releasing agent rather than an agonist, and potency is far below that of amphetamine. The mechanistic literature is thin, consisting mostly of structural inference and a small number of in vitro and animal studies, which is itself part of the regulatory story: the compound was sold to millions of people without the basic work having been done.",
- "body": [
-  [
-   "Blood vessels",
-   "Alpha-1 mediated vasoconstriction raises systemic vascular resistance and blood pressure, the most consistently documented human effect."
-  ],
-  [
-   "Heart",
-   "Beta-1 stimulation raises rate, contractility and myocardial oxygen demand while coronary perfusion time shortens, the setup for ischemia and arrhythmia."
-  ],
-  [
-   "Brain",
-   "Central noradrenergic stimulation gives the marketed effects of energy and focus, and at higher exposure agitation, headache, insomnia and psychiatric symptoms; abrupt hypertension is the proposed route to hemorrhagic stroke."
-  ],
-  [
-   "Thermoregulation",
-   "Vasoconstriction plus increased metabolic rate impairs heat dissipation, which is why cases cluster around hard exertion in heat."
-  ],
-  [
-   "Liver",
-   "Hepatotoxicity has been reported with DMAA-containing products, although several of those products contained other ingredients, so attribution is uncertain."
-  ],
-  [
-   "Nasal mucosa",
-   "Its original pharmacology: local vasoconstriction shrinking congested mucosa, which is what it was sold for in the 1940s."
-  ]
- ],
- "journey": "Oral absorption is good and effects come on within about half an hour. Human data are limited to a few small studies, which reported a terminal half-life around eight to nine hours, considerably longer than the stimulant experience itself and long enough that repeated daily servings stack. Being a small lipophilic amine, it distributes widely and enters the central nervous system. Metabolism appears limited, and a substantial fraction is excreted unchanged in urine, which is how anti-doping laboratories detect it; routine hospital drug screens are not designed for it, although DMAA has been reported to cross-react on some amphetamine immunoassays. Co-ingested caffeine was almost universal in the products it was sold in, and the combination was shown to raise blood pressure more than either alone.",
- "sidefx": "Everything reported traces back to sympathetic overdrive. The common complaints, palpitations, headache, jitteriness, insomnia, nausea and raised blood pressure, are the mechanism at low exposure. The serious events, hypertensive emergency, hemorrhagic stroke in young people with no vascular risk factors, myocardial infarction with normal coronary arteries, arrhythmia and cardiac arrest, are the same mechanism pushed further, often with caffeine on board and often during intense exertion. Exertional heat illness is the third strand, since the drug works against heat loss while exercise generates it. Psychiatric presentations, including agitation and psychosis, follow the central noradrenergic action.",
- "fun": "The military deaths are what moved this compound. After two soldiers died in 2011 following collapse during physical training with DMAA in their blood, the Department of Defense pulled DMAA products from exchanges and ran its own safety review, and that decision by a customer rather than a regulator did more to end DMAA's commercial life than anything else, with FDA enforcement and seven years of litigation following behind.",
- "src": [
-  "FDA. DMAA in dietary supplements (agency statement and warning letters, 2012-2013)",
-  "Eliason MJ et al. Report of 2 cases of exercise-induced death in otherwise healthy soldiers using dietary supplements containing 1,3-dimethylamylamine. Military Medicine, 2012",
-  "Austin KG et al. Pharmacokinetics of 1,3-dimethylamylamine in humans. Int J Sport Nutr Exerc Metab, 2014",
-  "Lisi A et al. Studies of methylhexaneamine in supplements and geranium oil. Drug Testing and Analysis, 2011"
- ]
-},
-"dmha": {
- "origin": "DMHA is the supplement-industry name for 2-amino-6-methylheptane, also called octodrine, 2-aminoisoheptane and 1,5-dimethylhexylamine. Like DMAA it is a synthetic aliphatic amine, and like DMAA it has no approved US drug product: the FDA has stated that it does not meet the requirements for a lawful dietary ingredient. Octodrine has a pharmaceutical past outside the United States, where it was marketed decades ago in combination preparations as an inhaled decongestant and a pressor agent, at doses well above what supplement labels later suggested. Its modern career began after FDA enforcement cleared DMAA out of the market around 2013, when DMHA appeared in pre-workout and weight-loss products marketed, sometimes explicitly, as the DMAA replacement. The same playbook followed, including plant-origin claims, this time to English walnut bark, Juglans regia, or to Kigelia africana or Aconitum species, none of which has been substantiated. Pieter Cohen and colleagues documented the compound in commercial products in Clinical Toxicology in 2018, and FDA warning letters went out in 2019.",
- "timeline": [
-  [
-   "20th century",
-   "Octodrine is marketed outside the United States as an inhaled decongestant and pressor agent, then falls out of use in the second half of the century."
-  ],
-  [
-   "2016",
-   "DMHA appears in US pre-workout and weight-loss supplements following FDA enforcement against DMAA."
-  ],
-  [
-   "2018",
-   "Cohen and colleagues publish analyses identifying DMHA and related experimental stimulants in commercial supplements."
-  ],
-  [
-   "2019",
-   "FDA sends warning letters stating that DMHA is not a lawful dietary ingredient, and it is listed among ingredients prohibited in products sold at military exchanges."
-  ]
- ],
- "cell": "DMHA is a branched seven-carbon primary amine, a near-homolog of DMAA with the amine and methyl groups in different positions, and the pharmacology is assumed from that structure because very little has been measured. The presumed action is that of an indirect sympathomimetic: uptake by the norepinephrine transporter, displacement of stored norepinephrine and inhibition of its reuptake, producing alpha-1 vasoconstriction and beta-1 cardiac stimulation, with no significant direct receptor affinity. Its old use as a decongestant and pressor is consistent with that, since both depend on alpha-1 mediated vasoconstriction. What is missing is specific: there are no good human receptor or transporter data, no characterized metabolism, and no dose-response work. A second problem is chemical identity. Labels have used 2-aminoisoheptane and octodrine interchangeably, and analytical work has found that products differ in which positional isomer they actually contain, so the molecule in a given tub is not reliably the one the pharmacology is being inferred for.",
- "body": [
-  [
-   "Blood vessels",
-   "Expected alpha-1 vasoconstriction with raised peripheral resistance and blood pressure, consistent with its historical use as a pressor."
-  ],
-  [
-   "Heart",
-   "Expected beta-1 stimulation raising rate and contractility, with the usual consequences for oxygen demand and rhythm; human reports are sparse."
-  ],
-  [
-   "Brain",
-   "Central noradrenergic stimulation accounts for the marketed energy and focus and for reported jitteriness, headache, insomnia and agitation."
-  ],
-  [
-   "Nasal mucosa and airway",
-   "The original pharmaceutical target, local vasoconstriction and bronchial effects when inhaled."
-  ],
-  [
-   "Thermoregulation",
-   "As with other stimulants, impaired heat loss during exertion is a theoretical concern, stacked on the caffeine these products also contain."
-  ]
- ],
- "journey": "Essentially uncharacterized in humans. Oral absorption of a small lipophilic amine is expected to be good, with ready central nervous system entry, and the historical inhaled use implies local mucosal action with some systemic absorption. Onset, peak, half-life, metabolic route and route of elimination have not been established in any published human study, and that gap is the point rather than an incidental omission: a compound with no pharmacokinetic description was sold in doses that analytical surveys found varied widely between products and often did not match the label. Routine hospital and workplace drug screens are not designed to detect it, and specific chromatographic methods are required, which is also why anti-doping laboratories rather than clinical ones generate most of the detection data.",
- "sidefx": "The expected adverse profile is the sympathomimetic one, and the reported human experience is consistent as far as it goes: palpitations, raised blood pressure, headache, insomnia, anxiety and nausea, with hypertension, tachycardia, arrhythmia and agitation as the concern at higher exposure. Serious cardiovascular and cerebrovascular events are anticipated by analogy with DMAA rather than documented in a case series of any size, and that uncertainty cuts both ways: absence of reports in a thinly studied, intermittently legal ingredient is weak reassurance. In practice DMHA rarely arrives alone, since the products combine it with caffeine, yohimbine and other stimulants, which makes attribution of any single event difficult.",
- "fun": "DMHA is a case study in regulatory whack-a-mole. It entered the market as DMAA left it, carried the same unsupported botanical cover story transplanted to walnut bark, and was marketed to the same customers, including the ones in uniform, which is why it joined DMAA on the list of ingredients barred from products sold at military exchanges. Products advertising themselves as DMAA-free were a reasonable place to look for it.",
- "src": [
-  "Cohen PA, Travis JC, Keizers PHJ, Boyer FE, Venhuis BJ. The stimulant higenamine in weight loss and sports supplements, and related analyses of DMHA and octodrine. Clinical Toxicology, 2018",
-  "FDA. Warning letters regarding DMHA (octodrine) as a new dietary ingredient, 2019",
-  "Department of Defense Operation Supplement Safety, prohibited ingredient listings",
-  "WADA Prohibited List (octodrine, specified stimulant)"
- ]
-},
-"papain": {
- "origin": "Papain is a cysteine protease from the latex of the unripe papaya fruit, Carica papaya, and it is sold in the United States as a dietary supplement and a food enzyme rather than as a drug; there is no approved US drug product containing papain. Cultures across the tropics wrapped tough meat in papaya leaves long before anyone named the enzyme, and that remains its largest commercial use. Alexander Balls and Hans Lineweaver, at the US Department of Agriculture, crystallized papain in 1937, and in 1968 Jan Drenth and colleagues in Groningen published its three-dimensional structure in Nature, one of the first enzyme structures ever solved. That structure defined a fold and a catalytic strategy now named for it: the papain family, clan CA, which includes the human cathepsins B, L, K and S, plant and parasite proteases, and the papain-like proteases of coronaviruses. A related papaya enzyme, chymopapain, became a surgical product in the 1980s, and its story is the reason papain is remembered in medicine mostly as an allergen.",
- "timeline": [
-  [
-   "1937",
-   "Balls and Lineweaver crystallize papain at the US Department of Agriculture."
-  ],
-  [
-   "1956",
-   "Lewis Thomas observes that injected papain collapses rabbit ears by dissolving cartilage matrix, suggesting a use on intervertebral discs."
-  ],
-  [
-   "1964",
-   "Lyman Smith injects chymopapain into a human lumbar disc and publishes the first chemonucleolysis series."
-  ],
-  [
-   "1968",
-   "Drenth and colleagues publish the crystal structure of papain, defining the papain protease family."
-  ],
-  [
-   "1982",
-   "FDA approves chymopapain as Chymodiactin for chemonucleolysis, and tens of thousands of injections follow."
-  ],
-  [
-   "2008",
-   "FDA removes unapproved topical papain debriding products from the US market after reports of serious hypersensitivity reactions."
-  ]
- ],
- "cell": "Papain hydrolyzes peptide bonds using a catalytic dyad rather than the serine protease triad. Cysteine 25 sits at the interface of two structural lobes, and its thiol is held as a thiolate-imidazolium ion pair with histidine 159, oriented by asparagine 175. The thiolate attacks the substrate carbonyl to form a covalent acyl-enzyme intermediate through a tetrahedral transition state, the amine leaving group departs, and water then hydrolyzes the thioester to release the carboxy product and regenerate free enzyme. The active site cleft binds about seven substrate residues, and the S2 pocket prefers a bulky hydrophobic side chain such as phenylalanine, but specificity is otherwise broad, which is precisely what makes papain useful for chewing up structural protein and useless as a selective tool. Activity depends on the free thiol, so reducing agents activate it and heavy metals and oxidation kill it. In immunology, protease activity is itself the signal: papain cleaves epithelial substrates and triggers release of the alarmin IL-33, driving a type 2 response, which is why it is a standard experimental allergen.",
- "body": [
-  [
-   "Mouth and esophagus",
-   "Chewable papaya enzyme tablets act locally and can irritate mucosa; meat tenderizer was once put down the esophagus for impacted food, and was abandoned after reports of perforation."
-  ],
-  [
-   "Stomach and intestine",
-   "Marketed as a digestive aid for bloating, but it is a protein entering a protease-rich acidic environment, and evidence of benefit is limited and of poor quality."
-  ],
-  [
-   "Immune system",
-   "The clinically important effect. Papain is a potent sensitizer, causing IgE-mediated reactions up to anaphylaxis, and cross-reacting within the latex-fruit syndrome."
-  ],
-  [
-   "Lungs",
-   "Inhaled papain dust causes occupational asthma and rhinitis in food, laboratory and supplement workers, and papain in enzymatic contact lens cleaners sensitized users."
-  ],
-  [
-   "Intervertebral disc (historical)",
-   "Chymopapain injected into the nucleus pulposus depolymerized proteoglycan, reducing disc volume and pressure on the nerve root."
-  ],
-  [
-   "Skin and wounds (historical)",
-   "Topical papain-urea ointments digested necrotic protein for debridement before the unapproved products were removed."
-  ]
- ],
- "journey": "Papain is a protein of about 23 kilodaltons and is not absorbed in any meaningful amount by mouth. It acts in the lumen where it is placed, is denatured by gastric acid and digested by gastric and pancreatic proteases along with the food, and what survives passes in the stool. There is no systemic distribution, no hepatic metabolism and no renal elimination to describe, which is the whole pharmacokinetic story of an oral enzyme supplement and also the main reason claims for systemic anti-inflammatory effects are difficult to support. The two routes that did produce systemic exposure were the ones that caused trouble: injection into a disc, and inhalation of powder, both of which deliver intact antigenic protein past the gut and sensitize the immune system.",
- "sidefx": "Papain's adverse effects are almost entirely immunologic, and they follow from it being a stable foreign protein with enzymatic activity that itself provokes type 2 immunity. Sensitized people react to papaya, papain supplements and papain dust, and because the papaya allergen Pers a 1 analog family and latex hevein share a class I chitinase structure, papaya sits in the latex-fruit syndrome alongside avocado, banana, kiwi and chestnut. Local effects, mouth and throat irritation and gastric upset, are direct proteolysis. Case reports describe raised INR with papaya products in patients taking warfarin. Occupational asthma reflects repeated inhalation of an aerosolized protease.",
- "fun": "Chemonucleolysis is a clean example of a good idea defeated by its own allergen. Chymopapain injection into a herniated lumbar disc worked, was far less invasive than surgery, and was approved in 1982 to great enthusiasm, but roughly half a percent to one percent of patients had anaphylaxis, with deaths reported, and the technique collapsed within a decade. The enzyme that tenderizes a steak was too good at teaching the immune system to recognize it.",
- "src": [
-  "Drenth J, Jansonius JN, Koekoek R, Swen HM, Wolthers BG. Structure of papain. Nature, 1968",
-  "Smith L. Enzyme dissolution of the nucleus pulposus in humans. JAMA, 1964",
-  "FDA. Topical drug products containing papain: notice regarding unapproved marketed products, 2008",
-  "Baur X, Fruhmann G. Allergic reactions, including asthma, to the pineapple protease bromelain and the papaya protease papain. Clinical Allergy and related occupational allergy literature"
- ]
-},
-"indole-3-carbinol": {
- "origin": "Indole-3-carbinol is not a drug and has no approved US product; it is a breakdown product of a plant defense chemical, sold as a dietary supplement along with its condensation product DIM. The story starts with cabbage. Cruciferous plants, the Brassicaceae, store sulfur-containing glucosinolates in their tissues and keep the enzyme that cleaves them, myrosinase, in separate cells; damage to the leaf brings the two together, which is a chemical weapon detonated by being eaten. The glucosinolate called glucobrassicin yields indole-3-carbinol. In the 1970s Lee Wattenberg at the University of Minnesota showed that feeding rodents cruciferous vegetables, and then purified indoles, induced detoxifying enzymes and reduced carcinogen-induced tumors, work published with Loub in Cancer Research in 1978 and widely credited with launching dietary chemoprevention. H. Leon Bradlow and Jon Michnovicz at the Rockefeller University then reported, around 1990 in the Journal of the National Cancer Institute, that indole-3-carbinol shifted human estradiol metabolism toward 2-hydroxylation, which is the claim the supplement market was built on.",
- "timeline": [
-  [
-   "1978",
-   "Wattenberg and Loub report that dietary indoles induce detoxifying enzymes and inhibit carcinogen-induced tumors in rodents."
-  ],
-  [
-   "1990",
-   "Michnovicz and Bradlow show that indole-3-carbinol increases 2-hydroxylation of estradiol in humans."
-  ],
-  [
-   "1991",
-   "Bjeldanes and colleagues identify indolocarbazole, formed from indole-3-carbinol in acid, as an extremely potent aryl hydrocarbon receptor ligand."
-  ],
-  [
-   "2000",
-   "A small placebo-controlled trial of indole-3-carbinol in cervical intraepithelial neoplasia is published."
-  ],
-  [
-   "2004",
-   "Trials in recurrent respiratory papillomatosis report mixed results."
-  ]
- ],
- "cell": "Chewing or chopping a cabbage releases myrosinase, which hydrolyzes glucobrassicin to an unstable indol-3-ylmethyl isothiocyanate. That falls apart in water, releasing thiocyanate and leaving indole-3-carbinol. Indole-3-carbinol is itself unstable in acid, and in the stomach it self-condenses into a family of oligomers: mainly 3,3-diindolylmethane, known as DIM, plus a linear trimer and small amounts of indolo[3,2-b]carbazole. These condensation products, not the parent, are what reach the tissues. Several are ligands for the aryl hydrocarbon receptor, and indolocarbazole binds it with an affinity approaching that of dioxin. Activated AhR dimerizes with ARNT and induces the CYP1 family, CYP1A1, CYP1A2 and CYP1B1, along with UGT1A1 and some phase II enzymes. The CYP1A1 induction is what redirects estradiol metabolism from 16-alpha-hydroxylation toward 2-hydroxylation, raising the urinary ratio of 2-hydroxyestrone to 16-alpha-hydroxyestrone, a biomarker whose clinical meaning remains unproven. DIM also shows antiandrogenic and NF-kB effects in cell culture.",
- "body": [
-  [
-   "Stomach",
-   "Not a passive conduit but a reaction vessel: gastric acid converts swallowed indole-3-carbinol into DIM and the other condensation products that do the work."
-  ],
-  [
-   "Liver",
-   "Aryl hydrocarbon receptor activation induces CYP1A1, CYP1A2 and CYP1B1, changing the clearance of other CYP1A2 substrates and of steroid hormones."
-  ],
-  [
-   "Endocrine system",
-   "Estradiol metabolism shifts toward 2-hydroxylation, measurable as a changed urinary estrogen metabolite ratio in small human studies; whether that changes any outcome has not been shown."
-  ],
-  [
-   "Cervix and airway epithelium",
-   "The settings for the small clinical trials, in cervical intraepithelial neoplasia and recurrent respiratory papillomatosis, both HPV-related, with limited and inconsistent results."
-  ],
-  [
-   "Nervous system",
-   "High intakes of indole-3-carbinol in one small study produced imbalance and tremor, which resolved on stopping."
-  ]
- ],
- "journey": "Very little indole-3-carbinol survives to be absorbed as itself. It is converted in gastric acid within minutes, and after an oral dose the parent compound is barely detectable in plasma while DIM and the other oligomers are. That chemistry is the whole pharmacokinetic story and it has a practical consequence: products labeled indole-3-carbinol and products labeled DIM are not interchangeable, since the first depends on each person's gastric acidity and transit to produce an unpredictable mixture, while the second delivers one defined compound. DIM is lipophilic, reaches peak plasma concentrations a few hours after dosing with a half-life of a few hours, is hydroxylated and conjugated, and is eliminated in bile and urine. Absorption of DIM varies several-fold between formulations, since it dissolves poorly in water.",
- "sidefx": "The reported effects are mild and mostly gastrointestinal, nausea and abdominal discomfort, with rash and a harmless darkening of the urine from DIM. The important risks are mechanistic rather than symptomatic. Inducing CYP1A2 can lower concentrations of narrow-margin substrates such as theophylline, clozapine and tizanidine. Shifting steroid metabolism can interfere with hormone-based therapy, and a small study found that DIM lowered levels of endoxifen, the active metabolite of tamoxifen, which matters for a supplement marketed heavily to women with breast cancer histories. There is also a tumor-promotion signal: in several rodent models indole-3-carbinol given after a carcinogen increased rather than decreased tumors, the opposite of Wattenberg's result when it was given before.",
- "fun": "Indole-3-carbinol is a reminder that the stomach is part of the pharmacology. Swallow it and acid condenses it into a mixture including indolocarbazole, one of the most potent aryl hydrocarbon receptor ligands known, binding the same receptor dioxin uses, which means a cabbage-derived supplement activates the classic environmental-toxin sensor. Whether that is chemoprevention or the opposite has depended, in animal studies, entirely on whether it was given before or after the carcinogen.",
- "src": [
-  "Wattenberg LW, Loub WD. Inhibition of polycyclic aromatic hydrocarbon-induced neoplasia by naturally occurring indoles. Cancer Research, 1978",
-  "Michnovicz JJ, Bradlow HL. Induction of estradiol 2-hydroxylation in humans by dietary indole-3-carbinol. J Natl Cancer Inst, 1990",
-  "Linus Pauling Institute Micronutrient Information Center, Indole-3-carbinol",
-  "Bjeldanes LF et al. Aromatic hydrocarbon responsiveness-receptor agonists generated from indole-3-carbinol in vitro and in vivo. Proc Natl Acad Sci USA, 1991"
- ]
-},
-"sulforaphane": {
- "origin": "Sulforaphane is an isothiocyanate from broccoli and its relatives, sold as a dietary supplement; it is not a drug and there is no approved US product containing it. It owes its scientific existence to one laboratory. Paul Talalay, a pharmacologist at Johns Hopkins, spent decades on the enzymes that cells use to dispose of electrophiles and set out to find the dietary compounds that turn them on. In 1992 Yuesheng Zhang, Talalay, Cho and Gary Posner reported in PNAS that they had isolated from broccoli the major inducer of these protective enzymes and identified it as sulforaphane. In 1994 they showed it blocked carcinogen-induced mammary tumors in rats. Then in 1997 Jed Fahey, Zhang and Talalay published the finding that made it a consumer product: three-day-old broccoli sprouts contain twenty to fifty times more of its precursor than mature broccoli. Hopkins patented the sprouts, a company was founded, and the patents were later invalidated in court on the ground that one cannot patent growing a known vegetable. Talalay died in 2019.",
- "timeline": [
-  [
-   "1992",
-   "Zhang, Talalay, Cho and Posner isolate sulforaphane from broccoli as the major inducer of protective phase II enzymes."
-  ],
-  [
-   "1994",
-   "Sulforaphane is shown to reduce carcinogen-induced mammary tumors in rats."
-  ],
-  [
-   "1997",
-   "Fahey, Zhang and Talalay report that young broccoli sprouts carry far more glucoraphanin than mature broccoli."
-  ],
-  [
-   "1999",
-   "Itoh, Yamamoto and colleagues identify Keap1 as the cytoplasmic sensor that holds Nrf2 in check."
-  ],
-  [
-   "2014",
-   "Broccoli sprout beverage trials in Qidong, China, show increased urinary excretion of airborne pollutant and aflatoxin conjugates."
-  ],
-  [
-   "2014",
-   "A small randomized trial reports behavioral changes with sulforaphane in young men with autism spectrum disorder."
-  ]
- ],
- "cell": "Broccoli stores the glucosinolate glucoraphanin and keeps myrosinase in separate cells; chewing or chopping ruptures both and the enzyme hydrolyzes glucoraphanin to sulforaphane. Sulforaphane is an electrophile, and its isothiocyanate carbon is attacked by thiols. Its target is Keap1, the substrate adaptor of a Cullin-3 ubiquitin ligase complex that normally grips the transcription factor Nrf2 and keeps it continuously ubiquitinated and destroyed. Sulforaphane modifies reactive cysteines on Keap1, including the sensor cysteine 151, which distorts the complex so that Nrf2 is no longer tagged for degradation. Newly made Nrf2 accumulates, enters the nucleus, pairs with small MAF proteins and binds antioxidant response elements, inducing NQO1, heme oxygenase-1, glutathione S-transferases, glutamate-cysteine ligase, thioredoxin reductase and UGT1A1. The elegance is that the same thiol reactivity that makes sulforaphane a sensor signal also makes it a substrate: glutathione S-transferases conjugate it and send it down the mercapturic acid pathway. Reported histone deacetylase and NF-kB effects come from cell culture.",
- "body": [
-  [
-   "Liver and gut epithelium",
-   "The main site of phase II enzyme induction, raising glutathione conjugation and quinone reductase capacity, measurable as faster urinary excretion of pollutant conjugates in human trials."
-  ],
-  [
-   "Stomach",
-   "Small trials in Helicobacter pylori infection reported reduced markers of colonization and gastritis, with inconsistent eradication."
-  ],
-  [
-   "Airways",
-   "Studied for Nrf2-mediated protection against oxidant air pollution, with mixed human results."
-  ],
-  [
-   "Brain",
-   "The basis of autism and schizophrenia trials, on an oxidative stress and inflammation rationale; the trials are small and the findings preliminary."
-  ],
-  [
-   "Thyroid",
-   "Glucosinolate breakdown also yields thiocyanate ion, which competes with iodide at the sodium-iodide symporter, a theoretical goitrogenic concern with concentrated products."
-  ],
-  [
-   "Gut lumen",
-   "Isothiocyanates and sulfur breakdown products account for the gas, bloating and sulfurous taste that people notice."
-  ]
- ],
- "journey": "The pharmacokinetics are mostly a question of what was swallowed. Preformed sulforaphane is well absorbed, with something like 70 to 80 percent bioavailability and a peak at one to three hours. Glucoraphanin alone is not: without plant myrosinase it depends on the myrosinase-like activity of colonic bacteria, which varies several-fold between people, and bioavailability falls to roughly a tenth. Cooking broccoli inactivates myrosinase, which is why well-cooked broccoli and raw sprouts deliver very different amounts. Absorbed sulforaphane is conjugated with glutathione by glutathione S-transferases and processed through the mercapturic acid pathway to cysteinylglycine, cysteine and N-acetylcysteine conjugates, which are excreted in urine within about twelve hours. The half-life is a few hours, so the enzyme induction outlasts the compound by days.",
- "sidefx": "Acute toxicity in humans appears low, and the common complaints, gas, bloating, nausea and an unpleasant sulfurous taste or odor, come from the sulfur chemistry itself rather than from Nrf2. The mechanistic cautions are more interesting than the symptoms. Nrf2 activation is cytoprotective in normal cells and is also what some tumors use to resist chemotherapy, so chronic pharmacologic activation is not obviously benign. Induction of UGT1A1 and glutathione S-transferases could in principle speed clearance of other drugs, which has been shown in cell systems without clear human consequence. Thiocyanate from glucosinolate breakdown is a theoretical thyroid concern at concentrated intakes. Isothiocyanates are also irritants, which is the same reactivity at work on mucosa.",
- "fun": "Talalay's broccoli sprout finding is the rare piece of nutritional biochemistry that produced both a supermarket product and a lawsuit. Hopkins patented sprouting broccoli seeds for their glucoraphanin content, and in 2002 a federal appeals court threw the patents out, reasoning that growers had been sprouting and selling these seeds for a century and that discovering why that was good for people did not make the vegetable new.",
- "src": [
-  "Zhang Y, Talalay P, Cho CG, Posner GH. A major inducer of anticarcinogenic protective enzymes from broccoli: isolation and elucidation of structure. Proc Natl Acad Sci USA, 1992",
-  "Fahey JW, Zhang Y, Talalay P. Broccoli sprouts: an exceptionally rich source of inducers of enzymes that protect against chemical carcinogens. Proc Natl Acad Sci USA, 1997",
-  "Kensler TW et al. Modulation of the metabolism of airborne pollutants by glucoraphanin-rich and sulforaphane-rich broccoli sprout beverages in Qidong, China. Cancer Prevention Research, 2014",
-  "Linus Pauling Institute Micronutrient Information Center, Isothiocyanates"
- ]
-},
-"piperine": {
- "origin": "Piperine is the alkaloid that makes black pepper hot, and it is a food constituent and supplement ingredient rather than a drug: no approved US product contains it. Pepper, Piper nigrum, came from the Malabar coast of India and was for centuries among the most valuable goods in long-distance trade, so much so that Alaric's ransom for Rome in 408 is recorded as including three thousand pounds of it. The molecule was isolated in 1819 by Hans Christian Oersted, the Danish chemist better known for discovering that an electric current deflects a compass needle, who identified piperine as the pungent principle of pepper; it turned out to be an amide of piperic acid with piperidine. Its modern career came from a different direction. From the late 1970s, Chand Krishen Atal and colleagues at the Regional Research Laboratory in Jammu, India, showed that piperine raised blood levels of co-administered drugs and coined the term bioavailability enhancer. In 1998 Shoba and colleagues reported in Planta Medica that piperine raised curcumin bioavailability roughly twentyfold in humans, which is why it now appears in almost every turmeric supplement sold.",
- "timeline": [
-  [
-   "1819",
-   "Hans Christian Oersted isolates piperine from black pepper."
-  ],
-  [
-   "1985",
-   "Atal and colleagues in Jammu describe piperine as a bioavailability enhancer and publish interaction studies."
-  ],
-  [
-   "1991",
-   "Small human studies report raised levels of phenytoin, propranolol and theophylline when given with piperine."
-  ],
-  [
-   "1998",
-   "Shoba and colleagues report an approximately twentyfold increase in curcumin bioavailability with piperine in humans."
-  ],
-  [
-   "2005",
-   "McNamara, Randall and Gunthorpe characterize piperine as an agonist at the human TRPV1 receptor."
-  ]
- ],
- "cell": "Piperine does two unrelated things. The first is to interfere with drug disposal. It inhibits CYP3A4 and several other cytochrome P450 enzymes, inhibits P-glycoprotein, the efflux pump that returns absorbed molecules to the gut lumen, and inhibits UDP-glucuronosyltransferases in both intestine and liver. Those three mechanisms act on the same stretch of the first-pass barrier, so inhibiting them together can raise systemic exposure to a co-ingested compound far more than inhibiting any one alone. Curcumin is the showcase case because its clearance is dominated by intestinal and hepatic glucuronidation, exactly the step piperine blocks. Piperine has also been reported to increase enterocyte membrane fluidity and to inhibit monoamine oxidase in vitro. The second action is sensory and entirely separate: piperine is an agonist at TRPV1, the capsaicin receptor, a non-selective cation channel on nociceptive C and A-delta fibers, and also activates TRPA1. Opening TRPV1 admits calcium and sodium, depolarizes the nerve ending and is read centrally as heat and pain.",
- "body": [
-  [
-   "Small intestine",
-   "The main site of the interaction effect: inhibited CYP3A4, P-glycoprotein and glucuronidation in the enterocyte let more of a co-ingested compound through intact."
-  ],
-  [
-   "Liver",
-   "Further inhibition of CYP-mediated oxidation and of glucuronidation reduces first-pass clearance of substrates arriving by the portal vein."
-  ],
-  [
-   "Mouth, tongue and throat",
-   "TRPV1 and TRPA1 activation on sensory nerve endings produces the burn of black pepper, and inhaled pepper dust triggers the sneeze reflex."
-  ],
-  [
-   "Stomach",
-   "Direct irritation and TRPV1-mediated sensory effects explain heartburn and gastric discomfort with concentrated extracts."
-  ],
-  [
-   "Other drugs",
-   "Not an organ, but the place the effect actually shows up: concentrations of narrow-margin drugs can rise without the person or prescriber knowing a supplement was involved."
-  ]
- ],
- "journey": "Piperine is lipophilic and absorbed well from the gut, with plasma concentrations peaking within a few hours. It is metabolized in the liver by CYP enzymes with oxidation and opening of the methylenedioxy ring, and metabolites are excreted in urine and bile; the parent has a short residence time. For once the pharmacokinetics of the compound matter less than its effect on everything else: piperine does its work during the absorption and first-pass window of whatever it was taken with, so timing relative to the other compound determines the size of the interaction. Culinary pepper delivers small amounts spread through a meal and is not generally regarded as an interaction risk. Concentrated standardized extracts, taken deliberately alongside something else, are the concern.",
- "sidefx": "Piperine alone causes little beyond gastrointestinal irritation, heartburn and the burning sensation that TRPV1 activation produces. The real adverse effect is other drugs becoming more potent than intended, and it traces to exactly the same mechanism that the product is sold for: a bioavailability enhancer cannot raise curcumin absorption without also raising the absorption of CYP3A4 and P-glycoprotein substrates that happen to be in the same gut at the same time. Immunosuppressants, some anticonvulsants, and other narrow-margin drugs are the theoretical concern, and phenytoin, propranolol and theophylline have documented increases in small human studies. The interaction is easy to miss because piperine is listed as a minor ingredient, often under a trade name, on a product the patient thinks of as turmeric.",
- "fun": "Two things about piperine are worth keeping. It was isolated by Hans Christian Oersted, the same man who discovered electromagnetism, which makes black pepper an odd footnote in the history of physics. And its presence in turmeric supplements is not a flavoring or a tradition but a deliberate pharmacokinetic intervention: curcumin by itself is almost unabsorbable, and piperine is there to block the glucuronidation that would otherwise dispose of it.",
- "src": [
-  "Shoba G, Joy D, Joseph T, Majeed M, Rajendran R, Srinivas PS. Influence of piperine on the pharmacokinetics of curcumin in animals and human volunteers. Planta Medica, 1998",
-  "McNamara FN, Randall A, Gunthorpe MJ. Effects of piperine, the pungent component of black pepper, at the human vanilloid receptor TRPV1. Br J Pharmacol, 2005",
-  "Atal CK, Dubey RK, Singh J. Biochemical basis of enhanced drug bioavailability by piperine. J Pharmacol Exp Ther, 1985",
-  "Bano G et al. Effect of piperine on bioavailability and pharmacokinetics of propranolol and theophylline in healthy volunteers. Eur J Clin Pharmacol, 1991"
  ]
 }
 });

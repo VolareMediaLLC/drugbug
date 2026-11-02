@@ -375,10 +375,13 @@ function backRow() {
 /* ---------- views ---------- */
 function viewHome() {
   var genN = genIds().length;
+  /* the whole main menu wears the season, not just the hero (owner, Nov 1 2026) */
+  var HOL = typeof holToday === "function" ? holToday() : null;
+  var hcls = HOL ? ' hol hol-' + HOL.id + (HOL.base ? ' hol-' + HOL.base : '') : '';
   var PT = '<span class="pointer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v13M6 12l6 6 6-6" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Start here</span>';
   function pt(go) { return S.pointGo === go ? ' pointed' : ''; }
   function mini(cls, go, title, line, bug) { return '<button class="route rmini ' + cls + pt(go) + '" ' + (go.indexOf("level:") === 0 ? 'data-level="' + go.slice(6) + '"' : 'data-go="' + go + '"') + '>' + (S.pointGo === go ? PT : '') + '<span class="mtx"><h2>' + title + '</h2><p>' + line + '</p></span><span class="mbug">' + bugArt(typeof bug === "string" ? bugById(bug) : bug, "", { mood: "happy" }) + '</span></button>'; }
-  return topbar() + homeTip() +
+  return topbar() + '<div class="homewrap' + hcls + '" data-hol="' + (HOL ? esc(holKey(HOL)) : '') + '">' + homeTip() +
    heroHTML() +
    homeStart() + homeProgress() + (typeof trialBanner === "function" ? trialBanner() : '') +
    '<h3 class="homegh">Look it up</h3><section class="routes">' +
@@ -390,7 +393,7 @@ function viewHome() {
    mini("rn", "nlevels", "Nursing", "CNA, LVN/LPN and RN", "grub-nurse") +
    mini("md", "mlevels", "Medical School", "MS1 to Intern", "grub-doc") +
    mini("im", "ilevels", "Imaging", "X-ray, CT, MRI, NM and IR", "grub-imaging") +
-   '</div></section>';
+   '</div></section></div>';
 }
 /* My List on the home screen, right under the BugDex (owner, Oct 28 2026) */
 function myListRoute() {
@@ -3398,7 +3401,7 @@ function shopView() {
     c += tankHTML(mine, true);
     if (typeof peekView === "function") c += peekView();
     var nb = mine.length, ni = ITEMS.filter(function (it) { return ownsItem(it.id); }).length, nf = FACES.filter(function (x) { return faceAvail(x[0]); }).length, ns = 1 + (Prog.d.styles || []).length;
-    c += '<div class="pickhead"><h3>Dress it up</h3></div><div class="hub sub terrtiles">' + [["bugs", "Bug Store", nb + " of " + shopBugs().length + " collected"], ["items", "Wardrobe", ni + " of " + ITEMS.length + " owned"], ["faces", "Faces", nf + " of " + FACES.length + " unlocked"], ["styles", "Colors", ns + " of " + STYLES.length + " owned"], ["borders", "Drug Borders", (typeof BORDERS === "undefined" ? "" : (BORDERS.filter(function (b) { return ownsBorder(b.id); }).length) + " of " + BORDERS.length + " owned")], ["sticks", "Get Sticks", "Stick packs, if you would rather not grind"], ["music", "Music", shownTracks().filter(function (t) { return ownsTrack(t.id); }).length + " of " + shownTracks().length + " tracks"]].map(function (x) { return '<button class="hubtile" data-shopf="' + x[0] + '"><span class="ht"><strong>' + x[1] + '</strong><span>' + esc(x[2]) + '</span></span></button>'; }).join("") + '</div>';
+    c += '<div class="pickhead"><h3>Dress it up</h3></div><div class="hub sub terrtiles">' + [["bugs", "Bug Store", nb + " of " + shopBugs().length + " collected"], ["items", "Wardrobe", ni + " of " + ITEMS.length + " owned"], ["faces", "Faces", nf + " of " + FACES.length + " unlocked"], ["styles", "Colors", ns + " of " + STYLES.length + " owned"], ["borders", "Drug Borders", (typeof BORDERS === "undefined" ? "" : (BORDERS.filter(function (b) { return ownsBorder(b.id); }).length) + " of " + BORDERS.length + " owned")], ["voices", "Voices", (typeof VOICES === "undefined" ? "" : VOICES.filter(function (v) { return ownsVoice(v.id); }).length + " of " + VOICES.length + " owned")], ["sticks", "Get Sticks", "Stick packs, if you would rather not grind"], ["music", "Music", shownTracks().filter(function (t) { return ownsTrack(t.id); }).length + " of " + shownTracks().length + " tracks"]].map(function (x) { return '<button class="hubtile" data-shopf="' + x[0] + '"><span class="ht"><strong>' + x[1] + '</strong><span>' + esc(x[2]) + '</span></span></button>'; }).join("") + '</div>';
     return c + '</section>';
   }
   if (S.shopMsg) { c += '<div class="presult good" role="status">' + esc(S.shopMsg) + '</div>'; S.shopMsg = ""; }
@@ -3407,6 +3410,7 @@ function shopView() {
   if (f === "items") return c + itemsView() + '</section>';
   if (f === "faces") return c + facesView() + '</section>';
   if (f === "borders" && typeof bordersView === "function") return c + bordersView() + '</section>';
+  if (f === "voices" && typeof voicesView === "function") return c + voicesView() + '</section>';
   if (f === "sticks" && typeof iapView === "function") return c + iapView() + '</section>';
   var mineOnly = !!S.shopMine;
   var bf = S.shopMine === true ? "mine" : S.shopMine === "dark" ? "dark" : "all";
@@ -3461,7 +3465,7 @@ function stylesView() {
 }
 function stickChip() { if (typeof funOn === "function" && !funOn()) return ""; return '<button class="stickchip" data-goshop="1" aria-label="Terrarium"' + (S.view === "terrarium" ? ' aria-current="page"' : '') + '>' + myBugArt("mini") + '<span class="tlabel">Terrarium</span></button>'; }
 function terrariumView() {
-  var f = S.shopF || "home", title = { bugs: "Bug Store", items: "Wardrobe", faces: "Faces", styles: "Colors", borders: "Drug Borders", sticks: "Get Sticks", music: "Music" }[f];
+  var f = S.shopF || "home", title = { bugs: "Bug Store", items: "Wardrobe", faces: "Faces", styles: "Colors", borders: "Drug Borders", voices: "Voices", sticks: "Get Sticks", music: "Music" }[f];
   var head = f === "home" ? '<button class="backbtn" data-act="terrback"><span aria-hidden="true">&larr;</span> Studying</button><h2>Terrarium</h2>' : '<button class="backbtn" data-act="shopback"><span aria-hidden="true">&larr;</span> Terrarium</button><h2>' + title + '</h2>';
   return topbar() + '<div class="lvl-gen terrarium"><div class="sechead terrhead">' + head + '</div>' + shopView() + '</div>';
 }
@@ -7793,12 +7797,15 @@ function holOn(d) {
   return "";
 }
 function holKey(h) { return h ? (h.base || h.id) : ""; }
+/* Pinned (owner, Nov 1 2026): Thanksgiving is the theme until further notice, whatever the date
+   says. Set HOL_PIN = "" to hand it back to the calendar in holOn(). */
+var HOL_PIN = "thanksgiving";
 function holToday() {
   if (typeof funOn === "function" && !funOn()) return null;   /* Serious mode: no holiday dressing */
   var s = SET(); /* always on: there is no user setting for holidays */
   /* the owner's preview only applies on the owner's device, and only for an hour after picking it; everyone else always gets the real date */
   var pv = s.holPreview && typeof Admin !== "undefined" && Admin.owner && s.holPreviewTs && Date.now() - s.holPreviewTs < 3600000 ? s.holPreview : "";
-  var id = pv || holOn(new Date());
+  var id = pv || HOL_PIN || holOn(new Date());
   for (var i = 0; i < HOLI.length; i++) if (HOLI[i].id === id) return HOLI[i];
   return null;
 }
@@ -23225,6 +23232,9 @@ function learnChatter(force) {
   say.setAttribute("role", "status");
   say.innerHTML = li[0] === "@ACR" ? learnStars(LRN_ACRONYM[learnPhase()] || LRN_ACRONYM[0]) : esc(li[0]);
   host.appendChild(say);
+  /* he drawls his line out loud in country bug gibberish; your bug answers in its own voice
+     (modules/voices.js). When Hickory IS your bug, both sides are the drawl, which is the joke. */
+  LRN_TMR.push(setTimeout(function () { try { if (typeof voiceSay === "function") voiceSay(say.textContent, "hick"); } catch (e) {} }, 60));
   LRN_TMR.push(setTimeout(function () { say.classList.add("on"); }, 30));
   LRN_TMR.push(setTimeout(function () { say.classList.remove("on"); }, 4600));
   LRN_TMR.push(setTimeout(function () { if (say.parentNode) say.parentNode.removeChild(say); }, 5100));
@@ -23795,9 +23805,9 @@ var TRX = {
   asm:       { cls: "tx-tq",     snd: "txtq"     },  /* windlass bites down */
   cls:       { cls: "tx-seal",   snd: "txseal"   },  /* chest seal slaps on */
   cmc:       { cls: "tx-io",     snd: "txio"     },  /* IO driver, then blood */
-  cna:       { cls: "tx-cuff",   snd: "txcuff"   },  /* cuff inflates, then the release hiss */
-  lvn:       { cls: "tx-pills",  snd: "txpills"  },  /* the med pass */
-  rn:        { cls: "tx-drip",   snd: "txdrip"   },  /* the drip chamber */
+  cna:       { cls: "tx-bed",    snd: "txbed"    },  /* the bed rolls down the hall */
+  lvn:       { cls: "tx-bottle", snd: "txbottle" },  /* the bottle gets a shake */
+  rn:        { cls: "tx-drip",   snd: "txdrip"   },  /* the drip chamber and the line filling */
   ms1:       { cls: "tx-atlas",  snd: "txatlas"  },  /* a page of the atlas turns */
   ms3:       { cls: "tx-light",  snd: "txlight"  },  /* penlight sweep on the wards */
   intern:    { cls: "tx-pager",  snd: "txpager"  },  /* the pager goes off */
@@ -23831,11 +23841,39 @@ function txArt(key, r) {
     case "cmc": /* the driver goes in, then blood fills the field */
       return '<span class="txdrill" ' + at + '><svg viewBox="0 0 60 90" aria-hidden="true"><rect x="16" y="2" width="28" height="40" rx="6" fill="#f59e0b"/><rect x="22" y="42" width="16" height="16" rx="3" fill="#475569"/><rect x="28" y="58" width="4" height="26" fill="#cbd5e1"/></svg></span>' +
         '<span class="txblood"></span><span class="txbug" ' + at + '>' + bug + '</span>';
-    case "cna": /* a cuff inflates around the screen and lets go */
-      return '<span class="txcuff"></span><span class="txgauge" ' + at + '><i></i></span><span class="txbug" ' + at + '>' + bug + '</span>';
-    case "lvn": /* pills rain into a med cup */
-      return '<span class="txpill-rain">' + (function () { var s = "", i; for (i = 0; i < 16; i++) s += '<i style="left:' + (5 + i * 6).toFixed(0) + '%;animation-delay:' + (i % 7 * 42) + 'ms;--h:' + ["#f87171", "#60a5fa", "#fbbf24", "#a78bfa", "#4ade80"][i % 5] + '"></i>'; return s; })() + '</span>' +
-        '<span class="txcup" ' + at + '></span><span class="txbug" ' + at + '>' + bug + '</span>';
+    case "cna": /* a hospital bed rolls past, rails up, and the hall goes with it */
+      return '<span class="txhall"></span><span class="txbed">' +
+        '<svg viewBox="0 0 200 110" aria-hidden="true">' +
+        '<rect x="14" y="52" width="164" height="16" rx="4" fill="#e2e8f0"/>' +          /* mattress */
+        '<rect x="14" y="48" width="164" height="7" rx="3.5" fill="#f8fafc"/>' +         /* sheet */
+        '<rect x="24" y="36" width="42" height="14" rx="7" fill="#f1f5f9"/>' +           /* pillow */
+        '<rect x="10" y="20" width="9" height="48" rx="4" fill="#94a3b8"/>' +            /* head board */
+        '<rect x="178" y="30" width="8" height="38" rx="4" fill="#94a3b8"/>' +           /* foot board */
+        '<path d="M10 26 H70 M10 34 H70" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round"/>' +
+        '<rect x="74" y="40" width="80" height="5" rx="2.5" fill="#cbd5e1"/>' +          /* side rail */
+        '<path d="M78 45 v10 M104 45 v10 M130 45 v10 M150 45 v10" stroke="#cbd5e1" stroke-width="3.5" stroke-linecap="round"/>' +
+        '<rect x="26" y="68" width="140" height="8" rx="3" fill="#64748b"/>' +           /* frame */
+        '<path d="M44 76 v12 M152 76 v12" stroke="#64748b" stroke-width="6" stroke-linecap="round"/>' +
+        '<g class="txwheel"><circle cx="44" cy="92" r="8" fill="#1e293b"/><circle cx="44" cy="92" r="3" fill="#94a3b8"/>' +
+        '<circle cx="152" cy="92" r="8" fill="#1e293b"/><circle cx="152" cy="92" r="3" fill="#94a3b8"/></g>' +
+        '<rect x="188" y="4" width="7" height="64" rx="3.5" fill="#cbd5e1"/>' +          /* the IV pole riding along */
+        '<rect x="183" y="10" width="17" height="22" rx="4" fill="rgba(186,230,253,.75)"/>' +
+        '</svg></span><span class="txbug" ' + at + '>' + bug + '</span>';
+    case "lvn": /* the bottle gets a shake, then tips out into the cup */
+      return '<span class="txshelf"></span><span class="txbottle" ' + at + '>' +
+        '<svg viewBox="0 0 90 140" aria-hidden="true">' +
+        '<rect x="24" y="4" width="42" height="16" rx="4" fill="#f8fafc"/>' +            /* child-resistant cap */
+        '<path d="M26 8 h38 M26 13 h38" stroke="#cbd5e1" stroke-width="2"/>' +
+        '<rect x="18" y="20" width="54" height="104" rx="9" fill="#b45309" opacity=".82"/>' +
+        '<rect x="18" y="20" width="54" height="104" rx="9" fill="none" stroke="#78350f" stroke-width="2.5"/>' +
+        '<rect x="24" y="24" width="7" height="92" rx="3.5" fill="#fcd34d" opacity=".35"/>' + /* the shine down the glass */
+        '<rect x="22" y="62" width="46" height="40" rx="3" fill="#f8fafc" opacity=".94"/>' +  /* the label */
+        '<path d="M27 70 h36 M27 77 h30 M27 84 h34 M27 91 h22" stroke="#94a3b8" stroke-width="3" stroke-linecap="round"/>' +
+        '<g class="txrattle"><ellipse cx="34" cy="44" rx="8" ry="5" fill="#f1f5f9"/><ellipse cx="54" cy="38" rx="7" ry="4.5" fill="#e2e8f0"/>' +
+        '<ellipse cx="45" cy="52" rx="8" ry="5" fill="#f8fafc"/><ellipse cx="58" cy="50" rx="6" ry="4" fill="#e2e8f0"/></g>' +
+        '</svg></span>' +
+        '<span class="txpill-rain">' + (function () { var s = "", i; for (i = 0; i < 14; i++) s += '<i style="left:' + (8 + i * 6.4).toFixed(0) + '%;animation-delay:' + (300 + i % 7 * 34) + 'ms;--h:' + ["#f8fafc", "#fde68a", "#bfdbfe", "#fecaca", "#e2e8f0"][i % 5] + '"></i>'; return s; })() + '</span>' +
+        '<span class="txbug" ' + at + '>' + bug + '</span>';
     case "rn": /* the drip chamber, then the line fills the screen */
       return '<span class="txchamber" ' + at + '><i></i><i></i><i></i></span><span class="txfill"></span><span class="txbug" ' + at + '>' + bug + '</span>';
     case "ms1": /* a page of the atlas turns over the screen */
@@ -23884,7 +23922,16 @@ function txSnd(kind) {
     var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
     var c = TXS.ctx || (TXS.ctx = new AC());
     if (c.state === "suspended") { try { c.resume(); } catch (e) {} }
-    var t = c.currentTime, out = c.destination, i;
+    var t = c.currentTime, i;
+    /* a shared output with a little headroom and a limiter, so a transition can be loud without
+       clipping when six oscillators land on the same beat (owner asked for these to be heard) */
+    var out = TXS.out;
+    if (!out || TXS.outCtx !== c) {
+      out = TXS.out = c.createGain(); TXS.outCtx = c; out.gain.value = 2.1;
+      var lim = c.createDynamicsCompressor();
+      lim.threshold.value = -6; lim.ratio.value = 12; lim.knee.value = 6; lim.attack.value = 0.003; lim.release.value = 0.18;
+      out.connect(lim); lim.connect(c.destination);
+    }
     function tone(type, f0, f1, at, dur, v, vib, vibd) {
       var o = c.createOscillator(), g = c.createGain();
       o.type = type; o.frequency.setValueAtTime(f0, t + at);
@@ -23924,13 +23971,19 @@ function txSnd(kind) {
       nz(0.06, 0.2, 0.1, "bandpass", 2400, 900, 2);
       tone("sine", 300, 1100, 0.2, 0.14, 0.09);
       for (i = 0; i < 3; i++) tone("sine", 700 + i * 160, 1400, 0.3 + i * 0.05, 0.07, 0.05);
-    } else if (kind === "txshock") {     /* the capacitor whine, then the thump of the shock */
-      tone("sawtooth", 420, 2400, 0, 0.3, 0.035);
-      tone("sine", 840, 4800, 0, 0.3, 0.018);
-      tone("square", 1200, 1200, 0.3, 0.05, 0.09);     /* ready tone */
-      nz(0.34, 0.1, 0.4, "lowpass", 1800, 200);        /* the discharge */
-      tone("sine", 120, 42, 0.34, 0.26, 0.3);
-      tone("sine", 1000, 1000, 0.5, 0.5, 0.03);        /* the monitor again */
+    } else if (kind === "txshock") {     /* charging whine, the ready tone, then the shock lands */
+      tone("sawtooth", 300, 2600, 0, 0.3, 0.07);       /* the capacitor winding up */
+      tone("sine", 600, 5200, 0, 0.3, 0.04);
+      tone("square", 150, 1300, 0, 0.3, 0.025);
+      tone("square", 1200, 1200, 0.3, 0.07, 0.17);     /* charged: the ready tone */
+      tone("square", 1200, 1200, 0.3, 0.07, 0.17);
+      nz(0.37, 0.05, 0.85, "highpass", 2600);          /* the crack of the discharge */
+      nz(0.37, 0.16, 0.8, "lowpass", 2600, 160);
+      tone("sine", 150, 36, 0.37, 0.34, 0.7);          /* and the thump through the chest */
+      tone("triangle", 75, 30, 0.38, 0.3, 0.3);
+      for (i = 0; i < 5; i++) nz(0.4 + i * 0.03, 0.03, 0.12, "bandpass", 900 + i * 500, 0, 2);
+      tone("sine", 1000, 1000, 0.62, 0.5, 0.05);       /* the monitor finds its rhythm again */
+      tone("sine", 1000, 1000, 1.0, 0.1, 0.05);
     } else if (kind === "txtq") {        /* webbing pulled tight, then the windlass ratchets */
       nz(0, 0.22, 0.2, "bandpass", 2800, 1200, 1.6);
       for (i = 0; i < 6; i++) { tone("square", 240 - i * 10, 160, 0.24 + i * 0.055, 0.03, 0.08); nz(0.24 + i * 0.055, 0.03, 0.12, "highpass", 2600); }
@@ -23949,13 +24002,26 @@ function txSnd(kind) {
       o2.connect(f2); f2.connect(g2); g2.connect(out); o2.start(t + 0.1); o2.stop(t + 0.46);
       nz(0.1, 0.34, 0.1, "bandpass", 1800, 2600, 1.2);
       nz(0.46, 0.3, 0.1, "lowpass", 700, 1500);
-    } else if (kind === "txcuff") {      /* the bulb pumps, then the valve lets go */
-      for (i = 0; i < 5; i++) nz(i * 0.085, 0.07, 0.17, "lowpass", 560 + i * 70, 260);
-      nz(0.46, 0.34, 0.14, "bandpass", 1500, 420, 1.4);
-      tone("sine", 1320, 1320, 0.56, 0.1, 0.045);
-    } else if (kind === "txpills") {     /* pills into a plastic cup, then the cup set down */
-      for (i = 0; i < 9; i++) { tone("sine", 1500 + Math.random() * 900, 700, 0.03 + i * 0.045, 0.045, 0.07); nz(0.03 + i * 0.045, 0.02, 0.05, "highpass", 4000); }
-      tone("sine", 420, 260, 0.5, 0.1, 0.07); nz(0.5, 0.05, 0.1, "lowpass", 1200);
+    } else if (kind === "txbed") {       /* casters on vinyl: a rolling rumble, one bad wheel, the rail clacks */
+      var bn = Math.floor(c.sampleRate * 0.72), bb = c.createBuffer(1, bn, c.sampleRate), bd = bb.getChannelData(0), bi;
+      for (bi = 0; bi < bn; bi++) { var bu = bi / bn, be = bu < 0.12 ? bu / 0.12 : Math.pow(1 - (bu - 0.12) / 0.88, 0.9); bd[bi] = (Math.random() * 2 - 1) * be; }
+      var bs = c.createBufferSource(), bf = c.createBiquadFilter(), bg = c.createGain(), bl = c.createOscillator(), blg = c.createGain();
+      bs.buffer = bb; bf.type = "lowpass"; bf.frequency.setValueAtTime(240, t); bf.frequency.linearRampToValueAtTime(420, t + 0.7);
+      bg.gain.value = 0.3; bl.type = "sine"; bl.frequency.value = 7.5; blg.gain.value = 0.12; bl.connect(blg); blg.connect(bg.gain);
+      bs.connect(bf); bf.connect(bg); bg.connect(out); bs.start(t); bl.start(t); bl.stop(t + 0.76);
+      for (i = 0; i < 6; i++) nz(0.06 + i * 0.105, 0.035, 0.09, "bandpass", 2300 + (i % 2) * 900, 0, 7);  /* the one wheel that squeaks */
+      tone("square", 300, 170, 0.1, 0.05, 0.09); nz(0.1, 0.05, 0.14, "bandpass", 1500, 0, 3);             /* the rail going up */
+      tone("sine", 70, 46, 0.5, 0.2, 0.14);                                                               /* and the weight of it */
+    } else if (kind === "txbottle") {    /* the cap, a good shake, then pills into the cup */
+      tone("square", 760, 300, 0, 0.035, 0.1);                                 /* the cap coming off */
+      nz(0, 0.05, 0.12, "bandpass", 1800, 0, 4);
+      for (i = 0; i < 18; i++) {                                               /* the rattle: tablets off plastic */
+        var rt = 0.09 + i * 0.016 + Math.random() * 0.008;
+        nz(rt, 0.014, 0.1 + Math.random() * 0.1, "bandpass", 2300 + Math.random() * 2600, 0, 8);
+        if (i % 3 === 0) tone("square", 1100 + Math.random() * 900, 520, rt, 0.016, 0.035);
+      }
+      for (i = 0; i < 5; i++) { tone("sine", 1500 + Math.random() * 800, 700, 0.44 + i * 0.05, 0.04, 0.075); nz(0.44 + i * 0.05, 0.02, 0.055, "highpass", 4200); }
+      tone("sine", 420, 250, 0.68, 0.1, 0.07);
     } else if (kind === "txdrip") {      /* three drops in the chamber, then a pump beep */
       [0, 0.17, 0.34].forEach(function (d, k) { tone("sine", 1000 - k * 50, 2000, d, 0.055, 0.1); nz(d, 0.03, 0.05, "highpass", 3600); });
       tone("square", 1760, 1760, 0.5, 0.07, 0.05); tone("square", 1760, 1760, 0.62, 0.07, 0.05);
@@ -24219,25 +24285,84 @@ function iapRestore() {
   };
 })();
 
+
+/* ---------- art: a pile of sticks that grows with the tier ----------
+   Nobody wants to look at a price list, so each pack is a drawing of what you are getting:
+   one twig, a bundle tied with twine, a crate, a woodpile with a bug asleep on it. */
+function iapStick(x, y, len, rot, w, c) {
+  return '<g transform="translate(' + x + ' ' + y + ') rotate(' + rot + ')">' +
+    '<rect x="0" y="' + (-(w || 4) / 2) + '" width="' + len + '" height="' + (w || 4) + '" rx="' + ((w || 4) / 2) + '" fill="' + (c || "#8a5a2b") + '"/>' +
+    '<path d="M' + (len * 0.55) + ' 0 l' + (len * 0.22) + ' ' + (-(w || 4) * 1.6) + '" stroke="' + (c || "#8a5a2b") + '" stroke-width="' + ((w || 4) * 0.6) + '" stroke-linecap="round"/>' +
+    '<path d="M' + (len * 0.78) + ' ' + (-(w || 4) * 0.4) + ' q6 -4 8 2 q-6 3 -8 -2z" fill="#4caf50"/></g>';
+}
+var IAP_ART = {
+  sticks500: function () {
+    return '<svg class="iapart" viewBox="0 0 110 64" width="110" height="64" aria-hidden="true"><g class="sway" style="transform-origin:55px 48px">' +
+      iapStick(16, 44, 70, -8, 6) + '</g></svg>';
+  },
+  sticks1500: function () {
+    return '<svg class="iapart" viewBox="0 0 110 64" width="110" height="64" aria-hidden="true"><g class="sway" style="transform-origin:55px 50px">' +
+      iapStick(14, 48, 76, -5, 6) + iapStick(18, 39, 68, -9, 5, "#a16207") + iapStick(20, 31, 60, -3, 5, "#7c4a21") +
+      '<rect x="44" y="24" width="9" height="30" rx="3" fill="#c2956a" opacity=".85"/></g></svg>';
+  },
+  sticks4000: function () {
+    return '<svg class="iapart" viewBox="0 0 110 64" width="110" height="64" aria-hidden="true"><g class="sway" style="transform-origin:55px 52px">' +
+      iapStick(10, 52, 86, -3, 6) + iapStick(12, 43, 82, -6, 6, "#a16207") + iapStick(16, 34, 74, -2, 5, "#7c4a21") +
+      iapStick(20, 26, 64, -8, 5) + iapStick(26, 19, 52, -4, 4, "#a16207") +
+      '<rect x="40" y="12" width="10" height="46" rx="3" fill="#c2956a" opacity=".8"/><rect x="66" y="14" width="10" height="44" rx="3" fill="#c2956a" opacity=".8"/></g></svg>';
+  },
+  sticks10000: function () {
+    return '<svg class="iapart" viewBox="0 0 110 64" width="110" height="64" aria-hidden="true">' +
+      '<rect x="12" y="22" width="86" height="36" rx="4" fill="#8a5a2b"/><rect x="12" y="22" width="86" height="36" rx="4" fill="none" stroke="#5c3a1a" stroke-width="3"/>' +
+      '<path d="M12 34 H98 M12 46 H98 M40 22 V58 M70 22 V58" stroke="#5c3a1a" stroke-width="2.5"/>' +
+      '<g class="sway" style="transform-origin:55px 24px">' + iapStick(22, 18, 44, -7, 5, "#a16207") + iapStick(50, 15, 38, 5, 5) + '</g></svg>';
+  },
+  sticks30000: function () {
+    var s = '<svg class="iapart" viewBox="0 0 110 64" width="110" height="64" aria-hidden="true">', r, i;
+    for (r = 0; r < 4; r++) for (i = 0; i < 4 - (r % 2); i++) {
+      s += '<circle cx="' + (18 + i * 22 + (r % 2) * 11) + '" cy="' + (54 - r * 11) + '" r="9.5" fill="' + (["#8a5a2b", "#a16207", "#7c4a21"][(r + i) % 3]) + '" stroke="#5c3a1a" stroke-width="1.6"/>' +
+        '<circle cx="' + (18 + i * 22 + (r % 2) * 11) + '" cy="' + (54 - r * 11) + '" r="4.2" fill="#c2956a"/>';
+    }
+    return s + '<g class="sway" style="transform-origin:86px 16px"><circle cx="86" cy="14" r="6" fill="#6aa84f"/><circle cx="83" cy="12" r="1.3" fill="#1c1917"/><circle cx="89" cy="12" r="1.3" fill="#1c1917"/><path d="M83 17 q3 2 6 0" stroke="#1c1917" stroke-width="1.3" fill="none"/><path d="M81 9 l-3 -4 M91 9 l3 -4" stroke="#3f5420" stroke-width="1.6" stroke-linecap="round"/></g></svg>';
+  }
+};
+function iapJar() {
+  return '<svg class="iapjar" viewBox="0 0 64 70" width="64" height="70" aria-hidden="true">' +
+    '<path d="M14 24 h36 v36 a8 8 0 0 1 -8 8 h-20 a8 8 0 0 1 -8 -8z" fill="rgba(186,230,253,.22)" stroke="#93c5fd" stroke-width="2.5"/>' +
+    '<rect x="11" y="18" width="42" height="8" rx="3" fill="#93c5fd"/>' +
+    '<g>' + iapStick(18, 50, 28, -62, 4) + iapStick(28, 52, 30, -84, 4, "#a16207") + iapStick(40, 50, 26, -104, 4, "#7c4a21") + '</g></svg>';
+}
+
 /* ---------- the screen ---------- */
 function iapView() {
   var bal = typeof sticks === "function" ? sticks() : 0, where = iapAvailable();
-  var c = '<p class="muted">Sticks are earned by studying: 3 for a correct answer, 1 for trying, 10 for a perfect round, 25 for an achievement. Buying them is optional, and it only ever buys bugs, hats, faces, colours, borders and music. No drug page, question or tool is behind a stick.</p>';
-  c += '<p class="balance iapbal">' + (typeof stickIcon === "function" ? stickIcon(24) : "") + '<strong>' + bal.toLocaleString() + '</strong> sticks' + (Prog.d.bought ? ' <span class="muted small">(' + Prog.d.bought.toLocaleString() + ' bought)</span>' : '') + '</p>';
+  var best = IAP_PACKS.reduce(function (a, b) { return (b.bonus / b.n) > (a.bonus / a.n) ? b : a; });
+  var c = '<div class="iaphead">' + iapJar() + '<div class="iaphtx"><span class="eyebrow">Your jar</span><h2>' +
+    bal.toLocaleString() + ' sticks</h2><p class="muted small">' +
+    (Prog.d.bought ? Prog.d.bought.toLocaleString() + ' bought, ' + Math.max(0, (Prog.d.earned || 0) - Prog.d.bought).toLocaleString() + ' earned the hard way.' :
+     'All earned, every one of them.') + '</p></div></div>';
   if (IAP.msg) c += '<div class="presult good" role="status">' + esc(IAP.msg) + '</div>';
   if (IAP.err) c += '<div class="presult bad" role="alert">' + esc(IAP.err) + '</div>';
-  if (!where) c += '<div class="callout"><strong>Not switched on yet.</strong> Stick packs are built and waiting on the store side. Until then every stick is earned, which is how most of them get earned anyway.</div>';
+  if (!where) c += '<div class="callout"><strong>The woodpile is not open yet.</strong> The packs are built and waiting on the app stores. Until they open, every stick is earned, which is how most of them get earned anyway.</div>';
   c += '<div class="iapgrid">' + IAP_PACKS.map(function (p) {
     var busy = IAP.busy === p.id, tot = iapTotal(p);
+    var art = IAP_ART[p.id] ? IAP_ART[p.id]() : "";
+    var per = Math.round(tot / parseFloat(String(iapPrice(p)).replace(/[^0-9.]/g, "") || "1"));
     return '<div class="iapcard' + (p.bonus ? ' hasbonus' : '') + '">' +
+      (p.id === best.id ? '<span class="iapbest">Most sticks</span>' : '') + art +
       '<span class="iapn">' + (typeof stickIcon === "function" ? stickIcon(20) : "") + '<strong>' + tot.toLocaleString() + '</strong></span>' +
       '<span class="iapname">' + esc(p.name) + '</span>' +
-      (p.bonus ? '<span class="iapbonus">' + p.n.toLocaleString() + ' + ' + p.bonus.toLocaleString() + ' bonus</span>' : '<span class="iapbonus flat">' + p.n.toLocaleString() + ' sticks</span>') +
+      (p.bonus ? '<span class="iapbonus">+' + p.bonus.toLocaleString() + ' free</span>' : '<span class="iapbonus flat">no bonus</span>') +
       '<span class="muted small iapblurb">' + esc(p.blurb) + '</span>' +
       '<button class="btn small' + (where ? '' : ' ghost') + '" data-iapbuy="' + p.id + '"' + (where && !busy ? '' : ' disabled') + '>' + (busy ? 'Opening the store...' : esc(iapPrice(p))) + '</button>' +
+      (isFinite(per) ? '<span class="iapper">about ' + per.toLocaleString() + ' a dollar</span>' : '') +
       '</div>';
   }).join("") + '</div>';
   if (where) c += '<p class="actions"><button class="btn ghost small" data-iaprestore="1"' + (IAP.busy === "restore" ? ' disabled' : '') + '>' + (IAP.busy === "restore" ? 'Checking...' : 'Restore purchases') + '</button></p>';
+  c += '<div class="iapwhy"><h3>What a stick is for</h3><p>Sticks buy bugs, hats, faces, colours, borders, voices and music. That is the whole list. No drug page, question, tool or protocol has ever been behind one, and none ever will be.</p>' +
+    '<p class="muted small">How they are earned:</p><ul>' +
+    [["Every correct answer", 3], ["Every question you try, even if you miss it", 1], ["A card you have not read before", 1], ["Perfect score on ten or more", 10], ["Each achievement", 25], ["The daily DrugBug", 10]]
+      .map(function (r) { return '<li>' + r[0] + ' &mdash; ' + r[1] + '</li>'; }).join("") + '</ul></div>';
   c += '<p class="muted small iapfine">Prices are set and charged by the app store, in your own currency, and may differ from the figures above. Sticks are a one-time purchase, not a subscription, and they stay with the account you bought them on. They have no cash value and cannot be refunded through DrugBug; refunds go through the store.</p>';
   return c;
 }
@@ -24245,6 +24370,269 @@ document.addEventListener("click", function (e) {
   var t = e.target.closest && e.target.closest("[data-iapbuy],[data-iaprestore]"); if (!t) return;
   if (t.dataset.iaprestore) iapRestore(); else iapBuy(t.dataset.iapbuy);
   render(); window.scrollTo(0, 0);
+});
+
+/* ===== Bug voices (owner, Nov 1 2026) =====
+   Nobody in here speaks English out loud. When a bug says something, it makes its own noise:
+   a blip per syllable, pitched off the letters, so the same line sounds the same way twice and
+   two different lines sound different. Hickory drawls in country bug gibberish; your own bug
+   chirps like a cricket until you buy it something else.
+
+   Voices are bought with sticks in the Terrarium and apply to your bug everywhere it speaks.
+   Hickory's is his own and is not for sale: he sounds like Hickory. */
+
+var VOICES = [
+  { id: "cricket",  name: "Cricket",        kind: "chirp",  price: 0,    rar: "starter",   blurb: "Two quick chirps a syllable, like a field at dusk. What your bug came with." },
+  { id: "beetle",   name: "Beetle",         kind: "buzz",   price: 220,  rar: "common",    blurb: "A short buzz on every beat. Businesslike." },
+  { id: "moth",     name: "Moth",           kind: "warble", price: 260,  rar: "common",    blurb: "Soft and wobbly, like something talking into a lampshade." },
+  { id: "grub",     name: "Grub",           kind: "burble", price: 240,  rar: "common",    blurb: "Round, low and a bit damp. Endearing, mostly." },
+  { id: "stick",    name: "Stick Bug",      kind: "click",  price: 300,  rar: "common",    blurb: "Dry clicks. Says little, means it." },
+  { id: "bumble",   name: "Bumblebee",      kind: "hum",    price: 900,  rar: "rare",      blurb: "A fat, friendly hum that lands slightly off every note." },
+  { id: "hornet",   name: "Hornet",         kind: "rasp",   price: 1100, rar: "rare",      blurb: "Rasping and clipped. People get out of the way." },
+  { id: "water",    name: "Water Beetle",   kind: "bubble", price: 1000, rar: "rare",      blurb: "Rising bloops, like talking from the bottom of a jar." },
+  { id: "katydid",  name: "Katydid",        kind: "scrape", price: 1300, rar: "rare",      blurb: "A leafy scrape with a lift at the end of every phrase." },
+  { id: "radio",    name: "Dispatch Radio", kind: "static", price: 3200, rar: "epic",      blurb: "Squelch, then clipped traffic. Every sentence ends like a key-up." },
+  { id: "mantis",   name: "Mantis",         kind: "whisper",price: 3000, rar: "epic",      blurb: "Barely there. Deliberate. Slightly unnerving." },
+  { id: "toad",     name: "Toad",           kind: "croak",  price: 2900, rar: "epic",      blurb: "Not a bug. Got in anyway. Croaks every syllable." },
+  { id: "cicada",   name: "Cicada",         kind: "swell",  price: 3600, rar: "epic",      blurb: "Each syllable swells and drops, seventeen years in the making." },
+  { id: "chorus",   name: "Night Chorus",   kind: "chorus", price: 7400, rar: "legendary", blurb: "Three voices at once, slightly apart, like a whole field answering." },
+  { id: "music",    name: "Music Box",      kind: "bell",   price: 8200, rar: "legendary", blurb: "A clean bell tone per syllable, in key, every time." },
+  { id: "thunder",  name: "Thunder Beetle", kind: "boom",   price: 9800, rar: "legendary", blurb: "Low, enormous, and far too much for the size of the bug." }
+];
+var VOICES_BY = {}; VOICES.forEach(function (v) { VOICES_BY[v.id] = v; });
+/* Hickory's own, not in the shop */
+var HICK_VOICE = { id: "hick", name: "Hickory", kind: "drawl" };
+
+function myVoice() { var id = Prog.d.voice || "cricket"; return ownsVoice(id) ? id : "cricket"; }
+function ownsVoice(id) { return id === "cricket" || (Prog.d.voices || []).indexOf(id) >= 0; }
+function voiceById(id) { return id === "hick" ? HICK_VOICE : (VOICES_BY[id] || VOICES_BY.cricket); }
+function buyVoice(id) {
+  var v = VOICES_BY[id]; if (!v || ownsVoice(id) || sticks() < v.price) return;
+  Prog.d.spent = (Prog.d.spent || 0) + v.price;
+  Prog.d.voices = (Prog.d.voices || []).concat([id]);
+  useVoice(id);
+  S.shopMsg = v.name + " is yours. That is how your bug sounds now.";
+}
+function useVoice(id) {
+  if (!ownsVoice(id)) return;
+  Prog.d.voice = id; saveProg();
+  S.shopMsg = VOICES_BY[id].name + " it is.";
+  voiceSay("Sounds about right", id);
+}
+
+/* ---------- turning a line of text into syllables ----------
+   Vowel groups, roughly. Good enough that "contraindicated" takes longer to say than "no",
+   which is the whole point, and the same line always comes out the same. */
+function voiceSyl(text) {
+  var w = String(text || "").toLowerCase().replace(/[^a-z' ]+/g, " ").split(/\s+/).filter(Boolean), out = [];
+  for (var i = 0; i < w.length && out.length < 16; i++) {
+    var m = w[i].match(/[aeiouy]+/g), n = m ? m.length : 1, j;
+    for (j = 0; j < n && out.length < 16; j++) {
+      /* pitch comes off the letters, so a word always sounds like itself */
+      var ch = w[i].charCodeAt(Math.min(w[i].length - 1, j * 2)) - 97;
+      out.push({ p: (ch < 0 ? 6 : ch) / 25, end: j === n - 1, word: i });
+    }
+  }
+  return out;
+}
+
+var VX = { ctx: null, t: 0 };
+function voiceOk() { return typeof SET === "function" && SET().sfx && (typeof funOn !== "function" || funOn()); }
+function voiceCtx() {
+  var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
+  if (!VX.ctx) {
+    VX.ctx = new AC();
+    VX.out = VX.ctx.createGain(); VX.out.gain.value = 1.0;
+    var lim = VX.ctx.createDynamicsCompressor();
+    lim.threshold.value = -8; lim.ratio.value = 10; lim.attack.value = 0.003; lim.release.value = 0.15;
+    VX.out.connect(lim); lim.connect(VX.ctx.destination);
+  }
+  if (VX.ctx.state === "suspended") { try { VX.ctx.resume(); } catch (e) {} }
+  return VX.ctx;
+}
+/* speak a line in a voice. Overlapping calls cut the previous one off, so two bubbles
+   in a row do not talk over each other. */
+function voiceSay(text, voiceId) {
+  if (!voiceOk()) return;
+  var V = voiceById(voiceId || myVoice());
+  try {
+    var c = voiceCtx(); if (!c) return;
+    var now = c.currentTime;
+    if (VX.until && VX.until > now + 0.05) { try { VX.out.gain.setValueAtTime(0.0001, now); VX.out.gain.setValueAtTime(1, now + 0.03); } catch (e) {} }
+    var S0 = voiceSyl(text); if (!S0.length) return;
+    var gap = V.kind === "drawl" ? 0.145 : V.kind === "whisper" ? 0.1 : V.kind === "boom" ? 0.16 : V.kind === "click" ? 0.075 : 0.086;
+    var t0 = now + 0.02;
+    for (var i = 0; i < S0.length; i++) voiceBlip(c, V.kind, t0 + i * gap, S0[i], i, S0.length);
+    VX.until = t0 + S0.length * gap + 0.4;
+  } catch (e) {}
+}
+function voiceBlip(c, kind, t, syl, i, n) {
+  var out = VX.out, last = i === n - 1;
+  /* p is 0..1 from the letters; every voice maps it into its own range */
+  function tone(type, f0, f1, dur, v, vib, vibd) {
+    var o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.setValueAtTime(f0, t);
+    if (f1 && f1 !== f0) o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur * 0.95);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(v, t + Math.min(0.02, dur * 0.3));
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(out); o.start(t); o.stop(t + dur + 0.02);
+    if (vib) { var l = c.createOscillator(), lg = c.createGain(); l.frequency.value = vib; lg.gain.value = vibd || 10; l.connect(lg); lg.connect(o.frequency); l.start(t); l.stop(t + dur + 0.02); }
+    return o;
+  }
+  function nz(dur, v, type, f, f2, q) {
+    var ln = Math.max(1, Math.floor(c.sampleRate * dur)), b = c.createBuffer(1, ln, c.sampleRate), d = b.getChannelData(0), k;
+    for (k = 0; k < ln; k++) d[k] = (Math.random() * 2 - 1) * Math.pow(1 - k / ln, 0.6);
+    var s = c.createBufferSource(), fl = c.createBiquadFilter(), g = c.createGain();
+    s.buffer = b; fl.type = type || "bandpass"; fl.frequency.setValueAtTime(f, t);
+    if (f2) fl.frequency.exponentialRampToValueAtTime(Math.max(60, f2), t + dur);
+    fl.Q.value = q || 2; g.gain.value = v;
+    s.connect(fl); fl.connect(g); g.connect(out); s.start(t);
+  }
+  var p = syl.p, lift = last ? 1.18 : syl.end ? 1.06 : 1;   /* phrases lift at the end */
+  switch (kind) {
+    case "drawl":    /* Hickory: low, slow, a slide on every syllable and a sag at the end */
+      var base = 150 + p * 85;
+      tone("sawtooth", base, base * (last ? 0.72 : 1.14) * lift, 0.14, 0.085, 5.5, 9);
+      tone("triangle", base * 2, base * 2 * (last ? 0.72 : 1.14), 0.11, 0.03, 5.5, 14);
+      nz(0.035, 0.035, "bandpass", 1300 + p * 700, 0, 3);
+      break;
+    case "chirp":    /* cricket: two fast high ticks */
+      tone("square", 2700 + p * 1400, (2900 + p * 1400) * lift, 0.028, 0.055);
+      tone("square", 2900 + p * 1500, (3200 + p * 1500) * lift, 0.03, 0.05);
+      nz(0.02, 0.03, "highpass", 5200);
+      break;
+    case "buzz":
+      tone("sawtooth", 190 + p * 120, (190 + p * 120) * lift, 0.075, 0.06, 36, 24);
+      break;
+    case "warble":
+      tone("triangle", 430 + p * 300, (430 + p * 300) * lift, 0.1, 0.07, 13, 48);
+      break;
+    case "burble":
+      tone("sine", 210 + p * 150, (300 + p * 180) * lift, 0.085, 0.09);
+      nz(0.05, 0.04, "lowpass", 700, 300);
+      break;
+    case "click":
+      nz(0.022, 0.16, "bandpass", 1700 + p * 2200, 0, 6);
+      tone("square", 900 + p * 700, 400, 0.02, 0.035);
+      break;
+    case "hum":
+      tone("sine", 160 + p * 90, (160 + p * 90) * lift, 0.11, 0.1, 6.5, 7);
+      tone("sine", 80 + p * 45, 80 + p * 45, 0.11, 0.045);
+      break;
+    case "rasp":
+      nz(0.06, 0.13, "bandpass", 800 + p * 1100, (700 + p * 900) * lift, 3.5);
+      tone("sawtooth", 230 + p * 140, (230 + p * 140) * lift, 0.055, 0.035, 48, 30);
+      break;
+    case "bubble":
+      tone("sine", 330 + p * 220, (900 + p * 500) * lift, 0.075, 0.08);
+      nz(0.03, 0.025, "highpass", 3600);
+      break;
+    case "scrape":
+      nz(0.065, 0.1, "bandpass", 2200 + p * 1600, (2800 + p * 1800) * lift, 5);
+      tone("triangle", 640 + p * 420, (700 + p * 460) * lift, 0.05, 0.03);
+      break;
+    case "static":   /* dispatch radio: clipped traffic, and a key-up at the end */
+      nz(0.055, 0.11, "bandpass", 1400 + p * 900, 0, 2.2);
+      tone("square", 420 + p * 320, (420 + p * 320) * lift, 0.05, 0.035);
+      if (last) { nz(0.09, 0.1, "bandpass", 2400, 900, 1.2); tone("sine", 1400, 1400, 0.05, 0.05); }
+      break;
+    case "whisper":
+      nz(0.07, 0.085, "bandpass", 1100 + p * 1500, (1300 + p * 1500) * lift, 1.6);
+      break;
+    case "croak":
+      tone("square", 170 + p * 70, (105 + p * 40) * lift, 0.09, 0.09, 26, 22);
+      nz(0.03, 0.04, "lowpass", 600);
+      break;
+    case "swell":
+      var sf = 520 + p * 340, o2 = c.createOscillator(), g2 = c.createGain();
+      o2.type = "sawtooth"; o2.frequency.setValueAtTime(sf, t); o2.frequency.linearRampToValueAtTime(sf * lift, t + 0.12);
+      g2.gain.setValueAtTime(0.0001, t); g2.gain.linearRampToValueAtTime(0.055, t + 0.06); g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.14);
+      var am = c.createOscillator(), ag = c.createGain(); am.frequency.value = 42; ag.gain.value = 0.03; am.connect(ag); ag.connect(g2.gain);
+      o2.connect(g2); g2.connect(out); o2.start(t); o2.stop(t + 0.16); am.start(t); am.stop(t + 0.16);
+      break;
+    case "chorus":
+      [0, 1.004, 0.993].forEach(function (d, k) { tone(k ? "triangle" : "sine", (620 + p * 420) * d, (620 + p * 420) * d * lift, 0.1, 0.045, 7 + k * 2, 16); });
+      break;
+    case "bell":
+      var bf = [523, 587, 659, 784, 880, 1047][Math.floor(p * 5.99)];
+      tone("sine", bf * 2, bf * 2, 0.34, 0.075);
+      tone("sine", bf * 5.4, bf * 5.4, 0.1, 0.018);
+      break;
+    case "boom":
+      tone("sine", 64 + p * 34, (44 + p * 22) * lift, 0.2, 0.4);
+      tone("triangle", 128 + p * 68, (92 + p * 44) * lift, 0.16, 0.1);
+      nz(0.07, 0.07, "lowpass", 340, 130);
+      break;
+    default:
+      tone("square", 700 + p * 600, (700 + p * 600) * lift, 0.05, 0.05);
+  }
+}
+
+/* ---------- wiring: anything that puts words in a bubble makes a noise ---------- */
+(function () {
+  if (typeof buddySet === "function") {
+    var bs = buddySet;
+    buddySet = function (mood, msg, ms) { if (msg) { try { voiceSay(msg, myVoice()); } catch (e) {} } return bs.apply(this, arguments); };
+  }
+})();
+
+/* ---------- the shop section ---------- */
+function voicesView() {
+  var bal = sticks(), cur = myVoice();
+  var c = '<p class="muted">Your bug does not speak English. It makes its own noise, a blip a syllable, so the same line sounds the same way twice. Buy a voice with sticks, then tap Use. Hickory keeps his own drawl: he is not for hire.</p>';
+  c += '<p class="vxhick"><button class="btn small ghost" data-voicepv="hick">Hear Hickory</button> <span class="muted small">Country bug gibberish, as standard.</span></p>';
+  var TIERS = [["starter", "Free"], ["common", "Common"], ["rare", "Rare"], ["epic", "Epic"], ["legendary", "Legendary"]];
+  TIERS.forEach(function (tr) {
+    var L = VOICES.filter(function (v) { return v.rar === tr[0]; });
+    if (!L.length) return;
+    var mine = L.filter(function (v) { return ownsVoice(v.id); }).length;
+    c += '<div class="tierhead r-' + tr[0] + '"><h3>' + esc(tr[1]) + '</h3><span class="tierown">' + mine + ' of ' + L.length + ' owned</span></div><div class="shopgrid vxgrid">' +
+      L.map(function (v) {
+        var own = ownsVoice(v.id), on = cur === v.id, can = bal >= v.price;
+        var act = on ? '<span class="eqd">In use</span>' :
+          own ? '<button class="btn small" data-voice="' + v.id + '">Use</button>' :
+          '<button class="btn small' + (can ? '' : ' ghost') + '" data-voicebuy="' + v.id + '"' + (can ? '' : ' disabled') + '>' + (can ? 'Buy' : 'Need ' + (v.price - bal).toLocaleString() + ' more') + '</button>';
+        return '<div class="bugcard vxcard r-' + v.rar + (on ? " eq" : "") + '">' +
+          '<span class="vxwave" aria-hidden="true">' + vxWave(v.kind) + '</span>' +
+          '<strong>' + esc(v.name) + '</strong><span class="rar">' + (typeof RARITY !== "undefined" && RARITY[v.rar] ? RARITY[v.rar] : tr[1]) + '</span>' +
+          '<span class="muted small vxblurb">' + esc(v.blurb) + '</span>' +
+          (own ? '<span class="muted small">Owned</span>' : v.price ? stickTag(v.price) : '<span class="muted small">Free</span>') +
+          '<div class="bact"><button class="btn small ghost" data-voicepv="' + v.id + '">Hear it</button>' + act + '</div></div>';
+      }).join("") + '</div>';
+  });
+  return c;
+}
+/* a little waveform so each card looks like a different sound */
+var VX_WAVE = {
+  chirp:   "M2 14 h4 l1 -9 l1 9 h3 l1 -11 l1 11 h4 l1 -8 l1 8 h4 l1 -10 l1 10 h6",
+  drawl:   "M2 10 q6 -7 12 0 t12 0 t12 0",
+  buzz:    "M2 14 l2 -9 l2 9 l2 -9 l2 9 l2 -9 l2 9 l2 -9 l2 9 l2 -9 l2 9 l2 -9 l2 9",
+  warble:  "M2 10 q4 -8 8 0 t8 0 q4 -9 8 0 t8 0",
+  burble:  "M2 13 q5 -8 10 0 q5 -6 10 0 q5 -9 10 0",
+  click:   "M3 14 v-9 M9 14 v-6 M15 14 v-10 M21 14 v-7 M27 14 v-9 M33 14 v-5",
+  hum:     "M2 10 q9 -4 18 0 t18 0",
+  rasp:    "M2 12 l3 -6 l2 7 l3 -8 l2 8 l3 -5 l2 6 l3 -8 l2 7 l3 -6 l2 5",
+  bubble:  "M2 15 q4 -11 7 0 q4 -11 7 0 q4 -11 7 0 q4 -11 7 0",
+  scrape:  "M2 13 l5 -3 l2 4 l5 -5 l2 5 l5 -6 l2 6 l5 -7",
+  static:  "M2 12 l1 -5 l1 6 l1 -7 l1 5 l1 -3 l1 4 l1 -6 l1 7 l1 -4 l1 3 l1 -5 l1 6 l1 -3 l1 4 l1 -7 l1 5 l1 -4 l1 6 l1 -5",
+  whisper: "M2 11 q3 -3 6 0 t6 0 t6 0 t6 0 t6 0 t6 0",
+  croak:   "M2 9 l4 7 l2 -11 l4 10 l2 -9 l4 8 l2 -10 l4 9",
+  swell:   "M2 11 q9 -9 18 0 q9 9 18 0",
+  chorus:  "M2 8 q6 -5 12 0 t12 0 t12 0 M2 13 q6 -5 12 0 t12 0 t12 0",
+  bell:    "M3 14 v-10 M11 14 v-8 M19 14 v-11 M27 14 v-7 M35 14 v-9",
+  boom:    "M2 10 q3 -9 6 0 q3 9 6 0 q3 -9 6 0 q3 9 6 0 q3 -7 6 0"
+};
+function vxWave(kind) {
+  return '<svg viewBox="0 0 42 20" width="84" height="40" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="' + (VX_WAVE[kind] || VX_WAVE.chirp) + '"/></svg>';
+}
+document.addEventListener("click", function (e) {
+  var t = e.target.closest && e.target.closest("[data-voice],[data-voicebuy],[data-voicepv]"); if (!t) return;
+  var d = t.dataset;
+  if (d.voicepv) { voiceSay(d.voicepv === "hick" ? "Well now, I reckon that's about how I sound" : "Hey there, this is how I sound", d.voicepv); return; }
+  if (d.voicebuy) buyVoice(d.voicebuy); else if (d.voice) useVoice(d.voice);
+  saveProg(); render(); window.scrollTo(0, 0);
 });
 
 
