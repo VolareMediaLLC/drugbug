@@ -1,3 +1,15 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f6f4fc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#17132a" media="(prefers-color-scheme: dark)">
+<meta name="description" content="DrugBug: medications explained plainly for EMS, nursing, medical and imaging students.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
 <title>DrugBug</title>
 <script>(function(){var r=document.documentElement,t="dark";try{var v=localStorage.getItem("drugbug:theme");if(v)t=JSON.parse(v)||"dark";}catch(e){}if(t==="light"||t==="dark")r.setAttribute("data-theme",t);})();</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1699,6 +1711,16 @@ button.pstat{cursor:pointer}button.pstat:hover{border-color:var(--flight)}
 .wzpn{font-family:var(--f-display);font-size:21px}
 .wzpp{font-weight:800;font-size:15px}
 .wzpnote{font-size:12.5px;color:var(--gen);font-weight:700;margin-bottom:6px}
+.wzflash{display:flex;align-items:flex-start;gap:11px;text-align:left;margin:18px 0 0;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--surface-2);flex-wrap:wrap}
+.wzflash .wzfi{flex:0 0 auto;color:var(--gold,#f2ac17);margin-top:1px}
+.wzflash .wzft{flex:1;min-width:200px;font-size:13px;line-height:1.5;color:var(--muted)}
+.wzflash .btn{flex:0 0 auto}
+.giftbox{margin:8px 0 0}
+.giftbox .pform.inl{display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap;margin:0}
+.giftbox .gl{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--muted)}
+.giftbox .pinput{text-transform:uppercase;letter-spacing:.06em;font-family:var(--f-mono);max-width:230px}
+.iapcode{margin:18px 0 0;padding:14px 16px;border:1px solid var(--line);border-radius:16px;background:var(--surface)}
+.iapcode h3{margin:0 0 4px;font-family:var(--f-display);font-size:19px}
 .wzlater{margin-top:16px}
 .wzlater .linkish{font-size:13.5px;color:var(--muted)}
 @media (max-width:620px){.wzplans{grid-template-columns:1fr}.wz h1{font-size:25px}}
@@ -2108,3 +2130,6 @@ body:has(#app > .gate){padding-inline:12px;padding-block:0;margin:0}#app:has(> .
 <script defer src="data3.js"></script>
 <script defer src="data4.js"></script>
 <script defer src="app.js"></script>
+
+</body>
+</html>

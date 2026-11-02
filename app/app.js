@@ -2182,6 +2182,11 @@ function mergeProg(remote) {
   if (R.buys && typeof R.buys === "object") { L.buys = L.buys || {}; Object.keys(R.buys).forEach(function (t) { if (!L.buys[t]) L.buys[t] = R.buys[t]; }); }
   /* sticks bought is the sum of the ledger, so recompute it rather than trusting either side */
   if (L.buys) { var tot = 0; Object.keys(L.buys).forEach(function (t) { tot += (L.buys[t] && L.buys[t].n) || 0; }); L.bought = tot; }
+  /* Gift codes: a union by gift id, so one code cannot be run twice by signing in on a second device.
+     The sticks it paid are already inside earned, which takes the higher side above. */
+  if (R.gifts && typeof R.gifts === "object") { L.gifts = L.gifts || {}; Object.keys(R.gifts).forEach(function (g) { if (!L.gifts[g] || R.gifts[g] < L.gifts[g]) L.gifts[g] = R.gifts[g]; }); }
+  /* Pro granted by a code: keep whichever expiry is later, so redeeming on one device covers both. */
+  if (R.proGift && R.proGift.until) { if (!L.proGift || (L.proGift.until || 0) < R.proGift.until) L.proGift = { until: R.proGift.until }; }
   /* what is equipped follows the same "newest device wins" rule as the outfit and face */
   if (avNewer) { if (R.border) L.border = R.border; if (R.voice) L.voice = R.voice; if (R.track) L.track = R.track; }
   if (R.muRefunded) L.muRefunded = 1;
@@ -6189,7 +6194,9 @@ function settingsView() {
   pv += setRow("Download my data", "A file with your progress, scores, saved list and settings.", '<button class="btn small ghost" data-act="exportdata">Download</button>');
   pv += setRow("Reset my progress", "Clears mastery, XP, streaks, achievements and scores. Keeps your bugs, sticks, saved list and settings.", S.resetAsk ? '<span class="confirm">Reset everything? <button class="btn small again" data-act="resetyes">Reset</button><button class="btn small ghost" data-act="resetno">Cancel</button></span>' : '<button class="btn small ghost" data-act="resetask">Reset progress</button>');
   pv += setRow("Delete all my data", "Removes everything DrugBug stores about you, here and online. Cannot be undone.", '<button class="btn small again" data-legal="data">Delete…</button>');
-  c += setCard("privacy", "Account & privacy", fmCodeRow() + (typeof accCard === "function" ? accCard() : "") + pv);
+  c += setCard("privacy", "Account & privacy", fmCodeRow() + (typeof accCard === "function" ? accCard() : "")
+    + (typeof giftBox === "function" ? setRow("Redeem a code", "A gift code from DrugBug or your agency: sticks, Pro time, or your agency's protocols.", "") + giftBox() : "")
+    + pv);
   // feedback
   c += setCard("feedback", "Feedback",
     setRow("Send feedback", "Bugs, content corrections, ideas or anything else. It opens your email app.", '<button class="btn small" data-idea="1">Write feedback</button>') +
@@ -7144,6 +7151,7 @@ function webCodeTry(raw) {
 }
 function tier() {
   if (!PAYWALL) return "pro";
+  if (typeof giftPro === "function" && giftPro()) return "pro";   /* a gift code (modules/gift.js) */
   if (typeof fmPassActive === "function" && fmPassActive() && typeof S !== "undefined" && S.view === "level" && typeof isF === "function" && isF(S.level)) return "pro"; /* Field Medic month code */
   if (DEMO) return webPass() ? "pro" : "free";
   if (!NATIVE) return SET().previewTier || "pro";
@@ -7172,6 +7180,7 @@ function proLabel() {
   if (!NATIVE) return "Web preview as " + TIER_NAME[tier()];
   if (PRO.store) return TIER_NAME[PRO.tier] + " active" + (PRO.offer ? " · offer code" : "") + (PRO.expires ? " · renews or ends " + new Date(PRO.expires).toLocaleDateString() : "");
   if (licenseActive()) return "School license (" + Prog.d.license.code + ") until " + new Date(Prog.d.license.until).toLocaleDateString();
+  if (typeof giftPro === "function" && giftPro()) return "DrugBug Pro from a code until " + new Date(Prog.d.proGift.until).toLocaleDateString();
   if (Prog.d.proGrant) return "Granted by DrugBug";
   return "DrugBug Free";
 }
@@ -24503,6 +24512,8 @@ function iapView() {
       (isFinite(per) ? '<span class="iapper">about ' + per.toLocaleString() + ' a dollar</span>' : '') +
       '</div>';
   }).join("") + '</div>';
+  /* a gift code sits with the packs: it is the other way sticks arrive (owner, Nov 1 2026) */
+  if (typeof giftBox === "function") c += '<div class="iapcode"><h3>Have a code?</h3>' + giftBox() + '</div>';
   if (where) c += '<p class="actions"><button class="btn ghost small" data-iaprestore="1"' + (IAP.busy === "restore" ? ' disabled' : '') + '>' + (IAP.busy === "restore" ? 'Checking...' : 'Restore purchases') + '</button></p>';
   c += '<div class="iapwhy"><h3>What a stick is for</h3><p>Sticks buy bugs, hats, faces, colours, borders, voices and music. That is the whole list. No drug page, question, tool or protocol has ever been behind one, and none ever will be.</p>' +
     '<p class="muted small">How they are earned:</p><ul>' +
@@ -24816,6 +24827,88 @@ document.addEventListener("click", function (e) {
   saveProg(); render(); window.scrollTo(0, 0);
 });
 
+/* ---------- Gift codes (owner, Nov 1 2026) ----------
+   One code hands someone a bundle: sticks, DrugBug Pro for a number of days, and optionally an
+   agency protocol set. Built by tools/gifts.py into DB.GIFTS.
+
+   Each gift's payload is encrypted under its own code, using the same scheme as the agency protocol
+   sets, and opened with agpDecrypt(). That is not decoration: the St Joseph bundle has to carry the
+   agency code, and that code is the decryption key for the protocol set itself. Hashing the gift code
+   and putting the agency code beside it in the clear would publish the key on the website. This way
+   nothing in a gift - not the stick count, not the agency code - can be read without the code.
+
+   A code works once per account: the redemption is written to Prog.d.gifts, which syncs, so the same
+   code cannot be run again on a second device. There is no server check, so a code handed to the world
+   can be used by the world; these are for handing out deliberately, not for public promotion. */
+
+var GIFT = { open: false, code: "", msg: "", ok: "", busy: false };
+
+function giftSalt() { return (DB.GIFTS || {}).salt || ""; }
+function giftKey(code) {   /* stretched once per try, same 100,000 rounds as the protocol codes */
+  var G = DB.GIFTS || {}, salt = agpB64(G.salt || ""), k = agpSha(agpCat(salt, new TextEncoder().encode(agpNorm(code))));
+  for (var i = 1; i < (G.n || 1); i++) k = agpSha(agpCat(k, salt));
+  return k;
+}
+function giftFind(code) {
+  var items = (DB.GIFTS || {}).items || []; if (!items.length) return null;
+  var k = giftKey(code);
+  for (var i = 0; i < items.length; i++) { var d = agpDecrypt(items[i], k); if (d) return d; }
+  return null;
+}
+/* Pro granted by a code, on any build. tier() checks this. */
+function giftPro() { var g = Prog.d.proGift; return g && g.until > Date.now() ? g : null; }
+function giftProDays() { var g = giftPro(); return g ? Math.ceil((g.until - Date.now()) / 864e5) : 0; }
+
+function giftRedeem(code) {
+  GIFT.msg = ""; GIFT.ok = "";
+  if (agpNorm(code).length < 4) { GIFT.msg = "Enter the code you were given."; return giftDraw(); }
+  GIFT.busy = true; giftDraw();
+  setTimeout(function () {
+    var d = giftFind(code); GIFT.busy = false;
+    if (!d) { GIFT.msg = "That code did not match anything. Check the spelling and try again."; return giftDraw(); }
+    Prog.d.gifts = Prog.d.gifts || {};
+    if (Prog.d.gifts[d.id]) { GIFT.msg = "That code has already been used on this account."; return giftDraw(); }
+    var got = [];
+    Prog.d.gifts[d.id] = Date.now();
+    if (d.sticks > 0) { earn(d.sticks); got.push(d.sticks.toLocaleString() + " sticks"); }
+    if (d.pro > 0) {
+      var from = Math.max(Date.now(), (Prog.d.proGift && Prog.d.proGift.until) || 0);
+      Prog.d.proGift = { until: from + d.pro * 864e5 };
+      got.push("DrugBug Pro until " + new Date(Prog.d.proGift.until).toLocaleDateString());
+    }
+    if (d.ag) {
+      store("agcode", d.ag);
+      if (typeof AGP !== "undefined") { AGP.code = d.ag; AGP.tried = false; AGP.data = null; if (typeof agpAuto === "function") agpAuto(); }
+      got.push("your agency's protocols");
+    }
+    saveProg();
+    GIFT.code = ""; GIFT.ok = "Redeemed: " + got.join(", ") + ".";
+    if (typeof webDeepLoad === "function") webDeepLoad();
+    giftDraw(); if (typeof render === "function") render();
+  }, 30);
+}
+
+/* The box, used in Settings and on the Get Sticks screen */
+function giftBox() {
+  return '<div class="giftbox" id="giftbox">' +
+    (GIFT.ok ? '<p class="presult good" role="status">' + esc(GIFT.ok) + '</p>' : '') +
+    (GIFT.msg ? '<p class="presult" role="status">' + esc(GIFT.msg) + '</p>' : '') +
+    '<form class="pform inl" data-giftform="1"><label class="gl">Code<input class="pinput" id="giftin" type="text" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="STICKS-XXXXXX" value="' + esc(GIFT.code) + '"></label>' +
+    '<button class="btn small" type="submit"' + (GIFT.busy ? " disabled" : "") + '>' + (GIFT.busy ? "Checking..." : "Redeem") + '</button></form>' +
+    '<p class="muted small">A code from DrugBug or your agency. Each one works once.</p></div>';
+}
+function giftDraw() {
+  var el = document.getElementById("giftbox");
+  if (!el) return;
+  var v = (document.getElementById("giftin") || {}).value; if (v !== undefined && !GIFT.ok) GIFT.code = v;
+  el.outerHTML = giftBox();
+}
+document.addEventListener("submit", function (e) {
+  var f = e.target; if (!f.getAttribute || !f.getAttribute("data-giftform")) return;
+  e.preventDefault();
+  giftRedeem((document.getElementById("giftin") || {}).value || "");
+});
+
 /* ---------- First run: pick a plan, then make an account (owner, Nov 1 2026) ----------
    Replaces the quiet in-app nudge that nobody found. The order is the one people expect from an app:
    see what it costs, then create the account that holds it.
@@ -24864,7 +24957,7 @@ function wzPlanStep() {
       '<div class="wzfree"><span class="wzfreetag">Free</span><strong>Everything, at no cost</strong>' +
       '<span class="wzpl"><em>Every medication on every route</em><em>Flashcards, questions and practice tests</em><em>The 5-minute daily and your streak</em><em>Sticks, bugs and the Terrarium</em></span>' +
       '<span class="muted small">Sticks are earned by studying. You can buy more if you would rather not wait, and nothing is locked behind them.</span></div>' +
-      '<div class="actions"><button class="btn big" data-wz="next" data-plan="free">Start free</button></div>';
+      '<div class="actions"><button class="btn big" data-wz="next" data-plan="free">Start free</button></div>' + wzFlashNote();
     return c;
   }
   var freeWeek = typeof trialEligible === "function" && trialEligible();
@@ -24874,6 +24967,16 @@ function wzPlanStep() {
     wzPlanCard("pro", TIER_NAME.pro.replace("DrugBug ", ""), PLANS.pro.m + "/mo", freeWeek ? "1 week free, then " + PLANS.pro.m + " a month" : PLANS.pro.y + " a year", ["Everything in Plus", "Practice tests, scenarios and Megacode", "Brain games and the study tools"], "best") +
     '</div><p class="muted small">' + (freeWeek ? "The free week is run by the App Store and renews into Pro unless you cancel first. " : "") + 'Payment is charged to your Apple Account. Manage or cancel in Settings, your name, Subscriptions.</p>';
   return c;
+}
+/* Photosensitivity notice, shown once on the way in (owner, Nov 1 2026). The flashes in the level
+   animations are single or below three a second, which is the published limit, but someone with
+   photosensitive epilepsy should be told before they meet one rather than after. */
+function wzFlashNote() {
+  if (typeof SET === "function" && SET().motion) return "";
+  return '<div class="wzflash"><span class="wzfi" aria-hidden="true">' +
+    '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/></svg></span>' +
+    '<span class="wzft"><strong>A note on flashing.</strong> Short animations play between sections and a few of them flash, like an ambulance light bar or a cardioversion. They are kept below three flashes a second, the published limit for photosensitive seizures. If you have photosensitive epilepsy you can switch every animation off now, or later in Settings.</span>' +
+    '<button class="btn small ghost" data-wz="nomotion">Turn animations off</button></div>';
 }
 function wzAcctStep() {
   var hasApple = ACCT.api && typeof ACCT.api.hasApple === "function" ? ACCT.api.hasApple() : NATIVE;
@@ -24907,6 +25010,7 @@ document.addEventListener("click", function (e) {
 
   var b = e.target.closest && e.target.closest("[data-wz]"); if (!b) return;
   var w = b.getAttribute("data-wz");
+  if (w === "nomotion") { if (typeof setSet === "function") setSet("motion", true); render(); return; }
   if (w === "later") return welcomeFinish(0);
   if (w === "plan" || w === "next") {
     WZ.plan = b.getAttribute("data-plan") || "free";
