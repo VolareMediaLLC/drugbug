@@ -1,5 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#1f1d2b"><link rel="icon" href="icon.png"><link rel="apple-touch-icon" href="icon.png"><meta name="description" content="Try DrugBug free in your browser: common medications explained for students, professionals and everyday people, with a preview of the Wormhole deep dives.">
-<title>DrugBug</title></head><body>
+<title>DrugBug</title>
 <script>(function(){var r=document.documentElement,t="dark";try{var v=localStorage.getItem("drugbug:theme");if(v)t=JSON.parse(v)||"dark";}catch(e){}if(t==="light"||t==="dark")r.setAttribute("data-theme",t);})();</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -495,6 +494,142 @@ table.suffix td{white-space:normal}
 .pupils{transition:transform .13s cubic-bezier(.22,.8,.3,1)}
 @media (prefers-reduced-motion:reduce){.pupils{transition:none;transform:none!important}}
 /* Flight Paramedic launch: the Sky Hornet rockets off and the wash carries you into the level */
+
+/* ===== Level transitions, one per bug (owner, Nov 1 2026). modules/trans.js ===== */
+.lvtrans{position:fixed;inset:0;z-index:90;pointer-events:none;overflow:hidden}
+.lvtrans.txout{opacity:0;transition:opacity .34s ease-out}
+.lvtrans .txbug{position:absolute;width:132px;height:132px;margin:-66px 0 0 -66px;opacity:0;animation:txbug .5s cubic-bezier(.3,1.5,.5,1) forwards}
+.lvtrans .txbug .lvbug,.lvtrans .txbug svg{width:100%;height:100%}
+@keyframes txbug{0%{opacity:0;transform:scale(.3)}35%{opacity:1;transform:scale(1.06)}100%{opacity:1;transform:scale(1)}}
+.lvtrans .txdim{position:absolute;inset:0;background:rgba(10,8,20,.95);opacity:0;animation:txdim .5s ease-out forwards}
+@keyframes txdim{0%{opacity:0}38%{opacity:1}100%{opacity:1}}
+.lvtrans .txflash{position:absolute;inset:0;background:#fff;opacity:0;animation:txflash .5s ease-out forwards}
+@keyframes txflash{0%{opacity:0}18%{opacity:.95}100%{opacity:.9}}
+
+/* EMT: the box rolls out hot */
+.tx-siren .txbar{position:absolute;inset:0;background:linear-gradient(90deg,rgba(220,38,38,.96),rgba(37,99,235,.96));opacity:0;animation:txbar .58s ease-out forwards}
+@keyframes txbar{0%{opacity:0}38%{opacity:.98}100%{opacity:.98}}
+.tx-siren .txbar::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(37,99,235,.96),rgba(220,38,38,.96));animation:txbarf .16s steps(1) infinite}
+@keyframes txbarf{0%,49%{opacity:0}50%,100%{opacity:1}}
+.tx-siren .txamb{position:absolute;left:-40%;top:50%;width:46%;max-width:420px;margin-top:-6%;animation:txamb .66s cubic-bezier(.3,.1,.2,1) forwards}
+.tx-siren .txamb svg{width:100%;height:auto;filter:drop-shadow(0 10px 22px rgba(0,0,0,.5))}
+@keyframes txamb{0%{left:-50%}100%{left:105%}}
+.tx-siren .txlights{position:absolute;left:22%;top:-10%;width:26%;height:16%;display:flex;gap:6%}
+.tx-siren .txlights i{flex:1;border-radius:4px;background:#dc2626;animation:txlt .18s steps(1) infinite}
+.tx-siren .txlights i:last-child{background:#2563eb;animation-delay:.09s}
+@keyframes txlt{0%,49%{opacity:1;box-shadow:0 0 26px currentColor}50%,100%{opacity:.25;box-shadow:none}}
+
+/* AEMT: the stick and the flash */
+.tx-iv .txflood{position:absolute;inset:0;background:radial-gradient(120% 110% at 50% 50%,rgba(103,232,249,.9) 0%,rgba(14,116,144,.92) 55%,rgba(8,47,73,.96) 100%);opacity:0;animation:txdim .55s ease-out forwards}
+.tx-iv .txsyr{position:absolute;right:-55%;top:46%;width:62%;max-width:560px;animation:txsyr .42s cubic-bezier(.4,0,.2,1) forwards}
+.tx-iv .txsyr svg{width:100%;height:auto;filter:drop-shadow(0 8px 18px rgba(0,0,0,.45))}
+@keyframes txsyr{0%{right:-60%}70%{right:28%}100%{right:24%}}
+.tx-iv .txdrop{position:absolute;left:50%;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:#dc2626;opacity:0;animation:txdrop .5s .22s ease-out forwards}
+@keyframes txdrop{0%{opacity:0;transform:scale(.2)}30%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(38)}}
+
+/* Paramedic: charge, clear, shock */
+.tx-shock .txcharge{position:absolute;inset:0;background:radial-gradient(90% 70% at 50% 50%,rgba(250,204,21,.5),rgba(8,8,16,.95) 70%);opacity:0;animation:txchg .36s ease-in forwards}
+@keyframes txchg{0%{opacity:0;transform:scale(1.25)}100%{opacity:1;transform:scale(1)}}
+.tx-shock .txflash{animation:txshk .55s ease-out forwards}
+@keyframes txshk{0%,54%{opacity:0}60%{opacity:1}100%{opacity:.86}}
+.tx-shock .txecg{position:absolute;left:0;top:50%;width:100%;height:120px;margin-top:-60px;opacity:0;stroke-dasharray:1400;stroke-dashoffset:1400;animation:txecg .6s .1s ease-out forwards}
+@keyframes txecg{0%{opacity:0;stroke-dashoffset:1400}25%{opacity:1}100%{opacity:1;stroke-dashoffset:0}}
+.tx-shock .txpad{position:absolute;top:50%;width:92px;height:92px;margin-top:-46px;border-radius:14px;background:linear-gradient(160deg,#e2e8f0,#94a3b8);box-shadow:0 8px 20px rgba(0,0,0,.5)}
+.tx-shock .txpadl{left:-20%;animation:txpadl .4s cubic-bezier(.3,0,.2,1) forwards}
+.tx-shock .txpadr{right:-20%;animation:txpadr .4s cubic-bezier(.3,0,.2,1) forwards}
+@keyframes txpadl{0%{left:-20%}100%{left:28%}}
+@keyframes txpadr{0%{right:-20%}100%{right:28%}}
+
+/* All Service Members: the windlass bites */
+.tx-tq .txstrap{position:absolute;left:-110%;top:34%;width:220%;height:11%;background:repeating-linear-gradient(90deg,#1c1917 0 22px,#292524 22px 44px);box-shadow:0 10px 26px rgba(0,0,0,.6);animation:txstrap .34s cubic-bezier(.3,0,.1,1) forwards}
+@keyframes txstrap{0%{left:-110%}100%{left:-10%}}
+.tx-tq .txwind{position:absolute;width:120px;height:18px;margin:-9px 0 0 -60px;border-radius:9px;background:linear-gradient(#f59e0b,#b45309);box-shadow:0 6px 16px rgba(0,0,0,.5);animation:txwind .6s .18s cubic-bezier(.4,0,.2,1) forwards;transform:rotate(0)}
+@keyframes txwind{0%{transform:rotate(0)}100%{transform:rotate(540deg)}}
+.tx-tq .txdim{animation-delay:.1s}
+
+/* Combat Lifesaver: the seal goes on */
+.tx-seal .txsealpad{position:absolute;width:160px;height:160px;margin:-80px 0 0 -80px;border-radius:50%;background:rgba(241,245,249,.93);border:5px solid #0f172a;opacity:0;animation:txseal .5s cubic-bezier(.2,1.6,.4,1) forwards}
+.tx-seal .txsealpad i{position:absolute;left:50%;width:9px;height:42%;margin-left:-4.5px;background:#0f172a;border-radius:5px;transform-origin:50% 100%}
+.tx-seal .txsealpad i:nth-child(1){top:8%;transform:rotate(0)}
+.tx-seal .txsealpad i:nth-child(2){top:8%;transform:rotate(120deg)}
+.tx-seal .txsealpad i:nth-child(3){top:8%;transform:rotate(240deg)}
+@keyframes txseal{0%{opacity:0;transform:scale(.2)}60%{opacity:1;transform:scale(1.1)}100%{opacity:1;transform:scale(14)}}
+
+/* Combat Medic: the driver, then blood */
+.tx-io .txdrill{position:absolute;width:84px;height:126px;margin:-180px 0 0 -42px;animation:txdrill .4s cubic-bezier(.4,0,.2,1) forwards}
+.tx-io .txdrill svg{width:100%;height:100%;filter:drop-shadow(0 8px 16px rgba(0,0,0,.5))}
+@keyframes txdrill{0%{transform:translateY(-70px) rotate(-6deg)}70%{transform:translateY(34px) rotate(0)}100%{transform:translateY(28px)}}
+.tx-io .txblood{position:absolute;inset:0;background:radial-gradient(90% 80% at 50% 56%,rgba(185,28,28,.96),rgba(69,10,10,.98) 70%);opacity:0;animation:txdim .5s .16s ease-out forwards}
+
+/* CNA: the cuff */
+.tx-cuff .txcuff{position:absolute;inset:0;border:0 solid #1e3a8a;background:rgba(15,23,42,.6);box-sizing:border-box;animation:txcuffa .62s cubic-bezier(.4,0,.3,1) forwards}
+@keyframes txcuffa{0%{border-width:0;background:rgba(15,23,42,0)}72%{border-width:34vmin;background:rgba(15,23,42,.9)}100%{border-width:30vmin;background:rgba(15,23,42,.92)}}
+.tx-cuff .txgauge{position:absolute;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;background:#f8fafc;border:7px solid #0f172a;opacity:0;animation:txgauge .6s .06s ease-out forwards}
+.tx-cuff .txgauge i{position:absolute;left:50%;bottom:50%;width:4px;height:40%;margin-left:-2px;background:#dc2626;transform-origin:50% 100%;animation:txneedle .62s cubic-bezier(.3,0,.4,1) forwards}
+@keyframes txgauge{0%{opacity:0;transform:scale(.5)}40%{opacity:1;transform:scale(1)}100%{opacity:1;transform:scale(1)}}
+@keyframes txneedle{0%{transform:rotate(-140deg)}70%{transform:rotate(120deg)}100%{transform:rotate(-20deg)}}
+
+/* LVN: the med pass */
+.tx-pills .txpill-rain{position:absolute;inset:0;background:rgba(12,14,24,.97);opacity:0;animation:txdim .42s ease-out forwards}
+.tx-pills .txpill-rain i{position:absolute;top:-8%;width:26px;height:15px;border-radius:9px;background:var(--h);box-shadow:inset 0 -5px 0 rgba(0,0,0,.18);animation:txpill .62s cubic-bezier(.4,0,.7,1) forwards}
+@keyframes txpill{0%{top:-8%;transform:rotate(0)}100%{top:108%;transform:rotate(420deg)}}
+.tx-pills .txcup{position:absolute;width:104px;height:78px;margin:-39px 0 0 -52px;background:rgba(248,250,252,.4);border:4px solid rgba(248,250,252,.85);border-radius:6px 6px 22px 22px;opacity:0;animation:txgauge .5s ease-out forwards}
+
+/* RN: the drip chamber */
+.tx-drip .txchamber{position:absolute;width:76px;height:132px;margin:-66px 0 0 -38px;border:4px solid rgba(226,232,240,.9);border-radius:12px 12px 20px 20px;background:rgba(226,232,240,.14);opacity:0;animation:txgauge .45s ease-out forwards}
+.tx-drip .txchamber i{position:absolute;left:50%;top:16%;width:11px;height:11px;margin-left:-5.5px;border-radius:50%;background:#bae6fd;animation:txdrop2 .3s linear infinite}
+.tx-drip .txchamber i:nth-child(2){animation-delay:.1s}
+.tx-drip .txchamber i:nth-child(3){animation-delay:.2s}
+@keyframes txdrop2{0%{top:16%;opacity:1}100%{top:74%;opacity:0}}
+.tx-drip .txfill{position:absolute;left:0;right:0;bottom:0;height:0;background:linear-gradient(0deg,rgba(2,132,199,.97),rgba(56,189,248,.9));animation:txfill .34s .04s cubic-bezier(.3,0,.3,1) forwards}
+@keyframes txfill{0%{height:0}100%{height:100%}}
+
+/* MS1-MS2: a page of the atlas turns */
+.tx-atlas .txpage{position:absolute;inset:0;background:linear-gradient(100deg,#fdf6e3,#f5e9c8);transform-origin:left center;transform:perspective(1400px) rotateY(-96deg);box-shadow:0 0 40px rgba(0,0,0,.45);animation:txpage .58s cubic-bezier(.4,0,.2,1) forwards}
+@keyframes txpage{0%{transform:perspective(1400px) rotateY(-96deg)}100%{transform:perspective(1400px) rotateY(0)}}
+.tx-atlas .txpage2{background:linear-gradient(100deg,#fffaf0,#f8f1dd);animation-delay:.1s}
+
+/* MS3-MS4: the penlight */
+.tx-light .txdark{position:absolute;inset:0;background:rgba(6,8,16,.95);opacity:0;animation:txdim .4s ease-out forwards}
+.tx-light .txbeam{position:absolute;top:-40%;left:-40%;width:70%;height:180%;background:linear-gradient(90deg,rgba(255,247,214,0),rgba(255,247,214,.5),rgba(255,247,214,0));transform:rotate(14deg);filter:blur(10px);animation:txbeam .62s cubic-bezier(.3,0,.3,1) forwards}
+@keyframes txbeam{0%{left:-60%}100%{left:95%}}
+
+/* Intern: the pager */
+.tx-pager .txpager{position:absolute;min-width:250px;padding:18px 26px;margin:-56px 0 0 -125px;border-radius:12px;background:#0f172a;border:3px solid #334155;color:#86efac;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;text-align:center;box-shadow:0 14px 34px rgba(0,0,0,.6);opacity:0;animation:txpg .62s ease-out forwards}
+.tx-pager .txpager em{display:block;font-style:normal;font-weight:800;letter-spacing:.14em;font-size:1.3rem}
+.tx-pager .txpager span{display:block;margin-top:5px;font-size:.84rem;color:#4ade80;letter-spacing:.08em}
+@keyframes txpg{0%{opacity:0;transform:scale(.7)}22%{opacity:1;transform:scale(1.04) translateX(-5px)}30%{transform:scale(1) translateX(5px)}38%{transform:translateX(-4px)}46%{transform:translateX(4px)}54%{transform:translateX(0)}100%{opacity:1}}
+
+/* RT: the exposure */
+.tx-xray .txneg{position:absolute;inset:0;background:radial-gradient(90% 80% at 50% 50%,#1e293b,#020617);opacity:0;animation:txdim .35s ease-out forwards}
+.tx-xray .txflashw{animation:txxr .58s ease-out forwards}
+@keyframes txxr{0%,36%{opacity:0}42%{opacity:1}64%{opacity:.5}100%{opacity:.92}}
+
+/* CT: the gantry */
+.tx-gantry .txring{position:absolute;left:50%;top:50%;width:70vmin;height:70vmin;margin:-35vmin 0 0 -35vmin;border-radius:50%;border:16px solid rgba(165,180,252,.9);border-top-color:rgba(67,56,202,.95);border-right-color:rgba(99,102,241,.6);animation:txring .64s cubic-bezier(.3,0,.3,1) forwards}
+@keyframes txring{0%{transform:rotate(0) scale(.42);opacity:0}25%{opacity:1}100%{transform:rotate(760deg) scale(2.6);opacity:1}}
+.tx-gantry .txring2{border-width:9px;border-color:rgba(199,210,254,.55);border-bottom-color:rgba(79,70,229,.95);animation-delay:.07s}
+.tx-gantry .txdim{background:rgba(30,27,75,.97);animation-duration:.4s}
+
+/* MRI: into the bore */
+.tx-magnet .txbore{position:absolute;inset:0;background:radial-gradient(closest-side circle at 50% 50%,rgba(15,10,35,0) 0 24%,rgba(196,181,253,.9) 26%,rgba(76,29,149,.96) 44%,rgba(24,16,48,.98) 100%);animation:txbore .64s cubic-bezier(.4,0,.2,1) forwards}
+@keyframes txbore{0%{transform:scale(2.6);opacity:0}25%{opacity:1}100%{transform:scale(1);opacity:1}}
+.tx-magnet .txbore i{position:absolute;inset:0;border:0 solid rgba(240,171,252,.5);box-sizing:border-box;animation:txknock .55s steps(1) 7}
+.tx-magnet .txbore i:last-child{animation-delay:.04s;border-color:rgba(167,139,250,.45)}
+@keyframes txknock{0%,49%{border-width:0}50%,100%{border-width:7px}}
+
+/* NM: the tracer lights up */
+.tx-tracer .txglow{position:absolute;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;background:radial-gradient(circle,rgba(190,242,100,.98),rgba(77,124,15,.9) 55%,rgba(12,22,6,.96) 100%);animation:txglow .66s cubic-bezier(.3,0,.3,1) forwards}
+@keyframes txglow{0%{transform:scale(.3);opacity:0}20%{opacity:1}100%{transform:scale(60);opacity:1}}
+.tx-tracer .txglow2{background:radial-gradient(circle,rgba(250,250,210,.95),rgba(132,204,22,.5) 60%,rgba(12,22,6,0) 100%);animation-delay:.08s;animation-duration:.6s}
+.tx-tracer .txcount{position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(255,255,255,.05) 0 2px,transparent 2px 5px);opacity:0;animation:txdim .5s .1s ease-out forwards}
+
+/* IR: the wire under fluoro */
+.tx-fluoro .txfluorobg{position:absolute;inset:0;background:radial-gradient(85% 80% at 50% 50%,#1f2937,#030712);opacity:0;animation:txdim .4s ease-out forwards}
+.tx-fluoro .txwire{position:absolute;left:0;top:50%;width:100%;height:200px;margin-top:-100px;stroke-dasharray:1200;stroke-dashoffset:1200;opacity:0;filter:drop-shadow(0 0 8px rgba(255,255,255,.6));animation:txwire .62s .08s ease-out forwards}
+@keyframes txwire{0%{opacity:0;stroke-dashoffset:1200}18%{opacity:1}100%{opacity:1;stroke-dashoffset:0}}
+
+@media (prefers-reduced-motion:reduce){.lvtrans{display:none}}
 .blastoff{position:fixed;inset:0;z-index:90;pointer-events:none;overflow:hidden}
 .blastoff .bowash{position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 100%,rgba(160,124,255,.95) 0%,rgba(124,58,237,.8) 38%,rgba(34,27,56,0) 78%);opacity:0;animation:bowash .48s ease-out forwards}
 .blastoff .borig{position:absolute;width:0;height:0;display:block;animation:bolift .48s cubic-bezier(.45,0,.75,.25) forwards}
@@ -1112,6 +1247,82 @@ html[data-motion="reduce"] *,html[data-motion="reduce"] *::before,html[data-moti
 .sickotc{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}.otcrow{display:flex;flex-direction:column;gap:3px;text-align:left;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--surface);color:var(--ink);font:inherit;cursor:pointer}.otcrow span{font-size:13px;color:var(--muted);line-height:1.4}.otcrow.harms{border-left:4px solid var(--bad)}.otcrow.acts{border-left:4px solid var(--ok)}
 .tblwrap{overflow-x:auto;margin:10px 0}.ntable{border-collapse:collapse;width:100%;font-size:13.5px;min-width:560px}.ntable th,.ntable td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}.ntable thead th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}.ntable .nnote td{font-size:12.5px;color:var(--muted);border-bottom:2px solid var(--line)}
 .normrow{border-bottom:1px solid var(--line);padding:8px 2px}.normrow strong{margin-right:8px}.normrow .nrange{font-weight:700;color:var(--ok)}.normrow p{margin:4px 0}.lowhi{font-weight:700}.normpanel{border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:8px 0}.normpanel summary{cursor:pointer}
+
+/* Anatomy tab (owner, Nov 1 2026) */
+.anatlead{margin:0 0 10px}.anatwrap{align-items:flex-start}.anatwrap .bodyfig{position:sticky;top:8px}.anatgrp{margin:0 0 14px}.anath{display:flex;align-items:center;gap:8px;margin:10px 0 6px;font-size:.95rem;letter-spacing:.02em;color:var(--muted);text-transform:uppercase}.anath .qacount{text-transform:none;letter-spacing:0}.anchip{font-size:13.5px}.anatcard{border-width:2px}.anatcard .anatalso{margin:-2px 0 8px}.anatcard .anatwhat{font-size:1.06rem;line-height:1.55;font-weight:600}.anatfail{border-left:3px solid var(--warn,#f59e0b);padding-left:10px;margin:4px 0}.anatbody{margin:12px 0 0}@media (max-width:560px){.anatwrap .bodyfig{position:static;width:100%}}
+.lrnbar,.lrntab{position:relative}
+.lrnpay{position:absolute;right:14px;top:8px;font-weight:800;font-size:.95rem;color:var(--ok,#4ade80);pointer-events:none;animation:lrnpay 1.3s ease-out forwards}
+.lrnpay.big{font-size:1.25rem;color:#fbbf24}
+@keyframes lrnpay{0%{opacity:0;transform:translateY(6px) scale(.8)}18%{opacity:1;transform:translateY(0) scale(1.08)}30%{transform:scale(1)}100%{opacity:0;transform:translateY(-26px)}}
+
+/* ===== Drug borders, bought with sticks (owner, Nov 1 2026). modules/borders.js =====
+   Each rule paints .tile and the drug sheet's .panel. The preview swatch in the shop uses the
+   same class on a wrapper, so what the card shows is exactly what you get. */
+.bdgrid .bdcard{align-items:stretch}
+.bdprev{padding:10px;display:block}
+.bdprev .bdt{display:flex;flex-direction:column;gap:3px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);text-align:left;font-size:12.5px;cursor:default}
+.bdprev .bdt .nm{font-weight:700}
+.bdprev .bdt .cl{color:var(--muted);font-size:11.5px}
+.bdcard .bdblurb{line-height:1.45}
+[class*="dbd-"] .tile,[class*="dbd-"] #sheet .panel,.bdprev .bdt{position:relative}
+
+/* Hairline */
+.dbd-hairline .tile:not(.bdt),.bdprev.dbd-hairline .bdt,.dbd-hairline #sheet .panel{border-color:color-mix(in srgb,var(--line) 40%,var(--ink));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--line) 70%,transparent)}
+/* Medical tape: cloth tape down both edges, deliberately off-square */
+.dbd-tape .tile:not(.bdt),.bdprev.dbd-tape .bdt,.dbd-tape #sheet .panel{border-color:transparent}
+.dbd-tape .tile:not(.bdt)::before,.bdprev.dbd-tape .bdt::before,.dbd-tape .tile:not(.bdt)::after,.bdprev.dbd-tape .bdt::after,.dbd-tape #sheet .panel::before,.dbd-tape #sheet .panel::after{content:"";position:absolute;top:-5px;bottom:-5px;width:13px;background:repeating-linear-gradient(0deg,rgba(240,230,210,.95) 0 3px,rgba(222,208,182,.95) 3px 6px);box-shadow:0 1px 4px rgba(0,0,0,.3);pointer-events:none;z-index:2}
+.dbd-tape .tile:not(.bdt)::before,.bdprev.dbd-tape .bdt::before,.dbd-tape #sheet .panel::before{left:-4px;transform:rotate(-1.4deg)}
+.dbd-tape .tile:not(.bdt)::after,.bdprev.dbd-tape .bdt::after,.dbd-tape #sheet .panel::after{right:-4px;transform:rotate(1.1deg)}
+/* Sutured: a running stitch all the way round */
+.dbd-stitch .tile:not(.bdt),.bdprev.dbd-stitch .bdt,.dbd-stitch #sheet .panel{border-style:dashed;border-width:2px;border-color:color-mix(in srgb,var(--ink) 55%,transparent);outline:1px solid color-mix(in srgb,var(--line) 60%,transparent);outline-offset:4px}
+/* Pocket notebook: ruled paper with a red margin */
+.dbd-notepad .tile:not(.bdt),.bdprev.dbd-notepad .bdt,.dbd-notepad #sheet .panel{background-image:repeating-linear-gradient(180deg,transparent 0 23px,color-mix(in srgb,#60a5fa 22%,transparent) 23px 24px);border-left:3px solid #ef4444;border-radius:4px 12px 12px 4px}
+/* Rhythm strip along the bottom */
+.dbd-ecg .tile:not(.bdt),.bdprev.dbd-ecg .bdt,.dbd-ecg #sheet .panel{border-color:#166534;padding-bottom:22px;background-image:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='20' viewBox='0 0 160 20'%3E%3Cpath d='M0 13H44l4-5 3 13 4-18 3 10 3-3h40l4-5 3 13 4-18 3 10 3-3h42' fill='none' stroke='%2322c55e' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:repeat-x;background-position:left bottom 5px;background-size:160px 20px}
+/* Amber vial */
+.dbd-amber .tile:not(.bdt),.bdprev.dbd-amber .bdt,.dbd-amber #sheet .panel{border:3px solid rgba(180,83,9,.85);border-radius:8px 8px 18px 18px;box-shadow:inset 0 0 26px rgba(217,119,6,.28),inset 0 10px 18px rgba(255,237,213,.14)}
+/* Brushed chrome */
+.dbd-chrome .tile:not(.bdt),.bdprev.dbd-chrome .bdt,.dbd-chrome #sheet .panel{border:3px solid transparent;border-radius:12px;background-origin:border-box;background-clip:padding-box,border-box;background-image:linear-gradient(var(--surface),var(--surface)),repeating-linear-gradient(118deg,#cbd5e1 0 2px,#94a3b8 2px 4px,#e2e8f0 4px 7px)}
+/* Terrarium moss */
+.dbd-moss .tile:not(.bdt),.bdprev.dbd-moss .bdt,.dbd-moss #sheet .panel{border:3px solid #4d7c0f;border-radius:14px;box-shadow:inset 0 0 0 2px rgba(132,204,22,.4)}
+.dbd-moss .tile:not(.bdt)::after,.bdprev.dbd-moss .bdt::after,.dbd-moss #sheet .panel::after{content:"";position:absolute;inset:-2px;border-radius:14px;pointer-events:none;background:radial-gradient(10px 7px at 8% 0%,#65a30d 60%,transparent 62%),radial-gradient(14px 8px at 26% 100%,#4d7c0f 60%,transparent 62%),radial-gradient(9px 12px at 100% 32%,#65a30d 60%,transparent 62%),radial-gradient(11px 9px at 0% 72%,#84cc16 60%,transparent 62%),radial-gradient(8px 6px at 72% 0%,#84cc16 60%,transparent 62%)}
+/* Night flight: instrument green with a slow sweep */
+.dbd-flight .tile:not(.bdt),.bdprev.dbd-flight .bdt,.dbd-flight #sheet .panel{border:2px solid #15803d;border-radius:10px;box-shadow:inset 0 0 18px rgba(34,197,94,.18),0 0 0 1px rgba(34,197,94,.25);overflow:hidden}
+.dbd-flight .tile:not(.bdt)::before,.bdprev.dbd-flight .bdt::before,.dbd-flight #sheet .panel::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,transparent,#4ade80,transparent);animation:bdsweep 3.4s linear infinite;pointer-events:none}
+@keyframes bdsweep{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+/* Biohazard striping */
+.dbd-biohaz .tile:not(.bdt),.bdprev.dbd-biohaz .bdt,.dbd-biohaz #sheet .panel{border:5px solid transparent;border-radius:10px;background-origin:border-box;background-clip:padding-box,border-box;background-image:linear-gradient(var(--surface),var(--surface)),repeating-linear-gradient(45deg,#f59e0b 0 9px,#1c1917 9px 18px)}
+/* Monitor trace: thin traces that pulse once a second */
+.dbd-circuit .tile:not(.bdt),.bdprev.dbd-circuit .bdt,.dbd-circuit #sheet .panel{border:1px solid #0e7490;border-radius:4px;box-shadow:inset 0 0 0 1px rgba(34,211,238,.25),0 0 10px rgba(34,211,238,.12);animation:bdpulse 1s ease-in-out infinite}
+@keyframes bdpulse{0%,100%{box-shadow:inset 0 0 0 1px rgba(34,211,238,.2),0 0 8px rgba(34,211,238,.1)}42%{box-shadow:inset 0 0 0 1px rgba(34,211,238,.75),0 0 18px rgba(34,211,238,.4)}}
+/* Cold chain: frosted glass, ice in the corners */
+.dbd-frost .tile:not(.bdt),.bdprev.dbd-frost .bdt,.dbd-frost #sheet .panel{border:3px solid rgba(186,230,253,.75);border-radius:12px;box-shadow:inset 0 0 24px rgba(224,242,254,.3)}
+.dbd-frost .tile:not(.bdt)::after,.bdprev.dbd-frost .bdt::after,.dbd-frost #sheet .panel::after{content:"";position:absolute;inset:0;border-radius:10px;pointer-events:none;background:radial-gradient(22px 22px at 0 0,rgba(224,242,254,.55),transparent 70%),radial-gradient(22px 22px at 100% 0,rgba(224,242,254,.55),transparent 70%),radial-gradient(22px 22px at 0 100%,rgba(224,242,254,.45),transparent 70%),radial-gradient(22px 22px at 100% 100%,rgba(224,242,254,.45),transparent 70%)}
+/* Gold leaf */
+.dbd-gold .tile:not(.bdt),.bdprev.dbd-gold .bdt,.dbd-gold #sheet .panel{border:3px solid transparent;border-radius:12px;background-origin:border-box;background-clip:padding-box,border-box;background-image:linear-gradient(var(--surface),var(--surface)),linear-gradient(118deg,#7c5a10,#fcd34d 22%,#fffbeb 36%,#f59e0b 52%,#92400e 68%,#fcd34d 86%,#7c5a10);box-shadow:0 0 14px rgba(251,191,36,.22)}
+/* Aurora: a slow band that drifts and never quite repeats */
+.dbd-aurora .tile:not(.bdt),.bdprev.dbd-aurora .bdt,.dbd-aurora #sheet .panel{border:3px solid transparent;border-radius:14px;background-origin:border-box;background-clip:padding-box,border-box;background-image:linear-gradient(var(--surface),var(--surface)),linear-gradient(110deg,#22d3ee,#a78bfa 25%,#f0abfc 45%,#4ade80 65%,#38bdf8 85%,#22d3ee);background-size:auto,320% 100%;animation:bdaurora 13s linear infinite}
+@keyframes bdaurora{0%{background-position:0 0,0% 50%}100%{background-position:0 0,320% 50%}}
+/* Ember */
+.dbd-ember .tile:not(.bdt),.bdprev.dbd-ember .bdt,.dbd-ember #sheet .panel{border:3px solid #7c2d12;border-radius:12px;box-shadow:inset 0 0 20px rgba(249,115,22,.3),0 0 16px rgba(234,88,12,.25);animation:bdember 2.6s ease-in-out infinite}
+@keyframes bdember{0%,100%{box-shadow:inset 0 0 18px rgba(249,115,22,.22),0 0 12px rgba(234,88,12,.18);border-color:#7c2d12}50%{box-shadow:inset 0 0 26px rgba(251,146,60,.42),0 0 24px rgba(249,115,22,.4);border-color:#c2410c}}
+/* Specimen case: brass frame, glass, a pin and a label */
+.dbd-specimen .tile:not(.bdt),.bdprev.dbd-specimen .bdt,.dbd-specimen #sheet .panel{border:6px solid transparent;border-radius:3px;background-origin:border-box;background-clip:padding-box,border-box;background-image:linear-gradient(var(--surface),var(--surface)),linear-gradient(145deg,#78350f,#d6a85a 30%,#fde68a 44%,#b45309 60%,#78350f);box-shadow:inset 0 0 0 1px rgba(255,255,255,.18),inset 0 14px 30px rgba(255,255,255,.07),0 6px 18px rgba(0,0,0,.35)}
+.dbd-specimen .tile:not(.bdt)::after,.bdprev.dbd-specimen .bdt::after,.dbd-specimen #sheet .panel::after{content:"";position:absolute;right:8px;top:8px;width:7px;height:7px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#fff,#94a3b8 55%,#475569);box-shadow:0 1px 3px rgba(0,0,0,.5);pointer-events:none}
+@media (prefers-reduced-motion:reduce){.dbd-flight .tile::before,.dbd-flight #sheet .panel::before,.dbd-circuit .tile,.dbd-circuit #sheet .panel,.dbd-aurora .tile,.dbd-aurora #sheet .panel,.dbd-ember .tile,.dbd-ember #sheet .panel,.bdprev .bdt,.bdprev .bdt::before{animation:none}}
+
+/* Stick packs (owner, Nov 1 2026). modules/iap.js */
+.iapbal{margin:10px 0 14px}
+.iapgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin:12px 0}
+.iapcard{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;border:1px solid var(--line);border-radius:14px;padding:14px 12px}
+.iapcard.hasbonus{border-color:color-mix(in srgb,#fbbf24 55%,var(--line))}
+.iapn{display:flex;align-items:center;gap:6px;font-size:1.35rem;line-height:1.1}
+.iapname{font-weight:700}
+.iapbonus{font-size:12px;font-weight:700;color:#f59e0b}
+.iapbonus.flat{color:var(--muted);font-weight:600}
+.iapblurb{line-height:1.4;min-height:2.6em}
+.iapcard .btn{margin-top:4px;width:100%}
+.iapfine{line-height:1.5;margin-top:14px}
 .bodywrap{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;margin:8px 0}.bodyfig{display:flex;flex-direction:column;align-items:center;gap:6px;width:150px}.bodylist{flex:1;min-width:220px}
 .bodymap{width:130px;height:auto}.bodymap .bzone{cursor:pointer}.bodymap .bzone *{fill:var(--surface);stroke:var(--muted);stroke-width:2;transition:fill .15s}.bodymap .bzone:hover *,.bodymap .bzone:focus *{fill:var(--line)}.bodymap .bzone.on *{fill:var(--ok);stroke:var(--ok)}
 .dcw{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0}.dcw .pinput{width:100px}
@@ -1800,7 +2011,8 @@ body:has(#app > .gate){padding-inline:12px;padding-block:0;margin:0}#app:has(> .
 <div class="wrap" id="app"><div id="boot" aria-hidden="true"><div class="bootlogo">Drug<span>Bug</span></div><div class="bootbar"><i></i></div><p class="bootnote">Loading your medications</p></div></div>
 <div class="sheet" id="sheet" hidden></div>
 
-<script>window.DRUGBUG_CONFIG={"site": "https://drugbugapp.com", "paywall": false, "demo": true, "supportEmail": "VolareMediaLLC@gmail.com", "webCodes": [{"h": "eea016450719f848f38c6ed17f495a6074a8ca41120387dcf5ac3ab67eb2e372", "by": "2026-12-31", "days": 30}]};
-(function(){var F=["data.js?v=1f6ad7b34c", "data2.js?v=94596794a8", "data3.js?v=fd2e012123", "data4.js?v=602e7e7344", "app.js?v=66c83495de"],Z=[7997117, 7933428, 7864616, 2729038, 3291729],T=0,got=[],txt=[],i;for(i=0;i<Z.length;i++){T+=Z[i];got[i]=0;}var fill=document.getElementById("dbsfill"),lab=document.getElementById("dbstext");function bar(p){if(fill)fill.style.width=Math.max(4,Math.min(100,p))+"%";}function tick(){var g=0;for(var j=0;j<got.length;j++)g+=got[j];bar(g/T*88);}function done(){bar(100);document.body.classList.remove("dbload");var s=document.getElementById("dbsplash");if(s){s.classList.add("out");setTimeout(function(){s.remove();},600);}}function plain(k){if(k>=F.length){done();return;}var e=document.createElement("script");e.src=F[k];e.onload=function(){got[k]=Z[k];tick();plain(k+1);};e.onerror=function(){if(lab)lab.textContent="Could not load. Check your connection and refresh.";};document.body.appendChild(e);}function run(k){if(k>=F.length){done();return;}if(lab&&k===0)lab.textContent="Getting things ready\u2026";var e=document.createElement("script");e.text=txt[k];document.body.appendChild(e);bar(88+12*(k+1)/F.length);setTimeout(function(){run(k+1);},0);}function get(k){return fetch(F[k]).then(function(r){if(!r.ok)throw 0;if(!r.body||!window.TextDecoder)return r.text().then(function(t){got[k]=Z[k];tick();return t;});var rd=r.body.getReader(),dec=new TextDecoder(),out=[];return rd.read().then(function step(x){if(x.done){out.push(dec.decode());got[k]=Z[k];tick();return out.join("");}got[k]+=x.value.length;tick();out.push(dec.decode(x.value,{stream:true}));return rd.read().then(step);});});}if(!window.fetch||!window.Promise){plain(0);return;}Promise.all(F.map(function(f,k){return get(k);})).then(function(a){txt=a;run(0);},function(){for(var j=0;j<got.length;j++)got[j]=0;plain(0);});})();</script>
-
-</body></html>
+<script defer src="data.js"></script>
+<script defer src="data2.js"></script>
+<script defer src="data3.js"></script>
+<script defer src="data4.js"></script>
+<script defer src="app.js"></script>

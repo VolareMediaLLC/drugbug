@@ -472,6 +472,7 @@ var ICO = {
   labs: '<path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3"/><path d="M7.5 15h9"/>',
   units: '<path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-5h6v5M12 8v5M9.5 10.5h5"/>',
   body: '<circle cx="12" cy="4.5" r="2.5"/><path d="M12 7v8M7 10h10M12 15l-3 6M12 15l3 6"/>',
+  anatomy: '<circle cx="12" cy="4" r="2.2"/><path d="M12 6.2v7.3M8 9h8M12 13.5l-2.6 6.3M12 13.5l2.6 6.3"/><circle cx="12" cy="9.6" r="1.5" fill="currentColor" stroke="none"/>',
   pillq: '<path d="M10.5 3.5a5 5 0 0 1 7 7l-7 7a5 5 0 0 1-7-7z"/><path d="M7 10l7 7"/>',
   ecg: '<path d="M3 12h4l2-5 4 10 2-5h6"/>',
   doses: '<rect x="7" y="2" width="10" height="20" rx="4"/><path d="M12 7v6l3 2"/>',
@@ -482,6 +483,7 @@ var ICO = {
   fruitc: '<circle cx="12" cy="14" r="7"/><path d="M12 7c0-2 1-4 3-4M12 7c-2-2-4-2-5-1"/>',
   vitc: '<rect x="5" y="9" width="14" height="7" rx="3.5" transform="rotate(-35 12 12.5)"/><path d="M10 9.5l4 6"/>',
   shop: '<path d="M7 7h10l1 3v9a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-9z"/><path d="M6 4h12v3H6zM10 14c0-2 2-3 2-5 0 2 2 3 2 5a2 2 0 0 1-4 0z"/>',
+  protocols: '<path d="M6 3h9l4 4v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v5h5"/><path d="M9 13h6"/><path d="M9 17h4"/>',
   micro: '<circle cx="9" cy="9" r="3"/><circle cx="16" cy="14" r="2.2"/><path d="M4 18c2-3 5-2 7-5"/><path d="M13 5c3 0 4 2 6 2"/><circle cx="6.5" cy="15.5" r="1.2"/>'
 };
 function icon(k) { return '<svg class="ico" viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (ICO[k] || '') + '</svg>'; }
@@ -494,6 +496,8 @@ function tabList() {
   /* Dose Cards removed Oct 27, 2026 (owner: too much liability) */
   if (typeof MICRO !== "undefined" && ((S.view === "level" && isM(S.level)) || S.view === "gen")) L.push(["micro", "Microbiology", "Every bacterium, virus, fungus, prion and parasite, with a full card and a Wormhole on each one."]);
   if (S.view === "level" && isM(S.level)) L.push(["body", "Body Systems", "Pick a part of the body to see the drugs that act on it and the drugs that harm it."]);
+  /* Anatomy sits in every bug's menu, not just Med School (owner, Nov 1 2026) */
+  if (typeof anatView === "function" && anatAll().length) L.push(["anatomy", "Anatomy", "Tap the body: every organ and body part, what it is and what it does."]);
   if (S.view === "level" && isM(S.level)) L.push(["alts", "Drug Alternatives", "Can't order a drug? See same-class options and other drugs for the same problem, and how they differ."]);
   if (S.view === "gen") L.splice(1, 0, ["conds", "Conditions & Medicine Cautions", "Pick a condition to see which medicines mention it in their contraindications and warnings. Education only."]);
   if (S.view === "gen") L.splice(1, 0, ["families", "Drug Families", "Similar drugs side by side: beta blockers, statins, SSRIs and more, and what makes each one different."]);
@@ -502,6 +506,15 @@ function tabList() {
   if (hasHemo()) L.push(["hemo", "Hemodynamics", "A-lines, PA catheters, IABP, Impella, ECMO, LVAD and shock profiles."]);
   if (hasLabs() && !(S.view === "level" && isF(S.level))) L.push(["labs", "Lab Values", labRoute() === "rn" ? "What each lab means for the meds you give." : labRoute() === "fl" ? "Labs for RSI, the vent, resuscitation and drips." : "Advanced labs, patterns and calculations."]);
   if (S.view === "level" && isF(S.level) && typeof FM_TABS !== "undefined") Object.keys(FM_TABS).forEach(function (k) { if (fmTierOk(FM_TABS[k][2], FM_TABS[k][3])) L.push([k, FM_TABS[k][0], FM_TABS[k][1]]); });
+  /* Your agency's own protocols sit inside the EMT / AEMT / Paramedic / Flight menus once the
+     agency code is entered, filtered to that level (owner, Nov 1 2026). */
+  if (S.view === "level" && routeOfLevel(S.level) === "ph" && typeof agpTabView === "function") {
+    if (typeof agpAuto === "function") agpAuto();
+    /* Shown locked as well as unlocked, so the agency code can be entered right here. It used to
+       appear only once unlocked, which left no way in on a new device (owner, Nov 1 2026). */
+    if (AGP.data) L.push(["protocols", (AGP.data.org || "Agency") + " Protocols", "Your agency's own protocols, showing the options for this level, with each drug linked to its DrugBug page."]);
+    else if (typeof agpPro !== "function" || agpPro()) L.push(["protocols", "Agency Protocols", "Enter the code from your agency or training officer to see your own protocols here, filtered to this level."]);
+  }
   if (S.level === "lvn" || S.level === "rn" || S.level === "flightrn") L.push(["nbug", "Nursing Bug", "Assess, hold, labs, teaching: one skill at a time."]);
   var img = S.view === "level" && isI(S.level);
   if (img) L.splice(1, 0, ["contrast", "Contrast Safety", "Reactions, screening, eGFR, GBCA groups, nuclear medicine and IR safety."]);
@@ -520,12 +533,12 @@ function tabName(k) { var t = tabList().filter(function (x) { return x[0] === k;
 /* Hub tiles grouped into sections with short labels (UI cleanup, Oct 28 2026) */
 var HUB_GROUPS = [
   ["Field care", ["fm_cond", "fm_blood", "fm_hold", "fm_store", "fm_istat", "fm_dive", "fm_k9", "fm_anti", "fm_tele", "fm_trauma", "fm_care", "pcc", "pcc_icu", "fm_adv"]],
-  ["Look it up", ["registry", "families", "conds", "diseases", "micro", "illicit", "units", "body", "alts", "contrast", "labs", "blood", "hemo", "flightp"]],
+  ["Look it up", ["protocols", "registry", "families", "conds", "diseases", "micro", "anatomy", "illicit", "units", "body", "alts", "contrast", "labs", "blood", "hemo", "flightp"]],
   ["Food and vitamin compounds", ["vegc", "fruitc", "vitc"]],
   ["Study and practice", ["tools", "scenarios", "nbug", "medlist"]],
   ["Yours", ["mylist", "progress", "shop"]]
 ];
-var HUB_SHORT = { micro: "Bacteria, viruses, fungi, prions, parasites", fm_bio: "Bio, chem, rad and nuclear casualties", fm_ref: "Burns, vents, scores, handoff, K9, dive", medlist: "What a med list says about the patient", fm_store: "Heat, cold, light and mixing", fm_istat: "Values, cartridges and practice cases", fm_cond: "Trauma, medical and blood reactions, with types", fm_blood: "Whole blood, components, MTP, reactions", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "Saved drugs and their interactions", tools: "Questions, megacode, cards, games, drills", scenarios: "Clinical cases", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time" };
+var HUB_SHORT = { micro: "Bacteria, viruses, fungi, prions, parasites", fm_bio: "Bio, chem, rad and nuclear casualties", fm_ref: "Burns, vents, scores, handoff, K9, dive", medlist: "What a med list says about the patient", fm_store: "Heat, cold, light and mixing", fm_istat: "Values, cartridges and practice cases", fm_cond: "Trauma, medical and blood reactions, with types", fm_blood: "Whole blood, components, MTP, reactions", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "Saved drugs and their interactions", tools: "Questions, megacode, cards, games, drills", scenarios: "Clinical cases", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", anatomy: "Every organ and body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time" };
 function hubView() {
   var L = tabList(), used = {}, lead = (typeof learnTile === "function" ? learnTile() : "");
   /* one search box across the whole tier, at the top of the Combat Paramedic menu (owner, Oct 31 2026).
@@ -797,7 +810,7 @@ function viewLevel() {
   if (!S.tab || (S.tab !== "hub" && S.tab !== "session" && !tabName(S.tab))) S.tab = "hub";
   if (S.tab !== "hub" && S.tab !== "session" && typeof proLocked === "function" && proLocked(S.tab)) { var lt = S.tab; S.tab = "hub"; setTimeout(function () { openPaywall(tabName(lt), tabTier(lt)); }, 0); }
   if (S.tab === "calc") S.tab = "hub";  /* Calc Lab was removed */
-  var body = S.tab === "hub" ? "" : typeof fieldTab === "function" && isF(S.level) && FM_TABS[S.tab] ? fieldTab(S.tab) : (S.tab === "vegc" || S.tab === "fruitc" || S.tab === "vitc") && typeof compoundView === "function" ? compoundView(S.tab) : S.tab === "illicit" && typeof illicitView === "function" ? illicitView() : S.tab === "registry" ? (S.view === "level" && isF(S.level) && typeof fieldMedsView === "function" ? fieldMedsView() : registry()) : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? (S.tab = "hub", "") : S.tab === "micro" && typeof microView === "function" ? microView() : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "tools" ? toolsView() : S.tab === "medlist" ? (typeof medlistView === "function" ? medlistView() : "") : flashcards();
+  var body = S.tab === "hub" ? "" : S.tab === "anatomy" && typeof anatView === "function" ? anatView() : S.tab === "protocols" && typeof agpTabView === "function" ? agpTabView() : typeof fieldTab === "function" && isF(S.level) && FM_TABS[S.tab] ? fieldTab(S.tab) : (S.tab === "vegc" || S.tab === "fruitc" || S.tab === "vitc") && typeof compoundView === "function" ? compoundView(S.tab) : S.tab === "illicit" && typeof illicitView === "function" ? illicitView() : S.tab === "registry" ? (S.view === "level" && isF(S.level) && typeof fieldMedsView === "function" ? fieldMedsView() : registry()) : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? (S.tab = "hub", "") : S.tab === "micro" && typeof microView === "function" ? microView() : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "tools" ? toolsView() : S.tab === "medlist" ? (typeof medlistView === "function" ? medlistView() : "") : flashcards();
   var msg = S.sessMsg ? '<div class="presult" role="status">' + esc(S.sessMsg) + '</div>' : ''; S.sessMsg = "";
   var notes = (S.tab === "calc" || S.tab === "tools" ? eduBanner() : '') + (["prep", "session", "nbug", "scenarios", "cards"].indexOf(S.tab) >= 0 ? esQNote() : '');
   if (S.tab === "hub") return topbar() + '<div class="' + ctxClass() + '">' + band() + protocolBanner() + (isF(S.level) ? "" : dailyCard()) + msg + (S.learn && S.learn.done && typeof learnDoneView === "function" ? learnDoneView() : "") + hubView() + '</div>';
@@ -1505,7 +1518,10 @@ document.addEventListener("click", function (e) {
   if (a.act === "errhome") { try { S.sheet = null; S.tab = "hub"; S.tool = null; S.micro = null; go("home"); } catch (e) { location.hash = ""; location.reload(); } return; }
   if (a.act === "errreload") { try { location.reload(); } catch (e) {} return; }
   if (a.level) {
-    var LVFX = { flight: "blast", flightrn: "blast", cpp: "smoke" }, fx = S.view !== "level" ? LVFX[a.level] : null, lk = a.level;
+    var LVFX = { flight: "blast", flightrn: "blast", cpp: "smoke" };
+    /* every other level has its own entrance too (owner, Nov 1 2026); modules/trans.js */
+    if (!LVFX[a.level] && typeof TRX !== "undefined" && TRX[a.level]) LVFX[a.level] = "trans";
+    var fx = S.view !== "level" ? LVFX[a.level] : null, lk = a.level;
     /* the animation must never be able to swallow the tap: whatever happens, the level opens
        (owner reported a level button doing nothing, Oct 30 2026) */
     if (fx) {
@@ -1518,6 +1534,7 @@ document.addEventListener("click", function (e) {
       try {
         if (fx === "blast" && typeof gfxBlastOff === "function") { gfxBlastOff(t, lk, goNow); return; }
         if (fx === "smoke" && typeof gfxSmokeBomb === "function") { gfxSmokeBomb(t, goNow); return; }
+        if (fx === "trans" && typeof gfxLevelTrans === "function") { gfxLevelTrans(lk, t, goNow); return; }
       } catch (e) { goNow(); return; }
       goNow(); return;
     }
@@ -3033,7 +3050,12 @@ function mixHex(a, b, k) { function p(h) { h = h.replace("#", ""); if (h.length 
 function sparkleP(x, y, r, c) { return '<path d="M' + x + ' ' + (y - r) + ' L' + (x + r * .28) + ' ' + (y - r * .28) + ' L' + (x + r) + ' ' + y + ' L' + (x + r * .28) + ' ' + (y + r * .28) + ' L' + x + ' ' + (y + r) + ' L' + (x - r * .28) + ' ' + (y + r * .28) + ' L' + (x - r) + ' ' + y + ' L' + (x - r * .28) + ' ' + (y - r * .28) + 'Z" fill="' + c + '"/>'; }
 var BUG_DY = {"ant2":-14,"ant3":-5,"ant4":-5,"ant5":-5,"bee2":-10,"bee4":-8,"bee5":-8,"beetle2":-10,"butterfly5":-12,"caterpillar1":-16,"caterpillar2":-7,"chrysalis2":-14,"cicada1":-31,"cicada2":-23,"cicada3":-16,"cicada4":-16,"cicada5":-7,"cocoon2":-14,"cricket1":-21,"cricket2":-12,"cricket3":-3,"cricket4":-3,"cricket5":-3,"dragonfly1":-32,"dragonfly2":-25,"dragonfly3":-17,"dragonfly4":-17,"dragonfly5":-8,"firefly2":-18,"firefly3":-10,"firefly4":-10,"firefly5":-10,"grasshopper1":-23,"grasshopper2":-15,"grasshopper3":-6,"grasshopper4":-6,"grasshopper5":-6,"larva1":-3,"longhorn2":-19,"longhorn3":-11,"longhorn4":-11,"longhorn5":-11,"mantis1":-23,"mantis2":-14,"mantis3":-6,"mantis4":-6,"mantis5":-6,"moth5":-12,"rhino2":-5,"scarab2":-15,"scarab3":-6,"scarab4":-6,"scarab5":-6,"scorpion1":-34,"scorpion2":-27,"scorpion3":-19,"scorpion4":-19,"scorpion5":-11,"snail1":-20,"snail2":-11,"spider1":-32,"spider2":-24,"spider3":-17,"spider4":-17,"spider5":-10,"stag2":-7,"stick1":-5,"stick2":-5,"stick3":-5,"stick4":-5,"stick5":-5,"wasp2":-21,"wasp3":-13,"wasp4":-13,"wasp5":-13};
 function bugArt(b, cls, opt) {
-  opt = opt || {}; var wear = opt.wear || {}, mood = opt.mood || "happy";
+  opt = opt || {};
+  /* Hickory is hand-drawn, not assembled from parts: no wardrobe, no stages, no style filter. */
+  if (b && b.hick && typeof learnBugSVG === "function") {
+    try { return learnBugSVG().replace('class="hickbug bug"', 'class="hickbug bug ' + (cls || "") + '"'); } catch (e) {}
+  }
+  var wear = opt.wear || {}, mood = opt.mood || "happy";
   var id = "sb" + (++bid), c1 = b.c[0], c2 = b.c[1], c3 = b.c[2] || "#ffffff", ink = b.ink || "#1b1430", hy = 74, s = "";
   var grad = '<defs><linearGradient id="' + id + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + c1 + '"/><stop offset="1" stop-color="' + c2 + '"/></linearGradient>' +
     (b.body === "stick" ? '<linearGradient id="' + id + 'v" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe29a"/><stop offset=".5" stop-color="#f59e0b"/><stop offset="1" stop-color="#7c2d12"/></linearGradient>' : '') + '<radialGradient id="' + id + 'r"><stop offset="0" stop-color="' + c3 + '" stop-opacity=".95"/><stop offset="1" stop-color="' + c3 + '" stop-opacity="0"/></radialGradient></defs>';
@@ -3302,6 +3324,10 @@ var BUGS = [
   { id: "galaxy-scorpion", name: "Galaxy Scorpion", body: "scorpion", c: ["#4c1d95", "#000000", "#f0abfc"], ink: "#000000", smile: "#f5d0fe", eyes: "glow", glow: "#f0abfc", acc: ["stars"], rar: "epic", price: 4800, dark: true },
   { id: "obsidian-emperor", name: "Obsidian Emperor", body: "hercules", c: ["#1c1917", "#000000", "#facc15"], horn: "#eab308", ink: "#000000", smile: "#fde68a", eyes: "glow", glow: "#facc15", acc: ["crown"], rar: "legendary", price: 12000, dark: true },
   // majestic legendaries and more everyday insects (growth update)
+  /* Hickory himself, buyable (owner, Nov 1 2026). He is hand-drawn rather than built from the
+     procedural parts, so bugArt hands him straight to learnBugSVG and he wears nothing: he comes
+     as he is, straw hat and pitchfork, and he grows up with your LEARN total like he always has. */
+  { id: "hickory", name: "Hickory", body: "beetle", hick: true, c: ["#9bcb5a", "#5f8f33", "#f4f1e6"], ink: "#3f5420", rar: "legendary", price: 12500, blurb: "The LEARN bug himself. Straw hat, three teeth, one pitchfork, and an opinion about every drug in here. He talks to himself when nobody else will." },
   { id: "atlas-moth", name: "Atlas Moth", body: "moth", c: ["#f59e0b", "#7c2d12", "#fff7ed"], ink: "#3b1405", rar: "legendary", price: 11500, blurb: "One of the largest moths on Earth, with wing tips shaped like snake heads." },
   { id: "goliath-beetle", name: "Goliath Beetle", body: "hercules", c: ["#f5f5f4", "#292524", "#ffffff"], head: "#1c1917", horn: "#1c1917", rar: "legendary", price: 10800, blurb: "A heavyweight of the beetle world, with bold black and white armor." },
   { id: "orchid-mantis", name: "Orchid Mantis", body: "mantis", c: ["#fbcfe8", "#db2777", "#ffffff"], ink: "#701a3a", rar: "legendary", price: 10400, blurb: "Disguised as a flower petal. Beautiful and patient." },
@@ -3346,7 +3372,7 @@ function unlockMet(b) {
 }
 function claimBug(id) { var b = bugById(id); if (owned(id) || !(b.admin ? Admin.owner : unlockMet(b))) return; Prog.d.owned = (Prog.d.owned || []).concat([id]); Prog.d.avatar = id; Prog.d.avatarTs = Date.now(); saveProg(); S.shopMsg = "Unlocked " + b.name + ". It's now your bug."; }
 function styleFilter() { var st = STYLES.filter(function (x) { return x[0] === (Prog.d.style || "classic"); })[0]; return st ? st[3] : ""; }
-function myBugArt(cls, mood, wear) { var f = styleFilter(), a = bugArt(myBug(), cls, { mood: mood || myFace(), wear: wear || myWear(), stage: myStage() }); return f ? a.replace('<svg class="bug', '<svg style="filter:' + f + '" class="bug') : a; }
+function myBugArt(cls, mood, wear) { if (myBug().hick) return bugArt(myBug(), cls, {}); var f = styleFilter(), a = bugArt(myBug(), cls, { mood: mood || myFace(), wear: wear || myWear(), stage: myStage() }); return f ? a.replace('<svg class="bug', '<svg style="filter:' + f + '" class="bug') : a; }
 function buyStyle(id) { var st = STYLES.filter(function (x) { return x[0] === id; })[0]; if (!st) return; var own = (Prog.d.styles || []).indexOf(id) >= 0 || st[2] === 0;
   if (!own) { if (sticks() < st[2]) return; Prog.d.spent = (Prog.d.spent || 0) + st[2]; Prog.d.styles = (Prog.d.styles || []).concat([id]); }
   Prog.d.style = id; saveProg(); S.shopMsg = st[1] + " style applied to your bug."; }
@@ -3372,7 +3398,7 @@ function shopView() {
     c += tankHTML(mine, true);
     if (typeof peekView === "function") c += peekView();
     var nb = mine.length, ni = ITEMS.filter(function (it) { return ownsItem(it.id); }).length, nf = FACES.filter(function (x) { return faceAvail(x[0]); }).length, ns = 1 + (Prog.d.styles || []).length;
-    c += '<div class="pickhead"><h3>Dress it up</h3></div><div class="hub sub terrtiles">' + [["bugs", "Bug Store", nb + " of " + shopBugs().length + " collected"], ["items", "Wardrobe", ni + " of " + ITEMS.length + " owned"], ["faces", "Faces", nf + " of " + FACES.length + " unlocked"], ["styles", "Colors", ns + " of " + STYLES.length + " owned"], ["music", "Music", shownTracks().filter(function (t) { return ownsTrack(t.id); }).length + " of " + shownTracks().length + " tracks"]].map(function (x) { return '<button class="hubtile" data-shopf="' + x[0] + '"><span class="ht"><strong>' + x[1] + '</strong><span>' + esc(x[2]) + '</span></span></button>'; }).join("") + '</div>';
+    c += '<div class="pickhead"><h3>Dress it up</h3></div><div class="hub sub terrtiles">' + [["bugs", "Bug Store", nb + " of " + shopBugs().length + " collected"], ["items", "Wardrobe", ni + " of " + ITEMS.length + " owned"], ["faces", "Faces", nf + " of " + FACES.length + " unlocked"], ["styles", "Colors", ns + " of " + STYLES.length + " owned"], ["borders", "Drug Borders", (typeof BORDERS === "undefined" ? "" : (BORDERS.filter(function (b) { return ownsBorder(b.id); }).length) + " of " + BORDERS.length + " owned")], ["sticks", "Get Sticks", "Stick packs, if you would rather not grind"], ["music", "Music", shownTracks().filter(function (t) { return ownsTrack(t.id); }).length + " of " + shownTracks().length + " tracks"]].map(function (x) { return '<button class="hubtile" data-shopf="' + x[0] + '"><span class="ht"><strong>' + x[1] + '</strong><span>' + esc(x[2]) + '</span></span></button>'; }).join("") + '</div>';
     return c + '</section>';
   }
   if (S.shopMsg) { c += '<div class="presult good" role="status">' + esc(S.shopMsg) + '</div>'; S.shopMsg = ""; }
@@ -3380,6 +3406,8 @@ function shopView() {
   if (f === "music") return c + tracksView() + '</section>';
   if (f === "items") return c + itemsView() + '</section>';
   if (f === "faces") return c + facesView() + '</section>';
+  if (f === "borders" && typeof bordersView === "function") return c + bordersView() + '</section>';
+  if (f === "sticks" && typeof iapView === "function") return c + iapView() + '</section>';
   var mineOnly = !!S.shopMine;
   var bf = S.shopMine === true ? "mine" : S.shopMine === "dark" ? "dark" : "all";
   c += tankHTML(BUGS.filter(function (b) { return owned(b.id); }), false);
@@ -3416,7 +3444,7 @@ function tracksView() {
   var bal = sticks(), cur = curTrack().id, note = '<svg class="trkicon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 18.5a2.5 2.5 0 1 1-2-2.45V5l11-2v12.5a2.5 2.5 0 1 1-2-2.45V7.1L9 8.4z"/></svg>';
   muRefundOld(); var rf = Prog.d.muRefundAmt ? '<div class="presult good" role="status">New music is here! The old tracks were retired, so the ' + Prog.d.muRefundAmt.toLocaleString() + ' sticks you spent on them are back in your jar.</div>' : ''; if (Prog.d.muRefundAmt) { delete Prog.d.muRefundAmt; saveProg(); }
   return rf + '<p class="muted">Background music tracks. Preview any track, buy it with sticks, then tap Use. Turn music on or off with the note button at the top.</p><div class="trklist">' + shownTracks().map(function (t) {
-    var own = ownsTrack(t.id), on = (Prog.d.track && ownsTrack(Prog.d.track) ? Prog.d.track : MU_DEFAULT) === t.id, pv = MU.preview === t.id;
+    var own = ownsTrack(t.id), on = (Prog.d.track && ownsTrack(Prog.d.track) ? Prog.d.track : muDefault()) === t.id, pv = MU.preview === t.id;
     var act = on ? '<span class="eqd">In use</span>' : own ? '<button class="btn small" data-trackuse="' + t.id + '">Use</button>' : '<button class="btn small' + (bal >= t.price ? '' : ' ghost') + '" data-trackbuy="' + t.id + '"' + (bal >= t.price ? '' : ' disabled') + '>' + (bal >= t.price ? 'Buy' : 'Need ' + (t.price - bal) + ' more') + '</button>';
     return '<div class="trk' + (on ? ' eq' : '') + '">' + note + '<div class="trktx"><strong>' + esc(t.name) + '</strong><span class="muted small">' + esc(t.desc) + ' · ' + t.bpm + ' bpm</span>' + (own ? '<span class="muted small">' + (t.price ? 'Owned' : t.season && !MU_ONLY ? 'Free for Halloween' : 'Free') + '</span>' : stickTag(t.price)) + '</div><div class="bact"><button class="btn small ghost" data-trackpv="' + t.id + '">' + (pv ? 'Playing…' : 'Preview') + '</button>' + act + '</div></div>';
   }).join("") + '</div>';
@@ -3433,7 +3461,7 @@ function stylesView() {
 }
 function stickChip() { if (typeof funOn === "function" && !funOn()) return ""; return '<button class="stickchip" data-goshop="1" aria-label="Terrarium"' + (S.view === "terrarium" ? ' aria-current="page"' : '') + '>' + myBugArt("mini") + '<span class="tlabel">Terrarium</span></button>'; }
 function terrariumView() {
-  var f = S.shopF || "home", title = { bugs: "Bug Store", items: "Wardrobe", faces: "Faces", styles: "Colors", music: "Music" }[f];
+  var f = S.shopF || "home", title = { bugs: "Bug Store", items: "Wardrobe", faces: "Faces", styles: "Colors", borders: "Drug Borders", sticks: "Get Sticks", music: "Music" }[f];
   var head = f === "home" ? '<button class="backbtn" data-act="terrback"><span aria-hidden="true">&larr;</span> Studying</button><h2>Terrarium</h2>' : '<button class="backbtn" data-act="shopback"><span aria-hidden="true">&larr;</span> Terrarium</button><h2>' + title + '</h2>';
   return topbar() + '<div class="lvl-gen terrarium"><div class="sechead terrhead">' + head + '</div>' + shopView() + '</div>';
 }
@@ -3700,6 +3728,8 @@ ITEMS.push(
   { id: "scrubcap", name: "Bug-Print Scrub Cap", slot: "hat", price: 130, nw: 1, draw: function (y) { var t = hatY(y); return '<path d="M71 ' + (t + 8) + ' Q71 ' + (t - 22) + ' 100 ' + (t - 24) + ' Q129 ' + (t - 22) + ' 129 ' + (t + 8) + 'Z" fill="#60a5fa" stroke="#1d4ed8" stroke-width="2"/><g fill="#1e3a8a"><circle cx="86" cy="' + (t - 8) + '" r="3"/><circle cx="100" cy="' + (t - 15) + '" r="3"/><circle cx="114" cy="' + (t - 6) + '" r="3"/><circle cx="94" cy="' + (t + 1) + '" r="2.5"/></g><path d="M128 ' + (t + 4) + ' q10 4 8 14 M128 ' + (t + 4) + ' q14 0 16 8" stroke="#1d4ed8" stroke-width="3" fill="none"/>'; } },
   { id: "ninjaband", name: "Ninja Headband", slot: "hat", price: 190, nw: 1, draw: function (y) { var t = hatY(y) + 14; return '<rect x="69" y="' + (t - 5) + '" width="62" height="10" rx="3" fill="#111827"/><rect x="94" y="' + (t - 4) + '" width="12" height="8" rx="1" fill="#9ca3af"/><g class="ia-sway"><path d="M130 ' + t + ' q14 4 24 16 q-12 -2 -20 -8 q4 10 2 20 q-8 -12 -10 -24z" fill="#111827"/></g>'; } },
   { id: "unicorn", name: "Unicorn Horn", slot: "hat", price: 640, nw: 1, draw: function (y) { var t = hatY(y) + 6; return '<path d="M92 ' + (t + 2) + ' L100 ' + (t - 40) + ' L108 ' + (t + 2) + 'Z" fill="#fde68a" stroke="#d97706" stroke-width="1.5"/><path d="M94 ' + (t - 8) + ' l12 -4 M96 ' + (t - 20) + ' l9 -3 M98 ' + (t - 30) + ' l5 -2" stroke="#f472b6" stroke-width="2.5"/>' + sp4(118, t - 34, 6, "#f0abfc", "spark") + sp4(82, t - 24, 4, "#a5f3fc", "spark", .8); } },
+  /* Thanksgiving (owner, Nov 1 2026): the seasonal hat for the harvest theme */
+  { id: "pilgrimhat", name: "Harvest Hat", slot: "hat", price: 200, nw: 1, draw: function (y) { var t = hatY(y); return '<ellipse cx="100" cy="' + (t + 3) + '" rx="38" ry="8" fill="#1c1917"/><rect x="82" y="' + (t - 36) + '" width="36" height="38" rx="3" fill="#292524"/><rect x="82" y="' + (t - 12) + '" width="36" height="10" fill="#f8fafc"/><rect x="94" y="' + (t - 11) + '" width="12" height="8" rx="1.5" fill="#f59e0b"/><rect x="97" y="' + (t - 9) + '" width="6" height="4" fill="#292524"/>'; } },
   { id: "santahat", name: "Holiday Hat", slot: "hat", price: 200, nw: 1, draw: function (y) { var t = hatY(y); return '<path d="M74 ' + (t + 4) + ' Q86 ' + (t - 40) + ' 130 ' + (t - 30) + ' L126 ' + (t + 4) + 'Z" fill="#dc2626"/><rect x="70" y="' + (t - 2) + '" width="60" height="11" rx="5.5" fill="#f8fafc"/><g class="ia-sway"><circle cx="132" cy="' + (t - 28) + '" r="7" fill="#f8fafc"/></g>'; } },
   // ---- face
   { id: "heartglasses", name: "Heart Glasses", slot: "face", price: 180, nw: 1, draw: function (y) { return heartShape(88, y - 2, 11, "#f43f5e") + heartShape(112, y - 2, 11, "#f43f5e") + '<path d="M97 ' + (y - 4) + ' h6" stroke="#9f1239" stroke-width="3"/><path d="M82 ' + (y - 6) + ' l4 -3" stroke="#fff" stroke-width="2" opacity=".7"/>'; } },
@@ -6233,14 +6263,17 @@ function muOn() { return SET().music !== false && (typeof funOn !== "function" |
 /* Oct 27, 2026: all tracks are now recorded lo-fi loops (made offline from sampled instruments, see /home/claude/music),
    played from music/*.mp3. The old WebAudio tracks (Rookie Loop, Night Shift Lo-Fi, Rotor Wash, ...) were retired and
    anyone who bought one with sticks gets the sticks back (muRefundOld). */
-/* Oct 2026 (owner): only Haunted Study Hall for now, until the rest of the music is sorted out. Set MU_ONLY = null to bring back the full list. */
-var MU_ONLY = "haunted-study-hall";
-var MU_DEFAULT = MU_ONLY || "study-session";
+/* Oct 2026 (owner): only the seasonal tracks for now, until the rest of the music is sorted out.
+   Set MU_ONLY = null to bring back the full list. Each entry still has to pass its own season
+   check below, so Haunted Study Hall steps aside for Harvest Table on November 1. */
+var MU_ONLY = ["haunted-study-hall", "harvest-table"];
+function muOnly(id) { return !MU_ONLY || MU_ONLY.indexOf(id) >= 0; }
 var TRACKS = [
   { id: "study-session", name: "Study Session", price: 0, desc: "Warm electric piano, a laid-back beat and a little vinyl crackle.", bpm: 82, src: "music/study-session.mp3" },
   { id: "coffee-flashcards", name: "Coffee and Flashcards", price: 0, desc: "Breezy bossa nova: nylon guitar, brushes and a flute.", bpm: 136, src: "music/coffee-flashcards.mp3" },
   { id: "rainy-day-review", name: "Rainy Day Review", price: 0, desc: "A swinging jazz trio with walking bass and soft rain outside.", bpm: 118, src: "music/rainy-day-review.mp3" },
   { id: "haunted-study-hall", name: "Haunted Study Hall", price: 0, season: "halloween", desc: "Spooky lo-fi with a music box, a ghostly choir and a distant bell.", bpm: 78, src: "music/haunted-study-hall.mp3" },
+  { id: "harvest-table", name: "Harvest Table", price: 0, season: "thanksgiving", desc: "Warm autumn lo-fi: Rhodes, nylon guitar and a cor anglais over brushes.", bpm: 76, src: "music/harvest-table.mp3" },
   { id: "night-shift-lofi", name: "Night Shift", price: 500, desc: "Dreamy, spacey keys and pads for the quiet hours.", bpm: 68, src: "music/night-shift.mp3" },
   { id: "flight-crew", name: "Flight Crew", price: 500, desc: "Funky neo-soul groove with clav, guitar and a tight beat.", bpm: 98, src: "music/flight-crew.mp3" },
   { id: "golden-hour", name: "Golden Hour", price: 500, desc: "Sunny dance-pop with a steel drum hook.", bpm: 112, src: "music/golden-hour.mp3" },
@@ -6252,15 +6285,22 @@ function muRefundOld() { /* give back sticks spent on retired tracks, once */
   var back = 0, keep = (Prog.d.tracks || []).filter(function (id) { if (MU_OLD_PAID[id]) { back += MU_OLD_PAID[id]; return false; } return true; });
   Prog.d.tracks = keep; Prog.d.muRefunded = 1;
   if (back) { Prog.d.spent = Math.max(0, (Prog.d.spent || 0) - back); Prog.d.muRefundAmt = back; }
-  if (Prog.d.track && !TRACKS.some(function (t) { return t.id === Prog.d.track; })) Prog.d.track = MU_DEFAULT;
+  if (Prog.d.track && !TRACKS.some(function (t) { return t.id === Prog.d.track; })) Prog.d.track = muDefault();
   try { saveProg(); } catch (e) {}
 }
 function trackById(id) { return TRACKS.filter(function (t) { return t.id === id; })[0] || TRACKS[0]; }
-function muSeason(k) { var d = new Date(), mo = d.getMonth(), day = d.getDate(); return k === "halloween" ? mo === 9 || (mo === 10 && day <= 1) : true; }
-function trackAvail(t) { if (MU_ONLY) return t.id === MU_ONLY; return !t.season || muSeason(t.season); }
+function muSeason(k) {
+  var d = new Date(), mo = d.getMonth(), day = d.getDate();
+  if (k === "halloween") return mo === 9 || (mo === 10 && day <= 1);
+  if (k === "thanksgiving") return mo === 10 && day >= 1;   /* all of November */
+  return true;
+}
+function trackAvail(t) { return muOnly(t.id) && (!t.season || muSeason(t.season)); }
+/* with MU_ONLY set, the default is whichever of those tracks is in season right now */
+function muDefault() { var L = TRACKS.filter(trackAvail); return L.length ? L[0].id : "study-session"; }
 function shownTracks() { return TRACKS.filter(trackAvail); }
 function ownsTrack(id) { var t = trackById(id); if (!trackAvail(t)) return false; return !t.price || (Prog.d.tracks || []).indexOf(id) >= 0; }
-function curTrack() { muRefundOld(); if (MU.preview) return trackById(MU.preview); var id = Prog.d.track; return trackById(id && ownsTrack(id) ? id : MU_DEFAULT); }
+function curTrack() { muRefundOld(); if (MU.preview) return trackById(MU.preview); var id = Prog.d.track; return trackById(id && ownsTrack(id) ? id : muDefault()); }
 function muTick() {
   var c = MU.ctx, T = curTrack(); if (!c) return;
   if (MU.trackId !== T.id) MU.trackId = T.id;
@@ -7729,7 +7769,7 @@ var HOLI = [
   { id: "ems", en: "EMS Week", es: "Semana de EMS", msg: ["Happy EMS Week! Thank you for answering the call.", "¡Feliz Semana de EMS! Gracias por responder al llamado."], hat: "flighthelmet", fx: "star", c: ["#2563eb", "#ef4444"] },
   { id: "july4", en: "Fourth of July", es: "4 de Julio", msg: ["Happy Fourth of July!", "¡Feliz 4 de Julio!"], hat: "tophat", fx: ["star", "firework", "confetti", "star", "firework"], icon: "star", n: 24, cols: ["#dc2626", "#f8fafc", "#2563eb"], c: ["#dc2626", "#2563eb"] },
   { id: "halloween", en: "Halloween", es: "Halloween", msg: ["Happy Halloween! Spooky studying.", "¡Feliz Halloween! A estudiar con susto."], hat: "witchhat", fx: ["bat", "pumpkin", "ghost", "pumpkin", "bat", "candy"], icon: "pumpkin", n: 20, c: ["#f97316", "#7c3aed"] },
-  { id: "thanksgiving", en: "Thanksgiving", es: "Acción de Gracias", msg: ["Happy Thanksgiving from DrugBug!", "¡Feliz Día de Acción de Gracias!"], hat: "", fx: "leaf", c: ["#d97706", "#b45309"] },
+  { id: "thanksgiving", en: "Thanksgiving", es: "Acción de Gracias", msg: ["Happy Thanksgiving from DrugBug!", "¡Feliz Día de Acción de Gracias!"], hat: "pilgrimhat", fx: ["leaf", "acorn", "leaf", "pie", "leaf", "corn", "turkey", "leaf", "wheat"], icon: "turkey", n: 24, cols: ["#d97706", "#b45309", "#ea580c", "#ca8a04", "#9a3412", "#65a30d"], c: ["#d97706", "#b45309"] },
   { id: "winter", en: "Snowy days", es: "Días de nieve", msg: ["Let it snow! Cozy studying from DrugBug.", "¡Que nieve! Estudia calentito con DrugBug."], hat: "santahat", fx: "snow", n: 46, c: ["#38bdf8", "#e11d48"] },
   { id: "christmas", base: "winter", en: "Christmas", es: "Navidad", msg: ["Merry Christmas from DrugBug!", "¡Feliz Navidad de parte de DrugBug!"], hat: "santahat", fx: "snow", n: 60, c: ["#38bdf8", "#e11d48"] }
 ];
@@ -7746,7 +7786,8 @@ function holOn(d) {
   var ems = holNthDow(y, 4, 0, 3); if (holIn(d, ems, new Date(y, 4, ems.getDate() + 6))) return "ems"; /* EMS Week: the third full week of May, Sunday to Saturday */
   if (m === 6 && day >= 1 && day <= 4) return "july4";
   if (m === 9 && day >= 24) return "halloween";
-  var tg = holNthDow(y, 10, 4, 4); if (holIn(d, new Date(y, 10, tg.getDate() - 4), new Date(y, 10, tg.getDate() + 1))) return "thanksgiving";
+  /* the whole week into the Sunday after, so it gets the same run Halloween does (owner, Nov 1 2026) */
+  var tg = holNthDow(y, 10, 4, 4); if (holIn(d, new Date(y, 10, tg.getDate() - 6), new Date(y, 10, tg.getDate() + 3))) return "thanksgiving";
   if (m === 11 && day === 25) return "christmas"; /* Merry Christmas only on Christmas Day */
   if (m === 11 && day >= 18 && day <= 30) return "winter"; /* snowy days around Christmas */
   return "";
@@ -7773,6 +7814,11 @@ var HOL_SHAPES = {
   pumpkin: '<path d="M12 6 Q12 3 14 2" stroke="#3f6212" stroke-width="2" fill="none"/><ellipse cx="7.5" cy="14" rx="5.5" ry="7" fill="#ea580c"/><ellipse cx="16.5" cy="14" rx="5.5" ry="7" fill="#ea580c"/><ellipse cx="12" cy="14" rx="5.5" ry="7.5" fill="#f97316"/><path d="M8 12 l2 -2 l2 2z M12 12 l2 -2 l2 2z" fill="#1c1917"/><path d="M8 16 Q12 19 16 16 L15 17.5 L13.5 16.8 L12 18 L10.5 16.8 L9 17.5Z" fill="#1c1917"/>',
   ghost: '<path d="M5 21 L5 10 C5 5 8 2 12 2 C16 2 19 5 19 10 L19 21 L16.5 19 L14 21 L12 19 L10 21 L7.5 19Z" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/><ellipse cx="9.5" cy="10" rx="1.5" ry="2.2" fill="#1c1917"/><ellipse cx="14.5" cy="10" rx="1.5" ry="2.2" fill="#1c1917"/><ellipse cx="12" cy="14.5" rx="1.6" ry="1.2" fill="#1c1917"/>',
   candy: '<path d="M2 9 L6 12 L2 15Z M22 9 L18 12 L22 15Z" fill="#f97316"/><ellipse cx="12" cy="12" rx="6.5" ry="4.5" fill="#f97316"/><path d="M8 9.5 L10 14.5 M12 8 L14 15 M15.5 8.6 L17 13.5" stroke="#fff" stroke-width="1.4"/>',
+  acorn: '<path d="M12 22 C7 22 5 17 5 13 L19 13 C19 17 17 22 12 22Z" fill="#b45309"/><path d="M4 9 Q12 5 20 9 Q20 13 12 13 Q4 13 4 9Z" fill="#78350f"/><path d="M12 5 Q12 2 14 1" stroke="#78350f" stroke-width="1.8" fill="none"/>',
+  pie: '<path d="M2 14 Q12 9 22 14 L21 17 Q12 21 3 17Z" fill="#d97706"/><path d="M2 14 Q12 7 22 14 Q12 11 2 14Z" fill="#fcd34d"/><path d="M6 12.4 l2.4 -1.4 M11 11.2 l2.4 -1.2 M16 12.1 l2.2 -1.3" stroke="#b45309" stroke-width="1.3" fill="none"/>',
+  corn: '<path d="M12 2 C16 5 17.5 10 17 15 C16.5 19.5 14 22 12 22 C10 22 7.5 19.5 7 15 C6.5 10 8 5 12 2Z" fill="#facc15"/><path d="M9.6 6 v13 M12 4.6 v16 M14.4 6 v13" stroke="#ca8a04" stroke-width="1.1"/><path d="M7 15 Q2 15 2.5 21 Q7 20 7.6 17Z M17 15 Q22 15 21.5 21 Q17 20 16.4 17Z" fill="#65a30d"/>',
+  turkey: '<path d="M12 10 Q3 7 3.5 16 Q4 21 12 21 Q20 21 20.5 16 Q21 7 12 10Z" fill="#b45309" opacity=".45"/><path d="M12 11 Q5.5 8.5 6 15 M12 11 Q9 6.5 10.5 13 M12 11 Q15 6.5 13.5 13 M12 11 Q18.5 8.5 18 15" stroke="#ea580c" stroke-width="2.4" stroke-linecap="round" fill="none"/><ellipse cx="12" cy="16.5" rx="5" ry="5.3" fill="#78350f"/><circle cx="12" cy="10.5" r="3.1" fill="#92400e"/><path d="M14.6 10 l3 1.1 l-3 1.1z" fill="#fbbf24"/><circle cx="10.9" cy="9.9" r=".8" fill="#1c1917"/><path d="M10.4 12.6 q.6 2.4 -.6 3.2" stroke="#dc2626" stroke-width="1.5" fill="none"/>',
+  wheat: '<path d="M12 22 V8" stroke="#ca8a04" stroke-width="1.8"/><g fill="#eab308"><ellipse cx="9.4" cy="8" rx="2" ry="3.1" transform="rotate(-28 9.4 8)"/><ellipse cx="14.6" cy="8" rx="2" ry="3.1" transform="rotate(28 14.6 8)"/><ellipse cx="9.4" cy="13" rx="2" ry="3.1" transform="rotate(-28 9.4 13)"/><ellipse cx="14.6" cy="13" rx="2" ry="3.1" transform="rotate(28 14.6 13)"/><ellipse cx="12" cy="4.4" rx="2" ry="3.3"/></g>',
   confetti: '<rect x="8" y="3" width="8" height="18" rx="2" transform="rotate(25 12 12)"/>'
 };
 function holFx(h) {
@@ -7799,6 +7845,7 @@ function holWear(h) { var w = myWear(), o = {}; for (var k in w) o[k] = w[k]; if
    the start-up notice, and scrolling sets off more while the holiday lasts. No sound; skipped with reduced motion. */
 var HFX = { cv: null, g: null, W: 0, H: 0, rockets: [], sparks: [], bits: [], run: false, on: null, acc: 0, lastY: 0, lastT: 0, kind: 0 };
 var HFX_RWB = ["#ef4444", "#ffffff", "#3b82f6"], HFX_NY = ["#fbbf24", "#fde68a", "#e5e7eb", "#a855f7", "#f472b6", "#22d3ee", "#facc15"];
+var HFX_TG = ["#d97706", "#b45309", "#ea580c", "#ca8a04", "#9a3412", "#eab308", "#78350f"];
 function hfxOk() { return !(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) && !SET().motion; }
 function hfxSize() { var dpr = Math.min(2, window.devicePixelRatio || 1); HFX.W = window.innerWidth; HFX.H = window.innerHeight; HFX.cv.width = HFX.W * dpr; HFX.cv.height = HFX.H * dpr; HFX.g.setTransform(dpr, 0, 0, dpr, 0, 0); }
 function hfxLayer() {
@@ -7824,7 +7871,20 @@ function hfxCannon(side, count, q) {
     HFX.bits.push({ x: x, y: H * (.82 + Math.random() * .12), vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp, r: Math.random() * 6.3, vr: (Math.random() - .5) * .4, w: 5 + Math.random() * 5, h: 3 + Math.random() * 4, c: HFX_NY[Math.floor(Math.random() * HFX_NY.length)], ph: Math.random() * 6.3, life: 1, round: Math.random() < .2 });
   }
 }
+/* Thanksgiving: a gust of leaves blows in from the side and tumbles down (owner, Nov 1 2026).
+   Same bits engine as the New Year confetti, slower and wider so they read as leaves. */
+function hfxGust(side, count, q) {
+  hfxSnd("rustle", q);
+  var W = HFX.W, H = HFX.H, x = side < 0 ? -10 : W + 10;
+  for (var i = 0; i < (count || 46); i++) {
+    var sp = 5 + Math.random() * 7, ang = -(0.12 + Math.random() * 0.5);
+    HFX.bits.push({ x: x, y: H * (0.05 + Math.random() * 0.7), vx: (side < 0 ? 1 : -1) * Math.cos(ang) * sp, vy: Math.sin(ang) * sp,
+      r: Math.random() * 6.3, vr: (Math.random() - 0.5) * 0.5, w: 9 + Math.random() * 8, h: 5 + Math.random() * 5,
+      c: HFX_TG[Math.floor(Math.random() * HFX_TG.length)], ph: Math.random() * 6.3, life: 1, round: Math.random() < 0.35 });
+  }
+}
 function hfxShower(n) { for (var i = 0; i < n; i++) HFX.bits.push({ x: Math.random() * HFX.W, y: -10 - Math.random() * 120, vx: (Math.random() - .5) * 1.5, vy: 1 + Math.random() * 1.5, r: Math.random() * 6.3, vr: (Math.random() - .5) * .3, w: 5 + Math.random() * 5, h: 3 + Math.random() * 4, c: HFX_NY[Math.floor(Math.random() * HFX_NY.length)], ph: Math.random() * 6.3, life: 1, round: Math.random() < .2 }); }
+function hfxShowerTG(n) { for (var i = 0; i < n; i++) HFX.bits.push({ x: Math.random() * HFX.W, y: -10 - Math.random() * 140, vx: (Math.random() - .5) * 1.8, vy: .7 + Math.random() * 1.2, r: Math.random() * 6.3, vr: (Math.random() - .5) * .35, w: 9 + Math.random() * 7, h: 5 + Math.random() * 5, c: HFX_TG[Math.floor(Math.random() * HFX_TG.length)], ph: Math.random() * 6.3, life: 1, round: Math.random() < .35 }); }
 function hfxLoop() {
   if (HFX.run) return; HFX.run = true;
   function frame() {
@@ -7846,7 +7906,12 @@ var holFwDone = false;
 function holOpenFx() {
   var h = holToday(); if (!h || holFwDone) return;
   holFwDone = true; holOpenSnd(h);
-  if ((h.id !== "july4" && h.id !== "newyear") || !hfxOk()) return; HFX.quiet = false; HFX.on = h.id; hfxLayer();
+  if ((h.id !== "july4" && h.id !== "newyear" && holKey(h) !== "thanksgiving") || !hfxOk()) return; HFX.quiet = false; HFX.on = h.id; hfxLayer();
+  if (holKey(h) === "thanksgiving") {
+    hfxGust(-1, 54); setTimeout(function () { hfxGust(1, 40); hfxLoop(); }, 520);
+    setTimeout(function () { hfxGust(-1, 34); hfxLoop(); }, 1500); setTimeout(function () { hfxShowerTG(28); hfxLoop(); }, 2400);
+    hfxLoop(); return;
+  }
   if (h.id === "july4") { for (var i = 0; i < 12; i++) setTimeout(hfxRocket, i * 380); setTimeout(hfxLoop, 0); }
   else { hfxCannon(-1, 90); setTimeout(function () { hfxCannon(1, 90); hfxLoop(); }, 350); setTimeout(function () { hfxCannon(-1, 60); hfxCannon(1, 60); hfxLoop(); }, 1500); setTimeout(function () { hfxShower(60); hfxLoop(); }, 2600); }
   hfxLoop();
@@ -7859,6 +7924,7 @@ window.addEventListener("scroll", function () {
   if (HFX.rockets.length + HFX.sparks.length / 60 + HFX.bits.length / 80 > 8) return; /* keep it light */
   HFX.quiet = true;
   if (HFX.on === "july4") { hfxRocket(true); if (Math.random() < .5) setTimeout(function () { hfxRocket(true); }, 200); }
+  else if (HFX.on === "thanksgiving") { if (Math.random() < .6) hfxGust(Math.random() < .5 ? -1 : 1, 26, true); else hfxShowerTG(18); }
   else if (Math.random() < .6) hfxCannon(Math.random() < .5 ? -1 : 1, 40, true); else hfxShower(30);
   hfxLoop();
 }, { passive: true });
@@ -7885,6 +7951,7 @@ var HS = {
   pop: function (t, q) { var k = q ? .55 : 1; hsNoise(t, .09, { type: "bandpass", f: 1400, q: .8, v: .45 * k, a: .002 }); hsTone(t, "sine", 220, 60, .12, .25 * k, .002); hsNoise(t + .05, .7, { type: "bandpass", f: 5000, f2: 3000, q: .6, v: .06 * k, a: .05 }); },
   horn: function (t) { var o = hsTone(t, "sawtooth", 300, 380, .8, .06, .03), l = MU.ctx.createOscillator(), lg = MU.ctx.createGain(); l.frequency.value = 26; lg.gain.value = 30; l.connect(lg); lg.connect(o.frequency); l.start(t); l.stop(t + .85); },
   bell: function (t, f, v) { hsTone(t, "sine", f, f, 1.6, v || .05, .005); hsTone(t, "sine", f * 2.76, f * 2.76, .6, (v || .05) * .3, .005); },
+  rustle: function (t, q) { var k = q ? .5 : 1, i; for (i = 0; i < 9; i++) hsNoise(t + i * .055 + Math.random() * .03, .12, { type: "highpass", f: 2600 + Math.random() * 2600, v: (.05 + Math.random() * .04) * k, a: .02 }); },
   jingle: function (t) { for (var i = 0; i < 10; i++) hsNoise(t + i * .07 + Math.random() * .03, .12, { type: "highpass", f: 6500, v: .05 }); }
 };
 /* one short holiday "hello" when the app opens, on top of the normal music */
@@ -9000,15 +9067,15 @@ function agpAuto() { /* reopen a saved code once */
   if (AGP.tried || AGP.data || !AGP.code || !agpPro()) return; AGP.tried = true;
   var d = agpTry(AGP.code); if (d) AGP.data = d; else { AGP.code = ""; store("agcode", ""); }
 }
-function agpUnlock(code) {
+function agpUnlock(code, el) {
   if (!agpPro()) { openPaywall("Your agency's protocols", "pro"); return; }
-  if (agpNorm(code).length < 4) { AGP.err = "Enter the code your agency gave you."; return drawProto(); }
-  AGP.busy = true; AGP.err = ""; drawProto();
+  if (agpNorm(code).length < 4) { AGP.err = "Enter the code your agency gave you."; return agpRedraw(el); }
+  AGP.busy = true; AGP.err = ""; agpRedraw(el);
   setTimeout(function () {
     var d = agpTry(code); AGP.busy = false;
     if (d) { AGP.data = d; AGP.code = code; store("agcode", code); AGP.sec = null; AGP.view = null; }
     else AGP.err = "That code did not match any agency. Check it with your agency or training officer.";
-    drawProto();
+    agpRedraw(el);
   }, 30);
 }
 /* text -> HTML: **bold**, and drug names linked to their DrugBug pages */
@@ -9065,6 +9132,21 @@ function agpPage() {
   c += '<div class="actions">' + (i > 0 ? '<button class="btn small ghost" data-agp="open" data-agid="' + all[i - 1] + '">‹ ' + esc(all[i - 1]) + '</button>' : '') + (i < all.length - 1 ? '<button class="btn small ghost" data-agp="open" data-agid="' + all[i + 1] + '">' + esc(all[i + 1]) + ' ›</button>' : '') + '</div>';
   return c;
 }
+/* The protocols live in two places now: the side drawer, and a tile inside the EMT / AEMT /
+   Paramedic / Flight bug menus (owner, Nov 1 2026). agpRedraw sends the repaint to whichever
+   one the click came from, so the same markup and handlers serve both. */
+function agpInDrawer(el) { return !!(el && el.closest && el.closest("#proto")); }
+function agpRedraw(el) {
+  if (agpInDrawer(el)) { drawProto(); var pp = document.querySelector("#proto .ppanel"); if (pp) pp.scrollTop = 0; return; }
+  render(); try { window.scrollTo(0, 0); } catch (e) {}
+}
+/* the in-level tab: same card, no drawer chrome */
+function agpTabView() {
+  agpAuto();
+  if (AGP.data && typeof AGQ !== "undefined" && AGQ.on) return agqView();
+  if (AGP.view && AGP.data) return agpPage();
+  return agpCard();
+}
 function agpCard() {
   agpAuto();
   var c = '<section class="agcard"><h3 class="eh small">Your agency\'s protocols ' + (agpPro() ? '' : tierBadge("pro")) + '</h3>';
@@ -9088,7 +9170,7 @@ function agpCard() {
 }
 document.addEventListener("click", function (e) {
   var dr = e.target.closest("#proto [data-drug]"); if (dr) { if (typeof closeProto === "function") closeProto(); return; }
-  var t = e.target.closest("#proto [data-agp]"); if (!t) return;
+  var t = e.target.closest("[data-agp]"); if (!t) return;
   var a = t.getAttribute("data-agp"), id = t.getAttribute("data-agid");
   if (a === "pro") { openPaywall("Your agency's protocols", "pro"); return; }
   if (a === "sec") { AGP.sec = id; AGP.view = null; }
@@ -9097,11 +9179,11 @@ document.addEventListener("click", function (e) {
   if (a === "back") AGP.view = null;
   if (a === "role") { AGP.role = id; store("agrole", id); }
   if (a === "forget") { AGP.data = null; AGP.code = ""; AGP.sec = null; AGP.view = null; AGP.err = ""; store("agcode", ""); }
-  drawProto(); var pp = document.querySelector("#proto .ppanel"); if (pp) pp.scrollTop = 0;
+  agpRedraw(t);
 });
 document.addEventListener("submit", function (e) {
   var f = e.target.closest && e.target.closest("[data-agpform]"); if (!f) return;
-  e.preventDefault(); var i = document.getElementById("agpcode"); agpUnlock(i ? i.value : "");
+  e.preventDefault(); var i = document.getElementById("agpcode"); agpUnlock(i ? i.value : "", f);
 });
 
 /* ---------- Drug pages: "Your agency protocol" box with that agency's doses and indications for this drug ---------- */
@@ -9174,7 +9256,7 @@ function agqStart(scope, ids) {
   var st = agqStats();
   /* unseen and missed questions first, then the rest */
   pool = agqShuffle(pool).sort(function (a, b) { function w(q) { var s = st[q.id]; return !s ? 0 : s[0] < s[1] ? 1 : 2; } return w(a) - w(b); });
-  AGQ = { on: true, scope: scope, items: pool.slice(0, 10).map(function (q) { return { q: q, opts: agqShuffle([q.a].concat(q.w)) }; }), i: 0, pick: null, right: 0, missed: [], done: false };
+  AGQ = { on: true, scope: scope, items: pool.slice(0, 10).map(function (q) { return { q: q, opts: agqShuffle([q.a].concat(q.w)) }; }), i: 0, pick: null, right: 0, missed: [], done: false, paid: 0, perfect: false };
 }
 function agqSecName(id) { var s = (AGP.data.sections || []).filter(function (x) { return x.id === id; })[0]; return s ? s.name : id; }
 function agqHome() {
@@ -9190,6 +9272,7 @@ function agqView() {
   var N = AGQ.items.length;
   if (AGQ.done) {
     var c = '<h3 class="eh small">Round done</h3><p class="agqscore">' + AGQ.right + ' / ' + N + ' correct</p>';
+    if (AGQ.paid) c += '<p class="earned small">+' + AGQ.paid + ' stick' + (AGQ.paid === 1 ? '' : 's') + (AGQ.perfect ? ', perfect round' : '') + '</p>';
     if (AGQ.missed.length) c += '<p class="muted small">Missed: ' + AGQ.missed.map(function (q) { return '<button class="linkish" data-agpgo="' + esc(q.pid) + '">' + esc(q.pid) + '</button>'; }).join(", ") + '</p>';
     return c + '<div class="actions"><button class="btn" data-agq="again">Next 10</button>' + (AGQ.missed.length ? '<button class="btn ghost" data-agq="redo">Retry my misses</button>' : '') + '<button class="btn ghost" data-agq="home">Practice menu</button></div>';
   }
@@ -9204,7 +9287,7 @@ function agqView() {
   return c + '</div>';
 }
 document.addEventListener("click", function (e) {
-  var t = e.target.closest("#proto [data-agq]"); if (!t || !AGP.data) return;
+  var t = e.target.closest("[data-agq]"); if (!t || !AGP.data) return;
   var a = t.getAttribute("data-agq");
   if (a === "open") { AGQ = { on: true, items: null }; }
   if (a === "exit") { AGQ = { on: false, items: null }; }
@@ -9214,12 +9297,26 @@ document.addEventListener("click", function (e) {
   if (a === "redo") agqStart(AGQ.scope, AGQ.missed.map(function (q) { return q.id; }));
   if (a === "pick" && AGQ.pick === null) {
     var k = +t.getAttribute("data-agqk"), it = AGQ.items[AGQ.i], ok = it.opts[k] === it.q.a, st = agqStats(), s = st[it.q.id] || [0, 0];
-    AGQ.pick = k; s[1]++; if (ok) { s[0]++; AGQ.right++; if (typeof earn === "function") earn(1); if (typeof gfxSnd === "function") gfxSnd("pop"); } else AGQ.missed.push(it.q);
-    st[it.q.id] = s; store("agqstats", st); if (ok && typeof saveProg === "function") saveProg();
+    AGQ.pick = k; s[1]++;
+    /* Was a flat 1 stick for correct and nothing for a wrong try, out of step with every other
+       quiz in the app. Now uses qSticks: 3 right, 1 for trying (owner, Nov 1 2026). */
+    var pay = typeof qSticks === "function" ? qSticks(ok) : (ok ? 3 : 1);
+    if (typeof earn === "function") earn(pay); AGQ.paid = (AGQ.paid || 0) + pay;
+    if (ok) { s[0]++; AGQ.right++; if (typeof gfxSnd === "function") gfxSnd("pop"); } else AGQ.missed.push(it.q);
+    st[it.q.id] = s; store("agqstats", st); if (typeof saveProg === "function") saveProg();
   }
-  if (a === "next") { if (AGQ.i + 1 < AGQ.items.length) { AGQ.i++; AGQ.pick = null; } else AGQ.done = true; }
+  if (a === "next") {
+    if (AGQ.i + 1 < AGQ.items.length) { AGQ.i++; AGQ.pick = null; }
+    else {
+      AGQ.done = true;
+      if (AGQ.right === AGQ.items.length && AGQ.items.length >= 10 && typeof earn === "function" && typeof PERFECT_BONUS !== "undefined") {
+        earn(PERFECT_BONUS); AGQ.paid = (AGQ.paid || 0) + PERFECT_BONUS; AGQ.perfect = true;
+      }
+      if (typeof saveProg === "function") saveProg();
+    }
+  }
   if (a === "pquiz") { AGQ = { on: true, items: null }; agqStart(t.getAttribute("data-agqs")); }
-  drawProto(); var pp = document.querySelector("#proto .ppanel"); if (pp) pp.scrollTop = 0;
+  agpRedraw(t);
 });
 
 /* ---------- Chemical structure (2D skeletal drawing) on drug pages ----------
@@ -22771,13 +22868,37 @@ function learnName(k) {
   var o = typeof levelObj === "function" ? levelObj(k) : null;
   return o ? o.name : k;
 }
+/* A card you have not been through before is worth a little something (owner, Nov 1 2026):
+   1 stick and 2 XP, and every 25th card across everything pays a round 10 on top. Deliberately
+   small - reading is not a quiz, and the sticks for answering questions are worth more. */
+var LRN_STICK = 1, LRN_XP = 2, LRN_MILE = 25, LRN_MILE_BONUS = 10;
 function learnMark(id) {
   if (!id) return;
   var SN = learnSeen();
   if (SN[id]) return;
   SN[id] = Date.now();
+  var paid = 0;
+  try {
+    if (typeof earn === "function") { earn(LRN_STICK); paid = LRN_STICK; }
+    Prog.d.xp = (Prog.d.xp || 0) + LRN_XP;
+    if (learnTotal() % LRN_MILE === 0 && typeof earn === "function") { earn(LRN_MILE_BONUS); paid += LRN_MILE_BONUS; }
+  } catch (e) {}
+  if (paid && typeof learnPaid === "function") learnPaid(paid);
   if (typeof checkAch === "function") checkAch();
   if (typeof saveProg === "function") saveProg();
+}
+/* a small "+1" floats off the LEARN bar so the sticks are visible without a banner */
+function learnPaid(n) {
+  try {
+    if (typeof gfxReduce === "function" && gfxReduce()) return;
+    var host = document.querySelector(".lrnbar") || document.querySelector(".lrntab"); if (!host) return;
+    var e = document.createElement("span");
+    e.className = "lrnpay" + (n > LRN_STICK ? " big" : "");
+    e.setAttribute("aria-hidden", "true");
+    e.textContent = "+" + n;
+    host.appendChild(e);
+    setTimeout(function () { if (e.parentNode) e.parentNode.removeChild(e); }, 1300);
+  } catch (x) {}
 }
 /* pick at random from what is left, so no two runs feel the same */
 function learnPick() {
@@ -22845,43 +22966,158 @@ var LRN_BANTER = [
    ["My cousin says medicine is just fancy soup.", "Okay, Hickory."],
    ["I know three of 'em by heart already.", "There are two thousand."],
    ["Back on the farm we just rubbed dirt on it.", "We are not doing that here."],
-   ["Is the long one the good one?", "That is not how any of this works."]],
+   ["Is the long one the good one?", "That is not how any of this works."],
+   ["This one's got four names. Pick one and stick with it.", "They are for different things."],
+   ["Granddaddy took a pill once. Didn't agree with him none.", "Which pill?"],
+   ["If I holler the name louder does it work better?", "No."],
+   ["Why's every one of 'em end in -ol or -pine?", "That is actually a good question."],
+   ["I been sayin' it ass-prin my whole life.", "Aspirin."],
+   ["Reckon I could just learn the short ones.", "Reckon you could not."],
+   ["Is this the kind of learnin' that takes?", "That depends entirely on you."]],
   [["I been readin' some. Don't tell nobody.", "Your secret is safe."],
    ["You're gettin' the hang of this, partner.", "So are you, apparently."],
    ["Found me a dictionary in the barn.", "And you opened it?"],
    ["I can spell pharmacology now. Mostly.", "Mostly is a start."],
    ["Turns out there's a reason for the long names.", "There usually is."],
    ["I quit chewin' on the straw. Mostly.", "Progress."],
-   ["Few more of these and I'll be downright respectable.", "Let us not get ahead of ourselves."]],
+   ["Few more of these and I'll be downright respectable.", "Let us not get ahead of ourselves."],
+   ["I got a notebook now. Got a pen too.", "Both? In one week?"],
+   ["Starting to see how they group up.", "That is the whole trick, actually."],
+   ["I used the word contraindicated at supper.", "How did that land?"],
+   ["Some of these sound made up. They ain't though.", "Correct on both counts."],
+   ["I quit guessin' and started readin'.", "Revolutionary."],
+   ["Asked a nurse a question. She answered it serious.", "That is a milestone."],
+   ["I'm rememberin' these without tryin' now.", "That is how it is supposed to go."]],
   [["I have started taking notes. Proper ones.", "Is that a second tooth?"],
    ["Repetition is how it sticks. I read that somewhere.", "You read?"],
    ["I would like to revisit the ones from Tuesday.", "Who taught you the word revisit?"],
    ["I have opinions about renal dosing now.", "Nobody asked for those."],
    ["The mechanism is the interesting part, really.", "Listen to you."],
    ["I bought a shirt with a collar on it.", "I noticed."],
-   ["Did you know half of these come from plants?", "You mentioned. Four times."]],
+   ["Did you know half of these come from plants?", "You mentioned. Four times."],
+   ["I flossed. Both of them.", "Good."],
+   ["Half-life finally clicked for me.", "Welcome."],
+   ["I can tell the beta blockers by the name alone.", "Show off."],
+   ["Been explainin' these to folks at the feed store.", "Are they asking?"],
+   ["I keep a list of the ones that catch me out.", "That is genuinely smart."],
+   ["Started readin' the labels in the medicine cabinet.", "Whose cabinet?"],
+   ["Turns out the dose is the whole argument.", "Paracelsus said that. Roughly."]],
   [["Spaced repetition, properly applied, is remarkably effective.", "What happened to the pitchfork guy?"],
    ["I have taken the liberty of alphabetizing the barn.", "Of course you have."],
    ["Shall we continue? I have cleared my afternoon.", "You have an afternoon now?"],
    ["I find the pharmacokinetics rather elegant.", "You find a lot of things elegant lately."],
    ["One ought to review before one forgets.", "One ought to relax."],
    ["I have been asked to chair a small committee.", "Of what?"],
-   ["My vocabulary has expanded considerably.", "We have all noticed."]],
+   ["My vocabulary has expanded considerably.", "We have all noticed."],
+   ["I have begun citing my sources.", "To whom?"],
+   ["The receptor subtypes are where it gets interesting.", "Is it."],
+   ["I corrected a pharmacist. Politely.", "Were you right?"],
+   ["I own reading glasses now. For the small print.", "You have compound eyes."],
+   ["I have reorganized my notes by mechanism.", "They were by color last month."],
+   ["Forgetting is a process, not a failure.", "That is almost comforting."],
+   ["I rather enjoy the obscure ones.", "Obviously you do."]],
   [["Encoding specificity suggests we revisit these in context.", "I miss the pitchfork guy."],
    ["I have been invited to give a talk.", "At the barn?"],
    ["My thesis concerns retrieval practice. You are in the acknowledgements.", "Thank you?"],
    ["I no longer recall what a tater is.", "That is the saddest thing you have said."],
    ["Shall I summarize the literature, or would that belabor it?", "Belabor it. You will anyway."],
    ["I have peer reviewers now. Three of them.", "Do they have pitchforks?"],
-   ["Knowledge, properly encoded, outlives us all.", "It is a drug app, Hickory."]]
+   ["Knowledge, properly encoded, outlives us all.", "It is a drug app, Hickory."],
+   ["I have been reviewing my own earlier remarks. Regrettable.", "We liked those."],
+   ["Someone cited me. I have been cited.", "By whom?"],
+   ["I find I can no longer talk to the chickens.", "They have not changed."],
+   ["Would you care to discuss first-pass metabolism?", "Not especially."],
+   ["I keep a standing desk in the barn now.", "There it is."],
+   ["Mastery, I have found, is mostly maintenance.", "That is actually true."],
+   ["Do you suppose I have become insufferable?", "Yes."]]
 ];
+
+/* ===== Hickory wearing Hickory (owner, Nov 1 2026) =====
+   If you have bought him in the Terrarium and he is your bug, both sides of the exchange are
+   him, so he talks to himself. Same five phases, so he gets more insufferable about it as he
+   learns, and the reply is always the other Hickory. */
+var LRN_SELF = [
+  [["Y'all gonna learn somethin' today.", "Y'all is me. There ain't but the one of us."],
+   ["Mornin', me.", "Mornin'."],
+   ["I been talkin' to myself again.", "You been talkin' to me. Ain't the same."],
+   ["Who's the handsomest bug in this app?", "Don't answer that."],
+   ["I agree with everything I just said.", "Well sure you do."],
+   ["I had a thought.", "I know. I was there."],
+   ["Reckon I'm good company.", "Low bar, but yeah."],
+   ["If I ask me a question do I gotta answer?", "Apparently."],
+   ["My cousin says medicine is fancy soup.", "That is also my cousin."],
+   ["I'm gonna learn three of these today.", "You said that Tuesday."],
+   ["Nobody argues with me no more.", "I'm arguin' right now."],
+   ["Two heads is better'n one.", "It's the same head twice."],
+   ["I finish my own sentences.", "You do."],
+   ["Hush, I'm readin'.", "You're lookin' at the picture."]],
+  [["I been readin' some. Don't tell nobody.", "Who exactly would I tell?"],
+   ["We're gettin' the hang of this.", "We are the same bug."],
+   ["I found a dictionary in the barn.", "I know. I put it there."],
+   ["I'm proud of us.", "That's just pride, said twice."],
+   ["I quit chewin' the straw.", "Half of it."],
+   ["You reckon folks can tell there's two of us?", "There ain't."],
+   ["I'd like a second opinion.", "You got the only one."],
+   ["I'm startin' to sound smart.", "Compared to what?"],
+   ["Let's go over it again.", "You just said that."],
+   ["I made a good point earlier.", "I remember. I made it."],
+   ["Got me a notebook.", "Got us a notebook."],
+   ["I used the word contraindicated.", "I heard. I said it."],
+   ["Takes one to know one.", "That's the whole problem."],
+   ["Nobody listens like I do.", "Nobody has to."]],
+  [["I have started taking notes. Proper ones.", "On what I said. Which was me."],
+   ["Would you care to review?", "I would. I'm already here."],
+   ["I have opinions about renal dosing.", "Yes. Mine."],
+   ["I flossed. Both of them.", "All four, between us."],
+   ["I find the mechanism interesting.", "So do I, obviously."],
+   ["Let us be rigorous about this.", "Let us not get carried away."],
+   ["I disagree with my earlier self.", "That is new."],
+   ["I bought a shirt with a collar.", "We did. It fits one of us."],
+   ["Half-life finally clicked.", "For both of me, happily."],
+   ["I would like to hear the counterargument.", "There isn't one. There's just me."],
+   ["I keep a list of the hard ones.", "I have seen it. It is long."],
+   ["Am I repeating myself?", "Constantly."],
+   ["I explained this at the feed store.", "To whom?"],
+   ["The dose is the whole argument.", "I was going to say that."]],
+  [["Spaced repetition, properly applied, is remarkably effective.", "I was just about to say so."],
+   ["Shall we continue? I have cleared the afternoon.", "We share the afternoon."],
+   ["I have alphabetized the barn.", "I watched myself do it."],
+   ["I find the pharmacokinetics rather elegant.", "You have said that eleven times."],
+   ["I should like a sounding board.", "You are talking into a mirror."],
+   ["I have been asked to chair a committee.", "By me. I asked."],
+   ["My vocabulary has expanded considerably.", "Ours has."],
+   ["I have begun citing my sources.", "The source is me."],
+   ["I corrected a pharmacist. Politely.", "I was there. It was not polite."],
+   ["Do you ever miss the pitchfork?", "I still carry it."],
+   ["I would value an outside perspective.", "There is no outside."],
+   ["I have reorganized my notes by mechanism.", "I preferred them by color."],
+   ["Forgetting is a process, not a failure.", "Comforting, from me."],
+   ["I enjoy the obscure ones.", "We know."]],
+  [["Encoding specificity suggests we revisit these in context.", "We. Always we."],
+   ["I have been invited to give a talk.", "The invitation is in my handwriting."],
+   ["My thesis concerns retrieval practice. You are in the acknowledgements.", "I had better be."],
+   ["I no longer recall what a tater is.", "Neither do I. That troubles me."],
+   ["I have peer reviewers now. Three of them.", "All of them me."],
+   ["Someone cited me.", "It was me. I cited me."],
+   ["Knowledge, properly encoded, outlives us all.", "There is only the one of us."],
+   ["I can no longer talk to the chickens.", "They were never the problem."],
+   ["Shall I summarize the literature?", "You will regardless."],
+   ["Do you suppose I have become insufferable?", "Yes. Twice over."],
+   ["I have been reviewing my earlier remarks. Regrettable.", "I liked the pitchfork years."],
+   ["Mastery is mostly maintenance.", "Well put. By me."],
+   ["I keep a standing desk in the barn.", "I stand at it."],
+   ["Is this what company feels like?", "I would not know."]]
+];
+/* true when the bug you have equipped is Hickory himself */
+function learnIsSelf() { try { return typeof myBug === "function" && !!myBug().hick; } catch (e) { return false; } }
+var LRN_ACR_SELF = ["I taught me that.", "Still workin' on it, me and me.", "Better. We have been practising.", "Now I am just showing off to myself.", "Neither of us knows what that means."];
 
 /* what your bug says back when he recites the acronym */
 var LRN_ACR_REPLY = ["You have been working on that one.", "Still workshopping it, then.", "Better. Much better.", "Now you are just showing off.", "Nobody knows what that means."];
 function learnLines() {
-  var ph = learnPhase(), set = (LRN_BANTER[ph] || LRN_BANTER[0]).slice();
+  var ph = learnPhase(), me = learnIsSelf(), BK = me ? LRN_SELF : LRN_BANTER, set = (BK[ph] || BK[0]).slice();
   /* the acronym is an occasional treat, not his catchphrase: about one time in eight (owner, Oct 30 2026) */
-  if (Math.random() < 0.12 && LRN_LAST_LINE !== -2) { LRN_LAST_LINE = -2; return ["@ACR", LRN_ACR_REPLY[ph] || LRN_ACR_REPLY[0]]; }
+  if (Math.random() < 0.12 && LRN_LAST_LINE !== -2) { LRN_LAST_LINE = -2; var R = me ? LRN_ACR_SELF : LRN_ACR_REPLY; return ["@ACR", R[ph] || R[0]]; }
   var pick = Math.floor(Math.random() * set.length);
   if (set.length > 1 && pick === LRN_LAST_LINE) pick = (pick + 1 + Math.floor(Math.random() * (set.length - 1))) % set.length;
   LRN_LAST_LINE = pick;
@@ -22966,18 +23202,22 @@ function learnTile() {
 
 /* Hickory pipes up on his own: a little bubble pops off him, he says his piece,
    it goes away, and then your own bug answers back in its own bubble (owner, Oct 30 2026). */
-var LRN_SAID = 0, LRN_TMR = [], LRN_LAST_LINE = -1;
+var LRN_SAID = 0, LRN_TMR = [], LRN_HUB_TMR = 0, LRN_LAST_LINE = -1;
 function learnClearSay() {
   LRN_TMR.forEach(clearTimeout); LRN_TMR = [];
+  clearTimeout(LRN_HUB_TMR); LRN_HUB_TMR = 0;
   var old = document.querySelector(".hksay"); if (old && old.parentNode) old.parentNode.removeChild(old);
 }
 function learnChatter(force) {
   if (typeof gfxReduce === "function" && gfxReduce() && !force) return;
   var tab = document.querySelector(".lrntab"); if (!tab) return;
   var now = Date.now();
-  if (!force && now - LRN_SAID < 45000) return;   /* he is chatty, not annoying */
+  if (!force && now - LRN_SAID < 18000) return;   /* he is chatty, not annoying */
+  /* The quiet roll comes BEFORE the clock is stamped. Stamping first meant a silent roll burned
+     the whole cooldown, so opening three bug menus in a row could produce nothing at all
+     (owner reported him not bantering, Nov 1 2026). */
+  if (!force && Math.random() < 0.22) return;     /* he still just stands there sometimes */
   LRN_SAID = now;
-  if (!force && Math.random() < 0.45) return;     /* and often he just stands there (owner, Oct 30 2026) */
   learnClearSay();
   var li = learnLines(), host = tab.querySelector(".lrnic") || tab;
   var say = document.createElement("span");
@@ -22986,12 +23226,13 @@ function learnChatter(force) {
   say.innerHTML = li[0] === "@ACR" ? learnStars(LRN_ACRONYM[learnPhase()] || LRN_ACRONYM[0]) : esc(li[0]);
   host.appendChild(say);
   LRN_TMR.push(setTimeout(function () { say.classList.add("on"); }, 30));
-  LRN_TMR.push(setTimeout(function () { say.classList.remove("on"); }, 3400));
-  LRN_TMR.push(setTimeout(function () { if (say.parentNode) say.parentNode.removeChild(say); }, 3900));
-  /* your bug answers in its own bubble, the way it does when you tap it */
+  LRN_TMR.push(setTimeout(function () { say.classList.remove("on"); }, 4600));
+  LRN_TMR.push(setTimeout(function () { if (say.parentNode) say.parentNode.removeChild(say); }, 5100));
+  /* Your bug answers while Hickory's bubble is still up, so the two read as one exchange rather
+     than two unrelated pop-ups. The reply used to land after his line had already gone. */
   LRN_TMR.push(setTimeout(function () {
-    if (typeof buddySet === "function" && typeof buddyOn === "function" && buddyOn()) buddySet("think", li[1], 3200);
-  }, 3500));
+    if (typeof buddySet === "function" && typeof buddyOn === "function" && buddyOn()) buddySet("think", li[1], 3600);
+  }, 1900));
 }
 /* he speaks up shortly after a hub comes into view */
 if (typeof render === "function") (function () {
@@ -22999,7 +23240,7 @@ if (typeof render === "function") (function () {
   render = function () {
     var v = r.apply(this, arguments);
     try {
-      if (S.tab === "hub" && document.querySelector(".lrntab")) { clearTimeout(LRN_TMR.hub); LRN_TMR.hub = setTimeout(function () { learnChatter(); }, 900); }
+      if (S.tab === "hub" && document.querySelector(".lrntab")) { clearTimeout(LRN_HUB_TMR); LRN_HUB_TMR = setTimeout(function () { learnChatter(); }, 900); }
       else learnClearSay();
     } catch (e) {}
     return v;
@@ -23271,6 +23512,739 @@ document.addEventListener("input", function (e) {
     var f = document.getElementById("fmq");
     if (f) { f.focus(); try { f.setSelectionRange(p, p); } catch (x) {} }
   }, 220);
+});
+
+/* ===== Anatomy: every organ and body part, with a card on what it is and what it does =====
+   (owner, Nov 1 2026). Available in every bug's menu, not just Med School. The body figure is
+   the same silhouette the Body Systems tab uses, so the two read as one place.
+
+   Data: DB.ANAT (data/anat*.js), 124 cards. Each tap plays a silly noise picked by the card's
+   `snd` field, because the owner asked for the stomach to groan and the arms to creak. */
+
+var ANAT_AREAS = ["Head", "Neck", "Chest", "Abdomen", "Pelvis", "Limbs", "Whole body"];
+var ANAT_BY = null, ANAT_GRP = null;
+
+function anatAll() { return (typeof DB !== "undefined" && DB.ANAT) || []; }
+function anatIndex() {
+  var L = anatAll();
+  if (ANAT_BY && ANAT_BY.__n === L.length) return ANAT_BY;
+  ANAT_BY = { __n: L.length }; ANAT_GRP = [];
+  var seen = {};
+  L.forEach(function (x) {
+    ANAT_BY[x.id] = x;
+    if (!seen[x.grp]) { seen[x.grp] = 1; ANAT_GRP.push(x.grp); }
+  });
+  return ANAT_BY;
+}
+function anatOf(id) { anatIndex(); return ANAT_BY[id] || null; }
+function anatGroups() { anatIndex(); return ANAT_GRP; }
+
+/* ---------- the noises ----------
+   Each is a few oscillators and a shaped noise burst, built on the same throwaway context the
+   rest of the sound effects use, so Settings > Sound effects turns them off with everything else. */
+var ANAT_SFX = {
+  groan:  "a long wet complaint",
+  gurgle: "liquid burbling",
+  creak:  "a rusty hinge",
+  squish: "a soft wet squeeze",
+  thump:  "lub-dub",
+  whoosh: "rushing air",
+  zap:    "an electric crackle",
+  drip:   "a slow drip",
+  bubble: "fizzing",
+  boing:  "a springy twang",
+  rustle: "dry and papery",
+  ding:   "a bright chime",
+  wobble: "a jiggle",
+  hum:    "a low drone",
+  slosh:  "liquid moving",
+  pop:    "a small pop"
+};
+var ASF = { ctx: null };
+function anatCtx() {
+  var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
+  if (!ASF.ctx) ASF.ctx = new AC();
+  if (ASF.ctx.state === "suspended") { try { ASF.ctx.resume(); } catch (e) {} }
+  return ASF.ctx;
+}
+function anatSnd(kind) {
+  if (typeof SET !== "function" || !SET().sfx) return;
+  if (!ANAT_SFX[kind]) kind = "pop";
+  try {
+    var c = anatCtx(); if (!c) return;
+    var t = c.currentTime, out = c.destination;
+    /* one oscillator with an optional slide and vibrato */
+    function tone(type, f0, f1, at, dur, v, vib, vibd) {
+      var o = c.createOscillator(), g = c.createGain();
+      o.type = type; o.frequency.setValueAtTime(f0, t + at);
+      if (f1 && f1 !== f0) o.frequency.exponentialRampToValueAtTime(Math.max(1, f1), t + at + dur * 0.95);
+      g.gain.setValueAtTime(0.0001, t + at);
+      g.gain.exponentialRampToValueAtTime(v || 0.12, t + at + Math.min(0.05, dur * 0.25));
+      g.gain.exponentialRampToValueAtTime(0.0001, t + at + dur);
+      o.connect(g); g.connect(out); o.start(t + at); o.stop(t + at + dur + 0.03);
+      if (vib) { var l = c.createOscillator(), lg = c.createGain(); l.frequency.value = vib; lg.gain.value = vibd || 12; l.connect(lg); lg.connect(o.frequency); l.start(t + at); l.stop(t + at + dur + 0.03); }
+      return o;
+    }
+    /* a filtered noise burst: type picks the filter, f the corner, f2 a sweep */
+    function nz(at, dur, v, type, f, f2, q) {
+      var n = Math.max(1, Math.floor(c.sampleRate * dur)), b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0), i;
+      for (i = 0; i < n; i++) { var u = i / n; d[i] = (Math.random() * 2 - 1) * Math.pow(1 - u, 0.8); }
+      var s = c.createBufferSource(), fl = c.createBiquadFilter(), g = c.createGain();
+      s.buffer = b; fl.type = type || "lowpass"; fl.frequency.setValueAtTime(f || 900, t + at);
+      if (f2) fl.frequency.exponentialRampToValueAtTime(Math.max(40, f2), t + at + dur);
+      fl.Q.value = q || 1; g.gain.value = v || 0.2;
+      s.connect(fl); fl.connect(g); g.connect(out); s.start(t + at);
+    }
+    var i;
+    if (kind === "groan") {           /* a long descending moan with a wet rumble under it */
+      tone("sawtooth", 150, 72, 0, 0.72, 0.08, 6.5, 16);
+      tone("sine", 74, 46, 0.03, 0.66, 0.1, 4, 8);
+      nz(0.05, 0.6, 0.07, "lowpass", 420, 180);
+      for (i = 0; i < 4; i++) tone("sine", 220 + Math.random() * 200, 90, 0.18 + i * 0.12, 0.1, 0.03);
+    } else if (kind === "gurgle") {   /* a handful of rising bloops */
+      for (i = 0; i < 7; i++) tone("sine", 200 + Math.random() * 260, 520 + Math.random() * 400, i * 0.062, 0.09, 0.07);
+      nz(0, 0.45, 0.05, "bandpass", 900, 500, 3);
+    } else if (kind === "creak") {    /* a rusty hinge: a stuttering, slowly rising squeal */
+      var o = c.createOscillator(), g = c.createGain(), fq = o.frequency;
+      o.type = "sawtooth"; fq.setValueAtTime(320, t);
+      for (i = 0; i < 14; i++) fq.linearRampToValueAtTime(330 + i * 26 + (i % 2 ? 50 : -30), t + 0.05 + i * 0.045);
+      g.gain.setValueAtTime(0.0001, t);
+      for (i = 0; i < 14; i++) g.gain.linearRampToValueAtTime(i % 2 ? 0.055 : 0.014, t + 0.05 + i * 0.045);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.78);
+      var bp = c.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 1500; bp.Q.value = 3.5;
+      o.connect(bp); bp.connect(g); g.connect(out); o.start(t); o.stop(t + 0.82);
+      nz(0, 0.7, 0.03, "bandpass", 2600, 1500, 5);
+    } else if (kind === "squish") {   /* squeeze in, squelch out */
+      nz(0, 0.16, 0.26, "lowpass", 1400, 300);
+      tone("sine", 420, 110, 0, 0.17, 0.08);
+      nz(0.2, 0.2, 0.2, "lowpass", 700, 1800);
+      tone("sine", 130, 330, 0.2, 0.18, 0.06);
+    } else if (kind === "thump") {    /* lub-dub */
+      tone("sine", 92, 40, 0, 0.17, 0.3); nz(0, 0.08, 0.1, "lowpass", 260);
+      tone("sine", 76, 34, 0.26, 0.22, 0.24); nz(0.26, 0.1, 0.08, "lowpass", 220);
+    } else if (kind === "whoosh") {   /* in through the nose, out through the mouth */
+      nz(0, 0.42, 0.17, "bandpass", 600, 2600, 0.7);
+      nz(0.46, 0.5, 0.15, "bandpass", 2400, 500, 0.7);
+    } else if (kind === "zap") {      /* crackling static with a couple of bright snaps */
+      for (i = 0; i < 16; i++) nz(Math.random() * 0.4, 0.02, 0.1 + Math.random() * 0.14, "highpass", 2800 + Math.random() * 3000);
+      tone("square", 1900, 420, 0, 0.1, 0.05);
+      tone("sawtooth", 3200, 900, 0.14, 0.08, 0.035);
+    } else if (kind === "drip") {     /* three drops into a tin bucket */
+      [0, 0.26, 0.52].forEach(function (d, k) {
+        tone("sine", 900 - k * 60, 1900 - k * 90, d, 0.07, 0.11);
+        nz(d, 0.05, 0.06, "highpass", 3200);
+        tone("sine", 420 - k * 30, 300, d + 0.05, 0.12, 0.03);
+      });
+    } else if (kind === "bubble") {   /* a fizzy rising shimmer */
+      for (i = 0; i < 20; i++) tone("sine", 700 + Math.random() * 1800, 2200 + Math.random() * 1600, Math.random() * 0.5, 0.05, 0.035);
+      nz(0, 0.6, 0.05, "highpass", 2600);
+    } else if (kind === "boing") {    /* a springy twang */
+      tone("triangle", 620, 150, 0, 0.5, 0.14, 15, 110);
+      tone("sine", 310, 90, 0.02, 0.45, 0.07, 15, 60);
+      nz(0, 0.05, 0.12, "bandpass", 1800, 0, 2);
+    } else if (kind === "rustle") {   /* dry paper */
+      for (i = 0; i < 9; i++) nz(i * 0.05 + Math.random() * 0.02, 0.07, 0.07 + Math.random() * 0.05, "highpass", 3400 + Math.random() * 2600);
+    } else if (kind === "ding") {     /* a small bright bell */
+      tone("sine", 1760, 1760, 0, 0.9, 0.11);
+      tone("sine", 1760 * 2.76, 1760 * 2.76, 0, 0.35, 0.035);
+      tone("sine", 2637, 2637, 0.09, 0.5, 0.045);
+    } else if (kind === "wobble") {   /* jelly */
+      tone("sine", 260, 150, 0, 0.6, 0.14, 11, 70);
+      tone("triangle", 130, 84, 0.02, 0.55, 0.07, 11, 36);
+    } else if (kind === "hum") {      /* a steady low drone with a slow beat in it */
+      tone("sine", 98, 98, 0, 0.85, 0.1, 3.2, 3);
+      tone("sine", 196, 196, 0, 0.8, 0.035, 3.2, 5);
+      tone("triangle", 49, 49, 0, 0.9, 0.05);
+    } else if (kind === "slosh") {    /* liquid rolling side to side */
+      nz(0, 0.3, 0.14, "bandpass", 500, 1500, 1.2);
+      nz(0.3, 0.34, 0.13, "bandpass", 1500, 400, 1.2);
+      for (i = 0; i < 5; i++) tone("sine", 180 + Math.random() * 180, 110, 0.1 + i * 0.11, 0.1, 0.045);
+    } else {                          /* pop */
+      tone("sine", 480, 1300, 0, 0.08, 0.17);
+      nz(0, 0.04, 0.1, "highpass", 2200);
+    }
+  } catch (e) {}
+}
+
+/* ---------- the view ---------- */
+function anatMatch(x, q) {
+  return (x.name + " " + (x.also || "") + " " + x.grp + " " + x.area + " " + x.what).toLowerCase().indexOf(q) >= 0;
+}
+function anatChip(x, cur) {
+  return '<button class="chip anchip" data-anid="' + esc(x.id) + '" aria-pressed="' + (cur === x.id) + '">' + esc(x.name) + '</button>';
+}
+function anatCard(x) {
+  var c = '<section class="sickcard anatcard"><span class="eyebrow">' + esc(x.area) + ' &middot; ' + esc(x.grp) + '</span>' +
+    '<h2>' + esc(x.name) + '</h2>' +
+    (x.also ? '<p class="muted small anatalso">Also called: ' + esc(x.also) + '</p>' : '') +
+    '<p class="anatwhat">' + esc(x.what) + '</p>' +
+    '<h3>What it does</h3><p>' + esc(x.does) + '</p>';
+  if (x.facts && x.facts.length) c += '<h3>Worth knowing</h3><ul>' + x.facts.map(function (f) { return '<li>' + esc(f) + '</li>'; }).join("") + '</ul>';
+  if (x.fail) c += '<h3>When it is not working</h3><p class="anatfail">' + esc(x.fail) + '</p>';
+  /* the Body Systems entry for the same region, when there is one, so the drugs are a tap away */
+  var bod = anatBody(x);
+  if (bod) c += '<p class="anatbody"><button class="linkish" data-anbody="' + esc(bod.id) + '">Medicines that act on the ' + esc(bod.name.toLowerCase()) + ' &rarr;</button></p>';
+  var see = (x.see || []).map(function (s) { return anatOf(s); }).filter(Boolean);
+  if (see.length) c += '<h3>Nearby</h3><div class="chips">' + see.map(function (s) { return anatChip(s, ""); }).join("") + '</div>';
+  return c + '</section>';
+}
+/* map an anatomy card onto a Body Systems region by keyword, so the two tabs link up */
+var ANAT_BODYMAP = [
+  [/^brain-|^cranial-nerves|^peripheral-nerve|^neuron|^myelin|nervous-system/, "brain-nerves"],
+  [/^eye-/, "eyes"], [/^ear-|^nose-|tonsils/, "ears-nose-throat"],
+  [/^heart-|^aorta|^vena-cava|^pulmonary-(arteries|vessels)|coronary|sinoatrial|atrioventricular|purkinje|pericardium/, "heart"],
+  [/^arteries|^veins|^capillaries|carotid/, "blood-vessels-bp"],
+  [/alveoli|bronch|trachea|larynx|pharynx|pleura|diaphragm|^nose-nasal/, "airway-lungs"],
+  [/^liver/, "liver"], [/stomach|esophagus|duoden|jejunum|ileum|colon|rectum|appendix|peritoneum|mouth|tongue|salivary|gallbladder|pancreas-exocrine/, "stomach-intestines"],
+  [/islets|pancreatic-islets/, "pancreas-blood-sugar"],
+  [/^kidney|nephron|glomerulus|ureter|bladder|urethra/, "kidneys-bladder"],
+  [/adrenal/, "adrenal-stress"], [/pituitary|pineal|thyroid|parathyroid|thymus/, "thyroid-hormones"],
+  [/ovaries|testes|placenta|uterus/, "reproductive-pregnancy"],
+  [/^bone-|^joint-|^cartilage/, "bones-joints"],
+  [/^muscle-|^tendons|^ligaments|neuromuscular/, "muscles-nerve-junction"],
+  [/^skin-/, "skin"],
+  [/^blood-(red|white|platelets|plasma)|clotting|marrow/, "blood-clotting"],
+  [/spleen|lymph/, "immune-infection"]
+];
+function anatBody(x) {
+  if (typeof DB === "undefined" || !DB.BODY) return null;
+  for (var i = 0; i < ANAT_BODYMAP.length; i++) if (ANAT_BODYMAP[i][0].test(x.id)) {
+    var id = ANAT_BODYMAP[i][1];
+    for (var j = 0; j < DB.BODY.length; j++) if (DB.BODY[j].id === id) return DB.BODY[j];
+  }
+  return null;
+}
+function anatView() {
+  var L = anatAll();
+  if (!L.length) return '<p class="empty">The anatomy cards are still loading.</p>';
+  var area = S.anArea || "", grp = S.anGrp || "", q = String(S.anQ || "").trim().toLowerCase(), cur = S.anId || "";
+  var hits = L.filter(function (x) { return (!area || x.area === area) && (!grp || x.grp === grp) && (!q || anatMatch(x, q)); });
+
+  var c = '<p class="muted anatlead">Every organ and body part, with what it is and what it does. Tap the body, or pick a part below. Education only.</p>';
+  c += '<div class="tools"><input class="search" id="anq" type="search" autocomplete="off" placeholder="Search a part: alveoli, SA node, glomerulus, cochlea" aria-label="Search anatomy" value="' + esc(S.anQ || "") + '"></div>';
+
+  /* body figure + area chips, reusing the Body Systems silhouette */
+  c += '<div class="bodywrap anatwrap"><div class="bodyfig">' + (typeof bodySVG === "function" ? bodySVG(area) : "") +
+    ANAT_AREAS.filter(function (a) { return a === "Whole body"; }).map(function (a) {
+      return '<button class="chip' + (area === a ? '" aria-pressed="true' : '') + '" data-anarea="' + a + '">' + a + '</button>';
+    }).join("") +
+    (area || grp || q ? '<button class="linkish" data-anarea="">Show all</button>' : '') + '</div>';
+
+  c += '<div class="bodylist"><p class="muted small">' + hits.length + ' part' + (hits.length === 1 ? '' : 's') +
+    (area ? ' in the ' + esc(area.toLowerCase()) : '') + (grp ? ' under ' + esc(grp) : '') + '</p>';
+  /* group headings, each collapsible, with the parts inside */
+  var G = {}, order = [];
+  hits.forEach(function (x) { if (!G[x.grp]) { G[x.grp] = []; order.push(x.grp); } G[x.grp].push(x); });
+  if (!hits.length) c += '<p class="empty">Nothing matches that yet.</p>';
+  order.forEach(function (g) {
+    c += '<div class="anatgrp"><h3 class="anath">' + esc(g) + '<span class="qacount">' + G[g].length + '</span></h3><div class="chips">' +
+      G[g].map(function (x) { return anatChip(x, cur); }).join("") + '</div></div>';
+  });
+  c += '</div></div>';
+
+  var x = cur ? anatOf(cur) : null;
+  if (x) c += anatCard(x);
+  return c;
+}
+/* taps: an area on the figure, a part chip, or the link across to Body Systems */
+document.addEventListener("click", function (e) {
+  var t = e.target.closest && e.target.closest("[data-anarea],[data-anid],[data-anbody]"); if (!t) return;
+  var d = t.dataset;
+  if (d.anbody) { S.tab = "body"; S.barea = ""; S.breg = d.anbody; render(); var b1 = document.querySelector(".sickcard"); if (b1) b1.scrollIntoView({ block: "start", behavior: SET().motion ? "auto" : "smooth" }); return; }
+  if (d.anarea != null) { S.anArea = d.anarea; S.anGrp = ""; S.anId = ""; render(); return window.scrollTo(0, 0); }
+  if (d.anid) {
+    var x = anatOf(d.anid); if (!x) return;
+    S.anId = d.anid; try { anatSnd(x.snd); } catch (e2) {}
+    render();
+    var card = document.querySelector(".anatcard"); if (card) card.scrollIntoView({ block: "start", behavior: SET().motion ? "auto" : "smooth" });
+  }
+});
+/* the Body Systems figure uses data-barea; inside the Anatomy tab those taps filter anatomy instead */
+document.addEventListener("click", function (e) {
+  if (S.tab !== "anatomy") return;
+  var t = e.target.closest && e.target.closest(".anatwrap [data-barea]"); if (!t) return;
+  e.stopPropagation(); S.anArea = t.getAttribute("data-barea") || ""; S.anGrp = ""; S.anId = ""; render(); window.scrollTo(0, 0);
+}, true);
+document.addEventListener("input", function (e) {
+  if (!e.target || e.target.id !== "anq") return;
+  S.anQ = e.target.value; clearTimeout(S.anQT);
+  S.anQT = setTimeout(function () {
+    var p = 0; try { p = e.target.selectionStart; } catch (x) {}
+    render();
+    var f = document.getElementById("anq"); if (f) { f.focus(); try { f.setSelectionRange(p, p); } catch (x) {} }
+  }, 200);
+});
+
+/* ===== Level transitions: every bug gets its own way in (owner, Nov 1 2026) =====
+   The Flight Paramedic blast-off and the Combat Paramedic smoke bomb (modules/eyes.js) were the
+   first two. This adds one for every other level, so opening a tier always feels like stepping
+   into that job rather than swapping a page.
+
+   Shape of every transition, matching gfxBlastOff:
+     0 ms    the layer goes up over the page, the sound starts
+     ~290 ms done() is called: the new level renders behind the cover, at its thickest
+     ~430 ms the layer starts clearing
+     ~760 ms the layer is removed
+   Each one is skipped whole when reduced motion is on, and the level still opens either way -
+   app.js runs done() on a 900 ms failsafe so an animation can never swallow a tap. */
+
+var TRX = {
+  emt:       { cls: "tx-siren",  snd: "txsiren"  },  /* the box rolls out hot */
+  aemt:      { cls: "tx-iv",     snd: "txiv"     },  /* first IV, first flash of blood */
+  paramedic: { cls: "tx-shock",  snd: "txshock"  },  /* charge, clear, shock */
+  asm:       { cls: "tx-tq",     snd: "txtq"     },  /* windlass bites down */
+  cls:       { cls: "tx-seal",   snd: "txseal"   },  /* chest seal slaps on */
+  cmc:       { cls: "tx-io",     snd: "txio"     },  /* IO driver, then blood */
+  cna:       { cls: "tx-cuff",   snd: "txcuff"   },  /* cuff inflates, then the release hiss */
+  lvn:       { cls: "tx-pills",  snd: "txpills"  },  /* the med pass */
+  rn:        { cls: "tx-drip",   snd: "txdrip"   },  /* the drip chamber */
+  ms1:       { cls: "tx-atlas",  snd: "txatlas"  },  /* a page of the atlas turns */
+  ms3:       { cls: "tx-light",  snd: "txlight"  },  /* penlight sweep on the wards */
+  intern:    { cls: "tx-pager",  snd: "txpager"  },  /* the pager goes off */
+  rt:        { cls: "tx-xray",   snd: "txxray"   },  /* the exposure */
+  ct:        { cls: "tx-gantry", snd: "txgantry" },  /* the gantry spins up */
+  mri:       { cls: "tx-magnet", snd: "txmagnet" },  /* into the bore, with the knocking */
+  nm:        { cls: "tx-tracer", snd: "txtracer" },  /* the tracer lights up */
+  ir:        { cls: "tx-fluoro", snd: "txfluoro" }   /* wire in under fluoro */
+};
+
+/* the inner markup for each one. r is the tapped card's rect, so most of them start at the tile. */
+function txArt(key, r) {
+  var bug = typeof gfxLevelBug === "function" ? gfxLevelBug(key) : "";
+  var at = 'style="left:' + r.cx + 'px;top:' + r.cy + 'px"';
+  switch (key) {
+    case "emt":  /* an ambulance races across behind a flashing light bar */
+      return '<span class="txbar"></span><span class="txamb"><span class="txlights"><i></i><i></i></span>' +
+        '<svg viewBox="0 0 160 70" aria-hidden="true"><rect x="2" y="18" width="96" height="36" rx="6" fill="#f8fafc"/><path d="M98 26 h26 l24 18 v10 h-50z" fill="#f1f5f9"/><rect x="104" y="29" width="18" height="13" rx="3" fill="#93c5fd"/><rect x="2" y="40" width="146" height="7" fill="#f97316"/><circle cx="30" cy="56" r="10" fill="#1c1917"/><circle cx="30" cy="56" r="4" fill="#64748b"/><circle cx="116" cy="56" r="10" fill="#1c1917"/><circle cx="116" cy="56" r="4" fill="#64748b"/><rect x="36" y="22" width="28" height="9" rx="3" fill="#dc2626"/><path d="M48 24v5M45.5 26.5h5" stroke="#fff" stroke-width="2"/></svg></span>' +
+        '<span class="txbug" ' + at + '>' + bug + '</span>';
+    case "aemt": /* a syringe drives in from the right and the field floods */
+      return '<span class="txflood"></span><span class="txsyr"><svg viewBox="0 0 200 48" aria-hidden="true"><rect x="40" y="14" width="110" height="20" rx="3" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/><rect x="44" y="17" width="74" height="14" fill="#67e8f9" opacity=".75"/><rect x="138" y="8" width="10" height="32" rx="2" fill="#cbd5e1"/><rect x="148" y="18" width="34" height="12" rx="3" fill="#94a3b8"/><path d="M40 24 H4" stroke="#cbd5e1" stroke-width="3"/><path d="M6 24 l8 -3 v6z" fill="#94a3b8"/></svg></span>' +
+        '<span class="txdrop"></span><span class="txbug" ' + at + '>' + bug + '</span>';
+    case "paramedic": /* charge, then the flash and the ECG jolt */
+      return '<span class="txcharge"></span><span class="txflash"></span>' +
+        '<svg class="txecg" viewBox="0 0 600 120" preserveAspectRatio="none" aria-hidden="true"><path d="M0 60 H180 l14 -6 l10 48 l14 -92 l12 56 l10 -6 H600" fill="none" stroke="#4ade80" stroke-width="4" stroke-linejoin="round"/></svg>' +
+        '<span class="txpad txpadl"></span><span class="txpad txpadr"></span><span class="txbug" ' + at + '>' + bug + '</span>';
+    case "asm": /* the strap whips across and the windlass twists */
+      return '<span class="txstrap"></span><span class="txwind" ' + at + '><i></i></span><span class="txbug" ' + at + '>' + bug + '</span><span class="txdim"></span>';
+    case "cls": /* a vented chest seal slaps down over the screen */
+      return '<span class="txsealpad" ' + at + '><i></i><i></i><i></i></span><span class="txdim"></span><span class="txbug" ' + at + '>' + bug + '</span>';
+    case "cmc": /* the driver goes in, then blood fills the field */
+      return '<span class="txdrill" ' + at + '><svg viewBox="0 0 60 90" aria-hidden="true"><rect x="16" y="2" width="28" height="40" rx="6" fill="#f59e0b"/><rect x="22" y="42" width="16" height="16" rx="3" fill="#475569"/><rect x="28" y="58" width="4" height="26" fill="#cbd5e1"/></svg></span>' +
+        '<span class="txblood"></span><span class="txbug" ' + at + '>' + bug + '</span>';
+    case "cna": /* a cuff inflates around the screen and lets go */
+      return '<span class="txcuff"></span><span class="txgauge" ' + at + '><i></i></span><span class="txbug" ' + at + '>' + bug + '</span>';
+    case "lvn": /* pills rain into a med cup */
+      return '<span class="txpill-rain">' + (function () { var s = "", i; for (i = 0; i < 16; i++) s += '<i style="left:' + (5 + i * 6).toFixed(0) + '%;animation-delay:' + (i % 7 * 42) + 'ms;--h:' + ["#f87171", "#60a5fa", "#fbbf24", "#a78bfa", "#4ade80"][i % 5] + '"></i>'; return s; })() + '</span>' +
+        '<span class="txcup" ' + at + '></span><span class="txbug" ' + at + '>' + bug + '</span>';
+    case "rn": /* the drip chamber, then the line fills the screen */
+      return '<span class="txchamber" ' + at + '><i></i><i></i><i></i></span><span class="txfill"></span><span class="txbug" ' + at + '>' + bug + '</span>';
+    case "ms1": /* a page of the atlas turns over the screen */
+      return '<span class="txpage"></span><span class="txpage txpage2"></span><span class="txbug" ' + at + '>' + bug + '</span>';
+    case "ms3": /* a penlight sweeps the room */
+      return '<span class="txdark"></span><span class="txbeam"></span><span class="txbug" ' + at + '>' + bug + '</span>';
+    case "intern": /* the pager goes off */
+      return '<span class="txdim"></span><span class="txpager" ' + at + '><em>CODE BLUE</em><span>4 WEST &middot; RM 412</span></span><span class="txbug" ' + at + '>' + bug + '</span>';
+    case "rt": /* the exposure: a white flash leaving a negative */
+      return '<span class="txneg"></span><span class="txflash txflashw"></span><span class="txbug" ' + at + '>' + bug + '</span>';
+    case "ct": /* the gantry ring spins up and closes in */
+      return '<span class="txring"></span><span class="txring txring2"></span><span class="txdim"></span><span class="txbug" ' + at + '>' + bug + '</span>';
+    case "mri": /* into the bore, with the knocking */
+      return '<span class="txbore"><i></i><i></i></span><span class="txbug" ' + at + '>' + bug + '</span>';
+    case "nm": /* the tracer lights up from the inside out */
+      return '<span class="txglow" ' + at + '></span><span class="txglow txglow2" ' + at + '></span><span class="txcount"></span><span class="txbug" ' + at + '>' + bug + '</span>';
+    case "ir": /* a guidewire snakes across under fluoro */
+      return '<span class="txfluorobg"></span><svg class="txwire" viewBox="0 0 600 200" preserveAspectRatio="none" aria-hidden="true"><path d="M-10 170 C120 150 160 60 290 80 C420 100 460 30 610 40" fill="none" stroke="#f8fafc" stroke-width="3" stroke-linecap="round"/></svg><span class="txbug" ' + at + '>' + bug + '</span>';
+  }
+  return '<span class="txdim"></span><span class="txbug" ' + at + '>' + bug + '</span>';
+}
+
+function gfxLevelTrans(key, from, done) {
+  var T = TRX[key];
+  if (!T || (typeof gfxReduce === "function" && gfxReduce())) return done();
+  var r = typeof gfxRect === "function" ? gfxRect(from) : null;
+  if (!r) return done();
+  var w = document.createElement("div");
+  w.className = "lvtrans " + T.cls;
+  w.setAttribute("aria-hidden", "true");
+  w.innerHTML = txArt(key, r);
+  document.body.appendChild(w);
+  try { txSnd(T.snd); } catch (e) {}
+  setTimeout(function () { done(); }, 290);
+  setTimeout(function () { w.classList.add("txout"); }, 430);
+  setTimeout(function () { if (w.parentNode) w.parentNode.removeChild(w); }, 780);
+}
+
+/* ---------- the sounds ----------
+   Built live, on the same throwaway context the rest of the effects use, so Settings >
+   Sound effects turns them off with everything else. */
+var TXS = { ctx: null };
+function txSnd(kind) {
+  if (typeof SET !== "function" || !SET().sfx) return;
+  try {
+    var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+    var c = TXS.ctx || (TXS.ctx = new AC());
+    if (c.state === "suspended") { try { c.resume(); } catch (e) {} }
+    var t = c.currentTime, out = c.destination, i;
+    function tone(type, f0, f1, at, dur, v, vib, vibd) {
+      var o = c.createOscillator(), g = c.createGain();
+      o.type = type; o.frequency.setValueAtTime(f0, t + at);
+      if (f1 && f1 !== f0) o.frequency.exponentialRampToValueAtTime(Math.max(1, f1), t + at + dur * 0.95);
+      g.gain.setValueAtTime(0.0001, t + at);
+      g.gain.exponentialRampToValueAtTime(v || 0.12, t + at + Math.min(0.04, dur * 0.3));
+      g.gain.exponentialRampToValueAtTime(0.0001, t + at + dur);
+      o.connect(g); g.connect(out); o.start(t + at); o.stop(t + at + dur + 0.03);
+      if (vib) { var l = c.createOscillator(), lg = c.createGain(); l.frequency.value = vib; lg.gain.value = vibd || 10; l.connect(lg); lg.connect(o.frequency); l.start(t + at); l.stop(t + at + dur + 0.03); }
+      return o;
+    }
+    function nz(at, dur, v, type, f, f2, q) {
+      var n = Math.max(1, Math.floor(c.sampleRate * dur)), b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0), k;
+      for (k = 0; k < n; k++) d[k] = (Math.random() * 2 - 1) * Math.pow(1 - k / n, 0.7);
+      var s = c.createBufferSource(), fl = c.createBiquadFilter(), g = c.createGain();
+      s.buffer = b; fl.type = type || "lowpass"; fl.frequency.setValueAtTime(f || 900, t + at);
+      if (f2) fl.frequency.exponentialRampToValueAtTime(Math.max(40, f2), t + at + dur);
+      fl.Q.value = q || 1; g.gain.value = v || 0.2;
+      s.connect(fl); fl.connect(g); g.connect(out); s.start(t + at);
+    }
+    /* a swept square wave, which is what every siren really is */
+    function wail(pts, v, at, dur) {
+      var o = c.createOscillator(), f = c.createBiquadFilter(), g = c.createGain();
+      o.type = "square"; f.type = "lowpass"; f.frequency.value = 2200; f.Q.value = 0.7;
+      o.frequency.setValueAtTime(pts[0][1], t + at);
+      pts.forEach(function (p) { o.frequency.linearRampToValueAtTime(p[1], t + at + p[0]); });
+      g.gain.setValueAtTime(0.0001, t + at); g.gain.exponentialRampToValueAtTime(v, t + at + 0.03);
+      g.gain.setValueAtTime(v, t + at + dur - 0.06); g.gain.exponentialRampToValueAtTime(0.0001, t + at + dur);
+      o.connect(f); f.connect(g); g.connect(out); o.start(t + at); o.stop(t + at + dur + 0.03);
+    }
+    if (kind === "txsiren") {            /* two quick yelps, an air-horn blat and tyres */
+      wail([[0, 700], [0.09, 1500], [0.18, 700], [0.27, 1500], [0.36, 700], [0.45, 1500], [0.54, 700]], 0.05, 0, 0.56);
+      tone("sawtooth", 260, 300, 0.1, 0.22, 0.05, 24, 26);
+      nz(0, 0.6, 0.05, "lowpass", 700, 1600);
+    } else if (kind === "txiv") {        /* the cap snaps, the catheter slides, the flash */
+      tone("square", 900, 300, 0, 0.04, 0.12);
+      nz(0.06, 0.2, 0.1, "bandpass", 2400, 900, 2);
+      tone("sine", 300, 1100, 0.2, 0.14, 0.09);
+      for (i = 0; i < 3; i++) tone("sine", 700 + i * 160, 1400, 0.3 + i * 0.05, 0.07, 0.05);
+    } else if (kind === "txshock") {     /* the capacitor whine, then the thump of the shock */
+      tone("sawtooth", 420, 2400, 0, 0.3, 0.035);
+      tone("sine", 840, 4800, 0, 0.3, 0.018);
+      tone("square", 1200, 1200, 0.3, 0.05, 0.09);     /* ready tone */
+      nz(0.34, 0.1, 0.4, "lowpass", 1800, 200);        /* the discharge */
+      tone("sine", 120, 42, 0.34, 0.26, 0.3);
+      tone("sine", 1000, 1000, 0.5, 0.5, 0.03);        /* the monitor again */
+    } else if (kind === "txtq") {        /* webbing pulled tight, then the windlass ratchets */
+      nz(0, 0.22, 0.2, "bandpass", 2800, 1200, 1.6);
+      for (i = 0; i < 6; i++) { tone("square", 240 - i * 10, 160, 0.24 + i * 0.055, 0.03, 0.08); nz(0.24 + i * 0.055, 0.03, 0.12, "highpass", 2600); }
+      tone("sine", 90, 60, 0.56, 0.18, 0.1);
+    } else if (kind === "txseal") {      /* the wrapper tears, the seal slaps on, air vents */
+      nz(0, 0.24, 0.16, "highpass", 4200);
+      nz(0.26, 0.07, 0.42, "lowpass", 900, 300);
+      tone("sine", 220, 70, 0.26, 0.12, 0.14);
+      nz(0.38, 0.3, 0.07, "bandpass", 1600, 3000, 2.5);
+    } else if (kind === "txio") {        /* the driver spins up and bites, then the flush */
+      tone("sawtooth", 160, 340, 0, 0.1, 0.05, 40, 30);
+      var o2 = c.createOscillator(), g2 = c.createGain(), f2 = c.createBiquadFilter();
+      o2.type = "sawtooth"; o2.frequency.setValueAtTime(340, t + 0.1); o2.frequency.setValueAtTime(300, t + 0.36);
+      f2.type = "lowpass"; f2.frequency.value = 1400;
+      g2.gain.setValueAtTime(0.06, t + 0.1); g2.gain.setValueAtTime(0.06, t + 0.34); g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.44);
+      o2.connect(f2); f2.connect(g2); g2.connect(out); o2.start(t + 0.1); o2.stop(t + 0.46);
+      nz(0.1, 0.34, 0.1, "bandpass", 1800, 2600, 1.2);
+      nz(0.46, 0.3, 0.1, "lowpass", 700, 1500);
+    } else if (kind === "txcuff") {      /* the bulb pumps, then the valve lets go */
+      for (i = 0; i < 5; i++) nz(i * 0.085, 0.07, 0.17, "lowpass", 560 + i * 70, 260);
+      nz(0.46, 0.34, 0.14, "bandpass", 1500, 420, 1.4);
+      tone("sine", 1320, 1320, 0.56, 0.1, 0.045);
+    } else if (kind === "txpills") {     /* pills into a plastic cup, then the cup set down */
+      for (i = 0; i < 9; i++) { tone("sine", 1500 + Math.random() * 900, 700, 0.03 + i * 0.045, 0.045, 0.07); nz(0.03 + i * 0.045, 0.02, 0.05, "highpass", 4000); }
+      tone("sine", 420, 260, 0.5, 0.1, 0.07); nz(0.5, 0.05, 0.1, "lowpass", 1200);
+    } else if (kind === "txdrip") {      /* three drops in the chamber, then a pump beep */
+      [0, 0.17, 0.34].forEach(function (d, k) { tone("sine", 1000 - k * 50, 2000, d, 0.055, 0.1); nz(d, 0.03, 0.05, "highpass", 3600); });
+      tone("square", 1760, 1760, 0.5, 0.07, 0.05); tone("square", 1760, 1760, 0.62, 0.07, 0.05);
+    } else if (kind === "txatlas") {     /* the spine cracks and a page turns */
+      nz(0, 0.06, 0.16, "lowpass", 600);
+      nz(0.08, 0.34, 0.13, "highpass", 2600, 5200);
+      nz(0.44, 0.2, 0.09, "highpass", 3400, 1800);
+      tone("sine", 160, 110, 0.5, 0.12, 0.05);
+    } else if (kind === "txlight") {     /* the penlight clicks on, a soft sweep, clicks off */
+      tone("square", 2200, 900, 0, 0.025, 0.09);
+      nz(0.05, 0.42, 0.045, "bandpass", 900, 2600, 1.1);
+      tone("sine", 660, 880, 0.12, 0.3, 0.025);
+      tone("square", 1800, 700, 0.52, 0.025, 0.07);
+    } else if (kind === "txpager") {     /* the buzz, then two alert chirps */
+      var bo = c.createOscillator(), bg = c.createGain(), bl = c.createOscillator(), blg = c.createGain();
+      bo.type = "square"; bo.frequency.value = 150; bl.type = "square"; bl.frequency.value = 42; blg.gain.value = 0.5;
+      bl.connect(blg); blg.connect(bg.gain);
+      bg.gain.setValueAtTime(0.05, t); bg.gain.setValueAtTime(0.05, t + 0.36); bg.gain.exponentialRampToValueAtTime(0.0001, t + 0.44);
+      bo.connect(bg); bg.connect(out); bo.start(t); bl.start(t); bo.stop(t + 0.46); bl.stop(t + 0.46);
+      tone("square", 2093, 2093, 0.5, 0.09, 0.06); tone("square", 2637, 2637, 0.62, 0.11, 0.06);
+    } else if (kind === "txxray") {      /* the tube charges, the exposure buzzes, the beep */
+      tone("sawtooth", 180, 900, 0, 0.22, 0.03);
+      nz(0.22, 0.16, 0.2, "bandpass", 2200, 2200, 1.4);
+      tone("square", 1046, 1046, 0.22, 0.16, 0.055);
+      tone("sine", 1568, 1568, 0.44, 0.22, 0.05);
+    } else if (kind === "txgantry") {    /* the ring spins up, the table indexes, the ready tone */
+      var go = c.createOscillator(), gg = c.createGain(), gf = c.createBiquadFilter();
+      go.type = "sawtooth"; go.frequency.setValueAtTime(70, t); go.frequency.exponentialRampToValueAtTime(260, t + 0.42);
+      gf.type = "lowpass"; gf.frequency.setValueAtTime(400, t); gf.frequency.exponentialRampToValueAtTime(1800, t + 0.42);
+      gg.gain.setValueAtTime(0.0001, t); gg.gain.exponentialRampToValueAtTime(0.055, t + 0.1); gg.gain.setValueAtTime(0.055, t + 0.42); gg.gain.exponentialRampToValueAtTime(0.0001, t + 0.62);
+      go.connect(gf); gf.connect(gg); gg.connect(out); go.start(t); go.stop(t + 0.64);
+      nz(0.1, 0.5, 0.05, "bandpass", 1200, 2600, 1.2);
+      tone("sine", 880, 880, 0.5, 0.14, 0.05);
+    } else if (kind === "txmagnet") {    /* the bore hum, then the gradient knocking */
+      tone("sine", 55, 55, 0, 0.75, 0.09);
+      tone("sine", 110, 110, 0, 0.7, 0.035);
+      for (i = 0; i < 7; i++) { var d2 = 0.12 + i * 0.075; tone("square", 330, 300, d2, 0.045, 0.085); nz(d2, 0.04, 0.16, "bandpass", 700, 400, 1.8); }
+    } else if (kind === "txtracer") {    /* a wash of glow, then the counter ticking away */
+      tone("sine", 300, 1200, 0, 0.4, 0.03);
+      tone("triangle", 600, 2400, 0.04, 0.38, 0.018);
+      for (i = 0; i < 22; i++) nz(0.12 + Math.random() * 0.55, 0.012, 0.11, "highpass", 4200 + Math.random() * 2600);
+    } else if (kind === "txfluoro") {    /* the pedal clicks, the tube buzzes, the wire feeds */
+      tone("square", 620, 240, 0, 0.03, 0.08);
+      nz(0.04, 0.4, 0.07, "bandpass", 2400, 2400, 2.2);
+      tone("sine", 92, 92, 0.04, 0.4, 0.035, 60, 8);
+      nz(0.2, 0.34, 0.055, "highpass", 3200, 5400);
+      tone("sine", 1318, 1318, 0.52, 0.16, 0.045);
+    }
+  } catch (e) {}
+}
+
+/* ===== Drug borders: frames you buy with sticks (owner, Nov 1 2026) =====
+   Bought in the Terrarium like hats. You pick one and it frames every drug tile and every drug
+   page you open, so the thing you paid for is the thing you look at all day.
+
+   All of it is CSS: the active border puts a class on <html>, and the rules in index.html
+   decorate .tile and the drug sheet's .panel. Nothing here touches the monograph itself. */
+
+var BORDERS = [
+  { id: "none",      name: "No border",       price: 0,     rar: "starter",   blurb: "The plain card, the way it has always looked." },
+  { id: "hairline",  name: "Hairline",        price: 120,   rar: "common",    blurb: "One clean rule, a shade brighter than the card." },
+  { id: "tape",      name: "Medical Tape",    price: 240,   rar: "common",    blurb: "Cloth tape down both edges, exactly as crooked as the real thing." },
+  { id: "stitch",    name: "Sutured",         price: 320,   rar: "common",    blurb: "A running stitch around the card. Three-oh nylon, interrupted." },
+  { id: "notepad",   name: "Pocket Notebook", price: 380,   rar: "common",    blurb: "Ruled paper and a red margin, like the notes in your leg pocket." },
+  { id: "ecg",       name: "Rhythm Strip",    price: 900,   rar: "rare",      blurb: "A sinus rhythm running along the bottom edge." },
+  { id: "amber",     name: "Amber Vial",      price: 1100,  rar: "rare",      blurb: "Warm amber glass with a soft shoulder, like a pharmacy bottle." },
+  { id: "chrome",    name: "Brushed Chrome",  price: 1400,  rar: "rare",      blurb: "Scrub-sink steel. Brushed, cold and a little clinical." },
+  { id: "moss",      name: "Terrarium Moss",  price: 1600,  rar: "rare",      blurb: "A living green edge with the moss creeping over the corners." },
+  { id: "flight",    name: "Night Flight",    price: 3000,  rar: "epic",      blurb: "Instrument-panel green on black, with a slow sweep across the top." },
+  { id: "biohaz",    name: "Biohazard",       price: 3200,  rar: "epic",      blurb: "Hazard striping on the diagonal, the way the sharps bin is marked." },
+  { id: "circuit",   name: "Monitor Trace",   price: 3600,  rar: "epic",      blurb: "Thin traces that run the perimeter and pulse once a second." },
+  { id: "frost",     name: "Cold Chain",      price: 4000,  rar: "epic",      blurb: "Frosted glass with ice creeping in from the corners." },
+  { id: "gold",      name: "Gold Leaf",       price: 7200,  rar: "legendary", blurb: "Real gold leaf, laid on by hand, catching the light as you scroll." },
+  { id: "aurora",    name: "Aurora",          price: 8600,  rar: "legendary", blurb: "A slow band of colour that drifts around the card and never quite repeats." },
+  { id: "ember",     name: "Ember",           price: 9400,  rar: "legendary", blurb: "The edge glows like it has been in the fire, brightest at the corners." },
+  { id: "specimen",  name: "Specimen Case",   price: 11800, rar: "legendary", blurb: "Mounted under glass in a brass case, with a pin and a label, like something in a collection." }
+];
+var BORDERS_BY = {}; BORDERS.forEach(function (b) { BORDERS_BY[b.id] = b; });
+
+function myBorder() { var id = Prog.d.border || "none"; return ownsBorder(id) ? id : "none"; }
+function ownsBorder(id) { return id === "none" || (Prog.d.borders || []).indexOf(id) >= 0; }
+function borderById(id) { return BORDERS_BY[id] || BORDERS_BY.none; }
+function buyBorder(id) {
+  var b = borderById(id);
+  if (ownsBorder(id) || sticks() < b.price) return;
+  Prog.d.spent = (Prog.d.spent || 0) + b.price;
+  Prog.d.borders = (Prog.d.borders || []).concat([id]);
+  useBorder(id);
+  S.shopMsg = b.name + " is yours. Every drug page wears it now.";
+}
+function useBorder(id) {
+  if (!ownsBorder(id)) return;
+  Prog.d.border = id; saveProg(); borderSync();
+  S.shopMsg = id === "none" ? "Borders turned off." : borderById(id).name + " applied.";
+}
+/* the class lives on <html> so it covers the sheet, which sits outside the app element */
+function borderSync() {
+  try {
+    var r = document.documentElement, on = (typeof funOn !== "function" || funOn()) ? myBorder() : "none";
+    r.className = r.className.replace(/\bdbd-[a-z]+\b/g, "").trim();
+    if (on && on !== "none") r.classList.add("dbd-" + on);
+  } catch (e) {}
+}
+/* re-apply after every render, because Serious mode and a fresh sign-in can both change it */
+if (typeof render === "function") (function () { var r = render; render = function () { var v = r.apply(this, arguments); borderSync(); return v; }; })();
+
+function bordersView() {
+  var bal = sticks(), cur = myBorder();
+  var c = '<p class="muted">Borders frame every drug tile and every drug page you open. Buy one with sticks, then tap Use. Pick one at a time.</p>';
+  var TIERS = [["starter", "Free"], ["common", "Common"], ["rare", "Rare"], ["epic", "Epic"], ["legendary", "Legendary"]];
+  TIERS.forEach(function (tr) {
+    var L = BORDERS.filter(function (b) { return b.rar === tr[0]; });
+    if (!L.length) return;
+    var mine = L.filter(function (b) { return ownsBorder(b.id); }).length;
+    c += '<div class="tierhead r-' + tr[0] + '"><h3>' + esc(tr[1]) + '</h3><span class="tierown">' + mine + ' of ' + L.length + ' owned</span></div><div class="shopgrid bdgrid">' +
+      L.map(function (b) {
+        var own = ownsBorder(b.id), on = cur === b.id, can = bal >= b.price;
+        var act = on ? '<span class="eqd">In use</span>' :
+          own ? '<button class="btn small" data-border="' + b.id + '">Use</button>' :
+          '<button class="btn small' + (can ? '' : ' ghost') + '" data-borderbuy="' + b.id + '"' + (can ? '' : ' disabled') + '>' + (can ? 'Buy' : 'Need ' + (b.price - bal).toLocaleString() + ' more') + '</button>';
+        /* the swatch is a real tile wearing the border, so what you see is what you get */
+        return '<div class="bugcard bdcard r-' + b.rar + (on ? " eq" : "") + '">' +
+          '<div class="bdprev dbd-' + b.id + '"><span class="tile bdt" aria-hidden="true"><span class="nm">Amiodarone</span><span class="cl">Antiarrhythmic</span></span></div>' +
+          '<strong>' + esc(b.name) + '</strong><span class="rar">' + (typeof RARITY !== "undefined" && RARITY[b.rar] ? RARITY[b.rar] : tr[1]) + '</span>' +
+          '<span class="muted small bdblurb">' + esc(b.blurb) + '</span>' +
+          (own ? '<span class="muted small">Owned</span>' : b.price ? stickTag(b.price) : '<span class="muted small">Free</span>') +
+          '<div class="bact">' + act + '</div></div>';
+      }).join("") + '</div>';
+  });
+  return c;
+}
+document.addEventListener("click", function (e) {
+  var t = e.target.closest && e.target.closest("[data-border],[data-borderbuy]"); if (!t) return;
+  if (t.dataset.borderbuy) buyBorder(t.dataset.borderbuy); else useBorder(t.dataset.border);
+  saveProg(); render(); window.scrollTo(0, 0);
+});
+try { borderSync(); } catch (e) {}
+
+/* ===== Buying sticks (owner, Nov 1 2026) =====
+   Sticks are earned by studying. This adds the option to buy a few as well, for people who want
+   a bug they have not studied their way to yet. Nothing behind a stick is medical content: sticks
+   buy bugs, hats, faces, colours, borders and music, and nothing else. Study is never gated on
+   them, and no pack is ever required.
+
+   Where the money actually changes hands depends on the build:
+     - iOS and Android wrappers: the platform's own billing, which both stores require for
+       digital goods. The bridge is the same one the subscriptions already use
+       (window.webkit.messageHandlers.store, modules/pro.js), with two new commands.
+     - Browser build: no billing is wired up, so the packs show as unavailable rather than
+       pretending. IAP_WEB below is the single place a web checkout would be added.
+
+   THE ONE HOOK: iapPurchase(). Everything above it is finished - the packs, the screen, the
+   grant, the receipt ledger, de-duplication and restore. Everything below it is the platform
+   call, and on a build with no billing it returns false and the screen says so. When the App
+   Store Connect and Play Console products exist, their ids go in IAP_PACKS[].sku and the native
+   side answers on DrugBugStore.onConsumable; nothing else here changes. */
+
+var IAP_PACKS = [
+  { id: "sticks500",   sku: "com.volaremedia.drugbug.sticks.500",   n: 500,   bonus: 0,    usd: "$0.99",  name: "A Handful",  blurb: "Enough for a common bug and a hat." },
+  { id: "sticks1500",  sku: "com.volaremedia.drugbug.sticks.1500",  n: 1500,  bonus: 100,  usd: "$2.99",  name: "A Jar",      blurb: "A rare bug, or most of the wardrobe." },
+  { id: "sticks4000",  sku: "com.volaremedia.drugbug.sticks.4000",  n: 4000,  bonus: 500,  usd: "$6.99",  name: "A Bundle",   blurb: "An epic bug with change left over." },
+  { id: "sticks10000", sku: "com.volaremedia.drugbug.sticks.10000", n: 10000, bonus: 2000, usd: "$14.99", name: "A Crate",    blurb: "A legendary bug, outright." },
+  { id: "sticks30000", sku: "com.volaremedia.drugbug.sticks.30000", n: 30000, bonus: 9000, usd: "$39.99", name: "A Woodpile", blurb: "Most of the Terrarium in one go." }
+];
+var IAP_WEB = false;   /* flip to true only when a web checkout actually exists */
+var IAP = { busy: "", msg: "", err: "" };
+
+function iapPackById(id) { return IAP_PACKS.filter(function (p) { return p.id === id || p.sku === id; })[0] || null; }
+function iapTotal(p) { return p.n + (p.bonus || 0); }
+/* the store sets the real prices; these are the fallbacks shown before it answers */
+function iapPrice(p) {
+  var s = (typeof PRO !== "undefined" && PRO.products || []).filter(function (x) { return x.id === p.sku; })[0];
+  return (s && s.price) || p.usd;
+}
+function iapAvailable() {
+  if (typeof hasStore === "function" && hasStore()) return "ios";
+  if (window.DrugBugAndroid && typeof window.DrugBugAndroid.buyConsumable === "function") return "android";
+  if (IAP_WEB) return "web";
+  return "";
+}
+
+/* ---------- the ledger: every granted purchase is recorded, so a replayed receipt pays once ---------- */
+function iapLedger() { return (Prog.d.buys = Prog.d.buys || {}); }
+function iapGrant(packId, txn, quiet) {
+  var p = iapPackById(packId); if (!p) return false;
+  var key = String(txn || ("local:" + packId + ":" + Date.now()));
+  var L = iapLedger();
+  if (L[key]) return false;                      /* already paid out for this transaction */
+  var n = iapTotal(p);
+  L[key] = { p: p.id, n: n, t: Date.now() };
+  Prog.d.bought = (Prog.d.bought || 0) + n;
+  if (typeof earn === "function") earn(n);       /* sticks() counts earned minus spent */
+  if (typeof saveProg === "function") saveProg();
+  IAP.busy = ""; IAP.err = "";
+  if (!quiet) {
+    IAP.msg = n.toLocaleString() + " sticks added. Thank you.";
+    S.shopMsg = IAP.msg;
+    try { if (typeof gfxSnd === "function") gfxSnd("win"); } catch (e) {}
+  }
+  return true;
+}
+
+/* ---------- THE HOOK ----------
+   Hands the purchase to whatever billing this build has. Returns true when a purchase was
+   actually started; the grant happens later, when the platform confirms, through
+   DrugBugStore.onConsumable below. */
+function iapPurchase(p) {
+  var where = iapAvailable();
+  if (where === "ios") return typeof storeCall === "function" && storeCall("buyConsumable", { product: p.sku });
+  if (where === "android") { try { window.DrugBugAndroid.buyConsumable(p.sku); return true; } catch (e) { return false; } }
+  /* where === "web": a checkout call goes here, and its success callback calls
+     iapGrant(p.id, <the payment processor's transaction id>). Nothing else needs changing. */
+  return false;
+}
+
+function iapBuy(id) {
+  var p = iapPackById(id); if (!p) return;
+  IAP.msg = ""; IAP.err = "";
+  if (!iapAvailable()) {
+    IAP.err = "Buying sticks is not switched on in this version yet. Every stick is still there to be earned by studying.";
+    return;
+  }
+  IAP.busy = p.id;
+  if (!iapPurchase(p)) { IAP.busy = ""; IAP.err = "The store did not open. Try again in a moment."; }
+  /* the store can take a while, and can also simply never answer if it is unreachable */
+  clearTimeout(IAP.t);
+  IAP.t = setTimeout(function () { if (IAP.busy === p.id) { IAP.busy = ""; IAP.err = "The store did not answer. Nothing was charged."; render(); } }, 60000);
+}
+function iapRestore() {
+  IAP.msg = ""; IAP.err = "";
+  var where = iapAvailable();
+  if (where === "ios" && typeof storeCall === "function") { IAP.busy = "restore"; storeCall("restoreConsumables"); return; }
+  if (where === "android" && window.DrugBugAndroid && window.DrugBugAndroid.restoreConsumables) { IAP.busy = "restore"; try { window.DrugBugAndroid.restoreConsumables(); } catch (e) { IAP.busy = ""; } return; }
+  IAP.err = "There is nothing to restore in this version.";
+}
+
+/* ---------- what the native side calls back ----------
+   One payload per finished transaction: { product, txn, state }. state is "done", "cancelled",
+   "pending" (Ask to Buy and the like) or "error" with a message. Unfinished transactions are
+   replayed at launch; the ledger above makes that safe. */
+(function () {
+  var S0 = window.DrugBugStore = window.DrugBugStore || {};
+  S0.onConsumable = function (d) {
+    d = d || {};
+    clearTimeout(IAP.t); IAP.busy = "";
+    if (d.state === "cancelled") { IAP.err = ""; IAP.msg = ""; }
+    else if (d.state === "pending") IAP.msg = "Your purchase is waiting for approval. The sticks arrive once it is approved.";
+    else if (d.state === "error") IAP.err = "The store said: " + (d.error || "something went wrong") + ". Nothing was charged.";
+    else if (d.product) {
+      if (!iapGrant(d.product, d.txn, d.silent)) IAP.msg = IAP.msg || "That purchase was already added.";
+    }
+    try { render(); } catch (e) {}
+  };
+  /* a batch at launch, or after a restore */
+  S0.onConsumables = function (list) {
+    var n = 0;
+    (list || []).forEach(function (d) { if (d && d.product && iapGrant(d.product, d.txn, true)) n++; });
+    IAP.busy = "";
+    IAP.msg = n ? n + (n === 1 ? " purchase" : " purchases") + " restored." : "No unredeemed purchases were found.";
+    try { render(); } catch (e) {}
+  };
+})();
+
+/* ---------- the screen ---------- */
+function iapView() {
+  var bal = typeof sticks === "function" ? sticks() : 0, where = iapAvailable();
+  var c = '<p class="muted">Sticks are earned by studying: 3 for a correct answer, 1 for trying, 10 for a perfect round, 25 for an achievement. Buying them is optional, and it only ever buys bugs, hats, faces, colours, borders and music. No drug page, question or tool is behind a stick.</p>';
+  c += '<p class="balance iapbal">' + (typeof stickIcon === "function" ? stickIcon(24) : "") + '<strong>' + bal.toLocaleString() + '</strong> sticks' + (Prog.d.bought ? ' <span class="muted small">(' + Prog.d.bought.toLocaleString() + ' bought)</span>' : '') + '</p>';
+  if (IAP.msg) c += '<div class="presult good" role="status">' + esc(IAP.msg) + '</div>';
+  if (IAP.err) c += '<div class="presult bad" role="alert">' + esc(IAP.err) + '</div>';
+  if (!where) c += '<div class="callout"><strong>Not switched on yet.</strong> Stick packs are built and waiting on the store side. Until then every stick is earned, which is how most of them get earned anyway.</div>';
+  c += '<div class="iapgrid">' + IAP_PACKS.map(function (p) {
+    var busy = IAP.busy === p.id, tot = iapTotal(p);
+    return '<div class="iapcard' + (p.bonus ? ' hasbonus' : '') + '">' +
+      '<span class="iapn">' + (typeof stickIcon === "function" ? stickIcon(20) : "") + '<strong>' + tot.toLocaleString() + '</strong></span>' +
+      '<span class="iapname">' + esc(p.name) + '</span>' +
+      (p.bonus ? '<span class="iapbonus">' + p.n.toLocaleString() + ' + ' + p.bonus.toLocaleString() + ' bonus</span>' : '<span class="iapbonus flat">' + p.n.toLocaleString() + ' sticks</span>') +
+      '<span class="muted small iapblurb">' + esc(p.blurb) + '</span>' +
+      '<button class="btn small' + (where ? '' : ' ghost') + '" data-iapbuy="' + p.id + '"' + (where && !busy ? '' : ' disabled') + '>' + (busy ? 'Opening the store...' : esc(iapPrice(p))) + '</button>' +
+      '</div>';
+  }).join("") + '</div>';
+  if (where) c += '<p class="actions"><button class="btn ghost small" data-iaprestore="1"' + (IAP.busy === "restore" ? ' disabled' : '') + '>' + (IAP.busy === "restore" ? 'Checking...' : 'Restore purchases') + '</button></p>';
+  c += '<p class="muted small iapfine">Prices are set and charged by the app store, in your own currency, and may differ from the figures above. Sticks are a one-time purchase, not a subscription, and they stay with the account you bought them on. They have no cash value and cannot be refunded through DrugBug; refunds go through the store.</p>';
+  return c;
+}
+document.addEventListener("click", function (e) {
+  var t = e.target.closest && e.target.closest("[data-iapbuy],[data-iaprestore]"); if (!t) return;
+  if (t.dataset.iaprestore) iapRestore(); else iapBuy(t.dataset.iapbuy);
+  render(); window.scrollTo(0, 0);
 });
 
 
