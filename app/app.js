@@ -1788,7 +1788,7 @@ function heroHTML() {
   var rr = { rare: "rare", seasonal: "rare", epic: "epic", earned: "epic", legendary: "legendary" }[b.rar] || "common";
   var spk = rr === "legendary" ? '<i class="lsp s1" aria-hidden="true"></i><i class="lsp s2" aria-hidden="true"></i><i class="lsp s3" aria-hidden="true"></i><i class="lsp s4" aria-hidden="true"></i>' : rr === "epic" ? '<i class="lsp s1" aria-hidden="true"></i><i class="lsp s3" aria-hidden="true"></i>' : '';
   var hol = typeof holToday === "function" ? holToday() : null;
-  return '<section class="hero ha' + (hol ? ' hol hol-' + hol.id + (hol.base ? ' hol-' + hol.base : '') : '') + '">' + (hol ? holFx(hol) : '') + '<div class="hatx lr-' + rr + '">' + (rr === "legendary" ? '<svg class="lcrown" viewBox="0 0 64 44" aria-hidden="true"><path d="M4 40 L8 12 L22 26 L32 4 L42 26 L56 12 L60 40Z" fill="#fbbf24" stroke="#92400e" stroke-width="3" stroke-linejoin="round"/><circle cx="32" cy="6" r="4" fill="#f43f5e"/><circle cx="8" cy="12" r="3.5" fill="#38bdf8"/><circle cx="56" cy="12" r="3.5" fill="#38bdf8"/><rect x="6" y="34" width="52" height="6" rx="2" fill="#f59e0b"/></svg>' : '') + '<h1 class="logo">Drug<span>Bug</span></h1>' + spk + '</div>' + (typeof funOn === "function" && !funOn() ? '' : '<button class="hbub" data-goshop="1" aria-label="' + lbl + '"><span class="orb">' + myBugArt("herobug", null, hol ? holWear(hol) : null) + (typeof pkSide === "function" ? pkSide("hero") : "") + '</span>' + chip + '</button>') + tag + (hol ? holBanner(hol) : '') + '</section>';
+  return '<section class="hero ha' + (hol ? ' hol hol-' + hol.id + (hol.base ? ' hol-' + hol.base : '') : '') + '">' + (hol ? holFx(hol) : '') + '<div class="hatx lr-' + rr + '">' + (rr === "legendary" ? '<svg class="lcrown" viewBox="0 0 64 44" aria-hidden="true"><path d="M4 40 L8 12 L22 26 L32 4 L42 26 L56 12 L60 40Z" fill="#fbbf24" stroke="#92400e" stroke-width="3" stroke-linejoin="round"/><circle cx="32" cy="6" r="4" fill="#f43f5e"/><circle cx="8" cy="12" r="3.5" fill="#38bdf8"/><circle cx="56" cy="12" r="3.5" fill="#38bdf8"/><rect x="6" y="34" width="52" height="6" rx="2" fill="#f59e0b"/></svg>' : '') + '<h1 class="logo">Drug<span>Bug</span></h1>' + spk + '</div>' + (typeof funOn === "function" && !funOn() ? '' : '<button class="hbub" data-goshop="1" aria-label="' + lbl + '"><span class="orb">' + myBugArt("herobug", null, hol ? holWear(hol) : null, myStage()) + (typeof pkSide === "function" ? pkSide("hero") : "") + '</span>' + chip + '</button>') + tag + (hol ? holBanner(hol) : '') + '</section>';
 }
 function topLayerOpen() { return ["pwdlg", "wdwdlg", "evodlg", "pkdlg", "chemdlg", "tourdlg", "rdlg", "idlg"].some(function (i) { var el = document.getElementById(i); return el && !el.hidden; }); }
 /* Android back button: closes the top layer or goes back one step; returns true when it handled it */
@@ -1840,7 +1840,13 @@ function visibleIds(ids) { return ids.filter(function (id) { return !hidden(id);
 // stable question ids so database edits can target bundled questions
 function hashStr(s) { var h = 5381; for (var i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0; return (h >>> 0).toString(36); }
 function qid(q) { return q.id || (q.id = "q" + hashStr(q.lv + "|" + q.q)); }
-function qVisible(q) { return !q.hidden || Admin.on; }
+function qVisible(q) {
+  if (q.hidden && !Admin.on) return false;
+  /* Drills run over the free medications for everyone, and over every medication on Pro
+     (modules/pro.js studyLocked). Plus buys the reference content, not the drills. */
+  if (q.d && typeof studyLocked === "function" && studyLocked(q.d)) return false;
+  return true;
+}
 
 var Dex = { db: null, loaded: false, error: null, counts: { drugs: 0, questions: 0, scenarios: 0 } };
 function applyQuestion(doc) {
@@ -3094,7 +3100,7 @@ function bugArt(b, cls, opt) {
   var grad = '<defs><linearGradient id="' + id + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + c1 + '"/><stop offset="1" stop-color="' + c2 + '"/></linearGradient>' +
     (b.body === "stick" ? '<linearGradient id="' + id + 'v" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe29a"/><stop offset=".5" stop-color="#f59e0b"/><stop offset="1" stop-color="#7c2d12"/></linearGradient>' : '') + '<radialGradient id="' + id + 'r"><stop offset="0" stop-color="' + c3 + '" stop-opacity=".95"/><stop offset="1" stop-color="' + c3 + '" stop-opacity="0"/></radialGradient></defs>';
   var F = 'url(#' + id + ')';
-  var st = opt.stage || 3, adultT = b.body, t = stageBody(b.body, st), GOLD = "#ffc531";
+  var st = opt.stage || 5, adultT = b.body, t = stageBody(b.body, st), GOLD = "#ffc531";
   var noWing = st === 1, wingK = st === 2 ? .55 : 1, light = mixHex(c1, "#ffffff", .55);
   grad = grad.replace('</defs>', '<linearGradient id="' + id + 'i" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".95"/><stop offset=".35" stop-color="#a5f3fc" stop-opacity=".85"/><stop offset=".65" stop-color="#f0abfc" stop-opacity=".85"/><stop offset="1" stop-color="#fde68a" stop-opacity=".95"/></linearGradient><radialGradient id="' + id + 'a"><stop offset="0" stop-color="' + (st === 5 ? GOLD : c1) + '" stop-opacity="' + (st === 5 ? .5 : .32) + '"/><stop offset=".6" stop-color="' + c1 + '" stop-opacity=".12"/><stop offset="1" stop-color="' + c1 + '" stop-opacity="0"/></radialGradient></defs>');
   /* wings: hidden on nymphs, small buds on rookies, rainbow shimmer on legends */
@@ -3406,7 +3412,8 @@ function unlockMet(b) {
 }
 function claimBug(id) { var b = bugById(id); if (owned(id) || !(b.admin ? Admin.owner : unlockMet(b))) return; Prog.d.owned = (Prog.d.owned || []).concat([id]); Prog.d.avatar = id; Prog.d.avatarTs = Date.now(); saveProg(); S.shopMsg = "Unlocked " + b.name + ". It's now your bug."; }
 function styleFilter() { var st = STYLES.filter(function (x) { return x[0] === (Prog.d.style || "classic"); })[0]; return st ? st[3] : ""; }
-function myBugArt(cls, mood, wear) { if (myBug().hick) return bugArt(myBug(), cls, {}); var f = styleFilter(), a = bugArt(myBug(), cls, { mood: mood || myFace(), wear: wear || myWear(), stage: myStage() }); return f ? a.replace('<svg class="bug', '<svg style="filter:' + f + '" class="bug') : a; }
+var MAX_STAGE = STAGE_LV.length;   /* Legend: how every bug is shown unless it is your avatar bubble */
+function myBugArt(cls, mood, wear, stage) { if (myBug().hick) return bugArt(myBug(), cls, {}); var f = styleFilter(), a = bugArt(myBug(), cls, { mood: mood || myFace(), wear: wear || myWear(), stage: stage || MAX_STAGE }); return f ? a.replace('<svg class="bug', '<svg style="filter:' + f + '" class="bug') : a; }
 function buyStyle(id) { var st = STYLES.filter(function (x) { return x[0] === id; })[0]; if (!st) return; var own = (Prog.d.styles || []).indexOf(id) >= 0 || st[2] === 0;
   if (!own) { if (sticks() < st[2]) return; Prog.d.spent = (Prog.d.spent || 0) + st[2]; Prog.d.styles = (Prog.d.styles || []).concat([id]); }
   Prog.d.style = id; saveProg(); S.shopMsg = st[1] + " style applied to your bug."; }
@@ -3496,7 +3503,7 @@ function stylesView() {
     return '<div class="bugcard' + (on ? " eq" : "") + '">' + art + '<strong>' + esc(st[1]) + '</strong>' + (own ? '<span class="muted small">Owned</span>' : stickTag(st[2])) + '<div class="bact">' + (on ? '<span class="eqd">In use</span>' : own ? '<button class="btn small" data-style="' + st[0] + '">Use</button>' : '<button class="btn small' + (bal >= st[2] ? '' : ' ghost') + '" data-style="' + st[0] + '"' + (bal >= st[2] ? '' : ' disabled') + '>' + (bal >= st[2] ? 'Buy' : 'Need ' + (st[2] - bal) + ' more') + '</button>') + '</div></div>';
   }).join("") + '</div>';
 }
-function stickChip() { if (typeof funOn === "function" && !funOn()) return ""; return '<button class="stickchip" data-goshop="1" aria-label="Terrarium"' + (S.view === "terrarium" ? ' aria-current="page"' : '') + '>' + myBugArt("mini") + '<span class="tlabel">Terrarium</span></button>'; }
+function stickChip() { if (typeof funOn === "function" && !funOn()) return ""; return '<button class="stickchip" data-goshop="1" aria-label="Terrarium"' + (S.view === "terrarium" ? ' aria-current="page"' : '') + '>' + myBugArt("mini", null, null, myStage()) + '<span class="tlabel">Terrarium</span></button>'; }
 function terrariumView() {
   var f = S.shopF || "home", title = { bugs: "Bug Store", items: "Wardrobe", faces: "Faces", styles: "Colors", borders: "Drug Borders", voices: "Voices", sticks: "Get Sticks", music: "Music" }[f];
   var head = f === "home" ? '<button class="backbtn" data-act="terrback"><span aria-hidden="true">&larr;</span> Studying</button><h2>Terrarium</h2>' : '<button class="backbtn" data-act="shopback"><span aria-hidden="true">&larr;</span> Terrarium</button><h2>' + title + '</h2>';
@@ -3525,7 +3532,7 @@ function stageCheck() {
 function showEvolve(st) {
   var es = lang() === "es", b = myBug(), nx = STAGE_LV[st];
   evodlg.innerHTML = '<div class="panel pwpanel evopanel" role="dialog" aria-modal="true" aria-label="' + (es ? "Tu insecto creció" : "Your bug grew") + '" tabindex="-1"><p class="wdwkick">' + (es ? "¡Tu insecto creció!" : "Your bug grew!") + '</p>' +
-    '<div class="evoart"><div class="evofrom">' + bugArt(b, "", { stage: st - 1, wear: myWear(), mood: myFace() }) + '</div><span class="evoarrow" aria-hidden="true">→</span><div class="evoto">' + myBugArt("big", "joy") + '</div></div>' +
+    '<div class="evoart"><div class="evofrom">' + bugArt(b, "", { stage: st - 1, wear: myWear(), mood: myFace() }) + '</div><span class="evoarrow" aria-hidden="true">→</span><div class="evoto">' + myBugArt("big", "joy", null, st) + '</div></div>' +
     '<h2>' + esc(b.name) + (es ? " ahora es " : (st === 3 ? " is now an " : " is now a ")) + esc(stageName(st)) + '</h2><p>' + STAGE_NEW[es ? "es" : "en"][st - 1] + '</p>' +
     (nx ? '<p class="muted small">' + (es ? "Siguiente etapa: " + esc(stageName(st + 1)) + " en el nivel " + nx + "." : "Next stage: " + esc(stageName(st + 1)) + " at level " + nx + ".") + '</p>' : '') +
     '<div class="btnrow"><button class="btn" data-evo="shop">' + (es ? "Ver en el Terrario" : "See it in the Terrarium") + '</button><button class="btn ghost" data-evo="close">' + (es ? "¡Genial!" : "Nice!") + '</button></div></div>';
@@ -3554,7 +3561,7 @@ function tankHTML(mine, withMore) {
   var bub = mine.map(function (b, i) {
     var on = me.id === b.id;
     return '<button class="bubble' + (on ? ' on' : '') + '" role="listitem" style="--d:' + ((i * 0.37) % 3).toFixed(2) + 's" ' + (on ? 'aria-current="true"' : 'data-equip="' + b.id + '"') + ' aria-label="' + (on ? (es ? "Usando " : "Using ") : (es ? "Usar " : "Use ")) + esc(b.name) + '">' +
-      '<span class="orb r-' + b.rar + '">' + bugArt(b, "", { stage: st, wear: on ? myWear() : {}, mood: on ? myFace() : "happy" }) + '</span><span class="bname">' + esc(b.name) + '</span>' + (on ? '<em>' + (es ? "Usando" : "Using") + '</em>' : '') + '</button>';
+      '<span class="orb r-' + b.rar + '">' + bugArt(b, "", { stage: MAX_STAGE, wear: on ? myWear() : {}, mood: on ? myFace() : "happy" }) + '</span><span class="bname">' + esc(b.name) + '</span>' + (on ? '<em>' + (es ? "Usando" : "Using") + '</em>' : '') + '</button>';
   }).join("");
   if (withMore) bub += '<button class="bubble more" data-shopf="bugs" role="listitem"><span class="orb"><span class="plus" aria-hidden="true">+</span></span><span class="bname">' + (es ? "Conseguir más" : "Get more bugs") + '</span></button>';
   return '<div class="pickhead"><h3>' + (es ? "Mi terrario" : "My terrarium") + '</h3><span class="muted small">' + (es ? "Toca una burbuja para usar ese insecto" : "Tap a bubble to use that bug") + '</span></div>' +
@@ -7086,7 +7093,7 @@ var PLANS = {
   pro: { monthly: "com.volaremedia.drugbug.pro.monthly", annual: "com.volaremedia.drugbug.pro.annual", m: "$9.99", y: "$79.99" }
 };
 var PRO_IDS = { monthly: PLANS.pro.monthly, annual: PLANS.pro.annual };
-var TRIAL_DAYS = 7, DAYMS = 86400000;
+var DAYMS = 86400000;   /* the 7-day trial is gone (owner, Nov 2 2026) */
 var FREE_DRUGS = "acetaminophen,ibuprofen,aspirin,naproxen,diphenhydramine,loratadine,cetirizine,famotidine,omeprazole,loperamide,lisinopril,amlodipine,metoprolol,atorvastatin,metformin,insulin-glargine,levothyroxine,albuterol,prednisone,amoxicillin,azithromycin,sertraline,fluoxetine,ondansetron,warfarin,apixaban,furosemide,hydrochlorothiazide,losartan,gabapentin,montelukast,cholecalciferol,melatonin,pseudoephedrine,dextromethorphan,guaifenesin,naloxone,epinephrine,amiodarone,atropine,nitroglycerin,dextrose".split(",");
 var FREE_SET = {}; FREE_DRUGS.forEach(function (id) { FREE_SET[id] = 1; });
 var FREE_TABS = { hub: 1, registry: 1, diseases: 1, progress: 1, shop: 1, conds: 1, cards: 1, flashcards: 1, tools: 1 }; /* flashcards free again (Oct 28 2026): Free gets flashcards for the free drugs, Plus for every drug */ /* compound tabs are Plus (Oct 28 2026) */
@@ -7126,7 +7133,7 @@ function licenseActive() { var L = Prog.d.license; return !!(L && L.until && L.u
    "7 free days without payment" period was removed (Guideline 3.1.1). trialBegin() stays as a no-op for old callers. */
 function trialBegin() {}
 function trialActive() { return false; }
-function trialEligible() { var p = PRO.products.filter(function (x) { return x.id === PLANS.pro.monthly || x.id === PLANS.pro.annual; }); return p.length > 0 && p.some(function (x) { return !!x.trial; }); }  /* only promise the free week once the store confirms it */
+function trialEligible() { return false; }   /* no free trials: the owner removed them (Nov 2 2026) */
 /* Public web demo (tools/build_demo.py sets DRUGBUG_CONFIG.demo): always DrugBug Free, no plan preview */
 var DEMO = CFG.demo === true && !NATIVE;
 /* Website access codes (web demo only): the build stores SHA-256 hashes of the codes in CFG.webCodes
@@ -7164,13 +7171,23 @@ function tier() {
 function hasTier(t) { return TIER_RANK[tier()] >= TIER_RANK[t || "pro"]; }
 function isPro() { return hasTier("pro"); }
 function proView() { return S.view === "level"; } /* professional routes */
-function tabTier(tab) {
-  if (PRO_EXTRA[tab]) return "pro";   /* games, flashcards, exam prep, scenarios, tools: Pro */
-  if (FREE_TABS[tab]) return "free";
-  return "plus";                      /* everything else is access to content (My List, families, labs, units...): Plus */
-}
+/* NEW MODEL (owner, Nov 2 2026). No feature is locked any more. Every tool in DrugBug - games,
+   exam prep, scenarios, Megacode, flashcards, the study tools - works on every plan, including Free.
+   What a plan buys is MEDICATIONS:
+
+     Free   every tool, over the ~40 starter medications (FREE_SET)
+     Plus   every medication to read, browse, search and save
+     Pro    the tools run over every medication too
+
+   So the gate moved off the feature and onto the drug, which is why tabTier is now free for
+   everything and the work happens in drugTier() and studyLocked(). */
+function tabTier(tab) { return "free"; }
 function proLocked(tab) { return PAYWALL && !hasTier(tabTier(tab)); }
-function drugTier(id) { return FREE_SET[id] ? "free" : "plus"; } /* every drug page, any route: Plus */
+function drugTier(id) { return FREE_SET[id] ? "free" : "plus"; }   /* reading a drug: Free for the 40, Plus for the rest */
+/* The drill pool. A question, game or scenario about a medication outside the free set only appears
+   on Pro - that is the one thing Plus does not include. Checked in qVisible (modules/dex.js), which
+   every question pool in the app already runs through. */
+function studyLocked(id) { return PAYWALL && !!id && !FREE_SET[id] && !hasTier("pro"); }
 function drugLocked(id) { return PAYWALL && !hasTier(drugTier(id)); }
 /* bugs by subscription: Common, starter and earned bugs are free; Rare and Seasonal need Plus; Epic and Legendary need Pro. Bugs already owned stay owned. */
 function bugTier(b) { if (!b) return "free"; if (b.rar === "epic" || b.rar === "legendary") return "pro"; if (b.rar === "rare" || b.rar === "seasonal") return "plus"; return "free"; }
@@ -7192,19 +7209,27 @@ function trialBanner() {
   if (DEMO && webPass()) return '<div class="callout evnote small trialbar"><strong>DrugBug Pro is unlocked</strong> with your access code until ' + new Date(webPass().until).toLocaleDateString() + '. Enjoy every drug, route and study tool.</div>';
   if (DEMO) return '<div class="callout evnote small trialbar"><strong>You are using the free DrugBug web demo.</strong> It includes about 40 common medications, with a free preview of the Wormhole. The full DrugBug, with 2,000+ medications and every professional route, is coming soon to iPhone. <button class="linkish" data-pw="open">See Plus and Pro</button></div>';
   if (!PAYWALL || !NATIVE || PRO.store || licenseActive() || Prog.d.proGrant) return "";
-  return '<div class="callout evnote small trialbar"><strong>You are on DrugBug Free.</strong> ' + (trialEligible() ? 'Try Pro free for 7 days through the App Store (renews unless you cancel). ' : '') + '<button class="linkish" data-pw="open">See Plus and Pro</button></div>';
+  return '<div class="callout evnote small trialbar"><strong>You are on DrugBug Free.</strong> Every tool in the app works on your free medications. <button class="linkish" data-pw="open">See Plus and Pro</button></div>';
 }
 function prodOf(id) { return PRO.products.filter(function (x) { return x.id === id; })[0] || null; }
 function priceOf(id, fallback) { var p = PRO.products.filter(function (x) { return x.id === id; })[0]; return p ? p.price : fallback; }
-function trialOf(id) { var p = PRO.products.filter(function (x) { return x.id === id; })[0]; return p ? !!p.trial : true; }
+function trialOf(id) { return false; }   /* no free trials */
 
 /* paywall dialog */
 var pwdlg = document.createElement("div"); pwdlg.id = "pwdlg"; pwdlg.className = "sheet rsheet"; pwdlg.hidden = true; document.body.appendChild(pwdlg);
 function openPaywall(why, need) { if (!PAYWALL) return; PRO.open = true; PRO.busy = false; clearTimeout(PRO.busyT); PRO.why = why || ""; PRO.need = need || "pro"; PRO.msg = ""; if (NATIVE) storeCall("products"); drawPaywall(); pwdlg.hidden = false; var p = $(".panel", pwdlg); if (p) p.focus(); }
 function closePaywall() { PRO.open = false; pwdlg.hidden = true; pwdlg.innerHTML = ""; }
 var PLAN_PERKS = {
-  plus: ["Every medication in DrugBug, on every route: BugDex, Prehospital, Nursing, Medical School and Imaging", "Illicit and street drug education in the BugDex", "Probiotics plus the Vegetable, Fruit and Vitamin Compounds tabs", "My List: save your drugs and see in depth how they interact", "Drug Families, Drug Alternatives, Lab Values, Blood Products, Hemodynamics, Flight Prep, Specialty Units and Contrast Safety", "The Wormhole on every drug and the Disease Lab on 250 conditions: origin stories and how they work, cell to organ", "Flashcards for every drug", "All of Everyday Health", "Rare and seasonal bugs"],
-  pro: ["Everything in Plus (new subscribers can try Pro free for 7 days)", "Exam prep: NREMT-style, NCLEX-style, Step-style and Registry-style practice tests, including select-all and put-in-order questions, plus Exam mode", "Practice quizzes", "Brain Games: memory match, crossword, scramble, Class Blitz and more", "Clinical scenarios and Megacode", "Study Tools: Questions, Megacode, Flashcards, Brain Games and Safety drills", "Medication Disease Identifier", "Nursing Bug skill practice", "Epic and Legendary bugs"]
+  plus: ["Every medication in DrugBug to read, search and save, on every route: BugDex, Prehospital, Nursing, Medical School and Imaging",
+         "Illicit and street drug education in the BugDex",
+         "Probiotics plus the Vegetable, Fruit and Vitamin Compounds tabs",
+         "My List: save your drugs and see in depth how they interact",
+         "Drug Families, Alternatives, Lab Values, Blood Products, Hemodynamics, Flight Prep, Specialty Units and Contrast Safety",
+         "The Wormhole deep dive on every drug, and the Disease Lab"],
+  pro: ["Everything in Plus",
+        "And the part Plus does not include: the drills run over every medication, not just the free ones",
+        "Exam prep over all 2,000+: NREMT-style, NCLEX-style, Step-style and Registry-style practice tests, select-all and put-in-order questions, and Exam mode",
+        "Brain Games, scenarios, Megacode and the study tools on any drug in the app"]
 };
 function drawPaywall() {
   if (!PRO.open) return;
@@ -25104,7 +25129,6 @@ function planMaybe() {
   planOpen();
 }
 function planOpen() {
-  var freeWeek = NATIVE && typeof trialEligible === "function" && trialEligible();
   var n = (Prog.d.earned || 0).toLocaleString();
   var card = function (name, price, year, lines, best) {
     return '<div class="wzplan' + (best ? ' best' : '') + '"><span class="wzpn">' + esc(name) + '</span><span class="wzpp">' + esc(price) + '</span>' +
@@ -25112,16 +25136,17 @@ function planOpen() {
       '<span class="wzpl">' + lines.map(function (x) { return '<em>' + esc(x) + '</em>'; }).join("") + '</span></div>';
   };
   plandlg.innerHTML = '<div class="panel planpanel" role="dialog" aria-modal="true" aria-label="DrugBug plans" tabindex="-1">' +
-    '<div class="planart">' + (typeof myBugArt === "function" ? myBugArt("planbug") : "") + '</div>' +
+    '<div class="planart">' + (typeof myBugArt === "function" ? myBugArt("tourbug", "joy") : "") + '</div>' +
+    '<p class="plankick">' + (typeof stickIcon === "function" ? stickIcon(18) + stickIcon(18) + stickIcon(18) : "") + '</p>' +
     '<h2>' + n + ' sticks. Look at you.</h2>' +
-    '<p class="muted">That is ' + n + ' sticks you did not have an hour ago, and every one of them came from answering something. Here is what the rest of DrugBug looks like when you want it.</p>' +
+    '<p class="muted">Every one of those came from answering something. Nothing in DrugBug is locked away from you \u2014 every test, game and scenario is already yours. What you buy is more medicine to point them at.</p>' +
     '<div class="wzplans">' +
-      card("Free", "$0", "", ["About 40 common medications", "The 5-minute daily and your streak", "Small Sickness Guide and vitals"], false) +
-      card("Plus", PLANS.plus.m + "/mo", PLANS.plus.y + " a year", ["Every medication on every route", "My List, interactions, drug families", "Labs, blood products, flight prep"], false) +
-      card("Pro", PLANS.pro.m + "/mo", freeWeek ? "1 week free first" : PLANS.pro.y + " a year", ["Everything in Plus", "Practice tests, scenarios, Megacode", "Brain games and the study tools"], true) +
+      card("Free", "$0", "forever", ["Every tool in the app, nothing locked", "Tests, games, scenarios, flashcards", "Over about 40 core medications"], false) +
+      card("Plus", PLANS.plus.m + "/mo", PLANS.plus.y + " a year", ["All 2,000+ medications to read", "Every route: EMS, nursing, med school, imaging", "Interactions, families, labs, blood products"], false) +
+      card("Pro", PLANS.pro.m + "/mo", PLANS.pro.y + " a year", ["Everything in Plus", "Plus the drills over all of it", "Every test, game and scenario, every drug"], true) +
     '</div>' +
     '<p class="muted small">' + (NATIVE ? 'Charged to your Apple Account. Cancel any time in Settings.' : 'Nothing is for sale yet and nothing is locked: the whole app is open on the website while the paid plans are being built. This is a heads-up, not a checkout.') + '</p>' +
-    '<div class="actions"><button class="btn" data-plan-close="1">Back to the bugs</button></div></div>';
+    '<div class="actions planfoot"><button class="btn" data-plan-close="1">Back to the bugs</button></div></div>';
   if (typeof translateDom === "function") translateDom(plandlg);
   plandlg.hidden = false;
   var p = plandlg.querySelector(".panel"); if (p) p.focus();

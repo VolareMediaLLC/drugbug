@@ -1690,7 +1690,19 @@ button.pstat{cursor:pointer}button.pstat:hover{border-color:var(--flight)}
 .hemotab td.hv.hi{color:#dc2626;font-weight:700}.hemotab td.hv.lo{color:#2563eb;font-weight:700}
 :root[data-theme="dark"] .hemotab td.hv.hi{color:#f87171}:root[data-theme="dark"] .hemotab td.hv.lo{color:#60a5fa}
 /* First run: plan, then account (owner, Nov 1 2026) */
-.wz{max-width:680px;text-align:center}
+.wz{max-width:680px;text-align:center;position:relative;overflow:hidden;
+  background:linear-gradient(165deg,color-mix(in srgb,var(--flight) 18%,var(--surface)) 0%,var(--surface) 45%,color-mix(in srgb,var(--gen) 12%,var(--surface)) 100%);
+  border:1px solid color-mix(in srgb,var(--flight) 28%,var(--line))}
+/* a soft glow behind the bug so it is not floating on a flat panel */
+.wz .wzart{position:relative}
+.wz .wzart::before{content:"";position:absolute;width:190px;height:190px;border-radius:50%;
+  background:radial-gradient(circle,color-mix(in srgb,var(--gold) 30%,transparent) 0%,transparent 68%);z-index:0}
+.wz .wzart>*{position:relative;z-index:1}
+.wz h1{background:linear-gradient(95deg,var(--flight),var(--gen) 70%);-webkit-background-clip:text;background-clip:text;color:transparent}
+@media (prefers-reduced-motion:no-preference){
+  .wz .wzart .wzbug,.wz .wzart .tourbug{animation:wzbob 3.4s ease-in-out infinite}
+  @keyframes wzbob{0%,100%{transform:translateY(0) rotate(-1.5deg)}50%{transform:translateY(-7px) rotate(1.5deg)}}
+}
 .wz h1{font-family:var(--f-display);font-size:30px;margin:10px 0 6px}
 .wz .wzsub{color:var(--muted);line-height:1.5;margin:0 auto 18px;max-width:46ch}
 .wz .wzart{display:flex;justify-content:center;align-items:center;min-height:92px}
@@ -1716,9 +1728,35 @@ button.pstat{cursor:pointer}button.pstat:hover{border-color:var(--flight)}
 .planpanel{max-width:640px;text-align:center}
 .planpanel h2{font-family:var(--f-display);font-size:26px;margin:8px 0 4px}
 .planpanel .muted{line-height:1.5}
-.planart{display:flex;justify-content:center;align-items:center;min-height:86px}
-.planart .planbug{width:86px;height:86px}
-.planpanel .wzplans{margin:14px 0 10px}
+.planart{display:flex;justify-content:center;align-items:center;min-height:78px}
+.planart .tourbug{width:78px;height:78px}
+.planart .tourbug svg,.planart svg{width:100%;height:100%}
+/* the plan cards are reference, not buttons, so they can be tighter here than on a full screen */
+.planpanel .wzplans{margin:12px 0 8px;gap:9px}
+.planpanel .wzplan{padding:12px 14px;position:relative;overflow:hidden}
+.planpanel .wzplan::after{content:"";position:absolute;left:0;top:0;bottom:0;width:4px}
+.planpanel .wzplan:nth-child(1)::after{background:var(--emt)}
+.planpanel .wzplan:nth-child(2)::after{background:var(--aemt)}
+.planpanel .wzplan:nth-child(2){background:linear-gradient(140deg,color-mix(in srgb,var(--aemt) 13%,var(--surface)),var(--surface));border-color:color-mix(in srgb,var(--aemt) 38%,var(--line))}
+.planpanel .wzplan:nth-child(3)::after{background:var(--gold)}
+.planpanel .wzplan:nth-child(3){background:linear-gradient(140deg,color-mix(in srgb,var(--gold) 15%,var(--surface)),color-mix(in srgb,var(--flight) 10%,var(--surface)));border-color:color-mix(in srgb,var(--gold) 45%,var(--line))}
+.planpanel .wzplan:nth-child(2) .wzpn{color:var(--aemt)}
+.planpanel .wzplan:nth-child(3) .wzpn{color:var(--gold)}
+.planpanel h2{background:linear-gradient(95deg,var(--gold),var(--flight) 80%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.planpanel{background:linear-gradient(170deg,color-mix(in srgb,var(--flight) 14%,var(--bg)),var(--bg) 40%)}
+.planart{position:relative}
+.planart::before{content:"";position:absolute;width:150px;height:150px;border-radius:50%;
+  background:radial-gradient(circle,color-mix(in srgb,var(--gold) 34%,transparent) 0%,transparent 66%)}
+.planart>*{position:relative;z-index:1}
+/* a confetti of sticks behind the headline, because this fires on an achievement */
+.plankick{display:flex;justify-content:center;gap:6px;margin:0 0 2px}
+.plankick span{font-size:15px;opacity:.9;animation:wzbob 2.6s ease-in-out infinite}
+.plankick span:nth-child(2){animation-delay:.3s}
+.plankick span:nth-child(3){animation-delay:.6s}
+.planpanel .wzpn{font-size:19px}
+.planpanel .wzpl em{font-size:13.5px;line-height:1.45}
+/* and the way out never scrolls off the bottom */
+.planpanel .planfoot{position:sticky;bottom:-18px;margin:0 -20px -18px;padding:12px 20px calc(14px + env(safe-area-inset-bottom,0px));background:linear-gradient(to top,var(--bg) 70%,transparent);z-index:2}
 .planpanel .wzplan{cursor:default}
 .planpanel .wzplan:hover{transform:none;border-color:var(--line)}
 .planpanel .wzplan.best:hover{border-color:var(--gen)}
