@@ -477,6 +477,9 @@ var ICO = {
   mylist: '<path d="M6 3h12v18l-6-4-6 4z"/><path d="M9.5 9.5l2 2 3.5-3.5"/>', /* Medication Disease Identifier: a med list under a magnifier. It was the one hub tile with no
      icon at all, so icon() rendered an empty <svg> and the tile had a blank gap. (owner, Nov 3 2026) */
   medlist: '<path d="M5 3h10l4 4v5"/><path d="M15 3v4h4"/><path d="M8 9h5M8 12.5h4"/><circle cx="15.5" cy="16.5" r="3.5"/><path d="M18.2 19.2L21 22"/>',
+  /* Flight Reference: a rotor over a search lens. Added with the tab, so it does not repeat the
+     medlist mistake of a tile whose icon() returns an empty <svg>. (owner, Nov 3 2026) */
+  flt_ref: '<path d="M3 5h8M7 5v4"/><path d="M13 5h8M17 5v4"/><circle cx="12" cy="14" r="5"/><path d="M15.6 17.6L19 21"/>',
   progress: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
   contrast: '<circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 0 0 16z" fill="currentColor"/>',
   families: '<circle cx="7" cy="7" r="3"/><circle cx="17" cy="7" r="3"/><circle cx="12" cy="17" r="3"/><path d="M9.5 8.5l1.5 6M14.5 8.5l-1.5 6M10 7h4"/>',
@@ -518,6 +521,10 @@ function tabList() {
   if (hasBlood() && !isF(S.level)) L.push(["flightp", "Flight Prep", "Gas laws, stresses of flight and hard critical care questions."]);
   if (hasBlood()) L.push(["blood", "Blood Products", "PRBCs, whole blood, plasma, MTP and transfusion reactions."]);
   if (hasHemo()) L.push(["hemo", "Hemodynamics", "A-lines, PA catheters, IABP, Impella, ECMO, LVAD and shock profiles."]);
+  /* Flight Paramedic and Flight Nurse share one reference across hemodynamics, flight physiology,
+     blood and the transport topics, with a star that pins any of it to this menu. (owner, Nov 3 2026) */
+  if (typeof isFlightLv === "function" && S.view === "level" && isFlightLv(S.level))
+    L.push(["flt_ref", "Flight Reference", "Every flight topic in one searchable list: devices in transport, gas laws, blood, hemodynamics. Star what you use."]);
   if (hasLabs() && !(S.view === "level" && isF(S.level))) L.push(["labs", "Lab Values", labRoute() === "rn" ? "What each lab means for the meds you give." : labRoute() === "fl" ? "Labs for RSI, the vent, resuscitation and drips." : "Advanced labs, patterns and calculations."]);
   if (S.view === "level" && isF(S.level) && typeof FM_TABS !== "undefined") Object.keys(FM_TABS).forEach(function (k) { if (fmTierOk(FM_TABS[k][2], FM_TABS[k][3])) L.push([k, FM_TABS[k][0], FM_TABS[k][1]]); });
   /* Your agency's own protocols sit inside the EMT / AEMT / Paramedic / Flight menus once the
@@ -575,6 +582,10 @@ function hubView() {
   });
   /* topics pinned out of the Field Reference get their own tiles here (owner, Oct 30 2026) */
   if (fld && typeof fmPinTiles === "function") { var pt = fmPinTiles(); if (pt) c += '<h3 class="hubgh">Pinned</h3>' + pt; }
+  if (typeof fltOn === "function" && fltOn() && typeof fltPinTiles === "function") {
+    var fpt = fltPinTiles();
+    if (fpt) c += '<h3 class="hubgh">Pinned</h3><div class="hub hubg">' + fpt + '</div>';
+  }
   if (fld) c += '<h3 class="hubgh">Your input</h3><button class="fmfeed" data-idea="fm"><span class="fmfi" aria-hidden="true">' + icon("ideas") + '</span><span class="fmft"><strong>Comments, requests and thoughts</strong><span>Tell the team what Combat Paramedic & Prolonged Care needs: topics, drugs, fixes or anything else. This section is in development, and your input shapes it.</span></span><span class="fmfgo" aria-hidden="true">&rsaquo;</span></button>';
   var rest = L.filter(function (t) { return !used[t[0]]; });
   if (rest.length) c += '<h3 class="hubgh">More</h3><div class="hub hubg' + (rest.length % 2 ? ' odd' : '') + '">' + rest.map(tile).join("") + '</div>';
@@ -873,7 +884,7 @@ function viewLevel() {
   if (!S.tab || (S.tab !== "hub" && S.tab !== "session" && !tabName(S.tab))) S.tab = "hub";
   if (S.tab !== "hub" && S.tab !== "session" && typeof proLocked === "function" && proLocked(S.tab)) { var lt = S.tab; S.tab = "hub"; setTimeout(function () { openPaywall(tabName(lt), tabTier(lt)); }, 0); }
   if (S.tab === "calc") S.tab = "hub";  /* Calc Lab was removed */
-  var body = S.tab === "hub" ? "" : S.tab === "anatomy" && typeof anatView === "function" ? anatView() : S.tab === "protocols" && typeof agpTabView === "function" ? agpTabView() : typeof fieldTab === "function" && isF(S.level) && FM_TABS[S.tab] ? fieldTab(S.tab) : (S.tab === "vegc" || S.tab === "fruitc" || S.tab === "vitc") && typeof compoundView === "function" ? compoundView(S.tab) : S.tab === "illicit" && typeof illicitView === "function" ? illicitView() : S.tab === "registry" ? (S.view === "level" && isF(S.level) && typeof fieldMedsView === "function" ? fieldMedsView() : registry()) : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? (S.tab = "hub", "") : S.tab === "micro" && typeof microView === "function" ? microView() : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "tools" ? toolsView() : S.tab === "medlist" ? (typeof medlistView === "function" ? medlistView() : "") : flashcards();
+  var body = S.tab === "hub" ? "" : S.tab === "anatomy" && typeof anatView === "function" ? anatView() : S.tab === "protocols" && typeof agpTabView === "function" ? agpTabView() : typeof fieldTab === "function" && isF(S.level) && FM_TABS[S.tab] ? fieldTab(S.tab) : (S.tab === "vegc" || S.tab === "fruitc" || S.tab === "vitc") && typeof compoundView === "function" ? compoundView(S.tab) : S.tab === "illicit" && typeof illicitView === "function" ? illicitView() : S.tab === "registry" ? (S.view === "level" && isF(S.level) && typeof fieldMedsView === "function" ? fieldMedsView() : registry()) : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? (S.tab = "hub", "") : S.tab === "micro" && typeof microView === "function" ? microView() : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "flt_ref" && typeof fltRefView === "function" ? fltRefView() : S.tab === "tools" ? toolsView() : S.tab === "medlist" ? (typeof medlistView === "function" ? medlistView() : "") : flashcards();
   var msg = S.sessMsg ? '<div class="presult" role="status">' + esc(S.sessMsg) + '</div>' : ''; S.sessMsg = "";
   var notes = (S.tab === "calc" || S.tab === "tools" ? eduBanner() : '') + (["prep", "session", "nbug", "scenarios", "cards"].indexOf(S.tab) >= 0 ? esQNote() : '');
   if (S.tab === "hub") return topbar() + '<div class="' + ctxClass() + '">' + band() + protocolBanner() + (isF(S.level) ? "" : dailyCard()) + msg + (S.learn && S.learn.done && typeof learnDoneView === "function" ? learnDoneView() : "") + hubView() + '</div>';
@@ -25345,6 +25356,162 @@ function subManage() {
     location.href = url;
   }).catch(function () { PRO.busy = false; PRO.msg = "Could not open the billing page just now."; drawPaywall(); });
 }
+
+/* ---------- The Flight route (owner, Nov 3 2026) ----------
+   Flight Paramedic and Flight Nurse do the same transport job, so they share one route and one
+   reference rather than getting two near-identical copies to keep in step.
+
+   Almost none of this is new content. DB.HEMO already holds ECMO, Impella, IABP, LVAD, PA
+   catheters, SCAI stages and the interventional cardiology set; DB.FLIGHTP holds the gas laws and
+   the stresses of flight; DB.BLOOD holds products, massive transfusion and reactions. What was
+   missing was a way in: those lived as three ordinary tabs on the normal level menu, while the
+   Combat Paramedic route next door had a purpose-built menu and a searchable reference you could
+   pin to it. This gives Flight the same treatment over the content that already exists, and adds
+   the transport topics that genuinely were not covered anywhere (FLT_NEW, in flightdata.js).
+
+   The pin list is separate from the Field Medic one (Prog.d.fltPins, not fmPins) so pinning a
+   topic as a flight medic does not rearrange the Combat Paramedic menu. */
+
+function isFlightLv(k) { return k === "flight" || k === "flightrn"; }
+function fltOn() { return S.view === "level" && isFlightLv(S.level); }
+
+/* ---- pins: a reference topic promoted to its own tile on the Flight menu ---- */
+var FLT_PIN_MAX = 12;
+function fltPins() { var P = Prog.d; return P.fltPins || (P.fltPins = []); }
+function fltPinned(id) { return fltPins().indexOf(id) >= 0; }
+function fltPinToggle(id) {
+  var L = fltPins(), i = L.indexOf(id);
+  if (i >= 0) L.splice(i, 1);
+  else if (L.length < FLT_PIN_MAX) L.push(id);
+  else { S.fltMsg = "The menu holds " + FLT_PIN_MAX + " pinned topics. Remove one to add another."; }
+  if (typeof saveProg === "function") saveProg();
+  render();
+}
+function fltPinBtn(id, big) {
+  var on = fltPinned(id);
+  return '<button class="pinbtn' + (on ? ' on' : '') + (big ? ' big' : '') + '" data-fltpin="' + esc(id) + '" aria-pressed="' + on +
+    '" title="' + (on ? 'Remove from the Flight menu' : 'Add to the Flight menu') + '">' +
+    '<span class="pini" aria-hidden="true">' + (on ? '★' : '☆') + '</span>' +
+    '<span class="pintx">' + (on ? 'On the menu' : 'Add to menu') + '</span></button>';
+}
+
+/* ---- the index ----
+   One flat, searchable list built from the existing topic sets plus the new transport ones. Each
+   entry knows how to open itself: `kind` + `topic` hands straight to critView's own navigation
+   (S.cn), which is the same route its Previous/Next links already use. */
+function fltIndex() {
+  /* critTopics() is the accessor the rest of the app uses, and it filters each set by the current
+     level (t.lv). So the index is built through it rather than off DB.HEMO directly - otherwise it
+     would list topics the level is not entitled to - and the cache is keyed by level, because
+     Flight Paramedic and Flight Nurse do not resolve critKey() the same way. */
+  var ck = "flt:" + S.level;
+  if (DB._fltIx && DB._fltIxKey === ck) return DB._fltIx;
+  var out = [];
+  function take(kind) {
+    var set = typeof critTopics === "function" ? critTopics(kind) : [];
+    (set || []).forEach(function (t) {
+      out.push({ id: kind + ":" + t.id, t: t.title, cat: t.grp, sum: t.sum || "",
+        kw: (t.title + " " + (t.grp || "") + " " + (t.sum || "")).toLowerCase(), kind: kind, topic: t.id });
+    });
+  }
+  take("hemo");
+  take("flightp");
+  take("blood");
+  if (typeof FLT_NEW !== "undefined") FLT_NEW.forEach(function (t) {
+    out.push({ id: "flt:" + t.id, t: t.t, cat: t.cat, sum: t.sum, kw: (t.t + " " + t.cat + " " + t.kw + " " + t.sum).toLowerCase(), flt: t });
+  });
+  out.sort(function (a, b) { return a.t.localeCompare(b.t); });
+  DB._fltIx = out; DB._fltIxKey = ck;
+  return out;
+}
+function fltById(id) { return fltIndex().filter(function (x) { return x.id === id; })[0]; }
+function fltOpen(x) {
+  if (!x) return;
+  if (x.flt) { S.tab = "flt_ref"; S.fltId = x.id; return; }
+  S.tab = x.kind; S.cn = { kind: x.kind, topic: x.topic };
+  var set = typeof critTopics === "function" ? critTopics(x.kind) : [];
+  var t = (set || []).filter(function (y) { return y.id === x.topic; })[0];
+  if (t) S.cn.grp = t.grp;   /* critView needs grp set, same as its own data-ctopic handler does */
+}
+
+/* ---- the Flight Reference tab ---- */
+function fltRefView() {
+  if (S.fltId) {
+    var R = fltById(S.fltId);
+    if (R && R.flt) return fltTopicView(R);
+    S.fltId = "";
+  }
+  var q = (S.fltQ || "").trim().toLowerCase();
+  var L = fltIndex().filter(function (x) { return !q || x.kw.indexOf(q) >= 0; });
+  var c = '';
+  if (S.fltMsg) { c += '<p class="presult" role="status">' + esc(S.fltMsg) + '</p>'; S.fltMsg = ""; }
+  c += '<p class="muted small">Everything a flight crew looks up, in one list: hemodynamics and devices, the gas laws, blood products and the transport topics. ' +
+    'Tap the star on anything to put it on the Flight menu as its own tile.' + (fltPins().length ? ' ' + fltPins().length + ' of ' + FLT_PIN_MAX + ' pinned.' : '') + '</p>';
+  c += '<input class="pinput dissearch" id="fltq" type="search" placeholder="Search: ECMO, Impella, wedge, Harlequin, boiling..." aria-label="Search the flight reference" value="' + esc(S.fltQ || "") + '">';
+  if (!L.length) return c + '<p class="muted">Nothing matches. Try another word.</p>';
+  var letters = []; L.forEach(function (x) { var l = x.t.charAt(0).toUpperCase(); if (letters.indexOf(l) < 0) letters.push(l); });
+  if (!q) c += '<div class="refaz">' + letters.map(function (l) { return '<button data-fltjump="' + l + '">' + l + '</button>'; }).join("") + '</div>';
+  var cur = "";
+  c += '<div class="reflist">' + L.map(function (x) {
+    var l = x.t.charAt(0).toUpperCase(), h = "";
+    if (l !== cur) { cur = l; h = '<h3 class="refl" id="fltl-' + l + '">' + l + '</h3>'; }
+    return h + '<div class="refrow"><button class="refitem" data-fltgo="' + esc(x.id) + '"><strong>' + esc(x.t) + '</strong><span>' + esc(x.sum) + '</span><em>' + esc(x.cat) + '</em></button>' + fltPinBtn(x.id) + '</div>';
+  }).join("") + '</div>';
+  return c;
+}
+
+/* A topic that lives only here (FLT_NEW), rendered in the same shape as a Field Reference entry. */
+function fltTopicView(R) {
+  var t = R.flt;
+  var c = '<div class="backrow"><button class="backbtn" data-fltgo=""><span aria-hidden="true">&larr;</span> Flight Reference</button>' + fltPinBtn(R.id, 1) + '</div>';
+  c += '<header class="dishead"><span class="dsys">' + esc(t.cat) + '</span><h2>' + esc(t.t) + '</h2></header><p>' + esc(t.sum) + '</p>';
+  (t.blocks || []).forEach(function (b) {
+    if (b[0] === "text") c += '<p>' + esc(b[1]) + '</p>';
+    else if (b[0] === "list") c += '<ul class="trl">' + b[1].map(function (x) { return '<li>' + esc(x) + '</li>'; }).join("") + '</ul>';
+    else if (b[0] === "table") c += '<div class="tablewrap"><table class="reftab"><thead><tr>' + b[1][0].map(function (h) { return '<th>' + esc(h) + '</th>'; }).join("") +
+      '</tr></thead><tbody>' + b[1].slice(1).map(function (r) { return '<tr>' + r.map(function (v) { return '<td>' + esc(v) + '</td>'; }).join("") + '</tr>'; }).join("") + '</tbody></table></div>';
+    else if (b[0] === "formula") c += '<div class="refformula"><b>' + esc(b[1]) + '</b>' + (b[2] ? '<span>' + esc(b[2]) + '</span>' : '') + '</div>';
+  });
+  if (t.src && t.src.length) c += '<p class="muted small">Sources: ' + t.src.map(esc).join("; ") + '</p>';
+  /* Every topic in FLT_NEW is new writing and has not been through clinical review. It says so on
+     the page rather than only in a tracker, because the person reading it is the one at risk. */
+  c += '<p class="revnote"><strong>Awaiting clinical review.</strong> This topic is new and has not yet been checked by a reviewer.</p>';
+  return c + '<p class="muted small">Education only. Protocols, medical direction and the aircraft configuration govern transport care.</p>';
+}
+
+/* ---- the pinned tiles, drawn on the Flight menu ---- */
+function fltPinTiles() {
+  var P = fltPins(); if (!P.length) return "";
+  return P.map(function (id) {
+    var x = fltById(id); if (!x) return "";
+    return '<button class="hubtile t-hemo" data-fltgo="' + esc(x.id) + '">' + (typeof icon === "function" ? icon("hemo") : "") +
+      '<span class="ht"><strong>' + esc(x.t) + '</strong><span>' + esc(x.cat) + '</span></span></button>';
+  }).join("");
+}
+
+/* ---- events ---- */
+document.addEventListener("click", function (e) {
+  var p = e.target.closest && e.target.closest("[data-fltpin]");
+  if (p) { e.preventDefault(); e.stopPropagation(); return fltPinToggle(p.getAttribute("data-fltpin")); }
+  var g = e.target.closest && e.target.closest("[data-fltgo]");
+  if (g) {
+    var id = g.getAttribute("data-fltgo");
+    if (!id) { S.fltId = ""; render(); window.scrollTo(0, 0); return; }
+    var x = fltById(id); if (!x) return;
+    fltOpen(x); render(); window.scrollTo(0, 0); return;
+  }
+  var j = e.target.closest && e.target.closest("[data-fltjump]");
+  if (j) { var el = document.getElementById("fltl-" + j.getAttribute("data-fltjump")); if (el) el.scrollIntoView({ block: "start" }); return; }
+});
+document.addEventListener("input", function (e) {
+  if (e.target && e.target.id === "fltq") {
+    S.fltQ = e.target.value;
+    var box = document.getElementById("tabbody"); if (!box) return;
+    box.innerHTML = fltRefView();
+    if (typeof translateDom === "function") translateDom(box);
+    var f = document.getElementById("fltq"); if (f) { f.focus(); f.setSelectionRange(f.value.length, f.value.length); }
+  }
+});
 
 /* ---------- First run, and the plans prompt (owner, Nov 2 2026) ----------
    The order the owner asked for: agree to everything, make an account straight away, then the quick
