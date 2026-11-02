@@ -11,6 +11,8 @@
 </head>
 <body>
 <title>DrugBug</title>
+<script>/* the query string is read here because app.js strips it on boot, before the modules run */
+window.__DBQ=location.search||"";</script>
 <script>(function(){var r=document.documentElement,t="dark";try{var v=localStorage.getItem("drugbug:theme");if(v)t=JSON.parse(v)||"dark";}catch(e){}if(t==="light"||t==="dark")r.setAttribute("data-theme",t);})();</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

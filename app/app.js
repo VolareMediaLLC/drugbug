@@ -24968,32 +24968,55 @@ function walletSticks() { return WALLET.purchased || 0; }
 
 function walletInit() {
   var c = walletCache(); if (c) WALLET.purchased = c.purchased;   /* show something before the network answers */
+  /* Coming back from Stripe (success_url carries ?bought=1). The thank-you belongs here rather than
+     on the balance changing: after the redirect the page is new, so the first wallet snapshot is a
+     first load and saying "500 sticks added" off the back of it would be guesswork. */
+  try {
+    if (/[?&]bought=1/.test(window.__DBQ || "")) {
+      S.shopMsg = "Thank you. Your sticks are on the way and will land in a moment.";
+      history.replaceState(null, "", location.pathname);   /* so a refresh does not repeat it */
+    }
+  } catch (e) {}
   if (!window.claude || typeof window.claude.use !== "function") return;
   Promise.all([window.claude.use("db"), window.claude.use("user")]).then(function (r) {
     var db = r[0], user = r[1]; if (!db || !user) return;
     return user.id().then(function (uid) {
       if (!uid) return;
       walletWatch(db, uid);
-      if (typeof ACCT !== "undefined" && ACCT.api && typeof ACCT.api.onChange === "function") {
+      /* Re-point the watch if the person signs into a different account. walletWatch ignores a
+         repeat of the same uid, so an auth event that changes nothing costs nothing. */
+      if (!WALLET.hooked && typeof ACCT !== "undefined" && ACCT.api && typeof ACCT.api.onChange === "function") {
+        WALLET.hooked = true;
         ACCT.api.onChange(function () { user.id().then(function (u2) { if (u2 && u2 !== WALLET.uid) walletWatch(db, u2); }); });
       }
     });
   }).catch(function () {});
 }
 function walletWatch(db, uid) {
+  if (WALLET.uid === uid && WALLET.unsub) return;   /* already watching this person */
   if (WALLET.unsub) { try { WALLET.unsub(); } catch (e) {} WALLET.unsub = null; }
   WALLET.uid = uid;
   try {
     WALLET.unsub = db.doc("wallets/" + uid).onSnapshot(function (snap) {
-      var d = (snap && snap.exists && snap.data()) || { purchased: 0 };
-      var was = WALLET.purchased;
-      WALLET.purchased = Number(d.purchased) || 0; WALLET.loaded = true;
-      store("wallet", { purchased: WALLET.purchased, uid: uid });
-      if (WALLET.purchased > was) {
-        /* a payment landed, possibly while they were looking at another screen */
-        S.shopMsg = (WALLET.purchased - was).toLocaleString() + " sticks added. Thank you.";
-      }
-      if (typeof render === "function") render();
+      /* Firestore offline persistence is on (tools/ios/backend.js), so every read fires TWICE:
+         once from the local cache, then again from the server. Before the cache has ever seen this
+         document the first of those pair says "does not exist", which read as a balance of zero and
+         made a just-bought balance drop back for a moment until the server answered. A cache
+         snapshot is allowed to raise the number but never to lower it; only the server is believed
+         when the balance goes down. (owner, Nov 2 2026) */
+      var fromCache = !!(snap && snap.metadata && snap.metadata.fromCache);
+      var has = !!(snap && snap.exists);
+      var n = has ? (Number(snap.data().purchased) || 0) : 0;
+      if (fromCache && (!has || n < WALLET.purchased)) return;
+
+      var was = WALLET.purchased, first = !WALLET.loaded;
+      if (n === was && !first) return;            /* nothing changed: do not re-render */
+      WALLET.purchased = n; WALLET.loaded = true;
+      store("wallet", { purchased: n, uid: uid });
+      /* Only announce a genuine increase, never the first load: on a fresh start the cached number
+         is already on screen and "500 sticks added" would be a lie. */
+      if (!first && n > was) S.shopMsg = (n - was).toLocaleString() + " sticks added. Thank you.";
+      if (n !== was && typeof render === "function") render();
     }, function () { /* offline or not allowed: the cached number stands */ });
   } catch (e) {}
 }
