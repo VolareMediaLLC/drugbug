@@ -12,6 +12,10 @@ window.DRUGBUG_CONFIG = Object.assign({
      meets a wall they cannot pay past. Flip that line in modules/pro.js the day Stripe is live. */
   paywall: true,
   site: "https://drugbugapp.com",
+  /* Base URL of the deployed Cloud Functions (functions/index.js). Empty until they are deployed,
+     and while it is empty the web Get Sticks screen says the packs are not open yet rather than
+     offering a button that cannot work. */
+  functionsUrl: "https://us-central1-drugbug-69d42.cloudfunctions.net",
   supportEmail: "VolareMediaLLC@gmail.com",
   firebase: {
     apiKey: "AIzaSyC7cNkPSpPqfHPLNSY54u8QSL1jnaYsVMM",

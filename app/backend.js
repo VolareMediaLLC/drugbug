@@ -117,6 +117,8 @@
       var rev = appleCode && typeof auth.revokeAccessToken === "function" ? auth.revokeAccessToken(appleCode).catch(function () {}) : Promise.resolve();
       return rev.then(function () { return u.delete(); }).then(function () { return auth.signInAnonymously(); }).then(function () { emit(); });
     },
+    /* a short-lived ID token for calling our own Cloud Functions (checkout) */
+    token: function () { var u = auth && auth.currentUser; return u ? u.getIdToken() : Promise.resolve(null); },
     error: msg
   };
   window.claude = {

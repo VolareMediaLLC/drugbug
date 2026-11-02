@@ -2997,7 +2997,8 @@ var STICKV = { emt: 1, cna: 1, aemt: 1, lvn: 1, gen: 1, paramedic: 1, rn: 1, ms1
 var PERFECT_BONUS = 10, ACH_BONUS = 25;
 function perfectBonus(st, total, correct) { if (st.perfectPaid || total < 10 || correct !== total) return false; st.perfectPaid = true; earn(PERFECT_BONUS); saveProg(); return true; }
 var START_STICKS = 20;
-function sticks() { var P = Prog.d; return START_STICKS + (P.earned || 0) - (P.spent || 0); }
+/* earned on the device + paid for on the server, less what has been spent (modules/wallet.js) */
+function sticks() { var P = Prog.d; return START_STICKS + (P.earned || 0) + (typeof walletSticks === "function" ? walletSticks() : 0) - (P.spent || 0); }
 var STICK_TRY = 1, STICK_RIGHT = 3; /* every answered question pays 1 stick for trying, 3 when correct */
 function qSticks(ok) { return ok ? STICK_RIGHT : STICK_TRY; }
 function stickNote(ok) { var n = qSticks(ok); return ' <span class="earned">+' + n + (n === 1 ? " stick" : " sticks") + (ok ? "" : " for trying") + '</span>'; }
@@ -7723,7 +7724,7 @@ function accInit() {
   }).catch(function () {});
 }
 var ACC_LOCAL = ["progress", "nrscores", "lastLevel", "nunit", "protocol", "reviewer"];
-function accClearLocal() { try { ACC_LOCAL.forEach(function (k) { localStorage.removeItem("drugbug:" + k); }); Object.keys(localStorage).forEach(function (k) { if (k.indexOf("drugbug:scen:") === 0) localStorage.removeItem(k); }); } catch (e) {} }
+function accClearLocal() { try { if (typeof walletClear === "function") walletClear(); ACC_LOCAL.forEach(function (k) { localStorage.removeItem("drugbug:" + k); }); Object.keys(localStorage).forEach(function (k) { if (k.indexOf("drugbug:scen:") === 0) localStorage.removeItem(k); }); } catch (e) {} }
 function accDone(text) { ACCT.busy = false; ACCT.msg = text || ""; try { sessionStorage.setItem("drugbug:accmsg", ACCT.msg); } catch (e) {} setTimeout(function () { location.reload(); }, 300); }
 function accFail(e) { ACCT.busy = false; ACCT.msg = ACCT.api ? ACCT.api.error(e) : "Something went wrong."; render(); }
 /* ===== The quiet offer (owner, Nov 1 2026) =====
@@ -24340,7 +24341,10 @@ var IAP_PACKS = [
   { id: "sticks10000", sku: "com.volaremedia.drugbug.sticks.10000", n: 10000, bonus: 2000, usd: "$14.99", name: "A Crate",    blurb: "A legendary bug, outright." },
   { id: "sticks30000", sku: "com.volaremedia.drugbug.sticks.30000", n: 30000, bonus: 9000, usd: "$39.99", name: "A Woodpile", blurb: "Most of the Terrarium in one go." }
 ];
-var IAP_WEB = false;   /* flip to true only when a web checkout actually exists */
+/* The web checkout exists once the Cloud Functions are deployed and their base URL is in
+   DRUGBUG_CONFIG.functionsUrl (tools/web-config.js). Until then this is false on its own and the
+   screen says the packs are not open, rather than offering a button that cannot work. */
+var IAP_WEB = !NATIVE && !!((window.DRUGBUG_CONFIG || {}).functionsUrl);
 var IAP = { busy: "", msg: "", err: "" };
 
 function iapPackById(id) { return IAP_PACKS.filter(function (p) { return p.id === id || p.sku === id; })[0] || null; }
@@ -24386,9 +24390,37 @@ function iapPurchase(p) {
   var where = iapAvailable();
   if (where === "ios") return typeof storeCall === "function" && storeCall("buyConsumable", { product: p.sku });
   if (where === "android") { try { window.DrugBugAndroid.buyConsumable(p.sku); return true; } catch (e) { return false; } }
-  /* where === "web": a checkout call goes here, and its success callback calls
-     iapGrant(p.id, <the payment processor's transaction id>). Nothing else needs changing. */
+  if (where === "web") return iapWebCheckout(p);
   return false;
+}
+/* Stripe Checkout, hosted by Stripe: we never see a card number and no card field is ever on our
+   page. The function is asked for a session by PACK ID only - it decides the price - and the sticks
+   are credited by the webhook into the wallet, not by anything here. So a person who never comes
+   back from Stripe still gets what they paid for, and a person who fakes the return gets nothing. */
+function iapWebCheckout(p) {
+  var base = (window.DRUGBUG_CONFIG || {}).functionsUrl;
+  if (!base || !ACCT || !ACCT.api || typeof ACCT.api.token !== "function") return false;
+  var st = ACCT.api.state() || {};
+  if (!st.signedIn) {
+    IAP.err = "Make an account first, so your sticks follow you to your other devices.";
+    IAP.busy = ""; render(); return true;
+  }
+  ACCT.api.token().then(function (tok) {
+    if (!tok) throw new Error("no token");
+    return fetch(base.replace(/\/$/, "") + "/createCheckout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + tok },
+      body: JSON.stringify({ data: { pack: p.id } })
+    });
+  }).then(function (r) { return r.json(); }).then(function (j) {
+    var url = j && j.result && j.result.url;
+    if (!url) throw new Error((j && j.error && j.error.message) || "no checkout url");
+    window.location.href = url;
+  }).catch(function (e) {
+    IAP.busy = ""; IAP.err = "Could not open checkout. " + (e && e.message ? e.message : "Try again in a moment.");
+    render();
+  });
+  return true;
 }
 
 function iapBuy(id) {
@@ -24909,6 +24941,69 @@ document.addEventListener("submit", function (e) {
   giftRedeem((document.getElementById("giftin") || {}).value || "");
 });
 
+/* ---------- The wallet: sticks that were paid for (owner, Nov 1 2026) ----------
+   Earned sticks stay where they have always been, in Prog.d.earned on the device, so studying works
+   with no account and no signal. Someone who edits that number is cheating at a game they paid
+   nothing for, and chasing it would cost offline play, which matters more in the back of a truck.
+
+   Sticks that cost money are different. They live in a document only a Cloud Function can write:
+
+       wallets/{uid}   { purchased: <number>, updated: <ms>, last: "<txn id>" }
+
+   It sits at the top level, not under data/users/, because Firestore grants access if ANY rule
+   allows it: nested under the user's own subtree the existing catch-all would still let a browser
+   write it, and the deny would be decoration. The rules let the owner read and delete it, and let
+   nobody create or update it (tools/firestore.rules). It is
+   written after Stripe's webhook, or Apple's receipt check, has verified a real payment, and the
+   transaction id is recorded so the same payment is never credited twice.
+
+   The client keeps a local copy so the balance still shows offline, but the server's number always
+   wins the moment it arrives: a forged cache lies to one browser until its next sync and buys
+   nothing anywhere else. */
+
+var WALLET = { purchased: 0, loaded: false, unsub: null };
+
+function walletCache() { var w = store("wallet"); return w && typeof w.purchased === "number" ? w : null; }
+function walletSticks() { return WALLET.purchased || 0; }
+
+function walletInit() {
+  var c = walletCache(); if (c) WALLET.purchased = c.purchased;   /* show something before the network answers */
+  if (!window.claude || typeof window.claude.use !== "function") return;
+  Promise.all([window.claude.use("db"), window.claude.use("user")]).then(function (r) {
+    var db = r[0], user = r[1]; if (!db || !user) return;
+    return user.id().then(function (uid) {
+      if (!uid) return;
+      walletWatch(db, uid);
+      if (typeof ACCT !== "undefined" && ACCT.api && typeof ACCT.api.onChange === "function") {
+        ACCT.api.onChange(function () { user.id().then(function (u2) { if (u2 && u2 !== WALLET.uid) walletWatch(db, u2); }); });
+      }
+    });
+  }).catch(function () {});
+}
+function walletWatch(db, uid) {
+  if (WALLET.unsub) { try { WALLET.unsub(); } catch (e) {} WALLET.unsub = null; }
+  WALLET.uid = uid;
+  try {
+    WALLET.unsub = db.doc("wallets/" + uid).onSnapshot(function (snap) {
+      var d = (snap && snap.exists && snap.data()) || { purchased: 0 };
+      var was = WALLET.purchased;
+      WALLET.purchased = Number(d.purchased) || 0; WALLET.loaded = true;
+      store("wallet", { purchased: WALLET.purchased, uid: uid });
+      if (WALLET.purchased > was) {
+        /* a payment landed, possibly while they were looking at another screen */
+        S.shopMsg = (WALLET.purchased - was).toLocaleString() + " sticks added. Thank you.";
+      }
+      if (typeof render === "function") render();
+    }, function () { /* offline or not allowed: the cached number stands */ });
+  } catch (e) {}
+}
+/* A person signing out should not keep seeing someone else's purchased balance. */
+function walletClear() {
+  if (WALLET.unsub) { try { WALLET.unsub(); } catch (e) {} }
+  WALLET.unsub = null; WALLET.purchased = 0; WALLET.loaded = false; WALLET.uid = null;
+  try { store("wallet", null); } catch (e) {}
+}
+
 /* ---------- First run: pick a plan, then make an account (owner, Nov 1 2026) ----------
    Replaces the quiet in-app nudge that nobody found. The order is the one people expect from an app:
    see what it costs, then create the account that holds it.
@@ -25044,5 +25139,5 @@ if (!h) {
 render();
 /* Control Center edits baked into the build (tools/bake_edits.py) so the iPhone app has them without a database */
 if (DB.BAKED) { try { (DB.BAKED.drugdex || []).forEach(applyRecord); CR_TYPES.forEach(function (t) { if (t[0] !== "drug") crItems(t[0]); }); (DB.BAKED.content || []).forEach(applyContent); } catch (e) { } }
-Dex.load(); initProg(); if (typeof grubFix === "function") grubFix(); if (agreeRec() && typeof trialBegin === "function") trialBegin(); setTimeout(function () { if (typeof remindSync === "function") remindSync(); if (typeof wdwSync === "function") wdwSync(); if (typeof watchSync === "function") watchSync(); }, 1500); initAdmin(); initLegal(); if (typeof accInit === "function") accInit(); setTimeout(loadProtocolSets, 400); if (typeof wzPending === "function") setTimeout(wzPending, 900);
+Dex.load(); initProg(); if (typeof grubFix === "function") grubFix(); if (agreeRec() && typeof trialBegin === "function") trialBegin(); setTimeout(function () { if (typeof remindSync === "function") remindSync(); if (typeof wdwSync === "function") wdwSync(); if (typeof watchSync === "function") watchSync(); }, 1500); initAdmin(); initLegal(); if (typeof accInit === "function") accInit(); if (typeof walletInit === "function") walletInit(); setTimeout(loadProtocolSets, 400); if (typeof wzPending === "function") setTimeout(wzPending, 900);
 })();
