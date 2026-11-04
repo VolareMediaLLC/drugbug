@@ -337,7 +337,7 @@ function go(view, opts) {
   if (view === "flevels" || view === "field") { if (S.view === "level" && isF(S.level)) view = "home"; else { view = "level"; opts = Object.assign({}, opts || {}, { level: "cpp" }); } }
   if (view === "level" && opts && opts.level && isF(opts.level) && opts.level !== "cpp") opts = Object.assign({}, opts, { level: "cpp" });
   if (UTIL_VIEWS[view] && !UTIL_VIEWS[S.view] && S.view !== view && S.view !== "terrarium") S.utilBack = { view: S.view, level: S.level, tab: S.tab };
-  clearTimeout(S.qT); S.view = view; Object.assign(S, { pointGo: null, showFilt: false, onlyMarks: false, tool: null, shopF: null, tab: "hub", q: "", tags: {}, group: "all", scen: null, fc: null, nr: null, sess: null, prepNr: null, unit: null, fam: null, famq: "", cn: null, menu: false, mupop: false, fmq: "", trId: null, blT: "", disId: null }, opts || {});
+  clearTimeout(S.qT); S.view = view; Object.assign(S, { cmpOn: 0, cmpB: null, cmpQ: "", pointGo: null, showFilt: false, onlyMarks: false, tool: null, shopF: null, tab: "hub", q: "", tags: {}, group: "all", scen: null, fc: null, nr: null, sess: null, prepNr: null, unit: null, fam: null, famq: "", cn: null, menu: false, mupop: false, fmq: "", trId: null, blT: "", disId: null }, opts || {});
   if ((S.view === "flevels" || S.view === "field" || (S.view === "level" && isF(S.level))) && typeof fmUnlocked === "function" && !fmUnlocked()) { S.view = "home"; view = "home"; } /* Field Medic is hidden until a code is redeemed */
   fixTab();
   Admin.on = view === "admin"; if (view === "level") store("lastLevel", S.level);
@@ -348,7 +348,10 @@ function go(view, opts) {
 
 /* ---------- top bar ---------- */
 function topbar() {
-  var c = '<div class="topbar"><button class="brand' + (S.view === "home" ? ' onhome' : '') + '" data-go="home" aria-label="DrugBug home">Drug<span>Bug</span></button><nav class="crumbs">';
+  try { document.documentElement.setAttribute("data-serious", funOn() ? "" : "1"); } catch (e) {}
+  var fun = funOn();
+  var c = '<div class="topbar"><button class="modetog' + (fun ? '' : ' serious') + '" data-act="funtog" role="switch" aria-checked="' + (fun ? 'true' : 'false') + '" aria-label="Seriously Fun mode" title="' + (fun ? 'Seriously Fun: tap for the plain reference' : 'Serious: tap for the playful version') + '"><span class="modedot"></span><span class="modetx">' + (fun ? 'Fun' : 'Serious') + '</span></button>' +
+    '<button class="brand' + (S.view === "home" ? ' onhome' : '') + '" data-go="home" aria-label="DrugBug home">Drug<span>Bug</span></button><nav class="crumbs">';
   var rc = routeCtx(); if (rc === "fm") rc = "ph"; if (ROUTES[rc]) c += '<span>/</span><button data-go="' + ROUTES[rc].view + '">' + ROUTES[rc].name + '</button>';
   if (S.view === "level") c += '<span class="cur">/</span><span class="cur">' + esc(levelObj(S.level).name) + '</span>';
   if (S.view === "gen") c += '<span>/</span><span>BugDex</span>';
@@ -1465,6 +1468,108 @@ function formStep(dir) { if (!S.sheet) return; var F = formsOf(S.sheet.id); if (
   sheet.addEventListener("touchend", function (e) { if (!ok || !S.sheet) return; ok = false; var t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy; if (Date.now() - st < 700 && Math.abs(dx) > 60 && Math.abs(dx) > 2 * Math.abs(dy)) formStep(dx < 0 ? 1 : -1); }, { passive: true });
 })();
 function dexCtx() { return S.view === "gen" || S.view === "admin" || nurseCtx() || medCtx() || imCtx() || S.view === "easy"; }
+/* ---------- Compare two drugs side by side (owner, Nov 4 2026) ----------
+   Everything shown here is pulled straight from the two monographs and, when the pair belongs to
+   one of the drug families, from that family's own "what they share / how to tell them apart"
+   text. Nothing is generated: this is the same wording as the drug pages, set next to each other,
+   which is what makes the close-but-different pairs (tenecteplase vs alteplase) readable. */
+var CMP_FIELDS = [
+  ["Class", 0, 3], ["Pharmacologic class", 0, 4], ["What it does", 1, 1],
+  ["Main uses", 3, 0], ["Contraindications", 4, 0], ["Boxed warning", 5, 1],
+  ["Onset", 8, 0], ["Peak", 8, 1], ["Duration", 8, 2], ["Half-life", 8, 3],
+  ["Routes", 7, 0], ["Serious side effects", 9, 1], ["Antidote", 13, 4], ["Reversal agent", 13, 5]
+];
+function cmpFam(a, b) {
+  return (DB.FAM || []).filter(function (f) {
+    return f.members.some(function (m) { return m.id === a; }) && f.members.some(function (m) { return m.id === b; });
+  })[0] || null;
+}
+function cmpMem(f, id) { return f.members.filter(function (m) { return m.id === id; })[0] || null; }
+/* drugs worth offering first: same family, then the drug's own "Similar Drugs" and
+   "Commonly Confused With" lines, then same class */
+function cmpSuggest(id) {
+  var d = DB.drugs[id], out = [], seen = {}; seen[id] = 1;
+  function push(x) { if (x && DB.drugs[x] && !seen[x] && !(typeof drugLocked === "function" && drugLocked(x))) { seen[x] = 1; out.push(x); } }
+  (DB.FAM || []).forEach(function (f) {
+    if (f.members.some(function (m) { return m.id === id; })) f.members.forEach(function (m) { push(m.id); });
+  });
+  if (d) [get(d, 16, 6), get(d, 16, 5)].forEach(function (txt) {
+    String(txt || "").split(/[;,]/).forEach(function (nm) {
+      nm = nm.trim(); if (nm.length < 3) return;
+      var hit = (DB.ALLIDS || DB.order || []).filter(function (x) { return DB.drugs[x] && DB.drugs[x].name.toLowerCase() === nm.toLowerCase(); })[0];
+      if (hit) push(hit);
+    });
+  });
+  return out.slice(0, 8);
+}
+function cmpResults(id) {
+  var q = (S.cmpQ || "").trim();
+  if (!q) {
+    var sug = cmpSuggest(id);
+    return !sug.length ? '<p class="muted small">Search for any medication above.</p>'
+      : '<p class="cmplbl">Often compared with</p><div class="cmpsug">' + sug.map(function (x) {
+          return '<button class="chip" data-cmpb="' + x + '">' + esc(nameOf(x)) + '</button>';
+        }).join("") + '</div>';
+  }
+  var ids = (DB.ALLIDS || DB.order || []).filter(function (x) {
+    return x !== id && !(typeof drugLocked === "function" && drugLocked(x)) && drugMatch(x, q, true);
+  }).slice(0, 24);
+  return !ids.length ? '<p class="muted small">No medication matches that.</p>'
+    : '<div class="cmpsug">' + ids.map(function (x) {
+        return '<button class="chip" data-cmpb="' + x + '">' + esc(nameOf(x)) + '</button>';
+      }).join("") + '</div>';
+}
+function cmpView(a) {
+  var b = S.cmpB, A = DB.drugs[a], B = b ? DB.drugs[b] : null;
+  var c = '<div class="cmpwrap"><div class="cmphead"><button class="linkish subback" data-cmpclose="1">&larr; Back to ' + esc(nameOf(a)) + '</button></div>';
+  if (!B) {
+    return c + '<h3 class="cmptitle">Compare ' + esc(nameOf(a)) + ' with&hellip;</h3>' +
+      '<input class="search" id="cmpq" type="search" placeholder="Search a medication to compare" value="' + esc(S.cmpQ || "") + '" autocomplete="off">' +
+      '<div id="cmpres">' + cmpResults(a) + '</div></div>';
+  }
+  var F = cmpFam(a, b), ma = F && cmpMem(F, a), mb = F && cmpMem(F, b);
+  c += '<div class="cmptop"><span class="cmpn">' + esc(nameOf(a)) + '</span><span class="cmpvs">vs</span><span class="cmpn">' + esc(nameOf(b)) + '</span></div>' +
+    '<div class="cmpacts2"><button class="btn small ghost" data-cmpswap="1">Swap</button>' +
+    '<button class="btn small ghost" data-cmppick="1">Compare something else</button></div>';
+  if (F) {
+    c += '<div class="cmpdiff"><h4>Both are ' + esc(F.name.toLowerCase()) + '</h4>' +
+      '<p class="cmpshare">' + esc(F.share) + '</p>' +
+      '<div class="cmpkeys">' +
+        (ma ? '<div class="cmpkey"><strong>' + esc(nameOf(a)) + '</strong><span class="cmptag">' + esc(ma.key || "") + '</span><p>' + esc(ma.diff || "") + '</p></div>' : '') +
+        (mb ? '<div class="cmpkey"><strong>' + esc(nameOf(b)) + '</strong><span class="cmptag">' + esc(mb.key || "") + '</span><p>' + esc(mb.diff || "") + '</p></div>' : '') +
+      '</div>' +
+      (F.tips && F.tips.length ? '<details class="cmptips"><summary>How to tell them apart</summary><ul>' + F.tips.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join("") + '</ul></details>' : '') +
+      '</div>';
+  }
+  var rows = CMP_FIELDS.map(function (f) {
+    var va = okv(get(A, f[1], f[2])) ? get(A, f[1], f[2]) : "", vb = okv(get(B, f[1], f[2])) ? get(B, f[1], f[2]) : "";
+    if (!va && !vb) return "";
+    var same = va && vb && va.trim().toLowerCase() === vb.trim().toLowerCase();
+    return '<tr' + (same ? '' : ' class="dif"') + '><th>' + esc(f[0]) + '</th><td>' + (va ? esc(va) : '<span class="muted">&mdash;</span>') +
+      '</td><td>' + (vb ? esc(vb) : '<span class="muted">&mdash;</span>') + '</td></tr>';
+  }).filter(Boolean).join("");
+  c += '<div class="cmptblwrap"><table class="cmptbl"><thead><tr><th></th><th>' + esc(nameOf(a)) + '</th><th>' + esc(nameOf(b)) + '</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+    '<p class="muted small">Rows that differ are marked. Wording comes from each drug\'s own page. Educational comparison only: which medicine fits a patient is a prescriber decision.</p>' +
+    '<div class="cmpacts2"><button class="btn small ghost" data-drug="' + a + '">Open ' + esc(nameOf(a)) + '</button>' +
+    '<button class="btn small ghost" data-drug="' + b + '">Open ' + esc(nameOf(b)) + '</button></div></div>';
+  return c;
+}
+function cmpClick(t, a) {
+  if (a.cmpgo) { S.cmpOn = 1; S.cmpB = null; S.cmpQ = ""; drawSheet(); return true; }
+  if (a.cmpb) { S.cmpB = a.cmpb; S.cmpQ = ""; drawSheet(); return true; }
+  if (a.cmppick) { S.cmpB = null; S.cmpQ = ""; drawSheet(); return true; }
+  if (a.cmpswap) { var o = S.sheet.id; S.sheet.id = S.cmpB; S.cmpB = o; drawSheet(); return true; }
+  if (a.cmpclose) { S.cmpOn = 0; S.cmpB = null; S.cmpQ = ""; drawSheet(); return true; }
+  return false;
+}
+/* typing filters the list in place, so the box keeps focus */
+document.addEventListener("input", function (e) {
+  if (!e.target || e.target.id !== "cmpq") return;
+  S.cmpQ = e.target.value;
+  var box = document.getElementById("cmpres");
+  if (box && S.sheet) box.innerHTML = cmpResults(S.sheet.id);
+});
+
 function drawSheet() {
   if (typeof drugLocked === "function" && drugLocked(S.sheet.id)) { var lid = S.sheet.id; closeSheet(); return openPaywall(nameOf(lid), drugTier(lid)); }
   DW.id = S.sheet.id;
@@ -1479,6 +1584,7 @@ function drawSheet() {
     '<span class="mchip m-' + mastery(id) + '">' + esc(mlabel(mastery(id))) + '</span>' + reviewBadge(d) +
     (d.status === "unpublished" ? '<span class="badge ctrl">Unpublished</span>' : '') +
     (S.view === "gen" && DB.PHIDS.indexOf(id) >= 0 ? '<span class="badge">EMS drug</span>' : '') + '</div></div>';
+  if (S.cmpOn) { c += cmpView(id); sheet.innerHTML = c + '</div>'; translateDom(sheet); return; }
   if (typeof deepView === "function") {
     c += deepTabs();
     if (S.dtab === "deep") { c += deepView(id) + '<div class="sheetfoot">' + reportBtn("drug", id, id) + '</div>'; sheet.innerHTML = c + '</div>'; translateDom(sheet); return; }
@@ -1491,7 +1597,7 @@ function drawSheet() {
   if (typeof agpDrugBox === "function") c += agpDrugBox(id);
   if (typeof antiBox === "function") c += antiBox(id);
   if (typeof worldBox === "function") c += worldBox(id);
-  c += '<div class="sheetacts"><button class="btn small" data-sess="study" data-drug-id="' + id + '">Study it</button>' + (medCtx() ? '<button class="btn small ghost" data-altgo="' + id + '">Alternatives</button>' : '') + '<button class="btn small ghost" data-mark="' + id + '" aria-pressed="' + isMarked(id) + '">' + (isMarked(id) ? "In My List ✓" : "Save to My List" + (typeof PAYWALL !== "undefined" && PAYWALL && !hasTier("plus") ? " " + tierBadge("plus") : "")) + '</button>' + (S.markHint === id && isMarked(id) ? '<span class="muted small markhint">Saved. Open it any time from the <strong>My List</strong> tile.</span>' : '') + '<button class="btn small ghost" data-act="srcjump">Sources</button>' + (typeof canPrint === "function" && canPrint() ? '<button class="btn small ghost" data-print="drug:' + id + '|cards">Print</button>' : '') + (Admin.can ? '<button class="btn small ghost" data-go-edit="' + id + '">Edit in Control Center</button>' : '') + '</div>' + famLinks(id) + eduBanner(true);
+  c += '<div class="sheetacts"><button class="btn small" data-sess="study" data-drug-id="' + id + '">Study it</button><button class="btn small ghost" data-cmpgo="' + id + '">Compare</button>' + (medCtx() ? '<button class="btn small ghost" data-altgo="' + id + '">Alternatives</button>' : '') + '<button class="btn small ghost" data-mark="' + id + '" aria-pressed="' + isMarked(id) + '">' + (isMarked(id) ? "In My List ✓" : "Save to My List" + (typeof PAYWALL !== "undefined" && PAYWALL && !hasTier("plus") ? " " + tierBadge("plus") : "")) + '</button>' + (S.markHint === id && isMarked(id) ? '<span class="muted small markhint">Saved. Open it any time from the <strong>My List</strong> tile.</span>' : '') + '<button class="btn small ghost" data-act="srcjump">Sources</button>' + (typeof canPrint === "function" && canPrint() ? '<button class="btn small ghost" data-print="drug:' + id + '|cards">Print</button>' : '') + (Admin.can ? '<button class="btn small ghost" data-go-edit="' + id + '">Edit in Control Center</button>' : '') + '</div>' + famLinks(id) + eduBanner(true);
   if (S.full) c += '<button class="toggle-full" data-act="full">Back to the simple view</button>' + (typeof probioSection === "function" ? probioSection(id) : "") + (dexCtx() ? dexView(d) : fullView(d, tier)) + '<button class="toggle-full" data-act="full">Back to the simple view</button>';
   else c += (dexCtx() ? dexBox(d) : tierBox(d, tier)) + (typeof probioSection === "function" ? probioSection(id) : "") + lensCard(d) + (lang() === "es" && DB.ES[id] ? esView(id) : simpleView(d, tier)) + '<button class="toggle-full" data-act="full">' + (dexCtx() ? "Show the full DrugDex record" : "Show everything (full monograph)") + '</button>';
   c += sourcesPanel(d) + '<div class="sheetfoot">' + reportBtn("drug", id, id) + '</div>';
@@ -1538,6 +1644,7 @@ document.addEventListener("click", function (e) {
   }
   var a = t.dataset;
   if (S.view === "admin" && (a.atab || a.aedit || a.aqedit || a.asedit || a.arestore || a.aact || a.rqopen || a.psedit)) return adminClick(t);
+  if (typeof cmpClick === "function" && cmpClick(t, a)) return;
   if (typeof obClick === "function" && obClick(t, a)) return;
   if (a.role) return pickRole(a.role);
   if ((typeof microClick === "function" && microClick(t, a)) || (typeof deepClick === "function" && deepClick(t, a)) || (typeof disClick === "function" && disClick(t, a)) || (typeof gamesClick === "function" && S.tab === "games" && gamesClick(t, a)) || altsClick(t, a) || flClick(t, a) || aiClick(t, a) || critClick(t, a) || labsClick(t, a) || legalClick(t, a) || i18nClick(t, a) || printClick(t, a) || settingsClick(t, a) || buddyClick(t, a)) return;
@@ -1647,6 +1754,14 @@ document.addEventListener("click", function (e) {
   switch (a.act) {
     case "close": return closeSheet();
     case "tbmenu": S.menu = !S.menu; return render();
+    case "funtog": {
+      var on = !funOn();
+      setSet("fun", on);
+      if (!on) setSet("sfx", false);          /* serious means quiet too, same as the first-run choice */
+      store("funAsked", 1);
+      try { document.documentElement.setAttribute("data-serious", on ? "" : "1"); } catch (e) {}
+      render(); return;
+    }
     case "gsearch": S.menu = false; go("gen", { tab: "registry" }); setTimeout(function () { var q = document.getElementById("q"); if (q) { q.focus(); q.scrollIntoView({ block: "center" }); } }, 60); return;
     case "openproto": S.menu = false; render(); return openProto();
     case "utilback": var ub = S.utilBack; S.utilBack = null; if (ub && ub.view && !UTIL_VIEWS[ub.view]) { go(ub.view, ub.level ? { level: ub.level } : {}); if (ub.tab && ub.tab !== "hub") { S.tab = ub.tab; render(); } return; } return go("home");
