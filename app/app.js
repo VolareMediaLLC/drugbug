@@ -2,6 +2,18 @@
 (function () {
 "use strict";
 
+/* The buyer's-eye copy opens as a stranger would meet it, every single time: the education
+   notice, then the first-run picker, then an empty profile. Set by DRUGBUG_CONFIG.fresh on
+   that build only; the real app and the main preview never do this (owner, Nov 4 2026).
+   It runs before anything reads storage, and the cloud copy of progress is left alone. */
+var FRESH = !!(window.DRUGBUG_CONFIG && window.DRUGBUG_CONFIG.fresh);
+if (FRESH) try {
+  for (var fi = localStorage.length - 1; fi >= 0; fi--) {
+    var fk = localStorage.key(fi);
+    if (fk && fk.indexOf("drugbug:") === 0) localStorage.removeItem(fk);
+  }
+} catch (e) {}
+
 /* ---------- template ---------- */
 var T = [
  ["Drug Name", "id", ["Generic Name","Brand Name(s)","Common EMS Name","Drug Class","Pharmacologic Class","Controlled Substance Schedule"]],
@@ -2406,6 +2418,7 @@ function mergeProg(remote) {
   Object.keys(R).forEach(function (k) { if (L[k] === undefined) L[k] = R[k]; });
 }
 function initProg() {
+  if (FRESH) return;          /* a fresh-every-open demo must not restore a saved profile */
   if (!window.claude || typeof window.claude.use !== "function") return;
   Promise.all([window.claude.use("db"), window.claude.use("user")]).then(function (r) {
     var db = r[0], user = r[1]; if (!db || !user || typeof user.id !== "function") return;
