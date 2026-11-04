@@ -1848,7 +1848,7 @@ body:has(#app > .gate){padding-inline:12px;padding-block:0;margin:0}#app:has(> .
 /* a single chosen path fills the row, and the "Start here" badge needs headroom
    so it does not sit on top of the heading above it */
 .minis.one{grid-template-columns:1fr}
-.minis:has(.pointed){margin-top:22px}
+.minis:has(.pointed){margin-top:22px;row-gap:28px}
 /* "Show every path" under the main menu's route cards (owner, Nov 4 2026) */
 .pathtog{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:12px;border:1.5px dashed var(--line);background:transparent;border-radius:14px;padding:11px;color:var(--muted);font-weight:700;font-size:14px}
 .pathtog span{font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;background:var(--surface-2);border-radius:999px;padding:2px 9px}
@@ -1902,6 +1902,40 @@ table.cmptbl tbody th{width:118px;font-size:11.5px;text-transform:uppercase;lett
 table.cmptbl tr.dif td{background:color-mix(in srgb,var(--gold) 12%,transparent)}
 table.cmptbl tr.dif th{border-left:3px solid var(--gold)}
 @media (max-width:560px){.cmpkeys{grid-template-columns:1fr}table.cmptbl tbody th{width:92px}}
+/* One card size on the main menu: BugDex, Everyday Health and every specialty match,
+   in a single column so nothing is half-width (owner, Nov 4 2026). My List stays small. */
+.homewrap .routes .minis{grid-template-columns:1fr!important}
+.homewrap .route.rmini{height:128px;min-height:0;align-items:center}
+.homewrap .route.rmini .mtx{min-width:0}
+.homewrap .route.rmini p{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.homewrap .route.rmini .mbug,.homewrap .route.rmini .mbug svg{width:66px;height:66px}
+/* My List: a small strip directly under the BugDex (owner, Nov 4 2026) */
+.route.mlsmall{grid-column:1/-1;display:flex;flex-direction:row;align-items:center;gap:12px;min-height:0;padding:10px 14px;border-radius:16px;background:linear-gradient(135deg,#b4532a 0%,#7a2e8e 100%);box-shadow:none;margin-top:10px}
+.route.mlsmall .mls-ic{flex:none;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:rgba(255,255,255,.18);font-size:15px}
+.route.mlsmall .mls-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.route.mlsmall .mls-tx strong{font-family:var(--f-display);font-size:16px;display:flex;align-items:center;gap:7px}
+.route.mlsmall .mls-tx span{font-size:12.5px;opacity:.92}
+.route.mlsmall .lockpill{font-size:10.5px;font-weight:800;background:rgba(0,0,0,.28);border-radius:999px;padding:1px 7px}
+.route.mlsmall .evs-go{flex:none;font-size:20px;opacity:.85}
+/* BugDex now wears the same card as a specialty */
+.route.rmini.gen{background:linear-gradient(135deg,#0b8f8d 0%,#6b3fb8 100%)}
+.route.rmini.gen .mbug svg{width:62px;height:62px}
+.route.rmini.ev{background:linear-gradient(135deg,#1f7a4d 0%,#0b8f8d 100%)}
+/* Serious mode has no bugs at all (owner, Nov 4 2026) */
+:root[data-serious="1"] svg.bug,
+:root[data-serious="1"] .mbug,
+:root[data-serious="1"] .bugstage,
+:root[data-serious="1"] .lvbug,
+:root[data-serious="1"] .route .sage,
+:root[data-serious="1"] .lrnic,
+:root[data-serious="1"] #buddy,
+:root[data-serious="1"] .stickchip,
+:root[data-serious="1"] .nrtop svg,
+:root[data-serious="1"] .gfxcheer,
+:root[data-serious="1"] .lazybug{display:none!important}
+:root[data-serious="1"] .hero.ha{grid-template-columns:1fr}
+:root[data-serious="1"] .band{grid-template-columns:1fr}
+:root[data-serious="1"] .lazycard{padding-top:34px}
 /* turntable cards are checkboxes now: tick as many paths as you like */
 .lazycard{padding-top:26px}
 .lazychk{position:absolute;top:10px;left:10px;width:22px;height:22px;border:2px solid var(--line);border-radius:7px;background:var(--surface);transition:background .14s,border-color .14s}

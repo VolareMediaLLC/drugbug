@@ -408,10 +408,10 @@ function viewHome() {
   return topbar() + '<div class="homewrap' + hcls + '" data-hol="' + (HOL ? esc(holKey(HOL)) : '') + '">' + homeTip() +
    heroHTML() +
    homeStart() + homeProgress() + (typeof trialBanner === "function" ? trialBanner() : '') +
-   '<h3 class="homegh">Look it up</h3><section class="routes">' +
-   '<button class="route gen wide' + pt("gen") + '" data-go="gen">' + (S.pointGo === "gen" ? PT : '') + '<span class="eyebrow">Start here</span><h2>BugDex</h2><p>Every medication, explained in plain language. Search or browse.</p><span class="count">' + genN + ' medications</span><span class="sage">' + bugSVG("sage") + '</span></button>' +
-   myListRoute() +
-   (homeAll() || (Prog.d.interests || []).indexOf("ev") >= 0 || (!(Prog.d.interests || []).length && Prog.d.role === "ev") ? '<button class="route evsmall" data-go="everyday"><span class="evs-ic" aria-hidden="true">' + bugArt(bugById("grub-everyday"), "", { mood: "happy" }) + '</span><span class="evs-tx"><strong>Everyday Health</strong><span>Medicine cabinet, small sicknesses, normal vitals</span></span><span class="evs-go" aria-hidden="true">&rsaquo;</span></button>' : '') +
+   '<h3 class="homegh">Look it up</h3><section class="routes"><div class="minis one">' +
+   '<button class="route rmini gen' + pt("gen") + '" data-go="gen">' + (S.pointGo === "gen" ? PT : '') +
+     '<span class="mtx"><h2>BugDex</h2><p>Every medication, explained in plain language. ' + genN + ' in all.</p></span>' +
+     '<span class="mbug">' + bugSVG("sage") + '</span></button></div>' + myListRoute() +
    '</section>' + homeRoutes(mini) + '</div>';
 }
 /* The main menu shows the path picked on the first run, not all of them (owner, Nov 4 2026).
@@ -430,22 +430,25 @@ function homeMine() {
 }
 function homeRoutes(mini) {
   var all = homeAll(), mine = homeMine(), list = all || !mine.length ? HOME_ROUTES : mine;
-  var hidden = HOME_ROUTES.length - list.length;
-  var cards = list.map(function (x) { return mini(x[0], x[1], x[2], x[3], x[4]); }).join("");
-  var head = all || !mine.length ? "Study by role" : "Your path";
-  var tog = hidden > 0
-    ? '<button class="pathtog" data-act="allpaths">Show every path<span>' + hidden + ' more</span></button>'
-    : (mine.length ? '<button class="pathtog" data-act="allpaths">Show only my path</button>' : '');
-  return '<h3 class="homegh">' + head + '</h3><section class="routes"><div class="minis' + (list.length === 1 ? ' one' : '') + '">' + cards + '</div>' + tog + '</section>';
+  var picked = Prog.d.interests || [];
+  var showEv = all || picked.indexOf("ev") >= 0 || (!picked.length && Prog.d.role === "ev") || (!picked.length && !mine.length);
+  var cards = (showEv ? mini("ev", "everyday", "Everyday Health", EV_LINE, "grub-everyday") : "") +
+    list.map(function (x) { return mini(x[0], x[1], x[2], x[3], x[4]); }).join("");
+  var n = list.length + (showEv ? 1 : 0);
+  var head = all || !mine.length ? "Study by role" : (n === 1 ? "Your path" : "Your paths");
+  /* the other paths live in Settings now, not on the menu (owner, Nov 4 2026) */
+  return '<h3 class="homegh">' + head + '</h3><section class="routes"><div class="minis' + (n === 1 ? ' one' : '') + '">' + cards + '</div></section>';
 }
+var EV_LINE = "Peptides, probiotics, vitamins and the medicine cabinet.";
 /* My List on the home screen, right under the BugDex (owner, Oct 28 2026) */
 function myListRoute() {
   var m = marks().filter(function (id) { return DB.drugs[id]; }), n = m.length, ix = 0;
   if (n >= 2 && typeof ixnGroups === "function") { var key = m.join(","); if (DB._ixk !== key) { var G = ixnGroups(m.slice(0, 40)); DB._ixk = key; DB._ixn = G.syn.length + G.add.length + G.neg.length + G.oth.length; } ix = DB._ixn; }
   var lock = typeof proLocked === "function" && proLocked("mylist");
-  return '<button class="route mylist wide" data-golist="1"><span class="eyebrow">Your drugs</span><h2>My List' + (lock ? '<span class="lockpill">Plus</span>' : '') + '</h2><p>' +
-    (n ? n + ' saved drug' + (n === 1 ? '' : 's') + '. Quiz, print and see how they interact.' : 'Save drugs from any page to quiz on them and see how they interact.') +
-    '</p>' + (n >= 2 ? '<span class="count">' + ix + ' interaction' + (ix === 1 ? '' : 's') + ' on your list</span>' : '') + '</button>';
+  return '<button class="route mlsmall" data-golist="1"><span class="mls-ic" aria-hidden="true">\u2605</span><span class="mls-tx"><strong>My List' +
+    (lock ? '<span class="lockpill">Plus</span>' : '') + '</strong><span>' +
+    (n ? n + ' saved drug' + (n === 1 ? '' : 's') + (n >= 2 ? ' \u00b7 ' + ix + ' interaction' + (ix === 1 ? '' : 's') : '') : 'Save drugs from any page to quiz on them') +
+    '</span></span><span class="evs-go" aria-hidden="true">&rsaquo;</span></button>';
 }
 /* the first thing after the header: get studying */
 function homeStart() {
@@ -465,6 +468,7 @@ function homeProgress() {
     '</section>';
 }
 function homeTip() {
+  if (typeof funOn === "function" && !funOn()) return "";   /* nothing to tap: serious mode has no Terrarium chip */
   if (store("tipBug") || (typeof tourDone === "function" && !tourDone())) return "";
   return '<div class="tbtip" role="note"><span>Tap your bug up here to open your Terrarium.</span><button class="btn small ghost" data-tipbug="1">Got it</button></div>';
 }
@@ -2001,7 +2005,7 @@ document.addEventListener("focusin", function (e) { if (!S.sheet || sheet.hidden
 /* ---------- home hero: the DrugBug title with your bug ---------- */
 function heroHTML() {
   var b = myBug(), st = typeof myStage === "function" ? myStage() : 3;
-  var tag = '<p class="tagline">Learn your meds. Grow your bug.</p>';
+  var tag = '<p class="tagline">' + (typeof funOn === "function" && !funOn() ? 'Every medication, explained plainly.' : 'Learn your meds. Grow your bug.') + '</p>';
   var chip = '<span class="stchip st' + st + '">' + esc(stageName(st)) + '</span>';
   var lbl = 'Your bug, ' + esc(b.name) + ', ' + esc(stageName(st)) + '. Open the Terrarium.';
   var rr = { rare: "rare", seasonal: "rare", epic: "epic", earned: "epic", legendary: "legendary" }[b.rar] || "common";
@@ -5605,7 +5609,7 @@ function pickFun(on) {
    and as many as you like can be on. What you tick is what the main menu shows afterwards. */
 function obCards() {
   var ev = ROLES.filter(function (r) { return r[0] === "ev"; })[0];
-  var out = [{ code: "ev", name: ev[1], line: ev[2], bug: ev[3], blurb: "Medicines, vitamins, small sicknesses and what they do in your body. Written for anyone, no clinical background needed." }];
+  var out = [{ code: "ev", name: ev[1], line: ev[2], bug: ev[3], blurb: "Peptides, probiotics, vitamins, the medicine cabinet, small sicknesses and normal vitals. Written for anyone, no clinical background needed." }];
   var BLURB = {
     ph: "EMT, AEMT, Paramedic and Flight Paramedic, each with its own drug list, protocols and registry-style question bank.",
     rn: "CNA, LVN/LPN and RN, with specialty units, lab values and licensure-style questions.",
@@ -6512,7 +6516,9 @@ function settingsView() {
     (NATIVE ? setRow("Daily study reminder", "A notification once a day with the drugs due for review and your exam countdown.", setTog("remind", s.remind, "Daily study reminder") + (s.remind ? ' <input class="pinput" type="time" data-setsel="remindAt" value="' + esc(s.remindAt || "19:00") + '" aria-label="Reminder time">' : '')) : "") +
     setRow("Weird Drug Wednesday", (NATIVE ? "A strange-but-true drug fact every Wednesday as a notification. " : "A strange-but-true drug fact every Wednesday. ") + "Education only.", setTog("weird", s.weird !== false, "Weird Drug Wednesday") + (NATIVE && s.weird !== false ? ' <input class="pinput" type="time" data-setsel="weirdAt" value="' + esc(s.weirdAt || "12:00") + '" aria-label="Weird Drug Wednesday time">' : '') + ' <button class="btn small ghost" data-wdw="show">See this week\'s fact</button>') +
     setRow("App tour", "See the quick welcome tour again.", '<button class="btn small ghost" data-tour="again">Show the tour</button>') +
-    setRow("What you are here for", obIntLine(), '<button class="btn small ghost" data-obagain="1">Change</button>'));
+    setRow("What you are here for", obIntLine(), '<button class="btn small ghost" data-obagain="1">Change</button>') +
+    setRow("Other study paths", homeAll() ? "Every path is listed on the main menu." : "The main menu lists only the paths you picked.",
+      '<button class="btn small ghost" data-act="allpaths">' + (homeAll() ? "Show only mine" : "Show every path") + '</button>'));
   // sound
   c += setCard("sound", "Sound & pronunciation",
     setRow("Voice speed", "For the \"Say it\" button." + (SPEAK_OK ? "" : " Your device does not support speech."), setOpts("voiceRate", s.voiceRate, [["slow", "Slow"], ["normal", "Normal"], ["fast", "Fast"]]) + (SPEAK_OK ? ' <button class="btn small ghost" data-say="epinephrine">Test</button>' : '')) +
