@@ -403,13 +403,14 @@ function viewHome() {
     var lk = ROUTE_BUG[cls];
     var art = lk && typeof levelBug === "function" ? levelBug(lk)
       : bugArt(typeof bug === "string" ? bugById(bug) : bug, "", { mood: "happy" });
-    return '<button class="route rmini ' + cls + pt(go) + '" ' + (go.indexOf("level:") === 0 ? 'data-level="' + go.slice(6) + '"' : 'data-go="' + go + '"') + '>' + (S.pointGo === go ? PT : '') + '<span class="mtx"><h2>' + title + '</h2><p>' + line + '</p></span><span class="mbug">' + art + '</span></button>';
+    var hit = S.pointGo === go;
+    return '<button class="route rmini ' + cls + pt(go) + '" ' + (hit ? 'data-startlearn="' + go + '"' : go.indexOf("level:") === 0 ? 'data-level="' + go.slice(6) + '"' : 'data-go="' + go + '"') + '>' + (hit ? PT : '') + '<span class="mtx"><h2>' + title + '</h2><p>' + line + '</p></span><span class="mbug">' + art + '</span></button>';
   }
   return topbar() + '<div class="homewrap' + hcls + '" data-hol="' + (HOL ? esc(holKey(HOL)) : '') + '">' + homeTip() +
    heroHTML() +
    homeStart() + homeProgress() + (typeof trialBanner === "function" ? trialBanner() : '') +
    '<h3 class="homegh">Look it up</h3><section class="routes"><div class="minis one">' +
-   '<button class="route rmini gen' + pt("gen") + '" data-go="gen">' + (S.pointGo === "gen" ? PT : '') +
+   '<button class="route rmini gen' + pt("gen") + '" ' + (S.pointGo === "gen" ? 'data-startlearn="gen"' : 'data-go="gen"') + '>' + (S.pointGo === "gen" ? PT : '') +
      '<span class="mtx"><h2>BugDex</h2><p>Every medication, explained in plain language. ' + genN + ' in all.</p></span>' +
      '<span class="mbug">' + bugSVG("sage") + '</span></button></div>' + myListRoute() +
    '</section>' + homeRoutes(mini) + '</div>';
@@ -1664,6 +1665,12 @@ function render() {
   if (typeof tourMaybe === "function") tourMaybe();
   if (S.proMsg) { var tst = document.createElement("div"); tst.className = "protoast"; tst.setAttribute("role", "status"); tst.textContent = S.proMsg; app.appendChild(tst); S.proMsg = ""; setTimeout(function () { if (tst.parentNode) tst.parentNode.removeChild(tst); }, 5000); }
   translateDom(app); drawBuddy();
+  /* "Start here" asked for L.E.A.R.N: wait until the path has actually rendered, so the
+     level transition cannot redraw over it (owner, Nov 4 2026) */
+  if (S.learnGo && !S.sheet) {
+    S.learnGo = 0;
+    setTimeout(function () { try { if (typeof learnStart === "function") { S.learn = null; learnStart(); } } catch (e) {} }, 40);
+  }
 }
 function refreshGrid() {
   var g = $("#grid"); if (!g) return;
@@ -1734,6 +1741,20 @@ document.addEventListener("click", function (e) {
   if (a.act === "lrnreset" && typeof learnReset === "function") return learnReset();
   if (a.act === "errhome") { try { S.sheet = null; S.tab = "hub"; S.tool = null; S.micro = null; go("home"); } catch (e) { location.hash = ""; location.reload(); } return; }
   if (a.act === "errreload") { try { location.reload(); } catch (e) {} return; }
+  if (a.startlearn) {
+    /* "Start here" is the way in to L.E.A.R.N: open the path, then hand straight over to it
+       (owner, Nov 4 2026). L.E.A.R.N is scoped by whatever view it starts from. */
+    var sg = a.startlearn;
+    S.learnGo = 1;   /* set before navigating: go() renders synchronously and render() consumes it */
+    if (sg === "gen" || sg === "everyday") go(sg);
+    else {
+      var arr = sg === "nlevels" ? DB.NLEVELS : sg === "mlevels" ? DB.MLEVELS : sg === "ilevels" ? (DB.ILEVELS || []) : DB.LEVELS;
+      arr = (arr || []).filter(function (l) { return !(typeof isF === "function" && isF(l.key)); });
+      var last = store("lastLevel"), pick = arr.filter(function (l) { return l.key === last; })[0] || arr[0];
+      if (pick) go("level", { level: pick.key }); else { go(sg); }
+    }
+    return;
+  }
   if (a.level) {
     var LVFX = { flight: "blast", flightrn: "blast", cpp: "smoke" };
     /* every other level has its own entrance too (owner, Nov 1 2026); modules/trans.js */
@@ -7833,20 +7854,29 @@ document.addEventListener("input", function (e) {
 });
 
 /* ---------- first-run tour: 4 quick cards, shown once after the user agrees to the terms ---------- */
-var TOUR = [
-  ["Welcome to DrugBug", "Pick your path on the main menu: EMS, nursing, medical school or imaging. Each level has its own drugs and its own question bank.", "home"],
-  ["Study your way", "Open Medications to search any drug by generic or brand name. Use flashcards, exam prep, Weak spots and the exam countdown to stay on track.", "study"],
-  ["Earn sticks", "Every question you try earns 1 stick, and every right answer earns 3. Perfect scores, achievements and daily challenges pay bonus sticks.", "sticks"],
-  ["Dress up your bug", "Spend sticks in the Terrarium on new bugs, outfits, hats and music. Tap your bug there to watch it use its items.", "bug"]
-];
+/* The tour describes the app as it actually is now: paths chosen on the first run, Start here
+   leading into L.E.A.R.N, and the bug and stick cards only when Seriously Fun is on
+   (owner, Nov 4 2026). Rebuilt each time it opens so it follows the mode. */
+function tourCards() {
+  var fun = typeof funOn !== "function" || funOn();
+  var c = [
+    ["Start here", "The paths you picked are on the main menu. The card marked Start here opens L.E.A.R.N: every drug in that scope, one at a time, in random order, and nothing repeats.", fun ? "bug" : "plain"],
+    ["Look anything up", "The BugDex holds every medication in DrugBug. Open one for the plain-language version or the full monograph, tap Compare to set it beside another drug, and save the ones you care about to My List.", "plain"],
+    ["Practise it", "Questions in registry and licensure style, flashcards, Weak spots for the ones you keep missing, and an exam countdown that works out a daily goal for you.", "plain"]
+  ];
+  if (fun) c.push(["Earn sticks", "Every question you try earns 1 stick and every right answer earns 3. Spend them in the Terrarium on bugs, outfits and music, and your bug grows as you level up.", "sticks"]);
+  return c;
+}
+var TOUR = tourCards();
 var TR = { i: 0, open: false };
 var trdlg = document.createElement("div"); trdlg.id = "tourdlg"; trdlg.className = "sheet rsheet"; trdlg.hidden = true; document.body.appendChild(trdlg);
 function tourDone() { return TR.done || !!store("tourDone"); }
-function tourOpen(force) { if (TR.open || (!force && tourDone())) return; TR.open = true; TR.i = 0;   /* the Serious / Seriously fun choice lives in Settings now (owner, Oct 30 2026) */ drawTour(); trdlg.hidden = false; }
+function tourOpen(force) { if (TR.open || (!force && tourDone())) return; TOUR = tourCards(); TR.open = true; TR.i = 0;   /* the Serious / Seriously fun choice lives in Settings now (owner, Oct 30 2026) */ drawTour(); trdlg.hidden = false; }
 function tourClose() { TR.done = true; TR.open = false; trdlg.hidden = true; trdlg.innerHTML = ""; store("tourDone", 1); if (typeof wdwSync === "function") setTimeout(wdwSync, 600); }
 function drawTour() {
   var t = TOUR[TR.i], last = TR.i === TOUR.length - 1;
-  trdlg.innerHTML = '<div class="panel tourpanel" role="dialog" aria-modal="true" aria-label="' + esc(t[0]) + '" tabindex="-1"><div class="tourart">' + (t[2] === "sticks" ? '<div class="tourbig">' + stickTag(3) + '</div>' : myBugArt("tourbug", null, null, myStage())) + '</div>' +
+    var art = t[2] === "sticks" ? '<div class="tourbig">' + stickTag(3) + '</div>' : t[2] === "bug" ? myBugArt("tourbug", null, null, myStage()) : "";
+  trdlg.innerHTML = '<div class="panel tourpanel" role="dialog" aria-modal="true" aria-label="' + esc(t[0]) + '" tabindex="-1">' + (art ? '<div class="tourart">' + art + '</div>' : '') +
     '<h2>' + esc(t[0]) + '</h2><p>' + esc(t[1]) + '</p><div class="tourdots">' + TOUR.map(function (x, i) { return '<i class="' + (i === TR.i ? "on" : "") + '"></i>'; }).join("") + '</div>' +
     '<div class="actions"><button class="btn small ghost" data-tour="skip">' + (last ? "Close" : "Skip") + '</button><button class="btn" data-tour="next">' + (last ? "Let's go" : "Next") + '</button></div></div>';
   translateDom(trdlg); var p = trdlg.querySelector(".panel"); if (p) p.focus();
