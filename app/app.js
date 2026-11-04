@@ -1507,7 +1507,7 @@ function render() {
      already moved on, so buttons did nothing and nothing explained why. Now it says so and offers
      a way out. (owner reported Flight Paramedic doing this, Oct 30 2026) */
   try {
-    html = needDisc() ? discView() : !ok && S.view !== "legal" ? gateView() : S.view === "legal" ? legalView() : (typeof needFun === "function" && needFun()) ? funView() : (typeof needWelcome === "function" && needWelcome()) ? welcomeView() : needRole() ? roleView() : S.view === "home" ? viewHome() : (S.view === "levels" || S.view === "flevels" || S.view === "nlevels" || S.view === "mlevels" || S.view === "ilevels") ? viewLevels() : S.view === "easy" ? viewEasy() : S.view === "admin" ? viewAdmin() : S.view === "classes" ? classesView() : S.view === "settings" ? settingsView() : S.view === "terrarium" ? ((typeof funOn === "function" && !funOn()) ? (S.view = "home", viewHome()) : terrariumView()) : S.view === "everyday" ? evView() : S.view === "field" && typeof fieldView === "function" ? fieldView() : viewLevel();
+    html = needDisc() ? discView() : !ok && S.view !== "legal" ? gateView() : S.view === "legal" ? legalView() : (typeof needFun === "function" && needFun()) ? funView() : (typeof needWelcome === "function" && needWelcome()) ? welcomeView() : needOnboard() ? obView() : S.view === "home" ? viewHome() : (S.view === "levels" || S.view === "flevels" || S.view === "nlevels" || S.view === "mlevels" || S.view === "ilevels") ? viewLevels() : S.view === "easy" ? viewEasy() : S.view === "admin" ? viewAdmin() : S.view === "classes" ? classesView() : S.view === "settings" ? settingsView() : S.view === "terrarium" ? ((typeof funOn === "function" && !funOn()) ? (S.view = "home", viewHome()) : terrariumView()) : S.view === "everyday" ? evView() : S.view === "field" && typeof fieldView === "function" ? fieldView() : viewLevel();
   } catch (err) {
     LAST_ERR = (err && (err.message || err)) + "";
     try { if (window.console) console.error("DrugBug render failed:", err); } catch (e) {}
@@ -1538,6 +1538,7 @@ document.addEventListener("click", function (e) {
   }
   var a = t.dataset;
   if (S.view === "admin" && (a.atab || a.aedit || a.aqedit || a.asedit || a.arestore || a.aact || a.rqopen || a.psedit)) return adminClick(t);
+  if (typeof obClick === "function" && obClick(t, a)) return;
   if (a.role) return pickRole(a.role);
   if ((typeof microClick === "function" && microClick(t, a)) || (typeof deepClick === "function" && deepClick(t, a)) || (typeof disClick === "function" && disClick(t, a)) || (typeof gamesClick === "function" && S.tab === "games" && gamesClick(t, a)) || altsClick(t, a) || flClick(t, a) || aiClick(t, a) || critClick(t, a) || labsClick(t, a) || legalClick(t, a) || i18nClick(t, a) || printClick(t, a) || settingsClick(t, a) || buddyClick(t, a)) return;
   if (a.report) return openReport(a.report);
@@ -5447,12 +5448,138 @@ function pickFun(on) {
   store("funAsked", 1);
   try { render(); } catch (e) {}
 }
+/* ---------- First run: what are you interested in, then the specialty carousel (owner, Nov 4 2026) ----------
+   Step 1 asks what brings them here. "Specialties" and "Everyday Health" are always on the list;
+   Everyday Health carries the Recommended tag because it suits anyone, clinician or not.
+   Step 2 is the lazy susan: specialty cards on a turntable, the middle one face on, its neighbours
+   turned away at the sides. Picking a card runs the old pickRole(), so starter beetles, the saved
+   role and the pointing arrow on the main menu all behave exactly as before. */
+var INTERESTS = [
+  ["spec", "Specialties", "Train for your role: EMS, nursing, medical school, imaging", 1],
+  ["ev", "Everyday Health", "Medicines, vitamins and what they do in your body", 0, 1],
+  ["exam", "Exam prep", "Registry and licensure style questions"],
+  ["how", "How drugs work", "The Wormhole: where a drug came from, cell to organ"],
+  ["cond", "Conditions", "The Disease Lab: what goes wrong and how treatment helps"],
+  ["play", "Something fun", "Brain Games, bugs to collect and a terrarium"]
+];
+/* the turntable: the clinical specialties, plus Everyday Health and the BugDex as the two
+   "not a specialty" ends, so nobody is forced down a clinical path to get started */
+function obCards() {
+  var out = ROLES.filter(function (r) { return r[0] !== "ev"; }).map(function (r) {
+    return { code: r[0], name: r[1], line: r[2], bug: r[3] };
+  });
+  var ev = ROLES.filter(function (r) { return r[0] === "ev"; })[0];
+  out.unshift({ code: "ev", name: ev[1], line: ev[2], bug: ev[3], rec: 1 });
+  out.push({ code: "none", name: "BugDex", line: "Every medication, A to Z. Good if you are not sure yet.", bug: ROLES[0][3], sage: 1 });
+  return out;
+}
+/* Settings > Study: what they picked on the first run, and the way back to change it */
+function obIntLine() {
+  var picked = Prog.d.interests || [];
+  if (!picked.length) return "You have not set this yet.";
+  var names = INTERESTS.filter(function (it) { return picked.indexOf(it[0]) >= 0; }).map(function (it) { return it[1]; });
+  return names.length ? names.join(" \u00b7 ") : "You have not set this yet.";
+}
+function obAgain() {
+  var sel = {};
+  (Prog.d.interests || []).forEach(function (k) { sel[k] = 1; });
+  S.obInt = sel; S.obStep = 1; S.obI = null; S.obRedo = 1;
+  go("home");                 /* needOnboard() picks it up from here */
+}
+function needOnboard() { return needRole() || !!S.obRedo; }
+function obInt() { return S.obInt || (S.obInt = { ev: 1 }); }   /* Everyday Health starts ticked: it is the recommended one */
+function obStep() { return S.obStep || 1; }
+function obView() { return obStep() === 2 ? obSpecView() : obIntView(); }
+function obIntView() {
+  var sel = obInt(), n = Object.keys(sel).filter(function (k) { return sel[k]; }).length;
+  return '<div class="gate obgate"><h1>What brings you to DrugBug?</h1>' +
+    '<p>Pick anything that sounds useful. This only sets where DrugBug starts you off, it never locks anything away.</p>' +
+    '<div class="obints">' + INTERESTS.map(function (it) {
+      return '<button class="obint' + (sel[it[0]] ? ' on' : '') + '" data-int="' + it[0] + '" aria-pressed="' + (sel[it[0]] ? 'true' : 'false') + '">' +
+        '<span class="obtick" aria-hidden="true"></span><span class="obtx"><strong>' + esc(it[1]) +
+        (it[4] ? '<span class="obrec">Recommended</span>' : '') + '</strong><span>' + esc(it[2]) + '</span></span></button>';
+    }).join("") + '</div>' +
+    '<div class="obfoot"><button class="btn big" data-intgo="1"' + (n ? '' : ' disabled') + '>Continue</button>' +
+    '<button class="btn ghost" data-obskip="1">' + (S.obRedo ? 'Cancel' : 'Skip for now') + '</button></div>' +
+    '<p class="muted small">You can change any of this later in Settings.</p></div>';
+}
+function obSpecView() {
+  var C = obCards(), i = ((S.obI == null ? 1 : S.obI) % C.length + C.length) % C.length, cur = C[i];
+  return '<div class="gate obgate obspec"><h1>Pick where to start</h1>' +
+    '<p>Spin the turntable. You get that path\'s starter beetle, and every other path stays open.</p>' +
+    '<div class="lazy" data-lazy="1">' +
+    '<button class="lazyarr l" data-spin="-1" aria-label="Previous">&#8249;</button>' +
+    '<div class="lazystage">' + C.map(function (c, k) {
+      var d = k - i, L = C.length;
+      if (d > L / 2) d -= L; if (d < -L / 2) d += L;          /* shortest way round the circle */
+      var pos = Math.abs(d) > 2 ? "far" : "o" + d;
+      return '<button class="lazycard p' + pos.replace("-", "m") + (d === 0 ? ' mid' : '') + '" data-spin="' + d + '" tabindex="' + (d === 0 ? 0 : -1) + '">' +
+        '<span class="lazybug">' + (c.sage ? bugSVG("sage") : bugArt(bugById(c.bug), "rolebug", { mood: "happy" })) + '</span>' +
+        '<strong>' + esc(c.name) + '</strong>' + (c.rec ? '<span class="obrec">Recommended</span>' : '') + '</button>';
+    }).join("") + '</div>' +
+    '<button class="lazyarr r" data-spin="1" aria-label="Next">&#8250;</button></div>' +
+    '<div class="lazynow"><strong>' + esc(cur.name) + '</strong><span>' + esc(cur.line) + '</span>' +
+    (cur.code === "none" ? '' : '<span class="rgrub">Starter: ' + esc(bugById(cur.bug).name) + '</span>') + '</div>' +
+    '<div class="lazydots">' + C.map(function (c, k) { return '<button class="lazydot' + (k === i ? ' on' : '') + '" data-spin="' + (k - i) + '" aria-label="' + esc(c.name) + '"></button>'; }).join("") + '</div>' +
+    '<div class="obfoot"><button class="btn big" data-obpick="' + cur.code + '">Start with ' + esc(cur.name) + '</button>' +
+    '<button class="btn ghost" data-obback="1">Back</button></div></div>';
+}
+function obSpin(d) {
+  var C = obCards();
+  S.obI = (((S.obI == null ? 1 : S.obI) + d) % C.length + C.length) % C.length;
+  render();
+}
+function obClick(t, a) {
+  if (a.int) { var s = obInt(); s[a.int] = !s[a.int]; render(); return true; }
+  if (a.intgo) {
+    var s2 = obInt();
+    Prog.d.interests = Object.keys(s2).filter(function (k) { return s2[k]; });
+    if (s2.spec) { S.obStep = 2; S.obI = s2.ev ? 0 : 1; render(); }     /* straight to the turntable */
+    else pickRole(s2.ev ? "ev" : "none");                               /* no specialty wanted: start where they said */
+    return true;
+  }
+  if (a.obskip) {
+    if (S.obRedo) { S.obRedo = 0; render(); return true; }   /* changing it later: back out without touching the saved path */
+    Prog.d.interests = []; pickRole("none"); return true;
+  }
+  if (a.obback) { S.obStep = 1; render(); return true; }
+  if (a.obagain) { obAgain(); return true; }
+  if (a.spin != null) {
+    var d = +a.spin;
+    if (!d) return true;                                                /* tapping the middle card does nothing; the button below picks it */
+    obSpin(d); return true;
+  }
+  if (a.obpick) { S.obStep = 1; S.obI = null; pickRole(a.obpick); return true; }
+  return false;
+}
+/* swipe the turntable, and arrow keys when it is on screen */
+document.addEventListener("keydown", function (e) {
+  if (!needOnboard() || obStep() !== 2) return;
+  if (/^(INPUT|TEXTAREA|SELECT)$/.test((e.target.tagName || ""))) return;
+  if (e.key === "ArrowLeft") { e.preventDefault(); obSpin(-1); }
+  else if (e.key === "ArrowRight") { e.preventDefault(); obSpin(1); }
+});
+(function () {
+  var x0 = null, y0 = null;
+  document.addEventListener("touchstart", function (e) {
+    var z = e.target.closest && e.target.closest("[data-lazy]"); if (!z) return;
+    x0 = e.touches[0].clientX; y0 = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener("touchend", function (e) {
+    if (x0 == null) return;
+    var dx = (e.changedTouches[0].clientX - x0), dy = (e.changedTouches[0].clientY - y0);
+    x0 = null;
+    if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy)) obSpin(dx < 0 ? 1 : -1);
+  }, { passive: true });
+})();
+
 function roleView() {
   return '<div class="gate rolepick"><h1>What are you studying for?</h1><p>Pick your path. You will get a starter beetle dressed for that path, and you can explore every route anytime.</p><button class="rolecard role-gen bugdexrole" data-role="none">' + bugSVG("sage") + '<span class="rtx"><strong>BugDex</strong><span>Every medication in DrugBug, A to Z, explained by Professor Sage. Great for anyone, or if you are not sure yet.</span><span class="rgrub">Starter: ' + esc(bugById(ROLES[0][3]).name) + ' · browse everything</span></span></button><div class="roles">' +
     ROLES.map(function (r) { return '<button class="rolecard role-' + r[0] + '" data-role="' + r[0] + '">' + bugArt(bugById(r[3]), "rolebug", { mood: "happy" }) + '<span class="rtx"><strong>' + r[1] + '</strong><span>' + r[2] + '</span><span class="rgrub">Starter: ' + esc(bugById(r[3]).name) + '</span></span></button>'; }).join("") +
     '</div></div>';
 }
 function pickRole(r) {
+  S.obRedo = 0;
   var R = ROLES.filter(function (x) { return x[0] === r; })[0];
   Prog.d.role = r;
   var G = R || ROLES[0]; /* every path starts with its version of the starter beetle; BugDex browsers get the Garden Beetle */
@@ -6256,7 +6383,8 @@ function settingsView() {
     setRow("Drug pages open in", "", setOpts("fullDefault", s.fullDefault ? "1" : "0", [["0", "Simple view"], ["1", "Full record"]])) +
     (NATIVE ? setRow("Daily study reminder", "A notification once a day with the drugs due for review and your exam countdown.", setTog("remind", s.remind, "Daily study reminder") + (s.remind ? ' <input class="pinput" type="time" data-setsel="remindAt" value="' + esc(s.remindAt || "19:00") + '" aria-label="Reminder time">' : '')) : "") +
     setRow("Weird Drug Wednesday", (NATIVE ? "A strange-but-true drug fact every Wednesday as a notification. " : "A strange-but-true drug fact every Wednesday. ") + "Education only.", setTog("weird", s.weird !== false, "Weird Drug Wednesday") + (NATIVE && s.weird !== false ? ' <input class="pinput" type="time" data-setsel="weirdAt" value="' + esc(s.weirdAt || "12:00") + '" aria-label="Weird Drug Wednesday time">' : '') + ' <button class="btn small ghost" data-wdw="show">See this week\'s fact</button>') +
-    setRow("App tour", "See the quick welcome tour again.", '<button class="btn small ghost" data-tour="again">Show the tour</button>'));
+    setRow("App tour", "See the quick welcome tour again.", '<button class="btn small ghost" data-tour="again">Show the tour</button>') +
+    setRow("What you are here for", obIntLine(), '<button class="btn small ghost" data-obagain="1">Change</button>'));
   // sound
   c += setCard("sound", "Sound & pronunciation",
     setRow("Voice speed", "For the \"Say it\" button." + (SPEAK_OK ? "" : " Your device does not support speech."), setOpts("voiceRate", s.voiceRate, [["slow", "Slow"], ["normal", "Normal"], ["fast", "Fast"]]) + (SPEAK_OK ? ' <button class="btn small ghost" data-say="epinephrine">Test</button>' : '')) +
