@@ -2961,6 +2961,9 @@ function rebuildIndex() {
 }
 function initAdmin() {
   if (!window.claude || typeof window.claude.use !== "function") return;
+  /* The buyer's-eye copy is a demo build: even the owner sees it as a visitor does,
+     so the Control Center stays shut (owner, Nov 4 2026). */
+  if (typeof CFG !== "undefined" && CFG.demo === true) return;
   window.claude.use("user").then(function (u) {
     if (!u) return;
     return Promise.all([u.canEdit(), typeof u.id === "function" ? u.id() : null, typeof u.isOwner === "function" ? u.isOwner() : false]).then(function (v) { Admin.can = !!v[0]; Admin.uid = v[1]; var wasOwner = Admin.owner; Admin.owner = !!v[2]; if (Admin.owner && !wasOwner && S.view === "terrarium") render(); P.owner = P.owner || Admin.can; if (Admin.can && S.view !== "admin") { var tb = $(".topbar"); if (tb && !$("[data-go='admin']", tb)) render(); } });
@@ -7570,7 +7573,7 @@ function proLabel() {
 /* home banner about the 7 free days */
 function trialBanner() {
   if (DEMO && webPass()) return '<div class="callout evnote small trialbar"><strong>DrugBug Pro is unlocked</strong> with your access code until ' + new Date(webPass().until).toLocaleDateString() + '. Enjoy every drug, route and study tool.</div>';
-  if (DEMO) return '<div class="callout evnote small trialbar"><strong>You are using the free DrugBug web demo.</strong> It includes about 40 common medications, with a free preview of the Wormhole. The full DrugBug, with 2,000+ medications and every professional route, is coming soon to iPhone. <button class="linkish" data-pw="open">See Plus and Pro</button></div>';
+  if (DEMO) return '<div class="callout evnote small trialbar"><strong>You are on DrugBug Free.</strong> That is about 40 common medications, with a free preview of the Wormhole. DrugBug Plus and Pro open all 2,100+ medications and every professional route. <button class="linkish" data-pw="open">See Plus and Pro</button></div>';
   if (!PAYWALL || !NATIVE || PRO.store || licenseActive() || Prog.d.proGrant) return "";
   return '<div class="callout evnote small trialbar"><strong>You are on DrugBug Free.</strong> Every tool in the app works on your free medications. <button class="linkish" data-pw="open">See Plus and Pro</button></div>';
 }
@@ -7629,7 +7632,7 @@ function drawPaywall() {
     pwdlg.innerHTML = c + '</div>'; translateDom(pwdlg);
     return;
   }
-  if (!canBuy) c += '<div class="presult">' + (DEMO && webPass() ? 'Your access code has DrugBug Pro unlocked in this browser until ' + new Date(webPass().until).toLocaleDateString() + '. Plus and Pro subscriptions come with the DrugBug iPhone app.' : DEMO ? 'This is the free web demo. Plus and Pro come with the DrugBug iPhone app, coming soon to the App Store.' : 'Plans are purchased in the DrugBug iPhone app.') + '</div>';
+  if (!canBuy) c += '<div class="presult">' + (DEMO && webPass() ? 'Your access code has DrugBug Pro unlocked in this browser until ' + new Date(webPass().until).toLocaleDateString() + '. Plus and Pro are also sold at drugbugapp.com.' : DEMO ? 'This is the free preview. Plus and Pro are sold at drugbugapp.com, and will come to the DrugBug iPhone app as well.' : 'Plans are purchased in the DrugBug iPhone app.') + '</div>';
   ["plus", "pro"].forEach(function (t) {
     var P = PLANS[t], pm = prodOf(P.monthly), py = prodOf(P.annual), m = pm ? pm.price : P.m, y = py ? py.price : P.y, own = PRO.store && PRO.tier === t;
     c += '<section class="pwtier pw-' + t + '"><h3>' + TIER_NAME[t] + (own ? ' <span class="pill good">Your plan</span>' : '') + '</h3><ul class="pwperks">' + PLAN_PERKS[t].map(function (x) { return '<li><span>' + esc(x) + '</span></li>'; }).join("") + '</ul>';
