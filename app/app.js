@@ -399,7 +399,7 @@ function viewHome() {
    '<h3 class="homegh">Look it up</h3><section class="routes">' +
    '<button class="route gen wide' + pt("gen") + '" data-go="gen">' + (S.pointGo === "gen" ? PT : '') + '<span class="eyebrow">Start here</span><h2>BugDex</h2><p>Every medication, explained in plain language. Search or browse.</p><span class="count">' + genN + ' medications</span><span class="sage">' + bugSVG("sage") + '</span></button>' +
    myListRoute() +
-   (homeAll() || Prog.d.role === "ev" || (Prog.d.interests || []).indexOf("ev") >= 0 ? '<button class="route evsmall" data-go="everyday"><span class="evs-ic" aria-hidden="true">' + bugArt(bugById("grub-everyday"), "", { mood: "happy" }) + '</span><span class="evs-tx"><strong>Everyday Health</strong><span>Medicine cabinet, small sicknesses, normal vitals</span></span><span class="evs-go" aria-hidden="true">&rsaquo;</span></button>' : '') +
+   (homeAll() || (Prog.d.interests || []).indexOf("ev") >= 0 || (!(Prog.d.interests || []).length && Prog.d.role === "ev") ? '<button class="route evsmall" data-go="everyday"><span class="evs-ic" aria-hidden="true">' + bugArt(bugById("grub-everyday"), "", { mood: "happy" }) + '</span><span class="evs-tx"><strong>Everyday Health</strong><span>Medicine cabinet, small sicknesses, normal vitals</span></span><span class="evs-go" aria-hidden="true">&rsaquo;</span></button>' : '') +
    '</section>' + homeRoutes(mini) + '</div>';
 }
 /* The main menu shows the path picked on the first run, not all of them (owner, Nov 4 2026).
@@ -412,7 +412,8 @@ var HOME_ROUTES = [
 ];
 function homeAll() { return !!store("allPaths"); }
 function homeMine() {
-  var r = Prog.d.role;
+  var picked = Prog.d.interests || [], r = Prog.d.role;
+  if (picked.length) return HOME_ROUTES.filter(function (x) { return picked.indexOf(x[0]) >= 0; });
   return HOME_ROUTES.filter(function (x) { return x[0] === r; });
 }
 function homeRoutes(mini) {
@@ -5276,7 +5277,7 @@ function syncAgree() { if (!agreeRec() && Prog.d.agree && Prog.d.agree.v === LEG
 var DISC_SECS = 5, DISC_AWAY = 15000;
 /* The education-only notice is acknowledged once and then stays acknowledged (owner, Oct 31 2026).
    It is tied to LEGAL_V, so a change to the legal documents shows it once more. */
-function discRec() { var d = store("discok"); return d && d.v === LEGAL_V ? d : null; }
+function discRec() { var d = store("discok"); return d && d.v === LEGAL_V && d.av === APP_VERSION ? d : null; }   /* shown again after a legal change or an app update, never otherwise (owner, Nov 4 2026) */
 function needDisc() { return !S.discOk && !discRec() && !window.__DRUGBUG_SKIP_DISC && S.view !== "legal"; }
 function discView() {
   if (!S.discT0) S.discT0 = Date.now();
@@ -5298,7 +5299,7 @@ function discTick() {
 }
 function acceptDisc() {
   if (!S.discT0 || Date.now() - S.discT0 < DISC_SECS * 1000) return;
-  S.discOk = true; store("discok", { v: LEGAL_V, ts: Date.now() });
+  S.discOk = true; store("discok", { v: LEGAL_V, av: APP_VERSION, ts: Date.now() });
   if (S.discSheet && S.sheet && typeof sheet !== "undefined" && sheet) { sheet.hidden = false; app.setAttribute("aria-hidden", "true"); } S.discSheet = false;
   if (typeof muGesture === "function") muGesture();
   render(); window.scrollTo(0, 0);
@@ -5585,113 +5586,90 @@ function pickFun(on) {
   store("funAsked", 1);
   try { render(); } catch (e) {}
 }
-/* ---------- First run: what are you interested in, then the specialty carousel (owner, Nov 4 2026) ----------
-   Step 1 asks what brings them here. "Specialties" and "Everyday Health" are always on the list;
-   Everyday Health carries the Recommended tag because it suits anyone, clinician or not.
-   Step 2 is the lazy susan: specialty cards on a turntable, the middle one face on, its neighbours
-   turned away at the sides. Picking a card runs the old pickRole(), so starter beetles, the saved
-   role and the pointing arrow on the main menu all behave exactly as before. */
-var INTERESTS = [
-  ["spec", "Specialties", "Train for your role: EMS, nursing, medical school, imaging", 1],
-  ["ev", "Everyday Health", "Medicines, vitamins and what they do in your body", 0, 1],
-  ["exam", "Exam prep", "Registry and licensure style questions"],
-  ["how", "How drugs work", "The Wormhole: where a drug came from, cell to organ"],
-  ["cond", "Conditions", "The Disease Lab: what goes wrong and how treatment helps"],
-  ["play", "Something fun", "Brain Games, bugs to collect and a terrarium"]
-];
-/* the turntable: the clinical specialties, plus Everyday Health and the BugDex as the two
-   "not a specialty" ends, so nobody is forced down a clinical path to get started */
+/* ---------- First run: pick your paths (owner, Nov 4 2026) ----------
+   One screen, no questionnaire. A turntable of the specialties plus Everyday Health; swipe,
+   drag the arrows or use the arrow keys. Each card is a checkbox, Everyday Health starts ticked,
+   and as many as you like can be on. What you tick is what the main menu shows afterwards. */
 function obCards() {
-  var out = ROLES.filter(function (r) { return r[0] !== "ev"; }).map(function (r) {
-    return { code: r[0], name: r[1], line: r[2], bug: r[3] };
-  });
   var ev = ROLES.filter(function (r) { return r[0] === "ev"; })[0];
-  out.unshift({ code: "ev", name: ev[1], line: ev[2], bug: ev[3], rec: 1 });
-  out.push({ code: "none", name: "BugDex", line: "Every medication, A to Z. Good if you are not sure yet.", bug: ROLES[0][3], sage: 1 });
+  var out = [{ code: "ev", name: ev[1], line: ev[2], bug: ev[3], blurb: "Medicines, vitamins, small sicknesses and what they do in your body. Written for anyone, no clinical background needed." }];
+  var BLURB = {
+    ph: "EMT, AEMT, Paramedic and Flight Paramedic, each with its own drug list, protocols and registry-style question bank.",
+    rn: "CNA, LVN/LPN and RN, with specialty units, lab values and licensure-style questions.",
+    md: "MS1 through Intern: mechanisms, board-style questions, drug alternatives and the wards view of every drug.",
+    im: "X-ray, CT, MRI, nuclear medicine and IR: contrast agents, radiopharmaceuticals and contrast safety."
+  };
+  ROLES.filter(function (r) { return r[0] !== "ev"; }).forEach(function (r) {
+    out.push({ code: r[0], name: r[1], line: r[2], bug: r[3], blurb: BLURB[r[0]] || r[2] });
+  });
   return out;
 }
-/* Settings > Study: what they picked on the first run, and the way back to change it */
-function obIntLine() {
-  var picked = Prog.d.interests || [];
-  if (!picked.length) return "You have not set this yet.";
-  var names = INTERESTS.filter(function (it) { return picked.indexOf(it[0]) >= 0; }).map(function (it) { return it[1]; });
-  return names.length ? names.join(" \u00b7 ") : "You have not set this yet.";
-}
-function obAgain() {
-  var sel = {};
-  (Prog.d.interests || []).forEach(function (k) { sel[k] = 1; });
-  S.obInt = sel; S.obStep = 1; S.obI = null; S.obRedo = 1;
-  go("home");                 /* needOnboard() picks it up from here */
-}
 function needOnboard() { return needRole() || !!S.obRedo; }
-function obInt() { return S.obInt || (S.obInt = { ev: 1 }); }   /* Everyday Health starts ticked: it is the recommended one */
-function obStep() { return S.obStep || 1; }
-function obView() { return obStep() === 2 ? obSpecView() : obIntView(); }
-function obIntView() {
-  var sel = obInt(), n = Object.keys(sel).filter(function (k) { return sel[k]; }).length;
-  return '<div class="gate obgate"><h1>What brings you to DrugBug?</h1>' +
-    '<p>Pick anything that sounds useful. This only sets where DrugBug starts you off, it never locks anything away.</p>' +
-    '<div class="obints">' + INTERESTS.map(function (it) {
-      return '<button class="obint' + (sel[it[0]] ? ' on' : '') + '" data-int="' + it[0] + '" aria-pressed="' + (sel[it[0]] ? 'true' : 'false') + '">' +
-        '<span class="obtick" aria-hidden="true"></span><span class="obtx"><strong>' + esc(it[1]) +
-        (it[4] ? '<span class="obrec">Recommended</span>' : '') + '</strong><span>' + esc(it[2]) + '</span></span></button>';
-    }).join("") + '</div>' +
-    '<div class="obfoot"><button class="btn big" data-intgo="1"' + (n ? '' : ' disabled') + '>Continue</button>' +
-    '<button class="btn ghost" data-obskip="1">' + (S.obRedo ? 'Cancel' : 'Skip for now') + '</button></div>' +
-    '<p class="muted small">You can change any of this later in Settings.</p></div>';
+function obSel() {
+  if (!S.obSel) { S.obSel = {}; (Prog.d.interests || ["ev"]).forEach(function (k) { S.obSel[k] = 1; }); if (!Object.keys(S.obSel).length) S.obSel.ev = 1; }
+  return S.obSel;
 }
-function obSpecView() {
-  var C = obCards(), i = ((S.obI == null ? 1 : S.obI) % C.length + C.length) % C.length, cur = C[i];
-  return '<div class="gate obgate obspec"><h1>Pick where to start</h1>' +
-    '<p>Spin the turntable. You get that path\'s starter beetle, and every other path stays open.</p>' +
+function obView() {
+  var C = obCards(), sel = obSel(),
+      i = ((S.obI == null ? 0 : S.obI) % C.length + C.length) % C.length,
+      cur = C[i], n = C.filter(function (c) { return sel[c.code]; }).length;
+  return '<div class="gate obgate obspec"><h1>What do you want to study?</h1>' +
+    '<p>Select as many as you want. Swipe the turntable, tap a card to tick it, and change any of this later in Settings.</p>' +
     '<div class="lazy" data-lazy="1">' +
     '<button class="lazyarr l" data-spin="-1" aria-label="Previous">&#8249;</button>' +
     '<div class="lazystage">' + C.map(function (c, k) {
       var d = k - i, L = C.length;
-      if (d > L / 2) d -= L; if (d < -L / 2) d += L;          /* shortest way round the circle */
-      var pos = Math.abs(d) > 2 ? "far" : "o" + d;
-      return '<button class="lazycard p' + pos.replace("-", "m") + (d === 0 ? ' mid' : '') + '" data-spin="' + d + '" tabindex="' + (d === 0 ? 0 : -1) + '">' +
-        '<span class="lazybug">' + (c.sage ? bugSVG("sage") : bugArt(bugById(c.bug), "rolebug", { mood: "happy" })) + '</span>' +
-        '<strong>' + esc(c.name) + '</strong>' + (c.rec ? '<span class="obrec">Recommended</span>' : '') + '</button>';
+      if (d > L / 2) d -= L; if (d < -L / 2) d += L;
+      var pos = Math.abs(d) > 2 ? "far" : "o" + d, on = !!sel[c.code];
+      return '<button class="lazycard p' + pos.replace("-", "m") + (d === 0 ? ' mid' : '') + (on ? ' on' : '') + '" data-spin="' + d + '" data-obtog="' + (d === 0 ? c.code : '') + '" tabindex="' + (d === 0 ? 0 : -1) + '" aria-pressed="' + (on ? 'true' : 'false') + '">' +
+        '<span class="lazychk" aria-hidden="true"></span>' +
+        '<span class="lazybug">' + bugArt(bugById(c.bug), "rolebug", { mood: "happy" }) + '</span>' +
+        '<strong>' + esc(c.name) + '</strong>' + (c.code === "ev" ? '<span class="obrec">Recommended</span>' : '') + '</button>';
     }).join("") + '</div>' +
     '<button class="lazyarr r" data-spin="1" aria-label="Next">&#8250;</button></div>' +
-    '<div class="lazynow"><strong>' + esc(cur.name) + '</strong><span>' + esc(cur.line) + '</span>' +
-    (cur.code === "none" ? '' : '<span class="rgrub">Starter: ' + esc(bugById(cur.bug).name) + '</span>') + '</div>' +
-    '<div class="lazydots">' + C.map(function (c, k) { return '<button class="lazydot' + (k === i ? ' on' : '') + '" data-spin="' + (k - i) + '" aria-label="' + esc(c.name) + '"></button>'; }).join("") + '</div>' +
-    '<div class="obfoot"><button class="btn big" data-obpick="' + cur.code + '">Start with ' + esc(cur.name) + '</button>' +
-    '<button class="btn ghost" data-obback="1">Back</button></div></div>';
+    '<div class="lazydots">' + C.map(function (c, k) { return '<button class="lazydot' + (k === i ? ' on' : '') + (sel[c.code] ? ' sel' : '') + '" data-spin="' + (k - i) + '" aria-label="' + esc(c.name) + '"></button>'; }).join("") + '</div>' +
+    '<div class="lazynow"><strong>' + esc(cur.name) + '</strong><p class="obblurb">' + esc(cur.blurb) + '</p>' +
+      '<button class="obpick' + (sel[cur.code] ? ' on' : '') + '" data-obtog="' + cur.code + '"><span class="lazychk" aria-hidden="true"></span>' +
+      (sel[cur.code] ? 'Included' : 'Add ' + esc(cur.name)) + '</button></div>' +
+    '<div class="obfoot"><button class="btn big" data-obdone="1"' + (n ? '' : ' disabled') + '>' +
+      (n ? 'Start with ' + n + ' selected' : 'Pick at least one') + '</button>' +
+      '<button class="btn ghost" data-obskip="1">' + (S.obRedo ? 'Cancel' : 'Skip for now') + '</button></div></div>';
 }
 function obSpin(d) {
   var C = obCards();
-  S.obI = (((S.obI == null ? 1 : S.obI) + d) % C.length + C.length) % C.length;
+  S.obI = (((S.obI == null ? 0 : S.obI) + d) % C.length + C.length) % C.length;
   render();
 }
 function obClick(t, a) {
-  if (a.int) { var s = obInt(); s[a.int] = !s[a.int]; render(); return true; }
-  if (a.intgo) {
-    var s2 = obInt();
-    Prog.d.interests = Object.keys(s2).filter(function (k) { return s2[k]; });
-    if (s2.spec) { S.obStep = 2; S.obI = s2.ev ? 0 : 1; render(); }     /* straight to the turntable */
-    else pickRole(s2.ev ? "ev" : "none");                               /* no specialty wanted: start where they said */
-    return true;
-  }
+  if (a.obtog) { var s = obSel(); s[a.obtog] = !s[a.obtog]; render(); return true; }
+  if (a.spin != null && a.spin !== "") { var d = +a.spin; if (d) obSpin(d); return true; }
   if (a.obskip) {
-    if (S.obRedo) { S.obRedo = 0; render(); return true; }   /* changing it later: back out without touching the saved path */
+    if (S.obRedo) { S.obRedo = 0; S.obSel = null; render(); return true; }   /* changing it later: back out, saved paths untouched */
     Prog.d.interests = []; pickRole("none"); return true;
   }
-  if (a.obback) { S.obStep = 1; render(); return true; }
-  if (a.obagain) { obAgain(); return true; }
-  if (a.spin != null) {
-    var d = +a.spin;
-    if (!d) return true;                                                /* tapping the middle card does nothing; the button below picks it */
-    obSpin(d); return true;
+  if (a.obdone) {
+    var s2 = obSel(), picked = obCards().map(function (c) { return c.code; }).filter(function (k) { return s2[k]; });
+    if (!picked.length) return true;
+    Prog.d.interests = picked;
+    S.obSel = null; S.obI = null;
+    /* the starter beetle and the arrow on the menu follow the first clinical path picked,
+       or Everyday Health when that is the only one */
+    pickRole(picked.filter(function (k) { return k !== "ev"; })[0] || "ev");
+    return true;
   }
-  if (a.obpick) { S.obStep = 1; S.obI = null; pickRole(a.obpick); return true; }
   return false;
 }
-/* swipe the turntable, and arrow keys when it is on screen */
+/* Settings > Study: what is on the menu, and the way back to change it */
+function obIntLine() {
+  var picked = Prog.d.interests || [];
+  if (!picked.length) return "You have not set this yet.";
+  var C = obCards(), names = C.filter(function (c) { return picked.indexOf(c.code) >= 0; }).map(function (c) { return c.name; });
+  return names.length ? names.join(" · ") : "You have not set this yet.";
+}
+function obAgain() { S.obSel = null; S.obI = null; S.obRedo = 1; go("home"); }
+/* arrow keys and swipe move the turntable */
 document.addEventListener("keydown", function (e) {
-  if (!needOnboard() || obStep() !== 2) return;
+  if (!needOnboard()) return;
   if (/^(INPUT|TEXTAREA|SELECT)$/.test((e.target.tagName || ""))) return;
   if (e.key === "ArrowLeft") { e.preventDefault(); obSpin(-1); }
   else if (e.key === "ArrowRight") { e.preventDefault(); obSpin(1); }
@@ -5704,7 +5682,7 @@ document.addEventListener("keydown", function (e) {
   }, { passive: true });
   document.addEventListener("touchend", function (e) {
     if (x0 == null) return;
-    var dx = (e.changedTouches[0].clientX - x0), dy = (e.changedTouches[0].clientY - y0);
+    var dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
     x0 = null;
     if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy)) obSpin(dx < 0 ? 1 : -1);
   }, { passive: true });
@@ -8469,7 +8447,8 @@ var holFwDone = false;
 function holOpenFx() {
   var h = holToday(); if (!h || holFwDone) return;
   holFwDone = true; holOpenSnd(h);
-  if ((h.id !== "july4" && h.id !== "newyear" && holKey(h) !== "thanksgiving") || !hfxOk()) return; HFX.quiet = false; HFX.on = h.id; hfxLayer();
+  if ((h.id !== "july4" && h.id !== "newyear" && holKey(h) !== "thanksgiving") || !hfxOk()) return;
+  if (typeof confettiOk === "function" && !confettiOk()) return;   /* no confetti in the first week (owner, Nov 4 2026) */ HFX.quiet = false; HFX.on = h.id; hfxLayer();
   if (holKey(h) === "thanksgiving") {
     hfxGust(-1, 54); setTimeout(function () { hfxGust(1, 40); hfxLoop(); }, 520);
     setTimeout(function () { hfxGust(-1, 34); hfxLoop(); }, 1500); setTimeout(function () { hfxShowerTG(28); hfxLoop(); }, 2400);
@@ -9227,6 +9206,15 @@ function gmCatCrawl() {
 }
 
 /* ===================== Game effects: little celebrations, all drawn on a top layer so redraws don't interrupt them ===================== */
+/* Confetti waits a week. A brand-new user is still working out what the app is; the
+   celebration lands better once they have a streak worth celebrating (owner, Nov 4 2026). */
+var CONFETTI_AFTER_DAYS = 7;
+function installTs() {
+  var t = store("installTs");
+  if (!t) { t = (Prog && Prog.d && (Prog.d.xp || 0) > 0) ? 1 : Date.now(); store("installTs", t); }
+  return t;
+}
+function confettiOk() { return Date.now() - installTs() >= CONFETTI_AFTER_DAYS * 86400000; }
 function gfxLayer() { var L = document.getElementById("gfx"); if (!L) { L = document.createElement("div"); L.id = "gfx"; L.setAttribute("aria-hidden", "true"); document.body.appendChild(L); } return L; }
 function gfxReduce() { return (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) || (typeof SET === "function" && SET().motion) || (typeof funOn === "function" && !funOn()); }
 function gfxAdd(html, css, ms) { var e = document.createElement("div"); e.className = "gfxi"; e.style.cssText = css || ""; e.innerHTML = html; gfxLayer().appendChild(e); setTimeout(function () { if (e.parentNode) e.parentNode.removeChild(e); }, ms || 1500); return e; }
@@ -9299,7 +9287,7 @@ function gfxCheer() {
 /* "New best!" banner with falling leaf confetti */
 function gfxBest(text) {
   gfxAdd('<div class="gfxbest">' + esc(text || "New best!") + '</div>', "", 2800);
-  if (gfxReduce()) return;
+  if (gfxReduce() || !confettiOk()) return;
   var cols = ["#22c55e", "#84cc16", "#16a34a", "#facc15", "#f97316"], html = "";
   for (var i = 0; i < 26; i++) html += '<i class="leaf" style="left:' + (Math.random() * 100).toFixed(1) + '%;animation-delay:' + (Math.random() * 0.8).toFixed(2) + 's;animation-duration:' + (1.8 + Math.random() * 1.4).toFixed(2) + 's;background:' + cols[i % cols.length] + ';--r:' + Math.round(Math.random() * 720 - 360) + 'deg"></i>';
   gfxAdd(html, "position:fixed;inset:0", 3600);
