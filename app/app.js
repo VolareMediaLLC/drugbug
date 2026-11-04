@@ -399,13 +399,31 @@ function viewHome() {
    '<h3 class="homegh">Look it up</h3><section class="routes">' +
    '<button class="route gen wide' + pt("gen") + '" data-go="gen">' + (S.pointGo === "gen" ? PT : '') + '<span class="eyebrow">Start here</span><h2>BugDex</h2><p>Every medication, explained in plain language. Search or browse.</p><span class="count">' + genN + ' medications</span><span class="sage">' + bugSVG("sage") + '</span></button>' +
    myListRoute() +
-   '<button class="route evsmall" data-go="everyday"><span class="evs-ic" aria-hidden="true">' + bugArt(bugById("grub-everyday"), "", { mood: "happy" }) + '</span><span class="evs-tx"><strong>Everyday Health</strong><span>Medicine cabinet, small sicknesses, normal vitals</span></span><span class="evs-go" aria-hidden="true">&rsaquo;</span></button>' +
-   '</section><h3 class="homegh">Study by role</h3><section class="routes"><div class="minis">' +
-   mini("ph", "levels", "Prehospital", "EMT to Flight Paramedic", "grub-medic") +
-   mini("rn", "nlevels", "Nursing", "CNA, LVN/LPN and RN", "grub-nurse") +
-   mini("md", "mlevels", "Medical School", "MS1 to Intern", "grub-doc") +
-   mini("im", "ilevels", "Imaging", "X-ray, CT, MRI, NM and IR", "grub-imaging") +
-   '</div></section></div>';
+   (homeAll() || Prog.d.role === "ev" || (Prog.d.interests || []).indexOf("ev") >= 0 ? '<button class="route evsmall" data-go="everyday"><span class="evs-ic" aria-hidden="true">' + bugArt(bugById("grub-everyday"), "", { mood: "happy" }) + '</span><span class="evs-tx"><strong>Everyday Health</strong><span>Medicine cabinet, small sicknesses, normal vitals</span></span><span class="evs-go" aria-hidden="true">&rsaquo;</span></button>' : '') +
+   '</section>' + homeRoutes(mini) + '</div>';
+}
+/* The main menu shows the path picked on the first run, not all of them (owner, Nov 4 2026).
+   "Show every path" is always one tap away and is remembered, so nothing is actually hidden. */
+var HOME_ROUTES = [
+  ["ph", "levels", "Prehospital", "EMT to Flight Paramedic", "grub-medic"],
+  ["rn", "nlevels", "Nursing", "CNA, LVN/LPN and RN", "grub-nurse"],
+  ["md", "mlevels", "Medical School", "MS1 to Intern", "grub-doc"],
+  ["im", "ilevels", "Imaging", "X-ray, CT, MRI, NM and IR", "grub-imaging"]
+];
+function homeAll() { return !!store("allPaths"); }
+function homeMine() {
+  var r = Prog.d.role;
+  return HOME_ROUTES.filter(function (x) { return x[0] === r; });
+}
+function homeRoutes(mini) {
+  var all = homeAll(), mine = homeMine(), list = all || !mine.length ? HOME_ROUTES : mine;
+  var hidden = HOME_ROUTES.length - list.length;
+  var cards = list.map(function (x) { return mini(x[0], x[1], x[2], x[3], x[4]); }).join("");
+  var head = all || !mine.length ? "Study by role" : "Your path";
+  var tog = hidden > 0
+    ? '<button class="pathtog" data-act="allpaths">Show every path<span>' + hidden + ' more</span></button>'
+    : (mine.length ? '<button class="pathtog" data-act="allpaths">Show only my path</button>' : '');
+  return '<h3 class="homegh">' + head + '</h3><section class="routes"><div class="minis' + (list.length === 1 ? ' one' : '') + '">' + cards + '</div>' + tog + '</section>';
 }
 /* My List on the home screen, right under the BugDex (owner, Oct 28 2026) */
 function myListRoute() {
@@ -1754,6 +1772,7 @@ document.addEventListener("click", function (e) {
   switch (a.act) {
     case "close": return closeSheet();
     case "tbmenu": S.menu = !S.menu; return render();
+    case "allpaths": store("allPaths", homeAll() ? 0 : 1); render(); return;
     case "funtog": {
       var on = !funOn();
       setSet("fun", on);
