@@ -25511,7 +25511,7 @@ function walletClear() {
    Written only by a Cloud Function after Stripe says so (functions/index.js setEntitlement), and
    read-only to the browser (tools/firestore.rules). */
 
-var SUB = { tier: "", until: 0, status: "", cancelAt: 0, loaded: false, unsub: null, uid: null, hooked: false };
+var SUB = { tier: "", until: 0, status: "", cancelAt: 0, amount: null, currency: "", interval: "", loaded: false, unsub: null, uid: null, hooked: false };
 
 function subCache() { var s = store("sub"); return s && typeof s.until === "number" ? s : null; }
 
@@ -25520,17 +25520,38 @@ function subCache() { var s = store("sub"); return s && typeof s.until === "numb
 function subTier() { return SUB.until > Date.now() ? (SUB.tier || "") : ""; }
 function subActive() { return !!subTier(); }
 function subDaysLeft() { return subActive() ? Math.ceil((SUB.until - Date.now()) / 86400000) : 0; }
+/* What this person actually pays, from their own subscription rather than the price list.
+   After a repricing a grandfathered subscriber keeps their old Stripe price, and showing them
+   today's list price would be plain wrong (owner, Nov 4 2026). */
+function subPriceText() {
+  if (typeof SUB.amount !== "number" || !SUB.interval) return "";
+  var cur = (SUB.currency || "usd").toUpperCase();
+  var amt = (SUB.amount / 100).toFixed(2);
+  var money = cur === "USD" ? "$" + amt : amt + " " + cur;
+  return money + " / " + (SUB.interval === "year" ? "year" : "month");
+}
+/* true when they are paying less than the current list price for the same plan */
+function subGrandfathered() {
+  var t = subTier(), P = t && PLANS[t];
+  if (!P || typeof SUB.amount !== "number" || !SUB.interval) return false;
+  var listed = SUB.interval === "year" ? P.y : P.m;
+  var cents = Math.round(parseFloat(String(listed).replace(/[^0-9.]/g, "")) * 100);
+  return !!cents && SUB.amount < cents;
+}
 function subLabel() {
   if (!subActive()) return "";
   var d = new Date(SUB.until).toLocaleDateString();
   if (SUB.cancelAt) return TIER_NAME[subTier()] + " until " + d + " (not renewing)";
   if (SUB.status === "past_due") return TIER_NAME[subTier()] + " — your card was declined. Update it by " + d + ".";
-  return TIER_NAME[subTier()] + " · renews " + d;
+  var pr = subPriceText();
+  return TIER_NAME[subTier()] + (pr ? " · " + pr : "") + " · renews " + d +
+    (subGrandfathered() ? " · your original price, kept" : "");
 }
 
 function subInit() {
   var c = subCache();
-  if (c) { SUB.tier = c.tier || ""; SUB.until = c.until || 0; SUB.status = c.status || ""; SUB.cancelAt = c.cancelAt || 0; }
+  if (c) { SUB.tier = c.tier || ""; SUB.until = c.until || 0; SUB.status = c.status || ""; SUB.cancelAt = c.cancelAt || 0;
+    SUB.amount = typeof c.amount === "number" ? c.amount : null; SUB.currency = c.currency || ""; SUB.interval = c.interval || ""; }
   /* Coming back from Stripe (success_url carries ?sub=1). Same reasoning as the wallet's ?bought=1:
      say thank you off the redirect, not off the document changing, because after a redirect the
      first snapshot is a first load and reading a welcome into it would be guesswork. __DBQ is
@@ -25580,8 +25601,10 @@ function subWatch(db, uid) {
       if (same && !first) return;                 /* nothing changed: do not re-render */
 
       SUB.tier = d.tier || ""; SUB.until = until; SUB.status = d.status || ""; SUB.cancelAt = d.cancelAt || 0;
+      SUB.amount = typeof d.amount === "number" ? d.amount : null; SUB.currency = d.currency || ""; SUB.interval = d.interval || "";
       SUB.loaded = true;
-      store("sub", { tier: SUB.tier, until: SUB.until, status: SUB.status, cancelAt: SUB.cancelAt, uid: uid });
+      store("sub", { tier: SUB.tier, until: SUB.until, status: SUB.status, cancelAt: SUB.cancelAt,
+        amount: SUB.amount, currency: SUB.currency, interval: SUB.interval, uid: uid });
 
       if (!first && !wasTier && subTier()) S.proMsg = "Welcome to " + TIER_NAME[subTier()] + "!";
       subArm();
