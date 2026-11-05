@@ -7064,7 +7064,7 @@ function voiceRate() { return { slow: 0.6, normal: 0.85, fast: 1.1 }[SET().voice
    — only the music context was ever being unlocked, so whichever contexts happened to be created
    outside a tap stayed suspended and silent for the rest of the session. One context, unlocked
    once, and every sound in the app rides on it. (owner asked why sounds were missing, Nov 4 2026) */
-var AUD = { ctx: null, warned: false, gesture: 0, played: 0, err: "", music: "" };
+var AUD = { ctx: null, warned: false, gesture: 0, played: 0, err: "", music: "", sfxFiles: {} };
 function audioCtx() {
   var AC = window.AudioContext || window.webkitAudioContext;
   if (!AC) { AUD.err = "This browser has no Web Audio support."; return null; }
@@ -7072,6 +7072,34 @@ function audioCtx() {
   if (AUD.ctx.state === "suspended") { try { var r = AUD.ctx.resume(); if (r && r.catch) r.catch(function () {}); } catch (e) {} }
   AUD.played++;
   return AUD.ctx;
+}
+/* ---------- recorded sound effects ----------
+   Fetched once, decoded once, then played as many times as needed. Anything that uses one keeps
+   a synthesised fallback, because a file can always fail to arrive - which is exactly what
+   happened to the music when its folder was never published. (owner, Nov 4 2026) */
+var SFXBUF = {}, SFX_SRC = { gasp: "sfx/gasp.mp3" };
+var SFX_TRIM = { gasp: 0.14 };     /* the recording opens with silence; skip it so it lands on time */
+function sfxLoad(name) {
+  var c = audioCtx(); if (!c || !SFX_SRC[name]) return null;
+  if (SFXBUF[name]) return SFXBUF[name];
+  SFXBUF[name] = fetch(SFX_SRC[name])
+    .then(function (r) { if (!r.ok) throw new Error(name + " " + r.status); return r.arrayBuffer(); })
+    .then(function (ab) { return new Promise(function (res, rej) { var pr = c.decodeAudioData(ab, res, rej); if (pr && pr.catch) pr.catch(rej); }); })
+    .then(function (buf) { SFXBUF[name + ":buf"] = buf; AUD.sfxFiles[name] = "ok"; return buf; });
+  SFXBUF[name].catch(function () { AUD.sfxFiles[name] = "fail"; delete SFXBUF[name]; });
+  return SFXBUF[name];
+}
+/* play a decoded effect: at = seconds from now, rate shifts the pitch, v is the level */
+function sfxPlay(name, at, v, rate, dest) {
+  var c = audioCtx(), buf = SFXBUF[name + ":buf"]; if (!c || !buf) return false;
+  try {
+    var src = c.createBufferSource(), g = c.createGain();
+    src.buffer = buf; src.playbackRate.value = rate || 1; g.gain.value = v == null ? 1 : v;
+    src.connect(g); g.connect(dest || c.destination);
+    var off = SFX_TRIM[name] || 0;
+    src.start(c.currentTime + (at || 0), off);
+    return true;
+  } catch (e) { return false; }
 }
 /* A plain-language readout of what the sound system is actually doing. Added because sound can
    fail for reasons the app cannot see from the inside - a browser that will not allow audio, a
@@ -7092,6 +7120,10 @@ function audioReport() {
     L.push(["info", AUD.played + " sound" + (AUD.played === 1 ? "" : "s") + " sent to the speakers this session."]);
   }
   if (AUD.err) L.push(["bad", AUD.err]);
+  var gs = AUD.sfxFiles.gasp;
+  L.push(gs === "ok" ? ["ok", "Gasp recording loaded."]
+    : gs === "fail" ? ["bad", "The gasp recording could not be loaded, so a synthesised one is used instead."]
+    : ["info", "Gasp recording not loaded yet."]);
   L.push(AUD.music === "ok" ? ["ok", "Music file loaded."]
     : AUD.music === "fail" ? ["bad", "The music file could not be loaded, so music stays silent. Sound effects are unaffected."]
     : ["info", "Music file not loaded yet."]);
@@ -7269,6 +7301,7 @@ function settingsClick(t, a) {
     case "sndrecheck":
       audioCtx(); AUD.played = Math.max(0, AUD.played - 1);     /* the check itself should not count */
       try { if (muCtx() && typeof muLoadBuf === "function" && typeof curTrack === "function") muLoadBuf(curTrack()); } catch (e) { AUD.music = "fail"; }
+      try { sfxLoad("gasp"); } catch (e) {}
       setTimeout(render, 700); return true;
     case "exportdata": exportData(); return true;
     case "resetask": S.resetAsk = true; render(); return true;
@@ -7454,7 +7487,7 @@ function muSync() { if (muOn() && MU.armed && muLevel() > 0) muStart(); else muS
 function muIcon() { return '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M9 18.5a2.5 2.5 0 1 1-2-2.45V5l11-2v12.5a2.5 2.5 0 1 1-2-2.45V7.1L9 8.4z"/>' + (muOn() ? '' : '<path d="M3 3l18 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>') + '</svg>'; }
 function musicBtn() { if (typeof funOn === "function" && !funOn()) return ""; return '<button class="theme-btn musicbtn" data-act="music" aria-pressed="' + muOn() + '" aria-label="Background music" title="Background music">' + muIcon() + '</button>'; }
 /* browsers only allow sound after a tap, so start on the first interaction */
-["pointerdown", "keydown", "touchend", "click"].forEach(function (ev) { document.addEventListener(ev, function () { audioCtx(); if (!MU.playing || (MU.ctx && MU.ctx.state !== "running")) muGesture(); }, { passive: true, capture: true }); });
+["pointerdown", "keydown", "touchend", "click"].forEach(function (ev) { document.addEventListener(ev, function () { audioCtx(); try { sfxLoad("gasp"); } catch (e) {} if (!MU.playing || (MU.ctx && MU.ctx.state !== "running")) muGesture(); }, { passive: true, capture: true }); });
 document.addEventListener("visibilitychange", function () { if (document.hidden) muStop(); else if (MU.armed) muSync(); });
 window.addEventListener("pageshow", function () { if (MU.armed && !document.hidden) muSync(); });
 /* quick volume popover from the top-bar note button */
@@ -25188,8 +25221,21 @@ function anatSnd(kind) {
         vo.start(t + at + dur * 0.5); vo.stop(t + at + dur + 0.1);
       }
       var qi;
-      /* the room catches its breath */
-      for (qi = 0; qi < 7; qi++) gaspv(Math.random() * 0.2, 90 + Math.random() * 150, 0.85 + Math.random() * 0.45, 0.05 + Math.random() * 0.04);
+      /* The room catches its breath. This is a real recording (sfx/gasp.mp3, supplied by the
+         owner), played several times over with the pitch shifted apart so it reads as a crowd
+         rather than one person on a loop. If the file has not arrived, the synthesised gasp
+         above stands in. (owner, Nov 4 2026) */
+      var realGasp = !!SFXBUF["gasp:buf"];
+      if (realGasp) {
+        for (qi = 0; qi < 7; qi++) {
+          sfxPlay("gasp", Math.random() * 0.26,
+            (0.5 + Math.random() * 0.5) * (qi === 0 ? 1 : 0.8),   /* one leads, the rest fill in */
+            0.82 + Math.random() * 0.46,                          /* pitch: deeper and lighter people */
+            bus);
+        }
+      } else {
+        for (qi = 0; qi < 7; qi++) gaspv(Math.random() * 0.2, 90 + Math.random() * 150, 0.85 + Math.random() * 0.45, 0.05 + Math.random() * 0.04);
+      }
       /* and then says it: sixteen voices across the middle second */
       for (qi = 0; qi < 16; qi++) {
         wow(0.16 + Math.random() * 0.72,
@@ -25205,10 +25251,15 @@ function anatSnd(kind) {
         tone("triangle", 120 + Math.random() * 130, 100 + Math.random() * 80, md, 0.3, 0.011, 5 + Math.random() * 4, 8);
         nz(md, 0.26, 0.013, "bandpass", 450 + Math.random() * 600, 1000, 1.1);
       }
-    } else if (kind === "gasp") {     /* a sharp offended inhale, then a held, scandalised note */
+    } else if (kind === "gasp") {
+      /* one person: the recording if it is here, the synthesised version if not */
+      if (SFXBUF["gasp:buf"] && sfxPlay("gasp", 0, 0.95, 0.94 + Math.random() * 0.16)) {
+        tone("sine", 840, 910, 0.3, 0.26, 0.04, 7, 18);           /* the scandalised note after it */
+      } else {
       nz(0, 0.26, 0.2, "bandpass", 700, 2600, 0.9);
       tone("sine", 420, 880, 0.02, 0.24, 0.07);
       tone("sine", 870, 940, 0.26, 0.3, 0.05, 7, 20);
+      }
     } else if (kind === "punch") {    /* a body blow: low thud and a slap on top */
       tone("sine", 160, 48, 0, 0.22, 0.3);
       tone("triangle", 90, 40, 0, 0.3, 0.18);
