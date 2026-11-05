@@ -1946,6 +1946,12 @@ table.cmptbl tr.dif th{border-left:3px solid var(--gold)}
 :root[data-serious="1"] .homewrap .route:hover{border-color:var(--muted)}
 /* and the call to action is a solid colour, not a gradient */
 :root[data-serious="1"] .homewrap .btn:not(.ghost){background-image:none;background-color:var(--gen);color:#fff}
+/* what is inside each path, on the card itself */
+.rchips{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.rchips span{font-size:10.5px;font-weight:800;letter-spacing:.02em;background:rgba(255,255,255,.18);border-radius:999px;padding:2px 8px;white-space:nowrap}
+.homewrap .route.rmini{height:150px}
+.homewrap .route.rmini .count{margin-top:6px;align-self:flex-start}
+:root[data-serious="1"] .rchips{display:none}
 /* My List: a small strip directly under the BugDex (owner, Nov 4 2026) */
 .route.mlsmall{grid-column:1/-1;display:flex;flex-direction:row;align-items:center;gap:12px;min-height:0;padding:10px 14px;border-radius:16px;background:linear-gradient(135deg,#b4532a 0%,#7a2e8e 100%);box-shadow:none;margin-top:10px}
 .route.mlsmall .mls-ic{flex:none;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:rgba(255,255,255,.18);font-size:15px}
@@ -1974,10 +1980,12 @@ table.cmptbl tr.dif th{border-left:3px solid var(--gold)}
 :root[data-serious="1"] .band{grid-template-columns:1fr}
 :root[data-serious="1"] .lazycard{padding-top:34px}
 /* the draggable track, and the bulge on whichever bug you are looking at (owner, Nov 4 2026) */
-.lazytrack{position:absolute;inset:0;transition:transform .26s cubic-bezier(.22,.9,.26,1);touch-action:pan-y}
+.lazytrack{position:absolute;inset:0;touch-action:pan-y;transform-style:preserve-3d}
 .lazy{cursor:grab;user-select:none;-webkit-user-select:none}
 .lazy:active{cursor:grabbing}
 .lazyarr,.lazydot{cursor:pointer}
+.lazycard.mid{border-color:var(--gen)}
+.lazycard{will-change:transform,opacity}
 .lazybug svg{transition:transform .3s cubic-bezier(.22,.9,.26,1);transform-origin:50% 60%}
 .lazycard.mid .lazybug svg{transform:scale(1.16);animation:lzpulse 3.2s ease-in-out infinite}
 @keyframes lzpulse{0%,100%{transform:scale(1.16)}50%{transform:scale(1.23)}}
@@ -2019,12 +2027,6 @@ table.cmptbl tr.dif th{border-left:3px solid var(--gold)}
 .lazycard{position:absolute;left:50%;top:0;width:188px;margin-left:-94px;height:222px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:var(--surface);border:2px solid var(--line);border-radius:22px;padding:14px 12px;color:var(--ink);box-shadow:var(--shadow);cursor:pointer;transition:transform .34s cubic-bezier(.22,.9,.26,1),opacity .34s,border-color .2s;backface-visibility:hidden}
 .lazycard strong{font-family:var(--f-display);font-size:17px;line-height:1.1;text-align:center}
 .lazybug svg{width:96px;height:96px;display:block}
-.lazycard.po0{transform:translateZ(60px) scale(1.05);opacity:1;z-index:6;border-color:var(--gen)}
-.lazycard.po1{transform:translateX(74%) rotateY(-34deg) scale(.78);opacity:.62;z-index:4}
-.lazycard.pom1{transform:translateX(-74%) rotateY(34deg) scale(.78);opacity:.62;z-index:4}
-.lazycard.po2{transform:translateX(128%) rotateY(-46deg) scale(.58);opacity:.26;z-index:2}
-.lazycard.pom2{transform:translateX(-128%) rotateY(46deg) scale(.58);opacity:.26;z-index:2}
-.lazycard.pfar{transform:scale(.4);opacity:0;pointer-events:none;z-index:1}
 .lazyarr{flex:0 0 auto;width:40px;height:40px;border-radius:50%;border:2px solid var(--line);background:var(--surface);color:var(--ink);font-size:22px;line-height:1;cursor:pointer;z-index:7}
 .lazyarr:hover{border-color:var(--gen);color:var(--gen)}
 .lazynow{text-align:center;min-height:62px;display:flex;flex-direction:column;align-items:center;gap:3px}

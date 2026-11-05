@@ -404,7 +404,7 @@ function viewHome() {
     var art = lk && typeof levelBug === "function" ? levelBug(lk)
       : bugArt(typeof bug === "string" ? bugById(bug) : bug, "", { mood: "happy" });
     var hit = S.pointGo === go;
-    return '<button class="route rmini ' + cls + pt(go) + '" ' + (hit ? 'data-startlearn="' + go + '"' : go.indexOf("level:") === 0 ? 'data-level="' + go.slice(6) + '"' : 'data-go="' + go + '"') + '>' + (hit ? PT : '') + '<span class="mtx"><h2>' + title + '</h2><p>' + line + '</p></span><span class="mbug">' + art + '</span></button>';
+    return '<button class="route rmini ' + cls + pt(go) + '" ' + (hit ? 'data-startlearn="' + go + '"' : go.indexOf("level:") === 0 ? 'data-level="' + go.slice(6) + '"' : 'data-go="' + go + '"') + '>' + (hit ? PT : '') + '<span class="mtx"><h2>' + title + '</h2><p>' + line + '</p>' + (fun ? routeChips(cls) : '') + '</span><span class="mbug">' + art + '</span></button>';
   }
   return topbar() + '<div class="homewrap' + hcls + '" data-hol="' + (HOL ? esc(holKey(HOL)) : '') + '">' + homeTip() +
    heroHTML() +
@@ -412,17 +412,31 @@ function viewHome() {
    '<h3 class="homegh">Look it up</h3><section class="routes"><div class="minis one">' +
    '<button class="route rmini gen' + pt("gen") + '" ' + (S.pointGo === "gen" ? 'data-startlearn="gen"' : 'data-go="gen"') + '>' + (S.pointGo === "gen" ? PT : '') +
      '<span class="mtx">' + (fun ? '<span class="eyebrow">Start here</span>' : '') + '<h2>BugDex</h2><p>Every medication, explained in plain language. Search or browse.</p>' +
-     (fun ? '<span class="count">' + genN + ' medications</span>' : '') + '</span>' +
+     (fun ? routeChips("gen") + '<span class="count">' + genN + ' medications</span>' : '') + '</span>' +
      '<span class="mbug">' + bugSVG("sage") + '</span></button></div>' + myListRoute() +
    '</section>' + homeRoutes(mini) + '</div>';
 }
 /* The main menu shows the path picked on the first run, not all of them (owner, Nov 4 2026).
    "Show every path" is always one tap away and is remembered, so nothing is actually hidden. */
+/* The role cards were mostly empty space: each one now lists what is actually inside it
+   (owner, Nov 4 2026). */
+var ROUTE_CHIPS = {
+  gen: ["Search", "Browse", "A to Z"],
+  ev:  ["Medicine cabinet", "Vitamins", "Probiotics", "Peptides"],
+  ph:  ["EMT", "AEMT", "Paramedic", "Flight"],
+  rn:  ["CNA", "LVN/LPN", "RN", "Units"],
+  md:  ["MS1-MS2", "MS3-MS4", "Intern"],
+  im:  ["X-ray", "CT", "MRI", "NM", "IR"]
+};
+function routeChips(code) {
+  var L = ROUTE_CHIPS[code];
+  return L ? '<span class="rchips">' + L.map(function (x) { return '<span>' + esc(x) + '</span>'; }).join("") + '</span>' : "";
+}
 var HOME_ROUTES = [
-  ["ph", "levels", "Prehospital", "EMT to Flight Paramedic", "grub-medic"],
-  ["rn", "nlevels", "Nursing", "CNA, LVN/LPN and RN", "grub-nurse"],
-  ["md", "mlevels", "Medical School", "MS1 to Intern", "grub-doc"],
-  ["im", "ilevels", "Imaging", "X-ray, CT, MRI, NM and IR", "grub-imaging"]
+  ["ph", "levels", "Prehospital", "Every level has its own drugs, protocols and question bank.", "grub-medic"],
+  ["rn", "nlevels", "Nursing", "Scope by licence, plus specialty units and lab values.", "grub-nurse"],
+  ["md", "mlevels", "Medical School", "Mechanisms, board-style questions and the wards view.", "grub-doc"],
+  ["im", "ilevels", "Imaging", "Contrast agents, radiopharmaceuticals and contrast safety.", "grub-imaging"]
 ];
 function homeAll() { return !!store("allPaths"); }
 function homeMine() {
@@ -441,7 +455,7 @@ function homeRoutes(mini) {
   /* the other paths live in Settings now, not on the menu (owner, Nov 4 2026) */
   return '<h3 class="homegh">' + head + '</h3><section class="routes"><div class="minis' + (n === 1 ? ' one' : '') + '">' + cards + '</div></section>';
 }
-var EV_LINE = "Peptides, probiotics, vitamins and the medicine cabinet.";
+var EV_LINE = "Medicines and your body, explained without the jargon.";
 /* My List on the home screen, right under the BugDex (owner, Oct 28 2026) */
 function myListRoute() {
   var m = marks().filter(function (id) { return DB.drugs[id]; }), n = m.length, ix = 0;
@@ -1668,6 +1682,9 @@ function render() {
   translateDom(app); drawBuddy();
   /* "Start here" asked for L.E.A.R.N: wait until the path has actually rendered, so the
      level transition cannot redraw over it (owner, Nov 4 2026) */
+  if (needOnboard() && document.querySelector(".lazytrack")) {
+    try { lzLayout(S.obI == null ? 0 : S.obI, false); } catch (e) {}
+  }
   if (S.learnGo && !S.sheet) {
     S.learnGo = 0;
     setTimeout(function () { try { if (typeof learnStart === "function") { S.learn = null; learnStart(); } } catch (e) {} }, 40);
@@ -5655,18 +5672,16 @@ function obView() {
   return '<div class="gate obgate obspec"><h1>What do you want to study?</h1>' +
     '<p>Select as many as you want. Swipe the turntable, tap a card to tick it, and change any of this later in Settings.</p>' +
     '<div class="lazy" data-lazy="1">' +
-    '<button class="lazyarr l" data-spin="-1" aria-label="Previous">&#8249;</button>' +
+    '<button class="lazyarr l" data-obstep="-1" aria-label="Previous">&#8249;</button>' +
     '<div class="lazystage"><div class="lazytrack">' + C.map(function (c, k) {
-      var d = k - i, L = C.length;
-      if (d > L / 2) d -= L; if (d < -L / 2) d += L;
-      var pos = Math.abs(d) > 2 ? "far" : "o" + d, on = !!sel[c.code];
-      return '<button class="lazycard p' + pos.replace("-", "m") + (d === 0 ? ' mid' : '') + (on ? ' on' : '') + '" data-spin="' + d + '" data-obtog="' + (d === 0 ? c.code : '') + '" tabindex="' + (d === 0 ? 0 : -1) + '" aria-pressed="' + (on ? 'true' : 'false') + '">' +
+      var on = !!sel[c.code];
+      return '<button class="lazycard' + (on ? ' on' : '') + '" data-obidx="' + k + '" aria-pressed="' + (on ? 'true' : 'false') + '">' +
         '<span class="lazychk" aria-hidden="true"></span>' +
         '<span class="lazybug">' + bugArt(bugById(c.bug), "rolebug", { mood: "happy" }) + '</span>' +
         '<strong>' + esc(c.name) + '</strong>' + (c.code === "ev" ? '<span class="obrec">Recommended</span>' : '') + '</button>';
     }).join("") + '</div></div>' +
-    '<button class="lazyarr r" data-spin="1" aria-label="Next">&#8250;</button></div>' +
-    '<div class="lazydots">' + C.map(function (c, k) { return '<button class="lazydot' + (k === i ? ' on' : '') + (sel[c.code] ? ' sel' : '') + '" data-spin="' + (k - i) + '" aria-label="' + esc(c.name) + '"></button>'; }).join("") + '</div>' +
+    '<button class="lazyarr r" data-obstep="1" aria-label="Next">&#8250;</button></div>' +
+    '<div class="lazydots">' + C.map(function (c, k) { return '<button class="lazydot' + (k === i ? ' on' : '') + (sel[c.code] ? ' sel' : '') + '" data-obgo="' + k + '" aria-label="' + esc(c.name) + '"></button>'; }).join("") + '</div>' +
     '<div class="lazynow"><strong>' + esc(cur.name) + '</strong><p class="obblurb">' + esc(cur.blurb) + '</p>' +
       '<button class="obpick' + (sel[cur.code] ? ' on' : '') + '" data-obtog="' + cur.code + '"><span class="lazychk" aria-hidden="true"></span>' +
       (sel[cur.code] ? 'Included' : 'Add ' + esc(cur.name)) + '</button></div>' +
@@ -5681,10 +5696,18 @@ function obSpin(d) {
 }
 function obClick(t, a) {
   if (a.obtog) {
-    if (LZ.moved) { LZ.moved = false; return true; }   /* that was a drag, not a tap */
+    if (LZ.suppress) return true;                      /* that was a drag, not a tap */
     var s = obSel(); s[a.obtog] = !s[a.obtog]; render(); return true;
   }
-  if (a.spin != null && a.spin !== "") { var d = +a.spin; if (d) obSpin(d); return true; }
+  if (a.obidx != null) {
+    if (LZ.suppress) return true;
+    var k = +a.obidx, cur = lzNorm(S.obI == null ? 0 : S.obI);
+    if (k === cur) { var sc = obSel(), code = obCards()[k].code; sc[code] = !sc[code]; render(); }
+    else obGoTo(k);
+    return true;
+  }
+  if (a.obstep) { obSpin(+a.obstep); return true; }
+  if (a.obgo != null) { obGoTo(+a.obgo); return true; }
   if (a.obskip) {
     if (S.obRedo) { S.obRedo = 0; S.obSel = null; render(); return true; }   /* changing it later: back out, saved paths untouched */
     Prog.d.interests = []; pickRole("none"); return true;
@@ -5716,49 +5739,79 @@ document.addEventListener("keydown", function (e) {
   if (e.key === "ArrowLeft") { e.preventDefault(); obSpin(-1); }
   else if (e.key === "ArrowRight") { e.preventDefault(); obSpin(1); }
 });
-/* Dragging the turntable: one path for finger, mouse and pen (owner, Nov 4 2026).
-   Pointer events cover all three, so the artifact drags with a mouse exactly as the phone does
-   with a thumb. The track follows the pointer while the drag is live and snaps on release;
-   a drag that moved more than a few pixels swallows the click so it cannot also tick a card. */
-var LZ = { id: null, x0: 0, y0: 0, dx: 0, moved: false, lock: "", track: null };
+/* A turntable you actually turn (owner, Nov 4 2026).
+   Position is a float, not an index: every card's place is computed from how far the carousel has
+   been turned, so dragging a side bug carries it continuously into the middle instead of nudging
+   a block that snaps at the end. The same function lays the cards out after a render, during a
+   drag and while easing to a stop, so there is never a jump between those three. */
+var LZ = { id: null, x0: 0, y0: 0, dx: 0, moved: false, suppress: false, lock: "", base: 0, pos: 0, step: 240, anim: 0 };
+function lzEls() { return document.querySelectorAll(".lazytrack .lazycard"); }
+function lzWrap(d, n) { while (d > n / 2) d -= n; while (d < -n / 2) d += n; return d; }
+function lzLayout(pos, ease) {
+  var els = lzEls(), n = els.length;
+  if (!n) return;
+  for (var k = 0; k < n; k++) {
+    var d = lzWrap(k - pos, n), ad = Math.abs(d), el = els[k];
+    el.style.transition = ease ? "transform .34s cubic-bezier(.22,.9,.26,1), opacity .34s" : "none";
+    el.style.transform = "translateX(" + (d * 76) + "%) rotateY(" + (-d * 32) + "deg) scale(" + Math.max(0.44, 1.05 - ad * 0.24) + ")";
+    el.style.opacity = ad > 2.3 ? "0" : String(Math.max(0, 1 - ad * 0.36));
+    el.style.zIndex = String(Math.max(1, Math.round(10 - ad * 2)));
+    el.style.pointerEvents = ad > 1.7 ? "none" : "";
+    el.classList.toggle("mid", ad < 0.5);
+  }
+}
+function lzCount() { return (typeof obCards === "function" ? obCards().length : 0); }
+function lzNorm(i) { var n = lzCount() || 1; return ((i % n) + n) % n; }
+/* ease to a whole card, then let the normal render take the layout back over */
+function lzSettle(target) {
+  clearTimeout(LZ.anim);
+  lzLayout(target, true);
+  LZ.anim = setTimeout(function () {
+    S.obI = lzNorm(Math.round(target));
+    render();
+  }, 300);
+}
+function obSpin(d) { lzSettle((S.obI == null ? 0 : S.obI) + d); }
+function obGoTo(i) {
+  var n = lzCount(), cur = S.obI == null ? 0 : S.obI;
+  lzSettle(cur + lzWrap(i - lzNorm(cur), n));      /* turn the short way round */
+}
 (function () {
-  function track(t) { return t && t.closest ? t.closest("[data-lazy]") : null; }
-  function setDx(px) {
-    if (!LZ.track) return;
-    /* swing rather than slide: the whole turntable turns a little as it is dragged, which is
-       what makes it read as a carousel on a spindle (owner, Nov 4 2026) */
-    LZ.track.style.transform = px ? "translateX(" + px + "px) rotateY(" + (-px * 0.14) + "deg)" : "";
-    LZ.track.style.transition = "none";
-  }
-  function release(snap) {
-    if (LZ.track) { LZ.track.style.transition = ""; LZ.track.style.transform = ""; }
-    LZ.id = null; LZ.lock = ""; LZ.track = null;
-    if (snap) obSpin(snap);
-  }
+  function stage(t) { return t && t.closest ? t.closest("[data-lazy]") : null; }
   document.addEventListener("pointerdown", function (e) {
-    if (e.button != null && e.button !== 0) return;          /* left button or touch only */
-    var z = track(e.target); if (!z) return;
-    if (e.target.closest && e.target.closest(".lazyarr, .lazydot")) return;   /* the buttons keep their own job */
+    if (e.button != null && e.button !== 0) return;
+    var z = stage(e.target); if (!z) return;
+    if (e.target.closest && e.target.closest(".lazyarr, .lazydot")) return;
+    clearTimeout(LZ.anim);
+    var box = z.querySelector(".lazystage");
     LZ.id = e.pointerId; LZ.x0 = e.clientX; LZ.y0 = e.clientY; LZ.dx = 0; LZ.moved = false; LZ.lock = "";
-    LZ.track = z.querySelector(".lazytrack");
+    LZ.base = S.obI == null ? 0 : S.obI; LZ.pos = LZ.base;
+    LZ.step = Math.max(120, (box ? box.getBoundingClientRect().width : 320) * 0.52);
   });
   document.addEventListener("pointermove", function (e) {
     if (LZ.id === null || e.pointerId !== LZ.id) return;
     var dx = e.clientX - LZ.x0, dy = e.clientY - LZ.y0;
-    /* decide once whether this is a sideways drag or the page being scrolled, then stick to it */
     if (!LZ.lock) {
       if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
       LZ.lock = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
-      if (LZ.lock === "y") { LZ.id = null; LZ.track = null; return; }
+      if (LZ.lock === "y") { LZ.id = null; return; }      /* they are scrolling the page */
     }
     LZ.dx = dx; LZ.moved = Math.abs(dx) > 5;
     if (e.cancelable) e.preventDefault();
-    setDx(Math.max(-120, Math.min(120, dx)) * 0.55);          /* a little resistance */
+    LZ.pos = LZ.base - dx / LZ.step;
+    lzLayout(LZ.pos, false);
   }, { passive: false });
   function end(e) {
     if (LZ.id === null || (e.pointerId != null && e.pointerId !== LZ.id)) return;
-    var dx = LZ.dx;
-    release(Math.abs(dx) > 45 ? (dx < 0 ? 1 : -1) : 0);
+    LZ.id = null;
+    /* the click that follows a real drag is the end of that drag, not a tap. Suppress exactly
+       that one, on a timer, so the next genuine tap is never eaten. */
+    if (LZ.moved) { LZ.suppress = true; setTimeout(function () { LZ.suppress = false; }, 350); }
+    LZ.moved = false;
+    if (!LZ.lock) return;
+    /* a flick carries on past the halfway point; a slow drag settles on whatever is nearest */
+    var t = Math.abs(LZ.dx) > 60 ? (LZ.dx < 0 ? Math.ceil(LZ.pos) : Math.floor(LZ.pos)) : Math.round(LZ.pos);
+    lzSettle(t);
   }
   document.addEventListener("pointerup", end);
   document.addEventListener("pointercancel", end);
@@ -7905,12 +7958,22 @@ function tourCards() {
     ["Practice", "Registry and licensure-style questions, flashcards, Weak spots for what you keep missing, and an exam countdown that sets a daily target.", "plain"]
   ];
   var c = [
-    ["Howdy, I'm Hickory", "I run L.E.A.R.N, which is the no-nonsense way through this thing: every drug in your scope, one at a time, random order, and I never show you the same one twice.", "hick"],
-    ["Look anything up", "BugDex has the lot. Open a drug for the plain words or the whole monograph, hit Compare to put two side by side, and star the ones you want in My List.", "hick"],
-    ["Then test yourself", "Registry and licensure-style questions, flashcards, and Weak spots, which quietly keeps score of what you keep getting wrong.", "hick"]
+    ["Well, howdy",
+     "Name's Hickory. I run the L.E.A.R.N round these parts. What that means is I take ya through every last drug in your patch, one at a time, all shuffled up, and I ain't gonna show ya the same one twice. Slow and steady beats crammin', every time.",
+     "hick"],
+    ["Lookin' somethin' up",
+     "BugDex has got the whole mess of 'em. Open one up and you can have it plain-spoke or you can have the whole long story, whichever suits ya. Hit Compare and I'll set two drugs side by each so you can see where they differ. Find one worth hangin' onto, star it into My List.",
+     "hick"],
+    ["Then go test yourself",
+     "Questions, flashcards, and Weak spots. That last one keeps a quiet tally of whatever you keep gettin' wrong, and feeds 'em back to ya till they stick.",
+     "hick"]
   ];
-  c.push(["Sticks and bugs", "Every question you try pays 1 stick, every right answer 3. Spend them in the Terrarium on bugs, outfits and music. Your bug grows as you level up.", "sticks"]);
-  c.push(["Right then", "Enough talk. Let me show you how L.E.A.R.N works on a real drug.", "hick"]);
+  c.push(["Sticks and bugs",
+    "Every question ya take a swing at pays one stick. Get it right, that's three. Spend 'em over in the Terrarium on bugs and hats and music and whatnot. Your bug grows right along with ya.",
+    "sticks"]);
+  c.push(["Right then",
+    "Enough jawin' out of me. Let me show ya how this works on a real drug.",
+    "hick"]);
   return c;
 }
 var TOUR = tourCards();
