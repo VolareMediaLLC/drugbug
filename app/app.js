@@ -9190,8 +9190,11 @@ var D3 = (function () {
   function lin(c) { return [Math.pow(c[0], 2.2), Math.pow(c[1], 2.2), Math.pow(c[2], 2.2)]; }
   var MAT = {
     yellow: { c: lin([0.95, 0.80, 0.42]), sp: 0.35, sh: 60, rim: 0.22 },
-    black:  { c: lin([0.012, 0.012, 0.014]), sp: 0.8, sh: 70, rim: 0.5 },
-    shoe:   { c: lin([0.07, 0.07, 0.08]), sp: 1.6, sh: 120, rim: 0.9 }
+    /* no black on him any more (owner, Nov 5 2026): soft grey joints, white hospital socks,
+       and a pale blue hospital gown */
+    black:  { c: lin([0.80, 0.80, 0.80]), sp: 0.5, sh: 60, rim: 0.25 },
+    shoe:   { c: lin([0.94, 0.94, 0.92]), sp: 0.3, sh: 40, rim: 0.2 },
+    gown:   { c: lin([0.66, 0.80, 0.90]), sp: 0.12, sh: 20, rim: 0.18 }
   };
 
   /* ---------------- the skeleton ---------------- */
@@ -9225,17 +9228,20 @@ var D3 = (function () {
       ball: sphere(0.068),
       ringL: torus(0.05, 0.018, 20, 8), ringM: torus(0.045, 0.017, 20, 8), ringS: torus(0.037, 0.014, 20, 8), ringXL: torus(0.07, 0.022, 22, 8),
       upper: capsule(0.054, 0.3, 8), fore: capsule(0.046, 0.27, 8), hand: capsule(0.04, 0.13, 6),
+      skirt: lathe([[0.214, -0.29], [0.2, -0.2], [0.184, -0.1], [0.172, -0.02], [0.168, 0.04]], 28),
+      sleeve: lathe([[0.084, -0.13], [0.08, -0.07], [0.076, -0.01], [0.06, 0.04], [0.03, 0.07]], 18),
       thigh: capsule(0.076, 0.44, 8), shin: capsule(0.06, 0.4, 8), shoe: capsule(0.058, 0.25, 8), hipball: sphere(0.08)
     };
     /* balance tilts him from his feet; spin turns him about his own vertical axis */
     var bal = node("bal", null, [0, 0, 0]), spin = node("spin", bal, [0, 0, 0]);
     var hips = node("hips", spin, [0, HIPY, 0]);
-    mesh(hips, G.pelvis, MAT.yellow, "pelvis", [0, 0, 0], null, [1, 1, 0.72], true);
-    mesh(hips, G.waist, MAT.black, "abdomen", [0, 0.085, 0], null, [1, 1, 0.74]);
+    mesh(hips, G.pelvis, MAT.gown, "pelvis", [0, 0, 0], null, [1.04, 1, 0.76], true);
+    mesh(hips, G.skirt, MAT.gown, "pelvis", [0, 0, 0], null, [1, 1, 0.8], true);
+    mesh(hips, G.waist, MAT.gown, "abdomen", [0, 0.085, 0], null, [1.06, 1, 0.8]);
     var spine = node("spine", hips, [0, 0.09, 0]);
-    mesh(spine, G.abdomen, MAT.yellow, "abdomen", [0, 0, 0], null, [1, 1, 0.7], true);
+    mesh(spine, G.abdomen, MAT.gown, "abdomen", [0, 0, 0], null, [1.05, 1, 0.75], true);
     var chest = node("chest", spine, [0, 0.17, 0]);
-    mesh(chest, G.chest, MAT.yellow, "chest", [0, 0, 0], null, [1, 1, 0.64], true);
+    mesh(chest, G.chest, MAT.gown, "chest", [0, 0, 0], null, [1.04, 1, 0.68], true);
     /* a little pectoral definition, like the moulded chest plate on the real thing */
     var neck = node("neck", chest, [0, 0.335, 0]);
     mesh(neck, G.neck, MAT.black, "neck", [0, 0.035, 0]);
@@ -9244,7 +9250,7 @@ var D3 = (function () {
     function arm(side, sx) {
       var sh = node("sh" + side, chest, [0.205 * sx, 0.265, 0]);
       mesh(sh, G.ball, MAT.yellow, "arm" + side, [0, 0, 0]);
-      mesh(sh, G.ringL, MAT.black, "arm" + side, [0, -0.06, 0]);
+      mesh(sh, G.sleeve, MAT.gown, "arm" + side, [0, -0.02, 0]);
       mesh(sh, G.upper, MAT.yellow, "arm" + side, [0, -0.165, 0]);
       var el = node("el" + side, sh, [0, -0.315, 0]);
       mesh(el, G.ringM, MAT.black, "arm" + side, [0, 0, 0]);
@@ -10329,7 +10335,7 @@ window.addEventListener("scroll", function () {
   if (HFX.rockets.length + HFX.sparks.length / 60 + HFX.bits.length / 80 > 8) return; /* keep it light */
   HFX.quiet = true;
   if (HFX.on === "july4") { hfxRocket(true); if (Math.random() < .5) setTimeout(function () { hfxRocket(true); }, 200); }
-  else if (HFX.on === "thanksgiving") { if (Math.random() < .6) hfxGust(Math.random() < .5 ? -1 : 1, 26, true); else hfxShowerTG(18); }
+  else if (HFX.on === "thanksgiving") { return; }   /* leaves burst out once at the start and then stop (owner, Nov 5 2026) */
   else if (Math.random() < .6) hfxCannon(Math.random() < .5 ? -1 : 1, 40, true); else hfxShower(30);
   hfxLoop();
 }, { passive: true });
