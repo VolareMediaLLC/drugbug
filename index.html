@@ -18,6 +18,13 @@
 a{color:var(--accent)}.wrap{max-width:900px;margin:0 auto;padding:0 20px}
 header.top{display:flex;align-items:center;gap:12px;padding:18px 0}header.top img{width:40px;height:40px;border-radius:10px}header.top b{font-size:22px}
 header.top nav{margin-left:auto;display:flex;gap:14px;flex-wrap:wrap;font-size:15px;align-items:center}
+.utilbar{background:#1e1b4b;color:#e0e7ff;font-size:14px}.utilbar .in{max-width:860px;margin:0 auto;padding:8px 16px;display:flex;justify-content:flex-end;gap:10px;align-items:center;flex-wrap:wrap}.utilbar a{color:#fff;font-weight:700;text-decoration:none}.utilbar a:hover{text-decoration:underline}.utilbar .sep{opacity:.4}@media(max-width:480px){.utilbar .lead{display:none}.utilbar .in{justify-content:center}}
+.classes{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;margin-top:26px;scroll-margin-top:16px}
+.cbox{padding:22px 24px;border-radius:14px;border:1px solid rgba(127,127,127,.28);background:rgba(127,127,127,.06);min-width:0}.cbox.alt{align-self:start}
+.cbox h3{margin:0 0 6px;font-size:19px}.cbox>p{margin:0 0 14px;opacity:.8;font-size:15px;line-height:1.5}
+.cform{display:grid;gap:6px}.cform label{font-size:13px;font-weight:700;opacity:.8;margin-top:6px}.cform input,.cform select,.cform textarea{font:inherit;font-size:15px;padding:9px 11px;border-radius:8px;border:1px solid rgba(127,127,127,.4);background:transparent;color:inherit;width:100%;box-sizing:border-box}
+.cform .crow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.cform input{min-width:0}.cform .crow>div{display:grid;gap:6px;min-width:0}@media(max-width:520px){.cform .crow{grid-template-columns:1fr}}
+.cform .btn{margin-top:12px;justify-self:start;border:0;cursor:pointer;font:inherit;font-weight:700}.cnote{font-size:13px;opacity:.75;margin:6px 0 0}
 .instnav{color:inherit!important;opacity:.75;text-decoration:none!important;padding-left:14px;border-left:1px solid rgba(127,127,127,.35)}.instnav:hover{opacity:1;text-decoration:underline!important}
 .portal{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-top:26px;padding:22px 24px;border-radius:14px;border:1px solid rgba(127,127,127,.28);background:rgba(127,127,127,.06)}
 .portaltx{flex:1 1 320px;min-width:0}.portalk{display:block;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:.65;margin-bottom:4px}
@@ -69,7 +76,7 @@ details{background:var(--surface);border:1px solid var(--line);border-radius:12p
 .wnfoot{margin:16px 0 0}
 @media (max-width:640px){.hero .ctas{justify-content:center}.whatsnew{padding:16px}}
 </style></head>
-<body><div class="wrap"><header class="top"><a href="index.html"><img src="icon.png" alt=""></a><b>DrugBug</b><nav><a href="index.html">Home</a><a href="app/">Try it free</a><a href="support.html">Support</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="disclaimers.html">Disclaimers</a><a class="instnav" href="instructor/">Educator login</a></nav></header><section class="hero"><img src="icon.png" alt="DrugBug app icon"><div><h1>Learn your meds by scope.</h1>
+<body><div class="utilbar"><div class="in"><span class="lead">Teaching with DrugBug?</span><a href="#start-class">Start a class</a><span class="sep" aria-hidden="true">|</span><a href="instructor/">Instructor portal &rarr;</a></div></div><div class="wrap"><header class="top"><a href="index.html"><img src="icon.png" alt=""></a><b>DrugBug</b><nav><a href="index.html">Home</a><a href="app/">Try it free</a><a href="support.html">Support</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="disclaimers.html">Disclaimers</a></nav></header><section class="hero"><img src="icon.png" alt="DrugBug app icon"><div><h1>Learn your meds by scope.</h1>
 <p>DrugBug is a medication study app for EMS, nursing, medical school and imaging students, built by a Paramedic, FP-C.</p>
 <div class="ctas"><a class="btn" href="app/">Try it free in your browser</a> <a class="btn appstore" href="https://apps.apple.com/us/app/drugbug/id6820225080" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M16.4 12.7c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.2-2.8.8-3.6.8-.7 0-1.9-.8-3.1-.8-1.6 0-3.1.9-3.9 2.4-1.7 2.9-.4 7.2 1.2 9.5.8 1.1 1.7 2.4 2.9 2.4 1.2 0 1.6-.8 3-.8s1.8.8 3.1.7c1.3 0 2.1-1.1 2.8-2.3.9-1.3 1.3-2.6 1.3-2.6s-2.3-.9-2.3-4zM14.2 5.9c.6-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.4-.6.7-1.1 1.8-1 2.9 1.1.1 2.2-.6 2.8-1.3z"/></svg><span><small>Download on the</small>App Store</span></a></div>
 <p class="hnote">On iPhone, get it from the App Store. On anything else, nothing to install. Start without an account &mdash; make one when you want your bug, your sticks and everything you learn to follow you to your phone.</p></div></section>
@@ -101,7 +108,32 @@ details{background:var(--surface);border:1px solid var(--line);border-radius:12p
 <p>DrugBug covers EMS, nursing, medical school and imaging in one app, so a program can put every student on the same tool. Group access is priced per seat and billed annually.</p>
 <ul class="perks"><li>Every route and every level, for every student</li><li>One tool across a whole curriculum instead of one per course</li><li>Questions levelled to each student's role, so a first-year and a senior get different work</li></ul>
 <p><a class="btn" href="mailto:VolareMediaLLC@gmail.com?subject=DrugBug%20for%20our%20program">Ask about group access</a></p>
-<div class="portal"><div class="portaltx"><span class="portalk">Instructor portal</span><h3>Already running DrugBug with a class?</h3><p>Sign in to issue anonymous class keys, print key sheets and see class progress by medication system. No student names are stored.</p></div><a class="portalbtn" href="instructor/">Sign in to the instructor portal <span aria-hidden="true">&rarr;</span></a></div></section>
+<div class="classes" id="start-class">
+<div class="cbox"><span class="portalk">New to DrugBug</span><h3>Start a class</h3><p>Tell us about your program and we will set up a free 30-day pilot with anonymous class keys for your students.</p>
+<form class="cform" id="cform" novalidate>
+<label for="cf-prog">Program or school</label><input id="cf-prog" required maxlength="120" placeholder="e.g. Brazos County Paramedic Program">
+<label for="cf-name">Your name and role</label><input id="cf-name" required maxlength="80" placeholder="e.g. Jane Smith, Program Director">
+<label for="cf-mail">Work email</label><input id="cf-mail" type="email" required maxlength="120" placeholder="you@school.edu">
+<div class="crow"><div><label for="cf-n">Students</label><input id="cf-n" type="number" min="1" max="2000" placeholder="30"></div>
+<div><label for="cf-lvl">Level</label><select id="cf-lvl"><option>EMT</option><option>AEMT</option><option selected>Paramedic</option><option>Flight / critical care</option><option>Nursing (LVN/LPN)</option><option>Nursing (RN)</option><option>Medical school</option><option>Imaging</option><option>Other</option></select></div>
+</div>
+<label for="cf-start">Start date</label><input id="cf-start" type="date">
+<label for="cf-msg">Anything else (optional)</label><textarea id="cf-msg" rows="3" maxlength="1000"></textarea>
+<button class="btn" type="submit">Email my request</button>
+<p class="cnote" id="cf-note">This opens your email app with the details filled in. Prefer to write yourself? Email <a href="mailto:VolareMediaLLC@gmail.com?subject=Start%20a%20DrugBug%20class">VolareMediaLLC@gmail.com</a>.</p>
+</form></div>
+<div class="cbox alt"><span class="portalk">Instructor portal</span><h3>Already running a class?</h3><p>Sign in to issue anonymous class keys, print key sheets and see class progress by medication system. No student names are stored.</p><a class="portalbtn" href="instructor/">Sign in to the instructor portal <span aria-hidden="true">&rarr;</span></a></div>
+</div>
+<script>
+(function(){var f=document.getElementById("cform");if(!f)return;f.addEventListener("submit",function(e){e.preventDefault();
+var v=function(i){return(document.getElementById(i).value||"").trim();};
+var miss=["cf-prog","cf-name","cf-mail"].filter(function(i){return!v(i);});
+var note=document.getElementById("cf-note");
+if(miss.length){note.textContent="Please fill in your program, your name and your work email.";document.getElementById(miss[0]).focus();return;}
+var body="Program or school: "+v("cf-prog")+"\nName and role: "+v("cf-name")+"\nWork email: "+v("cf-mail")+"\nStudents: "+(v("cf-n")||"-")+"\nLevel: "+v("cf-lvl")+"\nStart date: "+(v("cf-start")||"-")+"\n\n"+v("cf-msg");
+location.href="mailto:VolareMediaLLC@gmail.com?subject="+encodeURIComponent("Start a DrugBug class: "+v("cf-prog"))+"&body="+encodeURIComponent(body);
+note.innerHTML='Your email app should open with the request filled in. If nothing happened, email <a href="mailto:VolareMediaLLC@gmail.com">VolareMediaLLC@gmail.com</a>.';});})();
+</script></section>
 
 <section class="about"><div class="abgrid"><img src="adam.jpg" alt="Adam, the Paramedic who built DrugBug" loading="lazy" width="900" height="1125">
 <div><h2>Who makes this</h2>
