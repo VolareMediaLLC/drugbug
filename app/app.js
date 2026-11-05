@@ -2511,10 +2511,14 @@ function blankProg() { return { earned: 0, spent: 0, owned: [], avatar: "starter
 var LOGIN_BUGS = {};
 function loginDays() { var L = Prog.d.login; return L && L.d ? Object.keys(L.d).length : 0; }
 function loginTick() { var t = today(), L = Prog.d.login || (Prog.d.login = { d: {}, got: {} }); L.d = L.d || {}; L.got = L.got || {}; if (!L.d[t]) { L.d[t] = 1; saveProg(); return true; } return false; }
-var LOGIN_BONUS = { 3: 100, 7: 250, 14: 500, 21: 600, 30: 1000, 45: 1200, 60: 2000, 75: 1500, 100: 5000, 150: 3000, 200: 4000, 365: 10000 };
+/* a 30-day cycle (owner, Nov 5 2026): a small prize every day that grows through the month,
+   a bonus every 7th day, a big one on day 30, then the calendar starts again. The login-only bugs
+   land on days 10, 20 and 30 of the first cycles. */
+function loginCycleDay(n) { return ((n - 1) % 30) + 1; }
 function loginPrize(n) {
   if (!LOGIN_BUGS._) { LOGIN_BUGS._ = 1; BUGS.forEach(function (b) { if (b.login) LOGIN_BUGS[b.login] = b.id; }); }
-  return { sticks: Math.min(25 + 15 * (n - 1), 400) + (LOGIN_BONUS[n] || 0), bug: LOGIN_BUGS[n] || "", big: !!(LOGIN_BONUS[n] || LOGIN_BUGS[n]) };
+  var c = loginCycleDay(n), st = 10 + 5 * c + (c === 30 ? 300 : c % 7 === 0 ? 50 : 0);
+  return { sticks: st, bug: LOGIN_BUGS[n] || "", big: c === 30 || c % 7 === 0 || !!LOGIN_BUGS[n], c: c };
 }
 function loginOwed() { var n = loginDays(), got = (Prog.d.login || {}).got || {}, out = []; for (var i = 1; i <= n; i++) if (!got[i]) out.push(i); return out; }
 function loginCollect() {
@@ -2528,18 +2532,19 @@ function loginCollect() {
 function loginCard() {
   if (typeof funOn === "function" && !funOn()) return "";
   loginTick();
-  var n = loginDays(), owed = loginOwed(), next = [], i;
-  for (i = n + (owed.length ? 0 : 1); next.length < 7; i++) next.push(i);
-  var nb = 0; for (i = n + 1; i < n + 400 && !nb; i++) if (loginPrize(i).bug && !owned(loginPrize(i).bug)) nb = i;
-  var strip = '<ol class="lgstrip">' + next.map(function (d) {
-    var p = loginPrize(d), today0 = d === n;
-    return '<li class="' + (today0 ? 'now' : '') + (p.big ? ' big' : '') + '"><span>Day ' + d + '</span>' + (p.bug ? '<i class="lgbug">' + bugArt(bugById(p.bug), "", { stage: 5 }) + '</i>' : '<b>' + p.sticks + '</b>') + '</li>';
-  }).join("") + '</ol>';
-  var head = owed.length ? '<strong>Day ' + n + ' prize is ready</strong><span>' + (owed.length > 1 ? owed.length + ' days of prizes waiting' : 'Tap to collect') + '</span>'
-    : '<strong>Day ' + n + ' collected</strong><span>Come back tomorrow for ' + loginPrize(n + 1).sticks + ' sticks</span>';
-  var nxt = nb ? '<p class="lgnext">' + esc(b2n(loginPrize(nb).bug)) + ' (' + RARITY[bugById(loginPrize(nb).bug).rar] + ') unlocks on day ' + nb + ': ' + (nb - n) + ' more day' + (nb - n === 1 ? '' : 's') + '.</p>' : '';
+  var n = loginDays(), owed = loginOwed(), got = (Prog.d.login || {}).got || {}, c = loginCycleDay(n), start = n - c + 1, cyc = Math.floor((n - 1) / 30) + 1;
+  var cal = '<ol class="lgcal">';
+  for (var i = 0; i < 30; i++) {
+    var d = start + i, p = loginPrize(d), done = !!got[d], now = d === n;
+    cal += '<li class="' + (done ? 'done' : '') + (now ? ' now' : '') + (d > n ? ' later' : '') + (p.big ? ' big' : '') + '"><span>' + (i + 1) + '</span>' + (p.bug && !owned(p.bug) || (p.bug && d >= n) ? '<i class="lgbug">' + bugArt(bugById(p.bug), "", { stage: 5 }) + '</i>' : '<b>' + p.sticks + '</b>') + (done ? '<em aria-label="collected">\u2713</em>' : '') + '</li>';
+  }
+  cal += '</ol>';
+  var head = owed.length ? '<strong>Day ' + c + ' of 30 is ready</strong><span>' + (owed.length > 1 ? owed.length + ' days of prizes waiting' : 'Your daily prize: ' + loginPrize(n).sticks + ' sticks' + (loginPrize(n).bug ? ' and a bug' : '')) + '</span>'
+    : '<strong>Day ' + c + ' of 30 collected</strong><span>Come back tomorrow for ' + loginPrize(n + 1).sticks + ' sticks' + (loginPrize(n + 1).bug ? ' and ' + esc(b2n(loginPrize(n + 1).bug)) : '') + '</span>';
+  var nb = 0; for (i = n + 1; i < n + 120 && !nb; i++) if (loginPrize(i).bug && !owned(loginPrize(i).bug)) nb = i;
+  var nxt = '<p class="lgnext">Cycle ' + cyc + '. ' + (nb ? esc(b2n(loginPrize(nb).bug)) + ' (' + RARITY[bugById(loginPrize(nb).bug).rar] + ') comes on day ' + loginCycleDay(nb) + (Math.floor((nb - 1) / 30) + 1 > cyc ? ' of the next cycle' : '') + '.' : 'Every login bug collected. The sticks keep coming.') + '</p>';
   var msg = S.loginMsg ? '<p class="presult good" role="status">' + esc(S.loginMsg) + '</p>' : ''; S.loginMsg = "";
-  return '<section class="lgcard' + (owed.length ? ' ready' : '') + '"><div class="lghead"><div>' + head + '</div>' + (owed.length ? '<button class="btn" data-act="logincollect">Collect</button>' : '') + '</div>' + msg + strip + nxt + '</section>';
+  return '<section class="lgcard' + (owed.length ? ' ready' : '') + '"><div class="lghead"><div>' + head + '</div>' + (owed.length ? '<button class="btn" data-act="logincollect">Collect</button>' : '') + '</div>' + msg + cal + nxt + '</section>';
 }
 function today() { var d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
 function dayDiff(a, b) { return Math.round((new Date(b + "T12:00:00") - new Date(a + "T12:00:00")) / DAY); }
@@ -3812,13 +3817,13 @@ var BUGS = [
   { id: "sky-mantis", name: "Sky Mantis", body: "mantis", c: ["#7dd3fc", "#0284c7"], rar: "rare", price: 1300 },
   { id: "rapid-centipede", name: "Rapid Response Centipede", body: "centipede", c: ["#fb923c", "#c2410c", "#fde68a"], ink: "#431407", rar: "rare", price: 1450, blurb: "All those legs and still first on scene. Fun fact: no centipede has exactly 100 legs, because they always have an odd number of leg pairs." },
   /* daily-login bugs (owner, Nov 5 2026): never for sale, only earned by coming back on different days */
-  { id: "sunrise-firefly", name: "Sunrise Firefly", body: "firefly", c: ["#fdba74", "#c2410c", "#fef3c7"], rar: "rare", price: 0, login: 7, unlock: { login: 7, text: "Log in on 7 different days" }, blurb: "Shows up at first light, every single day." },
-  { id: "dawn-patrol-dragonfly", name: "Dawn Patrol Dragonfly", body: "dragonfly", c: ["#5eead4", "#0f766e", "#ccfbf1"], acc: ["headset"], rar: "rare", price: 0, login: 14, unlock: { login: 14, text: "Log in on 14 different days" }, blurb: "Two weeks of showing up. Always on patrol." },
-  { id: "royal-jelly-bee", name: "Royal Jelly Bee", body: "bee", c: ["#fde047", "#a16207", "#fff7ed"], acc: ["crown"], rar: "epic", price: 0, login: 30, unlock: { login: 30, text: "Log in on 30 different days" }, blurb: "A month of visits earns the royal treatment." },
-  { id: "moonlit-mantis", name: "Moonlit Mantis", body: "mantis", c: ["#a5b4fc", "#3730a3", "#e0e7ff"], rar: "epic", price: 0, login: 45, unlock: { login: 45, text: "Log in on 45 different days" }, blurb: "Studies by moonlight. Forty-five nights strong." },
-  { id: "golden-return-stag", name: "Golden Return Stag", body: "stag", c: ["#fcd34d", "#92400e", "#fffbeb"], acc: ["crown"], rar: "legendary", price: 0, login: 60, unlock: { login: 60, text: "Log in on 60 different days" }, blurb: "Sixty days. The stag only shows itself to the faithful." },
-  { id: "hundred-day-hercules", name: "Hundred-Day Hercules", body: "hercules", c: ["#f472b6", "#831843", "#fdf2f8"], horn: "#fde68a", rar: "legendary", price: 0, login: 100, unlock: { login: 100, text: "Log in on 100 different days" }, blurb: "One hundred days of learning. Strongest bug in the jungle." },
-  { id: "year-of-the-scarab", name: "Year of the Scarab", body: "scarab", c: ["#22d3ee", "#155e75", "#ecfeff"], acc: ["halo"], rar: "legendary", price: 0, login: 365, unlock: { login: 365, text: "Log in on 365 different days" }, blurb: "A whole year of days. The rarest bug in DrugBug." },
+  { id: "sunrise-firefly", name: "Sunrise Firefly", body: "firefly", c: ["#fdba74", "#c2410c", "#fef3c7"], rar: "rare", price: 0, login: 10, unlock: { login: 10, text: "Log in on 10 different days" }, blurb: "Shows up at first light, every single day." },
+  { id: "dawn-patrol-dragonfly", name: "Dawn Patrol Dragonfly", body: "dragonfly", c: ["#5eead4", "#0f766e", "#ccfbf1"], acc: ["headset"], rar: "rare", price: 0, login: 40, unlock: { login: 40, text: "Log in on 40 different days" }, blurb: "Forty days of showing up. Always on patrol." },
+  { id: "royal-jelly-bee", name: "Royal Jelly Bee", body: "bee", c: ["#fde047", "#a16207", "#fff7ed"], acc: ["crown"], rar: "epic", price: 0, login: 20, unlock: { login: 20, text: "Log in on 20 different days" }, blurb: "Twenty visits earns the royal treatment." },
+  { id: "moonlit-mantis", name: "Moonlit Mantis", body: "mantis", c: ["#a5b4fc", "#3730a3", "#e0e7ff"], rar: "epic", price: 0, login: 50, unlock: { login: 50, text: "Log in on 50 different days" }, blurb: "Studies by moonlight. Fifty nights strong." },
+  { id: "golden-return-stag", name: "Golden Return Stag", body: "stag", c: ["#fcd34d", "#92400e", "#fffbeb"], acc: ["crown"], rar: "legendary", price: 0, login: 30, unlock: { login: 30, text: "Log in on 30 different days" }, blurb: "Thirty days. The stag only shows itself to the faithful." },
+  { id: "hundred-day-hercules", name: "Hundred-Day Hercules", body: "hercules", c: ["#f472b6", "#831843", "#fdf2f8"], horn: "#fde68a", rar: "legendary", price: 0, login: 60, unlock: { login: 60, text: "Log in on 60 different days" }, blurb: "Sixty days of learning. Strongest bug in the jungle." },
+  { id: "year-of-the-scarab", name: "Year of the Scarab", body: "scarab", c: ["#22d3ee", "#155e75", "#ecfeff"], acc: ["halo"], rar: "legendary", price: 0, login: 90, unlock: { login: 90, text: "Log in on 90 different days" }, blurb: "Three full cycles of days. The rarest bug in DrugBug." },
   { id: "bubblegum-ant", name: "Bubblegum Ant", body: "ant", c: ["#f9a8d4", "#db2777"], ink: "#701a45", rar: "common", price: 800 },
   // rare
   { id: "glow-firefly", name: "Glow Firefly", body: "firefly", c: ["#4c5fd5", "#26307a", "#fff59d"], rar: "rare", price: 1200 },
@@ -3923,6 +3928,34 @@ var BUGS = [
   { id: "mb-coil", name: "Corky the Spirochete", body: "stick", c: ["#a5b4fc", "#3730a3", "#eef2ff"], head: "#818cf8", ink: "#1e1b4b", rar: "earned", price: 0, unlock: { micro: "borrelia-burgdorferi", text: "Found in Microbiology" }, blurb: "A corkscrew that hitchhiked in on a tick, drew a bullseye on you, and now insists it is just here for the doxycycline." },
   { id: "mb-yog", name: "Lacto the Good One", body: "grasshopper", c: ["#bbf7d0", "#15803d", "#ffffff"], head: "#86efac", ink: "#052e16", rar: "earned", price: 0, unlock: { micro: "lactobacillus", text: "Found in Microbiology" }, blurb: "The only bacterium in the Terrarium that is genuinely pleased to see you. Makes its own yoghurt. Resistant to vancomycin and to criticism." }
 ];
+/* ---------- Bug collections (owner, Nov 5 2026) ----------
+   Bugs of one kind form a collection. Own every bug in it and you can claim that collection's king:
+   a crowned bug that exists nowhere else. Only bugs anyone can buy count (no starters, seasonal,
+   earned, login or admin bugs), so every collection can always be finished. */
+var COLL_NAMES = { beetle: ["Beetles", "Beetle"], ladybug: ["Ladybugs", "Ladybug"], mantis: ["Mantises", "Mantis"], bee: ["Bees", "Bee"], wasp: ["Wasps and hornets", "Hornet"],
+  ant: ["Ants", "Ant"], moth: ["Moths", "Moth"], dragonfly: ["Dragonflies", "Dragonfly"], snail: ["Snails", "Snail"], hopper: ["Hoppers and crickets", "Hopper"], rhino: ["Rhino beetles", "Rhino"],
+  firefly: ["Fireflies", "Firefly"], butterfly: ["Butterflies", "Butterfly"], stag: ["Stag beetles", "Stag"], scarab: ["Scarabs", "Scarab"], longhorn: ["Longhorns", "Longhorn"],
+  scorpion: ["Scorpions", "Scorpion"], hercules: ["Hercules beetles", "Hercules"] };
+function collKey(b) { if (b.body === "beetle") return b.pat === "spots" ? "ladybug" : "beetle"; if (b.body === "grasshopper" || b.body === "cricket") return "hopper"; return b.body; }
+var COLLS = {};
+BUGS.forEach(function (b) {
+  if (b.admin || b.grub || b.free || b.unlock || b.login || b.retired || b.season || b.hick || b.id === "starter" || b.rar === "seasonal" || b.rar === "earned") return;
+  var k = collKey(b); if (COLL_NAMES[k]) (COLLS[k] = COLLS[k] || []).push(b.id);
+});
+(function () {
+  var ROYAL = [["#fcd34d", "#b45309", "#fff7ed"], ["#c084fc", "#6b21a8", "#faf5ff"], ["#f87171", "#991b1b", "#fff1f2"], ["#34d399", "#065f46", "#ecfdf5"], ["#60a5fa", "#1e3a8a", "#eff6ff"], ["#f472b6", "#9d174d", "#fdf2f8"]];
+  Object.keys(COLLS).forEach(function (k, i) {
+    if (COLLS[k].length < 3) { delete COLLS[k]; return; }
+    var src = BUGS.filter(function (b) { return b.id === COLLS[k][0]; })[0], N = COLL_NAMES[k];
+    var king = { id: "king-" + k, name: N[1] + " King", body: src.body, c: ROYAL[i % ROYAL.length].slice(), ink: "#1c1917", acc: ["crown"], rar: "legendary", price: 0, king: k,
+      unlock: { coll: k, text: "Collect every one of the " + N[0].toLowerCase() }, blurb: "Rules over every " + N[1].toLowerCase() + " in the jungle. Only crowned for collectors." };
+    if (src.pat) king.pat = src.pat; if (k === "ladybug") king.head = "#1c1917";
+    if (k === "rhino" || k === "hercules") king.horn = "#fde68a";
+    BUGS.push(king);
+  });
+})();
+function collProgress(k) { var L = COLLS[k] || []; return { have: L.filter(owned).length, all: L.length }; }
+function unlockText(b) { var u = b.unlock || {}; if (u.coll) { var p = collProgress(u.coll); return "Collect every one of the " + COLL_NAMES[u.coll][0].toLowerCase() + ": " + p.have + " of " + p.all; } return u.text || ""; }
 var STYLES = [["classic", "Classic", 0, ""], ["obsidian", "Obsidian", 150, "brightness(.55) contrast(1.35) saturate(.8)"], ["neon", "Neon", 160, "saturate(2.4) brightness(1.15) contrast(1.1)"], ["bloodmoon", "Blood Moon", 180, "sepia(.6) hue-rotate(-40deg) saturate(3) brightness(.75)"], ["ghost", "Ghost", 170, "grayscale(1) brightness(1.35) opacity(.85)"], ["galaxy", "Galaxy", 220, "hue-rotate(250deg) saturate(1.8) brightness(.85) contrast(1.15)"], ["inverted", "Upside Down", 260, "invert(.88) hue-rotate(180deg)"], ["shiny", "Shiny", 60, "saturate(1.7) brightness(1.08) contrast(1.05)"], ["midnight", "Midnight", 90, "hue-rotate(200deg) saturate(1.3) brightness(.9)"], ["ember", "Ember", 90, "hue-rotate(320deg) saturate(1.5)"], ["frost", "Frost", 90, "hue-rotate(160deg) saturate(.75) brightness(1.12)"], ["toxic", "Toxic", 120, "hue-rotate(90deg) saturate(1.8)"], ["gold", "Gold", 200, "sepia(.9) saturate(2.6) hue-rotate(-12deg) brightness(1.05)"]];
 var MONTHS = ["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 function inSeason(b) { if (!b.season) return true; var m = new Date().getMonth() + 1, a = b.season[0], z = b.season[1]; return a <= z ? m >= a && m <= z : m >= a || m <= z; }
@@ -3933,6 +3966,7 @@ function unlockMet(b) {
   if (u.micro) return !!(Prog.d.microFound || {})[u.micro];
   if (u.calc) return calcCorrect(Prog.d) >= u.calc;
   if (u.login) return loginDays() >= u.login;
+  if (u.coll) { var p = collProgress(u.coll); return p.all > 0 && p.have >= p.all; }
   return false;
 }
 function claimBug(id) { var b = bugById(id); if (owned(id) || !(b.admin ? Admin.owner : unlockMet(b))) return; Prog.d.owned = (Prog.d.owned || []).concat([id]); Prog.d.avatar = id; Prog.d.avatarTs = Date.now(); saveProg(); S.shopMsg = "Unlocked " + b.name + ". It's now your bug."; }
@@ -3988,23 +4022,23 @@ function shopView() {
     var own = owned(b.id), eq = me.id === b.id, can = bal >= b.price, pend = S.shopBuy === b.id;
     var act = eq ? '<span class="eqd">Equipped</span>' : own ? '<button class="btn small" data-equip="' + b.id + '">Equip</button>' :
       b.admin ? '<button class="btn small" data-claim="' + b.id + '">Claim</button>' :
-      b.unlock ? (unlockMet(b) ? '<button class="btn small" data-claim="' + b.id + '">Claim</button>' : '<span class="muted small">' + esc(b.unlock.text) + '</span>') :
+      b.unlock ? (unlockMet(b) ? '<button class="btn small" data-claim="' + b.id + '">Claim</button>' : '<span class="muted small">' + esc(unlockText(b)) + '</span>') :
       !inSeason(b) ? '<span class="muted small">Returns in ' + MONTHS[b.season[0]] + '</span>' :
       proBug(b.id) ? '<button class="btn small ghost" data-buy="' + b.id + '">' + tierBadge(bugTier(b)) + ' ' + (lang() === "es" ? "Desbloquear" : "Unlock") + '</button>' :
       !b.price ? '<button class="btn small" data-buyok="' + b.id + '">Get it free</button>' :
       pend ? '<button class="btn small" data-buyok="' + b.id + '">Buy for ' + b.price + '</button><button class="btn small ghost" data-buyno="1">Cancel</button>' :
       '<button class="btn small' + (can ? '' : ' ghost') + '" data-buy="' + b.id + '"' + (can ? '' : ' disabled') + '>' + (can ? 'Buy' : 'Need ' + (b.price - bal) + ' more') + '</button>';
-    return '<div class="bugcard r-' + b.rar + (eq ? " eq" : "") + '">' + bugArt(b) + '<strong>' + esc(b.name) + '</strong><span class="rar">' + RARITY[b.rar] + '</span>' + (own ? '<span class="muted small">Owned</span>' : b.admin ? '<span class="muted small">Administrator only</span>' : b.login ? '<span class="muted small">Daily login prize</span>' : !b.price ? '<span class="muted small">Free</span>' : b.unlock ? '<span class="muted small">Free when unlocked</span>' : stickTag(b.price) + (b.season && inSeason(b) ? '<span class="muted small">Until the end of ' + MONTHS[b.season[1]] + '</span>' : '')) + '<div class="bact">' + act + '</div></div>';
+    return '<div class="bugcard r-' + b.rar + (eq ? " eq" : "") + '">' + bugArt(b) + '<strong>' + esc(b.name) + '</strong><span class="rar">' + RARITY[b.rar] + '</span>' + (own ? '<span class="muted small">Owned</span>' : b.admin ? '<span class="muted small">Administrator only</span>' : b.login ? '<span class="muted small">Daily login prize</span>' : b.king ? '<span class="muted small">Collection king</span>' : !b.price ? '<span class="muted small">Free</span>' : b.unlock ? '<span class="muted small">Free when unlocked</span>' : stickTag(b.price) + (b.season && inSeason(b) ? '<span class="muted small">Until the end of ' + MONTHS[b.season[1]] + '</span>' : '')) + '<div class="bact">' + act + '</div></div>';
   }
   var TIERS = [["admin", "Administrator only", "Just for you"], ["starter", "Starter", "Free"], ["common", "Common", "300–800 sticks"], ["rare", "Rare", "1,200–2,000 sticks"], ["epic", "Epic", "2,800–4,800 sticks"], ["legendary", "Legendary", "7,000–12,000 sticks"], ["seasonal", "Seasonal", "2,400 sticks, only in season"], ["earned", "Earned by mastery", "Free when you unlock them"]];
-  function tierOf(b) { return b.admin ? "admin" : b.login ? "login" : b.id === "starter" || b.grub || b.free ? "starter" : b.rar; }
-  TIERS.splice(TIERS.length, 0, ["login", "Daily login bugs", "Rare, epic and legendary bugs you can only earn by coming back on different days"]);
+  function tierOf(b) { return b.admin ? "admin" : b.king ? "king" : b.login ? "login" : b.id === "starter" || b.grub || b.free ? "starter" : b.rar; }
+  TIERS.splice(TIERS.length, 0, ["login", "Daily login bugs", "Rare, epic and legendary bugs you can only earn by coming back on different days"], ["king", "Collection kings", "Own every bug of one kind to crown its king"]);
   TIERS.forEach(function (tr) {
     var L = list.filter(function (b) { return tierOf(b) === tr[0]; }).sort(function (a, b2) { return tr[0] === "seasonal" ? (inSeason(b2) - inSeason(a)) || a.season[0] - b2.season[0] : a.price - b2.price; });
     if (!L.length) return;
     var all = shopBugs().filter(function (b) { return tierOf(b) === tr[0]; }), mine = all.filter(function (b) { return owned(b.id); }).length;
     var need = PAYWALL && L[0] ? bugTier(L[0]) : "free";
-    c += '<div class="tierhead r-' + tr[0] + '"><h3>' + esc(tr[1]) + (need !== "free" && tr[0] !== "earned" && tr[0] !== "login" && tr[0] !== "starter" && tr[0] !== "admin" ? ' ' + tierBadge(need) : '') + '</h3><span class="muted small">' + esc(tr[2]) + '</span><span class="tierown">' + mine + ' of ' + all.length + ' owned</span></div><div class="shopgrid">' + L.map(bugCard).join("") + '</div>';
+    c += '<div class="tierhead r-' + tr[0] + '"><h3>' + esc(tr[1]) + (need !== "free" && tr[0] !== "earned" && tr[0] !== "login" && tr[0] !== "king" && tr[0] !== "starter" && tr[0] !== "admin" ? ' ' + tierBadge(need) : '') + '</h3><span class="muted small">' + esc(tr[2]) + '</span><span class="tierown">' + mine + ' of ' + all.length + ' owned</span></div><div class="shopgrid">' + L.map(bugCard).join("") + '</div>';
   });
   if (!list.length) c += '<p class="muted">No bugs here yet.</p>';
   c += '<details class="sec earn"><summary>How to earn sticks</summary><div class="worth">' + [["Every correct answer", 3], ["Every question you try, even if wrong", 1], ["Perfect score on 10 or more questions", PERFECT_BONUS], ["Each achievement unlocked", ACH_BONUS], ["Daily DrugBug or daily challenge", 10], ["Perfect clinical scenario", 5], ["100% on a Megacode case", 10]].map(function (r) { return '<div class="wrow"><span>' + r[0] + '</span>' + stickTag(r[1]) + '</div>'; }).join("") + '</div><p class="muted small">' + (Prog.synced ? "Your sticks and bugs are saved to your account." : "Your sticks and bugs are saved on this device.") + ' You have earned ' + (Prog.d.earned || 0).toLocaleString() + ' sticks in total.</p></details>';
@@ -4015,7 +4049,7 @@ function tracksView() {
   muRefundOld(); var rf = Prog.d.muRefundAmt ? '<div class="presult good" role="status">New music is here! The old tracks were retired, so the ' + Prog.d.muRefundAmt.toLocaleString() + ' sticks you spent on them are back in your jar.</div>' : ''; if (Prog.d.muRefundAmt) { delete Prog.d.muRefundAmt; saveProg(); }
   return rf + '<p class="muted">Background music tracks. Preview any track, buy it with sticks, then tap Use. Turn music on or off with the note button at the top.</p><div class="trklist">' + shownTracks().map(function (t) {
     var own = ownsTrack(t.id), on = (Prog.d.track && ownsTrack(Prog.d.track) ? Prog.d.track : muDefault()) === t.id, pv = MU.preview === t.id;
-    var act = on ? '<span class="eqd">In use</span>' : own ? '<button class="btn small" data-trackuse="' + t.id + '">Use</button>' : '<button class="btn small' + (bal >= t.price ? '' : ' ghost') + '" data-trackbuy="' + t.id + '"' + (bal >= t.price ? '' : ' disabled') + '>' + (bal >= t.price ? 'Buy' : 'Need ' + (t.price - bal) + ' more') + '</button>';
+    var act = on ? '<span class="eqd">In use</span>' : own ? '<button class="btn small" data-trackuse="' + t.id + '">Use</button>' : trackProLocked(t) ? '<button class="btn small ghost" data-pw="open">' + tierBadge("pro") + ' Unlock</button>' : '<button class="btn small' + (bal >= t.price ? '' : ' ghost') + '" data-trackbuy="' + t.id + '"' + (bal >= t.price ? '' : ' disabled') + '>' + (bal >= t.price ? 'Buy' : 'Need ' + (t.price - bal) + ' more') + '</button>';
     return '<div class="trk' + (on ? ' eq' : '') + '">' + note + '<div class="trktx"><strong>' + esc(t.name) + '</strong><span class="muted small">' + esc(t.desc) + ' · ' + t.bpm + ' bpm</span>' + (own ? '<span class="muted small">' + (t.price ? 'Owned' : t.season && !MU_ONLY ? 'Free for Halloween' : 'Free') + '</span>' : stickTag(t.price)) + '</div><div class="bact"><button class="btn small ghost" data-trackpv="' + t.id + '">' + (pv ? 'Playing…' : 'Preview') + '</button>' + act + '</div></div>';
   }).join("") + '</div>';
 }
@@ -7299,7 +7333,7 @@ function settingsView() {
     setRow("Voice speed", "For the \"Say it\" button." + (SPEAK_OK ? "" : " Your device does not support speech."), setOpts("voiceRate", s.voiceRate, [["slow", "Slow"], ["normal", "Normal"], ["fast", "Fast"]]) + (SPEAK_OK ? ' <button class="btn small ghost" data-say="epinephrine">Test</button>' : '')) +
     setRow("Written pronunciation", "Shows a guide like ep-ih-NEF-rin.", setTog("showPhon", s.showPhon, "Show pronunciation")) +
     setRow("Bug buddy", "Your bug on the side of the screen, reacting to your answers.", setTog("buddy", s.buddy, "Show my bug buddy")) +
-    setRow("Background music", "Jazz, house, bugstep, rock, banjo or pop while you study. You can also tap the music note at the top of any page.", '<span class="musettico">' + muMantis(true) + '</span>' + setTog("music", s.music !== false, "Background music") + '<label class="muvol"><span>Volume</span><input type="range" min="0" max="100" step="5" id="muvolset" value="' + muLevel() + '" aria-label="Music volume"><output id="muvolsetv">' + muLevel() + '%</output></label>') +
+    setRow("Background music", "Jazz, house, bugstep, rock, banjo or pop while you study. You can also tap the music note at the top of any page.", setTog("music", s.music !== false, "Background music") + '<label class="muvol"><span>Volume</span><input type="range" min="0" max="100" step="5" id="muvolset" value="' + muLevel() + '" aria-label="Music volume"><output id="muvolsetv">' + muLevel() + '%</output></label>') +
     setRow("Sound effects", "Answer tones, the game sounds and the level transitions.", setTog("sfx", s.sfx, "Sound effects") + ' <button class="btn small ghost" data-act="sfxtest">Test</button>') +
     setRow("Is sound working?", "What the app can actually see about the speakers.",
       '<ul class="sndchk">' + audioReport().map(function (r) {
@@ -7485,7 +7519,7 @@ function muOn() { return SET().music !== false && (typeof funOn !== "function" |
 /* Oct 2026 (owner): only the seasonal tracks for now, until the rest of the music is sorted out.
    Set MU_ONLY = null to bring back the full list. Each entry still has to pass its own season
    check below, so Haunted Study Hall steps aside for Harvest Table on November 1. */
-var MU_ONLY = ["haunted-study-hall", "harvest-table", "slow-bug-jazz", "bug-house", "bugstep", "bug-rock", "banjo-bug", "bug-pop"];
+var MU_ONLY = ["haunted-study-hall", "harvest-table", "slow-bug-jazz", "bug-house", "bugstep", "bug-rock", "banjo-bug", "bug-pop", "bug-house-deep-hive", "bug-house-disco-beetle", "bug-house-acid-ant", "bug-house-piano-moth"];
 function muOnly(id) { return !MU_ONLY || MU_ONLY.indexOf(id) >= 0; }
 var TRACKS = [
   { id: "study-session", name: "Study Session", price: 0, desc: "Warm electric piano, a laid-back beat and a little vinyl crackle.", bpm: 82, src: "music/study-session.mp3" },
@@ -7497,6 +7531,11 @@ var TRACKS = [
      crickets, wing buzz and wobble bass. Source: tools/music/compose.py */
   { id: "slow-bug-jazz", name: "Slow Bug Jazz", price: 0, desc: "A late-night ballad: brushes, walking bass, Rhodes and a breathy tenor sax.", bpm: 66, src: "music/slow-bug-jazz.mp3" },
   { id: "bug-house", name: "Bug House", price: 0, desc: "Four on the floor, house piano stabs and a cricket on the hi-hats.", bpm: 122, src: "music/bug-house.mp3" },
+  /* more Bug House, for Pro (owner, Nov 5 2026) */
+  { id: "bug-house-deep-hive", name: "Bug House: Deep Hive", price: 0, pro: true, desc: "Deep house: minor-ninth Rhodes, warm pads and a rolling low end.", bpm: 120, src: "music/bug-house-deep-hive.mp3" },
+  { id: "bug-house-disco-beetle", name: "Bug House: Disco Beetle", price: 0, pro: true, desc: "Disco house: octave bass, string stabs, funky guitar chops and a trumpet hook.", bpm: 124, src: "music/bug-house-disco-beetle.mp3" },
+  { id: "bug-house-acid-ant", name: "Bug House: Acid Ant", price: 0, pro: true, desc: "A squelchy sixteenth-note acid bassline over 808 drums.", bpm: 126, src: "music/bug-house-acid-ant.mp3" },
+  { id: "bug-house-piano-moth", name: "Bug House: Piano Moth", price: 0, pro: true, desc: "Classic piano house: big chords, a flute hook and an organ swell.", bpm: 123, src: "music/bug-house-piano-moth.mp3" },
   { id: "bugstep", name: "Bugstep", price: 0, desc: "A slow build, then the drop: wobble bass and buzzing wings.", bpm: 140, src: "music/bugstep.mp3" },
   { id: "bug-rock", name: "Bug Rock", price: 0, desc: "Crunchy power chords, a big backbeat and a screaming lead.", bpm: 132, src: "music/bug-rock.mp3" },
   { id: "banjo-bug", name: "Banjo Bug", price: 0, desc: "A bluegrass breakdown: rolling banjo, hammered dulcimer and a two-step bass.", bpm: 118, src: "music/banjo-bug.mp3" },
@@ -7526,7 +7565,8 @@ function trackAvail(t) { return muOnly(t.id) && (!t.season || muSeason(t.season)
 /* with MU_ONLY set, the default is whichever of those tracks is in season right now */
 function muDefault() { var L = TRACKS.filter(trackAvail); return L.length ? L[0].id : "study-session"; }
 function shownTracks() { return TRACKS.filter(trackAvail); }
-function ownsTrack(id) { var t = trackById(id); if (!trackAvail(t)) return false; return !t.price || (Prog.d.tracks || []).indexOf(id) >= 0; }
+function trackProLocked(t) { return !!(t && t.pro && typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier("pro")); }
+function ownsTrack(id) { var t = trackById(id); if (!trackAvail(t) || trackProLocked(t)) return false; return !t.price || (Prog.d.tracks || []).indexOf(id) >= 0; }
 function curTrack() { muRefundOld(); if (MU.preview) return trackById(MU.preview); var id = Prog.d.track; return trackById(id && ownsTrack(id) ? id : muDefault()); }
 function muTick() {
   var c = MU.ctx, T = curTrack(); if (!c) return;
@@ -7580,21 +7620,6 @@ function muGesture() {
 function muSync() { if (muOn() && MU.armed && muLevel() > 0) muStart(); else muStop(); if (MU.master && MU.ctx) MU.master.gain.setTargetAtTime(muVol(), MU.ctx.currentTime, 0.05); var b = $(".musicbtn"); if (b && b.getAttribute("aria-pressed") !== String(muOn())) { b.setAttribute("aria-pressed", String(muOn())); b.innerHTML = muIcon(); } }
 /* the music button at the top stays a music note (owner, Nov 5 2026) */
 function muIcon() { return '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M9 18.5a2.5 2.5 0 1 1-2-2.45V5l11-2v12.5a2.5 2.5 0 1 1-2-2.45V7.1L9 8.4z"/>' + (muOn() ? '' : '<path d="M3 3l18 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>') + '</svg>'; }
-/* beside the music settings: a praying mantis in sunglasses blowing a blues harp (owner, Nov 5 2026) */
-function muMantis(big) {
-  var w = big ? 44 : 24;
-  return '<svg class="muico" viewBox="0 0 24 24" width="' + w + '" height="' + w + '" aria-hidden="true">' +
-    '<path d="M9.2 5.2 Q7 1.6 3.6 1.4 M14.8 5.2 Q17 1.6 20.4 1.4" stroke="#3f8f2e" stroke-width="1.1" fill="none" stroke-linecap="round"/>' +
-    '<path d="M3.4 6.2 Q12 2.4 20.6 6.2 Q18.4 13.6 12 17.2 Q5.6 13.6 3.4 6.2Z" fill="#7ccf55" stroke="#3f8f2e" stroke-width=".8"/>' +
-    '<ellipse cx="7.6" cy="8" rx="3.3" ry="2.3" fill="#111827"/><ellipse cx="16.4" cy="8" rx="3.3" ry="2.3" fill="#111827"/>' +
-    '<path d="M10.8 7.6 Q12 6.9 13.2 7.6" stroke="#111827" stroke-width="1.1" fill="none"/>' +
-    '<path d="M5.6 7.2 l1.6 -.8 M14.4 7.2 l1.6 -.8" stroke="#fff" stroke-width=".8" stroke-linecap="round" opacity=".85"/>' +
-    '<rect x="7.4" y="13.4" width="9.2" height="3" rx=".8" fill="#cbd5e1" stroke="#64748b" stroke-width=".6" transform="rotate(-6 12 14.9)"/>' +
-    '<path d="M9 14.6 h.01 M10.6 14.4 h.01 M12.2 14.3 h.01 M13.8 14.1 h.01 M15.3 13.9 h.01" stroke="#334155" stroke-width="1.1" stroke-linecap="round"/>' +
-    '<path d="M5.2 19.8 Q6 15.6 7.8 15.1 M18.8 19.4 Q18 15 16.2 14.4" stroke="#7ccf55" stroke-width="1.6" fill="none" stroke-linecap="round"/>' +
-    '<path d="M20.2 9.6 v-4 l2.4 -.6 v3.4" stroke="#fbbf24" stroke-width=".9" fill="none"/><circle cx="19.6" cy="9.8" r=".9" fill="#fbbf24"/><circle cx="22" cy="8.9" r=".9" fill="#fbbf24"/>' +
-    '</svg>';
-}
 function musicBtn() { if (typeof funOn === "function" && !funOn()) return ""; return '<button class="theme-btn musicbtn" data-act="music" aria-pressed="' + muOn() + '" aria-label="Background music" title="Background music">' + muIcon() + '</button>'; }
 /* browsers only allow sound after a tap, so start on the first interaction */
 ["pointerdown", "keydown", "touchend", "click"].forEach(function (ev) { document.addEventListener(ev, function () { audioCtx(); try { sfxLoad("gasp"); } catch (e) {} if (!MU.playing || (MU.ctx && MU.ctx.state !== "running")) muGesture(); }, { passive: true, capture: true }); });
@@ -7639,9 +7664,36 @@ function muFile(T) {
     var s = c.createBufferSource(), g = c.createGain(); s.buffer = buf; s.loop = true;
     g.gain.setValueAtTime(0.0001, c.currentTime); g.gain.linearRampToValueAtTime(1, c.currentTime + 0.8);
     s.connect(g); g.connect(MU.fileOut); s.start(); f.src = s; f.g = g;
+    f.t0 = c.currentTime; f.len = buf.duration; f.bpm = T.bpm || 0; danceStart(f);
   }).catch(function () { f.failed = true; });
 }
+/* the bugs dance to the beat (owner, Nov 5 2026). The phase comes from the audio clock of the
+   playing loop, so every bug on screen bounces on the beat and sways every two beats, and a bug
+   that appears mid-song joins in time. Off with reduced motion or when the music stops. */
+var DANCE = { raf: 0, f: null };
+function danceStart(f) {
+  DANCE.f = f; if (DANCE.raf || !f.bpm) return;
+  var root = document.documentElement;
+  function frame() {
+    var F = DANCE.f, c = MU.ctx;
+    if (!F || MU.file !== F || !F.src || !muOn() || document.hidden || (typeof hfxOk === "function" && !hfxOk())) { danceStop(); return; }
+    var lat = (c.outputLatency || 0) + (c.baseLatency || 0), t = c.currentTime - F.t0 - lat; if (t < 0) t = 0;
+    var beats = (F.len ? t % F.len : t) * F.bpm / 60, p = beats - Math.floor(beats);
+    var hop = Math.sin(Math.PI * p);
+    root.style.setProperty("--dance-y", (-5 * hop * hop).toFixed(2) + "px");
+    root.style.setProperty("--dance-r", (6 * Math.sin(Math.PI * beats)).toFixed(2) + "deg");
+    root.style.setProperty("--dance-s", (1 + 0.05 * Math.max(0, 1 - p * 5)).toFixed(3));
+    if (!root.classList.contains("mudance")) root.classList.add("mudance");
+    DANCE.raf = requestAnimationFrame(frame);
+  }
+  DANCE.raf = requestAnimationFrame(frame);
+}
+function danceStop() {
+  if (DANCE.raf) cancelAnimationFrame(DANCE.raf); DANCE.raf = 0; DANCE.f = null;
+  var root = document.documentElement; root.classList.remove("mudance");
+}
 function muFileStop() {
+  danceStop();
   var f = MU.file; MU.file = null; if (!f || !f.src) return;
   try { var c = MU.ctx; f.g.gain.cancelScheduledValues(c.currentTime); f.g.gain.setTargetAtTime(0.0001, c.currentTime, 0.15); f.src.stop(c.currentTime + 0.8); } catch (e) {}
 }
@@ -8364,7 +8416,7 @@ function drugTier(id) { return FREE_SET[id] ? "free" : "plus"; }   /* reading a 
 function studyLocked(id) { return PAYWALL && !!id && !FREE_SET[id] && !hasTier("pro"); }
 function drugLocked(id) { return PAYWALL && !hasTier(drugTier(id)); }
 /* bugs by subscription: Common, starter and earned bugs are free; Rare and Seasonal need Plus; Epic and Legendary need Pro. Bugs already owned stay owned. */
-function bugTier(b) { if (!b || b.login) return "free"; if (b.rar === "epic" || b.rar === "legendary") return "pro"; if (b.rar === "rare" || b.rar === "seasonal") return "plus"; return "free"; }
+function bugTier(b) { if (!b || b.login || b.king) return "free"; if (b.rar === "epic" || b.rar === "legendary") return "pro"; if (b.rar === "rare" || b.rar === "seasonal") return "plus"; return "free"; }
 function proBug(id) { var b = bugById(id); return PAYWALL && !!b && !owned(id) && !hasTier(bugTier(b)); }
 function tierBadge(t) { return '<span class="probadge">' + (t === "plus" ? "PLUS" : "PRO") + '</span>'; }
 function proBadge(tab) { return tierBadge(tab ? tabTier(tab) : "pro"); }

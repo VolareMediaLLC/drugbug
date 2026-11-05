@@ -234,5 +234,54 @@ def bug_pop():
         if b % 8 == 0: s.d(49, B, 90, 0.5, kit=24)
     s.finish('bug-pop.mp3')
 
-ALL = dict(jazz=slow_bug_jazz, house=bug_house, step=bugstep, rock=bug_rock, banjo=banjo_bug, pop=bug_pop)
+def house_variant(name, bpm, prog, bassprog, stab, stabpat, hook, hookprog, extra=None, kit=24, bars=26):
+    s = Song(bpm, bars)
+    for b in range(s.bars):
+        B = b * 4; c = prog[b % len(prog)]; r, _ = chord(c); intro = b < 2
+        for i in range(4): s.d(36, B + i, 120, 1.1, kit=kit)
+        if not intro:
+            s.d(39, B + 1, 100, 0.7, kit=kit); s.d(39, B + 3, 100, 0.7, kit=kit)
+            for i in range(4): s.d(46, B + i + 0.5, 80, 0.5, kit=kit); s.d(42, B + i + 0.25, 42, 0.32, kit=kit); s.d(42, B + i + 0.75, 42, 0.32, kit=kit)
+            if b % 2: s.d(54, B + 1.75, 70, 0.4, kit=kit)
+            bassline(s, bassprog, r, B, b)
+        for o in stabpat: comp(s, stab, B + o, c, 0.28, 58, 86, 0.5)
+        if 6 <= b < bars - 4 and b % 2 == 0:
+            for o, k in hook: s.n(hookprog, k, B + o, 0.35, 88, 0.38)
+        if extra: extra(s, b, B, c)
+        if b % 4 == 3: s.raw(B + 3.25, chirp(4, 4600, 0.045), 0.6)
+        if b % 8 == 7: s.d(49, B + 4, 90, 0.5, kit=kit)
+    s.finish(name)
+def bassline(s, prog, r, B, b):
+    root = 33 + r if r < 7 else 21 + r + 12
+    if prog == 'octave':
+        for i in range(8): s.n(33, root + (12 if i % 2 else 0), B + i * .5, .4, 100, 1.0)
+    elif prog == 'acid':
+        pat = [0, 0, 12, 0, 3, 0, 15, 10, 0, 12, 0, 7, 0, 3, 12, 10]
+        for i, d in enumerate(pat):
+            if i % 4 == 2 and b % 2 == 0: continue
+            s.n(39, root + d, B + i * .25, .2, 110 if i % 4 == 0 else 85, 0.75)
+    else:
+        for i in (0.5, 1.5, 2.5, 3.5): s.n(38, root, B + i, 0.4, 100, 1.0)
+        if b % 2: s.n(38, root + 7, B + 3.75, 0.2, 90, 0.8)
+def house_deep():
+    def pads(s, b, B, c): comp(s, 89, B, c, 4, 55, 60, 0.4)
+    house_variant('bug-house-deep-hive.mp3', 120, ['Dm9', 'Dm9', 'Gm9', 'Gm9', 'Bbmaj9', 'Bbmaj9', 'A7', 'A7'], 'deep', 4, (0, 1.5, 2.75),
+                  [(0.5, 74), (1, 72), (2, 69), (3, 72)], 11, pads)
+def house_disco():
+    def strings(s, b, B, c):
+        if b % 2 == 1: comp(s, 48, B + 3.5, c, 0.4, 64, 95, 0.45)
+        for i in range(8):
+            if i % 2: comp(s, 27, B + i * .5, c, 0.12, 60, 70, 0.3)
+    house_variant('bug-house-disco-beetle.mp3', 124, ['Fmaj7', 'Em7', 'Dm7', 'Cmaj7'], 'octave', 0, (1.75, 3.5),
+                  [(0, 81), (0.5, 79), (1, 77), (1.5, 76), (2, 77), (3, 72)], 56, strings)
+def house_acid():
+    house_variant('bug-house-acid-ant.mp3', 126, ['Am', 'Am', 'Am', 'G', 'F', 'F', 'G', 'G'], 'acid', 81, (0.75, 2.25),
+                  [(0.5, 69), (1.5, 72), (2.5, 76), (3, 74)], 80, None, kit=25)
+def house_piano():
+    def organ(s, b, B, c):
+        if b >= 10: comp(s, 16, B, c, 3.8, 55, 55, 0.25)
+    house_variant('bug-house-piano-moth.mp3', 123, ['C', 'Am7', 'F', 'G', 'C', 'Em7', 'F', 'G'], 'deep', 0, (0, 0.5, 1.25, 1.75, 2.5, 3.0, 3.75),
+                  [(0, 79), (0.75, 76), (1.5, 77), (2, 76), (3, 72)], 73, organ)
+
+ALL = dict(hdeep=house_deep, hdisco=house_disco, hacid=house_acid, hpiano=house_piano, jazz=slow_bug_jazz, house=bug_house, step=bugstep, rock=bug_rock, banjo=banjo_bug, pop=bug_pop)
 for k in (sys.argv[1:] or ALL): ALL[k]()
