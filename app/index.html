@@ -2819,6 +2819,9 @@ table.cmptbl tr.dif th{border-left:3px solid var(--gold)}
    top of whatever the bug is already doing. Values come from danceStart() in app.js. */
 .mudance svg.bug.me{translate:0 var(--dance-y,0px);rotate:var(--dance-r,0deg);scale:1 var(--dance-s,1);transform-origin:50% 92%}
 @media (prefers-reduced-motion: reduce){.mudance svg.bug.me{translate:none;rotate:none;scale:none}}
+.lgtoggle{display:block;margin:10px 0 0;padding:0;border:0;background:none;color:var(--gen,#2bb3a3);font:inherit;font-size:13.5px;font-weight:700;cursor:pointer}
+.lgtoggle::after{content:" \25BE"}.lgcard.open .lgtoggle::after{content:" \25B4"}
+.pkbonus{display:block;font-size:12px;font-weight:700;color:var(--gold,#d4972a)}
 </style>
 
 <div class="wrap" id="app"><div id="boot" aria-hidden="true"><div class="bootlogo">Drug<span>Bug</span></div><div class="bootbar"><i></i></div><p class="bootnote">Loading your medications</p></div></div>

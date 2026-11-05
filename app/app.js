@@ -1944,6 +1944,7 @@ document.addEventListener("click", function (e) {
   }
   switch (a.act) {
     case "logincollect": loginCollect(); render(); return;
+    case "logintoggle": S.loginOpen = !S.loginOpen; render(); return;
     case "close": return closeSheet();
     case "tbmenu": S.menu = !S.menu; return render();
     case "allpaths": store("allPaths", homeAll() ? 0 : 1); render(); return;
@@ -2544,7 +2545,10 @@ function loginCard() {
   var nb = 0; for (i = n + 1; i < n + 120 && !nb; i++) if (loginPrize(i).bug && !owned(loginPrize(i).bug)) nb = i;
   var nxt = '<p class="lgnext">Cycle ' + cyc + '. ' + (nb ? esc(b2n(loginPrize(nb).bug)) + ' (' + RARITY[bugById(loginPrize(nb).bug).rar] + ') comes on day ' + loginCycleDay(nb) + (Math.floor((nb - 1) / 30) + 1 > cyc ? ' of the next cycle' : '') + '.' : 'Every login bug collected. The sticks keep coming.') + '</p>';
   var msg = S.loginMsg ? '<p class="presult good" role="status">' + esc(S.loginMsg) + '</p>' : ''; S.loginMsg = "";
-  return '<section class="lgcard' + (owed.length ? ' ready' : '') + '"><div class="lghead"><div>' + head + '</div>' + (owed.length ? '<button class="btn" data-act="logincollect">Collect</button>' : '') + '</div>' + msg + cal + nxt + '</section>';
+  /* folded by default; the 30 days open on a tap (owner, Nov 5 2026) */
+  var open = !!S.loginOpen;
+  return '<section class="lgcard' + (owed.length ? ' ready' : '') + (open ? ' open' : '') + '"><div class="lghead"><div>' + head + '</div>' + (owed.length ? '<button class="btn" data-act="logincollect">Collect</button>' : '') + '</div>' + msg +
+    '<button class="lgtoggle" data-act="logintoggle" aria-expanded="' + open + '">' + (open ? 'Hide the 30 days' : 'Show the 30 days') + '</button>' + (open ? cal + nxt : '') + '</section>';
 }
 function today() { var d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
 function dayDiff(a, b) { return Math.round((new Date(b + "T12:00:00") - new Date(a + "T12:00:00")) / DAY); }
@@ -3443,8 +3447,11 @@ var START_STICKS = 20;
 /* earned on the device + paid for on the server, less what has been spent (modules/wallet.js) */
 function sticks() { var P = Prog.d; return START_STICKS + (P.earned || 0) + (typeof walletSticks === "function" ? walletSticks() : 0) - (P.spent || 0); }
 var STICK_TRY = 1, STICK_RIGHT = 3; /* every answered question pays 1 stick for trying, 3 when correct */
-function qSticks(ok) { return ok ? STICK_RIGHT : STICK_TRY; }
-function stickNote(ok) { var n = qSticks(ok); return ' <span class="earned">+' + n + (n === 1 ? " stick" : " sticks") + (ok ? "" : " for trying") + '</span>'; }
+/* the peeking pal riding with your bug adds sticks to every right answer (owner, Nov 5 2026):
+   +1 when you equip it, +2 once it reaches level 5, +3 at level 10 */
+function palBonus() { var id = Prog.d.pal; if (!id || typeof pkCaught !== "function" || !pkCaught(id)) return 0; var lv = typeof pkLv === "function" ? pkLv(id) : 1; return lv >= 10 ? 3 : lv >= 5 ? 2 : 1; }
+function qSticks(ok) { return ok ? STICK_RIGHT + palBonus() : STICK_TRY; }
+function stickNote(ok) { var n = qSticks(ok), pb = ok ? palBonus() : 0; return ' <span class="earned">+' + n + (n === 1 ? " stick" : " sticks") + (ok ? "" : " for trying") + (pb ? ' (' + pb + ' from your pal)' : '') + '</span>'; }
 function earn(n) { if (!n) return; var P = Prog.d; P.earned = (P.earned || 0) + n; }
 function stickIcon(sz) {
   sz = sz || 16;
@@ -4846,7 +4853,7 @@ function megaFinish() {
   st.cs.steps.forEach(function (s, i) { if (st.ans[i] >= 0 && s.options[st.ans[i]].ok) ok++; });
   st.pct = Math.round(100 * ok / n); st.ok = ok;
   var P = Prog.d; P.mega = P.mega || {}; P.mega[st.cs.id] = Math.max(P.mega[st.cs.id] || 0, st.pct);
-  st.sticks = ok * STICK_RIGHT + (n - ok) * STICK_TRY + (st.pct === 100 ? 10 : 0); earn(st.sticks); P.xp += ok * 15; checkAch(); saveProg();
+  st.sticks = ok * (STICK_RIGHT + palBonus()) + (n - ok) * STICK_TRY + (st.pct === 100 ? 10 : 0); earn(st.sticks); P.xp += ok * 15; checkAch(); saveProg();
 }
 function megaDone() {
   var st = S.mega, cs = st.cs, avg = Object.keys(st.times).reduce(function (t, k) { return t + st.times[k]; }, 0) / cs.steps.length;
@@ -10804,7 +10811,7 @@ function peekView() {
     '<div class="pkgrid">' + mine.map(function (p) {
       var lv = pkLv(p.id), stars = ""; for (var i = 1; i <= 10; i++) stars += '<i class="' + (i <= lv ? "on" : "") + '"></i>';
       return '<div class="pkcard' + (Prog.d.pal === p.id ? ' eq' : '') + (lv >= 10 ? ' max' : lv >= 5 ? ' mid' : '') + '">' + pkFrame(p, pkStage(lv)) +
-        '<span class="pklv">' + (es ? "Nivel " : "Level ") + lv + ' · ' + esc(pkStageName(pkStage(lv))) + '</span><span class="pkstars" aria-label="' + (es ? "Nivel " : "Level ") + lv + ' / 10">' + stars + '</span><span class="muted small">' + (lv >= 10 ? (es ? "Completamente crecido" : "Fully grown") : (es ? "Sube de nivel al estudiar" : "Levels up as you study")) + '</span>' +
+        '<span class="pklv">' + (es ? "Nivel " : "Level ") + lv + ' · ' + esc(pkStageName(pkStage(lv))) + '</span><span class="pkbonus">+' + (lv >= 10 ? 3 : lv >= 5 ? 2 : 1) + (es ? " palitos por acierto al equiparlo" : " stick" + (lv >= 5 ? "s" : "") + " per right answer when equipped") + '</span><span class="pkstars" aria-label="' + (es ? "Nivel " : "Level ") + lv + ' / 10">' + stars + '</span><span class="muted small">' + (lv >= 10 ? (es ? "Completamente crecido" : "Fully grown") : (es ? "Sube de nivel al estudiar" : "Levels up as you study")) + '</span>' +
         '<button class="btn small' + (Prog.d.pal === p.id ? ' on' : '') + '" data-pkeq="' + p.id + '" aria-pressed="' + (Prog.d.pal === p.id) + '">' + (Prog.d.pal === p.id ? (es ? "Con tu bicho ✓" : "With your bug ✓") : (es ? "Equipar" : "Equip")) + '</button></div>';
     }).join("") + '</div>';
 }
