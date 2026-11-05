@@ -3648,9 +3648,55 @@ function bugArt(b, cls, opt) {
 
 
   accs.forEach(function (a) { if (a !== "stars" && ACC[a]) s += ACC[a](hy); });
+  var dk = false, ol = '';
+  /* ---------- the grown-up bugs are far more detailed (owner, Nov 4 2026) ----------
+     Veterans get a textured, worn shell; Legends get that plus a deeper sheen, segment creases
+     and fine hairs. It is painted through a mask cut from the bug's own drawing, so it follows
+     whatever silhouette that body has instead of assuming a round one, and it goes on before the
+     wardrobe so clothes sit cleanly over it. Kept light on purpose: it should read as a better
+     made bug, not as a filter over the art. */
+  if (st >= 4) {
+    var mid = id + "m", bg = id + "bg", hi5 = st === 5;
+    /* The mask is the bug's own drawing, referenced rather than copied: mask-type:alpha means only
+       its coverage matters, not its colour, so <use> does the job and the body art is not
+       duplicated into the mask. Copying it doubled the node count on every bug on screen.
+       Where mask-type is not supported this falls back to luminance, which simply shows the
+       texture a little less on dark bugs - it never breaks the drawing. */
+    s = '<g id="' + bg + '">' + s + '</g>';
+    ol += '<mask id="' + mid + '" maskUnits="userSpaceOnUse" x="0" y="0" width="200" height="200" style="mask-type:alpha"><use href="#' + bg + '"/></mask>' +
+      /* light from the top left, shadow pooling at the bottom: works on any blob */
+      '<radialGradient id="' + id + 'sh" cx=".34" cy=".26" r=".92">' +
+        '<stop offset="0" stop-color="#ffffff" stop-opacity="' + (hi5 ? ".34" : ".2") + '"/>' +
+        '<stop offset=".45" stop-color="#ffffff" stop-opacity="0"/>' +
+        '<stop offset="1" stop-color="#000000" stop-opacity="' + (hi5 ? ".2" : ".13") + '"/>' +
+      '</radialGradient>' +
+      (hi5 ? '<linearGradient id="' + id + 'ir" x1="0" y1="0" x2="1" y2="1">' +
+        '<stop offset="0" stop-color="#a5f3fc" stop-opacity=".2"/>' +
+        '<stop offset=".5" stop-color="#f0abfc" stop-opacity=".14"/>' +
+        '<stop offset="1" stop-color="#fde68a" stop-opacity=".2"/></linearGradient>' : '');
+    var det = '<rect x="0" y="0" width="200" height="200" fill="url(#' + id + 'sh)"/>';
+    if (hi5) det += '<rect x="0" y="0" width="200" height="200" fill="url(#' + id + 'ir)"/>';   /* iridescence */
+    /* the shell texture is one rect through a shared turbulence filter (see index.html).
+       It used to be 120 hand-placed circles per bug, which put 4,000 extra nodes on a shop grid. */
+    det += '<rect x="0" y="0" width="200" height="200" filter="url(#dbgrain' + (hi5 ? 5 : 4) + ')" opacity="' + (hi5 ? ".4" : ".34") + '"/>';
+    if (hi5) det += '<rect x="0" y="0" width="200" height="200" filter="url(#dbshine5)" opacity=".3"/>';
+    var sd = 0, sKey = String(b.id || b.name || "x"), q;
+    for (q = 0; q < sKey.length; q++) sd = (sd * 31 + sKey.charCodeAt(q)) % 9973;
+    function rnd() { sd = (sd * 1103515245 + 12345) % 2147483648; return sd / 2147483648; }
+    /* segment creases: horizontal, so they read as chitin on anything taller than it is wide */
+    det += '<path d="M0 126 Q100 138 200 126 M0 150 Q100 162 200 150 M0 172 Q100 182 200 172" fill="none" stroke="' + ink + '" stroke-width="' + (hi5 ? 2 : 1.5) + '" opacity="' + (hi5 ? ".13" : ".09") + '"/>';
+    s += '<g class="bugdet" mask="url(#' + mid + ')" aria-hidden="true">' + det + '</g>';
+    /* fine hairs: outside the mask on purpose, so they break the silhouette the way real setae do */
+    var hair = "", hn = hi5 ? 30 : 18, hj;
+    for (hj = 0; hj < hn; hj++) {
+      var a0 = Math.PI * (0.08 + rnd() * 0.84), rr = 44 + rnd() * 12;
+      var hx = 100 - Math.cos(a0) * rr, hy2 = 146 - Math.sin(a0) * (rr * .86), ln = 3.5 + rnd() * 4.5;
+      hair += '<path d="M' + hx.toFixed(1) + ' ' + hy2.toFixed(1) + ' l' + (-Math.cos(a0) * ln).toFixed(1) + ' ' + (-Math.sin(a0) * ln).toFixed(1) + '" stroke="' + ink + '" stroke-width="1.2" opacity="' + (hi5 ? ".36" : ".24") + '" stroke-linecap="round"/>';
+    }
+    s = '<g class="bughair" aria-hidden="true">' + hair + '</g>' + s;
+  }
   ["outfit", "neck", "hair", "face", "hat", "left", "held"].forEach(function (sl) { var it = ITEMS_BY[wear[sl]]; if (it) s += fitG(t, sl, hy, itemSVG(it, 74)); });
   if (wear.fx && ITEMS_BY[wear.fx] && !ITEMS_BY[wear.fx].under) s += itemSVG(ITEMS_BY[wear.fx], hy);
-  var dk = false, ol = '';
   var sk = st === 1 ? (t === "larva" ? .9 : .8) : st === 2 ? .9 : 1;
   if (t === "stick") sk *= .82; /* the stick insect is drawn edge to edge; bring it in line with the other bugs */
   if (sk !== 1) { var sy = t === "stick" ? 108 : 190; s = '<g transform="translate(' + (100 * (1 - sk)).toFixed(1) + ' ' + (sy * (1 - sk)).toFixed(1) + ') scale(' + sk.toFixed(3) + ')">' + s + '</g>'; }

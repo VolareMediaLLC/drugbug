@@ -10,6 +10,23 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
+<!-- One shared grain filter for the grown-up bug shells. Defined once here rather than per bug:
+     drawing the speckles as individual circles put 120 extra nodes on every bug on screen, which
+     is 4,000+ on a shop grid. (owner, Nov 4 2026) -->
+<svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute"><defs>
+<filter id="dbgrain4" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+<feTurbulence type="fractalNoise" baseFrequency=".62" numOctaves="2" seed="11" stitchTiles="stitch"/>
+<feColorMatrix type="matrix" values="0 0 0 0 .08  0 0 0 0 .06  0 0 0 0 .05  .8 0 0 0 -.56"/>
+</filter>
+<filter id="dbgrain5" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+<feTurbulence type="fractalNoise" baseFrequency=".48" numOctaves="3" seed="23" stitchTiles="stitch"/>
+<feColorMatrix type="matrix" values="0 0 0 0 .07  0 0 0 0 .05  0 0 0 0 .04  .95 0 0 0 -.58"/>
+</filter>
+<filter id="dbshine5" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+<feTurbulence type="fractalNoise" baseFrequency=".2" numOctaves="2" seed="5" stitchTiles="stitch"/>
+<feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  .6 0 0 0 -.44"/>
+</filter>
+</defs></svg>
 <title>DrugBug</title>
 <script>/* the query string is read here because app.js strips it on boot, before the modules run */
 window.__DBQ=location.search||"";</script>
