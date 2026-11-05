@@ -2246,6 +2246,14 @@ document.addEventListener("focusin", function (e) { if (!S.sheet || sheet.hidden
 /* dialogs that sit above the drug sheet (paywall, Weird Drug Wednesday, tour, report) get Escape first */
 
 /* ---------- home hero: the DrugBug title with your bug ---------- */
+/* Instructors get a way in from the top of the main menu: the class-keys dashboard and its sign-in
+   (owner, Nov 5 2026). On a wide screen it fills the empty top-right of the hero. */
+function heroInst() {
+  var here = /(^|\.)drugbugapp\.com$/.test(location.hostname);
+  return '<a class="heroinst" href="https://drugbugapp.com/instructor/"' + (here ? '' : ' target="_blank" rel="noopener"') + '>' +
+    '<span class="hiic" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-5 9 5-9 5-9-5z"/><path d="M7 11.5v4.5c0 1.2 2.2 2.5 5 2.5s5-1.3 5-2.5v-4.5"/><path d="M21 9v5"/></svg></span>' +
+    '<span class="hitx"><strong>Instructors</strong><span>Sign in to your class dashboard</span></span><span class="higo" aria-hidden="true">&rsaquo;</span></a>';
+}
 function heroHTML() {
   var b = myBug(), st = typeof myStage === "function" ? myStage() : 3;
   var tag = '<p class="tagline">' + (typeof funOn === "function" && !funOn() ? 'Every medication, explained plainly.' : 'Learn your meds. Grow your bug.') + '</p>';
@@ -2254,7 +2262,7 @@ function heroHTML() {
   var rr = { rare: "rare", seasonal: "rare", epic: "epic", earned: "epic", legendary: "legendary" }[b.rar] || "common";
   var spk = rr === "legendary" ? '<i class="lsp s1" aria-hidden="true"></i><i class="lsp s2" aria-hidden="true"></i><i class="lsp s3" aria-hidden="true"></i><i class="lsp s4" aria-hidden="true"></i>' : rr === "epic" ? '<i class="lsp s1" aria-hidden="true"></i><i class="lsp s3" aria-hidden="true"></i>' : '';
   var hol = typeof holToday === "function" ? holToday() : null;
-  return '<section class="hero ha' + (hol ? ' hol hol-' + hol.id + (hol.base ? ' hol-' + hol.base : '') : '') + '">' + (hol ? holFx(hol) : '') + '<div class="hatx lr-' + rr + '">' + (rr === "legendary" ? '<svg class="lcrown" viewBox="0 0 64 44" aria-hidden="true"><path d="M4 40 L8 12 L22 26 L32 4 L42 26 L56 12 L60 40Z" fill="#fbbf24" stroke="#92400e" stroke-width="3" stroke-linejoin="round"/><circle cx="32" cy="6" r="4" fill="#f43f5e"/><circle cx="8" cy="12" r="3.5" fill="#38bdf8"/><circle cx="56" cy="12" r="3.5" fill="#38bdf8"/><rect x="6" y="34" width="52" height="6" rx="2" fill="#f59e0b"/></svg>' : '') + '<h1 class="logo">Drug<span>Bug</span></h1>' + spk + '</div>' + (typeof funOn === "function" && !funOn() ? '' : '<button class="hbub" data-goshop="1" aria-label="' + lbl + '"><span class="orb">' + myBugArt("herobug", null, hol ? holWear(hol) : null, myStage()) + (typeof pkSide === "function" ? pkSide("hero") : "") + '</span>' + chip + '</button>') + tag + (hol ? holBanner(hol) : '') + '</section>';
+  return '<section class="hero ha' + (hol ? ' hol hol-' + hol.id + (hol.base ? ' hol-' + hol.base : '') : '') + '">' + (hol ? holFx(hol) : '') + '<div class="hatx lr-' + rr + '">' + (rr === "legendary" ? '<svg class="lcrown" viewBox="0 0 64 44" aria-hidden="true"><path d="M4 40 L8 12 L22 26 L32 4 L42 26 L56 12 L60 40Z" fill="#fbbf24" stroke="#92400e" stroke-width="3" stroke-linejoin="round"/><circle cx="32" cy="6" r="4" fill="#f43f5e"/><circle cx="8" cy="12" r="3.5" fill="#38bdf8"/><circle cx="56" cy="12" r="3.5" fill="#38bdf8"/><rect x="6" y="34" width="52" height="6" rx="2" fill="#f59e0b"/></svg>' : '') + '<h1 class="logo">Drug<span>Bug</span></h1>' + spk + '</div>' + (typeof funOn === "function" && !funOn() ? '' : '<button class="hbub" data-goshop="1" aria-label="' + lbl + '"><span class="orb">' + myBugArt("herobug", null, hol ? holWear(hol) : null, myStage()) + (typeof pkSide === "function" ? pkSide("hero") : "") + '</span>' + chip + '</button>') + heroInst() + tag + (hol ? holBanner(hol) : '') + '</section>';
 }
 function topLayerOpen() { return ["accdlg", "rvdlg", "pwdlg", "wdwdlg", "evodlg", "pkdlg", "chemdlg", "tourdlg", "rdlg", "idlg"].some(function (i) { var el = document.getElementById(i); return el && !el.hidden; }); }
 /* Android back button: closes the top layer or goes back one step; returns true when it handled it */
@@ -7477,6 +7485,9 @@ function printClick(t, a) { if (a.print) { openPrint(a.print); return true; } re
 var APP_VERSION = "1.1", APP_DATE = "2026-11-05";
 var SET_DEF = { remind: true, remindAt: "19:00", text: "normal", contrast: false, motion: false, homeLevel: "", dailyGoal: 10, nrN: 25, nrMode: "practice", adaptive: true, megaTimer: "on", fullDefault: false, voiceRate: "normal", showPhon: true, fun: true, sfx: true, music: true, musicVol: 40, printMode: "cards", printDetail: "std", printLang: "auto", printDense: false, state: "", buddy: true, weird: true, weirdAt: "12:00" };
 function SET() { var s = store("settings") || {}; return Object.assign({}, SET_DEF, s); }
+/* sound effects are on for everyone (owner, Nov 5 2026): anyone who had them off is switched back on
+   once; after that the switch in Settings is theirs again */
+(function () { try { if (!store("sfxOnce1")) { var s0 = store("settings") || {}; if (s0.sfx === false) { s0.sfx = true; store("settings", s0); } store("sfxOnce1", 1); } } catch (e) {} })();
 function setSet(k, v) { var s = SET(); s[k] = v; store("settings", s); applySettings(); if (k === "music" || k === "musicVol") muSync(); if (k === "remind" || k === "remindAt") remindSync(); if ((k === "weird" || k === "weirdAt") && typeof wdwSync === "function") wdwSync(); }
 /* daily study reminder (iPhone app): the app tells iOS what to say; iOS shows it at the chosen time */
 function dueNow() { var D = (Prog.d && Prog.d.drugs) || {}, n = Date.now(); return Object.keys(D).filter(function (id) { return D[id].due && D[id].due <= n + 864e5; }).length; }
@@ -9527,7 +9538,7 @@ var BM_RX = {
      snd is the fallback until the file has arrived. */
   head:    { cls: "rx-head",  snd: "thunk", rec: "bonk",   dur: 1500 },
   neck:    { cls: "rx-neck",  snd: "gasp",  dur: 1400 },
-  chest:   { cls: "rx-chest", snd: "thump", rec: "wheeze", recDur: 2.6, recV: 1.1, dur: 2400 },
+  chest:   { cls: "rx-chest", snd: "thump", rec: "wheeze", recDur: 3, recV: 1.6, dur: 2400 },
   abdomen: { cls: "rx-abd",   snd: "groan", rec: "whoosh", dur: 1700 },
   pelvis:  { cls: "rx-pelv",  snd: "gasp",  dur: 1900 },
   back:    { cls: "rx-back",  snd: "creak", dur: 2200 },
@@ -9538,6 +9549,17 @@ var BM_RX = {
   legR:    { cls: "rx-legR",  snd: "punch", rec: "punch",  dur: 2100, then: "cry",   thenAt: 340 }
 };
 /* fetch the dummy's recordings the first time anyone touches the page, so the first tap has them */
+/* the recordings go through their own boost and limiter, like the synthesised body sounds, so a
+   quiet file (the wheeze) still carries on a phone speaker (owner, Nov 5 2026: "I can't hear the wheezing") */
+function bodyBus() {
+  var c = audioCtx(); if (!c) return null;
+  if (!bodyBus.g || bodyBus.ctx !== c) {
+    var g = c.createGain(), lim = c.createDynamicsCompressor();
+    g.gain.value = 2.2; lim.threshold.value = -8; lim.knee.value = 4; lim.ratio.value = 12; lim.attack.value = 0.002; lim.release.value = 0.15;
+    g.connect(lim); lim.connect(c.destination); bodyBus.g = g; bodyBus.ctx = c;
+  }
+  return bodyBus.g;
+}
 function bodySfxWarm() { ["bonk", "wheeze", "whoosh", "squeak", "punch"].forEach(function (n) { try { sfxLoad(n); } catch (e) {} }); }
 /* used when something only knows the anatomy area and not which limb was touched */
 var BM_AREA = { "Head and face": "head", "Neck and throat": "neck", "Chest and ribs": "chest",
@@ -9573,12 +9595,12 @@ function bodyReact(area, snd, part) {
   var M = BM_RX[key];
   var played = false;
   if (M.rec && !snd && typeof SET === "function" && SET().sfx) {
-    try { bodySfxWarm(); played = sfxPlay(M.rec, 0, M.recV || 1, key === "butt" ? 0.96 + Math.random() * 0.1 : 1, null, M.recDur); } catch (e) {}
+    try { bodySfxWarm(); played = sfxPlay(M.rec, 0, M.recV || 1, key === "butt" ? 0.96 + Math.random() * 0.1 : 1, bodyBus(), M.recDur); } catch (e) {}
   }
   /* the very first tap can beat the download: wait a moment for the recording before giving up */
   if (!played && M.rec && !snd && SFXBUF[M.rec] && SFXBUF[M.rec].then) {
     played = true; var t0 = Date.now();
-    SFXBUF[M.rec].then(function () { if (Date.now() - t0 < 700) sfxPlay(M.rec, 0, M.recV || 1, 1, null, M.recDur); else anatSnd(M.snd); }, function () { try { anatSnd(M.snd); } catch (e) {} });
+    SFXBUF[M.rec].then(function () { if (Date.now() - t0 < 1500) sfxPlay(M.rec, 0, M.recV || 1, 1, bodyBus(), M.recDur); else anatSnd(M.snd); }, function () { try { anatSnd(M.snd); } catch (e) {} });
   }
   if (!played) try { if (typeof anatSnd === "function") anatSnd(snd || M.snd); } catch (e) {}
   if (M.then) setTimeout(function () { try { anatSnd(M.then); } catch (e) {} }, M.thenAt || 250);
@@ -9714,6 +9736,46 @@ var D3 = (function () {
     return lathe(pr, 22);
   }
   function sphere(r) { return capsule(r, 2 * r, 10); }
+  /* ---------- the gown: one continuous drape (owner, Nov 5 2026) ----------
+     GOWN gives the gown's radius at every height (metres above his hip joint, standing). The gown is
+     cut from that one outline into three bands so it can still follow his hips, waist and chest, but
+     every band shares the outline and the folds, so standing he wears one seamless, flowing gown:
+     soft folds that deepen toward a gently uneven hem. */
+  var GOWN = [[-0.6, 0.29], [-0.5, 0.266], [-0.38, 0.24], [-0.25, 0.216], [-0.12, 0.196], [-0.02, 0.186], [0.08, 0.177],
+    [0.18, 0.179], [0.3, 0.19], [0.4, 0.204], [0.48, 0.212], [0.54, 0.205], [0.58, 0.176], [0.605, 0.125], [0.62, 0.08]];
+  function gownR(y) {
+    if (y <= GOWN[0][0]) return GOWN[0][1];
+    for (var i = 1; i < GOWN.length; i++) if (y <= GOWN[i][0]) {
+      var a = GOWN[i - 1], b = GOWN[i], t = (y - a[0]) / (b[0] - a[0]); t = t * t * (3 - 2 * t);
+      return a[1] + (b[1] - a[1]) * t;
+    }
+    return GOWN[GOWN.length - 1][1];
+  }
+  /* y0..y1 in hip-joint height; off shifts it into the band's own node */
+  function drape(y0, y1, off, k) {
+    var seg = 56, rows = Math.max(4, Math.round((y1 - y0) / 0.012)), P = [], N = [], I = [], i, j, G2 = [];
+    for (i = 0; i <= rows; i++) {
+      var y = y0 + (y1 - y0) * i / rows, r = gownR(y) * (k || 1);
+      var low = Math.max(0, Math.min(1, -y / 0.6)), amp = 0.01 + 0.075 * Math.pow(low, 1.4), row = [];
+      for (j = 0; j <= seg; j++) {
+        var th = j / seg * 2 * PI;
+        /* irregular folds: two fold frequencies so they do not look machined, deeper at the back */
+        var f = Math.sin(7 * th + 0.8 * Math.sin(3 * th)) * 0.7 + Math.sin(11 * th + 1.3) * 0.3;
+        var rr = r * (1 + amp * f * (0.85 + 0.25 * Math.max(0, -Math.cos(th))));
+        var yy = y - off + (i === 0 && y0 < -0.5 ? -0.018 * Math.sin(5 * th + 0.7) - 0.01 * Math.sin(2 * th) : 0);
+        row.push([rr * Math.sin(th), yy, rr * Math.cos(th)]);
+      }
+      G2.push(row);
+    }
+    for (i = 0; i <= rows; i++) for (j = 0; j <= seg; j++) {
+      var p = G2[i][j], a1 = G2[i][(j + 1) % seg], a0 = G2[i][(j - 1 + seg) % seg], b1 = G2[Math.min(rows, i + 1)][j], b0 = G2[Math.max(0, i - 1)][j];
+      var tx = a1[0] - a0[0], ty = a1[1] - a0[1], tz = a1[2] - a0[2], ux = b1[0] - b0[0], uy = b1[1] - b0[1], uz = b1[2] - b0[2];
+      var nx = ty * uz - tz * uy, ny = tz * ux - tx * uz, nz = tx * uy - ty * ux, l = Math.hypot(nx, ny, nz) || 1;
+      P.push(p[0], p[1], p[2]); N.push(nx / l, ny / l, nz / l);
+    }
+    for (i = 0; i < rows; i++) for (j = 0; j < seg; j++) { var q0 = i * (seg + 1) + j, q1 = q0 + seg + 1; I.push(q0, q1, q0 + 1, q0 + 1, q1, q1 + 1); }
+    return { p: new Float32Array(P), n: new Float32Array(N), i: new Uint16Array(I) };
+  }
   /* a limb of length L, centred on the origin along Y, with radii listed bottom to top */
   function limb(L, rs) {
     var h = L / 2, n = rs.length, pr = [[0, -h - rs[0] * 0.55], [rs[0] * 0.72, -h - rs[0] * 0.38]], i;
@@ -9788,9 +9850,10 @@ var D3 = (function () {
       jElbow: sphere(0.047), jWrist: sphere(0.032), jKnee: sphere(0.058), jAnkle: sphere(0.041), knob: sphere(0.02), patella: sphere(0.03),
       eye: sphere(0.017), iris: sphere(0.0085), nose: sphere(0.019), ear: sphere(0.026), lips: capsule(0.0075, 0.042, 5), brow: capsule(0.0055, 0.034, 4),
       hairCap: lathe([[0.107, 0.172], [0.11, 0.19], [0.103, 0.215], [0.086, 0.245], [0.055, 0.268], [0, 0.276]], 26), hairBack: sphere(0.1),
-      skirt: lathe([[0.262, -0.5], [0.24, -0.38], [0.215, -0.24], [0.192, -0.1], [0.178, 0.0], [0.172, 0.08], [0.168, 0.14]], 32),
+      /* the gown in three bands of one drape: skirt (hip pivot), waist (spine), bodice (chest) */
+      gSkirt: drape(-0.6, 0.07, 0), gWaist: drape(0.05, 0.28, 0.09, 0.996), gBodice: drape(0.26, 0.62, 0.26, 0.998),
       hem: torus(0.262, 0.009, 32, 6),
-      sleeve: lathe([[0.098, -0.24], [0.092, -0.16], [0.086, -0.08], [0.08, -0.01], [0.064, 0.04], [0.034, 0.075]], 20),
+      sleeve: lathe([[0.104, -0.25], [0.098, -0.16], [0.092, -0.07], [0.088, 0.0], [0.083, 0.04], [0.068, 0.075], [0.04, 0.094], [0, 0.1]], 24),
       cuff: torus(0.098, 0.008, 20, 6), collar: torus(0.072, 0.012, 24, 6),
       slit: capsule(0.022, 0.3, 6), tie: torus(0.016, 0.005, 10, 5),
       thigh: limb(0.44, [0.052, 0.058, 0.066, 0.075, 0.082, 0.084, 0.08]), shin: limb(0.4, [0.035, 0.037, 0.043, 0.054, 0.062, 0.058, 0.053]), shoe: capsule(0.058, 0.25, 8), hipball: sphere(0.08)
@@ -9798,20 +9861,18 @@ var D3 = (function () {
     /* balance tilts him from his feet; spin turns him about his own vertical axis */
     var bal = node("bal", null, [0, 0, 0]), spin = node("spin", bal, [0, 0, 0]);
     var hips = node("hips", spin, [0, HIPY, 0]);
-    mesh(hips, G.pelvis, MAT.gown, "pelvis", [0, 0, 0], null, [1.04, 1, 0.76], true);
     /* the skirt hangs from a pivot at the hip joints and swings with the thighs (see update) */
+    var GS = [1.06, 1, 0.82];
     var skirtN = node("skirt", hips, [0, -0.07, 0]);
-    mesh(skirtN, G.skirt, MAT.gown, "pelvis", [0, 0.07, 0], null, [1, 1, 0.9], true);
-    mesh(skirtN, G.hem, MAT.trim, "pelvis", [0, -0.43, 0], null, [1, 1, 0.9], true);
+    mesh(skirtN, G.gSkirt, MAT.gown, "pelvis", [0, 0.07, 0], null, GS, true);
     var spine = node("spine", hips, [0, 0.09, 0]);
-    mesh(spine, G.abdomen, MAT.gown, "abdomen", [0, 0, 0], null, [1.22, 1, 0.92], true);
+    mesh(spine, G.gWaist, MAT.gown, "abdomen", [0, 0, 0], null, GS, true);
     var chest = node("chest", spine, [0, 0.17, 0]);
-    mesh(chest, G.chest, MAT.gown, "chest", [0, 0, 0], null, [1.08, 1, 0.74], true);
-    /* the open back: a strip of him showing between the edges, white binding and two ties */
-    mesh(chest, G.slit, MAT.yellow, "chest", [0, 0.16, -0.128], [0.12, 0, 0], [0.75, 1, 0.35], true);
-    mesh(chest, G.tie, MAT.trim, "chest", [0, 0.3, -0.104], [PI / 2, 0, 0], null, true);
-    mesh(spine, G.tie, MAT.trim, "abdomen", [0, 0.06, -0.122], [PI / 2, 0, 0], null, true);
-    mesh(chest, G.collar, MAT.trim, "chest", [0, 0.33, 0], null, [1, 1, 0.9]);
+    mesh(chest, G.gBodice, MAT.gown, "chest", [0, 0, 0], null, GS, true);
+    /* the open back: a strip of him showing where the gown parts, and two cloth ties */
+    mesh(chest, G.slit, MAT.yellow, "chest", [0, 0.16, -0.17], [0.12, 0, 0], [0.75, 1, 0.35], true);
+    mesh(chest, G.tie, MAT.gown, "chest", [0, 0.3, -0.158], [PI / 2, 0, 0], null, true);
+    mesh(spine, G.tie, MAT.gown, "abdomen", [0, 0.06, -0.148], [PI / 2, 0, 0], null, true);
     /* a little pectoral definition, like the moulded chest plate on the real thing */
     var neck = node("neck", chest, [0, 0.335, 0]);
     mesh(neck, G.neck, MAT.yellow, "neck", [0, 0.035, 0]);
@@ -9832,7 +9893,6 @@ var D3 = (function () {
       var sh = node("sh" + side, chest, [0.205 * sx, 0.265, 0]);
       mesh(sh, G.ball, MAT.yellow, "arm" + side, [0, 0, 0]);
       mesh(sh, G.sleeve, MAT.gown, "arm" + side, [0, -0.02, 0]);
-      mesh(sh, G.cuff, MAT.trim, "arm" + side, [0, -0.26, 0]);
       mesh(sh, G.upper, MAT.yellow, "arm" + side, [0, -0.165, 0]);
       var el = node("el" + side, sh, [0, -0.315, 0]);
       /* the elbow: a rounded joint with the point of the elbow showing at the back */
@@ -10565,6 +10625,8 @@ function scSnd(kind) {
     o.connect(g); g.connect(out); o.start(t + at); o.stop(t + at + dur + 0.02);
   }
   if (kind === "wheeze") {
+    /* the real recording when it is here (owner, Nov 5 2026), the synthesised wheeze otherwise */
+    try { sfxLoad("wheeze"); if (SFXBUF["wheeze:buf"] && sfxPlay("wheeze", 0, 1.6, 1, bodyBus(), 3)) return; } catch (e) {}
     for (var k = 0; k < 2; k++) { var b0 = k * 1.5; air(b0, 0.45, 700, 0.18); air(b0 + 0.5, 0.95, 500, 0.12); [520, 690, 830].forEach(function (f, j) { tone(b0 + 0.52 + j * 0.03, 0.85, f, 0.05); }); }
   } else if (kind === "clear") {
     for (var m = 0; m < 2; m++) { air(m * 1.8, 0.7, 450, 0.2); air(m * 1.8 + 0.75, 0.6, 300, 0.1); }

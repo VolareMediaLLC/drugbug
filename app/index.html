@@ -1961,7 +1961,18 @@ html,body{overflow-x:clip;overscroll-behavior:contain;touch-action:pan-y}
 .hbub .orb{width:132px;height:132px;transition:transform .15s}.hbub .orb .bug{width:108px;height:108px}.hbub:hover .orb,.hbub:focus-visible .orb{transform:scale(1.05)}
 .hbub:focus-visible{outline:none}.hbub:focus-visible .orb{outline:3px solid var(--flight);outline-offset:3px}
 .hbar{display:block;width:110px;height:6px;border-radius:99px;background:var(--line);overflow:hidden}.hbar i{display:block;height:100%;background:linear-gradient(90deg,#0f8f8a,#7240e0)}
-.hero.ha{display:grid;grid-template-columns:auto auto;justify-content:start;align-items:center;gap:6px 40px}@media (max-width:640px){.hero.ha{grid-template-columns:1fr auto;justify-content:stretch;gap:6px 14px}}.hero.ha .tagline{grid-column:1/-1;margin-top:2px}.hero.ha .logo{margin:0}
+.hero.ha{display:grid;grid-template-columns:auto auto;justify-content:start;align-items:center;gap:6px 40px}@media (max-width:640px){.hero.ha{grid-template-columns:1fr auto;justify-content:stretch;gap:6px 14px}}
+/* the instructor door in the hero (owner, Nov 5 2026): top right on wide screens, a slim row on phones */
+.hero.ha{grid-template-columns:auto auto 1fr}
+.heroinst{grid-column:3;grid-row:1;justify-self:end;align-self:center;display:flex;align-items:center;gap:12px;max-width:300px;padding:14px 16px;border-radius:18px;text-decoration:none;color:var(--ink);background:linear-gradient(140deg,color-mix(in srgb,#14b8a6 20%,var(--surface)),var(--surface));border:1.5px solid color-mix(in srgb,#14b8a6 40%,var(--line));box-shadow:var(--shadow);transition:transform .14s,border-color .14s}
+.heroinst:hover{transform:translateY(-2px);border-color:#14b8a6}
+.heroinst .hiic{flex:none;display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:color-mix(in srgb,#14b8a6 22%,transparent);color:#14b8a6}
+.heroinst .hitx{display:flex;flex-direction:column;gap:2px;min-width:0}
+.heroinst .hitx strong{font-family:var(--f-display);font-size:17px}
+.heroinst .hitx span{font-size:13px;color:var(--muted);line-height:1.3}
+.heroinst .higo{font-size:24px;color:#14b8a6;margin-left:auto}
+@media (max-width:900px){.hero.ha{grid-template-columns:auto auto}.heroinst{grid-column:1/-1;grid-row:auto;justify-self:stretch;max-width:none;padding:10px 14px}.heroinst .hiic{width:34px;height:34px}.heroinst .hitx strong{font-size:15px}}
+@media (max-width:640px){.hero.ha{grid-template-columns:1fr auto}.heroinst{order:-1;margin-bottom:6px}}.hero.ha .tagline{grid-column:1/-1;margin-top:2px}.hero.ha .logo{margin:0}
 /* the DrugBug title gets more character the rarer your bug */
 .hatx{position:relative;display:inline-block}
 .hatx.lr-rare .logo{background:linear-gradient(100deg,#22d3ee 0%,#3b82f6 50%,#a5f3fc 100%);-webkit-background-clip:text;background-clip:text;filter:drop-shadow(0 0 10px rgba(59,130,246,.35))}
@@ -2816,33 +2827,12 @@ table.cmptbl tr.dif th{border-left:3px solid var(--gold)}
 .lrnsc i{position:absolute;left:0;bottom:0;height:4px;background:linear-gradient(90deg,#7c3aed,#22d3ee);border-radius:0 4px 4px 0}
 .lrnsc.fin{border-color:#16a34a}.lrnsc.fin i{background:#16a34a}
 
-/* Every hub tab gets its own colour and the soft tinted gradient the Study tile had (owner, Nov 5 2026) */
-.hub2 .t-registry{--c:#3b82f6;--cs:rgba(59,130,246,.16)}
-.hub2 .t-tools{--c:#a855f7;--cs:rgba(168,85,247,.16)}
-.hub2 .t-diseases{--c:#10b981;--cs:rgba(16,185,129,.16)}
-.hub2 .t-calls{--c:#ef4444;--cs:rgba(239,68,68,.16)}
-.hub2 .t-anatomy{--c:#f97316;--cs:rgba(249,115,22,.16)}
-.hub2 .t-scenarios{--c:#06b6d4;--cs:rgba(6,182,212,.16)}
-.hub2 .t-scene{--c:#0ea5e9;--cs:rgba(14,165,233,.16)}
-.hub2 .t-mylist{--c:#ec4899;--cs:rgba(236,72,153,.16)}
-.hub2 .t-progress{--c:#eab308;--cs:rgba(234,179,8,.16)}
-.hub2 .t-units{--c:#14b8a6;--cs:rgba(20,184,166,.16)}
-.hub2 .t-labs{--c:#0891b2;--cs:rgba(8,145,178,.16)}
-.hub2 .t-families{--c:#6366f1;--cs:rgba(99,102,241,.16)}
-.hub2 .t-alts{--c:#84cc16;--cs:rgba(132,204,22,.16)}
-.hub2 .t-conds{--c:#f59e0b;--cs:rgba(245,158,11,.16)}
-.hub2 .t-body{--c:#fb7185;--cs:rgba(251,113,133,.16)}
-.hub2 .t-micro{--c:#22c55e;--cs:rgba(34,197,94,.16)}
-.hub2 .t-nbug{--c:#8b5cf6;--cs:rgba(139,92,246,.16)}
-.hub2 .t-protocols{--c:#64748b;--cs:rgba(100,116,139,.18)}
-.hub2 .t-illicit{--c:#d946ef;--cs:rgba(217,70,239,.16)}
-.hub2 .t-contrast{--c:#38bdf8;--cs:rgba(56,189,248,.16)}
-.hub2 .t-flightp{--c:#0284c7;--cs:rgba(2,132,199,.16)}
-.hub2 .t-flt_ref{--c:#4f46e5;--cs:rgba(79,70,229,.16)}
-.hub2 .t-medlist{--c:#e11d48;--cs:rgba(225,29,72,.16)}
-.hub2 .t-games{--c:#f43f5e;--cs:rgba(244,63,94,.16)}
-.hub2 .hub.hubg > .hubtile:not(.fmt){background:linear-gradient(140deg,color-mix(in srgb,var(--c,var(--flight)) 18%,var(--surface)),var(--surface));border-color:color-mix(in srgb,var(--c,var(--flight)) 32%,var(--line))}
-.hub2 .hub.hubg > .hubtile:not(.fmt) .ico{background:color-mix(in srgb,var(--c,var(--flight)) 20%,transparent);color:var(--c,var(--flight))}
+/* Every hub tab gets the soft tinted gradient the Study tile had, in its speciality's own colour, so the
+   tabs inside one speciality match each other (owner, Nov 5 2026) */
+.hub > .hubtile[class*="t-ev-"]{--c:#ec4899}
+.hub2 .hub.hubg > .hubtile:not(.fmt){--c:inherit;--cs:inherit}   /* one colour per speciality, even for tabs that carry their own elsewhere */
+.hub2 .hub.hubg > .hubtile:not(.fmt),.hub > .hubtile[class*="t-ev-"]{background:linear-gradient(140deg,color-mix(in srgb,var(--c,var(--flight)) 18%,var(--surface)),var(--surface));border-color:color-mix(in srgb,var(--c,var(--flight)) 32%,var(--line))}
+.hub2 .hub.hubg > .hubtile:not(.fmt) .ico,.hub > .hubtile[class*="t-ev-"] .ico{background:color-mix(in srgb,var(--c,var(--flight)) 20%,transparent);color:var(--c,var(--flight))}
 
 
 /* Medication Disease Identifier, simplified Oct 29 2026 */
