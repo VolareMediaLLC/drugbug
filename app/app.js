@@ -8584,6 +8584,8 @@ function drawTour() {
     '<h2>' + esc(t[0]) + '</h2><p>' + esc(t[1]) + '</p><div class="tourdots">' + TOUR.map(function (x, i) { return '<i class="' + (i === TR.i ? "on" : "") + '"></i>'; }).join("") + '</div>' +
     '<div class="actions"><button class="btn small ghost" data-tour="skip">' + (last ? "Not now" : "Skip") + '</button><button class="btn" data-tour="next">' + (last ? "Show me" : "Next") + '</button></div></div>';
   translateDom(trdlg); var p = trdlg.querySelector(".panel"); if (p) p.focus();
+  /* Hickory talks you through the tour (owner, Nov 5 2026) */
+  try { if (typeof voiceSay === "function") { var w = String(t[1]).split(/\s+/).slice(0, 14).join(" "); setTimeout(function () { voiceSay(w, "hick"); }, 120); } } catch (e) {}
 }
 document.addEventListener("click", function (e) {
   var b = e.target.closest && e.target.closest("[data-tour]"); if (!b) return;
@@ -8607,7 +8609,7 @@ document.addEventListener("keydown", function (e) { if (e.key === "Escape" && TR
 /* ---------- Everyday Health: the route for non-clinicians (education only) ----------
    Medicine cabinet (OTC + vitamins), small-sickness guide, normal vitals & labs, body map,
    drugs & your body (illicit education), peptides. Never tells anyone to use anything. */
-var EV_PLUS = { body: 1, illicit: 1, peptides: 1, probiotics: 1 };
+var EV_PLUS = { illicit: 1, peptides: 1, probiotics: 1 };
 function evLocked(t) { return typeof PAYWALL !== "undefined" && PAYWALL && EV_PLUS[t] && !hasTier("plus"); }
 var EVTABS = [
   ["cabinet", "Medicine Cabinet", "Over-the-counter remedies and vitamins: what each one is labeled for and what to watch for."],
@@ -9002,7 +9004,7 @@ function hickPop(line) {
   el.querySelector(".hpsay").textContent = line;
   document.body.appendChild(el);
   requestAnimationFrame(function () { el.classList.add("in"); });
-  try { if (typeof voiceSay === "function") setTimeout(function () { voiceSay(line, "drawl"); }, 500); } catch (e) {}
+  try { if (typeof voiceSay === "function") setTimeout(function () { voiceSay(line, "hick"); }, 500); } catch (e) {}
   setTimeout(function () { el.classList.remove("in"); setTimeout(function () { if (el.parentNode) el.remove(); }, 480); }, 2600);
 }
 var BM_CLASSES = ["rx-head", "rx-neck", "rx-chest", "rx-abd", "rx-pelv", "rx-armL", "rx-armR", "rx-legL", "rx-legR", "rx-back", "rx-butt"];
@@ -9156,7 +9158,7 @@ var D3 = (function () {
   /* ---------------- materials (linear colour) ---------------- */
   function lin(c) { return [Math.pow(c[0], 2.2), Math.pow(c[1], 2.2), Math.pow(c[2], 2.2)]; }
   var MAT = {
-    yellow: { c: lin([0.99, 0.69, 0.02]), sp: 0.7, sh: 90, rim: 0.35 },
+    yellow: { c: lin([0.95, 0.80, 0.42]), sp: 0.35, sh: 60, rim: 0.22 },
     black:  { c: lin([0.012, 0.012, 0.014]), sp: 0.8, sh: 70, rim: 0.5 },
     shoe:   { c: lin([0.07, 0.07, 0.08]), sp: 1.6, sh: 120, rim: 0.9 }
   };
@@ -9204,8 +9206,6 @@ var D3 = (function () {
     var chest = node("chest", spine, [0, 0.17, 0]);
     mesh(chest, G.chest, MAT.yellow, "chest", [0, 0, 0], null, [1, 1, 0.64], true);
     /* a little pectoral definition, like the moulded chest plate on the real thing */
-    mesh(chest, G.pec, MAT.yellow, "chest", [0.072, 0.205, 0.068], null, [1.05, 0.62, 0.42]);
-    mesh(chest, G.pec, MAT.yellow, "chest", [-0.072, 0.205, 0.068], null, [1.05, 0.62, 0.42]);
     var neck = node("neck", chest, [0, 0.335, 0]);
     mesh(neck, G.neck, MAT.black, "neck", [0, 0.035, 0]);
     var head = node("head", neck, [0, 0.075, 0]);

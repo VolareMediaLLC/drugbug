@@ -1440,8 +1440,7 @@ html[data-motion="reduce"] *,html[data-motion="reduce"] *::before,html[data-moti
 /* the 3D dummy's stage (owner, Nov 4 2026). The SVG figure inside stays as the fallback and is
    hidden only once WebGL is actually running. */
 .bodyfig:has(.bm3d){width:220px}
-.bm3d{position:relative;width:220px;max-width:100%;height:350px;border-radius:18px;
-  background:radial-gradient(120% 80% at 50% 38%,color-mix(in srgb,var(--surface-2,#2a2540) 80%,#fff 4%),transparent 72%)}
+.bm3d{position:relative;width:220px;max-width:100%;height:350px;background:none;border:0}
 .bm3d .bm3dcv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab;outline:none}
 .bm3d .bm3dcv:active{cursor:grabbing}
 .bm3d .bm3dfb{display:flex;justify-content:center;padding-top:10px}
@@ -2330,10 +2329,10 @@ table.cmptbl tr.dif th{border-left:3px solid var(--gold)}
 .hub.hubediting .hubtile:not(.hubdrag){opacity:.85}
 @media (prefers-reduced-motion:reduce){.hub.hubediting .hubtile{transition:none}}
 /* what is inside each path, on the card itself */
-.rchips{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
-.rchips span{font-size:10.5px;font-weight:800;letter-spacing:.02em;background:rgba(255,255,255,.18);border-radius:999px;padding:2px 8px;white-space:nowrap}
+.rchips{display:flex;flex-wrap:wrap;gap:7px 7px;margin-top:10px}
+.rchips span{font-size:10.5px;font-weight:800;letter-spacing:.02em;background:rgba(255,255,255,.18);border-radius:999px;padding:3px 9px;line-height:1.3;white-space:nowrap}
 .homewrap .route.rmini{height:150px}
-.homewrap .route.rmini .count{margin-top:6px;align-self:flex-start}
+.homewrap .route.rmini .count{margin-top:12px;margin-bottom:4px;align-self:flex-start;display:inline-block}
 :root[data-serious="1"] .rchips{display:none}
 /* My List: a small strip directly under the BugDex (owner, Nov 4 2026) */
 .route.mlsmall{grid-column:1/-1;display:flex;flex-direction:row;align-items:center;gap:12px;min-height:0;padding:10px 14px;border-radius:16px;background:linear-gradient(135deg,#b4532a 0%,#7a2e8e 100%);box-shadow:none;margin-top:10px}
@@ -2346,6 +2345,10 @@ table.cmptbl tr.dif th{border-left:3px solid var(--gold)}
 /* BugDex now wears the same card as a specialty */
 .route.rmini.gen{background:linear-gradient(135deg,#0b8f8d 0%,#6b3fb8 100%)}
 .route.rmini.gen .mbug svg{width:62px;height:62px}
+/* BugDex card: room for the chips and the count, Sage on the right (owner, Nov 5 2026) */
+.homewrap .route.rmini.gen{height:auto;min-height:150px;flex-direction:row!important;align-items:center!important;padding-bottom:16px}
+.homewrap .route.rmini.gen .mtx{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
+.homewrap .route.rmini.gen .mbug{align-self:center!important;margin-top:0!important}
 .route.rmini.ev{background:linear-gradient(135deg,#1f7a4d 0%,#0b8f8d 100%)}
 /* Serious mode has no bugs at all (owner, Nov 4 2026) */
 :root[data-serious="1"] svg.bug,
@@ -2407,10 +2410,10 @@ table.cmptbl tr.dif th{border-left:3px solid var(--gold)}
 .obfoot{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:4px 0 10px}
 /* the lazy susan */
 .lazy{position:relative;display:flex;align-items:center;justify-content:center;gap:4px;margin:14px 0 6px}
-.lazystage{position:relative;flex:1 1 auto;height:238px;perspective:1100px;transform-style:preserve-3d;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 14%,#000 86%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 14%,#000 86%,transparent 100%)}
+.lazystage{position:relative;flex:1 1 auto;height:282px;perspective:1100px;transform-style:preserve-3d;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 14%,#000 86%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 14%,#000 86%,transparent 100%)}
 .lazycard:not(.mid) strong,.lazycard:not(.mid) .obrec{opacity:0}
 .lazycard strong,.lazycard .obrec{transition:opacity .22s}
-.lazycard{position:absolute;left:50%;top:0;width:188px;margin-left:-94px;height:222px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:var(--surface);border:2px solid var(--line);border-radius:22px;padding:14px 12px;color:var(--ink);box-shadow:var(--shadow);cursor:pointer;transition:transform .34s cubic-bezier(.22,.9,.26,1),opacity .34s,border-color .2s;backface-visibility:hidden}
+.lazycard{position:absolute;left:50%;top:22px;width:188px;margin-left:-94px;height:222px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:var(--surface);border:2px solid var(--line);border-radius:22px;padding:14px 12px;color:var(--ink);box-shadow:var(--shadow);cursor:pointer;transition:transform .34s cubic-bezier(.22,.9,.26,1),opacity .34s,border-color .2s;backface-visibility:hidden}
 .lazycard strong{font-family:var(--f-display);font-size:17px;line-height:1.1;text-align:center}
 .lazybug svg{width:96px;height:96px;display:block}
 .lazyarr{flex:0 0 auto;width:40px;height:40px;border-radius:50%;border:2px solid var(--line);background:var(--surface);color:var(--ink);font-size:22px;line-height:1;cursor:pointer;z-index:7}
@@ -2423,7 +2426,7 @@ table.cmptbl tr.dif th{border-left:3px solid var(--gold)}
 .lazydot.on{background:var(--gen);transform:scale(1.3)}
 @media (max-height:860px){.obgate h1{font-size:1.5rem}.obgate>p{font-size:13.5px;margin:4px 0 0}.obints{gap:9px;margin:13px 0 10px}.obint{padding:10px 12px;border-radius:15px;gap:10px}.obtx strong{font-size:16px}.obtx span{font-size:12.5px}.obtick{flex-basis:20px;width:20px;height:20px}.obint.on .obtick::after{left:5px;top:2px;width:5px;height:10px}}
 .obfoot{position:sticky;bottom:0;background:var(--surface);padding-top:10px;padding-bottom:4px;z-index:3}
-@media (max-width:560px){.obints{grid-template-columns:1fr}.lazystage{height:214px}.lazycard{width:164px;margin-left:-82px;height:200px}.lazybug svg{width:82px;height:82px}.lazyarr{width:34px;height:34px;font-size:19px}}
+@media (max-width:560px){.obints{grid-template-columns:1fr}.lazystage{height:256px}.lazycard{width:164px;margin-left:-82px;height:200px}.lazybug svg{width:82px;height:82px}.lazyarr{width:34px;height:34px;font-size:19px}}
 @media (prefers-reduced-motion:reduce){.lazycard{transition:none}.obint{transition:none}}
 .roles{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0 14px}
 .rolecard{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;background:var(--surface);border:2px solid var(--line);border-radius:22px;padding:18px 14px;color:var(--ink);box-shadow:var(--shadow);transition:transform .15s,border-color .15s}
