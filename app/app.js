@@ -7054,12 +7054,39 @@ function voiceRate() { return { slow: 0.6, normal: 0.85, fast: 1.1 }[SET().voice
    — only the music context was ever being unlocked, so whichever contexts happened to be created
    outside a tap stayed suspended and silent for the rest of the session. One context, unlocked
    once, and every sound in the app rides on it. (owner asked why sounds were missing, Nov 4 2026) */
-var AUD = { ctx: null, warned: false };
+var AUD = { ctx: null, warned: false, gesture: 0, played: 0, err: "", music: "" };
 function audioCtx() {
-  var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
-  if (!AUD.ctx) { try { AUD.ctx = new AC(); } catch (e) { return null; } }
+  var AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) { AUD.err = "This browser has no Web Audio support."; return null; }
+  if (!AUD.ctx) { try { AUD.ctx = new AC(); } catch (e) { AUD.err = "The browser refused to open an audio channel."; return null; } }
   if (AUD.ctx.state === "suspended") { try { var r = AUD.ctx.resume(); if (r && r.catch) r.catch(function () {}); } catch (e) {} }
+  AUD.played++;
   return AUD.ctx;
+}
+/* A plain-language readout of what the sound system is actually doing. Added because sound can
+   fail for reasons the app cannot see from the inside - a browser that will not allow audio, a
+   phone on silent, a missing music file - and guessing wastes everyone's time. (owner, Nov 4 2026) */
+function audioReport() {
+  var L = [], S0 = SET();
+  if (!S0.sfx) L.push(["off", "Sound effects are switched off above."]);
+  if (S0.music === false) L.push(["off", "Background music is switched off above."]);
+  var AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) L.push(["bad", "This browser cannot play generated sound at all."]);
+  else if (!AUD.ctx) L.push(["wait", "No sound has been attempted yet."]);
+  else {
+    var st = AUD.ctx.state;
+    L.push([st === "running" ? "ok" : "bad",
+      st === "running" ? "Audio channel open and running."
+      : st === "suspended" ? "The browser has the audio channel paused. It opens on the first tap; if it stays paused, this page is not allowed to play sound."
+      : "The audio channel was closed by the browser."]);
+    L.push(["info", AUD.played + " sound" + (AUD.played === 1 ? "" : "s") + " sent to the speakers this session."]);
+  }
+  if (AUD.err) L.push(["bad", AUD.err]);
+  L.push(AUD.music === "ok" ? ["ok", "Music file loaded."]
+    : AUD.music === "fail" ? ["bad", "The music file could not be loaded, so music stays silent. Sound effects are unaffected."]
+    : ["info", "Music file not loaded yet."]);
+  L.push(["info", "If this all looks right and you still hear nothing, check the phone's silent switch and the volume."]);
+  return L;
 }
 /* every context holder below is a view onto the one above, so old code reading .ctx still works */
 function audioAlias(o) { try { Object.defineProperty(o, "ctx", { get: audioCtx, set: function () {}, configurable: true }); } catch (e) { o.ctx = null; } return o; }
@@ -7145,7 +7172,11 @@ function settingsView() {
     setRow("Written pronunciation", "Shows a guide like ep-ih-NEF-rin.", setTog("showPhon", s.showPhon, "Show pronunciation")) +
     setRow("Bug buddy", "Your bug on the side of the screen, reacting to your answers.", setTog("buddy", s.buddy, "Show my bug buddy")) +
     setRow("Background music", "Relaxed lo-fi beats while you study. You can also tap the music note at the top of any page.", setTog("music", s.music !== false, "Background music") + '<label class="muvol"><span>Volume</span><input type="range" min="0" max="100" step="5" id="muvolset" value="' + muLevel() + '" aria-label="Music volume"><output id="muvolsetv">' + muLevel() + '%</output></label>') +
-    setRow("Sound effects", "Answer tones, the game sounds and the level transitions.", setTog("sfx", s.sfx, "Sound effects") + ' <button class="btn small ghost" data-act="sfxtest">Test</button>'));
+    setRow("Sound effects", "Answer tones, the game sounds and the level transitions.", setTog("sfx", s.sfx, "Sound effects") + ' <button class="btn small ghost" data-act="sfxtest">Test</button>') +
+    setRow("Is sound working?", "What the app can actually see about the speakers.",
+      '<ul class="sndchk">' + audioReport().map(function (r) {
+        return '<li class="sc-' + r[0] + '"><span aria-hidden="true">' + (r[0] === "ok" ? "\u2713" : r[0] === "bad" ? "\u2715" : r[0] === "off" ? "\u25cb" : "\u2022") + '</span>' + esc(r[1]) + '</li>';
+      }).join("") + '</ul><button class="btn small ghost" data-act="sndrecheck">Check again</button>'));
   // protocols
   var ap = activeProtocol(), sets = PS.sets.filter(function (p) { return p.status !== "unpublished"; });
   c += setCard("protocols", "Protocols",
@@ -7224,7 +7255,11 @@ function settingsClick(t, a) {
     case "music": MU.armed = true; S.mupop = !S.mupop; render(); return true;
     case "mutoggle": MU.armed = true; setSet("music", !muOn()); render(); return true;
     case "mupopclose": S.mupop = false; render(); return true;
-    case "sfxtest": var was = SET().sfx; if (!was) setSet("sfx", true); sfx(true); setTimeout(function () { sfx(false); if (!was) setSet("sfx", false); }, 450); return true;
+    case "sfxtest": var was = SET().sfx; if (!was) setSet("sfx", true); sfx(true); setTimeout(function () { sfx(false); if (!was) setSet("sfx", false); render(); }, 450); return true;
+    case "sndrecheck":
+      audioCtx(); AUD.played = Math.max(0, AUD.played - 1);     /* the check itself should not count */
+      try { if (muCtx() && typeof muLoadBuf === "function" && typeof curTrack === "function") muLoadBuf(curTrack()); } catch (e) { AUD.music = "fail"; }
+      setTimeout(render, 700); return true;
     case "exportdata": exportData(); return true;
     case "resetask": S.resetAsk = true; render(); return true;
     case "resetno": S.resetAsk = false; render(); return true;
@@ -7436,8 +7471,9 @@ function muLoadBuf(T) {
   if (!MU.fbufs[T.id]) {
     var c = MU.ctx;
     MU.fbufs[T.id] = fetch(T.src).then(function (r) { if (!r.ok) throw new Error("music " + r.status); return r.arrayBuffer(); })
-      .then(function (ab) { return new Promise(function (res, rej) { var p = c.decodeAudioData(ab, res, rej); if (p && p.catch) p.catch(rej); }); });
-    MU.fbufs[T.id].catch(function () { delete MU.fbufs[T.id]; });
+      .then(function (ab) { return new Promise(function (res, rej) { var p = c.decodeAudioData(ab, res, rej); if (p && p.catch) p.catch(rej); }); })
+      .then(function (buf) { AUD.music = "ok"; return buf; });
+    MU.fbufs[T.id].catch(function () { AUD.music = "fail"; delete MU.fbufs[T.id]; });
   }
   return MU.fbufs[T.id];
 }
@@ -8601,53 +8637,128 @@ function normalsView() {
 /* body map: shared by Everyday Health and the Medical School "Body Systems" tab */
 var BODY_AREAS = ["Head", "Neck", "Chest", "Abdomen", "Pelvis", "Limbs", "Whole body"];
 function bodySVG(sel) {
-  /* hit: an invisible, deliberately fat shape for tapping. The arms are drawn as thin diagonals,
-     so without this the limbs were effectively untappable on a phone (owner, Nov 4 2026). */
-  function z(area, shape, hit) {
-    return '<g class="bzone' + (sel === area ? ' on' : '') + '" data-barea="' + area + '" role="button" tabindex="0" aria-label="' + area + '"><title>' + area + '</title>' +
-      shape + (hit ? '<g class="bhit">' + hit + '</g>' : '') + '</g>';
+  /* ---------- the articulated figure (owner, Nov 4 2026) ----------
+     This used to be six flat shapes. It is now a jointed rig so the body can actually do things:
+     fold over, cross its legs, reach up and hold its head, rub the arm you hit. Each joint is a
+     nested group whose own transform-origin sits at the joint, so a rotation carries everything
+     below it -- turn the shoulder and the forearm and hand come along.
+
+     Two data attributes, on purpose. data-barea is the anatomy area, used for filtering the part
+     list, and is unchanged. data-bpart says which bit was actually touched, so the left arm and
+     the right leg can react differently while both still filter as "Limbs". */
+  var light = '#ffffff', dark = '#000000';
+  /* a limb: drawn hanging from (0,0) so its joint is the top-centre of its own box, with a
+     highlight down one side and shade down the other to give it some roundness */
+  function limb(w, h, rx) {
+    var hw = w / 2;
+    return '<rect class="bmp" x="' + (-hw) + '" y="0" width="' + w + '" height="' + h + '" rx="' + (rx || hw) + '"/>' +
+      '<rect class="bmhl" x="' + (-hw + 1.5) + '" y="2" width="' + (w * 0.3) + '" height="' + (h - 4) + '" rx="' + (w * 0.15) + '" fill="' + light + '" opacity=".22"/>' +
+      '<rect class="bmsh" x="' + (hw - w * 0.3 - 1.5) + '" y="2" width="' + (w * 0.3) + '" height="' + (h - 4) + '" rx="' + (w * 0.15) + '" fill="' + dark + '" opacity=".14"/>';
   }
-  return '<svg class="bodymap" viewBox="0 0 160 300" aria-label="Body map">' +
-    z("Head", '<circle cx="80" cy="30" r="22"/>') +
-    z("Neck", '<rect x="70" y="52" width="20" height="14" rx="4"/>') +
-    z("Chest", '<path d="M44 68 h72 l6 62 h-84z"/>') +
-    z("Abdomen", '<path d="M38 132 h84 l-4 50 h-76z"/>') +
-    z("Pelvis", '<path d="M42 184 h76 l-8 26 h-60z"/>') +
-    z("Limbs", '<path d="M44 70 l-22 70 -6 60 10 2 10 -58 18 -50z M116 70 l22 70 6 60 -10 2 -10 -58 -18 -50z M52 212 h24 l-4 84 h-16z M84 212 h24 l-4 84 h-16z"/>',
-      '<path d="M46 68 L18 140 L10 204 L30 206 L40 146 L60 84 Z M114 68 L142 140 L150 204 L130 206 L120 146 L100 84 Z M48 208 H80 L74 298 H50 Z M80 208 H112 L106 298 H82 Z"/>') +
-    '</svg>';
+  function blob(d) {
+    return '<path class="bmp" d="' + d + '"/>' +
+      '<path class="bmhl" d="' + d + '" fill="url(#bmShade)" stroke="none"/>';
+  }
+  /* a zone: the touchable unit. hit is an invisible, deliberately fat shape for fingers. */
+  function z(area, part, label, inner, hit, cls) {
+    return '<g class="bzone ' + (cls || "") + (sel === area ? ' on' : '') + '" data-barea="' + area + '" data-bpart="' + part + '"' +
+      ' role="button" tabindex="0" aria-label="' + label + '"><title>' + label + '</title>' + inner +
+      (hit ? '<g class="bhit">' + hit + '</g>' : '') + '</g>';
+  }
+  /* arm: shoulder -> upper arm -> elbow -> forearm -> hand */
+  function arm(side) {
+    var X = side === "L" ? 46 : 114, S = side === "L" ? "L" : "R";
+    return '<g transform="translate(' + X + ' 78)"><g class="bmarm bmarm' + S + '">' +
+      limb(15, 50) +
+      '<g transform="translate(0 50)"><g class="bmfore bmfore' + S + '">' +
+        limb(13, 46) +
+        '<g transform="translate(0 46)"><g class="bmhand bmhand' + S + '">' +
+          '<circle class="bmp" cx="0" cy="7" r="8.5"/><circle class="bmhl" cx="-2.5" cy="4.5" r="3.4" fill="' + light + '" opacity=".25"/>' +
+        '</g></g>' +
+      '</g></g>' +
+    '</g></g>';
+  }
+  /* leg: hip -> thigh -> knee -> shin -> foot */
+  function leg(side) {
+    var X = side === "L" ? 67 : 93, S = side;
+    return '<g transform="translate(' + X + ' 206)"><g class="bmleg bmleg' + S + '">' +
+      limb(19, 44) +
+      '<g transform="translate(0 44)"><g class="bmshin bmshin' + S + '">' +
+        limb(16, 40) +
+        '<g transform="translate(0 40)"><g class="bmfoot bmfoot' + S + '">' +
+          '<ellipse class="bmp" cx="' + (side === "L" ? -2 : 2) + '" cy="5" rx="10" ry="5.5"/>' +
+        '</g></g>' +
+      '</g></g>' +
+    '</g></g>';
+  }
+
+  var head =
+    '<g transform="translate(80 54)"><g class="bmhead">' +
+      '<ellipse class="bmp" cx="0" cy="-23" rx="21" ry="23"/>' +
+      '<ellipse class="bmhl" cx="-7" cy="-30" rx="8" ry="9" fill="' + light + '" opacity=".2"/>' +
+      '<ellipse class="bmsh" cx="12" cy="-18" rx="7" ry="12" fill="' + dark + '" opacity=".12"/>' +
+    '</g></g>';
+  var neck = '<g transform="translate(80 66)"><g class="bmneck">' + '<rect class="bmp" x="-9" y="-16" width="18" height="17" rx="6"/>' + '</g></g>';
+
+  return '<svg class="bodymap" viewBox="0 0 160 310" aria-label="Body map">' +
+    '<defs><linearGradient id="bmShade" x1="0" y1="0" x2="1" y2=".35">' +
+      '<stop offset="0" stop-color="' + light + '" stop-opacity=".2"/>' +
+      '<stop offset=".45" stop-color="' + light + '" stop-opacity="0"/>' +
+      '<stop offset="1" stop-color="' + dark + '" stop-opacity=".15"/>' +
+    '</linearGradient></defs>' +
+    '<g class="bmfig">' +
+      /* legs sit behind the torso so a crossed leg reads correctly */
+      z("Limbs", "legL", "Left leg", leg("L"), '<rect x="48" y="200" width="36" height="108" rx="16"/>', "bmzleg") +
+      z("Limbs", "legR", "Right leg", leg("R"), '<rect x="76" y="200" width="36" height="108" rx="16"/>', "bmzleg") +
+      '<g class="bmtorso">' +
+        z("Pelvis", "pelvis", "Pelvis", blob("M46 184 H114 Q116 198 108 212 H52 Q44 198 46 184Z"), '<rect x="44" y="180" width="72" height="36" rx="12"/>') +
+        z("Abdomen", "abdomen", "Abdomen", blob("M44 132 H116 Q118 160 114 186 H46 Q42 160 44 132Z"), '<rect x="42" y="130" width="76" height="56" rx="12"/>') +
+        z("Chest", "chest", "Chest", blob("M44 68 Q80 62 116 68 Q120 102 118 134 H42 Q40 102 44 68Z"), '<rect x="40" y="64" width="80" height="70" rx="14"/>') +
+        z("Limbs", "armL", "Left arm", arm("L"), '<rect x="26" y="70" width="38" height="120" rx="17"/>', "bmzarm") +
+        z("Limbs", "armR", "Right arm", arm("R"), '<rect x="96" y="70" width="38" height="120" rx="17"/>', "bmzarm") +
+        z("Neck", "neck", "Neck", neck, '<rect x="64" y="46" width="32" height="26" rx="10"/>') +
+        z("Head", "head", "Head", head, '<circle cx="80" cy="32" r="27"/>') +
+      '</g>' +
+    '</g></svg>';
 }
 /* ---------- the figure reacts when you tap it (owner, Nov 4 2026) ----------
-   Tap the stomach and he folds over and groans; the head gets a wince and a shake, the chest a
-   heave, the limbs a kick. Each region has its own movement and its own noise, so a tap feels
-   like poking a person rather than selecting a menu item. Reduced motion keeps the sound and
-   drops the movement. */
-var BM_MOVE = {
-  "Head":       { cls: "bm-head",  snd: "creak",  dur: 760 },
-  "Neck":       { cls: "bm-neck",  snd: "creak",  dur: 700 },
-  "Chest":      { cls: "bm-chest", snd: "thump",  dur: 900 },
-  "Abdomen":    { cls: "bm-abd",   snd: "groan",  dur: 1150 },
-  "Pelvis":     { cls: "bm-pelv",  snd: "squish", dur: 820 },
-  "Limbs":      { cls: "bm-limb",  snd: "boing",  dur: 760 },
-  "Whole body": { cls: "bm-all",   snd: "wobble", dur: 980 }
+   Each part has its own noise and its own piece of choreography, driven by a class on the <svg>
+   that the keyframes in index.html hang off. Poke the head and he reaches up and holds it; the
+   throat and he guards it; the groin and he gasps and crosses his legs; an arm and he rubs the
+   one you hit and shakes his head at you; a leg and he hops about holding it.
+   Reduced motion keeps every sound and drops every movement. */
+var BM_RX = {
+  head:    { cls: "rx-head",  snd: "thunk", dur: 1500 },
+  neck:    { cls: "rx-neck",  snd: "gasp",  dur: 1400 },
+  chest:   { cls: "rx-chest", snd: "thump", dur: 1100 },
+  abdomen: { cls: "rx-abd",   snd: "groan", dur: 1700 },
+  pelvis:  { cls: "rx-pelv",  snd: "gasp",  dur: 1700 },
+  armL:    { cls: "rx-armL",  snd: "punch", dur: 1900, then: "whine", thenAt: 280 },
+  armR:    { cls: "rx-armR",  snd: "punch", dur: 1900, then: "whine", thenAt: 280 },
+  legL:    { cls: "rx-legL",  snd: "punch", dur: 2100, then: "cry",   thenAt: 240 },
+  legR:    { cls: "rx-legR",  snd: "punch", dur: 2100, then: "cry",   thenAt: 240 }
 };
-/* react(area, snd): snd overrides the region default, so a part keeps its own noise */
-function bodyReact(area, snd) {
-  var M = BM_MOVE[area] || BM_MOVE["Whole body"];
+/* used when something only knows the anatomy area and not which limb was touched */
+var BM_AREA = { "Head": "head", "Neck": "neck", "Chest": "chest", "Abdomen": "abdomen",
+  "Pelvis": "pelvis", "Limbs": "armL", "Whole body": "chest" };
+var BM_CLASSES = ["rx-head", "rx-neck", "rx-chest", "rx-abd", "rx-pelv", "rx-armL", "rx-armR", "rx-legL", "rx-legR"];
+function bodyReact(area, snd, part) {
+  var key = part && BM_RX[part] ? part : (BM_AREA[area] || "chest");
+  var M = BM_RX[key];
   try { if (typeof anatSnd === "function") anatSnd(snd || M.snd); } catch (e) {}
+  if (M.then) setTimeout(function () { try { anatSnd(M.then); } catch (e) {} }, M.thenAt || 250);
   if (typeof hfxOk === "function" && !hfxOk()) return;      /* reduced motion: the noise alone */
-  /* the figure may not be on screen yet after a re-render, so look again on the next frame */
   var go = function () {
     var figs = document.querySelectorAll(".bodymap");
     for (var i = 0; i < figs.length; i++) (function (f) {
-      f.classList.remove("bm-head", "bm-neck", "bm-chest", "bm-abd", "bm-pelv", "bm-limb", "bm-all");
+      BM_CLASSES.forEach(function (c) { f.classList.remove(c); });
       void f.getBoundingClientRect();                        /* restart the animation on a repeat tap */
       f.classList.add(M.cls);
       if (f.__bmT) clearTimeout(f.__bmT);
-      f.__bmT = setTimeout(function () { f.classList.remove(M.cls); f.__bmT = null; }, M.dur + 60);
-      var z = f.querySelector('[data-barea="' + area + '"]');
+      f.__bmT = setTimeout(function () { f.classList.remove(M.cls); f.__bmT = null; }, M.dur + 80);
+      var z = f.querySelector('[data-bpart="' + key + '"]') || f.querySelector('[data-barea="' + area + '"]');
       if (z) { z.classList.remove("bzhit"); void z.getBoundingClientRect(); z.classList.add("bzhit");
-        setTimeout(function () { z.classList.remove("bzhit"); }, M.dur + 60); }
+        setTimeout(function () { z.classList.remove("bzhit"); }, M.dur + 80); }
     })(figs[i]);
   };
   if (window.requestAnimationFrame) requestAnimationFrame(go); else setTimeout(go, 16);
@@ -8671,7 +8782,7 @@ document.addEventListener("click", function (e) {
   if (d.evtab != null) { S.evTab = d.evtab || null; S.evq = ""; S.pbq = ""; S.pbUse = ""; S.cond = null; S.sick = null; S.breg = null; render(); return window.scrollTo(0, 0); }
   if (d.sick) { S.sick = d.sick; render(); var s = document.querySelector(".sickcard"); if (s) s.scrollIntoView({ block: "start", behavior: SET().motion ? "auto" : "smooth" }); return; }
   if (d.normtab) { S.normTab = d.normtab; return render(); }
-  if (d.barea != null) { S.barea = d.barea; S.breg = null; render(); try { bodyReact(d.barea); } catch (e2) {} return; }
+  if (d.barea != null) { var bp0 = t.getAttribute("data-bpart") || ""; S.barea = d.barea; S.breg = null; render(); try { bodyReact(d.barea, null, bp0); } catch (e2) {} return; }
   if (d.breg) { S.breg = d.breg; render(); var b = document.querySelector(".sickcard"); if (b) b.scrollIntoView({ block: "start", behavior: SET().motion ? "auto" : "smooth" }); }
 });
 document.addEventListener("keydown", function (e) { if ((e.key === "Enter" || e.key === " ") && e.target.dataset && e.target.dataset.barea) { e.preventDefault(); S.barea = e.target.dataset.barea; S.breg = null; render(); } });
@@ -24831,7 +24942,13 @@ var ANAT_SFX = {
   wobble: "a jiggle",
   hum:    "a low drone",
   slosh:  "liquid moving",
-  pop:    "a small pop"
+  pop:    "a small pop",
+  /* the ones the figure needs when you poke it (owner, Nov 4 2026) */
+  thunk:  "a dull metal clang",
+  gasp:   "a sharp offended inhale",
+  punch:  "a body blow",
+  whine:  "a hurt complaint",
+  cry:    "a wavering sob"
 };
 var ASF = audioAlias({});
 function anatCtx() { return audioCtx(); }
@@ -24927,6 +25044,32 @@ function anatSnd(kind) {
       nz(0, 0.3, 0.14, "bandpass", 500, 1500, 1.2);
       nz(0.3, 0.34, 0.13, "bandpass", 1500, 400, 1.2);
       for (i = 0; i < 5; i++) tone("sine", 180 + Math.random() * 180, 110, 0.1 + i * 0.11, 0.1, 0.045);
+    } else if (kind === "thunk") {    /* knuckles on a metal skull: a dull clang with a long ring */
+      nz(0, 0.05, 0.3, "bandpass", 1800, 700, 1.4);
+      tone("triangle", 340, 150, 0, 0.3, 0.2);
+      tone("sine", 196, 190, 0, 1.1, 0.1);
+      tone("sine", 523, 515, 0.01, 0.85, 0.055);
+      tone("sine", 782, 770, 0.01, 0.6, 0.03);
+      tone("square", 88, 60, 0, 0.22, 0.07);
+    } else if (kind === "gasp") {     /* a sharp offended inhale, then a held, scandalised note */
+      nz(0, 0.26, 0.2, "bandpass", 700, 2600, 0.9);
+      tone("sine", 420, 880, 0.02, 0.24, 0.07);
+      tone("sine", 870, 940, 0.26, 0.3, 0.05, 7, 20);
+    } else if (kind === "punch") {    /* a body blow: low thud and a slap on top */
+      tone("sine", 160, 48, 0, 0.22, 0.3);
+      tone("triangle", 90, 40, 0, 0.3, 0.18);
+      nz(0, 0.07, 0.3, "lowpass", 900);
+      nz(0.005, 0.03, 0.18, "highpass", 2600);
+    } else if (kind === "whine") {    /* a hurt, nasal complaint that falls away */
+      tone("sawtooth", 520, 300, 0, 0.55, 0.055, 6.5, 22);
+      tone("sine", 262, 160, 0.02, 0.5, 0.06, 6, 12);
+      tone("sine", 1040, 620, 0, 0.45, 0.018, 6.5, 30);
+    } else if (kind === "cry") {      /* a wavering sob: three catches of breath */
+      [0, 0.26, 0.52].forEach(function (d, k) {
+        tone("sine", 600 - k * 70, 330 - k * 50, d, 0.22, 0.075, 9, 34);
+        tone("triangle", 300 - k * 35, 170 - k * 25, d, 0.2, 0.045, 9, 16);
+        nz(d, 0.07, 0.05, "bandpass", 900, 1700, 1.1);
+      });
     } else {                          /* pop */
       tone("sine", 480, 1300, 0, 0.08, 0.17);
       nz(0, 0.04, 0.1, "highpass", 2200);
@@ -25033,9 +25176,9 @@ document.addEventListener("click", function (e) {
   if (S.tab !== "anatomy") return;
   var t = e.target.closest && e.target.closest(".anatwrap [data-barea]"); if (!t) return;
   e.stopPropagation();
-  var ar = t.getAttribute("data-barea") || "";
+  var ar = t.getAttribute("data-barea") || "", bp = t.getAttribute("data-bpart") || "";
   S.anArea = ar; S.anGrp = ""; S.anId = ""; render(); window.scrollTo(0, 0);
-  try { bodyReact(ar); } catch (e2) {}
+  try { bodyReact(ar, null, bp); } catch (e2) {}
 }, true);
 document.addEventListener("input", function (e) {
   if (!e.target || e.target.id !== "anq") return;

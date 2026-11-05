@@ -1437,28 +1437,152 @@ html[data-motion="reduce"] *,html[data-motion="reduce"] *::before,html[data-moti
 .iapwhy ul{margin:4px 0 0;padding-left:20px;line-height:1.55}
 @media (prefers-reduced-motion:reduce){.iapcard .iapart .sway{animation:none}}
 .bodywrap{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;margin:8px 0}.bodyfig{display:flex;flex-direction:column;align-items:center;gap:6px;width:150px}.bodylist{flex:1;min-width:220px}
-.bodymap{width:130px;height:auto}.bodymap .bzone{cursor:pointer}.bodymap .bzone *{fill:var(--surface);stroke:var(--muted);stroke-width:2;transition:fill .15s}.bodymap .bzone:hover *,.bodymap .bzone:focus *{fill:var(--line)}.bodymap .bzone.on *{fill:var(--ok);stroke:var(--ok)}
-/* the figure reacts to a tap: one movement per region (owner, Nov 4 2026).
-   Transforms are on the <svg> itself so the whole body moves together, with the origin set
-   near the hips so a bend folds forward instead of sliding. */
-.bodymap{transform-origin:50% 68%;will-change:transform}
-.bodymap .bzone.bzhit *{fill:var(--accent);stroke:var(--accent)}
+.bodymap{width:132px;height:auto}
+/* ---------- the articulated figure (owner, Nov 4 2026) ----------
+   Every joint is a nested <g> whose transform-origin sits at the joint itself: transform-box
+   fill-box plus 50% 0 means "the top-centre of my own box", which is exactly where a limb hangs
+   from. A shoulder rotation therefore carries the forearm and hand with it, for free.
+   The whole figure also gets a little real 3D (perspective + rotateX) so a bend folds towards
+   you instead of just squashing. */
+.bodymap{perspective:520px;perspective-origin:50% 70%;overflow:visible}
+.bodymap .bmp{fill:var(--surface-2,var(--surface));stroke:var(--muted);stroke-width:2;transition:fill .15s,stroke .15s}
+.bodymap .bmhl,.bodymap .bmsh{pointer-events:none;stroke:none}
+.bodymap .bzone{cursor:pointer}
+.bodymap .bzone:hover .bmp,.bodymap .bzone:focus .bmp{stroke:var(--ink);stroke-width:2.6}
+/* selected and just-hit are outlines, not fills: a solid fill swallowed the limb's shading and
+   turned an arm into a flat green stick (owner, Nov 4 2026) */
+.bodymap .bzone.on .bmp{stroke:var(--ok);stroke-width:3}
+.bodymap .bzone.on .bmhl{opacity:.1}
+.bodymap .bzone.bzhit .bmp{stroke:var(--accent);stroke-width:3.4}
+.bodymap .bzone.bzhit{filter:drop-shadow(0 0 7px color-mix(in srgb,var(--accent) 65%,transparent))}
 .bodymap .bzone .bhit *{fill:transparent!important;stroke:transparent!important;stroke-width:0!important;pointer-events:all}
-@keyframes bmAbd{0%{transform:none}18%{transform:translateY(5px) rotate(-3deg) scaleY(.9) scaleX(1.05)}38%{transform:translateY(9px) rotate(-11deg) scaleY(.82) scaleX(1.09)}58%{transform:translateY(7px) rotate(-8deg) scaleY(.87) scaleX(1.06)}78%{transform:translateY(3px) rotate(-3deg) scaleY(.95) scaleX(1.02)}100%{transform:none}}
-@keyframes bmHead{0%{transform:none}15%{transform:rotate(5deg) translateY(-2px)}30%{transform:rotate(-6deg)}45%{transform:rotate(4deg)}60%{transform:rotate(-3deg)}80%{transform:rotate(1.5deg)}100%{transform:none}}
-@keyframes bmNeck{0%{transform:none}25%{transform:rotate(9deg) skewX(-3deg)}55%{transform:rotate(-5deg) skewX(2deg)}80%{transform:rotate(2deg)}100%{transform:none}}
-@keyframes bmChest{0%{transform:none}20%{transform:scale(1.07,1.05) translateY(-3px)}40%{transform:scale(.97,.98)}60%{transform:scale(1.05,1.03) translateY(-2px)}80%{transform:scale(.99,.995)}100%{transform:none}}
-@keyframes bmPelv{0%{transform:none}22%{transform:translateX(-6px) rotate(-2.5deg)}50%{transform:translateX(6px) rotate(2.5deg)}74%{transform:translateX(-3px) rotate(-1deg)}100%{transform:none}}
-@keyframes bmLimb{0%{transform:none}20%{transform:skewX(5deg) translateX(3px)}45%{transform:skewX(-6deg) translateX(-3px)}70%{transform:skewX(3deg) translateX(1px)}100%{transform:none}}
-@keyframes bmAll{0%{transform:none}10%{transform:translateX(-2.5px) rotate(-1deg)}22%{transform:translateX(2.5px) rotate(1deg)}34%{transform:translateX(-2px) rotate(-.8deg)}46%{transform:translateX(2px) rotate(.8deg)}58%{transform:translateX(-1.5px)}70%{transform:translateX(1.5px)}85%{transform:translateX(-.6px)}100%{transform:none}}
-.bodymap.bm-abd{animation:bmAbd 1.15s cubic-bezier(.3,.7,.3,1)}
-.bodymap.bm-head{animation:bmHead .76s ease-in-out}
-.bodymap.bm-neck{animation:bmNeck .7s ease-in-out}
-.bodymap.bm-chest{animation:bmChest .9s ease-in-out}
-.bodymap.bm-pelv{animation:bmPelv .82s ease-in-out}
-.bodymap.bm-limb{animation:bmLimb .76s ease-in-out}
-.bodymap.bm-all{animation:bmAll .98s linear}
-@media (prefers-reduced-motion:reduce){.bodymap{animation:none!important}}
+.bodymap .bmfig,.bodymap .bmtorso,.bodymap .bmhead,.bodymap .bmneck,
+.bodymap .bmarm,.bodymap .bmfore,.bodymap .bmhand,
+.bodymap .bmleg,.bodymap .bmshin,.bodymap .bmfoot{transform-box:fill-box;transform-origin:50% 0;will-change:transform}
+.bodymap .bmhead{transform-origin:50% 100%}      /* the head turns on the neck */
+.bodymap .bmtorso{transform-origin:50% 100%}     /* the torso folds at the hips */
+.bodymap .bmfig{transform-origin:50% 92%}        /* the whole body pivots on the feet */
+
+/* --- head: a metal thunk, both hands up to hold it, a wince --- */
+@keyframes bmHeadRecoil{0%,100%{transform:none}12%{transform:translateY(5px) rotate(-7deg)}30%{transform:translateY(3px) rotate(5deg)}50%{transform:translateY(2px) rotate(-3deg)}75%{transform:translateY(1px) rotate(1deg)}}
+@keyframes bmArmUpL{0%,100%{transform:none}22%{transform:rotate(-128deg)}70%{transform:rotate(-132deg)}88%{transform:rotate(-60deg)}}
+@keyframes bmArmUpR{0%,100%{transform:none}22%{transform:rotate(128deg)}70%{transform:rotate(132deg)}88%{transform:rotate(60deg)}}
+@keyframes bmForeUpL{0%,100%{transform:none}24%{transform:rotate(108deg)}70%{transform:rotate(112deg)}88%{transform:rotate(50deg)}}
+@keyframes bmForeUpR{0%,100%{transform:none}24%{transform:rotate(-108deg)}70%{transform:rotate(-112deg)}88%{transform:rotate(-50deg)}}
+@keyframes bmDuck{0%,100%{transform:none}20%{transform:translateY(6px) rotateX(9deg)}60%{transform:translateY(4px) rotateX(6deg)}}
+.bodymap.rx-head .bmhead{animation:bmHeadRecoil 1.5s ease-out}
+.bodymap.rx-head .bmarmL{animation:bmArmUpL 1.5s cubic-bezier(.3,.8,.3,1)}
+.bodymap.rx-head .bmarmR{animation:bmArmUpR 1.5s cubic-bezier(.3,.8,.3,1)}
+.bodymap.rx-head .bmforeL{animation:bmForeUpL 1.5s cubic-bezier(.3,.8,.3,1)}
+.bodymap.rx-head .bmforeR{animation:bmForeUpR 1.5s cubic-bezier(.3,.8,.3,1)}
+.bodymap.rx-head .bmfig{animation:bmDuck 1.5s ease-out}
+
+/* --- throat: one hand up to guard it, chin tucks down --- */
+@keyframes bmGuardArm{0%,100%{transform:none}18%{transform:rotate(-142deg)}72%{transform:rotate(-146deg)}90%{transform:rotate(-64deg)}}
+@keyframes bmGuardFore{0%,100%{transform:none}20%{transform:rotate(122deg)}72%{transform:rotate(126deg)}90%{transform:rotate(56deg)}}
+@keyframes bmTuck{0%,100%{transform:none}22%{transform:rotate(3deg) translateY(4px)}70%{transform:rotate(2deg) translateY(3px)}}
+@keyframes bmShrink{0%,100%{transform:none}25%{transform:translateY(4px) scaleY(.96)}70%{transform:translateY(3px) scaleY(.97)}}
+.bodymap.rx-neck .bmarmL{animation:bmGuardArm 1.4s cubic-bezier(.3,.8,.3,1)}
+.bodymap.rx-neck .bmforeL{animation:bmGuardFore 1.4s cubic-bezier(.3,.8,.3,1)}
+.bodymap.rx-neck .bmhead{animation:bmTuck 1.4s ease-out}
+.bodymap.rx-neck .bmtorso{animation:bmShrink 1.4s ease-out}
+
+/* --- chest: a heave --- */
+@keyframes bmHeave{0%,100%{transform:none}22%{transform:scaleY(1.06) translateY(-3px)}48%{transform:scaleY(.97)}72%{transform:scaleY(1.03) translateY(-1px)}}
+.bodymap.rx-chest .bmtorso{animation:bmHeave 1.1s ease-in-out}
+
+/* --- abdomen: he folds over, properly, and hugs his belly --- */
+@keyframes bmFold{0%,100%{transform:none}
+  22%{transform:rotateX(34deg) rotate(-4deg) translateY(10px)}
+  48%{transform:rotateX(52deg) rotate(-6deg) translateY(16px)}
+  70%{transform:rotateX(44deg) rotate(-5deg) translateY(13px)}
+  88%{transform:rotateX(16deg) translateY(4px)}}
+@keyframes bmHugL{0%,100%{transform:none}30%{transform:rotate(-46deg)}70%{transform:rotate(-50deg)}}
+@keyframes bmHugR{0%,100%{transform:none}30%{transform:rotate(46deg)}70%{transform:rotate(50deg)}}
+@keyframes bmHugForeL{0%,100%{transform:none}30%{transform:rotate(84deg)}70%{transform:rotate(88deg)}}
+@keyframes bmHugForeR{0%,100%{transform:none}30%{transform:rotate(-84deg)}70%{transform:rotate(-88deg)}}
+@keyframes bmHeadDrop{0%,100%{transform:none}30%{transform:rotate(-10deg) translateY(5px)}70%{transform:rotate(-8deg) translateY(4px)}}
+@keyframes bmKneeBend{0%,100%{transform:none}35%{transform:rotate(9deg)}70%{transform:rotate(7deg)}}
+.bodymap.rx-abd .bmtorso{animation:bmFold 1.7s cubic-bezier(.3,.7,.3,1)}
+.bodymap.rx-abd .bmarmL{animation:bmHugL 1.7s ease-out}
+.bodymap.rx-abd .bmarmR{animation:bmHugR 1.7s ease-out}
+.bodymap.rx-abd .bmforeL{animation:bmHugForeL 1.7s ease-out}
+.bodymap.rx-abd .bmforeR{animation:bmHugForeR 1.7s ease-out}
+.bodymap.rx-abd .bmhead{animation:bmHeadDrop 1.7s ease-out}
+.bodymap.rx-abd .bmlegL,.bodymap.rx-abd .bmlegR{animation:bmKneeBend 1.7s ease-out}
+
+/* --- groin: a scandalised gasp, hands straight down, knees together, legs crossed --- */
+@keyframes bmCoverL{0%,100%{transform:none}14%{transform:rotate(-16deg)}70%{transform:rotate(-14deg)}}
+@keyframes bmCoverR{0%,100%{transform:none}14%{transform:rotate(16deg)}70%{transform:rotate(14deg)}}
+@keyframes bmCoverForeL{0%,100%{transform:none}14%{transform:rotate(26deg)}70%{transform:rotate(24deg)}}
+@keyframes bmCoverForeR{0%,100%{transform:none}14%{transform:rotate(-26deg)}70%{transform:rotate(-24deg)}}
+/* the legs genuinely cross over: the thighs swing past each other far enough that the feet swap
+   sides, and the shins kick back the other way so the knees stay together */
+@keyframes bmCrossL{0%,100%{transform:none}18%{transform:rotate(12deg)}38%{transform:rotate(30deg)}74%{transform:rotate(28deg)}}
+@keyframes bmCrossR{0%,100%{transform:none}18%{transform:rotate(-12deg)}38%{transform:rotate(-30deg)}74%{transform:rotate(-28deg)}}
+@keyframes bmCrossShinL{0%,100%{transform:none}22%{transform:rotate(-14deg)}44%{transform:rotate(-34deg)}74%{transform:rotate(-32deg)}}
+@keyframes bmCrossShinR{0%,100%{transform:none}22%{transform:rotate(14deg)}44%{transform:rotate(34deg)}74%{transform:rotate(32deg)}}
+@keyframes bmRecoilBack{0%,100%{transform:none}16%{transform:rotateX(-12deg) translateY(-3px)}42%{transform:rotateX(-8deg)}72%{transform:rotateX(-5deg)}}
+@keyframes bmHeadBack{0%,100%{transform:none}16%{transform:rotate(4deg) translateY(-4px)}60%{transform:rotate(2deg) translateY(-2px)}}
+.bodymap.rx-pelv .bmarmL{animation:bmCoverL 1.7s ease-out}
+.bodymap.rx-pelv .bmarmR{animation:bmCoverR 1.7s ease-out}
+.bodymap.rx-pelv .bmforeL{animation:bmCoverForeL 1.7s ease-out}
+.bodymap.rx-pelv .bmforeR{animation:bmCoverForeR 1.7s ease-out}
+.bodymap.rx-pelv .bmlegL{animation:bmCrossL 1.7s cubic-bezier(.3,.8,.3,1)}
+.bodymap.rx-pelv .bmlegR{animation:bmCrossR 1.7s cubic-bezier(.3,.8,.3,1)}
+.bodymap.rx-pelv .bmshinL{animation:bmCrossShinL 1.7s cubic-bezier(.3,.8,.3,1)}
+.bodymap.rx-pelv .bmshinR{animation:bmCrossShinR 1.7s cubic-bezier(.3,.8,.3,1)}
+.bodymap.rx-pelv .bmtorso{animation:bmRecoilBack 1.7s ease-out}
+.bodymap.rx-pelv .bmhead{animation:bmHeadBack 1.7s ease-out}
+
+/* --- an arm: he flinches, then rubs the one you hit and shakes his head at you --- */
+@keyframes bmHurtArmL{0%,100%{transform:none}8%{transform:rotate(14deg)}22%{transform:rotate(-26deg)}70%{transform:rotate(-24deg)}}
+@keyframes bmHurtArmR{0%,100%{transform:none}8%{transform:rotate(-14deg)}22%{transform:rotate(26deg)}70%{transform:rotate(24deg)}}
+/* the other arm comes across and rubs it, back and forth */
+@keyframes bmRubArmR{0%,100%{transform:none}20%{transform:rotate(44deg)}70%{transform:rotate(42deg)}}
+@keyframes bmRubArmL{0%,100%{transform:none}20%{transform:rotate(-44deg)}70%{transform:rotate(-42deg)}}
+@keyframes bmRubForeR{0%{transform:none}18%{transform:rotate(-96deg)}
+  32%{transform:rotate(-82deg)}44%{transform:rotate(-102deg)}56%{transform:rotate(-84deg)}68%{transform:rotate(-100deg)}82%{transform:rotate(-90deg)}100%{transform:none}}
+@keyframes bmRubForeL{0%{transform:none}18%{transform:rotate(96deg)}
+  32%{transform:rotate(82deg)}44%{transform:rotate(102deg)}56%{transform:rotate(84deg)}68%{transform:rotate(100deg)}82%{transform:rotate(90deg)}100%{transform:none}}
+@keyframes bmHeadShake{0%,18%{transform:none}30%{transform:rotate(-9deg)}44%{transform:rotate(9deg)}58%{transform:rotate(-8deg)}72%{transform:rotate(7deg)}86%{transform:rotate(-3deg)}100%{transform:none}}
+@keyframes bmFlinch{0%,100%{transform:none}8%{transform:translateX(4px) rotate(1.5deg)}20%{transform:translateX(-3px) rotate(-1deg)}36%{transform:translateX(1px)}}
+.bodymap.rx-armL .bmarmL{animation:bmHurtArmL 1.9s ease-out}
+.bodymap.rx-armL .bmarmR{animation:bmRubArmR 1.9s ease-out}
+.bodymap.rx-armL .bmforeR{animation:bmRubForeR 1.9s ease-in-out}
+.bodymap.rx-armR .bmarmR{animation:bmHurtArmR 1.9s ease-out}
+.bodymap.rx-armR .bmarmL{animation:bmRubArmL 1.9s ease-out}
+.bodymap.rx-armR .bmforeL{animation:bmRubForeL 1.9s ease-in-out}
+.bodymap.rx-armL .bmhead,.bodymap.rx-armR .bmhead{animation:bmHeadShake 1.9s ease-in-out}
+.bodymap.rx-armL .bmfig,.bodymap.rx-armR .bmfig{animation:bmFlinch 1.9s ease-out}
+
+/* --- a leg: he hops up and down on the other one, holding the sore one --- */
+@keyframes bmHop{0%{transform:none}
+  14%{transform:translateY(-16px)}24%{transform:translateY(0)}
+  38%{transform:translateY(-13px)}48%{transform:translateY(0)}
+  62%{transform:translateY(-9px)}72%{transform:translateY(0)}
+  84%{transform:translateY(-4px)}100%{transform:none}}
+@keyframes bmLiftLegL{0%,100%{transform:none}16%{transform:rotate(-34deg)}76%{transform:rotate(-32deg)}}
+@keyframes bmLiftLegR{0%,100%{transform:none}16%{transform:rotate(34deg)}76%{transform:rotate(32deg)}}
+@keyframes bmLiftShinL{0%,100%{transform:none}16%{transform:rotate(66deg)}76%{transform:rotate(62deg)}}
+@keyframes bmLiftShinR{0%,100%{transform:none}16%{transform:rotate(-66deg)}76%{transform:rotate(-62deg)}}
+@keyframes bmGrabArmL{0%,100%{transform:none}18%{transform:rotate(-34deg)}76%{transform:rotate(-32deg)}}
+@keyframes bmGrabArmR{0%,100%{transform:none}18%{transform:rotate(34deg)}76%{transform:rotate(32deg)}}
+@keyframes bmGrabForeL{0%,100%{transform:none}18%{transform:rotate(74deg)}76%{transform:rotate(70deg)}}
+@keyframes bmGrabForeR{0%,100%{transform:none}18%{transform:rotate(-74deg)}76%{transform:rotate(-70deg)}}
+@keyframes bmLeanFwd{0%,100%{transform:none}20%{transform:rotateX(20deg) translateY(6px)}76%{transform:rotateX(17deg) translateY(5px)}}
+.bodymap.rx-legL .bmfig,.bodymap.rx-legR .bmfig{animation:bmHop 2.1s cubic-bezier(.3,.6,.4,1)}
+.bodymap.rx-legL .bmlegL{animation:bmLiftLegL 2.1s ease-out}
+.bodymap.rx-legL .bmshinL{animation:bmLiftShinL 2.1s ease-out}
+.bodymap.rx-legL .bmarmL{animation:bmGrabArmL 2.1s ease-out}
+.bodymap.rx-legL .bmforeL{animation:bmGrabForeL 2.1s ease-out}
+.bodymap.rx-legR .bmlegR{animation:bmLiftLegR 2.1s ease-out}
+.bodymap.rx-legR .bmshinR{animation:bmLiftShinR 2.1s ease-out}
+.bodymap.rx-legR .bmarmR{animation:bmGrabArmR 2.1s ease-out}
+.bodymap.rx-legR .bmforeR{animation:bmGrabForeR 2.1s ease-out}
+.bodymap.rx-legL .bmtorso,.bodymap.rx-legR .bmtorso{animation:bmLeanFwd 2.1s ease-out}
+
+@media (prefers-reduced-motion:reduce){.bodymap *{animation:none!important}}
 .dcw{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0}.dcw .pinput{width:100px}
 .dcgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px;margin:10px 0}.dccard{border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:5px;background:var(--surface)}
 .dctop{display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap}.dcname{background:none;border:0;padding:0;font:inherit;font-weight:800;font-size:1.05rem;color:var(--ink);cursor:pointer;text-align:left}.dcrole{font-size:12px;color:var(--muted)}
@@ -1491,6 +1615,12 @@ html[data-motion="reduce"] *,html[data-motion="reduce"] *::before,html[data-moti
 .pokebub.out{opacity:0;transition:opacity .3s}
 @keyframes pokeIn{from{opacity:0;transform:translate(-50%,-90%) scale(.9)}to{opacity:1;transform:translate(-50%,-100%) scale(1)}}
 @media (prefers-reduced-motion:reduce){.it[class*="pk-"]{animation:none!important}}
+.sndchk{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px;font-size:13px;line-height:1.4;max-width:46ch}
+.sndchk li{display:flex;gap:7px;align-items:flex-start}
+.sndchk li span{flex:0 0 auto;font-weight:800;width:1em;text-align:center}
+.sndchk .sc-ok span{color:var(--ok,#19b36b)}.sndchk .sc-bad span{color:var(--bad,#e5484d)}
+.sndchk .sc-off span,.sndchk .sc-info span,.sndchk .sc-wait span{color:var(--muted)}
+.sndchk .sc-info,.sndchk .sc-wait{color:var(--muted)}
 .bugcard .mystery{width:110px;height:110px;border-radius:50%;background:var(--surface-2);display:grid;place-items:center;font:800 44px var(--f-display);color:var(--muted)}
 .foot{padding-bottom:90px}
 .tierhead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:22px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--line)}.tierhead h3{font-family:var(--f-display);font-size:20px;margin:0}.tierhead .tierown{margin-left:auto;font-weight:800;font-size:13px;color:var(--muted)}.tierhead.r-legendary{border-color:#e0b43a}.tierhead.r-epic{border-color:var(--flight)}.tierhead.r-rare{border-color:var(--aemt)}
