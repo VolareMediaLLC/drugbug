@@ -18,8 +18,12 @@
 a{color:var(--accent)}.wrap{max-width:900px;margin:0 auto;padding:0 20px}
 header.top{display:flex;align-items:center;gap:12px;padding:18px 0}header.top img{width:40px;height:40px;border-radius:10px}header.top b{font-size:22px}
 header.top nav{margin-left:auto;display:flex;gap:14px;flex-wrap:wrap;font-size:15px;align-items:center}
-.instnav{font-weight:800;color:#0f766e!important;border:1.5px solid #14b8a6;border-radius:999px;padding:4px 12px;text-decoration:none}
-.btn.inst{background:#0f766e}
+.instnav{color:inherit!important;opacity:.75;text-decoration:none!important;padding-left:14px;border-left:1px solid rgba(127,127,127,.35)}.instnav:hover{opacity:1;text-decoration:underline!important}
+.portal{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-top:26px;padding:22px 24px;border-radius:14px;border:1px solid rgba(127,127,127,.28);background:rgba(127,127,127,.06)}
+.portaltx{flex:1 1 320px;min-width:0}.portalk{display:block;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:.65;margin-bottom:4px}
+.portal h3{margin:0 0 6px;font-size:19px}.portal p{margin:0;opacity:.8;font-size:15px;line-height:1.5}
+.portalbtn{flex:none;display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border-radius:10px;border:1.5px solid currentColor;color:inherit;font-weight:700;text-decoration:none;font-size:15px}
+.portalbtn:hover{background:rgba(127,127,127,.12)}
 .hero{display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center;padding:30px 0}.hero img{width:180px;height:180px;border-radius:40px;box-shadow:0 10px 40px rgba(0,0,0,.35)}
 .hero h1{font-size:clamp(34px,6vw,54px);line-height:1.05;margin:0 0 10px}.hero p{color:var(--muted);margin:0 0 16px;font-size:19px}
 .btn.ghost{background:transparent;border:2px solid var(--accent);color:var(--accent);margin-left:8px}.soon{display:inline-block;margin-left:12px;color:var(--muted);font-weight:700}
@@ -65,9 +69,9 @@ details{background:var(--surface);border:1px solid var(--line);border-radius:12p
 .wnfoot{margin:16px 0 0}
 @media (max-width:640px){.hero .ctas{justify-content:center}.whatsnew{padding:16px}}
 </style></head>
-<body><div class="wrap"><header class="top"><a href="index.html"><img src="icon.png" alt=""></a><b>DrugBug</b><nav><a href="index.html">Home</a><a href="app/">Try it free</a><a href="support.html">Support</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="disclaimers.html">Disclaimers</a><a class="instnav" href="instructor/">Instructor sign-in</a></nav></header><section class="hero"><img src="icon.png" alt="DrugBug app icon"><div><h1>Learn your meds by scope.</h1>
+<body><div class="wrap"><header class="top"><a href="index.html"><img src="icon.png" alt=""></a><b>DrugBug</b><nav><a href="index.html">Home</a><a href="app/">Try it free</a><a href="support.html">Support</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="disclaimers.html">Disclaimers</a><a class="instnav" href="instructor/">Educator login</a></nav></header><section class="hero"><img src="icon.png" alt="DrugBug app icon"><div><h1>Learn your meds by scope.</h1>
 <p>DrugBug is a medication study app for EMS, nursing, medical school and imaging students, built by a Paramedic, FP-C.</p>
-<div class="ctas"><a class="btn" href="app/">Try it free in your browser</a> <a class="btn inst" href="instructor/">Instructor sign-in</a> <a class="btn appstore" href="https://apps.apple.com/us/app/drugbug/id6820225080" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M16.4 12.7c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.2-2.8.8-3.6.8-.7 0-1.9-.8-3.1-.8-1.6 0-3.1.9-3.9 2.4-1.7 2.9-.4 7.2 1.2 9.5.8 1.1 1.7 2.4 2.9 2.4 1.2 0 1.6-.8 3-.8s1.8.8 3.1.7c1.3 0 2.1-1.1 2.8-2.3.9-1.3 1.3-2.6 1.3-2.6s-2.3-.9-2.3-4zM14.2 5.9c.6-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.4-.6.7-1.1 1.8-1 2.9 1.1.1 2.2-.6 2.8-1.3z"/></svg><span><small>Download on the</small>App Store</span></a></div>
+<div class="ctas"><a class="btn" href="app/">Try it free in your browser</a> <a class="btn appstore" href="https://apps.apple.com/us/app/drugbug/id6820225080" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M16.4 12.7c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.2-2.8.8-3.6.8-.7 0-1.9-.8-3.1-.8-1.6 0-3.1.9-3.9 2.4-1.7 2.9-.4 7.2 1.2 9.5.8 1.1 1.7 2.4 2.9 2.4 1.2 0 1.6-.8 3-.8s1.8.8 3.1.7c1.3 0 2.1-1.1 2.8-2.3.9-1.3 1.3-2.6 1.3-2.6s-2.3-.9-2.3-4zM14.2 5.9c.6-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.4-.6.7-1.1 1.8-1 2.9 1.1.1 2.2-.6 2.8-1.3z"/></svg><span><small>Download on the</small>App Store</span></a></div>
 <p class="hnote">On iPhone, get it from the App Store. On anything else, nothing to install. Start without an account &mdash; make one when you want your bug, your sticks and everything you learn to follow you to your phone.</p></div></section>
 
 <section class="whatsnew" aria-labelledby="wn-h"><span class="wnkick">Coming in the next update</span><h2 id="wn-h">What's new in DrugBug</h2>
@@ -96,7 +100,8 @@ details{background:var(--surface);border:1px solid var(--line);border-radius:12p
 <section class="schools"><h2>Schools, programs and agencies</h2>
 <p>DrugBug covers EMS, nursing, medical school and imaging in one app, so a program can put every student on the same tool. Group access is priced per seat and billed annually.</p>
 <ul class="perks"><li>Every route and every level, for every student</li><li>One tool across a whole curriculum instead of one per course</li><li>Questions levelled to each student's role, so a first-year and a senior get different work</li></ul>
-<p><a class="btn" href="mailto:VolareMediaLLC@gmail.com?subject=DrugBug%20for%20our%20program">Ask about group access</a> <a class="btn inst" href="instructor/">Instructor sign-in</a></p></section>
+<p><a class="btn" href="mailto:VolareMediaLLC@gmail.com?subject=DrugBug%20for%20our%20program">Ask about group access</a></p>
+<div class="portal"><div class="portaltx"><span class="portalk">Instructor portal</span><h3>Already running DrugBug with a class?</h3><p>Sign in to issue anonymous class keys, print key sheets and see class progress by medication system. No student names are stored.</p></div><a class="portalbtn" href="instructor/">Sign in to the instructor portal <span aria-hidden="true">&rarr;</span></a></div></section>
 
 <section class="about"><div class="abgrid"><img src="adam.jpg" alt="Adam, the Paramedic who built DrugBug" loading="lazy" width="900" height="1125">
 <div><h2>Who makes this</h2>
@@ -118,4 +123,4 @@ details{background:var(--surface);border:1px solid var(--line);border-radius:12p
 <footer><p>Educational use only. Not for clinical decision-making or patient care. Not a medical device.</p>
 <p>Not affiliated with or endorsed by NREMT, NCSBN, FSMB/NBME, ARRT or AHA.</p>
 <p>Built by a Paramedic, FP-C. &copy; Volare Media LLC &middot; <a href="mailto:VolareMediaLLC@gmail.com">VolareMediaLLC@gmail.com</a></p>
-<p><a href="index.html">Home</a> &middot; <a href="app/">Try it free</a> &middot; <a href="support.html">Support</a> &middot; <a href="privacy.html">Privacy</a> &middot; <a href="terms.html">Terms</a> &middot; <a href="disclaimers.html">Disclaimers</a></p></footer></div></body></html>
+<p><a href="index.html">Home</a> &middot; <a href="app/">Try it free</a> &middot; <a href="support.html">Support</a> &middot; <a href="privacy.html">Privacy</a> &middot; <a href="instructor/">Educator login</a> &middot; <a href="terms.html">Terms</a> &middot; <a href="disclaimers.html">Disclaimers</a></p></footer></div></body></html>
