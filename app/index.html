@@ -1413,6 +1413,27 @@ html[data-motion="reduce"] *,html[data-motion="reduce"] *::before,html[data-moti
 @media (prefers-reduced-motion:reduce){.iapcard .iapart .sway{animation:none}}
 .bodywrap{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;margin:8px 0}.bodyfig{display:flex;flex-direction:column;align-items:center;gap:6px;width:150px}.bodylist{flex:1;min-width:220px}
 .bodymap{width:130px;height:auto}.bodymap .bzone{cursor:pointer}.bodymap .bzone *{fill:var(--surface);stroke:var(--muted);stroke-width:2;transition:fill .15s}.bodymap .bzone:hover *,.bodymap .bzone:focus *{fill:var(--line)}.bodymap .bzone.on *{fill:var(--ok);stroke:var(--ok)}
+/* the figure reacts to a tap: one movement per region (owner, Nov 4 2026).
+   Transforms are on the <svg> itself so the whole body moves together, with the origin set
+   near the hips so a bend folds forward instead of sliding. */
+.bodymap{transform-origin:50% 68%;will-change:transform}
+.bodymap .bzone.bzhit *{fill:var(--accent);stroke:var(--accent)}
+.bodymap .bzone .bhit *{fill:transparent!important;stroke:transparent!important;stroke-width:0!important;pointer-events:all}
+@keyframes bmAbd{0%{transform:none}18%{transform:translateY(5px) rotate(-3deg) scaleY(.9) scaleX(1.05)}38%{transform:translateY(9px) rotate(-11deg) scaleY(.82) scaleX(1.09)}58%{transform:translateY(7px) rotate(-8deg) scaleY(.87) scaleX(1.06)}78%{transform:translateY(3px) rotate(-3deg) scaleY(.95) scaleX(1.02)}100%{transform:none}}
+@keyframes bmHead{0%{transform:none}15%{transform:rotate(5deg) translateY(-2px)}30%{transform:rotate(-6deg)}45%{transform:rotate(4deg)}60%{transform:rotate(-3deg)}80%{transform:rotate(1.5deg)}100%{transform:none}}
+@keyframes bmNeck{0%{transform:none}25%{transform:rotate(9deg) skewX(-3deg)}55%{transform:rotate(-5deg) skewX(2deg)}80%{transform:rotate(2deg)}100%{transform:none}}
+@keyframes bmChest{0%{transform:none}20%{transform:scale(1.07,1.05) translateY(-3px)}40%{transform:scale(.97,.98)}60%{transform:scale(1.05,1.03) translateY(-2px)}80%{transform:scale(.99,.995)}100%{transform:none}}
+@keyframes bmPelv{0%{transform:none}22%{transform:translateX(-6px) rotate(-2.5deg)}50%{transform:translateX(6px) rotate(2.5deg)}74%{transform:translateX(-3px) rotate(-1deg)}100%{transform:none}}
+@keyframes bmLimb{0%{transform:none}20%{transform:skewX(5deg) translateX(3px)}45%{transform:skewX(-6deg) translateX(-3px)}70%{transform:skewX(3deg) translateX(1px)}100%{transform:none}}
+@keyframes bmAll{0%{transform:none}10%{transform:translateX(-2.5px) rotate(-1deg)}22%{transform:translateX(2.5px) rotate(1deg)}34%{transform:translateX(-2px) rotate(-.8deg)}46%{transform:translateX(2px) rotate(.8deg)}58%{transform:translateX(-1.5px)}70%{transform:translateX(1.5px)}85%{transform:translateX(-.6px)}100%{transform:none}}
+.bodymap.bm-abd{animation:bmAbd 1.15s cubic-bezier(.3,.7,.3,1)}
+.bodymap.bm-head{animation:bmHead .76s ease-in-out}
+.bodymap.bm-neck{animation:bmNeck .7s ease-in-out}
+.bodymap.bm-chest{animation:bmChest .9s ease-in-out}
+.bodymap.bm-pelv{animation:bmPelv .82s ease-in-out}
+.bodymap.bm-limb{animation:bmLimb .76s ease-in-out}
+.bodymap.bm-all{animation:bmAll .98s linear}
+@media (prefers-reduced-motion:reduce){.bodymap{animation:none!important}}
 .dcw{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0}.dcw .pinput{width:100px}
 .dcgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px;margin:10px 0}.dccard{border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:5px;background:var(--surface)}
 .dctop{display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap}.dcname{background:none;border:0;padding:0;font:inherit;font-weight:800;font-size:1.05rem;color:var(--ink);cursor:pointer;text-align:left}.dcrole{font-size:12px;color:var(--muted)}

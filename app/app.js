@@ -6735,12 +6735,27 @@ function megaSecs(step) { return step.secs * megaFactor(); }
 function megaTimed() { return SET().megaTimer !== "off"; }
 function voiceRate() { return { slow: 0.6, normal: 0.85, fast: 1.1 }[SET().voiceRate] || 0.85; }
 /* sound effects (generated tones, no files) */
-var SFX = { ctx: null };
+/* ---------- one AudioContext for the whole app ----------
+   There used to be five (effects, music, anatomy, transitions, voices). Browsers cap how many a
+   page may hold (Safari especially), and each one needs its own unlock inside a real user gesture
+   — only the music context was ever being unlocked, so whichever contexts happened to be created
+   outside a tap stayed suspended and silent for the rest of the session. One context, unlocked
+   once, and every sound in the app rides on it. (owner asked why sounds were missing, Nov 4 2026) */
+var AUD = { ctx: null, warned: false };
+function audioCtx() {
+  var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
+  if (!AUD.ctx) { try { AUD.ctx = new AC(); } catch (e) { return null; } }
+  if (AUD.ctx.state === "suspended") { try { var r = AUD.ctx.resume(); if (r && r.catch) r.catch(function () {}); } catch (e) {} }
+  return AUD.ctx;
+}
+/* every context holder below is a view onto the one above, so old code reading .ctx still works */
+function audioAlias(o) { try { Object.defineProperty(o, "ctx", { get: audioCtx, set: function () {}, configurable: true }); } catch (e) { o.ctx = null; } return o; }
+var SFX = audioAlias({});
 function sfx(ok) {
   if (!SET().sfx) return;
   try {
-    var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
-    var c = SFX.ctx || (SFX.ctx = new AC()), t = c.currentTime;
+    var c = audioCtx(); if (!c) return;
+    var t = c.currentTime;
     (ok ? [660, 880] : [330, 247]).forEach(function (f, i) {
       var o = c.createOscillator(), g = c.createGain(); o.type = ok ? "sine" : "triangle"; o.frequency.value = f;
       g.gain.setValueAtTime(0.0001, t + i * 0.11); g.gain.exponentialRampToValueAtTime(0.18, t + i * 0.11 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.11 + 0.16);
@@ -6984,7 +6999,7 @@ document.addEventListener("visibilitychange", function () { if (document.hidden)
 /* ---------- Background music: recorded lo-fi loops in music/*.mp3 ----------
    Oct 28, 2026: the old WebAudio synth tracks, holiday synth tracks and synthesized bug ambience were removed to save space
    (archived in tools/music-synth-archive.js). Tracks are made offline with tools/musicgen. */
-var MU = { ctx: null, master: null, timer: null, playing: false, armed: false };
+var MU = audioAlias({ master: null, timer: null, playing: false, armed: false });
 var MU_VOL = { quiet: 30, medium: 60, loud: 100 };
 function muOn() { return SET().music !== false && (typeof funOn !== "function" || funOn()) && !!agreeRec(); }
 /* Oct 27, 2026: all tracks are now recorded lo-fi loops (made offline from sampled instruments, see /home/claude/music),
@@ -7041,15 +7056,15 @@ function muPreview(id) {
 function muLevel() { var v = SET().musicVol; if (typeof v === "string") v = MU_VOL[v] || 40; if (v == null || isNaN(+v)) v = 40; return Math.max(0, Math.min(100, +v)); }
 function muVol() { return muLevel() / 100 * 2.6; }
 function muCtx() {
-  var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
-  if (!MU.ctx) {
-    MU.ctx = new AC(); var c = MU.ctx; MU.master = c.createGain(); MU.master.gain.value = 0;
+  var c0 = audioCtx(); if (!c0) return null;
+  if (!MU.master || MU.outCtx !== c0) {
+    MU.outCtx = c0; var c = c0; MU.master = c.createGain(); MU.master.gain.value = 0;
     /* recorded tracks are already mixed: the compressor only catches peaks */
     var comp = c.createDynamicsCompressor(); comp.threshold.value = -4; comp.ratio.value = 4; comp.knee.value = 20; MU.comp = comp;
     MU.fileOut = c.createGain(); MU.fileOut.gain.value = 0.6; MU.fileOut.connect(MU.master);
     MU.master.connect(comp); comp.connect(c.destination);
   }
-  return MU.ctx;
+  return c0;
 }
 function muStart(force) {
   if ((!muOn() && !force) || document.hidden) return;
@@ -7063,7 +7078,13 @@ function muStart(force) {
     MU.timer = setInterval(muTick, 250); muTick();
   } catch (e) { MU.playing = false; clearInterval(MU.timer); MU.timer = null; }
 }
-function muStop() { clearInterval(MU.timer); MU.timer = null; MU.playing = false; try { if (MU.ctx && MU.ctx.state === "running") MU.ctx.suspend(); } catch (e) {} }
+function muStop() {
+  clearInterval(MU.timer); MU.timer = null; MU.playing = false;
+  /* the context is shared with every sound effect now, so it stays running: just close the
+     music bus. Suspending it here used to mute the whole app until the next tap. */
+  try { var c = MU.ctx; if (c && MU.master) { MU.master.gain.cancelScheduledValues(c.currentTime); MU.master.gain.setTargetAtTime(0.0001, c.currentTime, 0.08); } } catch (e) {}
+  try { if (MU.file) muFileStop(); } catch (e) {}
+}
 /* called from a real tap (the start-up notice, the agreement button, any first touch): unlock audio and start if music is on */
 function muGesture() {
   MU.armed = true;
@@ -7075,7 +7096,7 @@ function muSync() { if (muOn() && MU.armed && muLevel() > 0) muStart(); else muS
 function muIcon() { return '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M9 18.5a2.5 2.5 0 1 1-2-2.45V5l11-2v12.5a2.5 2.5 0 1 1-2-2.45V7.1L9 8.4z"/>' + (muOn() ? '' : '<path d="M3 3l18 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>') + '</svg>'; }
 function musicBtn() { if (typeof funOn === "function" && !funOn()) return ""; return '<button class="theme-btn musicbtn" data-act="music" aria-pressed="' + muOn() + '" aria-label="Background music" title="Background music">' + muIcon() + '</button>'; }
 /* browsers only allow sound after a tap, so start on the first interaction */
-["pointerdown", "keydown", "touchend", "click"].forEach(function (ev) { document.addEventListener(ev, function () { if (!MU.playing || (MU.ctx && MU.ctx.state !== "running")) muGesture(); }, { passive: true, capture: true }); });
+["pointerdown", "keydown", "touchend", "click"].forEach(function (ev) { document.addEventListener(ev, function () { audioCtx(); if (!MU.playing || (MU.ctx && MU.ctx.state !== "running")) muGesture(); }, { passive: true, capture: true }); });
 document.addEventListener("visibilitychange", function () { if (document.hidden) muStop(); else if (MU.armed) muSync(); });
 window.addEventListener("pageshow", function () { if (MU.armed && !document.hidden) muSync(); });
 /* quick volume popover from the top-bar note button */
@@ -8267,15 +8288,56 @@ function normalsView() {
 /* body map: shared by Everyday Health and the Medical School "Body Systems" tab */
 var BODY_AREAS = ["Head", "Neck", "Chest", "Abdomen", "Pelvis", "Limbs", "Whole body"];
 function bodySVG(sel) {
-  function z(area, shape) { return '<g class="bzone' + (sel === area ? ' on' : '') + '" data-barea="' + area + '" role="button" tabindex="0" aria-label="' + area + '"><title>' + area + '</title>' + shape + '</g>'; }
+  /* hit: an invisible, deliberately fat shape for tapping. The arms are drawn as thin diagonals,
+     so without this the limbs were effectively untappable on a phone (owner, Nov 4 2026). */
+  function z(area, shape, hit) {
+    return '<g class="bzone' + (sel === area ? ' on' : '') + '" data-barea="' + area + '" role="button" tabindex="0" aria-label="' + area + '"><title>' + area + '</title>' +
+      shape + (hit ? '<g class="bhit">' + hit + '</g>' : '') + '</g>';
+  }
   return '<svg class="bodymap" viewBox="0 0 160 300" aria-label="Body map">' +
     z("Head", '<circle cx="80" cy="30" r="22"/>') +
     z("Neck", '<rect x="70" y="52" width="20" height="14" rx="4"/>') +
     z("Chest", '<path d="M44 68 h72 l6 62 h-84z"/>') +
     z("Abdomen", '<path d="M38 132 h84 l-4 50 h-76z"/>') +
     z("Pelvis", '<path d="M42 184 h76 l-8 26 h-60z"/>') +
-    z("Limbs", '<path d="M44 70 l-22 70 -6 60 10 2 10 -58 18 -50z M116 70 l22 70 6 60 -10 2 -10 -58 -18 -50z M52 212 h24 l-4 84 h-16z M84 212 h24 l-4 84 h-16z"/>') +
+    z("Limbs", '<path d="M44 70 l-22 70 -6 60 10 2 10 -58 18 -50z M116 70 l22 70 6 60 -10 2 -10 -58 -18 -50z M52 212 h24 l-4 84 h-16z M84 212 h24 l-4 84 h-16z"/>',
+      '<path d="M46 68 L18 140 L10 204 L30 206 L40 146 L60 84 Z M114 68 L142 140 L150 204 L130 206 L120 146 L100 84 Z M48 208 H80 L74 298 H50 Z M80 208 H112 L106 298 H82 Z"/>') +
     '</svg>';
+}
+/* ---------- the figure reacts when you tap it (owner, Nov 4 2026) ----------
+   Tap the stomach and he folds over and groans; the head gets a wince and a shake, the chest a
+   heave, the limbs a kick. Each region has its own movement and its own noise, so a tap feels
+   like poking a person rather than selecting a menu item. Reduced motion keeps the sound and
+   drops the movement. */
+var BM_MOVE = {
+  "Head":       { cls: "bm-head",  snd: "creak",  dur: 760 },
+  "Neck":       { cls: "bm-neck",  snd: "creak",  dur: 700 },
+  "Chest":      { cls: "bm-chest", snd: "thump",  dur: 900 },
+  "Abdomen":    { cls: "bm-abd",   snd: "groan",  dur: 1150 },
+  "Pelvis":     { cls: "bm-pelv",  snd: "squish", dur: 820 },
+  "Limbs":      { cls: "bm-limb",  snd: "boing",  dur: 760 },
+  "Whole body": { cls: "bm-all",   snd: "wobble", dur: 980 }
+};
+/* react(area, snd): snd overrides the region default, so a part keeps its own noise */
+function bodyReact(area, snd) {
+  var M = BM_MOVE[area] || BM_MOVE["Whole body"];
+  try { if (typeof anatSnd === "function") anatSnd(snd || M.snd); } catch (e) {}
+  if (typeof hfxOk === "function" && !hfxOk()) return;      /* reduced motion: the noise alone */
+  /* the figure may not be on screen yet after a re-render, so look again on the next frame */
+  var go = function () {
+    var figs = document.querySelectorAll(".bodymap");
+    for (var i = 0; i < figs.length; i++) (function (f) {
+      f.classList.remove("bm-head", "bm-neck", "bm-chest", "bm-abd", "bm-pelv", "bm-limb", "bm-all");
+      void f.getBoundingClientRect();                        /* restart the animation on a repeat tap */
+      f.classList.add(M.cls);
+      if (f.__bmT) clearTimeout(f.__bmT);
+      f.__bmT = setTimeout(function () { f.classList.remove(M.cls); f.__bmT = null; }, M.dur + 60);
+      var z = f.querySelector('[data-barea="' + area + '"]');
+      if (z) { z.classList.remove("bzhit"); void z.getBoundingClientRect(); z.classList.add("bzhit");
+        setTimeout(function () { z.classList.remove("bzhit"); }, M.dur + 60); }
+    })(figs[i]);
+  };
+  if (window.requestAnimationFrame) requestAnimationFrame(go); else setTimeout(go, 16);
 }
 function bodyView() {
   var B = DB.BODY || [], area = S.barea || "", cur = S.breg && B.filter(function (r) { return r.id === S.breg; })[0];
@@ -8296,7 +8358,7 @@ document.addEventListener("click", function (e) {
   if (d.evtab != null) { S.evTab = d.evtab || null; S.evq = ""; S.pbq = ""; S.pbUse = ""; S.cond = null; S.sick = null; S.breg = null; render(); return window.scrollTo(0, 0); }
   if (d.sick) { S.sick = d.sick; render(); var s = document.querySelector(".sickcard"); if (s) s.scrollIntoView({ block: "start", behavior: SET().motion ? "auto" : "smooth" }); return; }
   if (d.normtab) { S.normTab = d.normtab; return render(); }
-  if (d.barea != null) { S.barea = d.barea; S.breg = null; return render(); }
+  if (d.barea != null) { S.barea = d.barea; S.breg = null; render(); try { bodyReact(d.barea); } catch (e2) {} return; }
   if (d.breg) { S.breg = d.breg; render(); var b = document.querySelector(".sickcard"); if (b) b.scrollIntoView({ block: "start", behavior: SET().motion ? "auto" : "smooth" }); }
 });
 document.addEventListener("keydown", function (e) { if ((e.key === "Enter" || e.key === " ") && e.target.dataset && e.target.dataset.barea) { e.preventDefault(); S.barea = e.target.dataset.barea; S.breg = null; render(); } });
@@ -9582,9 +9644,7 @@ function gfxButterflySvg(c1, c2) { return '<svg viewBox="0 0 80 60" width="80" h
 function gfxSnd(kind) {
   if (typeof SET !== "function" || !SET().sfx) return;
   try {
-    var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
-    var c = SFX.ctx || (SFX.ctx = new AC());
-    if (c.state === "suspended") { try { c.resume(); } catch (e) {} }
+    var c = audioCtx(); if (!c) return;
     var t = c.currentTime;
     function tone(type, f0, f1, at, dur, v) { var o = c.createOscillator(), g = c.createGain(); o.type = type; o.frequency.setValueAtTime(f0, t + at); if (f1) o.frequency.exponentialRampToValueAtTime(f1, t + at + dur); g.gain.setValueAtTime(0.0001, t + at); g.gain.exponentialRampToValueAtTime(v || 0.15, t + at + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + at + dur); o.connect(g); g.connect(c.destination); o.start(t + at); o.stop(t + at + dur + 0.02); }
     function noise(at, dur, v, fq) { var n = c.sampleRate * dur, b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0); for (var i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n); var s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(); s.buffer = b; f.type = "lowpass"; f.frequency.value = fq || 900; g.gain.value = v || 0.25; s.connect(f); f.connect(g); g.connect(c.destination); s.start(t + at); }
@@ -24460,13 +24520,8 @@ var ANAT_SFX = {
   slosh:  "liquid moving",
   pop:    "a small pop"
 };
-var ASF = { ctx: null };
-function anatCtx() {
-  var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
-  if (!ASF.ctx) ASF.ctx = new AC();
-  if (ASF.ctx.state === "suspended") { try { ASF.ctx.resume(); } catch (e) {} }
-  return ASF.ctx;
-}
+var ASF = audioAlias({});
+function anatCtx() { return audioCtx(); }
 function anatSnd(kind) {
   if (typeof SET !== "function" || !SET().sfx) return;
   if (!ANAT_SFX[kind]) kind = "pop";
@@ -24654,8 +24709,9 @@ document.addEventListener("click", function (e) {
   if (d.anarea != null) { S.anArea = d.anarea; S.anGrp = ""; S.anId = ""; render(); return window.scrollTo(0, 0); }
   if (d.anid) {
     var x = anatOf(d.anid); if (!x) return;
-    S.anId = d.anid; try { anatSnd(x.snd); } catch (e2) {}
+    S.anId = d.anid;
     render();
+    try { bodyReact(x.area, x.snd); } catch (e2) {}   /* the figure reacts, with this part's noise */
     var card = document.querySelector(".anatcard"); if (card) card.scrollIntoView({ block: "start", behavior: SET().motion ? "auto" : "smooth" });
   }
 });
@@ -24663,7 +24719,10 @@ document.addEventListener("click", function (e) {
 document.addEventListener("click", function (e) {
   if (S.tab !== "anatomy") return;
   var t = e.target.closest && e.target.closest(".anatwrap [data-barea]"); if (!t) return;
-  e.stopPropagation(); S.anArea = t.getAttribute("data-barea") || ""; S.anGrp = ""; S.anId = ""; render(); window.scrollTo(0, 0);
+  e.stopPropagation();
+  var ar = t.getAttribute("data-barea") || "";
+  S.anArea = ar; S.anGrp = ""; S.anId = ""; render(); window.scrollTo(0, 0);
+  try { bodyReact(ar); } catch (e2) {}
 }, true);
 document.addEventListener("input", function (e) {
   if (!e.target || e.target.id !== "anq") return;
@@ -24825,13 +24884,11 @@ function gfxLevelTrans(key, from, done) {
 /* ---------- the sounds ----------
    Built live, on the same throwaway context the rest of the effects use, so Settings >
    Sound effects turns them off with everything else. */
-var TXS = { ctx: null };
+var TXS = audioAlias({});
 function txSnd(kind) {
   if (typeof SET !== "function" || !SET().sfx) return;
   try {
-    var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
-    var c = TXS.ctx || (TXS.ctx = new AC());
-    if (c.state === "suspended") { try { c.resume(); } catch (e) {} }
+    var c = audioCtx(); if (!c) return;
     var t = c.currentTime, i;
     /* a shared output with a little headroom and a limiter, so a transition can be loud without
        clipping when six oscillators land on the same beat (owner asked for these to be heard) */
@@ -25386,19 +25443,17 @@ function voiceSyl(text) {
   return out;
 }
 
-var VX = { ctx: null, t: 0 };
+var VX = audioAlias({ t: 0 });
 function voiceOk() { return typeof SET === "function" && SET().sfx && (typeof funOn !== "function" || funOn()); }
 function voiceCtx() {
-  var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
-  if (!VX.ctx) {
-    VX.ctx = new AC();
-    VX.out = VX.ctx.createGain(); VX.out.gain.value = 1.0;
-    var lim = VX.ctx.createDynamicsCompressor();
+  var c = audioCtx(); if (!c) return null;
+  if (!VX.out || VX.outCtx !== c) {
+    VX.out = c.createGain(); VX.out.gain.value = 1.0; VX.outCtx = c;
+    var lim = c.createDynamicsCompressor();
     lim.threshold.value = -8; lim.ratio.value = 10; lim.attack.value = 0.003; lim.release.value = 0.15;
-    VX.out.connect(lim); lim.connect(VX.ctx.destination);
+    VX.out.connect(lim); lim.connect(c.destination);
   }
-  if (VX.ctx.state === "suspended") { try { VX.ctx.resume(); } catch (e) {} }
-  return VX.ctx;
+  return c;
 }
 /* speak a line in a voice. Overlapping calls cut the previous one off, so two bubbles
    in a row do not talk over each other. */
