@@ -1545,7 +1545,11 @@ function simpleView(d, tier) {
     c += S2(genish ? "What it is used for" : "When to give it", "go", true, F(genish ? "Used For" : "EMS Use", 3, genish ? 0 : 2));
     c += S2(S.view === "everyday" ? "Who should not use it" : "Contraindications", "stop", true, F("Not for people with or taking", 4, 0));
   }
-  c += S2("Dose & route", "dose", true, (note ? field("Your Scope", note) : "") + F("Adult Dose", 6, 0) + F("Pediatric Dose", 6, 1) + F("Routes", 7, 0));
+  /* Professor Sage's pages are for people who are not clinicians, so they do not carry doses.
+     Saying how much of a medicine to give is the one thing this app must never do, and "how it
+     is taken" answers the honest question without naming an amount. (owner, Nov 4 2026) */
+  if (genish) c += S2("How it is taken", "dose", true, (note ? field("Your Scope", note) : "") + F("Routes", 7, 0));
+  else c += S2("Dose & route", "dose", true, (note ? field("Your Scope", note) : "") + F("Adult Dose", 6, 0) + F("Pediatric Dose", 6, 1) + F("Routes", 7, 0));
   c += S2("What to watch", "", true, F("Common Side Effects", 9, 0) + F("Watch after use", 14, 3));
   if (S.view === "gen") c += S2("If someone takes it at home", "", true, F("Suggests", 15, 0) + F("Ask About", 15, 2) + F("If They Stop It", 15, 4));
   c += S2("Remember it", "", true, F("Memory Trick", 16, 2) + F("Key Fact", 16, 3));
@@ -2340,8 +2344,9 @@ function dexBox(d) {
 }
 /* route lens: what this route's learners need first */
 var LENS = {
-  gen: ["Professor Sage's notes", [["What it treats", "ind.primaryIndications"], ["If your patient takes it, it suggests", "home.whatDiseaseDoesThisSuggest"], ["Ask about", "home.whatShouldEMSAskAbout"], ["If they stop it suddenly", "home.whatHappensIfTheySuddenlyStopTakingIt"], ["Tell the patient", "@edu"]]],
-  rn: ["Nursing focus", [["Assess before giving", "pearl.whatToCheckBeforeGiving"], ["Nursing considerations", "@nurse"], ["Labs to check", "mon.labs"], ["Monitor after giving", "pearl.whatToMonitorAfterGiving"], ["Teach the patient", "@edu"]]],
+  /* no "tell the patient" row: the app does not script what anyone says to a patient (owner, Nov 4 2026) */
+  gen: ["Professor Sage's notes", [["What it treats", "ind.primaryIndications"], ["If your patient takes it, it suggests", "home.whatDiseaseDoesThisSuggest"], ["Ask about", "home.whatShouldEMSAskAbout"], ["If they stop it suddenly", "home.whatHappensIfTheySuddenlyStopTakingIt"]]],
+  rn: ["Nursing focus", [["Assess before giving", "pearl.whatToCheckBeforeGiving"], ["Nursing considerations", "@nurse"], ["Labs to check", "mon.labs"], ["Monitor after giving", "pearl.whatToMonitorAfterGiving"]]],
   md: ["Board focus", [["Mechanism", "moa.mechanismOfAction"], ["Target", "moa.receptorTarget"], ["Physiologic effects", "moa.physiologicEffects"], ["Most-tested fact", "mem.mostTestedFact"], ["Key interactions", "di.majorDrugInteractions"], ["Toxicity and antidote", "@tox"], ["Commonly confused with", "mem.commonlyConfusedWith"]]],
   im: ["Imaging focus", [["Why imaging uses it", "@rwi.use"], ["Screen before giving", "@rwi.check"], ["Watch during and after", "@rwi.watch"], ["If something goes wrong", "@rwi.act"]]],
   ems: ["Field focus", [["Why EMS gives it", "pearl.whyEMSGivesIt"], ["What EMS should know", "pearl.whatEMSShouldKnow"], ["Check before giving", "pearl.whatToCheckBeforeGiving"], ["Monitor after giving", "pearl.whatToMonitorAfterGiving"], ["When to stop", "pearl.whenToStopAdministration"]]]
@@ -8722,6 +8727,9 @@ function bodySVG(sel) {
       '<stop offset=".45" stop-color="' + light + '" stop-opacity="0"/>' +
       '<stop offset="1" stop-color="' + dark + '" stop-opacity=".15"/>' +
     '</linearGradient></defs>' +
+    /* the ground he is standing on: it only shows when he goes down on his knees, and it is
+       the cue that sells kneeling from the front (owner, Nov 4 2026) */
+    '<ellipse class="bmground" cx="80" cy="302" rx="52" ry="7" fill="' + dark + '" opacity="0"/>' +
     '<g class="bmfig">' + pivot(80, 300, 610) +
       /* legs sit behind the torso so a crossed leg reads correctly */
       z("Limbs", "legL", "Left leg", leg("L"), '<rect x="48" y="200" width="36" height="108" rx="16"/>', "bmzleg") +
@@ -8757,25 +8765,34 @@ var BM_RX = {
 /* used when something only knows the anatomy area and not which limb was touched */
 var BM_AREA = { "Head": "head", "Neck": "neck", "Chest": "chest", "Abdomen": "abdomen",
   "Pelvis": "pelvis", "Limbs": "armL", "Whole body": "chest" };
-/* Hickory leans in from whichever side of the screen, says his piece, and leaves again.
-   Fun mode only, and never more than one at a time. (owner, Nov 4 2026) */
+/* Hickory does not walk on: just his eyes come round the edge of the screen, the way someone
+   peers round a door frame, and he says his piece. Fun mode only, one at a time.
+   (owner, Nov 4 2026) */
 function hickPop(line) {
   if (typeof funOn === "function" && !funOn()) return;
   if (typeof hfxOk === "function" && !hfxOk()) return;
-  var old = document.querySelector(".hickpop"); if (old) old.remove();
+  var gone = document.querySelector(".hickpop"); if (gone) gone.remove();
   var side = Math.random() < 0.5 ? "left" : "right";
-  var art = "";
-  try {
-    if (typeof learnBugSVG === "function") art = learnBugSVG();
-    else if (typeof bugById === "function" && typeof bugArt === "function") art = bugArt(bugById("hickory"), "hickart", { mood: "joy" });
-  } catch (e) {}
+  /* two eyes and the brim of his hat, peeking. Drawn facing in from whichever edge he is on. */
+  var eyes =
+    '<svg class="hickeyes" viewBox="0 0 86 70" aria-hidden="true">' +
+      '<path d="M2 40 Q10 6 44 4 Q78 6 86 40 Z" fill="#9bcb5a"/>' +                 /* his head coming round */
+      '<path d="M-4 40 Q43 26 90 40 Q43 52 -4 40Z" fill="#d9b874"/>' +              /* the straw brim */
+      '<ellipse cx="30" cy="26" rx="12" ry="13" fill="#ffffff" stroke="#3f5420" stroke-width="2"/>' +
+      '<ellipse cx="60" cy="26" rx="12" ry="13" fill="#ffffff" stroke="#3f5420" stroke-width="2"/>' +
+      '<circle class="hickpupil" cx="34" cy="28" r="5.4" fill="#1b1430"/>' +
+      '<circle class="hickpupil" cx="64" cy="28" r="5.4" fill="#1b1430"/>' +
+      '<circle cx="36" cy="25" r="1.8" fill="#fff"/><circle cx="66" cy="25" r="1.8" fill="#fff"/>' +
+      '<path d="M18 11 Q30 3 42 9" stroke="#3f5420" stroke-width="2.6" fill="none" stroke-linecap="round"/>' +
+      '<path d="M50 9 Q62 3 74 11" stroke="#3f5420" stroke-width="2.6" fill="none" stroke-linecap="round"/>' +
+    '</svg>';
   var el = document.createElement("div");
   el.className = "hickpop " + side;
   el.setAttribute("aria-hidden", "true");
-  el.innerHTML = art + '<span class="hpsay"></span>';
+  el.innerHTML = eyes + '<span class="hpsay"></span>';
   el.querySelector(".hpsay").textContent = line;
   document.body.appendChild(el);
-  try { if (typeof voiceSay === "function") setTimeout(function () { voiceSay(line, "drawl"); }, 380); } catch (e) {}
+  try { if (typeof voiceSay === "function") setTimeout(function () { voiceSay(line, "drawl"); }, 420); } catch (e) {}
   setTimeout(function () { if (el.parentNode) el.remove(); }, 2700);
 }
 var BM_CLASSES = ["rx-head", "rx-neck", "rx-chest", "rx-abd", "rx-pelv", "rx-armL", "rx-armR", "rx-legL", "rx-legR"];
@@ -25094,18 +25111,46 @@ function anatSnd(kind) {
       tone("sine", 523, 515, 0.01, 0.85, 0.055);
       tone("sine", 782, 770, 0.01, 0.6, 0.03);
       tone("square", 88, 60, 0, 0.22, 0.07);
-    } else if (kind === "crowd") {    /* a room of people catching their breath, then muttering */
-      var ci, cn = 11;
-      for (ci = 0; ci < cn; ci++) {
-        var cd = Math.random() * 0.17, cf = 520 + Math.random() * 900;
-        nz(cd, 0.2 + Math.random() * 0.14, 0.045 + Math.random() * 0.03, "bandpass", cf, cf * 2.4, 0.8);
-        tone("sine", 300 + Math.random() * 360, 620 + Math.random() * 520, cd, 0.16 + Math.random() * 0.1, 0.016 + Math.random() * 0.012);
+    } else if (kind === "crowd") {
+      /* An actual crowd saying "wow", not just noise. Each voice is a sawtooth at its own pitch
+         pushed through three bandpass filters whose frequencies glide along the formants of the
+         word: w (F1 300, F2 610) into the open ah (F1 730, F2 1090) into the oo at the end
+         (F1 400, F2 750). Scatter the pitch and the timing across a dozen voices and it reads as
+         a room of people reacting. A gasp of breath lands first. (owner, Nov 4 2026) */
+      var vi, vn = 12;
+      for (vi = 0; vi < vn; vi++) {
+        var vt = Math.random() * 0.22,                      /* nobody starts at the same instant */
+            f0 = 96 + Math.random() * 150,                  /* deeper and lighter voices */
+            dur = 0.42 + Math.random() * 0.22,
+            amp = 0.05 + Math.random() * 0.045;
+        (function (at, f0, dur, amp) {
+          var o = c.createOscillator(), g = c.createGain();
+          o.type = "sawtooth";
+          o.frequency.setValueAtTime(f0 * 0.92, t + at);
+          o.frequency.linearRampToValueAtTime(f0 * 1.12, t + at + dur * 0.35);   /* the pitch lifts on "wow" */
+          o.frequency.linearRampToValueAtTime(f0 * 0.86, t + at + dur);
+          g.gain.setValueAtTime(0.0001, t + at);
+          g.gain.exponentialRampToValueAtTime(amp, t + at + dur * 0.22);
+          g.gain.setValueAtTime(amp, t + at + dur * 0.6);
+          g.gain.exponentialRampToValueAtTime(0.0001, t + at + dur);
+          /* three formants, glided: w -> ah -> oo */
+          var F = [[300, 730, 420], [610, 1090, 760], [2200, 2440, 2300]], prev = o, k;
+          for (k = 0; k < 3; k++) {
+            var bp = c.createBiquadFilter();
+            bp.type = "bandpass"; bp.Q.value = k === 2 ? 7 : 5;
+            bp.frequency.setValueAtTime(F[k][0], t + at);
+            bp.frequency.linearRampToValueAtTime(F[k][1], t + at + dur * 0.38);
+            bp.frequency.linearRampToValueAtTime(F[k][2], t + at + dur);
+            prev.connect(bp); prev = bp;
+          }
+          prev.connect(g); g.connect(out);
+          o.start(t + at); o.stop(t + at + dur + 0.05);
+        })(vt, f0, dur, amp);
+        /* the breath behind each voice */
+        nz(vt, 0.16 + Math.random() * 0.1, 0.02 + Math.random() * 0.016, "bandpass", 600 + Math.random() * 700, 1900, 0.9);
       }
-      for (ci = 0; ci < 7; ci++) {   /* the murmur afterwards */
-        var md = 0.42 + Math.random() * 0.5;
-        tone("triangle", 130 + Math.random() * 150, 110 + Math.random() * 90, md, 0.26, 0.012, 5 + Math.random() * 4, 9);
-        nz(md, 0.22, 0.016, "bandpass", 400 + Math.random() * 500, 900, 1.1);
-      }
+      /* the collective intake of breath that lands just before the word */
+      for (vi = 0; vi < 5; vi++) nz(Math.random() * 0.1, 0.2, 0.03, "bandpass", 500 + Math.random() * 900, 2400, 0.8);
     } else if (kind === "gasp") {     /* a sharp offended inhale, then a held, scandalised note */
       nz(0, 0.26, 0.2, "bandpass", 700, 2600, 0.9);
       tone("sine", 420, 880, 0.02, 0.24, 0.07);

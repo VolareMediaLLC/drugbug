@@ -1444,7 +1444,8 @@ html[data-motion="reduce"] *,html[data-motion="reduce"] *::before,html[data-moti
    from. A shoulder rotation therefore carries the forearm and hand with it, for free.
    The whole figure also gets a little real 3D (perspective + rotateX) so a bend folds towards
    you instead of just squashing. */
-.bodymap{perspective:520px;perspective-origin:50% 70%;overflow:visible}
+.bodymap{perspective:560px;perspective-origin:50% 64%;overflow:visible}
+.bodymap .bmfig,.bodymap .bmtorso{transform-style:preserve-3d}
 .bodymap .bmp{fill:var(--surface-2,var(--surface));stroke:var(--muted);stroke-width:2;transition:fill .15s,stroke .15s}
 .bodymap .bmhl,.bodymap .bmsh{pointer-events:none;stroke:none}
 .bodymap .bzone{cursor:pointer}
@@ -1500,28 +1501,43 @@ html[data-motion="reduce"] *,html[data-motion="reduce"] *::before,html[data-moti
 .bodymap.rx-neck .bmhead{animation:bmTuck 1.4s ease-out}
 .bodymap.rx-neck .bmtorso{animation:bmShrink 1.4s ease-out}
 
-/* --- chest: he drops to his knees and clutches it --- */
+/* --- chest: he goes down onto his knees and clutches it ---
+   Kneeling is the one pose that genuinely leaves the flat plane, so it is built in 3D: the hips
+   drop by a shin's length so the knees reach the floor, the shins swing back and away from the
+   viewer (rotateX, foreshortened), and the whole figure tips towards you a little. */
 @keyframes bmKneelDrop{0%{transform:none}
-  14%{transform:translateY(7px)}
-  40%{transform:translateY(39px)}
-  52%{transform:translateY(35px)}
-  74%{transform:translateY(36px)}
+  12%{transform:translateY(8px) rotateX(3deg)}
+  42%{transform:translateY(50px) rotateX(9deg)}
+  54%{transform:translateY(45px) rotateX(7deg)}
+  74%{transform:translateY(46px) rotateX(8deg)}
   100%{transform:none}}
-@keyframes bmKneelThighL{0%,100%{transform:none}40%{transform:rotate(15deg)}74%{transform:rotate(14deg)}}
-@keyframes bmKneelThighR{0%,100%{transform:none}40%{transform:rotate(-15deg)}74%{transform:rotate(-14deg)}}
-@keyframes bmKneelShinL{0%,100%{transform:none}40%{transform:rotate(-158deg)}74%{transform:rotate(-156deg)}}
-@keyframes bmKneelShinR{0%,100%{transform:none}40%{transform:rotate(158deg)}74%{transform:rotate(156deg)}}
+/* the thighs stay nearly upright and reach the floor; the knee lands where the foot used to be */
+@keyframes bmKneelThighL{0%,100%{transform:none}42%{transform:rotate(4deg)}74%{transform:rotate(3deg)}}
+@keyframes bmKneelThighR{0%,100%{transform:none}42%{transform:rotate(-4deg)}74%{transform:rotate(-3deg)}}
+/* the shins fold back behind him: rotated up and squashed, which is what a limb pointing away
+   from the viewer looks like */
+@keyframes bmKneelShinL{0%,100%{transform:none}
+  38%{transform:rotate(143deg) scaleY(.4)}74%{transform:rotate(140deg) scaleY(.42)}}
+@keyframes bmKneelShinR{0%,100%{transform:none}
+  38%{transform:rotate(-143deg) scaleY(.4)}74%{transform:rotate(-140deg) scaleY(.42)}}
+@keyframes bmKneelFootL{0%,100%{transform:none}38%{transform:scale(1.5,1.1) rotate(-34deg)}74%{transform:scale(1.45,1.05) rotate(-32deg)}}
+@keyframes bmKneelFootR{0%,100%{transform:none}38%{transform:scale(1.5,1.1) rotate(34deg)}74%{transform:scale(1.45,1.05) rotate(32deg)}}
 @keyframes bmClutchArmL{0%,100%{transform:none}30%{transform:rotate(28deg)}80%{transform:rotate(24deg)}}
 @keyframes bmClutchArmR{0%,100%{transform:none}30%{transform:rotate(-28deg)}80%{transform:rotate(-24deg)}}
 @keyframes bmClutchForeL{0%,100%{transform:none}30%{transform:rotate(-136deg)}80%{transform:rotate(-131deg)}}
 @keyframes bmClutchForeR{0%,100%{transform:none}30%{transform:rotate(136deg)}80%{transform:rotate(131deg)}}
-@keyframes bmCurlIn{0%,100%{transform:none}34%{transform:rotateX(22deg) translateY(5px)}80%{transform:rotateX(18deg) translateY(4px)}}
-@keyframes bmHeadHang{0%,100%{transform:none}34%{transform:rotate(-7deg) translateY(5px)}80%{transform:rotate(-6deg) translateY(4px)}}
+@keyframes bmCurlIn{0%,100%{transform:none}34%{transform:rotateX(26deg) translateY(5px)}80%{transform:rotateX(21deg) translateY(4px)}}
+@keyframes bmHeadHang{0%,100%{transform:none}34%{transform:rotate(-8deg) translateY(6px)}80%{transform:rotate(-7deg) translateY(5px)}}
+@keyframes bmGround{0%,100%{opacity:0;transform:scale(.7)}40%{opacity:.3;transform:scale(1)}74%{opacity:.28;transform:scale(1)}}
+.bodymap .bmground{transform-box:fill-box;transform-origin:50% 50%;pointer-events:none}
+.bodymap.rx-chest .bmground{animation:bmGround 2.4s cubic-bezier(.35,.1,.3,1)}
 .bodymap.rx-chest .bmfig{animation:bmKneelDrop 2.4s cubic-bezier(.35,.1,.3,1)}
 .bodymap.rx-chest .bmlegL{animation:bmKneelThighL 2.4s cubic-bezier(.35,.1,.3,1)}
 .bodymap.rx-chest .bmlegR{animation:bmKneelThighR 2.4s cubic-bezier(.35,.1,.3,1)}
 .bodymap.rx-chest .bmshinL{animation:bmKneelShinL 2.4s cubic-bezier(.35,.1,.3,1)}
 .bodymap.rx-chest .bmshinR{animation:bmKneelShinR 2.4s cubic-bezier(.35,.1,.3,1)}
+.bodymap.rx-chest .bmfootL{animation:bmKneelFootL 2.4s cubic-bezier(.35,.1,.3,1)}
+.bodymap.rx-chest .bmfootR{animation:bmKneelFootR 2.4s cubic-bezier(.35,.1,.3,1)}
 .bodymap.rx-chest .bmarmL{animation:bmClutchArmL 2.4s ease-out}
 .bodymap.rx-chest .bmarmR{animation:bmClutchArmR 2.4s ease-out}
 .bodymap.rx-chest .bmforeL{animation:bmClutchForeL 2.4s ease-out}
@@ -1622,16 +1638,21 @@ html[data-motion="reduce"] *,html[data-motion="reduce"] *::before,html[data-moti
 .bodymap.rx-legR .bmforeR{animation:bmHoldForeR 2.1s ease-out}
 .bodymap.rx-legL .bmtorso,.bodymap.rx-legR .bmtorso{animation:bmLeanFwd 2.1s ease-out}
 
-/* --- Hickory leans in from the side of the screen to comment --- */
-.hickpop{position:fixed;bottom:16%;z-index:60;display:flex;align-items:flex-end;gap:8px;pointer-events:none;max-width:70vw}
-.hickpop.left{left:0;flex-direction:row}
+/* --- Hickory peeks round the edge of the screen --- */
+.hickpop{position:fixed;bottom:9%;z-index:60;display:flex;align-items:center;gap:9px;pointer-events:none;max-width:72vw}
+.hickpop.left{left:0}
 .hickpop.right{right:0;flex-direction:row-reverse}
-.hickpop svg,.hickpop .hickart{width:78px;height:78px;flex:0 0 auto}
+.hickpop .hickeyes{width:84px;height:68px;flex:0 0 auto;filter:drop-shadow(0 3px 10px rgba(0,0,0,.35))}
+.hickpop.right .hickeyes{transform:scaleX(-1)}
 .hickpop .hpsay{background:var(--surface-2,#fff);color:var(--ink,#111);border:2px solid var(--line,#ccc);border-radius:14px;padding:7px 13px;font:800 19px/1.2 var(--f-display,inherit);white-space:nowrap;box-shadow:0 6px 20px rgba(0,0,0,.28)}
-.hickpop.left{animation:hickInL 2.6s cubic-bezier(.2,1.3,.4,1) forwards}
-.hickpop.right{animation:hickInR 2.6s cubic-bezier(.2,1.3,.4,1) forwards}
-@keyframes hickInL{0%{transform:translateX(-110%)}18%{transform:translateX(6%)}28%{transform:translateX(0)}78%{transform:translateX(0)}100%{transform:translateX(-110%)}}
-@keyframes hickInR{0%{transform:translateX(110%)}18%{transform:translateX(-6%)}28%{transform:translateX(0)}78%{transform:translateX(0)}100%{transform:translateX(110%)}}
+/* he leans out, holds, and ducks back behind the edge */
+.hickpop.left{animation:hickPeekL 2.6s cubic-bezier(.2,1.25,.4,1) forwards}
+.hickpop.right{animation:hickPeekR 2.6s cubic-bezier(.2,1.25,.4,1) forwards}
+@keyframes hickPeekL{0%{transform:translateX(-102%)}16%{transform:translateX(4%)}26%{transform:translateX(0)}80%{transform:translateX(0)}100%{transform:translateX(-102%)}}
+@keyframes hickPeekR{0%{transform:translateX(102%)}16%{transform:translateX(-4%)}26%{transform:translateX(0)}80%{transform:translateX(0)}100%{transform:translateX(102%)}}
+/* his eyes dart across while he looks */
+@keyframes hickLook{0%,22%{transform:none}38%{transform:translateX(2.5px)}60%{transform:translateX(-2px)}80%{transform:translateX(1px)}100%{transform:none}}
+.hickpop .hickpupil{animation:hickLook 2.6s ease-in-out}
 
 @media (prefers-reduced-motion:reduce){.bodymap *{animation:none!important}}
 .dcw{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0}.dcw .pinput{width:100px}
