@@ -374,7 +374,7 @@ function topbar() {
   if (S.view === "terrarium") c += '<span>/</span><span>Terrarium</span>';
   if (S.view === "everyday") c += '<span>/</span>' + (S.evTab ? '<button data-evtab="">Everyday Health</button>' : '<span>Everyday Health</span>');
   var extra = (!SOCIAL ? '' : '<button class="theme-btn" data-go="classes"' + (S.view === "classes" ? ' aria-current="page"' : '') + '>Classes</button>') + (Admin.can ? '<button class="theme-btn admin-btn" data-go="admin"' + (S.view === "admin" ? ' aria-current="page"' : '') + '><span class="lg">Control Center</span><span class="sm">Control Center</span></button>' : '') + '<button class="theme-btn mob-only" data-act="openproto">Protocols</button>';
-  c += '</nav><span class="spacer"></span><div class="tbacts">' + stickChip() + '<span class="tbx">' + extra + '</span><button class="theme-btn srch-btn" data-act="gsearch" aria-label="Search all drugs" title="Search all drugs"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button><button class="theme-btn menu-btn" data-act="tbmenu" aria-expanded="' + !!S.menu + '" aria-label="More">More</button>' + musicBtn() + gearBtn() + (typeof funOn === "function" && !funOn() ? '' : '<button class="tbsticks" data-goshop="1" data-shopf="sticks" aria-label="' + sticks() + ' sticks. Get more sticks" title="Get Sticks">' + stickIcon(18) + '<strong>' + sticks().toLocaleString() + '</strong></button>') + '</div>' + (S.menu ? '<div class="tbmenu" role="menu">' + extra + '<button class="theme-btn" data-idea="1">Send an idea</button></div>' : '') + '</div>';
+  c += '</nav><span class="spacer"></span><div class="tbacts">' + (stickChip() || tierChip()) + '<span class="tbx">' + extra + '</span><button class="theme-btn srch-btn" data-act="gsearch" aria-label="Search all drugs" title="Search all drugs"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button><button class="theme-btn menu-btn" data-act="tbmenu" aria-expanded="' + !!S.menu + '" aria-label="More">More</button>' + musicBtn() + gearBtn() + (typeof funOn === "function" && !funOn() ? '' : '<button class="tbsticks" data-goshop="1" data-shopf="sticks" aria-label="' + sticks() + ' sticks. Get more sticks" title="Get Sticks">' + stickIcon(18) + '<strong>' + sticks().toLocaleString() + '</strong></button>') + '</div>' + (S.menu ? '<div class="tbmenu" role="menu">' + extra + '<button class="theme-btn" data-idea="1">Send an idea</button></div>' : '') + '</div>';
   return c + (typeof muPop === "function" ? muPop() : "") + backRow();
 }
 function backRow() {
@@ -1958,6 +1958,7 @@ document.addEventListener("click", function (e) {
   if (a.act === "lrnstop" && typeof learnStop === "function") return learnStop();
   if (a.act === "lrnreset" && typeof learnReset === "function") return learnReset();
   if (a.act === "lrndismiss") { S.learn = null; return render(); }
+  if (a.act === "tierup" && typeof openPaywall === "function") { var tt = tier(); return openPaywall("", tt === "plus" ? "pro" : "plus"); }
   if (a.act === "errhome") { try { S.sheet = null; S.tab = "hub"; S.tool = null; S.micro = null; go("home"); } catch (e) { location.hash = ""; location.reload(); } return; }
   if (a.act === "errreload") { try { location.reload(); } catch (e) {} return; }
   if (a.startlearn) { startLearnPath(a.startlearn); return; }
@@ -4341,7 +4342,17 @@ function stylesView() {
     return '<div class="bugcard' + (on ? " eq" : "") + '">' + art + '<strong>' + esc(st[1]) + '</strong>' + (own ? '<span class="muted small">Owned</span>' : stickTag(st[2])) + '<div class="bact">' + (on ? '<span class="eqd">In use</span>' : own ? '<button class="btn small" data-style="' + st[0] + '">Use</button>' : '<button class="btn small' + (bal >= st[2] ? '' : ' ghost') + '" data-style="' + st[0] + '"' + (bal >= st[2] ? '' : ' disabled') + '>' + (bal >= st[2] ? 'Buy' : 'Need ' + (st[2] - bal) + ' more') + '</button>') + '</div></div>';
   }).join("") + '</div>';
 }
-function stickChip() { if (typeof funOn === "function" && !funOn()) return ""; return '<button class="stickchip" data-goshop="1" aria-label="Terrarium"' + (S.view === "terrarium" ? ' aria-current="page"' : '') + '>' + myBugArt("mini", null, null, myStage()) + '<span class="tlabel">Terrarium</span></button>'; }
+/* the top bar says which plan you are on: Free Bug, Plus Bug or Pro Bug (owner, Nov 5 2026).
+   Free and Plus open the plans so the next step is one tap away; Pro is just a badge. */
+function tierChip(inBug) {
+  var t = "free"; try { t = tier(); } catch (e) {}
+  if (inBug) return '<span class="tierchip inbug tc-' + t + '">' + (t === "pro" ? "Pro" : t === "plus" ? "Plus" : "Free") + ' Bug</span>';
+  var lab = t === "pro" ? "Pro Bug" : t === "plus" ? "Plus Bug" : "Free Bug";
+  var up = t !== "pro" && typeof PAYWALL !== "undefined" && PAYWALL;
+  return up ? '<button class="tierchip tc-' + t + '" data-act="tierup" title="You are a ' + lab + '. See plans">' + lab + '</button>'
+    : '<span class="tierchip tc-' + t + '" title="You are a ' + lab + '">' + lab + '</span>';
+}
+function stickChip() { if (typeof funOn === "function" && !funOn()) return ""; return '<button class="stickchip" data-goshop="1" aria-label="Terrarium"' + (S.view === "terrarium" ? ' aria-current="page"' : '') + '>' + myBugArt("mini", null, null, myStage()) + '<span class="tlabel">Terrarium</span>' + tierChip(true) + '</button>'; }
 function terrariumView() {
   var f = S.shopF || "home", title = { bugs: "Bug Store", items: "Wardrobe", faces: "Faces", styles: "Colors", borders: "Drug Borders", voices: "Voices", sticks: "Get Sticks", music: "Music", collections: "Collections" }[f];
   var head = f === "home" ? '<button class="backbtn" data-act="terrback"><span aria-hidden="true">&larr;</span> Studying</button><h2>Terrarium</h2>' : '<button class="backbtn" data-act="shopback"><span aria-hidden="true">&larr;</span> Terrarium</button><h2>' + title + '</h2>';
