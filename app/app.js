@@ -8679,6 +8679,26 @@ function normalsView() {
 }
 /* body map: shared by Everyday Health and the Medical School "Body Systems" tab */
 var BODY_AREAS = ["Head", "Neck", "Chest", "Abdomen", "Pelvis", "Limbs", "Whole body"];
+/* ---------- where each part lives on the body (owner, Nov 4 2026) ----------
+   Two changes. The area names say what they actually cover, because "Limbs" and "Whole body"
+   told you very little. And two areas are new: the Back, which the spine belongs to rather
+   than the chest, and the Backside, which is where the rectum and anus actually are. Done as a
+   pass over the records at startup so every screen that reads an area agrees - the anatomy
+   list, the Body Systems tab and the figure itself. */
+var AREA_RENAME = { "Head": "Head and face", "Neck": "Neck and throat", "Chest": "Chest and ribs",
+  "Abdomen": "Abdomen and gut", "Pelvis": "Pelvis and groin", "Limbs": "Arms and legs",
+  "Whole body": "Body-wide" };
+var AREA_MOVE = { "spinal-cord": "Back", "bone-vertebral-column": "Back", "gi-rectum-and-anus": "Buttocks" };
+(function () {
+  try {
+    [DB.ANAT, DB.BODY].forEach(function (L) {
+      (L || []).forEach(function (r) {
+        if (!r || !r.area) return;
+        r.area = AREA_MOVE[r.id] || AREA_RENAME[r.area] || r.area;
+      });
+    });
+  } catch (e) {}
+})();
 function bodySVG(sel) {
   /* ---------- the articulated figure (owner, Nov 4 2026) ----------
      This used to be six flat shapes. It is now a jointed rig so the body can actually do things:
@@ -8702,16 +8722,46 @@ function bodySVG(sel) {
   }
   /* a limb: drawn hanging from (0,0) so its joint is the top-centre of its own box, with a
      highlight down one side and shade down the other to give it some roundness */
+  /* A limb is a cylinder, and a cylinder seen from any angle is the same shape. Two copies of
+     the same capsule crossed at ninety degrees give that for almost nothing: whichever way he
+     is turned, one of them is facing you, so an arm never thins into a line. (owner, Nov 4 2026) */
   function limb(w, h, rx) {
     var hw = w / 2;
-    return '<rect class="bmp" x="' + (-hw) + '" y="0" width="' + w + '" height="' + h + '" rx="' + (rx || hw) + '"/>' +
-      '<rect class="bmhl" x="' + (-hw + 1.5) + '" y="2" width="' + (w * 0.3) + '" height="' + (h - 4) + '" rx="' + (w * 0.15) + '" fill="' + light + '" opacity=".22"/>' +
-      '<rect class="bmsh" x="' + (hw - w * 0.3 - 1.5) + '" y="2" width="' + (w * 0.3) + '" height="' + (h - 4) + '" rx="' + (w * 0.15) + '" fill="' + dark + '" opacity=".14"/>';
+    function face(extra) {
+      return '<g class="bmface"' + (extra || "") + '>' +
+        '<rect class="bmp" x="' + (-hw) + '" y="0" width="' + w + '" height="' + h + '" rx="' + (rx || hw) + '"/>' +
+        '<rect class="bmhl" x="' + (-hw + 1.5) + '" y="2" width="' + (w * 0.3) + '" height="' + (h - 4) + '" rx="' + (w * 0.15) + '" fill="' + light + '" opacity=".22"/>' +
+        '<rect class="bmsh" x="' + (hw - w * 0.3 - 1.5) + '" y="2" width="' + (w * 0.3) + '" height="' + (h - 4) + '" rx="' + (w * 0.15) + '" fill="' + dark + '" opacity=".14"/>' +
+      '</g>';
+    }
+    return face() + face(' style="transform:rotateY(90deg)"');
+  }
+  /* A body section with actual thickness. The same outline is drawn twice - once at the front
+     of the body and once at the back - and a horizontal panel joins their top edges. Standing
+     up, the two faces sit exactly on top of each other and the panel is edge-on, so he looks
+     like the flat drawing he always was. Bend him forward and the back face rises clear of the
+     front one while the panel turns into view between them, and he has a top and a depth. That
+     is real volume, not shading pretending to be volume. (owner, Nov 4 2026)
+     tl/tr/ty describe the top edge the panel has to span. */
+  function slab(d, tl, tr, ty, dep) {
+    var h = dep;
+    return '<g class="bmslab">' +
+      /* the back of him, pushed away from the viewer */
+      '<g class="bmback" style="transform:translateZ(' + (-h) + 'px)">' +
+        '<path class="bmp bmpback" d="' + d + '"/>' +
+      '</g>' +
+      /* the top of him: a horizontal panel lying between the two faces */
+      '<g class="bmtop" style="transform:translate3d(0,' + ty + 'px,0) rotateX(90deg)">' +
+        '<path class="bmp bmptop" d="M' + tl + ' 0 L' + tr + ' 0 L' + (tr - 2) + ' ' + h + ' L' + (tl + 2) + ' ' + h + 'Z"/>' +
+        '<path class="bmlit" d="M' + tl + ' 0 L' + tr + ' 0 L' + (tr - 2) + ' ' + h + ' L' + (tl + 2) + ' ' + h + 'Z" fill="url(#bmTop)" stroke="none" opacity="0"/>' +
+      '</g>' +
+      /* and the front */
+      '<path class="bmp" d="' + d + '"/>' +
+      '<path class="bmhl" d="' + d + '" fill="url(#bmShade)" stroke="none"/>' +
+      '<path class="bmlit" d="' + d + '" fill="url(#bmTop)" stroke="none" opacity="0"/>' +
+    '</g>';
   }
   function blob(d) {
-    /* bmlit is the light that lands on a surface once it turns to face upward. It is invisible
-       while he stands and fades in as he folds, which is what tells the eye this is a solid
-       object turning in space rather than a picture being squashed. (owner, Nov 4 2026) */
     return '<path class="bmp" d="' + d + '"/>' +
       '<path class="bmhl" d="' + d + '" fill="url(#bmShade)" stroke="none"/>' +
       '<path class="bmlit" d="' + d + '" fill="url(#bmTop)" stroke="none" opacity="0"/>';
@@ -8754,11 +8804,12 @@ function bodySVG(sel) {
 
   var head =
     '<g transform="translate(80 54)"><g class="bmhead">' + pivot(0, 0, 50) +
-      '<ellipse class="bmp" cx="0" cy="-23" rx="21" ry="23"/>' +
-      '<ellipse class="bmhl" cx="-7" cy="-30" rx="8" ry="9" fill="' + light + '" opacity=".2"/>' +
-      '<ellipse class="bmsh" cx="12" cy="-18" rx="7" ry="12" fill="' + dark + '" opacity=".12"/>' +
+      /* a cranium that narrows to a jaw, rather than a circle */
+      '<path class="bmp" d="M0 -46 Q20 -46 21 -26 Q22 -12 14 -5 Q7 1 0 1 Q-7 1 -14 -5 Q-22 -12 -21 -26 Q-20 -46 0 -46Z"/>' +
+      '<ellipse class="bmhl" cx="-7" cy="-32" rx="8" ry="9" fill="' + light + '" opacity=".2"/>' +
+      '<ellipse class="bmsh" cx="12" cy="-20" rx="7" ry="12" fill="' + dark + '" opacity=".12"/>' +
     '</g></g>';
-  var neck = '<g transform="translate(80 66)"><g class="bmneck">' + pivot(0, 0, 25) + '<rect class="bmp" x="-9" y="-16" width="18" height="17" rx="6"/>' + '</g></g>';
+  var neck = '<g transform="translate(80 66)"><g class="bmneck">' + pivot(0, 0, 25) + '<path class="bmp" d="M-8 -17 Q0 -19 8 -17 L10 1 Q0 4 -10 1Z"/>' + '</g></g>';
 
   /* The viewBox is wider than the figure on purpose. With a tight box, flaring the elbows to
      put both hands on the head pushed them off the canvas and the arms looked torn off. Giving
@@ -8777,21 +8828,136 @@ function bodySVG(sel) {
     /* the ground he is standing on: it only shows when he goes down on his knees, and it is
        the cue that sells kneeling from the front (owner, Nov 4 2026) */
     '<ellipse class="bmground" cx="80" cy="302" rx="52" ry="7" fill="' + dark + '" opacity="0"/>' +
+    '<g class="bmspin">' + pivot(80, 160, 700) +
     '<g class="bmfig">' + pivot(80, 300, 610) +
       /* legs sit behind the torso so a crossed leg reads correctly */
-      z("Limbs", "legL", "Left leg", leg("L"), '<rect x="48" y="200" width="36" height="108" rx="16"/>', "bmzleg") +
-      z("Limbs", "legR", "Right leg", leg("R"), '<rect x="76" y="200" width="36" height="108" rx="16"/>', "bmzleg") +
+      z("Arms and legs", "legL", "Left leg", leg("L"), '<rect x="48" y="200" width="36" height="108" rx="16"/>', "bmzleg") +
+      z("Arms and legs", "legR", "Right leg", leg("R"), '<rect x="76" y="200" width="36" height="108" rx="16"/>', "bmzleg") +
       '<g class="bmtorso">' + pivot(80, 206, 360) +
-        z("Pelvis", "pelvis", "Pelvis", blob("M46 184 H114 Q116 198 108 212 H52 Q44 198 46 184Z"), '<rect x="44" y="180" width="72" height="36" rx="12"/>') +
-        z("Abdomen", "abdomen", "Abdomen", blob("M44 132 H116 Q118 160 114 186 H46 Q42 160 44 132Z"), '<rect x="42" y="130" width="76" height="56" rx="12"/>') +
-        z("Chest", "chest", "Chest", blob("M44 68 Q80 62 116 68 Q120 102 118 134 H42 Q40 102 44 68Z"), '<rect x="40" y="64" width="80" height="70" rx="14"/>') +
-        z("Limbs", "armL", "Left arm", arm("L"), '<rect x="26" y="70" width="38" height="120" rx="17"/>', "bmzarm") +
-        z("Limbs", "armR", "Right arm", arm("R"), '<rect x="96" y="70" width="38" height="120" rx="17"/>', "bmzarm") +
-        z("Neck", "neck", "Neck", neck, '<rect x="64" y="46" width="32" height="26" rx="10"/>') +
-        z("Head", "head", "Head", head, '<circle cx="80" cy="32" r="27"/>') +
+        /* The torso follows a body, not a stack of boxes: shoulders slope off the neck and are
+           the widest point, the ribcage narrows into a waist, and the hips flare back out below
+           it. The three sections still have to be tapped separately, so they are three shapes -
+           but their edges meet exactly, so the outline reads as one continuous form. */
+        z("Pelvis and groin", "pelvis", "Pelvis",
+          slab("M50 186 L110 186 Q113 199 107 210 Q96 217 80 217 Q64 217 53 210 Q47 199 50 186Z", 50, 110, 186, 26),
+          '<rect x="46" y="182" width="68" height="36" rx="14"/>') +
+        z("Abdomen and gut", "abdomen", "Abdomen",
+          slab("M56 150 L104 150 Q107 166 110 186 L50 186 Q53 166 56 150Z", 56, 104, 150, 28),
+          '<rect x="48" y="148" width="64" height="40" rx="12"/>') +
+        z("Chest and ribs", "chest", "Chest",
+          slab("M42 86 Q44 70 66 66 L94 66 Q116 70 118 86 Q117 110 112 130 Q108 146 104 150 L56 150 Q52 146 48 130 Q43 110 42 86Z", 60, 100, 68, 30),
+          '<rect x="40" y="64" width="80" height="86" rx="16"/>') +
+        z("Arms and legs", "armL", "Left arm", arm("L"), '<rect x="26" y="70" width="38" height="120" rx="17"/>', "bmzarm") +
+        z("Arms and legs", "armR", "Right arm", arm("R"), '<rect x="96" y="70" width="38" height="120" rx="17"/>', "bmzarm") +
+        /* The back and the backside are on the back of him, so they live behind the front faces
+           and only come within reach once you have turned him round. Spin him and they are
+           there; face on, your finger lands on his chest, which is what you would expect. */
+        '<g class="bmrear" style="transform:translateZ(-31px)">' +
+          z("Back", "back", "Back",
+            blob("M44 84 Q80 76 116 84 Q118 118 112 150 L56 150 Q50 118 44 84Z") +
+            '<path class="bmspine" d="M80 84 V148" stroke="' + dark + '" stroke-width="3" opacity=".3" fill="none"/>' +
+            '<path class="bmspine" d="M62 96 Q80 104 98 96 M60 118 Q80 126 100 118" stroke="' + dark + '" stroke-width="2" opacity=".2" fill="none"/>',
+            '<rect x="42" y="80" width="76" height="72" rx="16"/>') +
+          z("Buttocks", "butt", "Backside",
+            /* two cheeks with a cleft between them, which is the shape, rather than a box */
+            blob("M50 182 Q50 174 62 175 Q73 177 78 184 L78 206 Q73 215 62 215 Q50 213 48 200 Q47 190 50 182Z") +
+            blob("M110 182 Q110 174 98 175 Q87 177 82 184 L82 206 Q87 215 98 215 Q110 213 112 200 Q113 190 110 182Z") +
+            '<path class="bmspine" d="M80 178 V210" stroke="' + dark + '" stroke-width="2.4" opacity=".3" fill="none" stroke-linecap="round"/>',
+            '<rect x="46" y="174" width="68" height="46" rx="18"/>') +
+        '</g>' +
+        z("Neck and throat", "neck", "Neck", neck, '<rect x="64" y="46" width="32" height="26" rx="10"/>') +
+        z("Head and face", "head", "Head", head, '<circle cx="80" cy="32" r="27"/>') +
       '</g>' +
-    '</g></svg>';
+    '</g></g></svg>';
 }
+/* ---------- turn him round (owner, Nov 4 2026) ----------
+   Drag sideways and he spins on the spot. The angle lives on the .bmspin wrapper, which sits
+   outside .bmfig so it never fights the reaction animations. Past a quarter turn you are
+   looking at his back, and the Back and Backside become the things under your finger. */
+var SPIN = { on: 0, id: null, x0: 0, a0: 0, ang: 0, moved: 0, el: null };
+function spinSet(el, a) {
+  while (a < 0) a += 360; a %= 360;
+  SPIN.ang = a;
+  el.style.setProperty("--bmspin", a.toFixed(1) + "deg");
+  var rear = a > 90 && a < 270;
+  el.classList.toggle("rear", rear);
+  /* Browsers do not reliably depth-sort SVG children inside a preserve-3d group, so his back
+     showed through his chest. Move it in the paint order instead: behind everything while you
+     are looking at his front, in front of everything once he has turned round. */
+  try {
+    var torso = el.querySelector(".bmtorso"), back = el.querySelector(".bmrear");
+    if (torso && back) {
+      var want = rear ? torso.lastElementChild : torso.firstElementChild;
+      if (rear && back !== torso.lastElementChild) torso.appendChild(back);
+      else if (!rear && back !== torso.firstElementChild) torso.insertBefore(back, torso.firstElementChild);
+    }
+  } catch (e) {}
+}
+function spinBind(fig) {
+  if (!fig || fig.__spun) return; fig.__spun = 1;
+  fig.addEventListener("pointerdown", function (e) {
+    if (SPIN.id !== null) return;
+    SPIN.id = e.pointerId; SPIN.x0 = e.clientX; SPIN.a0 = SPIN.ang; SPIN.moved = 0; SPIN.el = fig;
+    try { fig.setPointerCapture(e.pointerId); } catch (x) {}
+  });
+  fig.addEventListener("pointermove", function (e) {
+    if (SPIN.id !== e.pointerId) return;
+    var dx = e.clientX - SPIN.x0;
+    if (Math.abs(dx) > 4) SPIN.moved = 1;
+    if (!SPIN.moved) return;
+    e.preventDefault();
+    spinSet(fig, SPIN.a0 + dx * 0.85);
+    /* How fast he is being turned, in degrees per second. The gap between two pointer moves is
+       clamped to a sane minimum: events can arrive in the same tick, and dividing by a dt of
+       zero (or skipping those samples) left the speed permanently at zero. */
+    var now = performance.now();
+    var dt = Math.max(6, now - (SPIN.tLast || (now - 16)));
+    var v = SPIN.ang - (SPIN.aLast == null ? SPIN.ang : SPIN.aLast);
+    while (v > 180) v -= 360; while (v < -180) v += 360;
+    var inst = v / dt * 1000;
+    SPIN.v = SPIN.v ? SPIN.v * 0.45 + inst * 0.55 : inst;   /* smoothed, so one jittery frame does not set him off */
+    SPIN.tLast = now; SPIN.aLast = SPIN.ang;
+    /* he leans into the turn and throws his arms out to stay upright */
+    var lean = Math.max(-16, Math.min(16, -SPIN.v * 0.035));
+    fig.style.setProperty("--bmlean", lean.toFixed(1) + "deg");
+    fig.classList.toggle("whirl", Math.abs(SPIN.v) > 150);
+  });
+  function end(e) {
+    if (SPIN.id !== e.pointerId) return;
+    try { fig.releasePointerCapture(e.pointerId); } catch (x) {}
+    SPIN.id = null;
+    var fast = Math.abs(SPIN.v || 0);
+    SPIN.v = 0; SPIN.tLast = 0; SPIN.aLast = null;
+    fig.classList.remove("whirl");
+    fig.style.setProperty("--bmlean", "0deg");
+    /* let go of him mid-spin and he staggers before he gets his feet back */
+    if (fast > 180 && (typeof hfxOk !== "function" || hfxOk())) {
+      var svg = fig.closest(".bodymap") || fig;
+      svg.classList.remove("stagger"); void svg.getBoundingClientRect(); svg.classList.add("stagger");
+      if (svg.__stT) clearTimeout(svg.__stT);
+      svg.__stT = setTimeout(function () { svg.classList.remove("stagger"); svg.__stT = null; }, 1500);
+      try { if (typeof anatSnd === "function") anatSnd(fast > 420 ? "boing" : "wobble"); } catch (x) {}
+    }
+    /* a drag is a drag, not a tap: swallow the click that follows one */
+    if (SPIN.moved) { SPIN.on = Date.now(); SPIN.moved = 0; }
+  }
+  fig.addEventListener("pointerup", end);
+  fig.addEventListener("pointercancel", end);
+}
+function spinJustDragged() { return Date.now() - SPIN.on < 320; }
+/* keep him turned the way you left him across re-renders */
+if (typeof render === "function") (function () {
+  var r = render;
+  render = function () {
+    var v = r.apply(this, arguments);
+    try {
+      var figs = document.querySelectorAll(".bodymap .bmspin");
+      for (var i = 0; i < figs.length; i++) { spinSet(figs[i], SPIN.ang); spinBind(figs[i]); }
+    } catch (e) {}
+    return v;
+  };
+})();
+
 /* ---------- the figure reacts when you tap it (owner, Nov 4 2026) ----------
    Each part has its own noise and its own piece of choreography, driven by a class on the <svg>
    that the keyframes in index.html hang off. Poke the head and he reaches up and holds it; the
@@ -8804,14 +8970,17 @@ var BM_RX = {
   chest:   { cls: "rx-chest", snd: "thump", dur: 2400, then: "groan", thenAt: 420 },
   abdomen: { cls: "rx-abd",   snd: "groan", dur: 1700 },
   pelvis:  { cls: "rx-pelv",  snd: "gasp",  dur: 1900 },
+  back:    { cls: "rx-back",  snd: "creak", dur: 2200 },
+  butt:    { cls: "rx-butt",  snd: "gasp",  dur: 2200, then: "whine", thenAt: 420 },
   armL:    { cls: "rx-armL",  snd: "punch", dur: 1900, then: "whine", thenAt: 280 },
   armR:    { cls: "rx-armR",  snd: "punch", dur: 1900, then: "whine", thenAt: 280 },
   legL:    { cls: "rx-legL",  snd: "punch", dur: 2100, then: "cry",   thenAt: 240 },
   legR:    { cls: "rx-legR",  snd: "punch", dur: 2100, then: "cry",   thenAt: 240 }
 };
 /* used when something only knows the anatomy area and not which limb was touched */
-var BM_AREA = { "Head": "head", "Neck": "neck", "Chest": "chest", "Abdomen": "abdomen",
-  "Pelvis": "pelvis", "Limbs": "armL", "Whole body": "chest" };
+var BM_AREA = { "Head and face": "head", "Neck and throat": "neck", "Chest and ribs": "chest",
+  "Abdomen and gut": "abdomen", "Pelvis and groin": "pelvis", "Arms and legs": "armL",
+  "Body-wide": "chest", "Back": "back", "Buttocks": "butt" };
 /* Hickory pokes his head round the edge of the screen, the same way the peeking pals do -
    same position, same angle, same wiggle - and says his piece. Fun mode only, one at a time.
    (owner, Nov 4 2026) */
@@ -8836,13 +9005,13 @@ function hickPop(line) {
   try { if (typeof voiceSay === "function") setTimeout(function () { voiceSay(line, "drawl"); }, 500); } catch (e) {}
   setTimeout(function () { el.classList.remove("in"); setTimeout(function () { if (el.parentNode) el.remove(); }, 480); }, 2600);
 }
-var BM_CLASSES = ["rx-head", "rx-neck", "rx-chest", "rx-abd", "rx-pelv", "rx-armL", "rx-armR", "rx-legL", "rx-legR"];
+var BM_CLASSES = ["rx-head", "rx-neck", "rx-chest", "rx-abd", "rx-pelv", "rx-armL", "rx-armR", "rx-legL", "rx-legR", "rx-back", "rx-butt"];
 function bodyReact(area, snd, part) {
   var key = part && BM_RX[part] ? part : (BM_AREA[area] || "chest");
   var M = BM_RX[key];
   try { if (typeof anatSnd === "function") anatSnd(snd || M.snd); } catch (e) {}
   if (M.then) setTimeout(function () { try { anatSnd(M.then); } catch (e) {} }, M.thenAt || 250);
-  if (key === "pelvis") {
+  if (key === "pelvis" || key === "butt") {
     /* the whole room reacts, and Hickory turns up to make it worse */
     setTimeout(function () { try { anatSnd("crowd"); } catch (e) {} }, 170);
     setTimeout(function () { try { hickPop(pick(HICK_LINES)); } catch (e) {} }, 560);
@@ -25365,6 +25534,7 @@ function anatView() {
 /* taps: an area on the figure, a part chip, or the link across to Body Systems */
 document.addEventListener("click", function (e) {
   var t = e.target.closest && e.target.closest("[data-anarea],[data-anid],[data-anbody]"); if (!t) return;
+  if (typeof spinJustDragged === "function" && spinJustDragged()) return;
   var d = t.dataset;
   if (d.anbody) { S.tab = "body"; S.barea = ""; S.breg = d.anbody; render(); var b1 = document.querySelector(".sickcard"); if (b1) b1.scrollIntoView({ block: "start", behavior: SET().motion ? "auto" : "smooth" }); return; }
   if (d.anarea != null) { S.anArea = d.anarea; S.anGrp = ""; S.anId = ""; render(); return window.scrollTo(0, 0); }
@@ -25380,6 +25550,7 @@ document.addEventListener("click", function (e) {
 document.addEventListener("click", function (e) {
   if (S.tab !== "anatomy") return;
   var t = e.target.closest && e.target.closest(".anatwrap [data-barea]"); if (!t) return;
+  if (typeof spinJustDragged === "function" && spinJustDragged()) { e.stopPropagation(); return; }
   e.stopPropagation();
   var ar = t.getAttribute("data-barea") || "", bp = t.getAttribute("data-bpart") || "";
   S.anArea = ar; S.anGrp = ""; S.anId = ""; render(); window.scrollTo(0, 0);

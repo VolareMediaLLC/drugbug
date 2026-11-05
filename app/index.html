@@ -1445,7 +1445,44 @@ html[data-motion="reduce"] *,html[data-motion="reduce"] *::before,html[data-moti
    The whole figure also gets a little real 3D (perspective + rotateX) so a bend folds towards
    you instead of just squashing. */
 .bodymap{perspective:560px;perspective-origin:50% 64%;overflow:visible}
-.bodymap .bmfig,.bodymap .bmtorso{transform-style:preserve-3d}
+/* the 3D chain has to be unbroken from the perspective down to the faces of each slab, or the
+   parts flatten back into stickers (owner, Nov 4 2026) */
+.bodymap .bmspin,.bodymap .bmfig,.bodymap .bmtorso,.bodymap .bzone,.bodymap .bmslab,.bodymap .bmback,.bodymap .bmtop,.bodymap .bmrear,.bodymap .bmarm,.bodymap .bmfore,.bodymap .bmleg,.bodymap .bmshin,.bodymap .bmhand,.bodymap .bmfoot,.bodymap .bmhead,.bodymap .bmneck{transform-style:preserve-3d}
+/* drag him sideways and he turns on the spot */
+.bodymap .bmspin{transform-box:fill-box;transform-origin:50% 50%;transform:rotateY(var(--bmspin,0deg)) rotate(var(--bmlean,0deg));transition:transform .08s linear}
+/* turning him fast throws him off balance: he leans into it and puts his arms out */
+.bodymap .bmspin.whirl .bmarmL{transform:rotate(-42deg)}
+.bodymap .bmspin.whirl .bmarmR{transform:rotate(42deg)}
+.bodymap .bmspin.whirl .bmforeL{transform:rotate(-26deg)}
+.bodymap .bmspin.whirl .bmforeR{transform:rotate(26deg)}
+.bodymap .bmspin.whirl .bmarm,.bodymap .bmspin.whirl .bmfore{transition:transform .18s ease-out}
+/* let go mid-spin and he staggers before he finds his feet again */
+@keyframes bmStagger{0%{transform:rotate(0)}14%{transform:rotate(-9deg) translateX(5px)}
+  32%{transform:rotate(7deg) translateX(-4px)}50%{transform:rotate(-5deg) translateX(3px)}
+  68%{transform:rotate(3deg) translateX(-2px)}84%{transform:rotate(-1.5deg)}100%{transform:rotate(0)}}
+@keyframes bmStaggerArms{0%,100%{transform:none}18%{transform:rotate(-34deg)}44%{transform:rotate(-20deg)}70%{transform:rotate(-9deg)}}
+@keyframes bmStaggerArmsR{0%,100%{transform:none}18%{transform:rotate(34deg)}44%{transform:rotate(20deg)}70%{transform:rotate(9deg)}}
+@keyframes bmStaggerFeet{0%,100%{transform:none}20%{transform:rotate(8deg)}52%{transform:rotate(-6deg)}78%{transform:rotate(3deg)}}
+@keyframes bmStaggerFeetR{0%,100%{transform:none}20%{transform:rotate(-8deg)}52%{transform:rotate(6deg)}78%{transform:rotate(-3deg)}}
+@keyframes bmStaggerHead{0%,100%{transform:none}16%{transform:rotate(10deg)}40%{transform:rotate(-8deg)}66%{transform:rotate(5deg)}}
+.bodymap.stagger .bmfig{animation:bmStagger 1.5s cubic-bezier(.3,.7,.3,1)}
+.bodymap.stagger .bmarmL{animation:bmStaggerArms 1.5s ease-out}
+.bodymap.stagger .bmarmR{animation:bmStaggerArmsR 1.5s ease-out}
+.bodymap.stagger .bmlegL{animation:bmStaggerFeet 1.5s ease-out}
+.bodymap.stagger .bmlegR{animation:bmStaggerFeetR 1.5s ease-out}
+.bodymap.stagger .bmhead{animation:bmStaggerHead 1.5s ease-out}
+.bodyfig{touch-action:pan-y;cursor:ew-resize}
+/* his back and backside sit behind him: out of reach until he is turned round */
+.bodymap .bmrear{pointer-events:none}
+.bodymap .bmspin.rear .bmrear{pointer-events:auto}
+.bodymap .bmspin.rear .bmzarm,.bodymap .bmspin.rear [data-bpart="chest"],
+.bodymap .bmspin.rear [data-bpart="abdomen"],.bodymap .bmspin.rear [data-bpart="pelvis"]{pointer-events:none}
+.bodymap .bmspin.rear .bmzarm .bhit *{pointer-events:none}
+.bodymap .bmslab,.bodymap .bmback,.bodymap .bmtop{transform-box:view-box}
+/* the back face sits in shadow, and the top panel catches the light */
+.bodymap .bmpback{fill:color-mix(in srgb,var(--surface-2,#333) 72%,#000)}
+.bodymap .bmptop{fill:color-mix(in srgb,var(--surface-2,#333) 88%,#fff)}
+.bodymap .bmtop,.bodymap .bmback{pointer-events:none}
 .bodymap .bmp{fill:var(--surface-2,var(--surface));stroke:var(--muted);stroke-width:2;transition:fill .15s,stroke .15s}
 .bodymap .bmhl,.bodymap .bmsh{pointer-events:none;stroke:none}
 .bodymap .bzone{cursor:pointer}
@@ -1661,6 +1698,44 @@ html[data-motion="reduce"] *,html[data-motion="reduce"] *::before,html[data-moti
 .hickpop.hp-r.in .hpbug{animation:hickwigr .95s ease-in-out .45s infinite}
 @keyframes hickwig{0%,100%{transform:rotate(17deg)}50%{transform:rotate(9deg) translateY(-3px)}}
 @keyframes hickwigr{0%,100%{transform:scaleX(-1) rotate(17deg)}50%{transform:scaleX(-1) rotate(9deg) translateY(-3px)}}
+
+/* --- his back: he straightens up and holds it, shoulders back, chest out --- */
+@keyframes bmPosture{0%{transform:none}
+  22%{transform:rotateX(-13deg) translateY(-5px) scaleY(1.05)}
+  40%{transform:rotateX(-10deg) translateY(-4px) scaleY(1.045)}
+  72%{transform:rotateX(-10deg) translateY(-4px) scaleY(1.045)}
+  100%{transform:none}}
+@keyframes bmChinUp{0%{transform:none}22%{transform:rotate(-2deg) translateY(-5px)}72%{transform:rotate(-2deg) translateY(-4px)}100%{transform:none}}
+@keyframes bmArmsBackL{0%{transform:none}24%{transform:rotate(-13deg)}72%{transform:rotate(-11deg)}100%{transform:none}}
+@keyframes bmArmsBackR{0%{transform:none}24%{transform:rotate(13deg)}72%{transform:rotate(11deg)}100%{transform:none}}
+@keyframes bmStand{0%{transform:none}24%{transform:translateY(-4px)}72%{transform:translateY(-3px)}100%{transform:none}}
+.bodymap.rx-back .bmtorso{animation:bmPosture 2.2s cubic-bezier(.3,.9,.3,1)}
+.bodymap.rx-back .bmhead{animation:bmChinUp 2.2s cubic-bezier(.3,.9,.3,1)}
+.bodymap.rx-back .bmarmL{animation:bmArmsBackL 2.2s ease-out}
+.bodymap.rx-back .bmarmR{animation:bmArmsBackR 2.2s ease-out}
+.bodymap.rx-back .bmfig{animation:bmStand 2.2s ease-out}
+.bodymap.rx-back .bmlit{animation:bmLit 2.2s ease-out}
+
+/* --- his backside: both hands clap over it and his head turns right round to look at you --- */
+@keyframes bmCoverButtL{0%,100%{transform:none}14%{transform:rotate(-30deg)}76%{transform:rotate(-27deg)}}
+@keyframes bmCoverButtR{0%,100%{transform:none}14%{transform:rotate(30deg)}76%{transform:rotate(27deg)}}
+@keyframes bmCoverButtForeL{0%,100%{transform:none}14%{transform:rotate(-54deg)}76%{transform:rotate(-50deg)}}
+@keyframes bmCoverButtForeR{0%,100%{transform:none}14%{transform:rotate(54deg)}76%{transform:rotate(50deg)}}
+/* the head swings round on the neck - the whole point of the gag, so it goes most of the way */
+@keyframes bmHeadTurn{0%{transform:none}
+  20%{transform:rotateY(-128deg) rotate(-6deg)}
+  34%{transform:rotateY(-152deg) rotate(-8deg)}
+  74%{transform:rotateY(-150deg) rotate(-7deg)}
+  100%{transform:none}}
+@keyframes bmClench{0%,100%{transform:none}16%{transform:translateY(-6px) scaleY(.97)}70%{transform:translateY(-4px) scaleY(.98)}}
+@keyframes bmTipToe{0%,100%{transform:none}16%{transform:translateY(-5px)}70%{transform:translateY(-3px)}}
+.bodymap.rx-butt .bmarmL{animation:bmCoverButtL 2.2s cubic-bezier(.2,1.1,.4,1)}
+.bodymap.rx-butt .bmarmR{animation:bmCoverButtR 2.2s cubic-bezier(.2,1.1,.4,1)}
+.bodymap.rx-butt .bmforeL{animation:bmCoverButtForeL 2.2s cubic-bezier(.2,1.1,.4,1)}
+.bodymap.rx-butt .bmforeR{animation:bmCoverButtForeR 2.2s cubic-bezier(.2,1.1,.4,1)}
+.bodymap.rx-butt .bmhead{animation:bmHeadTurn 2.2s cubic-bezier(.3,1,.3,1)}
+.bodymap.rx-butt .bmtorso{animation:bmClench 2.2s ease-out}
+.bodymap.rx-butt .bmfig{animation:bmTipToe 2.2s ease-out}
 
 @media (prefers-reduced-motion:reduce){.bodymap *{animation:none!important}}
 .dcw{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0}.dcw .pinput{width:100px}
