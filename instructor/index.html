@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>DrugBug for Instructors</title>
+<link rel="icon" type="image/png" sizes="48x48" href="../icon-48.png">
+<style>
+:root{--bg:#13111c;--surface:#1d1a2a;--surface2:#251f37;--ink:#f2effb;--muted:#aaa3c4;--line:#322c47;--accent:#a78bfa;--teal:#2dd4bf;--good:#34d399;--warn:#fbbf24;--bad:#f87171;--bar:#2dd4bf;--track:#2b2540}
+@media (prefers-color-scheme:light){:root{--bg:#f6f4fc;--surface:#fff;--surface2:#f1edfa;--ink:#1c1730;--muted:#5f5878;--line:#e2dcef;--accent:#6d28d9;--teal:#0f766e;--good:#047857;--warn:#b45309;--bad:#b91c1c;--bar:#0f766e;--track:#ece7f6}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:var(--accent)}
+.wrap{max-width:1100px;margin:0 auto;padding:20px 16px 60px}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+header img{width:40px;height:40px;border-radius:10px}
+header h1{font-size:22px;margin:0}
+header .who{margin-left:auto;color:var(--muted);font-size:13px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+.card h2{font-size:17px;margin:0 0 10px}
+.muted{color:var(--muted)}.small{font-size:13px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);flex:1;min-width:140px}
+input,select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:9px 10px;width:100%}
+button{font:inherit;font-weight:600;border:0;border-radius:9px;padding:9px 14px;background:var(--teal);color:#06231f;cursor:pointer}
+button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+button.danger{background:transparent;color:var(--bad);border:1px solid var(--bad)}
+button:disabled{opacity:.5;cursor:default}
+.msg{margin:10px 0 0;padding:9px 12px;border-radius:9px;background:var(--surface2);font-size:14px}
+.msg.err{color:var(--bad)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:12px 0}
+.tile{background:var(--surface2);border-radius:12px;padding:12px}
+.tile b{display:block;font-size:24px}
+.tile span{color:var(--muted);font-size:12.5px}
+.tblwrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--muted);font-weight:600;font-size:12.5px;background:var(--surface2);position:sticky;top:0}
+tr:last-child td{border-bottom:0}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px}
+.pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:12px;background:var(--surface2);color:var(--muted)}
+.pill.on{color:var(--good)}
+.mini{display:inline-block;width:70px;height:6px;border-radius:3px;background:var(--track);vertical-align:middle;margin-right:6px;overflow:hidden}
+.mini i{display:block;height:100%;background:var(--bar)}
+.chart{display:grid;grid-template-columns:minmax(120px,210px) 1fr auto;gap:6px 12px;align-items:center}
+.chart .lab{font-size:13.5px;text-align:right;color:var(--ink)}
+.chart .bar{position:relative;height:22px;background:var(--track);border-radius:4px}
+.chart .bar i{position:absolute;inset:0 auto 0 0;background:var(--bar);border-radius:0 4px 4px 0}
+.chart .val{font-size:13px;font-variant-numeric:tabular-nums;min-width:118px}
+.chart .val b{display:inline-block;min-width:38px}
+.chart .val span{color:var(--muted)}
+tr.fresh td{background:color-mix(in srgb,var(--teal) 12%,transparent)}
+.cls{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.cls:last-child{border-bottom:0}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.hide{display:none!important}
+.privacy{border-left:3px solid var(--teal);padding:8px 12px;background:var(--surface2);border-radius:0 10px 10px 0;font-size:13.5px}
+.cols{display:grid;grid-template-columns:repeat(12,1fr);gap:6px;align-items:end;height:170px;padding-top:18px}
+.col{position:relative;display:flex;flex-direction:column;justify-content:flex-end;height:100%}
+.col i{display:block;background:var(--bar);border-radius:4px 4px 0 0;min-height:2px}
+.col b{position:absolute;left:0;right:0;text-align:center;font-size:11.5px;font-weight:600;color:var(--ink)}
+.colx{display:grid;grid-template-columns:repeat(12,1fr);gap:6px;font-size:11px;color:var(--muted);text-align:center;margin-top:4px;border-top:1px solid var(--line);padding-top:4px}
+.heat{display:inline-block;padding:1px 9px;border-radius:99px;font-size:12px;font-weight:600}
+.heat.warm{background:color-mix(in srgb,var(--good) 18%,transparent);color:var(--good)}
+.heat.lukewarm{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
+.heat.cold{background:var(--surface2);color:var(--muted)}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:860px){.grid2{grid-template-columns:minmax(0,1fr)}}
+tr.clk{cursor:pointer}tr.clk:hover td{background:var(--surface2)}
+@media (max-width:600px){.cols{gap:3px}.col b{font-size:9.5px}.colx{gap:3px;font-size:9.5px}}
+@media (max-width:600px){.chart{grid-template-columns:96px 1fr auto}.chart .lab{font-size:12px}.chart .val{min-width:0}.chart .val span{display:none}}
+@media print{
+  body{background:#fff;color:#000}header,.noprint,.card:not(.printme){display:none!important}
+  .printme{border:0;padding:0}.printme th{background:#eee;color:#000}.printme td,.printme th{border:1px solid #999;padding:10px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <img src="../icon-180.png" alt="">
+  <h1>DrugBug for Instructors</h1>
+  <div class="who" id="who"></div>
+</header>
+
+<!-- signed out -->
+<section id="vSignin" class="card hide">
+  <h2>Sign in</h2>
+  <p class="muted small">Use the account DrugBug set up for you, or create one with your work email. Students never sign in here: they only enter the class key you give them, in the app.</p>
+  <div class="row">
+    <label>Email<input id="em" type="email" autocomplete="email"></label>
+    <label>Password<input id="pw" type="password" autocomplete="current-password"></label>
+  </div>
+  <div class="row" style="margin-top:10px">
+    <button id="bIn">Sign in</button>
+    <button class="ghost" id="bUp">Create account</button>
+    <button class="ghost" id="bGoogle">Continue with Google</button>
+    <button class="ghost" id="bReset">Forgot password</button>
+  </div>
+  <p id="inMsg" class="msg hide"></p>
+</section>
+
+<!-- owner overview -->
+<section id="vOverview" class="hide">
+  <div class="card">
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <div><h2 style="margin:0">Your DrugBug schools</h2><div class="muted small" id="ovSub"></div></div>
+      <button class="ghost" id="bOvRefresh">Refresh</button>
+    </div>
+    <div class="tiles" id="ovTiles"></div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <h2>Questions answered per week</h2>
+      <p class="muted small">All schools together, last 12 weeks (Monday to Sunday).</p>
+      <div class="cols" id="ovWeeks"></div><div class="colx" id="ovWeekX"></div>
+      <p class="muted small" id="ovWeekNote" style="margin-top:8px"></p>
+    </div>
+    <div class="card">
+      <h2>Pilots to follow up</h2>
+      <p class="muted small">Live pilots ending in the next 14 days. <b>Warm</b> = most seats in use and students still studying: ask about a paid plan.</p>
+      <div id="ovFollow"></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Every school</h2>
+    <div class="tblwrap"><table id="ovSchools"></table></div>
+    <p class="muted small" style="margin-top:8px">Click a school to open its dashboard. Activated = students who entered a key. Per student = questions answered per activated student.</p>
+  </div>
+  <div class="card">
+    <h2>Where students struggle, across all schools</h2>
+    <p class="muted small">Useful for deciding what DrugBug should teach better. Weakest first.</p>
+    <div id="ovSys" class="chart"></div>
+  </div>
+</section>
+
+<!-- owner console -->
+<section id="vOwner" class="card hide">
+  <h2>Owner console: open a class</h2>
+  <p class="muted small">Creates a cohort and its instructor code. Send the instructor code to the school; they sign in here, enter it, and make their own keys.</p>
+  <div class="row">
+    <label style="flex:2">Class name<input id="nName" placeholder="Texas A&amp;M Paramedic Cohort 2027"></label>
+    <label>Short code<input id="nCode" maxlength="6" placeholder="TAMU"></label>
+    <label>Seats<input id="nSeats" type="number" min="1" max="500" value="30"></label>
+  </div>
+  <div class="row" style="margin-top:10px">
+    <label>Length<select id="nKind"><option value="30">30-day pilot</option><option value="60">60-day pilot</option><option value="365">1 year</option></select></label>
+    <label>Question goal per student<input id="nGoal" type="number" min="25" value="300"></label>
+    <label style="flex:2">School contact (staff only)<input id="nContact" placeholder="Program director name and work email"></label>
+    <button id="bNew">Open class</button>
+  </div>
+  <p id="newMsg" class="msg hide"></p>
+</section>
+
+<!-- class list -->
+<section id="vList" class="card hide">
+  <h2 id="listTitle">Your classes</h2>
+  <div id="list"></div>
+  <div id="joinBox" class="row" style="margin-top:12px">
+    <label>Instructor code from DrugBug<input id="inv" placeholder="INST-XXXX-XXXX" autocapitalize="characters"></label>
+    <button id="bJoin">Join class</button>
+  </div>
+  <p id="joinMsg" class="msg hide"></p>
+  <p class="muted small" id="uidLine"></p>
+</section>
+
+<!-- one class -->
+<section id="vClass" class="hide">
+  <div class="card">
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <div><h2 id="cName" style="margin:0"></h2><div class="muted small" id="cSub"></div></div>
+      <div class="row noprint"><button class="ghost" id="bBack">All classes</button><button class="ghost" id="bRefresh">Refresh</button></div>
+    </div>
+    <div class="tiles" id="tiles"></div>
+    <p class="privacy">DrugBug knows these students only as <b>Student 01, Student 02…</b> No names, emails or student IDs are collected. Your printed key sheet is the only link between a key and a person, so keep it with your class records.</p>
+  </div>
+
+  <div class="card noprint" id="ownerTools">
+    <h2>Owner tools</h2>
+    <div class="row">
+      <button class="ghost" data-add="30">+30 days</button>
+      <button class="ghost" data-add="365">+1 year</button>
+      <label style="max-width:160px">Seats<input id="oSeats" type="number" min="1" max="500"></label>
+      <button class="ghost" id="bSeats">Save seats</button>
+      <button class="ghost" id="bEnd">End class now</button>
+      <button class="ghost" id="bReopen">Reopen</button>
+      <button class="ghost" id="bPaid">Mark as paid (annual)</button>
+      <button class="ghost" id="bPilot">Back to pilot</button>
+      <button class="danger" id="bDel">Delete class…</button>
+    </div>
+    <p class="muted small" id="oInfo"></p>
+    <p id="oMsg" class="msg hide"></p>
+  </div>
+
+  <div class="card noprint">
+    <h2>Class average by medication system</h2>
+    <p class="muted small">Share of questions answered correctly across the whole class, weakest first. Bars need answers to appear; a system nobody has practised isn't shown.</p>
+    <div id="chart" class="chart"></div>
+    <details style="margin-top:10px"><summary class="small muted">Show as a table</summary><div class="tblwrap" style="margin-top:8px"><table id="sysTable"></table></div></details>
+  </div>
+
+  <div class="card printme">
+    <div class="row noprint" style="justify-content:space-between;align-items:center;margin-bottom:10px">
+      <h2 style="margin:0">Students</h2>
+      <div class="row">
+        <label style="max-width:120px">New keys<input id="qty" type="number" min="1" max="200" value="10"></label>
+        <button id="bMake">Make keys</button>
+        <button class="ghost" id="bCsv">Key sheet (CSV)</button>
+        <button class="ghost" id="bPrint">Print key sheet</button>
+      </div>
+    </div>
+    <p id="keyMsg" class="msg hide noprint"></p>
+    <h2 class="hide" id="printTitle"></h2>
+    <div class="tblwrap"><table id="stuTable"></table></div>
+    <p class="muted small noprint" style="margin-top:8px">Completion is questions answered against the class goal. "Weakest" needs at least <span id="wmin">5</span> answers in a system. <b>Reset</b> frees a key for a lost phone or a new student.</p>
+  </div>
+</div>
+</div>
+
+<script src="../app/vendor/firebase-app-compat.js"></script>
+<script src="../app/vendor/firebase-auth-compat.js"></script>
+<script>
+(function () {
+  "use strict";
+  /* Public Firebase identifiers (same as the app). Security comes from the Cloud Functions, which
+     check who is calling on every request; this page holds no secrets and reads no database. */
+  var CFG = {
+    apiKey: "AIzaSyC7cNkPSpPqfHPLNSY54u8QSL1jnaYsVMM", authDomain: "drugbug-69d42.firebaseapp.com",
+    projectId: "drugbug-69d42", appId: "1:123306339603:web:2a0021f13fd8e620253ee6"
+  };
+  var FN = "https://us-central1-drugbug-69d42.cloudfunctions.net/";
+  var local = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) && /[?&]emu=1/.test(location.search);
+  if (local) { CFG.apiKey = "demo-key"; CFG.projectId = "demo-drugbug"; FN = "http://127.0.0.1:5001/demo-drugbug/us-central1/"; }
+  firebase.initializeApp(CFG);
+  var auth = firebase.auth();
+  if (local) auth.useEmulator("http://127.0.0.1:9099", { disableWarnings: true });
+
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
+  var show = function (id, on) { $(id).classList.toggle("hide", !on); };
+  var say = function (id, text, err) { var el = $(id); el.textContent = text || ""; el.classList.toggle("err", !!err); show(id, !!text); };
+  var day = function (ms) { return ms ? new Date(ms).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "—"; };
+  var ago = function (ms) {
+    if (!ms) return "never"; var m = Math.round((Date.now() - ms) / 60000);
+    return m < 60 ? m + " min ago" : m < 1440 ? Math.round(m / 60) + " h ago" : Math.round(m / 1440) + " d ago";
+  };
+  var pctTxt = function (p) { return p == null ? "—" : (Math.round(p) + "%"); };
+
+  function call(name, data) {
+    var u = auth.currentUser;
+    if (!u) return Promise.reject(new Error("Sign in first."));
+    return u.getIdToken().then(function (tok) {
+      return fetch(FN + name, { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + tok }, body: JSON.stringify({ data: data || {} }) });
+    }).then(function (r) { return r.json(); }).then(function (j) {
+      if (j.error) throw new Error(j.error.message || j.error.status);
+      return j.result;
+    });
+  }
+
+  var ST = { owner: false, list: [], orgId: null, dash: null, newKeys: null };
+
+  /* ---------- sign in ---------- */
+  function authErr(e) {
+    var c = (e && e.code) || "";
+    return c === "auth/invalid-credential" || c === "auth/wrong-password" || c === "auth/user-not-found" ? "That email and password don't match an account."
+      : c === "auth/email-already-in-use" ? "There's already an account with that email. Sign in instead."
+      : c === "auth/weak-password" ? "Use a password of at least 8 characters."
+      : c === "auth/invalid-email" ? "That email address isn't valid." : (e && e.message) || "Something went wrong.";
+  }
+  $("bIn").onclick = function () { auth.signInWithEmailAndPassword($("em").value.trim(), $("pw").value).catch(function (e) { say("inMsg", authErr(e), true); }); };
+  $("bUp").onclick = function () {
+    if ($("pw").value.length < 8) return say("inMsg", "Use a password of at least 8 characters.", true);
+    auth.createUserWithEmailAndPassword($("em").value.trim(), $("pw").value).catch(function (e) { say("inMsg", authErr(e), true); });
+  };
+  $("bGoogle").onclick = function () { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(function (e) { say("inMsg", authErr(e), true); }); };
+  $("bReset").onclick = function () {
+    var em = $("em").value.trim(); if (!em) return say("inMsg", "Type your email above first.", true);
+    auth.sendPasswordResetEmail(em).then(function () { say("inMsg", "If that email has an account, a reset link is on its way."); }).catch(function (e) { say("inMsg", authErr(e), true); });
+  };
+
+  auth.onAuthStateChanged(function (u) {
+    var real = u && !u.isAnonymous;
+    $("who").innerHTML = real ? esc(u.email || "Signed in") + ' <button class="ghost" id="bOut">Sign out</button>' : "";
+    if (real) $("bOut").onclick = function () { auth.signOut(); };
+    show("vSignin", !real); show("vOwner", false); show("vList", false); show("vClass", false); show("vOverview", false);
+    if (real) loadList();
+  });
+
+  /* ---------- classes ---------- */
+  function loadList() {
+    call("groupOrgList").then(function (r) {
+      ST.owner = r.owner; ST.list = r.list;
+      show("vOwner", r.owner); show("vList", true); show("vClass", false); show("vOverview", r.owner);
+      if (r.owner) loadOverview();
+      $("listTitle").textContent = r.owner ? "All classes (" + r.list.length + ")" : "Your classes";
+      $("uidLine").textContent = r.owner ? "" : "Your account id: " + r.uid;
+      show("joinBox", !r.owner);
+      $("list").innerHTML = r.list.length ? r.list.map(function (o) {
+        var left = Math.ceil((o.expiresAt - Date.now()) / 864e5);
+        return '<div class="cls"><div><b>' + esc(o.name) + '</b> <span class="pill">' + esc(o.code) + '</span> <span class="pill' + (o.live ? " on" : "") + '">' + (o.live ? (left + " days left") : (o.status === "ended" ? "ended" : "expired")) + '</span>' +
+          '<div class="muted small">' + o.activatedCount + ' of ' + o.keyCount + ' keys in use · ' + o.seats + ' seats · ends ' + day(o.expiresAt) +
+          (r.owner ? ' · ' + o.instructors + ' instructor' + (o.instructors === 1 ? '' : 's') + ' · invite <span class="mono">' + esc(o.invite) + '</span>' + (o.contact ? ' · ' + esc(o.contact) : '') : '') + '</div></div>' +
+          '<button data-open="' + esc(o.orgId) + '">Open</button></div>';
+      }).join("") : '<p class="muted">' + (r.owner ? "No classes yet. Open one above." : "No classes yet. Enter the instructor code DrugBug sent you.") + '</p>';
+    }).catch(function (e) { show("vList", true); $("list").innerHTML = '<p class="msg err">' + esc(e.message) + '</p>'; });
+  }
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest("[data-open]"); if (b) openClass(b.getAttribute("data-open"));
+  });
+  $("bJoin").onclick = function () {
+    call("groupJoin", { invite: $("inv").value }).then(function (r) { say("joinMsg", "Joined " + r.name + "."); $("inv").value = ""; loadList(); })
+      .catch(function (e) { say("joinMsg", e.message, true); });
+  };
+  $("bNew").onclick = function () {
+    var b = this; b.disabled = true;
+    var days = Number($("nKind").value);
+    call("groupOrgCreate", { name: $("nName").value, code: $("nCode").value, seats: Number($("nSeats").value), days: days, goal: Number($("nGoal").value), contact: $("nContact").value, kind: days >= 365 ? "annual" : "pilot" })
+      .then(function (r) { say("newMsg", "Class opened. Instructor code: " + r.invite + " (send this to the school; it lets them sign in here and make keys). Ends " + day(r.expiresAt) + "."); ["nName", "nCode", "nContact"].forEach(function (i) { $(i).value = ""; }); loadList(); })
+      .catch(function (e) { say("newMsg", e.message, true); })
+      .then(function () { b.disabled = false; });
+  };
+
+  /* ---------- owner overview ---------- */
+  $("bOvRefresh").onclick = function () { loadOverview(); };
+  function loadOverview() {
+    $("ovSub").textContent = "Loading…";
+    call("groupOwnerStats").then(drawOverview).catch(function (e) { $("ovSub").textContent = e.message; });
+  }
+  function drawOverview(d) {
+    var T = d.totals;
+    $("ovSub").textContent = T.schools + " school" + (T.schools === 1 ? "" : "s") + " · " + T.live + " live · " + T.pilots + " pilot" + (T.pilots === 1 ? "" : "s") + ", " + T.annual + " paid · updated " + new Date(d.generatedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    $("ovTiles").innerHTML = [
+      [T.activated + " / " + T.seats, "students activated / seats (" + T.activationRate + "%)"],
+      [T.active7, "students active in the last 7 days"],
+      [T.n.toLocaleString(), "questions answered, all schools"],
+      [pctTxt(T.accuracy), "average accuracy"],
+      [T.annual + (T.conversions ? " (" + T.conversions + " converted)" : ""), "paying schools"],
+      [T.instructors, "instructors signed in"]
+    ].map(function (x) { return '<div class="tile"><b>' + esc(x[0]) + '</b><span>' + esc(x[1]) + '</span></div>'; }).join("");
+
+    /* weekly columns: one series, value on top of each bar */
+    var max = Math.max.apply(null, d.weeks.map(function (w) { return w.answered; }).concat([1]));
+    $("ovWeeks").innerHTML = d.weeks.map(function (w) {
+      var h = Math.round(100 * w.answered / max);
+      return '<div class="col" title="' + esc("Week of " + day(w.start) + ": " + w.answered + " questions, " + w.students + " students, " + w.schools + " schools" + (w.accuracy != null ? ", " + pctTxt(w.accuracy) + " correct" : "")) + '">' +
+        (w.answered ? '<b style="bottom:calc(' + h + '% + 2px)">' + (w.answered >= 1000 ? (w.answered / 1000).toFixed(1) + "k" : w.answered) + '</b>' : '') + '<i style="height:' + h + '%"></i></div>';
+    }).join("");
+    $("ovWeekX").innerHTML = d.weeks.map(function (w) { var dt = new Date(w.start); return '<span>' + (dt.getUTCMonth() + 1) + "/" + dt.getUTCDate() + '</span>'; }).join("");
+    var last = d.weeks[d.weeks.length - 1];
+    $("ovWeekNote").textContent = "This week so far: " + last.answered.toLocaleString() + " questions from " + last.students + " student" + (last.students === 1 ? "" : "s") + " at " + last.schools + " school" + (last.schools === 1 ? "" : "s") + ".";
+
+    $("ovFollow").innerHTML = d.followUp.length ? '<div class="tblwrap"><table><tr><th>School</th><th>Ends</th><th>Seats used</th><th>Still studying</th><th></th></tr>' + d.followUp.map(function (f) {
+      return '<tr class="clk" data-open="' + esc(f.orgId) + '"><td><b>' + esc(f.name) + '</b>' + (f.contact ? '<div class="muted small">' + esc(f.contact) + '</div>' : '') + '</td><td>' + (f.daysLeft <= 0 ? "today" : "in " + f.daysLeft + " d") + '</td><td class="num">' + f.activation + '%</td><td class="num">' + f.engaged + '%</td><td><span class="heat ' + f.heat + '">' + f.heat + '</span></td></tr>';
+    }).join("") + '</table></div>' : '<p class="muted">No pilots end in the next two weeks.</p>';
+
+    $("ovSchools").innerHTML = '<tr><th>School</th><th>Plan</th><th>Ends</th><th>Seats</th><th>Activated</th><th>Active 7 d</th><th>Questions</th><th>Per student</th><th>Accuracy</th><th>Last activity</th></tr>' +
+      (d.schools.length ? d.schools.map(function (s) {
+        var act = s.seats ? Math.round(100 * s.activated / s.seats) : 0;
+        return '<tr class="clk" data-open="' + esc(s.orgId) + '"><td><b>' + esc(s.name) + '</b> <span class="pill">' + esc(s.code) + '</span></td>' +
+          '<td>' + (s.kind === "annual" ? '<span class="pill on">paid</span>' : '<span class="pill">pilot</span>') + '</td>' +
+          '<td>' + (s.live ? (s.daysLeft + " d") : '<span class="muted">' + (s.status === "ended" ? "ended" : "expired") + '</span>') + '</td>' +
+          '<td class="num">' + s.seats + '</td><td><span class="mini"><i style="width:' + act + '%"></i></span>' + s.activated + '</td>' +
+          '<td class="num">' + s.active7 + '</td><td class="num">' + s.answered.toLocaleString() + '</td><td class="num">' + s.perStudent + '</td>' +
+          '<td class="num">' + pctTxt(s.accuracy) + '</td><td>' + ago(s.lastAt) + '</td></tr>';
+      }).join("") : '<tr><td colspan="10" class="muted">No schools yet. Open your first class below.</td></tr>');
+
+    $("ovSys").innerHTML = d.systems.length ? d.systems.map(function (s) {
+      return '<div class="lab">' + esc(s.name) + '</div><div class="bar"><i style="width:' + Math.max(2, s.pct) + '%"></i></div><div class="val"><b>' + pctTxt(s.pct) + '</b> <span>' + s.answered.toLocaleString() + ' · ' + s.schools + ' school' + (s.schools === 1 ? '' : 's') + '</span></div>';
+    }).join("") : '<p class="muted" style="grid-column:1/-1">No answers yet.</p>';
+  }
+
+  /* ---------- one class ---------- */
+  function openClass(id) { ST.orgId = id; ST.newKeys = null; say("keyMsg", ""); say("oMsg", ""); refresh(); }
+  $("bBack").onclick = function () { ST.orgId = null; loadList(); };
+  $("bRefresh").onclick = function () { refresh(); };
+  function refresh() {
+    show("vList", false); show("vOwner", false); show("vOverview", false); show("vClass", true);
+    $("cName").textContent = "Loading…";
+    return call("groupDashboard", { orgId: ST.orgId }).then(function (d) { ST.dash = d; drawClass(); })
+      .catch(function (e) { $("cName").textContent = "Couldn't load this class"; $("cSub").textContent = e.message; });
+  }
+  function drawClass() {
+    var d = ST.dash, o = d.org, t = d.totals;
+    var left = Math.ceil((o.expiresAt - Date.now()) / 864e5);
+    $("cName").textContent = o.name;
+    $("cSub").textContent = (o.kind === "annual" ? "Paid · " : "Pilot · ") + (o.live ? "Active · " + left + " day" + (left === 1 ? "" : "s") + " left" : o.status === "ended" ? "Ended" : "Expired") +
+      " · ends " + day(o.expiresAt) + " · code " + o.code + " · goal " + o.goal + " questions per student" + (o.instructors.length ? " · instructors: " + o.instructors.join(", ") : "");
+    $("printTitle").textContent = o.name + " — DrugBug key sheet";
+    $("tiles").innerHTML = [
+      [t.activated + " / " + o.seats, "seats in use (" + o.keyCount + " keys made)"],
+      [t.active7, "studied in the last 7 days"],
+      [t.answered.toLocaleString(), "questions answered"],
+      [pctTxt(t.accuracy), "class accuracy"]
+    ].map(function (x) { return '<div class="tile"><b>' + esc(x[0]) + '</b><span>' + esc(x[1]) + '</span></div>'; }).join("");
+    $("wmin").textContent = d.weakMin;
+
+    /* owner tools */
+    show("ownerTools", ST.owner);
+    if (ST.owner) { $("bPaid").classList.toggle("hide", o.kind === "annual"); $("bPilot").classList.toggle("hide", o.kind !== "annual"); $("oSeats").value = o.seats; $("oInfo").innerHTML = 'Instructor code: <span class="mono">' + esc(o.invite) + '</span>' + (o.contact ? ' · contact: ' + esc(o.contact) : ''); }
+
+    /* chart: weakest first, one series, value labels on every bar */
+    var sys = d.systems.slice().sort(function (a, b) { return a.pct - b.pct; });
+    $("chart").innerHTML = sys.length ? sys.map(function (s) {
+      return '<div class="lab">' + esc(s.name) + '</div><div class="bar" title="' + esc(s.name + ": " + pctTxt(s.pct) + " of " + s.answered + " answers, " + s.students + " students") + '"><i style="width:' + Math.max(2, s.pct) + '%"></i></div><div class="val"><b>' + pctTxt(s.pct) + '</b> <span>' + s.answered.toLocaleString() + ' answers</span></div>';
+    }).join("") : '<p class="muted" style="grid-column:1/-1">No answers yet. Numbers appear here as students study.</p>';
+    $("sysTable").innerHTML = '<tr><th>System</th><th>Class average</th><th>Answers</th><th>Students</th></tr>' + sys.map(function (s) {
+      return '<tr><td>' + esc(s.name) + '</td><td class="num">' + pctTxt(s.pct) + '</td><td class="num">' + s.answered.toLocaleString() + '</td><td class="num">' + s.students + '</td></tr>';
+    }).join("");
+
+    /* students */
+    var fresh = {}; (ST.newKeys || []).forEach(function (k) { fresh[k.alias] = 1; });
+    $("stuTable").innerHTML = '<tr><th>Student</th><th>Key</th><th class="noprint">Status</th><th class="noprint">Answered</th><th class="noprint">Accuracy</th><th class="noprint">Completion</th><th class="noprint">Weakest systems</th><th class="noprint">Last studied</th><th class="noprint"></th><th class="printonly hide">Name (write in, keep private)</th></tr>' +
+      (d.students.length ? d.students.map(function (s) {
+        return '<tr' + (fresh[s.alias] ? ' class="fresh"' : '') + '><td><b>' + esc(s.alias) + '</b></td><td class="mono">' + esc(s.token) + '</td>' +
+          '<td class="noprint"><span class="pill' + (s.activated ? " on" : "") + '">' + (s.activated ? "in use" : "not used yet") + '</span></td>' +
+          '<td class="num noprint">' + s.answered.toLocaleString() + '</td><td class="num noprint">' + pctTxt(s.accuracy) + '</td>' +
+          '<td class="noprint"><span class="mini"><i style="width:' + s.completion + '%"></i></span>' + s.completion + '%</td>' +
+          '<td class="noprint">' + (s.weakest.length ? s.weakest.map(function (w) { return esc(w.name) + ' <span class="muted">' + pctTxt(w.pct) + '</span>'; }).join(", ") : '<span class="muted">not enough yet</span>') + '</td>' +
+          '<td class="noprint">' + ago(s.lastAt) + '</td>' +
+          '<td class="noprint">' + (s.activated ? '<button class="ghost" data-reset="' + esc(s.keyId) + '" data-alias="' + esc(s.alias) + '">Reset</button>' : '') + '</td>' +
+          '<td class="printonly hide"></td></tr>';
+      }).join("") : '<tr><td colspan="9" class="muted">No keys yet. Choose how many and press Make keys.</td></tr>');
+  }
+
+  $("bMake").onclick = function () {
+    var b = this; b.disabled = true;
+    call("groupKeysGenerate", { orgId: ST.orgId, quantity: Number($("qty").value) })
+      .then(function (r) { ST.newKeys = r.keys; say("keyMsg", r.keys.length + " new key" + (r.keys.length === 1 ? "" : "s") + " made (highlighted). Print or download the key sheet and hand each student one key."); return refresh(); })
+      .catch(function (e) { say("keyMsg", e.message, true); })
+      .then(function () { b.disabled = false; });
+  };
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest("[data-reset]"); if (!b) return;
+    var alias = b.getAttribute("data-alias");
+    var clear = confirm(alias + ": unlink this key from the device using it?\n\nOK = unlink AND clear its results (giving the key to a new student).\nCancel = do nothing.\n\n(To move a key to a student's new phone, they can just enter it again on the new phone.)");
+    if (!clear) return;
+    call("groupKeyReset", { orgId: ST.orgId, keyId: b.getAttribute("data-reset"), clearStats: true })
+      .then(function () { say("keyMsg", alias + " is free to hand to someone else."); refresh(); })
+      .catch(function (e2) { say("keyMsg", e2.message, true); });
+  });
+
+  /* the desk-reference sheet: alias, key and a blank column the instructor fills in by hand */
+  $("bCsv").onclick = function () {
+    var d = ST.dash; if (!d) return;
+    var rows = [["Student", "Key", "Name (fill in yourself; keep private)"]].concat(d.students.map(function (s) { return [s.alias, s.token, ""]; }));
+    var csv = rows.map(function (r) { return r.map(function (c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(","); }).join("\r\n");
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+    a.download = "drugbug-keys-" + d.org.code + ".csv"; document.body.appendChild(a); a.click(); a.remove();
+  };
+  $("bPrint").onclick = function () {
+    document.querySelectorAll(".printonly").forEach(function (el) { el.classList.remove("hide"); });
+    $("printTitle").classList.remove("hide");
+    window.print();
+    setTimeout(function () { document.querySelectorAll(".printonly").forEach(function (el) { el.classList.add("hide"); }); $("printTitle").classList.add("hide"); }, 500);
+  };
+
+  /* owner tools */
+  function upd(data, done) {
+    data.orgId = ST.orgId;
+    call("groupOrgUpdate", data).then(function () { say("oMsg", done); refresh(); }).catch(function (e) { say("oMsg", e.message, true); });
+  }
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest("[data-add]"); if (!b) return;
+    upd({ addDays: Number(b.getAttribute("data-add")) }, "Extended. Students' Pro moves with it.");
+  });
+  $("bPaid").onclick = function () { upd({ kind: "annual" }, "Marked as a paying school."); };
+  $("bPilot").onclick = function () { upd({ kind: "pilot" }, "Set back to pilot."); };
+  $("bSeats").onclick = function () { upd({ seats: Number($("oSeats").value) }, "Seats saved."); };
+  $("bEnd").onclick = function () { if (confirm("End this class now? Students lose Pro immediately.")) upd({ status: "ended" }, "Class ended."); };
+  $("bReopen").onclick = function () { upd({ status: "active" }, "Class reopened."); };
+  $("bDel").onclick = function () {
+    var code = prompt("This deletes the class, every key and all its results, for good.\nType the class code (" + ST.dash.org.code + ") to confirm:");
+    if (!code) return;
+    call("groupOrgDelete", { orgId: ST.orgId, confirm: code }).then(function () { ST.orgId = null; loadList(); }).catch(function (e) { say("oMsg", e.message, true); });
+  };
+})();
+</script>
+</body>
+</html>
