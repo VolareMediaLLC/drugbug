@@ -8647,6 +8647,16 @@ function bodySVG(sel) {
      list, and is unchanged. data-bpart says which bit was actually touched, so the left arm and
      the right leg can react differently while both still filter as "Limbs". */
   var light = '#ffffff', dark = '#000000';
+  /* A joint rotates about its own pivot. CSS resolves transform-origin against the element's
+     bounding box, and that box GROWS as the limbs below it swing out - which silently dragged
+     each pivot sideways mid-animation and tore the arms off the shoulders. This invisible square,
+     centred on the joint and bigger than anything that can swing inside it, pins the bounding box
+     so "50% 50%" is always exactly the joint. (owner, Nov 4 2026) */
+  /* A circle, not a square: a square's corners stick out by root-2 and the box grew again.
+     Each radius only has to cover its own limb plus whatever hangs below it. */
+  function pivot(cx, cy, r) {
+    return '<circle class="bmpivot" cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="none" pointer-events="none"/>';
+  }
   /* a limb: drawn hanging from (0,0) so its joint is the top-centre of its own box, with a
      highlight down one side and shade down the other to give it some roundness */
   function limb(w, h, rx) {
@@ -8668,11 +8678,14 @@ function bodySVG(sel) {
   /* arm: shoulder -> upper arm -> elbow -> forearm -> hand */
   function arm(side) {
     var X = side === "L" ? 46 : 114, S = side === "L" ? "L" : "R";
-    return '<g transform="translate(' + X + ' 78)"><g class="bmarm bmarm' + S + '">' +
-      limb(15, 50) +
+    /* the resting angle is baked into the static transform, so the arms hang a little away from
+       the body instead of glued to it, and every CSS pose angle below is measured from here */
+    var rest = side === "L" ? 8 : -8;
+    return '<g transform="translate(' + X + ' 78) rotate(' + rest + ')"><g class="bmarm bmarm' + S + '">' +
+      pivot(0, 0, 160) + limb(15, 50) +
       '<g transform="translate(0 50)"><g class="bmfore bmfore' + S + '">' +
-        limb(13, 46) +
-        '<g transform="translate(0 46)"><g class="bmhand bmhand' + S + '">' +
+        pivot(0, 0, 76) + limb(13, 46) +
+        '<g transform="translate(0 46)"><g class="bmhand bmhand' + S + '">' + pivot(0, 0, 20) +
           '<circle class="bmp" cx="0" cy="7" r="8.5"/><circle class="bmhl" cx="-2.5" cy="4.5" r="3.4" fill="' + light + '" opacity=".25"/>' +
         '</g></g>' +
       '</g></g>' +
@@ -8680,12 +8693,12 @@ function bodySVG(sel) {
   }
   /* leg: hip -> thigh -> knee -> shin -> foot */
   function leg(side) {
-    var X = side === "L" ? 67 : 93, S = side;
-    return '<g transform="translate(' + X + ' 206)"><g class="bmleg bmleg' + S + '">' +
-      limb(19, 44) +
+    var X = side === "L" ? 67 : 93, S = side, rest = side === "L" ? 2 : -2;
+    return '<g transform="translate(' + X + ' 206) rotate(' + rest + ')"><g class="bmleg bmleg' + S + '">' +
+      pivot(0, 0, 140) + limb(19, 44) +
       '<g transform="translate(0 44)"><g class="bmshin bmshin' + S + '">' +
-        limb(16, 40) +
-        '<g transform="translate(0 40)"><g class="bmfoot bmfoot' + S + '">' +
+        pivot(0, 0, 65) + limb(16, 40) +
+        '<g transform="translate(0 40)"><g class="bmfoot bmfoot' + S + '">' + pivot(0, 0, 16) +
           '<ellipse class="bmp" cx="' + (side === "L" ? -2 : 2) + '" cy="5" rx="10" ry="5.5"/>' +
         '</g></g>' +
       '</g></g>' +
@@ -8693,24 +8706,27 @@ function bodySVG(sel) {
   }
 
   var head =
-    '<g transform="translate(80 54)"><g class="bmhead">' +
+    '<g transform="translate(80 54)"><g class="bmhead">' + pivot(0, 0, 50) +
       '<ellipse class="bmp" cx="0" cy="-23" rx="21" ry="23"/>' +
       '<ellipse class="bmhl" cx="-7" cy="-30" rx="8" ry="9" fill="' + light + '" opacity=".2"/>' +
       '<ellipse class="bmsh" cx="12" cy="-18" rx="7" ry="12" fill="' + dark + '" opacity=".12"/>' +
     '</g></g>';
-  var neck = '<g transform="translate(80 66)"><g class="bmneck">' + '<rect class="bmp" x="-9" y="-16" width="18" height="17" rx="6"/>' + '</g></g>';
+  var neck = '<g transform="translate(80 66)"><g class="bmneck">' + pivot(0, 0, 25) + '<rect class="bmp" x="-9" y="-16" width="18" height="17" rx="6"/>' + '</g></g>';
 
-  return '<svg class="bodymap" viewBox="0 0 160 310" aria-label="Body map">' +
+  /* The viewBox is wider than the figure on purpose. With a tight box, flaring the elbows to
+     put both hands on the head pushed them off the canvas and the arms looked torn off. Giving
+     the drawing room to move is cheaper and truer than foreshortening every limb. */
+  return '<svg class="bodymap" viewBox="-26 -4 212 318" aria-label="Body map">' +
     '<defs><linearGradient id="bmShade" x1="0" y1="0" x2="1" y2=".35">' +
       '<stop offset="0" stop-color="' + light + '" stop-opacity=".2"/>' +
       '<stop offset=".45" stop-color="' + light + '" stop-opacity="0"/>' +
       '<stop offset="1" stop-color="' + dark + '" stop-opacity=".15"/>' +
     '</linearGradient></defs>' +
-    '<g class="bmfig">' +
+    '<g class="bmfig">' + pivot(80, 300, 610) +
       /* legs sit behind the torso so a crossed leg reads correctly */
       z("Limbs", "legL", "Left leg", leg("L"), '<rect x="48" y="200" width="36" height="108" rx="16"/>', "bmzleg") +
       z("Limbs", "legR", "Right leg", leg("R"), '<rect x="76" y="200" width="36" height="108" rx="16"/>', "bmzleg") +
-      '<g class="bmtorso">' +
+      '<g class="bmtorso">' + pivot(80, 206, 360) +
         z("Pelvis", "pelvis", "Pelvis", blob("M46 184 H114 Q116 198 108 212 H52 Q44 198 46 184Z"), '<rect x="44" y="180" width="72" height="36" rx="12"/>') +
         z("Abdomen", "abdomen", "Abdomen", blob("M44 132 H116 Q118 160 114 186 H46 Q42 160 44 132Z"), '<rect x="42" y="130" width="76" height="56" rx="12"/>') +
         z("Chest", "chest", "Chest", blob("M44 68 Q80 62 116 68 Q120 102 118 134 H42 Q40 102 44 68Z"), '<rect x="40" y="64" width="80" height="70" rx="14"/>') +
@@ -8730,9 +8746,9 @@ function bodySVG(sel) {
 var BM_RX = {
   head:    { cls: "rx-head",  snd: "thunk", dur: 1500 },
   neck:    { cls: "rx-neck",  snd: "gasp",  dur: 1400 },
-  chest:   { cls: "rx-chest", snd: "thump", dur: 1100 },
+  chest:   { cls: "rx-chest", snd: "thump", dur: 2400, then: "groan", thenAt: 420 },
   abdomen: { cls: "rx-abd",   snd: "groan", dur: 1700 },
-  pelvis:  { cls: "rx-pelv",  snd: "gasp",  dur: 1700 },
+  pelvis:  { cls: "rx-pelv",  snd: "gasp",  dur: 1900 },
   armL:    { cls: "rx-armL",  snd: "punch", dur: 1900, then: "whine", thenAt: 280 },
   armR:    { cls: "rx-armR",  snd: "punch", dur: 1900, then: "whine", thenAt: 280 },
   legL:    { cls: "rx-legL",  snd: "punch", dur: 2100, then: "cry",   thenAt: 240 },
@@ -8741,12 +8757,38 @@ var BM_RX = {
 /* used when something only knows the anatomy area and not which limb was touched */
 var BM_AREA = { "Head": "head", "Neck": "neck", "Chest": "chest", "Abdomen": "abdomen",
   "Pelvis": "pelvis", "Limbs": "armL", "Whole body": "chest" };
+/* Hickory leans in from whichever side of the screen, says his piece, and leaves again.
+   Fun mode only, and never more than one at a time. (owner, Nov 4 2026) */
+function hickPop(line) {
+  if (typeof funOn === "function" && !funOn()) return;
+  if (typeof hfxOk === "function" && !hfxOk()) return;
+  var old = document.querySelector(".hickpop"); if (old) old.remove();
+  var side = Math.random() < 0.5 ? "left" : "right";
+  var art = "";
+  try {
+    if (typeof learnBugSVG === "function") art = learnBugSVG();
+    else if (typeof bugById === "function" && typeof bugArt === "function") art = bugArt(bugById("hickory"), "hickart", { mood: "joy" });
+  } catch (e) {}
+  var el = document.createElement("div");
+  el.className = "hickpop " + side;
+  el.setAttribute("aria-hidden", "true");
+  el.innerHTML = art + '<span class="hpsay"></span>';
+  el.querySelector(".hpsay").textContent = line;
+  document.body.appendChild(el);
+  try { if (typeof voiceSay === "function") setTimeout(function () { voiceSay(line, "drawl"); }, 380); } catch (e) {}
+  setTimeout(function () { if (el.parentNode) el.remove(); }, 2700);
+}
 var BM_CLASSES = ["rx-head", "rx-neck", "rx-chest", "rx-abd", "rx-pelv", "rx-armL", "rx-armR", "rx-legL", "rx-legR"];
 function bodyReact(area, snd, part) {
   var key = part && BM_RX[part] ? part : (BM_AREA[area] || "chest");
   var M = BM_RX[key];
   try { if (typeof anatSnd === "function") anatSnd(snd || M.snd); } catch (e) {}
   if (M.then) setTimeout(function () { try { anatSnd(M.then); } catch (e) {} }, M.thenAt || 250);
+  if (key === "pelvis") {
+    /* the whole room reacts, and Hickory turns up to make it worse */
+    setTimeout(function () { try { anatSnd("crowd"); } catch (e) {} }, 170);
+    setTimeout(function () { try { hickPop(pick(["Wow.", "Wow!", "Well. Wow.", "Wow now."])); } catch (e) {} }, 520);
+  }
   if (typeof hfxOk === "function" && !hfxOk()) return;      /* reduced motion: the noise alone */
   var go = function () {
     var figs = document.querySelectorAll(".bodymap");
@@ -24945,6 +24987,7 @@ var ANAT_SFX = {
   pop:    "a small pop",
   /* the ones the figure needs when you poke it (owner, Nov 4 2026) */
   thunk:  "a dull metal clang",
+  crowd:  "a room full of people gasping",
   gasp:   "a sharp offended inhale",
   punch:  "a body blow",
   whine:  "a hurt complaint",
@@ -25051,6 +25094,18 @@ function anatSnd(kind) {
       tone("sine", 523, 515, 0.01, 0.85, 0.055);
       tone("sine", 782, 770, 0.01, 0.6, 0.03);
       tone("square", 88, 60, 0, 0.22, 0.07);
+    } else if (kind === "crowd") {    /* a room of people catching their breath, then muttering */
+      var ci, cn = 11;
+      for (ci = 0; ci < cn; ci++) {
+        var cd = Math.random() * 0.17, cf = 520 + Math.random() * 900;
+        nz(cd, 0.2 + Math.random() * 0.14, 0.045 + Math.random() * 0.03, "bandpass", cf, cf * 2.4, 0.8);
+        tone("sine", 300 + Math.random() * 360, 620 + Math.random() * 520, cd, 0.16 + Math.random() * 0.1, 0.016 + Math.random() * 0.012);
+      }
+      for (ci = 0; ci < 7; ci++) {   /* the murmur afterwards */
+        var md = 0.42 + Math.random() * 0.5;
+        tone("triangle", 130 + Math.random() * 150, 110 + Math.random() * 90, md, 0.26, 0.012, 5 + Math.random() * 4, 9);
+        nz(md, 0.22, 0.016, "bandpass", 400 + Math.random() * 500, 900, 1.1);
+      }
     } else if (kind === "gasp") {     /* a sharp offended inhale, then a held, scandalised note */
       nz(0, 0.26, 0.2, "bandpass", 700, 2600, 0.9);
       tone("sine", 420, 880, 0.02, 0.24, 0.07);
