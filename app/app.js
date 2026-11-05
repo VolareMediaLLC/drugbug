@@ -1651,6 +1651,7 @@ function fullView(d, tier) {
 function openSheet(id, list) {
   if (typeof drugLocked === "function" && drugLocked(id)) return openPaywall(nameOf(id), drugTier(id));
   S.sheet = { id: id, list: list || S.sheet && S.sheet.list || [id] };
+  try { usgFeat("drug_page"); } catch (e) {}
   if (sheet.hidden) S.sheetFrom = document.activeElement;
   S.full = SET().fullDefault; drawSheet(); sheet.hidden = false; document.body.style.overflow = "hidden"; app.setAttribute("aria-hidden", "true");
   var p = $(".panel", sheet); if (p) { p.scrollTop = 0; p.focus(); }
@@ -1856,6 +1857,7 @@ function closeSheet() { sheet.hidden = true; sheet.innerHTML = ""; S.sheet = nul
 
 /* ---------- render & events ---------- */
 function render() {
+  try { if (typeof usgTab === "function") usgTab(); } catch (e) {}
   var ok = agreeRec(); protoTab.hidden = !ok; protoTab.textContent = lang() === "es" ? "Protocolos" : "Protocols"; document.documentElement.lang = lang();
   var html;
   /* A screen that fails to build used to leave the last one frozen on the page: the state had
@@ -2759,6 +2761,7 @@ function xpLevel(xp) { var lv = 1, need = 100; while (xp >= need) { xp -= need; 
 /* recording answers */
 function record(q, ok) { try { recordInner(q, ok); } catch (e) { /* never let progress bookkeeping block the quiz from moving on */ try { console.warn("record", e); } catch (x) { } } }
 function recordInner(q, ok) {
+  if (typeof usgOn === "function" && usgOn()) { USG.inc.q++; if (ok) USG.inc.c++; }
   var P = Prog.d, t = today();
   if (!P) return; P.days = P.days || {}; P.drugs = P.drugs || {}; P.xp = P.xp || 0;
   P.answered = (P.answered || 0) + 1; P.days[t] = (P.days[t] || 0) + 1; P.xp += ok ? 10 : 2;
@@ -2873,6 +2876,7 @@ function pickScenario(prefer) {
   return shuffle(fresh.length ? fresh : list)[0];
 }
 function startSession(kind, opt) {
+  try { usgFeat("quiz_" + kind); } catch (e) {}
   opt = opt || {};
   var pool = basePool(), qs = [], steps = ["quiz", "review", "done"], title = "", sub = "", sc = null, drug = opt.drug || null;
   if (kind === "daily") {
@@ -5995,7 +5999,7 @@ function savePs() {
 }
 
 /* ---------- Legal: terms, privacy, disclaimers, agreement gate, safety labels, moderation, data deletion ---------- */
-var LEGAL_V = "2026-10-08", COMPANY = "Volare Media LLC", CONTACT = DB.PROTOCOL_EMAIL;
+var LEGAL_V = "2026-11-05", COMPANY = "Volare Media LLC", CONTACT = DB.PROTOCOL_EMAIL;
 var NONAFF = "Not affiliated with or endorsed by NREMT, NCSBN, FSMB, NBME, ARRT, IBSC, BCEN or AHA.";
 var LG = { owner: false, blocked: [], mod: null };
 function eduBanner(short) {
@@ -6018,10 +6022,11 @@ var NAMEMSG = "Please choose a different name. Display names must be respectful,
 /* agreement gate (first run) */
 function gateView() {
   var g = S.gate || (S.gate = { age: "", ok: false });
-  var c = '<div class="gate"><div class="glogo">' + bugSVG("sage") + '</div><h1>Welcome to DrugBug</h1><p>DrugBug is a study tool for EMS, nursing and medical students and curious adults. It is for people 18 and older. Before you start, please confirm two things.</p>';
+  var c = '<div class="gate"><div class="glogo">' + bugSVG("sage") + '</div><h1>Welcome to DrugBug</h1><p>DrugBug is a study tool for EMS, nursing and medical students and curious adults. It is for people 18 and older. Before you start, please confirm two things.</p>' +
+    '<p class="gnote">DrugBug collects anonymous usage statistics, such as days active, time spent, sections opened and questions answered, to improve the app. They are never tied to your name or email, never sold and never used for ads. You can turn them off any time in Settings.</p>';
   c += '<fieldset class="gfs"><legend>How old are you?</legend>' + [["adult", "I am 18 or older"], ["minor", "I am under 18"]].map(function (o) { return '<label class="chk"><input type="radio" name="gage" data-gage="' + o[0] + '"' + (g.age === o[0] ? " checked" : "") + '> ' + o[1] + '</label>'; }).join("") + '</fieldset>';
   if (g.age === "minor") return c + '<div class="presult" role="alert">Sorry, DrugBug is for adults 18 and older only. Please close the app.</div></div>';
-  c += '<label class="chk gagree"><input type="checkbox" id="gok"' + (g.ok ? " checked" : "") + '> I have read and agree to the <button class="linkish" data-legal="terms">Terms of Use</button> and <button class="linkish" data-legal="privacy">Privacy Policy</button>. I understand DrugBug is for education only and is not for patient care.</label>';
+  c += '<label class="chk gagree"><input type="checkbox" id="gok"' + (g.ok ? " checked" : "") + '> I have read and agree to the <button class="linkish" data-legal="terms">Terms of Use</button> and <button class="linkish" data-legal="privacy">Privacy Policy</button>, including anonymous usage statistics. I understand DrugBug is for education only and is not for patient care.</label>';
   c += '<div class="actions"><button class="btn" data-act="gateok"' + (g.age && g.ok ? "" : " disabled") + '>Start learning</button></div>';
   return c + '<p class="muted small">' + esc(NONAFF) + '</p></div>';
 }
@@ -6114,24 +6119,34 @@ var LEGAL_PAGES = {
       L("12. Limitation of liability", ["To the fullest extent allowed by law, " + COMPANY + " and its members, employees, reviewers and contributors are not liable for any indirect, incidental, special, consequential, exemplary or punitive damages, or for any loss or harm arising from or related to: use of DrugBug in patient care or any other unauthorized clinical use; inaccurate, incomplete or outdated medication or clinical information; calculation errors in any simulation or calculator; software errors; service interruptions, outages or data loss; or our negligence, to the extent the law allows negligence to be limited.", "To the fullest extent allowed by law, our total liability for all claims relating to DrugBug is limited to the amount you paid us for DrugBug in the 12 months before the claim, or US $50 if you paid nothing.", "Some laws do not allow certain limits or exclusions, for example for gross negligence, intentional misconduct or certain consumer rights. In those cases these limits apply only as far as the law allows."]) +
       L("13. Indemnity", ["You agree to defend and hold harmless " + COMPANY + " from claims arising from your misuse of DrugBug, including use of DrugBug for patient care or breaking these Terms."]) +
       L("14. Subscriptions and billing", ["DrugBug Free is free. Some features require a paid subscription: DrugBug Plus or DrugBug Pro, billed monthly or yearly. The price and billing period are shown before you buy.", "Pro may include a free trial (for example 7 days) offered through the App Store to eligible new subscribers. The trial starts when you confirm with your Apple Account. Unless you cancel at least 24 hours before the trial ends, the subscription converts to a paid subscription and your Apple Account is charged the price shown. Eligibility is decided by Apple; each Apple Account generally gets one free trial per subscription group.", "Subscriptions bought in the iPhone app are billed and managed through your Apple Account and are subject to Apple's payment and subscription terms. Unless cancelled at least 24 hours before the end of the current period, subscriptions renew automatically at the end of each billing period, and your Apple Account is charged within 24 hours before the period ends. You can manage or cancel in iPhone Settings, your name, Subscriptions.", "Cancelling stops future renewals but does not normally refund the current billing period. Refund requests for App Store purchases are handled by Apple under its policies and applicable law.", "We may change subscription prices. Apple notifies subscribers of price increases as its rules require, and a new price applies only from your next renewal after notice. Plus and Pro are in one subscription group, so changing plans replaces your current plan.", "School and agency codes give Pro for the period your organization paid for and can be ended by your organization or by us.", "Apple's Standard Licensed Application End User License Agreement also applies to the iPhone app, alongside these Terms."]) +
-      L("15. Accounts, deletion and your data", ["Accounts are optional. If you create one, keep your sign-in details secure and tell us if you think someone else used your account. You can delete everything DrugBug stores about you at any time from Your data (in the footer) or by emailing <a href=\"mailto:" + CONTACT + "\">" + CONTACT + "</a>. Deletion removes or de-identifies your personal information, subject to legal obligations and legitimate retention needs described in the Privacy Policy. Deleting your data does not cancel an App Store subscription; cancel that in your Apple Account.", "How we collect, use, store and share information is described in the separate <button class=\"linkish\" data-legal=\"privacy\">Privacy Policy</button>."]) +
+      L("15. Accounts, deletion and your data", ["Accounts are optional. If you create one, keep your sign-in details secure and tell us if you think someone else used your account. You can delete everything DrugBug stores about you at any time from Your data (in the footer) or by emailing <a href=\"mailto:" + CONTACT + "\">" + CONTACT + "</a>. Deletion removes or de-identifies your personal information, subject to legal obligations and legitimate retention needs described in the Privacy Policy. Deleting your data does not cancel an App Store subscription; cancel that in your Apple Account.", "DrugBug collects anonymous usage statistics to improve the app, as described in the Privacy Policy. You can turn them off in Settings.", "How we collect, use, store and share information is described in the separate <button class=\"linkish\" data-legal=\"privacy\">Privacy Policy</button>."]) +
       L("16. Governing law and venue", ["These Terms are governed by the laws of the State of Texas, without regard to conflict-of-law principles. Except where applicable law requires otherwise, disputes arising from these Terms or the use of DrugBug shall be brought in the state or federal courts having jurisdiction in Brazos County, Texas."]) +
       L("17. Changes and effective date", ["These Terms are effective " + LEGAL_V + ". We may update them. When we make a material change, we will ask you to agree again in the app, and we keep a record of the version you accepted and when."]);
   }],
   privacy: ["Privacy Policy", function () {
-    return L("What DrugBug stores", ["<strong>On your device:</strong> your settings (theme, level), study progress, saved drug list, agreement record, and score history.", (NATIVE ? "<strong>In DrugBug's online database (only when online features are on), linked to an anonymous DrugBug account ID created on your device</strong> (not your name or email):" : typeof DEMO !== "undefined" && DEMO ? "<strong>On DrugBug's servers: nothing.</strong> The web app has no accounts or online database. Feedback and error reports open your own email app, so they reach DrugBug only if you choose to send them." : "<strong>In DrugBug's database, linked to your platform account ID</strong> (an opaque ID, not your name or email):"), typeof DEMO !== "undefined" && DEMO && !NATIVE ? [] : ["Your study progress and score history (private to you).", "If you join the leaderboard: the display name you choose and your weekly XP (visible to other DrugBug users).", "If you join a school competition: your display name, your school or team name and your competition scores (visible to other participants in that competition).", "If you report an error or request protocols: what you write, and an email address only if you choose to give one."]]) +
+    /* Rewritten Nov 5 2026 for anonymous usage statistics (LEGAL_V 2026-11-05). Mirrors privacy.html on the website. */
+    var STATS = "Settings, Account &amp; privacy, Share usage statistics";
+    return L("What DrugBug stores", ["<strong>On your device:</strong> your settings (theme, level), study progress, saved drug list, agreement record, score history, and a random device ID used for usage statistics.",
+        "<strong>In DrugBug's online database (Google Firebase)</strong>, linked to a random device ID or an anonymous account ID, never to your name or email unless you create an account:", [
+        "Usage statistics, described in the next section.",
+        "If you create an account: your email address and your study data, so it syncs across your devices.",
+        "If you subscribe on the website: which plan you have and when it renews or ends. Payment is handled by Stripe.",
+        "If you redeem a class key from a school or agency: running quiz totals for that key, described under Students and schools.",
+        "If you report an error or request protocols: what you write, and an email address only if you choose to give one."]]) +
+      L("Usage statistics", ["We collect anonymous usage statistics to understand how DrugBug is used and to improve it. They include: a random device ID that the app creates (not your name, email, Apple ID or an advertising ID); the days you use DrugBug; about how many minutes you are active; which sections you open and which features you use; how many questions you answer and how many are correct; L.E.A.R.N cards you go through; your plan (Free, Plus or Pro); your study route and level; the app version; and whether you use the website or the iPhone app.",
+        "We use them only to measure and improve DrugBug, for example which sections are used, whether people come back, and how many free users upgrade. We do not use them for advertising, we do not sell or share them, we do not combine them with information from other companies, and we do not track you across other apps or websites.",
+        "They are kept for up to 24 months, then deleted or combined into totals that cannot be tied to a device. You can turn them off at any time in " + STATS + ". Turning them off also deletes the statistics stored for that device."]) +
       L("Optional account", ["DrugBug works without an account. If you choose to create one (Sign in with Apple or email and password), we store your email address (or Apple's private relay address if you use Hide My Email), an account ID, and your study data so it can sync across your devices.", "Passwords and sign-in are handled by our authentication provider (Google Firebase Authentication); DrugBug never sees or stores your password or your Apple Account password. Apple sign-in tokens are verified by the provider's servers.", "Your account data is private to you: other users never see your email, account ID or study records. Data is encrypted in transit (HTTPS/TLS) and at rest by our provider. Access to the database is restricted by server-side security rules, and only authorized DrugBug administrators can manage content.", "You can export your data (Settings, Download my data) and delete your account in the app (Settings, Privacy & account). Deleting your account deletes your account and its study records; copies in our provider's backups expire within 30 days."]) +
-      L("What we do not collect", ["We do not ask for patient information, and you must never enter it. We do not sell personal information, and we do not show ads."]) +
-      L("Who can see it", ["Your progress and score history are private to your account. (The leaderboard and school competitions are currently turned off.) If turned on: leaderboard and competition display names, school or team names and scores are visible to other participants. Use a first name or nickname only. Error reports and protocol requests are seen by the DrugBug team."]) +
-      L("Students and schools", ["When a school or program buys DrugBug for its students, students use the app on their own. School competitions (currently turned off) let classmates compete on a shared leaderboard using a first name or nickname. DrugBug is not used for teaching or grading, and we do not give schools or instructors students' individual study records. Schools that need a data agreement can contact us."]) +
-      L("Account deletion and retention", ["Use <button class=\"linkish\" data-legal=\"data\">Your data</button> to delete everything DrugBug stores about you, or email us. We delete or de-identify your information promptly, except where we must keep limited records for legal reasons (for example records of purchases kept by Apple, or a record that you agreed to the Terms). Data stored only on your device is removed when you delete the app."]) +
+      L("What we do not collect", ["We do not ask for patient information, and you must never enter it. We do not collect your name, contacts, location, photos or advertising ID. We do not sell personal information, and we do not show ads."]) +
+      L("Who can see it", ["Your progress and score history are private to your account. Usage statistics are seen only by the DrugBug team, as totals and trends. (The leaderboard and school competitions are currently turned off.) If turned on: leaderboard and competition display names, school or team names and scores are visible to other participants. Use a first name or nickname only. Error reports and protocol requests are seen by the DrugBug team."]) +
+      L("Students and schools", ["A school or agency can give students anonymous class keys. If you redeem one, your quiz totals by medication system (questions answered, how many were correct, and when you last studied) are reported to your instructor under the key's label, for example \"Student 07\", never under your name. DrugBug does not know who holds which key; only your instructor's own key sheet does. Deleting the class deletes every key and its results. Schools that need a data agreement can contact us."]) +
+      L("Account deletion and retention", ["Use <button class=\"linkish\" data-legal=\"data\">Your data</button> to delete everything DrugBug stores about you, including this device's usage statistics, or email us. We delete or de-identify your information promptly, except where we must keep limited records for legal reasons (for example records of purchases, or a record that you agreed to the Terms). Data stored only on your device is removed when you delete the app or clear this site's data."]) +
       L("Age", ["DrugBug is for adults 18 and older only. If you believe someone under 18 has used DrugBug, contact us and we will delete the data."]) +
-      L("Your choices and rights", ['Open <button class="linkish" data-legal="data">Your data</button> to leave the leaderboard or a school competition, or delete everything DrugBug stores about you. You can also email <a href="mailto:' + CONTACT + '">' + CONTACT + '</a> to ask what we hold or to request deletion. Depending on where you live, you may have additional privacy rights; we will honor them.']) +
-      (NATIVE ? L("Subscriptions and payments", ["DrugBug Plus and Pro are sold through Apple's App Store. Apple processes the payment; DrugBug never receives your card or billing details. We only learn which plan is active and when it renews or ends. Manage or cancel subscriptions in iPhone Settings, your name, Subscriptions."]) +
-        L("Service providers", ["Apple distributes the app and handles purchases. When online features are on, DrugBug's database and anonymous sign-in are hosted by Google Firebase (Google Cloud). DrugBug contains no advertising or third-party tracking, and we do not track you across other apps or websites."])
-      : typeof DEMO !== "undefined" && DEMO ? L("Service providers", ["The DrugBug website and web app are hosted on GitHub Pages (GitHub, Inc.), which receives standard request information such as your IP address when pages load. The web app has no accounts and no server database: your progress, settings and any access code you redeem are stored only in this browser on this device."])
-      : L("Service providers", ["This preview of DrugBug is hosted on the platform where it is shared, which hosts the app and its database under that platform's own terms and privacy policy."])) +
-      L("Changes", ["We will update this policy when DrugBug changes and ask you to agree again. Contact: " + COMPANY + ', <a href="mailto:' + CONTACT + '">' + CONTACT + '</a>.']);
+      L("Your choices and rights", ['Turn usage statistics off in ' + STATS + '. Open <button class="linkish" data-legal="data">Your data</button> to leave the leaderboard or a school competition, or delete everything DrugBug stores about you. You can also email <a href="mailto:' + CONTACT + '">' + CONTACT + '</a> to ask what we hold or to request deletion. Depending on where you live, you may have additional privacy rights; we will honor them.']) +
+      (NATIVE ? L("Subscriptions and payments", ["DrugBug Plus and Pro are sold through Apple's App Store. Apple processes the payment; DrugBug never receives your card or billing details. We only learn which plan is active and when it renews or ends. Manage or cancel subscriptions in iPhone Settings, your name, Subscriptions."])
+        : L("Subscriptions and payments", ["On the website, DrugBug Plus and Pro are sold through Stripe. Stripe processes the payment under its own privacy policy; DrugBug never receives your full card details. We only learn which plan is active and when it renews or ends."])) +
+      L("Service providers", ["DrugBug's database, sign-in, usage statistics and server functions are hosted by Google Firebase (Google Cloud). " + (NATIVE ? "Apple distributes the iPhone app and handles its purchases." : "The website is hosted on GitHub Pages (GitHub, Inc.), which receives standard request information such as your IP address when pages load. Website payments are handled by Stripe.") + " DrugBug contains no advertising and no third-party analytics or tracking tools; usage statistics are collected by DrugBug itself."]) +
+      L("Changes", ["We will update this policy when DrugBug changes and ask you to agree again. Effective " + LEGAL_V + ". Contact: " + COMPANY + ', <a href="mailto:' + CONTACT + '">' + CONTACT + '</a>.']);
   }],
   disclaimers: ["Disclaimers & Attributions", function () {
     return L("Not affiliated", [NONAFF + " Exam names describe subjects DrugBug covers. Practice questions are original and are not official items from any exam.", "Resuscitation content is written from published resuscitation guidelines. DrugBug is not an AHA course, does not provide ACLS or PALS certification, and is not reviewed by AHA."]) +
@@ -6224,6 +6239,7 @@ function deleteCloudData(cb) {
   Promise.all(jobs.map(function (p) { return p.then(function () { return true; }, function () { return false; }); })).then(function (r) { cb(r.every(Boolean), !!(db && uid)); });
 }
 function deleteMyData() {
+  try { usgForget(); } catch (e) {}
   S.delState = "busy"; render();
   deleteCloudData(function (ok, had) {
     try { Object.keys(localStorage).forEach(function (k) { if (k.indexOf("drugbug:") === 0) localStorage.removeItem(k); }); } catch (e) {} if (typeof akWipeAll === "function") { akWipeAll().catch(function () {}); ANK.decks = null; ANK.st = null; }
@@ -7483,6 +7499,68 @@ function printClick(t, a) { if (a.print) { openPrint(a.print); return true; } re
 
 /* ---------- Settings: display, study preferences, sound, protocols, printing, privacy & account, about ---------- */
 var APP_VERSION = "1.1", APP_DATE = "2026-11-05";
+
+/* ---------- usage statistics (owner, Nov 5 2026) ----------
+   Anonymous counts so the owner can see how DrugBug is used: a random device id (never a name,
+   email or Apple ID), days active, active minutes, sections opened, questions answered and
+   correct, L.E.A.R.N cards, plan, route, level, version and platform. Described in the Privacy
+   Policy (effective 2026-11-05) and agreed to on the welcome screen. Settings > Account & privacy
+   > Share usage statistics turns it off and deletes this device's record (functions/usage.js). */
+var USG = { inc: null, tab: "", lastAct: Date.now(), sentAt: 0, busy: false, sessSent: false };
+function usgNew() { return { q: 0, c: 0, learn: 0, sec: 0, tabs: {}, feats: {} }; }
+USG.inc = usgNew();
+function usgOn() { try { return SET().shareUsage !== false && !!agreeRec() && !(typeof DEMO !== "undefined" && DEMO && !NATIVE && !(window.DRUGBUG_CONFIG || {}).functionsUrl); } catch (e) { return false; } }
+function usgDid() {
+  var d = store("did");
+  if (!d || !/^[a-z0-9]{16,40}$/.test(d)) {
+    d = ""; var a = "abcdefghijklmnopqrstuvwxyz0123456789", r = new Uint32Array(24);
+    try { crypto.getRandomValues(r); } catch (e) { for (var j = 0; j < 24; j++) r[j] = Math.floor(Math.random() * 1e9); }
+    for (var i = 0; i < 24; i++) d += a[r[i] % 36];
+    store("did", d);
+  }
+  return d;
+}
+function usgKey(k) { return String(k || "").toLowerCase().replace(/[^a-z0-9_]/g, "_").slice(0, 24); }
+function usgFeat(k, n) { if (!usgOn()) return; k = usgKey(k); if (k) USG.inc.feats[k] = (USG.inc.feats[k] || 0) + (n || 1); }
+function usgTab() {
+  var k = S.view === "level" || S.view === "gen" ? (S.tab && S.tab !== "hub" ? S.tab : S.view + "_hub") : S.view;
+  k = usgKey(k); if (!k || k === USG.tab) return;
+  USG.tab = k; if (usgOn()) USG.inc.tabs[k] = (USG.inc.tabs[k] || 0) + 1;
+}
+function usgUrl(fn) { var b = (window.DRUGBUG_CONFIG || {}).functionsUrl || "https://us-central1-drugbug-69d42.cloudfunctions.net"; return b.replace(/\/$/, "") + "/" + fn; }
+function usgFlush(leaving) {
+  if (!usgOn() || USG.busy) return;
+  var I = USG.inc, has = I.q || I.learn || I.sec >= 15 || Object.keys(I.tabs).length || Object.keys(I.feats).length;
+  if (!has && USG.sessSent) return;
+  if (!leaving && Date.now() - USG.sentAt < 16000) return;
+  var rc = (typeof routeCtx === "function" && routeCtx()) || "";
+  var body = { data: { did: usgDid(), plat: NATIVE ? "ios" : "web", tier: (function () { try { return tier(); } catch (e) { return "free"; } })(),
+    route: rc || "other", level: S.view === "level" ? usgKey(S.level) : "", ver: APP_VERSION,
+    inc: { q: I.q, c: I.c, learn: I.learn, sec: I.sec, sess: USG.sessSent ? 0 : 1, tabs: I.tabs, feats: I.feats } } };
+  USG.inc = usgNew(); USG.sentAt = Date.now(); USG.busy = true;
+  var wasSess = USG.sessSent; USG.sessSent = true;
+  var back = function (ok) { USG.busy = false; if (!ok) { USG.sessSent = wasSess; var J = body.data.inc; USG.inc.q += J.q; USG.inc.c += J.c; USG.inc.learn += J.learn; USG.inc.sec += J.sec; } };
+  try {
+    fetch(usgUrl("usagePing"), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), keepalive: !!leaving })
+      .then(function (r) { back(r.ok); }, function () { back(false); });
+  } catch (e) { back(false); }
+}
+function usgForget() {
+  var d = store("did"); if (!d) return;
+  try { fetch(usgUrl("usageForget"), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ data: { did: d } }) }).catch(function () {}); } catch (e) {}
+  USG.inc = usgNew(); USG.sessSent = false;
+}
+["pointerdown", "keydown", "scroll", "touchstart"].forEach(function (ev) { document.addEventListener(ev, function () { USG.lastAct = Date.now(); }, { passive: true, capture: true }); });
+/* active time: 15-second ticks while the page is visible and someone touched it in the last 2 minutes */
+setInterval(function () {
+  if (document.visibilityState !== "visible" || Date.now() - USG.lastAct > 120000 || !usgOn()) return;
+  USG.inc.sec += 15;
+  if (Date.now() - USG.sentAt >= 60000) usgFlush(false);
+}, 15000);
+document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden") usgFlush(true); else { USG.lastAct = Date.now(); } });
+window.addEventListener("pagehide", function () { usgFlush(true); });
+setTimeout(function () { usgFlush(false); }, 8000);   /* the visit itself counts even before anything is answered */
+
 var SET_DEF = { remind: true, remindAt: "19:00", text: "normal", contrast: false, motion: false, homeLevel: "", dailyGoal: 10, nrN: 25, nrMode: "practice", adaptive: true, megaTimer: "on", fullDefault: false, voiceRate: "normal", showPhon: true, fun: true, sfx: true, music: true, musicVol: 40, printMode: "cards", printDetail: "std", printLang: "auto", printDense: false, state: "", buddy: true, weird: true, weirdAt: "12:00" };
 function SET() { var s = store("settings") || {}; return Object.assign({}, SET_DEF, s); }
 /* sound effects are on for everyone (owner, Nov 5 2026): anyone who had them off is switched back on
@@ -7713,6 +7791,7 @@ function settingsView() {
   pv += !SOCIAL ? "" : setRow("Classes", R ? (cls.length ? "In " + cls.length + " class" + (cls.length > 1 ? "es" : "") + ". Instructors see this name." : "Not in any classes.") : "Open Classes to load your memberships.", (R && cls.length ? '<form class="inl" data-setcl="1"><input class="pinput" id="setclname" maxlength="60" value="' + esc(R.name || "") + '"><button class="btn small" type="submit">Change name</button></form>' : '') + '<button class="btn small ghost" data-go="classes">Manage classes</button>');
   pv += setRow("Age group", ag ? "18 or older" + (ag.ts && !isNaN(new Date(ag.ts)) ? " · agreed " + fmtDate(ag.ts) : "") : "", '<button class="linkish" data-legal="terms">Terms of Use</button> <button class="linkish" data-legal="privacy">Privacy Policy</button>');
   if (NATIVE && HASDB) pv += setRow("Account ID", "Give this to DrugBug support, or add it to ownerUids to unlock the Control Center.", '<code class="small">' + esc(Prog.uid || "connecting…") + '</code>');
+  pv += setRow("Share usage statistics", "Anonymous counts that show the DrugBug team how the app is used: days active, time spent, sections opened and questions answered. Never your name or email, never sold, never used for ads. Turning this off deletes this device's statistics.", setTog("shareUsage", SET().shareUsage !== false, SET().shareUsage !== false ? "On" : "Off"));
   pv += setRow("Download my data", "A file with your progress, scores, saved list and settings.", '<button class="btn small ghost" data-act="exportdata">Download</button>');
   pv += setRow("Reset my progress", "Clears mastery, XP, streaks, achievements and scores. Keeps your bugs, sticks, saved list and settings.", S.resetAsk ? '<span class="confirm">Reset everything? <button class="btn small again" data-act="resetyes">Reset</button><button class="btn small ghost" data-act="resetno">Cancel</button></span>' : '<button class="btn small ghost" data-act="resetask">Reset progress</button>');
   pv += setRow("Delete all my data", "Removes everything DrugBug stores about you, here and online. Cannot be undone.", '<button class="btn small again" data-legal="data">Delete…</button>');
@@ -7797,6 +7876,7 @@ function settingsClick(t, a) {
 document.addEventListener("change", function (e) {
   var t = e.target; if (!t.getAttribute) return;
   var k = t.getAttribute("data-settog");
+  if (k === "shareUsage") { if (!t.checked) { try { usgForget(); } catch (x) {} } else { USG.sessSent = false; } }
   if (k) { setSet(k, t.checked); render(); var f = $('[data-settog="' + k + '"]'); if (f) f.focus(); return; }
   k = t.getAttribute("data-setsel");
   if (k === "protocol") { store("protocol", t.value || null); DB._ncache = {}; DB._mcache = null; S.setMsg = t.value ? "Protocols updated. Your levels now follow them." : "Using national defaults."; render(); return; }
@@ -9591,6 +9671,7 @@ function hickPop(line) {
 }
 var BM_CLASSES = ["rx-head", "rx-neck", "rx-chest", "rx-abd", "rx-pelv", "rx-armL", "rx-armR", "rx-legL", "rx-legR", "rx-back", "rx-butt"];
 function bodyReact(area, snd, part) {
+  try { usgFeat("dummy_tap"); } catch (e) {}
   var key = part && BM_RX[part] ? part : (BM_AREA[area] || "chest");
   var M = BM_RX[key];
   var played = false;
@@ -26625,6 +26706,7 @@ function learnMark(id) {
   var SN = learnSeen();
   if (SN[id]) return;
   SN[id] = Date.now();
+  if (typeof usgOn === "function" && usgOn()) USG.inc.learn++;
   var paid = 0;
   try {
     if (typeof earn === "function") { earn(LRN_STICK); paid = LRN_STICK; }
@@ -26655,6 +26737,7 @@ function learnPick() {
   return st.left[Math.floor(Math.random() * st.left.length)];
 }
 function learnStart(sys) {
+  try { usgFeat(sys ? "learn_system" : "learn"); } catch (e) {}
   S.learn = { key: learnKey(), sys: sys || null };
   var id = learnPick();
   if (!id) { S.learn = { key: learnKey(), done: true, sys: sys || null }; return render(); }
