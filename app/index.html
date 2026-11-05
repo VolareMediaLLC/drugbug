@@ -2829,7 +2829,7 @@ table.cmptbl tr.dif th{border-left:3px solid var(--gold)}
 
 /* Every hub tab gets the soft tinted gradient the Study tile had, in its speciality's own colour, so the
    tabs inside one speciality match each other (owner, Nov 5 2026) */
-.hub > .hubtile[class*="t-ev-"]{--c:#ec4899}
+.hub > .hubtile[class*="t-ev-"]{--c:#16a34a}
 .hub2 .hub.hubg > .hubtile:not(.fmt){--c:inherit;--cs:inherit}   /* one colour per speciality, even for tabs that carry their own elsewhere */
 .hub2 .hub.hubg > .hubtile:not(.fmt),.hub > .hubtile[class*="t-ev-"]{background:linear-gradient(140deg,color-mix(in srgb,var(--c,var(--flight)) 18%,var(--surface)),var(--surface));border-color:color-mix(in srgb,var(--c,var(--flight)) 32%,var(--line))}
 .hub2 .hub.hubg > .hubtile:not(.fmt) .ico,.hub > .hubtile[class*="t-ev-"] .ico{background:color-mix(in srgb,var(--c,var(--flight)) 20%,transparent);color:var(--c,var(--flight))}
@@ -2989,6 +2989,11 @@ button.tierchip:hover{filter:brightness(1.08)}
 .stickchip{position:relative}
 .tierchip.inbug{position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);padding:1px 7px;font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;pointer-events:none;border-width:1px}
 .tierchip.inbug.tc-free{background:var(--surface-2,var(--surface))}
+
+/* the dummy's name above him (owner, Nov 5 2026) */
+.bm3d{position:relative}
+.bm3dname{margin:0 0 6px;text-align:center;pointer-events:none}
+.bm3dname span{display:inline-block;font:800 15px var(--f-display);letter-spacing:.06em;text-transform:uppercase;color:#fff;padding:5px 14px;border-radius:999px;background:linear-gradient(135deg,color-mix(in srgb,var(--c,#7c3aed) 85%,#000),color-mix(in srgb,var(--c,#7c3aed) 55%,#000));box-shadow:0 4px 14px rgba(0,0,0,.35)}
 </style>
 
 <div class="wrap" id="app"><div id="boot" aria-hidden="true"><div class="bootlogo">Drug<span>Bug</span></div><div class="bootbar"><i></i></div><p class="bootnote">Loading your medications</p></div></div>

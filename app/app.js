@@ -2262,7 +2262,7 @@ function heroHTML() {
   var rr = { rare: "rare", seasonal: "rare", epic: "epic", earned: "epic", legendary: "legendary" }[b.rar] || "common";
   var spk = rr === "legendary" ? '<i class="lsp s1" aria-hidden="true"></i><i class="lsp s2" aria-hidden="true"></i><i class="lsp s3" aria-hidden="true"></i><i class="lsp s4" aria-hidden="true"></i>' : rr === "epic" ? '<i class="lsp s1" aria-hidden="true"></i><i class="lsp s3" aria-hidden="true"></i>' : '';
   var hol = typeof holToday === "function" ? holToday() : null;
-  return '<section class="hero ha' + (hol ? ' hol hol-' + hol.id + (hol.base ? ' hol-' + hol.base : '') : '') + '">' + (hol ? holFx(hol) : '') + '<div class="hatx lr-' + rr + '">' + (rr === "legendary" ? '<svg class="lcrown" viewBox="0 0 64 44" aria-hidden="true"><path d="M4 40 L8 12 L22 26 L32 4 L42 26 L56 12 L60 40Z" fill="#fbbf24" stroke="#92400e" stroke-width="3" stroke-linejoin="round"/><circle cx="32" cy="6" r="4" fill="#f43f5e"/><circle cx="8" cy="12" r="3.5" fill="#38bdf8"/><circle cx="56" cy="12" r="3.5" fill="#38bdf8"/><rect x="6" y="34" width="52" height="6" rx="2" fill="#f59e0b"/></svg>' : '') + '<h1 class="logo">Drug<span>Bug</span></h1>' + spk + '</div>' + (typeof funOn === "function" && !funOn() ? '' : '<button class="hbub" data-goshop="1" aria-label="' + lbl + '"><span class="orb">' + myBugArt("herobug", null, hol ? holWear(hol) : null, myStage()) + (typeof pkSide === "function" ? pkSide("hero") : "") + '</span>' + chip + '</button>') + heroInst() + tag + (hol ? holBanner(hol) : '') + '</section>';
+  return '<section class="hero ha' + (hol ? ' hol hol-' + hol.id + (hol.base ? ' hol-' + hol.base : '') : '') + '">' + (hol ? holFx(hol) : '') + '<div class="hatx lr-' + rr + '">' + (rr === "legendary" ? '<svg class="lcrown" viewBox="0 0 64 44" aria-hidden="true"><path d="M4 40 L8 12 L22 26 L32 4 L42 26 L56 12 L60 40Z" fill="#fbbf24" stroke="#92400e" stroke-width="3" stroke-linejoin="round"/><circle cx="32" cy="6" r="4" fill="#f43f5e"/><circle cx="8" cy="12" r="3.5" fill="#38bdf8"/><circle cx="56" cy="12" r="3.5" fill="#38bdf8"/><rect x="6" y="34" width="52" height="6" rx="2" fill="#f59e0b"/></svg>' : '') + '<h1 class="logo">Drug<span>Bug</span></h1>' + spk + '</div>' + (typeof funOn === "function" && !funOn() ? '' : '<button class="hbub" data-goshop="1" aria-label="' + lbl + '"><span class="orb">' + myBugArt("herobug", null, hol ? holWear(hol) : null, myStage()) + (typeof pkSide === "function" ? pkSide("hero") : "") + '</span>' + chip + '</button>') + tag + (hol ? holBanner(hol) : '') + '</section>';
 }
 function topLayerOpen() { return ["accdlg", "rvdlg", "pwdlg", "wdwdlg", "evodlg", "pkdlg", "chemdlg", "tourdlg", "rdlg", "idlg"].some(function (i) { var el = document.getElementById(i); return el && !el.hidden; }); }
 /* Android back button: closes the top layer or goes back one step; returns true when it handled it */
@@ -7548,7 +7548,7 @@ function audioCtx() {
    happened to the music when its folder was never published. (owner, Nov 4 2026) */
 var SFXBUF = {}, SFX_SRC = { gasp: "sfx/gasp.mp3", wheeze: "sfx/wheeze.mp3",
   /* the dummy's tap sounds, owner-supplied recordings (Pixabay), Nov 5 2026 */
-  whoosh: "sfx/whoosh.mp3", squeak: "sfx/squeak.mp3", bonk: "sfx/bonk.mp3", punch: "sfx/punch.mp3" };   /* wheeze: owner-supplied recording (Pixabay / freesound_community), Nov 5 2026 */
+  whoosh: "sfx/whoosh.mp3", grunt: "sfx/grunt.mp3", squeak: "sfx/squeak.mp3", bonk: "sfx/bonk.mp3", punch: "sfx/punch.mp3" };   /* wheeze: owner-supplied recording (Pixabay / freesound_community), Nov 5 2026 */
 var SFX_TRIM = { gasp: 0.14 };     /* the recording opens with silence; skip it so it lands on time */
 function sfxLoad(name) {
   var c = audioCtx(); if (!c || !SFX_SRC[name]) return null;
@@ -9539,7 +9539,7 @@ var BM_RX = {
   head:    { cls: "rx-head",  snd: "thunk", rec: "bonk",   dur: 1500 },
   neck:    { cls: "rx-neck",  snd: "gasp",  dur: 1400 },
   chest:   { cls: "rx-chest", snd: "thump", rec: "wheeze", recDur: 3, recV: 1.6, dur: 2400 },
-  abdomen: { cls: "rx-abd",   snd: "groan", rec: "whoosh", dur: 1700 },
+  abdomen: { cls: "rx-abd",   snd: "groan", rec: "whoosh", rec2: "grunt", rec2At: 0.12, dur: 1700 },
   pelvis:  { cls: "rx-pelv",  snd: "gasp",  dur: 1900 },
   back:    { cls: "rx-back",  snd: "creak", dur: 2200 },
   butt:    { cls: "rx-butt",  snd: "gasp",  rec: "squeak", dur: 2200 },
@@ -9560,7 +9560,7 @@ function bodyBus() {
   }
   return bodyBus.g;
 }
-function bodySfxWarm() { ["bonk", "wheeze", "whoosh", "squeak", "punch"].forEach(function (n) { try { sfxLoad(n); } catch (e) {} }); }
+function bodySfxWarm() { ["bonk", "wheeze", "whoosh", "grunt", "squeak", "punch"].forEach(function (n) { try { sfxLoad(n); } catch (e) {} }); }
 /* used when something only knows the anatomy area and not which limb was touched */
 var BM_AREA = { "Head and face": "head", "Neck and throat": "neck", "Chest and ribs": "chest",
   "Abdomen and gut": "abdomen", "Pelvis and groin": "pelvis", "Arms and legs": "armL",
@@ -9595,7 +9595,9 @@ function bodyReact(area, snd, part) {
   var M = BM_RX[key];
   var played = false;
   if (M.rec && !snd && typeof SET === "function" && SET().sfx) {
-    try { bodySfxWarm(); played = sfxPlay(M.rec, 0, M.recV || 1, key === "butt" ? 0.96 + Math.random() * 0.1 : 1, bodyBus(), M.recDur); } catch (e) {}
+    try { bodySfxWarm(); played = sfxPlay(M.rec, 0, M.recV || 1, key === "butt" ? 0.96 + Math.random() * 0.1 : 1, bodyBus(), M.recDur);
+    /* a second recording on top: the stomach gets the whoosh of the hit and then his grunt (owner, Nov 5 2026) */
+    if (M.rec2) { if (SFXBUF[M.rec2 + ":buf"]) sfxPlay(M.rec2, M.rec2At || 0, 1.2, 0.97 + Math.random() * 0.06, bodyBus()); else if (SFXBUF[M.rec2] && SFXBUF[M.rec2].then) SFXBUF[M.rec2].then(function () { sfxPlay(M.rec2, 0, 1.2, 1, bodyBus()); }); } } catch (e) {}
   }
   /* the very first tap can beat the download: wait a moment for the recording before giving up */
   if (!played && M.rec && !snd && SFXBUF[M.rec] && SFXBUF[M.rec].then) {
@@ -9869,8 +9871,7 @@ var D3 = (function () {
     mesh(spine, G.gWaist, MAT.gown, "abdomen", [0, 0, 0], null, GS, true);
     var chest = node("chest", spine, [0, 0.17, 0]);
     mesh(chest, G.gBodice, MAT.gown, "chest", [0, 0, 0], null, GS, true);
-    /* the open back: a strip of him showing where the gown parts, and two cloth ties */
-    mesh(chest, G.slit, MAT.yellow, "chest", [0, 0.16, -0.17], [0.12, 0, 0], [0.75, 1, 0.35], true);
+    /* two cloth ties at the back (the strip of skin that showed through the opening is gone - owner, Nov 5 2026) */
     mesh(chest, G.tie, MAT.gown, "chest", [0, 0.3, -0.158], [PI / 2, 0, 0], null, true);
     mesh(spine, G.tie, MAT.gown, "abdomen", [0, 0.06, -0.148], [PI / 2, 0, 0], null, true);
     /* a little pectoral definition, like the moulded chest plate on the real thing */
@@ -10670,7 +10671,7 @@ function bodyStage(ctx, sel) {
   var sr = '<div class="bm3dsr">' + D3_PARTS.map(function (p) {
     return '<button type="button" data-barea="' + esc(D3GL.area(p)) + '" data-bpart="' + p + '">' + esc(D3_LABEL[p]) + '</button>';
   }).join("") + '</div>';
-  return '<div class="bm3d" data-ctx="' + ctx + '"><div class="bm3dfb">' + bodySVG(sel) + '</div>' + sr +
+  return '<p class="bm3dname" aria-hidden="true"><span>The Great Bug</span></p><div class="bm3d" data-ctx="' + ctx + '"><div class="bm3dfb">' + bodySVG(sel) + '</div>' + sr +
     '<p class="bm3dhint" aria-hidden="true">Drag to turn The Great Bug · tap a part</p></div>';
 }
 /* areas that exist in one list may not exist in the other (the Body Systems list has no Back) */
