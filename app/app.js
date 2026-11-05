@@ -463,7 +463,7 @@ function myListRoute() {
   var lock = typeof proLocked === "function" && proLocked("mylist");
   return '<button class="route mlsmall" data-golist="1"><span class="mls-ic" aria-hidden="true">\u2605</span><span class="mls-tx"><strong>My List' +
     (lock ? '<span class="lockpill">Plus</span>' : '') + '</strong><span>' +
-    (n ? n + ' saved drug' + (n === 1 ? '' : 's') + (n >= 2 ? ' \u00b7 ' + ix + ' interaction' + (ix === 1 ? '' : 's') : '') : 'Save drugs from any page to quiz on them') +
+    (n ? n + ' saved drug' + (n === 1 ? '' : 's') + (n >= 2 ? ' \u00b7 ' + ix + ' interaction' + (ix === 1 ? '' : 's') : '') : 'Store the drugs you take and read the interactions between them, or the drugs you need to learn') +
     '</span></span><span class="evs-go" aria-hidden="true">&rsaquo;</span></button>';
 }
 /* the first thing after the header: get studying */
@@ -613,7 +613,7 @@ var HUB_GROUPS = [
   ["Study and practice", ["tools", "scenarios", "nbug", "medlist"]],
   ["Yours", ["mylist", "progress", "shop"]]
 ];
-var HUB_SHORT = { micro: "Bacteria, viruses, fungi, prions, parasites", fm_bio: "Bio, chem, rad and nuclear casualties", fm_ref: "Burns, vents, scores, handoff, K9, dive", medlist: "What a med list says about the patient", fm_store: "Heat, cold, light and mixing", fm_istat: "Values, cartridges and practice cases", fm_cond: "Trauma, medical and blood reactions, with types", fm_blood: "Whole blood, components, MTP, reactions", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "Saved drugs and their interactions", tools: "Questions, megacode, cards, games, drills", scenarios: "Clinical cases", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", anatomy: "Every organ and body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time" };
+var HUB_SHORT = { micro: "Bacteria, viruses, fungi, prions, parasites", fm_bio: "Bio, chem, rad and nuclear casualties", fm_ref: "Burns, vents, scores, handoff, K9, dive", medlist: "What a med list says about the patient", fm_store: "Heat, cold, light and mixing", fm_istat: "Values, cartridges and practice cases", fm_cond: "Trauma, medical and blood reactions, with types", fm_blood: "Whole blood, components, MTP, reactions", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "The drugs you take, and their interactions", tools: "Questions, megacode, cards, games, drills", scenarios: "Clinical cases", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", anatomy: "Every organ and body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time" };
 /* ---------- Hold a tile, then move it (owner, Nov 4 2026) ----------
    The iPhone gesture: press and hold until the tile lifts, drag it where you want, and the
    others slide out of the way as you go. Order is kept per level and per section, so the
@@ -3983,10 +3983,21 @@ function mouth(kind, y, c) {
   return "";
 }
 /* moods: happy (default), joy, sad, think + easter eggs */
+/* [id, name, 0, price] - price 0/absent means free. The secret-face hunt is gone: every face is
+   either free or bought with sticks, and there are a lot more of them (owner, Nov 4 2026). */
 var FACES = [
   ["happy", "Happy", 0], ["joy", "Overjoyed", 0], ["sad", "Bummed", 0], ["think", "Thinking", 0],
-  ["wink", "Wink", 1], ["star", "Starstruck", 1], ["heart", "Heart eyes", 1], ["dizzy", "Dizzy", 1], ["sleepy", "Sleepy", 1], ["silly", "Silly", 1], ["shock", "Shocked", 1], ["smug", "Smug", 1],
-  ["determined", "Determined", 0, 300], ["angel", "Angelic", 0, 400], ["goofy", "Goofy", 0, 500], ["cool", "Too Cool", 0, 700]
+  ["wink", "Wink", 0, 120], ["silly", "Silly", 0, 120], ["sleepy", "Sleepy", 0, 150], ["shock", "Shocked", 0, 150],
+  ["star", "Starstruck", 0, 200], ["heart", "Heart eyes", 0, 200], ["dizzy", "Dizzy", 0, 220], ["smug", "Smug", 0, 240],
+  ["determined", "Determined", 0, 300], ["angel", "Angelic", 0, 400], ["goofy", "Goofy", 0, 500], ["cool", "Too Cool", 0, 700],
+  /* new */
+  ["grumpy", "Grumpy", 0, 180], ["worried", "Worried", 0, 180], ["sus", "Suspicious", 0, 200],
+  ["crying", "Crying", 0, 200], ["laugh", "Dying laughing", 0, 260], ["pleading", "Pleading", 0, 260],
+  ["money", "Money eyes", 0, 320], ["nerd", "Nerd", 0, 320], ["zombie", "Zombie", 0, 360],
+  ["robot", "Robot", 0, 380], ["pirate", "Pirate", 0, 400], ["ninja", "Ninja", 0, 420],
+  ["hero", "Masked hero", 0, 460], ["flushed", "Flushed", 0, 240], ["smitten", "Smitten", 0, 300],
+  ["woozy", "Woozy", 0, 280], ["mindblown", "Mind blown", 0, 520], ["sparkleface", "Sparkling", 0, 560],
+  ["fire", "Fired up", 0, 600], ["royal", "Royal", 0, 800], ["legend", "Legendary", 0, 1200]
 ];
 function bugFace(y, mood, b, faceItem) {
   var mc = b.smile || "#fff", cool = b.eyes === "cool" && !faceItem, s = "";
@@ -4010,6 +4021,28 @@ function bugFace(y, mood, b, faceItem) {
     case "goofy": s = eyeBall(88, y, 10, 4, 1) + eyeBall(112, y, 10, -4, 1) + mouth("grin", y + 13, mc) + '<rect x="96" y="' + (y + 11) + '" width="8" height="6" rx="1" fill="#fff"/>'; break;
     case "cool": s = shades(y) + mouth("smirk", y + 15, mc); break;
     case "smug": s = '<path d="M80 ' + (y - 1) + ' Q88 ' + (y - 5) + ' 96 ' + (y - 1) + ' M104 ' + (y - 1) + ' Q112 ' + (y - 5) + ' 120 ' + (y - 1) + '" stroke="' + INK + '" stroke-width="3.5" fill="none" stroke-linecap="round"/>' + eyeBall(88, y + 3, 6, 2, 0) + eyeBall(112, y + 3, 6, 2, 0) + mouth("smirk", y + 15, mc); break;
+    /* ---- the faces added when the secret hunt was retired (owner, Nov 4 2026) ---- */
+    case "grumpy": s = eyeBall(88, y + 2, 8, 0, 2) + eyeBall(112, y + 2, 8, 0, 2) + '<path d="M78 ' + (y - 12) + ' L96 ' + (y - 6) + ' M122 ' + (y - 12) + ' L104 ' + (y - 6) + '" stroke="' + INK + '" stroke-width="4.5" stroke-linecap="round"/>' + mouth("frown", y + 16, mc); break;
+    case "worried": s = eyeBall(88, y + 1, 9, 0, 2) + eyeBall(112, y + 1, 9, 0, 2) + '<path d="M78 ' + (y - 8) + ' Q86 ' + (y - 16) + ' 95 ' + (y - 11) + ' M122 ' + (y - 8) + ' Q114 ' + (y - 16) + ' 105 ' + (y - 11) + '" stroke="' + INK + '" stroke-width="3" fill="none" stroke-linecap="round"/>' + '<path d="M91 ' + (y + 15) + ' q4 -4 9 0 q4 4 9 0" stroke="' + mc + '" stroke-width="3" fill="none" stroke-linecap="round"/>'; break;
+    case "sus": s = '<path d="M79 ' + (y - 3) + ' H97" stroke="' + INK + '" stroke-width="3.5" stroke-linecap="round"/>' + eyeBall(88, y + 3, 7, 3, 0) + eyeBall(112, y + 3, 7, 3, 0) + '<path d="M103 ' + (y - 3) + ' H121" stroke="' + INK + '" stroke-width="3.5" stroke-linecap="round"/>' + mouth("flat", y + 15, mc); break;
+    case "crying": s = arcEye(88, y + 1, false) + arcEye(112, y + 1, false) + mouth("frown", y + 16, mc) + '<path d="M86 ' + (y + 6) + ' q-5 12 0 15 q5 -3 0 -15z M114 ' + (y + 6) + ' q5 12 0 15 q-5 -3 0 -15z" fill="#7dd3fc"/>'; break;
+    case "laugh": s = '<path d="M80 ' + (y + 2) + ' Q88 ' + (y - 8) + ' 96 ' + (y + 2) + ' M104 ' + (y + 2) + ' Q112 ' + (y - 8) + ' 120 ' + (y + 2) + '" stroke="' + INK + '" stroke-width="3.5" fill="none" stroke-linecap="round"/>' + mouth("grin", y + 12, mc) + '<path d="M74 ' + (y + 6) + ' q-6 9 -1 12 q5 -3 1 -12z M126 ' + (y + 6) + ' q6 9 1 12 q-5 -3 -1 -12z" fill="#7dd3fc"/>'; break;
+    case "pleading": s = ['88', '112'].map(function (x) { x = +x; return eyeBall(x, y + 1, 11, 0, 2) + '<ellipse cx="' + (x - 3) + '" cy="' + (y - 3) + '" rx="3.4" ry="2.6" fill="#fff" opacity=".95"/>'; }).join("") + '<path d="M78 ' + (y - 10) + ' Q86 ' + (y - 17) + ' 95 ' + (y - 12) + ' M122 ' + (y - 10) + ' Q114 ' + (y - 17) + ' 105 ' + (y - 12) + '" stroke="' + INK + '" stroke-width="2.6" fill="none" stroke-linecap="round"/>' + '<path d="M93 ' + (y + 16) + ' q7 -5 14 0" stroke="' + mc + '" stroke-width="3" fill="none" stroke-linecap="round"/>'; break;
+    case "money": s = ['88', '112'].map(function (x) { x = +x; return '<circle cx="' + x + '" cy="' + y + '" r="9.5" fill="#fff"/><text x="' + x + '" y="' + (y + 5) + '" font-size="13" font-weight="800" fill="#16a34a" font-family="sans-serif" text-anchor="middle">$</text>'; }).join("") + mouth("grin", y + 14, mc); break;
+    case "nerd": s = '<circle cx="88" cy="' + y + '" r="12" fill="#fff" fill-opacity=".35" stroke="' + INK + '" stroke-width="2.5"/><circle cx="112" cy="' + y + '" r="12" fill="#fff" fill-opacity=".35" stroke="' + INK + '" stroke-width="2.5"/><path d="M100 ' + y + ' H100" stroke="' + INK + '" stroke-width="2.5"/><path d="M100 ' + (y - 1) + ' h0" /><path d="M99 ' + y + ' h2" stroke="' + INK + '" stroke-width="3"/>' + eyeBall(88, y, 6, 1, 0) + eyeBall(112, y, 6, 1, 0) + mouth("flat", y + 16, mc) + '<rect x="96" y="' + (y + 11) + '" width="8" height="6" rx="1" fill="#fff"/>'; break;
+    case "zombie": s = '<circle cx="88" cy="' + y + '" r="9" fill="#dbf4c9"/><circle cx="90" cy="' + (y + 1) + '" r="3" fill="' + INK + '"/><path d="M103 ' + (y - 2) + ' L121 ' + (y + 3) + '" stroke="' + INK + '" stroke-width="3.5" stroke-linecap="round"/>' + '<path d="M88 ' + (y + 14) + ' h26 l-4 7 -5 -4 -5 4 -5 -4 -5 4z" fill="#7a1f3d" stroke="' + mc + '" stroke-width="2" stroke-linejoin="round"/>'; break;
+    case "robot": s = '<rect x="78" y="' + (y - 7) + '" width="18" height="13" rx="2" fill="#0b1220" stroke="#67e8f9" stroke-width="2"/><rect x="104" y="' + (y - 7) + '" width="18" height="13" rx="2" fill="#0b1220" stroke="#67e8f9" stroke-width="2"/><path d="M82 ' + (y - 1) + ' h10 M108 ' + (y - 1) + ' h10" stroke="#67e8f9" stroke-width="2.5"/><path d="M96 ' + (y - 1) + ' h8" stroke="#67e8f9" stroke-width="2"/>' + '<rect x="88" y="' + (y + 12) + '" width="24" height="7" rx="2" fill="none" stroke="' + mc + '" stroke-width="2.5"/><path d="M94 ' + (y + 12) + ' v7 M100 ' + (y + 12) + ' v7 M106 ' + (y + 12) + ' v7" stroke="' + mc + '" stroke-width="2"/>'; break;
+    case "pirate": s = '<path d="M72 ' + (y - 9) + ' Q88 ' + (y - 14) + ' 100 ' + (y - 7) + '" stroke="' + INK + '" stroke-width="2.5" fill="none"/><ellipse cx="88" cy="' + y + '" rx="11" ry="9.5" fill="#141224"/><path d="M77 ' + (y - 8) + ' L62 ' + (y - 15) + ' M99 ' + (y - 8) + ' L112 ' + (y - 16) + '" stroke="#141224" stroke-width="2.5"/>' + eyeBall(112, y, 9) + mouth("smirk", y + 15, mc); break;
+    case "ninja": s = '<path d="M68 ' + (y - 13) + ' h64 v12 h-64z" fill="#141224"/><path d="M68 ' + (y + 5) + ' h64 v16 h-64z" fill="#141224"/>' + eyeBall(88, y - 1, 7, 1, 0) + eyeBall(112, y - 1, 7, 1, 0); break;
+    case "hero": s = '<path d="M68 ' + (y - 12) + ' Q100 ' + (y - 19) + ' 132 ' + (y - 12) + ' L128 ' + (y + 6) + ' Q114 ' + (y + 2) + ' 100 ' + (y + 7) + ' Q86 ' + (y + 2) + ' 72 ' + (y + 6) + 'Z" fill="#1d4ed8"/>' + '<path d="M80 ' + (y - 4) + ' q8 -5 16 0 q-8 5 -16 0z M104 ' + (y - 4) + ' q8 -5 16 0 q-8 5 -16 0z" fill="#fff"/>' + eyeBall(88, y - 4, 4.5, 1, 0) + eyeBall(112, y - 4, 4.5, 1, 0) + mouth("smile", y + 16, mc); break;
+    case "flushed": s = eyeBall(88, y, 10, 0, 1) + eyeBall(112, y, 10, 0, 1) + '<ellipse cx="74" cy="' + (y + 10) + '" rx="8" ry="5.5" fill="#ff6b8a" opacity=".55"/><ellipse cx="126" cy="' + (y + 10) + '" rx="8" ry="5.5" fill="#ff6b8a" opacity=".55"/>' + '<path d="M93 ' + (y + 16) + ' q7 4 14 0" stroke="' + mc + '" stroke-width="3" fill="none" stroke-linecap="round"/>'; break;
+    case "smitten": s = heartShape(88, y, 9, "#ff4d6d") + heartShape(112, y, 9, "#ff4d6d") + mouth("grin", y + 14, mc) + heartShape(70, y - 30, 6, "#ff4d6d") + heartShape(132, y - 36, 5, "#ff8fa3") + heartShape(126, y - 20, 4, "#ff4d6d"); break;
+    case "woozy": s = '<path d="M79 ' + y + ' q4.5 -6 9 0 q4.5 6 9 0" stroke="' + INK + '" stroke-width="3" fill="none" stroke-linecap="round"/>' + '<circle cx="112" cy="' + y + '" r="9" fill="#fff"/><path d="M112 ' + y + ' m-2 0 a2 2 0 1 1 4 0 a4 4 0 1 1 -8 0" stroke="' + INK + '" stroke-width="2" fill="none"/>' + '<path d="M91 ' + (y + 15) + ' q5 5 9 0 q4 -5 9 1" stroke="' + mc + '" stroke-width="3" fill="none" stroke-linecap="round"/>'; break;
+    case "mindblown": s = eyeBall(88, y - 1, 12, 0, 0) + eyeBall(112, y - 1, 12, 0, 0) + mouth("o", y + 16, mc) + '<g>' + starShape(68, y - 34, 7, "#ffd84a") + starShape(100, y - 44, 6, "#f0abfc") + starShape(132, y - 34, 7, "#67e8f9") + '</g><path d="M74 ' + (y - 22) + ' l-7 -9 M100 ' + (y - 28) + ' v-10 M126 ' + (y - 22) + ' l7 -9" stroke="#ffd84a" stroke-width="2.5" stroke-linecap="round"/>'; break;
+    case "sparkleface": s = eyeBall(88, y, 9) + eyeBall(112, y, 9) + mouth("smile", y + 15, mc) + sparkleP(70, y - 26, 7, "#fff") + sparkleP(132, y - 32, 6, "#ffd84a") + sparkleP(124, y + 14, 5, "#a5f3fc") + sparkleP(76, y + 18, 4, "#f0abfc"); break;
+    case "fire": s = '<path d="M80 ' + (y + 3) + ' Q88 ' + (y - 9) + ' 96 ' + (y + 3) + ' M104 ' + (y + 3) + ' Q112 ' + (y - 9) + ' 120 ' + (y + 3) + '" stroke="#ff6b35" stroke-width="4" fill="none" stroke-linecap="round"/>' + '<path d="M88 ' + (y - 6) + ' q-4 -12 2 -18 q0 7 4 9 q2 -5 0 -11 q8 7 6 18z" fill="#ff8a3d"/><path d="M112 ' + (y - 6) + ' q-4 -12 2 -18 q0 7 4 9 q2 -5 0 -11 q8 7 6 18z" fill="#ff8a3d"/>' + mouth("grin", y + 14, mc); break;
+    case "royal": s = eyeBall(88, y, 9) + eyeBall(112, y, 9) + mouth("smirk", y + 15, mc) + '<path d="M72 ' + (y - 24) + ' l8 -16 8 10 12 -18 12 18 8 -10 8 16z" fill="#ffc531" stroke="#b7860b" stroke-width="1.5"/><circle cx="100" cy="' + (y - 30) + '" r="3" fill="#ff4d6d"/><circle cx="82" cy="' + (y - 26) + '" r="2.4" fill="#67e8f9"/><circle cx="118" cy="' + (y - 26) + '" r="2.4" fill="#67e8f9"/>'; break;
+    case "legend": s = starShape(88, y, 12, "#ffc531") + starShape(112, y, 12, "#ffc531") + mouth("grin", y + 14, mc) + '<path d="M70 ' + (y - 22) + ' l8 -15 8 9 14 -17 14 17 8 -9 8 15z" fill="#ffc531" stroke="#b7860b" stroke-width="1.5"/>' + sparkleP(66, y + 8, 6, "#fff") + sparkleP(136, y + 2, 5, "#ffd84a") + sparkleP(100, y - 40, 5, "#fff"); break;
     default: if (b.eyes === "fierce" && !faceItem) { s = eyeBall(88, y + 1, 9, 1, 1) + eyeBall(112, y + 1, 9, -1, 1) + '<path d="M76 ' + (y - 14) + ' L97 ' + (y - 7) + ' M124 ' + (y - 14) + ' L103 ' + (y - 7) + '" stroke="' + INK + '" stroke-width="5" stroke-linecap="round"/>' + mouth("smirk", y + 15, mc); break; }
       s = (cool ? shades(y) : E()) + mouth("smile", y + 15, mc);
   }
@@ -4282,24 +4315,38 @@ function itemsView() {
 function noFace() { var w = Object.assign({}, myWear()); delete w.face; return w; }
 function facesFound() { return Prog.d.faces || []; }
 function myFace() { var f = Prog.d.face; return f && faceAvail(f) ? f : "happy"; }
-function faceAvail(id) { var f = FACES.filter(function (x) { return x[0] === id; })[0]; if (!f) return false; if (f[3]) return (Prog.d.facesOwned || []).indexOf(id) >= 0; return !f[2] || facesFound().indexOf(id) >= 0; }
+function faceAvail(id) {
+  var f = FACES.filter(function (x) { return x[0] === id; })[0]; if (!f) return false;
+  if (!f[3]) return true;                                  /* free */
+  if ((Prog.d.facesOwned || []).indexOf(id) >= 0) return true;
+  return facesFound().indexOf(id) >= 0;                    /* kept: faces found before the change stay owned */
+}
 function equipFace(id) { if (!faceAvail(id)) return; Prog.d.face = id; Prog.d.avatarTs = Date.now(); saveProg(); BD.mood = null; drawBuddy(); S.shopMsg = FACES.filter(function (x) { return x[0] === id; })[0][1] + " face equipped."; }
 function buyFace(id) { var f = FACES.filter(function (x) { return x[0] === id; })[0]; if (!f || !f[3] || faceAvail(id) || sticks() < f[3]) return; Prog.d.spent = (Prog.d.spent || 0) + f[3]; Prog.d.facesOwned = (Prog.d.facesOwned || []).concat([id]); equipFace(id); S.shopMsg = "You bought the " + f[1] + " face. It's equipped."; }
 function facesView() {
-  var found = facesFound(), eggs = FACES.filter(function (f) { return f[2]; }), n = eggs.filter(function (f) { return found.indexOf(f[0]) >= 0; }).length, cur = myFace(), bal = sticks();
-  var c = '<p class="muted">Pick the face your bug wears. It still reacts to right and wrong answers, then goes back to the face you chose. Some faces are secret: keep studying (and try tapping your bug) to find them all. <strong>' + n + ' of ' + eggs.length + ' secret faces found.</strong></p>';
+  var cur = myFace(), bal = sticks(), owned = FACES.filter(function (f) { return faceAvail(f[0]); }).length;
+  var c = '<p class="muted">Pick the face your bug wears. It still reacts to right and wrong answers, then goes back to the face you chose. <strong>' + owned + ' of ' + FACES.length + ' faces unlocked.</strong></p>';
   function card(f) {
-    var avail = faceAvail(f[0]), on = cur === f[0], known = avail || !f[2], pend = S.shopBuy === "f:" + f[0];
+    var avail = faceAvail(f[0]), on = cur === f[0], pend = S.shopBuy === "f:" + f[0];
     var act = on ? '<span class="eqd">Equipped</span>' : avail ? '<button class="btn small" data-faceeq="' + f[0] + '">Equip</button>' :
-      f[3] ? (pend ? '<button class="btn small" data-facebuyok="' + f[0] + '">Buy for ' + f[3] + '</button><button class="btn small ghost" data-buyno="1">Cancel</button>' : '<button class="btn small' + (bal >= f[3] ? '' : ' ghost') + '" data-facebuy="' + f[0] + '"' + (bal >= f[3] ? '' : ' disabled') + '>' + (bal >= f[3] ? 'Buy' : 'Need ' + (f[3] - bal) + ' more') + '</button>') : '<span class="muted small">Keep studying to find it</span>';
-    return '<div class="bugcard' + (on ? " eq" : "") + '">' + (known ? myBugArt("", f[0], noFace()) : '<div class="mystery" aria-hidden="true">?</div>') + '<strong>' + (known ? esc(f[1]) : "Secret face") + '</strong>' + (f[3] && !avail ? stickTag(f[3]) : '') + '<div class="bact">' + act + '</div></div>';
+      (pend ? '<button class="btn small" data-facebuyok="' + f[0] + '">Buy for ' + f[3] + '</button><button class="btn small ghost" data-buyno="1">Cancel</button>'
+            : '<button class="btn small' + (bal >= f[3] ? '' : ' ghost') + '" data-facebuy="' + f[0] + '"' + (bal >= f[3] ? '' : ' disabled') + '>' + (bal >= f[3] ? 'Buy' : 'Need ' + (f[3] - bal) + ' more') + '</button>');
+    /* every face is shown as itself now: nothing is hidden behind a question mark */
+    return '<div class="bugcard' + (on ? " eq" : "") + '">' + myBugArt("", f[0], noFace()) + '<strong>' + esc(f[1]) + '</strong>' + (f[3] && !avail ? stickTag(f[3]) : '') + '<div class="bact">' + act + '</div></div>';
   }
-  [["Everyday faces", function (f) { return !f[2] && !f[3]; }], ["Shop faces", function (f) { return f[3]; }], ["Secret faces", function (f) { return f[2]; }]].forEach(function (g) {
-    c += '<div class="tierhead"><h3>' + g[0] + '</h3></div><div class="shopgrid">' + FACES.filter(g[1]).map(card).join("") + '</div>';
+  [["Free faces", function (f) { return !f[3]; }],
+   ["Under 250 sticks", function (f) { return f[3] && f[3] < 250; }],
+   ["250 to 500", function (f) { return f[3] >= 250 && f[3] <= 500; }],
+   ["The expensive ones", function (f) { return f[3] > 500; }]].forEach(function (g) {
+    var L = FACES.filter(g[1]); if (!L.length) return;
+    c += '<div class="tierhead"><h3>' + g[0] + '</h3></div><div class="shopgrid">' + L.map(card).join("") + '</div>';
   });
   return c;
 }
-function findFace(m) { var F = facesFound(); if (F.indexOf(m) < 0 && FACES.some(function (f) { return f[0] === m && f[2]; })) { Prog.d.faces = F.concat([m]); saveProg(); return true; } return false; }
+
+/* kept so progress saved before the secret hunt was retired still reads back; nothing is
+   discovered any more, so this never grants a face (owner, Nov 4 2026) */
+function findFace() { return false; }
 
 /* the on-screen buddy */
 var BD = { mood: null, t: null, streak: 0, taps: 0, tapT: 0, idle: null, msg: "" };
@@ -4326,23 +4373,23 @@ function pickQ(k) { return pick(QUIPS[k]); }
 function buddyReact(ok) {
   if (!buddyOn()) return;
   BD.streak = ok ? BD.streak + 1 : 0;
-  if (ok && Math.random() < 0.06) { var eggs = ["wink", "star", "heart", "silly", "smug"], m = pick(eggs); var nw = findFace(m); return buddySet(m, nw ? "Secret face found!" : pickQ("right")); }
-  if (ok && BD.streak >= 5 && BD.streak % 5 === 0) { var nw2 = findFace("star"); return buddySet("star", nw2 ? "Secret face found: Starstruck!" : BD.streak + " in a row! " + pickQ("streak"), 3200); }
-  if (!ok && Math.random() < 0.08) { var nw3 = findFace("dizzy"); return buddySet("dizzy", nw3 ? "Secret face found: Dizzy!" : pickQ("wrong")); }
+  if (ok && Math.random() < 0.06) { var m = pick(["wink", "star", "heart", "silly", "smug"]); return buddySet(m, pickQ("right")); }   /* a flash of a fun face on a streak; no hunt any more */
+  if (ok && BD.streak >= 5 && BD.streak % 5 === 0) return buddySet("star", BD.streak + " in a row! " + pickQ("streak"), 3200);
+  if (!ok && Math.random() < 0.08) return buddySet("dizzy", pickQ("wrong"));
   buddySet(ok ? "joy" : "sad", pickQ(ok ? "right" : "wrong"));
 }
 function buddyTap() {
   var now = Date.now(); BD.taps = now - BD.tapT < 1500 ? BD.taps + 1 : 1; BD.tapT = now;
-  if (BD.taps >= 7) { BD.taps = 0; var nw = findFace("shock"); return buddySet("shock", nw ? "Whoa! Secret face found: Shocked!" : "Okay, okay, I'm awake!"); }
-  if (BD.taps === 3) { var nw2 = findFace("silly"); return buddySet("silly", nw2 ? "Secret face found: Silly!" : "Hehe."); }
-  var m = pick(["wink", "joy", "think", "joy"]), nw3 = m === "wink" && findFace("wink");
-  buddySet(m, nw3 ? "Secret face found: Wink!" : pickQ("tap"));
+  if (BD.taps >= 7) { BD.taps = 0; return buddySet("shock", "Okay, okay, I'm awake!"); }
+  if (BD.taps === 3) return buddySet("silly", "Hehe.");
+  var m = pick(["wink", "joy", "think", "joy"]);
+  buddySet(m, pickQ("tap"));
 }
-function armIdle() { clearTimeout(BD.idle); BD.idle = setTimeout(function () { if (!buddyOn()) return; var nw = findFace("sleepy"); BD.mood = "sleepy"; BD.msg = nw ? "Secret face found: Sleepy! (Tap me.)" : "Zzz… tap me when you're back."; drawBuddy(); }, 180000); }
+function armIdle() { clearTimeout(BD.idle); BD.idle = setTimeout(function () { if (!buddyOn()) return; BD.mood = "sleepy"; BD.msg = "Zzz… tap me when you're back."; drawBuddy(); }, 180000); }
 buddy.addEventListener("click", function (e) { if (e.target.closest("[data-buddy]")) buddyTap(); });
 function feedback(ok) { sfx(ok); buddyReact(ok); }
 /* special days */
-(function () { var d = new Date(), m = d.getMonth() + 1, day = d.getDate(); if ((m === 10 && day === 31) || (m === 12 && day === 25) || (m === 1 && day === 1)) setTimeout(function () { if (buddyOn()) { findFace("heart"); buddySet("heart", m === 10 ? "Happy Halloween!" : m === 12 ? "Happy holidays!" : "Happy New Year!", 5000); } }, 1500); })();
+(function () { var d = new Date(), m = d.getMonth() + 1, day = d.getDate(); if ((m === 10 && day === 31) || (m === 12 && day === 25) || (m === 1 && day === 1)) setTimeout(function () { if (buddyOn()) { buddySet("heart", m === 10 ? "Happy Halloween!" : m === 12 ? "Happy holidays!" : "Happy New Year!", 5000); } }, 1500); })();
 armIdle();
 function buddyClick(t, a) {
   if (a.ibuy) { S.shopBuy = "i:" + a.ibuy; render(); return true; }
@@ -4855,7 +4902,8 @@ function myListView(own) { var m0 = marks().filter(function (id) { return DB.dru
 function myListBase(own) {
   var m = marks().filter(function (id) { return DB.drugs[id]; });
   var c = own ? '' : '<h3 class="eh small">My List</h3>';
-  if (!m.length) return c + '<div class="learncard"><p><strong>Your list is empty.</strong></p><p class="muted">Open any drug and tap <strong>Save to My List</strong>. Saved drugs show up here so you can study, quiz yourself on them or print them as a shift list.</p><button class="btn" data-tab="registry">Browse medications</button></div>';
+  if (!m.length) return c + '<div class="learncard"><p><strong>Your list is empty.</strong></p><p class="muted">This is where you store the drugs you take, so you can read the interactions between them \u2014 and the drugs you need to learn. Open any drug and tap <strong>Save to My List</strong>. Once two or more are saved, DrugBug shows how they interact, and you can study them, quiz yourself on them or print them as a shift list.</p><button class="btn" data-tab="registry">Browse medications</button></div>';
+  c += '<p class="muted small">The drugs you take and the drugs you are learning. With two or more saved, the interactions between them are listed below.</p>';
   return c + '<div class="actions"><button class="btn" data-sess="marks">Quiz me on my list</button><span class="muted small">' + m.length + ' saved drug' + (m.length === 1 ? '' : 's') + '</span></div>' + (typeof canPrint === "function" && canPrint() ? '<div class="actions"><button class="btn" data-print="marks|cards">Print all study cards (' + m.length + ')</button><button class="btn small ghost" data-print="marks|sheet">Print cheat sheet</button></div>' : '') + '<ul class="weaklist">' + m.map(function (id) { return '<li><button class="linkish" data-drug="' + id + '">' + esc(nameOf(id)) + '</button><span class="mchip m-' + mastery(id) + '">' + esc(mlabel(mastery(id))) + '</span><button class="btn small ghost" data-sess="study" data-drug-id="' + id + '">Study</button><button class="btn small ghost" data-unmark="' + id + '" aria-label="Remove ' + esc(nameOf(id)) + ' from My List">Remove</button></li>'; }).join("") + '</ul>';
 }
 
@@ -6624,7 +6672,13 @@ function setReportStatus(spec, status) {
 var printv = document.createElement("div"); printv.id = "printv"; printv.hidden = true; document.body.appendChild(printv);
 var PR = null;
 function canPrint() { return !NATIVE || !!(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.print); }
-function printBtns(src, label) { if (!canPrint()) return ""; /* one small Print menu instead of two loose buttons (cleanup, Oct 28 2026) */ return '<details class="printmenu"><summary class="btn small ghost">Print</summary><div class="pmlist"><button class="btn small ghost" data-print="' + esc(src) + '|cards">Study cards</button><button class="btn small ghost" data-print="' + esc(src) + '|sheet">Cheat sheet</button>' + (label ? '<span class="muted small">' + esc(label) + '</span>' : '') + '</div></details>'; }
+function printBtns(src, label) {
+  if (!canPrint()) return "";
+  /* every layout is offered here; the detail level is then changed in the print view itself */
+  return '<details class="printmenu"><summary class="btn small ghost">Print</summary><div class="pmlist">' +
+    PR_LAYOUTS.map(function (L) { return '<button class="btn small ghost" data-print="' + esc(src) + '|' + L[0] + '">' + esc(L[1]) + '</button>'; }).join("") +
+    (label ? '<span class="muted small">' + esc(label) + '</span>' : '') + '</div></details>';
+}
 function printIds(src) { return printIds0(src).filter(function (id) { return !(typeof drugLocked === "function" && drugLocked(id)); }); }
 function printIds0(src) {
   if (src === "marks") return marks().filter(function (id) { return DB.drugs[id]; });
@@ -6635,44 +6689,167 @@ function printIds0(src) {
 }
 function openPrint(spec) {
   var p = spec.split("|"), ids = printIds(p[0]);
-  var sp = SET(); PR = { src: p[0], ids: ids.slice(0, 200), mode: p[1] || sp.printMode, es: false, dense: sp.printDense, msg: "" };
+  var sp = SET(); PR = { src: p[0], ids: ids.slice(0, 200), mode: p[1] || sp.printMode, detail: p[2] || sp.printDetail || "std", es: false, dense: sp.printDense, msg: "" };
   if (sheet && !sheet.hidden) closeSheet();
   drawPrint(); printv.hidden = false; document.body.classList.add("printing"); window.scrollTo(0, 0);
 }
 function closePrint() { printv.hidden = true; printv.innerHTML = ""; PR = null; document.body.classList.remove("printing"); }
 function pf(id, si, fi) { var d = DB.drugs[id]; return d ? get(d, si, fi) : ""; }
+/* ---------- print layouts and how much detail goes on them (owner, Nov 4 2026) ----------
+   PR.mode picks the page design, PR.detail picks how much of each drug goes on it. The two are
+   independent, so a pocket card can be brief and a monograph can be exhaustive. */
+var PR_LAYOUTS = [
+  ["cards",  "Study cards",   "Two to a row, boxed. The classic."],
+  ["sheet",  "Cheat sheet",   "One table, one row per drug."],
+  ["pocket", "Pocket card",   "Three narrow columns to fold and carry."],
+  ["mono",   "Monograph",     "One drug per page, everything you have."],
+  ["quiz",   "Quiz sheet",    "Prompts with blank lines, answer key at the back."],
+  ["flash",  "Cut-out flashcards", "Front and back pairs with cut lines."]
+];
+var PR_DETAIL = [
+  ["brief", "Brief",    "Class and dose only."],
+  ["std",   "Standard", "The working facts."],
+  ["full",  "Full",     "Everything, including mechanism and interactions."]
+];
+/* [label, section, field, max characters]. Each level adds to the one before it. */
+var PR_FIELDS = {
+  brief: [["Class", 0, 3, 60], ["Adult dose", 6, 0, 220]],
+  std: [["Class", 0, 3, 60], ["What it does", 1, 1, 260], ["Used for", 3, 0, 260],
+        ["Contraindications", 4, 0, 260], ["Adult dose", 6, 0, 240], ["Pediatric dose", 6, 1, 180],
+        ["Routes", 7, 0, 90], ["Watch for", 9, 1, 240], ["Key fact", 16, 3, 200]],
+  full: [["Class", 0, 3, 60], ["Pharmacologic class", 0, 4, 80], ["What it is", 1, 0, 300],
+         ["What it does", 1, 1, 320], ["Mechanism", 2, 0, 420], ["Used for", 3, 0, 320],
+         ["EMS indications", 3, 2, 260], ["Absolute contraindications", 4, 0, 320],
+         ["Relative contraindications", 4, 1, 240], ["Boxed warning", 5, 1, 260],
+         ["Adult dose", 6, 0, 320], ["Pediatric dose", 6, 1, 240], ["Max dose", 6, 3, 160],
+         ["Routes", 7, 0, 120], ["Onset", 8, 0, 90], ["Duration", 8, 2, 90],
+         ["Common side effects", 9, 0, 280], ["Serious side effects", 9, 1, 300],
+         ["Major interactions", 10, 0, 320], ["Monitor", 11, 8, 220],
+         ["Antidote", 13, 4, 160], ["Clinical pearl", 14, 7, 280], ["Key fact", 16, 3, 220]]
+};
+function prDetail() { return (PR && PR.detail) || "std"; }
+function prTitle() { return "DrugBug " + ((PR_LAYOUTS.filter(function (L) { return L[0] === PR.mode; })[0] || PR_LAYOUTS[0])[1]).toLowerCase(); }
+function prRows(id) {
+  var es = PR.es && DB.ES[id];
+  if (es) {
+    var L = [["Qué es", es.what], ["Usos", es.use], ["No lo dé si", es.dont], ["Dosis (adulto)", es.dose], ["Vigilar", es.watch], ["Dato clave", es.rem]];
+    if (prDetail() === "brief") L = L.slice(3, 4);
+    return L.filter(function (r) { return r[1]; }).map(function (r) { return [r[0], cut(r[1], 260)]; });
+  }
+  return (PR_FIELDS[prDetail()] || PR_FIELDS.std).map(function (f) {
+    var v = pf(id, f[1], f[2]);
+    if (f[0] === "What it does" && !v) v = pf(id, 2, 0);
+    if (f[0] === "Watch for" && !v) v = pf(id, 9, 0);
+    if (f[0] === "Key fact" && !v) v = pf(id, 16, 4);
+    return v && v !== "-" ? [f[0], cut(v, f[3])] : null;
+  }).filter(Boolean);
+}
 function cut(s, n) { s = String(s || ""); return s.length > n ? s.slice(0, n - 1).replace(/\s+\S*$/, "") + "…" : s; }
 function cardHtml(id) {
-  var d = DB.drugs[id], e = PR.es && DB.ES[id], note = scopeNote(id);
-  function r(k, v, n) { return v ? '<div class="pr-r"><b>' + esc(k) + '</b> ' + esc(cut(v, n || 260)) + '</div>' : ''; }
+  var d = DB.drugs[id], note = scopeNote(id);
+  function r(k, v) { return v ? '<div class="pr-r"><b>' + esc(k) + '</b> ' + esc(v) + '</div>' : ''; }
   var h = '<article class="pr-card"><header><h3>' + esc(d.name) + '</h3><span>' + esc(cut(pf(id, 0, 3), 60)) + '</span></header>' + (DB.ES[id] ? '<div class="pr-ph">' + esc(DB.ES[id].ph) + '</div>' : '');
-  if (e) h += r("Qué es", e.what) + r("Usos", e.use) + r("No lo dé si", e.dont) + r("Dosis (adulto)", e.dose, 220) + r("Vigilar", e.watch) + r("Dato clave", e.rem, 180);
-  else h += r("What it does", pf(id, 1, 1) || pf(id, 2, 0)) + r("Used for", pf(id, 3, 0)) + r("Contraindications", pf(id, 4, 0)) + r("Adult dose", pf(id, 6, 0), 220) + r("Pediatric dose", pf(id, 6, 1), 160) + r("Routes", pf(id, 7, 0), 80) + r("Watch for", pf(id, 9, 1) || pf(id, 9, 0)) + r("Key fact", pf(id, 16, 3) || pf(id, 16, 4), 180);
-  if (note) h += r(PR.es ? "Su nivel" : "Your scope", note, 160);
-  var L = typeof labelSrc === "function" ? labelSrc(id) : null;
-  h += '<div class="pr-src">' + (L ? (PR.es ? "Fuente de dosis: etiqueta de la FDA" : "Dose source: FDA label") + ' (' + esc([L.b, L.m].filter(Boolean).join(", ")) + (L.d ? ", " + esc(L.d) : "") + ')' : (PR.es ? "Verifique la dosis con la etiqueta actual de la FDA." : "Verify any dose with the current FDA label.")) + '</div>';
-  h += '<div class="pr-tag">' + (PR.es ? "Tarjeta de estudio: verifique con su protocolo y la etiqueta de la FDA. No es para atención de pacientes." : "Study card - verify with your protocol and the FDA label. Not for patient care.") + '</div>';
-  return h + '</article>';
+  h += prRows(id).map(function (x) { return r(x[0], x[1]); }).join("");
+  if (note) h += r(PR.es ? "Su nivel" : "Your scope", cut(note, 160));
+  return h + prFoot(id) + '</article>';
 }
+/* the source line and the study-card disclaimer, shared by every layout */
+function prFoot(id) {
+  var L = typeof labelSrc === "function" ? labelSrc(id) : null;
+  return '<div class="pr-src">' + (L ? (PR.es ? "Fuente de dosis: etiqueta de la FDA" : "Dose source: FDA label") + ' (' + esc([L.b, L.m].filter(Boolean).join(", ")) + (L.d ? ", " + esc(L.d) : "") + ')' : (PR.es ? "Verifique la dosis con la etiqueta actual de la FDA." : "Verify any dose with the current FDA label.")) + '</div>' +
+    '<div class="pr-tag">' + (PR.es ? "Tarjeta de estudio: verifique con su protocolo y la etiqueta de la FDA. No es para atención de pacientes." : "Study card - verify with your protocol and the FDA label. Not for patient care.") + '</div>';
+}
+
 function sheetHtml(ids) {
-  var es = PR.es;
-  return '<table class="pr-table"><thead><tr><th>' + (es ? "Medicamento" : "Drug") + '</th><th>' + (es ? "Clase" : "Class") + '</th><th>' + (es ? "Dosis (adulto)" : "Adult dose") + '</th><th>' + (es ? "Contraindicaciones" : "Contraindications") + '</th><th>' + (es ? "Vigilar" : "Watch for") + '</th></tr></thead><tbody>' + ids.map(function (id) {
+  var es = PR.es, det = prDetail();
+  /* the columns follow the detail level: brief is two, full adds mechanism and interactions */
+  var cols = det === "brief" ? [["Medicamento", "Drug", null], ["Clase", "Class", [0, 3, 60]], ["Dosis (adulto)", "Adult dose", [6, 0, 200]]]
+    : det === "full" ? [["Medicamento", "Drug", null], ["Clase", "Class", [0, 3, 50]], ["Mecanismo", "Mechanism", [2, 0, 190]], ["Dosis (adulto)", "Adult dose", [6, 0, 150]], ["Contraindicaciones", "Contraindications", [4, 0, 120]], ["Interacciones", "Interactions", [10, 0, 130]], ["Vigilar", "Watch for", [9, 1, 110]]]
+    : [["Medicamento", "Drug", null], ["Clase", "Class", [0, 3, 50]], ["Dosis (adulto)", "Adult dose", [6, 0, 170]], ["Contraindicaciones", "Contraindications", [4, 0, 120]], ["Vigilar", "Watch for", [9, 1, 120]]];
+  return '<table class="pr-table' + (det === "full" ? ' pr-wide' : '') + '"><thead><tr>' + cols.map(function (c) { return '<th>' + esc(es ? c[0] : c[1]) + '</th>'; }).join("") + '</tr></thead><tbody>' + ids.map(function (id) {
     var e = es && DB.ES[id];
-    return '<tr><td><b>' + esc(DB.drugs[id].name) + '</b></td><td>' + esc(cut(pf(id, 0, 3), 50)) + '</td><td>' + esc(cut(e ? e.dose : pf(id, 6, 0), 170)) + '</td><td>' + esc(cut(e ? e.dont : pf(id, 4, 0), 120)) + '</td><td>' + esc(cut(e ? e.watch : (pf(id, 9, 1) || pf(id, 9, 0)), 120)) + '</td></tr>';
+    return '<tr>' + cols.map(function (c) {
+      if (!c[2]) return '<td><b>' + esc(DB.drugs[id].name) + '</b></td>';
+      var v = pf(id, c[2][0], c[2][1]);
+      if (e) { if (c[1] === "Adult dose") v = e.dose; else if (c[1] === "Contraindications") v = e.dont; else if (c[1] === "Watch for") v = e.watch; }
+      if (c[1] === "Watch for" && !v) v = pf(id, 9, 0);
+      return '<td>' + esc(cut(v, c[2][2])) + '</td>';
+    }).join("") + '</tr>';
   }).join("") + '</tbody></table>';
+}
+
+/* pocket card: three narrow columns, one compact entry each, meant to be folded */
+function pocketHtml(ids) {
+  return '<div class="pr-pocket">' + ids.map(function (id) {
+    var rows = prRows(id);
+    return '<div class="pp-item"><b>' + esc(DB.drugs[id].name) + '</b>' +
+      rows.map(function (x) { return '<span class="pp-r"><i>' + esc(x[0]) + '</i> ' + esc(cut(x[1], prDetail() === "full" ? 200 : 110)) + '</span>'; }).join("") +
+      '</div>';
+  }).join("") + '</div>';
+}
+/* monograph: one drug per page, with every row the detail level allows */
+function monoHtml(ids) {
+  return ids.map(function (id, i) {
+    var d = DB.drugs[id], note = scopeNote(id);
+    return '<section class="pr-mono' + (i ? ' pr-break' : '') + '"><h2>' + esc(d.name) + '</h2>' +
+      '<p class="pr-msub">' + esc(cut(pf(id, 0, 3), 90)) + (pf(id, 0, 1) ? ' \u00b7 ' + esc(cut(pf(id, 0, 1), 80)) : '') + '</p>' +
+      (DB.ES[id] ? '<div class="pr-ph">' + esc(DB.ES[id].ph) + '</div>' : '') +
+      '<dl class="pr-dl">' + prRows(id).map(function (x) { return '<dt>' + esc(x[0]) + '</dt><dd>' + esc(x[1]) + '</dd>'; }).join("") +
+      (note ? '<dt>' + (PR.es ? "Su nivel" : "Your scope") + '</dt><dd>' + esc(note) + '</dd>' : '') + '</dl>' + prFoot(id) + '</section>';
+  }).join("");
+}
+/* quiz sheet: the prompt and ruled blank lines, then an answer key on its own page */
+function quizHtml(ids) {
+  var keys = prDetail() === "brief" ? ["Class", "Adult dose"]
+    : prDetail() === "full" ? ["Class", "Mechanism", "Used for", "Absolute contraindications", "Adult dose", "Pediatric dose", "Serious side effects", "Major interactions"]
+    : ["Class", "What it does", "Used for", "Contraindications", "Adult dose", "Watch for"];
+  var q = '<div class="pr-quiz">' + ids.map(function (id, i) {
+    return '<div class="pq-item"><h3>' + (i + 1) + '. ' + esc(DB.drugs[id].name) + '</h3>' +
+      keys.map(function (k) { return '<div class="pq-r"><b>' + esc(k) + '</b><span class="pq-line"></span></div>'; }).join("") + '</div>';
+  }).join("") + '</div>';
+  var ans = '<section class="pr-break pr-key"><h2>' + (PR.es ? "Clave de respuestas" : "Answer key") + '</h2>' + ids.map(function (id, i) {
+    var byK = {}; prRows(id).forEach(function (x) { byK[x[0]] = x[1]; });
+    return '<div class="pk-item"><b>' + (i + 1) + '. ' + esc(DB.drugs[id].name) + '</b>' +
+      keys.map(function (k) { return byK[k] ? '<span class="pk-r"><i>' + esc(k) + '</i> ' + esc(byK[k]) + '</span>' : ''; }).join("") + '</div>';
+  }).join("") + '</section>';
+  return q + ans;
+}
+/* cut-out flashcards: a front and a back for each drug, with cut lines */
+function flashHtml(ids) {
+  return '<div class="pr-flash">' + ids.map(function (id) {
+    var rows = prRows(id);
+    return '<div class="pf-card pf-front"><span class="pf-lbl">' + (PR.es ? "frente" : "front") + '</span><strong>' + esc(DB.drugs[id].name) + '</strong>' + (DB.ES[id] ? '<em>' + esc(DB.ES[id].ph) + '</em>' : '') + '</div>' +
+      '<div class="pf-card pf-back"><span class="pf-lbl">' + (PR.es ? "dorso" : "back") + '</span>' +
+      rows.map(function (x) { return '<span class="pf-r"><i>' + esc(x[0]) + '</i> ' + esc(cut(x[1], prDetail() === "full" ? 240 : 150)) + '</span>'; }).join("") + '</div>';
+  }).join("") + '</div>';
 }
 function printDoc() {
   var ids = PR.ids, dt = fmtDate(Date.now()), es = PR.es;
-  var title = PR.mode === "cards" ? (es ? "Tarjetas de estudio" : "Study cards") : (es ? "Hoja de referencia rápida" : "Shift cheat sheet");
+  var LT = { cards: [ "Tarjetas de estudio", "Study cards" ], sheet: [ "Hoja de referencia rápida", "Shift cheat sheet" ],
+             pocket: [ "Tarjeta de bolsillo", "Pocket card" ], mono: [ "Monografías", "Monographs" ],
+             quiz: [ "Hoja de examen", "Quiz sheet" ], flash: [ "Tarjetas para cortar", "Cut-out flashcards" ] };
+  var title = (LT[PR.mode] || LT.cards)[es ? 0 : 1];
   var foot = '<p class="pr-foot">DrugBug · ' + (es ? "Solo para uso educativo; no es para tomar decisiones clínicas. Verifique con referencias actuales y sus protocolos locales." : "Educational use only — not for clinical decision-making. Verify with current references and your local protocols.") + ' Printed ' + esc(dt) + '. © ' + COMPANY + '.</p>';
-  return '<div class="pr-doc"><h1 class="pr-title">' + title + ' <small>' + ids.length + (es ? (ids.length === 1 ? " medicamento" : " medicamentos") : (ids.length === 1 ? " drug" : " drugs")) + '</small></h1>' + (PR.mode === "cards" ? '<div class="pr-cards' + (PR.dense ? ' pr-dense' : '') + '">' + ids.map(cardHtml).join("") + '</div>' : sheetHtml(ids)) + foot + '</div>';
+  var D = (PR_DETAIL.filter(function (x) { return x[0] === prDetail(); })[0] || PR_DETAIL[1])[1];
+  var body = PR.mode === "sheet" ? sheetHtml(ids)
+    : PR.mode === "pocket" ? pocketHtml(ids)
+    : PR.mode === "mono" ? monoHtml(ids)
+    : PR.mode === "quiz" ? quizHtml(ids)
+    : PR.mode === "flash" ? flashHtml(ids)
+    : '<div class="pr-cards' + (PR.dense ? ' pr-dense' : '') + '">' + ids.map(cardHtml).join("") + '</div>';
+  return '<div class="pr-doc"><h1 class="pr-title">' + title + ' <small>' + ids.length + (es ? (ids.length === 1 ? " medicamento" : " medicamentos") : (ids.length === 1 ? " drug" : " drugs")) + ' \u00b7 ' + esc(D.toLowerCase()) + '</small></h1>' + body + foot + '</div>';
 }
-var PRINT_CSS = ".pr-src{margin-top:4px;font-size:9px;color:#444}.pr-tag{margin-top:3px;font-size:9px;font-weight:700;color:#222;border-top:1px dashed #999;padding-top:3px}body{font-family:Arial,Helvetica,sans-serif;color:#111;margin:0;padding:16px;background:#fff}.pr-title{font-size:18px;margin:0 0 10px}.pr-title small{font-weight:400;color:#555;font-size:12px}.pr-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.pr-card{border:1.5px solid #333;border-radius:8px;padding:8px 10px;break-inside:avoid;page-break-inside:avoid;font-size:10.5px;line-height:1.35}.pr-card header{display:flex;justify-content:space-between;gap:6px;align-items:baseline;border-bottom:1px solid #999;margin-bottom:4px}.pr-card h3{font-size:14px;margin:0}.pr-card header span{color:#444;font-size:10px;text-align:right}.pr-ph{font-style:italic;color:#444;margin-bottom:3px}.pr-r{margin:2px 0}.pr-dense{grid-template-columns:repeat(3,1fr);gap:6px}.pr-dense .pr-card{font-size:9px;padding:6px 7px}.pr-dense .pr-card h3{font-size:12px}.pr-table{width:100%;border-collapse:collapse;font-size:10px;line-height:1.3}.pr-table th,.pr-table td{border:1px solid #888;padding:3px 5px;text-align:left;vertical-align:top}.pr-table th{background:#eee}.pr-table tr{break-inside:avoid}.pr-foot{font-size:9.5px;color:#444;margin-top:10px;border-top:1px solid #aaa;padding-top:4px}@media (max-width:560px){.pr-cards{grid-template-columns:1fr}}@page{margin:12mm}";
+var PRINT_CSS = ".pr-src{margin-top:4px;font-size:9px;color:#444}.pr-tag{margin-top:3px;font-size:9px;font-weight:700;color:#222;border-top:1px dashed #999;padding-top:3px}body{font-family:Arial,Helvetica,sans-serif;color:#111;margin:0;padding:16px;background:#fff}.pr-title{font-size:18px;margin:0 0 10px}.pr-title small{font-weight:400;color:#555;font-size:12px}.pr-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.pr-card{border:1.5px solid #333;border-radius:8px;padding:8px 10px;break-inside:avoid;page-break-inside:avoid;font-size:10.5px;line-height:1.35}.pr-card header{display:flex;justify-content:space-between;gap:6px;align-items:baseline;border-bottom:1px solid #999;margin-bottom:4px}.pr-card h3{font-size:14px;margin:0}.pr-card header span{color:#444;font-size:10px;text-align:right}.pr-ph{font-style:italic;color:#444;margin-bottom:3px}.pr-r{margin:2px 0}.pr-dense{grid-template-columns:repeat(3,1fr);gap:6px}.pr-dense .pr-card{font-size:9px;padding:6px 7px}.pr-dense .pr-card h3{font-size:12px}.pr-table{width:100%;border-collapse:collapse;font-size:10px;line-height:1.3}.pr-table th,.pr-table td{border:1px solid #888;padding:3px 5px;text-align:left;vertical-align:top}.pr-table th{background:#eee}.pr-table tr{break-inside:avoid}.pr-foot{font-size:9.5px;color:#444;margin-top:10px;border-top:1px solid #aaa;padding-top:4px}.pr-break{break-before:page;page-break-before:always}.pr-wide{font-size:8.5px}.pr-wide th,.pr-wide td{padding:2px 3px}.pr-pocket{column-count:3;column-gap:8px;font-size:8.5px;line-height:1.3}.pp-item{break-inside:avoid;page-break-inside:avoid;margin:0 0 5px;padding-bottom:4px;border-bottom:1px solid #bbb}.pp-item b{display:block;font-size:10px}.pp-r{display:block}.pp-r i{font-style:normal;font-weight:700;color:#333}.pr-mono{font-size:10.5px;line-height:1.45}.pr-mono h2{font-size:19px;margin:0 0 2px}.pr-msub{margin:0 0 8px;color:#444;font-size:11px}.pr-dl{display:grid;grid-template-columns:150px 1fr;gap:3px 10px;margin:0 0 8px}.pr-dl dt{font-weight:700;color:#222}.pr-dl dd{margin:0}.pr-quiz{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.pq-item{break-inside:avoid;page-break-inside:avoid;border:1.5px solid #333;border-radius:8px;padding:8px 10px}.pq-item h3{font-size:13px;margin:0 0 5px}.pq-r{display:flex;align-items:baseline;gap:6px;margin:0 0 7px;font-size:10px}.pq-r b{flex:0 0 94px}.pq-line{flex:1;border-bottom:1px solid #666;height:13px}.pr-key{font-size:9.5px;line-height:1.35}.pr-key h2{font-size:16px;margin:0 0 8px}.pk-item{break-inside:avoid;margin:0 0 7px}.pk-item b{display:block}.pk-r{display:block;padding-left:10px}.pk-r i{font-style:normal;font-weight:700;color:#333}.pr-flash{display:grid;grid-template-columns:repeat(2,1fr);gap:0}.pf-card{border:1px dashed #666;min-height:150px;padding:10px 12px;break-inside:avoid;page-break-inside:avoid;display:flex;flex-direction:column;justify-content:center;font-size:9.5px;line-height:1.35;position:relative}.pf-lbl{position:absolute;top:3px;right:5px;font-size:7px;text-transform:uppercase;letter-spacing:.06em;color:#999}.pf-front{align-items:center;text-align:center}.pf-front strong{font-size:19px}.pf-front em{color:#555;font-size:10px}.pf-back{justify-content:flex-start}.pf-r{display:block;margin:0 0 2px}.pf-r i{font-style:normal;font-weight:700;color:#333}@media (max-width:560px){.pr-cards{grid-template-columns:1fr}.pr-quiz,.pr-flash{grid-template-columns:1fr}.pr-pocket{column-count:1}.pr-dl{grid-template-columns:1fr}}@page{margin:12mm}";
 function drawPrint() {
   if (!PR) return;
-  var c = '<div class="pr-bar noprint"><button class="btn small ghost" data-pract="close">Close</button><div class="chips"><button class="chip" data-pract="cards" aria-pressed="' + (PR.mode === "cards") + '">Study cards</button><button class="chip" data-pract="sheet" aria-pressed="' + (PR.mode === "sheet") + '">Cheat sheet</button>' + (Object.keys(DB.ES).length ? '' : '') + '</div><span class="spacer"></span><button class="btn small" data-pract="print"' + (PR.ids.length ? "" : " disabled") + '>Print</button><button class="btn small ghost" data-pract="pdf"' + (PR.ids.length ? "" : " disabled") + '>Save as PDF</button>' + (NATIVE ? '' : '<button class="btn small ghost" data-pract="dl"' + (PR.ids.length ? "" : " disabled") + '>Download as HTML</button>') + '</div>';
+  var c = '<div class="pr-bar noprint"><button class="btn small ghost" data-pract="close">Close</button>' +
+    '<div class="prpick"><div class="prrow"><span class="prlab">Layout</span><div class="chips">' +
+      PR_LAYOUTS.map(function (L) { return '<button class="chip" data-pract="m:' + L[0] + '" aria-pressed="' + (PR.mode === L[0]) + '" title="' + esc(L[2]) + '">' + esc(L[1]) + '</button>'; }).join("") +
+    '</div></div><div class="prrow"><span class="prlab">Detail</span><div class="chips">' +
+      PR_DETAIL.map(function (D) { return '<button class="chip" data-pract="d:' + D[0] + '" aria-pressed="' + (prDetail() === D[0]) + '" title="' + esc(D[2]) + '">' + esc(D[1]) + '</button>'; }).join("") +
+    '</div></div></div><span class="spacer"></span><button class="btn small" data-pract="print"' + (PR.ids.length ? "" : " disabled") + '>Print</button><button class="btn small ghost" data-pract="pdf"' + (PR.ids.length ? "" : " disabled") + '>Save as PDF</button>' + (NATIVE ? '' : '<button class="btn small ghost" data-pract="dl"' + (PR.ids.length ? "" : " disabled") + '>Download as HTML</button>') + '</div>';
   if (PR.msg) c += '<p class="presult noprint" role="status">' + esc(PR.msg) + '</p>';
-  c += '<p class="muted small noprint">' + (isAndroid() ? '<b>Print</b> finds printers on your Wi-Fi or Bluetooth. <b>Save as PDF</b> opens the same screen: pick "Save as PDF" at the top to keep a file.' : NATIVE ? '<b>Print</b> sends to an AirPrint printer on your Wi-Fi. <b>Save as PDF</b> makes a file you can save to Files, AirDrop or email.' : '<b>Print</b> uses your computer\'s printers. <b>Save as PDF</b> opens the same window: set the destination to "Save as PDF".') + ' Cards print two per row.</p>';
+  c += '<p class="muted small noprint">' + (isAndroid() ? '<b>Print</b> finds printers on your Wi-Fi or Bluetooth. <b>Save as PDF</b> opens the same screen: pick "Save as PDF" at the top to keep a file.' : NATIVE ? '<b>Print</b> sends to an AirPrint printer on your Wi-Fi. <b>Save as PDF</b> makes a file you can save to Files, AirDrop or email.' : '<b>Print</b> uses your computer\'s printers. <b>Save as PDF</b> opens the same window: set the destination to "Save as PDF".') + ' ' + esc((PR_LAYOUTS.filter(function (L) { return L[0] === PR.mode; })[0] || PR_LAYOUTS[0])[2]) + '</p>';
   if (!PR.ids.length) c += '<p class="presult noprint">No drugs to print. Save drugs to My List or change your filter.</p>';
   printv.innerHTML = c + '<style>' + PRINT_CSS.replace(/body\{[^}]*\}/, "") + '</style>' + printDoc();
 }
@@ -6689,18 +6866,19 @@ printv.addEventListener("click", function (e) {
   var t = e.target.closest("[data-pract]"); if (!t || !PR) return;
   var act = t.getAttribute("data-pract");
   if (act === "close") return closePrint();
-  if (act === "cards" || act === "sheet") { PR.mode = act; PR.msg = ""; return drawPrint(); }
+  if (act.indexOf("m:") === 0) { PR.mode = act.slice(2); PR.msg = ""; setSet("printMode", PR.mode); return drawPrint(); }
+  if (act.indexOf("d:") === 0) { PR.detail = act.slice(2); PR.msg = ""; setSet("printDetail", PR.detail); return drawPrint(); }
   if (act === "es") return;
   if (act === "print") {
     var ph = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.print;
-    if (ph) { try { ph.postMessage({ title: "DrugBug " + (PR.mode === "cards" ? "study cards" : "cheat sheet"), html: '<!doctype html><html><head><meta charset="utf-8"><style>' + PRINT_CSS + '</style></head><body>' + printDoc() + '</body></html>' }); } catch (err) { PR.msg = "Could not open printing."; drawPrint(); } return; }
+    if (ph) { try { ph.postMessage({ title: prTitle(), html: '<!doctype html><html><head><meta charset="utf-8"><style>' + PRINT_CSS + '</style></head><body>' + printDoc() + '</body></html>' }); } catch (err) { PR.msg = "Could not open printing."; drawPrint(); } return; }
     try { window.print(); } catch (err) { PR.msg = "Printing is blocked here. Use Download as HTML, then print that file."; drawPrint(); } return; }
   if (act === "dl") return downloadPrint();
   if (act === "pdf") {
     var pdfh = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.pdf;
     var full = '<!doctype html><html><head><meta charset="utf-8"><style>' + PRINT_CSS + '</style></head><body>' + printDoc() + '</body></html>';
-    var fname = "DrugBug-" + (PR.mode === "cards" ? "study-cards" : "cheat-sheet") + "-" + new Date().toISOString().slice(0, 10) + ".pdf";
-    if (pdfh) { try { pdfh.postMessage({ title: "DrugBug " + (PR.mode === "cards" ? "study cards" : "cheat sheet"), html: full, name: fname }); if (isAndroid()) { PR.msg = 'Pick "Save as PDF" at the top of the next screen.'; drawPrint(); } } catch (err) { PR.msg = "Could not make the PDF right now."; drawPrint(); } return; }
+    var fname = "DrugBug-" + PR.mode + "-" + prDetail() + "-" + new Date().toISOString().slice(0, 10) + ".pdf";
+    if (pdfh) { try { pdfh.postMessage({ title: prTitle(), html: full, name: fname }); if (isAndroid()) { PR.msg = 'Pick "Save as PDF" at the top of the next screen.'; drawPrint(); } } catch (err) { PR.msg = "Could not make the PDF right now."; drawPrint(); } return; }
     PR.msg = 'In the print window, set the destination to "Save as PDF".'; drawPrint();
     try { window.print(); } catch (err) { PR.msg = "Saving is blocked here. Use Download as HTML instead."; drawPrint(); } return; }
 });
@@ -6709,7 +6887,7 @@ function printClick(t, a) { if (a.print) { openPrint(a.print); return true; } re
 
 /* ---------- Settings: display, study preferences, sound, protocols, printing, privacy & account, about ---------- */
 var APP_VERSION = "1.1", APP_DATE = "2026-10-10";
-var SET_DEF = { text: "normal", contrast: false, motion: false, homeLevel: "", dailyGoal: 10, nrN: 25, nrMode: "practice", adaptive: true, megaTimer: "on", fullDefault: false, voiceRate: "normal", showPhon: true, fun: true, sfx: true, music: true, musicVol: 40, printMode: "cards", printLang: "auto", printDense: false, state: "", buddy: true, weird: true, weirdAt: "12:00" };
+var SET_DEF = { text: "normal", contrast: false, motion: false, homeLevel: "", dailyGoal: 10, nrN: 25, nrMode: "practice", adaptive: true, megaTimer: "on", fullDefault: false, voiceRate: "normal", showPhon: true, fun: true, sfx: true, music: true, musicVol: 40, printMode: "cards", printDetail: "std", printLang: "auto", printDense: false, state: "", buddy: true, weird: true, weirdAt: "12:00" };
 function SET() { var s = store("settings") || {}; return Object.assign({}, SET_DEF, s); }
 function setSet(k, v) { var s = SET(); s[k] = v; store("settings", s); applySettings(); if (k === "music" || k === "musicVol") muSync(); if (k === "remind" || k === "remindAt") remindSync(); if ((k === "weird" || k === "weirdAt") && typeof wdwSync === "function") wdwSync(); }
 /* daily study reminder (iPhone app): the app tells iOS what to say; iOS shows it at the chosen time */
@@ -6962,7 +7140,7 @@ Object.assign(ES_UI, {
   "Age group": "Grupo de edad", "Download my data": "Descargar mis datos", "A file with your progress, scores, saved list and settings.": "Un archivo con su progreso, calificaciones, lista guardada y ajustes.", "Download": "Descargar",
   "Reset my progress": "Reiniciar mi progreso", "Clears mastery, XP, streaks, achievements and scores. Keeps your bugs, sticks, saved list and settings.": "Borra dominio, XP, rachas, logros y calificaciones. Conserva sus insectos, palitos, lista guardada y ajustes.", "Reset progress": "Reiniciar progreso", "Reset": "Reiniciar",
   "Delete all my data": "Borrar todos mis datos", "Removes everything DrugBug stores about you, here and online. Cannot be undone.": "Elimina todo lo que DrugBug guarda sobre usted, aquí y en línea. No se puede deshacer.", "Delete…": "Borrar…",
-  "Version": "Versión", "Medical review": "Revisión médica", "Something wrong?": "¿Algo está mal?", "Report a problem": "Reportar un problema", "Contact": "Contacto", "Legal": "Legal", "Professor Sage explains the medications people take at home. Filter by class or search by name.": "El Profesor Sage explica los medicamentos que la gente toma en casa. Filtre por clase o busque por nombre.", "The medications people take at home, by drug class. Plain-language guides from Professor Sage: what each drug treats, how it is taken, and what to ask a patient who takes it.": "Los medicamentos que la gente toma en casa, por clase. Guías sencillas del Profesor Sage: qué trata cada medicamento, cómo se toma y qué preguntar a quien lo toma.", "Professor Sage's notes": "Notas del Profesor Sage", "Nursing focus": "Enfoque de enfermería", "Board focus": "Enfoque para exámenes", "Field focus": "Enfoque prehospitalario", "Back to studying": "Volver a estudiar", "Dark collection": "Colección oscura", "Earn 1 stick for every correct answer, plus bonuses for perfect scores and achievements.": "Gane 1 palito por cada respuesta correcta, más bonos por calificaciones perfectas y logros.", "Every correct answer (any level)": "Cada respuesta correcta (cualquier nivel)", "Perfect score on 10 or more questions": "Calificación perfecta en 10 o más preguntas", "Each achievement unlocked": "Cada logro desbloqueado", "100% on a Megacode case": "100% en un caso de Megacode", "Terrarium": "Terrario", "Wardrobe": "Guardarropa", "Bugs": "Insectos", "Colors": "Colores", "How to earn sticks": "Cómo ganar palitos", "Filters": "Filtros", "Clear filters": "Quitar filtros", "Problem type": "Tipo de problema", "Exit": "Salir", "Look up every drug in your scope.": "Busque cada medicamento de su nivel.", "Timed practice tests with scores.": "Exámenes de práctica con calificación.", "Dose and drip math with worked answers.": "Cálculo de dosis y goteos con respuestas explicadas.", "Megacode, pediatric doses, med lists and safety drills.": "Megacode, dosis pediátricas, listas de medicamentos y seguridad.", "Clinical cases: choose what to give.": "Casos clínicos: elija qué administrar.", "Flip, sort and master each drug.": "Voltee, ordene y domine cada medicamento.", "Mastery, achievements, My List and leaderboard.": "Dominio, logros, Mi lista y clasificación.", "Your bugs, outfits, faces and sticks.": "Sus insectos, ropa, caras y palitos.", "Assess, hold, labs, teaching: one skill at a time.": "Valorar, retener, laboratorios, enseñanza: una habilidad a la vez.", "Study session": "Sesión de estudio", "Everyday faces": "Caras de diario", "Shop faces": "Caras de la tienda", "Secret faces": "Caras secretas", "Equip": "Equipar", "Keep studying to find it": "Sigue estudiando para encontrarla", "Answers reflect common national guidance at the time of writing. Where practice varies, the explanation says so; your protocols, facility policy and medical direction always come first.": "Las respuestas reflejan las guías nacionales comunes al momento de redactarlas. Cuando la práctica varía, la explicación lo indica; sus protocolos, la política del centro y la dirección médica siempre tienen prioridad.", "Outfits": "Ropa", "Other hand": "La otra mano", "Starter": "Inicial", "Free": "Gratis", "Free when you unlock them": "Gratis al desbloquearlos", "No bugs here yet.": "Aún no hay insectos aquí.", "Bug buddy": "Insecto compañero", "Your bug on the side of the screen, reacting to your answers.": "Su insecto al lado de la pantalla, reaccionando a sus respuestas.", "Hats & items": "Sombreros y objetos", "Faces": "Caras", "Hats": "Sombreros", "Eyewear": "Lentes", "Neck": "Cuello", "In hand": "En la mano", "Effects": "Efectos", "Wear": "Ponérselo", "Take off": "Quitárselo", "Wearing": "Puesto", "Secret face": "Cara secreta", "Show it off": "Lucirla", "Clinically reviewed": "Con revisión clínica", "Awaiting review": "Pendiente de revisión", "Pharmacist verified": "Verificado por farmacéutico", "Physician verified": "Verificado por médico", "Awaiting clinical review": "Pendiente de revisión clínica"
+  "Version": "Versión", "Medical review": "Revisión médica", "Something wrong?": "¿Algo está mal?", "Report a problem": "Reportar un problema", "Contact": "Contacto", "Legal": "Legal", "Professor Sage explains the medications people take at home. Filter by class or search by name.": "El Profesor Sage explica los medicamentos que la gente toma en casa. Filtre por clase o busque por nombre.", "The medications people take at home, by drug class. Plain-language guides from Professor Sage: what each drug treats, how it is taken, and what to ask a patient who takes it.": "Los medicamentos que la gente toma en casa, por clase. Guías sencillas del Profesor Sage: qué trata cada medicamento, cómo se toma y qué preguntar a quien lo toma.", "Professor Sage's notes": "Notas del Profesor Sage", "Nursing focus": "Enfoque de enfermería", "Board focus": "Enfoque para exámenes", "Field focus": "Enfoque prehospitalario", "Back to studying": "Volver a estudiar", "Dark collection": "Colección oscura", "Earn 1 stick for every correct answer, plus bonuses for perfect scores and achievements.": "Gane 1 palito por cada respuesta correcta, más bonos por calificaciones perfectas y logros.", "Every correct answer (any level)": "Cada respuesta correcta (cualquier nivel)", "Perfect score on 10 or more questions": "Calificación perfecta en 10 o más preguntas", "Each achievement unlocked": "Cada logro desbloqueado", "100% on a Megacode case": "100% en un caso de Megacode", "Terrarium": "Terrario", "Wardrobe": "Guardarropa", "Bugs": "Insectos", "Colors": "Colores", "How to earn sticks": "Cómo ganar palitos", "Filters": "Filtros", "Clear filters": "Quitar filtros", "Problem type": "Tipo de problema", "Exit": "Salir", "Look up every drug in your scope.": "Busque cada medicamento de su nivel.", "Timed practice tests with scores.": "Exámenes de práctica con calificación.", "Dose and drip math with worked answers.": "Cálculo de dosis y goteos con respuestas explicadas.", "Megacode, pediatric doses, med lists and safety drills.": "Megacode, dosis pediátricas, listas de medicamentos y seguridad.", "Clinical cases: choose what to give.": "Casos clínicos: elija qué administrar.", "Flip, sort and master each drug.": "Voltee, ordene y domine cada medicamento.", "Mastery, achievements, My List and leaderboard.": "Dominio, logros, Mi lista y clasificación.", "Your bugs, outfits, faces and sticks.": "Sus insectos, ropa, caras y palitos.", "Assess, hold, labs, teaching: one skill at a time.": "Valorar, retener, laboratorios, enseñanza: una habilidad a la vez.", "Study session": "Sesión de estudio", "Free faces": "Caras gratis", "Under 250 sticks": "Menos de 250 palitos", "250 to 500": "250 a 500", "The expensive ones": "Las caras caras", "Equip": "Equipar", "Keep studying to find it": "Sigue estudiando para encontrarla", "Answers reflect common national guidance at the time of writing. Where practice varies, the explanation says so; your protocols, facility policy and medical direction always come first.": "Las respuestas reflejan las guías nacionales comunes al momento de redactarlas. Cuando la práctica varía, la explicación lo indica; sus protocolos, la política del centro y la dirección médica siempre tienen prioridad.", "Outfits": "Ropa", "Other hand": "La otra mano", "Starter": "Inicial", "Free": "Gratis", "Free when you unlock them": "Gratis al desbloquearlos", "No bugs here yet.": "Aún no hay insectos aquí.", "Bug buddy": "Insecto compañero", "Your bug on the side of the screen, reacting to your answers.": "Su insecto al lado de la pantalla, reaccionando a sus respuestas.", "Hats & items": "Sombreros y objetos", "Faces": "Caras", "Hats": "Sombreros", "Eyewear": "Lentes", "Neck": "Cuello", "In hand": "En la mano", "Effects": "Efectos", "Wear": "Ponérselo", "Take off": "Quitárselo", "Wearing": "Puesto", "Secret face": "Cara secreta", "Show it off": "Lucirla", "Clinically reviewed": "Con revisión clínica", "Awaiting review": "Pendiente de revisión", "Pharmacist verified": "Verificado por farmacéutico", "Physician verified": "Verificado por médico", "Awaiting clinical review": "Pendiente de revisión clínica"
 });
 Object.assign(ES_UI, {
   "Medications": "Medicamentos", "All Medications": "Todos los medicamentos", "Specialty Units": "Unidades de especialidad",

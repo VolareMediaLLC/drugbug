@@ -1081,6 +1081,14 @@ table.suffix td{white-space:normal}
 .cprow{flex-direction:column;align-items:flex-start}
 #printv{background:#fff;color:#111;min-height:100vh;margin:0 -16px;padding:12px 16px 40px}
 #printv .pr-bar{position:sticky;top:0;background:#fff;display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid #ccc;z-index:2;color:#111}
+/* print view: the layout and detail pickers (owner, Nov 4 2026) */
+.prpick{display:flex;flex-direction:column;gap:5px;flex:1 1 320px;min-width:0}
+.prrow{display:flex;align-items:center;gap:8px;min-width:0}
+.prrow .prlab{flex:0 0 52px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#555}
+.prrow .chips{display:flex;flex-wrap:wrap;gap:5px;min-width:0}
+.prrow .chip{font-size:12px;padding:4px 9px;border:1px solid #bbb;border-radius:999px;background:#fff;color:#222;cursor:pointer}
+.prrow .chip[aria-pressed="true"]{background:#111;color:#fff;border-color:#111}
+@media (max-width:560px){.prrow{flex-wrap:wrap}.prrow .prlab{flex:1 1 100%}}
 #printv .pr-bar .spacer{flex:1}#printv .muted{color:#555}#printv .presult{background:#eef2ff;color:#1b1430;border:1px solid #c7d2fe;font-size:15px}
 #printv .chip{color:#111;background:#f3f3f3}#printv .chip[aria-pressed="true"]{background:#222;color:#fff}
 body.printing>*:not(#printv){display:none!important}
