@@ -3446,6 +3446,7 @@ var BODYFIT = {
   /* the stage 1 and 2 bodies need hand anchors of their own: without them a held item kept the
      adult position and floated in empty space beside a chrysalis (owner, Nov 4 2026) */
   chrysalis: { r: 26, t: [100, 150, 28, 40], R: [137, 124], L: [63, 124] }, cocoon: { r: 26, t: [100, 150, 34, 40], R: [140, 126], L: [60, 126] },
+  centipede: { r: 28, t: [114, 150, 40, 34], R: [162, 108], L: [52, 124] },
   wasp: { r: 28, t: [100, 154, 30, 36] }, cricket: { r: 28, t: [100, 150, 28, 40] }
 };
 function fitG(body, slot, hy, svg) {
@@ -3621,6 +3622,30 @@ function bugArt(b, cls, opt) {
     s += '<path d="M80 108 Q80 96 100 96 Q120 96 120 108 L116 190 Q100 202 84 190Z" fill="' + F + '" stroke="' + lgd + '" stroke-width="2.5"/>';
     s += '<path d="M83 128 Q100 133 117 128 M84 150 Q100 155 116 150 M86 172 Q100 177 114 172" stroke="' + lgd + '" stroke-width="2.5" fill="none" opacity=".55"/>';
     s += '<circle cx="100" cy="' + hy + '" r="28" fill="' + (b.head || c1) + '" stroke="' + lgd + '" stroke-width="2.5"/>';
+  } else if (t === "centipede") {
+    /* centipede (owner, Nov 5 2026): a coiled chain of segments, one pair of legs on each, long
+       trailing back legs and the forcipules (venom claws) under the head. Like real stone
+       centipedes it hatches with fewer segments and adds more as it grows. */
+    var cp = [[100, 112, 16], [84, 128, 15], [74, 146, 14.5], [78, 165, 14], [96, 177, 13.5], [117, 178, 13], [136, 170, 12.5], [149, 155, 12], [154, 138, 11], [152, 121, 10]];
+    cp = cp.slice(0, st === 1 ? 5 : st === 2 ? 7 : 10);
+    var legs = "", segS = "", n = cp.length;
+    cp.forEach(function (p, i) {
+      var a = cp[Math.max(0, i - 1)], c = cp[Math.min(n - 1, i + 1)], dx = c[0] - a[0], dy = c[1] - a[1], L = Math.sqrt(dx * dx + dy * dy) || 1, nx = -dy / L, ny = dx / L, tx = dx / L, ty = dy / L;
+      [-1, 1].forEach(function (sd) {
+        var x0 = p[0] + nx * sd * (p[2] - 4), y0 = p[1] + ny * sd * (p[2] - 4), x1 = p[0] + nx * sd * (p[2] + 9) - tx * 3, y1 = p[1] + ny * sd * (p[2] + 9) - ty * 3, x2 = x1 - tx * 5, y2 = y1 - ty * 5;
+        legs += '<path d="M' + x0.toFixed(1) + ' ' + y0.toFixed(1) + ' L' + x1.toFixed(1) + ' ' + y1.toFixed(1) + ' L' + x2.toFixed(1) + ' ' + y2.toFixed(1) + '" stroke="' + ink + '" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
+      });
+      if (i === n - 1) {   /* the long terminal legs trail behind like a second pair of antennae */
+        legs += '<path d="M' + (p[0] + tx * 4).toFixed(1) + ' ' + (p[1] + ty * 4).toFixed(1) + ' q' + (tx * 14 + nx * 10).toFixed(1) + ' ' + (ty * 14 + ny * 10).toFixed(1) + ' ' + (tx * 22 + nx * 4).toFixed(1) + ' ' + (ty * 22 + ny * 4).toFixed(1) + ' M' + (p[0] + tx * 4).toFixed(1) + ' ' + (p[1] + ty * 4).toFixed(1) + ' q' + (tx * 14 - nx * 10).toFixed(1) + ' ' + (ty * 14 - ny * 10).toFixed(1) + ' ' + (tx * 22 - nx * 4).toFixed(1) + ' ' + (ty * 22 - ny * 4).toFixed(1) + '" stroke="' + ink + '" stroke-width="2.6" fill="none" stroke-linecap="round"/>';
+      }
+    });
+    for (var ci = n - 1; ci >= 0; ci--) {
+      var q = cp[ci];
+      segS += '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="' + q[2] + '" fill="' + (ci % 2 ? c2 : F) + '" stroke="' + (st === 5 ? GOLD : ink) + '" stroke-width="' + (st === 5 ? 2.4 : 1.6) + '"/>' +
+        '<ellipse cx="' + (q[0] - q[2] * .25).toFixed(1) + '" cy="' + (q[1] - q[2] * .35).toFixed(1) + '" rx="' + (q[2] * .42).toFixed(1) + '" ry="' + (q[2] * .22).toFixed(1) + '" fill="#fff" opacity=".22"/>';
+    }
+    s += legs + segS + '<path d="M84 ' + (hy + 22) + ' Q78 ' + (hy + 36) + ' 92 ' + (hy + 40) + ' M116 ' + (hy + 22) + ' Q122 ' + (hy + 36) + ' 108 ' + (hy + 40) + '" stroke="' + (b.fang || ink) + '" stroke-width="4.5" fill="none" stroke-linecap="round"/>' +
+      antennae(ink, true) + '<circle cx="100" cy="' + hy + '" r="28" fill="' + (b.head || c1) + '" stroke="' + ink + '" stroke-width="1.6"/>';
   } else if (t === "scorpion") {
     s += '<path d="M76 120 Q40 110 34 84 M124 120 Q160 110 166 84" stroke="' + c2 + '" stroke-width="8" fill="none" stroke-linecap="round"/><path d="M34 84 l-12 -8 M34 84 l-4 -14 M166 84 l12 -8 M166 84 l4 -14" stroke="' + c2 + '" stroke-width="7" stroke-linecap="round"/>' + bLegs(ink) +
       '<ellipse cx="100" cy="140" rx="34" ry="40" fill="' + F + '"/>';
@@ -3644,7 +3669,7 @@ function bugArt(b, cls, opt) {
     s += '<circle cx="100" cy="' + hy + '" r="30" fill="' + (b.head || c1) + '"/>';
   }
   /* veteran / legend body details, fit to the torso of this body */
-  if (st >= 4 && !{ chrysalis: 1, cocoon: 1, snail: 1, caterpillar: 1, stick: 1, dragonfly: 1, butterfly: 1, moth: 1, firefly: 1, larva: 1 }[t]) {
+  if (st >= 4 && !{ centipede: 1, chrysalis: 1, cocoon: 1, snail: 1, caterpillar: 1, stick: 1, dragonfly: 1, butterfly: 1, moth: 1, firefly: 1, larva: 1 }[t]) {
     var TF = (BODYFIT[t] || BODYFIT.beetle).t, tx = TF[0], ty = TF[1], rx = TF[2], ry = TF[3];
     s += '<path d="M' + (tx - rx * .62) + ' ' + (ty - ry * .42) + ' Q' + (tx - rx * .5) + ' ' + (ty - ry * .78) + ' ' + (tx - rx * .16) + ' ' + (ty - ry * .86) + '" stroke="#fff" stroke-width="5" stroke-linecap="round" fill="none" opacity=".42"/>';
     if (st === 5) s += '<ellipse cx="' + tx + '" cy="' + ty + '" rx="' + rx + '" ry="' + ry + '" fill="none" stroke="' + GOLD + '" stroke-width="3.5" opacity=".95"/>';
@@ -3739,6 +3764,7 @@ var BUGS = [
   { id: "meadow-hopper", name: "Meadow Hopper", body: "grasshopper", c: ["#a3e635", "#4d7c0f", "#ecfccb"], ink: "#1f2d0a", rar: "common", price: 680 },
   { id: "rookie-rhino", name: "Rookie Rhino Beetle", body: "rhino", c: ["#a16207", "#713f12", "#fde68a"], head: "#422006", rar: "rare", price: 1300 },
   { id: "sky-mantis", name: "Sky Mantis", body: "mantis", c: ["#7dd3fc", "#0284c7"], rar: "rare", price: 1300 },
+  { id: "rapid-centipede", name: "Rapid Response Centipede", body: "centipede", c: ["#fb923c", "#c2410c", "#fde68a"], ink: "#431407", rar: "rare", price: 1450, blurb: "All those legs and still first on scene. Fun fact: no centipede has exactly 100 legs, because they always have an odd number of leg pairs." },
   { id: "bubblegum-ant", name: "Bubblegum Ant", body: "ant", c: ["#f9a8d4", "#db2777"], ink: "#701a45", rar: "common", price: 800 },
   // rare
   { id: "glow-firefly", name: "Glow Firefly", body: "firefly", c: ["#4c5fd5", "#26307a", "#fff59d"], rar: "rare", price: 1200 },
