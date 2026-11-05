@@ -1936,6 +1936,15 @@ table.cmptbl tr.dif th{border-left:3px solid var(--gold)}
 :root[data-serious="1"] .hero.ha{grid-template-columns:1fr}
 :root[data-serious="1"] .band{grid-template-columns:1fr}
 :root[data-serious="1"] .lazycard{padding-top:34px}
+/* the draggable track, and the bulge on whichever bug you are looking at (owner, Nov 4 2026) */
+.lazytrack{position:absolute;inset:0;transition:transform .26s cubic-bezier(.22,.9,.26,1);touch-action:pan-y}
+.lazy{cursor:grab;user-select:none;-webkit-user-select:none}
+.lazy:active{cursor:grabbing}
+.lazyarr,.lazydot{cursor:pointer}
+.lazycard.mid .lazybug svg{animation:lzbulge 2.8s ease-in-out infinite;transform-origin:50% 60%}
+@keyframes lzbulge{0%,100%{transform:scale(1)}50%{transform:scale(1.09)}}
+.lazycard.mid:hover .lazybug svg{animation-duration:1.5s}
+@media (prefers-reduced-motion:reduce){.lazycard.mid .lazybug svg{animation:none}.lazytrack{transition:none}}
 /* turntable cards are checkboxes now: tick as many paths as you like */
 .lazycard{padding-top:26px}
 .lazychk{position:absolute;top:10px;left:10px;width:22px;height:22px;border:2px solid var(--line);border-radius:7px;background:var(--surface);transition:background .14s,border-color .14s}
@@ -1972,7 +1981,7 @@ table.cmptbl tr.dif th{border-left:3px solid var(--gold)}
 .lazycard{position:absolute;left:50%;top:0;width:188px;margin-left:-94px;height:222px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:var(--surface);border:2px solid var(--line);border-radius:22px;padding:14px 12px;color:var(--ink);box-shadow:var(--shadow);cursor:pointer;transition:transform .34s cubic-bezier(.22,.9,.26,1),opacity .34s,border-color .2s;backface-visibility:hidden}
 .lazycard strong{font-family:var(--f-display);font-size:17px;line-height:1.1;text-align:center}
 .lazybug svg{width:96px;height:96px;display:block}
-.lazycard.po0{transform:translateZ(60px) scale(1);opacity:1;z-index:6;border-color:var(--gen)}
+.lazycard.po0{transform:translateZ(60px) scale(1.05);opacity:1;z-index:6;border-color:var(--gen)}
 .lazycard.po1{transform:translateX(74%) rotateY(-34deg) scale(.78);opacity:.62;z-index:4}
 .lazycard.pom1{transform:translateX(-74%) rotateY(34deg) scale(.78);opacity:.62;z-index:4}
 .lazycard.po2{transform:translateX(128%) rotateY(-46deg) scale(.58);opacity:.26;z-index:2}

@@ -5655,7 +5655,7 @@ function obView() {
     '<p>Select as many as you want. Swipe the turntable, tap a card to tick it, and change any of this later in Settings.</p>' +
     '<div class="lazy" data-lazy="1">' +
     '<button class="lazyarr l" data-spin="-1" aria-label="Previous">&#8249;</button>' +
-    '<div class="lazystage">' + C.map(function (c, k) {
+    '<div class="lazystage"><div class="lazytrack">' + C.map(function (c, k) {
       var d = k - i, L = C.length;
       if (d > L / 2) d -= L; if (d < -L / 2) d += L;
       var pos = Math.abs(d) > 2 ? "far" : "o" + d, on = !!sel[c.code];
@@ -5663,7 +5663,7 @@ function obView() {
         '<span class="lazychk" aria-hidden="true"></span>' +
         '<span class="lazybug">' + bugArt(bugById(c.bug), "rolebug", { mood: "happy" }) + '</span>' +
         '<strong>' + esc(c.name) + '</strong>' + (c.code === "ev" ? '<span class="obrec">Recommended</span>' : '') + '</button>';
-    }).join("") + '</div>' +
+    }).join("") + '</div></div>' +
     '<button class="lazyarr r" data-spin="1" aria-label="Next">&#8250;</button></div>' +
     '<div class="lazydots">' + C.map(function (c, k) { return '<button class="lazydot' + (k === i ? ' on' : '') + (sel[c.code] ? ' sel' : '') + '" data-spin="' + (k - i) + '" aria-label="' + esc(c.name) + '"></button>'; }).join("") + '</div>' +
     '<div class="lazynow"><strong>' + esc(cur.name) + '</strong><p class="obblurb">' + esc(cur.blurb) + '</p>' +
@@ -5679,7 +5679,10 @@ function obSpin(d) {
   render();
 }
 function obClick(t, a) {
-  if (a.obtog) { var s = obSel(); s[a.obtog] = !s[a.obtog]; render(); return true; }
+  if (a.obtog) {
+    if (LZ.moved) { LZ.moved = false; return true; }   /* that was a drag, not a tap */
+    var s = obSel(); s[a.obtog] = !s[a.obtog]; render(); return true;
+  }
   if (a.spin != null && a.spin !== "") { var d = +a.spin; if (d) obSpin(d); return true; }
   if (a.obskip) {
     if (S.obRedo) { S.obRedo = 0; S.obSel = null; render(); return true; }   /* changing it later: back out, saved paths untouched */
@@ -5712,18 +5715,50 @@ document.addEventListener("keydown", function (e) {
   if (e.key === "ArrowLeft") { e.preventDefault(); obSpin(-1); }
   else if (e.key === "ArrowRight") { e.preventDefault(); obSpin(1); }
 });
+/* Dragging the turntable: one path for finger, mouse and pen (owner, Nov 4 2026).
+   Pointer events cover all three, so the artifact drags with a mouse exactly as the phone does
+   with a thumb. The track follows the pointer while the drag is live and snaps on release;
+   a drag that moved more than a few pixels swallows the click so it cannot also tick a card. */
+var LZ = { id: null, x0: 0, y0: 0, dx: 0, moved: false, lock: "", track: null };
 (function () {
-  var x0 = null, y0 = null;
-  document.addEventListener("touchstart", function (e) {
-    var z = e.target.closest && e.target.closest("[data-lazy]"); if (!z) return;
-    x0 = e.touches[0].clientX; y0 = e.touches[0].clientY;
-  }, { passive: true });
-  document.addEventListener("touchend", function (e) {
-    if (x0 == null) return;
-    var dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
-    x0 = null;
-    if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy)) obSpin(dx < 0 ? 1 : -1);
-  }, { passive: true });
+  function track(t) { return t && t.closest ? t.closest("[data-lazy]") : null; }
+  function setDx(px) {
+    if (!LZ.track) return;
+    LZ.track.style.transform = px ? "translateX(" + px + "px)" : "";
+    LZ.track.style.transition = "none";
+  }
+  function release(snap) {
+    if (LZ.track) { LZ.track.style.transition = ""; LZ.track.style.transform = ""; }
+    LZ.id = null; LZ.lock = ""; LZ.track = null;
+    if (snap) obSpin(snap);
+  }
+  document.addEventListener("pointerdown", function (e) {
+    if (e.button != null && e.button !== 0) return;          /* left button or touch only */
+    var z = track(e.target); if (!z) return;
+    if (e.target.closest && e.target.closest(".lazyarr, .lazydot")) return;   /* the buttons keep their own job */
+    LZ.id = e.pointerId; LZ.x0 = e.clientX; LZ.y0 = e.clientY; LZ.dx = 0; LZ.moved = false; LZ.lock = "";
+    LZ.track = z.querySelector(".lazytrack");
+  });
+  document.addEventListener("pointermove", function (e) {
+    if (LZ.id === null || e.pointerId !== LZ.id) return;
+    var dx = e.clientX - LZ.x0, dy = e.clientY - LZ.y0;
+    /* decide once whether this is a sideways drag or the page being scrolled, then stick to it */
+    if (!LZ.lock) {
+      if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+      LZ.lock = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+      if (LZ.lock === "y") { LZ.id = null; LZ.track = null; return; }
+    }
+    LZ.dx = dx; LZ.moved = Math.abs(dx) > 5;
+    if (e.cancelable) e.preventDefault();
+    setDx(Math.max(-120, Math.min(120, dx)) * 0.55);          /* a little resistance */
+  }, { passive: false });
+  function end(e) {
+    if (LZ.id === null || (e.pointerId != null && e.pointerId !== LZ.id)) return;
+    var dx = LZ.dx;
+    release(Math.abs(dx) > 45 ? (dx < 0 ? 1 : -1) : 0);
+  }
+  document.addEventListener("pointerup", end);
+  document.addEventListener("pointercancel", end);
 })();
 
 function roleView() {
