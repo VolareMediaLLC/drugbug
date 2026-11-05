@@ -8678,7 +8678,7 @@ function normalsView() {
   return c + '<p class="callout evnote small">' + esc(N.note || "") + '</p>';
 }
 /* body map: shared by Everyday Health and the Medical School "Body Systems" tab */
-var BODY_AREAS = ["Head", "Neck", "Chest", "Abdomen", "Pelvis", "Limbs", "Whole body"];
+var BODY_AREAS = ["Head and face", "Neck and throat", "Chest and ribs", "Abdomen and gut", "Pelvis and groin", "Back", "Buttocks", "Arms and legs", "Body-wide"];   /* renamed Nov 4 2026; see AREA_RENAME */
 /* ---------- where each part lives on the body (owner, Nov 4 2026) ----------
    Two changes. The area names say what they actually cover, because "Limbs" and "Whole body"
    told you very little. And two areas are new: the Back, which the spine belongs to rather
@@ -9017,6 +9017,8 @@ function bodyReact(area, snd, part) {
     setTimeout(function () { try { hickPop(pick(HICK_LINES)); } catch (e) {} }, 560);
   }
   if (typeof hfxOk === "function" && !hfxOk()) return;      /* reduced motion: the noise alone */
+  /* the 3D dummy, when it is running, does the reaction itself */
+  if (typeof D3GL !== "undefined" && D3GL.live()) { D3GL.react(key); return; }
   var go = function () {
     var figs = document.querySelectorAll(".bodymap");
     for (var i = 0; i < figs.length; i++) (function (f) {
@@ -9032,10 +9034,725 @@ function bodyReact(area, snd, part) {
   };
   if (window.requestAnimationFrame) requestAnimationFrame(go); else setTimeout(go, 16);
 }
+/* D3:BEGIN */
+/* ===== The dummy, in actual 3D (owner, Nov 4 2026) =====
+   The figure used to be flat SVG shapes with CSS tricks to fake depth, and every trick fell
+   apart the moment he turned round. This is a small purpose-built WebGL engine instead: real
+   meshes with volume, a jointed skeleton, lighting that moves across him as he turns, a shadow
+   on the floor, and taps that are found by casting a ray from your finger into the scene - so
+   a tap on his back is a tap on his back, whichever way he is facing.
+   Built here rather than pulled in from a library so it stays small and works offline.
+   Modelled on a crash-test dummy: glossy yellow segments with black joint rings.
+
+   Coordinates are metres, Y up, and he faces +Z (toward the camera). His left is +X. */
+var D3 = (function () {
+  "use strict";
+  var PI = Math.PI, HIPY = 1.024;   /* puts the soles of his shoes on the floor at y = 0 */
+
+  /* ---------------- matrices (column-major, like WebGL) ---------------- */
+  function mul(a, b, o) {
+    var r = new Float32Array(16), c, k;
+    for (c = 0; c < 4; c++) for (k = 0; k < 4; k++)
+      r[c * 4 + k] = a[k] * b[c * 4] + a[4 + k] * b[c * 4 + 1] + a[8 + k] * b[c * 4 + 2] + a[12 + k] * b[c * 4 + 3];
+    if (o) { o.set(r); return o; } return r;
+  }
+  /* T * Rx * Ry * Rz * S */
+  function trs(p, e, s, o) {
+    var cx = Math.cos(e[0]), sx = Math.sin(e[0]), cy = Math.cos(e[1]), sy = Math.sin(e[1]), cz = Math.cos(e[2]), sz = Math.sin(e[2]);
+    var m00 = cy * cz, m01 = -cy * sz, m02 = sy,
+        m10 = cx * sz + sx * sy * cz, m11 = cx * cz - sx * sy * sz, m12 = -sx * cy,
+        m20 = sx * sz - cx * sy * cz, m21 = sx * cz + cx * sy * sz, m22 = cx * cy;
+    o = o || new Float32Array(16);
+    o[0] = m00 * s[0]; o[1] = m10 * s[0]; o[2] = m20 * s[0]; o[3] = 0;
+    o[4] = m01 * s[1]; o[5] = m11 * s[1]; o[6] = m21 * s[1]; o[7] = 0;
+    o[8] = m02 * s[2]; o[9] = m12 * s[2]; o[10] = m22 * s[2]; o[11] = 0;
+    o[12] = p[0]; o[13] = p[1]; o[14] = p[2]; o[15] = 1;
+    return o;
+  }
+  function inv(m) {
+    var a00 = m[0], a01 = m[1], a02 = m[2], a03 = m[3], a10 = m[4], a11 = m[5], a12 = m[6], a13 = m[7],
+        a20 = m[8], a21 = m[9], a22 = m[10], a23 = m[11], a30 = m[12], a31 = m[13], a32 = m[14], a33 = m[15];
+    var b00 = a00 * a11 - a01 * a10, b01 = a00 * a12 - a02 * a10, b02 = a00 * a13 - a03 * a10,
+        b03 = a01 * a12 - a02 * a11, b04 = a01 * a13 - a03 * a11, b05 = a02 * a13 - a03 * a12,
+        b06 = a20 * a31 - a21 * a30, b07 = a20 * a32 - a22 * a30, b08 = a20 * a33 - a23 * a30,
+        b09 = a21 * a32 - a22 * a31, b10 = a21 * a33 - a23 * a31, b11 = a22 * a33 - a23 * a32;
+    var d = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
+    if (!d) return null; d = 1 / d;
+    var o = new Float32Array(16);
+    o[0] = (a11 * b11 - a12 * b10 + a13 * b09) * d; o[1] = (a02 * b10 - a01 * b11 - a03 * b09) * d;
+    o[2] = (a31 * b05 - a32 * b04 + a33 * b03) * d; o[3] = (a22 * b04 - a21 * b05 - a23 * b03) * d;
+    o[4] = (a12 * b08 - a10 * b11 - a13 * b07) * d; o[5] = (a00 * b11 - a02 * b08 + a03 * b07) * d;
+    o[6] = (a32 * b02 - a30 * b05 - a33 * b01) * d; o[7] = (a20 * b05 - a22 * b02 + a23 * b01) * d;
+    o[8] = (a10 * b10 - a11 * b08 + a13 * b06) * d; o[9] = (a01 * b08 - a00 * b10 - a03 * b06) * d;
+    o[10] = (a30 * b04 - a31 * b02 + a33 * b00) * d; o[11] = (a21 * b02 - a20 * b04 - a23 * b00) * d;
+    o[12] = (a11 * b07 - a10 * b09 - a12 * b06) * d; o[13] = (a00 * b09 - a01 * b07 + a02 * b06) * d;
+    o[14] = (a31 * b01 - a30 * b03 - a32 * b00) * d; o[15] = (a20 * b03 - a21 * b01 + a22 * b00) * d;
+    return o;
+  }
+  function persp(fovy, asp, n, f) {
+    var t = 1 / Math.tan(fovy / 2), o = new Float32Array(16);
+    o[0] = t / asp; o[5] = t; o[10] = (f + n) / (n - f); o[11] = -1; o[14] = 2 * f * n / (n - f);
+    return o;
+  }
+  function lookAt(e, c, u) {
+    var zx = e[0] - c[0], zy = e[1] - c[1], zz = e[2] - c[2], l = Math.hypot(zx, zy, zz); zx /= l; zy /= l; zz /= l;
+    var xx = u[1] * zz - u[2] * zy, xy = u[2] * zx - u[0] * zz, xz = u[0] * zy - u[1] * zx; l = Math.hypot(xx, xy, xz); xx /= l; xy /= l; xz /= l;
+    var yx = zy * xz - zz * xy, yy = zz * xx - zx * xz, yz = zx * xy - zy * xx, o = new Float32Array(16);
+    o[0] = xx; o[1] = yx; o[2] = zx; o[4] = xy; o[5] = yy; o[6] = zy; o[8] = xz; o[9] = yz; o[10] = zz;
+    o[12] = -(xx * e[0] + xy * e[1] + xz * e[2]); o[13] = -(yx * e[0] + yy * e[1] + yz * e[2]); o[14] = -(zx * e[0] + zy * e[1] + zz * e[2]); o[15] = 1;
+    return o;
+  }
+  function xf(m, v, w) { w = w == null ? 1 : w;
+    return [m[0] * v[0] + m[4] * v[1] + m[8] * v[2] + m[12] * w, m[1] * v[0] + m[5] * v[1] + m[9] * v[2] + m[13] * w, m[2] * v[0] + m[6] * v[1] + m[10] * v[2] + m[14] * w]; }
+  /* normal matrix: inverse transpose of the upper 3x3, so non-uniform scale shades correctly */
+  function nrm3(m) {
+    var a = m[0], b = m[4], c = m[8], d = m[1], e = m[5], f = m[9], g = m[2], h = m[6], i = m[10];
+    var A = e * i - f * h, B = -(d * i - f * g), C = d * h - e * g, det = a * A + b * B + c * C || 1;
+    var o = new Float32Array(9);
+    o[0] = A / det; o[1] = -(b * i - c * h) / det; o[2] = (b * f - c * e) / det;
+    o[3] = B / det; o[4] = (a * i - c * g) / det; o[5] = -(a * f - c * d) / det;
+    o[6] = C / det; o[7] = -(a * h - b * g) / det; o[8] = (a * e - b * d) / det;
+    return o;   /* already the transpose of the inverse in column-major order */
+  }
+
+  /* ---------------- shapes ---------------- */
+  /* Revolve a profile [[radius, y], ...] about Y. Most of the dummy is made this way. */
+  function lathe(prof, seg) {
+    var n = prof.length, P = [], N = [], I = [], i, j;
+    for (i = 0; i < n; i++) {
+      var a = prof[Math.max(0, i - 1)], b = prof[Math.min(n - 1, i + 1)];
+      var tr = b[0] - a[0], ty = b[1] - a[1], tl = Math.hypot(tr, ty) || 1, nr = ty / tl, ny = -tr / tl;
+      for (j = 0; j <= seg; j++) {
+        var t = j / seg * 2 * PI, cs = Math.cos(t), sn = Math.sin(t);
+        P.push(prof[i][0] * sn, prof[i][1], prof[i][0] * cs);
+        N.push(nr * sn, ny, nr * cs);
+      }
+    }
+    for (i = 0; i < n - 1; i++) for (j = 0; j < seg; j++) {
+      var p = i * (seg + 1) + j, q = p + seg + 1;
+      I.push(p, q, p + 1, p + 1, q, q + 1);
+    }
+    return { p: new Float32Array(P), n: new Float32Array(N), i: new Uint16Array(I) };
+  }
+  /* a capsule centred on the origin along Y, total length L including the round ends */
+  function capsule(r, L, k) {
+    var pr = [], i, h = Math.max(0, L / 2 - r);
+    for (i = 0; i <= k; i++) { var a = -PI / 2 + i / k * PI / 2; pr.push([r * Math.cos(a), -h + r * Math.sin(a)]); }
+    for (i = 0; i <= k; i++) { var b = i / k * PI / 2; pr.push([r * Math.cos(b), h + r * Math.sin(b)]); }
+    pr[0][0] = 0; pr[pr.length - 1][0] = 0;
+    return lathe(pr, 22);
+  }
+  function sphere(r) { return capsule(r, 2 * r, 10); }
+  /* a ring lying flat in XZ: the black bands at every joint */
+  function torus(R, r, su, sv) {
+    var P = [], N = [], I = [], i, j;
+    for (i = 0; i <= su; i++) { var u = i / su * 2 * PI, cu = Math.cos(u), su2 = Math.sin(u);
+      for (j = 0; j <= sv; j++) { var v = j / sv * 2 * PI, cv = Math.cos(v), sv2 = Math.sin(v);
+        P.push((R + r * cv) * cu, r * sv2, (R + r * cv) * su2); N.push(cv * cu, sv2, cv * su2); } }
+    for (i = 0; i < su; i++) for (j = 0; j < sv; j++) { var p = i * (sv + 1) + j, q = p + sv + 1; I.push(p, q, p + 1, p + 1, q, q + 1); }
+    return { p: new Float32Array(P), n: new Float32Array(N), i: new Uint16Array(I) };
+  }
+
+  /* ---------------- materials (linear colour) ---------------- */
+  function lin(c) { return [Math.pow(c[0], 2.2), Math.pow(c[1], 2.2), Math.pow(c[2], 2.2)]; }
+  var MAT = {
+    yellow: { c: lin([0.99, 0.69, 0.02]), sp: 0.7, sh: 90, rim: 0.35 },
+    black:  { c: lin([0.012, 0.012, 0.014]), sp: 0.8, sh: 70, rim: 0.5 },
+    shoe:   { c: lin([0.07, 0.07, 0.08]), sp: 1.6, sh: 120, rim: 0.9 }
+  };
+
+  /* ---------------- the skeleton ---------------- */
+  /* Joint names used by the poses. Each one rotates everything beneath it. */
+  var J = ["hips", "spine", "chest", "neck", "head", "shL", "elL", "wrL", "shR", "elR", "wrR", "hipL", "knL", "anL", "hipR", "knR", "anR"];
+  /* the resting pose: arms a little away from the body, a soft elbow */
+  var REST = { shL: [0, 0, 0.2], shR: [0, 0, -0.2], elL: [-0.14, 0, 0], elR: [-0.14, 0, 0], hipL: [0, 0, 0.03], hipR: [0, 0, -0.03] };
+
+  function Rig() {
+    var nodes = {}, meshes = [], list = [];
+    function node(name, parent, p, opt) {
+      opt = opt || {};
+      var n = { name: name, parent: parent, p: p.slice(), r: [0, 0, 0], s: opt.s || [1, 1, 1], base: (opt.r || [0, 0, 0]).slice(), kids: [], world: new Float32Array(16), local: new Float32Array(16) };
+      n.r = n.base.slice();
+      if (parent) parent.kids.push(n);
+      nodes[name] = n; list.push(n); return n;
+    }
+    function mesh(parent, geo, mat, part, p, r, s, fb) {
+      var m = node("m" + meshes.length, parent, p || [0, 0, 0], { r: r, s: s });
+      m.mesh = { geo: geo, mat: mat, part: part, fb: !!fb };
+      meshes.push(m); return m;
+    }
+    var G = {
+      pelvis: lathe([[0, -0.115], [0.07, -0.112], [0.12, -0.085], [0.158, -0.04], [0.162, 0], [0.15, 0.04], [0.135, 0.07], [0, 0.075]], 26),
+      waist: torus(0.118, 0.026, 26, 10),
+      abdomen: lathe([[0, -0.01], [0.122, -0.008], [0.128, 0.04], [0.13, 0.1], [0.135, 0.16], [0, 0.165]], 26),
+      chest: lathe([[0, 0], [0.138, 0.002], [0.15, 0.06], [0.172, 0.15], [0.186, 0.22], [0.18, 0.27], [0.15, 0.31], [0.1, 0.335], [0, 0.345]], 28),
+      pec: sphere(0.08),
+      neck: capsule(0.046, 0.11, 6),
+      head: lathe([[0, -0.005], [0.05, 0.002], [0.075, 0.03], [0.092, 0.08], [0.104, 0.13], [0.1, 0.18], [0.082, 0.225], [0.05, 0.252], [0, 0.262]], 26),
+      ball: sphere(0.068),
+      ringL: torus(0.05, 0.018, 20, 8), ringM: torus(0.045, 0.017, 20, 8), ringS: torus(0.037, 0.014, 20, 8), ringXL: torus(0.07, 0.022, 22, 8),
+      upper: capsule(0.054, 0.3, 8), fore: capsule(0.046, 0.27, 8), hand: capsule(0.04, 0.13, 6),
+      thigh: capsule(0.076, 0.44, 8), shin: capsule(0.06, 0.4, 8), shoe: capsule(0.058, 0.25, 8), hipball: sphere(0.08)
+    };
+    /* balance tilts him from his feet; spin turns him about his own vertical axis */
+    var bal = node("bal", null, [0, 0, 0]), spin = node("spin", bal, [0, 0, 0]);
+    var hips = node("hips", spin, [0, HIPY, 0]);
+    mesh(hips, G.pelvis, MAT.yellow, "pelvis", [0, 0, 0], null, [1, 1, 0.72], true);
+    mesh(hips, G.waist, MAT.black, "abdomen", [0, 0.085, 0], null, [1, 1, 0.74]);
+    var spine = node("spine", hips, [0, 0.09, 0]);
+    mesh(spine, G.abdomen, MAT.yellow, "abdomen", [0, 0, 0], null, [1, 1, 0.7], true);
+    var chest = node("chest", spine, [0, 0.17, 0]);
+    mesh(chest, G.chest, MAT.yellow, "chest", [0, 0, 0], null, [1, 1, 0.64], true);
+    /* a little pectoral definition, like the moulded chest plate on the real thing */
+    mesh(chest, G.pec, MAT.yellow, "chest", [0.072, 0.205, 0.068], null, [1.05, 0.62, 0.42]);
+    mesh(chest, G.pec, MAT.yellow, "chest", [-0.072, 0.205, 0.068], null, [1.05, 0.62, 0.42]);
+    var neck = node("neck", chest, [0, 0.335, 0]);
+    mesh(neck, G.neck, MAT.black, "neck", [0, 0.035, 0]);
+    var head = node("head", neck, [0, 0.075, 0]);
+    mesh(head, G.head, MAT.yellow, "head", [0, 0, 0.008], null, [0.94, 1, 1.06]);
+    function arm(side, sx) {
+      var sh = node("sh" + side, chest, [0.205 * sx, 0.265, 0]);
+      mesh(sh, G.ball, MAT.yellow, "arm" + side, [0, 0, 0]);
+      mesh(sh, G.ringL, MAT.black, "arm" + side, [0, -0.06, 0]);
+      mesh(sh, G.upper, MAT.yellow, "arm" + side, [0, -0.165, 0]);
+      var el = node("el" + side, sh, [0, -0.315, 0]);
+      mesh(el, G.ringM, MAT.black, "arm" + side, [0, 0, 0]);
+      mesh(el, G.fore, MAT.yellow, "arm" + side, [0, -0.145, 0]);
+      var wr = node("wr" + side, el, [0, -0.285, 0]);
+      mesh(wr, G.ringS, MAT.black, "arm" + side, [0, 0, 0]);
+      mesh(wr, G.hand, MAT.yellow, "arm" + side, [0, -0.07, 0], null, [1, 1, 0.58]);
+    }
+    arm("L", 1); arm("R", -1);
+    function leg(side, sx) {
+      var hp = node("hip" + side, hips, [0.088 * sx, -0.07, 0]);
+      mesh(hp, G.ringXL, MAT.black, "leg" + side, [0, -0.04, 0]);
+      mesh(hp, G.thigh, MAT.yellow, "leg" + side, [0, -0.235, 0]);
+      var kn = node("kn" + side, hp, [0, -0.46, 0]);
+      mesh(kn, G.ringL, MAT.black, "leg" + side, [0, 0, 0], null, [1.25, 1, 1.25]);
+      mesh(kn, G.shin, MAT.yellow, "leg" + side, [0, -0.215, 0]);
+      var an = node("an" + side, kn, [0, -0.415, 0]);
+      mesh(an, G.ringS, MAT.black, "leg" + side, [0, 0, 0], null, [1.3, 1, 1.3]);
+      /* the shoe lies along Z, toes forward */
+      mesh(an, G.shoe, MAT.shoe, "leg" + side, [0, -0.035, 0.045], [PI / 2, 0, 0], [0.95, 1, 0.72]);
+    }
+    leg("L", 1); leg("R", -1);
+    this.nodes = nodes; this.meshes = meshes; this.list = list; this.G = G;
+  }
+  Rig.prototype.update = function () {
+    var L = this.list, i, n;
+    for (i = 0; i < L.length; i++) {
+      n = L[i];
+      trs(n.p, n.r, n.s, n.local);
+      if (n.parent) mul(n.parent.world, n.local, n.world); else n.world.set(n.local);
+    }
+  };
+  /* apply a pose: rest + offsets. Root offsets: drop (y), shift (z), and the hips' own turn. */
+  Rig.prototype.pose = function (P) {
+    var N = this.nodes, i;
+    for (i = 0; i < J.length; i++) {
+      var k = J[i], n = N[k], b = REST[k] || [0, 0, 0], d = P[k] || [0, 0, 0];
+      n.r[0] = b[0] + d[0]; n.r[1] = b[1] + d[1]; n.r[2] = b[2] + d[2];
+    }
+    N.hips.p[1] = HIPY + (P.drop || 0); N.hips.p[2] = P.shift || 0;
+    this.update();
+  };
+  Rig.prototype.at = function (name, off) { return xf(this.nodes[name].world, off || [0, 0, 0]); };
+  /* where the palm of a hand is, which is what every "hand on it" pose aims */
+  Rig.prototype.palm = function (side) { return this.at("wr" + side, [0, -0.075, 0.01]); };
+
+  /* ---------------- poses ---------------- */
+  function zero() { return {}; }
+  function addInto(o, P, w) {
+    for (var k in P) {
+      if (!P.hasOwnProperty(k)) continue;
+      if (typeof P[k] === "number") o[k] = (o[k] || 0) + P[k] * w;
+      else { var a = o[k] || (o[k] = [0, 0, 0]); a[0] += P[k][0] * w; a[1] += P[k][1] * w; a[2] += P[k][2] * w; }
+    }
+    return o;
+  }
+  function ease(t) { return t * t * t * (t * (t * 6 - 15) + 10); }     /* smootherstep */
+  /* frames: [[t, pose], ...] with t from 0 to 1; returns the pose at time u */
+  function sample(frames, u) {
+    if (u <= frames[0][0]) return addInto({}, frames[0][1], 1);
+    for (var i = 1; i < frames.length; i++) if (u <= frames[i][0]) {
+      var a = frames[i - 1], b = frames[i], k = ease((u - a[0]) / (b[0] - a[0] || 1));
+      return addInto(addInto({}, a[1], 1 - k), b[1], k);
+    }
+    return addInto({}, frames[frames.length - 1][1], 1);
+  }
+
+  return { mul: mul, trs: trs, inv: inv, persp: persp, lookAt: lookAt, xf: xf, nrm3: nrm3,
+           lathe: lathe, capsule: capsule, sphere: sphere, torus: torus,
+           Rig: Rig, J: J, HIPY: HIPY, REST: REST, MAT: MAT, sample: sample, addInto: addInto, ease: ease, zero: zero };
+})();
+
+/* ---------- the live part: rendering, poses, spin physics and touch ---------- */
+var D3GL = (function () {
+  "use strict";
+  var PI = Math.PI, C = D3;
+  var S = { gl: null, cv: null, ok: false, dead: false, rig: null, buf: {}, prog: null, sprog: null, bprog: null,
+            ang: 0.0, vel: 0, drag: null, tilt: 0, tiltV: 0, pitch: 0, pitchV: 0, armsOut: 0, t0: 0, last: 0,
+            rx: null, flash: {}, sel: "", raf: 0, mount: null, cb: {} };
+
+  /* which anatomy area each touchable part belongs to */
+  var AREA = { head: "Head and face", neck: "Neck and throat", chest: "Chest and ribs", abdomen: "Abdomen and gut",
+    pelvis: "Pelvis and groin", armL: "Arms and legs", armR: "Arms and legs", legL: "Arms and legs", legR: "Arms and legs",
+    back: "Back", butt: "Buttocks" };
+  /* which mesh parts light up when an area is selected */
+  var AREA_PARTS = { "Head and face": ["head"], "Neck and throat": ["neck"], "Chest and ribs": ["chest"],
+    "Abdomen and gut": ["abdomen"], "Pelvis and groin": ["pelvis"], "Arms and legs": ["armL", "armR", "legL", "legR"],
+    "Back": ["chest", "abdomen"], "Buttocks": ["pelvis"] };
+
+  /* ================= reactions =================
+     frames: body pose over normalised time. ik: where a hand goes, given as a joint and an
+     offset in that joint's frame so the hand follows the body as it moves, plus a pole that
+     says which way the elbow points (in the chest's frame). The hands are placed by inverse
+     kinematics every frame, so "hand on his head" is exactly on his head whatever else he is
+     doing. ikw: how strongly the hands follow the target over time. */
+  var UP = [[0, 0], [0.18, 1], [0.78, 1], [1, 0]];          /* the usual in-hold-out envelope */
+  var RX = {
+    head: { dur: 1.6, ikw: UP,
+      frames: [[0, {}], [0.16, { neck: [0.22, 0, 0], head: [0.18, 0, 0.05], spine: [0.12, 0, 0], knL: [0.2, 0, 0], knR: [0.2, 0, 0], hipL: [-0.12, 0, 0], hipR: [-0.12, 0, 0], drop: -0.035 }],
+               [0.3, { neck: [0.16, 0, 0], head: [0.1, 0, -0.06], spine: [0.08, 0, 0], knL: [0.14, 0, 0], knR: [0.14, 0, 0], hipL: [-0.08, 0, 0], hipR: [-0.08, 0, 0], drop: -0.025 }],
+               [0.78, { neck: [0.16, 0, 0], head: [0.1, 0, 0], spine: [0.08, 0, 0], knL: [0.12, 0, 0], knR: [0.12, 0, 0], hipL: [-0.07, 0, 0], hipR: [-0.07, 0, 0], drop: -0.02 }], [1, {}]],
+      ik: { L: { n: "head", o: [0.1, 0.13, 0.03], pole: [1, 0.35, 0.25] }, R: { n: "head", o: [-0.1, 0.13, 0.03], pole: [-1, 0.35, 0.25] } } },
+    neck: { dur: 1.5, ikw: UP,
+      frames: [[0, {}], [0.18, { head: [0.28, 0, 0], neck: [0.12, 0, 0], chest: [0.12, 0, 0], shR: [0, 0, -0.1] }], [0.78, { head: [0.24, 0, 0], neck: [0.1, 0, 0], chest: [0.1, 0, 0], shR: [0, 0, -0.08] }], [1, {}]],
+      ik: { L: { n: "neck", o: [0.01, 0.02, 0.075], pole: [0.45, -1, 0.55] } } },
+    /* the chest: he goes down on his knees clutching it */
+    chest: { dur: 2.6, ikw: [[0, 0], [0.2, 1], [0.8, 1], [1, 0]],
+      frames: [[0, {}], [0.12, { drop: -0.06, knL: [0.4, 0, 0], knR: [0.4, 0, 0], hipL: [-0.3, 0, 0], hipR: [-0.3, 0, 0], spine: [0.2, 0, 0] }],
+               [0.36, { drop: -0.445, knL: [1.57, 0, 0], knR: [1.57, 0, 0], hipL: [-0.06, 0, 0.04], hipR: [-0.06, 0, -0.04], anL: [-0.55, 0, 0], anR: [-0.55, 0, 0], spine: [0.38, 0, 0], chest: [0.26, 0, 0], head: [0.32, 0, 0] }],
+               [0.78, { drop: -0.445, knL: [1.57, 0, 0], knR: [1.57, 0, 0], hipL: [-0.06, 0, 0.04], hipR: [-0.06, 0, -0.04], anL: [-0.55, 0, 0], anR: [-0.55, 0, 0], spine: [0.3, 0, 0], chest: [0.22, 0, 0], head: [0.24, 0, 0] }],
+               [0.9, { drop: -0.2, knL: [0.9, 0, 0], knR: [0.9, 0, 0], hipL: [-0.55, 0, 0], hipR: [-0.55, 0, 0], spine: [0.25, 0, 0] }], [1, {}]],
+      ik: { L: { n: "chest", o: [0.055, 0.2, 0.12], pole: [1, -0.7, 0.1] }, R: { n: "chest", o: [-0.075, 0.17, 0.12], pole: [-1, -0.7, 0.1] } } },
+    /* the belly: folds right over, hugging it, knees bent */
+    abdomen: { dur: 1.8, ikw: UP,
+      frames: [[0, {}], [0.22, { spine: [0.72, 0, 0], chest: [0.4, 0, 0], head: [0.2, 0, 0], neck: [0.1, 0, 0], hipL: [-0.42, 0, 0], hipR: [-0.42, 0, 0], knL: [0.5, 0, 0], knR: [0.5, 0, 0], anL: [-0.12, 0, 0], anR: [-0.12, 0, 0], drop: -0.06, shift: -0.05 }],
+               [0.5, { spine: [0.82, 0, 0], chest: [0.46, 0, 0], head: [0.24, 0, 0], neck: [0.12, 0, 0], hipL: [-0.48, 0, 0], hipR: [-0.48, 0, 0], knL: [0.56, 0, 0], knR: [0.56, 0, 0], anL: [-0.14, 0, 0], anR: [-0.14, 0, 0], drop: -0.07, shift: -0.055 }],
+               [0.78, { spine: [0.74, 0, 0], chest: [0.4, 0, 0], head: [0.2, 0, 0], neck: [0.1, 0, 0], hipL: [-0.42, 0, 0], hipR: [-0.42, 0, 0], knL: [0.5, 0, 0], knR: [0.5, 0, 0], anL: [-0.12, 0, 0], anR: [-0.12, 0, 0], drop: -0.06, shift: -0.05 }], [1, {}]],
+      ik: { L: { n: "spine", o: [0.06, 0.07, 0.12], pole: [1, -0.25, -0.2] }, R: { n: "spine", o: [-0.06, 0.1, 0.12], pole: [-1, -0.25, -0.2] } } },
+    /* the groin: a scandalised recoil, hands straight down in front, legs crossed */
+    pelvis: { dur: 2.0, ikw: [[0, 0], [0.12, 1], [0.8, 1], [1, 0]],
+      frames: [[0, {}], [0.12, { spine: [-0.14, 0, 0], chest: [-0.08, 0, 0], head: [-0.16, 0, 0], hipL: [-0.14, 0.12, -0.24], hipR: [0.05, -0.1, 0.2], knL: [0.22, 0, 0], knR: [0.18, 0, 0], drop: -0.018 }],
+               [0.8, { spine: [-0.1, 0, 0], chest: [-0.06, 0, 0], head: [-0.12, 0, 0], hipL: [-0.13, 0.12, -0.22], hipR: [0.05, -0.1, 0.19], knL: [0.2, 0, 0], knR: [0.16, 0, 0], drop: -0.016 }], [1, {}]],
+      ik: { L: { n: "hips", o: [0.03, -0.075, 0.135], pole: [1, -0.15, 0.1] }, R: { n: "hips", o: [-0.03, -0.075, 0.135], pole: [-1, -0.15, 0.1] } } },
+    /* an arm: it jerks, the other hand comes across and rubs it, and he shakes his head at you */
+    armL: { dur: 2.0, ikw: [[0, 0], [0.16, 1], [0.84, 1], [1, 0]],
+      frames: [[0, {}], [0.06, { shL: [0, 0, 0.32], elL: [-0.25, 0, 0] }], [0.2, { shL: [-0.12, 0, 0.12], elL: [-0.35, 0, 0], chest: [0.06, -0.18, 0] }],
+               [0.84, { shL: [-0.12, 0, 0.12], elL: [-0.35, 0, 0], chest: [0.06, -0.14, 0] }], [1, {}]],
+      ik: { R: { n: "shL", o: [0.03, -0.15, 0.065], pole: [-0.3, -1, 0.65], slide: [-0.08, -0.24] } }, shake: 1 },
+    armR: { dur: 2.0, ikw: [[0, 0], [0.16, 1], [0.84, 1], [1, 0]],
+      frames: [[0, {}], [0.06, { shR: [0, 0, -0.32], elR: [-0.25, 0, 0] }], [0.2, { shR: [-0.12, 0, -0.12], elR: [-0.35, 0, 0], chest: [0.06, 0.18, 0] }],
+               [0.84, { shR: [-0.12, 0, -0.12], elR: [-0.35, 0, 0], chest: [0.06, 0.14, 0] }], [1, {}]],
+      ik: { L: { n: "shR", o: [-0.03, -0.15, 0.065], pole: [0.3, -1, 0.65], slide: [-0.08, -0.24] } }, shake: 1 },
+    /* a leg: he hops on the other one, bent over, holding the sore one */
+    legL: { dur: 2.2, ikw: [[0, 0], [0.14, 1], [0.84, 1], [1, 0]], hop: 1,
+      frames: [[0, {}], [0.12, { hipL: [-1.5, 0, 0.08], knL: [1.55, 0, 0], anL: [0.3, 0, 0], spine: [0.6, 0, 0], chest: [0.25, 0, 0], head: [0.05, 0, 0], hipR: [-0.15, 0, 0.04], knR: [0.2, 0, 0], drop: -0.03, shift: -0.04 }],
+               [0.84, { hipL: [-1.45, 0, 0.08], knL: [1.5, 0, 0], anL: [0.3, 0, 0], spine: [0.56, 0, 0], chest: [0.22, 0, 0], head: [0.04, 0, 0], hipR: [-0.15, 0, 0.04], knR: [0.2, 0, 0], drop: -0.03, shift: -0.04 }], [1, {}]],
+      ik: { L: { n: "knL", o: [0.03, 0.08, 0.09], pole: [1, 0.2, 0.1] }, R: { n: "knL", o: [-0.06, -0.07, 0.08], pole: [-0.6, 0.1, 0.4] } } },
+    legR: { dur: 2.2, ikw: [[0, 0], [0.14, 1], [0.84, 1], [1, 0]], hop: 1,
+      frames: [[0, {}], [0.12, { hipR: [-1.5, 0, -0.08], knR: [1.55, 0, 0], anR: [0.3, 0, 0], spine: [0.6, 0, 0], chest: [0.25, 0, 0], head: [0.05, 0, 0], hipL: [-0.15, 0, -0.04], knL: [0.2, 0, 0], drop: -0.03, shift: -0.04 }],
+               [0.84, { hipR: [-1.45, 0, -0.08], knR: [1.5, 0, 0], anR: [0.3, 0, 0], spine: [0.56, 0, 0], chest: [0.22, 0, 0], head: [0.04, 0, 0], hipL: [-0.15, 0, -0.04], knL: [0.2, 0, 0], drop: -0.03, shift: -0.04 }], [1, {}]],
+      ik: { R: { n: "knR", o: [-0.03, 0.08, 0.09], pole: [-1, 0.2, 0.1] }, L: { n: "knR", o: [0.06, -0.07, 0.08], pole: [0.6, 0.1, 0.4] } } },
+    /* his back: he straightens right up, shoulders back, chest out, and holds it */
+    back: { dur: 2.3,
+      frames: [[0, {}], [0.2, { spine: [-0.16, 0, 0], chest: [-0.2, 0, 0], neck: [-0.05, 0, 0], head: [-0.12, 0, 0], shL: [0.42, 0, -0.06], shR: [0.42, 0, 0.06], elL: [-0.1, 0, 0], elR: [-0.1, 0, 0], drop: 0.02 }],
+               [0.78, { spine: [-0.14, 0, 0], chest: [-0.18, 0, 0], neck: [-0.04, 0, 0], head: [-0.1, 0, 0], shL: [0.38, 0, -0.06], shR: [0.38, 0, 0.06], elL: [-0.1, 0, 0], elR: [-0.1, 0, 0], drop: 0.02 }], [1, {}]] },
+    /* his backside: both hands clap over it and he turns his head right round to look at you */
+    butt: { dur: 2.4, ikw: [[0, 0], [0.12, 1], [0.82, 1], [1, 0]],
+      frames: [[0, {}], [0.12, { spine: [-0.18, 0, 0], drop: 0.025, anL: [-0.25, 0, 0], anR: [-0.25, 0, 0] }],
+               [0.3, { spine: [-0.16, 0.24, 0], chest: [-0.05, 0.55, 0], neck: [0, 0.45, 0], head: [-0.06, 1.3, 0.05], drop: 0.02, anL: [-0.2, 0, 0], anR: [-0.2, 0, 0] }],
+               [0.82, { spine: [-0.15, 0.22, 0], chest: [-0.05, 0.53, 0], neck: [0, 0.45, 0], head: [-0.06, 1.3, 0.05], drop: 0.02, anL: [-0.2, 0, 0], anR: [-0.2, 0, 0] }], [1, {}]],
+      ik: { L: { n: "hips", o: [0.075, -0.03, -0.165], pole: [1, -0.1, -0.55] }, R: { n: "hips", o: [-0.075, -0.03, -0.165], pole: [-1, -0.1, -0.55] } } },
+    /* spun far too fast: he goes down on his backside, sits there dazed, and gets up */
+    fall: { dur: 3.2,
+      frames: [[0, {}], [0.07, { drop: -0.1, hipL: [-0.5, 0, 0.1], hipR: [-0.5, 0, -0.1], knL: [0.6, 0, 0], knR: [0.6, 0, 0], shL: [-0.5, 0, 0.9], shR: [-0.5, 0, -0.9], spine: [-0.2, 0, 0] }],
+               [0.16, { drop: -0.79, hipL: [-1.48, 0, 0.16], hipR: [-1.48, 0, -0.16], knL: [0.16, 0, 0], knR: [0.16, 0, 0], anL: [-0.3, 0, 0], anR: [-0.3, 0, 0], spine: [0.22, 0, 0], chest: [0.08, 0, 0], head: [0.28, 0, 0], shL: [0.75, 0, 0.32], shR: [0.75, 0, -0.32], elL: [0.15, 0, 0], elR: [0.15, 0, 0] }],
+               [0.6, { drop: -0.79, hipL: [-1.48, 0, 0.16], hipR: [-1.48, 0, -0.16], knL: [0.16, 0, 0], knR: [0.16, 0, 0], anL: [-0.3, 0, 0], anR: [-0.3, 0, 0], spine: [0.26, 0, 0], chest: [0.1, 0, 0], head: [0.3, 0, 0], shL: [0.72, 0, 0.3], shR: [0.72, 0, -0.3], elL: [0.15, 0, 0], elR: [0.15, 0, 0] }],
+               [0.78, { drop: -0.445, knL: [1.57, 0, 0], knR: [1.57, 0, 0], hipL: [-0.1, 0, 0], hipR: [-0.1, 0, 0], anL: [-0.55, 0, 0], anR: [-0.55, 0, 0], spine: [0.3, 0, 0], head: [0.15, 0, 0] }],
+               [0.9, { drop: -0.2, knL: [0.9, 0, 0], knR: [0.9, 0, 0], hipL: [-0.55, 0, 0], hipR: [-0.55, 0, 0], spine: [0.25, 0, 0] }], [1, {}]], daze: 1 }
+  };
+
+  /* ---------------- inverse kinematics ---------------- */
+  function v3(a, b) { return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]; }
+  function dot(a, b) { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; }
+  function len(a) { return Math.hypot(a[0], a[1], a[2]); }
+  function nrm(a) { var l = len(a) || 1; return [a[0] / l, a[1] / l, a[2] / l]; }
+  function scl(a, k) { return [a[0] * k, a[1] * k, a[2] * k]; }
+  function add(a, b) { return [a[0] + b[0], a[1] + b[1], a[2] + b[2]]; }
+  /* a world direction expressed in a node's own frame (its rotation only: no node in the
+     chain is scaled, so the transpose of the 3x3 is the inverse) */
+  function toLocal(node, d) {
+    var m = node.world;
+    return [m[0] * d[0] + m[1] * d[1] + m[2] * d[2], m[4] * d[0] + m[5] * d[1] + m[6] * d[2], m[8] * d[0] + m[9] * d[1] + m[10] * d[2]];
+  }
+  function toWorldDir(node, d) { var m = node.world; return [m[0] * d[0] + m[4] * d[1] + m[8] * d[2], m[1] * d[0] + m[5] * d[1] + m[9] * d[2], m[2] * d[0] + m[6] * d[1] + m[10] * d[2]]; }
+  /* the Euler angles (no twist) that point a limb hanging along -Y in direction d */
+  function aim(d) { d = nrm(d); return [Math.atan2(-d[2], -d[1]), 0, Math.asin(Math.max(-1, Math.min(1, d[0])))]; }
+  var UPPER = 0.315, LOWER = 0.36;
+  function solveArm(R, side, spec, w, slideK) {
+    var N = R.nodes, sh = N["sh" + side], el = N["el" + side], tgtN = N[spec.n];
+    var o = spec.o.slice();
+    if (spec.slide && slideK != null) o[1] = spec.slide[0] + (spec.slide[1] - spec.slide[0]) * slideK;
+    var T = C.xf(tgtN.world, o), S0 = C.xf(sh.world, [0, 0, 0]);
+    var dv = v3(T, S0), d = len(dv), u = nrm(dv);
+    d = Math.max(Math.abs(UPPER - LOWER) + 0.01, Math.min(UPPER + LOWER - 0.005, d));
+    var pole = nrm(toWorldDir(N.chest, spec.pole));
+    var v = v3(pole, scl(u, dot(pole, u))); if (len(v) < 1e-4) v = [0, -1, 0]; v = nrm(v);
+    var ca = (UPPER * UPPER + d * d - LOWER * LOWER) / (2 * UPPER * d), sa = Math.sqrt(Math.max(0, 1 - ca * ca));
+    var E = add(S0, add(scl(u, UPPER * ca), scl(v, UPPER * sa)));
+    var cur = [sh.r[0], sh.r[1], sh.r[2]], cel = [el.r[0], el.r[1], el.r[2]];
+    /* shoulder: point the upper arm at the elbow, in the chest's frame */
+    var a1 = aim(toLocal(sh.parent, v3(E, S0)));
+    sh.r[0] = cur[0] + (a1[0] - cur[0]) * w; sh.r[1] = cur[1] * (1 - w); sh.r[2] = cur[2] + (a1[2] - cur[2]) * w;
+    R.update();
+    /* elbow: point the forearm at the target, in the upper arm's frame */
+    var Ew = C.xf(el.world, [0, 0, 0]), a2 = aim(toLocal(sh, v3(T, Ew)));
+    el.r[0] = cel[0] + (a2[0] - cel[0]) * w; el.r[1] = cel[1] * (1 - w); el.r[2] = cel[2] + (a2[2] - cel[2]) * w;
+    R.update();
+  }
+
+  /* compose a frame: reaction + spin balance + idle, then the hands */
+  function poseAt(now) {
+    var R = S.rig, P = {}, rx = S.rx, u = 0, ikw = 0, slideK = null, t = (now - S.t0) / 1000;
+    if (rx) {
+      u = S.freeze != null ? S.freeze : Math.min(1, (now - rx.start) / (rx.def.dur * 1000));   /* freeze: for tests */
+      P = C.sample(rx.def.frames, u);
+      if (rx.def.ikw) { var kk = rx.def.ikw; ikw = C.sample(kk.map(function (f) { return [f[0], { w: f[1] }]; }), u).w || 0; }
+      var tt = u * rx.def.dur;
+      if (rx.def.shake) {   /* shaking his head at you */
+        var amp = Math.max(0, Math.min(1, (u - 0.18) / 0.1)) * Math.max(0, Math.min(1, (0.86 - u) / 0.1));
+        C.addInto(P, { head: [0, Math.sin(tt * 13) * 0.42 * amp, 0], neck: [0, Math.sin(tt * 13) * 0.12 * amp, 0] }, 1);
+        slideK = 0.5 + 0.5 * Math.sin(tt * 11);   /* the rubbing hand slides up and down */
+      }
+      if (rx.def.hop) {     /* hopping on the good leg */
+        var hp = Math.max(0, Math.min(1, (u - 0.12) / 0.08)) * Math.max(0, Math.min(1, (0.86 - u) / 0.1));
+        var ph = Math.abs(Math.sin(tt * PI * 2.6));
+        C.addInto(P, { drop: ph * 0.075 * hp, knL: [(1 - ph) * 0.18 * hp, 0, 0], knR: [(1 - ph) * 0.18 * hp, 0, 0] }, 1);
+      }
+      if (rx.def.daze) {
+        var dz = u > 0.16 && u < 0.62 ? 1 : 0;
+        C.addInto(P, { head: [0, Math.sin(tt * 5) * 0.3 * dz, Math.sin(tt * 3.7) * 0.18 * dz] }, 1);
+      }
+      if (u >= 1 && S.freeze == null) S.rx = null;
+    }
+    /* thrown off balance: arms out, feet stepping wide as the spring rocks him */
+    var ao = S.armsOut;
+    if (ao > 0.001) C.addInto(P, { shL: [-0.15, 0, 1.15], shR: [-0.15, 0, -1.15], elL: [0.1, 0, 0.25], elR: [0.1, 0, -0.25] }, ao);
+    var tl = S.tilt;
+    if (Math.abs(tl) > 0.002) C.addInto(P, { hipL: [0, 0, Math.max(0, -tl) * 0.9 + 0.05 * Math.abs(tl)], hipR: [0, 0, -Math.max(0, tl) * 0.9 - 0.05 * Math.abs(tl)], spine: [0, 0, -tl * 0.5], head: [0, 0, -tl * 0.6] }, 1);
+    /* breathing, so he is never completely still */
+    C.addInto(P, { chest: [Math.sin(t * 1.5) * 0.014, 0, 0], spine: [Math.sin(t * 1.5 + 0.6) * 0.006, 0, 0], head: [Math.sin(t * 0.7) * 0.01, Math.sin(t * 0.43) * 0.05, 0] }, 1);
+    R.pose(P);
+    R.nodes.spin.r[1] = S.ang;
+    R.nodes.bal.r[0] = S.pitch; R.nodes.bal.r[2] = S.tilt;
+    R.update();
+    if (rx && ikw > 0.001 && rx.def.ik) {
+      if (rx.def.ik.L) solveArm(R, "L", rx.def.ik.L, ikw, slideK);
+      if (rx.def.ik.R) solveArm(R, "R", rx.def.ik.R, ikw, slideK);
+    }
+  }
+
+  /* ---------------- spin physics ---------------- */
+  function physics(dt) {
+    if (!S.drag) {
+      S.ang += S.vel * dt;
+      S.vel *= Math.exp(-1.25 * dt);
+      if (Math.abs(S.vel) < 0.03) S.vel = 0;
+    }
+    var v = Math.abs(S.vel);
+    /* he leans into the spin; the spring makes him wobble back and forth on his feet */
+    var target = Math.max(-0.3, Math.min(0.3, -S.vel * 0.032));
+    var acc = -36 * (S.tilt - target) - 4.2 * S.tiltV;
+    S.tiltV += acc * dt; S.tilt += S.tiltV * dt;
+    var pacc = -30 * (S.pitch - Math.min(0.12, v * 0.008)) - 4 * S.pitchV;
+    S.pitchV += pacc * dt; S.pitch += S.pitchV * dt;
+    var aoT = Math.max(0, Math.min(1, (v - 2) / 5));
+    if (Math.abs(S.tilt) > 0.12) aoT = Math.max(aoT, Math.min(1, (Math.abs(S.tilt) - 0.12) * 4));
+    S.armsOut += (aoT - S.armsOut) * Math.min(1, dt * 7);
+  }
+  function release() {
+    var v = Math.abs(S.vel);
+    if (typeof S.cb.reduced === "function" && S.cb.reduced()) return;
+    if (v > 15) {           /* far too fast: down he goes */
+      S.vel *= 0.35;
+      react("fall");
+      setTimeout(function () { snd("thump"); setTimeout(function () { snd("groan"); }, 260); }, 470);
+    } else if (v > 7.5) {   /* fast enough to stagger */
+      S.tiltV += (S.vel > 0 ? -1 : 1) * Math.min(3.8, v * 0.28);
+      snd(v > 11 ? "boing" : "wobble");
+    }
+  }
+  function snd(k) { try { if (S.cb.sound) S.cb.sound(k); } catch (e) {} }
+
+  function react(key) {
+    var def = RX[key]; if (!def || !S.rig) return;
+    S.rx = { def: def, key: key, start: performance.now() };
+    kick();
+  }
+
+  /* ---------------- WebGL ---------------- */
+  var VS = "attribute vec3 aP;attribute vec3 aN;uniform mat4 uM;uniform mat4 uVP;uniform mat3 uNM;varying vec3 vW;varying vec3 vN;" +
+    "void main(){vec4 w=uM*vec4(aP,1.0);vW=w.xyz;vN=uNM*aN;gl_Position=uVP*w;}";
+  /* No gl_FrontFacing flip: the meshes wind clockwise, so that test called every visible face a
+     back face and turned the normals inward, which washed him out to grey. The normals the
+     shape builders compute already point outward, and only outward faces are ever visible.
+     Glossy plastic: a strong warm key light from the front left, a dim cool fill, a back light
+     that rims the edges, low ambient so the shadowed side stays dark, two specular lobes (a
+     tight clearcoat on a broader sheen), and a filmic curve that keeps the yellow saturated
+     instead of washing it out. */
+  var FS = "precision mediump float;varying vec3 vW;varying vec3 vN;uniform vec3 uCam;uniform vec3 uCol;uniform vec3 uEmi;uniform vec3 uSp;" +
+    "vec3 aces(vec3 x){return clamp((x*(2.51*x+0.03))/(x*(2.43*x+0.59)+0.14),0.0,1.0);}" +
+    "void main(){vec3 N=normalize(vN);vec3 V=normalize(uCam-vW);" +
+    "vec3 L1=normalize(vec3(-0.6,0.75,0.75));vec3 L2=normalize(vec3(0.9,0.2,0.35));vec3 L3=normalize(vec3(0.35,0.5,-0.85));" +
+    "float h=N.y*0.5+0.5;vec3 amb=mix(vec3(0.015,0.013,0.014),vec3(0.075,0.08,0.1),h);" +
+    "float d1=max(dot(N,L1),0.0),d2=max(dot(N,L2),0.0),d3=max(dot(N,L3),0.0);" +
+    "vec3 dif=vec3(1.35,1.25,1.1)*d1+vec3(0.1,0.13,0.2)*d2+vec3(0.3,0.32,0.4)*d3;" +
+    "float s1=pow(max(dot(N,normalize(L1+V)),0.0),uSp.y);float s3=pow(max(dot(N,normalize(L3+V)),0.0),uSp.y*0.7);" +
+    "float sh=pow(max(dot(N,normalize(L1+V)),0.0),uSp.y*0.18);" +
+    "vec3 spec=vec3(1.0,0.97,0.92)*(s1*uSp.x*1.6+sh*uSp.x*0.12)+vec3(0.75,0.8,1.0)*s3*uSp.x*0.9;" +
+    "float f=pow(1.0-max(dot(N,V),0.0),4.0)*uSp.z;" +
+    "vec3 c=uCol*(amb+dif)+spec+vec3(0.55,0.6,0.75)*f*(0.25+d3)+uEmi;" +
+    "gl_FragColor=vec4(pow(aces(c*1.05),vec3(0.4545)),1.0);}";
+  var SVS = "attribute vec3 aP;uniform mat4 uM;uniform mat4 uVP;uniform mat4 uS;void main(){gl_Position=uVP*uS*uM*vec4(aP,1.0);}";
+  var SFS = "precision mediump float;uniform float uA;void main(){gl_FragColor=vec4(0.0,0.0,0.0,uA);}";
+  var BVS = "attribute vec3 aP;uniform mat4 uVP;uniform vec3 uC;uniform float uR;varying vec2 vU;void main(){vU=aP.xz;gl_Position=uVP*vec4(uC.x+aP.x*uR,0.002,uC.z+aP.z*uR,1.0);}";
+  var BFS = "precision mediump float;varying vec2 vU;uniform float uA;void main(){float d=length(vU);float a=uA*(1.0-smoothstep(0.2,1.0,d));gl_FragColor=vec4(0.0,0.0,0.0,a);}";
+  function shader(gl, t, src) { var s = gl.createShader(t); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; }
+  function program(gl, vs, fs) {
+    var p = gl.createProgram(); gl.attachShader(p, shader(gl, gl.VERTEX_SHADER, vs)); gl.attachShader(p, shader(gl, gl.FRAGMENT_SHADER, fs)); gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+    var u = {}, n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS), i; for (i = 0; i < n; i++) { var a = gl.getActiveUniform(p, i); u[a.name] = gl.getUniformLocation(p, a.name); }
+    return { p: p, u: u, aP: gl.getAttribLocation(p, "aP"), aN: gl.getAttribLocation(p, "aN") };
+  }
+  function upload(gl, g) {
+    if (g.__b) return g.__b;
+    var b = { p: gl.createBuffer(), n: gl.createBuffer(), i: gl.createBuffer(), c: g.i.length };
+    gl.bindBuffer(gl.ARRAY_BUFFER, b.p); gl.bufferData(gl.ARRAY_BUFFER, g.p, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, b.n); gl.bufferData(gl.ARRAY_BUFFER, g.n, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, b.i); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, g.i, gl.STATIC_DRAW);
+    g.__b = b; return b;
+  }
+  var CAM = { eye: [0, 1.08, 4.35], at: [0, 0.93, 0], fov: 30 * PI / 180 };   /* framed so a fall still fits */
+  var LIGHT = (function () { var l = [-0.55, 0.8, 0.7], k = Math.hypot(l[0], l[1], l[2]); return [l[0] / k, l[1] / k, l[2] / k]; })();
+  function shadowMat() {
+    var o = new Float32Array(16); o[0] = 1; o[10] = 1; o[15] = 1;
+    o[4] = -LIGHT[0] / LIGHT[1]; o[6] = -LIGHT[2] / LIGHT[1]; o[5] = 0; o[13] = 0.003;
+    return o;
+  }
+  var SHM = shadowMat(), QUAD = { p: new Float32Array([-1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1]), n: new Float32Array(12), i: new Uint16Array([0, 1, 2, 0, 2, 3]) };
+  function viewProj() {
+    var cv = S.cv, asp = (cv.width / Math.max(1, cv.height)) || 0.66;
+    var V = C.lookAt(CAM.eye, CAM.at, [0, 1, 0]), P = C.persp(CAM.fov, asp, 0.1, 30);
+    return C.mul(P, V);
+  }
+  function draw() {
+    var gl = S.gl, cv = S.cv, dpr = Math.min(2, window.devicePixelRatio || 1);
+    var w = Math.max(1, Math.round(cv.clientWidth * dpr)), h = Math.max(1, Math.round(cv.clientHeight * dpr));
+    if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+    gl.viewport(0, 0, w, h);
+    gl.clearColor(0, 0, 0, 0); gl.clearStencil(0); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+    var VP = viewProj(), M = S.rig.meshes, i, m, b;
+    /* the floor: a soft contact shadow under his feet, then his cast shadow, each pixel once */
+    gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false); gl.disable(gl.DEPTH_TEST);
+    var hp = C.xf(S.rig.nodes.hips.world, [0, 0, 0]);
+    gl.useProgram(S.bprog.p); b = upload(gl, QUAD);
+    gl.uniformMatrix4fv(S.bprog.u.uVP, false, VP); gl.uniform3f(S.bprog.u.uC, hp[0], 0, hp[2]);
+    gl.uniform1f(S.bprog.u.uR, 0.5); gl.uniform1f(S.bprog.u.uA, 0.3);
+    gl.bindBuffer(gl.ARRAY_BUFFER, b.p); gl.enableVertexAttribArray(S.bprog.aP); gl.vertexAttribPointer(S.bprog.aP, 3, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, b.i); gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
+    gl.enable(gl.STENCIL_TEST); gl.stencilFunc(gl.EQUAL, 0, 0xff); gl.stencilOp(gl.KEEP, gl.KEEP, gl.INCR);
+    gl.useProgram(S.sprog.p); gl.uniformMatrix4fv(S.sprog.u.uVP, false, VP); gl.uniformMatrix4fv(S.sprog.u.uS, false, SHM); gl.uniform1f(S.sprog.u.uA, 0.26);
+    for (i = 0; i < M.length; i++) { m = M[i]; b = upload(gl, m.mesh.geo);
+      gl.uniformMatrix4fv(S.sprog.u.uM, false, m.world);
+      gl.bindBuffer(gl.ARRAY_BUFFER, b.p); gl.enableVertexAttribArray(S.sprog.aP); gl.vertexAttribPointer(S.sprog.aP, 3, gl.FLOAT, false, 0, 0);
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, b.i); gl.drawElements(gl.TRIANGLES, b.c, gl.UNSIGNED_SHORT, 0); }
+    gl.disable(gl.STENCIL_TEST); gl.disable(gl.BLEND); gl.depthMask(true); gl.enable(gl.DEPTH_TEST);
+    /* the dummy himself */
+    var pr = S.prog, now = performance.now(), sel = AREA_PARTS[S.sel] || [];
+    gl.useProgram(pr.p); gl.uniformMatrix4fv(pr.u.uVP, false, VP); gl.uniform3fv(pr.u.uCam, CAM.eye);
+    for (i = 0; i < M.length; i++) { m = M[i]; var mm = m.mesh, mat = mm.mat; b = upload(gl, mm.geo);
+      gl.uniformMatrix4fv(pr.u.uM, false, m.world); gl.uniformMatrix3fv(pr.u.uNM, false, C.nrm3(m.world));
+      gl.uniform3fv(pr.u.uCol, mat.c); gl.uniform3f(pr.u.uSp, mat.sp, mat.sh, mat.rim);
+      var e = sel.indexOf(mm.part) >= 0 ? 0.045 : 0, fl = S.flash[mm.part];
+      if (fl) { var k = 1 - (now - fl) / 650; if (k > 0) e += 0.22 * k; else delete S.flash[mm.part]; }
+      gl.uniform3f(pr.u.uEmi, e * 0.5, e * 0.9, e * 0.85);
+      gl.bindBuffer(gl.ARRAY_BUFFER, b.p); gl.enableVertexAttribArray(pr.aP); gl.vertexAttribPointer(pr.aP, 3, gl.FLOAT, false, 0, 0);
+      gl.bindBuffer(gl.ARRAY_BUFFER, b.n); gl.enableVertexAttribArray(pr.aN); gl.vertexAttribPointer(pr.aN, 3, gl.FLOAT, false, 0, 0);
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, b.i); gl.drawElements(gl.TRIANGLES, b.c, gl.UNSIGNED_SHORT, 0); }
+  }
+  function frame() {
+    S.raf = 0;
+    if (!S.ok || !S.cv || !S.cv.isConnected) return;       /* off screen: stop until mounted again */
+    var now = performance.now(), dt = Math.min(0.05, (now - (S.last || now)) / 1000); S.last = now;
+    physics(dt); poseAt(now);
+    if (!document.hidden) draw();
+    S.raf = requestAnimationFrame(frame);
+  }
+  function kick() { if (!S.raf && S.ok) { S.last = performance.now(); S.raf = requestAnimationFrame(frame); } }
+
+  /* ---------------- touch: a tap picks a part, a drag spins him ---------------- */
+  function ray(cx, cy) {
+    var r = S.cv.getBoundingClientRect(), nx = (cx - r.left) / r.width * 2 - 1, ny = 1 - (cy - r.top) / r.height * 2;
+    var IV = C.inv(viewProj()); if (!IV) return null;
+    function un(z) { var x = IV[0] * nx + IV[4] * ny + IV[8] * z + IV[12], y = IV[1] * nx + IV[5] * ny + IV[9] * z + IV[13], zz = IV[2] * nx + IV[6] * ny + IV[10] * z + IV[14], w = IV[3] * nx + IV[7] * ny + IV[11] * z + IV[15]; return [x / w, y / w, zz / w]; }
+    var a = un(-1), b = un(1); return { o: a, d: nrm(v3(b, a)) };
+  }
+  /* the nearest triangle under the finger, across every mesh, in each mesh's own space */
+  function pick(cx, cy) {
+    var R = ray(cx, cy); if (!R) return null;
+    var best = null, M = S.rig.meshes, i;
+    for (i = 0; i < M.length; i++) {
+      var m = M[i], IM = C.inv(m.world); if (!IM) continue;
+      var o = C.xf(IM, R.o), d = C.xf(IM, R.d, 0), g = m.mesh.geo, P = g.p, I = g.i, j;
+      for (j = 0; j < I.length; j += 3) {
+        var a0 = I[j] * 3, b0 = I[j + 1] * 3, c0 = I[j + 2] * 3;
+        var e1x = P[b0] - P[a0], e1y = P[b0 + 1] - P[a0 + 1], e1z = P[b0 + 2] - P[a0 + 2];
+        var e2x = P[c0] - P[a0], e2y = P[c0 + 1] - P[a0 + 1], e2z = P[c0 + 2] - P[a0 + 2];
+        var px = d[1] * e2z - d[2] * e2y, py = d[2] * e2x - d[0] * e2z, pz = d[0] * e2y - d[1] * e2x;
+        var det = e1x * px + e1y * py + e1z * pz; if (Math.abs(det) < 1e-9) continue;
+        var id = 1 / det, tx = o[0] - P[a0], ty = o[1] - P[a0 + 1], tz = o[2] - P[a0 + 2];
+        var uu = (tx * px + ty * py + tz * pz) * id; if (uu < 0 || uu > 1) continue;
+        var qx = ty * e1z - tz * e1y, qy = tz * e1x - tx * e1z, qz = tx * e1y - ty * e1x;
+        var vv = (d[0] * qx + d[1] * qy + d[2] * qz) * id; if (vv < 0 || uu + vv > 1) continue;
+        var t = (e2x * qx + e2y * qy + e2z * qz) * id; if (t <= 0) continue;
+        var hl = [o[0] + d[0] * t, o[1] + d[1] * t, o[2] + d[2] * t], hw = C.xf(m.world, hl), dist = len(v3(hw, R.o));
+        if (!best || dist < best.dist) best = { dist: dist, m: m, local: hl };
+      }
+    }
+    if (!best) return null;
+    var part = best.m.mesh.part;
+    /* the same piece of torso is his chest from the front and his back from behind */
+    if (best.m.mesh.fb && best.local[2] < -0.012) part = part === "pelvis" ? "butt" : "back";
+    return part;
+  }
+  function bind(cv) {
+    cv.addEventListener("pointerdown", function (e) {
+      if (S.drag) return;
+      S.drag = { id: e.pointerId, x: e.clientX, y: e.clientY, a0: S.ang, moved: false, lx: e.clientX, lt: performance.now() };
+      S.vel = 0;
+      try { cv.setPointerCapture(e.pointerId); } catch (x) {}
+      kick();
+    });
+    cv.addEventListener("pointermove", function (e) {
+      var D = S.drag; if (!D || D.id !== e.pointerId) return;
+      var dx = e.clientX - D.x;
+      if (!D.moved && Math.abs(dx) + Math.abs(e.clientY - D.y) > 7) D.moved = true;
+      if (!D.moved) return;
+      e.preventDefault();
+      var now = performance.now(), a = D.a0 + dx * 0.0125, dtm = Math.max(6, now - D.lt);
+      var inst = (a - S.ang) / dtm * 1000;
+      S.vel = S.vel * 0.5 + inst * 0.5; S.ang = a; D.lt = now;
+    });
+    function up(e) {
+      var D = S.drag; if (!D || D.id !== e.pointerId) return;
+      try { cv.releasePointerCapture(e.pointerId); } catch (x) {}
+      S.drag = null;
+      if (D.moved) { if (performance.now() - D.lt > 90) S.vel *= 0.2; release(); return; }
+      var part = pick(e.clientX, e.clientY);
+      if (part && S.cb.tap) { S.flash[part] = performance.now(); try { S.cb.tap(part, e.clientX, e.clientY); } catch (x) {} }
+    }
+    cv.addEventListener("pointerup", up);
+    cv.addEventListener("pointercancel", function (e) { if (S.drag && S.drag.id === e.pointerId) S.drag = null; });
+    cv.addEventListener("webglcontextlost", function (e) { e.preventDefault(); S.ok = false; S.dead = true; if (S.cb.lost) S.cb.lost(); });
+  }
+  function init() {
+    if (S.ok || S.dead) return S.ok;
+    try {
+      var cv = document.createElement("canvas"); cv.className = "bm3dcv";
+      cv.setAttribute("role", "img"); cv.setAttribute("aria-label", "3D body. Drag to turn him round, tap a part to see what is there.");
+      var gl = cv.getContext("webgl", { alpha: true, antialias: true, stencil: true, premultipliedAlpha: true, preserveDrawingBuffer: false });
+      if (!gl) { S.dead = true; return false; }
+      S.gl = gl; S.cv = cv;
+      S.prog = program(gl, VS, FS); S.sprog = program(gl, SVS, SFS); S.bprog = program(gl, BVS, BFS);
+      gl.enable(gl.DEPTH_TEST);
+      S.rig = new C.Rig(); S.rig.pose({}); S.t0 = performance.now();
+      bind(cv); S.ok = true;
+    } catch (e) { S.dead = true; S.ok = false; try { console.warn("3D body unavailable:", e && e.message); } catch (x) {} }
+    return S.ok;
+  }
+  function mount(el) {
+    if (!init()) return false;
+    if (S.cv.parentNode !== el) el.appendChild(S.cv);
+    el.classList.add("live"); S.mount = el; kick();
+    return true;
+  }
+  return {
+    mount: mount, react: react, live: function () { return S.ok && !!S.cv && S.cv.isConnected; },
+    select: function (area) { S.sel = area || ""; },
+    on: function (k, f) { S.cb[k] = f; }, area: function (p) { return AREA[p]; },
+    /* used by the tests */
+    _s: S, _pick: pick, _RX: RX, _release: release,
+    _project: function (w) { var VP = viewProj(), x = VP[0] * w[0] + VP[4] * w[1] + VP[8] * w[2] + VP[12], y = VP[1] * w[0] + VP[5] * w[1] + VP[9] * w[2] + VP[13], ww = VP[3] * w[0] + VP[7] * w[1] + VP[11] * w[2] + VP[15], r = S.cv.getBoundingClientRect();
+      return [r.left + (x / ww * 0.5 + 0.5) * r.width, r.top + (0.5 - y / ww * 0.5) * r.height]; }
+  };
+})();
+/* D3:END */
+
+/* ---------- the 3D dummy, wired into the app ----------
+   bodyStage() leaves a placeholder that still contains the old SVG figure. When WebGL starts,
+   the dummy's canvas is moved into the placeholder and the SVG is hidden; if WebGL is not
+   available, or the context is lost, the SVG simply stays. The canvas is moved, never rebuilt,
+   so a re-render of the page does not throw away the dummy or the way you have turned him. */
+var D3_PARTS = ["head", "neck", "chest", "abdomen", "pelvis", "back", "butt", "armL", "armR", "legL", "legR"];
+var D3_LABEL = { head: "Head", neck: "Neck", chest: "Chest", abdomen: "Abdomen", pelvis: "Pelvis", back: "Back", butt: "Backside", armL: "Left arm", armR: "Right arm", legL: "Left leg", legR: "Right leg" };
+function bodyStage(ctx, sel) {
+  /* buttons for keyboard and screen-reader users, who cannot aim at a canvas; each one is a
+     real tap on that part, so it filters the list and plays the reaction too */
+  var sr = '<div class="bm3dsr">' + D3_PARTS.map(function (p) {
+    return '<button type="button" data-barea="' + esc(D3GL.area(p)) + '" data-bpart="' + p + '">' + esc(D3_LABEL[p]) + '</button>';
+  }).join("") + '</div>';
+  return '<div class="bm3d" data-ctx="' + ctx + '"><div class="bm3dfb">' + bodySVG(sel) + '</div>' + sr +
+    '<p class="bm3dhint" aria-hidden="true">Drag to turn him · tap a part</p></div>';
+}
+/* areas that exist in one list may not exist in the other (the Body Systems list has no Back) */
+function d3AreaFor(ctx, area) {
+  if (ctx !== "body") return area;
+  var has = (DB.BODY || []).some(function (r) { return r.area === area; });
+  return has ? area : area === "Back" ? "Chest and ribs" : area === "Buttocks" ? "Pelvis and groin" : area;
+}
+function d3Pop(host, text, x, y) {
+  if (!host) return;
+  var r = host.getBoundingClientRect(), el = document.createElement("span");
+  el.className = "bm3dpop"; el.setAttribute("role", "status"); el.textContent = text;
+  el.style.left = Math.max(8, Math.min(r.width - 8, x - r.left)) + "px";
+  el.style.top = Math.max(16, y - r.top) + "px";
+  host.appendChild(el);
+  setTimeout(function () { el.classList.add("out"); setTimeout(function () { if (el.parentNode) el.remove(); }, 320); }, 1300);
+}
+function d3Mount() {
+  if (typeof D3GL === "undefined") return;
+  var hosts = document.querySelectorAll(".bm3d"); if (!hosts.length) return;
+  var h = hosts[hosts.length - 1];
+  if (!D3GL.mount(h)) return;
+  var ctx = h.getAttribute("data-ctx");
+  D3GL.select(ctx === "body" ? S.barea : S.anArea);
+}
+try { window.__D3GL = D3GL; } catch (e) {}   /* a handle for the automated tests */
+D3GL.on("sound", function (k) { try { anatSnd(k); } catch (e) {} });
+D3GL.on("reduced", function () { return typeof hfxOk === "function" && !hfxOk(); });
+D3GL.on("lost", function () { var h = document.querySelector(".bm3d.live"); if (h) h.classList.remove("live"); });
+D3GL.on("tap", function (part, x, y) {
+  var host = document.querySelector(".bm3d.live"), ctx = host ? host.getAttribute("data-ctx") : "anat";
+  var area = d3AreaFor(ctx, D3GL.area(part));
+  if (ctx === "body") { S.barea = area; S.breg = null; }
+  else { S.anArea = area; S.anGrp = ""; S.anId = ""; }
+  render();
+  /* the area name pops up where you touched him, then the reaction plays */
+  var lab = D3_LABEL[part], txt = (lab === area || area.toLowerCase().indexOf(lab.toLowerCase()) === 0) ? area : lab + " · " + area;
+  d3Pop(document.querySelector(".bm3d.live"), txt, x, y);
+  try { bodyReact(area, null, part); } catch (e) {}
+  var list = document.querySelector(".bodylist"); if (list && list.getBoundingClientRect().top > window.innerHeight) list.scrollIntoView({ block: "start", behavior: "smooth" });
+});
+if (typeof render === "function") (function () {
+  var r0 = render;
+  render = function () { var v = r0.apply(this, arguments); try { d3Mount(); } catch (e) {} return v; };
+})();
 function bodyView() {
   var B = DB.BODY || [], area = S.barea || "", cur = S.breg && B.filter(function (r) { return r.id === S.breg; })[0];
   var list = B.filter(function (r) { return !area || r.area === area; });
-  var c = '<div class="bodywrap"><div class="bodyfig">' + bodySVG(area) + '<button class="chip' + (area === "Whole body" ? '" aria-pressed="true' : '') + '" data-barea="Whole body">Whole body</button>' + (area ? '<button class="linkish" data-barea="">Show all</button>' : '') + '</div><div class="bodylist"><p class="muted small">' + (area ? esc(area) + ': ' : 'Tap the body or pick a part: ') + list.length + ' part' + (list.length === 1 ? '' : 's') + '</p><div class="chips">' + list.map(function (r) { return '<button class="chip" data-breg="' + r.id + '" aria-pressed="' + (cur && cur.id === r.id) + '">' + esc(r.name) + '</button>'; }).join("") + '</div></div></div>';
+  var c = '<div class="bodywrap"><div class="bodyfig">' + bodyStage("body", area) + '<button class="chip' + (area === "Body-wide" ? '" aria-pressed="true' : '') + '" data-barea="Body-wide">Body-wide</button>' + (area ? '<button class="linkish" data-barea="">Show all</button>' : '') + '</div><div class="bodylist"><p class="muted small">' + (area ? esc(area) + ': ' : 'Tap the body or pick a part: ') + list.length + ' part' + (list.length === 1 ? '' : 's') + '</p><div class="chips">' + list.map(function (r) { return '<button class="chip" data-breg="' + r.id + '" aria-pressed="' + (cur && cur.id === r.id) + '">' + esc(r.name) + '</button>'; }).join("") + '</div></div></div>';
   if (!cur) return c;
   function row(x, cls) { return DB.drugs[x.d] ? '<button class="otcrow ' + cls + '" data-drug="' + x.d + '"><strong>' + esc(nameOf(x.d)) + '</strong><span>' + esc(x.how) + '</span></button>' : ''; }
   c += '<section class="sickcard"><span class="eyebrow">' + esc(cur.area) + '</span><h2>' + esc(cur.name) + '</h2><p>' + esc(cur.what) + '</p>';
@@ -25174,7 +25891,7 @@ document.addEventListener("input", function (e) {
    Data: DB.ANAT (data/anat*.js), 124 cards. Each tap plays a silly noise picked by the card's
    `snd` field, because the owner asked for the stomach to groan and the arms to creak. */
 
-var ANAT_AREAS = ["Head", "Neck", "Chest", "Abdomen", "Pelvis", "Limbs", "Whole body"];
+var ANAT_AREAS = ["Head and face", "Neck and throat", "Chest and ribs", "Abdomen and gut", "Pelvis and groin", "Back", "Buttocks", "Arms and legs", "Body-wide"];   /* renamed Nov 4 2026; see AREA_RENAME */
 var ANAT_BY = null, ANAT_GRP = null;
 
 function anatAll() { return (typeof DB !== "undefined" && DB.ANAT) || []; }
@@ -25509,14 +26226,14 @@ function anatView() {
   c += '<div class="tools"><input class="search" id="anq" type="search" autocomplete="off" placeholder="Search a part: alveoli, SA node, glomerulus, cochlea" aria-label="Search anatomy" value="' + esc(S.anQ || "") + '"></div>';
 
   /* body figure + area chips, reusing the Body Systems silhouette */
-  c += '<div class="bodywrap anatwrap"><div class="bodyfig">' + (typeof bodySVG === "function" ? bodySVG(area) : "") +
-    ANAT_AREAS.filter(function (a) { return a === "Whole body"; }).map(function (a) {
+  c += '<div class="bodywrap anatwrap"><div class="bodyfig">' + (typeof bodyStage === "function" ? bodyStage("anat", area) : "") +
+    ANAT_AREAS.filter(function (a) { return a === "Body-wide"; }).map(function (a) {
       return '<button class="chip' + (area === a ? '" aria-pressed="true' : '') + '" data-anarea="' + a + '">' + a + '</button>';
     }).join("") +
     (area || grp || q ? '<button class="linkish" data-anarea="">Show all</button>' : '') + '</div>';
 
   c += '<div class="bodylist"><p class="muted small">' + hits.length + ' part' + (hits.length === 1 ? '' : 's') +
-    (area ? ' in the ' + esc(area.toLowerCase()) : '') + (grp ? ' under ' + esc(grp) : '') + '</p>';
+    (area ? (area === "Body-wide" ? ' that work throughout the body' : ' in the ' + esc(area.toLowerCase())) : '') + (grp ? ' under ' + esc(grp) : '') + '</p>';
   /* group headings, each collapsible, with the parts inside */
   var G = {}, order = [];
   hits.forEach(function (x) { if (!G[x.grp]) { G[x.grp] = []; order.push(x.grp); } G[x.grp].push(x); });

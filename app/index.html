@@ -1436,7 +1436,29 @@ html[data-motion="reduce"] *,html[data-motion="reduce"] *::before,html[data-moti
 .iapwhy h3{margin:0 0 6px;font-size:1rem}
 .iapwhy ul{margin:4px 0 0;padding-left:20px;line-height:1.55}
 @media (prefers-reduced-motion:reduce){.iapcard .iapart .sway{animation:none}}
-.bodywrap{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;margin:8px 0}.bodyfig{display:flex;flex-direction:column;align-items:center;gap:6px;width:150px}.bodylist{flex:1;min-width:220px}
+.bodywrap{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;margin:8px 0}.bodyfig{display:flex;flex-direction:column;align-items:center;gap:6px;width:150px}
+/* the 3D dummy's stage (owner, Nov 4 2026). The SVG figure inside stays as the fallback and is
+   hidden only once WebGL is actually running. */
+.bodyfig:has(.bm3d){width:220px}
+.bm3d{position:relative;width:220px;max-width:100%;height:350px;border-radius:18px;
+  background:radial-gradient(120% 80% at 50% 38%,color-mix(in srgb,var(--surface-2,#2a2540) 80%,#fff 4%),transparent 72%)}
+.bm3d .bm3dcv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab;outline:none}
+.bm3d .bm3dcv:active{cursor:grabbing}
+.bm3d .bm3dfb{display:flex;justify-content:center;padding-top:10px}
+.bm3d.live .bm3dfb{display:none}
+.bm3d .bm3dhint{position:absolute;left:0;right:0;bottom:4px;margin:0;text-align:center;font-size:11px;color:var(--muted);pointer-events:none}
+.bm3d:not(.live) .bm3dhint{display:none}
+/* the area name that pops up where you touched him */
+.bm3dpop{position:absolute;transform:translate(-50%,-130%);background:var(--surface-2,#fff);color:var(--ink,#111);
+  border:1px solid var(--line,#ccc);border-radius:999px;padding:4px 11px;font-size:12.5px;font-weight:700;white-space:nowrap;
+  box-shadow:0 4px 14px rgba(0,0,0,.25);pointer-events:none;z-index:3;animation:bmPopIn .2s ease-out}
+.bm3dpop.out{opacity:0;transition:opacity .3s}
+@keyframes bmPopIn{from{opacity:0;transform:translate(-50%,-110%) scale(.9)}to{opacity:1;transform:translate(-50%,-130%)}}
+/* keyboard and screen-reader access to every part: visually hidden until focused */
+.bm3dsr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.bm3dsr:focus-within{position:absolute;left:0;right:0;bottom:22px;width:auto;height:auto;clip:auto;display:flex;flex-wrap:wrap;gap:4px;justify-content:center;z-index:4}
+.bm3dsr button{font-size:11px;padding:3px 8px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+@media (max-width:520px){.bodyfig:has(.bm3d){width:100%}.bm3d{width:100%;max-width:280px;margin:0 auto}}.bodylist{flex:1;min-width:220px}
 .bodymap{width:168px;height:auto;max-width:100%}
 /* ---------- the articulated figure (owner, Nov 4 2026) ----------
    Every joint is a nested <g> whose transform-origin sits at the joint itself: transform-box
