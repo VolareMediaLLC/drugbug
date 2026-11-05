@@ -601,7 +601,7 @@ function tabList() {
   L.push(["progress", "Progress", "Mastery, achievements and leaderboard."]);
   if (S.view === "gen" && typeof illicitView === "function") L.splice(1, 0, ["illicit", "Illicit & Street Drugs", "How illicit and recreational drugs affect the body, overdose signs and treatment. Education only."]);
   if (S.view === "gen" && typeof COMPOUND_TABS !== "undefined") L.splice(1, 0, ["vegc", "Vegetable Compounds", "Sulforaphane, allicin, lycopene, favism beans and more cool compounds from vegetables."], ["fruitc", "Fruit Compounds", "Resveratrol, bromelain, star fruit toxin and more unique compounds from fruit."], ["vitc", "Vitamin Compounds", "Every vitamin form, from B12 types to vitamin K2, CoQ10 and choline."]);
-  if (typeof disView === "function" && !(S.view === "level" && isI(S.level))) L.splice(1, 0, ["diseases", "Disease Lab", "250 conditions explained: their history, what goes wrong from cell to organ, and the drugs that treat them."]);
+  if (typeof disView === "function" && !(S.view === "level" && isI(S.level))) L.splice(1, 0, ["diseases", "Disease Lab", Object.keys((DB && DB.DIS) || {}).length + " conditions explained: their history, what goes wrong from cell to organ, and the drugs that treat them."]);
   return L;
 }
 function tabName(k) { var t = tabList().filter(function (x) { return x[0] === k; })[0]; return t ? t[1] : k === "session" ? "Study session" : ""; }
@@ -622,7 +622,7 @@ var HUB_SHORT = { micro: "Bacteria, viruses, fungi, prions, parasites", fm_bio: 
    A tile is NOT reorderable across sections: the sections mean something ("Look it up",
    "Study and practice"), and letting a drill land under "Look it up" would make the menu
    lie about itself. */
-var HUB_HOLD = 700;        /* long enough to be deliberate, short enough not to feel broken */
+var HUB_HOLD = 520;        /* long enough to be deliberate, short enough not to feel broken */
 var HD = { t: 0, el: null, box: null, x0: 0, y0: 0, grabX: 0, grabY: 0, last: 0, on: false, moved: false, suppress: false, rects: null, key: "" };
 function hubOrderAll() { var P = Prog.d; return P.hubOrder || (P.hubOrder = {}); }
 function hubKey(gi) { return (S.view === "level" ? S.level : S.view) + ":" + gi; }
@@ -769,12 +769,14 @@ function hubView() {
 /* compact education strip: the first sentence stays visible, the rest opens with "More" (cleanup, Oct 28 2026) */
 function eduNote(lead, rest) { return '<details class="edunote" role="note"><summary><span class="edl">' + lead + '</span>' + (rest ? '<span class="edmore">More</span>' : '') + '</summary>' + (rest ? '<p>' + rest + '</p>' : '') + '</details>'; }
 /* one-line hooks; Field Medic levels get field wording for shared tabs */
-function hubShort(k) { if (k === "tools" && S.view === "level" && isF(S.level)) return "Questions, megacode, cards, games, drills"; if (S.view === "level" && isF(S.level) && k === "diseases") return "Trauma, environmental and field conditions"; if (S.view === "level" && isF(S.level) && k === "registry") return "By field use, by class or A to Z"; return HUB_SHORT[k] || ""; }
+function hubShort(k) { if (k === "diseases" && !(S.view === "level" && isF(S.level)) && typeof DB !== "undefined" && DB.DIS) return Object.keys(DB.DIS).length + " conditions, cell to organ"; if (k === "tools" && S.view === "level" && isF(S.level)) return "Questions, megacode, cards, games, drills"; if (S.view === "level" && isF(S.level) && k === "diseases") return "Trauma, environmental and field conditions"; if (S.view === "level" && isF(S.level) && k === "registry") return "By field use, by class or A to Z"; return HUB_SHORT[k] || ""; }
 function sectionHead() {
   var where = S.view === "gen" ? "BugDex" : (levelObj(S.level) || {}).name || "";
   var inUnit = S.tab === "units" && S.unit;
   if ((S.tab === "blood" || S.tab === "hemo" || S.tab === "contrast" || S.tab === "flightp") && S.cn && S.cn.kind === S.tab && (S.cn.grp || S.cn.mode)) { var ch = critHead(); return '<div class="sechead"><button class="backbtn" data-cnav="' + ch[0] + '"><span aria-hidden="true">&larr;</span> ' + esc(ch[1]) + '</button><h2' + (ch[2].length > 28 ? ' class="long"' : '') + '>' + esc(ch[2]) + '</h2></div>'; }
   var back = '<button class="backbtn" data-act="' + (S.tab === "session" ? "sessquit" : inUnit ? "unitsback" : "hub") + '"><span aria-hidden="true">&larr;</span> ' + (S.tab === "session" ? "Exit" : inUnit ? "Specialty Units" : esc(where)) + '</button>';
+  /* inside one condition: a single back button to the list, no second hero (owner, Nov 5 2026) */
+  if (S.tab === "diseases" && S.disId && typeof disAll === "function" && disAll()[S.disId] && !disLocked(S.disId)) return '<div class="sechead slim"><button class="backbtn" data-disback="1"><span aria-hidden="true">&larr;</span> Disease Lab</button></div>';
   if (S.tab === "session" || inUnit) return '<div class="sechead">' + back + '<h2>' + esc(tabName(S.tab)) + '</h2></div>';
   /* every tab opens with the same friendly header: icon bubble, name and a one-line hook (cleanup, Oct 28 2026) */
   var sub = S.tab === "prep" ? "" : hubShort(S.tab);
@@ -877,7 +879,7 @@ function tiles(ids) {
       var ltok = ++TILE_TOK;
       TILE_LISTS[ltok] = ids.slice();          /* Previous/Next still walks the whole list */
       LOCK_LISTS[ltok] = lock; tilePrune();
-      return (free.length ? tilesCore(free) : '<div class="empty">None of these are in your plan yet.</div>') +
+      return (free.length ? tilesCore(free) : '') +
         '<details class="lockwrap" data-locktok="' + ltok + '"><summary><span class="lkn">' + lock.length.toLocaleString() +
         ' more medication' + (lock.length === 1 ? '' : 's') + '</span><span class="lksub">In ' +
         TIER_NAME[drugTier(lock[0])] + ' and above · tap to look</span></summary><div class="grid lockgrid"></div></details>';
@@ -4610,7 +4612,7 @@ function toolsView() {
   var al = toolsAllowed(), list = TOOLS.filter(function (t) { return al[t[0]]; });
   function toolLocked(k) { return typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier(toolTier(k)); }
   if (S.tool && !al[S.tool]) S.tool = null;
-  if (!S.tool) return '<div class="hub sub">' + list.map(function (t) { var lk = toolLocked(t[0]); return '<button class="hubtile' + (lk ? ' locked' : '') + '" data-tool="' + t[0] + '"><span class="ht"><strong>' + esc(t[1]) + (lk && typeof tierBadge === "function" ? ' ' + tierBadge(toolTier(t[0])) : '') + '</strong><span>' + esc(TOOLDESC[t[0]]) + '</span></span></button>'; }).join("") + '</div>';
+  if (!S.tool) return '<div class="hub sub">' + list.map(function (t) { var lk = toolLocked(t[0]); return '<button class="hubtile toolt' + (lk ? ' locked' : '') + '" data-tool="' + t[0] + '">' + (lk && typeof tierBadge === "function" ? '<span class="tbadge">' + tierBadge(toolTier(t[0])) + '</span>' : '') + '<span class="ht"><strong>' + esc(t[1]) + '</strong><span>' + esc(TOOLDESC[t[0]]) + '</span></span></button>'; }).join("") + '</div>';
   var c = '<button class="linkish subback" data-act="toolsback">&larr; All study tools</button>';
   if (S.tool === "peds" || S.tool === "ixn") S.tool = "mega"; /* Pediatric dosing practice removed Oct 27 2026; Interaction explorer removed Oct 29 2026 */
   if (S.tool === "mega") c += megaView();
@@ -12014,13 +12016,17 @@ var DIS_SYS = ["Heart & Blood Vessels", "Lungs & Breathing", "Brain & Nerves", "
 ICO.diseases = '<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5c-2.6 2.4-2.6 14.6 0 17M12 3.5c2.6 2.4 2.6 14.6 0 17M4 9.5h16M4 14.5h16"/><circle cx="17.5" cy="6.5" r="2" fill="currentColor" stroke="none"/>';
 (function () {
   var css = '.dislist{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-top:12px}' +
-    '.disitem{text-align:left;border:1px solid var(--line,rgba(127,127,127,.25));border-radius:14px;padding:12px 14px;background:var(--surface,transparent);color:inherit;font:inherit;cursor:pointer;display:flex;flex-direction:column;gap:4px}' +
-    '.disitem strong{font-size:1rem;line-height:1.3}.disitem span{font-size:.82rem;opacity:.75;line-height:1.35}' +
-    '.disitem.locked{opacity:.8}' +
-    '.dischips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}' +
-    '.dischips button{border:1px solid var(--line,rgba(127,127,127,.3));background:transparent;color:inherit;font:inherit;font-size:.82rem;padding:6px 10px;border-radius:999px;cursor:pointer}' +
+    '.disitem{text-align:left;border:1px solid var(--line,rgba(127,127,127,.25));border-radius:14px;padding:12px 14px;background:var(--surface,transparent);color:inherit;font:inherit;cursor:pointer;display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:10px;row-gap:3px}' +
+    '.disitem strong{font-size:1rem;line-height:1.3;grid-column:1}.disitem .dsub{grid-column:1;font-size:.82rem;opacity:.75;line-height:1.35}' +
+    '.disitem .dtag{grid-column:2;grid-row:1/3;align-self:center}.disitem .dtag .pill{font-size:11px;white-space:nowrap}' +
+    '.disitem.locked strong{opacity:.82}' +
+    '.disintro{margin:0 0 4px}.disbar{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:12px 0 0}.disbar p{margin:0}' +
+    '.disgrp{font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:16px 0 0}' +
+    '.dischips{display:flex;flex-wrap:nowrap;gap:6px;margin:10px -16px 0;padding:2px 16px 6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity}.dischips::-webkit-scrollbar{display:none}' +
+    '.dischips button{flex:none;scroll-snap-align:start;white-space:nowrap;border:1px solid var(--line,rgba(127,127,127,.3));background:transparent;color:inherit;font:inherit;font-size:.82rem;padding:6px 12px;border-radius:999px;cursor:pointer}' +
     '.dischips button[aria-pressed="true"]{background:var(--c,#6b3fbf);border-color:transparent;color:#fff}' +
     '.dissearch{width:100%;margin-top:10px}' +
+    '.dishead{margin:6px 0 10px}.dishead .disaka{margin:4px 0 0;line-height:1.4}.diswhat p:first-child{margin-top:0}.diswhat p:last-child{margin-bottom:0}.disred{margin:12px 0}.disfoot{margin-top:18px;opacity:.8}' +
     '.dishead h2{margin:4px 0 2px}.dishead .dsys{display:inline-block;font-size:.75rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;opacity:.75}' +
     '.disred{border-left:4px solid #e5484d;padding:10px 12px;border-radius:0 10px 10px 0;background:rgba(229,72,77,.1);line-height:1.45}' +
     '.drugchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}';
@@ -12046,10 +12052,17 @@ function disListHTML() {
   var fm = disFieldMode(), pool = fm ? disFieldIds(sys) : Object.keys(D);
   var ids = pool.filter(function (k) { return (fm || !sys || D[k].sys === sys) && disMatch(D[k], q); }).sort(function (a, b) { return D[a].name.localeCompare(D[b].name); });
   if (!ids.length) return '<p class="muted">No conditions match. Try another word.</p>';
-  return '<p class="muted small">' + ids.length + ' condition' + (ids.length === 1 ? '' : 's') + '</p><div class="dislist">' + ids.map(function (k) {
+  /* cleaner list (owner, Nov 5 2026): the badge sits on the right instead of wrapping the name,
+     and on the free plan the open preview conditions come first instead of being buried */
+  function item(k) {
     var e = D[k], lk = disLocked(k);
-    return '<button class="disitem' + (lk ? ' locked' : '') + '" data-dis="' + k + '"><strong>' + esc(e.name) + (lk && typeof tierBadge === "function" ? ' ' + tierBadge("plus") : DIS_FREE[k] && typeof PAYWALL !== "undefined" && PAYWALL && !hasTier("plus") ? ' <span class="pill">Free preview</span>' : '') + '</strong><span>' + esc(fm ? disFieldGroup(k) : e.sys) + '</span></button>';
-  }).join("") + '</div>';
+    var tag = lk && typeof tierBadge === "function" ? tierBadge("plus") : DIS_FREE[k] && typeof PAYWALL !== "undefined" && PAYWALL && !hasTier("plus") ? '<span class="pill">Free</span>' : '';
+    return '<button class="disitem' + (lk ? ' locked' : '') + '" data-dis="' + k + '"><strong>' + esc(e.name) + '</strong><span class="dsub">' + esc(fm ? disFieldGroup(k) : e.sys) + '</span>' + (tag ? '<span class="dtag">' + tag + '</span>' : '') + '</button>';
+  }
+  var open = ids.filter(function (k) { return !disLocked(k); }), shut = ids.filter(function (k) { return disLocked(k); });
+  var head = '<p class="muted small">' + ids.length + ' condition' + (ids.length === 1 ? '' : 's') + '</p>';
+  if (open.length && shut.length) return head + '<h3 class="disgrp">Open now</h3><div class="dislist">' + open.map(item).join("") + '</div><h3 class="disgrp">With DrugBug Plus</h3><div class="dislist">' + shut.map(item).join("") + '</div>';
+  return head + '<div class="dislist">' + ids.map(item).join("") + '</div>';
 }
 function disView() {
   var D = disAll();
@@ -12062,8 +12075,8 @@ function disView() {
     fc += '<div class="dischips fmdis" role="group" aria-label="Field groups"><button data-dissys="" aria-pressed="' + !S.disSys + '">All field (' + disFieldIds("").length + ')</button>' + DIS_FIELD.map(function (g) { return '<button data-dissys="' + esc(g[0]) + '" aria-pressed="' + (S.disSys === g[0]) + '">' + esc(g[0]) + '</button>'; }).join("") + '</div>';
     return fc + '<div id="disout">' + disListHTML() + '</div>';
   }
-  var c = '<p class="muted">Step into the lab on a disease: where it came from, what goes wrong from the cell to each organ, why the symptoms happen, how it is diagnosed and how the drugs that treat it work. Education only.</p>';
-  if (typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier("plus")) c += '<div class="callout evnote small"><strong>DrugBug Plus.</strong> Five conditions are open as a free preview: high blood pressure, type 2 diabetes, asthma, migraine and the flu. <button class="linkish" data-pw="open">See Plus</button></div>';
+  var c = '<p class="muted disintro">Each condition from the cell to the organ: why the symptoms happen, how it is diagnosed and how its drugs work. Education only.</p>';
+  if (typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier("plus")) c += '<div class="callout evnote small"><strong>Five are free to open.</strong> The rest come with DrugBug Plus. <button class="linkish" data-pw="open">See Plus</button></div>';
   if (typeof lang === "function" && lang() === "es") c += '<p class="dnote">La sección "Disease Lab" solo está disponible en inglés por ahora.</p>';
   c += '<input class="pinput dissearch" id="disq" type="search" placeholder="Search conditions, like asthma or DKA" aria-label="Search conditions" value="' + esc(S.disQ || "") + '">';
   c += '<div class="dischips" role="group" aria-label="Body systems"><button data-dissys="" aria-pressed="' + !S.disSys + '">All</button>' + DIS_SYS.map(function (s) { return '<button data-dissys="' + esc(s) + '" aria-pressed="' + (S.disSys === s) + '">' + esc(s) + '</button>'; }).join("") + '</div>';
@@ -12071,10 +12084,8 @@ function disView() {
 }
 function disDetail(id) {
   var e = disAll()[id], c = '<div class="deep">';
-  c += '<div class="backrow"><button class="backbtn" data-disback="1"><span aria-hidden="true">&larr;</span> All conditions</button></div>';
-  c += '<header class="dishead"><span class="dsys">' + esc(e.sys) + '</span><h2>🪱 ' + esc(e.name) + '</h2>' + (e.aka && e.aka.length ? '<p class="dnote">Also called: ' + esc(e.aka.join(", ")) + '</p>' : '') + '</header>';
-  c += deepP(e.what);
-  c += '<p class="dnote">Draft study content. For learning only, not for diagnosing anyone. If you have health questions, ask a doctor, nurse or pharmacist. In an emergency, call 911.</p>';
+  c += '<header class="dishead"><span class="dsys">' + esc(e.sys) + '</span><h2>' + esc(e.name) + '</h2>' + (e.aka && e.aka.length ? '<p class="dnote disaka">Also called: ' + esc(e.aka.join(", ")) + '</p>' : '') + '</header>';
+  c += '<div class="diswhat">' + deepP(e.what) + '</div>';
   if (e.red) c += '<div class="disred"><b>When it is an emergency:</b> ' + esc(e.red) + '</div>';
   if (typeof disTypesHTML === "function") c += disTypesHTML(id);
   var org = deepP(e.origin);
@@ -12089,6 +12100,7 @@ function disDetail(id) {
   if (e.mem && e.mem.length) c += deepSec("🧠", "Make it stick", '<div class="mem">' + e.mem.map(function (m) { return '<div><b>' + esc(m[0]) + ':</b> ' + esc(m[1]) + '</div>'; }).join("") + '</div>');
   if (e.fun) c += '<div class="fun"><b>Fun fact:</b> ' + esc(e.fun) + '</div>';
   if (e.src && e.src.length) c += deepSec("📚", "Sources", '<ul class="srcl">' + e.src.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join("") + '</ul>');
+  c += '<p class="dnote disfoot">Study content for learning only, not for diagnosing anyone. If you have health questions, ask a doctor, nurse or pharmacist. In an emergency, call 911.</p>';
   c += '<div class="sheetacts"><button class="btn small ghost" data-disback="1">Back to all conditions</button></div>';
   return c + '</div>';
 }
