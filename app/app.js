@@ -407,7 +407,7 @@ function viewHome() {
     return '<button class="route rmini ' + cls + pt(go) + '" ' + (hit ? 'data-startlearn="' + go + '"' : go.indexOf("level:") === 0 ? 'data-level="' + go.slice(6) + '"' : 'data-go="' + go + '"') + '>' + (hit ? PT : '') + '<span class="mtx"><h2>' + title + '</h2><p>' + line + '</p>' + (fun ? routeChips(cls) : '') + '</span><span class="mbug">' + art + '</span></button>';
   }
   return topbar() + '<div class="homewrap' + hcls + '" data-hol="' + (HOL ? esc(holKey(HOL)) : '') + '">' + homeTip() +
-   heroHTML() +
+   heroHTML() + loginCard() +
    homeStart() + homeProgress() + (typeof trialBanner === "function" ? trialBanner() : '') +
    '<h3 class="homegh">Look it up</h3><section class="routes"><div class="minis one">' +
    '<button class="route rmini gen' + pt("gen") + '" ' + (S.pointGo === "gen" ? 'data-startlearn="gen"' : 'data-go="gen"') + '>' + (S.pointGo === "gen" ? PT : '') +
@@ -1943,6 +1943,8 @@ document.addEventListener("click", function (e) {
     return render();
   }
   switch (a.act) {
+    case "logincollect": loginCollect(); render(); return;
+    case "logintoggle": S.loginOpen = !S.loginOpen; render(); return;
     case "close": return closeSheet();
     case "tbmenu": S.menu = !S.menu; return render();
     case "allpaths": store("allPaths", homeAll() ? 0 : 1); render(); return;
@@ -2502,6 +2504,52 @@ var MSCORE = { "new": 0, learning: 0.25, familiar: 0.5, proficient: 0.75, master
 var Prog = { d: blankProg(), db: null, uid: null, synced: false, saving: false, dirty: false };
 function blankProg() { return { earned: 0, spent: 0, owned: [], avatar: "starter", avatarTs: 0, drugs: {}, calc: {}, qcat: {}, xp: 0, days: {}, streak: 0, best: 0, lastDaily: "", dailyCount: 0, ach: {}, answered: 0, chal: {} }; }
 (function () { var l = store("progress"); if (l && l.drugs) Prog.d = Object.assign(blankProg(), l); })();
+/* ---------- Daily login prizes (owner, Nov 5 2026) ----------
+   Every different day you open DrugBug counts. Each day has a prize waiting: sticks that grow day by
+   day, bonus sticks on milestone days, and rare, epic and legendary bugs that can only be earned this
+   way. Days are a set of dates, so they merge exactly across devices; prizes collected are a set of
+   day numbers. Missing a day never resets anything: the count only goes up. */
+var LOGIN_BUGS = {};
+function loginDays() { var L = Prog.d.login; return L && L.d ? Object.keys(L.d).length : 0; }
+function loginTick() { var t = today(), L = Prog.d.login || (Prog.d.login = { d: {}, got: {} }); L.d = L.d || {}; L.got = L.got || {}; if (!L.d[t]) { L.d[t] = 1; saveProg(); return true; } return false; }
+/* a 30-day cycle (owner, Nov 5 2026): a small prize every day that grows through the month,
+   a bonus every 7th day, a big one on day 30, then the calendar starts again. The login-only bugs
+   land on days 10, 20 and 30 of the first cycles. */
+function loginCycleDay(n) { return ((n - 1) % 30) + 1; }
+function loginPrize(n) {
+  if (!LOGIN_BUGS._) { LOGIN_BUGS._ = 1; BUGS.forEach(function (b) { if (b.login) LOGIN_BUGS[b.login] = b.id; }); }
+  var c = loginCycleDay(n), st = 10 + 5 * c + (c === 30 ? 300 : c % 7 === 0 ? 50 : 0);
+  return { sticks: st, bug: LOGIN_BUGS[n] || "", big: c === 30 || c % 7 === 0 || !!LOGIN_BUGS[n], c: c };
+}
+function loginOwed() { var n = loginDays(), got = (Prog.d.login || {}).got || {}, out = []; for (var i = 1; i <= n; i++) if (!got[i]) out.push(i); return out; }
+function loginCollect() {
+  var owed = loginOwed(); if (!owed.length) return;
+  var L = Prog.d.login, st = 0, bugs = [];
+  owed.forEach(function (n) { var p = loginPrize(n); st += p.sticks; if (p.bug && !owned(p.bug)) { Prog.d.owned = (Prog.d.owned || []).concat([p.bug]); bugs.push(p.bug); } L.got[n] = Date.now(); });
+  earn(st); saveProg();
+  S.loginMsg = "+" + st.toLocaleString() + " sticks" + (bugs.length ? " and " + bugs.map(b2n).join(", ") + "! Find " + (bugs.length > 1 ? "them" : "it") + " in the Bug Store." : ".");
+  try { if (typeof sfx === "function") sfx(true); } catch (e) {}
+}
+function loginCard() {
+  if (typeof funOn === "function" && !funOn()) return "";
+  loginTick();
+  var n = loginDays(), owed = loginOwed(), got = (Prog.d.login || {}).got || {}, c = loginCycleDay(n), start = n - c + 1, cyc = Math.floor((n - 1) / 30) + 1;
+  var cal = '<ol class="lgcal">';
+  for (var i = 0; i < 30; i++) {
+    var d = start + i, p = loginPrize(d), done = !!got[d], now = d === n;
+    cal += '<li class="' + (done ? 'done' : '') + (now ? ' now' : '') + (d > n ? ' later' : '') + (p.big ? ' big' : '') + '"><span>' + (i + 1) + '</span>' + (p.bug && !owned(p.bug) || (p.bug && d >= n) ? '<i class="lgbug">' + bugArt(bugById(p.bug), "", { stage: 5 }) + '</i>' : '<b>' + p.sticks + '</b>') + (done ? '<em aria-label="collected">\u2713</em>' : '') + '</li>';
+  }
+  cal += '</ol>';
+  var head = owed.length ? '<strong>Day ' + c + ' of 30 is ready</strong><span>' + (owed.length > 1 ? owed.length + ' days of prizes waiting' : 'Your daily prize: ' + loginPrize(n).sticks + ' sticks' + (loginPrize(n).bug ? ' and a bug' : '')) + '</span>'
+    : '<strong>Day ' + c + ' of 30 collected</strong><span>Come back tomorrow for ' + loginPrize(n + 1).sticks + ' sticks' + (loginPrize(n + 1).bug ? ' and ' + esc(b2n(loginPrize(n + 1).bug)) : '') + '</span>';
+  var nb = 0; for (i = n + 1; i < n + 120 && !nb; i++) if (loginPrize(i).bug && !owned(loginPrize(i).bug)) nb = i;
+  var nxt = '<p class="lgnext">Cycle ' + cyc + '. ' + (nb ? esc(b2n(loginPrize(nb).bug)) + ' (' + RARITY[bugById(loginPrize(nb).bug).rar] + ') comes on day ' + loginCycleDay(nb) + (Math.floor((nb - 1) / 30) + 1 > cyc ? ' of the next cycle' : '') + '.' : 'Every login bug collected. The sticks keep coming.') + '</p>';
+  var msg = S.loginMsg ? '<p class="presult good" role="status">' + esc(S.loginMsg) + '</p>' : ''; S.loginMsg = "";
+  /* folded by default; the 30 days open on a tap (owner, Nov 5 2026) */
+  var open = !!S.loginOpen;
+  return '<section class="lgcard' + (owed.length ? ' ready' : '') + (open ? ' open' : '') + '"><div class="lghead"><div>' + head + '</div>' + (owed.length ? '<button class="btn" data-act="logincollect">Collect</button>' : '') + '</div>' + msg +
+    '<button class="lgtoggle" data-act="logintoggle" aria-expanded="' + open + '">' + (open ? 'Hide the 30 days' : 'Show the 30 days') + '</button>' + (open ? cal + nxt : '') + '</section>';
+}
 function today() { var d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
 function dayDiff(a, b) { return Math.round((new Date(b + "T12:00:00") - new Date(a + "T12:00:00")) / DAY); }
 /* Saved on the device every time; copied to the cloud account at most every 20 s (and right away when the app
@@ -2576,6 +2624,13 @@ function mergeProg(remote) {
   /* what is equipped follows the same "newest device wins" rule as the outfit and face */
   if (avNewer) { if (R.border) L.border = R.border; if (R.voice) L.voice = R.voice; if (R.track) L.track = R.track; }
   if (R.muRefunded) L.muRefunded = 1;
+  /* daily-login prizes: the days are a set of dates and the prizes collected a set of day numbers,
+     so both are unions; a prize collected on either device stays collected */
+  if (R.login && typeof R.login === "object") {
+    L.login = L.login || { d: {}, got: {} }; L.login.d = L.login.d || {}; L.login.got = L.login.got || {};
+    Object.keys(R.login.d || {}).forEach(function (k) { L.login.d[k] = 1; });
+    Object.keys(R.login.got || {}).forEach(function (k) { if (!L.login.got[k] || R.login.got[k] < L.login.got[k]) L.login.got[k] = R.login.got[k]; });
+  }
   Object.keys(R).forEach(function (k) { if (L[k] === undefined) L[k] = R[k]; });
 }
 function initProg() {
@@ -3392,8 +3447,11 @@ var START_STICKS = 20;
 /* earned on the device + paid for on the server, less what has been spent (modules/wallet.js) */
 function sticks() { var P = Prog.d; return START_STICKS + (P.earned || 0) + (typeof walletSticks === "function" ? walletSticks() : 0) - (P.spent || 0); }
 var STICK_TRY = 1, STICK_RIGHT = 3; /* every answered question pays 1 stick for trying, 3 when correct */
-function qSticks(ok) { return ok ? STICK_RIGHT : STICK_TRY; }
-function stickNote(ok) { var n = qSticks(ok); return ' <span class="earned">+' + n + (n === 1 ? " stick" : " sticks") + (ok ? "" : " for trying") + '</span>'; }
+/* the peeking pal riding with your bug adds sticks to every right answer (owner, Nov 5 2026):
+   +1 when you equip it, +2 once it reaches level 5, +3 at level 10 */
+function palBonus() { var id = Prog.d.pal; if (!id || typeof pkCaught !== "function" || !pkCaught(id)) return 0; var lv = typeof pkLv === "function" ? pkLv(id) : 1; return lv >= 10 ? 3 : lv >= 5 ? 2 : 1; }
+function qSticks(ok) { return ok ? STICK_RIGHT + palBonus() : STICK_TRY; }
+function stickNote(ok) { var n = qSticks(ok), pb = ok ? palBonus() : 0; return ' <span class="earned">+' + n + (n === 1 ? " stick" : " sticks") + (ok ? "" : " for trying") + (pb ? ' (' + pb + ' from your pal)' : '') + '</span>'; }
 function earn(n) { if (!n) return; var P = Prog.d; P.earned = (P.earned || 0) + n; }
 function stickIcon(sz) {
   sz = sz || 16;
@@ -3410,6 +3468,8 @@ function bEyes(y, cool) {
 }
 function bSmile(y, c) { return '<path d="M90 ' + y + ' Q100 ' + (y + 8) + ' 110 ' + y + '" stroke="' + c + '" stroke-width="3.5" fill="none" stroke-linecap="round"/>'; }
 var ACC = {
+  bandana: function (y) { return '<path d="M72 ' + (y - 12) + ' Q74 ' + (y - 36) + ' 100 ' + (y - 37) + ' Q126 ' + (y - 36) + ' 128 ' + (y - 12) + ' Q100 ' + (y - 20) + ' 72 ' + (y - 12) + 'Z" fill="#dc2626" stroke="#7f1d1d" stroke-width="1.5"/>' +
+    '<circle cx="88" cy="' + (y - 26) + '" r="2" fill="#fff"/><circle cx="104" cy="' + (y - 29) + '" r="2" fill="#fff"/><circle cx="116" cy="' + (y - 22) + '" r="2" fill="#fff"/><path d="M128 ' + (y - 14) + ' l12 -6 l-3 10Z M128 ' + (y - 14) + ' l13 4 l-8 6Z" fill="#dc2626" stroke="#7f1d1d" stroke-width="1"/>'; },
   crown: function (y) { return '<path d="M78 ' + (y - 26) + ' L84 ' + (y - 44) + ' L94 ' + (y - 32) + ' L100 ' + (y - 48) + ' L106 ' + (y - 32) + ' L116 ' + (y - 44) + ' L122 ' + (y - 26) + ' Z" fill="#ffc531" stroke="#b7860b" stroke-width="2"/><circle cx="100" cy="' + (y - 34) + '" r="3.5" fill="#e23b4a"/>'; },
   halo: function (y) { return '<ellipse cx="100" cy="' + (y - 40) + '" rx="22" ry="6" fill="none" stroke="#ffe066" stroke-width="5"/>'; },
   cap: function (y) { return '<path d="M74 ' + (y - 18) + ' L80 ' + (y - 36) + ' Q100 ' + (y - 46) + ' 120 ' + (y - 36) + ' L126 ' + (y - 18) + ' Q100 ' + (y - 26) + ' 74 ' + (y - 18) + 'Z" fill="#fff" stroke="#c9c2bc" stroke-width="2"/><rect x="96" y="' + (y - 40) + '" width="8" height="15" rx="1.5" fill="#e23b4a"/><rect x="92" y="' + (y - 36) + '" width="16" height="7" rx="1.5" fill="#e23b4a"/>'; },
@@ -3447,6 +3507,10 @@ var BODYFIT = {
      adult position and floated in empty space beside a chrysalis (owner, Nov 4 2026) */
   chrysalis: { r: 26, t: [100, 150, 28, 40], R: [137, 124], L: [63, 124] }, cocoon: { r: 26, t: [100, 150, 34, 40], R: [140, 126], L: [60, 126] },
   centipede: { r: 28, t: [114, 150, 40, 34], R: [162, 108], L: [52, 124] },
+  shield: { r: 25, t: [100, 140, 40, 40] }, bedbug: { r: 24, t: [100, 146, 44, 34] }, dung: { r: 27, t: [94, 142, 36, 40], R: [150, 120] },
+  millipede: { r: 26, t: [104, 150, 40, 34], R: [164, 112], L: [44, 124] }, harvestman: { r: 24, t: [100, 124, 28, 22], R: [150, 100], L: [50, 100] },
+  asp: { r: 26, t: [100, 152, 46, 32] }, flea: { r: 23, t: [100, 144, 28, 40] }, tick: { r: 23, t: [100, 146, 42, 40] },
+  mosquito: { r: 22, t: [100, 140, 16, 40] }, louse: { r: 23, t: [100, 150, 34, 40] }, roach: { r: 24, t: [100, 148, 36, 44] },
   wasp: { r: 28, t: [100, 154, 30, 36] }, cricket: { r: 28, t: [100, 150, 28, 40] }
 };
 function fitG(body, slot, hy, svg) {
@@ -3622,21 +3686,87 @@ function bugArt(b, cls, opt) {
     s += '<path d="M80 108 Q80 96 100 96 Q120 96 120 108 L116 190 Q100 202 84 190Z" fill="' + F + '" stroke="' + lgd + '" stroke-width="2.5"/>';
     s += '<path d="M83 128 Q100 133 117 128 M84 150 Q100 155 116 150 M86 172 Q100 177 114 172" stroke="' + lgd + '" stroke-width="2.5" fill="none" opacity=".55"/>';
     s += '<circle cx="100" cy="' + hy + '" r="28" fill="' + (b.head || c1) + '" stroke="' + lgd + '" stroke-width="2.5"/>';
+  } else if (t === "shield") {
+    /* stink bugs and kissing bugs: a flat shield, a triangle on the back, edge bands on kissing bugs */
+    s += bLegs(ink) + antennae(ink) + '<path d="M56 106 L144 106 L136 150 L100 190 L64 150Z" fill="' + F + '" stroke="' + ink + '" stroke-width="2" stroke-linejoin="round"/>' +
+      '<path d="M78 108 L122 108 L100 150Z" fill="' + c2 + '" opacity=".85"/><path d="M100 150 V188" stroke="' + ink + '" stroke-width="2" opacity=".6"/>';
+    if (b.pat === "edges") for (var ek = 0; ek < 4; ek++) s += '<rect x="' + (60 + ek * 3) + '" y="' + (112 + ek * 18) + '" width="8" height="9" rx="2" fill="' + c3 + '"/><rect x="' + (132 - ek * 3) + '" y="' + (112 + ek * 18) + '" width="8" height="9" rx="2" fill="' + c3 + '"/>';
+    s += '<circle cx="100" cy="' + hy + '" r="25" fill="' + (b.head || c1) + '"/>';
+  } else if (t === "bedbug") {
+    s += legs(ink, 4) + antennae(ink) + '<ellipse cx="100" cy="146" rx="48" ry="38" fill="' + F + '" stroke="' + ink + '" stroke-width="2"/>' +
+      '<path d="M58 134 Q100 124 142 134 M54 150 Q100 140 146 150 M58 166 Q100 158 142 166" stroke="' + c2 + '" stroke-width="3" fill="none" opacity=".8"/>' +
+      '<ellipse cx="100" cy="108" rx="30" ry="12" fill="' + c2 + '"/><circle cx="100" cy="' + hy + '" r="24" fill="' + (b.head || c1) + '"/>';
+  } else if (t === "dung") {
+    /* a dung beetle with its ball (it steers by the Milky Way) */
+    s += '<circle cx="150" cy="158" r="32" fill="#7c5a3a" stroke="#4a3220" stroke-width="2"/><path d="M134 146 l6 4 M152 136 l4 6 M160 164 l6 -2 M140 170 l4 5 M166 150 l5 3" stroke="#5b3f26" stroke-width="3" stroke-linecap="round"/>' +
+      bLegs(ink) + antennae(ink) + '<ellipse cx="94" cy="142" rx="40" ry="42" fill="' + F + '" stroke="' + ink + '" stroke-width="2"/><path d="M94 104 V184" stroke="' + ink + '" stroke-width="3"/>' +
+      '<path d="M76 98 l-6 -8 M88 96 l-2 -9 M100 96 l2 -9 M112 98 l6 -8" stroke="' + ink + '" stroke-width="3" stroke-linecap="round"/><circle cx="100" cy="' + hy + '" r="27" fill="' + (b.head || c1) + '"/>';
+  } else if (t === "millipede") {
+    /* a millipede: many round segments, two pairs of short legs on each, curled */
+    var mp = [], mn = st === 1 ? 7 : st === 2 ? 10 : 14;
+    /* a loose spiral under the head, biggest segment first */
+    for (var mi = 0; mi < mn; mi++) { var ang = Math.PI * 1.5 - mi * 0.44, rad = 50 - mi * 2.4; mp.push([100 + Math.cos(ang) * rad, 150 + Math.sin(ang) * rad * 0.9, 16 - mi * 0.45]); }
+    var mlegs = "", msegs = "";
+    mp.forEach(function (p, i) {
+      var q = mp[Math.min(mp.length - 1, i + 1)], o = mp[Math.max(0, i - 1)], dx = q[0] - o[0], dy = q[1] - o[1], L = Math.sqrt(dx * dx + dy * dy) || 1, nx = -dy / L, ny = dx / L;
+      [-1, 1].forEach(function (sd) { [-0.3, 0.3].forEach(function (off) {
+        var bx = p[0] + dx / L * off * p[2], by = p[1] + dy / L * off * p[2];
+        mlegs += '<path d="M' + (bx + nx * sd * p[2] * .7).toFixed(1) + ' ' + (by + ny * sd * p[2] * .7).toFixed(1) + ' l' + (nx * sd * 8).toFixed(1) + ' ' + (ny * sd * 8 + 3).toFixed(1) + '" stroke="' + ink + '" stroke-width="2" stroke-linecap="round"/>';
+      }); });
+    });
+    for (mi = mp.length - 1; mi >= 0; mi--) msegs += '<circle cx="' + mp[mi][0].toFixed(1) + '" cy="' + mp[mi][1].toFixed(1) + '" r="' + mp[mi][2].toFixed(1) + '" fill="' + (mi % 2 ? c2 : F) + '" stroke="' + ink + '" stroke-width="1.4"/>';
+    s += mlegs + msegs + antennae(ink, true) + '<circle cx="100" cy="' + hy + '" r="26" fill="' + (b.head || c1) + '" stroke="' + ink + '" stroke-width="1.4"/>';
+  } else if (t === "harvestman") {
+    /* daddy long legs: one small round body and eight very long bent legs */
+    var hl = "", HL = [[-1, 0, 30, 18], [-1, 1, 40, 70], [-1, 2, 34, 120], [-1, 3, 22, 186], [1, 0, 170, 18], [1, 1, 160, 70], [1, 2, 166, 120], [1, 3, 178, 186]];
+    HL.forEach(function (l) { var kx = 100 + l[0] * (40 + l[1] * 6), ky = 92 + l[1] * 14 - 34; hl += '<path d="M' + (100 + l[0] * 12) + ' ' + (116 + l[1] * 4) + ' Q' + kx + ' ' + ky + ' ' + l[2] + ' ' + l[3] + '" stroke="' + ink + '" stroke-width="2.6" fill="none" stroke-linecap="round"/>'; });
+    s += hl + '<ellipse cx="100" cy="124" rx="30" ry="24" fill="' + F + '" stroke="' + ink + '" stroke-width="2"/><circle cx="100" cy="' + hy + '" r="24" fill="' + (b.head || c1) + '"/>';
+  } else if (t === "asp") {
+    /* the asp (puss caterpillar): a teardrop of soft fur hiding venomous spines */
+    var fur = "";
+    for (var fi = 0; fi < 46; fi++) { var fa = Math.PI * (1.05 + fi / 46 * 0.9) + (fi % 3) * 0.02, fx = 100 + Math.cos(fa) * 50, fy = 152 + Math.sin(fa) * 36; fur += '<path d="M' + fx.toFixed(1) + ' ' + fy.toFixed(1) + ' q' + (Math.cos(fa) * 8 + 4).toFixed(1) + ' ' + (Math.sin(fa) * 10 - 6).toFixed(1) + ' ' + (Math.cos(fa) * 14 + 8).toFixed(1) + ' ' + (Math.sin(fa) * 4 - 2).toFixed(1) + '" stroke="' + c2 + '" stroke-width="3" fill="none" stroke-linecap="round"/>'; }
+    s += '<path d="M48 156 Q52 112 100 108 Q156 110 158 150 Q166 176 186 184 Q150 196 100 192 Q50 190 48 156Z" fill="' + F + '"/>' + fur +
+      '<path d="M70 140 Q100 128 142 144" stroke="' + c3 + '" stroke-width="5" fill="none" stroke-linecap="round" opacity=".7"/><circle cx="100" cy="' + hy + '" r="26" fill="' + (b.head || c1) + '"/>';
+  } else if (t === "flea") {
+    /* a flea: tall, narrow, hard, with huge jumping hind legs */
+    s += '<path d="M76 150 Q40 156 34 184 L52 186 M124 150 Q160 156 166 184 L148 186" stroke="' + ink + '" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<path d="M78 118 Q58 120 54 134 M122 118 Q142 120 146 134 M80 134 Q62 144 60 160 M120 134 Q138 144 140 160" stroke="' + ink + '" stroke-width="4" fill="none" stroke-linecap="round"/>' +
+      '<ellipse cx="100" cy="144" rx="30" ry="44" fill="' + F + '" stroke="' + ink + '" stroke-width="2"/><path d="M74 124 Q100 116 126 124 M72 144 Q100 136 128 144 M76 164 Q100 158 124 164" stroke="' + c2 + '" stroke-width="3" fill="none"/>' +
+      '<path d="M86 106 l-4 -6 M100 104 v-7 M114 106 l4 -6" stroke="' + ink + '" stroke-width="2.4" stroke-linecap="round"/><circle cx="100" cy="' + hy + '" r="23" fill="' + (b.head || c1) + '"/>';
+  } else if (t === "tick") {
+    /* a tick: eight legs up front, a round body that swells when it feeds, a shield on the back */
+    var tl = ""; [[-1, 112, 40, 92], [-1, 122, 30, 112], [-1, 134, 30, 136], [-1, 146, 38, 160], [1, 112, 160, 92], [1, 122, 170, 112], [1, 134, 170, 136], [1, 146, 162, 160]].forEach(function (l) { tl += '<path d="M' + (100 + l[0] * 30) + ' ' + l[1] + ' Q' + (100 + l[0] * 52) + ' ' + (l[1] - 14) + ' ' + l[2] + ' ' + l[3] + '" stroke="' + ink + '" stroke-width="4" fill="none" stroke-linecap="round"/>'; });
+    s += tl + '<ellipse cx="100" cy="146" rx="46" ry="44" fill="' + F + '" stroke="' + ink + '" stroke-width="2"/><path d="M68 114 Q100 100 132 114 Q128 142 100 150 Q72 142 68 114Z" fill="' + c2 + '"/>' +
+      '<path d="M70 168 h8 M92 176 h8 M114 172 h8" stroke="' + ink + '" stroke-width="2" opacity=".5"/><circle cx="100" cy="' + hy + '" r="23" fill="' + (b.head || c1) + '"/>';
+  } else if (t === "mosquito") {
+    s += W('<ellipse cx="62" cy="120" rx="40" ry="11" fill="' + c3 + '" opacity=".55" stroke="' + ink + '" stroke-width="1" transform="rotate(-18 62 120)"/><ellipse cx="138" cy="120" rx="40" ry="11" fill="' + c3 + '" opacity=".55" stroke="' + ink + '" stroke-width="1" transform="rotate(18 138 120)"/>') +
+      '<path d="M90 118 Q60 130 30 186 M110 118 Q140 130 170 186 M92 124 Q72 150 58 192 M108 124 Q128 150 142 192 M94 112 Q62 104 28 120 M106 112 Q138 104 172 120" stroke="' + ink + '" stroke-width="2.2" fill="none" stroke-linecap="round"/>' +
+      '<ellipse cx="100" cy="114" rx="16" ry="14" fill="' + c2 + '"/><path d="M100 126 Q108 160 104 188 Q100 194 96 188 Q92 160 100 126Z" fill="' + F + '" stroke="' + ink + '" stroke-width="1.5"/>' +
+      '<path d="M94 146 h12 M95 160 h10 M96 174 h8" stroke="' + c3 + '" stroke-width="2"/>' + antennae(ink) + '<circle cx="100" cy="' + hy + '" r="22" fill="' + (b.head || c1) + '"/><path d="M100 ' + (hy + 20) + ' V' + (hy + 52) + '" stroke="' + ink + '" stroke-width="2.5" stroke-linecap="round"/>';
+  } else if (t === "louse") {
+    s += '<path d="M72 120 Q54 120 50 132 l-6 2 M70 140 Q50 144 48 156 l-6 2 M72 160 Q54 168 54 180 l-6 1 M128 120 Q146 120 150 132 l6 2 M130 140 Q150 144 152 156 l6 2 M128 160 Q146 168 146 180 l6 1" stroke="' + ink + '" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<path d="M66 128 Q66 104 100 104 Q134 104 134 128 L138 168 Q132 192 100 192 Q68 192 62 168Z" fill="' + F + '" opacity=".92" stroke="' + ink + '" stroke-width="2"/>' +
+      '<path d="M66 144 Q100 136 134 144 M64 160 Q100 152 136 160 M68 176 Q100 170 132 176" stroke="' + c2 + '" stroke-width="2.4" fill="none"/>' + antennae(ink) + '<circle cx="100" cy="' + hy + '" r="23" fill="' + (b.head || c1) + '"/>';
+  } else if (t === "roach") {
+    s += '<path d="M84 52 Q60 20 30 14 M116 52 Q140 20 170 14" stroke="' + ink + '" stroke-width="2" fill="none"/>' + legs(ink, 4) +
+      '<path d="M76 130 l-10 8 M124 130 l10 8 M74 150 l-12 6 M126 150 l12 6" stroke="' + ink + '" stroke-width="2"/>' +
+      '<ellipse cx="100" cy="148" rx="38" ry="48" fill="' + F + '" stroke="' + ink + '" stroke-width="2"/><path d="M100 110 V194" stroke="' + ink + '" stroke-width="2.4"/>' +
+      '<ellipse cx="100" cy="106" rx="34" ry="16" fill="' + c2 + '" stroke="' + ink + '" stroke-width="2"/><circle cx="100" cy="' + hy + '" r="24" fill="' + (b.head || c1) + '"/>';
   } else if (t === "centipede") {
     /* centipede (owner, Nov 5 2026): a coiled chain of segments, one pair of legs on each, long
        trailing back legs and the forcipules (venom claws) under the head. Like real stone
        centipedes it hatches with fewer segments and adds more as it grows. */
     var cp = [[100, 112, 16], [84, 128, 15], [74, 146, 14.5], [78, 165, 14], [96, 177, 13.5], [117, 178, 13], [136, 170, 12.5], [149, 155, 12], [154, 138, 11], [152, 121, 10]];
     cp = cp.slice(0, st === 1 ? 5 : st === 2 ? 7 : 10);
-    var legs = "", segS = "", n = cp.length;
+    var cleg = "", segS = "", n = cp.length;
     cp.forEach(function (p, i) {
       var a = cp[Math.max(0, i - 1)], c = cp[Math.min(n - 1, i + 1)], dx = c[0] - a[0], dy = c[1] - a[1], L = Math.sqrt(dx * dx + dy * dy) || 1, nx = -dy / L, ny = dx / L, tx = dx / L, ty = dy / L;
       [-1, 1].forEach(function (sd) {
         var x0 = p[0] + nx * sd * (p[2] - 4), y0 = p[1] + ny * sd * (p[2] - 4), x1 = p[0] + nx * sd * (p[2] + 9) - tx * 3, y1 = p[1] + ny * sd * (p[2] + 9) - ty * 3, x2 = x1 - tx * 5, y2 = y1 - ty * 5;
-        legs += '<path d="M' + x0.toFixed(1) + ' ' + y0.toFixed(1) + ' L' + x1.toFixed(1) + ' ' + y1.toFixed(1) + ' L' + x2.toFixed(1) + ' ' + y2.toFixed(1) + '" stroke="' + ink + '" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
+        cleg += '<path d="M' + x0.toFixed(1) + ' ' + y0.toFixed(1) + ' L' + x1.toFixed(1) + ' ' + y1.toFixed(1) + ' L' + x2.toFixed(1) + ' ' + y2.toFixed(1) + '" stroke="' + ink + '" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
       });
       if (i === n - 1) {   /* the long terminal legs trail behind like a second pair of antennae */
-        legs += '<path d="M' + (p[0] + tx * 4).toFixed(1) + ' ' + (p[1] + ty * 4).toFixed(1) + ' q' + (tx * 14 + nx * 10).toFixed(1) + ' ' + (ty * 14 + ny * 10).toFixed(1) + ' ' + (tx * 22 + nx * 4).toFixed(1) + ' ' + (ty * 22 + ny * 4).toFixed(1) + ' M' + (p[0] + tx * 4).toFixed(1) + ' ' + (p[1] + ty * 4).toFixed(1) + ' q' + (tx * 14 - nx * 10).toFixed(1) + ' ' + (ty * 14 - ny * 10).toFixed(1) + ' ' + (tx * 22 - nx * 4).toFixed(1) + ' ' + (ty * 22 - ny * 4).toFixed(1) + '" stroke="' + ink + '" stroke-width="2.6" fill="none" stroke-linecap="round"/>';
+        cleg += '<path d="M' + (p[0] + tx * 4).toFixed(1) + ' ' + (p[1] + ty * 4).toFixed(1) + ' q' + (tx * 14 + nx * 10).toFixed(1) + ' ' + (ty * 14 + ny * 10).toFixed(1) + ' ' + (tx * 22 + nx * 4).toFixed(1) + ' ' + (ty * 22 + ny * 4).toFixed(1) + ' M' + (p[0] + tx * 4).toFixed(1) + ' ' + (p[1] + ty * 4).toFixed(1) + ' q' + (tx * 14 - nx * 10).toFixed(1) + ' ' + (ty * 14 - ny * 10).toFixed(1) + ' ' + (tx * 22 - nx * 4).toFixed(1) + ' ' + (ty * 22 - ny * 4).toFixed(1) + '" stroke="' + ink + '" stroke-width="2.6" fill="none" stroke-linecap="round"/>';
       }
     });
     for (var ci = n - 1; ci >= 0; ci--) {
@@ -3644,7 +3774,7 @@ function bugArt(b, cls, opt) {
       segS += '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="' + q[2] + '" fill="' + (ci % 2 ? c2 : F) + '" stroke="' + (st === 5 ? GOLD : ink) + '" stroke-width="' + (st === 5 ? 2.4 : 1.6) + '"/>' +
         '<ellipse cx="' + (q[0] - q[2] * .25).toFixed(1) + '" cy="' + (q[1] - q[2] * .35).toFixed(1) + '" rx="' + (q[2] * .42).toFixed(1) + '" ry="' + (q[2] * .22).toFixed(1) + '" fill="#fff" opacity=".22"/>';
     }
-    s += legs + segS + '<path d="M84 ' + (hy + 22) + ' Q78 ' + (hy + 36) + ' 92 ' + (hy + 40) + ' M116 ' + (hy + 22) + ' Q122 ' + (hy + 36) + ' 108 ' + (hy + 40) + '" stroke="' + (b.fang || ink) + '" stroke-width="4.5" fill="none" stroke-linecap="round"/>' +
+    s += cleg + segS + '<path d="M84 ' + (hy + 22) + ' Q78 ' + (hy + 36) + ' 92 ' + (hy + 40) + ' M116 ' + (hy + 22) + ' Q122 ' + (hy + 36) + ' 108 ' + (hy + 40) + '" stroke="' + (b.fang || ink) + '" stroke-width="4.5" fill="none" stroke-linecap="round"/>' +
       antennae(ink, true) + '<circle cx="100" cy="' + hy + '" r="28" fill="' + (b.head || c1) + '" stroke="' + ink + '" stroke-width="1.6"/>';
   } else if (t === "scorpion") {
     s += '<path d="M76 120 Q40 110 34 84 M124 120 Q160 110 166 84" stroke="' + c2 + '" stroke-width="8" fill="none" stroke-linecap="round"/><path d="M34 84 l-12 -8 M34 84 l-4 -14 M166 84 l12 -8 M166 84 l4 -14" stroke="' + c2 + '" stroke-width="7" stroke-linecap="round"/>' + bLegs(ink) +
@@ -3667,6 +3797,15 @@ function bugArt(b, cls, opt) {
     if (b.pat === "stripes") s += '<path d="M58 130 Q100 118 142 130 M56 154 Q100 142 144 154" stroke="' + c3 + '" stroke-width="6" fill="none"/>';
     if (t === "scarab") s += '<circle cx="100" cy="140" r="14" fill="' + c3 + '" stroke="' + ink + '" stroke-width="2"/><path d="M100 120 v-6 M100 160 v6 M80 140 h-6 M120 140 h6" stroke="' + c3 + '" stroke-width="3"/>';
     s += '<circle cx="100" cy="' + hy + '" r="30" fill="' + (b.head || c1) + '"/>';
+  }
+  /* the bad bugs ride as a biker gang (owner, Nov 5 2026): a studded leather vest over the torso,
+     open down the middle, with a little skull patch; the shades and bandana come from b.eyes/acc */
+  if (b.biker) {
+    var BT = (BODYFIT[t] || BODYFIT.beetle).t, vx = BT[0], vy = BT[1], vrx = BT[2], vry = BT[3], studs = "";
+    for (var si = 0; si < 4; si++) studs += '<circle cx="' + (vx - vrx * .62).toFixed(1) + '" cy="' + (vy - vry * .5 + si * vry * .3).toFixed(1) + '" r="2.2" fill="#d1d5db"/><circle cx="' + (vx + vrx * .62).toFixed(1) + '" cy="' + (vy - vry * .5 + si * vry * .3).toFixed(1) + '" r="2.2" fill="#d1d5db"/>';
+    s += '<path d="M' + (vx - vrx * .95) + ' ' + (vy - vry * .55) + ' Q' + (vx - vrx * .4) + ' ' + (vy - vry * .95) + ' ' + (vx - 6) + ' ' + (vy - vry * .7) + ' L' + (vx - 10) + ' ' + (vy + vry * .8) + ' Q' + (vx - vrx * .7) + ' ' + (vy + vry * .75) + ' ' + (vx - vrx * .95) + ' ' + (vy + vry * .3) + 'Z" fill="#1f1b1a" stroke="#0b0a09" stroke-width="1.5"/>' +
+      '<path d="M' + (vx + vrx * .95) + ' ' + (vy - vry * .55) + ' Q' + (vx + vrx * .4) + ' ' + (vy - vry * .95) + ' ' + (vx + 6) + ' ' + (vy - vry * .7) + ' L' + (vx + 10) + ' ' + (vy + vry * .8) + ' Q' + (vx + vrx * .7) + ' ' + (vy + vry * .75) + ' ' + (vx + vrx * .95) + ' ' + (vy + vry * .3) + 'Z" fill="#1f1b1a" stroke="#0b0a09" stroke-width="1.5"/>' + studs +
+      '<circle cx="' + (vx + vrx * .45) + '" cy="' + (vy - vry * .05) + '" r="5" fill="#f5f5f4"/><path d="M' + (vx + vrx * .45 - 2) + ' ' + (vy - vry * .05) + ' h.1 M' + (vx + vrx * .45 + 2) + ' ' + (vy - vry * .05) + ' h.1" stroke="#1c1917" stroke-width="2" stroke-linecap="round"/>';
   }
   /* veteran / legend body details, fit to the torso of this body */
   if (st >= 4 && !{ centipede: 1, chrysalis: 1, cocoon: 1, snail: 1, caterpillar: 1, stick: 1, dragonfly: 1, butterfly: 1, moth: 1, firefly: 1, larva: 1 }[t]) {
@@ -3765,6 +3904,29 @@ var BUGS = [
   { id: "rookie-rhino", name: "Rookie Rhino Beetle", body: "rhino", c: ["#a16207", "#713f12", "#fde68a"], head: "#422006", rar: "rare", price: 1300 },
   { id: "sky-mantis", name: "Sky Mantis", body: "mantis", c: ["#7dd3fc", "#0284c7"], rar: "rare", price: 1300 },
   { id: "rapid-centipede", name: "Rapid Response Centipede", body: "centipede", c: ["#fb923c", "#c2410c", "#fde68a"], ink: "#431407", rar: "rare", price: 1450, blurb: "All those legs and still first on scene. Fun fact: no centipede has exactly 100 legs, because they always have an odd number of leg pairs." },
+  /* daily-login bugs (owner, Nov 5 2026): never for sale, only earned by coming back on different days */
+  { id: "sunrise-firefly", name: "Sunrise Firefly", body: "firefly", c: ["#fdba74", "#c2410c", "#fef3c7"], rar: "rare", price: 0, login: 10, unlock: { login: 10, text: "Log in on 10 different days" }, blurb: "Shows up at first light, every single day." },
+  { id: "dawn-patrol-dragonfly", name: "Dawn Patrol Dragonfly", body: "dragonfly", c: ["#5eead4", "#0f766e", "#ccfbf1"], acc: ["headset"], rar: "rare", price: 0, login: 40, unlock: { login: 40, text: "Log in on 40 different days" }, blurb: "Forty days of showing up. Always on patrol." },
+  { id: "royal-jelly-bee", name: "Royal Jelly Bee", body: "bee", c: ["#fde047", "#a16207", "#fff7ed"], acc: ["crown"], rar: "epic", price: 0, login: 20, unlock: { login: 20, text: "Log in on 20 different days" }, blurb: "Twenty visits earns the royal treatment." },
+  { id: "moonlit-mantis", name: "Moonlit Mantis", body: "mantis", c: ["#a5b4fc", "#3730a3", "#e0e7ff"], rar: "epic", price: 0, login: 50, unlock: { login: 50, text: "Log in on 50 different days" }, blurb: "Studies by moonlight. Fifty nights strong." },
+  { id: "golden-return-stag", name: "Golden Return Stag", body: "stag", c: ["#fcd34d", "#92400e", "#fffbeb"], acc: ["crown"], rar: "legendary", price: 0, login: 30, unlock: { login: 30, text: "Log in on 30 different days" }, blurb: "Thirty days. The stag only shows itself to the faithful." },
+  { id: "hundred-day-hercules", name: "Hundred-Day Hercules", body: "hercules", c: ["#f472b6", "#831843", "#fdf2f8"], horn: "#fde68a", rar: "legendary", price: 0, login: 60, unlock: { login: 60, text: "Log in on 60 different days" }, blurb: "Sixty days of learning. Strongest bug in the jungle." },
+  { id: "year-of-the-scarab", name: "Year of the Scarab", body: "scarab", c: ["#22d3ee", "#155e75", "#ecfeff"], acc: ["halo"], rar: "legendary", price: 0, login: 90, unlock: { login: 90, text: "Log in on 90 different days" }, blurb: "Three full cycles of days. The rarest bug in DrugBug." },
+  /* more real bugs (owner, Nov 5 2026) */
+  { id: "stink-bug", name: "Stink Bug", body: "shield", c: ["#a3a37a", "#5f6b3a", "#fef3c7"], ink: "#2d3319", rar: "common", price: 380, blurb: "Shield-shaped and smells like cilantro when bothered. Harmless, just rude." },
+  { id: "daddy-long-legs", name: "Daddy Long Legs", body: "harvestman", c: ["#c4a484", "#7c5a3a", "#fef3c7"], ink: "#3b2a1a", rar: "common", price: 440, blurb: "A harvestman, not a spider: one body section, no venom, no silk." },
+  { id: "garden-millipede", name: "Garden Millipede", body: "millipede", c: ["#8b5e3c", "#4a2f1d", "#fde68a"], ink: "#2b1a0e", rar: "common", price: 470, blurb: "Two pairs of legs on almost every segment. Curls into a spiral when scared." },
+  { id: "dung-beetle", name: "Dung Beetle", body: "dung", c: ["#3f3f46", "#18181b", "#a1a1aa"], ink: "#09090b", rar: "rare", price: 1280, blurb: "Rolls its ball in a straight line by steering with the Milky Way." },
+  /* the bad bugs: a biker gang of pests and disease carriers (owner, Nov 5 2026) */
+  { id: "flea", name: "Flea", body: "flea", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#7c4a1e", "#4a2a10", "#fde68a"], ink: "#24130a", rar: "common", price: 450, blurb: "Jumps 100 times its height. Rat fleas spread plague and murine typhus." },
+  { id: "deer-tick", name: "Deer Tick", body: "tick", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#9a3412", "#1c1917", "#fed7aa"], ink: "#0c0a09", rar: "common", price: 500, blurb: "Carries Lyme disease. Remove it with tweezers close to the skin, pulling straight out." },
+  { id: "bed-bug", name: "Bed Bug", body: "bedbug", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#b45309", "#7c2d12", "#fed7aa"], ink: "#2a0f05", rar: "common", price: 520, blurb: "Bites in a line at night. Itchy, but not known to spread disease." },
+  { id: "head-louse", name: "Head Louse", body: "louse", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#e7d8c0", "#a68a64", "#fef3c7"], ink: "#3b2f20", rar: "common", price: 420, blurb: "Grips hair with hook claws. Its body-louse cousin spreads epidemic typhus." },
+  { id: "cockroach", name: "Cockroach", body: "roach", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#92400e", "#451a03", "#fde68a"], ink: "#1c0a02", rar: "rare", price: 1250, blurb: "Roach allergens are a major asthma trigger in city kids." },
+  { id: "tiger-mosquito", name: "Tiger Mosquito", body: "mosquito", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#27272a", "#09090b", "#e5e7eb"], ink: "#000000", rar: "rare", price: 1300, blurb: "The deadliest animal on Earth: malaria, dengue, Zika and West Nile." },
+  { id: "chigger", name: "Chigger", body: "tick", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#ef4444", "#991b1b", "#fecaca"], ink: "#450a0a", rar: "rare", price: 1350, blurb: "A tiny mite larva. In parts of Asia its bite spreads scrub typhus." },
+  { id: "kissing-bug", name: "Kissing Bug", body: "shield", pat: "edges", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#292524", "#0c0a09", "#f97316"], ink: "#000000", rar: "epic", price: 2900, blurb: "Bites near the lips at night and spreads Chagas disease, which can scar the heart." },
+  { id: "puss-asp", name: "Asp", body: "asp", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#d6b88a", "#a07a4a", "#fef3c7"], ink: "#3b2a14", rar: "epic", price: 3100, blurb: "The puss caterpillar looks like a fluffy toupee. Its hidden spines give one of the worst stings in North America." },
   { id: "bubblegum-ant", name: "Bubblegum Ant", body: "ant", c: ["#f9a8d4", "#db2777"], ink: "#701a45", rar: "common", price: 800 },
   // rare
   { id: "glow-firefly", name: "Glow Firefly", body: "firefly", c: ["#4c5fd5", "#26307a", "#fff59d"], rar: "rare", price: 1200 },
@@ -3869,6 +4031,49 @@ var BUGS = [
   { id: "mb-coil", name: "Corky the Spirochete", body: "stick", c: ["#a5b4fc", "#3730a3", "#eef2ff"], head: "#818cf8", ink: "#1e1b4b", rar: "earned", price: 0, unlock: { micro: "borrelia-burgdorferi", text: "Found in Microbiology" }, blurb: "A corkscrew that hitchhiked in on a tick, drew a bullseye on you, and now insists it is just here for the doxycycline." },
   { id: "mb-yog", name: "Lacto the Good One", body: "grasshopper", c: ["#bbf7d0", "#15803d", "#ffffff"], head: "#86efac", ink: "#052e16", rar: "earned", price: 0, unlock: { micro: "lactobacillus", text: "Found in Microbiology" }, blurb: "The only bacterium in the Terrarium that is genuinely pleased to see you. Makes its own yoghurt. Resistant to vancomycin and to criticism." }
 ];
+/* ---------- Bug collections (owner, Nov 5 2026) ----------
+   Bugs of one kind form a collection. Own every bug in it and you can claim that collection's king:
+   a crowned bug that exists nowhere else. Only bugs anyone can buy count (no starters, seasonal,
+   earned, login or admin bugs), so every collection can always be finished. */
+var COLL_NAMES = { beetle: ["Beetles", "Beetle"], ladybug: ["Ladybugs", "Ladybug"], mantis: ["Mantises", "Mantis"], bee: ["Bees", "Bee"], wasp: ["Wasps and hornets", "Hornet"],
+  ant: ["Ants", "Ant"], moth: ["Moths", "Moth"], dragonfly: ["Dragonflies", "Dragonfly"], snail: ["Snails", "Snail"], hopper: ["Hoppers and crickets", "Hopper"], rhino: ["Rhino beetles", "Rhino"],
+  firefly: ["Fireflies", "Firefly"], butterfly: ["Butterflies", "Butterfly"], stag: ["Stag beetles", "Stag"], scarab: ["Scarabs", "Scarab"], longhorn: ["Longhorns", "Longhorn"],
+  scorpion: ["Scorpions", "Scorpion"], hercules: ["Hercules beetles", "Hercules"], bad: ["Bad bugs", "Bad Bug"] };
+function collKey(b) { if (b.coll) return b.coll; if (b.body === "beetle") return b.pat === "spots" ? "ladybug" : "beetle"; if (b.body === "grasshopper" || b.body === "cricket") return "hopper"; return b.body; }
+var COLLS = {};
+BUGS.forEach(function (b) {
+  if (b.admin || b.grub || b.free || b.unlock || b.login || b.retired || b.season || b.hick || b.id === "starter" || b.rar === "seasonal" || b.rar === "earned") return;
+  var k = collKey(b); if (COLL_NAMES[k]) (COLLS[k] = COLLS[k] || []).push(b.id);
+});
+(function () {
+  var ROYAL = [["#fcd34d", "#b45309", "#fff7ed"], ["#c084fc", "#6b21a8", "#faf5ff"], ["#f87171", "#991b1b", "#fff1f2"], ["#34d399", "#065f46", "#ecfdf5"], ["#60a5fa", "#1e3a8a", "#eff6ff"], ["#f472b6", "#9d174d", "#fdf2f8"]];
+  Object.keys(COLLS).forEach(function (k, i) {
+    if (COLLS[k].length < 3) { delete COLLS[k]; return; }
+    var src = BUGS.filter(function (b) { return b.id === COLLS[k][0]; })[0], N = COLL_NAMES[k];
+    var king = { id: "king-" + k, name: N[1] + " King", body: src.body, c: ROYAL[i % ROYAL.length].slice(), ink: "#1c1917", acc: ["crown"], rar: "legendary", price: 0, king: k,
+      unlock: { coll: k, text: "Collect every one of the " + N[0].toLowerCase() }, blurb: "Rules over every " + N[1].toLowerCase() + " in the jungle. Only crowned for collectors." };
+    if (src.pat) king.pat = src.pat; if (k === "ladybug") king.head = "#1c1917";
+    if (k === "rhino" || k === "hercules") king.horn = "#fde68a";
+    if (k === "bad") { king.biker = true; king.eyes = "cool"; king.name = "Bad Bug King"; king.c = ["#3f3f46", "#18181b", "#fbbf24"]; king.blurb = "Leader of the pack. Every pest in the gang answers to him."; }
+    BUGS.push(king);
+  });
+})();
+/* the Collections tab in the Terrarium store (owner, Nov 5 2026): every collection with its bugs,
+   the ones you have lit and the ones still to find greyed out, and its king at the end */
+function collectionsView() {
+  var keys = Object.keys(COLLS).sort(function (a, b) { var pa = collProgress(a), pb = collProgress(b); return (pb.have / pb.all) - (pa.have / pa.all) || COLL_NAMES[a][0].localeCompare(COLL_NAMES[b][0]); });
+  return '<p class="muted">Own every bug in a collection to crown its king, a bug you cannot get any other way. Tap a bug to find it in the Bug Store.</p>' + keys.map(function (k) {
+    var p = collProgress(k), king = bugById("king-" + k), done = owned(king.id), pct = Math.round(100 * p.have / p.all);
+    var act = done ? '<span class="eqd">Crowned</span>' : p.have >= p.all ? '<button class="btn small" data-claim="' + king.id + '">Claim the king</button>' : '<span class="muted small">' + (p.all - p.have) + ' to go</span>';
+    return '<section class="collcard' + (done ? ' done' : '') + '"><div class="collhead"><div><strong>' + esc(COLL_NAMES[k][0]) + '</strong><span>' + p.have + ' of ' + p.all + ' collected</span></div>' + act + '</div>' +
+      '<div class="collbar"><i style="width:' + pct + '%"></i></div><div class="collbugs">' + COLLS[k].map(function (id) {
+        var b = bugById(id), own = owned(id);
+        return '<button class="collbug' + (own ? ' own' : '') + '" data-shopf="bugs" title="' + esc(b.name) + '">' + bugArt(b, "", { stage: 3 }) + '<span>' + esc(b.name) + '</span></button>';
+      }).join("") + '<div class="collbug king' + (done ? ' own' : '') + '">' + bugArt(king, "", { stage: 5 }) + '<span>' + esc(king.name) + '</span></div></div></section>';
+  }).join("");
+}
+function collProgress(k) { var L = COLLS[k] || []; return { have: L.filter(owned).length, all: L.length }; }
+function unlockText(b) { var u = b.unlock || {}; if (u.coll) { var p = collProgress(u.coll); return "Collect every one of the " + COLL_NAMES[u.coll][0].toLowerCase() + ": " + p.have + " of " + p.all; } return u.text || ""; }
 var STYLES = [["classic", "Classic", 0, ""], ["obsidian", "Obsidian", 150, "brightness(.55) contrast(1.35) saturate(.8)"], ["neon", "Neon", 160, "saturate(2.4) brightness(1.15) contrast(1.1)"], ["bloodmoon", "Blood Moon", 180, "sepia(.6) hue-rotate(-40deg) saturate(3) brightness(.75)"], ["ghost", "Ghost", 170, "grayscale(1) brightness(1.35) opacity(.85)"], ["galaxy", "Galaxy", 220, "hue-rotate(250deg) saturate(1.8) brightness(.85) contrast(1.15)"], ["inverted", "Upside Down", 260, "invert(.88) hue-rotate(180deg)"], ["shiny", "Shiny", 60, "saturate(1.7) brightness(1.08) contrast(1.05)"], ["midnight", "Midnight", 90, "hue-rotate(200deg) saturate(1.3) brightness(.9)"], ["ember", "Ember", 90, "hue-rotate(320deg) saturate(1.5)"], ["frost", "Frost", 90, "hue-rotate(160deg) saturate(.75) brightness(1.12)"], ["toxic", "Toxic", 120, "hue-rotate(90deg) saturate(1.8)"], ["gold", "Gold", 200, "sepia(.9) saturate(2.6) hue-rotate(-12deg) brightness(1.05)"]];
 var MONTHS = ["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 function inSeason(b) { if (!b.season) return true; var m = new Date().getMonth() + 1, a = b.season[0], z = b.season[1]; return a <= z ? m >= a && m <= z : m >= a || m <= z; }
@@ -3878,12 +4083,14 @@ function unlockMet(b) {
   if (u.mega) return Object.keys(Prog.d.mega || {}).filter(function (k) { return Prog.d.mega[k] === 100; }).length >= 5;
   if (u.micro) return !!(Prog.d.microFound || {})[u.micro];
   if (u.calc) return calcCorrect(Prog.d) >= u.calc;
+  if (u.login) return loginDays() >= u.login;
+  if (u.coll) { var p = collProgress(u.coll); return p.all > 0 && p.have >= p.all; }
   return false;
 }
 function claimBug(id) { var b = bugById(id); if (owned(id) || !(b.admin ? Admin.owner : unlockMet(b))) return; Prog.d.owned = (Prog.d.owned || []).concat([id]); Prog.d.avatar = id; Prog.d.avatarTs = Date.now(); saveProg(); S.shopMsg = "Unlocked " + b.name + ". It's now your bug."; }
 function styleFilter() { var st = STYLES.filter(function (x) { return x[0] === (Prog.d.style || "classic"); })[0]; return st ? st[3] : ""; }
 var MAX_STAGE = STAGE_LV.length;   /* Legend: how every bug is shown unless it is your avatar bubble */
-function myBugArt(cls, mood, wear, stage) { if (myBug().hick) return bugArt(myBug(), cls, {}); var f = styleFilter(), a = bugArt(myBug(), cls, { mood: mood || myFace(), wear: wear || myWear(), stage: stage || MAX_STAGE }); return f ? a.replace('<svg class="bug', '<svg style="filter:' + f + '" class="bug') : a; }
+function myBugArt(cls, mood, wear, stage) { cls = (cls || "") + " me"; if (myBug().hick) return bugArt(myBug(), cls, {}); var f = styleFilter(), a = bugArt(myBug(), cls, { mood: mood || myFace(), wear: wear || myWear(), stage: stage || MAX_STAGE }); return f ? a.replace('<svg class="bug', '<svg style="filter:' + f + '" class="bug') : a; }
 function buyStyle(id) { var st = STYLES.filter(function (x) { return x[0] === id; })[0]; if (!st) return; var own = (Prog.d.styles || []).indexOf(id) >= 0 || st[2] === 0;
   if (!own) { if (sticks() < st[2]) return; Prog.d.spent = (Prog.d.spent || 0) + st[2]; Prog.d.styles = (Prog.d.styles || []).concat([id]); }
   Prog.d.style = id; saveProg(); S.shopMsg = st[1] + " style applied to your bug."; }
@@ -3911,12 +4118,13 @@ function shopView() {
     var nb = mine.length, ni = ITEMS.filter(function (it) { return ownsItem(it.id); }).length, nf = FACES.filter(function (x) { return faceAvail(x[0]); }).length, ns = 1 + (Prog.d.styles || []).length;
     /* Get Sticks sits at the top, on its own, above the things you spend them on (owner, Nov 1 2026) */
     c += '<button class="hubtile terrsticks" data-shopf="sticks"><span class="ht"><strong>' + (typeof stickIcon === "function" ? stickIcon(20) : "") + 'Get Sticks</strong><span>Stick packs, for when you want the bug now</span></span><span class="tsgo" aria-hidden="true">&rsaquo;</span></button>';
-    c += '<div class="pickhead"><h3>Dress it up</h3></div><div class="hub sub terrtiles">' + [["bugs", "Bug Store", nb + " of " + shopBugs().length + " collected"], ["items", "Wardrobe", ni + " of " + ITEMS.length + " owned"], ["faces", "Faces", nf + " of " + FACES.length + " unlocked"], ["styles", "Colors", ns + " of " + STYLES.length + " owned"], ["borders", "Drug Borders", (typeof BORDERS === "undefined" ? "" : (BORDERS.filter(function (b) { return ownsBorder(b.id); }).length) + " of " + BORDERS.length + " owned")], ["voices", "Voices", (typeof VOICES === "undefined" ? "" : VOICES.filter(function (v) { return ownsVoice(v.id); }).length + " of " + VOICES.length + " owned")], ["music", "Music", shownTracks().filter(function (t) { return ownsTrack(t.id); }).length + " of " + shownTracks().length + " tracks"]].map(function (x) { return '<button class="hubtile" data-shopf="' + x[0] + '"><span class="ht"><strong>' + x[1] + '</strong><span>' + esc(x[2]) + '</span></span></button>'; }).join("") + '</div>';
+    c += '<div class="pickhead"><h3>Dress it up</h3></div><div class="hub sub terrtiles">' + [["bugs", "Bug Store", nb + " of " + shopBugs().length + " collected"], ["collections", "Collections", Object.keys(COLLS).filter(function (k) { return owned("king-" + k); }).length + " of " + Object.keys(COLLS).length + " kings crowned"], ["items", "Wardrobe", ni + " of " + ITEMS.length + " owned"], ["faces", "Faces", nf + " of " + FACES.length + " unlocked"], ["styles", "Colors", ns + " of " + STYLES.length + " owned"], ["borders", "Drug Borders", (typeof BORDERS === "undefined" ? "" : (BORDERS.filter(function (b) { return ownsBorder(b.id); }).length) + " of " + BORDERS.length + " owned")], ["voices", "Voices", (typeof VOICES === "undefined" ? "" : VOICES.filter(function (v) { return ownsVoice(v.id); }).length + " of " + VOICES.length + " owned")], ["music", "Music", shownTracks().filter(function (t) { return ownsTrack(t.id); }).length + " of " + shownTracks().length + " tracks"]].map(function (x) { return '<button class="hubtile" data-shopf="' + x[0] + '"><span class="ht"><strong>' + x[1] + '</strong><span>' + esc(x[2]) + '</span></span></button>'; }).join("") + '</div>';
     return c + '</section>';
   }
   if (S.shopMsg) { c += '<div class="presult good" role="status">' + esc(S.shopMsg) + '</div>'; S.shopMsg = ""; }
   if (f === "styles") return c + stylesView() + '</section>';
   if (f === "music") return c + tracksView() + '</section>';
+  if (f === "collections") return c + collectionsView() + '</section>';
   if (f === "items") return c + itemsView() + '</section>';
   if (f === "faces") return c + facesView() + '</section>';
   if (f === "borders" && typeof bordersView === "function") return c + bordersView() + '</section>';
@@ -3933,22 +4141,23 @@ function shopView() {
     var own = owned(b.id), eq = me.id === b.id, can = bal >= b.price, pend = S.shopBuy === b.id;
     var act = eq ? '<span class="eqd">Equipped</span>' : own ? '<button class="btn small" data-equip="' + b.id + '">Equip</button>' :
       b.admin ? '<button class="btn small" data-claim="' + b.id + '">Claim</button>' :
-      b.unlock ? (unlockMet(b) ? '<button class="btn small" data-claim="' + b.id + '">Claim</button>' : '<span class="muted small">' + esc(b.unlock.text) + '</span>') :
+      b.unlock ? (unlockMet(b) ? '<button class="btn small" data-claim="' + b.id + '">Claim</button>' : '<span class="muted small">' + esc(unlockText(b)) + '</span>') :
       !inSeason(b) ? '<span class="muted small">Returns in ' + MONTHS[b.season[0]] + '</span>' :
       proBug(b.id) ? '<button class="btn small ghost" data-buy="' + b.id + '">' + tierBadge(bugTier(b)) + ' ' + (lang() === "es" ? "Desbloquear" : "Unlock") + '</button>' :
       !b.price ? '<button class="btn small" data-buyok="' + b.id + '">Get it free</button>' :
       pend ? '<button class="btn small" data-buyok="' + b.id + '">Buy for ' + b.price + '</button><button class="btn small ghost" data-buyno="1">Cancel</button>' :
       '<button class="btn small' + (can ? '' : ' ghost') + '" data-buy="' + b.id + '"' + (can ? '' : ' disabled') + '>' + (can ? 'Buy' : 'Need ' + (b.price - bal) + ' more') + '</button>';
-    return '<div class="bugcard r-' + b.rar + (eq ? " eq" : "") + '">' + bugArt(b) + '<strong>' + esc(b.name) + '</strong><span class="rar">' + RARITY[b.rar] + '</span>' + (own ? '<span class="muted small">Owned</span>' : b.admin ? '<span class="muted small">Administrator only</span>' : !b.price ? '<span class="muted small">Free</span>' : b.unlock ? '<span class="muted small">Free when unlocked</span>' : stickTag(b.price) + (b.season && inSeason(b) ? '<span class="muted small">Until the end of ' + MONTHS[b.season[1]] + '</span>' : '')) + '<div class="bact">' + act + '</div></div>';
+    return '<div class="bugcard r-' + b.rar + (eq ? " eq" : "") + '">' + bugArt(b) + '<strong>' + esc(b.name) + '</strong><span class="rar">' + RARITY[b.rar] + '</span>' + (own ? '<span class="muted small">Owned</span>' : b.admin ? '<span class="muted small">Administrator only</span>' : b.login ? '<span class="muted small">Daily login prize</span>' : b.king ? '<span class="muted small">Collection king</span>' : !b.price ? '<span class="muted small">Free</span>' : b.unlock ? '<span class="muted small">Free when unlocked</span>' : stickTag(b.price) + (b.season && inSeason(b) ? '<span class="muted small">Until the end of ' + MONTHS[b.season[1]] + '</span>' : '')) + '<div class="bact">' + act + '</div></div>';
   }
   var TIERS = [["admin", "Administrator only", "Just for you"], ["starter", "Starter", "Free"], ["common", "Common", "300–800 sticks"], ["rare", "Rare", "1,200–2,000 sticks"], ["epic", "Epic", "2,800–4,800 sticks"], ["legendary", "Legendary", "7,000–12,000 sticks"], ["seasonal", "Seasonal", "2,400 sticks, only in season"], ["earned", "Earned by mastery", "Free when you unlock them"]];
-  function tierOf(b) { return b.admin ? "admin" : b.id === "starter" || b.grub || b.free ? "starter" : b.rar; }
+  function tierOf(b) { return b.admin ? "admin" : b.king ? "king" : b.login ? "login" : b.id === "starter" || b.grub || b.free ? "starter" : b.rar; }
+  TIERS.splice(TIERS.length, 0, ["login", "Daily login bugs", "Rare, epic and legendary bugs you can only earn by coming back on different days"], ["king", "Collection kings", "Own every bug of one kind to crown its king"]);
   TIERS.forEach(function (tr) {
     var L = list.filter(function (b) { return tierOf(b) === tr[0]; }).sort(function (a, b2) { return tr[0] === "seasonal" ? (inSeason(b2) - inSeason(a)) || a.season[0] - b2.season[0] : a.price - b2.price; });
     if (!L.length) return;
     var all = shopBugs().filter(function (b) { return tierOf(b) === tr[0]; }), mine = all.filter(function (b) { return owned(b.id); }).length;
     var need = PAYWALL && L[0] ? bugTier(L[0]) : "free";
-    c += '<div class="tierhead r-' + tr[0] + '"><h3>' + esc(tr[1]) + (need !== "free" && tr[0] !== "earned" && tr[0] !== "starter" && tr[0] !== "admin" ? ' ' + tierBadge(need) : '') + '</h3><span class="muted small">' + esc(tr[2]) + '</span><span class="tierown">' + mine + ' of ' + all.length + ' owned</span></div><div class="shopgrid">' + L.map(bugCard).join("") + '</div>';
+    c += '<div class="tierhead r-' + tr[0] + '"><h3>' + esc(tr[1]) + (need !== "free" && tr[0] !== "earned" && tr[0] !== "login" && tr[0] !== "king" && tr[0] !== "starter" && tr[0] !== "admin" ? ' ' + tierBadge(need) : '') + '</h3><span class="muted small">' + esc(tr[2]) + '</span><span class="tierown">' + mine + ' of ' + all.length + ' owned</span></div><div class="shopgrid">' + L.map(bugCard).join("") + '</div>';
   });
   if (!list.length) c += '<p class="muted">No bugs here yet.</p>';
   c += '<details class="sec earn"><summary>How to earn sticks</summary><div class="worth">' + [["Every correct answer", 3], ["Every question you try, even if wrong", 1], ["Perfect score on 10 or more questions", PERFECT_BONUS], ["Each achievement unlocked", ACH_BONUS], ["Daily DrugBug or daily challenge", 10], ["Perfect clinical scenario", 5], ["100% on a Megacode case", 10]].map(function (r) { return '<div class="wrow"><span>' + r[0] + '</span>' + stickTag(r[1]) + '</div>'; }).join("") + '</div><p class="muted small">' + (Prog.synced ? "Your sticks and bugs are saved to your account." : "Your sticks and bugs are saved on this device.") + ' You have earned ' + (Prog.d.earned || 0).toLocaleString() + ' sticks in total.</p></details>';
@@ -3959,7 +4168,7 @@ function tracksView() {
   muRefundOld(); var rf = Prog.d.muRefundAmt ? '<div class="presult good" role="status">New music is here! The old tracks were retired, so the ' + Prog.d.muRefundAmt.toLocaleString() + ' sticks you spent on them are back in your jar.</div>' : ''; if (Prog.d.muRefundAmt) { delete Prog.d.muRefundAmt; saveProg(); }
   return rf + '<p class="muted">Background music tracks. Preview any track, buy it with sticks, then tap Use. Turn music on or off with the note button at the top.</p><div class="trklist">' + shownTracks().map(function (t) {
     var own = ownsTrack(t.id), on = (Prog.d.track && ownsTrack(Prog.d.track) ? Prog.d.track : muDefault()) === t.id, pv = MU.preview === t.id;
-    var act = on ? '<span class="eqd">In use</span>' : own ? '<button class="btn small" data-trackuse="' + t.id + '">Use</button>' : '<button class="btn small' + (bal >= t.price ? '' : ' ghost') + '" data-trackbuy="' + t.id + '"' + (bal >= t.price ? '' : ' disabled') + '>' + (bal >= t.price ? 'Buy' : 'Need ' + (t.price - bal) + ' more') + '</button>';
+    var act = on ? '<span class="eqd">In use</span>' : own ? '<button class="btn small" data-trackuse="' + t.id + '">Use</button>' : trackProLocked(t) ? '<button class="btn small ghost" data-pw="open">' + tierBadge(t.tier || "pro") + ' Unlock</button>' : '<button class="btn small' + (bal >= t.price ? '' : ' ghost') + '" data-trackbuy="' + t.id + '"' + (bal >= t.price ? '' : ' disabled') + '>' + (bal >= t.price ? 'Buy' : 'Need ' + (t.price - bal) + ' more') + '</button>';
     return '<div class="trk' + (on ? ' eq' : '') + '">' + note + '<div class="trktx"><strong>' + esc(t.name) + '</strong><span class="muted small">' + esc(t.desc) + ' · ' + t.bpm + ' bpm</span>' + (own ? '<span class="muted small">' + (t.price ? 'Owned' : t.season && !MU_ONLY ? 'Free for Halloween' : 'Free') + '</span>' : stickTag(t.price)) + '</div><div class="bact"><button class="btn small ghost" data-trackpv="' + t.id + '">' + (pv ? 'Playing…' : 'Preview') + '</button>' + act + '</div></div>';
   }).join("") + '</div>';
 }
@@ -3975,7 +4184,7 @@ function stylesView() {
 }
 function stickChip() { if (typeof funOn === "function" && !funOn()) return ""; return '<button class="stickchip" data-goshop="1" aria-label="Terrarium"' + (S.view === "terrarium" ? ' aria-current="page"' : '') + '>' + myBugArt("mini", null, null, myStage()) + '<span class="tlabel">Terrarium</span></button>'; }
 function terrariumView() {
-  var f = S.shopF || "home", title = { bugs: "Bug Store", items: "Wardrobe", faces: "Faces", styles: "Colors", borders: "Drug Borders", voices: "Voices", sticks: "Get Sticks", music: "Music" }[f];
+  var f = S.shopF || "home", title = { bugs: "Bug Store", items: "Wardrobe", faces: "Faces", styles: "Colors", borders: "Drug Borders", voices: "Voices", sticks: "Get Sticks", music: "Music", collections: "Collections" }[f];
   var head = f === "home" ? '<button class="backbtn" data-act="terrback"><span aria-hidden="true">&larr;</span> Studying</button><h2>Terrarium</h2>' : '<button class="backbtn" data-act="shopback"><span aria-hidden="true">&larr;</span> Terrarium</button><h2>' + title + '</h2>';
   return topbar() + '<div class="lvl-gen terrarium"><div class="sechead terrhead">' + head + '</div>' + shopView() + '</div>';
 }
@@ -4136,7 +4345,7 @@ function bugFace(y, mood, b, faceItem) {
   return s;
 }
 /* wearable items: slot hat | face | neck | back | held | fx */
-var ACC_SLOT = { jethelmet: "hat", aviscarf: "neck", crown: "hat", halo: "hat", cap: "hat", helmet: "hat", headset: "hat", flame: "hat", goggles: "face", mask: "face", stetho: "neck", bowtie: "neck", scarf: "neck", stars: "fx" };
+var ACC_SLOT = { bandana: "hat", jethelmet: "hat", aviscarf: "neck", crown: "hat", halo: "hat", cap: "hat", helmet: "hat", headset: "hat", flame: "hat", goggles: "face", mask: "face", stetho: "neck", bowtie: "neck", scarf: "neck", stars: "fx" };
 function hatY(y) { return y - 26; }
 /* a ring of curls sitting on the head: used by every perm (owner, Oct 30 2026) */
 function permDraw(y, dark, light, big) {
@@ -4756,7 +4965,7 @@ function megaFinish() {
   st.cs.steps.forEach(function (s, i) { if (st.ans[i] >= 0 && s.options[st.ans[i]].ok) ok++; });
   st.pct = Math.round(100 * ok / n); st.ok = ok;
   var P = Prog.d; P.mega = P.mega || {}; P.mega[st.cs.id] = Math.max(P.mega[st.cs.id] || 0, st.pct);
-  st.sticks = ok * STICK_RIGHT + (n - ok) * STICK_TRY + (st.pct === 100 ? 10 : 0); earn(st.sticks); P.xp += ok * 15; checkAch(); saveProg();
+  st.sticks = ok * (STICK_RIGHT + palBonus()) + (n - ok) * STICK_TRY + (st.pct === 100 ? 10 : 0); earn(st.sticks); P.xp += ok * 15; checkAch(); saveProg();
 }
 function megaDone() {
   var st = S.mega, cs = st.cs, avg = Object.keys(st.times).reduce(function (t, k) { return t + st.times[k]; }, 0) / cs.steps.length;
@@ -7243,7 +7452,7 @@ function settingsView() {
     setRow("Voice speed", "For the \"Say it\" button." + (SPEAK_OK ? "" : " Your device does not support speech."), setOpts("voiceRate", s.voiceRate, [["slow", "Slow"], ["normal", "Normal"], ["fast", "Fast"]]) + (SPEAK_OK ? ' <button class="btn small ghost" data-say="epinephrine">Test</button>' : '')) +
     setRow("Written pronunciation", "Shows a guide like ep-ih-NEF-rin.", setTog("showPhon", s.showPhon, "Show pronunciation")) +
     setRow("Bug buddy", "Your bug on the side of the screen, reacting to your answers.", setTog("buddy", s.buddy, "Show my bug buddy")) +
-    setRow("Background music", "Relaxed lo-fi beats while you study. You can also tap the music note at the top of any page.", setTog("music", s.music !== false, "Background music") + '<label class="muvol"><span>Volume</span><input type="range" min="0" max="100" step="5" id="muvolset" value="' + muLevel() + '" aria-label="Music volume"><output id="muvolsetv">' + muLevel() + '%</output></label>') +
+    setRow("Background music", "Jazz, house, bugstep, rock, banjo or pop while you study. You can also tap the music note at the top of any page.", setTog("music", s.music !== false, "Background music") + '<label class="muvol"><span>Volume</span><input type="range" min="0" max="100" step="5" id="muvolset" value="' + muLevel() + '" aria-label="Music volume"><output id="muvolsetv">' + muLevel() + '%</output></label>') +
     setRow("Sound effects", "Answer tones, the game sounds and the level transitions.", setTog("sfx", s.sfx, "Sound effects") + ' <button class="btn small ghost" data-act="sfxtest">Test</button>') +
     setRow("Is sound working?", "What the app can actually see about the speakers.",
       '<ul class="sndchk">' + audioReport().map(function (r) {
@@ -7429,7 +7638,7 @@ function muOn() { return SET().music !== false && (typeof funOn !== "function" |
 /* Oct 2026 (owner): only the seasonal tracks for now, until the rest of the music is sorted out.
    Set MU_ONLY = null to bring back the full list. Each entry still has to pass its own season
    check below, so Haunted Study Hall steps aside for Harvest Table on November 1. */
-var MU_ONLY = ["haunted-study-hall", "harvest-table"];
+var MU_ONLY = ["haunted-study-hall", "harvest-table", "slow-bug-jazz", "bug-house", "bugstep", "bug-rock", "banjo-bug", "bug-pop", "bug-house-deep-hive", "bug-house-disco-beetle", "bug-house-acid-ant", "bug-house-piano-moth"];
 function muOnly(id) { return !MU_ONLY || MU_ONLY.indexOf(id) >= 0; }
 var TRACKS = [
   { id: "study-session", name: "Study Session", price: 0, desc: "Warm electric piano, a laid-back beat and a little vinyl crackle.", bpm: 82, src: "music/study-session.mp3" },
@@ -7437,6 +7646,19 @@ var TRACKS = [
   { id: "rainy-day-review", name: "Rainy Day Review", price: 0, desc: "A swinging jazz trio with walking bass and soft rain outside.", bpm: 118, src: "music/rainy-day-review.mp3" },
   { id: "haunted-study-hall", name: "Haunted Study Hall", price: 0, season: "halloween", desc: "Spooky lo-fi with a music box, a ghostly choir and a distant bell.", bpm: 78, src: "music/haunted-study-hall.mp3" },
   { id: "harvest-table", name: "Harvest Table", price: 0, season: "thanksgiving", desc: "Warm autumn lo-fi: Rhodes, nylon guitar and a cor anglais over brushes.", bpm: 76, src: "music/harvest-table.mp3" },
+  /* the bug genres (owner, Nov 5 2026): rendered from a General MIDI SoundFont plus synthesized
+     crickets, wing buzz and wobble bass. Source: tools/music/compose.py */
+  { id: "slow-bug-jazz", name: "Slow Bug Jazz", price: 0, tier: "plus", desc: "A late-night ballad: brushes, walking bass, Rhodes and a breathy tenor sax.", bpm: 66, src: "music/slow-bug-jazz.mp3" },
+  { id: "bug-house", name: "Bug House", price: 0, tier: "plus", desc: "Four on the floor, house piano stabs and a cricket on the hi-hats.", bpm: 122, src: "music/bug-house.mp3" },
+  /* more Bug House, for Plus (owner, Nov 5 2026; was Pro) */
+  { id: "bug-house-deep-hive", name: "Bug House: Deep Hive", price: 0, tier: "plus", desc: "Deep house: minor-ninth Rhodes, warm pads and a rolling low end.", bpm: 120, src: "music/bug-house-deep-hive.mp3" },
+  { id: "bug-house-disco-beetle", name: "Bug House: Disco Beetle", price: 0, tier: "plus", desc: "Disco house: octave bass, string stabs, funky guitar chops and a trumpet hook.", bpm: 124, src: "music/bug-house-disco-beetle.mp3" },
+  { id: "bug-house-acid-ant", name: "Bug House: Acid Ant", price: 0, tier: "plus", desc: "A squelchy sixteenth-note acid bassline over 808 drums.", bpm: 126, src: "music/bug-house-acid-ant.mp3" },
+  { id: "bug-house-piano-moth", name: "Bug House: Piano Moth", price: 0, tier: "plus", desc: "Classic piano house: big chords, a flute hook and an organ swell.", bpm: 123, src: "music/bug-house-piano-moth.mp3" },
+  { id: "bugstep", name: "Bugstep", price: 0, tier: "plus", desc: "A slow build, then the drop: wobble bass and buzzing wings.", bpm: 140, src: "music/bugstep.mp3" },
+  { id: "bug-rock", name: "Bug Rock", price: 0, tier: "plus", desc: "Crunchy power chords, a big backbeat and a screaming lead.", bpm: 132, src: "music/bug-rock.mp3" },
+  { id: "banjo-bug", name: "Banjo Bug", price: 0, tier: "plus", desc: "A bluegrass breakdown: rolling banjo, hammered dulcimer and a two-step bass.", bpm: 118, src: "music/banjo-bug.mp3" },
+  { id: "bug-pop", name: "Bug Pop", price: 0, tier: "plus", desc: "Bright synth-pop with a hook you will hum on shift.", bpm: 116, src: "music/bug-pop.mp3" },
   { id: "night-shift-lofi", name: "Night Shift", price: 500, desc: "Dreamy, spacey keys and pads for the quiet hours.", bpm: 68, src: "music/night-shift.mp3" },
   { id: "flight-crew", name: "Flight Crew", price: 500, desc: "Funky neo-soul groove with clav, guitar and a tight beat.", bpm: 98, src: "music/flight-crew.mp3" },
   { id: "golden-hour", name: "Golden Hour", price: 500, desc: "Sunny dance-pop with a steel drum hook.", bpm: 112, src: "music/golden-hour.mp3" },
@@ -7462,7 +7684,8 @@ function trackAvail(t) { return muOnly(t.id) && (!t.season || muSeason(t.season)
 /* with MU_ONLY set, the default is whichever of those tracks is in season right now */
 function muDefault() { var L = TRACKS.filter(trackAvail); return L.length ? L[0].id : "study-session"; }
 function shownTracks() { return TRACKS.filter(trackAvail); }
-function ownsTrack(id) { var t = trackById(id); if (!trackAvail(t)) return false; return !t.price || (Prog.d.tracks || []).indexOf(id) >= 0; }
+function trackProLocked(t) { var need = t && (t.tier || (t.pro ? "pro" : "")); return !!(need && typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier(need)); }
+function ownsTrack(id) { var t = trackById(id); if (!trackAvail(t) || trackProLocked(t)) return false; return !t.price || (Prog.d.tracks || []).indexOf(id) >= 0; }
 function curTrack() { muRefundOld(); if (MU.preview) return trackById(MU.preview); var id = Prog.d.track; return trackById(id && ownsTrack(id) ? id : muDefault()); }
 function muTick() {
   var c = MU.ctx, T = curTrack(); if (!c) return;
@@ -7514,6 +7737,7 @@ function muGesture() {
   muStart();
 }
 function muSync() { if (muOn() && MU.armed && muLevel() > 0) muStart(); else muStop(); if (MU.master && MU.ctx) MU.master.gain.setTargetAtTime(muVol(), MU.ctx.currentTime, 0.05); var b = $(".musicbtn"); if (b && b.getAttribute("aria-pressed") !== String(muOn())) { b.setAttribute("aria-pressed", String(muOn())); b.innerHTML = muIcon(); } }
+/* the music button at the top stays a music note (owner, Nov 5 2026) */
 function muIcon() { return '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M9 18.5a2.5 2.5 0 1 1-2-2.45V5l11-2v12.5a2.5 2.5 0 1 1-2-2.45V7.1L9 8.4z"/>' + (muOn() ? '' : '<path d="M3 3l18 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>') + '</svg>'; }
 function musicBtn() { if (typeof funOn === "function" && !funOn()) return ""; return '<button class="theme-btn musicbtn" data-act="music" aria-pressed="' + muOn() + '" aria-label="Background music" title="Background music">' + muIcon() + '</button>'; }
 /* browsers only allow sound after a tap, so start on the first interaction */
@@ -7559,9 +7783,38 @@ function muFile(T) {
     var s = c.createBufferSource(), g = c.createGain(); s.buffer = buf; s.loop = true;
     g.gain.setValueAtTime(0.0001, c.currentTime); g.gain.linearRampToValueAtTime(1, c.currentTime + 0.8);
     s.connect(g); g.connect(MU.fileOut); s.start(); f.src = s; f.g = g;
+    f.t0 = c.currentTime; f.len = buf.duration; f.bpm = T.bpm || 0; danceStart(f);
   }).catch(function () { f.failed = true; });
 }
+/* your bug dances when a new song starts (owner, Nov 5 2026): only your own avatar, only for the
+   first 16 beats of a track you just switched to. The phase comes from the audio clock of the
+   playing loop, so it hops on the beat and sways every two beats. Off with reduced motion. */
+var DANCE_BEATS = 16;
+var DANCE = { raf: 0, f: null };
+function danceStart(f) {
+  DANCE.f = f; if (DANCE.raf || !f.bpm) return;
+  var root = document.documentElement;
+  function frame() {
+    var F = DANCE.f, c = MU.ctx;
+    if (!F || MU.file !== F || !F.src || !muOn() || document.hidden || (typeof hfxOk === "function" && !hfxOk())) { danceStop(); return; }
+    var lat = (c.outputLatency || 0) + (c.baseLatency || 0), t = c.currentTime - F.t0 - lat; if (t < 0) t = 0;
+    if (t * F.bpm / 60 > DANCE_BEATS) { danceStop(); return; }
+    var beats = (F.len ? t % F.len : t) * F.bpm / 60, p = beats - Math.floor(beats);
+    var hop = Math.sin(Math.PI * p);
+    root.style.setProperty("--dance-y", (-5 * hop * hop).toFixed(2) + "px");
+    root.style.setProperty("--dance-r", (6 * Math.sin(Math.PI * beats)).toFixed(2) + "deg");
+    root.style.setProperty("--dance-s", (1 + 0.05 * Math.max(0, 1 - p * 5)).toFixed(3));
+    if (!root.classList.contains("mudance")) root.classList.add("mudance");
+    DANCE.raf = requestAnimationFrame(frame);
+  }
+  DANCE.raf = requestAnimationFrame(frame);
+}
+function danceStop() {
+  if (DANCE.raf) cancelAnimationFrame(DANCE.raf); DANCE.raf = 0; DANCE.f = null;
+  var root = document.documentElement; root.classList.remove("mudance");
+}
 function muFileStop() {
+  danceStop();
   var f = MU.file; MU.file = null; if (!f || !f.src) return;
   try { var c = MU.ctx; f.g.gain.cancelScheduledValues(c.currentTime); f.g.gain.setTargetAtTime(0.0001, c.currentTime, 0.15); f.src.stop(c.currentTime + 0.8); } catch (e) {}
 }
@@ -8284,7 +8537,7 @@ function drugTier(id) { return FREE_SET[id] ? "free" : "plus"; }   /* reading a 
 function studyLocked(id) { return PAYWALL && !!id && !FREE_SET[id] && !hasTier("pro"); }
 function drugLocked(id) { return PAYWALL && !hasTier(drugTier(id)); }
 /* bugs by subscription: Common, starter and earned bugs are free; Rare and Seasonal need Plus; Epic and Legendary need Pro. Bugs already owned stay owned. */
-function bugTier(b) { if (!b) return "free"; if (b.rar === "epic" || b.rar === "legendary") return "pro"; if (b.rar === "rare" || b.rar === "seasonal") return "plus"; return "free"; }
+function bugTier(b) { if (!b || b.login || b.king) return "free"; if (b.rar === "epic" || b.rar === "legendary") return "pro"; if (b.rar === "rare" || b.rar === "seasonal") return "plus"; return "free"; }
 function proBug(id) { var b = bugById(id); return PAYWALL && !!b && !owned(id) && !hasTier(bugTier(b)); }
 function tierBadge(t) { return '<span class="probadge">' + (t === "plus" ? "PLUS" : "PRO") + '</span>'; }
 function proBadge(tab) { return tierBadge(tab ? tabTier(tab) : "pro"); }
@@ -9190,8 +9443,13 @@ var D3 = (function () {
   function lin(c) { return [Math.pow(c[0], 2.2), Math.pow(c[1], 2.2), Math.pow(c[2], 2.2)]; }
   var MAT = {
     yellow: { c: lin([0.95, 0.80, 0.42]), sp: 0.35, sh: 60, rim: 0.22 },
-    black:  { c: lin([0.012, 0.012, 0.014]), sp: 0.8, sh: 70, rim: 0.5 },
-    shoe:   { c: lin([0.07, 0.07, 0.08]), sp: 1.6, sh: 120, rim: 0.9 }
+    /* no black on him any more (owner, Nov 5 2026): soft grey joints, white hospital socks,
+       and a pale blue hospital gown */
+    black:  { c: lin([0.80, 0.80, 0.80]), sp: 0.5, sh: 60, rim: 0.25 },
+    shoe:   { c: lin([0.94, 0.94, 0.92]), sp: 0.3, sh: 40, rim: 0.2 },
+    gown:   { c: lin([0.70, 0.81, 0.95]), sp: 0.08, sh: 16, rim: 0.16, pat: 1 },
+    trim:   { c: lin([0.95, 0.96, 0.97]), sp: 0.1, sh: 20, rim: 0.15 },
+    skin:   null   /* the gap at the open back shows the dummy himself (his yellow, re-tinted) */
   };
 
   /* ---------------- the skeleton ---------------- */
@@ -9225,17 +9483,30 @@ var D3 = (function () {
       ball: sphere(0.068),
       ringL: torus(0.05, 0.018, 20, 8), ringM: torus(0.045, 0.017, 20, 8), ringS: torus(0.037, 0.014, 20, 8), ringXL: torus(0.07, 0.022, 22, 8),
       upper: capsule(0.054, 0.3, 8), fore: capsule(0.046, 0.27, 8), hand: capsule(0.04, 0.13, 6),
+      skirt: lathe([[0.262, -0.5], [0.24, -0.38], [0.215, -0.24], [0.192, -0.1], [0.178, 0.0], [0.172, 0.08], [0.168, 0.14]], 32),
+      hem: torus(0.262, 0.009, 32, 6),
+      sleeve: lathe([[0.098, -0.24], [0.092, -0.16], [0.086, -0.08], [0.08, -0.01], [0.064, 0.04], [0.034, 0.075]], 20),
+      cuff: torus(0.098, 0.008, 20, 6), collar: torus(0.072, 0.012, 24, 6),
+      slit: capsule(0.022, 0.3, 6), tie: torus(0.016, 0.005, 10, 5),
       thigh: capsule(0.076, 0.44, 8), shin: capsule(0.06, 0.4, 8), shoe: capsule(0.058, 0.25, 8), hipball: sphere(0.08)
     };
     /* balance tilts him from his feet; spin turns him about his own vertical axis */
     var bal = node("bal", null, [0, 0, 0]), spin = node("spin", bal, [0, 0, 0]);
     var hips = node("hips", spin, [0, HIPY, 0]);
-    mesh(hips, G.pelvis, MAT.yellow, "pelvis", [0, 0, 0], null, [1, 1, 0.72], true);
-    mesh(hips, G.waist, MAT.black, "abdomen", [0, 0.085, 0], null, [1, 1, 0.74]);
+    mesh(hips, G.pelvis, MAT.gown, "pelvis", [0, 0, 0], null, [1.04, 1, 0.76], true);
+    /* the skirt hangs from a pivot at the hip joints and swings with the thighs (see update) */
+    var skirtN = node("skirt", hips, [0, -0.07, 0]);
+    mesh(skirtN, G.skirt, MAT.gown, "pelvis", [0, 0.07, 0], null, [1, 1, 0.9], true);
+    mesh(skirtN, G.hem, MAT.trim, "pelvis", [0, -0.43, 0], null, [1, 1, 0.9], true);
     var spine = node("spine", hips, [0, 0.09, 0]);
-    mesh(spine, G.abdomen, MAT.yellow, "abdomen", [0, 0, 0], null, [1, 1, 0.7], true);
+    mesh(spine, G.abdomen, MAT.gown, "abdomen", [0, 0, 0], null, [1.22, 1, 0.92], true);
     var chest = node("chest", spine, [0, 0.17, 0]);
-    mesh(chest, G.chest, MAT.yellow, "chest", [0, 0, 0], null, [1, 1, 0.64], true);
+    mesh(chest, G.chest, MAT.gown, "chest", [0, 0, 0], null, [1.08, 1, 0.74], true);
+    /* the open back: a strip of him showing between the edges, white binding and two ties */
+    mesh(chest, G.slit, MAT.yellow, "chest", [0, 0.16, -0.128], [0.12, 0, 0], [0.75, 1, 0.35], true);
+    mesh(chest, G.tie, MAT.trim, "chest", [0, 0.3, -0.104], [PI / 2, 0, 0], null, true);
+    mesh(spine, G.tie, MAT.trim, "abdomen", [0, 0.06, -0.122], [PI / 2, 0, 0], null, true);
+    mesh(chest, G.collar, MAT.trim, "chest", [0, 0.33, 0], null, [1, 1, 0.9]);
     /* a little pectoral definition, like the moulded chest plate on the real thing */
     var neck = node("neck", chest, [0, 0.335, 0]);
     mesh(neck, G.neck, MAT.black, "neck", [0, 0.035, 0]);
@@ -9244,7 +9515,8 @@ var D3 = (function () {
     function arm(side, sx) {
       var sh = node("sh" + side, chest, [0.205 * sx, 0.265, 0]);
       mesh(sh, G.ball, MAT.yellow, "arm" + side, [0, 0, 0]);
-      mesh(sh, G.ringL, MAT.black, "arm" + side, [0, -0.06, 0]);
+      mesh(sh, G.sleeve, MAT.gown, "arm" + side, [0, -0.02, 0]);
+      mesh(sh, G.cuff, MAT.trim, "arm" + side, [0, -0.26, 0]);
       mesh(sh, G.upper, MAT.yellow, "arm" + side, [0, -0.165, 0]);
       var el = node("el" + side, sh, [0, -0.315, 0]);
       mesh(el, G.ringM, MAT.black, "arm" + side, [0, 0, 0]);
@@ -9270,7 +9542,8 @@ var D3 = (function () {
     this.nodes = nodes; this.meshes = meshes; this.list = list; this.G = G;
   }
   Rig.prototype.update = function () {
-    var L = this.list, i, n;
+    var L = this.list, i, n, N = this.nodes;
+    if (N.skirt && N.hipL && N.hipR) { N.skirt.r[0] = (N.hipL.r[0] + N.hipR.r[0]) * 0.42; N.skirt.r[2] = (N.hipL.r[2] + N.hipR.r[2]) * 0.3; }
     for (i = 0; i < L.length; i++) {
       n = L[i];
       trs(n.p, n.r, n.s, n.local);
@@ -9312,7 +9585,7 @@ var D3 = (function () {
     return addInto({}, frames[frames.length - 1][1], 1);
   }
 
-  return { mul: mul, trs: trs, inv: inv, persp: persp, lookAt: lookAt, xf: xf, nrm3: nrm3,
+  return { MAT: MAT, lin: lin, mul: mul, trs: trs, inv: inv, persp: persp, lookAt: lookAt, xf: xf, nrm3: nrm3,
            lathe: lathe, capsule: capsule, sphere: sphere, torus: torus,
            Rig: Rig, J: J, HIPY: HIPY, REST: REST, MAT: MAT, sample: sample, addInto: addInto, ease: ease, zero: zero };
 })();
@@ -9524,8 +9797,8 @@ var D3GL = (function () {
   }
 
   /* ---------------- WebGL ---------------- */
-  var VS = "attribute vec3 aP;attribute vec3 aN;uniform mat4 uM;uniform mat4 uVP;uniform mat3 uNM;varying vec3 vW;varying vec3 vN;" +
-    "void main(){vec4 w=uM*vec4(aP,1.0);vW=w.xyz;vN=uNM*aN;gl_Position=uVP*w;}";
+  var VS = "attribute vec3 aP;attribute vec3 aN;uniform mat4 uM;uniform mat4 uVP;uniform mat3 uNM;varying vec3 vW;varying vec3 vN;varying vec3 vO;" +
+    "void main(){vec4 w=uM*vec4(aP,1.0);vW=w.xyz;vO=aP;vN=uNM*aN;gl_Position=uVP*w;}";
   /* No gl_FrontFacing flip: the meshes wind clockwise, so that test called every visible face a
      back face and turned the normals inward, which washed him out to grey. The normals the
      shape builders compute already point outward, and only outward faces are ever visible.
@@ -9533,7 +9806,15 @@ var D3GL = (function () {
      that rims the edges, low ambient so the shadowed side stays dark, two specular lobes (a
      tight clearcoat on a broader sheen), and a filmic curve that keeps the yellow saturated
      instead of washing it out. */
-  var FS = "precision mediump float;varying vec3 vW;varying vec3 vN;uniform vec3 uCam;uniform vec3 uCol;uniform vec3 uEmi;uniform vec3 uSp;" +
+  var FS = "precision mediump float;varying vec3 vW;varying vec3 vN;varying vec3 vO;uniform vec3 uCam;uniform vec3 uCol;uniform vec3 uEmi;uniform vec3 uSp;uniform float uPat;" +
+    /* hospital-gown print (owner, Nov 5 2026): scattered small triangles, some filled and some
+       outlined, in two blues, laid out around each piece of the gown in its own coordinates */
+    "float hsh(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}" +
+    "float tri(vec2 q,float s){q.y+=s*0.35;return step(0.0,q.y)*step(abs(q.x)*1.7,s-q.y);}" +
+    "vec3 gown(vec3 base){vec2 uv=vec2(atan(vO.z,vO.x)*0.17,vO.y)/0.052;vec2 id=floor(uv),f=fract(uv)-0.5;" +
+    "float h=hsh(id),h2=hsh(id+7.3);if(h>0.5)return base;f+=vec2(h2-0.5,hsh(id+3.1)-0.5)*0.3;if(h2>0.5)f.y=-f.y;" +
+    "float m=tri(f,0.34);if(h>0.2)m-=tri(f*1.0+vec2(0.0,-0.02),0.2);" +
+    "vec3 ink=h2>0.6?vec3(0.07,0.12,0.42):vec3(0.12,0.24,0.66);return mix(base,ink,clamp(m,0.0,1.0)*0.85);}" +
     "vec3 aces(vec3 x){return clamp((x*(2.51*x+0.03))/(x*(2.43*x+0.59)+0.14),0.0,1.0);}" +
     "void main(){vec3 N=normalize(vN);vec3 V=normalize(uCam-vW);" +
     "vec3 L1=normalize(vec3(-0.6,0.75,0.75));vec3 L2=normalize(vec3(0.9,0.2,0.35));vec3 L3=normalize(vec3(0.35,0.5,-0.85));" +
@@ -9544,7 +9825,7 @@ var D3GL = (function () {
     "float sh=pow(max(dot(N,normalize(L1+V)),0.0),uSp.y*0.18);" +
     "vec3 spec=vec3(1.0,0.97,0.92)*(s1*uSp.x*1.6+sh*uSp.x*0.12)+vec3(0.75,0.8,1.0)*s3*uSp.x*0.9;" +
     "float f=pow(1.0-max(dot(N,V),0.0),4.0)*uSp.z;" +
-    "vec3 c=uCol*(amb+dif)+spec+vec3(0.55,0.6,0.75)*f*(0.25+d3)+uEmi;" +
+    "vec3 col=uPat>0.5?gown(uCol):uCol;vec3 c=col*(amb+dif)+spec+vec3(0.55,0.6,0.75)*f*(0.25+d3)+uEmi;" +
     "gl_FragColor=vec4(pow(aces(c*1.05),vec3(0.4545)),1.0);}";
   var SVS = "attribute vec3 aP;uniform mat4 uM;uniform mat4 uVP;uniform mat4 uS;void main(){gl_Position=uVP*uS*uM*vec4(aP,1.0);}";
   var SFS = "precision mediump float;uniform float uA;void main(){gl_FragColor=vec4(0.0,0.0,0.0,uA);}";
@@ -9605,7 +9886,7 @@ var D3GL = (function () {
     gl.useProgram(pr.p); gl.uniformMatrix4fv(pr.u.uVP, false, VP); gl.uniform3fv(pr.u.uCam, CAM.eye);
     for (i = 0; i < M.length; i++) { m = M[i]; var mm = m.mesh, mat = mm.mat; b = upload(gl, mm.geo);
       gl.uniformMatrix4fv(pr.u.uM, false, m.world); gl.uniformMatrix3fv(pr.u.uNM, false, C.nrm3(m.world));
-      gl.uniform3fv(pr.u.uCol, mat.c); gl.uniform3f(pr.u.uSp, mat.sp, mat.sh, mat.rim);
+      gl.uniform3fv(pr.u.uCol, mat.c); gl.uniform3f(pr.u.uSp, mat.sp, mat.sh, mat.rim); if (pr.u.uPat) gl.uniform1f(pr.u.uPat, mat.pat ? 1 : 0);
       var e = sel.indexOf(mm.part) >= 0 ? 0.045 : 0, fl = S.flash[mm.part];
       if (fl) { var k = 1 - (now - fl) / 650; if (k > 0) e += 0.22 * k; else delete S.flash[mm.part]; }
       gl.uniform3f(pr.u.uEmi, e * 0.5, e * 0.9, e * 0.85);
@@ -9710,6 +9991,8 @@ var D3GL = (function () {
     return true;
   }
   return {
+    /* the dummy wears the colour of the specialty you are in, toned down (owner, Nov 5 2026) */
+    tint: function (rgb) { if (rgb && rgb.length === 3) D3.MAT.yellow.c = D3.lin(rgb); },
     mount: mount, react: react, live: function () { return S.ok && !!S.cv && S.cv.isConnected; },
     select: function (area) { S.sel = area || ""; },
     on: function (k, f) { S.cb[k] = f; }, area: function (p) { return AREA[p]; },
@@ -9752,10 +10035,22 @@ function d3Pop(host, text, x, y) {
   host.appendChild(el);
   setTimeout(function () { el.classList.add("out"); setTimeout(function () { if (el.parentNode) el.remove(); }, 320); }, 1300);
 }
+/* the specialty colour (--c on the level page, BugDex teal otherwise), mixed 45% toward a warm
+   grey and lifted a little, so it reads as the specialty but is softer than the buttons */
+function d3Tint(h) {
+  var v = "";
+  try { v = getComputedStyle(h).getPropertyValue("--c").trim() || getComputedStyle(document.documentElement).getPropertyValue("--gen").trim(); } catch (e) {}
+  var m = /^#?([0-9a-f]{6})$/i.exec(v), c;
+  if (m) c = [0, 2, 4].map(function (i) { return parseInt(m[1].substr(i, 2), 16) / 255; });
+  else { var r = /rgba?\(([^)]+)\)/.exec(v); if (!r) return null; c = r[1].split(",").slice(0, 3).map(function (x) { return parseFloat(x) / 255; }); }
+  var grey = [0.80, 0.78, 0.74];
+  return c.map(function (x, i) { return Math.min(1, x * 0.55 + grey[i] * 0.45 + 0.03); });
+}
 function d3Mount() {
   if (typeof D3GL === "undefined") return;
   var hosts = document.querySelectorAll(".bm3d"); if (!hosts.length) return;
   var h = hosts[hosts.length - 1];
+  try { D3GL.tint(d3Tint(h)); } catch (e) {}
   if (!D3GL.mount(h)) return;
   var ctx = h.getAttribute("data-ctx");
   D3GL.select(ctx === "body" ? S.barea : S.anArea);
@@ -10315,7 +10610,7 @@ window.addEventListener("scroll", function () {
   if (HFX.rockets.length + HFX.sparks.length / 60 + HFX.bits.length / 80 > 8) return; /* keep it light */
   HFX.quiet = true;
   if (HFX.on === "july4") { hfxRocket(true); if (Math.random() < .5) setTimeout(function () { hfxRocket(true); }, 200); }
-  else if (HFX.on === "thanksgiving") { if (Math.random() < .6) hfxGust(Math.random() < .5 ? -1 : 1, 26, true); else hfxShowerTG(18); }
+  else if (HFX.on === "thanksgiving") { return; }   /* leaves burst out once at the start and then stop (owner, Nov 5 2026) */
   else if (Math.random() < .6) hfxCannon(Math.random() < .5 ? -1 : 1, 40, true); else hfxShower(30);
   hfxLoop();
 }, { passive: true });
@@ -10628,7 +10923,7 @@ function peekView() {
     '<div class="pkgrid">' + mine.map(function (p) {
       var lv = pkLv(p.id), stars = ""; for (var i = 1; i <= 10; i++) stars += '<i class="' + (i <= lv ? "on" : "") + '"></i>';
       return '<div class="pkcard' + (Prog.d.pal === p.id ? ' eq' : '') + (lv >= 10 ? ' max' : lv >= 5 ? ' mid' : '') + '">' + pkFrame(p, pkStage(lv)) +
-        '<span class="pklv">' + (es ? "Nivel " : "Level ") + lv + ' · ' + esc(pkStageName(pkStage(lv))) + '</span><span class="pkstars" aria-label="' + (es ? "Nivel " : "Level ") + lv + ' / 10">' + stars + '</span><span class="muted small">' + (lv >= 10 ? (es ? "Completamente crecido" : "Fully grown") : (es ? "Sube de nivel al estudiar" : "Levels up as you study")) + '</span>' +
+        '<span class="pklv">' + (es ? "Nivel " : "Level ") + lv + ' · ' + esc(pkStageName(pkStage(lv))) + '</span><span class="pkbonus">+' + (lv >= 10 ? 3 : lv >= 5 ? 2 : 1) + (es ? " palitos por acierto al equiparlo" : " stick" + (lv >= 5 ? "s" : "") + " per right answer when equipped") + '</span><span class="pkstars" aria-label="' + (es ? "Nivel " : "Level ") + lv + ' / 10">' + stars + '</span><span class="muted small">' + (lv >= 10 ? (es ? "Completamente crecido" : "Fully grown") : (es ? "Sube de nivel al estudiar" : "Levels up as you study")) + '</span>' +
         '<button class="btn small' + (Prog.d.pal === p.id ? ' on' : '') + '" data-pkeq="' + p.id + '" aria-pressed="' + (Prog.d.pal === p.id) + '">' + (Prog.d.pal === p.id ? (es ? "Con tu bicho ✓" : "With your bug ✓") : (es ? "Equipar" : "Equip")) + '</button></div>';
     }).join("") + '</div>';
 }
@@ -27461,6 +27756,25 @@ function giftRedeem(code) {
     if (!d) { GIFT.msg = "That code did not match anything. Check the spelling and try again."; return giftDraw(); }
     Prog.d.gifts = Prog.d.gifts || {};
     if (Prog.d.gifts[d.id]) { GIFT.msg = "That code has already been used on this account."; return giftDraw(); }
+    /* one-time codes (owner, Nov 5 2026): the first account to claim it online owns it. The claim
+       is a create-only document giftUses/<id>; the rules refuse to overwrite it, so a second person
+       is turned away even on another device or a fresh browser. Needs the internet and the backend. */
+    if (d.once && GIFT.claimFor !== d.id) {
+      if (!Prog.db || !Prog.uid) { GIFT.msg = "This code needs an internet connection. Connect and try again in a moment."; return giftDraw(); }
+      GIFT.busy = true; giftDraw();
+      var ref = Prog.db.doc("giftUses/" + d.id), uid = Prog.uid;
+      var mine = function () { GIFT.busy = false; GIFT.claimFor = d.id; giftRedeem(code); };
+      var taken = function () { GIFT.busy = false; GIFT.msg = "That code has already been used. Each of these codes works one time only."; giftDraw(); };
+      ref.get().then(function (snap) {
+        if (snap && snap.exists) { var o = snap.data() || {}; return o.uid === uid ? mine() : taken(); }
+        return ref.set({ uid: uid, at: Date.now() }).then(mine);
+      }).catch(function () {
+        /* permission-denied: somebody else's claim we are not allowed to read, or a lost race */
+        ref.get().then(function (snap) { var o = snap && snap.exists ? snap.data() || {} : {}; if (o.uid === uid) mine(); else taken(); }).catch(taken);
+      });
+      return;
+    }
+    GIFT.claimFor = "";
     var got = [];
     Prog.d.gifts[d.id] = Date.now();
     if (d.sticks > 0) { earn(d.sticks); got.push(d.sticks.toLocaleString() + " sticks"); }
@@ -27468,6 +27782,10 @@ function giftRedeem(code) {
       var from = Math.max(Date.now(), (Prog.d.proGift && Prog.d.proGift.until) || 0);
       Prog.d.proGift = { until: from + d.pro * 864e5 };
       got.push("DrugBug Pro until " + new Date(Prog.d.proGift.until).toLocaleDateString());
+    }
+    if (d.bug && typeof bugById === "function" && bugById(d.bug).id === d.bug) {   /* a gift can carry a bug (owner, Nov 5 2026) */
+      if (!owned(d.bug)) Prog.d.owned = (Prog.d.owned || []).concat([d.bug]);
+      Prog.d.avatar = d.bug; Prog.d.avatarTs = Date.now(); got.push("the " + bugById(d.bug).name);
     }
     if (d.ag) {
       store("agcode", d.ag);
