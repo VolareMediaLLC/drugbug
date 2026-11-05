@@ -9618,7 +9618,7 @@ var BM_RX = {
      snd is the fallback until the file has arrived. */
   head:    { cls: "rx-head",  snd: "thunk", rec: "bonk",   dur: 1500 },
   neck:    { cls: "rx-neck",  snd: "gasp",  dur: 1400 },
-  chest:   { cls: "rx-chest", snd: "thump", rec: "wheeze", recDur: 3, recV: 1.6, dur: 2400 },
+  chest:   { cls: "rx-chest", snd: "thump", rec: "wheeze", recDur: 1.6, recV: 0.7, dur: 2400 },
   abdomen: { cls: "rx-abd",   snd: "groan", rec: "whoosh", rec2: "grunt", rec2At: 0.12, dur: 1700 },
   pelvis:  { cls: "rx-pelv",  snd: "gasp",  dur: 1900 },
   back:    { cls: "rx-back",  snd: "creak", dur: 2200 },
@@ -10708,7 +10708,7 @@ function scSnd(kind) {
   }
   if (kind === "wheeze") {
     /* the real recording when it is here (owner, Nov 5 2026), the synthesised wheeze otherwise */
-    try { sfxLoad("wheeze"); if (SFXBUF["wheeze:buf"] && sfxPlay("wheeze", 0, 1.6, 1, bodyBus(), 3)) return; } catch (e) {}
+    try { sfxLoad("wheeze"); if (SFXBUF["wheeze:buf"] && sfxPlay("wheeze", 0, 0.8, 1, bodyBus(), 2.2)) return; } catch (e) {}
     for (var k = 0; k < 2; k++) { var b0 = k * 1.5; air(b0, 0.45, 700, 0.18); air(b0 + 0.5, 0.95, 500, 0.12); [520, 690, 830].forEach(function (f, j) { tone(b0 + 0.52 + j * 0.03, 0.85, f, 0.05); }); }
   } else if (kind === "clear") {
     for (var m = 0; m < 2; m++) { air(m * 1.8, 0.7, 450, 0.2); air(m * 1.8 + 0.75, 0.6, 300, 0.1); }
