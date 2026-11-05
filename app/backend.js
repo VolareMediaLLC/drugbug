@@ -16,6 +16,9 @@
   var base = "vendor/"; /* Firebase 10.12.2 compat SDK, bundled inside the app (never downloaded at runtime: App Review 2.5.2) */
   function load(src) { return new Promise(function (res, rej) { var s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); }); }
   var auth = null, fs = null, listeners = [];
+  /* developer testing only: on this computer, with ?emu=1, talk to the Firebase emulators instead of
+     the live project. The hostname check means it can never switch on at drugbugapp.com. */
+  var EMU = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) && /[?&]emu=1/.test((window.__DBQ || "") + location.search);
   function emit() { listeners.forEach(function (fn) { try { fn(state()); } catch (e) {} }); }
   function state() {
     var u = auth && auth.currentUser; if (!u) return { signedIn: false, anonymous: true };
@@ -28,6 +31,7 @@
     .then(function () {
       firebase.initializeApp(F);
       auth = firebase.auth();
+      if (EMU) auth.useEmulator("http://127.0.0.1:9099", { disableWarnings: true });
       return new Promise(function (res) {
         var done = false;
         auth.onAuthStateChanged(function (u) {
@@ -40,6 +44,7 @@
     .then(function (u) {
       if (!u) return null;
       fs = firebase.firestore();
+      if (EMU) fs.useEmulator("127.0.0.1", 8080);
       try { fs.enablePersistence({ synchronizeTabs: true }).catch(function () {}); } catch (e) {}
       return true;
     })

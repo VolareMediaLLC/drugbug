@@ -2765,9 +2765,11 @@ function recordInner(q, ok) {
     var SN = P.seen || (P.seen = {}); if (!SN[k]) SN[k] = 1; else if (SN[k] < 99) SN[k]++;
   }
   if (q && q.cat) { P.qcat = P.qcat || {}; var cs = P.qcat[q.cat] || (P.qcat[q.cat] = { n: 0, c: 0 }); cs.n++; if (ok) cs.c++; }
+  if (typeof groupNote === "function") groupNote(q, ok);
   checkAch(); saveProg();
 }
 function recordCalc(type, ok) {
+  if (typeof groupNote === "function") groupNote(null, ok);
   var c = Prog.d.calc[type] || (Prog.d.calc[type] = { n: 0, c: 0 }); c.n++; if (ok) c.c++; earn(qSticks(ok)); if (typeof feedback === "function") feedback(ok);
   Prog.d.xp += ok ? 12 : 2; var t = today(); Prog.d.days[t] = (Prog.d.days[t] || 0) + 1; checkAch(); saveProg();
 }
@@ -8698,7 +8700,8 @@ function tier() {
     if (!WEBSUBS) return SET().previewTier || "pro";
     var pv = SET().previewTier;
     if (pv && typeof Admin !== "undefined" && Admin.on) return pv;   /* owner's "Preview as", Settings */
-    return (typeof subTier === "function" && subTier()) || "free";
+    var st = (typeof subTier === "function" && subTier()) || "", gt = (typeof seatTier === "function" && seatTier()) || "";
+    return (TIER_RANK[gt] || 0) > (TIER_RANK[st] || 0) ? gt : (st || gt || "free");
   }
   if (PRO.tier === "pro" || licenseActive()) return "pro";
   return PRO.tier === "plus" ? "plus" : "free";
@@ -8734,7 +8737,8 @@ function proLabel() {
   if (DEMO) return webPass() ? "DrugBug Pro (access code) until " + new Date(webPass().until).toLocaleDateString() : "DrugBug Free (web demo)";
   if (!NATIVE) {
     if (!WEBSUBS) return "Web preview as " + TIER_NAME[tier()];
-    if (typeof subActive === "function" && subActive()) return subLabel();
+    if (typeof subActive === "function" && subActive() && !(typeof seatActive === "function" && seatActive() && subTier() !== "pro")) return subLabel();
+    if (typeof seatActive === "function" && seatActive()) return seatLabel();
     return TIER_NAME[tier()];
   }
   if (PRO.store) return TIER_NAME[PRO.tier] + " active" + (PRO.offer ? " · offer code" : "") + (PRO.expires ? " · renews or ends " + new Date(PRO.expires).toLocaleDateString() : "");
@@ -28631,6 +28635,7 @@ function codeOther(raw) {
   var code = agpNorm(raw);
   var fail = function (m) { GIFT.busy = false; GIFT.msg = m || "That code did not match anything. Check the spelling and try again."; giftDraw(); };
   var win = function (m) { GIFT.busy = false; GIFT.code = ""; GIFT.ok = m; giftDraw(); if (typeof render === "function") render(); };
+  if (typeof groupKeyShape === "function" && groupKeyShape(raw)) return groupRedeemKey(raw, win, fail);
   if (/^\d{6,}$/.test(code) && typeof agpTry === "function") {
     var ad = null; try { ad = agpTry(raw); } catch (e) {}
     if (ad) {
@@ -28846,9 +28851,10 @@ function subInit() {
     return user.id().then(function (uid) {
       if (!uid) return;
       subWatch(db, uid);
+      if (typeof seatWatch === "function") seatWatch(db, uid);
       if (!SUB.hooked && typeof ACCT !== "undefined" && ACCT.api && typeof ACCT.api.onChange === "function") {
         SUB.hooked = true;
-        ACCT.api.onChange(function () { user.id().then(function (u2) { if (u2 && u2 !== SUB.uid) subWatch(db, u2); }); });
+        ACCT.api.onChange(function () { user.id().then(function (u2) { if (u2 && u2 !== SUB.uid) { subWatch(db, u2); if (typeof seatWatch === "function") seatWatch(db, u2); } }); });
       }
     });
   }).catch(function () {});
@@ -28905,6 +28911,128 @@ function subClear() {
   SUB.unsub = null; SUB.tier = ""; SUB.until = 0; SUB.status = ""; SUB.cancelAt = 0; SUB.loaded = false; SUB.uid = null;
   try { store("sub", null); } catch (e) {}
 }
+
+/* ---------- Class keys: anonymous seats for schools and agencies (owner, Nov 5 2026) ----------
+   An instructor hands a student a key like DB-TAMU-4X9-B7K. Entered in Settings > Redeem a code,
+   it goes to the groupRedeem Cloud Function (functions/groups.js), which writes
+
+       seats/{uid}   { tier: "pro", until, orgId, orgName, alias }
+
+   for this browser's account - the anonymous one every visitor already has, so a student never
+   signs up or gives an email. tier() treats an active seat like a subscription.
+
+   While a seat is active, every answer is tallied by medication system (the same groups as Meds by
+   System) and sent in small batches to groupReport, which adds them to the KEY's running totals.
+   Nothing about the student goes with it: no name, no email, no device, no individual answers.
+   The instructor sees "Student 07", and only their own sheet says who that is. */
+var SEAT = { tier: "", until: 0, orgName: "", alias: "", loaded: false, unsub: null, uid: null, busy: false, t: null };
+(function () { var c = store("seat"); if (c && typeof c.until === "number") { SEAT.tier = c.tier || ""; SEAT.until = c.until; SEAT.orgName = c.orgName || ""; SEAT.alias = c.alias || ""; } })();
+function seatTier() { return SEAT.until > Date.now() ? (SEAT.tier || "") : ""; }
+function seatActive() { return !!seatTier(); }
+function seatLabel() { return TIER_NAME[seatTier()] + " · " + SEAT.orgName + " (" + SEAT.alias + ") · until " + new Date(SEAT.until).toLocaleDateString(); }
+function seatWatch(db, uid) {
+  if (SEAT.uid === uid && SEAT.unsub) return;
+  if (SEAT.unsub) { try { SEAT.unsub(); } catch (e) {} SEAT.unsub = null; }
+  SEAT.uid = uid;
+  try {
+    SEAT.unsub = db.doc("seats/" + uid).onSnapshot(function (snap) {
+      /* same cache rule as subWatch: the cache may extend a seat, only the server takes one away */
+      var fromCache = !!(snap && snap.metadata && snap.metadata.fromCache), has = !!(snap && snap.exists);
+      var d = has ? (snap.data() || {}) : {}, until = Number(d.until) || 0;
+      if (fromCache && (!has || until < SEAT.until)) return;
+      /* a "no seat" that arrives just after redeeming is the listener catching up, not a removal */
+      if (!has && SEAT.redeemedAt && Date.now() - SEAT.redeemedAt < 120000) return;
+      var was = seatTier(), first = !SEAT.loaded;
+      if (!first && until === SEAT.until && (d.tier || "") === SEAT.tier && (d.orgName || "") === SEAT.orgName) return;
+      SEAT.tier = d.tier || ""; SEAT.until = until; SEAT.orgName = d.orgName || ""; SEAT.alias = d.alias || ""; SEAT.loaded = true;
+      store("seat", has ? { tier: SEAT.tier, until: SEAT.until, orgName: SEAT.orgName, alias: SEAT.alias } : null);
+      if (!first && !was && seatTier()) S.proMsg = "Welcome, " + SEAT.alias + ". DrugBug Pro is on for " + SEAT.orgName + ".";
+      if (typeof render === "function") render();
+      if (seatActive()) groupFlush();
+    }, function () {});
+  } catch (e) {}
+}
+
+/* any Cloud Function, callable protocol, with this browser's account token */
+function fnCall(name, data) {
+  var base = (window.DRUGBUG_CONFIG || {}).functionsUrl;
+  if (!base || typeof ACCT === "undefined" || !ACCT || !ACCT.api || typeof ACCT.api.token !== "function") return Promise.reject(new Error("offline"));
+  return ACCT.api.token().then(function (tok) {
+    if (!tok) throw new Error("offline");
+    return fetch(base.replace(/\/$/, "") + "/" + name, {
+      method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + tok },
+      body: JSON.stringify({ data: data || {} })
+    });
+  }).then(function (r) {
+    return r.json().catch(function () { return { error: { message: "That service isn't available right now. Try again later.", status: "UNAVAILABLE" } }; });
+  }).then(function (j) {
+    if (j && j.error) { var e = new Error(j.error.message || "error"); e.status = j.error.status; throw e; }
+    return j ? j.result : null;
+  });
+}
+
+/* DB-TAMU-4X9-B7K, typed any old way */
+function groupKeyShape(raw) { return /^DB[A-Z0-9]{8,12}$/.test(String(raw || "").toUpperCase().replace(/[^A-Z0-9]/g, "")); }
+function groupRedeemKey(raw, win, fail) {
+  if (NATIVE) return fail("Class keys are entered on the website: open drugbugapp.com, then Settings > Redeem a code.");
+  GIFT.busy = true; giftDraw();
+  fnCall("groupRedeem", { token: raw }).then(function (r) {
+    SEAT.tier = "pro"; SEAT.until = r.until; SEAT.orgName = r.orgName; SEAT.alias = r.alias; SEAT.loaded = true; SEAT.redeemedAt = Date.now();
+    store("seat", { tier: "pro", until: r.until, orgName: r.orgName, alias: r.alias });
+    if (typeof webDeepLoad === "function") webDeepLoad();
+    win("You're in " + r.orgName + " as " + r.alias + ". DrugBug Pro is on until " + new Date(r.until).toLocaleDateString() + ". Your quiz results now count toward your class (no name or email is shared).");
+  }).catch(function (e) {
+    fail(e && e.message === "offline" ? "Class keys need an internet connection. Connect and try again." : (e && e.message) || "Could not check that key right now. Try again in a moment.");
+  });
+}
+
+/* Which Meds-by-System groups a drug belongs to (same rules as sysMap, for any level). */
+var SYS_OF = {};
+function sysOfDrug(id) {
+  if (SYS_OF[id]) return SYS_OF[id];
+  var d = DB.drugs[id], out = [];
+  if (d && typeof SYS !== "undefined") {
+    var c = (get(d, 0, 3) || "") + " " + (get(d, 0, 4) || ""), t = d.tags || [];
+    SYS.forEach(function (g) { if (g[4] && (g[3].some(function (x) { return t.indexOf(x) >= 0; }) || g[4].test(c) || (g[5] && g[5].test(c)))) out.push(g[0]); });
+  }
+  return (SYS_OF[id] = out.length ? out : ["other"]);
+}
+
+/* the tally waits in localStorage, so a closed tab or a dead zone loses nothing */
+function groupNote(q, ok) {
+  if (NATIVE || !seatActive()) return;
+  try {
+    var Q = store("groupq") || { t: { n: 0, c: 0 }, s: {} };
+    var ks = q && q.d && DB.drugs[q.d] ? sysOfDrug(q.d) : ["general"];
+    Q.t.n++; if (ok) Q.t.c++;
+    ks.forEach(function (k) { var e = Q.s[k] || (Q.s[k] = { n: 0, c: 0 }); e.n++; if (ok) e.c++; });
+    store("groupq", Q);
+    clearTimeout(SEAT.t);
+    if (Q.t.n >= 15) groupFlush(); else SEAT.t = setTimeout(groupFlush, 60000);
+  } catch (e) {}
+}
+function groupFlush() {
+  if (NATIVE || SEAT.busy || !seatActive()) return;
+  var Q = store("groupq"); if (!Q || !Q.t || !Q.t.n) return;
+  /* the server takes at most 5,000 answers a batch; a phone offline for longer just sends the cap */
+  var lim = function (v, m) { var n = Math.min(v.n, m); return { n: n, c: Math.min(v.c, n) }; };
+  var sent = { t: lim(Q.t, 5000), s: {} };
+  Object.keys(Q.s).forEach(function (k) { if (Q.s[k].n > 0) sent.s[k] = lim(Q.s[k], 2000); });
+  SEAT.busy = true;
+  fnCall("groupReport", { counts: sent.s, total: sent.t }).then(function (r) {
+    SEAT.busy = false;
+    var cur = store("groupq") || { t: { n: 0, c: 0 }, s: {} };
+    if (r && r.ok === false) { store("groupq", null); return; }   /* key reset or class ended: stop counting */
+    /* take away exactly what was sent; anything answered meanwhile stays queued */
+    cur.t.n = Math.max(0, cur.t.n - sent.t.n); cur.t.c = Math.max(0, Math.min(cur.t.n, cur.t.c - sent.t.c));
+    Object.keys(sent.s).forEach(function (k) { var e = cur.s[k]; if (!e) return; e.n = Math.max(0, e.n - sent.s[k].n); e.c = Math.max(0, Math.min(e.n, e.c - sent.s[k].c)); if (!e.n) delete cur.s[k]; });
+    store("groupq", cur.t.n ? cur : null);
+  }).catch(function () {
+    SEAT.busy = false;   /* offline or throttled: it stays queued and goes with the next batch */
+    clearTimeout(SEAT.t); SEAT.t = setTimeout(groupFlush, 90000);
+  });
+}
+document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden") groupFlush(); });
 
 /* ---- buying, and managing ----
    Callable functions are reached the same way modules/iap.js reaches createCheckout: a POST to
