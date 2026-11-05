@@ -1979,9 +1979,10 @@ table.cmptbl tr.dif th{border-left:3px solid var(--gold)}
 .lazy:active{cursor:grabbing}
 .lazyarr,.lazydot{cursor:pointer}
 .lazybug svg{transition:transform .3s cubic-bezier(.22,.9,.26,1);transform-origin:50% 60%}
-.lazycard.mid .lazybug svg{transform:scale(1.16)}
+.lazycard.mid .lazybug svg{transform:scale(1.16);animation:lzpulse 3.2s ease-in-out infinite}
+@keyframes lzpulse{0%,100%{transform:scale(1.16)}50%{transform:scale(1.23)}}
 .lazytrack{transform-style:preserve-3d}
-@media (prefers-reduced-motion:reduce){.lazytrack,.lazybug svg{transition:none}}
+@media (prefers-reduced-motion:reduce){.lazytrack,.lazybug svg{transition:none}.lazycard.mid .lazybug svg{animation:none}}
 /* turntable cards are checkboxes now: tick as many paths as you like */
 .lazycard{padding-top:26px}
 .lazychk{position:absolute;top:10px;left:10px;width:22px;height:22px;border:2px solid var(--line);border-radius:7px;background:var(--surface);transition:background .14s,border-color .14s}
