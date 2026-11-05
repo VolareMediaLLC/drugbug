@@ -4058,6 +4058,20 @@ BUGS.forEach(function (b) {
     BUGS.push(king);
   });
 })();
+/* the Collections tab in the Terrarium store (owner, Nov 5 2026): every collection with its bugs,
+   the ones you have lit and the ones still to find greyed out, and its king at the end */
+function collectionsView() {
+  var keys = Object.keys(COLLS).sort(function (a, b) { var pa = collProgress(a), pb = collProgress(b); return (pb.have / pb.all) - (pa.have / pa.all) || COLL_NAMES[a][0].localeCompare(COLL_NAMES[b][0]); });
+  return '<p class="muted">Own every bug in a collection to crown its king, a bug you cannot get any other way. Tap a bug to find it in the Bug Store.</p>' + keys.map(function (k) {
+    var p = collProgress(k), king = bugById("king-" + k), done = owned(king.id), pct = Math.round(100 * p.have / p.all);
+    var act = done ? '<span class="eqd">Crowned</span>' : p.have >= p.all ? '<button class="btn small" data-claim="' + king.id + '">Claim the king</button>' : '<span class="muted small">' + (p.all - p.have) + ' to go</span>';
+    return '<section class="collcard' + (done ? ' done' : '') + '"><div class="collhead"><div><strong>' + esc(COLL_NAMES[k][0]) + '</strong><span>' + p.have + ' of ' + p.all + ' collected</span></div>' + act + '</div>' +
+      '<div class="collbar"><i style="width:' + pct + '%"></i></div><div class="collbugs">' + COLLS[k].map(function (id) {
+        var b = bugById(id), own = owned(id);
+        return '<button class="collbug' + (own ? ' own' : '') + '" data-shopf="bugs" title="' + esc(b.name) + '">' + bugArt(b, "", { stage: 3 }) + '<span>' + esc(b.name) + '</span></button>';
+      }).join("") + '<div class="collbug king' + (done ? ' own' : '') + '">' + bugArt(king, "", { stage: 5 }) + '<span>' + esc(king.name) + '</span></div></div></section>';
+  }).join("");
+}
 function collProgress(k) { var L = COLLS[k] || []; return { have: L.filter(owned).length, all: L.length }; }
 function unlockText(b) { var u = b.unlock || {}; if (u.coll) { var p = collProgress(u.coll); return "Collect every one of the " + COLL_NAMES[u.coll][0].toLowerCase() + ": " + p.have + " of " + p.all; } return u.text || ""; }
 var STYLES = [["classic", "Classic", 0, ""], ["obsidian", "Obsidian", 150, "brightness(.55) contrast(1.35) saturate(.8)"], ["neon", "Neon", 160, "saturate(2.4) brightness(1.15) contrast(1.1)"], ["bloodmoon", "Blood Moon", 180, "sepia(.6) hue-rotate(-40deg) saturate(3) brightness(.75)"], ["ghost", "Ghost", 170, "grayscale(1) brightness(1.35) opacity(.85)"], ["galaxy", "Galaxy", 220, "hue-rotate(250deg) saturate(1.8) brightness(.85) contrast(1.15)"], ["inverted", "Upside Down", 260, "invert(.88) hue-rotate(180deg)"], ["shiny", "Shiny", 60, "saturate(1.7) brightness(1.08) contrast(1.05)"], ["midnight", "Midnight", 90, "hue-rotate(200deg) saturate(1.3) brightness(.9)"], ["ember", "Ember", 90, "hue-rotate(320deg) saturate(1.5)"], ["frost", "Frost", 90, "hue-rotate(160deg) saturate(.75) brightness(1.12)"], ["toxic", "Toxic", 120, "hue-rotate(90deg) saturate(1.8)"], ["gold", "Gold", 200, "sepia(.9) saturate(2.6) hue-rotate(-12deg) brightness(1.05)"]];
@@ -4104,12 +4118,13 @@ function shopView() {
     var nb = mine.length, ni = ITEMS.filter(function (it) { return ownsItem(it.id); }).length, nf = FACES.filter(function (x) { return faceAvail(x[0]); }).length, ns = 1 + (Prog.d.styles || []).length;
     /* Get Sticks sits at the top, on its own, above the things you spend them on (owner, Nov 1 2026) */
     c += '<button class="hubtile terrsticks" data-shopf="sticks"><span class="ht"><strong>' + (typeof stickIcon === "function" ? stickIcon(20) : "") + 'Get Sticks</strong><span>Stick packs, for when you want the bug now</span></span><span class="tsgo" aria-hidden="true">&rsaquo;</span></button>';
-    c += '<div class="pickhead"><h3>Dress it up</h3></div><div class="hub sub terrtiles">' + [["bugs", "Bug Store", nb + " of " + shopBugs().length + " collected"], ["items", "Wardrobe", ni + " of " + ITEMS.length + " owned"], ["faces", "Faces", nf + " of " + FACES.length + " unlocked"], ["styles", "Colors", ns + " of " + STYLES.length + " owned"], ["borders", "Drug Borders", (typeof BORDERS === "undefined" ? "" : (BORDERS.filter(function (b) { return ownsBorder(b.id); }).length) + " of " + BORDERS.length + " owned")], ["voices", "Voices", (typeof VOICES === "undefined" ? "" : VOICES.filter(function (v) { return ownsVoice(v.id); }).length + " of " + VOICES.length + " owned")], ["music", "Music", shownTracks().filter(function (t) { return ownsTrack(t.id); }).length + " of " + shownTracks().length + " tracks"]].map(function (x) { return '<button class="hubtile" data-shopf="' + x[0] + '"><span class="ht"><strong>' + x[1] + '</strong><span>' + esc(x[2]) + '</span></span></button>'; }).join("") + '</div>';
+    c += '<div class="pickhead"><h3>Dress it up</h3></div><div class="hub sub terrtiles">' + [["bugs", "Bug Store", nb + " of " + shopBugs().length + " collected"], ["collections", "Collections", Object.keys(COLLS).filter(function (k) { return owned("king-" + k); }).length + " of " + Object.keys(COLLS).length + " kings crowned"], ["items", "Wardrobe", ni + " of " + ITEMS.length + " owned"], ["faces", "Faces", nf + " of " + FACES.length + " unlocked"], ["styles", "Colors", ns + " of " + STYLES.length + " owned"], ["borders", "Drug Borders", (typeof BORDERS === "undefined" ? "" : (BORDERS.filter(function (b) { return ownsBorder(b.id); }).length) + " of " + BORDERS.length + " owned")], ["voices", "Voices", (typeof VOICES === "undefined" ? "" : VOICES.filter(function (v) { return ownsVoice(v.id); }).length + " of " + VOICES.length + " owned")], ["music", "Music", shownTracks().filter(function (t) { return ownsTrack(t.id); }).length + " of " + shownTracks().length + " tracks"]].map(function (x) { return '<button class="hubtile" data-shopf="' + x[0] + '"><span class="ht"><strong>' + x[1] + '</strong><span>' + esc(x[2]) + '</span></span></button>'; }).join("") + '</div>';
     return c + '</section>';
   }
   if (S.shopMsg) { c += '<div class="presult good" role="status">' + esc(S.shopMsg) + '</div>'; S.shopMsg = ""; }
   if (f === "styles") return c + stylesView() + '</section>';
   if (f === "music") return c + tracksView() + '</section>';
+  if (f === "collections") return c + collectionsView() + '</section>';
   if (f === "items") return c + itemsView() + '</section>';
   if (f === "faces") return c + facesView() + '</section>';
   if (f === "borders" && typeof bordersView === "function") return c + bordersView() + '</section>';
@@ -4169,7 +4184,7 @@ function stylesView() {
 }
 function stickChip() { if (typeof funOn === "function" && !funOn()) return ""; return '<button class="stickchip" data-goshop="1" aria-label="Terrarium"' + (S.view === "terrarium" ? ' aria-current="page"' : '') + '>' + myBugArt("mini", null, null, myStage()) + '<span class="tlabel">Terrarium</span></button>'; }
 function terrariumView() {
-  var f = S.shopF || "home", title = { bugs: "Bug Store", items: "Wardrobe", faces: "Faces", styles: "Colors", borders: "Drug Borders", voices: "Voices", sticks: "Get Sticks", music: "Music" }[f];
+  var f = S.shopF || "home", title = { bugs: "Bug Store", items: "Wardrobe", faces: "Faces", styles: "Colors", borders: "Drug Borders", voices: "Voices", sticks: "Get Sticks", music: "Music", collections: "Collections" }[f];
   var head = f === "home" ? '<button class="backbtn" data-act="terrback"><span aria-hidden="true">&larr;</span> Studying</button><h2>Terrarium</h2>' : '<button class="backbtn" data-act="shopback"><span aria-hidden="true">&larr;</span> Terrarium</button><h2>' + title + '</h2>';
   return topbar() + '<div class="lvl-gen terrarium"><div class="sechead terrhead">' + head + '</div>' + shopView() + '</div>';
 }
@@ -27767,6 +27782,10 @@ function giftRedeem(code) {
       var from = Math.max(Date.now(), (Prog.d.proGift && Prog.d.proGift.until) || 0);
       Prog.d.proGift = { until: from + d.pro * 864e5 };
       got.push("DrugBug Pro until " + new Date(Prog.d.proGift.until).toLocaleDateString());
+    }
+    if (d.bug && typeof bugById === "function" && bugById(d.bug).id === d.bug) {   /* a gift can carry a bug (owner, Nov 5 2026) */
+      if (!owned(d.bug)) Prog.d.owned = (Prog.d.owned || []).concat([d.bug]);
+      Prog.d.avatar = d.bug; Prog.d.avatarTs = Date.now(); got.push("the " + bugById(d.bug).name);
     }
     if (d.ag) {
       store("agcode", d.ag);

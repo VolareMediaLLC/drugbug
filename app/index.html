@@ -2822,6 +2822,15 @@ table.cmptbl tr.dif th{border-left:3px solid var(--gold)}
 .lgtoggle{display:block;margin:10px 0 0;padding:0;border:0;background:none;color:var(--gen,#2bb3a3);font:inherit;font-size:13.5px;font-weight:700;cursor:pointer}
 .lgtoggle::after{content:" \25BE"}.lgcard.open .lgtoggle::after{content:" \25B4"}
 .pkbonus{display:block;font-size:12px;font-weight:700;color:var(--gold,#d4972a)}
+/* Collections tab (owner, Nov 5 2026) */
+.collcard{border:1px solid var(--line);border-radius:16px;background:var(--surface);padding:12px 14px;margin:0 0 12px}.collcard.done{border-color:var(--gold,#f2ac17)}
+.collhead{display:flex;justify-content:space-between;align-items:center;gap:10px}.collhead div{display:flex;flex-direction:column}.collhead strong{font-size:16px}.collhead span{font-size:13px;color:var(--muted)}
+.collbar{height:6px;border-radius:99px;background:var(--surface-2);margin:8px 0 10px;overflow:hidden}.collbar i{display:block;height:100%;background:linear-gradient(90deg,#fbbf24,#f59e0b);border-radius:99px}
+.collbugs{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px}
+.collbug{display:flex;flex-direction:column;align-items:center;gap:2px;border:1px solid var(--line);border-radius:12px;background:var(--bg);padding:4px 2px;color:var(--ink);font:inherit;cursor:pointer}
+.collbug svg{width:52px;height:52px;filter:grayscale(1) brightness(.55);opacity:.7}.collbug.own svg{filter:none;opacity:1}
+.collbug span{font-size:9.5px;line-height:1.15;text-align:center;color:var(--muted)}.collbug.own span{color:var(--ink)}
+.collbug.king{border-color:var(--gold,#f2ac17);cursor:default}
 </style>
 
 <div class="wrap" id="app"><div id="boot" aria-hidden="true"><div class="bootlogo">Drug<span>Bug</span></div><div class="bootbar"><i></i></div><p class="bootnote">Loading your medications</p></div></div>
