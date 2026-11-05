@@ -2799,6 +2799,16 @@ table.cmptbl tr.dif th{border-left:3px solid var(--gold)}
 .hol-thanksgiving .holfx .holp{display:none}
 /* the mantis music button (owner, Nov 5 2026) */
 .musicbtn .muico{display:block}.musettico{display:inline-block;vertical-align:middle;margin-right:8px}.musettico svg{display:block}
+/* daily-login prizes (owner, Nov 5 2026) */
+.lgcard{margin:12px 0;padding:14px;border-radius:18px;background:var(--surface);border:1px solid var(--line)}
+.lgcard.ready{border-color:var(--gold,#f2ac17);box-shadow:0 0 0 3px color-mix(in srgb,var(--gold,#f2ac17) 25%,transparent)}
+.lghead{display:flex;align-items:center;justify-content:space-between;gap:12px}.lghead div{display:flex;flex-direction:column}.lghead strong{font-size:17px}.lghead span{font-size:13px;color:var(--muted)}
+.lgstrip{list-style:none;margin:12px 0 0;padding:0;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.lgstrip li{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);min-height:62px;justify-content:center}
+.lgstrip li span{font-size:10.5px;font-weight:700;color:var(--muted);white-space:nowrap}.lgstrip li b{font-size:14px;font-family:var(--f-mono)}
+.lgstrip li.big{border-color:var(--gold,#f2ac17)}.lgstrip li.now{background:color-mix(in srgb,var(--gold,#f2ac17) 22%,var(--surface-2))}
+.lgbug svg{width:34px;height:34px;display:block}.lgnext{margin:10px 0 0;font-size:13px;color:var(--muted)}
+.lgcard .presult{margin:10px 0 0}.lgcard .btn{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1c1917;border:0;font-weight:800;padding:10px 18px;border-radius:999px}
 </style>
 
 <div class="wrap" id="app"><div id="boot" aria-hidden="true"><div class="bootlogo">Drug<span>Bug</span></div><div class="bootbar"><i></i></div><p class="bootnote">Loading your medications</p></div></div>

@@ -164,26 +164,39 @@ def bug_rock():
             for i in range(4): s.d(48 - i * 3, B + 2 + i * .5, 110, 0.8, kit=16)
             s.raw(B + 3.5, chirp(3, 3900), 0.8)
     s.finish('bug-rock.mp3')
-def bug_country():
-    s = Song(112, 26)
-    prog = ['G', 'G', 'C', 'G', 'G', 'D', 'G', 'G', 'C', 'C', 'G', 'Em', 'C', 'D', 'G', 'D']
-    fid = [[(0, 74, 1), (1, 71, .5), (1.5, 74, .5), (2, 79, 1.5), (3.5, 78, .5)], [(0, 76, 1), (1, 74, .5), (1.5, 72, .5), (2, 71, 2)],
-           [(0, 72, .5), (.5, 74, .5), (1, 76, 1), (2, 74, .5), (2.5, 72, .5), (3, 71, 1)], [(0, 74, 3), (3, 71, 1)]]
-    roll = [0, 2, 1, 0, 2, 1, 0, 2]
+def banjo_bug():
+    """Banjo Bug: a bluegrass breakdown. Banjo forward rolls carry it, the hammered dulcimer takes
+    the tune, and an upright bass and brushed snare keep a two-step underneath."""
+    s = Song(118, 26)
+    prog = ['G', 'G', 'C', 'G', 'G', 'G', 'D', 'D', 'G', 'G', 'C', 'C', 'G', 'D', 'G', 'G']
+    tune = [[(0, 71, .5), (.5, 74, .5), (1, 79, 1), (2, 78, .5), (2.5, 76, .5), (3, 74, 1)],
+            [(0, 71, .5), (.5, 69, .5), (1, 67, .5), (1.5, 69, .5), (2, 71, 2)],
+            [(0, 72, .5), (.5, 76, .5), (1, 79, 1), (2, 76, .5), (2.5, 72, .5), (3, 76, 1)],
+            [(0, 74, 1.5), (1.5, 71, .5), (2, 67, 2)],
+            [(0, 71, .5), (.5, 74, .5), (1, 79, .5), (1.5, 81, .5), (2, 83, 1), (3, 81, 1)],
+            [(0, 79, .5), (.5, 78, .5), (1, 76, .5), (1.5, 74, .5), (2, 71, 2)],
+            [(0, 69, .5), (.5, 71, .5), (1, 72, .5), (1.5, 74, .5), (2, 76, 1), (3, 78, 1)],
+            [(0, 79, 2), (2, 74, 1), (3, 67, 1)]]
+    roll = [0, 1, 2, 0, 1, 2, 0, 2]   # a forward roll: thumb, index, middle
     for b in range(s.bars):
         B = b * 4; c = prog[b % 16]; r, q = chord(c)
+        tones = [55 + ((r + i - 55) % 12) for i in q]; tones = sorted(tones) + [62 + ((r - 62) % 12) + 12]
+        for i in range(8):   # banjo, always rolling; the 5th string drone G on the offbeats
+            k = tones[roll[i] % 3] + 12 if i % 4 != 3 else 79
+            s.n(105, k, B + i * .5, .45, 92 if i % 2 == 0 else 78, 0.62, pan=-0.25)
         root = 36 + r if r < 5 else 24 + r; fifth = root + 7 if root + 7 < 50 else root - 5
-        s.n(32, root, B, .9, 100, 1.2); s.n(32, fifth, B + 2, .9, 95, 1.2)
-        comp(s, 25, B + 1, c, .45, 52, 78, 0.6); comp(s, 25, B + 3, c, .45, 52, 72, 0.6)
-        s.d(36, B, 95, 0.8, kit=8); s.d(36, B + 2, 90, 0.8, kit=8); s.d(37, B + 1, 90, 0.7, kit=8); s.d(37, B + 3, 90, 0.7, kit=8)
-        for i in range(8): s.d(70, B + i * .5, 60, 0.35, kit=8)
-        if b >= 2:
-            tones = [60 + ((r + i) % 12) for i in q]
-            for i in range(8): s.n(105, tones[roll[i] % len(tones)] + 12, B + i * .5, .4, 80, 0.45)
-        if 4 <= b < 20:
-            for o, k, d in fid[b % 4]: s.n(110 if b < 12 else 22, k - 12 if b >= 12 else k, B + o, d * .95, 92, 0.6)
+        s.n(32, root, B, .9, 104, 1.25); s.n(32, fifth, B + 2, .9, 98, 1.2)
+        if b % 2: s.n(32, fifth + 2, B + 3.5, .45, 85, 1.0)
+        s.d(36, B, 80, 0.6, kit=40); s.d(36, B + 2, 76, 0.6, kit=40)
+        s.d(38, B + 1, 88, 0.7, kit=40); s.d(38, B + 3, 88, 0.7, kit=40)
+        for i in range(8): s.d(42, B + i * .5, 50, 0.3, kit=40)
+        comp(s, 25, B + 1, c, .4, 52, 70, 0.4); comp(s, 25, B + 3, c, .4, 52, 66, 0.4)
+        if b >= 2:   # hammered dulcimer melody, doubled an octave up very softly
+            for o, k, d in tune[(b - 2) % 8]: s.n(15, k, B + o, d * 1.1, 98, 0.85, pan=0.2); s.n(15, k + 12, B + o, d * .6, 60, 0.2, pan=0.3)
+        if b >= 18 and b % 2 == 0:
+            for o, k, d in tune[(b + 1) % 8]: s.n(110, k - 12, B + o, d * .95, 80, 0.4, pan=0.35)
         if b % 4 == 3: s.raw(B + 3.5, chirp(3, 4400), 0.7)
-    s.finish('bug-country.mp3')
+    s.finish('banjo-bug.mp3')
 def classy_bug():
     s = Song(100, 28, beats=3)      # a minuet
     prog = ['G', 'D', 'G', 'C', 'G', 'D', 'G', 'D', 'Em', 'Am', 'D', 'G', 'C', 'G', 'D', 'G']
@@ -221,5 +234,5 @@ def bug_pop():
         if b % 8 == 0: s.d(49, B, 90, 0.5, kit=24)
     s.finish('bug-pop.mp3')
 
-ALL = dict(jazz=slow_bug_jazz, house=bug_house, step=bugstep, rock=bug_rock, country=bug_country, classy=classy_bug, pop=bug_pop)
+ALL = dict(jazz=slow_bug_jazz, house=bug_house, step=bugstep, rock=bug_rock, banjo=banjo_bug, pop=bug_pop)
 for k in (sys.argv[1:] or ALL): ALL[k]()
