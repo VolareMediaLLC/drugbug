@@ -4056,7 +4056,7 @@ function tracksView() {
   muRefundOld(); var rf = Prog.d.muRefundAmt ? '<div class="presult good" role="status">New music is here! The old tracks were retired, so the ' + Prog.d.muRefundAmt.toLocaleString() + ' sticks you spent on them are back in your jar.</div>' : ''; if (Prog.d.muRefundAmt) { delete Prog.d.muRefundAmt; saveProg(); }
   return rf + '<p class="muted">Background music tracks. Preview any track, buy it with sticks, then tap Use. Turn music on or off with the note button at the top.</p><div class="trklist">' + shownTracks().map(function (t) {
     var own = ownsTrack(t.id), on = (Prog.d.track && ownsTrack(Prog.d.track) ? Prog.d.track : muDefault()) === t.id, pv = MU.preview === t.id;
-    var act = on ? '<span class="eqd">In use</span>' : own ? '<button class="btn small" data-trackuse="' + t.id + '">Use</button>' : trackProLocked(t) ? '<button class="btn small ghost" data-pw="open">' + tierBadge("pro") + ' Unlock</button>' : '<button class="btn small' + (bal >= t.price ? '' : ' ghost') + '" data-trackbuy="' + t.id + '"' + (bal >= t.price ? '' : ' disabled') + '>' + (bal >= t.price ? 'Buy' : 'Need ' + (t.price - bal) + ' more') + '</button>';
+    var act = on ? '<span class="eqd">In use</span>' : own ? '<button class="btn small" data-trackuse="' + t.id + '">Use</button>' : trackProLocked(t) ? '<button class="btn small ghost" data-pw="open">' + tierBadge(t.tier || "pro") + ' Unlock</button>' : '<button class="btn small' + (bal >= t.price ? '' : ' ghost') + '" data-trackbuy="' + t.id + '"' + (bal >= t.price ? '' : ' disabled') + '>' + (bal >= t.price ? 'Buy' : 'Need ' + (t.price - bal) + ' more') + '</button>';
     return '<div class="trk' + (on ? ' eq' : '') + '">' + note + '<div class="trktx"><strong>' + esc(t.name) + '</strong><span class="muted small">' + esc(t.desc) + ' · ' + t.bpm + ' bpm</span>' + (own ? '<span class="muted small">' + (t.price ? 'Owned' : t.season && !MU_ONLY ? 'Free for Halloween' : 'Free') + '</span>' : stickTag(t.price)) + '</div><div class="bact"><button class="btn small ghost" data-trackpv="' + t.id + '">' + (pv ? 'Playing…' : 'Preview') + '</button>' + act + '</div></div>';
   }).join("") + '</div>';
 }
@@ -7536,17 +7536,17 @@ var TRACKS = [
   { id: "harvest-table", name: "Harvest Table", price: 0, season: "thanksgiving", desc: "Warm autumn lo-fi: Rhodes, nylon guitar and a cor anglais over brushes.", bpm: 76, src: "music/harvest-table.mp3" },
   /* the bug genres (owner, Nov 5 2026): rendered from a General MIDI SoundFont plus synthesized
      crickets, wing buzz and wobble bass. Source: tools/music/compose.py */
-  { id: "slow-bug-jazz", name: "Slow Bug Jazz", price: 0, desc: "A late-night ballad: brushes, walking bass, Rhodes and a breathy tenor sax.", bpm: 66, src: "music/slow-bug-jazz.mp3" },
-  { id: "bug-house", name: "Bug House", price: 0, desc: "Four on the floor, house piano stabs and a cricket on the hi-hats.", bpm: 122, src: "music/bug-house.mp3" },
-  /* more Bug House, for Pro (owner, Nov 5 2026) */
-  { id: "bug-house-deep-hive", name: "Bug House: Deep Hive", price: 0, pro: true, desc: "Deep house: minor-ninth Rhodes, warm pads and a rolling low end.", bpm: 120, src: "music/bug-house-deep-hive.mp3" },
-  { id: "bug-house-disco-beetle", name: "Bug House: Disco Beetle", price: 0, pro: true, desc: "Disco house: octave bass, string stabs, funky guitar chops and a trumpet hook.", bpm: 124, src: "music/bug-house-disco-beetle.mp3" },
-  { id: "bug-house-acid-ant", name: "Bug House: Acid Ant", price: 0, pro: true, desc: "A squelchy sixteenth-note acid bassline over 808 drums.", bpm: 126, src: "music/bug-house-acid-ant.mp3" },
-  { id: "bug-house-piano-moth", name: "Bug House: Piano Moth", price: 0, pro: true, desc: "Classic piano house: big chords, a flute hook and an organ swell.", bpm: 123, src: "music/bug-house-piano-moth.mp3" },
-  { id: "bugstep", name: "Bugstep", price: 0, desc: "A slow build, then the drop: wobble bass and buzzing wings.", bpm: 140, src: "music/bugstep.mp3" },
-  { id: "bug-rock", name: "Bug Rock", price: 0, desc: "Crunchy power chords, a big backbeat and a screaming lead.", bpm: 132, src: "music/bug-rock.mp3" },
-  { id: "banjo-bug", name: "Banjo Bug", price: 0, desc: "A bluegrass breakdown: rolling banjo, hammered dulcimer and a two-step bass.", bpm: 118, src: "music/banjo-bug.mp3" },
-  { id: "bug-pop", name: "Bug Pop", price: 0, desc: "Bright synth-pop with a hook you will hum on shift.", bpm: 116, src: "music/bug-pop.mp3" },
+  { id: "slow-bug-jazz", name: "Slow Bug Jazz", price: 0, tier: "plus", desc: "A late-night ballad: brushes, walking bass, Rhodes and a breathy tenor sax.", bpm: 66, src: "music/slow-bug-jazz.mp3" },
+  { id: "bug-house", name: "Bug House", price: 0, tier: "plus", desc: "Four on the floor, house piano stabs and a cricket on the hi-hats.", bpm: 122, src: "music/bug-house.mp3" },
+  /* more Bug House, for Plus (owner, Nov 5 2026; was Pro) */
+  { id: "bug-house-deep-hive", name: "Bug House: Deep Hive", price: 0, tier: "plus", desc: "Deep house: minor-ninth Rhodes, warm pads and a rolling low end.", bpm: 120, src: "music/bug-house-deep-hive.mp3" },
+  { id: "bug-house-disco-beetle", name: "Bug House: Disco Beetle", price: 0, tier: "plus", desc: "Disco house: octave bass, string stabs, funky guitar chops and a trumpet hook.", bpm: 124, src: "music/bug-house-disco-beetle.mp3" },
+  { id: "bug-house-acid-ant", name: "Bug House: Acid Ant", price: 0, tier: "plus", desc: "A squelchy sixteenth-note acid bassline over 808 drums.", bpm: 126, src: "music/bug-house-acid-ant.mp3" },
+  { id: "bug-house-piano-moth", name: "Bug House: Piano Moth", price: 0, tier: "plus", desc: "Classic piano house: big chords, a flute hook and an organ swell.", bpm: 123, src: "music/bug-house-piano-moth.mp3" },
+  { id: "bugstep", name: "Bugstep", price: 0, tier: "plus", desc: "A slow build, then the drop: wobble bass and buzzing wings.", bpm: 140, src: "music/bugstep.mp3" },
+  { id: "bug-rock", name: "Bug Rock", price: 0, tier: "plus", desc: "Crunchy power chords, a big backbeat and a screaming lead.", bpm: 132, src: "music/bug-rock.mp3" },
+  { id: "banjo-bug", name: "Banjo Bug", price: 0, tier: "plus", desc: "A bluegrass breakdown: rolling banjo, hammered dulcimer and a two-step bass.", bpm: 118, src: "music/banjo-bug.mp3" },
+  { id: "bug-pop", name: "Bug Pop", price: 0, tier: "plus", desc: "Bright synth-pop with a hook you will hum on shift.", bpm: 116, src: "music/bug-pop.mp3" },
   { id: "night-shift-lofi", name: "Night Shift", price: 500, desc: "Dreamy, spacey keys and pads for the quiet hours.", bpm: 68, src: "music/night-shift.mp3" },
   { id: "flight-crew", name: "Flight Crew", price: 500, desc: "Funky neo-soul groove with clav, guitar and a tight beat.", bpm: 98, src: "music/flight-crew.mp3" },
   { id: "golden-hour", name: "Golden Hour", price: 500, desc: "Sunny dance-pop with a steel drum hook.", bpm: 112, src: "music/golden-hour.mp3" },
@@ -7572,7 +7572,7 @@ function trackAvail(t) { return muOnly(t.id) && (!t.season || muSeason(t.season)
 /* with MU_ONLY set, the default is whichever of those tracks is in season right now */
 function muDefault() { var L = TRACKS.filter(trackAvail); return L.length ? L[0].id : "study-session"; }
 function shownTracks() { return TRACKS.filter(trackAvail); }
-function trackProLocked(t) { return !!(t && t.pro && typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier("pro")); }
+function trackProLocked(t) { var need = t && (t.tier || (t.pro ? "pro" : "")); return !!(need && typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier(need)); }
 function ownsTrack(id) { var t = trackById(id); if (!trackAvail(t) || trackProLocked(t)) return false; return !t.price || (Prog.d.tracks || []).indexOf(id) >= 0; }
 function curTrack() { muRefundOld(); if (MU.preview) return trackById(MU.preview); var id = Prog.d.track; return trackById(id && ownsTrack(id) ? id : muDefault()); }
 function muTick() {
