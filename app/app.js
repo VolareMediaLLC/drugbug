@@ -7243,7 +7243,7 @@ function settingsView() {
     setRow("Voice speed", "For the \"Say it\" button." + (SPEAK_OK ? "" : " Your device does not support speech."), setOpts("voiceRate", s.voiceRate, [["slow", "Slow"], ["normal", "Normal"], ["fast", "Fast"]]) + (SPEAK_OK ? ' <button class="btn small ghost" data-say="epinephrine">Test</button>' : '')) +
     setRow("Written pronunciation", "Shows a guide like ep-ih-NEF-rin.", setTog("showPhon", s.showPhon, "Show pronunciation")) +
     setRow("Bug buddy", "Your bug on the side of the screen, reacting to your answers.", setTog("buddy", s.buddy, "Show my bug buddy")) +
-    setRow("Background music", "Relaxed lo-fi beats while you study. You can also tap the music note at the top of any page.", setTog("music", s.music !== false, "Background music") + '<label class="muvol"><span>Volume</span><input type="range" min="0" max="100" step="5" id="muvolset" value="' + muLevel() + '" aria-label="Music volume"><output id="muvolsetv">' + muLevel() + '%</output></label>') +
+    setRow("Background music", "Jazz, house, bugstep, rock, country, classy or pop while you study. You can also tap the mantis at the top of any page.", '<span class="musettico">' + muIcon(true) + '</span>' + setTog("music", s.music !== false, "Background music") + '<label class="muvol"><span>Volume</span><input type="range" min="0" max="100" step="5" id="muvolset" value="' + muLevel() + '" aria-label="Music volume"><output id="muvolsetv">' + muLevel() + '%</output></label>') +
     setRow("Sound effects", "Answer tones, the game sounds and the level transitions.", setTog("sfx", s.sfx, "Sound effects") + ' <button class="btn small ghost" data-act="sfxtest">Test</button>') +
     setRow("Is sound working?", "What the app can actually see about the speakers.",
       '<ul class="sndchk">' + audioReport().map(function (r) {
@@ -7429,7 +7429,7 @@ function muOn() { return SET().music !== false && (typeof funOn !== "function" |
 /* Oct 2026 (owner): only the seasonal tracks for now, until the rest of the music is sorted out.
    Set MU_ONLY = null to bring back the full list. Each entry still has to pass its own season
    check below, so Haunted Study Hall steps aside for Harvest Table on November 1. */
-var MU_ONLY = ["haunted-study-hall", "harvest-table"];
+var MU_ONLY = ["haunted-study-hall", "harvest-table", "slow-bug-jazz", "bug-house", "bugstep", "bug-rock", "bug-country", "classy-bug", "bug-pop"];
 function muOnly(id) { return !MU_ONLY || MU_ONLY.indexOf(id) >= 0; }
 var TRACKS = [
   { id: "study-session", name: "Study Session", price: 0, desc: "Warm electric piano, a laid-back beat and a little vinyl crackle.", bpm: 82, src: "music/study-session.mp3" },
@@ -7437,6 +7437,15 @@ var TRACKS = [
   { id: "rainy-day-review", name: "Rainy Day Review", price: 0, desc: "A swinging jazz trio with walking bass and soft rain outside.", bpm: 118, src: "music/rainy-day-review.mp3" },
   { id: "haunted-study-hall", name: "Haunted Study Hall", price: 0, season: "halloween", desc: "Spooky lo-fi with a music box, a ghostly choir and a distant bell.", bpm: 78, src: "music/haunted-study-hall.mp3" },
   { id: "harvest-table", name: "Harvest Table", price: 0, season: "thanksgiving", desc: "Warm autumn lo-fi: Rhodes, nylon guitar and a cor anglais over brushes.", bpm: 76, src: "music/harvest-table.mp3" },
+  /* the bug genres (owner, Nov 5 2026): rendered from a General MIDI SoundFont plus synthesized
+     crickets, wing buzz and wobble bass. Source: tools/music/compose.py */
+  { id: "slow-bug-jazz", name: "Slow Bug Jazz", price: 0, desc: "A late-night ballad: brushes, walking bass, Rhodes and a breathy tenor sax.", bpm: 66, src: "music/slow-bug-jazz.mp3" },
+  { id: "bug-house", name: "Bug House", price: 0, desc: "Four on the floor, house piano stabs and a cricket on the hi-hats.", bpm: 122, src: "music/bug-house.mp3" },
+  { id: "bugstep", name: "Bugstep", price: 0, desc: "A slow build, then the drop: wobble bass and buzzing wings.", bpm: 140, src: "music/bugstep.mp3" },
+  { id: "bug-rock", name: "Bug Rock", price: 0, desc: "Crunchy power chords, a big backbeat and a screaming lead.", bpm: 132, src: "music/bug-rock.mp3" },
+  { id: "bug-country", name: "Bug Country", price: 0, desc: "Boom-chick bass, banjo rolls, a fiddle and a little harmonica.", bpm: 112, src: "music/bug-country.mp3" },
+  { id: "classy-bug", name: "Classy Bug", price: 0, desc: "A minuet for harpsichord, cello and violin. Pinkies out.", bpm: 100, src: "music/classy-bug.mp3" },
+  { id: "bug-pop", name: "Bug Pop", price: 0, desc: "Bright synth-pop with a hook you will hum on shift.", bpm: 116, src: "music/bug-pop.mp3" },
   { id: "night-shift-lofi", name: "Night Shift", price: 500, desc: "Dreamy, spacey keys and pads for the quiet hours.", bpm: 68, src: "music/night-shift.mp3" },
   { id: "flight-crew", name: "Flight Crew", price: 500, desc: "Funky neo-soul groove with clav, guitar and a tight beat.", bpm: 98, src: "music/flight-crew.mp3" },
   { id: "golden-hour", name: "Golden Hour", price: 500, desc: "Sunny dance-pop with a steel drum hook.", bpm: 112, src: "music/golden-hour.mp3" },
@@ -7514,7 +7523,21 @@ function muGesture() {
   muStart();
 }
 function muSync() { if (muOn() && MU.armed && muLevel() > 0) muStart(); else muStop(); if (MU.master && MU.ctx) MU.master.gain.setTargetAtTime(muVol(), MU.ctx.currentTime, 0.05); var b = $(".musicbtn"); if (b && b.getAttribute("aria-pressed") !== String(muOn())) { b.setAttribute("aria-pressed", String(muOn())); b.innerHTML = muIcon(); } }
-function muIcon() { return '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M9 18.5a2.5 2.5 0 1 1-2-2.45V5l11-2v12.5a2.5 2.5 0 1 1-2-2.45V7.1L9 8.4z"/>' + (muOn() ? '' : '<path d="M3 3l18 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>') + '</svg>'; }
+/* the music button: a praying mantis in sunglasses blowing a blues harp (owner, Nov 5 2026) */
+function muIcon(big) {
+  var w = big ? 44 : 24;
+  return '<svg class="muico" viewBox="0 0 24 24" width="' + w + '" height="' + w + '" aria-hidden="true">' +
+    '<path d="M9.2 5.2 Q7 1.6 3.6 1.4 M14.8 5.2 Q17 1.6 20.4 1.4" stroke="#3f8f2e" stroke-width="1.1" fill="none" stroke-linecap="round"/>' +
+    '<path d="M3.4 6.2 Q12 2.4 20.6 6.2 Q18.4 13.6 12 17.2 Q5.6 13.6 3.4 6.2Z" fill="#7ccf55" stroke="#3f8f2e" stroke-width=".8"/>' +
+    '<ellipse cx="7.6" cy="8" rx="3.3" ry="2.3" fill="#111827"/><ellipse cx="16.4" cy="8" rx="3.3" ry="2.3" fill="#111827"/>' +
+    '<path d="M10.8 7.6 Q12 6.9 13.2 7.6" stroke="#111827" stroke-width="1.1" fill="none"/>' +
+    '<path d="M5.6 7.2 l1.6 -.8 M14.4 7.2 l1.6 -.8" stroke="#fff" stroke-width=".8" stroke-linecap="round" opacity=".85"/>' +
+    '<rect x="7.4" y="13.4" width="9.2" height="3" rx=".8" fill="#cbd5e1" stroke="#64748b" stroke-width=".6" transform="rotate(-6 12 14.9)"/>' +
+    '<path d="M9 14.6 h.01 M10.6 14.4 h.01 M12.2 14.3 h.01 M13.8 14.1 h.01 M15.3 13.9 h.01" stroke="#334155" stroke-width="1.1" stroke-linecap="round"/>' +
+    '<path d="M5.2 19.8 Q6 15.6 7.8 15.1 M18.8 19.4 Q18 15 16.2 14.4" stroke="#7ccf55" stroke-width="1.6" fill="none" stroke-linecap="round"/>' +
+    '<path d="M20.2 9.6 v-4 l2.4 -.6 v3.4" stroke="#fbbf24" stroke-width=".9" fill="none"/><circle cx="19.6" cy="9.8" r=".9" fill="#fbbf24"/><circle cx="22" cy="8.9" r=".9" fill="#fbbf24"/>' +
+    (muOn() ? '' : '<path d="M3 3l18 18" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round"/>') + '</svg>';
+}
 function musicBtn() { if (typeof funOn === "function" && !funOn()) return ""; return '<button class="theme-btn musicbtn" data-act="music" aria-pressed="' + muOn() + '" aria-label="Background music" title="Background music">' + muIcon() + '</button>'; }
 /* browsers only allow sound after a tap, so start on the first interaction */
 ["pointerdown", "keydown", "touchend", "click"].forEach(function (ev) { document.addEventListener(ev, function () { audioCtx(); try { sfxLoad("gasp"); } catch (e) {} if (!MU.playing || (MU.ctx && MU.ctx.state !== "running")) muGesture(); }, { passive: true, capture: true }); });
