@@ -338,7 +338,7 @@ function scopeNote(id) { if (S.view !== "level") return ""; return scopeFor(S.le
 var UTIL_VIEWS = { settings: 1, easy: 1, classes: 1, admin: 1 };
 /* Tabs that moved inside Study Tools, Oct 29 2026. Old links, restored sessions and saved state
    land on the tool instead of an orphan page. */
-var MOVED_TABS = { cards: "cards", games: "games", prep: "prep", ixn: null };
+var MOVED_TABS = { cards: "cards", games: "games", prep: "prep", ixn: null, medlist: null };
 function fixTab() {
   if (!S.tab || !(S.tab in MOVED_TABS)) return;
   var tool = MOVED_TABS[S.tab];
@@ -362,7 +362,7 @@ function go(view, opts) {
 function topbar() {
   try { document.documentElement.setAttribute("data-serious", funOn() ? "" : "1"); } catch (e) {}
   var fun = funOn();
-  var c = '<div class="topbar">' +
+  var c = '<div class="topbar">' + (!FOCUSED_READY ? '' : '<button class="modetog' + (fun ? '' : ' serious') + '" data-act="funtog" role="switch" aria-checked="' + (fun ? 'true' : 'false') + '" aria-label="Focused or Enhanced" title="' + (fun ? 'Enhanced: tap for Focused, just the studying' : 'Focused: tap for Enhanced, the full experience') + '"><span class="modedot"></span><span class="modetx">' + (fun ? 'Enhanced' : 'Focused') + '</span></button>') +
     '<button class="brand' + (S.view === "home" ? ' onhome' : '') + '" data-go="home" aria-label="DrugBug home">Drug<span>Bug</span></button><nav class="crumbs">';
   var rc = routeCtx(); if (rc === "fm") rc = "ph"; if (ROUTES[rc]) c += '<span>/</span><button data-go="' + ROUTES[rc].view + '">' + ROUTES[rc].name + '</button>';
   if (S.view === "level") c += '<span class="cur">/</span><span class="cur">' + esc(levelObj(S.level).name) + '</span>';
@@ -373,7 +373,7 @@ function topbar() {
   if (S.view === "settings") c += '<span>/</span><span>Settings</span>';
   if (S.view === "terrarium") c += '<span>/</span><span>Terrarium</span>';
   if (S.view === "everyday") c += '<span>/</span>' + (S.evTab ? '<button data-evtab="">Everyday Health</button>' : '<span>Everyday Health</span>');
-  var extra = (!SOCIAL ? '' : '<button class="theme-btn" data-go="classes"' + (S.view === "classes" ? ' aria-current="page"' : '') + '>Classes</button>') + (Admin.can ? '<button class="theme-btn admin-btn" data-go="admin"' + (S.view === "admin" ? ' aria-current="page"' : '') + '><span class="lg">Control Center</span><span class="sm">Control Center</span></button>' : '') + '<button class="theme-btn easy-btn" data-act="easy"' + (S.view === "easy" ? ' aria-current="page"' : '') + '>Easy Learn</button><button class="theme-btn mob-only" data-act="openproto">Protocols</button>';
+  var extra = (!SOCIAL ? '' : '<button class="theme-btn" data-go="classes"' + (S.view === "classes" ? ' aria-current="page"' : '') + '>Classes</button>') + (Admin.can ? '<button class="theme-btn admin-btn" data-go="admin"' + (S.view === "admin" ? ' aria-current="page"' : '') + '><span class="lg">Control Center</span><span class="sm">Control Center</span></button>' : '') + '<button class="theme-btn mob-only" data-act="openproto">Protocols</button>';
   c += '</nav><span class="spacer"></span><div class="tbacts">' + stickChip() + '<span class="tbx">' + extra + '</span><button class="theme-btn srch-btn" data-act="gsearch" aria-label="Search all drugs" title="Search all drugs"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button><button class="theme-btn menu-btn" data-act="tbmenu" aria-expanded="' + !!S.menu + '" aria-label="More">More</button>' + musicBtn() + gearBtn() + (typeof funOn === "function" && !funOn() ? '' : '<button class="tbsticks" data-goshop="1" data-shopf="sticks" aria-label="' + sticks() + ' sticks. Get more sticks" title="Get Sticks">' + stickIcon(18) + '<strong>' + sticks().toLocaleString() + '</strong></button>') + '</div>' + (S.menu ? '<div class="tbmenu" role="menu">' + extra + '<button class="theme-btn" data-idea="1">Send an idea</button></div>' : '') + '</div>';
   return c + (typeof muPop === "function" ? muPop() : "") + backRow();
 }
@@ -389,6 +389,7 @@ function backRow() {
 
 /* ---------- views ---------- */
 function viewHome() {
+  S.lvWheelFor = null; S.lvGrid = false; S.lvWheel = null;   /* the level turntable opens on your pick again next time */
   var genN = genIds().length, fun = typeof funOn !== "function" || funOn();
   /* the whole main menu wears the season, not just the hero (owner, Nov 1 2026) */
   var HOL = typeof holToday === "function" ? holToday() : null;
@@ -399,22 +400,34 @@ function viewHome() {
      than a generic grub: the top of each ladder, drawn by levelBug() with its own tier effects.
      (owner, Nov 2 2026) */
   var ROUTE_BUG = { ph: "flight", rn: "rn", md: "intern", im: "ir" };
+  /* the bug you picked at the start (your level) sits on that path's card (owner, Nov 5 2026) */
+  function pathBug(cls) {
+    var pick = [Prog.d.startLevel, store("lastLevel")].filter(function (k) { return k && typeof levelObj === "function" && levelObj(k) && routeOfLevel(k) === cls; })[0];
+    return pick || ROUTE_BUG[cls];
+  }
   function mini(cls, go, title, line, bug) {
-    var lk = ROUTE_BUG[cls];
+    if (!fun) {   /* Focused: a clean row, no bug, no chips (owner, Nov 5 2026) */
+      var at = S.pointGo === go ? 'data-startlearn="' + go + '"' : go.indexOf("level:") === 0 ? 'data-level="' + go.slice(6) + '"' : 'data-go="' + go + '"';
+      return '<button class="route rmini fpath ' + cls + '" ' + at + '><span class="fpic" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + (FPATH_ICO[cls] || "") + '</svg></span>' +
+        '<span class="mtx"><h2>' + title + '</h2><p>' + line + '</p>' + (ROUTE_MORE[cls] ? '<span class="fpmore">' + ROUTE_MORE[cls].map(function (x) { return '<span>' + esc(x) + '</span>'; }).join("") + '</span>' : '') + '</span>' +
+        '<span class="fpgo" aria-hidden="true">&rsaquo;</span></button>';
+    }
+    var lk = pathBug(cls);
     var art = lk && typeof levelBug === "function" ? levelBug(lk)
       : bugArt(typeof bug === "string" ? bugById(bug) : bug, "", { mood: "happy" });
     var hit = S.pointGo === go;
-    return '<button class="route rmini ' + cls + pt(go) + '" ' + (hit ? 'data-startlearn="' + go + '"' : go.indexOf("level:") === 0 ? 'data-level="' + go.slice(6) + '"' : 'data-go="' + go + '"') + '>' + (hit ? PT : '') + '<span class="mtx"><h2>' + title + '</h2><p>' + line + '</p>' + (fun ? routeChips(cls) : '') + '</span><span class="mbug">' + art + '</span></button>';
+    return '<button class="route rmini ' + cls + pt(go) + '" ' + (hit ? 'data-startlearn="' + go + '"' : go.indexOf("level:") === 0 ? 'data-level="' + go.slice(6) + '"' : 'data-go="' + go + '"') + '>' + (hit ? PT : '') + '<span class="mtx"><h2>' + title + '</h2><p>' + line + '</p>' + (ROUTE_MORE[cls] ? '<ul class="rmore">' + ROUTE_MORE[cls].map(function (x) { return '<li>' + esc(x) + '</li>'; }).join("") + '</ul>' : '') + (fun ? routeChips(cls) : '') + '</span><span class="mbug">' + art + '</span></button>';
   }
   return topbar() + '<div class="homewrap' + hcls + '" data-hol="' + (HOL ? esc(holKey(HOL)) : '') + '">' + homeTip() +
    heroHTML() + loginCard() +
    homeStart() + homeProgress() + (typeof trialBanner === "function" ? trialBanner() : '') +
    '<h3 class="homegh">Look it up</h3><section class="routes"><div class="minis one">' +
-   '<button class="route rmini gen' + pt("gen") + '" ' + (S.pointGo === "gen" ? 'data-startlearn="gen"' : 'data-go="gen"') + '>' + (S.pointGo === "gen" ? PT : '') +
+   (!fun ? mini("gen", "gen", "BugDex", "Every medication, explained in plain language. Search, browse or go A to Z through " + genN.toLocaleString() + " medications.", "") : '') +
+   (!fun ? '' : '<button class="route rmini gen' + pt("gen") + '" ' + (S.pointGo === "gen" ? 'data-startlearn="gen"' : 'data-go="gen"') + '>' + (S.pointGo === "gen" ? PT : '') +
      '<span class="mtx">' + (fun ? '<span class="eyebrow">Start here</span>' : '') + '<h2>BugDex</h2><p>Every medication, explained in plain language. Search or browse.</p>' +
      (fun ? routeChips("gen") + '<span class="count">' + genN + ' medications</span>' : '') + '</span>' +
-     '<span class="mbug">' + bugSVG("sage") + '</span></button></div>' + myListRoute() +
-   '</section>' + homeRoutes(mini) + '</div>';
+     '<span class="mbug">' + bugSVG("sage") + '</span></button>') + '</div>' + myListRoute() +
+   '</section>' + homeRoutes(mini) + (typeof harvestStrip === "function" ? harvestStrip() : '') + '</div>';
 }
 /* The main menu shows the path picked on the first run, not all of them (owner, Nov 4 2026).
    "Show every path" is always one tap away and is remembered, so nothing is actually hidden. */
@@ -433,11 +446,27 @@ function routeChips(code) {
   return L ? '<span class="rchips">' + L.map(function (x) { return '<span>' + esc(x) + '</span>'; }).join("") + '</span>' : "";
 }
 var HOME_ROUTES = [
-  ["ph", "levels", "Prehospital", "Every level has its own drugs, protocols and question bank.", "grub-medic"],
-  ["rn", "nlevels", "Nursing", "Scope by licence, plus specialty units and lab values.", "grub-nurse"],
-  ["md", "mlevels", "Medical School", "Mechanisms, board-style questions and the wards view.", "grub-doc"],
-  ["im", "ilevels", "Imaging", "Contrast agents, radiopharmaceuticals and contrast safety.", "grub-imaging"]
+  ["ph", "levels", "Prehospital", "EMT, AEMT, Paramedic and Flight. Every level has its own drugs, protocols and question bank, written for the calls you actually run.", "grub-medic"],
+  ["rn", "nlevels", "Nursing", "CNA, LVN/LPN, RN and Flight Nurse: the medicines each licence gives and monitors, and what to check before you give them.", "grub-nurse"],
+  ["md", "mlevels", "Medical School", "MS1 to intern: mechanisms and drug classes first, then how it all plays out on the wards.", "grub-doc"],
+  ["im", "ilevels", "Imaging", "X-ray, CT, MRI, nuclear medicine and IR: the agents you inject and how to keep patients safe.", "grub-imaging"]
 ];
+var FPATH_ICO = {
+  gen: '<path d="M4 4.5A1.5 1.5 0 0 1 5.5 3H20v15H5.5A1.5 1.5 0 0 0 4 19.5z"/><path d="M4 19.5A1.5 1.5 0 0 0 5.5 21H20"/><path d="M9 8h7M9 11.5h5"/>',
+  ev: '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/>',
+  ph: '<path d="M3 12h4l2-5 4 10 2-5h6"/>',
+  rn: '<path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z"/>',
+  md: '<path d="M6 3v6a5 5 0 0 0 10 0V3"/><path d="M11 14v2a4 4 0 0 0 8 0v-2"/><circle cx="19" cy="12" r="2"/>',
+  im: '<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3"/>'
+};
+/* what is inside each path, so the menu says more than one line (owner, Nov 5 2026) */
+var ROUTE_MORE = {
+  ph: ["Drugs matched to your scope, EMT to Flight", "Big Calls: stroke, STEMI, sepsis, trauma and ROSC", "NREMT-style questions, Megacode and scenarios"],
+  rn: ["Hold parameters, labs to watch and patient teaching", "Specialty units: ICU, ER, L&D, NICU and more", "NCLEX-style questions and Nursing Bug drills"],
+  md: ["Mechanisms, pharmacokinetics and drug classes", "Step-style questions and advanced lab patterns", "Drug Alternatives and Body Systems for rounds"],
+  im: ["Contrast agents and radiopharmaceuticals", "Reactions, premedication, eGFR and screening", "Registry-style questions"],
+  ev: ["The medicine cabinet: OTC, vitamins and probiotics", "Small sicknesses, normal vitals and lab values", "What street drugs and peptides really do"]
+};
 function homeAll() { return !!store("allPaths"); }
 function homeMine() {
   var picked = Prog.d.interests || [], r = Prog.d.role;
@@ -455,7 +484,7 @@ function homeRoutes(mini) {
   /* the other paths live in Settings now, not on the menu (owner, Nov 4 2026) */
   return '<h3 class="homegh">' + head + '</h3><section class="routes"><div class="minis' + (n === 1 ? ' one' : '') + '">' + cards + '</div></section>';
 }
-var EV_LINE = "Medicines and your body, explained without the jargon.";
+var EV_LINE = "Medicines and your body, explained without the jargon. For anyone, no clinical background needed.";
 /* My List on the home screen, right under the BugDex (owner, Oct 28 2026) */
 function myListRoute() {
   var m = marks().filter(function (id) { return DB.drugs[id]; }), n = m.length, ix = 0;
@@ -476,6 +505,7 @@ function homeStart() {
 }
 /* one card that ties the rewards together */
 function homeProgress() {
+  if (typeof funOn === "function" && !funOn()) return "";   /* Focused: no levels, no streaks (owner, Nov 5 2026) */
   var P = Prog.d, L = xpLevel(P.xp || 0), st = typeof myStage === "function" ? myStage() : 3, nx = typeof STAGE_LV !== "undefined" ? STAGE_LV[st] : 0, pct = Math.round(L.into / L.need * 100);
   return '<section class="progcard" aria-label="Your progress">' +
     '<div class="pstat"><span class="pk">Level</span><strong>' + L.lv + '</strong><span class="pbar" aria-hidden="true"><i style="width:' + pct + '%"></i></span><span class="pm">' + (L.need - L.into) + ' XP to level ' + (L.lv + 1) + '</span></div>' +
@@ -490,7 +520,7 @@ function homeTip() {
 }
 function homeContinue() {
   var ll = store("lastLevel"), lo = ll && levelObj(ll); if (!lo) return '';
-  return '<div class="dailymini home"><span class="dmt"><strong>Continue: ' + esc(lo.name) + '</strong><span class="muted"> · ' + liveStreak() + '-day streak' + (dailyDone() ? ' · 5-min DrugBug done' : '') + '</span></span><span class="dma"><button class="btn small" data-level="' + ll + '">Open</button>' + (dailyDone() ? '' : '<button class="btn small ghost" data-sess="daily">5-min DrugBug</button>') + '</span></div>';
+  return '<div class="dailymini home"><span class="dmt"><strong>Continue: ' + esc(lo.name) + '</strong><span class="muted">' + (funOn() ? ' · ' + liveStreak() + '-day streak' : '') + (dailyDone() ? ' · 5-min DrugBug done' : '') + '</span></span><span class="dma"><button class="btn small" data-level="' + ll + '">Open</button>' + (dailyDone() ? '' : '<button class="btn small ghost" data-sess="daily">5-min DrugBug</button>') + '</span></div>';
 }
 function viewLevels() {
   if (routeCtx() === "fm") { S.view = "level"; S.level = "cpp"; S.tab = "hub"; return viewLevel(); }
@@ -503,6 +533,24 @@ function viewLevels() {
   }
   var just = !fm && S.fmJust; S.fmJust = "";
   if (just) c = c.replace('<section', '<div class="fmjust" role="status"><b>Unlocked</b> ' + esc(just) + '</div><section');
+  /* Enhanced: the same turntable as the first run, with the level you picked already in front.
+     "Let's go" plays that level's own entrance (owner, Nov 5 2026). Focused keeps the grid. */
+  if (!fm && !S.lvGrid && typeof funOn === "function" && funOn() && typeof obWheel === "function") {
+    var W = L.map(function (l) { return { code: l.key, name: l.name, bug: l.bug, blurb: l.blurb || scopeTag(l.key, 0, 1), lvl: 1 }; });
+    S.lvWheel = W;
+    if (S.lvWheelFor !== rt || S.obI == null) {
+      var pickK = [Prog.d.startLevel, store("lastLevel")].filter(function (k) { return k && W.some(function (w) { return w.code === k; }); })[0];
+      S.obI = Math.max(0, W.map(function (w) { return w.code; }).indexOf(pickK)); S.lvWheelFor = rt;
+    }
+    var wi = ((S.obI % W.length) + W.length) % W.length, cw = W[wi];
+    /* "Let's go" sits right under the carousel, the details below it (owner, Nov 5 2026) */
+    return c.replace(/<section[^>]*>$/, '') + '<div class="lvwheel">' + obWheel(W, wi, null) +
+      '<div class="obfoot lvtop"><button class="btn big lvgo" data-level="' + esc(cw.code) + '">Let\'s go!</button></div>' +
+      '<div class="lazynow"><span class="lvwtag">' + esc(img ? (cw.name) : scopeTag(cw.code, wi, W.length)) + '</span><strong>' + esc(cw.name) + '</strong><span class="lvwbug">' + esc(cw.bug || "") + '</span><p class="obblurb">' + esc(cw.blurb) + '</p></div>' +
+      '<div class="obfoot"><button class="btn ghost small" data-lvgrid="1">See every level at once</button></div></div>' +
+      '<p class="disclaimer">' + (img ? "" : "Scope lists follow national scope-of-practice models with common state additions. Your state, agency or facility may differ.") + '</p>';
+  }
+  S.lvWheel = null;
   L.forEach(function (l, i) {
     if (l.key === "cpp" && !fm) { c += '<button class="lvcard ' + (LVCLASS.cpp || "") + (just ? ' lvnew' : '') + '" data-level="cpp"><span class="stage">' + levelBug("cpp") + '</span><span class="pip">' + esc(scopeTag("cpp", i, L.length)).toUpperCase() + ' <span class="pill proto">In development</span></span><h2>' + esc(l.name) + '</h2><span class="bugname">' + esc(l.bug) + '</span><p>' + esc(l.blurb) + '</p></button>'; return; }
     c += '<button class="lvcard ' + LVCLASS[l.key] + '" data-level="' + l.key + '"><span class="stage">' + levelBug(l.key) + '</span><span class="pip">' + (img ? esc(l.full).toUpperCase() : esc(scopeTag(l.key, i, L.length)).toUpperCase()) + '</span><h2>' + esc(l.name) + '</h2><span class="bugname">' + esc(l.bug) + '</span><p>' + esc(l.blurb) + '</p></button>';
@@ -517,7 +565,7 @@ function band() {
   if (S.view === "gen") return '<header class="band"><div class="bugstage">' + bugSVG("sage") + '</div><div><h1>BugDex</h1><div class="sub">Every medication in DrugBug, explained by Professor Sage.</div></div></header>';
   var l = levelObj(S.level), i = levelIdx(S.level), m = '', mu = isN(S.level) && myUnit(S.level), tot = levelsOf(S.level).length;
   for (var k = 0; k < tot; k++) m += '<span class="p' + (k <= i ? " on" : "") + '"></span>';
-  return '<header class="band"><div class="bugstage">' + levelBug(S.level) + '</div><div><h1>' + esc(l.name) + '</h1><div class="sub">' + esc(l.bug) + (mu ? ' · ' + esc(unitObj(mu).name) : '') + '</div><div class="meter">' + (isI(S.level) ? '<span>' + esc(l.full) + '</span>' : m + '<span>' + esc(scopeTag(S.level, i, tot)) + '</span>') + '</div></div></header>';
+  return '<header class="band"><div class="bugstage">' + levelBug(S.level) + '</div><div><h1>' + esc(l.name) + '</h1><div class="sub">' + (funOn() ? esc(l.bug) : '') + (mu ? (funOn() ? ' · ' : '') + esc(unitObj(mu).name) : '') + '</div><div class="meter">' + (isI(S.level) ? '<span>' + esc(l.full) + '</span>' : m + '<span>' + esc(scopeTag(S.level, i, tot)) + '</span>') + '</div></div></header>';
 }
 var ICO = {
   registry: '<path d="M5 4h9a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h9"/>',
@@ -544,6 +592,7 @@ var ICO = {
   units: '<path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-5h6v5M12 8v5M9.5 10.5h5"/>',
   body: '<circle cx="12" cy="4.5" r="2.5"/><path d="M12 7v8M7 10h10M12 15l-3 6M12 15l3 6"/>',
   systems: '<rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><path d="M17.2 14.5v6M14.2 17.5h6"/>',
+  scene: '<path d="M3 12h3l2-4 3 8 2-4h3"/><rect x="15" y="4" width="6" height="8" rx="1.5"/><path d="M17 14v6M15 20h4"/>',
   anatomy: '<circle cx="12" cy="4" r="2.2"/><path d="M12 6.2v7.3M8 9h8M12 13.5l-2.6 6.3M12 13.5l2.6 6.3"/><circle cx="12" cy="9.6" r="1.5" fill="currentColor" stroke="none"/>',
   pillq: '<path d="M10.5 3.5a5 5 0 0 1 7 7l-7 7a5 5 0 0 1-7-7z"/><path d="M7 10l7 7"/>',
   ecg: '<path d="M3 12h4l2-5 4 10 2-5h6"/>',
@@ -597,26 +646,31 @@ function tabList() {
   var img = S.view === "level" && isI(S.level);
   if (img) L.splice(1, 0, ["contrast", "Contrast Safety", "Reactions, screening, eGFR, GBCA groups, nuclear medicine and IR safety."]);
   /* Calc Lab removed Oct 26, 2026 (owner decision) */
-  L.push(["tools", "Study Tools", "Questions, megacode, flashcards, brain games and safety drills."]);
-  if (!img) L.push(["scenarios", "Scenarios", "Clinical cases: choose what to give."]);
-  L.push(["medlist", "Medication Disease Identifier", "A study exercise: read a practice medication list and work out the conditions behind it, what to ask, and the risky combinations. Not for use on a call."]);
+  L.push(["tools", "Study", "Questions, flashcards, brain games and safety drills."]);
+  if (!img) L.push(["scenarios", "Scenarios", "Clinical cases and Megacode: choose what to give."]);
+  /* the Medication Disease Identifier is gone: the medicine pages already answer it (owner, Nov 5 2026).
+     Its place goes to the live call with the dummy acting it out (working name "On Scene"). */
+  if (SCENE_READY && typeof sceneView === "function" && S.view === "level" && !img) L.push(["scene", "On Scene", "Run a call live: The Great Bug acts it out, vitals change in real time, and the questions follow the call."]);
   /* Flashcards and Brain Games moved inside Study Tools, Oct 29 2026 (owner) */
   L.push(["progress", "Progress", "Mastery, achievements and leaderboard."]);
   if (S.view === "gen" && typeof illicitView === "function") L.splice(1, 0, ["illicit", "Illicit & Street Drugs", "How illicit and recreational drugs affect the body, overdose signs and treatment. Education only."]);
   if (S.view === "gen" && typeof COMPOUND_TABS !== "undefined") L.splice(1, 0, ["vegc", "Vegetable Compounds", "Sulforaphane, allicin, lycopene, favism beans and more cool compounds from vegetables."], ["fruitc", "Fruit Compounds", "Resveratrol, bromelain, star fruit toxin and more unique compounds from fruit."], ["vitc", "Vitamin Compounds", "Every vitamin form, from B12 types to vitamin K2, CoQ10 and choline."]);
   if (typeof disView === "function" && !(S.view === "level" && isI(S.level))) L.splice(1, 0, ["diseases", "Disease Lab", Object.keys((DB && DB.DIS) || {}).length + " conditions explained: their history, what goes wrong from cell to organ, and the drugs that treat them."]);
+  /* Study sits right after Medications (owner, Nov 5 2026) */
+  var ti = -1, ri = -1; L.forEach(function (t, i) { if (t[0] === "tools") ti = i; if (t[0] === "registry") ri = i; });
+  if (ti > 0 && ri >= 0 && ti !== ri + 1) { var st = L.splice(ti, 1)[0]; ri = L.map(function (t) { return t[0]; }).indexOf("registry"); L.splice(ri + 1, 0, st); }
   return L;
 }
 function tabName(k) { var t = tabList().filter(function (x) { return x[0] === k; })[0]; return t ? t[1] : k === "session" ? "Study session" : ""; }
 /* Hub tiles grouped into sections with short labels (UI cleanup, Oct 28 2026) */
 var HUB_GROUPS = [
   ["Field care", ["fm_cond", "fm_blood", "fm_hold", "fm_store", "fm_istat", "fm_dive", "fm_k9", "fm_anti", "fm_tele", "fm_trauma", "fm_care", "pcc", "pcc_icu", "fm_adv"]],
-  ["Look it up", ["protocols", "calls", "registry", "families", "conds", "diseases", "micro", "anatomy", "illicit", "units", "body", "alts", "contrast", "labs", "blood", "hemo", "flightp"]],
+  ["Look it up", ["protocols", "calls", "registry", "tools", "families", "conds", "diseases", "micro", "anatomy", "illicit", "units", "body", "alts", "contrast", "labs", "blood", "hemo", "flightp"]],
   ["Food and vitamin compounds", ["vegc", "fruitc", "vitc"]],
-  ["Study and practice", ["tools", "scenarios", "nbug", "medlist"]],
+  ["Study and practice", ["scene", "scenarios", "nbug"]],
   ["Yours", ["mylist", "progress", "shop"]]
 ];
-var HUB_SHORT = { systems: "Airway, cardiac, neuro and more, with quizzes", calls: "Stroke, STEMI, sepsis, trauma, ROSC", micro: "Bacteria, viruses, fungi, prions, parasites", fm_bio: "Bio, chem, rad and nuclear casualties", fm_ref: "Burns, vents, scores, handoff, K9, dive", medlist: "What a med list says about the patient", fm_store: "Heat, cold, light and mixing", fm_istat: "Values, cartridges and practice cases", fm_cond: "Trauma, medical and blood reactions, with types", fm_blood: "Whole blood, components, MTP, reactions", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "The drugs you take, and their interactions", tools: "Questions, megacode, cards, games, drills", scenarios: "Clinical cases", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", anatomy: "Every organ and body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time" };
+var HUB_SHORT = { scene: "The Great Bug acts out the call, vitals live", systems: "Airway, cardiac, neuro and more, with quizzes", calls: "Stroke, STEMI, sepsis, trauma, ROSC", micro: "Bacteria, viruses, fungi, prions, parasites", fm_bio: "Bio, chem, rad and nuclear casualties", fm_ref: "Burns, vents, scores, handoff, K9, dive", medlist: "What a med list says about the patient", fm_store: "Heat, cold, light and mixing", fm_istat: "Values, cartridges and practice cases", fm_cond: "Trauma, medical and blood reactions, with types", fm_blood: "Whole blood, components, MTP, reactions", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "The drugs you take, and their interactions", tools: "Questions, megacode, cards, games, drills", scenarios: "Clinical cases", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", anatomy: "Every organ and body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time" };
 /* ---------- Hold a tile, then move it (owner, Nov 4 2026) ----------
    The iPhone gesture: press and hold until the tile lifts, drag it where you want, and the
    others slide out of the way as you go. Order is kept per level and per section, so the
@@ -772,7 +826,7 @@ function hubView() {
 /* compact education strip: the first sentence stays visible, the rest opens with "More" (cleanup, Oct 28 2026) */
 function eduNote(lead, rest) { return '<details class="edunote" role="note"><summary><span class="edl">' + lead + '</span>' + (rest ? '<span class="edmore">More</span>' : '') + '</summary>' + (rest ? '<p>' + rest + '</p>' : '') + '</details>'; }
 /* one-line hooks; Field Medic levels get field wording for shared tabs */
-function hubShort(k) { if (k === "diseases" && !(S.view === "level" && isF(S.level)) && typeof DB !== "undefined" && DB.DIS) return Object.keys(DB.DIS).length + " conditions, cell to organ"; if (k === "tools" && S.view === "level" && isF(S.level)) return "Questions, megacode, cards, games, drills"; if (S.view === "level" && isF(S.level) && k === "diseases") return "Trauma, environmental and field conditions"; if (S.view === "level" && isF(S.level) && k === "registry") return "By field use, by class or A to Z"; return HUB_SHORT[k] || ""; }
+function hubShort(k) { if (k === "progress" && typeof funOn === "function" && !funOn()) return "Mastery and badges"; if (k === "diseases" && !(S.view === "level" && isF(S.level)) && typeof DB !== "undefined" && DB.DIS) return Object.keys(DB.DIS).length + " conditions, cell to organ"; if (k === "tools" && S.view === "level" && isF(S.level)) return "Questions, megacode, cards, games, drills"; if (S.view === "level" && isF(S.level) && k === "diseases") return "Trauma, environmental and field conditions"; if (S.view === "level" && isF(S.level) && k === "registry") return "By field use, by class or A to Z"; return HUB_SHORT[k] || ""; }
 function sectionHead() {
   var where = S.view === "gen" ? "BugDex" : (levelObj(S.level) || {}).name || "";
   var inUnit = S.tab === "units" && S.unit;
@@ -981,7 +1035,9 @@ function scenarios() {
   if (!list.length) return '<div class="empty">Scenarios are on the way.</div>';
   if (S.scen) return scenView(list.filter(function (s) { return s.id === S.scen.id; })[0], list);
   var n = list.filter(function (s) { return done[s.id]; }).length;
-  return '<div class="fmprog scenprog"><span><strong>' + n + '</strong> of ' + list.length + ' scenarios cleared</span><span class="cmptrack"><span class="cmpfill" style="width:' + (list.length ? Math.round(100 * n / list.length) : 0) + '%"></span></span></div><div class="scenlist">' + list.map(function (s) {
+  var mlk = typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier(toolTier("mega"));
+  var mega = DB.MEGA_LEVELS && DB.MEGA_LEVELS[ctxKey()] ? '<button class="scard megacard' + (mlk ? ' locked' : '') + '" data-act="' + (mlk ? 'megalock' : 'megago') + '"><span class="meta">Megacode' + (mlk ? ' · Pro' : '') + '</span><h3>Run a code</h3><span>A timed code with a live monitor: rhythms, shocks and drugs, in order.</span></button>' : '';
+  return mega + '<div class="fmprog scenprog"><span><strong>' + n + '</strong> of ' + list.length + ' scenarios cleared</span><span class="cmptrack"><span class="cmpfill" style="width:' + (list.length ? Math.round(100 * n / list.length) : 0) + '%"></span></span></div><div class="scenlist">' + list.map(function (s) {
     return '<button class="scard' + (done[s.id] ? " done" : "") + '" data-scen="' + s.id + '"><span class="meta">' + esc(s.cat || "") + (done[s.id] ? " · Cleared" : "") + '</span><h3>' + esc(s.title) + '</h3><span class="tapnote">Tap to open</span></button>';
   }).join("") + '</div>';
 }
@@ -1065,7 +1121,7 @@ function viewLevel() {
   if (!S.tab || (S.tab !== "hub" && S.tab !== "session" && !tabName(S.tab))) S.tab = "hub";
   if (S.tab !== "hub" && S.tab !== "session" && typeof proLocked === "function" && proLocked(S.tab)) { var lt = S.tab; S.tab = "hub"; setTimeout(function () { openPaywall(tabName(lt), tabTier(lt)); }, 0); }
   if (S.tab === "calc") S.tab = "hub";  /* Calc Lab was removed */
-  var body = S.tab === "hub" ? "" : S.tab === "anatomy" && typeof anatView === "function" ? anatView() : S.tab === "calls" && typeof callsView === "function" ? callsView() : S.tab === "systems" && typeof sysView === "function" ? sysView() : S.tab === "protocols" && typeof agpTabView === "function" ? agpTabView() : typeof fieldTab === "function" && isF(S.level) && FM_TABS[S.tab] ? fieldTab(S.tab) : (S.tab === "vegc" || S.tab === "fruitc" || S.tab === "vitc") && typeof compoundView === "function" ? compoundView(S.tab) : S.tab === "illicit" && typeof illicitView === "function" ? illicitView() : S.tab === "registry" ? (S.view === "level" && isF(S.level) && typeof fieldMedsView === "function" ? fieldMedsView() : registry()) : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? (S.tab = "hub", "") : S.tab === "micro" && typeof microView === "function" ? microView() : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "flt_ref" && typeof fltRefView === "function" ? fltRefView() : S.tab === "tools" ? toolsView() : S.tab === "medlist" ? (typeof medlistView === "function" ? medlistView() : "") : flashcards();
+  var body = S.tab === "hub" ? "" : S.tab === "anatomy" && typeof anatView === "function" ? anatView() : S.tab === "calls" && typeof callsView === "function" ? callsView() : S.tab === "scene" && typeof sceneView === "function" ? sceneView() : S.tab === "systems" && typeof sysView === "function" ? sysView() : S.tab === "protocols" && typeof agpTabView === "function" ? agpTabView() : typeof fieldTab === "function" && isF(S.level) && FM_TABS[S.tab] ? fieldTab(S.tab) : (S.tab === "vegc" || S.tab === "fruitc" || S.tab === "vitc") && typeof compoundView === "function" ? compoundView(S.tab) : S.tab === "illicit" && typeof illicitView === "function" ? illicitView() : S.tab === "registry" ? (S.view === "level" && isF(S.level) && typeof fieldMedsView === "function" ? fieldMedsView() : registry()) : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? (S.tab = "hub", "") : S.tab === "micro" && typeof microView === "function" ? microView() : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "flt_ref" && typeof fltRefView === "function" ? fltRefView() : S.tab === "tools" ? toolsView() : S.tab === "medlist" ? (typeof medlistView === "function" ? medlistView() : "") : flashcards();
   var msg = S.sessMsg ? '<div class="presult" role="status">' + esc(S.sessMsg) + '</div>' : ''; S.sessMsg = "";
   var notes = (S.tab === "calc" || S.tab === "tools" ? eduBanner() : '') + (["prep", "session", "nbug", "scenarios", "cards"].indexOf(S.tab) >= 0 ? esQNote() : '');
   if (S.tab === "hub") return topbar() + '<div class="' + ctxClass() + '">' + band() + protocolBanner() + (isF(S.level) ? "" : dailyCard()) + msg + (S.learn && S.learn.done && typeof learnDoneView === "function" ? learnDoneView() : "") + hubView() + '</div>';
@@ -1140,7 +1196,7 @@ function nrLevelsFor(k) {
   if (["cna", "rn", "ms1", "ms3", "intern", "emt", "aemt", "flight"].indexOf(k) >= 0) return [k];
   return ["flight"];
 }
-function nrPool(filter) {
+function nrPool(filter, noGen) {
   var allowed = nrLevelsFor(ctxKey());
   if (filter && filter !== "all" && !isF(ctxKey())) allowed = allowed.indexOf(filter) >= 0 ? [filter] : []; /* tiers always study their whole cumulative bank */
   var inScope = null;
@@ -1148,7 +1204,7 @@ function nrPool(filter) {
   var ck = ctxKey();
   function ok(q) { return allowed.indexOf(q.lv) >= 0 && starOK(q, ck) && !(q.home && ck !== "gen") && qVisible(q) && (!inScope || (q.d ? inScope[q.d] : !isF(ck))) && (!q.d || !drugLocked(q.d)); }
   if (S.nr && S.nr.kind === "reg") return (DB.RQ || []).filter(function (q) { return allowed.indexOf(q.lv) >= 0 && starOK(q, ck) && qVisible(q) && (!isF(ck) || q.fm) && (typeof callScaleOK !== "function" || callScaleOK(q)); });
-  return DB.Q.filter(ok).concat((DB.QX || []).filter(ok)).concat(typeof qgPoolFor === "function" ? qgPoolFor(ck, ok) : []);
+  return DB.Q.filter(ok).concat((DB.QX || []).filter(ok)).concat(!noGen && typeof qgPoolFor === "function" ? qgPoolFor(ck, ok) : []);
 }
 function nrState() {
   if (!S.nr) { var ss0 = SET(); S.nr = { phase: "setup", n: ss0.nrN, mode: ss0.nrMode, filter: "", adaptive: ss0.adaptive }; }
@@ -1437,7 +1493,7 @@ function nrDone(st) {
   var by = {};
   st.qs.forEach(function (x, i) { var k = x.q.reg && RQ_DOM[x.q.cat] ? "d:" + x.q.cat : x.q.lv; by[k] = by[k] || [0, 0]; by[k][1]++; if (nrRight(x, st.ans[i])) by[k][0]++; });
   var missed = st.qs.map(function (x, i) { return { x: x, a: st.ans[i] }; }).filter(function (m) { return !nrRight(m.x, m.a); });
-  var msg = pct >= 85 ? "Excellent. You know this material." : pct >= 70 ? "Solid. You're on track." : pct >= 50 ? "Getting there. Review the misses below." : "Keep studying. Start with the BugDex and Easy Learn.";
+  var msg = pct >= 85 ? "Excellent. You know this material." : pct >= 70 ? "Solid. You're on track." : pct >= 50 ? "Getting there. Review the misses below." : "Keep studying. Start with the BugDex.";
   var pb = perfectBonus(st, total, correct) || st.perfectPaid;
   var c = '<section class="result"><div class="bigscore ' + (pct >= 70 ? "good" : pct >= 50 ? "mid" : "low") + '"><span class="pct">' + pct + '%</span><span>' + correct + ' of ' + total + ' correct · ' + fmtTime(secs) + '</span></div><p class="resmsg">' + msg + '</p>' + (pb ? '<p class="presult good">Perfect score bonus: <strong>+' + PERFECT_BONUS + ' sticks</strong></p>' : '');
   c += '<div class="chips">' + Object.keys(by).map(function (k) { return '<span class="chip static">' + (k.indexOf("d:") === 0 ? RQ_DOM[k.slice(2)] : NRLV[k]) + ': ' + by[k][0] + '/' + by[k][1] + '</span>'; }).join("") + '</div>';
@@ -1671,7 +1727,7 @@ function cmpMem(f, id) { return f.members.filter(function (m) { return m.id === 
    "Commonly Confused With" lines, then same class */
 function cmpSuggest(id) {
   var d = DB.drugs[id], out = [], seen = {}; seen[id] = 1;
-  function push(x) { if (x && DB.drugs[x] && !seen[x] && !(typeof drugLocked === "function" && drugLocked(x))) { seen[x] = 1; out.push(x); } }
+  function push(x) { if (x && DB.drugs[x] && !seen[x]) { seen[x] = 1; out.push(x); } }   /* locked ones too, marked (owner, Nov 5 2026) */
   (DB.FAM || []).forEach(function (f) {
     if (f.members.some(function (m) { return m.id === id; })) f.members.forEach(function (m) { push(m.id); });
   });
@@ -1682,24 +1738,34 @@ function cmpSuggest(id) {
       if (hit) push(hit);
     });
   });
-  return out.slice(0, 8);
+  /* the ones you can open first, so a Free list is never all padlocks */
+  var lk = function (x) { return typeof drugLocked === "function" && drugLocked(x) ? 1 : 0; };
+  return out.sort(function (x, y) { return lk(x) - lk(y); }).slice(0, 10);
+}
+/* a compare chip. A locked drug still shows, with its plan, so a Free user can see there is
+   plenty to compare against; tapping it opens the plans instead (owner, Nov 5 2026) */
+function cmpChip(x) {
+  var L = typeof drugLocked === "function" && drugLocked(x);
+  return L ? '<button class="chip cmplocked" data-cmplock="' + x + '" title="Part of DrugBug ' + (drugTier(x) === "pro" ? "Pro" : "Plus") + '"><span aria-hidden="true">\ud83d\udd12 </span>' + esc(nameOf(x)) + ' ' + tierBadge(drugTier(x)) + '</button>'
+    : '<button class="chip" data-cmpb="' + x + '">' + esc(nameOf(x)) + '</button>';
+}
+function cmpLockNote(L) {
+  var n = L.filter(function (x) { return typeof drugLocked === "function" && drugLocked(x); }).length;
+  return n ? '<p class="muted small cmplocknote">\ud83d\udd12 ' + n + ' of these ' + (n === 1 ? 'is' : 'are') + ' part of DrugBug Plus. <button class="linkish" data-pw="open">See plans</button></p>' : '';
 }
 function cmpResults(id) {
   var q = (S.cmpQ || "").trim();
   if (!q) {
     var sug = cmpSuggest(id);
     return !sug.length ? '<p class="muted small">Search for any medication above.</p>'
-      : '<p class="cmplbl">Often compared with</p><div class="cmpsug">' + sug.map(function (x) {
-          return '<button class="chip" data-cmpb="' + x + '">' + esc(nameOf(x)) + '</button>';
-        }).join("") + '</div>';
+      : '<p class="cmplbl">Often compared with</p><div class="cmpsug">' + sug.map(cmpChip).join("") + '</div>' + cmpLockNote(sug);
   }
+  var lk = function (x) { return typeof drugLocked === "function" && drugLocked(x) ? 1 : 0; };
   var ids = (DB.ALLIDS || DB.order || []).filter(function (x) {
-    return x !== id && !(typeof drugLocked === "function" && drugLocked(x)) && drugMatch(x, q, true);
-  }).slice(0, 24);
+    return x !== id && drugMatch(x, q, true);
+  }).sort(function (x, y) { return lk(x) - lk(y); }).slice(0, 24);
   return !ids.length ? '<p class="muted small">No medication matches that.</p>'
-    : '<div class="cmpsug">' + ids.map(function (x) {
-        return '<button class="chip" data-cmpb="' + x + '">' + esc(nameOf(x)) + '</button>';
-      }).join("") + '</div>';
+    : '<div class="cmpsug">' + ids.map(cmpChip).join("") + '</div>' + cmpLockNote(ids);
 }
 function cmpView(a) {
   var b = S.cmpB, A = DB.drugs[a], B = b ? DB.drugs[b] : null;
@@ -1739,6 +1805,7 @@ function cmpView(a) {
 function cmpClick(t, a) {
   if (a.cmpgo) { S.cmpOn = 1; S.cmpB = null; S.cmpQ = ""; drawSheet(); return true; }
   if (a.cmpb) { S.cmpB = a.cmpb; S.cmpQ = ""; drawSheet(); return true; }
+  if (a.cmplock) { openPaywall("Compare with " + nameOf(a.cmplock), drugTier(a.cmplock)); return true; }
   if (a.cmppick) { S.cmpB = null; S.cmpQ = ""; drawSheet(); return true; }
   if (a.cmpswap) { var o = S.sheet.id; S.sheet.id = S.cmpB; S.cmpB = o; drawSheet(); return true; }
   if (a.cmpclose) { S.cmpOn = 0; S.cmpB = null; S.cmpQ = ""; drawSheet(); return true; }
@@ -1814,7 +1881,7 @@ function render() {
   translateDom(app); drawBuddy();
   /* "Start here" asked for L.E.A.R.N: wait until the path has actually rendered, so the
      level transition cannot redraw over it (owner, Nov 4 2026) */
-  if (needOnboard() && document.querySelector(".lazytrack")) {
+  if ((needOnboard() || S.lvWheel) && document.querySelector(".lazytrack")) {
     try { lzLayout(S.obI == null ? 0 : S.obI, false); } catch (e) {}
   }
   if (S.learnGo && !S.sheet) {
@@ -1961,15 +2028,20 @@ document.addEventListener("click", function (e) {
     case "funtog": {
       var on = !funOn();
       setSet("fun", on);
-      if (!on) setSet("sfx", false);          /* serious means quiet too, same as the first-run choice */
-      store("funAsked", 1);
+      if (!on) setSet("sfx", false);          /* Focused means quiet too, same as the first-run choice */
+      else setSet("sfx", true);
+      store("funAsked", 1); store("modeAsked", 1);
       try { document.documentElement.setAttribute("data-serious", on ? "" : "1"); } catch (e) {}
+      try { if (!on) { S.mupop = false; MU.preview = null; muStop(); } else muSync(); } catch (e) {}   /* Focused has no music at all */
       render(); return;
     }
     case "gsearch": S.menu = false; go("gen", { tab: "registry" }); setTimeout(function () { var q = document.getElementById("q"); if (q) { q.focus(); q.scrollIntoView({ block: "center" }); } }, 60); return;
     case "openproto": S.menu = false; render(); return openProto();
     case "utilback": var ub = S.utilBack; S.utilBack = null; if (ub && ub.view && !UTIL_VIEWS[ub.view]) { go(ub.view, ub.level ? { level: ub.level } : {}); if (ub.tab && ub.tab !== "hub") { S.tab = ub.tab; render(); } return; } return go("home");
     case "terrback": var tb = S.terrBack; S.terrBack = null; if (tb && tb.view && tb.view !== "terrarium") { go(tb.view, tb.level ? { level: tb.level } : {}); if (tb.tab) { S.tab = tb.tab; render(); } return; } return go("home");
+    case "megalock": return openPaywall("Megacode", toolTier("mega"));
+    case "megaback": S.megaFrom = null; S.tool = null; S.mega = null; clearInterval(MC.timer); S.tab = "scenarios"; render(); return window.scrollTo(0, 0);
+    case "megago": S.megaFrom = "scenarios"; S.tab = "tools"; S.tool = "mega"; render(); return window.scrollTo(0, 0);
     case "toolsback": S.tool = null; S.mega = null; clearInterval(MC.timer); render(); return window.scrollTo(0, 0);
     case "shopback": S.shopF = null; S.shopBuy = null; render(); return window.scrollTo(0, 0);
     case "filters": S.showFilt = !S.showFilt; return render();
@@ -2911,12 +2983,12 @@ function reviewView() {
 function doneView() {
   var ss = S.sess, sc = ss.result, gained = Prog.d.xp - ss.xp0, lv = xpLevel(Prog.d.xp);
   var c = '<div class="learncard done">';
-  if (ss.kind === "daily") c += '<h2>' + (ss.streakSaved ? "Daily DrugBug complete" : "Done again today") + '</h2><p class="big">' + liveStreak() + '-day streak</p>';
+  if (ss.kind === "daily") c += '<h2>' + (ss.streakSaved ? "Daily DrugBug complete" : "Done again today") + '</h2>' + (funOn() ? '<p class="big">' + liveStreak() + '-day streak</p>' : '');
   else c += '<h2>Session complete</h2>';
   if (sc) c += '<p>' + sc.c + ' of ' + sc.n + ' correct (' + sc.pct + '%)</p>';
   if (ss.chalDone) c += '<p><strong>Daily challenge complete.</strong> +50 XP, +10 sticks</p>';
   if (ss.perfect) c += '<p class="presult good">Perfect score bonus: <strong>+' + PERFECT_BONUS + ' sticks</strong></p>';
-  c += '<p class="muted">+' + gained + ' XP · ' + stickTag(sticks()) + ' sticks · Level ' + lv.lv + ' (' + lv.into + ' of ' + lv.need + ' XP to the next level)</p>';
+  if (funOn()) c += '<p class="muted">+' + gained + ' XP · ' + stickTag(sticks()) + ' sticks · Level ' + lv.lv + ' (' + lv.into + ' of ' + lv.need + ' XP to the next level)</p>';
   var ch = Object.keys(ss.before).map(function (id) { return { id: id, a: ss.before[id], b: mastery(id) }; });
   if (ch.length) c += '<h3 class="eh small">Mastery</h3><ul class="weaklist">' + ch.map(function (m) { return '<li><button class="linkish" data-drug="' + m.id + '">' + esc(nameOf(m.id)) + '</button>' + (m.a !== m.b ? '<span class="mchip m-' + m.a + '">' + esc(mlabel(m.a)) + '</span><span aria-hidden="true">→</span>' : '') + '<span class="mchip m-' + m.b + '">' + esc(mlabel(m.b)) + '</span></li>'; }).join("") + '</ul>';
   c += '</div><div class="actions"><button class="btn" data-act="sessquit">Done</button>';
@@ -2928,7 +3000,7 @@ function doneView() {
 /* Daily card and Progress tab */
 function dailyCard() {
   var done = dailyDone(), st = liveStreak(), ch = challengeGroup(), chDone = !!Prog.d.chal[today()];
-  return '<div class="dailymini"><span class="dmt"><strong>5-min DrugBug</strong><span class="muted"> · ' + (done ? "done today" : SET().dailyGoal + " quick questions") + ' · ' + st + '-day streak</span></span><span class="dma"><button class="btn small" data-sess="daily">' + (done ? "Again" : "Start") + '</button>' +
+  return '<div class="dailymini"><span class="dmt"><strong>5-min DrugBug</strong><span class="muted"> · ' + (done ? "done today" : SET().dailyGoal + " quick questions") + (funOn() ? ' · ' + st + '-day streak' : '') + '</span></span><span class="dma"><button class="btn small" data-sess="daily">' + (done ? "Again" : "Start") + '</button>' +
     (ch && !chDone ? '<button class="btn small ghost" data-sess="class" data-g="' + DB.GROUPS.indexOf(ch.g) + '" data-chal="1" title="Challenge: 5 ' + esc(ch.g.name) + ' questions">Challenge</button>' : '') + '</span></div>';
 }
 function progressView() {
@@ -2936,8 +3008,8 @@ function progressView() {
   var counts = {}; MLEVELS.forEach(function (m) { counts[m[0]] = 0; }); ids.forEach(function (id) { counts[mastery(id)]++; });
   var c = (typeof accNudge === "function" ? accNudge() : "") +   /* the quiet account offer, once there is something worth keeping */
     '<section class="progress"><div class="stats">' +
-    '<div class="stat"><span class="lbl">Level</span><span class="num">' + lv.lv + '</span><span class="xpbar" role="img" aria-label="' + lv.into + ' of ' + lv.need + ' XP to the next level"><i style="width:' + Math.round(100 * lv.into / lv.need) + '%"></i></span></div>' +
-    '<div class="stat"><span class="lbl">Streak</span><span class="num">' + liveStreak() + '</span><span class="muted small">best ' + (P.best || 0) + ' days</span></div>' +
+    (funOn() ? '<div class="stat"><span class="lbl">Level</span><span class="num">' + lv.lv + '</span><span class="xpbar" role="img" aria-label="' + lv.into + ' of ' + lv.need + ' XP to the next level"><i style="width:' + Math.round(100 * lv.into / lv.need) + '%"></i></span></div>' +
+    '<div class="stat"><span class="lbl">Streak</span><span class="num">' + liveStreak() + '</span><span class="muted small">best ' + (P.best || 0) + ' days</span></div>' : '') +
     '<div class="stat"><span class="lbl">Mastered here</span><span class="num">' + counts.mastered + '</span><span class="muted small">of ' + ids.length + ' drugs</span></div>' +
     '<div class="stat"><span class="lbl">Questions</span><span class="num">' + (P.answered || 0).toLocaleString() + '</span><span class="muted small">answered</span></div></div>';
   c += '<div class="mdist">' + MLEVELS.map(function (m) { return '<span class="mchip m-' + m[0] + '">' + esc(m[1]) + ' · ' + counts[m[0]] + '</span>'; }).join("") + '</div>';
@@ -2949,12 +3021,14 @@ function progressView() {
   }).join("") + '</div>';
   var weak = weakest(ids, 8);
   if (weak.length) c += '<h3 class="eh small">Needs work</h3><ul class="weaklist">' + weak.map(function (id) { var s = stat(id); return '<li><button class="linkish" data-drug="' + id + '">' + esc(nameOf(id)) + '</button><span class="mchip m-' + mastery(id) + '">' + esc(mlabel(mastery(id))) + '</span><span class="muted small">' + s.c + '/' + s.n + ' correct</span><button class="btn small ghost" data-sess="study" data-drug-id="' + id + '">Study</button></li>'; }).join("") + '</ul>';
-  c += '<h3 class="eh small">Achievements</h3><div class="achgrid">' + ACH.map(function (a) { var t = P.ach[a[0]]; return '<div class="ach' + (t ? " on" : "") + '"><strong>' + esc(a[1]) + '</strong><span class="muted small">' + (t ? "Earned " + esc(fmtDay(t)) : "Not yet") + '</span></div>'; }).join("") + '</div>';
+  c += '<h3 class="eh small">Achievements</h3><div class="achgrid">' + ACH.filter(function (a) { return funOn() || !/^st\d/.test(a[0]); }).map(function (a) { var t = P.ach[a[0]]; return '<div class="ach' + (t ? " on" : "") + '"><strong>' + esc(a[1]) + '</strong><span class="muted small">' + (t ? "Earned " + esc(fmtDay(t)) : "Not yet") + '</span></div>'; }).join("") + '</div>';
   c += '<p class="muted small">' + (Prog.synced ? "Progress is saved to your account." : "Progress is saved on this device.") + '</p>';
   return c + '</section>';
 }
 function nbugView() {
-  var pool = basePool(), q = Prog.d.qcat || {};
+  /* the counts only need the written questions (the ones built from drug pages carry no skill
+     category), so skip building those: this tab opened in about a second on RN before (Nov 5 2026) */
+  var pool = nrPool("all", true).filter(qVisible), q = Prog.d.qcat || {};
   return '<section class="nbug"><h2>Nursing Bug</h2><p class="muted">Bedside thinking, one skill at a time. Each drill pulls questions from your level and leans on the drugs you know least.</p><div class="nbgrid">' + NBUG.map(function (c2) {
     var n = pool.filter(function (x) { return x.cat === c2[0]; }).length, s = q[c2[0]];
     return '<button class="nbcard" data-sess="nbug" data-cat="' + c2[0] + '"' + (n ? "" : " disabled") + '><strong>' + esc(c2[1]) + '</strong><span>' + esc(c2[2]) + '</span><span class="muted small">' + n + ' questions' + (s ? ' · ' + Math.round(100 * s.c / s.n) + '% correct so far' : '') + '</span></button>';
@@ -4744,7 +4818,7 @@ var QUIPS = {
   streak: ["Unstoppable!", "Combo!", "Look at you go!", "Streak mode!"],
   tap: ["Hi!", "Hey, that tickles!", "Study buddy reporting!", "Let's learn some meds.", "Bzzz.", "Need a break? Hydrate!"]
 };
-function buddyOn() { return SET().buddy !== false && (typeof funOn !== "function" || funOn()) && !!agreeRec() && S.view !== "legal" && S.view !== "home" && S.view !== "terrarium" && S.view !== "admin"; }
+function buddyOn() { return SET().buddy !== false && (typeof funOn !== "function" || funOn()) && !!agreeRec() && S.view !== "legal" && S.view !== "home" && S.view !== "terrarium" && S.view !== "admin" && !(S.view === "level" && S.tab === "scene"); }   /* on a call your bug is already beside you */
 function drawBuddy() {
   if (!buddyOn()) { buddy.hidden = true; return; }
   buddy.hidden = false;
@@ -4864,11 +4938,11 @@ function toolTier(k) { return TOOL_TIER[k] || "pro"; }
 function toolsAllowed() { var k = ctxKey(); return { mega: !!DB.MEGA_LEVELS[k], peds: ["emt", "cna"].indexOf(k) < 0, medlist: true, safety: true, prep: S.view !== "gen", cards: true, games: true }; }
 var TOOLDESC = { mega: "Run a timed code with a live monitor.", peds: "Weight-based pediatric doses at a glance.", medlist: "A study exercise: read a practice medication list and work out the likely conditions, the questions to ask and the risky combinations.", safety: "Look-alike names and high-alert drug drills.", prep: "Timed practice tests at your star level, with scores.", cards: "Flip, sort and master each drug.", games: "Memory match, crossword, quick match, word scramble, Class Blitz and Frog Snack." };
 function toolsView() {
-  var al = toolsAllowed(), list = TOOLS.filter(function (t) { return al[t[0]]; });
+  var al = toolsAllowed(), list = TOOLS.filter(function (t) { return al[t[0]] && t[0] !== "mega"; });   /* Megacode lives in Scenarios now (owner, Nov 5 2026) */
   function toolLocked(k) { return typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier(toolTier(k)); }
   if (S.tool && !al[S.tool]) S.tool = null;
   if (!S.tool) return '<div class="hub sub">' + list.map(function (t) { var lk = toolLocked(t[0]); return '<button class="hubtile toolt' + (lk ? ' locked' : '') + '" data-tool="' + t[0] + '">' + (lk && typeof tierBadge === "function" ? '<span class="tbadge">' + tierBadge(toolTier(t[0])) + '</span>' : '') + '<span class="ht"><strong>' + esc(t[1]) + '</strong><span>' + esc(TOOLDESC[t[0]]) + '</span></span></button>'; }).join("") + '</div>';
-  var c = '<button class="linkish subback" data-act="toolsback">&larr; All study tools</button>';
+  var c = S.tool === "mega" && S.megaFrom ? '<button class="linkish subback" data-act="megaback">&larr; Scenarios</button>' : '<button class="linkish subback" data-act="toolsback">&larr; All of Study</button>';
   if (S.tool === "peds" || S.tool === "ixn") S.tool = "mega"; /* Pediatric dosing practice removed Oct 27 2026; Interaction explorer removed Oct 29 2026 */
   if (S.tool === "mega") c += megaView();
   else if (S.tool === "medlist") c += medlistView();
@@ -6251,8 +6325,30 @@ function obPrimary() {
   return obCards().map(function (c) { return c.code; })
     .filter(function (k) { return sel[k] && k !== "ev"; })[0] || "";
 }
-function obStep() { return S.obStep === 2 && obPrimary() ? 2 : 1; }
-function obList() { return obStep() === 2 ? obLevelsFor(obPrimary()) : obCards(); }
+function obStep() { return S.obStep === 3 ? 3 : S.obStep === 2 && obPrimary() ? 2 : 1; }
+/* Step 3 (owner, Nov 5 2026): Focused or Enhanced, asked once, right after the level */
+function obModeView() {
+  var fx = function (m, title, line, pts) {
+    return '<button class="obmode ' + m + '" data-obmode="' + m + '"><strong>' + title + '</strong><span class="obml">' + line + '</span><ul>' + pts.map(function (p) { return '<li>' + p + '</li>'; }).join("") + '</ul></button>';
+  };
+  return '<div class="gate obgate obmodes"><h1>How do you want to use DrugBug?</h1>' +
+    '<p>Same medicine, same questions either way. You can switch at any time from the button at the top of the screen.</p>' +
+    '<div class="obmrow">' +
+    fx("focused", "Focused", "For when you need to learn it and pass the test.", ["Just the medicine, the questions and your progress", "Clean pages, no bugs, music, sound or animations", "Quick to read on a shift or before an exam"]) +
+    fx("enhanced", "Enhanced", "The full DrugBug experience.", ["Your bug grows with you, plus the Terrarium", "Hickory, bug music, sounds and level animations", "Daily prizes, collections and king bugs"]) +
+    '</div><button class="btn ghost" data-obmodeback="1">Back</button></div>';
+}
+function obModePick(m) {
+  var fun = m !== "focused";
+  setSet("fun", fun); setSet("sfx", fun); if (!fun) setSet("music", false);
+  store("funAsked", 1); store("modeAsked", 1);
+  try { document.documentElement.setAttribute("data-serious", fun ? "" : "1"); } catch (e) {}
+  try { if (!fun) muStop(); } catch (e) {}
+  var nx = S.obModeNext; S.obModeNext = null; S.obStep = 1;
+  if (nx && nx.ev) { S.obSel = null; S.obI = null; return pickRole("ev"); }
+  return obFinish(nx ? nx.level : "", true);
+}
+function obList() { if (S.lvWheel && !needOnboard()) return S.lvWheel; return obStep() === 2 ? obLevelsFor(obPrimary()) : obCards(); }
 /* one wheel, both steps */
 function obWheel(C, i, sel) {
   return '<div class="lazy" data-lazy="1">' +
@@ -6277,6 +6373,7 @@ function obWheel(C, i, sel) {
     }).join("") + '</div>';
 }
 function obView() {
+  if (obStep() === 3) return obModeView();
   var step = obStep(), C = obList(), sel = step === 1 ? obSel() : null,
       i = ((S.obI == null ? 0 : S.obI) % C.length + C.length) % C.length, cur = C[i];
   if (step === 2) {
@@ -6309,6 +6406,7 @@ function obClick(t, a) {
     if (LZ.suppress) return true;
     var k = +a.obidx, cur = lzNorm(S.obI == null ? 0 : S.obI);
     if (k !== cur) { obGoTo(k); return true; }
+    if (S.lvWheel && !needOnboard()) { var gl = document.querySelector('.lvwheel [data-level]'); if (gl) gl.click(); return true; }
     if (obStep() === 1) { var sc = obSel(), code = obList()[k].code; sc[code] = !sc[code]; render(); }
     return true;
   }
@@ -6323,10 +6421,16 @@ function obClick(t, a) {
     if (!picked.length) return true;
     Prog.d.interests = picked;
     if (obPrimary()) { S.obStep = 2; S.obI = 0; render(); return true; }   /* on to the level wheel */
+    if (FOCUSED_READY && !store("modeAsked") && !S.obRedo) { S.obModeNext = { ev: 1 }; S.obStep = 3; render(); window.scrollTo(0, 0); return true; }
     S.obSel = null; S.obI = null; pickRole("ev");
     return true;
   }
-  if (a.obfinish) { obFinish(a.obfinish); return true; }
+  if (a.obfinish) { if (FOCUSED_READY && !store("modeAsked") && !S.obRedo) { S.obModeNext = { level: a.obfinish }; S.obStep = 3; render(); window.scrollTo(0, 0); return true; } obFinish(a.obfinish); return true; }
+  if (a.lvgrid) { S.lvGrid = true; render(); return true; }
+  if (a.obagain) { obAgain(); window.scrollTo(0, 0); return true; }   /* Settings > Study > Your specialty: this button was never wired up (owner, Nov 5 2026) */
+  if (a.obmode) { obModePick(a.obmode); return true; }
+  if (a.obmodeset) { var fn = a.obmodeset !== "focused"; if (fn !== funOn()) { setSet("fun", fn); setSet("sfx", fn); store("funAsked", 1); store("modeAsked", 1); try { document.documentElement.setAttribute("data-serious", fn ? "" : "1"); } catch (e) {} try { if (!fn) { S.mupop = false; MU.preview = null; muStop(); } else muSync(); } catch (e) {} } render(); return true; }
+  if (a.obmodeback) { var nb = S.obModeNext || {}; S.obStep = nb.ev ? 1 : 2; render(); return true; }
   if (a.obback) { S.obStep = 1; S.obI = 0; render(); return true; }
   return false;
 }
@@ -6381,14 +6485,15 @@ function lzSettle(target) {
    menu, and hand straight to Hickory (owner, Nov 4 2026). The entrance is the one the level
    normally gets; the difference is that this time it opens the menu with the introduction on
    top rather than the level itself. */
-function obFinish(levelKey) {
-  var picked = Prog.d.interests || [], primary = obPrimary();
+function obFinish(levelKey, fromMode) {
+  var redo = !!S.obRedo, picked = Prog.d.interests || [], primary = obPrimary();
   if (levelKey) store("lastLevel", levelKey);
   Prog.d.startLevel = levelKey || "";
   S.obSel = null; S.obI = null; S.obStep = 1;
   pickRole(primary || picked.filter(function (k) { return k !== "ev"; })[0] || "ev");
   var done = 0, land = function () {
     if (done) return; done = 1;
+    if (redo) { S.setMsg = ""; if (levelKey && levelObj(levelKey)) go("level", { level: levelKey }); else go("home"); return; }   /* changed from Settings: straight there, no tour again */
     go("home");
     setTimeout(function () { try { if (typeof tourOpen === "function") tourOpen(true); } catch (e) {} }, 260);
   };
@@ -7291,7 +7396,7 @@ document.addEventListener("keydown", function (e) { if (e.key === "Escape" && PR
 function printClick(t, a) { if (a.print) { openPrint(a.print); return true; } return false; }
 
 /* ---------- Settings: display, study preferences, sound, protocols, printing, privacy & account, about ---------- */
-var APP_VERSION = "1.1", APP_DATE = "2026-10-10";
+var APP_VERSION = "1.1", APP_DATE = "2026-11-05";
 var SET_DEF = { remind: true, remindAt: "19:00", text: "normal", contrast: false, motion: false, homeLevel: "", dailyGoal: 10, nrN: 25, nrMode: "practice", adaptive: true, megaTimer: "on", fullDefault: false, voiceRate: "normal", showPhon: true, fun: true, sfx: true, music: true, musicVol: 40, printMode: "cards", printDetail: "std", printLang: "auto", printDense: false, state: "", buddy: true, weird: true, weirdAt: "12:00" };
 function SET() { var s = store("settings") || {}; return Object.assign({}, SET_DEF, s); }
 function setSet(k, v) { var s = SET(); s[k] = v; store("settings", s); applySettings(); if (k === "music" || k === "musicVol") muSync(); if (k === "remind" || k === "remindAt") remindSync(); if ((k === "weird" || k === "weirdAt") && typeof wdwSync === "function") wdwSync(); }
@@ -7352,7 +7457,7 @@ function audioCtx() {
    Fetched once, decoded once, then played as many times as needed. Anything that uses one keeps
    a synthesised fallback, because a file can always fail to arrive - which is exactly what
    happened to the music when its folder was never published. (owner, Nov 4 2026) */
-var SFXBUF = {}, SFX_SRC = { gasp: "sfx/gasp.mp3" };
+var SFXBUF = {}, SFX_SRC = { gasp: "sfx/gasp.mp3", wheeze: "sfx/wheeze.mp3" };   /* wheeze: owner-supplied recording (Pixabay / freesound_community), Nov 5 2026 */
 var SFX_TRIM = { gasp: 0.14 };     /* the recording opens with silence; skip it so it lands on time */
 function sfxLoad(name) {
   var c = audioCtx(); if (!c || !SFX_SRC[name]) return null;
@@ -7430,9 +7535,14 @@ function setRow(label, help, ctl) { return '<div class="setrow"><div class="sl">
 function setCard(id, title, body) { return (S.setTab || "display") !== id ? "" : '<section class="setcard" id="set-' + id + '"><h2>' + esc(title) + '</h2>' + body + '</section>'; }
 /* hidden Field Medic (military) section: unlocked by a code, shown as a prototype (owner, Oct 28 2026). Only SHA-256 hashes ship. */
 var FM_CODES = { "3cffa3f08ba9410ebbf2ac347359f647fcc57eed26e4294a7991a5b6b9ed77ab": { days: 0 }, "327a19299989c959457c7697b6dd8cdb9ec2c1704fb4e12653389c086938b0e5": { days: 30 } };
-/* Focused mode is gone (owner, Nov 5 2026): DrugBug is always the fun version. Anyone who had
-   it off is switched back on; sound stays however they set it. */
-function funOn() { return true; }   /* Seriously Fun mode: the bugs, the banter, the little animations */
+/* Focused or Enhanced (owner, Nov 5 2026): Focused is for studying, Enhanced is everything.
+   fun:false is Focused. Asked once at the start, right after the path and level. */
+/* Focused is parked while it is being worked on (owner, Nov 5 2026): everyone gets Enhanced, the
+   switch, the Settings row and the first-run question are hidden. Set FOCUSED_READY = true to bring it back. */
+var FOCUSED_READY = false;
+/* On Scene (The Great Bug calls) is parked with Focused while it is worked on (owner, Nov 5 2026) */
+var SCENE_READY = false;
+function funOn() { return !FOCUSED_READY || SET().fun !== false; }   /* Seriously Fun mode: the bugs, the banter, the little animations */
 function fmUnlocked() { return !!store("fmUnlock"); }
 /* In the App Store build a code may unhide the section but not unlock paid features (Guideline 3.1.1: paid features go through in-app purchase). Debug pass Oct 29; owner to confirm. */
 function fmPassActive() { if (typeof NATIVE !== "undefined" && NATIVE) return false; var p = store("fmPass"); return !!(p && p.until > Date.now()); }
@@ -7470,6 +7580,9 @@ function settingsView() {
   // study
   var lvls = DB.LEVELS.concat(DB.NLEVELS, DB.MLEVELS);
   c += setCard("study", "Study preferences",
+    /* first thing in Study: go back and pick your specialty and level again (owner, Nov 5 2026) */
+    setRow("Your specialty", obIntLine() + (store("lastLevel") && levelObj(store("lastLevel")) ? " \u00b7 level: " + levelObj(store("lastLevel")).name : "") + ". Go back to the start and choose a different specialty or level. Your progress, bugs and sticks stay.", '<button class="btn small" data-obagain="1">Choose my specialty</button>') +
+    (!FOCUSED_READY ? "" : setRow("Focused or Enhanced", "Focused is for studying: just the medicine, the questions and your progress, with no bugs, music, sound or animations. Enhanced is the full DrugBug: your bug and the Terrarium, Hickory, music, sounds and the level animations. The medicine and the questions are the same in both.", '<span class="seg2">' + ['focused', 'enhanced'].map(function (m) { var on = (m === 'enhanced') === funOn(); return '<button class="chip" data-obmodeset="' + m + '" aria-pressed="' + on + '">' + (m === 'focused' ? 'Focused' : 'Enhanced') + '</button>'; }).join('') + '</span>')) +
     setRow("Open DrugBug to", "Where the app starts each time you open it.", '<select class="pinput" data-setsel="homeLevel"><option value="">The main menu (default)</option><option value="path"' + (s.homeLevel === "path" ? " selected" : "") + '>My path</option><option value="gen"' + (s.homeLevel === "gen" ? " selected" : "") + '>BugDex</option>' + lvls.map(function (l) { return '<option value="' + l.key + '"' + (s.homeLevel === l.key ? " selected" : "") + '>' + esc(l.name) + '</option>'; }).join("") + '</select>') +
     setRow("Daily goal", "Questions in the Daily DrugBug.", setOpts("dailyGoal", s.dailyGoal, [[5, "5"], [10, "10"], [20, "20"]])) +
     setRow("Exam prep length", "Default number of questions.", setOpts("nrN", s.nrN, [[10, "10"], [25, "25"], [50, "50"], [100, "100"]])) +
@@ -7482,7 +7595,6 @@ function settingsView() {
     (!NATIVE ? setRow("Daily reminder", "Add a daily reminder to your phone's calendar to come learn and collect your sticks. Pick a time, then open the file it saves.", '<input class="pinput" type="time" data-setsel="remindAt" value="' + esc(s.remindAt || "19:00") + '" aria-label="Reminder time"> <button class="btn small ghost" data-act="remindcal">Add to my calendar</button>') : "") +
     setRow("Weird Drug Wednesday", (NATIVE ? "A strange-but-true drug fact every Wednesday as a notification. " : "A strange-but-true drug fact every Wednesday. ") + "Education only.", setTog("weird", s.weird !== false, "Weird Drug Wednesday") + (NATIVE && s.weird !== false ? ' <input class="pinput" type="time" data-setsel="weirdAt" value="' + esc(s.weirdAt || "12:00") + '" aria-label="Weird Drug Wednesday time">' : '') + ' <button class="btn small ghost" data-wdw="show">See this week\'s fact</button>') +
     setRow("App tour", "See the quick welcome tour again.", '<button class="btn small ghost" data-tour="again">Show the tour</button>') +
-    setRow("What you are here for", obIntLine(), '<button class="btn small ghost" data-obagain="1">Change</button>') +
     setRow("Other study paths", homeAll() ? "Every path is listed on the main menu." : "The main menu lists only the paths you picked.",
       '<button class="btn small ghost" data-act="allpaths">' + (homeAll() ? "Show only mine" : "Show every path") + '</button>'));
   // sound
@@ -7491,11 +7603,7 @@ function settingsView() {
     setRow("Written pronunciation", "Shows a guide like ep-ih-NEF-rin.", setTog("showPhon", s.showPhon, "Show pronunciation")) +
     setRow("Bug buddy", "Your bug on the side of the screen, reacting to your answers.", setTog("buddy", s.buddy, "Show my bug buddy")) +
     setRow("Background music", "Jazz, house, bugstep, rock, banjo or pop while you study. You can also tap the music note at the top of any page.", setTog("music", s.music !== false, "Background music") + '<label class="muvol"><span>Volume</span><input type="range" min="0" max="100" step="5" id="muvolset" value="' + muLevel() + '" aria-label="Music volume"><output id="muvolsetv">' + muLevel() + '%</output></label>') +
-    setRow("Sound effects", "Answer tones, the game sounds and the level transitions.", setTog("sfx", s.sfx, "Sound effects") + ' <button class="btn small ghost" data-act="sfxtest">Test</button>') +
-    setRow("Is sound working?", "What the app can actually see about the speakers.",
-      '<ul class="sndchk">' + audioReport().map(function (r) {
-        return '<li class="sc-' + r[0] + '"><span aria-hidden="true">' + (r[0] === "ok" ? "\u2713" : r[0] === "bad" ? "\u2715" : r[0] === "off" ? "\u25cb" : "\u2022") + '</span>' + esc(r[1]) + '</li>';
-      }).join("") + '</ul><button class="btn small ghost" data-act="sndrecheck">Check again</button>'));
+    setRow("Sound effects", "Answer tones, the game sounds and the level transitions.", setTog("sfx", s.sfx, "Sound effects") + ' <button class="btn small ghost" data-act="sfxtest">Test</button>'));   /* the "Is sound working?" check is gone (owner, Nov 5 2026) */
   // protocols
   var ap = activeProtocol(), sets = PS.sets.filter(function (p) { return p.status !== "unpublished"; });
   c += setCard("protocols", "Protocols",
@@ -7571,7 +7679,12 @@ function settingsClick(t, a) {
   if (a.settab) { S.setTab = a.settab; render(); var tb = $('[data-settab="' + a.settab + '"]'); if (tb) tb.focus(); return true; }
   if (a.setjump) { var el = document.getElementById("set-" + a.setjump); if (el) el.scrollIntoView({ behavior: SET().motion ? "auto" : "smooth", block: "start" }); return true; }
   switch (a.act) {
-    case "music": MU.armed = true; S.mupop = !S.mupop; render(); return true;
+    case "music": MU.armed = true; S.mupop = !S.mupop;
+      /* the box floats just under the button, wherever the page is scrolled to. It used to sit in
+         the page flow at the top, so when scrolled down it opened out of sight and nudged the page
+         (owner, Nov 5 2026) */
+      try { var mb = t.closest ? t.closest(".musicbtn") : null; mb = mb || document.querySelector(".musicbtn"); if (mb) { var rr = mb.getBoundingClientRect(); document.documentElement.style.setProperty("--mupopTop", Math.round(rr.bottom + 8) + "px"); } } catch (e) {}
+      render(); return true;
     case "mutoggle": MU.armed = true; setSet("music", !muOn()); render(); return true;
     case "mupopclose": S.mupop = false; render(); return true;
     case "sfxtest": var was = SET().sfx; if (!was) setSet("sfx", true); sfx(true); setTimeout(function () { sfx(false); if (!was) setSet("sfx", false); render(); }, 450); return true;
@@ -7734,6 +7847,7 @@ function muTick() {
   if (c.state === "running" && T.src) muFile(T);
 }
 function muPreview(id) {
+  if (typeof funOn === "function" && !funOn()) return;   /* Focused: no music */
   MU.armed = true; MU.preview = id; MU.trackId = null; clearTimeout(MU.pvT);
   if (!MU.playing) { MU.forced = true; muStart(true); }
   MU.pvT = setTimeout(function () { MU.preview = null; MU.trackId = null; if (MU.forced) { MU.forced = false; if (!muOn()) muStop(); } if (typeof render === "function" && S.shopF === "music") render(); }, 15000);
@@ -7780,6 +7894,7 @@ function muStop() {
 /* called from a real tap (the start-up notice, the agreement button, any first touch): unlock audio and start if music is on */
 function muGesture() {
   MU.armed = true;
+  if (typeof funOn === "function" && !funOn()) return;   /* Focused: no music, not even a preview */
   if (!muOn()) return;
   try { var c = muCtx(); if (c && c.state !== "running") c.resume(); } catch (e) {}
   muStart();
@@ -7797,7 +7912,7 @@ function muPop() {
   if (!S.mupop) return "";
   var on = muOn(), v = muLevel();
   return '<div class="mupop" role="dialog" aria-label="Music"><div class="murow"><strong>Background music</strong><button class="btn small' + (on ? ' ghost' : '') + '" data-act="mutoggle" aria-pressed="' + on + '">' + (on ? "Turn off" : "Turn on") + '</button></div>' +
-    '<label class="muvol"><span>Track</span><select class="pinput" id="mutrack">' + shownTracks().filter(function (t) { return ownsTrack(t.id); }).map(function (t) { return '<option value="' + t.id + '"' + (curTrack().id === t.id ? " selected" : "") + '>' + esc(t.name) + '</option>'; }).join("") + '</select></label><p class="muted small mumore">More tracks in the <button class="linkish" data-goshop="1" data-shopf="music">Terrarium Music shop</button></p>' +
+    '<label class="muvol"><span>Track</span><select class="pinput" id="mutrack">' + muTrackOptions() + '</select></label><p class="muted small mumore">More tracks in the <button class="linkish" data-goshop="1" data-shopf="music">Terrarium Music shop</button></p>' +
     '<label class="muvol"><span>Volume</span><input type="range" min="0" max="100" step="5" id="muvol" value="' + v + '" aria-label="Music volume"><output id="muvolv">' + v + '%</output></label>' +
     '<div class="murow"><button class="btn small ghost" data-act="mupopclose">Done</button></div></div>';
 }
@@ -7805,7 +7920,31 @@ document.addEventListener("input", function (e) {
   if (e.target.id === "muvol" || e.target.id === "muvolset") { var v = +e.target.value, s = SET(); s.musicVol = v; store("settings", s); var o = $("#muvolv"); if (o) o.textContent = v + "%"; var o2 = $("#muvolsetv"); if (o2) o2.textContent = v + "%"; if (v > 0 && SET().music === false) { s.music = true; store("settings", s); } MU.armed = true; muSync(); }
 });
 
-document.addEventListener("change", function (e) { if (e.target.id === "mutrack") { useTrack(e.target.value); } });
+/* every track is listed for every plan (owner, Nov 5 2026): yours first, then the ones behind
+   Plus and behind Pro, marked, so people can see what a plan adds. Picking a locked one plays its
+   snippet and opens the plans. */
+function muTrackOptions() {
+  var cur = curTrack().id, L = shownTracks(), mine = [], plus = [], pro = [], buy = [];
+  L.forEach(function (t) { if (ownsTrack(t.id)) mine.push(t); else if (trackProLocked(t)) ((t.tier || "pro") === "plus" ? plus : pro).push(t); else buy.push(t); });
+  function opt(t, tag) { return '<option value="' + t.id + '"' + (cur === t.id ? " selected" : "") + '>' + esc(t.name) + (tag ? " \u00b7 " + tag : "") + '</option>'; }
+  var c = '<optgroup label="Your music">' + mine.map(function (t) { return opt(t, ""); }).join("") + '</optgroup>';
+  if (buy.length) c += '<optgroup label="In the Music shop">' + buy.map(function (t) { return opt(t, t.price + " sticks"); }).join("") + '</optgroup>';
+  if (plus.length) c += '<optgroup label="DrugBug Plus">' + plus.map(function (t) { return opt(t, "Plus \ud83d\udd12"); }).join("") + '</optgroup>';
+  if (pro.length) c += '<optgroup label="DrugBug Pro">' + pro.map(function (t) { return opt(t, "Pro \ud83d\udd12"); }).join("") + '</optgroup>';
+  return c;
+}
+document.addEventListener("change", function (e) {
+  if (e.target.id !== "mutrack") return;
+  var id = e.target.value, t = trackById(id);
+  if (ownsTrack(id)) return useTrack(id);
+  e.target.value = curTrack().id;                     /* stay on the track that is playing */
+  if (t && trackProLocked(t)) {
+    try { muPreview(id); } catch (x) {}
+    S.mupop = false; render();
+    return openPaywall(t.name + " (bug music)", t.tier || "pro");
+  }
+  S.mupop = false; go("terrarium"); S.shopF = "music"; render(); window.scrollTo(0, 0);   /* bought with sticks in the shop */
+});
 
 /* white-noise buffer used by holiday opening sounds (modules/holiday.js) */
 function muNoiseBuf() { if (MU.nb) return MU.nb; var c = MU.ctx, n = Math.floor(c.sampleRate * 1.2), b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0); for (var i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; MU.nb = b; return b; }
@@ -9497,7 +9636,9 @@ var D3 = (function () {
     shoe:   { c: lin([0.94, 0.94, 0.92]), sp: 0.3, sh: 40, rim: 0.2 },
     gown:   { c: lin([0.70, 0.81, 0.95]), sp: 0.08, sh: 16, rim: 0.16, pat: 1 },
     trim:   { c: lin([0.95, 0.96, 0.97]), sp: 0.1, sh: 20, rim: 0.15 },
-    skin:   null   /* the gap at the open back shows the dummy himself (his yellow, re-tinted) */
+    skin:   null,  /* the gap at the open back shows the dummy himself (his yellow, re-tinted) */
+    wood:   { c: lin([0.55, 0.38, 0.24]), sp: 0.18, sh: 30, rim: 0.12 },   /* the kitchen chair in On Scene */
+    metal:  { c: lin([0.62, 0.64, 0.68]), sp: 0.6, sh: 70, rim: 0.2 }
   };
 
   /* ---------------- the skeleton ---------------- */
@@ -9587,11 +9728,22 @@ var D3 = (function () {
       mesh(an, G.shoe, MAT.shoe, "leg" + side, [0, -0.035, 0.045], [PI / 2, 0, 0], [0.95, 1, 0.72]);
     }
     leg("L", 1); leg("R", -1);
+    /* a kitchen chair for On Scene (owner, Nov 5 2026): it turns with him, and is hidden unless a
+       scene asks for it. Seat top at 0.47 m, centred a little in front of his hips. */
+    var chairN = node("chair", spin, [0, 0, 0]);
+    var seat = lathe([[0, -0.025], [0.22, -0.025], [0.235, -0.01], [0.235, 0.012], [0.22, 0.025], [0, 0.025]], 28);
+    var post = capsule(0.018, 0.47, 6), rail = capsule(0.016, 0.42, 6), slat = capsule(0.03, 0.4, 6);
+    [[0.17, 0.33], [-0.17, 0.33], [0.17, -0.06], [-0.17, -0.06]].forEach(function (q) { mesh(chairN, post, MAT.wood, "prop", [q[0], 0.225, q[1]]).mesh.prop = "chair"; });
+    mesh(chairN, seat, MAT.wood, "prop", [0, 0.455, 0.14], null, [1, 1, 0.95]).mesh.prop = "chair";
+    mesh(chairN, rail, MAT.wood, "prop", [0.17, 0.66, -0.08]).mesh.prop = "chair";
+    mesh(chairN, rail, MAT.wood, "prop", [-0.17, 0.66, -0.08]).mesh.prop = "chair";
+    mesh(chairN, slat, MAT.wood, "prop", [0, 0.78, -0.09], [0, 0, PI / 2]).mesh.prop = "chair";
+    mesh(chairN, slat, MAT.wood, "prop", [0, 0.64, -0.09], [0, 0, PI / 2]).mesh.prop = "chair";
     this.nodes = nodes; this.meshes = meshes; this.list = list; this.G = G;
   }
   Rig.prototype.update = function () {
     var L = this.list, i, n, N = this.nodes;
-    if (N.skirt && N.hipL && N.hipR) { N.skirt.r[0] = (N.hipL.r[0] + N.hipR.r[0]) * 0.42; N.skirt.r[2] = (N.hipL.r[2] + N.hipR.r[2]) * 0.3; }
+    if (N.skirt && N.hipL && N.hipR) { var hf = (N.hipL.r[0] + N.hipR.r[0]) / 2; var sat = hf < -0.9; N.skirt.r[0] = hf * (sat ? 0.8 : 0.84); N.skirt.s[1] = sat ? 0.4 : 1;   /* seated: the gown lies over his lap */ N.skirt.r[2] = (N.hipL.r[2] + N.hipR.r[2]) * 0.3; }
     for (i = 0; i < L.length; i++) {
       n = L[i];
       trs(n.p, n.r, n.s, n.local);
@@ -9767,7 +9919,17 @@ var D3GL = (function () {
 
   /* compose a frame: reaction + spin balance + idle, then the hands */
   function poseAt(now) {
-    var R = S.rig, P = {}, rx = S.rx, u = 0, ikw = 0, slideK = null, t = (now - S.t0) / 1000;
+    var R = S.rig, P = {}, rx = S.rx, u = 0, ikw = 0, slideK = null, t = (now - S.t0) / 1000, sc = S.scene;
+    var actEnv = 0;
+    if (sc) {
+      rx = null; C.addInto(P, sc.pose || {}, 1);    /* On Scene: he holds the scene's posture */
+      if (S.act) {   /* and acts out what you just examined */
+        var au = Math.min(1, (now - S.act.start) / (S.act.def.dur * 1000));
+        C.addInto(P, C.sample(S.act.def.frames, au), 1);
+        actEnv = Math.min(1, au / 0.15, (1 - au) / 0.15);
+        if (au >= 1) S.act = null;
+      }
+    }
     if (rx) {
       u = S.freeze != null ? S.freeze : Math.min(1, (now - rx.start) / (rx.def.dur * 1000));   /* freeze: for tests */
       P = C.sample(rx.def.frames, u);
@@ -9795,7 +9957,12 @@ var D3GL = (function () {
     var tl = S.tilt;
     if (Math.abs(tl) > 0.002) C.addInto(P, { hipL: [0, 0, Math.max(0, -tl) * 0.9 + 0.05 * Math.abs(tl)], hipR: [0, 0, -Math.max(0, tl) * 0.9 - 0.05 * Math.abs(tl)], spine: [0, 0, -tl * 0.5], head: [0, 0, -tl * 0.6] }, 1);
     /* breathing, so he is never completely still */
-    C.addInto(P, { chest: [Math.sin(t * 1.5) * 0.014, 0, 0], spine: [Math.sin(t * 1.5 + 0.6) * 0.006, 0, 0], head: [Math.sin(t * 0.7) * 0.01, Math.sin(t * 0.43) * 0.05, 0] }, 1);
+    var br = sc && sc.breath ? sc.breath : null, bw = br ? br.rate : 1.5, ba = br ? br.amp : 0.014;
+    C.addInto(P, { chest: [Math.sin(t * bw) * ba, 0, 0], spine: [Math.sin(t * bw + 0.6) * ba * 0.43, 0, 0], head: [Math.sin(t * 0.7) * 0.01, Math.sin(t * 0.43) * (br ? 0.02 : 0.05), 0] }, 1);
+    if (br && br.acc) {   /* working to breathe: the shoulders lift with every breath */
+      var lift = Math.max(0, Math.sin(t * bw)) * br.acc;
+      C.addInto(P, { shL: [0, 0, lift * 0.25], shR: [0, 0, -lift * 0.25], neck: [-lift * 0.15, 0, 0] }, 1);
+    }
     R.pose(P);
     R.nodes.spin.r[1] = S.ang;
     R.nodes.bal.r[0] = S.pitch; R.nodes.bal.r[2] = S.tilt;
@@ -9803,6 +9970,11 @@ var D3GL = (function () {
     if (rx && ikw > 0.001 && rx.def.ik) {
       if (rx.def.ik.L) solveArm(R, "L", rx.def.ik.L, ikw, slideK);
       if (rx.def.ik.R) solveArm(R, "R", rx.def.ik.R, ikw, slideK);
+    }
+    if (sc && sc.ik) {
+      var free = S.act && S.act.def.noik ? S.act.def.noik : "";
+      if (sc.ik.L) solveArm(R, "L", sc.ik.L, free.indexOf("L") >= 0 ? 1 - actEnv : 1, null);
+      if (sc.ik.R) solveArm(R, "R", sc.ik.R, free.indexOf("R") >= 0 ? 1 - actEnv : 1, null);
     }
   }
 
@@ -9815,18 +9987,19 @@ var D3GL = (function () {
     }
     var v = Math.abs(S.vel);
     /* he leans into the spin; the spring makes him wobble back and forth on his feet */
-    var target = Math.max(-0.3, Math.min(0.3, -S.vel * 0.032));
+    var target = S.scene ? 0 : Math.max(-0.3, Math.min(0.3, -S.vel * 0.032));
     var acc = -36 * (S.tilt - target) - 4.2 * S.tiltV;
     S.tiltV += acc * dt; S.tilt += S.tiltV * dt;
     var pacc = -30 * (S.pitch - Math.min(0.12, v * 0.008)) - 4 * S.pitchV;
     S.pitchV += pacc * dt; S.pitch += S.pitchV * dt;
-    var aoT = Math.max(0, Math.min(1, (v - 2) / 5));
+    var aoT = S.scene ? 0 : Math.max(0, Math.min(1, (v - 2) / 5));
     if (Math.abs(S.tilt) > 0.12) aoT = Math.max(aoT, Math.min(1, (Math.abs(S.tilt) - 0.12) * 4));
     S.armsOut += (aoT - S.armsOut) * Math.min(1, dt * 7);
   }
   function release() {
     var v = Math.abs(S.vel);
     if (typeof S.cb.reduced === "function" && S.cb.reduced()) return;
+    if (S.scene) return;     /* a patient on scene does not get knocked over */
     if (v > 15) {           /* far too fast: down he goes */
       S.vel *= 0.35;
       react("fall");
@@ -9924,7 +10097,7 @@ var D3GL = (function () {
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, b.i); gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
     gl.enable(gl.STENCIL_TEST); gl.stencilFunc(gl.EQUAL, 0, 0xff); gl.stencilOp(gl.KEEP, gl.KEEP, gl.INCR);
     gl.useProgram(S.sprog.p); gl.uniformMatrix4fv(S.sprog.u.uVP, false, VP); gl.uniformMatrix4fv(S.sprog.u.uS, false, SHM); gl.uniform1f(S.sprog.u.uA, 0.26);
-    for (i = 0; i < M.length; i++) { m = M[i]; b = upload(gl, m.mesh.geo);
+    for (i = 0; i < M.length; i++) { m = M[i]; if (m.mesh.prop && !(S.scene && S.scene.chair)) continue; b = upload(gl, m.mesh.geo);
       gl.uniformMatrix4fv(S.sprog.u.uM, false, m.world);
       gl.bindBuffer(gl.ARRAY_BUFFER, b.p); gl.enableVertexAttribArray(S.sprog.aP); gl.vertexAttribPointer(S.sprog.aP, 3, gl.FLOAT, false, 0, 0);
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, b.i); gl.drawElements(gl.TRIANGLES, b.c, gl.UNSIGNED_SHORT, 0); }
@@ -9932,7 +10105,7 @@ var D3GL = (function () {
     /* the dummy himself */
     var pr = S.prog, now = performance.now(), sel = AREA_PARTS[S.sel] || [];
     gl.useProgram(pr.p); gl.uniformMatrix4fv(pr.u.uVP, false, VP); gl.uniform3fv(pr.u.uCam, CAM.eye);
-    for (i = 0; i < M.length; i++) { m = M[i]; var mm = m.mesh, mat = mm.mat; b = upload(gl, mm.geo);
+    for (i = 0; i < M.length; i++) { m = M[i]; var mm = m.mesh, mat = mm.mat; if (mm.prop && !(S.scene && S.scene.chair)) continue; b = upload(gl, mm.geo);
       gl.uniformMatrix4fv(pr.u.uM, false, m.world); gl.uniformMatrix3fv(pr.u.uNM, false, C.nrm3(m.world));
       gl.uniform3fv(pr.u.uCol, mat.c); gl.uniform3f(pr.u.uSp, mat.sp, mat.sh, mat.rim); if (pr.u.uPat) gl.uniform1f(pr.u.uPat, mat.pat ? 1 : 0);
       var e = sel.indexOf(mm.part) >= 0 ? 0.045 : 0, fl = S.flash[mm.part];
@@ -9964,7 +10137,7 @@ var D3GL = (function () {
     var R = ray(cx, cy); if (!R) return null;
     var best = null, M = S.rig.meshes, i;
     for (i = 0; i < M.length; i++) {
-      var m = M[i], IM = C.inv(m.world); if (!IM) continue;
+      var m = M[i]; if (m.mesh.prop) continue; var IM = C.inv(m.world); if (!IM) continue;
       var o = C.xf(IM, R.o), d = C.xf(IM, R.d, 0), g = m.mesh.geo, P = g.p, I = g.i, j;
       for (j = 0; j < I.length; j += 3) {
         var a0 = I[j] * 3, b0 = I[j + 1] * 3, c0 = I[j + 2] * 3;
@@ -10021,7 +10194,7 @@ var D3GL = (function () {
     if (S.ok || S.dead) return S.ok;
     try {
       var cv = document.createElement("canvas"); cv.className = "bm3dcv";
-      cv.setAttribute("role", "img"); cv.setAttribute("aria-label", "3D body. Drag to turn him round, tap a part to see what is there.");
+      cv.setAttribute("role", "img"); cv.setAttribute("aria-label", "The Great Bug, in 3D. Drag to turn him round, tap a part to see what is there.");
       var gl = cv.getContext("webgl", { alpha: true, antialias: true, stencil: true, premultipliedAlpha: true, preserveDrawingBuffer: false });
       if (!gl) { S.dead = true; return false; }
       S.gl = gl; S.cv = cv;
@@ -10043,6 +10216,11 @@ var D3GL = (function () {
     tint: function (rgb) { if (rgb && rgb.length === 3) D3.MAT.yellow.c = D3.lin(rgb); },
     mount: mount, react: react, live: function () { return S.ok && !!S.cv && S.cv.isConnected; },
     select: function (area) { S.sel = area || ""; },
+    /* On Scene (owner, Nov 5 2026): a held posture, an optional chair, breathing rate and effort.
+       scene(null) gives him back to the Anatomy tab. */
+    scene: function (def) { var was = S.scene; S.scene = def || null; if (def) { S.rx = null; S.tilt = 0; S.tiltV = 0; S.armsOut = 0; if (was !== def) { S.ang = def.ang != null ? def.ang : 0.6; S.vel = 0; } } else if (was) { S.ang = 0; S.vel = 0; } kick(); },
+    flash: function (part) { S.flash[part] = performance.now(); kick(); },
+    act: function (def) { if (def && S.scene) { S.act = { def: def, start: performance.now() }; kick(); } },
     on: function (k, f) { S.cb[k] = f; }, area: function (p) { return AREA[p]; },
     /* used by the tests */
     _s: S, _pick: pick, _RX: RX, _release: release,
@@ -10051,6 +10229,232 @@ var D3GL = (function () {
   };
 })();
 /* D3:END */
+
+/* ---------- On Scene (working name; owner, Nov 5 2026) ----------
+   A call, live. The dummy acts out what you walk in on (a man tripodding in a kitchen chair, a man
+   clutching his chest), you can spin him and tap him to examine him, a monitor beside him runs
+   real-time vitals that change with what you do, and the questions follow the call step by step.
+   Education only: no doses are given here; the medicine pages hold those. */
+var SC_SEAT = { drop: -0.445, shift: 0.03, hipL: [-1.5, 0, 0.14], hipR: [-1.5, 0, -0.14], knL: [1.5, 0, 0], knR: [1.5, 0, 0], anL: [0.05, 0, 0], anR: [0.05, 0, 0] };
+function scPose(extra) { var P = {}; for (var k in SC_SEAT) P[k] = SC_SEAT[k]; for (var j in extra) P[j] = extra[j]; return P; }
+var SCENES = [
+  { id: "sob", title: "Short of breath", tag: "Respiratory", blurb: "A 68-year-old man who can barely finish a sentence.",
+    dispatch: "Respond to a residence for a 68-year-old male, difficulty breathing.",
+    arrive: "You find him in the kitchen, sitting forward in a chair with his hands braced on his knees, breathing through pursed lips. His wife says he has COPD and has been getting worse for two days.",
+    scene: { chair: true, pose: scPose({ spine: [0.62, 0, 0], chest: [0.18, 0, 0], neck: [-0.38, 0, 0], head: [-0.3, 0, 0] }),
+      ik: { L: { n: "knL", o: [0.0, 0.02, 0.07], pole: [1, -0.2, 0.3] }, R: { n: "knR", o: [0.0, 0.02, 0.07], pole: [-1, -0.2, 0.3] } },
+      breath: { rate: 3.1, amp: 0.045, acc: 0.6 }, ang: 0.75 },
+    v0: { hr: 114, sbp: 158, dbp: 94, rr: 30, spo2: 85, etco2: 52 },
+    exam: {
+      chest: { t: "Diffuse expiratory wheezes, quiet at both bases. A prolonged expiration.", snd: "wheeze" },
+      back: { t: "Wheezes all the way down, and very little air moving at the bases.", snd: "wheeze" },
+      head: { t: "He speaks two or three words at a time. Lips pursed, a dusky tint to his lips.", snd: "gaspy" },
+      neck: { t: "Neck muscles straining with every breath: accessory muscle use. Trachea midline.", snd: "gaspy" },
+      abdomen: { t: "Belly is soft. His abdominal muscles tighten on every breath out.", snd: "" },
+      armL: { t: "Fingertips slightly blue. A home inhaler in his robe pocket.", snd: "" }, armR: { t: "Clubbed fingertips, the kind long-term lung disease leaves.", snd: "" },
+      legL: { t: "A little ankle swelling on both sides.", snd: "" }, legR: { t: "A little ankle swelling on both sides.", snd: "" }
+    },
+    steps: [
+      { say: "Look at how he is sitting. Spin him round if you like.", q: "Why is he sitting forward with his hands on his knees?",
+        a: "Bracing his arms lets the chest and neck muscles help him breathe (tripod position)", w: ["He has abdominal pain", "He is about to faint", "It is the most comfortable way to sleep"],
+        x: "Tripod position fixes the shoulder girdle so the accessory muscles can pull on the rib cage. It is a sign of significant respiratory distress." },
+      { say: "Listen to his lungs: tap his chest or his back.", need: ["chest", "back"],
+        q: "Wheezes everywhere, quiet bases, a known COPD history. What is the best first step?",
+        a: "Oxygen titrated to an SpO2 of about 88 to 92% and a nebulized bronchodilator", w: ["A non-rebreather at 15 L to get him to 100% and nothing else yet", "Nitroglycerin for possible heart failure", "Have him lie flat to rest"],
+        x: "In COPD, oxygen is titrated to a target of about 88 to 92% (GOLD), and a short-acting bronchodilator opens the airways. Lying him flat makes the work of breathing worse.",
+        after: { hr: 122, rr: 26, spo2: 90, etco2: 50 } },
+      { say: "The nebulizer is running. Watch the monitor.", q: "His heart rate has gone up a little since the treatment started. Why?",
+        a: "Beta-agonist bronchodilators like albuterol raise the heart rate", w: ["He is having a heart attack", "The oxygen is too high", "It means the treatment failed"],
+        x: "Albuterol stimulates beta receptors; some reach the heart. A modest rise in heart rate is an expected side effect, not a reason to stop." },
+      { say: "Ten minutes in. He is still working hard but is awake and following commands.", q: "He is still in distress, SpO2 89% and tiring. What noninvasive option helps most, if your protocol allows it?",
+        a: "CPAP or other noninvasive positive pressure ventilation", w: ["An oral steroid tablet and wait", "Stop the oxygen to drive his breathing", "A second nebulizer only, then reassess in an hour"],
+        x: "Noninvasive positive pressure splints the small airways open and rests tired muscles. It needs a patient who is awake and protecting his airway.",
+        after: { hr: 110, rr: 22, spo2: 92, etco2: 46, sbp: 146, dbp: 88 } },
+      { say: "On CPAP, he settles. Time to think about what is behind the flare.", q: "Which medicine treats the airway inflammation driving a COPD flare?",
+        a: "A corticosteroid such as methylprednisolone", w: ["Furosemide", "Diphenhydramine", "Aspirin"],
+        x: "Systemic corticosteroids reduce airway inflammation and shorten a COPD exacerbation. They take hours to work, so the bronchodilators and ventilation support come first.",
+        after: { hr: 104, rr: 20, spo2: 93, etco2: 44 } }
+    ] },
+  { id: "cp", title: "Chest pain", tag: "Cardiac", blurb: "A 58-year-old man, pale and sweaty, hand pressed on his chest.",
+    dispatch: "Respond to an office building for a 58-year-old male with chest pain.",
+    arrive: "He is sitting upright in a chair in the break room, pale and sweaty, his right hand pressed flat on the middle of his chest. It started 40 minutes ago and goes into his left arm and jaw.",
+    scene: { chair: true, pose: scPose({ spine: [0.12, 0, 0], chest: [0.04, 0, 0], head: [0.06, 0, 0] }),
+      ik: { R: { n: "chest", o: [-0.01, 0.2, 0.13], pole: [-1, -0.7, 0.1] }, L: { n: "knL", o: [0.0, 0.02, 0.07], pole: [1, -0.2, 0.3] } },
+      breath: { rate: 2.1, amp: 0.022, acc: 0 } },
+    v0: { hr: 98, sbp: 168, dbp: 98, rr: 20, spo2: 95, etco2: 38 },
+    exam: {
+      chest: { t: "Clear, equal breath sounds on both sides. The pain does not change when you press on his chest.", snd: "clear" },
+      back: { t: "Clear breath sounds at the bases. No crackles.", snd: "clear" },
+      head: { t: "Pale, cool and clammy. He calls it a crushing pressure, 8 out of 10.", snd: "groan" },
+      neck: { t: "No jugular venous distension.", snd: "" },
+      abdomen: { t: "Soft and not tender.", snd: "" },
+      armL: { t: "The pain runs down this arm. Radial pulse strong and regular.", snd: "groan" }, armR: { t: "Radial pulse strong and regular.", snd: "" },
+      legL: { t: "No leg swelling.", snd: "" }, legR: { t: "No leg swelling.", snd: "" }
+    },
+    steps: [
+      { say: "Tap him to examine him; spin him to look him over.", q: "What is the most important early test for this patient?",
+        a: "A 12-lead ECG, acquired within 10 minutes of first contact", w: ["A blood glucose only", "A chest X-ray on scene", "Wait for the pain to settle, then decide"],
+        x: "Ischemic chest pain needs a 12-lead within about 10 minutes of first contact. A STEMI on that ECG changes where he goes and who you call ahead." },
+      { say: "The 12-lead shows ST elevation in II, III and aVF: an inferior STEMI.", need: ["chest", "back"],
+        q: "Which medicine should he chew now, if he has no allergy and no active bleeding?",
+        a: "Aspirin", w: ["Ibuprofen", "Acetaminophen", "Clopidogrel only, swallowed whole"],
+        x: "Chewed aspirin blocks platelet clumping early. Other NSAIDs do not replace it and are avoided in heart attacks.",
+        after: { hr: 94, rr: 18 } },
+      { say: "His pressure is holding. Your partner reaches for the nitroglycerin.", q: "Before nitroglycerin in an inferior STEMI, what must you check?",
+        a: "Blood pressure, recent erectile dysfunction medicine, and signs of right ventricular involvement", w: ["Only his pain score", "His blood glucose", "Nothing, nitroglycerin is always safe"],
+        x: "Inferior STEMI can involve the right ventricle, which depends on preload; nitroglycerin can drop the pressure sharply. Low blood pressure and a PDE-5 inhibitor in the last day or two are also reasons to hold it.",
+        after: { hr: 92, sbp: 150, dbp: 90 } },
+      { say: "You are packaging him for transport.", q: "Where should he go?",
+        a: "A hospital that can do emergency PCI, with a STEMI alert called ahead", w: ["The closest hospital, whatever it offers", "Home, if the pain settles", "Urgent care"],
+        x: "Systems of care aim for a first-contact-to-device time of about 90 minutes. Calling ahead gets the cath lab team ready before you arrive.",
+        after: { hr: 90, rr: 18, spo2: 96 } }
+    ] }
+];
+var SC = { id: null, i: 0, ans: null, v: null, tgt: null, log: [], heard: {}, t: 0, beat: 0 };
+function scOk() { return S.view === "level" && routeOfLevel(S.level) === "ph" && !isF(S.level); }
+function scCase() { for (var i = 0; i < SCENES.length; i++) if (SCENES[i].id === SC.id) return SCENES[i]; return null; }
+function scStart(id) {
+  var c = null; SCENES.forEach(function (x) { if (x.id === id) c = x; }); if (!c) return;
+  SC.id = id; SC.i = -1; SC.ans = null; SC.log = []; SC.heard = {};
+  SC.v = {}; SC.tgt = {}; for (var k in c.v0) { SC.v[k] = c.v0[k]; SC.tgt[k] = c.v0[k]; }
+  render(); window.scrollTo(0, 0); scTick();
+}
+/* real-time vitals: every second each number drifts toward where the call is taking it, with a
+   little noise so the monitor never looks frozen */
+function scTick() {
+  clearInterval(SC.timer);
+  SC.timer = setInterval(function () {
+    if (S.tab !== "scene" || !SC.id || document.hidden) return;
+    for (var k in SC.tgt) {
+      var d = SC.tgt[k] - SC.v[k], step = d * 0.12, n = k === "spo2" ? 0.35 : k === "hr" ? 1.2 : k === "rr" ? 0.6 : k === "etco2" ? 0.5 : 0.8;
+      SC.v[k] += step + (Math.random() - 0.5) * n;
+    }
+    scDrawVitals();
+  }, 1000);
+}
+function scVal(k) { var v = SC.v[k]; if (k === "spo2") return Math.max(60, Math.min(100, Math.round(v))); return Math.round(v); }
+function scVitalsHTML() {
+  if (!SC.v) return "";
+  var lo = function (k, a, b) { var v = scVal(k); return v < a || v > b ? " warn" : ""; };
+  return '<div class="scmon" id="scmon" aria-live="off">' +
+    '<div class="scv hr' + lo("hr", 50, 110) + '"><span>HR</span><strong>' + scVal("hr") + '</strong><i class="scbeat" style="animation-duration:' + (60 / Math.max(30, scVal("hr"))).toFixed(2) + 's"></i></div>' +
+    '<div class="scv bp' + lo("sbp", 90, 160) + '"><span>BP</span><strong>' + scVal("sbp") + '/' + scVal("dbp") + '</strong></div>' +
+    '<div class="scv rr' + lo("rr", 10, 24) + '"><span>RR</span><strong>' + scVal("rr") + '</strong></div>' +
+    '<div class="scv sp' + lo("spo2", 92, 100) + '"><span>SpO₂</span><strong>' + scVal("spo2") + '%</strong></div>' +
+    '<div class="scv co' + lo("etco2", 35, 45) + '"><span>EtCO₂</span><strong>' + scVal("etco2") + '</strong></div></div>';
+}
+function scDrawVitals() { var m = document.getElementById("scmon"); if (m) m.outerHTML = scVitalsHTML(); }
+/* the stage: the dummy's placeholder plus buttons for keyboard and screen-reader users */
+function scStage() {
+  var parts = ["head", "neck", "chest", "back", "abdomen", "armL", "armR", "legL", "legR"];
+  return '<div class="scstage"><div class="bm3d scene" data-ctx="scene"><div class="bm3dfb"><p class="muted small">Your browser cannot show The Great Bug in 3D; use the buttons below to examine him.</p></div>' +
+    '<div class="bm3dsr">' + parts.map(function (p) { return '<button type="button" data-scpart="' + p + '">Examine ' + esc((D3_LABEL[p] || p).toLowerCase()) + '</button>'; }).join("") + '</div>' +
+    '<p class="bm3dhint" aria-hidden="true">Drag to turn him · tap to examine</p></div>' + scVitalsHTML() + '</div>';
+}
+function sceneView() {
+  if (!scOk()) return '<div class="empty">On Scene calls are in the Prehospital levels for now.</div>';
+  var c = scCase();
+  if (!c) {
+    return '<p class="muted">Run a call from the moment you walk in. The Great Bug plays your patient and acts out what is happening, the monitor runs live, and your bug talks you through it. Tap The Great Bug to examine him and drag to turn him round.</p><div class="scenelist">' +
+      SCENES.map(function (x) { return '<button class="scard" data-scgo="' + x.id + '"><span class="meta">' + esc(x.tag) + '</span><h3>' + esc(x.title) + '</h3><span>' + esc(x.blurb) + '</span></button>'; }).join("") + '</div>' +
+      '<p class="muted small">Education only. Follow your own protocols and medical direction.</p>';
+  }
+  var h = '<div class="scwrap"><button class="linkish subback" data-scback="1">&larr; All calls</button>';
+  h += '<div class="scdisp"><span class="scdl">Dispatch</span> ' + esc(c.dispatch) + '</div>';
+  h += scStage();
+  if (SC.i < 0) {
+    h += scGuide(c.arrive) + '<div class="scstep"><div class="actions"><button class="btn" data-scnext="1">Start the call</button></div></div>';
+  } else if (SC.i >= c.steps.length) {
+    var right = SC.log.filter(function (x) { return x; }).length;
+    h += scGuide(right === c.steps.length ? "Perfect call. The Great Bug is in good hands." : "Good work. Have a look back at the ones that tripped you up.") + '<div class="scstep done"><h3>Call complete</h3><p>' + right + ' of ' + c.steps.length + ' answered right first time. Handoff given, patient care transferred.</p><div class="actions"><button class="btn" data-scgo="' + c.id + '">Run it again</button><button class="btn ghost" data-scback="1">Another call</button></div></div>';
+  } else {
+    var st = c.steps[SC.i], need = st.need && !st.need.some(function (p) { return SC.heard[p]; });
+    h += scGuide(st.say) + '<div class="scstep">';
+    if (need) h += '<p class="scneed">Tap his chest or his back to listen before you decide.</p>';
+    else {
+      var opts = SC.opts || (SC.opts = shuffle([st.a].concat(st.w)));
+      h += '<h3 class="scq">' + esc(st.q) + '</h3><div class="scopts">' + opts.map(function (o, n) {
+        var cls = SC.ans == null ? "" : o === st.a ? " right" : o === SC.ans ? " wrong" : " dim";
+        return '<button class="scopt' + cls + '" data-scans="' + n + '"' + (SC.ans != null ? " disabled" : "") + '>' + esc(o) + '</button>';
+      }).join("") + '</div>';
+      if (SC.ans != null) h += '<div class="scx' + (SC.ans === st.a ? " good" : "") + '"><strong>' + (SC.ans === st.a ? "Right." : "Not quite.") + '</strong> ' + esc(st.x) + '</div><div class="actions"><button class="btn" data-scnext="1">' + (SC.i === c.steps.length - 1 ? "Finish the call" : "Continue") + '</button></div>';
+    }
+    h += '</div>';
+  }
+  if (SC.notes && SC.notes.length) h += '<details class="scfind" open><summary>Your findings</summary><ul>' + SC.notes.map(function (n) { return '<li><b>' + esc(n[0]) + ':</b> ' + esc(n[1]) + '</li>'; }).join("") + '</ul></details>';
+  return h + '</div>';
+}
+/* your own bug is your partner on the call: it says each step out loud, in its own voice */
+function scGuide(text) {
+  var art = ""; try { art = myBugArt("scgbug", "happy", null, typeof myStage === "function" ? myStage() : 3); } catch (e) {}
+  var key = SC.id + ":" + SC.i;
+  if (SC.said !== key) { SC.said = key; setTimeout(function () { try { if (typeof voiceSay === "function") voiceSay(String(text).split(/\s+/).slice(0, 16).join(" ")); } catch (e) {} }, 250); }
+  return '<div class="scguide"><span class="scgart">' + art + '</span><div class="scgsay"><span class="scgname">' + esc(typeof myBug === "function" ? myBug().name : "Your bug") + '</span>' + esc(text) + '</div></div>';
+}
+/* examining him: what you find, and what you hear */
+function scExam(part, x, y) {
+  var c = scCase(); if (!c) return;
+  var e = c.exam[part] || c.exam[part === "butt" ? "back" : part === "pelvis" ? "abdomen" : ""] ; if (!e) return;
+  var key = part === "butt" ? "back" : part;
+  SC.heard[key] = 1;
+  SC.notes = SC.notes || []; var lab = D3_LABEL[part] || part;
+  if (!SC.notes.some(function (n) { return n[0] === lab; })) SC.notes.push([lab, e.t]);
+  try { D3GL.flash(part); } catch (er) {}
+  var host = document.querySelector(".bm3d.live");
+  if (host && x != null) d3Pop(host, e.t, x, y);
+  scSnd(e.snd);
+  render();
+}
+/* lung and body sounds, made live: a wheeze is a few high, musical tones that swell on each breath
+   out; clear breath sounds are soft filtered air; gasping is quick ragged breaths */
+function scSnd(kind) {
+  if (!kind || typeof SET !== "function" || !SET().sfx) { if (kind === "groan" && typeof anatSnd === "function") try { anatSnd("groan"); } catch (e) {} return; }
+  if (kind === "groan") { try { anatSnd("groan"); } catch (e) {} return; }
+  var c = audioCtx(); if (!c) return;
+  var t = c.currentTime, out = c.createGain(); out.gain.value = 0.9; out.connect(c.destination);
+  function air(at, dur, f, v) {
+    var n = Math.floor(c.sampleRate * dur), b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0);
+    for (var i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+    var s = c.createBufferSource(), fl = c.createBiquadFilter(), g = c.createGain();
+    s.buffer = b; fl.type = "bandpass"; fl.frequency.value = f; fl.Q.value = 0.7;
+    g.gain.setValueAtTime(0.0001, t + at); g.gain.exponentialRampToValueAtTime(v, t + at + dur * 0.35); g.gain.exponentialRampToValueAtTime(0.0001, t + at + dur);
+    s.connect(fl); fl.connect(g); g.connect(out); s.start(t + at); s.stop(t + at + dur + 0.02);
+  }
+  function tone(at, dur, f, v) {
+    var o = c.createOscillator(), g = c.createGain(); o.type = "sine"; o.frequency.setValueAtTime(f, t + at); o.frequency.linearRampToValueAtTime(f * 0.94, t + at + dur);
+    g.gain.setValueAtTime(0.0001, t + at); g.gain.exponentialRampToValueAtTime(v, t + at + dur * 0.4); g.gain.exponentialRampToValueAtTime(0.0001, t + at + dur);
+    o.connect(g); g.connect(out); o.start(t + at); o.stop(t + at + dur + 0.02);
+  }
+  if (kind === "wheeze") {
+    for (var k = 0; k < 2; k++) { var b0 = k * 1.5; air(b0, 0.45, 700, 0.18); air(b0 + 0.5, 0.95, 500, 0.12); [520, 690, 830].forEach(function (f, j) { tone(b0 + 0.52 + j * 0.03, 0.85, f, 0.05); }); }
+  } else if (kind === "clear") {
+    for (var m = 0; m < 2; m++) { air(m * 1.8, 0.7, 450, 0.2); air(m * 1.8 + 0.75, 0.6, 300, 0.1); }
+  } else if (kind === "gaspy") {
+    for (var q = 0; q < 4; q++) { air(q * 0.42, 0.22, 900, 0.2); air(q * 0.42 + 0.22, 0.18, 600, 0.12); }
+  }
+}
+document.addEventListener("click", function (e) {
+  var t = e.target.closest && e.target.closest("[data-scgo],[data-scback],[data-scnext],[data-scans],[data-scpart]"); if (!t) return;
+  var d = t.dataset;
+  if (d.scgo) return scStart(d.scgo);
+  if (d.scback) { SC.id = null; clearInterval(SC.timer); render(); return window.scrollTo(0, 0); }
+  if (d.scpart) return scExam(d.scpart, null, null);
+  var c = scCase(); if (!c) return;
+  if (d.scans != null) {
+    if (SC.ans != null) return;
+    var st = c.steps[SC.i]; SC.ans = SC.opts[+d.scans]; SC.log[SC.i] = SC.ans === st.a;
+    try { sfx(SC.ans === st.a); } catch (er) {}
+    if (SC.ans === st.a) { try { earn(3); Prog.d.answered = (Prog.d.answered || 0) + 1; saveProg(); } catch (er) {} }
+    return render();
+  }
+  if (d.scnext) {
+    var prev = c.steps[SC.i];
+    if (prev && prev.after) for (var k in prev.after) SC.tgt[k] = prev.after[k];
+    SC.i++; SC.ans = null; SC.opts = null;
+    render();
+    var s1 = document.querySelector(".scstep"); if (s1) try { s1.scrollIntoView({ block: "nearest", behavior: "smooth" }); } catch (er) {}
+  }
+});
 
 /* ---------- the 3D dummy, wired into the app ----------
    bodyStage() leaves a placeholder that still contains the old SVG figure. When WebGL starts,
@@ -10066,7 +10470,7 @@ function bodyStage(ctx, sel) {
     return '<button type="button" data-barea="' + esc(D3GL.area(p)) + '" data-bpart="' + p + '">' + esc(D3_LABEL[p]) + '</button>';
   }).join("") + '</div>';
   return '<div class="bm3d" data-ctx="' + ctx + '"><div class="bm3dfb">' + bodySVG(sel) + '</div>' + sr +
-    '<p class="bm3dhint" aria-hidden="true">Drag to turn him · tap a part</p></div>';
+    '<p class="bm3dhint" aria-hidden="true">Drag to turn The Great Bug · tap a part</p></div>';
 }
 /* areas that exist in one list may not exist in the other (the Body Systems list has no Back) */
 function d3AreaFor(ctx, area) {
@@ -10101,7 +10505,8 @@ function d3Mount() {
   try { D3GL.tint(d3Tint(h)); } catch (e) {}
   if (!D3GL.mount(h)) return;
   var ctx = h.getAttribute("data-ctx");
-  D3GL.select(ctx === "body" ? S.barea : S.anArea);
+  try { var scc = ctx === "scene" && typeof scCase === "function" ? scCase() : null; D3GL.scene(scc ? scc.scene : null); } catch (e) {}
+  D3GL.select(ctx === "body" ? S.barea : ctx === "scene" ? "" : S.anArea);
 }
 try { window.__D3GL = D3GL; } catch (e) {}   /* a handle for the automated tests */
 D3GL.on("sound", function (k) { try { anatSnd(k); } catch (e) {} });
@@ -10109,6 +10514,7 @@ D3GL.on("reduced", function () { return typeof hfxOk === "function" && !hfxOk();
 D3GL.on("lost", function () { var h = document.querySelector(".bm3d.live"); if (h) h.classList.remove("live"); });
 D3GL.on("tap", function (part, x, y) {
   var host = document.querySelector(".bm3d.live"), ctx = host ? host.getAttribute("data-ctx") : "anat";
+  if (ctx === "scene") { try { scExam(part, x, y); } catch (e) {} return; }   /* On Scene: tapping him examines him */
   var area = d3AreaFor(ctx, D3GL.area(part));
   if (ctx === "body") { S.barea = area; S.breg = null; }
   else { S.anArea = area; S.anGrp = ""; S.anId = ""; }
@@ -10693,6 +11099,169 @@ function holOpenFx() {
   else { hfxCannon(-1, 90); setTimeout(function () { hfxCannon(1, 90); hfxLoop(); }, 350); setTimeout(function () { hfxCannon(-1, 60); hfxCannon(1, 60); hfxLoop(); }, 1500); setTimeout(function () { hfxShower(60); hfxLoop(); }, 2600); }
   hfxLoop();
 }
+/* ---------- Thanksgiving: leaves keep falling until the day after Thanksgiving (owner, Nov 5 2026) ----------
+   Two layers: some leaves drift behind the page (behind the DrugBug name and your bubble), some in
+   front of it. The front ones can land on the DrugBug name, skid along it and drop off, or bounce
+   off your bubble. A little wind comes and goes, with the odd gust. Off with reduced motion. */
+var TGL = window.__tgl = { run: false, hits: 0, pile: [], L: [], W: 0, H: 0, t: 0, rt: 0, title: null, bub: null, gust: 0, nextGust: 0, chk: 0 };
+var TGL_C = ["#f97316", "#ea580c", "#dc2626", "#b91c1c", "#eab308", "#ca8a04", "#b45309", "#92400e"];
+var TGL_PILE_MAX = 16;
+/* Thanksgiving: a harvest spread along the bottom of the main menu (owner, Nov 5 2026) */
+function harvestStrip() {
+  try { var h = holToday(); if (!h || holKey(h) !== "thanksgiving" || !tglWindow()) return ""; } catch (e) { return ""; }
+  var I = function (k, x, y, sz, rot) { return '<svg x="' + x + '" y="' + y + '" width="' + sz + '" height="' + sz + '" viewBox="0 0 24 24" fill="currentColor" style="color:#b45309"><g transform="rotate(' + (rot || 0) + ' 12 12)">' + (HOL_SHAPES[k] || "") + '</g></svg>'; };
+  /* one woven horn, its tail curled up behind, spilling the harvest across the strip */
+  var bz = function (t, a, b, c, d) { var u = 1 - t; return u * u * u * a + 3 * u * u * t * b + 3 * u * t * t * c + t * t * t * d; };
+  var P = [[78, 18], [8, 6], [22, 92], [150, 64]], ribs = "", n = 46;
+  for (var k = 0; k <= n; k++) {
+    var t = k / n, x = bz(t, P[0][0], P[1][0], P[2][0], P[3][0]), y = bz(t, P[0][1], P[1][1], P[2][1], P[3][1]);
+    var t2 = Math.min(1, t + 0.01), x2 = bz(t2, P[0][0], P[1][0], P[2][0], P[3][0]), y2 = bz(t2, P[0][1], P[1][1], P[2][1], P[3][1]);
+    var ang = Math.atan2(y2 - y, x2 - x) * 180 / Math.PI, r = 2.2 + 27 * Math.pow(t, 1.5);
+    ribs += '<ellipse cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" rx="' + Math.max(1.6, r * 0.42).toFixed(1) + '" ry="' + r.toFixed(1) + '" transform="rotate(' + ang.toFixed(1) + ' ' + x.toFixed(1) + ' ' + y.toFixed(1) + ')" fill="' + (k % 2 ? "#a16207" : "#854d0e") + '" stroke="#5b3410" stroke-width=".8"/>';
+    if (k % 2 === 0 && r > 6) ribs += '<path d="M' + (x - r * 0.15).toFixed(1) + ' ' + (y - r * 0.8).toFixed(1) + ' Q' + (x + r * 0.2).toFixed(1) + ' ' + y.toFixed(1) + ' ' + (x - r * 0.15).toFixed(1) + ' ' + (y + r * 0.8).toFixed(1) + '" transform="rotate(' + ang.toFixed(1) + ' ' + x.toFixed(1) + ' ' + y.toFixed(1) + ')" stroke="#fde68a" stroke-opacity=".28" stroke-width="1.2" fill="none"/>';
+  }
+  var mouth = '<ellipse cx="152" cy="64" rx="11" ry="27" fill="#3b1d06" transform="rotate(-8 152 64)"/>';
+  var pumpkin = function (x, y, k, c1, c2) { return '<g transform="translate(' + x + ' ' + y + ') scale(' + k + ')"><ellipse cx="-9" cy="0" rx="10" ry="12" fill="' + c1 + '"/><ellipse cx="9" cy="0" rx="10" ry="12" fill="' + c1 + '"/><ellipse cx="0" cy="0" rx="10" ry="13" fill="' + c2 + '"/><path d="M0 -12 Q1 -18 5 -19" stroke="#3f6212" stroke-width="2.4" fill="none"/></g>'; };
+  var apple = function (x, y, c) { return '<g transform="translate(' + x + ' ' + y + ')"><circle r="8" fill="' + c + '"/><path d="M0 -7 Q1 -11 3 -12" stroke="#57340f" stroke-width="1.6" fill="none"/><ellipse cx="5" cy="-10" rx="3.5" ry="1.8" fill="#4d7c0f" transform="rotate(-25 5 -10)"/><circle cx="-3" cy="-3" r="2" fill="#fff" opacity=".25"/></g>'; };
+  var pear = function (x, y) { return '<g transform="translate(' + x + ' ' + y + ') rotate(18)"><path d="M0 -12 C5 -12 5 -4 7 2 C10 10 4 14 0 14 C-4 14 -10 10 -7 2 C-5 -4 -5 -12 0 -12Z" fill="#a3c93a"/><path d="M0 -12 Q1 -16 3 -17" stroke="#57340f" stroke-width="1.6" fill="none"/></g>'; };
+  var grapes = function (x, y) { var g = ""; [[0, 0], [7, 0], [14, 0], [3.5, 6], [10.5, 6], [7, 12], [-3.5, 6]].forEach(function (q) { g += '<circle cx="' + (x + q[0]) + '" cy="' + (y + q[1]) + '" r="4" fill="#6d28d9" stroke="#4c1d95" stroke-width=".6"/>'; }); return g + '<path d="M' + (x + 7) + ' ' + (y - 4) + ' q2 -6 6 -7" stroke="#3f6212" stroke-width="1.6" fill="none"/>'; };
+  var gourd = function (x, y) { return '<g transform="translate(' + x + ' ' + y + ') rotate(-70)"><circle cx="0" cy="6" r="8" fill="#facc15"/><ellipse cx="0" cy="-5" rx="4.5" ry="7" fill="#eab308"/><path d="M0 -12 q1 -4 3 -5" stroke="#3f6212" stroke-width="1.6" fill="none"/><path d="M-6 8 q6 -4 12 0" stroke="#15803d" stroke-width="1.4" fill="none" opacity=".6"/></g>'; };
+  return '<div class="harvest" aria-hidden="true"><svg viewBox="0 0 400 100" preserveAspectRatio="xMidYMax meet">' +
+    '<path d="M0 90 Q90 80 180 86 T400 84 L400 100 L0 100Z" fill="#78350f" opacity=".55"/>' +
+    ribs + mouth +
+    grapes(150, 40) + apple(168, 80, "#dc2626") + pumpkin(196, 76, 1.05, "#ea580c", "#f97316") + pear(176, 60) + gourd(228, 80) +
+    apple(214, 88, "#b91c1c") + I("corn", 240, 52, 30, 35) + pumpkin(270, 82, 0.62, "#d97706", "#f59e0b") + I("wheat", 290, 50, 36, 10) +
+    I("acorn", 252, 82, 13, 10) + I("leaf", 312, 78, 15, 50) + I("pie", 326, 70, 26, 0) + I("acorn", 356, 84, 12, -20) + I("turkey", 368, 60, 28, 0) + I("leaf", 30, 84, 14, -30) + I("acorn", 118, 88, 11, 15) +
+    '</svg><p>Happy Thanksgiving from all of us at DrugBug</p></div>';
+}      /* px: the pile never gets taller than this */
+function tglPileH(x) { var h = 0; for (var i = 0; i < TGL.pile.length; i++) { var p = TGL.pile[i]; if (Math.abs(p.x - x) < p.s * 1.4) h += p.s * 0.45; } return Math.min(h, TGL_PILE_MAX + 4); }
+function tglWindow() {
+  var d = new Date(), y = d.getFullYear(), tg = holNthDow(y, 10, 4, 4);
+  return d >= new Date(y, 10, 1) && d <= new Date(y, 10, tg.getDate() + 1, 23, 59, 59);
+}
+var TGL_ON = true;    /* a gentle fall until the day after Thanksgiving, main menu only (owner, Nov 5 2026) */
+var TGL_GENTLE = true;   /* a few leaves, slow, no gusts, no bouncing, no pile */
+function tglWant() {
+  if (!TGL_ON) return false;
+  var h = typeof holToday === "function" ? holToday() : null;
+  return !!(h && holKey(h) === "thanksgiving" && tglWindow() && hfxOk() && !document.hidden && S.view === "home" && (typeof funOn !== "function" || funOn()));   /* main menu only (owner, Nov 5 2026) */
+}
+function tglCanvas(cls, z) {
+  var c = document.createElement("canvas"); c.className = cls; c.setAttribute("aria-hidden", "true");
+  c.style.cssText = "position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:" + z;
+  if (z === 0) document.body.insertBefore(c, document.body.firstChild); else document.body.appendChild(c);
+  return c;
+}
+function tglSize() {
+  var dpr = Math.min(2, window.devicePixelRatio || 1); TGL.W = window.innerWidth; TGL.H = window.innerHeight;
+  [TGL.cb, TGL.cf].forEach(function (c) { if (!c) return; c.width = TGL.W * dpr; c.height = TGL.H * dpr; c.getContext("2d").setTransform(dpr, 0, 0, dpr, 0, 0); });
+}
+function tglSpawn(top) {
+  var s = 7 + Math.random() * 9, front = TGL_GENTLE ? false : Math.random() < 0.5;   /* gentle: all behind the menu cards (owner, Nov 5 2026) */
+  TGL.L.push({ x: Math.random() * (TGL.W + 120) - 60, y: top ? -20 - Math.random() * 60 : Math.random() * TGL.H * 0.7,
+    vx: (Math.random() - 0.5) * 0.6, vy: 0.4 + Math.random() * 0.5, s: front ? s : s * 0.8, c: TGL_C[Math.floor(Math.random() * TGL_C.length)],
+    r: Math.random() * 6.3, vr: (Math.random() - 0.5) * 0.04, ph: Math.random() * 6.3, vph: 0.03 + Math.random() * 0.04,
+    front: front, rest: 0, cool: 0, a: front ? 0.95 : 0.55, maple: Math.random() < 0.4 });
+}
+/* where the DrugBug name and your bubble are right now (home only) */
+function tglRects() {
+  TGL.title = null; TGL.bub = null;
+  if (S.view !== "home") return;
+  var h = document.querySelector(".hero.ha .logo") || document.querySelector(".hero.ha h1");
+  if (h) { try { var rg = document.createRange(); rg.selectNodeContents(h); var r = rg.getBoundingClientRect(); if (r.width) TGL.title = { l: r.left + 4, r: r.right - 4, t: r.top + r.height * 0.18 }; } catch (e) {} }
+  var b = document.querySelector(".hero.ha .hbub");
+  if (b) { var el = b.firstElementChild || b, q = el.getBoundingClientRect(), R = Math.min(q.width, q.height) / 2; if (R > 10) TGL.bub = { x: q.left + q.width / 2, y: q.top + Math.min(q.width, q.height) / 2, R: R }; }
+}
+function tglDraw(g, f) {
+  g.save(); g.globalAlpha = f.a; g.translate(f.x, f.y); g.rotate(f.r); g.scale(Math.max(0.25, Math.abs(Math.cos(f.ph))), 1);
+  var s = f.s; g.fillStyle = f.c; g.beginPath();
+  if (f.maple) {   /* a broad, lobed leaf */
+    g.moveTo(0, -s);
+    g.bezierCurveTo(s * 0.5, -s * 0.9, s * 0.55, -s * 0.35, s * 0.35, -s * 0.2);
+    g.bezierCurveTo(s * 0.95, -s * 0.25, s * 0.95, s * 0.35, s * 0.4, s * 0.35);
+    g.quadraticCurveTo(s * 0.3, s * 0.8, 0, s);
+    g.quadraticCurveTo(-s * 0.3, s * 0.8, -s * 0.4, s * 0.35);
+    g.bezierCurveTo(-s * 0.95, s * 0.35, -s * 0.95, -s * 0.25, -s * 0.35, -s * 0.2);
+    g.bezierCurveTo(-s * 0.55, -s * 0.35, -s * 0.5, -s * 0.9, 0, -s);
+  } else { g.moveTo(0, -s); g.quadraticCurveTo(s * 0.85, -s * 0.2, 0, s); g.quadraticCurveTo(-s * 0.85, -s * 0.2, 0, -s); }
+  g.fill();
+  g.strokeStyle = "rgba(60,25,5,.45)"; g.lineWidth = 1; g.beginPath(); g.moveTo(0, -s * 0.8); g.lineTo(0, s * 1.15); g.stroke();
+  g.restore();
+}
+function tglFrame() {
+  if (!TGL.run) return;
+  var now = Date.now();
+  if (now - TGL.chk > 1000) { TGL.chk = now; if (!tglWant()) return tglStop(); }
+  if (now - TGL.rt > 250) { TGL.rt = now; tglRects(); }
+  /* wind: a slow sway, plus a gust every so often */
+  if (!TGL_GENTLE && now > TGL.nextGust) { TGL.gust = (Math.random() < 0.5 ? -1 : 1) * (1.2 + Math.random() * 1.4); TGL.nextGust = now + 6000 + Math.random() * 9000; }
+  TGL.gust *= 0.985;
+  var wind = TGL_GENTLE ? Math.sin(now / 6000) * 0.18 + 0.08 : Math.sin(now / 4200) * 0.35 + 0.15 + TGL.gust;
+  var want = TGL_GENTLE ? (TGL.W < 520 ? 5 : 8) : (TGL.W < 520 ? 13 : 20);
+  if (TGL.L.length < want && Math.random() < (TGL_GENTLE ? 0.012 : 0.05)) tglSpawn(true);
+  var gb = TGL.cb.getContext("2d"), gf = TGL.cf.getContext("2d"), W = TGL.W, H = TGL.H, T = TGL.title, B = TGL.bub;
+  gb.clearRect(0, 0, W, H); gf.clearRect(0, 0, W, H);
+  TGL.L = TGL.L.filter(function (f) {
+    f.ph += f.vph;
+    if (f.rest > 0 && T) {      /* skidding along the top of the DrugBug name */
+      f.rest--; f.x += f.vx; f.vx *= 0.99; f.y = T.t - f.s * 0.55; f.r += f.vx * 0.04;
+      if (f.x < T.l || f.x > T.r || f.rest <= 0) { f.rest = 0; f.cool = 50; f.vy = 0.3; f.vx += (f.x < (T.l + T.r) / 2 ? -0.6 : 0.6); }
+    } else {
+      f.vx += (wind - f.vx) * 0.02 + Math.sin(f.ph) * 0.03;
+      var term = TGL_GENTLE ? 0.35 + f.s * 0.025 : 0.6 + f.s * 0.05;
+      f.vy += (term - f.vy) * 0.04;
+      var py = f.y; f.x += f.vx; f.y += f.vy + Math.sin(f.ph * 1.3) * 0.25; f.r += f.vr + f.vx * 0.006;
+      if (f.cool > 0) f.cool--;
+      if (f.front && !f.cool && !TGL_GENTLE) {
+        /* lands on the name */
+        if (T && f.vy > 0 && py < T.t - f.s * 0.5 && f.y >= T.t - f.s * 0.5 && f.x > T.l && f.x < T.r) {
+          TGL.hits++;
+          if (Math.random() < 0.55) { f.rest = 20 + Math.random() * 40; f.vx = (Math.random() < 0.5 ? -1 : 1) * (0.5 + Math.random() * 0.9); f.vr += (Math.random() - 0.5) * 0.08; }
+          else { f.vy = -f.vy * 0.4 - 0.5; f.vx += (Math.random() - 0.5) * 2.2; f.vr += (Math.random() - 0.5) * 0.15; f.cool = 40; }
+        }
+        /* bounces off the bubble */
+        if (B) {
+          var dx = f.x - B.x, dy = f.y - B.y, d = Math.sqrt(dx * dx + dy * dy), min = B.R + f.s * 0.5;
+          if (d < min && d > 0.01) {
+            var nx = dx / d, ny = dy / d, dot = f.vx * nx + f.vy * ny;
+            if (dot < 0) { TGL.hits++; f.vx -= 1.6 * dot * nx; f.vy -= 1.6 * dot * ny; f.vr += (Math.random() - 0.5) * 0.2; }
+            f.x = B.x + nx * min; f.y = B.y + ny * min; f.cool = 6;
+          }
+        }
+      }
+    }
+    if (f.x < -80 || f.x > W + 80) return false;
+    /* a little leaf pile along the bottom: it builds slowly and melts away, never more than a
+       couple of leaves deep, so it can never cover anything (owner, Nov 5 2026) */
+    if (TGL_GENTLE && f.y > H + 30) return false;
+    if (!TGL_GENTLE && f.y > H - f.s * 0.6 - tglPileH(f.x)) {
+      if (tglPileH(f.x) < TGL_PILE_MAX && TGL.pile.length < 70) TGL.pile.push({ x: f.x, y: H - f.s * 0.45 - tglPileH(f.x) * 0.7, s: f.s, c: f.c, r: (Math.random() - 0.5) * 1.2, ph: Math.random() * 3, a: 0.9, maple: f.maple, born: now, life: 22000 + Math.random() * 20000 });
+      return false;
+    }
+    tglDraw(f.front ? gf : gb, f);
+    return true;
+  });
+  TGL.pile = TGL.pile.filter(function (p) {
+    var age = now - p.born, k = age > p.life ? 1 - (age - p.life) / 4000 : 1;
+    if (k <= 0) return false;
+    p.a = 0.9 * k; tglDraw(gf, p); return true;   /* in front, along the very bottom edge, never taller than TGL_PILE_MAX */
+  });
+  requestAnimationFrame(tglFrame);
+}
+function tglStart() {
+  if (TGL.run || !tglWant()) return;
+  if (!TGL.cb) { TGL.cb = tglCanvas("tglb", 0); TGL.cf = tglCanvas("tglf", 12); window.addEventListener("resize", tglSize); }
+  tglSize(); TGL.run = true; TGL.chk = Date.now(); TGL.nextGust = Date.now() + 3000;
+  if (!TGL.L.length) for (var i = 0; i < (TGL_GENTLE ? 3 : 6); i++) tglSpawn(false);
+  requestAnimationFrame(tglFrame);
+}
+function tglStop() {
+  TGL.run = false; TGL.L = []; TGL.pile = [];
+  [TGL.cb, TGL.cf].forEach(function (c) { if (c) c.getContext("2d").clearRect(0, 0, c.width, c.height); });
+}
+document.addEventListener("visibilitychange", function () { if (document.hidden) tglStop(); else setTimeout(tglStart, 400); });
+setTimeout(tglStart, 2600);   /* after the opening gust has blown through */
+setInterval(function () { if (!TGL.run) tglStart(); }, 1500);   /* starts once the start-up notice is done, or motion is allowed again */
 /* scrolling sets off more */
 window.addEventListener("scroll", function () {
   if (!HFX.on || !hfxOk()) return; var h = holToday(); if (!h || h.id !== HFX.on) return;
@@ -28000,6 +28569,9 @@ function giftRedeem(code) {
     if (!d) return codeOther(code);
     Prog.d.gifts = Prog.d.gifts || {};
     if (Prog.d.gifts[d.id]) { GIFT.msg = "That code has already been used on this account."; return giftDraw(); }
+    /* App Store Guideline 3.1.1: in the iPhone app, paid access only comes through in-app purchase,
+       so a code that gives Pro time is redeemed on the website instead (owner, Nov 5 2026) */
+    if (typeof NATIVE !== "undefined" && NATIVE && d.pro > 0) { GIFT.msg = "This code unlocks DrugBug Pro. Redeem it at drugbugapp.com, or use an App Store offer code here."; return giftDraw(); }
     /* one-time codes (owner, Nov 5 2026): the first account to claim it online owns it. The claim
        is a create-only document giftUses/<id>; the rules refuse to overwrite it, so a second person
        is turned away even on another device or a fresh browser. Needs the internet and the backend. */
@@ -28651,7 +29223,7 @@ rebuildIndex();
 applySettings();
 var h = (location.hash || "").slice(1);
 if (h !== "admin") { h = ""; try { history.replaceState(null, "", location.pathname); } catch (e) {} }
-if (h === "admin") { S.view = "admin"; Admin.on = true; } else if (h === "classes" && SOCIAL) S.view = "classes"; else if (h === "settings") S.view = "settings"; else if (h === "terrarium") S.view = "terrarium"; else if (h === "prehospital") S.view = "levels"; else if (h === "nursing") S.view = "nlevels"; else if (h === "medschool") S.view = "mlevels"; else if (h === "imaging") S.view = "ilevels"; else if (h === "general") S.view = "gen"; else if (h === "easy") S.view = "easy"; else if (levelObj(h)) { S.view = "level"; S.level = h; }
+if (h === "admin") { S.view = "admin"; Admin.on = true; } else if (h === "classes" && SOCIAL) S.view = "classes"; else if (h === "settings") S.view = "settings"; else if (h === "terrarium") S.view = "terrarium"; else if (h === "prehospital") S.view = "levels"; else if (h === "nursing") S.view = "nlevels"; else if (h === "medschool") S.view = "mlevels"; else if (h === "imaging") S.view = "ilevels"; else if (h === "general") S.view = "gen"; else if (h === "easy") S.view = "gen"; else if (levelObj(h)) { S.view = "level"; S.level = h; }
 if (!h) {
   var hl = SET().homeLevel, rl = Prog.d.role;
   if (hl === "gen") S.view = "gen"; else if (hl && levelObj(hl)) { S.view = "level"; S.level = hl; }

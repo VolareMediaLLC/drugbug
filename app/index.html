@@ -2235,7 +2235,7 @@ body:has(#app > .gate){padding-inline:12px;padding-block:0;margin:0}#app:has(> .
 .modetog.serious{color:var(--ink)}
 .modetog.serious .modedot{background:var(--muted);box-shadow:none}
 .modetog:hover{border-color:var(--gen);color:var(--ink)}
-@media (max-width:430px){.modetog .modetx{display:none}.modetog{padding:6px 8px}}
+@media (max-width:430px){.modetog{padding:5px 9px 5px 7px;font-size:12px}}
 /* Serious: the plain reference. Same medicine, quieter surface - squarer corners, a
    straight-sided display face instead of the rounded one, and less saturated accents. */
 :root[data-serious="1"]{--f-display:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif}
@@ -2361,7 +2361,43 @@ table.cmptbl tr.dif th{border-left:3px solid var(--gold)}
 :root[data-serious="1"] .stickchip,
 :root[data-serious="1"] .nrtop svg,
 :root[data-serious="1"] .gfxcheer,
-:root[data-serious="1"] .lazybug{display:none!important}
+:root[data-serious="1"] .gfxcheer{display:none!important}
+/* Focused keeps the bugs on the cards you pick a path and a level from (owner, Nov 5 2026) */
+:root[data-serious="1"] .lvcard .stage .lvbug{display:inline-grid!important}:root[data-serious="1"] .lvcard .stage svg.bug{display:revert!important}
+/* first run, step 3: Focused or Enhanced */
+.obmodes .obmrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:18px 0}
+.obmode{display:flex;flex-direction:column;gap:6px;text-align:left;padding:20px;border-radius:18px;border:2px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;cursor:pointer}
+.obmode strong{font-size:24px}.obmode .obml{color:var(--muted);font-weight:600}
+.obmode ul{margin:8px 0 0;padding-left:18px;color:var(--ink);font-size:15px}.obmode li{margin:4px 0}
+.obmode.enhanced{background:linear-gradient(135deg,rgba(124,58,237,.22),rgba(13,148,136,.18));border-color:rgba(124,58,237,.45)}
+.obmode:hover,.obmode:focus-visible{border-color:var(--accent)}
+/* richer route cards on the main menu */
+.rmore{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:3px;font-size:13px;opacity:.92}
+.rmore li{padding-left:16px;position:relative}.rmore li:before{content:"";position:absolute;left:2px;top:.55em;width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.7}
+:root[data-serious="1"] .homewrap .route.rmini p{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;opacity:.85}
+:root[data-serious="1"] .rmore{color:var(--muted)}
+/* path cards grow to fit their fuller descriptions */
+.homewrap .route.rmini:not(.gen){height:auto!important;min-height:130px;align-items:center}
+.homewrap .route.rmini:not(.gen) p{display:block!important;-webkit-line-clamp:unset!important;overflow:visible!important;white-space:normal!important}
+.homewrap .route.rmini:not(.gen) .mtx{padding:4px 0;flex:1 1 auto;min-width:0}
+:root[data-serious="1"] .homewrap .route.rmini:not(.gen){min-height:0;justify-content:flex-start!important;text-align:left}
+/* Focused path rows (owner, Nov 5 2026) */
+:root[data-serious="1"] .homewrap .route.rmini.fpath{display:flex!important;flex-direction:row!important;align-items:flex-start!important;gap:14px!important;padding:16px 14px 16px 16px!important;border:1px solid var(--line)!important;border-left:1px solid var(--line)!important;border-radius:14px!important;background:var(--surface)!important;box-shadow:none!important;transition:border-color .15s,background .15s}
+:root[data-serious="1"] .homewrap .route.rmini.fpath:hover,:root[data-serious="1"] .homewrap .route.rmini.fpath:focus-visible{border-color:var(--pc)!important}
+.fpath{--pc:var(--accent)}.fpath.ev{--pc:var(--emt)}.fpath.ph{--pc:var(--medic)}.fpath.rn{--pc:var(--rn)}.fpath.md{--pc:var(--ms3)}.fpath.im{--pc:var(--plum)}
+.fpath .fpic{flex:none;width:40px;height:40px;border-radius:11px;display:grid;place-items:center;color:var(--pc);background:color-mix(in srgb,var(--pc) 14%,transparent)}
+:root[data-serious="1"] .homewrap .route.rmini.fpath h2{font-size:17px!important;margin:1px 0 3px}
+:root[data-serious="1"] .homewrap .route.rmini.fpath p{font-size:13.5px!important;line-height:1.4;color:var(--muted);opacity:1!important;margin:0}
+.fpath .fpmore{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:9px;font-size:12px;color:var(--muted)}
+.fpath .fpmore span{position:relative;padding-left:10px}.fpath .fpmore span:before{content:"";position:absolute;left:0;top:.55em;width:4px;height:4px;border-radius:50%;background:var(--pc)}
+.fpath.gen{--pc:var(--gen)}
+.homewrap .route.rmini.fpath{height:auto!important;min-height:0!important}
+.homewrap .route.rmini.fpath p{display:block!important;-webkit-line-clamp:unset!important;overflow:visible!important;white-space:normal!important}
+.homewrap .route.rmini.fpath .mtx{flex:1 1 auto!important;min-width:0}
+:root[data-serious="1"] .homewrap .route.mlsmall .mls-tx span{white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
+:root[data-serious="1"] .homewrap .route.mlsmall{border-left:1px solid var(--line)!important;border-radius:14px!important;padding:14px 14px 14px 16px!important}
+.fpath .fpgo{flex:none;align-self:center;font-size:24px;line-height:1;color:var(--muted);margin-left:2px}
+:root[data-serious="1"] .homewrap .route.rmini .mtx{flex:1 1 auto!important;margin:0!important;align-self:stretch!important}
 :root[data-serious="1"] .hero.ha{grid-template-columns:1fr}
 :root[data-serious="1"] .band{grid-template-columns:1fr}
 :root[data-serious="1"] .lazycard{padding-top:34px}
@@ -2613,7 +2649,7 @@ table.cmptbl tr.dif th{border-left:3px solid var(--gold)}
 .dosewarn strong{color:var(--warn)}.dosewarn .dsrc{margin-top:4px;font-size:12.5px;color:var(--muted)}.dosewarn .dsrc a{color:inherit;text-decoration:underline}
 .dosewarn.small{font-size:12.5px;padding:7px 10px}.dosewarn.small .dsrc{display:block}
 .dlabel{margin-top:6px}.dlabel summary{cursor:pointer;font-weight:700;font-size:12.5px}.dlabel p{margin:4px 0;font-size:13px}
-.mupop{position:relative;z-index:30;margin:-4px 0 12px auto;max-width:320px;background:var(--surface);border:1.5px solid var(--line);border-radius:16px;padding:12px 14px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px}
+.mupop{position:fixed;z-index:60;top:var(--mupopTop,72px);right:max(12px,calc((100vw - 1100px)/2 + 12px));width:min(320px,calc(100vw - 24px));margin:0;max-width:320px;background:var(--surface);border:1.5px solid var(--line);border-radius:16px;padding:12px 14px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px}
 .mupop .murow{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .muvol{display:flex;align-items:center;gap:10px;font-weight:700;font-size:14px}.muvol input[type=range]{flex:1;accent-color:var(--flight);min-width:120px}.muvol output{min-width:44px;text-align:right;font-variant-numeric:tabular-nums}
 .lvbug{position:relative;display:inline-grid;place-items:center;width:100%;height:100%}
@@ -2817,8 +2853,8 @@ table.cmptbl tr.dif th{border-left:3px solid var(--gold)}
 .lgcard .presult{margin:10px 0 0}.lgcard .btn{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1c1917;border:0;font-weight:800;padding:10px 18px;border-radius:999px}
 /* bugs dance to the music (owner, Nov 5 2026): individual transform properties, so they stack on
    top of whatever the bug is already doing. Values come from danceStart() in app.js. */
-.mudance svg.bug.me{translate:0 var(--dance-y,0px);rotate:var(--dance-r,0deg);scale:1 var(--dance-s,1);transform-origin:50% 92%}
-@media (prefers-reduced-motion: reduce){.mudance svg.bug.me{translate:none;rotate:none;scale:none}}
+.mudance .hero .hbub svg.bug.me{translate:0 var(--dance-y,0px);rotate:var(--dance-r,0deg);scale:1 var(--dance-s,1);transform-origin:50% 92%}
+@media (prefers-reduced-motion: reduce){.mudance .hero .hbub svg.bug.me{translate:none;rotate:none;scale:none}}
 .lgtoggle{display:block;margin:10px 0 0;padding:0;border:0;background:none;color:var(--gen,#2bb3a3);font:inherit;font-size:13.5px;font-weight:700;cursor:pointer}
 .lgtoggle::after{content:" \25BE"}.lgcard.open .lgtoggle::after{content:" \25B4"}
 .pkbonus{display:block;font-size:12px;font-weight:700;color:var(--gold,#d4972a)}
@@ -2831,7 +2867,86 @@ table.cmptbl tr.dif th{border-left:3px solid var(--gold)}
 .collbug svg{width:52px;height:52px;filter:grayscale(1) brightness(.55);opacity:.7}.collbug.own svg{filter:none;opacity:1}
 .collbug span{font-size:9.5px;line-height:1.15;text-align:center;color:var(--muted)}.collbug.own span{color:var(--ink)}
 .collbug.king{border-color:var(--gold,#f2ac17);cursor:default}
-.sysgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin-top:10px}.syscard{display:flex;gap:8px;align-items:stretch;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px}.sysopen{flex:1;display:flex;flex-direction:column;gap:4px;text-align:left;background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer}.sysopen strong{font-size:16px}.syscard>.btn{align-self:center}.sysmeta{font-size:13px;font-weight:700;color:var(--muted)}.syscard .cbar{display:block;height:6px;border-radius:3px;background:var(--line);overflow:hidden}.syscard .cbar i{display:block;height:100%;background:var(--emt)}.syshead h2{margin:10px 0 4px}.syshead .actions{margin:10px 0 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}.organlink{display:block;background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;cursor:pointer;text-align:left;text-decoration:underline;text-underline-offset:2px}.anatmeds{margin:12px 0 0}.anatmeds summary{cursor:pointer;font-weight:800;font-size:15px;margin-bottom:8px}
+.sysgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin-top:10px}.syscard{display:flex;gap:8px;align-items:stretch;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px}.sysopen{flex:1;display:flex;flex-direction:column;gap:4px;text-align:left;background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer}.sysopen strong{font-size:16px}.syscard>.btn{align-self:center}.sysmeta{font-size:13px;font-weight:700;color:var(--muted)}.syscard .cbar{display:block;height:6px;border-radius:3px;background:var(--line);overflow:hidden}.syscard .cbar i{display:block;height:100%;background:var(--emt)}.syshead h2{margin:10px 0 4px}.syshead .actions{margin:10px 0 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}.organlink{display:block;background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;cursor:pointer;text-align:left;text-decoration:underline;text-underline-offset:2px}.chip.cmplocked{opacity:.72;border-style:dashed}.chip.cmplocked .probadge{margin-left:4px;font-size:10px}.cmplocknote{margin-top:8px}.anatmeds{margin:12px 0 0}.anatmeds summary{cursor:pointer;font-weight:800;font-size:15px;margin-bottom:8px}
+/* ===== Focused, with a bit of pop (owner, Nov 5 2026) ===== */
+:root[data-serious="1"]{--fx1:#2dd4bf;--fx2:#8b5cf6}
+:root[data-serious="1"] .hero.ha .logo,:root[data-serious="1"] .hero.ha h1{background:linear-gradient(100deg,var(--fx1),var(--fx2))!important;-webkit-background-clip:text!important;background-clip:text!important;color:transparent!important}
+:root[data-serious="1"] .homegh{display:flex;align-items:center;gap:8px;letter-spacing:.09em;color:var(--ink)!important;opacity:.85}
+:root[data-serious="1"] .homegh:before{content:"";width:14px;height:3px;border-radius:2px;background:linear-gradient(90deg,var(--fx1),var(--fx2))}
+:root[data-serious="1"] .startcard{position:relative;overflow:hidden;border:1px solid var(--line)}
+:root[data-serious="1"] .startcard:before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,var(--fx1),var(--fx2))}
+:root[data-serious="1"] .homewrap .route.rmini.fpath{background:linear-gradient(105deg,color-mix(in srgb,var(--pc) 9%,var(--surface)) 0%,var(--surface) 45%)!important;transition:transform .15s ease,border-color .15s,box-shadow .15s}
+:root[data-serious="1"] .homewrap .route.rmini.fpath:hover{transform:translateY(-1px);box-shadow:0 6px 22px color-mix(in srgb,var(--pc) 22%,transparent)!important}
+:root[data-serious="1"] .homewrap .route.rmini.fpath:active{transform:scale(.99)}
+:root[data-serious="1"] .fpath .fpic{background:linear-gradient(140deg,var(--pc),color-mix(in srgb,var(--pc) 55%,#000));color:#fff;box-shadow:0 4px 14px color-mix(in srgb,var(--pc) 35%,transparent)}
+:root[data-serious="1"] .fpath .fpgo{color:var(--pc)}
+:root[data-serious="1"] .hubtile{transition:transform .15s ease,box-shadow .15s}
+:root[data-serious="1"] .hubtile:hover{transform:translateY(-1px)}
+:root[data-serious="1"] .band{background:linear-gradient(105deg,color-mix(in srgb,var(--c,var(--accent)) 12%,var(--surface)) 0%,var(--surface) 55%)!important}
+
+/* the level turntable in Enhanced (owner, Nov 5 2026) */
+.lvwheel{margin:6px 0 10px}
+.lvwheel .lazynow{text-align:center}
+.lvwheel .lvwtag{display:block;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.lvwheel .lazynow strong{display:block;font-size:28px;margin:2px 0}
+.lvwheel .lvwbug{display:block;font-weight:700;color:var(--muted);margin-bottom:6px}
+.lvwheel .obfoot{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:14px;position:static;background:none;padding:0}
+.lvwheel .lvgo{min-width:240px;font-size:20px;font-weight:800;padding:14px 28px;border:0;border-radius:16px;color:#fff;background:linear-gradient(100deg,#14b8a6,#7c3aed);box-shadow:0 8px 26px rgba(124,58,237,.35);cursor:pointer}.lvwheel .lvgo:active{transform:scale(.98)}
+/* phones: the top bar fills the row edge to edge inside the page gutters, nothing pushed off the right (owner, Nov 5 2026) */
+@media (max-width:640px){
+  .topbar .tbacts{width:100%;flex-basis:100%;justify-content:space-between;gap:4px!important;padding-right:0!important;overflow:visible!important}
+  .topbar .tbacts .theme-btn{margin:0!important}
+  .topbar .tbsticks{padding-left:0!important;margin-left:0!important}
+  .topbar .tbx:empty{display:none}
+}
+@media (max-width:360px){
+  .topbar .tbacts .theme-btn{padding:5px 7px!important}
+  .topbar .stickchip{padding:2px 6px!important}
+  .topbar .stickchip svg{width:30px!important;height:30px!important}
+  .topbar .tbsticks{font-size:14px!important}
+}
+/* ===== On Scene (owner, Nov 5 2026) ===== */
+.scenelist{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin:12px 0}
+.scdisp{margin:8px 0 10px;padding:10px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--line);font-weight:600}
+.scdisp .scdl{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#f87171;margin-right:6px}
+.scstage{position:relative;display:grid;grid-template-columns:1fr 150px;gap:10px;align-items:stretch;border-radius:18px;padding:8px;border:1px solid var(--line);
+  background:radial-gradient(120% 80% at 40% 100%,rgba(180,140,100,.18),transparent 60%),linear-gradient(180deg,var(--surface),var(--bg))}
+.bm3d.scene{max-width:none;width:100%;height:380px;margin:0}
+.bm3d.scene .bm3dhint{position:absolute;left:0;right:0;top:6px;bottom:auto;text-align:center;font-size:12px;color:var(--muted);margin:0}
+.scmon{align-self:center;display:flex;flex-direction:column;gap:6px;justify-content:center;background:#05080c;border-radius:12px;padding:10px;border:1px solid #1f2937;font-family:var(--f-mono,ui-monospace,monospace)}
+.scv{position:relative;display:flex;flex-direction:column;line-height:1.05}
+.scv span{font-size:11px;font-weight:800;letter-spacing:.06em;opacity:.8}
+.scv strong{font-size:26px;font-weight:800}
+.scv.hr{color:#4ade80}.scv.bp{color:#f8fafc}.scv.rr{color:#facc15}.scv.sp{color:#22d3ee}.scv.co{color:#fbbf24}
+.scv.warn strong{animation:scwarn 1s steps(2) infinite}
+@keyframes scwarn{50%{opacity:.45}}
+.scbeat{position:absolute;right:2px;top:4px;width:9px;height:9px;border-radius:50%;background:#4ade80;animation:scbeat .8s ease-out infinite}
+@keyframes scbeat{0%{transform:scale(1.4);opacity:1}60%{transform:scale(.7);opacity:.35}100%{transform:scale(.7);opacity:.2}}
+.scguide{display:flex;gap:10px;align-items:flex-end;margin:12px 0 6px}
+.scguide .scgart{flex:none;width:62px;height:62px}.scguide .scgart svg{width:62px;height:62px}
+.scgsay{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:16px 16px 16px 4px;padding:10px 14px;font-size:16px;line-height:1.4}
+.scgname{display:block;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:2px}
+.scstep{margin:6px 0 10px}
+.scq{font-size:18px;margin:10px 0 8px}
+.scneed{padding:10px 14px;border-radius:12px;border:1px dashed var(--accent);color:var(--ink)}
+.scopts{display:flex;flex-direction:column;gap:8px}
+.scopt{text-align:left;padding:12px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-weight:600;cursor:pointer}
+.scopt.right{border-color:#22c55e;background:rgba(34,197,94,.14)}.scopt.wrong{border-color:#ef4444;background:rgba(239,68,68,.12)}.scopt.dim{opacity:.55}
+.scx{margin:10px 0;padding:10px 14px;border-radius:12px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.35)}
+.scx.good{background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.35)}
+.scfind{margin-top:10px}
+.scfind ul{margin:6px 0 0;padding-left:18px}.scfind li{margin:4px 0}
+@media (max-width:560px){
+  .scstage{grid-template-columns:1fr 104px;gap:6px;padding:6px}
+  .bm3d.scene{height:320px}
+  .scv strong{font-size:19px}.scv span{font-size:10px}
+  .scmon{padding:8px 7px;gap:4px}
+}
+
+.harvest{margin:22px auto 4px;max-width:560px;text-align:center}
+.harvest svg{display:block;width:100%;height:auto;overflow:visible}
+.harvest p{margin:4px 0 0;font-size:13px;font-weight:700;color:var(--muted)}
+.lvwheel .obfoot.lvtop{margin:4px 0 12px}
 </style>
 
 <div class="wrap" id="app"><div id="boot" aria-hidden="true"><div class="bootlogo">Drug<span>Bug</span></div><div class="bootbar"><i></i></div><p class="bootnote">Loading your medications</p></div></div>
