@@ -611,7 +611,7 @@ function icon(k) { return '<svg class="ico" viewBox="0 0 24 24" width="26" heigh
 function tabList() {
   if (S.view === "level" && isF(S.level)) return [["registry", "Medications", "Every Tier 4 medication, by field use, by class or A to Z."], ["fm_blood", "Blood Products", "Whole blood, components, massive transfusion and every transfusion reaction."], ["fm_cond", FM_TABS.fm_cond[0], FM_TABS.fm_cond[1]], ["fm_store", FM_TABS.fm_store[0], FM_TABS.fm_store[1]], ["fm_istat", FM_TABS.fm_istat[0], FM_TABS.fm_istat[1]], ["fm_bio", FM_TABS.fm_bio[0], FM_TABS.fm_bio[1]], ["fm_ref", FM_TABS.fm_ref[0], FM_TABS.fm_ref[1]], ["tools", "Study Tools", "Questions, megacode, flashcards, brain games, med-list workout and safety drills."]];
   var L = [["registry", S.view === "gen" ? "All Medications" : "Medications", S.view === "gen" ? "Every drug in DrugBug, A to Z." : isN(S.level) ? "The drugs nurses at your license give and monitor." : isI(S.level) ? "Contrast agents, radiopharmaceuticals and the reaction cart." : "Look up every drug in your scope."]];
-  if (typeof sysTabOK === "function" && sysTabOK()) L.splice(1, 0, ["systems", "Meds by System", "Airway, cardiology, neuro and more: every medicine grouped by what it works on, with a quiz for each."]);
+  /* Meds by System now lives inside L.E.A.R.N as "Learn by system" (owner, Nov 5 2026) */
   L.push(["mylist", "My List", marks().length ? "Your saved drugs: study, quiz or print them." : "Tap \"Save to My List\" on any drug page to build your list."]);
   if (S.view === "level" && isN(S.level) && unitsFor(S.level).length) L.push(["units", "Specialty Units", "ICU, ER, L&D, peds and more: the meds your unit uses."]);
   /* Questions moved inside Study Tools, Oct 29 2026 (owner) */
@@ -792,7 +792,7 @@ document.addEventListener("pointerup", function () { if (HD.el) hubDrop(); });
 document.addEventListener("pointercancel", function () { if (HD.el) hubDrop(); });
 
 function hubView() {
-  var L = tabList(), used = {}, lead = (typeof learnTile === "function" ? learnTile() : "");
+  var L = tabList(), used = {}, lead = (typeof learnTile === "function" ? learnTile() + (typeof learnSysRow === "function" ? learnSysRow() : "") : "");
   /* one search box across the whole tier, at the top of the Combat Paramedic menu (owner, Oct 31 2026).
      With a query typed, the results replace the tiles; clearing it brings the menu back. */
   if (S.view === "level" && isF(S.level) && typeof fmsBar === "function") {
@@ -1912,6 +1912,7 @@ document.addEventListener("click", function (e) {
   if (a.goEdit) { closeSheet(); go("admin"); A().tab = "drugs"; A().form = recordOf(a.goEdit); return render(); }
   if (a.sess) {
     if (a.sess !== "daily" && typeof PAYWALL !== "undefined" && PAYWALL && !isPro()) return openPaywall("Practice quizzes", "pro"); /* extra learning is Pro; the daily 5-min DrugBug stays free */
+    if (S.learn && S.learn.on) S.learn = null;   /* a quiz from inside a L.E.A.R.N run ends the run */
     if (sheet && !sheet.hidden) closeSheet();
     if (S.view !== "level" && S.view !== "gen") { var ll = store("lastLevel"); if (ll && levelObj(ll)) go("level", { level: ll }); else go("gen"); }
     return startSession(a.sess, { drug: a.drugId, g: a.g != null ? +a.g : undefined, cat: a.cat, unit: a.unitq, sys: a.sys, chal: !!a.chal, n: a.chal ? 5 : 10 });
@@ -1952,10 +1953,11 @@ document.addEventListener("click", function (e) {
   if (a.nradapt != null) { nrState().adaptive = a.nradapt === "1"; return render(); }
   if (a.golist) { if (typeof proLocked === "function" && proLocked("mylist")) return openPaywall(tabName("mylist"), tabTier("mylist")); return go("gen", { tab: "mylist" }); }
   if (a.go) return go(a.go);
-  if (a.act === "lrngo" && typeof learnStart === "function") { S.learn = null; return learnStart(); }
+  if (a.act === "lrngo" && typeof learnStart === "function") { S.learn = null; return learnStart(a.lsys || null); }
   if (a.act === "lrnnext" && typeof learnNext === "function") return learnNext();
   if (a.act === "lrnstop" && typeof learnStop === "function") return learnStop();
   if (a.act === "lrnreset" && typeof learnReset === "function") return learnReset();
+  if (a.act === "lrndismiss") { S.learn = null; return render(); }
   if (a.act === "errhome") { try { S.sheet = null; S.tab = "hub"; S.tool = null; S.micro = null; go("home"); } catch (e) { location.hash = ""; location.reload(); } return; }
   if (a.act === "errreload") { try { location.reload(); } catch (e) {} return; }
   if (a.startlearn) { startLearnPath(a.startlearn); return; }
@@ -3638,6 +3640,59 @@ function stageBody(t, st) {
 function mixHex(a, b, k) { function p(h) { h = h.replace("#", ""); if (h.length === 3) h = h.replace(/./g, "$&$&"); return [0, 2, 4].map(function (i) { return parseInt(h.substr(i, 2), 16); }); } var x = p(a), y = p(b); return "#" + x.map(function (v, i) { return ("0" + Math.round(v + (y[i] - v) * k).toString(16)).slice(-2); }).join(""); }
 function sparkleP(x, y, r, c) { return '<path d="M' + x + ' ' + (y - r) + ' L' + (x + r * .28) + ' ' + (y - r * .28) + ' L' + (x + r) + ' ' + y + ' L' + (x + r * .28) + ' ' + (y + r * .28) + ' L' + x + ' ' + (y + r) + ' L' + (x - r * .28) + ' ' + (y + r * .28) + ' L' + (x - r) + ' ' + y + ' L' + (x - r * .28) + ' ' + (y - r * .28) + 'Z" fill="' + c + '"/>'; }
 var BUG_DY = {"ant2":-14,"ant3":-5,"ant4":-5,"ant5":-5,"bee2":-10,"bee4":-8,"bee5":-8,"beetle2":-10,"butterfly5":-12,"caterpillar1":-16,"caterpillar2":-7,"chrysalis2":-14,"cicada1":-31,"cicada2":-23,"cicada3":-16,"cicada4":-16,"cicada5":-7,"cocoon2":-14,"cricket1":-21,"cricket2":-12,"cricket3":-3,"cricket4":-3,"cricket5":-3,"dragonfly1":-32,"dragonfly2":-25,"dragonfly3":-17,"dragonfly4":-17,"dragonfly5":-8,"firefly2":-18,"firefly3":-10,"firefly4":-10,"firefly5":-10,"grasshopper1":-23,"grasshopper2":-15,"grasshopper3":-6,"grasshopper4":-6,"grasshopper5":-6,"larva1":-3,"longhorn2":-19,"longhorn3":-11,"longhorn4":-11,"longhorn5":-11,"mantis1":-23,"mantis2":-14,"mantis3":-6,"mantis4":-6,"mantis5":-6,"moth5":-12,"rhino2":-5,"scarab2":-15,"scarab3":-6,"scarab4":-6,"scarab5":-6,"scorpion1":-34,"scorpion2":-27,"scorpion3":-19,"scorpion4":-19,"scorpion5":-11,"snail1":-20,"snail2":-11,"spider1":-32,"spider2":-24,"spider3":-17,"spider4":-17,"spider5":-10,"stag2":-7,"stick1":-5,"stick2":-5,"stick3":-5,"stick4":-5,"stick5":-5,"wasp2":-21,"wasp3":-13,"wasp4":-13,"wasp5":-13};
+/* ---------- species markings (owner, Nov 5 2026: "make all the bugs a little different") ----------
+   Each bug's place among the bugs that share its body picks a torso pattern, a head tone and a body
+   feature, so the same body never repeats the same look. Painted clipped to this body's torso, in a
+   colour that contrasts with the shell. */
+var SPX = null;
+function speciesIx(b) {
+  if (!SPX) { SPX = {}; var per = {}; (typeof BUGS !== "undefined" ? BUGS : []).forEach(function (x, gi) { var k = x.body || "beetle"; per[k] = (per[k] || 0); SPX[x.id] = [per[k]++, gi]; }); }
+  return SPX[b.id] || [0, 0];
+}
+function hexLum(h) { h = (h || "#888").replace("#", ""); if (h.length === 3) h = h.replace(/./g, "$&$&"); var r = parseInt(h.substr(0, 2), 16), g = parseInt(h.substr(2, 2), 16), bl = parseInt(h.substr(4, 2), 16); return (r * .299 + g * .587 + bl * .114) / 255; }
+var SP_PATS = ["bands", "spots", "chevrons", "speckle", "eyespots", "zigzag", "split", "rings", "diamonds", "bars", "cross", "tip", "dashes", "stripe", "hearts", "scales"];
+var SP_FEATS = ["spikes", "tail", "crest", "fringe", "horn", "crown", "none", "lobes"];
+function speciesMarks(b, t, id, ink, c1, c2, c3) {
+  var ix = speciesIx(b), i = ix[0], g = ix[1], F = (BODYFIT[t] || BODYFIT.beetle), T = F.t, cx = T[0], cy = T[1], rx = T[2], ry = T[3], hy = 74;
+  var dark = hexLum(c1) < .45, lightMk = (i + g) % 2 === 0, mk = dark || lightMk ? mixHex(c3 === "#ffffff" || hexLum(c3) < .5 ? c1 : c3, "#ffffff", .72) : mixHex(ink, c2, .1), op = .95;
+  var pat = b.pat ? "" : SP_PATS[(i * 5 + g) % SP_PATS.length], feat = SP_FEATS[(i * 3 + (g >> 1)) % SP_FEATS.length], snailish = { snail: 1, caterpillar: 1, larva: 1, centipede: 1, millipede: 1, chrysalis: 1, cocoon: 1 }[t], o = "", k, j;
+  function P(x, y) { return (cx + x * rx).toFixed(1) + " " + (cy + y * ry).toFixed(1); }
+  function rnd(n) { var v = Math.sin((g + 1) * 12.9898 + n * 78.233) * 43758.5453; return v - Math.floor(v); }
+  if (pat === "bands") for (k = -1; k <= 1; k++) o += '<path d="M' + P(-1.1, k * .42) + ' Q' + P(0, k * .42 - .12) + ' ' + P(1.1, k * .42) + '" stroke="' + mk + '" stroke-width="' + (ry * .16).toFixed(1) + '" fill="none"/>';
+  else if (pat === "spots") [[-.5, -.4], [.5, -.4], [-.6, .15], [.6, .15], [-.3, .6], [.3, .6]].forEach(function (q, n) { o += '<circle cx="' + (cx + q[0] * rx).toFixed(1) + '" cy="' + (cy + q[1] * ry).toFixed(1) + '" r="' + (Math.min(rx, ry) * (n % 2 ? .13 : .17)).toFixed(1) + '" fill="' + mk + '"/>'; });
+  else if (pat === "chevrons") for (k = 0; k < 3; k++) o += '<path d="M' + P(-.9, -.5 + k * .45) + ' L' + P(0, -.2 + k * .45) + ' L' + P(.9, -.5 + k * .45) + '" stroke="' + mk + '" stroke-width="' + (ry * .1).toFixed(1) + '" fill="none" stroke-linejoin="round"/>';
+  else if (pat === "speckle") for (k = 0; k < 22; k++) o += '<circle cx="' + (cx + (rnd(k) * 2 - 1) * rx * .9).toFixed(1) + '" cy="' + (cy + (rnd(k + 40) * 2 - 1) * ry * .9).toFixed(1) + '" r="' + (1.6 + rnd(k + 80) * 2.4).toFixed(1) + '" fill="' + mk + '"/>';
+  else if (pat === "eyespots") [-1, 1].forEach(function (sd) { var ex = cx + sd * rx * .45, ey = cy + ry * .05, er = Math.min(rx, ry) * .3; o += '<circle cx="' + ex.toFixed(1) + '" cy="' + ey.toFixed(1) + '" r="' + er.toFixed(1) + '" fill="' + mk + '"/><circle cx="' + ex.toFixed(1) + '" cy="' + ey.toFixed(1) + '" r="' + (er * .55).toFixed(1) + '" fill="' + c3 + '"/><circle cx="' + ex.toFixed(1) + '" cy="' + ey.toFixed(1) + '" r="' + (er * .25).toFixed(1) + '" fill="' + ink + '"/>'; });
+  else if (pat === "zigzag") { var z = "M" + P(-1, 0); for (k = 1; k <= 8; k++) z += " L" + P(-1 + k * .25, k % 2 ? -.22 : .22); o += '<path d="' + z + '" stroke="' + mk + '" stroke-width="' + (ry * .12).toFixed(1) + '" fill="none" stroke-linejoin="round"/>'; }
+  else if (pat === "split") o += '<rect x="' + (cx - rx).toFixed(1) + '" y="' + (cy + ry * .1).toFixed(1) + '" width="' + (rx * 2).toFixed(1) + '" height="' + ry.toFixed(1) + '" fill="' + mk + '"/>';
+  else if (pat === "rings") for (k = 1; k <= 2; k++) o += '<ellipse cx="' + cx + '" cy="' + cy + '" rx="' + (rx * k * .32).toFixed(1) + '" ry="' + (ry * k * .32).toFixed(1) + '" fill="none" stroke="' + mk + '" stroke-width="' + (Math.min(rx, ry) * .1).toFixed(1) + '"/>';
+  else if (pat === "diamonds") for (k = -1; k <= 1; k++) { var dy = cy + k * ry * .45, d = Math.min(rx, ry) * .2; o += '<path d="M' + cx + ' ' + (dy - d).toFixed(1) + ' l' + (d * .8).toFixed(1) + ' ' + d.toFixed(1) + ' l' + (-d * .8).toFixed(1) + ' ' + d.toFixed(1) + ' l' + (-d * .8).toFixed(1) + ' ' + (-d).toFixed(1) + 'z" fill="' + mk + '"/>'; }
+  else if (pat === "bars") [-1, 1].forEach(function (sd) { o += '<rect x="' + (sd < 0 ? cx - rx : cx + rx * .62).toFixed(1) + '" y="' + (cy - ry).toFixed(1) + '" width="' + (rx * .38).toFixed(1) + '" height="' + (ry * 2).toFixed(1) + '" fill="' + mk + '"/>'; });
+  else if (pat === "cross") o += '<path d="M' + P(-.8, -.7) + ' L' + P(.8, .7) + ' M' + P(.8, -.7) + ' L' + P(-.8, .7) + '" stroke="' + mk + '" stroke-width="' + (Math.min(rx, ry) * .2).toFixed(1) + '" stroke-linecap="round"/>';
+  else if (pat === "tip") o += '<ellipse cx="' + cx + '" cy="' + (cy + ry).toFixed(1) + '" rx="' + (rx * .9).toFixed(1) + '" ry="' + (ry * .5).toFixed(1) + '" fill="' + mk + '"/>';
+  else if (pat === "dashes") for (k = 0; k < 4; k++) for (j = -1; j <= 1; j += 2) o += '<path d="M' + P(j * .25, -.6 + k * .4) + ' l' + (j * rx * .35).toFixed(1) + ' 0" stroke="' + mk + '" stroke-width="' + (ry * .08).toFixed(1) + '" stroke-linecap="round"/>';
+  else if (pat === "stripe") o += '<rect x="' + (cx - rx * .22).toFixed(1) + '" y="' + (cy - ry).toFixed(1) + '" width="' + (rx * .44).toFixed(1) + '" height="' + (ry * 2).toFixed(1) + '" fill="' + mk + '"/>';
+  else if (pat === "hearts") [[-.45, -.3], [.45, -.3], [0, .35]].forEach(function (q) { var hx = cx + q[0] * rx, hy2 = cy + q[1] * ry, r = Math.min(rx, ry) * .12; o += '<path d="M' + hx.toFixed(1) + ' ' + (hy2 + r * 1.6).toFixed(1) + ' C' + (hx - r * 2.4).toFixed(1) + ' ' + (hy2 + r * .2).toFixed(1) + ' ' + (hx - r * 1.2).toFixed(1) + ' ' + (hy2 - r * 1.6).toFixed(1) + ' ' + hx.toFixed(1) + ' ' + (hy2 - r * .4).toFixed(1) + ' C' + (hx + r * 1.2).toFixed(1) + ' ' + (hy2 - r * 1.6).toFixed(1) + ' ' + (hx + r * 2.4).toFixed(1) + ' ' + (hy2 + r * .2).toFixed(1) + ' ' + hx.toFixed(1) + ' ' + (hy2 + r * 1.6).toFixed(1) + 'Z" fill="' + mk + '"/>'; });
+  else if (pat === "scales") for (k = 0; k < 4; k++) for (j = -2; j <= 2; j++) o += '<path d="M' + P(j * .34 - .17, -.75 + k * .45) + ' a' + (rx * .17).toFixed(1) + ' ' + (ry * .16).toFixed(1) + ' 0 0 0 ' + (rx * .34).toFixed(1) + ' 0" stroke="' + mk + '" stroke-width="2" fill="none"/>';
+  var out = "";
+  if (o) out += '<defs><clipPath id="' + id + 'k"><ellipse cx="' + cx + '" cy="' + cy + '" rx="' + (rx * .97).toFixed(1) + '" ry="' + (ry * .97).toFixed(1) + '"/></clipPath></defs><g clip-path="url(#' + id + 'k)" opacity="' + op + '">' + o + '</g>';
+  /* head tone (unless the bug sets its own head colour) */
+  if (!b.head && t !== "stick") {
+    var ht = [null, c2, mixHex(c1, ink, .35), mixHex(c1, c3, .35)][(i + g) % 4], hr = F.r || 30;
+    if (ht) out += '<circle cx="100" cy="' + hy + '" r="' + (hr - .5) + '" fill="' + ht + '" opacity=".85"/>';
+  }
+  /* one body feature */
+  var fw = Math.min(rx, ry);
+  if (snailish && { spikes: 1, tail: 1, lobes: 1, fringe: 1 }[feat]) feat = "crown";
+  if (feat === "spikes") [-1, 1].forEach(function (sd) { var x0 = cx + sd * rx * .78, y0 = cy - ry * .55; o = 'M' + x0.toFixed(1) + ' ' + y0.toFixed(1) + ' l' + (sd * fw * .45).toFixed(1) + ' ' + (-fw * .35).toFixed(1) + ' l' + (-sd * fw * .15).toFixed(1) + ' ' + (fw * .5).toFixed(1) + 'Z'; out += '<path d="' + o + '" fill="' + c2 + '" stroke="' + ink + '" stroke-width="2.5" stroke-linejoin="round"/>'; });
+  else if (feat === "tail") out += '<path d="M' + (cx - fw * .22).toFixed(1) + ' ' + (cy + ry * .94).toFixed(1) + ' L' + cx + ' ' + (cy + ry + fw * .45).toFixed(1) + ' L' + (cx + fw * .22).toFixed(1) + ' ' + (cy + ry * .94).toFixed(1) + 'Z" fill="' + c2 + '" stroke="' + ink + '" stroke-width="2.5" stroke-linejoin="round"/>';
+  else if (feat === "crest") for (k = 0; k < 4; k++) out += '<circle cx="' + cx + '" cy="' + (cy - ry * .6 + k * ry * .38).toFixed(1) + '" r="' + (fw * .09).toFixed(1) + '" fill="' + c3 + '" stroke="' + ink + '" stroke-width="1.6"/>';
+  else if (feat === "fringe") { var fr = ""; for (k = 0; k < 7; k++) { var a = Math.PI * (.2 + k * .1); [-1, 1].forEach(function (sd) { var x1 = cx + sd * Math.sin(a) * rx, y1 = cy - Math.cos(a) * ry; fr += 'M' + x1.toFixed(1) + ' ' + y1.toFixed(1) + ' l' + (sd * 5).toFixed(1) + ' ' + (k % 2 ? 2 : -2) + ' '; }); } out += '<path d="' + fr + '" stroke="' + ink + '" stroke-width="2" stroke-linecap="round"/>'; }
+  else if (feat === "horn" && !{ stag: 1, hercules: 1, rhino: 1, longhorn: 1 }[t]) { var hr2 = F.r || 30; out += '<path d="M' + (100 - 5) + ' ' + (hy - hr2 + 4) + ' Q100 ' + (hy - hr2 - 16) + ' ' + (100 + 9) + ' ' + (hy - hr2 - 14) + ' Q103 ' + (hy - hr2 - 4) + ' ' + (100 + 6) + ' ' + (hy - hr2 + 4) + 'Z" fill="' + c2 + '" stroke="' + ink + '" stroke-width="2.5" stroke-linejoin="round"/>'; }
+  else if (feat === "crown") { var hr3 = F.r || 30; [-1, 0, 1].forEach(function (q) { out += '<circle cx="' + (100 + q * hr3 * .42).toFixed(1) + '" cy="' + (hy - hr3 * (q ? .72 : .86)).toFixed(1) + '" r="' + (hr3 * .1).toFixed(1) + '" fill="' + c3 + '" stroke="' + ink + '" stroke-width="1.5"/>'; }); }
+  else if (feat === "lobes") [-1, 1].forEach(function (sd) { out += '<ellipse cx="' + (cx + sd * rx * .95).toFixed(1) + '" cy="' + (cy + ry * .35).toFixed(1) + '" rx="' + (fw * .16).toFixed(1) + '" ry="' + (fw * .26).toFixed(1) + '" fill="' + c2 + '" stroke="' + ink + '" stroke-width="2.5"/>'; });
+  return out;
+}
 function bugArt(b, cls, opt) {
   opt = opt || {};
   /* Hickory is hand-drawn, not assembled from parts: no wardrobe, no stages, no style filter. */
@@ -3656,7 +3711,7 @@ function bugArt(b, cls, opt) {
   function W(m, cx, cy) {
     if (noWing) return "";
     var out = m;
-    if (st === 5) out += m.replace(/fill="[^"]*"/g, 'fill="url(#' + id + 'i)"').replace(/opacity="[^"]*"/g, "").replace(/stroke="[^"]*"/g, 'stroke="' + GOLD + '"').replace(/<(path|ellipse|circle) /g, '<$1 opacity=".38" ');
+    if (st === 5) out += m.replace(/fill="[^"]*"/g, 'fill="url(#' + id + 'i)"').replace(/opacity="[^"]*"/g, "").replace(/stroke="[^"]*"/g, 'stroke="' + ink + '"').replace(/<(path|ellipse|circle) /g, '<$1 opacity=".38" ');
     if (wingK !== 1) out = '<g transform="translate(' + ((cx || 100) * (1 - wingK)).toFixed(1) + ' ' + ((cy || 116) * (1 - wingK)).toFixed(1) + ') scale(' + wingK + ')">' + out + '</g>';
     return out;
   }
@@ -3670,7 +3725,7 @@ function bugArt(b, cls, opt) {
      decoration was reading as clutter rather than as an achievement. What stays is the soft gold
      glow behind it (st >= 4, above) and the pool of light it stands in - a bug lit differently,
      rather than a bug wearing jewellery. */
-  if (st === 5) under += '<ellipse class="lgpool" cx="100" cy="188" rx="58" ry="11" fill="' + GOLD + '" opacity=".22"/>';
+  if (st === 5) under += '<ellipse class="lgpool" cx="100" cy="188" rx="58" ry="11" fill="' + c1 + '" opacity=".18"/>';
   var accs = (b.acc || []).filter(function (a) { var sl = ACC_SLOT[a]; return !(sl && wear[sl]); });
   if (accs.indexOf("stars") >= 0) s += ACC.stars();
   if (wear.fx && ITEMS_BY[wear.fx] && ITEMS_BY[wear.fx].under) s += itemSVG(ITEMS_BY[wear.fx], 74);
@@ -3695,7 +3750,7 @@ function bugArt(b, cls, opt) {
       '<circle cx="48" cy="92" r="9" fill="' + c3 + '" opacity=".85"/><circle cx="152" cy="92" r="9" fill="' + c3 + '" opacity=".85"/><circle cx="64" cy="156" r="6" fill="' + c3 + '" opacity=".85"/><circle cx="136" cy="156" r="6" fill="' + c3 + '" opacity=".85"/>';
     else wm += '<path d="M96 104 L26 82 Q16 118 40 136 L96 132Z" fill="' + F + '" ' + wc + '/><path d="M104 104 L174 82 Q184 118 160 136 L104 132Z" fill="' + F + '" ' + wc + '/><path d="M96 134 L54 150 Q60 172 96 160Z" fill="' + F + '" ' + wc + '/><path d="M104 134 L146 150 Q140 172 104 160Z" fill="' + F + '" ' + wc + '/>' +
       '<circle cx="56" cy="112" r="10" fill="none" stroke="' + c3 + '" stroke-width="4"/><circle cx="144" cy="112" r="10" fill="none" stroke="' + c3 + '" stroke-width="4"/>';
-    if (st >= 4) wm += (t === "butterfly" ? '<path d="M92 110 Q54 64 30 80 Q20 102 44 116 Q62 124 92 120Z M108 110 Q146 64 170 80 Q180 102 156 116 Q138 124 108 120Z' : '<path d="M92 106 L34 88 Q26 116 44 130 L92 128Z M108 106 L166 88 Q174 116 156 130 L108 128Z') + '" fill="none" stroke="' + (st === 5 ? GOLD : c3) + '" stroke-width="3" opacity=".9"/>';
+    if (st >= 4) wm += (t === "butterfly" ? '<path d="M92 110 Q54 64 30 80 Q20 102 44 116 Q62 124 92 120Z M108 110 Q146 64 170 80 Q180 102 156 116 Q138 124 108 120Z' : '<path d="M92 106 L34 88 Q26 116 44 130 L92 128Z M108 106 L166 88 Q174 116 156 130 L108 128Z') + '" fill="none" stroke="' + c3 + '" stroke-width="3" opacity=".9"/>';
     if (st === 5) wm = '<path d="M60 166 Q50 196 40 200 Q58 194 70 172Z M140 166 Q150 196 160 200 Q142 194 130 172Z" fill="' + c2 + '" stroke="' + ink + '" stroke-width="3"/>' + wm + '<circle cx="62" cy="98" r="11" fill="' + ink + '"/><circle cx="62" cy="98" r="7" fill="' + GOLD + '"/><circle cx="138" cy="98" r="11" fill="' + ink + '"/><circle cx="138" cy="98" r="7" fill="' + GOLD + '"/>';
     s += W(wm, 100, 120);
     s += (t === "moth" ? '<path d="M92 52 Q80 26 66 24 M108 52 Q120 26 134 24" stroke="' + ink + '" stroke-width="3" fill="none"/><path d="M84 40 l-6 -4 M80 33 l-6 -3 M116 40 l6 -4 M120 33 l6 -3" stroke="' + ink + '" stroke-width="2"/>' : antennae(ink, true));
@@ -3865,7 +3920,7 @@ function bugArt(b, cls, opt) {
     });
     for (var ci = n - 1; ci >= 0; ci--) {
       var q = cp[ci];
-      segS += '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="' + q[2] + '" fill="' + (ci % 2 ? c2 : F) + '" stroke="' + (st === 5 ? GOLD : ink) + '" stroke-width="' + (st === 5 ? 2.4 : 1.6) + '"/>' +
+      segS += '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="' + q[2] + '" fill="' + (ci % 2 ? c2 : F) + '" stroke="' + ink + '" stroke-width="' + (st === 5 ? 2.4 : 1.6) + '"/>' +
         '<ellipse cx="' + (q[0] - q[2] * .25).toFixed(1) + '" cy="' + (q[1] - q[2] * .35).toFixed(1) + '" rx="' + (q[2] * .42).toFixed(1) + '" ry="' + (q[2] * .22).toFixed(1) + '" fill="#fff" opacity=".22"/>';
     }
     s += cleg + segS + '<path d="M84 ' + (hy + 22) + ' Q78 ' + (hy + 36) + ' 92 ' + (hy + 40) + ' M116 ' + (hy + 22) + ' Q122 ' + (hy + 36) + ' 108 ' + (hy + 40) + '" stroke="' + (b.fang || ink) + '" stroke-width="4.5" fill="none" stroke-linecap="round"/>' +
@@ -3901,15 +3956,25 @@ function bugArt(b, cls, opt) {
       '<path d="M' + (vx + vrx * .95) + ' ' + (vy - vry * .55) + ' Q' + (vx + vrx * .4) + ' ' + (vy - vry * .95) + ' ' + (vx + 6) + ' ' + (vy - vry * .7) + ' L' + (vx + 10) + ' ' + (vy + vry * .8) + ' Q' + (vx + vrx * .7) + ' ' + (vy + vry * .75) + ' ' + (vx + vrx * .95) + ' ' + (vy + vry * .3) + 'Z" fill="#1f1b1a" stroke="#0b0a09" stroke-width="1.5"/>' + studs +
       '<circle cx="' + (vx + vrx * .45) + '" cy="' + (vy - vry * .05) + '" r="5" fill="#f5f5f4"/><path d="M' + (vx + vrx * .45 - 2) + ' ' + (vy - vry * .05) + ' h.1 M' + (vx + vrx * .45 + 2) + ' ' + (vy - vry * .05) + ' h.1" stroke="#1c1917" stroke-width="2" stroke-linecap="round"/>';
   }
+  /* every species gets its own markings, head tone and one body feature, so two bugs that share a
+     body are never just a recolour of each other (owner, Nov 5 2026) */
+  var spG = "";
+  if (!b.hick && b.id) {
+    if (!b.biker) s += speciesMarks(b, t, id, ink, c1, c2, c3);
+    /* and its own build: wider, slimmer, stockier - scaled about the head so the face still fits */
+    var spI = speciesIx(b)[0], spK = [[1, 1], [1.13, .95], [.88, 1], [1.07, .93], [.93, 1]][(spI + (b.c[0].charCodeAt(2) || 0)) % 5];
+    if (spK[0] !== 1 || spK[1] !== 1) { s = '<g transform="translate(100 ' + hy + ') scale(' + spK[0] + ' ' + spK[1] + ') translate(-100 -' + hy + ')">' + s; spG = "</g>"; }
+  }
   /* veteran / legend body details, fit to the torso of this body */
   if (st >= 4 && !{ centipede: 1, chrysalis: 1, cocoon: 1, snail: 1, caterpillar: 1, stick: 1, dragonfly: 1, butterfly: 1, moth: 1, firefly: 1, larva: 1 }[t]) {
     var TF = (BODYFIT[t] || BODYFIT.beetle).t, tx = TF[0], ty = TF[1], rx = TF[2], ry = TF[3];
     s += '<path d="M' + (tx - rx * .62) + ' ' + (ty - ry * .42) + ' Q' + (tx - rx * .5) + ' ' + (ty - ry * .78) + ' ' + (tx - rx * .16) + ' ' + (ty - ry * .86) + '" stroke="#fff" stroke-width="5" stroke-linecap="round" fill="none" opacity=".42"/>';
-    if (st === 5) s += '<ellipse cx="' + tx + '" cy="' + ty + '" rx="' + rx + '" ry="' + ry + '" fill="none" stroke="' + GOLD + '" stroke-width="3.5" opacity=".95"/>';
-    else s += '<path d="M' + (tx - rx * .8) + ' ' + (ty - ry * .25) + ' Q' + tx + ' ' + (ty - ry * .6) + ' ' + (tx + rx * .8) + ' ' + (ty - ry * .25) + '" stroke="' + ink + '" stroke-width="3" fill="none" opacity=".5"/><path d="M' + (tx - rx * .7) + ' ' + (ty + ry * .1) + ' Q' + tx + ' ' + (ty - ry * .2) + ' ' + (tx + rx * .7) + ' ' + (ty + ry * .1) + '" stroke="' + ink + '" stroke-width="2.5" fill="none" opacity=".3"/>';
+    /* Legends get the same shell creases as Veterans, no gold ring (owner, Nov 5 2026) */
+    s += '<path d="M' + (tx - rx * .8) + ' ' + (ty - ry * .25) + ' Q' + tx + ' ' + (ty - ry * .6) + ' ' + (tx + rx * .8) + ' ' + (ty - ry * .25) + '" stroke="' + ink + '" stroke-width="3" fill="none" opacity=".5"/><path d="M' + (tx - rx * .7) + ' ' + (ty + ry * .1) + ' Q' + tx + ' ' + (ty - ry * .2) + ' ' + (tx + rx * .7) + ' ' + (ty + ry * .1) + '" stroke="' + ink + '" stroke-width="2.5" fill="none" opacity=".3"/>';
   }
-  if (st === 5 && t === "snail") s += '<circle cx="134" cy="138" r="40" fill="none" stroke="' + GOLD + '" stroke-width="3.5"/>';
-  if (st === 5 && b.rar === "legendary") { var rays = ""; for (var ri = 0; ri < 12; ri++) { var ra = Math.PI * 2 * ri / 12; rays += '<path d="M' + (100 + Math.cos(ra) * 36).toFixed(1) + ' ' + (hy + Math.sin(ra) * 36).toFixed(1) + ' L' + (100 + Math.cos(ra) * 50).toFixed(1) + ' ' + (hy + Math.sin(ra) * 50).toFixed(1) + '" stroke="' + GOLD + '" stroke-width="4" stroke-linecap="round" opacity=".8"/>'; } s = rays + s; }
+  s += spG;
+
+
   s += bugFace(hy, mood, b, !!wear.face);
 
 
@@ -3983,21 +4048,21 @@ var BUGS = [
   { id: "grub-everyday", name: "Garden Beetle", body: "beetle", c: ["#ffcf6b", "#e08a2c", "#ffffff"], acc: ["leaf"], rar: "common", price: 0, grub: "ev", blurb: "Starter beetle for Everyday Health learners. Just a regular, friendly bug." },
   { id: "grub-doc", name: "Bookworm Beetle", body: "beetle", c: ["#8fa8ff", "#4053c9", "#ffffff"], acc: ["bowtie"], rar: "common", price: 0, grub: "md", blurb: "Starter beetle for medical students." },
   // common
-  { id: "free-mantis", name: "Praying Mantis", body: "mantis", c: ["#86efac", "#16a34a", "#ffffff"], acc: [], rar: "rare", price: 1200, blurb: "Patient, precise and always ready." },
-  { id: "free-stickbug", name: "Stick Bug", body: "stick", c: ["#c08a4e", "#7a4a1e", "#ffffff"], ink: "#4a2c10", acc: [], rar: "common", price: 400, blurb: "Blends right in on any branch." },
-  { id: "garden-ladybug", name: "Garden Ladybug", body: "beetle", pat: "spots", c: ["#ff6b6b", "#c92a3a"], head: "#2b1d2e", rar: "common", price: 300 },
-  { id: "honey-bee", name: "Honey Bee", body: "bee", c: ["#ffd84a", "#f2a40c", "#e8f6ff"], rar: "common", price: 340 },
-  { id: "leaf-beetle", name: "Leaf Beetle", body: "beetle", c: ["#9be15d", "#3a9d23", "#ffffff"], acc: ["leaf"], rar: "common", price: 380 },
-  { id: "sugar-ant", name: "Sugar Ant", body: "ant", c: ["#b0703c", "#6b3d1d"], ink: "#3a220f", rar: "common", price: 420 },
-  { id: "moss-caterpillar", name: "Moss Caterpillar", body: "caterpillar", c: ["#7bd389", "#3f9b52"], rar: "common", price: 460 },
-  { id: "dusk-moth", name: "Dusk Moth", body: "moth", c: ["#c7b199", "#8a6f55", "#f4e7d3"], ink: "#4a3a2a", rar: "rare", price: 1220 },
-  { id: "epi-ladybug", name: "Epi Ladybug", body: "beetle", pat: "spots", c: ["#facc15", "#ca8a04"], head: "#1f2937", rar: "common", price: 560 },
-  { id: "pond-dragonfly", name: "Pond Dragonfly", body: "dragonfly", c: ["#38bdf8", "#0e7490", "#e0f7ff"], rar: "rare", price: 1240 },
-  { id: "garden-snail", name: "Garden Snail", body: "snail", c: ["#d6a56b", "#c084fc", "#fde68a"], ink: "#5b3a1a", rar: "common", price: 640 },
-  { id: "meadow-hopper", name: "Meadow Hopper", body: "grasshopper", c: ["#a3e635", "#4d7c0f", "#ecfccb"], ink: "#1f2d0a", rar: "common", price: 680 },
-  { id: "rookie-rhino", name: "Rookie Rhino Beetle", body: "rhino", c: ["#a16207", "#713f12", "#fde68a"], head: "#422006", rar: "rare", price: 1300 },
-  { id: "sky-mantis", name: "Sky Mantis", body: "mantis", c: ["#7dd3fc", "#0284c7"], rar: "rare", price: 1300 },
-  { id: "rapid-centipede", name: "Rapid Response Centipede", body: "centipede", c: ["#fb923c", "#c2410c", "#fde68a"], ink: "#431407", rar: "rare", price: 1450, blurb: "All those legs and still first on scene. Fun fact: no centipede has exactly 100 legs, because they always have an odd number of leg pairs." },
+  { id: "free-mantis", name: "Praying Mantis", body: "mantis", c: ["#86efac", "#16a34a", "#ffffff"], acc: [], rar: "rare", price: 1500, blurb: "Patient, precise and always ready." },
+  { id: "free-stickbug", name: "Stick Bug", body: "stick", c: ["#c08a4e", "#7a4a1e", "#ffffff"], ink: "#4a2c10", acc: [], rar: "common", price: 500, blurb: "Blends right in on any branch." },
+  { id: "garden-ladybug", name: "Garden Ladybug", body: "beetle", pat: "spots", c: ["#ff6b6b", "#c92a3a"], head: "#2b1d2e", rar: "common", price: 500 },
+  { id: "honey-bee", name: "Honey Bee", body: "bee", c: ["#ffd84a", "#f2a40c", "#e8f6ff"], rar: "common", price: 500 },
+  { id: "leaf-beetle", name: "Leaf Beetle", body: "beetle", c: ["#9be15d", "#3a9d23", "#ffffff"], acc: ["leaf"], rar: "common", price: 500 },
+  { id: "sugar-ant", name: "Sugar Ant", body: "ant", c: ["#b0703c", "#6b3d1d"], ink: "#3a220f", rar: "common", price: 500 },
+  { id: "moss-caterpillar", name: "Moss Caterpillar", body: "caterpillar", c: ["#7bd389", "#3f9b52"], rar: "common", price: 500 },
+  { id: "dusk-moth", name: "Dusk Moth", body: "moth", c: ["#c7b199", "#8a6f55", "#f4e7d3"], ink: "#4a3a2a", rar: "rare", price: 1500 },
+  { id: "epi-ladybug", name: "Epi Ladybug", body: "beetle", pat: "spots", c: ["#facc15", "#ca8a04"], head: "#1f2937", rar: "common", price: 500 },
+  { id: "pond-dragonfly", name: "Pond Dragonfly", body: "dragonfly", c: ["#38bdf8", "#0e7490", "#e0f7ff"], rar: "rare", price: 1500 },
+  { id: "garden-snail", name: "Garden Snail", body: "snail", c: ["#d6a56b", "#c084fc", "#fde68a"], ink: "#5b3a1a", rar: "common", price: 500 },
+  { id: "meadow-hopper", name: "Meadow Hopper", body: "grasshopper", c: ["#a3e635", "#4d7c0f", "#ecfccb"], ink: "#1f2d0a", rar: "common", price: 500 },
+  { id: "rookie-rhino", name: "Rookie Rhino Beetle", body: "rhino", c: ["#a16207", "#713f12", "#fde68a"], head: "#422006", rar: "rare", price: 1500 },
+  { id: "sky-mantis", name: "Sky Mantis", body: "mantis", c: ["#7dd3fc", "#0284c7"], rar: "rare", price: 1500 },
+  { id: "rapid-centipede", name: "Rapid Response Centipede", body: "centipede", c: ["#fb923c", "#c2410c", "#fde68a"], ink: "#431407", rar: "rare", price: 1500, blurb: "All those legs and still first on scene. Fun fact: no centipede has exactly 100 legs, because they always have an odd number of leg pairs." },
   /* daily-login bugs (owner, Nov 5 2026): never for sale, only earned by coming back on different days */
   { id: "sunrise-firefly", name: "Sunrise Firefly", body: "firefly", c: ["#fdba74", "#c2410c", "#fef3c7"], rar: "rare", price: 0, login: 10, unlock: { login: 10, text: "Log in on 10 different days" }, blurb: "Shows up at first light, every single day." },
   { id: "dawn-patrol-dragonfly", name: "Dawn Patrol Dragonfly", body: "dragonfly", c: ["#5eead4", "#0f766e", "#ccfbf1"], acc: ["headset"], rar: "rare", price: 0, login: 40, unlock: { login: 40, text: "Log in on 40 different days" }, blurb: "Forty days of showing up. Always on patrol." },
@@ -4007,104 +4072,104 @@ var BUGS = [
   { id: "hundred-day-hercules", name: "Hundred-Day Hercules", body: "hercules", c: ["#f472b6", "#831843", "#fdf2f8"], horn: "#fde68a", rar: "legendary", price: 0, login: 60, unlock: { login: 60, text: "Log in on 60 different days" }, blurb: "Sixty days of learning. Strongest bug in the jungle." },
   { id: "year-of-the-scarab", name: "Year of the Scarab", body: "scarab", c: ["#22d3ee", "#155e75", "#ecfeff"], acc: ["halo"], rar: "legendary", price: 0, login: 90, unlock: { login: 90, text: "Log in on 90 different days" }, blurb: "Three full cycles of days. The rarest bug in DrugBug." },
   /* more real bugs (owner, Nov 5 2026) */
-  { id: "stink-bug", name: "Stink Bug", body: "shield", c: ["#a3a37a", "#5f6b3a", "#fef3c7"], ink: "#2d3319", rar: "common", price: 380, blurb: "Shield-shaped and smells like cilantro when bothered. Harmless, just rude." },
-  { id: "daddy-long-legs", name: "Daddy Long Legs", body: "harvestman", c: ["#c4a484", "#7c5a3a", "#fef3c7"], ink: "#3b2a1a", rar: "common", price: 440, blurb: "A harvestman, not a spider: one body section, no venom, no silk." },
-  { id: "garden-millipede", name: "Garden Millipede", body: "millipede", c: ["#8b5e3c", "#4a2f1d", "#fde68a"], ink: "#2b1a0e", rar: "common", price: 470, blurb: "Two pairs of legs on almost every segment. Curls into a spiral when scared." },
-  { id: "dung-beetle", name: "Dung Beetle", body: "dung", c: ["#3f3f46", "#18181b", "#a1a1aa"], ink: "#09090b", rar: "rare", price: 1280, blurb: "Rolls its ball in a straight line by steering with the Milky Way." },
+  { id: "stink-bug", name: "Stink Bug", body: "shield", c: ["#a3a37a", "#5f6b3a", "#fef3c7"], ink: "#2d3319", rar: "common", price: 500, blurb: "Shield-shaped and smells like cilantro when bothered. Harmless, just rude." },
+  { id: "daddy-long-legs", name: "Daddy Long Legs", body: "harvestman", c: ["#c4a484", "#7c5a3a", "#fef3c7"], ink: "#3b2a1a", rar: "common", price: 500, blurb: "A harvestman, not a spider: one body section, no venom, no silk." },
+  { id: "garden-millipede", name: "Garden Millipede", body: "millipede", c: ["#8b5e3c", "#4a2f1d", "#fde68a"], ink: "#2b1a0e", rar: "common", price: 500, blurb: "Two pairs of legs on almost every segment. Curls into a spiral when scared." },
+  { id: "dung-beetle", name: "Dung Beetle", body: "dung", c: ["#3f3f46", "#18181b", "#a1a1aa"], ink: "#09090b", rar: "rare", price: 1500, blurb: "Rolls its ball in a straight line by steering with the Milky Way." },
   /* the bad bugs: a biker gang of pests and disease carriers (owner, Nov 5 2026) */
-  { id: "flea", name: "Flea", body: "flea", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#7c4a1e", "#4a2a10", "#fde68a"], ink: "#24130a", rar: "common", price: 450, blurb: "Jumps 100 times its height. Rat fleas spread plague and murine typhus." },
+  { id: "flea", name: "Flea", body: "flea", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#7c4a1e", "#4a2a10", "#fde68a"], ink: "#24130a", rar: "common", price: 500, blurb: "Jumps 100 times its height. Rat fleas spread plague and murine typhus." },
   { id: "deer-tick", name: "Deer Tick", body: "tick", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#9a3412", "#1c1917", "#fed7aa"], ink: "#0c0a09", rar: "common", price: 500, blurb: "Carries Lyme disease. Remove it with tweezers close to the skin, pulling straight out." },
-  { id: "bed-bug", name: "Bed Bug", body: "bedbug", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#b45309", "#7c2d12", "#fed7aa"], ink: "#2a0f05", rar: "common", price: 520, blurb: "Bites in a line at night. Itchy, but not known to spread disease." },
-  { id: "head-louse", name: "Head Louse", body: "louse", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#e7d8c0", "#a68a64", "#fef3c7"], ink: "#3b2f20", rar: "common", price: 420, blurb: "Grips hair with hook claws. Its body-louse cousin spreads epidemic typhus." },
-  { id: "cockroach", name: "Cockroach", body: "roach", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#92400e", "#451a03", "#fde68a"], ink: "#1c0a02", rar: "rare", price: 1250, blurb: "Roach allergens are a major asthma trigger in city kids." },
-  { id: "tiger-mosquito", name: "Tiger Mosquito", body: "mosquito", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#27272a", "#09090b", "#e5e7eb"], ink: "#000000", rar: "rare", price: 1300, blurb: "The deadliest animal on Earth: malaria, dengue, Zika and West Nile." },
-  { id: "chigger", name: "Chigger", body: "tick", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#ef4444", "#991b1b", "#fecaca"], ink: "#450a0a", rar: "rare", price: 1350, blurb: "A tiny mite larva. In parts of Asia its bite spreads scrub typhus." },
-  { id: "kissing-bug", name: "Kissing Bug", body: "shield", pat: "edges", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#292524", "#0c0a09", "#f97316"], ink: "#000000", rar: "epic", price: 2900, blurb: "Bites near the lips at night and spreads Chagas disease, which can scar the heart." },
-  { id: "puss-asp", name: "Asp", body: "asp", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#d6b88a", "#a07a4a", "#fef3c7"], ink: "#3b2a14", rar: "epic", price: 3100, blurb: "The puss caterpillar looks like a fluffy toupee. Its hidden spines give one of the worst stings in North America." },
-  { id: "bubblegum-ant", name: "Bubblegum Ant", body: "ant", c: ["#f9a8d4", "#db2777"], ink: "#701a45", rar: "common", price: 800 },
+  { id: "bed-bug", name: "Bed Bug", body: "bedbug", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#b45309", "#7c2d12", "#fed7aa"], ink: "#2a0f05", rar: "common", price: 500, blurb: "Bites in a line at night. Itchy, but not known to spread disease." },
+  { id: "head-louse", name: "Head Louse", body: "louse", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#e7d8c0", "#a68a64", "#fef3c7"], ink: "#3b2f20", rar: "common", price: 500, blurb: "Grips hair with hook claws. Its body-louse cousin spreads epidemic typhus." },
+  { id: "cockroach", name: "Cockroach", body: "roach", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#92400e", "#451a03", "#fde68a"], ink: "#1c0a02", rar: "rare", price: 1500, blurb: "Roach allergens are a major asthma trigger in city kids." },
+  { id: "tiger-mosquito", name: "Tiger Mosquito", body: "mosquito", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#27272a", "#09090b", "#e5e7eb"], ink: "#000000", rar: "rare", price: 1500, blurb: "The deadliest animal on Earth: malaria, dengue, Zika and West Nile." },
+  { id: "chigger", name: "Chigger", body: "tick", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#ef4444", "#991b1b", "#fecaca"], ink: "#450a0a", rar: "rare", price: 1500, blurb: "A tiny mite larva. In parts of Asia its bite spreads scrub typhus." },
+  { id: "kissing-bug", name: "Kissing Bug", body: "shield", pat: "edges", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#292524", "#0c0a09", "#f97316"], ink: "#000000", rar: "epic", price: 3800, blurb: "Bites near the lips at night and spreads Chagas disease, which can scar the heart." },
+  { id: "puss-asp", name: "Asp", body: "asp", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#d6b88a", "#a07a4a", "#fef3c7"], ink: "#3b2a14", rar: "epic", price: 3800, blurb: "The puss caterpillar looks like a fluffy toupee. Its hidden spines give one of the worst stings in North America." },
+  { id: "bubblegum-ant", name: "Bubblegum Ant", body: "ant", c: ["#f9a8d4", "#db2777"], ink: "#701a45", rar: "common", price: 500 },
   // rare
-  { id: "glow-firefly", name: "Glow Firefly", body: "firefly", c: ["#4c5fd5", "#26307a", "#fff59d"], rar: "rare", price: 1200 },
-  { id: "ruby-ladybug", name: "Ruby Ladybug", body: "beetle", pat: "spots", c: ["#ff3d6e", "#9d0b38"], head: "#1d0f1a", acc: ["bowtie"], rar: "rare", price: 1260 },
-  { id: "midnight-moth", name: "Midnight Moth", body: "moth", c: ["#5b4bdb", "#1e1b4b", "#a5f3fc"], ink: "#0f0c2e", rar: "rare", price: 1320 },
-  { id: "teal-jewel", name: "Teal Jewel Beetle", body: "beetle", pat: "gems", c: ["#2dd4bf", "#0f766e", "#ccfbf1"], rar: "rare", price: 1380 },
-  { id: "blue-morpho", name: "Blue Morpho", body: "butterfly", c: ["#60a5fa", "#1d4ed8", "#e0f2fe"], rar: "epic", price: 3200 },
+  { id: "glow-firefly", name: "Glow Firefly", body: "firefly", c: ["#4c5fd5", "#26307a", "#fff59d"], rar: "rare", price: 1500 },
+  { id: "ruby-ladybug", name: "Ruby Ladybug", body: "beetle", pat: "spots", c: ["#ff3d6e", "#9d0b38"], head: "#1d0f1a", acc: ["bowtie"], rar: "rare", price: 1500 },
+  { id: "midnight-moth", name: "Midnight Moth", body: "moth", c: ["#5b4bdb", "#1e1b4b", "#a5f3fc"], ink: "#0f0c2e", rar: "rare", price: 1500 },
+  { id: "teal-jewel", name: "Teal Jewel Beetle", body: "beetle", pat: "gems", c: ["#2dd4bf", "#0f766e", "#ccfbf1"], rar: "rare", price: 1500 },
+  { id: "blue-morpho", name: "Blue Morpho", body: "butterfly", c: ["#60a5fa", "#1d4ed8", "#e0f2fe"], rar: "epic", price: 3800 },
   { id: "fire-ant", name: "Fire Ant Responder", body: "ant", c: ["#ff6a3d", "#b91c1c"], acc: ["helmet"], rar: "rare", price: 1500 },
-  { id: "narcan-ninja", name: "Narcan Ninja Ant", body: "ant", c: ["#475569", "#0f172a"], acc: ["mask"], rar: "rare", price: 1560 },
-  { id: "siren-cicada", name: "Siren Cicada", body: "cicada", c: ["#34d399", "#065f46", "#d1fae5"], rar: "rare", price: 1640 },
-  { id: "iv-pole-mantis", name: "IV Pole Mantis", body: "mantis", c: ["#a7f3d0", "#047857"], acc: ["stetho"], rar: "rare", price: 1700 },
-  { id: "banded-bee", name: "Banded Bee", body: "bee", c: ["#fb923c", "#c2410c", "#fff7ed"], acc: ["scarf"], rar: "rare", price: 1760 },
-  { id: "night-nurse-moth", name: "Night Nurse Moth", body: "moth", c: ["#818cf8", "#312e81", "#e0e7ff"], ink: "#1e1b4b", acc: ["cap"], rar: "rare", price: 1820 },
-  { id: "lab-coat-snail", name: "Lab Coat Snail", body: "snail", c: ["#e2e8f0", "#94a3b8", "#38bdf8"], ink: "#334155", acc: ["goggles"], rar: "rare", price: 1880 },
-  { id: "jade-mantis", name: "Jade Mantis", body: "mantis", c: ["#4ade80", "#15803d"], rar: "rare", price: 1940 },
-  { id: "medic-rhino", name: "Medic Rhino Beetle", body: "rhino", c: ["#ef4444", "#7f1d1d", "#fecaca"], head: "#450a0a", horn: "#e5e7eb", acc: ["headset"], rar: "rare", price: 2000 },
+  { id: "narcan-ninja", name: "Narcan Ninja Ant", body: "ant", c: ["#475569", "#0f172a"], acc: ["mask"], rar: "rare", price: 1500 },
+  { id: "siren-cicada", name: "Siren Cicada", body: "cicada", c: ["#34d399", "#065f46", "#d1fae5"], rar: "rare", price: 1500 },
+  { id: "iv-pole-mantis", name: "IV Pole Mantis", body: "mantis", c: ["#a7f3d0", "#047857"], acc: ["stetho"], rar: "rare", price: 1500 },
+  { id: "banded-bee", name: "Banded Bee", body: "bee", c: ["#fb923c", "#c2410c", "#fff7ed"], acc: ["scarf"], rar: "rare", price: 1500 },
+  { id: "night-nurse-moth", name: "Night Nurse Moth", body: "moth", c: ["#818cf8", "#312e81", "#e0e7ff"], ink: "#1e1b4b", acc: ["cap"], rar: "rare", price: 1500 },
+  { id: "lab-coat-snail", name: "Lab Coat Snail", body: "snail", c: ["#e2e8f0", "#94a3b8", "#38bdf8"], ink: "#334155", acc: ["goggles"], rar: "rare", price: 1500 },
+  { id: "jade-mantis", name: "Jade Mantis", body: "mantis", c: ["#4ade80", "#15803d"], rar: "rare", price: 1500 },
+  { id: "medic-rhino", name: "Medic Rhino Beetle", body: "rhino", c: ["#ef4444", "#7f1d1d", "#fecaca"], head: "#450a0a", horn: "#e5e7eb", acc: ["headset"], rar: "rare", price: 1500 },
   // epic
-  { id: "code-blue-stag", name: "Code Blue Stag", body: "stag", c: ["#3b82f6", "#1e3a8a", "#ffffff"], acc: ["stetho"], rar: "epic", price: 2800 },
-  { id: "neon-dragonfly", name: "Neon Dragonfly", body: "dragonfly", c: ["#e879f9", "#7e22ce", "#fae8ff"], acc: ["goggles"], rar: "epic", price: 3000 },
-  { id: "chopper-dragonfly", name: "Chopper Dragonfly", body: "dragonfly", c: ["#f97316", "#7c2d12", "#ffedd5"], acc: ["helmet"], rar: "epic", price: 3100 },
-  { id: "shadow-mantis", name: "Shadow Mantis", body: "mantis", c: ["#475569", "#0f172a"], acc: ["mask"], rar: "epic", price: 3300 },
-  { id: "defib-firefly", name: "Defib Firefly", body: "firefly", c: ["#facc15", "#1f2937", "#fef08a"], acc: ["bolt"], rar: "epic", price: 3500 },
-  { id: "aurora-butterfly", name: "Aurora Butterfly", body: "butterfly", c: ["#22d3ee", "#a855f7", "#fef08a"], rar: "epic", price: 3600 },
+  { id: "code-blue-stag", name: "Code Blue Stag", body: "stag", c: ["#3b82f6", "#1e3a8a", "#ffffff"], acc: ["stetho"], rar: "epic", price: 3800 },
+  { id: "neon-dragonfly", name: "Neon Dragonfly", body: "dragonfly", c: ["#e879f9", "#7e22ce", "#fae8ff"], acc: ["goggles"], rar: "epic", price: 3800 },
+  { id: "chopper-dragonfly", name: "Chopper Dragonfly", body: "dragonfly", c: ["#f97316", "#7c2d12", "#ffedd5"], acc: ["helmet"], rar: "epic", price: 3800 },
+  { id: "shadow-mantis", name: "Shadow Mantis", body: "mantis", c: ["#475569", "#0f172a"], acc: ["mask"], rar: "epic", price: 3800 },
+  { id: "defib-firefly", name: "Defib Firefly", body: "firefly", c: ["#facc15", "#1f2937", "#fef08a"], acc: ["bolt"], rar: "epic", price: 3800 },
+  { id: "aurora-butterfly", name: "Aurora Butterfly", body: "butterfly", c: ["#22d3ee", "#a855f7", "#fef08a"], rar: "epic", price: 3800 },
   { id: "pager-cicada", name: "Pager Cicada", body: "cicada", c: ["#f472b6", "#831843", "#fce7f3"], acc: ["headset"], rar: "epic", price: 3800 },
-  { id: "thunder-beetle", name: "Thunder Beetle", body: "beetle", pat: "stripes", c: ["#facc15", "#1f2937", "#fde68a"], head: "#111827", acc: ["bolt"], eyes: "cool", rar: "rare", price: 1980 },
-  { id: "night-shift-spider", name: "Night Shift Spider", body: "spider", c: ["#6366f1", "#111827", "#f472b6"], acc: ["headset"], rar: "epic", price: 4100 },
-  { id: "trauma-bay-hornet", name: "Trauma Bay Hornet", body: "bee", c: ["#f87171", "#1f2937", "#fee2e2"], acc: ["goggles"], eyes: "cool", rar: "epic", price: 4300 },
-  { id: "flight-hornet", name: "Flight Hornet", body: "bee", c: ["#a78bfa", "#4c1d95", "#e9d5ff"], acc: ["helmet"], rar: "epic", price: 4500 },
-  { id: "charge-nurse-bee", name: "Charge Nurse Bee", body: "bee", c: ["#fde047", "#ca8a04", "#fefce8"], acc: ["cap", "stetho"], rar: "epic", price: 4600 },
-  { id: "cardiac-scarab", name: "Cardiac Scarab", body: "scarab", c: ["#f43f5e", "#881337", "#fecdd3"], rar: "epic", price: 4800 },
+  { id: "thunder-beetle", name: "Thunder Beetle", body: "beetle", pat: "stripes", c: ["#facc15", "#1f2937", "#fde68a"], head: "#111827", acc: ["bolt"], eyes: "cool", rar: "rare", price: 1500 },
+  { id: "night-shift-spider", name: "Night Shift Spider", body: "spider", c: ["#6366f1", "#111827", "#f472b6"], acc: ["headset"], rar: "epic", price: 3800 },
+  { id: "trauma-bay-hornet", name: "Trauma Bay Hornet", body: "bee", c: ["#f87171", "#1f2937", "#fee2e2"], acc: ["goggles"], eyes: "cool", rar: "epic", price: 3800 },
+  { id: "flight-hornet", name: "Flight Hornet", body: "bee", c: ["#a78bfa", "#4c1d95", "#e9d5ff"], acc: ["helmet"], rar: "epic", price: 3800 },
+  { id: "charge-nurse-bee", name: "Charge Nurse Bee", body: "bee", c: ["#fde047", "#ca8a04", "#fefce8"], acc: ["cap", "stetho"], rar: "epic", price: 3800 },
+  { id: "cardiac-scarab", name: "Cardiac Scarab", body: "scarab", c: ["#f43f5e", "#881337", "#fecdd3"], rar: "epic", price: 3800 },
   // legendary
-  { id: "golden-scarab", name: "Golden Scarab", body: "scarab", c: ["#fcd34d", "#b45309", "#fff7ed"], acc: ["crown"], rar: "legendary", price: 7000 },
-  { id: "phoenix-moth", name: "Phoenix Moth", body: "moth", c: ["#fb923c", "#dc2626", "#fde047"], ink: "#4a0d0d", acc: ["flame"], rar: "legendary", price: 7700 },
-  { id: "diamond-beetle", name: "Diamond Scarab", body: "scarab", pat: "gems", c: ["#e0f2fe", "#7dd3fc", "#ffffff"], ink: "#1e3a5f", smile: "#1e3a5f", acc: ["halo"], rar: "legendary", price: 8400 },
-  { id: "rainbow-snail", name: "Rainbow Snail", body: "snail", c: ["#f472b6", "#22d3ee", "#fde047"], ink: "#4c1d95", acc: ["stars"], rar: "rare", price: 1900 },
-  { id: "chief-resident-stag", name: "Chief Resident Stag", body: "stag", c: ["#94a3b8", "#1e293b", "#ffffff"], acc: ["crown", "stetho"], eyes: "cool", rar: "legendary", price: 9900 },
-  { id: "galaxy-rhino", name: "Galaxy Rhino Beetle", body: "rhino", c: ["#6d28d9", "#0f172a", "#c4b5fd"], head: "#1e1b4b", horn: "#f0abfc", acc: ["stars"], rar: "legendary", price: 10600 },
-  { id: "cosmic-butterfly", name: "Cosmic Butterfly", body: "butterfly", c: ["#312e81", "#0f172a", "#f0abfc"], acc: ["stars"], rar: "legendary", price: 11300 },
-  { id: "queen-bee", name: "Queen Bee", body: "bee", c: ["#facc15", "#a16207", "#fef9c3"], acc: ["crown"], rar: "legendary", price: 12000 },
+  { id: "golden-scarab", name: "Golden Scarab", body: "scarab", c: ["#fcd34d", "#b45309", "#fff7ed"], acc: ["crown"], rar: "legendary", price: 10000 },
+  { id: "phoenix-moth", name: "Phoenix Moth", body: "moth", c: ["#fb923c", "#dc2626", "#fde047"], ink: "#4a0d0d", acc: ["flame"], rar: "legendary", price: 10000 },
+  { id: "diamond-beetle", name: "Diamond Scarab", body: "scarab", pat: "gems", c: ["#e0f2fe", "#7dd3fc", "#ffffff"], ink: "#1e3a5f", smile: "#1e3a5f", acc: ["halo"], rar: "legendary", price: 10000 },
+  { id: "rainbow-snail", name: "Rainbow Snail", body: "snail", c: ["#f472b6", "#22d3ee", "#fde047"], ink: "#4c1d95", acc: ["stars"], rar: "rare", price: 1500 },
+  { id: "chief-resident-stag", name: "Chief Resident Stag", body: "stag", c: ["#94a3b8", "#1e293b", "#ffffff"], acc: ["crown", "stetho"], eyes: "cool", rar: "legendary", price: 10000 },
+  { id: "galaxy-rhino", name: "Galaxy Rhino Beetle", body: "rhino", c: ["#6d28d9", "#0f172a", "#c4b5fd"], head: "#1e1b4b", horn: "#f0abfc", acc: ["stars"], rar: "legendary", price: 10000 },
+  { id: "cosmic-butterfly", name: "Cosmic Butterfly", body: "butterfly", c: ["#312e81", "#0f172a", "#f0abfc"], acc: ["stars"], rar: "legendary", price: 10000 },
+  { id: "queen-bee", name: "Queen Bee", body: "bee", c: ["#facc15", "#a16207", "#fef9c3"], acc: ["crown"], rar: "legendary", price: 10000 },
   // more bugs + the Dark collection (dark: true)
-  { id: "tiger-longhorn", name: "Tiger Longhorn", body: "longhorn", c: ["#fb923c", "#9a3412", "#1c1917"], rar: "common", price: 520 },
-  { id: "sunset-longhorn", name: "Sunset Longhorn", body: "longhorn", c: ["#f472b6", "#f59e0b", "#fff7ed"], rar: "common", price: 660 },
-  { id: "coral-snail", name: "Coral Snail", body: "snail", c: ["#fb7185", "#fda4af", "#fff1f2"], ink: "#881337", rar: "common", price: 580 },
-  { id: "desert-scorpion", name: "Desert Scorpion", body: "scorpion", c: ["#eab308", "#a16207", "#713f12"], ink: "#422006", rar: "common", price: 740 },
-  { id: "mint-hercules", name: "Mint Hercules", body: "hercules", c: ["#6ee7b7", "#047857", "#d1fae5"], horn: "#064e3b", rar: "rare", price: 1440 },
-  { id: "hercules-hero", name: "Hercules Hero", body: "hercules", c: ["#60a5fa", "#1e3a8a", "#bfdbfe"], horn: "#facc15", acc: ["bowtie"], rar: "rare", price: 1740 },
-  { id: "jade-scorpion", name: "Jade Scorpion", body: "scorpion", c: ["#4ade80", "#166534", "#bbf7d0"], ink: "#052e16", rar: "rare", price: 1800 },
-  { id: "aurora-longhorn", name: "Aurora Longhorn", body: "longhorn", c: ["#22d3ee", "#a855f7", "#fef08a"], acc: ["stars"], rar: "epic", price: 3400 },
-  { id: "coal-beetle", name: "Coal Beetle", body: "beetle", c: ["#3f3f46", "#18181b", "#71717a"], ink: "#09090b", smile: "#a1a1aa", rar: "common", price: 400, dark: true },
-  { id: "soot-ant", name: "Soot Ant", body: "ant", c: ["#44403c", "#1c1917"], ink: "#0c0a09", smile: "#d6d3d1", rar: "common", price: 440, dark: true },
-  { id: "ink-caterpillar", name: "Ink Caterpillar", body: "caterpillar", c: ["#334155", "#0f172a"], ink: "#020617", smile: "#94a3b8", rar: "common", price: 480, dark: true },
-  { id: "graphite-snail", name: "Graphite Snail", body: "snail", c: ["#52525b", "#27272a", "#a1a1aa"], ink: "#09090b", smile: "#d4d4d8", rar: "common", price: 620, dark: true },
-  { id: "dusk-raven-moth", name: "Raven Moth", body: "moth", c: ["#27272a", "#09090b", "#6366f1"], ink: "#000000", smile: "#c7d2fe", rar: "rare", price: 1280, dark: true },
-  { id: "onyx-ladybug", name: "Onyx Ladybug", body: "beetle", pat: "spots", c: ["#1f1f23", "#000000"], ink: "#000000", spot: "#dc2626", head: "#0a0a0a", smile: "#fca5a5", eyes: "glow", glow: "#ef4444", rar: "rare", price: 1360, dark: true },
-  { id: "smoke-mantis", name: "Smoke Mantis", body: "mantis", c: ["#6b7280", "#1f2937"], ink: "#030712", smile: "#d1d5db", rar: "rare", price: 1520, dark: true },
-  { id: "gunmetal-rhino", name: "Gunmetal Rhino Beetle", body: "rhino", c: ["#4b5563", "#111827", "#9ca3af"], head: "#030712", horn: "#9ca3af", smile: "#e5e7eb", rar: "rare", price: 1640, dark: true },
-  { id: "shadow-longhorn", name: "Shadow Longhorn", body: "longhorn", c: ["#1e1b4b", "#020617", "#818cf8"], ink: "#000000", smile: "#a5b4fc", eyes: "glow", glow: "#818cf8", rar: "rare", price: 1860, dark: true },
-  { id: "obsidian-scorpion", name: "Obsidian Scorpion", body: "scorpion", c: ["#27272a", "#000000", "#a855f7"], ink: "#000000", smile: "#d8b4fe", eyes: "glow", glow: "#c084fc", rar: "rare", price: 1960, dark: true },
-  { id: "crimson-widow", name: "Crimson Widow", body: "spider", c: ["#1c1917", "#000000", "#dc2626"], ink: "#000000", smile: "#fca5a5", eyes: "glow", glow: "#ef4444", rar: "epic", price: 2900, dark: true },
-  { id: "void-scarab", name: "Void Scarab", body: "scarab", c: ["#312e81", "#030014", "#a78bfa"], ink: "#000000", smile: "#c4b5fd", eyes: "glow", glow: "#a78bfa", rar: "epic", price: 3200, dark: true },
-  { id: "phantom-dragonfly", name: "Phantom Dragonfly", body: "dragonfly", c: ["#334155", "#020617", "#94a3b8"], ink: "#000000", smile: "#cbd5e1", eyes: "glow", glow: "#67e8f9", rar: "epic", price: 3500, dark: true },
-  { id: "abyss-firefly", name: "Abyss Firefly", body: "firefly", c: ["#0f172a", "#000000", "#22d3ee"], ink: "#000000", smile: "#a5f3fc", eyes: "glow", glow: "#22d3ee", rar: "epic", price: 3900, dark: true },
-  { id: "eclipse-butterfly", name: "Eclipse Butterfly", body: "butterfly", c: ["#18181b", "#000000", "#f97316"], ink: "#000000", smile: "#fdba74", rar: "epic", price: 4200, dark: true },
-  { id: "midnight-hercules", name: "Midnight Hercules", body: "hercules", c: ["#1e293b", "#000000", "#38bdf8"], horn: "#0ea5e9", ink: "#000000", smile: "#7dd3fc", eyes: "glow", glow: "#38bdf8", rar: "epic", price: 4700, dark: true },
-  { id: "nightmare-stag", name: "Nightmare Stag", body: "stag", c: ["#27272a", "#000000", "#ef4444"], ink: "#000000", smile: "#fca5a5", eyes: "glow", glow: "#ef4444", acc: ["flame"], rar: "legendary", price: 8800, dark: true },
+  { id: "tiger-longhorn", name: "Tiger Longhorn", body: "longhorn", c: ["#fb923c", "#9a3412", "#1c1917"], rar: "common", price: 500 },
+  { id: "sunset-longhorn", name: "Sunset Longhorn", body: "longhorn", c: ["#f472b6", "#f59e0b", "#fff7ed"], rar: "common", price: 500 },
+  { id: "coral-snail", name: "Coral Snail", body: "snail", c: ["#fb7185", "#fda4af", "#fff1f2"], ink: "#881337", rar: "common", price: 500 },
+  { id: "desert-scorpion", name: "Desert Scorpion", body: "scorpion", c: ["#eab308", "#a16207", "#713f12"], ink: "#422006", rar: "common", price: 500 },
+  { id: "mint-hercules", name: "Mint Hercules", body: "hercules", c: ["#6ee7b7", "#047857", "#d1fae5"], horn: "#064e3b", rar: "rare", price: 1500 },
+  { id: "hercules-hero", name: "Hercules Hero", body: "hercules", c: ["#60a5fa", "#1e3a8a", "#bfdbfe"], horn: "#facc15", acc: ["bowtie"], rar: "rare", price: 1500 },
+  { id: "jade-scorpion", name: "Jade Scorpion", body: "scorpion", c: ["#4ade80", "#166534", "#bbf7d0"], ink: "#052e16", rar: "rare", price: 1500 },
+  { id: "aurora-longhorn", name: "Aurora Longhorn", body: "longhorn", c: ["#22d3ee", "#a855f7", "#fef08a"], acc: ["stars"], rar: "epic", price: 3800 },
+  { id: "coal-beetle", name: "Coal Beetle", body: "beetle", c: ["#3f3f46", "#18181b", "#71717a"], ink: "#09090b", smile: "#a1a1aa", rar: "common", price: 500, dark: true },
+  { id: "soot-ant", name: "Soot Ant", body: "ant", c: ["#44403c", "#1c1917"], ink: "#0c0a09", smile: "#d6d3d1", rar: "common", price: 500, dark: true },
+  { id: "ink-caterpillar", name: "Ink Caterpillar", body: "caterpillar", c: ["#334155", "#0f172a"], ink: "#020617", smile: "#94a3b8", rar: "common", price: 500, dark: true },
+  { id: "graphite-snail", name: "Graphite Snail", body: "snail", c: ["#52525b", "#27272a", "#a1a1aa"], ink: "#09090b", smile: "#d4d4d8", rar: "common", price: 500, dark: true },
+  { id: "dusk-raven-moth", name: "Raven Moth", body: "moth", c: ["#27272a", "#09090b", "#6366f1"], ink: "#000000", smile: "#c7d2fe", rar: "rare", price: 1500, dark: true },
+  { id: "onyx-ladybug", name: "Onyx Ladybug", body: "beetle", pat: "spots", c: ["#1f1f23", "#000000"], ink: "#000000", spot: "#dc2626", head: "#0a0a0a", smile: "#fca5a5", eyes: "glow", glow: "#ef4444", rar: "rare", price: 1500, dark: true },
+  { id: "smoke-mantis", name: "Smoke Mantis", body: "mantis", c: ["#6b7280", "#1f2937"], ink: "#030712", smile: "#d1d5db", rar: "rare", price: 1500, dark: true },
+  { id: "gunmetal-rhino", name: "Gunmetal Rhino Beetle", body: "rhino", c: ["#4b5563", "#111827", "#9ca3af"], head: "#030712", horn: "#9ca3af", smile: "#e5e7eb", rar: "rare", price: 1500, dark: true },
+  { id: "shadow-longhorn", name: "Shadow Longhorn", body: "longhorn", c: ["#1e1b4b", "#020617", "#818cf8"], ink: "#000000", smile: "#a5b4fc", eyes: "glow", glow: "#818cf8", rar: "rare", price: 1500, dark: true },
+  { id: "obsidian-scorpion", name: "Obsidian Scorpion", body: "scorpion", c: ["#27272a", "#000000", "#a855f7"], ink: "#000000", smile: "#d8b4fe", eyes: "glow", glow: "#c084fc", rar: "rare", price: 1500, dark: true },
+  { id: "crimson-widow", name: "Crimson Widow", body: "spider", c: ["#1c1917", "#000000", "#dc2626"], ink: "#000000", smile: "#fca5a5", eyes: "glow", glow: "#ef4444", rar: "epic", price: 3800, dark: true },
+  { id: "void-scarab", name: "Void Scarab", body: "scarab", c: ["#312e81", "#030014", "#a78bfa"], ink: "#000000", smile: "#c4b5fd", eyes: "glow", glow: "#a78bfa", rar: "epic", price: 3800, dark: true },
+  { id: "phantom-dragonfly", name: "Phantom Dragonfly", body: "dragonfly", c: ["#334155", "#020617", "#94a3b8"], ink: "#000000", smile: "#cbd5e1", eyes: "glow", glow: "#67e8f9", rar: "epic", price: 3800, dark: true },
+  { id: "abyss-firefly", name: "Abyss Firefly", body: "firefly", c: ["#0f172a", "#000000", "#22d3ee"], ink: "#000000", smile: "#a5f3fc", eyes: "glow", glow: "#22d3ee", rar: "epic", price: 3800, dark: true },
+  { id: "eclipse-butterfly", name: "Eclipse Butterfly", body: "butterfly", c: ["#18181b", "#000000", "#f97316"], ink: "#000000", smile: "#fdba74", rar: "epic", price: 3800, dark: true },
+  { id: "midnight-hercules", name: "Midnight Hercules", body: "hercules", c: ["#1e293b", "#000000", "#38bdf8"], horn: "#0ea5e9", ink: "#000000", smile: "#7dd3fc", eyes: "glow", glow: "#38bdf8", rar: "epic", price: 3800, dark: true },
+  { id: "nightmare-stag", name: "Nightmare Stag", body: "stag", c: ["#27272a", "#000000", "#ef4444"], ink: "#000000", smile: "#fca5a5", eyes: "glow", glow: "#ef4444", acc: ["flame"], rar: "legendary", price: 10000, dark: true },
   { id: "wraith-mantis", name: "Wraith Mantis", body: "mantis", c: ["#14532d", "#000000"], ink: "#000000", smile: "#86efac", eyes: "glow", glow: "#4ade80", acc: ["stars"], rar: "legendary", price: 10000, dark: true },
-  { id: "galaxy-scorpion", name: "Galaxy Scorpion", body: "scorpion", c: ["#4c1d95", "#000000", "#f0abfc"], ink: "#000000", smile: "#f5d0fe", eyes: "glow", glow: "#f0abfc", acc: ["stars"], rar: "epic", price: 4800, dark: true },
-  { id: "obsidian-emperor", name: "Obsidian Emperor", body: "hercules", c: ["#1c1917", "#000000", "#facc15"], horn: "#eab308", ink: "#000000", smile: "#fde68a", eyes: "glow", glow: "#facc15", acc: ["crown"], rar: "legendary", price: 12000, dark: true },
+  { id: "galaxy-scorpion", name: "Galaxy Scorpion", body: "scorpion", c: ["#4c1d95", "#000000", "#f0abfc"], ink: "#000000", smile: "#f5d0fe", eyes: "glow", glow: "#f0abfc", acc: ["stars"], rar: "epic", price: 3800, dark: true },
+  { id: "obsidian-emperor", name: "Obsidian Emperor", body: "hercules", c: ["#1c1917", "#000000", "#facc15"], horn: "#eab308", ink: "#000000", smile: "#fde68a", eyes: "glow", glow: "#facc15", acc: ["crown"], rar: "legendary", price: 10000, dark: true },
   // majestic legendaries and more everyday insects (growth update)
   /* Hickory himself, buyable (owner, Nov 1 2026). He is hand-drawn rather than built from the
      procedural parts, so bugArt hands him straight to learnBugSVG and he wears nothing: he comes
      as he is, straw hat and pitchfork, and he grows up with your LEARN total like he always has. */
-  { id: "hickory", name: "Hickory", body: "beetle", hick: true, c: ["#9bcb5a", "#5f8f33", "#f4f1e6"], ink: "#3f5420", rar: "legendary", price: 12500, blurb: "The LEARN bug himself. Straw hat, three teeth, one pitchfork, and an opinion about every drug in here. He talks to himself when nobody else will." },
-  { id: "atlas-moth", name: "Atlas Moth", body: "moth", c: ["#f59e0b", "#7c2d12", "#fff7ed"], ink: "#3b1405", rar: "legendary", price: 11500, blurb: "One of the largest moths on Earth, with wing tips shaped like snake heads." },
-  { id: "goliath-beetle", name: "Goliath Beetle", body: "hercules", c: ["#f5f5f4", "#292524", "#ffffff"], head: "#1c1917", horn: "#1c1917", rar: "legendary", price: 10800, blurb: "A heavyweight of the beetle world, with bold black and white armor." },
-  { id: "orchid-mantis", name: "Orchid Mantis", body: "mantis", c: ["#fbcfe8", "#db2777", "#ffffff"], ink: "#701a3a", rar: "legendary", price: 10400, blurb: "Disguised as a flower petal. Beautiful and patient." },
-  { id: "emperor-dragonfly", name: "Emperor Dragonfly", body: "dragonfly", c: ["#38bdf8", "#15803d", "#e0f2fe"], ink: "#0c4a6e", rar: "legendary", price: 9600, blurb: "A fast, sky-blue hunter that patrols ponds all summer." },
-  { id: "field-cricket", name: "Field Cricket", body: "grasshopper", c: ["#a16207", "#3f2a0d", "#fde68a"], ink: "#1c1206", rar: "common", price: 360, blurb: "The night-shift singer. Chirps faster when it is warm." },
-  { id: "katydid", name: "Katydid", body: "grasshopper", c: ["#86efac", "#16a34a", "#f0fdf4"], ink: "#14532d", rar: "common", price: 520, blurb: "Looks exactly like a leaf and sings its own name." },
-  { id: "green-lacewing", name: "Green Lacewing", body: "dragonfly", c: ["#bbf7d0", "#22c55e", "#f0fdf4"], ink: "#14532d", rar: "rare", price: 1200, blurb: "Delicate lace wings and golden eyes. A garden helper." },
-  { id: "giant-hornet", name: "Giant Hornet", body: "wasp", hornet: true, c: ["#fbbf24", "#b45309", "#e7e5e4"], head: "#f59e0b", ink: "#1c1917", eyes: "fierce", rar: "epic", price: 4400, blurb: "The world's largest hornet: about 2 inches long, with a stinger and jaws to match." },
-  { id: "tarantula-hawk", name: "Tarantula Hawk", body: "wasp", nostripe: true, c: ["#1e3a8a", "#0b1020", "#f97316"], wingC: "#f97316", ink: "#020617", smile: "#fdba74", eyes: "fierce", rar: "epic", price: 3900, blurb: "A huge blue-black wasp with blazing orange wings that hunts tarantulas." },
-  { id: "sky-ace-wasp", name: "Sky Ace Wasp", body: "wasp", slim: true, c: ["#fde047", "#a16207", "#e0f2fe"], head: "#facc15", ink: "#1c1917", eyes: "fierce", acc: ["jethelmet", "aviscarf"], rar: "epic", price: 4100, blurb: "Thread-waisted like a mud dauber and born to fly. Jet helmet on, visor down, cleared for takeoff." },
-  { id: "shadow-cricket", name: "Shadow Cricket", body: "cricket", c: ["#475569", "#0f172a", "#38bdf8"], ink: "#020617", smile: "#bae6fd", eyes: "glow", glow: "#38bdf8", rar: "rare", price: 1600, dark: true, blurb: "Owns the night shift. Its chirp tells you the temperature." },
+  { id: "hickory", name: "Hickory", body: "beetle", hick: true, c: ["#9bcb5a", "#5f8f33", "#f4f1e6"], ink: "#3f5420", rar: "legendary", price: 10000, blurb: "The LEARN bug himself. Straw hat, three teeth, one pitchfork, and an opinion about every drug in here. He talks to himself when nobody else will." },
+  { id: "atlas-moth", name: "Atlas Moth", body: "moth", c: ["#f59e0b", "#7c2d12", "#fff7ed"], ink: "#3b1405", rar: "legendary", price: 10000, blurb: "One of the largest moths on Earth, with wing tips shaped like snake heads." },
+  { id: "goliath-beetle", name: "Goliath Beetle", body: "hercules", c: ["#f5f5f4", "#292524", "#ffffff"], head: "#1c1917", horn: "#1c1917", rar: "legendary", price: 10000, blurb: "A heavyweight of the beetle world, with bold black and white armor." },
+  { id: "orchid-mantis", name: "Orchid Mantis", body: "mantis", c: ["#fbcfe8", "#db2777", "#ffffff"], ink: "#701a3a", rar: "legendary", price: 10000, blurb: "Disguised as a flower petal. Beautiful and patient." },
+  { id: "emperor-dragonfly", name: "Emperor Dragonfly", body: "dragonfly", c: ["#38bdf8", "#15803d", "#e0f2fe"], ink: "#0c4a6e", rar: "legendary", price: 10000, blurb: "A fast, sky-blue hunter that patrols ponds all summer." },
+  { id: "field-cricket", name: "Field Cricket", body: "grasshopper", c: ["#a16207", "#3f2a0d", "#fde68a"], ink: "#1c1206", rar: "common", price: 500, blurb: "The night-shift singer. Chirps faster when it is warm." },
+  { id: "katydid", name: "Katydid", body: "grasshopper", c: ["#86efac", "#16a34a", "#f0fdf4"], ink: "#14532d", rar: "common", price: 500, blurb: "Looks exactly like a leaf and sings its own name." },
+  { id: "green-lacewing", name: "Green Lacewing", body: "dragonfly", c: ["#bbf7d0", "#22c55e", "#f0fdf4"], ink: "#14532d", rar: "rare", price: 1500, blurb: "Delicate lace wings and golden eyes. A garden helper." },
+  { id: "giant-hornet", name: "Giant Hornet", body: "wasp", hornet: true, c: ["#fbbf24", "#b45309", "#e7e5e4"], head: "#f59e0b", ink: "#1c1917", eyes: "fierce", rar: "epic", price: 3800, blurb: "The world's largest hornet: about 2 inches long, with a stinger and jaws to match." },
+  { id: "tarantula-hawk", name: "Tarantula Hawk", body: "wasp", nostripe: true, c: ["#1e3a8a", "#0b1020", "#f97316"], wingC: "#f97316", ink: "#020617", smile: "#fdba74", eyes: "fierce", rar: "epic", price: 3800, blurb: "A huge blue-black wasp with blazing orange wings that hunts tarantulas." },
+  { id: "sky-ace-wasp", name: "Sky Ace Wasp", body: "wasp", slim: true, c: ["#fde047", "#a16207", "#e0f2fe"], head: "#facc15", ink: "#1c1917", eyes: "fierce", acc: ["jethelmet", "aviscarf"], rar: "epic", price: 3800, blurb: "Thread-waisted like a mud dauber and born to fly. Jet helmet on, visor down, cleared for takeoff." },
+  { id: "shadow-cricket", name: "Shadow Cricket", body: "cricket", c: ["#475569", "#0f172a", "#38bdf8"], ink: "#020617", smile: "#bae6fd", eyes: "glow", glow: "#38bdf8", rar: "rare", price: 1500, dark: true, blurb: "Owns the night shift. Its chirp tells you the temperature." },
   // seasonal (buyable only in season; months 1-12)
   { id: "ghost-moth", name: "Ghost Moth", body: "moth", c: ["#f8fafc", "#cbd5e1", "#a5b4fc"], ink: "#475569", smile: "#475569", rar: "seasonal", price: 2400, season: [10, 10] },
   { id: "frost-firefly", name: "Frost Firefly", body: "firefly", c: ["#bae6fd", "#0369a1", "#e0f2fe"], acc: ["scarf"], rar: "seasonal", price: 2400, season: [12, 2] },
@@ -6380,7 +6445,7 @@ function obView() {
       i = ((S.obI == null ? 0 : S.obI) % C.length + C.length) % C.length, cur = C[i];
   if (step === 2) {
     var P = obCards().filter(function (c) { return c.code === obPrimary(); })[0] || { name: "" };
-    return '<div class="gate obgate obspec"><h1>Where are you at in ' + esc(P.name) + '?</h1>' +
+    return '<div class="gate obgate obspec"><h1>Where are you in ' + esc(P.name) + '?</h1>' +
       '<p>Pick the level you are studying for. Hickory starts you there, and you can move between levels whenever you like.</p>' +
       obWheel(C, i, null) +
       '<div class="lazynow"><strong>' + esc(cur.name) + '</strong><p class="obblurb">' + esc(cur.blurb) + '</p></div>' +
@@ -7459,7 +7524,9 @@ function audioCtx() {
    Fetched once, decoded once, then played as many times as needed. Anything that uses one keeps
    a synthesised fallback, because a file can always fail to arrive - which is exactly what
    happened to the music when its folder was never published. (owner, Nov 4 2026) */
-var SFXBUF = {}, SFX_SRC = { gasp: "sfx/gasp.mp3", wheeze: "sfx/wheeze.mp3" };   /* wheeze: owner-supplied recording (Pixabay / freesound_community), Nov 5 2026 */
+var SFXBUF = {}, SFX_SRC = { gasp: "sfx/gasp.mp3", wheeze: "sfx/wheeze.mp3",
+  /* the dummy's tap sounds, owner-supplied recordings (Pixabay), Nov 5 2026 */
+  whoosh: "sfx/whoosh.mp3", squeak: "sfx/squeak.mp3", bonk: "sfx/bonk.mp3", punch: "sfx/punch.mp3" };   /* wheeze: owner-supplied recording (Pixabay / freesound_community), Nov 5 2026 */
 var SFX_TRIM = { gasp: 0.14 };     /* the recording opens with silence; skip it so it lands on time */
 function sfxLoad(name) {
   var c = audioCtx(); if (!c || !SFX_SRC[name]) return null;
@@ -7472,14 +7539,16 @@ function sfxLoad(name) {
   return SFXBUF[name];
 }
 /* play a decoded effect: at = seconds from now, rate shifts the pitch, v is the level */
-function sfxPlay(name, at, v, rate, dest) {
+function sfxPlay(name, at, v, rate, dest, dur) {
   var c = audioCtx(), buf = SFXBUF[name + ":buf"]; if (!c || !buf) return false;
   try {
-    var src = c.createBufferSource(), g = c.createGain();
-    src.buffer = buf; src.playbackRate.value = rate || 1; g.gain.value = v == null ? 1 : v;
+    var src = c.createBufferSource(), g = c.createGain(), t0 = c.currentTime + (at || 0), lv = v == null ? 1 : v;
+    src.buffer = buf; src.playbackRate.value = rate || 1; g.gain.value = lv;
     src.connect(g); g.connect(dest || c.destination);
     var off = SFX_TRIM[name] || 0;
-    src.start(c.currentTime + (at || 0), off);
+    /* dur: play only the first part, with a short fade so it does not click off */
+    if (dur) { g.gain.setValueAtTime(lv, t0 + Math.max(0, dur - 0.35)); g.gain.linearRampToValueAtTime(0.0001, t0 + dur); src.start(t0, off, dur + 0.02); return true; }
+    src.start(t0, off);
     return true;
   } catch (e) { return false; }
 }
@@ -7906,7 +7975,7 @@ function muSync() { if (muOn() && MU.armed && muLevel() > 0) muStart(); else muS
 function muIcon() { return '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M9 18.5a2.5 2.5 0 1 1-2-2.45V5l11-2v12.5a2.5 2.5 0 1 1-2-2.45V7.1L9 8.4z"/>' + (muOn() ? '' : '<path d="M3 3l18 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>') + '</svg>'; }
 function musicBtn() { if (typeof funOn === "function" && !funOn()) return ""; return '<button class="theme-btn musicbtn" data-act="music" aria-pressed="' + muOn() + '" aria-label="Background music" title="Background music">' + muIcon() + '</button>'; }
 /* browsers only allow sound after a tap, so start on the first interaction */
-["pointerdown", "keydown", "touchend", "click"].forEach(function (ev) { document.addEventListener(ev, function () { audioCtx(); try { sfxLoad("gasp"); } catch (e) {} if (!MU.playing || (MU.ctx && MU.ctx.state !== "running")) muGesture(); }, { passive: true, capture: true }); });
+["pointerdown", "keydown", "touchend", "click"].forEach(function (ev) { document.addEventListener(ev, function () { audioCtx(); try { sfxLoad("gasp"); if (S.tab === "anatomy" || document.querySelector(".bodymap")) bodySfxWarm(); } catch (e) {} if (!MU.playing || (MU.ctx && MU.ctx.state !== "running")) muGesture(); }, { passive: true, capture: true }); });
 document.addEventListener("visibilitychange", function () { if (document.hidden) muStop(); else if (MU.armed) muSync(); });
 window.addEventListener("pageshow", function () { if (MU.armed && !document.hidden) muSync(); });
 /* quick volume popover from the top-bar note button */
@@ -9442,18 +9511,23 @@ if (typeof render === "function") (function () {
    one you hit and shakes his head at you; a leg and he hops about holding it.
    Reduced motion keeps every sound and drops every movement. */
 var BM_RX = {
-  head:    { cls: "rx-head",  snd: "thunk", dur: 1500 },
+  /* rec: a recorded sound played first (owner, Nov 5 2026: bonk on the head, wheeze on the lungs,
+     whoosh on the belly, baby squeak on the butt, punch on the arms and legs). The synthesised
+     snd is the fallback until the file has arrived. */
+  head:    { cls: "rx-head",  snd: "thunk", rec: "bonk",   dur: 1500 },
   neck:    { cls: "rx-neck",  snd: "gasp",  dur: 1400 },
-  chest:   { cls: "rx-chest", snd: "thump", dur: 2400, then: "groan", thenAt: 420 },
-  abdomen: { cls: "rx-abd",   snd: "groan", dur: 1700 },
+  chest:   { cls: "rx-chest", snd: "thump", rec: "wheeze", recDur: 2.6, recV: 1.1, dur: 2400 },
+  abdomen: { cls: "rx-abd",   snd: "groan", rec: "whoosh", dur: 1700 },
   pelvis:  { cls: "rx-pelv",  snd: "gasp",  dur: 1900 },
   back:    { cls: "rx-back",  snd: "creak", dur: 2200 },
-  butt:    { cls: "rx-butt",  snd: "gasp",  dur: 2200, then: "whine", thenAt: 420 },
-  armL:    { cls: "rx-armL",  snd: "punch", dur: 1900, then: "whine", thenAt: 280 },
-  armR:    { cls: "rx-armR",  snd: "punch", dur: 1900, then: "whine", thenAt: 280 },
-  legL:    { cls: "rx-legL",  snd: "punch", dur: 2100, then: "cry",   thenAt: 240 },
-  legR:    { cls: "rx-legR",  snd: "punch", dur: 2100, then: "cry",   thenAt: 240 }
+  butt:    { cls: "rx-butt",  snd: "gasp",  rec: "squeak", dur: 2200 },
+  armL:    { cls: "rx-armL",  snd: "punch", rec: "punch",  dur: 1900, then: "whine", thenAt: 380 },
+  armR:    { cls: "rx-armR",  snd: "punch", rec: "punch",  dur: 1900, then: "whine", thenAt: 380 },
+  legL:    { cls: "rx-legL",  snd: "punch", rec: "punch",  dur: 2100, then: "cry",   thenAt: 340 },
+  legR:    { cls: "rx-legR",  snd: "punch", rec: "punch",  dur: 2100, then: "cry",   thenAt: 340 }
 };
+/* fetch the dummy's recordings the first time anyone touches the page, so the first tap has them */
+function bodySfxWarm() { ["bonk", "wheeze", "whoosh", "squeak", "punch"].forEach(function (n) { try { sfxLoad(n); } catch (e) {} }); }
 /* used when something only knows the anatomy area and not which limb was touched */
 var BM_AREA = { "Head and face": "head", "Neck and throat": "neck", "Chest and ribs": "chest",
   "Abdomen and gut": "abdomen", "Pelvis and groin": "pelvis", "Arms and legs": "armL",
@@ -9486,7 +9560,16 @@ var BM_CLASSES = ["rx-head", "rx-neck", "rx-chest", "rx-abd", "rx-pelv", "rx-arm
 function bodyReact(area, snd, part) {
   var key = part && BM_RX[part] ? part : (BM_AREA[area] || "chest");
   var M = BM_RX[key];
-  try { if (typeof anatSnd === "function") anatSnd(snd || M.snd); } catch (e) {}
+  var played = false;
+  if (M.rec && !snd && typeof SET === "function" && SET().sfx) {
+    try { bodySfxWarm(); played = sfxPlay(M.rec, 0, M.recV || 1, key === "butt" ? 0.96 + Math.random() * 0.1 : 1, null, M.recDur); } catch (e) {}
+  }
+  /* the very first tap can beat the download: wait a moment for the recording before giving up */
+  if (!played && M.rec && !snd && SFXBUF[M.rec] && SFXBUF[M.rec].then) {
+    played = true; var t0 = Date.now();
+    SFXBUF[M.rec].then(function () { if (Date.now() - t0 < 700) sfxPlay(M.rec, 0, M.recV || 1, 1, null, M.recDur); else anatSnd(M.snd); }, function () { try { anatSnd(M.snd); } catch (e) {} });
+  }
+  if (!played) try { if (typeof anatSnd === "function") anatSnd(snd || M.snd); } catch (e) {}
   if (M.then) setTimeout(function () { try { anatSnd(M.then); } catch (e) {} }, M.thenAt || 250);
   if (key === "pelvis" || key === "butt") {
     /* the whole room reacts, and Hickory turns up to make it worse */
@@ -9519,7 +9602,7 @@ function bodyReact(area, snd, part) {
    on the floor, and taps that are found by casting a ray from your finger into the scene - so
    a tap on his back is a tap on his back, whichever way he is facing.
    Built here rather than pulled in from a library so it stays small and works offline.
-   Modelled on a crash-test dummy: glossy yellow segments with black joint rings.
+   Started as a crash-test dummy; since Nov 5 2026 he is a person - skin, real joints, hands, a face, hair.
 
    Coordinates are metres, Y up, and he faces +Z (toward the camera). His left is +X. */
 var D3 = (function () {
@@ -9620,6 +9703,13 @@ var D3 = (function () {
     return lathe(pr, 22);
   }
   function sphere(r) { return capsule(r, 2 * r, 10); }
+  /* a limb of length L, centred on the origin along Y, with radii listed bottom to top */
+  function limb(L, rs) {
+    var h = L / 2, n = rs.length, pr = [[0, -h - rs[0] * 0.55], [rs[0] * 0.72, -h - rs[0] * 0.38]], i;
+    for (i = 0; i < n; i++) pr.push([rs[i], -h + L * i / (n - 1)]);
+    pr.push([rs[n - 1] * 0.72, h + rs[n - 1] * 0.38], [0, h + rs[n - 1] * 0.55]);
+    return lathe(pr, 22);
+  }
   /* a ring lying flat in XZ: the black bands at every joint */
   function torus(R, r, su, sv) {
     var P = [], N = [], I = [], i, j;
@@ -9633,7 +9723,13 @@ var D3 = (function () {
   /* ---------------- materials (linear colour) ---------------- */
   function lin(c) { return [Math.pow(c[0], 2.2), Math.pow(c[1], 2.2), Math.pow(c[2], 2.2)]; }
   var MAT = {
-    yellow: { c: lin([0.95, 0.80, 0.42]), sp: 0.35, sh: 60, rim: 0.22 },
+    /* a person now, not a crash-test dummy (owner, Nov 5 2026): skin with a soft sheen, real
+       joints, hands with fingers, a face and hair. "yellow" keeps its name so nothing else moves. */
+    yellow: { c: lin([0.88, 0.69, 0.56]), sp: 0.12, sh: 18, rim: 0.2 },
+    hair:   { c: lin([0.24, 0.16, 0.11]), sp: 0.22, sh: 26, rim: 0.12 },
+    eyew:   { c: lin([0.96, 0.95, 0.93]), sp: 0.5, sh: 80, rim: 0.05 },
+    iris:   { c: lin([0.20, 0.13, 0.09]), sp: 0.8, sh: 90, rim: 0.02 },
+    lip:    { c: lin([0.74, 0.45, 0.42]), sp: 0.25, sh: 40, rim: 0.1 },
     /* no black on him any more (owner, Nov 5 2026): soft grey joints, white hospital socks,
        and a pale blue hospital gown */
     black:  { c: lin([0.80, 0.80, 0.80]), sp: 0.5, sh: 60, rim: 0.25 },
@@ -9671,17 +9767,22 @@ var D3 = (function () {
       abdomen: lathe([[0, -0.01], [0.122, -0.008], [0.128, 0.04], [0.13, 0.1], [0.135, 0.16], [0, 0.165]], 26),
       chest: lathe([[0, 0], [0.138, 0.002], [0.15, 0.06], [0.172, 0.15], [0.186, 0.22], [0.18, 0.27], [0.15, 0.31], [0.1, 0.335], [0, 0.345]], 28),
       pec: sphere(0.08),
-      neck: capsule(0.046, 0.11, 6),
+      neck: capsule(0.054, 0.11, 6),
       head: lathe([[0, -0.005], [0.05, 0.002], [0.075, 0.03], [0.092, 0.08], [0.104, 0.13], [0.1, 0.18], [0.082, 0.225], [0.05, 0.252], [0, 0.262]], 26),
       ball: sphere(0.068),
       ringL: torus(0.05, 0.018, 20, 8), ringM: torus(0.045, 0.017, 20, 8), ringS: torus(0.037, 0.014, 20, 8), ringXL: torus(0.07, 0.022, 22, 8),
-      upper: capsule(0.054, 0.3, 8), fore: capsule(0.046, 0.27, 8), hand: capsule(0.04, 0.13, 6),
+      /* limbs taper like real ones: a biceps, a forearm that narrows to the wrist, a calf */
+      upper: limb(0.3, [0.044, 0.049, 0.056, 0.059, 0.056, 0.054]), fore: limb(0.27, [0.032, 0.035, 0.04, 0.046, 0.05, 0.047]),
+      palm: capsule(0.04, 0.105, 6), finger: capsule(0.0115, 0.072, 5), thumb: capsule(0.0125, 0.06, 5),
+      jElbow: sphere(0.047), jWrist: sphere(0.032), jKnee: sphere(0.058), jAnkle: sphere(0.041), knob: sphere(0.02), patella: sphere(0.03),
+      eye: sphere(0.017), iris: sphere(0.0085), nose: sphere(0.019), ear: sphere(0.026), lips: capsule(0.0075, 0.042, 5), brow: capsule(0.0055, 0.034, 4),
+      hairCap: lathe([[0.107, 0.172], [0.11, 0.19], [0.103, 0.215], [0.086, 0.245], [0.055, 0.268], [0, 0.276]], 26), hairBack: sphere(0.1),
       skirt: lathe([[0.262, -0.5], [0.24, -0.38], [0.215, -0.24], [0.192, -0.1], [0.178, 0.0], [0.172, 0.08], [0.168, 0.14]], 32),
       hem: torus(0.262, 0.009, 32, 6),
       sleeve: lathe([[0.098, -0.24], [0.092, -0.16], [0.086, -0.08], [0.08, -0.01], [0.064, 0.04], [0.034, 0.075]], 20),
       cuff: torus(0.098, 0.008, 20, 6), collar: torus(0.072, 0.012, 24, 6),
       slit: capsule(0.022, 0.3, 6), tie: torus(0.016, 0.005, 10, 5),
-      thigh: capsule(0.076, 0.44, 8), shin: capsule(0.06, 0.4, 8), shoe: capsule(0.058, 0.25, 8), hipball: sphere(0.08)
+      thigh: limb(0.44, [0.052, 0.058, 0.066, 0.075, 0.082, 0.084, 0.08]), shin: limb(0.4, [0.035, 0.037, 0.043, 0.054, 0.062, 0.058, 0.053]), shoe: capsule(0.058, 0.25, 8), hipball: sphere(0.08)
     };
     /* balance tilts him from his feet; spin turns him about his own vertical axis */
     var bal = node("bal", null, [0, 0, 0]), spin = node("spin", bal, [0, 0, 0]);
@@ -9702,9 +9803,20 @@ var D3 = (function () {
     mesh(chest, G.collar, MAT.trim, "chest", [0, 0.33, 0], null, [1, 1, 0.9]);
     /* a little pectoral definition, like the moulded chest plate on the real thing */
     var neck = node("neck", chest, [0, 0.335, 0]);
-    mesh(neck, G.neck, MAT.black, "neck", [0, 0.035, 0]);
+    mesh(neck, G.neck, MAT.yellow, "neck", [0, 0.035, 0]);
     var head = node("head", neck, [0, 0.075, 0]);
     mesh(head, G.head, MAT.yellow, "head", [0, 0, 0.008], null, [0.94, 1, 1.06]);
+    /* a face: eyes, brows, nose, lips and ears, then short hair */
+    [-1, 1].forEach(function (sx) {
+      mesh(head, G.eye, MAT.eyew, "head", [0.036 * sx, 0.13, 0.1], null, [1, 0.8, 0.7]);
+      mesh(head, G.iris, MAT.iris, "head", [0.036 * sx, 0.13, 0.109]);
+      mesh(head, G.brow, MAT.hair, "head", [0.037 * sx, 0.154, 0.108], [0, 0, PI / 2 + 0.08 * sx], [1, 1, 0.8]);
+      mesh(head, G.ear, MAT.yellow, "head", [0.099 * sx, 0.118, -0.004], [0, 0.25 * sx, 0], [0.42, 1, 0.78]);
+    });
+    mesh(head, G.nose, MAT.yellow, "head", [0, 0.106, 0.112], [-0.25, 0, 0], [0.72, 1.35, 0.95]);
+    mesh(head, G.lips, MAT.lip, "head", [0, 0.07, 0.1], [0, 0, PI / 2], [1, 1, 0.75]);
+    mesh(head, G.hairCap, MAT.hair, "head", [0, 0, 0.002], null, [0.94, 1, 1.06]);
+    mesh(head, G.hairBack, MAT.hair, "head", [0, 0.15, -0.03], null, [1.0, 0.96, 0.92]);
     function arm(side, sx) {
       var sh = node("sh" + side, chest, [0.205 * sx, 0.265, 0]);
       mesh(sh, G.ball, MAT.yellow, "arm" + side, [0, 0, 0]);
@@ -9712,22 +9824,34 @@ var D3 = (function () {
       mesh(sh, G.cuff, MAT.trim, "arm" + side, [0, -0.26, 0]);
       mesh(sh, G.upper, MAT.yellow, "arm" + side, [0, -0.165, 0]);
       var el = node("el" + side, sh, [0, -0.315, 0]);
-      mesh(el, G.ringM, MAT.black, "arm" + side, [0, 0, 0]);
+      /* the elbow: a rounded joint with the point of the elbow showing at the back */
+      mesh(el, G.jElbow, MAT.yellow, "arm" + side, [0, 0, 0]);
+      mesh(el, G.knob, MAT.yellow, "arm" + side, [0, 0.004, -0.036], null, [1, 1.1, 0.9]);
       mesh(el, G.fore, MAT.yellow, "arm" + side, [0, -0.145, 0]);
       var wr = node("wr" + side, el, [0, -0.285, 0]);
-      mesh(wr, G.ringS, MAT.black, "arm" + side, [0, 0, 0]);
-      mesh(wr, G.hand, MAT.yellow, "arm" + side, [0, -0.07, 0], null, [1, 1, 0.58]);
+      mesh(wr, G.jWrist, MAT.yellow, "arm" + side, [0, -0.004, 0], null, [1.05, 0.9, 0.78]);
+      /* a hand: palm, four fingers of different lengths, and a thumb on the outside */
+      mesh(wr, G.palm, MAT.yellow, "arm" + side, [0, -0.06, 0], null, [1, 1, 0.5]);
+      [[-0.024, 0.9], [-0.008, 1.05], [0.008, 1], [0.023, 0.82]].forEach(function (f) {
+        mesh(wr, G.finger, MAT.yellow, "arm" + side, [f[0] * -sx, -0.13 - 0.036 * (f[1] - 1), 0.004], [0.12, 0, 0], [1, f[1], 0.9]);
+      });
+      mesh(wr, G.thumb, MAT.yellow, "arm" + side, [0.043 * sx, -0.062, 0.012], [0.2, 0, 0.55 * sx]);
     }
     arm("L", 1); arm("R", -1);
     function leg(side, sx) {
       var hp = node("hip" + side, hips, [0.088 * sx, -0.07, 0]);
-      mesh(hp, G.ringXL, MAT.black, "leg" + side, [0, -0.04, 0]);
+      mesh(hp, G.hipball, MAT.yellow, "leg" + side, [0, -0.02, 0]);
       mesh(hp, G.thigh, MAT.yellow, "leg" + side, [0, -0.235, 0]);
       var kn = node("kn" + side, hp, [0, -0.46, 0]);
-      mesh(kn, G.ringL, MAT.black, "leg" + side, [0, 0, 0], null, [1.25, 1, 1.25]);
+      /* the knee: the joint itself with a kneecap sitting in front of it */
+      mesh(kn, G.jKnee, MAT.yellow, "leg" + side, [0, 0, 0], null, [1, 1.05, 1]);
+      mesh(kn, G.patella, MAT.yellow, "leg" + side, [0, 0.012, 0.042], null, [1.15, 1.3, 0.75]);
       mesh(kn, G.shin, MAT.yellow, "leg" + side, [0, -0.215, 0]);
       var an = node("an" + side, kn, [0, -0.415, 0]);
-      mesh(an, G.ringS, MAT.black, "leg" + side, [0, 0, 0], null, [1.3, 1, 1.3]);
+      /* the ankle: the joint and the two ankle bones either side */
+      mesh(an, G.jAnkle, MAT.yellow, "leg" + side, [0, 0, 0]);
+      mesh(an, G.knob, MAT.yellow, "leg" + side, [0.033, 0.006, -0.004], null, [0.8, 1, 1]);
+      mesh(an, G.knob, MAT.yellow, "leg" + side, [-0.033, -0.004, -0.004], null, [0.8, 1, 1]);
       /* the shoe lies along Z, toes forward */
       mesh(an, G.shoe, MAT.shoe, "leg" + side, [0, -0.035, 0.045], [PI / 2, 0, 0], [0.95, 1, 0.72]);
     }
@@ -10217,7 +10341,7 @@ var D3GL = (function () {
   }
   return {
     /* the dummy wears the colour of the specialty you are in, toned down (owner, Nov 5 2026) */
-    tint: function (rgb) { if (rgb && rgb.length === 3) D3.MAT.yellow.c = D3.lin(rgb); },
+    tint: function (rgb) { /* he is a person now: skin stays skin whatever the route colour (owner, Nov 5 2026) */ },
     mount: mount, react: react, live: function () { return S.ok && !!S.cv && S.cv.isConnected; },
     select: function (area) { S.sel = area || ""; },
     /* On Scene (owner, Nov 5 2026): a held posture, an optional chair, breathing rate and effort.
@@ -26397,17 +26521,23 @@ function learnKey() { return (typeof ctxKey === "function" && ctxKey()) || "gen"
 function learnAll() { var P = Prog.d; return P.learn || (P.learn = {}); }
 function learnSeen(k) { var L = learnAll(); k = k || learnKey(); return L[k] || (L[k] = {}); }
 /* the drugs this speciality counts: in scope, and ones the current plan can actually open */
-function learnPool(k) {
+function learnPool(k, sys) {
   var ids = typeof scopeIds === "function" ? scopeIds() : [];
+  /* a run inside one body system (Learn by system) only walks that system's medicines */
+  sys = sys === undefined ? learnSysK() : sys;
+  if (sys && typeof sysIds === "function") { var inS = {}; sysIds(sys).forEach(function (x) { inS[x] = 1; }); ids = ids.filter(function (id) { return inS[id]; }); }
   return ids.filter(function (id) { return DB.drugs[id] && !(typeof drugLocked === "function" && drugLocked(id)); });
 }
-function learnStats() {
-  var pool = learnPool(), SN = learnSeen(), done = 0, left = [];
+function learnSysK() { return (S.learn && S.learn.sys) || null; }
+function learnStats(sys) {
+  var pool = learnPool(null, sys), SN = learnSeen(), done = 0, left = [];
   pool.forEach(function (id) { if (SN[id]) done++; else left.push(id); });
   return { total: pool.length, done: done, left: left, pct: pool.length ? Math.round(done / pool.length * 100) : 0 };
 }
 function learnName(k) {
   k = k || learnKey();
+  var lsys = learnSysK(), lso = lsys && typeof sysObj === "function" ? sysObj(lsys) : null;
+  if (lso && !arguments.length) return lso.name + " (" + learnName(k) + ")";
   if (k === "gen") return "the BugDex";
   var o = typeof levelObj === "function" ? levelObj(k) : null;
   return o ? o.name : k;
@@ -26450,10 +26580,11 @@ function learnPick() {
   if (!st.left.length) return null;
   return st.left[Math.floor(Math.random() * st.left.length)];
 }
-function learnStart() {
+function learnStart(sys) {
+  S.learn = { key: learnKey(), sys: sys || null };
   var id = learnPick();
-  if (!id) { S.learn = { key: learnKey(), done: true }; return render(); }
-  S.learn = { key: learnKey(), on: true };
+  if (!id) { S.learn = { key: learnKey(), done: true, sys: sys || null }; return render(); }
+  S.learn = { key: learnKey(), on: true, sys: sys || null };
   if (typeof openSheet === "function") openSheet(id);
 }
 function learnNext() {
@@ -26461,7 +26592,7 @@ function learnNext() {
   learnMark(cur);
   var id = learnPick();
   if (!id) {
-    S.learn = { key: learnKey(), done: true };
+    S.learn = { key: learnKey(), done: true, sys: learnSysK() };
     if (typeof closeSheet === "function") closeSheet();
     if (typeof gfxCheer === "function") try { gfxCheer(); } catch (e) {}
     return render();
@@ -26478,7 +26609,8 @@ function learnBar() {
   var st = learnStats(), n = st.done + 1;
   return '<div class="lrnbar"><div class="lrnhd"><strong>L.E.A.R.N</strong><span class="muted small">' + n.toLocaleString() + ' of ' + st.total.toLocaleString() + ' in ' + esc(learnName()) + '</span></div>' +
     '<div class="lrnmeter"><i style="width:' + Math.round(st.done / Math.max(1, st.total) * 100) + '%"></i></div>' +
-    '<div class="lrnacts"><button class="btn lrnnext" data-act="lrnnext">Next drug <span aria-hidden="true">&rarr;</span></button><button class="btn ghost small" data-act="lrnstop">Stop</button></div></div>';
+    '<div class="lrnacts"><button class="btn lrnnext" data-act="lrnnext">Next drug <span aria-hidden="true">&rarr;</span></button><button class="btn ghost small" data-act="lrnstop">Stop</button>' +
+    (learnSysK() ? '<button class="btn ghost small" data-sess="sys" data-sys="' + learnSysK() + '">Quiz me on this system</button>' : '') + '</div></div>';
 }
 
 /* Hickory, the LEARN bug: straw hat, three teeth, one pitchfork, no hurry.
@@ -26731,13 +26863,13 @@ function learnBugSVG() {
 function learnTile() {
   /* not on the Field Medic tiers: that section is in development and its own thing (owner, Oct 30 2026) */
   if (typeof isF === "function" && S.view === "level" && isF(S.level)) return "";
-  var st = learnStats();
+  var st = learnStats(null), ln = learnName(learnKey());
   if (!st.total) return "";
   var done = !st.left.length;
   return '<button class="lrntab' + (done ? ' lrndone' : '') + '" data-act="lrngo"><span class="lrnic" aria-hidden="true">' + learnBugSVG() + '</span>' +
     '<span class="lrntx"><strong>L.E.A.R.N</strong>' +
 
-    '<span class="lrnsub">' + (done ? 'You have been through every drug in ' + esc(learnName()) + '.' : 'Every drug in ' + esc(learnName()) + ', one at a time, in random order. Nothing repeats.') + '</span>' +
+    '<span class="lrnsub">' + (done ? 'You have been through every drug in ' + esc(ln) + '.' : 'Every drug in ' + esc(ln) + ', one at a time, in random order. Nothing repeats.') + '</span>' +
     '<span class="lrnmeter sm"><i style="width:' + st.pct + '%"></i></span>' +
     '<span class="lrnn">' + st.done.toLocaleString() + ' of ' + st.total.toLocaleString() + ' &middot; ' + st.pct + '%</span></span>' +
     '<span class="lrngo" aria-hidden="true">' + (done ? '&#10003;' : '&rsaquo;') + '</span></button>';
@@ -26796,10 +26928,33 @@ if (typeof render === "function") (function () {
 
 /* the screen you land on when a speciality is finished */
 function learnDoneView() {
-  var st = learnStats();
+  var st = learnStats(), sk = learnSysK();
+  if (sk) return '<section class="lrnfin"><h2>Every drug in ' + esc(learnName()) + '</h2>' +
+    '<p>You have been through all ' + st.total.toLocaleString() + ' of them. Now see how many stuck.</p>' +
+    '<div class="actions"><button class="btn" data-sess="sys" data-sys="' + sk + '">Quiz me on this system</button><button class="btn ghost" data-act="lrndismiss">Back</button></div></section>';
   return '<section class="lrnfin"><h2>Every drug in ' + esc(learnName()) + '</h2>' +
     '<p>You have been through all ' + st.total.toLocaleString() + ' of them. That badge is yours.</p>' +
     '<div class="actions"><button class="btn" data-act="hub">Back to ' + esc(learnName()) + '</button><button class="btn ghost" data-act="lrnreset">Start this one over</button></div></section>';
+}
+/* ---------- Learn by system (owner, Nov 5 2026) ----------
+   What used to be the Meds by System tab: the same groups (Cardiology, Airway, Neuro...), but each
+   one is now a L.E.A.R.N run through just that system's medicines, so a whole group can be learned
+   together. Cards seen here count toward the full L.E.A.R.N as well, and each group keeps its quiz. */
+function learnSysRow() {
+  if (typeof SYS === "undefined" || typeof sysMap !== "function") return "";
+  if (typeof isF === "function" && S.view === "level" && isF(S.level)) return "";
+  var map, SN = learnSeen(), out = "", n = 0;
+  try { map = sysMap(); } catch (e) { return ""; }
+  var open = {}; learnPool(null, null).forEach(function (id) { open[id] = 1; });
+  SYS.forEach(function (g) {
+    var ids = (map[g[0]] || []).filter(function (id) { return open[id]; }); if (!ids.length || g[0] === "other") return;
+    var done = 0; ids.forEach(function (id) { if (SN[id]) done++; });
+    var pct = Math.round(done / ids.length * 100); n++;
+    out += '<button class="lrnsc' + (done === ids.length ? ' fin' : '') + '" data-act="lrngo" data-lsys="' + g[0] + '" title="' + esc(g[2]) + '">' +
+      '<b>' + esc(g[1]) + '</b><span>' + done + ' of ' + ids.length + (done === ids.length ? ' &#10003;' : '') + '</span><i style="width:' + pct + '%"></i></button>';
+  });
+  if (n < 2) return "";
+  return '<section class="lrnsys"><div class="lrnsyshd"><strong>Learn by system</strong><span class="muted small">Pick a group, like Cardiology, and learn those medicines together. Each card counts toward L.E.A.R.N too.</span></div><div class="lrnsyschips">' + out + '</div></section>';
 }
 
 /* achievements: milestones across everything, plus one for finishing each speciality */
@@ -26818,7 +26973,7 @@ function learnDoneView() {
     var cur = S.view, lvl = S.level, ok = false;
     try {
       if (key === "gen") { S.view = "gen"; } else { S.view = "level"; S.level = key; }
-      var pool = learnPool();
+      var pool = learnPool(null, null);
       ok = pool.length > 0 && pool.every(function (id) { return L[id]; });
     } catch (e) { ok = false; }
     S.view = cur; S.level = lvl;
