@@ -51,11 +51,36 @@ details{background:var(--surface);border:1px solid var(--line);border-radius:12p
 .btn:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
 @media (max-width:640px){.shots figure{flex-basis:200px}.shots img{width:200px}}
 
+.ctas{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.hero .ctas{margin:6px 0}
+.btn.appstore{background:#000;color:#fff;display:inline-flex;align-items:center;gap:10px;border:1px solid #444}
+.btn.appstore span{display:flex;flex-direction:column;line-height:1.05;text-align:left;font-size:17px}.btn.appstore small{font-size:11px;font-weight:600;opacity:.85}
+.btn.appstore.sm{font-size:15px}
+.whatsnew{margin:26px 0;padding:24px;border:1px solid var(--line);border-radius:18px;background:var(--surface)}
+.wnkick{display:inline-block;font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--teal)}
+.whatsnew h2{margin:6px 0 4px}
+.wngrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-top:14px}
+.wn{border:1px solid var(--line);border-radius:14px;padding:14px;background:var(--bg)}.wn h3{margin:0 0 6px;font-size:17px}.wn p{margin:0;color:var(--muted);font-size:15px}
+.wnfoot{margin:16px 0 0}
+@media (max-width:640px){.hero .ctas{justify-content:center}.whatsnew{padding:16px}}
 </style></head>
 <body><div class="wrap"><header class="top"><a href="index.html"><img src="icon.png" alt=""></a><b>DrugBug</b><nav><a href="index.html">Home</a><a href="app/">Try it free</a><a href="support.html">Support</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="disclaimers.html">Disclaimers</a></nav></header><section class="hero"><img src="icon.png" alt="DrugBug app icon"><div><h1>Learn your meds by scope.</h1>
 <p>DrugBug is a medication study app for EMS, nursing, medical school and imaging students, built by a Paramedic, FP-C.</p>
-<a class="btn" href="app/">Try it free in your browser</a> <span class="soon">Coming soon to iPhone</span>
-<p class="hnote">Nothing to install. Start without an account &mdash; make one when you want your bug, your sticks and everything you learn to follow you to your phone.</p></div></section>
+<div class="ctas"><a class="btn" href="app/">Try it free in your browser</a> <a class="btn appstore" href="https://apps.apple.com/us/app/drugbug/id6820225080" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M16.4 12.7c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.2-2.8.8-3.6.8-.7 0-1.9-.8-3.1-.8-1.6 0-3.1.9-3.9 2.4-1.7 2.9-.4 7.2 1.2 9.5.8 1.1 1.7 2.4 2.9 2.4 1.2 0 1.6-.8 3-.8s1.8.8 3.1.7c1.3 0 2.1-1.1 2.8-2.3.9-1.3 1.3-2.6 1.3-2.6s-2.3-.9-2.3-4zM14.2 5.9c.6-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.4-.6.7-1.1 1.8-1 2.9 1.1.1 2.2-.6 2.8-1.3z"/></svg><span><small>Download on the</small>App Store</span></a></div>
+<p class="hnote">On iPhone, get it from the App Store. On anything else, nothing to install. Start without an account &mdash; make one when you want your bug, your sticks and everything you learn to follow you to your phone.</p></div></section>
+
+<section class="whatsnew" aria-labelledby="wn-h"><span class="wnkick">Coming in the next update</span><h2 id="wn-h">What's new in DrugBug</h2>
+<p class="plead">Already live here on the web, and on its way to the iPhone app.</p>
+<div class="wngrid">
+<div class="wn"><h3>Meds by System</h3><p>Paramedic and RN medicines grouped by what they work on: airway, breathing, cardiology, shock, neuro, OB and more. Each group has its own quiz and keeps your best score.</p></div>
+<div class="wn"><h3>Big Calls</h3><p>Stroke, STEMI, sepsis, trauma and ROSC: what to recognize, the clocks that matter and where the patient should go.</p></div>
+<div class="wn"><h3>Anatomy you can tap</h3><p>A 3D patient in a hospital gown. Tap a body part to learn it, then jump straight to the medicines that act on it or can harm it.</p></div>
+<div class="wn"><h3>Daily prizes</h3><p>A 30-day login calendar with a prize every day, plus a daily reminder to come learn and collect your sticks.</p></div>
+<div class="wn"><h3>New bugs and collections</h3><p>Centipedes, millipedes, dung beetles, stink bugs and a Bad Bugs biker crew. Collect a whole set to earn its king bug.</p></div>
+<div class="wn"><h3>Bug music</h3><p>Bug jazz, bug house, bugstep, bug rock, banjo bug and bug pop to study to. Free has the Plain Bug Beat and a taste of every genre.</p></div>
+<div class="wn"><h3>24 hours of Pro, free</h3><p>Make a free account and DrugBug Pro is yours for a day: every drug, every level, every quiz.</p></div>
+</div>
+<p class="wnfoot"><a class="btn appstore sm" href="https://apps.apple.com/us/app/drugbug/id6820225080" target="_blank" rel="noopener">Get DrugBug on the App Store</a></p>
+</section>
 
 <section class="shots" aria-label="Screenshots"><figure><img src="shot-routes.png" alt="Pick your route and level" loading="lazy" width="390" height="800"><figcaption>Pick your route and level</figcaption></figure><figure><img src="shot-drug.png" alt="Every drug, in plain language" loading="lazy" width="390" height="800"><figcaption>Every drug, in plain language</figcaption></figure><figure><img src="shot-card.png" alt="A drug card for every medication" loading="lazy" width="390" height="800"><figcaption>A drug card for every medication</figcaption></figure><figure><img src="shot-nursing.png" alt="Your bug grows with your scope" loading="lazy" width="390" height="800"><figcaption>Your bug grows with your scope</figcaption></figure><figure><img src="shot-terr.png" alt="The Terrarium and the Bug Store" loading="lazy" width="390" height="800"><figcaption>The Terrarium and the Bug Store</figcaption></figure><figure><img src="shot-disease.png" alt="The Disease Lab" loading="lazy" width="390" height="800"><figcaption>The Disease Lab</figcaption></figure><figure><img src="shot-quiz.png" alt="Questions at your star level" loading="lazy" width="390" height="800"><figcaption>Questions at your star level</figcaption></figure></section>
 
