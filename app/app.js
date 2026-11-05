@@ -27475,6 +27475,25 @@ function giftRedeem(code) {
     if (!d) { GIFT.msg = "That code did not match anything. Check the spelling and try again."; return giftDraw(); }
     Prog.d.gifts = Prog.d.gifts || {};
     if (Prog.d.gifts[d.id]) { GIFT.msg = "That code has already been used on this account."; return giftDraw(); }
+    /* one-time codes (owner, Nov 5 2026): the first account to claim it online owns it. The claim
+       is a create-only document giftUses/<id>; the rules refuse to overwrite it, so a second person
+       is turned away even on another device or a fresh browser. Needs the internet and the backend. */
+    if (d.once && GIFT.claimFor !== d.id) {
+      if (!Prog.db || !Prog.uid) { GIFT.msg = "This code needs an internet connection. Connect and try again in a moment."; return giftDraw(); }
+      GIFT.busy = true; giftDraw();
+      var ref = Prog.db.doc("giftUses/" + d.id), uid = Prog.uid;
+      var mine = function () { GIFT.busy = false; GIFT.claimFor = d.id; giftRedeem(code); };
+      var taken = function () { GIFT.busy = false; GIFT.msg = "That code has already been used. Each of these codes works one time only."; giftDraw(); };
+      ref.get().then(function (snap) {
+        if (snap && snap.exists) { var o = snap.data() || {}; return o.uid === uid ? mine() : taken(); }
+        return ref.set({ uid: uid, at: Date.now() }).then(mine);
+      }).catch(function () {
+        /* permission-denied: somebody else's claim we are not allowed to read, or a lost race */
+        ref.get().then(function (snap) { var o = snap && snap.exists ? snap.data() || {} : {}; if (o.uid === uid) mine(); else taken(); }).catch(taken);
+      });
+      return;
+    }
+    GIFT.claimFor = "";
     var got = [];
     Prog.d.gifts[d.id] = Date.now();
     if (d.sticks > 0) { earn(d.sticks); got.push(d.sticks.toLocaleString() + " sticks"); }
