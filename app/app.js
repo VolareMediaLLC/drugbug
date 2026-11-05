@@ -25944,7 +25944,14 @@ function anatSnd(kind) {
   if (!ANAT_SFX[kind]) kind = "pop";
   try {
     var c = anatCtx(); if (!c) return;
-    var t = c.currentTime, out = c.destination;
+    /* louder body sounds (owner, Nov 5 2026): every anatomy sound goes through a boost and a
+       limiter, so the groans, punches and whines are about 2.5x louder without clipping */
+    if (!anatSnd.bus || anatSnd.busCtx !== c) {
+      var bg = c.createGain(), lim = c.createDynamicsCompressor();
+      bg.gain.value = 2.6; lim.threshold.value = -6; lim.knee.value = 4; lim.ratio.value = 12; lim.attack.value = 0.002; lim.release.value = 0.12;
+      bg.connect(lim); lim.connect(c.destination); anatSnd.bus = bg; anatSnd.busCtx = c;
+    }
+    var t = c.currentTime, out = anatSnd.bus;
     /* one oscillator with an optional slide and vibrato */
     function tone(type, f0, f1, at, dur, v, vib, vibd) {
       var o = c.createOscillator(), g = c.createGain();
@@ -25969,10 +25976,11 @@ function anatSnd(kind) {
     }
     var i;
     if (kind === "groan") {           /* a long descending moan with a wet rumble under it */
-      tone("sawtooth", 150, 72, 0, 0.72, 0.08, 6.5, 16);
-      tone("sine", 74, 46, 0.03, 0.66, 0.1, 4, 8);
-      nz(0.05, 0.6, 0.07, "lowpass", 420, 180);
-      for (i = 0; i < 4; i++) tone("sine", 220 + Math.random() * 200, 90, 0.18 + i * 0.12, 0.1, 0.03);
+      tone("sawtooth", 150, 72, 0, 0.9, 0.15, 6.5, 16);
+      tone("sawtooth", 300, 150, 0.01, 0.85, 0.07, 6.5, 30);   /* an octave up, so phone speakers carry it */
+      tone("sine", 74, 46, 0.03, 0.8, 0.16, 4, 8);
+      nz(0.05, 0.7, 0.12, "lowpass", 520, 200);
+      for (i = 0; i < 4; i++) tone("sine", 220 + Math.random() * 200, 90, 0.18 + i * 0.12, 0.1, 0.06);
     } else if (kind === "gurgle") {   /* a handful of rising bloops */
       for (i = 0; i < 7; i++) tone("sine", 200 + Math.random() * 260, 520 + Math.random() * 400, i * 0.062, 0.09, 0.07);
       nz(0, 0.45, 0.05, "bandpass", 900, 500, 3);
