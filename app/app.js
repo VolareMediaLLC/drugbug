@@ -8614,6 +8614,8 @@ document.addEventListener("keydown", function (e) { if (e.key === "Escape" && TR
 var EV_PLUS = { illicit: 1, peptides: 1, probiotics: 1 };
 function evLocked(t) { return typeof PAYWALL !== "undefined" && PAYWALL && EV_PLUS[t] && !hasTier("plus"); }
 var EVTABS = [
+  /* search first (owner, Nov 5 2026) */
+  ["all", "Search Every Medicine", "Open the full BugDex: every medicine in DrugBug, A to Z."],
   ["cabinet", "Medicine Cabinet", "Over-the-counter remedies and vitamins: what each one is labeled for and what to watch for."],
   ["sick", "Small Sickness Guide", "Colds, heartburn, rashes and more: self-care facts, OTC products labeled for it, and when to see a doctor."],
   ["normals", "Normal Vitals & Labs", "What normal heart rate, blood pressure, temperature and lab results look like at every age."],
@@ -8622,7 +8624,6 @@ var EVTABS = [
   ["peptides", "Peptides", "Approved peptide medicines and popular research peptides that are NOT FDA approved. Education only."],
   ["probiotics", "Probiotics", "Probiotic strains and what research shows for each one, strain by strain. Most are supplements, not FDA-approved medicines. Education only."],
   /* "Conditions & Medicine Cautions" lives in the BugDex only (owner, Oct 28 2026) */
-  ["all", "Search Every Medicine", "Open the full BugDex: every medicine in DrugBug, A to Z."]
 ];
 var EV_NOTE = "Education only. DrugBug does not tell anyone to use any medicine, supplement or drug. Ask your doctor or pharmacist before using anything, and call 911 in an emergency.";
 function evGroup(name) { var g = DB.GROUPS.filter(function (x) { return x.name.indexOf(name) === 0; })[0]; return g ? g.ids.filter(function (id) { return DB.drugs[id]; }) : []; }
