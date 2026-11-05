@@ -5938,7 +5938,12 @@ function obCards() {
     im: "X-ray, CT, MRI, nuclear medicine and IR: contrast agents, radiopharmaceuticals and contrast safety."
   };
   ROLES.filter(function (r) { return r[0] !== "ev"; }).forEach(function (r) {
-    out.push({ code: r[0], name: r[1], line: r[2], bug: r[3], blurb: BLURB[r[0]] || r[2] });
+    /* show the path at its best: the bug you end up with and the certification you top out at,
+       rather than the starter grub every path begins with (owner, Nov 4 2026) */
+    var L = typeof obLevelsFor === "function" ? obLevelsFor(r[0]) : [];
+    var top = L.length ? L[L.length - 1] : null;
+    out.push({ code: r[0], name: r[1], line: r[2], bug: r[3], blurb: BLURB[r[0]] || r[2],
+      topKey: top ? top.code : "", topName: top ? top.name : "" });
   });
   return out;
 }
@@ -5984,12 +5989,17 @@ function obWheel(C, i, sel) {
     '<button class="lazyarr l" data-obstep="-1" aria-label="Previous">&#8249;</button>' +
     '<div class="lazystage"><div class="lazytrack">' + C.map(function (c, k) {
       var on = sel ? !!sel[c.code] : k === i;
+      /* a level card draws its own bug; a specialty card draws the bug of its highest level, fully
+         grown, so the picker shows what you are working towards rather than what you start as */
       var art = c.lvl && typeof levelBug === "function" ? levelBug(c.code)
-        : bugArt(bugById(c.bug), "rolebug", { mood: "happy" });
+        : c.topKey && typeof levelBug === "function" ? levelBug(c.topKey)
+        : bugArt(bugById(c.bug), "rolebug", { mood: "happy", stage: MAX_STAGE });
       return '<button class="lazycard' + (on ? ' on' : '') + (sel ? '' : ' plainpick') + '" data-obidx="' + k + '" aria-pressed="' + (on ? 'true' : 'false') + '">' +
         (sel ? '<span class="lazychk" aria-hidden="true"></span>' : '') +
         '<span class="lazybug">' + art + '</span>' +
-        '<strong>' + esc(c.name) + '</strong>' + (c.code === "ev" ? '<span class="obrec">Recommended</span>' : '') + '</button>';
+        '<strong>' + esc(c.name) + '</strong>' +
+        (c.topName ? '<span class="obtop">up to ' + esc(c.topName) + '</span>' : '') +
+        (c.code === "ev" ? '<span class="obrec">Recommended</span>' : '') + '</button>';
     }).join("") + '</div></div>' +
     '<button class="lazyarr r" data-obstep="1" aria-label="Next">&#8250;</button></div>' +
     '<div class="lazydots">' + C.map(function (c, k) {
