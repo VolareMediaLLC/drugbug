@@ -72,6 +72,8 @@ tr.fresh td{background:color-mix(in srgb,var(--teal) 12%,transparent)}
 .dcols .dc.today i{background:var(--accent)}
 .dcols .dc:hover i{opacity:.75}
 .dcolx{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);border-top:1px solid var(--line);padding-top:4px;margin-top:4px}
+.dcols .dc i.ios{background:var(--accent);border-radius:0}.dcols .dc i.web{border-radius:3px 3px 0 0}
+.key{display:inline-block;width:10px;height:10px;border-radius:2px;vertical-align:middle;margin-right:2px}
 .dpeak{font-size:12px;color:var(--muted);margin-top:4px}
 .grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
 @media (max-width:860px){.grid2{grid-template-columns:minmax(0,1fr)}}
@@ -118,6 +120,10 @@ tr.clk{cursor:pointer}tr.clk:hover td{background:var(--surface2)}
     </div>
     <div class="tiles" id="apTiles"></div>
   </div>
+  <div class="card"><h2>iPhone app vs website</h2><p class="muted small">Where people use DrugBug. Each device counts once per day.</p>
+    <div class="tiles" id="apPlatTiles"></div>
+    <div class="dcols" id="apPD"></div><div class="dcolx" id="apPDX"></div>
+    <p class="small" style="margin-top:6px"><span class="key" style="background:var(--bar)"></span> Website &nbsp; <span class="key" style="background:var(--accent)"></span> iPhone app</p></div>
   <div class="grid2">
     <div class="card"><h2>Daily active users</h2><p class="muted small">Devices that opened DrugBug each day (Texas time).</p><div class="dcols" id="apDau"></div><div class="dcolx" id="apDauX"></div></div>
     <div class="card"><h2>Questions answered per day</h2><p class="muted small">All users together. Hover a bar for accuracy and minutes studied.</p><div class="dcols" id="apQ"></div><div class="dcolx" id="apQX"></div></div>
@@ -372,7 +378,7 @@ tr.clk{cursor:pointer}tr.clk:hover td{background:var(--surface2)}
   function loadApp() {
     $("apSub").textContent = "Loading…";
     call("appMetrics").then(function (d) { AP = d; drawApp(d); }).catch(function (e) {
-      $("apSub").textContent = /not.?found|internal|unavailable/i.test(e.message) ? "App metrics start working once the new server functions are deployed." : e.message;
+      $("apSub").textContent = /not.?found|internal|unavailable|fetch|network/i.test(e.message) ? "App metrics will appear once the new server functions are deployed (DEPLOY.cmd on your PC)." : e.message;
     });
   }
   function bars(id, xid, rows, val, tip) {
@@ -406,6 +412,18 @@ tr.clk{cursor:pointer}tr.clk:hover td{background:var(--surface2)}
     bars("apDau", "apDauX", rows, function (r) { return r.dau; }, function (r) { return r.day + ": " + r.dau + " active, " + r.newUsers + " new"; });
     bars("apQ", "apQX", rows, function (r) { return r.q; }, function (r) { return r.day + ": " + r.q + " questions" + (r.accuracy != null ? ", " + r.accuracy + "% right" : "") + ", " + r.minutes + " min studied, " + r.learn + " L.E.A.R.N cards"; });
     bars("apNew", "apNewX", rows, function (r) { return r.newUsers; }, function (r) { return r.day + ": " + r.newUsers + " new users"; });
+    /* iPhone vs website: tiles for the chosen range, and stacked daily bars */
+    var ws = sum(function (r) { return (r.plat || {}).web || 0; }), is = sum(function (r) { return (r.plat || {}).ios || 0; }), both = ws + is;
+    var P30 = d.splits.plat || {};
+    $("apPlatTiles").innerHTML = [
+      [num(P30.ios || 0), "iPhone app users, active in the last 30 days"],
+      [num(P30.web || 0), "website users, active in the last 30 days"],
+      [both ? Math.round(100 * is / both) + "% / " + Math.round(100 * ws / both) + "%" : "—", "iPhone / website share of daily visits, last " + R + " days"]
+    ].map(function (x) { return '<div class="tile"><b>' + esc(x[0]) + '</b><span>' + esc(x[1]) + '</span></div>'; }).join("");
+    var pmax = Math.max.apply(null, rows.map(function (r) { return ((r.plat || {}).web || 0) + ((r.plat || {}).ios || 0); }).concat([1]));
+    $("apPD").innerHTML = rows.map(function (r) { var p = r.plat || {}, w = p.web || 0, i2 = p.ios || 0;
+      return '<div class="dc" title="' + esc(r.day + ": " + i2 + " on iPhone, " + w + " on the website") + '"><i class="ios" style="height:' + (100 * i2 / pmax) + '%"></i><i class="web" style="height:' + (100 * w / pmax) + '%;order:-1"></i></div>'; }).join("");
+    $("apPDX").innerHTML = $("apDauX").innerHTML;
     var pc = function (v) { return v == null ? '<span class="muted">too soon</span>' : v + "%"; };
     $("apRet").innerHTML = '<tr><th>Started</th><th>New users</th><th>Day 1</th><th>Within 7 days</th><th>Within 30 days</th></tr>' + (d.retention.length ? d.retention.map(function (r) {
       return '<tr><td>' + (r.weeksAgo === 0 ? "This week" : r.weeksAgo === 1 ? "Last week" : r.weeksAgo + " weeks ago") + '</td><td class="num">' + r.size + '</td><td class="num">' + pc(r.d1) + '</td><td class="num">' + pc(r.d7) + '</td><td class="num">' + pc(r.d30) + '</td></tr>';
