@@ -9194,7 +9194,9 @@ var D3 = (function () {
        and a pale blue hospital gown */
     black:  { c: lin([0.80, 0.80, 0.80]), sp: 0.5, sh: 60, rim: 0.25 },
     shoe:   { c: lin([0.94, 0.94, 0.92]), sp: 0.3, sh: 40, rim: 0.2 },
-    gown:   { c: lin([0.66, 0.80, 0.90]), sp: 0.12, sh: 20, rim: 0.18 }
+    gown:   { c: lin([0.70, 0.81, 0.95]), sp: 0.08, sh: 16, rim: 0.16, pat: 1 },
+    trim:   { c: lin([0.95, 0.96, 0.97]), sp: 0.1, sh: 20, rim: 0.15 },
+    skin:   null   /* the gap at the open back shows the dummy himself (his yellow, re-tinted) */
   };
 
   /* ---------------- the skeleton ---------------- */
@@ -9228,20 +9230,30 @@ var D3 = (function () {
       ball: sphere(0.068),
       ringL: torus(0.05, 0.018, 20, 8), ringM: torus(0.045, 0.017, 20, 8), ringS: torus(0.037, 0.014, 20, 8), ringXL: torus(0.07, 0.022, 22, 8),
       upper: capsule(0.054, 0.3, 8), fore: capsule(0.046, 0.27, 8), hand: capsule(0.04, 0.13, 6),
-      skirt: lathe([[0.214, -0.29], [0.2, -0.2], [0.184, -0.1], [0.172, -0.02], [0.168, 0.04]], 28),
-      sleeve: lathe([[0.084, -0.13], [0.08, -0.07], [0.076, -0.01], [0.06, 0.04], [0.03, 0.07]], 18),
+      skirt: lathe([[0.262, -0.5], [0.24, -0.38], [0.215, -0.24], [0.192, -0.1], [0.178, 0.0], [0.172, 0.08], [0.168, 0.14]], 32),
+      hem: torus(0.262, 0.009, 32, 6),
+      sleeve: lathe([[0.098, -0.24], [0.092, -0.16], [0.086, -0.08], [0.08, -0.01], [0.064, 0.04], [0.034, 0.075]], 20),
+      cuff: torus(0.098, 0.008, 20, 6), collar: torus(0.072, 0.012, 24, 6),
+      slit: capsule(0.022, 0.3, 6), tie: torus(0.016, 0.005, 10, 5),
       thigh: capsule(0.076, 0.44, 8), shin: capsule(0.06, 0.4, 8), shoe: capsule(0.058, 0.25, 8), hipball: sphere(0.08)
     };
     /* balance tilts him from his feet; spin turns him about his own vertical axis */
     var bal = node("bal", null, [0, 0, 0]), spin = node("spin", bal, [0, 0, 0]);
     var hips = node("hips", spin, [0, HIPY, 0]);
     mesh(hips, G.pelvis, MAT.gown, "pelvis", [0, 0, 0], null, [1.04, 1, 0.76], true);
-    mesh(hips, G.skirt, MAT.gown, "pelvis", [0, 0, 0], null, [1, 1, 0.8], true);
-    mesh(hips, G.waist, MAT.gown, "abdomen", [0, 0.085, 0], null, [1.06, 1, 0.8]);
+    /* the skirt hangs from a pivot at the hip joints and swings with the thighs (see update) */
+    var skirtN = node("skirt", hips, [0, -0.07, 0]);
+    mesh(skirtN, G.skirt, MAT.gown, "pelvis", [0, 0.07, 0], null, [1, 1, 0.9], true);
+    mesh(skirtN, G.hem, MAT.trim, "pelvis", [0, -0.43, 0], null, [1, 1, 0.9], true);
     var spine = node("spine", hips, [0, 0.09, 0]);
-    mesh(spine, G.abdomen, MAT.gown, "abdomen", [0, 0, 0], null, [1.05, 1, 0.75], true);
+    mesh(spine, G.abdomen, MAT.gown, "abdomen", [0, 0, 0], null, [1.22, 1, 0.92], true);
     var chest = node("chest", spine, [0, 0.17, 0]);
-    mesh(chest, G.chest, MAT.gown, "chest", [0, 0, 0], null, [1.04, 1, 0.68], true);
+    mesh(chest, G.chest, MAT.gown, "chest", [0, 0, 0], null, [1.08, 1, 0.74], true);
+    /* the open back: a strip of him showing between the edges, white binding and two ties */
+    mesh(chest, G.slit, MAT.yellow, "chest", [0, 0.16, -0.128], [0.12, 0, 0], [0.75, 1, 0.35], true);
+    mesh(chest, G.tie, MAT.trim, "chest", [0, 0.3, -0.104], [PI / 2, 0, 0], null, true);
+    mesh(spine, G.tie, MAT.trim, "abdomen", [0, 0.06, -0.122], [PI / 2, 0, 0], null, true);
+    mesh(chest, G.collar, MAT.trim, "chest", [0, 0.33, 0], null, [1, 1, 0.9]);
     /* a little pectoral definition, like the moulded chest plate on the real thing */
     var neck = node("neck", chest, [0, 0.335, 0]);
     mesh(neck, G.neck, MAT.black, "neck", [0, 0.035, 0]);
@@ -9251,6 +9263,7 @@ var D3 = (function () {
       var sh = node("sh" + side, chest, [0.205 * sx, 0.265, 0]);
       mesh(sh, G.ball, MAT.yellow, "arm" + side, [0, 0, 0]);
       mesh(sh, G.sleeve, MAT.gown, "arm" + side, [0, -0.02, 0]);
+      mesh(sh, G.cuff, MAT.trim, "arm" + side, [0, -0.26, 0]);
       mesh(sh, G.upper, MAT.yellow, "arm" + side, [0, -0.165, 0]);
       var el = node("el" + side, sh, [0, -0.315, 0]);
       mesh(el, G.ringM, MAT.black, "arm" + side, [0, 0, 0]);
@@ -9276,7 +9289,8 @@ var D3 = (function () {
     this.nodes = nodes; this.meshes = meshes; this.list = list; this.G = G;
   }
   Rig.prototype.update = function () {
-    var L = this.list, i, n;
+    var L = this.list, i, n, N = this.nodes;
+    if (N.skirt && N.hipL && N.hipR) { N.skirt.r[0] = (N.hipL.r[0] + N.hipR.r[0]) * 0.42; N.skirt.r[2] = (N.hipL.r[2] + N.hipR.r[2]) * 0.3; }
     for (i = 0; i < L.length; i++) {
       n = L[i];
       trs(n.p, n.r, n.s, n.local);
@@ -9530,8 +9544,8 @@ var D3GL = (function () {
   }
 
   /* ---------------- WebGL ---------------- */
-  var VS = "attribute vec3 aP;attribute vec3 aN;uniform mat4 uM;uniform mat4 uVP;uniform mat3 uNM;varying vec3 vW;varying vec3 vN;" +
-    "void main(){vec4 w=uM*vec4(aP,1.0);vW=w.xyz;vN=uNM*aN;gl_Position=uVP*w;}";
+  var VS = "attribute vec3 aP;attribute vec3 aN;uniform mat4 uM;uniform mat4 uVP;uniform mat3 uNM;varying vec3 vW;varying vec3 vN;varying vec3 vO;" +
+    "void main(){vec4 w=uM*vec4(aP,1.0);vW=w.xyz;vO=aP;vN=uNM*aN;gl_Position=uVP*w;}";
   /* No gl_FrontFacing flip: the meshes wind clockwise, so that test called every visible face a
      back face and turned the normals inward, which washed him out to grey. The normals the
      shape builders compute already point outward, and only outward faces are ever visible.
@@ -9539,7 +9553,15 @@ var D3GL = (function () {
      that rims the edges, low ambient so the shadowed side stays dark, two specular lobes (a
      tight clearcoat on a broader sheen), and a filmic curve that keeps the yellow saturated
      instead of washing it out. */
-  var FS = "precision mediump float;varying vec3 vW;varying vec3 vN;uniform vec3 uCam;uniform vec3 uCol;uniform vec3 uEmi;uniform vec3 uSp;" +
+  var FS = "precision mediump float;varying vec3 vW;varying vec3 vN;varying vec3 vO;uniform vec3 uCam;uniform vec3 uCol;uniform vec3 uEmi;uniform vec3 uSp;uniform float uPat;" +
+    /* hospital-gown print (owner, Nov 5 2026): scattered small triangles, some filled and some
+       outlined, in two blues, laid out around each piece of the gown in its own coordinates */
+    "float hsh(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}" +
+    "float tri(vec2 q,float s){q.y+=s*0.35;return step(0.0,q.y)*step(abs(q.x)*1.7,s-q.y);}" +
+    "vec3 gown(vec3 base){vec2 uv=vec2(atan(vO.z,vO.x)*0.17,vO.y)/0.052;vec2 id=floor(uv),f=fract(uv)-0.5;" +
+    "float h=hsh(id),h2=hsh(id+7.3);if(h>0.5)return base;f+=vec2(h2-0.5,hsh(id+3.1)-0.5)*0.3;if(h2>0.5)f.y=-f.y;" +
+    "float m=tri(f,0.34);if(h>0.2)m-=tri(f*1.0+vec2(0.0,-0.02),0.2);" +
+    "vec3 ink=h2>0.6?vec3(0.07,0.12,0.42):vec3(0.12,0.24,0.66);return mix(base,ink,clamp(m,0.0,1.0)*0.85);}" +
     "vec3 aces(vec3 x){return clamp((x*(2.51*x+0.03))/(x*(2.43*x+0.59)+0.14),0.0,1.0);}" +
     "void main(){vec3 N=normalize(vN);vec3 V=normalize(uCam-vW);" +
     "vec3 L1=normalize(vec3(-0.6,0.75,0.75));vec3 L2=normalize(vec3(0.9,0.2,0.35));vec3 L3=normalize(vec3(0.35,0.5,-0.85));" +
@@ -9550,7 +9572,7 @@ var D3GL = (function () {
     "float sh=pow(max(dot(N,normalize(L1+V)),0.0),uSp.y*0.18);" +
     "vec3 spec=vec3(1.0,0.97,0.92)*(s1*uSp.x*1.6+sh*uSp.x*0.12)+vec3(0.75,0.8,1.0)*s3*uSp.x*0.9;" +
     "float f=pow(1.0-max(dot(N,V),0.0),4.0)*uSp.z;" +
-    "vec3 c=uCol*(amb+dif)+spec+vec3(0.55,0.6,0.75)*f*(0.25+d3)+uEmi;" +
+    "vec3 col=uPat>0.5?gown(uCol):uCol;vec3 c=col*(amb+dif)+spec+vec3(0.55,0.6,0.75)*f*(0.25+d3)+uEmi;" +
     "gl_FragColor=vec4(pow(aces(c*1.05),vec3(0.4545)),1.0);}";
   var SVS = "attribute vec3 aP;uniform mat4 uM;uniform mat4 uVP;uniform mat4 uS;void main(){gl_Position=uVP*uS*uM*vec4(aP,1.0);}";
   var SFS = "precision mediump float;uniform float uA;void main(){gl_FragColor=vec4(0.0,0.0,0.0,uA);}";
@@ -9611,7 +9633,7 @@ var D3GL = (function () {
     gl.useProgram(pr.p); gl.uniformMatrix4fv(pr.u.uVP, false, VP); gl.uniform3fv(pr.u.uCam, CAM.eye);
     for (i = 0; i < M.length; i++) { m = M[i]; var mm = m.mesh, mat = mm.mat; b = upload(gl, mm.geo);
       gl.uniformMatrix4fv(pr.u.uM, false, m.world); gl.uniformMatrix3fv(pr.u.uNM, false, C.nrm3(m.world));
-      gl.uniform3fv(pr.u.uCol, mat.c); gl.uniform3f(pr.u.uSp, mat.sp, mat.sh, mat.rim);
+      gl.uniform3fv(pr.u.uCol, mat.c); gl.uniform3f(pr.u.uSp, mat.sp, mat.sh, mat.rim); if (pr.u.uPat) gl.uniform1f(pr.u.uPat, mat.pat ? 1 : 0);
       var e = sel.indexOf(mm.part) >= 0 ? 0.045 : 0, fl = S.flash[mm.part];
       if (fl) { var k = 1 - (now - fl) / 650; if (k > 0) e += 0.22 * k; else delete S.flash[mm.part]; }
       gl.uniform3f(pr.u.uEmi, e * 0.5, e * 0.9, e * 0.85);
