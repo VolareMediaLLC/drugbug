@@ -3468,6 +3468,8 @@ function bEyes(y, cool) {
 }
 function bSmile(y, c) { return '<path d="M90 ' + y + ' Q100 ' + (y + 8) + ' 110 ' + y + '" stroke="' + c + '" stroke-width="3.5" fill="none" stroke-linecap="round"/>'; }
 var ACC = {
+  bandana: function (y) { return '<path d="M72 ' + (y - 12) + ' Q74 ' + (y - 36) + ' 100 ' + (y - 37) + ' Q126 ' + (y - 36) + ' 128 ' + (y - 12) + ' Q100 ' + (y - 20) + ' 72 ' + (y - 12) + 'Z" fill="#dc2626" stroke="#7f1d1d" stroke-width="1.5"/>' +
+    '<circle cx="88" cy="' + (y - 26) + '" r="2" fill="#fff"/><circle cx="104" cy="' + (y - 29) + '" r="2" fill="#fff"/><circle cx="116" cy="' + (y - 22) + '" r="2" fill="#fff"/><path d="M128 ' + (y - 14) + ' l12 -6 l-3 10Z M128 ' + (y - 14) + ' l13 4 l-8 6Z" fill="#dc2626" stroke="#7f1d1d" stroke-width="1"/>'; },
   crown: function (y) { return '<path d="M78 ' + (y - 26) + ' L84 ' + (y - 44) + ' L94 ' + (y - 32) + ' L100 ' + (y - 48) + ' L106 ' + (y - 32) + ' L116 ' + (y - 44) + ' L122 ' + (y - 26) + ' Z" fill="#ffc531" stroke="#b7860b" stroke-width="2"/><circle cx="100" cy="' + (y - 34) + '" r="3.5" fill="#e23b4a"/>'; },
   halo: function (y) { return '<ellipse cx="100" cy="' + (y - 40) + '" rx="22" ry="6" fill="none" stroke="#ffe066" stroke-width="5"/>'; },
   cap: function (y) { return '<path d="M74 ' + (y - 18) + ' L80 ' + (y - 36) + ' Q100 ' + (y - 46) + ' 120 ' + (y - 36) + ' L126 ' + (y - 18) + ' Q100 ' + (y - 26) + ' 74 ' + (y - 18) + 'Z" fill="#fff" stroke="#c9c2bc" stroke-width="2"/><rect x="96" y="' + (y - 40) + '" width="8" height="15" rx="1.5" fill="#e23b4a"/><rect x="92" y="' + (y - 36) + '" width="16" height="7" rx="1.5" fill="#e23b4a"/>'; },
@@ -3505,6 +3507,10 @@ var BODYFIT = {
      adult position and floated in empty space beside a chrysalis (owner, Nov 4 2026) */
   chrysalis: { r: 26, t: [100, 150, 28, 40], R: [137, 124], L: [63, 124] }, cocoon: { r: 26, t: [100, 150, 34, 40], R: [140, 126], L: [60, 126] },
   centipede: { r: 28, t: [114, 150, 40, 34], R: [162, 108], L: [52, 124] },
+  shield: { r: 25, t: [100, 140, 40, 40] }, bedbug: { r: 24, t: [100, 146, 44, 34] }, dung: { r: 27, t: [94, 142, 36, 40], R: [150, 120] },
+  millipede: { r: 26, t: [104, 150, 40, 34], R: [164, 112], L: [44, 124] }, harvestman: { r: 24, t: [100, 124, 28, 22], R: [150, 100], L: [50, 100] },
+  asp: { r: 26, t: [100, 152, 46, 32] }, flea: { r: 23, t: [100, 144, 28, 40] }, tick: { r: 23, t: [100, 146, 42, 40] },
+  mosquito: { r: 22, t: [100, 140, 16, 40] }, louse: { r: 23, t: [100, 150, 34, 40] }, roach: { r: 24, t: [100, 148, 36, 44] },
   wasp: { r: 28, t: [100, 154, 30, 36] }, cricket: { r: 28, t: [100, 150, 28, 40] }
 };
 function fitG(body, slot, hy, svg) {
@@ -3680,21 +3686,87 @@ function bugArt(b, cls, opt) {
     s += '<path d="M80 108 Q80 96 100 96 Q120 96 120 108 L116 190 Q100 202 84 190Z" fill="' + F + '" stroke="' + lgd + '" stroke-width="2.5"/>';
     s += '<path d="M83 128 Q100 133 117 128 M84 150 Q100 155 116 150 M86 172 Q100 177 114 172" stroke="' + lgd + '" stroke-width="2.5" fill="none" opacity=".55"/>';
     s += '<circle cx="100" cy="' + hy + '" r="28" fill="' + (b.head || c1) + '" stroke="' + lgd + '" stroke-width="2.5"/>';
+  } else if (t === "shield") {
+    /* stink bugs and kissing bugs: a flat shield, a triangle on the back, edge bands on kissing bugs */
+    s += bLegs(ink) + antennae(ink) + '<path d="M56 106 L144 106 L136 150 L100 190 L64 150Z" fill="' + F + '" stroke="' + ink + '" stroke-width="2" stroke-linejoin="round"/>' +
+      '<path d="M78 108 L122 108 L100 150Z" fill="' + c2 + '" opacity=".85"/><path d="M100 150 V188" stroke="' + ink + '" stroke-width="2" opacity=".6"/>';
+    if (b.pat === "edges") for (var ek = 0; ek < 4; ek++) s += '<rect x="' + (60 + ek * 3) + '" y="' + (112 + ek * 18) + '" width="8" height="9" rx="2" fill="' + c3 + '"/><rect x="' + (132 - ek * 3) + '" y="' + (112 + ek * 18) + '" width="8" height="9" rx="2" fill="' + c3 + '"/>';
+    s += '<circle cx="100" cy="' + hy + '" r="25" fill="' + (b.head || c1) + '"/>';
+  } else if (t === "bedbug") {
+    s += legs(ink, 4) + antennae(ink) + '<ellipse cx="100" cy="146" rx="48" ry="38" fill="' + F + '" stroke="' + ink + '" stroke-width="2"/>' +
+      '<path d="M58 134 Q100 124 142 134 M54 150 Q100 140 146 150 M58 166 Q100 158 142 166" stroke="' + c2 + '" stroke-width="3" fill="none" opacity=".8"/>' +
+      '<ellipse cx="100" cy="108" rx="30" ry="12" fill="' + c2 + '"/><circle cx="100" cy="' + hy + '" r="24" fill="' + (b.head || c1) + '"/>';
+  } else if (t === "dung") {
+    /* a dung beetle with its ball (it steers by the Milky Way) */
+    s += '<circle cx="150" cy="158" r="32" fill="#7c5a3a" stroke="#4a3220" stroke-width="2"/><path d="M134 146 l6 4 M152 136 l4 6 M160 164 l6 -2 M140 170 l4 5 M166 150 l5 3" stroke="#5b3f26" stroke-width="3" stroke-linecap="round"/>' +
+      bLegs(ink) + antennae(ink) + '<ellipse cx="94" cy="142" rx="40" ry="42" fill="' + F + '" stroke="' + ink + '" stroke-width="2"/><path d="M94 104 V184" stroke="' + ink + '" stroke-width="3"/>' +
+      '<path d="M76 98 l-6 -8 M88 96 l-2 -9 M100 96 l2 -9 M112 98 l6 -8" stroke="' + ink + '" stroke-width="3" stroke-linecap="round"/><circle cx="100" cy="' + hy + '" r="27" fill="' + (b.head || c1) + '"/>';
+  } else if (t === "millipede") {
+    /* a millipede: many round segments, two pairs of short legs on each, curled */
+    var mp = [], mn = st === 1 ? 7 : st === 2 ? 10 : 14;
+    /* a loose spiral under the head, biggest segment first */
+    for (var mi = 0; mi < mn; mi++) { var ang = Math.PI * 1.5 - mi * 0.44, rad = 50 - mi * 2.4; mp.push([100 + Math.cos(ang) * rad, 150 + Math.sin(ang) * rad * 0.9, 16 - mi * 0.45]); }
+    var mlegs = "", msegs = "";
+    mp.forEach(function (p, i) {
+      var q = mp[Math.min(mp.length - 1, i + 1)], o = mp[Math.max(0, i - 1)], dx = q[0] - o[0], dy = q[1] - o[1], L = Math.sqrt(dx * dx + dy * dy) || 1, nx = -dy / L, ny = dx / L;
+      [-1, 1].forEach(function (sd) { [-0.3, 0.3].forEach(function (off) {
+        var bx = p[0] + dx / L * off * p[2], by = p[1] + dy / L * off * p[2];
+        mlegs += '<path d="M' + (bx + nx * sd * p[2] * .7).toFixed(1) + ' ' + (by + ny * sd * p[2] * .7).toFixed(1) + ' l' + (nx * sd * 8).toFixed(1) + ' ' + (ny * sd * 8 + 3).toFixed(1) + '" stroke="' + ink + '" stroke-width="2" stroke-linecap="round"/>';
+      }); });
+    });
+    for (mi = mp.length - 1; mi >= 0; mi--) msegs += '<circle cx="' + mp[mi][0].toFixed(1) + '" cy="' + mp[mi][1].toFixed(1) + '" r="' + mp[mi][2].toFixed(1) + '" fill="' + (mi % 2 ? c2 : F) + '" stroke="' + ink + '" stroke-width="1.4"/>';
+    s += mlegs + msegs + antennae(ink, true) + '<circle cx="100" cy="' + hy + '" r="26" fill="' + (b.head || c1) + '" stroke="' + ink + '" stroke-width="1.4"/>';
+  } else if (t === "harvestman") {
+    /* daddy long legs: one small round body and eight very long bent legs */
+    var hl = "", HL = [[-1, 0, 30, 18], [-1, 1, 40, 70], [-1, 2, 34, 120], [-1, 3, 22, 186], [1, 0, 170, 18], [1, 1, 160, 70], [1, 2, 166, 120], [1, 3, 178, 186]];
+    HL.forEach(function (l) { var kx = 100 + l[0] * (40 + l[1] * 6), ky = 92 + l[1] * 14 - 34; hl += '<path d="M' + (100 + l[0] * 12) + ' ' + (116 + l[1] * 4) + ' Q' + kx + ' ' + ky + ' ' + l[2] + ' ' + l[3] + '" stroke="' + ink + '" stroke-width="2.6" fill="none" stroke-linecap="round"/>'; });
+    s += hl + '<ellipse cx="100" cy="124" rx="30" ry="24" fill="' + F + '" stroke="' + ink + '" stroke-width="2"/><circle cx="100" cy="' + hy + '" r="24" fill="' + (b.head || c1) + '"/>';
+  } else if (t === "asp") {
+    /* the asp (puss caterpillar): a teardrop of soft fur hiding venomous spines */
+    var fur = "";
+    for (var fi = 0; fi < 46; fi++) { var fa = Math.PI * (1.05 + fi / 46 * 0.9) + (fi % 3) * 0.02, fx = 100 + Math.cos(fa) * 50, fy = 152 + Math.sin(fa) * 36; fur += '<path d="M' + fx.toFixed(1) + ' ' + fy.toFixed(1) + ' q' + (Math.cos(fa) * 8 + 4).toFixed(1) + ' ' + (Math.sin(fa) * 10 - 6).toFixed(1) + ' ' + (Math.cos(fa) * 14 + 8).toFixed(1) + ' ' + (Math.sin(fa) * 4 - 2).toFixed(1) + '" stroke="' + c2 + '" stroke-width="3" fill="none" stroke-linecap="round"/>'; }
+    s += '<path d="M48 156 Q52 112 100 108 Q156 110 158 150 Q166 176 186 184 Q150 196 100 192 Q50 190 48 156Z" fill="' + F + '"/>' + fur +
+      '<path d="M70 140 Q100 128 142 144" stroke="' + c3 + '" stroke-width="5" fill="none" stroke-linecap="round" opacity=".7"/><circle cx="100" cy="' + hy + '" r="26" fill="' + (b.head || c1) + '"/>';
+  } else if (t === "flea") {
+    /* a flea: tall, narrow, hard, with huge jumping hind legs */
+    s += '<path d="M76 150 Q40 156 34 184 L52 186 M124 150 Q160 156 166 184 L148 186" stroke="' + ink + '" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<path d="M78 118 Q58 120 54 134 M122 118 Q142 120 146 134 M80 134 Q62 144 60 160 M120 134 Q138 144 140 160" stroke="' + ink + '" stroke-width="4" fill="none" stroke-linecap="round"/>' +
+      '<ellipse cx="100" cy="144" rx="30" ry="44" fill="' + F + '" stroke="' + ink + '" stroke-width="2"/><path d="M74 124 Q100 116 126 124 M72 144 Q100 136 128 144 M76 164 Q100 158 124 164" stroke="' + c2 + '" stroke-width="3" fill="none"/>' +
+      '<path d="M86 106 l-4 -6 M100 104 v-7 M114 106 l4 -6" stroke="' + ink + '" stroke-width="2.4" stroke-linecap="round"/><circle cx="100" cy="' + hy + '" r="23" fill="' + (b.head || c1) + '"/>';
+  } else if (t === "tick") {
+    /* a tick: eight legs up front, a round body that swells when it feeds, a shield on the back */
+    var tl = ""; [[-1, 112, 40, 92], [-1, 122, 30, 112], [-1, 134, 30, 136], [-1, 146, 38, 160], [1, 112, 160, 92], [1, 122, 170, 112], [1, 134, 170, 136], [1, 146, 162, 160]].forEach(function (l) { tl += '<path d="M' + (100 + l[0] * 30) + ' ' + l[1] + ' Q' + (100 + l[0] * 52) + ' ' + (l[1] - 14) + ' ' + l[2] + ' ' + l[3] + '" stroke="' + ink + '" stroke-width="4" fill="none" stroke-linecap="round"/>'; });
+    s += tl + '<ellipse cx="100" cy="146" rx="46" ry="44" fill="' + F + '" stroke="' + ink + '" stroke-width="2"/><path d="M68 114 Q100 100 132 114 Q128 142 100 150 Q72 142 68 114Z" fill="' + c2 + '"/>' +
+      '<path d="M70 168 h8 M92 176 h8 M114 172 h8" stroke="' + ink + '" stroke-width="2" opacity=".5"/><circle cx="100" cy="' + hy + '" r="23" fill="' + (b.head || c1) + '"/>';
+  } else if (t === "mosquito") {
+    s += W('<ellipse cx="62" cy="120" rx="40" ry="11" fill="' + c3 + '" opacity=".55" stroke="' + ink + '" stroke-width="1" transform="rotate(-18 62 120)"/><ellipse cx="138" cy="120" rx="40" ry="11" fill="' + c3 + '" opacity=".55" stroke="' + ink + '" stroke-width="1" transform="rotate(18 138 120)"/>') +
+      '<path d="M90 118 Q60 130 30 186 M110 118 Q140 130 170 186 M92 124 Q72 150 58 192 M108 124 Q128 150 142 192 M94 112 Q62 104 28 120 M106 112 Q138 104 172 120" stroke="' + ink + '" stroke-width="2.2" fill="none" stroke-linecap="round"/>' +
+      '<ellipse cx="100" cy="114" rx="16" ry="14" fill="' + c2 + '"/><path d="M100 126 Q108 160 104 188 Q100 194 96 188 Q92 160 100 126Z" fill="' + F + '" stroke="' + ink + '" stroke-width="1.5"/>' +
+      '<path d="M94 146 h12 M95 160 h10 M96 174 h8" stroke="' + c3 + '" stroke-width="2"/>' + antennae(ink) + '<circle cx="100" cy="' + hy + '" r="22" fill="' + (b.head || c1) + '"/><path d="M100 ' + (hy + 20) + ' V' + (hy + 52) + '" stroke="' + ink + '" stroke-width="2.5" stroke-linecap="round"/>';
+  } else if (t === "louse") {
+    s += '<path d="M72 120 Q54 120 50 132 l-6 2 M70 140 Q50 144 48 156 l-6 2 M72 160 Q54 168 54 180 l-6 1 M128 120 Q146 120 150 132 l6 2 M130 140 Q150 144 152 156 l6 2 M128 160 Q146 168 146 180 l6 1" stroke="' + ink + '" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<path d="M66 128 Q66 104 100 104 Q134 104 134 128 L138 168 Q132 192 100 192 Q68 192 62 168Z" fill="' + F + '" opacity=".92" stroke="' + ink + '" stroke-width="2"/>' +
+      '<path d="M66 144 Q100 136 134 144 M64 160 Q100 152 136 160 M68 176 Q100 170 132 176" stroke="' + c2 + '" stroke-width="2.4" fill="none"/>' + antennae(ink) + '<circle cx="100" cy="' + hy + '" r="23" fill="' + (b.head || c1) + '"/>';
+  } else if (t === "roach") {
+    s += '<path d="M84 52 Q60 20 30 14 M116 52 Q140 20 170 14" stroke="' + ink + '" stroke-width="2" fill="none"/>' + legs(ink, 4) +
+      '<path d="M76 130 l-10 8 M124 130 l10 8 M74 150 l-12 6 M126 150 l12 6" stroke="' + ink + '" stroke-width="2"/>' +
+      '<ellipse cx="100" cy="148" rx="38" ry="48" fill="' + F + '" stroke="' + ink + '" stroke-width="2"/><path d="M100 110 V194" stroke="' + ink + '" stroke-width="2.4"/>' +
+      '<ellipse cx="100" cy="106" rx="34" ry="16" fill="' + c2 + '" stroke="' + ink + '" stroke-width="2"/><circle cx="100" cy="' + hy + '" r="24" fill="' + (b.head || c1) + '"/>';
   } else if (t === "centipede") {
     /* centipede (owner, Nov 5 2026): a coiled chain of segments, one pair of legs on each, long
        trailing back legs and the forcipules (venom claws) under the head. Like real stone
        centipedes it hatches with fewer segments and adds more as it grows. */
     var cp = [[100, 112, 16], [84, 128, 15], [74, 146, 14.5], [78, 165, 14], [96, 177, 13.5], [117, 178, 13], [136, 170, 12.5], [149, 155, 12], [154, 138, 11], [152, 121, 10]];
     cp = cp.slice(0, st === 1 ? 5 : st === 2 ? 7 : 10);
-    var legs = "", segS = "", n = cp.length;
+    var cleg = "", segS = "", n = cp.length;
     cp.forEach(function (p, i) {
       var a = cp[Math.max(0, i - 1)], c = cp[Math.min(n - 1, i + 1)], dx = c[0] - a[0], dy = c[1] - a[1], L = Math.sqrt(dx * dx + dy * dy) || 1, nx = -dy / L, ny = dx / L, tx = dx / L, ty = dy / L;
       [-1, 1].forEach(function (sd) {
         var x0 = p[0] + nx * sd * (p[2] - 4), y0 = p[1] + ny * sd * (p[2] - 4), x1 = p[0] + nx * sd * (p[2] + 9) - tx * 3, y1 = p[1] + ny * sd * (p[2] + 9) - ty * 3, x2 = x1 - tx * 5, y2 = y1 - ty * 5;
-        legs += '<path d="M' + x0.toFixed(1) + ' ' + y0.toFixed(1) + ' L' + x1.toFixed(1) + ' ' + y1.toFixed(1) + ' L' + x2.toFixed(1) + ' ' + y2.toFixed(1) + '" stroke="' + ink + '" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
+        cleg += '<path d="M' + x0.toFixed(1) + ' ' + y0.toFixed(1) + ' L' + x1.toFixed(1) + ' ' + y1.toFixed(1) + ' L' + x2.toFixed(1) + ' ' + y2.toFixed(1) + '" stroke="' + ink + '" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
       });
       if (i === n - 1) {   /* the long terminal legs trail behind like a second pair of antennae */
-        legs += '<path d="M' + (p[0] + tx * 4).toFixed(1) + ' ' + (p[1] + ty * 4).toFixed(1) + ' q' + (tx * 14 + nx * 10).toFixed(1) + ' ' + (ty * 14 + ny * 10).toFixed(1) + ' ' + (tx * 22 + nx * 4).toFixed(1) + ' ' + (ty * 22 + ny * 4).toFixed(1) + ' M' + (p[0] + tx * 4).toFixed(1) + ' ' + (p[1] + ty * 4).toFixed(1) + ' q' + (tx * 14 - nx * 10).toFixed(1) + ' ' + (ty * 14 - ny * 10).toFixed(1) + ' ' + (tx * 22 - nx * 4).toFixed(1) + ' ' + (ty * 22 - ny * 4).toFixed(1) + '" stroke="' + ink + '" stroke-width="2.6" fill="none" stroke-linecap="round"/>';
+        cleg += '<path d="M' + (p[0] + tx * 4).toFixed(1) + ' ' + (p[1] + ty * 4).toFixed(1) + ' q' + (tx * 14 + nx * 10).toFixed(1) + ' ' + (ty * 14 + ny * 10).toFixed(1) + ' ' + (tx * 22 + nx * 4).toFixed(1) + ' ' + (ty * 22 + ny * 4).toFixed(1) + ' M' + (p[0] + tx * 4).toFixed(1) + ' ' + (p[1] + ty * 4).toFixed(1) + ' q' + (tx * 14 - nx * 10).toFixed(1) + ' ' + (ty * 14 - ny * 10).toFixed(1) + ' ' + (tx * 22 - nx * 4).toFixed(1) + ' ' + (ty * 22 - ny * 4).toFixed(1) + '" stroke="' + ink + '" stroke-width="2.6" fill="none" stroke-linecap="round"/>';
       }
     });
     for (var ci = n - 1; ci >= 0; ci--) {
@@ -3702,7 +3774,7 @@ function bugArt(b, cls, opt) {
       segS += '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="' + q[2] + '" fill="' + (ci % 2 ? c2 : F) + '" stroke="' + (st === 5 ? GOLD : ink) + '" stroke-width="' + (st === 5 ? 2.4 : 1.6) + '"/>' +
         '<ellipse cx="' + (q[0] - q[2] * .25).toFixed(1) + '" cy="' + (q[1] - q[2] * .35).toFixed(1) + '" rx="' + (q[2] * .42).toFixed(1) + '" ry="' + (q[2] * .22).toFixed(1) + '" fill="#fff" opacity=".22"/>';
     }
-    s += legs + segS + '<path d="M84 ' + (hy + 22) + ' Q78 ' + (hy + 36) + ' 92 ' + (hy + 40) + ' M116 ' + (hy + 22) + ' Q122 ' + (hy + 36) + ' 108 ' + (hy + 40) + '" stroke="' + (b.fang || ink) + '" stroke-width="4.5" fill="none" stroke-linecap="round"/>' +
+    s += cleg + segS + '<path d="M84 ' + (hy + 22) + ' Q78 ' + (hy + 36) + ' 92 ' + (hy + 40) + ' M116 ' + (hy + 22) + ' Q122 ' + (hy + 36) + ' 108 ' + (hy + 40) + '" stroke="' + (b.fang || ink) + '" stroke-width="4.5" fill="none" stroke-linecap="round"/>' +
       antennae(ink, true) + '<circle cx="100" cy="' + hy + '" r="28" fill="' + (b.head || c1) + '" stroke="' + ink + '" stroke-width="1.6"/>';
   } else if (t === "scorpion") {
     s += '<path d="M76 120 Q40 110 34 84 M124 120 Q160 110 166 84" stroke="' + c2 + '" stroke-width="8" fill="none" stroke-linecap="round"/><path d="M34 84 l-12 -8 M34 84 l-4 -14 M166 84 l12 -8 M166 84 l4 -14" stroke="' + c2 + '" stroke-width="7" stroke-linecap="round"/>' + bLegs(ink) +
@@ -3725,6 +3797,15 @@ function bugArt(b, cls, opt) {
     if (b.pat === "stripes") s += '<path d="M58 130 Q100 118 142 130 M56 154 Q100 142 144 154" stroke="' + c3 + '" stroke-width="6" fill="none"/>';
     if (t === "scarab") s += '<circle cx="100" cy="140" r="14" fill="' + c3 + '" stroke="' + ink + '" stroke-width="2"/><path d="M100 120 v-6 M100 160 v6 M80 140 h-6 M120 140 h6" stroke="' + c3 + '" stroke-width="3"/>';
     s += '<circle cx="100" cy="' + hy + '" r="30" fill="' + (b.head || c1) + '"/>';
+  }
+  /* the bad bugs ride as a biker gang (owner, Nov 5 2026): a studded leather vest over the torso,
+     open down the middle, with a little skull patch; the shades and bandana come from b.eyes/acc */
+  if (b.biker) {
+    var BT = (BODYFIT[t] || BODYFIT.beetle).t, vx = BT[0], vy = BT[1], vrx = BT[2], vry = BT[3], studs = "";
+    for (var si = 0; si < 4; si++) studs += '<circle cx="' + (vx - vrx * .62).toFixed(1) + '" cy="' + (vy - vry * .5 + si * vry * .3).toFixed(1) + '" r="2.2" fill="#d1d5db"/><circle cx="' + (vx + vrx * .62).toFixed(1) + '" cy="' + (vy - vry * .5 + si * vry * .3).toFixed(1) + '" r="2.2" fill="#d1d5db"/>';
+    s += '<path d="M' + (vx - vrx * .95) + ' ' + (vy - vry * .55) + ' Q' + (vx - vrx * .4) + ' ' + (vy - vry * .95) + ' ' + (vx - 6) + ' ' + (vy - vry * .7) + ' L' + (vx - 10) + ' ' + (vy + vry * .8) + ' Q' + (vx - vrx * .7) + ' ' + (vy + vry * .75) + ' ' + (vx - vrx * .95) + ' ' + (vy + vry * .3) + 'Z" fill="#1f1b1a" stroke="#0b0a09" stroke-width="1.5"/>' +
+      '<path d="M' + (vx + vrx * .95) + ' ' + (vy - vry * .55) + ' Q' + (vx + vrx * .4) + ' ' + (vy - vry * .95) + ' ' + (vx + 6) + ' ' + (vy - vry * .7) + ' L' + (vx + 10) + ' ' + (vy + vry * .8) + ' Q' + (vx + vrx * .7) + ' ' + (vy + vry * .75) + ' ' + (vx + vrx * .95) + ' ' + (vy + vry * .3) + 'Z" fill="#1f1b1a" stroke="#0b0a09" stroke-width="1.5"/>' + studs +
+      '<circle cx="' + (vx + vrx * .45) + '" cy="' + (vy - vry * .05) + '" r="5" fill="#f5f5f4"/><path d="M' + (vx + vrx * .45 - 2) + ' ' + (vy - vry * .05) + ' h.1 M' + (vx + vrx * .45 + 2) + ' ' + (vy - vry * .05) + ' h.1" stroke="#1c1917" stroke-width="2" stroke-linecap="round"/>';
   }
   /* veteran / legend body details, fit to the torso of this body */
   if (st >= 4 && !{ centipede: 1, chrysalis: 1, cocoon: 1, snail: 1, caterpillar: 1, stick: 1, dragonfly: 1, butterfly: 1, moth: 1, firefly: 1, larva: 1 }[t]) {
@@ -3831,6 +3912,21 @@ var BUGS = [
   { id: "golden-return-stag", name: "Golden Return Stag", body: "stag", c: ["#fcd34d", "#92400e", "#fffbeb"], acc: ["crown"], rar: "legendary", price: 0, login: 30, unlock: { login: 30, text: "Log in on 30 different days" }, blurb: "Thirty days. The stag only shows itself to the faithful." },
   { id: "hundred-day-hercules", name: "Hundred-Day Hercules", body: "hercules", c: ["#f472b6", "#831843", "#fdf2f8"], horn: "#fde68a", rar: "legendary", price: 0, login: 60, unlock: { login: 60, text: "Log in on 60 different days" }, blurb: "Sixty days of learning. Strongest bug in the jungle." },
   { id: "year-of-the-scarab", name: "Year of the Scarab", body: "scarab", c: ["#22d3ee", "#155e75", "#ecfeff"], acc: ["halo"], rar: "legendary", price: 0, login: 90, unlock: { login: 90, text: "Log in on 90 different days" }, blurb: "Three full cycles of days. The rarest bug in DrugBug." },
+  /* more real bugs (owner, Nov 5 2026) */
+  { id: "stink-bug", name: "Stink Bug", body: "shield", c: ["#a3a37a", "#5f6b3a", "#fef3c7"], ink: "#2d3319", rar: "common", price: 380, blurb: "Shield-shaped and smells like cilantro when bothered. Harmless, just rude." },
+  { id: "daddy-long-legs", name: "Daddy Long Legs", body: "harvestman", c: ["#c4a484", "#7c5a3a", "#fef3c7"], ink: "#3b2a1a", rar: "common", price: 440, blurb: "A harvestman, not a spider: one body section, no venom, no silk." },
+  { id: "garden-millipede", name: "Garden Millipede", body: "millipede", c: ["#8b5e3c", "#4a2f1d", "#fde68a"], ink: "#2b1a0e", rar: "common", price: 470, blurb: "Two pairs of legs on almost every segment. Curls into a spiral when scared." },
+  { id: "dung-beetle", name: "Dung Beetle", body: "dung", c: ["#3f3f46", "#18181b", "#a1a1aa"], ink: "#09090b", rar: "rare", price: 1280, blurb: "Rolls its ball in a straight line by steering with the Milky Way." },
+  /* the bad bugs: a biker gang of pests and disease carriers (owner, Nov 5 2026) */
+  { id: "flea", name: "Flea", body: "flea", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#7c4a1e", "#4a2a10", "#fde68a"], ink: "#24130a", rar: "common", price: 450, blurb: "Jumps 100 times its height. Rat fleas spread plague and murine typhus." },
+  { id: "deer-tick", name: "Deer Tick", body: "tick", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#9a3412", "#1c1917", "#fed7aa"], ink: "#0c0a09", rar: "common", price: 500, blurb: "Carries Lyme disease. Remove it with tweezers close to the skin, pulling straight out." },
+  { id: "bed-bug", name: "Bed Bug", body: "bedbug", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#b45309", "#7c2d12", "#fed7aa"], ink: "#2a0f05", rar: "common", price: 520, blurb: "Bites in a line at night. Itchy, but not known to spread disease." },
+  { id: "head-louse", name: "Head Louse", body: "louse", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#e7d8c0", "#a68a64", "#fef3c7"], ink: "#3b2f20", rar: "common", price: 420, blurb: "Grips hair with hook claws. Its body-louse cousin spreads epidemic typhus." },
+  { id: "cockroach", name: "Cockroach", body: "roach", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#92400e", "#451a03", "#fde68a"], ink: "#1c0a02", rar: "rare", price: 1250, blurb: "Roach allergens are a major asthma trigger in city kids." },
+  { id: "tiger-mosquito", name: "Tiger Mosquito", body: "mosquito", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#27272a", "#09090b", "#e5e7eb"], ink: "#000000", rar: "rare", price: 1300, blurb: "The deadliest animal on Earth: malaria, dengue, Zika and West Nile." },
+  { id: "chigger", name: "Chigger", body: "tick", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#ef4444", "#991b1b", "#fecaca"], ink: "#450a0a", rar: "rare", price: 1350, blurb: "A tiny mite larva. In parts of Asia its bite spreads scrub typhus." },
+  { id: "kissing-bug", name: "Kissing Bug", body: "shield", pat: "edges", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#292524", "#0c0a09", "#f97316"], ink: "#000000", rar: "epic", price: 2900, blurb: "Bites near the lips at night and spreads Chagas disease, which can scar the heart." },
+  { id: "puss-asp", name: "Asp", body: "asp", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#d6b88a", "#a07a4a", "#fef3c7"], ink: "#3b2a14", rar: "epic", price: 3100, blurb: "The puss caterpillar looks like a fluffy toupee. Its hidden spines give one of the worst stings in North America." },
   { id: "bubblegum-ant", name: "Bubblegum Ant", body: "ant", c: ["#f9a8d4", "#db2777"], ink: "#701a45", rar: "common", price: 800 },
   // rare
   { id: "glow-firefly", name: "Glow Firefly", body: "firefly", c: ["#4c5fd5", "#26307a", "#fff59d"], rar: "rare", price: 1200 },
@@ -3942,8 +4038,8 @@ var BUGS = [
 var COLL_NAMES = { beetle: ["Beetles", "Beetle"], ladybug: ["Ladybugs", "Ladybug"], mantis: ["Mantises", "Mantis"], bee: ["Bees", "Bee"], wasp: ["Wasps and hornets", "Hornet"],
   ant: ["Ants", "Ant"], moth: ["Moths", "Moth"], dragonfly: ["Dragonflies", "Dragonfly"], snail: ["Snails", "Snail"], hopper: ["Hoppers and crickets", "Hopper"], rhino: ["Rhino beetles", "Rhino"],
   firefly: ["Fireflies", "Firefly"], butterfly: ["Butterflies", "Butterfly"], stag: ["Stag beetles", "Stag"], scarab: ["Scarabs", "Scarab"], longhorn: ["Longhorns", "Longhorn"],
-  scorpion: ["Scorpions", "Scorpion"], hercules: ["Hercules beetles", "Hercules"] };
-function collKey(b) { if (b.body === "beetle") return b.pat === "spots" ? "ladybug" : "beetle"; if (b.body === "grasshopper" || b.body === "cricket") return "hopper"; return b.body; }
+  scorpion: ["Scorpions", "Scorpion"], hercules: ["Hercules beetles", "Hercules"], bad: ["Bad bugs", "Bad Bug"] };
+function collKey(b) { if (b.coll) return b.coll; if (b.body === "beetle") return b.pat === "spots" ? "ladybug" : "beetle"; if (b.body === "grasshopper" || b.body === "cricket") return "hopper"; return b.body; }
 var COLLS = {};
 BUGS.forEach(function (b) {
   if (b.admin || b.grub || b.free || b.unlock || b.login || b.retired || b.season || b.hick || b.id === "starter" || b.rar === "seasonal" || b.rar === "earned") return;
@@ -3958,6 +4054,7 @@ BUGS.forEach(function (b) {
       unlock: { coll: k, text: "Collect every one of the " + N[0].toLowerCase() }, blurb: "Rules over every " + N[1].toLowerCase() + " in the jungle. Only crowned for collectors." };
     if (src.pat) king.pat = src.pat; if (k === "ladybug") king.head = "#1c1917";
     if (k === "rhino" || k === "hercules") king.horn = "#fde68a";
+    if (k === "bad") { king.biker = true; king.eyes = "cool"; king.name = "Bad Bug King"; king.c = ["#3f3f46", "#18181b", "#fbbf24"]; king.blurb = "Leader of the pack. Every pest in the gang answers to him."; }
     BUGS.push(king);
   });
 })();
@@ -4233,7 +4330,7 @@ function bugFace(y, mood, b, faceItem) {
   return s;
 }
 /* wearable items: slot hat | face | neck | back | held | fx */
-var ACC_SLOT = { jethelmet: "hat", aviscarf: "neck", crown: "hat", halo: "hat", cap: "hat", helmet: "hat", headset: "hat", flame: "hat", goggles: "face", mask: "face", stetho: "neck", bowtie: "neck", scarf: "neck", stars: "fx" };
+var ACC_SLOT = { bandana: "hat", jethelmet: "hat", aviscarf: "neck", crown: "hat", halo: "hat", cap: "hat", helmet: "hat", headset: "hat", flame: "hat", goggles: "face", mask: "face", stetho: "neck", bowtie: "neck", scarf: "neck", stars: "fx" };
 function hatY(y) { return y - 26; }
 /* a ring of curls sitting on the head: used by every perm (owner, Oct 30 2026) */
 function permDraw(y, dark, light, big) {
