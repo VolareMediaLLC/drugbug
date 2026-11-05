@@ -4286,8 +4286,81 @@ var IACT = {
 function itemSVG(it, y) {
   var a = it.anim || IA_ITEM[it.id] || IA_SLOT[it.slot] || "none", inner = it.draw(y), A = IACT[it.id];
   if (A) inner = '<g class="ac ac-' + A[0] + '" style="transform-origin:' + A[1] + 'px ' + A[2] + 'px;--dx:' + (A[3] || 0) + 'px;--dy:' + (A[4] || 0) + 'px;--r:' + (A[5] || 0) + 'deg;animation-delay:' + (1 + Math.random() * 6).toFixed(1) + 's">' + inner + '</g>';
-  return '<g class="it ia-' + a + '">' + inner + '</g>';
+  /* data-it makes the item tappable where the bug is the subject of the screen; see itemPoke */
+  return '<g class="it ia-' + a + '" data-it="' + it.id + '"><title>' + esc(it.name) + '</title>' + inner + '</g>';
 }
+/* ---------- tap what your bug is wearing (owner, Nov 4 2026) ----------
+   Poke the coffee and it gets drunk, the cape snaps, the lantern swings and clinks. Each item
+   has a noise, a movement and something the bug says. Defaults come from the slot, so an item
+   added later is interactive the moment it exists. */
+var POKE_SLOT = {
+  hat:    ["tick",   "pk-tip",   ["Hat's on straight, thanks.", "Mind the hat."]],
+  hair:   ["rustle", "pk-shake", ["Don't touch the hair.", "Took me all morning."]],
+  face:   ["tick",   "pk-tip",   ["Can't see a thing.", "Shades stay on."]],
+  neck:   ["thump",  "pk-swing", ["Lub-dub. Still going.", "Want a listen?"]],
+  outfit: ["rustle", "pk-shake", ["Fresh out of the laundry.", "Pockets are empty."]],
+  back:   ["whoosh", "pk-flap",  ["Whoosh.", "It does nothing. I know."]],
+  held:   ["pop",    "pk-swing", ["Get your own.", "Careful, that's full."]],
+  left:   ["boing",  "pk-swing", ["Steady, steady.", "Heavier than it looks."]],
+  fx:     ["sparkle", "pk-pulse", ["Sparkly.", "I know, I know."]]
+};
+var POKE_ITEM = {
+  coffee:     ["slosh",  "pk-drink", ["Ahh. That's the stuff.", "Third one today."]],
+  hugeCup:    ["slosh",  "pk-drink", ["It is a lot of coffee.", "No regrets."]],
+  lantern:    ["ding",   "pk-swing", ["Mind your eyes.", "Still got oil in her."]],
+  stetho:     ["thump",  "pk-swing", ["Lub-dub.", "Sounds fine to me."]],
+  stetho2:    ["thump",  "pk-swing", ["Lub-dub.", "Nice and regular."]],
+  cape:       ["whoosh", "pk-flap",  ["No, I cannot fly.", "It's mostly for the look."]],
+  balloon:    ["squish", "pk-float", ["Don't pop it.", "It's helium. Probably."]],
+  glowsaber:  ["hum",    "pk-swing", ["Not a toy.", "Hmmmmm."]],
+  trident:    ["ding",   "pk-swing", ["Three points. All sharp.", "Poseidon's, briefly."]],
+  propeller:  ["buzz",   "pk-spin",  ["Round and round.", "Still not flying."]],
+  jetpack:    ["whoosh", "pk-flap",  ["Out of fuel.", "One day."]],
+  crown:      ["ding",   "pk-tip",   ["Mind the crown.", "Heavy is the head."]],
+  crown2:     ["ding",   "pk-tip",   ["Royalty, that's me.", "Bow if you like."]],
+  halo:       ["sparkle", "pk-float", ["Earned it.", "Mostly."]],
+  halo2:      ["sparkle", "pk-float", ["Still spotless.", "Don't ask how."]],
+  sparkles:   ["sparkle", "pk-pulse", ["I do sparkle.", "Hard to miss."]],
+  bowtie:     ["pop",    "pk-shake", ["It spins, you know.", "Dapper."]],
+  goggles:    ["tick",   "pk-tip",   ["Can't see a thing.", "Fogged up again."]],
+  mask:       ["whoosh", "pk-shake", ["Still breathing.", "Seal's good."]]
+};
+function pokeOf(it) {
+  return POKE_ITEM[it.id] || POKE_SLOT[it.slot] || ["pop", "pk-shake", ["Hey.", "That's mine."]];
+}
+var PK = { t: 0 };
+function itemPoke(g, id) {
+  var it = ITEMS_BY[id]; if (!it) return;
+  var P = pokeOf(it);
+  try { if (typeof anatSnd === "function") anatSnd(P[0]); } catch (e) {}
+  if (typeof hfxOk !== "function" || hfxOk()) {
+    g.classList.remove(P[1]); void g.getBoundingClientRect(); g.classList.add(P[1]);
+    if (g.__pkT) clearTimeout(g.__pkT);
+    g.__pkT = setTimeout(function () { g.classList.remove(P[1]); g.__pkT = null; }, 900);
+  }
+  /* the bug says something about it, but not on every single tap, and only in Fun mode.
+     A bubble of its own rather than the buddy, because the buddy is hidden in the Terrarium
+     and because re-rendering would cut the animation short. */
+  var now = Date.now();
+  if (now - PK.t < 900 || (typeof funOn === "function" && !funOn())) return;
+  PK.t = now;
+  var par = g.closest(".mybug, .buddyart"); if (!par) return;   /* sits over the bug, not the card */
+  if (getComputedStyle(par).position === "static") par.style.position = "relative";
+  var old2 = document.querySelector(".pokebub"); if (old2) old2.remove();
+  var bub = document.createElement("span");
+  bub.className = "pokebub"; bub.setAttribute("role", "status"); bub.textContent = pick(P[2]);
+  par.appendChild(bub);
+  setTimeout(function () { if (bub.parentNode) { bub.classList.add("out"); setTimeout(function () { if (bub.parentNode) bub.remove(); }, 300); } }, 2200);
+}
+/* only where the bug itself is the subject: the Terrarium bug and the buddy. Everywhere else a
+   tap on the bug still does what it did (the hero orb opens the Terrarium). */
+document.addEventListener("click", function (e) {
+  if (!e.target.closest) return;
+  var host = e.target.closest(".mybug, .buddyart"); if (!host) return;
+  var g = e.target.closest("[data-it]"); if (!g) return;
+  e.stopPropagation(); e.preventDefault();
+  itemPoke(g, g.getAttribute("data-it"));
+}, true);
 /* tap your bug to make it use its items right now */
 function bugAct(svg) { if (!svg || (typeof lvbStill === "function" && lvbStill())) return; svg.querySelectorAll(".ac").forEach(function (g) { g.style.animation = "none"; void g.getBoundingClientRect(); g.style.animation = ""; g.style.animationDelay = "-5.5s"; }); }
 document.addEventListener("click", function (e) { var b = e.target.closest && e.target.closest(".mybug, #buddy"); if (b) bugAct(b.querySelector("svg.bug") || b.querySelector("svg")); });
