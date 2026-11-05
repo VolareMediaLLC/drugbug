@@ -362,7 +362,7 @@ function go(view, opts) {
 function topbar() {
   try { document.documentElement.setAttribute("data-serious", funOn() ? "" : "1"); } catch (e) {}
   var fun = funOn();
-  var c = '<div class="topbar"><button class="modetog' + (fun ? '' : ' serious') + '" data-act="funtog" role="switch" aria-checked="' + (fun ? 'true' : 'false') + '" aria-label="Fun or Focused" title="' + (fun ? 'Fun: tap for Focused, the plain reference' : 'Focused: tap for the playful version') + '"><span class="modedot"></span><span class="modetx">' + (fun ? 'Fun' : 'Focused') + '</span></button>' +
+  var c = '<div class="topbar">' +
     '<button class="brand' + (S.view === "home" ? ' onhome' : '') + '" data-go="home" aria-label="DrugBug home">Drug<span>Bug</span></button><nav class="crumbs">';
   var rc = routeCtx(); if (rc === "fm") rc = "ph"; if (ROUTES[rc]) c += '<span>/</span><button data-go="' + ROUTES[rc].view + '">' + ROUTES[rc].name + '</button>';
   if (S.view === "level") c += '<span class="cur">/</span><span class="cur">' + esc(levelObj(S.level).name) + '</span>';
@@ -543,6 +543,7 @@ var ICO = {
   labs: '<path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3"/><path d="M7.5 15h9"/>',
   units: '<path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-5h6v5M12 8v5M9.5 10.5h5"/>',
   body: '<circle cx="12" cy="4.5" r="2.5"/><path d="M12 7v8M7 10h10M12 15l-3 6M12 15l3 6"/>',
+  systems: '<rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><path d="M17.2 14.5v6M14.2 17.5h6"/>',
   anatomy: '<circle cx="12" cy="4" r="2.2"/><path d="M12 6.2v7.3M8 9h8M12 13.5l-2.6 6.3M12 13.5l2.6 6.3"/><circle cx="12" cy="9.6" r="1.5" fill="currentColor" stroke="none"/>',
   pillq: '<path d="M10.5 3.5a5 5 0 0 1 7 7l-7 7a5 5 0 0 1-7-7z"/><path d="M7 10l7 7"/>',
   ecg: '<path d="M3 12h4l2-5 4 10 2-5h6"/>',
@@ -561,6 +562,7 @@ function icon(k) { return '<svg class="ico" viewBox="0 0 24 24" width="26" heigh
 function tabList() {
   if (S.view === "level" && isF(S.level)) return [["registry", "Medications", "Every Tier 4 medication, by field use, by class or A to Z."], ["fm_blood", "Blood Products", "Whole blood, components, massive transfusion and every transfusion reaction."], ["fm_cond", FM_TABS.fm_cond[0], FM_TABS.fm_cond[1]], ["fm_store", FM_TABS.fm_store[0], FM_TABS.fm_store[1]], ["fm_istat", FM_TABS.fm_istat[0], FM_TABS.fm_istat[1]], ["fm_bio", FM_TABS.fm_bio[0], FM_TABS.fm_bio[1]], ["fm_ref", FM_TABS.fm_ref[0], FM_TABS.fm_ref[1]], ["tools", "Study Tools", "Questions, megacode, flashcards, brain games, med-list workout and safety drills."]];
   var L = [["registry", S.view === "gen" ? "All Medications" : "Medications", S.view === "gen" ? "Every drug in DrugBug, A to Z." : isN(S.level) ? "The drugs nurses at your license give and monitor." : isI(S.level) ? "Contrast agents, radiopharmaceuticals and the reaction cart." : "Look up every drug in your scope."]];
+  if (typeof sysTabOK === "function" && sysTabOK()) L.splice(1, 0, ["systems", "Meds by System", "Airway, cardiology, neuro and more: every medicine grouped by what it works on, with a quiz for each."]);
   L.push(["mylist", "My List", marks().length ? "Your saved drugs: study, quiz or print them." : "Tap \"Save to My List\" on any drug page to build your list."]);
   if (S.view === "level" && isN(S.level) && unitsFor(S.level).length) L.push(["units", "Specialty Units", "ICU, ER, L&D, peds and more: the meds your unit uses."]);
   /* Questions moved inside Study Tools, Oct 29 2026 (owner) */
@@ -614,7 +616,7 @@ var HUB_GROUPS = [
   ["Study and practice", ["tools", "scenarios", "nbug", "medlist"]],
   ["Yours", ["mylist", "progress", "shop"]]
 ];
-var HUB_SHORT = { calls: "Stroke, STEMI, sepsis, trauma, ROSC", micro: "Bacteria, viruses, fungi, prions, parasites", fm_bio: "Bio, chem, rad and nuclear casualties", fm_ref: "Burns, vents, scores, handoff, K9, dive", medlist: "What a med list says about the patient", fm_store: "Heat, cold, light and mixing", fm_istat: "Values, cartridges and practice cases", fm_cond: "Trauma, medical and blood reactions, with types", fm_blood: "Whole blood, components, MTP, reactions", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "The drugs you take, and their interactions", tools: "Questions, megacode, cards, games, drills", scenarios: "Clinical cases", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", anatomy: "Every organ and body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time" };
+var HUB_SHORT = { systems: "Airway, cardiac, neuro and more, with quizzes", calls: "Stroke, STEMI, sepsis, trauma, ROSC", micro: "Bacteria, viruses, fungi, prions, parasites", fm_bio: "Bio, chem, rad and nuclear casualties", fm_ref: "Burns, vents, scores, handoff, K9, dive", medlist: "What a med list says about the patient", fm_store: "Heat, cold, light and mixing", fm_istat: "Values, cartridges and practice cases", fm_cond: "Trauma, medical and blood reactions, with types", fm_blood: "Whole blood, components, MTP, reactions", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "The drugs you take, and their interactions", tools: "Questions, megacode, cards, games, drills", scenarios: "Clinical cases", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", anatomy: "Every organ and body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time" };
 /* ---------- Hold a tile, then move it (owner, Nov 4 2026) ----------
    The iPhone gesture: press and hold until the tile lifts, drag it where you want, and the
    others slide out of the way as you go. Order is kept per level and per section, so the
@@ -1063,7 +1065,7 @@ function viewLevel() {
   if (!S.tab || (S.tab !== "hub" && S.tab !== "session" && !tabName(S.tab))) S.tab = "hub";
   if (S.tab !== "hub" && S.tab !== "session" && typeof proLocked === "function" && proLocked(S.tab)) { var lt = S.tab; S.tab = "hub"; setTimeout(function () { openPaywall(tabName(lt), tabTier(lt)); }, 0); }
   if (S.tab === "calc") S.tab = "hub";  /* Calc Lab was removed */
-  var body = S.tab === "hub" ? "" : S.tab === "anatomy" && typeof anatView === "function" ? anatView() : S.tab === "calls" && typeof callsView === "function" ? callsView() : S.tab === "protocols" && typeof agpTabView === "function" ? agpTabView() : typeof fieldTab === "function" && isF(S.level) && FM_TABS[S.tab] ? fieldTab(S.tab) : (S.tab === "vegc" || S.tab === "fruitc" || S.tab === "vitc") && typeof compoundView === "function" ? compoundView(S.tab) : S.tab === "illicit" && typeof illicitView === "function" ? illicitView() : S.tab === "registry" ? (S.view === "level" && isF(S.level) && typeof fieldMedsView === "function" ? fieldMedsView() : registry()) : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? (S.tab = "hub", "") : S.tab === "micro" && typeof microView === "function" ? microView() : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "flt_ref" && typeof fltRefView === "function" ? fltRefView() : S.tab === "tools" ? toolsView() : S.tab === "medlist" ? (typeof medlistView === "function" ? medlistView() : "") : flashcards();
+  var body = S.tab === "hub" ? "" : S.tab === "anatomy" && typeof anatView === "function" ? anatView() : S.tab === "calls" && typeof callsView === "function" ? callsView() : S.tab === "systems" && typeof sysView === "function" ? sysView() : S.tab === "protocols" && typeof agpTabView === "function" ? agpTabView() : typeof fieldTab === "function" && isF(S.level) && FM_TABS[S.tab] ? fieldTab(S.tab) : (S.tab === "vegc" || S.tab === "fruitc" || S.tab === "vitc") && typeof compoundView === "function" ? compoundView(S.tab) : S.tab === "illicit" && typeof illicitView === "function" ? illicitView() : S.tab === "registry" ? (S.view === "level" && isF(S.level) && typeof fieldMedsView === "function" ? fieldMedsView() : registry()) : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? (S.tab = "hub", "") : S.tab === "micro" && typeof microView === "function" ? microView() : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "flt_ref" && typeof fltRefView === "function" ? fltRefView() : S.tab === "tools" ? toolsView() : S.tab === "medlist" ? (typeof medlistView === "function" ? medlistView() : "") : flashcards();
   var msg = S.sessMsg ? '<div class="presult" role="status">' + esc(S.sessMsg) + '</div>' : ''; S.sessMsg = "";
   var notes = (S.tab === "calc" || S.tab === "tools" ? eduBanner() : '') + (["prep", "session", "nbug", "scenarios", "cards"].indexOf(S.tab) >= 0 ? esQNote() : '');
   if (S.tab === "hub") return topbar() + '<div class="' + ctxClass() + '">' + band() + protocolBanner() + (isF(S.level) ? "" : dailyCard()) + msg + (S.learn && S.learn.done && typeof learnDoneView === "function" ? learnDoneView() : "") + hubView() + '</div>';
@@ -1807,6 +1809,7 @@ function render() {
   app.innerHTML = html + footer();
   if (BOOTED !== 1) { BOOTED = 1; try { document.body.classList.add("ready"); } catch (e) {} }
   if (typeof tourMaybe === "function") tourMaybe();
+  if (S.view === "home" && typeof accAskMaybe === "function" && !S.accAskT) { S.accAskT = 1; accAskMaybe(1500); setTimeout(function () { S.accAskT = 0; }, 60000); }
   if (S.proMsg) { var tst = document.createElement("div"); tst.className = "protoast"; tst.setAttribute("role", "status"); tst.textContent = S.proMsg; app.appendChild(tst); S.proMsg = ""; setTimeout(function () { if (tst.parentNode) tst.parentNode.removeChild(tst); }, 5000); }
   translateDom(app); drawBuddy();
   /* "Start here" asked for L.E.A.R.N: wait until the path has actually rendered, so the
@@ -1844,7 +1847,7 @@ document.addEventListener("click", function (e) {
     if (a.sess !== "daily" && typeof PAYWALL !== "undefined" && PAYWALL && !isPro()) return openPaywall("Practice quizzes", "pro"); /* extra learning is Pro; the daily 5-min DrugBug stays free */
     if (sheet && !sheet.hidden) closeSheet();
     if (S.view !== "level" && S.view !== "gen") { var ll = store("lastLevel"); if (ll && levelObj(ll)) go("level", { level: ll }); else go("gen"); }
-    return startSession(a.sess, { drug: a.drugId, g: a.g != null ? +a.g : undefined, cat: a.cat, unit: a.unitq, chal: !!a.chal, n: a.chal ? 5 : 10 });
+    return startSession(a.sess, { drug: a.drugId, g: a.g != null ? +a.g : undefined, cat: a.cat, unit: a.unitq, sys: a.sys, chal: !!a.chal, n: a.chal ? 5 : 10 });
   }
   if (a.tool) {
     var tt = typeof toolTier === "function" ? toolTier(a.tool) : "pro";
@@ -1903,6 +1906,11 @@ document.addEventListener("click", function (e) {
         catch (e) { try { S.view = "level"; S.level = lk; S.tab = "hub"; render(); } catch (e2) { try { location.hash = lk; location.reload(); } catch (e3) {} } }
       };
       setTimeout(goNow, 900);
+      /* the sound is not motion: with Reduce Motion on (common on iPhones) the animation is skipped,
+         and it used to take the sound with it, so the transition was silent (owner, Nov 5 2026) */
+      if (typeof gfxReduce === "function" && gfxReduce() && typeof funOn === "function" && funOn()) {
+        try { if (fx === "blast") gfxSnd("rotor"); else if (fx === "smoke") gfxSnd("smokebomb"); else if (fx === "trans" && TRX[lk]) txSnd(TRX[lk].snd); } catch (e) {}
+      }
       try {
         if (fx === "blast" && typeof gfxBlastOff === "function") { gfxBlastOff(t, lk, goNow); return; }
         if (fx === "smoke" && typeof gfxSmokeBomb === "function") { gfxSmokeBomb(t, goNow); return; }
@@ -1917,7 +1925,7 @@ document.addEventListener("click", function (e) {
   if (a.tab && typeof HD !== "undefined" && HD.suppress) return;   /* that was a drag, not a tap */
   if (a.tab && proLocked(a.tab)) { var tn = tabName(a.tab); return openPaywall(tn, tabTier(a.tab)); }
   if (a.fcpick) { S.fcPick = 1; render(); return window.scrollTo(0, 0); }
-  if (a.tab) { S.tab = a.tab; S.scen = null; S.fc = null; S.fcPick = 0; S.group = "all"; fixTab(); render(); return window.scrollTo(0, 0); }
+  if (a.tab) { S.tab = a.tab; S.sysK = ""; S.scen = null; S.fc = null; S.fcPick = 0; S.group = "all"; fixTab(); render(); return window.scrollTo(0, 0); }
   if (a.tag) { S.tags[a.tag] = !S.tags[a.tag]; t.setAttribute("aria-pressed", !!S.tags[a.tag]); return refreshGrid(); }
   if (a.form && S.sheet && !sheet.hidden) { formGo(a.form); return; }
   if (a.drug) {
@@ -1948,6 +1956,8 @@ document.addEventListener("click", function (e) {
     case "close": return closeSheet();
     case "tbmenu": S.menu = !S.menu; return render();
     case "allpaths": store("allPaths", homeAll() ? 0 : 1); render(); return;
+    case "remindcal": remindCal(); return;
+    case "codesgo": codesGo(); return;
     case "funtog": {
       var on = !funOn();
       setSet("fun", on);
@@ -2171,7 +2181,7 @@ function heroHTML() {
   var hol = typeof holToday === "function" ? holToday() : null;
   return '<section class="hero ha' + (hol ? ' hol hol-' + hol.id + (hol.base ? ' hol-' + hol.base : '') : '') + '">' + (hol ? holFx(hol) : '') + '<div class="hatx lr-' + rr + '">' + (rr === "legendary" ? '<svg class="lcrown" viewBox="0 0 64 44" aria-hidden="true"><path d="M4 40 L8 12 L22 26 L32 4 L42 26 L56 12 L60 40Z" fill="#fbbf24" stroke="#92400e" stroke-width="3" stroke-linejoin="round"/><circle cx="32" cy="6" r="4" fill="#f43f5e"/><circle cx="8" cy="12" r="3.5" fill="#38bdf8"/><circle cx="56" cy="12" r="3.5" fill="#38bdf8"/><rect x="6" y="34" width="52" height="6" rx="2" fill="#f59e0b"/></svg>' : '') + '<h1 class="logo">Drug<span>Bug</span></h1>' + spk + '</div>' + (typeof funOn === "function" && !funOn() ? '' : '<button class="hbub" data-goshop="1" aria-label="' + lbl + '"><span class="orb">' + myBugArt("herobug", null, hol ? holWear(hol) : null, myStage()) + (typeof pkSide === "function" ? pkSide("hero") : "") + '</span>' + chip + '</button>') + tag + (hol ? holBanner(hol) : '') + '</section>';
 }
-function topLayerOpen() { return ["pwdlg", "wdwdlg", "evodlg", "pkdlg", "chemdlg", "tourdlg", "rdlg", "idlg"].some(function (i) { var el = document.getElementById(i); return el && !el.hidden; }); }
+function topLayerOpen() { return ["accdlg", "rvdlg", "pwdlg", "wdwdlg", "evodlg", "pkdlg", "chemdlg", "tourdlg", "rdlg", "idlg"].some(function (i) { var el = document.getElementById(i); return el && !el.hidden; }); }
 /* Android back button: closes the top layer or goes back one step; returns true when it handled it */
 window.drugbugBack = function () {
   try {
@@ -2595,6 +2605,7 @@ function mergeProg(remote) {
   if (R.peek) { L.peek = L.peek || {}; Object.keys(R.peek).forEach(function (k) { var a = L.peek[k], b = R.peek[k]; if (!a || (b && (b.first || 0) && (b.first || 0) < (a.first || Infinity))) L.peek[k] = b; }); }
   if (R.conc) { L.conc = L.conc || {}; Object.keys(R.conc).forEach(function (k) { var a = L.conc[k], b = R.conc[k]; if (!a || (b && (b.ts || 0) > (a.ts || 0))) L.conc[k] = b; }); }
   ["mega", "miss"].forEach(function (k) { if (R[k] && typeof R[k] === "object") { L[k] = L[k] || {}; Object.keys(R[k]).forEach(function (x) { var a = L[k][x], b = R[k][x]; L[k][x] = typeof a === "number" && typeof b === "number" ? Math.max(a, b) : (a === undefined ? b : a); }); } });
+  if (R.sysq && typeof R.sysq === "object") { L.sysq = L.sysq || {}; Object.keys(R.sysq).forEach(function (k) { var a = L.sysq[k], b = R.sysq[k]; if (!a) L.sysq[k] = b; else if (b) L.sysq[k] = { best: Math.max(a.best || 0, b.best || 0), n: Math.max(a.n || 0, b.n || 0), last: (b.ts || 0) > (a.ts || 0) ? b.last : a.last, ts: Math.max(a.ts || 0, b.ts || 0) }; }); }
   if (R.exam && typeof R.exam === "object") L.exam = Object.assign({}, R.exam, L.exam || {});
   if (R.license && R.license.until && (!L.license || (L.license.until || 0) < R.license.until)) L.license = R.license;
   /* ===== fields added Oct-Nov 2026; without these the catch-all below drops the account's copy
@@ -2620,6 +2631,7 @@ function mergeProg(remote) {
      The sticks it paid are already inside earned, which takes the higher side above. */
   if (R.gifts && typeof R.gifts === "object") { L.gifts = L.gifts || {}; Object.keys(R.gifts).forEach(function (g) { if (!L.gifts[g] || R.gifts[g] < L.gifts[g]) L.gifts[g] = R.gifts[g]; }); }
   /* Pro granted by a code: keep whichever expiry is later, so redeeming on one device covers both. */
+  if (R.acctBonus && !L.acctBonus) L.acctBonus = R.acctBonus;
   if (R.proGift && R.proGift.until) { if (!L.proGift || (L.proGift.until || 0) < R.proGift.until) L.proGift = { until: R.proGift.until }; }
   /* what is equipped follows the same "newest device wins" rule as the outfit and face */
   if (avNewer) { if (R.border) L.border = R.border; if (R.voice) L.voice = R.voice; if (R.track) L.track = R.track; }
@@ -2798,6 +2810,10 @@ function startSession(kind, opt) {
   } else if (kind === "unit") {
     var uo = unitObj(opt.unit), uids = DB.nunitIds(opt.unit, S.level), upool = DB.Q.filter(function (q) { return nrLevelsFor(ctxKey()).indexOf(q.lv) >= 0 && qVisible(q) && uids.indexOf(q.d) >= 0; });
     qs = adaptivePick(upool, 10); title = "Practice: " + (uo ? uo.name : "Unit"); sub = "Questions on the medications this unit uses most.";
+  } else if (kind === "sys" && typeof sysIds === "function") {
+    var sy = sysObj(opt.sys), sids = sysIds(opt.sys);
+    qs = adaptivePick(pool.filter(function (q) { return q.d && sids.indexOf(q.d) >= 0; }), 10);
+    title = "Practice: " + (sy ? sy.name : "System"); sub = "Questions on the medicines in this group, weighted toward the ones you know least.";
   } else if (kind === "marks") {
     var mk = marks(); qs = adaptivePick(pool.filter(function (q) { return mk.indexOf(q.d) >= 0; }), 15); title = "Study my list"; sub = "Questions on the drugs you saved.";
   } else if (kind === "field" && typeof FM_Q !== "undefined") {
@@ -2841,10 +2857,12 @@ function finishSession() {
   if (ss.kind === "daily") ss.streakSaved = completeDaily();
   if (ss.kind === "assign" && sc) saveAssignResult(ss.opt, sc, missedDrugs());
   if (ss.kind === "class" && ss.opt.chal && sc && sc.pct >= 80 && !Prog.d.chal[today()]) { Prog.d.chal[today()] = ss.opt.g; Prog.d.xp += 50; earn(10); ss.chalDone = true; checkAch(); saveProg(); }
+  if (ss.kind === "sys" && sc && typeof sysSave === "function") sysSave(ss.opt.sys, sc);
   if (sc) ss.perfect = perfectBonus(ss, sc.n, sc.c);
   if (sc && sc.n >= 5) addScore({ id: "s" + (S.nr.start || Date.now()), ts: Date.now(), route: curRoute(), lvl: S.view === "gen" ? "all" : S.level, n: sc.n, correct: sc.c, pct: sc.pct, mode: ss.kind === "daily" ? "daily" : "practice", secs: Math.round((Date.now() - (S.nr.start || Date.now())) / 1000) });
   setTimeout(toastAch, 300);
   if (typeof rateMaybe === "function" && ss.kind !== "class" && ss.kind !== "assign") rateMaybe(sc);
+  if (typeof accAskMaybe === "function") accAskMaybe(2600);
 }
 function endSession() { var back = S.prevTab || "hub"; S.sess = null; S.tab = back; S.nr = S.prepNr || null; S.prepNr = null; S.scen = null; render(); window.scrollTo(0, 0);
   /* the plans sheet, once, after the sticks have actually been earned (modules/welcome.js) */
@@ -4169,7 +4187,7 @@ function tracksView() {
   return rf + '<p class="muted">Background music tracks. Preview any track, buy it with sticks, then tap Use. Turn music on or off with the note button at the top.</p><div class="trklist">' + shownTracks().map(function (t) {
     var own = ownsTrack(t.id), on = (Prog.d.track && ownsTrack(Prog.d.track) ? Prog.d.track : muDefault()) === t.id, pv = MU.preview === t.id;
     var act = on ? '<span class="eqd">In use</span>' : own ? '<button class="btn small" data-trackuse="' + t.id + '">Use</button>' : trackProLocked(t) ? '<button class="btn small ghost" data-pw="open">' + tierBadge(t.tier || "pro") + ' Unlock</button>' : '<button class="btn small' + (bal >= t.price ? '' : ' ghost') + '" data-trackbuy="' + t.id + '"' + (bal >= t.price ? '' : ' disabled') + '>' + (bal >= t.price ? 'Buy' : 'Need ' + (t.price - bal) + ' more') + '</button>';
-    return '<div class="trk' + (on ? ' eq' : '') + '">' + note + '<div class="trktx"><strong>' + esc(t.name) + '</strong><span class="muted small">' + esc(t.desc) + ' · ' + t.bpm + ' bpm</span>' + (own ? '<span class="muted small">' + (t.price ? 'Owned' : t.season && !MU_ONLY ? 'Free for Halloween' : 'Free') + '</span>' : stickTag(t.price)) + '</div><div class="bact"><button class="btn small ghost" data-trackpv="' + t.id + '">' + (pv ? 'Playing…' : 'Preview') + '</button>' + act + '</div></div>';
+    return '<div class="trk' + (on ? ' eq' : '') + '">' + note + '<div class="trktx"><strong>' + esc(t.name) + '</strong><span class="muted small">' + esc(t.desc) + ' · ' + t.bpm + ' bpm</span>' + (own ? '<span class="muted small">' + (t.price ? 'Owned' : t.season && !MU_ONLY ? 'Free for Halloween' : 'Free') + '</span>' : stickTag(t.price)) + '</div><div class="bact"><button class="btn small ghost" data-trackpv="' + t.id + '">' + (pv ? 'Playing…' : own ? 'Preview' : 'Hear a snippet') + '</button>' + act + '</div></div>';
   }).join("") + '</div>';
 }
 function buyTrack(id) { var t = trackById(id); if (ownsTrack(id) || sticks() < t.price) return; Prog.d.spent = (Prog.d.spent || 0) + t.price; Prog.d.tracks = (Prog.d.tracks || []).concat([id]); useTrack(id); S.shopMsg = t.name + " is yours and now playing."; }
@@ -5859,7 +5877,8 @@ function syncAgree() { if (!agreeRec() && Prog.d.agree && Prog.d.agree.v === LEG
 var DISC_SECS = 5, DISC_AWAY = 15000;
 /* The education-only notice is acknowledged once and then stays acknowledged (owner, Oct 31 2026).
    It is tied to LEGAL_V, so a change to the legal documents shows it once more. */
-function discRec() { var d = store("discok"); return d && d.v === LEGAL_V && d.av === APP_VERSION ? d : null; }   /* shown again after a legal change or an app update, never otherwise (owner, Nov 4 2026) */
+var DISC_REV = 2;   /* bump to show the notice once more after its wording changes (2: the AI/FDA update line, Nov 5 2026) */
+function discRec() { var d = store("discok"); return d && d.v === LEGAL_V && d.av === APP_VERSION && (d.dr || 0) >= DISC_REV ? d : null; }   /* shown again after a legal change or an app update, never otherwise (owner, Nov 4 2026) */
 function needDisc() { return !S.discOk && !discRec() && !window.__DRUGBUG_SKIP_DISC && S.view !== "legal"; }
 function discView() {
   if (!S.discT0) S.discT0 = Date.now();
@@ -5868,6 +5887,8 @@ function discView() {
   return '<div class="gate disc" role="alertdialog" aria-labelledby="disch" aria-describedby="discb"><div class="glogo">' + bugSVG("sage") + '</div><h1 id="disch">Education only</h1>' +
     '<div id="discb" class="disctext"><p><strong>DrugBug is for education only. It is not to be used in patient care.</strong></p>' +
     '<p>Nothing in this app is medical advice, a treatment recommendation or a medical device. Doses, practice scenarios and every other tool are study material only. DrugBug never tells anyone to take, give or use any drug.</p>' +
+    /* owner, Nov 5 2026 */
+    '<p><strong>AI is used to pull new updates from the FDA each week, including updated drug dosages.</strong> AI can make mistakes, and changes can reach DrugBug after the FDA publishes them, so this app should not be used for patient care.</p>' +
     '<p>For real patients, always follow your protocols, medical direction, facility policy, the current FDA label and a licensed clinician. If you have a health question about yourself, ask your doctor or pharmacist. In an emergency, call 911.</p>' +
     '<p><strong>DrugBug is for adults 18 and older only.</strong></p></div>' +
     '<div class="actions"><button class="btn" id="discok" data-act="discok"' + (left > 0 ? ' disabled aria-disabled="true"' : '') + '>' + (left > 0 ? 'Please read (' + left + ')' : 'I understand') + '</button></div>' +
@@ -5881,7 +5902,7 @@ function discTick() {
 }
 function acceptDisc() {
   if (!S.discT0 || Date.now() - S.discT0 < DISC_SECS * 1000) return;
-  S.discOk = true; store("discok", { v: LEGAL_V, av: APP_VERSION, ts: Date.now() });
+  S.discOk = true; store("discok", { v: LEGAL_V, av: APP_VERSION, dr: DISC_REV, ts: Date.now() });
   if (S.discSheet && S.sheet && typeof sheet !== "undefined" && sheet) { sheet.hidden = false; app.setAttribute("aria-hidden", "true"); } S.discSheet = false;
   if (typeof muGesture === "function") muGesture();
   render(); window.scrollTo(0, 0);
@@ -7271,7 +7292,7 @@ function printClick(t, a) { if (a.print) { openPrint(a.print); return true; } re
 
 /* ---------- Settings: display, study preferences, sound, protocols, printing, privacy & account, about ---------- */
 var APP_VERSION = "1.1", APP_DATE = "2026-10-10";
-var SET_DEF = { text: "normal", contrast: false, motion: false, homeLevel: "", dailyGoal: 10, nrN: 25, nrMode: "practice", adaptive: true, megaTimer: "on", fullDefault: false, voiceRate: "normal", showPhon: true, fun: true, sfx: true, music: true, musicVol: 40, printMode: "cards", printDetail: "std", printLang: "auto", printDense: false, state: "", buddy: true, weird: true, weirdAt: "12:00" };
+var SET_DEF = { remind: true, remindAt: "19:00", text: "normal", contrast: false, motion: false, homeLevel: "", dailyGoal: 10, nrN: 25, nrMode: "practice", adaptive: true, megaTimer: "on", fullDefault: false, voiceRate: "normal", showPhon: true, fun: true, sfx: true, music: true, musicVol: 40, printMode: "cards", printDetail: "std", printLang: "auto", printDense: false, state: "", buddy: true, weird: true, weirdAt: "12:00" };
 function SET() { var s = store("settings") || {}; return Object.assign({}, SET_DEF, s); }
 function setSet(k, v) { var s = SET(); s[k] = v; store("settings", s); applySettings(); if (k === "music" || k === "musicVol") muSync(); if (k === "remind" || k === "remindAt") remindSync(); if ((k === "weird" || k === "weirdAt") && typeof wdwSync === "function") wdwSync(); }
 /* daily study reminder (iPhone app): the app tells iOS what to say; iOS shows it at the chosen time */
@@ -7281,10 +7302,24 @@ function remindSync() {
   /* the same text repeats every day until the app is opened again, so it avoids counts that go stale */
   var s = SET(), at = String(s.remindAt || "19:00").split(":"), h = parseInt(at[0], 10), m = parseInt(at[1], 10), es = lang() === "es";
   var ex = (Prog.d.exam || {})[typeof examKey === "function" ? examKey() : ""], exd = ex ? new Date(ex + "T00:00:00") : null, exs = exd && exd > new Date() ? exd.toLocaleDateString(es ? "es" : "en-US", { month: "long", day: "numeric" }) : "";
-  var body = es ? "Unos minutos de DrugBug mantienen tu racha." + (exs ? " Tu examen es el " + exs + "." : "") : "A few minutes of DrugBug keeps your streak going." + (exs ? " Your exam is on " + exs + "." : "");
-  var gn = typeof growNudge === "function" ? growNudge(150) : null; /* refreshed every time the app goes to the background, so it never goes stale */
-  if (gn) body = gn.text + (es ? " Una sesión rápida podría lograrlo." : " A quick session could do it.");
-  window.webkit.messageHandlers.remind.postMessage({ on: !!s.remind, hour: isNaN(h) ? 19 : h, minute: isNaN(m) ? 0 : m, title: es ? "Hora de estudiar con DrugBug" : "Time to study with DrugBug", body: body });
+  /* come learn and collect your sticks: on by default (owner, Nov 5 2026) */
+  var body = es ? "Tu premio diario de palitos te espera. Entra, recógelo y aprende unos medicamentos." + (exs ? " Tu examen es el " + exs + "." : "") : "Your daily sticks are waiting. Come collect them and learn a few drugs to keep your streak going." + (exs ? " Your exam is on " + exs + "." : "");
+  window.webkit.messageHandlers.remind.postMessage({ on: s.remind !== false, hour: isNaN(h) ? 19 : h, minute: isNaN(m) ? 0 : m, title: es ? "Tus palitos de DrugBug te esperan" : "Your DrugBug sticks are waiting", body: body });
+}
+/* the website cannot send notifications on a schedule, so it offers a repeating calendar event
+   with an alert instead; every phone and computer calendar understands the .ics file */
+function remindCal() {
+  var s = SET(), at = String(s.remindAt || "19:00").split(":"), h = ("0" + (parseInt(at[0], 10) || 19)).slice(-2), m = ("0" + (parseInt(at[1], 10) || 0)).slice(-2);
+  var d = new Date(), ymd = d.getFullYear() + ("0" + (d.getMonth() + 1)).slice(-2) + ("0" + d.getDate()).slice(-2);
+  var site = (CFG && CFG.site) || "https://drugbugapp.com";
+  var ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//DrugBug//Daily reminder//EN", "BEGIN:VEVENT",
+    "UID:drugbug-daily-" + ymd + "@drugbugapp.com", "DTSTAMP:" + ymd + "T000000Z", "DTSTART:" + ymd + "T" + h + m + "00", "DURATION:PT10M",
+    "RRULE:FREQ=DAILY", "SUMMARY:DrugBug: collect your sticks", "DESCRIPTION:Your daily sticks are waiting. Come learn a few drugs and keep your streak going. " + site,
+    "URL:" + site, "BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:DrugBug: collect your sticks", "TRIGGER:PT0M", "END:VALARM", "END:VEVENT", "END:VCALENDAR"].join("\r\n");
+  try {
+    var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([ics], { type: "text/calendar" })); a.download = "DrugBug-daily-reminder.ics";
+    document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+  } catch (e) {}
 }
 function themePref() { return store("theme") || "dark"; }
 function applySettings() {
@@ -7309,6 +7344,7 @@ function audioCtx() {
   if (!AC) { AUD.err = "This browser has no Web Audio support."; return null; }
   if (!AUD.ctx) { try { AUD.ctx = new AC(); } catch (e) { AUD.err = "The browser refused to open an audio channel."; return null; } }
   if (AUD.ctx.state === "suspended") { try { var r = AUD.ctx.resume(); if (r && r.catch) r.catch(function () {}); } catch (e) {} }
+  if (typeof muSession === "function") muSession();
   AUD.played++;
   return AUD.ctx;
 }
@@ -7366,7 +7402,8 @@ function audioReport() {
   L.push(AUD.music === "ok" ? ["ok", "Music file loaded."]
     : AUD.music === "fail" ? ["bad", "The music file could not be loaded, so music stays silent. Sound effects are unaffected."]
     : ["info", "Music file not loaded yet."]);
-  L.push(["info", "If this all looks right and you still hear nothing, check the phone's silent switch and the volume."]);
+  if (typeof funOn === "function" && !funOn()) L.push(["off", "Seriously Fun mode is off, and music only plays in Seriously Fun mode."]);
+  L.push(["info", "If this all looks right and you still hear nothing, turn the volume up. On an iPhone older than iOS 17, flip the ring/silent switch off; sound from web pages follows it."]);
   return L;
 }
 /* every context holder below is a view onto the one above, so old code reading .ctx still works */
@@ -7393,7 +7430,9 @@ function setRow(label, help, ctl) { return '<div class="setrow"><div class="sl">
 function setCard(id, title, body) { return (S.setTab || "display") !== id ? "" : '<section class="setcard" id="set-' + id + '"><h2>' + esc(title) + '</h2>' + body + '</section>'; }
 /* hidden Field Medic (military) section: unlocked by a code, shown as a prototype (owner, Oct 28 2026). Only SHA-256 hashes ship. */
 var FM_CODES = { "3cffa3f08ba9410ebbf2ac347359f647fcc57eed26e4294a7991a5b6b9ed77ab": { days: 0 }, "327a19299989c959457c7697b6dd8cdb9ec2c1704fb4e12653389c086938b0e5": { days: 30 } };
-function funOn() { return SET().fun !== false; }   /* Seriously Fun mode: the bugs, the banter, the little animations */
+/* Focused mode is gone (owner, Nov 5 2026): DrugBug is always the fun version. Anyone who had
+   it off is switched back on; sound stays however they set it. */
+function funOn() { return true; }   /* Seriously Fun mode: the bugs, the banter, the little animations */
 function fmUnlocked() { return !!store("fmUnlock"); }
 /* In the App Store build a code may unhide the section but not unlock paid features (Guideline 3.1.1: paid features go through in-app purchase). Debug pass Oct 29; owner to confirm. */
 function fmPassActive() { if (typeof NATIVE !== "undefined" && NATIVE) return false; var p = store("fmPass"); return !!(p && p.until > Date.now()); }
@@ -7414,8 +7453,7 @@ function fmCodeTry(raw) {
 }
 function fmCodeRow() {
   var on = fmUnlocked(), p = store("fmPass");
-  return setRow("Redeem a code", "Access codes from DrugBug unlock extra sections or time.", '<form class="inl" data-fmcode="1"><input class="pinput" id="fmcodein" maxlength="24" autocomplete="off" autocapitalize="characters" placeholder="Enter code"><button class="btn small" type="submit">Redeem</button></form>') +
-    (on ? setRow("Combat Paramedic & Prolonged Care", "In development, unlocked on this device. Find it in Prehospital." + (fmPassActive() ? " Full access until " + new Date(p.until).toLocaleDateString() + "." : ""), '<span class="pill proto">In development</span><button class="btn small ghost" data-act="fmhide">Hide it</button>') : "");
+  return (on ? setRow("Combat Paramedic & Prolonged Care", "In development, unlocked on this device. Find it in Prehospital." + (fmPassActive() ? " Full access until " + new Date(p.until).toLocaleDateString() + "." : ""), '<span class="pill proto">In development</span><button class="btn small ghost" data-act="fmhide">Hide it</button>') : "");
 }
 function settingsView() {
   var s = SET(), P = Prog.d, ag = agreeRec(), c = topbar() + '<div class="settings lvl-gen"><header class="pagehead"><h1>Settings</h1><p>' + (!HASDB ? 'Saved on this device.' : 'Saved on this device. Your progress, bugs and scores also sync to your account.') + '</p></header>' + proCard();
@@ -7425,7 +7463,6 @@ function settingsView() {
   c += '<nav class="settabs" role="tablist" aria-label="Settings sections">' + tabs.map(function (x) { return '<button role="tab" data-settab="' + x[0] + '" aria-selected="' + (S.setTab === x[0]) + '">' + x[1] + '</button>'; }).join("") + '</nav>';
   // display
   c += setCard("display", "Display",
-    setRow("Fun mode", "Off is Focused, the plain reference. On is everything playful: your bug and the Terrarium, the study buddy, bugs whose eyes follow you, Hickory\u2019s chatter, the level animations, holiday dressing, music and sound. Turn it off for a plain, quiet drug reference. The medicine, doses and questions never change.", setTog("fun", s.fun !== false, "Seriously Fun")) +
     setRow("Theme", "", setOpts("theme", themePref(), [["dark", "Night shift (default)"], ["light", "Day shift"], ["system", "Match my device"]])) +
     setRow("Text size", "", setOpts("text", s.text, [["normal", "Normal"], ["large", "Large"], ["xl", "Extra large"]])) +
     setRow("High contrast", "Darker text and borders.", setTog("contrast", s.contrast, "High contrast")) +
@@ -7441,7 +7478,8 @@ function settingsView() {
     setRow("Question choice", "", setOpts("adaptive", s.adaptive ? "1" : "0", [["1", "Adaptive"], ["0", "Random"]])) +
     setRow("Megacode timer", "Relaxed doubles the time. Off removes the clock.", setOpts("megaTimer", s.megaTimer, [["on", "On"], ["relaxed", "Relaxed"], ["off", "Off"]])) +
     setRow("Drug pages open in", "", setOpts("fullDefault", s.fullDefault ? "1" : "0", [["0", "Simple view"], ["1", "Full record"]])) +
-    (NATIVE ? setRow("Daily study reminder", "A notification once a day with the drugs due for review and your exam countdown.", setTog("remind", s.remind, "Daily study reminder") + (s.remind ? ' <input class="pinput" type="time" data-setsel="remindAt" value="' + esc(s.remindAt || "19:00") + '" aria-label="Reminder time">' : '')) : "") +
+    (NATIVE ? setRow("Daily reminder", "A notification once a day to come learn and collect your daily sticks.", setTog("remind", s.remind !== false, "Daily reminder") + (s.remind ? ' <input class="pinput" type="time" data-setsel="remindAt" value="' + esc(s.remindAt || "19:00") + '" aria-label="Reminder time">' : '')) : "") +
+    (!NATIVE ? setRow("Daily reminder", "Add a daily reminder to your phone's calendar to come learn and collect your sticks. Pick a time, then open the file it saves.", '<input class="pinput" type="time" data-setsel="remindAt" value="' + esc(s.remindAt || "19:00") + '" aria-label="Reminder time"> <button class="btn small ghost" data-act="remindcal">Add to my calendar</button>') : "") +
     setRow("Weird Drug Wednesday", (NATIVE ? "A strange-but-true drug fact every Wednesday as a notification. " : "A strange-but-true drug fact every Wednesday. ") + "Education only.", setTog("weird", s.weird !== false, "Weird Drug Wednesday") + (NATIVE && s.weird !== false ? ' <input class="pinput" type="time" data-setsel="weirdAt" value="' + esc(s.weirdAt || "12:00") + '" aria-label="Weird Drug Wednesday time">' : '') + ' <button class="btn small ghost" data-wdw="show">See this week\'s fact</button>') +
     setRow("App tour", "See the quick welcome tour again.", '<button class="btn small ghost" data-tour="again">Show the tour</button>') +
     setRow("What you are here for", obIntLine(), '<button class="btn small ghost" data-obagain="1">Change</button>') +
@@ -7478,7 +7516,7 @@ function settingsView() {
   pv += setRow("Reset my progress", "Clears mastery, XP, streaks, achievements and scores. Keeps your bugs, sticks, saved list and settings.", S.resetAsk ? '<span class="confirm">Reset everything? <button class="btn small again" data-act="resetyes">Reset</button><button class="btn small ghost" data-act="resetno">Cancel</button></span>' : '<button class="btn small ghost" data-act="resetask">Reset progress</button>');
   pv += setRow("Delete all my data", "Removes everything DrugBug stores about you, here and online. Cannot be undone.", '<button class="btn small again" data-legal="data">Delete…</button>');
   c += setCard("privacy", "Account & privacy", fmCodeRow() + (typeof accCard === "function" ? accCard() : "")
-    + (typeof giftBox === "function" ? setRow("Redeem a code", "A gift code from DrugBug or your agency: sticks, Pro time, or your agency's protocols.", "") + giftBox() : "")
+    + (typeof giftBox === "function" ? setRow("Redeem a code", "Every code goes here: gift codes, access codes, school or agency codes, and your agency's protocol code." + (NATIVE ? " App Store offer codes open Apple's own screen." : ""), NATIVE ? '<button class="btn small ghost" data-pw="redeem">App Store offer code</button>' : "") + giftBox() : "")
     + pv);
   // feedback
   c += setCard("feedback", "Feedback",
@@ -7638,23 +7676,26 @@ function muOn() { return SET().music !== false && (typeof funOn !== "function" |
 /* Oct 2026 (owner): only the seasonal tracks for now, until the rest of the music is sorted out.
    Set MU_ONLY = null to bring back the full list. Each entry still has to pass its own season
    check below, so Haunted Study Hall steps aside for Harvest Table on November 1. */
-var MU_ONLY = ["haunted-study-hall", "harvest-table", "slow-bug-jazz", "bug-house", "bugstep", "bug-rock", "banjo-bug", "bug-pop", "bug-house-deep-hive", "bug-house-disco-beetle", "bug-house-acid-ant", "bug-house-piano-moth"];
+var MU_ONLY = ["haunted-study-hall", "harvest-table", "plain-bug-beat", "slow-bug-jazz", "bug-house", "bugstep", "bug-rock", "banjo-bug", "bug-pop", "bug-house-deep-hive", "bug-house-disco-beetle", "bug-house-acid-ant", "bug-house-piano-moth"];
 function muOnly(id) { return !MU_ONLY || MU_ONLY.indexOf(id) >= 0; }
 var TRACKS = [
   { id: "study-session", name: "Study Session", price: 0, desc: "Warm electric piano, a laid-back beat and a little vinyl crackle.", bpm: 82, src: "music/study-session.mp3" },
   { id: "coffee-flashcards", name: "Coffee and Flashcards", price: 0, desc: "Breezy bossa nova: nylon guitar, brushes and a flute.", bpm: 136, src: "music/coffee-flashcards.mp3" },
   { id: "rainy-day-review", name: "Rainy Day Review", price: 0, desc: "A swinging jazz trio with walking bass and soft rain outside.", bpm: 118, src: "music/rainy-day-review.mp3" },
   { id: "haunted-study-hall", name: "Haunted Study Hall", price: 0, season: "halloween", desc: "Spooky lo-fi with a music box, a ghostly choir and a distant bell.", bpm: 78, src: "music/haunted-study-hall.mp3" },
-  { id: "harvest-table", name: "Harvest Table", price: 0, season: "thanksgiving", desc: "Warm autumn lo-fi: Rhodes, nylon guitar and a cor anglais over brushes.", bpm: 76, src: "music/harvest-table.mp3" },
+  { id: "harvest-table", name: "Harvest Table", price: 0, tier: "plus", season: "thanksgiving", desc: "Warm autumn lo-fi: Rhodes, nylon guitar and a cor anglais over brushes.", bpm: 76, src: "music/harvest-table.mp3" },
+  /* music by plan (owner, Nov 5 2026): Free gets one plain track (plus the seasonal ones) and a
+     snippet of everything else; Plus gets one track of each genre; Pro gets every track */
+  { id: "plain-bug-beat", name: "Plain Bug Beat", price: 0, desc: "The free one. Some piano, a beat, nothing fancy. The real bands are in Plus and Pro.", bpm: 96, src: "music/plain-bug-beat.mp3" },
   /* the bug genres (owner, Nov 5 2026): rendered from a General MIDI SoundFont plus synthesized
      crickets, wing buzz and wobble bass. Source: tools/music/compose.py */
   { id: "slow-bug-jazz", name: "Slow Bug Jazz", price: 0, tier: "plus", desc: "A late-night ballad: brushes, walking bass, Rhodes and a breathy tenor sax.", bpm: 66, src: "music/slow-bug-jazz.mp3" },
   { id: "bug-house", name: "Bug House", price: 0, tier: "plus", desc: "Four on the floor, house piano stabs and a cricket on the hi-hats.", bpm: 122, src: "music/bug-house.mp3" },
-  /* more Bug House, for Plus (owner, Nov 5 2026; was Pro) */
-  { id: "bug-house-deep-hive", name: "Bug House: Deep Hive", price: 0, tier: "plus", desc: "Deep house: minor-ninth Rhodes, warm pads and a rolling low end.", bpm: 120, src: "music/bug-house-deep-hive.mp3" },
-  { id: "bug-house-disco-beetle", name: "Bug House: Disco Beetle", price: 0, tier: "plus", desc: "Disco house: octave bass, string stabs, funky guitar chops and a trumpet hook.", bpm: 124, src: "music/bug-house-disco-beetle.mp3" },
-  { id: "bug-house-acid-ant", name: "Bug House: Acid Ant", price: 0, tier: "plus", desc: "A squelchy sixteenth-note acid bassline over 808 drums.", bpm: 126, src: "music/bug-house-acid-ant.mp3" },
-  { id: "bug-house-piano-moth", name: "Bug House: Piano Moth", price: 0, tier: "plus", desc: "Classic piano house: big chords, a flute hook and an organ swell.", bpm: 123, src: "music/bug-house-piano-moth.mp3" },
+  /* more Bug House: Pro only (owner, Nov 5 2026) */
+  { id: "bug-house-deep-hive", name: "Bug House: Deep Hive", price: 0, tier: "pro", desc: "Deep house: minor-ninth Rhodes, warm pads and a rolling low end.", bpm: 120, src: "music/bug-house-deep-hive.mp3" },
+  { id: "bug-house-disco-beetle", name: "Bug House: Disco Beetle", price: 0, tier: "pro", desc: "Disco house: octave bass, string stabs, funky guitar chops and a trumpet hook.", bpm: 124, src: "music/bug-house-disco-beetle.mp3" },
+  { id: "bug-house-acid-ant", name: "Bug House: Acid Ant", price: 0, tier: "pro", desc: "A squelchy sixteenth-note acid bassline over 808 drums.", bpm: 126, src: "music/bug-house-acid-ant.mp3" },
+  { id: "bug-house-piano-moth", name: "Bug House: Piano Moth", price: 0, tier: "pro", desc: "Classic piano house: big chords, a flute hook and an organ swell.", bpm: 123, src: "music/bug-house-piano-moth.mp3" },
   { id: "bugstep", name: "Bugstep", price: 0, tier: "plus", desc: "A slow build, then the drop: wobble bass and buzzing wings.", bpm: 140, src: "music/bugstep.mp3" },
   { id: "bug-rock", name: "Bug Rock", price: 0, tier: "plus", desc: "Crunchy power chords, a big backbeat and a screaming lead.", bpm: 132, src: "music/bug-rock.mp3" },
   { id: "banjo-bug", name: "Banjo Bug", price: 0, tier: "plus", desc: "A bluegrass breakdown: rolling banjo, hammered dulcimer and a two-step bass.", bpm: 118, src: "music/banjo-bug.mp3" },
@@ -7682,7 +7723,7 @@ function muSeason(k) {
 }
 function trackAvail(t) { return muOnly(t.id) && (!t.season || muSeason(t.season)); }
 /* with MU_ONLY set, the default is whichever of those tracks is in season right now */
-function muDefault() { var L = TRACKS.filter(trackAvail); return L.length ? L[0].id : "study-session"; }
+function muDefault() { var L = TRACKS.filter(function (t) { return trackAvail(t) && !trackProLocked(t); }); return L.length ? L[0].id : "plain-bug-beat"; }
 function shownTracks() { return TRACKS.filter(trackAvail); }
 function trackProLocked(t) { var need = t && (t.tier || (t.pro ? "pro" : "")); return !!(need && typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier(need)); }
 function ownsTrack(id) { var t = trackById(id); if (!trackAvail(t) || trackProLocked(t)) return false; return !t.price || (Prog.d.tracks || []).indexOf(id) >= 0; }
@@ -7695,7 +7736,7 @@ function muTick() {
 function muPreview(id) {
   MU.armed = true; MU.preview = id; MU.trackId = null; clearTimeout(MU.pvT);
   if (!MU.playing) { MU.forced = true; muStart(true); }
-  MU.pvT = setTimeout(function () { MU.preview = null; MU.trackId = null; if (MU.forced) { MU.forced = false; if (!muOn()) muStop(); } if (typeof render === "function" && S.shopF === "music") render(); }, 9000);
+  MU.pvT = setTimeout(function () { MU.preview = null; MU.trackId = null; if (MU.forced) { MU.forced = false; if (!muOn()) muStop(); } if (typeof render === "function" && S.shopF === "music") render(); }, 15000);
 }
 function muLevel() { var v = SET().musicVol; if (typeof v === "string") v = MU_VOL[v] || 40; if (v == null || isNaN(+v)) v = 40; return Math.max(0, Math.min(100, +v)); }
 function muVol() { return muLevel() / 100 * 2.6; }
@@ -7710,8 +7751,15 @@ function muCtx() {
   }
   return c0;
 }
+/* iPhones mute web audio while the ring/silent switch is on, which is why the music played for
+   some people and not others (owner, Nov 5 2026). Safari 17+ lets a page say its sound is media
+   playback, which plays through the switch like a video does. Only while music is playing. */
+/* playback while the app has sound switched on (music or effects), so sound effects and level
+   transitions are heard with the switch on too; back to the browser's default when both are off */
+function muSession() { try { if (navigator.audioSession) { var s0 = typeof SET === "function" ? SET() : {}; navigator.audioSession.type = (s0.sfx || (typeof muOn === "function" && muOn())) ? "playback" : "auto"; } } catch (e) {} }
 function muStart(force) {
   if ((!muOn() && !force) || document.hidden) return;
+  muSession();
   try {
     var c = muCtx(); if (!c) return;
     if (c.state !== "running") { var pr = c.resume(); if (pr && pr.then) pr.then(function () { if (MU.playing) { MU.nextT = Math.max(MU.nextT, c.currentTime + 0.05); } }).catch(function () {}); }
@@ -7723,7 +7771,7 @@ function muStart(force) {
   } catch (e) { MU.playing = false; clearInterval(MU.timer); MU.timer = null; }
 }
 function muStop() {
-  clearInterval(MU.timer); MU.timer = null; MU.playing = false;
+  clearInterval(MU.timer); MU.timer = null; MU.playing = false; muSession();
   /* the context is shared with every sound effect now, so it stays running: just close the
      music bus. Suspending it here used to mute the whole app until the next tap. */
   try { var c = MU.ctx; if (c && MU.master) { MU.master.gain.cancelScheduledValues(c.currentTime); MU.master.gain.setTargetAtTime(0.0001, c.currentTime, 0.08); } } catch (e) {}
@@ -7784,6 +7832,7 @@ function muFile(T) {
     g.gain.setValueAtTime(0.0001, c.currentTime); g.gain.linearRampToValueAtTime(1, c.currentTime + 0.8);
     s.connect(g); g.connect(MU.fileOut); s.start(); f.src = s; f.g = g;
     f.t0 = c.currentTime; f.len = buf.duration; f.bpm = T.bpm || 0; danceStart(f);
+    try { if (f.bpm) document.documentElement.style.setProperty("--beatdur", (60 / f.bpm).toFixed(3) + "s"); } catch (e) {}
   }).catch(function () { f.failed = true; });
 }
 /* your bug dances when a new song starts (owner, Nov 5 2026): only your own avatar, only for the
@@ -8484,7 +8533,7 @@ function webCodeTry(raw) {
   var code = String(raw || "").toUpperCase().replace(/[^A-Z0-9]/g, ""), list = CFG.webCodes || [];
   PRO.code = raw; if (!code) return;
   if (!(window.crypto && crypto.subtle)) { PRO.msg = "This browser can't check codes. Try a current version of Safari or Chrome."; return drawPaywall(); }
-  crypto.subtle.digest("SHA-256", new TextEncoder().encode("drugbug-web:" + code)).then(function (buf) {
+  return crypto.subtle.digest("SHA-256", new TextEncoder().encode("drugbug-web:" + code)).then(function (buf) {
     var h = Array.prototype.map.call(new Uint8Array(buf), function (b) { return ("0" + b.toString(16)).slice(-2); }).join("");
     var hit = list.filter(function (c) { return c.h === h; })[0];
     if (!hit) { PRO.msg = "That code isn't valid. Check the spelling and try again."; return drawPaywall(); }
@@ -8610,7 +8659,7 @@ function drawPaywall() {
     });
     if (PRO.busy) c += '<p class="muted small" role="status">Opening checkout…</p>';
     if (PRO.msg) c += '<div class="presult" role="alert">' + esc(PRO.msg) + '</div>';
-    if (subActive()) c += '<div class="pwrow"><button class="linkish" data-pw="wmanage">Manage or cancel your subscription</button></div>';
+    c += '<div class="pwrow">' + (subActive() ? '<button class="linkish" data-pw="wmanage">Manage or cancel your subscription</button>' : '') + '<button class="linkish" data-act="codesgo">Have a code? Redeem it in Settings</button></div>';
     c += '<p class="muted small">DrugBug Free stays free forever: every tool in the app, over about 40 common medications.</p>';
     c += '<p class="muted small pwfine">Payment is taken by Stripe; DrugBug never sees your card. Subscriptions renew automatically until cancelled, and you can cancel any time from Manage subscription above. Cancelling stops future renewals and your plan stays active until the end of the period you have paid for. DrugBug is for education only, not for patient care.' +
       (site ? ' <a href="' + esc(site) + '/terms.html" target="_blank" rel="noopener">Terms of Use</a> · <a href="' + esc(site) + '/privacy.html" target="_blank" rel="noopener">Privacy Policy</a>' : '') + '</p>';
@@ -8630,9 +8679,8 @@ function drawPaywall() {
   if (PRO.busy) c += '<p class="muted small" role="status">Talking to the App Store…</p>';
   if (PRO.msg) c += '<div class="presult" role="alert">' + esc(PRO.msg) + '</div>';
   c += '<p class="muted small">DrugBug Free stays free forever: about 40 common medications, flashcards for those drugs, the daily 5-minute DrugBug, the Small Sickness Guide, Normal Vitals &amp; Labs, and a free preview of the Wormhole and the Disease Lab.</p>';
-  c += '<div class="pwrow"><button class="linkish" data-pw="restore">Restore purchases</button>' + (NATIVE ? '<button class="linkish" data-pw="redeem">Redeem an offer code</button>' : '') + (NATIVE && PRO.store ? '<button class="linkish" data-pw="manage">Manage subscription</button>' : '') + '</div>';
-  if (DEMO) c += '<div class="pwcode">' + (PRO.codeOpen ? '<form data-pwwebcode="1" class="inl"><input class="pinput" id="pwwebcode" maxlength="24" placeholder="Access code" value="' + esc(PRO.code || "") + '" autocapitalize="characters" autocomplete="off"><button class="btn small" type="submit">Apply</button></form>' : '<button class="linkish" data-pw="code">Have an access code?</button>') + '</div>';
-  if (HASDB && !DEMO) c += '<div class="pwcode">' + (PRO.codeOpen ? '<form data-pwcode="1" class="inl"><input class="pinput" id="pwcode" maxlength="16" placeholder="School or agency code" value="' + esc(PRO.code) + '" autocapitalize="characters"><button class="btn small" type="submit">Apply</button></form>' : '<button class="linkish" data-pw="code">Have a school or agency code?</button>') + '</div>';
+  c += '<div class="pwrow"><button class="linkish" data-pw="restore">Restore purchases</button><button class="linkish" data-act="codesgo">Have a code? Redeem it in Settings</button>' + (NATIVE && PRO.store ? '<button class="linkish" data-pw="manage">Manage subscription</button>' : '') + '</div>';
+  /* codes are redeemed in one place only, Settings > Account (owner, Nov 5 2026) */
   c += '<p class="muted small pwfine">Prices are shown before you buy. If a free trial is offered, payment is charged when the trial ends unless you cancel at least 24 hours before it ends. Subscriptions renew automatically at the end of each billing period unless cancelled at least 24 hours before it ends. Payment is charged to your Apple Account when you confirm. Manage or cancel any time in iPhone Settings → your name → Subscriptions. Cancelling stops future renewals; refunds for App Store purchases are handled by Apple. Plus and Pro are in one subscription group, so changing plans replaces your current one. DrugBug is for education only, not for patient care.' +
     (site ? ' <a href="' + esc(site) + '/terms.html" target="_blank" rel="noopener">Terms of Use</a> · <a href="' + esc(site) + '/privacy.html" target="_blank" rel="noopener">Privacy Policy</a>' : ' <button class="linkish" data-legal="terms">Terms of Use</button> · <button class="linkish" data-legal="privacy">Privacy Policy</button>') + '</p>';
   pwdlg.innerHTML = c + '</div>'; translateDom(pwdlg);
@@ -8659,7 +8707,7 @@ function proCard() {
      and watch nothing happen. (owner, Nov 3 2026) */
   if (!NATIVE && !DEMO && (!WEBSUBS || (typeof Admin !== "undefined" && Admin.on))) c += '<label class="small">Preview as <select class="pinput" id="pvtier">' + ["free", "plus", "pro"].map(function (t) { return '<option value="' + t + '"' + (tier() === t ? " selected" : "") + '>' + TIER_NAME[t] + '</option>'; }).join("") + '</select></label>';
   if (!(PRO.store && PRO.tier === "pro")) c += '<button class="btn small" data-pw="open">See plans</button>';
-  if (NATIVE) c += '<button class="btn small ghost" data-pw="redeem">Redeem code</button><button class="btn small ghost" data-pw="restore">Restore purchases</button>' + (PRO.store ? '<button class="btn small ghost" data-pw="manage">Manage subscription</button>' : '');
+  if (NATIVE) c += '<button class="btn small ghost" data-pw="restore">Restore purchases</button>' + (PRO.store ? '<button class="btn small ghost" data-pw="manage">Manage subscription</button>' : '');
   return c + '</div></div>';
 }
 document.addEventListener("click", function (e) {
@@ -8857,7 +8905,7 @@ var TR = { i: 0, open: false };
 var trdlg = document.createElement("div"); trdlg.id = "tourdlg"; trdlg.className = "sheet rsheet"; trdlg.hidden = true; document.body.appendChild(trdlg);
 function tourDone() { return TR.done || !!store("tourDone"); }
 function tourOpen(force) { if (TR.open || (!force && tourDone())) return; TOUR = tourCards(); TR.open = true; TR.i = 0;   /* the Serious / Seriously fun choice lives in Settings now (owner, Oct 30 2026) */ drawTour(); trdlg.hidden = false; }
-function tourClose() { TR.done = true; TR.open = false; trdlg.hidden = true; trdlg.innerHTML = ""; store("tourDone", 1); if (typeof wdwSync === "function") setTimeout(wdwSync, 600); }
+function tourClose() { try { if (typeof voiceStop === "function") voiceStop(); } catch (e) {} TR.done = true; TR.open = false; trdlg.hidden = true; trdlg.innerHTML = ""; store("tourDone", 1); if (typeof wdwSync === "function") setTimeout(wdwSync, 600); if (typeof remindSync === "function") setTimeout(remindSync, 900); }
 function drawTour() {
   var t = TOUR[TR.i], last = TR.i === TOUR.length - 1;
     var art = t[2] === "sticks" ? '<div class="tourbig">' + stickTag(3) + '</div>'
@@ -8868,7 +8916,7 @@ function drawTour() {
     '<div class="actions"><button class="btn small ghost" data-tour="skip">' + (last ? "Not now" : "Skip") + '</button><button class="btn" data-tour="next">' + (last ? "Show me" : "Next") + '</button></div></div>';
   translateDom(trdlg); var p = trdlg.querySelector(".panel"); if (p) p.focus();
   /* Hickory talks you through the tour (owner, Nov 5 2026) */
-  try { if (typeof voiceSay === "function") { var w = String(t[1]).split(/\s+/).slice(0, 14).join(" "); setTimeout(function () { voiceSay(w, "hick"); }, 120); } } catch (e) {}
+  try { if (typeof voiceSay === "function") { var w = String(t[1]).split(/\s+/).slice(0, 14).join(" "); if (typeof voiceStop === "function") voiceStop(); VX.pend = setTimeout(function () { voiceSay(w, "hick"); }, 120); } } catch (e) {}
 }
 document.addEventListener("click", function (e) {
   var b = e.target.closest && e.target.closest("[data-tour]"); if (!b) return;
@@ -9270,7 +9318,7 @@ var BM_AREA = { "Head and face": "head", "Neck and throat": "neck", "Chest and r
 /* Hickory pokes his head round the edge of the screen, the same way the peeking pals do -
    same position, same angle, same wiggle - and says his piece. Fun mode only, one at a time.
    (owner, Nov 4 2026) */
-var HICK_LINES = ["Wow.", "That's messed up, man.", "We're just here to learn.", "Poor fella."];
+var HICK_LINES = ["Wow.", "That's messed up, man.", "We're just here to learn.", "Poor fella.", "Have some respect."];
 function hickPop(line) {
   if (typeof funOn === "function" && !funOn()) return;
   if (typeof hfxOk === "function" && !hfxOk()) return;
@@ -10094,7 +10142,7 @@ document.addEventListener("click", function (e) {
   if (d.evtab != null) { S.evTab = d.evtab || null; S.evq = ""; S.pbq = ""; S.pbUse = ""; S.cond = null; S.sick = null; S.breg = null; render(); return window.scrollTo(0, 0); }
   if (d.sick) { S.sick = d.sick; render(); var s = document.querySelector(".sickcard"); if (s) s.scrollIntoView({ block: "start", behavior: SET().motion ? "auto" : "smooth" }); return; }
   if (d.normtab) { S.normTab = d.normtab; return render(); }
-  if (d.barea != null) { var bp0 = t.getAttribute("data-bpart") || ""; S.barea = d.barea; S.breg = null; render(); try { bodyReact(d.barea, null, bp0); } catch (e2) {} return; }
+  if (d.barea != null) { var bp0 = t.getAttribute("data-bpart") || ""; S.barea = d.barea; S.breg = null; render(); if (t.closest("svg.bodymap, .bm3dsr")) { try { bodyReact(d.barea, null, bp0); } catch (e2) {} } return; }
   if (d.breg) { S.breg = d.breg; render(); var b = document.querySelector(".sickcard"); if (b) b.scrollIntoView({ block: "start", behavior: SET().motion ? "auto" : "smooth" }); }
 });
 document.addEventListener("keydown", function (e) { if ((e.key === "Enter" || e.key === " ") && e.target.dataset && e.target.dataset.barea) { e.preventDefault(); S.barea = e.target.dataset.barea; S.breg = null; render(); } });
@@ -10275,7 +10323,20 @@ function accInit() {
 }
 var ACC_LOCAL = ["progress", "nrscores", "lastLevel", "nunit", "protocol", "reviewer"];
 function accClearLocal() { try { if (typeof walletClear === "function") walletClear(); if (typeof subClear === "function") subClear(); ACC_LOCAL.forEach(function (k) { localStorage.removeItem("drugbug:" + k); }); Object.keys(localStorage).forEach(function (k) { if (k.indexOf("drugbug:scen:") === 0) localStorage.removeItem(k); }); } catch (e) {} }
-function accDone(text) { ACCT.busy = false; ACCT.msg = text || ""; try { sessionStorage.setItem("drugbug:accmsg", ACCT.msg); } catch (e) {} setTimeout(function () { location.reload(); }, 300); }
+/* Make an account, get 24 hours of DrugBug Pro free (owner, Nov 5 2026). Only for a brand-new
+   account, once: acctBonus is saved with the progress, so it syncs and a second claim is refused. */
+var ACC_BONUS_HRS = 24;
+function accBonus() {
+  try {
+    if (Prog.d.acctBonus) return "";
+    var from = Math.max(Date.now(), (Prog.d.proGift && Prog.d.proGift.until) || 0);
+    Prog.d.proGift = { until: from + ACC_BONUS_HRS * 36e5 }; Prog.d.acctBonus = Date.now();
+    if (typeof flushProg === "function") flushProg(); else saveProg();
+    try { localStorage.setItem("drugbug:progress", JSON.stringify(Prog.d)); } catch (e) {}
+    return " You have DrugBug Pro free for the next 24 hours.";
+  } catch (e) { return ""; }
+}
+function accDone(text, created) { if (created) text = (text || "") + accBonus(); ACCT.busy = false; ACCT.msg = text || ""; try { sessionStorage.setItem("drugbug:accmsg", ACCT.msg); } catch (e) {} setTimeout(function () { location.reload(); }, 300); }
 function accFail(e) { ACCT.busy = false; ACCT.msg = ACCT.api ? ACCT.api.error(e) : "Something went wrong."; render(); }
 /* ===== The quiet offer (owner, Nov 1 2026) =====
    Accounts are optional and the app never asks on arrival: someone looking up a drug mid-shift should
@@ -10301,12 +10362,42 @@ function accNudgeOk() {
   if (store("accnudge")) return false;                /* they said no once; that is the answer */
   return accInvested();
 }
+/* The pop-up (owner, Nov 5 2026): once someone has earned ACC_ASK_STICKS sticks, ask once, on
+   the phone and the web, with the 24-hour Pro offer. "Not now" asks again after a week, once. */
+var ACC_ASK_STICKS = 100;
+var accdlg = document.createElement("div"); accdlg.id = "accdlg"; accdlg.className = "sheet rsheet"; accdlg.hidden = true; document.body.appendChild(accdlg);
+function accAskOk() {
+  if (!ACCT.api) return false;
+  var st = ACCT.api.state() || {}; if (st.signedIn) return false;
+  if ((Prog.d.earned || 0) < ACC_ASK_STICKS) return false;
+  var a = store("accask") || {}; if (a.done || (a.n || 0) >= 2) return false;
+  if (a.ts && Date.now() - a.ts < 7 * 864e5) return false;
+  if (typeof tourDone === "function" && !tourDone()) return false;
+  if (typeof topLayerOpen === "function" && topLayerOpen()) return false;
+  if (S.tab === "session" && S.sess && !S.sess.result) return false;   /* never in the middle of a quiz */
+  return true;
+}
+function accAskMaybe(delay) { setTimeout(function () { if (accAskOk()) accAskOpen(); }, delay || 900); }
+function accAskOpen() {
+  var a = store("accask") || {}; store("accask", { n: (a.n || 0) + 1, ts: Date.now() });
+  accdlg.innerHTML = '<div class="panel pwpanel accask" role="dialog" aria-modal="true" aria-label="Make a free account" tabindex="-1">' +
+    '<p class="wdwkick">' + (Prog.d.earned || 0).toLocaleString() + ' sticks and counting</p><h2>Make a free account, get 24 hours of Pro</h2>' +
+    '<p>Right now your bug, your sticks and your progress live only on this ' + (NATIVE ? 'phone' : 'browser') + '. A free account backs them up and brings them to your other devices.</p>' +
+    '<p><strong>Make one now and DrugBug Pro is yours free for 24 hours:</strong> every drug, every level, every quiz.</p>' +
+    '<div class="actions"><button class="btn" data-accask="go">Make my free account</button><button class="btn ghost" data-accask="no">Not now</button></div></div>';
+  accdlg.hidden = false; var p = accdlg.querySelector(".panel"); if (p) p.focus();
+}
+document.addEventListener("click", function (e) {
+  var t = e.target.closest && e.target.closest("[data-accask]"); if (!t) { if (e.target === accdlg) { accdlg.hidden = true; } return; }
+  var k = t.getAttribute("data-accask"); accdlg.hidden = true; accdlg.innerHTML = "";
+  if (k === "go") { var a = store("accask") || {}; a.done = 1; store("accask", a); S.view = "settings"; S.setTab = "privacy"; render(); window.scrollTo(0, 0); var el = document.getElementById("set-privacy"); if (el) el.scrollIntoView({ block: "start" }); }
+});
 /* One line, where they are already looking at what they have earned. */
 function accNudge() {
   if (!accNudgeOk()) return "";
   return '<div class="accnudge"><span class="annx" aria-hidden="true">' +
     '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11V8a7 7 0 0 1 14 0v3"/><rect x="4" y="11" width="16" height="10" rx="2.5"/></svg></span>' +
-    '<span class="antx"><strong>This is all saved in this browser only.</strong> Make a free account and it follows you to your phone, and survives clearing your history.</span>' +
+    '<span class="antx"><strong>This is all saved in this browser only.</strong> Make a free account and it follows you to your phone, and survives clearing your history. New accounts get 24 hours of DrugBug Pro free.</span>' +
     '<span class="anact"><button class="btn small" data-acc="nudgego">Make an account</button>' +
     '<button class="linkish small" data-acc="nudgeno">Not now</button></span></div>';
 }
@@ -10329,7 +10420,7 @@ function accCard() {
     } else c += setRow("Delete account", "Permanently delete your account and its data.", '<button class="btn small ghost" data-acc="delask">Delete account</button>');
     return c;
   }
-  c += setRow("Account (optional)", "DrugBug works without an account. Create one to back up your progress and sync it across devices. We never show your email or account to other users.", "");
+  c += setRow("Account (optional)", "DrugBug works without an account. Create one to back up your progress and sync it across devices" + (Prog.d.acctBonus ? "" : ", and get 24 hours of DrugBug Pro free") + ". We never show your email or account to other users.", "");
   /* Sign in with Apple needs the native AuthenticationServices bridge, so it only appears in the
      iPhone app; the website offers Google instead (owner, Nov 1 2026). Email works in both. */
   var hasApple = typeof ACCT.api.hasApple === "function" ? ACCT.api.hasApple() : true;
@@ -10353,8 +10444,8 @@ document.addEventListener("click", function (e) {
   if (a === "nudgeno") { store("accnudge", 1); return render(); }
   if (a === "nudgego") { S.view = "settings"; S.setTab = "privacy"; render(); window.scrollTo(0, 0); var el = document.getElementById("set-privacy"); if (el) el.scrollIntoView({ block: "start" }); return; }
   if (a === "mode") { ACCT.mode = t.getAttribute("data-m") || ""; return render(); }
-  if (a === "google") { ACCT.busy = true; render(); return ACCT.api.signInGoogle().then(function (r) { accDone(r.switched ? "Signed in. This device's progress was merged into your account." : "Account created. Your progress is now backed up."); }, function (er) { var mm = ACCT.api.error(er); if (!mm) { ACCT.busy = false; return render(); } accFail(er); }); }
-  if (a === "apple") { ACCT.busy = true; render(); return ACCT.api.signInApple().then(function (r) { accDone(r.switched ? "Signed in. This phone's progress was merged into your account." : "Account created. Your progress is now backed up."); }, function (er) { if (/cancel/i.test(er && er.message || "")) { ACCT.busy = false; return render(); } accFail(er); }); }
+  if (a === "google") { ACCT.busy = true; render(); return ACCT.api.signInGoogle().then(function (r) { accDone(r.switched ? "Signed in. This device's progress was merged into your account." : "Account created. Your progress is now backed up.", !r.switched); }, function (er) { var mm = ACCT.api.error(er); if (!mm) { ACCT.busy = false; return render(); } accFail(er); }); }
+  if (a === "apple") { ACCT.busy = true; render(); return ACCT.api.signInApple().then(function (r) { accDone(r.switched ? "Signed in. This phone's progress was merged into your account." : "Account created. Your progress is now backed up.", !r.switched); }, function (er) { if (/cancel/i.test(er && er.message || "")) { ACCT.busy = false; return render(); } accFail(er); }); }
   if (a === "signout") { if (typeof flushProg === "function") flushProg(); ACCT.busy = true; var waitN = 0; return (function waitSave() { if (Prog.saving && waitN++ < 40) return setTimeout(waitSave, 250); if (Prog.dirty && Prog.db && waitN < 40 && typeof flushProg === "function") { flushProg(); waitN++; return setTimeout(waitSave, 250); } (function () { ACCT.api.signOut().then(function () { accClearLocal(); accDone("Signed out. Your progress is safe in your account."); }, accFail); })(); })(); }
   if (a === "delask") { ACCT.del = true; return render(); }
   if (a === "delno") { ACCT.del = null; return render(); }
@@ -10371,7 +10462,7 @@ document.addEventListener("submit", function (e) {
   ACCT.msg = ""; ACCT.busy = true;
   if (go === "reset") return ACCT.api.resetPassword(em).then(function () { ACCT.busy = false; ACCT.mode = "email"; ACCT.msg = "If an account uses that email, a reset link is on its way."; render(); }, function () { ACCT.busy = false; ACCT.msg = "If an account uses that email, a reset link is on its way."; render(); });
   var p = go === "create" ? ACCT.api.createEmail(em, pw) : ACCT.api.signInEmail(em, pw);
-  p.then(function (r) { accDone(go === "create" ? "Account created. Check your email to verify your address." : r && r.switched ? "Signed in. This phone's progress was merged into your account." : "Signed in."); }, accFail);
+  p.then(function (r) { accDone(go === "create" ? "Account created. Check your email to verify your address." : r && r.switched ? "Signed in. This phone's progress was merged into your account." : "Signed in.", go === "create"); }, accFail);
 });
 
 /* ---------- Weird Drug Wednesday: one strange-but-true drug fact a week (on by default) ----------
@@ -11650,22 +11741,53 @@ function hasReview() { return !!(window.webkit && window.webkit.messageHandlers 
 function rateUrl() {
   if (isAndroid()) return "https://play.google.com/store/apps/details?id=com.volaremedia.drugbug";
   var id = String((window.DRUGBUG_CONFIG || {}).appStoreId || "").replace(/\D/g, "");
-  return NATIVE && id ? "https://apps.apple.com/app/id" + id + "?action=write-review" : "";
+  if (!id) id = typeof APP_STORE_ID !== "undefined" ? APP_STORE_ID : "";
+  return id ? "https://apps.apple.com/app/id" + id + "?action=write-review" : "";
 }
-/* called when a study session finishes with a good score */
+/* called when a study session finishes with a good score.
+   Asks "Enjoying DrugBug?" after the 3rd good session (owner, Nov 5 2026). Yes opens Apple's own
+   review prompt in the app (the API Apple requires), or the App Store review page; "Not really"
+   opens feedback so a problem comes to us instead of a 1-star. "Not now" waits 30 days. At most
+   3 asks ever, and never again once they say yes. */
+var APP_STORE_ID = "6820225080";
+var RV_ASK_SESS = 3, RV_ASK_GAP = 30;
+var rvdlg = document.createElement("div"); rvdlg.id = "rvdlg"; rvdlg.className = "sheet rsheet"; rvdlg.hidden = true; document.body.appendChild(rvdlg);
+function rvStoreUrl() {
+  if (isAndroid()) return "https://play.google.com/store/apps/details?id=com.volaremedia.drugbug";
+  var id = String((window.DRUGBUG_CONFIG || {}).appStoreId || APP_STORE_ID).replace(/\D/g, "");
+  return "https://apps.apple.com/app/id" + id + "?action=write-review";
+}
 function rateMaybe(sc) {
   try {
-    if (!hasReview() || !sc || sc.n < 5 || sc.pct < 70) return;
+    if (!sc || sc.n < 5 || sc.pct < 70) return;
+    if (typeof funOn === "function" && !funOn()) return;
     var r = Prog.d.rv || (Prog.d.rv = { s: 0, last: 0 }); r.s = (r.s || 0) + 1; saveProg();
-    if (r.s < RV_MIN_SESS || (r.last && Date.now() - r.last < RV_GAP_DAYS * 864e5)) return;
+    if (r.yes || (r.asks || 0) >= 3 || r.s < RV_ASK_SESS || (r.last && Date.now() - r.last < RV_ASK_GAP * 864e5)) return;
     setTimeout(function () {
       if (S.sess && !S.sess.result) return; /* a new quiz already started */
       if (topLayerOpen()) return;
-      r.last = Date.now(); saveProg();
-      try { window.webkit.messageHandlers.review.postMessage({}); } catch (e) {}
+      r.last = Date.now(); r.asks = (r.asks || 0) + 1; saveProg();
+      rvAskOpen();
     }, 1800);
   } catch (e) {}
 }
+function rvAskOpen() {
+  rvdlg.innerHTML = '<div class="panel pwpanel rvask" role="dialog" aria-modal="true" aria-label="Enjoying DrugBug?" tabindex="-1">' +
+    '<h2>Enjoying DrugBug?</h2><p>A quick review on the ' + (isAndroid() ? 'Google Play Store' : 'App Store') + ' helps other students and medics find it. It takes about ten seconds.</p>' +
+    '<div class="actions"><button class="btn" data-rvask="yes">Leave a review</button><button class="btn ghost" data-rvask="later">Not now</button></div>' +
+    '<p><button class="linkish small" data-rvask="no">Something is not right? Tell us instead</button></p></div>';
+  rvdlg.hidden = false; var p = rvdlg.querySelector(".panel"); if (p) p.focus();
+}
+document.addEventListener("click", function (e) {
+  var t = e.target.closest && e.target.closest("[data-rvask]"); if (!t) { if (e.target === rvdlg) rvdlg.hidden = true; return; }
+  var k = t.getAttribute("data-rvask"), r = Prog.d.rv || (Prog.d.rv = {});
+  rvdlg.hidden = true; rvdlg.innerHTML = "";
+  if (k === "yes") {
+    r.yes = Date.now(); saveProg();
+    if (hasReview()) { try { window.webkit.messageHandlers.review.postMessage({}); return; } catch (x) {} }
+    try { window.open(rvStoreUrl(), "_blank", "noopener"); } catch (x) {}
+  } else if (k === "no") { if (typeof openIdeas === "function") openIdeas(); }
+});
 /* Settings row: rate + send ideas */
 function ideasRow() {
   var u = rateUrl();
@@ -11846,7 +11968,7 @@ function agpCard() {
   if (!AGP.data) {
     c += '<p class="muted small">Enter the code from your agency or training officer to see your own protocols here, with each drug linked to its DrugBug page.</p>';
     if (!agpPro()) return c + '<button class="btn" data-agp="pro">See DrugBug Pro</button></section>';
-    c += '<form class="inl" data-agpform="1"><input class="pinput" id="agpcode" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="32" placeholder="10-digit agency code" inputmode="numeric" aria-label="Agency code"><button class="btn" type="submit"' + (AGP.busy ? " disabled" : "") + '>' + (AGP.busy ? "Checking…" : "Unlock") + '</button></form>';
+    c += '<p><button class="btn" data-act="codesgo">Enter my agency code in Settings</button></p>'; if (false) c += '<form class="inl" data-agpform="1"><input class="pinput" id="agpcode" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="32" placeholder="10-digit agency code" inputmode="numeric" aria-label="Agency code"><button class="btn" type="submit"' + (AGP.busy ? " disabled" : "") + '>' + (AGP.busy ? "Checking…" : "Unlock") + '</button></form>';
     if (AGP.err) c += '<p class="presult" role="alert">' + esc(AGP.err) + '</p>';
     return c + '</section>';
   }
@@ -12301,7 +12423,7 @@ function deepView(id) {
   c += deepSec("🔬", "What happens at the cellular level", (typeof chemCard === "function" ? chemCard(id) : "") + cell);
   /* 3 organ by organ */
   var org2 = '';
-  if (e && e.body && e.body.length) org2 = '<div class="organs">' + e.body.map(function (b) { return '<div class="organ"><b>' + esc(b[0]) + '</b>' + esc(b[1]) + '</div>'; }).join("") + '</div>';
+  if (e && e.body && e.body.length) org2 = '<div class="organs">' + e.body.map(function (b) { return typeof organHTML === "function" ? organHTML(b) : '<div class="organ"><b>' + esc(b[0]) + '</b>' + esc(b[1]) + '</div>'; }).join("") + '</div>';
   else org2 = deepP(get(d, 1, 1)) + (deepOk(get(d, 2, 3)) ? '<p><b>Effects in the body:</b> ' + esc(get(d, 2, 3)) + '</p>' : '');
   c += deepSec("🫀", "What it does in the body, organ by organ", org2);
   /* 4 journey + PK */
@@ -12416,7 +12538,7 @@ function disDetail(id) {
   if (e.timeline && e.timeline.length) org += '<ul class="tl">' + e.timeline.map(function (t) { return '<li><b>' + esc(t[0]) + '</b> ' + esc(t[1]) + '</li>'; }).join("") + '</ul>';
   c += deepSec("🌱", "Where it came from", org);
   c += deepSec("🔬", "What happens at the cellular level", deepP(e.cell));
-  if (e.body && e.body.length) c += deepSec("🫀", "What it does in the body, organ by organ", '<div class="organs">' + e.body.map(function (b) { return '<div class="organ"><b>' + esc(b[0]) + '</b>' + esc(b[1]) + '</div>'; }).join("") + '</div>');
+  if (e.body && e.body.length) c += deepSec("🫀", "What it does in the body, organ by organ", '<div class="organs">' + e.body.map(function (b) { return typeof organHTML === "function" ? organHTML(b) : '<div class="organ"><b>' + esc(b[0]) + '</b>' + esc(b[1]) + '</div>'; }).join("") + '</div>');
   c += deepSec("🤒", "Why the symptoms happen", deepP(e.symptoms));
   c += deepSec("🩺", "How it is diagnosed", deepP(e.dx));
   var dr = (e.drugs || []).filter(function (d) { return DB.drugs[d]; });
@@ -26389,7 +26511,112 @@ function anatIndex() {
   return ANAT_BY;
 }
 function anatOf(id) { anatIndex(); return ANAT_BY[id] || null; }
+/* "What it does in the body, organ by organ" (drug Wormhole and Disease Lab) links each organ to
+   its Anatomy page, so "take me to it" goes somewhere (owner, Nov 5 2026). First match wins. */
+var ANAT_JUMP = [["bone marrow","bone-marrow"],["spinal","spinal-cord"],["red blood","blood-red-cells"],["white blood","blood-white-cells"],["platelet","blood-platelets"],["clot","clotting-cascade"],
+  ["blood vessel","arteries"],["arter","arteries"],["vein","veins"],["heart","heart-muscle"],["brain","brain-cerebrum"],["nerv","peripheral-nerve"],["lung","alveoli"],["airway","bronchi"],["breath","diaphragm"],
+  ["liver","liver"],["kidney","kidney"],["bladder","bladder"],["urinary","bladder"],["stomach","gi-stomach"],["colon","gi-colon"],["esophag","gi-esophagus"],["intestin","gi-jejunum-and-ileum"],["gut","gi-jejunum-and-ileum"],
+  ["pancrea","pancreatic-islets"],["gallbladder","gallbladder-and-bile-ducts"],["skin","skin-epidermis"],["hair","skin-hair-nails-and-sweat-glands"],["eye","eye-retina"],["ear","ear-cochlea"],["nose","nose-and-nasal-passages"],["mouth","gi-mouth-and-teeth"],["throat","pharynx"],
+  ["joint","joint-synovial"],["tendon","tendons"],["ligament","ligaments"],["cartilage","cartilage"],["muscle","muscle-skeletal"],["bone","bone-femur"],["immune","lymph-nodes"],["lymph","lymph-nodes"],["spleen","spleen"],["thymus","thymus"],
+  ["adrenal","adrenal-cortex"],["pituitar","pituitary-gland"],["thyroid","thyroid-gland"],["ovar","ovaries"],["testes","testes"],["testic","testes"],["placenta","placenta"],["blood","blood-plasma"]];
+function anatFor(label) {
+  var l = String(label || "").toLowerCase(); if (!l) return "";
+  for (var i = 0; i < ANAT_JUMP.length; i++) if (l.indexOf(ANAT_JUMP[i][0]) >= 0 && anatOf(ANAT_JUMP[i][1])) return ANAT_JUMP[i][1];
+  return "";
+}
+function organHTML(b) {
+  var id = anatFor(b[0]);
+  return '<div class="organ">' + (id ? '<button type="button" class="organlink" data-anjump="' + id + '" title="Open in Anatomy"><b>' + esc(b[0]) + '</b><span aria-hidden="true"> &rsaquo;</span></button>' : '<b>' + esc(b[0]) + '</b>') + esc(b[1]) + '</div>';
+}
+document.addEventListener("click", function (e) {
+  var t = e.target.closest && e.target.closest("[data-anjump]"); if (!t) return;
+  var id = t.getAttribute("data-anjump"); if (!anatOf(id)) return;
+  e.preventDefault(); e.stopPropagation();
+  if (typeof sheet !== "undefined" && sheet && !sheet.hidden && typeof closeSheet === "function") closeSheet();
+  S.tab = "anatomy"; S.anArea = ""; S.anGrp = ""; S.anQ = ""; S.anId = id; render();
+  var card = document.querySelector(".anatcard"); if (card) card.scrollIntoView({ block: "start" }); else window.scrollTo(0, 0);
+}, true);
 function anatGroups() { anatIndex(); return ANAT_GRP; }
+
+/* ---------- Meds by System (owner, Nov 5 2026) ----------
+   Paramedic and RN (and their flight levels): this level's medicines grouped by what they work on,
+   airway, breathing, cardiology and so on, each with its own quiz and a saved best score. A drug
+   can sit in more than one group (epinephrine is cardiology, shock and breathing). Groups come
+   from the drug's tags and its class text; anything that matches nothing goes in "Everything else". */
+var SYS = [
+  ["airway", "Airway & RSI", "Induction, paralytics and the drugs given around intubation.", ["RSI"], /paralytic|neuromuscular block|induction agent|general anesthetic/i],
+  ["resp", "Breathing & Lungs", "Bronchodilators, steroids for the lungs and other respiratory drugs.", ["RE"], /bronchodilat|inhaled|expectorant|mucolytic|leukotriene|antitussive|pulmonary|cough|surfactant|respiratory stimul|decongest|alpha-1.proteinase/i, /CFTR/],
+  ["cardio", "Cardiology", "Rhythm, rate, blood pressure, chest pain and heart failure.", ["CA"], /antiarrhythm|antianginal|antihypertens|beta blocker|ACE inhibitor|angiotensin|calcium channel|lipid|statin|cardiac glycoside|heart failure|nitrate|triglyceride|mineralocorticoid/i, /\bACE\b|\bARB\b/],
+  ["shock", "Shock & Pressors", "Vasopressors and inotropes for low blood pressure and poor perfusion.", ["VP"], /vasopressor|inotrope|inodilator|antihypotens/i],
+  ["blood", "Blood & Clotting", "Anticoagulants, antiplatelets, clot busters and bleeding control.", [], /anticoag|antiplatelet|thrombolyt|fibrinoly|hemostat|antianemic|iron|erythropoie|colony.stimul|heparin|platelet|coagulation|vitamin k|clotting|thrombopoietin|willebrand|sickle|hemorheolog/i],
+  ["neuro", "Neuro & Seizures", "Seizures, stroke, Parkinson's, dementia, migraine and nerves.", ["NE"], /anticonvuls|antiepilep|antiparkinson|dementia|migraine|triptan|muscle relax|myasthen|multiple sclerosis|vertigo|VMAT2|chorea|neuroprotect/i, /\bALS\b/],
+  ["pain", "Pain & Sedation", "Opioids, NSAIDs, local anesthetics and sedatives.", ["AN", "SE"], /opioid|analgesic|NSAID|anesthetic|sedative|benzodiazep|hypnotic/i],
+  ["psych", "Behavioral Health", "Depression, anxiety, psychosis, agitation and substance use.", ["BH"], /antidepress|antipsychot|anxiolyt|mood stabil|lithium|stimulant|smoking cessation|alcohol|opioid use|anorectic/i, /ADHD|SNRI|SSRI/],
+  ["tox", "Toxicology & Antidotes", "Antidotes, reversal agents and decontamination.", ["AD"], /antidote|reversal|chelat|decontamin|adsorbent/i],
+  ["endo", "Diabetes & Endocrine", "Blood sugar, thyroid, steroids and hormones.", [], /antidiabet|insulin|hypoglyc|thyroid|corticosteroid|glucocorticoid|hormone|estrogen|androgen|testoster|carbohydrate|sulfonylurea|biguanide|pituitar|adrenal|catecholamine synthesis/i, /GLP-1|SGLT2|DPP-4/],
+  ["bone", "Bones, Joints & Gout", "Osteoporosis, gout, calcium and vitamin D.", [], /bone resorption|osteopor|bisphosphon|antigout|urate|uricos|uricase|calcimimet|vitamin D|calcium regulat|antiresorpt/i],
+  ["gi", "GI & Nausea", "Nausea, reflux, ulcers, constipation and diarrhea.", [], /antiemetic|laxative|proton pump|antacid|antidiarr|prokinetic|bowel|stool softener|gastro|antispasmodic|pancreatic enzyme|bile|aminosalicyl|digestive/i, /\bH2\b|\bGI\b/],
+  ["renal", "Fluids, Electrolytes & Kidneys", "IV fluids, electrolytes, diuretics, kidney and bladder.", [], /electrolyte|alkaliniz|potassium|diuretic|phosphate binder|urinar|bladder|urolog|5-alpha|fluid|plasma expander|crystalloid|colloid|kidney|antiproteinur/i, /\bBPH\b/],
+  ["infect", "Infection", "Antibiotics, antivirals, antifungals and vaccines.", [], /antibiot|antiviral|antifungal|antibacter|anti-infect|antiparasit|antiretro|vaccine|antimicrob|antitubercul|antimycobact|cephalospor|penicillin|macrolide|fluoroquinol|anthelmint|antimalar|antiprotoz|aminoglyco|tetracycline|carbapenem|glycopeptide/i],
+  ["ob", "OB & Women's Health", "Labor, delivery, preterm labor, contraception and menopause.", ["OB"], /uterotonic|tocolyt|oxytoc|contracept|progest|fertility|ovulation|menopaus/i],
+  ["immune", "Allergy & Immune", "Allergy, anaphylaxis, autoimmune disease and transplant.", [], /antihistamine|immunosupp|immunomod|biologic|monoclonal|interleukin|allerg|anaphyla|mast cell|calcineurin|complement/i, /\bTNF\b|\bJAK\b|DMARD/],
+  ["onc", "Cancer", "Chemotherapy, targeted therapy and hormone therapy for cancer.", [], /antineoplast|chemotherap|kinase inhibitor|antimetabol|alkylat|cytotoxic|aromatase|antiestrogen|antiandrogen|oncolog/i],
+  ["skin", "Skin, Eyes & Ears", "Topical, eye and ear medicines.", [], /dermatolog|topical|keratolytic|retinoid|ophthalm|glaucoma|mydriat|\botic\b|acne|psoria|emollient|antipruritic|retinal|skin/i],
+  ["other", "Everything else", "Medicines that do not fit one of the groups above.", [], null]
+];
+function sysTabOK() { return S.view === "level" && (S.level === "paramedic" || S.level === "flight" || S.level === "rn" || S.level === "flightrn"); }
+function sysObj(k) { for (var i = 0; i < SYS.length; i++) if (SYS[i][0] === k) return { key: SYS[i][0], name: SYS[i][1], blurb: SYS[i][2] }; return null; }
+var SYS_CACHE = {};
+function sysMap() {
+  var ids = scopeIds(), key = S.level + ":" + ids.length;
+  if (SYS_CACHE.key === key) return SYS_CACHE.map;
+  var map = {}; SYS.forEach(function (g) { map[g[0]] = []; });
+  ids.forEach(function (id) {
+    var d = DB.drugs[id]; if (!d) return;
+    var c = (get(d, 0, 3) || "") + " " + (get(d, 0, 4) || ""), t = d.tags || [], hit = 0;
+    SYS.forEach(function (g) {
+      if (!g[4]) return;
+      if (g[3].some(function (x) { return t.indexOf(x) >= 0; }) || g[4].test(c) || (g[5] && g[5].test(c))) { map[g[0]].push(id); hit = 1; }
+    });
+    if (!hit) map.other.push(id);
+  });
+  Object.keys(map).forEach(function (k) { map[k].sort(function (a, b) { return nameOf(a).localeCompare(nameOf(b)); }); });
+  SYS_CACHE = { key: key, map: map };
+  return map;
+}
+function sysIds(k) { return (sysMap()[k] || []).slice(); }
+function sysQCount(ids) { var pool = basePool(), n = 0; for (var i = 0; i < pool.length; i++) if (pool[i].d && ids.indexOf(pool[i].d) >= 0) n++; return n; }
+function sysRec(k) { return (Prog.d.sysq || {})[S.level + ":" + k] || null; }
+function sysSave(k, sc) {
+  Prog.d.sysq = Prog.d.sysq || {};
+  var key = S.level + ":" + k, r = Prog.d.sysq[key] || { best: 0, n: 0 };
+  Prog.d.sysq[key] = { best: Math.max(r.best || 0, sc.pct), n: (r.n || 0) + 1, last: sc.pct, ts: Date.now() };
+  saveProg();
+}
+function sysView() {
+  var map = sysMap(), cur = S.sysK && map[S.sysK] ? S.sysK : "";
+  if (cur) {
+    var g = sysObj(cur), ids = map[cur], qn = sysQCount(ids), r = sysRec(cur);
+    var c = '<div class="syshead"><button class="btn small ghost" data-sysk="">&lsaquo; All systems</button><h2>' + esc(g.name) + '</h2><p class="muted">' + esc(g.blurb) + '</p>' +
+      '<div class="actions"><button class="btn" data-sess="sys" data-sys="' + cur + '"' + (qn ? '' : ' disabled') + '>Quiz me on ' + esc(g.name) + '</button><span class="muted small">' +
+      ids.length + ' medicine' + (ids.length === 1 ? '' : 's') + ' · ' + qn + ' question' + (qn === 1 ? '' : 's') + (r ? ' · best ' + r.best + '%, last ' + r.last + '%' : '') + '</span></div></div>';
+    return c + '<div class="grid" id="grid">' + tiles(ids) + '</div>';
+  }
+  var c2 = '<p class="muted">Every medicine at this level, grouped by what it works on. Open a group to see its medicines, or quiz yourself on just that group. A medicine can be in more than one group.</p><div class="sysgrid">';
+  SYS.forEach(function (g) {
+    var ids = map[g[0]]; if (!ids.length) return;
+    var r = sysRec(g[0]), m = masteryPct(ids);
+    c2 += '<div class="syscard"><button class="sysopen" data-sysk="' + g[0] + '"><strong>' + esc(g[1]) + '</strong><span class="muted small">' + esc(g[2]) + '</span>' +
+      '<span class="sysmeta">' + ids.length + ' medicine' + (ids.length === 1 ? '' : 's') + ' · ' + m + '% mastered' + (r ? ' · best quiz ' + r.best + '%' : '') + '</span>' +
+      '<span class="cbar" aria-hidden="true"><i style="width:' + m + '%"></i></span></button>' +
+      '<button class="btn small ghost" data-sess="sys" data-sys="' + g[0] + '">Quiz</button></div>';
+  });
+  return c2 + '</div>';
+}
+document.addEventListener("click", function (e) {
+  var t = e.target.closest && e.target.closest("[data-sysk]"); if (!t) return;
+  S.sysK = t.getAttribute("data-sysk") || ""; render(); window.scrollTo(0, 0);
+});
 
 /* ---------- the noises ----------
    Each is a few oscillators and a shaped noise burst, built on the same throwaway context the
@@ -26675,7 +26902,14 @@ function anatCard(x) {
   if (x.fail) c += '<h3>When it is not working</h3><p class="anatfail">' + esc(x.fail) + '</p>';
   /* the Body Systems entry for the same region, when there is one, so the drugs are a tap away */
   var bod = anatBody(x);
-  if (bod) c += '<p class="anatbody"><button class="linkish" data-anbody="' + esc(bod.id) + '">Medicines that act on the ' + esc(bod.name.toLowerCase()) + ' &rarr;</button></p>';
+  /* the medicines for this region, right here: the old link jumped to a Body Systems tab that most
+     levels do not have, so it went nowhere (owner, Nov 5 2026). Each row opens the drug page. */
+  if (bod) {
+    var mrow = function (m, cls) { return DB.drugs[m.d] ? '<button class="otcrow ' + cls + '" data-drug="' + m.d + '"><strong>' + esc(nameOf(m.d)) + '</strong><span>' + esc(m.how) + '</span></button>' : ''; };
+    var acts = (bod.acts || []).filter(function (m) { return DB.drugs[m.d]; }), harms = (bod.harms || []).filter(function (m) { return DB.drugs[m.d]; });
+    if (acts.length) c += '<details class="anatmeds" open><summary>Medicines that act on the ' + esc(bod.name.toLowerCase()) + ' (' + acts.length + ')</summary><div class="sickotc">' + acts.map(function (m) { return mrow(m, "acts"); }).join("") + '</div></details>';
+    if (harms.length) c += '<details class="anatmeds"><summary>Medicines that can harm it (' + harms.length + ')</summary><div class="sickotc">' + harms.map(function (m) { return mrow(m, "harms"); }).join("") + '</div></details>';
+  }
   var see = (x.see || []).map(function (s) { return anatOf(s); }).filter(Boolean);
   if (see.length) c += '<h3>Nearby</h3><div class="chips">' + see.map(function (s) { return anatChip(s, ""); }).join("") + '</div>';
   return c + '</section>';
@@ -26748,8 +26982,7 @@ document.addEventListener("click", function (e) {
   if (d.anid) {
     var x = anatOf(d.anid); if (!x) return;
     S.anId = d.anid;
-    render();
-    try { bodyReact(x.area, x.snd); } catch (e2) {}   /* the figure reacts, with this part's noise */
+    render();   /* only touching the dummy itself makes him react (owner, Nov 5 2026) */
     var card = document.querySelector(".anatcard"); if (card) card.scrollIntoView({ block: "start", behavior: SET().motion ? "auto" : "smooth" });
   }
 });
@@ -26761,7 +26994,7 @@ document.addEventListener("click", function (e) {
   e.stopPropagation();
   var ar = t.getAttribute("data-barea") || "", bp = t.getAttribute("data-bpart") || "";
   S.anArea = ar; S.anGrp = ""; S.anId = ""; render(); window.scrollTo(0, 0);
-  try { bodyReact(ar, null, bp); } catch (e2) {}
+  if (t.closest("svg.bodymap, .bm3dsr")) { try { bodyReact(ar, null, bp); } catch (e2) {} }   /* the drawn figure only, not the chips */
 }, true);
 document.addEventListener("input", function (e) {
   if (!e.target || e.target.id !== "anq") return;
@@ -26933,7 +27166,7 @@ function txSnd(kind) {
        clipping when six oscillators land on the same beat (owner asked for these to be heard) */
     var out = TXS.out;
     if (!out || TXS.outCtx !== c) {
-      out = TXS.out = c.createGain(); TXS.outCtx = c; out.gain.value = 2.1;
+      out = TXS.out = c.createGain(); TXS.outCtx = c; out.gain.value = 1.5;
       var lim = c.createDynamicsCompressor();
       lim.threshold.value = -6; lim.ratio.value = 12; lim.knee.value = 6; lim.attack.value = 0.003; lim.release.value = 0.18;
       out.connect(lim); lim.connect(c.destination);
@@ -27403,7 +27636,7 @@ function iapView() {
       '</div>';
   }).join("") + '</div>';
   /* a gift code sits with the packs: it is the other way sticks arrive (owner, Nov 1 2026) */
-  if (typeof giftBox === "function") c += '<div class="iapcode"><h3>Have a code?</h3>' + giftBox() + '</div>';
+  c += '<div class="iapcode"><h3>Have a code?</h3><p><button class="btn small ghost" data-act="codesgo">Redeem it in Settings</button></p></div>';
   if (where) c += '<p class="actions"><button class="btn ghost small" data-iaprestore="1"' + (IAP.busy === "restore" ? ' disabled' : '') + '>' + (IAP.busy === "restore" ? 'Checking...' : 'Restore purchases') + '</button></p>';
   c += '<div class="iapwhy"><h3>What a stick is for</h3><p>Sticks buy bugs, hats, faces, colours, borders, voices and music. That is the whole list. No drug page, question, tool or protocol has ever been behind one, and none ever will be.</p>' +
     '<p class="muted small">How they are earned:</p><ul>' +
@@ -27496,14 +27729,25 @@ function voiceCtx() {
 }
 /* speak a line in a voice. Overlapping calls cut the previous one off, so two bubbles
    in a row do not talk over each other. */
+function voiceStop() {
+  clearTimeout(VX.pend); VX.pend = 0;
+  var g = VX.cur; VX.cur = null; VX.until = 0;
+  if (!g) return;
+  try { var now = g.context.currentTime; g.gain.cancelScheduledValues(now); g.gain.setValueAtTime(g.gain.value, now); g.gain.linearRampToValueAtTime(0, now + 0.04); } catch (e) {}
+  setTimeout(function () { try { g.disconnect(); } catch (e) {} }, 120);
+}
 function voiceSay(text, voiceId) {
   if (!voiceOk()) return;
   var V = voiceById(voiceId || myVoice());
   try {
     var c = voiceCtx(); if (!c) return;
     var now = c.currentTime;
-    if (VX.until && VX.until > now + 0.05) { try { VX.out.gain.setValueAtTime(0.0001, now); VX.out.gain.setValueAtTime(1, now + 0.03); } catch (e) {} }
+    /* a new line cuts off whatever is still being said. Every line gets its own gain node, so
+       the syllables already scheduled for the old line can be silenced without touching the new
+       one (owner, Nov 5 2026: clicking fast through the tour stacked Hickory's lines). */
+    voiceStop();
     var S0 = voiceSyl(text); if (!S0.length) return;
+    VX.cur = c.createGain(); VX.cur.gain.value = 1; VX.cur.connect(VX.out);
     var gap = V.kind === "drawl" ? 0.215 : V.kind === "whisper" ? 0.1 : V.kind === "boom" ? 0.16 : V.kind === "click" ? 0.075 : V.kind === "chirp" ? 0.105 : 0.086;
     var t0 = now + 0.02;
     for (var i = 0; i < S0.length; i++) voiceBlip(c, V.kind, t0 + i * gap, S0[i], i, S0.length);
@@ -27511,7 +27755,7 @@ function voiceSay(text, voiceId) {
   } catch (e) {}
 }
 function voiceBlip(c, kind, t, syl, i, n) {
-  var out = VX.out, last = i === n - 1;
+  var out = VX.cur || VX.out, last = i === n - 1;
   /* p is 0..1 from the letters; every voice maps it into its own range */
   function tone(type, f0, f1, dur, v, vib, vibd) {
     var o = c.createOscillator(), g = c.createGain();
@@ -27753,7 +27997,7 @@ function giftRedeem(code) {
   GIFT.busy = true; giftDraw();
   setTimeout(function () {
     var d = giftFind(code); GIFT.busy = false;
-    if (!d) { GIFT.msg = "That code did not match anything. Check the spelling and try again."; return giftDraw(); }
+    if (!d) return codeOther(code);
     Prog.d.gifts = Prog.d.gifts || {};
     if (Prog.d.gifts[d.id]) { GIFT.msg = "That code has already been used on this account."; return giftDraw(); }
     /* one-time codes (owner, Nov 5 2026): the first account to claim it online owns it. The claim
@@ -27799,14 +28043,59 @@ function giftRedeem(code) {
   }, 30);
 }
 
-/* The box, used in Settings and on the Get Sticks screen */
+/* The one place a code is entered (owner, Nov 5 2026): Settings > Account & privacy */
+function codesGo() {
+  try { if (typeof PRO !== "undefined" && PRO.open && typeof closePaywall === "function") closePaywall(); } catch (e) {}
+  try { if (typeof sheet !== "undefined" && sheet && !sheet.hidden && typeof closeSheet === "function") closeSheet(); } catch (e) {}
+  S.setTab = "privacy"; go("settings");
+  setTimeout(function () { var b = document.getElementById("giftbox"); if (b) { try { b.scrollIntoView({ block: "center" }); } catch (e) {} var i = document.getElementById("giftin"); if (i) i.focus(); } }, 150);
+}
+function codeHash(prefix, code) {
+  return crypto.subtle.digest("SHA-256", new TextEncoder().encode(prefix + code)).then(function (buf) { return Array.prototype.map.call(new Uint8Array(buf), function (b) { return ("0" + b.toString(16)).slice(-2); }).join(""); });
+}
+/* not a gift code: try every other kind, in order. Agency protocols, the in-development
+   Field Medic codes, website access codes, then school or agency licence codes online. */
+function codeOther(raw) {
+  var code = agpNorm(raw);
+  var fail = function (m) { GIFT.busy = false; GIFT.msg = m || "That code did not match anything. Check the spelling and try again."; giftDraw(); };
+  var win = function (m) { GIFT.busy = false; GIFT.code = ""; GIFT.ok = m; giftDraw(); if (typeof render === "function") render(); };
+  if (/^\d{6,}$/.test(code) && typeof agpTry === "function") {
+    var ad = null; try { ad = agpTry(raw); } catch (e) {}
+    if (ad) {
+      if (typeof agpPro === "function" && !agpPro()) { fail("That is your agency's protocols code. Agency protocols are part of DrugBug Pro."); return openPaywall("Your agency's protocols", "pro"); }
+      AGP.data = ad; AGP.code = raw; store("agcode", raw); AGP.sec = null; AGP.view = null;
+      return win("Your agency's protocols are unlocked. They are in the Prehospital levels.");
+    }
+  }
+  if (!(window.crypto && crypto.subtle)) return fail("This browser can't check codes. Try a current version of Safari or Chrome.");
+  GIFT.busy = true; giftDraw();
+  codeHash("drugbug-fm:", code).then(function (h) {
+    if (typeof FM_CODES !== "undefined" && FM_CODES[h]) { GIFT.busy = false; GIFT.code = ""; giftDraw(); return fmCodeTry(raw); }
+    return codeHash("drugbug-web:", code).then(function (h2) {
+      var list = (CFG && CFG.webCodes) || [];
+      if (typeof DEMO !== "undefined" && DEMO && list.some(function (c) { return c.h === h2; })) {
+        return Promise.resolve(webCodeTry(raw)).then(function () { var m = PRO.msg || ""; PRO.msg = ""; if (/accepted/i.test(m)) win(m); else fail(m); });
+      }
+      var db = Prog.db || (typeof Dex !== "undefined" && Dex.db);
+      if (!db) return fail("That code did not match anything. School and agency codes also need an internet connection, so if it is one of those, try again online.");
+      return db.doc("licenses/" + code).get().then(function (snap) {
+        var L = snap && snap.exists ? snap.data() : null;
+        if (!L) return fail();
+        if (!L.until || L.until < Date.now()) return fail("That code has ended. Check with your instructor or agency.");
+        Prog.d.license = { code: code, until: L.until, org: L.org || "" }; saveProg();
+        if (Prog.uid) db.doc("licenseUse/" + code + "_" + Prog.uid).set({ code: code, uid: Prog.uid, ts: Date.now() }).catch(function () {});
+        win("Code applied: DrugBug Pro through " + new Date(L.until).toLocaleDateString() + (L.org ? " from " + L.org : "") + ".");
+      });
+    });
+  }).catch(function () { fail("Could not check that code right now. Try again in a moment."); });
+}
 function giftBox() {
   return '<div class="giftbox" id="giftbox">' +
     (GIFT.ok ? '<p class="presult good" role="status">' + esc(GIFT.ok) + '</p>' : '') +
     (GIFT.msg ? '<p class="presult" role="status">' + esc(GIFT.msg) + '</p>' : '') +
-    '<form class="pform inl" data-giftform="1"><label class="gl">Code<input class="pinput" id="giftin" type="text" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="STICKS-XXXXXX" value="' + esc(GIFT.code) + '"></label>' +
+    '<form class="pform inl" data-giftform="1"><label class="gl">Code<input class="pinput" id="giftin" type="text" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="Enter your code" value="' + esc(GIFT.code) + '"></label>' +
     '<button class="btn small" type="submit"' + (GIFT.busy ? " disabled" : "") + '>' + (GIFT.busy ? "Checking..." : "Redeem") + '</button></form>' +
-    '<p class="muted small">A code from DrugBug or your agency. Each one works once.</p></div>';
+    '<p class="muted small">Gift codes, access codes, school or agency codes and agency protocol codes all go here.</p></div>';
 }
 function giftDraw() {
   var el = document.getElementById("giftbox");
