@@ -8599,7 +8599,7 @@ var PAYWALL = CFG.paywall === true;
    Off until the live price IDs exist in the functions config and DRUGBUG_CONFIG.webSubs = true,
    because a paywall with no working buy button is worse than no paywall at all. */
 var WEBSUBS = CFG.webSubs === true && CFG.paywall === true;
-/* Tiers (repriced Nov 3 2026, owner): Free forever; Plus $5.99/mo or $49.99/yr; Pro $11.99/mo or $99.99/yr.
+/* Tiers (repriced Nov 5 2026, owner: website matches the App Store): Free forever; Plus $4.99/mo or $39.99/yr; Pro $9.99/mo or $79.99/yr.
    Priced against the market rather than under it: the nearest comparable EMS study app charges
    $89.99/yr for a far smaller product. Raising a price later costs a customer's trust; starting
    there and discounting never does. App Store Connect and Google Play must be set to MATCH these
@@ -8613,8 +8613,8 @@ var WEBSUBS = CFG.webSubs === true && CFG.paywall === true;
          Wormhole deep dives (drug Wormhole and Disease Lab) are Plus (Oct 28 2026). */
 var TIER_RANK = { free: 0, plus: 1, pro: 2 }, TIER_NAME = { free: "DrugBug Free", plus: "DrugBug Plus", pro: "DrugBug Pro" };
 var PLANS = {
-  plus: { monthly: "com.volaremedia.drugbug.plus.monthly", annual: "com.volaremedia.drugbug.plus.annual", m: "$5.99", y: "$49.99" },
-  pro: { monthly: "com.volaremedia.drugbug.pro.monthly", annual: "com.volaremedia.drugbug.pro.annual", m: "$11.99", y: "$99.99" }
+  plus: { monthly: "com.volaremedia.drugbug.plus.monthly", annual: "com.volaremedia.drugbug.plus.annual", m: "$4.99", y: "$39.99" },
+  pro: { monthly: "com.volaremedia.drugbug.pro.monthly", annual: "com.volaremedia.drugbug.pro.annual", m: "$9.99", y: "$79.99" }
 };
 var PRO_IDS = { monthly: PLANS.pro.monthly, annual: PLANS.pro.annual };
 var DAYMS = 86400000;   /* the 7-day trial is gone (owner, Nov 2 2026) */
