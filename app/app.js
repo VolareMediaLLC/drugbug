@@ -3427,12 +3427,16 @@ function darkUI() { var t = document.documentElement.getAttribute("data-theme");
    r = head radius, t = torso [cx, cy, rx, ry], R/L = right/left hand points */
 var BODYFIT = {
   beetle: { r: 30, t: [100, 140, 46, 48] }, butterfly: { r: 26, t: [100, 138, 20, 42] }, moth: { r: 26, t: [100, 138, 22, 42] },
-  dragonfly: { r: 24, t: [100, 132, 18, 42] }, ant: { r: 28, t: [100, 140, 32, 46] }, caterpillar: { r: 30, t: [96, 150, 50, 24] },
+  dragonfly: { r: 24, t: [100, 132, 18, 42] }, ant: { r: 28, t: [100, 140, 32, 46] },
+  caterpillar: { r: 30, t: [96, 150, 50, 24], R: [158, 122], L: [40, 130] },
   spider: { r: 26, t: [100, 148, 40, 38] }, mantis: { r: 26, t: [100, 146, 26, 44], R: [146, 98], L: [54, 98] }, bee: { r: 30, t: [100, 142, 42, 46] },
   cicada: { r: 30, t: [100, 140, 30, 44] }, grasshopper: { r: 29, t: [100, 142, 30, 46] }, snail: { r: 28, t: [96, 132, 24, 44], R: [150, 120] },
   longhorn: { r: 28, t: [100, 146, 36, 52] }, hercules: { r: 29, t: [100, 146, 46, 46] }, stick: { r: 28, t: [100, 148, 22, 50], R: [174, 112], L: [26, 112] },
   scorpion: { r: 27, t: [100, 140, 34, 40], R: [164, 96], L: [36, 96] }, rhino: { r: 30, t: [100, 142, 48, 46] }, firefly: { r: 30, t: [100, 145, 30, 40] },
-  larva: { r: 29, t: [106, 122, 46, 28], R: [170, 100], L: [44, 110] }, chrysalis: { r: 26, t: [100, 150, 28, 40] }, cocoon: { r: 26, t: [100, 150, 34, 40] },
+  larva: { r: 29, t: [106, 122, 46, 28], R: [170, 100], L: [44, 110] },
+  /* the stage 1 and 2 bodies need hand anchors of their own: without them a held item kept the
+     adult position and floated in empty space beside a chrysalis (owner, Nov 4 2026) */
+  chrysalis: { r: 26, t: [100, 150, 28, 40], R: [137, 124], L: [63, 124] }, cocoon: { r: 26, t: [100, 150, 34, 40], R: [140, 126], L: [60, 126] },
   wasp: { r: 28, t: [100, 154, 30, 36] }, cricket: { r: 28, t: [100, 150, 28, 40] }
 };
 function fitG(body, slot, hy, svg) {
@@ -3440,8 +3444,10 @@ function fitG(body, slot, hy, svg) {
   if (slot === "hat" || slot === "face" || slot === "neck" || slot === "hair") { k = F.r / 30; if (k === 1 && hy === 74) return svg; tr = "translate(" + (100 - 100 * k).toFixed(2) + " " + (hy - 74 * k).toFixed(2) + ") scale(" + k.toFixed(3) + ")"; }
   else if (slot === "outfit") { var sx = T[2] / 46, sy = T[3] / 48; if (sx === 1 && sy === 1 && T[1] === 140) return svg; tr = "translate(" + (T[0] - 100 * sx).toFixed(2) + " " + (T[1] - 140 * sy).toFixed(2) + ") scale(" + sx.toFixed(3) + " " + sy.toFixed(3) + ")"; }
   else if (slot === "back") { k = Math.max(.6, Math.min(1.1, T[3] / 48)); if (k === 1 && T[1] === 140) return svg; tr = "translate(" + (T[0] - 100 * k).toFixed(2) + " " + (T[1] - 140 * k).toFixed(2) + ") scale(" + k.toFixed(3) + ")"; }
-  else if (slot === "held") { if (!F.R) return svg; tr = "translate(" + (F.R[0] - 160) + " " + (F.R[1] - 145) + ")"; }
-  else if (slot === "left") { if (!F.L) return svg; tr = "translate(" + (F.L[0] - 38) + " " + (F.L[1] - 150) + ")"; }
+  /* hands: move to this body's anchor, and take the body's scale so a small stage does not
+     carry a full-size lantern (owner, Nov 4 2026) */
+  else if (slot === "held") { if (!F.R) return svg; k = F.r / 30; tr = "translate(" + (F.R[0] - 160 * k).toFixed(2) + " " + (F.R[1] - 145 * k).toFixed(2) + ") scale(" + k.toFixed(3) + ")"; }
+  else if (slot === "left") { if (!F.L) return svg; k = F.r / 30; tr = "translate(" + (F.L[0] - 38 * k).toFixed(2) + " " + (F.L[1] - 150 * k).toFixed(2) + ") scale(" + k.toFixed(3) + ")"; }
   else return svg;
   return '<g transform="' + tr + '">' + svg + '</g>';
 }
@@ -3500,7 +3506,7 @@ function bugArt(b, cls, opt) {
   var accs = (b.acc || []).filter(function (a) { var sl = ACC_SLOT[a]; return !(sl && wear[sl]); });
   if (accs.indexOf("stars") >= 0) s += ACC.stars();
   if (wear.fx && ITEMS_BY[wear.fx] && ITEMS_BY[wear.fx].under) s += itemSVG(ITEMS_BY[wear.fx], 74);
-  if (wear.back && ITEMS_BY[wear.back]) s += fitG(b.body, "back", 74, itemSVG(ITEMS_BY[wear.back], 74));
+  if (wear.back && ITEMS_BY[wear.back]) s += fitG(t, "back", hy, itemSVG(ITEMS_BY[wear.back], 74));   /* the stage body, not the adult one */
   if (t === "larva") {
     /* grub: a curled, soft larva in a pale version of the bug's colors */
     var gl = mixHex(c1, "#fff6e0", .45), gd = mixHex(c2, "#fff6e0", .4);
