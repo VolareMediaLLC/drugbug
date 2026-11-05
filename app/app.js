@@ -362,7 +362,7 @@ function go(view, opts) {
 function topbar() {
   try { document.documentElement.setAttribute("data-serious", funOn() ? "" : "1"); } catch (e) {}
   var fun = funOn();
-  var c = '<div class="topbar"><button class="modetog' + (fun ? '' : ' serious') + '" data-act="funtog" role="switch" aria-checked="' + (fun ? 'true' : 'false') + '" aria-label="Seriously Fun mode" title="' + (fun ? 'Seriously Fun: tap for the plain reference' : 'Serious: tap for the playful version') + '"><span class="modedot"></span><span class="modetx">' + (fun ? 'Fun' : 'Serious') + '</span></button>' +
+  var c = '<div class="topbar"><button class="modetog' + (fun ? '' : ' serious') + '" data-act="funtog" role="switch" aria-checked="' + (fun ? 'true' : 'false') + '" aria-label="Fun or Focused" title="' + (fun ? 'Fun: tap for Focused, the plain reference' : 'Focused: tap for the playful version') + '"><span class="modedot"></span><span class="modetx">' + (fun ? 'Fun' : 'Focused') + '</span></button>' +
     '<button class="brand' + (S.view === "home" ? ' onhome' : '') + '" data-go="home" aria-label="DrugBug home">Drug<span>Bug</span></button><nav class="crumbs">';
   var rc = routeCtx(); if (rc === "fm") rc = "ph"; if (ROUTES[rc]) c += '<span>/</span><button data-go="' + ROUTES[rc].view + '">' + ROUTES[rc].name + '</button>';
   if (S.view === "level") c += '<span class="cur">/</span><span class="cur">' + esc(levelObj(S.level).name) + '</span>';
@@ -389,7 +389,7 @@ function backRow() {
 
 /* ---------- views ---------- */
 function viewHome() {
-  var genN = genIds().length;
+  var genN = genIds().length, fun = typeof funOn !== "function" || funOn();
   /* the whole main menu wears the season, not just the hero (owner, Nov 1 2026) */
   var HOL = typeof holToday === "function" ? holToday() : null;
   var hcls = HOL ? ' hol hol-' + HOL.id + (HOL.base ? ' hol-' + HOL.base : '') : '';
@@ -411,7 +411,8 @@ function viewHome() {
    homeStart() + homeProgress() + (typeof trialBanner === "function" ? trialBanner() : '') +
    '<h3 class="homegh">Look it up</h3><section class="routes"><div class="minis one">' +
    '<button class="route rmini gen' + pt("gen") + '" ' + (S.pointGo === "gen" ? 'data-startlearn="gen"' : 'data-go="gen"') + '>' + (S.pointGo === "gen" ? PT : '') +
-     '<span class="mtx"><h2>BugDex</h2><p>Every medication, explained in plain language. ' + genN + ' in all.</p></span>' +
+     '<span class="mtx">' + (fun ? '<span class="eyebrow">Start here</span>' : '') + '<h2>BugDex</h2><p>Every medication, explained in plain language. Search or browse.</p>' +
+     (fun ? '<span class="count">' + genN + ' medications</span>' : '') + '</span>' +
      '<span class="mbug">' + bugSVG("sage") + '</span></button></div>' + myListRoute() +
    '</section>' + homeRoutes(mini) + '</div>';
 }
@@ -1741,20 +1742,7 @@ document.addEventListener("click", function (e) {
   if (a.act === "lrnreset" && typeof learnReset === "function") return learnReset();
   if (a.act === "errhome") { try { S.sheet = null; S.tab = "hub"; S.tool = null; S.micro = null; go("home"); } catch (e) { location.hash = ""; location.reload(); } return; }
   if (a.act === "errreload") { try { location.reload(); } catch (e) {} return; }
-  if (a.startlearn) {
-    /* "Start here" is the way in to L.E.A.R.N: open the path, then hand straight over to it
-       (owner, Nov 4 2026). L.E.A.R.N is scoped by whatever view it starts from. */
-    var sg = a.startlearn;
-    S.learnGo = 1;   /* set before navigating: go() renders synchronously and render() consumes it */
-    if (sg === "gen" || sg === "everyday") go(sg);
-    else {
-      var arr = sg === "nlevels" ? DB.NLEVELS : sg === "mlevels" ? DB.MLEVELS : sg === "ilevels" ? (DB.ILEVELS || []) : DB.LEVELS;
-      arr = (arr || []).filter(function (l) { return !(typeof isF === "function" && isF(l.key)); });
-      var last = store("lastLevel"), pick = arr.filter(function (l) { return l.key === last; })[0] || arr[0];
-      if (pick) go("level", { level: pick.key }); else { go(sg); }
-    }
-    return;
-  }
+  if (a.startlearn) { startLearnPath(a.startlearn); return; }
   if (a.level) {
     var LVFX = { flight: "blast", flightrn: "blast", cpp: "smoke" };
     /* every other level has its own entrance too (owner, Nov 1 2026); modules/trans.js */
@@ -5642,6 +5630,19 @@ function obCards() {
   });
   return out;
 }
+/* "Start here" and the end of Hickory's tour both land in the same place: open the path, then
+   hand straight over to L.E.A.R.N. The flag is set before navigating because go() renders
+   synchronously, and render() picks it up once the path is actually on screen so the level
+   transition cannot redraw over it (owner, Nov 4 2026). */
+function startLearnPath(sg) {
+  if (!sg) sg = { ph: "levels", rn: "nlevels", md: "mlevels", im: "ilevels", ev: "everyday" }[Prog.d.role] || "gen";
+  S.learnGo = 1;
+  if (sg === "gen" || sg === "everyday") return go(sg);
+  var arr = sg === "nlevels" ? DB.NLEVELS : sg === "mlevels" ? DB.MLEVELS : sg === "ilevels" ? (DB.ILEVELS || []) : DB.LEVELS;
+  arr = (arr || []).filter(function (l) { return !(typeof isF === "function" && isF(l.key)); });
+  var last = store("lastLevel"), pick = arr.filter(function (l) { return l.key === last; })[0] || arr[0];
+  if (pick) go("level", { level: pick.key }); else go(sg);
+}
 function needOnboard() { return needRole() || !!S.obRedo; }
 function obSel() {
   if (!S.obSel) { S.obSel = {}; (Prog.d.interests || ["ev"]).forEach(function (k) { S.obSel[k] = 1; }); if (!Object.keys(S.obSel).length) S.obSel.ev = 1; }
@@ -5724,7 +5725,9 @@ var LZ = { id: null, x0: 0, y0: 0, dx: 0, moved: false, lock: "", track: null };
   function track(t) { return t && t.closest ? t.closest("[data-lazy]") : null; }
   function setDx(px) {
     if (!LZ.track) return;
-    LZ.track.style.transform = px ? "translateX(" + px + "px)" : "";
+    /* swing rather than slide: the whole turntable turns a little as it is dragged, which is
+       what makes it read as a carousel on a spindle (owner, Nov 4 2026) */
+    LZ.track.style.transform = px ? "translateX(" + px + "px) rotateY(" + (-px * 0.14) + "deg)" : "";
     LZ.track.style.transition = "none";
   }
   function release(snap) {
@@ -6553,7 +6556,7 @@ function settingsView() {
   c += '<nav class="settabs" role="tablist" aria-label="Settings sections">' + tabs.map(function (x) { return '<button role="tab" data-settab="' + x[0] + '" aria-selected="' + (S.setTab === x[0]) + '">' + x[1] + '</button>'; }).join("") + '</nav>';
   // display
   c += setCard("display", "Display",
-    setRow("Seriously Fun", "Everything playful: your bug and the Terrarium, the study buddy, bugs whose eyes follow you, Hickory\u2019s chatter, the level animations, holiday dressing, music and sound. Turn it off for a plain, quiet drug reference. The medicine, doses and questions never change.", setTog("fun", s.fun !== false, "Seriously Fun")) +
+    setRow("Fun mode", "Off is Focused, the plain reference. On is everything playful: your bug and the Terrarium, the study buddy, bugs whose eyes follow you, Hickory\u2019s chatter, the level animations, holiday dressing, music and sound. Turn it off for a plain, quiet drug reference. The medicine, doses and questions never change.", setTog("fun", s.fun !== false, "Seriously Fun")) +
     setRow("Theme", "", setOpts("theme", themePref(), [["dark", "Night shift (default)"], ["light", "Day shift"], ["system", "Match my device"]])) +
     setRow("Text size", "", setOpts("text", s.text, [["normal", "Normal"], ["large", "Large"], ["xl", "Extra large"]])) +
     setRow("High contrast", "Darker text and borders.", setTog("contrast", s.contrast, "High contrast")) +
@@ -7894,12 +7897,20 @@ document.addEventListener("input", function (e) {
    (owner, Nov 4 2026). Rebuilt each time it opens so it follows the mode. */
 function tourCards() {
   var fun = typeof funOn !== "function" || funOn();
-  var c = [
-    ["Start here", "The paths you picked are on the main menu. The card marked Start here opens L.E.A.R.N: every drug in that scope, one at a time, in random order, and nothing repeats.", fun ? "bug" : "plain"],
-    ["Look anything up", "The BugDex holds every medication in DrugBug. Open one for the plain-language version or the full monograph, tap Compare to set it beside another drug, and save the ones you care about to My List.", "plain"],
-    ["Practise it", "Questions in registry and licensure style, flashcards, Weak spots for the ones you keep missing, and an exam countdown that works out a daily goal for you.", "plain"]
+  /* Hickory hosts it: he is the face of L.E.A.R.N, and the tour ends by handing you to him
+     (owner, Nov 4 2026). In Focused mode he steps aside and the cards speak plainly. */
+  if (!fun) return [
+    ["Where to start", "Your paths are on the main menu. The card marked Start here opens L.E.A.R.N: every drug in that scope, one at a time, in random order, nothing repeated.", "plain"],
+    ["Looking things up", "The BugDex holds every medication. Open one for the plain-language version or the full monograph, use Compare to set two drugs side by side, and save what matters to My List.", "plain"],
+    ["Practice", "Registry and licensure-style questions, flashcards, Weak spots for what you keep missing, and an exam countdown that sets a daily target.", "plain"]
   ];
-  if (fun) c.push(["Earn sticks", "Every question you try earns 1 stick and every right answer earns 3. Spend them in the Terrarium on bugs, outfits and music, and your bug grows as you level up.", "sticks"]);
+  var c = [
+    ["Howdy, I'm Hickory", "I run L.E.A.R.N, which is the no-nonsense way through this thing: every drug in your scope, one at a time, random order, and I never show you the same one twice.", "hick"],
+    ["Look anything up", "BugDex has the lot. Open a drug for the plain words or the whole monograph, hit Compare to put two side by side, and star the ones you want in My List.", "hick"],
+    ["Then test yourself", "Registry and licensure-style questions, flashcards, and Weak spots, which quietly keeps score of what you keep getting wrong.", "hick"]
+  ];
+  c.push(["Sticks and bugs", "Every question you try pays 1 stick, every right answer 3. Spend them in the Terrarium on bugs, outfits and music. Your bug grows as you level up.", "sticks"]);
+  c.push(["Right then", "Enough talk. Let me show you how L.E.A.R.N works on a real drug.", "hick"]);
   return c;
 }
 var TOUR = tourCards();
@@ -7910,17 +7921,25 @@ function tourOpen(force) { if (TR.open || (!force && tourDone())) return; TOUR =
 function tourClose() { TR.done = true; TR.open = false; trdlg.hidden = true; trdlg.innerHTML = ""; store("tourDone", 1); if (typeof wdwSync === "function") setTimeout(wdwSync, 600); }
 function drawTour() {
   var t = TOUR[TR.i], last = TR.i === TOUR.length - 1;
-    var art = t[2] === "sticks" ? '<div class="tourbig">' + stickTag(3) + '</div>' : t[2] === "bug" ? myBugArt("tourbug", null, null, myStage()) : "";
+    var art = t[2] === "sticks" ? '<div class="tourbig">' + stickTag(3) + '</div>'
+    : t[2] === "hick" && typeof learnBugSVG === "function" ? '<div class="tourhick">' + learnBugSVG() + '</div>'
+    : t[2] === "bug" ? myBugArt("tourbug", null, null, myStage()) : "";
   trdlg.innerHTML = '<div class="panel tourpanel" role="dialog" aria-modal="true" aria-label="' + esc(t[0]) + '" tabindex="-1">' + (art ? '<div class="tourart">' + art + '</div>' : '') +
     '<h2>' + esc(t[0]) + '</h2><p>' + esc(t[1]) + '</p><div class="tourdots">' + TOUR.map(function (x, i) { return '<i class="' + (i === TR.i ? "on" : "") + '"></i>'; }).join("") + '</div>' +
-    '<div class="actions"><button class="btn small ghost" data-tour="skip">' + (last ? "Close" : "Skip") + '</button><button class="btn" data-tour="next">' + (last ? "Let's go" : "Next") + '</button></div></div>';
+    '<div class="actions"><button class="btn small ghost" data-tour="skip">' + (last ? "Not now" : "Skip") + '</button><button class="btn" data-tour="next">' + (last ? "Show me" : "Next") + '</button></div></div>';
   translateDom(trdlg); var p = trdlg.querySelector(".panel"); if (p) p.focus();
 }
 document.addEventListener("click", function (e) {
   var b = e.target.closest && e.target.closest("[data-tour]"); if (!b) return;
   if (b.dataset.tour === "skip") return tourClose();
   if (b.dataset.tour === "again") { TR.done = false; store("tourDone", null); return tourOpen(true); }
-  if (TR.i < TOUR.length - 1) { TR.i++; drawTour(); } else tourClose();
+  if (TR.i < TOUR.length - 1) { TR.i++; drawTour(); return; }
+  /* the last card is Hickory offering to show you: closing it opens L.E.A.R.N on the path
+     the menu is pointing at, or the one they are already in (owner, Nov 4 2026) */
+  tourClose();
+  if (typeof funOn === "function" && !funOn()) return;   /* Focused mode just closes */
+  var pointed = document.querySelector("[data-startlearn]");
+  startLearnPath(pointed ? pointed.getAttribute("data-startlearn") : "");
 });
 function tourMaybe() {
   if (tourDone() || !agreeRec() || needRole() || S.view !== "home") return;
