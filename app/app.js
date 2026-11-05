@@ -3972,7 +3972,7 @@ function unlockMet(b) {
 function claimBug(id) { var b = bugById(id); if (owned(id) || !(b.admin ? Admin.owner : unlockMet(b))) return; Prog.d.owned = (Prog.d.owned || []).concat([id]); Prog.d.avatar = id; Prog.d.avatarTs = Date.now(); saveProg(); S.shopMsg = "Unlocked " + b.name + ". It's now your bug."; }
 function styleFilter() { var st = STYLES.filter(function (x) { return x[0] === (Prog.d.style || "classic"); })[0]; return st ? st[3] : ""; }
 var MAX_STAGE = STAGE_LV.length;   /* Legend: how every bug is shown unless it is your avatar bubble */
-function myBugArt(cls, mood, wear, stage) { if (myBug().hick) return bugArt(myBug(), cls, {}); var f = styleFilter(), a = bugArt(myBug(), cls, { mood: mood || myFace(), wear: wear || myWear(), stage: stage || MAX_STAGE }); return f ? a.replace('<svg class="bug', '<svg style="filter:' + f + '" class="bug') : a; }
+function myBugArt(cls, mood, wear, stage) { cls = (cls || "") + " me"; if (myBug().hick) return bugArt(myBug(), cls, {}); var f = styleFilter(), a = bugArt(myBug(), cls, { mood: mood || myFace(), wear: wear || myWear(), stage: stage || MAX_STAGE }); return f ? a.replace('<svg class="bug', '<svg style="filter:' + f + '" class="bug') : a; }
 function buyStyle(id) { var st = STYLES.filter(function (x) { return x[0] === id; })[0]; if (!st) return; var own = (Prog.d.styles || []).indexOf(id) >= 0 || st[2] === 0;
   if (!own) { if (sticks() < st[2]) return; Prog.d.spent = (Prog.d.spent || 0) + st[2]; Prog.d.styles = (Prog.d.styles || []).concat([id]); }
   Prog.d.style = id; saveProg(); S.shopMsg = st[1] + " style applied to your bug."; }
@@ -7667,9 +7667,10 @@ function muFile(T) {
     f.t0 = c.currentTime; f.len = buf.duration; f.bpm = T.bpm || 0; danceStart(f);
   }).catch(function () { f.failed = true; });
 }
-/* the bugs dance to the beat (owner, Nov 5 2026). The phase comes from the audio clock of the
-   playing loop, so every bug on screen bounces on the beat and sways every two beats, and a bug
-   that appears mid-song joins in time. Off with reduced motion or when the music stops. */
+/* your bug dances when a new song starts (owner, Nov 5 2026): only your own avatar, only for the
+   first 16 beats of a track you just switched to. The phase comes from the audio clock of the
+   playing loop, so it hops on the beat and sways every two beats. Off with reduced motion. */
+var DANCE_BEATS = 16;
 var DANCE = { raf: 0, f: null };
 function danceStart(f) {
   DANCE.f = f; if (DANCE.raf || !f.bpm) return;
@@ -7678,6 +7679,7 @@ function danceStart(f) {
     var F = DANCE.f, c = MU.ctx;
     if (!F || MU.file !== F || !F.src || !muOn() || document.hidden || (typeof hfxOk === "function" && !hfxOk())) { danceStop(); return; }
     var lat = (c.outputLatency || 0) + (c.baseLatency || 0), t = c.currentTime - F.t0 - lat; if (t < 0) t = 0;
+    if (t * F.bpm / 60 > DANCE_BEATS) { danceStop(); return; }
     var beats = (F.len ? t % F.len : t) * F.bpm / 60, p = beats - Math.floor(beats);
     var hop = Math.sin(Math.PI * p);
     root.style.setProperty("--dance-y", (-5 * hop * hop).toFixed(2) + "px");
