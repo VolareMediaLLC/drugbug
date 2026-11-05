@@ -5933,6 +5933,8 @@ function pickFun(on) {
    One screen, no questionnaire. A turntable of the specialties plus Everyday Health; swipe,
    drag the arrows or use the arrow keys. Each card is a checkbox, Everyday Health starts ticked,
    and as many as you like can be on. What you tick is what the main menu shows afterwards. */
+/* the certification each path is known by: the highest one that is actually common */
+var OB_FLAGSHIP = { ph: "paramedic", rn: "rn", md: "intern", im: "rt" };
 function obCards() {
   var ev = ROLES.filter(function (r) { return r[0] === "ev"; })[0];
   var out = [{ code: "ev", name: ev[1], line: ev[2], bug: ev[3], blurb: "Peptides, probiotics, vitamins, the medicine cabinet, small sicknesses, normal vitals and much more.", sub: "For anyone \u2014 no clinical background needed." }];
@@ -5943,10 +5945,13 @@ function obCards() {
     im: "X-ray, CT, MRI, nuclear medicine and IR: contrast agents, radiopharmaceuticals and contrast safety."
   };
   ROLES.filter(function (r) { return r[0] !== "ev"; }).forEach(function (r) {
-    /* show the path at its best: the bug you end up with and the certification you top out at,
-       rather than the starter grub every path begins with (owner, Nov 4 2026) */
+    /* Show the path's headline certification, not the rarest one above it. The last level in
+       each list is a specialty a small number of people hold - Flight Paramedic, Flight Nurse -
+       and leading with it misrepresents the path. The one people recognise is Paramedic, or RN.
+       The blurb underneath still lists every level, so nothing is hidden. (owner, Nov 4 2026) */
     var L = typeof obLevelsFor === "function" ? obLevelsFor(r[0]) : [];
-    var top = L.length ? L[L.length - 1] : null;
+    var flag = OB_FLAGSHIP[r[0]];
+    var top = (flag && L.filter(function (x) { return x.code === flag; })[0]) || (L.length ? L[L.length - 1] : null);
     out.push({ code: r[0], name: r[1], line: r[2], bug: r[3], blurb: BLURB[r[0]] || r[2],
       topKey: top ? top.code : "", topName: top ? top.name : "" });
   });
@@ -6003,7 +6008,7 @@ function obWheel(C, i, sel) {
         (sel ? '<span class="lazychk" aria-hidden="true"></span>' : '') +
         '<span class="lazybug">' + art + '</span>' +
         '<strong>' + esc(c.name) + '</strong>' +
-        (c.topName ? '<span class="obtop">up to ' + esc(c.topName) + '</span>' : '') +
+        (c.topName ? '<span class="obtop">' + esc(c.topName) + '</span>' : '') +
         (c.code === "ev" ? '<span class="obrec">Recommended</span>' : '') + '</button>';
     }).join("") + '</div></div>' +
     '<button class="lazyarr r" data-obstep="1" aria-label="Next">&#8250;</button></div>' +
@@ -8671,8 +8676,12 @@ function bodySVG(sel) {
       '<rect class="bmsh" x="' + (hw - w * 0.3 - 1.5) + '" y="2" width="' + (w * 0.3) + '" height="' + (h - 4) + '" rx="' + (w * 0.15) + '" fill="' + dark + '" opacity=".14"/>';
   }
   function blob(d) {
+    /* bmlit is the light that lands on a surface once it turns to face upward. It is invisible
+       while he stands and fades in as he folds, which is what tells the eye this is a solid
+       object turning in space rather than a picture being squashed. (owner, Nov 4 2026) */
     return '<path class="bmp" d="' + d + '"/>' +
-      '<path class="bmhl" d="' + d + '" fill="url(#bmShade)" stroke="none"/>';
+      '<path class="bmhl" d="' + d + '" fill="url(#bmShade)" stroke="none"/>' +
+      '<path class="bmlit" d="' + d + '" fill="url(#bmTop)" stroke="none" opacity="0"/>';
   }
   /* a zone: the touchable unit. hit is an invisible, deliberately fat shape for fingers. */
   function z(area, part, label, inner, hit, cls) {
@@ -8722,7 +8731,12 @@ function bodySVG(sel) {
      put both hands on the head pushed them off the canvas and the arms looked torn off. Giving
      the drawing room to move is cheaper and truer than foreshortening every limb. */
   return '<svg class="bodymap" viewBox="-26 -4 212 318" aria-label="Body map">' +
-    '<defs><linearGradient id="bmShade" x1="0" y1="0" x2="1" y2=".35">' +
+    '<defs><linearGradient id="bmTop" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0" stop-color="' + light + '" stop-opacity=".85"/>' +
+      '<stop offset=".45" stop-color="' + light + '" stop-opacity=".25"/>' +
+      '<stop offset="1" stop-color="' + dark + '" stop-opacity=".3"/>' +
+    '</linearGradient>' +
+    '<linearGradient id="bmShade" x1="0" y1="0" x2="1" y2=".35">' +
       '<stop offset="0" stop-color="' + light + '" stop-opacity=".2"/>' +
       '<stop offset=".45" stop-color="' + light + '" stop-opacity="0"/>' +
       '<stop offset="1" stop-color="' + dark + '" stop-opacity=".15"/>' +
@@ -8765,35 +8779,29 @@ var BM_RX = {
 /* used when something only knows the anatomy area and not which limb was touched */
 var BM_AREA = { "Head": "head", "Neck": "neck", "Chest": "chest", "Abdomen": "abdomen",
   "Pelvis": "pelvis", "Limbs": "armL", "Whole body": "chest" };
-/* Hickory does not walk on: just his eyes come round the edge of the screen, the way someone
-   peers round a door frame, and he says his piece. Fun mode only, one at a time.
+/* Hickory pokes his head round the edge of the screen, the same way the peeking pals do -
+   same position, same angle, same wiggle - and says his piece. Fun mode only, one at a time.
    (owner, Nov 4 2026) */
+var HICK_LINES = ["Wow.", "That's messed up, man.", "We're just here to learn.", "Poor fella."];
 function hickPop(line) {
   if (typeof funOn === "function" && !funOn()) return;
   if (typeof hfxOk === "function" && !hfxOk()) return;
   var gone = document.querySelector(".hickpop"); if (gone) gone.remove();
-  var side = Math.random() < 0.5 ? "left" : "right";
-  /* two eyes and the brim of his hat, peeking. Drawn facing in from whichever edge he is on. */
-  var eyes =
-    '<svg class="hickeyes" viewBox="0 0 86 70" aria-hidden="true">' +
-      '<path d="M2 40 Q10 6 44 4 Q78 6 86 40 Z" fill="#9bcb5a"/>' +                 /* his head coming round */
-      '<path d="M-4 40 Q43 26 90 40 Q43 52 -4 40Z" fill="#d9b874"/>' +              /* the straw brim */
-      '<ellipse cx="30" cy="26" rx="12" ry="13" fill="#ffffff" stroke="#3f5420" stroke-width="2"/>' +
-      '<ellipse cx="60" cy="26" rx="12" ry="13" fill="#ffffff" stroke="#3f5420" stroke-width="2"/>' +
-      '<circle class="hickpupil" cx="34" cy="28" r="5.4" fill="#1b1430"/>' +
-      '<circle class="hickpupil" cx="64" cy="28" r="5.4" fill="#1b1430"/>' +
-      '<circle cx="36" cy="25" r="1.8" fill="#fff"/><circle cx="66" cy="25" r="1.8" fill="#fff"/>' +
-      '<path d="M18 11 Q30 3 42 9" stroke="#3f5420" stroke-width="2.6" fill="none" stroke-linecap="round"/>' +
-      '<path d="M50 9 Q62 3 74 11" stroke="#3f5420" stroke-width="2.6" fill="none" stroke-linecap="round"/>' +
-    '</svg>';
+  var side = Math.random() < 0.5 ? "l" : "r";
+  var art = "";
+  try {
+    if (typeof learnBugSVG === "function") art = learnBugSVG().replace('class="hickbug bug"', 'class="hickbug bug hickart"');
+    else if (typeof bugById === "function" && typeof bugArt === "function") art = bugArt(bugById("hickory"), "hickart", { mood: "joy" });
+  } catch (e) {}
   var el = document.createElement("div");
-  el.className = "hickpop " + side;
+  el.className = "hickpop hp-" + side;
   el.setAttribute("aria-hidden", "true");
-  el.innerHTML = eyes + '<span class="hpsay"></span>';
+  el.innerHTML = '<span class="hpbug">' + art + '</span><span class="hpsay"></span>';
   el.querySelector(".hpsay").textContent = line;
   document.body.appendChild(el);
-  try { if (typeof voiceSay === "function") setTimeout(function () { voiceSay(line, "drawl"); }, 420); } catch (e) {}
-  setTimeout(function () { if (el.parentNode) el.remove(); }, 2700);
+  requestAnimationFrame(function () { el.classList.add("in"); });
+  try { if (typeof voiceSay === "function") setTimeout(function () { voiceSay(line, "drawl"); }, 500); } catch (e) {}
+  setTimeout(function () { el.classList.remove("in"); setTimeout(function () { if (el.parentNode) el.remove(); }, 480); }, 2600);
 }
 var BM_CLASSES = ["rx-head", "rx-neck", "rx-chest", "rx-abd", "rx-pelv", "rx-armL", "rx-armR", "rx-legL", "rx-legR"];
 function bodyReact(area, snd, part) {
@@ -8804,7 +8812,7 @@ function bodyReact(area, snd, part) {
   if (key === "pelvis") {
     /* the whole room reacts, and Hickory turns up to make it worse */
     setTimeout(function () { try { anatSnd("crowd"); } catch (e) {} }, 170);
-    setTimeout(function () { try { hickPop(pick(["Wow.", "Wow!", "Well. Wow.", "Wow now."])); } catch (e) {} }, 520);
+    setTimeout(function () { try { hickPop(pick(HICK_LINES)); } catch (e) {} }, 560);
   }
   if (typeof hfxOk === "function" && !hfxOk()) return;      /* reduced motion: the noise alone */
   var go = function () {
@@ -25112,45 +25120,91 @@ function anatSnd(kind) {
       tone("sine", 782, 770, 0.01, 0.6, 0.03);
       tone("square", 88, 60, 0, 0.22, 0.07);
     } else if (kind === "crowd") {
-      /* An actual crowd saying "wow", not just noise. Each voice is a sawtooth at its own pitch
-         pushed through three bandpass filters whose frequencies glide along the formants of the
-         word: w (F1 300, F2 610) into the open ah (F1 730, F2 1090) into the oo at the end
-         (F1 400, F2 750). Scatter the pitch and the timing across a dozen voices and it reads as
-         a room of people reacting. A gasp of breath lands first. (owner, Nov 4 2026) */
-      var vi, vn = 12;
-      for (vi = 0; vi < vn; vi++) {
-        var vt = Math.random() * 0.22,                      /* nobody starts at the same instant */
-            f0 = 96 + Math.random() * 150,                  /* deeper and lighter voices */
-            dur = 0.42 + Math.random() * 0.22,
-            amp = 0.05 + Math.random() * 0.045;
-        (function (at, f0, dur, amp) {
-          var o = c.createOscillator(), g = c.createGain();
-          o.type = "sawtooth";
-          o.frequency.setValueAtTime(f0 * 0.92, t + at);
-          o.frequency.linearRampToValueAtTime(f0 * 1.12, t + at + dur * 0.35);   /* the pitch lifts on "wow" */
-          o.frequency.linearRampToValueAtTime(f0 * 0.86, t + at + dur);
-          g.gain.setValueAtTime(0.0001, t + at);
-          g.gain.exponentialRampToValueAtTime(amp, t + at + dur * 0.22);
-          g.gain.setValueAtTime(amp, t + at + dur * 0.6);
-          g.gain.exponentialRampToValueAtTime(0.0001, t + at + dur);
-          /* three formants, glided: w -> ah -> oo */
-          var F = [[300, 730, 420], [610, 1090, 760], [2200, 2440, 2300]], prev = o, k;
-          for (k = 0; k < 3; k++) {
-            var bp = c.createBiquadFilter();
-            bp.type = "bandpass"; bp.Q.value = k === 2 ? 7 : 5;
-            bp.frequency.setValueAtTime(F[k][0], t + at);
-            bp.frequency.linearRampToValueAtTime(F[k][1], t + at + dur * 0.38);
-            bp.frequency.linearRampToValueAtTime(F[k][2], t + at + dur);
-            prev.connect(bp); prev = bp;
-          }
-          prev.connect(g); g.connect(out);
-          o.start(t + at); o.stop(t + at + dur + 0.05);
-        })(vt, f0, dur, amp);
-        /* the breath behind each voice */
-        nz(vt, 0.16 + Math.random() * 0.1, 0.02 + Math.random() * 0.016, "bandpass", 600 + Math.random() * 700, 1900, 0.9);
+      /* A room of people saying "wow", about two seconds of it. (owner, Nov 4 2026)
+         Three things make it read as people rather than a synthesiser:
+         - the formants run in PARALLEL, not in series. Chained bandpasses multiply and leave
+           almost nothing: the series version measured 230x quieter than this one.
+         - every voice gets its own formant SCALE, which is vocal tract length. That is what
+           makes one voice sound like a big man and another like a child; pitch alone does not.
+         - the word is snappy. "wow" peaks early and closes fast; drawn out slowly it turns
+           into "woah".
+         Shape: gasps first, the word across the middle, mutters trailing off. */
+      var bus = c.createGain(), comp = c.createDynamicsCompressor();
+      bus.gain.value = 0.85;
+      comp.threshold.value = -15; comp.ratio.value = 8; comp.knee.value = 12;
+      comp.attack.value = 0.004; comp.release.value = 0.3;
+      bus.connect(comp); comp.connect(out);
+      /* one person saying "wow": k scales the whole vocal tract, so k>1 is a smaller person */
+      function wow(at, f0, k, amp, dur) {
+        var T1 = at + dur * 0.24, T2 = at + dur;                 /* the vowel opens early */
+        var src = c.createOscillator(); src.type = "sawtooth";
+        src.frequency.setValueAtTime(f0 * 0.88, t + at);
+        src.frequency.linearRampToValueAtTime(f0 * 1.2, t + T1); /* the jump on "wow" */
+        src.frequency.linearRampToValueAtTime(f0 * 0.78, t + T2);
+        var vib = c.createOscillator(), vg = c.createGain();
+        vib.frequency.value = 4.5 + Math.random() * 2.5; vg.gain.value = f0 * 0.025;
+        vib.connect(vg); vg.connect(src.frequency); vib.start(t + at); vib.stop(t + T2 + 0.05);
+        var env = c.createGain();
+        env.gain.setValueAtTime(0.0001, t + at);
+        env.gain.exponentialRampToValueAtTime(amp, t + at + dur * 0.16);   /* a quick attack */
+        env.gain.setValueAtTime(amp, t + at + dur * 0.5);
+        env.gain.exponentialRampToValueAtTime(0.0001, t + T2);
+        env.connect(bus);
+        /* w (rounded) -> ah (open) -> oo (rounded again), each formant on its own filter */
+        var FR = [[310, 760, 390], [600, 1150, 740], [2300, 2500, 2320]],
+            FG = [1, 0.5, 0.16], FQ = [10, 12, 14], j;
+        for (j = 0; j < 3; j++) {
+          var bp = c.createBiquadFilter(), bg = c.createGain();
+          bp.type = "bandpass"; bp.Q.value = FQ[j];
+          bp.frequency.setValueAtTime(FR[j][0] * k, t + at);
+          bp.frequency.linearRampToValueAtTime(FR[j][1] * k, t + T1);
+          bp.frequency.linearRampToValueAtTime(FR[j][2] * k, t + T2);
+          bg.gain.value = FG[j];
+          src.connect(bp); bp.connect(bg); bg.connect(env);
+        }
+        src.start(t + at); src.stop(t + T2 + 0.05);
       }
-      /* the collective intake of breath that lands just before the word */
-      for (vi = 0; vi < 5; vi++) nz(Math.random() * 0.1, 0.2, 0.03, "bandpass", 500 + Math.random() * 900, 2400, 0.8);
+      /* a person catching their breath: noise pulled in through a moving throat, with a
+         touch of voice on it, which is what makes a gasp sound human and not like wind */
+      function gaspv(at, f0, k, amp) {
+        var dur = 0.3 + Math.random() * 0.16;
+        var n = Math.floor(c.sampleRate * dur), bf = c.createBuffer(1, n, c.sampleRate), dd = bf.getChannelData(0), i2;
+        for (i2 = 0; i2 < n; i2++) { var u = i2 / n; dd[i2] = (Math.random() * 2 - 1) * Math.pow(u, 0.6) * (1 - u * 0.25); }
+        var sn = c.createBufferSource(); sn.buffer = bf;
+        var bp = c.createBiquadFilter(); bp.type = "bandpass"; bp.Q.value = 2.2;
+        bp.frequency.setValueAtTime(420 * k, t + at);
+        bp.frequency.linearRampToValueAtTime(1500 * k, t + at + dur);      /* the throat opening */
+        var g2 = c.createGain(); g2.gain.value = amp;
+        sn.connect(bp); bp.connect(g2); g2.connect(bus);
+        sn.start(t + at); sn.stop(t + at + dur);
+        var vo = c.createOscillator(), vg2 = c.createGain(), vb = c.createBiquadFilter();
+        vo.type = "sawtooth"; vo.frequency.setValueAtTime(f0 * 1.25, t + at + dur * 0.5);
+        vo.frequency.linearRampToValueAtTime(f0 * 1.75, t + at + dur);
+        vb.type = "bandpass"; vb.Q.value = 8; vb.frequency.value = 820 * k;
+        vg2.gain.setValueAtTime(0.0001, t + at + dur * 0.5);
+        vg2.gain.exponentialRampToValueAtTime(amp * 0.5, t + at + dur * 0.78);
+        vg2.gain.exponentialRampToValueAtTime(0.0001, t + at + dur + 0.06);
+        vo.connect(vb); vb.connect(vg2); vg2.connect(bus);
+        vo.start(t + at + dur * 0.5); vo.stop(t + at + dur + 0.1);
+      }
+      var qi;
+      /* the room catches its breath */
+      for (qi = 0; qi < 7; qi++) gaspv(Math.random() * 0.2, 90 + Math.random() * 150, 0.85 + Math.random() * 0.45, 0.05 + Math.random() * 0.04);
+      /* and then says it: sixteen voices across the middle second */
+      for (qi = 0; qi < 16; qi++) {
+        wow(0.16 + Math.random() * 0.72,
+            88 + Math.random() * 180,                 /* pitch */
+            0.82 + Math.random() * 0.5,               /* vocal tract: big men to children */
+            0.085 + Math.random() * 0.06,
+            0.32 + Math.random() * 0.16);             /* short: "wow", not "woah" */
+      }
+      /* a few late ones and the mutter afterwards, out to about two seconds */
+      for (qi = 0; qi < 4; qi++) wow(1.0 + Math.random() * 0.4, 95 + Math.random() * 150, 0.85 + Math.random() * 0.45, 0.05 + Math.random() * 0.035, 0.34 + Math.random() * 0.14);
+      for (qi = 0; qi < 9; qi++) {
+        var md = 1.25 + Math.random() * 0.6;
+        tone("triangle", 120 + Math.random() * 130, 100 + Math.random() * 80, md, 0.3, 0.011, 5 + Math.random() * 4, 8);
+        nz(md, 0.26, 0.013, "bandpass", 450 + Math.random() * 600, 1000, 1.1);
+      }
     } else if (kind === "gasp") {     /* a sharp offended inhale, then a held, scandalised note */
       nz(0, 0.26, 0.2, "bandpass", 700, 2600, 0.9);
       tone("sine", 420, 880, 0.02, 0.24, 0.07);

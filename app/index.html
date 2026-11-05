@@ -1547,10 +1547,10 @@ html[data-motion="reduce"] *,html[data-motion="reduce"] *::before,html[data-moti
 
 /* --- belly: he folds right over, hugging it, knees bent --- */
 @keyframes bmFold{0%,100%{transform:none}
-  20%{transform:rotateX(32deg) rotate(-3deg) translateY(10px)}
-  46%{transform:rotateX(50deg) rotate(-5deg) translateY(16px)}
-  70%{transform:rotateX(43deg) rotate(-4deg) translateY(13px)}
-  88%{transform:rotateX(15deg) translateY(4px)}}
+  20%{transform:rotateX(38deg) rotate(-3deg) translateY(10px) translateZ(12px)}
+  46%{transform:rotateX(64deg) rotate(-5deg) translateY(18px) translateZ(26px)}
+  70%{transform:rotateX(56deg) rotate(-4deg) translateY(15px) translateZ(22px)}
+  88%{transform:rotateX(18deg) translateY(4px) translateZ(6px)}}
 @keyframes bmHugArmL{0%,100%{transform:none}28%{transform:rotate(14deg)}74%{transform:rotate(11deg)}}
 @keyframes bmHugArmR{0%,100%{transform:none}28%{transform:rotate(-14deg)}74%{transform:rotate(-11deg)}}
 @keyframes bmHugForeL{0%,100%{transform:none}28%{transform:rotate(-76deg)}74%{transform:rotate(-71deg)}}
@@ -1558,6 +1558,12 @@ html[data-motion="reduce"] *,html[data-motion="reduce"] *::before,html[data-moti
 @keyframes bmHeadDrop{0%,100%{transform:none}30%{transform:rotate(-11deg) translateY(5px)}72%{transform:rotate(-9deg) translateY(4px)}}
 @keyframes bmKneeBendL{0%,100%{transform:none}36%{transform:rotate(10deg)}72%{transform:rotate(8deg)}}
 @keyframes bmKneeBendR{0%,100%{transform:none}36%{transform:rotate(-10deg)}72%{transform:rotate(-8deg)}}
+.bodymap .bmlit{pointer-events:none}
+@keyframes bmLit{0%,100%{opacity:0}24%{opacity:.34}70%{opacity:.3}}
+@keyframes bmGroundSoft{0%,100%{opacity:0;transform:scale(.8)}30%{opacity:.22;transform:scale(1.04)}72%{opacity:.2;transform:scale(1.02)}}
+.bodymap.rx-abd .bmlit{animation:bmLit 1.7s ease-out}
+.bodymap.rx-abd .bmground{animation:bmGroundSoft 1.7s ease-out}
+.bodymap.rx-chest .bmlit{animation:bmLit 2.4s ease-out}
 .bodymap.rx-abd .bmtorso{animation:bmFold 1.7s cubic-bezier(.3,.7,.3,1)}
 .bodymap.rx-abd .bmarmL{animation:bmHugArmL 1.7s ease-out}
 .bodymap.rx-abd .bmarmR{animation:bmHugArmR 1.7s ease-out}
@@ -1638,21 +1644,23 @@ html[data-motion="reduce"] *,html[data-motion="reduce"] *::before,html[data-moti
 .bodymap.rx-legR .bmforeR{animation:bmHoldForeR 2.1s ease-out}
 .bodymap.rx-legL .bmtorso,.bodymap.rx-legR .bmtorso{animation:bmLeanFwd 2.1s ease-out}
 
-/* --- Hickory peeks round the edge of the screen --- */
-.hickpop{position:fixed;bottom:9%;z-index:60;display:flex;align-items:center;gap:9px;pointer-events:none;max-width:72vw}
-.hickpop.left{left:0}
-.hickpop.right{right:0;flex-direction:row-reverse}
-.hickpop .hickeyes{width:84px;height:68px;flex:0 0 auto;filter:drop-shadow(0 3px 10px rgba(0,0,0,.35))}
-.hickpop.right .hickeyes{transform:scaleX(-1)}
-.hickpop .hpsay{background:var(--surface-2,#fff);color:var(--ink,#111);border:2px solid var(--line,#ccc);border-radius:14px;padding:7px 13px;font:800 19px/1.2 var(--f-display,inherit);white-space:nowrap;box-shadow:0 6px 20px rgba(0,0,0,.28)}
-/* he leans out, holds, and ducks back behind the edge */
-.hickpop.left{animation:hickPeekL 2.6s cubic-bezier(.2,1.25,.4,1) forwards}
-.hickpop.right{animation:hickPeekR 2.6s cubic-bezier(.2,1.25,.4,1) forwards}
-@keyframes hickPeekL{0%{transform:translateX(-102%)}16%{transform:translateX(4%)}26%{transform:translateX(0)}80%{transform:translateX(0)}100%{transform:translateX(-102%)}}
-@keyframes hickPeekR{0%{transform:translateX(102%)}16%{transform:translateX(-4%)}26%{transform:translateX(0)}80%{transform:translateX(0)}100%{transform:translateX(102%)}}
-/* his eyes dart across while he looks */
-@keyframes hickLook{0%,22%{transform:none}38%{transform:translateX(2.5px)}60%{transform:translateX(-2px)}80%{transform:translateX(1px)}100%{transform:none}}
-.hickpop .hickpupil{animation:hickLook 2.6s ease-in-out}
+/* --- Hickory pokes his head in, the way the peeking pals do --- */
+.hickpop{position:fixed;bottom:16%;z-index:61;display:flex;align-items:center;gap:4px;pointer-events:none;max-width:76vw}
+.hickpop .hpbug{flex:0 0 auto;width:104px;height:104px;display:block}
+.hickpop .hpbug svg{width:100%;height:100%;filter:drop-shadow(0 4px 7px rgba(0,0,0,.34))}
+.hickpop .hpsay{background:var(--surface-2,#fff);color:var(--ink,#111);border:2px solid var(--line,#ccc);border-radius:14px;padding:7px 13px;font:800 18px/1.2 var(--f-display,inherit);box-shadow:0 6px 20px rgba(0,0,0,.28);opacity:0;transform:translateY(5px) scale(.94);transition:opacity .22s ease-out .2s,transform .3s cubic-bezier(.2,1.3,.4,1) .2s}
+.hickpop.in .hpsay{opacity:1;transform:none}
+/* he leans in from his edge at an angle and wiggles, exactly like a peeker */
+.hickpop.hp-l{left:0;transform:translateX(-112%);transition:transform .45s cubic-bezier(.2,1.3,.4,1)}
+.hickpop.hp-l .hpbug{transform:rotate(17deg)}
+.hickpop.hp-l.in{transform:translateX(-26%)}
+.hickpop.hp-l.in .hpbug{animation:hickwig .95s ease-in-out .45s infinite}
+.hickpop.hp-r{right:0;flex-direction:row-reverse;transform:translateX(112%);transition:transform .45s cubic-bezier(.2,1.3,.4,1)}
+.hickpop.hp-r .hpbug{transform:scaleX(-1) rotate(17deg)}
+.hickpop.hp-r.in{transform:translateX(26%)}
+.hickpop.hp-r.in .hpbug{animation:hickwigr .95s ease-in-out .45s infinite}
+@keyframes hickwig{0%,100%{transform:rotate(17deg)}50%{transform:rotate(9deg) translateY(-3px)}}
+@keyframes hickwigr{0%,100%{transform:scaleX(-1) rotate(17deg)}50%{transform:scaleX(-1) rotate(9deg) translateY(-3px)}}
 
 @media (prefers-reduced-motion:reduce){.bodymap *{animation:none!important}}
 .dcw{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0}.dcw .pinput{width:100px}
