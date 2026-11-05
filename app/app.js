@@ -2,6 +2,18 @@
 (function () {
 "use strict";
 
+/* The buyer's-eye copy opens as a stranger would meet it, every single time: the education
+   notice, then the first-run picker, then an empty profile. Set by DRUGBUG_CONFIG.fresh on
+   that build only; the real app and the main preview never do this (owner, Nov 4 2026).
+   It runs before anything reads storage, and the cloud copy of progress is left alone. */
+var FRESH = !!(window.DRUGBUG_CONFIG && window.DRUGBUG_CONFIG.fresh);
+if (FRESH) try {
+  for (var fi = localStorage.length - 1; fi >= 0; fi--) {
+    var fk = localStorage.key(fi);
+    if (fk && fk.indexOf("drugbug:") === 0) localStorage.removeItem(fk);
+  }
+} catch (e) {}
+
 /* ---------- template ---------- */
 var T = [
  ["Drug Name", "id", ["Generic Name","Brand Name(s)","Common EMS Name","Drug Class","Pharmacologic Class","Controlled Substance Schedule"]],
@@ -337,7 +349,7 @@ function go(view, opts) {
   if (view === "flevels" || view === "field") { if (S.view === "level" && isF(S.level)) view = "home"; else { view = "level"; opts = Object.assign({}, opts || {}, { level: "cpp" }); } }
   if (view === "level" && opts && opts.level && isF(opts.level) && opts.level !== "cpp") opts = Object.assign({}, opts, { level: "cpp" });
   if (UTIL_VIEWS[view] && !UTIL_VIEWS[S.view] && S.view !== view && S.view !== "terrarium") S.utilBack = { view: S.view, level: S.level, tab: S.tab };
-  clearTimeout(S.qT); S.view = view; Object.assign(S, { pointGo: null, showFilt: false, onlyMarks: false, tool: null, shopF: null, tab: "hub", q: "", tags: {}, group: "all", scen: null, fc: null, nr: null, sess: null, prepNr: null, unit: null, fam: null, famq: "", cn: null, menu: false, mupop: false, fmq: "", trId: null, blT: "", disId: null }, opts || {});
+  clearTimeout(S.qT); S.view = view; Object.assign(S, { cmpOn: 0, cmpB: null, cmpQ: "", pointGo: null, showFilt: false, onlyMarks: false, tool: null, shopF: null, tab: "hub", q: "", tags: {}, group: "all", scen: null, fc: null, nr: null, sess: null, prepNr: null, unit: null, fam: null, famq: "", cn: null, menu: false, mupop: false, fmq: "", trId: null, blT: "", disId: null }, opts || {});
   if ((S.view === "flevels" || S.view === "field" || (S.view === "level" && isF(S.level))) && typeof fmUnlocked === "function" && !fmUnlocked()) { S.view = "home"; view = "home"; } /* Field Medic is hidden until a code is redeemed */
   fixTab();
   Admin.on = view === "admin"; if (view === "level") store("lastLevel", S.level);
@@ -348,7 +360,10 @@ function go(view, opts) {
 
 /* ---------- top bar ---------- */
 function topbar() {
-  var c = '<div class="topbar"><button class="brand' + (S.view === "home" ? ' onhome' : '') + '" data-go="home" aria-label="DrugBug home">Drug<span>Bug</span></button><nav class="crumbs">';
+  try { document.documentElement.setAttribute("data-serious", funOn() ? "" : "1"); } catch (e) {}
+  var fun = funOn();
+  var c = '<div class="topbar"><button class="modetog' + (fun ? '' : ' serious') + '" data-act="funtog" role="switch" aria-checked="' + (fun ? 'true' : 'false') + '" aria-label="Fun or Focused" title="' + (fun ? 'Fun: tap for Focused, the plain reference' : 'Focused: tap for the playful version') + '"><span class="modedot"></span><span class="modetx">' + (fun ? 'Fun' : 'Focused') + '</span></button>' +
+    '<button class="brand' + (S.view === "home" ? ' onhome' : '') + '" data-go="home" aria-label="DrugBug home">Drug<span>Bug</span></button><nav class="crumbs">';
   var rc = routeCtx(); if (rc === "fm") rc = "ph"; if (ROUTES[rc]) c += '<span>/</span><button data-go="' + ROUTES[rc].view + '">' + ROUTES[rc].name + '</button>';
   if (S.view === "level") c += '<span class="cur">/</span><span class="cur">' + esc(levelObj(S.level).name) + '</span>';
   if (S.view === "gen") c += '<span>/</span><span>BugDex</span>';
@@ -374,7 +389,7 @@ function backRow() {
 
 /* ---------- views ---------- */
 function viewHome() {
-  var genN = genIds().length;
+  var genN = genIds().length, fun = typeof funOn !== "function" || funOn();
   /* the whole main menu wears the season, not just the hero (owner, Nov 1 2026) */
   var HOL = typeof holToday === "function" ? holToday() : null;
   var hcls = HOL ? ' hol hol-' + HOL.id + (HOL.base ? ' hol-' + HOL.base : '') : '';
@@ -388,30 +403,68 @@ function viewHome() {
     var lk = ROUTE_BUG[cls];
     var art = lk && typeof levelBug === "function" ? levelBug(lk)
       : bugArt(typeof bug === "string" ? bugById(bug) : bug, "", { mood: "happy" });
-    return '<button class="route rmini ' + cls + pt(go) + '" ' + (go.indexOf("level:") === 0 ? 'data-level="' + go.slice(6) + '"' : 'data-go="' + go + '"') + '>' + (S.pointGo === go ? PT : '') + '<span class="mtx"><h2>' + title + '</h2><p>' + line + '</p></span><span class="mbug">' + art + '</span></button>';
+    var hit = S.pointGo === go;
+    return '<button class="route rmini ' + cls + pt(go) + '" ' + (hit ? 'data-startlearn="' + go + '"' : go.indexOf("level:") === 0 ? 'data-level="' + go.slice(6) + '"' : 'data-go="' + go + '"') + '>' + (hit ? PT : '') + '<span class="mtx"><h2>' + title + '</h2><p>' + line + '</p>' + (fun ? routeChips(cls) : '') + '</span><span class="mbug">' + art + '</span></button>';
   }
   return topbar() + '<div class="homewrap' + hcls + '" data-hol="' + (HOL ? esc(holKey(HOL)) : '') + '">' + homeTip() +
    heroHTML() +
    homeStart() + homeProgress() + (typeof trialBanner === "function" ? trialBanner() : '') +
-   '<h3 class="homegh">Look it up</h3><section class="routes">' +
-   '<button class="route gen wide' + pt("gen") + '" data-go="gen">' + (S.pointGo === "gen" ? PT : '') + '<span class="eyebrow">Start here</span><h2>BugDex</h2><p>Every medication, explained in plain language. Search or browse.</p><span class="count">' + genN + ' medications</span><span class="sage">' + bugSVG("sage") + '</span></button>' +
-   myListRoute() +
-   '<button class="route evsmall" data-go="everyday"><span class="evs-ic" aria-hidden="true">' + bugArt(bugById("grub-everyday"), "", { mood: "happy" }) + '</span><span class="evs-tx"><strong>Everyday Health</strong><span>Medicine cabinet, small sicknesses, normal vitals</span></span><span class="evs-go" aria-hidden="true">&rsaquo;</span></button>' +
-   '</section><h3 class="homegh">Study by role</h3><section class="routes"><div class="minis">' +
-   mini("ph", "levels", "Prehospital", "EMT to Flight Paramedic", "grub-medic") +
-   mini("rn", "nlevels", "Nursing", "CNA, LVN/LPN and RN", "grub-nurse") +
-   mini("md", "mlevels", "Medical School", "MS1 to Intern", "grub-doc") +
-   mini("im", "ilevels", "Imaging", "X-ray, CT, MRI, NM and IR", "grub-imaging") +
-   '</div></section></div>';
+   '<h3 class="homegh">Look it up</h3><section class="routes"><div class="minis one">' +
+   '<button class="route rmini gen' + pt("gen") + '" ' + (S.pointGo === "gen" ? 'data-startlearn="gen"' : 'data-go="gen"') + '>' + (S.pointGo === "gen" ? PT : '') +
+     '<span class="mtx">' + (fun ? '<span class="eyebrow">Start here</span>' : '') + '<h2>BugDex</h2><p>Every medication, explained in plain language. Search or browse.</p>' +
+     (fun ? routeChips("gen") + '<span class="count">' + genN + ' medications</span>' : '') + '</span>' +
+     '<span class="mbug">' + bugSVG("sage") + '</span></button></div>' + myListRoute() +
+   '</section>' + homeRoutes(mini) + '</div>';
 }
+/* The main menu shows the path picked on the first run, not all of them (owner, Nov 4 2026).
+   "Show every path" is always one tap away and is remembered, so nothing is actually hidden. */
+/* The role cards were mostly empty space: each one now lists what is actually inside it
+   (owner, Nov 4 2026). */
+var ROUTE_CHIPS = {
+  gen: ["Search", "Browse", "A to Z"],
+  ev:  ["Medicine cabinet", "Vitamins", "Probiotics", "Peptides"],
+  ph:  ["EMT", "AEMT", "Paramedic", "Flight"],
+  rn:  ["CNA", "LVN/LPN", "RN", "Units"],
+  md:  ["MS1-MS2", "MS3-MS4", "Intern"],
+  im:  ["X-ray", "CT", "MRI", "NM", "IR"]
+};
+function routeChips(code) {
+  var L = ROUTE_CHIPS[code];
+  return L ? '<span class="rchips">' + L.map(function (x) { return '<span>' + esc(x) + '</span>'; }).join("") + '</span>' : "";
+}
+var HOME_ROUTES = [
+  ["ph", "levels", "Prehospital", "Every level has its own drugs, protocols and question bank.", "grub-medic"],
+  ["rn", "nlevels", "Nursing", "Scope by licence, plus specialty units and lab values.", "grub-nurse"],
+  ["md", "mlevels", "Medical School", "Mechanisms, board-style questions and the wards view.", "grub-doc"],
+  ["im", "ilevels", "Imaging", "Contrast agents, radiopharmaceuticals and contrast safety.", "grub-imaging"]
+];
+function homeAll() { return !!store("allPaths"); }
+function homeMine() {
+  var picked = Prog.d.interests || [], r = Prog.d.role;
+  if (picked.length) return HOME_ROUTES.filter(function (x) { return picked.indexOf(x[0]) >= 0; });
+  return HOME_ROUTES.filter(function (x) { return x[0] === r; });
+}
+function homeRoutes(mini) {
+  var all = homeAll(), mine = homeMine(), list = all || !mine.length ? HOME_ROUTES : mine;
+  var picked = Prog.d.interests || [];
+  var showEv = all || picked.indexOf("ev") >= 0 || (!picked.length && Prog.d.role === "ev") || (!picked.length && !mine.length);
+  var cards = (showEv ? mini("ev", "everyday", "Everyday Health", EV_LINE, "grub-everyday") : "") +
+    list.map(function (x) { return mini(x[0], x[1], x[2], x[3], x[4]); }).join("");
+  var n = list.length + (showEv ? 1 : 0);
+  var head = all || !mine.length ? "Study by role" : (n === 1 ? "Your path" : "Your paths");
+  /* the other paths live in Settings now, not on the menu (owner, Nov 4 2026) */
+  return '<h3 class="homegh">' + head + '</h3><section class="routes"><div class="minis' + (n === 1 ? ' one' : '') + '">' + cards + '</div></section>';
+}
+var EV_LINE = "Medicines and your body, explained without the jargon.";
 /* My List on the home screen, right under the BugDex (owner, Oct 28 2026) */
 function myListRoute() {
   var m = marks().filter(function (id) { return DB.drugs[id]; }), n = m.length, ix = 0;
   if (n >= 2 && typeof ixnGroups === "function") { var key = m.join(","); if (DB._ixk !== key) { var G = ixnGroups(m.slice(0, 40)); DB._ixk = key; DB._ixn = G.syn.length + G.add.length + G.neg.length + G.oth.length; } ix = DB._ixn; }
   var lock = typeof proLocked === "function" && proLocked("mylist");
-  return '<button class="route mylist wide" data-golist="1"><span class="eyebrow">Your drugs</span><h2>My List' + (lock ? '<span class="lockpill">Plus</span>' : '') + '</h2><p>' +
-    (n ? n + ' saved drug' + (n === 1 ? '' : 's') + '. Quiz, print and see how they interact.' : 'Save drugs from any page to quiz on them and see how they interact.') +
-    '</p>' + (n >= 2 ? '<span class="count">' + ix + ' interaction' + (ix === 1 ? '' : 's') + ' on your list</span>' : '') + '</button>';
+  return '<button class="route mlsmall" data-golist="1"><span class="mls-ic" aria-hidden="true">\u2605</span><span class="mls-tx"><strong>My List' +
+    (lock ? '<span class="lockpill">Plus</span>' : '') + '</strong><span>' +
+    (n ? n + ' saved drug' + (n === 1 ? '' : 's') + (n >= 2 ? ' \u00b7 ' + ix + ' interaction' + (ix === 1 ? '' : 's') : '') : 'Store the drugs you take and read the interactions between them, or the drugs you need to learn') +
+    '</span></span><span class="evs-go" aria-hidden="true">&rsaquo;</span></button>';
 }
 /* the first thing after the header: get studying */
 function homeStart() {
@@ -431,6 +484,7 @@ function homeProgress() {
     '</section>';
 }
 function homeTip() {
+  if (typeof funOn === "function" && !funOn()) return "";   /* nothing to tap: serious mode has no Terrarium chip */
   if (store("tipBug") || (typeof tourDone === "function" && !tourDone())) return "";
   return '<div class="tbtip" role="note"><span>Tap your bug up here to open your Terrarium.</span><button class="btn small ghost" data-tipbug="1">Got it</button></div>';
 }
@@ -536,6 +590,7 @@ function tabList() {
     if (AGP.data) L.push(["protocols", (AGP.data.org || "Agency") + " Protocols", "Your agency's own protocols, showing the options for this level, with each drug linked to its DrugBug page."]);
     else if (typeof agpPro !== "function" || agpPro()) L.push(["protocols", "Agency Protocols", "Enter the code from your agency or training officer to see your own protocols here, filtered to this level."]);
   }
+  if (typeof callTabOK === "function" && callTabOK()) L.splice(1, 0, ["calls", "Big Calls", "Stroke, STEMI, sepsis, trauma and ROSC: what to recognize, the clocks and where to go."]);
   if (S.level === "lvn" || S.level === "rn" || S.level === "flightrn") L.push(["nbug", "Nursing Bug", "Assess, hold, labs, teaching: one skill at a time."]);
   var img = S.view === "level" && isI(S.level);
   if (img) L.splice(1, 0, ["contrast", "Contrast Safety", "Reactions, screening, eGFR, GBCA groups, nuclear medicine and IR safety."]);
@@ -547,19 +602,139 @@ function tabList() {
   L.push(["progress", "Progress", "Mastery, achievements and leaderboard."]);
   if (S.view === "gen" && typeof illicitView === "function") L.splice(1, 0, ["illicit", "Illicit & Street Drugs", "How illicit and recreational drugs affect the body, overdose signs and treatment. Education only."]);
   if (S.view === "gen" && typeof COMPOUND_TABS !== "undefined") L.splice(1, 0, ["vegc", "Vegetable Compounds", "Sulforaphane, allicin, lycopene, favism beans and more cool compounds from vegetables."], ["fruitc", "Fruit Compounds", "Resveratrol, bromelain, star fruit toxin and more unique compounds from fruit."], ["vitc", "Vitamin Compounds", "Every vitamin form, from B12 types to vitamin K2, CoQ10 and choline."]);
-  if (typeof disView === "function" && !(S.view === "level" && isI(S.level))) L.splice(1, 0, ["diseases", "Disease Lab", "250 conditions explained: their history, what goes wrong from cell to organ, and the drugs that treat them."]);
+  if (typeof disView === "function" && !(S.view === "level" && isI(S.level))) L.splice(1, 0, ["diseases", "Disease Lab", Object.keys((DB && DB.DIS) || {}).length + " conditions explained: their history, what goes wrong from cell to organ, and the drugs that treat them."]);
   return L;
 }
 function tabName(k) { var t = tabList().filter(function (x) { return x[0] === k; })[0]; return t ? t[1] : k === "session" ? "Study session" : ""; }
 /* Hub tiles grouped into sections with short labels (UI cleanup, Oct 28 2026) */
 var HUB_GROUPS = [
   ["Field care", ["fm_cond", "fm_blood", "fm_hold", "fm_store", "fm_istat", "fm_dive", "fm_k9", "fm_anti", "fm_tele", "fm_trauma", "fm_care", "pcc", "pcc_icu", "fm_adv"]],
-  ["Look it up", ["protocols", "registry", "families", "conds", "diseases", "micro", "anatomy", "illicit", "units", "body", "alts", "contrast", "labs", "blood", "hemo", "flightp"]],
+  ["Look it up", ["protocols", "calls", "registry", "families", "conds", "diseases", "micro", "anatomy", "illicit", "units", "body", "alts", "contrast", "labs", "blood", "hemo", "flightp"]],
   ["Food and vitamin compounds", ["vegc", "fruitc", "vitc"]],
   ["Study and practice", ["tools", "scenarios", "nbug", "medlist"]],
   ["Yours", ["mylist", "progress", "shop"]]
 ];
-var HUB_SHORT = { micro: "Bacteria, viruses, fungi, prions, parasites", fm_bio: "Bio, chem, rad and nuclear casualties", fm_ref: "Burns, vents, scores, handoff, K9, dive", medlist: "What a med list says about the patient", fm_store: "Heat, cold, light and mixing", fm_istat: "Values, cartridges and practice cases", fm_cond: "Trauma, medical and blood reactions, with types", fm_blood: "Whole blood, components, MTP, reactions", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "Saved drugs and their interactions", tools: "Questions, megacode, cards, games, drills", scenarios: "Clinical cases", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", anatomy: "Every organ and body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time" };
+var HUB_SHORT = { calls: "Stroke, STEMI, sepsis, trauma, ROSC", micro: "Bacteria, viruses, fungi, prions, parasites", fm_bio: "Bio, chem, rad and nuclear casualties", fm_ref: "Burns, vents, scores, handoff, K9, dive", medlist: "What a med list says about the patient", fm_store: "Heat, cold, light and mixing", fm_istat: "Values, cartridges and practice cases", fm_cond: "Trauma, medical and blood reactions, with types", fm_blood: "Whole blood, components, MTP, reactions", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "The drugs you take, and their interactions", tools: "Questions, megacode, cards, games, drills", scenarios: "Clinical cases", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", anatomy: "Every organ and body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time" };
+/* ---------- Hold a tile, then move it (owner, Nov 4 2026) ----------
+   The iPhone gesture: press and hold until the tile lifts, drag it where you want, and the
+   others slide out of the way as you go. Order is kept per level and per section, so the
+   Prehospital menu can be arranged differently from the Nursing one.
+
+   A tile is NOT reorderable across sections: the sections mean something ("Look it up",
+   "Study and practice"), and letting a drill land under "Look it up" would make the menu
+   lie about itself. */
+var HUB_HOLD = 520;        /* long enough to be deliberate, short enough not to feel broken */
+var HD = { t: 0, el: null, box: null, x0: 0, y0: 0, grabX: 0, grabY: 0, last: 0, on: false, moved: false, suppress: false, rects: null, key: "" };
+function hubOrderAll() { var P = Prog.d; return P.hubOrder || (P.hubOrder = {}); }
+function hubKey(gi) { return (S.view === "level" ? S.level : S.view) + ":" + gi; }
+/* put the saved arrangement back, with anything new falling in at the end */
+function hubSort(items, gi) {
+  var saved = hubOrderAll()[hubKey(gi)];
+  if (!saved || !saved.length) return items;
+  var pos = {};
+  saved.forEach(function (k, n) { pos[k] = n; });
+  return items.slice().sort(function (a, b) {
+    var pa = pos[a[0]] == null ? 999 + items.indexOf(a) : pos[a[0]];
+    var pb = pos[b[0]] == null ? 999 + items.indexOf(b) : pos[b[0]];
+    return pa - pb;
+  });
+}
+function hubSave() {
+  if (!HD.box) return;
+  var keys = [].slice.call(HD.box.querySelectorAll(".hubtile")).map(function (e) { return e.getAttribute("data-tab"); }).filter(Boolean);
+  if (!keys.length) return;
+  hubOrderAll()[HD.key] = keys;
+  if (typeof saveProg === "function") saveProg();
+}
+/* FLIP: note where everything was, let the DOM change, then animate the gap closing */
+function hubFlipStart() {
+  HD.rects = [];
+  [].slice.call(HD.box.querySelectorAll(".hubtile")).forEach(function (e) {
+    if (e !== HD.el) HD.rects.push([e, e.getBoundingClientRect()]);
+  });
+}
+function hubFlipEnd() {
+  (HD.rects || []).forEach(function (p) {
+    var e = p[0], was = p[1], now = e.getBoundingClientRect();
+    var dx = was.left - now.left, dy = was.top - now.top;
+    if (!dx && !dy) return;
+    e.style.transition = "none";
+    e.style.transform = "translate(" + dx + "px," + dy + "px)";
+    e.getBoundingClientRect();                      /* force the browser to take that position */
+    e.style.transition = "transform .22s cubic-bezier(.22,.9,.26,1)";
+    e.style.transform = "";
+  });
+}
+/* Put the tile under the pointer wherever it currently sits in the DOM. Measuring with the
+   transform cleared is what makes this survive the tile being moved to a new slot mid-drag. */
+function hubPlace(cx, cy) {
+  if (!HD.el) return;
+  HD.el.style.transition = "none";
+  HD.el.style.transform = "";
+  var base = HD.el.getBoundingClientRect();
+  HD.el.style.transform = "translate(" + (cx - HD.grabX - base.left) + "px," + (cy - HD.grabY - base.top) + "px) scale(1.06)";
+}
+function hubLift() {
+  HD.on = true;
+  var r = HD.el.getBoundingClientRect();
+  HD.grabX = HD.x0 - r.left; HD.grabY = HD.y0 - r.top;   /* where in the tile they grabbed it */
+  HD.last = 0;
+  HD.el.classList.add("hubdrag");
+  if (HD.box) HD.box.classList.add("hubediting");
+  try { if (navigator.vibrate) navigator.vibrate(12); } catch (e) {}
+}
+function hubDrop() {
+  if (HD.el) { HD.el.classList.remove("hubdrag"); HD.el.style.transform = ""; HD.el.style.transition = ""; }
+  if (HD.box) HD.box.classList.remove("hubediting");
+  [].slice.call((HD.box || document).querySelectorAll(".hubtile")).forEach(function (e) { e.style.transition = ""; e.style.transform = ""; });
+  if (HD.on) { hubSave(); HD.suppress = true; setTimeout(function () { HD.suppress = false; }, 350); }
+  clearTimeout(HD.t);
+  HD.on = false; HD.el = null; HD.box = null; HD.moved = false; HD.rects = null;
+}
+document.addEventListener("pointerdown", function (e) {
+  if (e.button != null && e.button !== 0) return;
+  var el = e.target.closest && e.target.closest(".hubtile");
+  if (!el) return;
+  var box = el.parentElement;
+  if (!box || box.querySelectorAll(".hubtile").length < 2) return;   /* nothing to swap with */
+  HD.el = el; HD.box = box; HD.x0 = e.clientX; HD.y0 = e.clientY; HD.moved = false; HD.on = false;
+  HD.key = "";
+  var gi = [].slice.call(box.parentElement.children).indexOf(box);
+  HD.key = hubKey(gi);
+  clearTimeout(HD.t);
+  HD.t = setTimeout(hubLift, HUB_HOLD);
+});
+document.addEventListener("pointermove", function (e) {
+  if (!HD.el) return;
+  if (!HD.on) {
+    /* moved before the hold finished: they are scrolling or just tapping, so let it go */
+    var ax = Math.abs(e.clientX - HD.x0), ay = Math.abs(e.clientY - HD.y0);
+    if (ax > 8 || ay > 8) { clearTimeout(HD.t); HD.el = null; HD.box = null; }
+    return;
+  }
+  HD.moved = true;
+  if (e.cancelable) e.preventDefault();
+  hubPlace(e.clientX, e.clientY);
+  /* Swap when the pointer is well inside a neighbour, not merely touching its edge, and never
+     twice in quick succession. Both guards matter: the tile is re-laid-out the instant it moves,
+     and without them it ping-pongs between two slots and ends up back where it started. */
+  if (Date.now() - (HD.last || 0) < 160) return;
+  var sibs = [].slice.call(HD.box.querySelectorAll(".hubtile")).filter(function (x) { return x !== HD.el; });
+  for (var i = 0; i < sibs.length; i++) {
+    var r = sibs[i].getBoundingClientRect(), mx = r.width * 0.25, my = r.height * 0.25;
+    if (e.clientX < r.left + mx || e.clientX > r.right - mx || e.clientY < r.top + my || e.clientY > r.bottom - my) continue;
+    hubFlipStart();
+    var before = HD.el.compareDocumentPosition(sibs[i]) & Node.DOCUMENT_POSITION_FOLLOWING;
+    HD.box.insertBefore(HD.el, before ? sibs[i].nextSibling : sibs[i]);
+    HD.last = Date.now();
+    hubPlace(e.clientX, e.clientY);      /* keep it under the finger in its new slot */
+    hubFlipEnd();
+    break;
+  }
+}, { passive: false });
+document.addEventListener("pointerup", function () { if (HD.el) hubDrop(); });
+document.addEventListener("pointercancel", function () { if (HD.el) hubDrop(); });
+
 function hubView() {
   var L = tabList(), used = {}, lead = (typeof learnTile === "function" ? learnTile() : "");
   /* one search box across the whole tier, at the top of the Combat Paramedic menu (owner, Oct 31 2026).
@@ -578,6 +753,7 @@ function hubView() {
 
   groups.forEach(function (g, gi) {
     var items = L.filter(function (t) { return g[1].indexOf(t[0]) >= 0; }); if (!items.length) return;
+    items = hubSort(items, gi);          /* whatever order they dragged these into */
     c += '<h3 class="hubgh">' + esc(g[0]) + '</h3><div class="hub hubg' + (items.length % 2 ? ' odd' : '') + (items.length === 1 ? ' solo' : '') + (fld && gi === 2 ? ' minis' : '') + '">' + items.map(tile).join("") + '</div>';
   });
   /* topics pinned out of the Field Reference get their own tiles here (owner, Oct 30 2026) */
@@ -594,12 +770,15 @@ function hubView() {
 /* compact education strip: the first sentence stays visible, the rest opens with "More" (cleanup, Oct 28 2026) */
 function eduNote(lead, rest) { return '<details class="edunote" role="note"><summary><span class="edl">' + lead + '</span>' + (rest ? '<span class="edmore">More</span>' : '') + '</summary>' + (rest ? '<p>' + rest + '</p>' : '') + '</details>'; }
 /* one-line hooks; Field Medic levels get field wording for shared tabs */
-function hubShort(k) { if (k === "tools" && S.view === "level" && isF(S.level)) return "Questions, megacode, cards, games, drills"; if (S.view === "level" && isF(S.level) && k === "diseases") return "Trauma, environmental and field conditions"; if (S.view === "level" && isF(S.level) && k === "registry") return "By field use, by class or A to Z"; return HUB_SHORT[k] || ""; }
+function hubShort(k) { if (k === "diseases" && !(S.view === "level" && isF(S.level)) && typeof DB !== "undefined" && DB.DIS) return Object.keys(DB.DIS).length + " conditions, cell to organ"; if (k === "tools" && S.view === "level" && isF(S.level)) return "Questions, megacode, cards, games, drills"; if (S.view === "level" && isF(S.level) && k === "diseases") return "Trauma, environmental and field conditions"; if (S.view === "level" && isF(S.level) && k === "registry") return "By field use, by class or A to Z"; return HUB_SHORT[k] || ""; }
 function sectionHead() {
   var where = S.view === "gen" ? "BugDex" : (levelObj(S.level) || {}).name || "";
   var inUnit = S.tab === "units" && S.unit;
   if ((S.tab === "blood" || S.tab === "hemo" || S.tab === "contrast" || S.tab === "flightp") && S.cn && S.cn.kind === S.tab && (S.cn.grp || S.cn.mode)) { var ch = critHead(); return '<div class="sechead"><button class="backbtn" data-cnav="' + ch[0] + '"><span aria-hidden="true">&larr;</span> ' + esc(ch[1]) + '</button><h2' + (ch[2].length > 28 ? ' class="long"' : '') + '>' + esc(ch[2]) + '</h2></div>'; }
   var back = '<button class="backbtn" data-act="' + (S.tab === "session" ? "sessquit" : inUnit ? "unitsback" : "hub") + '"><span aria-hidden="true">&larr;</span> ' + (S.tab === "session" ? "Exit" : inUnit ? "Specialty Units" : esc(where)) + '</button>';
+  /* inside one condition: a single back button to the list, no second hero (owner, Nov 5 2026) */
+  if (S.tab === "diseases" && S.disId && typeof disAll === "function" && disAll()[S.disId] && !disLocked(S.disId)) return '<div class="sechead slim"><button class="backbtn" data-disback="1"><span aria-hidden="true">&larr;</span> Disease Lab</button></div>';
+  if (S.tab === "calls" && S.callId) return '<div class="sechead slim"><button class="backbtn" data-callback="1"><span aria-hidden="true">&larr;</span> Big Calls</button></div>';
   if (S.tab === "session" || inUnit) return '<div class="sechead">' + back + '<h2>' + esc(tabName(S.tab)) + '</h2></div>';
   /* every tab opens with the same friendly header: icon bubble, name and a one-line hook (cleanup, Oct 28 2026) */
   var sub = S.tab === "prep" ? "" : hubShort(S.tab);
@@ -702,7 +881,7 @@ function tiles(ids) {
       var ltok = ++TILE_TOK;
       TILE_LISTS[ltok] = ids.slice();          /* Previous/Next still walks the whole list */
       LOCK_LISTS[ltok] = lock; tilePrune();
-      return (free.length ? tilesCore(free) : '<div class="empty">None of these are in your plan yet.</div>') +
+      return (free.length ? tilesCore(free) : '') +
         '<details class="lockwrap" data-locktok="' + ltok + '"><summary><span class="lkn">' + lock.length.toLocaleString() +
         ' more medication' + (lock.length === 1 ? '' : 's') + '</span><span class="lksub">In ' +
         TIER_NAME[drugTier(lock[0])] + ' and above · tap to look</span></summary><div class="grid lockgrid"></div></details>';
@@ -884,7 +1063,7 @@ function viewLevel() {
   if (!S.tab || (S.tab !== "hub" && S.tab !== "session" && !tabName(S.tab))) S.tab = "hub";
   if (S.tab !== "hub" && S.tab !== "session" && typeof proLocked === "function" && proLocked(S.tab)) { var lt = S.tab; S.tab = "hub"; setTimeout(function () { openPaywall(tabName(lt), tabTier(lt)); }, 0); }
   if (S.tab === "calc") S.tab = "hub";  /* Calc Lab was removed */
-  var body = S.tab === "hub" ? "" : S.tab === "anatomy" && typeof anatView === "function" ? anatView() : S.tab === "protocols" && typeof agpTabView === "function" ? agpTabView() : typeof fieldTab === "function" && isF(S.level) && FM_TABS[S.tab] ? fieldTab(S.tab) : (S.tab === "vegc" || S.tab === "fruitc" || S.tab === "vitc") && typeof compoundView === "function" ? compoundView(S.tab) : S.tab === "illicit" && typeof illicitView === "function" ? illicitView() : S.tab === "registry" ? (S.view === "level" && isF(S.level) && typeof fieldMedsView === "function" ? fieldMedsView() : registry()) : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? (S.tab = "hub", "") : S.tab === "micro" && typeof microView === "function" ? microView() : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "flt_ref" && typeof fltRefView === "function" ? fltRefView() : S.tab === "tools" ? toolsView() : S.tab === "medlist" ? (typeof medlistView === "function" ? medlistView() : "") : flashcards();
+  var body = S.tab === "hub" ? "" : S.tab === "anatomy" && typeof anatView === "function" ? anatView() : S.tab === "calls" && typeof callsView === "function" ? callsView() : S.tab === "protocols" && typeof agpTabView === "function" ? agpTabView() : typeof fieldTab === "function" && isF(S.level) && FM_TABS[S.tab] ? fieldTab(S.tab) : (S.tab === "vegc" || S.tab === "fruitc" || S.tab === "vitc") && typeof compoundView === "function" ? compoundView(S.tab) : S.tab === "illicit" && typeof illicitView === "function" ? illicitView() : S.tab === "registry" ? (S.view === "level" && isF(S.level) && typeof fieldMedsView === "function" ? fieldMedsView() : registry()) : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? (S.tab = "hub", "") : S.tab === "micro" && typeof microView === "function" ? microView() : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "flt_ref" && typeof fltRefView === "function" ? fltRefView() : S.tab === "tools" ? toolsView() : S.tab === "medlist" ? (typeof medlistView === "function" ? medlistView() : "") : flashcards();
   var msg = S.sessMsg ? '<div class="presult" role="status">' + esc(S.sessMsg) + '</div>' : ''; S.sessMsg = "";
   var notes = (S.tab === "calc" || S.tab === "tools" ? eduBanner() : '') + (["prep", "session", "nbug", "scenarios", "cards"].indexOf(S.tab) >= 0 ? esQNote() : '');
   if (S.tab === "hub") return topbar() + '<div class="' + ctxClass() + '">' + band() + protocolBanner() + (isF(S.level) ? "" : dailyCard()) + msg + (S.learn && S.learn.done && typeof learnDoneView === "function" ? learnDoneView() : "") + hubView() + '</div>';
@@ -966,7 +1145,7 @@ function nrPool(filter) {
   if (S.view === "level" && (isN(S.level) || isI(S.level) || isF(S.level))) { inScope = {}; scopeFor(S.level).ids.forEach(function (id) { inScope[id] = 1; }); }
   var ck = ctxKey();
   function ok(q) { return allowed.indexOf(q.lv) >= 0 && starOK(q, ck) && !(q.home && ck !== "gen") && qVisible(q) && (!inScope || (q.d ? inScope[q.d] : !isF(ck))) && (!q.d || !drugLocked(q.d)); }
-  if (S.nr && S.nr.kind === "reg") return (DB.RQ || []).filter(function (q) { return allowed.indexOf(q.lv) >= 0 && starOK(q, ck) && qVisible(q) && (!isF(ck) || q.fm); });
+  if (S.nr && S.nr.kind === "reg") return (DB.RQ || []).filter(function (q) { return allowed.indexOf(q.lv) >= 0 && starOK(q, ck) && qVisible(q) && (!isF(ck) || q.fm) && (typeof callScaleOK !== "function" || callScaleOK(q)); });
   return DB.Q.filter(ok).concat((DB.QX || []).filter(ok)).concat(typeof qgPoolFor === "function" ? qgPoolFor(ck, ok) : []);
 }
 function nrState() {
@@ -1370,7 +1549,11 @@ function simpleView(d, tier) {
     c += S2(genish ? "What it is used for" : "When to give it", "go", true, F(genish ? "Used For" : "EMS Use", 3, genish ? 0 : 2));
     c += S2(S.view === "everyday" ? "Who should not use it" : "Contraindications", "stop", true, F("Not for people with or taking", 4, 0));
   }
-  c += S2("Dose & route", "dose", true, (note ? field("Your Scope", note) : "") + F("Adult Dose", 6, 0) + F("Pediatric Dose", 6, 1) + F("Routes", 7, 0));
+  /* Professor Sage's pages are for people who are not clinicians, so they do not carry doses.
+     Saying how much of a medicine to give is the one thing this app must never do, and "how it
+     is taken" answers the honest question without naming an amount. (owner, Nov 4 2026) */
+  if (genish) c += S2("How it is taken", "dose", true, (note ? field("Your Scope", note) : "") + F("Routes", 7, 0));
+  else c += S2("Dose & route", "dose", true, (note ? field("Your Scope", note) : "") + F("Adult Dose", 6, 0) + F("Pediatric Dose", 6, 1) + F("Routes", 7, 0));
   c += S2("What to watch", "", true, F("Common Side Effects", 9, 0) + F("Watch after use", 14, 3));
   if (S.view === "gen") c += S2("If someone takes it at home", "", true, F("Suggests", 15, 0) + F("Ask About", 15, 2) + F("If They Stop It", 15, 4));
   c += S2("Remember it", "", true, F("Memory Trick", 16, 2) + F("Key Fact", 16, 3));
@@ -1465,6 +1648,108 @@ function formStep(dir) { if (!S.sheet) return; var F = formsOf(S.sheet.id); if (
   sheet.addEventListener("touchend", function (e) { if (!ok || !S.sheet) return; ok = false; var t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy; if (Date.now() - st < 700 && Math.abs(dx) > 60 && Math.abs(dx) > 2 * Math.abs(dy)) formStep(dx < 0 ? 1 : -1); }, { passive: true });
 })();
 function dexCtx() { return S.view === "gen" || S.view === "admin" || nurseCtx() || medCtx() || imCtx() || S.view === "easy"; }
+/* ---------- Compare two drugs side by side (owner, Nov 4 2026) ----------
+   Everything shown here is pulled straight from the two monographs and, when the pair belongs to
+   one of the drug families, from that family's own "what they share / how to tell them apart"
+   text. Nothing is generated: this is the same wording as the drug pages, set next to each other,
+   which is what makes the close-but-different pairs (tenecteplase vs alteplase) readable. */
+var CMP_FIELDS = [
+  ["Class", 0, 3], ["Pharmacologic class", 0, 4], ["What it does", 1, 1],
+  ["Main uses", 3, 0], ["Contraindications", 4, 0], ["Boxed warning", 5, 1],
+  ["Onset", 8, 0], ["Peak", 8, 1], ["Duration", 8, 2], ["Half-life", 8, 3],
+  ["Routes", 7, 0], ["Serious side effects", 9, 1], ["Antidote", 13, 4], ["Reversal agent", 13, 5]
+];
+function cmpFam(a, b) {
+  return (DB.FAM || []).filter(function (f) {
+    return f.members.some(function (m) { return m.id === a; }) && f.members.some(function (m) { return m.id === b; });
+  })[0] || null;
+}
+function cmpMem(f, id) { return f.members.filter(function (m) { return m.id === id; })[0] || null; }
+/* drugs worth offering first: same family, then the drug's own "Similar Drugs" and
+   "Commonly Confused With" lines, then same class */
+function cmpSuggest(id) {
+  var d = DB.drugs[id], out = [], seen = {}; seen[id] = 1;
+  function push(x) { if (x && DB.drugs[x] && !seen[x] && !(typeof drugLocked === "function" && drugLocked(x))) { seen[x] = 1; out.push(x); } }
+  (DB.FAM || []).forEach(function (f) {
+    if (f.members.some(function (m) { return m.id === id; })) f.members.forEach(function (m) { push(m.id); });
+  });
+  if (d) [get(d, 16, 6), get(d, 16, 5)].forEach(function (txt) {
+    String(txt || "").split(/[;,]/).forEach(function (nm) {
+      nm = nm.trim(); if (nm.length < 3) return;
+      var hit = (DB.ALLIDS || DB.order || []).filter(function (x) { return DB.drugs[x] && DB.drugs[x].name.toLowerCase() === nm.toLowerCase(); })[0];
+      if (hit) push(hit);
+    });
+  });
+  return out.slice(0, 8);
+}
+function cmpResults(id) {
+  var q = (S.cmpQ || "").trim();
+  if (!q) {
+    var sug = cmpSuggest(id);
+    return !sug.length ? '<p class="muted small">Search for any medication above.</p>'
+      : '<p class="cmplbl">Often compared with</p><div class="cmpsug">' + sug.map(function (x) {
+          return '<button class="chip" data-cmpb="' + x + '">' + esc(nameOf(x)) + '</button>';
+        }).join("") + '</div>';
+  }
+  var ids = (DB.ALLIDS || DB.order || []).filter(function (x) {
+    return x !== id && !(typeof drugLocked === "function" && drugLocked(x)) && drugMatch(x, q, true);
+  }).slice(0, 24);
+  return !ids.length ? '<p class="muted small">No medication matches that.</p>'
+    : '<div class="cmpsug">' + ids.map(function (x) {
+        return '<button class="chip" data-cmpb="' + x + '">' + esc(nameOf(x)) + '</button>';
+      }).join("") + '</div>';
+}
+function cmpView(a) {
+  var b = S.cmpB, A = DB.drugs[a], B = b ? DB.drugs[b] : null;
+  var c = '<div class="cmpwrap"><div class="cmphead"><button class="linkish subback" data-cmpclose="1">&larr; Back to ' + esc(nameOf(a)) + '</button></div>';
+  if (!B) {
+    return c + '<h3 class="cmptitle">Compare ' + esc(nameOf(a)) + ' with&hellip;</h3>' +
+      '<input class="search" id="cmpq" type="search" placeholder="Search a medication to compare" value="' + esc(S.cmpQ || "") + '" autocomplete="off">' +
+      '<div id="cmpres">' + cmpResults(a) + '</div></div>';
+  }
+  var F = cmpFam(a, b), ma = F && cmpMem(F, a), mb = F && cmpMem(F, b);
+  c += '<div class="cmptop"><span class="cmpn">' + esc(nameOf(a)) + '</span><span class="cmpvs">vs</span><span class="cmpn">' + esc(nameOf(b)) + '</span></div>' +
+    '<div class="cmpacts2"><button class="btn small ghost" data-cmpswap="1">Swap</button>' +
+    '<button class="btn small ghost" data-cmppick="1">Compare something else</button></div>';
+  if (F) {
+    c += '<div class="cmpdiff"><h4>Both are ' + esc(F.name.toLowerCase()) + '</h4>' +
+      '<p class="cmpshare">' + esc(F.share) + '</p>' +
+      '<div class="cmpkeys">' +
+        (ma ? '<div class="cmpkey"><strong>' + esc(nameOf(a)) + '</strong><span class="cmptag">' + esc(ma.key || "") + '</span><p>' + esc(ma.diff || "") + '</p></div>' : '') +
+        (mb ? '<div class="cmpkey"><strong>' + esc(nameOf(b)) + '</strong><span class="cmptag">' + esc(mb.key || "") + '</span><p>' + esc(mb.diff || "") + '</p></div>' : '') +
+      '</div>' +
+      (F.tips && F.tips.length ? '<details class="cmptips"><summary>How to tell them apart</summary><ul>' + F.tips.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join("") + '</ul></details>' : '') +
+      '</div>';
+  }
+  var rows = CMP_FIELDS.map(function (f) {
+    var va = okv(get(A, f[1], f[2])) ? get(A, f[1], f[2]) : "", vb = okv(get(B, f[1], f[2])) ? get(B, f[1], f[2]) : "";
+    if (!va && !vb) return "";
+    var same = va && vb && va.trim().toLowerCase() === vb.trim().toLowerCase();
+    return '<tr' + (same ? '' : ' class="dif"') + '><th>' + esc(f[0]) + '</th><td>' + (va ? esc(va) : '<span class="muted">&mdash;</span>') +
+      '</td><td>' + (vb ? esc(vb) : '<span class="muted">&mdash;</span>') + '</td></tr>';
+  }).filter(Boolean).join("");
+  c += '<div class="cmptblwrap"><table class="cmptbl"><thead><tr><th></th><th>' + esc(nameOf(a)) + '</th><th>' + esc(nameOf(b)) + '</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+    '<p class="muted small">Rows that differ are marked. Wording comes from each drug\'s own page. Educational comparison only: which medicine fits a patient is a prescriber decision.</p>' +
+    '<div class="cmpacts2"><button class="btn small ghost" data-drug="' + a + '">Open ' + esc(nameOf(a)) + '</button>' +
+    '<button class="btn small ghost" data-drug="' + b + '">Open ' + esc(nameOf(b)) + '</button></div></div>';
+  return c;
+}
+function cmpClick(t, a) {
+  if (a.cmpgo) { S.cmpOn = 1; S.cmpB = null; S.cmpQ = ""; drawSheet(); return true; }
+  if (a.cmpb) { S.cmpB = a.cmpb; S.cmpQ = ""; drawSheet(); return true; }
+  if (a.cmppick) { S.cmpB = null; S.cmpQ = ""; drawSheet(); return true; }
+  if (a.cmpswap) { var o = S.sheet.id; S.sheet.id = S.cmpB; S.cmpB = o; drawSheet(); return true; }
+  if (a.cmpclose) { S.cmpOn = 0; S.cmpB = null; S.cmpQ = ""; drawSheet(); return true; }
+  return false;
+}
+/* typing filters the list in place, so the box keeps focus */
+document.addEventListener("input", function (e) {
+  if (!e.target || e.target.id !== "cmpq") return;
+  S.cmpQ = e.target.value;
+  var box = document.getElementById("cmpres");
+  if (box && S.sheet) box.innerHTML = cmpResults(S.sheet.id);
+});
+
 function drawSheet() {
   if (typeof drugLocked === "function" && drugLocked(S.sheet.id)) { var lid = S.sheet.id; closeSheet(); return openPaywall(nameOf(lid), drugTier(lid)); }
   DW.id = S.sheet.id;
@@ -1479,6 +1764,7 @@ function drawSheet() {
     '<span class="mchip m-' + mastery(id) + '">' + esc(mlabel(mastery(id))) + '</span>' + reviewBadge(d) +
     (d.status === "unpublished" ? '<span class="badge ctrl">Unpublished</span>' : '') +
     (S.view === "gen" && DB.PHIDS.indexOf(id) >= 0 ? '<span class="badge">EMS drug</span>' : '') + '</div></div>';
+  if (S.cmpOn) { c += cmpView(id); sheet.innerHTML = c + '</div>'; translateDom(sheet); return; }
   if (typeof deepView === "function") {
     c += deepTabs();
     if (S.dtab === "deep") { c += deepView(id) + '<div class="sheetfoot">' + reportBtn("drug", id, id) + '</div>'; sheet.innerHTML = c + '</div>'; translateDom(sheet); return; }
@@ -1491,7 +1777,7 @@ function drawSheet() {
   if (typeof agpDrugBox === "function") c += agpDrugBox(id);
   if (typeof antiBox === "function") c += antiBox(id);
   if (typeof worldBox === "function") c += worldBox(id);
-  c += '<div class="sheetacts"><button class="btn small" data-sess="study" data-drug-id="' + id + '">Study it</button>' + (medCtx() ? '<button class="btn small ghost" data-altgo="' + id + '">Alternatives</button>' : '') + '<button class="btn small ghost" data-mark="' + id + '" aria-pressed="' + isMarked(id) + '">' + (isMarked(id) ? "In My List ✓" : "Save to My List" + (typeof PAYWALL !== "undefined" && PAYWALL && !hasTier("plus") ? " " + tierBadge("plus") : "")) + '</button>' + (S.markHint === id && isMarked(id) ? '<span class="muted small markhint">Saved. Open it any time from the <strong>My List</strong> tile.</span>' : '') + '<button class="btn small ghost" data-act="srcjump">Sources</button>' + (typeof canPrint === "function" && canPrint() ? '<button class="btn small ghost" data-print="drug:' + id + '|cards">Print</button>' : '') + (Admin.can ? '<button class="btn small ghost" data-go-edit="' + id + '">Edit in Control Center</button>' : '') + '</div>' + famLinks(id) + eduBanner(true);
+  c += '<div class="sheetacts"><button class="btn small" data-sess="study" data-drug-id="' + id + '">Study it</button><button class="btn small ghost" data-cmpgo="' + id + '">Compare</button>' + (medCtx() ? '<button class="btn small ghost" data-altgo="' + id + '">Alternatives</button>' : '') + '<button class="btn small ghost" data-mark="' + id + '" aria-pressed="' + isMarked(id) + '">' + (isMarked(id) ? "In My List ✓" : "Save to My List" + (typeof PAYWALL !== "undefined" && PAYWALL && !hasTier("plus") ? " " + tierBadge("plus") : "")) + '</button>' + (S.markHint === id && isMarked(id) ? '<span class="muted small markhint">Saved. Open it any time from the <strong>My List</strong> tile.</span>' : '') + '<button class="btn small ghost" data-act="srcjump">Sources</button>' + (typeof canPrint === "function" && canPrint() ? '<button class="btn small ghost" data-print="drug:' + id + '|cards">Print</button>' : '') + (Admin.can ? '<button class="btn small ghost" data-go-edit="' + id + '">Edit in Control Center</button>' : '') + '</div>' + famLinks(id) + eduBanner(true);
   if (S.full) c += '<button class="toggle-full" data-act="full">Back to the simple view</button>' + (typeof probioSection === "function" ? probioSection(id) : "") + (dexCtx() ? dexView(d) : fullView(d, tier)) + '<button class="toggle-full" data-act="full">Back to the simple view</button>';
   else c += (dexCtx() ? dexBox(d) : tierBox(d, tier)) + (typeof probioSection === "function" ? probioSection(id) : "") + lensCard(d) + (lang() === "es" && DB.ES[id] ? esView(id) : simpleView(d, tier)) + '<button class="toggle-full" data-act="full">' + (dexCtx() ? "Show the full DrugDex record" : "Show everything (full monograph)") + '</button>';
   c += sourcesPanel(d) + '<div class="sheetfoot">' + reportBtn("drug", id, id) + '</div>';
@@ -1507,7 +1793,7 @@ function render() {
      already moved on, so buttons did nothing and nothing explained why. Now it says so and offers
      a way out. (owner reported Flight Paramedic doing this, Oct 30 2026) */
   try {
-    html = needDisc() ? discView() : !ok && S.view !== "legal" ? gateView() : S.view === "legal" ? legalView() : (typeof needFun === "function" && needFun()) ? funView() : (typeof needWelcome === "function" && needWelcome()) ? welcomeView() : needRole() ? roleView() : S.view === "home" ? viewHome() : (S.view === "levels" || S.view === "flevels" || S.view === "nlevels" || S.view === "mlevels" || S.view === "ilevels") ? viewLevels() : S.view === "easy" ? viewEasy() : S.view === "admin" ? viewAdmin() : S.view === "classes" ? classesView() : S.view === "settings" ? settingsView() : S.view === "terrarium" ? ((typeof funOn === "function" && !funOn()) ? (S.view = "home", viewHome()) : terrariumView()) : S.view === "everyday" ? evView() : S.view === "field" && typeof fieldView === "function" ? fieldView() : viewLevel();
+    html = needDisc() ? discView() : !ok && S.view !== "legal" ? gateView() : S.view === "legal" ? legalView() : (typeof needFun === "function" && needFun()) ? funView() : (typeof needWelcome === "function" && needWelcome()) ? welcomeView() : needOnboard() ? obView() : S.view === "home" ? viewHome() : (S.view === "levels" || S.view === "flevels" || S.view === "nlevels" || S.view === "mlevels" || S.view === "ilevels") ? viewLevels() : S.view === "easy" ? viewEasy() : S.view === "admin" ? viewAdmin() : S.view === "classes" ? classesView() : S.view === "settings" ? settingsView() : S.view === "terrarium" ? ((typeof funOn === "function" && !funOn()) ? (S.view = "home", viewHome()) : terrariumView()) : S.view === "everyday" ? evView() : S.view === "field" && typeof fieldView === "function" ? fieldView() : viewLevel();
   } catch (err) {
     LAST_ERR = (err && (err.message || err)) + "";
     try { if (window.console) console.error("DrugBug render failed:", err); } catch (e) {}
@@ -1523,6 +1809,15 @@ function render() {
   if (typeof tourMaybe === "function") tourMaybe();
   if (S.proMsg) { var tst = document.createElement("div"); tst.className = "protoast"; tst.setAttribute("role", "status"); tst.textContent = S.proMsg; app.appendChild(tst); S.proMsg = ""; setTimeout(function () { if (tst.parentNode) tst.parentNode.removeChild(tst); }, 5000); }
   translateDom(app); drawBuddy();
+  /* "Start here" asked for L.E.A.R.N: wait until the path has actually rendered, so the
+     level transition cannot redraw over it (owner, Nov 4 2026) */
+  if (needOnboard() && document.querySelector(".lazytrack")) {
+    try { lzLayout(S.obI == null ? 0 : S.obI, false); } catch (e) {}
+  }
+  if (S.learnGo && !S.sheet) {
+    S.learnGo = 0;
+    setTimeout(function () { try { if (typeof learnStart === "function") { S.learn = null; learnStart(); } } catch (e) {} }, 40);
+  }
 }
 function refreshGrid() {
   var g = $("#grid"); if (!g) return;
@@ -1538,8 +1833,10 @@ document.addEventListener("click", function (e) {
   }
   var a = t.dataset;
   if (S.view === "admin" && (a.atab || a.aedit || a.aqedit || a.asedit || a.arestore || a.aact || a.rqopen || a.psedit)) return adminClick(t);
+  if (typeof cmpClick === "function" && cmpClick(t, a)) return;
+  if (typeof obClick === "function" && obClick(t, a)) return;
   if (a.role) return pickRole(a.role);
-  if ((typeof microClick === "function" && microClick(t, a)) || (typeof deepClick === "function" && deepClick(t, a)) || (typeof disClick === "function" && disClick(t, a)) || (typeof gamesClick === "function" && S.tab === "games" && gamesClick(t, a)) || altsClick(t, a) || flClick(t, a) || aiClick(t, a) || critClick(t, a) || labsClick(t, a) || legalClick(t, a) || i18nClick(t, a) || printClick(t, a) || settingsClick(t, a) || buddyClick(t, a)) return;
+  if ((typeof microClick === "function" && microClick(t, a)) || (typeof deepClick === "function" && deepClick(t, a)) || (typeof disClick === "function" && disClick(t, a)) || (typeof callsClick === "function" && S.tab === "calls" && callsClick(t, a)) || (typeof gamesClick === "function" && S.tab === "games" && gamesClick(t, a)) || altsClick(t, a) || flClick(t, a) || aiClick(t, a) || critClick(t, a) || labsClick(t, a) || legalClick(t, a) || i18nClick(t, a) || printClick(t, a) || settingsClick(t, a) || buddyClick(t, a)) return;
   if (a.report) return openReport(a.report);
   if (a.idea) return openIdeas(a.idea === "fm" ? "Field Medic: comment, request or thought" : "");
   if (a.goEdit) { closeSheet(); go("admin"); A().tab = "drugs"; A().form = recordOf(a.goEdit); return render(); }
@@ -1591,6 +1888,7 @@ document.addEventListener("click", function (e) {
   if (a.act === "lrnreset" && typeof learnReset === "function") return learnReset();
   if (a.act === "errhome") { try { S.sheet = null; S.tab = "hub"; S.tool = null; S.micro = null; go("home"); } catch (e) { location.hash = ""; location.reload(); } return; }
   if (a.act === "errreload") { try { location.reload(); } catch (e) {} return; }
+  if (a.startlearn) { startLearnPath(a.startlearn); return; }
   if (a.level) {
     var LVFX = { flight: "blast", flightrn: "blast", cpp: "smoke" };
     /* every other level has its own entrance too (owner, Nov 1 2026); modules/trans.js */
@@ -1616,6 +1914,7 @@ document.addEventListener("click", function (e) {
   }
   if (a.unitopen) { S.unit = a.unitopen; render(); return window.scrollTo(0, 0); }
   if (a.myunit) { var mu0 = store("nunit"); store("nunit", mu0 === a.myunit ? "" : a.myunit); UNITC = {}; return render(); }
+  if (a.tab && typeof HD !== "undefined" && HD.suppress) return;   /* that was a drag, not a tap */
   if (a.tab && proLocked(a.tab)) { var tn = tabName(a.tab); return openPaywall(tn, tabTier(a.tab)); }
   if (a.fcpick) { S.fcPick = 1; render(); return window.scrollTo(0, 0); }
   if (a.tab) { S.tab = a.tab; S.scen = null; S.fc = null; S.fcPick = 0; S.group = "all"; fixTab(); render(); return window.scrollTo(0, 0); }
@@ -1646,6 +1945,15 @@ document.addEventListener("click", function (e) {
   switch (a.act) {
     case "close": return closeSheet();
     case "tbmenu": S.menu = !S.menu; return render();
+    case "allpaths": store("allPaths", homeAll() ? 0 : 1); render(); return;
+    case "funtog": {
+      var on = !funOn();
+      setSet("fun", on);
+      if (!on) setSet("sfx", false);          /* serious means quiet too, same as the first-run choice */
+      store("funAsked", 1);
+      try { document.documentElement.setAttribute("data-serious", on ? "" : "1"); } catch (e) {}
+      render(); return;
+    }
     case "gsearch": S.menu = false; go("gen", { tab: "registry" }); setTimeout(function () { var q = document.getElementById("q"); if (q) { q.focus(); q.scrollIntoView({ block: "center" }); } }, 60); return;
     case "openproto": S.menu = false; render(); return openProto();
     case "utilback": var ub = S.utilBack; S.utilBack = null; if (ub && ub.view && !UTIL_VIEWS[ub.view]) { go(ub.view, ub.level ? { level: ub.level } : {}); if (ub.tab && ub.tab !== "hub") { S.tab = ub.tab; render(); } return; } return go("home");
@@ -1853,7 +2161,7 @@ document.addEventListener("focusin", function (e) { if (!S.sheet || sheet.hidden
 /* ---------- home hero: the DrugBug title with your bug ---------- */
 function heroHTML() {
   var b = myBug(), st = typeof myStage === "function" ? myStage() : 3;
-  var tag = '<p class="tagline">Learn your meds. Grow your bug.</p>';
+  var tag = '<p class="tagline">' + (typeof funOn === "function" && !funOn() ? 'Every medication, explained plainly.' : 'Learn your meds. Grow your bug.') + '</p>';
   var chip = '<span class="stchip st' + st + '">' + esc(stageName(st)) + '</span>';
   var lbl = 'Your bug, ' + esc(b.name) + ', ' + esc(stageName(st)) + '. Open the Terrarium.';
   var rr = { rare: "rare", seasonal: "rare", epic: "epic", earned: "epic", legendary: "legendary" }[b.rar] || "common";
@@ -2040,8 +2348,9 @@ function dexBox(d) {
 }
 /* route lens: what this route's learners need first */
 var LENS = {
-  gen: ["Professor Sage's notes", [["What it treats", "ind.primaryIndications"], ["If your patient takes it, it suggests", "home.whatDiseaseDoesThisSuggest"], ["Ask about", "home.whatShouldEMSAskAbout"], ["If they stop it suddenly", "home.whatHappensIfTheySuddenlyStopTakingIt"], ["Tell the patient", "@edu"]]],
-  rn: ["Nursing focus", [["Assess before giving", "pearl.whatToCheckBeforeGiving"], ["Nursing considerations", "@nurse"], ["Labs to check", "mon.labs"], ["Monitor after giving", "pearl.whatToMonitorAfterGiving"], ["Teach the patient", "@edu"]]],
+  /* no "tell the patient" row: the app does not script what anyone says to a patient (owner, Nov 4 2026) */
+  gen: ["Professor Sage's notes", [["What it treats", "ind.primaryIndications"], ["If your patient takes it, it suggests", "home.whatDiseaseDoesThisSuggest"], ["Ask about", "home.whatShouldEMSAskAbout"], ["If they stop it suddenly", "home.whatHappensIfTheySuddenlyStopTakingIt"]]],
+  rn: ["Nursing focus", [["Assess before giving", "pearl.whatToCheckBeforeGiving"], ["Nursing considerations", "@nurse"], ["Labs to check", "mon.labs"], ["Monitor after giving", "pearl.whatToMonitorAfterGiving"]]],
   md: ["Board focus", [["Mechanism", "moa.mechanismOfAction"], ["Target", "moa.receptorTarget"], ["Physiologic effects", "moa.physiologicEffects"], ["Most-tested fact", "mem.mostTestedFact"], ["Key interactions", "di.majorDrugInteractions"], ["Toxicity and antidote", "@tox"], ["Commonly confused with", "mem.commonlyConfusedWith"]]],
   im: ["Imaging focus", [["Why imaging uses it", "@rwi.use"], ["Screen before giving", "@rwi.check"], ["Watch during and after", "@rwi.watch"], ["If something goes wrong", "@rwi.act"]]],
   ems: ["Field focus", [["Why EMS gives it", "pearl.whyEMSGivesIt"], ["What EMS should know", "pearl.whatEMSShouldKnow"], ["Check before giving", "pearl.whatToCheckBeforeGiving"], ["Monitor after giving", "pearl.whatToMonitorAfterGiving"], ["When to stop", "pearl.whenToStopAdministration"]]]
@@ -2270,6 +2579,7 @@ function mergeProg(remote) {
   Object.keys(R).forEach(function (k) { if (L[k] === undefined) L[k] = R[k]; });
 }
 function initProg() {
+  if (FRESH) return;          /* a fresh-every-open demo must not restore a saved profile */
   if (!window.claude || typeof window.claude.use !== "function") return;
   Promise.all([window.claude.use("db"), window.claude.use("user")]).then(function (r) {
     var db = r[0], user = r[1]; if (!db || !user || typeof user.id !== "function") return;
@@ -2826,6 +3136,9 @@ function rebuildIndex() {
 }
 function initAdmin() {
   if (!window.claude || typeof window.claude.use !== "function") return;
+  /* The buyer's-eye copy is a demo build: even the owner sees it as a visitor does,
+     so the Control Center stays shut (owner, Nov 4 2026). */
+  if (typeof CFG !== "undefined" && CFG.demo === true) return;
   window.claude.use("user").then(function (u) {
     if (!u) return;
     return Promise.all([u.canEdit(), typeof u.id === "function" ? u.id() : null, typeof u.isOwner === "function" ? u.isOwner() : false]).then(function (v) { Admin.can = !!v[0]; Admin.uid = v[1]; var wasOwner = Admin.owner; Admin.owner = !!v[2]; if (Admin.owner && !wasOwner && S.view === "terrarium") render(); P.owner = P.owner || Admin.can; if (Admin.can && S.view !== "admin") { var tb = $(".topbar"); if (tb && !$("[data-go='admin']", tb)) render(); } });
@@ -3123,12 +3436,17 @@ function darkUI() { var t = document.documentElement.getAttribute("data-theme");
    r = head radius, t = torso [cx, cy, rx, ry], R/L = right/left hand points */
 var BODYFIT = {
   beetle: { r: 30, t: [100, 140, 46, 48] }, butterfly: { r: 26, t: [100, 138, 20, 42] }, moth: { r: 26, t: [100, 138, 22, 42] },
-  dragonfly: { r: 24, t: [100, 132, 18, 42] }, ant: { r: 28, t: [100, 140, 32, 46] }, caterpillar: { r: 30, t: [96, 150, 50, 24] },
+  dragonfly: { r: 24, t: [100, 132, 18, 42] }, ant: { r: 28, t: [100, 140, 32, 46] },
+  caterpillar: { r: 30, t: [96, 150, 50, 24], R: [158, 122], L: [40, 130] },
   spider: { r: 26, t: [100, 148, 40, 38] }, mantis: { r: 26, t: [100, 146, 26, 44], R: [146, 98], L: [54, 98] }, bee: { r: 30, t: [100, 142, 42, 46] },
   cicada: { r: 30, t: [100, 140, 30, 44] }, grasshopper: { r: 29, t: [100, 142, 30, 46] }, snail: { r: 28, t: [96, 132, 24, 44], R: [150, 120] },
   longhorn: { r: 28, t: [100, 146, 36, 52] }, hercules: { r: 29, t: [100, 146, 46, 46] }, stick: { r: 28, t: [100, 148, 22, 50], R: [174, 112], L: [26, 112] },
   scorpion: { r: 27, t: [100, 140, 34, 40], R: [164, 96], L: [36, 96] }, rhino: { r: 30, t: [100, 142, 48, 46] }, firefly: { r: 30, t: [100, 145, 30, 40] },
-  larva: { r: 29, t: [106, 122, 46, 28], R: [170, 100], L: [44, 110] }, chrysalis: { r: 26, t: [100, 150, 28, 40] }, cocoon: { r: 26, t: [100, 150, 34, 40] },
+  larva: { r: 29, t: [106, 122, 46, 28], R: [170, 100], L: [44, 110] },
+  /* the stage 1 and 2 bodies need hand anchors of their own: without them a held item kept the
+     adult position and floated in empty space beside a chrysalis (owner, Nov 4 2026) */
+  chrysalis: { r: 26, t: [100, 150, 28, 40], R: [137, 124], L: [63, 124] }, cocoon: { r: 26, t: [100, 150, 34, 40], R: [140, 126], L: [60, 126] },
+  centipede: { r: 28, t: [114, 150, 40, 34], R: [162, 108], L: [52, 124] },
   wasp: { r: 28, t: [100, 154, 30, 36] }, cricket: { r: 28, t: [100, 150, 28, 40] }
 };
 function fitG(body, slot, hy, svg) {
@@ -3136,8 +3454,10 @@ function fitG(body, slot, hy, svg) {
   if (slot === "hat" || slot === "face" || slot === "neck" || slot === "hair") { k = F.r / 30; if (k === 1 && hy === 74) return svg; tr = "translate(" + (100 - 100 * k).toFixed(2) + " " + (hy - 74 * k).toFixed(2) + ") scale(" + k.toFixed(3) + ")"; }
   else if (slot === "outfit") { var sx = T[2] / 46, sy = T[3] / 48; if (sx === 1 && sy === 1 && T[1] === 140) return svg; tr = "translate(" + (T[0] - 100 * sx).toFixed(2) + " " + (T[1] - 140 * sy).toFixed(2) + ") scale(" + sx.toFixed(3) + " " + sy.toFixed(3) + ")"; }
   else if (slot === "back") { k = Math.max(.6, Math.min(1.1, T[3] / 48)); if (k === 1 && T[1] === 140) return svg; tr = "translate(" + (T[0] - 100 * k).toFixed(2) + " " + (T[1] - 140 * k).toFixed(2) + ") scale(" + k.toFixed(3) + ")"; }
-  else if (slot === "held") { if (!F.R) return svg; tr = "translate(" + (F.R[0] - 160) + " " + (F.R[1] - 145) + ")"; }
-  else if (slot === "left") { if (!F.L) return svg; tr = "translate(" + (F.L[0] - 38) + " " + (F.L[1] - 150) + ")"; }
+  /* hands: move to this body's anchor, and take the body's scale so a small stage does not
+     carry a full-size lantern (owner, Nov 4 2026) */
+  else if (slot === "held") { if (!F.R) return svg; k = F.r / 30; tr = "translate(" + (F.R[0] - 160 * k).toFixed(2) + " " + (F.R[1] - 145 * k).toFixed(2) + ") scale(" + k.toFixed(3) + ")"; }
+  else if (slot === "left") { if (!F.L) return svg; k = F.r / 30; tr = "translate(" + (F.L[0] - 38 * k).toFixed(2) + " " + (F.L[1] - 150 * k).toFixed(2) + ") scale(" + k.toFixed(3) + ")"; }
   else return svg;
   return '<g transform="' + tr + '">' + svg + '</g>';
 }
@@ -3196,7 +3516,7 @@ function bugArt(b, cls, opt) {
   var accs = (b.acc || []).filter(function (a) { var sl = ACC_SLOT[a]; return !(sl && wear[sl]); });
   if (accs.indexOf("stars") >= 0) s += ACC.stars();
   if (wear.fx && ITEMS_BY[wear.fx] && ITEMS_BY[wear.fx].under) s += itemSVG(ITEMS_BY[wear.fx], 74);
-  if (wear.back && ITEMS_BY[wear.back]) s += fitG(b.body, "back", 74, itemSVG(ITEMS_BY[wear.back], 74));
+  if (wear.back && ITEMS_BY[wear.back]) s += fitG(t, "back", hy, itemSVG(ITEMS_BY[wear.back], 74));   /* the stage body, not the adult one */
   if (t === "larva") {
     /* grub: a curled, soft larva in a pale version of the bug's colors */
     var gl = mixHex(c1, "#fff6e0", .45), gd = mixHex(c2, "#fff6e0", .4);
@@ -3302,6 +3622,30 @@ function bugArt(b, cls, opt) {
     s += '<path d="M80 108 Q80 96 100 96 Q120 96 120 108 L116 190 Q100 202 84 190Z" fill="' + F + '" stroke="' + lgd + '" stroke-width="2.5"/>';
     s += '<path d="M83 128 Q100 133 117 128 M84 150 Q100 155 116 150 M86 172 Q100 177 114 172" stroke="' + lgd + '" stroke-width="2.5" fill="none" opacity=".55"/>';
     s += '<circle cx="100" cy="' + hy + '" r="28" fill="' + (b.head || c1) + '" stroke="' + lgd + '" stroke-width="2.5"/>';
+  } else if (t === "centipede") {
+    /* centipede (owner, Nov 5 2026): a coiled chain of segments, one pair of legs on each, long
+       trailing back legs and the forcipules (venom claws) under the head. Like real stone
+       centipedes it hatches with fewer segments and adds more as it grows. */
+    var cp = [[100, 112, 16], [84, 128, 15], [74, 146, 14.5], [78, 165, 14], [96, 177, 13.5], [117, 178, 13], [136, 170, 12.5], [149, 155, 12], [154, 138, 11], [152, 121, 10]];
+    cp = cp.slice(0, st === 1 ? 5 : st === 2 ? 7 : 10);
+    var legs = "", segS = "", n = cp.length;
+    cp.forEach(function (p, i) {
+      var a = cp[Math.max(0, i - 1)], c = cp[Math.min(n - 1, i + 1)], dx = c[0] - a[0], dy = c[1] - a[1], L = Math.sqrt(dx * dx + dy * dy) || 1, nx = -dy / L, ny = dx / L, tx = dx / L, ty = dy / L;
+      [-1, 1].forEach(function (sd) {
+        var x0 = p[0] + nx * sd * (p[2] - 4), y0 = p[1] + ny * sd * (p[2] - 4), x1 = p[0] + nx * sd * (p[2] + 9) - tx * 3, y1 = p[1] + ny * sd * (p[2] + 9) - ty * 3, x2 = x1 - tx * 5, y2 = y1 - ty * 5;
+        legs += '<path d="M' + x0.toFixed(1) + ' ' + y0.toFixed(1) + ' L' + x1.toFixed(1) + ' ' + y1.toFixed(1) + ' L' + x2.toFixed(1) + ' ' + y2.toFixed(1) + '" stroke="' + ink + '" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
+      });
+      if (i === n - 1) {   /* the long terminal legs trail behind like a second pair of antennae */
+        legs += '<path d="M' + (p[0] + tx * 4).toFixed(1) + ' ' + (p[1] + ty * 4).toFixed(1) + ' q' + (tx * 14 + nx * 10).toFixed(1) + ' ' + (ty * 14 + ny * 10).toFixed(1) + ' ' + (tx * 22 + nx * 4).toFixed(1) + ' ' + (ty * 22 + ny * 4).toFixed(1) + ' M' + (p[0] + tx * 4).toFixed(1) + ' ' + (p[1] + ty * 4).toFixed(1) + ' q' + (tx * 14 - nx * 10).toFixed(1) + ' ' + (ty * 14 - ny * 10).toFixed(1) + ' ' + (tx * 22 - nx * 4).toFixed(1) + ' ' + (ty * 22 - ny * 4).toFixed(1) + '" stroke="' + ink + '" stroke-width="2.6" fill="none" stroke-linecap="round"/>';
+      }
+    });
+    for (var ci = n - 1; ci >= 0; ci--) {
+      var q = cp[ci];
+      segS += '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="' + q[2] + '" fill="' + (ci % 2 ? c2 : F) + '" stroke="' + (st === 5 ? GOLD : ink) + '" stroke-width="' + (st === 5 ? 2.4 : 1.6) + '"/>' +
+        '<ellipse cx="' + (q[0] - q[2] * .25).toFixed(1) + '" cy="' + (q[1] - q[2] * .35).toFixed(1) + '" rx="' + (q[2] * .42).toFixed(1) + '" ry="' + (q[2] * .22).toFixed(1) + '" fill="#fff" opacity=".22"/>';
+    }
+    s += legs + segS + '<path d="M84 ' + (hy + 22) + ' Q78 ' + (hy + 36) + ' 92 ' + (hy + 40) + ' M116 ' + (hy + 22) + ' Q122 ' + (hy + 36) + ' 108 ' + (hy + 40) + '" stroke="' + (b.fang || ink) + '" stroke-width="4.5" fill="none" stroke-linecap="round"/>' +
+      antennae(ink, true) + '<circle cx="100" cy="' + hy + '" r="28" fill="' + (b.head || c1) + '" stroke="' + ink + '" stroke-width="1.6"/>';
   } else if (t === "scorpion") {
     s += '<path d="M76 120 Q40 110 34 84 M124 120 Q160 110 166 84" stroke="' + c2 + '" stroke-width="8" fill="none" stroke-linecap="round"/><path d="M34 84 l-12 -8 M34 84 l-4 -14 M166 84 l12 -8 M166 84 l4 -14" stroke="' + c2 + '" stroke-width="7" stroke-linecap="round"/>' + bLegs(ink) +
       '<ellipse cx="100" cy="140" rx="34" ry="40" fill="' + F + '"/>';
@@ -3325,7 +3669,7 @@ function bugArt(b, cls, opt) {
     s += '<circle cx="100" cy="' + hy + '" r="30" fill="' + (b.head || c1) + '"/>';
   }
   /* veteran / legend body details, fit to the torso of this body */
-  if (st >= 4 && !{ chrysalis: 1, cocoon: 1, snail: 1, caterpillar: 1, stick: 1, dragonfly: 1, butterfly: 1, moth: 1, firefly: 1, larva: 1 }[t]) {
+  if (st >= 4 && !{ centipede: 1, chrysalis: 1, cocoon: 1, snail: 1, caterpillar: 1, stick: 1, dragonfly: 1, butterfly: 1, moth: 1, firefly: 1, larva: 1 }[t]) {
     var TF = (BODYFIT[t] || BODYFIT.beetle).t, tx = TF[0], ty = TF[1], rx = TF[2], ry = TF[3];
     s += '<path d="M' + (tx - rx * .62) + ' ' + (ty - ry * .42) + ' Q' + (tx - rx * .5) + ' ' + (ty - ry * .78) + ' ' + (tx - rx * .16) + ' ' + (ty - ry * .86) + '" stroke="#fff" stroke-width="5" stroke-linecap="round" fill="none" opacity=".42"/>';
     if (st === 5) s += '<ellipse cx="' + tx + '" cy="' + ty + '" rx="' + rx + '" ry="' + ry + '" fill="none" stroke="' + GOLD + '" stroke-width="3.5" opacity=".95"/>';
@@ -3338,9 +3682,55 @@ function bugArt(b, cls, opt) {
 
 
   accs.forEach(function (a) { if (a !== "stars" && ACC[a]) s += ACC[a](hy); });
+  var dk = false, ol = '';
+  /* ---------- the grown-up bugs are far more detailed (owner, Nov 4 2026) ----------
+     Veterans get a textured, worn shell; Legends get that plus a deeper sheen, segment creases
+     and fine hairs. It is painted through a mask cut from the bug's own drawing, so it follows
+     whatever silhouette that body has instead of assuming a round one, and it goes on before the
+     wardrobe so clothes sit cleanly over it. Kept light on purpose: it should read as a better
+     made bug, not as a filter over the art. */
+  if (st >= 4) {
+    var mid = id + "m", bg = id + "bg", hi5 = st === 5;
+    /* The mask is the bug's own drawing, referenced rather than copied: mask-type:alpha means only
+       its coverage matters, not its colour, so <use> does the job and the body art is not
+       duplicated into the mask. Copying it doubled the node count on every bug on screen.
+       Where mask-type is not supported this falls back to luminance, which simply shows the
+       texture a little less on dark bugs - it never breaks the drawing. */
+    s = '<g id="' + bg + '">' + s + '</g>';
+    ol += '<mask id="' + mid + '" maskUnits="userSpaceOnUse" x="0" y="0" width="200" height="200" style="mask-type:alpha"><use href="#' + bg + '"/></mask>' +
+      /* light from the top left, shadow pooling at the bottom: works on any blob */
+      '<radialGradient id="' + id + 'sh" cx=".34" cy=".26" r=".92">' +
+        '<stop offset="0" stop-color="#ffffff" stop-opacity="' + (hi5 ? ".34" : ".2") + '"/>' +
+        '<stop offset=".45" stop-color="#ffffff" stop-opacity="0"/>' +
+        '<stop offset="1" stop-color="#000000" stop-opacity="' + (hi5 ? ".2" : ".13") + '"/>' +
+      '</radialGradient>' +
+      (hi5 ? '<linearGradient id="' + id + 'ir" x1="0" y1="0" x2="1" y2="1">' +
+        '<stop offset="0" stop-color="#a5f3fc" stop-opacity=".2"/>' +
+        '<stop offset=".5" stop-color="#f0abfc" stop-opacity=".14"/>' +
+        '<stop offset="1" stop-color="#fde68a" stop-opacity=".2"/></linearGradient>' : '');
+    var det = '<rect x="0" y="0" width="200" height="200" fill="url(#' + id + 'sh)"/>';
+    if (hi5) det += '<rect x="0" y="0" width="200" height="200" fill="url(#' + id + 'ir)"/>';   /* iridescence */
+    /* the shell texture is one rect through a shared turbulence filter (see index.html).
+       It used to be 120 hand-placed circles per bug, which put 4,000 extra nodes on a shop grid. */
+    det += '<rect x="0" y="0" width="200" height="200" filter="url(#dbgrain' + (hi5 ? 5 : 4) + ')" opacity="' + (hi5 ? ".4" : ".34") + '"/>';
+    if (hi5) det += '<rect x="0" y="0" width="200" height="200" filter="url(#dbshine5)" opacity=".3"/>';
+    var sd = 0, sKey = String(b.id || b.name || "x"), q;
+    for (q = 0; q < sKey.length; q++) sd = (sd * 31 + sKey.charCodeAt(q)) % 9973;
+    function rnd() { sd = (sd * 1103515245 + 12345) % 2147483648; return sd / 2147483648; }
+    /* segment creases: horizontal, so they read as chitin on anything taller than it is wide */
+    det += '<path d="M0 126 Q100 138 200 126 M0 150 Q100 162 200 150 M0 172 Q100 182 200 172" fill="none" stroke="' + ink + '" stroke-width="' + (hi5 ? 2 : 1.5) + '" opacity="' + (hi5 ? ".13" : ".09") + '"/>';
+    s += '<g class="bugdet" mask="url(#' + mid + ')" aria-hidden="true">' + det + '</g>';
+    /* fine hairs: outside the mask on purpose, so they break the silhouette the way real setae do */
+    var hair = "", hn = hi5 ? 30 : 18, hj;
+    for (hj = 0; hj < hn; hj++) {
+      var a0 = Math.PI * (0.08 + rnd() * 0.84), rr = 44 + rnd() * 12;
+      var hx = 100 - Math.cos(a0) * rr, hy2 = 146 - Math.sin(a0) * (rr * .86), ln = 3.5 + rnd() * 4.5;
+      hair += '<path d="M' + hx.toFixed(1) + ' ' + hy2.toFixed(1) + ' l' + (-Math.cos(a0) * ln).toFixed(1) + ' ' + (-Math.sin(a0) * ln).toFixed(1) + '" stroke="' + ink + '" stroke-width="1.2" opacity="' + (hi5 ? ".36" : ".24") + '" stroke-linecap="round"/>';
+    }
+    s = '<g class="bughair" aria-hidden="true">' + hair + '</g>' + s;
+  }
   ["outfit", "neck", "hair", "face", "hat", "left", "held"].forEach(function (sl) { var it = ITEMS_BY[wear[sl]]; if (it) s += fitG(t, sl, hy, itemSVG(it, 74)); });
   if (wear.fx && ITEMS_BY[wear.fx] && !ITEMS_BY[wear.fx].under) s += itemSVG(ITEMS_BY[wear.fx], hy);
-  var dk = false, ol = '';
   var sk = st === 1 ? (t === "larva" ? .9 : .8) : st === 2 ? .9 : 1;
   if (t === "stick") sk *= .82; /* the stick insect is drawn edge to edge; bring it in line with the other bugs */
   if (sk !== 1) { var sy = t === "stick" ? 108 : 190; s = '<g transform="translate(' + (100 * (1 - sk)).toFixed(1) + ' ' + (sy * (1 - sk)).toFixed(1) + ') scale(' + sk.toFixed(3) + ')">' + s + '</g>'; }
@@ -3374,6 +3764,7 @@ var BUGS = [
   { id: "meadow-hopper", name: "Meadow Hopper", body: "grasshopper", c: ["#a3e635", "#4d7c0f", "#ecfccb"], ink: "#1f2d0a", rar: "common", price: 680 },
   { id: "rookie-rhino", name: "Rookie Rhino Beetle", body: "rhino", c: ["#a16207", "#713f12", "#fde68a"], head: "#422006", rar: "rare", price: 1300 },
   { id: "sky-mantis", name: "Sky Mantis", body: "mantis", c: ["#7dd3fc", "#0284c7"], rar: "rare", price: 1300 },
+  { id: "rapid-centipede", name: "Rapid Response Centipede", body: "centipede", c: ["#fb923c", "#c2410c", "#fde68a"], ink: "#431407", rar: "rare", price: 1450, blurb: "All those legs and still first on scene. Fun fact: no centipede has exactly 100 legs, because they always have an odd number of leg pairs." },
   { id: "bubblegum-ant", name: "Bubblegum Ant", body: "ant", c: ["#f9a8d4", "#db2777"], ink: "#701a45", rar: "common", price: 800 },
   // rare
   { id: "glow-firefly", name: "Glow Firefly", body: "firefly", c: ["#4c5fd5", "#26307a", "#fff59d"], rar: "rare", price: 1200 },
@@ -3679,10 +4070,21 @@ function mouth(kind, y, c) {
   return "";
 }
 /* moods: happy (default), joy, sad, think + easter eggs */
+/* [id, name, 0, price] - price 0/absent means free. The secret-face hunt is gone: every face is
+   either free or bought with sticks, and there are a lot more of them (owner, Nov 4 2026). */
 var FACES = [
   ["happy", "Happy", 0], ["joy", "Overjoyed", 0], ["sad", "Bummed", 0], ["think", "Thinking", 0],
-  ["wink", "Wink", 1], ["star", "Starstruck", 1], ["heart", "Heart eyes", 1], ["dizzy", "Dizzy", 1], ["sleepy", "Sleepy", 1], ["silly", "Silly", 1], ["shock", "Shocked", 1], ["smug", "Smug", 1],
-  ["determined", "Determined", 0, 300], ["angel", "Angelic", 0, 400], ["goofy", "Goofy", 0, 500], ["cool", "Too Cool", 0, 700]
+  ["wink", "Wink", 0, 120], ["silly", "Silly", 0, 120], ["sleepy", "Sleepy", 0, 150], ["shock", "Shocked", 0, 150],
+  ["star", "Starstruck", 0, 200], ["heart", "Heart eyes", 0, 200], ["dizzy", "Dizzy", 0, 220], ["smug", "Smug", 0, 240],
+  ["determined", "Determined", 0, 300], ["angel", "Angelic", 0, 400], ["goofy", "Goofy", 0, 500], ["cool", "Too Cool", 0, 700],
+  /* new */
+  ["grumpy", "Grumpy", 0, 180], ["worried", "Worried", 0, 180], ["sus", "Suspicious", 0, 200],
+  ["crying", "Crying", 0, 200], ["laugh", "Dying laughing", 0, 260], ["pleading", "Pleading", 0, 260],
+  ["money", "Money eyes", 0, 320], ["nerd", "Nerd", 0, 320], ["zombie", "Zombie", 0, 360],
+  ["robot", "Robot", 0, 380], ["pirate", "Pirate", 0, 400], ["ninja", "Ninja", 0, 420],
+  ["hero", "Masked hero", 0, 460], ["flushed", "Flushed", 0, 240], ["smitten", "Smitten", 0, 300],
+  ["woozy", "Woozy", 0, 280], ["mindblown", "Mind blown", 0, 520], ["sparkleface", "Sparkling", 0, 560],
+  ["fire", "Fired up", 0, 600], ["royal", "Royal", 0, 800], ["legend", "Legendary", 0, 1200]
 ];
 function bugFace(y, mood, b, faceItem) {
   var mc = b.smile || "#fff", cool = b.eyes === "cool" && !faceItem, s = "";
@@ -3706,6 +4108,28 @@ function bugFace(y, mood, b, faceItem) {
     case "goofy": s = eyeBall(88, y, 10, 4, 1) + eyeBall(112, y, 10, -4, 1) + mouth("grin", y + 13, mc) + '<rect x="96" y="' + (y + 11) + '" width="8" height="6" rx="1" fill="#fff"/>'; break;
     case "cool": s = shades(y) + mouth("smirk", y + 15, mc); break;
     case "smug": s = '<path d="M80 ' + (y - 1) + ' Q88 ' + (y - 5) + ' 96 ' + (y - 1) + ' M104 ' + (y - 1) + ' Q112 ' + (y - 5) + ' 120 ' + (y - 1) + '" stroke="' + INK + '" stroke-width="3.5" fill="none" stroke-linecap="round"/>' + eyeBall(88, y + 3, 6, 2, 0) + eyeBall(112, y + 3, 6, 2, 0) + mouth("smirk", y + 15, mc); break;
+    /* ---- the faces added when the secret hunt was retired (owner, Nov 4 2026) ---- */
+    case "grumpy": s = eyeBall(88, y + 2, 8, 0, 2) + eyeBall(112, y + 2, 8, 0, 2) + '<path d="M78 ' + (y - 12) + ' L96 ' + (y - 6) + ' M122 ' + (y - 12) + ' L104 ' + (y - 6) + '" stroke="' + INK + '" stroke-width="4.5" stroke-linecap="round"/>' + mouth("frown", y + 16, mc); break;
+    case "worried": s = eyeBall(88, y + 1, 9, 0, 2) + eyeBall(112, y + 1, 9, 0, 2) + '<path d="M78 ' + (y - 8) + ' Q86 ' + (y - 16) + ' 95 ' + (y - 11) + ' M122 ' + (y - 8) + ' Q114 ' + (y - 16) + ' 105 ' + (y - 11) + '" stroke="' + INK + '" stroke-width="3" fill="none" stroke-linecap="round"/>' + '<path d="M91 ' + (y + 15) + ' q4 -4 9 0 q4 4 9 0" stroke="' + mc + '" stroke-width="3" fill="none" stroke-linecap="round"/>'; break;
+    case "sus": s = '<path d="M79 ' + (y - 3) + ' H97" stroke="' + INK + '" stroke-width="3.5" stroke-linecap="round"/>' + eyeBall(88, y + 3, 7, 3, 0) + eyeBall(112, y + 3, 7, 3, 0) + '<path d="M103 ' + (y - 3) + ' H121" stroke="' + INK + '" stroke-width="3.5" stroke-linecap="round"/>' + mouth("flat", y + 15, mc); break;
+    case "crying": s = arcEye(88, y + 1, false) + arcEye(112, y + 1, false) + mouth("frown", y + 16, mc) + '<path d="M86 ' + (y + 6) + ' q-5 12 0 15 q5 -3 0 -15z M114 ' + (y + 6) + ' q5 12 0 15 q-5 -3 0 -15z" fill="#7dd3fc"/>'; break;
+    case "laugh": s = '<path d="M80 ' + (y + 2) + ' Q88 ' + (y - 8) + ' 96 ' + (y + 2) + ' M104 ' + (y + 2) + ' Q112 ' + (y - 8) + ' 120 ' + (y + 2) + '" stroke="' + INK + '" stroke-width="3.5" fill="none" stroke-linecap="round"/>' + mouth("grin", y + 12, mc) + '<path d="M74 ' + (y + 6) + ' q-6 9 -1 12 q5 -3 1 -12z M126 ' + (y + 6) + ' q6 9 1 12 q-5 -3 -1 -12z" fill="#7dd3fc"/>'; break;
+    case "pleading": s = ['88', '112'].map(function (x) { x = +x; return eyeBall(x, y + 1, 11, 0, 2) + '<ellipse cx="' + (x - 3) + '" cy="' + (y - 3) + '" rx="3.4" ry="2.6" fill="#fff" opacity=".95"/>'; }).join("") + '<path d="M78 ' + (y - 10) + ' Q86 ' + (y - 17) + ' 95 ' + (y - 12) + ' M122 ' + (y - 10) + ' Q114 ' + (y - 17) + ' 105 ' + (y - 12) + '" stroke="' + INK + '" stroke-width="2.6" fill="none" stroke-linecap="round"/>' + '<path d="M93 ' + (y + 16) + ' q7 -5 14 0" stroke="' + mc + '" stroke-width="3" fill="none" stroke-linecap="round"/>'; break;
+    case "money": s = ['88', '112'].map(function (x) { x = +x; return '<circle cx="' + x + '" cy="' + y + '" r="9.5" fill="#fff"/><text x="' + x + '" y="' + (y + 5) + '" font-size="13" font-weight="800" fill="#16a34a" font-family="sans-serif" text-anchor="middle">$</text>'; }).join("") + mouth("grin", y + 14, mc); break;
+    case "nerd": s = '<circle cx="88" cy="' + y + '" r="12" fill="#fff" fill-opacity=".35" stroke="' + INK + '" stroke-width="2.5"/><circle cx="112" cy="' + y + '" r="12" fill="#fff" fill-opacity=".35" stroke="' + INK + '" stroke-width="2.5"/><path d="M100 ' + y + ' H100" stroke="' + INK + '" stroke-width="2.5"/><path d="M100 ' + (y - 1) + ' h0" /><path d="M99 ' + y + ' h2" stroke="' + INK + '" stroke-width="3"/>' + eyeBall(88, y, 6, 1, 0) + eyeBall(112, y, 6, 1, 0) + mouth("flat", y + 16, mc) + '<rect x="96" y="' + (y + 11) + '" width="8" height="6" rx="1" fill="#fff"/>'; break;
+    case "zombie": s = '<circle cx="88" cy="' + y + '" r="9" fill="#dbf4c9"/><circle cx="90" cy="' + (y + 1) + '" r="3" fill="' + INK + '"/><path d="M103 ' + (y - 2) + ' L121 ' + (y + 3) + '" stroke="' + INK + '" stroke-width="3.5" stroke-linecap="round"/>' + '<path d="M88 ' + (y + 14) + ' h26 l-4 7 -5 -4 -5 4 -5 -4 -5 4z" fill="#7a1f3d" stroke="' + mc + '" stroke-width="2" stroke-linejoin="round"/>'; break;
+    case "robot": s = '<rect x="78" y="' + (y - 7) + '" width="18" height="13" rx="2" fill="#0b1220" stroke="#67e8f9" stroke-width="2"/><rect x="104" y="' + (y - 7) + '" width="18" height="13" rx="2" fill="#0b1220" stroke="#67e8f9" stroke-width="2"/><path d="M82 ' + (y - 1) + ' h10 M108 ' + (y - 1) + ' h10" stroke="#67e8f9" stroke-width="2.5"/><path d="M96 ' + (y - 1) + ' h8" stroke="#67e8f9" stroke-width="2"/>' + '<rect x="88" y="' + (y + 12) + '" width="24" height="7" rx="2" fill="none" stroke="' + mc + '" stroke-width="2.5"/><path d="M94 ' + (y + 12) + ' v7 M100 ' + (y + 12) + ' v7 M106 ' + (y + 12) + ' v7" stroke="' + mc + '" stroke-width="2"/>'; break;
+    case "pirate": s = '<path d="M72 ' + (y - 9) + ' Q88 ' + (y - 14) + ' 100 ' + (y - 7) + '" stroke="' + INK + '" stroke-width="2.5" fill="none"/><ellipse cx="88" cy="' + y + '" rx="11" ry="9.5" fill="#141224"/><path d="M77 ' + (y - 8) + ' L62 ' + (y - 15) + ' M99 ' + (y - 8) + ' L112 ' + (y - 16) + '" stroke="#141224" stroke-width="2.5"/>' + eyeBall(112, y, 9) + mouth("smirk", y + 15, mc); break;
+    case "ninja": s = '<path d="M68 ' + (y - 13) + ' h64 v12 h-64z" fill="#141224"/><path d="M68 ' + (y + 5) + ' h64 v16 h-64z" fill="#141224"/>' + eyeBall(88, y - 1, 7, 1, 0) + eyeBall(112, y - 1, 7, 1, 0); break;
+    case "hero": s = '<path d="M68 ' + (y - 12) + ' Q100 ' + (y - 19) + ' 132 ' + (y - 12) + ' L128 ' + (y + 6) + ' Q114 ' + (y + 2) + ' 100 ' + (y + 7) + ' Q86 ' + (y + 2) + ' 72 ' + (y + 6) + 'Z" fill="#1d4ed8"/>' + '<path d="M80 ' + (y - 4) + ' q8 -5 16 0 q-8 5 -16 0z M104 ' + (y - 4) + ' q8 -5 16 0 q-8 5 -16 0z" fill="#fff"/>' + eyeBall(88, y - 4, 4.5, 1, 0) + eyeBall(112, y - 4, 4.5, 1, 0) + mouth("smile", y + 16, mc); break;
+    case "flushed": s = eyeBall(88, y, 10, 0, 1) + eyeBall(112, y, 10, 0, 1) + '<ellipse cx="74" cy="' + (y + 10) + '" rx="8" ry="5.5" fill="#ff6b8a" opacity=".55"/><ellipse cx="126" cy="' + (y + 10) + '" rx="8" ry="5.5" fill="#ff6b8a" opacity=".55"/>' + '<path d="M93 ' + (y + 16) + ' q7 4 14 0" stroke="' + mc + '" stroke-width="3" fill="none" stroke-linecap="round"/>'; break;
+    case "smitten": s = heartShape(88, y, 9, "#ff4d6d") + heartShape(112, y, 9, "#ff4d6d") + mouth("grin", y + 14, mc) + heartShape(70, y - 30, 6, "#ff4d6d") + heartShape(132, y - 36, 5, "#ff8fa3") + heartShape(126, y - 20, 4, "#ff4d6d"); break;
+    case "woozy": s = '<path d="M79 ' + y + ' q4.5 -6 9 0 q4.5 6 9 0" stroke="' + INK + '" stroke-width="3" fill="none" stroke-linecap="round"/>' + '<circle cx="112" cy="' + y + '" r="9" fill="#fff"/><path d="M112 ' + y + ' m-2 0 a2 2 0 1 1 4 0 a4 4 0 1 1 -8 0" stroke="' + INK + '" stroke-width="2" fill="none"/>' + '<path d="M91 ' + (y + 15) + ' q5 5 9 0 q4 -5 9 1" stroke="' + mc + '" stroke-width="3" fill="none" stroke-linecap="round"/>'; break;
+    case "mindblown": s = eyeBall(88, y - 1, 12, 0, 0) + eyeBall(112, y - 1, 12, 0, 0) + mouth("o", y + 16, mc) + '<g>' + starShape(68, y - 34, 7, "#ffd84a") + starShape(100, y - 44, 6, "#f0abfc") + starShape(132, y - 34, 7, "#67e8f9") + '</g><path d="M74 ' + (y - 22) + ' l-7 -9 M100 ' + (y - 28) + ' v-10 M126 ' + (y - 22) + ' l7 -9" stroke="#ffd84a" stroke-width="2.5" stroke-linecap="round"/>'; break;
+    case "sparkleface": s = eyeBall(88, y, 9) + eyeBall(112, y, 9) + mouth("smile", y + 15, mc) + sparkleP(70, y - 26, 7, "#fff") + sparkleP(132, y - 32, 6, "#ffd84a") + sparkleP(124, y + 14, 5, "#a5f3fc") + sparkleP(76, y + 18, 4, "#f0abfc"); break;
+    case "fire": s = '<path d="M80 ' + (y + 3) + ' Q88 ' + (y - 9) + ' 96 ' + (y + 3) + ' M104 ' + (y + 3) + ' Q112 ' + (y - 9) + ' 120 ' + (y + 3) + '" stroke="#ff6b35" stroke-width="4" fill="none" stroke-linecap="round"/>' + '<path d="M88 ' + (y - 6) + ' q-4 -12 2 -18 q0 7 4 9 q2 -5 0 -11 q8 7 6 18z" fill="#ff8a3d"/><path d="M112 ' + (y - 6) + ' q-4 -12 2 -18 q0 7 4 9 q2 -5 0 -11 q8 7 6 18z" fill="#ff8a3d"/>' + mouth("grin", y + 14, mc); break;
+    case "royal": s = eyeBall(88, y, 9) + eyeBall(112, y, 9) + mouth("smirk", y + 15, mc) + '<path d="M72 ' + (y - 24) + ' l8 -16 8 10 12 -18 12 18 8 -10 8 16z" fill="#ffc531" stroke="#b7860b" stroke-width="1.5"/><circle cx="100" cy="' + (y - 30) + '" r="3" fill="#ff4d6d"/><circle cx="82" cy="' + (y - 26) + '" r="2.4" fill="#67e8f9"/><circle cx="118" cy="' + (y - 26) + '" r="2.4" fill="#67e8f9"/>'; break;
+    case "legend": s = starShape(88, y, 12, "#ffc531") + starShape(112, y, 12, "#ffc531") + mouth("grin", y + 14, mc) + '<path d="M70 ' + (y - 22) + ' l8 -15 8 9 14 -17 14 17 8 -9 8 15z" fill="#ffc531" stroke="#b7860b" stroke-width="1.5"/>' + sparkleP(66, y + 8, 6, "#fff") + sparkleP(136, y + 2, 5, "#ffd84a") + sparkleP(100, y - 40, 5, "#fff"); break;
     default: if (b.eyes === "fierce" && !faceItem) { s = eyeBall(88, y + 1, 9, 1, 1) + eyeBall(112, y + 1, 9, -1, 1) + '<path d="M76 ' + (y - 14) + ' L97 ' + (y - 7) + ' M124 ' + (y - 14) + ' L103 ' + (y - 7) + '" stroke="' + INK + '" stroke-width="5" stroke-linecap="round"/>' + mouth("smirk", y + 15, mc); break; }
       s = (cool ? shades(y) : E()) + mouth("smile", y + 15, mc);
   }
@@ -3943,8 +4367,81 @@ var IACT = {
 function itemSVG(it, y) {
   var a = it.anim || IA_ITEM[it.id] || IA_SLOT[it.slot] || "none", inner = it.draw(y), A = IACT[it.id];
   if (A) inner = '<g class="ac ac-' + A[0] + '" style="transform-origin:' + A[1] + 'px ' + A[2] + 'px;--dx:' + (A[3] || 0) + 'px;--dy:' + (A[4] || 0) + 'px;--r:' + (A[5] || 0) + 'deg;animation-delay:' + (1 + Math.random() * 6).toFixed(1) + 's">' + inner + '</g>';
-  return '<g class="it ia-' + a + '">' + inner + '</g>';
+  /* data-it makes the item tappable where the bug is the subject of the screen; see itemPoke */
+  return '<g class="it ia-' + a + '" data-it="' + it.id + '"><title>' + esc(it.name) + '</title>' + inner + '</g>';
 }
+/* ---------- tap what your bug is wearing (owner, Nov 4 2026) ----------
+   Poke the coffee and it gets drunk, the cape snaps, the lantern swings and clinks. Each item
+   has a noise, a movement and something the bug says. Defaults come from the slot, so an item
+   added later is interactive the moment it exists. */
+var POKE_SLOT = {
+  hat:    ["tick",   "pk-tip",   ["Hat's on straight, thanks.", "Mind the hat."]],
+  hair:   ["rustle", "pk-shake", ["Don't touch the hair.", "Took me all morning."]],
+  face:   ["tick",   "pk-tip",   ["Can't see a thing.", "Shades stay on."]],
+  neck:   ["thump",  "pk-swing", ["Lub-dub. Still going.", "Want a listen?"]],
+  outfit: ["rustle", "pk-shake", ["Fresh out of the laundry.", "Pockets are empty."]],
+  back:   ["whoosh", "pk-flap",  ["Whoosh.", "It does nothing. I know."]],
+  held:   ["pop",    "pk-swing", ["Get your own.", "Careful, that's full."]],
+  left:   ["boing",  "pk-swing", ["Steady, steady.", "Heavier than it looks."]],
+  fx:     ["sparkle", "pk-pulse", ["Sparkly.", "I know, I know."]]
+};
+var POKE_ITEM = {
+  coffee:     ["slosh",  "pk-drink", ["Ahh. That's the stuff.", "Third one today."]],
+  hugeCup:    ["slosh",  "pk-drink", ["It is a lot of coffee.", "No regrets."]],
+  lantern:    ["ding",   "pk-swing", ["Mind your eyes.", "Still got oil in her."]],
+  stetho:     ["thump",  "pk-swing", ["Lub-dub.", "Sounds fine to me."]],
+  stetho2:    ["thump",  "pk-swing", ["Lub-dub.", "Nice and regular."]],
+  cape:       ["whoosh", "pk-flap",  ["No, I cannot fly.", "It's mostly for the look."]],
+  balloon:    ["squish", "pk-float", ["Don't pop it.", "It's helium. Probably."]],
+  glowsaber:  ["hum",    "pk-swing", ["Not a toy.", "Hmmmmm."]],
+  trident:    ["ding",   "pk-swing", ["Three points. All sharp.", "Poseidon's, briefly."]],
+  propeller:  ["buzz",   "pk-spin",  ["Round and round.", "Still not flying."]],
+  jetpack:    ["whoosh", "pk-flap",  ["Out of fuel.", "One day."]],
+  crown:      ["ding",   "pk-tip",   ["Mind the crown.", "Heavy is the head."]],
+  crown2:     ["ding",   "pk-tip",   ["Royalty, that's me.", "Bow if you like."]],
+  halo:       ["sparkle", "pk-float", ["Earned it.", "Mostly."]],
+  halo2:      ["sparkle", "pk-float", ["Still spotless.", "Don't ask how."]],
+  sparkles:   ["sparkle", "pk-pulse", ["I do sparkle.", "Hard to miss."]],
+  bowtie:     ["pop",    "pk-shake", ["It spins, you know.", "Dapper."]],
+  goggles:    ["tick",   "pk-tip",   ["Can't see a thing.", "Fogged up again."]],
+  mask:       ["whoosh", "pk-shake", ["Still breathing.", "Seal's good."]]
+};
+function pokeOf(it) {
+  return POKE_ITEM[it.id] || POKE_SLOT[it.slot] || ["pop", "pk-shake", ["Hey.", "That's mine."]];
+}
+var PK = { t: 0 };
+function itemPoke(g, id) {
+  var it = ITEMS_BY[id]; if (!it) return;
+  var P = pokeOf(it);
+  try { if (typeof anatSnd === "function") anatSnd(P[0]); } catch (e) {}
+  if (typeof hfxOk !== "function" || hfxOk()) {
+    g.classList.remove(P[1]); void g.getBoundingClientRect(); g.classList.add(P[1]);
+    if (g.__pkT) clearTimeout(g.__pkT);
+    g.__pkT = setTimeout(function () { g.classList.remove(P[1]); g.__pkT = null; }, 900);
+  }
+  /* the bug says something about it, but not on every single tap, and only in Fun mode.
+     A bubble of its own rather than the buddy, because the buddy is hidden in the Terrarium
+     and because re-rendering would cut the animation short. */
+  var now = Date.now();
+  if (now - PK.t < 900 || (typeof funOn === "function" && !funOn())) return;
+  PK.t = now;
+  var par = g.closest(".mybug, .buddyart"); if (!par) return;   /* sits over the bug, not the card */
+  if (getComputedStyle(par).position === "static") par.style.position = "relative";
+  var old2 = document.querySelector(".pokebub"); if (old2) old2.remove();
+  var bub = document.createElement("span");
+  bub.className = "pokebub"; bub.setAttribute("role", "status"); bub.textContent = pick(P[2]);
+  par.appendChild(bub);
+  setTimeout(function () { if (bub.parentNode) { bub.classList.add("out"); setTimeout(function () { if (bub.parentNode) bub.remove(); }, 300); } }, 2200);
+}
+/* only where the bug itself is the subject: the Terrarium bug and the buddy. Everywhere else a
+   tap on the bug still does what it did (the hero orb opens the Terrarium). */
+document.addEventListener("click", function (e) {
+  if (!e.target.closest) return;
+  var host = e.target.closest(".mybug, .buddyart"); if (!host) return;
+  var g = e.target.closest("[data-it]"); if (!g) return;
+  e.stopPropagation(); e.preventDefault();
+  itemPoke(g, g.getAttribute("data-it"));
+}, true);
 /* tap your bug to make it use its items right now */
 function bugAct(svg) { if (!svg || (typeof lvbStill === "function" && lvbStill())) return; svg.querySelectorAll(".ac").forEach(function (g) { g.style.animation = "none"; void g.getBoundingClientRect(); g.style.animation = ""; g.style.animationDelay = "-5.5s"; }); }
 document.addEventListener("click", function (e) { var b = e.target.closest && e.target.closest(".mybug, #buddy"); if (b) bugAct(b.querySelector("svg.bug") || b.querySelector("svg")); });
@@ -3978,24 +4475,38 @@ function itemsView() {
 function noFace() { var w = Object.assign({}, myWear()); delete w.face; return w; }
 function facesFound() { return Prog.d.faces || []; }
 function myFace() { var f = Prog.d.face; return f && faceAvail(f) ? f : "happy"; }
-function faceAvail(id) { var f = FACES.filter(function (x) { return x[0] === id; })[0]; if (!f) return false; if (f[3]) return (Prog.d.facesOwned || []).indexOf(id) >= 0; return !f[2] || facesFound().indexOf(id) >= 0; }
+function faceAvail(id) {
+  var f = FACES.filter(function (x) { return x[0] === id; })[0]; if (!f) return false;
+  if (!f[3]) return true;                                  /* free */
+  if ((Prog.d.facesOwned || []).indexOf(id) >= 0) return true;
+  return facesFound().indexOf(id) >= 0;                    /* kept: faces found before the change stay owned */
+}
 function equipFace(id) { if (!faceAvail(id)) return; Prog.d.face = id; Prog.d.avatarTs = Date.now(); saveProg(); BD.mood = null; drawBuddy(); S.shopMsg = FACES.filter(function (x) { return x[0] === id; })[0][1] + " face equipped."; }
 function buyFace(id) { var f = FACES.filter(function (x) { return x[0] === id; })[0]; if (!f || !f[3] || faceAvail(id) || sticks() < f[3]) return; Prog.d.spent = (Prog.d.spent || 0) + f[3]; Prog.d.facesOwned = (Prog.d.facesOwned || []).concat([id]); equipFace(id); S.shopMsg = "You bought the " + f[1] + " face. It's equipped."; }
 function facesView() {
-  var found = facesFound(), eggs = FACES.filter(function (f) { return f[2]; }), n = eggs.filter(function (f) { return found.indexOf(f[0]) >= 0; }).length, cur = myFace(), bal = sticks();
-  var c = '<p class="muted">Pick the face your bug wears. It still reacts to right and wrong answers, then goes back to the face you chose. Some faces are secret: keep studying (and try tapping your bug) to find them all. <strong>' + n + ' of ' + eggs.length + ' secret faces found.</strong></p>';
+  var cur = myFace(), bal = sticks(), owned = FACES.filter(function (f) { return faceAvail(f[0]); }).length;
+  var c = '<p class="muted">Pick the face your bug wears. It still reacts to right and wrong answers, then goes back to the face you chose. <strong>' + owned + ' of ' + FACES.length + ' faces unlocked.</strong></p>';
   function card(f) {
-    var avail = faceAvail(f[0]), on = cur === f[0], known = avail || !f[2], pend = S.shopBuy === "f:" + f[0];
+    var avail = faceAvail(f[0]), on = cur === f[0], pend = S.shopBuy === "f:" + f[0];
     var act = on ? '<span class="eqd">Equipped</span>' : avail ? '<button class="btn small" data-faceeq="' + f[0] + '">Equip</button>' :
-      f[3] ? (pend ? '<button class="btn small" data-facebuyok="' + f[0] + '">Buy for ' + f[3] + '</button><button class="btn small ghost" data-buyno="1">Cancel</button>' : '<button class="btn small' + (bal >= f[3] ? '' : ' ghost') + '" data-facebuy="' + f[0] + '"' + (bal >= f[3] ? '' : ' disabled') + '>' + (bal >= f[3] ? 'Buy' : 'Need ' + (f[3] - bal) + ' more') + '</button>') : '<span class="muted small">Keep studying to find it</span>';
-    return '<div class="bugcard' + (on ? " eq" : "") + '">' + (known ? myBugArt("", f[0], noFace()) : '<div class="mystery" aria-hidden="true">?</div>') + '<strong>' + (known ? esc(f[1]) : "Secret face") + '</strong>' + (f[3] && !avail ? stickTag(f[3]) : '') + '<div class="bact">' + act + '</div></div>';
+      (pend ? '<button class="btn small" data-facebuyok="' + f[0] + '">Buy for ' + f[3] + '</button><button class="btn small ghost" data-buyno="1">Cancel</button>'
+            : '<button class="btn small' + (bal >= f[3] ? '' : ' ghost') + '" data-facebuy="' + f[0] + '"' + (bal >= f[3] ? '' : ' disabled') + '>' + (bal >= f[3] ? 'Buy' : 'Need ' + (f[3] - bal) + ' more') + '</button>');
+    /* every face is shown as itself now: nothing is hidden behind a question mark */
+    return '<div class="bugcard' + (on ? " eq" : "") + '">' + myBugArt("", f[0], noFace()) + '<strong>' + esc(f[1]) + '</strong>' + (f[3] && !avail ? stickTag(f[3]) : '') + '<div class="bact">' + act + '</div></div>';
   }
-  [["Everyday faces", function (f) { return !f[2] && !f[3]; }], ["Shop faces", function (f) { return f[3]; }], ["Secret faces", function (f) { return f[2]; }]].forEach(function (g) {
-    c += '<div class="tierhead"><h3>' + g[0] + '</h3></div><div class="shopgrid">' + FACES.filter(g[1]).map(card).join("") + '</div>';
+  [["Free faces", function (f) { return !f[3]; }],
+   ["Under 250 sticks", function (f) { return f[3] && f[3] < 250; }],
+   ["250 to 500", function (f) { return f[3] >= 250 && f[3] <= 500; }],
+   ["The expensive ones", function (f) { return f[3] > 500; }]].forEach(function (g) {
+    var L = FACES.filter(g[1]); if (!L.length) return;
+    c += '<div class="tierhead"><h3>' + g[0] + '</h3></div><div class="shopgrid">' + L.map(card).join("") + '</div>';
   });
   return c;
 }
-function findFace(m) { var F = facesFound(); if (F.indexOf(m) < 0 && FACES.some(function (f) { return f[0] === m && f[2]; })) { Prog.d.faces = F.concat([m]); saveProg(); return true; } return false; }
+
+/* kept so progress saved before the secret hunt was retired still reads back; nothing is
+   discovered any more, so this never grants a face (owner, Nov 4 2026) */
+function findFace() { return false; }
 
 /* the on-screen buddy */
 var BD = { mood: null, t: null, streak: 0, taps: 0, tapT: 0, idle: null, msg: "" };
@@ -4022,23 +4533,23 @@ function pickQ(k) { return pick(QUIPS[k]); }
 function buddyReact(ok) {
   if (!buddyOn()) return;
   BD.streak = ok ? BD.streak + 1 : 0;
-  if (ok && Math.random() < 0.06) { var eggs = ["wink", "star", "heart", "silly", "smug"], m = pick(eggs); var nw = findFace(m); return buddySet(m, nw ? "Secret face found!" : pickQ("right")); }
-  if (ok && BD.streak >= 5 && BD.streak % 5 === 0) { var nw2 = findFace("star"); return buddySet("star", nw2 ? "Secret face found: Starstruck!" : BD.streak + " in a row! " + pickQ("streak"), 3200); }
-  if (!ok && Math.random() < 0.08) { var nw3 = findFace("dizzy"); return buddySet("dizzy", nw3 ? "Secret face found: Dizzy!" : pickQ("wrong")); }
+  if (ok && Math.random() < 0.06) { var m = pick(["wink", "star", "heart", "silly", "smug"]); return buddySet(m, pickQ("right")); }   /* a flash of a fun face on a streak; no hunt any more */
+  if (ok && BD.streak >= 5 && BD.streak % 5 === 0) return buddySet("star", BD.streak + " in a row! " + pickQ("streak"), 3200);
+  if (!ok && Math.random() < 0.08) return buddySet("dizzy", pickQ("wrong"));
   buddySet(ok ? "joy" : "sad", pickQ(ok ? "right" : "wrong"));
 }
 function buddyTap() {
   var now = Date.now(); BD.taps = now - BD.tapT < 1500 ? BD.taps + 1 : 1; BD.tapT = now;
-  if (BD.taps >= 7) { BD.taps = 0; var nw = findFace("shock"); return buddySet("shock", nw ? "Whoa! Secret face found: Shocked!" : "Okay, okay, I'm awake!"); }
-  if (BD.taps === 3) { var nw2 = findFace("silly"); return buddySet("silly", nw2 ? "Secret face found: Silly!" : "Hehe."); }
-  var m = pick(["wink", "joy", "think", "joy"]), nw3 = m === "wink" && findFace("wink");
-  buddySet(m, nw3 ? "Secret face found: Wink!" : pickQ("tap"));
+  if (BD.taps >= 7) { BD.taps = 0; return buddySet("shock", "Okay, okay, I'm awake!"); }
+  if (BD.taps === 3) return buddySet("silly", "Hehe.");
+  var m = pick(["wink", "joy", "think", "joy"]);
+  buddySet(m, pickQ("tap"));
 }
-function armIdle() { clearTimeout(BD.idle); BD.idle = setTimeout(function () { if (!buddyOn()) return; var nw = findFace("sleepy"); BD.mood = "sleepy"; BD.msg = nw ? "Secret face found: Sleepy! (Tap me.)" : "Zzz… tap me when you're back."; drawBuddy(); }, 180000); }
+function armIdle() { clearTimeout(BD.idle); BD.idle = setTimeout(function () { if (!buddyOn()) return; BD.mood = "sleepy"; BD.msg = "Zzz… tap me when you're back."; drawBuddy(); }, 180000); }
 buddy.addEventListener("click", function (e) { if (e.target.closest("[data-buddy]")) buddyTap(); });
 function feedback(ok) { sfx(ok); buddyReact(ok); }
 /* special days */
-(function () { var d = new Date(), m = d.getMonth() + 1, day = d.getDate(); if ((m === 10 && day === 31) || (m === 12 && day === 25) || (m === 1 && day === 1)) setTimeout(function () { if (buddyOn()) { findFace("heart"); buddySet("heart", m === 10 ? "Happy Halloween!" : m === 12 ? "Happy holidays!" : "Happy New Year!", 5000); } }, 1500); })();
+(function () { var d = new Date(), m = d.getMonth() + 1, day = d.getDate(); if ((m === 10 && day === 31) || (m === 12 && day === 25) || (m === 1 && day === 1)) setTimeout(function () { if (buddyOn()) { buddySet("heart", m === 10 ? "Happy Halloween!" : m === 12 ? "Happy holidays!" : "Happy New Year!", 5000); } }, 1500); })();
 armIdle();
 function buddyClick(t, a) {
   if (a.ibuy) { S.shopBuy = "i:" + a.ibuy; render(); return true; }
@@ -4129,7 +4640,7 @@ function toolsView() {
   var al = toolsAllowed(), list = TOOLS.filter(function (t) { return al[t[0]]; });
   function toolLocked(k) { return typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier(toolTier(k)); }
   if (S.tool && !al[S.tool]) S.tool = null;
-  if (!S.tool) return '<div class="hub sub">' + list.map(function (t) { var lk = toolLocked(t[0]); return '<button class="hubtile' + (lk ? ' locked' : '') + '" data-tool="' + t[0] + '"><span class="ht"><strong>' + esc(t[1]) + (lk && typeof tierBadge === "function" ? ' ' + tierBadge(toolTier(t[0])) : '') + '</strong><span>' + esc(TOOLDESC[t[0]]) + '</span></span></button>'; }).join("") + '</div>';
+  if (!S.tool) return '<div class="hub sub">' + list.map(function (t) { var lk = toolLocked(t[0]); return '<button class="hubtile toolt' + (lk ? ' locked' : '') + '" data-tool="' + t[0] + '">' + (lk && typeof tierBadge === "function" ? '<span class="tbadge">' + tierBadge(toolTier(t[0])) + '</span>' : '') + '<span class="ht"><strong>' + esc(t[1]) + '</strong><span>' + esc(TOOLDESC[t[0]]) + '</span></span></button>'; }).join("") + '</div>';
   var c = '<button class="linkish subback" data-act="toolsback">&larr; All study tools</button>';
   if (S.tool === "peds" || S.tool === "ixn") S.tool = "mega"; /* Pediatric dosing practice removed Oct 27 2026; Interaction explorer removed Oct 29 2026 */
   if (S.tool === "mega") c += megaView();
@@ -4551,7 +5062,8 @@ function myListView(own) { var m0 = marks().filter(function (id) { return DB.dru
 function myListBase(own) {
   var m = marks().filter(function (id) { return DB.drugs[id]; });
   var c = own ? '' : '<h3 class="eh small">My List</h3>';
-  if (!m.length) return c + '<div class="learncard"><p><strong>Your list is empty.</strong></p><p class="muted">Open any drug and tap <strong>Save to My List</strong>. Saved drugs show up here so you can study, quiz yourself on them or print them as a shift list.</p><button class="btn" data-tab="registry">Browse medications</button></div>';
+  if (!m.length) return c + '<div class="learncard"><p><strong>Your list is empty.</strong></p><p class="muted">This is where you store the drugs you take, so you can read the interactions between them \u2014 and the drugs you need to learn. Open any drug and tap <strong>Save to My List</strong>. Once two or more are saved, DrugBug shows how they interact, and you can study them, quiz yourself on them or print them as a shift list.</p><button class="btn" data-tab="registry">Browse medications</button></div>';
+  c += '<p class="muted small">The drugs you take and the drugs you are learning. With two or more saved, the interactions between them are listed below.</p>';
   return c + '<div class="actions"><button class="btn" data-sess="marks">Quiz me on my list</button><span class="muted small">' + m.length + ' saved drug' + (m.length === 1 ? '' : 's') + '</span></div>' + (typeof canPrint === "function" && canPrint() ? '<div class="actions"><button class="btn" data-print="marks|cards">Print all study cards (' + m.length + ')</button><button class="btn small ghost" data-print="marks|sheet">Print cheat sheet</button></div>' : '') + '<ul class="weaklist">' + m.map(function (id) { return '<li><button class="linkish" data-drug="' + id + '">' + esc(nameOf(id)) + '</button><span class="mchip m-' + mastery(id) + '">' + esc(mlabel(mastery(id))) + '</span><button class="btn small ghost" data-sess="study" data-drug-id="' + id + '">Study</button><button class="btn small ghost" data-unmark="' + id + '" aria-label="Remove ' + esc(nameOf(id)) + ' from My List">Remove</button></li>'; }).join("") + '</ul>';
 }
 
@@ -5138,7 +5650,7 @@ function syncAgree() { if (!agreeRec() && Prog.d.agree && Prog.d.agree.v === LEG
 var DISC_SECS = 5, DISC_AWAY = 15000;
 /* The education-only notice is acknowledged once and then stays acknowledged (owner, Oct 31 2026).
    It is tied to LEGAL_V, so a change to the legal documents shows it once more. */
-function discRec() { var d = store("discok"); return d && d.v === LEGAL_V ? d : null; }
+function discRec() { var d = store("discok"); return d && d.v === LEGAL_V && d.av === APP_VERSION ? d : null; }   /* shown again after a legal change or an app update, never otherwise (owner, Nov 4 2026) */
 function needDisc() { return !S.discOk && !discRec() && !window.__DRUGBUG_SKIP_DISC && S.view !== "legal"; }
 function discView() {
   if (!S.discT0) S.discT0 = Date.now();
@@ -5160,7 +5672,7 @@ function discTick() {
 }
 function acceptDisc() {
   if (!S.discT0 || Date.now() - S.discT0 < DISC_SECS * 1000) return;
-  S.discOk = true; store("discok", { v: LEGAL_V, ts: Date.now() });
+  S.discOk = true; store("discok", { v: LEGAL_V, av: APP_VERSION, ts: Date.now() });
   if (S.discSheet && S.sheet && typeof sheet !== "undefined" && sheet) { sheet.hidden = false; app.setAttribute("aria-hidden", "true"); } S.discSheet = false;
   if (typeof muGesture === "function") muGesture();
   render(); window.scrollTo(0, 0);
@@ -5447,12 +5959,274 @@ function pickFun(on) {
   store("funAsked", 1);
   try { render(); } catch (e) {}
 }
+/* ---------- First run: pick your paths (owner, Nov 4 2026) ----------
+   One screen, no questionnaire. A turntable of the specialties plus Everyday Health; swipe,
+   drag the arrows or use the arrow keys. Each card is a checkbox, Everyday Health starts ticked,
+   and as many as you like can be on. What you tick is what the main menu shows afterwards. */
+/* the certification each path is known by: the highest one that is actually common */
+var OB_FLAGSHIP = { ph: "paramedic", rn: "rn", md: "intern", im: "rt" };
+function obCards() {
+  var ev = ROLES.filter(function (r) { return r[0] === "ev"; })[0];
+  var out = [{ code: "ev", name: ev[1], line: ev[2], bug: ev[3], blurb: "Peptides, probiotics, vitamins, the medicine cabinet, small sicknesses, normal vitals and much more.", sub: "For anyone \u2014 no clinical background needed." }];
+  var BLURB = {
+    ph: "EMT, AEMT, Paramedic and Flight Paramedic, each with its own drug list, protocols and registry-style question bank.",
+    rn: "CNA, LVN/LPN and RN, with specialty units, lab values and licensure-style questions.",
+    md: "MS1 through Intern: mechanisms, board-style questions, drug alternatives and the wards view of every drug.",
+    im: "X-ray, CT, MRI, nuclear medicine and IR: contrast agents, radiopharmaceuticals and contrast safety."
+  };
+  ROLES.filter(function (r) { return r[0] !== "ev"; }).forEach(function (r) {
+    /* Show the path's headline certification, not the rarest one above it. The last level in
+       each list is a specialty a small number of people hold - Flight Paramedic, Flight Nurse -
+       and leading with it misrepresents the path. The one people recognise is Paramedic, or RN.
+       The blurb underneath still lists every level, so nothing is hidden. (owner, Nov 4 2026) */
+    var L = typeof obLevelsFor === "function" ? obLevelsFor(r[0]) : [];
+    var flag = OB_FLAGSHIP[r[0]];
+    var top = (flag && L.filter(function (x) { return x.code === flag; })[0]) || (L.length ? L[L.length - 1] : null);
+    out.push({ code: r[0], name: r[1], line: r[2], bug: r[3], blurb: BLURB[r[0]] || r[2],
+      topKey: top ? top.code : "", topName: top ? top.name : "" });
+  });
+  return out;
+}
+/* "Start here" and the end of Hickory's tour both land in the same place: open the path, then
+   hand straight over to L.E.A.R.N. The flag is set before navigating because go() renders
+   synchronously, and render() picks it up once the path is actually on screen so the level
+   transition cannot redraw over it (owner, Nov 4 2026). */
+function startLearnPath(sg) {
+  if (!sg) sg = { ph: "levels", rn: "nlevels", md: "mlevels", im: "ilevels", ev: "everyday" }[Prog.d.role] || "gen";
+  S.learnGo = 1;
+  if (sg === "gen" || sg === "everyday") return go(sg);
+  var arr = sg === "nlevels" ? DB.NLEVELS : sg === "mlevels" ? DB.MLEVELS : sg === "ilevels" ? (DB.ILEVELS || []) : DB.LEVELS;
+  arr = (arr || []).filter(function (l) { return !(typeof isF === "function" && isF(l.key)); });
+  var last = store("lastLevel"), pick = arr.filter(function (l) { return l.key === last; })[0] || arr[0];
+  if (pick) go("level", { level: pick.key }); else go(sg);
+}
+function needOnboard() { return needRole() || !!S.obRedo; }
+function obSel() {
+  if (!S.obSel) { S.obSel = {}; (Prog.d.interests || ["ev"]).forEach(function (k) { S.obSel[k] = 1; }); if (!Object.keys(S.obSel).length) S.obSel.ev = 1; }
+  return S.obSel;
+}
+/* Step 2: once they have a clinical path, the second wheel asks which level, so Hickory knows
+   where to take them and the first L.E.A.R.N lands in the right scope (owner, Nov 4 2026). */
+function obLevelsFor(code) {
+  var arr = code === "rn" ? DB.NLEVELS : code === "md" ? DB.MLEVELS : code === "im" ? (DB.ILEVELS || []) : DB.LEVELS;
+  return (arr || []).filter(function (l) { return !(typeof isF === "function" && isF(l.key)); })
+    .map(function (l) {
+      return { code: l.key, name: l.name, bug: l.bug,
+        blurb: (typeof SCOPE_TAG !== "undefined" && SCOPE_TAG[l.key]) || l.name, lvl: 1 };
+    });
+}
+/* the first clinical path they ticked; Everyday Health alone has no second wheel */
+function obPrimary() {
+  var sel = obSel();
+  return obCards().map(function (c) { return c.code; })
+    .filter(function (k) { return sel[k] && k !== "ev"; })[0] || "";
+}
+function obStep() { return S.obStep === 2 && obPrimary() ? 2 : 1; }
+function obList() { return obStep() === 2 ? obLevelsFor(obPrimary()) : obCards(); }
+/* one wheel, both steps */
+function obWheel(C, i, sel) {
+  return '<div class="lazy" data-lazy="1">' +
+    '<button class="lazyarr l" data-obstep="-1" aria-label="Previous">&#8249;</button>' +
+    '<div class="lazystage"><div class="lazytrack">' + C.map(function (c, k) {
+      var on = sel ? !!sel[c.code] : k === i;
+      /* a level card draws its own bug; a specialty card draws the bug of its highest level, fully
+         grown, so the picker shows what you are working towards rather than what you start as */
+      var art = c.lvl && typeof levelBug === "function" ? levelBug(c.code)
+        : c.topKey && typeof levelBug === "function" ? levelBug(c.topKey)
+        : bugArt(bugById(c.bug), "rolebug", { mood: "happy", stage: MAX_STAGE });
+      return '<button class="lazycard' + (on ? ' on' : '') + (sel ? '' : ' plainpick') + '" data-obidx="' + k + '" aria-pressed="' + (on ? 'true' : 'false') + '">' +
+        (sel ? '<span class="lazychk" aria-hidden="true"></span>' : '') +
+        '<span class="lazybug">' + art + '</span>' +
+        '<strong>' + esc(c.name) + '</strong>' +
+        (c.topName ? '<span class="obtop">' + esc(c.topName) + '</span>' : '') +
+        (c.code === "ev" ? '<span class="obrec">Recommended</span>' : '') + '</button>';
+    }).join("") + '</div></div>' +
+    '<button class="lazyarr r" data-obstep="1" aria-label="Next">&#8250;</button></div>' +
+    '<div class="lazydots">' + C.map(function (c, k) {
+      return '<button class="lazydot' + (k === i ? ' on' : '') + (sel && sel[c.code] ? ' sel' : '') + '" data-obgo="' + k + '" aria-label="' + esc(c.name) + '"></button>';
+    }).join("") + '</div>';
+}
+function obView() {
+  var step = obStep(), C = obList(), sel = step === 1 ? obSel() : null,
+      i = ((S.obI == null ? 0 : S.obI) % C.length + C.length) % C.length, cur = C[i];
+  if (step === 2) {
+    var P = obCards().filter(function (c) { return c.code === obPrimary(); })[0] || { name: "" };
+    return '<div class="gate obgate obspec"><h1>Where are you at in ' + esc(P.name) + '?</h1>' +
+      '<p>Pick the level you are studying for. Hickory starts you there, and you can move between levels whenever you like.</p>' +
+      obWheel(C, i, null) +
+      '<div class="lazynow"><strong>' + esc(cur.name) + '</strong><p class="obblurb">' + esc(cur.blurb) + '</p></div>' +
+      '<div class="obfoot"><button class="btn big" data-obfinish="' + esc(cur.code) + '">Start with ' + esc(cur.name) + '</button>' +
+      '<button class="btn ghost" data-obback="1">Back</button></div></div>';
+  }
+  var n = C.filter(function (c) { return sel[c.code]; }).length;
+  return '<div class="gate obgate obspec"><h1>What do you want to study?</h1>' +
+    '<p>Select as many as you want. Drag the turntable, tap a card to tick it, and change any of this later in Settings.</p>' +
+    obWheel(C, i, sel) +
+    '<div class="lazynow"><strong>' + esc(cur.name) + '</strong><p class="obblurb">' + esc(cur.blurb) + '</p>' +
+      (cur.sub ? '<p class="obsub">' + esc(cur.sub) + '</p>' : '') +
+      '<button class="obpick' + (sel[cur.code] ? ' on' : '') + '" data-obtog="' + cur.code + '"><span class="lazychk" aria-hidden="true"></span>' +
+      (sel[cur.code] ? 'Included' : 'Add ' + esc(cur.name)) + '</button></div>' +
+    '<div class="obfoot"><button class="btn big" data-obnext="1"' + (n ? '' : ' disabled') + '>' +
+      (n ? 'Continue with ' + n + ' selected' : 'Pick at least one') + '</button>' +
+      '<button class="btn ghost" data-obskip="1">' + (S.obRedo ? 'Cancel' : 'Skip for now') + '</button></div></div>';
+}
+function obClick(t, a) {
+  if (a.obtog) {
+    if (LZ.suppress) return true;                      /* that was a drag, not a tap */
+    var s = obSel(); s[a.obtog] = !s[a.obtog]; render(); return true;
+  }
+  if (a.obidx != null) {
+    if (LZ.suppress) return true;
+    var k = +a.obidx, cur = lzNorm(S.obI == null ? 0 : S.obI);
+    if (k !== cur) { obGoTo(k); return true; }
+    if (obStep() === 1) { var sc = obSel(), code = obList()[k].code; sc[code] = !sc[code]; render(); }
+    return true;
+  }
+  if (a.obstep) { obSpin(+a.obstep); return true; }
+  if (a.obgo != null) { obGoTo(+a.obgo); return true; }
+  if (a.obskip) {
+    if (S.obRedo) { S.obRedo = 0; S.obSel = null; render(); return true; }   /* changing it later: back out, saved paths untouched */
+    Prog.d.interests = []; pickRole("none"); return true;
+  }
+  if (a.obnext) {
+    var s2 = obSel(), picked = obCards().map(function (c) { return c.code; }).filter(function (k) { return s2[k]; });
+    if (!picked.length) return true;
+    Prog.d.interests = picked;
+    if (obPrimary()) { S.obStep = 2; S.obI = 0; render(); return true; }   /* on to the level wheel */
+    S.obSel = null; S.obI = null; pickRole("ev");
+    return true;
+  }
+  if (a.obfinish) { obFinish(a.obfinish); return true; }
+  if (a.obback) { S.obStep = 1; S.obI = 0; render(); return true; }
+  return false;
+}
+/* Settings > Study: what is on the menu, and the way back to change it */
+function obIntLine() {
+  var picked = Prog.d.interests || [];
+  if (!picked.length) return "You have not set this yet.";
+  var C = obCards(), names = C.filter(function (c) { return picked.indexOf(c.code) >= 0; }).map(function (c) { return c.name; });
+  return names.length ? names.join(" · ") : "You have not set this yet.";
+}
+function obAgain() { S.obSel = null; S.obI = null; S.obRedo = 1; go("home"); }
+/* arrow keys and swipe move the turntable */
+document.addEventListener("keydown", function (e) {
+  if (!needOnboard()) return;
+  if (/^(INPUT|TEXTAREA|SELECT)$/.test((e.target.tagName || ""))) return;
+  if (e.key === "ArrowLeft") { e.preventDefault(); obSpin(-1); }
+  else if (e.key === "ArrowRight") { e.preventDefault(); obSpin(1); }
+});
+/* A turntable you actually turn (owner, Nov 4 2026).
+   Position is a float, not an index: every card's place is computed from how far the carousel has
+   been turned, so dragging a side bug carries it continuously into the middle instead of nudging
+   a block that snaps at the end. The same function lays the cards out after a render, during a
+   drag and while easing to a stop, so there is never a jump between those three. */
+var LZ = { id: null, x0: 0, y0: 0, dx: 0, moved: false, suppress: false, lock: "", base: 0, pos: 0, step: 240, anim: 0 };
+function lzEls() { return document.querySelectorAll(".lazytrack .lazycard"); }
+function lzWrap(d, n) { while (d > n / 2) d -= n; while (d < -n / 2) d += n; return d; }
+function lzLayout(pos, ease) {
+  var els = lzEls(), n = els.length;
+  if (!n) return;
+  for (var k = 0; k < n; k++) {
+    var d = lzWrap(k - pos, n), ad = Math.abs(d), el = els[k];
+    el.style.transition = ease ? "transform .34s cubic-bezier(.22,.9,.26,1), opacity .34s" : "none";
+    el.style.transform = "translateX(" + (d * 76) + "%) rotateY(" + (-d * 32) + "deg) scale(" + Math.max(0.44, 1.05 - ad * 0.24) + ")";
+    el.style.opacity = ad > 2.3 ? "0" : String(Math.max(0, 1 - ad * 0.36));
+    el.style.zIndex = String(Math.max(1, Math.round(10 - ad * 2)));
+    el.style.pointerEvents = ad > 1.7 ? "none" : "";
+    el.classList.toggle("mid", ad < 0.5);
+  }
+}
+function lzCount() { return (typeof obList === "function" ? obList().length : 0); }
+function lzNorm(i) { var n = lzCount() || 1; return ((i % n) + n) % n; }
+/* ease to a whole card, then let the normal render take the layout back over */
+function lzSettle(target) {
+  clearTimeout(LZ.anim);
+  lzLayout(target, true);
+  LZ.anim = setTimeout(function () {
+    S.obI = lzNorm(Math.round(target));
+    render();
+  }, 300);
+}
+/* The last step of the first run: save the path, play that level's own entrance, land on the
+   menu, and hand straight to Hickory (owner, Nov 4 2026). The entrance is the one the level
+   normally gets; the difference is that this time it opens the menu with the introduction on
+   top rather than the level itself. */
+function obFinish(levelKey) {
+  var picked = Prog.d.interests || [], primary = obPrimary();
+  if (levelKey) store("lastLevel", levelKey);
+  Prog.d.startLevel = levelKey || "";
+  S.obSel = null; S.obI = null; S.obStep = 1;
+  pickRole(primary || picked.filter(function (k) { return k !== "ev"; })[0] || "ev");
+  var done = 0, land = function () {
+    if (done) return; done = 1;
+    go("home");
+    setTimeout(function () { try { if (typeof tourOpen === "function") tourOpen(true); } catch (e) {} }, 260);
+  };
+  var el = document.querySelector(".lazycard.mid") || document.querySelector(".obgate");
+  var fx = (levelKey === "flight" || levelKey === "flightrn") ? "blast"
+    : levelKey === "cpp" ? "smoke"
+    : (typeof TRX !== "undefined" && TRX[levelKey]) ? "trans" : "";
+  setTimeout(land, 1100);                    /* an entrance can never strand the first run */
+  try {
+    if (fx === "blast" && typeof gfxBlastOff === "function") return gfxBlastOff(el, levelKey, land);
+    if (fx === "smoke" && typeof gfxSmokeBomb === "function") return gfxSmokeBomb(el, land);
+    if (fx === "trans" && typeof gfxLevelTrans === "function") return gfxLevelTrans(levelKey, el, land);
+  } catch (e) {}
+  if (!fx) land();
+}
+function obSpin(d) { lzSettle((S.obI == null ? 0 : S.obI) + d); }
+function obGoTo(i) {
+  var n = lzCount(), cur = S.obI == null ? 0 : S.obI;
+  lzSettle(cur + lzWrap(i - lzNorm(cur), n));      /* turn the short way round */
+}
+(function () {
+  function stage(t) { return t && t.closest ? t.closest("[data-lazy]") : null; }
+  document.addEventListener("pointerdown", function (e) {
+    if (e.button != null && e.button !== 0) return;
+    var z = stage(e.target); if (!z) return;
+    if (e.target.closest && e.target.closest(".lazyarr, .lazydot")) return;
+    clearTimeout(LZ.anim);
+    var box = z.querySelector(".lazystage");
+    LZ.id = e.pointerId; LZ.x0 = e.clientX; LZ.y0 = e.clientY; LZ.dx = 0; LZ.moved = false; LZ.lock = "";
+    LZ.base = S.obI == null ? 0 : S.obI; LZ.pos = LZ.base;
+    LZ.step = Math.max(120, (box ? box.getBoundingClientRect().width : 320) * 0.52);
+  });
+  document.addEventListener("pointermove", function (e) {
+    if (LZ.id === null || e.pointerId !== LZ.id) return;
+    var dx = e.clientX - LZ.x0, dy = e.clientY - LZ.y0;
+    if (!LZ.lock) {
+      if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+      LZ.lock = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+      if (LZ.lock === "y") { LZ.id = null; return; }      /* they are scrolling the page */
+    }
+    LZ.dx = dx; LZ.moved = Math.abs(dx) > 5;
+    if (e.cancelable) e.preventDefault();
+    LZ.pos = LZ.base - dx / LZ.step;
+    lzLayout(LZ.pos, false);
+  }, { passive: false });
+  function end(e) {
+    if (LZ.id === null || (e.pointerId != null && e.pointerId !== LZ.id)) return;
+    LZ.id = null;
+    /* the click that follows a real drag is the end of that drag, not a tap. Suppress exactly
+       that one, on a timer, so the next genuine tap is never eaten. */
+    if (LZ.moved) { LZ.suppress = true; setTimeout(function () { LZ.suppress = false; }, 350); }
+    LZ.moved = false;
+    if (!LZ.lock) return;
+    /* a flick carries on past the halfway point; a slow drag settles on whatever is nearest */
+    var t = Math.abs(LZ.dx) > 60 ? (LZ.dx < 0 ? Math.ceil(LZ.pos) : Math.floor(LZ.pos)) : Math.round(LZ.pos);
+    lzSettle(t);
+  }
+  document.addEventListener("pointerup", end);
+  document.addEventListener("pointercancel", end);
+})();
+
 function roleView() {
   return '<div class="gate rolepick"><h1>What are you studying for?</h1><p>Pick your path. You will get a starter beetle dressed for that path, and you can explore every route anytime.</p><button class="rolecard role-gen bugdexrole" data-role="none">' + bugSVG("sage") + '<span class="rtx"><strong>BugDex</strong><span>Every medication in DrugBug, A to Z, explained by Professor Sage. Great for anyone, or if you are not sure yet.</span><span class="rgrub">Starter: ' + esc(bugById(ROLES[0][3]).name) + ' · browse everything</span></span></button><div class="roles">' +
     ROLES.map(function (r) { return '<button class="rolecard role-' + r[0] + '" data-role="' + r[0] + '">' + bugArt(bugById(r[3]), "rolebug", { mood: "happy" }) + '<span class="rtx"><strong>' + r[1] + '</strong><span>' + r[2] + '</span><span class="rgrub">Starter: ' + esc(bugById(r[3]).name) + '</span></span></button>'; }).join("") +
     '</div></div>';
 }
 function pickRole(r) {
+  S.obRedo = 0;
   var R = ROLES.filter(function (x) { return x[0] === r; })[0];
   Prog.d.role = r;
   var G = R || ROLES[0]; /* every path starts with its version of the starter beetle; BugDex browsers get the Garden Beetle */
@@ -6073,7 +6847,13 @@ function setReportStatus(spec, status) {
 var printv = document.createElement("div"); printv.id = "printv"; printv.hidden = true; document.body.appendChild(printv);
 var PR = null;
 function canPrint() { return !NATIVE || !!(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.print); }
-function printBtns(src, label) { if (!canPrint()) return ""; /* one small Print menu instead of two loose buttons (cleanup, Oct 28 2026) */ return '<details class="printmenu"><summary class="btn small ghost">Print</summary><div class="pmlist"><button class="btn small ghost" data-print="' + esc(src) + '|cards">Study cards</button><button class="btn small ghost" data-print="' + esc(src) + '|sheet">Cheat sheet</button>' + (label ? '<span class="muted small">' + esc(label) + '</span>' : '') + '</div></details>'; }
+function printBtns(src, label) {
+  if (!canPrint()) return "";
+  /* every layout is offered here; the detail level is then changed in the print view itself */
+  return '<details class="printmenu"><summary class="btn small ghost">Print</summary><div class="pmlist">' +
+    PR_LAYOUTS.map(function (L) { return '<button class="btn small ghost" data-print="' + esc(src) + '|' + L[0] + '">' + esc(L[1]) + '</button>'; }).join("") +
+    (label ? '<span class="muted small">' + esc(label) + '</span>' : '') + '</div></details>';
+}
 function printIds(src) { return printIds0(src).filter(function (id) { return !(typeof drugLocked === "function" && drugLocked(id)); }); }
 function printIds0(src) {
   if (src === "marks") return marks().filter(function (id) { return DB.drugs[id]; });
@@ -6084,44 +6864,167 @@ function printIds0(src) {
 }
 function openPrint(spec) {
   var p = spec.split("|"), ids = printIds(p[0]);
-  var sp = SET(); PR = { src: p[0], ids: ids.slice(0, 200), mode: p[1] || sp.printMode, es: false, dense: sp.printDense, msg: "" };
+  var sp = SET(); PR = { src: p[0], ids: ids.slice(0, 200), mode: p[1] || sp.printMode, detail: p[2] || sp.printDetail || "std", es: false, dense: sp.printDense, msg: "" };
   if (sheet && !sheet.hidden) closeSheet();
   drawPrint(); printv.hidden = false; document.body.classList.add("printing"); window.scrollTo(0, 0);
 }
 function closePrint() { printv.hidden = true; printv.innerHTML = ""; PR = null; document.body.classList.remove("printing"); }
 function pf(id, si, fi) { var d = DB.drugs[id]; return d ? get(d, si, fi) : ""; }
+/* ---------- print layouts and how much detail goes on them (owner, Nov 4 2026) ----------
+   PR.mode picks the page design, PR.detail picks how much of each drug goes on it. The two are
+   independent, so a pocket card can be brief and a monograph can be exhaustive. */
+var PR_LAYOUTS = [
+  ["cards",  "Study cards",   "Two to a row, boxed. The classic."],
+  ["sheet",  "Cheat sheet",   "One table, one row per drug."],
+  ["pocket", "Pocket card",   "Three narrow columns to fold and carry."],
+  ["mono",   "Monograph",     "One drug per page, everything you have."],
+  ["quiz",   "Quiz sheet",    "Prompts with blank lines, answer key at the back."],
+  ["flash",  "Cut-out flashcards", "Front and back pairs with cut lines."]
+];
+var PR_DETAIL = [
+  ["brief", "Brief",    "Class and dose only."],
+  ["std",   "Standard", "The working facts."],
+  ["full",  "Full",     "Everything, including mechanism and interactions."]
+];
+/* [label, section, field, max characters]. Each level adds to the one before it. */
+var PR_FIELDS = {
+  brief: [["Class", 0, 3, 60], ["Adult dose", 6, 0, 220]],
+  std: [["Class", 0, 3, 60], ["What it does", 1, 1, 260], ["Used for", 3, 0, 260],
+        ["Contraindications", 4, 0, 260], ["Adult dose", 6, 0, 240], ["Pediatric dose", 6, 1, 180],
+        ["Routes", 7, 0, 90], ["Watch for", 9, 1, 240], ["Key fact", 16, 3, 200]],
+  full: [["Class", 0, 3, 60], ["Pharmacologic class", 0, 4, 80], ["What it is", 1, 0, 300],
+         ["What it does", 1, 1, 320], ["Mechanism", 2, 0, 420], ["Used for", 3, 0, 320],
+         ["EMS indications", 3, 2, 260], ["Absolute contraindications", 4, 0, 320],
+         ["Relative contraindications", 4, 1, 240], ["Boxed warning", 5, 1, 260],
+         ["Adult dose", 6, 0, 320], ["Pediatric dose", 6, 1, 240], ["Max dose", 6, 3, 160],
+         ["Routes", 7, 0, 120], ["Onset", 8, 0, 90], ["Duration", 8, 2, 90],
+         ["Common side effects", 9, 0, 280], ["Serious side effects", 9, 1, 300],
+         ["Major interactions", 10, 0, 320], ["Monitor", 11, 8, 220],
+         ["Antidote", 13, 4, 160], ["Clinical pearl", 14, 7, 280], ["Key fact", 16, 3, 220]]
+};
+function prDetail() { return (PR && PR.detail) || "std"; }
+function prTitle() { return "DrugBug " + ((PR_LAYOUTS.filter(function (L) { return L[0] === PR.mode; })[0] || PR_LAYOUTS[0])[1]).toLowerCase(); }
+function prRows(id) {
+  var es = PR.es && DB.ES[id];
+  if (es) {
+    var L = [["Qué es", es.what], ["Usos", es.use], ["No lo dé si", es.dont], ["Dosis (adulto)", es.dose], ["Vigilar", es.watch], ["Dato clave", es.rem]];
+    if (prDetail() === "brief") L = L.slice(3, 4);
+    return L.filter(function (r) { return r[1]; }).map(function (r) { return [r[0], cut(r[1], 260)]; });
+  }
+  return (PR_FIELDS[prDetail()] || PR_FIELDS.std).map(function (f) {
+    var v = pf(id, f[1], f[2]);
+    if (f[0] === "What it does" && !v) v = pf(id, 2, 0);
+    if (f[0] === "Watch for" && !v) v = pf(id, 9, 0);
+    if (f[0] === "Key fact" && !v) v = pf(id, 16, 4);
+    return v && v !== "-" ? [f[0], cut(v, f[3])] : null;
+  }).filter(Boolean);
+}
 function cut(s, n) { s = String(s || ""); return s.length > n ? s.slice(0, n - 1).replace(/\s+\S*$/, "") + "…" : s; }
 function cardHtml(id) {
-  var d = DB.drugs[id], e = PR.es && DB.ES[id], note = scopeNote(id);
-  function r(k, v, n) { return v ? '<div class="pr-r"><b>' + esc(k) + '</b> ' + esc(cut(v, n || 260)) + '</div>' : ''; }
+  var d = DB.drugs[id], note = scopeNote(id);
+  function r(k, v) { return v ? '<div class="pr-r"><b>' + esc(k) + '</b> ' + esc(v) + '</div>' : ''; }
   var h = '<article class="pr-card"><header><h3>' + esc(d.name) + '</h3><span>' + esc(cut(pf(id, 0, 3), 60)) + '</span></header>' + (DB.ES[id] ? '<div class="pr-ph">' + esc(DB.ES[id].ph) + '</div>' : '');
-  if (e) h += r("Qué es", e.what) + r("Usos", e.use) + r("No lo dé si", e.dont) + r("Dosis (adulto)", e.dose, 220) + r("Vigilar", e.watch) + r("Dato clave", e.rem, 180);
-  else h += r("What it does", pf(id, 1, 1) || pf(id, 2, 0)) + r("Used for", pf(id, 3, 0)) + r("Contraindications", pf(id, 4, 0)) + r("Adult dose", pf(id, 6, 0), 220) + r("Pediatric dose", pf(id, 6, 1), 160) + r("Routes", pf(id, 7, 0), 80) + r("Watch for", pf(id, 9, 1) || pf(id, 9, 0)) + r("Key fact", pf(id, 16, 3) || pf(id, 16, 4), 180);
-  if (note) h += r(PR.es ? "Su nivel" : "Your scope", note, 160);
-  var L = typeof labelSrc === "function" ? labelSrc(id) : null;
-  h += '<div class="pr-src">' + (L ? (PR.es ? "Fuente de dosis: etiqueta de la FDA" : "Dose source: FDA label") + ' (' + esc([L.b, L.m].filter(Boolean).join(", ")) + (L.d ? ", " + esc(L.d) : "") + ')' : (PR.es ? "Verifique la dosis con la etiqueta actual de la FDA." : "Verify any dose with the current FDA label.")) + '</div>';
-  h += '<div class="pr-tag">' + (PR.es ? "Tarjeta de estudio: verifique con su protocolo y la etiqueta de la FDA. No es para atención de pacientes." : "Study card - verify with your protocol and the FDA label. Not for patient care.") + '</div>';
-  return h + '</article>';
+  h += prRows(id).map(function (x) { return r(x[0], x[1]); }).join("");
+  if (note) h += r(PR.es ? "Su nivel" : "Your scope", cut(note, 160));
+  return h + prFoot(id) + '</article>';
 }
+/* the source line and the study-card disclaimer, shared by every layout */
+function prFoot(id) {
+  var L = typeof labelSrc === "function" ? labelSrc(id) : null;
+  return '<div class="pr-src">' + (L ? (PR.es ? "Fuente de dosis: etiqueta de la FDA" : "Dose source: FDA label") + ' (' + esc([L.b, L.m].filter(Boolean).join(", ")) + (L.d ? ", " + esc(L.d) : "") + ')' : (PR.es ? "Verifique la dosis con la etiqueta actual de la FDA." : "Verify any dose with the current FDA label.")) + '</div>' +
+    '<div class="pr-tag">' + (PR.es ? "Tarjeta de estudio: verifique con su protocolo y la etiqueta de la FDA. No es para atención de pacientes." : "Study card - verify with your protocol and the FDA label. Not for patient care.") + '</div>';
+}
+
 function sheetHtml(ids) {
-  var es = PR.es;
-  return '<table class="pr-table"><thead><tr><th>' + (es ? "Medicamento" : "Drug") + '</th><th>' + (es ? "Clase" : "Class") + '</th><th>' + (es ? "Dosis (adulto)" : "Adult dose") + '</th><th>' + (es ? "Contraindicaciones" : "Contraindications") + '</th><th>' + (es ? "Vigilar" : "Watch for") + '</th></tr></thead><tbody>' + ids.map(function (id) {
+  var es = PR.es, det = prDetail();
+  /* the columns follow the detail level: brief is two, full adds mechanism and interactions */
+  var cols = det === "brief" ? [["Medicamento", "Drug", null], ["Clase", "Class", [0, 3, 60]], ["Dosis (adulto)", "Adult dose", [6, 0, 200]]]
+    : det === "full" ? [["Medicamento", "Drug", null], ["Clase", "Class", [0, 3, 50]], ["Mecanismo", "Mechanism", [2, 0, 190]], ["Dosis (adulto)", "Adult dose", [6, 0, 150]], ["Contraindicaciones", "Contraindications", [4, 0, 120]], ["Interacciones", "Interactions", [10, 0, 130]], ["Vigilar", "Watch for", [9, 1, 110]]]
+    : [["Medicamento", "Drug", null], ["Clase", "Class", [0, 3, 50]], ["Dosis (adulto)", "Adult dose", [6, 0, 170]], ["Contraindicaciones", "Contraindications", [4, 0, 120]], ["Vigilar", "Watch for", [9, 1, 120]]];
+  return '<table class="pr-table' + (det === "full" ? ' pr-wide' : '') + '"><thead><tr>' + cols.map(function (c) { return '<th>' + esc(es ? c[0] : c[1]) + '</th>'; }).join("") + '</tr></thead><tbody>' + ids.map(function (id) {
     var e = es && DB.ES[id];
-    return '<tr><td><b>' + esc(DB.drugs[id].name) + '</b></td><td>' + esc(cut(pf(id, 0, 3), 50)) + '</td><td>' + esc(cut(e ? e.dose : pf(id, 6, 0), 170)) + '</td><td>' + esc(cut(e ? e.dont : pf(id, 4, 0), 120)) + '</td><td>' + esc(cut(e ? e.watch : (pf(id, 9, 1) || pf(id, 9, 0)), 120)) + '</td></tr>';
+    return '<tr>' + cols.map(function (c) {
+      if (!c[2]) return '<td><b>' + esc(DB.drugs[id].name) + '</b></td>';
+      var v = pf(id, c[2][0], c[2][1]);
+      if (e) { if (c[1] === "Adult dose") v = e.dose; else if (c[1] === "Contraindications") v = e.dont; else if (c[1] === "Watch for") v = e.watch; }
+      if (c[1] === "Watch for" && !v) v = pf(id, 9, 0);
+      return '<td>' + esc(cut(v, c[2][2])) + '</td>';
+    }).join("") + '</tr>';
   }).join("") + '</tbody></table>';
+}
+
+/* pocket card: three narrow columns, one compact entry each, meant to be folded */
+function pocketHtml(ids) {
+  return '<div class="pr-pocket">' + ids.map(function (id) {
+    var rows = prRows(id);
+    return '<div class="pp-item"><b>' + esc(DB.drugs[id].name) + '</b>' +
+      rows.map(function (x) { return '<span class="pp-r"><i>' + esc(x[0]) + '</i> ' + esc(cut(x[1], prDetail() === "full" ? 200 : 110)) + '</span>'; }).join("") +
+      '</div>';
+  }).join("") + '</div>';
+}
+/* monograph: one drug per page, with every row the detail level allows */
+function monoHtml(ids) {
+  return ids.map(function (id, i) {
+    var d = DB.drugs[id], note = scopeNote(id);
+    return '<section class="pr-mono' + (i ? ' pr-break' : '') + '"><h2>' + esc(d.name) + '</h2>' +
+      '<p class="pr-msub">' + esc(cut(pf(id, 0, 3), 90)) + (pf(id, 0, 1) ? ' \u00b7 ' + esc(cut(pf(id, 0, 1), 80)) : '') + '</p>' +
+      (DB.ES[id] ? '<div class="pr-ph">' + esc(DB.ES[id].ph) + '</div>' : '') +
+      '<dl class="pr-dl">' + prRows(id).map(function (x) { return '<dt>' + esc(x[0]) + '</dt><dd>' + esc(x[1]) + '</dd>'; }).join("") +
+      (note ? '<dt>' + (PR.es ? "Su nivel" : "Your scope") + '</dt><dd>' + esc(note) + '</dd>' : '') + '</dl>' + prFoot(id) + '</section>';
+  }).join("");
+}
+/* quiz sheet: the prompt and ruled blank lines, then an answer key on its own page */
+function quizHtml(ids) {
+  var keys = prDetail() === "brief" ? ["Class", "Adult dose"]
+    : prDetail() === "full" ? ["Class", "Mechanism", "Used for", "Absolute contraindications", "Adult dose", "Pediatric dose", "Serious side effects", "Major interactions"]
+    : ["Class", "What it does", "Used for", "Contraindications", "Adult dose", "Watch for"];
+  var q = '<div class="pr-quiz">' + ids.map(function (id, i) {
+    return '<div class="pq-item"><h3>' + (i + 1) + '. ' + esc(DB.drugs[id].name) + '</h3>' +
+      keys.map(function (k) { return '<div class="pq-r"><b>' + esc(k) + '</b><span class="pq-line"></span></div>'; }).join("") + '</div>';
+  }).join("") + '</div>';
+  var ans = '<section class="pr-break pr-key"><h2>' + (PR.es ? "Clave de respuestas" : "Answer key") + '</h2>' + ids.map(function (id, i) {
+    var byK = {}; prRows(id).forEach(function (x) { byK[x[0]] = x[1]; });
+    return '<div class="pk-item"><b>' + (i + 1) + '. ' + esc(DB.drugs[id].name) + '</b>' +
+      keys.map(function (k) { return byK[k] ? '<span class="pk-r"><i>' + esc(k) + '</i> ' + esc(byK[k]) + '</span>' : ''; }).join("") + '</div>';
+  }).join("") + '</section>';
+  return q + ans;
+}
+/* cut-out flashcards: a front and a back for each drug, with cut lines */
+function flashHtml(ids) {
+  return '<div class="pr-flash">' + ids.map(function (id) {
+    var rows = prRows(id);
+    return '<div class="pf-card pf-front"><span class="pf-lbl">' + (PR.es ? "frente" : "front") + '</span><strong>' + esc(DB.drugs[id].name) + '</strong>' + (DB.ES[id] ? '<em>' + esc(DB.ES[id].ph) + '</em>' : '') + '</div>' +
+      '<div class="pf-card pf-back"><span class="pf-lbl">' + (PR.es ? "dorso" : "back") + '</span>' +
+      rows.map(function (x) { return '<span class="pf-r"><i>' + esc(x[0]) + '</i> ' + esc(cut(x[1], prDetail() === "full" ? 240 : 150)) + '</span>'; }).join("") + '</div>';
+  }).join("") + '</div>';
 }
 function printDoc() {
   var ids = PR.ids, dt = fmtDate(Date.now()), es = PR.es;
-  var title = PR.mode === "cards" ? (es ? "Tarjetas de estudio" : "Study cards") : (es ? "Hoja de referencia rápida" : "Shift cheat sheet");
+  var LT = { cards: [ "Tarjetas de estudio", "Study cards" ], sheet: [ "Hoja de referencia rápida", "Shift cheat sheet" ],
+             pocket: [ "Tarjeta de bolsillo", "Pocket card" ], mono: [ "Monografías", "Monographs" ],
+             quiz: [ "Hoja de examen", "Quiz sheet" ], flash: [ "Tarjetas para cortar", "Cut-out flashcards" ] };
+  var title = (LT[PR.mode] || LT.cards)[es ? 0 : 1];
   var foot = '<p class="pr-foot">DrugBug · ' + (es ? "Solo para uso educativo; no es para tomar decisiones clínicas. Verifique con referencias actuales y sus protocolos locales." : "Educational use only — not for clinical decision-making. Verify with current references and your local protocols.") + ' Printed ' + esc(dt) + '. © ' + COMPANY + '.</p>';
-  return '<div class="pr-doc"><h1 class="pr-title">' + title + ' <small>' + ids.length + (es ? (ids.length === 1 ? " medicamento" : " medicamentos") : (ids.length === 1 ? " drug" : " drugs")) + '</small></h1>' + (PR.mode === "cards" ? '<div class="pr-cards' + (PR.dense ? ' pr-dense' : '') + '">' + ids.map(cardHtml).join("") + '</div>' : sheetHtml(ids)) + foot + '</div>';
+  var D = (PR_DETAIL.filter(function (x) { return x[0] === prDetail(); })[0] || PR_DETAIL[1])[1];
+  var body = PR.mode === "sheet" ? sheetHtml(ids)
+    : PR.mode === "pocket" ? pocketHtml(ids)
+    : PR.mode === "mono" ? monoHtml(ids)
+    : PR.mode === "quiz" ? quizHtml(ids)
+    : PR.mode === "flash" ? flashHtml(ids)
+    : '<div class="pr-cards' + (PR.dense ? ' pr-dense' : '') + '">' + ids.map(cardHtml).join("") + '</div>';
+  return '<div class="pr-doc"><h1 class="pr-title">' + title + ' <small>' + ids.length + (es ? (ids.length === 1 ? " medicamento" : " medicamentos") : (ids.length === 1 ? " drug" : " drugs")) + ' \u00b7 ' + esc(D.toLowerCase()) + '</small></h1>' + body + foot + '</div>';
 }
-var PRINT_CSS = ".pr-src{margin-top:4px;font-size:9px;color:#444}.pr-tag{margin-top:3px;font-size:9px;font-weight:700;color:#222;border-top:1px dashed #999;padding-top:3px}body{font-family:Arial,Helvetica,sans-serif;color:#111;margin:0;padding:16px;background:#fff}.pr-title{font-size:18px;margin:0 0 10px}.pr-title small{font-weight:400;color:#555;font-size:12px}.pr-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.pr-card{border:1.5px solid #333;border-radius:8px;padding:8px 10px;break-inside:avoid;page-break-inside:avoid;font-size:10.5px;line-height:1.35}.pr-card header{display:flex;justify-content:space-between;gap:6px;align-items:baseline;border-bottom:1px solid #999;margin-bottom:4px}.pr-card h3{font-size:14px;margin:0}.pr-card header span{color:#444;font-size:10px;text-align:right}.pr-ph{font-style:italic;color:#444;margin-bottom:3px}.pr-r{margin:2px 0}.pr-dense{grid-template-columns:repeat(3,1fr);gap:6px}.pr-dense .pr-card{font-size:9px;padding:6px 7px}.pr-dense .pr-card h3{font-size:12px}.pr-table{width:100%;border-collapse:collapse;font-size:10px;line-height:1.3}.pr-table th,.pr-table td{border:1px solid #888;padding:3px 5px;text-align:left;vertical-align:top}.pr-table th{background:#eee}.pr-table tr{break-inside:avoid}.pr-foot{font-size:9.5px;color:#444;margin-top:10px;border-top:1px solid #aaa;padding-top:4px}@media (max-width:560px){.pr-cards{grid-template-columns:1fr}}@page{margin:12mm}";
+var PRINT_CSS = ".pr-src{margin-top:4px;font-size:9px;color:#444}.pr-tag{margin-top:3px;font-size:9px;font-weight:700;color:#222;border-top:1px dashed #999;padding-top:3px}body{font-family:Arial,Helvetica,sans-serif;color:#111;margin:0;padding:16px;background:#fff}.pr-title{font-size:18px;margin:0 0 10px}.pr-title small{font-weight:400;color:#555;font-size:12px}.pr-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.pr-card{border:1.5px solid #333;border-radius:8px;padding:8px 10px;break-inside:avoid;page-break-inside:avoid;font-size:10.5px;line-height:1.35}.pr-card header{display:flex;justify-content:space-between;gap:6px;align-items:baseline;border-bottom:1px solid #999;margin-bottom:4px}.pr-card h3{font-size:14px;margin:0}.pr-card header span{color:#444;font-size:10px;text-align:right}.pr-ph{font-style:italic;color:#444;margin-bottom:3px}.pr-r{margin:2px 0}.pr-dense{grid-template-columns:repeat(3,1fr);gap:6px}.pr-dense .pr-card{font-size:9px;padding:6px 7px}.pr-dense .pr-card h3{font-size:12px}.pr-table{width:100%;border-collapse:collapse;font-size:10px;line-height:1.3}.pr-table th,.pr-table td{border:1px solid #888;padding:3px 5px;text-align:left;vertical-align:top}.pr-table th{background:#eee}.pr-table tr{break-inside:avoid}.pr-foot{font-size:9.5px;color:#444;margin-top:10px;border-top:1px solid #aaa;padding-top:4px}.pr-break{break-before:page;page-break-before:always}.pr-wide{font-size:8.5px}.pr-wide th,.pr-wide td{padding:2px 3px}.pr-pocket{column-count:3;column-gap:8px;font-size:8.5px;line-height:1.3}.pp-item{break-inside:avoid;page-break-inside:avoid;margin:0 0 5px;padding-bottom:4px;border-bottom:1px solid #bbb}.pp-item b{display:block;font-size:10px}.pp-r{display:block}.pp-r i{font-style:normal;font-weight:700;color:#333}.pr-mono{font-size:10.5px;line-height:1.45}.pr-mono h2{font-size:19px;margin:0 0 2px}.pr-msub{margin:0 0 8px;color:#444;font-size:11px}.pr-dl{display:grid;grid-template-columns:150px 1fr;gap:3px 10px;margin:0 0 8px}.pr-dl dt{font-weight:700;color:#222}.pr-dl dd{margin:0}.pr-quiz{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.pq-item{break-inside:avoid;page-break-inside:avoid;border:1.5px solid #333;border-radius:8px;padding:8px 10px}.pq-item h3{font-size:13px;margin:0 0 5px}.pq-r{display:flex;align-items:baseline;gap:6px;margin:0 0 7px;font-size:10px}.pq-r b{flex:0 0 94px}.pq-line{flex:1;border-bottom:1px solid #666;height:13px}.pr-key{font-size:9.5px;line-height:1.35}.pr-key h2{font-size:16px;margin:0 0 8px}.pk-item{break-inside:avoid;margin:0 0 7px}.pk-item b{display:block}.pk-r{display:block;padding-left:10px}.pk-r i{font-style:normal;font-weight:700;color:#333}.pr-flash{display:grid;grid-template-columns:repeat(2,1fr);gap:0}.pf-card{border:1px dashed #666;min-height:150px;padding:10px 12px;break-inside:avoid;page-break-inside:avoid;display:flex;flex-direction:column;justify-content:center;font-size:9.5px;line-height:1.35;position:relative}.pf-lbl{position:absolute;top:3px;right:5px;font-size:7px;text-transform:uppercase;letter-spacing:.06em;color:#999}.pf-front{align-items:center;text-align:center}.pf-front strong{font-size:19px}.pf-front em{color:#555;font-size:10px}.pf-back{justify-content:flex-start}.pf-r{display:block;margin:0 0 2px}.pf-r i{font-style:normal;font-weight:700;color:#333}@media (max-width:560px){.pr-cards{grid-template-columns:1fr}.pr-quiz,.pr-flash{grid-template-columns:1fr}.pr-pocket{column-count:1}.pr-dl{grid-template-columns:1fr}}@page{margin:12mm}";
 function drawPrint() {
   if (!PR) return;
-  var c = '<div class="pr-bar noprint"><button class="btn small ghost" data-pract="close">Close</button><div class="chips"><button class="chip" data-pract="cards" aria-pressed="' + (PR.mode === "cards") + '">Study cards</button><button class="chip" data-pract="sheet" aria-pressed="' + (PR.mode === "sheet") + '">Cheat sheet</button>' + (Object.keys(DB.ES).length ? '' : '') + '</div><span class="spacer"></span><button class="btn small" data-pract="print"' + (PR.ids.length ? "" : " disabled") + '>Print</button><button class="btn small ghost" data-pract="pdf"' + (PR.ids.length ? "" : " disabled") + '>Save as PDF</button>' + (NATIVE ? '' : '<button class="btn small ghost" data-pract="dl"' + (PR.ids.length ? "" : " disabled") + '>Download as HTML</button>') + '</div>';
+  var c = '<div class="pr-bar noprint"><button class="btn small ghost" data-pract="close">Close</button>' +
+    '<div class="prpick"><div class="prrow"><span class="prlab">Layout</span><div class="chips">' +
+      PR_LAYOUTS.map(function (L) { return '<button class="chip" data-pract="m:' + L[0] + '" aria-pressed="' + (PR.mode === L[0]) + '" title="' + esc(L[2]) + '">' + esc(L[1]) + '</button>'; }).join("") +
+    '</div></div><div class="prrow"><span class="prlab">Detail</span><div class="chips">' +
+      PR_DETAIL.map(function (D) { return '<button class="chip" data-pract="d:' + D[0] + '" aria-pressed="' + (prDetail() === D[0]) + '" title="' + esc(D[2]) + '">' + esc(D[1]) + '</button>'; }).join("") +
+    '</div></div></div><span class="spacer"></span><button class="btn small" data-pract="print"' + (PR.ids.length ? "" : " disabled") + '>Print</button><button class="btn small ghost" data-pract="pdf"' + (PR.ids.length ? "" : " disabled") + '>Save as PDF</button>' + (NATIVE ? '' : '<button class="btn small ghost" data-pract="dl"' + (PR.ids.length ? "" : " disabled") + '>Download as HTML</button>') + '</div>';
   if (PR.msg) c += '<p class="presult noprint" role="status">' + esc(PR.msg) + '</p>';
-  c += '<p class="muted small noprint">' + (isAndroid() ? '<b>Print</b> finds printers on your Wi-Fi or Bluetooth. <b>Save as PDF</b> opens the same screen: pick "Save as PDF" at the top to keep a file.' : NATIVE ? '<b>Print</b> sends to an AirPrint printer on your Wi-Fi. <b>Save as PDF</b> makes a file you can save to Files, AirDrop or email.' : '<b>Print</b> uses your computer\'s printers. <b>Save as PDF</b> opens the same window: set the destination to "Save as PDF".') + ' Cards print two per row.</p>';
+  c += '<p class="muted small noprint">' + (isAndroid() ? '<b>Print</b> finds printers on your Wi-Fi or Bluetooth. <b>Save as PDF</b> opens the same screen: pick "Save as PDF" at the top to keep a file.' : NATIVE ? '<b>Print</b> sends to an AirPrint printer on your Wi-Fi. <b>Save as PDF</b> makes a file you can save to Files, AirDrop or email.' : '<b>Print</b> uses your computer\'s printers. <b>Save as PDF</b> opens the same window: set the destination to "Save as PDF".') + ' ' + esc((PR_LAYOUTS.filter(function (L) { return L[0] === PR.mode; })[0] || PR_LAYOUTS[0])[2]) + '</p>';
   if (!PR.ids.length) c += '<p class="presult noprint">No drugs to print. Save drugs to My List or change your filter.</p>';
   printv.innerHTML = c + '<style>' + PRINT_CSS.replace(/body\{[^}]*\}/, "") + '</style>' + printDoc();
 }
@@ -6138,18 +7041,19 @@ printv.addEventListener("click", function (e) {
   var t = e.target.closest("[data-pract]"); if (!t || !PR) return;
   var act = t.getAttribute("data-pract");
   if (act === "close") return closePrint();
-  if (act === "cards" || act === "sheet") { PR.mode = act; PR.msg = ""; return drawPrint(); }
+  if (act.indexOf("m:") === 0) { PR.mode = act.slice(2); PR.msg = ""; setSet("printMode", PR.mode); return drawPrint(); }
+  if (act.indexOf("d:") === 0) { PR.detail = act.slice(2); PR.msg = ""; setSet("printDetail", PR.detail); return drawPrint(); }
   if (act === "es") return;
   if (act === "print") {
     var ph = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.print;
-    if (ph) { try { ph.postMessage({ title: "DrugBug " + (PR.mode === "cards" ? "study cards" : "cheat sheet"), html: '<!doctype html><html><head><meta charset="utf-8"><style>' + PRINT_CSS + '</style></head><body>' + printDoc() + '</body></html>' }); } catch (err) { PR.msg = "Could not open printing."; drawPrint(); } return; }
+    if (ph) { try { ph.postMessage({ title: prTitle(), html: '<!doctype html><html><head><meta charset="utf-8"><style>' + PRINT_CSS + '</style></head><body>' + printDoc() + '</body></html>' }); } catch (err) { PR.msg = "Could not open printing."; drawPrint(); } return; }
     try { window.print(); } catch (err) { PR.msg = "Printing is blocked here. Use Download as HTML, then print that file."; drawPrint(); } return; }
   if (act === "dl") return downloadPrint();
   if (act === "pdf") {
     var pdfh = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.pdf;
     var full = '<!doctype html><html><head><meta charset="utf-8"><style>' + PRINT_CSS + '</style></head><body>' + printDoc() + '</body></html>';
-    var fname = "DrugBug-" + (PR.mode === "cards" ? "study-cards" : "cheat-sheet") + "-" + new Date().toISOString().slice(0, 10) + ".pdf";
-    if (pdfh) { try { pdfh.postMessage({ title: "DrugBug " + (PR.mode === "cards" ? "study cards" : "cheat sheet"), html: full, name: fname }); if (isAndroid()) { PR.msg = 'Pick "Save as PDF" at the top of the next screen.'; drawPrint(); } } catch (err) { PR.msg = "Could not make the PDF right now."; drawPrint(); } return; }
+    var fname = "DrugBug-" + PR.mode + "-" + prDetail() + "-" + new Date().toISOString().slice(0, 10) + ".pdf";
+    if (pdfh) { try { pdfh.postMessage({ title: prTitle(), html: full, name: fname }); if (isAndroid()) { PR.msg = 'Pick "Save as PDF" at the top of the next screen.'; drawPrint(); } } catch (err) { PR.msg = "Could not make the PDF right now."; drawPrint(); } return; }
     PR.msg = 'In the print window, set the destination to "Save as PDF".'; drawPrint();
     try { window.print(); } catch (err) { PR.msg = "Saving is blocked here. Use Download as HTML instead."; drawPrint(); } return; }
 });
@@ -6158,7 +7062,7 @@ function printClick(t, a) { if (a.print) { openPrint(a.print); return true; } re
 
 /* ---------- Settings: display, study preferences, sound, protocols, printing, privacy & account, about ---------- */
 var APP_VERSION = "1.1", APP_DATE = "2026-10-10";
-var SET_DEF = { text: "normal", contrast: false, motion: false, homeLevel: "", dailyGoal: 10, nrN: 25, nrMode: "practice", adaptive: true, megaTimer: "on", fullDefault: false, voiceRate: "normal", showPhon: true, fun: true, sfx: true, music: true, musicVol: 40, printMode: "cards", printLang: "auto", printDense: false, state: "", buddy: true, weird: true, weirdAt: "12:00" };
+var SET_DEF = { text: "normal", contrast: false, motion: false, homeLevel: "", dailyGoal: 10, nrN: 25, nrMode: "practice", adaptive: true, megaTimer: "on", fullDefault: false, voiceRate: "normal", showPhon: true, fun: true, sfx: true, music: true, musicVol: 40, printMode: "cards", printDetail: "std", printLang: "auto", printDense: false, state: "", buddy: true, weird: true, weirdAt: "12:00" };
 function SET() { var s = store("settings") || {}; return Object.assign({}, SET_DEF, s); }
 function setSet(k, v) { var s = SET(); s[k] = v; store("settings", s); applySettings(); if (k === "music" || k === "musicVol") muSync(); if (k === "remind" || k === "remindAt") remindSync(); if ((k === "weird" || k === "weirdAt") && typeof wdwSync === "function") wdwSync(); }
 /* daily study reminder (iPhone app): the app tells iOS what to say; iOS shows it at the chosen time */
@@ -6184,12 +7088,86 @@ function megaSecs(step) { return step.secs * megaFactor(); }
 function megaTimed() { return SET().megaTimer !== "off"; }
 function voiceRate() { return { slow: 0.6, normal: 0.85, fast: 1.1 }[SET().voiceRate] || 0.85; }
 /* sound effects (generated tones, no files) */
-var SFX = { ctx: null };
+/* ---------- one AudioContext for the whole app ----------
+   There used to be five (effects, music, anatomy, transitions, voices). Browsers cap how many a
+   page may hold (Safari especially), and each one needs its own unlock inside a real user gesture
+   — only the music context was ever being unlocked, so whichever contexts happened to be created
+   outside a tap stayed suspended and silent for the rest of the session. One context, unlocked
+   once, and every sound in the app rides on it. (owner asked why sounds were missing, Nov 4 2026) */
+var AUD = { ctx: null, warned: false, gesture: 0, played: 0, err: "", music: "", sfxFiles: {} };
+function audioCtx() {
+  var AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) { AUD.err = "This browser has no Web Audio support."; return null; }
+  if (!AUD.ctx) { try { AUD.ctx = new AC(); } catch (e) { AUD.err = "The browser refused to open an audio channel."; return null; } }
+  if (AUD.ctx.state === "suspended") { try { var r = AUD.ctx.resume(); if (r && r.catch) r.catch(function () {}); } catch (e) {} }
+  AUD.played++;
+  return AUD.ctx;
+}
+/* ---------- recorded sound effects ----------
+   Fetched once, decoded once, then played as many times as needed. Anything that uses one keeps
+   a synthesised fallback, because a file can always fail to arrive - which is exactly what
+   happened to the music when its folder was never published. (owner, Nov 4 2026) */
+var SFXBUF = {}, SFX_SRC = { gasp: "sfx/gasp.mp3" };
+var SFX_TRIM = { gasp: 0.14 };     /* the recording opens with silence; skip it so it lands on time */
+function sfxLoad(name) {
+  var c = audioCtx(); if (!c || !SFX_SRC[name]) return null;
+  if (SFXBUF[name]) return SFXBUF[name];
+  SFXBUF[name] = fetch(SFX_SRC[name])
+    .then(function (r) { if (!r.ok) throw new Error(name + " " + r.status); return r.arrayBuffer(); })
+    .then(function (ab) { return new Promise(function (res, rej) { var pr = c.decodeAudioData(ab, res, rej); if (pr && pr.catch) pr.catch(rej); }); })
+    .then(function (buf) { SFXBUF[name + ":buf"] = buf; AUD.sfxFiles[name] = "ok"; return buf; });
+  SFXBUF[name].catch(function () { AUD.sfxFiles[name] = "fail"; delete SFXBUF[name]; });
+  return SFXBUF[name];
+}
+/* play a decoded effect: at = seconds from now, rate shifts the pitch, v is the level */
+function sfxPlay(name, at, v, rate, dest) {
+  var c = audioCtx(), buf = SFXBUF[name + ":buf"]; if (!c || !buf) return false;
+  try {
+    var src = c.createBufferSource(), g = c.createGain();
+    src.buffer = buf; src.playbackRate.value = rate || 1; g.gain.value = v == null ? 1 : v;
+    src.connect(g); g.connect(dest || c.destination);
+    var off = SFX_TRIM[name] || 0;
+    src.start(c.currentTime + (at || 0), off);
+    return true;
+  } catch (e) { return false; }
+}
+/* A plain-language readout of what the sound system is actually doing. Added because sound can
+   fail for reasons the app cannot see from the inside - a browser that will not allow audio, a
+   phone on silent, a missing music file - and guessing wastes everyone's time. (owner, Nov 4 2026) */
+function audioReport() {
+  var L = [], S0 = SET();
+  if (!S0.sfx) L.push(["off", "Sound effects are switched off above."]);
+  if (S0.music === false) L.push(["off", "Background music is switched off above."]);
+  var AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) L.push(["bad", "This browser cannot play generated sound at all."]);
+  else if (!AUD.ctx) L.push(["wait", "No sound has been attempted yet."]);
+  else {
+    var st = AUD.ctx.state;
+    L.push([st === "running" ? "ok" : "bad",
+      st === "running" ? "Audio channel open and running."
+      : st === "suspended" ? "The browser has the audio channel paused. It opens on the first tap; if it stays paused, this page is not allowed to play sound."
+      : "The audio channel was closed by the browser."]);
+    L.push(["info", AUD.played + " sound" + (AUD.played === 1 ? "" : "s") + " sent to the speakers this session."]);
+  }
+  if (AUD.err) L.push(["bad", AUD.err]);
+  var gs = AUD.sfxFiles.gasp;
+  L.push(gs === "ok" ? ["ok", "Gasp recording loaded."]
+    : gs === "fail" ? ["bad", "The gasp recording could not be loaded, so a synthesised one is used instead."]
+    : ["info", "Gasp recording not loaded yet."]);
+  L.push(AUD.music === "ok" ? ["ok", "Music file loaded."]
+    : AUD.music === "fail" ? ["bad", "The music file could not be loaded, so music stays silent. Sound effects are unaffected."]
+    : ["info", "Music file not loaded yet."]);
+  L.push(["info", "If this all looks right and you still hear nothing, check the phone's silent switch and the volume."]);
+  return L;
+}
+/* every context holder below is a view onto the one above, so old code reading .ctx still works */
+function audioAlias(o) { try { Object.defineProperty(o, "ctx", { get: audioCtx, set: function () {}, configurable: true }); } catch (e) { o.ctx = null; } return o; }
+var SFX = audioAlias({});
 function sfx(ok) {
   if (!SET().sfx) return;
   try {
-    var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
-    var c = SFX.ctx || (SFX.ctx = new AC()), t = c.currentTime;
+    var c = audioCtx(); if (!c) return;
+    var t = c.currentTime;
     (ok ? [660, 880] : [330, 247]).forEach(function (f, i) {
       var o = c.createOscillator(), g = c.createGain(); o.type = ok ? "sine" : "triangle"; o.frequency.value = f;
       g.gain.setValueAtTime(0.0001, t + i * 0.11); g.gain.exponentialRampToValueAtTime(0.18, t + i * 0.11 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.11 + 0.16);
@@ -6238,7 +7216,7 @@ function settingsView() {
   c += '<nav class="settabs" role="tablist" aria-label="Settings sections">' + tabs.map(function (x) { return '<button role="tab" data-settab="' + x[0] + '" aria-selected="' + (S.setTab === x[0]) + '">' + x[1] + '</button>'; }).join("") + '</nav>';
   // display
   c += setCard("display", "Display",
-    setRow("Seriously Fun", "Everything playful: your bug and the Terrarium, the study buddy, bugs whose eyes follow you, Hickory\u2019s chatter, the level animations, holiday dressing, music and sound. Turn it off for a plain, quiet drug reference. The medicine, doses and questions never change.", setTog("fun", s.fun !== false, "Seriously Fun")) +
+    setRow("Fun mode", "Off is Focused, the plain reference. On is everything playful: your bug and the Terrarium, the study buddy, bugs whose eyes follow you, Hickory\u2019s chatter, the level animations, holiday dressing, music and sound. Turn it off for a plain, quiet drug reference. The medicine, doses and questions never change.", setTog("fun", s.fun !== false, "Seriously Fun")) +
     setRow("Theme", "", setOpts("theme", themePref(), [["dark", "Night shift (default)"], ["light", "Day shift"], ["system", "Match my device"]])) +
     setRow("Text size", "", setOpts("text", s.text, [["normal", "Normal"], ["large", "Large"], ["xl", "Extra large"]])) +
     setRow("High contrast", "Darker text and borders.", setTog("contrast", s.contrast, "High contrast")) +
@@ -6256,14 +7234,21 @@ function settingsView() {
     setRow("Drug pages open in", "", setOpts("fullDefault", s.fullDefault ? "1" : "0", [["0", "Simple view"], ["1", "Full record"]])) +
     (NATIVE ? setRow("Daily study reminder", "A notification once a day with the drugs due for review and your exam countdown.", setTog("remind", s.remind, "Daily study reminder") + (s.remind ? ' <input class="pinput" type="time" data-setsel="remindAt" value="' + esc(s.remindAt || "19:00") + '" aria-label="Reminder time">' : '')) : "") +
     setRow("Weird Drug Wednesday", (NATIVE ? "A strange-but-true drug fact every Wednesday as a notification. " : "A strange-but-true drug fact every Wednesday. ") + "Education only.", setTog("weird", s.weird !== false, "Weird Drug Wednesday") + (NATIVE && s.weird !== false ? ' <input class="pinput" type="time" data-setsel="weirdAt" value="' + esc(s.weirdAt || "12:00") + '" aria-label="Weird Drug Wednesday time">' : '') + ' <button class="btn small ghost" data-wdw="show">See this week\'s fact</button>') +
-    setRow("App tour", "See the quick welcome tour again.", '<button class="btn small ghost" data-tour="again">Show the tour</button>'));
+    setRow("App tour", "See the quick welcome tour again.", '<button class="btn small ghost" data-tour="again">Show the tour</button>') +
+    setRow("What you are here for", obIntLine(), '<button class="btn small ghost" data-obagain="1">Change</button>') +
+    setRow("Other study paths", homeAll() ? "Every path is listed on the main menu." : "The main menu lists only the paths you picked.",
+      '<button class="btn small ghost" data-act="allpaths">' + (homeAll() ? "Show only mine" : "Show every path") + '</button>'));
   // sound
   c += setCard("sound", "Sound & pronunciation",
     setRow("Voice speed", "For the \"Say it\" button." + (SPEAK_OK ? "" : " Your device does not support speech."), setOpts("voiceRate", s.voiceRate, [["slow", "Slow"], ["normal", "Normal"], ["fast", "Fast"]]) + (SPEAK_OK ? ' <button class="btn small ghost" data-say="epinephrine">Test</button>' : '')) +
     setRow("Written pronunciation", "Shows a guide like ep-ih-NEF-rin.", setTog("showPhon", s.showPhon, "Show pronunciation")) +
     setRow("Bug buddy", "Your bug on the side of the screen, reacting to your answers.", setTog("buddy", s.buddy, "Show my bug buddy")) +
     setRow("Background music", "Relaxed lo-fi beats while you study. You can also tap the music note at the top of any page.", setTog("music", s.music !== false, "Background music") + '<label class="muvol"><span>Volume</span><input type="range" min="0" max="100" step="5" id="muvolset" value="' + muLevel() + '" aria-label="Music volume"><output id="muvolsetv">' + muLevel() + '%</output></label>') +
-    setRow("Sound effects", "Answer tones, the game sounds and the level transitions.", setTog("sfx", s.sfx, "Sound effects") + ' <button class="btn small ghost" data-act="sfxtest">Test</button>'));
+    setRow("Sound effects", "Answer tones, the game sounds and the level transitions.", setTog("sfx", s.sfx, "Sound effects") + ' <button class="btn small ghost" data-act="sfxtest">Test</button>') +
+    setRow("Is sound working?", "What the app can actually see about the speakers.",
+      '<ul class="sndchk">' + audioReport().map(function (r) {
+        return '<li class="sc-' + r[0] + '"><span aria-hidden="true">' + (r[0] === "ok" ? "\u2713" : r[0] === "bad" ? "\u2715" : r[0] === "off" ? "\u25cb" : "\u2022") + '</span>' + esc(r[1]) + '</li>';
+      }).join("") + '</ul><button class="btn small ghost" data-act="sndrecheck">Check again</button>'));
   // protocols
   var ap = activeProtocol(), sets = PS.sets.filter(function (p) { return p.status !== "unpublished"; });
   c += setCard("protocols", "Protocols",
@@ -6342,7 +7327,12 @@ function settingsClick(t, a) {
     case "music": MU.armed = true; S.mupop = !S.mupop; render(); return true;
     case "mutoggle": MU.armed = true; setSet("music", !muOn()); render(); return true;
     case "mupopclose": S.mupop = false; render(); return true;
-    case "sfxtest": var was = SET().sfx; if (!was) setSet("sfx", true); sfx(true); setTimeout(function () { sfx(false); if (!was) setSet("sfx", false); }, 450); return true;
+    case "sfxtest": var was = SET().sfx; if (!was) setSet("sfx", true); sfx(true); setTimeout(function () { sfx(false); if (!was) setSet("sfx", false); render(); }, 450); return true;
+    case "sndrecheck":
+      audioCtx(); AUD.played = Math.max(0, AUD.played - 1);     /* the check itself should not count */
+      try { if (muCtx() && typeof muLoadBuf === "function" && typeof curTrack === "function") muLoadBuf(curTrack()); } catch (e) { AUD.music = "fail"; }
+      try { sfxLoad("gasp"); } catch (e) {}
+      setTimeout(render, 700); return true;
     case "exportdata": exportData(); return true;
     case "resetask": S.resetAsk = true; render(); return true;
     case "resetno": S.resetAsk = false; render(); return true;
@@ -6393,7 +7383,7 @@ Object.assign(ES_UI, {
   "Age group": "Grupo de edad", "Download my data": "Descargar mis datos", "A file with your progress, scores, saved list and settings.": "Un archivo con su progreso, calificaciones, lista guardada y ajustes.", "Download": "Descargar",
   "Reset my progress": "Reiniciar mi progreso", "Clears mastery, XP, streaks, achievements and scores. Keeps your bugs, sticks, saved list and settings.": "Borra dominio, XP, rachas, logros y calificaciones. Conserva sus insectos, palitos, lista guardada y ajustes.", "Reset progress": "Reiniciar progreso", "Reset": "Reiniciar",
   "Delete all my data": "Borrar todos mis datos", "Removes everything DrugBug stores about you, here and online. Cannot be undone.": "Elimina todo lo que DrugBug guarda sobre usted, aquí y en línea. No se puede deshacer.", "Delete…": "Borrar…",
-  "Version": "Versión", "Medical review": "Revisión médica", "Something wrong?": "¿Algo está mal?", "Report a problem": "Reportar un problema", "Contact": "Contacto", "Legal": "Legal", "Professor Sage explains the medications people take at home. Filter by class or search by name.": "El Profesor Sage explica los medicamentos que la gente toma en casa. Filtre por clase o busque por nombre.", "The medications people take at home, by drug class. Plain-language guides from Professor Sage: what each drug treats, how it is taken, and what to ask a patient who takes it.": "Los medicamentos que la gente toma en casa, por clase. Guías sencillas del Profesor Sage: qué trata cada medicamento, cómo se toma y qué preguntar a quien lo toma.", "Professor Sage's notes": "Notas del Profesor Sage", "Nursing focus": "Enfoque de enfermería", "Board focus": "Enfoque para exámenes", "Field focus": "Enfoque prehospitalario", "Back to studying": "Volver a estudiar", "Dark collection": "Colección oscura", "Earn 1 stick for every correct answer, plus bonuses for perfect scores and achievements.": "Gane 1 palito por cada respuesta correcta, más bonos por calificaciones perfectas y logros.", "Every correct answer (any level)": "Cada respuesta correcta (cualquier nivel)", "Perfect score on 10 or more questions": "Calificación perfecta en 10 o más preguntas", "Each achievement unlocked": "Cada logro desbloqueado", "100% on a Megacode case": "100% en un caso de Megacode", "Terrarium": "Terrario", "Wardrobe": "Guardarropa", "Bugs": "Insectos", "Colors": "Colores", "How to earn sticks": "Cómo ganar palitos", "Filters": "Filtros", "Clear filters": "Quitar filtros", "Problem type": "Tipo de problema", "Exit": "Salir", "Look up every drug in your scope.": "Busque cada medicamento de su nivel.", "Timed practice tests with scores.": "Exámenes de práctica con calificación.", "Dose and drip math with worked answers.": "Cálculo de dosis y goteos con respuestas explicadas.", "Megacode, pediatric doses, med lists and safety drills.": "Megacode, dosis pediátricas, listas de medicamentos y seguridad.", "Clinical cases: choose what to give.": "Casos clínicos: elija qué administrar.", "Flip, sort and master each drug.": "Voltee, ordene y domine cada medicamento.", "Mastery, achievements, My List and leaderboard.": "Dominio, logros, Mi lista y clasificación.", "Your bugs, outfits, faces and sticks.": "Sus insectos, ropa, caras y palitos.", "Assess, hold, labs, teaching: one skill at a time.": "Valorar, retener, laboratorios, enseñanza: una habilidad a la vez.", "Study session": "Sesión de estudio", "Everyday faces": "Caras de diario", "Shop faces": "Caras de la tienda", "Secret faces": "Caras secretas", "Equip": "Equipar", "Keep studying to find it": "Sigue estudiando para encontrarla", "Answers reflect common national guidance at the time of writing. Where practice varies, the explanation says so; your protocols, facility policy and medical direction always come first.": "Las respuestas reflejan las guías nacionales comunes al momento de redactarlas. Cuando la práctica varía, la explicación lo indica; sus protocolos, la política del centro y la dirección médica siempre tienen prioridad.", "Outfits": "Ropa", "Other hand": "La otra mano", "Starter": "Inicial", "Free": "Gratis", "Free when you unlock them": "Gratis al desbloquearlos", "No bugs here yet.": "Aún no hay insectos aquí.", "Bug buddy": "Insecto compañero", "Your bug on the side of the screen, reacting to your answers.": "Su insecto al lado de la pantalla, reaccionando a sus respuestas.", "Hats & items": "Sombreros y objetos", "Faces": "Caras", "Hats": "Sombreros", "Eyewear": "Lentes", "Neck": "Cuello", "In hand": "En la mano", "Effects": "Efectos", "Wear": "Ponérselo", "Take off": "Quitárselo", "Wearing": "Puesto", "Secret face": "Cara secreta", "Show it off": "Lucirla", "Clinically reviewed": "Con revisión clínica", "Awaiting review": "Pendiente de revisión", "Pharmacist verified": "Verificado por farmacéutico", "Physician verified": "Verificado por médico", "Awaiting clinical review": "Pendiente de revisión clínica"
+  "Version": "Versión", "Medical review": "Revisión médica", "Something wrong?": "¿Algo está mal?", "Report a problem": "Reportar un problema", "Contact": "Contacto", "Legal": "Legal", "Professor Sage explains the medications people take at home. Filter by class or search by name.": "El Profesor Sage explica los medicamentos que la gente toma en casa. Filtre por clase o busque por nombre.", "The medications people take at home, by drug class. Plain-language guides from Professor Sage: what each drug treats, how it is taken, and what to ask a patient who takes it.": "Los medicamentos que la gente toma en casa, por clase. Guías sencillas del Profesor Sage: qué trata cada medicamento, cómo se toma y qué preguntar a quien lo toma.", "Professor Sage's notes": "Notas del Profesor Sage", "Nursing focus": "Enfoque de enfermería", "Board focus": "Enfoque para exámenes", "Field focus": "Enfoque prehospitalario", "Back to studying": "Volver a estudiar", "Dark collection": "Colección oscura", "Earn 1 stick for every correct answer, plus bonuses for perfect scores and achievements.": "Gane 1 palito por cada respuesta correcta, más bonos por calificaciones perfectas y logros.", "Every correct answer (any level)": "Cada respuesta correcta (cualquier nivel)", "Perfect score on 10 or more questions": "Calificación perfecta en 10 o más preguntas", "Each achievement unlocked": "Cada logro desbloqueado", "100% on a Megacode case": "100% en un caso de Megacode", "Terrarium": "Terrario", "Wardrobe": "Guardarropa", "Bugs": "Insectos", "Colors": "Colores", "How to earn sticks": "Cómo ganar palitos", "Filters": "Filtros", "Clear filters": "Quitar filtros", "Problem type": "Tipo de problema", "Exit": "Salir", "Look up every drug in your scope.": "Busque cada medicamento de su nivel.", "Timed practice tests with scores.": "Exámenes de práctica con calificación.", "Dose and drip math with worked answers.": "Cálculo de dosis y goteos con respuestas explicadas.", "Megacode, pediatric doses, med lists and safety drills.": "Megacode, dosis pediátricas, listas de medicamentos y seguridad.", "Clinical cases: choose what to give.": "Casos clínicos: elija qué administrar.", "Flip, sort and master each drug.": "Voltee, ordene y domine cada medicamento.", "Mastery, achievements, My List and leaderboard.": "Dominio, logros, Mi lista y clasificación.", "Your bugs, outfits, faces and sticks.": "Sus insectos, ropa, caras y palitos.", "Assess, hold, labs, teaching: one skill at a time.": "Valorar, retener, laboratorios, enseñanza: una habilidad a la vez.", "Study session": "Sesión de estudio", "Free faces": "Caras gratis", "Under 250 sticks": "Menos de 250 palitos", "250 to 500": "250 a 500", "The expensive ones": "Las caras caras", "Equip": "Equipar", "Keep studying to find it": "Sigue estudiando para encontrarla", "Answers reflect common national guidance at the time of writing. Where practice varies, the explanation says so; your protocols, facility policy and medical direction always come first.": "Las respuestas reflejan las guías nacionales comunes al momento de redactarlas. Cuando la práctica varía, la explicación lo indica; sus protocolos, la política del centro y la dirección médica siempre tienen prioridad.", "Outfits": "Ropa", "Other hand": "La otra mano", "Starter": "Inicial", "Free": "Gratis", "Free when you unlock them": "Gratis al desbloquearlos", "No bugs here yet.": "Aún no hay insectos aquí.", "Bug buddy": "Insecto compañero", "Your bug on the side of the screen, reacting to your answers.": "Su insecto al lado de la pantalla, reaccionando a sus respuestas.", "Hats & items": "Sombreros y objetos", "Faces": "Caras", "Hats": "Sombreros", "Eyewear": "Lentes", "Neck": "Cuello", "In hand": "En la mano", "Effects": "Efectos", "Wear": "Ponérselo", "Take off": "Quitárselo", "Wearing": "Puesto", "Secret face": "Cara secreta", "Show it off": "Lucirla", "Clinically reviewed": "Con revisión clínica", "Awaiting review": "Pendiente de revisión", "Pharmacist verified": "Verificado por farmacéutico", "Physician verified": "Verificado por médico", "Awaiting clinical review": "Pendiente de revisión clínica"
 });
 Object.assign(ES_UI, {
   "Medications": "Medicamentos", "All Medications": "Todos los medicamentos", "Specialty Units": "Unidades de especialidad",
@@ -6430,7 +7420,7 @@ document.addEventListener("visibilitychange", function () { if (document.hidden)
 /* ---------- Background music: recorded lo-fi loops in music/*.mp3 ----------
    Oct 28, 2026: the old WebAudio synth tracks, holiday synth tracks and synthesized bug ambience were removed to save space
    (archived in tools/music-synth-archive.js). Tracks are made offline with tools/musicgen. */
-var MU = { ctx: null, master: null, timer: null, playing: false, armed: false };
+var MU = audioAlias({ master: null, timer: null, playing: false, armed: false });
 var MU_VOL = { quiet: 30, medium: 60, loud: 100 };
 function muOn() { return SET().music !== false && (typeof funOn !== "function" || funOn()) && !!agreeRec(); }
 /* Oct 27, 2026: all tracks are now recorded lo-fi loops (made offline from sampled instruments, see /home/claude/music),
@@ -6487,15 +7477,15 @@ function muPreview(id) {
 function muLevel() { var v = SET().musicVol; if (typeof v === "string") v = MU_VOL[v] || 40; if (v == null || isNaN(+v)) v = 40; return Math.max(0, Math.min(100, +v)); }
 function muVol() { return muLevel() / 100 * 2.6; }
 function muCtx() {
-  var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
-  if (!MU.ctx) {
-    MU.ctx = new AC(); var c = MU.ctx; MU.master = c.createGain(); MU.master.gain.value = 0;
+  var c0 = audioCtx(); if (!c0) return null;
+  if (!MU.master || MU.outCtx !== c0) {
+    MU.outCtx = c0; var c = c0; MU.master = c.createGain(); MU.master.gain.value = 0;
     /* recorded tracks are already mixed: the compressor only catches peaks */
     var comp = c.createDynamicsCompressor(); comp.threshold.value = -4; comp.ratio.value = 4; comp.knee.value = 20; MU.comp = comp;
     MU.fileOut = c.createGain(); MU.fileOut.gain.value = 0.6; MU.fileOut.connect(MU.master);
     MU.master.connect(comp); comp.connect(c.destination);
   }
-  return MU.ctx;
+  return c0;
 }
 function muStart(force) {
   if ((!muOn() && !force) || document.hidden) return;
@@ -6509,7 +7499,13 @@ function muStart(force) {
     MU.timer = setInterval(muTick, 250); muTick();
   } catch (e) { MU.playing = false; clearInterval(MU.timer); MU.timer = null; }
 }
-function muStop() { clearInterval(MU.timer); MU.timer = null; MU.playing = false; try { if (MU.ctx && MU.ctx.state === "running") MU.ctx.suspend(); } catch (e) {} }
+function muStop() {
+  clearInterval(MU.timer); MU.timer = null; MU.playing = false;
+  /* the context is shared with every sound effect now, so it stays running: just close the
+     music bus. Suspending it here used to mute the whole app until the next tap. */
+  try { var c = MU.ctx; if (c && MU.master) { MU.master.gain.cancelScheduledValues(c.currentTime); MU.master.gain.setTargetAtTime(0.0001, c.currentTime, 0.08); } } catch (e) {}
+  try { if (MU.file) muFileStop(); } catch (e) {}
+}
 /* called from a real tap (the start-up notice, the agreement button, any first touch): unlock audio and start if music is on */
 function muGesture() {
   MU.armed = true;
@@ -6521,7 +7517,7 @@ function muSync() { if (muOn() && MU.armed && muLevel() > 0) muStart(); else muS
 function muIcon() { return '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M9 18.5a2.5 2.5 0 1 1-2-2.45V5l11-2v12.5a2.5 2.5 0 1 1-2-2.45V7.1L9 8.4z"/>' + (muOn() ? '' : '<path d="M3 3l18 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>') + '</svg>'; }
 function musicBtn() { if (typeof funOn === "function" && !funOn()) return ""; return '<button class="theme-btn musicbtn" data-act="music" aria-pressed="' + muOn() + '" aria-label="Background music" title="Background music">' + muIcon() + '</button>'; }
 /* browsers only allow sound after a tap, so start on the first interaction */
-["pointerdown", "keydown", "touchend", "click"].forEach(function (ev) { document.addEventListener(ev, function () { if (!MU.playing || (MU.ctx && MU.ctx.state !== "running")) muGesture(); }, { passive: true, capture: true }); });
+["pointerdown", "keydown", "touchend", "click"].forEach(function (ev) { document.addEventListener(ev, function () { audioCtx(); try { sfxLoad("gasp"); } catch (e) {} if (!MU.playing || (MU.ctx && MU.ctx.state !== "running")) muGesture(); }, { passive: true, capture: true }); });
 document.addEventListener("visibilitychange", function () { if (document.hidden) muStop(); else if (MU.armed) muSync(); });
 window.addEventListener("pageshow", function () { if (MU.armed && !document.hidden) muSync(); });
 /* quick volume popover from the top-bar note button */
@@ -6548,8 +7544,9 @@ function muLoadBuf(T) {
   if (!MU.fbufs[T.id]) {
     var c = MU.ctx;
     MU.fbufs[T.id] = fetch(T.src).then(function (r) { if (!r.ok) throw new Error("music " + r.status); return r.arrayBuffer(); })
-      .then(function (ab) { return new Promise(function (res, rej) { var p = c.decodeAudioData(ab, res, rej); if (p && p.catch) p.catch(rej); }); });
-    MU.fbufs[T.id].catch(function () { delete MU.fbufs[T.id]; });
+      .then(function (ab) { return new Promise(function (res, rej) { var p = c.decodeAudioData(ab, res, rej); if (p && p.catch) p.catch(rej); }); })
+      .then(function (buf) { AUD.music = "ok"; return buf; });
+    MU.fbufs[T.id].catch(function () { AUD.music = "fail"; delete MU.fbufs[T.id]; });
   }
   return MU.fbufs[T.id];
 }
@@ -7308,7 +8305,7 @@ function proLabel() {
 /* home banner about the 7 free days */
 function trialBanner() {
   if (DEMO && webPass()) return '<div class="callout evnote small trialbar"><strong>DrugBug Pro is unlocked</strong> with your access code until ' + new Date(webPass().until).toLocaleDateString() + '. Enjoy every drug, route and study tool.</div>';
-  if (DEMO) return '<div class="callout evnote small trialbar"><strong>You are using the free DrugBug web demo.</strong> It includes about 40 common medications, with a free preview of the Wormhole. The full DrugBug, with 2,000+ medications and every professional route, is coming soon to iPhone. <button class="linkish" data-pw="open">See Plus and Pro</button></div>';
+  if (DEMO) return '<div class="callout evnote small trialbar"><strong>You are on DrugBug Free.</strong> That is about 40 common medications, with a free preview of the Wormhole. DrugBug Plus and Pro open all 2,100+ medications and every professional route. <button class="linkish" data-pw="open">See Plus and Pro</button></div>';
   if (!PAYWALL || !NATIVE || PRO.store || licenseActive() || Prog.d.proGrant) return "";
   return '<div class="callout evnote small trialbar"><strong>You are on DrugBug Free.</strong> Every tool in the app works on your free medications. <button class="linkish" data-pw="open">See Plus and Pro</button></div>';
 }
@@ -7367,7 +8364,7 @@ function drawPaywall() {
     pwdlg.innerHTML = c + '</div>'; translateDom(pwdlg);
     return;
   }
-  if (!canBuy) c += '<div class="presult">' + (DEMO && webPass() ? 'Your access code has DrugBug Pro unlocked in this browser until ' + new Date(webPass().until).toLocaleDateString() + '. Plus and Pro subscriptions come with the DrugBug iPhone app.' : DEMO ? 'This is the free web demo. Plus and Pro come with the DrugBug iPhone app, coming soon to the App Store.' : 'Plans are purchased in the DrugBug iPhone app.') + '</div>';
+  if (!canBuy) c += '<div class="presult">' + (DEMO && webPass() ? 'Your access code has DrugBug Pro unlocked in this browser until ' + new Date(webPass().until).toLocaleDateString() + '. Plus and Pro are also sold at drugbugapp.com.' : DEMO ? 'This is the free preview. Plus and Pro are sold at drugbugapp.com, and will come to the DrugBug iPhone app as well.' : 'Plans are purchased in the DrugBug iPhone app.') + '</div>';
   ["plus", "pro"].forEach(function (t) {
     var P = PLANS[t], pm = prodOf(P.monthly), py = prodOf(P.annual), m = pm ? pm.price : P.m, y = py ? py.price : P.y, own = PRO.store && PRO.tier === t;
     c += '<section class="pwtier pw-' + t + '"><h3>' + TIER_NAME[t] + (own ? ' <span class="pill good">Your plan</span>' : '') + '</h3><ul class="pwperks">' + PLAN_PERKS[t].map(function (x) { return '<li><span>' + esc(x) + '</span></li>'; }).join("") + '</ul>';
@@ -7571,29 +8568,66 @@ document.addEventListener("input", function (e) {
 });
 
 /* ---------- first-run tour: 4 quick cards, shown once after the user agrees to the terms ---------- */
-var TOUR = [
-  ["Welcome to DrugBug", "Pick your path on the main menu: EMS, nursing, medical school or imaging. Each level has its own drugs and its own question bank.", "home"],
-  ["Study your way", "Open Medications to search any drug by generic or brand name. Use flashcards, exam prep, Weak spots and the exam countdown to stay on track.", "study"],
-  ["Earn sticks", "Every question you try earns 1 stick, and every right answer earns 3. Perfect scores, achievements and daily challenges pay bonus sticks.", "sticks"],
-  ["Dress up your bug", "Spend sticks in the Terrarium on new bugs, outfits, hats and music. Tap your bug there to watch it use its items.", "bug"]
-];
+/* The tour describes the app as it actually is now: paths chosen on the first run, Start here
+   leading into L.E.A.R.N, and the bug and stick cards only when Seriously Fun is on
+   (owner, Nov 4 2026). Rebuilt each time it opens so it follows the mode. */
+function tourCards() {
+  var fun = typeof funOn !== "function" || funOn();
+  /* Hickory hosts it: he is the face of L.E.A.R.N, and the tour ends by handing you to him
+     (owner, Nov 4 2026). In Focused mode he steps aside and the cards speak plainly. */
+  if (!fun) return [
+    ["Where to start", "Your paths are on the main menu. The card marked Start here opens L.E.A.R.N: every drug in that scope, one at a time, in random order, nothing repeated.", "plain"],
+    ["Looking things up", "The BugDex holds every medication. Open one for the plain-language version or the full monograph, use Compare to set two drugs side by side, and save what matters to My List.", "plain"],
+    ["Practice", "Registry and licensure-style questions, flashcards, Weak spots for what you keep missing, and an exam countdown that sets a daily target.", "plain"]
+  ];
+  var c = [
+    ["Well, howdy there",
+     "Name's Hickory. Now, I run the L.E.A.R.N round these parts, and what that means is this. I'm fixin' to walk ya through every last drug in your patch. One at a time, mind. All shuffled up so's ya can't guess what's comin'. And I ain't never gonna show ya the same one twice. Slow and steady, that's the way. Beats crammin' the night before, every single time.",
+     "hick"],
+    ["Now, lookin' somethin' up",
+     "The BugDex has got the whole mess of 'em in there. Ya open one up and ya can have it plain-spoke, or ya can have the whole long story, whichever suits ya that day. See two that keep gettin' tangled up in your head? Hit Compare and I'll set 'em side by each so ya can see just where they part ways. And anything worth hangin' onto, go on and star it into My List.",
+     "hick"],
+    ["Then ya gotta go test yourself",
+     "Questions, flashcards, and Weak spots. Now that last one's the sneaky one. It keeps a quiet little tally of whatever ya keep gettin' wrong, and it'll feed 'em right back to ya till they finally stick.",
+     "hick"]
+  ];
+  c.push(["Sticks and bugs",
+    "Every question ya take a swing at pays ya one stick. Get the thing right, well, that's three. Spend 'em over yonder in the Terrarium on bugs and hats and music and all manner of foolishness. And your bug? He grows right along with ya.",
+    "sticks"]);
+  c.push(["Right then",
+    "That's about enough jawin' out of me. Come on, let me show ya how this works on a real drug.",
+    "hick"]);
+  return c;
+}
+var TOUR = tourCards();
 var TR = { i: 0, open: false };
 var trdlg = document.createElement("div"); trdlg.id = "tourdlg"; trdlg.className = "sheet rsheet"; trdlg.hidden = true; document.body.appendChild(trdlg);
 function tourDone() { return TR.done || !!store("tourDone"); }
-function tourOpen(force) { if (TR.open || (!force && tourDone())) return; TR.open = true; TR.i = 0;   /* the Serious / Seriously fun choice lives in Settings now (owner, Oct 30 2026) */ drawTour(); trdlg.hidden = false; }
+function tourOpen(force) { if (TR.open || (!force && tourDone())) return; TOUR = tourCards(); TR.open = true; TR.i = 0;   /* the Serious / Seriously fun choice lives in Settings now (owner, Oct 30 2026) */ drawTour(); trdlg.hidden = false; }
 function tourClose() { TR.done = true; TR.open = false; trdlg.hidden = true; trdlg.innerHTML = ""; store("tourDone", 1); if (typeof wdwSync === "function") setTimeout(wdwSync, 600); }
 function drawTour() {
   var t = TOUR[TR.i], last = TR.i === TOUR.length - 1;
-  trdlg.innerHTML = '<div class="panel tourpanel" role="dialog" aria-modal="true" aria-label="' + esc(t[0]) + '" tabindex="-1"><div class="tourart">' + (t[2] === "sticks" ? '<div class="tourbig">' + stickTag(3) + '</div>' : myBugArt("tourbug", null, null, myStage())) + '</div>' +
+    var art = t[2] === "sticks" ? '<div class="tourbig">' + stickTag(3) + '</div>'
+    : t[2] === "hick" && typeof learnBugSVG === "function" ? '<div class="tourhick">' + learnBugSVG() + '</div>'
+    : t[2] === "bug" ? myBugArt("tourbug", null, null, myStage()) : "";
+  trdlg.innerHTML = '<div class="panel tourpanel" role="dialog" aria-modal="true" aria-label="' + esc(t[0]) + '" tabindex="-1">' + (art ? '<div class="tourart">' + art + '</div>' : '') +
     '<h2>' + esc(t[0]) + '</h2><p>' + esc(t[1]) + '</p><div class="tourdots">' + TOUR.map(function (x, i) { return '<i class="' + (i === TR.i ? "on" : "") + '"></i>'; }).join("") + '</div>' +
-    '<div class="actions"><button class="btn small ghost" data-tour="skip">' + (last ? "Close" : "Skip") + '</button><button class="btn" data-tour="next">' + (last ? "Let's go" : "Next") + '</button></div></div>';
+    '<div class="actions"><button class="btn small ghost" data-tour="skip">' + (last ? "Not now" : "Skip") + '</button><button class="btn" data-tour="next">' + (last ? "Show me" : "Next") + '</button></div></div>';
   translateDom(trdlg); var p = trdlg.querySelector(".panel"); if (p) p.focus();
+  /* Hickory talks you through the tour (owner, Nov 5 2026) */
+  try { if (typeof voiceSay === "function") { var w = String(t[1]).split(/\s+/).slice(0, 14).join(" "); setTimeout(function () { voiceSay(w, "hick"); }, 120); } } catch (e) {}
 }
 document.addEventListener("click", function (e) {
   var b = e.target.closest && e.target.closest("[data-tour]"); if (!b) return;
   if (b.dataset.tour === "skip") return tourClose();
   if (b.dataset.tour === "again") { TR.done = false; store("tourDone", null); return tourOpen(true); }
-  if (TR.i < TOUR.length - 1) { TR.i++; drawTour(); } else tourClose();
+  if (TR.i < TOUR.length - 1) { TR.i++; drawTour(); return; }
+  /* the last card is Hickory offering to show you: closing it opens L.E.A.R.N on the path
+     the menu is pointing at, or the one they are already in (owner, Nov 4 2026) */
+  tourClose();
+  if (typeof funOn === "function" && !funOn()) return;   /* Focused mode just closes */
+  var pointed = document.querySelector("[data-startlearn]");
+  startLearnPath(pointed ? pointed.getAttribute("data-startlearn") : "");
 });
 function tourMaybe() {
   if (tourDone() || !agreeRec() || needRole() || S.view !== "home") return;
@@ -7605,9 +8639,11 @@ document.addEventListener("keydown", function (e) { if (e.key === "Escape" && TR
 /* ---------- Everyday Health: the route for non-clinicians (education only) ----------
    Medicine cabinet (OTC + vitamins), small-sickness guide, normal vitals & labs, body map,
    drugs & your body (illicit education), peptides. Never tells anyone to use anything. */
-var EV_PLUS = { body: 1, illicit: 1, peptides: 1, probiotics: 1 };
+var EV_PLUS = { illicit: 1, peptides: 1, probiotics: 1 };
 function evLocked(t) { return typeof PAYWALL !== "undefined" && PAYWALL && EV_PLUS[t] && !hasTier("plus"); }
 var EVTABS = [
+  /* search first (owner, Nov 5 2026) */
+  ["all", "Search Every Medicine", "Open the full BugDex: every medicine in DrugBug, A to Z."],
   ["cabinet", "Medicine Cabinet", "Over-the-counter remedies and vitamins: what each one is labeled for and what to watch for."],
   ["sick", "Small Sickness Guide", "Colds, heartburn, rashes and more: self-care facts, OTC products labeled for it, and when to see a doctor."],
   ["normals", "Normal Vitals & Labs", "What normal heart rate, blood pressure, temperature and lab results look like at every age."],
@@ -7616,7 +8652,6 @@ var EVTABS = [
   ["peptides", "Peptides", "Approved peptide medicines and popular research peptides that are NOT FDA approved. Education only."],
   ["probiotics", "Probiotics", "Probiotic strains and what research shows for each one, strain by strain. Most are supplements, not FDA-approved medicines. Education only."],
   /* "Conditions & Medicine Cautions" lives in the BugDex only (owner, Oct 28 2026) */
-  ["all", "Search Every Medicine", "Open the full BugDex: every medicine in DrugBug, A to Z."]
 ];
 var EV_NOTE = "Education only. DrugBug does not tell anyone to use any medicine, supplement or drug. Ask your doctor or pharmacist before using anything, and call 911 in an emergency.";
 function evGroup(name) { var g = DB.GROUPS.filter(function (x) { return x.name.indexOf(name) === 0; })[0]; return g ? g.ids.filter(function (id) { return DB.drugs[id]; }) : []; }
@@ -7676,22 +8711,1079 @@ function normalsView() {
   return c + '<p class="callout evnote small">' + esc(N.note || "") + '</p>';
 }
 /* body map: shared by Everyday Health and the Medical School "Body Systems" tab */
-var BODY_AREAS = ["Head", "Neck", "Chest", "Abdomen", "Pelvis", "Limbs", "Whole body"];
+var BODY_AREAS = ["Head and face", "Neck and throat", "Chest and ribs", "Abdomen and gut", "Pelvis and groin", "Back", "Buttocks", "Arms and legs", "Body-wide"];   /* renamed Nov 4 2026; see AREA_RENAME */
+/* ---------- where each part lives on the body (owner, Nov 4 2026) ----------
+   Two changes. The area names say what they actually cover, because "Limbs" and "Whole body"
+   told you very little. And two areas are new: the Back, which the spine belongs to rather
+   than the chest, and the Backside, which is where the rectum and anus actually are. Done as a
+   pass over the records at startup so every screen that reads an area agrees - the anatomy
+   list, the Body Systems tab and the figure itself. */
+var AREA_RENAME = { "Head": "Head and face", "Neck": "Neck and throat", "Chest": "Chest and ribs",
+  "Abdomen": "Abdomen and gut", "Pelvis": "Pelvis and groin", "Limbs": "Arms and legs",
+  "Whole body": "Body-wide" };
+var AREA_MOVE = { "spinal-cord": "Back", "bone-vertebral-column": "Back", "gi-rectum-and-anus": "Buttocks" };
+(function () {
+  try {
+    [DB.ANAT, DB.BODY].forEach(function (L) {
+      (L || []).forEach(function (r) {
+        if (!r || !r.area) return;
+        r.area = AREA_MOVE[r.id] || AREA_RENAME[r.area] || r.area;
+      });
+    });
+  } catch (e) {}
+})();
 function bodySVG(sel) {
-  function z(area, shape) { return '<g class="bzone' + (sel === area ? ' on' : '') + '" data-barea="' + area + '" role="button" tabindex="0" aria-label="' + area + '"><title>' + area + '</title>' + shape + '</g>'; }
-  return '<svg class="bodymap" viewBox="0 0 160 300" aria-label="Body map">' +
-    z("Head", '<circle cx="80" cy="30" r="22"/>') +
-    z("Neck", '<rect x="70" y="52" width="20" height="14" rx="4"/>') +
-    z("Chest", '<path d="M44 68 h72 l6 62 h-84z"/>') +
-    z("Abdomen", '<path d="M38 132 h84 l-4 50 h-76z"/>') +
-    z("Pelvis", '<path d="M42 184 h76 l-8 26 h-60z"/>') +
-    z("Limbs", '<path d="M44 70 l-22 70 -6 60 10 2 10 -58 18 -50z M116 70 l22 70 6 60 -10 2 -10 -58 -18 -50z M52 212 h24 l-4 84 h-16z M84 212 h24 l-4 84 h-16z"/>') +
-    '</svg>';
+  /* ---------- the articulated figure (owner, Nov 4 2026) ----------
+     This used to be six flat shapes. It is now a jointed rig so the body can actually do things:
+     fold over, cross its legs, reach up and hold its head, rub the arm you hit. Each joint is a
+     nested group whose own transform-origin sits at the joint, so a rotation carries everything
+     below it -- turn the shoulder and the forearm and hand come along.
+
+     Two data attributes, on purpose. data-barea is the anatomy area, used for filtering the part
+     list, and is unchanged. data-bpart says which bit was actually touched, so the left arm and
+     the right leg can react differently while both still filter as "Limbs". */
+  var light = '#ffffff', dark = '#000000';
+  /* A joint rotates about its own pivot. CSS resolves transform-origin against the element's
+     bounding box, and that box GROWS as the limbs below it swing out - which silently dragged
+     each pivot sideways mid-animation and tore the arms off the shoulders. This invisible square,
+     centred on the joint and bigger than anything that can swing inside it, pins the bounding box
+     so "50% 50%" is always exactly the joint. (owner, Nov 4 2026) */
+  /* A circle, not a square: a square's corners stick out by root-2 and the box grew again.
+     Each radius only has to cover its own limb plus whatever hangs below it. */
+  function pivot(cx, cy, r) {
+    return '<circle class="bmpivot" cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="none" pointer-events="none"/>';
+  }
+  /* a limb: drawn hanging from (0,0) so its joint is the top-centre of its own box, with a
+     highlight down one side and shade down the other to give it some roundness */
+  /* A limb is a cylinder, and a cylinder seen from any angle is the same shape. Two copies of
+     the same capsule crossed at ninety degrees give that for almost nothing: whichever way he
+     is turned, one of them is facing you, so an arm never thins into a line. (owner, Nov 4 2026) */
+  function limb(w, h, rx) {
+    var hw = w / 2;
+    function face(extra) {
+      return '<g class="bmface"' + (extra || "") + '>' +
+        '<rect class="bmp" x="' + (-hw) + '" y="0" width="' + w + '" height="' + h + '" rx="' + (rx || hw) + '"/>' +
+        '<rect class="bmhl" x="' + (-hw + 1.5) + '" y="2" width="' + (w * 0.3) + '" height="' + (h - 4) + '" rx="' + (w * 0.15) + '" fill="' + light + '" opacity=".22"/>' +
+        '<rect class="bmsh" x="' + (hw - w * 0.3 - 1.5) + '" y="2" width="' + (w * 0.3) + '" height="' + (h - 4) + '" rx="' + (w * 0.15) + '" fill="' + dark + '" opacity=".14"/>' +
+      '</g>';
+    }
+    return face() + face(' style="transform:rotateY(90deg)"');
+  }
+  /* A body section with actual thickness. The same outline is drawn twice - once at the front
+     of the body and once at the back - and a horizontal panel joins their top edges. Standing
+     up, the two faces sit exactly on top of each other and the panel is edge-on, so he looks
+     like the flat drawing he always was. Bend him forward and the back face rises clear of the
+     front one while the panel turns into view between them, and he has a top and a depth. That
+     is real volume, not shading pretending to be volume. (owner, Nov 4 2026)
+     tl/tr/ty describe the top edge the panel has to span. */
+  function slab(d, tl, tr, ty, dep) {
+    var h = dep;
+    return '<g class="bmslab">' +
+      /* the back of him, pushed away from the viewer */
+      '<g class="bmback" style="transform:translateZ(' + (-h) + 'px)">' +
+        '<path class="bmp bmpback" d="' + d + '"/>' +
+      '</g>' +
+      /* the top of him: a horizontal panel lying between the two faces */
+      '<g class="bmtop" style="transform:translate3d(0,' + ty + 'px,0) rotateX(90deg)">' +
+        '<path class="bmp bmptop" d="M' + tl + ' 0 L' + tr + ' 0 L' + (tr - 2) + ' ' + h + ' L' + (tl + 2) + ' ' + h + 'Z"/>' +
+        '<path class="bmlit" d="M' + tl + ' 0 L' + tr + ' 0 L' + (tr - 2) + ' ' + h + ' L' + (tl + 2) + ' ' + h + 'Z" fill="url(#bmTop)" stroke="none" opacity="0"/>' +
+      '</g>' +
+      /* and the front */
+      '<path class="bmp" d="' + d + '"/>' +
+      '<path class="bmhl" d="' + d + '" fill="url(#bmShade)" stroke="none"/>' +
+      '<path class="bmlit" d="' + d + '" fill="url(#bmTop)" stroke="none" opacity="0"/>' +
+    '</g>';
+  }
+  function blob(d) {
+    return '<path class="bmp" d="' + d + '"/>' +
+      '<path class="bmhl" d="' + d + '" fill="url(#bmShade)" stroke="none"/>' +
+      '<path class="bmlit" d="' + d + '" fill="url(#bmTop)" stroke="none" opacity="0"/>';
+  }
+  /* a zone: the touchable unit. hit is an invisible, deliberately fat shape for fingers. */
+  function z(area, part, label, inner, hit, cls) {
+    return '<g class="bzone ' + (cls || "") + (sel === area ? ' on' : '') + '" data-barea="' + area + '" data-bpart="' + part + '"' +
+      ' role="button" tabindex="0" aria-label="' + label + '"><title>' + label + '</title>' + inner +
+      (hit ? '<g class="bhit">' + hit + '</g>' : '') + '</g>';
+  }
+  /* arm: shoulder -> upper arm -> elbow -> forearm -> hand */
+  function arm(side) {
+    var X = side === "L" ? 46 : 114, S = side === "L" ? "L" : "R";
+    /* the resting angle is baked into the static transform, so the arms hang a little away from
+       the body instead of glued to it, and every CSS pose angle below is measured from here */
+    var rest = side === "L" ? 8 : -8;
+    return '<g transform="translate(' + X + ' 78) rotate(' + rest + ')"><g class="bmarm bmarm' + S + '">' +
+      pivot(0, 0, 160) + limb(15, 50) +
+      '<g transform="translate(0 50)"><g class="bmfore bmfore' + S + '">' +
+        pivot(0, 0, 76) + limb(13, 46) +
+        '<g transform="translate(0 46)"><g class="bmhand bmhand' + S + '">' + pivot(0, 0, 20) +
+          '<circle class="bmp" cx="0" cy="7" r="8.5"/><circle class="bmhl" cx="-2.5" cy="4.5" r="3.4" fill="' + light + '" opacity=".25"/>' +
+        '</g></g>' +
+      '</g></g>' +
+    '</g></g>';
+  }
+  /* leg: hip -> thigh -> knee -> shin -> foot */
+  function leg(side) {
+    var X = side === "L" ? 67 : 93, S = side, rest = side === "L" ? 2 : -2;
+    return '<g transform="translate(' + X + ' 206) rotate(' + rest + ')"><g class="bmleg bmleg' + S + '">' +
+      pivot(0, 0, 140) + limb(19, 44) +
+      '<g transform="translate(0 44)"><g class="bmshin bmshin' + S + '">' +
+        pivot(0, 0, 65) + limb(16, 40) +
+        '<g transform="translate(0 40)"><g class="bmfoot bmfoot' + S + '">' + pivot(0, 0, 16) +
+          '<ellipse class="bmp" cx="' + (side === "L" ? -2 : 2) + '" cy="5" rx="10" ry="5.5"/>' +
+        '</g></g>' +
+      '</g></g>' +
+    '</g></g>';
+  }
+
+  var head =
+    '<g transform="translate(80 54)"><g class="bmhead">' + pivot(0, 0, 50) +
+      /* a cranium that narrows to a jaw, rather than a circle */
+      '<path class="bmp" d="M0 -46 Q20 -46 21 -26 Q22 -12 14 -5 Q7 1 0 1 Q-7 1 -14 -5 Q-22 -12 -21 -26 Q-20 -46 0 -46Z"/>' +
+      '<ellipse class="bmhl" cx="-7" cy="-32" rx="8" ry="9" fill="' + light + '" opacity=".2"/>' +
+      '<ellipse class="bmsh" cx="12" cy="-20" rx="7" ry="12" fill="' + dark + '" opacity=".12"/>' +
+    '</g></g>';
+  var neck = '<g transform="translate(80 66)"><g class="bmneck">' + pivot(0, 0, 25) + '<path class="bmp" d="M-8 -17 Q0 -19 8 -17 L10 1 Q0 4 -10 1Z"/>' + '</g></g>';
+
+  /* The viewBox is wider than the figure on purpose. With a tight box, flaring the elbows to
+     put both hands on the head pushed them off the canvas and the arms looked torn off. Giving
+     the drawing room to move is cheaper and truer than foreshortening every limb. */
+  return '<svg class="bodymap" viewBox="-26 -4 212 318" aria-label="Body map">' +
+    '<defs><linearGradient id="bmTop" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0" stop-color="' + light + '" stop-opacity=".85"/>' +
+      '<stop offset=".45" stop-color="' + light + '" stop-opacity=".25"/>' +
+      '<stop offset="1" stop-color="' + dark + '" stop-opacity=".3"/>' +
+    '</linearGradient>' +
+    '<linearGradient id="bmShade" x1="0" y1="0" x2="1" y2=".35">' +
+      '<stop offset="0" stop-color="' + light + '" stop-opacity=".2"/>' +
+      '<stop offset=".45" stop-color="' + light + '" stop-opacity="0"/>' +
+      '<stop offset="1" stop-color="' + dark + '" stop-opacity=".15"/>' +
+    '</linearGradient></defs>' +
+    /* the ground he is standing on: it only shows when he goes down on his knees, and it is
+       the cue that sells kneeling from the front (owner, Nov 4 2026) */
+    '<ellipse class="bmground" cx="80" cy="302" rx="52" ry="7" fill="' + dark + '" opacity="0"/>' +
+    '<g class="bmspin">' + pivot(80, 160, 700) +
+    '<g class="bmfig">' + pivot(80, 300, 610) +
+      /* legs sit behind the torso so a crossed leg reads correctly */
+      z("Arms and legs", "legL", "Left leg", leg("L"), '<rect x="48" y="200" width="36" height="108" rx="16"/>', "bmzleg") +
+      z("Arms and legs", "legR", "Right leg", leg("R"), '<rect x="76" y="200" width="36" height="108" rx="16"/>', "bmzleg") +
+      '<g class="bmtorso">' + pivot(80, 206, 360) +
+        /* The torso follows a body, not a stack of boxes: shoulders slope off the neck and are
+           the widest point, the ribcage narrows into a waist, and the hips flare back out below
+           it. The three sections still have to be tapped separately, so they are three shapes -
+           but their edges meet exactly, so the outline reads as one continuous form. */
+        z("Pelvis and groin", "pelvis", "Pelvis",
+          slab("M50 186 L110 186 Q113 199 107 210 Q96 217 80 217 Q64 217 53 210 Q47 199 50 186Z", 50, 110, 186, 26),
+          '<rect x="46" y="182" width="68" height="36" rx="14"/>') +
+        z("Abdomen and gut", "abdomen", "Abdomen",
+          slab("M56 150 L104 150 Q107 166 110 186 L50 186 Q53 166 56 150Z", 56, 104, 150, 28),
+          '<rect x="48" y="148" width="64" height="40" rx="12"/>') +
+        z("Chest and ribs", "chest", "Chest",
+          slab("M42 86 Q44 70 66 66 L94 66 Q116 70 118 86 Q117 110 112 130 Q108 146 104 150 L56 150 Q52 146 48 130 Q43 110 42 86Z", 60, 100, 68, 30),
+          '<rect x="40" y="64" width="80" height="86" rx="16"/>') +
+        z("Arms and legs", "armL", "Left arm", arm("L"), '<rect x="26" y="70" width="38" height="120" rx="17"/>', "bmzarm") +
+        z("Arms and legs", "armR", "Right arm", arm("R"), '<rect x="96" y="70" width="38" height="120" rx="17"/>', "bmzarm") +
+        /* The back and the backside are on the back of him, so they live behind the front faces
+           and only come within reach once you have turned him round. Spin him and they are
+           there; face on, your finger lands on his chest, which is what you would expect. */
+        '<g class="bmrear" style="transform:translateZ(-31px)">' +
+          z("Back", "back", "Back",
+            blob("M44 84 Q80 76 116 84 Q118 118 112 150 L56 150 Q50 118 44 84Z") +
+            '<path class="bmspine" d="M80 84 V148" stroke="' + dark + '" stroke-width="3" opacity=".3" fill="none"/>' +
+            '<path class="bmspine" d="M62 96 Q80 104 98 96 M60 118 Q80 126 100 118" stroke="' + dark + '" stroke-width="2" opacity=".2" fill="none"/>',
+            '<rect x="42" y="80" width="76" height="72" rx="16"/>') +
+          z("Buttocks", "butt", "Backside",
+            /* two cheeks with a cleft between them, which is the shape, rather than a box */
+            blob("M50 182 Q50 174 62 175 Q73 177 78 184 L78 206 Q73 215 62 215 Q50 213 48 200 Q47 190 50 182Z") +
+            blob("M110 182 Q110 174 98 175 Q87 177 82 184 L82 206 Q87 215 98 215 Q110 213 112 200 Q113 190 110 182Z") +
+            '<path class="bmspine" d="M80 178 V210" stroke="' + dark + '" stroke-width="2.4" opacity=".3" fill="none" stroke-linecap="round"/>',
+            '<rect x="46" y="174" width="68" height="46" rx="18"/>') +
+        '</g>' +
+        z("Neck and throat", "neck", "Neck", neck, '<rect x="64" y="46" width="32" height="26" rx="10"/>') +
+        z("Head and face", "head", "Head", head, '<circle cx="80" cy="32" r="27"/>') +
+      '</g>' +
+    '</g></g></svg>';
 }
+/* ---------- turn him round (owner, Nov 4 2026) ----------
+   Drag sideways and he spins on the spot. The angle lives on the .bmspin wrapper, which sits
+   outside .bmfig so it never fights the reaction animations. Past a quarter turn you are
+   looking at his back, and the Back and Backside become the things under your finger. */
+var SPIN = { on: 0, id: null, x0: 0, a0: 0, ang: 0, moved: 0, el: null };
+function spinSet(el, a) {
+  while (a < 0) a += 360; a %= 360;
+  SPIN.ang = a;
+  el.style.setProperty("--bmspin", a.toFixed(1) + "deg");
+  var rear = a > 90 && a < 270;
+  el.classList.toggle("rear", rear);
+  /* Browsers do not reliably depth-sort SVG children inside a preserve-3d group, so his back
+     showed through his chest. Move it in the paint order instead: behind everything while you
+     are looking at his front, in front of everything once he has turned round. */
+  try {
+    var torso = el.querySelector(".bmtorso"), back = el.querySelector(".bmrear");
+    if (torso && back) {
+      var want = rear ? torso.lastElementChild : torso.firstElementChild;
+      if (rear && back !== torso.lastElementChild) torso.appendChild(back);
+      else if (!rear && back !== torso.firstElementChild) torso.insertBefore(back, torso.firstElementChild);
+    }
+  } catch (e) {}
+}
+function spinBind(fig) {
+  if (!fig || fig.__spun) return; fig.__spun = 1;
+  fig.addEventListener("pointerdown", function (e) {
+    if (SPIN.id !== null) return;
+    SPIN.id = e.pointerId; SPIN.x0 = e.clientX; SPIN.a0 = SPIN.ang; SPIN.moved = 0; SPIN.el = fig;
+    try { fig.setPointerCapture(e.pointerId); } catch (x) {}
+  });
+  fig.addEventListener("pointermove", function (e) {
+    if (SPIN.id !== e.pointerId) return;
+    var dx = e.clientX - SPIN.x0;
+    if (Math.abs(dx) > 4) SPIN.moved = 1;
+    if (!SPIN.moved) return;
+    e.preventDefault();
+    spinSet(fig, SPIN.a0 + dx * 0.85);
+    /* How fast he is being turned, in degrees per second. The gap between two pointer moves is
+       clamped to a sane minimum: events can arrive in the same tick, and dividing by a dt of
+       zero (or skipping those samples) left the speed permanently at zero. */
+    var now = performance.now();
+    var dt = Math.max(6, now - (SPIN.tLast || (now - 16)));
+    var v = SPIN.ang - (SPIN.aLast == null ? SPIN.ang : SPIN.aLast);
+    while (v > 180) v -= 360; while (v < -180) v += 360;
+    var inst = v / dt * 1000;
+    SPIN.v = SPIN.v ? SPIN.v * 0.45 + inst * 0.55 : inst;   /* smoothed, so one jittery frame does not set him off */
+    SPIN.tLast = now; SPIN.aLast = SPIN.ang;
+    /* he leans into the turn and throws his arms out to stay upright */
+    var lean = Math.max(-16, Math.min(16, -SPIN.v * 0.035));
+    fig.style.setProperty("--bmlean", lean.toFixed(1) + "deg");
+    fig.classList.toggle("whirl", Math.abs(SPIN.v) > 150);
+  });
+  function end(e) {
+    if (SPIN.id !== e.pointerId) return;
+    try { fig.releasePointerCapture(e.pointerId); } catch (x) {}
+    SPIN.id = null;
+    var fast = Math.abs(SPIN.v || 0);
+    SPIN.v = 0; SPIN.tLast = 0; SPIN.aLast = null;
+    fig.classList.remove("whirl");
+    fig.style.setProperty("--bmlean", "0deg");
+    /* let go of him mid-spin and he staggers before he gets his feet back */
+    if (fast > 180 && (typeof hfxOk !== "function" || hfxOk())) {
+      var svg = fig.closest(".bodymap") || fig;
+      svg.classList.remove("stagger"); void svg.getBoundingClientRect(); svg.classList.add("stagger");
+      if (svg.__stT) clearTimeout(svg.__stT);
+      svg.__stT = setTimeout(function () { svg.classList.remove("stagger"); svg.__stT = null; }, 1500);
+      try { if (typeof anatSnd === "function") anatSnd(fast > 420 ? "boing" : "wobble"); } catch (x) {}
+    }
+    /* a drag is a drag, not a tap: swallow the click that follows one */
+    if (SPIN.moved) { SPIN.on = Date.now(); SPIN.moved = 0; }
+  }
+  fig.addEventListener("pointerup", end);
+  fig.addEventListener("pointercancel", end);
+}
+function spinJustDragged() { return Date.now() - SPIN.on < 320; }
+/* keep him turned the way you left him across re-renders */
+if (typeof render === "function") (function () {
+  var r = render;
+  render = function () {
+    var v = r.apply(this, arguments);
+    try {
+      var figs = document.querySelectorAll(".bodymap .bmspin");
+      for (var i = 0; i < figs.length; i++) { spinSet(figs[i], SPIN.ang); spinBind(figs[i]); }
+    } catch (e) {}
+    return v;
+  };
+})();
+
+/* ---------- the figure reacts when you tap it (owner, Nov 4 2026) ----------
+   Each part has its own noise and its own piece of choreography, driven by a class on the <svg>
+   that the keyframes in index.html hang off. Poke the head and he reaches up and holds it; the
+   throat and he guards it; the groin and he gasps and crosses his legs; an arm and he rubs the
+   one you hit and shakes his head at you; a leg and he hops about holding it.
+   Reduced motion keeps every sound and drops every movement. */
+var BM_RX = {
+  head:    { cls: "rx-head",  snd: "thunk", dur: 1500 },
+  neck:    { cls: "rx-neck",  snd: "gasp",  dur: 1400 },
+  chest:   { cls: "rx-chest", snd: "thump", dur: 2400, then: "groan", thenAt: 420 },
+  abdomen: { cls: "rx-abd",   snd: "groan", dur: 1700 },
+  pelvis:  { cls: "rx-pelv",  snd: "gasp",  dur: 1900 },
+  back:    { cls: "rx-back",  snd: "creak", dur: 2200 },
+  butt:    { cls: "rx-butt",  snd: "gasp",  dur: 2200, then: "whine", thenAt: 420 },
+  armL:    { cls: "rx-armL",  snd: "punch", dur: 1900, then: "whine", thenAt: 280 },
+  armR:    { cls: "rx-armR",  snd: "punch", dur: 1900, then: "whine", thenAt: 280 },
+  legL:    { cls: "rx-legL",  snd: "punch", dur: 2100, then: "cry",   thenAt: 240 },
+  legR:    { cls: "rx-legR",  snd: "punch", dur: 2100, then: "cry",   thenAt: 240 }
+};
+/* used when something only knows the anatomy area and not which limb was touched */
+var BM_AREA = { "Head and face": "head", "Neck and throat": "neck", "Chest and ribs": "chest",
+  "Abdomen and gut": "abdomen", "Pelvis and groin": "pelvis", "Arms and legs": "armL",
+  "Body-wide": "chest", "Back": "back", "Buttocks": "butt" };
+/* Hickory pokes his head round the edge of the screen, the same way the peeking pals do -
+   same position, same angle, same wiggle - and says his piece. Fun mode only, one at a time.
+   (owner, Nov 4 2026) */
+var HICK_LINES = ["Wow.", "That's messed up, man.", "We're just here to learn.", "Poor fella."];
+function hickPop(line) {
+  if (typeof funOn === "function" && !funOn()) return;
+  if (typeof hfxOk === "function" && !hfxOk()) return;
+  var gone = document.querySelector(".hickpop"); if (gone) gone.remove();
+  var side = Math.random() < 0.5 ? "l" : "r";
+  var art = "";
+  try {
+    if (typeof learnBugSVG === "function") art = learnBugSVG().replace('class="hickbug bug"', 'class="hickbug bug hickart"');
+    else if (typeof bugById === "function" && typeof bugArt === "function") art = bugArt(bugById("hickory"), "hickart", { mood: "joy" });
+  } catch (e) {}
+  var el = document.createElement("div");
+  el.className = "hickpop hp-" + side;
+  el.setAttribute("aria-hidden", "true");
+  el.innerHTML = '<span class="hpbug">' + art + '</span><span class="hpsay"></span>';
+  el.querySelector(".hpsay").textContent = line;
+  document.body.appendChild(el);
+  requestAnimationFrame(function () { el.classList.add("in"); });
+  try { if (typeof voiceSay === "function") setTimeout(function () { voiceSay(line, "hick"); }, 500); } catch (e) {}
+  setTimeout(function () { el.classList.remove("in"); setTimeout(function () { if (el.parentNode) el.remove(); }, 480); }, 2600);
+}
+var BM_CLASSES = ["rx-head", "rx-neck", "rx-chest", "rx-abd", "rx-pelv", "rx-armL", "rx-armR", "rx-legL", "rx-legR", "rx-back", "rx-butt"];
+function bodyReact(area, snd, part) {
+  var key = part && BM_RX[part] ? part : (BM_AREA[area] || "chest");
+  var M = BM_RX[key];
+  try { if (typeof anatSnd === "function") anatSnd(snd || M.snd); } catch (e) {}
+  if (M.then) setTimeout(function () { try { anatSnd(M.then); } catch (e) {} }, M.thenAt || 250);
+  if (key === "pelvis" || key === "butt") {
+    /* the whole room reacts, and Hickory turns up to make it worse */
+    setTimeout(function () { try { anatSnd("crowd"); } catch (e) {} }, 170);
+    setTimeout(function () { try { hickPop(pick(HICK_LINES)); } catch (e) {} }, 560);
+  }
+  if (typeof hfxOk === "function" && !hfxOk()) return;      /* reduced motion: the noise alone */
+  /* the 3D dummy, when it is running, does the reaction itself */
+  if (typeof D3GL !== "undefined" && D3GL.live()) { D3GL.react(key); return; }
+  var go = function () {
+    var figs = document.querySelectorAll(".bodymap");
+    for (var i = 0; i < figs.length; i++) (function (f) {
+      BM_CLASSES.forEach(function (c) { f.classList.remove(c); });
+      void f.getBoundingClientRect();                        /* restart the animation on a repeat tap */
+      f.classList.add(M.cls);
+      if (f.__bmT) clearTimeout(f.__bmT);
+      f.__bmT = setTimeout(function () { f.classList.remove(M.cls); f.__bmT = null; }, M.dur + 80);
+      var z = f.querySelector('[data-bpart="' + key + '"]') || f.querySelector('[data-barea="' + area + '"]');
+      if (z) { z.classList.remove("bzhit"); void z.getBoundingClientRect(); z.classList.add("bzhit");
+        setTimeout(function () { z.classList.remove("bzhit"); }, M.dur + 80); }
+    })(figs[i]);
+  };
+  if (window.requestAnimationFrame) requestAnimationFrame(go); else setTimeout(go, 16);
+}
+/* D3:BEGIN */
+/* ===== The dummy, in actual 3D (owner, Nov 4 2026) =====
+   The figure used to be flat SVG shapes with CSS tricks to fake depth, and every trick fell
+   apart the moment he turned round. This is a small purpose-built WebGL engine instead: real
+   meshes with volume, a jointed skeleton, lighting that moves across him as he turns, a shadow
+   on the floor, and taps that are found by casting a ray from your finger into the scene - so
+   a tap on his back is a tap on his back, whichever way he is facing.
+   Built here rather than pulled in from a library so it stays small and works offline.
+   Modelled on a crash-test dummy: glossy yellow segments with black joint rings.
+
+   Coordinates are metres, Y up, and he faces +Z (toward the camera). His left is +X. */
+var D3 = (function () {
+  "use strict";
+  var PI = Math.PI, HIPY = 1.024;   /* puts the soles of his shoes on the floor at y = 0 */
+
+  /* ---------------- matrices (column-major, like WebGL) ---------------- */
+  function mul(a, b, o) {
+    var r = new Float32Array(16), c, k;
+    for (c = 0; c < 4; c++) for (k = 0; k < 4; k++)
+      r[c * 4 + k] = a[k] * b[c * 4] + a[4 + k] * b[c * 4 + 1] + a[8 + k] * b[c * 4 + 2] + a[12 + k] * b[c * 4 + 3];
+    if (o) { o.set(r); return o; } return r;
+  }
+  /* T * Rx * Ry * Rz * S */
+  function trs(p, e, s, o) {
+    var cx = Math.cos(e[0]), sx = Math.sin(e[0]), cy = Math.cos(e[1]), sy = Math.sin(e[1]), cz = Math.cos(e[2]), sz = Math.sin(e[2]);
+    var m00 = cy * cz, m01 = -cy * sz, m02 = sy,
+        m10 = cx * sz + sx * sy * cz, m11 = cx * cz - sx * sy * sz, m12 = -sx * cy,
+        m20 = sx * sz - cx * sy * cz, m21 = sx * cz + cx * sy * sz, m22 = cx * cy;
+    o = o || new Float32Array(16);
+    o[0] = m00 * s[0]; o[1] = m10 * s[0]; o[2] = m20 * s[0]; o[3] = 0;
+    o[4] = m01 * s[1]; o[5] = m11 * s[1]; o[6] = m21 * s[1]; o[7] = 0;
+    o[8] = m02 * s[2]; o[9] = m12 * s[2]; o[10] = m22 * s[2]; o[11] = 0;
+    o[12] = p[0]; o[13] = p[1]; o[14] = p[2]; o[15] = 1;
+    return o;
+  }
+  function inv(m) {
+    var a00 = m[0], a01 = m[1], a02 = m[2], a03 = m[3], a10 = m[4], a11 = m[5], a12 = m[6], a13 = m[7],
+        a20 = m[8], a21 = m[9], a22 = m[10], a23 = m[11], a30 = m[12], a31 = m[13], a32 = m[14], a33 = m[15];
+    var b00 = a00 * a11 - a01 * a10, b01 = a00 * a12 - a02 * a10, b02 = a00 * a13 - a03 * a10,
+        b03 = a01 * a12 - a02 * a11, b04 = a01 * a13 - a03 * a11, b05 = a02 * a13 - a03 * a12,
+        b06 = a20 * a31 - a21 * a30, b07 = a20 * a32 - a22 * a30, b08 = a20 * a33 - a23 * a30,
+        b09 = a21 * a32 - a22 * a31, b10 = a21 * a33 - a23 * a31, b11 = a22 * a33 - a23 * a32;
+    var d = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
+    if (!d) return null; d = 1 / d;
+    var o = new Float32Array(16);
+    o[0] = (a11 * b11 - a12 * b10 + a13 * b09) * d; o[1] = (a02 * b10 - a01 * b11 - a03 * b09) * d;
+    o[2] = (a31 * b05 - a32 * b04 + a33 * b03) * d; o[3] = (a22 * b04 - a21 * b05 - a23 * b03) * d;
+    o[4] = (a12 * b08 - a10 * b11 - a13 * b07) * d; o[5] = (a00 * b11 - a02 * b08 + a03 * b07) * d;
+    o[6] = (a32 * b02 - a30 * b05 - a33 * b01) * d; o[7] = (a20 * b05 - a22 * b02 + a23 * b01) * d;
+    o[8] = (a10 * b10 - a11 * b08 + a13 * b06) * d; o[9] = (a01 * b08 - a00 * b10 - a03 * b06) * d;
+    o[10] = (a30 * b04 - a31 * b02 + a33 * b00) * d; o[11] = (a21 * b02 - a20 * b04 - a23 * b00) * d;
+    o[12] = (a11 * b07 - a10 * b09 - a12 * b06) * d; o[13] = (a00 * b09 - a01 * b07 + a02 * b06) * d;
+    o[14] = (a31 * b01 - a30 * b03 - a32 * b00) * d; o[15] = (a20 * b03 - a21 * b01 + a22 * b00) * d;
+    return o;
+  }
+  function persp(fovy, asp, n, f) {
+    var t = 1 / Math.tan(fovy / 2), o = new Float32Array(16);
+    o[0] = t / asp; o[5] = t; o[10] = (f + n) / (n - f); o[11] = -1; o[14] = 2 * f * n / (n - f);
+    return o;
+  }
+  function lookAt(e, c, u) {
+    var zx = e[0] - c[0], zy = e[1] - c[1], zz = e[2] - c[2], l = Math.hypot(zx, zy, zz); zx /= l; zy /= l; zz /= l;
+    var xx = u[1] * zz - u[2] * zy, xy = u[2] * zx - u[0] * zz, xz = u[0] * zy - u[1] * zx; l = Math.hypot(xx, xy, xz); xx /= l; xy /= l; xz /= l;
+    var yx = zy * xz - zz * xy, yy = zz * xx - zx * xz, yz = zx * xy - zy * xx, o = new Float32Array(16);
+    o[0] = xx; o[1] = yx; o[2] = zx; o[4] = xy; o[5] = yy; o[6] = zy; o[8] = xz; o[9] = yz; o[10] = zz;
+    o[12] = -(xx * e[0] + xy * e[1] + xz * e[2]); o[13] = -(yx * e[0] + yy * e[1] + yz * e[2]); o[14] = -(zx * e[0] + zy * e[1] + zz * e[2]); o[15] = 1;
+    return o;
+  }
+  function xf(m, v, w) { w = w == null ? 1 : w;
+    return [m[0] * v[0] + m[4] * v[1] + m[8] * v[2] + m[12] * w, m[1] * v[0] + m[5] * v[1] + m[9] * v[2] + m[13] * w, m[2] * v[0] + m[6] * v[1] + m[10] * v[2] + m[14] * w]; }
+  /* normal matrix: inverse transpose of the upper 3x3, so non-uniform scale shades correctly */
+  function nrm3(m) {
+    var a = m[0], b = m[4], c = m[8], d = m[1], e = m[5], f = m[9], g = m[2], h = m[6], i = m[10];
+    var A = e * i - f * h, B = -(d * i - f * g), C = d * h - e * g, det = a * A + b * B + c * C || 1;
+    var o = new Float32Array(9);
+    o[0] = A / det; o[1] = -(b * i - c * h) / det; o[2] = (b * f - c * e) / det;
+    o[3] = B / det; o[4] = (a * i - c * g) / det; o[5] = -(a * f - c * d) / det;
+    o[6] = C / det; o[7] = -(a * h - b * g) / det; o[8] = (a * e - b * d) / det;
+    return o;   /* already the transpose of the inverse in column-major order */
+  }
+
+  /* ---------------- shapes ---------------- */
+  /* Revolve a profile [[radius, y], ...] about Y. Most of the dummy is made this way. */
+  function lathe(prof, seg) {
+    var n = prof.length, P = [], N = [], I = [], i, j;
+    for (i = 0; i < n; i++) {
+      var a = prof[Math.max(0, i - 1)], b = prof[Math.min(n - 1, i + 1)];
+      var tr = b[0] - a[0], ty = b[1] - a[1], tl = Math.hypot(tr, ty) || 1, nr = ty / tl, ny = -tr / tl;
+      for (j = 0; j <= seg; j++) {
+        var t = j / seg * 2 * PI, cs = Math.cos(t), sn = Math.sin(t);
+        P.push(prof[i][0] * sn, prof[i][1], prof[i][0] * cs);
+        N.push(nr * sn, ny, nr * cs);
+      }
+    }
+    for (i = 0; i < n - 1; i++) for (j = 0; j < seg; j++) {
+      var p = i * (seg + 1) + j, q = p + seg + 1;
+      I.push(p, q, p + 1, p + 1, q, q + 1);
+    }
+    return { p: new Float32Array(P), n: new Float32Array(N), i: new Uint16Array(I) };
+  }
+  /* a capsule centred on the origin along Y, total length L including the round ends */
+  function capsule(r, L, k) {
+    var pr = [], i, h = Math.max(0, L / 2 - r);
+    for (i = 0; i <= k; i++) { var a = -PI / 2 + i / k * PI / 2; pr.push([r * Math.cos(a), -h + r * Math.sin(a)]); }
+    for (i = 0; i <= k; i++) { var b = i / k * PI / 2; pr.push([r * Math.cos(b), h + r * Math.sin(b)]); }
+    pr[0][0] = 0; pr[pr.length - 1][0] = 0;
+    return lathe(pr, 22);
+  }
+  function sphere(r) { return capsule(r, 2 * r, 10); }
+  /* a ring lying flat in XZ: the black bands at every joint */
+  function torus(R, r, su, sv) {
+    var P = [], N = [], I = [], i, j;
+    for (i = 0; i <= su; i++) { var u = i / su * 2 * PI, cu = Math.cos(u), su2 = Math.sin(u);
+      for (j = 0; j <= sv; j++) { var v = j / sv * 2 * PI, cv = Math.cos(v), sv2 = Math.sin(v);
+        P.push((R + r * cv) * cu, r * sv2, (R + r * cv) * su2); N.push(cv * cu, sv2, cv * su2); } }
+    for (i = 0; i < su; i++) for (j = 0; j < sv; j++) { var p = i * (sv + 1) + j, q = p + sv + 1; I.push(p, q, p + 1, p + 1, q, q + 1); }
+    return { p: new Float32Array(P), n: new Float32Array(N), i: new Uint16Array(I) };
+  }
+
+  /* ---------------- materials (linear colour) ---------------- */
+  function lin(c) { return [Math.pow(c[0], 2.2), Math.pow(c[1], 2.2), Math.pow(c[2], 2.2)]; }
+  var MAT = {
+    yellow: { c: lin([0.95, 0.80, 0.42]), sp: 0.35, sh: 60, rim: 0.22 },
+    black:  { c: lin([0.012, 0.012, 0.014]), sp: 0.8, sh: 70, rim: 0.5 },
+    shoe:   { c: lin([0.07, 0.07, 0.08]), sp: 1.6, sh: 120, rim: 0.9 }
+  };
+
+  /* ---------------- the skeleton ---------------- */
+  /* Joint names used by the poses. Each one rotates everything beneath it. */
+  var J = ["hips", "spine", "chest", "neck", "head", "shL", "elL", "wrL", "shR", "elR", "wrR", "hipL", "knL", "anL", "hipR", "knR", "anR"];
+  /* the resting pose: arms a little away from the body, a soft elbow */
+  var REST = { shL: [0, 0, 0.2], shR: [0, 0, -0.2], elL: [-0.14, 0, 0], elR: [-0.14, 0, 0], hipL: [0, 0, 0.03], hipR: [0, 0, -0.03] };
+
+  function Rig() {
+    var nodes = {}, meshes = [], list = [];
+    function node(name, parent, p, opt) {
+      opt = opt || {};
+      var n = { name: name, parent: parent, p: p.slice(), r: [0, 0, 0], s: opt.s || [1, 1, 1], base: (opt.r || [0, 0, 0]).slice(), kids: [], world: new Float32Array(16), local: new Float32Array(16) };
+      n.r = n.base.slice();
+      if (parent) parent.kids.push(n);
+      nodes[name] = n; list.push(n); return n;
+    }
+    function mesh(parent, geo, mat, part, p, r, s, fb) {
+      var m = node("m" + meshes.length, parent, p || [0, 0, 0], { r: r, s: s });
+      m.mesh = { geo: geo, mat: mat, part: part, fb: !!fb };
+      meshes.push(m); return m;
+    }
+    var G = {
+      pelvis: lathe([[0, -0.115], [0.07, -0.112], [0.12, -0.085], [0.158, -0.04], [0.162, 0], [0.15, 0.04], [0.135, 0.07], [0, 0.075]], 26),
+      waist: torus(0.118, 0.026, 26, 10),
+      abdomen: lathe([[0, -0.01], [0.122, -0.008], [0.128, 0.04], [0.13, 0.1], [0.135, 0.16], [0, 0.165]], 26),
+      chest: lathe([[0, 0], [0.138, 0.002], [0.15, 0.06], [0.172, 0.15], [0.186, 0.22], [0.18, 0.27], [0.15, 0.31], [0.1, 0.335], [0, 0.345]], 28),
+      pec: sphere(0.08),
+      neck: capsule(0.046, 0.11, 6),
+      head: lathe([[0, -0.005], [0.05, 0.002], [0.075, 0.03], [0.092, 0.08], [0.104, 0.13], [0.1, 0.18], [0.082, 0.225], [0.05, 0.252], [0, 0.262]], 26),
+      ball: sphere(0.068),
+      ringL: torus(0.05, 0.018, 20, 8), ringM: torus(0.045, 0.017, 20, 8), ringS: torus(0.037, 0.014, 20, 8), ringXL: torus(0.07, 0.022, 22, 8),
+      upper: capsule(0.054, 0.3, 8), fore: capsule(0.046, 0.27, 8), hand: capsule(0.04, 0.13, 6),
+      thigh: capsule(0.076, 0.44, 8), shin: capsule(0.06, 0.4, 8), shoe: capsule(0.058, 0.25, 8), hipball: sphere(0.08)
+    };
+    /* balance tilts him from his feet; spin turns him about his own vertical axis */
+    var bal = node("bal", null, [0, 0, 0]), spin = node("spin", bal, [0, 0, 0]);
+    var hips = node("hips", spin, [0, HIPY, 0]);
+    mesh(hips, G.pelvis, MAT.yellow, "pelvis", [0, 0, 0], null, [1, 1, 0.72], true);
+    mesh(hips, G.waist, MAT.black, "abdomen", [0, 0.085, 0], null, [1, 1, 0.74]);
+    var spine = node("spine", hips, [0, 0.09, 0]);
+    mesh(spine, G.abdomen, MAT.yellow, "abdomen", [0, 0, 0], null, [1, 1, 0.7], true);
+    var chest = node("chest", spine, [0, 0.17, 0]);
+    mesh(chest, G.chest, MAT.yellow, "chest", [0, 0, 0], null, [1, 1, 0.64], true);
+    /* a little pectoral definition, like the moulded chest plate on the real thing */
+    var neck = node("neck", chest, [0, 0.335, 0]);
+    mesh(neck, G.neck, MAT.black, "neck", [0, 0.035, 0]);
+    var head = node("head", neck, [0, 0.075, 0]);
+    mesh(head, G.head, MAT.yellow, "head", [0, 0, 0.008], null, [0.94, 1, 1.06]);
+    function arm(side, sx) {
+      var sh = node("sh" + side, chest, [0.205 * sx, 0.265, 0]);
+      mesh(sh, G.ball, MAT.yellow, "arm" + side, [0, 0, 0]);
+      mesh(sh, G.ringL, MAT.black, "arm" + side, [0, -0.06, 0]);
+      mesh(sh, G.upper, MAT.yellow, "arm" + side, [0, -0.165, 0]);
+      var el = node("el" + side, sh, [0, -0.315, 0]);
+      mesh(el, G.ringM, MAT.black, "arm" + side, [0, 0, 0]);
+      mesh(el, G.fore, MAT.yellow, "arm" + side, [0, -0.145, 0]);
+      var wr = node("wr" + side, el, [0, -0.285, 0]);
+      mesh(wr, G.ringS, MAT.black, "arm" + side, [0, 0, 0]);
+      mesh(wr, G.hand, MAT.yellow, "arm" + side, [0, -0.07, 0], null, [1, 1, 0.58]);
+    }
+    arm("L", 1); arm("R", -1);
+    function leg(side, sx) {
+      var hp = node("hip" + side, hips, [0.088 * sx, -0.07, 0]);
+      mesh(hp, G.ringXL, MAT.black, "leg" + side, [0, -0.04, 0]);
+      mesh(hp, G.thigh, MAT.yellow, "leg" + side, [0, -0.235, 0]);
+      var kn = node("kn" + side, hp, [0, -0.46, 0]);
+      mesh(kn, G.ringL, MAT.black, "leg" + side, [0, 0, 0], null, [1.25, 1, 1.25]);
+      mesh(kn, G.shin, MAT.yellow, "leg" + side, [0, -0.215, 0]);
+      var an = node("an" + side, kn, [0, -0.415, 0]);
+      mesh(an, G.ringS, MAT.black, "leg" + side, [0, 0, 0], null, [1.3, 1, 1.3]);
+      /* the shoe lies along Z, toes forward */
+      mesh(an, G.shoe, MAT.shoe, "leg" + side, [0, -0.035, 0.045], [PI / 2, 0, 0], [0.95, 1, 0.72]);
+    }
+    leg("L", 1); leg("R", -1);
+    this.nodes = nodes; this.meshes = meshes; this.list = list; this.G = G;
+  }
+  Rig.prototype.update = function () {
+    var L = this.list, i, n;
+    for (i = 0; i < L.length; i++) {
+      n = L[i];
+      trs(n.p, n.r, n.s, n.local);
+      if (n.parent) mul(n.parent.world, n.local, n.world); else n.world.set(n.local);
+    }
+  };
+  /* apply a pose: rest + offsets. Root offsets: drop (y), shift (z), and the hips' own turn. */
+  Rig.prototype.pose = function (P) {
+    var N = this.nodes, i;
+    for (i = 0; i < J.length; i++) {
+      var k = J[i], n = N[k], b = REST[k] || [0, 0, 0], d = P[k] || [0, 0, 0];
+      n.r[0] = b[0] + d[0]; n.r[1] = b[1] + d[1]; n.r[2] = b[2] + d[2];
+    }
+    N.hips.p[1] = HIPY + (P.drop || 0); N.hips.p[2] = P.shift || 0;
+    this.update();
+  };
+  Rig.prototype.at = function (name, off) { return xf(this.nodes[name].world, off || [0, 0, 0]); };
+  /* where the palm of a hand is, which is what every "hand on it" pose aims */
+  Rig.prototype.palm = function (side) { return this.at("wr" + side, [0, -0.075, 0.01]); };
+
+  /* ---------------- poses ---------------- */
+  function zero() { return {}; }
+  function addInto(o, P, w) {
+    for (var k in P) {
+      if (!P.hasOwnProperty(k)) continue;
+      if (typeof P[k] === "number") o[k] = (o[k] || 0) + P[k] * w;
+      else { var a = o[k] || (o[k] = [0, 0, 0]); a[0] += P[k][0] * w; a[1] += P[k][1] * w; a[2] += P[k][2] * w; }
+    }
+    return o;
+  }
+  function ease(t) { return t * t * t * (t * (t * 6 - 15) + 10); }     /* smootherstep */
+  /* frames: [[t, pose], ...] with t from 0 to 1; returns the pose at time u */
+  function sample(frames, u) {
+    if (u <= frames[0][0]) return addInto({}, frames[0][1], 1);
+    for (var i = 1; i < frames.length; i++) if (u <= frames[i][0]) {
+      var a = frames[i - 1], b = frames[i], k = ease((u - a[0]) / (b[0] - a[0] || 1));
+      return addInto(addInto({}, a[1], 1 - k), b[1], k);
+    }
+    return addInto({}, frames[frames.length - 1][1], 1);
+  }
+
+  return { mul: mul, trs: trs, inv: inv, persp: persp, lookAt: lookAt, xf: xf, nrm3: nrm3,
+           lathe: lathe, capsule: capsule, sphere: sphere, torus: torus,
+           Rig: Rig, J: J, HIPY: HIPY, REST: REST, MAT: MAT, sample: sample, addInto: addInto, ease: ease, zero: zero };
+})();
+
+/* ---------- the live part: rendering, poses, spin physics and touch ---------- */
+var D3GL = (function () {
+  "use strict";
+  var PI = Math.PI, C = D3;
+  var S = { gl: null, cv: null, ok: false, dead: false, rig: null, buf: {}, prog: null, sprog: null, bprog: null,
+            ang: 0.0, vel: 0, drag: null, tilt: 0, tiltV: 0, pitch: 0, pitchV: 0, armsOut: 0, t0: 0, last: 0,
+            rx: null, flash: {}, sel: "", raf: 0, mount: null, cb: {} };
+
+  /* which anatomy area each touchable part belongs to */
+  var AREA = { head: "Head and face", neck: "Neck and throat", chest: "Chest and ribs", abdomen: "Abdomen and gut",
+    pelvis: "Pelvis and groin", armL: "Arms and legs", armR: "Arms and legs", legL: "Arms and legs", legR: "Arms and legs",
+    back: "Back", butt: "Buttocks" };
+  /* which mesh parts light up when an area is selected */
+  var AREA_PARTS = { "Head and face": ["head"], "Neck and throat": ["neck"], "Chest and ribs": ["chest"],
+    "Abdomen and gut": ["abdomen"], "Pelvis and groin": ["pelvis"], "Arms and legs": ["armL", "armR", "legL", "legR"],
+    "Back": ["chest", "abdomen"], "Buttocks": ["pelvis"] };
+
+  /* ================= reactions =================
+     frames: body pose over normalised time. ik: where a hand goes, given as a joint and an
+     offset in that joint's frame so the hand follows the body as it moves, plus a pole that
+     says which way the elbow points (in the chest's frame). The hands are placed by inverse
+     kinematics every frame, so "hand on his head" is exactly on his head whatever else he is
+     doing. ikw: how strongly the hands follow the target over time. */
+  var UP = [[0, 0], [0.18, 1], [0.78, 1], [1, 0]];          /* the usual in-hold-out envelope */
+  var RX = {
+    head: { dur: 1.6, ikw: UP,
+      frames: [[0, {}], [0.16, { neck: [0.22, 0, 0], head: [0.18, 0, 0.05], spine: [0.12, 0, 0], knL: [0.2, 0, 0], knR: [0.2, 0, 0], hipL: [-0.12, 0, 0], hipR: [-0.12, 0, 0], drop: -0.035 }],
+               [0.3, { neck: [0.16, 0, 0], head: [0.1, 0, -0.06], spine: [0.08, 0, 0], knL: [0.14, 0, 0], knR: [0.14, 0, 0], hipL: [-0.08, 0, 0], hipR: [-0.08, 0, 0], drop: -0.025 }],
+               [0.78, { neck: [0.16, 0, 0], head: [0.1, 0, 0], spine: [0.08, 0, 0], knL: [0.12, 0, 0], knR: [0.12, 0, 0], hipL: [-0.07, 0, 0], hipR: [-0.07, 0, 0], drop: -0.02 }], [1, {}]],
+      ik: { L: { n: "head", o: [0.1, 0.13, 0.03], pole: [1, 0.35, 0.25] }, R: { n: "head", o: [-0.1, 0.13, 0.03], pole: [-1, 0.35, 0.25] } } },
+    neck: { dur: 1.5, ikw: UP,
+      frames: [[0, {}], [0.18, { head: [0.28, 0, 0], neck: [0.12, 0, 0], chest: [0.12, 0, 0], shR: [0, 0, -0.1] }], [0.78, { head: [0.24, 0, 0], neck: [0.1, 0, 0], chest: [0.1, 0, 0], shR: [0, 0, -0.08] }], [1, {}]],
+      ik: { L: { n: "neck", o: [0.01, 0.02, 0.075], pole: [0.45, -1, 0.55] } } },
+    /* the chest: he goes down on his knees clutching it */
+    chest: { dur: 2.6, ikw: [[0, 0], [0.2, 1], [0.8, 1], [1, 0]],
+      frames: [[0, {}], [0.12, { drop: -0.06, knL: [0.4, 0, 0], knR: [0.4, 0, 0], hipL: [-0.3, 0, 0], hipR: [-0.3, 0, 0], spine: [0.2, 0, 0] }],
+               [0.36, { drop: -0.445, knL: [1.57, 0, 0], knR: [1.57, 0, 0], hipL: [-0.06, 0, 0.04], hipR: [-0.06, 0, -0.04], anL: [-0.55, 0, 0], anR: [-0.55, 0, 0], spine: [0.38, 0, 0], chest: [0.26, 0, 0], head: [0.32, 0, 0] }],
+               [0.78, { drop: -0.445, knL: [1.57, 0, 0], knR: [1.57, 0, 0], hipL: [-0.06, 0, 0.04], hipR: [-0.06, 0, -0.04], anL: [-0.55, 0, 0], anR: [-0.55, 0, 0], spine: [0.3, 0, 0], chest: [0.22, 0, 0], head: [0.24, 0, 0] }],
+               [0.9, { drop: -0.2, knL: [0.9, 0, 0], knR: [0.9, 0, 0], hipL: [-0.55, 0, 0], hipR: [-0.55, 0, 0], spine: [0.25, 0, 0] }], [1, {}]],
+      ik: { L: { n: "chest", o: [0.055, 0.2, 0.12], pole: [1, -0.7, 0.1] }, R: { n: "chest", o: [-0.075, 0.17, 0.12], pole: [-1, -0.7, 0.1] } } },
+    /* the belly: folds right over, hugging it, knees bent */
+    abdomen: { dur: 1.8, ikw: UP,
+      frames: [[0, {}], [0.22, { spine: [0.72, 0, 0], chest: [0.4, 0, 0], head: [0.2, 0, 0], neck: [0.1, 0, 0], hipL: [-0.42, 0, 0], hipR: [-0.42, 0, 0], knL: [0.5, 0, 0], knR: [0.5, 0, 0], anL: [-0.12, 0, 0], anR: [-0.12, 0, 0], drop: -0.06, shift: -0.05 }],
+               [0.5, { spine: [0.82, 0, 0], chest: [0.46, 0, 0], head: [0.24, 0, 0], neck: [0.12, 0, 0], hipL: [-0.48, 0, 0], hipR: [-0.48, 0, 0], knL: [0.56, 0, 0], knR: [0.56, 0, 0], anL: [-0.14, 0, 0], anR: [-0.14, 0, 0], drop: -0.07, shift: -0.055 }],
+               [0.78, { spine: [0.74, 0, 0], chest: [0.4, 0, 0], head: [0.2, 0, 0], neck: [0.1, 0, 0], hipL: [-0.42, 0, 0], hipR: [-0.42, 0, 0], knL: [0.5, 0, 0], knR: [0.5, 0, 0], anL: [-0.12, 0, 0], anR: [-0.12, 0, 0], drop: -0.06, shift: -0.05 }], [1, {}]],
+      ik: { L: { n: "spine", o: [0.06, 0.07, 0.12], pole: [1, -0.25, -0.2] }, R: { n: "spine", o: [-0.06, 0.1, 0.12], pole: [-1, -0.25, -0.2] } } },
+    /* the groin: a scandalised recoil, hands straight down in front, legs crossed */
+    pelvis: { dur: 2.0, ikw: [[0, 0], [0.12, 1], [0.8, 1], [1, 0]],
+      frames: [[0, {}], [0.12, { spine: [-0.14, 0, 0], chest: [-0.08, 0, 0], head: [-0.16, 0, 0], hipL: [-0.14, 0.12, -0.24], hipR: [0.05, -0.1, 0.2], knL: [0.22, 0, 0], knR: [0.18, 0, 0], drop: -0.018 }],
+               [0.8, { spine: [-0.1, 0, 0], chest: [-0.06, 0, 0], head: [-0.12, 0, 0], hipL: [-0.13, 0.12, -0.22], hipR: [0.05, -0.1, 0.19], knL: [0.2, 0, 0], knR: [0.16, 0, 0], drop: -0.016 }], [1, {}]],
+      ik: { L: { n: "hips", o: [0.03, -0.075, 0.135], pole: [1, -0.15, 0.1] }, R: { n: "hips", o: [-0.03, -0.075, 0.135], pole: [-1, -0.15, 0.1] } } },
+    /* an arm: it jerks, the other hand comes across and rubs it, and he shakes his head at you */
+    armL: { dur: 2.0, ikw: [[0, 0], [0.16, 1], [0.84, 1], [1, 0]],
+      frames: [[0, {}], [0.06, { shL: [0, 0, 0.32], elL: [-0.25, 0, 0] }], [0.2, { shL: [-0.12, 0, 0.12], elL: [-0.35, 0, 0], chest: [0.06, -0.18, 0] }],
+               [0.84, { shL: [-0.12, 0, 0.12], elL: [-0.35, 0, 0], chest: [0.06, -0.14, 0] }], [1, {}]],
+      ik: { R: { n: "shL", o: [0.03, -0.15, 0.065], pole: [-0.3, -1, 0.65], slide: [-0.08, -0.24] } }, shake: 1 },
+    armR: { dur: 2.0, ikw: [[0, 0], [0.16, 1], [0.84, 1], [1, 0]],
+      frames: [[0, {}], [0.06, { shR: [0, 0, -0.32], elR: [-0.25, 0, 0] }], [0.2, { shR: [-0.12, 0, -0.12], elR: [-0.35, 0, 0], chest: [0.06, 0.18, 0] }],
+               [0.84, { shR: [-0.12, 0, -0.12], elR: [-0.35, 0, 0], chest: [0.06, 0.14, 0] }], [1, {}]],
+      ik: { L: { n: "shR", o: [-0.03, -0.15, 0.065], pole: [0.3, -1, 0.65], slide: [-0.08, -0.24] } }, shake: 1 },
+    /* a leg: he hops on the other one, bent over, holding the sore one */
+    legL: { dur: 2.2, ikw: [[0, 0], [0.14, 1], [0.84, 1], [1, 0]], hop: 1,
+      frames: [[0, {}], [0.12, { hipL: [-1.5, 0, 0.08], knL: [1.55, 0, 0], anL: [0.3, 0, 0], spine: [0.6, 0, 0], chest: [0.25, 0, 0], head: [0.05, 0, 0], hipR: [-0.15, 0, 0.04], knR: [0.2, 0, 0], drop: -0.03, shift: -0.04 }],
+               [0.84, { hipL: [-1.45, 0, 0.08], knL: [1.5, 0, 0], anL: [0.3, 0, 0], spine: [0.56, 0, 0], chest: [0.22, 0, 0], head: [0.04, 0, 0], hipR: [-0.15, 0, 0.04], knR: [0.2, 0, 0], drop: -0.03, shift: -0.04 }], [1, {}]],
+      ik: { L: { n: "knL", o: [0.03, 0.08, 0.09], pole: [1, 0.2, 0.1] }, R: { n: "knL", o: [-0.06, -0.07, 0.08], pole: [-0.6, 0.1, 0.4] } } },
+    legR: { dur: 2.2, ikw: [[0, 0], [0.14, 1], [0.84, 1], [1, 0]], hop: 1,
+      frames: [[0, {}], [0.12, { hipR: [-1.5, 0, -0.08], knR: [1.55, 0, 0], anR: [0.3, 0, 0], spine: [0.6, 0, 0], chest: [0.25, 0, 0], head: [0.05, 0, 0], hipL: [-0.15, 0, -0.04], knL: [0.2, 0, 0], drop: -0.03, shift: -0.04 }],
+               [0.84, { hipR: [-1.45, 0, -0.08], knR: [1.5, 0, 0], anR: [0.3, 0, 0], spine: [0.56, 0, 0], chest: [0.22, 0, 0], head: [0.04, 0, 0], hipL: [-0.15, 0, -0.04], knL: [0.2, 0, 0], drop: -0.03, shift: -0.04 }], [1, {}]],
+      ik: { R: { n: "knR", o: [-0.03, 0.08, 0.09], pole: [-1, 0.2, 0.1] }, L: { n: "knR", o: [0.06, -0.07, 0.08], pole: [0.6, 0.1, 0.4] } } },
+    /* his back: he straightens right up, shoulders back, chest out, and holds it */
+    back: { dur: 2.3,
+      frames: [[0, {}], [0.2, { spine: [-0.16, 0, 0], chest: [-0.2, 0, 0], neck: [-0.05, 0, 0], head: [-0.12, 0, 0], shL: [0.42, 0, -0.06], shR: [0.42, 0, 0.06], elL: [-0.1, 0, 0], elR: [-0.1, 0, 0], drop: 0.02 }],
+               [0.78, { spine: [-0.14, 0, 0], chest: [-0.18, 0, 0], neck: [-0.04, 0, 0], head: [-0.1, 0, 0], shL: [0.38, 0, -0.06], shR: [0.38, 0, 0.06], elL: [-0.1, 0, 0], elR: [-0.1, 0, 0], drop: 0.02 }], [1, {}]] },
+    /* his backside: both hands clap over it and he turns his head right round to look at you */
+    butt: { dur: 2.4, ikw: [[0, 0], [0.12, 1], [0.82, 1], [1, 0]],
+      frames: [[0, {}], [0.12, { spine: [-0.18, 0, 0], drop: 0.025, anL: [-0.25, 0, 0], anR: [-0.25, 0, 0] }],
+               [0.3, { spine: [-0.16, 0.24, 0], chest: [-0.05, 0.55, 0], neck: [0, 0.45, 0], head: [-0.06, 1.3, 0.05], drop: 0.02, anL: [-0.2, 0, 0], anR: [-0.2, 0, 0] }],
+               [0.82, { spine: [-0.15, 0.22, 0], chest: [-0.05, 0.53, 0], neck: [0, 0.45, 0], head: [-0.06, 1.3, 0.05], drop: 0.02, anL: [-0.2, 0, 0], anR: [-0.2, 0, 0] }], [1, {}]],
+      ik: { L: { n: "hips", o: [0.075, -0.03, -0.165], pole: [1, -0.1, -0.55] }, R: { n: "hips", o: [-0.075, -0.03, -0.165], pole: [-1, -0.1, -0.55] } } },
+    /* spun far too fast: he goes down on his backside, sits there dazed, and gets up */
+    fall: { dur: 3.2,
+      frames: [[0, {}], [0.07, { drop: -0.1, hipL: [-0.5, 0, 0.1], hipR: [-0.5, 0, -0.1], knL: [0.6, 0, 0], knR: [0.6, 0, 0], shL: [-0.5, 0, 0.9], shR: [-0.5, 0, -0.9], spine: [-0.2, 0, 0] }],
+               [0.16, { drop: -0.79, hipL: [-1.48, 0, 0.16], hipR: [-1.48, 0, -0.16], knL: [0.16, 0, 0], knR: [0.16, 0, 0], anL: [-0.3, 0, 0], anR: [-0.3, 0, 0], spine: [0.22, 0, 0], chest: [0.08, 0, 0], head: [0.28, 0, 0], shL: [0.75, 0, 0.32], shR: [0.75, 0, -0.32], elL: [0.15, 0, 0], elR: [0.15, 0, 0] }],
+               [0.6, { drop: -0.79, hipL: [-1.48, 0, 0.16], hipR: [-1.48, 0, -0.16], knL: [0.16, 0, 0], knR: [0.16, 0, 0], anL: [-0.3, 0, 0], anR: [-0.3, 0, 0], spine: [0.26, 0, 0], chest: [0.1, 0, 0], head: [0.3, 0, 0], shL: [0.72, 0, 0.3], shR: [0.72, 0, -0.3], elL: [0.15, 0, 0], elR: [0.15, 0, 0] }],
+               [0.78, { drop: -0.445, knL: [1.57, 0, 0], knR: [1.57, 0, 0], hipL: [-0.1, 0, 0], hipR: [-0.1, 0, 0], anL: [-0.55, 0, 0], anR: [-0.55, 0, 0], spine: [0.3, 0, 0], head: [0.15, 0, 0] }],
+               [0.9, { drop: -0.2, knL: [0.9, 0, 0], knR: [0.9, 0, 0], hipL: [-0.55, 0, 0], hipR: [-0.55, 0, 0], spine: [0.25, 0, 0] }], [1, {}]], daze: 1 }
+  };
+
+  /* ---------------- inverse kinematics ---------------- */
+  function v3(a, b) { return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]; }
+  function dot(a, b) { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; }
+  function len(a) { return Math.hypot(a[0], a[1], a[2]); }
+  function nrm(a) { var l = len(a) || 1; return [a[0] / l, a[1] / l, a[2] / l]; }
+  function scl(a, k) { return [a[0] * k, a[1] * k, a[2] * k]; }
+  function add(a, b) { return [a[0] + b[0], a[1] + b[1], a[2] + b[2]]; }
+  /* a world direction expressed in a node's own frame (its rotation only: no node in the
+     chain is scaled, so the transpose of the 3x3 is the inverse) */
+  function toLocal(node, d) {
+    var m = node.world;
+    return [m[0] * d[0] + m[1] * d[1] + m[2] * d[2], m[4] * d[0] + m[5] * d[1] + m[6] * d[2], m[8] * d[0] + m[9] * d[1] + m[10] * d[2]];
+  }
+  function toWorldDir(node, d) { var m = node.world; return [m[0] * d[0] + m[4] * d[1] + m[8] * d[2], m[1] * d[0] + m[5] * d[1] + m[9] * d[2], m[2] * d[0] + m[6] * d[1] + m[10] * d[2]]; }
+  /* the Euler angles (no twist) that point a limb hanging along -Y in direction d */
+  function aim(d) { d = nrm(d); return [Math.atan2(-d[2], -d[1]), 0, Math.asin(Math.max(-1, Math.min(1, d[0])))]; }
+  var UPPER = 0.315, LOWER = 0.36;
+  function solveArm(R, side, spec, w, slideK) {
+    var N = R.nodes, sh = N["sh" + side], el = N["el" + side], tgtN = N[spec.n];
+    var o = spec.o.slice();
+    if (spec.slide && slideK != null) o[1] = spec.slide[0] + (spec.slide[1] - spec.slide[0]) * slideK;
+    var T = C.xf(tgtN.world, o), S0 = C.xf(sh.world, [0, 0, 0]);
+    var dv = v3(T, S0), d = len(dv), u = nrm(dv);
+    d = Math.max(Math.abs(UPPER - LOWER) + 0.01, Math.min(UPPER + LOWER - 0.005, d));
+    var pole = nrm(toWorldDir(N.chest, spec.pole));
+    var v = v3(pole, scl(u, dot(pole, u))); if (len(v) < 1e-4) v = [0, -1, 0]; v = nrm(v);
+    var ca = (UPPER * UPPER + d * d - LOWER * LOWER) / (2 * UPPER * d), sa = Math.sqrt(Math.max(0, 1 - ca * ca));
+    var E = add(S0, add(scl(u, UPPER * ca), scl(v, UPPER * sa)));
+    var cur = [sh.r[0], sh.r[1], sh.r[2]], cel = [el.r[0], el.r[1], el.r[2]];
+    /* shoulder: point the upper arm at the elbow, in the chest's frame */
+    var a1 = aim(toLocal(sh.parent, v3(E, S0)));
+    sh.r[0] = cur[0] + (a1[0] - cur[0]) * w; sh.r[1] = cur[1] * (1 - w); sh.r[2] = cur[2] + (a1[2] - cur[2]) * w;
+    R.update();
+    /* elbow: point the forearm at the target, in the upper arm's frame */
+    var Ew = C.xf(el.world, [0, 0, 0]), a2 = aim(toLocal(sh, v3(T, Ew)));
+    el.r[0] = cel[0] + (a2[0] - cel[0]) * w; el.r[1] = cel[1] * (1 - w); el.r[2] = cel[2] + (a2[2] - cel[2]) * w;
+    R.update();
+  }
+
+  /* compose a frame: reaction + spin balance + idle, then the hands */
+  function poseAt(now) {
+    var R = S.rig, P = {}, rx = S.rx, u = 0, ikw = 0, slideK = null, t = (now - S.t0) / 1000;
+    if (rx) {
+      u = S.freeze != null ? S.freeze : Math.min(1, (now - rx.start) / (rx.def.dur * 1000));   /* freeze: for tests */
+      P = C.sample(rx.def.frames, u);
+      if (rx.def.ikw) { var kk = rx.def.ikw; ikw = C.sample(kk.map(function (f) { return [f[0], { w: f[1] }]; }), u).w || 0; }
+      var tt = u * rx.def.dur;
+      if (rx.def.shake) {   /* shaking his head at you */
+        var amp = Math.max(0, Math.min(1, (u - 0.18) / 0.1)) * Math.max(0, Math.min(1, (0.86 - u) / 0.1));
+        C.addInto(P, { head: [0, Math.sin(tt * 13) * 0.42 * amp, 0], neck: [0, Math.sin(tt * 13) * 0.12 * amp, 0] }, 1);
+        slideK = 0.5 + 0.5 * Math.sin(tt * 11);   /* the rubbing hand slides up and down */
+      }
+      if (rx.def.hop) {     /* hopping on the good leg */
+        var hp = Math.max(0, Math.min(1, (u - 0.12) / 0.08)) * Math.max(0, Math.min(1, (0.86 - u) / 0.1));
+        var ph = Math.abs(Math.sin(tt * PI * 2.6));
+        C.addInto(P, { drop: ph * 0.075 * hp, knL: [(1 - ph) * 0.18 * hp, 0, 0], knR: [(1 - ph) * 0.18 * hp, 0, 0] }, 1);
+      }
+      if (rx.def.daze) {
+        var dz = u > 0.16 && u < 0.62 ? 1 : 0;
+        C.addInto(P, { head: [0, Math.sin(tt * 5) * 0.3 * dz, Math.sin(tt * 3.7) * 0.18 * dz] }, 1);
+      }
+      if (u >= 1 && S.freeze == null) S.rx = null;
+    }
+    /* thrown off balance: arms out, feet stepping wide as the spring rocks him */
+    var ao = S.armsOut;
+    if (ao > 0.001) C.addInto(P, { shL: [-0.15, 0, 1.15], shR: [-0.15, 0, -1.15], elL: [0.1, 0, 0.25], elR: [0.1, 0, -0.25] }, ao);
+    var tl = S.tilt;
+    if (Math.abs(tl) > 0.002) C.addInto(P, { hipL: [0, 0, Math.max(0, -tl) * 0.9 + 0.05 * Math.abs(tl)], hipR: [0, 0, -Math.max(0, tl) * 0.9 - 0.05 * Math.abs(tl)], spine: [0, 0, -tl * 0.5], head: [0, 0, -tl * 0.6] }, 1);
+    /* breathing, so he is never completely still */
+    C.addInto(P, { chest: [Math.sin(t * 1.5) * 0.014, 0, 0], spine: [Math.sin(t * 1.5 + 0.6) * 0.006, 0, 0], head: [Math.sin(t * 0.7) * 0.01, Math.sin(t * 0.43) * 0.05, 0] }, 1);
+    R.pose(P);
+    R.nodes.spin.r[1] = S.ang;
+    R.nodes.bal.r[0] = S.pitch; R.nodes.bal.r[2] = S.tilt;
+    R.update();
+    if (rx && ikw > 0.001 && rx.def.ik) {
+      if (rx.def.ik.L) solveArm(R, "L", rx.def.ik.L, ikw, slideK);
+      if (rx.def.ik.R) solveArm(R, "R", rx.def.ik.R, ikw, slideK);
+    }
+  }
+
+  /* ---------------- spin physics ---------------- */
+  function physics(dt) {
+    if (!S.drag) {
+      S.ang += S.vel * dt;
+      S.vel *= Math.exp(-1.25 * dt);
+      if (Math.abs(S.vel) < 0.03) S.vel = 0;
+    }
+    var v = Math.abs(S.vel);
+    /* he leans into the spin; the spring makes him wobble back and forth on his feet */
+    var target = Math.max(-0.3, Math.min(0.3, -S.vel * 0.032));
+    var acc = -36 * (S.tilt - target) - 4.2 * S.tiltV;
+    S.tiltV += acc * dt; S.tilt += S.tiltV * dt;
+    var pacc = -30 * (S.pitch - Math.min(0.12, v * 0.008)) - 4 * S.pitchV;
+    S.pitchV += pacc * dt; S.pitch += S.pitchV * dt;
+    var aoT = Math.max(0, Math.min(1, (v - 2) / 5));
+    if (Math.abs(S.tilt) > 0.12) aoT = Math.max(aoT, Math.min(1, (Math.abs(S.tilt) - 0.12) * 4));
+    S.armsOut += (aoT - S.armsOut) * Math.min(1, dt * 7);
+  }
+  function release() {
+    var v = Math.abs(S.vel);
+    if (typeof S.cb.reduced === "function" && S.cb.reduced()) return;
+    if (v > 15) {           /* far too fast: down he goes */
+      S.vel *= 0.35;
+      react("fall");
+      setTimeout(function () { snd("thump"); setTimeout(function () { snd("groan"); }, 260); }, 470);
+    } else if (v > 7.5) {   /* fast enough to stagger */
+      S.tiltV += (S.vel > 0 ? -1 : 1) * Math.min(3.8, v * 0.28);
+      snd(v > 11 ? "boing" : "wobble");
+    }
+  }
+  function snd(k) { try { if (S.cb.sound) S.cb.sound(k); } catch (e) {} }
+
+  function react(key) {
+    var def = RX[key]; if (!def || !S.rig) return;
+    S.rx = { def: def, key: key, start: performance.now() };
+    kick();
+  }
+
+  /* ---------------- WebGL ---------------- */
+  var VS = "attribute vec3 aP;attribute vec3 aN;uniform mat4 uM;uniform mat4 uVP;uniform mat3 uNM;varying vec3 vW;varying vec3 vN;" +
+    "void main(){vec4 w=uM*vec4(aP,1.0);vW=w.xyz;vN=uNM*aN;gl_Position=uVP*w;}";
+  /* No gl_FrontFacing flip: the meshes wind clockwise, so that test called every visible face a
+     back face and turned the normals inward, which washed him out to grey. The normals the
+     shape builders compute already point outward, and only outward faces are ever visible.
+     Glossy plastic: a strong warm key light from the front left, a dim cool fill, a back light
+     that rims the edges, low ambient so the shadowed side stays dark, two specular lobes (a
+     tight clearcoat on a broader sheen), and a filmic curve that keeps the yellow saturated
+     instead of washing it out. */
+  var FS = "precision mediump float;varying vec3 vW;varying vec3 vN;uniform vec3 uCam;uniform vec3 uCol;uniform vec3 uEmi;uniform vec3 uSp;" +
+    "vec3 aces(vec3 x){return clamp((x*(2.51*x+0.03))/(x*(2.43*x+0.59)+0.14),0.0,1.0);}" +
+    "void main(){vec3 N=normalize(vN);vec3 V=normalize(uCam-vW);" +
+    "vec3 L1=normalize(vec3(-0.6,0.75,0.75));vec3 L2=normalize(vec3(0.9,0.2,0.35));vec3 L3=normalize(vec3(0.35,0.5,-0.85));" +
+    "float h=N.y*0.5+0.5;vec3 amb=mix(vec3(0.015,0.013,0.014),vec3(0.075,0.08,0.1),h);" +
+    "float d1=max(dot(N,L1),0.0),d2=max(dot(N,L2),0.0),d3=max(dot(N,L3),0.0);" +
+    "vec3 dif=vec3(1.35,1.25,1.1)*d1+vec3(0.1,0.13,0.2)*d2+vec3(0.3,0.32,0.4)*d3;" +
+    "float s1=pow(max(dot(N,normalize(L1+V)),0.0),uSp.y);float s3=pow(max(dot(N,normalize(L3+V)),0.0),uSp.y*0.7);" +
+    "float sh=pow(max(dot(N,normalize(L1+V)),0.0),uSp.y*0.18);" +
+    "vec3 spec=vec3(1.0,0.97,0.92)*(s1*uSp.x*1.6+sh*uSp.x*0.12)+vec3(0.75,0.8,1.0)*s3*uSp.x*0.9;" +
+    "float f=pow(1.0-max(dot(N,V),0.0),4.0)*uSp.z;" +
+    "vec3 c=uCol*(amb+dif)+spec+vec3(0.55,0.6,0.75)*f*(0.25+d3)+uEmi;" +
+    "gl_FragColor=vec4(pow(aces(c*1.05),vec3(0.4545)),1.0);}";
+  var SVS = "attribute vec3 aP;uniform mat4 uM;uniform mat4 uVP;uniform mat4 uS;void main(){gl_Position=uVP*uS*uM*vec4(aP,1.0);}";
+  var SFS = "precision mediump float;uniform float uA;void main(){gl_FragColor=vec4(0.0,0.0,0.0,uA);}";
+  var BVS = "attribute vec3 aP;uniform mat4 uVP;uniform vec3 uC;uniform float uR;varying vec2 vU;void main(){vU=aP.xz;gl_Position=uVP*vec4(uC.x+aP.x*uR,0.002,uC.z+aP.z*uR,1.0);}";
+  var BFS = "precision mediump float;varying vec2 vU;uniform float uA;void main(){float d=length(vU);float a=uA*(1.0-smoothstep(0.2,1.0,d));gl_FragColor=vec4(0.0,0.0,0.0,a);}";
+  function shader(gl, t, src) { var s = gl.createShader(t); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; }
+  function program(gl, vs, fs) {
+    var p = gl.createProgram(); gl.attachShader(p, shader(gl, gl.VERTEX_SHADER, vs)); gl.attachShader(p, shader(gl, gl.FRAGMENT_SHADER, fs)); gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+    var u = {}, n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS), i; for (i = 0; i < n; i++) { var a = gl.getActiveUniform(p, i); u[a.name] = gl.getUniformLocation(p, a.name); }
+    return { p: p, u: u, aP: gl.getAttribLocation(p, "aP"), aN: gl.getAttribLocation(p, "aN") };
+  }
+  function upload(gl, g) {
+    if (g.__b) return g.__b;
+    var b = { p: gl.createBuffer(), n: gl.createBuffer(), i: gl.createBuffer(), c: g.i.length };
+    gl.bindBuffer(gl.ARRAY_BUFFER, b.p); gl.bufferData(gl.ARRAY_BUFFER, g.p, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, b.n); gl.bufferData(gl.ARRAY_BUFFER, g.n, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, b.i); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, g.i, gl.STATIC_DRAW);
+    g.__b = b; return b;
+  }
+  var CAM = { eye: [0, 1.08, 4.35], at: [0, 0.93, 0], fov: 30 * PI / 180 };   /* framed so a fall still fits */
+  var LIGHT = (function () { var l = [-0.55, 0.8, 0.7], k = Math.hypot(l[0], l[1], l[2]); return [l[0] / k, l[1] / k, l[2] / k]; })();
+  function shadowMat() {
+    var o = new Float32Array(16); o[0] = 1; o[10] = 1; o[15] = 1;
+    o[4] = -LIGHT[0] / LIGHT[1]; o[6] = -LIGHT[2] / LIGHT[1]; o[5] = 0; o[13] = 0.003;
+    return o;
+  }
+  var SHM = shadowMat(), QUAD = { p: new Float32Array([-1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1]), n: new Float32Array(12), i: new Uint16Array([0, 1, 2, 0, 2, 3]) };
+  function viewProj() {
+    var cv = S.cv, asp = (cv.width / Math.max(1, cv.height)) || 0.66;
+    var V = C.lookAt(CAM.eye, CAM.at, [0, 1, 0]), P = C.persp(CAM.fov, asp, 0.1, 30);
+    return C.mul(P, V);
+  }
+  function draw() {
+    var gl = S.gl, cv = S.cv, dpr = Math.min(2, window.devicePixelRatio || 1);
+    var w = Math.max(1, Math.round(cv.clientWidth * dpr)), h = Math.max(1, Math.round(cv.clientHeight * dpr));
+    if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+    gl.viewport(0, 0, w, h);
+    gl.clearColor(0, 0, 0, 0); gl.clearStencil(0); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+    var VP = viewProj(), M = S.rig.meshes, i, m, b;
+    /* the floor: a soft contact shadow under his feet, then his cast shadow, each pixel once */
+    gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false); gl.disable(gl.DEPTH_TEST);
+    var hp = C.xf(S.rig.nodes.hips.world, [0, 0, 0]);
+    gl.useProgram(S.bprog.p); b = upload(gl, QUAD);
+    gl.uniformMatrix4fv(S.bprog.u.uVP, false, VP); gl.uniform3f(S.bprog.u.uC, hp[0], 0, hp[2]);
+    gl.uniform1f(S.bprog.u.uR, 0.5); gl.uniform1f(S.bprog.u.uA, 0.3);
+    gl.bindBuffer(gl.ARRAY_BUFFER, b.p); gl.enableVertexAttribArray(S.bprog.aP); gl.vertexAttribPointer(S.bprog.aP, 3, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, b.i); gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
+    gl.enable(gl.STENCIL_TEST); gl.stencilFunc(gl.EQUAL, 0, 0xff); gl.stencilOp(gl.KEEP, gl.KEEP, gl.INCR);
+    gl.useProgram(S.sprog.p); gl.uniformMatrix4fv(S.sprog.u.uVP, false, VP); gl.uniformMatrix4fv(S.sprog.u.uS, false, SHM); gl.uniform1f(S.sprog.u.uA, 0.26);
+    for (i = 0; i < M.length; i++) { m = M[i]; b = upload(gl, m.mesh.geo);
+      gl.uniformMatrix4fv(S.sprog.u.uM, false, m.world);
+      gl.bindBuffer(gl.ARRAY_BUFFER, b.p); gl.enableVertexAttribArray(S.sprog.aP); gl.vertexAttribPointer(S.sprog.aP, 3, gl.FLOAT, false, 0, 0);
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, b.i); gl.drawElements(gl.TRIANGLES, b.c, gl.UNSIGNED_SHORT, 0); }
+    gl.disable(gl.STENCIL_TEST); gl.disable(gl.BLEND); gl.depthMask(true); gl.enable(gl.DEPTH_TEST);
+    /* the dummy himself */
+    var pr = S.prog, now = performance.now(), sel = AREA_PARTS[S.sel] || [];
+    gl.useProgram(pr.p); gl.uniformMatrix4fv(pr.u.uVP, false, VP); gl.uniform3fv(pr.u.uCam, CAM.eye);
+    for (i = 0; i < M.length; i++) { m = M[i]; var mm = m.mesh, mat = mm.mat; b = upload(gl, mm.geo);
+      gl.uniformMatrix4fv(pr.u.uM, false, m.world); gl.uniformMatrix3fv(pr.u.uNM, false, C.nrm3(m.world));
+      gl.uniform3fv(pr.u.uCol, mat.c); gl.uniform3f(pr.u.uSp, mat.sp, mat.sh, mat.rim);
+      var e = sel.indexOf(mm.part) >= 0 ? 0.045 : 0, fl = S.flash[mm.part];
+      if (fl) { var k = 1 - (now - fl) / 650; if (k > 0) e += 0.22 * k; else delete S.flash[mm.part]; }
+      gl.uniform3f(pr.u.uEmi, e * 0.5, e * 0.9, e * 0.85);
+      gl.bindBuffer(gl.ARRAY_BUFFER, b.p); gl.enableVertexAttribArray(pr.aP); gl.vertexAttribPointer(pr.aP, 3, gl.FLOAT, false, 0, 0);
+      gl.bindBuffer(gl.ARRAY_BUFFER, b.n); gl.enableVertexAttribArray(pr.aN); gl.vertexAttribPointer(pr.aN, 3, gl.FLOAT, false, 0, 0);
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, b.i); gl.drawElements(gl.TRIANGLES, b.c, gl.UNSIGNED_SHORT, 0); }
+  }
+  function frame() {
+    S.raf = 0;
+    if (!S.ok || !S.cv || !S.cv.isConnected) return;       /* off screen: stop until mounted again */
+    var now = performance.now(), dt = Math.min(0.05, (now - (S.last || now)) / 1000); S.last = now;
+    physics(dt); poseAt(now);
+    if (!document.hidden) draw();
+    S.raf = requestAnimationFrame(frame);
+  }
+  function kick() { if (!S.raf && S.ok) { S.last = performance.now(); S.raf = requestAnimationFrame(frame); } }
+
+  /* ---------------- touch: a tap picks a part, a drag spins him ---------------- */
+  function ray(cx, cy) {
+    var r = S.cv.getBoundingClientRect(), nx = (cx - r.left) / r.width * 2 - 1, ny = 1 - (cy - r.top) / r.height * 2;
+    var IV = C.inv(viewProj()); if (!IV) return null;
+    function un(z) { var x = IV[0] * nx + IV[4] * ny + IV[8] * z + IV[12], y = IV[1] * nx + IV[5] * ny + IV[9] * z + IV[13], zz = IV[2] * nx + IV[6] * ny + IV[10] * z + IV[14], w = IV[3] * nx + IV[7] * ny + IV[11] * z + IV[15]; return [x / w, y / w, zz / w]; }
+    var a = un(-1), b = un(1); return { o: a, d: nrm(v3(b, a)) };
+  }
+  /* the nearest triangle under the finger, across every mesh, in each mesh's own space */
+  function pick(cx, cy) {
+    var R = ray(cx, cy); if (!R) return null;
+    var best = null, M = S.rig.meshes, i;
+    for (i = 0; i < M.length; i++) {
+      var m = M[i], IM = C.inv(m.world); if (!IM) continue;
+      var o = C.xf(IM, R.o), d = C.xf(IM, R.d, 0), g = m.mesh.geo, P = g.p, I = g.i, j;
+      for (j = 0; j < I.length; j += 3) {
+        var a0 = I[j] * 3, b0 = I[j + 1] * 3, c0 = I[j + 2] * 3;
+        var e1x = P[b0] - P[a0], e1y = P[b0 + 1] - P[a0 + 1], e1z = P[b0 + 2] - P[a0 + 2];
+        var e2x = P[c0] - P[a0], e2y = P[c0 + 1] - P[a0 + 1], e2z = P[c0 + 2] - P[a0 + 2];
+        var px = d[1] * e2z - d[2] * e2y, py = d[2] * e2x - d[0] * e2z, pz = d[0] * e2y - d[1] * e2x;
+        var det = e1x * px + e1y * py + e1z * pz; if (Math.abs(det) < 1e-9) continue;
+        var id = 1 / det, tx = o[0] - P[a0], ty = o[1] - P[a0 + 1], tz = o[2] - P[a0 + 2];
+        var uu = (tx * px + ty * py + tz * pz) * id; if (uu < 0 || uu > 1) continue;
+        var qx = ty * e1z - tz * e1y, qy = tz * e1x - tx * e1z, qz = tx * e1y - ty * e1x;
+        var vv = (d[0] * qx + d[1] * qy + d[2] * qz) * id; if (vv < 0 || uu + vv > 1) continue;
+        var t = (e2x * qx + e2y * qy + e2z * qz) * id; if (t <= 0) continue;
+        var hl = [o[0] + d[0] * t, o[1] + d[1] * t, o[2] + d[2] * t], hw = C.xf(m.world, hl), dist = len(v3(hw, R.o));
+        if (!best || dist < best.dist) best = { dist: dist, m: m, local: hl };
+      }
+    }
+    if (!best) return null;
+    var part = best.m.mesh.part;
+    /* the same piece of torso is his chest from the front and his back from behind */
+    if (best.m.mesh.fb && best.local[2] < -0.012) part = part === "pelvis" ? "butt" : "back";
+    return part;
+  }
+  function bind(cv) {
+    cv.addEventListener("pointerdown", function (e) {
+      if (S.drag) return;
+      S.drag = { id: e.pointerId, x: e.clientX, y: e.clientY, a0: S.ang, moved: false, lx: e.clientX, lt: performance.now() };
+      S.vel = 0;
+      try { cv.setPointerCapture(e.pointerId); } catch (x) {}
+      kick();
+    });
+    cv.addEventListener("pointermove", function (e) {
+      var D = S.drag; if (!D || D.id !== e.pointerId) return;
+      var dx = e.clientX - D.x;
+      if (!D.moved && Math.abs(dx) + Math.abs(e.clientY - D.y) > 7) D.moved = true;
+      if (!D.moved) return;
+      e.preventDefault();
+      var now = performance.now(), a = D.a0 + dx * 0.0125, dtm = Math.max(6, now - D.lt);
+      var inst = (a - S.ang) / dtm * 1000;
+      S.vel = S.vel * 0.5 + inst * 0.5; S.ang = a; D.lt = now;
+    });
+    function up(e) {
+      var D = S.drag; if (!D || D.id !== e.pointerId) return;
+      try { cv.releasePointerCapture(e.pointerId); } catch (x) {}
+      S.drag = null;
+      if (D.moved) { if (performance.now() - D.lt > 90) S.vel *= 0.2; release(); return; }
+      var part = pick(e.clientX, e.clientY);
+      if (part && S.cb.tap) { S.flash[part] = performance.now(); try { S.cb.tap(part, e.clientX, e.clientY); } catch (x) {} }
+    }
+    cv.addEventListener("pointerup", up);
+    cv.addEventListener("pointercancel", function (e) { if (S.drag && S.drag.id === e.pointerId) S.drag = null; });
+    cv.addEventListener("webglcontextlost", function (e) { e.preventDefault(); S.ok = false; S.dead = true; if (S.cb.lost) S.cb.lost(); });
+  }
+  function init() {
+    if (S.ok || S.dead) return S.ok;
+    try {
+      var cv = document.createElement("canvas"); cv.className = "bm3dcv";
+      cv.setAttribute("role", "img"); cv.setAttribute("aria-label", "3D body. Drag to turn him round, tap a part to see what is there.");
+      var gl = cv.getContext("webgl", { alpha: true, antialias: true, stencil: true, premultipliedAlpha: true, preserveDrawingBuffer: false });
+      if (!gl) { S.dead = true; return false; }
+      S.gl = gl; S.cv = cv;
+      S.prog = program(gl, VS, FS); S.sprog = program(gl, SVS, SFS); S.bprog = program(gl, BVS, BFS);
+      gl.enable(gl.DEPTH_TEST);
+      S.rig = new C.Rig(); S.rig.pose({}); S.t0 = performance.now();
+      bind(cv); S.ok = true;
+    } catch (e) { S.dead = true; S.ok = false; try { console.warn("3D body unavailable:", e && e.message); } catch (x) {} }
+    return S.ok;
+  }
+  function mount(el) {
+    if (!init()) return false;
+    if (S.cv.parentNode !== el) el.appendChild(S.cv);
+    el.classList.add("live"); S.mount = el; kick();
+    return true;
+  }
+  return {
+    mount: mount, react: react, live: function () { return S.ok && !!S.cv && S.cv.isConnected; },
+    select: function (area) { S.sel = area || ""; },
+    on: function (k, f) { S.cb[k] = f; }, area: function (p) { return AREA[p]; },
+    /* used by the tests */
+    _s: S, _pick: pick, _RX: RX, _release: release,
+    _project: function (w) { var VP = viewProj(), x = VP[0] * w[0] + VP[4] * w[1] + VP[8] * w[2] + VP[12], y = VP[1] * w[0] + VP[5] * w[1] + VP[9] * w[2] + VP[13], ww = VP[3] * w[0] + VP[7] * w[1] + VP[11] * w[2] + VP[15], r = S.cv.getBoundingClientRect();
+      return [r.left + (x / ww * 0.5 + 0.5) * r.width, r.top + (0.5 - y / ww * 0.5) * r.height]; }
+  };
+})();
+/* D3:END */
+
+/* ---------- the 3D dummy, wired into the app ----------
+   bodyStage() leaves a placeholder that still contains the old SVG figure. When WebGL starts,
+   the dummy's canvas is moved into the placeholder and the SVG is hidden; if WebGL is not
+   available, or the context is lost, the SVG simply stays. The canvas is moved, never rebuilt,
+   so a re-render of the page does not throw away the dummy or the way you have turned him. */
+var D3_PARTS = ["head", "neck", "chest", "abdomen", "pelvis", "back", "butt", "armL", "armR", "legL", "legR"];
+var D3_LABEL = { head: "Head", neck: "Neck", chest: "Chest", abdomen: "Abdomen", pelvis: "Pelvis", back: "Back", butt: "Backside", armL: "Left arm", armR: "Right arm", legL: "Left leg", legR: "Right leg" };
+function bodyStage(ctx, sel) {
+  /* buttons for keyboard and screen-reader users, who cannot aim at a canvas; each one is a
+     real tap on that part, so it filters the list and plays the reaction too */
+  var sr = '<div class="bm3dsr">' + D3_PARTS.map(function (p) {
+    return '<button type="button" data-barea="' + esc(D3GL.area(p)) + '" data-bpart="' + p + '">' + esc(D3_LABEL[p]) + '</button>';
+  }).join("") + '</div>';
+  return '<div class="bm3d" data-ctx="' + ctx + '"><div class="bm3dfb">' + bodySVG(sel) + '</div>' + sr +
+    '<p class="bm3dhint" aria-hidden="true">Drag to turn him · tap a part</p></div>';
+}
+/* areas that exist in one list may not exist in the other (the Body Systems list has no Back) */
+function d3AreaFor(ctx, area) {
+  if (ctx !== "body") return area;
+  var has = (DB.BODY || []).some(function (r) { return r.area === area; });
+  return has ? area : area === "Back" ? "Chest and ribs" : area === "Buttocks" ? "Pelvis and groin" : area;
+}
+function d3Pop(host, text, x, y) {
+  if (!host) return;
+  var r = host.getBoundingClientRect(), el = document.createElement("span");
+  el.className = "bm3dpop"; el.setAttribute("role", "status"); el.textContent = text;
+  el.style.left = Math.max(8, Math.min(r.width - 8, x - r.left)) + "px";
+  el.style.top = Math.max(16, y - r.top) + "px";
+  host.appendChild(el);
+  setTimeout(function () { el.classList.add("out"); setTimeout(function () { if (el.parentNode) el.remove(); }, 320); }, 1300);
+}
+function d3Mount() {
+  if (typeof D3GL === "undefined") return;
+  var hosts = document.querySelectorAll(".bm3d"); if (!hosts.length) return;
+  var h = hosts[hosts.length - 1];
+  if (!D3GL.mount(h)) return;
+  var ctx = h.getAttribute("data-ctx");
+  D3GL.select(ctx === "body" ? S.barea : S.anArea);
+}
+try { window.__D3GL = D3GL; } catch (e) {}   /* a handle for the automated tests */
+D3GL.on("sound", function (k) { try { anatSnd(k); } catch (e) {} });
+D3GL.on("reduced", function () { return typeof hfxOk === "function" && !hfxOk(); });
+D3GL.on("lost", function () { var h = document.querySelector(".bm3d.live"); if (h) h.classList.remove("live"); });
+D3GL.on("tap", function (part, x, y) {
+  var host = document.querySelector(".bm3d.live"), ctx = host ? host.getAttribute("data-ctx") : "anat";
+  var area = d3AreaFor(ctx, D3GL.area(part));
+  if (ctx === "body") { S.barea = area; S.breg = null; }
+  else { S.anArea = area; S.anGrp = ""; S.anId = ""; }
+  render();
+  /* the area name pops up where you touched him, then the reaction plays */
+  var lab = D3_LABEL[part], txt = (lab === area || area.toLowerCase().indexOf(lab.toLowerCase()) === 0) ? area : lab + " · " + area;
+  d3Pop(document.querySelector(".bm3d.live"), txt, x, y);
+  try { bodyReact(area, null, part); } catch (e) {}
+  var list = document.querySelector(".bodylist"); if (list && list.getBoundingClientRect().top > window.innerHeight) list.scrollIntoView({ block: "start", behavior: "smooth" });
+});
+if (typeof render === "function") (function () {
+  var r0 = render;
+  render = function () { var v = r0.apply(this, arguments); try { d3Mount(); } catch (e) {} return v; };
+})();
 function bodyView() {
   var B = DB.BODY || [], area = S.barea || "", cur = S.breg && B.filter(function (r) { return r.id === S.breg; })[0];
   var list = B.filter(function (r) { return !area || r.area === area; });
-  var c = '<div class="bodywrap"><div class="bodyfig">' + bodySVG(area) + '<button class="chip' + (area === "Whole body" ? '" aria-pressed="true' : '') + '" data-barea="Whole body">Whole body</button>' + (area ? '<button class="linkish" data-barea="">Show all</button>' : '') + '</div><div class="bodylist"><p class="muted small">' + (area ? esc(area) + ': ' : 'Tap the body or pick a part: ') + list.length + ' part' + (list.length === 1 ? '' : 's') + '</p><div class="chips">' + list.map(function (r) { return '<button class="chip" data-breg="' + r.id + '" aria-pressed="' + (cur && cur.id === r.id) + '">' + esc(r.name) + '</button>'; }).join("") + '</div></div></div>';
+  var c = '<div class="bodywrap"><div class="bodyfig">' + bodyStage("body", area) + '<button class="chip' + (area === "Body-wide" ? '" aria-pressed="true' : '') + '" data-barea="Body-wide">Body-wide</button>' + (area ? '<button class="linkish" data-barea="">Show all</button>' : '') + '</div><div class="bodylist"><p class="muted small">' + (area ? esc(area) + ': ' : 'Tap the body or pick a part: ') + list.length + ' part' + (list.length === 1 ? '' : 's') + '</p><div class="chips">' + list.map(function (r) { return '<button class="chip" data-breg="' + r.id + '" aria-pressed="' + (cur && cur.id === r.id) + '">' + esc(r.name) + '</button>'; }).join("") + '</div></div></div>';
   if (!cur) return c;
   function row(x, cls) { return DB.drugs[x.d] ? '<button class="otcrow ' + cls + '" data-drug="' + x.d + '"><strong>' + esc(nameOf(x.d)) + '</strong><span>' + esc(x.how) + '</span></button>' : ''; }
   c += '<section class="sickcard"><span class="eyebrow">' + esc(cur.area) + '</span><h2>' + esc(cur.name) + '</h2><p>' + esc(cur.what) + '</p>';
@@ -7707,7 +9799,7 @@ document.addEventListener("click", function (e) {
   if (d.evtab != null) { S.evTab = d.evtab || null; S.evq = ""; S.pbq = ""; S.pbUse = ""; S.cond = null; S.sick = null; S.breg = null; render(); return window.scrollTo(0, 0); }
   if (d.sick) { S.sick = d.sick; render(); var s = document.querySelector(".sickcard"); if (s) s.scrollIntoView({ block: "start", behavior: SET().motion ? "auto" : "smooth" }); return; }
   if (d.normtab) { S.normTab = d.normtab; return render(); }
-  if (d.barea != null) { S.barea = d.barea; S.breg = null; return render(); }
+  if (d.barea != null) { var bp0 = t.getAttribute("data-bpart") || ""; S.barea = d.barea; S.breg = null; render(); try { bodyReact(d.barea, null, bp0); } catch (e2) {} return; }
   if (d.breg) { S.breg = d.breg; render(); var b = document.querySelector(".sickcard"); if (b) b.scrollIntoView({ block: "start", behavior: SET().motion ? "auto" : "smooth" }); }
 });
 document.addEventListener("keydown", function (e) { if ((e.key === "Enter" || e.key === " ") && e.target.dataset && e.target.dataset.barea) { e.preventDefault(); S.barea = e.target.dataset.barea; S.breg = null; render(); } });
@@ -8204,7 +10296,8 @@ var holFwDone = false;
 function holOpenFx() {
   var h = holToday(); if (!h || holFwDone) return;
   holFwDone = true; holOpenSnd(h);
-  if ((h.id !== "july4" && h.id !== "newyear" && holKey(h) !== "thanksgiving") || !hfxOk()) return; HFX.quiet = false; HFX.on = h.id; hfxLayer();
+  if ((h.id !== "july4" && h.id !== "newyear" && holKey(h) !== "thanksgiving") || !hfxOk()) return;
+  if (typeof confettiOk === "function" && !confettiOk()) return;   /* no confetti in the first week (owner, Nov 4 2026) */ HFX.quiet = false; HFX.on = h.id; hfxLayer();
   if (holKey(h) === "thanksgiving") {
     hfxGust(-1, 54); setTimeout(function () { hfxGust(1, 40); hfxLoop(); }, 520);
     setTimeout(function () { hfxGust(-1, 34); hfxLoop(); }, 1500); setTimeout(function () { hfxShowerTG(28); hfxLoop(); }, 2400);
@@ -8962,6 +11055,15 @@ function gmCatCrawl() {
 }
 
 /* ===================== Game effects: little celebrations, all drawn on a top layer so redraws don't interrupt them ===================== */
+/* Confetti waits a week. A brand-new user is still working out what the app is; the
+   celebration lands better once they have a streak worth celebrating (owner, Nov 4 2026). */
+var CONFETTI_AFTER_DAYS = 7;
+function installTs() {
+  var t = store("installTs");
+  if (!t) { t = (Prog && Prog.d && (Prog.d.xp || 0) > 0) ? 1 : Date.now(); store("installTs", t); }
+  return t;
+}
+function confettiOk() { return Date.now() - installTs() >= CONFETTI_AFTER_DAYS * 86400000; }
 function gfxLayer() { var L = document.getElementById("gfx"); if (!L) { L = document.createElement("div"); L.id = "gfx"; L.setAttribute("aria-hidden", "true"); document.body.appendChild(L); } return L; }
 function gfxReduce() { return (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) || (typeof SET === "function" && SET().motion) || (typeof funOn === "function" && !funOn()); }
 function gfxAdd(html, css, ms) { var e = document.createElement("div"); e.className = "gfxi"; e.style.cssText = css || ""; e.innerHTML = html; gfxLayer().appendChild(e); setTimeout(function () { if (e.parentNode) e.parentNode.removeChild(e); }, ms || 1500); return e; }
@@ -8983,9 +11085,7 @@ function gfxButterflySvg(c1, c2) { return '<svg viewBox="0 0 80 60" width="80" h
 function gfxSnd(kind) {
   if (typeof SET !== "function" || !SET().sfx) return;
   try {
-    var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
-    var c = SFX.ctx || (SFX.ctx = new AC());
-    if (c.state === "suspended") { try { c.resume(); } catch (e) {} }
+    var c = audioCtx(); if (!c) return;
     var t = c.currentTime;
     function tone(type, f0, f1, at, dur, v) { var o = c.createOscillator(), g = c.createGain(); o.type = type; o.frequency.setValueAtTime(f0, t + at); if (f1) o.frequency.exponentialRampToValueAtTime(f1, t + at + dur); g.gain.setValueAtTime(0.0001, t + at); g.gain.exponentialRampToValueAtTime(v || 0.15, t + at + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + at + dur); o.connect(g); g.connect(c.destination); o.start(t + at); o.stop(t + at + dur + 0.02); }
     function noise(at, dur, v, fq) { var n = c.sampleRate * dur, b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0); for (var i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n); var s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(); s.buffer = b; f.type = "lowpass"; f.frequency.value = fq || 900; g.gain.value = v || 0.25; s.connect(f); f.connect(g); g.connect(c.destination); s.start(t + at); }
@@ -9034,7 +11134,7 @@ function gfxCheer() {
 /* "New best!" banner with falling leaf confetti */
 function gfxBest(text) {
   gfxAdd('<div class="gfxbest">' + esc(text || "New best!") + '</div>', "", 2800);
-  if (gfxReduce()) return;
+  if (gfxReduce() || !confettiOk()) return;
   var cols = ["#22c55e", "#84cc16", "#16a34a", "#facc15", "#f97316"], html = "";
   for (var i = 0; i < 26; i++) html += '<i class="leaf" style="left:' + (Math.random() * 100).toFixed(1) + '%;animation-delay:' + (Math.random() * 0.8).toFixed(2) + 's;animation-duration:' + (1.8 + Math.random() * 1.4).toFixed(2) + 's;background:' + cols[i % cols.length] + ';--r:' + Math.round(Math.random() * 720 - 360) + 'deg"></i>';
   gfxAdd(html, "position:fixed;inset:0", 3600);
@@ -9945,13 +12045,17 @@ var DIS_SYS = ["Heart & Blood Vessels", "Lungs & Breathing", "Brain & Nerves", "
 ICO.diseases = '<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5c-2.6 2.4-2.6 14.6 0 17M12 3.5c2.6 2.4 2.6 14.6 0 17M4 9.5h16M4 14.5h16"/><circle cx="17.5" cy="6.5" r="2" fill="currentColor" stroke="none"/>';
 (function () {
   var css = '.dislist{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-top:12px}' +
-    '.disitem{text-align:left;border:1px solid var(--line,rgba(127,127,127,.25));border-radius:14px;padding:12px 14px;background:var(--surface,transparent);color:inherit;font:inherit;cursor:pointer;display:flex;flex-direction:column;gap:4px}' +
-    '.disitem strong{font-size:1rem;line-height:1.3}.disitem span{font-size:.82rem;opacity:.75;line-height:1.35}' +
-    '.disitem.locked{opacity:.8}' +
-    '.dischips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}' +
-    '.dischips button{border:1px solid var(--line,rgba(127,127,127,.3));background:transparent;color:inherit;font:inherit;font-size:.82rem;padding:6px 10px;border-radius:999px;cursor:pointer}' +
+    '.disitem{text-align:left;border:1px solid var(--line,rgba(127,127,127,.25));border-radius:14px;padding:12px 14px;background:var(--surface,transparent);color:inherit;font:inherit;cursor:pointer;display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:10px;row-gap:3px}' +
+    '.disitem strong{font-size:1rem;line-height:1.3;grid-column:1}.disitem .dsub{grid-column:1;font-size:.82rem;opacity:.75;line-height:1.35}' +
+    '.disitem .dtag{grid-column:2;grid-row:1/3;align-self:center}.disitem .dtag .pill{font-size:11px;white-space:nowrap}' +
+    '.disitem.locked strong{opacity:.82}' +
+    '.disintro{margin:0 0 4px}.disbar{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:12px 0 0}.disbar p{margin:0}' +
+    '.disgrp{font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:16px 0 0}' +
+    '.dischips{display:flex;flex-wrap:nowrap;gap:6px;margin:10px -16px 0;padding:2px 16px 6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity}.dischips::-webkit-scrollbar{display:none}' +
+    '.dischips button{flex:none;scroll-snap-align:start;white-space:nowrap;border:1px solid var(--line,rgba(127,127,127,.3));background:transparent;color:inherit;font:inherit;font-size:.82rem;padding:6px 12px;border-radius:999px;cursor:pointer}' +
     '.dischips button[aria-pressed="true"]{background:var(--c,#6b3fbf);border-color:transparent;color:#fff}' +
     '.dissearch{width:100%;margin-top:10px}' +
+    '.dishead{margin:6px 0 10px}.dishead .disaka{margin:4px 0 0;line-height:1.4}.diswhat p:first-child{margin-top:0}.diswhat p:last-child{margin-bottom:0}.disred{margin:12px 0}.disfoot{margin-top:18px;opacity:.8}' +
     '.dishead h2{margin:4px 0 2px}.dishead .dsys{display:inline-block;font-size:.75rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;opacity:.75}' +
     '.disred{border-left:4px solid #e5484d;padding:10px 12px;border-radius:0 10px 10px 0;background:rgba(229,72,77,.1);line-height:1.45}' +
     '.drugchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}';
@@ -9977,10 +12081,17 @@ function disListHTML() {
   var fm = disFieldMode(), pool = fm ? disFieldIds(sys) : Object.keys(D);
   var ids = pool.filter(function (k) { return (fm || !sys || D[k].sys === sys) && disMatch(D[k], q); }).sort(function (a, b) { return D[a].name.localeCompare(D[b].name); });
   if (!ids.length) return '<p class="muted">No conditions match. Try another word.</p>';
-  return '<p class="muted small">' + ids.length + ' condition' + (ids.length === 1 ? '' : 's') + '</p><div class="dislist">' + ids.map(function (k) {
+  /* cleaner list (owner, Nov 5 2026): the badge sits on the right instead of wrapping the name,
+     and on the free plan the open preview conditions come first instead of being buried */
+  function item(k) {
     var e = D[k], lk = disLocked(k);
-    return '<button class="disitem' + (lk ? ' locked' : '') + '" data-dis="' + k + '"><strong>' + esc(e.name) + (lk && typeof tierBadge === "function" ? ' ' + tierBadge("plus") : DIS_FREE[k] && typeof PAYWALL !== "undefined" && PAYWALL && !hasTier("plus") ? ' <span class="pill">Free preview</span>' : '') + '</strong><span>' + esc(fm ? disFieldGroup(k) : e.sys) + '</span></button>';
-  }).join("") + '</div>';
+    var tag = lk && typeof tierBadge === "function" ? tierBadge("plus") : DIS_FREE[k] && typeof PAYWALL !== "undefined" && PAYWALL && !hasTier("plus") ? '<span class="pill">Free</span>' : '';
+    return '<button class="disitem' + (lk ? ' locked' : '') + '" data-dis="' + k + '"><strong>' + esc(e.name) + '</strong><span class="dsub">' + esc(fm ? disFieldGroup(k) : e.sys) + '</span>' + (tag ? '<span class="dtag">' + tag + '</span>' : '') + '</button>';
+  }
+  var open = ids.filter(function (k) { return !disLocked(k); }), shut = ids.filter(function (k) { return disLocked(k); });
+  var head = '<p class="muted small">' + ids.length + ' condition' + (ids.length === 1 ? '' : 's') + '</p>';
+  if (open.length && shut.length) return head + '<h3 class="disgrp">Open now</h3><div class="dislist">' + open.map(item).join("") + '</div><h3 class="disgrp">With DrugBug Plus</h3><div class="dislist">' + shut.map(item).join("") + '</div>';
+  return head + '<div class="dislist">' + ids.map(item).join("") + '</div>';
 }
 function disView() {
   var D = disAll();
@@ -9993,8 +12104,8 @@ function disView() {
     fc += '<div class="dischips fmdis" role="group" aria-label="Field groups"><button data-dissys="" aria-pressed="' + !S.disSys + '">All field (' + disFieldIds("").length + ')</button>' + DIS_FIELD.map(function (g) { return '<button data-dissys="' + esc(g[0]) + '" aria-pressed="' + (S.disSys === g[0]) + '">' + esc(g[0]) + '</button>'; }).join("") + '</div>';
     return fc + '<div id="disout">' + disListHTML() + '</div>';
   }
-  var c = '<p class="muted">Step into the lab on a disease: where it came from, what goes wrong from the cell to each organ, why the symptoms happen, how it is diagnosed and how the drugs that treat it work. Education only.</p>';
-  if (typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier("plus")) c += '<div class="callout evnote small"><strong>DrugBug Plus.</strong> Five conditions are open as a free preview: high blood pressure, type 2 diabetes, asthma, migraine and the flu. <button class="linkish" data-pw="open">See Plus</button></div>';
+  var c = '<p class="muted disintro">Each condition from the cell to the organ: why the symptoms happen, how it is diagnosed and how its drugs work. Education only.</p>';
+  if (typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier("plus")) c += '<div class="callout evnote small"><strong>Five are free to open.</strong> The rest come with DrugBug Plus. <button class="linkish" data-pw="open">See Plus</button></div>';
   if (typeof lang === "function" && lang() === "es") c += '<p class="dnote">La sección "Disease Lab" solo está disponible en inglés por ahora.</p>';
   c += '<input class="pinput dissearch" id="disq" type="search" placeholder="Search conditions, like asthma or DKA" aria-label="Search conditions" value="' + esc(S.disQ || "") + '">';
   c += '<div class="dischips" role="group" aria-label="Body systems"><button data-dissys="" aria-pressed="' + !S.disSys + '">All</button>' + DIS_SYS.map(function (s) { return '<button data-dissys="' + esc(s) + '" aria-pressed="' + (S.disSys === s) + '">' + esc(s) + '</button>'; }).join("") + '</div>';
@@ -10002,10 +12113,8 @@ function disView() {
 }
 function disDetail(id) {
   var e = disAll()[id], c = '<div class="deep">';
-  c += '<div class="backrow"><button class="backbtn" data-disback="1"><span aria-hidden="true">&larr;</span> All conditions</button></div>';
-  c += '<header class="dishead"><span class="dsys">' + esc(e.sys) + '</span><h2>🪱 ' + esc(e.name) + '</h2>' + (e.aka && e.aka.length ? '<p class="dnote">Also called: ' + esc(e.aka.join(", ")) + '</p>' : '') + '</header>';
-  c += deepP(e.what);
-  c += '<p class="dnote">Draft study content. For learning only, not for diagnosing anyone. If you have health questions, ask a doctor, nurse or pharmacist. In an emergency, call 911.</p>';
+  c += '<header class="dishead"><span class="dsys">' + esc(e.sys) + '</span><h2>' + esc(e.name) + '</h2>' + (e.aka && e.aka.length ? '<p class="dnote disaka">Also called: ' + esc(e.aka.join(", ")) + '</p>' : '') + '</header>';
+  c += '<div class="diswhat">' + deepP(e.what) + '</div>';
   if (e.red) c += '<div class="disred"><b>When it is an emergency:</b> ' + esc(e.red) + '</div>';
   if (typeof disTypesHTML === "function") c += disTypesHTML(id);
   var org = deepP(e.origin);
@@ -10020,6 +12129,7 @@ function disDetail(id) {
   if (e.mem && e.mem.length) c += deepSec("🧠", "Make it stick", '<div class="mem">' + e.mem.map(function (m) { return '<div><b>' + esc(m[0]) + ':</b> ' + esc(m[1]) + '</div>'; }).join("") + '</div>');
   if (e.fun) c += '<div class="fun"><b>Fun fact:</b> ' + esc(e.fun) + '</div>';
   if (e.src && e.src.length) c += deepSec("📚", "Sources", '<ul class="srcl">' + e.src.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join("") + '</ul>');
+  c += '<p class="dnote disfoot">Study content for learning only, not for diagnosing anyone. If you have health questions, ask a doctor, nurse or pharmacist. In an emergency, call 911.</p>';
   c += '<div class="sheetacts"><button class="btn small ghost" data-disback="1">Back to all conditions</button></div>';
   return c + '</div>';
 }
@@ -10035,6 +12145,152 @@ function disClick(t, a) {
   return false;
 }
 document.addEventListener("input", function (e) { if (e.target && e.target.id === "disq") { S.disQ = e.target.value; var o = document.getElementById("disout"); if (o) o.innerHTML = disListHTML(); } });
+/* ---------- Big Calls: stroke, STEMI, sepsis, trauma, ROSC (owner, Nov 5 2026) ----------
+   Learning pages plus a quiz. The stroke page asks which stroke scale your agency uses (on the
+   side) and from then on only asks scale questions about that scale, here and in Registry prep.
+   Education only, no doses. Content from the 2026 AHA/ASA acute ischemic stroke guideline and the
+   AHA Mission: Lifeline EMS routing algorithm; see tools/calls/ in the repo for the sources. */
+var CALLS = [{"id":"stroke","name":"Stroke and TIA","line":"Scales, mimics, last known well, windows, TNK or tPA, and who needs a thrombectomy center.","sec":[["Stroke or TIA?",["A stroke is brain tissue dying from a blocked artery (ischemic, about 87%) or a burst one (hemorrhagic).","A TIA (transient ischemic attack) is a short spell of stroke symptoms from a brief blockage that leaves no dead tissue on imaging. Most clear within an hour.","You cannot tell a TIA from a stroke in the field. If the symptoms are still there, it is a stroke until proven otherwise.","A TIA is a warning: the risk of a full stroke is highest in the first 48 hours. A patient whose symptoms have resolved still needs the emergency department, not a refusal.","Hemorrhagic strokes often bring a sudden severe headache, vomiting, very high blood pressure and a falling level of consciousness. Only a CT tells them apart."]],["Last known well (LKW)",["LKW is the last time someone saw the patient at their normal baseline. It is NOT when symptoms were found.","Woke up with symptoms: LKW is when they went to bed (or the last time they were up and normal in the night).","Symptoms that fully cleared and came back: the clock resets to when they were last fully normal. Symptoms that only improved do not reset it.","Pin down an exact clock time and a phone number for the witness. Every treatment window is measured from LKW.","Bring the witness, or their number, to the hospital: the stroke team will ask the same question."]],["Classic stroke mimics",["Hypoglycemia: the most important one. Check a glucose on every suspected stroke.","Seizure with a postictal (Todd's) paralysis: one-sided weakness after a seizure that clears over hours.","Complex migraine: aura, one-sided weakness or numbness, often a history of the same.","Bell's palsy: the whole side of the face, forehead included, is weak. A stroke usually spares the forehead.","Sepsis or infection in an older adult bringing back old stroke deficits (recrudescence).","Intoxication, overdose, hyponatremia, hepatic or uremic encephalopathy, Wernicke's.","Hypertensive encephalopathy, brain tumor, subdural hematoma (ask about falls and blood thinners).","Functional (conversion) disorder and syncope.","A mimic is a diagnosis made at the hospital. In the field, a positive screen with a normal glucose is treated as a stroke."]],["Blood pressure and the swollen brain",["Cerebral perfusion pressure (CPP) = mean arterial pressure (MAP) minus intracranial pressure (ICP).","Around a clot is the penumbra: stunned brain that is still alive but living on whatever pressure gets past the blockage.","Stroke breaks autoregulation in that area, so its blood flow follows the blood pressure directly.","As the brain swells (edema), ICP rises. Dropping the MAP at the same time drops CPP from both sides.","Less perfusion turns penumbra into dead core. Dying cells swell (cytotoxic edema), ICP rises further, and perfusion falls again: a spiral.","That is why high blood pressure is usually allowed in the field (permissive hypertension) and hypotension is treated. Many systems do not treat blood pressure prehospital unless it is over 220/120.","Before thrombolysis the hospital lowers it to under 185/110 and keeps it under 180/105 for 24 hours afterward. The 2026 guideline says pushing the systolic below 140 after a successful thrombectomy is harmful."]],["Clot-busters: tenecteplase or alteplase",["The 2026 AHA/ASA guideline endorses either tenecteplase (TNK) or alteplase (tPA) for eligible patients within 4.5 hours of last known well.","Tenecteplase is a single IV push. Alteplase is a bolus followed by a 60-minute infusion, which complicates transfers.","Tenecteplase is more fibrin-specific and has a longer half-life than alteplase, which is why one push is enough.","The higher tenecteplase dose studied in some trials is NOT recommended: it did not help and may cause harm.","Thrombolysis is for disabling deficits regardless of the NIHSS number. For a mild, non-disabling stroke, dual antiplatelet therapy is preferred instead.","Common reasons it cannot be given: bleeding on CT, blood pressure that cannot be brought under 185/110, glucose under 50, recent major surgery or head trauma, an ischemic stroke in the last 3 months, active internal bleeding, or recent use of a blood thinner with abnormal coagulation.","Doses are given by the hospital team. DrugBug does not list them here."]],["The time windows",["0 to 4.5 hours from LKW: IV thrombolysis (tenecteplase or alteplase) for eligible disabling strokes. Hospital goal is door to needle within 60 minutes, with many centers aiming for 30 to 45.","4.5 to 9 hours, or unknown onset (wake-up stroke): thrombolysis may be considered in selected patients if advanced imaging (MRI DWI-FLAIR mismatch or perfusion) shows brain that can still be saved.","0 to 6 hours: thrombectomy for an anterior LVO (ICA or M1) with NIHSS 6 or more.","6 to 24 hours: thrombectomy for selected anterior LVO patients picked by imaging, now including some large-core strokes.","Basilar artery occlusion: thrombectomy within 24 hours for selected patients with NIHSS 10 or more.","Field targets: scene time under 15 minutes, early hospital pre-notification with the LKW time, and a hospital CT within about 20 to 25 minutes of arrival."]],["Does this patient need a thrombectomy center?",["Only a Comprehensive Stroke Center (CSC) or a Thrombectomy-capable Stroke Center (TSC) can pull a clot. A Primary Stroke Center or Acute Stroke Ready Hospital can give thrombolysis but not thrombectomy.","Suspect an LVO when the severity scale your system uses is positive (for example LAMS 4 or more, RACE 5 or more, C-STAT 2 or more, FAST-ED 4 or more, VAN positive) and LKW is within 24 hours.","Cortical signs (gaze deviation, aphasia, neglect) plus dense weakness are the classic picture of a big clot.","The AHA Mission: Lifeline routing algorithm: suspected LVO goes to a CSC or TSC when the extra transport time is about 30 minutes or less (with total time limits that vary for urban, suburban and rural areas). If the bypass would push a thrombolysis-eligible patient past their window, go to the nearest stroke center first (drip and ship).","The 2026 guideline supports direct transport to the closest EVT-capable center where hospital-to-hospital transfer does not work well, and asks systems to cut door-in-door-out times where it does.","Your regional destination protocol decides the exact minutes. Know yours."]],["What to do on scene",["ABCs, oxygen only if SpO2 is under 94%.","Glucose on everyone. Treat hypoglycemia.","Run your system's screen and severity scale. Get the exact LKW and a witness phone number.","Head of the bed flat or up to 30 degrees per protocol; elevate if vomiting or airway risk.","IV access (often an antecubital site for CT angiography), but do not delay transport for it.","Nothing by mouth until the swallow is checked.","Pre-notify the hospital with the scale result and LKW. Scene time under 15 minutes."]]]},{"id":"stemi","name":"STEMI","line":"12-lead criteria, equivalents, time goals and field care.","sec":[["Recognize it",["STEMI: new ST elevation at the J point in 2 contiguous leads, at least 1 mm in most leads. In V2 and V3 the cutoff is 2 mm in men 40 and over, 2.5 mm in men under 40, and 1.5 mm in women.","Reciprocal ST depression in the opposite leads makes a STEMI much more likely than a mimic.","Get a 12-lead within 10 minutes of first medical contact, and repeat it if the first is normal but the story is not.","Atypical presentations (shortness of breath, nausea, weakness, jaw or back pain, no pain at all) are common in women, older adults and people with diabetes."]],["Location and what it means",["Inferior (II, III, aVF): usually the right coronary artery. Check right-sided V4R: 1 mm of elevation means right ventricle involvement.","Right ventricular infarct: preload-dependent. Nitroglycerin can crash the blood pressure; small fluid boluses help.","Anterior / septal (V1 to V4): left anterior descending artery, the widowmaker territory.","Lateral (I, aVL, V5, V6): circumflex or diagonal branches.","Posterior: ST depression in V1 to V3 with tall R waves. Posterior leads V7 to V9 with 0.5 mm of elevation confirm it."]],["STEMI equivalents and danger patterns",["Posterior MI: depression in V1 to V3 is often posterior elevation seen from the front.","De Winter T waves: upsloping ST depression with tall symmetric T waves in the precordial leads, a proximal LAD occlusion.","Left bundle branch block or a paced rhythm: use the Sgarbossa (or modified Smith-Sgarbossa) criteria: concordant ST elevation of 1 mm or more, concordant ST depression of 1 mm or more in V1 to V3, or excessively discordant elevation.","ST elevation in aVR with widespread ST depression: left main or multivessel disease. High risk, often not a classic STEMI activation; follow your protocol.","Wellens T waves (deep or biphasic T waves in V2 and V3, pain-free): critical LAD narrowing about to close. Not a STEMI, but a patient who needs the cath lab soon."]],["Time is muscle",["First medical contact (FMC) to device of 90 minutes or less when EMS takes the patient straight to a PCI center.","Patients who first reach a non-PCI hospital: FMC to device of 120 minutes or less, with door-in-door-out of 30 minutes or less.","If the PCI center cannot be reached within 120 minutes from FMC, fibrinolysis is the alternative for STEMI within 12 hours of symptom onset, with a door-to-needle goal of 30 minutes.","Transmit the 12-lead and activate early. Field cath lab activation cuts door-to-balloon time.","After fibrinolysis, patients go to a PCI center, with angiography within 3 to 24 hours (sooner for failed reperfusion)."]],["Field care",["Aspirin, chewed, unless allergy or active bleeding.","Oxygen only if SpO2 is under 90% or the patient is in distress; extra oxygen does not help a normal saturation.","Nitroglycerin is held for systolic BP under 90 (or 30 below baseline), right ventricular infarct, or a phosphodiesterase-5 inhibitor in the last 24 hours (48 for tadalafil).","Pads on: ventricular fibrillation is most common in the first hours of a STEMI.","Treat pain per protocol and avoid NSAIDs other than aspirin.","Doses follow your protocol. DrugBug does not list them here."]],["Fibrinolytic contraindications to know",["Absolute: any prior intracranial hemorrhage, known cerebral vascular lesion or malignant brain tumor, ischemic stroke within 3 months (except an acute stroke within 4.5 hours), suspected aortic dissection, active bleeding (not menses), significant head or facial trauma within 3 months, brain or spine surgery within 2 months, severe hypertension that does not respond to treatment.","Many prehospital fibrinolysis checklists screen these before the hospital is called."]]]},{"id":"sepsis","name":"Sepsis","line":"Recognition, the first hour and field care.","sec":[["Recognize it",["Sepsis is life-threatening organ dysfunction from the body's response to an infection.","Look for suspected infection plus signs of poor perfusion: altered mental status, fast breathing, low blood pressure, mottled skin, slow capillary refill.","qSOFA (respiratory rate 22 or more, altered mentation, systolic BP 100 or less) predicts poor outcome, but the 2021 Surviving Sepsis Campaign recommends against using it alone as the screening tool.","Low end-tidal CO2 (often 25 mmHg or less) tracks with a high lactate and is a useful field clue.","Septic shock: needs vasopressors to keep MAP 65 or more and lactate stays over 2 despite fluids."]],["Why time matters",["Every hour of delay to antibiotics in septic shock raises mortality. The goal in shock is antibiotics within 1 hour of recognition.","Pre-notification (a sepsis alert) gets cultures, lactate and antibiotics started at the door.","Fluids are given for hypotension or high lactate, reassessing lungs and perfusion between boluses."]],["Field care",["Oxygen to keep SpO2 in range, IV access, glucose, end-tidal CO2 if available.","Fluid boluses per protocol with reassessment; watch for crackles and worsening breathing.","Vasopressors for persistent shock per protocol (often norepinephrine first).","Some systems give prehospital antibiotics or draw blood cultures; follow yours."]]]},{"id":"trauma","name":"Major trauma","line":"Field triage criteria and stopping the dying.","sec":[["Field triage (2021 national guideline)",["RED criteria go to the highest level trauma center available.","Red injury patterns: penetrating injury to head, neck, torso or proximal limbs; skull deformity; suspected spinal injury with new weakness or numbness; chest wall instability or flail chest; suspected pelvic fracture; two or more proximal long-bone fractures; crushed, degloved, mangled or pulseless limb; amputation above the wrist or ankle; bleeding needing a tourniquet or wound packing with continuous pressure.","Red mental status and vitals: unable to follow commands (motor GCS under 6); respiratory rate under 10 or over 29, respiratory distress or need for ventilation support; room-air SpO2 under 90%; age 0 to 9 with SBP under 70 + (2 x age); age 10 to 64 with SBP under 90 or heart rate greater than SBP; age 65 and over with SBP under 110 or heart rate greater than SBP.","YELLOW criteria go to a trauma center (not always the highest level): high-risk crash (ejection, major intrusion, extrication, unrestrained child, vehicle telemetry), rider separated from a motorcycle or ATV, pedestrian or cyclist thrown, run over or hit hard, falls over 10 feet.","EMS judgment: older adult with a ground-level fall and head strike, anticoagulants, suspected child abuse, pregnancy over 20 weeks, burns with trauma, special health care needs."]],["Stop the dying",["Massive hemorrhage first: tourniquets and wound packing before airway in the bleeding patient (MARCH).","The lethal triad: hypothermia, acidosis and coagulopathy feed each other. Keep the patient warm from the start.","Permissive hypotension in penetrating torso trauma without head injury: enough pressure for mentation and a radial pulse, not a normal number. Head injury needs a normal pressure.","Tranexamic acid works best within 1 hour and is not given after 3 hours from injury.","Scene time goal of 10 minutes or less for critical patients."]]]},{"id":"rosc","name":"After cardiac arrest (ROSC)","line":"Oxygen, ventilation, pressure and the cath lab.","sec":[["After the pulse comes back",["Re-check the pulse and get a 12-lead as soon as possible; STEMI after arrest goes to a PCI center.","Oxygen: titrate to SpO2 92 to 98%. Too much oxygen is harmful.","Ventilation: about 10 breaths per minute, aiming for end-tidal CO2 35 to 45. Hyperventilation drops cerebral blood flow.","Blood pressure: keep systolic 90 or more and MAP 65 or more with fluids and vasopressors per protocol.","Check glucose and treat the cause (Hs and Ts).","Temperature control: prevent fever; the hospital continues targeted temperature management.","A sudden drop in end-tidal CO2 is often the first sign of re-arrest."]]]}];
+var CALL_SCALES = [{"id":"cpss","name":"Cincinnati Prehospital Stroke Scale (CPSS)","short":"Cincinnati","kind":"Stroke screen","tells":"Whether this could be a stroke at all. It does not say how big the stroke is or whether there is a large vessel occlusion.","items":[["Facial droop","Ask them to smile or show their teeth. One side not moving as well as the other is abnormal."],["Arm drift","Eyes closed, both arms straight out, palms up, for 10 seconds. One arm drifting down or not moving is abnormal."],["Abnormal speech","Repeat a simple sentence. Slurred words, wrong words or no words is abnormal."]],"pos":"Any one finding abnormal = suspect stroke. About 72% chance of stroke with one abnormal finding and over 85% with all three.","pearl":"Positive CPSS starts the stroke clock and the glucose check. If your system also uses a severity scale, the CPSS does not replace it."},{"id":"befast","name":"BE-FAST","short":"BE-FAST","kind":"Stroke screen","tells":"Whether this could be a stroke, including posterior (back of the brain) strokes that FAST alone misses.","items":[["B - Balance","Sudden loss of balance or coordination, trouble walking."],["E - Eyes","Sudden loss of vision in one or both eyes, or double vision."],["F - Face","One side of the face droops."],["A - Arm","One arm drifts down or is weak."],["S - Speech","Slurred, confused or absent speech."],["T - Time","Note the last known well time and get moving."]],"pos":"Any one sudden finding = suspect stroke.","pearl":"The B and E were added because posterior circulation strokes often show up as dizziness, imbalance or vision loss with a normal face, arm and speech exam."},{"id":"lapss","name":"Los Angeles Prehospital Stroke Screen (LAPSS)","short":"LAPSS","kind":"Stroke screen","tells":"Whether this is likely a stroke, using history and a glucose to screen out common mimics before the motor exam.","items":[["Age over 45","Yes or unknown."],["No history of seizures or epilepsy","Yes or unknown."],["Symptoms under 24 hours","Yes or unknown."],["Not wheelchair-bound or bedridden at baseline","Yes or unknown."],["Blood glucose 60 to 400 mg/dL","Must be yes."],["One-sided weakness","Unilateral weakness in facial smile or grimace, grip, or arm strength."]],"pos":"LAPSS positive when every criterion is yes (or unknown) and there is one-sided weakness.","pearl":"A negative LAPSS does not rule out stroke. If the story still sounds like a stroke, treat it like one."},{"id":"lams","name":"Los Angeles Motor Scale (LAMS)","short":"LAMS","kind":"Severity / LVO scale","tells":"How severe the motor deficit is, which predicts a large vessel occlusion (LVO) that may need a thrombectomy center.","items":[["Facial droop","0 absent, 1 present."],["Arm drift","0 absent, 1 drifts down, 2 falls rapidly."],["Grip strength","0 normal, 1 weak grip, 2 no grip."]],"pos":"Total 0 to 5. A score of 4 or 5 suggests an LVO.","pearl":"LAMS is built from the LAPSS motor items, so systems that use LAPSS often add LAMS on a positive screen."},{"id":"race","name":"Rapid Arterial oCclusion Evaluation (RACE)","short":"RACE","kind":"Severity / LVO scale","tells":"Likelihood of a large vessel occlusion, using items borrowed from the NIHSS.","items":[["Facial palsy","0 absent, 1 mild, 2 moderate to severe."],["Arm motor","0 normal or mild, 1 moderate, 2 severe."],["Leg motor","0 normal or mild, 1 moderate, 2 severe."],["Head and gaze deviation","0 absent, 1 present."],["Aphasia (right-sided weakness) or agnosia (left-sided weakness)","0 to 2. Aphasia is tested with commands; agnosia by asking whose arm this is and whether they can move it."]],"pos":"Total 0 to 9. A score of 5 or more suggests an LVO.","pearl":"Aphasia is scored when the right side is weak (left brain); agnosia or neglect when the left side is weak (right brain)."},{"id":"cstat","name":"Cincinnati Stroke Triage Assessment Tool (C-STAT)","short":"C-STAT","kind":"Severity / LVO scale","tells":"Likelihood of a large vessel occlusion, using three quick cortical findings.","items":[["Conjugate gaze deviation","2 points. Both eyes forced to one side."],["Level of consciousness questions and commands","1 point if the patient gets at least one of age or month wrong AND fails at least one command (close your eyes, make a fist)."],["Arm weakness","1 point if they cannot hold an arm up for 10 seconds."]],"pos":"Total 0 to 4. A score of 2 or more suggests an LVO.","pearl":"Gaze deviation alone scores 2, so it is LVO-positive on its own. Also called the Cincinnati Prehospital Stroke Severity Scale (CPSSS)."},{"id":"fasted","name":"Field Assessment Stroke Triage for Emergency Destination (FAST-ED)","short":"FAST-ED","kind":"Severity / LVO scale","tells":"Likelihood of a large vessel occlusion, to choose the destination.","items":[["F - Facial palsy","0 normal, 1 present."],["A - Arm weakness","0 none, 1 drift, 2 falls or no effort against gravity."],["S - Speech changes","0 none, 1 mild to moderate, 2 severe, global aphasia or mute."],["E - Eye deviation","0 none, 1 partial, 2 forced."],["D - Denial or neglect","0 none, 1 extinction to one side, 2 does not recognize own hand or orients to one side only."]],"pos":"Total 0 to 9. A score of 4 or more suggests an LVO.","pearl":"It reads like FAST with Eyes and Denial added, the two cortical signs that point to a big clot."},{"id":"van","name":"Vision, Aphasia, Neglect (VAN)","short":"VAN","kind":"Severity / LVO scale","tells":"Whether a weak patient also has cortical signs that point to a large vessel occlusion.","items":[["Arm weakness first","Arms up for 10 seconds. If there is no weakness, the patient is VAN negative."],["V - Vision","Field cut, double vision or new blindness."],["A - Aphasia","Cannot speak, cannot follow commands, or uses wrong words."],["N - Neglect","Forced gaze to one side, or ignores one side of the body."]],"pos":"VAN positive = arm weakness PLUS any one of V, A or N.","pearl":"No arm weakness, no VAN. Weakness alone without V, A or N is VAN negative."},{"id":"mend","name":"Miami Emergency Neurologic Deficit (MEND) exam","short":"MEND","kind":"Stroke exam","tells":"A fuller neuro exam that builds on the Cincinnati scale and lines up with the NIHSS the hospital will do.","items":[["Mental status","Level of consciousness, speech, questions (age, month) and commands (open and close eyes)."],["Cranial nerves","Facial droop, visual fields, horizontal gaze."],["Limbs","Arm and leg drift, sensation, coordination (finger to nose, heel to shin)."]],"pos":"Any abnormal finding is a positive exam. It is a checklist, not a point score.","pearl":"MEND contains the three Cincinnati items, so a MEND exam also answers the CPSS."},{"id":"nihss","name":"NIH Stroke Scale (NIHSS)","short":"NIHSS","kind":"Hospital severity scale","tells":"Stroke severity. It is the scale the stroke team uses for treatment decisions, and some flight and critical care teams use it too.","items":[["Level of consciousness","1a alertness, 1b questions (month, age), 1c commands."],["Best gaze and visual fields",""],["Facial palsy",""],["Motor arm and motor leg","Each side scored separately."],["Limb ataxia and sensory",""],["Best language, dysarthria",""],["Extinction and inattention (neglect)",""]],"pos":"0 to 42. 0 no deficit, 1 to 4 minor, 5 to 15 moderate, 16 to 20 moderate to severe, 21 to 42 severe. A score of 6 or more is the usual cutoff for thrombectomy in the 2026 guideline.","pearl":"The 2026 guideline says thrombolysis is for disabling deficits regardless of the NIHSS number, so a low score with a disabling deficit (like isolated aphasia) can still be treated."}];
+var CALLQ = [{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"cpss","q":"Which three findings make up the Cincinnati Prehospital Stroke Scale?","a":"Facial droop, arm drift and abnormal speech","w":["Facial droop, grip strength and gaze deviation","Balance, vision and speech","Arm drift, leg drift and level of consciousness"],"x":"The CPSS checks a smile for facial droop, 10 seconds of arm drift with eyes closed, and repeating a sentence."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"cpss","q":"How many abnormal Cincinnati findings are needed to suspect a stroke?","a":"One","w":["Two","All three","At least two plus a headache"],"x":"Any single abnormal CPSS finding is a positive screen. With one finding the chance of stroke is about 72%; with all three it is over 85%."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"cpss","q":"A positive Cincinnati Prehospital Stroke Scale tells you what?","a":"That this could be a stroke","w":["That there is a large vessel occlusion","That the stroke is hemorrhagic","That the patient qualifies for thrombolysis"],"x":"The CPSS is a screen. It does not measure severity or predict an LVO; a severity scale or the hospital exam does that."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"cpss","q":"How is arm drift tested in the Cincinnati scale?","a":"Eyes closed, both arms out with palms up for 10 seconds","w":["Squeeze both of your hands as hard as possible","Lift each leg off the stretcher for 5 seconds","Touch the finger to the nose with eyes open"],"x":"Closing the eyes removes visual correction, so a weak arm drifts down or pronates."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"befast","q":"What do the B and E in BE-FAST add to FAST?","a":"Balance and eyes, to catch posterior circulation strokes","w":["Breathing and EKG, to catch cardiac causes","Blood glucose and eyes, to rule out mimics","Bleeding and edema, to spot hemorrhagic strokes"],"x":"Strokes in the back of the brain (posterior circulation) often cause imbalance, vertigo or vision loss with a normal face, arm and speech exam."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"befast","q":"A 62-year-old has sudden vertigo, cannot walk straight and has double vision. Face, arms and speech are normal. With BE-FAST this patient is:","a":"Positive, because of the balance and eye findings","w":["Negative, because face, arm and speech are normal","Positive only if a headache is present","Negative until the symptoms last 24 hours"],"x":"Any one sudden BE-FAST finding is positive. This is the posterior stroke picture FAST alone would miss."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"befast","q":"What does the T in BE-FAST stand for?","a":"Time: note the last known well and move quickly","w":["Temperature: rule out sepsis","Tongue: check for deviation","Tone: check for rigidity"],"x":"Every stroke treatment window is measured from the last known well time."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"lapss","q":"Which glucose range is required for a positive LAPSS?","a":"60 to 400 mg/dL","w":["Over 60 mg/dL only","70 to 180 mg/dL","Under 400 mg/dL only"],"x":"LAPSS requires a glucose of 60 to 400 to help screen out hypoglycemia and severe hyperglycemia as mimics."},{"t":"M","lv":"emt","cat":"medical","call":"stroke","scale":"lapss","q":"Which are LAPSS screening criteria? Select all that apply.","opts":[[true,"Age over 45"],[true,"No history of seizures or epilepsy"],[true,"Symptoms present less than 24 hours"],[false,"Systolic blood pressure over 140"],[false,"Sudden severe headache"]],"x":"LAPSS criteria: age over 45, no seizure history, symptoms under 24 hours, not wheelchair-bound or bedridden, glucose 60 to 400, and one-sided weakness of face, grip or arm."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"lapss","q":"A patient has a negative LAPSS but a clear story of sudden one-sided numbness and confusion. What is the best approach?","a":"Treat it as a possible stroke anyway","w":["Document a negative stroke screen and transport routinely","Recheck in 30 minutes before deciding","Obtain a refusal since the screen is negative"],"x":"A negative LAPSS does not rule out stroke. Clinical suspicion wins."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"lams","q":"What is the Los Angeles Motor Scale total that suggests a large vessel occlusion?","a":"4 or more out of 5","w":["2 or more out of 5","3 or more out of 9","5 or more out of 9"],"x":"LAMS scores facial droop 0 to 1, arm drift 0 to 2 and grip 0 to 2. A total of 4 or 5 suggests an LVO."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"lams","q":"Which three items are scored in LAMS?","a":"Facial droop, arm drift and grip strength","w":["Gaze, aphasia and neglect","Facial droop, speech and leg drift","Level of consciousness, gaze and arm drift"],"x":"LAMS is a pure motor scale built from the LAPSS motor items."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"lams","q":"A patient has facial droop, an arm that falls rapidly and no grip on that side. What is the LAMS?","a":"5","w":["3","4","6"],"x":"Facial droop 1 + arm falls rapidly 2 + no grip 2 = 5, which suggests an LVO."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"race","q":"What RACE score suggests a large vessel occlusion?","a":"5 or more","w":["2 or more","4 or more","8 or more"],"x":"RACE runs 0 to 9; a score of 5 or more suggests an LVO."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"race","q":"In RACE, when do you score agnosia instead of aphasia?","a":"When the left side is weak","w":["When the right side is weak","When the patient is unconscious","When both sides are weak"],"x":"Left-sided weakness means a right-brain stroke, which causes neglect or agnosia. Right-sided weakness means a left-brain stroke, which causes aphasia."},{"t":"M","lv":"emt","cat":"medical","call":"stroke","scale":"race","q":"Which items are scored in RACE? Select all that apply.","opts":[[true,"Facial palsy"],[true,"Leg motor"],[true,"Head and gaze deviation"],[false,"Blood glucose"],[false,"Pupil size"]],"x":"RACE scores facial palsy, arm motor, leg motor, head and gaze deviation, and aphasia or agnosia."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"cstat","q":"How many points does conjugate gaze deviation earn on C-STAT?","a":"2","w":["1","3","It is not part of C-STAT"],"x":"Gaze deviation is worth 2 points, so it alone reaches the LVO cutoff of 2."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"cstat","q":"What C-STAT total suggests a large vessel occlusion?","a":"2 or more","w":["1 or more","3 or more","4 only"],"x":"C-STAT runs 0 to 4; 2 or more suggests an LVO."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"cstat","q":"A patient cannot hold the left arm up for 10 seconds, knows their age and the month, and follows commands. Gaze is midline. What is the C-STAT?","a":"1, which is below the LVO cutoff","w":["2, which suggests an LVO","3, which suggests an LVO","0, because the arm is not scored"],"x":"Only arm weakness scores (1 point). The LOC point needs a wrong answer AND a failed command."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"fasted","q":"What FAST-ED score suggests a large vessel occlusion?","a":"4 or more","w":["2 or more","6 or more","9 only"],"x":"FAST-ED runs 0 to 9; 4 or more suggests an LVO."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"fasted","q":"What do the E and D in FAST-ED stand for?","a":"Eye deviation and denial or neglect","w":["EKG and dysarthria","Edema and deficit","Extremity and drift"],"x":"Eye deviation and denial or neglect are cortical signs that point to a large clot."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"fasted","q":"Facial palsy (1), arm falls (2), mild aphasia (1), no eye deviation, no neglect. What is the FAST-ED and what does it suggest?","a":"4, which suggests an LVO","w":["3, which does not suggest an LVO","4, which rules out a stroke","6, which suggests hemorrhage"],"x":"1 + 2 + 1 + 0 + 0 = 4, the LVO cutoff."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"van","q":"What must be present before the rest of the VAN assessment counts?","a":"Arm weakness","w":["Facial droop","Altered mental status","A severe headache"],"x":"VAN starts with arm weakness. No weakness means VAN negative."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"van","q":"A patient has right arm drift and cannot name objects. Vision and attention are normal. The VAN is:","a":"Positive, from weakness plus aphasia","w":["Negative, because vision is normal","Positive only with gaze deviation","Negative, because only one cortical sign is present"],"x":"VAN positive = arm weakness plus any one of vision, aphasia or neglect."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"van","q":"A patient has left arm weakness only. Speech, vision and attention are normal. The VAN is:","a":"Negative","w":["Positive","Indeterminate until a glucose is checked","Positive if the weakness is severe"],"x":"Weakness alone, without a vision, aphasia or neglect finding, is VAN negative."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"mend","q":"What are the three parts of the MEND exam?","a":"Mental status, cranial nerves and limbs","w":["Airway, breathing and circulation","Motor, eyes, neglect and drift","Mood, energy, nutrition and dexterity"],"x":"MEND checks mental status, cranial nerves (face, fields, gaze) and limbs (drift, sensation, coordination)."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"mend","q":"Which scale is built into the MEND exam?","a":"The Cincinnati Prehospital Stroke Scale","w":["The Glasgow Coma Scale","The RACE scale","The Los Angeles Motor Scale"],"x":"MEND includes facial droop, arm drift and speech, so it also answers the CPSS."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"mend","q":"How is the MEND exam scored?","a":"Any abnormal finding is a positive exam","w":["It is scored 0 to 42","A total of 4 or more is positive","Only gaze deviation counts"],"x":"MEND is a checklist rather than a point score."},{"t":"S","lv":"paramedic","cat":"medical","call":"stroke","scale":"nihss","q":"What is the range of the NIH Stroke Scale?","a":"0 to 42","w":["0 to 9","3 to 15","0 to 100"],"x":"NIHSS runs 0 (no deficit) to 42."},{"t":"S","lv":"paramedic","cat":"medical","call":"stroke","scale":"nihss","q":"What NIHSS is the usual minimum for thrombectomy of an anterior LVO?","a":"6","w":["1","10","15"],"x":"The 2026 guideline uses NIHSS 6 or more for anterior LVO thrombectomy (10 or more for basilar occlusion)."},{"t":"S","lv":"paramedic","cat":"medical","call":"stroke","scale":"nihss","q":"A patient has NIHSS 3 from isolated severe aphasia that keeps them from working or communicating. Under the 2026 guideline, are they a thrombolysis candidate within 4.5 hours?","a":"Yes, because the deficit is disabling","w":["No, because the NIHSS is under 6","No, because aphasia is excluded","Only if a perfusion scan is done first"],"x":"Thrombolysis is for disabling deficits regardless of the NIHSS number."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"What is the key difference between a TIA and a stroke?","a":"A TIA leaves no infarct on imaging; a stroke does","w":["A TIA is always under 5 minutes","A TIA only affects speech","A TIA cannot be treated"],"x":"A TIA is a brief blockage without dead tissue. You cannot tell them apart in the field, so active symptoms are treated as a stroke."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"A 70-year-old had 20 minutes of right arm weakness that has fully resolved. Now he wants to stay home. What is the best response?","a":"Explain that stroke risk is highest in the next 48 hours and encourage transport","w":["Agree, since the symptoms resolved","Have him follow up with his doctor next week","Transport only if the blood pressure is high"],"x":"A TIA is a warning sign; urgent evaluation lowers the risk of a disabling stroke."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"A woman went to bed at 22:00 normal and woke at 06:00 with left-sided weakness. What is her last known well?","a":"22:00","w":["06:00","The time EMS arrived","Unknown, so no time is recorded"],"x":"Wake-up stroke: LKW is when she was last seen normal, not when symptoms were found."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"Symptoms started at 13:00, fully resolved at 13:30, then returned at 15:00. What is the last known well?","a":"13:30","w":["13:00","15:00","Unknown"],"x":"A complete return to baseline resets the clock to the time they were last fully normal."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"Symptoms started at 09:00 and partly improved at 09:40 but never fully cleared. What is the last known well?","a":"09:00","w":["09:40","The time of arrival","Unknown"],"x":"Only a full return to baseline resets the clock. Partial improvement does not."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"What is the single most important stroke mimic to rule out in the field?","a":"Hypoglycemia","w":["Bell's palsy","Migraine","Conversion disorder"],"x":"Low glucose can cause any focal deficit and is quickly reversible. Check a glucose on every suspected stroke."},{"t":"M","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"Which are classic stroke mimics? Select all that apply.","opts":[[true,"Postictal (Todd's) paralysis"],[true,"Complex migraine"],[true,"Hypoglycemia"],[false,"Atrial fibrillation"],[false,"Carotid stenosis"]],"x":"Atrial fibrillation and carotid stenosis are stroke causes, not mimics."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"Which finding points to Bell's palsy rather than a stroke?","a":"The forehead on the affected side cannot wrinkle","w":["Arm drift on the same side","Slurred speech","Forced gaze to one side"],"x":"Bell's palsy weakens the whole side of the face, forehead included. A stroke usually spares the forehead."},{"t":"S","lv":"paramedic","cat":"medical","call":"stroke","scale":null,"q":"Why can dropping the blood pressure worsen a swelling ischemic brain?","a":"CPP = MAP - ICP, so a lower MAP with a high ICP cuts perfusion to the penumbra","w":["Lower pressure increases bleeding into the clot","Low pressure raises intracranial pressure directly","It prevents thrombolytics from working"],"x":"Autoregulation is lost around the stroke, so flow follows pressure. Less flow turns penumbra into core and worsens swelling."},{"t":"S","lv":"paramedic","cat":"medical","call":"stroke","scale":null,"q":"What is the penumbra?","a":"Stunned but still living brain around the dead core","w":["The dead core of the infarct","Blood that has leaked into the brain","The swelling seen 3 days after a stroke"],"x":"Saving the penumbra is the whole point of reperfusion and of protecting blood pressure."},{"t":"S","lv":"paramedic","cat":"medical","call":"stroke","scale":null,"q":"In many EMS systems, when is the blood pressure of a suspected ischemic stroke treated in the field?","a":"Only when it is over 220/120 (or per medical control)","w":["Whenever it is over 140/90","Whenever it is over 160/100","Never, under any circumstances"],"x":"Permissive hypertension protects the penumbra. The hospital lowers it to under 185/110 only if thrombolysis is planned."},{"t":"S","lv":"paramedic","cat":"medical","call":"stroke","scale":null,"q":"What blood pressure must be reached before IV thrombolysis for stroke?","a":"Under 185/110","w":["Under 140/90","Under 160/100","Under 220/120"],"x":"After thrombolysis it is kept under 180/105 for 24 hours."},{"t":"S","lv":"paramedic","cat":"medical","call":"stroke","scale":null,"q":"After a successful thrombectomy, what does the 2026 guideline say about lowering systolic BP below 140?","a":"It is harmful and not recommended","w":["It is required for 72 hours","It is optional","It is recommended only for large-core strokes"],"x":"Intensive lowering below 140 after recanalization worsened outcomes in trials."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"Under the 2026 AHA/ASA guideline, what is the standard window for IV thrombolysis for stroke?","a":"Within 4.5 hours of last known well","w":["Within 3 hours of symptom discovery","Within 6 hours of last known well","Within 24 hours of last known well"],"x":"0 to 4.5 hours from LKW for eligible patients with disabling deficits."},{"t":"S","lv":"paramedic","cat":"medical","call":"stroke","scale":null,"q":"A wake-up stroke patient was last seen normal 8 hours ago. Under the 2026 guideline, can thrombolysis still be considered?","a":"Yes, if advanced imaging shows salvageable brain (for example DWI-FLAIR mismatch)","w":["No, the window is 4.5 hours with no exceptions","Yes, with no imaging needed","Only if the NIHSS is over 20"],"x":"Extended-window thrombolysis (about 4.5 to 9 hours or unknown onset) may be considered with imaging selection."},{"t":"S","lv":"paramedic","cat":"pharm","call":"stroke","scale":null,"q":"Which statement about tenecteplase versus alteplase for stroke is correct under the 2026 guideline?","a":"Either may be used within 4.5 hours; tenecteplase is a single IV push","w":["Only alteplase is recommended","Tenecteplase requires a 60-minute infusion","Tenecteplase is only for patients over 80"],"x":"The 2026 guideline endorses both. Tenecteplase's single bolus makes transfers simpler than alteplase's 60-minute infusion."},{"t":"S","lv":"paramedic","cat":"pharm","call":"stroke","scale":null,"q":"Why can tenecteplase be given as one push while alteplase needs an infusion?","a":"Tenecteplase has a longer half-life and more fibrin specificity","w":["Tenecteplase is a smaller dose of the same drug","Alteplase is only absorbed slowly","Tenecteplase does not need to reach the clot"],"x":"Tenecteplase was engineered from alteplase to last longer and bind fibrin more selectively."},{"t":"S","lv":"paramedic","cat":"pharm","call":"stroke","scale":null,"q":"What does the 2026 guideline say about the higher tenecteplase dose used in some trials?","a":"It is not recommended because it did not help and may cause harm","w":["It is preferred for basilar occlusion","It is preferred for patients over 100 kg","It is recommended after 4.5 hours"],"x":"Only the standard stroke dose is recommended."},{"t":"S","lv":"paramedic","cat":"pharm","call":"stroke","scale":null,"q":"A patient has a mild, non-disabling stroke 2 hours after onset. What does the 2026 guideline prefer?","a":"Dual antiplatelet therapy rather than thrombolysis","w":["Thrombolysis regardless of deficit","Thrombectomy","No treatment"],"x":"Thrombolysis has not been shown to help non-disabling deficits; DAPT is preferred."},{"t":"M","lv":"paramedic","cat":"pharm","call":"stroke","scale":null,"q":"Which would make a stroke patient ineligible for IV thrombolysis? Select all that apply.","opts":[[true,"Blood on the CT scan"],[true,"Blood pressure that cannot be brought under 185/110"],[true,"Glucose of 40 mg/dL"],[false,"Age over 80"],[false,"Atrial fibrillation not on an anticoagulant"]],"x":"Age alone and untreated atrial fibrillation are not exclusions. Low glucose must be corrected and reassessed because it may be the cause."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"Which hospitals can perform endovascular thrombectomy?","a":"Comprehensive and Thrombectomy-capable Stroke Centers","w":["Any Primary Stroke Center","Acute Stroke Ready Hospitals","Any emergency department with a CT"],"x":"Primary Stroke Centers and Acute Stroke Ready Hospitals can give thrombolysis but not thrombectomy."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"Which findings most strongly suggest a large vessel occlusion?","a":"Gaze deviation, aphasia or neglect with dense one-sided weakness","w":["Isolated numbness of one hand","Dizziness alone","Mild facial droop only"],"x":"Cortical signs plus dense weakness are the classic LVO picture, which is what the severity scales measure."},{"t":"S","lv":"emt","cat":"ops","call":"stroke","scale":null,"q":"Your severity scale is positive for LVO, LKW was 2 hours ago, and a thrombectomy center is 20 minutes farther than the nearest primary stroke center. Under the AHA Mission: Lifeline routing algorithm, where should most systems go?","a":"The thrombectomy-capable center","w":["The nearest primary stroke center","Whichever hospital the family prefers","Any ED with a CT"],"x":"Suspected LVO goes to a CSC or TSC when the extra time is about 30 minutes or less and thrombolysis eligibility is not lost. Local protocols set exact minutes."},{"t":"S","lv":"emt","cat":"ops","call":"stroke","scale":null,"q":"When does a suspected LVO patient go to the nearest stroke center instead of bypassing to a thrombectomy center?","a":"When the bypass would push a thrombolysis-eligible patient past their window","w":["Whenever the patient is over 80","Whenever the blood pressure is high","When the patient is on aspirin"],"x":"Getting thrombolysis started (drip and ship) can come first when the bypass costs the window."},{"t":"S","lv":"paramedic","cat":"medical","call":"stroke","scale":null,"q":"What is the standard time window for thrombectomy of an anterior LVO without advanced imaging selection?","a":"0 to 6 hours from last known well","w":["0 to 3 hours","0 to 4.5 hours","0 to 48 hours"],"x":"Up to 6 hours is the early window; 6 to 24 hours needs imaging selection."},{"t":"S","lv":"paramedic","cat":"medical","call":"stroke","scale":null,"q":"Up to how long after last known well can selected anterior LVO patients get a thrombectomy?","a":"24 hours","w":["6 hours","12 hours","72 hours"],"x":"From 6 to 24 hours, patients are selected by imaging; the 2026 guideline now includes some large-core strokes."},{"t":"S","lv":"paramedic","cat":"medical","call":"stroke","scale":null,"q":"For basilar artery occlusion, the 2026 guideline supports thrombectomy within 24 hours for patients with which NIHSS?","a":"10 or more","w":["1 or more","6 or more","20 or more"],"x":"Benefit for NIHSS 6 to 9 in basilar occlusion is not well established."},{"t":"S","lv":"emt","cat":"ops","call":"stroke","scale":null,"q":"What is the field scene-time goal for a suspected stroke?","a":"15 minutes or less","w":["30 minutes or less","5 minutes or less","No target; take as long as needed"],"x":"Short scene times and pre-notification shorten door-to-needle and door-to-puncture times."},{"t":"O","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"Put these stroke actions in order, first to last.","opts":["Check the airway, breathing and circulation","Check a blood glucose","Run the stroke screen and severity scale","Pin down the last known well time and a witness phone number","Pre-notify the stroke destination"],"x":"Life threats, then the most common treatable mimic, then the exam, the clock and the call ahead."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"What SpO2 is the usual threshold for giving oxygen to a stroke patient?","a":"Under 94%","w":["Under 98%","Under 90% only in COPD","Oxygen for everyone regardless of SpO2"],"x":"Routine oxygen for a normal saturation does not help stroke outcomes."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"Why should a stroke patient have nothing by mouth?","a":"Swallowing may be impaired and aspiration is common","w":["Food raises blood pressure","Food interferes with CT scans","Eating triggers seizures"],"x":"Dysphagia is common after stroke; the hospital screens the swallow first."},{"t":"S","lv":"emt","cat":"cardio","call":"stemi","scale":null,"q":"How soon after first medical contact should a 12-lead be obtained in suspected ACS?","a":"Within 10 minutes","w":["Within 30 minutes","On arrival at the hospital","Only if the pain is severe"],"x":"Early 12-leads let EMS activate the cath lab from the field."},{"t":"S","lv":"paramedic","cat":"cardio","call":"stemi","scale":null,"q":"What is the ST elevation threshold for V2 and V3 in a woman?","a":"1.5 mm","w":["1 mm","2 mm","2.5 mm"],"x":"In V2-V3: 1.5 mm in women, 2 mm in men 40 and over, 2.5 mm in men under 40. Other leads: 1 mm."},{"t":"S","lv":"paramedic","cat":"cardio","call":"stemi","scale":null,"q":"ST elevation in II, III and aVF points to which territory?","a":"Inferior, usually the right coronary artery","w":["Anterior, the LAD","Lateral, the circumflex","Septal only"],"x":"Inferior STEMI: check right-sided V4R for right ventricular involvement."},{"t":"S","lv":"paramedic","cat":"cardio","call":"stemi","scale":null,"q":"Inferior STEMI with 1 mm ST elevation in V4R and a BP of 92/60. Which drug is most likely to drop the pressure dangerously?","a":"Nitroglycerin","w":["Aspirin","Oxygen","Normal saline"],"x":"Right ventricular infarcts are preload-dependent; nitrates reduce preload and can crash the pressure."},{"t":"S","lv":"paramedic","cat":"cardio","call":"stemi","scale":null,"q":"ST depression in V1 to V3 with tall R waves suggests what?","a":"Posterior MI","w":["Normal variant","Pericarditis","Digoxin effect only"],"x":"Confirm with posterior leads V7 to V9: 0.5 mm of elevation."},{"t":"S","lv":"paramedic","cat":"cardio","call":"stemi","scale":null,"q":"What is the elevation threshold in posterior leads V7 to V9?","a":"0.5 mm","w":["1 mm","2 mm","3 mm"],"x":"Posterior leads are far from the heart, so the cutoff is lower."},{"t":"S","lv":"paramedic","cat":"cardio","call":"stemi","scale":null,"q":"Upsloping ST depression with tall symmetric T waves across V1 to V6 in chest pain suggests what?","a":"De Winter T waves, a proximal LAD occlusion","w":["Hyperkalemia only","Early repolarization","Wellens syndrome"],"x":"De Winter is a STEMI equivalent that deserves cath lab activation per protocol."},{"t":"S","lv":"paramedic","cat":"cardio","call":"stemi","scale":null,"q":"A pain-free patient has deep biphasic T waves in V2 and V3 after chest pain yesterday. What is this, and why does it matter?","a":"Wellens pattern: critical LAD narrowing at risk of closing","w":["Normal variant","A completed old MI","Pericarditis"],"x":"Wellens is not a STEMI, but these patients need urgent cardiology and should not get stress testing."},{"t":"S","lv":"paramedic","cat":"cardio","call":"stemi","scale":null,"q":"Which criteria help find an MI in a patient with left bundle branch block or a paced rhythm?","a":"Sgarbossa (or modified Smith-Sgarbossa)","w":["Wellens criteria","Brugada criteria","Duke criteria"],"x":"Concordant ST elevation of 1 mm or more, concordant ST depression of 1 mm or more in V1 to V3, or excessively discordant elevation."},{"t":"S","lv":"paramedic","cat":"cardio","call":"stemi","scale":null,"q":"ST elevation in aVR with widespread ST depression suggests what?","a":"Left main or multivessel ischemia","w":["A normal ECG","Isolated right ventricular infarct","Early repolarization"],"x":"High-risk pattern; follow your protocol on activation."},{"t":"S","lv":"emt","cat":"cardio","call":"stemi","scale":null,"q":"EMS takes a STEMI patient directly to a PCI-capable center. What is the first-medical-contact-to-device goal?","a":"90 minutes or less","w":["30 minutes or less","120 minutes or less","180 minutes or less"],"x":"Direct transport: FMC to device within 90 minutes."},{"t":"S","lv":"paramedic","cat":"cardio","call":"stemi","scale":null,"q":"When is fibrinolysis chosen over transfer for PCI in STEMI?","a":"When FMC to device would exceed 120 minutes, within 12 hours of onset","w":["Whenever the patient is over 75","Only after a failed PCI","Whenever the pain is under 1 hour"],"x":"If PCI cannot happen within 120 minutes, fibrinolysis (door to needle within 30 minutes) is the alternative."},{"t":"S","lv":"paramedic","cat":"cardio","call":"stemi","scale":null,"q":"What is the door-in-door-out goal at a non-PCI hospital transferring a STEMI?","a":"30 minutes or less","w":["60 minutes or less","90 minutes or less","10 minutes or less"],"x":"DIDO of 30 minutes keeps FMC to device near 120 minutes."},{"t":"S","lv":"emt","cat":"cardio","call":"stemi","scale":null,"q":"When is oxygen indicated in suspected ACS?","a":"SpO2 under 90% or respiratory distress","w":["For every chest pain patient","Only for STEMI","Only if the patient is over 65"],"x":"Extra oxygen does not help a normal saturation."},{"t":"M","lv":"emt","cat":"cardio","call":"stemi","scale":null,"q":"Which findings mean nitroglycerin is held in chest pain? Select all that apply.","opts":[[true,"Systolic BP under 90"],[true,"Sildenafil taken 6 hours ago"],[true,"Right ventricular infarct"],[false,"Heart rate of 88"],[false,"History of high cholesterol"]],"x":"Also held for tadalafil within 48 hours or a pressure 30 below baseline."},{"t":"M","lv":"paramedic","cat":"cardio","call":"stemi","scale":null,"q":"Which are absolute contraindications to fibrinolysis for STEMI? Select all that apply.","opts":[[true,"Any prior intracranial hemorrhage"],[true,"Suspected aortic dissection"],[true,"Ischemic stroke 6 weeks ago"],[false,"Age over 75"],[false,"Blood pressure of 150/90"]],"x":"Age and a controlled BP are not absolute contraindications."},{"t":"S","lv":"emt","cat":"cardio","call":"stemi","scale":null,"q":"Why are defibrillation pads placed early on a STEMI patient?","a":"Ventricular fibrillation is most common in the first hours","w":["To get a better 12-lead","To pace every patient","To monitor blood pressure"],"x":"Early VF is the most common cause of sudden death in STEMI."},{"t":"S","lv":"emt","cat":"medical","call":"sepsis","scale":null,"q":"Which best defines sepsis?","a":"Life-threatening organ dysfunction from the body's response to infection","w":["Any fever over 38 C","Bacteria in the blood","Infection with a fast heart rate"],"x":"Sepsis-3 definition."},{"t":"S","lv":"emt","cat":"medical","call":"sepsis","scale":null,"q":"Which qSOFA finding is NOT one of the three criteria?","a":"Heart rate over 100","w":["Respiratory rate 22 or more","Altered mentation","Systolic BP 100 or less"],"x":"qSOFA is respiratory rate, mentation and systolic BP. The 2021 Surviving Sepsis Campaign advises against using it alone as a screen."},{"t":"S","lv":"paramedic","cat":"medical","call":"sepsis","scale":null,"q":"A low end-tidal CO2 in a suspected sepsis patient often correlates with what?","a":"A high lactate","w":["A low glucose","A high potassium","Normal perfusion"],"x":"EtCO2 of about 25 mmHg or less tracks with elevated lactate and poor perfusion."},{"t":"S","lv":"paramedic","cat":"medical","call":"sepsis","scale":null,"q":"What defines septic shock?","a":"Vasopressors needed for MAP 65 or more and lactate over 2 despite fluids","w":["Any hypotension with fever","Heart rate over 120","Lactate over 1"],"x":"Septic shock carries a much higher mortality than sepsis alone."},{"t":"S","lv":"emt","cat":"medical","call":"sepsis","scale":null,"q":"What is the antibiotic time goal for septic shock?","a":"Within 1 hour of recognition","w":["Within 6 hours","Within 24 hours","After cultures result"],"x":"Each hour of delay raises mortality; a field sepsis alert speeds this up."},{"t":"S","lv":"paramedic","cat":"medical","call":"sepsis","scale":null,"q":"During fluid resuscitation in sepsis, what should be reassessed between boluses?","a":"Lung sounds, breathing and perfusion","w":["Pupil size","Grip strength","Capillary glucose only"],"x":"Fluids help until they cause pulmonary edema; reassess each time."},{"t":"M","lv":"emt","cat":"trauma","call":"trauma","scale":null,"q":"Which are RED criteria in the 2021 field triage guideline? Select all that apply.","opts":[[true,"Suspected pelvic fracture"],[true,"Amputation above the wrist"],[true,"Motor GCS under 6"],[false,"Fall from 8 feet"],[false,"Single closed forearm fracture"]],"x":"Red criteria go to the highest level trauma center."},{"t":"S","lv":"emt","cat":"trauma","call":"trauma","scale":null,"q":"In the 2021 field triage guideline, which vital sign is a red criterion for an adult aged 10 to 64?","a":"Heart rate greater than systolic BP","w":["Heart rate over 100","Systolic BP under 110","SpO2 under 95%"],"x":"For 10 to 64: SBP under 90 or HR greater than SBP. For 65 and over: SBP under 110 or HR greater than SBP."},{"t":"S","lv":"emt","cat":"trauma","call":"trauma","scale":null,"q":"What systolic BP is a red criterion for a patient 65 or older?","a":"Under 110","w":["Under 90","Under 100","Under 80"],"x":"Older adults decompensate at higher pressures."},{"t":"S","lv":"emt","cat":"trauma","call":"trauma","scale":null,"q":"A fall from what height is a yellow (mechanism) criterion for all ages?","a":"Over 10 feet","w":["Over 20 feet","Over 3 feet","Any fall"],"x":"The 2021 guideline uses 10 feet for all ages."},{"t":"S","lv":"emt","cat":"trauma","call":"trauma","scale":null,"q":"What are the parts of the trauma lethal triad?","a":"Hypothermia, acidosis and coagulopathy","w":["Hypoxia, hypotension and hypoglycemia","Bradycardia, hypertension and irregular breathing","Fever, tachycardia and hypotension"],"x":"Each worsens the others; keep trauma patients warm from the start."},{"t":"S","lv":"paramedic","cat":"trauma","call":"trauma","scale":null,"q":"Which patient should NOT get permissive hypotension?","a":"A patient with a traumatic brain injury","w":["A stab wound to the abdomen with no head injury","A gunshot to the torso","A patient with a pelvic fracture and no head injury"],"x":"The injured brain needs a normal blood pressure for perfusion."},{"t":"S","lv":"paramedic","cat":"trauma","call":"trauma","scale":null,"q":"Tranexamic acid for trauma bleeding is not started after how long from injury?","a":"3 hours","w":["1 hour","6 hours","24 hours"],"x":"Benefit is greatest within 1 hour; after 3 hours it may cause harm."},{"t":"S","lv":"emt","cat":"cardio","call":"rosc","scale":null,"q":"After ROSC, what SpO2 range is targeted?","a":"92 to 98%","w":["100%","88 to 92%","Over 85%"],"x":"Hyperoxia after arrest is harmful."},{"t":"S","lv":"paramedic","cat":"cardio","call":"rosc","scale":null,"q":"After ROSC, what end-tidal CO2 range is targeted?","a":"35 to 45 mmHg","w":["20 to 25 mmHg","50 to 60 mmHg","Under 30 mmHg"],"x":"Hyperventilation lowers CO2 and constricts cerebral vessels."},{"t":"S","lv":"paramedic","cat":"cardio","call":"rosc","scale":null,"q":"After ROSC, what blood pressure goals are typical?","a":"Systolic 90 or more and MAP 65 or more","w":["Systolic 140 or more","MAP 50 or more","Any pressure with a pulse"],"x":"Treat hypotension with fluids and vasopressors per protocol."},{"t":"S","lv":"paramedic","cat":"cardio","call":"rosc","scale":null,"q":"During post-ROSC care, the end-tidal CO2 suddenly falls from 38 to 12. What is the most likely cause?","a":"Re-arrest","w":["Improved perfusion","Hyperventilation only","A normal finding"],"x":"Check a pulse and resume CPR if absent."},{"t":"S","lv":"emt","cat":"cardio","call":"rosc","scale":null,"q":"Why is a 12-lead obtained soon after ROSC?","a":"To find a STEMI that needs the cath lab","w":["To check the defibrillator","To measure blood pressure","To confirm the patient's identity"],"x":"Post-arrest STEMI goes to a PCI center."}];
+ICO.calls = '<path d="M3 12h4l2-5 4 10 2-5h6"/><circle cx="12" cy="12" r="10" stroke-opacity=".35"/>';
+(function () {
+  if (typeof DB === "undefined") return;
+  DB.RQ = DB.RQ || [];
+  CALLQ.forEach(function (q, k) {
+    var it = { reg: 1, lv: q.lv, cat: q.cat, d: "", q: q.q, x: q.x, w: [], call: q.call, scale: q.scale || "", cqid: "cq" + k };
+    if (q.t === "S") { it.a = q.a; it.w = q.w.slice(); }
+    else if (q.t === "M") { it.t = "multi"; it.opts = q.opts.map(function (o) { return o[1]; }); it.ok = q.opts.filter(function (o) { return o[0]; }).map(function (o) { return o[1]; }); it.a = it.ok.join("; "); }
+    else { it.t = "order"; it.prio = 1; it.opts = q.opts.slice(); it.ok = q.opts.slice(); it.a = q.opts.map(function (p, i) { return (i + 1) + ". " + p; }).join("  "); }
+    q.it = it; DB.RQ.push(it);
+  });
+})();
+function strokeScale() { return (typeof Prog !== "undefined" && Prog.d && Prog.d.strokeScale) || ""; }
+function scaleById(id) { return CALL_SCALES.filter(function (s) { return s.id === id; })[0] || null; }
+/* a scale question only shows once the agency's scale is known, and only for that scale */
+function callScaleOK(q) { if (!q || !q.scale) return true; var sc = strokeScale(); return !sc || q.scale === sc; }
+function callQs(call) { return CALLQ.filter(function (q) { return q.call === call && callScaleOK(q); }); }
+function callTabOK() { return S.view === "level" && (routeOfLevel(S.level) === "ph" || S.level === "rn" || S.level === "flightrn"); }
+function scaleCard(s, full) {
+  return '<div class="cscard"><div class="cskind">' + esc(s.kind) + '</div><h3>' + esc(s.name) + '</h3><p class="cstell">' + esc(s.tells) + '</p>' +
+    '<ul class="csitems">' + s.items.map(function (i) { return '<li><b>' + esc(i[0]) + '</b>' + (i[1] ? ' ' + esc(i[1]) : '') + '</li>'; }).join("") + '</ul>' +
+    '<p class="cspos"><b>Positive:</b> ' + esc(s.pos) + '</p>' + (full ? '<p class="cspearl">' + esc(s.pearl) + '</p>' : '') + '</div>';
+}
+function scalePicker() {
+  var sc = strokeScale(), s = scaleById(sc);
+  var sel = '<label class="cslabel" for="cscale">What stroke scale does your agency use?</label><select id="cscale" class="cssel"><option value="">Pick your scale</option>' +
+    CALL_SCALES.map(function (x) { return '<option value="' + x.id + '"' + (x.id === sc ? ' selected' : '') + '>' + esc(x.short) + ' (' + esc(x.kind.toLowerCase()) + ')</option>'; }).join("") + '</select>';
+  return '<aside class="callside">' + sel + (s ? '<p class="csnote">Quizzes now ask only about ' + esc(s.short) + '. Change it any time.</p><details class="csdet"' + (window.innerWidth >= 900 ? ' open' : '') + '><summary>How ' + esc(s.short) + ' works</summary>' + scaleCard(s, true) + '</details>'
+    : '<p class="csnote">Pick the one you use and the quiz will only ask about that scale from now on.</p>') + '</aside>';
+}
+function callsView() {
+  var C = CALLS.filter(function (c) { return c.id === S.callId; })[0];
+  if (!C) {
+    S.callId = null;
+    return '<p class="muted">The time-critical calls: what to recognize, the clocks that matter, and where the patient needs to go. Education only; your protocols decide care.</p>' +
+      '<div class="calllist">' + CALLS.map(function (c) { var n = callQs(c.id).length; return '<button class="callitem" data-callid="' + c.id + '"><strong>' + esc(c.name) + '</strong><span>' + esc(c.line) + '</span><em>' + n + ' questions</em></button>'; }).join("") + '</div>';
+  }
+  var main = '<header class="callhead"><h2>' + esc(C.name) + '</h2><p class="muted">' + esc(C.line) + '</p></header>' + callQuizHTML(C);
+  main += C.sec.map(function (s, i) {
+    return '<details class="callsec"' + (i === 0 ? ' open' : '') + '><summary>' + esc(s[0]) + '</summary><ul>' + s[1].map(function (l) { return '<li>' + esc(l) + '</li>'; }).join("") + '</ul></details>';
+  }).join("");
+  if (C.id === "stroke") {
+    var sc = strokeScale();
+    main += '<details class="callsec"><summary>Other stroke scales you may see</summary><div class="csgrid">' + CALL_SCALES.filter(function (s) { return s.id !== sc; }).map(function (s) { return scaleCard(s, false); }).join("") + '</div></details>';
+  }
+  main += '<p class="dnote callfoot">Education only. Follow your local protocols and medical direction. DrugBug does not give drug doses here.</p>';
+  if (C.id !== "stroke") return '<div class="callwrap">' + main + '</div>';
+  return '<div class="callgrid"><div class="callmain">' + main + '</div>' + scalePicker() + '</div>';
+}
+/* the quiz: 10 questions from this call, one at a time */
+function callQuizHTML(C) {
+  var Z = S.cq && S.cq.call === C.id ? S.cq : null;
+  var pool = callQs(C.id);
+  if (!Z) {
+    var need = C.id === "stroke" && !strokeScale();
+    return '<div class="cq start"><div><b>Quiz me</b><span>' + Math.min(10, pool.length) + ' of ' + pool.length + ' questions' + (need ? '. Pick your stroke scale first so it only asks about yours.' : '') + '</span></div><button class="btn small" data-cqstart="' + C.id + '">Start</button></div>';
+  }
+  if (Z.i >= Z.list.length) {
+    return '<div class="cq done"><b>' + Z.score + ' of ' + Z.list.length + ' right</b><div class="cqacts"><button class="btn small" data-cqstart="' + C.id + '">Another 10</button><button class="btn small ghost" data-cqend="1">Done</button></div></div>';
+  }
+  var q = CALLQ[Z.list[Z.i]], h = '<div class="cq"><div class="cqtop"><span>Question ' + (Z.i + 1) + ' of ' + Z.list.length + '</span>' + (q.scale ? '<span class="pill">' + esc((scaleById(q.scale) || {}).short || "") + '</span>' : '') + '</div><p class="cqq">' + esc(q.q) + '</p>';
+  if (q.t === "S") {
+    if (!Z.order) Z.order = shuffle([q.a].concat(q.w));
+    h += '<div class="cqopts">' + Z.order.map(function (o, k) {
+      var cls = Z.ans == null ? "" : o === q.a ? " right" : k === Z.ans ? " wrong" : " dim";
+      return '<button class="cqo' + cls + '" data-cqa="' + k + '"' + (Z.ans != null ? ' disabled' : '') + '>' + esc(o) + '</button>';
+    }).join("") + '</div>';
+  } else if (q.t === "M") {
+    if (!Z.order) { Z.order = shuffle(q.opts.map(function (o, k) { return k; })); Z.sel = {}; }
+    h += '<p class="cqhint">Select all that apply.</p><div class="cqopts">' + Z.order.map(function (k) {
+      var o = q.opts[k], on = !!Z.sel[k], cls = on ? " on" : "";
+      if (Z.ans != null) cls += o[0] ? (on ? " right" : " missed") : (on ? " wrong" : " dim");
+      return '<button class="cqo multi' + cls + '" data-cqm="' + k + '"' + (Z.ans != null ? ' disabled' : '') + '><i aria-hidden="true"></i>' + esc(o[1]) + '</button>';
+    }).join("") + '</div>' + (Z.ans == null ? '<button class="btn small" data-cqcheck="1">Check</button>' : '');
+  } else {
+    if (!Z.order) { Z.order = shuffle(q.opts.map(function (o, k) { return k; })); Z.seq = []; }
+    h += '<p class="cqhint">Tap them in order, first to last.</p><div class="cqopts">' + Z.order.map(function (k) {
+      var n = Z.seq.indexOf(k), cls = n >= 0 ? " on" : "";
+      if (Z.ans != null) cls += Z.seq[k] === k ? "" : "";
+      return '<button class="cqo ord' + cls + '" data-cqord="' + k + '"' + (Z.ans != null || n >= 0 ? ' disabled' : '') + '><i aria-hidden="true">' + (n >= 0 ? n + 1 : '') + '</i>' + esc(q.opts[k]) + '</button>';
+    }).join("") + '</div>' + (Z.ans == null && Z.seq.length ? '<button class="btn small ghost" data-cqreset="1">Start over</button>' : '');
+    if (Z.ans != null) h += '<ol class="cqorder">' + q.opts.map(function (o) { return '<li>' + esc(o) + '</li>'; }).join("") + '</ol>';
+  }
+  if (Z.ans != null) h += '<div class="cqx ' + (Z.ok ? 'ok' : 'no') + '"><b>' + (Z.ok ? 'Right.' : 'Not quite.') + '</b> ' + esc(q.x) + '</div><button class="btn small" data-cqnext="1">' + (Z.i + 1 < Z.list.length ? 'Next' : 'See score') + '</button>';
+  return h + '</div>';
+}
+function cqRender() { var el = document.querySelector(".cq"); if (!el || !S.callId) return render(); var C = CALLS.filter(function (c) { return c.id === S.callId; })[0]; var w = document.createElement("div"); w.innerHTML = callQuizHTML(C); el.parentNode.replaceChild(w.firstChild, el); }
+function cqFinish(ok) { var Z = S.cq; Z.ans = 1; Z.ok = ok; if (ok) Z.score++; try { if (typeof sfx === "function") sfx(ok); } catch (e) {} cqRender(); }
+function callsClick(t, a) {
+  if (a.callid) { S.callId = a.callid; S.cq = null; render(); try { window.scrollTo(0, 0); } catch (e) {} return true; }
+  if (a.callback) { S.callId = null; S.cq = null; render(); try { window.scrollTo(0, 0); } catch (e) {} return true; }
+  if (a.cqend) { S.cq = null; cqRender(); return true; }
+  if (a.cqstart) {
+    var pool = []; CALLQ.forEach(function (q, k) { if (q.call === a.cqstart && callScaleOK(q)) pool.push(k); });
+    S.cq = { call: a.cqstart, list: shuffle(pool).slice(0, 10), i: 0, score: 0 }; cqRender(); return true;
+  }
+  var Z = S.cq; if (!Z) return false;
+  var q = CALLQ[Z.list[Z.i]];
+  if (a.cqa != null && Z.ans == null) { Z.ans = +a.cqa; var ok = Z.order[+a.cqa] === q.a; Z.ans = +a.cqa; Z.ok = ok; if (ok) Z.score++; try { if (typeof sfx === "function") sfx(ok); } catch (e) {} cqRender(); return true; }
+  if (a.cqm != null && Z.ans == null) { Z.sel[+a.cqm] = !Z.sel[+a.cqm]; t.classList.toggle("on"); return true; }
+  if (a.cqcheck) { cqFinish(q.opts.every(function (o, k) { return !!o[0] === !!Z.sel[k]; })); return true; }
+  if (a.cqord != null && Z.ans == null) { Z.seq.push(+a.cqord); if (Z.seq.length === q.opts.length) cqFinish(Z.seq.every(function (k, i) { return k === i; })); else cqRender(); return true; }
+  if (a.cqreset) { Z.seq = []; cqRender(); return true; }
+  if (a.cqnext) { Z.i++; Z.ans = null; Z.order = null; Z.ok = null; cqRender(); var el = document.querySelector(".cq"); if (el && el.scrollIntoView) el.scrollIntoView({ block: "nearest" }); return true; }
+  return false;
+}
+document.addEventListener("change", function (e) {
+  if (!e.target || e.target.id !== "cscale") return;
+  Prog.d.strokeScale = e.target.value || ""; if (typeof saveProg === "function") saveProg();
+  if (S.cq && S.cq.call === "stroke") S.cq = null;
+  render();
+});
+(function () {
+  var css = '.calllist{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-top:12px}' +
+    '.callitem{text-align:left;border:1px solid var(--line);border-radius:16px;padding:14px;background:var(--surface);color:var(--ink);font:inherit;cursor:pointer;display:flex;flex-direction:column;gap:4px}' +
+    '.callitem strong{font-size:17px}.callitem span{font-size:14px;color:var(--muted);line-height:1.35}.callitem em{font-style:normal;font-size:12px;font-weight:700;color:var(--muted);margin-top:4px}' +
+    '.callgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}.callside{order:-1}' +
+    '@media (min-width:900px){.callgrid{grid-template-columns:minmax(0,1fr) 300px;align-items:start}.callside{order:0;position:sticky;top:12px}}' +
+    '.callside{border:1px solid var(--line);border-radius:16px;background:var(--surface);padding:14px}' +
+    '.cslabel{display:block;font-weight:800;font-size:15px;margin-bottom:8px}.cssel{width:100%;font:inherit;padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}' +
+    '.csnote{font-size:13px;color:var(--muted);margin:8px 0}' +
+    '.csdet summary{cursor:pointer;font-weight:700;font-size:14px;color:var(--gen,#2bb3a3)}' +
+    '.cscard{border-top:1px solid var(--line);padding-top:10px;margin-top:6px}.cskind{font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}.cscard h3{margin:2px 0 6px;font-size:16px}' +
+    '.cstell{font-size:14px;margin:0 0 8px}.csitems{margin:0 0 8px;padding-left:18px;font-size:14px}.csitems li{margin:4px 0}.cspos{font-size:14px;margin:0 0 6px;padding:8px 10px;border-radius:10px;background:var(--surface-2)}.cspearl{font-size:13px;color:var(--muted);margin:0}' +
+    '.csgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}.csgrid .cscard{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:0;background:var(--bg)}' +
+    '.callhead h2{margin:0 0 2px}.callhead p{margin:0 0 10px}' +
+    '.callsec{border:1px solid var(--line);border-radius:14px;background:var(--surface);margin:0 0 10px}.callsec summary{cursor:pointer;font-weight:800;padding:12px 14px;list-style:none}.callsec summary::-webkit-details-marker{display:none}.callsec summary::after{content:"+";float:right;color:var(--muted)}.callsec[open] summary::after{content:"-"}' +
+    '.callsec ul{margin:0;padding:0 16px 12px 32px}.callsec li{margin:6px 0;line-height:1.45;font-size:15px}.callsec .csgrid{padding:0 12px 12px}' +
+    '.cq{border:1.5px solid var(--gen,#2bb3a3);border-radius:16px;padding:12px 14px;margin:0 0 12px;background:var(--surface)}' +
+    '.cq.start,.cq.done{display:flex;align-items:center;justify-content:space-between;gap:12px}.cq.start div{display:flex;flex-direction:column}.cq.start span{font-size:13px;color:var(--muted)}.cqacts{display:flex;gap:8px}' +
+    '.cqtop{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);font-weight:700}.cqq{font-size:16px;font-weight:700;margin:8px 0 10px;line-height:1.4}.cqhint{font-size:13px;color:var(--muted);margin:-4px 0 8px}' +
+    '.cqopts{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}.cqo{text-align:left;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:15px;padding:10px 12px;border-radius:12px;cursor:pointer;display:flex;gap:10px;align-items:flex-start}' +
+    '.cqo i{flex:none;width:20px;height:20px;border-radius:6px;border:1.5px solid var(--line);font-style:normal;font-size:12px;font-weight:800;display:grid;place-items:center}.cqo.on{border-color:var(--gen,#2bb3a3)}.cqo.on i{background:var(--gen,#2bb3a3);border-color:transparent;color:#fff}' +
+    '.cqo.right{border-color:var(--ok,#22a06b);background:color-mix(in srgb,var(--ok,#22a06b) 14%,var(--bg))}.cqo.wrong{border-color:var(--bad,#e5484d);background:color-mix(in srgb,var(--bad,#e5484d) 12%,var(--bg))}.cqo.missed{border-style:dashed;border-color:var(--ok,#22a06b)}.cqo.dim{opacity:.55}.cqo:disabled{cursor:default;color:var(--ink)}' +
+    '.cqx{font-size:14px;line-height:1.45;padding:10px 12px;border-radius:12px;background:var(--surface-2);margin-bottom:10px;border-left:4px solid var(--ok,#22a06b)}.cqx.no{border-left-color:var(--bad,#e5484d)}.cqorder{font-size:14px;margin:0 0 10px;padding-left:22px}' +
+    '.callfoot{margin-top:14px}';
+  try { var st = document.createElement("style"); st.textContent = css; document.head.appendChild(st); } catch (e) {}
+})();
 /* "Conditions it treats" section for the drug Wormhole */
 function disDrugSection(drugId) {
   var ids = disForDrug(drugId); if (!ids.length) return "";
@@ -23822,7 +26078,7 @@ document.addEventListener("input", function (e) {
    Data: DB.ANAT (data/anat*.js), 124 cards. Each tap plays a silly noise picked by the card's
    `snd` field, because the owner asked for the stomach to groan and the arms to creak. */
 
-var ANAT_AREAS = ["Head", "Neck", "Chest", "Abdomen", "Pelvis", "Limbs", "Whole body"];
+var ANAT_AREAS = ["Head and face", "Neck and throat", "Chest and ribs", "Abdomen and gut", "Pelvis and groin", "Back", "Buttocks", "Arms and legs", "Body-wide"];   /* renamed Nov 4 2026; see AREA_RENAME */
 var ANAT_BY = null, ANAT_GRP = null;
 
 function anatAll() { return (typeof DB !== "undefined" && DB.ANAT) || []; }
@@ -23859,21 +26115,30 @@ var ANAT_SFX = {
   wobble: "a jiggle",
   hum:    "a low drone",
   slosh:  "liquid moving",
-  pop:    "a small pop"
+  pop:    "a small pop",
+  /* the ones the figure needs when you poke it (owner, Nov 4 2026) */
+  thunk:  "a dull metal clang",
+  crowd:  "a room full of people gasping",
+  gasp:   "a sharp offended inhale",
+  punch:  "a body blow",
+  whine:  "a hurt complaint",
+  cry:    "a wavering sob"
 };
-var ASF = { ctx: null };
-function anatCtx() {
-  var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
-  if (!ASF.ctx) ASF.ctx = new AC();
-  if (ASF.ctx.state === "suspended") { try { ASF.ctx.resume(); } catch (e) {} }
-  return ASF.ctx;
-}
+var ASF = audioAlias({});
+function anatCtx() { return audioCtx(); }
 function anatSnd(kind) {
   if (typeof SET !== "function" || !SET().sfx) return;
   if (!ANAT_SFX[kind]) kind = "pop";
   try {
     var c = anatCtx(); if (!c) return;
-    var t = c.currentTime, out = c.destination;
+    /* louder body sounds (owner, Nov 5 2026): every anatomy sound goes through a boost and a
+       limiter, so the groans, punches and whines are about 2.5x louder without clipping */
+    if (!anatSnd.bus || anatSnd.busCtx !== c) {
+      var bg = c.createGain(), lim = c.createDynamicsCompressor();
+      bg.gain.value = 2.6; lim.threshold.value = -6; lim.knee.value = 4; lim.ratio.value = 12; lim.attack.value = 0.002; lim.release.value = 0.12;
+      bg.connect(lim); lim.connect(c.destination); anatSnd.bus = bg; anatSnd.busCtx = c;
+    }
+    var t = c.currentTime, out = anatSnd.bus;
     /* one oscillator with an optional slide and vibrato */
     function tone(type, f0, f1, at, dur, v, vib, vibd) {
       var o = c.createOscillator(), g = c.createGain();
@@ -23898,10 +26163,11 @@ function anatSnd(kind) {
     }
     var i;
     if (kind === "groan") {           /* a long descending moan with a wet rumble under it */
-      tone("sawtooth", 150, 72, 0, 0.72, 0.08, 6.5, 16);
-      tone("sine", 74, 46, 0.03, 0.66, 0.1, 4, 8);
-      nz(0.05, 0.6, 0.07, "lowpass", 420, 180);
-      for (i = 0; i < 4; i++) tone("sine", 220 + Math.random() * 200, 90, 0.18 + i * 0.12, 0.1, 0.03);
+      tone("sawtooth", 150, 72, 0, 0.9, 0.15, 6.5, 16);
+      tone("sawtooth", 300, 150, 0.01, 0.85, 0.07, 6.5, 30);   /* an octave up, so phone speakers carry it */
+      tone("sine", 74, 46, 0.03, 0.8, 0.16, 4, 8);
+      nz(0.05, 0.7, 0.12, "lowpass", 520, 200);
+      for (i = 0; i < 4; i++) tone("sine", 220 + Math.random() * 200, 90, 0.18 + i * 0.12, 0.1, 0.06);
     } else if (kind === "gurgle") {   /* a handful of rising bloops */
       for (i = 0; i < 7; i++) tone("sine", 200 + Math.random() * 260, 520 + Math.random() * 400, i * 0.062, 0.09, 0.07);
       nz(0, 0.45, 0.05, "bandpass", 900, 500, 3);
@@ -23960,6 +26226,136 @@ function anatSnd(kind) {
       nz(0, 0.3, 0.14, "bandpass", 500, 1500, 1.2);
       nz(0.3, 0.34, 0.13, "bandpass", 1500, 400, 1.2);
       for (i = 0; i < 5; i++) tone("sine", 180 + Math.random() * 180, 110, 0.1 + i * 0.11, 0.1, 0.045);
+    } else if (kind === "thunk") {    /* knuckles on a metal skull: a dull clang with a long ring */
+      nz(0, 0.05, 0.3, "bandpass", 1800, 700, 1.4);
+      tone("triangle", 340, 150, 0, 0.3, 0.2);
+      tone("sine", 196, 190, 0, 1.1, 0.1);
+      tone("sine", 523, 515, 0.01, 0.85, 0.055);
+      tone("sine", 782, 770, 0.01, 0.6, 0.03);
+      tone("square", 88, 60, 0, 0.22, 0.07);
+    } else if (kind === "crowd") {
+      /* A room of people saying "wow", about two seconds of it. (owner, Nov 4 2026)
+         Three things make it read as people rather than a synthesiser:
+         - the formants run in PARALLEL, not in series. Chained bandpasses multiply and leave
+           almost nothing: the series version measured 230x quieter than this one.
+         - every voice gets its own formant SCALE, which is vocal tract length. That is what
+           makes one voice sound like a big man and another like a child; pitch alone does not.
+         - the word is snappy. "wow" peaks early and closes fast; drawn out slowly it turns
+           into "woah".
+         Shape: gasps first, the word across the middle, mutters trailing off. */
+      var bus = c.createGain(), comp = c.createDynamicsCompressor();
+      bus.gain.value = 0.85;
+      comp.threshold.value = -15; comp.ratio.value = 8; comp.knee.value = 12;
+      comp.attack.value = 0.004; comp.release.value = 0.3;
+      bus.connect(comp); comp.connect(out);
+      /* one person saying "wow": k scales the whole vocal tract, so k>1 is a smaller person */
+      function wow(at, f0, k, amp, dur) {
+        var T1 = at + dur * 0.24, T2 = at + dur;                 /* the vowel opens early */
+        var src = c.createOscillator(); src.type = "sawtooth";
+        src.frequency.setValueAtTime(f0 * 0.88, t + at);
+        src.frequency.linearRampToValueAtTime(f0 * 1.2, t + T1); /* the jump on "wow" */
+        src.frequency.linearRampToValueAtTime(f0 * 0.78, t + T2);
+        var vib = c.createOscillator(), vg = c.createGain();
+        vib.frequency.value = 4.5 + Math.random() * 2.5; vg.gain.value = f0 * 0.025;
+        vib.connect(vg); vg.connect(src.frequency); vib.start(t + at); vib.stop(t + T2 + 0.05);
+        var env = c.createGain();
+        env.gain.setValueAtTime(0.0001, t + at);
+        env.gain.exponentialRampToValueAtTime(amp, t + at + dur * 0.16);   /* a quick attack */
+        env.gain.setValueAtTime(amp, t + at + dur * 0.5);
+        env.gain.exponentialRampToValueAtTime(0.0001, t + T2);
+        env.connect(bus);
+        /* w (rounded) -> ah (open) -> oo (rounded again), each formant on its own filter */
+        var FR = [[310, 760, 390], [600, 1150, 740], [2300, 2500, 2320]],
+            FG = [1, 0.5, 0.16], FQ = [10, 12, 14], j;
+        for (j = 0; j < 3; j++) {
+          var bp = c.createBiquadFilter(), bg = c.createGain();
+          bp.type = "bandpass"; bp.Q.value = FQ[j];
+          bp.frequency.setValueAtTime(FR[j][0] * k, t + at);
+          bp.frequency.linearRampToValueAtTime(FR[j][1] * k, t + T1);
+          bp.frequency.linearRampToValueAtTime(FR[j][2] * k, t + T2);
+          bg.gain.value = FG[j];
+          src.connect(bp); bp.connect(bg); bg.connect(env);
+        }
+        src.start(t + at); src.stop(t + T2 + 0.05);
+      }
+      /* a person catching their breath: noise pulled in through a moving throat, with a
+         touch of voice on it, which is what makes a gasp sound human and not like wind */
+      function gaspv(at, f0, k, amp) {
+        var dur = 0.3 + Math.random() * 0.16;
+        var n = Math.floor(c.sampleRate * dur), bf = c.createBuffer(1, n, c.sampleRate), dd = bf.getChannelData(0), i2;
+        for (i2 = 0; i2 < n; i2++) { var u = i2 / n; dd[i2] = (Math.random() * 2 - 1) * Math.pow(u, 0.6) * (1 - u * 0.25); }
+        var sn = c.createBufferSource(); sn.buffer = bf;
+        var bp = c.createBiquadFilter(); bp.type = "bandpass"; bp.Q.value = 2.2;
+        bp.frequency.setValueAtTime(420 * k, t + at);
+        bp.frequency.linearRampToValueAtTime(1500 * k, t + at + dur);      /* the throat opening */
+        var g2 = c.createGain(); g2.gain.value = amp;
+        sn.connect(bp); bp.connect(g2); g2.connect(bus);
+        sn.start(t + at); sn.stop(t + at + dur);
+        var vo = c.createOscillator(), vg2 = c.createGain(), vb = c.createBiquadFilter();
+        vo.type = "sawtooth"; vo.frequency.setValueAtTime(f0 * 1.25, t + at + dur * 0.5);
+        vo.frequency.linearRampToValueAtTime(f0 * 1.75, t + at + dur);
+        vb.type = "bandpass"; vb.Q.value = 8; vb.frequency.value = 820 * k;
+        vg2.gain.setValueAtTime(0.0001, t + at + dur * 0.5);
+        vg2.gain.exponentialRampToValueAtTime(amp * 0.5, t + at + dur * 0.78);
+        vg2.gain.exponentialRampToValueAtTime(0.0001, t + at + dur + 0.06);
+        vo.connect(vb); vb.connect(vg2); vg2.connect(bus);
+        vo.start(t + at + dur * 0.5); vo.stop(t + at + dur + 0.1);
+      }
+      var qi;
+      /* The room catches its breath. This is a real recording (sfx/gasp.mp3, supplied by the
+         owner), played several times over with the pitch shifted apart so it reads as a crowd
+         rather than one person on a loop. If the file has not arrived, the synthesised gasp
+         above stands in. (owner, Nov 4 2026) */
+      var realGasp = !!SFXBUF["gasp:buf"];
+      if (realGasp) {
+        for (qi = 0; qi < 7; qi++) {
+          sfxPlay("gasp", Math.random() * 0.26,
+            (0.5 + Math.random() * 0.5) * (qi === 0 ? 1 : 0.8),   /* one leads, the rest fill in */
+            0.82 + Math.random() * 0.46,                          /* pitch: deeper and lighter people */
+            bus);
+        }
+      } else {
+        for (qi = 0; qi < 7; qi++) gaspv(Math.random() * 0.2, 90 + Math.random() * 150, 0.85 + Math.random() * 0.45, 0.05 + Math.random() * 0.04);
+      }
+      /* and then says it: sixteen voices across the middle second */
+      for (qi = 0; qi < 16; qi++) {
+        wow(0.16 + Math.random() * 0.72,
+            88 + Math.random() * 180,                 /* pitch */
+            0.82 + Math.random() * 0.5,               /* vocal tract: big men to children */
+            0.085 + Math.random() * 0.06,
+            0.32 + Math.random() * 0.16);             /* short: "wow", not "woah" */
+      }
+      /* a few late ones and the mutter afterwards, out to about two seconds */
+      for (qi = 0; qi < 4; qi++) wow(1.0 + Math.random() * 0.4, 95 + Math.random() * 150, 0.85 + Math.random() * 0.45, 0.05 + Math.random() * 0.035, 0.34 + Math.random() * 0.14);
+      for (qi = 0; qi < 9; qi++) {
+        var md = 1.25 + Math.random() * 0.6;
+        tone("triangle", 120 + Math.random() * 130, 100 + Math.random() * 80, md, 0.3, 0.011, 5 + Math.random() * 4, 8);
+        nz(md, 0.26, 0.013, "bandpass", 450 + Math.random() * 600, 1000, 1.1);
+      }
+    } else if (kind === "gasp") {
+      /* one person: the recording if it is here, the synthesised version if not */
+      if (SFXBUF["gasp:buf"] && sfxPlay("gasp", 0, 0.95, 0.94 + Math.random() * 0.16)) {
+        tone("sine", 840, 910, 0.3, 0.26, 0.04, 7, 18);           /* the scandalised note after it */
+      } else {
+      nz(0, 0.26, 0.2, "bandpass", 700, 2600, 0.9);
+      tone("sine", 420, 880, 0.02, 0.24, 0.07);
+      tone("sine", 870, 940, 0.26, 0.3, 0.05, 7, 20);
+      }
+    } else if (kind === "punch") {    /* a body blow: low thud and a slap on top */
+      tone("sine", 160, 48, 0, 0.22, 0.3);
+      tone("triangle", 90, 40, 0, 0.3, 0.18);
+      nz(0, 0.07, 0.3, "lowpass", 900);
+      nz(0.005, 0.03, 0.18, "highpass", 2600);
+    } else if (kind === "whine") {    /* a hurt, nasal complaint that falls away */
+      tone("sawtooth", 520, 300, 0, 0.55, 0.055, 6.5, 22);
+      tone("sine", 262, 160, 0.02, 0.5, 0.06, 6, 12);
+      tone("sine", 1040, 620, 0, 0.45, 0.018, 6.5, 30);
+    } else if (kind === "cry") {      /* a wavering sob: three catches of breath */
+      [0, 0.26, 0.52].forEach(function (d, k) {
+        tone("sine", 600 - k * 70, 330 - k * 50, d, 0.22, 0.075, 9, 34);
+        tone("triangle", 300 - k * 35, 170 - k * 25, d, 0.2, 0.045, 9, 16);
+        nz(d, 0.07, 0.05, "bandpass", 900, 1700, 1.1);
+      });
     } else {                          /* pop */
       tone("sine", 480, 1300, 0, 0.08, 0.17);
       nz(0, 0.04, 0.1, "highpass", 2200);
@@ -24025,14 +26421,14 @@ function anatView() {
   c += '<div class="tools"><input class="search" id="anq" type="search" autocomplete="off" placeholder="Search a part: alveoli, SA node, glomerulus, cochlea" aria-label="Search anatomy" value="' + esc(S.anQ || "") + '"></div>';
 
   /* body figure + area chips, reusing the Body Systems silhouette */
-  c += '<div class="bodywrap anatwrap"><div class="bodyfig">' + (typeof bodySVG === "function" ? bodySVG(area) : "") +
-    ANAT_AREAS.filter(function (a) { return a === "Whole body"; }).map(function (a) {
+  c += '<div class="bodywrap anatwrap"><div class="bodyfig">' + (typeof bodyStage === "function" ? bodyStage("anat", area) : "") +
+    ANAT_AREAS.filter(function (a) { return a === "Body-wide"; }).map(function (a) {
       return '<button class="chip' + (area === a ? '" aria-pressed="true' : '') + '" data-anarea="' + a + '">' + a + '</button>';
     }).join("") +
     (area || grp || q ? '<button class="linkish" data-anarea="">Show all</button>' : '') + '</div>';
 
   c += '<div class="bodylist"><p class="muted small">' + hits.length + ' part' + (hits.length === 1 ? '' : 's') +
-    (area ? ' in the ' + esc(area.toLowerCase()) : '') + (grp ? ' under ' + esc(grp) : '') + '</p>';
+    (area ? (area === "Body-wide" ? ' that work throughout the body' : ' in the ' + esc(area.toLowerCase())) : '') + (grp ? ' under ' + esc(grp) : '') + '</p>';
   /* group headings, each collapsible, with the parts inside */
   var G = {}, order = [];
   hits.forEach(function (x) { if (!G[x.grp]) { G[x.grp] = []; order.push(x.grp); } G[x.grp].push(x); });
@@ -24050,13 +26446,15 @@ function anatView() {
 /* taps: an area on the figure, a part chip, or the link across to Body Systems */
 document.addEventListener("click", function (e) {
   var t = e.target.closest && e.target.closest("[data-anarea],[data-anid],[data-anbody]"); if (!t) return;
+  if (typeof spinJustDragged === "function" && spinJustDragged()) return;
   var d = t.dataset;
   if (d.anbody) { S.tab = "body"; S.barea = ""; S.breg = d.anbody; render(); var b1 = document.querySelector(".sickcard"); if (b1) b1.scrollIntoView({ block: "start", behavior: SET().motion ? "auto" : "smooth" }); return; }
   if (d.anarea != null) { S.anArea = d.anarea; S.anGrp = ""; S.anId = ""; render(); return window.scrollTo(0, 0); }
   if (d.anid) {
     var x = anatOf(d.anid); if (!x) return;
-    S.anId = d.anid; try { anatSnd(x.snd); } catch (e2) {}
+    S.anId = d.anid;
     render();
+    try { bodyReact(x.area, x.snd); } catch (e2) {}   /* the figure reacts, with this part's noise */
     var card = document.querySelector(".anatcard"); if (card) card.scrollIntoView({ block: "start", behavior: SET().motion ? "auto" : "smooth" });
   }
 });
@@ -24064,7 +26462,11 @@ document.addEventListener("click", function (e) {
 document.addEventListener("click", function (e) {
   if (S.tab !== "anatomy") return;
   var t = e.target.closest && e.target.closest(".anatwrap [data-barea]"); if (!t) return;
-  e.stopPropagation(); S.anArea = t.getAttribute("data-barea") || ""; S.anGrp = ""; S.anId = ""; render(); window.scrollTo(0, 0);
+  if (typeof spinJustDragged === "function" && spinJustDragged()) { e.stopPropagation(); return; }
+  e.stopPropagation();
+  var ar = t.getAttribute("data-barea") || "", bp = t.getAttribute("data-bpart") || "";
+  S.anArea = ar; S.anGrp = ""; S.anId = ""; render(); window.scrollTo(0, 0);
+  try { bodyReact(ar, null, bp); } catch (e2) {}
 }, true);
 document.addEventListener("input", function (e) {
   if (!e.target || e.target.id !== "anq") return;
@@ -24226,13 +26628,11 @@ function gfxLevelTrans(key, from, done) {
 /* ---------- the sounds ----------
    Built live, on the same throwaway context the rest of the effects use, so Settings >
    Sound effects turns them off with everything else. */
-var TXS = { ctx: null };
+var TXS = audioAlias({});
 function txSnd(kind) {
   if (typeof SET !== "function" || !SET().sfx) return;
   try {
-    var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
-    var c = TXS.ctx || (TXS.ctx = new AC());
-    if (c.state === "suspended") { try { c.resume(); } catch (e) {} }
+    var c = audioCtx(); if (!c) return;
     var t = c.currentTime, i;
     /* a shared output with a little headroom and a limiter, so a transition can be loud without
        clipping when six oscillators land on the same beat (owner asked for these to be heard) */
@@ -24787,19 +27187,17 @@ function voiceSyl(text) {
   return out;
 }
 
-var VX = { ctx: null, t: 0 };
+var VX = audioAlias({ t: 0 });
 function voiceOk() { return typeof SET === "function" && SET().sfx && (typeof funOn !== "function" || funOn()); }
 function voiceCtx() {
-  var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
-  if (!VX.ctx) {
-    VX.ctx = new AC();
-    VX.out = VX.ctx.createGain(); VX.out.gain.value = 1.0;
-    var lim = VX.ctx.createDynamicsCompressor();
+  var c = audioCtx(); if (!c) return null;
+  if (!VX.out || VX.outCtx !== c) {
+    VX.out = c.createGain(); VX.out.gain.value = 1.0; VX.outCtx = c;
+    var lim = c.createDynamicsCompressor();
     lim.threshold.value = -8; lim.ratio.value = 10; lim.attack.value = 0.003; lim.release.value = 0.15;
-    VX.out.connect(lim); lim.connect(VX.ctx.destination);
+    VX.out.connect(lim); lim.connect(c.destination);
   }
-  if (VX.ctx.state === "suspended") { try { VX.ctx.resume(); } catch (e) {} }
-  return VX.ctx;
+  return c;
 }
 /* speak a line in a voice. Overlapping calls cut the previous one off, so two bubbles
    in a row do not talk over each other. */
@@ -25209,7 +27607,7 @@ function walletClear() {
    Written only by a Cloud Function after Stripe says so (functions/index.js setEntitlement), and
    read-only to the browser (tools/firestore.rules). */
 
-var SUB = { tier: "", until: 0, status: "", cancelAt: 0, loaded: false, unsub: null, uid: null, hooked: false };
+var SUB = { tier: "", until: 0, status: "", cancelAt: 0, amount: null, currency: "", interval: "", loaded: false, unsub: null, uid: null, hooked: false };
 
 function subCache() { var s = store("sub"); return s && typeof s.until === "number" ? s : null; }
 
@@ -25218,17 +27616,38 @@ function subCache() { var s = store("sub"); return s && typeof s.until === "numb
 function subTier() { return SUB.until > Date.now() ? (SUB.tier || "") : ""; }
 function subActive() { return !!subTier(); }
 function subDaysLeft() { return subActive() ? Math.ceil((SUB.until - Date.now()) / 86400000) : 0; }
+/* What this person actually pays, from their own subscription rather than the price list.
+   After a repricing a grandfathered subscriber keeps their old Stripe price, and showing them
+   today's list price would be plain wrong (owner, Nov 4 2026). */
+function subPriceText() {
+  if (typeof SUB.amount !== "number" || !SUB.interval) return "";
+  var cur = (SUB.currency || "usd").toUpperCase();
+  var amt = (SUB.amount / 100).toFixed(2);
+  var money = cur === "USD" ? "$" + amt : amt + " " + cur;
+  return money + " / " + (SUB.interval === "year" ? "year" : "month");
+}
+/* true when they are paying less than the current list price for the same plan */
+function subGrandfathered() {
+  var t = subTier(), P = t && PLANS[t];
+  if (!P || typeof SUB.amount !== "number" || !SUB.interval) return false;
+  var listed = SUB.interval === "year" ? P.y : P.m;
+  var cents = Math.round(parseFloat(String(listed).replace(/[^0-9.]/g, "")) * 100);
+  return !!cents && SUB.amount < cents;
+}
 function subLabel() {
   if (!subActive()) return "";
   var d = new Date(SUB.until).toLocaleDateString();
   if (SUB.cancelAt) return TIER_NAME[subTier()] + " until " + d + " (not renewing)";
   if (SUB.status === "past_due") return TIER_NAME[subTier()] + " — your card was declined. Update it by " + d + ".";
-  return TIER_NAME[subTier()] + " · renews " + d;
+  var pr = subPriceText();
+  return TIER_NAME[subTier()] + (pr ? " · " + pr : "") + " · renews " + d +
+    (subGrandfathered() ? " · your original price, kept" : "");
 }
 
 function subInit() {
   var c = subCache();
-  if (c) { SUB.tier = c.tier || ""; SUB.until = c.until || 0; SUB.status = c.status || ""; SUB.cancelAt = c.cancelAt || 0; }
+  if (c) { SUB.tier = c.tier || ""; SUB.until = c.until || 0; SUB.status = c.status || ""; SUB.cancelAt = c.cancelAt || 0;
+    SUB.amount = typeof c.amount === "number" ? c.amount : null; SUB.currency = c.currency || ""; SUB.interval = c.interval || ""; }
   /* Coming back from Stripe (success_url carries ?sub=1). Same reasoning as the wallet's ?bought=1:
      say thank you off the redirect, not off the document changing, because after a redirect the
      first snapshot is a first load and reading a welcome into it would be guesswork. __DBQ is
@@ -25278,8 +27697,10 @@ function subWatch(db, uid) {
       if (same && !first) return;                 /* nothing changed: do not re-render */
 
       SUB.tier = d.tier || ""; SUB.until = until; SUB.status = d.status || ""; SUB.cancelAt = d.cancelAt || 0;
+      SUB.amount = typeof d.amount === "number" ? d.amount : null; SUB.currency = d.currency || ""; SUB.interval = d.interval || "";
       SUB.loaded = true;
-      store("sub", { tier: SUB.tier, until: SUB.until, status: SUB.status, cancelAt: SUB.cancelAt, uid: uid });
+      store("sub", { tier: SUB.tier, until: SUB.until, status: SUB.status, cancelAt: SUB.cancelAt,
+        amount: SUB.amount, currency: SUB.currency, interval: SUB.interval, uid: uid });
 
       if (!first && !wasTier && subTier()) S.proMsg = "Welcome to " + TIER_NAME[subTier()] + "!";
       subArm();
