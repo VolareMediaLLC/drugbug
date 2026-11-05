@@ -9312,7 +9312,7 @@ var D3 = (function () {
     return addInto({}, frames[frames.length - 1][1], 1);
   }
 
-  return { mul: mul, trs: trs, inv: inv, persp: persp, lookAt: lookAt, xf: xf, nrm3: nrm3,
+  return { MAT: MAT, lin: lin, mul: mul, trs: trs, inv: inv, persp: persp, lookAt: lookAt, xf: xf, nrm3: nrm3,
            lathe: lathe, capsule: capsule, sphere: sphere, torus: torus,
            Rig: Rig, J: J, HIPY: HIPY, REST: REST, MAT: MAT, sample: sample, addInto: addInto, ease: ease, zero: zero };
 })();
@@ -9710,6 +9710,8 @@ var D3GL = (function () {
     return true;
   }
   return {
+    /* the dummy wears the colour of the specialty you are in, toned down (owner, Nov 5 2026) */
+    tint: function (rgb) { if (rgb && rgb.length === 3) D3.MAT.yellow.c = D3.lin(rgb); },
     mount: mount, react: react, live: function () { return S.ok && !!S.cv && S.cv.isConnected; },
     select: function (area) { S.sel = area || ""; },
     on: function (k, f) { S.cb[k] = f; }, area: function (p) { return AREA[p]; },
@@ -9752,10 +9754,22 @@ function d3Pop(host, text, x, y) {
   host.appendChild(el);
   setTimeout(function () { el.classList.add("out"); setTimeout(function () { if (el.parentNode) el.remove(); }, 320); }, 1300);
 }
+/* the specialty colour (--c on the level page, BugDex teal otherwise), mixed 45% toward a warm
+   grey and lifted a little, so it reads as the specialty but is softer than the buttons */
+function d3Tint(h) {
+  var v = "";
+  try { v = getComputedStyle(h).getPropertyValue("--c").trim() || getComputedStyle(document.documentElement).getPropertyValue("--gen").trim(); } catch (e) {}
+  var m = /^#?([0-9a-f]{6})$/i.exec(v), c;
+  if (m) c = [0, 2, 4].map(function (i) { return parseInt(m[1].substr(i, 2), 16) / 255; });
+  else { var r = /rgba?\(([^)]+)\)/.exec(v); if (!r) return null; c = r[1].split(",").slice(0, 3).map(function (x) { return parseFloat(x) / 255; }); }
+  var grey = [0.80, 0.78, 0.74];
+  return c.map(function (x, i) { return Math.min(1, x * 0.55 + grey[i] * 0.45 + 0.03); });
+}
 function d3Mount() {
   if (typeof D3GL === "undefined") return;
   var hosts = document.querySelectorAll(".bm3d"); if (!hosts.length) return;
   var h = hosts[hosts.length - 1];
+  try { D3GL.tint(d3Tint(h)); } catch (e) {}
   if (!D3GL.mount(h)) return;
   var ctx = h.getAttribute("data-ctx");
   D3GL.select(ctx === "body" ? S.barea : S.anArea);
