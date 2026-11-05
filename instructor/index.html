@@ -66,6 +66,13 @@ tr.fresh td{background:color-mix(in srgb,var(--teal) 12%,transparent)}
 .heat.warm{background:color-mix(in srgb,var(--good) 18%,transparent);color:var(--good)}
 .heat.lukewarm{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
 .heat.cold{background:var(--surface2);color:var(--muted)}
+.dcols{display:flex;gap:2px;align-items:flex-end;height:150px;padding-top:16px}
+.dcols .dc{flex:1 1 0;min-width:0;position:relative;height:100%;display:flex;flex-direction:column;justify-content:flex-end}
+.dcols .dc i{display:block;background:var(--bar);border-radius:3px 3px 0 0;min-height:1px}
+.dcols .dc.today i{background:var(--accent)}
+.dcols .dc:hover i{opacity:.75}
+.dcolx{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);border-top:1px solid var(--line);padding-top:4px;margin-top:4px}
+.dpeak{font-size:12px;color:var(--muted);margin-top:4px}
 .grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
 @media (max-width:860px){.grid2{grid-template-columns:minmax(0,1fr)}}
 tr.clk{cursor:pointer}tr.clk:hover td{background:var(--surface2)}
@@ -103,6 +110,33 @@ tr.clk{cursor:pointer}tr.clk:hover td{background:var(--surface2)}
 </section>
 
 <!-- owner overview -->
+<section id="vApp" class="hide">
+  <div class="card">
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <div><h2 style="margin:0">App metrics</h2><div class="muted small" id="apSub">Everyone using DrugBug, website and iPhone. Anonymous: counted by device, never by name.</div></div>
+      <div class="row" style="align-items:center"><select id="apRange" style="width:auto"><option value="30" selected>Last 30 days</option><option value="14">Last 14 days</option><option value="90">Last 90 days</option></select><button class="ghost" id="bApRefresh">Refresh</button></div>
+    </div>
+    <div class="tiles" id="apTiles"></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><h2>Daily active users</h2><p class="muted small">Devices that opened DrugBug each day (Texas time).</p><div class="dcols" id="apDau"></div><div class="dcolx" id="apDauX"></div></div>
+    <div class="card"><h2>Questions answered per day</h2><p class="muted small">All users together. Hover a bar for accuracy and minutes studied.</p><div class="dcols" id="apQ"></div><div class="dcolx" id="apQX"></div></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><h2>New users per day</h2><p class="muted small">First time a device opened DrugBug.</p><div class="dcols" id="apNew"></div><div class="dcolx" id="apNewX"></div></div>
+    <div class="card"><h2>Do people come back?</h2><p class="muted small">New users grouped by the week they started. Day 1 = came back the next day; 7 / 30 = came back within that many days.</p><div class="tblwrap"><table id="apRet"></table></div></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><h2>Plans (active in the last 30 days)</h2><div id="apTier" class="chart"></div><p class="muted small" id="apSubs" style="margin-top:8px"></p></div>
+    <div class="card"><h2>Platform and route (active in the last 30 days)</h2><div id="apPlat" class="chart"></div><div id="apRoute" class="chart" style="margin-top:12px"></div></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><h2>Most-opened sections</h2><p class="muted small">Opens by people active in the last 30 days.</p><div id="apTabs" class="chart"></div></div>
+    <div class="card"><h2>Most-used features</h2><p class="muted small">Quizzes by type, drug pages, the dummy, L.E.A.R.N and more.</p><div id="apFeats" class="chart"></div></div>
+  </div>
+  <div class="card"><h2>Levels people study</h2><div id="apLevels" class="chart"></div><p class="muted small" id="apVer" style="margin-top:10px"></p></div>
+</section>
+
 <section id="vOverview" class="hide">
   <div class="card">
     <div class="row" style="justify-content:space-between;align-items:center">
@@ -284,7 +318,7 @@ tr.clk{cursor:pointer}tr.clk:hover td{background:var(--surface2)}
     var real = u && !u.isAnonymous;
     $("who").innerHTML = real ? esc(u.email || "Signed in") + ' <button class="ghost" id="bOut">Sign out</button>' : "";
     if (real) $("bOut").onclick = function () { auth.signOut(); };
-    show("vSignin", !real); show("vOwner", false); show("vList", false); show("vClass", false); show("vOverview", false);
+    show("vSignin", !real); show("vApp", false); show("vOwner", false); show("vList", false); show("vClass", false); show("vOverview", false);
     if (real) loadList();
   });
 
@@ -292,8 +326,8 @@ tr.clk{cursor:pointer}tr.clk:hover td{background:var(--surface2)}
   function loadList() {
     call("groupOrgList").then(function (r) {
       ST.owner = r.owner; ST.list = r.list;
-      show("vOwner", r.owner); show("vList", true); show("vClass", false); show("vOverview", r.owner);
-      if (r.owner) loadOverview();
+      show("vOwner", r.owner); show("vList", true); show("vClass", false); show("vOverview", r.owner); show("vApp", r.owner);
+      if (r.owner) { loadOverview(); loadApp(); }
       $("listTitle").textContent = r.owner ? "All classes (" + r.list.length + ")" : "Your classes";
       $("uidLine").textContent = r.owner ? "" : "Your account id: " + r.uid;
       show("joinBox", !r.owner);
@@ -321,6 +355,73 @@ tr.clk{cursor:pointer}tr.clk:hover td{background:var(--surface2)}
       .catch(function (e) { say("newMsg", e.message, true); })
       .then(function () { b.disabled = false; });
   };
+
+  /* ---------- owner: app metrics (functions/usage.js appMetrics) ---------- */
+  var AP = null;
+  $("bApRefresh").onclick = function () { loadApp(); };
+  $("apRange").onchange = function () { if (AP) drawApp(AP); };
+  var LABEL = { ph: "Prehospital", rn: "Nursing", md: "Medical school", im: "Imaging", ev: "Everyday Health", gen: "BugDex", fm: "Field medic", other: "Main menu / other",
+    web: "Website", ios: "iPhone", android: "Android", free: "Free", plus: "Plus", pro: "Pro",
+    registry: "Medications", tools: "Study", diseases: "Disease Lab", calls: "Big Calls", scene: "On Scene", level_hub: "Level menu", gen_hub: "BugDex menu", home: "Main menu",
+    terrarium: "Terrarium", mylist: "My List", units: "Specialty Units", labs: "Lab Values", micro: "Microbiology", nbug: "Nursing Bug", everyday: "Everyday Health",
+    drug_page: "Drug pages opened", dummy_tap: "Taps on the Great Bug", learn: "L.E.A.R.N runs", learn_system: "Learn by system runs", quiz_sys: "System quizzes",
+    quiz_daily: "5-min DrugBug", quiz_quick: "Quick quizzes", quiz_study: "Study a drug", quiz_unit: "Unit practice" };
+  var LEVEL = { emt: "EMT", aemt: "AEMT", paramedic: "Paramedic", flight: "Flight Paramedic", rn: "RN", lvn: "LVN", flightrn: "Flight RN", cna: "CNA", md1: "Med school" };
+  var nice = function (k) { return LABEL[k] || String(k).replace(/_/g, " ").replace(/^./, function (c) { return c.toUpperCase(); }); };
+  var num = function (n) { return n == null ? "—" : Number(n).toLocaleString(); };
+  function loadApp() {
+    $("apSub").textContent = "Loading…";
+    call("appMetrics").then(function (d) { AP = d; drawApp(d); }).catch(function (e) {
+      $("apSub").textContent = /not.?found|internal|unavailable/i.test(e.message) ? "App metrics start working once the new server functions are deployed." : e.message;
+    });
+  }
+  function bars(id, xid, rows, val, tip) {
+    var max = Math.max.apply(null, rows.map(val).concat([1])), last = rows.length - 1;
+    $(id).innerHTML = rows.map(function (r, i) { var v = val(r), hgt = Math.round(100 * v / max);
+      return '<div class="dc' + (i === last ? ' today' : '') + '" title="' + esc(tip(r)) + '"><i style="height:' + (v ? Math.max(2, hgt) : 0) + '%"></i></div>'; }).join("");
+    var f = rows[0], m = rows[Math.floor(rows.length / 2)], l = rows[last];
+    var lab = function (r) { var p = r.day.split("-"); return (+p[1]) + "/" + (+p[2]); };
+    $(xid).innerHTML = '<span>' + lab(f) + '</span><span>' + lab(m) + '</span><span>' + lab(l) + ' (today)</span>';
+  }
+  function hbars(id, rows, total) {
+    var max = Math.max.apply(null, rows.map(function (r) { return r.n; }).concat([1]));
+    $(id).innerHTML = rows.length ? rows.map(function (r) {
+      return '<div class="lab">' + esc(nice(r.key)) + '</div><div class="bar"><i style="width:' + Math.max(2, Math.round(100 * r.n / max)) + '%"></i></div><div class="val"><b>' + num(r.n) + '</b>' + (total ? ' <span>' + Math.round(100 * r.n / total) + '%</span>' : '') + '</div>';
+    }).join("") : '<p class="muted" style="grid-column:1/-1">Nothing yet.</p>';
+  }
+  function obj(o) { return Object.keys(o || {}).map(function (k) { return { key: k, n: o[k] }; }).filter(function (r) { return r.n; }).sort(function (a, b) { return b.n - a.n; }); }
+  function drawApp(d) {
+    var T = d.totals, R = +$("apRange").value, rows = d.daily.slice(-R);
+    var sum = function (f) { return rows.reduce(function (s, r) { return s + f(r); }, 0); };
+    var q = sum(function (r) { return r.q; }), c = sum(function (r) { return r.c; }), mins = sum(function (r) { return r.minutes; }), dauSum = sum(function (r) { return r.dau; });
+    $("apSub").textContent = num(T.users) + " devices have ever opened DrugBug · updated " + new Date(d.generatedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    $("apTiles").innerHTML = [
+      [num(T.active1), "active today"], [num(T.active7), "active in the last 7 days"], [num(T.active30), "active in the last 30 days"],
+      [num(sum(function (r) { return r.newUsers; })), "new users, last " + R + " days"],
+      [num(q), "questions answered, last " + R + " days" + (q ? " (" + Math.round(100 * c / q) + "% right)" : "")],
+      [(dauSum ? Math.round(10 * mins / dauSum) / 10 : 0) + " min", "average time per person per day"],
+      [T.daysActivePerUser30 + " days", "days active per person, last 30"],
+      [T.paidPct30 + "%", "of active users on Plus or Pro"]
+    ].map(function (x) { return '<div class="tile"><b>' + esc(x[0]) + '</b><span>' + esc(x[1]) + '</span></div>'; }).join("");
+    bars("apDau", "apDauX", rows, function (r) { return r.dau; }, function (r) { return r.day + ": " + r.dau + " active, " + r.newUsers + " new"; });
+    bars("apQ", "apQX", rows, function (r) { return r.q; }, function (r) { return r.day + ": " + r.q + " questions" + (r.accuracy != null ? ", " + r.accuracy + "% right" : "") + ", " + r.minutes + " min studied, " + r.learn + " L.E.A.R.N cards"; });
+    bars("apNew", "apNewX", rows, function (r) { return r.newUsers; }, function (r) { return r.day + ": " + r.newUsers + " new users"; });
+    var pc = function (v) { return v == null ? '<span class="muted">too soon</span>' : v + "%"; };
+    $("apRet").innerHTML = '<tr><th>Started</th><th>New users</th><th>Day 1</th><th>Within 7 days</th><th>Within 30 days</th></tr>' + (d.retention.length ? d.retention.map(function (r) {
+      return '<tr><td>' + (r.weeksAgo === 0 ? "This week" : r.weeksAgo === 1 ? "Last week" : r.weeksAgo + " weeks ago") + '</td><td class="num">' + r.size + '</td><td class="num">' + pc(r.d1) + '</td><td class="num">' + pc(r.d7) + '</td><td class="num">' + pc(r.d30) + '</td></tr>';
+    }).join("") : '<tr><td colspan="5" class="muted">No new users yet.</td></tr>');
+    var tier = obj(d.splits.tier), tt = tier.reduce(function (s, r) { return s + r.n; }, 0);
+    hbars("apTier", ["free", "plus", "pro"].map(function (k) { return { key: k, n: d.splits.tier[k] || 0 }; }), tt);
+    $("apSubs").textContent = T.webSubs != null ? "Website subscriptions currently paid up (Stripe): " + T.webSubs + ". iPhone subscriptions are counted in App Store Connect." : "";
+    var plat = obj(d.splits.plat), pt = plat.reduce(function (s, r) { return s + r.n; }, 0);
+    hbars("apPlat", plat, pt);
+    var route = obj(d.splits.route), rt = route.reduce(function (s, r) { return s + r.n; }, 0);
+    hbars("apRoute", route, rt);
+    hbars("apTabs", d.tabs);
+    hbars("apFeats", d.feats);
+    hbars("apLevels", d.splits.level.map(function (r) { return { key: LEVEL[r.key] || r.key.toUpperCase(), n: r.n }; }));
+    $("apVer").textContent = d.splits.version.length ? "App versions in use: " + d.splits.version.map(function (v) { return v.key + " (" + v.n + ")"; }).join(", ") : "";
+  }
 
   /* ---------- owner overview ---------- */
   $("bOvRefresh").onclick = function () { loadOverview(); };
@@ -376,7 +477,7 @@ tr.clk{cursor:pointer}tr.clk:hover td{background:var(--surface2)}
   $("bBack").onclick = function () { ST.orgId = null; loadList(); };
   $("bRefresh").onclick = function () { refresh(); };
   function refresh() {
-    show("vList", false); show("vOwner", false); show("vOverview", false); show("vClass", true);
+    show("vList", false); show("vOwner", false); show("vOverview", false); show("vApp", false); show("vClass", true);
     $("cName").textContent = "Loading…";
     return call("groupDashboard", { orgId: ST.orgId }).then(function (d) { ST.dash = d; drawClass(); })
       .catch(function (e) { $("cName").textContent = "Couldn't load this class"; $("cSub").textContent = e.message; });
