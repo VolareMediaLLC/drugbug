@@ -29598,6 +29598,7 @@ function groupRedeemKey(raw, win, fail) {
     SEAT.tier = "pro"; SEAT.until = r.until; SEAT.orgName = r.orgName; SEAT.alias = r.alias; SEAT.level = r.level || ""; SEAT.loaded = true; SEAT.redeemedAt = Date.now();
     store("seat", { tier: "pro", until: r.until, orgName: r.orgName, alias: r.alias, level: SEAT.level });
     if (typeof webDeepLoad === "function") webDeepLoad();
+    setTimeout(function () { try { classIntro(); } catch (e) {} }, 400);
     win("You're in " + r.orgName + " as " + r.alias + ". DrugBug Pro is on until " + new Date(r.until).toLocaleDateString() + ". Your quiz results now count toward your class (no name or email is shared). Your class, its scoreboard and your scores are under My Class in " + (r.level && typeof levelObj === "function" && levelObj(r.level) ? "the " + levelObj(r.level).name + " menu" : "your level's menu") + ".");
   }).catch(function (e) {
     fail(e && e.message === "offline" ? "Class keys need an internet connection. Connect and try again." : (e && e.message) || "Could not check that key right now. Try again in a moment.");
@@ -29693,13 +29694,103 @@ function groupFlush() {
 }
 document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden") groupFlush(); });
 
+/* ---------- Joining a class: Hickory explains it, three short cards (owner, Nov 6 2026) ----------
+   Plain, professional wording (no drawl here): what you get, what your instructor sees, and
+   where to find your class. Shown once, right after a class key is accepted. */
+var CI = { i: 0 };
+var cidlg = document.createElement("div"); cidlg.id = "cidlg"; cidlg.className = "sheet rsheet"; cidlg.hidden = true; document.body.appendChild(cidlg);
+function classIntroCards() {
+  var lv = SEAT.level && typeof levelObj === "function" && levelObj(SEAT.level) ? levelObj(SEAT.level).name : "";
+  var until = SEAT.until ? new Date(SEAT.until).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" }) : "";
+  return [
+    ["Welcome to " + (SEAT.orgName || "your class"), "You are " + SEAT.alias + " in this class. DrugBug Pro is on for you" + (until ? " until " + until : "") + ", at no cost to you. Everything you study from now on counts toward your class."],
+    ["What your instructor sees", "Your instructor sees your scores: how many questions you answer, your accuracy, and how you do in each topic. They see you only as " + SEAT.alias + ". DrugBug never shares your name or email with them."],
+    ["Your Dashboard and weekly prizes", "Open the Dashboard in " + (lv ? "the " + lv + " menu" : "your level's menu") + " for your scores, your strengths and weak spots, and the class scoreboard. Each week the top three in your class win a bug for their Terrarium. In the last week of every month, first place wins a legendary bug."]
+  ];
+}
+function classIntro() { CI.i = 0; ciDraw(); cidlg.hidden = false; }
+function ciDraw() {
+  var C = classIntroCards(), t = C[CI.i], last = CI.i === C.length - 1;
+  var hk = typeof learnBugSVG === "function" ? learnBugSVG() : "";
+  cidlg.innerHTML = '<div class="panel cipanel" role="dialog" aria-modal="true" aria-label="' + esc(t[0]) + '" tabindex="-1">' +
+    '<div class="cihead"><span class="cihk">' + hk + '</span><span><b>Hickory</b><small>Your study guide</small></span><span class="cistep">' + (CI.i + 1) + ' of ' + C.length + '</span></div>' +
+    '<h2>' + esc(t[0]) + '</h2><p>' + esc(t[1]) + '</p>' +
+    '<div class="cibar">' + C.map(function (x, i) { return '<i class="' + (i <= CI.i ? "on" : "") + '"></i>'; }).join("") + '</div>' +
+    '<div class="actions">' + (CI.i ? '<button class="btn ghost" data-ci="back">Back</button>' : '<button class="btn ghost" data-ci="done">Skip</button>') + '<button class="btn" data-ci="' + (last ? "dash" : "next") + '">' + (last ? "Open my Dashboard" : "Next") + '</button></div></div>';
+  var p = cidlg.querySelector(".panel"); if (p) p.focus();
+}
+cidlg.addEventListener("click", function (e) {
+  var b = e.target.closest("[data-ci]"); if (!b) { if (e.target === cidlg) cidlg.hidden = true; return; }
+  var a = b.getAttribute("data-ci");
+  if (a === "next") { CI.i++; return ciDraw(); }
+  if (a === "back") { CI.i = Math.max(0, CI.i - 1); return ciDraw(); }
+  cidlg.hidden = true; cidlg.innerHTML = "";
+  if (a === "dash") {
+    try { if (typeof closeClassPane === "function") closeClassPane(); } catch (er) {}
+    var lv = SEAT.level || (S.view === "level" ? S.level : "") || store("lastLevel") || "";
+    if (lv && typeof levelObj === "function" && levelObj(lv)) { go("level", { level: lv }); S.tab = "dash"; render(); window.scrollTo(0, 0); }
+  }
+});
+document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !cidlg.hidden) { cidlg.hidden = true; cidlg.innerHTML = ""; } });
+
 /* ---------- Dashboard (owner, Nov 6 2026) ----------
    A "Dashboard" panel sits in the level banner to the right of the bug: accuracy, this week and
    either the class rank (in a class) or the streak. Tapping it opens the dashboard page: totals,
    the last two weeks, where you do well and where to practice (every way scores are counted),
    and, for class students, the class scoreboard. Everyone gets it; the class parts appear only
    with a class key. The personal numbers come from this device's progress record. */
-var DASH = { failAt: 0 };
+var DASH = { failAt: 0, all: false };
+document.addEventListener("click", function (e) {
+  var b = e.target && e.target.closest && e.target.closest("[data-dboard]"); if (!b) return;
+  DASH.all = b.getAttribute("data-dboard") === "all"; render();
+});
+/* weekly prizes (owner, Nov 6 2026): 1st/2nd/3rd win a bug; the last week of each month is legendary week */
+var PRIZE_STICKS = { legendary: 3000, epic: 1500, rare: 600, common: 200 };
+function dashPrizeBox(d) {
+  var P = d && d.prizes; if (!P) return "";
+  var names = P.tiers.map(function (t) { return RARITY[t] || t; });
+  var left = Math.max(0, P.endsAt - Date.now()), days = Math.floor(left / 864e5), hrs = Math.floor((left % 864e5) / 36e5);
+  var c = '<div class="przbox' + (P.legend ? ' legend' : '') + '"><div class="przh">' + (P.legend ? 'Legendary week' : 'This week\'s prizes') + '<span>' + (days ? days + "d " : "") + hrs + 'h left</span></div>' +
+    '<div class="przrow">' + [1, 2, 3].map(function (n, i) { return '<div class="przc p-' + P.tiers[i] + '"><b>' + ["1st", "2nd", "3rd"][i] + '</b><span>' + esc(names[i]) + ' bug</span></div>'; }).join("") + '</div>';
+  if (!P.legend && P.nextLegend) c += '<p class="small przn">Legendary week starts ' + esc(new Date(P.nextLegend).toLocaleDateString(undefined, { month: "short", day: "numeric", timeZone: "UTC" })) + ': 1st place wins a legendary bug.</p>';
+  if (P.last && P.last.winners && P.last.winners.length) c += '<p class="small przn">Last week: ' + P.last.winners.map(function (w) { return esc(w.name) + ' (' + esc(RARITY[w.rar] || w.rar) + ')'; }).join(" · ") + '</p>';
+  return c + '</div>';
+}
+function prizePool(rar) {
+  return BUGS.filter(function (b) { return b.rar === rar && !b.admin && !b.unlock && !b.grub && !b.retired && !b.season && !b.login && !owned(b.id); });
+}
+function dashCollect(r) {
+  var list = (r && r.myPrizes) || []; if (!list.length) return;
+  var got = store("prizeGot") || {}, shown = [];
+  list.forEach(function (p) {
+    var key = (r.orgName || "") + ":" + p.week, bug = got[key];
+    if (bug === undefined) {
+      var pool = prizePool(p.rar), pick = pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+      if (pick) { Prog.d.owned = (Prog.d.owned || []).concat([pick.id]); bug = pick.id; }
+      else { earn(PRIZE_STICKS[p.rar] || 200); bug = ""; }
+      got[key] = bug; store("prizeGot", got); saveProg();
+      shown.push({ p: p, bug: bug });
+    }
+    fnCall("groupPrizeClaim", { week: p.week, bug: bug }).catch(function () {});
+  });
+  if (shown.length) prizeShow(shown);
+}
+var przdlg = document.createElement("div"); przdlg.id = "przdlg"; przdlg.className = "sheet rsheet"; przdlg.hidden = true; document.body.appendChild(przdlg);
+function prizeShow(list) {
+  var x = list[0], p = x.p, b = x.bug ? bugById(x.bug) : null, place = ["1st", "2nd", "3rd"][p.place - 1] || "";
+  przdlg.innerHTML = '<div class="panel przpanel" role="dialog" aria-modal="true" aria-label="Class prize" tabindex="-1"><div class="przlab p-' + p.rar + '">' + esc(RARITY[p.rar] || p.rar) + ' prize</div>' +
+    (b ? '<div class="przart">' + bugArt(b, "", { mood: "happy" }) + '</div><h2>You won ' + esc(b.name) + '</h2><p>You finished ' + place + ' in your class last week. ' + esc(b.name) + ' is in your Terrarium now.</p>'
+       : '<h2>You won ' + (PRIZE_STICKS[p.rar] || 200).toLocaleString() + ' sticks</h2><p>You finished ' + place + ' in your class last week. You already own every ' + esc((RARITY[p.rar] || p.rar).toLowerCase()) + ' bug, so the prize is sticks.</p>') +
+    '<div class="actions">' + (b ? '<button class="btn ghost" data-przgo="equip" data-bug="' + esc(b.id) + '">Use this bug</button>' : '') + '<button class="btn" data-przgo="ok">Nice</button></div></div>';
+  przdlg.hidden = false; przdlg._rest = list.slice(1);
+  try { if (typeof gfxSnd === "function") gfxSnd("pop"); } catch (e) {}
+}
+przdlg.addEventListener("click", function (e) {
+  var t = e.target.closest("[data-przgo]"); if (!t && e.target !== przdlg) return;
+  if (t && t.getAttribute("data-przgo") === "equip") { try { equipBug(t.getAttribute("data-bug")); } catch (er) {} }
+  przdlg.hidden = true; var rest = przdlg._rest || []; przdlg.innerHTML = "";
+  if (rest.length) prizeShow(rest); else if (typeof render === "function") render();
+});
 function dashInClass() { return typeof seatActive === "function" && seatActive() && S.view === "level" && (!SEAT.level || SEAT.level === S.level); }
 function dashLoad() {
   if (!dashInClass() || CL.busy) return;
@@ -29786,7 +29877,7 @@ function dashView() {
     c += '<div class="dcard2" id="dashclass"><h3>' + esc(SEAT.orgName || "Your class") + '</h3><p class="muted small">You are <strong>' + esc(SEAT.alias) + '</strong> · Pro until ' + esc(new Date(SEAT.until).toLocaleDateString()) + '</p>';
     if (!CL.data) c += '<p class="muted">' + (CL.busy ? "Loading the class…" : (CL.msg || "The scoreboard needs an internet connection.")) + '</p>';
     else {
-      c += dashNick() + '<h4 class="dsub">Scoreboard</h4>' + clBoard(CL.data);
+      c += dashNick() + dashPrizeBox(CL.data) + '<div class="dtabs"><button class="' + (DASH.all ? "" : "on") + '" data-dboard="week">This week</button><button class="' + (DASH.all ? "on" : "") + '" data-dboard="all">All time</button></div>' + clBoard(CL.data, !DASH.all);
       if (CL.data.mine) c += '<details class="cldim"><summary>Your class results, by quiz type and more</summary>' + clMine(CL.data.mine) + '</details>';
     }
     c += '</div>';
@@ -29836,12 +29927,14 @@ function clMine(m) {
   });
   return c;
 }
-function clBoard(d) {
-  if (!d.board || !d.board.length) return '<p class="muted">No one in the class has started yet.</p>';
+function clBoard(d, weekly) {
+  var src = weekly && d.wboard ? d.wboard : d.board;
+  if (!src || !src.length) return '<p class="muted">No one in the class has started yet.</p>';
   /* top 5 only, plus your own place if you're further down (owner, Nov 6 2026) */
-  var rows = d.board.filter(function (r) { return r.rank <= 5 || r.me; }), cnt = d.count || d.board.length;
-  return '<p class="muted small">Top 5 of ' + cnt + ', ranked by correct answers. Everyone shows as their student number or a nickname their instructor approved.</p><ol class="clboard">' + rows.map(function (r) {
-    return (r.rank > 5 ? '<li class="clgap" aria-hidden="true">···</li>' : '') + '<li class="' + (r.me ? "me" : "") + '"><span class="clrk' + (r.rank <= 3 ? " r" + r.rank : "") + '">' + r.rank + '</span><span class="clal">' + esc(r.alias) + (r.me ? ' <em>you</em>' : '') + '</span><span class="clsc"><b>' + r.correct.toLocaleString() + '</b> right<small>' + (r.accuracy == null ? "—" : Math.round(r.accuracy) + "%") + ' · ' + r.week + ' this week</small></span></li>';
+  var rows = src.filter(function (r) { return r.rank <= 5 || r.me; }), cnt = d.count || src.length, tiers = (d.prizes && d.prizes.tiers) || [];
+  return '<p class="muted small">Top 5 of ' + cnt + (weekly ? ', ranked by correct answers this week.' : ', ranked by correct answers since the class started.') + ' Everyone shows as their student number or a nickname their instructor approved.</p><ol class="clboard">' + rows.map(function (r) {
+    if (weekly) r = Object.assign({}, r, { correct: r.weekC || 0, prize: r.rank <= 3 && (r.weekC || 0) > 0 ? tiers[r.rank - 1] : "" });
+    return (r.rank > 5 ? '<li class="clgap" aria-hidden="true">···</li>' : '') + '<li class="' + (r.me ? "me" : "") + '"><span class="clrk' + (r.rank <= 3 ? " r" + r.rank : "") + '">' + r.rank + '</span><span class="clal">' + esc(r.alias) + (r.me ? ' <em>you</em>' : '') + (r.prize ? ' <span class="przchip p-' + r.prize + '">' + esc(RARITY[r.prize] || r.prize) + '</span>' : '') + '</span><span class="clsc"><b>' + r.correct.toLocaleString() + '</b> right<small>' + (r.accuracy == null ? "—" : Math.round(r.accuracy) + "%") + ' · ' + r.week + ' this week</small></span></li>';
   }).join("") + '</ol>';
 }
 function classView() {
@@ -29876,7 +29969,7 @@ function clLoad(force) {
     fnCall("groupBoard", {}).then(function (r) {
       CL.busy = false;
       if (!r || r.ok === false) { CL.data = null; CL.msg = "This device isn't holding a class key any more. Enter your key again to rejoin."; CL.err = true; }
-      else { CL.data = r; CL.at = Date.now(); DASH.failAt = 0; if (CL.err) CL.msg = ""; CL.err = false; if (!CL.open && S.view === "level" && (S.tab === "hub" || S.tab === "dash") && typeof render === "function") setTimeout(render, 0); if (r.level != null && r.level !== SEAT.level) { SEAT.level = r.level; var sc = store("seat"); if (sc) { sc.level = r.level; store("seat", sc); } } }
+      else { CL.data = r; CL.at = Date.now(); DASH.failAt = 0; try { dashCollect(r); } catch (e) {} if (CL.err) CL.msg = ""; CL.err = false; if (!CL.open && S.view === "level" && (S.tab === "hub" || S.tab === "dash") && typeof render === "function") setTimeout(render, 0); if (r.level != null && r.level !== SEAT.level) { SEAT.level = r.level; var sc = store("seat"); if (sc) { sc.level = r.level; store("seat", sc); } } }
       if (CL.open) drawClassPane();
     }).catch(function (e) {
       CL.busy = false; CL.err = true;
