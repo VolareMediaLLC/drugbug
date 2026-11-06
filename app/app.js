@@ -2900,8 +2900,12 @@ function startSession(kind, opt) {
     var uo = unitObj(opt.unit), uids = DB.nunitIds(opt.unit, S.level), upool = DB.Q.filter(function (q) { return nrLevelsFor(ctxKey()).indexOf(q.lv) >= 0 && qVisible(q) && uids.indexOf(q.d) >= 0; });
     qs = adaptivePick(upool, 10); title = "Practice: " + (uo ? uo.name : "Unit"); sub = "Questions on the medications this unit uses most.";
   } else if (kind === "sys" && typeof sysIds === "function") {
-    var sy = sysObj(opt.sys), sids = sysIds(opt.sys);
-    qs = adaptivePick(pool.filter(function (q) { return q.d && sids.indexOf(q.d) >= 0; }), 10);
+    var sy = sysObj(opt.sys), sids = sysIds(opt.sys), inSys = {}; sids.forEach(function (x) { inSys[x] = 1; });
+    var spool = pool.filter(function (q) { return q.d && inSys[q.d]; });
+    /* a group's own question bank: the level's questions on these drugs first, then every other
+       visible question on them, so a category is never short of practice (owner, Nov 5 2026) */
+    if (spool.length < 30) { var have = {}; spool.forEach(function (q) { have[q.id || q.q] = 1; }); DB.Q.forEach(function (q) { if (q.d && inSys[q.d] && !have[q.id || q.q] && (typeof qVisible !== "function" || qVisible(q))) spool.push(q); }); }
+    qs = adaptivePick(spool, /^[cg]:/.test(opt.sys) ? 15 : 10);
     title = "Practice: " + (sy ? sy.name : "System"); sub = "Questions on the medicines in this group, weighted toward the ones you know least.";
   } else if (kind === "marks") {
     var mk = marks(); qs = adaptivePick(pool.filter(function (q) { return mk.indexOf(q.d) >= 0; }), 15); title = "Study my list"; sub = "Questions on the drugs you saved.";
@@ -27100,19 +27104,41 @@ function learnDoneView() {
 function learnSysRow() {
   if (typeof SYS === "undefined" || typeof sysMap !== "function") return "";
   if (typeof isF === "function" && S.view === "level" && isF(S.level)) return "";
-  var map, SN = learnSeen(), out = "", n = 0;
-  try { map = sysMap(); } catch (e) { return ""; }
-  var open = {}; learnPool(null, null).forEach(function (id) { open[id] = 1; });
-  SYS.forEach(function (g) {
-    var ids = (map[g[0]] || []).filter(function (id) { return open[id]; }); if (!ids.length || g[0] === "other") return;
-    var done = 0; ids.forEach(function (id) { if (SN[id]) done++; });
-    var pct = Math.round(done / ids.length * 100); n++;
-    out += '<button class="lrnsc' + (done === ids.length ? ' fin' : '') + '" data-act="lrngo" data-lsys="' + g[0] + '" title="' + esc(g[2]) + '">' +
-      '<b>' + esc(g[1]) + '</b><span>' + done + ' of ' + ids.length + (done === ids.length ? ' &#10003;' : '') + '</span><i style="width:' + pct + '%"></i></button>';
-  });
-  if (n < 2) return "";
-  return '<section class="lrnsys"><div class="lrnsyshd"><strong>Learn by system</strong><span class="muted small">Pick a group, like Cardiology, and learn those medicines together. Each card counts toward L.E.A.R.N too.</span></div><div class="lrnsyschips">' + out + '</div></section>';
+  var SN = learnSeen(), open = {}, ph = lcatMode() === "ph";
+  learnPool(null, null).forEach(function (id) { open[id] = 1; });
+  var cnt = function (ids) { ids = ids.filter(function (id) { return open[id]; }); var d = 0; ids.forEach(function (id) { if (SN[id]) d++; }); return { n: ids.length, d: d }; };
+  var groups = LGROUPS.map(function (g) {
+    var subs = (ph ? g[2].map(function (k) { return ["c:" + k, (LCATS.filter(function (x) { return x[0] === k; })[0] || [0, k])[1]]; })
+      : g[3].map(function (k) { var o = sysObj(k); return [k, o ? o.name : k]; })).map(function (x) { var c = cnt(sysIds(x[0])); return { key: x[0], name: x[1], n: c.n, d: c.d }; }).filter(function (x) { return x.n; });
+    var all = cnt(lcatIds("g:" + g[0]));
+    return { key: "g:" + g[0], id: g[0], name: g[1], subs: subs, n: all.n, d: all.d };
+  }).filter(function (g) { return g.n; });
+  if (groups.length < 2) return "";
+  var openG = S.lsysOpen && groups.filter(function (g) { return g.id === S.lsysOpen; })[0];
+  var out = groups.map(function (g) {
+    var pct = Math.round(g.d / g.n * 100), on = openG && openG.id === g.id;
+    return '<button class="lrng' + (on ? ' on' : '') + (g.d === g.n ? ' fin' : '') + '" data-lsysg="' + g.id + '" aria-expanded="' + (on ? "true" : "false") + '">' +
+      '<b>' + esc(g.name) + '</b><span class="lgs">' + esc(g.subs.map(function (x) { return LCAT_SHORT[x.key.slice(2)] || x.name.split(/ & | and /)[0]; }).join(" · ")) + '</span>' +
+      '<span class="lgn">' + g.d + ' of ' + g.n + (g.d === g.n ? ' &#10003;' : '') + '</span><i style="width:' + pct + '%"></i></button>';
+  }).join("");
+  var det = "";
+  if (openG) {
+    det = '<div class="lrndet"><div class="lrndhd"><strong>' + esc(openG.name) + '</strong><span class="muted small">' + openG.d + ' of ' + openG.n + ' learned</span></div>' +
+      '<div class="lrndacts"><button class="btn small" data-act="lrngo" data-lsys="' + openG.key + '">Learn all ' + openG.n + '</button><button class="btn small ghost" data-sess="sys" data-sys="' + openG.key + '">Quiz the whole group</button></div>' +
+      '<div class="lrndlist">' + openG.subs.map(function (c) {
+        var pct = Math.round(c.d / c.n * 100), r = typeof sysRec === "function" ? sysRec(c.key) : null;
+        return '<div class="lrnc' + (c.d === c.n ? ' fin' : '') + '"><div class="lct"><b>' + esc(c.name) + '</b><span>' + c.d + ' of ' + c.n + ' learned' + (r ? ' · best quiz ' + r.best + '%' : '') + '</span><i style="width:' + pct + '%"></i></div>' +
+          '<button class="btn small" data-act="lrngo" data-lsys="' + c.key + '">Learn</button><button class="btn small ghost" data-sess="sys" data-sys="' + c.key + '">Quiz</button></div>';
+      }).join("") + '</div></div>';
+  }
+  return '<section class="lrnsys"><div class="lrnsyshd"><strong>Learn by system</strong><span class="muted small">' + (ph ? "Twenty emergency categories in six groups." : "Medication systems in six groups.") + ' Tap a group to learn it or quiz on it. Every card counts toward L.E.A.R.N too.</span></div>' +
+    '<div class="lrngrid">' + out + '</div>' + det + '</section>';
 }
+document.addEventListener("click", function (e) {
+  var t = e.target.closest && e.target.closest("[data-lsysg]"); if (!t) return;
+  var g = t.getAttribute("data-lsysg"); S.lsysOpen = S.lsysOpen === g ? null : g; render();
+  var d = document.querySelector(".lrndet"); if (d) try { d.scrollIntoView({ block: "nearest", behavior: "smooth" }); } catch (x) {}
+});
 
 /* achievements: milestones across everything, plus one for finishing each speciality */
 (function () {
@@ -27449,8 +27475,66 @@ var SYS = [
   ["skin", "Skin, Eyes & Ears", "Topical, eye and ear medicines.", [], /dermatolog|topical|keratolytic|retinoid|ophthalm|glaucoma|mydriat|\botic\b|acne|psoria|emollient|antipruritic|retinal|skin/i],
   ["other", "Everything else", "Medicines that do not fit one of the groups above.", [], null]
 ];
+
+/* ---------- Learn by system: the owner's 20 prehospital and critical-care categories (Nov 5 2026) ----------
+   Each category is a hand-picked list of the medications it is about (a drug can sit in several).
+   They are folded into six body groups (Option B), each one a L.E.A.R.N run and a quiz.
+   Keys: "c:<category>" or "g:<group>". sysObj / sysIds understand them, so the L.E.A.R.N run, its
+   progress and the quiz ("sys" session) all work unchanged. Prehospital and flight use these;
+   nursing, medical school and imaging keep the medication systems (SYS) in the same six groups. */
+var LCATS = [
+  ["airway", "Airway & Respiratory", "albuterol ipratropium albuterol-ipratropium methylprednisolone magnesium-sulfate racemic-epinephrine levalbuterol terbutaline dexamethasone prednisone budesonide epinephrine aminophylline"],
+  ["acls", "Cardiac & ACLS", "amiodarone lidocaine atropine adenosine diltiazem metoprolol procainamide verapamil digoxin epinephrine vasopressin calcium-chloride sodium-bicarbonate esmolol ibutilide"],
+  ["shock", "Shock & Hemodynamics", "norepinephrine epinephrine dopamine vasopressin dobutamine phenylephrine milrinone angiotensin-ii methylene-blue"],
+  ["rsi", "Rapid Sequence Intubation (RSI)", "etomidate ketamine rocuronium succinylcholine vecuronium propofol midazolam fentanyl lidocaine sugammadex atropine"],
+  ["sedation", "Sedation & Analgesia", "fentanyl morphine midazolam ketamine propofol hydromorphone lorazepam diazepam dexmedetomidine ketorolac acetaminophen nitrous-oxide"],
+  ["neuro", "Neurological Emergencies", "lorazepam midazolam levetiracetam hypertonic-saline-3-percent diazepam phenytoin fosphenytoin valproic-acid phenobarbital mannitol alteplase tenecteplase labetalol nicardipine"],
+  ["ob", "Obstetrics & Gynecology", "oxytocin magnesium-sulfate terbutaline tranexamic-acid methylergonovine carboprost misoprostol nifedipine labetalol hydralazine calcium-gluconate"],
+  ["peds", "Pediatric Emergencies", "epinephrine atropine dextrose albuterol midazolam naloxone amiodarone adenosine glucagon ondansetron acetaminophen ibuprofen"],
+  ["trauma", "Trauma & Hemorrhage", "tranexamic-acid calcium-chloride calcium-gluconate bp-ltowb bp-fwb bp-prbc bp-plasma bp-dried-plasma fentanyl ketamine cefazolin ertapenem"],
+  ["tox", "Toxicology & Overdose", "naloxone sodium-bicarbonate activated-charcoal hydroxocobalamin atropine pralidoxime flumazenil glucagon calcium-chloride fomepizole physostigmine methylene-blue digoxin-immune-fab n-acetylcysteine lipid-emulsion octreotide dantrolene cyproheptadine"],
+  ["endo", "Endocrine & Metabolic", "regular-insulin dextrose glucagon hydrocortisone thiamine levothyroxine octreotide"],
+  ["lytes", "Electrolytes & Renal", "calcium-chloride calcium-gluconate magnesium-sulfate potassium-chloride sodium-bicarbonate furosemide albuterol regular-insulin sodium-polystyrene-sulfonate patiromer sodium-zirconium-cyclosilicate"],
+  ["gi", "Gastrointestinal Emergencies", "ondansetron metoclopramide pantoprazole famotidine prochlorperazine promethazine droperidol octreotide"],
+  ["allergy", "Allergic Reactions & Anaphylaxis", "epinephrine diphenhydramine methylprednisolone dexamethasone albuterol famotidine glucagon cetirizine hydrocortisone"],
+  ["sepsis", "Infectious Disease & Sepsis", "ceftriaxone cefazolin piperacillin-tazobactam vancomycin cefepime meropenem ertapenem azithromycin levofloxacin metronidazole clindamycin gentamicin ampicillin"],
+  ["htn", "Hypertensive Emergencies", "nicardipine labetalol nitroglycerin hydralazine clevidipine esmolol nitroprusside enalapril"],
+  ["acs", "Acute Coronary Syndromes", "aspirin nitroglycerin heparin ticagrelor clopidogrel prasugrel enoxaparin morphine fentanyl metoprolol tenecteplase alteplase bivalirudin"],
+  ["psych", "Psychiatric & Behavioral Emergencies", "droperidol haloperidol olanzapine midazolam ketamine lorazepam ziprasidone diphenhydramine"],
+  ["fluids", "Fluids & Blood Products", "normal-saline lactated-ringers plasma-lyte dextrose albumin-human bp-prbc bp-plasma bp-dried-plasma bp-platelets bp-cryo bp-ltowb bp-fwb"],
+  ["icu", "Critical Care & Specialty Infusions", "propofol dexmedetomidine esmolol milrinone nitroprusside norepinephrine vasopressin cisatracurium fentanyl midazolam ketamine heparin regular-insulin nicardipine"]
+];
+/* the six body groups (Option B). ph = the categories above, sys = the SYS medication systems */
+var LCAT_SHORT = {"airway": "Airway", "acls": "ACLS", "shock": "Shock", "rsi": "RSI", "sedation": "Sedation & pain", "neuro": "Neuro", "ob": "OB/GYN", "peds": "Peds", "trauma": "Trauma", "tox": "Overdose", "endo": "Endocrine", "lytes": "Electrolytes", "gi": "GI", "allergy": "Anaphylaxis", "sepsis": "Sepsis", "htn": "Hypertensive", "acs": "ACS", "psych": "Behavioral", "fluids": "Fluids & blood", "icu": "ICU drips"};
+var LGROUPS = [
+  ["heart", "Heart & Circulation", ["acls", "acs", "htn", "shock"], ["cardio", "shock", "blood"]],
+  ["lungs", "Airway & Breathing", ["airway", "rsi", "allergy"], ["airway", "resp"]],
+  ["brain", "Brain, Pain & Behavior", ["neuro", "sedation", "psych"], ["neuro", "pain", "psych"]],
+  ["trauma", "Trauma, Blood & Fluids", ["trauma", "fluids", "lytes"], ["renal", "bone"]],
+  ["tox", "Toxins, Infection & Metabolic", ["tox", "sepsis", "endo", "gi"], ["tox", "infect", "endo", "gi"]],
+  ["special", "Special Patients & Critical Care", ["ob", "peds", "icu"], ["ob", "immune", "onc", "skin"]]
+];
+function lcatMode() { var r = typeof routeCtx === "function" ? routeCtx() : ""; return r === "ph" || r === "fm" ? "ph" : "sys"; }
+function lcatObj(k) {
+  var t = String(k || "").slice(0, 2), id = String(k || "").slice(2), i;
+  if (t === "c:") for (i = 0; i < LCATS.length; i++) if (LCATS[i][0] === id) return { key: k, name: LCATS[i][1], blurb: "Medications for " + LCATS[i][1].toLowerCase() + "." };
+  if (t === "g:") for (i = 0; i < LGROUPS.length; i++) if (LGROUPS[i][0] === id) return { key: k, name: LGROUPS[i][1], blurb: "Every medication in " + LGROUPS[i][1] + "." };
+  return null;
+}
+/* the members of a category or group, before the level's scope is applied */
+function lcatIds(k) {
+  var t = String(k || "").slice(0, 2), id = String(k || "").slice(2), seen = {}, out = [];
+  var add = function (x) { if (!seen[x] && DB.drugs[x]) { seen[x] = 1; out.push(x); } };
+  if (t === "c:") { var c = LCATS.filter(function (x) { return x[0] === id; })[0]; if (c) c[2].split(" ").forEach(add); }
+  else if (t === "g:") {
+    var g = LGROUPS.filter(function (x) { return x[0] === id; })[0]; if (!g) return out;
+    if (lcatMode() === "ph") g[2].forEach(function (ck) { lcatIds("c:" + ck).forEach(add); });
+    else g[3].forEach(function (sk) { sysIds(sk).forEach(add); });
+  }
+  return out;
+}
 function sysTabOK() { return S.view === "level" && (S.level === "paramedic" || S.level === "flight" || S.level === "rn" || S.level === "flightrn"); }
-function sysObj(k) { for (var i = 0; i < SYS.length; i++) if (SYS[i][0] === k) return { key: SYS[i][0], name: SYS[i][1], blurb: SYS[i][2] }; return null; }
+function sysObj(k) { if (/^[cg]:/.test(String(k || ""))) return lcatObj(k); for (var i = 0; i < SYS.length; i++) if (SYS[i][0] === k) return { key: SYS[i][0], name: SYS[i][1], blurb: SYS[i][2] }; return null; }
 var SYS_CACHE = {};
 function sysMap() {
   var ids = scopeIds(), key = S.level + ":" + ids.length;
@@ -27469,7 +27553,7 @@ function sysMap() {
   SYS_CACHE = { key: key, map: map };
   return map;
 }
-function sysIds(k) { return (sysMap()[k] || []).slice(); }
+function sysIds(k) { if (/^[cg]:/.test(String(k || ""))) return lcatIds(k); return (sysMap()[k] || []).slice(); }
 function sysQCount(ids) { var pool = basePool(), n = 0; for (var i = 0; i < pool.length; i++) if (pool[i].d && ids.indexOf(pool[i].d) >= 0) n++; return n; }
 function sysRec(k) { return (Prog.d.sysq || {})[S.level + ":" + k] || null; }
 function sysSave(k, sc) {
