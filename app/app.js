@@ -29760,7 +29760,7 @@ document.addEventListener("click", function (e) {
   var b = e.target && e.target.closest && e.target.closest('[data-dnick="clear"]'); if (!b) return;
   dashNickSave("");
 });
-function dashMe() { var b = CL.data && CL.data.board; if (!b) return null; for (var i = 0; i < b.length; i++) if (b[i].me) return { rank: b[i].rank, of: b.length, row: b[i] }; return null; }
+function dashMe() { var b = CL.data && CL.data.board; if (!b) return null; for (var i = 0; i < b.length; i++) if (b[i].me) return { rank: b[i].rank, of: CL.data.count || b.length, row: b[i] }; return null; }
 function dashStrip() {
   if (S.view !== "level") return "";
   var L = dashLocal(), cls = dashInClass(), me = cls ? dashMe() : null;
@@ -29838,8 +29838,10 @@ function clMine(m) {
 }
 function clBoard(d) {
   if (!d.board || !d.board.length) return '<p class="muted">No one in the class has started yet.</p>';
-  return '<p class="muted small">Ranked by correct answers. Everyone shows as their student number or a nickname their instructor approved.</p><ol class="clboard">' + d.board.map(function (r) {
-    return '<li class="' + (r.me ? "me" : "") + '"><span class="clrk' + (r.rank <= 3 ? " r" + r.rank : "") + '">' + r.rank + '</span><span class="clal">' + esc(r.alias) + (r.me ? ' <em>you</em>' : '') + '</span><span class="clsc"><b>' + r.correct.toLocaleString() + '</b> right<small>' + (r.accuracy == null ? "—" : Math.round(r.accuracy) + "%") + ' · ' + r.week + ' this week</small></span></li>';
+  /* top 5 only, plus your own place if you're further down (owner, Nov 6 2026) */
+  var rows = d.board.filter(function (r) { return r.rank <= 5 || r.me; }), cnt = d.count || d.board.length;
+  return '<p class="muted small">Top 5 of ' + cnt + ', ranked by correct answers. Everyone shows as their student number or a nickname their instructor approved.</p><ol class="clboard">' + rows.map(function (r) {
+    return (r.rank > 5 ? '<li class="clgap" aria-hidden="true">···</li>' : '') + '<li class="' + (r.me ? "me" : "") + '"><span class="clrk' + (r.rank <= 3 ? " r" + r.rank : "") + '">' + r.rank + '</span><span class="clal">' + esc(r.alias) + (r.me ? ' <em>you</em>' : '') + '</span><span class="clsc"><b>' + r.correct.toLocaleString() + '</b> right<small>' + (r.accuracy == null ? "—" : Math.round(r.accuracy) + "%") + ' · ' + r.week + ' this week</small></span></li>';
   }).join("") + '</ol>';
 }
 function classView() {
