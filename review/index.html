@@ -89,6 +89,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 .eacts{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
 .msg{font-size:14px;padding:8px 12px;border-radius:9px;background:var(--warn-bg);color:var(--warn);margin-top:10px}
 .backlink{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:inherit;opacity:.8;text-decoration:none;border:1px solid currentColor;border-radius:999px;padding:6px 14px;margin-bottom:14px}.backlink:hover{opacity:1}.backrow{display:flex;gap:8px;flex-wrap:wrap}
+.prate{margin:10px 0 0;font-size:13.5px;color:var(--muted)}.prate b{color:inherit}
 </style>
 </head><body>
 <div class="wrap">
@@ -138,7 +139,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
             <button class="vb o" data-v="off" aria-pressed="false">Not relevant<small>R</small></button>
           </div>
         </div>
-        <div class="card sec"><h3>Difficulty</h3><div class="diff" id="diff"></div></div>
+        <div class="card sec"><h3>Difficulty</h3><div class="diff" id="diff"></div><p class="prate" id="prate"></p></div>
         <div class="card sec"><h3>Specialty it belongs in</h3><div class="specs" id="specs"></div><p class="note">"now" marks the level it is in today. Pick every level it fits.</p></div>
         <div class="card sec"><h3>Note</h3><textarea id="note" placeholder="What to fix, or why it is bad"></textarea><div class="saved" id="saved"></div></div>
         <div class="card sec">
@@ -167,7 +168,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
   var DIFF = [["1","Easy"],["2","Basic"],["3","Medium"],["4","Hard"],["5","Expert"]];
   var BANK = { q: "Practice", sata: "Select all", reg: "Exam prep" };
   var $ = function (id) { return document.getElementById(id); };
-  var QS = [], BYID = {}, NAMES = {}, R = {}, list = [], pos = 0, editing = false, loaded = false;
+  var QS = [], BYID = {}, NAMES = {}, R = {}, RATES = {}, list = [], pos = 0, editing = false, loaded = false;
   var store = { get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   function msg(id, t) { var el = $(id); el.textContent = t || ""; el.hidden = !t; }
@@ -276,6 +277,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
     $("diff").innerHTML = DIFF.map(function (d) { return '<button class="db" data-d="' + d[0] + '" aria-pressed="' + (String(r.d) === d[0]) + '"' + (q ? '' : ' disabled') + '><b>' + d[0] + '</b>' + d[1] + '</button>'; }).join("");
     var spec = r.s || (q && q.lv ? [q.lv] : []);
     $("specs").innerHTML = LEVELS.map(function (l) { return '<button class="sp' + (q && q.lv === l[0] ? " cur" : "") + '" data-s="' + l[0] + '" aria-pressed="' + (spec.indexOf(l[0]) >= 0) + '"' + (q ? '' : ' disabled') + '>' + l[1] + '</button>'; }).join("");
+    var pr = q && RATES[q.id]; $("prate").innerHTML = pr && pr.n ? 'Players rated it <b>' + (pr.s / pr.n).toFixed(1) + ' of 5</b> (' + pr.n + (pr.n === 1 ? ' rating' : ' ratings') + ': ' + [1, 2, 3, 4, 5].map(function (k) { return k + '&times;' + (pr['d' + k] || 0); }).join(' ') + ')' : 'No player ratings yet.';
     $("note").value = r.n || ""; $("note").disabled = !q;
     $("saved").textContent = q && r.ts ? "Reviewed " + new Date(r.ts).toLocaleDateString() : "";
   }
@@ -342,7 +344,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
     var out = [];
     QS.forEach(function (q) {
       var r = R[q.id]; if (!r) return;
-      var o = { id: q.id, bank: q.b, level: q.lv, drug: q.d || "", verdict: r.v || null, difficulty: r.d || null, specialties: r.s || [], note: r.n || null, reviewed: r.ts ? new Date(r.ts).toISOString() : null, rule_flags: flags(q) };
+      var o = { id: q.id, bank: q.b, level: q.lv, drug: q.d || "", verdict: r.v || null, difficulty: r.d || null, players: RATES[q.id] && RATES[q.id].n ? { avg: +(RATES[q.id].s / RATES[q.id].n).toFixed(2), n: RATES[q.id].n } : null, specialties: r.s || [], note: r.n || null, reviewed: r.ts ? new Date(r.ts).toISOString() : null, rule_flags: flags(q) };
       o.original = { q: q.q, a: q.a, w: q.w, opts: q.opts, ok: q.ok, x: q.x };
       if (r.e) o.edited = r.e;
       out.push(o);
@@ -374,7 +376,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
     $("vIn").hidden = !!real; $("vMain").hidden = !real;
     if (!real) return;
     Promise.all([qsP, call("qrLoad")]).then(function (res) {
-      var j = res[0]; NAMES = j.names || {}; R = res[1].items || {};
+      var j = res[0]; NAMES = j.names || {}; R = res[1].items || {}; RATES = res[1].rates || {};
       QS = j.qs.map(function (q) { q._s = (q.q + " " + (q.a || "") + " " + (q.opts || []).join(" ") + " " + (NAMES[q.d] || q.d || "") + " " + q.id).toLowerCase(); BYID[q.id] = q; return q; });
       QS.forEach(function (q) { q._f0 = flags(q).length > 0; });
       loaded = true; build();
