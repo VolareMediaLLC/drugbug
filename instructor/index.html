@@ -202,6 +202,7 @@ tr.clk{cursor:pointer}tr.clk:hover td{background:var(--surface2)}
     <label style="flex:2">Class name<input id="nName" placeholder="Texas A&amp;M Paramedic Cohort 2027"></label>
     <label>Short code<input id="nCode" maxlength="6" placeholder="TAMU"></label>
     <label>Seats<input id="nSeats" type="number" min="1" max="500" value="30"></label>
+    <label style="flex:1.4">Level (where the class shows in the app)<select id="nLevel"><option value="">Any level (shows in every menu)</option><optgroup label="Prehospital"><option value="emt">EMT</option><option value="aemt">AEMT</option><option value="paramedic">Paramedic</option><option value="flight">Flight Paramedic</option></optgroup><optgroup label="Nursing"><option value="cna">CNA</option><option value="lvn">LVN / LPN</option><option value="rn">RN</option><option value="flightrn">Flight Nurse</option></optgroup><optgroup label="Medical school"><option value="ms1">MS1–MS2</option><option value="ms3">MS3–MS4</option><option value="intern">Intern</option></optgroup><optgroup label="Imaging"><option value="rt">Radiologic Technologist</option><option value="ct">CT Technologist</option><option value="mri">MRI Technologist</option><option value="nm">Nuclear Medicine Technologist</option><option value="ir">Interventional Radiology</option></optgroup><optgroup label="Allied health"><option value="mh">Mental Health</option><option value="diet">Dietitian</option><option value="rrt">Respiratory Therapist</option></optgroup><optgroup label="Military"><option value="asm">All Service Members</option><option value="cls">Combat Lifesaver</option><option value="cmc">Combat Medic / Corpsman</option><option value="cpp">Combat Paramedic</option></optgroup></select></label>
   </div>
   <div class="row" style="margin-top:10px">
     <label>Length<select id="nKind"><option value="30">30-day pilot</option><option value="60">60-day pilot</option><option value="365">1 year</option></select></label>
@@ -241,6 +242,8 @@ tr.clk{cursor:pointer}tr.clk:hover td{background:var(--surface2)}
       <button class="ghost" data-add="30">+30 days</button>
       <button class="ghost" data-add="365">+1 year</button>
       <label style="max-width:160px">Seats<input id="oSeats" type="number" min="1" max="500"></label>
+      <label style="max-width:240px">Level<select id="oLevel"><option value="">Any level (shows in every menu)</option><optgroup label="Prehospital"><option value="emt">EMT</option><option value="aemt">AEMT</option><option value="paramedic">Paramedic</option><option value="flight">Flight Paramedic</option></optgroup><optgroup label="Nursing"><option value="cna">CNA</option><option value="lvn">LVN / LPN</option><option value="rn">RN</option><option value="flightrn">Flight Nurse</option></optgroup><optgroup label="Medical school"><option value="ms1">MS1–MS2</option><option value="ms3">MS3–MS4</option><option value="intern">Intern</option></optgroup><optgroup label="Imaging"><option value="rt">Radiologic Technologist</option><option value="ct">CT Technologist</option><option value="mri">MRI Technologist</option><option value="nm">Nuclear Medicine Technologist</option><option value="ir">Interventional Radiology</option></optgroup><optgroup label="Allied health"><option value="mh">Mental Health</option><option value="diet">Dietitian</option><option value="rrt">Respiratory Therapist</option></optgroup><optgroup label="Military"><option value="asm">All Service Members</option><option value="cls">Combat Lifesaver</option><option value="cmc">Combat Medic / Corpsman</option><option value="cpp">Combat Paramedic</option></optgroup></select></label>
+      <button class="ghost" id="bLevel">Save level</button>
       <button class="ghost" id="bSeats">Save seats</button>
       <button class="ghost" id="bEnd">End class now</button>
       <button class="ghost" id="bReopen">Reopen</button>
@@ -415,7 +418,7 @@ tr.clk{cursor:pointer}tr.clk:hover td{background:var(--surface2)}
   $("bNew").onclick = function () {
     var b = this; b.disabled = true;
     var days = Number($("nKind").value);
-    call("groupOrgCreate", { name: $("nName").value, code: $("nCode").value, seats: Number($("nSeats").value), days: days, goal: Number($("nGoal").value), contact: $("nContact").value, kind: days >= 365 ? "annual" : "pilot" })
+    call("groupOrgCreate", { name: $("nName").value, code: $("nCode").value, seats: Number($("nSeats").value), days: days, goal: Number($("nGoal").value), contact: $("nContact").value, level: $("nLevel").value, kind: days >= 365 ? "annual" : "pilot" })
       .then(function (r) { say("newMsg", "Class opened. Instructor code: " + r.invite + " (send this to the school; it lets them sign in here and make keys). Ends " + day(r.expiresAt) + "."); ["nName", "nCode", "nContact"].forEach(function (i) { $(i).value = ""; }); loadList(); })
       .catch(function (e) { say("newMsg", e.message, true); })
       .then(function () { b.disabled = false; });
@@ -564,7 +567,7 @@ tr.clk{cursor:pointer}tr.clk:hover td{background:var(--surface2)}
     var left = Math.ceil((o.expiresAt - Date.now()) / 864e5);
     $("cName").textContent = o.name;
     $("cSub").textContent = (o.kind === "annual" ? "Paid · " : "Pilot · ") + (o.live ? "Active · " + left + " day" + (left === 1 ? "" : "s") + " left" : o.status === "ended" ? "Ended" : "Expired") +
-      " · ends " + day(o.expiresAt) + " · code " + o.code + " · goal " + o.goal + " questions per student" + (o.instructors.length ? " · instructors: " + o.instructors.join(", ") : "");
+      " · ends " + day(o.expiresAt) + " · code " + o.code + (o.level ? " · level " + (LVNAME[o.level] || o.level) : "") + " · goal " + o.goal + " questions per student" + (o.instructors.length ? " · instructors: " + o.instructors.join(", ") : "");
     $("printTitle").textContent = o.name + " — DrugBug key sheet";
     $("tiles").innerHTML = [
       [t.activated + " / " + o.seats, "seats in use (" + o.keyCount + " keys made)"],
@@ -576,7 +579,7 @@ tr.clk{cursor:pointer}tr.clk:hover td{background:var(--surface2)}
 
     /* owner tools */
     show("ownerTools", ST.owner);
-    if (ST.owner) { $("bPaid").classList.toggle("hide", o.kind === "annual"); $("bPilot").classList.toggle("hide", o.kind !== "annual"); $("oSeats").value = o.seats; $("oInfo").innerHTML = 'Instructor code: <span class="mono">' + esc(o.invite) + '</span>' + (o.contact ? ' · contact: ' + esc(o.contact) : ''); }
+    if (ST.owner) { $("bPaid").classList.toggle("hide", o.kind === "annual"); $("bPilot").classList.toggle("hide", o.kind !== "annual"); $("oSeats").value = o.seats; $("oLevel").value = o.level || ""; $("oInfo").innerHTML = 'Instructor code: <span class="mono">' + esc(o.invite) + '</span>' + (o.contact ? ' · contact: ' + esc(o.contact) : ''); }
 
     /* chart: weakest first, one series, value labels on every bar */
     var sys = d.systems.slice().sort(function (a, b) { return a.pct - b.pct; });
@@ -604,6 +607,7 @@ tr.clk{cursor:pointer}tr.clk:hover td{background:var(--surface2)}
   }
 
   /* ---------- every score: strengths, weak spots, all dimensions (owner, Nov 6 2026) ---------- */
+  var LVNAME = {}; [].forEach.call(document.querySelectorAll("#nLevel option"), function (op) { if (op.value) LVNAME[op.value] = op.textContent; });
   var KIND = { practice: "Practice tests", exam: "Exam mode", daily: "Daily 5-minute", study: "Study a drug", weak: "Weak-spot review", system: "Learn by system", acls: "ACLS / PALS", session: "Guided sessions", game: "Games", safety: "Safety checks", lab: "Lab drills", crit: "Critical-care drills", megacode: "Megacode", anatomy: "Anatomy quiz", calc: "Calculations" };
   var QT = { assess: "Assessment", hold: "When to hold", labs: "Labs to watch", vitals: "Vital signs", adverse: "Side effects", teach: "Patient teaching", interact: "Interactions", notify: "When to notify" };
   var DIMS = [["s", "Medication systems"], ["k", "Quiz types"], ["y", "Question types"], ["l", "Drug classes"], ["p", "Drill topics"], ["d", "Each drug"]];
@@ -737,6 +741,7 @@ tr.clk{cursor:pointer}tr.clk:hover td{background:var(--surface2)}
   $("bPaid").onclick = function () { upd({ kind: "annual" }, "Marked as a paying school."); };
   $("bPilot").onclick = function () { upd({ kind: "pilot" }, "Set back to pilot."); };
   $("bSeats").onclick = function () { upd({ seats: Number($("oSeats").value) }, "Seats saved."); };
+  $("bLevel").onclick = function () { upd({ level: $("oLevel").value }, "Level saved. Students see the class in that level's menu."); };
   $("bEnd").onclick = function () { if (confirm("End this class now? Students lose Pro immediately.")) upd({ status: "ended" }, "Class ended."); };
   $("bReopen").onclick = function () { upd({ status: "active" }, "Class reopened."); };
   $("bDel").onclick = function () {
