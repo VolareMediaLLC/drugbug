@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex">
+<title>DrugBug Question Review</title><link rel="icon" type="image/png" sizes="48x48" href="../icon-48.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* layout: a sticky filter bar over one question at a time, with the review panel beside it on wide screens and below it on phones */
+:root{
+  --bg:#f3f4f7;--panel:#ffffff;--ink:#17202e;--muted:#5b6576;--line:#dde1e8;--accent:#0e7c86;--accent-ink:#ffffff;
+  --good:#15803d;--good-bg:#e7f6ec;--bad:#c2410c;--bad-bg:#fdeee6;--off:#6d28d9;--off-bg:#f0eafd;--warn:#b45309;--warn-bg:#fff4dc;
+  --sans:"Atkinson Hyperlegible",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#11151c;--panel:#1a2029;--ink:#e9edf3;--muted:#9aa5b5;--line:#2b3340;--accent:#2bb3bf;--accent-ink:#071417;
+  --good:#4ade80;--good-bg:#12301e;--bad:#fb923c;--bad-bg:#35200f;--off:#b197fc;--off-bg:#251c3d;--warn:#fbbf24;--warn-bg:#33270b;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11151c;--panel:#1a2029;--ink:#e9edf3;--muted:#9aa5b5;--line:#2b3340;--accent:#2bb3bf;--accent-ink:#071417;
+  --good:#4ade80;--good-bg:#12301e;--bad:#fb923c;--bad-bg:#35200f;--off:#b197fc;--off-bg:#251c3d;--warn:#fbbf24;--warn-bg:#33270b;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--sans)}
+.wrap{max-width:1180px;margin:0 auto;padding-block:18px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1{font-size:24px;margin:0;letter-spacing:-.01em}
+.top{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:baseline;justify-content:space-between}
+.stats{display:flex;flex-wrap:wrap;gap:6px;font-size:13.5px}
+.stat{padding:3px 10px;border-radius:999px;background:var(--panel);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.stat b{font-weight:700}.stat.g b{color:var(--good)}.stat.b b{color:var(--bad)}.stat.o b{color:var(--off)}.stat.f b{color:var(--warn)}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:12px 0;margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;border-bottom:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+select,input[type=search],textarea{font:inherit;font-size:14.5px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:7px 10px}
+input[type=search]{flex:1 1 200px;min-width:0}
+label.tg{display:inline-flex;gap:6px;align-items:center;font-size:14px;color:var(--muted);cursor:pointer;padding:6px 4px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;margin-top:16px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;min-width:0}
+.meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.chip{font-size:12.5px;padding:2px 9px;border-radius:6px;background:var(--bg);border:1px solid var(--line);color:var(--muted)}
+.chip.mono{font-family:var(--mono);font-size:11.5px}
+.flag{display:flex;gap:8px;align-items:flex-start;background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:9px 12px;font-size:14px;font-weight:700;margin-bottom:10px}
+.qtext{font-size:18.5px;line-height:1.5;margin:4px 0 14px;text-wrap:pretty}
+ol.opts{list-style:none;margin:0;padding:0;display:grid;gap:7px}
+ol.opts li{display:flex;gap:10px;align-items:flex-start;padding:9px 12px;border-radius:10px;border:1px solid var(--line);font-size:15.5px}
+ol.opts li .k{flex:none;width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-size:12px;font-weight:700;background:var(--bg);color:var(--muted)}
+ol.opts li.ok{border-color:var(--good);background:var(--good-bg)}ol.opts li.ok .k{background:var(--good);color:var(--panel)}
+.why{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line);color:var(--muted);font-size:15px}
+.why b{color:var(--ink)}
+.side{display:grid;gap:14px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 74px)}
+@media (max-width:900px){.side{position:static}}
+.sec h3{margin:0 0 8px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.vbtns{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.vb{font:inherit;font-weight:700;font-size:14.5px;padding:10px 6px;border-radius:10px;border:1.5px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.vb small{display:block;font-weight:400;font-size:11px;color:var(--muted)}
+.vb.g[aria-pressed=true]{border-color:var(--good);background:var(--good-bg);color:var(--good)}
+.vb.b[aria-pressed=true]{border-color:var(--bad);background:var(--bad-bg);color:var(--bad)}
+.vb.o[aria-pressed=true]{border-color:var(--off);background:var(--off-bg);color:var(--off)}
+.diff{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.db{font:inherit;padding:8px 2px;border-radius:9px;border:1.5px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer;font-size:13px;line-height:1.2}
+.db b{display:block;font-size:16px}
+.db[aria-pressed=true]{border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
+.specs{display:flex;flex-wrap:wrap;gap:6px}
+.sp{font:inherit;font-size:13px;padding:5px 10px;border-radius:999px;border:1.5px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.sp[aria-pressed=true]{border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
+.sp.cur::after{content:" ·now";font-size:11px;opacity:.7}
+textarea{width:100%;min-height:62px;resize:vertical}
+.nav{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.nb{font:inherit;font-weight:700;padding:9px 14px;border-radius:10px;border:1.5px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.nb.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.nb:disabled{opacity:.45;cursor:default}
+.pos{font-size:13.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.saved{font-size:13px;color:var(--muted);min-height:1.2em}
+.keys{font-size:12.5px;color:var(--muted)}
+.keys kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--panel)}
+.empty{padding:40px 20px;text-align:center;color:var(--muted)}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.note{font-size:13px;color:var(--muted);margin:6px 0 0}
+
+.signin{max-width:440px;margin:60px auto;text-align:center}
+.signin p{color:var(--muted)}
+.gbtn{font:inherit;font-weight:700;padding:11px 18px;border-radius:10px;border:1.5px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.who{font-size:13px;color:var(--muted);display:flex;gap:8px;align-items:center}
+.who button,.tb{font:inherit;font-size:13px;padding:5px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.tools{display:flex;gap:6px;flex-wrap:wrap}
+.tb.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+.chip.ed{background:var(--off-bg);color:var(--off);border-color:transparent}
+.edit{display:grid;gap:10px}
+.edit label{display:grid;gap:4px;font-size:13px;font-weight:700;color:var(--muted)}
+.edit textarea{min-height:44px;font-weight:400}
+.edit .orow{display:flex;gap:8px;align-items:flex-start}
+.edit .orow input[type=checkbox]{margin-top:12px;width:18px;height:18px;flex:none}
+.edit .orow textarea{flex:1;min-width:0}
+.eacts{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.msg{font-size:14px;padding:8px 12px;border-radius:9px;background:var(--warn-bg);color:var(--warn);margin-top:10px}
+</style>
+</head><body>
+<div class="wrap">
+  <div class="top">
+    <h1>DrugBug Question Review</h1>
+    <div class="who" id="who"></div>
+  </div>
+
+  <section class="signin card" id="vIn" hidden>
+    <h2 style="margin-top:0">Owner sign-in</h2>
+    <p>This page is only for the DrugBug owner accounts.</p>
+    <button class="gbtn" id="bGoogle">Continue with Google</button>
+    <p class="msg" id="inMsg" hidden></p>
+  </section>
+
+  <section id="vMain" hidden>
+    <div class="top" style="margin-top:10px">
+      <div class="stats" id="stats"><span class="stat">Loading questions…</span></div>
+      <div class="tools">
+        <button class="tb primary" id="bExport">Download for Claude</button>
+        <button class="tb" id="bCopy">Copy summary</button>
+      </div>
+    </div>
+    <p class="msg" id="topMsg" hidden></p>
+    <p class="note" style="margin-top:8px">Questions with a &#9888; rule flag are already hidden from the app. Rewrite one here to rescue it; your edits reach the app when Claude applies your download.</p>
+    <div class="bar" role="search">
+      <select id="fBank" aria-label="Question bank">
+        <option value="">All banks</option><option value="q">Practice (single answer)</option><option value="sata">Select all that apply</option><option value="reg">Exam prep (registry style)</option>
+      </select>
+      <select id="fLv" aria-label="Level"><option value="">All levels</option></select>
+      <select id="fV" aria-label="Review status">
+        <option value="un">Not reviewed yet</option><option value="">Everything</option><option value="good">Marked good</option><option value="bad">Marked bad</option><option value="off">Marked not relevant</option><option value="ed">Edited by me</option>
+      </select>
+      <label class="tg"><input type="checkbox" id="fFlag"> Rule breakers only</label>
+      <input type="search" id="fQ" placeholder="Search a drug or any words" aria-label="Search">
+    </div>
+
+    <div class="grid">
+      <article class="card" id="card" aria-live="polite"><div class="empty">Loading…</div></article>
+      <aside class="side">
+        <div class="card sec">
+          <h3>Verdict</h3>
+          <div class="vbtns">
+            <button class="vb g" data-v="good" aria-pressed="false">Good<small>G</small></button>
+            <button class="vb b" data-v="bad" aria-pressed="false">Bad<small>B</small></button>
+            <button class="vb o" data-v="off" aria-pressed="false">Not relevant<small>R</small></button>
+          </div>
+        </div>
+        <div class="card sec"><h3>Difficulty</h3><div class="diff" id="diff"></div></div>
+        <div class="card sec"><h3>Specialty it belongs in</h3><div class="specs" id="specs"></div><p class="note">"now" marks the level it is in today. Pick every level it fits.</p></div>
+        <div class="card sec"><h3>Note</h3><textarea id="note" placeholder="What to fix, or why it is bad"></textarea><div class="saved" id="saved"></div></div>
+        <div class="card sec">
+          <div class="nav"><button class="nb" id="prev">&larr; Back</button><button class="nb primary" id="next">Next &rarr;</button><span class="pos" id="pos"></span></div>
+          <p class="keys" style="margin:10px 0 0"><kbd>G</kbd> <kbd>B</kbd> <kbd>R</kbd> verdict · <kbd>1</kbd>–<kbd>5</kbd> difficulty · <kbd>E</kbd> edit · <kbd>&larr;</kbd> <kbd>&rarr;</kbd> move</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+</div>
+<script src="../app/vendor/firebase-app-compat.js"></script>
+<script src="../app/vendor/firebase-auth-compat.js"></script>
+<script>
+(function () {
+  "use strict";
+  var CFG = { apiKey: "AIzaSyC7cNkPSpPqfHPLNSY54u8QSL1jnaYsVMM", authDomain: "drugbug-69d42.firebaseapp.com", projectId: "drugbug-69d42", appId: "1:123306339603:web:2a0021f13fd8e620253ee6" };
+  var FN = "https://us-central1-drugbug-69d42.cloudfunctions.net/";
+  var local = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) && /[?&]emu=1/.test(location.search);
+  if (local) { CFG.apiKey = "demo-key"; CFG.projectId = "demo-drugbug"; FN = "http://127.0.0.1:5001/demo-drugbug/us-central1/"; }
+  firebase.initializeApp(CFG);
+  var auth = firebase.auth();
+  if (local) auth.useEmulator("http://127.0.0.1:9099", { disableWarnings: true });
+
+  var LEVELS = [["emt","EMT"],["aemt","AEMT"],["paramedic","Paramedic"],["flight","Flight Paramedic"],["cna","CNA"],["lvn","LVN / LPN"],["rn","RN"],["flightrn","Flight RN"],["ms1","Med school 1-2"],["ms3","Med school 3-4"],["intern","Intern / resident"],["im","Imaging"],["gen","General (BugDex)"]];
+  var LVNAME = {}; LEVELS.forEach(function (l) { LVNAME[l[0]] = l[1]; });
+  var DIFF = [["1","Easy"],["2","Basic"],["3","Medium"],["4","Hard"],["5","Expert"]];
+  var BANK = { q: "Practice", sata: "Select all", reg: "Exam prep" };
+  var $ = function (id) { return document.getElementById(id); };
+  var QS = [], BYID = {}, NAMES = {}, R = {}, list = [], pos = 0, editing = false, loaded = false;
+  var store = { get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function msg(id, t) { var el = $(id); el.textContent = t || ""; el.hidden = !t; }
+
+  function call(name, data) {
+    var u = auth.currentUser; if (!u) return Promise.reject(new Error("Sign in first."));
+    return u.getIdToken().then(function (tok) {
+      return fetch(FN + name, { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + tok }, body: JSON.stringify({ data: data || {} }) });
+    }).then(function (r) { return r.json(); }).then(function (j) { if (j.error) { var e = new Error(j.error.message || j.error.status); e.status = j.error.status; throw e; } return j.result; });
+  }
+
+  /* ---------- the owner's rules ---------- */
+  var STOP_RX = /(^|\b)(stop|stopping|discontinue|discontinuing|hold|holding|withhold|withholding|cease|pause)\b[^.;]{0,40}\b(the )?(medication|medicine|drug|infusion|drip|dose|therapy|it|treatment|this)\b|^(stop|discontinue|hold|withhold)\b/i;
+  function view(q) { var r = R[q.id], e = r && r.e; if (!e) return q; var o = Object.assign({}, q); ["q","a","x","w","opts","ok"].forEach(function (k) { if (e[k] != null) o[k] = e[k]; }); return o; }
+  var UNIT = /\b\d+(?:[.,]\d+)?(?:\s?(?:-|to)\s?\d+(?:\.\d+)?)?\s?(?:mg|mcg|µg|micrograms?|milligrams?|g|grams?|units?|mEq|mmol|mL|ml|L|J|joules?)(?:\/(?:kg|min|hr|h|kg\/min|kg\/hr|dose))?\b/i;
+  var ASKD = /\b(dose|dosage|dosing|how much|how many (?:mg|mcg|units|mL)|rate of infusion|infusion rate|max(?:imum)? (?:daily )?dose|loading dose)\b/i;
+  var ACLS = /\b(ACLS|PALS|BLS|cardiac arrest|arrest|pulseless|v-?fib|ventricular fibrillation|VF|pVT|VT|ventricular tachycardia|asystole|PEA|ROSC|SVT|supraventricular|bradycardi|tachycardi|torsades|resuscitat|defibrillat|cardiover|post-arrest|megacode|neonatal resus|NRP)\b/i;
+  function flags(q) {
+    q = view(q); var f = [];
+    var dans = q.ok ? q.ok.join(" | ") : (q.a || ""), dall = dans + " " + (q.w || []).join(" ") + " " + (q.opts || []).join(" ");
+    if ((UNIT.test(dans) || (ASKD.test(q.q || "") && UNIT.test(dall))) && !ACLS.test((q.q || "") + " " + (q.x || ""))) f.push("Asks for a dose. Rule: no dose questions unless they are ACLS or PALS.");
+    if (q.opts && q.ok && q.opts.length && q.ok.length === q.opts.length) f.push("Select-all where every option is correct. Rule: never all of them.");
+    var ans = q.ok ? q.ok.join(" | ") : (q.a || "");
+    if (STOP_RX.test(ans) || (q.ok && q.ok.some(function (o) { return STOP_RX.test(o); }))) f.push("The answer is to stop or hold the medication. Rule: no stop-the-medication questions.");
+    return f;
+  }
+
+  /* ---------- saving: one call per question, one at a time per question ---------- */
+  var busy = {}, again = {};
+  function save(id) {
+    if (busy[id]) { again[id] = true; return; }
+    busy[id] = true; $("saved").textContent = "Saving…";
+    var r = R[id], body = r ? { v: r.v || null, d: r.d || null, s: r.s || [], n: r.n || null, e: r.e || null } : null;
+    call("qrSave", { id: id, r: body }).then(function () { $("saved").textContent = "Saved"; }, function (e) {
+      $("saved").textContent = "Not saved: " + e.message; again[id] = true;
+      setTimeout(function () { if (again[id] && !busy[id]) save(id); }, 2500);
+    }).then(function () { busy[id] = false; if (again[id]) { again[id] = false; save(id); } });
+  }
+
+  /* ---------- filtering ---------- */
+  function build(keepId) {
+    var bk = $("fBank").value, lv = $("fLv").value, v = $("fV").value, fo = $("fFlag").checked, s = $("fQ").value.trim().toLowerCase();
+    list = QS.filter(function (q) {
+      var r = R[q.id];
+      if (bk && q.b !== bk) return false;
+      if (lv && q.lv !== lv) return false;
+      if (v === "un" && r && r.v) return false;
+      if (v === "ed" && !(r && r.e)) return false;
+      if (v && v !== "un" && v !== "ed" && !(r && r.v === v)) return false;
+      if (fo && !flags(q).length) return false;
+      if (s && q._s.indexOf(s) < 0) return false;
+      return true;
+    });
+    var i = keepId ? list.findIndex(function (q) { return q.id === keepId; }) : -1;
+    pos = i >= 0 ? i : Math.min(pos, Math.max(0, list.length - 1));
+    store.set("qr-filters", JSON.stringify({ bk: bk, lv: lv, v: v, fo: fo, s: $("fQ").value }));
+    editing = false; draw();
+  }
+
+  /* ---------- drawing ---------- */
+  function stats() {
+    var n = QS.length, g = 0, b = 0, o = 0, f = 0, ed = 0;
+    QS.forEach(function (q) { var r = R[q.id]; if (r && r.v === "good") g++; else if (r && r.v === "bad") b++; else if (r && r.v === "off") o++; if (r && r.e) ed++; if (!(r && r.v) && q._f0) f++; });
+    $("stats").innerHTML = '<span class="stat"><b>' + (g + b + o).toLocaleString() + '</b> of ' + n.toLocaleString() + ' reviewed</span>' +
+      '<span class="stat g"><b>' + g + '</b> good</span><span class="stat b"><b>' + b + '</b> bad</span><span class="stat o"><b>' + o + '</b> not relevant</span>' +
+      '<span class="stat"><b>' + ed + '</b> edited</span><span class="stat f"><b>' + f + '</b> rule breakers left</span>';
+  }
+  function draw() {
+    stats();
+    var q = list[pos];
+    $("pos").textContent = list.length ? (pos + 1).toLocaleString() + " of " + list.length.toLocaleString() : "";
+    $("prev").disabled = pos <= 0; $("next").disabled = pos >= list.length - 1;
+    if (!q) { $("card").innerHTML = '<div class="empty">Nothing matches these filters.' + ($("fV").value === "un" ? " Every question here has been reviewed." : "") + '</div>'; paintPanel(null); return; }
+    var r = R[q.id] || {}, v = view(q);
+    var h = '<div class="meta"><span class="chip">' + BANK[q.b] + (q.t === "multi" ? " · select all" : q.t ? " · " + esc(q.t) : "") + '</span>' +
+      '<span class="chip">Now in: ' + esc(LVNAME[q.lv] || q.lv || "—") + '</span>' + (q.d ? '<span class="chip">Drug: ' + esc(NAMES[q.d] || q.d) + '</span>' : (q.cat ? '<span class="chip">Topic: ' + esc(q.cat) + '</span>' : '')) +
+      (r.e ? '<span class="chip ed">Edited</span>' : '') + '<span class="chip mono">' + esc(q.id) + '</span></div>';
+    flags(q).forEach(function (f) { h += '<div class="flag" role="note"><span aria-hidden="true">&#9888;</span><span>' + esc(f) + '</span></div>'; });
+    if (editing) h += editForm(v);
+    else {
+      var keys = "ABCDEFGHIJ", opts = v.opts ? v.opts.map(function (o) { return [o, (v.ok || []).indexOf(o) >= 0]; }) : [[v.a, true]].concat((v.w || []).map(function (w) { return [w, false]; }));
+      h += '<p class="qtext">' + esc(v.q) + '</p><ol class="opts">';
+      opts.forEach(function (o, i) { h += '<li class="' + (o[1] ? "ok" : "") + '"><span class="k">' + keys[i] + '</span><span>' + esc(o[0]) + (o[1] ? ' <b style="color:var(--good)">&#10003;</b>' : '') + '</span></li>'; });
+      h += '</ol>' + (v.x ? '<div class="why"><b>Explanation.</b> ' + esc(v.x) + '</div>' : '');
+      h += '<div class="eacts"><button class="tb" data-act="edit">Edit this question (E)</button>' + (r.e ? '<button class="tb" data-act="revert">Undo my edits</button>' : '') + '</div>';
+    }
+    $("card").innerHTML = h;
+    paintPanel(q);
+  }
+  function editForm(v) {
+    var h = '<div class="edit"><label>Question<textarea id="eQ" rows="3">' + esc(v.q) + '</textarea></label>';
+    if (v.opts) {
+      h += '<div><label style="margin-bottom:6px">Options (tick every correct one; never all of them)</label>';
+      v.opts.concat([""]).forEach(function (o, i) { h += '<div class="orow"><input type="checkbox" class="eOk" aria-label="Correct"' + ((v.ok || []).indexOf(o) >= 0 && o ? " checked" : "") + '><textarea class="eOpt" rows="1" placeholder="' + (o ? "" : "Add an option (optional)") + '">' + esc(o) + '</textarea></div>'; });
+      h += '</div>';
+    } else {
+      h += '<label>Correct answer<textarea id="eA" rows="2">' + esc(v.a) + '</textarea></label>';
+      (v.w || []).concat(["", ""]).slice(0, Math.max(4, (v.w || []).length)).forEach(function (w, i) { h += '<label>Wrong answer ' + (i + 1) + '<textarea class="eW" rows="1">' + esc(w) + '</textarea></label>'; });
+    }
+    h += '<label>Explanation<textarea id="eX" rows="3">' + esc(v.x) + '</textarea></label>';
+    return h + '<div class="eacts"><button class="tb primary" data-act="esave">Save my edit</button><button class="tb" data-act="ecancel">Cancel</button></div></div>';
+  }
+  function paintPanel(q) {
+    var r = (q && R[q.id]) || {};
+    document.querySelectorAll(".vb").forEach(function (b) { b.setAttribute("aria-pressed", String(r.v === b.getAttribute("data-v"))); b.disabled = !q; });
+    $("diff").innerHTML = DIFF.map(function (d) { return '<button class="db" data-d="' + d[0] + '" aria-pressed="' + (String(r.d) === d[0]) + '"' + (q ? '' : ' disabled') + '><b>' + d[0] + '</b>' + d[1] + '</button>'; }).join("");
+    var spec = r.s || (q && q.lv ? [q.lv] : []);
+    $("specs").innerHTML = LEVELS.map(function (l) { return '<button class="sp' + (q && q.lv === l[0] ? " cur" : "") + '" data-s="' + l[0] + '" aria-pressed="' + (spec.indexOf(l[0]) >= 0) + '"' + (q ? '' : ' disabled') + '>' + l[1] + '</button>'; }).join("");
+    $("note").value = r.n || ""; $("note").disabled = !q;
+    $("saved").textContent = q && r.ts ? "Reviewed " + new Date(r.ts).toLocaleDateString() : "";
+  }
+
+  /* ---------- editing ---------- */
+  function cur() { return list[pos]; }
+  function edit(fn) {
+    var q = cur(); if (!q) return;
+    var r = JSON.parse(JSON.stringify(R[q.id] || {}));
+    if (!r.s) r.s = [q.lv].filter(Boolean);
+    fn(r, q); r.ts = Date.now(); R[q.id] = r; save(q.id); paintPanel(q); stats();
+  }
+  function setVerdict(v) { edit(function (r) { r.v = r.v === v ? null : v; }); }
+  function saveEdit() {
+    var q = cur(); if (!q) return;
+    var e = { q: $("eQ").value.trim(), x: $("eX").value.trim() };
+    if (q.opts) {
+      var opts = [], ok = [];
+      document.querySelectorAll(".orow").forEach(function (row) { var t = row.querySelector(".eOpt").value.trim(); if (!t) return; opts.push(t); if (row.querySelector(".eOk").checked) ok.push(t); });
+      if (!ok.length) return alertBox("Tick at least one correct option.");
+      if (ok.length === opts.length) return alertBox("Every option is ticked as correct. Your rule: a select-all can never be all of them.");
+      e.opts = opts; e.ok = ok;
+    } else {
+      e.a = $("eA").value.trim(); e.w = [].map.call(document.querySelectorAll(".eW"), function (t) { return t.value.trim(); }).filter(Boolean);
+      if (!e.a || e.w.length < 2) return alertBox("Give a correct answer and at least two wrong answers.");
+    }
+    if (!e.q) return alertBox("The question can't be empty.");
+    edit(function (r) { r.e = e; }); editing = false; draw();
+  }
+  function alertBox(t) { var el = document.querySelector(".edit .msg") || document.createElement("p"); el.className = "msg"; el.textContent = t; document.querySelector(".edit").appendChild(el); }
+  document.addEventListener("click", function (ev) {
+    var t = ev.target.closest && ev.target.closest("button"); if (!t || !loaded) return;
+    if (t.dataset.v) setVerdict(t.dataset.v);
+    else if (t.dataset.d) edit(function (r) { r.d = String(r.d) === t.dataset.d ? null : +t.dataset.d; });
+    else if (t.dataset.s) edit(function (r) { var i = r.s.indexOf(t.dataset.s); if (i >= 0) r.s.splice(i, 1); else r.s.push(t.dataset.s); });
+    else if (t.dataset.act === "edit") { editing = true; draw(); var f = $("eQ"); if (f) f.focus(); }
+    else if (t.dataset.act === "ecancel") { editing = false; draw(); }
+    else if (t.dataset.act === "esave") saveEdit();
+    else if (t.dataset.act === "revert") { edit(function (r) { r.e = null; }); draw(); }
+  });
+  var noteT = 0;
+  $("note").addEventListener("input", function () { clearTimeout(noteT); var v = this.value; noteT = setTimeout(function () { edit(function (r) { r.n = v.trim() || null; }); }, 700); });
+  function go(d) {
+    var q = cur();
+    if ($("fV").value === "un" && q && R[q.id] && R[q.id].v && d > 0) { build(); return; }
+    pos = Math.max(0, Math.min(list.length - 1, pos + d)); editing = false; draw(); window.scrollTo({ top: 0 });
+  }
+  $("prev").onclick = function () { go(-1); }; $("next").onclick = function () { go(1); };
+  document.addEventListener("keydown", function (e) {
+    if (!loaded || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName) || e.metaKey || e.ctrlKey || e.altKey) return;
+    var k = e.key.toLowerCase();
+    if (k === "g") setVerdict("good"); else if (k === "b") setVerdict("bad"); else if (k === "r") setVerdict("off");
+    else if (/^[1-5]$/.test(k)) edit(function (r) { r.d = +k; });
+    else if (k === "e") { editing = true; draw(); }
+    else if (k === "arrowright" || k === "j") go(1); else if (k === "arrowleft" || k === "k") go(-1);
+    else return;
+    e.preventDefault();
+  });
+  ["fBank", "fLv", "fV", "fFlag"].forEach(function (id) { $(id).addEventListener("change", function () { pos = 0; build(); try { this.blur(); } catch (e) {} }); });   /* blur so G, B, R and the arrow keys work straight away */
+  var sT = 0; $("fQ").addEventListener("input", function () { clearTimeout(sT); sT = setTimeout(function () { pos = 0; build(); }, 250); });
+
+  /* ---------- "Download for Claude": every review, with the original and the edited wording ---------- */
+  function exportData() {
+    var out = [];
+    QS.forEach(function (q) {
+      var r = R[q.id]; if (!r) return;
+      var o = { id: q.id, bank: q.b, level: q.lv, drug: q.d || "", verdict: r.v || null, difficulty: r.d || null, specialties: r.s || [], note: r.n || null, reviewed: r.ts ? new Date(r.ts).toISOString() : null, rule_flags: flags(q) };
+      o.original = { q: q.q, a: q.a, w: q.w, opts: q.opts, ok: q.ok, x: q.x };
+      if (r.e) o.edited = r.e;
+      out.push(o);
+    });
+    return { exported: new Date().toISOString(), total_questions: QS.length, reviewed: out.length, reviews: out };
+  }
+  $("bExport").onclick = function () {
+    var j = exportData(), blob = new Blob([JSON.stringify(j, null, 1)], { type: "application/json" });
+    var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "drugbug-question-reviews-" + new Date().toISOString().slice(0, 10) + ".json";
+    document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    msg("topMsg", "Downloaded " + j.reviewed + " reviews. Attach that file in your chat with Claude and say \"apply my question reviews\".");
+  };
+  $("bCopy").onclick = function () {
+    var j = exportData(), c = { good: 0, bad: 0, off: 0 }, ed = 0, lines = [];
+    j.reviews.forEach(function (r) { if (r.verdict) c[r.verdict]++; if (r.edited) ed++; if (r.verdict === "bad" || r.verdict === "off" || r.edited || (r.specialties.length && r.specialties.join() !== r.level)) lines.push(r.id + " | " + (r.verdict || "-") + " | diff " + (r.difficulty || "-") + " | " + r.specialties.join(",") + (r.edited ? " | EDITED" : "") + (r.note ? " | " + r.note : "")); });
+    var t = "DrugBug question reviews (" + j.exported.slice(0, 10) + "): " + j.reviewed + " reviewed, " + c.good + " good, " + c.bad + " bad, " + c.off + " not relevant, " + ed + " edited.\n" + lines.slice(0, 300).join("\n") + (lines.length > 300 ? "\n...and " + (lines.length - 300) + " more (use Download for Claude for all of them)" : "");
+    (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { msg("topMsg", "Summary copied. Paste it into your chat with Claude. For edited wording, use Download for Claude."); }, function () { msg("topMsg", "Your browser blocked copying. Use Download for Claude instead."); });
+  };
+
+  /* ---------- start ---------- */
+  LEVELS.forEach(function (l) { var o = document.createElement("option"); o.value = l[0]; o.textContent = l[1]; $("fLv").appendChild(o); });
+  try { var F = JSON.parse(store.get("qr-filters") || "null"); if (F) { $("fBank").value = F.bk || ""; $("fLv").value = F.lv || ""; $("fV").value = F.v == null ? "un" : F.v; $("fFlag").checked = !!F.fo; $("fQ").value = F.s || ""; } } catch (e) {}
+  $("bGoogle").onclick = function () { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(function (e) { msg("inMsg", e.message); }); };
+  var qsP = fetch("questions.json").then(function (r) { return r.json(); });
+  auth.onAuthStateChanged(function (u) {
+    var real = u && !u.isAnonymous;
+    $("who").innerHTML = real ? esc(u.email || "Signed in") + ' <button id="bOut">Sign out</button>' : "";
+    if (real) $("bOut").onclick = function () { auth.signOut(); };
+    $("vIn").hidden = !!real; $("vMain").hidden = !real;
+    if (!real) return;
+    Promise.all([qsP, call("qrLoad")]).then(function (res) {
+      var j = res[0]; NAMES = j.names || {}; R = res[1].items || {};
+      QS = j.qs.map(function (q) { q._s = (q.q + " " + (q.a || "") + " " + (q.opts || []).join(" ") + " " + (NAMES[q.d] || q.d || "") + " " + q.id).toLowerCase(); BYID[q.id] = q; return q; });
+      QS.forEach(function (q) { q._f0 = flags(q).length > 0; });
+      loaded = true; build();
+    }).catch(function (e) {
+      if (e.status === "PERMISSION_DENIED") { $("vMain").hidden = true; $("vIn").hidden = false; msg("inMsg", "This account isn't a DrugBug owner account. Sign out and use volaremediallc@gmail.com or adamficklen@gmail.com."); }
+      else $("card").innerHTML = '<div class="empty">' + (/fetch|not.?found|internal/i.test(e.message) ? "The review service isn't deployed yet. Run DEPLOY.cmd on your PC, then reload." : esc(e.message)) + '</div>';
+    });
+  });
+})();
+</script>
+</body></html>
