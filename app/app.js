@@ -13466,6 +13466,7 @@ function disListHTML() {
 }
 function disView() {
   var D = disAll();
+  if (S.disSys == null && S.view === "level" && S.level === "mh" && !disFieldMode()) S.disSys = "Mental Health";
   if (S.disId && D[S.disId] && !disLocked(S.disId)) return disDetail(S.disId);
   S.disId = null;
   if (disFieldMode()) {
@@ -13494,9 +13495,17 @@ function disDetail(id) {
   c += deepSec("🔬", "What happens at the cellular level", deepP(e.cell));
   if (e.body && e.body.length) c += deepSec("🫀", "What it does in the body, organ by organ", '<div class="organs">' + e.body.map(function (b) { return typeof organHTML === "function" ? organHTML(b) : '<div class="organ"><b>' + esc(b[0]) + '</b>' + esc(b[1]) + '</div>'; }).join("") + '</div>');
   c += deepSec("🤒", "Why the symptoms happen", deepP(e.symptoms));
-  c += deepSec("🩺", "How it is diagnosed", deepP(e.dx));
+  /* mental health depth (owner, Nov 5 2026): how it looks, who gets it, the criteria, what comes with it */
+  if (e.signs && e.signs.length) c += deepSec("👀", "What it looks like", '<div class="organs">' + e.signs.map(function (b) { return '<div class="organ"><b>' + esc(b[0]) + '</b>' + esc(b[1]) + '</div>'; }).join("") + '</div>');
+  if (e.course) c += deepSec("📈", "Who gets it and how it changes over time", deepP(e.course));
+  c += deepSec("🩺", "How it is diagnosed", deepP(e.dx) + (e.criteria && e.criteria.length ? '<p class="dnote">The diagnostic criteria, in plain words:</p><ul>' + e.criteria.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join("") + '</ul>' : '') +
+    (e.comorbid && e.comorbid.length ? '<p class="dnote">Conditions that often come with it:</p><ul>' + e.comorbid.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join("") + '</ul>' : ''));
   var dr = (e.drugs || []).filter(function (d) { return DB.drugs[d]; });
   c += deepSec("💊", "How treatment works", deepP(e.tx) + (dr.length ? '<p class="dnote">Drugs in DrugBug used for it (tap one to open its page and its Wormhole):</p><div class="drugchips">' + dr.map(function (d) { return '<button class="chip" data-drug="' + d + '">' + esc(nameOf(d)) + '</button>'; }).join("") + '</div>' : ''));
+  if (e.care && e.care.length) c += deepSec("🧑‍⚕️", "What each member of the team watches for", '<div class="organs">' + e.care.map(function (b) { return '<div class="organ"><b>' + esc(b[0]) + '</b>' + esc(b[1]) + '</div>'; }).join("") + '</div>');
+  if (e.living) c += deepSec("🌤️", "Living with it", deepP(e.living));
+  if (e.help) c += deepSec("🤝", "How to support someone with it", deepP(e.help));
+  if (e.myths && e.myths.length) c += deepSec("💬", "Myths and facts", '<div class="mem">' + e.myths.map(function (m) { return '<div><b>Myth:</b> ' + esc(m[0]) + '<br><b>Fact:</b> ' + esc(m[1]) + '</div>'; }).join("") + '</div>');
   if (e.mem && e.mem.length) c += deepSec("🧠", "Make it stick", '<div class="mem">' + e.mem.map(function (m) { return '<div><b>' + esc(m[0]) + ':</b> ' + esc(m[1]) + '</div>'; }).join("") + '</div>');
   if (e.fun) c += '<div class="fun"><b>Fun fact:</b> ' + esc(e.fun) + '</div>';
   if (e.src && e.src.length) c += deepSec("📚", "Sources", '<ul class="srcl">' + e.src.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join("") + '</ul>');
@@ -27201,6 +27210,7 @@ function learnDoneView() {
    together. Cards seen here count toward the full L.E.A.R.N as well, and each group keeps its quiz. */
 function learnSysRow() {
   if (typeof SYS === "undefined" || typeof sysMap !== "function") return "";
+  if (S.view === "level" && typeof isA === "function" && isA(S.level)) return "";   /* not on Allied Health (owner, Nov 5 2026) */
   if (typeof isF === "function" && S.view === "level" && isF(S.level)) return "";
   var SN = learnSeen(), open = {}, ph = lcatMode() === "ph";
   learnPool(null, null).forEach(function (id) { open[id] = 1; });
