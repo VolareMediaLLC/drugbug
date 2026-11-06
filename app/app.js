@@ -403,7 +403,7 @@ function topbar() {
   if (S.view === "settings") c += '<span>/</span><span>Settings</span>';
   if (S.view === "terrarium") c += '<span>/</span><span>Terrarium</span>';
   if (S.view === "everyday") c += '<span>/</span>' + (S.evTab ? '<button data-evtab="">Everyday Health</button>' : '<span>Everyday Health</span>');
-  var extra = (!SOCIAL ? '' : '<button class="theme-btn" data-go="classes"' + (S.view === "classes" ? ' aria-current="page"' : '') + '>Classes</button>') + (Admin.can ? '<button class="theme-btn admin-btn" data-go="admin"' + (S.view === "admin" ? ' aria-current="page"' : '') + '><span class="lg">Control Center</span><span class="sm">Control Center</span></button>' : '') + '<button class="theme-btn mob-only" data-act="openproto">Protocols</button>';
+  var extra = (!SOCIAL ? '' : '<button class="theme-btn" data-go="classes"' + (S.view === "classes" ? ' aria-current="page"' : '') + '>Classes</button>') + (Admin.can ? '<button class="theme-btn admin-btn" data-go="admin"' + (S.view === "admin" ? ' aria-current="page"' : '') + '><span class="lg">Control Center</span><span class="sm">Control Center</span></button>' : '') + '<button class="theme-btn mob-only" data-act="openclass">My class</button>';
   c += '</nav><span class="spacer"></span><div class="tbacts">' + (stickChip() || tierChip()) + '<span class="tbx">' + extra + '</span><button class="theme-btn srch-btn" data-act="gsearch" aria-label="Search all drugs" title="Search all drugs"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button><button class="theme-btn menu-btn" data-act="tbmenu" aria-expanded="' + !!S.menu + '" aria-label="More">More</button>' + musicBtn() + gearBtn() + (typeof funOn === "function" && !funOn() ? '' : '<button class="tbsticks" data-goshop="1" data-shopf="sticks" aria-label="' + sticks() + ' sticks. Get more sticks" title="Get Sticks">' + stickIcon(18) + '<strong>' + sticks().toLocaleString() + '</strong></button>') + '</div>' + (S.menu ? '<div class="tbmenu" role="menu">' + extra + '<button class="theme-btn" data-idea="1">Send an idea</button></div>' : '') + '</div>';
   return c + (typeof muPop === "function" ? muPop() : "") + backRow();
 }
@@ -675,7 +675,7 @@ function tabList() {
     /* Shown locked as well as unlocked, so the agency code can be entered right here. It used to
        appear only once unlocked, which left no way in on a new device (owner, Nov 1 2026). */
     if (AGP.data) L.push(["protocols", (AGP.data.org || "Agency") + " Protocols", "Your agency's own protocols, showing the options for this level, with each drug linked to its DrugBug page."]);
-    else if (typeof agpPro !== "function" || agpPro()) L.push(["protocols", "Agency Protocols", "Enter the code from your agency or training officer to see your own protocols here, filtered to this level."]);
+    else L.push(["protocols", "Protocols", "Your agency's own protocols with a code, or check whether your state's and agency's protocols are in DrugBug and send yours in."]);
   }
   if (typeof callTabOK === "function" && callTabOK()) L.splice(1, 0, ["calls", "Big Calls", "Stroke, STEMI, sepsis, trauma and ROSC: what to recognize, the clocks and where to go."]);
   if (S.level === "lvn" || S.level === "rn" || S.level === "flightrn") L.push(["nbug", "Nursing Bug", "Assess, hold, labs, teaching: one skill at a time."]);
@@ -1933,7 +1933,7 @@ function closeSheet() { sheet.hidden = true; sheet.innerHTML = ""; S.sheet = nul
 /* ---------- render & events ---------- */
 function render() {
   try { if (typeof usgTab === "function") usgTab(); } catch (e) {}
-  var ok = agreeRec(); protoTab.hidden = !ok; protoTab.textContent = lang() === "es" ? "Protocolos" : "Protocols"; document.documentElement.lang = lang();
+  var ok = agreeRec(); protoTab.hidden = true; if (typeof classTab !== "undefined" && classTab) classTab.hidden = !ok || (typeof needOnboard === "function" && needOnboard()); protoTab.textContent = lang() === "es" ? "Protocolos" : "Protocols"; document.documentElement.lang = lang();
   var html;
   /* A screen that fails to build used to leave the last one frozen on the page: the state had
      already moved on, so buttons did nothing and nothing explained why. Now it says so and offers
@@ -2004,7 +2004,7 @@ document.addEventListener("click", function (e) {
   if (a.mlrm) { S.medlist = (S.medlist || []).filter(function (x) { return x !== a.mlrm; }); return render(); }
   if (a.mlclear) { S.medlist = []; return render(); }
   if (a.mlex && typeof mlAddText === "function") { S.medlist = []; mlAddText(ML_EXAMPLE); return render(); }
-  if (a.sopt != null) { var sf = S.safe; if (sf.pick != null) return; sf.pick = sf.opts[+a.sopt]; sf.n++; feedback(sf.pick === sf.q.a); earn(qSticks(sf.pick === sf.q.a)); if (sf.pick === sf.q.a) { sf.c++; Prog.d.xp += 5; } saveProg(); return render(); }
+  if (a.sopt != null) { var sf = S.safe; if (sf.pick != null) return; sf.pick = sf.opts[+a.sopt]; sf.n++; feedback(sf.pick === sf.q.a); try { groupNote(sf.q, sf.pick === sf.q.a, "safety"); } catch (e) {} earn(qSticks(sf.pick === sf.q.a)); if (sf.pick === sf.q.a) { sf.c++; Prog.d.xp += 5; } saveProg(); return render(); }
   if (a.mark) { if (typeof PAYWALL !== "undefined" && PAYWALL && !hasTier("plus") && !isMarked(a.mark)) { openPaywall("Saving drugs to My List", "plus"); return; } toggleMark(a.mark); S.markHint = isMarked(a.mark) ? a.mark : null; return S.sheet ? drawSheet() : render(); }
   if (a.unmark) { toggleMark(a.unmark); return render(); }
   if (a.onlymarks) { S.onlyMarks = !S.onlyMarks; return render(); }
@@ -2117,6 +2117,7 @@ document.addEventListener("click", function (e) {
     }
     case "gsearch": S.menu = false; go("gen", { tab: "registry" }); setTimeout(function () { var q = document.getElementById("q"); if (q) { q.focus(); q.scrollIntoView({ block: "center" }); } }, 60); return;
     case "openproto": S.menu = false; render(); return openProto();
+    case "openclass": S.menu = false; render(); return openClassPane();
     case "utilback": var ub = S.utilBack; S.utilBack = null; if (ub && ub.view && !UTIL_VIEWS[ub.view]) { go(ub.view, ub.level ? { level: ub.level } : {}); if (ub.tab && ub.tab !== "hub") { S.tab = ub.tab; render(); } return; } return go("home");
     case "terrback": var tb = S.terrBack; S.terrBack = null; if (tb && tb.view && tb.view !== "terrarium") { go(tb.view, tb.level ? { level: tb.level } : {}); if (tb.tab) { S.tab = tb.tab; render(); } return; } return go("home");
     case "megalock": return openPaywall("Megacode", toolTier("mega"));
@@ -2857,8 +2858,8 @@ function masteryPct(ids) { if (!ids.length) return 0; return Math.round(100 * id
 function xpLevel(xp) { var lv = 1, need = 100; while (xp >= need) { xp -= need; lv++; need = 100 + (lv - 1) * 50; } return { lv: lv, into: xp, need: need }; }
 
 /* recording answers */
-function record(q, ok) { try { recordInner(q, ok); } catch (e) { /* never let progress bookkeeping block the quiz from moving on */ try { console.warn("record", e); } catch (x) { } } }
-function recordInner(q, ok) {
+function record(q, ok, kind) { try { recordInner(q, ok, kind); } catch (e) { /* never let progress bookkeeping block the quiz from moving on */ try { console.warn("record", e); } catch (x) { } } }
+function recordInner(q, ok, kind) {
   if (typeof usgOn === "function" && usgOn()) { USG.inc.q++; if (ok) USG.inc.c++; }
   var P = Prog.d, t = today();
   if (!P) return; P.days = P.days || {}; P.drugs = P.drugs || {}; P.xp = P.xp || 0;
@@ -2877,11 +2878,11 @@ function recordInner(q, ok) {
     var SN = P.seen || (P.seen = {}); if (!SN[k]) SN[k] = 1; else if (SN[k] < 99) SN[k]++;
   }
   if (q && q.cat) { P.qcat = P.qcat || {}; var cs = P.qcat[q.cat] || (P.qcat[q.cat] = { n: 0, c: 0 }); cs.n++; if (ok) cs.c++; }
-  if (typeof groupNote === "function") groupNote(q, ok);
+  if (typeof groupNote === "function") groupNote(q, ok, kind);
   checkAch(); saveProg();
 }
 function recordCalc(type, ok) {
-  if (typeof groupNote === "function") groupNote(null, ok);
+  if (typeof groupNote === "function") groupNote(null, ok, "calc", { id: "calc-" + type, name: String(type) });
   var c = Prog.d.calc[type] || (Prog.d.calc[type] = { n: 0, c: 0 }); c.n++; if (ok) c.c++; earn(qSticks(ok)); if (typeof feedback === "function") feedback(ok);
   Prog.d.xp += ok ? 12 : 2; var t = today(); Prog.d.days[t] = (Prog.d.days[t] || 0) + 1; checkAch(); saveProg();
 }
@@ -5292,6 +5293,7 @@ function megaTick() {
 function megaAnswer(oi) {
   var st = S.mega; if (!st || st.ans[st.i] != null) return;
   st.ans[st.i] = oi; st.times[st.i] = (Date.now() - st.t0) / 1000; clearInterval(MC.timer); feedback(oi >= 0 && st.cs.steps[st.i].options[oi].ok);
+  try { groupNote(null, !!(oi >= 0 && st.cs.steps[st.i].options[oi].ok), "megacode", { id: "mc-" + (st.cs.id || st.cs.title || "case"), name: "Megacode: " + (st.cs.title || st.cs.id || "case") }); } catch (e) {}
   render();
 }
 function megaNext() {
@@ -6725,8 +6727,9 @@ function lzLayout(pos, ease) {
   for (var k = 0; k < n; k++) {
     var d = lzWrap(k - pos, n), ad = Math.abs(d), el = els[k];
     el.style.transition = ease ? "transform .34s cubic-bezier(.22,.9,.26,1), opacity .34s" : "none";
-    el.style.transform = "translateX(" + (d * 76) + "%) rotateY(" + (-d * 32) + "deg) scale(" + Math.max(0.44, 1.05 - ad * 0.24) + ")";
-    el.style.opacity = ad > 2.3 ? "0" : String(Math.max(0, 1 - ad * 0.36));
+    /* the card in front sits flat at its real size (no transform at all), so its text and bug are drawn sharp */
+    el.style.transform = ad < 0.02 ? "none" : "translateX(" + (d * 76) + "%) rotateY(" + (-d * 32) + "deg) scale(" + Math.max(0.42, 1 - ad * 0.24) + ")";
+    el.style.opacity = ad < 0.02 ? "1" : ad > 2.3 ? "0" : String(Math.max(0, 1 - ad * 0.22));
     el.style.zIndex = String(Math.max(1, Math.round(10 - ad * 2)));
     el.style.pointerEvents = ad > 1.7 ? "none" : "";
     el.classList.toggle("mid", ad < 0.5);
@@ -7956,7 +7959,7 @@ function settingsView() {
   c += setCard("protocols", "Protocols",
     setRow("My state", "Used to filter protocol sets.", '<select class="pinput" data-setsel="state"><option value="">Not set</option>' + DB.STATES.map(function (x) { return '<option value="' + x[0] + '"' + (s.state === x[0] ? " selected" : "") + '>' + x[1] + '</option>'; }).join("") + '</select>') +
     setRow("Protocols in use", ap ? "Used with permission of " + (ap.permBy || ap.agency || ap.name) + "." : "National scope of practice and national dosing.", '<select class="pinput" data-setsel="protocol"><option value="">National defaults</option>' + sets.filter(function (p) { return !s.state || p.state === s.state || (ap && ap.id === p.id); }).map(function (p) { return '<option value="' + esc(p.id) + '"' + (ap && ap.id === p.id ? " selected" : "") + '>' + esc((p.agency || p.name) + " (" + stateName(p.state) + ")") + '</option>'; }).join("") + '</select>') +
-    '<p class="muted small">Don\'t see yours? Open the Protocols tab on the right edge to request it.</p>');
+    '<p class="muted small">Don\'t see yours? Open Protocols in your EMT, AEMT, Paramedic or Flight menu to request it.</p>');
   // printing
   if (canPrint()) c += setCard("print", "Printing",
     setRow("Default layout", "Used by \"Print study card\" on a drug page.", setOpts("printMode", s.printMode, [["cards", "Study cards"], ["sheet", "Cheat sheet"]])) +
@@ -8550,6 +8553,7 @@ function labStart(r) {
 function labAnswer(i) {
   var st = S.labd, x = st.qs[st.i]; if (st.pick != null) return;
   st.pick = x.opts[i]; var ok = st.pick === x.q.a; feedback(ok);
+  try { var lbx = (DB.LABS || []).filter(function (l) { return l.id === x.q.lab; })[0]; groupNote(x.q, ok, "lab", x.q.lab ? { id: "lab-" + x.q.lab, name: "Lab: " + (lbx ? lbx.name : x.q.lab) } : null); } catch (e) {}
   if (x.q.lab) { var mm = ctm("lab", x.q.lab); mm.n++; if (ok) { mm.r++; mm.s++; } else mm.s = 0; }
   earn(qSticks(ok)); if (ok) { st.c++; Prog.d.xp += 5; }
   if (st.i === st.qs.length - 1 && st.c === st.qs.length && st.qs.length >= 10) earn(PERFECT_BONUS);
@@ -8731,7 +8735,7 @@ function critClick(t, a) {
   if (a.cnav) { var N = critNav(); if (a.cnav === "home") { N.grp = null; N.topic = null; N.mode = null; } else if (a.cnav === "grp") N.topic = null; else if (a.cnav === "topic") { N.mode = null; S.cd = null; } render(); window.scrollTo(0, 0); return true; }
   if (a.ctstudy) { var N2 = critNav(), tp2 = critTopics(N2.kind).filter(function (x) { return x.id === a.ctstudy; })[0]; if (!tp2) return true; var qs2 = ctTopicQs(N2.kind, tp2); S.cd = { k: N2.kind + labRoute(), i: 0, c: 0, pick: null, topic: tp2.id, back: tp2.id, qs: qs2.map(mixItem) }; N2.mode = "drill"; render(); window.scrollTo(0, 0); return true; }
   if (a.critgo) { var cq = critQs(a.critgo); if (a.critgo === "flightp" && S.cdGrp) cq = cq.filter(function (q) { return S.cdGrp === "cc" ? /^cc-/.test(q.topic) : !/^cc-/.test(q.topic); }); var pool = shuffle(cq).slice(0, 10); S.cd = { k: a.critgo + labRoute(), i: 0, c: 0, pick: null, qs: pool.map(mixItem) }; critNav().mode = "drill"; render(); window.scrollTo(0, 0); return true; }
-  if (a.critopt != null) { var st = S.cd, x = st.qs[st.i]; if (st.pick != null) return true; st.pick = x.opts[+a.critopt]; var ok = st.pick === x.q.a; feedback(ok); if (x.q.topic) { var mm = ctm(critNav().kind, x.q.topic); mm.n++; if (ok) { mm.r++; mm.s++; } else mm.s = 0; } earn(qSticks(ok)); if (ok) { st.c++; Prog.d.xp += 5; } if (st.i === st.qs.length - 1 && st.c === st.qs.length && st.qs.length >= 10) earn(PERFECT_BONUS); saveProg(); render(); return true; }
+  if (a.critopt != null) { var st = S.cd, x = st.qs[st.i]; if (st.pick != null) return true; st.pick = x.opts[+a.critopt]; var ok = st.pick === x.q.a; feedback(ok); try { var ck0 = critNav().kind, ct0 = x.q.topic && critTopics(ck0).filter(function (t) { return t.id === x.q.topic; })[0]; groupNote(x.q, ok, "crit", x.q.topic ? { id: ck0 + "-" + x.q.topic, name: (tabName(ck0) || String(ck0).toUpperCase()) + ": " + (ct0 ? ctShort(ct0) : x.q.topic) } : null); } catch (e) {} if (x.q.topic) { var mm = ctm(critNav().kind, x.q.topic); mm.n++; if (ok) { mm.r++; mm.s++; } else mm.s = 0; } earn(qSticks(ok)); if (ok) { st.c++; Prog.d.xp += 5; } if (st.i === st.qs.length - 1 && st.c === st.qs.length && st.qs.length >= 10) earn(PERFECT_BONUS); saveProg(); render(); return true; }
   if (a.critnext) { S.cd.i++; S.cd.pick = null; render(); window.scrollTo(0, 0); return true; }
   if (a.famopen) { S.fam = a.famopen; render(); window.scrollTo(0, 0); return true; }
   if (a.famback) { S.fam = null; render(); window.scrollTo(0, 0); return true; }
@@ -12441,7 +12445,7 @@ function gmFrogShoot(k, el) {
   GM.shot = { k: k, ok: b.ok, x: x.toFixed(1), y: y.toFixed(1) };
   /* freeze every bug where it is, so the redraw doesn't make them jump */
   if (pond) { var P2 = pond.getBoundingClientRect(); pond.querySelectorAll("[data-gmfrog]").forEach(function (e) { var j = +e.getAttribute("data-gmfrog"), R2 = e.getBoundingClientRect(); GM.bugs[j].fx = (100 * (R2.left + R2.width / 2 - P2.left) / P2.width).toFixed(1); GM.bugs[j].fy = (100 * (R2.top + R2.height / 2 - P2.top) / P2.height).toFixed(1); }); }
-  record(GM.q.q, b.ok);
+  record(GM.q.q, b.ok, "game");
   if (b.ok) {
     GM.score++; GM.streak = (GM.streak || 0) + 1; GM.mood = GM.streak % 3 === 0 ? "burp" : "happy"; gfxSnd("chomp"); if (GM.mood === "burp") setTimeout(function () { gfxSnd("burp"); }, 350);
     if (b.gold) { earn(2); GM.bonus = (GM.bonus || 0) + 2; saveProg(); gfxSparkle(el ? gfxRect(el) : null); }
@@ -13010,7 +13014,8 @@ function agpTabView() {
   agpAuto();
   if (AGP.data && typeof AGQ !== "undefined" && AGQ.on) return agqView();
   if (AGP.view && AGP.data) return agpPage();
-  return agpCard();
+  /* the side tab is gone (owner, Nov 6 2026): the state / agency check and the request form open from here */
+  return agpCard() + '<section class="agcard"><h3 class="eh small">State and agency protocols</h3><p class="muted small">See if your state or agency protocols are already in DrugBug. If they are not, send them in and we will add them.</p><button class="btn ghost" data-act="openproto">Check my protocols</button></section>';
 }
 function agpCard() {
   agpAuto();
@@ -13163,6 +13168,7 @@ document.addEventListener("click", function (e) {
   if (a === "pick" && AGQ.pick === null) {
     var k = +t.getAttribute("data-agqk"), it = AGQ.items[AGQ.i], ok = it.opts[k] === it.q.a, st = agqStats(), s = st[it.q.id] || [0, 0];
     AGQ.pick = k; s[1]++;
+    try { groupNote(null, ok, "anatomy", null); } catch (e) {}
     /* Was a flat 1 stick for correct and nothing for a wrong try, out of step with every other
        quiz in the app. Now uses qSticks: 3 right, 1 for trying (owner, Nov 1 2026). */
     var pay = typeof qSticks === "function" ? qSticks(ok) : (ok ? 3 : 1);
@@ -29597,41 +29603,196 @@ function sysOfDrug(id) {
   return (SYS_OF[id] = out.length ? out : ["other"]);
 }
 
-/* the tally waits in localStorage, so a closed tab or a dead zone loses nothing */
-function groupNote(q, ok) {
+/* the tally waits in localStorage, so a closed tab or a dead zone loses nothing.
+   Besides the medication systems it now keeps every other way to slice a score, so the instructor
+   dashboard can show strengths and weak spots everywhere (owner, Nov 6 2026):
+     k = quiz type (practice, exam, daily, game, lab drill...)   d = each drug
+     l = drug class                                              y = question type (hold, teach, labs...)
+     p = topic inside a drill (a lab value, a blood-product topic, a megacode case)
+   lb carries the display names for d, l and p so the dashboard can label them. */
+function groupSlug(s) { return String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 48); }
+function groupClassOf(id) {
+  var d = DB.drugs[id]; if (!d) return "";
+  var c = String(get(d, 0, 3) || "").replace(/^NOT FDA APPROVED\s*-\s*/i, "").split(/[;,(]/)[0].trim();
+  return c ? c.charAt(0).toUpperCase() + c.slice(1, 60) : "";
+}
+function groupKindNow() {
+  var n = S.nr;
+  if (n && n.kind === "session" && S.sess) return { daily: "daily", study: "study", weak: "weak", sys: "system", acls: "acls" }[S.sess.kind] || "session";
+  if (n && n.mode === "exam") return "exam";
+  return "practice";
+}
+function groupNote(q, ok, kind, topic) {
   if (!seatActive()) return;   /* class keys work in the iPhone app too (owner, Nov 5 2026) */
   try {
     var Q = store("groupq") || { t: { n: 0, c: 0 }, s: {} };
-    var ks = q && q.d && DB.drugs[q.d] ? sysOfDrug(q.d) : ["general"];
+    ["k", "d", "l", "y", "p", "lb"].forEach(function (f) { Q[f] = Q[f] || {}; });
+    var add = function (m, k) { if (!k) return; var e = m[k] || (m[k] = { n: 0, c: 0 }); e.n++; if (ok) e.c++; };
+    var drug = q && q.d && DB.drugs[q.d] ? q.d : "";
+    var ks = drug ? sysOfDrug(drug) : ["general"];
     Q.t.n++; if (ok) Q.t.c++;
-    ks.forEach(function (k) { var e = Q.s[k] || (Q.s[k] = { n: 0, c: 0 }); e.n++; if (ok) e.c++; });
+    ks.forEach(function (k) { add(Q.s, k); });
+    add(Q.k, kind || groupKindNow());
+    if (drug && /^[a-z0-9][a-z0-9-]{0,62}$/.test(drug)) { var dk = drug.slice(0, 48); add(Q.d, dk); Q.lb["d_" + dk] = String(DB.drugs[drug].name || drug).slice(0, 60);
+      var cl = groupClassOf(drug), ck = groupSlug(cl); if (ck) { add(Q.l, ck); Q.lb["l_" + ck] = cl; } }
+    if (q && q.cat && /^[a-z]{2,12}$/.test(q.cat)) add(Q.y, q.cat);
+    if (topic && topic.id) { var tk = groupSlug(topic.id); if (tk) { add(Q.p, tk); Q.lb["p_" + tk] = String(topic.name || topic.id).slice(0, 60); } }
     store("groupq", Q);
     clearTimeout(SEAT.t);
     if (Q.t.n >= 15) groupFlush(); else SEAT.t = setTimeout(groupFlush, 60000);
   } catch (e) {}
 }
+var GROUP_DIMS = ["k", "d", "l", "y", "p"];
 function groupFlush() {
   if (SEAT.busy || !seatActive()) return;
-  var Q = store("groupq"); if (!Q || !Q.t || !Q.t.n) return;
+  var Q = store("groupq"); if (!Q || !Q.t) return;
+  if (!Q.t.n && !GROUP_DIMS.some(function (f) { return Q[f] && Object.keys(Q[f]).length; })) return;
   /* the server takes at most 5,000 answers a batch; a phone offline for longer just sends the cap */
   var lim = function (v, m) { var n = Math.min(v.n, m); return { n: n, c: Math.min(v.c, n) }; };
-  var sent = { t: lim(Q.t, 5000), s: {} };
+  var sent = { t: Q.t.n ? lim(Q.t, 5000) : null, s: {}, x: {}, lb: {} };
   Object.keys(Q.s).forEach(function (k) { if (Q.s[k].n > 0) sent.s[k] = lim(Q.s[k], 2000); });
+  /* at most 200 detail rows a batch (the server's write limit); the rest wait for the next one */
+  var room = 200;
+  GROUP_DIMS.forEach(function (f) {
+    var m = Q[f] || {}, o = {};
+    Object.keys(m).forEach(function (k) { if (room > 0 && m[k].n > 0) { o[k] = lim(m[k], 2000); room--; var L = (Q.lb || {})[f + "_" + k]; if (L) sent.lb[f + "_" + k] = L; } });
+    sent.x[f] = o;
+  });
   SEAT.busy = true;
-  fnCall("groupReport", { counts: sent.s, total: sent.t }).then(function (r) {
+  fnCall("groupReport", { counts: sent.s, total: sent.t, detail: sent.x, labels: sent.lb }).then(function (r) {
     SEAT.busy = false;
     var cur = store("groupq") || { t: { n: 0, c: 0 }, s: {} };
     if (r && r.ok === false) { store("groupq", null); return; }   /* key reset or class ended: stop counting */
     /* take away exactly what was sent; anything answered meanwhile stays queued */
-    cur.t.n = Math.max(0, cur.t.n - sent.t.n); cur.t.c = Math.max(0, Math.min(cur.t.n, cur.t.c - sent.t.c));
-    Object.keys(sent.s).forEach(function (k) { var e = cur.s[k]; if (!e) return; e.n = Math.max(0, e.n - sent.s[k].n); e.c = Math.max(0, Math.min(e.n, e.c - sent.s[k].c)); if (!e.n) delete cur.s[k]; });
-    store("groupq", cur.t.n ? cur : null);
+    var take = function (m, part) { Object.keys(part).forEach(function (k) { var e = m && m[k]; if (!e) return; e.n = Math.max(0, e.n - part[k].n); e.c = Math.max(0, Math.min(e.n, e.c - part[k].c)); if (!e.n) delete m[k]; }); };
+    if (sent.t) { cur.t.n = Math.max(0, cur.t.n - sent.t.n); cur.t.c = Math.max(0, Math.min(cur.t.n, cur.t.c - sent.t.c)); }
+    take(cur.s, sent.s);
+    GROUP_DIMS.forEach(function (f) { if (cur[f]) take(cur[f], sent.x[f]); });
+    /* labels go once; keep only those for rows still waiting */
+    if (cur.lb) Object.keys(cur.lb).forEach(function (k) { var f = k.charAt(0), id = k.slice(2); if (!(cur[f] && cur[f][id])) delete cur.lb[k]; });
+    var left = cur.t.n || GROUP_DIMS.some(function (f) { return cur[f] && Object.keys(cur[f]).length; });
+    store("groupq", left ? cur : null);
+    if (!cur.t.n && left) { clearTimeout(SEAT.t); SEAT.t = setTimeout(groupFlush, 8000); }
   }).catch(function () {
     SEAT.busy = false;   /* offline or throttled: it stays queued and goes with the next batch */
     clearTimeout(SEAT.t); SEAT.t = setTimeout(groupFlush, 90000);
   });
 }
 document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden") groupFlush(); });
+
+/* ---------- "My class" side tab (owner, Nov 6 2026) ----------
+   Mirrors the Protocols tab on the other edge. Joining = entering the class key (the same
+   groupRedeem the Settings code box uses). Inside: the class scoreboard (aliases only) and the
+   student's own scores, every way they're counted, with strengths and weak spots up top. */
+var CL = { open: false, view: "board", data: null, busy: false, msg: "", err: false, at: 0, key: "" };
+var classPane = document.createElement("aside"); classPane.id = "classPane"; classPane.hidden = true; classPane.setAttribute("aria-label", "My class"); document.body.appendChild(classPane);
+var classTab = document.createElement("button"); classTab.id = "classTab"; classTab.className = "class-tab"; classTab.textContent = "My class"; classTab.setAttribute("aria-controls", "classPane"); classTab.hidden = true; document.body.appendChild(classTab);
+var CL_KIND = { practice: "Practice tests", exam: "Exam mode", daily: "Daily 5-minute", study: "Study a drug", weak: "Weak-spot review", system: "Learn by system", acls: "ACLS / PALS", session: "Guided sessions", game: "Games", safety: "Safety checks", lab: "Lab drills", crit: "Critical-care drills", megacode: "Megacode", anatomy: "Anatomy quiz", calc: "Calculations" };
+var CL_QT = { assess: "Assessment", hold: "When to hold", labs: "Labs to watch", vitals: "Vital signs", adverse: "Side effects", teach: "Patient teaching", interact: "Interactions", notify: "When to notify" };
+var CL_DIMS = [["s", "Medication systems"], ["k", "Quiz types"], ["y", "Question types"], ["l", "Drug classes"], ["p", "Drill topics"], ["d", "Each drug"]];
+var CL_MIN = 5;
+function clName(f, k, m) {
+  if (f === "k") return CL_KIND[k] || k; if (f === "y") return CL_QT[k] || k;
+  if (f === "s") return (m.sysNames || {})[k] || (k === "general" ? "General" : k);
+  return (m.labels || {})[f + "_" + k] || k.replace(/-/g, " ").replace(/^./, function (c) { return c.toUpperCase(); });
+}
+function clRows(m) {
+  var out = [];
+  CL_DIMS.forEach(function (D) { var o = (m.detail || {})[D[0]] || {}; Object.keys(o).forEach(function (k) { var v = o[k]; if (v.n) out.push({ f: D[0], k: k, n: v.n, c: v.c, p: Math.round(100 * v.c / v.n), name: clName(D[0], k, m), dim: D[1] }); }); });
+  return out;
+}
+function clBar(r) { var cls = r.p >= 80 ? "good" : r.p >= 60 ? "mid" : "low"; return '<div class="clrow"><span class="cln">' + esc(r.name) + '</span><span class="clbar ' + cls + '"><i style="width:' + Math.max(3, r.p) + '%"></i></span><span class="clv"><b>' + r.p + '%</b> <small>' + r.c + '/' + r.n + '</small></span></div>'; }
+function clMine(m) {
+  if (!m) return '<p class="muted">Your scores show up here after your first few answers.</p>';
+  var rows = clRows(m), ok = rows.filter(function (r) { return r.n >= CL_MIN && r.f !== "s" || (r.f === "s" && r.n >= CL_MIN && r.k !== "general"); });
+  if (!rows.length) return '<p class="muted">Answer a few questions and your scores show up here, broken down every way DrugBug counts them.</p>';
+  var best = ok.filter(function (r) { return r.p >= 70; }).sort(function (a, b) { return b.p - a.p || b.n - a.n; }).slice(0, 4);
+  var worst = ok.filter(function (r) { return r.p < 70; }).sort(function (a, b) { return a.p - b.p || b.n - a.n; }).slice(0, 4);
+  var c = '';
+  if (ok.length) {
+    c += '<div class="clsw"><div class="clbox good"><h4>Where you do well</h4>' + (best.length ? "" : '<p class="muted small">Nothing at 70% yet. You\'ll get there.</p>') + best.map(function (r) { return '<p><b>' + esc(r.name) + '</b> <span>' + r.p + '%</span><small>' + esc(r.dim) + '</small></p>'; }).join("") + '</div>';
+    c += '<div class="clbox low"><h4>Where to practice</h4>' + (worst.length ? worst.map(function (r) { return '<p><b>' + esc(r.name) + '</b> <span>' + r.p + '%</span><small>' + esc(r.dim) + '</small></p>'; }).join("") : '<p class="muted small">Nothing under 70%. Nice work.</p>') + '</div></div>';
+  } else c += '<p class="muted small">Strengths and weak spots appear once an area has ' + CL_MIN + ' answers.</p>';
+  CL_DIMS.forEach(function (D) {
+    var list = rows.filter(function (r) { return r.f === D[0]; }).sort(function (a, b) { return a.p - b.p || b.n - a.n; });
+    if (!list.length) return;
+    c += '<details class="cldim"' + (D[0] === "s" || D[0] === "k" ? " open" : "") + '><summary>' + esc(D[1]) + ' <span class="muted small">(' + list.length + ', weakest first)</span></summary>' + list.map(clBar).join("") + '</details>';
+  });
+  return c;
+}
+function clBoard(d) {
+  if (!d.board || !d.board.length) return '<p class="muted">No one in the class has started yet.</p>';
+  return '<p class="muted small">Ranked by correct answers. Everyone shows as their student number, never a name.</p><ol class="clboard">' + d.board.map(function (r) {
+    var medal = r.rank === 1 ? "🥇" : r.rank === 2 ? "🥈" : r.rank === 3 ? "🥉" : r.rank;
+    return '<li class="' + (r.me ? "me" : "") + '"><span class="clrk">' + medal + '</span><span class="clal">' + esc(r.alias) + (r.me ? ' <em>you</em>' : '') + '</span><span class="clsc"><b>' + r.correct.toLocaleString() + '</b> right<small>' + (r.accuracy == null ? "—" : Math.round(r.accuracy) + "%") + ' · ' + r.week + ' this week</small></span></li>';
+  }).join("") + '</ol>';
+}
+function classView() {
+  var c = '<div class="pbar"><h2>My class</h2><button class="theme-btn" data-clact="close">Close</button></div>';
+  if (!seatActive()) {
+    c += '<p class="muted">Got a class key from your instructor? Enter it here to join your class. You get DrugBug Pro while the class runs, a class scoreboard, and your own scores broken down every way.</p>';
+    c += '<form class="pform" id="clform"><label>Class key<input class="pinput clkey" id="clkey" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="DB-XXXX-XXX-XXX" value="' + esc(CL.key) + '"></label><button class="btn" type="submit"' + (CL.busy ? " disabled" : "") + '>' + (CL.busy ? "Checking…" : "Join my class") + '</button></form>';
+    if (CL.msg) c += '<p class="presult' + (CL.err ? "" : " good") + '">' + esc(CL.msg) + '</p>';
+    c += '<p class="muted small">No name or email is shared. Your instructor sees you only as a student number.</p>';
+    c += '<p class="muted small">Teaching a class? <a href="' + (NATIVE ? "https://drugbugapp.com/instructor/" : "../instructor/") + '" target="_blank" rel="noopener">Instructor portal</a></p>';
+    return c;
+  }
+  c += '<div class="clhead"><b>' + esc(SEAT.orgName) + '</b><span>You are <strong>' + esc(SEAT.alias) + '</strong> · Pro until ' + esc(new Date(SEAT.until).toLocaleDateString()) + '</span></div>';
+  c += '<div class="cltabs"><button class="' + (CL.view === "board" ? "on" : "") + '" data-clact="board">Scoreboard</button><button class="' + (CL.view === "mine" ? "on" : "") + '" data-clact="mine">My scores</button><button data-clact="refresh" aria-label="Refresh">↻</button></div>';
+  if (CL.msg) c += '<p class="presult' + (CL.err ? "" : " good") + '">' + esc(CL.msg) + '</p>';
+  if (!CL.data) c += '<p class="muted">' + (CL.busy ? "Loading…" : "") + '</p>';
+  else c += CL.view === "board" ? clBoard(CL.data) : clMine(CL.data.mine);
+  return c;
+}
+function drawClassPane(top) {
+  var old = classPane.querySelector(".ppanel"), y = old && !top ? old.scrollTop : 0;
+  classPane.innerHTML = '<div class="ppanel clpanel">' + classView() + '</div>'; try { translateDom(classPane); } catch (e) {}
+  var nw = classPane.querySelector(".ppanel"); if (nw) nw.scrollTop = y;
+}
+function clLoad(force) {
+  if (!seatActive() || CL.busy) return;
+  if (!force && CL.data && Date.now() - CL.at < 60000) return;
+  CL.busy = true; if (CL.open) drawClassPane();
+  try { groupFlush(); } catch (e) {}
+  /* give a pending batch a moment to land so your own row is current */
+  setTimeout(function () {
+    fnCall("groupBoard", {}).then(function (r) {
+      CL.busy = false;
+      if (!r || r.ok === false) { CL.data = null; CL.msg = "This device isn't holding a class key any more. Enter your key again to rejoin."; CL.err = true; }
+      else { CL.data = r; CL.at = Date.now(); if (CL.err) CL.msg = ""; CL.err = false; }
+      if (CL.open) drawClassPane();
+    }).catch(function (e) {
+      CL.busy = false; CL.err = true;
+      CL.msg = e && e.message === "offline" ? "The scoreboard needs an internet connection." : "Couldn't load your class right now. Try again in a moment.";
+      if (CL.open) drawClassPane();
+    });
+  }, 1200);
+}
+function openClassPane() { CL.open = true; classPane.hidden = false; if (!seatActive() || !CL.data) CL.msg = ""; drawClassPane(true); clLoad(false); }
+function closeClassPane() { CL.open = false; classPane.hidden = true; }
+classTab.addEventListener("click", function () { CL.open ? closeClassPane() : openClassPane(); });
+classPane.addEventListener("click", function (e) {
+  if (e.target === classPane) return closeClassPane();
+  var t = e.target.closest("[data-clact]"); if (!t) return;
+  var a = t.getAttribute("data-clact");
+  if (a === "close") return closeClassPane();
+  if (a === "board" || a === "mine") { CL.view = a; return drawClassPane(true); }
+  if (a === "refresh") { CL.msg = ""; return clLoad(true); }
+});
+classPane.addEventListener("submit", function (e) {
+  if (e.target.id !== "clform") return;
+  e.preventDefault();
+  var raw = (document.getElementById("clkey") || {}).value || ""; CL.key = raw;
+  if (!groupKeyShape(raw)) { CL.msg = "That doesn't look like a class key. It starts with DB-, like DB-ABCD-123-XYZ."; CL.err = true; return drawClassPane(); }
+  CL.busy = true; CL.msg = ""; drawClassPane();
+  groupRedeemKey(raw, function (m) {
+    CL.busy = false; GIFT.busy = false; CL.key = ""; CL.msg = m; CL.err = false; CL.data = null; CL.view = "board";
+    try { document.activeElement && document.activeElement.blur(); } catch (e) {}
+    drawClassPane(true); clLoad(true); if (typeof render === "function") render();
+  }, function (m) { CL.busy = false; GIFT.busy = false; CL.msg = m; CL.err = true; drawClassPane(); });
+});
+document.addEventListener("keydown", function (e) { if (e.key === "Escape" && CL.open) closeClassPane(); });
+
 
 /* ---- buying, and managing ----
    Callable functions are reached the same way modules/iap.js reaches createCheckout: a POST to
