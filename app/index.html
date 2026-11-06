@@ -857,6 +857,37 @@ table.suffix td{white-space:normal}
 /* protocols side tab */
 .proto-tab{position:fixed;right:0;top:50%;transform:translateY(-50%) rotate(180deg);writing-mode:vertical-rl;z-index:15;background:var(--ink);color:var(--bg);border:0;border-radius:0 12px 12px 0;padding:16px 9px;font:700 14px var(--f-body);letter-spacing:.06em;box-shadow:var(--shadow);cursor:pointer}
 .proto-tab:hover{background:var(--flight)}
+/* Dashboard panel in the level banner, right of the bug, and the dashboard page (owner, Nov 6 2026) */
+.band.hasdash{grid-template-columns:auto 1fr auto}
+.dstrip{display:flex;flex-direction:column;gap:8px;align-self:center;min-width:300px;padding:12px 16px 13px;border-radius:16px;border:1px solid color-mix(in srgb,currentColor 30%,transparent);background:color-mix(in srgb,#000 14%,transparent);color:inherit;font:inherit;text-align:left;cursor:pointer;transition:background .15s,border-color .15s}
+.dstrip:hover{background:color-mix(in srgb,#000 22%,transparent);border-color:color-mix(in srgb,currentColor 55%,transparent)}
+.dstrip:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+.dhead{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;opacity:.92}
+.dhead .ico{width:16px;height:16px}
+.dchev{margin-left:auto;font-size:18px;line-height:1;letter-spacing:0;opacity:.85}
+.drow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0}
+.dst{display:flex;flex-direction:column;padding:0 12px;border-left:1px solid color-mix(in srgb,currentColor 25%,transparent)}
+.dst:first-child{padding-left:0;border-left:0}
+.dst b{font-size:24px;line-height:1.1;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.dst small{font-size:11.5px;opacity:.82;white-space:nowrap}
+:root[data-serious="1"] .dstrip{background:var(--surface-2)}
+@media (max-width:640px){.band.hasdash{grid-template-columns:auto 1fr}.dstrip{grid-column:1/-1;min-width:0;width:100%;box-sizing:border-box}.dst b{font-size:21px}}
+.dashpage{display:flex;flex-direction:column;gap:14px}
+.dtiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.dtile{background:var(--surface);border:1.5px solid var(--line);border-radius:16px;padding:12px 14px}
+.dtile b{display:block;font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.15}
+.dtile span{font-size:13px;color:var(--muted)}
+.dcard2{background:var(--surface);border:1.5px solid var(--line);border-radius:18px;padding:14px 16px}
+.dcard2 h3{margin:0 0 10px;font-size:17px}
+.dcard2 .cldim{background:var(--surface-2)}
+.dsub{margin:12px 0 4px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.dbars{display:grid;grid-template-columns:repeat(14,1fr);gap:6px;align-items:end;height:130px}
+.dbar{display:flex;flex-direction:column;justify-content:flex-end;height:100%;gap:4px}
+.dbar i{display:block;background:var(--c,var(--flight));border-radius:5px 5px 2px 2px;min-height:0}
+.dbar span{font-size:10.5px;color:var(--muted);text-align:center;white-space:nowrap}
+@media (max-width:560px){.dbars{gap:3px}.dbar span{font-size:8.5px}}
+.clrk.r1,.clrk.r2,.clrk.r3{width:28px;height:28px;border-radius:50%;display:inline-grid;place-items:center;font-size:14px;color:#1d1a2a;justify-self:center}
+.clrk.r1{background:#f5c542}.clrk.r2{background:#c9ced8}.clrk.r3{background:#d99a5b}
 /* "My class" side tab on the right edge, where the Protocols tab used to be; Protocols now live inside the Prehospital menus (owner, Nov 6 2026) */
 .class-tab{position:fixed;right:0;top:50%;transform:translateY(-50%) rotate(180deg);writing-mode:vertical-rl;z-index:15;background:var(--flight);color:#fff;border:0;border-radius:0 12px 12px 0;padding:16px 9px;font:700 14px var(--f-body);letter-spacing:.06em;box-shadow:var(--shadow);cursor:pointer}
 .class-tab:hover{filter:brightness(1.1)}

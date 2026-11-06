@@ -598,9 +598,11 @@ function band() {
   if (S.view === "gen") return '<header class="band"><div class="bugstage">' + bugSVG("sage") + '</div><div><h1>BugDex</h1><div class="sub">Every medication in DrugBug, explained by Professor Sage.</div></div></header>';
   var l = levelObj(S.level), i = levelIdx(S.level), m = '', mu = isN(S.level) && myUnit(S.level), tot = levelsOf(S.level).length;
   for (var k = 0; k < tot; k++) m += '<span class="p' + (k <= i ? " on" : "") + '"></span>';
-  return '<header class="band"><div class="bugstage">' + levelBug(S.level) + '</div><div><h1>' + esc(l.name) + '</h1><div class="sub">' + (funOn() ? esc(l.bug) : '') + (mu ? (funOn() ? ' · ' : '') + esc(unitObj(mu).name) : '') + '</div><div class="meter">' + (isI(S.level) ? '<span>' + esc(l.full) + '</span>' : m + '<span>' + esc(scopeTag(S.level, i, tot)) + '</span>') + '</div></div></header>';
+  var ds = S.tab === "hub" && typeof dashStrip === "function" ? dashStrip() : "";
+  return '<header class="band' + (ds ? ' hasdash' : '') + '"><div class="bugstage">' + levelBug(S.level) + '</div><div><h1>' + esc(l.name) + '</h1><div class="sub">' + (funOn() ? esc(l.bug) : '') + (mu ? (funOn() ? ' · ' : '') + esc(unitObj(mu).name) : '') + '</div><div class="meter">' + (isI(S.level) ? '<span>' + esc(l.full) + '</span>' : m + '<span>' + esc(scopeTag(S.level, i, tot)) + '</span>') + '</div></div>' + ds + '</header>';
 }
 var ICO = {
+  dash: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
   myclass: '<path d="M3 9l9-4 9 4-9 4z"/><path d="M7 11v4c0 1.5 2.2 3 5 3s5-1.5 5-3v-4"/><path d="M21 9v5"/>',
   registry: '<path d="M5 4h9a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h9"/>',
   prep: '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M8.5 12l2.5 2.5 4.5-5"/>',
@@ -702,7 +704,7 @@ function tabList() {
   if (ti > 0 && ri >= 0 && ti !== ri + 1) { var st = L.splice(ti, 1)[0]; ri = L.map(function (t) { return t[0]; }).indexOf("registry"); L.splice(ri + 1, 0, st); }
   return L;
 }
-function tabName(k) { var t = tabList().filter(function (x) { return x[0] === k; })[0]; return t ? t[1] : k === "session" ? "Study session" : ""; }
+function tabName(k) { if (k === "dash") return "Dashboard"; var t = tabList().filter(function (x) { return x[0] === k; })[0]; return t ? t[1] : k === "session" ? "Study session" : ""; }
 /* Hub tiles grouped into sections with short labels (UI cleanup, Oct 28 2026) */
 var HUB_GROUPS = [
   ["Field care", ["fm_cond", "fm_blood", "fm_hold", "fm_store", "fm_istat", "fm_dive", "fm_k9", "fm_anti", "fm_tele", "fm_trauma", "fm_care", "pcc", "pcc_icu", "fm_adv"]],
@@ -872,7 +874,7 @@ function hubView() {
 /* compact education strip: the first sentence stays visible, the rest opens with "More" (cleanup, Oct 28 2026) */
 function eduNote(lead, rest) { return '<details class="edunote" role="note"><summary><span class="edl">' + lead + '</span>' + (rest ? '<span class="edmore">More</span>' : '') + '</summary>' + (rest ? '<p>' + rest + '</p>' : '') + '</details>'; }
 /* one-line hooks; Field Medic levels get field wording for shared tabs */
-function hubShort(k) { if (k === "myclass" && typeof SEAT !== "undefined") return (SEAT.orgName || "Your class") + (SEAT.alias ? " · " + SEAT.alias : ""); if (k === "progress" && typeof funOn === "function" && !funOn()) return "Mastery and badges"; if (k === "diseases" && !(S.view === "level" && isF(S.level)) && typeof DB !== "undefined" && DB.DIS) return Object.keys(DB.DIS).length + " conditions, cell to organ"; if (k === "tools" && S.view === "level" && isF(S.level)) return "Questions, megacode, cards, games, drills"; if (S.view === "level" && isF(S.level) && k === "diseases") return "Trauma, environmental and field conditions"; if (S.view === "level" && isF(S.level) && k === "registry") return "By field use, by class or A to Z"; return HUB_SHORT[k] || ""; }
+function hubShort(k) { if (k === "dash") return "Your scores, strengths and weak spots" + (typeof seatActive === "function" && seatActive() ? ", and your class" : ""); if (k === "myclass" && typeof SEAT !== "undefined") return (SEAT.orgName || "Your class") + (SEAT.alias ? " · " + SEAT.alias : ""); if (k === "progress" && typeof funOn === "function" && !funOn()) return "Mastery and badges"; if (k === "diseases" && !(S.view === "level" && isF(S.level)) && typeof DB !== "undefined" && DB.DIS) return Object.keys(DB.DIS).length + " conditions, cell to organ"; if (k === "tools" && S.view === "level" && isF(S.level)) return "Questions, megacode, cards, games, drills"; if (S.view === "level" && isF(S.level) && k === "diseases") return "Trauma, environmental and field conditions"; if (S.view === "level" && isF(S.level) && k === "registry") return "By field use, by class or A to Z"; return HUB_SHORT[k] || ""; }
 function sectionHead() {
   var where = S.view === "gen" ? "BugDex" : (levelObj(S.level) || {}).name || "";
   var inUnit = S.tab === "units" && S.unit;
@@ -1204,7 +1206,7 @@ function viewLevel() {
   if (!S.tab || (S.tab !== "hub" && S.tab !== "session" && !tabName(S.tab))) S.tab = "hub";
   if (S.tab !== "hub" && S.tab !== "session" && typeof proLocked === "function" && proLocked(S.tab)) { var lt = S.tab; S.tab = "hub"; setTimeout(function () { openPaywall(tabName(lt), tabTier(lt)); }, 0); }
   if (S.tab === "calc") S.tab = "hub";  /* Calc Lab was removed */
-  var body = S.tab === "hub" ? "" : S.tab === "anatomy" && typeof anatView === "function" ? anatView() : S.tab === "calls" && typeof callsView === "function" ? callsView() : S.tab === "scene" && typeof sceneView === "function" ? sceneView() : S.tab === "systems" && typeof sysView === "function" ? sysView() : S.tab === "protocols" && typeof agpTabView === "function" ? agpTabView() : typeof fieldTab === "function" && isF(S.level) && FM_TABS[S.tab] ? fieldTab(S.tab) : (S.tab === "vegc" || S.tab === "fruitc" || S.tab === "vitc") && typeof compoundView === "function" ? compoundView(S.tab) : S.tab === "illicit" && typeof illicitView === "function" ? illicitView() : S.tab === "registry" ? (S.view === "level" && isF(S.level) && typeof fieldMedsView === "function" ? fieldMedsView() : registry()) : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? (S.tab = "hub", "") : S.tab === "micro" && typeof microView === "function" ? microView() : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "flt_ref" && typeof fltRefView === "function" ? fltRefView() : S.tab === "tools" ? toolsView() : S.tab === "medlist" ? (typeof medlistView === "function" ? medlistView() : "") : flashcards();
+  var body = S.tab === "hub" ? "" : S.tab === "dash" && typeof dashView === "function" ? dashView() : S.tab === "anatomy" && typeof anatView === "function" ? anatView() : S.tab === "calls" && typeof callsView === "function" ? callsView() : S.tab === "scene" && typeof sceneView === "function" ? sceneView() : S.tab === "systems" && typeof sysView === "function" ? sysView() : S.tab === "protocols" && typeof agpTabView === "function" ? agpTabView() : typeof fieldTab === "function" && isF(S.level) && FM_TABS[S.tab] ? fieldTab(S.tab) : (S.tab === "vegc" || S.tab === "fruitc" || S.tab === "vitc") && typeof compoundView === "function" ? compoundView(S.tab) : S.tab === "illicit" && typeof illicitView === "function" ? illicitView() : S.tab === "registry" ? (S.view === "level" && isF(S.level) && typeof fieldMedsView === "function" ? fieldMedsView() : registry()) : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? (S.tab = "hub", "") : S.tab === "micro" && typeof microView === "function" ? microView() : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "flt_ref" && typeof fltRefView === "function" ? fltRefView() : S.tab === "tools" ? toolsView() : S.tab === "medlist" ? (typeof medlistView === "function" ? medlistView() : "") : flashcards();
   var msg = S.sessMsg ? '<div class="presult" role="status">' + esc(S.sessMsg) + '</div>' : ''; S.sessMsg = "";
   var notes = (S.tab === "calc" || S.tab === "tools" ? eduBanner() : '') + (["prep", "session", "nbug", "scenarios", "cards"].indexOf(S.tab) >= 0 ? esQNote() : '');
   if (S.tab === "hub") return topbar() + '<div class="' + ctxClass() + '">' + band() + protocolBanner() + (isF(S.level) ? "" : dailyCard()) + msg + (S.learn && S.learn.done && typeof learnDoneView === "function" ? learnDoneView() : "") + hubView() + '</div>';
@@ -2080,7 +2082,7 @@ document.addEventListener("click", function (e) {
   if (a.unitopen) { S.unit = a.unitopen; render(); return window.scrollTo(0, 0); }
   if (a.myunit) { var mu0 = store("nunit"); store("nunit", mu0 === a.myunit ? "" : a.myunit); UNITC = {}; return render(); }
   if (a.tab && typeof HD !== "undefined" && HD.suppress) return;   /* that was a drag, not a tap */
-  if (a.tab === "myclass") return openClassPane();
+  if (a.tab === "myclass") { S.tab = "dash"; render(); setTimeout(function () { var c = document.getElementById("dashclass"); if (c) c.scrollIntoView({ block: "start" }); }, 60); return; }
   if (a.tab && proLocked(a.tab)) { var tn = tabName(a.tab); return openPaywall(tn, tabTier(a.tab)); }
   if (a.fcpick) { S.fcPick = 1; render(); return window.scrollTo(0, 0); }
   if (a.tab) { S.tab = a.tab; S.sysK = ""; S.scen = null; S.fc = null; S.fcPick = 0; S.group = "all"; fixTab(); render(); return window.scrollTo(0, 0); }
@@ -29691,6 +29693,72 @@ function groupFlush() {
 }
 document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden") groupFlush(); });
 
+/* ---------- Dashboard (owner, Nov 6 2026) ----------
+   A "Dashboard" panel sits in the level banner to the right of the bug: accuracy, this week and
+   either the class rank (in a class) or the streak. Tapping it opens the dashboard page: totals,
+   the last two weeks, where you do well and where to practice (every way scores are counted),
+   and, for class students, the class scoreboard. Everyone gets it; the class parts appear only
+   with a class key. The personal numbers come from this device's progress record. */
+var DASH = { failAt: 0 };
+function dashInClass() { return typeof seatActive === "function" && seatActive() && S.view === "level" && (!SEAT.level || SEAT.level === S.level); }
+function dashLoad() {
+  if (!dashInClass() || CL.busy) return;
+  if (CL.data && Date.now() - CL.at < 120000) return;
+  if (Date.now() - DASH.failAt < 120000) return;
+  DASH.failAt = Date.now();          /* cleared when the answer arrives */
+  clLoad(true);
+}
+function dashLocal() {
+  var P = Prog.d || {}, det = { s: {}, d: {}, l: {}, y: {} }, labels = {}, n = 0, c = 0;
+  var add = function (m, k, v) { var e = m[k] || (m[k] = { n: 0, c: 0 }); e.n += v.n; e.c += v.c; };
+  Object.keys(P.drugs || {}).forEach(function (id) {
+    var v = P.drugs[id]; if (!v || !v.n) return;
+    n += v.n; c += v.c || 0; var x = { n: v.n, c: v.c || 0 };
+    det.d[id] = x; labels["d_" + id] = nameOf(id);
+    if (DB.drugs[id]) { sysOfDrug(id).forEach(function (k) { add(det.s, k, x); }); var cl = groupClassOf(id), ck = groupSlug(cl); if (ck) { add(det.l, ck, x); labels["l_" + ck] = cl; } }
+  });
+  Object.keys(P.qcat || {}).forEach(function (k) { var v = P.qcat[k]; if (v && v.n) det.y[k] = { n: v.n, c: v.c || 0 }; });
+  Object.keys(P.calc || {}).forEach(function (k) { var v = P.calc[k]; if (v && v.n) { n += v.n; c += v.c || 0; } });
+  var names = {}; (typeof SYS !== "undefined" ? SYS : []).forEach(function (g) { names[g[0]] = g[1]; });
+  var wk = 0, days = []; for (var i = 13; i >= 0; i--) { var d = new Date(Date.now() - i * 864e5), k = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"), v = (P.days || {})[k] || 0; days.push([d, v]); if (i < 7) wk += v; }
+  return { m: { detail: det, labels: labels, sysNames: names }, n: n, c: c, acc: n ? Math.round(100 * c / n) : null, week: wk, days: days, answered: P.answered || 0, streak: P.streak || 0 };
+}
+function dashMe() { var b = CL.data && CL.data.board; if (!b) return null; for (var i = 0; i < b.length; i++) if (b[i].me) return { rank: b[i].rank, of: b.length, row: b[i] }; return null; }
+function dashStrip() {
+  if (S.view !== "level") return "";
+  var L = dashLocal(), cls = dashInClass(), me = cls ? dashMe() : null;
+  if (cls) dashLoad();
+  var st = function (v, lab) { return '<span class="dst"><b>' + esc(String(v)) + '</b><small>' + esc(lab) + '</small></span>'; };
+  var cells = cls
+    ? st(me ? "#" + me.rank : "—", me ? "of " + me.of + " in class" : "class rank") + st(me && me.row.accuracy != null ? Math.round(me.row.accuracy) + "%" : L.acc == null ? "—" : L.acc + "%", "accuracy") + st(me ? me.row.week : L.week, "this week")
+    : st(L.acc == null ? "—" : L.acc + "%", "accuracy") + st(L.week, "this week") + st(L.streak, L.streak === 1 ? "day streak" : "day streak");
+  return '<button class="dstrip" data-tab="dash" aria-label="Open your dashboard"><span class="dhead">' + icon("dash") + 'Dashboard<span class="dchev" aria-hidden="true">›</span></span><span class="drow">' + cells + '</span></button>';
+}
+function dashView() {
+  var L = dashLocal(), cls = dashInClass(), me = cls ? dashMe() : null;
+  if (cls) dashLoad();
+  var tile = function (v, lab) { return '<div class="dtile"><b>' + esc(String(v)) + '</b><span>' + esc(lab) + '</span></div>'; };
+  var c = '<section class="dashpage">';
+  /* in a class the headline numbers are the class's count (every quiz type), the same as the banner */
+  var R = me ? me.row : null, ans = R ? Math.max(R.answered, L.answered) : L.answered, acc = R && R.accuracy != null ? Math.round(R.accuracy) : L.acc, wk = R ? R.week : L.week;
+  c += '<div class="dtiles">' + (cls ? tile(me ? "#" + me.rank + " of " + me.of : "—", "class rank") : "") + tile(ans.toLocaleString(), "questions answered") + tile(acc == null ? "—" : acc + "%", "accuracy") + tile(wk, "answered this week") + tile(L.streak, "day streak") + '</div>';
+  var max = Math.max.apply(null, L.days.map(function (d) { return d[1]; }).concat([1]));
+  c += '<div class="dcard2"><h3>Last 14 days</h3><div class="dbars">' + L.days.map(function (d) { var h = Math.round(100 * d[1] / max); return '<div class="dbar" title="' + esc(d[0].toLocaleDateString() + ": " + d[1] + " answered") + '"><i style="height:' + Math.max(d[1] ? 4 : 0, h) + '%"></i><span>' + (d[0].getMonth() + 1) + "/" + d[0].getDate() + '</span></div>'; }).join("") + '</div></div>';
+  c += '<div class="dcard2"><h3>Your scores</h3>' + clMine(L.n ? L.m : null) + '</div>';
+  if (cls) {
+    c += '<div class="dcard2" id="dashclass"><h3>' + esc(SEAT.orgName || "Your class") + '</h3><p class="muted small">You are <strong>' + esc(SEAT.alias) + '</strong> · Pro until ' + esc(new Date(SEAT.until).toLocaleDateString()) + '</p>';
+    if (!CL.data) c += '<p class="muted">' + (CL.busy ? "Loading the class…" : (CL.msg || "The scoreboard needs an internet connection.")) + '</p>';
+    else {
+      c += '<h4 class="dsub">Scoreboard</h4>' + clBoard(CL.data);
+      if (CL.data.mine) c += '<details class="cldim"><summary>Your class results, by quiz type and more</summary>' + clMine(CL.data.mine) + '</details>';
+    }
+    c += '</div>';
+  } else {
+    c += '<div class="dcard2"><h3>In a class?</h3><p class="muted small">Enter the class key from your instructor under Settings, Redeem a code. Your class rank and scoreboard then show here.</p><button class="btn ghost" data-go="settings">Open Settings</button></div>';
+  }
+  return c + '</section>';
+}
+
 /* ---------- "My class" side tab (owner, Nov 6 2026) ----------
    Mirrors the Protocols tab on the other edge. Joining = entering the class key (the same
    groupRedeem the Settings code box uses). Inside: the class scoreboard (aliases only) and the
@@ -29734,8 +29802,7 @@ function clMine(m) {
 function clBoard(d) {
   if (!d.board || !d.board.length) return '<p class="muted">No one in the class has started yet.</p>';
   return '<p class="muted small">Ranked by correct answers. Everyone shows as their student number, never a name.</p><ol class="clboard">' + d.board.map(function (r) {
-    var medal = r.rank === 1 ? "🥇" : r.rank === 2 ? "🥈" : r.rank === 3 ? "🥉" : r.rank;
-    return '<li class="' + (r.me ? "me" : "") + '"><span class="clrk">' + medal + '</span><span class="clal">' + esc(r.alias) + (r.me ? ' <em>you</em>' : '') + '</span><span class="clsc"><b>' + r.correct.toLocaleString() + '</b> right<small>' + (r.accuracy == null ? "—" : Math.round(r.accuracy) + "%") + ' · ' + r.week + ' this week</small></span></li>';
+    return '<li class="' + (r.me ? "me" : "") + '"><span class="clrk' + (r.rank <= 3 ? " r" + r.rank : "") + '">' + r.rank + '</span><span class="clal">' + esc(r.alias) + (r.me ? ' <em>you</em>' : '') + '</span><span class="clsc"><b>' + r.correct.toLocaleString() + '</b> right<small>' + (r.accuracy == null ? "—" : Math.round(r.accuracy) + "%") + ' · ' + r.week + ' this week</small></span></li>';
   }).join("") + '</ol>';
 }
 function classView() {
@@ -29770,7 +29837,7 @@ function clLoad(force) {
     fnCall("groupBoard", {}).then(function (r) {
       CL.busy = false;
       if (!r || r.ok === false) { CL.data = null; CL.msg = "This device isn't holding a class key any more. Enter your key again to rejoin."; CL.err = true; }
-      else { CL.data = r; CL.at = Date.now(); if (CL.err) CL.msg = ""; CL.err = false; if (r.level != null && r.level !== SEAT.level) { SEAT.level = r.level; var sc = store("seat"); if (sc) { sc.level = r.level; store("seat", sc); } } }
+      else { CL.data = r; CL.at = Date.now(); DASH.failAt = 0; if (CL.err) CL.msg = ""; CL.err = false; if (!CL.open && S.view === "level" && (S.tab === "hub" || S.tab === "dash") && typeof render === "function") setTimeout(render, 0); if (r.level != null && r.level !== SEAT.level) { SEAT.level = r.level; var sc = store("seat"); if (sc) { sc.level = r.level; store("seat", sc); } } }
       if (CL.open) drawClassPane();
     }).catch(function (e) {
       CL.busy = false; CL.err = true;
