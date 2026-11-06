@@ -24,6 +24,7 @@ header .who{margin-left:auto;color:var(--muted);font-size:13px;display:flex;gap:
 label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);flex:1;min-width:140px}
 input,select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:9px 10px;width:100%}
 button{font:inherit;font-weight:600;border:0;border-radius:9px;padding:9px 14px;background:var(--teal);color:#06231f;cursor:pointer}
+button.small{padding:4px 9px;font-size:12.5px;margin-left:4px}
 button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
 button.danger{background:transparent;color:var(--bad);border:1px solid var(--bad)}
 button:disabled{opacity:.5;cursor:default}
@@ -301,6 +302,12 @@ tr.clk{cursor:pointer}tr.clk:hover td{background:var(--surface2)}
     <div id="stuChart" class="chart"></div>
     <h3 style="font-size:15px;margin:16px 0 0">Questions per week</h3>
     <div class="trend" id="stuTrend"></div><div class="colx" id="stuTrendX"></div>
+  </div>
+
+  <div class="card noprint hide" id="nickCard">
+    <h2>Nicknames waiting for your approval</h2>
+    <p class="muted small">Students can choose a nickname for the class scoreboard. Nothing shows to classmates until you approve it. DrugBug already blocks bad words and look-alike spellings; you have the final say. You can rename or remove any nickname later in the Students table.</p>
+    <div class="tblwrap"><table id="nickTable"></table></div>
   </div>
 
   <div class="card printme">
@@ -592,18 +599,20 @@ tr.clk{cursor:pointer}tr.clk:hover td{background:var(--surface2)}
 
     /* students */
     var fresh = {}; (ST.newKeys || []).forEach(function (k) { fresh[k.alias] = 1; });
-    $("stuTable").innerHTML = '<tr><th>Student</th><th>Key</th><th class="noprint">Status</th><th class="noprint">Answered</th><th class="noprint">Accuracy</th><th class="noprint">Completion</th><th class="noprint">Weakest systems</th><th class="noprint">Last studied</th><th class="noprint"></th><th class="printonly hide">Name (write in, keep private)</th></tr>' +
+    $("stuTable").innerHTML = '<tr><th>Student</th><th>Key</th><th class="noprint">Status</th><th class="noprint">Nickname</th><th class="noprint">Answered</th><th class="noprint">Accuracy</th><th class="noprint">Completion</th><th class="noprint">Weakest systems</th><th class="noprint">Last studied</th><th class="noprint"></th><th class="printonly hide">Name (write in, keep private)</th></tr>' +
       (d.students.length ? d.students.map(function (s) {
         return '<tr class="clk' + (fresh[s.alias] ? ' fresh' : '') + '" data-stu="' + esc(s.keyId) + '"><td><b>' + esc(s.alias) + '</b></td><td class="mono">' + esc(s.token) + '</td>' +
           '<td class="noprint"><span class="pill' + (s.activated ? " on" : "") + '">' + (s.activated ? "in use" : "not used yet") + '</span></td>' +
+          '<td class="noprint">' + nickCell(s) + '</td>' +
           '<td class="num noprint">' + s.answered.toLocaleString() + '</td><td class="num noprint">' + pctTxt(s.accuracy) + '</td>' +
           '<td class="noprint"><span class="mini"><i style="width:' + s.completion + '%"></i></span>' + s.completion + '%</td>' +
           '<td class="noprint">' + (s.weakest.length ? s.weakest.map(function (w) { return esc(w.name) + ' <span class="muted">' + pctTxt(w.pct) + '</span>'; }).join(", ") : '<span class="muted">not enough yet</span>') + '</td>' +
           '<td class="noprint">' + ago(s.lastAt) + '</td>' +
           '<td class="noprint">' + (s.activated ? '<button class="ghost" data-reset="' + esc(s.keyId) + '" data-alias="' + esc(s.alias) + '">Reset</button>' : '') + '</td>' +
           '<td class="printonly hide"></td></tr>';
-      }).join("") : '<tr><td colspan="9" class="muted">No keys yet. Choose how many and press Make keys.</td></tr>');
+      }).join("") : '<tr><td colspan="10" class="muted">No keys yet. Choose how many and press Make keys.</td></tr>');
     drawDetail();
+    drawNicks();
   }
 
   /* ---------- every score: strengths, weak spots, all dimensions (owner, Nov 6 2026) ---------- */
@@ -663,7 +672,7 @@ tr.clk{cursor:pointer}tr.clk:hover td{background:var(--surface2)}
     var board = studs.filter(function (s) { return s.activated; }).slice().sort(function (a, b) { return correctOf(b) - correctOf(a) || (b.accuracy || 0) - (a.accuracy || 0); });
     $("boardTable").innerHTML = '<tr><th>#</th><th>Student</th><th>Correct</th><th>Answered</th><th>Accuracy</th><th>This week</th></tr>' + (board.length ? board.map(function (s, i) {
       var wk = (s.weeks || [])[11] || [0, 0];
-      return '<tr class="clk" data-stu="' + esc(s.keyId) + '"><td class="rk">' + (i < 3 ? ["🥇", "🥈", "🥉"][i] : i + 1) + '</td><td><b>' + esc(s.alias) + '</b></td><td class="num">' + correctOf(s).toLocaleString() + '</td><td class="num">' + s.answered.toLocaleString() + '</td><td class="num">' + pctTxt(s.accuracy) + '</td><td class="num">' + wk[0] + '</td></tr>';
+      return '<tr class="clk" data-stu="' + esc(s.keyId) + '"><td class="rk">' + (i < 3 ? ["🥇", "🥈", "🥉"][i] : i + 1) + '</td><td><b>' + esc(s.alias) + '</b>' + (s.nick && s.nick.status === "ok" && s.nick.text ? ' <span class="muted">(' + esc(s.nick.text) + ')</span>' : '') + '</td><td class="num">' + correctOf(s).toLocaleString() + '</td><td class="num">' + s.answered.toLocaleString() + '</td><td class="num">' + pctTxt(s.accuracy) + '</td><td class="num">' + wk[0] + '</td></tr>';
     }).join("") : '<tr><td colspan="6" class="muted">No one has started yet.</td></tr>');
     /* class trend */
     var weeks = []; for (var i = 0; i < 12; i++) weeks.push([0, 0]);
@@ -695,6 +704,31 @@ tr.clk{cursor:pointer}tr.clk:hover td{background:var(--surface2)}
     if (t.hasAttribute("data-sdim")) { ST.stuDim = t.getAttribute("data-sdim"); return drawStudent(); }
     ST.stu = t.getAttribute("data-stu"); drawStudent(); $("stuCard").scrollIntoView({ behavior: "smooth", block: "start" });
   });
+
+  /* nicknames (owner, Nov 6 2026) */
+  function nickCell(s) {
+    var n = s.nick; if (!n || (!n.text && n.status !== "rejected")) return '<span class="muted">—</span>';
+    if (n.status === "rejected") return '<span class="muted">rejected</span>';
+    var b = function (act, lab) { return '<button class="ghost small" data-nick="' + act + '" data-key="' + esc(s.keyId) + '" data-alias="' + esc(s.alias) + '">' + lab + '</button>'; };
+    return '<b>' + esc(n.text) + '</b> ' + (n.status === "pending" ? '<span class="pill" style="color:var(--warn)">waiting</span> ' + b("approve", "Approve") + b("reject", "Reject") : b("rename", "Rename") + b("remove", "Remove"));
+  }
+  function drawNicks() {
+    var d = ST.dash, list = (d.students || []).filter(function (s) { return s.nick && s.nick.status === "pending" && s.nick.text; });
+    show("nickCard", list.length > 0);
+    $("nickTable").innerHTML = '<tr><th>Student</th><th>Wants to be shown as</th><th></th></tr>' + list.map(function (s) {
+      return '<tr><td><b>' + esc(s.alias) + '</b></td><td>' + esc(s.nick.text) + '</td><td><button data-nick="approve" data-key="' + esc(s.keyId) + '" data-alias="' + esc(s.alias) + '">Approve</button> <button class="ghost" data-nick="reject" data-key="' + esc(s.keyId) + '" data-alias="' + esc(s.alias) + '">Reject</button> <button class="ghost" data-nick="rename" data-key="' + esc(s.keyId) + '" data-alias="' + esc(s.alias) + '">Rename…</button></td></tr>';
+    }).join("");
+  }
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest("[data-nick]"); if (!b) return;
+    e.stopPropagation();
+    var act = b.getAttribute("data-nick"), alias = b.getAttribute("data-alias"), data = { orgId: ST.orgId, keyId: b.getAttribute("data-key"), action: act };
+    if (act === "rename") { var nm = prompt("New nickname for " + alias + " (2 to 20 characters):"); if (!nm) return; data.name = nm; }
+    if (act === "remove" && !confirm("Remove " + alias + "'s nickname? They will show as " + alias + " again.")) return;
+    b.disabled = true;
+    call("groupNameReview", data).then(function () { say("keyMsg", { approve: "Approved.", reject: "Rejected. They show as " + alias + ".", rename: "Renamed.", remove: "Removed. They show as " + alias + "." }[act]); refresh(); })
+      .catch(function (e2) { say("keyMsg", e2.message, true); b.disabled = false; });
+  }, true);
 
   $("bMake").onclick = function () {
     var b = this; b.disabled = true;
