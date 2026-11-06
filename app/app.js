@@ -29723,6 +29723,43 @@ function dashLocal() {
   var wk = 0, days = []; for (var i = 13; i >= 0; i--) { var d = new Date(Date.now() - i * 864e5), k = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"), v = (P.days || {})[k] || 0; days.push([d, v]); if (i < 7) wk += v; }
   return { m: { detail: det, labels: labels, sysNames: names }, n: n, c: c, acc: n ? Math.round(100 * c / n) : null, week: wk, days: days, answered: P.answered || 0, streak: P.streak || 0 };
 }
+/* scoreboard nickname: typed by the student, checked by the server, shown only after the
+   instructor approves it (owner, Nov 6 2026) */
+var DNICK = { busy: false, msg: "", err: false };
+function dashNick() {
+  var nk = (CL.data && CL.data.nick) || null, st = nk ? nk.status : "";
+  var line = st === "ok" ? 'Classmates see you as <strong>' + esc(nk.text) + '</strong>.'
+    : st === "pending" ? '<strong>' + esc(nk.text) + '</strong> is waiting for your instructor to approve it. Until then you show as ' + esc(SEAT.alias) + '.'
+    : st === "rejected" ? 'Your instructor didn\'t approve that nickname. You show as ' + esc(SEAT.alias) + '. You can try another.'
+    : 'You show as <strong>' + esc(SEAT.alias) + '</strong>. You can choose a nickname for the scoreboard.';
+  var c = '<div class="dnick"><p class="small">' + line + '</p><form class="dnickf" id="dnickform"><input class="pinput" id="dnickin" maxlength="20" autocomplete="off" placeholder="Nickname (2 to 20 characters)"><button class="btn" type="submit"' + (DNICK.busy ? " disabled" : "") + '>' + (st === "ok" || st === "pending" ? "Change" : "Save") + '</button>' + (nk && nk.text ? '<button class="btn ghost" type="button" data-dnick="clear">Use ' + esc(SEAT.alias) + '</button>' : '') + '</form>';
+  if (DNICK.msg) c += '<p class="presult' + (DNICK.err ? '' : ' good') + '">' + esc(DNICK.msg) + '</p>';
+  return c + '<p class="muted small">Keep it respectful, and don\'t use your full real name. Your instructor approves every nickname before anyone sees it.</p></div>';
+}
+function dashNickSave(name) {
+  DNICK.busy = true; DNICK.msg = ""; render();
+  fnCall("groupSetName", { name: name }).then(function (r) {
+    DNICK.busy = false; DNICK.err = false;
+    DNICK.msg = name ? "Sent to your instructor for approval." : "You show as " + SEAT.alias + " again.";
+    if (CL.data) CL.data.nick = r && r.nick ? r.nick : null;
+    CL.at = 0; DASH.failAt = 0; render();
+  }).catch(function (e) {
+    DNICK.busy = false; DNICK.err = true;
+    DNICK.msg = e && e.message === "offline" ? "Nicknames need an internet connection." : (e && e.message) || "Couldn't save that right now. Try again in a moment.";
+    render();
+  });
+}
+document.addEventListener("submit", function (e) {
+  if (!e.target || e.target.id !== "dnickform") return;
+  e.preventDefault();
+  var v = ((document.getElementById("dnickin") || {}).value || "").trim();
+  if (!v) { DNICK.msg = "Type a nickname first."; DNICK.err = true; return render(); }
+  dashNickSave(v);
+});
+document.addEventListener("click", function (e) {
+  var b = e.target && e.target.closest && e.target.closest('[data-dnick="clear"]'); if (!b) return;
+  dashNickSave("");
+});
 function dashMe() { var b = CL.data && CL.data.board; if (!b) return null; for (var i = 0; i < b.length; i++) if (b[i].me) return { rank: b[i].rank, of: b.length, row: b[i] }; return null; }
 function dashStrip() {
   if (S.view !== "level") return "";
@@ -29749,7 +29786,7 @@ function dashView() {
     c += '<div class="dcard2" id="dashclass"><h3>' + esc(SEAT.orgName || "Your class") + '</h3><p class="muted small">You are <strong>' + esc(SEAT.alias) + '</strong> · Pro until ' + esc(new Date(SEAT.until).toLocaleDateString()) + '</p>';
     if (!CL.data) c += '<p class="muted">' + (CL.busy ? "Loading the class…" : (CL.msg || "The scoreboard needs an internet connection.")) + '</p>';
     else {
-      c += '<h4 class="dsub">Scoreboard</h4>' + clBoard(CL.data);
+      c += dashNick() + '<h4 class="dsub">Scoreboard</h4>' + clBoard(CL.data);
       if (CL.data.mine) c += '<details class="cldim"><summary>Your class results, by quiz type and more</summary>' + clMine(CL.data.mine) + '</details>';
     }
     c += '</div>';
@@ -29801,7 +29838,7 @@ function clMine(m) {
 }
 function clBoard(d) {
   if (!d.board || !d.board.length) return '<p class="muted">No one in the class has started yet.</p>';
-  return '<p class="muted small">Ranked by correct answers. Everyone shows as their student number, never a name.</p><ol class="clboard">' + d.board.map(function (r) {
+  return '<p class="muted small">Ranked by correct answers. Everyone shows as their student number or a nickname their instructor approved.</p><ol class="clboard">' + d.board.map(function (r) {
     return '<li class="' + (r.me ? "me" : "") + '"><span class="clrk' + (r.rank <= 3 ? " r" + r.rank : "") + '">' + r.rank + '</span><span class="clal">' + esc(r.alias) + (r.me ? ' <em>you</em>' : '') + '</span><span class="clsc"><b>' + r.correct.toLocaleString() + '</b> right<small>' + (r.accuracy == null ? "—" : Math.round(r.accuracy) + "%") + ' · ' + r.week + ' this week</small></span></li>';
   }).join("") + '</ol>';
 }
