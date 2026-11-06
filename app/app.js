@@ -2316,8 +2316,31 @@ function visibleIds(ids) { return ids.filter(function (id) { return !hidden(id);
 // stable question ids so database edits can target bundled questions
 function hashStr(s) { var h = 5381; for (var i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0; return (h >>> 0).toString(36); }
 function qid(q) { return q.id || (q.id = "q" + hashStr(q.lv + "|" + q.q)); }
+/* ---------- the owner's question rules (Nov 5 2026) ----------
+   1. A select-all question can never have every option correct.
+   2. No "stop the medication" questions (stop, hold, withhold or discontinue as the answer).
+   3. No dose questions, unless the question is about ACLS or PALS (arrest, arrhythmia, resuscitation).
+   Questions that break a rule are hidden from every quiz. They stay in the data so they can be
+   rewritten at drugbugapp.com/review/ (which flags them with the same three tests). */
+var QR_STOP = /(^|\b)(stop|stopping|discontinue|discontinuing|hold|holding|withhold|withholding|cease|pause)\b[^.;]{0,40}\b(the )?(medication|medicine|drug|infusion|drip|dose|therapy|it|treatment|this)\b|^(stop|discontinue|hold|withhold)\b/i;
+var QR_UNIT = /\b\d+(?:[.,]\d+)?(?:\s?(?:-|to)\s?\d+(?:\.\d+)?)?\s?(?:mg|mcg|µg|micrograms?|milligrams?|g|grams?|units?|mEq|mmol|mL|ml|L|J|joules?)(?:\/(?:kg|min|hr|h|kg\/min|kg\/hr|dose))?\b/i;
+var QR_ASKD = /\b(dose|dosage|dosing|how much|how many (?:mg|mcg|units|mL)|rate of infusion|infusion rate|max(?:imum)? (?:daily )?dose|loading dose)\b/i;
+var QR_ACLS = /\b(ACLS|PALS|BLS|cardiac arrest|arrest|pulseless|v-?fib|ventricular fibrillation|VF|pVT|VT|ventricular tachycardia|asystole|PEA|ROSC|SVT|supraventricular|bradycardi|tachycardi|torsades|resuscitat|defibrillat|cardiover|post-arrest|megacode|neonatal resus|NRP)\b/i;
+var QR_OFF = false;   /* true shows every question again */
+function qRuleBad(q) {
+  if (QR_OFF || !q) return false;
+  if (q._rb != null) return q._rb;
+  var ok = q.ok && q.ok.length ? q.ok : null, ans = ok ? ok.join(" | ") : String(q.a || "");
+  var all = ans + " " + (q.w || []).join(" ") + " " + (q.opts || []).join(" ");
+  var bad = !!(q.opts && ok && q.opts.length && ok.length === q.opts.length) ||
+    QR_STOP.test(ans) || !!(ok && ok.some(function (o) { return QR_STOP.test(o); })) ||
+    ((QR_UNIT.test(ans) || (QR_ASKD.test(q.q || "") && QR_UNIT.test(all))) && !QR_ACLS.test((q.q || "") + " " + (q.x || "")));
+  try { q._rb = bad; } catch (e) {}
+  return bad;
+}
 function qVisible(q) {
   if (q.hidden && !Admin.on) return false;
+  if (qRuleBad(q)) return false;
   /* Drills run over the free medications for everyone, and over every medication on Pro
      (modules/pro.js studyLocked). Plus buys the reference content, not the drills. */
   if (q.d && typeof studyLocked === "function" && studyLocked(q.d)) return false;
