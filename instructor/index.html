@@ -80,6 +80,22 @@ tr.fresh td{background:color-mix(in srgb,var(--teal) 12%,transparent)}
 tr.clk{cursor:pointer}tr.clk:hover td{background:var(--surface2)}
 @media (max-width:600px){.cols{gap:3px}.col b{font-size:9.5px}.colx{gap:3px;font-size:9.5px}}
 @media (max-width:600px){.chart{grid-template-columns:96px 1fr auto}.chart .lab{font-size:12px}.chart .val{min-width:0}.chart .val span{display:none}}
+.sw{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0}
+@media (max-width:700px){.sw{grid-template-columns:1fr}}
+.swbox{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--surface2)}
+.swbox h3{margin:0 0 8px;font-size:15px}.swbox.good h3{color:var(--good)}.swbox.bad h3{color:var(--bad)}
+.swbox ol{margin:0;padding-left:20px}.swbox li{margin:4px 0;font-size:14px}.swbox li small{color:var(--muted)}
+.dimtabs{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 12px}
+.dimtabs button{background:transparent;color:var(--ink);border:1px solid var(--line);font-weight:600;padding:6px 12px;border-radius:99px}
+.dimtabs button.on{background:var(--teal);color:#06231f;border-color:var(--teal)}
+.chart .bar i.mid{background:var(--warn)}.chart .bar i.low{background:var(--bad)}
+.board td.rk{font-weight:700;width:46px}
+.stuDetail{margin-top:12px}
+.trend{display:grid;grid-template-columns:repeat(12,1fr);gap:6px;align-items:end;height:120px;padding-top:16px}
+.trend .tc{position:relative;height:100%;display:flex;flex-direction:column;justify-content:flex-end}
+.trend .tc i{display:block;background:var(--bar);border-radius:4px 4px 0 0;min-height:2px}
+.trend .tc b{position:absolute;left:0;right:0;text-align:center;font-size:11px;font-weight:600}
+.find{max-width:260px;margin-bottom:10px}
 @media print{
   body{background:#fff;color:#000}header,.noprint,.card:not(.printme){display:none!important}
   .printme{border:0;padding:0}.printme th{background:#eee;color:#000}.printme td,.printme th{border:1px solid #999;padding:10px}
@@ -236,11 +252,52 @@ tr.clk{cursor:pointer}tr.clk:hover td{background:var(--surface2)}
     <p id="oMsg" class="msg hide"></p>
   </div>
 
-  <div class="card noprint">
+  <div class="card noprint hide">
     <h2>Class average by medication system</h2>
     <p class="muted small">Share of questions answered correctly across the whole class, weakest first. Bars need answers to appear; a system nobody has practised isn't shown.</p>
     <div id="chart" class="chart"></div>
     <details style="margin-top:10px"><summary class="small muted">Show as a table</summary><div class="tblwrap" style="margin-top:8px"><table id="sysTable"></table></div></details>
+  </div>
+
+  <div class="card noprint">
+    <h2>Class strengths and weak spots</h2>
+    <p class="muted small">Every way DrugBug counts a score: medication systems, quiz types, question types, drug classes, drill topics and each drug. An area needs at least <span class="wmin2">5</span> answers to be ranked.</p>
+    <div class="sw" id="classSW"></div>
+  </div>
+
+  <div class="card noprint">
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <h2 style="margin:0">Every score, class-wide</h2>
+      <select id="sortBy" style="max-width:200px"><option value="low">Weakest first</option><option value="high">Strongest first</option><option value="n">Most answered</option></select>
+    </div>
+    <div class="dimtabs" id="dimTabs"></div>
+    <input class="find" id="dimFind" placeholder="Filter (e.g. insulin)" type="search">
+    <div id="dimChart" class="chart"></div>
+    <p class="muted small" id="dimNote" style="margin-top:8px"></p>
+  </div>
+
+  <div class="card noprint">
+    <h2>Class scoreboard</h2>
+    <p class="muted small">Ranked by correct answers. Students see this same board (as student numbers) in the app under <b>My class</b>.</p>
+    <div class="tblwrap"><table class="board" id="boardTable"></table></div>
+  </div>
+
+  <div class="card noprint">
+    <h2>Questions answered per week (class)</h2>
+    <div class="trend" id="classTrend"></div><div class="colx" id="classTrendX"></div>
+  </div>
+
+  <div class="card noprint hide" id="stuCard">
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <h2 style="margin:0" id="stuName"></h2>
+      <button class="ghost" id="bStuClose">Close</button>
+    </div>
+    <div class="tiles" id="stuTiles"></div>
+    <div class="sw" id="stuSW"></div>
+    <div class="dimtabs" id="stuDimTabs"></div>
+    <div id="stuChart" class="chart"></div>
+    <h3 style="font-size:15px;margin:16px 0 0">Questions per week</h3>
+    <div class="trend" id="stuTrend"></div><div class="colx" id="stuTrendX"></div>
   </div>
 
   <div class="card printme">
@@ -256,7 +313,7 @@ tr.clk{cursor:pointer}tr.clk:hover td{background:var(--surface2)}
     <p id="keyMsg" class="msg hide noprint"></p>
     <h2 class="hide" id="printTitle"></h2>
     <div class="tblwrap"><table id="stuTable"></table></div>
-    <p class="muted small noprint" style="margin-top:8px">Completion is questions answered against the class goal. "Weakest" needs at least <span id="wmin">5</span> answers in a system. <b>Reset</b> frees a key for a lost phone or a new student.</p>
+    <p class="muted small noprint" style="margin-top:8px"><b>Click a student</b> to see every score for them. Completion is questions answered against the class goal. "Weakest" needs at least <span id="wmin">5</span> answers in a system. <b>Reset</b> frees a key for a lost phone or a new student.</p>
   </div>
 </div>
 </div>
@@ -534,7 +591,7 @@ tr.clk{cursor:pointer}tr.clk:hover td{background:var(--surface2)}
     var fresh = {}; (ST.newKeys || []).forEach(function (k) { fresh[k.alias] = 1; });
     $("stuTable").innerHTML = '<tr><th>Student</th><th>Key</th><th class="noprint">Status</th><th class="noprint">Answered</th><th class="noprint">Accuracy</th><th class="noprint">Completion</th><th class="noprint">Weakest systems</th><th class="noprint">Last studied</th><th class="noprint"></th><th class="printonly hide">Name (write in, keep private)</th></tr>' +
       (d.students.length ? d.students.map(function (s) {
-        return '<tr' + (fresh[s.alias] ? ' class="fresh"' : '') + '><td><b>' + esc(s.alias) + '</b></td><td class="mono">' + esc(s.token) + '</td>' +
+        return '<tr class="clk' + (fresh[s.alias] ? ' fresh' : '') + '" data-stu="' + esc(s.keyId) + '"><td><b>' + esc(s.alias) + '</b></td><td class="mono">' + esc(s.token) + '</td>' +
           '<td class="noprint"><span class="pill' + (s.activated ? " on" : "") + '">' + (s.activated ? "in use" : "not used yet") + '</span></td>' +
           '<td class="num noprint">' + s.answered.toLocaleString() + '</td><td class="num noprint">' + pctTxt(s.accuracy) + '</td>' +
           '<td class="noprint"><span class="mini"><i style="width:' + s.completion + '%"></i></span>' + s.completion + '%</td>' +
@@ -543,7 +600,97 @@ tr.clk{cursor:pointer}tr.clk:hover td{background:var(--surface2)}
           '<td class="noprint">' + (s.activated ? '<button class="ghost" data-reset="' + esc(s.keyId) + '" data-alias="' + esc(s.alias) + '">Reset</button>' : '') + '</td>' +
           '<td class="printonly hide"></td></tr>';
       }).join("") : '<tr><td colspan="9" class="muted">No keys yet. Choose how many and press Make keys.</td></tr>');
+    drawDetail();
   }
+
+  /* ---------- every score: strengths, weak spots, all dimensions (owner, Nov 6 2026) ---------- */
+  var KIND = { practice: "Practice tests", exam: "Exam mode", daily: "Daily 5-minute", study: "Study a drug", weak: "Weak-spot review", system: "Learn by system", acls: "ACLS / PALS", session: "Guided sessions", game: "Games", safety: "Safety checks", lab: "Lab drills", crit: "Critical-care drills", megacode: "Megacode", anatomy: "Anatomy quiz", calc: "Calculations" };
+  var QT = { assess: "Assessment", hold: "When to hold", labs: "Labs to watch", vitals: "Vital signs", adverse: "Side effects", teach: "Patient teaching", interact: "Interactions", notify: "When to notify" };
+  var DIMS = [["s", "Medication systems"], ["k", "Quiz types"], ["y", "Question types"], ["l", "Drug classes"], ["p", "Drill topics"], ["d", "Each drug"]];
+  var DIMNAME = {}; DIMS.forEach(function (x) { DIMNAME[x[0]] = x[1]; });
+  ST.dim = "s"; ST.stuDim = "s"; ST.stu = null;
+  function dname(f, k) {
+    var d = ST.dash;
+    if (f === "k") return KIND[k] || k; if (f === "y") return QT[k] || k;
+    if (f === "s") return (d.sysNames || {})[k] || (k === "general" ? "General" : k);
+    return (d.labels || {})[f + "_" + k] || k.replace(/-/g, " ").replace(/^./, function (c) { return c.toUpperCase(); });
+  }
+  function rowsOf(list) {   /* list of students -> [{f,k,name,n,c,pct,students}] */
+    var acc = {};
+    list.forEach(function (st) { var det = st.detail || {}; DIMS.forEach(function (D) { var o = det[D[0]] || {}; Object.keys(o).forEach(function (k) {
+      var id = D[0] + "|" + k, a = acc[id] || (acc[id] = { f: D[0], k: k, n: 0, c: 0, students: 0 }); a.n += o[k].n; a.c += o[k].c; a.students++; }); }); });
+    return Object.keys(acc).map(function (id) { var a = acc[id]; a.pct = a.n ? Math.round(1000 * a.c / a.n) / 10 : null; a.name = dname(a.f, a.k); return a; });
+  }
+  function tone(p) { return p >= 80 ? "" : p >= 60 ? "mid" : "low"; }
+  function swHTML(rows, min) {
+    var ok = rows.filter(function (r) { return r.n >= min && !(r.f === "s" && r.k === "general"); });
+    if (!ok.length) return '<p class="muted" style="grid-column:1/-1">Not enough answers yet. Areas are ranked once they have ' + min + ' answers.</p>';
+    var best = ok.filter(function (r) { return r.pct >= 70; }).sort(function (a, b) { return b.pct - a.pct || b.n - a.n; }).slice(0, 6);
+    var worst = ok.filter(function (r) { return r.pct < 70; }).sort(function (a, b) { return a.pct - b.pct || b.n - a.n; }).slice(0, 6);
+    var li = function (r) { return '<li><b>' + esc(r.name) + '</b> ' + pctTxt(r.pct) + ' <small>· ' + esc(DIMNAME[r.f]) + ' · ' + r.n + ' answers</small></li>'; };
+    return '<div class="swbox good"><h3>Doing well (70% and up)</h3><ol>' + (best.length ? best.map(li).join("") : '<li class="muted">Nothing at 70% yet.</li>') + '</ol></div><div class="swbox bad"><h3>Needs work (under 70%)</h3><ol>' + (worst.length ? worst.map(li).join("") : '<li class="muted">Nothing under 70%.</li>') + '</ol></div>';
+  }
+  function tabsHTML(rows, cur, attr) {
+    return DIMS.map(function (D) { var n = rows.filter(function (r) { return r.f === D[0]; }).length; return '<button class="' + (cur === D[0] ? "on" : "") + '" ' + attr + '="' + D[0] + '">' + esc(D[1]) + ' (' + n + ')</button>'; }).join("");
+  }
+  function chartHTML(rows, sortBy, find) {
+    var f = (find || "").trim().toLowerCase();
+    var list = rows.filter(function (r) { return !f || r.name.toLowerCase().indexOf(f) >= 0; });
+    list.sort(sortBy === "high" ? function (a, b) { return b.pct - a.pct || b.n - a.n; } : sortBy === "n" ? function (a, b) { return b.n - a.n; } : function (a, b) { return a.pct - b.pct || b.n - a.n; });
+    if (!list.length) return '<p class="muted" style="grid-column:1/-1">Nothing here yet.</p>';
+    return list.slice(0, 300).map(function (r) {
+      return '<div class="lab">' + esc(r.name) + '</div><div class="bar" title="' + esc(r.name + ": " + pctTxt(r.pct) + " of " + r.n + " answers") + '"><i class="' + tone(r.pct) + '" style="width:' + Math.max(2, r.pct) + '%"></i></div><div class="val"><b>' + pctTxt(r.pct) + '</b> <span>' + r.c + "/" + r.n + (r.students != null && ST.stu == null ? " · " + r.students + " students" : "") + '</span></div>';
+    }).join("") + (list.length > 300 ? '<p class="muted small" style="grid-column:1/-1">Showing 300 of ' + list.length + '. Use the filter to find the rest.</p>' : "");
+  }
+  function trendHTML(id, xid, weeks, starts) {
+    var max = Math.max.apply(null, weeks.map(function (w) { return w[0]; }).concat([1]));
+    $(id).innerHTML = weeks.map(function (w) { var p = w[0] ? Math.round(100 * w[1] / w[0]) : null; return '<div class="tc" title="' + w[0] + ' answers' + (p != null ? ", " + p + "% right" : "") + '"><b style="bottom:calc(' + Math.round(100 * w[0] / max) + '% + 2px)">' + (w[0] || "") + '</b><i style="height:' + Math.round(100 * w[0] / max) + '%"></i></div>'; }).join("");
+    $(xid).innerHTML = (starts || []).map(function (ms) { var dt = new Date(ms); return '<span>' + (dt.getUTCMonth() + 1) + "/" + dt.getUTCDate() + '</span>'; }).join("");
+  }
+  function drawDetail() {
+    var d = ST.dash; if (!d) return;
+    var studs = d.students || [], rows = rowsOf(studs);
+    document.querySelectorAll(".wmin2").forEach(function (e) { e.textContent = d.weakMin; });
+    $("classSW").innerHTML = swHTML(rows, d.weakMin);
+    $("dimTabs").innerHTML = tabsHTML(rows, ST.dim, "data-dim");
+    $("dimChart").innerHTML = chartHTML(rows.filter(function (r) { return r.f === ST.dim; }), $("sortBy").value, $("dimFind").value);
+    $("dimNote").textContent = ST.dim === "s" ? "One question can count toward more than one system (epinephrine is cardiology and shock), so systems don't add up to the total." : "";
+    /* scoreboard */
+    var board = studs.filter(function (s) { return s.activated; }).slice().sort(function (a, b) { return correctOf(b) - correctOf(a) || (b.accuracy || 0) - (a.accuracy || 0); });
+    $("boardTable").innerHTML = '<tr><th>#</th><th>Student</th><th>Correct</th><th>Answered</th><th>Accuracy</th><th>This week</th></tr>' + (board.length ? board.map(function (s, i) {
+      var wk = (s.weeks || [])[11] || [0, 0];
+      return '<tr class="clk" data-stu="' + esc(s.keyId) + '"><td class="rk">' + (i < 3 ? ["🥇", "🥈", "🥉"][i] : i + 1) + '</td><td><b>' + esc(s.alias) + '</b></td><td class="num">' + correctOf(s).toLocaleString() + '</td><td class="num">' + s.answered.toLocaleString() + '</td><td class="num">' + pctTxt(s.accuracy) + '</td><td class="num">' + wk[0] + '</td></tr>';
+    }).join("") : '<tr><td colspan="6" class="muted">No one has started yet.</td></tr>');
+    /* class trend */
+    var weeks = []; for (var i = 0; i < 12; i++) weeks.push([0, 0]);
+    studs.forEach(function (s) { (s.weeks || []).forEach(function (w, j) { weeks[j][0] += w[0]; weeks[j][1] += w[1]; }); });
+    trendHTML("classTrend", "classTrendX", weeks, d.weekStarts);
+    drawStudent();
+  }
+  function correctOf(s) { return s.correct != null ? s.correct : s.answered && s.accuracy != null ? Math.round(s.answered * s.accuracy / 100) : 0; }
+  function drawStudent() {
+    var d = ST.dash, s = ST.stu && (d.students || []).filter(function (x) { return x.keyId === ST.stu; })[0];
+    show("stuCard", !!s); if (!s) return;
+    var rows = rowsOf([s]); rows.forEach(function (r) { r.students = null; });
+    $("stuName").textContent = s.alias + " — every score";
+    var wk = (s.weeks || [])[11] || [0, 0];
+    $("stuTiles").innerHTML = [[s.answered.toLocaleString(), "questions answered"], [pctTxt(s.accuracy), "accuracy"], [wk[0], "answered this week"], [ago(s.lastAt), "last studied"]]
+      .map(function (x) { return '<div class="tile"><b>' + esc(x[0]) + '</b><span>' + esc(x[1]) + '</span></div>'; }).join("");
+    $("stuSW").innerHTML = swHTML(rows, d.weakMin);
+    $("stuDimTabs").innerHTML = tabsHTML(rows, ST.stuDim, "data-sdim");
+    $("stuChart").innerHTML = chartHTML(rows.filter(function (r) { return r.f === ST.stuDim; }), "low", "");
+    trendHTML("stuTrend", "stuTrendX", s.weeks || [], d.weekStarts);
+  }
+  $("sortBy").onchange = drawDetail;
+  $("dimFind").oninput = drawDetail;
+  $("bStuClose").onclick = function () { ST.stu = null; drawStudent(); };
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest && e.target.closest("[data-dim],[data-sdim],tr[data-stu]"); if (!t || !ST.dash) return;
+    if (e.target.closest("button[data-reset]")) return;
+    if (t.hasAttribute("data-dim")) { ST.dim = t.getAttribute("data-dim"); $("dimFind").value = ""; return drawDetail(); }
+    if (t.hasAttribute("data-sdim")) { ST.stuDim = t.getAttribute("data-sdim"); return drawStudent(); }
+    ST.stu = t.getAttribute("data-stu"); drawStudent(); $("stuCard").scrollIntoView({ behavior: "smooth", block: "start" });
+  });
 
   $("bMake").onclick = function () {
     var b = this; b.disabled = true;
