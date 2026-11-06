@@ -2527,7 +2527,7 @@ table.cmptbl tr.dif th{border-left:3px solid var(--gold)}
 :root[data-theme="dark"]{--rt:#38bdf8;--rt-soft:#0c2f44;--ct:#818cf8;--ct-soft:#1e1f4d;--mri:#a78bfa;--mri-soft:#2a1d4d;--nm:#a3e635;--nm-soft:#22300d;--ir:#2dd4bf;--ir-soft:#0d332f}
 .lvl-rt{--c:var(--rt);--cs:var(--rt-soft)}.lvl-ct{--c:var(--ct);--cs:var(--ct-soft)}.lvl-mri{--c:var(--mri);--cs:var(--mri-soft)}.lvl-nm{--c:var(--nm);--cs:var(--nm-soft)}.lvl-ir{--c:var(--ir);--cs:var(--ir-soft)}
 .route.wide{grid-column:1/-1;min-height:200px}.route.wide p{max-width:60ch}
-.route.im{background:linear-gradient(135deg,#0f3d5e 0%,#0e7490 100%)}
+.route.im{background:linear-gradient(135deg,#0f3d5e 0%,#0e7490 100%)}.route.ah{background:linear-gradient(135deg,#6d28d9 0%,#0f766e 100%);color:#fff}
 .route .bugrow .lvbug:nth-child(5) svg{width:100px;height:100px}
 .route.im .bugrow svg{width:62px!important;height:62px!important}
 .plain-im{font-size:17px;border-left:4px solid var(--c,var(--line));padding:4px 0 4px 12px}
@@ -3028,6 +3028,30 @@ button.tierchip:hover{filter:brightness(1.08)}
 @media (max-width:640px){.rdarr{display:none}}
 .rndchip{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;padding:10px 14px;border-radius:14px;border:1.5px solid color-mix(in srgb,var(--rn) 40%,var(--line));background:color-mix(in srgb,var(--rn) 10%,var(--surface))}
 .rndchip span{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}.rndchip strong{font-size:15.5px;margin-right:auto}
+
+/* phone: the "Your path" card no longer leaves the description floating at the top with the bug alone
+   on its own row underneath; the bug tucks into the bottom corner and the text fills the card evenly (owner, Nov 5 2026) */
+@media (max-width:640px){
+ .homewrap .route.rmini:has(.rmore){position:relative;height:auto;padding:18px 18px 16px;justify-content:center;gap:0}
+ .homewrap .route.rmini:has(.rmore) .mtx{width:100%;display:flex;flex-direction:column;gap:6px}
+ .homewrap .route.rmini:has(.rmore) .mtx>:last-child{padding-right:64px}
+ .homewrap .route.rmini:has(.rmore) .mbug{position:absolute;right:12px;bottom:10px;margin:0;width:56px;height:56px}
+ .homewrap .route.rmini:has(.rmore) .mbug svg{width:56px;height:56px}
+ .homewrap .route.rmini:has(.rmore) .rmore{margin:4px 0 2px}
+}
+
+/* question difficulty rating (owner, Nov 5 2026) */
+.qrate{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:10px 0 4px;padding:10px 12px;border:1.5px dashed var(--line);border-radius:14px;background:color-mix(in srgb,var(--surface) 70%,transparent)}
+.qrate .qrl{font-weight:700;font-size:14px}
+.qrate .qrb{display:flex;gap:6px}
+.qrate .qrbtn{width:36px;height:36px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-weight:800;font-size:15px;cursor:pointer}
+.qrate .qrbtn:hover{border-color:var(--c,#8b7bff)}
+.qrate .qrbtn.on{background:var(--c,#8b7bff);border-color:var(--c,#8b7bff);color:#fff}
+.qrate .qrs{font-size:12.5px;color:var(--muted);margin-left:auto}
+.sticks.bump{animation:stbump .6s ease}
+@keyframes stbump{40%{transform:scale(1.25)}}
+@media (max-width:640px){.qrate .qrs{margin-left:0;width:100%}}
+.myplan{align-items:flex-start;gap:14px;flex-wrap:wrap}.myplan .mpt{display:flex;flex-direction:column;gap:3px;min-width:220px;flex:1}.myplan .mpk{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}.myplan strong{font-size:19px}.myplan .mpnote{margin-top:4px;color:var(--ink);opacity:.8;line-height:1.4}.myplan .actions{flex-wrap:wrap}
 </style>
 
 <div class="wrap" id="app"><div id="boot" aria-hidden="true"><div class="bootlogo">Drug<span>Bug</span></div><div class="bootbar"><i></i></div><p class="bootnote">Loading your medications</p></div></div>

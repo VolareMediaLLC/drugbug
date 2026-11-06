@@ -497,6 +497,7 @@ var ROUTE_MORE = {
   rn: ["Hold parameters, labs to watch and patient teaching", "Specialty units: ICU, ER, L&D, NICU and more", "NCLEX-style questions and Nursing Bug drills"],
   md: ["Mechanisms, pharmacokinetics and drug classes", "Step-style questions and advanced lab patterns", "Drug Alternatives and Body Systems for rounds"],
   im: ["Contrast agents and radiopharmaceuticals", "Reactions, premedication, eGFR and screening", "Registry-style questions"],
+  ah: ["Mental health: 51 conditions and the medicines that treat them", "Dietitian: nutrition, supplements and food-drug interactions", "Respiratory Therapist: airway drugs, sedation and the ICU"],
   ev: ["The medicine cabinet: OTC, vitamins and probiotics", "Small sicknesses, normal vitals and lab values", "What street drugs and peptides really do"]
 };
 function homeAll() { return !!store("allPaths"); }
@@ -559,7 +560,7 @@ function viewLevels() {
   var rt = routeCtx(), nurse = rt === "rn", med = rt === "md", img = rt === "im", ally = rt === "ah", fm = rt === "fm", L = nurse ? DB.NLEVELS : med ? DB.MLEVELS : img ? DB.ILEVELS : ally ? DB.ALEVELS : fm ? DB.FLEVELS : DB.LEVELS;
   var c = topbar() + '<header class="pagehead"><h1>' + (fm ? 'Field Medic: choose your tier <span class="pill proto">In development</span>' : nurse ? "Nursing: choose your license" : med ? "Medical school: choose your year" : img ? "Imaging: choose your modality" : ally ? "Allied Health: choose your field" : "Choose your level") + '</h1><p>' + (fm ? "Tactical Combat Casualty Care in four tiers, from every service member to the combat paramedic with prolonged casualty care. Each tier includes every skill and medication from the tiers before it." : img ? "Each modality covers the reaction cart and sedation drugs every tech needs, plus the contrast agents and radiopharmaceuticals for that modality." : ally ? "Each field has its own medicines and its own questions: mental health, nutrition, or airway and breathing." : med ? "Every year studies the full drug library; the exam prep, scenarios and focus change as you advance. Your bug evolves with you." : "Each level includes every drug from the levels before it. Your bug evolves as your scope grows.") + '</p></header><section class="levels' + (fm ? " flv" : (L.length === 3 || L.length === 5 ? " three" : "")) + '">';
   /* Combat Paramedic & Prolonged Care sits in Prehospital, just before Flight Paramedic, once Field Medic is unlocked (owner, Oct 29 2026) */
-  if (!nurse && !med && !img && !fm && typeof fmUnlocked === "function" && fmUnlocked()) {
+  if (!nurse && !med && !img && !ally && !fm && typeof fmUnlocked === "function" && fmUnlocked()) {   /* Prehospital only, never Allied Health (owner, Nov 5 2026) */
     var cp = DB.FLEVELS.filter(function (x) { return x.key === "cpp"; })[0], fi = L.map(function (x) { return x.key; }).indexOf("flight");
     if (cp && L.indexOf(cp) < 0) { L = L.slice(); L.splice(fi < 0 ? L.length : fi, 0, cp); }
   }
@@ -1155,7 +1156,7 @@ function flashcards() {
    departments, NICU on its own, then the specialties beyond. A department adds its unit's medicines
    to the RN scope (the existing Specialty Units, store "nunit"); Nursing school RN keeps the core. */
 var RN_DEPTS = [["", "Nursing school RN", "start"], ["ed", "", "hosp"], ["icu", "", "hosp"], ["medsurg", "", "hosp"], ["ob", "", "hosp"], ["peds", "", "hosp"], ["periop", "", "hosp"],
-  ["nicu", "", "nicu"], ["cardiac", "", "other"], ["onc", "", "other"], ["renal", "", "other"], ["psych", "", "other"], ["ltc", "", "other"], ["flight", "", "other"]];
+  ["nicu", "", "nicu"], ["cardiac", "", "other"], ["onc", "", "other"], ["renal", "", "other"], ["psych", "", "other"], ["ltc", "", "other"]];   /* no Flight here: Flight Nurse has its own level (owner, Nov 5 2026) */
 var RN_SECT = { start: "Start here", hosp: "Hospital", nicu: "Newborn intensive care", other: "Specialty and beyond" };
 function rnDepts() { return RN_DEPTS.map(function (d) { var u = d[0] ? unitObj(d[0]) : null; return d[0] && !u ? null : { key: d[0], name: d[1] || u.name, sect: d[2], blurb: u ? u.blurb : "The core RN pharmacology for nursing school and the NCLEX-RN: every medicine an RN gives and monitors." }; }).filter(Boolean); }
 function rnDeptView() {
@@ -1552,6 +1553,7 @@ function nrQuiz(st) {
   });
  c += '</div><div class="qreport">' + reportBtn("question", qRef(q), q.d) + '</div>';
   if (reveal) c += '<div class="explain ' + (nrRight(x, picked) ? "ok" : "bad") + '"><strong>' + (nrRight(x, picked) ? "Correct." + (st.mode === "practice" ? stickNote(true) : '') : (q.t === "order" ? "Not quite. The correct order is shown above." : (q.t === "multi" ? "Not quite. You found " + (picked || []).filter(function (v) { return q.ok.indexOf(v) >= 0; }).length + " of " + q.ok.length + " correct answers" + ((picked || []).some(function (v) { return q.ok.indexOf(v) < 0; }) ? " and picked a wrong one" : "") + ". Correct answers: " : "Not quite. Correct answer: ") + esc(q.a)) + (st.mode === "practice" ? stickNote(false) : '')) + '</strong><p>' + esc(q.x) + '</p>' + (q.d && DB.drugs[q.d] ? '<button class="linkish" data-drug="' + q.d + '">Review ' + esc(DB.drugs[q.d].name) + '</button>' : '') + '</div>';
+  if (reveal) c += qRateHTML(q);
   c += '<div class="actions">';
   if (q.t && st.mode === "practice" && picked == null) c += '<button class="btn" data-act="nrsubmit"' + (nrSelReady(st, x) ? "" : " disabled") + '>Check answer</button>';
   if (st.i > 0) c += '<button class="btn ghost" data-act="nrprev">\u2190 Previous question</button>'; /* available in practice as well as exam (owner, Oct 29 2026) */
@@ -2033,7 +2035,7 @@ document.addEventListener("click", function (e) {
   if (a.act === "lrnstop" && typeof learnStop === "function") return learnStop();
   if (a.act === "lrnreset" && typeof learnReset === "function") return learnReset();
   if (a.act === "lrndismiss") { S.learn = null; return render(); }
-  if (a.act === "tierup" && typeof openPaywall === "function") { var tt = tier(); return openPaywall("", tt === "plus" ? "pro" : "plus"); }
+  if (a.act === "tierup" && typeof openPaywall === "function") { var tt = tier(); if (tt !== "free" && typeof planInfo === "function") { go("settings"); setTimeout(function () { var m = document.getElementById("myplan"); if (m) m.scrollIntoView({ block: "start" }); }, 60); return true; } return openPaywall("", tt === "plus" ? "pro" : "plus"); }
   if (a.act === "errhome") { try { S.sheet = null; S.tab = "hub"; S.tool = null; S.micro = null; go("home"); } catch (e) { location.hash = ""; location.reload(); } return; }
   if (a.act === "errreload") { try { location.reload(); } catch (e) {} return; }
   if (a.startlearn) { startLearnPath(a.startlearn); return; }
@@ -3666,6 +3668,38 @@ function stickIcon(sz) {
   sz = sz || 16;
   return '<svg class="stick" width="' + sz + '" height="' + sz + '" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20 L19 5" stroke="#8a5a2b" stroke-width="3" stroke-linecap="round"/><path d="M12 12 L16 13.5" stroke="#8a5a2b" stroke-width="2" stroke-linecap="round"/><path d="M19 5 q3 -1 2 3 q-3 1 -2 -3z" fill="#4caf50"/><path d="M15.5 13.3 q2.6 -.2 2.4 2.4 q-2.6 .2 -2.4 -2.4z" fill="#66bb6a"/></svg>';
 }
+/* ---------- players grade each question's difficulty 1-5 after answering (owner, Nov 5 2026) ----------
+   The first rating of a question earns one stick. Ratings are kept on the device (Prog.d.qrate) and the
+   first rating of each question is sent, anonymously, with the usage statistics so the owner sees an
+   average on the Question review page. Changing a rating later only changes it here. */
+var QRATE_Q = {};
+function qRateHTML(q) {
+  if (!q || !q.q || typeof qid !== "function") return "";
+  var k = qid(q), R = (Prog.d && Prog.d.qrate) || {}, cur = R[k] || 0, c;
+  QRATE_Q[k] = q;
+  c = '<div class="qrate" data-qrk="' + k + '"><span class="qrl">' + (cur ? 'You rated this ' + cur + ' of 5' : 'How hard was this?') + '</span><span class="qrb" role="group" aria-label="Rate the difficulty from 1 to 5">';
+  for (var n = 1; n <= 5; n++) c += '<button type="button" class="qrbtn' + (cur === n ? ' on' : '') + '" data-qrate="' + n + '" aria-pressed="' + (cur === n) + '" aria-label="Difficulty ' + n + ' of 5">' + n + '</button>';
+  return c + '</span><span class="qrs">' + (cur ? '<span class="earned">+1 stick earned</span>' : '1 easy · 5 hard · <b>+1 stick</b>') + '</span></div>';
+}
+function qRateSet(k, n, el) {
+  var P = Prog.d; if (!P || !(n >= 1 && n <= 5)) return;
+  var R = P.qrate || (P.qrate = {}), first = !R[k];
+  R[k] = n;
+  if (first) {
+    earn(1);
+    var pend = store("qratePend") || {}; if (Object.keys(pend).length < 300) { pend[k] = n; store("qratePend", pend); }
+    try { [].forEach.call(document.querySelectorAll(".sticks"), function (s) { s.classList.add("bump"); setTimeout(function () { s.classList.remove("bump"); }, 600); }); } catch (e) {}
+  }
+  saveProg();
+  if (el) { var w = document.createElement("div"); w.innerHTML = qRateHTML(QRATE_Q[k] || { q: "x", id: k }); el.replaceWith(w.firstChild); }
+  if (first) try { var st = document.querySelector(".topbar .sticks, .sticks"); if (st && typeof stickTag === "function") { var t = document.createElement("span"); t.innerHTML = stickTag((P.earned || 0) - (P.spent || 0)); st.replaceWith(t.firstChild); } } catch (e) {}
+}
+document.addEventListener("click", function (e) {
+  var b = e.target && e.target.closest ? e.target.closest("[data-qrate]") : null; if (!b) return;
+  var w = b.closest(".qrate"); if (!w) return;
+  e.preventDefault(); e.stopPropagation();
+  qRateSet(w.getAttribute("data-qrk"), +b.getAttribute("data-qrate"), w);
+}, true);
 function stickTag(n) { return '<span class="sticks">' + stickIcon(15) + n.toLocaleString() + '</span>'; }
 
 /* original bug artwork, built from parts */
@@ -3676,7 +3710,29 @@ function bEyes(y, cool) {
   return eyes(y);
 }
 function bSmile(y, c) { return '<path d="M90 ' + y + ' Q100 ' + (y + 8) + ' 110 ' + y + '" stroke="' + c + '" stroke-width="3.5" fill="none" stroke-linecap="round"/>'; }
+function bikerPatch(p, x, y) {
+  var X = function (v) { return v.toFixed(1); };
+  if (p === "flame") return '<path d="M' + X(x - 6) + ' ' + X(y + 5) + ' Q' + X(x - 7) + ' ' + X(y - 3) + ' ' + X(x - 2) + ' ' + X(y - 8) + ' Q' + X(x - 1) + ' ' + X(y - 2) + ' ' + X(x + 2) + ' ' + X(y - 4) + ' Q' + X(x + 7) + ' ' + X(y) + ' ' + X(x + 5) + ' ' + X(y + 5) + 'Z" fill="#f97316" stroke="#facc15" stroke-width="1.2"/>';
+  if (p === "wings") return '<path d="M' + X(x) + ' ' + X(y) + ' q-5 -5 -10 -2 q4 1 4 4 q-3 0 -4 3 q5 0 10 -5z M' + X(x) + ' ' + X(y) + ' q5 -5 10 -2 q-4 1 -4 4 q3 0 4 3 q-5 0 -10 -5z" fill="#e5e7eb"/><circle cx="' + X(x) + '" cy="' + X(y) + '" r="2" fill="#fbbf24"/>';
+  if (p === "star") return '<path d="M' + X(x) + ' ' + X(y - 6) + ' l1.8 4 4.3 .4 -3.3 2.8 1 4.2 -3.8 -2.3 -3.8 2.3 1 -4.2 -3.3 -2.8 4.3 -.4z" fill="#f5f5f4"/>';
+  if (p === "ace") return '<rect x="' + X(x - 4.5) + '" y="' + X(y - 6) + '" width="9" height="12" rx="1.5" fill="#f5f5f4"/><path d="M' + X(x) + ' ' + X(y - 3) + ' q-3 3 0 5 q3 -2 0 -5z" fill="#111"/>';
+  return '<circle cx="' + X(x) + '" cy="' + X(y) + '" r="5" fill="#f5f5f4"/><path d="M' + X(x - 2) + ' ' + X(y) + ' h.1 M' + X(x + 2) + ' ' + X(y) + ' h.1" stroke="#1c1917" stroke-width="2" stroke-linecap="round"/>';
+}
+function bandanaC(y, f, st, dot) { return '<path d="M72 ' + (y - 12) + ' Q74 ' + (y - 36) + ' 100 ' + (y - 37) + ' Q126 ' + (y - 36) + ' 128 ' + (y - 12) + ' Q100 ' + (y - 20) + ' 72 ' + (y - 12) + 'Z" fill="' + f + '" stroke="' + st + '" stroke-width="1.5"/>' +
+  '<path d="M84 ' + (y - 24) + ' q4 -4 8 0 q-4 4 -8 0 M104 ' + (y - 30) + ' q4 -4 8 0 q-4 4 -8 0 M114 ' + (y - 19) + ' q3 -3 6 0 q-3 3 -6 0" fill="none" stroke="' + dot + '" stroke-width="1.4"/><path d="M128 ' + (y - 14) + ' l12 -6 l-3 10Z M128 ' + (y - 14) + ' l13 4 l-8 6Z" fill="' + f + '" stroke="' + st + '" stroke-width="1"/>'; }
+function halfHelm(y, f, gog) { return '<path d="M68 ' + (y - 8) + ' Q68 ' + (y - 46) + ' 100 ' + (y - 47) + ' Q132 ' + (y - 46) + ' 132 ' + (y - 8) + ' Q100 ' + (y - 16) + ' 68 ' + (y - 8) + 'Z" fill="' + f + '" stroke="#000" stroke-width="1.5"/><path d="M80 ' + (y - 34) + ' Q92 ' + (y - 42) + ' 104 ' + (y - 41) + '" stroke="#fff" stroke-opacity=".35" stroke-width="3" fill="none" stroke-linecap="round"/>' +
+  '<path d="M70 ' + (y - 9) + ' L74 ' + (y + 16) + ' M130 ' + (y - 9) + ' L126 ' + (y + 16) + '" stroke="#292524" stroke-width="2"/>' +
+  (gog ? '<path d="M70 ' + (y - 22) + ' Q100 ' + (y - 30) + ' 130 ' + (y - 22) + '" stroke="#57534e" stroke-width="4" fill="none"/><circle cx="88" cy="' + (y - 26) + '" r="7" fill="#fbbf24" stroke="#57534e" stroke-width="2.5"/><circle cx="112" cy="' + (y - 26) + '" r="7" fill="#fbbf24" stroke="#57534e" stroke-width="2.5"/>' : ''); }
+function beanie(y, f) { var r = ''; for (var i = 0; i < 9; i++) r += '<path d="M' + (73 + i * 6.8) + ' ' + (y - 21) + ' v8" stroke="#000" stroke-opacity=".25" stroke-width="1.4"/>'; return '<path d="M70 ' + (y - 14) + ' Q70 ' + (y - 50) + ' 100 ' + (y - 51) + ' Q130 ' + (y - 50) + ' 130 ' + (y - 14) + 'Z" fill="' + f + '" stroke="#000" stroke-width="1.5"/><rect x="69" y="' + (y - 22) + '" width="62" height="10" rx="4" fill="' + f + '" stroke="#000" stroke-width="1.5"/>' + r; }
 var ACC = {
+  /* biker gear, so every bad bug in the gang looks like its own rider (owner, Nov 5 2026) */
+  bandanaK: function (y) { return bandanaC(y, "#18181b", "#000", "#e5e7eb"); },
+  bandanaB: function (y) { return bandanaC(y, "#1e3a8a", "#172554", "#bfdbfe"); },
+  halfhelm: function (y) { return halfHelm(y, "#111827", false); },
+  halfhelmG: function (y) { return halfHelm(y, "#3f2a14", true); },
+  beanie: function (y) { return beanie(y, "#3f3f46"); },
+  beanieR: function (y) { return beanie(y, "#7f1d1d"); },
+  chain: function (y) { var o = ""; for (var i = 0; i <= 10; i++) { var t = i / 10, x = (1 - t) * (1 - t) * 80 + 2 * t * (1 - t) * 100 + t * t * 120, yy = (1 - t) * (1 - t) * (y + 25) + 2 * t * (1 - t) * (y + 42) + t * t * (y + 25); o += '<ellipse cx="' + x.toFixed(1) + '" cy="' + yy.toFixed(1) + '" rx="2.6" ry="1.8" fill="none" stroke="#d1d5db" stroke-width="1.6" transform="rotate(' + (i % 2 ? 60 : -30) + ' ' + x.toFixed(1) + ' ' + yy.toFixed(1) + ')"/>'; } return o; },
   bandana: function (y) { return '<path d="M72 ' + (y - 12) + ' Q74 ' + (y - 36) + ' 100 ' + (y - 37) + ' Q126 ' + (y - 36) + ' 128 ' + (y - 12) + ' Q100 ' + (y - 20) + ' 72 ' + (y - 12) + 'Z" fill="#dc2626" stroke="#7f1d1d" stroke-width="1.5"/>' +
     '<circle cx="88" cy="' + (y - 26) + '" r="2" fill="#fff"/><circle cx="104" cy="' + (y - 29) + '" r="2" fill="#fff"/><circle cx="116" cy="' + (y - 22) + '" r="2" fill="#fff"/><path d="M128 ' + (y - 14) + ' l12 -6 l-3 10Z M128 ' + (y - 14) + ' l13 4 l-8 6Z" fill="#dc2626" stroke="#7f1d1d" stroke-width="1"/>'; },
   crown: function (y) { return '<path d="M78 ' + (y - 26) + ' L84 ' + (y - 44) + ' L94 ' + (y - 32) + ' L100 ' + (y - 48) + ' L106 ' + (y - 32) + ' L116 ' + (y - 44) + ' L122 ' + (y - 26) + ' Z" fill="#ffc531" stroke="#b7860b" stroke-width="2"/><circle cx="100" cy="' + (y - 34) + '" r="3.5" fill="#e23b4a"/>'; },
@@ -4063,11 +4119,12 @@ function bugArt(b, cls, opt) {
   /* the bad bugs ride as a biker gang (owner, Nov 5 2026): a studded leather vest over the torso,
      open down the middle, with a little skull patch; the shades and bandana come from b.eyes/acc */
   if (b.biker) {
+    var VV = b.vest || {}, VC = VV.c || "#1f1b1a", VS = VV.s || "#0b0a09";
     var BT = (BODYFIT[t] || BODYFIT.beetle).t, vx = BT[0], vy = BT[1], vrx = BT[2], vry = BT[3], studs = "";
     for (var si = 0; si < 4; si++) studs += '<circle cx="' + (vx - vrx * .62).toFixed(1) + '" cy="' + (vy - vry * .5 + si * vry * .3).toFixed(1) + '" r="2.2" fill="#d1d5db"/><circle cx="' + (vx + vrx * .62).toFixed(1) + '" cy="' + (vy - vry * .5 + si * vry * .3).toFixed(1) + '" r="2.2" fill="#d1d5db"/>';
-    s += '<path d="M' + (vx - vrx * .95) + ' ' + (vy - vry * .55) + ' Q' + (vx - vrx * .4) + ' ' + (vy - vry * .95) + ' ' + (vx - 6) + ' ' + (vy - vry * .7) + ' L' + (vx - 10) + ' ' + (vy + vry * .8) + ' Q' + (vx - vrx * .7) + ' ' + (vy + vry * .75) + ' ' + (vx - vrx * .95) + ' ' + (vy + vry * .3) + 'Z" fill="#1f1b1a" stroke="#0b0a09" stroke-width="1.5"/>' +
-      '<path d="M' + (vx + vrx * .95) + ' ' + (vy - vry * .55) + ' Q' + (vx + vrx * .4) + ' ' + (vy - vry * .95) + ' ' + (vx + 6) + ' ' + (vy - vry * .7) + ' L' + (vx + 10) + ' ' + (vy + vry * .8) + ' Q' + (vx + vrx * .7) + ' ' + (vy + vry * .75) + ' ' + (vx + vrx * .95) + ' ' + (vy + vry * .3) + 'Z" fill="#1f1b1a" stroke="#0b0a09" stroke-width="1.5"/>' + studs +
-      '<circle cx="' + (vx + vrx * .45) + '" cy="' + (vy - vry * .05) + '" r="5" fill="#f5f5f4"/><path d="M' + (vx + vrx * .45 - 2) + ' ' + (vy - vry * .05) + ' h.1 M' + (vx + vrx * .45 + 2) + ' ' + (vy - vry * .05) + ' h.1" stroke="#1c1917" stroke-width="2" stroke-linecap="round"/>';
+    s += '<path d="M' + (vx - vrx * .95) + ' ' + (vy - vry * .55) + ' Q' + (vx - vrx * .4) + ' ' + (vy - vry * .95) + ' ' + (vx - 6) + ' ' + (vy - vry * .7) + ' L' + (vx - 10) + ' ' + (vy + vry * .8) + ' Q' + (vx - vrx * .7) + ' ' + (vy + vry * .75) + ' ' + (vx - vrx * .95) + ' ' + (vy + vry * .3) + 'Z" fill="' + VC + '" stroke="' + VS + '" stroke-width="1.5"/>' +
+      '<path d="M' + (vx + vrx * .95) + ' ' + (vy - vry * .55) + ' Q' + (vx + vrx * .4) + ' ' + (vy - vry * .95) + ' ' + (vx + 6) + ' ' + (vy - vry * .7) + ' L' + (vx + 10) + ' ' + (vy + vry * .8) + ' Q' + (vx + vrx * .7) + ' ' + (vy + vry * .75) + ' ' + (vx + vrx * .95) + ' ' + (vy + vry * .3) + 'Z" fill="' + VC + '" stroke="' + VS + '" stroke-width="1.5"/>' + studs +
+      bikerPatch(VV.p || "skull", vx + vrx * .45, vy - vry * .05);
   }
   /* every species gets its own markings, head tone and one body feature, so two bugs that share a
      body are never just a recolour of each other (owner, Nov 5 2026) */
@@ -4191,15 +4248,15 @@ var BUGS = [
   { id: "garden-millipede", name: "Garden Millipede", body: "millipede", c: ["#8b5e3c", "#4a2f1d", "#fde68a"], ink: "#2b1a0e", rar: "common", price: 500, blurb: "Two pairs of legs on almost every segment. Curls into a spiral when scared." },
   { id: "dung-beetle", name: "Dung Beetle", body: "dung", c: ["#3f3f46", "#18181b", "#a1a1aa"], ink: "#09090b", rar: "rare", price: 1500, blurb: "Rolls its ball in a straight line by steering with the Milky Way." },
   /* the bad bugs: a biker gang of pests and disease carriers (owner, Nov 5 2026) */
-  { id: "flea", name: "Flea", body: "flea", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#7c4a1e", "#4a2a10", "#fde68a"], ink: "#24130a", rar: "common", price: 500, blurb: "Jumps 100 times its height. Rat fleas spread plague and murine typhus." },
-  { id: "deer-tick", name: "Deer Tick", body: "tick", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#9a3412", "#1c1917", "#fed7aa"], ink: "#0c0a09", rar: "common", price: 500, blurb: "Carries Lyme disease. Remove it with tweezers close to the skin, pulling straight out." },
-  { id: "bed-bug", name: "Bed Bug", body: "bedbug", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#b45309", "#7c2d12", "#fed7aa"], ink: "#2a0f05", rar: "common", price: 500, blurb: "Bites in a line at night. Itchy, but not known to spread disease." },
-  { id: "head-louse", name: "Head Louse", body: "louse", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#e7d8c0", "#a68a64", "#fef3c7"], ink: "#3b2f20", rar: "common", price: 500, blurb: "Grips hair with hook claws. Its body-louse cousin spreads epidemic typhus." },
-  { id: "cockroach", name: "Cockroach", body: "roach", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#92400e", "#451a03", "#fde68a"], ink: "#1c0a02", rar: "rare", price: 1500, blurb: "Roach allergens are a major asthma trigger in city kids." },
-  { id: "tiger-mosquito", name: "Tiger Mosquito", body: "mosquito", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#27272a", "#09090b", "#e5e7eb"], ink: "#000000", rar: "rare", price: 1500, blurb: "The deadliest animal on Earth: malaria, dengue, Zika and West Nile." },
-  { id: "chigger", name: "Chigger", body: "tick", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#ef4444", "#991b1b", "#fecaca"], ink: "#450a0a", rar: "rare", price: 1500, blurb: "A tiny mite larva. In parts of Asia its bite spreads scrub typhus." },
-  { id: "kissing-bug", name: "Kissing Bug", body: "shield", pat: "edges", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#292524", "#0c0a09", "#f97316"], ink: "#000000", rar: "epic", price: 3800, blurb: "Bites near the lips at night and spreads Chagas disease, which can scar the heart." },
-  { id: "puss-asp", name: "Asp", body: "asp", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], c: ["#d6b88a", "#a07a4a", "#fef3c7"], ink: "#3b2a14", rar: "epic", price: 3800, blurb: "The puss caterpillar looks like a fluffy toupee. Its hidden spines give one of the worst stings in North America." },
+  { id: "flea", name: "Flea", body: "flea", coll: "bad", biker: true, eyes: "cool", acc: ["bandana"], vest: { c: "#5b3a1e", s: "#2a1a0c", p: "skull" }, c: ["#7c4a1e", "#4a2a10", "#fde68a"], ink: "#24130a", rar: "common", price: 500, blurb: "Jumps 100 times its height. Rat fleas spread plague and murine typhus." },
+  { id: "deer-tick", name: "Deer Tick", body: "tick", coll: "bad", biker: true, eyes: "fierce", acc: ["halfhelm", "chain"], vest: { c: "#1f1b1a", s: "#0b0a09", p: "flame" }, c: ["#9a3412", "#1c1917", "#fed7aa"], ink: "#0c0a09", rar: "common", price: 500, blurb: "Carries Lyme disease. Remove it with tweezers close to the skin, pulling straight out." },
+  { id: "bed-bug", name: "Bed Bug", body: "bedbug", coll: "bad", biker: true, eyes: "cool", acc: ["beanie"], vest: { c: "#1e3a5f", s: "#0f1d33", p: "star" }, c: ["#b45309", "#7c2d12", "#fed7aa"], ink: "#2a0f05", rar: "common", price: 500, blurb: "Bites in a line at night. Itchy, but not known to spread disease." },
+  { id: "head-louse", name: "Head Louse", body: "louse", coll: "bad", biker: true, eyes: "cool", acc: ["bandanaK", "chain"], vest: { c: "#1f1b1a", s: "#0b0a09", p: "wings" }, c: ["#e7d8c0", "#a68a64", "#fef3c7"], ink: "#3b2f20", rar: "common", price: 500, blurb: "Grips hair with hook claws. Its body-louse cousin spreads epidemic typhus." },
+  { id: "cockroach", name: "Cockroach", body: "roach", coll: "bad", biker: true, eyes: "fierce", acc: ["halfhelmG"], vest: { c: "#3f2a14", s: "#1c1208", p: "ace" }, c: ["#92400e", "#451a03", "#fde68a"], ink: "#1c0a02", rar: "rare", price: 1500, blurb: "Roach allergens are a major asthma trigger in city kids." },
+  { id: "tiger-mosquito", name: "Tiger Mosquito", body: "mosquito", coll: "bad", biker: true, eyes: "cool", acc: ["bandanaB"], vest: { c: "#111827", s: "#030712", p: "flame" }, c: ["#27272a", "#09090b", "#e5e7eb"], ink: "#000000", rar: "rare", price: 1500, blurb: "The deadliest animal on Earth: malaria, dengue, Zika and West Nile." },
+  { id: "chigger", name: "Chigger", body: "tick", coll: "bad", biker: true, eyes: "fierce", acc: ["beanieR", "chain"], vest: { c: "#1f1b1a", s: "#0b0a09", p: "skull" }, c: ["#ef4444", "#991b1b", "#fecaca"], ink: "#450a0a", rar: "rare", price: 1500, blurb: "A tiny mite larva. In parts of Asia its bite spreads scrub typhus." },
+  { id: "kissing-bug", name: "Kissing Bug", body: "shield", pat: "edges", coll: "bad", biker: true, eyes: "cool", acc: ["bandanaK"], vest: { c: "#4c0519", s: "#1f0209", p: "wings" }, c: ["#292524", "#0c0a09", "#f97316"], ink: "#000000", rar: "epic", price: 3800, blurb: "Bites near the lips at night and spreads Chagas disease, which can scar the heart." },
+  { id: "puss-asp", name: "Asp", body: "asp", coll: "bad", biker: true, eyes: "cool", acc: ["halfhelm", "chain"], vest: { c: "#1e3a5f", s: "#0f1d33", p: "star" }, c: ["#d6b88a", "#a07a4a", "#fef3c7"], ink: "#3b2a14", rar: "epic", price: 3800, blurb: "The puss caterpillar looks like a fluffy toupee. Its hidden spines give one of the worst stings in North America." },
   { id: "bubblegum-ant", name: "Bubblegum Ant", body: "ant", c: ["#f9a8d4", "#db2777"], ink: "#701a45", rar: "common", price: 500 },
   // rare
   { id: "glow-firefly", name: "Glow Firefly", body: "firefly", c: ["#4c5fd5", "#26307a", "#fff59d"], rar: "rare", price: 1500 },
@@ -4628,7 +4685,7 @@ function bugFace(y, mood, b, faceItem) {
   return s;
 }
 /* wearable items: slot hat | face | neck | back | held | fx */
-var ACC_SLOT = { bandana: "hat", jethelmet: "hat", aviscarf: "neck", crown: "hat", halo: "hat", cap: "hat", helmet: "hat", headset: "hat", flame: "hat", goggles: "face", mask: "face", stetho: "neck", bowtie: "neck", scarf: "neck", stars: "fx" };
+var ACC_SLOT = { bandana: "hat", bandanaK: "hat", bandanaB: "hat", halfhelm: "hat", halfhelmG: "hat", beanie: "hat", beanieR: "hat", chain: "neck", jethelmet: "hat", aviscarf: "neck", crown: "hat", halo: "hat", cap: "hat", helmet: "hat", headset: "hat", flame: "hat", goggles: "face", mask: "face", stetho: "neck", bowtie: "neck", scarf: "neck", stars: "fx" };
 function hatY(y) { return y - 26; }
 /* a ring of curls sitting on the head: used by every perm (owner, Oct 30 2026) */
 function permDraw(y, dark, light, big) {
@@ -5484,6 +5541,7 @@ function safetyView() {
   s.opts.forEach(function (o, k) { var cls = rev ? (o === q.a ? " right" : o === s.pick ? " wrong" : " dim") : ""; c += '<button class="qopt' + cls + '" data-sopt="' + k + '"' + (rev ? " disabled" : "") + '><span class="letter">' + "ABCD"[k] + '</span><span>' + esc(o) + '</span></button>'; });
   c += '</div>';
   if (rev) c += '<div class="explain ' + (s.pick === q.a ? "ok" : "bad") + '"><strong>' + (s.pick === q.a ? "Correct." + stickNote(true) : "Not quite." + stickNote(false)) + '</strong><p>' + esc(q.x) + '</p>' + (q.d && DB.drugs[q.d] ? '<button class="linkish" data-drug="' + q.d + '">Review ' + esc(nameOf(q.d)) + '</button>' : '') + '</div><div class="actions"><button class="btn" data-act="snext">Next drill</button></div>';
+  if (rev) c += qRateHTML(q);
   return c + '</div><p class="muted small">' + s.c + ' of ' + s.n + ' correct this session.</p><p class="muted small attrib">High-alert drills are adapted from the ISMP List of High-Alert Medications; look-alike pairs are informed by the ISMP List of Confused Drug Names and FDA/ISMP tall-man lettering. ISMP lists © Institute for Safe Medication Practices, used for education with attribution. DrugBug is not affiliated with ISMP; see ismp.org for current lists.</p></section>';
 }
 
@@ -7611,7 +7669,18 @@ var APP_VERSION = "1.1", APP_DATE = "2026-11-05";
 var USG = { inc: null, tab: "", lastAct: Date.now(), sentAt: 0, busy: false, sessSent: false };
 function usgNew() { return { q: 0, c: 0, learn: 0, sec: 0, tabs: {}, feats: {} }; }
 USG.inc = usgNew();
-function usgOn() { try { return SET().shareUsage !== false && !!agreeRec() && !(typeof DEMO !== "undefined" && DEMO && !NATIVE && !(window.DRUGBUG_CONFIG || {}).functionsUrl); } catch (e) { return false; } }
+/* the owner's own devices never count in the metrics (owner, Nov 5 2026): once the owner account signs
+   in on a device, that device is marked, its earlier stats are removed and it stops reporting for good */
+var USG_SKIP = ["volaremediallc@gmail.com"];
+function usgOwner() {
+  try {
+    if (store("usgSkip")) return true;
+    var st = typeof ACCT !== "undefined" && ACCT.api && ACCT.api.state ? ACCT.api.state() : null;
+    if (st && st.email && USG_SKIP.indexOf(String(st.email).toLowerCase()) >= 0) { store("usgSkip", 1); try { usgForget(); } catch (x) {} return true; }
+  } catch (e) {}
+  return false;
+}
+function usgOn() { try { return !usgOwner() && SET().shareUsage !== false && !!agreeRec() && !(typeof DEMO !== "undefined" && DEMO && !NATIVE && !(window.DRUGBUG_CONFIG || {}).functionsUrl); } catch (e) { return false; } }
 function usgDid() {
   var d = store("did");
   if (!d || !/^[a-z0-9]{16,40}$/.test(d)) {
@@ -7632,21 +7701,22 @@ function usgTab() {
 function usgUrl(fn) { var b = (window.DRUGBUG_CONFIG || {}).functionsUrl || "https://us-central1-drugbug-69d42.cloudfunctions.net"; return b.replace(/\/$/, "") + "/" + fn; }
 function usgFlush(leaving) {
   if (!usgOn() || USG.busy) return;
-  var I = USG.inc, has = I.q || I.learn || I.sec >= 15 || Object.keys(I.tabs).length || Object.keys(I.feats).length;
+  var I = USG.inc, has = I.q || I.learn || I.sec >= 15 || Object.keys(I.tabs).length || Object.keys(I.feats).length || Object.keys(usgRates()).length;
   if (!has && USG.sessSent) return;
   if (!leaving && Date.now() - USG.sentAt < 16000) return;
   var rc = (typeof routeCtx === "function" && routeCtx()) || "";
   var body = { data: { did: usgDid(), plat: NATIVE ? "ios" : "web", tier: (function () { try { return tier(); } catch (e) { return "free"; } })(),
     route: rc || "other", level: S.view === "level" ? usgKey(S.level) : "", ver: APP_VERSION,
-    inc: { q: I.q, c: I.c, learn: I.learn, sec: I.sec, sess: USG.sessSent ? 0 : 1, tabs: I.tabs, feats: I.feats } } };
+    inc: { q: I.q, c: I.c, learn: I.learn, sec: I.sec, sess: USG.sessSent ? 0 : 1, tabs: I.tabs, feats: I.feats }, rate: usgRates() } };
   USG.inc = usgNew(); USG.sentAt = Date.now(); USG.busy = true;
   var wasSess = USG.sessSent; USG.sessSent = true;
-  var back = function (ok) { USG.busy = false; if (!ok) { USG.sessSent = wasSess; var J = body.data.inc; USG.inc.q += J.q; USG.inc.c += J.c; USG.inc.learn += J.learn; USG.inc.sec += J.sec; } };
+  var back = function (ok) { USG.busy = false; if (ok && body.data.rate) { var pd = store("qratePend") || {}; Object.keys(body.data.rate).forEach(function (k) { delete pd[k]; }); store("qratePend", pd); } if (!ok) { USG.sessSent = wasSess; var J = body.data.inc; USG.inc.q += J.q; USG.inc.c += J.c; USG.inc.learn += J.learn; USG.inc.sec += J.sec; } };
   try {
     fetch(usgUrl("usagePing"), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), keepalive: !!leaving })
       .then(function (r) { back(r.ok); }, function () { back(false); });
   } catch (e) { back(false); }
 }
+function usgRates() { var p = store("qratePend") || {}, o = {}, n = 0; for (var k in p) { if (n++ >= 50) break; o[k] = p[k]; } return o; }
 function usgForget() {
   var d = store("did"); if (!d) return;
   try { fetch(usgUrl("usageForget"), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ data: { did: d } }) }).catch(function () {}); } catch (e) {}
@@ -7807,7 +7877,8 @@ function setTog(name, on, label) { return '<label class="tog"><input type="check
 function setRow(label, help, ctl) { return '<div class="setrow"><div class="sl"><strong>' + esc(label) + '</strong>' + (help ? '<span class="muted small">' + esc(help) + '</span>' : '') + '</div><div class="sc">' + ctl + '</div></div>'; }
 function setCard(id, title, body) { return (S.setTab || "display") !== id ? "" : '<section class="setcard" id="set-' + id + '"><h2>' + esc(title) + '</h2>' + body + '</section>'; }
 /* hidden Field Medic (military) section: unlocked by a code, shown as a prototype (owner, Oct 28 2026). Only SHA-256 hashes ship. */
-var FM_CODES = { "3cffa3f08ba9410ebbf2ac347359f647fcc57eed26e4294a7991a5b6b9ed77ab": { days: 0 }, "327a19299989c959457c7697b6dd8cdb9ec2c1704fb4e12653389c086938b0e5": { days: 30 } };
+/* only TCCC-MONTH-4K opens it now (owner, Nov 5 2026); the old always-on code was retired */
+var FM_CODES = { "327a19299989c959457c7697b6dd8cdb9ec2c1704fb4e12653389c086938b0e5": { days: 30 } };
 /* Focused or Enhanced (owner, Nov 5 2026): Focused is for studying, Enhanced is everything.
    fun:false is Focused. Asked once at the start, right after the path and level. */
 /* Focused is parked while it is being worked on (owner, Nov 5 2026): everyone gets Enhanced, the
@@ -7816,7 +7887,10 @@ var FOCUSED_READY = false;
 /* On Scene (The Great Bug calls) is parked with Focused while it is worked on (owner, Nov 5 2026) */
 var SCENE_READY = false;
 function funOn() { return !FOCUSED_READY || SET().fun !== false; }   /* Seriously Fun mode: the bugs, the banter, the little animations */
-function fmUnlocked() { return !!store("fmUnlock"); }
+function fmUnlocked() {   /* needs the current code; on the web it lasts while the month pass is active (owner, Nov 5 2026) */
+  var u = store("fmUnlock"); if (!u || !u.h || !FM_CODES[u.h]) return false;
+  return (typeof NATIVE !== "undefined" && NATIVE) ? true : fmPassActive();
+}
 /* In the App Store build a code may unhide the section but not unlock paid features (Guideline 3.1.1: paid features go through in-app purchase). Debug pass Oct 29; owner to confirm. */
 function fmPassActive() { if (typeof NATIVE !== "undefined" && NATIVE) return false; var p = store("fmPass"); return !!(p && p.until > Date.now()); }
 function fmCodeTry(raw) {
@@ -7826,7 +7900,7 @@ function fmCodeTry(raw) {
   crypto.subtle.digest("SHA-256", new TextEncoder().encode("drugbug-fm:" + code)).then(function (buf) {
     var h = Array.prototype.map.call(new Uint8Array(buf), function (b) { return ("0" + b.toString(16)).slice(-2); }).join(""), hit = FM_CODES[h];
     if (!hit) { if (typeof DEMO !== "undefined" && DEMO && typeof webCodeTry === "function") { webCodeTry(raw); S.setMsg = (typeof PRO !== "undefined" && PRO.msg) || ""; return render(); } return alertMsg("That code isn't valid. Check the spelling and try again."); }
-    store("fmUnlock", { ts: Date.now() });
+    store("fmUnlock", { ts: Date.now(), h: h });
     var msg = "Code accepted. Combat Paramedic & Prolonged Care (in development) is now in Prehospital.";
     if (hit.days && !(typeof NATIVE !== "undefined" && NATIVE)) { var old = store("fmPass"); if (old && old.h === h) msg = "This code is already active."; else { store("fmPass", { h: h, until: Date.now() + hit.days * 864e5 }); msg = "Code accepted. Combat Paramedic & Prolonged Care (in development) is now in Prehospital, with full access until " + new Date(Date.now() + hit.days * 864e5).toLocaleDateString() + "."; } }
     if (msg === "This code is already active.") { S.setMsg = msg; render(); window.scrollTo(0, 0); return; }
@@ -8466,6 +8540,7 @@ function labDrill(r) {
   });
   c += '</div>';
   if (picked != null) c += '<div class="explain ' + (picked === x.q.a ? "ok" : "bad") + '"><strong>' + (picked === x.q.a ? 'Correct.' + stickNote(true) : "Not quite. Correct answer: " + esc(x.q.a) + stickNote(false)) + '</strong><p>' + esc(x.q.x) + '</p>' + (x.q.d && DB.drugs[x.q.d] ? '<button class="linkish" data-drug="' + x.q.d + '">Review ' + esc(nameOf(x.q.d)) + '</button>' : '') + '</div><div class="actions"><button class="btn" data-labnext="1">' + (st.i + 1 < st.qs.length ? "Next question" : "See results") + '</button></div>';
+  if (picked != null) c += qRateHTML(x.q);
   return c + '</section>';
 }
 function labStart(r) {
@@ -8604,6 +8679,7 @@ function critDrill(kind) {
   var x = st.qs[st.i], picked = st.pick;
   var c = '<section class="labdrill"><div class="muted small">Question ' + (st.i + 1) + ' of ' + st.qs.length + '</div><p class="qstem">' + esc(x.q.q) + '</p><div class="opts">' + x.opts.map(function (o, i) { var cls = picked == null ? "" : o === x.q.a ? " right" : o === picked ? " wrong" : ""; return '<button class="opt' + cls + '" data-critopt="' + i + '"' + (picked != null ? ' disabled' : '') + '>' + esc(o) + '</button>'; }).join("") + '</div>';
   if (picked != null) c += '<div class="explain ' + (picked === x.q.a ? "ok" : "bad") + '"><strong>' + (picked === x.q.a ? 'Correct.' + stickNote(true) : "Not quite. Correct answer: " + esc(x.q.a) + stickNote(false)) + '</strong><p>' + esc(x.q.x) + '</p></div><div class="actions"><button class="btn" data-critnext="1">' + (st.i + 1 < st.qs.length ? "Next question" : "See results") + '</button></div>';
+  if (picked != null) c += qRateHTML(x.q);
   return c + '</section>';
 }
 var HEMOCALC = [
@@ -9115,16 +9191,43 @@ function applyCode(code) {
     PRO.msg = ""; PRO.open = false; closePaywall(); S.proMsg = "Code applied: DrugBug Pro through " + new Date(L.until).toLocaleDateString() + (L.org ? " from " + L.org : "") + "."; render();
   }).catch(function () { PRO.msg = "Could not check that code right now."; drawPaywall(); });
 }
+/* "My plan" (owner, Nov 5 2026): one place that says which plan you have, how you got it, when it
+   renews or ends, and how to cancel. Settings opens with it, and tapping the Plus/Pro badge comes here. */
+function planInfo() {
+  var t = tier(), o = { tier: t, src: "free", lines: [], cancel: "", note: "" };
+  if (NATIVE) {
+    if (PRO.store) {
+      o.src = "apple"; o.lines.push("Bought through the App Store" + (PRO.offer ? " with an offer code" : ""));
+      if (PRO.expires) o.lines.push("Renews or ends on " + new Date(PRO.expires).toLocaleDateString());
+      o.cancel = "manage"; o.note = "To cancel, open Manage or cancel and turn off DrugBug in your Apple subscriptions. You keep your plan until the end of the period you paid for.";
+    }
+  } else if (typeof subActive === "function" && subActive()) {
+    o.src = "stripe"; var pr = subPriceText ? subPriceText() : "";
+    o.lines.push("Subscribed on drugbugapp.com" + (pr ? " · " + pr : ""));
+    if (SUB.cancelAt) o.lines.push("Cancelled: your plan stays active until " + new Date(SUB.until).toLocaleDateString() + " and then will not renew");
+    else if (SUB.status === "past_due") o.lines.push("Your card was declined. Update it by " + new Date(SUB.until).toLocaleDateString() + " to keep your plan");
+    else o.lines.push("Renews on " + new Date(SUB.until).toLocaleDateString());
+    o.cancel = "wmanage"; o.note = SUB.cancelAt ? "You can turn renewal back on from Manage or cancel." : "Cancel any time from Manage or cancel. You keep your plan until the end of the period you paid for.";
+  }
+  if (o.src === "free") {
+    if (typeof seatActive === "function" && seatActive()) { o.src = "school"; o.lines.push(seatLabel()); o.note = "Your school or program pays for this. There is nothing to cancel."; }
+    else if (typeof licenseActive === "function" && licenseActive()) { o.src = "school"; o.lines.push("School license until " + new Date(Prog.d.license.until).toLocaleDateString()); o.note = "Your school or program pays for this. There is nothing to cancel."; }
+    else if (typeof giftPro === "function" && giftPro()) { o.src = "code"; o.lines.push("From a code, until " + new Date(Prog.d.proGift.until).toLocaleDateString()); o.note = "Codes are not subscriptions: nothing renews and nothing is charged."; }
+    else if (DEMO && typeof webPass === "function" && webPass()) { o.src = "code"; o.lines.push("Access code, until " + new Date(webPass().until).toLocaleDateString()); o.note = "Codes are not subscriptions: nothing renews and nothing is charged."; }
+    else if (Prog.d && Prog.d.proGrant) { o.src = "grant"; o.lines.push("Granted by DrugBug"); }
+    else { o.lines.push("Free forever: every tool, over about 40 common medications"); o.note = NATIVE ? "No subscription. If you subscribed before on this Apple ID, tap Restore purchases." : "No subscription. Nothing is ever charged on Free."; }
+  }
+  return o;
+}
 function proCard() {
   if (!PAYWALL) return '<div class="procard"><div><strong>DrugBug Beta</strong><span class="muted small">' + esc(proLabel()) + '</span></div></div>';
-  var c = '<div class="procard"><div><strong>' + TIER_NAME[tier()] + '</strong><span class="muted small">' + esc(proLabel()) + '</span></div><div class="actions">';
-  /* "Preview as" is an owner tool. With WEBSUBS on, tier() ignores it for everyone but an admin, so
-     leaving the control on screen for ordinary visitors only invites them to try switching to Pro
-     and watch nothing happen. (owner, Nov 3 2026) */
+  var P = planInfo(), c = '<section class="procard myplan" id="myplan" aria-label="My plan"><div class="mpt"><span class="mpk">My plan</span><strong>' + TIER_NAME[P.tier] + '</strong>' +
+    P.lines.map(function (l) { return '<span class="muted small">' + esc(l) + '</span>'; }).join("") + (P.note ? '<span class="mpnote small">' + esc(P.note) + '</span>' : '') + '</div><div class="actions">';
   if (!NATIVE && !DEMO && (!WEBSUBS || (typeof Admin !== "undefined" && Admin.on))) c += '<label class="small">Preview as <select class="pinput" id="pvtier">' + ["free", "plus", "pro"].map(function (t) { return '<option value="' + t + '"' + (tier() === t ? " selected" : "") + '>' + TIER_NAME[t] + '</option>'; }).join("") + '</select></label>';
-  if (!(PRO.store && PRO.tier === "pro")) c += '<button class="btn small" data-pw="open">See plans</button>';
-  if (NATIVE) c += '<button class="btn small ghost" data-pw="restore">Restore purchases</button>' + (PRO.store ? '<button class="btn small ghost" data-pw="manage">Manage subscription</button>' : '');
-  return c + '</div></div>';
+  if (P.cancel) c += '<button class="btn small ghost" data-pw="' + P.cancel + '">Manage or cancel</button>';
+  if (P.tier !== "pro") c += '<button class="btn small" data-pw="open">' + (P.tier === "free" ? "See plans" : "Upgrade to Pro") + '</button>';
+  if (NATIVE) c += '<button class="btn small ghost" data-pw="restore">Restore purchases</button>';
+  return c + '</div></section>';
 }
 document.addEventListener("click", function (e) {
   var t = e.target.closest("[data-pw]"); if (!t) { if (e.target === pwdlg) closePaywall(); return; }
@@ -9135,7 +9238,7 @@ document.addEventListener("click", function (e) {
   if (a === "wbuy") { if (typeof subBuy === "function") subBuy(t.getAttribute("data-plan")); return; }
   if (a === "wmanage") { if (typeof subManage === "function") subManage(); return; }
   if (a === "restore") { PRO.restoring = true; PRO.msg = "Checking your purchases…"; drawPaywall(); if (!storeCall("restore")) { PRO.msg = "Restore works in the DrugBug iPhone app."; drawPaywall(); } return; }
-  if (a === "manage") { storeCall("manage"); return; }
+  if (a === "manage") { if (!storeCall("manage")) { try { window.open("https://apps.apple.com/account/subscriptions", "_blank"); } catch (x) {} } return; }
   if (a === "redeem") { PRO.msg = ""; if (!storeCall("redeem")) { PRO.msg = "Offer codes are redeemed in the DrugBug iPhone app."; drawPaywall(); } return; }
   if (a === "code") { PRO.codeOpen = true; drawPaywall(); var f = $("#pwcode") || $("#pwwebcode"); if (f) f.focus(); return; }
 });
@@ -9926,8 +10029,10 @@ var D3 = (function () {
      cut from that one outline into three bands so it can still follow his hips, waist and chest, but
      every band shares the outline and the folds, so standing he wears one seamless, flowing gown:
      soft folds that deepen toward a gently uneven hem. */
-  var GOWN = [[-0.6, 0.29], [-0.5, 0.266], [-0.38, 0.24], [-0.25, 0.216], [-0.12, 0.196], [-0.02, 0.186], [0.08, 0.177],
-    [0.18, 0.179], [0.3, 0.19], [0.4, 0.204], [0.48, 0.212], [0.54, 0.205], [0.58, 0.176], [0.605, 0.125], [0.62, 0.08]];
+  /* a hospital gown, not a dress (owner, Nov 5 2026): a loose, boxy cut that hangs straight from the
+     shoulders to just below the knee, no waist and no flare, with a straight hem and only shallow folds */
+  var GOWN = [[-0.46, 0.212], [-0.3, 0.212], [-0.1, 0.212], [0.1, 0.212], [0.3, 0.212], [0.46, 0.212],
+    [0.52, 0.206], [0.56, 0.19], [0.59, 0.16], [0.608, 0.12], [0.62, 0.08]];   /* dead straight from hem to chest: no taper, no flare */
   function gownR(y) {
     if (y <= GOWN[0][0]) return GOWN[0][1];
     for (var i = 1; i < GOWN.length; i++) if (y <= GOWN[i][0]) {
@@ -9941,13 +10046,15 @@ var D3 = (function () {
     var seg = 56, rows = Math.max(4, Math.round((y1 - y0) / 0.012)), P = [], N = [], I = [], i, j, G2 = [];
     for (i = 0; i <= rows; i++) {
       var y = y0 + (y1 - y0) * i / rows, r = gownR(y) * (k || 1);
-      var low = Math.max(0, Math.min(1, -y / 0.6)), amp = 0.01 + 0.075 * Math.pow(low, 1.4), row = [];
+      var low = Math.max(0, Math.min(1, -y / 0.46)), amp = 0.004 + 0.01 * low, row = [];
       for (j = 0; j <= seg; j++) {
         var th = j / seg * 2 * PI;
         /* irregular folds: two fold frequencies so they do not look machined, deeper at the back */
         var f = Math.sin(7 * th + 0.8 * Math.sin(3 * th)) * 0.7 + Math.sin(11 * th + 1.3) * 0.3;
-        var rr = r * (1 + amp * f * (0.85 + 0.25 * Math.max(0, -Math.cos(th))));
-        var yy = y - off + (i === 0 && y0 < -0.5 ? -0.018 * Math.sin(5 * th + 0.7) - 0.01 * Math.sin(2 * th) : 0);
+        /* boxy: a rounded-square cross-section, like a flat cotton gown hanging off the shoulders */
+        var sq = Math.pow(Math.pow(Math.abs(Math.sin(th)), 4) + Math.pow(Math.abs(Math.cos(th)), 4), -0.25), box = y < 0.5 ? 1 : Math.max(0, 1 - (y - 0.5) / 0.1);
+        var rr = r * (1 + (sq - 1) * 0.85 * box) * (1 + amp * f);
+        var yy = y - off;
         row.push([rr * Math.sin(th), yy, rr * Math.cos(th)]);
       }
       G2.push(row);
@@ -10036,8 +10143,8 @@ var D3 = (function () {
       eye: sphere(0.017), iris: sphere(0.0085), nose: sphere(0.019), ear: sphere(0.026), lips: capsule(0.0075, 0.042, 5), brow: capsule(0.0055, 0.034, 4),
       hairCap: lathe([[0.107, 0.172], [0.11, 0.19], [0.103, 0.215], [0.086, 0.245], [0.055, 0.268], [0, 0.276]], 26), hairBack: sphere(0.1),
       /* the gown in three bands of one drape: skirt (hip pivot), waist (spine), bodice (chest) */
-      gSkirt: drape(-0.6, 0.07, 0), gWaist: drape(0.05, 0.28, 0.09, 0.996), gBodice: drape(0.26, 0.62, 0.26, 0.998),
-      hem: torus(0.262, 0.009, 32, 6),
+      gSkirt: drape(-0.46, 0.07, 0), gWaist: drape(0.05, 0.28, 0.09, 0.996), gBodice: drape(0.26, 0.62, 0.26, 0.998),
+      hem: torus(0.212, 0.009, 32, 6),
       sleeve: lathe([[0.104, -0.25], [0.098, -0.16], [0.092, -0.07], [0.088, 0.0], [0.083, 0.04], [0.068, 0.075], [0.04, 0.094], [0, 0.1]], 24),
       cuff: torus(0.098, 0.008, 20, 6), collar: torus(0.072, 0.012, 24, 6),
       slit: capsule(0.022, 0.3, 6), tie: torus(0.016, 0.005, 10, 5),
@@ -10047,36 +10154,22 @@ var D3 = (function () {
     var bal = node("bal", null, [0, 0, 0]), spin = node("spin", bal, [0, 0, 0]);
     var hips = node("hips", spin, [0, HIPY, 0]);
     /* the skirt hangs from a pivot at the hip joints and swings with the thighs (see update) */
-    var GS = [1.06, 1, 0.82];
+    /* no gown (owner, Nov 5 2026): a smooth mannequin torso in his skin tone */
     var skirtN = node("skirt", hips, [0, -0.07, 0]);
-    mesh(skirtN, G.gSkirt, MAT.gown, "pelvis", [0, 0.07, 0], null, GS, true);
+    mesh(hips, G.pelvis, MAT.yellow, "pelvis", [0, 0, 0], null, [1.04, 1, 0.76], true);
     var spine = node("spine", hips, [0, 0.09, 0]);
-    mesh(spine, G.gWaist, MAT.gown, "abdomen", [0, 0, 0], null, GS, true);
+    mesh(spine, G.abdomen, MAT.yellow, "abdomen", [0, 0, 0], null, [1.22, 1, 0.92], true);
     var chest = node("chest", spine, [0, 0.17, 0]);
-    mesh(chest, G.gBodice, MAT.gown, "chest", [0, 0, 0], null, GS, true);
-    /* two cloth ties at the back (the strip of skin that showed through the opening is gone - owner, Nov 5 2026) */
-    mesh(chest, G.tie, MAT.gown, "chest", [0, 0.3, -0.158], [PI / 2, 0, 0], null, true);
-    mesh(spine, G.tie, MAT.gown, "abdomen", [0, 0.06, -0.148], [PI / 2, 0, 0], null, true);
+    mesh(chest, G.chest, MAT.yellow, "chest", [0, 0, 0], null, [1.08, 1, 0.74], true);
     /* a little pectoral definition, like the moulded chest plate on the real thing */
     var neck = node("neck", chest, [0, 0.335, 0]);
     mesh(neck, G.neck, MAT.yellow, "neck", [0, 0.035, 0]);
     var head = node("head", neck, [0, 0.075, 0]);
     mesh(head, G.head, MAT.yellow, "head", [0, 0, 0.008], null, [0.94, 1, 1.06]);
-    /* a face: eyes, brows, nose, lips and ears, then short hair */
-    [-1, 1].forEach(function (sx) {
-      mesh(head, G.eye, MAT.eyew, "head", [0.036 * sx, 0.13, 0.1], null, [1, 0.8, 0.7]);
-      mesh(head, G.iris, MAT.iris, "head", [0.036 * sx, 0.13, 0.109]);
-      mesh(head, G.brow, MAT.hair, "head", [0.037 * sx, 0.154, 0.108], [0, 0, PI / 2 + 0.08 * sx], [1, 1, 0.8]);
-      mesh(head, G.ear, MAT.yellow, "head", [0.099 * sx, 0.118, -0.004], [0, 0.25 * sx, 0], [0.42, 1, 0.78]);
-    });
-    mesh(head, G.nose, MAT.yellow, "head", [0, 0.106, 0.112], [-0.25, 0, 0], [0.72, 1.35, 0.95]);
-    mesh(head, G.lips, MAT.lip, "head", [0, 0.07, 0.1], [0, 0, PI / 2], [1, 1, 0.75]);
-    mesh(head, G.hairCap, MAT.hair, "head", [0, 0, 0.002], null, [0.94, 1, 1.06]);
-    mesh(head, G.hairBack, MAT.hair, "head", [0, 0.15, -0.03], null, [1.0, 0.96, 0.92]);
+    /* no face and no hair (owner, Nov 5 2026): a smooth mannequin head */
     function arm(side, sx) {
       var sh = node("sh" + side, chest, [0.205 * sx, 0.265, 0]);
       mesh(sh, G.ball, MAT.yellow, "arm" + side, [0, 0, 0]);
-      mesh(sh, G.sleeve, MAT.gown, "arm" + side, [0, -0.02, 0]);
       mesh(sh, G.upper, MAT.yellow, "arm" + side, [0, -0.165, 0]);
       var el = node("el" + side, sh, [0, -0.315, 0]);
       /* the elbow: a rounded joint with the point of the elbow showing at the back */
@@ -11542,11 +11635,11 @@ function tglSize() {
   [TGL.cb, TGL.cf].forEach(function (c) { if (!c) return; c.width = TGL.W * dpr; c.height = TGL.H * dpr; c.getContext("2d").setTransform(dpr, 0, 0, dpr, 0, 0); });
 }
 function tglSpawn(top) {
-  var s = 7 + Math.random() * 9, front = TGL_GENTLE ? false : Math.random() < 0.5;   /* gentle: all behind the menu cards (owner, Nov 5 2026) */
+  var s = (TGL_GENTLE ? 10 : 7) + Math.random() * 9, front = TGL_GENTLE ? false : Math.random() < 0.5;   /* gentle: every leaf behind the boxes (owner, Nov 5 2026) */   /* gentle: all behind the menu cards (owner, Nov 5 2026) */
   TGL.L.push({ x: Math.random() * (TGL.W + 120) - 60, y: top ? -20 - Math.random() * 60 : Math.random() * TGL.H * 0.7,
     vx: (Math.random() - 0.5) * 0.6, vy: 0.4 + Math.random() * 0.5, s: front ? s : s * 0.8, c: TGL_C[Math.floor(Math.random() * TGL_C.length)],
     r: Math.random() * 6.3, vr: (Math.random() - 0.5) * 0.04, ph: Math.random() * 6.3, vph: 0.03 + Math.random() * 0.04,
-    front: front, rest: 0, cool: 0, a: front ? 0.95 : 0.55, maple: Math.random() < 0.4 });
+    front: front, rest: 0, cool: 0, a: front ? 0.95 : (TGL_GENTLE ? 0.8 : 0.55), maple: Math.random() < 0.4 });
 }
 /* where the DrugBug name and your bubble are right now (home only) */
 function tglRects() {
@@ -11582,8 +11675,8 @@ function tglFrame() {
   if (!TGL_GENTLE && now > TGL.nextGust) { TGL.gust = (Math.random() < 0.5 ? -1 : 1) * (1.2 + Math.random() * 1.4); TGL.nextGust = now + 6000 + Math.random() * 9000; }
   TGL.gust *= 0.985;
   var wind = TGL_GENTLE ? Math.sin(now / 6000) * 0.18 + 0.08 : Math.sin(now / 4200) * 0.35 + 0.15 + TGL.gust;
-  var want = TGL_GENTLE ? (TGL.W < 520 ? 5 : 8) : (TGL.W < 520 ? 13 : 20);
-  if (TGL.L.length < want && Math.random() < (TGL_GENTLE ? 0.012 : 0.05)) tglSpawn(true);
+  var want = TGL_GENTLE ? (TGL.W < 520 ? 24 : 40) : (TGL.W < 520 ? 13 : 20);   /* more leaves (owner, Nov 5 2026) */
+  if (TGL.L.length < want && Math.random() < (TGL_GENTLE ? 0.08 : 0.05)) tglSpawn(true);
   var gb = TGL.cb.getContext("2d"), gf = TGL.cf.getContext("2d"), W = TGL.W, H = TGL.H, T = TGL.title, B = TGL.bub;
   gb.clearRect(0, 0, W, H); gf.clearRect(0, 0, W, H);
   TGL.L = TGL.L.filter(function (f) {
@@ -11637,7 +11730,7 @@ function tglStart() {
   if (TGL.run || !tglWant()) return;
   if (!TGL.cb) { TGL.cb = tglCanvas("tglb", 0); TGL.cf = tglCanvas("tglf", 12); window.addEventListener("resize", tglSize); }
   tglSize(); TGL.run = true; TGL.chk = Date.now(); TGL.nextGust = Date.now() + 3000;
-  if (!TGL.L.length) for (var i = 0; i < (TGL_GENTLE ? 3 : 6); i++) tglSpawn(false);
+  if (!TGL.L.length) for (var i = 0; i < (TGL_GENTLE ? 18 : 6); i++) tglSpawn(false);
   requestAnimationFrame(tglFrame);
 }
 function tglStop() {
@@ -29586,7 +29679,7 @@ function subManage() {
   PRO.busy = true; drawPaywall();
   subCall("billingPortal", {}).then(function (url) {
     location.href = url;
-  }).catch(function () { PRO.busy = false; PRO.msg = "Could not open the billing page just now."; drawPaywall(); });
+  }).catch(function () { PRO.busy = false; PRO.msg = "Could not open the billing page just now."; drawPaywall(); if (!PRO.open && typeof alertMsg === "function") alertMsg("Could not open the billing page just now. Try again in a moment, or email VolareMediaLLC@gmail.com and we will cancel it for you."); });
 }
 
 /* ---------- The Flight route (owner, Nov 3 2026) ----------
