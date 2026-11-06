@@ -403,7 +403,7 @@ function topbar() {
   if (S.view === "settings") c += '<span>/</span><span>Settings</span>';
   if (S.view === "terrarium") c += '<span>/</span><span>Terrarium</span>';
   if (S.view === "everyday") c += '<span>/</span>' + (S.evTab ? '<button data-evtab="">Everyday Health</button>' : '<span>Everyday Health</span>');
-  var extra = (!SOCIAL ? '' : '<button class="theme-btn" data-go="classes"' + (S.view === "classes" ? ' aria-current="page"' : '') + '>Classes</button>') + (Admin.can ? '<button class="theme-btn admin-btn" data-go="admin"' + (S.view === "admin" ? ' aria-current="page"' : '') + '><span class="lg">Control Center</span><span class="sm">Control Center</span></button>' : '') + '<button class="theme-btn mob-only" data-act="openclass">My class</button>';
+  var extra = (!SOCIAL ? '' : '<button class="theme-btn" data-go="classes"' + (S.view === "classes" ? ' aria-current="page"' : '') + '>Classes</button>') + (Admin.can ? '<button class="theme-btn admin-btn" data-go="admin"' + (S.view === "admin" ? ' aria-current="page"' : '') + '><span class="lg">Control Center</span><span class="sm">Control Center</span></button>' : '');
   c += '</nav><span class="spacer"></span><div class="tbacts">' + (stickChip() || tierChip()) + '<span class="tbx">' + extra + '</span><button class="theme-btn srch-btn" data-act="gsearch" aria-label="Search all drugs" title="Search all drugs"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button><button class="theme-btn menu-btn" data-act="tbmenu" aria-expanded="' + !!S.menu + '" aria-label="More">More</button>' + musicBtn() + gearBtn() + (typeof funOn === "function" && !funOn() ? '' : '<button class="tbsticks" data-goshop="1" data-shopf="sticks" aria-label="' + sticks() + ' sticks. Get more sticks" title="Get Sticks">' + stickIcon(18) + '<strong>' + sticks().toLocaleString() + '</strong></button>') + '</div>' + (S.menu ? '<div class="tbmenu" role="menu">' + extra + '<button class="theme-btn" data-idea="1">Send an idea</button></div>' : '') + '</div>';
   return c + (typeof muPop === "function" ? muPop() : "") + backRow();
 }
@@ -601,6 +601,7 @@ function band() {
   return '<header class="band"><div class="bugstage">' + levelBug(S.level) + '</div><div><h1>' + esc(l.name) + '</h1><div class="sub">' + (funOn() ? esc(l.bug) : '') + (mu ? (funOn() ? ' · ' : '') + esc(unitObj(mu).name) : '') + '</div><div class="meter">' + (isI(S.level) ? '<span>' + esc(l.full) + '</span>' : m + '<span>' + esc(scopeTag(S.level, i, tot)) + '</span>') + '</div></div></header>';
 }
 var ICO = {
+  myclass: '<path d="M3 9l9-4 9 4-9 4z"/><path d="M7 11v4c0 1.5 2.2 3 5 3s5-1.5 5-3v-4"/><path d="M21 9v5"/>',
   registry: '<path d="M5 4h9a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h9"/>',
   prep: '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M8.5 12l2.5 2.5 4.5-5"/>',
   nbug: '<path d="M6 3v6a4 4 0 0 0 8 0V3"/><path d="M10 13v3a4 4 0 0 0 8 0v-2"/><circle cx="18" cy="12" r="2"/>',
@@ -689,6 +690,10 @@ function tabList() {
   if (SCENE_READY && typeof sceneView === "function" && S.view === "level" && !img) L.push(["scene", "On Scene", "Run a call live: The Great Bug acts it out, vitals change in real time, and the questions follow the call."]);
   /* Flashcards and Brain Games moved inside Study Tools, Oct 29 2026 (owner) */
   L.push(["progress", "Progress", "Mastery, achievements and leaderboard."]);
+  /* Your class sits in the menu of the level it is for (paramedic school -> Paramedic), or in
+     every level when the class has none set (owner, Nov 6 2026). Tapping it opens the class panel. */
+  if (S.view === "level" && typeof seatActive === "function" && seatActive() && (!SEAT.level || SEAT.level === S.level))
+    L.unshift(["myclass", "My Class", SEAT.orgName || "Your class"]);
   if (S.view === "gen" && typeof illicitView === "function") L.splice(1, 0, ["illicit", "Illicit & Street Drugs", "How illicit and recreational drugs affect the body, overdose signs and treatment. Education only."]);
   if (S.view === "gen" && typeof COMPOUND_TABS !== "undefined") L.splice(1, 0, ["vegc", "Vegetable Compounds", "Sulforaphane, allicin, lycopene, favism beans and more cool compounds from vegetables."], ["fruitc", "Fruit Compounds", "Resveratrol, bromelain, star fruit toxin and more unique compounds from fruit."], ["vitc", "Vitamin Compounds", "Every vitamin form, from B12 types to vitamin K2, CoQ10 and choline."]);
   if (typeof disView === "function" && !(S.view === "level" && isI(S.level))) L.splice(1, 0, ["diseases", "Disease Lab", Object.keys((DB && DB.DIS) || {}).length + " conditions explained: their history, what goes wrong from cell to organ, and the drugs that treat them."]);
@@ -701,12 +706,15 @@ function tabName(k) { var t = tabList().filter(function (x) { return x[0] === k;
 /* Hub tiles grouped into sections with short labels (UI cleanup, Oct 28 2026) */
 var HUB_GROUPS = [
   ["Field care", ["fm_cond", "fm_blood", "fm_hold", "fm_store", "fm_istat", "fm_dive", "fm_k9", "fm_anti", "fm_tele", "fm_trauma", "fm_care", "pcc", "pcc_icu", "fm_adv"]],
-  ["Look it up", ["protocols", "calls", "registry", "tools", "families", "conds", "diseases", "micro", "anatomy", "illicit", "units", "body", "alts", "contrast", "labs", "blood", "hemo", "flightp"]],
+  /* Cleaned up (owner, Nov 6 2026): reference in "Look it up", everything you practise in
+     "Study and practice", and the things that are yours (your class, your agency's protocols,
+     your list, your progress) together in "Yours". */
+  ["Look it up", ["registry", "diseases", "calls", "anatomy", "families", "conds", "micro", "illicit", "units", "body", "alts", "contrast", "labs", "blood", "hemo", "flightp", "flt_ref"]],
   ["Food and vitamin compounds", ["vegc", "fruitc", "vitc"]],
-  ["Study and practice", ["scene", "scenarios", "nbug"]],
-  ["Yours", ["mylist", "progress", "shop"]]
+  ["Study and practice", ["tools", "scenarios", "scene", "nbug"]],
+  ["Yours", ["myclass", "protocols", "mylist", "progress", "shop"]]
 ];
-var HUB_SHORT = { scene: "The Great Bug acts out the call, vitals live", systems: "Airway, cardiac, neuro and more, with quizzes", calls: "Stroke, STEMI, sepsis, trauma, ROSC", micro: "Bacteria, viruses, fungi, prions, parasites", fm_bio: "Bio, chem, rad and nuclear casualties", fm_ref: "Burns, vents, scores, handoff, K9, dive", medlist: "What a med list says about the patient", fm_store: "Heat, cold, light and mixing", fm_istat: "Values, cartridges and practice cases", fm_cond: "Trauma, medical and blood reactions, with types", fm_blood: "Whole blood, components, MTP, reactions", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "The drugs you take, and their interactions", tools: "Questions, megacode, cards, games, drills", scenarios: "Clinical cases", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", anatomy: "Every organ and body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time" };
+var HUB_SHORT = { protocols: "Your agency's protocols, or request yours", scene: "The Great Bug acts out the call, vitals live", systems: "Airway, cardiac, neuro and more, with quizzes", calls: "Stroke, STEMI, sepsis, trauma, ROSC", micro: "Bacteria, viruses, fungi, prions, parasites", fm_bio: "Bio, chem, rad and nuclear casualties", fm_ref: "Burns, vents, scores, handoff, K9, dive", medlist: "What a med list says about the patient", fm_store: "Heat, cold, light and mixing", fm_istat: "Values, cartridges and practice cases", fm_cond: "Trauma, medical and blood reactions, with types", fm_blood: "Whole blood, components, MTP, reactions", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "The drugs you take, and their interactions", tools: "Questions, megacode, cards, games, drills", scenarios: "Clinical cases", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", anatomy: "Every organ and body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time" };
 /* ---------- Hold a tile, then move it (owner, Nov 4 2026) ----------
    The iPhone gesture: press and hold until the tile lifts, drag it where you want, and the
    others slide out of the way as you go. Order is kept per level and per section, so the
@@ -845,6 +853,8 @@ function hubView() {
 
   groups.forEach(function (g, gi) {
     var items = L.filter(function (t) { return g[1].indexOf(t[0]) >= 0; }); if (!items.length) return;
+    /* the section's own order (Medications first, then Disease Lab...) unless they rearranged it */
+    items.sort(function (x, y) { return g[1].indexOf(x[0]) - g[1].indexOf(y[0]); });
     items = hubSort(items, gi);          /* whatever order they dragged these into */
     c += '<h3 class="hubgh">' + esc(g[0]) + '</h3><div class="hub hubg' + (items.length % 2 ? ' odd' : '') + (items.length === 1 ? ' solo' : '') + (fld && gi === 2 ? ' minis' : '') + '">' + items.map(tile).join("") + '</div>';
   });
@@ -862,7 +872,7 @@ function hubView() {
 /* compact education strip: the first sentence stays visible, the rest opens with "More" (cleanup, Oct 28 2026) */
 function eduNote(lead, rest) { return '<details class="edunote" role="note"><summary><span class="edl">' + lead + '</span>' + (rest ? '<span class="edmore">More</span>' : '') + '</summary>' + (rest ? '<p>' + rest + '</p>' : '') + '</details>'; }
 /* one-line hooks; Field Medic levels get field wording for shared tabs */
-function hubShort(k) { if (k === "progress" && typeof funOn === "function" && !funOn()) return "Mastery and badges"; if (k === "diseases" && !(S.view === "level" && isF(S.level)) && typeof DB !== "undefined" && DB.DIS) return Object.keys(DB.DIS).length + " conditions, cell to organ"; if (k === "tools" && S.view === "level" && isF(S.level)) return "Questions, megacode, cards, games, drills"; if (S.view === "level" && isF(S.level) && k === "diseases") return "Trauma, environmental and field conditions"; if (S.view === "level" && isF(S.level) && k === "registry") return "By field use, by class or A to Z"; return HUB_SHORT[k] || ""; }
+function hubShort(k) { if (k === "myclass" && typeof SEAT !== "undefined") return (SEAT.orgName || "Your class") + (SEAT.alias ? " · " + SEAT.alias : ""); if (k === "progress" && typeof funOn === "function" && !funOn()) return "Mastery and badges"; if (k === "diseases" && !(S.view === "level" && isF(S.level)) && typeof DB !== "undefined" && DB.DIS) return Object.keys(DB.DIS).length + " conditions, cell to organ"; if (k === "tools" && S.view === "level" && isF(S.level)) return "Questions, megacode, cards, games, drills"; if (S.view === "level" && isF(S.level) && k === "diseases") return "Trauma, environmental and field conditions"; if (S.view === "level" && isF(S.level) && k === "registry") return "By field use, by class or A to Z"; return HUB_SHORT[k] || ""; }
 function sectionHead() {
   var where = S.view === "gen" ? "BugDex" : (levelObj(S.level) || {}).name || "";
   var inUnit = S.tab === "units" && S.unit;
@@ -1933,7 +1943,7 @@ function closeSheet() { sheet.hidden = true; sheet.innerHTML = ""; S.sheet = nul
 /* ---------- render & events ---------- */
 function render() {
   try { if (typeof usgTab === "function") usgTab(); } catch (e) {}
-  var ok = agreeRec(); protoTab.hidden = true; if (typeof classTab !== "undefined" && classTab) classTab.hidden = !ok || (typeof needOnboard === "function" && needOnboard()); protoTab.textContent = lang() === "es" ? "Protocolos" : "Protocols"; document.documentElement.lang = lang();
+  var ok = agreeRec(); protoTab.hidden = true; if (typeof classTab !== "undefined" && classTab) classTab.hidden = true;   /* the class lives in its level's menu now (owner, Nov 6 2026) */ protoTab.textContent = lang() === "es" ? "Protocolos" : "Protocols"; document.documentElement.lang = lang();
   var html;
   /* A screen that fails to build used to leave the last one frozen on the page: the state had
      already moved on, so buttons did nothing and nothing explained why. Now it says so and offers
@@ -2070,6 +2080,7 @@ document.addEventListener("click", function (e) {
   if (a.unitopen) { S.unit = a.unitopen; render(); return window.scrollTo(0, 0); }
   if (a.myunit) { var mu0 = store("nunit"); store("nunit", mu0 === a.myunit ? "" : a.myunit); UNITC = {}; return render(); }
   if (a.tab && typeof HD !== "undefined" && HD.suppress) return;   /* that was a drag, not a tap */
+  if (a.tab === "myclass") return openClassPane();
   if (a.tab && proLocked(a.tab)) { var tn = tabName(a.tab); return openPaywall(tn, tabTier(a.tab)); }
   if (a.fcpick) { S.fcPick = 1; render(); return window.scrollTo(0, 0); }
   if (a.tab) { S.tab = a.tab; S.sysK = ""; S.scen = null; S.fc = null; S.fcPick = 0; S.group = "all"; fixTab(); render(); return window.scrollTo(0, 0); }
@@ -29531,8 +29542,8 @@ function subClear() {
    System) and sent in small batches to groupReport, which adds them to the KEY's running totals.
    Nothing about the student goes with it: no name, no email, no device, no individual answers.
    The instructor sees "Student 07", and only their own sheet says who that is. */
-var SEAT = { tier: "", until: 0, orgName: "", alias: "", loaded: false, unsub: null, uid: null, busy: false, t: null };
-(function () { var c = store("seat"); if (c && typeof c.until === "number") { SEAT.tier = c.tier || ""; SEAT.until = c.until; SEAT.orgName = c.orgName || ""; SEAT.alias = c.alias || ""; } })();
+var SEAT = { tier: "", until: 0, orgName: "", alias: "", level: "", loaded: false, unsub: null, uid: null, busy: false, t: null };
+(function () { var c = store("seat"); if (c && typeof c.until === "number") { SEAT.tier = c.tier || ""; SEAT.until = c.until; SEAT.orgName = c.orgName || ""; SEAT.alias = c.alias || ""; SEAT.level = c.level || ""; } })();
 function seatTier() { return SEAT.until > Date.now() ? (SEAT.tier || "") : ""; }
 function seatActive() { return !!seatTier(); }
 function seatLabel() { return TIER_NAME[seatTier()] + " · " + SEAT.orgName + " (" + SEAT.alias + ") · until " + new Date(SEAT.until).toLocaleDateString(); }
@@ -29549,9 +29560,9 @@ function seatWatch(db, uid) {
       /* a "no seat" that arrives just after redeeming is the listener catching up, not a removal */
       if (!has && SEAT.redeemedAt && Date.now() - SEAT.redeemedAt < 120000) return;
       var was = seatTier(), first = !SEAT.loaded;
-      if (!first && until === SEAT.until && (d.tier || "") === SEAT.tier && (d.orgName || "") === SEAT.orgName) return;
-      SEAT.tier = d.tier || ""; SEAT.until = until; SEAT.orgName = d.orgName || ""; SEAT.alias = d.alias || ""; SEAT.loaded = true;
-      store("seat", has ? { tier: SEAT.tier, until: SEAT.until, orgName: SEAT.orgName, alias: SEAT.alias } : null);
+      if (!first && until === SEAT.until && (d.tier || "") === SEAT.tier && (d.orgName || "") === SEAT.orgName && (d.level || "") === SEAT.level) return;
+      SEAT.tier = d.tier || ""; SEAT.until = until; SEAT.orgName = d.orgName || ""; SEAT.alias = d.alias || ""; SEAT.level = d.level || ""; SEAT.loaded = true;
+      store("seat", has ? { tier: SEAT.tier, until: SEAT.until, orgName: SEAT.orgName, alias: SEAT.alias, level: SEAT.level } : null);
       if (!first && !was && seatTier()) S.proMsg = "Welcome, " + SEAT.alias + ". DrugBug Pro is on for " + SEAT.orgName + ".";
       if (typeof render === "function") render();
       if (seatActive()) groupFlush();
@@ -29582,10 +29593,10 @@ function groupKeyShape(raw) { return /^DB[A-Z0-9]{8,12}$/.test(String(raw || "")
 function groupRedeemKey(raw, win, fail) {
   GIFT.busy = true; giftDraw();
   fnCall("groupRedeem", { token: raw }).then(function (r) {
-    SEAT.tier = "pro"; SEAT.until = r.until; SEAT.orgName = r.orgName; SEAT.alias = r.alias; SEAT.loaded = true; SEAT.redeemedAt = Date.now();
-    store("seat", { tier: "pro", until: r.until, orgName: r.orgName, alias: r.alias });
+    SEAT.tier = "pro"; SEAT.until = r.until; SEAT.orgName = r.orgName; SEAT.alias = r.alias; SEAT.level = r.level || ""; SEAT.loaded = true; SEAT.redeemedAt = Date.now();
+    store("seat", { tier: "pro", until: r.until, orgName: r.orgName, alias: r.alias, level: SEAT.level });
     if (typeof webDeepLoad === "function") webDeepLoad();
-    win("You're in " + r.orgName + " as " + r.alias + ". DrugBug Pro is on until " + new Date(r.until).toLocaleDateString() + ". Your quiz results now count toward your class (no name or email is shared).");
+    win("You're in " + r.orgName + " as " + r.alias + ". DrugBug Pro is on until " + new Date(r.until).toLocaleDateString() + ". Your quiz results now count toward your class (no name or email is shared). Your class, its scoreboard and your scores are under My Class in " + (r.level && typeof levelObj === "function" && levelObj(r.level) ? "the " + levelObj(r.level).name + " menu" : "your level's menu") + ".");
   }).catch(function (e) {
     fail(e && e.message === "offline" ? "Class keys need an internet connection. Connect and try again." : (e && e.message) || "Could not check that key right now. Try again in a moment.");
   });
@@ -29759,7 +29770,7 @@ function clLoad(force) {
     fnCall("groupBoard", {}).then(function (r) {
       CL.busy = false;
       if (!r || r.ok === false) { CL.data = null; CL.msg = "This device isn't holding a class key any more. Enter your key again to rejoin."; CL.err = true; }
-      else { CL.data = r; CL.at = Date.now(); if (CL.err) CL.msg = ""; CL.err = false; }
+      else { CL.data = r; CL.at = Date.now(); if (CL.err) CL.msg = ""; CL.err = false; if (r.level != null && r.level !== SEAT.level) { SEAT.level = r.level; var sc = store("seat"); if (sc) { sc.level = r.level; store("seat", sc); } } }
       if (CL.open) drawClassPane();
     }).catch(function (e) {
       CL.busy = false; CL.err = true;
