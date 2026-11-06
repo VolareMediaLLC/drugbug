@@ -11251,6 +11251,7 @@ function accNudgeOk() {
 var ACC_ASK_STICKS = 100;
 var accdlg = document.createElement("div"); accdlg.id = "accdlg"; accdlg.className = "sheet rsheet"; accdlg.hidden = true; document.body.appendChild(accdlg);
 function accAskOk() {
+  if (typeof acctUI === "function" && !acctUI()) return false;
   if (!ACCT.api) return false;
   var st = ACCT.api.state() || {}; if (st.signedIn) return false;
   if ((Prog.d.earned || 0) < ACC_ASK_STICKS) return false;
@@ -11288,8 +11289,10 @@ function accNudge() {
 
 function accAppleMark() { return '<svg class="accmark" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M16.4 12.7c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.2-2.8.8-3.6.8-.7 0-1.9-.8-3.1-.8-1.6 0-3.1.9-3.9 2.4-1.7 2.9-.4 7.2 1.2 9.5.8 1.2 1.8 2.5 3 2.4 1.2 0 1.6-.8 3.1-.8s1.9.8 3.1.7c1.3 0 2.1-1.2 2.9-2.3.9-1.3 1.3-2.6 1.3-2.7 0 0-2.5-1-2.6-3.9zM14.1 5.9c.7-.8 1.1-2 1-3.1-1 0-2.2.7-2.9 1.5-.6.7-1.2 1.9-1 3 1.1.1 2.2-.6 2.9-1.4z"/></svg> '; }
 function accGoogleMark() { return '<svg class="accmark" viewBox="0 0 48 48" width="15" height="15" aria-hidden="true"><path fill="#4285F4" d="M45.1 24.5c0-1.6-.1-2.7-.4-4H24v7.3h12.1c-.2 1.8-1.6 4.6-4.5 6.5l-.1.3 6.5 5 .5.1c4.1-3.8 6.6-9.5 6.6-15.2z"/><path fill="#34A853" d="M24 46c5.9 0 10.9-2 14.5-5.3l-6.9-5.4c-1.8 1.3-4.3 2.2-7.6 2.2-5.8 0-10.7-3.8-12.5-9.1l-.3028.1L4 33.7l-.1.2C7.5 41.1 15.1 46 24 46z"/><path fill="#FBBC05" d="M11.5 28.4c-.5-1.4-.7-2.9-.7-4.4s.3-3 .7-4.4v-.3L4.6 14l-.2.1C2.9 17 2 20.4 2 24s.9 7 2.4 9.9l7.1-5.5z"/><path fill="#EB4335" d="M24 10.5c4.1 0 6.9 1.8 8.5 3.3l6.2-6C34.9 4.4 29.9 2 24 2 15.1 2 7.5 6.9 4.4 14.1l7.1 5.5C13.3 14.3 18.2 10.5 24 10.5z"/></svg> '; }
+/* the iPhone app can run Firebase only for class keys, with no sign-in screens (accountsUI: false) */
+function acctUI() { return !(NATIVE && (window.DRUGBUG_CONFIG || {}).accountsUI === false); }
 function accCard() {
-  if (!ACCT.api) return "";
+  if (!ACCT.api || !acctUI()) return "";
   var s = ACCT.api.state() || {}, c = "", m = ACCT.mode;
   var flash = ""; try { flash = sessionStorage.getItem("drugbug:accmsg") || ""; sessionStorage.removeItem("drugbug:accmsg"); } catch (e) {}
   if (flash && !ACCT.msg) ACCT.msg = flash;
@@ -29571,7 +29574,6 @@ function fnCall(name, data) {
 /* DB-TAMU-4X9-B7K, typed any old way */
 function groupKeyShape(raw) { return /^DB[A-Z0-9]{8,12}$/.test(String(raw || "").toUpperCase().replace(/[^A-Z0-9]/g, "")); }
 function groupRedeemKey(raw, win, fail) {
-  if (NATIVE) return fail("Class keys are entered on the website: open drugbugapp.com, then Settings > Redeem a code.");
   GIFT.busy = true; giftDraw();
   fnCall("groupRedeem", { token: raw }).then(function (r) {
     SEAT.tier = "pro"; SEAT.until = r.until; SEAT.orgName = r.orgName; SEAT.alias = r.alias; SEAT.loaded = true; SEAT.redeemedAt = Date.now();
@@ -29597,7 +29599,7 @@ function sysOfDrug(id) {
 
 /* the tally waits in localStorage, so a closed tab or a dead zone loses nothing */
 function groupNote(q, ok) {
-  if (NATIVE || !seatActive()) return;
+  if (!seatActive()) return;   /* class keys work in the iPhone app too (owner, Nov 5 2026) */
   try {
     var Q = store("groupq") || { t: { n: 0, c: 0 }, s: {} };
     var ks = q && q.d && DB.drugs[q.d] ? sysOfDrug(q.d) : ["general"];
@@ -29609,7 +29611,7 @@ function groupNote(q, ok) {
   } catch (e) {}
 }
 function groupFlush() {
-  if (NATIVE || SEAT.busy || !seatActive()) return;
+  if (SEAT.busy || !seatActive()) return;
   var Q = store("groupq"); if (!Q || !Q.t || !Q.t.n) return;
   /* the server takes at most 5,000 answers a batch; a phone offline for longer just sends the cap */
   var lim = function (v, m) { var n = Math.min(v.n, m); return { n: n, c: Math.min(v.c, n) }; };
