@@ -3008,6 +3008,26 @@ button.tierchip:hover{filter:brightness(1.08)}
 .lrndlist{display:grid;gap:6px}.lrnc{display:flex;align-items:center;gap:6px;padding:8px 0;border-top:1px solid var(--line)}
 .lrnc .lct{flex:1;min-width:0;position:relative;padding-bottom:6px}.lrnc .lct b{display:block;font-size:13.5px}.lrnc .lct span{font-size:12px;color:var(--muted)}
 .lrnc .lct i{position:absolute;left:0;bottom:0;height:3px;border-radius:2px;background:linear-gradient(90deg,#7c3aed,#22d3ee)}.lrnc.fin .lct i{background:#16a34a}
+:root{--mh:#7c3aed;--mh-soft:#ede9fe;--diet:#4d7c0f;--diet-soft:#ecfccb;--rrt:#0284c7;--rrt-soft:#e0f2fe}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--mh:#a78bfa;--mh-soft:#2a1d4d;--diet:#a3e635;--diet-soft:#22300d;--rrt:#38bdf8;--rrt-soft:#0c2f44}}
+:root[data-theme="dark"]{--mh:#a78bfa;--mh-soft:#2a1d4d;--diet:#a3e635;--diet-soft:#22300d;--rrt:#38bdf8;--rrt-soft:#0c2f44}
+.lvl-mh{--c:var(--mh);--cs:var(--mh-soft)}.lvl-diet{--c:var(--diet);--cs:var(--diet-soft)}.lvl-rrt{--c:var(--rrt);--cs:var(--rrt-soft)}
+.rndept{max-width:980px}
+.rdwrap{position:relative;margin:18px 0 6px}
+.rdtrack{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;padding:6px 4px 16px;scrollbar-width:thin}
+.rdcell{flex:0 0 min(78%,260px);scroll-snap-align:center;display:flex;flex-direction:column;gap:6px}
+.rdsect{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--c,var(--muted));min-height:1.2em}
+.rdcard{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;font:inherit;color:var(--ink);background:linear-gradient(160deg,color-mix(in srgb,var(--rn) 14%,var(--surface)),var(--surface));border:2px solid var(--line);border-radius:20px;padding:14px 14px 16px;cursor:pointer;transition:transform .14s,border-color .14s}
+.rdcard:hover{transform:translateY(-3px);border-color:var(--rn)}.rdcard.on{border-color:var(--rn);box-shadow:0 0 0 3px color-mix(in srgb,var(--rn) 30%,transparent)}
+.rdcard.first{background:linear-gradient(160deg,color-mix(in srgb,var(--rn) 26%,var(--surface)),var(--surface))}
+.rdbug{width:96px;height:96px;display:block}.rdbug .bug{width:100%;height:100%}
+.rdcard strong{font-size:17px;line-height:1.2}.rdblurb{font-size:13px;color:var(--muted);line-height:1.4}
+.rdnow{position:absolute;top:10px;right:10px;font-size:11px;font-weight:800;padding:2px 8px;border-radius:99px;background:var(--rn);color:#fff}
+.rdarr{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:24px;line-height:1;cursor:pointer;box-shadow:var(--shadow)}
+.rdarr.l{left:-6px}.rdarr.r{right:-6px}
+@media (max-width:640px){.rdarr{display:none}}
+.rndchip{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;padding:10px 14px;border-radius:14px;border:1.5px solid color-mix(in srgb,var(--rn) 40%,var(--line));background:color-mix(in srgb,var(--rn) 10%,var(--surface))}
+.rndchip span{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}.rndchip strong{font-size:15.5px;margin-right:auto}
 </style>
 
 <div class="wrap" id="app"><div id="boot" aria-hidden="true"><div class="bootlogo">Drug<span>Bug</span></div><div class="bootbar"><i></i></div><p class="bootnote">Loading your medications</p></div></div>

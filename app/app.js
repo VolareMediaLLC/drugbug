@@ -41,7 +41,7 @@ var HIDE_MEDIC = { 6: [6, 7], 8: [6], 10: [2], 12: [1] };
 var TAGS = [["IM","Imaging"],["PH","Prehospital"],["ED","Emergency Department"],["ICU","ICU"],["CCT","Critical Care Transport"],["FL","Flight"],["HM","Home Medication"],["CA","Cardiac"],["RE","Respiratory"],["NE","Neurologic"],["TR","Trauma"],["OB","OB/GYN"],["PE","Pediatric"],["TX","Toxicology"],["BH","Behavioral"],["AN","Analgesia"],["SE","Sedation"],["RSI","RSI"],["VP","Vasopressor"],["AD","Antidote"]];
 var TAGNAME = {}; TAGS.forEach(function (t) { TAGNAME[t[0]] = t[1]; });
 var FILTER_TAGS = ["IM","CA","RE","NE","TR","OB","PE","TX","BH","AN","SE","RSI","VP","AD"];
-var LVCLASS = { rt: "lvl-rt", ct: "lvl-ct", mri: "lvl-mri", nm: "lvl-nm", ir: "lvl-ir", emt: "lvl-emt", aemt: "lvl-aemt", paramedic: "lvl-medic", flight: "lvl-flight", asm: "lvl-field lvl-asm", cls: "lvl-field lvl-cls", cmc: "lvl-field lvl-cmc", cpp: "lvl-field lvl-cpp", pcc: "lvl-field lvl-pcc", gen: "lvl-gen", cna: "lvl-cna", lvn: "lvl-lvn", rn: "lvl-rn", ms1: "lvl-ms1", ms3: "lvl-ms3", intern: "lvl-intern" };
+var LVCLASS = { mh: "lvl-mh", diet: "lvl-diet", rrt: "lvl-rrt", rt: "lvl-rt", ct: "lvl-ct", mri: "lvl-mri", nm: "lvl-nm", ir: "lvl-ir", emt: "lvl-emt", aemt: "lvl-aemt", paramedic: "lvl-medic", flight: "lvl-flight", asm: "lvl-field lvl-asm", cls: "lvl-field lvl-cls", cmc: "lvl-field lvl-cmc", cpp: "lvl-field lvl-cpp", pcc: "lvl-field lvl-pcc", gen: "lvl-gen", cna: "lvl-cna", lvn: "lvl-lvn", rn: "lvl-rn", ms1: "lvl-ms1", ms3: "lvl-ms3", intern: "lvl-intern" };
 var TIER = { rt: 3, ct: 3, mri: 3, nm: 3, ir: 3, emt: 0, aemt: 1, paramedic: 2, flight: 3, asm: 0, cls: 1, cmc: 2, cpp: 3, pcc: 3, gen: 3, cna: 0, lvn: 1, rn: 3, ms1: 3, ms3: 3, intern: 3 };
 
 /* ---------- helpers ---------- */
@@ -131,13 +131,43 @@ function isEMSLv(k) { return k === "emt" || k === "aemt" || k === "paramedic" ||
 function isF(k) { return k === "asm" || k === "cls" || k === "cmc" || k === "cpp" || k === "pcc"; } /* Field Medic route: TCCC tiers + Prolonged Casualty Care */
 function isM(k) { return k === "ms1" || k === "ms3" || k === "intern"; }
 function isI(k) { return k === "rt" || k === "ct" || k === "mri" || k === "nm" || k === "ir"; }
-function routeOfLevel(k) { return isN(k) ? "rn" : isM(k) ? "md" : isI(k) ? "im" : isF(k) ? "fm" : "ph"; }
-var ROUTES = { ph: { view: "levels", hash: "prehospital", name: "Prehospital" }, fm: { view: "flevels", hash: "fieldmedic", name: "Field Medic" }, rn: { view: "nlevels", hash: "nursing", name: "Nursing" }, md: { view: "mlevels", hash: "medschool", name: "Med School" }, im: { view: "ilevels", hash: "imaging", name: "Imaging" } };
-function levelsOf(k) { return isN(k) ? DB.NLEVELS : isM(k) ? DB.MLEVELS : isI(k) ? DB.ILEVELS : isF(k) ? DB.FLEVELS : DB.LEVELS; }
-function levelObj(k) { return DB.LEVELS.concat(DB.NLEVELS, DB.MLEVELS, DB.ILEVELS || [], DB.FLEVELS || []).filter(function (l) { return l.key === k; })[0]; }
+/* Allied Health route (owner, Nov 5 2026): mental health, dietitian, respiratory therapist. Not cumulative, like Imaging. */
+function isA(k) { return k === "mh" || k === "diet" || k === "rrt"; }
+DB.ALEVELS = [
+  { key: "mh", name: "Mental Health", full: "Mental and behavioral health professionals", bug: "Calm Cicada", color: "mh",
+    blurb: "For psych nurses, behavioral health techs, counselors and social workers: psychiatric medicines, side effects to watch for, agitation and crisis care, and substance use treatment." },
+  { key: "diet", name: "Dietitian", full: "Registered dietitians and nutrition professionals", bug: "Garden Grasshopper", color: "diet",
+    blurb: "Nutrition first: vitamins and minerals, supplements, diabetes and weight medicines, food and drug interactions, electrolytes and IV fluids." },
+  { key: "rrt", name: "Respiratory Therapist", full: "Respiratory therapists (RT / RRT)", bug: "Breathing Bee", color: "rrt",
+    blurb: "Airway first: bronchodilators, inhaled steroids, aerosols, RSI and sedation for the vent, surfactant, pulmonary hypertension and inhaled antibiotics." }
+];
+/* each field's medicines: whole drug groups, drug tags, and hand-picked additions */
+DB.ASCOPE = {
+  mh: { groups: ["Antidepressants", "Antipsychotics", "Mood Stabilizers", "ADHD / Stimulants", "Sedatives / Anxiolytics", "Sleep", "Neuro / Psych / Addiction (Advanced)", "Dementia", "Illicit & Recreational Drugs (education)"], tags: ["BH"],
+    ids: "naloxone naltrexone buprenorphine methadone disulfiram acamprosate varenicline benztropine diphenhydramine hydroxyzine propranolol clonidine prazosin lithium haloperidol droperidol olanzapine ziprasidone ketamine esketamine lorazepam midazolam thiamine" },
+  diet: { groups: ["Vitamins & Supplements", "Vegetable Compounds", "Fruit Compounds", "Probiotics", "Diabetes", "Lipid / Cholesterol", "IV Fluids & Electrolytes", "Renal / Electrolyte", "Thyroid"], tags: [],
+    ids: "warfarin phytonadione phenelzine tranylcypromine linezolid levothyroxine orlistat phentermine semaglutide tirzepatide liraglutide metformin ferrous-sulfate folic-acid cyanocobalamin thiamine calcium-carbonate potassium-chloride magnesium-oxide sevelamer calcium-acetate lactulose pancrelipase ursodiol metoclopramide ondansetron megestrol dronabinol mirtazapine prednisone furosemide spironolactone lithium isoniazid pyridoxine levodopa carbidopa-levodopa tetracycline ciprofloxacin" },
+  rrt: { groups: ["Respiratory", "Steroids", "Paralytics / Neuromuscular Blockers", "ICU Sedation / Analgesia", "Erectile Dysfunction / Pulmonary HTN"], tags: ["RE", "RSI"],
+    ids: "epoprostenol iloprost treprostinil sildenafil nitric-oxide poractant-alfa beractant calfactant caffeine-citrate dornase-alfa n-acetylcysteine hypertonic-saline-inhaled tobramycin aztreonam racemic-epinephrine albuterol levalbuterol ipratropium albuterol-ipratropium magnesium-sulfate terbutaline aminophylline epinephrine montelukast omalizumab budesonide fluticasone methylprednisolone dexamethasone etomidate ketamine propofol rocuronium succinylcholine vecuronium sugammadex dexmedetomidine midazolam fentanyl lidocaine atropine glycopyrrolate naloxone flumazenil sodium-bicarbonate" }
+};
+DB._acache = {};
+DB.ascopeFor = function (k) {
+  var nD = Object.keys(DB.drugs).length;   /* more drugs arrive as the deeper data files load */
+  if (DB._acache[k] && DB._acache[k].n === nD) return DB._acache[k];
+  var c = DB.ASCOPE[k] || { groups: [], tags: [], ids: "" }, ids = {};
+  (DB.GROUPS || []).forEach(function (g) { if (c.groups.indexOf(g.name) >= 0) g.ids.forEach(function (id) { ids[id] = 1; }); });
+  if (c.tags.length) Object.keys(DB.drugs).forEach(function (id) { var t = DB.drugs[id].tags || []; if (c.tags.some(function (x) { return t.indexOf(x) >= 0; })) ids[id] = 1; });
+  c.ids.split(" ").forEach(function (id) { if (id) ids[id] = 1; });
+  DB._acache[k] = { ids: Object.keys(ids).filter(function (id) { return DB.drugs[id]; }).sort(), notes: {}, n: nD };
+  return DB._acache[k];
+};
+function routeOfLevel(k) { return isN(k) ? "rn" : isM(k) ? "md" : isI(k) ? "im" : isA(k) ? "ah" : isF(k) ? "fm" : "ph"; }
+var ROUTES = { ph: { view: "levels", hash: "prehospital", name: "Prehospital" }, fm: { view: "flevels", hash: "fieldmedic", name: "Field Medic" }, rn: { view: "nlevels", hash: "nursing", name: "Nursing" }, md: { view: "mlevels", hash: "medschool", name: "Med School" }, im: { view: "ilevels", hash: "imaging", name: "Imaging" }, ah: { view: "alevels", hash: "allied", name: "Allied Health" } };
+function levelsOf(k) { return isN(k) ? DB.NLEVELS : isM(k) ? DB.MLEVELS : isI(k) ? DB.ILEVELS : isA(k) ? DB.ALEVELS : isF(k) ? DB.FLEVELS : DB.LEVELS; }
+function levelObj(k) { return DB.LEVELS.concat(DB.NLEVELS, DB.MLEVELS, DB.ILEVELS || [], DB.FLEVELS || [], DB.ALEVELS || []).filter(function (l) { return l.key === k; })[0]; }
 function levelIdx(k) { return levelsOf(k).map(function (l) { return l.key; }).indexOf(k); }
 function scopeFor(k) {
-  var b = isN(k) ? DB.nscopeFor(k) : isM(k) ? DB.mscopeFor(k) : isI(k) ? DB.iscopeFor(k) : isF(k) ? DB.fscopeFor(k) : DB.scopeFor(k), u = isN(k) ? myUnit(k) : null;
+  var b = isN(k) ? DB.nscopeFor(k) : isM(k) ? DB.mscopeFor(k) : isI(k) ? DB.iscopeFor(k) : isA(k) ? DB.ascopeFor(k) : isF(k) ? DB.fscopeFor(k) : DB.scopeFor(k), u = isN(k) ? myUnit(k) : null;
   if (u) { var ck = k + ":" + u; if (!UNITC[ck] || UNITC[ck].base !== b) { var have = {}; b.ids.forEach(function (id) { have[id] = 1; }); UNITC[ck] = { base: b, v: { ids: b.ids.concat(DB.nunitIds(u, k).filter(function (id) { return !have[id]; })), notes: b.notes } }; } b = UNITC[ck].v; }
   var r = applyProtocolScope(k, b);
   if (isF(k)) return r;
@@ -185,7 +215,7 @@ function antennae(c, curl) {
   return '<path d="M90 48 Q80 24 68 20" stroke="' + c + '" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M110 48 Q120 24 132 20" stroke="' + c + '" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="68" cy="20" r="6" fill="' + c + '"/><circle cx="132" cy="20" r="6" fill="' + c + '"/>';
 }
 var BOOTED = 0, LAST_ERR = "";   /* the boot splash is replaced by the first real render (owner, Oct 30 2026) */
-var IMBUG = { flightrn: { name: "Night Monarch", body: "butterfly", c: ["#f59e0b", "#7c2d12", "#fff7ed"], head: "#fb923c", ink: "#1c1917", wingC: "#fdba74", eyes: "fierce", acc: ["jethelmet", "aviscarf", "stetho"] }, rt: { name: "X-Ray Firefly", body: "firefly", c: ["#7dd3fc", "#0369a1", "#e0f2fe"], acc: ["goggles"] }, ct: { name: "Spiral Scarab", body: "scarab", c: ["#a5b4fc", "#4338ca", "#ffffff"], acc: ["headset"] }, mri: { name: "Magnet Moth", body: "moth", c: ["#c4b5fd", "#6d28d9", "#f5f3ff"], acc: ["bolt"] }, nm: { name: "Glow Worm", body: "caterpillar", c: ["#bef264", "#4d7c0f", "#ffffff"], acc: ["stars"] }, ir: { name: "Cath Cricket", body: "grasshopper", c: ["#5eead4", "#0f766e", "#ffffff"], acc: ["mask"] } };
+var IMBUG = { mh: { name: "Calm Cicada", body: "cicada", c: ["#c4b5fd", "#7c3aed", "#f5f3ff"], acc: ["headset"] }, diet: { name: "Garden Grasshopper", body: "grasshopper", c: ["#bef264", "#65a30d", "#f7fee7"], acc: ["leaf"] }, rrt: { name: "Breathing Bee", body: "bee", c: ["#7dd3fc", "#0284c7", "#f0f9ff"], acc: ["mask"] }, flightrn: { name: "Night Monarch", body: "butterfly", c: ["#f59e0b", "#7c2d12", "#fff7ed"], head: "#fb923c", ink: "#1c1917", wingC: "#fdba74", eyes: "fierce", acc: ["jethelmet", "aviscarf", "stetho"] }, rt: { name: "X-Ray Firefly", body: "firefly", c: ["#7dd3fc", "#0369a1", "#e0f2fe"], acc: ["goggles"] }, ct: { name: "Spiral Scarab", body: "scarab", c: ["#a5b4fc", "#4338ca", "#ffffff"], acc: ["headset"] }, mri: { name: "Magnet Moth", body: "moth", c: ["#c4b5fd", "#6d28d9", "#f5f3ff"], acc: ["bolt"] }, nm: { name: "Glow Worm", body: "caterpillar", c: ["#bef264", "#4d7c0f", "#ffffff"], acc: ["stars"] }, ir: { name: "Cath Cricket", body: "grasshopper", c: ["#5eead4", "#0f766e", "#ffffff"], acc: ["mask"] } };
 function bugSVG(kind) {
   if (IMBUG[kind] && typeof bugArt === "function") return bugArt(IMBUG[kind], "bug", { mood: "happy" });
   var id = "b" + (++uid), s = '<svg class="bug" viewBox="0 0 200 200" role="img" aria-label="' + ({ emt: "Rookie Bug", aemt: "Beetle Medic", paramedic: "Siren Beetle", flight: "Sky Hornet", sage: "Professor Sage, the wise bug", cna: "Helper Ladybug", lvn: "Busy Bee", rn: "Monarch Nurse", ms1: "Bookworm Scholar", ms3: "Firefly Clerk", intern: "Stag Beetle Doc", flightrn: "Night Monarch, the flight nurse bug" }[kind]) + '">';
@@ -353,7 +383,7 @@ function go(view, opts) {
   if ((S.view === "flevels" || S.view === "field" || (S.view === "level" && isF(S.level))) && typeof fmUnlocked === "function" && !fmUnlocked()) { S.view = "home"; view = "home"; } /* Field Medic is hidden until a code is redeemed */
   fixTab();
   Admin.on = view === "admin"; if (view === "level") store("lastLevel", S.level);
-  var h = view === "home" ? "" : view === "admin" ? "admin" : view === "classes" ? "classes" : view === "settings" ? "settings" : view === "terrarium" ? "terrarium" : view === "levels" ? "prehospital" : view === "flevels" ? "fieldmedic" : view === "nlevels" ? "nursing" : view === "mlevels" ? "medschool" : view === "ilevels" ? "imaging" : view === "everyday" ? "everyday" : view === "field" ? "field" : view === "gen" ? "general" : view === "easy" ? "easy" : S.level;
+  var h = view === "home" ? "" : view === "admin" ? "admin" : view === "classes" ? "classes" : view === "settings" ? "settings" : view === "terrarium" ? "terrarium" : view === "levels" ? "prehospital" : view === "flevels" ? "fieldmedic" : view === "nlevels" ? "nursing" : view === "mlevels" ? "medschool" : view === "ilevels" ? "imaging" : view === "alevels" ? "allied" : view === "everyday" ? "everyday" : view === "field" ? "field" : view === "gen" ? "general" : view === "easy" ? "easy" : S.level;
   try { history.replaceState(null, "", h ? "#" + h : location.pathname); } catch (e) {}
   render(); window.scrollTo(0, 0);
 }
@@ -379,7 +409,7 @@ function topbar() {
 }
 function backRow() {
   var v = S.view, lab = "", act = "";
-  if (v === "levels" || v === "flevels" || v === "nlevels" || v === "mlevels" || v === "ilevels" || (v === "everyday" && !S.evTab)) { lab = "Main menu"; act = 'data-go="home"'; }
+  if (v === "levels" || v === "flevels" || v === "nlevels" || v === "mlevels" || v === "ilevels" || v === "alevels" || (v === "everyday" && !S.evTab)) { lab = "Main menu"; act = 'data-go="home"'; }
   else if (v === "gen" && S.tab === "hub") { lab = "Main menu"; act = 'data-go="home"'; }
   else if (v === "level" && S.tab === "hub") { var r = isF(S.level) ? ROUTES.ph : ROUTES[routeOfLevel(S.level)]; lab = r ? r.name : "Main menu"; act = 'data-go="' + (r ? r.view : "home") + '"'; }
   else if (UTIL_VIEWS[v]) { var ub = S.utilBack; lab = ub && ub.view && ub.view !== "home" ? "Back" : "Main menu"; act = 'data-act="utilback"'; }
@@ -439,7 +469,8 @@ var ROUTE_CHIPS = {
   ph:  ["EMT", "AEMT", "Paramedic", "Flight"],
   rn:  ["CNA", "LVN/LPN", "RN", "Units"],
   md:  ["MS1-MS2", "MS3-MS4", "Intern"],
-  im:  ["X-ray", "CT", "MRI", "NM", "IR"]
+  im:  ["X-ray", "CT", "MRI", "NM", "IR"],
+  ah:  ["Mental health", "Dietitian", "Respiratory"]
 };
 function routeChips(code) {
   var L = ROUTE_CHIPS[code];
@@ -449,7 +480,8 @@ var HOME_ROUTES = [
   ["ph", "levels", "Prehospital", "EMT, AEMT, Paramedic and Flight. Every level has its own drugs, protocols and question bank, written for the calls you actually run.", "grub-medic"],
   ["rn", "nlevels", "Nursing", "CNA, LVN/LPN, RN and Flight Nurse: the medicines each licence gives and monitors, and what to check before you give them.", "grub-nurse"],
   ["md", "mlevels", "Medical School", "MS1 to intern: mechanisms and drug classes first, then how it all plays out on the wards.", "grub-doc"],
-  ["im", "ilevels", "Imaging", "X-ray, CT, MRI, nuclear medicine and IR: the agents you inject and how to keep patients safe.", "grub-imaging"]
+  ["im", "ilevels", "Imaging", "X-ray, CT, MRI, nuclear medicine and IR: the agents you inject and how to keep patients safe.", "grub-imaging"],
+  ["ah", "alevels", "Allied Health", "Mental health professionals, dietitians and respiratory therapists: the medicines your field works with every day.", "grub-allied"]
 ];
 var FPATH_ICO = {
   gen: '<path d="M4 4.5A1.5 1.5 0 0 1 5.5 3H20v15H5.5A1.5 1.5 0 0 0 4 19.5z"/><path d="M4 19.5A1.5 1.5 0 0 0 5.5 21H20"/><path d="M9 8h7M9 11.5h5"/>',
@@ -497,7 +529,7 @@ function myListRoute() {
 }
 /* the first thing after the header: get studying */
 function homeStart() {
-  var ll = store("lastLevel"), lo = ll && levelObj(ll), RV = { ph: "levels", fm: "flevels", rn: "nlevels", md: "mlevels", im: "ilevels", ev: "everyday" };
+  var ll = store("lastLevel"), lo = ll && levelObj(ll), RV = { ph: "levels", fm: "flevels", rn: "nlevels", md: "mlevels", im: "ilevels", ah: "alevels", ev: "everyday" };
   var main = lo ? '<button class="btn big" data-level="' + ll + '">Continue: ' + esc(lo.name) + '</button>' : '<button class="btn big" data-go="' + (RV[Prog.d.role] || "gen") + '">Start studying</button>';
   var daily = dailyDone() ? '<span class="sdone">Today\'s 5-min DrugBug: done</span>' : '<button class="btn big ghost" data-sess="daily">Today\'s 5-min DrugBug</button>';
   var gn = typeof growNudge === "function" ? growNudge(200) : null;
@@ -524,8 +556,8 @@ function homeContinue() {
 }
 function viewLevels() {
   if (routeCtx() === "fm") { S.view = "level"; S.level = "cpp"; S.tab = "hub"; return viewLevel(); }
-  var rt = routeCtx(), nurse = rt === "rn", med = rt === "md", img = rt === "im", fm = rt === "fm", L = nurse ? DB.NLEVELS : med ? DB.MLEVELS : img ? DB.ILEVELS : fm ? DB.FLEVELS : DB.LEVELS;
-  var c = topbar() + '<header class="pagehead"><h1>' + (fm ? 'Field Medic: choose your tier <span class="pill proto">In development</span>' : nurse ? "Nursing: choose your license" : med ? "Medical school: choose your year" : img ? "Imaging: choose your modality" : "Choose your level") + '</h1><p>' + (fm ? "Tactical Combat Casualty Care in four tiers, from every service member to the combat paramedic with prolonged casualty care. Each tier includes every skill and medication from the tiers before it." : img ? "Each modality covers the reaction cart and sedation drugs every tech needs, plus the contrast agents and radiopharmaceuticals for that modality." : med ? "Every year studies the full drug library; the exam prep, scenarios and focus change as you advance. Your bug evolves with you." : "Each level includes every drug from the levels before it. Your bug evolves as your scope grows.") + '</p></header><section class="levels' + (fm ? " flv" : (L.length === 3 || L.length === 5 ? " three" : "")) + '">';
+  var rt = routeCtx(), nurse = rt === "rn", med = rt === "md", img = rt === "im", ally = rt === "ah", fm = rt === "fm", L = nurse ? DB.NLEVELS : med ? DB.MLEVELS : img ? DB.ILEVELS : ally ? DB.ALEVELS : fm ? DB.FLEVELS : DB.LEVELS;
+  var c = topbar() + '<header class="pagehead"><h1>' + (fm ? 'Field Medic: choose your tier <span class="pill proto">In development</span>' : nurse ? "Nursing: choose your license" : med ? "Medical school: choose your year" : img ? "Imaging: choose your modality" : ally ? "Allied Health: choose your field" : "Choose your level") + '</h1><p>' + (fm ? "Tactical Combat Casualty Care in four tiers, from every service member to the combat paramedic with prolonged casualty care. Each tier includes every skill and medication from the tiers before it." : img ? "Each modality covers the reaction cart and sedation drugs every tech needs, plus the contrast agents and radiopharmaceuticals for that modality." : ally ? "Each field has its own medicines and its own questions: mental health, nutrition, or airway and breathing." : med ? "Every year studies the full drug library; the exam prep, scenarios and focus change as you advance. Your bug evolves with you." : "Each level includes every drug from the levels before it. Your bug evolves as your scope grows.") + '</p></header><section class="levels' + (fm ? " flv" : (L.length === 3 || L.length === 5 ? " three" : "")) + '">';
   /* Combat Paramedic & Prolonged Care sits in Prehospital, just before Flight Paramedic, once Field Medic is unlocked (owner, Oct 29 2026) */
   if (!nurse && !med && !img && !fm && typeof fmUnlocked === "function" && fmUnlocked()) {
     var cp = DB.FLEVELS.filter(function (x) { return x.key === "cpp"; })[0], fi = L.map(function (x) { return x.key; }).indexOf("flight");
@@ -559,7 +591,7 @@ function viewLevels() {
 }
 
 var SCOPE_TAG = { emt: "Basic life support", aemt: "Limited advanced life support", paramedic: "Advanced life support", flight: "Critical care transport", asm: "TCCC Tier 1", cls: "TCCC Tier 2", cmc: "TCCC Tier 3", cpp: "TCCC Tier 4", pcc: "Prolonged casualty care",
-  cna: "Basic patient care", lvn: "Practical nursing", rn: "Professional nursing", ms1: "Preclinical sciences", ms3: "Clinical rotations", intern: "First-year residency" };
+  mh: "Behavioral health", diet: "Nutrition", rrt: "Airway and breathing", cna: "Basic patient care", lvn: "Practical nursing", rn: "Professional nursing", ms1: "Preclinical sciences", ms3: "Clinical rotations", intern: "First-year residency" };
 function scopeTag(key, i, tot) { return SCOPE_TAG[key] || ("Level " + (i + 1) + " of " + tot); }
 function band() {
   if (S.view === "gen") return '<header class="band"><div class="bugstage">' + bugSVG("sage") + '</div><div><h1>BugDex</h1><div class="sub">Every medication in DrugBug, explained by Professor Sage.</div></div></header>';
@@ -621,7 +653,10 @@ function tabList() {
   /* Anatomy sits in every bug's menu, not just Med School (owner, Nov 1 2026) */
   if (typeof anatView === "function" && anatAll().length) L.push(["anatomy", "Anatomy", "Tap the body: every organ and body part, what it is and what it does."]);
   if (S.view === "level" && isM(S.level)) L.push(["alts", "Drug Alternatives", "Can't order a drug? See same-class options and other drugs for the same problem, and how they differ."]);
-  if (S.view === "gen") L.splice(1, 0, ["conds", "Conditions & Medicine Cautions", "Pick a condition to see which medicines mention it in their contraindications and warnings. Education only."]);
+  if (S.view === "level" && S.level === "diet") {
+    L.splice(1, 0, ["vitc", "Vitamin Compounds", "Vitamins and minerals: what each one does, food sources, deficiency and excess."], ["vegc", "Vegetable Compounds", "The active compounds in vegetables and what the research shows."], ["fruitc", "Fruit Compounds", "Fruit compounds, grapefruit interactions and more."]);
+  }
+  if (S.view === "gen" || (S.view === "level" && S.level === "diet")) L.splice(1, 0, ["conds", "Conditions & Medicine Cautions", "Pick a condition to see which medicines mention it in their contraindications and warnings. Education only."]);
   if (S.view === "gen") L.splice(1, 0, ["families", "Drug Families", "Similar drugs side by side: beta blockers, statins, SSRIs and more, and what makes each one different."]);
   if (hasBlood() && !isF(S.level)) L.push(["flightp", "Flight Prep", "Gas laws, stresses of flight and hard critical care questions."]);
   if (hasBlood()) L.push(["blood", "Blood Products", "PRBCs, whole blood, plasma, MTP and transfusion reactions."]);
@@ -792,7 +827,7 @@ document.addEventListener("pointerup", function () { if (HD.el) hubDrop(); });
 document.addEventListener("pointercancel", function () { if (HD.el) hubDrop(); });
 
 function hubView() {
-  var L = tabList(), used = {}, lead = (typeof learnTile === "function" ? learnTile() + (typeof learnSysRow === "function" ? learnSysRow() : "") : "");
+  var L = tabList(), used = {}, lead = (typeof rnDeptChip === "function" ? rnDeptChip() : "") + (typeof learnTile === "function" ? learnTile() + (typeof learnSysRow === "function" ? learnSysRow() : "") : "");
   /* one search box across the whole tier, at the top of the Combat Paramedic menu (owner, Oct 31 2026).
      With a query typed, the results replace the tiles; clearing it brings the menu back. */
   if (S.view === "level" && isF(S.level) && typeof fmsBar === "function") {
@@ -1115,7 +1150,44 @@ function flashcards() {
   return c;
 }
 
+/* ---------- RN departments (owner, Nov 5 2026) ----------
+   After choosing RN, a carousel asks which RN you are: Nursing school RN first, then the hospital
+   departments, NICU on its own, then the specialties beyond. A department adds its unit's medicines
+   to the RN scope (the existing Specialty Units, store "nunit"); Nursing school RN keeps the core. */
+var RN_DEPTS = [["", "Nursing school RN", "start"], ["ed", "", "hosp"], ["icu", "", "hosp"], ["medsurg", "", "hosp"], ["ob", "", "hosp"], ["peds", "", "hosp"], ["periop", "", "hosp"],
+  ["nicu", "", "nicu"], ["cardiac", "", "other"], ["onc", "", "other"], ["renal", "", "other"], ["psych", "", "other"], ["ltc", "", "other"], ["flight", "", "other"]];
+var RN_SECT = { start: "Start here", hosp: "Hospital", nicu: "Newborn intensive care", other: "Specialty and beyond" };
+function rnDepts() { return RN_DEPTS.map(function (d) { var u = d[0] ? unitObj(d[0]) : null; return d[0] && !u ? null : { key: d[0], name: d[1] || u.name, sect: d[2], blurb: u ? u.blurb : "The core RN pharmacology for nursing school and the NCLEX-RN: every medicine an RN gives and monitors." }; }).filter(Boolean); }
+function rnDeptView() {
+  var cur = store("nunit") || "", D = rnDepts(), last = "";
+  var cards = D.map(function (d) {
+    var lab = d.sect !== last ? '<span class="rdsect">' + esc(RN_SECT[d.sect]) + '</span>' : '<span class="rdsect" aria-hidden="true">&nbsp;</span>'; last = d.sect;
+    return '<div class="rdcell">' + lab + '<button class="rdcard' + (d.key === cur ? ' on' : '') + (d.sect === "start" ? ' first' : '') + '" data-rndept="' + d.key + '" data-rnd="' + (d.key || "school") + '">' +
+      '<span class="rdbug">' + bugSVG("rn") + '</span><strong>' + esc(d.name) + '</strong><span class="rdblurb">' + esc(d.blurb) + '</span>' +
+      (d.key === cur && store("rnDeptAsked") ? '<span class="rdnow">Current</span>' : '') + '</button></div>';
+  }).join("");
+  return '<div class="gate rndept"><h1>Which RN are you?</h1><p>Start with Nursing school RN, or swipe to your department. Your department\'s medicines are added to everything you study. You can change it any time.</p>' +
+    '<div class="rdwrap"><button class="rdarr l" data-rdscroll="-1" aria-label="Previous">&#8249;</button><div class="rdtrack" id="rdtrack">' + cards + '</div><button class="rdarr r" data-rdscroll="1" aria-label="Next">&#8250;</button></div>' +
+    (store("rnDeptAsked") ? '<div class="actions" style="justify-content:center"><button class="btn ghost" data-rndeptback="1">Keep ' + esc((D.filter(function (d) { return d.key === cur; })[0] || D[0]).name) + '</button></div>' : '') + '</div>';
+}
+function rnDeptNeeded() { return S.view === "level" && S.level === "rn" && (S.rnDept || !store("rnDeptAsked")); }
+document.addEventListener("click", function (e) {
+  var t = e.target.closest && e.target.closest("[data-rndept],[data-rdscroll],[data-rndeptch],[data-rndeptback]"); if (!t) return;
+  if (t.hasAttribute("data-rdscroll")) { var tr = document.getElementById("rdtrack"); if (tr) tr.scrollBy({ left: (+t.getAttribute("data-rdscroll")) * tr.clientWidth * 0.8, behavior: "smooth" }); return; }
+  if (t.hasAttribute("data-rndeptch")) { S.rnDept = true; render(); window.scrollTo(0, 0); return; }
+  if (t.hasAttribute("data-rndeptback")) { S.rnDept = false; render(); return; }
+  var k = t.getAttribute("data-rndept") || "";
+  store("nunit", k); store("rnDeptAsked", 1); UNITC = {}; S.rnDept = false; S.tab = "hub"; S.learn = null;
+  try { if (typeof usgFeat === "function") usgFeat("rn_dept_" + (k || "school")); } catch (x) {}
+  render(); window.scrollTo(0, 0);
+});
+function rnDeptChip() {
+  if (!(S.view === "level" && S.level === "rn")) return "";
+  var cur = store("nunit") || "", d = rnDepts().filter(function (x) { return x.key === cur; })[0] || rnDepts()[0];
+  return '<div class="rndchip"><span>Department</span><strong>' + esc(d.name) + '</strong><button class="btn small ghost" data-rndeptch="1">Change</button></div>';
+}
 function viewLevel() {
+  if (rnDeptNeeded()) { setTimeout(function () { var tr = document.getElementById("rdtrack"), on = tr && tr.querySelector(".rdcard.on"); if (on) on.parentNode.scrollIntoView({ inline: "center", block: "nearest" }); }, 30); return topbar() + rnDeptView(); }
   if (isF(S.level) && S.level !== "cpp") S.level = "cpp";
   if (S.view === "level" && isF(S.level) && typeof fmAlias === "function") fmAlias();
   if (!S.tab || (S.tab !== "hub" && S.tab !== "session" && !tabName(S.tab))) S.tab = "hub";
@@ -1186,6 +1258,7 @@ function starOK(q, k) { return starsFor(k).indexOf(qStar(q)) >= 0; }
 function starHTML(n, cls) { var s = "", i; for (i = 1; i <= 4; i++) s += '<span class="' + (i <= n ? "on" : "off") + '">\u2605</span>'; return '<span class="qstars' + (cls ? " " + cls : "") + '" aria-label="Difficulty ' + n + ' of 4">' + s + '</span>'; }
 function starLabel(n) { return ["", "Foundation", "Working", "Advanced", "Expert"][n] || ""; }
 function nrLevelsFor(k) {
+  if (isA(k)) return ["gen", "emt", "aemt", "paramedic", "flight", "lvn", "rn", "flightrn", "ms1", "ms3", "intern"];   /* every bank, filtered to the field's medicines in nrPool */
   /* each scope studies its OWN question bank only (no lower-scope questions); top scopes get no general pool */
   if (isI(k)) return ["im"];
   if (k === "gen") return ["gen"]; /* Everyday / BugDex: plain-language home & general med questions only (no flight questions); topped up by modules/qgen.js */
@@ -1200,7 +1273,7 @@ function nrPool(filter, noGen) {
   var allowed = nrLevelsFor(ctxKey());
   if (filter && filter !== "all" && !isF(ctxKey())) allowed = allowed.indexOf(filter) >= 0 ? [filter] : []; /* tiers always study their whole cumulative bank */
   var inScope = null;
-  if (S.view === "level" && (isN(S.level) || isI(S.level) || isF(S.level))) { inScope = {}; scopeFor(S.level).ids.forEach(function (id) { inScope[id] = 1; }); }
+  if (S.view === "level" && (isN(S.level) || isI(S.level) || isF(S.level) || isA(S.level))) { inScope = {}; scopeFor(S.level).ids.forEach(function (id) { inScope[id] = 1; }); }
   var ck = ctxKey();
   function ok(q) { return allowed.indexOf(q.lv) >= 0 && starOK(q, ck) && !(q.home && ck !== "gen") && qVisible(q) && (!inScope || (q.d ? inScope[q.d] : !isF(ck))) && (!q.d || !drugLocked(q.d)); }
   if (S.nr && S.nr.kind === "reg") return (DB.RQ || []).filter(function (q) { return allowed.indexOf(q.lv) >= 0 && starOK(q, ck) && qVisible(q) && (!isF(ck) || q.fm) && (typeof callScaleOK !== "function" || callScaleOK(q)); });
@@ -1864,7 +1937,7 @@ function render() {
      already moved on, so buttons did nothing and nothing explained why. Now it says so and offers
      a way out. (owner reported Flight Paramedic doing this, Oct 30 2026) */
   try {
-    html = needDisc() ? discView() : !ok && S.view !== "legal" ? gateView() : S.view === "legal" ? legalView() : (typeof needFun === "function" && needFun()) ? funView() : (typeof needWelcome === "function" && needWelcome()) ? welcomeView() : needOnboard() ? obView() : S.view === "home" ? viewHome() : (S.view === "levels" || S.view === "flevels" || S.view === "nlevels" || S.view === "mlevels" || S.view === "ilevels") ? viewLevels() : S.view === "easy" ? viewEasy() : S.view === "admin" ? viewAdmin() : S.view === "classes" ? classesView() : S.view === "settings" ? settingsView() : S.view === "terrarium" ? ((typeof funOn === "function" && !funOn()) ? (S.view = "home", viewHome()) : terrariumView()) : S.view === "everyday" ? evView() : S.view === "field" && typeof fieldView === "function" ? fieldView() : viewLevel();
+    html = needDisc() ? discView() : !ok && S.view !== "legal" ? gateView() : S.view === "legal" ? legalView() : (typeof needFun === "function" && needFun()) ? funView() : (typeof needWelcome === "function" && needWelcome()) ? welcomeView() : needOnboard() ? obView() : S.view === "home" ? viewHome() : (S.view === "levels" || S.view === "flevels" || S.view === "nlevels" || S.view === "mlevels" || S.view === "ilevels" || S.view === "alevels") ? viewLevels() : S.view === "easy" ? viewEasy() : S.view === "admin" ? viewAdmin() : S.view === "classes" ? classesView() : S.view === "settings" ? settingsView() : S.view === "terrarium" ? ((typeof funOn === "function" && !funOn()) ? (S.view = "home", viewHome()) : terrariumView()) : S.view === "everyday" ? evView() : S.view === "field" && typeof fieldView === "function" ? fieldView() : viewLevel();
   } catch (err) {
     LAST_ERR = (err && (err.message || err)) + "";
     try { if (window.console) console.error("DrugBug render failed:", err); } catch (e) {}
@@ -3276,7 +3349,7 @@ function qgStudy(id, n) {
    Top those up from each drug's own page, at the role's own difficulty, so a learner meets the whole
    formulary instead of the same 300 items. Only drugs with fewer than two hand-written questions are
    topped up, so written items always come first. (Oct 29 2026) */
-var QG_TOPUP = { gen: 3, rn: 2, flightrn: 2, lvn: 2, ms1: 2, ms3: 2, intern: 2, cpp: 2, flight: 2 };
+var QG_TOPUP = { mh: 3, diet: 3, rrt: 3, gen: 3, rn: 2, flightrn: 2, lvn: 2, ms1: 2, ms3: 2, intern: 2, cpp: 2, flight: 2 };
 function qgPoolFor(lv, scopeOk) {
   var per = QG_TOPUP[lv]; if (!per) return [];
   if (QG.pool[lv]) return QG.pool[lv].filter(scopeOk);
@@ -4086,6 +4159,7 @@ var BUGS = [
   { id: "grub-nurse", name: "Scrub Beetle", body: "beetle", c: ["#4fd1c5", "#0f8f86", "#ffffff"], acc: ["stetho"], rar: "common", price: 0, grub: "rn", blurb: "Starter beetle for nursing learners." },
   { id: "grub-imaging", name: "Lead Apron Beetle", body: "beetle", c: ["#94a3b8", "#334155", "#ffffff"], acc: ["goggles"], rar: "common", price: 0, grub: "im", blurb: "Starter beetle for imaging technologists." },
   { id: "grub-everyday", name: "Garden Beetle", body: "beetle", c: ["#ffcf6b", "#e08a2c", "#ffffff"], acc: ["leaf"], rar: "common", price: 0, grub: "ev", blurb: "Starter beetle for Everyday Health learners. Just a regular, friendly bug." },
+  { id: "grub-allied", name: "Field Guide Beetle", body: "beetle", c: ["#c4b5fd", "#6d28d9", "#ffffff"], acc: ["headset"], rar: "common", price: 0, grub: "ah", blurb: "Starter beetle for allied health learners: mental health, dietitians and respiratory therapists." },
   { id: "grub-doc", name: "Bookworm Beetle", body: "beetle", c: ["#8fa8ff", "#4053c9", "#ffffff"], acc: ["bowtie"], rar: "common", price: 0, grub: "md", blurb: "Starter beetle for medical students." },
   // common
   { id: "free-mantis", name: "Praying Mantis", body: "mantis", c: ["#86efac", "#16a34a", "#ffffff"], acc: [], rar: "rare", price: 1500, blurb: "Patient, precise and always ready." },
@@ -4984,7 +5058,7 @@ function buddyClick(t, a) {
 /* ---------- Level bugs: the higher the scope, the more alive the bug ----------
    tier 1: gentle bob · tier 2: + blinks · tier 3: + eyes follow you, wiggle on hover, hop on tap
    tier 4 (top of each route): + aura, sparkles and orbit ring, barrel roll and sparkle burst with a quip on tap */
-var LVB_IMG = { rt: 3, ct: 3, nm: 3, mri: 4, ir: 4 };
+var LVB_IMG = { rt: 3, ct: 3, nm: 3, mri: 4, ir: 4, mh: 3, diet: 3, rrt: 4 };
 var LVB_FX = { flight: ["#ffd25e", "#ffd25e"], rn: ["#ffb347", "#ff7ad9"], flightrn: ["#fb923c", "#7dd3fc"], intern: ["#7fe7ff", "#a7b4ff"], ir: ["#5eead4", "#7dd3fc"], mri: ["#c4b5fd", "#f0abfc"] };
 var LVB_QUIPS = {
   flight: ["Wheels up!", "Rotor wash incoming!", "Blood on board.", "Pre-flight check: done.", "Sky's the limit."],
@@ -4995,7 +5069,7 @@ var LVB_QUIPS = {
   ir: ["Lead apron on!", "Access obtained.", "Contrast check: done.", "Time-out complete.", "Wire in, sheath out."]
 };
 function lvTier(key) {
-  if (isI(key)) return LVB_IMG[key] || 1;
+  if (isI(key) || isA(key)) return LVB_IMG[key] || 1;
   var L = levelsOf(key), i = levelIdx(key);
   return i === L.length - 1 ? 4 : i + 1;
 }
@@ -6375,7 +6449,7 @@ function grubFix() { /* give each path its own starter beetle once (older builds
   if (!P.avatar || P.avatar === "starter") { P.avatar = g; P.avatarTs = Date.now(); }
   P.grubFix = 1; saveProg();
 }
-var ROLES = [["ev", "Everyday Health", "Not a clinician: medicines, vitamins and your body", "grub-everyday", "everyday"], ["ph", "Prehospital", "EMT, AEMT, Paramedic or Flight Paramedic", "grub-medic", "levels"], ["rn", "Nursing", "CNA, LVN/LPN or RN", "grub-nurse", "nlevels"], ["md", "Medical School", "MS1-MS2, MS3-MS4 or Intern", "grub-doc", "mlevels"], ["im", "Imaging", "X-ray, CT, MRI, nuclear medicine or IR", "grub-imaging", "ilevels"]];
+var ROLES = [["ev", "Everyday Health", "Not a clinician: medicines, vitamins and your body", "grub-everyday", "everyday"], ["ph", "Prehospital", "EMT, AEMT, Paramedic or Flight Paramedic", "grub-medic", "levels"], ["rn", "Nursing", "CNA, LVN/LPN or RN", "grub-nurse", "nlevels"], ["md", "Medical School", "MS1-MS2, MS3-MS4 or Intern", "grub-doc", "mlevels"], ["im", "Imaging", "X-ray, CT, MRI, nuclear medicine or IR", "grub-imaging", "ilevels"], ["ah", "Allied Health", "Mental health, dietitian or respiratory therapist", "grub-allied", "alevels"]];
 function needRole() { return !!agreeRec() && !Prog.d.role && S.view !== "legal"; }
 /* First open, straight after the disclaimer: how do you want the app to behave? (owner, Oct 30 2026) */
 function needFun() { return false; }   /* the choice now lives in the first card of the tour (owner, Oct 30 2026) */
@@ -6397,7 +6471,7 @@ function pickFun(on) {
    drag the arrows or use the arrow keys. Each card is a checkbox, Everyday Health starts ticked,
    and as many as you like can be on. What you tick is what the main menu shows afterwards. */
 /* the certification each path is known by: the highest one that is actually common */
-var OB_FLAGSHIP = { ph: "paramedic", rn: "rn", md: "intern", im: "rt" };
+var OB_FLAGSHIP = { ph: "paramedic", rn: "rn", md: "intern", im: "rt", ah: "mh" };
 function obCards() {
   var ev = ROLES.filter(function (r) { return r[0] === "ev"; })[0];
   var out = [{ code: "ev", name: ev[1], line: ev[2], bug: ev[3], blurb: "Peptides, probiotics, vitamins, the medicine cabinet, small sicknesses, normal vitals and much more.", sub: "For anyone \u2014 no clinical background needed." }];
@@ -6405,7 +6479,8 @@ function obCards() {
     ph: "EMT, AEMT, Paramedic and Flight Paramedic, each with its own drug list, protocols and registry-style question bank.",
     rn: "CNA, LVN/LPN and RN, with specialty units, lab values and licensure-style questions.",
     md: "MS1 through Intern: mechanisms, board-style questions, drug alternatives and the wards view of every drug.",
-    im: "X-ray, CT, MRI, nuclear medicine and IR: contrast agents, radiopharmaceuticals and contrast safety."
+    im: "X-ray, CT, MRI, nuclear medicine and IR: contrast agents, radiopharmaceuticals and contrast safety.",
+    ah: "Mental health professionals, dietitians and respiratory therapists, each with its own medicines and questions."
   };
   ROLES.filter(function (r) { return r[0] !== "ev"; }).forEach(function (r) {
     /* Show the path's headline certification, not the rarest one above it. The last level in
@@ -6425,10 +6500,10 @@ function obCards() {
    synchronously, and render() picks it up once the path is actually on screen so the level
    transition cannot redraw over it (owner, Nov 4 2026). */
 function startLearnPath(sg) {
-  if (!sg) sg = { ph: "levels", rn: "nlevels", md: "mlevels", im: "ilevels", ev: "everyday" }[Prog.d.role] || "gen";
+  if (!sg) sg = { ph: "levels", rn: "nlevels", md: "mlevels", im: "ilevels", ah: "alevels", ev: "everyday" }[Prog.d.role] || "gen";
   S.learnGo = 1;
   if (sg === "gen" || sg === "everyday") return go(sg);
-  var arr = sg === "nlevels" ? DB.NLEVELS : sg === "mlevels" ? DB.MLEVELS : sg === "ilevels" ? (DB.ILEVELS || []) : DB.LEVELS;
+  var arr = sg === "nlevels" ? DB.NLEVELS : sg === "mlevels" ? DB.MLEVELS : sg === "ilevels" ? (DB.ILEVELS || []) : sg === "alevels" ? (DB.ALEVELS || []) : DB.LEVELS;
   arr = (arr || []).filter(function (l) { return !(typeof isF === "function" && isF(l.key)); });
   var last = store("lastLevel"), pick = arr.filter(function (l) { return l.key === last; })[0] || arr[0];
   if (pick) go("level", { level: pick.key }); else go(sg);
@@ -6441,7 +6516,7 @@ function obSel() {
 /* Step 2: once they have a clinical path, the second wheel asks which level, so Hickory knows
    where to take them and the first L.E.A.R.N lands in the right scope (owner, Nov 4 2026). */
 function obLevelsFor(code) {
-  var arr = code === "rn" ? DB.NLEVELS : code === "md" ? DB.MLEVELS : code === "im" ? (DB.ILEVELS || []) : DB.LEVELS;
+  var arr = code === "rn" ? DB.NLEVELS : code === "md" ? DB.MLEVELS : code === "im" ? (DB.ILEVELS || []) : code === "ah" ? (DB.ALEVELS || []) : DB.LEVELS;
   return (arr || []).filter(function (l) { return !(typeof isF === "function" && isF(l.key)); })
     .map(function (l) {
       return { code: l.key, name: l.name, bug: l.bug,
@@ -8329,7 +8404,7 @@ document.addEventListener("change", function (e) { if (e.target.id === "pfiles")
 document.addEventListener("input", function (e) { if (e.target.id === "plink") { PQ.link = e.target.value; var b = $('[data-pq="submit"]'); if (b) b.disabled = !(P.auth && (PQ.link.trim() || PQ.photos.length) && !PQ.busy); } });
 
 /* ---------- Lab values (RN, Flight, Med School) ---------- */
-function labRoute() { var k = S.level; return k === "rn" ? "rn" : k === "flight" || k === "flightrn" || k === "cpp" || k === "pcc" ? "fl" : isM(k) ? "md" : null; }
+function labRoute() { var k = S.level; return k === "rn" || k === "diet" || k === "mh" ? "rn" : k === "rrt" ? "fl" : k === "flight" || k === "flightrn" || k === "cpp" || k === "pcc" ? "fl" : isM(k) ? "md" : null; }
 function hasLabs() { return S.view === "level" && !!labRoute(); }
 var LABHEAD = { rn: "At the bedside", fl: "In the aircraft", md: "Interpretation" };
 var LABGRP_ORDER = ["Electrolytes", "Kidney & glucose", "Blood count", "Clotting", "Blood gas", "Cardiac & other", "Acid-base", "Kidney & sodium", "Calcium & endocrine", "Liver & pancreas", "Hematology", "Coagulation", "Inflammation & infection", "Drug levels & toxicology", "Cardio-metabolic"];
@@ -11807,7 +11882,7 @@ function pkCalm() {
   if (typeof tourDone === "function" && !tourDone()) return false;
   if (typeof topLayerOpen === "function" && topLayerOpen()) return false;
   if (S.sheet || S.sess || S.mupop) return false;
-  var v = S.view; if (v === "home" || v === "levels" || v === "flevels" || v === "nlevels" || v === "mlevels" || v === "ilevels" || v === "terrarium") return true;
+  var v = S.view; if (v === "home" || v === "levels" || v === "flevels" || v === "nlevels" || v === "mlevels" || v === "ilevels" || v === "alevels" || v === "terrarium") return true;
   return (v === "gen" || v === "level" || v === "everyday") && (!S.tab || S.tab === "hub");
 }
 function pkPick() {
@@ -29770,12 +29845,12 @@ rebuildIndex();
 applySettings();
 var h = (location.hash || "").slice(1);
 if (h !== "admin") { h = ""; try { history.replaceState(null, "", location.pathname); } catch (e) {} }
-if (h === "admin") { S.view = "admin"; Admin.on = true; } else if (h === "classes" && SOCIAL) S.view = "classes"; else if (h === "settings") S.view = "settings"; else if (h === "terrarium") S.view = "terrarium"; else if (h === "prehospital") S.view = "levels"; else if (h === "nursing") S.view = "nlevels"; else if (h === "medschool") S.view = "mlevels"; else if (h === "imaging") S.view = "ilevels"; else if (h === "general") S.view = "gen"; else if (h === "easy") S.view = "gen"; else if (levelObj(h)) { S.view = "level"; S.level = h; }
+if (h === "admin") { S.view = "admin"; Admin.on = true; } else if (h === "classes" && SOCIAL) S.view = "classes"; else if (h === "settings") S.view = "settings"; else if (h === "terrarium") S.view = "terrarium"; else if (h === "prehospital") S.view = "levels"; else if (h === "nursing") S.view = "nlevels"; else if (h === "medschool") S.view = "mlevels"; else if (h === "imaging") S.view = "ilevels"; else if (h === "allied") S.view = "alevels"; else if (h === "general") S.view = "gen"; else if (h === "easy") S.view = "gen"; else if (levelObj(h)) { S.view = "level"; S.level = h; }
 if (!h) {
   var hl = SET().homeLevel, rl = Prog.d.role;
   if (hl === "gen") S.view = "gen"; else if (hl && levelObj(hl)) { S.view = "level"; S.level = hl; }
   else if (hl === "path" && rl) {
-    var ll = store("lastLevel"), rv = { ph: "levels", rn: "nlevels", md: "mlevels", im: "ilevels" }[rl];
+    var ll = store("lastLevel"), rv = { ph: "levels", rn: "nlevels", md: "mlevels", im: "ilevels", ah: "alevels" }[rl];
     if (ll && levelObj(ll) && routeOfLevel(ll) === rl) { S.view = "level"; S.level = ll; } else if (rv) S.view = rv; else S.view = "gen";
   }
 }
