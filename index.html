@@ -75,8 +75,8 @@ details{background:var(--surface);border:1px solid var(--line);border-radius:12p
 .wn{border:1px solid var(--line);border-radius:14px;padding:14px;background:var(--bg)}.wn h3{margin:0 0 6px;font-size:17px}.wn p{margin:0;color:var(--muted);font-size:15px}
 .wnfoot{margin:16px 0 0}
 @media (max-width:640px){.hero .ctas{justify-content:center}.whatsnew{padding:16px}}
-</style></head>
-<body><div class="utilbar"><div class="in"><span class="lead">Teaching with DrugBug?</span><a href="#start-class">Start a class</a><span class="sep" aria-hidden="true">|</span><a href="instructor/">Instructor portal &rarr;</a></div></div><div class="wrap"><header class="top"><a href="index.html"><img src="icon.png" alt=""></a><b>DrugBug</b><nav><a href="index.html">Home</a><a href="app/">Try it free</a><a href="support.html">Support</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="disclaimers.html">Disclaimers</a></nav></header><section class="hero"><img src="icon.png" alt="DrugBug app icon"><div><h1>Learn your meds by scope.</h1>
+header.top nav a[aria-current]{font-weight:700;text-decoration:none;color:var(--ink)}@media(max-width:640px){header.top{flex-wrap:wrap}header.top nav{margin-left:0;width:100%;gap:8px 14px}}.insteaser{grid-column:1/-1}.tbtns{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:14px!important}.tlink{font-weight:700;font-size:15px}</style></head>
+<body><div class="utilbar"><div class="in"><span class="lead">Teaching with DrugBug?</span><a href="instructor/">See the instructor demo</a><span class="sep" aria-hidden="true">|</span><a href="instructor/signin/">Instructor sign in &rarr;</a></div></div><div class="wrap"><header class="top"><a href="index.html"><img src="icon.png" alt=""></a><b>DrugBug</b><nav><a href="index.html" aria-current="page">Home</a><a href="instructor/">For Instructors</a><a href="app/">Try it free</a><a href="support.html">Support</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="disclaimers.html">Disclaimers</a></nav></header><section class="hero"><img src="icon.png" alt="DrugBug app icon"><div><h1>Learn your meds by scope.</h1>
 <p>DrugBug is a medication study app for EMS, Nursing, Medical, Imaging and Allied Health students, built by a Paramedic, FP-C.</p>
 <div class="ctas"><a class="btn" href="app/">Try it free in your browser</a> <a class="btn appstore" href="https://apps.apple.com/us/app/drugbug/id6820225080" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M16.4 12.7c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.2-2.8.8-3.6.8-.7 0-1.9-.8-3.1-.8-1.6 0-3.1.9-3.9 2.4-1.7 2.9-.4 7.2 1.2 9.5.8 1.1 1.7 2.4 2.9 2.4 1.2 0 1.6-.8 3-.8s1.8.8 3.1.7c1.3 0 2.1-1.1 2.8-2.3.9-1.3 1.3-2.6 1.3-2.6s-2.3-.9-2.3-4zM14.2 5.9c.6-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.4-.6.7-1.1 1.8-1 2.9 1.1.1 2.2-.6 2.8-1.3z"/></svg><span><small>Download on the</small>App Store</span></a></div>
 <p class="hnote">On iPhone, get it from the App Store. On anything else, nothing to install. Start without an account &mdash; make one when you want your bug, your sticks and everything you learn to follow you to your phone.</p></div></section>
@@ -108,32 +108,7 @@ details{background:var(--surface);border:1px solid var(--line);border-radius:12p
 <p>DrugBug covers EMS, Nursing, Medical, Imaging and Allied Health in one app, so a program can put every student on the same tool. Group access is priced per seat and billed annually.</p>
 <ul class="perks"><li>Every route and every level, for every student</li><li>One tool across a whole curriculum instead of one per course</li><li>Questions levelled to each student's role, so a first-year and a senior get different work</li></ul>
 <p><a class="btn" href="mailto:VolareMediaLLC@gmail.com?subject=DrugBug%20for%20our%20program">Ask about group access</a></p>
-<div class="classes" id="start-class">
-<div class="cbox"><span class="portalk">New to DrugBug</span><h3>Start a class</h3><p>Tell us about your program and we will set up a free 30-day pilot with anonymous class keys for your students.</p>
-<form class="cform" id="cform" novalidate>
-<label for="cf-prog">Program or school</label><input id="cf-prog" required maxlength="120" placeholder="e.g. Brazos County Paramedic Program">
-<label for="cf-name">Your name and role</label><input id="cf-name" required maxlength="80" placeholder="e.g. Jane Smith, Program Director">
-<label for="cf-mail">Work email</label><input id="cf-mail" type="email" required maxlength="120" placeholder="you@school.edu">
-<div class="crow"><div><label for="cf-n">Students</label><input id="cf-n" type="number" min="1" max="2000" placeholder="30"></div>
-<div><label for="cf-lvl">Level</label><select id="cf-lvl"><option>EMT</option><option>AEMT</option><option selected>Paramedic</option><option>Flight / critical care</option><option>Nursing (LVN/LPN)</option><option>Nursing (RN)</option><option>Medical school</option><option>Imaging</option><option>Allied Health</option><option>Other</option></select></div>
-</div>
-<label for="cf-start">Start date</label><input id="cf-start" type="date">
-<label for="cf-msg">Anything else (optional)</label><textarea id="cf-msg" rows="3" maxlength="1000"></textarea>
-<button class="btn" type="submit">Email my request</button>
-<p class="cnote" id="cf-note">This opens your email app with the details filled in. Prefer to write yourself? Email <a href="mailto:VolareMediaLLC@gmail.com?subject=Start%20a%20DrugBug%20class">VolareMediaLLC@gmail.com</a>.</p>
-</form></div>
-<div class="cbox alt"><span class="portalk">Instructor portal</span><h3>Already running a class?</h3><p>Sign in to issue anonymous class keys, print key sheets and see class progress by medication system. No student names are stored.</p><a class="portalbtn" href="instructor/signin/">Sign in to the instructor portal <span aria-hidden="true">&rarr;</span></a></div>
-</div>
-<script>
-(function(){var f=document.getElementById("cform");if(!f)return;f.addEventListener("submit",function(e){e.preventDefault();
-var v=function(i){return(document.getElementById(i).value||"").trim();};
-var miss=["cf-prog","cf-name","cf-mail"].filter(function(i){return!v(i);});
-var note=document.getElementById("cf-note");
-if(miss.length){note.textContent="Please fill in your program, your name and your work email.";document.getElementById(miss[0]).focus();return;}
-var body="Program or school: "+v("cf-prog")+"\nName and role: "+v("cf-name")+"\nWork email: "+v("cf-mail")+"\nStudents: "+(v("cf-n")||"-")+"\nLevel: "+v("cf-lvl")+"\nStart date: "+(v("cf-start")||"-")+"\n\n"+v("cf-msg");
-location.href="mailto:VolareMediaLLC@gmail.com?subject="+encodeURIComponent("Start a DrugBug class: "+v("cf-prog"))+"&body="+encodeURIComponent(body);
-note.innerHTML='Your email app should open with the request filled in. If nothing happened, email <a href="mailto:VolareMediaLLC@gmail.com">VolareMediaLLC@gmail.com</a>.';});})();
-</script></section>
+<div class="classes" id="start-class"><div class="cbox insteaser"><span class="portalk">For instructors</span><h3>Run your class on DrugBug</h3><p>A live dashboard with every student's scores by body system, drug class and single medication, a weekly scoreboard with prizes, and Pro free for every student. Click through a demo class, then apply for a free 30-day pilot.</p><p class="tbtns"><a class="btn" href="instructor/">See the demo &amp; apply</a><a class="tlink" href="instructor/signin/">Already running a class? Sign&nbsp;in&nbsp;&rarr;</a></p></div></div></section>
 
 <section class="about"><div class="abgrid"><img src="adam.jpg" alt="Adam, the Paramedic who built DrugBug" loading="lazy" width="900" height="1125">
 <div><h2>Who makes this</h2>
@@ -155,4 +130,4 @@ note.innerHTML='Your email app should open with the request filled in. If nothin
 <footer><p>Educational use only. Not for clinical decision-making or patient care. Not a medical device.</p>
 <p>Not affiliated with or endorsed by NREMT, NCSBN, FSMB/NBME, ARRT or AHA.</p>
 <p>Built by a Paramedic, FP-C. &copy; Volare Media LLC &middot; <a href="mailto:VolareMediaLLC@gmail.com">VolareMediaLLC@gmail.com</a></p>
-<p><a href="index.html">Home</a> &middot; <a href="app/">Try it free</a> &middot; <a href="support.html">Support</a> &middot; <a href="privacy.html">Privacy</a> &middot; <a href="instructor/signin/">Educator login</a> &middot; <a href="terms.html">Terms</a> &middot; <a href="disclaimers.html">Disclaimers</a></p></footer></div></body></html>
+<p><a href="index.html">Home</a> &middot; <a href="instructor/">For Instructors</a> &middot; <a href="app/">Try it free</a> &middot; <a href="support.html">Support</a> &middot; <a href="privacy.html">Privacy</a> &middot; <a href="instructor/signin/">Educator login</a> &middot; <a href="terms.html">Terms</a> &middot; <a href="disclaimers.html">Disclaimers</a></p></footer></div></body></html>
