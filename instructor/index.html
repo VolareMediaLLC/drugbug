@@ -191,8 +191,8 @@ tr.clk{cursor:pointer}tr.clk:hover td{background:var(--surface2)}
     <div class="tiles" id="apTiles"></div>
   </div>
   <div class="card" id="coderCard">
-    <div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Reviewer codes</h2><button class="ghost" id="bCoders">Refresh</button></div>
-    <p class="muted small">Who holds each lifetime reviewer code and the reviewing they have done. Names are yours to fill in; only you see them. Their own studying stays anonymous.</p>
+    <div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Evaluator codes</h2><button class="ghost" id="bCoders">Refresh</button></div>
+    <p class="muted small">Who holds each lifetime code (shown in the app as Evaluator, or Administrator for yours) and the reviewing they have done. Names are yours to fill in; only you see them. Their own studying stays anonymous.</p>
     <div class="tblwrap"><table id="coderTable"><tr><td class="muted">Loading…</td></tr></table></div>
     <div id="coderSugg"></div>
   </div>
@@ -598,8 +598,8 @@ tr.clk{cursor:pointer}tr.clk:hover td{background:var(--surface2)}
   }
   function drawCoders() {
     var L = CODERS || [];
-    $("coderTable").innerHTML = '<tr><th>#</th><th>Code</th><th>Name</th><th>Redeemed</th><th>Graded</th><th>Good</th><th>Bad</th><th>Avg difficulty</th><th>Suggestions</th><th>Last active</th></tr>' + L.map(function (c) {
-      return '<tr><td class="num">' + c.n + '</td><td class="mono">' + esc(c.code) + '</td>' +
+    $("coderTable").innerHTML = '<tr><th>#</th><th>Code</th><th>Role</th><th>Name</th><th>Redeemed</th><th>Graded</th><th>Good</th><th>Bad</th><th>Avg difficulty</th><th>Suggestions</th><th>Last active</th></tr>' + L.map(function (c) {
+      return '<tr><td class="num">' + c.n + '</td><td class="mono">' + esc(c.code) + '</td><td>' + esc(c.role || "Evaluator") + '</td>' +
         '<td><input class="cname" data-cgift="' + esc(c.gift) + '" value="' + esc(c.name) + '" placeholder="Who has it?" style="min-width:170px;padding:6px 8px"></td>' +
         '<td>' + (c.redeemed ? '<span class="pill on">yes</span> <span class="muted small">' + (c.redeemedAt ? day(c.redeemedAt) : "") + '</span>' : '<span class="pill">not yet</span>') + '</td>' +
         '<td class="num">' + c.graded + '</td><td class="num" style="color:var(--good)">' + c.good + '</td><td class="num" style="color:var(--bad)">' + c.bad + '</td>' +
