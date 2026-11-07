@@ -2,6 +2,29 @@
 (function () {
 "use strict";
 
+/* One quieter master level for every sound DrugBug makes (owner, Nov 7 2026: "so people aren't
+   blasted"). Every sound, the music, Hickory's voice and the dummy all end at an audio context's
+   speakers; anything connected straight to the speakers is sent through one gain node per context
+   instead, set a little below full. */
+var SOUND_MASTER = 0.72;
+(function () {
+  try {
+    var AN = window.AudioNode, AD = window.AudioDestinationNode; if (!AN || !AD || AN.prototype.__dbQuiet) return;
+    var orig = AN.prototype.connect;
+    AN.prototype.connect = function (dest) {
+      if (dest instanceof AD) {
+        var ctx = dest.context, m = ctx.__dbMaster;
+        if (!m) { m = ctx.createGain(); m.gain.value = SOUND_MASTER; orig.call(m, dest); ctx.__dbMaster = m; }
+        if (this === m) return orig.apply(this, arguments);
+        var a = Array.prototype.slice.call(arguments); a[0] = m;
+        return orig.apply(this, a);
+      }
+      return orig.apply(this, arguments);
+    };
+    AN.prototype.__dbQuiet = true;
+  } catch (e) {}
+})();
+
 /* The buyer's-eye copy opens as a stranger would meet it, every single time: the education
    notice, then the first-run picker, then an empty profile. Set by DRUGBUG_CONFIG.fresh on
    that build only; the real app and the main preview never do this (owner, Nov 4 2026).
@@ -2829,6 +2852,8 @@ function mergeProg(remote) {
   if (R.gifts && typeof R.gifts === "object") { L.gifts = L.gifts || {}; Object.keys(R.gifts).forEach(function (g) { if (!L.gifts[g] || R.gifts[g] < L.gifts[g]) L.gifts[g] = R.gifts[g]; }); }
   /* Pro granted by a code: keep whichever expiry is later, so redeeming on one device covers both. */
   if (R.acctBonus && !L.acctBonus) L.acctBonus = R.acctBonus;
+  if (R.reviewer && R.reviewer.id && !(L.reviewer && L.reviewer.id)) L.reviewer = R.reviewer;   /* question reviewer (Nov 7 2026) */
+  if (R.qrev) { L.qrev = L.qrev || {}; Object.keys(R.qrev).forEach(function (k) { if (!L.qrev[k]) L.qrev[k] = R.qrev[k]; }); }
   if (R.proGift && R.proGift.until) { if (!L.proGift || (L.proGift.until || 0) < R.proGift.until) L.proGift = { until: R.proGift.until }; }
   /* what is equipped follows the same "newest device wins" rule as the outfit and face */
   if (avNewer) { if (R.border) L.border = R.border; if (R.voice) L.voice = R.voice; if (R.track) L.track = R.track; }
@@ -3687,8 +3712,52 @@ function stickIcon(sz) {
    first rating of each question is sent, anonymously, with the usage statistics so the owner sees an
    average on the Question review page. Changing a rating later only changes it here. */
 var QRATE_Q = {};
+/* ---------- question reviewers (owner, Nov 7 2026) ----------
+   A LIFE- code makes its owner a question reviewer: after each answer, instead of the players'
+   1-5 rating, they get a reviewer panel: difficulty 1-5, Good / Bad question, and a suggestion.
+   Saved to the server (qrRate) for the owner's Review page. */
+function isReviewer() { return !!(Prog.d && Prog.d.reviewer && Prog.d.reviewer.id); }
+var QREV_T = {};
+function revHTML(q) {
+  var k = qid(q), R = (Prog.d.qrev || {})[k] || {};
+  QRATE_Q[k] = q;
+  var c = '<div class="qrev" data-qrk="' + k + '"><div class="qrevh"><b>Reviewer</b><span>' + (R.sent ? "Saved" : R.err ? esc(R.err) : "Your feedback goes to the DrugBug team") + '</span></div>';
+  c += '<div class="qrevrow"><span class="qrevl">Difficulty</span><span class="qrb" role="group" aria-label="Difficulty from 1 to 5">';
+  for (var n = 1; n <= 5; n++) c += '<button type="button" class="qrbtn' + (R.d === n ? ' on' : '') + '" data-qrd="' + n + '" aria-pressed="' + (R.d === n) + '">' + n + '</button>';
+  c += '</span><span class="qrevhint">1 easy · 5 hard</span></div>';
+  c += '<div class="qrevrow"><span class="qrevl">This question is</span><button type="button" class="qrevv g' + (R.v === "good" ? ' on' : '') + '" data-qrv="good">Good</button><button type="button" class="qrevv b' + (R.v === "bad" ? ' on' : '') + '" data-qrv="bad">Bad</button></div>';
+  c += '<div class="qrevs"><textarea maxlength="1000" placeholder="Suggestion (optional): a better wording, a wrong answer, a missing fact…" data-qrs="1">' + esc(R.s || "") + '</textarea><button type="button" class="btn small" data-qrsend="1">Send suggestion</button></div>';
+  return c + '</div>';
+}
+function revSave(k, el) {
+  var R = (Prog.d.qrev || (Prog.d.qrev = {}))[k] || (Prog.d.qrev[k] = {}), q = QRATE_Q[k] || {};
+  R.sent = false; R.err = ""; saveProg();
+  fnCall("qrRate", { gift: Prog.d.reviewer.id, id: k, d: R.d || null, v: R.v || null, s: R.s || null, lv: q.lv || (S.level || "") })
+    .then(function () { R.sent = true; R.err = ""; saveProg(); revRedraw(k); })
+    .catch(function (e) { R.err = e && e.message === "offline" ? "Not saved: no internet" : "Not saved: " + ((e && e.message) || "try again"); revRedraw(k); });
+  revRedraw(k);
+}
+function revRedraw(k) {
+  document.querySelectorAll('.qrev[data-qrk="' + k + '"]').forEach(function (el) {
+    var ta = el.querySelector("textarea"), keep = ta ? ta.value : null, w = document.createElement("div");
+    w.innerHTML = revHTML(QRATE_Q[k] || { q: "x", id: k }); var nw = w.firstChild;
+    if (keep != null) { var t2 = nw.querySelector("textarea"); if (t2) t2.value = keep; }
+    el.replaceWith(nw);
+  });
+}
+document.addEventListener("click", function (e) {
+  var b = e.target && e.target.closest && e.target.closest("[data-qrd],[data-qrv],[data-qrsend]"); if (!b) return;
+  var box = b.closest(".qrev"); if (!box || !isReviewer()) return;
+  e.preventDefault(); e.stopPropagation();
+  var k = box.getAttribute("data-qrk"), R = (Prog.d.qrev || (Prog.d.qrev = {}))[k] || (Prog.d.qrev[k] = {});
+  if (b.hasAttribute("data-qrd")) R.d = +b.getAttribute("data-qrd");
+  if (b.hasAttribute("data-qrv")) { var v = b.getAttribute("data-qrv"); R.v = R.v === v ? null : v; }
+  if (b.hasAttribute("data-qrsend")) { var ta = box.querySelector("textarea"); R.s = ta ? ta.value.trim().slice(0, 1000) : ""; if (!R.s) { R.err = "Type a suggestion first"; return revRedraw(k); } }
+  clearTimeout(QREV_T[k]); QREV_T[k] = setTimeout(function () { revSave(k); }, b.hasAttribute("data-qrsend") ? 0 : 500);
+}, true);
 function qRateHTML(q) {
   if (!q || !q.q || typeof qid !== "function") return "";
+  if (isReviewer()) return revHTML(q);
   var k = qid(q), R = (Prog.d && Prog.d.qrate) || {}, cur = R[k] || 0, c;
   QRATE_Q[k] = q;
   c = '<div class="qrate" data-qrk="' + k + '"><span class="qrl">' + (cur ? 'You rated this ' + cur + ' of 5' : 'How hard was this?') + '</span><span class="qrb" role="group" aria-label="Rate the difficulty from 1 to 5">';
@@ -7749,7 +7818,7 @@ document.addEventListener("visibilitychange", function () { if (document.visibil
 window.addEventListener("pagehide", function () { usgFlush(true); });
 setTimeout(function () { usgFlush(false); }, 8000);   /* the visit itself counts even before anything is answered */
 
-var SET_DEF = { remind: true, remindAt: "19:00", text: "normal", contrast: false, motion: false, homeLevel: "", dailyGoal: 10, nrN: 25, nrMode: "practice", adaptive: true, megaTimer: "on", fullDefault: false, voiceRate: "normal", showPhon: true, fun: true, sfx: true, music: true, musicVol: 40, printMode: "cards", printDetail: "std", printLang: "auto", printDense: false, state: "", buddy: true, weird: true, weirdAt: "12:00" };
+var SET_DEF = { remind: true, remindAt: "19:00", text: "normal", contrast: false, motion: false, homeLevel: "", dailyGoal: 10, nrN: 25, nrMode: "practice", adaptive: true, megaTimer: "on", fullDefault: false, voiceRate: "normal", showPhon: true, fun: true, sfx: true, music: true, musicVol: 30, printMode: "cards", printDetail: "std", printLang: "auto", printDense: false, state: "", buddy: true, weird: true, weirdAt: "12:00" };
 function SET() { var s = store("settings") || {}; return Object.assign({}, SET_DEF, s); }
 /* sound effects are on for everyone (owner, Nov 5 2026): anyone who had them off is switched back on
    once; after that the switch in Settings is theirs again */
@@ -8217,7 +8286,7 @@ function muPreview(id) {
   if (!MU.playing) { MU.forced = true; muStart(true); }
   MU.pvT = setTimeout(function () { MU.preview = null; MU.trackId = null; if (MU.forced) { MU.forced = false; if (!muOn()) muStop(); } if (typeof render === "function" && S.shopF === "music") render(); }, 15000);
 }
-function muLevel() { var v = SET().musicVol; if (typeof v === "string") v = MU_VOL[v] || 40; if (v == null || isNaN(+v)) v = 40; return Math.max(0, Math.min(100, +v)); }
+function muLevel() { var v = SET().musicVol; if (typeof v === "string") v = MU_VOL[v] || 30; if (v == null || isNaN(+v)) v = 30; return Math.max(0, Math.min(100, +v)); }
 function muVol() { return muLevel() / 100 * 2.6; }
 function muCtx() {
   var c0 = audioCtx(); if (!c0) return null;
@@ -9109,7 +9178,7 @@ function proLabel() {
   }
   if (PRO.store) return TIER_NAME[PRO.tier] + " active" + (PRO.offer ? " · offer code" : "") + (PRO.expires ? " · renews or ends " + new Date(PRO.expires).toLocaleDateString() : "");
   if (licenseActive()) return "School license (" + Prog.d.license.code + ") until " + new Date(Prog.d.license.until).toLocaleDateString();
-  if (typeof giftPro === "function" && giftPro()) return "DrugBug Pro from a code until " + new Date(Prog.d.proGift.until).toLocaleDateString();
+  if (typeof giftPro === "function" && giftPro()) return Prog.d.proGift.until - Date.now() > 50 * 365 * 864e5 ? "DrugBug Pro for life, from a code" : "DrugBug Pro from a code until " + new Date(Prog.d.proGift.until).toLocaleDateString();
   if (Prog.d.proGrant) return "Granted by DrugBug";
   return "DrugBug Free";
 }
@@ -9229,7 +9298,7 @@ function planInfo() {
   if (o.src === "free") {
     if (typeof seatActive === "function" && seatActive()) { o.src = "school"; o.lines.push(seatLabel()); o.note = "Your school or program pays for this. There is nothing to cancel."; }
     else if (typeof licenseActive === "function" && licenseActive()) { o.src = "school"; o.lines.push("School license until " + new Date(Prog.d.license.until).toLocaleDateString()); o.note = "Your school or program pays for this. There is nothing to cancel."; }
-    else if (typeof giftPro === "function" && giftPro()) { o.src = "code"; o.lines.push("From a code, until " + new Date(Prog.d.proGift.until).toLocaleDateString()); o.note = "Codes are not subscriptions: nothing renews and nothing is charged."; }
+    else if (typeof giftPro === "function" && giftPro()) { o.src = "code"; o.lines.push(Prog.d.proGift.until - Date.now() > 50 * 365 * 864e5 ? "From a code, for life" : "From a code, until " + new Date(Prog.d.proGift.until).toLocaleDateString()); o.note = "Codes are not subscriptions: nothing renews and nothing is charged."; }
     else if (DEMO && typeof webPass === "function" && webPass()) { o.src = "code"; o.lines.push("Access code, until " + new Date(webPass().until).toLocaleDateString()); o.note = "Codes are not subscriptions: nothing renews and nothing is charged."; }
     else if (Prog.d && Prog.d.proGrant) { o.src = "grant"; o.lines.push("Granted by DrugBug"); }
     else { o.lines.push("Free forever: every tool, over about 40 common medications"); o.note = NATIVE ? "No subscription. If you subscribed before on this Apple ID, tap Restore purchases." : "No subscription. Nothing is ever charged on Free."; }
@@ -29220,12 +29289,13 @@ function giftRedeem(code) {
     if (d.pro > 0) {
       var from = Math.max(Date.now(), (Prog.d.proGift && Prog.d.proGift.until) || 0);
       Prog.d.proGift = { until: from + d.pro * 864e5 };
-      got.push("DrugBug Pro until " + new Date(Prog.d.proGift.until).toLocaleDateString());
+      got.push(d.pro >= 36500 ? "DrugBug Pro for life" : "DrugBug Pro until " + new Date(Prog.d.proGift.until).toLocaleDateString());
     }
     if (d.bug && typeof bugById === "function" && bugById(d.bug).id === d.bug) {   /* a gift can carry a bug (owner, Nov 5 2026) */
       if (!owned(d.bug)) Prog.d.owned = (Prog.d.owned || []).concat([d.bug]);
       Prog.d.avatar = d.bug; Prog.d.avatarTs = Date.now(); got.push("the " + bugById(d.bug).name);
     }
+    if (d.rev) { Prog.d.reviewer = { id: d.id, at: Date.now() }; got.push("question reviewer access (a reviewer panel now shows after each answer)"); }
     if (d.ag) {
       store("agcode", d.ag);
       if (typeof AGP !== "undefined") { AGP.code = d.ag; AGP.tried = false; AGP.data = null; if (typeof agpAuto === "function") agpAuto(); }

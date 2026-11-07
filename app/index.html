@@ -898,6 +898,13 @@ table.suffix td{white-space:normal}
 .cihead b{display:block;font-size:14px}.cihead small{color:var(--muted);font-size:12px}.cistep{margin-left:auto;font-size:12.5px;color:var(--muted);font-weight:700}
 .cipanel h2{margin:0 0 8px;font-size:22px}.cipanel p{line-height:1.55;margin:0}
 .cibar{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:16px 0 4px}.cibar i{height:4px;border-radius:2px;background:var(--line)}.cibar i.on{background:var(--flight)}
+/* question reviewer panel (owner, Nov 7 2026) */
+.qrev{margin:12px 0 4px;border:1.5px solid var(--line);border-left:4px solid var(--flight);border-radius:14px;padding:10px 12px;background:var(--surface)}
+.qrevh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:6px}.qrevh b{font-size:12.5px;letter-spacing:.1em;text-transform:uppercase}.qrevh span{font-size:12.5px;color:var(--muted)}
+.qrevrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0}.qrevl{font-size:13px;font-weight:700;min-width:110px}.qrevhint{font-size:12px;color:var(--muted)}
+.qrevv{font:700 13.5px var(--f-body);padding:6px 14px;border-radius:999px;border:1.5px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+.qrevv.g.on{background:#16a34a;border-color:#16a34a;color:#fff}.qrevv.b.on{background:#dc2626;border-color:#dc2626;color:#fff}
+.qrevs{display:flex;flex-direction:column;gap:6px;margin-top:6px}.qrevs textarea{width:100%;box-sizing:border-box;min-height:60px;font:400 14px var(--f-body);color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;resize:vertical}.qrevs .btn{align-self:flex-start}
 .dsub{margin:12px 0 4px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .dbars{display:grid;grid-template-columns:repeat(14,1fr);gap:6px;align-items:end;height:130px}
 .dbar{display:flex;flex-direction:column;justify-content:flex-end;height:100%;gap:4px}
@@ -3139,9 +3146,10 @@ button.tierchip:hover{filter:brightness(1.08)}
 .qrate{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:10px 0 4px;padding:10px 12px;border:1.5px dashed var(--line);border-radius:14px;background:color-mix(in srgb,var(--surface) 70%,transparent)}
 .qrate .qrl{font-weight:700;font-size:14px}
 .qrate .qrb{display:flex;gap:6px}
-.qrate .qrbtn{width:36px;height:36px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-weight:800;font-size:15px;cursor:pointer}
-.qrate .qrbtn:hover{border-color:var(--c,#8b7bff)}
-.qrate .qrbtn.on{background:var(--c,#8b7bff);border-color:var(--c,#8b7bff);color:#fff}
+.qrev .qrb{display:inline-flex;gap:6px}
+.qrate .qrbtn,.qrev .qrbtn{width:36px;height:36px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-weight:800;font-size:15px;cursor:pointer}
+.qrate .qrbtn:hover,.qrev .qrbtn:hover{border-color:var(--c,#8b7bff)}
+.qrate .qrbtn.on,.qrev .qrbtn.on{background:var(--c,#8b7bff);border-color:var(--c,#8b7bff);color:#fff}
 .qrate .qrs{font-size:12.5px;color:var(--muted);margin-left:auto}
 .sticks.bump{animation:stbump .6s ease}
 @keyframes stbump{40%{transform:scale(1.25)}}
