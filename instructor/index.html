@@ -139,6 +139,12 @@ tr.clk{cursor:pointer}tr.clk:hover td{background:var(--surface2)}
     </div>
     <div class="tiles" id="apTiles"></div>
   </div>
+  <div class="card" id="coderCard">
+    <div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Reviewer codes</h2><button class="ghost" id="bCoders">Refresh</button></div>
+    <p class="muted small">Who holds each lifetime reviewer code and the reviewing they have done. Names are yours to fill in; only you see them. Their own studying stays anonymous.</p>
+    <div class="tblwrap"><table id="coderTable"><tr><td class="muted">Loading…</td></tr></table></div>
+    <div id="coderSugg"></div>
+  </div>
   <div class="card"><h2>iPhone app vs website</h2><p class="muted small">Where people use DrugBug. Each device counts once per day.</p>
     <div class="tiles" id="apPlatTiles"></div>
     <div class="dcols" id="apPD"></div><div class="dcolx" id="apPDX"></div>
@@ -444,7 +450,43 @@ tr.clk{cursor:pointer}tr.clk:hover td{background:var(--surface2)}
   var LEVEL = { emt: "EMT", aemt: "AEMT", paramedic: "Paramedic", flight: "Flight Paramedic", rn: "RN", lvn: "LVN", flightrn: "Flight RN", cna: "CNA", md1: "Med school" };
   var nice = function (k) { return LABEL[k] || String(k).replace(/_/g, " ").replace(/^./, function (c) { return c.toUpperCase(); }); };
   var num = function (n) { return n == null ? "—" : Number(n).toLocaleString(); };
+  /* reviewer codes (owner, Nov 7 2026) */
+  var CODERS = null, CODER_OPEN = null;
+  function loadCoders() {
+    call("qrCoders").then(function (d) { CODERS = d.list || []; drawCoders(); }).catch(function (e) {
+      $("coderTable").innerHTML = '<tr><td class="muted">' + esc(/not.?found|internal|unavailable|fetch|network/i.test(e.message) ? "Reviewer codes appear once the new server functions are deployed (DEPLOY.cmd on your PC)." : e.message) + '</td></tr>';
+    });
+  }
+  function drawCoders() {
+    var L = CODERS || [];
+    $("coderTable").innerHTML = '<tr><th>#</th><th>Code</th><th>Name</th><th>Redeemed</th><th>Graded</th><th>Good</th><th>Bad</th><th>Avg difficulty</th><th>Suggestions</th><th>Last active</th></tr>' + L.map(function (c) {
+      return '<tr><td class="num">' + c.n + '</td><td class="mono">' + esc(c.code) + '</td>' +
+        '<td><input class="cname" data-cgift="' + esc(c.gift) + '" value="' + esc(c.name) + '" placeholder="Who has it?" style="min-width:170px;padding:6px 8px"></td>' +
+        '<td>' + (c.redeemed ? '<span class="pill on">yes</span> <span class="muted small">' + (c.redeemedAt ? day(c.redeemedAt) : "") + '</span>' : '<span class="pill">not yet</span>') + '</td>' +
+        '<td class="num">' + c.graded + '</td><td class="num" style="color:var(--good)">' + c.good + '</td><td class="num" style="color:var(--bad)">' + c.bad + '</td>' +
+        '<td class="num">' + (c.avgDiff == null ? "—" : c.avgDiff) + '</td>' +
+        '<td>' + (c.suggestions.length ? '<button class="ghost small" data-csugg="' + esc(c.gift) + '">' + c.suggestions.length + ' · read</button>' : '<span class="muted">0</span>') + '</td>' +
+        '<td>' + ago(c.lastAt) + '</td></tr>';
+    }).join("");
+    var o = CODER_OPEN && L.filter(function (c) { return c.gift === CODER_OPEN; })[0];
+    $("coderSugg").innerHTML = o ? '<h3 style="font-size:15px;margin:14px 0 6px">Suggestions from ' + esc(o.name || o.code) + '</h3>' + o.suggestions.map(function (x) {
+      return '<div style="border-top:1px solid var(--line);padding:8px 0"><div class="small muted">' + day(x.at) + ' · <span class="mono">' + esc(x.qid) + '</span>' + (x.lv ? ' · ' + esc(x.lv) : '') + (x.v ? ' · <b style="color:' + (x.v === "bad" ? "var(--bad)" : "var(--good)") + '">' + x.v + '</b>' : '') + (x.d ? ' · difficulty ' + x.d : '') + '</div><div style="white-space:pre-wrap">' + esc(x.s) + '</div></div>';
+    }).join("") + '<p class="muted small">Open <a href="../review/">Question review</a> and pick "Reviewers left a suggestion" to see each one next to its question.</p>' : "";
+  }
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest("[data-csugg]"); if (!b) return;
+    CODER_OPEN = CODER_OPEN === b.getAttribute("data-csugg") ? null : b.getAttribute("data-csugg"); drawCoders();
+  });
+  document.addEventListener("change", function (e) {
+    var t = e.target; if (!t.matches || !t.matches("input.cname")) return;
+    var g = t.getAttribute("data-cgift"), v = t.value.trim(); t.disabled = true;
+    call("qrNameSet", { gift: g, name: v }).then(function () { (CODERS || []).forEach(function (c) { if (c.gift === g) c.name = v; }); t.disabled = false; t.style.borderColor = "var(--good)"; })
+      .catch(function (e2) { t.disabled = false; t.style.borderColor = "var(--bad)"; alert(e2.message); });
+  });
+  $("bCoders").onclick = loadCoders;
+
   function loadApp() {
+    loadCoders();
     $("apSub").textContent = "Loading…";
     call("appMetrics").then(function (d) { AP = d; drawApp(d); }).catch(function (e) {
       $("apSub").textContent = /not.?found|internal|unavailable|fetch|network/i.test(e.message) ? "App metrics will appear once the new server functions are deployed (DEPLOY.cmd on your PC)." : e.message;
