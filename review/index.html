@@ -90,6 +90,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 .msg{font-size:14px;padding:8px 12px;border-radius:9px;background:var(--warn-bg);color:var(--warn);margin-top:10px}
 .backlink{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:inherit;opacity:.8;text-decoration:none;border:1px solid currentColor;border-radius:999px;padding:6px 14px;margin-bottom:14px}.backlink:hover{opacity:1}.backrow{display:flex;gap:8px;flex-wrap:wrap}
 .prate{margin:10px 0 0;font-size:13.5px;color:var(--muted)}.prate b{color:inherit}
+.revs .rvi{border-top:1px solid var(--line);padding:8px 0;font-size:13.5px}.rvw .rvb{color:#dc2626;font-weight:700}.rvw .rvg{color:#16a34a;font-weight:700}.rvs{margin-top:4px;white-space:pre-wrap}
 </style>
 </head><body>
 <div class="wrap">
@@ -122,7 +123,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
       </select>
       <select id="fLv" aria-label="Level"><option value="">All levels</option></select>
       <select id="fV" aria-label="Review status">
-        <option value="un">Not reviewed yet</option><option value="">Everything</option><option value="good">Marked good</option><option value="bad">Marked bad</option><option value="off">Marked not relevant</option><option value="ed">Edited by me</option>
+        <option value="un">Not reviewed yet</option><option value="">Everything</option><option value="good">Marked good</option><option value="bad">Marked bad</option><option value="off">Marked not relevant</option><option value="rvbad">Reviewers said bad</option><option value="rvsug">Reviewers left a suggestion</option><option value="rvany">Any reviewer feedback</option><option value="ed">Edited by me</option>
       </select>
       <label class="tg"><input type="checkbox" id="fFlag"> Rule breakers only</label>
       <input type="search" id="fQ" placeholder="Search a drug or any words" aria-label="Search">
@@ -140,6 +141,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
           </div>
         </div>
         <div class="card sec"><h3>Difficulty</h3><div class="diff" id="diff"></div><p class="prate" id="prate"></p></div>
+        <div class="card sec" id="revBox"><h3>Reviewers</h3><div id="revs" class="revs"></div></div>
         <div class="card sec"><h3>Specialty it belongs in</h3><div class="specs" id="specs"></div><p class="note">"now" marks the level it is in today. Pick every level it fits.</p></div>
         <div class="card sec"><h3>Note</h3><textarea id="note" placeholder="What to fix, or why it is bad"></textarea><div class="saved" id="saved"></div></div>
         <div class="card sec">
@@ -168,7 +170,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
   var DIFF = [["1","Easy"],["2","Basic"],["3","Medium"],["4","Hard"],["5","Expert"]];
   var BANK = { q: "Practice", sata: "Select all", reg: "Exam prep" };
   var $ = function (id) { return document.getElementById(id); };
-  var QS = [], BYID = {}, NAMES = {}, R = {}, RATES = {}, list = [], pos = 0, editing = false, loaded = false;
+  var QS = [], BYID = {}, NAMES = {}, R = {}, RATES = {}, REVS = {}, list = [], pos = 0, editing = false, loaded = false;
   var store = { get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   function msg(id, t) { var el = $(id); el.textContent = t || ""; el.hidden = !t; }
@@ -217,7 +219,11 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
       if (lv && q.lv !== lv) return false;
       if (v === "un" && r && r.v) return false;
       if (v === "ed" && !(r && r.e)) return false;
-      if (v && v !== "un" && v !== "ed" && !(r && r.v === v)) return false;
+      var rv = REVS[q.id] || [];
+      if (v === "rvbad" && !rv.some(function (x) { return x.v === "bad"; })) return false;
+      if (v === "rvsug" && !rv.some(function (x) { return x.s; })) return false;
+      if (v === "rvany" && !rv.length) return false;
+      if (v && v !== "un" && v !== "ed" && v.indexOf("rv") !== 0 && !(r && r.v === v)) return false;
       if (fo && !flags(q).length) return false;
       if (s && q._s.indexOf(s) < 0) return false;
       return true;
@@ -278,6 +284,12 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
     var spec = r.s || (q && q.lv ? [q.lv] : []);
     $("specs").innerHTML = LEVELS.map(function (l) { return '<button class="sp' + (q && q.lv === l[0] ? " cur" : "") + '" data-s="' + l[0] + '" aria-pressed="' + (spec.indexOf(l[0]) >= 0) + '"' + (q ? '' : ' disabled') + '>' + l[1] + '</button>'; }).join("");
     var pr = q && RATES[q.id]; $("prate").innerHTML = pr && pr.n ? 'Players rated it <b>' + (pr.s / pr.n).toFixed(1) + ' of 5</b> (' + pr.n + (pr.n === 1 ? ' rating' : ' ratings') + ': ' + [1, 2, 3, 4, 5].map(function (k) { return k + '&times;' + (pr['d' + k] || 0); }).join(' ') + ')' : 'No player ratings yet.';
+    var rv = (q && REVS[q.id]) || [];
+    $("revs").innerHTML = rv.length ? (function () {
+      var ds = rv.filter(function (x) { return x.d; }), g = rv.filter(function (x) { return x.v === "good"; }).length, b = rv.filter(function (x) { return x.v === "bad"; }).length;
+      return '<p class="prate">' + (ds.length ? 'Average difficulty <b>' + (ds.reduce(function (t, x) { return t + x.d; }, 0) / ds.length).toFixed(1) + ' of 5</b> · ' : '') + '<b style="color:#16a34a">' + g + ' good</b> · <b style="color:#dc2626">' + b + ' bad</b></p>' +
+        rv.map(function (x) { return '<div class="rvi"><div class="rvw"><b>' + esc(x.who) + '</b>' + (x.d ? ' · difficulty ' + x.d : '') + (x.v ? ' · <span class="' + (x.v === "bad" ? "rvb" : "rvg") + '">' + x.v + '</span>' : '') + (x.at ? ' · <span class="muted">' + new Date(x.at).toLocaleDateString() + '</span>' : '') + '</div>' + (x.s ? '<div class="rvs">' + esc(x.s) + '</div>' : '') + '</div>'; }).join("");
+    })() : '<p class="prate">No reviewer feedback yet.</p>';
     $("note").value = r.n || ""; $("note").disabled = !q;
     $("saved").textContent = q && r.ts ? "Reviewed " + new Date(r.ts).toLocaleDateString() : "";
   }
@@ -343,8 +355,8 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
   function exportData() {
     var out = [];
     QS.forEach(function (q) {
-      var r = R[q.id]; if (!r) return;
-      var o = { id: q.id, bank: q.b, level: q.lv, drug: q.d || "", verdict: r.v || null, difficulty: r.d || null, players: RATES[q.id] && RATES[q.id].n ? { avg: +(RATES[q.id].s / RATES[q.id].n).toFixed(2), n: RATES[q.id].n } : null, specialties: r.s || [], note: r.n || null, reviewed: r.ts ? new Date(r.ts).toISOString() : null, rule_flags: flags(q) };
+      var r = R[q.id] || (REVS[q.id] && REVS[q.id].length ? {} : null); if (!r) return;   /* reviewer feedback alone counts too */
+      var o = { id: q.id, bank: q.b, level: q.lv, drug: q.d || "", verdict: r.v || null, difficulty: r.d || null, reviewers: (REVS[q.id] || []).map(function (x) { return { who: x.who, difficulty: x.d || null, verdict: x.v || null, suggestion: x.s || null }; }), players: RATES[q.id] && RATES[q.id].n ? { avg: +(RATES[q.id].s / RATES[q.id].n).toFixed(2), n: RATES[q.id].n } : null, specialties: r.s || [], note: r.n || null, reviewed: r.ts ? new Date(r.ts).toISOString() : null, rule_flags: flags(q) };
       o.original = { q: q.q, a: q.a, w: q.w, opts: q.opts, ok: q.ok, x: q.x };
       if (r.e) o.edited = r.e;
       out.push(o);
@@ -376,7 +388,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
     $("vIn").hidden = !!real; $("vMain").hidden = !real;
     if (!real) return;
     Promise.all([qsP, call("qrLoad")]).then(function (res) {
-      var j = res[0]; NAMES = j.names || {}; R = res[1].items || {}; RATES = res[1].rates || {};
+      var j = res[0]; NAMES = j.names || {}; R = res[1].items || {}; RATES = res[1].rates || {}; REVS = res[1].revs || {};
       QS = j.qs.map(function (q) { q._s = (q.q + " " + (q.a || "") + " " + (q.opts || []).join(" ") + " " + (NAMES[q.d] || q.d || "") + " " + q.id).toLowerCase(); BYID[q.id] = q; return q; });
       QS.forEach(function (q) { q._f0 = flags(q).length > 0; });
       loaded = true; build();
