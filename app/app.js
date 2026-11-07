@@ -2898,7 +2898,7 @@ function xpLevel(xp) { var lv = 1, need = 100; while (xp >= need) { xp -= need; 
 /* recording answers */
 function record(q, ok, kind) { try { recordInner(q, ok, kind); } catch (e) { /* never let progress bookkeeping block the quiz from moving on */ try { console.warn("record", e); } catch (x) { } } }
 function recordInner(q, ok, kind) {
-  if (typeof usgOn === "function" && usgOn()) { USG.inc.q++; if (ok) USG.inc.c++; }
+  if (typeof usgOn === "function" && usgOn()) { USG.inc.q++; if (ok) USG.inc.c++; if (q && q.d && /^[a-z0-9][a-z0-9-]{1,59}$/.test(q.d) && USG.inc.dr) { var ud = USG.inc.dr[q.d] || (USG.inc.dr[q.d] = [0, 0]); ud[0]++; if (ok) ud[1]++; } }
   var P = Prog.d, t = today();
   if (!P) return; P.days = P.days || {}; P.drugs = P.drugs || {}; P.xp = P.xp || 0;
   P.answered = (P.answered || 0) + 1; P.days[t] = (P.days[t] || 0) + 1; P.xp += ok ? 10 : 2;
@@ -3755,6 +3755,100 @@ document.addEventListener("click", function (e) {
   if (b.hasAttribute("data-qrsend")) { var ta = box.querySelector("textarea"); R.s = ta ? ta.value.trim().slice(0, 1000) : ""; if (!R.s) { R.err = "Type a suggestion first"; return revRedraw(k); } }
   clearTimeout(QREV_T[k]); QREV_T[k] = setTimeout(function () { revSave(k); }, b.hasAttribute("data-qrsend") ? 0 : 500);
 }, true);
+/* ---------- evaluators' analytics (owner, Nov 7 2026) ----------
+   How everyone does, anonymously, down to each medication: answers and % right per drug (all
+   players), players' difficulty ratings and evaluators' good / bad per question. Opened from the
+   Evaluator / Administrator badge. Body systems and drug classes are added up here from the drugs. */
+var ANA = { open: false, data: null, busy: false, err: "", tab: "drug", q: "", sort: "n", drug: null };
+var anadlg = document.createElement("div"); anadlg.id = "anadlg"; anadlg.className = "sheet rsheet"; anadlg.hidden = true; document.body.appendChild(anadlg);
+function anaQs() {
+  if (ANA.qs) return ANA.qs;
+  var all = [].concat(DB.Q || [], DB.RQ || [], DB.QX || []), by = {};
+  all.forEach(function (q) { if (!q || !q.q || !q.d) return; if (typeof qRuleBad === "function" && qRuleBad(q)) return; (by[q.d] = by[q.d] || []).push(q); });   /* only questions players can actually get */
+  return (ANA.qs = by);
+}
+function anaRows() {
+  var D = (ANA.data && ANA.data.drugs) || {}, R = (ANA.data && ANA.data.rates) || {}, V = (ANA.data && ANA.data.revs) || {}, QB = anaQs();
+  var ids = {}; Object.keys(D).forEach(function (k) { ids[k] = 1; }); Object.keys(QB).forEach(function (k) { if (DB.drugs[k]) ids[k] = 1; });
+  var rows = Object.keys(ids).map(function (id) {
+    var d = D[id] || { n: 0, c: 0 }, qs = QB[id] || [], rs = 0, rn = 0, g = 0, b = 0;
+    qs.forEach(function (q) { var k = qid(q), r = R[k], v = V[k]; if (r && r.n) { rs += r.s; rn += r.n; } if (v) { g += v.g; b += v.b; } });
+    return { id: id, name: nameOf(id), n: d.n || 0, c: d.c || 0, pct: d.n ? Math.round(100 * d.c / d.n) : null, diff: rn ? Math.round(10 * rs / rn) / 10 : null, rn: rn, g: g, b: b, nq: qs.length };
+  });
+  return rows.filter(function (r) { return r.n || r.rn || r.g || r.b; });
+}
+function anaGroup(rows, keyFn, nameFn) {
+  var acc = {};
+  rows.forEach(function (r) { keyFn(r.id).forEach(function (k) { if (!k) return; var a = acc[k] || (acc[k] = { id: k, name: nameFn(k), n: 0, c: 0, rs: 0, rn: 0, g: 0, b: 0, drugs: 0 }); a.n += r.n; a.c += r.c; if (r.diff != null) { a.rs += r.diff * r.rn; a.rn += r.rn; } a.g += r.g; a.b += r.b; a.drugs++; }); });
+  return Object.keys(acc).map(function (k) { var a = acc[k]; a.pct = a.n ? Math.round(100 * a.c / a.n) : null; a.diff = a.rn ? Math.round(10 * a.rs / a.rn) / 10 : null; return a; });
+}
+function anaTable(rows, clickable) {
+  var f = ANA.q.trim().toLowerCase(); if (f) rows = rows.filter(function (r) { return r.name.toLowerCase().indexOf(f) >= 0; });
+  var so = ANA.sort;
+  rows.sort(so === "weak" ? function (a, b) { return (a.pct == null ? 999 : a.pct) - (b.pct == null ? 999 : b.pct) || b.n - a.n; } : so === "hard" ? function (a, b) { return (b.diff || 0) - (a.diff || 0) || b.n - a.n; } : so === "bad" ? function (a, b) { return b.b - a.b || b.n - a.n; } : function (a, b) { return b.n - a.n || a.name.localeCompare(b.name); });
+  if (!rows.length) return '<p class="muted">' + (ANA.data ? "Nothing here yet. Numbers fill in as people answer questions." : "") + '</p>';
+  return '<div class="evtbl"><div class="evhd"><span>Name</span><span>Answers</span><span>% right</span><span>Difficulty</span><span>Good / bad</span></div>' + rows.slice(0, 300).map(function (r) {
+    var cls = r.pct == null ? "" : r.pct >= 80 ? "good" : r.pct >= 60 ? "mid" : "low";
+    return '<' + (clickable ? 'button type="button" data-evdrug="' + esc(r.id) + '"' : 'div') + ' class="evrow"><span class="evn">' + esc(r.name) + '</span><span>' + (r.n || 0).toLocaleString() + '</span><span class="evp ' + cls + '">' + (r.pct == null ? "—" : r.pct + "%") + '</span><span>' + (r.diff == null ? "—" : r.diff + " / 5") + '</span><span><b class="g">' + r.g + '</b> / <b class="b">' + r.b + '</b></span></' + (clickable ? 'button' : 'div') + '>';
+  }).join("") + '</div>' + (rows.length > 300 ? '<p class="muted small">Showing 300 of ' + rows.length + '. Use the search to find the rest.</p>' : '');
+}
+function anaDrugView(id) {
+  var r = anaRows().filter(function (x) { return x.id === id; })[0] || { id: id, name: nameOf(id), n: 0, c: 0, pct: null, diff: null, g: 0, b: 0 };
+  var R = (ANA.data && ANA.data.rates) || {}, V = (ANA.data && ANA.data.revs) || {}, qs = (anaQs()[id] || []).slice();
+  var info = qs.map(function (q) { var k = qid(q), rr = R[k], v = V[k] || { g: 0, b: 0, dS: 0, dN: 0 }; return { q: q, avg: rr && rr.n ? rr.s / rr.n : null, n: rr ? rr.n : 0, g: v.g, b: v.b, ed: v.dN ? v.dS / v.dN : null }; });
+  info.sort(function (a, b) { return (b.avg || 0) - (a.avg || 0) || b.b - a.b; });
+  var t = function (v, l) { return '<div class="evtile"><b>' + v + '</b><span>' + l + '</span></div>'; };
+  var c = '<button class="linkish" data-evback="1">&larr; All medications</button><h3 class="evh">' + esc(r.name) + '</h3>' +
+    '<div class="evtiles">' + t((r.n || 0).toLocaleString(), "answers, everyone") + t(r.pct == null ? "—" : r.pct + "%", "answered right") + t(r.diff == null ? "—" : r.diff + " / 5", "players' difficulty") + t('<span class="g">' + r.g + '</span> / <span class="b">' + r.b + '</span>', "evaluators: good / bad") + t(qs.length, "questions") + '</div>';
+  c += '<h4 class="evsub">Questions, hardest first (by players\' ratings)</h4>' + (info.length ? info.slice(0, 60).map(function (x) {
+    return '<div class="evq"><p>' + esc(String(x.q.q).slice(0, 220)) + (String(x.q.q).length > 220 ? "…" : "") + '</p><span class="muted small">' + esc(x.q.lv || "") + ' · players ' + (x.avg == null ? "not rated yet" : x.avg.toFixed(1) + " / 5 (" + x.n + ")") + ' · evaluators <b class="g">' + x.g + ' good</b> / <b class="b">' + x.b + ' bad</b>' + (x.ed ? ' · their difficulty ' + x.ed.toFixed(1) : '') + '</span></div>';
+  }).join("") : '<p class="muted">No questions for this medication yet.</p>');
+  return c;
+}
+function anaView() {
+  var role = codeRole(), c = '<div class="panel evpanel" role="dialog" aria-modal="true" aria-label="Analytics" tabindex="-1"><div class="pbar"><h2>Analytics</h2><span class="tierchip tc-role tc-' + role + '">' + (role === "admin" ? "Administrator" : "Evaluator") + '</span><button class="theme-btn" data-evclose="1">Close</button></div>';
+  c += '<p class="muted small">How everyone does on DrugBug, all anonymous, down to each medication. Answers count from Nov 7, 2026 on; difficulty is the players\' 1-5 ratings; good / bad are the evaluators\' votes.</p>';
+  if (ANA.busy && !ANA.data) return c + '<p class="muted">Loading…</p></div>';
+  if (ANA.err && !ANA.data) return c + '<p class="presult">' + esc(ANA.err) + '</p></div>';
+  if (ANA.drug) return c + anaDrugView(ANA.drug) + '</div>';
+  var rows = anaRows(), tot = rows.reduce(function (a, r) { a.n += r.n; a.c += r.c; a.g += r.g; a.b += r.b; return a; }, { n: 0, c: 0, g: 0, b: 0 });
+  var t = function (v, l) { return '<div class="evtile"><b>' + v + '</b><span>' + l + '</span></div>'; };
+  c += '<div class="evtiles">' + t(tot.n.toLocaleString(), "answers counted") + t(tot.n ? Math.round(100 * tot.c / tot.n) + "%" : "—", "answered right") + t(rows.length, "medications with data") + t('<span class="g">' + tot.g + '</span> / <span class="b">' + tot.b + '</span>', "evaluators: good / bad") + '</div>';
+  c += '<div class="evtabs">' + [["drug", "Each medication"], ["sys", "Body systems"], ["cls", "Drug classes"]].map(function (x) { return '<button class="' + (ANA.tab === x[0] ? "on" : "") + '" data-evtab="' + x[0] + '">' + x[1] + '</button>'; }).join("") + '</div>';
+  c += '<div class="evctl"><input class="pinput" id="evq" placeholder="Search a medication, system or class" value="' + esc(ANA.q) + '"><select class="pinput" id="evsort">' + [["n", "Most answered"], ["weak", "Lowest % right"], ["hard", "Hardest (players)"], ["bad", "Most \"bad\" votes"]].map(function (o) { return '<option value="' + o[0] + '"' + (ANA.sort === o[0] ? " selected" : "") + '>' + o[1] + '</option>'; }).join("") + '</select></div>';
+  if (ANA.tab === "drug") c += anaTable(rows, true);
+  else if (ANA.tab === "sys") { var SN = {}; (typeof SYS !== "undefined" ? SYS : []).forEach(function (g) { SN[g[0]] = g[1]; }); c += anaTable(anaGroup(rows, function (id) { return DB.drugs[id] ? sysOfDrug(id) : []; }, function (k) { return SN[k] || k; }), false); }
+  else c += anaTable(anaGroup(rows, function (id) { var cl = groupClassOf(id); return cl ? [cl] : []; }, function (k) { return k; }), false);
+  return c + '</div>';
+}
+function anaDraw(keepFocus) {
+  var a = document.activeElement, id = a && a.id, pos = a && a.selectionStart;
+  anadlg.innerHTML = anaView(); try { translateDom(anadlg); } catch (e) {}
+  if (keepFocus && id) { var n = document.getElementById(id); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) {} } }
+}
+function anaOpen() {
+  if (!codeRole()) return;
+  ANA.open = true; anadlg.hidden = false; ANA.drug = null; anaDraw();
+  if (ANA.data && Date.now() - ANA.at < 300000) return;
+  ANA.busy = true; ANA.err = ""; anaDraw();
+  fnCall("qrStats", { gift: Prog.d.reviewer.id }).then(function (r) { ANA.busy = false; ANA.data = r || {}; ANA.at = Date.now(); if (ANA.open) anaDraw(); })
+    .catch(function (e) { ANA.busy = false; ANA.err = e && e.message === "offline" ? "Analytics need an internet connection." : "Couldn't load analytics: " + ((e && e.message) || "try again"); if (ANA.open) anaDraw(); });
+}
+document.addEventListener("click", function (e) {
+  var b = e.target && e.target.closest && e.target.closest("[data-evopen]"); if (!b) return;
+  e.preventDefault(); e.stopPropagation(); anaOpen();
+}, true);
+anadlg.addEventListener("click", function (e) {
+  if (e.target === anadlg || e.target.closest("[data-evclose]")) { ANA.open = false; anadlg.hidden = true; anadlg.innerHTML = ""; return; }
+  var t = e.target.closest("[data-evtab],[data-evdrug],[data-evback]"); if (!t) return;
+  if (t.hasAttribute("data-evtab")) { ANA.tab = t.getAttribute("data-evtab"); ANA.q = ""; }
+  if (t.hasAttribute("data-evdrug")) ANA.drug = t.getAttribute("data-evdrug");
+  if (t.hasAttribute("data-evback")) ANA.drug = null;
+  anaDraw(); var p = anadlg.querySelector(".panel"); if (p) p.scrollTop = 0;
+});
+anadlg.addEventListener("input", function (e) { if (e.target.id === "evq") { ANA.q = e.target.value; anaDraw(true); } });
+anadlg.addEventListener("change", function (e) { if (e.target.id === "evsort") { ANA.sort = e.target.value; anaDraw(); } });
+document.addEventListener("keydown", function (e) { if (e.key === "Escape" && ANA.open) { ANA.open = false; anadlg.hidden = true; } if ((e.key === "Enter" || e.key === " ") && e.target && e.target.getAttribute && e.target.getAttribute("data-evopen")) { e.preventDefault(); anaOpen(); } });
 function qRateHTML(q) {
   if (!q || !q.q || typeof qid !== "function") return "";
   if (isReviewer()) return revHTML(q);
@@ -4597,7 +4691,13 @@ function stylesView() {
 }
 /* the top bar says which plan you are on: Free Bug, Plus Bug or Pro Bug (owner, Nov 5 2026).
    Free and Plus open the plans so the next step is one tap away; Pro is just a badge. */
+/* code roles (owner, Nov 7 2026): LIFE-F49ZSZ is the owner's own code and shows "Administrator";
+   every other LIFE- code shows "Evaluator". Tapping the badge opens the evaluators' analytics. */
+var ADMIN_GIFT = "once-life-nov7-8c3dfa44";
+function codeRole() { return typeof isReviewer === "function" && isReviewer() ? (Prog.d.reviewer.id === ADMIN_GIFT ? "admin" : "eval") : ""; }
 function tierChip(inBug) {
+  var role = codeRole();
+  if (role) { var rl = role === "admin" ? "Administrator" : "Evaluator"; return '<span class="tierchip ' + (inBug ? 'inbug ' : '') + 'tc-role tc-' + role + '" data-evopen="1" role="button" tabindex="0" title="' + rl + ': open analytics">' + rl + '</span>'; }
   var t = "free"; try { t = tier(); } catch (e) {}
   if (inBug) return '<span class="tierchip inbug tc-' + t + '">' + (t === "pro" ? "Pro" : t === "plus" ? "Plus" : "Free") + ' Bug</span>';
   var lab = t === "pro" ? "Pro Bug" : t === "plus" ? "Plus Bug" : "Free Bug";
@@ -7752,7 +7852,7 @@ var APP_VERSION = "1.1", APP_DATE = "2026-11-05";
    Policy (effective 2026-11-05) and agreed to on the welcome screen. Settings > Account & privacy
    > Share usage statistics turns it off and deletes this device's record (functions/usage.js). */
 var USG = { inc: null, tab: "", lastAct: Date.now(), sentAt: 0, busy: false, sessSent: false };
-function usgNew() { return { q: 0, c: 0, learn: 0, sec: 0, tabs: {}, feats: {} }; }
+function usgNew() { return { q: 0, c: 0, learn: 0, sec: 0, tabs: {}, feats: {}, dr: {} }; }
 USG.inc = usgNew();
 /* the owner's own devices never count in the metrics (owner, Nov 5 2026): once the owner account signs
    in on a device, that device is marked, its earlier stats are removed and it stops reporting for good */
@@ -7792,7 +7892,7 @@ function usgFlush(leaving) {
   var rc = (typeof routeCtx === "function" && routeCtx()) || "";
   var body = { data: { did: usgDid(), plat: NATIVE ? "ios" : "web", tier: (function () { try { return tier(); } catch (e) { return "free"; } })(),
     route: rc || "other", level: S.view === "level" ? usgKey(S.level) : "", ver: APP_VERSION,
-    inc: { q: I.q, c: I.c, learn: I.learn, sec: I.sec, sess: USG.sessSent ? 0 : 1, tabs: I.tabs, feats: I.feats }, rate: usgRates() } };
+    inc: { q: I.q, c: I.c, learn: I.learn, sec: I.sec, sess: USG.sessSent ? 0 : 1, tabs: I.tabs, feats: I.feats, dr: I.dr || {} }, rate: usgRates() } };
   USG.inc = usgNew(); USG.sentAt = Date.now(); USG.busy = true;
   var wasSess = USG.sessSent; USG.sessSent = true;
   var back = function (ok) { USG.busy = false; if (ok && body.data.rate) { var pd = store("qratePend") || {}; Object.keys(body.data.rate).forEach(function (k) { delete pd[k]; }); store("qratePend", pd); } if (!ok) { USG.sessSent = wasSess; var J = body.data.inc; USG.inc.q += J.q; USG.inc.c += J.c; USG.inc.learn += J.learn; USG.inc.sec += J.sec; } };
