@@ -91,10 +91,13 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 .backlink{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:inherit;opacity:.8;text-decoration:none;border:1px solid currentColor;border-radius:999px;padding:6px 14px;margin-bottom:14px}.backlink:hover{opacity:1}.backrow{display:flex;gap:8px;flex-wrap:wrap}
 .prate{margin:10px 0 0;font-size:13.5px;color:var(--muted)}.prate b{color:inherit}
 .revs .rvi{border-top:1px solid var(--line);padding:8px 0;font-size:13.5px}.rvw .rvb{color:#dc2626;font-weight:700}.rvw .rvg{color:#16a34a;font-weight:700}.rvs{margin-top:4px;white-space:pre-wrap}
+.avgbig{display:inline-block;font-size:15px;margin-bottom:6px;padding:6px 10px;border-radius:10px;background:rgba(124,58,237,.1)}.avgbig>b{font-size:20px}
+html.embed .backrow,html.embed .wrap>.top:first-of-type{display:none!important}html.embed .wrap{padding-top:4px}
 </style>
 </head><body>
 <div class="wrap">
-  <nav class="backrow"><a class="backlink" href="../instructor/signin/">&larr; Back to dashboard</a><a class="backlink" href="../">DrugBug home</a></nav>
+  <script>if (/[?&]embed=1/.test(location.search)) document.documentElement.classList.add("embed");</script>
+  <nav class="backrow"><a class="backlink" href="../admin/#grading">&larr; Admin dashboard</a><a class="backlink" href="../">DrugBug home</a></nav>
   <div class="top">
     <h1>DrugBug Question Review</h1>
     <div class="who" id="who"></div>
@@ -123,8 +126,9 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
       </select>
       <select id="fLv" aria-label="Level"><option value="">All levels</option></select>
       <select id="fV" aria-label="Review status">
-        <option value="un">Not reviewed yet</option><option value="">Everything</option><option value="good">Marked good</option><option value="bad">Marked bad</option><option value="off">Marked not relevant</option><option value="rvbad">Reviewers said bad</option><option value="rvsug">Reviewers left a suggestion</option><option value="rvany">Any reviewer feedback</option><option value="ed">Edited by me</option>
+        <option value="un">Not reviewed yet</option><option value="">Everything</option><option value="rated">Has difficulty ratings</option><option value="good">Marked good</option><option value="bad">Marked bad</option><option value="off">Marked not relevant</option><option value="rvbad">Reviewers said bad</option><option value="rvsug">Reviewers left a suggestion</option><option value="rvany">Any reviewer feedback</option><option value="ed">Edited by me</option>
       </select>
+      <select id="fSort" aria-label="Order"><option value="">Question order</option><option value="hard">Rated hardest first</option><option value="easy">Rated easiest first</option><option value="many">Most ratings first</option></select>
       <label class="tg"><input type="checkbox" id="fFlag"> Rule breakers only</label>
       <input type="search" id="fQ" placeholder="Search a drug or any words" aria-label="Search">
     </div>
@@ -223,14 +227,21 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
       if (v === "rvbad" && !rv.some(function (x) { return x.v === "bad"; })) return false;
       if (v === "rvsug" && !rv.some(function (x) { return x.s; })) return false;
       if (v === "rvany" && !rv.length) return false;
-      if (v && v !== "un" && v !== "ed" && v.indexOf("rv") !== 0 && !(r && r.v === v)) return false;
+      if (v === "rated" && !avgOf(q).n) return false;
+      if (v && v !== "un" && v !== "ed" && v !== "rated" && v.indexOf("rv") !== 0 && !(r && r.v === v)) return false;
       if (fo && !flags(q).length) return false;
       if (s && q._s.indexOf(s) < 0) return false;
       return true;
     });
+    var so = $("fSort").value;
+    if (so) { var A = {}; list.forEach(function (q) { A[q.id] = avgOf(q); });
+      list.sort(function (x, y) { var a = A[x.id], b = A[y.id];
+        if (so === "many") return b.n - a.n;
+        if (!a.n || !b.n) return (b.n ? 1 : 0) - (a.n ? 1 : 0);
+        return so === "hard" ? b.avg - a.avg || b.n - a.n : a.avg - b.avg || b.n - a.n; }); }
     var i = keepId ? list.findIndex(function (q) { return q.id === keepId; }) : -1;
     pos = i >= 0 ? i : Math.min(pos, Math.max(0, list.length - 1));
-    store.set("qr-filters", JSON.stringify({ bk: bk, lv: lv, v: v, fo: fo, s: $("fQ").value }));
+    store.set("qr-filters", JSON.stringify({ bk: bk, lv: lv, v: v, fo: fo, s: $("fQ").value, so: so }));
     editing = false; draw();
   }
 
@@ -277,13 +288,20 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
     h += '<label>Explanation<textarea id="eX" rows="3">' + esc(v.x) + '</textarea></label>';
     return h + '<div class="eacts"><button class="tb primary" data-act="esave">Save my edit</button><button class="tb" data-act="ecancel">Cancel</button></div></div>';
   }
+  /* everyone's difficulty for a question: players' 1-5 ratings and evaluators' together (owner, Nov 7 2026) */
+  function avgOf(q) {
+    var pr = RATES[q.id] || {}, rv = (REVS[q.id] || []).filter(function (x) { return x.d; });
+    var n = (pr.n || 0) + rv.length, sum = (pr.s || 0) + rv.reduce(function (t, x) { return t + x.d; }, 0);
+    return { n: n, avg: n ? sum / n : 0, pn: pr.n || 0, en: rv.length };
+  }
   function paintPanel(q) {
     var r = (q && R[q.id]) || {};
     document.querySelectorAll(".vb").forEach(function (b) { b.setAttribute("aria-pressed", String(r.v === b.getAttribute("data-v"))); b.disabled = !q; });
     $("diff").innerHTML = DIFF.map(function (d) { return '<button class="db" data-d="' + d[0] + '" aria-pressed="' + (String(r.d) === d[0]) + '"' + (q ? '' : ' disabled') + '><b>' + d[0] + '</b>' + d[1] + '</button>'; }).join("");
     var spec = r.s || (q && q.lv ? [q.lv] : []);
     $("specs").innerHTML = LEVELS.map(function (l) { return '<button class="sp' + (q && q.lv === l[0] ? " cur" : "") + '" data-s="' + l[0] + '" aria-pressed="' + (spec.indexOf(l[0]) >= 0) + '"' + (q ? '' : ' disabled') + '>' + l[1] + '</button>'; }).join("");
-    var pr = q && RATES[q.id]; $("prate").innerHTML = pr && pr.n ? 'Players rated it <b>' + (pr.s / pr.n).toFixed(1) + ' of 5</b> (' + pr.n + (pr.n === 1 ? ' rating' : ' ratings') + ': ' + [1, 2, 3, 4, 5].map(function (k) { return k + '&times;' + (pr['d' + k] || 0); }).join(' ') + ')' : 'No player ratings yet.';
+    var av = q ? avgOf(q) : { n: 0 };
+    var pr = q && RATES[q.id]; $("prate").innerHTML = (av.n ? '<span class="avgbig">Average difficulty <b>' + av.avg.toFixed(1) + '</b> of 5 <span class="muted">from ' + av.n + (av.n === 1 ? ' rating' : ' ratings') + ' (' + av.pn + ' player' + (av.pn === 1 ? '' : 's') + ', ' + av.en + ' evaluator' + (av.en === 1 ? '' : 's') + ')</span></span><br>' : '') + (pr && pr.n ? 'Players rated it <b>' + (pr.s / pr.n).toFixed(1) + ' of 5</b> (' + pr.n + (pr.n === 1 ? ' rating' : ' ratings') + ': ' + [1, 2, 3, 4, 5].map(function (k) { return k + '&times;' + (pr['d' + k] || 0); }).join(' ') + ')' : 'No player ratings yet.');
     var rv = (q && REVS[q.id]) || [];
     $("revs").innerHTML = rv.length ? (function () {
       var ds = rv.filter(function (x) { return x.d; }), g = rv.filter(function (x) { return x.v === "good"; }).length, b = rv.filter(function (x) { return x.v === "bad"; }).length;
@@ -348,7 +366,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
     else return;
     e.preventDefault();
   });
-  ["fBank", "fLv", "fV", "fFlag"].forEach(function (id) { $(id).addEventListener("change", function () { pos = 0; build(); try { this.blur(); } catch (e) {} }); });   /* blur so G, B, R and the arrow keys work straight away */
+  ["fBank", "fLv", "fV", "fFlag", "fSort"].forEach(function (id) { $(id).addEventListener("change", function () { pos = 0; build(); try { this.blur(); } catch (e) {} }); });   /* blur so G, B, R and the arrow keys work straight away */
   var sT = 0; $("fQ").addEventListener("input", function () { clearTimeout(sT); sT = setTimeout(function () { pos = 0; build(); }, 250); });
 
   /* ---------- "Download for Claude": every review, with the original and the edited wording ---------- */
@@ -378,7 +396,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 
   /* ---------- start ---------- */
   LEVELS.forEach(function (l) { var o = document.createElement("option"); o.value = l[0]; o.textContent = l[1]; $("fLv").appendChild(o); });
-  try { var F = JSON.parse(store.get("qr-filters") || "null"); if (F) { $("fBank").value = F.bk || ""; $("fLv").value = F.lv || ""; $("fV").value = F.v == null ? "un" : F.v; $("fFlag").checked = !!F.fo; $("fQ").value = F.s || ""; } } catch (e) {}
+  try { var F = JSON.parse(store.get("qr-filters") || "null"); if (F) { $("fBank").value = F.bk || ""; $("fLv").value = F.lv || ""; $("fV").value = F.v == null ? "un" : F.v; $("fFlag").checked = !!F.fo; $("fQ").value = F.s || ""; $("fSort").value = F.so || ""; } } catch (e) {}
   $("bGoogle").onclick = function () { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(function (e) { msg("inMsg", e.message); }); };
   var qsP = fetch("questions.json").then(function (r) { return r.json(); });
   auth.onAuthStateChanged(function (u) {
