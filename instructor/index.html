@@ -120,6 +120,9 @@ header.site nav{margin-left:auto;display:flex;gap:14px;flex-wrap:wrap;font-size:
 header.ptitle h1{font-size:24px}
 footer.sitef{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:13px;text-align:center}
 @media (max-width:640px){header.site nav{margin-left:0;gap:10px;font-size:14px}}
+body.embed header.site,body.embed header.ptitle,body.embed footer.sitef{display:none!important}body.embed .wrap{padding-top:4px;max-width:none}
+body.emb-evaluators #vApp>.card:not(#coderCard),body.emb-evaluators #vApp>.grid2{display:none!important}body.emb-metrics #coderCard{display:none!important}
+body.embed a[href="../admin/"]{display:none!important}
 </style>
 </head>
 <body>
@@ -193,7 +196,7 @@ footer.sitef{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);c
   <div class="card">
     <div class="row" style="justify-content:space-between;align-items:center">
       <div><h2 style="margin:0">App metrics</h2><div class="muted small" id="apSub">Everyone using DrugBug, website and iPhone. Anonymous: counted by device, never by name.</div></div>
-      <div class="row" style="align-items:center"><a href="../review/" style="font-weight:700;padding:9px 12px;border:1px solid var(--line);border-radius:9px;text-decoration:none">Question review &rarr;</a><select id="apRange" style="width:auto"><option value="30" selected>Last 30 days</option><option value="14">Last 14 days</option><option value="90">Last 90 days</option></select><button class="ghost" id="bApRefresh">Refresh</button></div>
+      <div class="row" style="align-items:center"><a href="../admin/" style="font-weight:700;padding:9px 12px;border:1px solid var(--line);border-radius:9px;text-decoration:none">Admin dashboard &rarr;</a><select id="apRange" style="width:auto"><option value="30" selected>Last 30 days</option><option value="14">Last 14 days</option><option value="90">Last 90 days</option></select><button class="ghost" id="bApRefresh">Refresh</button></div>
     </div>
     <div class="tiles" id="apTiles"></div>
   </div>
@@ -439,7 +442,10 @@ footer.sitef{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);c
   /* ---------- showcase + demo (owner, Nov 7 2026) ----------
      /instructor/ is the showcase: pitch, a demo dashboard with a made-up class, and the pilot form.
      /instructor/signin/ (-> ?signin=1) is the real sign-in and dashboard. */
-  var MODE = /[?&]signin=1/.test(location.search) ? "signin" : "show";
+  /* embedded in the owner's Admin page (owner, Nov 7 2026): ?embed=metrics|evaluators|classes shows only that part */
+  var EMB = (/[?&]embed=(metrics|evaluators|classes)/.exec(location.search) || [])[1] || "";
+  if (EMB) document.body.classList.add("embed", "emb-" + EMB);
+  var MODE = EMB || /[?&]signin=1/.test(location.search) ? "signin" : "show";
   function demoData() {
     var seed = 7; function rnd() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
     var SYSN = { airway: "Airway & RSI", resp: "Breathing & Lungs", cardio: "Cardiology", shock: "Shock & Pressors", blood: "Blood & Clotting", neuro: "Neuro & Seizures", pain: "Pain & Sedation", psych: "Behavioral Health", tox: "Toxicology & Antidotes", endo: "Diabetes & Endocrine", gi: "GI & Nausea", renal: "Fluids, Electrolytes & Kidneys", ob: "OB & Women's Health", immune: "Allergy & Immune", general: "General & dosage math" };
@@ -554,8 +560,9 @@ footer.sitef{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);c
   function loadList() {
     call("groupOrgList").then(function (r) {
       ST.owner = r.owner; ST.list = r.list;
-      show("vOwner", r.owner); show("vList", true); show("vClass", false); show("vOverview", r.owner); show("vApp", r.owner);
-      if (r.owner) { loadOverview(); loadApp(); }
+      var cls = !EMB || EMB === "classes", app = !EMB || EMB === "metrics" || EMB === "evaluators";
+      show("vOwner", r.owner && cls); show("vList", cls); show("vClass", false); show("vOverview", r.owner && cls); show("vApp", r.owner && app);
+      if (r.owner) { if (cls) loadOverview(); if (EMB === "evaluators") loadCoders(); else if (app) loadApp(); }
       $("listTitle").textContent = r.owner ? "All classes (" + r.list.length + ")" : "Your classes";
       $("uidLine").textContent = r.owner ? "" : "Your account id: " + r.uid;
       show("joinBox", !r.owner);
