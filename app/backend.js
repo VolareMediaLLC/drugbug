@@ -33,7 +33,16 @@
     .then(function () { D.stage = "loading-2"; return Promise.all([load(base + "firebase-auth-compat.js"), load(base + "firebase-firestore-compat.js")]); }, function () { D.stage = "sdk-missing"; throw new Error("vendor/firebase-app-compat.js did not load"); })
     .then(function () {
       D.stage = "init";
-      firebase.initializeApp(F);
+      /* In the iPhone app, Firebase Auth's sign-in-with-popup helper loads a hidden page from authDomain
+         and waits for it before it reports any user; inside the app that page never answers, so sign-in
+         hung forever ("timeout-auth"). The app never uses popups or redirects (Apple sign-in is native,
+         email needs no page), so the iPhone starts Firebase without authDomain and skips it. (Nov 8 2026) */
+      var opts = {}; for (var k in F) opts[k] = F[k];
+      if (window.DRUGBUG_NATIVE) delete opts.authDomain;
+      /* and it would also fetch Google's gapi loader for that page first; a stand-in that answers
+         "not available" right away lets Firebase carry on instead of waiting up to 30 seconds */
+      if (window.DRUGBUG_NATIVE && !window.gapi) window.gapi = { load: function (name, o) { setTimeout(function () { if (o && typeof o.ontimeout === "function") o.ontimeout(); }, 0); } };
+      firebase.initializeApp(opts);
       auth = firebase.auth();
       if (EMU) auth.useEmulator("http://127.0.0.1:9099", { disableWarnings: true });
       D.stage = "auth";
