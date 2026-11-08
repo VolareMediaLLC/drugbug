@@ -12166,6 +12166,9 @@ function tglFrame() {
   var wind = TGL_GENTLE ? Math.sin(now / 6000) * 0.18 + 0.08 : Math.sin(now / 4200) * 0.35 + 0.15 + TGL.gust;
   var want = TGL_GENTLE ? (TGL.W < 520 ? 24 : 40) : (TGL.W < 520 ? 13 : 20);   /* more leaves (owner, Nov 5 2026) */
   if (TGL.L.length < want && Math.random() < (TGL_GENTLE ? 0.08 : 0.05)) tglSpawn(true);
+  /* the leaves scroll with the page (owner, Nov 8 2026): when the page moves, every leaf moves the same amount */
+  var sy = window.pageYOffset || document.documentElement.scrollTop || 0, dsy = TGL.sy == null ? 0 : sy - TGL.sy; TGL.sy = sy;
+  if (dsy) { TGL.L.forEach(function (f) { f.y -= dsy; }); TGL.pile.forEach(function (p) { p.y -= dsy; }); }
   var gb = TGL.cb.getContext("2d"), gf = TGL.cf.getContext("2d"), W = TGL.W, H = TGL.H, T = TGL.title, B = TGL.bub;
   gb.clearRect(0, 0, W, H); gf.clearRect(0, 0, W, H);
   TGL.L = TGL.L.filter(function (f) {
@@ -12197,7 +12200,7 @@ function tglFrame() {
         }
       }
     }
-    if (f.x < -80 || f.x > W + 80) return false;
+    if (f.x < -80 || f.x > W + 80 || f.y < -H) return false;
     /* a little leaf pile along the bottom: it builds slowly and melts away, never more than a
        couple of leaves deep, so it can never cover anything (owner, Nov 5 2026) */
     if (TGL_GENTLE && f.y > H + 30) return false;
@@ -12218,7 +12221,7 @@ function tglFrame() {
 function tglStart() {
   if (TGL.run || !tglWant()) return;
   if (!TGL.cb) { TGL.cb = tglCanvas("tglb", 0); TGL.cf = tglCanvas("tglf", 12); window.addEventListener("resize", tglSize); }
-  tglSize(); TGL.run = true; TGL.chk = Date.now(); TGL.nextGust = Date.now() + 3000;
+  tglSize(); TGL.sy = null; TGL.run = true; TGL.chk = Date.now(); TGL.nextGust = Date.now() + 3000;
   if (!TGL.L.length) for (var i = 0; i < (TGL_GENTLE ? 18 : 6); i++) tglSpawn(false);
   requestAnimationFrame(tglFrame);
 }
