@@ -3733,7 +3733,7 @@ function revSave(k, el) {
   var R = (Prog.d.qrev || (Prog.d.qrev = {}))[k] || (Prog.d.qrev[k] = {}), q = QRATE_Q[k] || {};
   R.sent = false; R.err = ""; saveProg();
   fnCall("qrRate", { gift: Prog.d.reviewer.id, id: k, d: R.d || null, v: R.v || null, s: R.s || null, lv: q.lv || (S.level || "") })
-    .then(function () { R.sent = true; R.err = ""; saveProg(); revRedraw(k); })
+    .then(function () { R.sent = true; R.err = ""; saveProg(); revRedraw(k); if (typeof ANA !== "undefined") ANA.at = 0; })
     .catch(function (e) { R.err = e && e.message === "offline" ? "Not saved: no internet" : "Not saved: " + ((e && e.message) || "try again"); revRedraw(k); });
   revRedraw(k);
 }
@@ -3851,12 +3851,39 @@ anadlg.addEventListener("change", function (e) { if (e.target.id === "evsort") {
 document.addEventListener("keydown", function (e) { if (e.key === "Escape" && ANA.open) { ANA.open = false; anadlg.hidden = true; } if ((e.key === "Enter" || e.key === " ") && e.target && e.target.getAttribute && e.target.getAttribute("data-evopen")) { e.preventDefault(); anaOpen(); } });
 function qRateHTML(q) {
   if (!q || !q.q || typeof qid !== "function") return "";
-  if (isReviewer()) return revHTML(q);
+  if (isReviewer()) return revHTML(q) + admAvgHTML(qid(q));
   var k = qid(q), R = (Prog.d && Prog.d.qrate) || {}, cur = R[k] || 0, c;
   QRATE_Q[k] = q;
   c = '<div class="qrate" data-qrk="' + k + '"><span class="qrl">' + (cur ? 'You rated this ' + cur + ' of 5' : 'How hard was this?') + '</span><span class="qrb" role="group" aria-label="Rate the difficulty from 1 to 5">';
   for (var n = 1; n <= 5; n++) c += '<button type="button" class="qrbtn' + (cur === n ? ' on' : '') + '" data-qrate="' + n + '" aria-pressed="' + (cur === n) + '" aria-label="Difficulty ' + n + ' of 5">' + n + '</button>';
   return c + '</span><span class="qrs">' + (cur ? '<span class="earned">+1 stick earned</span>' : '1 easy · 5 hard · <b>+1 stick</b>') + '</span></div>';
+}
+/* Administrator only (owner, Nov 7 2026): the average difficulty everyone gave this question,
+   players and evaluators, under the question. Uses the same anonymous totals as Analytics. */
+var ADM_T = 0;
+function admAvgHTML(k) {
+  if (typeof codeRole !== "function" || codeRole() !== "admin") return "";
+  var D = ANA.data;
+  if (!D || Date.now() - (ANA.at || 0) > 600000) admStats();
+  if (!D) return '<div class="admavg" data-admk="' + k + '"><b>Average difficulty</b><span class="muted">Loading ratings…</span></div>';
+  var r = (D.rates || {})[k] || {}, v = (D.revs || {})[k] || {}, parts = [];
+  var pn = r.n || 0, en = v.dN || 0, all = pn + en;
+  var avg = all ? Math.round(10 * ((r.s || 0) + (v.dS || 0)) / all) / 10 : null;
+  if (pn) parts.push("Players " + (Math.round(10 * r.s / pn) / 10).toFixed(1) + " (" + pn + ")");
+  if (en) parts.push("Evaluators " + (Math.round(10 * v.dS / en) / 10).toFixed(1) + " (" + en + ")");
+  if (v.g || v.b) parts.push((v.g || 0) + " good · " + (v.b || 0) + " bad");
+  return '<div class="admavg" data-admk="' + k + '"><b>Average difficulty</b>' +
+    (avg != null ? '<span class="admnum">' + avg.toFixed(1) + '<small> / 5</small></span><span class="muted">' + all + ' rating' + (all === 1 ? '' : 's') + ' · ' + parts.join(' · ') + '</span>'
+      : '<span class="muted">No ratings yet</span>') + '<span class="admtag">Administrator</span></div>';
+}
+function admStats() {
+  if (ANA.busy || Date.now() - ADM_T < 30000 || typeof fnCall !== "function" || !Prog.d || !Prog.d.reviewer) return;
+  ADM_T = Date.now(); ANA.busy = true;
+  fnCall("qrStats", { gift: Prog.d.reviewer.id }).then(function (r) {
+    ANA.busy = false; ANA.data = r || {}; ANA.at = Date.now();
+    document.querySelectorAll(".admavg[data-admk]").forEach(function (el) { var w = document.createElement("div"); w.innerHTML = admAvgHTML(el.getAttribute("data-admk")); if (w.firstChild) el.replaceWith(w.firstChild); });
+    if (ANA.open) anaDraw();
+  }).catch(function () { ANA.busy = false; });
 }
 function qRateSet(k, n, el) {
   var P = Prog.d; if (!P || !(n >= 1 && n <= 5)) return;
@@ -29383,7 +29410,15 @@ function giftRedeem(code) {
       return;
     }
     GIFT.claimFor = "";
-    var got = [];
+    giftGive(d);
+  }, 30);
+}
+
+/* what a code gives, applied the same way for built-in gift codes and codes made on the owner's
+   Admin page (owner, Nov 7 2026) */
+function giftGive(d) {
+  var got = [];
+  Prog.d.gifts = Prog.d.gifts || {};
     Prog.d.gifts[d.id] = Date.now();
     if (d.sticks > 0) { earn(d.sticks); got.push(d.sticks.toLocaleString() + " sticks"); }
     if (d.pro > 0) {
@@ -29405,7 +29440,6 @@ function giftRedeem(code) {
     GIFT.code = ""; GIFT.ok = "Redeemed: " + got.join(", ") + ".";
     if (typeof webDeepLoad === "function") webDeepLoad();
     giftDraw(); if (typeof render === "function") render();
-  }, 30);
 }
 
 /* The one place a code is entered (owner, Nov 5 2026): Settings > Account & privacy */
@@ -29420,11 +29454,29 @@ function codeHash(prefix, code) {
 }
 /* not a gift code: try every other kind, in order. Agency protocols, the in-development
    Field Medic codes, website access codes, then school or agency licence codes online. */
+/* PRO- / EVAL- / STK- / BUG- codes made on the owner's Admin page live in Firestore and are
+   checked by codeRedeem, so a new code works the moment it is made (owner, Nov 7 2026) */
+function codeServer(raw, fail) {
+  var up = String(raw || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  if (typeof NATIVE !== "undefined" && NATIVE && /^(PRO|EVAL)/.test(up)) return fail("This code unlocks DrugBug Pro. Redeem it at drugbugapp.com, or use an App Store offer code here.");
+  if (!Prog.uid || typeof fnCall !== "function") return fail("This code needs an internet connection. Connect and try again in a moment.");
+  GIFT.busy = true; giftDraw();
+  fnCall("codeRedeem", { code: raw }).then(function (r) {
+    GIFT.busy = false;
+    if (!r || !r.found) return fail();
+    if (r.error) return fail(r.error);
+    var g = r.grant || {}, d = { id: g.id, pro: g.pro || 0, sticks: g.sticks || 0, bug: g.bug || null, rev: !!g.rev };
+    Prog.d.gifts = Prog.d.gifts || {};
+    if (Prog.d.gifts[d.id]) return fail("That code has already been used on this account.");
+    giftGive(d);
+  }).catch(function (e) { fail(e && e.message === "offline" ? "This code needs an internet connection. Connect and try again in a moment." : "Could not check that code right now. Try again in a moment."); });
+}
 function codeOther(raw) {
   var code = agpNorm(raw);
   var fail = function (m) { GIFT.busy = false; GIFT.msg = m || "That code did not match anything. Check the spelling and try again."; giftDraw(); };
   var win = function (m) { GIFT.busy = false; GIFT.code = ""; GIFT.ok = m; giftDraw(); if (typeof render === "function") render(); };
   if (typeof groupKeyShape === "function" && groupKeyShape(raw)) return groupRedeemKey(raw, win, fail);
+  if (/^(PRO|EVAL|STK|BUG)[A-Z0-9]{6,10}$/.test(String(raw || "").toUpperCase().replace(/[^A-Z0-9]/g, ""))) return codeServer(raw, fail);
   if (/^\d{6,}$/.test(code) && typeof agpTry === "function") {
     var ad = null; try { ad = agpTry(raw); } catch (e) {}
     if (ad) {
