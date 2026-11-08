@@ -86,6 +86,40 @@ nav.subtabs .badge{background:#d97706;color:#fff;border-radius:99px;padding:0 6p
 .todo{list-style:none;margin:0;padding:0}.todo li{padding:8px 0;border-top:1px solid var(--line)}.todo li:first-child{border-top:0}
 .linkish{background:none;border:0;padding:0;font:inherit;color:var(--accent);font-weight:650;cursor:pointer;text-align:left}
 @media(max-width:480px){nav.tabs button{padding:8px 10px;font-size:13.5px}}
+
+.lights{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+.light{display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:6px 12px 6px 9px;font:inherit;font-size:13.5px;font-weight:650;color:var(--ink)}
+button.light{cursor:pointer}button.light:hover{border-color:var(--accent)}
+.light i{width:11px;height:11px;border-radius:50%;background:var(--muted);flex:none}.light.g i{background:var(--good)}.light.w i{background:var(--warn)}.light.b i{background:var(--bad)}
+.light small{color:var(--muted);font-weight:500}
+.cock{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media(max-width:960px){.cock{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:620px){.cock{grid-template-columns:minmax(0,1fr)}}
+.pnl{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px;min-width:0}
+.pnl.wide,.pnl.open{grid-column:1/-1}.pnl.open{border-color:var(--accent)}
+.pnl .ph{display:flex;align-items:center;gap:8px}.pnl h3{font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin:0;flex:1}
+.pnl h4{font-size:14px;margin:0 0 6px}
+.dot{font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}.dot i{width:9px;height:9px;border-radius:50%}
+.dot.g{color:var(--good)}.dot.g i{background:var(--good)}.dot.w{color:var(--warn)}.dot.w i{background:var(--warn)}.dot.b{color:var(--bad)}.dot.b i{background:var(--bad)}
+.big{font-size:32px;font-weight:800;line-height:1.1;margin-top:8px}.big small{font-size:14px;font-weight:600;color:var(--muted);margin-left:6px}
+.delta{font-size:13px;font-weight:650;margin-top:2px}.delta.up{color:var(--good)}.delta.dn{color:var(--bad)}
+.minis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+.mini{background:var(--surface2);border-radius:10px;padding:7px 9px;min-width:0}.mini b{display:block;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mini span{font-size:11.5px;color:var(--muted)}
+.what{font-size:13px;color:var(--muted);margin:10px 0 0}
+.more{margin-top:10px;background:none;border:0;padding:0;font:inherit;font-size:13.5px;font-weight:750;color:var(--accent);cursor:pointer}
+svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var(--muted);margin:8px 0}
+.exp{margin-top:12px;border-top:1px solid var(--line);padding-top:12px;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:20px}
+.exp p{font-size:13.5px;margin:0 0 8px}
+.two{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:22px}
+@media(max-width:720px){.exp,.two{grid-template-columns:minmax(0,1fr)}}
+.hb{display:grid;grid-template-columns:minmax(80px,max-content) 1fr auto;gap:6px 10px;align-items:center;font-size:13px;margin-top:8px}
+.hb .t{height:11px;background:var(--track);border-radius:4px;min-width:30px}.hb .t i{display:block;height:100%;background:var(--accent);border-radius:4px}
+.funnel{display:flex;gap:2px;height:20px;border-radius:6px;overflow:hidden;margin:8px 0;background:var(--track)}.funnel i{display:block;height:100%}
+.leg{display:flex;gap:12px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}.leg b{color:var(--ink)}
+.leg span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;background:var(--c)}
+.ccols{display:flex;align-items:flex-end;gap:2px;height:110px;border-bottom:1px solid var(--line)}.ccols i{flex:1;background:var(--accent);border-radius:3px 3px 0 0;min-height:2px}.ccols i:hover{opacity:.7}
+.ccx{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:3px}
+.heat{font-size:11.5px;font-weight:750;border-radius:99px;padding:2px 8px;background:var(--surface2)}.heat.warm{color:var(--good)}.heat.lukewarm{color:var(--warn)}.heat.cold{color:var(--muted)}
+:root{--track2:#d9d2ec}@media(prefers-color-scheme:dark){:root{--track2:#433a5e}}
 </style>
 </head>
 <body>
@@ -117,15 +151,9 @@ nav.subtabs .badge{background:#d97706;color:#fff;border-radius:99px;padding:0 6p
 
 <!-- OVERVIEW -->
 <section data-page="overview">
-  <div class="card" id="todoCard"><h2>To do</h2><ul class="todo" id="todo"><li class="muted">Checking…</li></ul></div>
-  <div class="card">
-    <div class="row sp"><div><h2>At a glance</h2><div class="muted small" id="ovSub">Loading…</div></div><button class="ghost" id="bOvRefresh">Refresh</button></div>
-    <div class="kpis" id="kpis" style="margin-top:14px"></div>
-  </div>
-  <div class="ovgrid">
-    <div class="card ovsec"><h2>Latest codes <button class="ghost" data-go="codes">All codes &rarr;</button></h2><table class="mini" id="ovCodes"><tr><td class="muted">Loading…</td></tr></table></div>
-    <div class="card ovsec"><h2>Evaluator activity <button class="ghost" data-go="evaluators">All evaluators &rarr;</button></h2><table class="mini" id="ovEval"><tr><td class="muted">Loading…</td></tr></table></div>
-  </div>
+  <div class="row sp" style="align-items:flex-end"><div><h2 style="margin:0;font-size:22px">Cockpit</h2><div class="muted small" id="ovSub">Loading…</div></div><button class="ghost" id="bOvRefresh">Refresh</button></div>
+  <div class="lights" id="lights"><span class="light"><i></i>Checking…</span></div>
+  <div class="cock" id="cock"></div>
 </section>
 
 <!-- GRADING -->
@@ -314,63 +342,188 @@ nav.subtabs .badge{background:#d97706;color:#fff;border-radius:99px;padding:0 6p
       OV = null; OV_ERR = errTxt(e); enter();    /* functions not deployed yet: still show the rest */
     });
   });
-  function enter() { show("vMain", true); LOADED.overview = true; drawOverview(); go(location.hash.slice(1) || "overview"); loadOverviewLists(); }
+  function enter() { show("vMain", true); LOADED.overview = true; cockpit(); go(location.hash.slice(1) || "overview"); loadOverviewLists(); }
 
   /* ---------- overview ---------- */
   var REDS = [], OV = null, OV_ERR = "", CODES = null, STATS = null, CODERS = null;
+  /* ---------- Home: the cockpit (owner, Nov 7 2026) ----------
+     Status lights, then one panel per area: a big number, the change, a trend line, three small
+     numbers and what it measures. "Open" widens the panel and adds the detail and a plain-English
+     reading. Every source loads on its own, so a slow or undeployed function only blanks its panel. */
+  var AP = null, GS = null, PIL = null, PILN = null, PINGS = null, OPEN = {};
   function loadOverview() {
     $("ovSub").textContent = "Loading…";
-    call("adminOverview").then(function (o) { OV = o; OV_ERR = ""; drawOverview(); }).catch(function (e) { OV_ERR = errTxt(e); drawOverview(); });
+    call("adminOverview").then(function (o) { OV = o; OV_ERR = ""; }).catch(function (e) { OV_ERR = errTxt(e); }).then(cockpit);
     loadOverviewLists();
   }
-  $("bOvRefresh").onclick = function () { STATS = null; CODES = null; loadOverview(); };
+  $("bOvRefresh").onclick = function () { STATS = null; CODES = null; AP = GS = PIL = PILN = PINGS = CODERS = null; loadOverview(); };
   function kpi(tab, label, big, sub) { return '<button class="kpi" data-go="' + tab + '"><i>' + label + '</i><b>' + big + '</b><span>' + sub + '</span></button>'; }
-  function drawOverview() {
-    var o = OV || {};
-    $("ovSub").textContent = OV_ERR || "Updated " + new Date(o.at || Date.now()).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) + " · today is Texas time";
-    var t = o.today || {}, y = o.yesterday || {}, k = [];
-    var vs = function (a, b) { return b ? (a >= b ? "+" : "") + fmt(a - b) + " vs yesterday" : "yesterday " + fmt(b || 0); };
-    k.push(kpi("metrics", "Today", fmt(t.dau), "people opened DrugBug · " + vs(t.dau || 0, y.dau || 0)));
-    k.push(kpi("metrics", "Today", fmt(t.q), "questions answered · " + pct(t.c || 0, t.q || 0) + " right"));
-    k.push(kpi("metrics", "Today", fmt(t.newUsers), "new users · yesterday " + fmt(y.newUsers || 0)));
-    if (o.codes) k.push(kpi("codes", "Codes", fmt(o.codes.active), "ready to use · " + fmt(o.codes.made) + " made · " + fmt(o.codes.used) + " redemptions"));
-    if (o.ratings) k.push(kpi("grading", "Difficulty", o.ratings.avg != null ? o.ratings.avg.toFixed(1) + '<small style="font-size:14px"> / 5</small>' : "—", fmt(o.ratings.ratings) + " player ratings on " + fmt(o.ratings.questions) + " questions"));
-    if (o.review) k.push(kpi("grading", "Your grading", fmt(o.review.reviewed), "questions reviewed · " + fmt(o.review.bad) + " bad · " + fmt(o.review.edited) + " rewritten"));
-    if (o.evaluators) k.push(kpi("evaluators", "Evaluators", fmt(o.evaluators.questions), "questions graded · " + fmt(o.evaluators.suggestions) + " suggestions · " + fmt(o.evaluators.bad) + " bad"));
-    if (o.signups) k.push(kpi("signups", "Sign-ups", fmt(o.signups.new), "new evaluator sign-ups · " + fmt(o.signups.total) + " total"));
-    if (o.classes) k.push(kpi("classes", "Schools", fmt(o.classes.active), "active · " + fmt(o.classes.seats) + " seats · " + fmt(o.classes.total) + " total"));
-    $("kpis").innerHTML = k.join("");
-  }
+  function drawOverview() { cockpit(); }
   function loadOverviewLists() {
-    (CODES ? Promise.resolve(CODES) : call("codeList").then(function (r) { CODES = r.list || []; REDS = r.redemptions || []; return CODES; })).then(meta).then(function () {
-      var L = CODES.slice(0, 6);
-      $("ovCodes").innerHTML = L.length ? L.map(function (c) { var s = status(c); return '<tr><td><code class="c">' + esc(c.code) + '</code><div class="muted small">' + esc(c.label || "") + '</div></td><td>' + esc(gives(c)) + ((c.who || []).length ? '<div class="muted small">' + esc(c.who.map(function (w) { return w.name; }).join(", ")) + '</div>' : '') + '</td><td><span class="pill ' + s[0] + '">' + s[1] + '</span></td></tr>'; }).join("") : '<tr><td class="muted">No codes made here yet.</td></tr>';
-    }).catch(function (e) { $("ovCodes").innerHTML = '<tr><td class="muted">' + esc(errTxt(e)) + '</td></tr>'; });
-    call("qrCoders").then(function (r) {
-      CODERS = r.list || [];
-      var L = CODERS.filter(function (c) { return c.redeemed; }).sort(function (a, b) { return (b.lastAt || 0) - (a.lastAt || 0); }).slice(0, 6);
-      $("ovEval").innerHTML = L.length ? L.map(function (c) { return '<tr><td><b>' + esc(c.name || c.code) + '</b><div class="muted small">' + esc(c.role) + ' · ' + esc(c.code) + '</div></td><td class="num">' + fmt(c.graded) + ' graded</td><td class="muted small">' + ago(c.lastAt) + '</td></tr>'; }).join("") : '<tr><td class="muted">No evaluator has redeemed a code yet.</td></tr>';
-    }).catch(function (e) { $("ovEval").innerHTML = '<tr><td class="muted">' + esc(errTxt(e)) + '</td></tr>'; });
-    drawTodo();
+    var done = function () { cockpit(); };
+    (CODES ? Promise.resolve() : call("codeList").then(function (r) { CODES = r.list || []; REDS = r.redemptions || []; })).catch(function () { CODES = CODES || []; }).then(meta).then(done, done);
+    (CODERS ? Promise.resolve() : call("qrCoders").then(function (r) { CODERS = r.list || []; })).catch(function () { CODERS = CODERS || []; }).then(done);
+    (AP ? Promise.resolve() : call("appMetrics").then(function (r) { AP = r; })).catch(function () { AP = AP || false; }).then(done);
+    (GS ? Promise.resolve() : call("groupOwnerStats").then(function (r) { GS = r; })).catch(function () { GS = GS || false; }).then(done);
+    (PIL ? Promise.resolve() : call("pilotStatus", { fresh: 1 }).then(function (r) { PIL = r || {}; })).catch(function () { PIL = PIL || false; }).then(done);
+    (PILN != null ? Promise.resolve() : questions().then(function (J) { PILN = J.qs.filter(function (q) { return q.b === "pilot"; }).length; })).catch(function () {}).then(done);
+    (STATS ? Promise.resolve() : stats()).then(meta).catch(function () {}).then(done);
+    if (!PINGS) pingAll();
+  }
+  /* which server functions answer: a deployed callable always replies (even with an error for a
+     bad request); one that was never deployed doesn't. Only read-only functions are asked. */
+  var PING_FNS = ["adminOverview", "codeList", "qrStats", "qrCoders", "pilotStatus", "qDifficulty", "qrChecked", "evalAppList", "appMetrics", "groupOwnerStats", "groupOrgList", "groupDashboard"];
+  function pingAll() {
+    PINGS = { ok: [], no: [], busy: true };
+    Promise.all(PING_FNS.map(function (f) { return call(f, { ping: 1 }).then(function () { PINGS.ok.push(f); }, function (e) { if (/^not deployed$|failed to fetch|networkerror|load failed/i.test((e && e.message) || "")) PINGS.no.push(f); else PINGS.ok.push(f); }); }))
+      .then(function () { PINGS.busy = false; cockpit(); });
   }
 
-  /* ---------- analytics ---------- */
-  var AN = { tab: "drug", q: "", sort: "n", drug: null };
-  /* the things waiting on the owner, worked out from what is already loaded */
-  function drawTodo() {
-    var o = OV || {}, out = [];
-    if (o.signups && o.signups.new) out.push(['people', 'signups', o.signups.new + ' evaluator sign-up' + (o.signups.new === 1 ? '' : 's') + ' to review']);
-    Promise.all([questions(), call("pilotStatus", { fresh: 1 }).catch(function () { return null; })]).then(function (r) {
-      var pil = r[0].qs.filter(function (q) { return q.b === "pilot"; }).length, P = r[1] || {};
-      var done = (P.ok || []).length + (P.no || []).length, held = (P.held || []).length;
-      if (held) out.push(['questions', 'grading', held + ' pilot question' + (held === 1 ? ' was' : 's were') + ' voted Bad: decide whether to fix or drop ' + (held === 1 ? 'it' : 'them')]);
-      if (pil) out.push(['questions', 'grading', fmt(Math.max(0, pil - done - held)) + ' of ' + fmt(pil) + ' pilot questions still need evaluator votes (' + fmt((P.ok || []).length) + ' live so far)']);
-      paint();
-    }).catch(paint);
-    function paint() {
-      $("todo").innerHTML = out.length ? out.map(function (x) { return '<li><button class="linkish" data-go="' + x[1] + '">' + esc(x[2]) + ' &rarr;</button></li>'; }).join("") : '<li class="muted">Nothing waiting on you right now.</li>';
+  /* small drawing helpers */
+  function spark(vals, h) {
+    h = h || 46; if (!vals || vals.length < 2) return '<div class="sp none">Not enough days yet</div>';
+    var W = 300, mx = Math.max.apply(null, vals), mn = Math.min.apply(null, vals); if (mx === mn) { mx += 1; mn = Math.max(0, mn - 1); }
+    var pts = vals.map(function (y, i) { return [i * W / (vals.length - 1), h - 4 - (y - mn) / (mx - mn) * (h - 10)]; });
+    var d = pts.map(function (q, i) { return (i ? "L" : "M") + q[0].toFixed(1) + " " + q[1].toFixed(1); }).join(" "), L = pts[pts.length - 1];
+    return '<svg class="sp" viewBox="0 0 300 ' + h + '" preserveAspectRatio="none" style="height:' + h + 'px" role="img" aria-label="Trend"><path d="' + d + ' L300 ' + h + ' L0 ' + h + 'Z" fill="var(--accent)" opacity=".09"/><path d="' + d + '" fill="none" stroke="var(--accent)" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>';
+  }
+  function cols(rows, val, lab, tip) {   /* daily columns with hover text */
+    var mx = Math.max.apply(null, rows.map(val).concat([1]));
+    return '<div class="ccols">' + rows.map(function (r) { var v = val(r); return '<i title="' + esc(tip(r)) + '" style="height:' + Math.max(2, Math.round(100 * v / mx)) + '%"></i>'; }).join("") + '</div><div class="ccx"><span>' + esc(lab(rows[0])) + '</span><span>' + esc(lab(rows[rows.length - 1])) + '</span></div>';
+  }
+  function hb(rows) {   /* [label, value, shown text] horizontal bars */
+    var mx = Math.max.apply(null, rows.map(function (r) { return r[1]; }).concat([1]));
+    return rows.length ? '<div class="hb">' + rows.map(function (r) { return '<span>' + esc(r[0]) + '</span><span class="t"><i style="width:' + Math.max(2, Math.round(100 * r[1] / mx)) + '%"></i></span><b>' + esc(r[2]) + '</b>'; }).join("") + '</div>' : '<p class="muted small">Nothing yet.</p>';
+  }
+  function chg(a, b) { if (!b) return a ? { t: "new this week", c: "up" } : { t: "no change", c: "" }; var p = Math.round(100 * (a - b) / b); return { t: (p >= 0 ? "▲ " : "▼ ") + Math.abs(p) + "% vs last week", c: p >= 0 ? "up" : "dn" }; }
+  function mini(v, l) { return '<div class="mini"><b>' + v + '</b><span>' + esc(l) + '</span></div>'; }
+  var LOAD = '<p class="muted small">Loading…</p>';
+  function panel(id, title, st, body, open, cls) {
+    var o = !!OPEN[id];
+    return '<div class="pnl' + (o ? ' open' : '') + (cls ? ' ' + cls : '') + '" id="p-' + id + '"><div class="ph"><h3>' + esc(title) + '</h3>' + (st ? '<span class="dot ' + st[0] + '"><i></i>' + esc(st[1]) + '</span>' : '') + '</div>' + body + (open ? (o ? '<div class="exp">' + open + '</div>' : '') + '<button class="more" data-open="' + id + '">' + (o ? 'Close ▴' : 'Open ▾') + '</button>' : '') + '</div>';
+  }
+  document.addEventListener("click", function (e) { var b = e.target.closest && e.target.closest("[data-open]"); if (!b || !$("cock").contains(b)) return; var id = b.getAttribute("data-open"); OPEN[id] = !OPEN[id]; cockpit(); if (OPEN[id]) $("p-" + id).scrollIntoView({ behavior: "smooth", block: "nearest" }); });
+  var pc = function (a, b) { return b ? Math.round(100 * a / b) : null; };
+  var lastN = function (arr, n, off) { return arr.slice(Math.max(0, arr.length - n - (off || 0)), arr.length - (off || 0)); };
+  var sumF = function (a, f) { return a.reduce(function (s, x) { return s + f(x); }, 0); };
+
+  function cockpit() {
+    if (!$("cock")) return;
+    var o = OV || {}, now = Date.now();
+    $("ovSub").textContent = (OV_ERR ? OV_ERR + " · " : "") + "Everything at a glance. Open any panel for the detail and what it means. Updated " + new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) + " · days are Texas time";
+    var D = AP && AP.daily || [], T = AP && AP.totals || {};
+
+    /* ---- status lights ---- */
+    var L = [];
+    if (PINGS && !PINGS.busy) L.push(PINGS.no.length ? ["w", PINGS.no.length + " server function" + (PINGS.no.length === 1 ? "" : "s") + " not answering", "run DEPLOY.cmd · " + PINGS.no.join(", ")] : ["g", "Server functions answering", PINGS.ok.length + " of " + PING_FNS.length + " checked"]);
+    else L.push(["", "Checking server functions…", ""]);
+    if (o.signups) L.push(o.signups.new ? ["w", o.signups.new + " evaluator sign-up" + (o.signups.new === 1 ? "" : "s") + " waiting", "People › Sign-ups", "signups"] : ["g", "No sign-ups waiting", ""]);
+    if (PIL) L.push((PIL.held || []).length ? ["b", PIL.held.length + " pilot question" + (PIL.held.length === 1 ? "" : "s") + " voted Bad", "fix or drop in Questions", "grading"] : ["g", "No pilot questions voted Bad", ""]);
+    if (GS && GS.followUp && GS.followUp.length) { var f0 = GS.followUp[0]; L.push(["w", "A pilot class ends in " + f0.daysLeft + " day" + (f0.daysLeft === 1 ? "" : "s"), f0.name + " · follow up", "classes"]); }
+    $("lights").innerHTML = L.map(function (x) { return '<' + (x[3] ? 'button data-go="' + x[3] + '"' : 'span') + ' class="light ' + x[0] + '"><i></i>' + esc(x[1]) + (x[2] ? ' <small>' + esc(x[2]) + '</small>' : '') + '</' + (x[3] ? 'button' : 'span') + '>'; }).join("");
+
+    var P = [];
+    /* ---- people ---- */
+    if (AP === null) P.push(panel("users", "People using DrugBug", null, LOAD));
+    else if (!AP) P.push(panel("users", "People using DrugBug", ["w", "No data"], '<p class="muted small">App metrics aren\'t answering yet. Run DEPLOY.cmd.</p>'));
+    else {
+      var v7 = sumF(lastN(D, 7), function (x) { return x.dau; }), v7b = sumF(lastN(D, 7, 7), function (x) { return x.dau; }), cu = chg(v7, v7b);
+      var ret = (AP.retention || []).filter(function (r) { return r.d7 != null && r.size >= 3; })[0];
+      var st = cu.c === "dn" ? ["w", "Slower"] : ["g", cu.c === "up" ? "Growing" : "Steady"];
+      var body = '<div class="big">' + fmt(T.active7) + '<small>active this week</small></div><div class="delta ' + cu.c + '">' + esc(cu.t) + ' <span class="muted">(daily visits)</span></div>' + spark(lastN(D, 30).map(function (x) { return x.dau; })) +
+        '<div class="minis">' + mini(fmt(T.active1), "today") + mini(fmt((o.today || {}).newUsers || 0), "new today") + mini(ret ? ret.d7 + "%" : "—", "come back in 7 days") + '</div><p class="what">Devices that opened DrugBug. "Come back" = new users who returned within a week.</p>';
+      var mau = T.active30 || 0, stick = T.stickiness;
+      var open = '<div><h4>Daily active users, last 30 days</h4>' + cols(lastN(D, 30), function (r) { return r.dau; }, function (r) { var q = r.day.split("-"); return +q[1] + "/" + +q[2]; }, function (r) { return r.day + ": " + r.dau + " active, " + r.newUsers + " new"; }) + '</div>' +
+        '<div><h4>What this tells you</h4><p><b>Growth:</b> daily visits this week are ' + (cu.c === "up" ? "up" : cu.c === "dn" ? "down" : "level") + ' (' + esc(cu.t.replace(/[▲▼] /, "")) + '). ' + fmt(T.newUsers30) + ' new users in the last 30 days.</p>' +
+        '<p><b>Keeping people:</b> ' + (ret ? ret.d7 + '% of new users from ' + (ret.weeksAgo === 1 ? "last week" : ret.weeksAgo + " weeks ago") + ' came back within 7 days. Above 30% is healthy for a study app.' : 'Not enough new users yet to measure.') + '</p>' +
+        '<p><b>Habit:</b> ' + fmt(mau) + (mau === 1 ? ' person' : ' people') + ' used DrugBug in the last 30 days; on an average day ' + (stick || 0) + '% of them open it. 20% or more means it has become a habit.</p><button class="linkish" data-go="metrics">Open Usage for retention by week, sections and platforms ▸</button></div>';
+      P.push(panel("users", "People using DrugBug", st, body, open));
     }
-    paint();
+    /* ---- learning ---- */
+    if (AP === null) P.push(panel("learn", "Learning", null, LOAD));
+    else if (AP) {
+      var q7 = sumF(lastN(D, 7), function (x) { return x.q; }), q7b = sumF(lastN(D, 7, 7), function (x) { return x.q; }), c7 = sumF(lastN(D, 7), function (x) { return x.c; }), cq = chg(q7, q7b);
+      var weak = weakSys(), feat = (AP.feats || []).filter(function (f) { return /^quiz_/.test(f.key); })[0];
+      var body2 = '<div class="big">' + fmt(q7) + '<small>questions this week</small></div><div class="delta ' + cq.c + '">' + esc(cq.t) + ' · ' + (pc(c7, q7) != null ? pc(c7, q7) + '% answered correctly' : '') + '</div>' + spark(lastN(D, 30).map(function (x) { return x.q; })) +
+        '<div class="minis">' + mini((T.minutesPerActiveDay || 0) + " min", "per person a day") + mini(weak ? esc(weak.name.split(" ")[0]) : "—", "weakest system") + mini(feat ? esc(nice2(feat.key.slice(5))) : "—", "most-used quiz") + '</div><p class="what">Every question answered across the app, and how many were right.</p>';
+      var low = lowDrugs(5);
+      var open2 = '<div><h4>Questions answered per day</h4>' + cols(lastN(D, 30), function (r) { return r.q; }, function (r) { var q = r.day.split("-"); return +q[1] + "/" + +q[2]; }, function (r) { return r.day + ": " + r.q + " questions" + (r.accuracy != null ? ", " + r.accuracy + "% right" : ""); }) + '<h4 style="margin-top:12px">Lowest-scoring medications (everyone, 20+ answers)</h4>' + hb(low.map(function (x) { return [x.name, x.p, x.p + "%"]; })) + '</div>' +
+        '<div><h4>What this tells you</h4><p><b>Volume:</b> ' + fmt(q7) + ' questions this week (' + esc(cq.t.replace(/[▲▼] /, "")) + ').</p><p><b>Accuracy:</b> ' + (pc(c7, q7) != null ? pc(c7, q7) + '% right this week. 65 to 80% is the sweet spot: hard enough to learn from, easy enough to keep going.' : 'no answers yet.') + '</p>' +
+        (weak ? '<p><b>Weakest area:</b> ' + esc(weak.name) + ' at ' + weak.p + '% correct. Good candidate for new L.E.A.R.N cards or a post.</p>' : '') +
+        '<button class="linkish" data-go="analytics">Open How students score ▸</button></div>';
+      P.push(panel("learn", "Learning", pc(c7, q7) != null && (pc(c7, q7) < 60 || pc(c7, q7) > 88) ? ["w", "Check difficulty"] : ["g", "Steady"], body2, open2));
+    }
+    /* ---- money ---- */
+    if (AP === null) P.push(panel("money", "Money", null, LOAD));
+    else if (AP) {
+      var tier = (AP.splits || {}).tier || {}, paid = (tier.plus || 0) + (tier.pro || 0);
+      var body3 = '<div class="big">' + fmt(paid) + '<small>on Plus or Pro</small></div><div class="delta">' + (T.paidPct30 || 0) + '% of people active in 30 days</div>' +
+        '<div class="minis">' + mini(fmt(tier.pro || 0), "Pro") + mini(fmt(tier.plus || 0), "Plus") + mini(T.webSubs == null ? "—" : fmt(T.webSubs), "website subscriptions") + '</div><p class="what">Plans of everyone active in the last 30 days (App Store and website). School seats are under Schools.</p>';
+      var open3 = '<div><h4>What this tells you</h4><p><b>Conversion:</b> ' + (T.paidPct30 || 0) + '% of active people pay. 2 to 5% is typical for a study app; 5% is a good goal.</p><p><b>Website:</b> ' + (T.webSubs == null ? 'website subscription count isn\'t available.' : fmt(T.webSubs) + ' active subscription' + (T.webSubs === 1 ? '' : 's') + ' through Stripe.') + ' App Store sales and payouts are in App Store Connect.</p><p class="muted small">Stick-pack sales aren\'t counted here yet.</p></div>' +
+        '<div><h4>Plans, last 30 days</h4>' + hb([["Free", tier.free || 0, fmt(tier.free || 0)], ["Plus", tier.plus || 0, fmt(tier.plus || 0)], ["Pro", tier.pro || 0, fmt(tier.pro || 0)]]) + '</div>';
+      P.push(panel("money", "Money", (T.paidPct30 || 0) >= 2 ? ["g", "On track"] : ["w", "Early days"], body3, open3));
+    }
+    /* ---- questions and evaluators (wide) ---- */
+    {
+      var live = PIL ? (PIL.ok || []).length : null, bad = PIL ? (PIL.held || []).length : 0, drop = PIL ? (PIL.no || []).length : 0;
+      var wait = PILN != null && live != null ? Math.max(0, PILN - live - bad - drop) : null;
+      var C = (CODERS || []).filter(function (c) { return c.redeemed; }), act = C.filter(function (c) { return c.lastAt && now - c.lastAt < 7 * 864e5; }).length;
+      var graded = sumF(C, function (c) { return c.graded || 0; }), sugg = sumF(C, function (c) { return (c.suggestions || []).length; });
+      var bar = PILN ? '<div class="funnel">' + [[live, "var(--good)"], [bad, "var(--bad)"], [drop, "#8a8399"], [wait, "var(--track2)"]].map(function (x) { return x[0] ? '<i style="flex:' + x[0] + ';background:' + x[1] + '"></i>' : ''; }).join("") + '</div><div class="leg"><span style="--c:var(--good)"><b>' + fmt(live) + '</b> live</span><span style="--c:var(--bad)"><b>' + fmt(bad) + '</b> voted Bad</span><span style="--c:#8a8399"><b>' + fmt(drop) + '</b> dropped</span><span style="--c:var(--track2)"><b>' + fmt(wait) + '</b> waiting for votes</span></div>' : LOAD;
+      var body4 = '<div class="two"><div><div class="big">' + (PILN != null ? fmt(PILN) : "…") + '<small>pilot questions</small></div>' + bar +
+        '<p class="what" style="margin-top:10px"><b>What this means:</b> new questions are shown only to evaluators until 2 of them mark one Good (or you do). Then it goes live for everyone. More evaluators, or grading some yourself, empties the waiting pile faster.</p></div>' +
+        '<div><h4>Evaluators</h4>' + hb([["With a code", C.length, fmt(C.length)], ["Active this week", act, fmt(act)], ["Questions graded", graded, fmt(graded)], ["Suggestions", sugg, fmt(sugg)]]) +
+        '<h4 style="margin-top:10px">Difficulty</h4><p class="small">' + (o.ratings && o.ratings.avg != null ? 'Average ' + o.ratings.avg.toFixed(1) + ' / 5 from ' + fmt(o.ratings.ratings) + ' ratings on ' + fmt(o.ratings.questions) + ' questions. Quizzes mix 2 easy, 6 normal and 2 hard per 10.' : 'No ratings yet.') + '</p></div></div>';
+      var EV = C.slice().sort(function (a, b) { return (b.lastAt || 0) - (a.lastAt || 0); }).slice(0, 6);
+      var open4 = '<div><h4>Recent evaluator activity</h4>' + (EV.length ? '<table class="mini">' + EV.map(function (c) { return '<tr><td><b>' + esc(c.name || c.code) + '</b><div class="muted small">' + esc(c.role || "") + '</div></td><td class="num">' + fmt(c.graded) + ' graded</td><td class="num muted small">' + ago(c.lastAt) + '</td></tr>'; }).join("") + '</table>' : '<p class="muted small">No evaluator has redeemed a code yet.</p>') + '</div>' +
+        '<div><h4>Your part</h4><p>' + (bad ? '<b>' + bad + ' voted Bad:</b> open Grade questions, filter to Pilot, and fix or drop them.' : 'Nothing voted Bad right now.') + '</p><p>Marking a pilot question Good yourself puts it live at once.</p><button class="linkish" data-go="grading">Open Grade questions ▸</button> &nbsp; <button class="linkish" data-go="evaluators">Evaluators ▸</button></div>';
+      P.push(panel("qs", "Questions and evaluators", bad ? ["b", "Needs you"] : wait ? ["w", "Waiting on votes"] : ["g", "Clear"], body4, open4, "wide"));
+    }
+    /* ---- schools ---- */
+    if (GS === null) P.push(panel("schools", "Schools", null, LOAD));
+    else if (!GS) P.push(panel("schools", "Schools", ["w", "No data"], '<p class="muted small">School stats aren\'t answering.</p>'));
+    else {
+      var t = GS.totals || {}, fu = GS.followUp || [], wk = (GS.weeks || []).map(function (w) { return w.answered; });
+      var body5 = '<div class="big">' + fmt(t.live) + '<small>active class' + (t.live === 1 ? '' : 'es') + '</small></div><div class="delta">' + fmt(t.activated) + ' of ' + fmt(t.seats) + ' seats joined · ' + fmt(t.active7) + ' studied this week</div>' + spark(wk) +
+        '<div class="minis">' + mini(fmt(t.pilots), "pilots") + mini(fmt(t.annual), "paid") + mini(fu.length ? fu[0].daysLeft + " days" : "—", "until a pilot ends") + '</div><p class="what">Classes using class keys. The line is questions answered by students each week.</p>';
+      var open5 = '<div><h4>Pilots ending in the next 14 days</h4>' + (fu.length ? '<table class="mini">' + fu.map(function (f) { return '<tr><td><b>' + esc(f.name) + '</b><div class="muted small">' + esc(f.contact || "") + '</div></td><td class="num">' + f.daysLeft + ' days</td><td><span class="heat ' + f.heat + '">' + f.heat + '</span></td></tr>'; }).join("") + '</table><p class="muted small">Warm = most seats joined and students still studying: the best time to ask about a paid year.</p>' : '<p class="muted small">None right now.</p>') + '</div>' +
+        '<div><h4>What this tells you</h4><p><b>Uptake:</b> ' + (t.activationRate || 0) + '% of seats are in use. Under 50% usually means keys weren\'t handed out yet; worth a nudge to the instructor.</p><p><b>Accuracy across schools:</b> ' + (t.accuracy != null ? t.accuracy + '%' : '—') + '. ' + (t.conversions ? fmt(t.conversions) + ' pilot' + (t.conversions === 1 ? ' has' : 's have') + ' become paid.' : 'No pilots have become paid yet.') + '</p><button class="linkish" data-go="classes">Open Schools ▸</button></div>';
+      P.push(panel("schools", "Schools", fu.length ? ["w", fu.length + " ending soon"] : ["g", "Fine"], body5, open5));
+    }
+    /* ---- codes ---- */
+    if (CODES === null) P.push(panel("codes", "Codes", null, LOAD));
+    else {
+      var ready = CODES.filter(function (c) { return status(c)[0] === "ok"; }), byK = function (k) { return ready.filter(function (c) { return k.indexOf(c.kind) >= 0; }).length; };
+      var red7 = (REDS || []).filter(function (r) { return r.at && now - r.at < 7 * 864e5; }).length;
+      var body6 = '<div class="big">' + fmt(ready.length) + '<small>codes ready to use</small></div><div class="delta">' + fmt(red7) + ' redeemed this week · ' + fmt(CODES.length) + ' made in all</div>' +
+        '<div class="minis">' + mini(fmt(byK(["eval"])), "evaluator") + mini(fmt(byK(["pro"])), "gift / Pro") + mini(fmt(byK(["sticks", "bug"])), "sticks / bug") + '</div><p class="what">Codes you made that can still be used, and how many were used this week.</p>';
+      var LC = CODES.slice(0, 5), LR = (REDS || []).slice(0, 5);
+      var open6 = '<div><h4>Latest codes</h4>' + (LC.length ? '<table class="mini">' + LC.map(function (c) { var s2 = status(c); return '<tr><td><code class="c">' + esc(c.code) + '</code><div class="muted small">' + esc(c.label || "") + '</div></td><td>' + esc(gives(c)) + '</td><td><span class="st ' + s2[0] + '">' + s2[1] + '</span></td></tr>'; }).join("") + '</table>' : '<p class="muted small">No codes made here yet.</p>') + '</div>' +
+        '<div><h4>Who used a code lately</h4>' + (LR.length ? '<table class="mini">' + LR.map(function (r) { return '<tr><td><b>' + esc(r.name || "—") + '</b><div class="muted small">' + esc(r.code || "") + '</div></td><td class="num muted small">' + ago(r.at) + '</td></tr>'; }).join("") + '</table>' : '<p class="muted small">Nobody yet.</p>') + '<button class="linkish" data-go="codes">Make or manage codes ▸</button></div>';
+      P.push(panel("codes", "Codes", ["g", "Fine"], body6, open6));
+    }
+    /* ---- where people study ---- */
+    if (AP === null) P.push(panel("where", "Where people study", null, LOAD));
+    else if (AP) {
+      var sp = AP.splits || {}, lv = sp.level || [], tot = sumF(lv, function (x) { return x.n; }), pl = sp.plat || {}, pt = (pl.web || 0) + (pl.ios || 0);
+      var LVN = { emt: "EMT", aemt: "AEMT", paramedic: "Paramedic", flight: "Flight Paramedic", cna: "CNA", lvn: "LVN / LPN", rn: "RN", flightrn: "Flight Nurse", ms1: "Med school 1-2", ms3: "Med school 3-4", intern: "Intern", gen: "Everyday", mh: "Mental health", diet: "Dietitian", rrt: "Respiratory", pt: "PT / OT", slp: "Speech-language", surg: "Surgical tech", anes: "Anesthesia tech", dent: "Dental hygiene", phleb: "Phlebotomy", ekg: "EKG tech", cp: "Community paramedic", tccc: "Tactical medic", rt: "X-ray", ct: "CT", mri: "MRI", nm: "Nuclear med", ir: "IR" };
+      var rowsL = lv.slice(0, 5).map(function (x) { return [LVN[x.key] || x.key, x.n, pc(x.n, tot) + "%"]; });
+      var body7 = hb(rowsL) + '<p class="what">Share of people active in 30 days, by the level they study.' + (pt ? ' iPhone ' + pc(pl.ios || 0, pt) + '%, website ' + pc(pl.web || 0, pt) + '%.' : '') + '</p>';
+      var open7 = '<div><h4>Every level</h4>' + hb(lv.map(function (x) { return [LVN[x.key] || x.key, x.n, pc(x.n, tot) + "%"]; })) + '</div><div><h4>What this tells you</h4><p>Your biggest audiences are where new content and posts pay off most. Small levels with growing numbers are worth a closer look.</p><p><b>App versions:</b> ' + esc((sp.version || []).map(function (v) { return v.key + " (" + v.n + ")"; }).join(", ") || "—") + '</p><button class="linkish" data-go="metrics">Open Usage ▸</button></div>';
+      P.push(panel("where", "Where people study", ["g", "Info"], body7, open7));
+    }
+    $("cock").innerHTML = P.join("");
+  }
+  function nice2(k) { return ({ practice: "Practice", exam: "Exam", daily: "Daily 5", system: "By system", session: "Sessions", study: "Study", weak: "Weak spots", acls: "ACLS" })[k] || k.charAt(0).toUpperCase() + k.slice(1); }
+  function weakSys() {
+    if (!STATS || !META) return null; var G = {};
+    Object.keys(STATS.drugs || {}).forEach(function (id) { var d = STATS.drugs[id], m = META.drugs[id]; if (!d || !d.n || !m) return; (m[1] || []).forEach(function (k) { var g = G[k] || (G[k] = { n: 0, c: 0 }); g.n += d.n; g.c += d.c || 0; }); });
+    var best = null; Object.keys(G).forEach(function (k) { var g = G[k]; if (g.n < 30) return; var p = Math.round(100 * g.c / g.n); if (!best || p < best.p) best = { name: META.sys[k] || k, p: p }; });
+    return best;
+  }
+  function lowDrugs(n) {
+    if (!STATS || !META) return [];
+    return Object.keys(STATS.drugs || {}).map(function (id) { var d = STATS.drugs[id]; return d && d.n >= 20 ? { name: dname(id), p: Math.round(100 * (d.c || 0) / d.n) } : null; }).filter(Boolean).sort(function (a, b) { return a.p - b.p; }).slice(0, n);
   }
   function stats() { return STATS ? Promise.resolve(STATS) : call("qrStats").then(function (r) { STATS = r || {}; return STATS; }); }
   function dname(id) { var d = META && META.drugs[id]; return d ? d[0] : id; }
