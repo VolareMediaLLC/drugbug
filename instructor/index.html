@@ -132,6 +132,29 @@ a.trybtn:hover{background:var(--accent);color:#fff}
 footer .flinks{margin-top:10px}
 @media(max-width:640px){header.site{flex-wrap:wrap}header.site nav.tabs2{margin-left:0;order:3;width:100%}nav.tabs2 a.tab{flex:1;text-align:center}a.trybtn{margin-left:auto}}
 a.signbtn{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important;font-size:14.5px!important;padding:10px 16px!important}
+
+.ctabs{display:flex;gap:6px;margin-top:14px;border-top:1px solid var(--line);padding-top:12px;flex-wrap:wrap}
+.ctabs button{background:transparent;color:var(--ink);border:1px solid var(--line);font-weight:700;padding:8px 16px;border-radius:99px}
+.ctabs button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+#stuBadge:empty{display:none}#stuBadge{background:var(--warn);color:#fff;border-radius:99px;padding:0 7px;font-size:12px;margin-left:4px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.grid2>.card{margin:0 0 16px}
+@media (max-width:860px){.grid2{grid-template-columns:1fr}}
+.focus{margin:6px 0 0;padding-left:0;list-style:none}
+.focus li{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line);font-size:14.5px}
+.focus li:first-child{border-top:0}
+.focus .fi{flex:0 0 auto;width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-weight:800;background:var(--surface2);color:var(--accent)}
+.hq{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:10px 0;background:var(--surface)}
+.hqtop{display:flex;gap:12px;align-items:flex-start}
+.hqp{flex:0 0 auto;min-width:56px;text-align:center;border-radius:10px;padding:6px 4px;font-weight:800;font-size:18px;background:var(--surface2)}
+.hqp small{display:block;font-size:10.5px;font-weight:600;color:var(--muted)}
+.hqp.low{color:var(--bad)}.hqp.mid{color:var(--warn)}.hqp.ok{color:var(--good)}
+.hqs{font-weight:600;font-size:15px;line-height:1.4}
+.hqm{color:var(--muted);font-size:12.5px;margin-top:4px}
+.hqa{display:grid;gap:4px;margin-top:8px;font-size:13.5px}
+.hqa .r{color:var(--good)}.hqa .w{color:var(--bad)}
+.hq details{margin-top:6px;font-size:13.5px}.hq summary{cursor:pointer;color:var(--accent);font-weight:600}
+.h3s{font-size:15px;margin:18px 0 6px}
+details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webkit-details-marker{display:none}
 </style>
 </head>
 <body>
@@ -151,18 +174,19 @@ a.signbtn{background:var(--accent)!important;color:#fff!important;border-color:v
   <div class="card hero">
     <div>
       <h2>See exactly where every student stands on their medications</h2>
-      <p class="lead">DrugBug gives each of your students a private study app, and gives you a live dashboard: scores by body system, drug class, question type and every single drug, with strengths, weak spots and a weekly scoreboard that keeps the class studying.</p>
+      <p class="lead">DrugBug gives each of your students a private study app, and gives you a live dashboard: the exact questions your class misses most (and the wrong answer they chose), the medications and question styles they struggle with, and a weekly scoreboard that keeps them studying.</p>
       <div class="ctas"><a class="cta" href="#pilot">Start a free pilot</a><a class="cta2" href="#demo">See the demo dashboard</a></div>
       <p class="muted small" style="margin-top:12px">No student names or emails, ever. Each student gets a class key and shows up as Student 01, 02, and so on. Your printed key sheet is the only link to a real person.</p>
     </div>
     <ul class="feats">
-      <li><b>Every score, every drug</b>Body systems, drug classes, question types, drill topics and each drug, weakest first.</li>
-      <li><b>Strengths and weak spots</b>For the whole class and for each student, updated as they study.</li>
+      <li><b>What to reteach first</b>A plain-language summary of the class's biggest gaps, updated as they study.</li>
+      <li><b>The questions they miss</b>Lowest-scoring questions with the right answer, the most-picked wrong answer and the explanation.</li>
+      <li><b>Every drug, class and question style</b>Medications, drug classes, question styles, body systems and study modes, weakest first, plus a downloadable report.</li>
       <li><b>A weekly scoreboard with prizes</b>Top three each week win a bug; the last week of each month, a legendary one.</li>
       <li><b>Pro for every student</b>The full app, free to them, for as long as your class runs.</li>
     </ul>
   </div>
-  <div class="demobar" id="demo"><b>Demo</b><span>This is a made-up class with fake students and scores. Click around: open a student, switch score tabs, approve a nickname. Nothing here is saved.</span></div>
+  <div class="demobar" id="demo"><b>Demo</b><span>This is a made-up class with fake students and scores. Click around: read the questions they miss, open the Students tab, approve a nickname. Nothing here is saved.</span></div>
 </section>
 
 <section id="vPilot" class="card pilot hide">
@@ -293,6 +317,7 @@ a.signbtn{background:var(--accent)!important;color:#fff!important;border-color:v
 </section>
 
 <!-- class list -->
+<p id="adminLink" class="card hide" style="padding:12px 16px">You are signed in as the DrugBug owner. App metrics, evaluator codes, every school and the owner tools are on the <a href="../admin/"><b>Admin dashboard →</b></a></p>
 <section id="vList" class="card hide">
   <h2 id="listTitle">Your classes</h2>
   <div id="list"></div>
@@ -304,15 +329,15 @@ a.signbtn{background:var(--accent)!important;color:#fff!important;border-color:v
   <p class="muted small" id="uidLine"></p>
 </section>
 
-<!-- one class -->
+<!-- one class: Insights / Students / Scoreboard (rebuilt Nov 7 2026 for clarity) -->
 <section id="vClass" class="hide">
   <div class="card">
     <div class="row" style="justify-content:space-between;align-items:center">
       <div><h2 id="cName" style="margin:0"></h2><div class="muted small" id="cSub"></div></div>
-      <div class="row noprint"><button class="ghost" id="bBack">All classes</button><button class="ghost" id="bRefresh">Refresh</button></div>
+      <div class="row noprint"><button class="ghost" id="bBack">All classes</button><button class="ghost" id="bRefresh">Refresh</button><button class="ghost" id="bReport">Download report</button></div>
     </div>
     <div class="tiles" id="tiles"></div>
-    <p class="privacy">DrugBug knows these students only as <b>Student 01, Student 02…</b> No names, emails or student IDs are collected. Your printed key sheet is the only link between a key and a person, so keep it with your class records.</p>
+    <nav class="ctabs noprint" id="cTabs" aria-label="Class sections"><button data-ctab="ins" class="on">Insights</button><button data-ctab="stu">Students <span id="stuBadge"></span></button><button data-ctab="board">Scoreboard</button></nav>
   </div>
 
   <div class="card noprint" id="ownerTools">
@@ -321,7 +346,7 @@ a.signbtn{background:var(--accent)!important;color:#fff!important;border-color:v
       <button class="ghost" data-add="30">+30 days</button>
       <button class="ghost" data-add="365">+1 year</button>
       <label style="max-width:160px">Seats<input id="oSeats" type="number" min="1" max="500"></label>
-      <label style="max-width:240px">Level<select id="oLevel"><option value="">Any level (shows in every menu)</option><optgroup label="Prehospital"><option value="emt">EMT</option><option value="aemt">AEMT</option><option value="paramedic">Paramedic</option><option value="flight">Flight Paramedic</option></optgroup><optgroup label="Nursing"><option value="cna">CNA</option><option value="lvn">LVN / LPN</option><option value="rn">RN</option><option value="flightrn">Flight Nurse</option></optgroup><optgroup label="Medical school"><option value="ms1">MS1–MS2</option><option value="ms3">MS3–MS4</option><option value="intern">Intern</option></optgroup><optgroup label="Imaging"><option value="rt">Radiologic Technologist</option><option value="ct">CT Technologist</option><option value="mri">MRI Technologist</option><option value="nm">Nuclear Medicine Technologist</option><option value="ir">Interventional Radiology</option></optgroup><optgroup label="Allied health"><option value="mh">Mental Health</option><option value="diet">Dietitian</option><option value="rrt">Respiratory Therapist</option></optgroup><optgroup label="Military"><option value="asm">All Service Members</option><option value="cls">Combat Lifesaver</option><option value="cmc">Combat Medic / Corpsman</option><option value="cpp">Combat Paramedic</option></optgroup></select></label>
+      <label style="max-width:240px">Level<select id="oLevel"></select></label>
       <button class="ghost" id="bLevel">Save level</button>
       <button class="ghost" id="bSeats">Save seats</button>
       <button class="ghost" id="bEnd">End class now</button>
@@ -334,75 +359,126 @@ a.signbtn{background:var(--accent)!important;color:#fff!important;border-color:v
     <p id="oMsg" class="msg hide"></p>
   </div>
 
-  <div class="card noprint hide">
-    <h2>Class average by medication system</h2>
-    <p class="muted small">Share of questions answered correctly across the whole class, weakest first. Bars need answers to appear; a system nobody has practised isn't shown.</p>
-    <div id="chart" class="chart"></div>
-    <details style="margin-top:10px"><summary class="small muted">Show as a table</summary><div class="tblwrap" style="margin-top:8px"><table id="sysTable"></table></div></details>
-  </div>
-
-  <div class="card noprint">
-    <h2>Class strengths and weak spots</h2>
-    <p class="muted small">Every way DrugBug counts a score: medication systems, quiz types, question types, drug classes, drill topics and each drug. An area needs at least <span class="wmin2">5</span> answers to be ranked.</p>
-    <div class="sw" id="classSW"></div>
-  </div>
-
-  <div class="card noprint">
-    <div class="row" style="justify-content:space-between;align-items:center">
-      <h2 style="margin:0">Every score, class-wide</h2>
-      <select id="sortBy" style="max-width:200px"><option value="low">Weakest first</option><option value="high">Strongest first</option><option value="n">Most answered</option></select>
+  <!-- INSIGHTS -->
+  <div id="pIns" class="noprint">
+    <div class="card">
+      <h2>Reteach first</h2>
+      <p class="muted small">The clearest gaps in your class right now, worked out from every answer.</p>
+      <ul class="focus" id="focus"></ul>
     </div>
-    <div class="dimtabs" id="dimTabs"></div>
-    <input class="find" id="dimFind" placeholder="Filter (e.g. insulin)" type="search">
-    <div id="dimChart" class="chart"></div>
-    <p class="muted small" id="dimNote" style="margin-top:8px"></p>
-  </div>
 
-  <div class="card noprint">
-    <h2>Class scoreboard</h2>
-    <p class="muted small">Ranked by correct answers. Students see only the top 5 (and their own place) in the app, on their Dashboard. Each week the top 3 by correct answers that week win a bug (epic, rare, common; in the last week of each month 1st wins a legendary).</p>
-    <div class="tblwrap"><table class="board" id="boardTable"></table></div>
-  </div>
-
-  <div class="card noprint">
-    <h2>Questions answered per week (class)</h2>
-    <div class="trend" id="classTrend"></div><div class="colx" id="classTrendX"></div>
-  </div>
-
-  <div class="card noprint hide" id="stuCard">
-    <div class="row" style="justify-content:space-between;align-items:center">
-      <h2 style="margin:0" id="stuName"></h2>
-      <button class="ghost" id="bStuClose">Close</button>
+    <div class="card">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <h2 style="margin:0">Questions your class misses most</h2>
+        <input class="find" id="hqFind" placeholder="Filter by drug or word" type="search" style="max-width:240px;margin:0">
+      </div>
+      <p class="muted small" id="hqNote">Lowest share correct first. A question needs <span class="qmin">3</span> answers to be listed. "Most picked wrong" shows the wrong answer students chose most often, which is usually the misconception to address.</p>
+      <div id="hardQ"></div>
+      <button class="ghost hide" id="hqMore" style="margin-top:8px">Show more</button>
     </div>
-    <div class="tiles" id="stuTiles"></div>
-    <div class="sw" id="stuSW"></div>
-    <div class="dimtabs" id="stuDimTabs"></div>
-    <div id="stuChart" class="chart"></div>
-    <h3 style="font-size:15px;margin:16px 0 0">Questions per week</h3>
-    <div class="trend" id="stuTrend"></div><div class="colx" id="stuTrendX"></div>
-  </div>
 
-  <div class="card noprint hide" id="nickCard">
-    <h2>Nicknames waiting for your approval</h2>
-    <p class="muted small">Students can choose a nickname for the class scoreboard. Nothing shows to classmates until you approve it. DrugBug already blocks bad words and look-alike spellings; you have the final say. You can rename or remove any nickname later in the Students table.</p>
-    <div class="tblwrap"><table id="nickTable"></table></div>
-  </div>
-
-  <div class="card printme">
-    <div class="row noprint" style="justify-content:space-between;align-items:center;margin-bottom:10px">
-      <h2 style="margin:0">Students</h2>
-      <div class="row">
-        <label style="max-width:120px">New keys<input id="qty" type="number" min="1" max="200" value="10"></label>
-        <button id="bMake">Make keys</button>
-        <button class="ghost" id="bCsv">Key sheet (CSV)</button>
-        <button class="ghost" id="bPrint">Print key sheet</button>
+    <div class="grid2">
+      <div class="card">
+        <h2>Medications they struggle with</h2>
+        <p class="muted small">Share correct on each drug's questions, weakest first (at least <span class="wmin2">5</span> answers).</p>
+        <div id="hardDrugs" class="chart"></div>
+      </div>
+      <div class="card">
+        <h2>Drug classes</h2>
+        <p class="muted small">The same answers grouped by drug class, weakest first.</p>
+        <div id="hardClasses" class="chart"></div>
       </div>
     </div>
-    <p id="keyMsg" class="msg hide noprint"></p>
-    <h2 class="hide" id="printTitle"></h2>
-    <div class="tblwrap"><table id="stuTable"></table></div>
-    <p class="muted small noprint" style="margin-top:8px"><b>Click a student</b> to see every score for them. Completion is questions answered against the class goal. "Weakest" needs at least <span id="wmin">5</span> answers in a system. <b>Reset</b> frees a key for a lost phone or a new student.</p>
+
+    <div class="grid2">
+      <div class="card">
+        <h2>Question styles</h2>
+        <p class="muted small">How they do by the kind of question asked: assessment, when to hold, side effects, teaching and so on.</p>
+        <div id="qStyles" class="chart"></div>
+      </div>
+      <div class="card">
+        <h2>Ways they study</h2>
+        <p class="muted small">Practice tests, exam mode, the daily 5 minutes, drills and games. Exam-mode scores are usually the most realistic.</p>
+        <div id="qKinds" class="chart"></div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h2>Body systems</h2>
+        <p class="muted small">One question can count toward more than one system (epinephrine is cardiology and shock).</p>
+        <div id="hardSys" class="chart"></div>
+      </div>
+      <div class="card">
+        <h2>Studying over time</h2>
+        <p class="muted small">Questions answered each week. Hover a week for its accuracy.</p>
+        <div class="trend" id="classTrend"></div><div class="colx" id="classTrendX"></div>
+        <p class="muted small" id="trendNote" style="margin-top:8px"></p>
+      </div>
+    </div>
+
+    <details class="card">
+      <summary><b>Explore every score</b> <span class="muted small">— search any drug, topic or category</span></summary>
+      <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
+        <div class="dimtabs" id="dimTabs" style="margin:0"></div>
+        <select id="sortBy" style="max-width:200px"><option value="low">Weakest first</option><option value="high">Strongest first</option><option value="n">Most answered</option></select>
+      </div>
+      <input class="find" id="dimFind" placeholder="Filter (e.g. insulin)" type="search">
+      <div id="dimChart" class="chart"></div>
+    </details>
   </div>
+
+  <!-- STUDENTS -->
+  <div id="pStu" class="hide">
+    <div class="card noprint hide" id="nickCard">
+      <h2>Nicknames waiting for your approval</h2>
+      <p class="muted small">Nothing shows to classmates until you approve it. DrugBug already blocks bad words and look-alike spellings; you have the final say.</p>
+      <div class="tblwrap"><table id="nickTable"></table></div>
+    </div>
+
+    <div class="card noprint hide" id="stuCard">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <h2 style="margin:0" id="stuName"></h2>
+        <button class="ghost" id="bStuClose">Close</button>
+      </div>
+      <div class="tiles" id="stuTiles"></div>
+      <div class="sw" id="stuSW"></div>
+      <h3 class="h3s">Questions they missed</h3>
+      <div id="stuQ"></div>
+      <h3 class="h3s">Every score</h3>
+      <div class="dimtabs" id="stuDimTabs"></div>
+      <div id="stuChart" class="chart"></div>
+      <h3 class="h3s">Questions per week</h3>
+      <div class="trend" id="stuTrend"></div><div class="colx" id="stuTrendX"></div>
+    </div>
+
+    <div class="card printme">
+      <div class="row noprint" style="justify-content:space-between;align-items:center;margin-bottom:10px">
+        <h2 style="margin:0">Students</h2>
+        <div class="row">
+          <label style="max-width:120px">New keys<input id="qty" type="number" min="1" max="200" value="10"></label>
+          <button id="bMake">Make keys</button>
+          <button class="ghost" id="bCsv">Key sheet (CSV)</button>
+          <button class="ghost" id="bPrint">Print key sheet</button>
+        </div>
+      </div>
+      <p id="keyMsg" class="msg hide noprint"></p>
+      <h2 class="hide" id="printTitle"></h2>
+      <div class="tblwrap"><table id="stuTable"></table></div>
+      <p class="muted small noprint" style="margin-top:8px"><b>Click a student</b> for their scores and the questions they missed. Completion is questions answered against the class goal. <b>Reset</b> frees a key for a lost phone or a new student.</p>
+      <p class="privacy">DrugBug knows these students only as <b>Student 01, Student 02…</b> No names, emails or student IDs are collected. Your printed key sheet is the only link between a key and a person, so keep it with your class records.</p>
+    </div>
+  </div>
+
+  <!-- SCOREBOARD -->
+  <div id="pBoard" class="hide noprint">
+    <div class="card">
+      <h2>Class scoreboard</h2>
+      <p class="muted small">Ranked by correct answers. Students see only the top 5 and their own place, on their Dashboard. Each week the top 3 by correct answers that week win a bug.</p>
+      <div class="tblwrap"><table class="board" id="boardTable"></table></div>
+    </div>
+  </div>
+</section>
 </div>
 <footer class="sitef noprint"><p>Educational use only. Not for clinical decision-making or patient care. Not a medical device.</p><p>Not affiliated with or endorsed by NREMT, NCSBN, FSMB/NBME, ARRT or AHA.</p><p>&copy; Volare Media LLC &middot; <a href="mailto:VolareMediaLLC@gmail.com">VolareMediaLLC@gmail.com</a></p><p class="flinks"><a href="../about.html">About</a> &middot; <a href="../support.html">Support</a> &middot; <a href="../privacy.html">Privacy</a> &middot; <a href="../terms.html">Terms</a> &middot; <a href="../disclaimers.html">Disclaimers</a> &middot; <a href="../evaluate.html">Become an evaluator</a> &middot; <a href="../instructor/signin/">Instructor login</a></p></footer>
 </div>
@@ -470,6 +546,7 @@ a.signbtn{background:var(--accent)!important;color:#fff!important;border-color:v
     var nicks = { 2: ["Code Blue", "ok"], 5: ["Medic Mike", "ok"], 9: ["Swift Medic", "pending"], 13: ["Night Shift", "pending"], 17: ["Rapid Response", "ok"] };
     var students = [], sysTot = {}, N = 0, C = 0, act7 = 0, activated = 0;
     /* class-wide strengths and weak spots, so the demo has a story to tell */
+    var DRB = { amiodarone: -0.24, diltiazem: -0.2, epinephrine: -0.14, adenosine: -0.1, naloxone: 0.12, albuterol: 0.1 };
     var CB = { cardio: -0.16, ob: -0.2, renal: -0.12, psych: -0.08, airway: 0.06, tox: 0.12, pain: 0.1, endo: 0.08, resp: 0.04, general: -0.1 };
     for (var i = 1; i <= 24; i++) {
       var alias = "Student " + (i < 10 ? "0" : "") + i, on = i <= 22, skill = 0.55 + rnd() * 0.32, vol = 0.4 + rnd() * 1.4;
@@ -482,7 +559,7 @@ a.signbtn{background:var(--accent)!important;color:#fff!important;border-color:v
         var KB = { exam: -0.1, megacode: -0.12, crit: -0.08, game: 0.1, daily: 0.04 };
         kinds.forEach(function (k) { add(det.k, k, n * (0.04 + rnd() * 0.2), skill + (KB[k] || 0) + (rnd() - 0.5) * 0.3); });
         qts.forEach(function (k) { add(det.y, k, n * (0.03 + rnd() * 0.06), skill + (rnd() - 0.5) * 0.3); });
-        drugs.forEach(function (d) { if (rnd() < 0.9) { var e = add(det.d, d[0], 4 + rnd() * 20 * vol, skill + (rnd() - 0.5) * 0.4); var ck = d[2].toLowerCase().replace(/[^a-z0-9]+/g, "-"), cur = det.l[ck] || (det.l[ck] = { n: 0, c: 0 }); cur.n += e.n; cur.c += e.c; } });
+        drugs.forEach(function (d) { if (rnd() < 0.9) { var e = add(det.d, d[0], 4 + rnd() * 20 * vol, skill + (DRB[d[0]] || 0) + (rnd() - 0.5) * 0.4); var ck = d[2].toLowerCase().replace(/[^a-z0-9]+/g, "-"), cur = det.l[ck] || (det.l[ck] = { n: 0, c: 0 }); cur.n += e.n; cur.c += e.c; } });
         topics.forEach(function (t) { add(det.p, t[0], 3 + rnd() * 14, skill + (rnd() - 0.5) * 0.35); });
         activated++; if (weeks[11][0] > 0) act7++; N += n; C += c;
       } else for (var w3 = 0; w3 < 12; w3++) weeks.push([0, 0]);
@@ -494,11 +571,16 @@ a.signbtn{background:var(--accent)!important;color:#fff!important;border-color:v
         weakest: sys.filter(function (x) { return x.n >= 5 && x.key !== "general"; }).sort(function (a, b) { return a.pct - b.pct; }).slice(0, 2),
         systemsTried: sys.length, detail: det, weeks: weeks, nick: nk ? { text: nk[0], status: nk[1] } : null });
     }
+    /* real questions from the bank, with made-up results, so the demo shows the hardest-questions list */
+    var DQ = [["q8wmj84", 9, 31, 0], ["qbu9k3n", 11, 29, 1], ["qt239pr", 14, 30, 2], ["q39lsbb", 16, 28, 0], ["q12wjb12", 0, 0, 0], ["q1pcm6e3", 17, 26, 1], ["qcngrsi", 18, 25, 2], ["q19h9zs1", 19, 24, 0], ["q15yq2e4", 21, 26, 1], ["q36e4y4", 22, 25, 2]].filter(function (x) { return x[2]; });
+    var questions = DQ.map(function (x, i) { var miss = x[2] - x[1]; return { id: x[0], c: x[1], n: x[2], pct: Math.round(1000 * x[1] / x[2]) / 10, students: 14 + (i % 5), missed: Math.min(14 + (i % 5), miss), wrong: [{ idx: x[3], n: Math.ceil(miss * 0.6) }, { idx: (x[3] + 1) % 3, n: Math.floor(miss * 0.3) }] }; });
+    students.forEach(function (st, i) { st.missedQ = st.activated ? DQ.slice(i % 3, i % 3 + 3).map(function (x) { return { id: x[0], n: 2, c: i % 2 }; }) : []; });
     var systems = sysK.filter(function (k) { return sysTot[k]; }).map(function (k) { var t = sysTot[k]; return { key: k, name: SYSN[k], answered: t.n, pct: Math.round(1000 * t.c / t.n) / 10, students: t.students }; });
     return {
       org: { orgId: "demo", name: "Demo Paramedic Academy · Spring Cohort", code: "DEMO", kind: "pilot", level: "paramedic", status: "active", live: true, expiresAt: now + 51 * 86400000, createdAt: now - 40 * 86400000, seats: 24, keyCount: 24, goal: 300, instructors: ["program.director@demo-academy.edu"] },
       totals: { activated: activated, active7: act7, answered: N, accuracy: Math.round(1000 * C / N) / 10, keys: 24 },
-      systems: systems, students: students, weakMin: 5, labels: labels, sysNames: SYSN, weekStarts: weekStarts, generatedAt: now
+      systems: systems, students: students, weakMin: 5, labels: labels, sysNames: SYSN, weekStarts: weekStarts, generatedAt: now,
+      questions: questions, qAnswered: 412, qMin: 3
     };
   }
   var DEMO_MSG = "This is the demo. Nothing here is saved. Start a free pilot to get your own class.";
@@ -514,12 +596,13 @@ a.signbtn{background:var(--accent)!important;color:#fff!important;border-color:v
   }
   function demoTips() {
     var tip = function (beforeId, html) { var el = $(beforeId); if (!el || el.previousElementSibling && el.previousElementSibling.classList.contains("dtip")) return; var t = document.createElement("div"); t.className = "dtip"; t.innerHTML = '<span>' + html + '</span>'; el.parentNode.insertBefore(t, el); };
-    tip("tiles", "The class at a glance: seats in use, who studied this week, questions answered and class accuracy.");
-    tip("classSW", "What the class is good at and where it struggles, across every way DrugBug counts a score.");
-    tip("dimTabs", "Switch between body systems, quiz types, question types, drug classes, drill topics and each drug. Type a drug name to find it.");
-    tip("boardTable", "The weekly scoreboard. Students see only the top 5 and their own place. <b>Click a student</b> to open their full breakdown.");
-    tip("nickTable", "Students can pick a nickname for the scoreboard. Nothing shows until you approve it. Try Approve.");
-    tip("stuTable", "Every key, its student number, progress and weakest areas. Print the key sheet, hand out keys, and write names on your own copy.");
+    tip("tiles", "The class at a glance: who joined, who studied this week, questions answered and how many were right.");
+    tip("cTabs", "Three views: <b>Insights</b> (what to reteach), <b>Students</b> (keys, nicknames, each student) and <b>Scoreboard</b>.");
+    tip("focus", "DrugBug reads every answer and tells you, in plain words, where the class is weakest right now.");
+    tip("hardQ", "The exact questions the class misses most, with the right answer and the wrong answer most students chose. That wrong answer is usually the misconception to address in class.");
+    tip("hardDrugs", "Which medications and drug classes they struggle with, weakest first.");
+    tip("qStyles", "How they do by kind of question (assessment, when to hold, side effects…) and by how they study.");
+    tip("stuTable", "Under Students: every key, progress and weakest areas. Click a student to see the questions they missed. Print the key sheet and write names on your own copy.");
   }
   function startDemo() {
     ST.demo = true; ST.demoData = demoData(); ST.orgId = "demo"; ST.owner = false;
@@ -571,9 +654,12 @@ a.signbtn{background:var(--accent)!important;color:#fff!important;border-color:v
   function loadList() {
     call("groupOrgList").then(function (r) {
       ST.owner = r.owner; ST.list = r.list;
-      var cls = !EMB || EMB === "classes", app = !EMB || EMB === "metrics" || EMB === "evaluators";
-      show("vOwner", r.owner && cls); show("vList", cls); show("vClass", false); show("vOverview", r.owner && cls); show("vApp", r.owner && app);
-      if (r.owner) { if (cls) loadOverview(); if (EMB === "evaluators") loadCoders(); else if (app) loadApp(); }
+      /* Owner tools live on the Admin dashboard only (owner, Nov 7 2026). Signed in here without
+         ?embed=, the owner sees the same instructor view as everyone else, plus a link to Admin. */
+      var ownerHere = r.owner && !!EMB, cls = !EMB || EMB === "classes", app = EMB === "metrics" || EMB === "evaluators";
+      show("vOwner", ownerHere && cls); show("vList", cls); show("vClass", false); show("vOverview", ownerHere && cls); show("vApp", ownerHere && app);
+      show("adminLink", r.owner && !EMB);
+      if (ownerHere) { if (cls) loadOverview(); if (EMB === "evaluators") loadCoders(); else if (app) loadApp(); }
       $("listTitle").textContent = r.owner ? "All classes (" + r.list.length + ")" : "Your classes";
       $("uidLine").textContent = r.owner ? "" : "Your account id: " + r.uid;
       show("joinBox", !r.owner);
@@ -780,36 +866,26 @@ a.signbtn{background:var(--accent)!important;color:#fff!important;border-color:v
     var d = ST.dash, o = d.org, t = d.totals;
     var left = Math.ceil((o.expiresAt - Date.now()) / 864e5);
     $("cName").textContent = o.name;
-    $("cSub").textContent = (o.kind === "annual" ? "Paid · " : "Pilot · ") + (o.live ? "Active · " + left + " day" + (left === 1 ? "" : "s") + " left" : o.status === "ended" ? "Ended" : "Expired") +
-      " · ends " + day(o.expiresAt) + " · code " + o.code + (o.level ? " · level " + (LVNAME[o.level] || o.level) : "") + " · goal " + o.goal + " questions per student" + (o.instructors.length ? " · instructors: " + o.instructors.join(", ") : "");
+    $("cSub").textContent = (o.kind === "annual" ? "Paid" : "Pilot") + " · " + (o.live ? left + " day" + (left === 1 ? "" : "s") + " left" : o.status === "ended" ? "Ended" : "Expired") +
+      (o.level ? " · " + (LVNAME[o.level] || o.level) : "") + " · goal " + o.goal + " questions per student" + (o.instructors.length ? " · " + o.instructors.join(", ") : "");
     $("printTitle").textContent = o.name + " — DrugBug key sheet";
     $("tiles").innerHTML = [
-      [t.activated + " / " + o.seats, "seats in use (" + o.keyCount + " keys made)"],
-      [t.active7, "studied in the last 7 days"],
+      [t.activated + " of " + o.seats, "students joined"],
+      [t.active7, "studied this week"],
       [t.answered.toLocaleString(), "questions answered"],
-      [pctTxt(t.accuracy), "class accuracy"]
+      [pctTxt(t.accuracy), "answered correctly"]
     ].map(function (x) { return '<div class="tile"><b>' + esc(x[0]) + '</b><span>' + esc(x[1]) + '</span></div>'; }).join("");
-    $("wmin").textContent = d.weakMin;
 
-    /* owner tools */
-    show("ownerTools", ST.owner);
-    if (ST.owner) { $("bPaid").classList.toggle("hide", o.kind === "annual"); $("bPilot").classList.toggle("hide", o.kind !== "annual"); $("oSeats").value = o.seats; $("oLevel").value = o.level || ""; $("oInfo").innerHTML = 'Instructor code: <span class="mono">' + esc(o.invite) + '</span>' + (o.contact ? ' · contact: ' + esc(o.contact) : ''); }
+    /* owner tools: only when the owner opens a class (from the Admin dashboard) */
+    show("ownerTools", !!ST.owner && !!EMB);
+    if (ST.owner) { if (!$("oLevel").options.length && $("nLevel")) $("oLevel").innerHTML = $("nLevel").innerHTML; $("bPaid").classList.toggle("hide", o.kind === "annual"); $("bPilot").classList.toggle("hide", o.kind !== "annual"); $("oSeats").value = o.seats; $("oLevel").value = o.level || ""; $("oInfo").innerHTML = 'Instructor code: <span class="mono">' + esc(o.invite) + '</span>' + (o.contact ? ' · contact: ' + esc(o.contact) : ''); }
 
-    /* chart: weakest first, one series, value labels on every bar */
-    var sys = d.systems.slice().sort(function (a, b) { return a.pct - b.pct; });
-    $("chart").innerHTML = sys.length ? sys.map(function (s) {
-      return '<div class="lab">' + esc(s.name) + '</div><div class="bar" title="' + esc(s.name + ": " + pctTxt(s.pct) + " of " + s.answered + " answers, " + s.students + " students") + '"><i style="width:' + Math.max(2, s.pct) + '%"></i></div><div class="val"><b>' + pctTxt(s.pct) + '</b> <span>' + s.answered.toLocaleString() + ' answers</span></div>';
-    }).join("") : '<p class="muted" style="grid-column:1/-1">No answers yet. Numbers appear here as students study.</p>';
-    $("sysTable").innerHTML = '<tr><th>System</th><th>Class average</th><th>Answers</th><th>Students</th></tr>' + sys.map(function (s) {
-      return '<tr><td>' + esc(s.name) + '</td><td class="num">' + pctTxt(s.pct) + '</td><td class="num">' + s.answered.toLocaleString() + '</td><td class="num">' + s.students + '</td></tr>';
-    }).join("");
-
-    /* students */
+    /* students table */
     var fresh = {}; (ST.newKeys || []).forEach(function (k) { fresh[k.alias] = 1; });
-    $("stuTable").innerHTML = '<tr><th>Student</th><th>Key</th><th class="noprint">Status</th><th class="noprint">Nickname</th><th class="noprint">Answered</th><th class="noprint">Accuracy</th><th class="noprint">Completion</th><th class="noprint">Weakest systems</th><th class="noprint">Last studied</th><th class="noprint"></th><th class="printonly hide">Name (write in, keep private)</th></tr>' +
+    $("stuTable").innerHTML = '<tr><th>Student</th><th>Key</th><th class="noprint">Status</th><th class="noprint">Nickname</th><th class="noprint">Answered</th><th class="noprint">Correct</th><th class="noprint">Completion</th><th class="noprint">Weakest systems</th><th class="noprint">Last studied</th><th class="noprint"></th><th class="printonly hide">Name (write in, keep private)</th></tr>' +
       (d.students.length ? d.students.map(function (s) {
         return '<tr class="clk' + (fresh[s.alias] ? ' fresh' : '') + '" data-stu="' + esc(s.keyId) + '"><td><b>' + esc(s.alias) + '</b></td><td class="mono">' + esc(s.token) + '</td>' +
-          '<td class="noprint"><span class="pill' + (s.activated ? " on" : "") + '">' + (s.activated ? "in use" : "not used yet") + '</span></td>' +
+          '<td class="noprint"><span class="pill' + (s.activated ? " on" : "") + '">' + (s.activated ? "joined" : "not used yet") + '</span></td>' +
           '<td class="noprint">' + nickCell(s) + '</td>' +
           '<td class="num noprint">' + s.answered.toLocaleString() + '</td><td class="num noprint">' + pctTxt(s.accuracy) + '</td>' +
           '<td class="noprint"><span class="mini"><i style="width:' + s.completion + '%"></i></span>' + s.completion + '%</td>' +
@@ -820,15 +896,23 @@ a.signbtn{background:var(--accent)!important;color:#fff!important;border-color:v
       }).join("") : '<tr><td colspan="10" class="muted">No keys yet. Choose how many and press Make keys.</td></tr>');
     drawDetail();
     drawNicks();
+    setTab(ST.ctab || "ins");
   }
+  /* section tabs inside a class */
+  function setTab(k) {
+    ST.ctab = k;
+    [].forEach.call(document.querySelectorAll("[data-ctab]"), function (b) { b.classList.toggle("on", b.getAttribute("data-ctab") === k); });
+    show("pIns", k === "ins"); show("pStu", k === "stu"); show("pBoard", k === "board");
+  }
+  document.addEventListener("click", function (e) { var b = e.target.closest && e.target.closest("[data-ctab]"); if (b) setTab(b.getAttribute("data-ctab")); });
 
-  /* ---------- every score: strengths, weak spots, all dimensions (owner, Nov 6 2026) ---------- */
+  /* ---------- scores by every dimension ---------- */
   var LVNAME = {}; [].forEach.call(document.querySelectorAll("#nLevel option"), function (op) { if (op.value) LVNAME[op.value] = op.textContent; });
   var KIND = { practice: "Practice tests", exam: "Exam mode", daily: "Daily 5-minute", study: "Study a drug", weak: "Weak-spot review", system: "Learn by system", acls: "ACLS / PALS", session: "Guided sessions", game: "Games", safety: "Safety checks", lab: "Lab drills", crit: "Critical-care drills", megacode: "Megacode", anatomy: "Anatomy quiz", calc: "Calculations" };
   var QT = { assess: "Assessment", hold: "When to hold", labs: "Labs to watch", vitals: "Vital signs", adverse: "Side effects", teach: "Patient teaching", interact: "Interactions", notify: "When to notify" };
-  var DIMS = [["s", "Medication systems"], ["k", "Quiz types"], ["y", "Question types"], ["l", "Drug classes"], ["p", "Drill topics"], ["d", "Each drug"]];
+  var DIMS = [["s", "Body systems"], ["d", "Medications"], ["l", "Drug classes"], ["y", "Question styles"], ["k", "Ways they study"], ["p", "Drill topics"]];
   var DIMNAME = {}; DIMS.forEach(function (x) { DIMNAME[x[0]] = x[1]; });
-  ST.dim = "s"; ST.stuDim = "s"; ST.stu = null;
+  ST.dim = "d"; ST.stuDim = "d"; ST.stu = null;
   function dname(f, k) {
     var d = ST.dash;
     if (f === "k") return KIND[k] || k; if (f === "y") return QT[k] || k;
@@ -845,36 +929,93 @@ a.signbtn{background:var(--accent)!important;color:#fff!important;border-color:v
   function swHTML(rows, min) {
     var ok = rows.filter(function (r) { return r.n >= min && !(r.f === "s" && r.k === "general"); });
     if (!ok.length) return '<p class="muted" style="grid-column:1/-1">Not enough answers yet. Areas are ranked once they have ' + min + ' answers.</p>';
-    var best = ok.filter(function (r) { return r.pct >= 70; }).sort(function (a, b) { return b.pct - a.pct || b.n - a.n; }).slice(0, 6);
-    var worst = ok.filter(function (r) { return r.pct < 70; }).sort(function (a, b) { return a.pct - b.pct || b.n - a.n; }).slice(0, 6);
+    var best = ok.filter(function (r) { return r.pct >= 70; }).sort(function (a, b) { return b.pct - a.pct || b.n - a.n; }).slice(0, 5);
+    var worst = ok.filter(function (r) { return r.pct < 70; }).sort(function (a, b) { return a.pct - b.pct || b.n - a.n; }).slice(0, 5);
     var li = function (r) { return '<li><b>' + esc(r.name) + '</b> ' + pctTxt(r.pct) + ' <small>· ' + esc(DIMNAME[r.f]) + ' · ' + r.n + ' answers</small></li>'; };
     return '<div class="swbox good"><h3>Doing well (70% and up)</h3><ol>' + (best.length ? best.map(li).join("") : '<li class="muted">Nothing at 70% yet.</li>') + '</ol></div><div class="swbox bad"><h3>Needs work (under 70%)</h3><ol>' + (worst.length ? worst.map(li).join("") : '<li class="muted">Nothing under 70%.</li>') + '</ol></div>';
   }
   function tabsHTML(rows, cur, attr) {
     return DIMS.map(function (D) { var n = rows.filter(function (r) { return r.f === D[0]; }).length; return '<button class="' + (cur === D[0] ? "on" : "") + '" ' + attr + '="' + D[0] + '">' + esc(D[1]) + ' (' + n + ')</button>'; }).join("");
   }
-  function chartHTML(rows, sortBy, find) {
+  function barRow(r, showStudents) {
+    return '<div class="lab">' + esc(r.name) + '</div><div class="bar" title="' + esc(r.name + ": " + pctTxt(r.pct) + " of " + r.n + " answers") + '"><i class="' + tone(r.pct) + '" style="width:' + Math.max(2, r.pct) + '%"></i></div><div class="val"><b>' + pctTxt(r.pct) + '</b> <span>' + r.c + "/" + r.n + (showStudents && r.students != null ? " · " + r.students + " students" : "") + '</span></div>';
+  }
+  function chartHTML(rows, sortBy, find, limit) {
     var f = (find || "").trim().toLowerCase();
     var list = rows.filter(function (r) { return !f || r.name.toLowerCase().indexOf(f) >= 0; });
     list.sort(sortBy === "high" ? function (a, b) { return b.pct - a.pct || b.n - a.n; } : sortBy === "n" ? function (a, b) { return b.n - a.n; } : function (a, b) { return a.pct - b.pct || b.n - a.n; });
-    if (!list.length) return '<p class="muted" style="grid-column:1/-1">Nothing here yet.</p>';
-    return list.slice(0, 300).map(function (r) {
-      return '<div class="lab">' + esc(r.name) + '</div><div class="bar" title="' + esc(r.name + ": " + pctTxt(r.pct) + " of " + r.n + " answers") + '"><i class="' + tone(r.pct) + '" style="width:' + Math.max(2, r.pct) + '%"></i></div><div class="val"><b>' + pctTxt(r.pct) + '</b> <span>' + r.c + "/" + r.n + (r.students != null && ST.stu == null ? " · " + r.students + " students" : "") + '</span></div>';
-    }).join("") + (list.length > 300 ? '<p class="muted small" style="grid-column:1/-1">Showing 300 of ' + list.length + '. Use the filter to find the rest.</p>' : "");
+    if (!list.length) return '<p class="muted" style="grid-column:1/-1">Nothing here yet. This fills in as students study.</p>';
+    var lim = limit || 300;
+    return list.slice(0, lim).map(function (r) { return barRow(r, ST.stu == null); }).join("") + (list.length > lim ? '<p class="muted small" style="grid-column:1/-1">Showing ' + lim + ' of ' + list.length + '. See them all under Explore every score.</p>' : "");
   }
   function trendHTML(id, xid, weeks, starts) {
     var max = Math.max.apply(null, weeks.map(function (w) { return w[0]; }).concat([1]));
     $(id).innerHTML = weeks.map(function (w) { var p = w[0] ? Math.round(100 * w[1] / w[0]) : null; return '<div class="tc" title="' + w[0] + ' answers' + (p != null ? ", " + p + "% right" : "") + '"><b style="bottom:calc(' + Math.round(100 * w[0] / max) + '% + 2px)">' + (w[0] || "") + '</b><i style="height:' + Math.round(100 * w[0] / max) + '%"></i></div>'; }).join("");
     $(xid).innerHTML = (starts || []).map(function (ms) { var dt = new Date(ms); return '<span>' + (dt.getUTCMonth() + 1) + "/" + dt.getUTCDate() + '</span>'; }).join("");
   }
+
+  /* ---------- the question bank, for question text (loaded once, only when needed) ---------- */
+  var QB = null, QBP = null;
+  function hashStr(s) { var h = 5381; for (var i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0; return (h >>> 0).toString(36); }
+  function qbank() { if (QB) return Promise.resolve(QB); if (!QBP) QBP = fetch("qbank.json").then(function (r) { return r.json(); }).then(function (j) { QB = j; return j; }).catch(function () { QB = {}; return QB; }); return QBP; }
+  function wrongText(q, w) {   /* w = { h } from the server or { idx } in the demo */
+    if (!q) return null; if (w.idx != null) return q[2][w.idx] || null;
+    for (var i = 0; i < q[2].length; i++) if (hashStr(q[2][i]).slice(0, 6) === w.h) return q[2][i];
+    return null;
+  }
+  function hqHTML(x, studentView) {
+    var q = QB && QB[x.id], p = x.pct, tn = p >= 80 ? "ok" : p >= 60 ? "mid" : "low";
+    if (!q) return '<div class="hq"><div class="hqtop"><div class="hqp ' + tn + '">' + pctTxt(p) + '<small>correct</small></div><div><div class="hqs muted">This question has since been changed or retired.</div><div class="hqm">' + x.n + ' answers</div></div></div></div>';
+    var w = (x.wrong || []).map(function (y) { return { t: wrongText(q, y), n: y.n }; }).filter(function (y) { return y.t && y.n > 0; });
+    var meta = [q[4], (LVNAME[q[5]] || q[5] || "").toString()].filter(Boolean).join(" · ");
+    meta += (meta ? " · " : "") + (studentView ? x.c + " of " + x.n + " right" : x.n + " answers · " + x.missed + " of " + x.students + " students missed it");
+    return '<div class="hq"><div class="hqtop"><div class="hqp ' + tn + '">' + pctTxt(p) + '<small>correct</small></div><div style="min-width:0"><div class="hqs">' + esc(q[0]) + '</div><div class="hqm">' + esc(meta) + '</div>' +
+      '<div class="hqa"><div class="r">✓ Correct: ' + esc(q[1]) + '</div>' + (w.length ? '<div class="w">✗ Most picked wrong: ' + esc(w[0].t) + ' <span class="muted">(' + w[0].n + ' time' + (w[0].n === 1 ? '' : 's') + ')</span></div>' + (w[1] ? '<div class="w" style="opacity:.8">✗ Also picked: ' + esc(w[1].t) + ' <span class="muted">(' + w[1].n + ')</span></div>' : '') : '') + '</div>' +
+      (q[3] ? '<details><summary>Explanation</summary><p style="margin:6px 0 0">' + esc(q[3]) + '</p></details>' : '') + '</div></div></div>';
+  }
+  ST.hqN = 10;
+  function drawHardQ() {
+    var d = ST.dash, L = d.questions || [];
+    document.querySelectorAll(".qmin").forEach(function (e) { e.textContent = d.qMin || 3; });
+    if (!L.length) { $("hardQ").innerHTML = '<p class="muted">No question has ' + (d.qMin || 3) + ' answers yet. This list fills in as students study' + (d.qAnswered == null ? ' (needs the latest DrugBug update on students\' phones)' : '') + '.</p>'; show("hqMore", false); return; }
+    if (!QB) { $("hardQ").innerHTML = '<p class="muted">Loading questions…</p>'; qbank().then(drawHardQ); return; }
+    var f = ($("hqFind").value || "").trim().toLowerCase();
+    var list = L.filter(function (x) { if (!f) return true; var q = QB[x.id]; return q && (q[0] + " " + q[1] + " " + q[4]).toLowerCase().indexOf(f) >= 0; });
+    $("hardQ").innerHTML = list.length ? list.slice(0, ST.hqN).map(function (x) { return hqHTML(x); }).join("") : '<p class="muted">No listed question matches.</p>';
+    show("hqMore", list.length > ST.hqN);
+  }
+  $("hqFind").oninput = function () { ST.hqN = 10; drawHardQ(); };
+  $("hqMore").onclick = function () { ST.hqN += 10; drawHardQ(); };
+
+  /* plain-language summary at the top of Insights */
+  function drawFocus(rows) {
+    var d = ST.dash, min = d.weakMin, out = [];
+    var pick = function (f, n) { return rows.filter(function (r) { return r.f === f && r.n >= min && r.pct < 70 && !(f === "s" && r.k === "general"); }).sort(function (a, b) { return a.pct - b.pct || b.n - a.n; }).slice(0, n); };
+    var dr = pick("d", 3), cl = pick("l", 1), qt = pick("y", 1), sy = pick("s", 1);
+    if (dr.length) out.push(["Rx", "<b>" + dr.map(function (r) { return esc(r.name); }).join(", ") + "</b>: the class gets " + dr.map(function (r) { return pctTxt(r.pct); }).join(", ") + " of these drugs' questions right."]);
+    if (cl.length) out.push(["Cl", "Drug class <b>" + esc(cl[0].name) + "</b> is the weakest group at " + pctTxt(cl[0].pct) + " (" + cl[0].n + " answers)."]);
+    if (qt.length) out.push(["?", "<b>" + esc(qt[0].name) + "</b> questions trip them up most: " + pctTxt(qt[0].pct) + " correct."]);
+    if (sy.length) out.push(["Sy", "Weakest body system: <b>" + esc(sy[0].name) + "</b> at " + pctTxt(sy[0].pct) + "."]);
+    var hq = (d.questions || [])[0];
+    if (hq) out.push(["Q", "The most-missed question is answered correctly only " + pctTxt(hq.pct) + " of the time. It's first in the list below, with the wrong answer most students chose."]);
+    var idle = (d.students || []).filter(function (s) { return s.activated && (!s.lastAt || Date.now() - s.lastAt > 7 * 864e5); }).length;
+    if (idle) out.push(["Zz", idle + " student" + (idle === 1 ? " hasn't" : "s haven't") + " studied in the past 7 days. See the Students tab."]);
+    $("focus").innerHTML = out.length ? out.map(function (x) { return '<li><span class="fi">' + x[0] + '</span><span>' + x[1] + '</span></li>'; }).join("") : '<li><span class="fi">✓</span><span class="muted">No clear gaps yet. Areas need at least ' + min + ' answers before DrugBug calls them weak.</span></li>';
+  }
   function drawDetail() {
     var d = ST.dash; if (!d) return;
-    var studs = d.students || [], rows = rowsOf(studs);
-    document.querySelectorAll(".wmin2").forEach(function (e) { e.textContent = d.weakMin; });
-    $("classSW").innerHTML = swHTML(rows, d.weakMin);
+    var studs = d.students || [], rows = rowsOf(studs), min = d.weakMin;
+    document.querySelectorAll(".wmin2").forEach(function (e) { e.textContent = min; });
+    var of = function (f) { return rows.filter(function (r) { return r.f === f && r.n >= min && !(f === "s" && r.k === "general"); }); };
+    drawFocus(rows);
+    drawHardQ();
+    $("hardDrugs").innerHTML = chartHTML(of("d"), "low", "", 12);
+    $("hardClasses").innerHTML = chartHTML(of("l"), "low", "", 10);
+    $("qStyles").innerHTML = chartHTML(of("y"), "low", "", 10);
+    $("qKinds").innerHTML = chartHTML(of("k"), "low", "", 10);
+    $("hardSys").innerHTML = chartHTML(of("s"), "low", "", 12);
     $("dimTabs").innerHTML = tabsHTML(rows, ST.dim, "data-dim");
     $("dimChart").innerHTML = chartHTML(rows.filter(function (r) { return r.f === ST.dim; }), $("sortBy").value, $("dimFind").value);
-    $("dimNote").textContent = ST.dim === "s" ? "One question can count toward more than one system (epinephrine is cardiology and shock), so systems don't add up to the total." : "";
     /* scoreboard */
     var board = studs.filter(function (s) { return s.activated; }).slice().sort(function (a, b) { return correctOf(b) - correctOf(a) || (b.accuracy || 0) - (a.accuracy || 0); });
     $("boardTable").innerHTML = '<tr><th>#</th><th>Student</th><th>Correct</th><th>Answered</th><th>Accuracy</th><th>This week</th></tr>' + (board.length ? board.map(function (s, i) {
@@ -885,6 +1026,11 @@ a.signbtn{background:var(--accent)!important;color:#fff!important;border-color:v
     var weeks = []; for (var i = 0; i < 12; i++) weeks.push([0, 0]);
     studs.forEach(function (s) { (s.weeks || []).forEach(function (w, j) { weeks[j][0] += w[0]; weeks[j][1] += w[1]; }); });
     trendHTML("classTrend", "classTrendX", weeks, d.weekStarts);
+    var a4 = weeks.slice(-4), b4 = weeks.slice(-8, -4), pc = function (L) { var n = 0, c = 0; L.forEach(function (w) { n += w[0]; c += w[1]; }); return n ? Math.round(100 * c / n) : null; };
+    var p1 = pc(a4), p0 = pc(b4);
+    $("trendNote").textContent = p1 != null && p0 != null ? "Accuracy, last 4 weeks: " + p1 + "% (the 4 weeks before: " + p0 + "%, " + (p1 >= p0 ? "up " : "down ") + Math.abs(p1 - p0) + " points)." : p1 != null ? "Accuracy, last 4 weeks: " + p1 + "%." : "";
+    var waiting = studs.filter(function (s) { return s.nick && s.nick.status === "pending" && s.nick.text; }).length;
+    $("stuBadge").textContent = waiting ? String(waiting) : "";
     drawStudent();
   }
   function correctOf(s) { return s.correct != null ? s.correct : s.answered && s.accuracy != null ? Math.round(s.answered * s.accuracy / 100) : 0; }
@@ -892,11 +1038,15 @@ a.signbtn{background:var(--accent)!important;color:#fff!important;border-color:v
     var d = ST.dash, s = ST.stu && (d.students || []).filter(function (x) { return x.keyId === ST.stu; })[0];
     show("stuCard", !!s); if (!s) return;
     var rows = rowsOf([s]); rows.forEach(function (r) { r.students = null; });
-    $("stuName").textContent = s.alias + " — every score";
+    $("stuName").textContent = s.alias + (s.nick && s.nick.status === "ok" && s.nick.text ? " (" + s.nick.text + ")" : "");
     var wk = (s.weeks || [])[11] || [0, 0];
-    $("stuTiles").innerHTML = [[s.answered.toLocaleString(), "questions answered"], [pctTxt(s.accuracy), "accuracy"], [wk[0], "answered this week"], [ago(s.lastAt), "last studied"]]
+    $("stuTiles").innerHTML = [[s.answered.toLocaleString(), "questions answered"], [pctTxt(s.accuracy), "answered correctly"], [wk[0], "answered this week"], [ago(s.lastAt), "last studied"]]
       .map(function (x) { return '<div class="tile"><b>' + esc(x[0]) + '</b><span>' + esc(x[1]) + '</span></div>'; }).join("");
     $("stuSW").innerHTML = swHTML(rows, d.weakMin);
+    var mq = (s.missedQ || []).map(function (x) { return { id: x.id, n: x.n, c: x.c, pct: x.n ? Math.round(100 * x.c / x.n) : null, wrong: [] }; });
+    if (!mq.length) $("stuQ").innerHTML = '<p class="muted small">Nothing missed yet, or no answers since the latest update.</p>';
+    else if (!QB) { $("stuQ").innerHTML = '<p class="muted small">Loading…</p>'; qbank().then(drawStudent); }
+    else $("stuQ").innerHTML = mq.slice(0, 5).map(function (x) { return hqHTML(x, true); }).join("");
     $("stuDimTabs").innerHTML = tabsHTML(rows, ST.stuDim, "data-sdim");
     $("stuChart").innerHTML = chartHTML(rows.filter(function (r) { return r.f === ST.stuDim; }), "low", "");
     trendHTML("stuTrend", "stuTrendX", s.weeks || [], d.weekStarts);
@@ -906,11 +1056,26 @@ a.signbtn{background:var(--accent)!important;color:#fff!important;border-color:v
   $("bStuClose").onclick = function () { ST.stu = null; drawStudent(); };
   document.addEventListener("click", function (e) {
     var t = e.target.closest && e.target.closest("[data-dim],[data-sdim],tr[data-stu]"); if (!t || !ST.dash) return;
-    if (e.target.closest("button[data-reset]")) return;
+    if (e.target.closest("button[data-reset],button[data-nick]")) return;
     if (t.hasAttribute("data-dim")) { ST.dim = t.getAttribute("data-dim"); $("dimFind").value = ""; return drawDetail(); }
     if (t.hasAttribute("data-sdim")) { ST.stuDim = t.getAttribute("data-sdim"); return drawStudent(); }
-    ST.stu = t.getAttribute("data-stu"); drawStudent(); $("stuCard").scrollIntoView({ behavior: "smooth", block: "start" });
+    ST.stu = t.getAttribute("data-stu"); setTab("stu"); drawStudent(); $("stuCard").scrollIntoView({ behavior: "smooth", block: "start" });
   });
+
+  /* one CSV with everything on the Insights tab, for the instructor's own records */
+  $("bReport").onclick = function () {
+    var d = ST.dash; if (!d) return;
+    var go = function () {
+      var rows = rowsOf(d.students || []), out = [["Section", "Item", "Share correct (%)", "Correct", "Answered", "Students"]];
+      DIMS.forEach(function (D) { rows.filter(function (r) { return r.f === D[0]; }).sort(function (a, b) { return a.pct - b.pct; }).forEach(function (r) { out.push([D[1], r.name, r.pct, r.c, r.n, r.students]); }); });
+      out.push([]); out.push(["Question", "Correct answer", "Share correct (%)", "Answered", "Students who missed it", "Most picked wrong answer"]);
+      (d.questions || []).forEach(function (x) { var q = QB && QB[x.id], w = q && x.wrong && x.wrong[0] ? wrongText(q, x.wrong[0]) : ""; out.push([q ? q[0] : "(retired question)", q ? q[1] : "", x.pct, x.n, x.missed, w || ""]); });
+      var csv = out.map(function (r) { return r.map(function (c) { return '"' + String(c == null ? "" : c).replace(/"/g, '""') + '"'; }).join(","); }).join("\r\n");
+      var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+      a.download = "drugbug-class-report-" + d.org.code + ".csv"; document.body.appendChild(a); a.click(); a.remove();
+    };
+    (d.questions || []).length ? qbank().then(go) : go();
+  };
 
   /* nicknames (owner, Nov 6 2026) */
   function nickCell(s) {
