@@ -103,6 +103,7 @@ iframe.emb{width:100%;border:0;display:block;min-height:600px;background:transpa
   <button role="tab" data-tab="analytics">Analytics</button>
   <button role="tab" data-tab="codes">Codes</button>
   <button role="tab" data-tab="evaluators">Evaluators</button>
+  <button role="tab" data-tab="signups">Sign-ups</button>
   <button role="tab" data-tab="classes">Classes</button>
   <button role="tab" data-tab="metrics">App metrics</button>
 </nav>
@@ -183,6 +184,13 @@ iframe.emb{width:100%;border:0;display:block;min-height:600px;background:transpa
   </div>
 </section>
 
+<section data-page="signups" class="hide">
+  <div class="card">
+    <div class="row sp"><div><h2>Evaluator sign-ups</h2><div class="muted small">From drugbugapp.com/evaluate.html, newest first. Make a code for the people you pick, then email it to them.</div></div>
+      <div class="row"><select id="sfSt" style="width:auto"><option value="" selected>Everyone</option><option value="new">New</option><option value="approved">Approved</option><option value="declined">Declined</option></select><button class="ghost" id="bSuRefresh">Refresh</button></div></div>
+    <div class="tblwrap" style="margin-top:10px"><table class="t" id="suTable"><tr><td class="muted">Loading…</td></tr></table></div>
+  </div>
+</section>
 <section data-page="evaluators" class="hide"><iframe class="emb" data-src="../instructor/?embed=evaluators" title="Evaluators"></iframe></section>
 <section data-page="classes" class="hide"><iframe class="emb" data-src="../instructor/?embed=classes" title="Classes"></iframe></section>
 <section data-page="metrics" class="hide"><iframe class="emb" data-src="../instructor/?embed=metrics" title="App metrics"></iframe></section>
@@ -260,7 +268,7 @@ iframe.emb{width:100%;border:0;display:block;min-height:600px;background:transpa
     if (location.hash.slice(1) !== t) history.replaceState(null, "", "#" + t);
     var fr = document.querySelector('[data-page="' + t + '"] iframe');
     if (fr && !fr.src) { fr.src = fr.getAttribute("data-src") + (local ? "&emu=1" : ""); fit(fr); }
-    if (!LOADED[t]) { LOADED[t] = true; if (t === "overview") loadOverview(); if (t === "analytics") loadAnalytics(); if (t === "codes") loadCodes(); }
+    if (!LOADED[t]) { LOADED[t] = true; if (t === "overview") loadOverview(); if (t === "analytics") loadAnalytics(); if (t === "codes") loadCodes(); if (t === "signups") loadSignups(); }
     window.scrollTo(0, 0);
   }
   $("tabs").addEventListener("click", function (e) { var b = e.target.closest("[data-tab]"); if (b) go(b.getAttribute("data-tab")); });
@@ -313,6 +321,7 @@ iframe.emb{width:100%;border:0;display:block;min-height:600px;background:transpa
     if (o.ratings) k.push(kpi("grading", "Difficulty", o.ratings.avg != null ? o.ratings.avg.toFixed(1) + '<small style="font-size:14px"> / 5</small>' : "—", fmt(o.ratings.ratings) + " player ratings on " + fmt(o.ratings.questions) + " questions"));
     if (o.review) k.push(kpi("grading", "Your grading", fmt(o.review.reviewed), "questions reviewed · " + fmt(o.review.bad) + " bad · " + fmt(o.review.edited) + " rewritten"));
     if (o.evaluators) k.push(kpi("evaluators", "Evaluators", fmt(o.evaluators.questions), "questions graded · " + fmt(o.evaluators.suggestions) + " suggestions · " + fmt(o.evaluators.bad) + " bad"));
+    if (o.signups) k.push(kpi("signups", "Sign-ups", fmt(o.signups.new), "new evaluator sign-ups · " + fmt(o.signups.total) + " total"));
     if (o.classes) k.push(kpi("classes", "Classes", fmt(o.classes.active), "active · " + fmt(o.classes.seats) + " seats · " + fmt(o.classes.total) + " total"));
     $("kpis").innerHTML = k.join("");
   }
@@ -403,6 +412,44 @@ iframe.emb{width:100%;border:0;display:block;min-height:600px;background:transpa
   });
   $("anBody").addEventListener("input", function (e) { if (e.target.id === "anQ") { AN.q = e.target.value; var p = e.target.selectionStart; drawAnalytics(); var i = $("anQ"); i.focus(); try { i.setSelectionRange(p, p); } catch (x) {} } });
   $("anBody").addEventListener("change", function (e) { if (e.target.id === "anSort") { AN.sort = e.target.value; drawAnalytics(); } });
+
+
+  /* ---------- evaluator sign-ups ---------- */
+  var SU = [];
+  function loadSignups() {
+    $("suTable").innerHTML = '<tr><td class="muted">Loading…</td></tr>';
+    call("evalAppList").then(function (r) { SU = r.list || []; drawSignups(); }).catch(function (e) { $("suTable").innerHTML = '<tr><td class="muted">' + esc(errTxt(e)) + '</td></tr>'; });
+  }
+  function suMail(a) {
+    var first = String(a.name || "").split(" ")[0];
+    var body = "Hi " + first + ",\n\nThank you for signing up. You have been chosen to be a DrugBug Evaluator!\n\nYour evaluator code: " + a.code + "\n\nHow to use it:\n1. Open drugbugapp.com/app on a computer or phone browser.\n2. Go to Settings > Account & privacy > Redeem a code.\n3. Enter your full name and the code above.\n\nYou get DrugBug Pro for life, and an Evaluator panel opens under every question you answer. Make an account in the app so it follows you to the iPhone app too.\n\nThank you for helping make DrugBug better,\nAdam\nDrugBug";
+    return "mailto:" + String(a.email).replace(/[^A-Za-z0-9._%+@-]/g, "") + "?subject=" + encodeURIComponent("You're a DrugBug Evaluator") + "&body=" + encodeURIComponent(body);
+  }
+  function drawSignups() {
+    var st = $("sfSt").value, L = SU.filter(function (a) { return !st || (a.status || "new") === st; });
+    $("suTable").innerHTML = L.length ? '<tr><th>Name</th><th>Role</th><th>Years</th><th>Where</th><th>Why</th><th>Signed up</th><th>Status</th><th></th></tr>' + L.map(function (a) {
+      var s = a.status || "new";
+      return '<tr><td><b>' + esc(a.name) + '</b><div class="muted small">' + esc(a.email) + '</div></td><td class="small">' + esc(a.cred) + '</td><td class="small">' + esc(a.years || "") + '</td><td class="small">' + esc(a.place || "") + '</td><td class="small" style="max-width:280px">' + esc(a.why || "") + '</td><td class="small muted">' + day(a.at) + '</td>' +
+        '<td><span class="pill ' + (s === "approved" ? "ok" : s === "declined" ? "off" : "") + '">' + (s === "approved" ? "Approved" : s === "declined" ? "Declined" : "New") + '</span>' + (a.code ? '<div><code class="c">' + esc(a.code) + '</code></div>' : '') + '</td>' +
+        '<td><div class="row" style="flex-wrap:nowrap">' + (a.code ? '<a class="btn" style="padding:7px 12px;font-size:13px" href="' + suMail(a) + '">Email the code</a>' : '<button class="ghost" data-sumake="' + esc(a.id) + '">Make evaluator code</button>') + (s !== "declined" && !a.code ? '<button class="ghost" data-sudecline="' + esc(a.id) + '">Decline</button>' : '') + '</div></td></tr>';
+    }).join("") : '<tr><td class="muted">' + (SU.length ? "Nobody here." : "No sign-ups yet.") + '</td></tr>';
+  }
+  $("sfSt").onchange = drawSignups; $("bSuRefresh").onclick = loadSignups;
+  $("suTable").addEventListener("click", function (e) {
+    var mk = e.target.closest("[data-sumake]"), dc = e.target.closest("[data-sudecline]");
+    if (mk) {
+      var a = SU.filter(function (x) { return x.id === mk.getAttribute("data-sumake"); })[0]; if (!a) return;
+      mk.disabled = true; mk.textContent = "Making…";
+      call("codeMint", { kind: "eval", count: 1, once: true, label: a.name + " (" + a.cred + ")" }).then(function (r) {
+        a.code = (r.codes || [])[0]; a.status = "approved";
+        return call("evalAppSet", { id: a.id, status: "approved", code: a.code });
+      }).then(function () { CODES = null; drawSignups(); }).catch(function (er) { mk.disabled = false; mk.textContent = "Make evaluator code"; alert(errTxt(er)); });
+    }
+    if (dc) {
+      var b = SU.filter(function (x) { return x.id === dc.getAttribute("data-sudecline"); })[0]; if (!b) return;
+      call("evalAppSet", { id: b.id, status: "declined" }).then(function () { b.status = "declined"; drawSignups(); }).catch(function (er) { alert(errTxt(er)); });
+    }
+  });
 
   /* ---------- codes ---------- */
   var CK = "pro";
