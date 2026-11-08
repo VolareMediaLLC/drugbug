@@ -2175,7 +2175,7 @@ document.addEventListener("click", function (e) {
     case "aclstest": return typeof fmAclsTest === "function" && fmAclsTest();
     case "nrmore": S.nrMore = !(S.nrMore || S.exEdit); S.exEdit = false; return render();
     case "exclear": if (Prog.d.exam) delete Prog.d.exam[examKey()]; S.exEdit = false; saveProg(); return render();
-    case "nrstart": var st0 = nrState(), pl0 = nrPool(st0.filter), pk0; if (S.nrFresh) { var fr0 = freshPool(pl0); if (fr0.length >= Math.min(5, st0.n)) pl0 = fr0; } pk0 = st0.kind === "reg" ? regCompose(pl0, st0.n, st0.adaptive !== false) : isEMSLv(ctxKey()) ? nrCompose(pl0, Math.min(st0.n, pl0.length), st0.filter && st0.filter !== "all" ? [st0.filter] : nrLevelsFor(ctxKey()), st0.adaptive !== false) : st0.adaptive !== false ? adaptivePick(pl0, st0.n) : shuffle(pl0).slice(0, st0.n); nrStart(pk0); render(); return window.scrollTo(0, 0);
+    case "nrstart": var st0 = nrState(), pl0 = nrPool(st0.filter), pk0; if (S.nrFresh) { var fr0 = freshPool(pl0); if (fr0.length >= Math.min(5, st0.n)) pl0 = fr0; } pk0 = st0.kind === "reg" ? regCompose(pl0, st0.n, st0.adaptive !== false) : isEMSLv(ctxKey()) ? nrCompose(pl0, Math.min(st0.n, pl0.length), st0.filter && st0.filter !== "all" ? [st0.filter] : nrLevelsFor(ctxKey()), st0.adaptive !== false) : st0.adaptive !== false ? adaptivePick(pl0, st0.n) : shuffle(pl0).slice(0, st0.n); if (st0.kind !== "reg") pk0 = diffBalance(pk0, pl0); nrStart(pk0); render(); return window.scrollTo(0, 0);
     case "nrnext": S.nr.i++; render(); return window.scrollTo(0, 0);
     case "nrprev": S.nr.i--; render(); return window.scrollTo(0, 0);
     case "nrfinish": S.nr.end = Date.now(); S.nr.phase = "done"; if (S.nr.mode === "exam") { S.nr.rec = S.nr.rec || {}; S.nr.qs.forEach(function (x, i) { if (!S.nr.rec[i] && S.nr.ans[i] != null) { S.nr.rec[i] = 1; record(x.q, nrRight(x, S.nr.ans[i])); } }); setTimeout(toastAch, 300); } render(); return window.scrollTo(0, 0);
@@ -2941,7 +2941,42 @@ function adaptivePick(pool, n) {
   var out = [], seenDrug = {};
   items.forEach(function (it) { if (out.length < n && (!it.q.d || (seenDrug[it.q.d] || 0) < 2)) { out.push(it.q); seenDrug[it.q.d] = (seenDrug[it.q.d] || 0) + 1; } });
   items.forEach(function (it) { if (out.length < n && out.indexOf(it.q) < 0) out.push(it.q); });
-  return out;
+  return diffBalance(out, pool);
+}
+/* ---------- Difficulty mix (owner, Nov 7 2026) ----------
+   Once a question is graded it has an average difficulty from 1 to 5 (players', evaluators' and the
+   owner's ratings together; qDifficulty on the server). Every quiz is then mixed per 10 questions:
+   2 easy (1 to 1.9), 6 normal (2 to 4) and 2 hard (4.1 to 5). Questions nobody has graded yet count
+   as normal, and when there are not enough easy or hard ones the quiz simply keeps what it has. */
+var DIFF = { avg: {}, n: 0, at: 0, busy: false };
+try { var _dd = store("qdiff"); if (_dd && _dd.avg) { DIFF.avg = _dd.avg; DIFF.at = _dd.at || 0; DIFF.n = Object.keys(_dd.avg).length; } } catch (e) {}
+function diffLoad() {
+  if (DIFF.busy || typeof fnCall !== "function" || Date.now() - DIFF.at < 6 * 3600000) return;
+  DIFF.busy = true;
+  fnCall("qDifficulty", {}).then(function (r) {
+    DIFF.busy = false; if (!r || !r.avg) return;
+    DIFF.avg = r.avg; DIFF.n = Object.keys(r.avg).length; DIFF.at = Date.now();
+    try { store("qdiff", { avg: r.avg, at: DIFF.at }); } catch (e) {}
+  }).catch(function () { DIFF.busy = false; });
+}
+setTimeout(function () { try { diffLoad(); } catch (e) {} }, 8000);
+function diffOf(q) { var v = DIFF.avg[qid(q)]; return v == null ? null : v; }
+function diffCls(q) { var v = diffOf(q); return v == null ? "u" : v < 2 ? "e" : v > 4 ? "h" : "m"; }
+function diffBalance(sel, pool) {
+  var n = sel.length; if (n < 5 || !DIFF.n || !pool || !pool.length) return sel;
+  var want = { e: Math.round(n * 0.2), h: Math.round(n * 0.2) };
+  var out = sel.slice(), inS = {}, ch = 0; out.forEach(function (q) { inS[qid(q)] = 1; });
+  var spare = { e: [], h: [], m: [], u: [] };
+  shuffle(pool.slice()).forEach(function (q) { if (!inS[qid(q)] && !q.t) spare[diffCls(q)].push(q); });
+  var cnt = function (c) { return out.filter(function (q) { return diffCls(q) === c; }).length; };
+  var lastOf = function (cls) { for (var i = out.length - 1; i >= 0; i--) if (cls.indexOf(diffCls(out[i])) >= 0 && !out[i].pilot) return i; return -1; };
+  ["e", "h"].forEach(function (c) {
+    /* too many of this kind: trade the extras for normal (or ungraded) ones */
+    var g = 0; while (cnt(c) > want[c] && g++ < n) { var i = lastOf([c]), r = spare.m.pop() || spare.u.pop(); if (i < 0 || !r) break; out[i] = r; ch = 1; }
+    /* too few: bring some in, in place of ungraded first, then normal */
+    g = 0; while (cnt(c) < want[c] && spare[c].length && g++ < n) { var j = lastOf(["u"]); if (j < 0) j = lastOf(["m"]); if (j < 0) break; out[j] = spare[c].pop(); ch = 1; }
+  });
+  return ch ? shuffle(out) : out;
 }
 function weakest(ids, n) {
   return ids.filter(function (id) { return stat(id); }).map(function (id) { var s = stat(id); return { id: id, m: MSCORE[mastery(id)], acc: s.c / s.n }; })
@@ -6590,7 +6625,7 @@ var LEGAL_PAGES = {
         "They are kept for up to 24 months, then deleted or combined into totals that cannot be tied to a device. You can turn them off at any time in " + STATS + ". Turning them off also deletes the statistics stored for that device."]) +
       L("Optional account", ["DrugBug works without an account. If you choose to create one (Sign in with Apple or email and password), we store your email address (or Apple's private relay address if you use Hide My Email), an account ID, and your study data so it can sync across your devices.", "Passwords and sign-in are handled by our authentication provider (Google Firebase Authentication); DrugBug never sees or stores your password or your Apple Account password. Apple sign-in tokens are verified by the provider's servers.", "Your account data is private to you: other users never see your email, account ID or study records. Data is encrypted in transit (HTTPS/TLS) and at rest by our provider. Access to the database is restricted by server-side security rules, and only authorized DrugBug administrators can manage content.", "You can export your data (Settings, Download my data) and delete your account in the app (Settings, Privacy & account). Deleting your account deletes your account and its study records; copies in our provider's backups expire within 30 days."]) +
       L("What we do not collect", ["We do not ask for patient information, and you must never enter it. We do not collect your contacts, location, photos or advertising ID, and we do not collect your name unless you redeem a code (see Codes). We do not sell personal information, and we do not show ads."]) +
-      L("Codes", ["When you redeem a code (a gift, Pro, evaluator, sticks, bug, school or agency license, agency protocol or Field Medic code), DrugBug asks for your full name. It is saved with that redemption and on your account, and only the DrugBug team sees it, so we know who used each code. School class keys never ask for a name. Your name is deleted with your account."]) +
+      L("Codes", ["When you redeem a code (a gift, Pro, evaluator, sticks, bug, school or agency license, agency protocol or Field Medic code), DrugBug asks for your full name. It is saved with that redemption and on your account, and only the DrugBug team sees it, so we know who used each code. School class keys never ask for a name. Your name is deleted with your account. If you sign up to evaluate questions (drugbugapp.com/evaluate.html), we keep the name, email, role and anything else you write there, and use them only to contact you about evaluating."]) +
       L("Who can see it", ["Your progress and score history are private to your account. Usage statistics are seen only by the DrugBug team, as totals and trends. (The leaderboard and school competitions are currently turned off.) If turned on: leaderboard and competition display names, school or team names and scores are visible to other participants. Use a first name or nickname only. Error reports and protocol requests are seen by the DrugBug team."]) +
       L("Students and schools", ["A school or agency can give students anonymous class keys. If you redeem one, your quiz totals by medication system (questions answered, how many were correct, and when you last studied) are reported to your instructor under the key's label, for example \"Student 07\", never under your name. DrugBug does not know who holds which key; only your instructor's own key sheet does. Deleting the class deletes every key and its results. Schools that need a data agreement can contact us."]) +
       L("Account deletion and retention", ["Use <button class=\"linkish\" data-legal=\"data\">Your data</button> to delete everything DrugBug stores about you, including this device's usage statistics, or email us. We delete or de-identify your information promptly, except where we must keep limited records for legal reasons (for example records of purchases, or a record that you agreed to the Terms). Data stored only on your device is removed when you delete the app or clear this site's data."]) +
