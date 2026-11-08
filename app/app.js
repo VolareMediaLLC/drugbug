@@ -9538,7 +9538,11 @@ function tier() {
     return (TIER_RANK[gt] || 0) > (TIER_RANK[st] || 0) ? gt : (st || gt || "free");
   }
   if (PRO.tier === "pro" || licenseActive()) return "pro";
-  return PRO.tier === "plus" ? "plus" : "free";
+  /* signed in to a DrugBug account on the iPhone: a plan bought on the website, or a school seat,
+     counts here too (App Store 3.1.3(b), multiplatform). Nothing here sells or links to it. (owner, Nov 8 2026) */
+  var wt = (typeof subTier === "function" && subTier()) || "", sk = (typeof seatTier === "function" && seatTier()) || "", ap = PRO.tier || "";
+  var best = [ap, wt, sk].reduce(function (m, x) { return (TIER_RANK[x] || 0) > (TIER_RANK[m] || 0) ? x : m; }, "");
+  return best === "pro" ? "pro" : best === "plus" ? "plus" : "free";
 }
 function hasTier(t) { return TIER_RANK[tier()] >= TIER_RANK[t || "pro"]; }
 function isPro() { return hasTier("pro"); }
@@ -9576,6 +9580,8 @@ function proLabel() {
     return TIER_NAME[tier()];
   }
   if (PRO.store) return TIER_NAME[PRO.tier] + " active" + (PRO.offer ? " · offer code" : "") + (PRO.expires ? " · renews or ends " + new Date(PRO.expires).toLocaleDateString() : "");
+  if (typeof subActive === "function" && subActive()) return TIER_NAME[subTier()] + " · from your DrugBug account";
+  if (typeof seatActive === "function" && seatActive()) return seatLabel();
   if (licenseActive()) return "School license (" + Prog.d.license.code + ") until " + new Date(Prog.d.license.until).toLocaleDateString();
   if (typeof giftPro === "function" && giftPro()) return Prog.d.proGift.until - Date.now() > 50 * 365 * 864e5 ? "DrugBug Pro for life, from a code" : "DrugBug Pro from a code until " + new Date(Prog.d.proGift.until).toLocaleDateString();
   if (Prog.d.proGrant) return "Granted by DrugBug";
@@ -9636,7 +9642,7 @@ function drawPaywall() {
     });
     if (PRO.busy) c += '<p class="muted small" role="status">Opening checkout…</p>';
     if (PRO.msg) c += '<div class="presult" role="alert">' + esc(PRO.msg) + '</div>';
-    c += '<div class="pwrow">' + (subActive() ? '<button class="linkish" data-pw="wmanage">Manage or cancel your subscription</button>' : '') + '<button class="linkish" data-act="codesgo">Have a code? Redeem it in Settings</button></div>';
+    c += '<div class="pwrow">' + (subActive() && !NATIVE ? '<button class="linkish" data-pw="wmanage">Manage or cancel your subscription</button>' : '') + '<button class="linkish" data-act="codesgo">Have a code? Redeem it in Settings</button></div>';
     c += '<p class="muted small">DrugBug Free stays free forever: every tool in the app, over about 40 common medications.</p>';
     c += '<p class="muted small pwfine">Payment is taken by Stripe; DrugBug never sees your card. Subscriptions renew automatically until cancelled, and you can cancel any time from Manage subscription above. Cancelling stops future renewals and your plan stays active until the end of the period you have paid for. DrugBug is for education only, not for patient care.' +
       (site ? ' <a href="' + esc(site) + '/terms.html" target="_blank" rel="noopener">Terms of Use</a> · <a href="' + esc(site) + '/privacy.html" target="_blank" rel="noopener">Privacy Policy</a>' : '') + '</p>';
@@ -9686,6 +9692,8 @@ function planInfo() {
       o.src = "apple"; o.lines.push("Bought through the App Store" + (PRO.offer ? " with an offer code" : ""));
       if (PRO.expires) o.lines.push("Renews or ends on " + new Date(PRO.expires).toLocaleDateString());
       o.cancel = "manage"; o.note = "To cancel, open Manage or cancel and turn off DrugBug in your Apple subscriptions. You keep your plan until the end of the period you paid for.";
+    } else if (typeof subActive === "function" && subActive()) {
+      o.src = "account"; o.lines.push("From your DrugBug account, active until " + new Date(SUB.until).toLocaleDateString()); o.note = "This plan comes with your DrugBug account.";
     }
   } else if (typeof subActive === "function" && subActive()) {
     o.src = "stripe"; var pr = subPriceText ? subPriceText() : "";
@@ -11698,7 +11706,7 @@ function accClearLocal() { try { if (typeof walletClear === "function") walletCl
 var ACC_BONUS_HRS = 72;   /* 3 days (owner, Nov 8 2026) */
 function accBonus() {
   try {
-    if (Prog.d.acctBonus) return "";
+    if (Prog.d.acctBonus || NATIVE) return "";   /* website only: an app-run free Pro period is not allowed in the iPhone app (3.1.1) */
     var from = Math.max(Date.now(), (Prog.d.proGift && Prog.d.proGift.until) || 0);
     Prog.d.proGift = { until: from + ACC_BONUS_HRS * 36e5 }; Prog.d.acctBonus = Date.now();
     if (typeof flushProg === "function") flushProg(); else saveProg();
@@ -11752,9 +11760,9 @@ function accAskMaybe(delay) { setTimeout(function () { if (accAskOk()) accAskOpe
 function accAskOpen() {
   var a = store("accask") || {}; store("accask", { n: (a.n || 0) + 1, ts: Date.now() });
   accdlg.innerHTML = '<div class="panel pwpanel accask" role="dialog" aria-modal="true" aria-label="Make a free account" tabindex="-1">' +
-    '<p class="wdwkick">' + (Prog.d.earned || 0).toLocaleString() + ' sticks and counting</p><h2>Make a free account, get 3 days of Pro</h2>' +
-    '<p>Right now your bug, your sticks and your progress live only on this ' + (NATIVE ? 'phone' : 'browser') + '. A free account backs them up and brings them to your other devices.</p>' +
-    '<p><strong>Make one now and DrugBug Pro is yours free for 3 days:</strong> every drug, every level, every quiz.</p>' +
+    '<p class="wdwkick">' + (Prog.d.earned || 0).toLocaleString() + ' sticks and counting</p><h2>' + (NATIVE ? 'Back up your bug with a free account' : 'Make a free account, get 3 days of Pro') + '</h2>' +
+    '<p>Right now your bug, your sticks and your progress live only on this ' + (NATIVE ? 'phone' : 'browser') + '. A free account backs them up and brings them to your other devices' + (NATIVE ? ', including drugbugapp.com' : '') + '.</p>' +
+    (NATIVE ? '' : '<p><strong>Make one now and DrugBug Pro is yours free for 3 days:</strong> every drug, every level, every quiz.</p>') +
     '<div class="actions"><button class="btn" data-accask="go">Make my free account</button><button class="btn ghost" data-accask="no">Not now</button></div></div>';
   accdlg.hidden = false; var p = accdlg.querySelector(".panel"); if (p) p.focus();
 }
@@ -11785,7 +11793,13 @@ function accCard() {
   if (ACCT.msg) c += '<p class="presult" role="status">' + esc(ACCT.msg) + '</p>';
   if (s.signedIn) {
     c += setRow("Signed in", (s.provider === "apple" ? "With Apple" : s.provider === "google" ? "With Google" : "With email") + (s.email ? " · " + (/privaterelay\.appleid\.com$/i.test(s.email) ? "Hide My Email address" : s.email) : "") + (s.provider === "email" && !s.emailVerified ? " · email not verified yet" : ""), '<button class="btn small ghost" data-acc="signout">Sign out</button>');
-    c += setRow("Sync", "Your progress, scores, My List and Terrarium are saved to your account and sync to your other devices.", "");
+    c += setRow("Sync", "Your progress, scores, My List and Terrarium are saved to your account and sync to your other devices" + (NATIVE ? ", including drugbugapp.com" : ", including the DrugBug iPhone app") + ".", "");
+    /* Apple sign-in is only in the iPhone app and Google only on the website, so a password lets the same
+       account sign in on the other one with email (owner, Nov 8 2026) */
+    if ((s.provider === "apple" || s.provider === "google") && !s.hasPassword && typeof ACCT.api.addPassword === "function") {
+      if (ACCT.mode === "addpw") c += '<form class="pform" data-accform="1"><p class="small">Then sign in on ' + (NATIVE ? 'drugbugapp.com' : 'the iPhone app') + ' with <strong>' + esc(s.email || "your email") + '</strong> and this password.</p><label>New password (8+ characters)<input class="pinput" id="accnewpw" type="password" autocomplete="new-password" minlength="8" required></label><div class="actions"><button class="btn small" type="submit" data-accgo="addpw">Save password</button><button class="linkish" type="button" data-acc="mode" data-m="">Cancel</button></div></form>';
+      else c += setRow("Use it on " + (NATIVE ? "the website" : "your iPhone"), (NATIVE ? "The website signs in with Google or email, not Apple." : "The iPhone app signs in with Apple or email, not Google.") + " Add a password and sign in there with your email.", '<button class="btn small ghost" data-acc="mode" data-m="addpw">Add a password</button>');
+    }
     if (ACCT.del) {
       c += '<div class="presult"><strong>Delete your DrugBug account?</strong> This permanently deletes your account and everything stored with it: progress, scores, saved list, Terrarium, error reports and protocol requests. It cannot be undone. App Store subscriptions are not cancelled automatically; cancel them in iPhone Settings → your name → Subscriptions.' +
         (s.provider === "email" ? '<label class="small">Confirm your password<input class="pinput" id="accdelpw" type="password" autocomplete="current-password"></label>' : '<p class="small">You will be asked to confirm with Apple.</p>') +
@@ -11793,7 +11807,7 @@ function accCard() {
     } else c += setRow("Delete account", "Permanently delete your account and its data.", '<button class="btn small ghost" data-acc="delask">Delete account</button>');
     return c;
   }
-  c += setRow("Account (optional)", "DrugBug works without an account. Create one to back up your progress and sync it across devices" + (Prog.d.acctBonus ? "" : ", and get 3 days of DrugBug Pro free") + ". We never show your email or account to other users.", "");
+  c += setRow("Account (optional)", "DrugBug works without an account. Create one to back up your progress and sync it across devices" + (NATIVE ? ", including drugbugapp.com" : "") + (Prog.d.acctBonus || NATIVE ? "" : ", and get 3 days of DrugBug Pro free") + ". We never show your email or account to other users.", "");
   /* Sign in with Apple needs the native AuthenticationServices bridge, so it only appears in the
      iPhone app; the website offers Google instead (owner, Nov 1 2026). Email works in both. */
   var hasApple = typeof ACCT.api.hasApple === "function" ? ACCT.api.hasApple() : true;
@@ -11833,6 +11847,7 @@ document.addEventListener("submit", function (e) {
   var f = e.target; if (!f.getAttribute || !f.getAttribute("data-accform") || !ACCT.api) return; e.preventDefault();
   var em = ((document.getElementById("accemail") || {}).value || "").trim(), pw = (document.getElementById("accpw") || {}).value || "", go = ACCT.go || "signin";
   ACCT.msg = ""; ACCT.busy = true;
+  if (go === "addpw") { var npw = (document.getElementById("accnewpw") || {}).value || ""; return ACCT.api.addPassword(npw).then(function () { ACCT.busy = false; ACCT.mode = ""; ACCT.msg = "Password saved. You can now sign in with your email on " + (NATIVE ? "drugbugapp.com" : "the iPhone app") + "."; render(); }, accFail); }
   if (go === "reset") return ACCT.api.resetPassword(em).then(function () { ACCT.busy = false; ACCT.mode = "email"; ACCT.msg = "If an account uses that email, a reset link is on its way."; render(); }, function () { ACCT.busy = false; ACCT.msg = "If an account uses that email, a reset link is on its way."; render(); });
   var p = go === "create" ? ACCT.api.createEmail(em, pw) : ACCT.api.signInEmail(em, pw);
   p.then(function (r) { accDone(go === "create" ? "Account created. Check your email to verify your address." : r && r.switched ? "Signed in. This phone's progress was merged into your account." : "Signed in.", go === "create"); }, accFail);
@@ -30960,6 +30975,7 @@ function needWelcome() {
 }
 function wzCanAccount() {
   if (typeof ACCT === "undefined" || !ACCT || !ACCT.api) return false;
+  if (typeof acctUI === "function" && !acctUI()) return false;
   var s = ACCT.api.state() || {};
   return !s.signedIn;
 }
@@ -30971,7 +30987,7 @@ function wzAcctStep() {
     : (ACCT.api && typeof ACCT.api.signInGoogle === "function" ? '<button class="btn big" data-acc="google"' + (ACCT.busy ? " disabled" : "") + '>' + accGoogleMark() + 'Continue with Google</button>' : '');
   var c = '<div class="wzart">' + (typeof bugArt === "function" && typeof bugById === "function" ? bugArt(bugById("grub-medic"), "wzbug", { mood: "happy" }) : "") + '</div>' +
     '<h1>Let’s get you a bug</h1>' +
-    '<p class="wzsub">Make an account and your bug, your sticks and everything you learn follow you to your phone. Skip it and they live in this browser only, until you clear your history.</p>';
+    '<p class="wzsub">' + (NATIVE ? 'Make an account and your bug, your sticks and everything you learn are backed up and follow you to drugbugapp.com. Skip it and they live on this phone only.' : 'Make an account and your bug, your sticks and everything you learn follow you to your phone. Skip it and they live in this browser only, until you clear your history.') + '</p>';
   if (ACCT.msg) c += '<p class="presult" role="status">' + esc(ACCT.msg) + '</p>';
   c += '<div class="wzacct"><div class="actions">' + one +
     '<button class="btn ghost" data-acc="mode" data-m="' + (ACCT.mode === "email" ? "" : "email") + '">' + (ACCT.mode === "email" ? "Hide email sign-up" : "Use email instead") + '</button></div>';

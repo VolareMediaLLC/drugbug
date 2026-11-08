@@ -24,7 +24,8 @@
     var u = auth && auth.currentUser; if (!u) return { signedIn: false, anonymous: true };
     var prov = (u.providerData || []).map(function (p) { return p.providerId; });
     return { uid: u.uid, anonymous: u.isAnonymous, signedIn: !u.isAnonymous, email: u.email || "", emailVerified: !!u.emailVerified,
-      provider: prov.indexOf("apple.com") >= 0 ? "apple" : prov.indexOf("google.com") >= 0 ? "google" : prov.indexOf("password") >= 0 ? "email" : "" };
+      provider: prov.indexOf("apple.com") >= 0 ? "apple" : prov.indexOf("google.com") >= 0 ? "google" : prov.indexOf("password") >= 0 ? "email" : "",
+      hasPassword: prov.indexOf("password") >= 0 };
   }
   var ready = load(base + "firebase-app-compat.js")
     .then(function () { return Promise.all([load(base + "firebase-auth-compat.js"), load(base + "firebase-firestore-compat.js")]); })
@@ -95,6 +96,7 @@
       "auth/user-not-found": "Email or password is incorrect.", "auth/invalid-credential": "Email or password is incorrect.", "auth/invalid-login-credentials": "Email or password is incorrect.",
       "auth/too-many-requests": "Too many tries. Wait a few minutes and try again.", "auth/network-request-failed": "No internet connection.",
       "auth/requires-recent-login": "For your security, sign in again, then try once more.",
+      "auth/account-exists-with-different-credential": "You already have a DrugBug account with this email. Sign in with your email and password instead. (Signed up with Google on the website? Add a password there in Settings, Account.)", "auth/credential-already-in-use": "That Apple ID is already linked to another DrugBug account. Sign out, then sign in with it.",
       "auth/popup-closed-by-user": "", "auth/cancelled-popup-request": "", "auth/user-cancelled": "" }[c] || (e && e.message) || "Something went wrong.";
   }
   var account = {
@@ -109,6 +111,14 @@
     },
     signInEmail: function (email, pw) { return auth.signInWithEmailAndPassword(email, pw).then(function () { emit(); return { switched: true }; }); },
     resetPassword: function (email) { return auth.sendPasswordResetEmail(email); },
+    /* an Apple or Google account adds a password, so it can sign in with email where that button is missing
+       (Apple only in the iPhone app, Google only on the website). Firebase may ask for a fresh sign-in first. */
+    addPassword: function (pw) {
+      var u = auth.currentUser;
+      if (!u || !u.email) return Promise.reject({ message: "This account has no email address to sign in with." });
+      if (String(pw || "").length < 8) return Promise.reject({ message: "Use a password of at least 8 characters." });
+      return u.linkWithCredential(firebase.auth.EmailAuthProvider.credential(u.email, pw)).then(function () { emit(); return true; });
+    },
     signOut: function () { return auth.signOut().then(function () { return auth.signInAnonymously(); }).then(function () { emit(); }); },
     /* re-confirm identity before deleting (Firebase requires a recent sign-in) */
     reauth: function (pw) {
