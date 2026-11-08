@@ -129,7 +129,7 @@ html.embed .backrow,html.embed .wrap>.top:first-of-type{display:none!important}h
       </select>
       <select id="fLv" aria-label="Level"><option value="">All levels</option></select>
       <select id="fV" aria-label="Review status">
-        <option value="un">Not reviewed yet</option><option value="">Everything</option><option value="unchk">Not checked by an evaluator yet</option><option value="chk">Checked by an evaluator</option><option value="rated">Has difficulty ratings</option><option value="good">Marked good</option><option value="bad">Marked bad</option><option value="off">Marked not relevant</option><option value="rvbad">Reviewers said bad</option><option value="rvsug">Reviewers left a suggestion</option><option value="rvany">Any reviewer feedback</option><option value="ed">Edited by me</option>
+        <option value="un">Not reviewed yet</option><option value="">Everything</option><option value="unchk">Not checked by an evaluator yet</option><option value="chk">Checked by an evaluator</option><option value="rated">Has difficulty ratings</option><option value="good">Marked good</option><option value="bad">Marked bad (by you or an evaluator)</option><option value="off">Marked not relevant</option><option value="rvbad">Marked bad by an evaluator</option><option value="mybad">Marked bad by you (this page)</option><option value="rvsug">Reviewers left a suggestion</option><option value="rvany">Any reviewer feedback</option><option value="ed">Edited by me</option>
       </select>
       <select id="fSort" aria-label="Order"><option value="">Question order</option><option value="hard">Rated hardest first</option><option value="easy">Rated easiest first</option><option value="many">Most ratings first</option></select>
       <label class="tg"><input type="checkbox" id="fFlag"> Rule breakers only</label>
@@ -228,12 +228,14 @@ html.embed .backrow,html.embed .wrap>.top:first-of-type{display:none!important}h
       if (v === "ed" && !(r && r.e)) return false;
       var rv = REVS[q.id] || [];
       if (v === "rvbad" && !rv.some(function (x) { return x.v === "bad"; })) return false;
+      if (v === "bad" && !(r && r.v === "bad") && !rv.some(function (x) { return x.v === "bad"; })) return false;
+      if (v === "mybad" && !(r && r.v === "bad")) return false;
       if (v === "rvsug" && !rv.some(function (x) { return x.s; })) return false;
       if (v === "rvany" && !rv.length) return false;
       if (v === "rated" && !avgOf(q).n) return false;
       if (v === "unchk" && SEEN[q.id]) return false;
       if (v === "chk" && !SEEN[q.id]) return false;
-      if (v && v !== "un" && v !== "ed" && v !== "rated" && v !== "unchk" && v !== "chk" && v.indexOf("rv") !== 0 && !(r && r.v === v)) return false;
+      if (v && v !== "un" && v !== "ed" && v !== "rated" && v !== "unchk" && v !== "chk" && v !== "bad" && v !== "mybad" && v.indexOf("rv") !== 0 && !(r && r.v === v)) return false;
       if (fo && !flags(q).length) return false;
       if (s && q._s.indexOf(s) < 0) return false;
       return true;
@@ -264,7 +266,9 @@ html.embed .backrow,html.embed .wrap>.top:first-of-type{display:none!important}h
     var q = list[pos];
     $("pos").textContent = list.length ? (pos + 1).toLocaleString() + " of " + list.length.toLocaleString() : "";
     $("prev").disabled = pos <= 0; $("next").disabled = pos >= list.length - 1;
-    if (!q) { $("card").innerHTML = '<div class="empty">Nothing matches these filters.' + ($("fV").value === "un" ? " Every question here has been reviewed." : "") + '</div>'; paintPanel(null); return; }
+    if (!q) { var others = [$("fBank").value && "bank", $("fLv").value && "level", $("fQ").value.trim() && "search \u201c" + $("fQ").value.trim() + "\u201d", $("fFlag").checked && "rule breakers only"].filter(Boolean);
+      $("card").innerHTML = '<div class="empty">Nothing matches these filters.' + ($("fV").value === "un" ? " Every question here has been reviewed." : "") + (others.length ? '<br><span class="muted">Also filtering by ' + others.join(", ") + '.</span> <button type="button" id="clrF">Clear those filters</button>' : '') + '</div>';
+      var cf = document.getElementById("clrF"); if (cf) cf.onclick = function () { $("fBank").value = ""; $("fLv").value = ""; $("fQ").value = ""; $("fFlag").checked = false; build(); }; paintPanel(null); return; }
     var r = R[q.id] || {}, v = view(q);
     var h = '<div class="meta"><span class="chip">' + BANK[q.b] + (q.t === "multi" ? " · select all" : q.t ? " · " + esc(q.t) : "") + '</span>' +
       '<span class="chip">Now in: ' + esc(LVNAME[q.lv] || q.lv || "—") + '</span>' + (q.d ? '<span class="chip">Drug: ' + esc(NAMES[q.d] || q.d) + '</span>' : (q.cat ? '<span class="chip">Topic: ' + esc(q.cat) + '</span>' : '')) +
@@ -428,6 +432,11 @@ html.embed .backrow,html.embed .wrap>.top:first-of-type{display:none!important}h
       var j = res[0]; NAMES = j.names || {}; R = res[1].items || {}; RATES = res[1].rates || {}; REVS = res[1].revs || {}; SEEN = res[1].seen || {}; (REVS && Object.keys(REVS)).forEach(function (k) { if (!SEEN[k]) SEEN[k] = 1; });
       QS = j.qs.map(function (q) { q._s = (q.q + " " + (q.a || "") + " " + (q.opts || []).join(" ") + " " + (NAMES[q.d] || q.d || "") + " " + q.id).toLowerCase(); BYID[q.id] = q; return q; });
       QS.forEach(function (q) { q._f0 = flags(q).length > 0; });
+      /* exam-prep (registry) questions have "reg-" ids here, but the app grades them under its own id
+         ("q" + a hash of level and wording). Join the two so their ratings, votes and check marks show (Nov 8 2026). */
+      var hs = function (t) { var h = 5381; for (var i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0; return (h >>> 0).toString(36); };
+      QS.forEach(function (q) { if (/^q/.test(q.id)) return; var a = "q" + hs(q.lv + "|" + q.q);
+        if (REVS[a]) REVS[q.id] = (REVS[q.id] || []).concat(REVS[a]); if (RATES[a] && !RATES[q.id]) RATES[q.id] = RATES[a]; if (SEEN[a]) SEEN[q.id] = 1; });
       loaded = true; build();
     }).catch(function (e) {
       if (e.status === "PERMISSION_DENIED") { $("vMain").hidden = true; $("vIn").hidden = false; msg("inMsg", "This account isn't a DrugBug owner account. Sign out and use volaremediallc@gmail.com or adamficklen@gmail.com."); }
