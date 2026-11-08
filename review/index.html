@@ -93,6 +93,9 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 .revs .rvi{border-top:1px solid var(--line);padding:8px 0;font-size:13.5px}.rvw .rvb{color:#dc2626;font-weight:700}.rvw .rvg{color:#16a34a;font-weight:700}.rvs{margin-top:4px;white-space:pre-wrap}
 .avgbig{display:inline-block;font-size:15px;margin-bottom:6px;padding:6px 10px;border-radius:10px;background:rgba(124,58,237,.1)}.avgbig>b{font-size:20px}
 html.embed .backrow,html.embed .wrap>.top:first-of-type{display:none!important}html.embed .wrap{padding-top:4px}
+.chkrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}
+.qchk{display:inline-flex;align-items:center;gap:7px;padding:4px 10px 4px 6px;border-radius:99px;border:1.5px dashed #9ca3af;font-size:12.5px;font-weight:700;color:#6b7280}.qchk i{width:16px;height:16px;border-radius:4px;border:2px solid currentColor;display:grid;place-items:center;font-style:normal;font-size:12px;line-height:1}.qchk.on{border-style:solid;border-color:#16a34a;color:#16a34a}.qchk.on i{background:#16a34a;color:#fff}
+.pst{display:inline-block;font-size:12.5px;font-weight:800;padding:4px 10px;border-radius:99px}.pst.wait{background:#fde047;color:#422006}.pst.held{background:#fed7aa;color:#7c2d12}.pst.live{background:#bbf7d0;color:#14532d}.pst.out{background:#fecaca;color:#7f1d1d}
 </style>
 </head><body>
 <div class="wrap">
@@ -122,11 +125,11 @@ html.embed .backrow,html.embed .wrap>.top:first-of-type{display:none!important}h
     <p class="note" style="margin-top:8px">Questions with a &#9888; rule flag are already hidden from the app. Rewrite one here to rescue it; your edits reach the app when Claude applies your download.</p>
     <div class="bar" role="search">
       <select id="fBank" aria-label="Question bank">
-        <option value="">All banks</option><option value="q">Practice (single answer)</option><option value="sata">Select all that apply</option><option value="reg">Exam prep (registry style)</option>
+        <option value="">All banks</option><option value="pilot">Pilot questions (new)</option><option value="q">Practice (single answer)</option><option value="sata">Select all that apply</option><option value="reg">Exam prep (registry style)</option>
       </select>
       <select id="fLv" aria-label="Level"><option value="">All levels</option></select>
       <select id="fV" aria-label="Review status">
-        <option value="un">Not reviewed yet</option><option value="">Everything</option><option value="rated">Has difficulty ratings</option><option value="good">Marked good</option><option value="bad">Marked bad</option><option value="off">Marked not relevant</option><option value="rvbad">Reviewers said bad</option><option value="rvsug">Reviewers left a suggestion</option><option value="rvany">Any reviewer feedback</option><option value="ed">Edited by me</option>
+        <option value="un">Not reviewed yet</option><option value="">Everything</option><option value="unchk">Not checked by an evaluator yet</option><option value="chk">Checked by an evaluator</option><option value="rated">Has difficulty ratings</option><option value="good">Marked good</option><option value="bad">Marked bad</option><option value="off">Marked not relevant</option><option value="rvbad">Reviewers said bad</option><option value="rvsug">Reviewers left a suggestion</option><option value="rvany">Any reviewer feedback</option><option value="ed">Edited by me</option>
       </select>
       <select id="fSort" aria-label="Order"><option value="">Question order</option><option value="hard">Rated hardest first</option><option value="easy">Rated easiest first</option><option value="many">Most ratings first</option></select>
       <label class="tg"><input type="checkbox" id="fFlag"> Rule breakers only</label>
@@ -228,7 +231,9 @@ html.embed .backrow,html.embed .wrap>.top:first-of-type{display:none!important}h
       if (v === "rvsug" && !rv.some(function (x) { return x.s; })) return false;
       if (v === "rvany" && !rv.length) return false;
       if (v === "rated" && !avgOf(q).n) return false;
-      if (v && v !== "un" && v !== "ed" && v !== "rated" && v.indexOf("rv") !== 0 && !(r && r.v === v)) return false;
+      if (v === "unchk" && SEEN[q.id]) return false;
+      if (v === "chk" && !SEEN[q.id]) return false;
+      if (v && v !== "un" && v !== "ed" && v !== "rated" && v !== "unchk" && v !== "chk" && v.indexOf("rv") !== 0 && !(r && r.v === v)) return false;
       if (fo && !flags(q).length) return false;
       if (s && q._s.indexOf(s) < 0) return false;
       return true;
@@ -249,7 +254,8 @@ html.embed .backrow,html.embed .wrap>.top:first-of-type{display:none!important}h
   function stats() {
     var n = QS.length, g = 0, b = 0, o = 0, f = 0, ed = 0;
     QS.forEach(function (q) { var r = R[q.id]; if (r && r.v === "good") g++; else if (r && r.v === "bad") b++; else if (r && r.v === "off") o++; if (r && r.e) ed++; if (!(r && r.v) && q._f0) f++; });
-    $("stats").innerHTML = '<span class="stat"><b>' + (g + b + o).toLocaleString() + '</b> of ' + n.toLocaleString() + ' reviewed</span>' +
+    var ck = QS.filter(function (q) { return SEEN[q.id]; }).length, pl = QS.filter(function (q) { return q.b === "pilot"; }).length;
+    $("stats").innerHTML = '<span class="stat"><b>' + (g + b + o).toLocaleString() + '</b> of ' + n.toLocaleString() + ' reviewed</span>' + '<span class="stat"><b>' + ck.toLocaleString() + '</b> checked by evaluators</span>' + '<span class="stat"><b>' + pl.toLocaleString() + '</b> pilot</span>' +
       '<span class="stat g"><b>' + g + '</b> good</span><span class="stat b"><b>' + b + '</b> bad</span><span class="stat o"><b>' + o + '</b> not relevant</span>' +
       '<span class="stat"><b>' + ed + '</b> edited</span><span class="stat f"><b>' + f + '</b> rule breakers left</span>';
   }
@@ -301,7 +307,8 @@ html.embed .backrow,html.embed .wrap>.top:first-of-type{display:none!important}h
     var spec = r.s || (q && q.lv ? [q.lv] : []);
     $("specs").innerHTML = LEVELS.map(function (l) { return '<button class="sp' + (q && q.lv === l[0] ? " cur" : "") + '" data-s="' + l[0] + '" aria-pressed="' + (spec.indexOf(l[0]) >= 0) + '"' + (q ? '' : ' disabled') + '>' + l[1] + '</button>'; }).join("");
     var av = q ? avgOf(q) : { n: 0 };
-    var pr = q && RATES[q.id]; $("prate").innerHTML = (av.n ? '<span class="avgbig">Average difficulty <b>' + av.avg.toFixed(1) + '</b> of 5 <span class="muted">from ' + av.n + (av.n === 1 ? ' rating' : ' ratings') + ' (' + av.pn + ' player' + (av.pn === 1 ? '' : 's') + ', ' + av.en + ' evaluator' + (av.en === 1 ? '' : 's') + ')</span></span><br>' : '') + (pr && pr.n ? 'Players rated it <b>' + (pr.s / pr.n).toFixed(1) + ' of 5</b> (' + pr.n + (pr.n === 1 ? ' rating' : ' ratings') + ': ' + [1, 2, 3, 4, 5].map(function (k) { return k + '&times;' + (pr['d' + k] || 0); }).join(' ') + ')' : 'No player ratings yet.');
+    var chk = q ? (SEEN[q.id] ? '<span class="qchk on"><i>&#10003;</i>Checked by an evaluator' + (SEEN[q.id] > 1 ? ' (' + SEEN[q.id] + ' times)' : '') + '</span>' : '<span class="qchk"><i></i>Not checked yet</span>') : '';
+    var pr = q && RATES[q.id]; $("prate").innerHTML = (q ? '<div class="chkrow">' + chk + pilotState(q) + '</div>' : '') + (av.n ? '<span class="avgbig">Average difficulty <b>' + av.avg.toFixed(1) + '</b> of 5 <span class="muted">from ' + av.n + (av.n === 1 ? ' rating' : ' ratings') + ' (' + av.pn + ' player' + (av.pn === 1 ? '' : 's') + ', ' + av.en + ' evaluator' + (av.en === 1 ? '' : 's') + ')</span></span><br>' : '') + (pr && pr.n ? 'Players rated it <b>' + (pr.s / pr.n).toFixed(1) + ' of 5</b> (' + pr.n + (pr.n === 1 ? ' rating' : ' ratings') + ': ' + [1, 2, 3, 4, 5].map(function (k) { return k + '&times;' + (pr['d' + k] || 0); }).join(' ') + ')' : 'No player ratings yet.');
     var rv = (q && REVS[q.id]) || [];
     $("revs").innerHTML = rv.length ? (function () {
       var ds = rv.filter(function (x) { return x.d; }), g = rv.filter(function (x) { return x.v === "good"; }).length, b = rv.filter(function (x) { return x.v === "bad"; }).length;
@@ -394,6 +401,18 @@ html.embed .backrow,html.embed .wrap>.top:first-of-type{display:none!important}h
     (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { msg("topMsg", "Summary copied. Paste it into your chat with Claude. For edited wording, use Download for Claude."); }, function () { msg("topMsg", "Your browser blocked copying. Use Download for Claude instead."); });
   };
 
+  var SEEN = {};
+  /* pilot status, worked out here the same way the server does: owner Good = live, owner Bad = out,
+     any evaluator Bad = held for you, 2 evaluator Good = live */
+  function pilotState(q) {
+    if (q.b !== "pilot") return "";
+    var r = R[q.id] || {}, rv = REVS[q.id] || [], g = rv.filter(function (x) { return x.v === "good"; }).length, b = rv.filter(function (x) { return x.v === "bad"; }).length;
+    if (r.v === "good") return '<span class="pst live">Live for everyone (you approved it)</span>';
+    if (r.v === "bad" || r.v === "off") return '<span class="pst out">Rejected</span>';
+    if (b) return '<span class="pst held">Held for your review: ' + b + ' Bad vote' + (b === 1 ? '' : 's') + '</span>';
+    if (g >= 2) return '<span class="pst live">Live for everyone (' + g + ' Good votes)</span>';
+    return '<span class="pst wait">Pilot: waiting for evaluators (' + g + ' of 2 Good votes)</span>';
+  }
   /* ---------- start ---------- */
   LEVELS.forEach(function (l) { var o = document.createElement("option"); o.value = l[0]; o.textContent = l[1]; $("fLv").appendChild(o); });
   try { var F = JSON.parse(store.get("qr-filters") || "null"); if (F) { $("fBank").value = F.bk || ""; $("fLv").value = F.lv || ""; $("fV").value = F.v == null ? "un" : F.v; $("fFlag").checked = !!F.fo; $("fQ").value = F.s || ""; $("fSort").value = F.so || ""; } } catch (e) {}
@@ -406,7 +425,7 @@ html.embed .backrow,html.embed .wrap>.top:first-of-type{display:none!important}h
     $("vIn").hidden = !!real; $("vMain").hidden = !real;
     if (!real) return;
     Promise.all([qsP, call("qrLoad")]).then(function (res) {
-      var j = res[0]; NAMES = j.names || {}; R = res[1].items || {}; RATES = res[1].rates || {}; REVS = res[1].revs || {};
+      var j = res[0]; NAMES = j.names || {}; R = res[1].items || {}; RATES = res[1].rates || {}; REVS = res[1].revs || {}; SEEN = res[1].seen || {}; (REVS && Object.keys(REVS)).forEach(function (k) { if (!SEEN[k]) SEEN[k] = 1; });
       QS = j.qs.map(function (q) { q._s = (q.q + " " + (q.a || "") + " " + (q.opts || []).join(" ") + " " + (NAMES[q.d] || q.d || "") + " " + q.id).toLowerCase(); BYID[q.id] = q; return q; });
       QS.forEach(function (q) { q._f0 = flags(q).length > 0; });
       loaded = true; build();
