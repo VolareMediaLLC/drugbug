@@ -172,7 +172,7 @@ html.embed .backrow,html.embed .wrap>.top:first-of-type{display:none!important}h
   var auth = firebase.auth();
   if (local) auth.useEmulator("http://127.0.0.1:9099", { disableWarnings: true });
 
-  var LEVELS = [["emt","EMT"],["aemt","AEMT"],["paramedic","Paramedic"],["flight","Flight Paramedic"],["cna","CNA"],["lvn","LVN / LPN"],["rn","RN"],["flightrn","Flight RN"],["ms1","Med school 1-2"],["ms3","Med school 3-4"],["intern","Intern / resident"],["im","Imaging"],["gen","General (BugDex)"]];
+  var LEVELS = [["emt","EMT"],["aemt","AEMT"],["paramedic","Paramedic"],["flight","Flight Paramedic"],["cna","CNA"],["lvn","LVN / LPN"],["rn","RN"],["flightrn","Flight RN"],["ms1","Med school 1-2"],["ms3","Med school 3-4"],["intern","Intern / resident"],["im","Imaging"],["diet","Dietitian"],["rrt","Respiratory"],["mh","Mental health"],["pt","PT / OT"],["slp","Speech-language"],["surg","Surgical tech"],["anes","Anesthesia tech"],["dent","Dental hygiene"],["phleb","Phlebotomy"],["ekg","EKG tech"],["cp","Community paramedic"],["tccc","Tactical medic"],["gen","General (BugDex)"]];
   var LVNAME = {}; LEVELS.forEach(function (l) { LVNAME[l[0]] = l[1]; });
   var DIFF = [["1","Easy"],["2","Basic"],["3","Medium"],["4","Hard"],["5","Expert"]];
   var BANK = { q: "Practice", sata: "Select all", reg: "Exam prep" };
