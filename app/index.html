@@ -3129,6 +3129,10 @@ button.tierchip:hover{filter:brightness(1.08)}
 .lrnc .lct{flex:1;min-width:0;position:relative;padding-bottom:6px}.lrnc .lct b{display:block;font-size:13.5px}.lrnc .lct span{font-size:12px;color:var(--muted)}
 .lrnc .lct i{position:absolute;left:0;bottom:0;height:3px;border-radius:2px;background:linear-gradient(90deg,#7c3aed,#22d3ee)}.lrnc.fin .lct i{background:#16a34a}
 :root{--mh:#7c3aed;--mh-soft:#ede9fe;--diet:#4d7c0f;--diet-soft:#ecfccb;--rrt:#0284c7;--rrt-soft:#e0f2fe}
+:root{--pt:#ea580c;--pt-soft:#ffedd5;--slp:#db2777;--slp-soft:#fce7f3;--surg:#0d9488;--surg-soft:#ccfbf1;--anes:#4338ca;--anes-soft:#e0e7ff;--dent:#0284c7;--dent-soft:#e0f2fe;--phleb:#b91c1c;--phleb-soft:#fee2e2;--ekg:#15803d;--ekg-soft:#dcfce7;--cp:#1d4ed8;--cp-soft:#dbeafe;--tccc:#4d7c0f;--tccc-soft:#ecfccb;}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--pt:#fb923c;--pt-soft:#3a1d0a;--slp:#f472b6;--slp-soft:#3d1028;--surg:#2dd4bf;--surg-soft:#0b2e2b;--anes:#818cf8;--anes-soft:#1e1b4b;--dent:#38bdf8;--dent-soft:#0c2f44;--phleb:#f87171;--phleb-soft:#3b1010;--ekg:#4ade80;--ekg-soft:#0d2e1a;--cp:#60a5fa;--cp-soft:#14254d;--tccc:#a3e635;--tccc-soft:#22300d;}}
+:root[data-theme="dark"]{--pt:#fb923c;--pt-soft:#3a1d0a;--slp:#f472b6;--slp-soft:#3d1028;--surg:#2dd4bf;--surg-soft:#0b2e2b;--anes:#818cf8;--anes-soft:#1e1b4b;--dent:#38bdf8;--dent-soft:#0c2f44;--phleb:#f87171;--phleb-soft:#3b1010;--ekg:#4ade80;--ekg-soft:#0d2e1a;--cp:#60a5fa;--cp-soft:#14254d;--tccc:#a3e635;--tccc-soft:#22300d;}
+.lvl-pt{--c:var(--pt);--cs:var(--pt-soft)}.lvl-slp{--c:var(--slp);--cs:var(--slp-soft)}.lvl-surg{--c:var(--surg);--cs:var(--surg-soft)}.lvl-anes{--c:var(--anes);--cs:var(--anes-soft)}.lvl-dent{--c:var(--dent);--cs:var(--dent-soft)}.lvl-phleb{--c:var(--phleb);--cs:var(--phleb-soft)}.lvl-ekg{--c:var(--ekg);--cs:var(--ekg-soft)}.lvl-cp{--c:var(--cp);--cs:var(--cp-soft)}.lvl-tccc{--c:var(--tccc);--cs:var(--tccc-soft)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--mh:#a78bfa;--mh-soft:#2a1d4d;--diet:#a3e635;--diet-soft:#22300d;--rrt:#38bdf8;--rrt-soft:#0c2f44}}
 :root[data-theme="dark"]{--mh:#a78bfa;--mh-soft:#2a1d4d;--diet:#a3e635;--diet-soft:#22300d;--rrt:#38bdf8;--rrt-soft:#0c2f44}
 .lvl-mh{--c:var(--mh);--cs:var(--mh-soft)}.lvl-diet{--c:var(--diet);--cs:var(--diet-soft)}.lvl-rrt{--c:var(--rrt);--cs:var(--rrt-soft)}
@@ -3173,6 +3177,21 @@ button.tierchip:hover{filter:brightness(1.08)}
 @keyframes stbump{40%{transform:scale(1.25)}}
 @media (max-width:640px){.qrate .qrs{margin-left:0;width:100%}}
 .myplan{align-items:flex-start;gap:14px;flex-wrap:wrap}.myplan .mpt{display:flex;flex-direction:column;gap:3px;min-width:220px;flex:1}.myplan .mpk{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}.myplan strong{font-size:19px}.myplan .mpnote{margin-top:4px;color:var(--ink);opacity:.8;line-height:1.4}.myplan .actions{flex-wrap:wrap}
+
+.fgwrap{max-width:900px}.fgintro{margin:.2rem 0 .8rem}
+.fgsearch input{width:100%;box-sizing:border-box;padding:.6rem .8rem;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit}
+.fgtoc{display:flex;flex-wrap:wrap;gap:.4rem;margin:.8rem 0}
+.fgtoc a{font-size:.85rem;padding:.3rem .65rem;border-radius:999px;background:var(--surface-2);color:inherit;text-decoration:none}
+.fgsec{margin:1.1rem 0 1.4rem;scroll-margin-top:70px}.fgsec h3{margin:0 0 .35rem}.fgsec>p{margin:.2rem 0 .6rem}
+.fgtbl{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+.fgtbl table{border-collapse:collapse;width:100%;font-size:.9rem}
+.fgtbl th{text-align:left;padding:.5rem .6rem;background:var(--surface-2);font-weight:600}
+.fgtbl td{padding:.5rem .6rem;border-top:1px solid var(--line);vertical-align:top}
+.fgtip{margin:.6rem 0 0;padding:.55rem .75rem;border-left:4px solid #f2b705;background:rgba(242,183,5,.12);border-radius:6px;font-size:.92rem}
+.fgtip b{margin-right:.3rem}.fgnote{margin-top:1.4rem}
+@media (max-width:600px){.fgtbl{border:0;overflow:visible}.fgtbl thead{display:none}.fgtbl table,.fgtbl tbody,.fgtbl tr,.fgtbl td{display:block;width:auto}
+.fgtbl tr{border:1px solid var(--line);border-radius:10px;margin:0 0 .55rem;padding:.35rem .2rem}
+.fgtbl td{border:0;padding:.25rem .55rem}.fgtbl td:before{content:attr(data-l);display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.03em;opacity:.65}}
 </style>
 
 <div class="wrap" id="app"><div id="boot" aria-hidden="true"><div class="bootlogo">Drug<span>Bug</span></div><div class="bootbar"><i></i></div><p class="bootnote">Loading your medications</p></div></div>
@@ -3184,7 +3203,7 @@ button.tierchip:hover{filter:brightness(1.08)}
 <script defer src="data2.js"></script>
 <script defer src="data3.js"></script>
 <script defer src="data4.js"></script>
-<script defer src="pilot.js"></script>
+<script defer src="pilot.js"></script><script defer src="guides.js"></script>
 <script defer src="app.js"></script>
 
 </body>

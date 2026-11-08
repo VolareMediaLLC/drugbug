@@ -64,7 +64,7 @@ var HIDE_MEDIC = { 6: [6, 7], 8: [6], 10: [2], 12: [1] };
 var TAGS = [["IM","Imaging"],["PH","Prehospital"],["ED","Emergency Department"],["ICU","ICU"],["CCT","Critical Care Transport"],["FL","Flight"],["HM","Home Medication"],["CA","Cardiac"],["RE","Respiratory"],["NE","Neurologic"],["TR","Trauma"],["OB","OB/GYN"],["PE","Pediatric"],["TX","Toxicology"],["BH","Behavioral"],["AN","Analgesia"],["SE","Sedation"],["RSI","RSI"],["VP","Vasopressor"],["AD","Antidote"]];
 var TAGNAME = {}; TAGS.forEach(function (t) { TAGNAME[t[0]] = t[1]; });
 var FILTER_TAGS = ["IM","CA","RE","NE","TR","OB","PE","TX","BH","AN","SE","RSI","VP","AD"];
-var LVCLASS = { mh: "lvl-mh", diet: "lvl-diet", rrt: "lvl-rrt", rt: "lvl-rt", ct: "lvl-ct", mri: "lvl-mri", nm: "lvl-nm", ir: "lvl-ir", emt: "lvl-emt", aemt: "lvl-aemt", paramedic: "lvl-medic", flight: "lvl-flight", asm: "lvl-field lvl-asm", cls: "lvl-field lvl-cls", cmc: "lvl-field lvl-cmc", cpp: "lvl-field lvl-cpp", pcc: "lvl-field lvl-pcc", gen: "lvl-gen", cna: "lvl-cna", lvn: "lvl-lvn", rn: "lvl-rn", ms1: "lvl-ms1", ms3: "lvl-ms3", intern: "lvl-intern" };
+var LVCLASS = { pt: "lvl-pt", slp: "lvl-slp", surg: "lvl-surg", anes: "lvl-anes", dent: "lvl-dent", phleb: "lvl-phleb", ekg: "lvl-ekg", cp: "lvl-cp", tccc: "lvl-tccc", mh: "lvl-mh", diet: "lvl-diet", rrt: "lvl-rrt", rt: "lvl-rt", ct: "lvl-ct", mri: "lvl-mri", nm: "lvl-nm", ir: "lvl-ir", emt: "lvl-emt", aemt: "lvl-aemt", paramedic: "lvl-medic", flight: "lvl-flight", asm: "lvl-field lvl-asm", cls: "lvl-field lvl-cls", cmc: "lvl-field lvl-cmc", cpp: "lvl-field lvl-cpp", pcc: "lvl-field lvl-pcc", gen: "lvl-gen", cna: "lvl-cna", lvn: "lvl-lvn", rn: "lvl-rn", ms1: "lvl-ms1", ms3: "lvl-ms3", intern: "lvl-intern" };
 var TIER = { rt: 3, ct: 3, mri: 3, nm: 3, ir: 3, emt: 0, aemt: 1, paramedic: 2, flight: 3, asm: 0, cls: 1, cmc: 2, cpp: 3, pcc: 3, gen: 3, cna: 0, lvn: 1, rn: 3, ms1: 3, ms3: 3, intern: 3 };
 
 /* ---------- helpers ---------- */
@@ -155,24 +155,82 @@ function isF(k) { return k === "asm" || k === "cls" || k === "cmc" || k === "cpp
 function isM(k) { return k === "ms1" || k === "ms3" || k === "intern"; }
 function isI(k) { return k === "rt" || k === "ct" || k === "mri" || k === "nm" || k === "ir"; }
 /* Allied Health route (owner, Nov 5 2026): mental health, dietitian, respiratory therapist. Not cumulative, like Imaging. */
-function isA(k) { return k === "mh" || k === "diet" || k === "rrt"; }
+function isA(k) { return k === "mh" || k === "diet" || k === "rrt" || k === "pt" || k === "slp" || k === "surg" || k === "anes" || k === "dent" || k === "phleb" || k === "ekg"; }
 DB.ALEVELS = [
   { key: "mh", name: "Mental Health", full: "Mental and behavioral health professionals", bug: "Calm Cicada", color: "mh",
     blurb: "For psych nurses, behavioral health techs, counselors and social workers: psychiatric medicines, side effects to watch for, agitation and crisis care, and substance use treatment." },
   { key: "diet", name: "Dietitian", full: "Registered dietitians and nutrition professionals", bug: "Garden Grasshopper", color: "diet",
     blurb: "Nutrition first: vitamins and minerals, supplements, diabetes and weight medicines, food and drug interactions, electrolytes and IV fluids." },
   { key: "rrt", name: "Respiratory Therapist", full: "Respiratory therapists (RT / RRT)", bug: "Breathing Bee", color: "rrt",
-    blurb: "Airway first: bronchodilators, inhaled steroids, aerosols, RSI and sedation for the vent, surfactant, pulmonary hypertension and inhaled antibiotics." }
+    blurb: "Airway first: bronchodilators, inhaled steroids, aerosols, RSI and sedation for the vent, surfactant, pulmonary hypertension and inhaled antibiotics." },
+  /* seven more fields (owner, Nov 7 2026, for 1.2) */
+  { key: "pt", name: "PT / OT", full: "Physical and occupational therapists", bug: "Gym Beetle", color: "pt",
+    blurb: "Medicines that change a therapy session: drowsiness from muscle relaxants, timing pain medicine before a session, Parkinson's on/off swings, blood pressure drops and fall risk." },
+  { key: "slp", name: "Speech-Language Pathology", full: "Speech-language pathologists (SLP)", bug: "Echo Cricket", color: "slp",
+    blurb: "Swallowing and speech: dry mouth, drug-induced dysphagia and tardive dyskinesia, sedation and silent aspiration, and medicines that affect thinking and voice." },
+  { key: "surg", name: "Surgical Technologist", full: "Surgical technologists (CST)", bug: "Scalpel Scorpion", color: "surg",
+    blurb: "The sterile field: local anesthetics with and without epinephrine, topical hemostatics, irrigation, antibiotics and eye drops used in surgery." },
+  { key: "anes", name: "Anesthesia Technologist", full: "Anesthesia technologists (Cer.A.T.)", bug: "Ether Earwig", color: "anes",
+    blurb: "The anesthesia cart: induction agents, inhaled anesthetics, paralytics and reversal, nerve blocks, emergency drugs and malignant hyperthermia." },
+  { key: "dent", name: "Dental Hygiene", full: "Dental hygienists and assistants", bug: "Enamel Ant", color: "dent",
+    blurb: "Before the chair: local anesthetics with vasoconstrictors, bleeding risk, gum overgrowth, dry mouth, bone medicines and antibiotic prophylaxis." },
+  { key: "phleb", name: "Phlebotomy", full: "Phlebotomists", bug: "Vessel Vine-Borer", color: "phleb",
+    blurb: "Drawing blood safely: blood thinners and bleeding, drug levels and timing (peak and trough), and IV lines that can skew a sample." },
+  { key: "ekg", name: "EKG Technician", full: "EKG and monitor technicians", bug: "Pulse Beetle", color: "ekg",
+    blurb: "Medicines you can see on the strip: rate, rhythm, QT prolongation, digoxin effects and the drugs used for arrhythmias." }
 ];
 /* each field's medicines: whole drug groups, drug tags, and hand-picked additions */
 DB.ASCOPE = {
   mh: { groups: ["Antidepressants", "Antipsychotics", "Mood Stabilizers", "ADHD / Stimulants", "Sedatives / Anxiolytics", "Sleep", "Neuro / Psych / Addiction (Advanced)", "Dementia", "Illicit & Recreational Drugs (education)"], tags: ["BH"],
     ids: "naloxone naltrexone buprenorphine methadone disulfiram acamprosate varenicline benztropine diphenhydramine hydroxyzine propranolol clonidine prazosin lithium haloperidol droperidol olanzapine ziprasidone ketamine esketamine lorazepam midazolam thiamine" },
   diet: { groups: ["Vitamins & Supplements", "Vegetable Compounds", "Fruit Compounds", "Probiotics", "Diabetes", "Lipid / Cholesterol", "IV Fluids & Electrolytes", "Renal / Electrolyte", "Thyroid"], tags: [],
-    ids: "warfarin phytonadione phenelzine tranylcypromine linezolid levothyroxine orlistat phentermine semaglutide tirzepatide liraglutide metformin ferrous-sulfate folic-acid cyanocobalamin thiamine calcium-carbonate potassium-chloride magnesium-oxide sevelamer calcium-acetate lactulose pancrelipase ursodiol metoclopramide ondansetron megestrol dronabinol mirtazapine prednisone furosemide spironolactone lithium isoniazid pyridoxine levodopa carbidopa-levodopa tetracycline ciprofloxacin" },
+    ids: "warfarin phytonadione phenelzine tranylcypromine linezolid levothyroxine orlistat phentermine semaglutide tirzepatide liraglutide metformin ferrous-sulfate folic-acid cyanocobalamin thiamine calcium-carbonate potassium-chloride magnesium-oxide sevelamer calcium-acetate lactulose pancrelipase ursodiol metoclopramide ondansetron megestrol dronabinol mirtazapine prednisone furosemide spironolactone lithium isoniazid pyridoxine levodopa carbidopa-levodopa tetracycline ciprofloxacin omeprazole pantoprazole cholestyramine colestipol alendronate hydrochlorothiazide olanzapine clozapine methylphenidate propofol clevidipine phenytoin sucralfate lisinopril lanthanum-carbonate empagliflozin glipizide saccharomyces-boulardii" },
+  pt: { groups: ["Muscle Relaxants", "Analgesics / Pain", "Parkinson's", "Multiple Sclerosis", "Gout", "Steroids", "Dementia"], tags: [],
+    ids: "baclofen cyclobenzaprine tizanidine methocarbamol carisoprodol dantrolene diazepam carbidopa-levodopa pramipexole ropinirole amantadine gabapentin pregabalin duloxetine ibuprofen naproxen celecoxib meloxicam acetaminophen oxycodone hydrocodone tramadol morphine lidocaine prednisone methylprednisolone metoprolol atenolol propranolol lisinopril amlodipine furosemide hydrochlorothiazide tamsulosin insulin-glargine insulin-lispro metformin warfarin apixaban rivaroxaban enoxaparin alendronate zolendronic-acid zoledronic-acid denosumab levothyroxine donepezil memantine zolpidem trazodone diphenhydramine oxybutynin botulinum-toxin onabotulinumtoxina" },
+  slp: { groups: ["Antipsychotics", "Parkinson's", "Dementia", "Sleep", "Muscle Relaxants"], tags: [],
+    ids: "glycopyrrolate scopolamine benztropine trihexyphenidyl oxybutynin tolterodine diphenhydramine hydroxyzine amitriptyline nortriptyline lorazepam midazolam alprazolam clonazepam diazepam morphine oxycodone fentanyl hydromorphone metoclopramide haloperidol risperidone olanzapine quetiapine valbenazine deutetrabenazine tetrabenazine pyridostigmine carbidopa-levodopa botulinum-toxin onabotulinumtoxina levetiracetam phenytoin topiramate baclofen tizanidine omeprazole pantoprazole famotidine alendronate doxycycline potassium-chloride ferrous-sulfate pilocarpine cevimeline lisinopril inhaled-corticosteroids fluticasone budesonide albuterol tiotropium donepezil memantine thickened-liquids" },
+  surg: { groups: ["Anesthesia / OR"], tags: [],
+    ids: "lidocaine lidocaine-with-epinephrine bupivacaine bupivacaine-liposomal ropivacaine mepivacaine tetracaine chloroprocaine epinephrine phenylephrine oxymetazoline thrombin-topical heparin cefazolin vancomycin clindamycin bacitracin gentamicin chlorhexidine povidone-iodine sodium-chloride-irrigation lactated-ringers sterile-water methylene-blue indocyanine-green isosulfan-blue tropicamide cyclopentolate phenylephrine-ophthalmic proparacaine tetracaine-ophthalmic acetylcholine-intraocular carbachol triamcinolone dexamethasone ketorolac tranexamic-acid aminocaproic-acid oxytocin protamine papaverine mannitol" },
+  anes: { groups: ["Anesthesia / OR", "Inhaled Anesthetics", "Paralytics / Neuromuscular Blockers", "ICU Sedation / Analgesia", "Reversal Agents / Antagonists", "Vasopressors / Inotropes"], tags: ["RSI"],
+    ids: "propofol etomidate ketamine methohexital dexmedetomidine midazolam fentanyl remifentanil sufentanil hydromorphone morphine succinylcholine rocuronium vecuronium cisatracurium sugammadex neostigmine glycopyrrolate atropine edrophonium dantrolene sevoflurane isoflurane desflurane nitrous-oxide lidocaine bupivacaine ropivacaine phenylephrine ephedrine epinephrine norepinephrine vasopressin esmolol labetalol ondansetron dexamethasone famotidine metoclopramide scopolamine naloxone flumazenil calcium-chloride sodium-bicarbonate amiodarone adenosine intralipid lipid-emulsion" },
+  dent: { groups: [], tags: [],
+    ids: "lidocaine lidocaine-with-epinephrine articaine mepivacaine prilocaine bupivacaine benzocaine tetracaine epinephrine nitrous-oxide amoxicillin clindamycin azithromycin cephalexin penicillin-vk metronidazole chlorhexidine fluoride ibuprofen naproxen acetaminophen hydrocodone oxycodone warfarin apixaban rivaroxaban dabigatran clopidogrel aspirin heparin phenytoin cyclosporine nifedipine amlodipine diltiazem verapamil alendronate zoledronic-acid denosumab metoprolol propranolol lisinopril insulin-lispro metformin levothyroxine prednisone amitriptyline diphenhydramine oxybutynin albuterol triazolam diazepam nystatin fluconazole acyclovir valacyclovir doxycycline minocycline tetracycline pilocarpine cevimeline" },
+  phleb: { groups: ["Anticoagulants / Antiplatelets", "Thrombolytics"], tags: [],
+    ids: "heparin enoxaparin warfarin apixaban rivaroxaban dabigatran edoxaban clopidogrel aspirin ticagrelor prasugrel alteplase vancomycin gentamicin tobramycin amikacin digoxin lithium phenytoin valproic-acid carbamazepine theophylline cyclosporine tacrolimus potassium-chloride dextrose sodium-chloride lactated-ringers insulin-regular regular-insulin biotin vitamin-k phytonadione protamine iron-sucrose ferrous-sulfate methotrexate" },
+  ekg: { groups: ["Antiarrhythmics"], tags: [],
+    ids: "digoxin amiodarone sotalol dofetilide dronedarone flecainide propafenone procainamide lidocaine adenosine atropine metoprolol atenolol propranolol carvedilol esmolol diltiazem verapamil isoproterenol epinephrine dopamine ivabradine ondansetron haloperidol droperidol methadone azithromycin levofloxacin ciprofloxacin moxifloxacin citalopram escitalopram quetiapine ziprasidone hydroxychloroquine potassium-chloride magnesium-sulfate calcium-chloride sodium-bicarbonate furosemide spironolactone lisinopril amitriptyline donepezil" },
   rrt: { groups: ["Respiratory", "Steroids", "Paralytics / Neuromuscular Blockers", "ICU Sedation / Analgesia", "Erectile Dysfunction / Pulmonary HTN"], tags: ["RE", "RSI"],
     ids: "epoprostenol iloprost treprostinil sildenafil nitric-oxide poractant-alfa beractant calfactant caffeine-citrate dornase-alfa n-acetylcysteine hypertonic-saline-inhaled tobramycin aztreonam racemic-epinephrine albuterol levalbuterol ipratropium albuterol-ipratropium magnesium-sulfate terbutaline aminophylline epinephrine montelukast omalizumab budesonide fluticasone methylprednisolone dexamethasone etomidate ketamine propofol rocuronium succinylcholine vecuronium sugammadex dexmedetomidine midazolam fentanyl lidocaine atropine glycopyrrolate naloxone flumazenil sodium-bicarbonate" }
 };
+/* Prehospital side levels (owner, Nov 7 2026, for 1.2): Community Paramedic (paramedic scope plus the
+   chronic-disease medicines it manages at home) and Tactical Medic (TCCC up to the combat medic tier,
+   plus chemical, biological and radiation antidotes). They sit beside the EMT-to-Flight ladder rather
+   than on it, so Flight does not inherit them. Combat Paramedic & Prolonged Care stays behind its code. */
+if (DB.LEVELS && !DB.LEVELS.some(function (l) { return l.key === "cp"; })) DB.LEVELS.push(
+  { key: "cp", name: "Community Paramedic", bug: "Armor Beetle", color: "cp", side: 1,
+    blurb: "Paramedic scope plus the home medicines you manage to keep people out of the ER: blood pressure, heart failure, diabetes, blood thinners, COPD and medication reconciliation." },
+  { key: "tccc", name: "Tactical Medic (TCCC)", bug: "Hazmat Hornet", color: "tccc", side: 1,
+    blurb: "Tactical Combat Casualty Care through the combat medic tier: hemorrhage control, TXA, ketamine, field antibiotics, plus nerve agent, cyanide and radiation antidotes." }
+);
+DB.PH_SIDE = {
+  cp: { base: "paramedic", groups: ["Cardiovascular / Blood Pressure", "Diuretics", "Diabetes", "Anticoagulants / Antiplatelets", "Respiratory", "Lipid / Cholesterol", "Thyroid"],
+    ids: "insulin-glargine insulin-lispro insulin-aspart metformin empagliflozin dapagliflozin semaglutide sitagliptin glipizide warfarin apixaban rivaroxaban dabigatran clopidogrel lisinopril losartan sacubitril-valsartan carvedilol metoprolol furosemide torsemide spironolactone digoxin amlodipine atorvastatin tiotropium fluticasone-salmeterol budesonide-formoterol levothyroxine potassium-chloride" },
+  tccc: { fs: "cmc", groups: ["EMS Toxicology / Antidotes"],
+    ids: "atropine pralidoxime diazepam midazolam hydroxocobalamin sodium-thiosulfate sodium-nitrite potassium-iodide prussian-blue pentetate-calcium-trisodium ciprofloxacin doxycycline tranexamic-acid ketamine fentanyl ondansetron ceftriaxone ertapenem cefadroxil moxifloxacin naloxone lidocaine" }
+};
+(function () {
+  var base = DB.scopeFor, cache = {};
+  DB.scopeFor = function (k) {
+    var sd = DB.PH_SIDE[k]; if (!sd) return base(k);
+    var nD = Object.keys(DB.drugs).length; if (cache[k] && cache[k].n === nD) return cache[k].v;
+    var b = sd.base ? base(sd.base) : (DB.fscopeFor ? DB.fscopeFor(sd.fs) : { ids: [], notes: {} }), ids = {}, notes = Object.assign({}, b.notes || {});
+    (b.ids || []).forEach(function (id) { ids[id] = 1; });
+    (DB.GROUPS || []).forEach(function (g) { if (sd.groups.indexOf(g.name) >= 0) g.ids.forEach(function (id) { ids[id] = 1; }); });
+    sd.ids.split(" ").forEach(function (id) { if (id) ids[id] = 1; });
+    var v = { ids: Object.keys(ids).filter(function (id) { return DB.drugs[id]; }), notes: notes };
+    cache[k] = { n: nD, v: v }; return v;
+  };
+})();
 DB._acache = {};
 DB.ascopeFor = function (k) {
   var nD = Object.keys(DB.drugs).length;   /* more drugs arrive as the deeper data files load */
@@ -238,7 +296,7 @@ function antennae(c, curl) {
   return '<path d="M90 48 Q80 24 68 20" stroke="' + c + '" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M110 48 Q120 24 132 20" stroke="' + c + '" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="68" cy="20" r="6" fill="' + c + '"/><circle cx="132" cy="20" r="6" fill="' + c + '"/>';
 }
 var BOOTED = 0, LAST_ERR = "";   /* the boot splash is replaced by the first real render (owner, Oct 30 2026) */
-var IMBUG = { mh: { name: "Calm Cicada", body: "cicada", c: ["#c4b5fd", "#7c3aed", "#f5f3ff"], acc: ["headset"] }, diet: { name: "Garden Grasshopper", body: "grasshopper", c: ["#bef264", "#65a30d", "#f7fee7"], acc: ["leaf"] }, rrt: { name: "Breathing Bee", body: "bee", c: ["#7dd3fc", "#0284c7", "#f0f9ff"], acc: ["mask"] }, flightrn: { name: "Night Monarch", body: "butterfly", c: ["#f59e0b", "#7c2d12", "#fff7ed"], head: "#fb923c", ink: "#1c1917", wingC: "#fdba74", eyes: "fierce", acc: ["jethelmet", "aviscarf", "stetho"] }, rt: { name: "X-Ray Firefly", body: "firefly", c: ["#7dd3fc", "#0369a1", "#e0f2fe"], acc: ["goggles"] }, ct: { name: "Spiral Scarab", body: "scarab", c: ["#a5b4fc", "#4338ca", "#ffffff"], acc: ["headset"] }, mri: { name: "Magnet Moth", body: "moth", c: ["#c4b5fd", "#6d28d9", "#f5f3ff"], acc: ["bolt"] }, nm: { name: "Glow Worm", body: "caterpillar", c: ["#bef264", "#4d7c0f", "#ffffff"], acc: ["stars"] }, ir: { name: "Cath Cricket", body: "grasshopper", c: ["#5eead4", "#0f766e", "#ffffff"], acc: ["mask"] } };
+var IMBUG = { pt: { name: "Gym Beetle", body: "beetle", c: ["#fdba74", "#ea580c", "#fff7ed"], acc: ["bandana"] }, slp: { name: "Echo Cricket", body: "cricket", c: ["#f9a8d4", "#db2777", "#fdf2f8"], acc: ["headset"] }, surg: { name: "Scalpel Scorpion", body: "scorpion", c: ["#99f6e4", "#0d9488", "#f0fdfa"], acc: ["mask", "cap"] }, anes: { name: "Ether Earwig", body: "stag", c: ["#a5b4fc", "#4338ca", "#eef2ff"], acc: ["mask", "goggles"] }, dent: { name: "Enamel Ant", body: "ant", c: ["#e0f2fe", "#0ea5e9", "#ffffff"], acc: ["mask", "goggles"] }, phleb: { name: "Vessel Vine-Borer", body: "caterpillar", c: ["#fca5a5", "#b91c1c", "#fef2f2"], acc: ["stetho"] }, ekg: { name: "Pulse Beetle", body: "firefly", c: ["#86efac", "#15803d", "#f0fdf4"], acc: ["stetho", "bolt"] }, cp: { name: "Armor Beetle", body: "hercules", c: ["#93c5fd", "#1d4ed8", "#eff6ff"], acc: ["stetho", "cap"] }, tccc: { name: "Hazmat Hornet", body: "wasp", c: ["#bef264", "#3f6212", "#f7fee7"], acc: ["tachelmet", "mask"] }, mh: { name: "Calm Cicada", body: "cicada", c: ["#c4b5fd", "#7c3aed", "#f5f3ff"], acc: ["headset"] }, diet: { name: "Garden Grasshopper", body: "grasshopper", c: ["#bef264", "#65a30d", "#f7fee7"], acc: ["leaf"] }, rrt: { name: "Breathing Bee", body: "bee", c: ["#7dd3fc", "#0284c7", "#f0f9ff"], acc: ["mask"] }, flightrn: { name: "Night Monarch", body: "butterfly", c: ["#f59e0b", "#7c2d12", "#fff7ed"], head: "#fb923c", ink: "#1c1917", wingC: "#fdba74", eyes: "fierce", acc: ["jethelmet", "aviscarf", "stetho"] }, rt: { name: "X-Ray Firefly", body: "firefly", c: ["#7dd3fc", "#0369a1", "#e0f2fe"], acc: ["goggles"] }, ct: { name: "Spiral Scarab", body: "scarab", c: ["#a5b4fc", "#4338ca", "#ffffff"], acc: ["headset"] }, mri: { name: "Magnet Moth", body: "moth", c: ["#c4b5fd", "#6d28d9", "#f5f3ff"], acc: ["bolt"] }, nm: { name: "Glow Worm", body: "caterpillar", c: ["#bef264", "#4d7c0f", "#ffffff"], acc: ["stars"] }, ir: { name: "Cath Cricket", body: "grasshopper", c: ["#5eead4", "#0f766e", "#ffffff"], acc: ["mask"] } };
 function bugSVG(kind) {
   if (IMBUG[kind] && typeof bugArt === "function") return bugArt(IMBUG[kind], "bug", { mood: "happy" });
   var id = "b" + (++uid), s = '<svg class="bug" viewBox="0 0 200 200" role="img" aria-label="' + ({ emt: "Rookie Bug", aemt: "Beetle Medic", paramedic: "Siren Beetle", flight: "Sky Hornet", sage: "Professor Sage, the wise bug", cna: "Helper Ladybug", lvn: "Busy Bee", rn: "Monarch Nurse", ms1: "Bookworm Scholar", ms3: "Firefly Clerk", intern: "Stag Beetle Doc", flightrn: "Night Monarch, the flight nurse bug" }[kind]) + '">';
@@ -615,16 +673,17 @@ function viewLevels() {
 }
 
 var SCOPE_TAG = { emt: "Basic life support", aemt: "Limited advanced life support", paramedic: "Advanced life support", flight: "Critical care transport", asm: "TCCC Tier 1", cls: "TCCC Tier 2", cmc: "TCCC Tier 3", cpp: "TCCC Tier 4", pcc: "Prolonged casualty care",
-  mh: "Behavioral health", diet: "Nutrition", rrt: "Airway and breathing", cna: "Basic patient care", lvn: "Practical nursing", rn: "Professional nursing", ms1: "Preclinical sciences", ms3: "Clinical rotations", intern: "First-year residency" };
+  mh: "Behavioral health", diet: "Nutrition", rrt: "Airway and breathing", pt: "Movement and function", slp: "Swallowing and speech", surg: "The sterile field", anes: "The anesthesia cart", dent: "Oral health", phleb: "Blood draws and levels", ekg: "Rhythm and the strip", cp: "Community care", tccc: "Tactical care", cna: "Basic patient care", lvn: "Practical nursing", rn: "Professional nursing", ms1: "Preclinical sciences", ms3: "Clinical rotations", intern: "First-year residency" };
 function scopeTag(key, i, tot) { return SCOPE_TAG[key] || ("Level " + (i + 1) + " of " + tot); }
 function band() {
   if (S.view === "gen") return '<header class="band"><div class="bugstage">' + bugSVG("sage") + '</div><div><h1>BugDex</h1><div class="sub">Every medication in DrugBug, explained by Professor Sage.</div></div></header>';
   var l = levelObj(S.level), i = levelIdx(S.level), m = '', mu = isN(S.level) && myUnit(S.level), tot = levelsOf(S.level).length;
   for (var k = 0; k < tot; k++) m += '<span class="p' + (k <= i ? " on" : "") + '"></span>';
   var ds = S.tab === "hub" && typeof dashStrip === "function" ? dashStrip() : "";
-  return '<header class="band' + (ds ? ' hasdash' : '') + '"><div class="bugstage">' + levelBug(S.level) + '</div><div><h1>' + esc(l.name) + '</h1><div class="sub">' + (funOn() ? esc(l.bug) : '') + (mu ? (funOn() ? ' · ' : '') + esc(unitObj(mu).name) : '') + '</div><div class="meter">' + (isI(S.level) ? '<span>' + esc(l.full) + '</span>' : m + '<span>' + esc(scopeTag(S.level, i, tot)) + '</span>') + '</div></div>' + ds + '</header>';
+  return '<header class="band' + (ds ? ' hasdash' : '') + '"><div class="bugstage">' + levelBug(S.level) + '</div><div><h1>' + esc(l.name) + '</h1><div class="sub">' + (funOn() ? esc(l.bug) : '') + (mu ? (funOn() ? ' · ' : '') + esc(unitObj(mu).name) : '') + '</div><div class="meter">' + (isI(S.level) ? '<span>' + esc(l.full) + '</span>' : (isA(S.level) || l.side) ? '<span>' + esc(scopeTag(S.level, i, tot)) + '</span>' : m + '<span>' + esc(scopeTag(S.level, i, tot)) + '</span>') + '</div></div>' + ds + '</header>';
 }
 var ICO = {
+  guide: '<path d="M4 5a2 2 0 0 1 2-2h5v17H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-5v17h5a2 2 0 0 1 2 2z"/><path d="M7 8h2M7 11h2M15 8h2M15 11h2"/>',
   dash: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
   myclass: '<path d="M3 9l9-4 9 4-9 4z"/><path d="M7 11v4c0 1.5 2.2 3 5 3s5-1.5 5-3v-4"/><path d="M21 9v5"/>',
   registry: '<path d="M5 4h9a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h9"/>',
@@ -667,6 +726,43 @@ var ICO = {
   micro: '<circle cx="9" cy="9" r="3"/><circle cx="16" cy="14" r="2.2"/><path d="M4 18c2-3 5-2 7-5"/><path d="M13 5c3 0 4 2 6 2"/><circle cx="6.5" cy="15.5" r="1.2"/>'
 };
 function icon(k) { return '<svg class="ico" viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (ICO[k] || '') + '</svg>'; }
+/* ---------- Field study guides (1.2, owner Nov 7 2026) ----------
+   Each Allied field (and Community Paramedic / Tactical Medic) gets one study tab built from
+   DB.FGUIDE in guides.js: short sections, each a table plus a tip. Search filters the rows;
+   on a phone each row becomes a small card with the column names as labels. */
+var FG = { q: "" };
+function fgOf(k) { return typeof DB !== "undefined" && DB.FGUIDE && DB.FGUIDE[k] || null; }
+function guideView() {
+  var G = fgOf(S.level); if (!G) return '<p class="muted">No study guide for this level yet.</p>';
+  var q = FG.q.trim().toLowerCase(), hits = 0;
+  var c = '<div class="fgwrap"><p class="muted fgintro">' + esc(G.intro || G.sub || "") + '</p>' +
+    '<div class="fgsearch"><input id="fgq" type="search" placeholder="Search this guide" value="' + esc(FG.q) + '" aria-label="Search this guide" autocomplete="off"></div>';
+  if (!q) c += '<nav class="fgtoc" aria-label="Sections">' + G.sections.map(function (x, i) { return '<a href="#fg' + i + '" data-fgjump="' + i + '">' + esc(x.h) + '</a>'; }).join("") + '</nav>';
+  G.sections.forEach(function (x, i) {
+    var inHead = q && (x.h + " " + (x.p || "") + " " + (x.tip || "")).toLowerCase().indexOf(q) >= 0;
+    var rows = (x.rows || []).filter(function (r) { return !q || inHead || r.join(" ").toLowerCase().indexOf(q) >= 0; });
+    if (q && !rows.length && !inHead) return;
+    hits++;
+    c += '<section class="fgsec" id="fg' + i + '"><h3>' + esc(x.h) + '</h3>' + (x.p ? '<p>' + esc(x.p) + '</p>' : '');
+    if (rows.length) {
+      c += '<div class="fgtbl"><table><thead><tr>' + (x.cols || []).map(function (h) { return '<th scope="col">' + esc(h) + '</th>'; }).join("") + '</tr></thead><tbody>' +
+        rows.map(function (r) { return '<tr>' + r.map(function (v, k) { return '<td data-l="' + esc((x.cols || [])[k] || "") + '">' + esc(v) + '</td>'; }).join("") + '</tr>'; }).join("") + '</tbody></table></div>';
+    }
+    if (x.tip) c += '<p class="fgtip"><b>Tip</b> ' + esc(x.tip) + '</p>';
+    c += '</section>';
+  });
+  if (q && !hits) c += '<p class="muted">Nothing in this guide matches "' + esc(FG.q) + '".</p>';
+  return c + '<p class="muted small fgnote">For education only. Follow your program, your facility and the prescriber.</p></div>';
+}
+document.addEventListener("input", function (e) {
+  if (e.target.id !== "fgq") return;
+  FG.q = e.target.value; var pos = e.target.selectionStart; render();
+  var el = document.getElementById("fgq"); if (el) { el.focus(); try { el.setSelectionRange(pos, pos); } catch (x) {} }
+});
+document.addEventListener("click", function (e) {
+  var a = e.target.closest && e.target.closest("[data-fgjump]"); if (!a) return;
+  e.preventDefault(); var t = document.getElementById("fg" + a.getAttribute("data-fgjump")); if (t) t.scrollIntoView({ behavior: "smooth", block: "start" });
+});
 function tabList() {
   if (S.view === "level" && isF(S.level)) return [["registry", "Medications", "Every Tier 4 medication, by field use, by class or A to Z."], ["fm_blood", "Blood Products", "Whole blood, components, massive transfusion and every transfusion reaction."], ["fm_cond", FM_TABS.fm_cond[0], FM_TABS.fm_cond[1]], ["fm_store", FM_TABS.fm_store[0], FM_TABS.fm_store[1]], ["fm_istat", FM_TABS.fm_istat[0], FM_TABS.fm_istat[1]], ["fm_bio", FM_TABS.fm_bio[0], FM_TABS.fm_bio[1]], ["fm_ref", FM_TABS.fm_ref[0], FM_TABS.fm_ref[1]], ["tools", "Study Tools", "Questions, megacode, flashcards, brain games, med-list workout and safety drills."]];
   var L = [["registry", S.view === "gen" ? "All Medications" : "Medications", S.view === "gen" ? "Every drug in DrugBug, A to Z." : isN(S.level) ? "The drugs nurses at your license give and monitor." : isI(S.level) ? "Contrast agents, radiopharmaceuticals and the reaction cart." : "Look up every drug in your scope."]];
@@ -722,6 +818,8 @@ function tabList() {
   if (S.view === "gen" && typeof illicitView === "function") L.splice(1, 0, ["illicit", "Illicit & Street Drugs", "How illicit and recreational drugs affect the body, overdose signs and treatment. Education only."]);
   if (S.view === "gen" && typeof COMPOUND_TABS !== "undefined") L.splice(1, 0, ["vegc", "Vegetable Compounds", "Sulforaphane, allicin, lycopene, favism beans and more cool compounds from vegetables."], ["fruitc", "Fruit Compounds", "Resveratrol, bromelain, star fruit toxin and more unique compounds from fruit."], ["vitc", "Vitamin Compounds", "Every vitamin form, from B12 types to vitamin K2, CoQ10 and choline."]);
   if (typeof disView === "function" && !(S.view === "level" && isI(S.level))) L.splice(1, 0, ["diseases", "Disease Lab", Object.keys((DB && DB.DIS) || {}).length + " conditions explained: their history, what goes wrong from cell to organ, and the drugs that treat them."]);
+  /* the field study guide sits right after Medications (1.2, owner Nov 7 2026) */
+  if (S.view === "level" && fgOf(S.level)) { var G0 = fgOf(S.level); L.splice(1, 0, ["guide", G0.tab, G0.sub]); }
   /* Study sits right after Medications (owner, Nov 5 2026) */
   var ti = -1, ri = -1; L.forEach(function (t, i) { if (t[0] === "tools") ti = i; if (t[0] === "registry") ri = i; });
   if (ti > 0 && ri >= 0 && ti !== ri + 1) { var st = L.splice(ti, 1)[0]; ri = L.map(function (t) { return t[0]; }).indexOf("registry"); L.splice(ri + 1, 0, st); }
@@ -734,7 +832,7 @@ var HUB_GROUPS = [
   /* Cleaned up (owner, Nov 6 2026): reference in "Look it up", everything you practise in
      "Study and practice", and the things that are yours (your class, your agency's protocols,
      your list, your progress) together in "Yours". */
-  ["Look it up", ["registry", "diseases", "calls", "anatomy", "families", "conds", "micro", "illicit", "units", "body", "alts", "contrast", "labs", "blood", "hemo", "flightp", "flt_ref"]],
+  ["Look it up", ["registry", "guide", "diseases", "calls", "anatomy", "families", "conds", "micro", "illicit", "units", "body", "alts", "contrast", "labs", "blood", "hemo", "flightp", "flt_ref"]],
   ["Food and vitamin compounds", ["vegc", "fruitc", "vitc"]],
   ["Study and practice", ["tools", "scenarios", "scene", "nbug"]],
   ["Yours", ["myclass", "protocols", "mylist", "progress", "shop"]]
@@ -1229,7 +1327,7 @@ function viewLevel() {
   if (!S.tab || (S.tab !== "hub" && S.tab !== "session" && !tabName(S.tab))) S.tab = "hub";
   if (S.tab !== "hub" && S.tab !== "session" && typeof proLocked === "function" && proLocked(S.tab)) { var lt = S.tab; S.tab = "hub"; setTimeout(function () { openPaywall(tabName(lt), tabTier(lt)); }, 0); }
   if (S.tab === "calc") S.tab = "hub";  /* Calc Lab was removed */
-  var body = S.tab === "hub" ? "" : S.tab === "dash" && typeof dashView === "function" ? dashView() : S.tab === "anatomy" && typeof anatView === "function" ? anatView() : S.tab === "calls" && typeof callsView === "function" ? callsView() : S.tab === "scene" && typeof sceneView === "function" ? sceneView() : S.tab === "systems" && typeof sysView === "function" ? sysView() : S.tab === "protocols" && typeof agpTabView === "function" ? agpTabView() : typeof fieldTab === "function" && isF(S.level) && FM_TABS[S.tab] ? fieldTab(S.tab) : (S.tab === "vegc" || S.tab === "fruitc" || S.tab === "vitc") && typeof compoundView === "function" ? compoundView(S.tab) : S.tab === "illicit" && typeof illicitView === "function" ? illicitView() : S.tab === "registry" ? (S.view === "level" && isF(S.level) && typeof fieldMedsView === "function" ? fieldMedsView() : registry()) : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? (S.tab = "hub", "") : S.tab === "micro" && typeof microView === "function" ? microView() : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "flt_ref" && typeof fltRefView === "function" ? fltRefView() : S.tab === "tools" ? toolsView() : S.tab === "medlist" ? (typeof medlistView === "function" ? medlistView() : "") : flashcards();
+  var body = S.tab === "hub" ? "" : S.tab === "guide" ? guideView() : S.tab === "dash" && typeof dashView === "function" ? dashView() : S.tab === "anatomy" && typeof anatView === "function" ? anatView() : S.tab === "calls" && typeof callsView === "function" ? callsView() : S.tab === "scene" && typeof sceneView === "function" ? sceneView() : S.tab === "systems" && typeof sysView === "function" ? sysView() : S.tab === "protocols" && typeof agpTabView === "function" ? agpTabView() : typeof fieldTab === "function" && isF(S.level) && FM_TABS[S.tab] ? fieldTab(S.tab) : (S.tab === "vegc" || S.tab === "fruitc" || S.tab === "vitc") && typeof compoundView === "function" ? compoundView(S.tab) : S.tab === "illicit" && typeof illicitView === "function" ? illicitView() : S.tab === "registry" ? (S.view === "level" && isF(S.level) && typeof fieldMedsView === "function" ? fieldMedsView() : registry()) : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? (S.tab = "hub", "") : S.tab === "micro" && typeof microView === "function" ? microView() : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "flt_ref" && typeof fltRefView === "function" ? fltRefView() : S.tab === "tools" ? toolsView() : S.tab === "medlist" ? (typeof medlistView === "function" ? medlistView() : "") : flashcards();
   var msg = S.sessMsg ? '<div class="presult" role="status">' + esc(S.sessMsg) + '</div>' : ''; S.sessMsg = "";
   var notes = (S.tab === "calc" || S.tab === "tools" ? eduBanner() : '') + (["prep", "session", "nbug", "scenarios", "cards"].indexOf(S.tab) >= 0 ? esQNote() : '');
   if (S.tab === "hub") return topbar() + '<div class="' + ctxClass() + '">' + band() + protocolBanner() + (isF(S.level) ? "" : dailyCard()) + msg + (S.learn && S.learn.done && typeof learnDoneView === "function" ? learnDoneView() : "") + hubView() + '</div>';
@@ -1275,12 +1373,12 @@ function addScore(r) { mergeScores([r]); saveLocal(); pushScoresToDb(); }
 function refreshScoresUI() { var el = $("#scorearea"); if (el) { el.outerHTML = scoreArea(); var n = $("#scorearea"); if (n) translateDom(n); } }
 
 /* ---------- Registry Exam Prep ---------- */
-var NRLV = { all: "All levels", emt: "EMT", aemt: "AEMT", paramedic: "Paramedic", flight: "Flight", asm: "Tier 1", cls: "Tier 2", cmc: "Tier 3", cpp: "Tier 4", pcc: "PCC", field: "Field calls", gen: "Home & general meds", cna: "CNA", lvn: "LVN/LPN", rn: "RN", flightrn: "Flight Nurse", im: "Imaging", ms1: "Step 1", ms3: "Step 2 CK", intern: "Step 3" };
+var NRLV = { mh: "Mental Health", diet: "Dietitian", rrt: "Respiratory Therapist", pt: "PT / OT", slp: "SLP", surg: "Surgical Tech", anes: "Anesthesia Tech", dent: "Dental", phleb: "Phlebotomy", ekg: "EKG Tech", cp: "Community Paramedic", tccc: "Tactical Medic", all: "All levels", emt: "EMT", aemt: "AEMT", paramedic: "Paramedic", flight: "Flight", asm: "Tier 1", cls: "Tier 2", cmc: "Tier 3", cpp: "Tier 4", pcc: "PCC", field: "Field calls", gen: "Home & general meds", cna: "CNA", lvn: "LVN/LPN", rn: "RN", flightrn: "Flight Nurse", im: "Imaging", ms1: "Step 1", ms3: "Step 2 CK", intern: "Step 3" };
 /* ---------- Question difficulty stars (owner, Oct 29 2026) ----------
    Every question carries a 1-to-4 star difficulty tied to the role that studies it, and a role is
    only shown questions at its own star level. Imaging deliberately mixes 2 and 3. */
-var QSTAR = { cna: 1, lvn: 1, gen: 1, emt: 2, aemt: 2, asm: 2, cls: 2, paramedic: 3, rn: 3, cmc: 3, cpp: 3, flight: 4, flightrn: 4, ms1: 4, ms3: 4, intern: 4, im: 2 };
-var ROLESTARS = { cna: [1], lvn: [1], gen: [1], emt: [2], aemt: [2], asm: [2], cls: [2], paramedic: [3], rn: [3], cmc: [3], cpp: [3], flight: [4], flightrn: [4], ms1: [4], ms3: [4], intern: [4], rt: [2, 3], ct: [2, 3], mri: [2, 3], nm: [2, 3], ir: [2, 3] };
+var QSTAR = { cp: 3, tccc: 3, cna: 1, lvn: 1, gen: 1, emt: 2, aemt: 2, asm: 2, cls: 2, paramedic: 3, rn: 3, cmc: 3, cpp: 3, flight: 4, flightrn: 4, ms1: 4, ms3: 4, intern: 4, im: 2 };
+var ROLESTARS = { cp: [3], tccc: [2, 3], cna: [1], lvn: [1], gen: [1], emt: [2], aemt: [2], asm: [2], cls: [2], paramedic: [3], rn: [3], cmc: [3], cpp: [3], flight: [4], flightrn: [4], ms1: [4], ms3: [4], intern: [4], rt: [2, 3], ct: [2, 3], mri: [2, 3], nm: [2, 3], ir: [2, 3] };
 /* imaging items alternate 2 and 3 by a stable hash, so the mix is the same every time the app loads */
 function qHash(s) { var h = 0, i; s = String(s || ""); for (i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) | 0; } return Math.abs(h); }
 function qStar(q) {
@@ -1294,7 +1392,9 @@ function starOK(q, k) { return starsFor(k).indexOf(qStar(q)) >= 0; }
 function starHTML(n, cls) { var s = "", i; for (i = 1; i <= 4; i++) s += '<span class="' + (i <= n ? "on" : "off") + '">\u2605</span>'; return '<span class="qstars' + (cls ? " " + cls : "") + '" aria-label="Difficulty ' + n + ' of 4">' + s + '</span>'; }
 function starLabel(n) { return ["", "Foundation", "Working", "Advanced", "Expert"][n] || ""; }
 function nrLevelsFor(k) {
-  if (isA(k)) return ["gen", "emt", "aemt", "paramedic", "flight", "lvn", "rn", "flightrn", "ms1", "ms3", "intern"];   /* every bank, filtered to the field's medicines in nrPool */
+  if (isA(k)) return ["gen", "emt", "aemt", "paramedic", "flight", "lvn", "rn", "flightrn", "ms1", "ms3", "intern", k];
+  if (k === "cp") return ["paramedic", "gen", "cp"];      /* Community Paramedic: the paramedic bank plus its own */
+  if (k === "tccc") return ["emt", "aemt", "paramedic", "tccc"];   /* every bank, filtered to the field's medicines in nrPool */
   /* each scope studies its OWN question bank only (no lower-scope questions); top scopes get no general pool */
   if (isI(k)) return ["im"];
   if (k === "gen") return ["gen"]; /* Everyday / BugDex: plain-language home & general med questions only (no flight questions); topped up by modules/qgen.js */
@@ -1309,7 +1409,7 @@ function nrPool(filter, noGen) {
   var allowed = nrLevelsFor(ctxKey());
   if (filter && filter !== "all" && !isF(ctxKey())) allowed = allowed.indexOf(filter) >= 0 ? [filter] : []; /* tiers always study their whole cumulative bank */
   var inScope = null;
-  if (S.view === "level" && (isN(S.level) || isI(S.level) || isF(S.level) || isA(S.level))) { inScope = {}; scopeFor(S.level).ids.forEach(function (id) { inScope[id] = 1; }); }
+  if (S.view === "level" && (isN(S.level) || isI(S.level) || isF(S.level) || isA(S.level) || S.level === "tccc")) { inScope = {}; scopeFor(S.level).ids.forEach(function (id) { inScope[id] = 1; }); }
   var ck = ctxKey();
   function ok(q) { return allowed.indexOf(q.lv) >= 0 && starOK(q, ck) && !(q.home && ck !== "gen") && qVisible(q) && (!inScope || (q.d ? inScope[q.d] : !isF(ck))) && (!q.d || !drugLocked(q.d)); }
   if (S.nr && S.nr.kind === "reg") return (DB.RQ || []).filter(function (q) { return allowed.indexOf(q.lv) >= 0 && starOK(q, ck) && qVisible(q) && (!isF(ck) || q.fm) && (typeof callScaleOK !== "function" || callScaleOK(q)); });
@@ -1319,7 +1419,7 @@ function nrState() {
   if (!S.nr) { var ss0 = SET(); S.nr = { phase: "setup", n: ss0.nrN, mode: ss0.nrMode, filter: "", adaptive: ss0.adaptive }; }
   /* each time you open a test in a role, it starts on that role's own questions; "Everything" only if you pick it */
   var k0 = ctxKey(), lv0 = nrLevelsFor(k0);
-  if (S.nr.lv !== k0 && S.nr.phase === "setup") { S.nr.lv = k0; S.nr.filter = lv0.indexOf(k0) >= 0 ? k0 : lv0[0] || "all"; }
+  if (S.nr.lv !== k0 && S.nr.phase === "setup") { S.nr.lv = k0; S.nr.filter = lv0.indexOf(k0) >= 0 && DB.Q.some(function (q) { return q.lv === k0; }) ? k0 : (isA(k0) || k0 === "cp" || k0 === "tccc") ? "all" : lv0.indexOf(k0) >= 0 ? k0 : lv0[0] || "all"; }
   if (!isPro()) { if (S.nr.n > 10) S.nr.n = 10; if (S.nr.mode === "exam") S.nr.mode = "practice"; }
   return S.nr;
 }
@@ -2175,7 +2275,7 @@ document.addEventListener("click", function (e) {
     case "aclstest": return typeof fmAclsTest === "function" && fmAclsTest();
     case "nrmore": S.nrMore = !(S.nrMore || S.exEdit); S.exEdit = false; return render();
     case "exclear": if (Prog.d.exam) delete Prog.d.exam[examKey()]; S.exEdit = false; saveProg(); return render();
-    case "nrstart": var st0 = nrState(), pl0 = nrPool(st0.filter), pk0; if (S.nrFresh) { var fr0 = freshPool(pl0); if (fr0.length >= Math.min(5, st0.n)) pl0 = fr0; } pk0 = st0.kind === "reg" ? regCompose(pl0, st0.n, st0.adaptive !== false) : isEMSLv(ctxKey()) ? nrCompose(pl0, Math.min(st0.n, pl0.length), st0.filter && st0.filter !== "all" ? [st0.filter] : nrLevelsFor(ctxKey()), st0.adaptive !== false) : st0.adaptive !== false ? adaptivePick(pl0, st0.n) : shuffle(pl0).slice(0, st0.n); if (st0.kind !== "reg") pk0 = diffBalance(pk0, pl0); nrStart(pk0); render(); return window.scrollTo(0, 0);
+    case "nrstart": var st0 = nrState(), pl0 = nrPool(st0.filter), pk0; if (S.nrFresh) { var fr0 = freshPool(pl0); if (fr0.length >= Math.min(5, st0.n)) pl0 = fr0; } pk0 = st0.kind === "reg" ? regCompose(pl0, st0.n, st0.adaptive !== false) : isEMSLv(ctxKey()) ? nrCompose(pl0, Math.min(st0.n, pl0.length), st0.filter && st0.filter !== "all" ? [st0.filter] : nrLevelsFor(ctxKey()), st0.adaptive !== false) : st0.adaptive !== false ? adaptivePick(pl0, st0.n) : shuffle(pl0).slice(0, st0.n); if (st0.kind !== "reg") { pk0 = diffBalance(pk0, pl0); var pf0 = st0.filter && st0.filter !== "all" ? st0.filter : null; var ck0 = ctxKey(), pc0 = pilFor(function (q) { return !pf0 || q.lv === pf0; }); pc0 = pc0.filter(function (q) { return q.lv === ck0; }).concat(pc0.filter(function (q) { return q.lv !== ck0; })); pk0 = pilMix(pk0, pc0.slice(0, 3)); } nrStart(pk0); render(); return window.scrollTo(0, 0);
     case "nrnext": S.nr.i++; render(); return window.scrollTo(0, 0);
     case "nrprev": S.nr.i--; render(); return window.scrollTo(0, 0);
     case "nrfinish": S.nr.end = Date.now(); S.nr.phase = "done"; if (S.nr.mode === "exam") { S.nr.rec = S.nr.rec || {}; S.nr.qs.forEach(function (x, i) { if (!S.nr.rec[i] && S.nr.ans[i] != null) { S.nr.rec[i] = 1; record(x.q, nrRight(x, S.nr.ans[i])); } }); setTimeout(toastAch, 300); } render(); return window.scrollTo(0, 0);
@@ -3056,7 +3156,7 @@ function startSession(kind, opt) {
   var pool = basePool(), qs = [], steps = ["quiz", "review", "done"], title = "", sub = "", sc = null, drug = opt.drug || null;
   if (kind === "daily") {
     var goal = SET().dailyGoal; qs = adaptivePick(pool, goal);
-    if (typeof isReviewer === "function" && isReviewer()) { var inScope = {}; scopeIds().forEach(function (x) { inScope[x] = 1; }); qs = pilMix(qs, pilFor(function (q) { return inScope[q.d]; }).slice(0, 2)); } title = "Today's 5-minute DrugBug"; sub = goal + " questions, then your weak areas, then one clinical scenario.";
+    if (typeof isReviewer === "function" && isReviewer()) { var inScope = {}; scopeIds().forEach(function (x) { inScope[x] = 1; }); qs = pilMix(qs, pilFor(function (q) { return !q.d || inScope[q.d]; }).slice(0, 2)); } title = "Today's 5-minute DrugBug"; sub = goal + " questions, then your weak areas, then one clinical scenario.";
     steps = ["quiz", "weak", "scen", "done"];
   } else if (kind === "study") {
     /* only this specialty's questions, topped up with ones built from the drug page at this level (never another level's questions) */
@@ -3430,7 +3530,7 @@ function qgStudy(id, n) {
    Top those up from each drug's own page, at the role's own difficulty, so a learner meets the whole
    formulary instead of the same 300 items. Only drugs with fewer than two hand-written questions are
    topped up, so written items always come first. (Oct 29 2026) */
-var QG_TOPUP = { mh: 3, diet: 3, rrt: 3, gen: 3, rn: 2, flightrn: 2, lvn: 2, ms1: 2, ms3: 2, intern: 2, cpp: 2, flight: 2 };
+var QG_TOPUP = { mh: 3, diet: 3, rrt: 3, pt: 3, slp: 3, surg: 3, anes: 3, dent: 3, phleb: 3, ekg: 3, cp: 2, tccc: 2, gen: 3, rn: 2, flightrn: 2, lvn: 2, ms1: 2, ms3: 2, intern: 2, cpp: 2, flight: 2 };
 function qgPoolFor(lv, scopeOk) {
   var per = QG_TOPUP[lv]; if (!per) return [];
   if (QG.pool[lv]) return QG.pool[lv].filter(scopeOk);
@@ -3737,9 +3837,11 @@ var START_STICKS = 20;
 /* earned on the device + paid for on the server, less what has been spent (modules/wallet.js) */
 function sticks() { var P = Prog.d; return START_STICKS + (P.earned || 0) + (typeof walletSticks === "function" ? walletSticks() : 0) - (P.spent || 0); }
 var STICK_TRY = 1, STICK_RIGHT = 3; /* every answered question pays 1 stick for trying, 3 when correct */
-/* the peeking pal riding with your bug adds sticks to every right answer (owner, Nov 5 2026):
-   +1 when you equip it, +2 once it reaches level 5, +3 at level 10 */
-function palBonus() { var id = Prog.d.pal; if (!id || typeof pkCaught !== "function" || !pkCaught(id)) return 0; var lv = typeof pkLv === "function" ? pkLv(id) : 1; return lv >= 10 ? 3 : lv >= 5 ? 2 : 1; }
+/* the peeking pal riding with your bug adds sticks to every right answer (owner, Nov 5 2026).
+   Every level up now adds one more (owner, Nov 7 2026): +1 at level 1, +2 at level 2 ... +10 at
+   level 10. It used to step only at levels 5 and 10. */
+function palBonusAt(lv) { return Math.max(1, Math.min(10, lv || 1)); }
+function palBonus() { var id = Prog.d.pal; if (!id || typeof pkCaught !== "function" || !pkCaught(id)) return 0; return palBonusAt(typeof pkLv === "function" ? pkLv(id) : 1); }
 function qSticks(ok) { return ok ? STICK_RIGHT + palBonus() : STICK_TRY; }
 function stickNote(ok) { var n = qSticks(ok), pb = ok ? palBonus() : 0; return ' <span class="earned">+' + n + (n === 1 ? " stick" : " sticks") + (ok ? "" : " for trying") + (pb ? ' (' + pb + ' from your pal)' : '') + '</span>'; }
 function earn(n) { if (!n) return; var P = Prog.d; P.earned = (P.earned || 0) + n; }
@@ -4097,13 +4199,22 @@ var BODYFIT = {
   millipede: { r: 26, t: [104, 150, 40, 34], R: [164, 112], L: [44, 124] }, harvestman: { r: 24, t: [100, 124, 28, 22], R: [150, 100], L: [50, 100] },
   asp: { r: 26, t: [100, 152, 46, 32] }, flea: { r: 23, t: [100, 144, 28, 40] }, tick: { r: 23, t: [100, 146, 42, 40] },
   mosquito: { r: 22, t: [100, 140, 16, 40] }, louse: { r: 23, t: [100, 150, 34, 40] }, roach: { r: 24, t: [100, 148, 36, 44] },
-  wasp: { r: 28, t: [100, 154, 30, 36] }, cricket: { r: 28, t: [100, 150, 28, 40] }
+  wasp: { r: 28, t: [100, 154, 30, 36] }, cricket: { r: 28, t: [100, 150, 28, 40] },
+  /* measured from the drawings (Nov 7 2026); they used to fall back to the beetle entry */
+  stag: { r: 30, t: [100, 140, 46, 48] }, scarab: { r: 30, t: [100, 140, 46, 48] }
 };
 function fitG(body, slot, hy, svg) {
   var F = BODYFIT[body] || BODYFIT.beetle, T = F.t, k, tr;
-  if (slot === "hat" || slot === "face" || slot === "neck" || slot === "hair") { k = F.r / 30; if (k === 1 && hy === 74) return svg; tr = "translate(" + (100 - 100 * k).toFixed(2) + " " + (hy - 74 * k).toFixed(2) + ") scale(" + k.toFixed(3) + ")"; }
+  /* neck items follow the body's width as well as its head (owner, Nov 7 2026): a necklace or
+     scarf cut for the wide beetle hung past both sides of a thin mosquito, and one cut for a thin
+     body looked lost on a rhino. Width is half head, half torso; height stays with the head. */
+  if (slot === "neck") { var kx = Math.max(.5, Math.min(1.15, .5 * F.r / 30 + .5 * T[2] / 46)), ky = F.r / 30; if (kx === 1 && ky === 1 && hy === 74) return svg; return '<g transform="translate(' + (100 - 100 * kx).toFixed(2) + ' ' + (hy - 74 * ky).toFixed(2) + ') scale(' + kx.toFixed(3) + ' ' + ky.toFixed(3) + ')">' + svg + '</g>'; }
+  if (slot === "hat" || slot === "face" || slot === "hair") { k = F.r / 30; if (k === 1 && hy === 74) return svg; tr = "translate(" + (100 - 100 * k).toFixed(2) + " " + (hy - 74 * k).toFixed(2) + ") scale(" + k.toFixed(3) + ")"; }
   else if (slot === "outfit") { var sx = T[2] / 46, sy = T[3] / 48; if (sx === 1 && sy === 1 && T[1] === 140) return svg; tr = "translate(" + (T[0] - 100 * sx).toFixed(2) + " " + (T[1] - 140 * sy).toFixed(2) + ") scale(" + sx.toFixed(3) + " " + sy.toFixed(3) + ")"; }
-  else if (slot === "back") { k = Math.max(.6, Math.min(1.1, T[3] / 48)); if (k === 1 && T[1] === 140) return svg; tr = "translate(" + (T[0] - 100 * k).toFixed(2) + " " + (T[1] - 140 * k).toFixed(2) + ") scale(" + k.toFixed(3) + ")"; }
+  /* back items (capes, wings, packs, shells) take the torso's width and height separately, so a
+     cape is as wide as the body wearing it and a bag hangs at that body's side instead of in the
+     air beside a skinny one (owner, Nov 7 2026) */
+  else if (slot === "back") { var bx = Math.max(.45, Math.min(1.15, T[2] / 46)), by = Math.max(.6, Math.min(1.1, T[3] / 48)); if (bx === 1 && by === 1 && T[1] === 140) return svg; tr = "translate(" + (T[0] - 100 * bx).toFixed(2) + " " + (T[1] - 140 * by).toFixed(2) + ") scale(" + bx.toFixed(3) + " " + by.toFixed(3) + ")"; }
   /* hands: move to this body's anchor, and take the body's scale so a small stage does not
      carry a full-size lantern (owner, Nov 4 2026) */
   else if (slot === "held") { if (!F.R) return svg; k = F.r / 30; tr = "translate(" + (F.R[0] - 160 * k).toFixed(2) + " " + (F.R[1] - 145 * k).toFixed(2) + ") scale(" + k.toFixed(3) + ")"; }
@@ -5335,10 +5446,13 @@ function wearItem(id, on) {
   Prog.d.wear = w; Prog.d.avatarTs = Date.now(); saveProg(); drawBuddy();
 }
 function itemsView() {
-  var w = myWear(), bal = sticks(), haveAll = ITEMS.filter(function (it) { return ownsItem(it.id); }).length, c = '<p class="muted">Dress up your bug. Items fit every bug, and you can wear one per slot. <strong>' + haveAll + ' of ' + ITEMS.length + ' owned</strong>, ' + (ITEMS.length - haveAll) + ' left to collect.</p>';
+  var w = myWear(), bal = sticks(), haveAll = ITEMS.filter(function (it) { return ownsItem(it.id); }).length, c = '<p class="muted">Dress up your bug. Items fit every bug, and you can wear one per slot. <strong>' + haveAll + ' of ' + ITEMS.length + ' owned</strong>, ' + (ITEMS.length - haveAll) + ' left to collect.</p>' + (Object.keys(w).length ? '<p><button class="btn small ghost" data-wearnone="all">Take everything off</button></p>' : '');
   SLOTS.forEach(function (sl) {
     var inSlot = ITEMS.filter(function (it) { return it.slot === sl[0]; }), haveN = inSlot.filter(function (it) { return ownsItem(it.id); }).length;
-    c += '<div class="tierhead"><h3 class="eh small">' + sl[1] + '</h3><span class="tierown">' + haveN + ' of ' + inSlot.length + ' owned</span></div><div class="shopgrid items">' + inSlot.map(function (it) {
+    /* "None" comes first in every slot (owner, Nov 7 2026): one tap takes off whatever is in it */
+    var pvN = Object.assign({}, w); delete pvN[sl[0]];
+    var none = '<div class="bugcard' + (w[sl[0]] ? '' : ' eq') + '">' + myBugArt("", null, pvN) + '<strong>None</strong><span class="muted small">' + (w[sl[0]] ? 'Nothing in this slot' : 'Wearing nothing here') + '</span><div class="bact">' + (w[sl[0]] ? '<button class="btn small ghost" data-wearnone="' + sl[0] + '">Wear none</button>' : '') + '</div></div>';
+    c += '<div class="tierhead"><h3 class="eh small">' + sl[1] + '</h3><span class="tierown">' + haveN + ' of ' + inSlot.length + ' owned</span></div><div class="shopgrid items">' + none + inSlot.map(function (it) {
       var own = ownsItem(it.id), on = w[it.slot] === it.id, pv = Object.assign({}, w), pend = S.shopBuy === "i:" + it.id; pv[it.slot] = it.id;
       var act = on ? '<button class="btn small ghost" data-unwear="' + it.id + '">Take off</button>' : own ? '<button class="btn small" data-wear="' + it.id + '">Wear</button>' :
         pend ? '<button class="btn small" data-ibuyok="' + it.id + '">Buy for ' + it.price + '</button><button class="btn small ghost" data-buyno="1">Cancel</button>' :
@@ -5431,6 +5545,7 @@ function buddyClick(t, a) {
   if (a.ibuy) { S.shopBuy = "i:" + a.ibuy; render(); return true; }
   if (a.ibuyok) { buyItem(a.ibuyok); S.shopBuy = null; render(); return true; }
   if (a.wear) { wearItem(a.wear, true); S.shopMsg = ITEMS_BY[a.wear].name + " on."; render(); return true; }
+  if (a.wearnone) { var wn = Object.assign({}, myWear()); if (a.wearnone === "all") wn = {}; else delete wn[a.wearnone]; Prog.d.wear = wn; Prog.d.avatarTs = Date.now(); saveProg(); drawBuddy(); render(); return true; }
   if (a.unwear) { wearItem(a.unwear, false); render(); return true; }
   if (a.faceeq) { equipFace(a.faceeq); render(); return true; }
   if (a.facebuy) { S.shopBuy = "f:" + a.facebuy; render(); return true; }
@@ -5442,7 +5557,7 @@ function buddyClick(t, a) {
 /* ---------- Level bugs: the higher the scope, the more alive the bug ----------
    tier 1: gentle bob · tier 2: + blinks · tier 3: + eyes follow you, wiggle on hover, hop on tap
    tier 4 (top of each route): + aura, sparkles and orbit ring, barrel roll and sparkle burst with a quip on tap */
-var LVB_IMG = { rt: 3, ct: 3, nm: 3, mri: 4, ir: 4, mh: 3, diet: 3, rrt: 4 };
+var LVB_IMG = { rt: 3, ct: 3, nm: 3, mri: 4, ir: 4, mh: 3, diet: 3, rrt: 4, pt: 3, slp: 3, surg: 3, anes: 4, dent: 3, phleb: 3, ekg: 3, cp: 3, tccc: 4 };
 var LVB_FX = { flight: ["#ffd25e", "#ffd25e"], rn: ["#ffb347", "#ff7ad9"], flightrn: ["#fb923c", "#7dd3fc"], intern: ["#7fe7ff", "#a7b4ff"], ir: ["#5eead4", "#7dd3fc"], mri: ["#c4b5fd", "#f0abfc"] };
 var LVB_QUIPS = {
   flight: ["Wheels up!", "Rotor wash incoming!", "Blood on board.", "Pre-flight check: done.", "Sky's the limit."],
@@ -12395,7 +12510,7 @@ function peekView() {
     '<div class="pkgrid">' + mine.map(function (p) {
       var lv = pkLv(p.id), stars = ""; for (var i = 1; i <= 10; i++) stars += '<i class="' + (i <= lv ? "on" : "") + '"></i>';
       return '<div class="pkcard' + (Prog.d.pal === p.id ? ' eq' : '') + (lv >= 10 ? ' max' : lv >= 5 ? ' mid' : '') + '">' + pkFrame(p, pkStage(lv)) +
-        '<span class="pklv">' + (es ? "Nivel " : "Level ") + lv + ' · ' + esc(pkStageName(pkStage(lv))) + '</span><span class="pkbonus">+' + (lv >= 10 ? 3 : lv >= 5 ? 2 : 1) + (es ? " palitos por acierto al equiparlo" : " stick" + (lv >= 5 ? "s" : "") + " per right answer when equipped") + '</span><span class="pkstars" aria-label="' + (es ? "Nivel " : "Level ") + lv + ' / 10">' + stars + '</span><span class="muted small">' + (lv >= 10 ? (es ? "Completamente crecido" : "Fully grown") : (es ? "Sube de nivel al estudiar" : "Levels up as you study")) + '</span>' +
+        '<span class="pklv">' + (es ? "Nivel " : "Level ") + lv + ' · ' + esc(pkStageName(pkStage(lv))) + '</span><span class="pkbonus">+' + palBonusAt(lv) + (es ? " palitos por acierto al equiparlo" : " stick" + (palBonusAt(lv) > 1 ? "s" : "") + " per right answer when equipped") + (lv < 10 ? '<br><span class="muted small">' + (es ? "Nivel " + (lv + 1) + ": +" + palBonusAt(lv + 1) : "Level " + (lv + 1) + ": +" + palBonusAt(lv + 1)) + '</span>' : '') + '</span><span class="pkstars" aria-label="' + (es ? "Nivel " : "Level ") + lv + ' / 10">' + stars + '</span><span class="muted small">' + (lv >= 10 ? (es ? "Completamente crecido" : "Fully grown") : (es ? "Sube de nivel al estudiar" : "Levels up as you study")) + '</span>' +
         '<button class="btn small' + (Prog.d.pal === p.id ? ' on' : '') + '" data-pkeq="' + p.id + '" aria-pressed="' + (Prog.d.pal === p.id) + '">' + (Prog.d.pal === p.id ? (es ? "Con tu bicho ✓" : "With your bug ✓") : (es ? "Equipar" : "Equip")) + '</button></div>';
     }).join("") + '</div>';
 }
