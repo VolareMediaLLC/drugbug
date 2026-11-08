@@ -29498,7 +29498,7 @@ function giftPro() { var g = Prog.d.proGift; return g && g.until > Date.now() ? 
 function giftProDays() { var g = giftPro(); return g ? Math.ceil((g.until - Date.now()) / 864e5) : 0; }
 
 function giftRedeem(code) {
-  GIFT.msg = ""; GIFT.ok = "";
+  GIFT.msg = ""; GIFT.ok = ""; GIFT.web = "";
   if (agpNorm(code).length < 4) { GIFT.msg = "Enter the code you were given."; return giftDraw(); }
   /* every code except a school class key needs the person's full name (owner, Nov 7 2026) */
   if (!(typeof groupKeyShape === "function" && groupKeyShape(code))) {
@@ -29513,7 +29513,7 @@ function giftRedeem(code) {
     if (Prog.d.gifts[d.id]) { GIFT.msg = "That code has already been used on this account."; return giftDraw(); }
     /* App Store Guideline 3.1.1: in the iPhone app, paid access only comes through in-app purchase,
        so a code that gives Pro time is redeemed on the website instead (owner, Nov 5 2026) */
-    if (typeof NATIVE !== "undefined" && NATIVE && d.pro > 0) { GIFT.msg = "This code unlocks DrugBug Pro. Redeem it at drugbugapp.com, or use an App Store offer code here."; return giftDraw(); }
+    if (typeof NATIVE !== "undefined" && NATIVE && d.pro > 0) { GIFT.web = code; GIFT.msg = "This code unlocks DrugBug Pro, so it is redeemed on our website."; return giftDraw(); }
     /* one-time codes (owner, Nov 5 2026): the first account to claim it online owns it. The claim
        is a create-only document giftUses/<id>; the rules refuse to overwrite it, so a second person
        is turned away even on another device or a fresh browser. Needs the internet and the backend. */
@@ -29586,6 +29586,28 @@ function giftGive(d) {
     giftDraw(); if (typeof render === "function") render();
 }
 
+/* Pro codes in the iPhone app (owner, Nov 7 2026): App Store guideline 3.1.1 keeps them out of the
+   app, so instead of a dead end the app offers a button that opens drugbugapp.com with the code
+   already filled in. Redeemed there on the same account, Pro syncs back to the phone (3.1.3(b)). */
+function giftWebBox() {
+  if (!GIFT.web || GIFT.ok) return "";
+  var signed = false; try { signed = !!(typeof ACCT !== "undefined" && ACCT.api && (ACCT.api.state() || {}).signedIn); } catch (e) {}
+  return '<div class="giftweb"><a class="btn small" href="https://drugbugapp.com/app/?redeem=' + encodeURIComponent(String(GIFT.web).trim()) + '" target="_blank" rel="noopener">Redeem on drugbugapp.com</a>' +
+    '<p class="muted small">It opens with your code filled in. ' + (signed ? 'Sign in there with the same account you use here, redeem it, and your Pro shows up here automatically.' : 'Make a free account there (or sign in), redeem it, then sign in here with the same account and your Pro shows up automatically.') + '</p></div>';
+}
+/* the website side: drugbugapp.com/app/?redeem=CODE opens the code box with the code in it */
+var REDEEM_Q = (/[?&]redeem=([^&#]+)/.exec(location.search) || [])[1] || "";   /* read before boot tidies the address bar */
+setTimeout(function () {
+  try {
+    if (typeof NATIVE !== "undefined" && NATIVE) return;
+    var m = REDEEM_Q ? [0, REDEEM_Q] : null; if (!m) return;
+    var c = decodeURIComponent(m[1]).slice(0, 40);
+    try { history.replaceState(null, "", location.pathname); } catch (e) {}
+    if (typeof needOnboard === "function" && needOnboard()) return;
+    GIFT.code = c; GIFT.web = ""; codesGo();
+    setTimeout(function () { var i = document.getElementById("giftin"); if (i) i.value = c; var n = document.getElementById("giftname"); if (n && !n.value) n.focus(); }, 250);
+  } catch (e) {}
+}, 1800);
 /* The one place a code is entered (owner, Nov 5 2026): Settings > Account & privacy */
 function codesGo() {
   try { if (typeof PRO !== "undefined" && PRO.open && typeof closePaywall === "function") closePaywall(); } catch (e) {}
@@ -29602,7 +29624,7 @@ function codeHash(prefix, code) {
    checked by codeRedeem, so a new code works the moment it is made (owner, Nov 7 2026) */
 function codeServer(raw, fail) {
   var up = String(raw || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
-  if (typeof NATIVE !== "undefined" && NATIVE && /^(PRO|EVAL)/.test(up)) return fail("This code unlocks DrugBug Pro. Redeem it at drugbugapp.com, or use an App Store offer code here.");
+  if (typeof NATIVE !== "undefined" && NATIVE && /^(PRO|EVAL)/.test(up)) { GIFT.web = raw; return fail("This code unlocks DrugBug Pro, so it is redeemed on our website."); }
   if (!Prog.uid || typeof fnCall !== "function") return fail("This code needs an internet connection. Connect and try again in a moment.");
   GIFT.busy = true; giftDraw();
   fnCall("codeRedeem", { code: raw, name: giftNameKeep() }).then(function (r) {
@@ -29654,7 +29676,7 @@ function codeOther(raw) {
 function giftBox() {
   return '<div class="giftbox" id="giftbox">' +
     (GIFT.ok ? '<p class="presult good" role="status">' + esc(GIFT.ok) + '</p>' : '') +
-    (GIFT.msg ? '<p class="presult" role="status">' + esc(GIFT.msg) + '</p>' : '') +
+    (GIFT.msg ? '<p class="presult" role="status">' + esc(GIFT.msg) + '</p>' : '') + giftWebBox() +
     '<form class="pform inl" data-giftform="1"><label class="gl gname">Your full name<input class="pinput pname" id="giftname" type="text" autocomplete="name" autocapitalize="words" maxlength="80" placeholder="First and last name" value="' + esc(GIFT.name || (Prog.d && Prog.d.fullName) || "") + '"></label><label class="gl">Code<input class="pinput" id="giftin" type="text" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="Enter your code" value="' + esc(GIFT.code) + '"></label>' +
     '<button class="btn small" type="submit"' + (GIFT.busy ? " disabled" : "") + '>' + (GIFT.busy ? "Checking..." : "Redeem") + '</button></form>' +
     '<p class="muted small">Gift codes, access codes, school or agency codes and agency protocol codes all go here. Every code except a school class key needs your full name; only the DrugBug team sees it.</p></div>';
