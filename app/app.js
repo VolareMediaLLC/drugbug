@@ -309,7 +309,7 @@ function antennae(c, curl) {
   return '<path d="M90 48 Q80 24 68 20" stroke="' + c + '" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M110 48 Q120 24 132 20" stroke="' + c + '" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="68" cy="20" r="6" fill="' + c + '"/><circle cx="132" cy="20" r="6" fill="' + c + '"/>';
 }
 var BOOTED = 0, LAST_ERR = "";   /* the boot splash is replaced by the first real render (owner, Oct 30 2026) */
-var IMBUG = { pt: { name: "Gym Beetle", body: "beetle", c: ["#fdba74", "#ea580c", "#fff7ed"], acc: ["bandana"] }, slp: { name: "Echo Cricket", body: "cricket", c: ["#f9a8d4", "#db2777", "#fdf2f8"], acc: ["headset"] }, surg: { name: "Scalpel Scorpion", body: "scorpion", c: ["#99f6e4", "#0d9488", "#f0fdfa"], acc: ["mask", "cap"] }, anes: { name: "Ether Earwig", body: "stag", c: ["#a5b4fc", "#4338ca", "#eef2ff"], acc: ["mask", "goggles"] }, dent: { name: "Enamel Ant", body: "ant", c: ["#e0f2fe", "#0ea5e9", "#ffffff"], acc: ["mask", "goggles"] }, phleb: { name: "Vessel Vine-Borer", body: "caterpillar", c: ["#fca5a5", "#b91c1c", "#fef2f2"], acc: ["stetho"] }, ekg: { name: "Pulse Beetle", body: "firefly", c: ["#86efac", "#15803d", "#f0fdf4"], acc: ["stetho", "bolt"] }, cp: { name: "Armor Beetle", body: "hercules", c: ["#93c5fd", "#1d4ed8", "#eff6ff"], acc: ["stetho", "cap"] }, tccc: { name: "Hazmat Hornet", body: "wasp", c: ["#bef264", "#3f6212", "#f7fee7"], acc: ["tachelmet", "mask"] }, mh: { name: "Calm Cicada", body: "cicada", c: ["#c4b5fd", "#7c3aed", "#f5f3ff"], acc: ["headset"] }, diet: { name: "Garden Grasshopper", body: "grasshopper", c: ["#bef264", "#65a30d", "#f7fee7"], acc: ["leaf"] }, rrt: { name: "Breathing Bee", body: "bee", c: ["#7dd3fc", "#0284c7", "#f0f9ff"], acc: ["mask"] }, flightrn: { name: "Night Monarch", body: "butterfly", c: ["#f59e0b", "#7c2d12", "#fff7ed"], head: "#fb923c", ink: "#1c1917", wingC: "#fdba74", eyes: "fierce", acc: ["jethelmet", "aviscarf", "stetho"] }, rt: { name: "X-Ray Firefly", body: "firefly", c: ["#7dd3fc", "#0369a1", "#e0f2fe"], acc: ["goggles"] }, ct: { name: "Spiral Scarab", body: "scarab", c: ["#a5b4fc", "#4338ca", "#ffffff"], acc: ["headset"] }, mri: { name: "Magnet Moth", body: "moth", c: ["#c4b5fd", "#6d28d9", "#f5f3ff"], acc: ["bolt"] }, nm: { name: "Glow Worm", body: "caterpillar", c: ["#bef264", "#4d7c0f", "#ffffff"], acc: ["stars"] }, ir: { name: "Cath Cricket", body: "grasshopper", c: ["#5eead4", "#0f766e", "#ffffff"], acc: ["mask"] } };
+var IMBUG = { pt: { name: "Gym Beetle", body: "beetle", c: ["#fdba74", "#ea580c", "#fff7ed"], acc: ["bandana"] }, slp: { name: "Echo Cricket", body: "cricket", c: ["#f9a8d4", "#db2777", "#fdf2f8"], acc: ["headset"] }, surg: { name: "Scalpel Scorpion", body: "scorpion", c: ["#99f6e4", "#0d9488", "#f0fdfa"], acc: ["mask", "cap"] }, anes: { name: "Ether Earwig", body: "stag", c: ["#a5b4fc", "#4338ca", "#eef2ff"], acc: ["mask", "goggles"] }, dent: { name: "Enamel Ant", body: "ant", c: ["#e0f2fe", "#0ea5e9", "#ffffff"], acc: ["mask", "goggles"] }, phleb: { name: "Vessel Vine-Borer", body: "caterpillar", c: ["#fca5a5", "#b91c1c", "#fef2f2"], acc: ["stetho"] }, ekg: { name: "Pulse Beetle", body: "firefly", c: ["#86efac", "#15803d", "#f0fdf4"], acc: ["stetho", "bolt"] }, cp: { name: "Armor Beetle", body: "hercules", c: ["#93c5fd", "#1d4ed8", "#eff6ff"], acc: ["stetho"] }, tccc: { name: "Hazmat Hornet", body: "wasp", c: ["#bef264", "#3f6212", "#f7fee7"], acc: ["tachelmet", "mask"] }, mh: { name: "Calm Cicada", body: "cicada", c: ["#c4b5fd", "#7c3aed", "#f5f3ff"], acc: ["headset"] }, diet: { name: "Garden Grasshopper", body: "grasshopper", c: ["#bef264", "#65a30d", "#f7fee7"], acc: ["leaf"] }, rrt: { name: "Breathing Bee", body: "bee", c: ["#7dd3fc", "#0284c7", "#f0f9ff"], acc: ["mask"] }, flightrn: { name: "Night Monarch", body: "butterfly", c: ["#f59e0b", "#7c2d12", "#fff7ed"], head: "#fb923c", ink: "#1c1917", wingC: "#fdba74", eyes: "fierce", acc: ["jethelmet", "aviscarf", "stetho"] }, rt: { name: "X-Ray Firefly", body: "firefly", c: ["#7dd3fc", "#0369a1", "#e0f2fe"], acc: ["goggles"] }, ct: { name: "Spiral Scarab", body: "scarab", c: ["#a5b4fc", "#4338ca", "#ffffff"], acc: ["headset"] }, mri: { name: "Magnet Moth", body: "moth", c: ["#c4b5fd", "#6d28d9", "#f5f3ff"], acc: ["bolt"] }, nm: { name: "Glow Worm", body: "caterpillar", c: ["#bef264", "#4d7c0f", "#ffffff"], acc: ["stars"] }, ir: { name: "Cath Cricket", body: "grasshopper", c: ["#5eead4", "#0f766e", "#ffffff"], acc: ["mask"] } };
 function bugSVG(kind) {
   if (IMBUG[kind] && typeof bugArt === "function") return bugArt(IMBUG[kind], "bug", { mood: "happy" });
   var id = "b" + (++uid), s = '<svg class="bug" viewBox="0 0 200 200" role="img" aria-label="' + ({ emt: "Rookie Bug", aemt: "Beetle Medic", paramedic: "Siren Beetle", flight: "Sky Hornet", sage: "Professor Sage, the wise bug", cna: "Helper Ladybug", lvn: "Busy Bee", rn: "Monarch Nurse", ms1: "Bookworm Scholar", ms3: "Firefly Clerk", intern: "Stag Beetle Doc", flightrn: "Night Monarch, the flight nurse bug" }[kind]) + '">';
@@ -498,7 +498,7 @@ function topbar() {
   if (S.view === "terrarium") c += '<span>/</span><span>Terrarium</span>';
   if (S.view === "everyday") c += '<span>/</span>' + (S.evTab ? '<button data-evtab="">Everyday Health</button>' : '<span>Everyday Health</span>');
   var extra = (!SOCIAL ? '' : '<button class="theme-btn" data-go="classes"' + (S.view === "classes" ? ' aria-current="page"' : '') + '>Classes</button>') + (Admin.can ? '<button class="theme-btn admin-btn" data-go="admin"' + (S.view === "admin" ? ' aria-current="page"' : '') + '><span class="lg">Control Center</span><span class="sm">Control Center</span></button>' : '');
-  c += '</nav><span class="spacer"></span><div class="tbacts">' + (stickChip() || tierChip()) + '<span class="tbx">' + extra + '</span><button class="theme-btn srch-btn" data-act="gsearch" aria-label="Search all drugs" title="Search all drugs"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button><button class="theme-btn menu-btn" data-act="tbmenu" aria-expanded="' + !!S.menu + '" aria-label="More">More</button>' + musicBtn() + gearBtn() + (typeof funOn === "function" && !funOn() ? '' : '<button class="tbsticks" data-goshop="1" data-shopf="sticks" aria-label="' + sticks() + ' sticks. Get more sticks" title="Get Sticks">' + stickIcon(18) + '<strong>' + sticks().toLocaleString() + '</strong></button>') + '</div>' + (S.menu ? '<div class="tbmenu" role="menu">' + extra + '<button class="theme-btn" data-idea="1">Send an idea</button></div>' : '') + '</div>';
+  c += '</nav><span class="spacer"></span><div class="tbacts">' + (stickChip() || tierChip()) + '<span class="tbx">' + extra + '</span><button class="theme-btn srch-btn" data-act="gsearch" aria-label="Search all drugs" title="Search all drugs"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button><button class="theme-btn menu-btn" data-act="tbmenu" aria-expanded="' + !!S.menu + '" aria-label="More">More</button>' + musicBtn() + gearBtn() + (typeof funOn === "function" && !funOn() ? '' : '<button class="tbsticks' + (typeof iapAvailable === "function" && iapAvailable() ? ' hasplus' : '') + '" data-goshop="1" data-shopf="sticks" aria-label="' + sticks() + ' sticks. Get more sticks" title="Get Sticks">' + stickIcon(18) + (typeof iapAvailable === "function" && iapAvailable() ? '<span class="tbplus" aria-hidden="true">+</span>' : '') + '<strong>' + sticks().toLocaleString() + '</strong></button>') + '</div>' + (S.menu ? '<div class="tbmenu" role="menu">' + extra + '<button class="theme-btn" data-idea="1">Send an idea</button></div>' : '') + '</div>';
   return c + (typeof muPop === "function" ? muPop() : "") + backRow();
 }
 function backRow() {
@@ -2081,6 +2081,20 @@ function drawSheet() {
 function closeSheet() { sheet.hidden = true; sheet.innerHTML = ""; S.sheet = null; document.body.style.overflow = ""; app.removeAttribute("aria-hidden"); var f = S.sheetFrom; S.sheetFrom = null; if (f && f.isConnected && f.focus) { try { f.focus({ preventScroll: true }); } catch (x) {} } }
 
 /* ---------- render & events ---------- */
+/* every tap redraws the screen, and a redrawn element used to start its looping animation over
+   (bugs bobbing, wings, shines), so things jumped back to the start on every click. Looping
+   animations now all keep time from when the page opened, so a redraw picks up exactly where
+   the old one was (owner, Nov 8 2026) */
+function animKeep() {
+  try {
+    if (!document.getAnimations) return;
+    document.getAnimations().forEach(function (a) {
+      if (typeof CSSAnimation !== "undefined" && !(a instanceof CSSAnimation)) return;
+      var t = a.effect && a.effect.getTiming ? a.effect.getTiming() : null;
+      if (t && t.iterations === Infinity && a.startTime !== 0 && a.playState === "running") a.startTime = 0;
+    });
+  } catch (e) {}
+}
 function render() {
   try { if (typeof usgTab === "function") usgTab(); } catch (e) {}
   var ok = agreeRec(); protoTab.hidden = true; if (typeof classTab !== "undefined" && classTab) classTab.hidden = true;   /* the class lives in its level's menu now (owner, Nov 6 2026) */ protoTab.textContent = lang() === "es" ? "Protocolos" : "Protocols"; document.documentElement.lang = lang();
@@ -2106,6 +2120,7 @@ function render() {
   if (S.view === "home" && typeof accAskMaybe === "function" && !S.accAskT) { S.accAskT = 1; accAskMaybe(1500); setTimeout(function () { S.accAskT = 0; }, 60000); }
   if (S.proMsg) { var tst = document.createElement("div"); tst.className = "protoast"; tst.setAttribute("role", "status"); tst.textContent = S.proMsg; app.appendChild(tst); S.proMsg = ""; setTimeout(function () { if (tst.parentNode) tst.parentNode.removeChild(tst); }, 5000); }
   translateDom(app); drawBuddy();
+  animKeep(); try { if (S.view === "home" && typeof tglStart === "function") tglStart(); } catch (e) {}
   /* "Start here" asked for L.E.A.R.N: wait until the path has actually rendered, so the
      level transition cannot redraw over it (owner, Nov 4 2026) */
   if ((needOnboard() || S.lvWheel) && document.querySelector(".lazytrack")) {
@@ -8244,9 +8259,14 @@ var AUD = { ctx: null, warned: false, gesture: 0, played: 0, err: "", music: "",
 function audioCtx() {
   var AC = window.AudioContext || window.webkitAudioContext;
   if (!AC) { AUD.err = "This browser has no Web Audio support."; return null; }
-  if (!AUD.ctx) { try { AUD.ctx = new AC(); } catch (e) { AUD.err = "The browser refused to open an audio channel."; return null; } }
-  if (AUD.ctx.state === "suspended") { try { var r = AUD.ctx.resume(); if (r && r.catch) r.catch(function () {}); } catch (e) {} }
+  /* the iPhone needs to hear "this is media playback" before the channel opens, or the ring/silent
+     switch can mute it; and after a call, Siri or another app's sound iPhones park the channel as
+     "interrupted" (not "suspended"), which the old check missed, so music only played sometimes
+     (owner, Nov 8 2026) */
   if (typeof muSession === "function") muSession();
+  if (AUD.ctx && AUD.ctx.state === "closed") { AUD.ctx = null; }
+  if (!AUD.ctx) { try { AUD.ctx = new AC(); } catch (e) { AUD.err = "The browser refused to open an audio channel."; return null; } }
+  if (AUD.ctx.state !== "running") { try { var r = AUD.ctx.resume(); if (r && r.catch) r.catch(function () {}); } catch (e) {} }
   AUD.played++;
   return AUD.ctx;
 }
@@ -8770,9 +8790,10 @@ function muLoadBuf(T) {
   return MU.fbufs[T.id];
 }
 function muFile(T) {
-  if (MU.file && MU.file.id === T.id) return;
+  /* a track whose download or decode failed once used to stay silent for the whole session; retry it (owner, Nov 8 2026) */
+  if (MU.file && MU.file.id === T.id && MU.file.ctx === MU.ctx && !(MU.file.failed && Date.now() - MU.file.failed > 4000)) return;
   muFileStop();
-  var c = MU.ctx, f = { id: T.id }; MU.file = f;
+  var c = MU.ctx, f = { id: T.id, ctx: c }; MU.file = f;
   muLoadBuf(T).then(function (buf) {
     if (MU.file !== f) return;
     var s = c.createBufferSource(), g = c.createGain(); s.buffer = buf; s.loop = true;
@@ -8780,7 +8801,7 @@ function muFile(T) {
     s.connect(g); g.connect(MU.fileOut); s.start(); f.src = s; f.g = g;
     f.t0 = c.currentTime; f.len = buf.duration; f.bpm = T.bpm || 0; danceStart(f);
     try { if (f.bpm) document.documentElement.style.setProperty("--beatdur", (60 / f.bpm).toFixed(3) + "s"); } catch (e) {}
-  }).catch(function () { f.failed = true; });
+  }).catch(function () { f.failed = Date.now(); });
 }
 /* your bug dances when a new song starts (owner, Nov 5 2026): only your own avatar, only for the
    first 16 beats of a track you just switched to. The phase comes from the audio clock of the
@@ -10287,7 +10308,7 @@ var BM_RX = {
      snd is the fallback until the file has arrived. */
   head:    { cls: "rx-head",  snd: "thunk", rec: "bonk",   dur: 1500 },
   neck:    { cls: "rx-neck",  snd: "gasp",  dur: 1400 },
-  chest:   { cls: "rx-chest", snd: "thump", rec: "wheeze", recDur: 1.6, recV: 0.7, dur: 2400 },
+  chest:   { cls: "rx-chest", snd: "thump", rec: "wheeze", recDur: 1.6, recV: 0.32, dur: 2400 },   /* softer wheeze (owner, Nov 8 2026) */
   abdomen: { cls: "rx-abd",   snd: "groan", rec: "whoosh", rec2: "grunt", rec2At: 0.12, dur: 1700 },
   pelvis:  { cls: "rx-pelv",  snd: "gasp",  dur: 1900 },
   back:    { cls: "rx-back",  snd: "creak", dur: 2200 },
@@ -11367,7 +11388,7 @@ function scSnd(kind) {
   }
   if (kind === "wheeze") {
     /* the real recording when it is here (owner, Nov 5 2026), the synthesised wheeze otherwise */
-    try { sfxLoad("wheeze"); if (SFXBUF["wheeze:buf"] && sfxPlay("wheeze", 0, 0.8, 1, bodyBus(), 2.2)) return; } catch (e) {}
+    try { sfxLoad("wheeze"); if (SFXBUF["wheeze:buf"] && sfxPlay("wheeze", 0, 0.36, 1, bodyBus(), 2.2)) return; } catch (e) {}
     for (var k = 0; k < 2; k++) { var b0 = k * 1.5; air(b0, 0.45, 700, 0.18); air(b0 + 0.5, 0.95, 500, 0.12); [520, 690, 830].forEach(function (f, j) { tone(b0 + 0.52 + j * 0.03, 0.85, f, 0.05); }); }
   } else if (kind === "clear") {
     for (var m = 0; m < 2; m++) { air(m * 1.8, 0.7, 450, 0.2); air(m * 1.8 + 0.75, 0.6, 300, 0.1); }
@@ -12201,7 +12222,9 @@ function tglStart() {
   requestAnimationFrame(tglFrame);
 }
 function tglStop() {
-  TGL.run = false; TGL.L = []; TGL.pile = [];
+  /* the leaves are kept (just not drawn) while you are off the menu, so coming back they are
+     still mid-fall instead of starting over from the top (owner, Nov 8 2026) */
+  TGL.run = false;
   [TGL.cb, TGL.cf].forEach(function (c) { if (c) c.getContext("2d").clearRect(0, 0, c.width, c.height); });
 }
 document.addEventListener("visibilitychange", function () { if (document.hidden) tglStop(); else setTimeout(tglStart, 400); });

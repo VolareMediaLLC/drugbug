@@ -3062,6 +3062,28 @@ table.cmptbl tr.dif th{border-left:3px solid var(--gold)}
   .topbar .stickchip svg{width:30px!important;height:30px!important}
   .topbar .tbsticks{font-size:14px!important}
 }
+/* phones: the get-sticks plus rides on the stick count so the top bar fits and Settings stays on screen (owner, Nov 8 2026) */
+.tbsticks .tbplus{display:none}
+@media (max-width:640px){
+  .topbar .stickplus{display:none!important}
+  .topbar .stickchip .tlabel{display:none!important}
+  .topbar .tbsticks.hasplus{position:relative;border:1.5px solid var(--line)!important;border-radius:999px;padding:3px 9px 3px 7px!important;background:var(--surface)!important}
+  .topbar .tbsticks .tbplus{display:inline-grid;place-items:center;position:absolute;left:15px;top:-5px;width:16px;height:16px;border-radius:50%;background:#14b8a6;color:#fff;font:900 13px/1 var(--f-body)}
+  .topbar .tbacts{min-width:0;gap:4px!important}
+  .topbar .tbacts>*{flex-shrink:0}
+  .topbar .tbacts .theme-btn{padding-left:9px!important;padding-right:9px!important}
+}
+@media (max-width:400px){
+  .topbar .tbsticks{font-size:15px!important}
+  .topbar .tbacts .theme-btn{padding-left:7px!important;padding-right:7px!important}
+  .topbar .stickchip{padding:2px 6px!important}
+  .topbar .stickchip svg{width:32px!important;height:32px!important}
+}
+/* last resort on very narrow screens: the row scrolls sideways so Settings is always reachable */
+@media (max-width:640px){
+  .topbar .tbacts{overflow-x:auto!important;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-top:6px;padding-bottom:12px;margin-top:-6px;margin-bottom:-12px}
+  .topbar .tbacts::-webkit-scrollbar{display:none}
+}
 /* ===== On Scene (owner, Nov 5 2026) ===== */
 .scenelist{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin:12px 0}
 .scdisp{margin:8px 0 10px;padding:10px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--line);font-weight:600}
