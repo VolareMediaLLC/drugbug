@@ -175,6 +175,12 @@ iframe.emb{width:100%;border:0;display:block;min-height:600px;background:transpa
     <p class="muted small" style="margin:6px 0 10px">The ten LIFE- codes built into the app are listed under Evaluators.</p>
     <div class="tblwrap"><table class="t" id="cTable"><tr><td class="muted">Loading…</td></tr></table></div>
   </div>
+  <div class="card">
+    <div class="row sp"><div><h2>Who used a code</h2><div class="muted small">Every code except school class keys asks for the person's full name. Newest first.</div></div>
+      <div class="row"><select id="rfKind" style="width:auto"><option value="">Every kind</option><option value="made">Made here</option><option value="evaluator">LIFE / evaluator</option><option value="gift">Gift</option><option value="license">School or agency license</option><option value="protocols">Agency protocols</option><option value="fieldmedic">Field Medic</option><option value="web">Web Pro</option></select>
+      <input id="rfQ" type="search" placeholder="Search name or code" style="width:200px"></div></div>
+    <div class="tblwrap" style="margin-top:10px"><table class="t" id="rTable"><tr><td class="muted">Loading…</td></tr></table></div>
+  </div>
 </section>
 
 <section data-page="evaluators" class="hide"><iframe class="emb" data-src="../instructor/?embed=evaluators" title="Evaluators"></iframe></section>
@@ -287,7 +293,7 @@ iframe.emb{width:100%;border:0;display:block;min-height:600px;background:transpa
   function enter() { show("vMain", true); LOADED.overview = true; drawOverview(); go(location.hash.slice(1) || "overview"); loadOverviewLists(); }
 
   /* ---------- overview ---------- */
-  var OV = null, OV_ERR = "", CODES = null, STATS = null, CODERS = null;
+  var REDS = [], OV = null, OV_ERR = "", CODES = null, STATS = null, CODERS = null;
   function loadOverview() {
     $("ovSub").textContent = "Loading…";
     call("adminOverview").then(function (o) { OV = o; OV_ERR = ""; drawOverview(); }).catch(function (e) { OV_ERR = errTxt(e); drawOverview(); });
@@ -311,9 +317,9 @@ iframe.emb{width:100%;border:0;display:block;min-height:600px;background:transpa
     $("kpis").innerHTML = k.join("");
   }
   function loadOverviewLists() {
-    (CODES ? Promise.resolve(CODES) : call("codeList").then(function (r) { CODES = r.list || []; return CODES; })).then(meta).then(function () {
+    (CODES ? Promise.resolve(CODES) : call("codeList").then(function (r) { CODES = r.list || []; REDS = r.redemptions || []; return CODES; })).then(meta).then(function () {
       var L = CODES.slice(0, 6);
-      $("ovCodes").innerHTML = L.length ? L.map(function (c) { var s = status(c); return '<tr><td><code class="c">' + esc(c.code) + '</code><div class="muted small">' + esc(c.label || "") + '</div></td><td>' + esc(gives(c)) + '</td><td><span class="pill ' + s[0] + '">' + s[1] + '</span></td></tr>'; }).join("") : '<tr><td class="muted">No codes made here yet.</td></tr>';
+      $("ovCodes").innerHTML = L.length ? L.map(function (c) { var s = status(c); return '<tr><td><code class="c">' + esc(c.code) + '</code><div class="muted small">' + esc(c.label || "") + '</div></td><td>' + esc(gives(c)) + ((c.who || []).length ? '<div class="muted small">' + esc(c.who.map(function (w) { return w.name; }).join(", ")) + '</div>' : '') + '</td><td><span class="pill ' + s[0] + '">' + s[1] + '</span></td></tr>'; }).join("") : '<tr><td class="muted">No codes made here yet.</td></tr>';
     }).catch(function (e) { $("ovCodes").innerHTML = '<tr><td class="muted">' + esc(errTxt(e)) + '</td></tr>'; });
     call("qrCoders").then(function (r) {
       CODERS = r.list || [];
@@ -451,7 +457,7 @@ iframe.emb{width:100%;border:0;display:block;min-height:600px;background:transpa
       summ();
     });
     $("cTable").innerHTML = '<tr><td class="muted">Loading…</td></tr>';
-    (CODES ? Promise.resolve(CODES) : call("codeList").then(function (r) { CODES = r.list || []; return CODES; })).then(meta).then(drawCodes)
+    (CODES ? Promise.resolve(CODES) : call("codeList").then(function (r) { CODES = r.list || []; REDS = r.redemptions || []; return CODES; })).then(meta).then(function () { drawCodes(); drawReds(); })
       .catch(function (e) { $("cTable").innerHTML = '<tr><td class="muted">' + esc(errTxt(e)) + '</td></tr>'; });
   }
   function codeRows() {
@@ -465,12 +471,21 @@ iframe.emb{width:100%;border:0;display:block;min-height:600px;background:transpa
   }
   function drawCodes() {
     var L = codeRows();
-    $("cTable").innerHTML = L.length ? '<tr><th>Code</th><th>For</th><th>Gives</th><th class="num">Used</th><th>Who</th><th>Stops working</th><th>Label</th><th>Made</th><th>Status</th><th></th></tr>' + L.map(function (c) {
+    $("cTable").innerHTML = L.length ? '<tr><th>Code</th><th>For</th><th>Gives</th><th class="num">Used</th><th>Used by</th><th>Stops working</th><th>Label</th><th>Made</th><th>Status</th><th></th></tr>' + L.map(function (c) {
       var s = status(c);
-      return '<tr><td><code class="c">' + esc(c.code) + '</code></td><td>' + esc(KIND[c.kind] || c.kind) + '</td><td>' + esc(gives(c)) + '</td><td class="num">' + fmt(c.uses || 0) + (c.once ? " / 1" : c.max ? " / " + fmt(c.max) : "") + '</td><td class="small">' + (c.once ? "One person" : "Shared") + '</td><td class="small">' + (c.expires ? day(c.expires) : "Never") + '</td><td class="small">' + esc(c.label || "") + '</td><td class="small muted">' + day(c.created) + '</td><td><span class="pill ' + s[0] + '">' + s[1] + '</span></td>' +
+      return '<tr><td><code class="c">' + esc(c.code) + '</code></td><td>' + esc(KIND[c.kind] || c.kind) + '</td><td>' + esc(gives(c)) + '</td><td class="num">' + fmt(c.uses || 0) + (c.once ? " / 1" : c.max ? " / " + fmt(c.max) : "") + '</td><td class="small">' + ((c.who || []).length ? (c.who || []).map(function (w) { return '<b>' + esc(w.name || "no name") + '</b>'; }).slice(0, 3).join(", ") + ((c.who || []).length > 3 ? " +" + ((c.who || []).length - 3) : "") : '<span class="muted">' + (c.once ? "One person" : "Shared") + '</span>') + '</td><td class="small">' + (c.expires ? day(c.expires) : "Never") + '</td><td class="small">' + esc(c.label || "") + '</td><td class="small muted">' + day(c.created) + '</td><td><span class="pill ' + s[0] + '">' + s[1] + '</span></td>' +
         '<td><div class="row" style="flex-wrap:nowrap"><button class="ghost" data-copy="' + esc(c.code) + '">Copy</button><button class="ghost" data-rev="' + esc(c.code) + '" data-on="' + (c.revoked ? "0" : "1") + '">' + (c.revoked ? "Turn on" : "Turn off") + '</button></div></td></tr>';
     }).join("") : '<tr><td class="muted">' + ((CODES || []).length ? "Nothing matches." : "No codes made here yet. Make some above.") + '</td></tr>';
   }
+  var RK = { made: "Made here", evaluator: "LIFE / evaluator", gift: "Gift", license: "School or agency license", protocols: "Agency protocols", fieldmedic: "Field Medic", web: "Web Pro" };
+  function drawReds() {
+    var k = $("rfKind").value, q = $("rfQ").value.trim().toLowerCase();
+    var L = REDS.filter(function (r) { return (!k || r.kind === k) && (!q || ((r.name || "") + " " + (r.code || "")).toLowerCase().indexOf(q) >= 0); });
+    $("rTable").innerHTML = L.length ? '<tr><th>Name</th><th>Code</th><th>Kind</th><th>When</th></tr>' + L.slice(0, 500).map(function (r) {
+      return '<tr><td><b>' + esc(r.name || "—") + '</b></td><td><code class="c">' + esc(r.code || r.ref || "") + '</code></td><td class="small">' + esc(RK[r.kind] || r.kind) + '</td><td class="small muted">' + day(r.at) + '</td></tr>';
+    }).join("") : '<tr><td class="muted">' + (REDS.length ? "Nothing matches." : "Nobody has used a code with a name yet. Names are collected from Nov 7, 2026.") + '</td></tr>';
+  }
+  $("rfKind").onchange = drawReds; $("rfQ").oninput = drawReds;
   ["cfKind", "cfSt"].forEach(function (id) { $(id).onchange = drawCodes; });
   $("cfQ").oninput = drawCodes;
   $("cTable").addEventListener("click", function (e) {
@@ -484,7 +499,7 @@ iframe.emb{width:100%;border:0;display:block;min-height:600px;background:transpa
   });
   $("bCsv").onclick = function () {
     var L = codeRows(), q = function (v) { return '"' + String(v == null ? "" : v).replace(/"/g, '""') + '"'; };
-    var csv = ["Code,For,Gives,Used,Limit,Stops working,Label,Made,Status"].concat(L.map(function (c) { return [c.code, KIND[c.kind], gives(c), c.uses || 0, c.once ? 1 : c.max || "none", c.expires ? new Date(c.expires).toISOString().slice(0, 10) : "never", c.label || "", new Date(c.created).toISOString().slice(0, 10), status(c)[1]].map(q).join(","); })).join("\n");
+    var csv = ["Code,For,Gives,Used,Limit,Used by,Stops working,Label,Made,Status"].concat(L.map(function (c) { return [c.code, KIND[c.kind], gives(c), c.uses || 0, c.once ? 1 : c.max || "none", (c.who || []).map(function (w) { return w.name; }).join("; "), c.expires ? new Date(c.expires).toISOString().slice(0, 10) : "never", c.label || "", new Date(c.created).toISOString().slice(0, 10), status(c)[1]].map(q).join(","); })).join("\n");
     var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); a.download = "drugbug-codes.csv"; a.click();
   };
 })();
