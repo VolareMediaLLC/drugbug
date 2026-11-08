@@ -6741,7 +6741,7 @@ var LEGAL_PAGES = {
       L("14. No warranty", ["DrugBug is provided \"as is\" and \"as available\", without warranties of any kind, express or implied, including accuracy, completeness, fitness for a particular purpose, and non-infringement."]) +
       L("15. Limitation of liability", ["To the fullest extent allowed by law, Volare Media LLC and its members, employees, reviewers, evaluators and contributors are not liable for any indirect, incidental, special, consequential, exemplary or punitive damages, or for any loss or harm arising from or related to: use of DrugBug in patient care or any other unauthorized clinical use; inaccurate, incomplete or outdated medication or clinical information, including pilot questions and AI-gathered updates; calculation errors in any simulation or calculator; software errors; service interruptions, outages or data loss, including loss of progress or virtual items; or our negligence, to the extent the law allows negligence to be limited.", "To the fullest extent allowed by law, our total liability for all claims relating to DrugBug is limited to the amount you paid us for DrugBug in the 12 months before the claim, or US $50 if you paid nothing.", "Some laws do not allow certain limits or exclusions, for example for gross negligence, intentional misconduct or certain consumer rights. In those cases these limits apply only as far as the law allows."]) +
       L("16. Indemnity", ["You agree to defend and hold harmless Volare Media LLC from claims arising from your misuse of DrugBug, including use of DrugBug for patient care, sharing pilot questions, misuse of class results or key sheets, or breaking these Terms."]) +
-      L("17. Subscriptions and billing", ["DrugBug Free is free. Some features require a paid subscription: DrugBug Plus or DrugBug Pro, billed monthly or yearly. The price and billing period are shown before you buy. A brand-new DrugBug account gets 24 hours of DrugBug Pro free, once per account. It ends on its own after 24 hours, no payment details are needed, and nothing renews or is charged. DrugBug does not otherwise offer free trials. Stick packs are one-time purchases of virtual items (section 8).", "Subscriptions bought in the iPhone app are billed and managed through your Apple Account and are subject to Apple's payment and subscription terms. Unless cancelled at least 24 hours before the end of the current period, subscriptions renew automatically at the end of each billing period, and your Apple Account is charged within 24 hours before the period ends. You can manage or cancel in iPhone Settings, your name, Subscriptions.", "Cancelling stops future renewals but does not normally refund the current billing period. Refund requests for App Store purchases are handled by Apple under its policies and applicable law.", (NATIVE ? null : "On the website, subscriptions and stick packs are paid through Stripe; DrugBug never sees your card. Website subscriptions renew automatically at the end of each billing period until cancelled. You can cancel at any time from Manage subscription, and the cancellation takes effect at the end of the current period. Website purchases are not refunded except where the law requires it or we choose to."), "We may change subscription prices. A new price applies only from your next renewal after notice (for the App Store, as Apple's rules require). Plus and Pro are in one subscription group, so changing plans replaces your current plan.", "School and agency codes give Pro for the period your organization paid for and can be ended by your organization or by us.", "Apple's Standard Licensed Application End User License Agreement also applies to the iPhone app, alongside these Terms."]) +
+      L("17. Subscriptions and billing", ["DrugBug Free is free. Some features require a paid subscription: DrugBug Plus or DrugBug Pro, billed monthly or yearly. The price and billing period are shown before you buy. A brand-new DrugBug account gets 3 days of DrugBug Pro free, once per account. It ends on its own after 3 days, no payment details are needed, and nothing renews or is charged. DrugBug does not otherwise offer free trials. Stick packs are one-time purchases of virtual items (section 8).", "Subscriptions bought in the iPhone app are billed and managed through your Apple Account and are subject to Apple's payment and subscription terms. Unless cancelled at least 24 hours before the end of the current period, subscriptions renew automatically at the end of each billing period, and your Apple Account is charged within 24 hours before the period ends. You can manage or cancel in iPhone Settings, your name, Subscriptions.", "Cancelling stops future renewals but does not normally refund the current billing period. Refund requests for App Store purchases are handled by Apple under its policies and applicable law.", (NATIVE ? null : "On the website, subscriptions and stick packs are paid through Stripe; DrugBug never sees your card. Website subscriptions renew automatically at the end of each billing period until cancelled. You can cancel at any time from Manage subscription, and the cancellation takes effect at the end of the current period. Website purchases are not refunded except where the law requires it or we choose to."), "We may change subscription prices. A new price applies only from your next renewal after notice (for the App Store, as Apple's rules require). Plus and Pro are in one subscription group, so changing plans replaces your current plan.", "School and agency codes give Pro for the period your organization paid for and can be ended by your organization or by us.", "Apple's Standard Licensed Application End User License Agreement also applies to the iPhone app, alongside these Terms."]) +
       L("18. Accounts, deletion and your data", ["Accounts are optional. If you create one, keep your sign-in details secure and tell us if you think someone else used your account. You can delete everything DrugBug stores about you at any time from <button class=\"linkish\" data-legal=\"data\">Your data</button> or by emailing <a href=\"mailto:VolareMediaLLC@gmail.com\">VolareMediaLLC@gmail.com</a>. Deletion removes or de-identifies your personal information, subject to legal obligations and legitimate retention needs described in the Privacy Policy. Deleting your data does not cancel a subscription; cancel that in your Apple Account or from Manage subscription.", "DrugBug collects anonymous usage statistics to improve the app, as described in the Privacy Policy. You can turn them off in Settings.", "How we collect, use, store and share information is described in the separate <button class=\"linkish\" data-legal=\"privacy\">Privacy Policy</button>."]) +
       L("19. Governing law and venue", ["These Terms are governed by the laws of the State of Texas, without regard to conflict-of-law principles. Except where applicable law requires otherwise, disputes arising from these Terms or the use of DrugBug shall be brought in the state or federal courts having jurisdiction in Brazos County, Texas."]) +
       L("20. Changes and effective date", ["These Terms are effective 2026-11-07. We may update them. When we make a material change, we will ask you to agree again in the app, and we keep a record of the version you accepted and when."]);
@@ -9467,7 +9467,7 @@ function licenseActive() { var L = Prog.d.license; return !!(L && L.until && L.u
    StoreKit tells us per product whether this Apple Account is still eligible (product.trial). The old in-app
    "7 free days without payment" period was removed (Guideline 3.1.1). trialBegin() stays as a no-op for old callers. */
 /* No App Store free trial (owner, Nov 8 2026): even if an introductory offer is still set in App Store Connect, the plans
-   screen never advertises "7 days free". The only free Pro is the 24 hours a brand-new account gets (accBonus). */
+   screen never advertises "7 days free". The only free Pro is the 3 days a brand-new account gets (accBonus). */
 var SHOW_TRIAL = false;
 function trialBegin() {}
 function trialActive() { return false; }
@@ -11670,9 +11670,9 @@ function accInit() {
 }
 var ACC_LOCAL = ["progress", "nrscores", "lastLevel", "nunit", "protocol", "reviewer"];
 function accClearLocal() { try { if (typeof walletClear === "function") walletClear(); if (typeof subClear === "function") subClear(); ACC_LOCAL.forEach(function (k) { localStorage.removeItem("drugbug:" + k); }); Object.keys(localStorage).forEach(function (k) { if (k.indexOf("drugbug:scen:") === 0) localStorage.removeItem(k); }); } catch (e) {} }
-/* Make an account, get 24 hours of DrugBug Pro free (owner, Nov 5 2026). Only for a brand-new
+/* Make an account, get 3 days of DrugBug Pro free (owner, Nov 5 2026; 24 hours became 3 days Nov 8). Only for a brand-new
    account, once: acctBonus is saved with the progress, so it syncs and a second claim is refused. */
-var ACC_BONUS_HRS = 24;
+var ACC_BONUS_HRS = 72;   /* 3 days (owner, Nov 8 2026) */
 function accBonus() {
   try {
     if (Prog.d.acctBonus) return "";
@@ -11680,7 +11680,7 @@ function accBonus() {
     Prog.d.proGift = { until: from + ACC_BONUS_HRS * 36e5 }; Prog.d.acctBonus = Date.now();
     if (typeof flushProg === "function") flushProg(); else saveProg();
     try { localStorage.setItem("drugbug:progress", JSON.stringify(Prog.d)); } catch (e) {}
-    return " You have DrugBug Pro free for the next 24 hours.";
+    return " You have DrugBug Pro free for the next 3 days.";
   } catch (e) { return ""; }
 }
 function accDone(text, created) { if (created) text = (text || "") + accBonus(); ACCT.busy = false; ACCT.msg = text || ""; try { sessionStorage.setItem("drugbug:accmsg", ACCT.msg); } catch (e) {} setTimeout(function () { location.reload(); }, 300); }
@@ -11710,7 +11710,7 @@ function accNudgeOk() {
   return accInvested();
 }
 /* The pop-up (owner, Nov 5 2026): once someone has earned ACC_ASK_STICKS sticks, ask once, on
-   the phone and the web, with the 24-hour Pro offer. "Not now" asks again after a week, once. */
+   the phone and the web, with the 3-day Pro offer. "Not now" asks again after a week, once. */
 var ACC_ASK_STICKS = 100;
 var accdlg = document.createElement("div"); accdlg.id = "accdlg"; accdlg.className = "sheet rsheet"; accdlg.hidden = true; document.body.appendChild(accdlg);
 function accAskOk() {
@@ -11729,9 +11729,9 @@ function accAskMaybe(delay) { setTimeout(function () { if (accAskOk()) accAskOpe
 function accAskOpen() {
   var a = store("accask") || {}; store("accask", { n: (a.n || 0) + 1, ts: Date.now() });
   accdlg.innerHTML = '<div class="panel pwpanel accask" role="dialog" aria-modal="true" aria-label="Make a free account" tabindex="-1">' +
-    '<p class="wdwkick">' + (Prog.d.earned || 0).toLocaleString() + ' sticks and counting</p><h2>Make a free account, get 24 hours of Pro</h2>' +
+    '<p class="wdwkick">' + (Prog.d.earned || 0).toLocaleString() + ' sticks and counting</p><h2>Make a free account, get 3 days of Pro</h2>' +
     '<p>Right now your bug, your sticks and your progress live only on this ' + (NATIVE ? 'phone' : 'browser') + '. A free account backs them up and brings them to your other devices.</p>' +
-    '<p><strong>Make one now and DrugBug Pro is yours free for 24 hours:</strong> every drug, every level, every quiz.</p>' +
+    '<p><strong>Make one now and DrugBug Pro is yours free for 3 days:</strong> every drug, every level, every quiz.</p>' +
     '<div class="actions"><button class="btn" data-accask="go">Make my free account</button><button class="btn ghost" data-accask="no">Not now</button></div></div>';
   accdlg.hidden = false; var p = accdlg.querySelector(".panel"); if (p) p.focus();
 }
@@ -11745,7 +11745,7 @@ function accNudge() {
   if (!accNudgeOk()) return "";
   return '<div class="accnudge"><span class="annx" aria-hidden="true">' +
     '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11V8a7 7 0 0 1 14 0v3"/><rect x="4" y="11" width="16" height="10" rx="2.5"/></svg></span>' +
-    '<span class="antx"><strong>This is all saved in this browser only.</strong> Make a free account and it follows you to your phone, and survives clearing your history. New accounts get 24 hours of DrugBug Pro free.</span>' +
+    '<span class="antx"><strong>This is all saved in this browser only.</strong> Make a free account and it follows you to your phone, and survives clearing your history. New accounts get 3 days of DrugBug Pro free.</span>' +
     '<span class="anact"><button class="btn small" data-acc="nudgego">Make an account</button>' +
     '<button class="linkish small" data-acc="nudgeno">Not now</button></span></div>';
 }
@@ -11770,7 +11770,7 @@ function accCard() {
     } else c += setRow("Delete account", "Permanently delete your account and its data.", '<button class="btn small ghost" data-acc="delask">Delete account</button>');
     return c;
   }
-  c += setRow("Account (optional)", "DrugBug works without an account. Create one to back up your progress and sync it across devices" + (Prog.d.acctBonus ? "" : ", and get 24 hours of DrugBug Pro free") + ". We never show your email or account to other users.", "");
+  c += setRow("Account (optional)", "DrugBug works without an account. Create one to back up your progress and sync it across devices" + (Prog.d.acctBonus ? "" : ", and get 3 days of DrugBug Pro free") + ". We never show your email or account to other users.", "");
   /* Sign in with Apple needs the native AuthenticationServices bridge, so it only appears in the
      iPhone app; the website offers Google instead (owner, Nov 1 2026). Email works in both. */
   var hasApple = typeof ACCT.api.hasApple === "function" ? ACCT.api.hasApple() : true;
