@@ -113,8 +113,16 @@ header.top nav a[aria-current]{font-weight:700;text-decoration:none;color:var(--
 @media (prefers-reduced-motion:reduce){.tt .bug *{animation:none!important}.ttcard{transition:none!important}}
 @media (max-width:860px){.hero2{grid-template-columns:1fr;gap:10px}.hero2 .htext{display:contents}.hero2 h1{order:1}.hero2 .htext>p:not(.hnote){order:2}.hero2 .ctas{order:3}.hero2 .tt{order:4;margin-top:6px}.hero2 .hnote{order:5;font-size:15px!important}}
 @media (max-width:480px){.ttstage{height:270px}.ttcard{width:166px;margin-left:-83px;height:252px}.ttcard svg{width:128px;height:128px}.ttarrow{width:36px;height:36px;font-size:22px}}
+header.top nav.tabs2,header.site nav.tabs2{margin-left:auto;display:flex;gap:4px;padding:4px;border-radius:12px;background:var(--surface);border:1px solid var(--line)}
+nav.tabs2 a.tab{padding:7px 16px;border-radius:9px;font-weight:700;font-size:15px;text-decoration:none;color:var(--muted)}
+nav.tabs2 a.tab:hover{color:var(--ink)}
+nav.tabs2 a.tab[aria-current]{background:var(--accent);color:#fff}
+a.trybtn{margin-left:10px;padding:9px 14px;border-radius:11px;font-weight:800;font-size:14.5px;text-decoration:none;border:2px solid var(--accent);color:var(--accent)}
+a.trybtn:hover{background:var(--accent);color:#fff}
+footer .flinks{margin-top:10px}
+@media(max-width:640px){header.top,header.site{flex-wrap:wrap}header.top nav.tabs2,header.site nav.tabs2{margin-left:0;order:3;width:100%}nav.tabs2 a.tab{flex:1;text-align:center}a.trybtn{margin-left:auto}}
 </style></head>
-<body><div class="utilbar"><div class="in"><span class="lead">Teaching with DrugBug?</span><a href="instructor/">See the instructor demo</a><span class="sep" aria-hidden="true">|</span><a href="instructor/signin/">Instructor sign in &rarr;</a></div></div><div class="wrap"><header class="top"><a href="index.html"><img src="icon.png" alt=""></a><b>DrugBug</b><nav><a href="index.html" aria-current="page">Home</a><a href="instructor/">For Instructors</a><a href="app/">Try it free</a><a href="support.html">Support</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="disclaimers.html">Disclaimers</a></nav></header><section class="hero hero2"><div class="htext"><h1>Learn your meds by scope.</h1>
+<body><div class="wrap"><header class="top"><a href="index.html"><img src="icon.png" alt=""></a><b>DrugBug</b><nav class="tabs2" aria-label="Main"><a class="tab" href="index.html" aria-current="page">Home</a><a class="tab" href="instructor/">Instructors</a></nav><a class="trybtn" href="app/">Try it free</a></header><section class="hero hero2"><div class="htext"><h1>Learn your meds by scope.</h1>
 <p>DrugBug is a medication study app for EMS, Nursing, Medical, Imaging and Allied Health students, built by a Paramedic, FP-C.</p>
 <div class="ctas"><a class="btn" href="app/">Try it free in your browser</a> <a class="btn appstore" href="https://apps.apple.com/us/app/drugbug/id6820225080" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M16.4 12.7c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.2-2.8.8-3.6.8-.7 0-1.9-.8-3.1-.8-1.6 0-3.1.9-3.9 2.4-1.7 2.9-.4 7.2 1.2 9.5.8 1.1 1.7 2.4 2.9 2.4 1.2 0 1.6-.8 3-.8s1.8.8 3.1.7c1.3 0 2.1-1.1 2.8-2.3.9-1.3 1.3-2.6 1.3-2.6s-2.3-.9-2.3-4zM14.2 5.9c.6-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.4-.6.7-1.1 1.8-1 2.9 1.1.1 2.2-.6 2.8-1.3z"/></svg><span><small>Download on the</small>App Store</span></a></div>
 <p class="hnote">On iPhone, get it from the App Store. On anything else, nothing to install. Start without an account &mdash; make one when you want your bug, your sticks and everything you learn to follow you to your phone.</p></div>
@@ -177,7 +185,7 @@ header.top nav a[aria-current]{font-weight:700;text-decoration:none;color:var(--
 <footer><p>Educational use only. Not for clinical decision-making or patient care. Not a medical device.</p>
 <p>Not affiliated with or endorsed by NREMT, NCSBN, FSMB/NBME, ARRT or AHA.</p>
 <p>Built by a Paramedic, FP-C. &copy; Volare Media LLC &middot; <a href="mailto:VolareMediaLLC@gmail.com">VolareMediaLLC@gmail.com</a></p>
-<p><a href="index.html">Home</a> &middot; <a href="instructor/">For Instructors</a> &middot; <a href="app/">Try it free</a> &middot; <a href="support.html">Support</a> &middot; <a href="privacy.html">Privacy</a> &middot; <a href="instructor/signin/">Educator login</a> &middot; <a href="terms.html">Terms</a> &middot; <a href="disclaimers.html">Disclaimers</a></p></footer></div><script>
+<p class="flinks"><a href="support.html">Support</a> &middot; <a href="privacy.html">Privacy</a> &middot; <a href="terms.html">Terms</a> &middot; <a href="disclaimers.html">Disclaimers</a> &middot; <a href="instructor/signin/">Instructor login</a></p></footer></div><script>
 /* Hero turntable (Nov 7 2026): the app's own first-run picker, same engine. Turn it to pick a path,
    tap the middle card (or "See its levels") to turn through that path's levels and their bugs,
    exactly like the app's second wheel. Position is a float, so a drag carries a side card
