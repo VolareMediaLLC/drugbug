@@ -144,6 +144,7 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
 <nav class="tabs" role="tablist" id="tabs">
   <button role="tab" data-tab="overview">Home</button>
   <button role="tab" data-tab="people">People</button>
+  <button role="tab" data-tab="codes">Codes</button>
   <button role="tab" data-tab="questions">Questions</button>
   <button role="tab" data-tab="classes">Schools</button>
   <button role="tab" data-tab="metrics">Usage</button>
@@ -296,7 +297,7 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
   /* ---------- tabs ---------- */
   var TAB = "", LOADED = {};
   /* five sections; People and Questions each hold a few pages (owner, Nov 7 2026) */
-  var GROUPS = { overview: ["overview"], people: ["signups", "evaluators", "codes"], questions: ["grading", "analytics"], classes: ["classes"], metrics: ["metrics"] };
+  var GROUPS = { overview: ["overview"], people: ["signups", "evaluators"], codes: ["codes"], questions: ["grading", "analytics"], classes: ["classes"], metrics: ["metrics"] };
   var SUBNAME = { signups: "Evaluator sign-ups", evaluators: "Evaluators", codes: "Codes", grading: "Grade questions", analytics: "How students score" };
   var SUBNOTE = { evaluators: "Everyone with an evaluator code: what they graded, and their suggestions.", grading: "Read, rate and fix questions. Pilot questions go live after 2 Good votes." };
   var LASTSUB = { people: "signups", questions: "grading" };
