@@ -90,6 +90,8 @@ tr.clk{cursor:pointer}tr.clk:hover td{background:var(--surface2)}
 .dimtabs button.on{background:var(--teal);color:#06231f;border-color:var(--teal)}
 .chart .bar i.mid{background:var(--warn)}.chart .bar i.low{background:var(--bad)}
 .board td.rk{font-weight:700;width:46px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:99px;overflow:hidden}.seg button{border:0;border-radius:0;background:none;color:var(--ink);padding:6px 12px;font-weight:700}.seg button.on{background:var(--accent,#6d28d9);color:#fff}
+#compCard .grid2>div{min-width:0}.teamed{margin-top:14px}.teamed summary{font-weight:700;cursor:pointer}.teamrow{margin:6px 0;flex-wrap:nowrap}.teamrow input{flex:1;min-width:0}.teamsel{font:inherit;font-size:13px;padding:4px 6px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);max-width:150px}
 .stuDetail{margin-top:12px}
 .trend{display:grid;grid-template-columns:repeat(12,1fr);gap:6px;align-items:end;height:120px;padding-top:16px}
 .trend .tc{position:relative;height:100%;display:flex;flex-direction:column;justify-content:flex-end}
@@ -477,6 +479,21 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
       <p class="muted small">Ranked by correct answers. Students see only the top 5 and their own place, on their Dashboard. Each week the top 3 by correct answers that week win a bug.</p>
       <div class="tblwrap"><table class="board" id="boardTable"></table></div>
     </div>
+    <div class="card" id="compCard">
+      <div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Protocol competition</h2>
+        <div class="seg" role="group" aria-label="Period"><button data-cw="1" class="on">This week</button><button data-cw="0">All time</button></div></div>
+      <p class="muted small">Your members race on your agency's protocol questions, as individuals and as teams. Teams are ranked by correct answers <b>per member</b>, so a small crew can beat a big station. Members see the team standings and the top 5 people on the Protocols tab of their class scoreboard.</p>
+      <div class="grid2">
+        <div><h3 style="font-size:15px;margin:6px 0">Teams</h3><div class="tblwrap"><table class="board" id="compTeams"></table></div></div>
+        <div><h3 style="font-size:15px;margin:6px 0">Individuals</h3><div class="tblwrap"><table class="board" id="compPeople"></table></div></div>
+      </div>
+      <details class="teamed" id="teamEd"><summary>Set up teams (crews, stations, shifts)</summary>
+        <p class="muted small">Add a team for each crew, station or shift, then put each member on a team in the Students tab. Renaming keeps its members; deleting a team leaves its members unassigned.</p>
+        <div id="teamRows"></div>
+        <div class="row"><button class="ghost" id="bTeamAdd">+ Add team</button><button id="bTeamSave">Save teams</button></div>
+        <p id="teamMsg" class="msg hide"></p>
+      </details>
+    </div>
   </div>
 </section>
 </div>
@@ -574,10 +591,12 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
     /* real questions from the bank, with made-up results, so the demo shows the hardest-questions list */
     var DQ = [["q8wmj84", 9, 31, 0], ["qbu9k3n", 11, 29, 1], ["qt239pr", 14, 30, 2], ["q39lsbb", 16, 28, 0], ["q12wjb12", 0, 0, 0], ["q1pcm6e3", 17, 26, 1], ["qcngrsi", 18, 25, 2], ["q19h9zs1", 19, 24, 0], ["q15yq2e4", 21, 26, 1], ["q36e4y4", 22, 25, 2]].filter(function (x) { return x[2]; });
     var questions = DQ.map(function (x, i) { var miss = x[2] - x[1]; return { id: x[0], c: x[1], n: x[2], pct: Math.round(1000 * x[1] / x[2]) / 10, students: 14 + (i % 5), missed: Math.min(14 + (i % 5), miss), wrong: [{ idx: x[3], n: Math.ceil(miss * 0.6) }, { idx: (x[3] + 1) % 3, n: Math.floor(miss * 0.3) }] }; });
+    var DT = [{ id: "tA", name: "Station 1" }, { id: "tB", name: "Station 4" }, { id: "tC", name: "Medic 12" }, { id: "tD", name: "B Shift" }];
+    students.forEach(function (st, i) { st.team = st.activated ? DT[i % 4].id : ""; var pn = st.activated ? Math.round(20 + rnd() * 120) : 0, pq = Math.min(0.97, 0.55 + rnd() * 0.35); st.pr = { n: pn, c: Math.round(pn * pq) }; var wn = st.activated && rnd() < 0.8 ? Math.round(4 + rnd() * 30) : 0; st.pw = { n: wn, c: Math.round(wn * pq) }; });
     students.forEach(function (st, i) { st.missedQ = st.activated ? DQ.slice(i % 3, i % 3 + 3).map(function (x) { return { id: x[0], n: 2, c: i % 2 }; }) : []; });
     var systems = sysK.filter(function (k) { return sysTot[k]; }).map(function (k) { var t = sysTot[k]; return { key: k, name: SYSN[k], answered: t.n, pct: Math.round(1000 * t.c / t.n) / 10, students: t.students }; });
     return {
-      org: { orgId: "demo", name: "Demo Paramedic Academy · Spring Cohort", code: "DEMO", kind: "pilot", level: "paramedic", status: "active", live: true, expiresAt: now + 51 * 86400000, createdAt: now - 40 * 86400000, seats: 24, keyCount: 24, goal: 300, instructors: ["program.director@demo-academy.edu"] },
+      org: { orgId: "demo", name: "Demo Paramedic Academy · Spring Cohort", code: "DEMO", kind: "pilot", level: "paramedic", status: "active", live: true, expiresAt: now + 51 * 86400000, createdAt: now - 40 * 86400000, seats: 24, keyCount: 24, goal: 300, teams: DT, comp: true, instructors: ["program.director@demo-academy.edu"] },
       totals: { activated: activated, active7: act7, answered: N, accuracy: Math.round(1000 * C / N) / 10, keys: 24 },
       systems: systems, students: students, weakMin: 5, labels: labels, sysNames: SYSN, weekStarts: weekStarts, generatedAt: now,
       questions: questions, qAnswered: 412, qMin: 3
@@ -592,6 +611,8 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
       if (data.action === "approve") st.nick.status = "ok"; else if (data.action === "reject" || data.action === "remove") st.nick = null; else if (data.action === "rename") st.nick = { text: String(data.name).slice(0, 20), status: "ok" };
       return Promise.resolve({ ok: true });
     }
+    if (name === "groupKeyTeam") { D.students.forEach(function (x) { if (data.keyIds.indexOf(x.keyId) >= 0) x.team = data.team; }); return Promise.resolve({ ok: true }); }
+    if (name === "groupTeamsSet") { var out = data.teams.map(function (t, i) { return { id: t.id || "tN" + i + Date.now() % 1000, name: t.name }; }); D.org.teams = out; return Promise.resolve({ ok: true, teams: out }); }
     return Promise.reject(new Error(DEMO_MSG));
   }
   function demoTips() {
@@ -882,11 +903,11 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
 
     /* students table */
     var fresh = {}; (ST.newKeys || []).forEach(function (k) { fresh[k.alias] = 1; });
-    $("stuTable").innerHTML = '<tr><th>Student</th><th>Key</th><th class="noprint">Status</th><th class="noprint">Nickname</th><th class="noprint">Answered</th><th class="noprint">Correct</th><th class="noprint">Completion</th><th class="noprint">Weakest systems</th><th class="noprint">Last studied</th><th class="noprint"></th><th class="printonly hide">Name (write in, keep private)</th></tr>' +
+    $("stuTable").innerHTML = '<tr><th>Student</th><th>Key</th><th class="noprint">Status</th><th class="noprint">Nickname</th>' + (teamsOf().length ? '<th class="noprint">Team</th>' : '') + '<th class="noprint">Answered</th><th class="noprint">Correct</th><th class="noprint">Completion</th><th class="noprint">Weakest systems</th><th class="noprint">Last studied</th><th class="noprint"></th><th class="printonly hide">Name (write in, keep private)</th></tr>' +
       (d.students.length ? d.students.map(function (s) {
         return '<tr class="clk' + (fresh[s.alias] ? ' fresh' : '') + '" data-stu="' + esc(s.keyId) + '"><td><b>' + esc(s.alias) + '</b></td><td class="mono">' + esc(s.token) + '</td>' +
           '<td class="noprint"><span class="pill' + (s.activated ? " on" : "") + '">' + (s.activated ? "joined" : "not used yet") + '</span></td>' +
-          '<td class="noprint">' + nickCell(s) + '</td>' +
+          '<td class="noprint">' + nickCell(s) + '</td>' + (teamsOf().length ? '<td class="noprint">' + teamSel(s) + '</td>' : '') +
           '<td class="num noprint">' + s.answered.toLocaleString() + '</td><td class="num noprint">' + pctTxt(s.accuracy) + '</td>' +
           '<td class="noprint"><span class="mini"><i style="width:' + s.completion + '%"></i></span>' + s.completion + '%</td>' +
           '<td class="noprint">' + (s.weakest.length ? s.weakest.map(function (w) { return esc(w.name) + ' <span class="muted">' + pctTxt(w.pct) + '</span>'; }).join(", ") : '<span class="muted">not enough yet</span>') + '</td>' +
@@ -896,6 +917,7 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
       }).join("") : '<tr><td colspan="10" class="muted">No keys yet. Choose how many and press Make keys.</td></tr>');
     drawDetail();
     drawNicks();
+    drawComp();
     setTab(ST.ctab || "ins");
   }
   /* section tabs inside a class */
@@ -908,7 +930,7 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
 
   /* ---------- scores by every dimension ---------- */
   var LVNAME = {}; [].forEach.call(document.querySelectorAll("#nLevel option"), function (op) { if (op.value) LVNAME[op.value] = op.textContent; });
-  var KIND = { practice: "Practice tests", exam: "Exam mode", daily: "Daily 5-minute", study: "Study a drug", weak: "Weak-spot review", system: "Learn by system", acls: "ACLS / PALS", session: "Guided sessions", game: "Games", safety: "Safety checks", lab: "Lab drills", crit: "Critical-care drills", megacode: "Megacode", anatomy: "Anatomy quiz", calc: "Calculations" };
+  var KIND = { practice: "Practice tests", exam: "Exam mode", daily: "Daily 5-minute", study: "Study a drug", weak: "Weak-spot review", system: "Learn by system", acls: "ACLS / PALS", session: "Guided sessions", game: "Games", safety: "Safety checks", lab: "Lab drills", crit: "Critical-care drills", megacode: "Megacode", anatomy: "Anatomy quiz", calc: "Calculations", protocol: "Agency protocols" };
   var QT = { assess: "Assessment", hold: "When to hold", labs: "Labs to watch", vitals: "Vital signs", adverse: "Side effects", teach: "Patient teaching", interact: "Interactions", notify: "When to notify" };
   var DIMS = [["s", "Body systems"], ["d", "Medications"], ["l", "Drug classes"], ["y", "Question styles"], ["k", "Ways they study"], ["p", "Drill topics"]];
   var DIMNAME = {}; DIMS.forEach(function (x) { DIMNAME[x[0]] = x[1]; });
@@ -1084,6 +1106,52 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
     var b = function (act, lab) { return '<button class="ghost small" data-nick="' + act + '" data-key="' + esc(s.keyId) + '" data-alias="' + esc(s.alias) + '">' + lab + '</button>'; };
     return '<b>' + esc(n.text) + '</b> ' + (n.status === "pending" ? '<span class="pill" style="color:var(--warn)">waiting</span> ' + b("approve", "Approve") + b("reject", "Reject") : b("rename", "Rename") + b("remove", "Remove"));
   }
+  /* ---------- protocol competition: teams and standings (owner, Nov 8 2026) ---------- */
+  ST.cw = true; ST.teamDraft = null;
+  function teamsOf() { return (ST.dash && ST.dash.org && ST.dash.org.teams) || []; }
+  function teamSel(s) {
+    return '<select class="teamsel" data-tkey="' + esc(s.keyId) + '" aria-label="Team for ' + esc(s.alias) + '"><option value="">No team</option>' + teamsOf().map(function (t) { return '<option value="' + esc(t.id) + '"' + (s.team === t.id ? " selected" : "") + '>' + esc(t.name) + '</option>'; }).join("") + '</select>';
+  }
+  function drawComp() {
+    var d = ST.dash, wk = ST.cw, T = {}, studs = (d.students || []).filter(function (s) { return s.activated; });
+    teamsOf().forEach(function (t) { T[t.id] = { name: t.name, m: 0, n: 0, c: 0 }; });
+    var people = studs.map(function (s) { var v = wk ? s.pw || {} : s.pr || {}, t = T[s.team]; if (t) { t.m++; t.n += v.n || 0; t.c += v.c || 0; } return { s: s, n: v.n || 0, c: v.c || 0, team: t ? t.name : "" }; })
+      .filter(function (r) { return r.n > 0; }).sort(function (a, b) { return b.c - a.c || b.c / b.n - a.c / a.n; });
+    var teams = Object.keys(T).map(function (k) { var t = T[k]; t.per = t.m ? Math.round(10 * t.c / t.m) / 10 : 0; return t; }).filter(function (t) { return t.m; }).sort(function (a, b) { return b.per - a.per || b.c / (b.n || 1) - a.c / (a.n || 1); });
+    var medal = function (i) { return i < 3 ? ["🥇", "🥈", "🥉"][i] : i + 1; }, pc = function (c, n) { return n ? Math.round(100 * c / n) + "%" : "—"; };
+    $("compTeams").innerHTML = teams.length ? '<tr><th>#</th><th>Team</th><th>Members</th><th>Per member</th><th>Correct</th><th>Accuracy</th></tr>' + teams.map(function (t, i) { return '<tr><td class="rk">' + (t.n ? medal(i) : "–") + '</td><td><b>' + esc(t.name) + '</b></td><td class="num">' + t.m + '</td><td class="num"><b>' + t.per + '</b></td><td class="num">' + t.c.toLocaleString() + '</td><td class="num">' + pc(t.c, t.n) + '</td></tr>'; }).join("")
+      : '<tr><td class="muted">' + (teamsOf().length ? 'No members on a team yet. Assign them in the Students tab.' : 'No teams yet. Set them up below.') + '</td></tr>';
+    $("compPeople").innerHTML = people.length ? '<tr><th>#</th><th>Member</th><th>Team</th><th>Correct</th><th>Accuracy</th></tr>' + people.map(function (r, i) { var s = r.s; return '<tr class="clk" data-stu="' + esc(s.keyId) + '"><td class="rk">' + medal(i) + '</td><td><b>' + esc(s.alias) + '</b>' + (s.nick && s.nick.status === "ok" && s.nick.text ? ' <span class="muted">(' + esc(s.nick.text) + ')</span>' : '') + '</td><td>' + esc(r.team || "—") + '</td><td class="num">' + r.c.toLocaleString() + '</td><td class="num">' + pc(r.c, r.n) + ' <span class="muted">of ' + r.n + '</span></td></tr>'; }).join("")
+      : '<tr><td class="muted">No protocol questions answered ' + (wk ? 'this week' : 'yet') + '. Members find them under Protocols, then Protocol practice, in the app.</td></tr>';
+    [].forEach.call(document.querySelectorAll("[data-cw]"), function (b) { b.classList.toggle("on", (b.getAttribute("data-cw") === "1") === wk); });
+    if (!ST.teamDraft) drawTeamRows();
+  }
+  function drawTeamRows() {
+    var L = ST.teamDraft || teamsOf().map(function (t) { return { id: t.id, name: t.name }; });
+    if (!L.length) L = [{ id: "", name: "" }];
+    $("teamRows").innerHTML = L.map(function (t, i) { return '<div class="row teamrow"><input data-ti="' + i + '" data-tid="' + esc(t.id) + '" maxlength="30" placeholder="e.g. Station 4 or B Shift" value="' + esc(t.name) + '"><button class="ghost" data-tdel="' + i + '" aria-label="Delete team">Delete</button></div>'; }).join("");
+  }
+  function teamRead() { return [].map.call(document.querySelectorAll("#teamRows [data-ti]"), function (el) { return { id: el.getAttribute("data-tid") || "", name: el.value }; }); }
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest("[data-cw]"); if (b) { ST.cw = b.getAttribute("data-cw") === "1"; drawComp(); return; }
+    var del = e.target.closest && e.target.closest("[data-tdel]"); if (del) { var L = teamRead(); L.splice(+del.getAttribute("data-tdel"), 1); ST.teamDraft = L; drawTeamRows(); }
+  });
+  document.addEventListener("click", function (e) { if (e.target.closest && e.target.closest(".teamsel")) e.stopPropagation(); }, true);
+  $("bTeamAdd").onclick = function () { var L = teamRead(); if (L.length >= 40) return say("teamMsg", "Up to 40 teams.", true); L.push({ id: "", name: "" }); ST.teamDraft = L; drawTeamRows(); var r = document.querySelectorAll("#teamRows input"); if (r.length) r[r.length - 1].focus(); };
+  $("bTeamSave").onclick = function () {
+    var L = teamRead().map(function (t) { return { id: t.id, name: t.name.trim() }; }).filter(function (t) { return t.name; }), b = this;
+    b.disabled = true;
+    call("groupTeamsSet", { orgId: ST.orgId, teams: L }).then(function (r) { ST.teamDraft = null; say("teamMsg", r.teams.length + " team" + (r.teams.length === 1 ? "" : "s") + " saved. Put members on teams in the Students tab."); return refresh(); })
+      .catch(function (e2) { say("teamMsg", e2.message, true); }).then(function () { b.disabled = false; });
+  };
+  document.addEventListener("change", function (e) {
+    var sel = e.target.closest && e.target.closest(".teamsel"); if (!sel) return;
+    var keyId = sel.getAttribute("data-tkey"), team = sel.value; sel.disabled = true;
+    call("groupKeyTeam", { orgId: ST.orgId, keyIds: [keyId], team: team }).then(function () {
+      (ST.dash.students || []).forEach(function (s) { if (s.keyId === keyId) s.team = team; }); sel.disabled = false; sel.style.borderColor = "var(--good)"; drawComp();
+    }).catch(function (e2) { sel.disabled = false; sel.style.borderColor = "var(--bad)"; say("keyMsg", e2.message, true); });
+  });
+
   function drawNicks() {
     var d = ST.dash, list = (d.students || []).filter(function (s) { return s.nick && s.nick.status === "pending" && s.nick.text; });
     show("nickCard", list.length > 0);
