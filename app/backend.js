@@ -27,19 +27,24 @@
       provider: prov.indexOf("apple.com") >= 0 ? "apple" : prov.indexOf("google.com") >= 0 ? "google" : prov.indexOf("password") >= 0 ? "email" : "",
       hasPassword: prov.indexOf("password") >= 0 };
   }
+  /* what happened while connecting, shown in Settings when the phone cannot connect (owner, Nov 8 2026) */
+  var D = window.__fbDiag = { stage: "loading", err: "" };
   var ready = load(base + "firebase-app-compat.js")
-    .then(function () { return Promise.all([load(base + "firebase-auth-compat.js"), load(base + "firebase-firestore-compat.js")]); })
+    .then(function () { D.stage = "loading-2"; return Promise.all([load(base + "firebase-auth-compat.js"), load(base + "firebase-firestore-compat.js")]); }, function () { D.stage = "sdk-missing"; throw new Error("vendor/firebase-app-compat.js did not load"); })
     .then(function () {
+      D.stage = "init";
       firebase.initializeApp(F);
       auth = firebase.auth();
       if (EMU) auth.useEmulator("http://127.0.0.1:9099", { disableWarnings: true });
+      D.stage = "auth";
       return new Promise(function (res) {
         var done = false;
         auth.onAuthStateChanged(function (u) {
+          D.stage = u ? "signed-in" : "anon-start";
           if (u) { if (!done) { done = true; res(u); } emit(); }
-          else auth.signInAnonymously().catch(function () { if (!done) { done = true; res(null); } });
+          else auth.signInAnonymously().catch(function (e) { D.stage = "anon-failed"; D.err = (e && (e.code || e.message)) || "unknown"; if (!done) { done = true; res(null); } });
         });
-        setTimeout(function () { if (!done) { done = true; res(auth.currentUser || null); } }, 12000);
+        setTimeout(function () { if (!done) { done = true; if (!auth.currentUser) { D.stage = "timeout-" + D.stage; } res(auth.currentUser || null); } }, 12000);
       });
     })
     .then(function (u) {
@@ -47,9 +52,10 @@
       fs = firebase.firestore();
       if (EMU) fs.useEmulator("127.0.0.1", 8080);
       try { fs.enablePersistence({ synchronizeTabs: true }).catch(function () {}); } catch (e) {}
+      D.stage = "ready";
       return true;
     })
-    .catch(function () { return null; });
+    .catch(function (e) { D.err = D.err || (e && (e.code || e.message)) || "unknown"; if (D.stage !== "sdk-missing") D.stage = "error-" + D.stage; return null; });
   var owner = function () { var u = auth && auth.currentUser; return !!u && !u.isAnonymous && (C.ownerUids || []).indexOf(u.uid) >= 0; };
 
   /* Sign in with Apple happens natively (AuthenticationServices) through messageHandlers.auth; the native side
