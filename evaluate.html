@@ -1,5 +1,5 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Evaluate questions for DrugBug</title><meta name="description" content="Want DrugBug Pro for free? Sign up to evaluate DrugBug questions. Evaluators get DrugBug Pro for life.">
+<title>Evaluate questions for DrugBug</title><meta name="description" content="Want DrugBug Pro for free? Sign up to evaluate DrugBug questions. Evaluators get DrugBug Pro while they evaluate.">
 <link rel="canonical" href="https://drugbugapp.com/evaluate.html">
 <link rel="icon" type="image/png" sizes="48x48" href="icon-48.png"><link rel="icon" type="image/png" sizes="1024x1024" href="icon.png"><link rel="icon" type="image/x-icon" href="favicon.ico">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -88,18 +88,22 @@ footer .flinks{margin-top:10px}
 .evform h2{margin:0 0 4px}.evform .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .evform label{display:grid;gap:5px;font-size:13.5px;font-weight:700;color:var(--muted);margin-top:12px}
 .evform input,.evform select,.evform textarea{font:inherit;font-size:16px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);width:100%;box-sizing:border-box}
+.evagree{border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-top:14px;background:color-mix(in srgb,#fde047 10%,var(--surface))}
+.evagree legend{font-weight:800;padding:0 6px}.evagree p{margin:0 0 4px;color:var(--muted)}
+.evform label.evack{display:flex;gap:10px;align-items:flex-start;font-weight:500;color:var(--ink);font-size:14px;line-height:1.45;margin-top:10px}
+.evform label.evack input{width:18px;height:18px;flex:none;margin-top:2px;padding:0}
 .evform .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
 .evform button{margin-top:16px;font:inherit;font-weight:800;font-size:16px;padding:12px 20px;border-radius:12px;border:0;background:var(--accent);color:#fff;cursor:pointer}
 .evform button:disabled{opacity:.6}
 .evmsg{margin-top:12px;padding:12px 14px;border-radius:12px;font-weight:600}.evmsg.ok{background:color-mix(in srgb,#16a34a 15%,transparent);color:#16a34a}.evmsg.err{background:color-mix(in srgb,#dc2626 12%,transparent);color:#dc2626}
 @media(max-width:600px){.evform .row2{grid-template-columns:1fr}}
 </style></head>
-<body><div class="wrap"><header class="top"><a href="index.html"><img src="icon.png" alt=""></a><b>DrugBug</b><nav class="tabs2" aria-label="Main"><a class="tab" href="index.html">Home</a><a class="tab" href="instructor/">Instructors</a><a class="tab" href="about.html">About</a></nav><a class="trybtn" href="app/">Try it free</a></header><main>
-<section class="evh"><span class="kick">Free DrugBug Pro</span><h1>Want DrugBug for free? Help us check our questions.</h1><p>DrugBug evaluators read our practice questions, rate how hard they are and tell us when something is wrong. In return, evaluators get DrugBug Pro for life.</p></section>
+<body><div class="wrap"><header class="top"><a href="index.html"><img src="icon.png" alt=""></a><b>DrugBug</b><nav class="tabs2" aria-label="Main"><a class="tab" href="index.html">Home</a><a class="tab" href="instructor/">Instructors</a><a class="tab" href="protocols.html">Protocols</a><a class="tab" href="about.html">About</a></nav><a class="trybtn" href="app/">Try it free</a></header><main>
+<section class="evh"><span class="kick">Free DrugBug Pro</span><h1>Want DrugBug for free? Help us check our questions.</h1><p>DrugBug evaluators read our practice questions, rate how hard they are and tell us when something is wrong. In return, evaluators get DrugBug Pro while they evaluate. It's unpaid volunteer work, with a minimum of 40 graded questions a week.</p></section>
 <div class="evgrid">
 <div class="evc"><h3>What you do</h3><ul><li>Study in DrugBug like normal.</li><li>After each question, rate it 1 to 5 and mark it Good or Bad.</li><li>Check new pilot questions before students see them.</li><li>Suggest better wording when something is off.</li></ul></div>
 <div class="evc"><h3>Who we are looking for</h3><p>EMTs, paramedics, nurses, physicians, pharmacists, imaging techs, respiratory therapists, instructors and students in those programs. If you study or work with medications, we would like to hear from you.</p></div>
-<div class="evc"><h3>What you get</h3><ul><li>DrugBug Pro for life.</li><li>An Evaluator badge in the app.</li><li>Analytics on how everyone does with each medication.</li><li>A say in the questions every student sees.</li></ul></div>
+<div class="evc"><h3>What you get</h3><ul><li>DrugBug Pro while you evaluate (at least 40 graded questions a week).</li><li>An Evaluator badge in the app.</li><li>Analytics on how everyone does with each medication.</li><li>A say in the questions every student sees.</li></ul></div>
 </div>
 <form class="evform" id="evform" novalidate>
 <h2>Sign up to evaluate</h2><p class="muted small">We read every sign-up and email the people we choose an evaluator code. We only use your details to contact you about evaluating.</p>
@@ -108,33 +112,16 @@ footer .flinks{margin-top:10px}
 <div class="row2"><label>Your role or credential<select id="ef-cred" required><option value="">Choose one</option><option>EMT</option><option>AEMT</option><option>Paramedic</option><option>Flight Paramedic</option><option>CNA</option><option>LVN/LPN</option><option>RN</option><option>Flight or critical care RN</option><option>Nurse practitioner</option><option>Physician (MD/DO)</option><option>Physician assistant</option><option>Pharmacist</option><option>Resident or fellow</option><option>Medical student</option><option>Nursing student</option><option>EMS student</option><option>Radiologic or imaging technologist</option><option>Respiratory therapist</option><option>Educator or instructor</option><option>Other</option></select></label>
 <label>Years in that role<select id="ef-years"><option value="">Choose one</option><option>Still in school</option><option>Less than 1</option><option>1 to 3</option><option>4 to 10</option><option>More than 10</option></select></label></div>
 <label>Where you work or study (optional)<input id="ef-place" maxlength="120" placeholder="e.g. county EMS, a hospital, a nursing program"></label>
-<label>Why you would like to help (optional)<textarea id="ef-why" rows="3" maxlength="1500"></textarea></label>
+<label>Why you would like to help (optional)<textarea id="ef-why" rows="2" maxlength="1500"></textarea></label>
+<fieldset class="evagree"><legend>Evaluator agreement</legend><p class="small">Please read and tick each point, then type your full name to sign.</p><label class="evack"><input type="checkbox" data-ack="unpaid"> <span>I am volunteering. I am not being paid for evaluating and I am not an employee, contractor or agent of Volare Media LLC.</span></label><label class="evack"><input type="checkbox" data-ack="nofuture"> <span>I will not be paid or otherwise compensated for evaluating in the future, and I won't ask to be. Free DrugBug Pro while I am an evaluator is a thank-you, not payment.</span></label><label class="evack"><input type="checkbox" data-ack="quota"> <span>I will grade at least 40 questions each week (Monday to Sunday, Texas time). If I grade fewer than 40 in a week I get a warning; if it happens two weeks in a row, my evaluator status ends and my account goes back to DrugBug Free.</span></label><label class="evack"><input type="checkbox" data-ack="confidential"> <span>Pilot questions are confidential. I won't copy, screenshot or share them, and DrugBug may use my ratings and suggestions freely (Terms of Use, section 9).</span></label>
+<label>Type your full name to sign<input id="ef-sig" autocomplete="name" maxlength="80" placeholder="First and last name"></label></fieldset>
 <label class="hp" aria-hidden="true">Website<input id="ef-web" tabindex="-1" autocomplete="off"></label>
-<p class="small" style="opacity:.75;margin:6px 0 10px">By signing up you agree to the <a href="terms.html">Terms of Use</a>, including section 9 (Evaluator program), and the <a href="privacy.html">Privacy Policy</a>. Evaluating is unpaid volunteer work.</p><button type="submit" id="ef-go">Sign me up</button>
+<p class="small" style="opacity:.75;margin:6px 0 10px">By signing up you agree to the <a href="terms.html">Terms of Use</a>, including section 9 (Evaluator program), and the <a href="privacy.html">Privacy Policy</a>.</p><button type="submit" id="ef-go">Sign me up</button>
 <div class="evmsg" id="ef-msg" hidden></div>
 </form>
 </main>
-<script>
-(function(){var f=document.getElementById("evform"),m=document.getElementById("ef-msg"),b=document.getElementById("ef-go");
-var v=function(i){return(document.getElementById(i).value||"").trim()};
-var say=function(t,ok){m.hidden=false;m.className="evmsg "+(ok?"ok":"err");m.textContent=t};
-f.addEventListener("submit",function(e){e.preventDefault();
- var d={name:v("ef-name"),email:v("ef-mail"),cred:v("ef-cred"),years:v("ef-years"),place:v("ef-place"),why:v("ef-why"),website:v("ef-web")};
- if(d.name.split(/\s+/).filter(Boolean).length<2)return say("Please enter your full name (first and last).");
- if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(d.email))return say("Please enter a valid email address.");
- if(!d.cred)return say("Please pick your role or credential.");
- b.disabled=true;b.textContent="Sending…";
- var mail=function(){var body="Name: "+d.name+"\nEmail: "+d.email+"\nRole: "+d.cred+"\nYears: "+(d.years||"-")+"\nWhere: "+(d.place||"-")+"\n\n"+d.why;location.href="mailto:VolareMediaLLC@gmail.com?subject="+encodeURIComponent("DrugBug evaluator sign-up: "+d.name)+"&body="+encodeURIComponent(body);say("Your email app should open with your sign-up filled in. Send it and we will be in touch.",true);};
- fetch("https://us-central1-drugbug-69d42.cloudfunctions.net/evalApply",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({data:d})})
- .then(function(r){if(r.status===404)throw new Error("nf");return r.json()}).then(function(j){
-   b.disabled=false;b.textContent="Sign me up";
-   if(j.error){return say(j.error.message||"Something went wrong. Try again.")}
-   f.querySelectorAll("input,select,textarea").forEach(function(x){x.value=""});
-   say("Thank you! We got your sign-up. We will email you if you are chosen as an evaluator.",true);
- }).catch(function(){b.disabled=false;b.textContent="Sign me up";mail();});
-});})();
-</script>
+<script src="evform.js"></script>
 <footer><p>Educational use only. Not for clinical decision-making or patient care. Not a medical device.</p>
 <p>Not affiliated with or endorsed by NREMT, NCSBN, FSMB/NBME, ARRT or AHA.</p>
 <p>Built by a Paramedic, FP-C. &copy; Volare Media LLC &middot; <a href="mailto:VolareMediaLLC@gmail.com">VolareMediaLLC@gmail.com</a></p>
-<p class="flinks"><a href="about.html">About</a> &middot; <a href="support.html">Support</a> &middot; <a href="privacy.html">Privacy</a> &middot; <a href="terms.html">Terms</a> &middot; <a href="disclaimers.html">Disclaimers</a> &middot; <a href="evaluate.html">Become an evaluator</a> &middot; <a href="instructor/signin/">Instructor login</a></p></footer></div></body></html>
+<p class="flinks"><a href="about.html">About</a> &middot; <a href="protocols.html">Protocols &amp; packages</a> &middot; <a href="support.html">Support</a> &middot; <a href="privacy.html">Privacy</a> &middot; <a href="terms.html">Terms</a> &middot; <a href="disclaimers.html">Disclaimers</a> &middot; <a href="evaluate.html">Become an evaluator</a> &middot; <a href="instructor/signin/">Instructor login</a></p></footer></div></body></html>
