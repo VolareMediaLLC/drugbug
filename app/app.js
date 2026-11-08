@@ -13609,7 +13609,7 @@ document.addEventListener("click", function (e) {
   if (a === "pick" && AGQ.pick === null) {
     var k = +t.getAttribute("data-agqk"), it = AGQ.items[AGQ.i], ok = it.opts[k] === it.q.a, st = agqStats(), s = st[it.q.id] || [0, 0];
     AGQ.pick = k; s[1]++;
-    try { groupNote(null, ok, "anatomy", null); } catch (e) {}
+    try { var gf = agpFind(it.q.pid); groupNote(null, ok, "protocol", { id: "pr-" + it.q.pid, name: (it.q.pid + " " + (gf ? gf.it.title : "")).trim() }); } catch (e) {}
     /* Was a flat 1 stick for correct and nothing for a wrong try, out of step with every other
        quiz in the app. Now uses qSticks: 3 right, 1 for trying (owner, Nov 1 2026). */
     var pay = typeof qSticks === "function" ? qSticks(ok) : (ok ? 3 : 1);
@@ -30534,7 +30534,7 @@ function dashView() {
 var CL = { open: false, view: "board", data: null, busy: false, msg: "", err: false, at: 0, key: "" };
 var classPane = document.createElement("aside"); classPane.id = "classPane"; classPane.hidden = true; classPane.setAttribute("aria-label", "My class"); document.body.appendChild(classPane);
 var classTab = document.createElement("button"); classTab.id = "classTab"; classTab.className = "class-tab"; classTab.textContent = "My class"; classTab.setAttribute("aria-controls", "classPane"); classTab.hidden = true; document.body.appendChild(classTab);
-var CL_KIND = { practice: "Practice tests", exam: "Exam mode", daily: "Daily 5-minute", study: "Study a drug", weak: "Weak-spot review", system: "Learn by system", acls: "ACLS / PALS", session: "Guided sessions", game: "Games", safety: "Safety checks", lab: "Lab drills", crit: "Critical-care drills", megacode: "Megacode", anatomy: "Anatomy quiz", calc: "Calculations" };
+var CL_KIND = { practice: "Practice tests", exam: "Exam mode", daily: "Daily 5-minute", study: "Study a drug", weak: "Weak-spot review", system: "Learn by system", acls: "ACLS / PALS", session: "Guided sessions", game: "Games", safety: "Safety checks", lab: "Lab drills", crit: "Critical-care drills", megacode: "Megacode", anatomy: "Anatomy quiz", calc: "Calculations", protocol: "Agency protocols" };
 var CL_QT = { assess: "Assessment", hold: "When to hold", labs: "Labs to watch", vitals: "Vital signs", adverse: "Side effects", teach: "Patient teaching", interact: "Interactions", notify: "When to notify" };
 var CL_DIMS = [["s", "Medication systems"], ["k", "Quiz types"], ["y", "Question types"], ["l", "Drug classes"], ["p", "Drill topics"], ["d", "Each drug"]];
 var CL_MIN = 5;
@@ -30577,6 +30577,27 @@ function clBoard(d, weekly) {
     return (r.rank > 5 ? '<li class="clgap" aria-hidden="true">···</li>' : '') + '<li class="' + (r.me ? "me" : "") + '"><span class="clrk' + (r.rank <= 3 ? " r" + r.rank : "") + '">' + r.rank + '</span><span class="clal">' + esc(r.alias) + (r.me ? ' <em>you</em>' : '') + (r.prize ? ' <span class="przchip p-' + r.prize + '">' + esc(RARITY[r.prize] || r.prize) + '</span>' : '') + '</span><span class="clsc"><b>' + r.correct.toLocaleString() + '</b> right<small>' + (r.accuracy == null ? "—" : Math.round(r.accuracy) + "%") + ' · ' + r.week + ' this week</small></span></li>';
   }).join("") + '</ol>';
 }
+/* Protocol competition (owner, Nov 8 2026): agency members race on their own protocol questions,
+   as individuals and as teams (crews, stations, shifts). Teams rank by correct answers per member. */
+function clComp(m) {
+  var wk = CL.cw !== false, T = wk ? m.teams.week : m.teams.all, B = wk ? m.board.week : m.board.all;
+  var c = '<p class="muted small">Your agency\'s protocol questions only, from Protocols in the menu.' + (m.myTeam ? ' Your team: <strong>' + esc(m.myTeam) + '</strong>.' : '') + '</p>';
+  c += '<div class="cltabs clsub"><button class="' + (wk ? "on" : "") + '" data-clact="cweek">This week</button><button class="' + (wk ? "" : "on") + '" data-clact="call">All time</button></div>';
+  if (wk && m.endsAt) { var dl = Math.max(0, Math.ceil((m.endsAt - Date.now()) / 864e5)); c += '<p class="muted small">This week ends in ' + dl + ' day' + (dl === 1 ? '' : 's') + '.</p>'; }
+  if (m.teamCount) {
+    c += '<h3 class="eh small">Teams</h3>';
+    c += T.length ? '<p class="muted small">Ranked by correct answers per member, so small crews compete fairly.</p><ol class="clboard">' + T.map(function (t) {
+      var per = wk ? t.wper : t.per, n = wk ? t.wn : t.n, cc = wk ? t.wc : t.c;
+      return '<li class="' + (t.mine ? "me" : "") + '"><span class="clrk' + (t.rank <= 3 ? " r" + t.rank : "") + '">' + t.rank + '</span><span class="clal">' + esc(t.name) + (t.mine ? ' <em>your team</em>' : '') + '</span><span class="clsc"><b>' + per + '</b> per member<small>' + t.members + ' member' + (t.members === 1 ? '' : 's') + ' · ' + Math.round(100 * cc / (n || 1)) + '% right</small></span></li>';
+    }).join("") + '</ol>' : '<p class="muted small">No team has answered a protocol question ' + (wk ? 'this week' : 'yet') + '.</p>';
+  }
+  c += '<h3 class="eh small">Individuals</h3>';
+  if (!B.length) return c + '<p class="muted small">No one has answered a protocol question ' + (wk ? 'this week' : 'yet') + '. Open Protocols in the menu, then Protocol practice.</p>';
+  return c + '<p class="muted small">Top 5 by correct protocol answers, plus your own place.</p><ol class="clboard">' + B.map(function (r) {
+    var n = wk ? r.wn : r.n, cc = wk ? r.wc : r.c;
+    return (r.rank > 5 ? '<li class="clgap" aria-hidden="true">···</li>' : '') + '<li class="' + (r.me ? "me" : "") + '"><span class="clrk' + (r.rank <= 3 ? " r" + r.rank : "") + '">' + r.rank + '</span><span class="clal">' + esc(r.name) + (r.me ? ' <em>you</em>' : '') + (r.team ? '<small class="muted"> · ' + esc(r.team) + '</small>' : '') + '</span><span class="clsc"><b>' + cc.toLocaleString() + '</b> right<small>' + Math.round(100 * cc / (n || 1)) + '% of ' + n + '</small></span></li>';
+  }).join("") + '</ol>';
+}
 function classView() {
   var c = '<div class="pbar"><h2>My class</h2><button class="theme-btn" data-clact="close">Close</button></div>';
   if (!seatActive()) {
@@ -30588,10 +30609,12 @@ function classView() {
     return c;
   }
   c += '<div class="clhead"><b>' + esc(SEAT.orgName) + '</b><span>You are <strong>' + esc(SEAT.alias) + '</strong> · Pro until ' + esc(new Date(SEAT.until).toLocaleDateString()) + '</span></div>';
-  c += '<div class="cltabs"><button class="' + (CL.view === "board" ? "on" : "") + '" data-clact="board">Scoreboard</button><button class="' + (CL.view === "mine" ? "on" : "") + '" data-clact="mine">My scores</button><button data-clact="refresh" aria-label="Refresh">↻</button></div>';
+  var comp = CL.data && CL.data.comp && CL.data.comp.on;
+  if (CL.view === "comp" && !comp) CL.view = "board";
+  c += '<div class="cltabs"><button class="' + (CL.view === "board" ? "on" : "") + '" data-clact="board">Scoreboard</button>' + (comp ? '<button class="' + (CL.view === "comp" ? "on" : "") + '" data-clact="comp">Protocols</button>' : '') + '<button class="' + (CL.view === "mine" ? "on" : "") + '" data-clact="mine">My scores</button><button data-clact="refresh" aria-label="Refresh">↻</button></div>';
   if (CL.msg) c += '<p class="presult' + (CL.err ? "" : " good") + '">' + esc(CL.msg) + '</p>';
   if (!CL.data) c += '<p class="muted">' + (CL.busy ? "Loading…" : "") + '</p>';
-  else c += CL.view === "board" ? clBoard(CL.data) : clMine(CL.data.mine);
+  else c += CL.view === "board" ? clBoard(CL.data) : CL.view === "comp" ? clComp(CL.data.comp) : clMine(CL.data.mine);
   return c;
 }
 function drawClassPane(top) {
@@ -30626,7 +30649,8 @@ classPane.addEventListener("click", function (e) {
   var t = e.target.closest("[data-clact]"); if (!t) return;
   var a = t.getAttribute("data-clact");
   if (a === "close") return closeClassPane();
-  if (a === "board" || a === "mine") { CL.view = a; return drawClassPane(true); }
+  if (a === "board" || a === "mine" || a === "comp") { CL.view = a; return drawClassPane(true); }
+  if (a === "cweek" || a === "call") { CL.cw = a === "cweek"; return drawClassPane(); }
   if (a === "refresh") { CL.msg = ""; return clLoad(true); }
 });
 classPane.addEventListener("submit", function (e) {
