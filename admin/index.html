@@ -120,6 +120,7 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
 .ccx{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:3px}
 .heat{font-size:11.5px;font-weight:750;border-radius:99px;padding:2px 8px;background:var(--surface2)}.heat.warm{color:var(--good)}.heat.lukewarm{color:var(--warn)}.heat.cold{color:var(--muted)}
 :root{--track2:#d9d2ec}@media(prefers-color-scheme:dark){:root{--track2:#433a5e}}
+.mbar{position:relative;height:14px;background:var(--track);border-radius:99px;margin-top:10px}.mbar i{display:block;height:100%;background:var(--good);border-radius:99px}.mbar b{position:absolute;top:-4px;width:2px;height:22px;background:var(--ink);border-radius:2px}
 </style>
 </head>
 <body>
@@ -279,7 +280,7 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
   function bugName(id) { var b = META && META.bugs.filter(function (x) { return x[0] === id; })[0]; return b ? b[1] : id; }
   function gives(c) {
     if (c.kind === "pro") return c.days >= 36500 ? "Pro for life" : "Pro, " + c.days + " day" + (c.days === 1 ? "" : "s");
-    if (c.kind === "eval") return "Lifetime Pro + grading";
+    if (c.kind === "eval") return "Pro while evaluating + grading";
     if (c.kind === "sticks") return fmt(c.sticks) + " sticks";
     if (c.kind === "bug") return bugName(c.bug);
     return c.kind;
@@ -350,13 +351,13 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
      Status lights, then one panel per area: a big number, the change, a trend line, three small
      numbers and what it measures. "Open" widens the panel and adds the detail and a plain-English
      reading. Every source loads on its own, so a slow or undeployed function only blanks its panel. */
-  var AP = null, GS = null, PIL = null, PILN = null, PINGS = null, OPEN = {};
+  var AP = null, GS = null, PIL = null, PILN = null, PINGS = null, EQ = null, RV = null, PK = null, OPEN = {};
   function loadOverview() {
     $("ovSub").textContent = "Loading…";
     call("adminOverview").then(function (o) { OV = o; OV_ERR = ""; }).catch(function (e) { OV_ERR = errTxt(e); }).then(cockpit);
     loadOverviewLists();
   }
-  $("bOvRefresh").onclick = function () { STATS = null; CODES = null; AP = GS = PIL = PILN = PINGS = CODERS = null; loadOverview(); };
+  $("bOvRefresh").onclick = function () { STATS = null; CODES = null; AP = GS = PIL = PILN = PINGS = CODERS = EQ = RV = PK = null; loadOverview(); };
   function kpi(tab, label, big, sub) { return '<button class="kpi" data-go="' + tab + '"><i>' + label + '</i><b>' + big + '</b><span>' + sub + '</span></button>'; }
   function drawOverview() { cockpit(); }
   function loadOverviewLists() {
@@ -368,11 +369,14 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
     (PIL ? Promise.resolve() : call("pilotStatus", { fresh: 1 }).then(function (r) { PIL = r || {}; })).catch(function () { PIL = PIL || false; }).then(done);
     (PILN != null ? Promise.resolve() : questions().then(function (J) { PILN = J.qs.filter(function (q) { return q.b === "pilot"; }).length; })).catch(function () {}).then(done);
     (STATS ? Promise.resolve() : stats()).then(meta).catch(function () {}).then(done);
+    (PK ? Promise.resolve() : call("orgInquiryList").then(function (r) { PK = r.list || []; })).catch(function () { PK = PK || false; }).then(done);
+    (RV ? Promise.resolve() : call("revenueMonth").then(function (r) { RV = r; })).catch(function () { RV = RV || false; }).then(done);
+    (EQ ? Promise.resolve() : call("evalQuota").then(function (r) { EQ = r; })).catch(function () { EQ = EQ || false; }).then(done);
     if (!PINGS) pingAll();
   }
   /* which server functions answer: a deployed callable always replies (even with an error for a
      bad request); one that was never deployed doesn't. Only read-only functions are asked. */
-  var PING_FNS = ["adminOverview", "codeList", "qrStats", "qrCoders", "pilotStatus", "qDifficulty", "qrChecked", "evalAppList", "appMetrics", "groupOwnerStats", "groupOrgList", "groupDashboard"];
+  var PING_FNS = ["orgInquiryList", "revenueMonth", "evalQuota", "adminOverview", "codeList", "qrStats", "qrCoders", "pilotStatus", "qDifficulty", "qrChecked", "evalAppList", "appMetrics", "groupOwnerStats", "groupOrgList", "groupDashboard"];
   function pingAll() {
     PINGS = { ok: [], no: [], busy: true };
     Promise.all(PING_FNS.map(function (f) { return call(f, { ping: 1 }).then(function () { PINGS.ok.push(f); }, function (e) { if (/^not deployed$|failed to fetch|networkerror|load failed/i.test((e && e.message) || "")) PINGS.no.push(f); else PINGS.ok.push(f); }); }))
@@ -402,6 +406,8 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
     var o = !!OPEN[id];
     return '<div class="pnl' + (o ? ' open' : '') + (cls ? ' ' + cls : '') + '" id="p-' + id + '"><div class="ph"><h3>' + esc(title) + '</h3>' + (st ? '<span class="dot ' + st[0] + '"><i></i>' + esc(st[1]) + '</span>' : '') + '</div>' + body + (open ? (o ? '<div class="exp">' + open + '</div>' : '') + '<button class="more" data-open="' + id + '">' + (o ? 'Close ▴' : 'Open ▾') + '</button>' : '') + '</div>';
   }
+  document.addEventListener("change", function (e) { var t = e.target; if (!t.getAttribute || !t.getAttribute("data-pkst")) return; var id = t.getAttribute("data-pkst"), st = t.value; t.disabled = true; call("orgInquirySet", { id: id, status: st }).then(function () { (PK || []).forEach(function (x) { if (x.id === id) x.status = st; }); t.disabled = false; cockpit(); }).catch(function (e2) { alert(e2.message); t.disabled = false; }); });
+  document.addEventListener("click", function (e) { var b = e.target.closest && e.target.closest("[data-restore]"); if (!b) return; var g = b.getAttribute("data-restore"); if (!confirm("Restore this evaluator? Their status and Pro come back, and weeks are counted again from this week.")) return; b.disabled = true; call("evalRestore", { gift: g }).then(function () { EQ = null; loadOverviewLists(); }).catch(function (e2) { alert(e2.message); b.disabled = false; }); });
   document.addEventListener("click", function (e) { var b = e.target.closest && e.target.closest("[data-open]"); if (!b || !$("cock").contains(b)) return; var id = b.getAttribute("data-open"); OPEN[id] = !OPEN[id]; cockpit(); if (OPEN[id]) $("p-" + id).scrollIntoView({ behavior: "smooth", block: "nearest" }); });
   var pc = function (a, b) { return b ? Math.round(100 * a / b) : null; };
   var lastN = function (arr, n, off) { return arr.slice(Math.max(0, arr.length - n - (off || 0)), arr.length - (off || 0)); };
@@ -419,6 +425,9 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
     else L.push(["", "Checking server functions…", ""]);
     if (o.signups) L.push(o.signups.new ? ["w", o.signups.new + " evaluator sign-up" + (o.signups.new === 1 ? "" : "s") + " waiting", "People › Sign-ups", "signups"] : ["g", "No sign-ups waiting", ""]);
     if (PIL) L.push((PIL.held || []).length ? ["b", PIL.held.length + " pilot question" + (PIL.held.length === 1 ? "" : "s") + " voted Bad", "fix or drop in Questions", "grading"] : ["g", "No pilot questions voted Bad", ""]);
+    if (EQ && EQ.list) { var wq = EQ.list.filter(function (x) { return x.warned; }).length, rq = EQ.list.filter(function (x) { return x.removed; }).length, uq = EQ.list.filter(function (x) { return !x.signed && !x.removed; }).length;
+      if (wq || rq) L.push(["w", (wq ? wq + " evaluator" + (wq === 1 ? "" : "s") + " warned" : "") + (wq && rq ? " · " : "") + (rq ? rq + " removed" : ""), "under " + EQ.need + " graded a week", "overview"]); }
+    if (PK && PK.length) { var pn = PK.filter(function (x) { return (x.status || "new") === "new"; }).length; if (pn) L.push(["w", pn + " package request" + (pn === 1 ? "" : "s") + " to answer", "from the Protocols page", "classes"]); }
     if (GS && GS.followUp && GS.followUp.length) { var f0 = GS.followUp[0]; L.push(["w", "A pilot class ends in " + f0.daysLeft + " day" + (f0.daysLeft === 1 ? "" : "s"), f0.name + " · follow up", "classes"]); }
     $("lights").innerHTML = L.map(function (x) { return '<' + (x[3] ? 'button data-go="' + x[3] + '"' : 'span') + ' class="light ' + x[0] + '"><i></i>' + esc(x[1]) + (x[2] ? ' <small>' + esc(x[2]) + '</small>' : '') + '</' + (x[3] ? 'button' : 'span') + '>'; }).join("");
 
@@ -453,15 +462,29 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
         '<button class="linkish" data-go="analytics">Open How students score ▸</button></div>';
       P.push(panel("learn", "Learning", pc(c7, q7) != null && (pc(c7, q7) < 60 || pc(c7, q7) > 88) ? ["w", "Check difficulty"] : ["g", "Steady"], body2, open2));
     }
-    /* ---- money ---- */
-    if (AP === null) P.push(panel("money", "Money", null, LOAD));
-    else if (AP) {
-      var tier = (AP.splits || {}).tier || {}, paid = (tier.plus || 0) + (tier.pro || 0);
-      var body3 = '<div class="big">' + fmt(paid) + '<small>on Plus or Pro</small></div><div class="delta">' + (T.paidPct30 || 0) + '% of people active in 30 days</div>' +
-        '<div class="minis">' + mini(fmt(tier.pro || 0), "Pro") + mini(fmt(tier.plus || 0), "Plus") + mini(T.webSubs == null ? "—" : fmt(T.webSubs), "website subscriptions") + '</div><p class="what">Plans of everyone active in the last 30 days (App Store and website). School seats are under Schools.</p>';
-      var open3 = '<div><h4>What this tells you</h4><p><b>Conversion:</b> ' + (T.paidPct30 || 0) + '% of active people pay. 2 to 5% is typical for a study app; 5% is a good goal.</p><p><b>Website:</b> ' + (T.webSubs == null ? 'website subscription count isn\'t available.' : fmt(T.webSubs) + ' active subscription' + (T.webSubs === 1 ? '' : 's') + ' through Stripe.') + ' App Store sales and payouts are in App Store Connect.</p><p class="muted small">Stick-pack sales aren\'t counted here yet.</p></div>' +
-        '<div><h4>Plans, last 30 days</h4>' + hb([["Free", tier.free || 0, fmt(tier.free || 0)], ["Plus", tier.plus || 0, fmt(tier.plus || 0)], ["Pro", tier.pro || 0, fmt(tier.pro || 0)]]) + '</div>';
-      P.push(panel("money", "Money", (T.paidPct30 || 0) >= 2 ? ["g", "On track"] : ["w", "Early days"], body3, open3));
+    /* ---- money this month (owner, Nov 8 2026): website money from Stripe, plus plan mix ---- */
+    {
+      var usd = function (c) { return c == null ? "—" : "$" + (c / 100).toLocaleString(undefined, { minimumFractionDigits: c % 100 ? 2 : 0, maximumFractionDigits: 2 }); };
+      var tier = AP && (AP.splits || {}).tier || {}, paid = (tier.plus || 0) + (tier.pro || 0);
+      var mon = new Date().toLocaleDateString(undefined, { month: "long" });
+      if (RV === null) P.push(panel("money", "Money this month", null, LOAD));
+      else if (!RV) P.push(panel("money", "Money this month", ["w", "No data"], '<p class="muted small">Revenue isn\'t answering yet. Run DEPLOY.cmd (it needs the revenueMonth function).</p>' + (AP ? '<div class="minis">' + mini(fmt(tier.pro || 0), "on Pro") + mini(fmt(tier.plus || 0), "on Plus") + mini((T.paidPct30 || 0) + "%", "of active people pay") + '</div>' : '')));
+      else {
+        var R = RV, frac = (R.now - R.start) / (R.end - R.start), dl = Math.max(0, Math.ceil((R.end - R.now) / 864e5));
+        var vsLast = R.lastMonth && R.lastMonth.sameDay ? chg(R.collected, R.lastMonth.sameDay) : null;
+        var cum = [], run = 0; R.byDay.slice(0, R.dayIndex + 1).forEach(function (v) { run += v; cum.push(run); });
+        var bodyM = '<div class="big">' + usd(R.projected) + '<small>by the end of ' + esc(mon) + '</small></div><div class="delta">' + usd(R.collected) + ' in so far · ' + usd(R.expected) + ' more expected from ' + R.renewals + ' renewal' + (R.renewals === 1 ? '' : 's') + '</div>' +
+          '<div class="mbar" title="Collected so far vs expected by month end"><i style="width:' + (R.projected ? Math.round(100 * R.collected / R.projected) : 0) + '%"></i><b style="left:' + Math.round(100 * frac) + '%" title="Today"></b></div><div class="ccx"><span>' + esc(mon) + ' 1</span><span>' + dl + ' day' + (dl === 1 ? '' : 's') + ' left</span></div>' +
+          '<div class="minis">' + mini(usd(R.net), "after Stripe fees") + mini(usd(R.mrr), "monthly recurring") + mini(fmt(paid), "people on Plus or Pro") + '</div><p class="what">Website sales through Stripe (subscriptions and stick packs). App Store sales are in App Store Connect and aren\'t included.</p>';
+        var openM = '<div><h4>Money in, day by day (' + esc(mon) + ')</h4>' + (cum.length > 1 ? spark(cum, 110) : '<p class="muted small">Not enough days yet.</p>') +
+          '<h4 style="margin-top:12px">Active website subscriptions</h4>' + hb(Object.keys(R.byPlan || {}).map(function (k) { return [k, R.byPlan[k], fmt(R.byPlan[k])]; })) + '</div>' +
+          '<div><h4>What this tells you</h4><p><b>So far:</b> ' + usd(R.gross) + ' from ' + R.payments + ' payment' + (R.payments === 1 ? '' : 's') + (R.refunds ? ', less ' + usd(R.refunds) + ' refunded' : '') + '. Stripe kept ' + usd(Math.abs(R.fees || 0)) + ' in fees, so ' + usd(R.net) + ' reaches your bank.</p>' +
+          '<p><b>Still coming:</b> ' + R.renewals + ' website subscription' + (R.renewals === 1 ? '' : 's') + ' renew before the month ends, worth ' + usd(R.expected) + '. New sign-ups and stick packs come on top of that.' + (R.ending ? ' ' + R.ending + ' subscription' + (R.ending === 1 ? ' is' : 's are') + ' set to cancel and aren\'t counted.' : '') + '</p>' +
+          (vsLast ? '<p><b>Compared with last month</b> at this point: ' + esc(vsLast.t.replace("vs last week", "")) + ' (' + usd(R.lastMonth.sameDay) + ' by this day last month; ' + usd(R.lastMonth.collected) + ' for the whole month).</p>' : '') +
+          '<p><b>Monthly recurring:</b> ' + usd(R.mrr) + ' a month from website subscriptions (yearly plans counted as a twelfth).</p>' +
+          (AP ? '<p><b>Conversion:</b> ' + (T.paidPct30 || 0) + '% of people active in the last 30 days are on Plus or Pro (App Store and website). 2 to 5% is typical; 5% is a good goal.</p>' : '') + '</div>';
+        P.push(panel("money", "Money this month", vsLast && vsLast.c === "dn" ? ["w", "Behind last month"] : ["g", "On track"], bodyM, openM));
+      }
     }
     /* ---- questions and evaluators (wide) ---- */
     {
@@ -475,7 +498,12 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
         '<div><h4>Evaluators</h4>' + hb([["With a code", C.length, fmt(C.length)], ["Active this week", act, fmt(act)], ["Questions graded", graded, fmt(graded)], ["Suggestions", sugg, fmt(sugg)]]) +
         '<h4 style="margin-top:10px">Difficulty</h4><p class="small">' + (o.ratings && o.ratings.avg != null ? 'Average ' + o.ratings.avg.toFixed(1) + ' / 5 from ' + fmt(o.ratings.ratings) + ' ratings on ' + fmt(o.ratings.questions) + ' questions. Quizzes mix 2 easy, 6 normal and 2 hard per 10.' : 'No ratings yet.') + '</p></div></div>';
       var EV = C.slice().sort(function (a, b) { return (b.lastAt || 0) - (a.lastAt || 0); }).slice(0, 6);
-      var open4 = '<div><h4>Recent evaluator activity</h4>' + (EV.length ? '<table class="mini">' + EV.map(function (c) { return '<tr><td><b>' + esc(c.name || c.code) + '</b><div class="muted small">' + esc(c.role || "") + '</div></td><td class="num">' + fmt(c.graded) + ' graded</td><td class="num muted small">' + ago(c.lastAt) + '</td></tr>'; }).join("") + '</table>' : '<p class="muted small">No evaluator has redeemed a code yet.</p>') + '</div>' +
+      var EL = EQ && EQ.list ? EQ.list.slice().sort(function (a, b) { return (b.removed - a.removed) || (b.warned - a.warned) || (a.thisWeek - b.thisWeek); }) : null;
+      var NM = {}; (CODERS || []).forEach(function (c) { NM[c.gift] = c.name || c.code; });
+      var quota = '<h4>Weekly minimum (' + (EQ ? EQ.need : 40) + ' graded questions, Monday to Sunday)</h4>' + (EL === null ? LOAD : !EL ? '<p class="muted small">Not answering yet. Run DEPLOY.cmd.</p>' : EL.length ? '<table class="mini"><tr><th>Evaluator</th><th>This week</th><th>Last week</th><th>Status</th><th></th></tr>' + EL.map(function (x) {
+        var st = x.removed ? ['bad', 'Removed'] : !x.signed ? ['warn', 'Not signed'] : x.warned ? ['warn', 'Warned'] : x.thisWeek >= x.need ? ['ok', 'Done this week'] : ['ok', 'On track'];
+        return '<tr><td><b>' + esc(x.name || NM[x.gift] || x.gift) + '</b><div class="muted small">' + (x.at ? 'signed ' + day(x.at) : 'no signature yet') + '</div></td><td class="num">' + x.thisWeek + '</td><td class="num">' + x.lastWeek + '</td><td><span class="st ' + st[0] + '">' + st[1] + '</span></td><td>' + (x.removed ? '<button class="ghost" data-restore="' + esc(x.gift) + '">Restore</button>' : '') + '</td></tr>'; }).join("") + '</table><p class="muted small">One short week is a warning; two in a row ends evaluator status and their Pro. Restore gives them a fresh start from this week.</p>' : '<p class="muted small">No one has signed the evaluator agreement yet.</p>');
+      var open4 = '<div style="grid-column:1/-1">' + quota + '</div><div><h4>Recent evaluator activity</h4>' + (EV.length ? '<table class="mini">' + EV.map(function (c) { return '<tr><td><b>' + esc(c.name || c.code) + '</b><div class="muted small">' + esc(c.role || "") + '</div></td><td class="num">' + fmt(c.graded) + ' graded</td><td class="num muted small">' + ago(c.lastAt) + '</td></tr>'; }).join("") + '</table>' : '<p class="muted small">No evaluator has redeemed a code yet.</p>') + '</div>' +
         '<div><h4>Your part</h4><p>' + (bad ? '<b>' + bad + ' voted Bad:</b> open Grade questions, filter to Pilot, and fix or drop them.' : 'Nothing voted Bad right now.') + '</p><p>Marking a pilot question Good yourself puts it live at once.</p><button class="linkish" data-go="grading">Open Grade questions ▸</button> &nbsp; <button class="linkish" data-go="evaluators">Evaluators ▸</button></div>';
       P.push(panel("qs", "Questions and evaluators", bad ? ["b", "Needs you"] : wait ? ["w", "Waiting on votes"] : ["g", "Clear"], body4, open4, "wide"));
     }
@@ -486,7 +514,10 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
       var t = GS.totals || {}, fu = GS.followUp || [], wk = (GS.weeks || []).map(function (w) { return w.answered; });
       var body5 = '<div class="big">' + fmt(t.live) + '<small>active class' + (t.live === 1 ? '' : 'es') + '</small></div><div class="delta">' + fmt(t.activated) + ' of ' + fmt(t.seats) + ' seats joined · ' + fmt(t.active7) + ' studied this week</div>' + spark(wk) +
         '<div class="minis">' + mini(fmt(t.pilots), "pilots") + mini(fmt(t.annual), "paid") + mini(fu.length ? fu[0].daysLeft + " days" : "—", "until a pilot ends") + '</div><p class="what">Classes using class keys. The line is questions answered by students each week.</p>';
-      var open5 = '<div><h4>Pilots ending in the next 14 days</h4>' + (fu.length ? '<table class="mini">' + fu.map(function (f) { return '<tr><td><b>' + esc(f.name) + '</b><div class="muted small">' + esc(f.contact || "") + '</div></td><td class="num">' + f.daysLeft + ' days</td><td><span class="heat ' + f.heat + '">' + f.heat + '</span></td></tr>'; }).join("") + '</table><p class="muted small">Warm = most seats joined and students still studying: the best time to ask about a paid year.</p>' : '<p class="muted small">None right now.</p>') + '</div>' +
+      var PKN = { analytics: "Analytics", protocols: "Protocols", combined: "Combined", premium: "Premium", unsure: "Not sure" }, PRICE = { analytics: 15, protocols: 15, combined: 22, premium: 22 };
+      var pkT = PK === null ? LOAD : !PK ? '<p class="muted small">Not answering yet. Run DEPLOY.cmd.</p>' : PK.length ? '<table class="mini">' + PK.slice(0, 12).map(function (x) { var est = PRICE[x.pkg] && x.people ? ' · about $' + (PRICE[x.pkg] * x.people).toLocaleString() + '/yr' : '';
+        return '<tr><td><b>' + esc(x.org) + '</b><div class="muted small">' + esc(x.kind || "") + ' · ' + esc(x.name) + ' · <a href="mailto:' + esc(x.email) + '?subject=' + encodeURIComponent("DrugBug " + (PKN[x.pkg] || "") + " package for " + x.org) + '">' + esc(x.email) + '</a>' + (x.phone ? ' · ' + esc(x.phone) : '') + '</div>' + (x.notes ? '<div class="small">' + esc(x.notes.slice(0, 200)) + '</div>' : '') + '</td><td>' + esc(PKN[x.pkg] || x.pkg) + '<div class="muted small">' + (x.people ? fmt(x.people) + ' people' : '') + est + (x.pages ? ' · ' + fmt(x.pages) + ' pages' : '') + '</div></td><td class="muted small">' + ago(x.at) + '</td><td><select data-pkst="' + esc(x.id) + '">' + ["new", "contacted", "won", "lost"].map(function (k) { return '<option' + ((x.status || "new") === k ? ' selected' : '') + '>' + k + '</option>'; }).join("") + '</select></td></tr>'; }).join("") + '</table>' : '<p class="muted small">No package requests yet. They come from drugbugapp.com/protocols.html.</p>';
+      var open5 = '<div style="grid-column:1/-1"><h4>Package requests</h4>' + pkT + '</div><div><h4>Pilots ending in the next 14 days</h4>' + (fu.length ? '<table class="mini">' + fu.map(function (f) { return '<tr><td><b>' + esc(f.name) + '</b><div class="muted small">' + esc(f.contact || "") + '</div></td><td class="num">' + f.daysLeft + ' days</td><td><span class="heat ' + f.heat + '">' + f.heat + '</span></td></tr>'; }).join("") + '</table><p class="muted small">Warm = most seats joined and students still studying: the best time to ask about a paid year.</p>' : '<p class="muted small">None right now.</p>') + '</div>' +
         '<div><h4>What this tells you</h4><p><b>Uptake:</b> ' + (t.activationRate || 0) + '% of seats are in use. Under 50% usually means keys weren\'t handed out yet; worth a nudge to the instructor.</p><p><b>Accuracy across schools:</b> ' + (t.accuracy != null ? t.accuracy + '%' : '—') + '. ' + (t.conversions ? fmt(t.conversions) + ' pilot' + (t.conversions === 1 ? ' has' : 's have') + ' become paid.' : 'No pilots have become paid yet.') + '</p><button class="linkish" data-go="classes">Open Schools ▸</button></div>';
       P.push(panel("schools", "Schools", fu.length ? ["w", fu.length + " ending soon"] : ["g", "Fine"], body5, open5));
     }
