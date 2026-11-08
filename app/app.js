@@ -8627,11 +8627,12 @@ var TRACKS = [
   { id: "harvest-table", name: "Harvest Table", price: 0, tier: "plus", season: "thanksgiving", desc: "Warm autumn lo-fi: Rhodes, nylon guitar and a cor anglais over brushes.", bpm: 76, src: "music/harvest-table.mp3" },
   /* music by plan (owner, Nov 5 2026): Free gets one plain track (plus the seasonal ones) and a
      snippet of everything else; Plus gets one track of each genre; Pro gets every track */
-  { id: "plain-bug-beat", name: "Plain Bug Beat", price: 0, desc: "The free one. Some piano, a beat, nothing fancy. The real bands are in Plus and Pro.", bpm: 96, src: "music/plain-bug-beat.mp3" },
+  { id: "plain-bug-beat", name: "Plain Bug Beat", price: 0, desc: "Some piano, a beat, nothing fancy. More bands are in Plus and Pro.", bpm: 96, src: "music/plain-bug-beat.mp3" },
   /* the bug genres (owner, Nov 5 2026): rendered from a General MIDI SoundFont plus synthesized
      crickets, wing buzz and wobble bass. Source: tools/music/compose.py */
   { id: "slow-bug-jazz", name: "Slow Bug Jazz", price: 0, tier: "plus", desc: "A late-night ballad: brushes, walking bass, Rhodes and a breathy tenor sax.", bpm: 66, src: "music/slow-bug-jazz.mp3" },
-  { id: "bug-house", name: "Bug House", price: 0, tier: "plus", desc: "Four on the floor, house piano stabs and a cricket on the hi-hats.", bpm: 122, src: "music/bug-house.mp3" },
+  /* Bug House is the main track, free for everyone (owner, Nov 8 2026) */
+  { id: "bug-house", name: "Bug House", price: 0, desc: "Four on the floor, house piano stabs and a cricket on the hi-hats.", bpm: 122, src: "music/bug-house.mp3" },
   /* more Bug House: Pro only (owner, Nov 5 2026) */
   { id: "bug-house-deep-hive", name: "Bug House: Deep Hive", price: 0, tier: "pro", desc: "Deep house: minor-ninth Rhodes, warm pads and a rolling low end.", bpm: 120, src: "music/bug-house-deep-hive.mp3" },
   { id: "bug-house-disco-beetle", name: "Bug House: Disco Beetle", price: 0, tier: "pro", desc: "Disco house: octave bass, string stabs, funky guitar chops and a trumpet hook.", bpm: 124, src: "music/bug-house-disco-beetle.mp3" },
@@ -8664,7 +8665,7 @@ function muSeason(k) {
 }
 function trackAvail(t) { return muOnly(t.id) && (!t.season || muSeason(t.season)); }
 /* with MU_ONLY set, the default is whichever of those tracks is in season right now */
-function muDefault() { var L = TRACKS.filter(function (t) { return trackAvail(t) && !trackProLocked(t); }); return L.length ? L[0].id : "plain-bug-beat"; }
+function muDefault() { var bh = trackById("bug-house"); if (bh.id === "bug-house" && trackAvail(bh) && !trackProLocked(bh)) return "bug-house"; var L = TRACKS.filter(function (t) { return trackAvail(t) && !trackProLocked(t); }); return L.length ? L[0].id : "plain-bug-beat"; }
 function shownTracks() { return TRACKS.filter(trackAvail); }
 function trackProLocked(t) { var need = t && (t.tier || (t.pro ? "pro" : "")); return !!(need && typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier(need)); }
 function ownsTrack(id) { var t = trackById(id); if (!trackAvail(t) || trackProLocked(t)) return false; return !t.price || (Prog.d.tracks || []).indexOf(id) >= 0; }

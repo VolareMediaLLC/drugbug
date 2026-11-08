@@ -3234,6 +3234,10 @@ button.tierchip:hover{filter:brightness(1.08)}
 <div class="wrap" id="app"><div id="boot" aria-hidden="true"><div class="bootlogo">Drug<span>Bug</span></div><div class="bootbar"><i></i></div><p class="bootnote">Loading your medications</p></div></div>
 <div class="sheet" id="sheet" hidden></div>
 
+<script>/* if the app never starts (a file missing from the build, or one that failed to load), say so
+   instead of showing "Loading your medications" forever (owner, Nov 8 2026) */
+setTimeout(function(){var b=document.getElementById("boot");if(!b)return;var miss=[];["DB","DRUGBUG_CONFIG"].forEach(function(k){if(typeof window[k]==="undefined")miss.push(k);});
+b.innerHTML='<div class="bootlogo">Drug<span>Bug</span></div><p class="bootnote" style="max-width:300px;margin:12px auto;text-align:center">DrugBug didn\'t finish loading.'+(miss.length?' Part of the app is missing ('+miss.join(", ")+').':'')+'</p><button type="button" onclick="location.reload()" style="font:700 16px system-ui;padding:10px 22px;border-radius:12px;border:0;background:#14b8a6;color:#fff">Try again</button>';},15000);</script>
 <script src="app-config.js"></script>
 <script defer src="backend.js"></script>
 <script defer src="data.js"></script>
