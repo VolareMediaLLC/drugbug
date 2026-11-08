@@ -1578,6 +1578,8 @@ function nrQuiz(st) {
   var c = '<section class="quiz"><div class="qtop"><span class="lbl">Question ' + (st.i + 1) + ' of ' + total + ' ' + starHTML(qStar(q)) + '</span><span class="muted small">' + (NRLV[q.lv] || "") + (st.mode === "practice" ? " · Score so far " + nrScore({ qs: st.qs.slice(0, st.i + 1), ans: st.ans }) + "/" + answered : " · " + answered + " answered") + '</span><button class="linkish" data-act="nrquit">Quit</button></div>';
   c += '<div class="prog"><i style="width:' + Math.round(100 * (st.i + (picked != null ? 1 : 0)) / total) + '%"></i></div>';
   if (q.cs) c += caseBox(q);
+  if (q.pilot && !pilLive(q.id) && typeof isReviewer === "function" && isReviewer()) c += pilBanner(q);
+  else if (!q.pilot) { if (reveal) chkSeen(q); c += chkHTML(q); }
   c += '<h3 class="qstem">' + esc(q.q) + '</h3><div class="qopts">';
   if (q.t) c += nrItemOpts(st, x, reveal);
   else x.opts.forEach(function (o, k) {
@@ -2853,6 +2855,7 @@ function mergeProg(remote) {
   /* Pro granted by a code: keep whichever expiry is later, so redeeming on one device covers both. */
   if (R.acctBonus && !L.acctBonus) L.acctBonus = R.acctBonus;
   if (R.reviewer && R.reviewer.id && !(L.reviewer && L.reviewer.id)) L.reviewer = R.reviewer;   /* question reviewer (Nov 7 2026) */
+  if (R.fullName && !L.fullName) L.fullName = R.fullName;   /* full name given with a code (Nov 7 2026) */
   if (R.qrev) { L.qrev = L.qrev || {}; Object.keys(R.qrev).forEach(function (k) { if (!L.qrev[k]) L.qrev[k] = R.qrev[k]; }); }
   if (R.proGift && R.proGift.until) { if (!L.proGift || (L.proGift.until || 0) < R.proGift.until) L.proGift = { until: R.proGift.until }; }
   /* what is equipped follows the same "newest device wins" rule as the outfit and face */
@@ -3017,7 +3020,8 @@ function startSession(kind, opt) {
   opt = opt || {};
   var pool = basePool(), qs = [], steps = ["quiz", "review", "done"], title = "", sub = "", sc = null, drug = opt.drug || null;
   if (kind === "daily") {
-    var goal = SET().dailyGoal; qs = adaptivePick(pool, goal); title = "Today's 5-minute DrugBug"; sub = goal + " questions, then your weak areas, then one clinical scenario.";
+    var goal = SET().dailyGoal; qs = adaptivePick(pool, goal);
+    if (typeof isReviewer === "function" && isReviewer()) { var inScope = {}; scopeIds().forEach(function (x) { inScope[x] = 1; }); qs = pilMix(qs, pilFor(function (q) { return inScope[q.d]; }).slice(0, 2)); } title = "Today's 5-minute DrugBug"; sub = goal + " questions, then your weak areas, then one clinical scenario.";
     steps = ["quiz", "weak", "scen", "done"];
   } else if (kind === "study") {
     /* only this specialty's questions, topped up with ones built from the drug page at this level (never another level's questions) */
@@ -3043,6 +3047,7 @@ function startSession(kind, opt) {
        visible question on them, so a category is never short of practice (owner, Nov 5 2026) */
     if (spool.length < 30) { var have = {}; spool.forEach(function (q) { have[q.id || q.q] = 1; }); DB.Q.forEach(function (q) { if (q.d && inSys[q.d] && !have[q.id || q.q] && (typeof qVisible !== "function" || qVisible(q))) spool.push(q); }); }
     qs = adaptivePick(spool, /^[cg]:/.test(opt.sys) ? 15 : 10);
+    qs = pilMix(qs, pilFor(function (q) { return inSys[q.d]; }));
     title = "Practice: " + (sy ? sy.name : "System"); sub = "Questions on the medicines in this group, weighted toward the ones you know least.";
   } else if (kind === "marks") {
     var mk = marks(); qs = adaptivePick(pool.filter(function (q) { return mk.indexOf(q.d) >= 0; }), 15); title = "Study my list"; sub = "Questions on the drugs you saved.";
@@ -3733,7 +3738,7 @@ function revSave(k, el) {
   var R = (Prog.d.qrev || (Prog.d.qrev = {}))[k] || (Prog.d.qrev[k] = {}), q = QRATE_Q[k] || {};
   R.sent = false; R.err = ""; saveProg();
   fnCall("qrRate", { gift: Prog.d.reviewer.id, id: k, d: R.d || null, v: R.v || null, s: R.s || null, lv: q.lv || (S.level || "") })
-    .then(function () { R.sent = true; R.err = ""; saveProg(); revRedraw(k); if (typeof ANA !== "undefined") ANA.at = 0; })
+    .then(function () { R.sent = true; R.err = ""; saveProg(); revRedraw(k); if (typeof ANA !== "undefined") ANA.at = 0; if (/^qp/.test(k)) setTimeout(function () { pilFetch(true); }, 1500); })
     .catch(function (e) { R.err = e && e.message === "offline" ? "Not saved: no internet" : "Not saved: " + ((e && e.message) || "try again"); revRedraw(k); });
   revRedraw(k);
 }
@@ -3885,6 +3890,83 @@ function admStats() {
     if (ANA.open) anaDraw();
   }).catch(function () { ANA.busy = false; });
 }
+/* ---------- Pilot questions (owner, Nov 7 2026) ----------
+   New questions (DB.PILOT, ids "qp...", in pilot.js) go to the owner and the evaluators first,
+   mixed into their Learn by system quizzes and the 5-minute DrugBug every few questions under a
+   yellow "Pilot question" banner. Their Good / Bad votes decide: 2 Good and no Bad (or the owner
+   marking it Good on the Review page) puts it live for everyone; pilotStatus says which are live,
+   and live ones simply join DB.Q, so every quiz can use them. */
+var PIL = store("pilotSt") || { ok: [], held: [], no: [], at: 0 }, PIL_ADDED = {};
+function pilHas(k, id) { return (PIL[k] || []).indexOf(id) >= 0; }
+function pilLive(id) { return pilHas("ok", id); }
+function pilDone(id) { return pilLive(id) || pilHas("no", id) || pilHas("held", id); }
+function pilApply() {
+  if (!DB.PILOT) return;
+  var ok = {}; (PIL.ok || []).forEach(function (i) { ok[i] = 1; });
+  DB.PILOT.forEach(function (q) { if (ok[q.id] && !PIL_ADDED[q.id]) { PIL_ADDED[q.id] = 1; DB.Q.push(q); } });
+}
+function pilFetch(force) {
+  pilApply();
+  if (typeof fnCall !== "function" || (!force && Date.now() - (PIL.at || 0) < 3600000)) return;
+  fnCall("pilotStatus", force ? { fresh: 1 } : {}).then(function (r) {
+    if (!r || !r.ok) return;
+    PIL = { ok: r.ok, held: r.held || [], no: r.no || [], at: Date.now() }; store("pilotSt", PIL); pilApply();
+  }).catch(function () {});
+}
+setTimeout(function () { try { pilFetch(); } catch (e) {} }, 6000);
+/* pilot questions this evaluator still has to look at, for this level */
+function pilFor(test) {
+  if (!DB.PILOT || typeof isReviewer !== "function" || !isReviewer()) return [];
+  var R = Prog.d.qrev || {}, al = nrLevelsFor(ctxKey());
+  return shuffle(DB.PILOT.filter(function (q) { return al.indexOf(q.lv) >= 0 && !pilDone(q.id) && !(R[q.id] && (R[q.id].v || R[q.id].d)) && test(q); }));
+}
+/* one every few questions: the 3rd, 7th, 11th... at most four in a quiz */
+function pilMix(qs, cands) {
+  if (!cands.length) return qs;
+  var out = qs.slice(), n = 0;
+  for (var p = 2; p <= out.length && n < 4 && n < cands.length; p += 4) { out.splice(p, 0, cands[n]); n++; }
+  return out;
+}
+function pilBanner(q) {
+  return '<div class="pilotq" role="note"><b>Pilot question</b><span>Needs your evaluation. Answer it, then rate it below: Good or Bad, and how hard. It goes live for everyone after 2 Good votes.</span></div>';
+}
+/* ---------- Checked marks (owner, Nov 7 2026) ----------
+   Evaluators and the Administrator see a small box at the top of every question: empty until at
+   least one evaluator has seen it, then a check mark. Answering a question counts as seeing it;
+   the ids go to qrSeen in small batches. The shared list comes from qrChecked (cached 30 min). */
+var CHK = { set: {}, at: 0, q: [], t: 0, busy: false };
+try { (store("chkSet") || []).forEach(function (i) { CHK.set[i] = 1; }); CHK.at = store("chkAt") || 0; } catch (e) {}
+function chkOn() { return typeof isReviewer === "function" && isReviewer(); }
+function chkLoad(force) {
+  if (!chkOn() || CHK.busy || typeof fnCall !== "function" || (!force && Date.now() - CHK.at < 1800000)) return;
+  CHK.busy = true;
+  fnCall("qrChecked", { gift: Prog.d.reviewer.id }).then(function (r) {
+    CHK.busy = false; if (!r || !r.ids) return;
+    r.ids.forEach(function (i) { CHK.set[i] = 1; }); CHK.at = Date.now();
+    try { store("chkSet", Object.keys(CHK.set)); store("chkAt", CHK.at); } catch (e) {}
+    document.querySelectorAll(".qchk[data-chk]").forEach(function (el) { if (CHK.set[el.getAttribute("data-chk")]) { el.classList.add("on"); el.innerHTML = chkInner(true); } });
+  }).catch(function () { CHK.busy = false; });
+}
+function chkInner(on) { return on ? '<i aria-hidden="true">&#10003;</i>Checked by an evaluator' : '<i aria-hidden="true"></i>Not checked yet'; }
+function chkHTML(q) {
+  if (!chkOn() || !q || !q.q) return "";
+  var k = qid(q); chkLoad();
+  return '<span class="qchk' + (CHK.set[k] ? ' on' : '') + '" data-chk="' + esc(k) + '">' + chkInner(!!CHK.set[k]) + '</span>';
+}
+/* answering it as an evaluator = seen */
+function chkSeen(q) {
+  if (!chkOn() || !q || !q.q) return;
+  var k = qid(q); if (CHK.set[k]) return;
+  CHK.set[k] = 1; CHK.q.push(k);
+  try { store("chkSet", Object.keys(CHK.set)); } catch (e) {}
+  clearTimeout(CHK.t); CHK.t = setTimeout(chkFlush, CHK.q.length >= 10 ? 0 : 15000);
+}
+function chkFlush() {
+  if (!CHK.q.length || typeof fnCall !== "function" || !Prog.d.reviewer) return;
+  var ids = CHK.q.splice(0, 50);
+  fnCall("qrSeen", { gift: Prog.d.reviewer.id, ids: ids }).catch(function () { CHK.q = ids.concat(CHK.q); });
+}
+document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden") try { chkFlush(); } catch (e) {} });
 function qRateSet(k, n, el) {
   var P = Prog.d; if (!P || !(n >= 1 && n <= 5)) return;
   var R = P.qrate || (P.qrate = {}), first = !R[k];
@@ -6507,7 +6589,8 @@ var LEGAL_PAGES = {
         "We use them only to measure and improve DrugBug, for example which sections are used, whether people come back, and how many free users upgrade. We do not use them for advertising, we do not sell or share them, we do not combine them with information from other companies, and we do not track you across other apps or websites.",
         "They are kept for up to 24 months, then deleted or combined into totals that cannot be tied to a device. You can turn them off at any time in " + STATS + ". Turning them off also deletes the statistics stored for that device."]) +
       L("Optional account", ["DrugBug works without an account. If you choose to create one (Sign in with Apple or email and password), we store your email address (or Apple's private relay address if you use Hide My Email), an account ID, and your study data so it can sync across your devices.", "Passwords and sign-in are handled by our authentication provider (Google Firebase Authentication); DrugBug never sees or stores your password or your Apple Account password. Apple sign-in tokens are verified by the provider's servers.", "Your account data is private to you: other users never see your email, account ID or study records. Data is encrypted in transit (HTTPS/TLS) and at rest by our provider. Access to the database is restricted by server-side security rules, and only authorized DrugBug administrators can manage content.", "You can export your data (Settings, Download my data) and delete your account in the app (Settings, Privacy & account). Deleting your account deletes your account and its study records; copies in our provider's backups expire within 30 days."]) +
-      L("What we do not collect", ["We do not ask for patient information, and you must never enter it. We do not collect your name, contacts, location, photos or advertising ID. We do not sell personal information, and we do not show ads."]) +
+      L("What we do not collect", ["We do not ask for patient information, and you must never enter it. We do not collect your contacts, location, photos or advertising ID, and we do not collect your name unless you redeem a code (see Codes). We do not sell personal information, and we do not show ads."]) +
+      L("Codes", ["When you redeem a code (a gift, Pro, evaluator, sticks, bug, school or agency license, agency protocol or Field Medic code), DrugBug asks for your full name. It is saved with that redemption and on your account, and only the DrugBug team sees it, so we know who used each code. School class keys never ask for a name. Your name is deleted with your account."]) +
       L("Who can see it", ["Your progress and score history are private to your account. Usage statistics are seen only by the DrugBug team, as totals and trends. (The leaderboard and school competitions are currently turned off.) If turned on: leaderboard and competition display names, school or team names and scores are visible to other participants. Use a first name or nickname only. Error reports and protocol requests are seen by the DrugBug team."]) +
       L("Students and schools", ["A school or agency can give students anonymous class keys. If you redeem one, your quiz totals by medication system (questions answered, how many were correct, and when you last studied) are reported to your instructor under the key's label, for example \"Student 07\", never under your name. DrugBug does not know who holds which key; only your instructor's own key sheet does. Deleting the class deletes every key and its results. Schools that need a data agreement can contact us."]) +
       L("Account deletion and retention", ["Use <button class=\"linkish\" data-legal=\"data\">Your data</button> to delete everything DrugBug stores about you, including this device's usage statistics, or email us. We delete or de-identify your information promptly, except where we must keep limited records for legal reasons (for example records of purchases, or a record that you agreed to the Terms). Data stored only on your device is removed when you delete the app or clear this site's data."]) +
@@ -29361,7 +29444,7 @@ document.addEventListener("click", function (e) {
    code cannot be run again on a second device. There is no server check, so a code handed to the world
    can be used by the world; these are for handing out deliberately, not for public promotion. */
 
-var GIFT = { open: false, code: "", msg: "", ok: "", busy: false };
+var GIFT = { open: false, code: "", msg: "", ok: "", busy: false, name: "" };
 
 function giftSalt() { return (DB.GIFTS || {}).salt || ""; }
 function giftKey(code) {   /* stretched once per try, same 100,000 rounds as the protocol codes */
@@ -29382,6 +29465,11 @@ function giftProDays() { var g = giftPro(); return g ? Math.ceil((g.until - Date
 function giftRedeem(code) {
   GIFT.msg = ""; GIFT.ok = "";
   if (agpNorm(code).length < 4) { GIFT.msg = "Enter the code you were given."; return giftDraw(); }
+  /* every code except a school class key needs the person's full name (owner, Nov 7 2026) */
+  if (!(typeof groupKeyShape === "function" && groupKeyShape(code))) {
+    if (!giftNameOk(GIFT.name)) { GIFT.msg = "Enter your full name (first and last) to use this code."; giftDraw(); var ni = document.getElementById("giftname"); if (ni) ni.focus(); return; }
+    GIFT.lastCode = code;
+  }
   GIFT.busy = true; giftDraw();
   setTimeout(function () {
     var d = giftFind(code); GIFT.busy = false;
@@ -29414,10 +29502,31 @@ function giftRedeem(code) {
   }, 30);
 }
 
+/* Full names on codes (owner, Nov 7 2026): every code except a school class key asks for the
+   person's full name. It is kept on their account (Prog.d.fullName) and sent with the redemption,
+   so the owner sees who used each code on the Admin page. Names that cannot be sent right away
+   (offline) wait in "codeNamePend" and go with the next try. */
+function giftNameOk(n) {
+  n = String(n || "").trim().replace(/\s+/g, " ");
+  return n.length >= 3 && n.length <= 80 && n.split(" ").filter(function (w) { return /\p{L}/u.test(w); }).length >= 2 && !/[<>{}@\d]/.test(n);
+}
+function giftNameKeep() { var n = String(GIFT.name || "").trim().replace(/\s+/g, " "); if (Prog.d && n && Prog.d.fullName !== n) { Prog.d.fullName = n; saveProg(); } return n; }
+function codeNameLog(kind, ref) {
+  var n = giftNameKeep(); if (!n) return;
+  var pend = store("codeNamePend") || []; pend.push({ kind: kind, ref: String(ref || "").slice(0, 80), code: String(GIFT.lastCode || "").slice(0, 40), name: n, at: Date.now() });
+  store("codeNamePend", pend.slice(-20)); codeNameFlush();
+}
+function codeNameFlush() {
+  var pend = store("codeNamePend") || []; if (!pend.length || typeof fnCall !== "function" || !Prog.uid) return;
+  var it = pend[0];
+  fnCall("codeNameLog", it).then(function () { var p = store("codeNamePend") || []; p.shift(); store("codeNamePend", p); if (p.length) codeNameFlush(); }).catch(function () {});
+}
+setTimeout(function () { try { codeNameFlush(); } catch (e) {} }, 9000);
 /* what a code gives, applied the same way for built-in gift codes and codes made on the owner's
    Admin page (owner, Nov 7 2026) */
 function giftGive(d) {
   var got = [];
+  if (String(d.id || "").slice(0, 2) !== "c-") codeNameLog(d.rev ? "evaluator" : "gift", d.id); else giftNameKeep();
   Prog.d.gifts = Prog.d.gifts || {};
     Prog.d.gifts[d.id] = Date.now();
     if (d.sticks > 0) { earn(d.sticks); got.push(d.sticks.toLocaleString() + " sticks"); }
@@ -29430,7 +29539,7 @@ function giftGive(d) {
       if (!owned(d.bug)) Prog.d.owned = (Prog.d.owned || []).concat([d.bug]);
       Prog.d.avatar = d.bug; Prog.d.avatarTs = Date.now(); got.push("the " + bugById(d.bug).name);
     }
-    if (d.rev) { Prog.d.reviewer = { id: d.id, at: Date.now() }; got.push("question reviewer access (a reviewer panel now shows after each answer)"); }
+    if (d.rev) { Prog.d.reviewer = { id: d.id, at: Date.now() }; got.push("question reviewer access (a reviewer panel now shows after each answer)"); setTimeout(function () { try { evWelcome(); } catch (e) {} }, 350); }
     if (d.ag) {
       store("agcode", d.ag);
       if (typeof AGP !== "undefined") { AGP.code = d.ag; AGP.tried = false; AGP.data = null; if (typeof agpAuto === "function") agpAuto(); }
@@ -29461,7 +29570,7 @@ function codeServer(raw, fail) {
   if (typeof NATIVE !== "undefined" && NATIVE && /^(PRO|EVAL)/.test(up)) return fail("This code unlocks DrugBug Pro. Redeem it at drugbugapp.com, or use an App Store offer code here.");
   if (!Prog.uid || typeof fnCall !== "function") return fail("This code needs an internet connection. Connect and try again in a moment.");
   GIFT.busy = true; giftDraw();
-  fnCall("codeRedeem", { code: raw }).then(function (r) {
+  fnCall("codeRedeem", { code: raw, name: giftNameKeep() }).then(function (r) {
     GIFT.busy = false;
     if (!r || !r.found) return fail();
     if (r.error) return fail(r.error);
@@ -29481,18 +29590,18 @@ function codeOther(raw) {
     var ad = null; try { ad = agpTry(raw); } catch (e) {}
     if (ad) {
       if (typeof agpPro === "function" && !agpPro()) { fail("That is your agency's protocols code. Agency protocols are part of DrugBug Pro."); return openPaywall("Your agency's protocols", "pro"); }
-      AGP.data = ad; AGP.code = raw; store("agcode", raw); AGP.sec = null; AGP.view = null;
+      AGP.data = ad; AGP.code = raw; store("agcode", raw); AGP.sec = null; AGP.view = null; codeNameLog("protocols", raw);
       return win("Your agency's protocols are unlocked. They are in the Prehospital levels.");
     }
   }
   if (!(window.crypto && crypto.subtle)) return fail("This browser can't check codes. Try a current version of Safari or Chrome.");
   GIFT.busy = true; giftDraw();
   codeHash("drugbug-fm:", code).then(function (h) {
-    if (typeof FM_CODES !== "undefined" && FM_CODES[h]) { GIFT.busy = false; GIFT.code = ""; giftDraw(); return fmCodeTry(raw); }
+    if (typeof FM_CODES !== "undefined" && FM_CODES[h]) { codeNameLog("fieldmedic", h.slice(0, 16)); GIFT.busy = false; GIFT.code = ""; giftDraw(); return fmCodeTry(raw); }
     return codeHash("drugbug-web:", code).then(function (h2) {
       var list = (CFG && CFG.webCodes) || [];
       if (typeof DEMO !== "undefined" && DEMO && list.some(function (c) { return c.h === h2; })) {
-        return Promise.resolve(webCodeTry(raw)).then(function () { var m = PRO.msg || ""; PRO.msg = ""; if (/accepted/i.test(m)) win(m); else fail(m); });
+        return Promise.resolve(webCodeTry(raw)).then(function () { var m = PRO.msg || ""; PRO.msg = ""; if (/accepted/i.test(m)) { codeNameLog("web", h2.slice(0, 16)); win(m); } else fail(m); });
       }
       var db = Prog.db || (typeof Dex !== "undefined" && Dex.db);
       if (!db) return fail("That code did not match anything. School and agency codes also need an internet connection, so if it is one of those, try again online.");
@@ -29500,7 +29609,7 @@ function codeOther(raw) {
         var L = snap && snap.exists ? snap.data() : null;
         if (!L) return fail();
         if (!L.until || L.until < Date.now()) return fail("That code has ended. Check with your instructor or agency.");
-        Prog.d.license = { code: code, until: L.until, org: L.org || "" }; saveProg();
+        Prog.d.license = { code: code, until: L.until, org: L.org || "" }; saveProg(); codeNameLog("license", code);
         if (Prog.uid) db.doc("licenseUse/" + code + "_" + Prog.uid).set({ code: code, uid: Prog.uid, ts: Date.now() }).catch(function () {});
         win("Code applied: DrugBug Pro through " + new Date(L.until).toLocaleDateString() + (L.org ? " from " + L.org : "") + ".");
       });
@@ -29511,19 +29620,21 @@ function giftBox() {
   return '<div class="giftbox" id="giftbox">' +
     (GIFT.ok ? '<p class="presult good" role="status">' + esc(GIFT.ok) + '</p>' : '') +
     (GIFT.msg ? '<p class="presult" role="status">' + esc(GIFT.msg) + '</p>' : '') +
-    '<form class="pform inl" data-giftform="1"><label class="gl">Code<input class="pinput" id="giftin" type="text" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="Enter your code" value="' + esc(GIFT.code) + '"></label>' +
+    '<form class="pform inl" data-giftform="1"><label class="gl gname">Your full name<input class="pinput pname" id="giftname" type="text" autocomplete="name" autocapitalize="words" maxlength="80" placeholder="First and last name" value="' + esc(GIFT.name || (Prog.d && Prog.d.fullName) || "") + '"></label><label class="gl">Code<input class="pinput" id="giftin" type="text" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="Enter your code" value="' + esc(GIFT.code) + '"></label>' +
     '<button class="btn small" type="submit"' + (GIFT.busy ? " disabled" : "") + '>' + (GIFT.busy ? "Checking..." : "Redeem") + '</button></form>' +
-    '<p class="muted small">Gift codes, access codes, school or agency codes and agency protocol codes all go here.</p></div>';
+    '<p class="muted small">Gift codes, access codes, school or agency codes and agency protocol codes all go here. Every code except a school class key needs your full name; only the DrugBug team sees it.</p></div>';
 }
 function giftDraw() {
   var el = document.getElementById("giftbox");
   if (!el) return;
   var v = (document.getElementById("giftin") || {}).value; if (v !== undefined && !GIFT.ok) GIFT.code = v;
+  var nm = (document.getElementById("giftname") || {}).value; if (nm !== undefined) GIFT.name = nm;
   el.outerHTML = giftBox();
 }
 document.addEventListener("submit", function (e) {
   var f = e.target; if (!f.getAttribute || !f.getAttribute("data-giftform")) return;
   e.preventDefault();
+  GIFT.name = ((document.getElementById("giftname") || {}).value || "").trim();
   giftRedeem((document.getElementById("giftin") || {}).value || "");
 });
 
@@ -29954,6 +30065,46 @@ cidlg.addEventListener("click", function (e) {
   }
 });
 document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !cidlg.hidden) { cidlg.hidden = true; cidlg.innerHTML = ""; } });
+
+
+/* ---------- "You have been chosen to be an evaluator" (owner, Nov 7 2026) ----------
+   Shown right after an evaluator code is redeemed: congratulations, what evaluators do, how it
+   works in the app, and a thank-you. Four short cards in the same style as the class welcome. */
+var EVW = { i: 0 };
+var evwdlg = document.createElement("div"); evwdlg.id = "evwdlg"; evwdlg.className = "sheet rsheet"; evwdlg.hidden = true; document.body.appendChild(evwdlg);
+function evWelcomeCards() {
+  var first = String((Prog.d && Prog.d.fullName) || "").trim().split(" ")[0], admin = typeof codeRole === "function" && codeRole() === "admin";
+  return [
+    [admin ? "Welcome, Administrator" : "Congratulations" + (first ? ", " + first : "") + "!",
+      '<p class="evwbig">' + (admin ? "Your administrator code is active." : "You have been chosen to be a <b>DrugBug Evaluator</b>.") + '</p><p>' + (admin ? "You see everything evaluators see, plus the Administrator tools." : "Evaluators help decide which questions every DrugBug student sees. You also have DrugBug Pro for life, as a thank-you.") + '</p><p class="evwchip"><span class="tc-role tc-' + (admin ? "admin" : "eval") + '">' + (admin ? "Administrator" : "Evaluator") + '</span> now shows at the top of the app.</p>'],
+    ["What an evaluator does",
+      '<p>You check our questions the way a careful instructor would:</p><ul class="evwl"><li><b>Is it accurate?</b> The right answer is right, and none of the others are.</li><li><b>Is it clear?</b> It reads well and asks one thing.</li><li><b>Is it fair?</b> It fits the level it is written for.</li><li><b>How hard is it?</b> Rate it from 1 (easy) to 5 (hard).</li></ul>'],
+    ["How it works",
+      '<ol class="evwl"><li><b>Study like normal.</b> After you answer a question, an <b>Evaluator</b> panel opens under it: difficulty 1 to 5, <b>Good</b> or <b>Bad</b>, and a box for suggestions.</li><li><b>Pilot questions</b> come with a <span class="evwy">yellow banner</span>. They are new, and only evaluators see them. Once 2 evaluators mark one Good, it goes live for everyone.</li><li><b>Tap your Evaluator badge</b> at the top to see how everyone does on each medication.</li></ol>'],
+    ["Thank you",
+      '<p>Your ratings and suggestions go straight to the DrugBug team. Your name is shared only with the team, never with other users.</p><p>Every question you check makes DrugBug better for every student who studies with it.</p>']
+  ];
+}
+function evWelcome() { EVW.i = 0; evwDraw(); evwdlg.hidden = false; }
+function evwDraw() {
+  var C = evWelcomeCards(), t = C[EVW.i], last = EVW.i === C.length - 1;
+  var hk = typeof learnBugSVG === "function" ? learnBugSVG() : "";
+  evwdlg.innerHTML = '<div class="panel cipanel evwpanel" role="dialog" aria-modal="true" aria-label="' + esc(t[0]) + '" tabindex="-1">' +
+    '<div class="cihead"><span class="cihk">' + hk + '</span><span><b>Hickory</b><small>DrugBug evaluators</small></span><span class="cistep">' + (EVW.i + 1) + ' of ' + C.length + '</span></div>' +
+    '<h2>' + esc(t[0]) + '</h2><div class="evwbody">' + t[1] + '</div>' +
+    '<div class="cibar" style="grid-template-columns:repeat(' + C.length + ',1fr)">' + C.map(function (x, i) { return '<i class="' + (i <= EVW.i ? "on" : "") + '"></i>'; }).join("") + '</div>' +
+    '<div class="actions">' + (EVW.i ? '<button class="btn ghost" data-evw="back">Back</button>' : '<button class="btn ghost" data-evw="done">Skip</button>') + '<button class="btn" data-evw="' + (last ? "go" : "next") + '">' + (last ? "Start evaluating" : "Next") + '</button></div></div>';
+  var p = evwdlg.querySelector(".panel"); if (p) p.focus();
+}
+evwdlg.addEventListener("click", function (e) {
+  var b = e.target.closest("[data-evw]"); if (!b) { if (e.target === evwdlg) { evwdlg.hidden = true; evwdlg.innerHTML = ""; } return; }
+  var a = b.getAttribute("data-evw");
+  if (a === "next") { EVW.i++; return evwDraw(); }
+  if (a === "back") { EVW.i = Math.max(0, EVW.i - 1); return evwDraw(); }
+  evwdlg.hidden = true; evwdlg.innerHTML = "";
+  if (a === "go") { var lv = store("lastLevel"); if (lv && typeof levelObj === "function" && levelObj(lv)) go("level", { level: lv }); else go("home"); }
+});
+document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !evwdlg.hidden) { evwdlg.hidden = true; evwdlg.innerHTML = ""; } });
 
 /* ---------- Dashboard (owner, Nov 6 2026) ----------
    A "Dashboard" panel sits in the level banner to the right of the bug: accuracy, this week and
