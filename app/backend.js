@@ -25,7 +25,7 @@
     var prov = (u.providerData || []).map(function (p) { return p.providerId; });
     return { uid: u.uid, anonymous: u.isAnonymous, signedIn: !u.isAnonymous, email: u.email || "", emailVerified: !!u.emailVerified,
       provider: prov.indexOf("apple.com") >= 0 ? "apple" : prov.indexOf("google.com") >= 0 ? "google" : prov.indexOf("password") >= 0 ? "email" : "",
-      hasPassword: prov.indexOf("password") >= 0 };
+      hasPassword: prov.indexOf("password") >= 0, hasAppleLink: prov.indexOf("apple.com") >= 0 };
   }
   /* what happened while connecting, shown in Settings when the phone cannot connect (owner, Nov 8 2026) */
   var D = window.__fbDiag = { stage: "loading", err: "" };
@@ -112,12 +112,15 @@
       "auth/too-many-requests": "Too many tries. Wait a few minutes and try again.", "auth/network-request-failed": "No internet connection.",
       "auth/requires-recent-login": "For your security, sign in again, then try once more.",
       "auth/account-exists-with-different-credential": "You already have a DrugBug account with this email. Sign in with your email and password instead. (Signed up with Google on the website? Add a password there in Settings, Account.)", "auth/credential-already-in-use": "That Apple ID is already linked to another DrugBug account. Sign out, then sign in with it.",
-      "auth/popup-closed-by-user": "", "auth/cancelled-popup-request": "", "auth/user-cancelled": "" }[c] || (e && e.message) || "Something went wrong.";
+      "auth/popup-closed-by-user": "", "auth/cancelled-popup-request": "", "auth/user-cancelled": "" }[c] ||
+      (/AuthorizationError error 1000/.test(e && e.message || "") ? "Sign in with Apple isn't available in this version of the app yet. Use email for now." : "") || (e && e.message) || "Something went wrong.";
   }
   var account = {
     state: state,
     onChange: function (fn) { listeners.push(fn); },
     signInApple: function () { return appleNative().then(function (r) { return attach(appleCred(r)); }); },
+    /* add Apple to the account you are signed in to, so Apple signs you straight into it next time (owner, Nov 8 2026) */
+    linkApple: function () { return appleNative().then(function (r) { var u = auth.currentUser; if (!u) throw new Error("Sign in first."); return u.linkWithCredential(appleCred(r)).then(function () { emit(); return true; }); }); },
     signInGoogle: googleSignIn,
     hasApple: function () { return !!(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.auth); },
     createEmail: function (email, pw) {
