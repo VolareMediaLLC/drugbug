@@ -77,6 +77,15 @@ iframe.emb{width:100%;border:0;display:block;min-height:600px;background:transpa
 .signin{max-width:420px;margin:40px auto}
 .signin input{margin-top:6px}
 @media (max-width:640px){.kpi b{font-size:22px}}
+
+nav.subtabs{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:-6px 0 14px}
+nav.subtabs button{font:inherit;font-weight:650;font-size:13.5px;padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer}
+nav.subtabs button[aria-selected=true]{background:var(--accent);border-color:var(--accent);color:#fff}
+nav.subtabs .subnote{flex-basis:100%;color:var(--muted);font-size:13px;margin-top:4px}
+nav.subtabs .badge{background:#d97706;color:#fff;border-radius:99px;padding:0 6px;font-size:11.5px;margin-left:3px}
+.todo{list-style:none;margin:0;padding:0}.todo li{padding:8px 0;border-top:1px solid var(--line)}.todo li:first-child{border-top:0}
+.linkish{background:none;border:0;padding:0;font:inherit;color:var(--accent);font-weight:650;cursor:pointer;text-align:left}
+@media(max-width:480px){nav.tabs button{padding:8px 10px;font-size:13.5px}}
 </style>
 </head>
 <body>
@@ -98,27 +107,24 @@ iframe.emb{width:100%;border:0;display:block;min-height:600px;background:transpa
 
 <div id="vMain" class="hide">
 <nav class="tabs" role="tablist" id="tabs">
-  <button role="tab" data-tab="overview">Overview</button>
-  <button role="tab" data-tab="grading">Grading</button>
-  <button role="tab" data-tab="analytics">Analytics</button>
-  <button role="tab" data-tab="codes">Codes</button>
-  <button role="tab" data-tab="evaluators">Evaluators</button>
-  <button role="tab" data-tab="signups">Sign-ups</button>
-  <button role="tab" data-tab="classes">Classes</button>
-  <button role="tab" data-tab="metrics">App metrics</button>
+  <button role="tab" data-tab="overview">Home</button>
+  <button role="tab" data-tab="people">People</button>
+  <button role="tab" data-tab="questions">Questions</button>
+  <button role="tab" data-tab="classes">Schools</button>
+  <button role="tab" data-tab="metrics">Usage</button>
 </nav>
+<nav class="subtabs hide" id="subtabs" aria-label="Section pages"></nav>
 
 <!-- OVERVIEW -->
 <section data-page="overview">
+  <div class="card" id="todoCard"><h2>To do</h2><ul class="todo" id="todo"><li class="muted">Checking…</li></ul></div>
   <div class="card">
-    <div class="row sp"><div><h2>Dashboard</h2><div class="muted small" id="ovSub">Loading…</div></div><button class="ghost" id="bOvRefresh">Refresh</button></div>
+    <div class="row sp"><div><h2>At a glance</h2><div class="muted small" id="ovSub">Loading…</div></div><button class="ghost" id="bOvRefresh">Refresh</button></div>
     <div class="kpis" id="kpis" style="margin-top:14px"></div>
   </div>
   <div class="ovgrid">
-    <div class="card ovsec"><h2>Latest codes <button class="ghost" data-go="codes">Make codes &rarr;</button></h2><table class="mini" id="ovCodes"><tr><td class="muted">Loading…</td></tr></table></div>
-    <div class="card ovsec"><h2>Evaluators <button class="ghost" data-go="evaluators">All evaluators &rarr;</button></h2><table class="mini" id="ovEval"><tr><td class="muted">Loading…</td></tr></table></div>
-    <div class="card ovsec"><h2>Hardest questions <button class="ghost" data-go="grading">Open Grading &rarr;</button></h2><p class="muted small" style="margin:0 0 6px">Highest average difficulty from players and evaluators (at least 3 ratings).</p><table class="mini" id="ovHard"><tr><td class="muted">Loading…</td></tr></table></div>
-    <div class="card ovsec"><h2>Lowest-scoring medications <button class="ghost" data-go="analytics">Open Analytics &rarr;</button></h2><p class="muted small" style="margin:0 0 6px">Everyone together, at least 20 answers.</p><table class="mini" id="ovLow"><tr><td class="muted">Loading…</td></tr></table></div>
+    <div class="card ovsec"><h2>Latest codes <button class="ghost" data-go="codes">All codes &rarr;</button></h2><table class="mini" id="ovCodes"><tr><td class="muted">Loading…</td></tr></table></div>
+    <div class="card ovsec"><h2>Evaluator activity <button class="ghost" data-go="evaluators">All evaluators &rarr;</button></h2><table class="mini" id="ovEval"><tr><td class="muted">Loading…</td></tr></table></div>
   </div>
 </section>
 
@@ -128,7 +134,7 @@ iframe.emb{width:100%;border:0;display:block;min-height:600px;background:transpa
 <!-- ANALYTICS -->
 <section data-page="analytics" class="hide">
   <div class="card">
-    <div class="row sp"><div><h2>Analytics</h2><div class="muted small" id="anSub">How everyone does, anonymously, down to each medication.</div></div><button class="ghost" id="bAnRefresh">Refresh</button></div>
+    <div class="row sp"><div><h2>How students score</h2><div class="muted small" id="anSub">Everyone using DrugBug, anonymously, by medication, body system and drug class. Click a medication to see its questions.</div></div><button class="ghost" id="bAnRefresh">Refresh</button></div>
     <div class="kpis" id="anKpis" style="margin-top:12px"></div>
     <div id="anBody"></div>
   </div>
@@ -260,10 +266,19 @@ iframe.emb{width:100%;border:0;display:block;min-height:600px;background:transpa
 
   /* ---------- tabs ---------- */
   var TAB = "", LOADED = {};
+  /* five sections; People and Questions each hold a few pages (owner, Nov 7 2026) */
+  var GROUPS = { overview: ["overview"], people: ["signups", "evaluators", "codes"], questions: ["grading", "analytics"], classes: ["classes"], metrics: ["metrics"] };
+  var SUBNAME = { signups: "Evaluator sign-ups", evaluators: "Evaluators", codes: "Codes", grading: "Grade questions", analytics: "How students score" };
+  var SUBNOTE = { evaluators: "Everyone with an evaluator code: what they graded, and their suggestions.", grading: "Read, rate and fix questions. Pilot questions go live after 2 Good votes." };
+  var LASTSUB = { people: "signups", questions: "grading" };
+  function groupOf(t) { for (var g in GROUPS) if (GROUPS[g].indexOf(t) >= 0) return g; return null; }
   function go(t) {
+    if (GROUPS[t] && GROUPS[t].length > 1) t = LASTSUB[t] || GROUPS[t][0];
     if (!document.querySelector('[data-page="' + t + '"]')) t = "overview";
-    TAB = t;
-    document.querySelectorAll("#tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.getAttribute("data-tab") === t)); });
+    TAB = t; var g = groupOf(t) || "overview"; if (LASTSUB[g]) LASTSUB[g] = t;
+    document.querySelectorAll("#tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.getAttribute("data-tab") === g)); });
+    var subs = GROUPS[g]; show("subtabs", subs.length > 1);
+    if (subs.length > 1) $("subtabs").innerHTML = subs.map(function (x) { return '<button data-tab="' + x + '" aria-selected="' + (x === t) + '">' + esc(SUBNAME[x]) + (x === "signups" && OV && OV.signups && OV.signups.new ? ' <span class="badge">' + OV.signups.new + '</span>' : '') + '</button>'; }).join("") + '<span class="subnote">' + esc(SUBNOTE[t] || "") + '</span>';
     document.querySelectorAll("[data-page]").forEach(function (s) { show(s, s.getAttribute("data-page") === t); });
     if (location.hash.slice(1) !== t) history.replaceState(null, "", "#" + t);
     var fr = document.querySelector('[data-page="' + t + '"] iframe');
@@ -272,6 +287,7 @@ iframe.emb{width:100%;border:0;display:block;min-height:600px;background:transpa
     window.scrollTo(0, 0);
   }
   $("tabs").addEventListener("click", function (e) { var b = e.target.closest("[data-tab]"); if (b) go(b.getAttribute("data-tab")); });
+  $("subtabs").addEventListener("click", function (e) { var b = e.target.closest("[data-tab]"); if (b) go(b.getAttribute("data-tab")); });
   document.addEventListener("click", function (e) { var b = e.target.closest("[data-go]"); if (b) go(b.getAttribute("data-go")); });
   window.addEventListener("hashchange", function () { if (!$("vMain").classList.contains("hide")) go(location.hash.slice(1)); });
   /* the embedded pages are on this same site, so their height can be read and matched */
@@ -322,7 +338,7 @@ iframe.emb{width:100%;border:0;display:block;min-height:600px;background:transpa
     if (o.review) k.push(kpi("grading", "Your grading", fmt(o.review.reviewed), "questions reviewed · " + fmt(o.review.bad) + " bad · " + fmt(o.review.edited) + " rewritten"));
     if (o.evaluators) k.push(kpi("evaluators", "Evaluators", fmt(o.evaluators.questions), "questions graded · " + fmt(o.evaluators.suggestions) + " suggestions · " + fmt(o.evaluators.bad) + " bad"));
     if (o.signups) k.push(kpi("signups", "Sign-ups", fmt(o.signups.new), "new evaluator sign-ups · " + fmt(o.signups.total) + " total"));
-    if (o.classes) k.push(kpi("classes", "Classes", fmt(o.classes.active), "active · " + fmt(o.classes.seats) + " seats · " + fmt(o.classes.total) + " total"));
+    if (o.classes) k.push(kpi("classes", "Schools", fmt(o.classes.active), "active · " + fmt(o.classes.seats) + " seats · " + fmt(o.classes.total) + " total"));
     $("kpis").innerHTML = k.join("");
   }
   function loadOverviewLists() {
@@ -335,19 +351,27 @@ iframe.emb{width:100%;border:0;display:block;min-height:600px;background:transpa
       var L = CODERS.filter(function (c) { return c.redeemed; }).sort(function (a, b) { return (b.lastAt || 0) - (a.lastAt || 0); }).slice(0, 6);
       $("ovEval").innerHTML = L.length ? L.map(function (c) { return '<tr><td><b>' + esc(c.name || c.code) + '</b><div class="muted small">' + esc(c.role) + ' · ' + esc(c.code) + '</div></td><td class="num">' + fmt(c.graded) + ' graded</td><td class="muted small">' + ago(c.lastAt) + '</td></tr>'; }).join("") : '<tr><td class="muted">No evaluator has redeemed a code yet.</td></tr>';
     }).catch(function (e) { $("ovEval").innerHTML = '<tr><td class="muted">' + esc(errTxt(e)) + '</td></tr>'; });
-    stats().then(function (S) {
-      return Promise.all([meta(), questions()]).then(function (r) {
-        var QS = {}; r[1].qs.forEach(function (q) { QS[q.id] = q; });
-        var hard = Object.keys(QS).map(function (id) { var a = avgQ(S, id); return a.n >= 3 ? [id, a] : null; }).filter(Boolean).sort(function (a, b) { return b[1].avg - a[1].avg; }).slice(0, 6);
-        $("ovHard").innerHTML = hard.length ? hard.map(function (h) { var q = QS[h[0]]; return '<tr><td><span class="avg">' + h[1].avg.toFixed(1) + '</span></td><td>' + esc(String(q.q).slice(0, 120)) + (q.q.length > 120 ? "…" : "") + '<div class="muted small">' + esc((r[1].names[q.d] || q.d || "") + " · " + q.lv) + ' · ' + h[1].n + ' ratings</div></td></tr>'; }).join("") : '<tr><td class="muted">Not enough ratings yet. Questions show here once 3 or more people rate them.</td></tr>';
-        var low = Object.keys(S.drugs || {}).map(function (id) { var d = S.drugs[id]; return d.n >= 20 ? [id, d] : null; }).filter(Boolean).sort(function (a, b) { return a[1].c / a[1].n - b[1].c / b[1].n; }).slice(0, 6);
-        $("ovLow").innerHTML = low.length ? low.map(function (x) { return '<tr><td><b>' + esc(dname(x[0])) + '</b></td><td class="num">' + pct(x[1].c, x[1].n) + '</td><td class="muted small num">' + fmt(x[1].n) + ' answers</td></tr>'; }).join("") : '<tr><td class="muted">Not enough answers yet. Per-medication counts started Nov 7, 2026.</td></tr>';
-      });
-    }).catch(function (e) { $("ovHard").innerHTML = $("ovLow").innerHTML = '<tr><td class="muted">' + esc(errTxt(e)) + '</td></tr>'; });
+    drawTodo();
   }
 
   /* ---------- analytics ---------- */
   var AN = { tab: "drug", q: "", sort: "n", drug: null };
+  /* the things waiting on the owner, worked out from what is already loaded */
+  function drawTodo() {
+    var o = OV || {}, out = [];
+    if (o.signups && o.signups.new) out.push(['people', 'signups', o.signups.new + ' evaluator sign-up' + (o.signups.new === 1 ? '' : 's') + ' to review']);
+    Promise.all([questions(), call("pilotStatus", { fresh: 1 }).catch(function () { return null; })]).then(function (r) {
+      var pil = r[0].qs.filter(function (q) { return q.b === "pilot"; }).length, P = r[1] || {};
+      var done = (P.ok || []).length + (P.no || []).length, held = (P.held || []).length;
+      if (held) out.push(['questions', 'grading', held + ' pilot question' + (held === 1 ? ' was' : 's were') + ' voted Bad: decide whether to fix or drop ' + (held === 1 ? 'it' : 'them')]);
+      if (pil) out.push(['questions', 'grading', fmt(Math.max(0, pil - done - held)) + ' of ' + fmt(pil) + ' pilot questions still need evaluator votes (' + fmt((P.ok || []).length) + ' live so far)']);
+      paint();
+    }).catch(paint);
+    function paint() {
+      $("todo").innerHTML = out.length ? out.map(function (x) { return '<li><button class="linkish" data-go="' + x[1] + '">' + esc(x[2]) + ' &rarr;</button></li>'; }).join("") : '<li class="muted">Nothing waiting on you right now.</li>';
+    }
+    paint();
+  }
   function stats() { return STATS ? Promise.resolve(STATS) : call("qrStats").then(function (r) { STATS = r || {}; return STATS; }); }
   function dname(id) { var d = META && META.drugs[id]; return d ? d[0] : id; }
   function avgQ(S, id) {
