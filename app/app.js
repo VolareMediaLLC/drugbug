@@ -571,11 +571,11 @@ function routeChips(code) {
   return L ? '<span class="rchips">' + L.map(function (x) { return '<span>' + esc(x) + '</span>'; }).join("") + '</span>' : "";
 }
 var HOME_ROUTES = [
-  ["ph", "levels", "Prehospital", "EMT, AEMT, Paramedic and Flight. Every level has its own drugs, protocols and question bank, written for the calls you actually run.", "grub-medic"],
+  ["ph", "levels", "Prehospital", "EMT, AEMT, Paramedic, Flight and Community Paramedic. Every level has its own drugs, protocols and question bank, written for the calls you actually run.", "grub-medic"],
   ["rn", "nlevels", "Nursing", "CNA, LVN/LPN, RN and Flight Nurse: the medicines each licence gives and monitors, and what to check before you give them.", "grub-nurse"],
   ["md", "mlevels", "Medical School", "MS1 to intern: mechanisms and drug classes first, then how it all plays out on the wards.", "grub-doc"],
   ["im", "ilevels", "Imaging", "X-ray, CT, MRI, nuclear medicine and IR: the agents you inject and how to keep patients safe.", "grub-imaging"],
-  ["ah", "alevels", "Allied Health", "Mental health professionals, dietitians and respiratory therapists: the medicines your field works with every day.", "grub-allied"]
+  ["ah", "alevels", "Allied Health", "Ten fields, from mental health, dietitians and respiratory therapists to surgical techs, dental hygiene and phlebotomy: the medicines your field works with every day.", "grub-allied"]
 ];
 var FPATH_ICO = {
   gen: '<path d="M4 4.5A1.5 1.5 0 0 1 5.5 3H20v15H5.5A1.5 1.5 0 0 0 4 19.5z"/><path d="M4 19.5A1.5 1.5 0 0 0 5.5 21H20"/><path d="M9 8h7M9 11.5h5"/>',
@@ -587,11 +587,11 @@ var FPATH_ICO = {
 };
 /* what is inside each path, so the menu says more than one line (owner, Nov 5 2026) */
 var ROUTE_MORE = {
-  ph: ["Drugs matched to your scope, EMT to Flight", "Big Calls: stroke, STEMI, sepsis, trauma and ROSC", "NREMT-style questions, Megacode and scenarios"],
+  ph: ["Drugs matched to your scope, EMT to Flight and Community Paramedic", "Big Calls: stroke, STEMI, sepsis, trauma and ROSC", "NREMT-style questions, Megacode and scenarios"],
   rn: ["Hold parameters, labs to watch and patient teaching", "Specialty units: ICU, ER, L&D, NICU and more", "NCLEX-style questions and Nursing Bug drills"],
   md: ["Mechanisms, pharmacokinetics and drug classes", "Step-style questions and advanced lab patterns", "Drug Alternatives and Body Systems for rounds"],
   im: ["Contrast agents and radiopharmaceuticals", "Reactions, premedication, eGFR and screening", "Registry-style questions"],
-  ah: ["Mental health: 51 conditions and the medicines that treat them", "Dietitian: nutrition, supplements and food-drug interactions", "Respiratory Therapist: airway drugs, sedation and the ICU"],
+  ah: ["Mental health, dietitian and respiratory therapy", "PT/OT, speech, surgical and anesthesia techs", "Dental hygiene, phlebotomy and EKG, with a study guide for each"],
   ev: ["The medicine cabinet: OTC, vitamins and probiotics", "Small sicknesses, normal vitals and lab values", "What street drugs and peptides really do"]
 };
 function homeAll() { return !!store("allPaths"); }
@@ -6991,11 +6991,11 @@ function obCards() {
   var ev = ROLES.filter(function (r) { return r[0] === "ev"; })[0];
   var out = [{ code: "ev", name: ev[1], line: ev[2], bug: ev[3], blurb: "Peptides, probiotics, vitamins, the medicine cabinet, small sicknesses, normal vitals and much more.", sub: "For anyone \u2014 no clinical background needed." }];
   var BLURB = {
-    ph: "EMT, AEMT, Paramedic and Flight Paramedic, each with its own drug list, protocols and registry-style question bank.",
-    rn: "CNA, LVN/LPN and RN, with specialty units, lab values and licensure-style questions.",
+    ph: "EMT, AEMT, Paramedic, Flight Paramedic and Community Paramedic, each with its own drug list, protocols and registry-style questions.",
+    rn: "CNA, LVN/LPN, RN and Flight Nurse, with specialty units, lab values and licensure-style questions.",
     md: "MS1 through Intern: mechanisms, board-style questions, drug alternatives and the wards view of every drug.",
     im: "X-ray, CT, MRI, nuclear medicine and IR: contrast agents, radiopharmaceuticals and contrast safety.",
-    ah: "Mental health professionals, dietitians and respiratory therapists, each with its own medicines and questions."
+    ah: "Ten fields: mental health, dietitian, respiratory therapy, PT/OT, speech, surgical and anesthesia techs, dental hygiene, phlebotomy and EKG, each with its own medicines and questions."
   };
   ROLES.filter(function (r) { return r[0] !== "ev"; }).forEach(function (r) {
     /* Show the path's headline certification, not the rarest one above it. The last level in
