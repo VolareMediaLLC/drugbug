@@ -123,13 +123,22 @@ footer.sitef{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);c
 body.embed header.site,body.embed header.ptitle,body.embed footer.sitef{display:none!important}body.embed .wrap{padding-top:4px;max-width:none}
 body.emb-evaluators #vApp>.card:not(#coderCard),body.emb-evaluators #vApp>.grid2{display:none!important}body.emb-metrics #coderCard{display:none!important}
 body.embed a[href="../admin/"]{display:none!important}
+header.site nav.tabs2{margin-left:auto;display:flex;gap:4px;padding:4px;border-radius:12px;background:var(--surface);border:1px solid var(--line)}
+nav.tabs2 a.tab{padding:7px 16px;border-radius:9px;font-weight:700;font-size:15px;text-decoration:none;color:var(--muted)}
+nav.tabs2 a.tab:hover{color:var(--ink)}
+nav.tabs2 a.tab[aria-current]{background:var(--accent);color:#fff}
+a.trybtn{margin-left:10px;padding:9px 14px;border-radius:11px;font-weight:800;font-size:14.5px;text-decoration:none;border:2px solid var(--accent);color:var(--accent)}
+a.trybtn:hover{background:var(--accent);color:#fff}
+footer .flinks{margin-top:10px}
+@media(max-width:640px){header.site{flex-wrap:wrap}header.site nav.tabs2{margin-left:0;order:3;width:100%}nav.tabs2 a.tab{flex:1;text-align:center}a.trybtn{margin-left:auto}}
+a.signbtn{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important;font-size:14.5px!important;padding:10px 16px!important}
 </style>
 </head>
 <body>
 <div class="wrap">
 <header class="site">
   <a href="../index.html" class="brand"><img src="../icon-180.png" alt=""><b>DrugBug</b></a>
-  <nav><a href="../index.html">Home</a><a href="../instructor/" aria-current="page">For Instructors</a><a href="../app/">Try it free</a><a href="../support.html">Support</a><a href="../privacy.html">Privacy</a><a href="../terms.html">Terms</a><a href="../disclaimers.html">Disclaimers</a></nav>
+  <nav class="tabs2" aria-label="Main"><a class="tab" href="../index.html">Home</a><a class="tab" href="../instructor/" aria-current="page">Instructors</a></nav><a class="trybtn" href="../app/">Try it free</a>
 </header>
 <header class="ptitle">
   <h1>DrugBug for Instructors</h1>
@@ -393,7 +402,7 @@ body.embed a[href="../admin/"]{display:none!important}
     <p class="muted small noprint" style="margin-top:8px"><b>Click a student</b> to see every score for them. Completion is questions answered against the class goal. "Weakest" needs at least <span id="wmin">5</span> answers in a system. <b>Reset</b> frees a key for a lost phone or a new student.</p>
   </div>
 </div>
-<footer class="sitef noprint">&copy; Volare Media LLC &middot; <a href="../index.html">Home</a> &middot; <a href="../app/">Try it free</a> &middot; <a href="../support.html">Support</a> &middot; <a href="../privacy.html">Privacy</a> &middot; <a href="../terms.html">Terms</a></footer>
+<footer class="sitef noprint"><p>Educational use only. Not for clinical decision-making or patient care. Not a medical device.</p><p>Not affiliated with or endorsed by NREMT, NCSBN, FSMB/NBME, ARRT or AHA.</p><p>&copy; Volare Media LLC &middot; <a href="mailto:VolareMediaLLC@gmail.com">VolareMediaLLC@gmail.com</a></p><p class="flinks"><a href="../support.html">Support</a> &middot; <a href="../privacy.html">Privacy</a> &middot; <a href="../terms.html">Terms</a> &middot; <a href="../disclaimers.html">Disclaimers</a> &middot; <a href="../instructor/signin/">Instructor login</a></p></footer>
 </div>
 
 <script src="../app/vendor/firebase-app-compat.js"></script>
@@ -546,7 +555,7 @@ body.embed a[href="../admin/"]{display:none!important}
   auth.onAuthStateChanged(function (u) {
     var real = u && !u.isAnonymous;
     if (MODE === "show") {   /* the showcase never switches to the real dashboard by itself */
-      $("who").innerHTML = '<a class="signbtn" href="signin/">' + (real ? "Go to my dashboard" : "Instructor sign in") + '</a>';
+      $("who").innerHTML = '<a class="signbtn" href="signin/">' + (real ? "Go to my dashboard" : "Instructor login") + '</a>';
       if (!ST.demo) startDemo();
       return;
     }
