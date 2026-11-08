@@ -4975,7 +4975,7 @@ function tierChip(inBug) {
   return up ? '<button class="tierchip tc-' + t + '" data-act="tierup" title="You are a ' + lab + '. See plans">' + lab + '</button>'
     : '<span class="tierchip tc-' + t + '" title="You are a ' + lab + '">' + lab + '</span>';
 }
-function stickChip() { if (typeof funOn === "function" && !funOn()) return ""; return '<button class="stickchip" data-goshop="1" aria-label="Terrarium"' + (S.view === "terrarium" ? ' aria-current="page"' : '') + '>' + myBugArt("mini", null, null, myStage()) + '<span class="tlabel">Terrarium</span>' + tierChip(true) + '</button>'; }
+function stickChip() { if (typeof funOn === "function" && !funOn()) return ""; return (typeof iapAvailable === "function" && iapAvailable() ? '<button class="stickplus" data-goshop="1" data-shopf="sticks" aria-label="Get sticks" title="Get sticks">' + (typeof stickIcon === "function" ? stickIcon(16) : "") + '<span aria-hidden="true">+</span></button>' : '') + '<button class="stickchip" data-goshop="1" aria-label="Terrarium"' + (S.view === "terrarium" ? ' aria-current="page"' : '') + '>' + myBugArt("mini", null, null, myStage()) + '<span class="tlabel">Terrarium</span>' + tierChip(true) + '</button>'; }
 function terrariumView() {
   var f = S.shopF || "home", title = { bugs: "Bug Store", items: "Wardrobe", faces: "Faces", styles: "Colors", borders: "Drug Borders", voices: "Voices", sticks: "Get Sticks", music: "Music", collections: "Collections" }[f];
   var head = f === "home" ? '<button class="backbtn" data-act="terrback"><span aria-hidden="true">&larr;</span> Studying</button><h2>Terrarium</h2>' : '<button class="backbtn" data-act="shopback"><span aria-hidden="true">&larr;</span> Terrarium</button><h2>' + title + '</h2>';
@@ -5014,7 +5014,7 @@ function evoClose() { evodlg.hidden = true; evodlg.innerHTML = ""; }
 document.addEventListener("click", function (e) {
   var t = e.target.closest("[data-evo]"); if (!t) { if (e.target === evodlg) evoClose(); return; }
   var a = t.getAttribute("data-evo"); evoClose();
-  if (a === "shop") { var g = document.querySelector("[data-goshop]"); if (g) g.click(); }
+  if (a === "shop") { var g = document.querySelector("[data-goshop]:not([data-shopf])"); if (g) g.click(); }
 });
 document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !evodlg.hidden) evoClose(); });
 
@@ -8116,7 +8116,7 @@ document.addEventListener("keydown", function (e) { if (e.key === "Escape" && PR
 function printClick(t, a) { if (a.print) { openPrint(a.print); return true; } return false; }
 
 /* ---------- Settings: display, study preferences, sound, protocols, printing, privacy & account, about ---------- */
-var APP_VERSION = "1.1", APP_DATE = "2026-11-05";
+var APP_VERSION = "1.2", APP_DATE = "2026-11-08";
 
 /* ---------- usage statistics (owner, Nov 5 2026) ----------
    Anonymous counts so the owner can see how DrugBug is used: a random device id (never a name,
@@ -9634,6 +9634,7 @@ function drawPaywall() {
   if (PRO.busy) c += '<p class="muted small" role="status">Talking to the App Store…</p>';
   if (PRO.msg) c += '<div class="presult" role="alert">' + esc(PRO.msg) + '</div>';
   c += '<p class="muted small">DrugBug Free stays free forever: about 40 common medications, flashcards for those drugs, the daily 5-minute DrugBug, the Small Sickness Guide, Normal Vitals &amp; Labs, and a free preview of the Wormhole and the Disease Lab.</p>';
+  if (typeof iapBox === "function") c += iapBox();
   c += '<div class="pwrow"><button class="linkish" data-pw="restore">Restore purchases</button><button class="linkish" data-act="codesgo">Have a code? Redeem it in Settings</button>' + (NATIVE && PRO.store ? '<button class="linkish" data-pw="manage">Manage subscription</button>' : '') + '</div>';
   /* codes are redeemed in one place only, Settings > Account (owner, Nov 5 2026) */
   c += '<p class="muted small pwfine">Prices are shown before you buy. Subscriptions renew automatically at the end of each billing period unless cancelled at least 24 hours before it ends. Payment is charged to your Apple Account when you confirm. Manage or cancel any time in iPhone Settings → your name → Subscriptions. Cancelling stops future renewals; refunds for App Store purchases are handled by Apple. Plus and Pro are in one subscription group, so changing plans replaces your current one. DrugBug is for education only, not for patient care.' +
@@ -9690,7 +9691,7 @@ function proCard() {
   if (P.cancel) c += '<button class="btn small ghost" data-pw="' + P.cancel + '">Manage or cancel</button>';
   if (P.tier !== "pro") c += '<button class="btn small" data-pw="open">' + (P.tier === "free" ? "See plans" : "Upgrade to Pro") + '</button>';
   if (NATIVE) c += '<button class="btn small ghost" data-pw="restore">Restore purchases</button>';
-  return c + '</div></section>';
+  return c + '</div></section>' + (typeof iapBox === "function" ? iapBox() : '');
 }
 document.addEventListener("click", function (e) {
   var t = e.target.closest("[data-pw]"); if (!t) { if (e.target === pwdlg) closePaywall(); return; }
@@ -29284,10 +29285,27 @@ function iapView() {
   c += '<p class="muted small iapfine">Prices are set and charged by the app store, in your own currency, and may differ from the figures above. Sticks are a one-time purchase, not a subscription, and they stay with the account you bought them on. They have no cash value and cannot be refunded through DrugBug; refunds go through the store.</p>';
   return c;
 }
+/* Stick packs box (owner, Nov 8 2026): App Review could not find the stick packs, which lived two taps
+   deep in the Terrarium. This box lists all five, with their App Store prices and buy buttons, on the
+   Plans screen and on My plan in Settings, and links to the full Get Sticks page. */
+function iapBox() {
+  var where = iapAvailable();
+  if (!where) return "";
+  return '<section class="iapbox" aria-label="Stick packs"><div class="iapboxh"><h3>' + (typeof stickIcon === "function" ? stickIcon(18) : "") + 'Stick packs</h3>' +
+    '<span class="muted small">One-time purchases, not a subscription. Sticks buy bugs, outfits and music; they never unlock study content.</span></div>' +
+    '<ul class="iapboxl">' + IAP_PACKS.map(function (p) {
+      var busy = IAP.busy === p.id;
+      return '<li><span class="iapbn"><strong>' + esc(p.name) + '</strong><span class="muted small">' + iapTotal(p).toLocaleString() + ' sticks' + (p.bonus ? ' (includes ' + p.bonus.toLocaleString() + ' bonus)' : '') + '</span></span>' +
+        '<button class="btn small" data-iapbuy="' + p.id + '"' + (busy ? ' disabled' : '') + '>' + (busy ? 'Opening...' : esc(iapPrice(p))) + '</button></li>';
+    }).join("") + '</ul>' +
+    (IAP.msg ? '<p class="presult good small" role="status">' + esc(IAP.msg) + '</p>' : '') + (IAP.err ? '<p class="presult bad small" role="alert">' + esc(IAP.err) + '</p>' : '') +
+    '<p class="actions"><button class="btn small ghost" data-goshop="1" data-shopf="sticks">Open Get Sticks</button>' + (where ? '<button class="btn small ghost" data-iaprestore="1">Restore purchases</button>' : '') + '</p></section>';
+}
 document.addEventListener("click", function (e) {
   var t = e.target.closest && e.target.closest("[data-iapbuy],[data-iaprestore]"); if (!t) return;
   if (t.dataset.iaprestore) iapRestore(); else iapBuy(t.dataset.iapbuy);
-  render(); window.scrollTo(0, 0);
+  if (typeof PRO !== "undefined" && PRO.open && typeof drawPaywall === "function") { drawPaywall(); return; }
+  render(); if (!t.closest(".iapbox")) window.scrollTo(0, 0);
 });
 
 /* ===== Bug voices (owner, Nov 1 2026) =====
