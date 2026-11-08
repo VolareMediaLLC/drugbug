@@ -30265,11 +30265,12 @@ var EVW = { i: 0 };
    warning, a second in a row ends evaluator status and the Pro that came with it. */
 var EVAG_V = "2026-11-08", EV_NEED = 40;
 var EVAG_ACKS = [
-  ["unpaid", "I am volunteering. I am not being paid for evaluating and I am not an employee, contractor or agent of Volare Media LLC."],
-  ["nofuture", "I will not be paid or otherwise compensated for evaluating in the future, and I won't ask to be. Free DrugBug Pro while I am an evaluator is a thank-you, not payment."],
-  ["quota", "I will grade at least 40 questions each week (Monday to Sunday, Texas time). If I grade fewer than 40 in a week I get a warning; if it happens two weeks in a row, my evaluator status ends and my account goes back to DrugBug Free."],
-  ["confidential", "Pilot questions are confidential. I won't copy, screenshot or share them, and DrugBug may use my ratings and suggestions freely (Terms of Use, section 9)."]
+  ["unpaid", "I am participating as an unpaid volunteer. I am not an employee, independent contractor or agent of Volare Media LLC.", "Volunteer status."],
+  ["nofuture", "I will not receive wages, fees or any other compensation for evaluating, now or in the future, and I will not request any. Complimentary DrugBug Pro during my participation is a courtesy, not payment.", "No compensation."],
+  ["quota", "I will grade at least 40 questions per week (Monday through Sunday, Central Time). If I grade fewer than 40 in a week, I will receive a warning. A second consecutive week below 40 ends my evaluator status and returns my account to DrugBug Free.", "Weekly minimum."],
+  ["confidential", "Pilot questions are confidential. I will not copy, screenshot or share them. Volare Media LLC may use my ratings and suggestions without restriction (Terms of Use, Section 9).", "Confidentiality."]
 ];
+var EVAG_EASE = "Grading is quick: rate each question 1 to 5, mark it Good or Bad, and add a comment only if you want to. Most questions take under 30 seconds, so 40 a week is about 20 minutes.";
 var EVS = store("evStat") || null, EVSIGN = { acks: {}, name: "", msg: "", busy: false };
 function evIsEval() { return typeof codeRole === "function" && codeRole() === "eval"; }
 function evSaveLocal() { try { store("evStat", EVS); } catch (e) {} }
@@ -30300,8 +30301,9 @@ function evAgreeOpen() { if (!evIsEval()) return; EVSIGN.msg = ""; evAgreeDraw()
 function evAgreeDraw() {
   var all = EVAG_ACKS.every(function (a) { return EVSIGN.acks[a[0]]; }), nm = String(EVSIGN.name || "").trim();
   evagdlg.innerHTML = '<div class="panel cipanel evagpanel" role="dialog" aria-modal="true" aria-labelledby="evagh" tabindex="-1"><h2 id="evagh">Evaluator agreement</h2>' +
+    '<p class="small">' + esc(EVAG_EASE) + '</p>' +
     '<p class="muted small">Please read each point and tick it, then type your full name to sign. Version ' + EVAG_V + '.</p>' +
-    EVAG_ACKS.map(function (a) { return '<label class="chk evag"><input type="checkbox" data-evack="' + a[0] + '"' + (EVSIGN.acks[a[0]] ? ' checked' : '') + '> <span>' + esc(a[1]) + '</span></label>'; }).join("") +
+    EVAG_ACKS.map(function (a) { return '<label class="chk evag"><input type="checkbox" data-evack="' + a[0] + '"' + (EVSIGN.acks[a[0]] ? ' checked' : '') + '> <span>' + (a[2] ? '<b>' + esc(a[2]) + '</b> ' : '') + esc(a[1]) + '</span></label>'; }).join("") +
     '<label class="gl" style="margin-top:10px">Type your full name to sign<input class="pinput" id="evagname" autocomplete="name" maxlength="80" placeholder="First and last name" value="' + esc(EVSIGN.name || "") + '"></label>' +
     '<p class="muted small">Signed ' + new Date().toLocaleDateString() + '. DrugBug keeps a copy with the date and time.</p>' +
     (EVSIGN.msg ? '<p class="presult" role="alert">' + esc(EVSIGN.msg) + '</p>' : '') +
