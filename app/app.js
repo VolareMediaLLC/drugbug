@@ -8735,6 +8735,17 @@ function musicBtn() { if (typeof funOn === "function" && !funOn()) return ""; re
 /* browsers only allow sound after a tap, so start on the first interaction */
 ["pointerdown", "keydown", "touchend", "click"].forEach(function (ev) { document.addEventListener(ev, function () { audioCtx(); try { sfxLoad("gasp"); if (S.tab === "anatomy" || document.querySelector(".bodymap")) bodySfxWarm(); } catch (e) {} if (!MU.playing || (MU.ctx && MU.ctx.state !== "running")) muGesture(); }, { passive: true, capture: true }); });
 document.addEventListener("visibilitychange", function () { if (document.hidden) muStop(); else if (MU.armed) muSync(); });
+/* iPhones can park the sound channel after a notification, Siri, a call or another app's sound, and
+   it stayed silent until the next tap. Every few seconds, while the app is open and sound is on, wake
+   it back up; the next tap still unlocks it if the phone insists on one (owner, Nov 8 2026) */
+setInterval(function () {
+  try {
+    var c = AUD.ctx; if (!c || document.hidden || c.state === "running" || c.state === "closed") return;
+    var s0 = typeof SET === "function" ? SET() : {}; if (!(s0.sfx !== false || muOn())) return;
+    if (typeof muSession === "function") muSession();
+    var r = c.resume(); if (r && r.then) r.then(function () { if (MU.armed && muOn()) { MU.playing = false; muSync(); } }).catch(function () {});
+  } catch (e) {}
+}, 3000);
 window.addEventListener("pageshow", function () { if (MU.armed && !document.hidden) muSync(); });
 /* quick volume popover from the top-bar note button */
 function muPop() {
