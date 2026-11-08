@@ -615,11 +615,11 @@ var EV_LINE = "Medicines and your body, explained without the jargon. For anyone
 /* My List on the home screen, right under the BugDex (owner, Oct 28 2026) */
 function myListRoute() {
   var m = marks().filter(function (id) { return DB.drugs[id]; }), n = m.length, ix = 0;
-  if (n >= 2 && typeof ixnGroups === "function") { var key = m.join(","); if (DB._ixk !== key) { var G = ixnGroups(m.slice(0, 40)); DB._ixk = key; DB._ixn = G.syn.length + G.add.length + G.neg.length + G.oth.length; } ix = DB._ixn; }
+  if (false && n >= 2 && typeof ixnGroups === "function") {   /* My List is a study list only; no interaction counts (owner, Nov 8 2026) */ var key = m.join(","); if (DB._ixk !== key) { var G = ixnGroups(m.slice(0, 40)); DB._ixk = key; DB._ixn = G.syn.length + G.add.length + G.neg.length + G.oth.length; } ix = DB._ixn; }
   var lock = typeof proLocked === "function" && proLocked("mylist");
   return '<button class="route mlsmall" data-golist="1"><span class="mls-ic" aria-hidden="true">\u2605</span><span class="mls-tx"><strong>My List' +
     (lock ? '<span class="lockpill">Plus</span>' : '') + '</strong><span>' +
-    (n ? n + ' saved drug' + (n === 1 ? '' : 's') + (n >= 2 ? ' \u00b7 ' + ix + ' interaction' + (ix === 1 ? '' : 's') : '') : 'Store the drugs you take and read the interactions between them, or the drugs you need to learn') +
+    (n ? n + ' saved drug' + (n === 1 ? '' : 's') + ' to study' : 'Save the drugs you are studying, then quiz yourself on them') +
     '</span></span><span class="evs-go" aria-hidden="true">&rsaquo;</span></button>';
 }
 /* the first thing after the header: get studying */
@@ -850,7 +850,7 @@ var HUB_GROUPS = [
   ["Study and practice", ["tools", "scenarios", "scene", "nbug"]],
   ["Yours", ["myclass", "protocols", "mylist", "progress", "shop"]]
 ];
-var HUB_SHORT = { protocols: "Your agency's protocols, or request yours", scene: "The Great Bug acts out the call, vitals live", systems: "Airway, cardiac, neuro and more, with quizzes", calls: "Stroke, STEMI, sepsis, trauma, ROSC", micro: "Bacteria, viruses, fungi, prions, parasites", fm_bio: "Bio, chem, rad and nuclear casualties", fm_ref: "Burns, vents, scores, handoff, K9, dive", medlist: "What a med list says about the patient", fm_store: "Heat, cold, light and mixing", fm_istat: "Values, cartridges and practice cases", fm_cond: "Trauma, medical and blood reactions, with types", fm_blood: "Whole blood, components, MTP, reactions", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "The drugs you take, and their interactions", tools: "Questions, megacode, cards, games, drills", scenarios: "Clinical cases", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", anatomy: "Every organ and body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time" };
+var HUB_SHORT = { protocols: "Your agency's protocols, or request yours", scene: "The Great Bug acts out the call, vitals live", systems: "Airway, cardiac, neuro and more, with quizzes", calls: "Stroke, STEMI, sepsis, trauma, ROSC", micro: "Bacteria, viruses, fungi, prions, parasites", fm_bio: "Bio, chem, rad and nuclear casualties", fm_ref: "Burns, vents, scores, handoff, K9, dive", medlist: "What a med list says about the patient", fm_store: "Heat, cold, light and mixing", fm_istat: "Values, cartridges and practice cases", fm_cond: "Trauma, medical and blood reactions, with types", fm_blood: "Whole blood, components, MTP, reactions", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "The drugs you are studying", tools: "Questions, megacode, cards, games, drills", scenarios: "Clinical cases", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", anatomy: "Every organ and body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time" };
 /* ---------- Hold a tile, then move it (owner, Nov 4 2026) ----------
    The iPhone gesture: press and hold until the tile lifts, drag it where you want, and the
    others slide out of the way as you go. Order is kept per level and per section, so the
@@ -5640,7 +5640,7 @@ var TOOLS = [["prep", "Questions"], ["mega", "Megacode"], ["cards", "Flashcards"
 /* each tool keeps the tier it had before Study Tools absorbed it, so the move changed nothing about what anyone pays for */
 var TOOL_TIER = { prep: "pro", mega: "pro", cards: "free", games: "pro", safety: "pro" };
 function toolTier(k) { return TOOL_TIER[k] || "pro"; }
-function toolsAllowed() { var k = ctxKey(); return { mega: !!DB.MEGA_LEVELS[k], peds: ["emt", "cna"].indexOf(k) < 0, medlist: true, safety: true, prep: S.view !== "gen", cards: true, games: true }; }
+function toolsAllowed() { var k = ctxKey(); return { mega: !!DB.MEGA_LEVELS[k], peds: ["emt", "cna"].indexOf(k) < 0, medlist: false, safety: true, prep: S.view !== "gen", cards: true, games: true }; }
 var TOOLDESC = { mega: "Run a timed code with a live monitor.", peds: "Weight-based pediatric doses at a glance.", medlist: "A study exercise: read a practice medication list and work out the likely conditions, the questions to ask and the risky combinations.", safety: "Look-alike names and high-alert drug drills.", prep: "Timed practice tests at your star level, with scores.", cards: "Flip, sort and master each drug.", games: "Memory match, crossword, quick match, word scramble, Class Blitz and Frog Snack." };
 function toolsView() {
   var al = toolsAllowed(), list = TOOLS.filter(function (t) { return al[t[0]] && t[0] !== "mega"; });   /* Megacode lives in Scenarios now (owner, Nov 5 2026) */
@@ -5648,7 +5648,7 @@ function toolsView() {
   if (S.tool && !al[S.tool]) S.tool = null;
   if (!S.tool) return '<div class="hub sub">' + list.map(function (t) { var lk = toolLocked(t[0]); return '<button class="hubtile toolt' + (lk ? ' locked' : '') + '" data-tool="' + t[0] + '">' + (lk && typeof tierBadge === "function" ? '<span class="tbadge">' + tierBadge(toolTier(t[0])) + '</span>' : '') + '<span class="ht"><strong>' + esc(t[1]) + '</strong><span>' + esc(TOOLDESC[t[0]]) + '</span></span></button>'; }).join("") + '</div>';
   var c = S.tool === "mega" && S.megaFrom ? '<button class="linkish subback" data-act="megaback">&larr; Scenarios</button>' : '<button class="linkish subback" data-act="toolsback">&larr; All of Study</button>';
-  if (S.tool === "peds" || S.tool === "ixn") S.tool = "mega"; /* Pediatric dosing practice removed Oct 27 2026; Interaction explorer removed Oct 29 2026 */
+  if (S.tool === "peds" || S.tool === "ixn" || S.tool === "medlist") S.tool = "mega"; /* Pediatric dosing practice removed Oct 27 2026; Interaction explorer removed Oct 29 2026 */
   if (S.tool === "mega") c += megaView();
   else if (S.tool === "medlist") c += medlistView();
   else if (S.tool === "prep") c += (typeof nrPrep === "function" ? nrPrep() : "");
@@ -6066,12 +6066,13 @@ function ixnPanel(ids, opts) {
   c += '<div class="ixsum">' + IXG.slice(0, 3).map(function (g) { return '<span class="ixchip ixg-' + g.k + '">' + esc(g.h.split(":")[0]) + ' <b>' + G[g.k].length + '</b></span>'; }).join("") + '</div>';
   return c + ixnGroupsHtml(G, opts) + '</section>';
 }
-function myListView(own) { var m0 = marks().filter(function (id) { return DB.drugs[id]; }); return myListBase(own) + (m0.length >= 2 ? ixnPanel(m0, { open: false }) : ''); }
+/* My List is purely a study list (owner, Nov 8 2026): the interaction panel was removed, so DrugBug never works as an interaction checker. */
+function myListView(own) { return myListBase(own); }
 function myListBase(own) {
   var m = marks().filter(function (id) { return DB.drugs[id]; });
   var c = own ? '' : '<h3 class="eh small">My List</h3>';
-  if (!m.length) return c + '<div class="learncard"><p><strong>Your list is empty.</strong></p><p class="muted">This is where you store the drugs you take, so you can read the interactions between them \u2014 and the drugs you need to learn. Open any drug and tap <strong>Save to My List</strong>. Once two or more are saved, DrugBug shows how they interact, and you can study them, quiz yourself on them or print them as a shift list.</p><button class="btn" data-tab="registry">Browse medications</button></div>';
-  c += '<p class="muted small">The drugs you take and the drugs you are learning. With two or more saved, the interactions between them are listed below.</p>';
+  if (!m.length) return c + '<div class="learncard"><p><strong>Your list is empty.</strong></p><p class="muted">This is your study list: the drugs you are learning. Open any drug and tap <strong>Save to My List</strong>, then quiz yourself on them or print them as a study list.</p><button class="btn" data-tab="registry">Browse medications</button></div>';
+  c += '<p class="muted small">The drugs you are studying. Quiz yourself on them or print their study cards.</p>';
   return c + '<div class="actions"><button class="btn" data-sess="marks">Quiz me on my list</button><span class="muted small">' + m.length + ' saved drug' + (m.length === 1 ? '' : 's') + '</span></div>' + (typeof canPrint === "function" && canPrint() ? '<div class="actions"><button class="btn" data-print="marks|cards">Print all study cards (' + m.length + ')</button><button class="btn small ghost" data-print="marks|sheet">Print cheat sheet</button></div>' : '') + '<ul class="weaklist">' + m.map(function (id) { return '<li><button class="linkish" data-drug="' + id + '">' + esc(nameOf(id)) + '</button><span class="mchip m-' + mastery(id) + '">' + esc(mlabel(mastery(id))) + '</span><button class="btn small ghost" data-sess="study" data-drug-id="' + id + '">Study</button><button class="btn small ghost" data-unmark="' + id + '" aria-label="Remove ' + esc(nameOf(id)) + ' from My List">Remove</button></li>'; }).join("") + '</ul>';
 }
 
@@ -6271,7 +6272,7 @@ function compoundView(k) {
           '</div></div>';
       }).join("") + '</div></details>';
   });
-  return c + '<p class="muted small">Many supplements interact with medicines, which is why health care teams ask about them. Saved compounds show up in My List with their interactions.</p></section>';
+  return c + '<p class="muted small">Many supplements interact with medicines, which is why health care teams ask about them. Save any compound to My List to study it.</p></section>';
 }
 /* interactions handled here (no full re-render, so flips feel instant) */
 function cmpApplyFilter(sec, f) {
@@ -9416,7 +9417,7 @@ var WEBSUBS = CFG.webSubs === true && CFG.paywall === true;
    before either store ships, or the same plan costs two different amounts.
    Free: ~40 common medications with flashcards, the daily 5-min DrugBug, Small Sickness Guide, Normal Vitals & Labs, basic progress.
    Plus: ACCESS to everything: every drug page on every route (BugDex, Prehospital, Nursing, Medical School, Imaging), probiotics,
-         food and vitamin compounds, My List with in-depth interactions, Drug Families, Drug Alternatives, Lab Values, Blood Products,
+         food and vitamin compounds, My List (study list), Drug Families, Drug Alternatives, Lab Values, Blood Products,
          Hemodynamics, Flight Prep, Specialty Units, Contrast Safety, Everyday Health.
    Pro:  everything in Plus + the EXTRA LEARNING: exam prep / practice tests, Brain Games,
          scenarios and Megacode, Study Tools (questions, megacode, flashcards, brain games, Medication Disease Identifier, safety drills), Nursing Bug,
@@ -14124,7 +14125,7 @@ function callsView() {
   var C = CALLS.filter(function (c) { return c.id === S.callId; })[0];
   if (!C) {
     S.callId = null;
-    return '<p class="muted">The time-critical calls: what to recognize, the clocks that matter, and where the patient needs to go. Education only; your protocols decide care.</p>' +
+    return '<p class="muted">The time-critical calls: learn what to recognize, the time windows that matter and how destination decisions are made. Education only; your protocols decide care.</p>' +
       '<div class="calllist">' + CALLS.map(function (c) { var n = callQs(c.id).length; return '<button class="callitem" data-callid="' + c.id + '"><strong>' + esc(c.name) + '</strong><span>' + esc(c.line) + '</span><em>' + n + ' questions</em></button>'; }).join("") + '</div>';
   }
   var main = '<header class="callhead"><h2>' + esc(C.name) + '</h2><p class="muted">' + esc(C.line) + '</p></header>' + callQuizHTML(C);
@@ -30975,7 +30976,7 @@ function planOpen() {
     '<p class="muted">Every one of those came from answering something. Nothing in DrugBug is locked away from you \u2014 every test, game and scenario is already yours. What you buy is more medicine to point them at.</p>' +
     '<div class="wzplans">' +
       card("Free", "$0", "forever", ["Every tool in the app, nothing locked", "Tests, games, scenarios, flashcards", "Over about 40 core medications"], false) +
-      card("Plus", PLANS.plus.m + "/mo", PLANS.plus.y + " a year", ["All 2,000+ medications to read", "Every route: EMS, nursing, med school, imaging", "Interactions, families, labs, blood products"], false) +
+      card("Plus", PLANS.plus.m + "/mo", PLANS.plus.y + " a year", ["All 2,000+ medications to read", "Every route: EMS, nursing, med school, imaging", "Drug families, labs, blood products"], false) +
       card("Pro", PLANS.pro.m + "/mo", PLANS.pro.y + " a year", ["Everything in Plus", "Plus the drills over all of it", "Every test, game and scenario, every drug"], true) +
     '</div>' +
     '<p class="muted small">' + (NATIVE ? 'Charged to your Apple Account. Cancel any time in Settings.'
