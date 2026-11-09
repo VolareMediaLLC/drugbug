@@ -4089,6 +4089,121 @@ function pilFor(test) {
   var R = Prog.d.qrev || {}, al = nrLevelsFor(ctxKey());
   return shuffle(DB.PILOT.filter(function (q) { return al.indexOf(q.lv) >= 0 && !pilDone(q.id) && !(R[q.id] && (R[q.id].v || R[q.id].d)) && test(q); }));
 }
+/* ---------- Drug data updates over the air (owner, Nov 9 2026) ----------
+   Weekly FDA-label updates reach every copy of DrugBug without a new App Store build. The website
+   hosts app/content/manifest.json (a version number and the name of one update file); the update
+   file holds only DATA (drug records in the same shape the Control Center saves, short "what's
+   new" notes, and questions sent back to the pilot pool), never code, so it is ordinary content
+   under App Review guideline 2.5.2. On open the app re-applies the update it saved last time,
+   then checks for a newer one in the background ("Updating drug data..."). Offline it keeps the
+   last one; a brand-new install offline still has the drug data built into the app.
+   Questions about an updated drug are "re-piloted": the old copy leaves the live pool, and a copy
+   with a fresh "qp" id goes to the evaluators with a yellow re-check banner. Two Good votes (or the
+   owner's Good) put it back live through the normal pilotStatus path, with no server change. */
+var OTA = { v: 0, data: null, busy: false, at: 0 };
+var OTA_BASE = NATIVE ? "https://drugbugapp.com/app/content/" : "content/";
+var OTA_BAKED = DB.OTA_BAKED || 0;   /* a build that already contains updates up to this version ignores older files */
+function otaApply(p) {
+  if (!p || p.schema !== 1 || !(p.v > OTA_BAKED)) return false;
+  (p.drugs || []).forEach(function (r) { try { if (r && r.id && typeof applyRecord === "function") applyRecord(r); } catch (e) {} });
+  var old = {};
+  (p.repilot || []).forEach(function (x) { if (x && x.o) old[x.o] = x; });
+  if (Object.keys(old).length) {
+    DB.Q = DB.Q.filter(function (q) { return !old[qid(q)]; });
+    if (DB.PILOT) DB.PILOT = DB.PILOT.filter(function (q) { return !old[q.id]; });
+    DB.PILOT = DB.PILOT || [];
+    var have = {}; DB.PILOT.forEach(function (q) { have[q.id] = 1; });
+    (p.repilot || []).forEach(function (x) {
+      if (!x || !x.n || !x.q || have[x.n]) return;
+      var q = JSON.parse(JSON.stringify(x.q)); q.id = x.n; q.pilot = 1; q.repilot = { d: x.d, at: x.at, name: x.name || "" };
+      DB.PILOT.push(q); have[x.n] = 1;
+    });
+    Object.keys(PIL_ADDED).forEach(function (k) { if (old[k]) delete PIL_ADDED[k]; });
+    if (typeof pilApply === "function") pilApply();
+  }
+  OTA.v = p.v; OTA.data = p;
+  return true;
+}
+function otaToast(text, ms) {
+  var el = document.getElementById("otatoast");
+  if (!text) { if (el) el.remove(); return; }
+  if (!el) { el = document.createElement("div"); el.id = "otatoast"; el.className = "otatoast"; el.setAttribute("role", "status"); document.body.appendChild(el); }
+  el.textContent = text;
+  clearTimeout(OTA.tt); if (ms) OTA.tt = setTimeout(function () { otaToast(""); }, ms);
+}
+function otaFetch(url, ms) {
+  var ctl = typeof AbortController === "function" ? new AbortController() : null, t = ctl ? setTimeout(function () { ctl.abort(); }, ms || 8000) : 0;
+  return fetch(url, { cache: "no-store", signal: ctl ? ctl.signal : undefined }).then(function (r) { clearTimeout(t); if (!r.ok) throw new Error("http " + r.status); return r.text(); });
+}
+function otaSha(text) {
+  try { if (!(window.crypto && crypto.subtle && window.TextEncoder)) return Promise.resolve(""); } catch (e) { return Promise.resolve(""); }
+  return crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)).then(function (b) { return Array.prototype.map.call(new Uint8Array(b), function (x) { return ("0" + x.toString(16)).slice(-2); }).join(""); }).catch(function () { return ""; });
+}
+function otaCheck(quiet) {
+  if (OTA.busy || (typeof navigator !== "undefined" && navigator.onLine === false)) return;
+  OTA.busy = true; OTA.at = Date.now();
+  otaFetch(OTA_BASE + "manifest.json?t=" + Date.now(), 6000).then(function (txt) {
+    var m = JSON.parse(txt);
+    if (!m || m.schema !== 1 || !(m.v > Math.max(OTA.v, OTA_BAKED)) || !/^updates-[0-9]+\.json$/.test(m.file || "")) { OTA.busy = false; return; }
+    if (!quiet) otaToast("Updating drug data…");
+    return otaFetch(OTA_BASE + m.file, 20000).then(function (body) {
+      return otaSha(body).then(function (h) {
+        if (h && m.sha256 && h !== m.sha256) throw new Error("checksum");
+        var p = JSON.parse(body);
+        if (p.v !== m.v) throw new Error("version");
+        if (!otaApply(p)) throw new Error("schema");
+        try { store("otaPatch", p); } catch (e) {}
+        if (typeof rebuildIndex === "function") rebuildIndex();
+        OTA.busy = false;
+        otaToast("Drug data updated " + otaDay(p.ts), 3500);
+        if (typeof render === "function") render();
+        setTimeout(otaNews, 900);
+      });
+    });
+  }).catch(function () { OTA.busy = false; otaToast(""); });
+}
+function otaDay(ts) { try { return new Date(ts).toLocaleDateString(undefined, { month: "short", day: "numeric" }); } catch (e) { return ""; } }
+/* "See what's new": shown once per update when the app opens; a tap on "Not now" (or outside) clicks past it */
+function otaUnseen() {
+  var p = OTA.data; if (!p || !p.news || !p.news.length) return [];
+  var seen = store("newsSeen") || {};
+  return p.news.filter(function (n) { return n && n.id && !seen[n.id]; });
+}
+function otaMarkSeen(list) { var seen = store("newsSeen") || {}; (list || []).forEach(function (n) { seen[n.id] = Date.now(); }); store("newsSeen", seen); }
+function otaNews(force) {
+  if (document.getElementById("otanews")) return;
+  var list = force ? ((OTA.data && OTA.data.news) || []) : otaUnseen();
+  if (!list.length) return;
+  if (!force && (S.sheet || [].some.call(document.querySelectorAll(".paywall, #pwdlg, #tourdlg, #evwdlg, .agree"), function (el) { return !el.hidden && (el.open || el.offsetParent !== null || getComputedStyle(el).position === "fixed" && getComputedStyle(el).display !== "none"); }))) { setTimeout(function () { otaNews(); }, 4000); return; }
+  var n = 0; list.forEach(function (x) { n += (x.items || []).length; });
+  var box = document.createElement("div"); box.id = "otanews"; box.className = "otanews"; box.setAttribute("role", "dialog"); box.setAttribute("aria-modal", "true"); box.setAttribute("aria-labelledby", "otanewsh");
+  var head = '<div class="otacard"><button class="otax" data-ota="close" aria-label="Close">×</button><div class="otak">Drug updates</div><h2 id="otanewsh">See what\'s new</h2>';
+  var short = head + '<p class="muted">' + n + ' medication' + (n === 1 ? ' was' : 's were') + ' updated from the latest FDA labeling' + (list[0].date ? ' (' + esc(otaDay(list[0].ts || list[0].date)) + ')' : '') + '.</p><div class="otabtns"><button class="btn" data-ota="open">See what\'s new</button><button class="btn ghost" data-ota="close">Not now</button></div></div>';
+  var full = head + list.map(function (x) {
+    return '<h3>' + esc(x.title || "Drug updates") + '</h3><ul class="otalist">' + (x.items || []).map(function (it) {
+      return '<li><button class="linkish" data-ota-drug="' + esc(it.drug) + '">' + esc(it.name || it.drug) + '</button><span>' + esc(it.text || "") + '</span></li>';
+    }).join("") + '</ul>';
+  }).join("") + '<p class="muted small">Education only. Not for patient care. Questions about these drugs are being rechecked by our evaluators.</p><div class="otabtns"><button class="btn" data-ota="close">Done</button></div></div>';
+  box.innerHTML = force ? full : short;
+  function close() { otaMarkSeen(list); if (box.parentNode) box.parentNode.removeChild(box); document.removeEventListener("keydown", key); }
+  function key(e) { if (e.key === "Escape") close(); }
+  box.addEventListener("click", function (e) {
+    var t = e.target, a = t.closest && t.closest("[data-ota]"), d = t.closest && t.closest("[data-ota-drug]");
+    if (t === box || (a && a.getAttribute("data-ota") === "close")) return close();
+    if (a && a.getAttribute("data-ota") === "open") { box.innerHTML = full; return; }
+    if (d) { var id = d.getAttribute("data-ota-drug"); close(); if (DB.drugs[id] && typeof openSheet === "function") openSheet(id, list.reduce(function (A, x) { return A.concat((x.items || []).map(function (i) { return i.drug; })); }, []).filter(function (z) { return DB.drugs[z]; })); }
+  });
+  document.addEventListener("keydown", key);
+  document.body.appendChild(box);
+  var f = box.querySelector("[data-ota='open'], [data-ota='close']"); if (f) try { f.focus(); } catch (e) {}
+}
+function otaInit() {
+  try { var p = store("otaPatch"); if (p) otaApply(p); } catch (e) {}
+  setTimeout(function () { otaCheck(); }, 1500);
+  setTimeout(function () { otaNews(); }, 2500);
+  try { document.addEventListener("visibilitychange", function () { if (!document.hidden && Date.now() - OTA.at > 6 * 3600000) otaCheck(); }); } catch (e) {}
+  document.addEventListener("click", function (e) { var b = e.target && e.target.closest && e.target.closest("[data-ota-news]"); if (b) { e.preventDefault(); otaNews(true); } });
+}
 /* one every few questions: the 3rd, 7th, 11th... at most four in a quiz */
 function pilMix(qs, cands) {
   if (!cands.length) return qs;
@@ -4097,6 +4212,7 @@ function pilMix(qs, cands) {
   return out;
 }
 function pilBanner(q) {
+  if (q && q.repilot) return '<div class="pilotq" role="note"><b>Pilot question: re-check</b><span>' + esc(q.repilot.name || nameOf(q.repilot.d) || 'A drug in this question') + ' was updated from new FDA labeling' + (q.repilot.at ? ' (' + esc(otaDay(q.repilot.at)) + ')' : '') + '. Check that this question still matches the drug page, then rate it: Good or Bad, and how hard. It goes back live after 2 Good votes.</span></div>';
   return '<div class="pilotq" role="note"><b>Pilot question</b><span>Needs your evaluation. Answer it, then rate it below: Good or Bad, and how hard. It goes live for everyone after 2 Good votes.</span></div>';
 }
 /* ---------- Checked marks (owner, Nov 7 2026) ----------
@@ -8423,6 +8539,7 @@ function settingsView() {
     (!NATIVE ? setRow("Daily reminder", "Add a daily reminder to your phone's calendar to come learn and collect your sticks. Pick a time, then open the file it saves.", '<input class="pinput" type="time" data-setsel="remindAt" value="' + esc(s.remindAt || "19:00") + '" aria-label="Reminder time"> <button class="btn small ghost" data-act="remindcal">Add to my calendar</button>') : "") +
     setRow("Weird Drug Wednesday", (NATIVE ? "A strange-but-true drug fact every Wednesday as a notification. " : "A strange-but-true drug fact every Wednesday. ") + "Education only.", setTog("weird", s.weird !== false, "Weird Drug Wednesday") + (NATIVE && s.weird !== false ? ' <input class="pinput" type="time" data-setsel="weirdAt" value="' + esc(s.weirdAt || "12:00") + '" aria-label="Weird Drug Wednesday time">' : '') + ' <button class="btn small ghost" data-wdw="show">See this week\'s fact</button>') +
     setRow("App tour", "See the quick welcome tour again.", '<button class="btn small ghost" data-tour="again">Show the tour</button>') +
+    setRow("Drug updates", OTA.data && OTA.data.news && OTA.data.news.length ? "Updated from FDA labeling " + otaDay(OTA.data.ts) + ". DrugBug checks for new drug data each time you open it." : "DrugBug checks for new drug data each time you open it.", OTA.data && OTA.data.news && OTA.data.news.length ? '<button class="btn small ghost" data-ota-news="1">See what\'s new</button>' : '') +
     setRow("Other study paths", homeAll() ? "Every path is listed on the main menu." : "The main menu lists only the paths you picked.",
       '<button class="btn small ghost" data-act="allpaths">' + (homeAll() ? "Show only mine" : "Show every path") + '</button>'));
   // sound
@@ -31129,5 +31246,5 @@ if (!h) {
 render();
 /* Control Center edits baked into the build (tools/bake_edits.py) so the iPhone app has them without a database */
 if (DB.BAKED) { try { (DB.BAKED.drugdex || []).forEach(applyRecord); CR_TYPES.forEach(function (t) { if (t[0] !== "drug") crItems(t[0]); }); (DB.BAKED.content || []).forEach(applyContent); } catch (e) { } }
-Dex.load(); initProg(); if (typeof grubFix === "function") grubFix(); if (agreeRec() && typeof trialBegin === "function") trialBegin(); setTimeout(function () { if (typeof remindSync === "function") remindSync(); if (typeof wdwSync === "function") wdwSync(); if (typeof watchSync === "function") watchSync(); }, 1500); initAdmin(); initLegal(); if (typeof accInit === "function") accInit(); if (typeof walletInit === "function") walletInit(); if (typeof subInit === "function") subInit(); setTimeout(loadProtocolSets, 400);
+Dex.load(); try { otaInit(); } catch (e) {} initProg(); if (typeof grubFix === "function") grubFix(); if (agreeRec() && typeof trialBegin === "function") trialBegin(); setTimeout(function () { if (typeof remindSync === "function") remindSync(); if (typeof wdwSync === "function") wdwSync(); if (typeof watchSync === "function") watchSync(); }, 1500); initAdmin(); initLegal(); if (typeof accInit === "function") accInit(); if (typeof walletInit === "function") walletInit(); if (typeof subInit === "function") subInit(); setTimeout(loadProtocolSets, 400);
 })();
