@@ -11,14 +11,14 @@
 :root{
   --bg:#13111c; --card:#1d1a2a; --ink:#f2effb; --mut:#aaa3c4; --line:#322c47; --soft:#251f37;
   --accent:#a78bfa; --accent-ink:#13111c; --warn-bg:#2d2312; --warn-ink:#f5c97a; --warn-line:#6b5222;
-  --s-new:#7d7896; --s-contacted:#6ea0f0; --s-replied:#2dd4bf; --s-followup:#e0a64a; --s-interested:#c4a8ff; --s-won:#34d399; --s-no:#f87171;
+  --s-new:#7d7896; --s-contacted:#6ea0f0; --s-replied:#2dd4bf; --s-followup:#e0a64a; --s-interested:#c4a8ff; --s-won:#34d399; --s-no:#f87171; --s-bounced:#fb923c;
   --display:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; --body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   color-scheme:dark;
 }
 @media (prefers-color-scheme: light){:root{
   --bg:#f6f4fc; --card:#ffffff; --ink:#1c1730; --mut:#5f5878; --line:#e2dcef; --soft:#f1edfa;
   --accent:#6d28d9; --accent-ink:#ffffff; --warn-bg:#fff4e0; --warn-ink:#7a4a00; --warn-line:#f0c97a;
-  --s-new:#8a85a0; --s-contacted:#2563c4; --s-replied:#0f766e; --s-followup:#b7791f; --s-interested:#7c3aed; --s-won:#047857; --s-no:#b91c1c; color-scheme:light}}
+  --s-new:#8a85a0; --s-contacted:#2563c4; --s-replied:#0f766e; --s-followup:#b7791f; --s-interested:#7c3aed; --s-won:#047857; --s-no:#b91c1c; --s-bounced:#c2410c; color-scheme:light}}
 *{box-sizing:border-box}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font:15px/1.45 var(--body)}
@@ -83,6 +83,7 @@ a.btn{text-decoration:none;display:inline-block}
 .log time{font:500 12.5px var(--mono);color:var(--mut);flex:none}
 .log .k{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;border-radius:5px;padding:1px 6px;background:var(--soft);color:var(--mut);flex:none}
 .log .k.in{background:var(--s-replied);color:var(--card)}
+.log .k.bad{background:var(--s-bounced);color:var(--card)}
 details.set{margin-top:12px;background:var(--card);border:1px solid var(--line);border-radius:10px}
 details.set summary{cursor:pointer;padding:10px 14px;font-weight:600;font-size:14px}
 details.set .in{padding:0 14px 14px;display:grid;gap:10px}
@@ -165,7 +166,7 @@ body.embed h1{font-size:22px}
 if(/[?&]embed=1/.test(location.search))document.body.classList.add("embed");
 var CATS=[["all","All"],["col","EMS: colleges"],["acad","EMS: private academies"],["fdedu","EMS: fire & agency schools"],["hs","High school EMT"],["nurse","Nursing schools"],["agency","EMS agencies"],["fire","Fire departments"]];
 var CATN={col:"EMS college",acad:"EMS academy",fdedu:"Fire/agency EMS school",hs:"High school EMT",nurse:"Nursing school",agency:"EMS agency",fire:"Fire department"};
-var ST=[["new","Not contacted"],["contacted","Contacted"],["replied","Replied"],["followup","Follow up"],["interested","Interested"],["won","Signed"],["no","Not interested"]];
+var ST=[["new","Not contacted"],["contacted","Contacted"],["bounced","Didn't go through"],["replied","Replied"],["followup","Follow up"],["interested","Interested"],["won","Signed"],["no","Not interested"]];
 var STN={}; ST.forEach(function(s){STN[s[0]]=s[1]});
 var K=[], BASE=[];
 function initData(RAW){K=RAW.k;BASE=RAW.r.map(function(r){var o={};K.forEach(function(k,i){o[k]=r[i]});return o});applyEdits();buildControls();render()}
@@ -217,7 +218,7 @@ function save(){try{localStorage.setItem("otf",JSON.stringify({cat:F.cat,st:F.st
 function tally(){
   var c={}; ST.forEach(function(s){c[s[0]]=0});
   ROWS.forEach(function(o){c[st(o)]++});
-  var done=ROWS.length-c["new"];
+  var done=ROWS.length-c["new"]-(c["bounced"]||0);
   document.getElementById("tally").innerHTML='<span><b>'+done+'</b> of '+ROWS.length+' reached</span>'+ST.slice(1).map(function(s){return '<span><b>'+c[s[0]]+'</b> '+esc(s[1].toLowerCase())+'</span>'}).join("");
   document.getElementById("meter").innerHTML=ST.slice(1).map(function(s){return c[s[0]]?'<i style="width:'+(100*c[s[0]]/ROWS.length)+'%;background:var(--s-'+s[0]+')"></i>':''}).join("");
 }
@@ -283,10 +284,10 @@ function card(o){
 function mailBox(o,rec){
   var id=esc(o.id), log=(rec.log||[]).slice().sort(function(a,b){return b.at-a.at}), live=CAN&&DB;
   var h='<div class="mail"><h3>Email</h3>';
-  if(log.length)h+='<ul class="log">'+log.map(function(l){return '<li><time>'+fmtD(l.at)+'</time><span class="k'+(l.in?' in':'')+'">'+(l.in?'Reply':'Sent')+'</span><span>'+esc(l.t||"")+'</span></li>'}).join("")+'</ul>';
+  if(log.length)h+='<ul class="log">'+log.map(function(l){return '<li><time>'+fmtD(l.at)+'</time><span class="k'+(l.in?' in':l.bad?' bad':'')+'">'+(l.in?'Reply':l.bad?'Didn\'t work':'Sent')+'</span><span>'+esc(l.t||"")+'</span></li>'}).join("")+'</ul>';
   else h+='<p class="small" style="margin:0">No emails yet.</p>';
   if(!o.email){return h+'<p class="small" style="margin:0">No email address on file. Call them, or click Edit to add one.</p></div>'}
-  h+='<div class="row"><a class="btn ghost" href="'+esc(gmailThread(o))+'" target="_blank" rel="noopener">See the conversation in Gmail</a>'+(live?'<button class="btn ghost" type="button" data-reply="'+id+'">They replied</button>':'')+(live&&!COMP[o.id]?'<button class="btn" type="button" data-compose="'+id+'">'+(log.some(function(l){return !l.in})?'Write a follow-up':'Write an email')+'</button>':'')+'</div>';
+  h+='<div class="row"><a class="btn ghost" href="'+esc(gmailThread(o))+'" target="_blank" rel="noopener">See the conversation in Gmail</a>'+(live?'<button class="btn ghost" type="button" data-reply="'+id+'">They replied</button><button class="btn ghost" type="button" data-bounce="'+id+'">Didn\'t go through</button>':'')+(live&&!COMP[o.id]?'<button class="btn" type="button" data-compose="'+id+'">'+(log.some(function(l){return !l.in})?'Write a follow-up':'Write an email')+'</button>':'')+'</div>';
   var c=COMP[o.id];
   if(c&&live){
     h+='<div class="row"><label class="small" for="ck-'+id+'">Template</label><select id="ck-'+id+'" data-ck="'+id+'">'+Object.keys(TPL0).map(function(k){return '<option value="'+k+'"'+(k===c.k?' selected':'')+'>'+esc(TPL0[k].n)+'</option>'}).join("")+'</select><span class="small">To: '+esc(o.email)+'</span></div>'+
@@ -331,6 +332,8 @@ document.getElementById("list").addEventListener("click",function(e){
   if(cc){delete COMP[cc.getAttribute("data-closec")];redraw(cc.getAttribute("data-closec"));return}
   var sd=e.target.closest("[data-send]");
   if(sd){var id=sd.getAttribute("data-send"),c=COMP[id],r0=S[id]||{},lg=(r0.log||[]).concat([{at:Date.now(),t:c.s}]).slice(-50),p={log:lg};if(!r0.s||r0.s==="new"){p.s="contacted";p.date=r0.date||today()}write(id,p);delete COMP[id];setTimeout(function(){redraw(id);tally()},50);return}
+  var bn=e.target.closest("[data-bounce]");
+  if(bn){var id=bn.getAttribute("data-bounce"),r0=S[id]||{},p={s:"bounced",log:(r0.log||[]).concat([{at:Date.now(),t:"Email didn't go through ("+(BYID[id].email||"no address")+")",bad:1}]).slice(-50)};if(!r0.date)p.date=today();write(id,p);redraw(id);tally();return}
   var rp=e.target.closest("[data-reply]");
   if(rp){var id=rp.getAttribute("data-reply"),r0=S[id]||{},p={log:(r0.log||[]).concat([{at:Date.now(),t:"They replied",in:1}]).slice(-50)};if(!r0.s||r0.s==="new"||r0.s==="contacted")p.s="replied";write(id,p);redraw(id);tally();return}
   var cy=e.target.closest("[data-copymail]");
