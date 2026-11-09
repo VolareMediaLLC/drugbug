@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Outreach · DrugBug Dashboard</title>
+<link rel="icon" type="image/png" sizes="48x48" href="../icon-48.png">
+<style>
+/* Layout: sticky filter bar over a single list of contact rows; each row opens into a detail panel with status, date and notes. */
+:root{
+  --bg:#13111c; --card:#1d1a2a; --ink:#f2effb; --mut:#aaa3c4; --line:#322c47; --soft:#251f37;
+  --accent:#a78bfa; --accent-ink:#13111c; --warn-bg:#2d2312; --warn-ink:#f5c97a; --warn-line:#6b5222;
+  --s-new:#7d7896; --s-contacted:#6ea0f0; --s-replied:#2dd4bf; --s-followup:#e0a64a; --s-interested:#c4a8ff; --s-won:#34d399; --s-no:#f87171;
+  --display:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; --body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){:root{
+  --bg:#f6f4fc; --card:#ffffff; --ink:#1c1730; --mut:#5f5878; --line:#e2dcef; --soft:#f1edfa;
+  --accent:#6d28d9; --accent-ink:#ffffff; --warn-bg:#fff4e0; --warn-ink:#7a4a00; --warn-line:#f0c97a;
+  --s-new:#8a85a0; --s-contacted:#2563c4; --s-replied:#0f766e; --s-followup:#b7791f; --s-interested:#7c3aed; --s-won:#047857; --s-no:#b91c1c; color-scheme:light}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.45 var(--body)}
+.wrap{max-width:980px;margin:0 auto;padding-block:20px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1{font:800 28px/1.1 var(--display);margin:0;letter-spacing:-.01em;text-wrap:balance}
+.sub{color:var(--mut);margin:4px 0 0;font-size:14px}
+.top{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between}
+.tally{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--mut);font-variant-numeric:tabular-nums}
+.tally b{color:var(--ink);font-weight:600}
+.meter{height:8px;border-radius:99px;background:var(--soft);overflow:hidden;display:flex;margin:12px 0 4px}
+.meter i{display:block;height:100%}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:12px 0 10px;margin-top:10px;border-bottom:1px solid var(--line);display:grid;gap:10px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:thin}
+.chip{flex:none;font:500 13px var(--body);border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:99px;padding:6px 11px;cursor:pointer;white-space:nowrap}
+.chip span{color:var(--mut);font-variant-numeric:tabular-nums;margin-left:4px}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chip[aria-pressed="true"] span{color:inherit;opacity:.8}
+.row2{display:flex;flex-wrap:wrap;gap:8px}
+.row2 input,.row2 select{font:inherit;font-size:14px;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:9px;padding:7px 10px;min-width:0}
+.row2 input[type=search]{flex:1 1 220px}
+.warn{background:var(--warn-bg);color:var(--warn-ink);border:1px solid var(--warn-line);border-radius:10px;padding:10px 12px;font-size:13.5px;margin-top:12px}
+.warn strong{display:block;font-weight:600;margin-bottom:2px}
+.count{font-size:13px;color:var(--mut);margin:12px 0 8px}
+.list{display:grid;gap:8px}
+.item{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--st,var(--s-new));border-radius:10px}
+.head{display:grid;grid-template-columns:1fr auto;gap:4px 12px;padding:11px 14px;cursor:pointer;align-items:start}
+.head:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;border-radius:8px}
+.nm{font-weight:600;min-width:0}
+.nm small{display:block;font-weight:400;color:var(--mut);font-size:12.5px}
+.dist{font:500 13px var(--mono);color:var(--ink);text-align:right;white-space:nowrap}
+.dist small{display:block;font:400 12px var(--body);color:var(--mut)}
+.who{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13.5px;color:var(--mut)}
+.who b{color:var(--ink);font-weight:500}
+.pills{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px}
+.pill{font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;border-radius:6px;padding:2px 7px;background:var(--soft);color:var(--mut)}
+.pill.st{background:var(--st);color:var(--card)}
+.pill.minor{background:var(--warn-bg);color:var(--warn-ink);border:1px solid var(--warn-line)}
+.pill.mine{background:var(--accent);color:var(--accent-ink)}
+.det{border-top:1px solid var(--line);padding:12px 14px 14px;display:grid;gap:12px}
+.kv{display:grid;grid-template-columns:110px 1fr;gap:6px 12px;font-size:14px}
+.kv dt{color:var(--mut)}
+.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.cp{font:inherit;font-size:12px;border:1px solid var(--line);background:var(--soft);color:var(--ink);border-radius:6px;padding:1px 7px;margin-left:6px;cursor:pointer}
+.mono{font-family:var(--mono);font-size:13.5px}
+.track{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.track select,.track input,.track textarea{font:inherit;font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 9px}
+.track textarea{flex:1 1 100%;min-height:60px;resize:vertical}
+.ef{display:grid;grid-template-columns:170px 1fr;gap:8px 12px;align-items:center;font-size:14px}
+.ef label{color:var(--mut)}
+.ef input,.ef textarea{font:inherit;font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 9px;min-width:0;width:100%;box-sizing:border-box}
+.ef textarea{min-height:54px;resize:vertical}
+@media (max-width:560px){.ef{grid-template-columns:1fr}.ef label{margin-top:4px}}
+.mail{border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:10px;background:var(--bg)}
+.mail h3{margin:0;font:600 13px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.mail .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.mail input,.mail select,.mail textarea{font:inherit;font-size:14px;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 9px;min-width:0;box-sizing:border-box}
+.mail input,.mail textarea{width:100%}
+.mail textarea{min-height:230px;resize:vertical;line-height:1.45}
+a.btn{text-decoration:none;display:inline-block}
+.log{list-style:none;margin:0;padding:0;display:grid;gap:4px;font-size:13.5px}
+.log li{display:flex;gap:10px;align-items:baseline}
+.log time{font:500 12.5px var(--mono);color:var(--mut);flex:none}
+.log .k{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;border-radius:5px;padding:1px 6px;background:var(--soft);color:var(--mut);flex:none}
+.log .k.in{background:var(--s-replied);color:var(--card)}
+details.set{margin-top:12px;background:var(--card);border:1px solid var(--line);border-radius:10px}
+details.set summary{cursor:pointer;padding:10px 14px;font-weight:600;font-size:14px}
+details.set .in{padding:0 14px 14px;display:grid;gap:10px}
+details.set label{font-size:13px;color:var(--mut)}
+details.set input,details.set textarea{font:inherit;font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 9px;width:100%;box-sizing:border-box}
+details.set textarea{min-height:200px;resize:vertical}
+.btn{font:600 14px var(--body);border:0;border-radius:8px;padding:7px 12px;cursor:pointer;background:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:var(--soft);color:var(--ink)}
+.small{font-size:12.5px;color:var(--mut)}
+.more{display:block;margin:14px auto 0}
+.note{font-size:13px;color:var(--s-no);min-height:0}
+a{color:var(--accent)}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+@media (max-width:560px){.kv{grid-template-columns:1fr}.kv dt{margin-top:4px}.head{grid-template-columns:1fr}.dist{text-align:left}}
+.sync{font-size:12.5px;color:var(--mut);margin:6px 0 0}.sync b{color:var(--ink)}
+body.embed .wrap{padding-top:4px;max-width:none;padding-left:0;padding-right:0}
+body.embed h1{font-size:22px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>Texas Outreach</h1>
+      <p class="sub">Schools, programs and agencies to pitch DrugBug to. Drive distances are from College Station.</p>
+      <p class="sync" id="sync">Starting…</p>
+    </div>
+    <div class="tally" id="tally" aria-live="polite"></div>
+  </div>
+  <div class="meter" id="meter" aria-hidden="true"></div>
+  <p class="note" id="note"></p>
+  <details class="set" id="setbox">
+    <summary>Email settings and templates</summary>
+    <div class="in">
+      <p class="small" style="margin:0">Emails open in Gmail, signed in as the address below, with the template filled in. You check it and press Send in Gmail. In templates, {first} becomes the contact's first name and {org} the school or agency name.</p>
+      <label for="set-from">Send from this Gmail address</label>
+      <input id="set-from" type="email">
+      <label for="set-k">Template to edit</label>
+      <select id="set-k" style="font:inherit;font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 9px"></select>
+      <label for="set-s">Subject</label><input id="set-s">
+      <label for="set-b">Message</label><textarea id="set-b"></textarea>
+      <div class="row2"><button class="btn" id="set-save" type="button">Save settings</button><button class="btn ghost" id="set-reset" type="button">Restore this template's original text</button><span class="small" id="set-msg"></span></div>
+    </div>
+  </details>
+
+  <div class="bar">
+    <div class="chips" id="cats" role="group" aria-label="Type"></div>
+    <div class="row2">
+      <input type="search" id="q" placeholder="Search name, city, county or person" aria-label="Search">
+      <select id="fs" aria-label="Status"></select>
+      <select id="fd" aria-label="Distance">
+        <option value="0">Any distance</option><option value="60">Within 1 hour</option><option value="120">Within 2 hours</option><option value="180">Within 3 hours</option><option value="300">Within 5 hours</option>
+      </select>
+      <select id="fo" aria-label="Sort">
+        <option value="d">Closest first</option><option value="n">A to Z</option><option value="s">Biggest staff first</option><option value="t">Recently updated</option>
+      </select>
+      <select id="fc" aria-label="Contact info">
+        <option value="">Any contact info</option><option value="e">Has email</option><option value="p">Has a named person</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="warn" id="minorwarn" hidden>
+    <strong>Minors: read before you reach out</strong>
+    High school programs (and college EMT classes with dual-credit students) have students under 18. Pitch only to the district, principal or instructor, never to students. Don't collect student names or emails yourself; use instructor-run class keys only. Get Brandon's written advice on minors, and finish minor mode, before any high school student signs up.
+  </div>
+
+  <p class="count" id="count"></p>
+  <div class="list" id="list"></div>
+  <button class="btn ghost more" id="more" hidden>Show 100 more</button>
+  <p class="small" style="margin-top:24px">Sources: Texas DSHS EMS rosters (EMS Education Programs, EMS Provider Agencies and First Responder Organizations, updated Nov 5, 2026), and school websites for nursing (researched Oct 11, 2026). Phone and email are what each organization has on file with the state, which is often a main office line. Drive times are estimates.</p>
+</div>
+
+<script src="../app/vendor/firebase-app-compat.js"></script>
+<script src="../app/vendor/firebase-auth-compat.js"></script>
+<script src="dash.js"></script>
+<script>
+if(/[?&]embed=1/.test(location.search))document.body.classList.add("embed");
+var CATS=[["all","All"],["col","EMS: colleges"],["acad","EMS: private academies"],["fdedu","EMS: fire & agency schools"],["hs","High school EMT"],["nurse","Nursing schools"],["agency","EMS agencies"],["fire","Fire departments"]];
+var CATN={col:"EMS college",acad:"EMS academy",fdedu:"Fire/agency EMS school",hs:"High school EMT",nurse:"Nursing school",agency:"EMS agency",fire:"Fire department"};
+var ST=[["new","Not contacted"],["contacted","Contacted"],["replied","Replied"],["followup","Follow up"],["interested","Interested"],["won","Signed"],["no","Not interested"]];
+var STN={}; ST.forEach(function(s){STN[s[0]]=s[1]});
+var K=[], BASE=[];
+function initData(RAW){K=RAW.k;BASE=RAW.r.map(function(r){var o={};K.forEach(function(k,i){o[k]=r[i]});return o});applyEdits();buildControls();render()}
+var EF=[["name","Name"],["aka","Also known as"],["city","City"],["county","County"],["who","Contact person"],["role","Their title"],["phone","Phone"],["email","Email"],["who2","Second contact"],["role2","Second contact's title"],["web","Website"],["info","Details"],["note","Research note"]];
+var ROWS=[], BYID={};
+var SIG="Adam Ficklen\nParamedic, FP-C · Founder, DrugBug\ndrugbugapp.com";
+var TPL0={
+ ems:{n:"EMS schools",s:"Free drug-study pilot for your {org} students",b:"Hi {first},\n\nI'm Adam Ficklen, a paramedic (FP-C) and the founder of DrugBug, a medication study app built for EMS students. It covers 2,000+ drugs at the EMT, AEMT and paramedic level, with quizzes, flashcards and plain-language explanations.\n\nFor instructors there's a class dashboard that shows where your cohort is weak (by drug, body system and question type). Students join with an anonymous class key, so you see class results without collecting their personal info.\n\nI'd like to offer {org} a free pilot for one cohort. You can click through the demo dashboard here: https://drugbugapp.com/instructor\n\nWould you have 15 minutes in the next couple of weeks for a quick call?\n\nThanks,\n"+SIG},
+ hs:{n:"High school EMT",s:"Drug-study tool for your EMT program at {org}",b:"Hi {first},\n\nI'm Adam Ficklen, a paramedic (FP-C) and the founder of DrugBug, a medication study app built for EMS education. I'm reaching out to EMT instructors and wanted to see if it could help your program.\n\nThe instructor dashboard shows where your class is weak on medications (by drug, body system and question type). Students join with an anonymous class key, so DrugBug doesn't need their names or emails.\n\nBecause your students are in high school, I'd start by sharing our student data agreement with you and your district before anyone signs up. You can look at the demo dashboard here: https://drugbugapp.com/instructor\n\nWould you be open to a short call to see if it's a fit?\n\nThanks,\n"+SIG},
+ agency:{n:"EMS agencies & fire departments",s:"Medication training tool for {org} crews",b:"Hi {first},\n\nI'm Adam Ficklen, a paramedic (FP-C) and the founder of DrugBug, a medication study app for EMS. It covers 2,000+ drugs with quizzes, flashcards and plain-language explanations, from EMT to paramedic level.\n\nFor agencies, we can load your own protocols into the app so crews can study them and quiz on them, and a training dashboard shows where your people are weak on medications.\n\nWould you have 15 minutes for a quick call to see if it would help {org}? More about it here: https://drugbugapp.com/instructor\n\nThanks,\n"+SIG},
+ nurse:{n:"Nursing schools",s:"Medication study tool for {org} nursing students",b:"Hi {first},\n\nI'm Adam Ficklen, a paramedic (FP-C) and the founder of DrugBug, a medication study app with an RN level for nursing students. It covers 2,000+ drugs with quizzes, flashcards and plain-language explanations.\n\nFaculty get a class dashboard that shows where a cohort is weak on medications (by drug, body system and question type). Students join with an anonymous class key, so you see class results without collecting their personal info.\n\nI'd like to offer {org} a free pilot for one class. You can click through the demo dashboard here: https://drugbugapp.com/instructor\n\nWould you have 15 minutes for a quick call in the next couple of weeks?\n\nThanks,\n"+SIG},
+ follow:{n:"Follow-up",s:"Following up: DrugBug for {org}",b:"Hi {first},\n\nJust following up on my note about DrugBug. I'd still love to set up a free pilot for {org}, or just show you the instructor dashboard in 15 minutes.\n\nIs there a better person for me to reach out to?\n\nThanks,\n"+SIG}
+};
+var SET={from:"volaremediallc@gmail.com",tpl:{}};
+var COMP={};
+function tpl(k){var t=(SET.tpl&&SET.tpl[k])||{};return {n:TPL0[k].n,s:t.s||TPL0[k].s,b:t.b||TPL0[k].b}}
+function tplFor(o){return o.cat==="hs"?"hs":o.cat==="nurse"?"nurse":(o.cat==="agency"||o.cat==="fire")?"agency":"ems"}
+function firstName(o){var w=(o.who||"").replace(/^(dr|mr|mrs|ms|chief|capt|captain|lt)\.?\s+/i,"").split(/\s+/)[0]||"";return w&&!/^(the|ems|fire|program)$/i.test(w)?w:""}
+function fill(t,o){var f=firstName(o);return t.replace(/Hi \{first\},/g,f?"Hi "+f+",":"Hello,").replace(/\{first\}/g,f||"there").replace(/\{org\}/g,o.name)}
+function gmailCompose(o,sub,body){return "https://mail.google.com/mail/u/"+encodeURIComponent(SET.from)+"/?view=cm&fs=1&to="+encodeURIComponent(o.email)+"&su="+encodeURIComponent(sub)+"&body="+encodeURIComponent(body)}
+function gmailThread(o){return "https://mail.google.com/mail/u/"+encodeURIComponent(SET.from)+"/#search/"+encodeURIComponent("from:"+o.email+" OR to:"+o.email)}
+function fmtD(t){var d=new Date(t);return (d.getMonth()+1)+"/"+d.getDate()+"/"+String(d.getFullYear()).slice(2)}
+var S={}, DB={}, CAN=true, LIMIT=100, OPEN={}, EDIT={};
+function applyEdits(){
+  ROWS=BASE.map(function(b){
+    var ed=(S[b.id]&&S[b.id].ed)||null, o=ed?Object.assign({},b):b;
+    if(ed){EF.forEach(function(f){if(typeof ed[f[0]]==="string")o[f[0]]=ed[f[0]]});o.edited=1}
+    o.hay=(o.name+" "+o.aka+" "+o.city+" "+o.county+" "+o.who+" "+o.who2+" "+o.email+" "+o.phone).toLowerCase();
+    return o});
+  BYID={}; ROWS.forEach(function(o){BYID[o.id]=o});
+}
+applyEdits();
+var F={cat:"all",q:"",st:"",d:0,o:"d",c:""};
+try{var sv=JSON.parse(localStorage.getItem("otf")||"null");if(sv)F=Object.assign(F,sv,{q:""})}catch(e){}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function st(o){return (S[o.id]&&S[o.id].s)||"new"}
+function hm(m){if(m==null||m==="")return "";var h=Math.floor(m/60),mm=m%60;return h?h+" h "+(mm?mm+" m":""):mm+" m"}
+function today(){var d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function note(t){document.getElementById("note").textContent=t||""}
+
+function buildControls(){
+  var cnt={all:ROWS.length}; ROWS.forEach(function(o){cnt[o.cat]=(cnt[o.cat]||0)+1});
+  document.getElementById("cats").innerHTML=CATS.map(function(c){return '<button class="chip" data-cat="'+c[0]+'" aria-pressed="'+(F.cat===c[0])+'">'+esc(c[1])+'<span>'+(cnt[c[0]]||0)+'</span></button>'}).join("");
+  document.getElementById("fs").innerHTML='<option value="">Any status</option><option value="todo">Not contacted yet</option><option value="done">Already contacted</option>'+ST.map(function(s){return '<option value="'+s[0]+'">'+esc(s[1])+'</option>'}).join("");
+  document.getElementById("fs").value=F.st; document.getElementById("fd").value=String(F.d); document.getElementById("fo").value=F.o; document.getElementById("fc").value=F.c;
+}
+function save(){try{localStorage.setItem("otf",JSON.stringify({cat:F.cat,st:F.st,d:F.d,o:F.o,c:F.c}))}catch(e){}}
+
+function tally(){
+  var c={}; ST.forEach(function(s){c[s[0]]=0});
+  ROWS.forEach(function(o){c[st(o)]++});
+  var done=ROWS.length-c["new"];
+  document.getElementById("tally").innerHTML='<span><b>'+done+'</b> of '+ROWS.length+' reached</span>'+ST.slice(1).map(function(s){return '<span><b>'+c[s[0]]+'</b> '+esc(s[1].toLowerCase())+'</span>'}).join("");
+  document.getElementById("meter").innerHTML=ST.slice(1).map(function(s){return c[s[0]]?'<i style="width:'+(100*c[s[0]]/ROWS.length)+'%;background:var(--s-'+s[0]+')"></i>':''}).join("");
+}
+
+function filtered(){
+  var q=F.q.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  var r=ROWS.filter(function(o){
+    if(F.cat!=="all"&&o.cat!==F.cat)return false;
+    var s=st(o);
+    if(F.st==="todo"&&s!=="new")return false;
+    if(F.st==="done"&&s==="new")return false;
+    if(F.st&&F.st!=="todo"&&F.st!=="done"&&s!==F.st)return false;
+    if(F.d&&(o.min===""||o.min>F.d))return false;
+    if(F.c==="e"&&!o.email)return false;
+    if(F.c==="p"&&!o.who)return false;
+    for(var i=0;i<q.length;i++)if(o.hay.indexOf(q[i])<0)return false;
+    return true});
+  var big=function(o){return o.mi===""?99999:o.mi};
+  r.sort(F.o==="n"?function(a,b){return a.name.localeCompare(b.name)}:F.o==="s"?function(a,b){return (b.size||0)-(a.size||0)||big(a)-big(b)}:F.o==="t"?function(a,b){return ((S[b.id]||{}).at||0)-((S[a.id]||{}).at||0)||big(a)-big(b)}:function(a,b){return big(a)-big(b)||a.name.localeCompare(b.name)});
+  return r;
+}
+
+function card(o){
+  var s=st(o), rec=S[o.id]||{}, open=!!OPEN[o.id];
+  var dist=o.mi===""?'<div class="dist">Out of state</div>':'<div class="dist">'+o.mi+' mi<small>'+esc(hm(o.min))+' drive</small></div>';
+  var h='<div class="item" style="--st:var(--s-'+s+')" data-id="'+esc(o.id)+'">'+
+   '<div class="head" tabindex="0" role="button" aria-expanded="'+open+'" data-tog="'+esc(o.id)+'">'+
+   '<div class="nm">'+esc(o.name)+'<small>'+esc([o.city,o.county?o.county+" County":""].filter(Boolean).join(", "))+(o.aka?' · '+esc(o.aka):'')+'</small></div>'+dist+
+   '<div class="who">'+(o.who?'<span><b>'+esc(o.who)+'</b>'+(o.role?', '+esc(o.role):'')+'</span>':'<span>No contact name listed</span>')+(o.phone?'<span class="mono">'+esc(o.phone)+'</span>':'')+(o.email?'<span>'+esc(o.email)+'</span>':'')+'</div>'+
+   '<div class="pills"><span class="pill st">'+esc(STN[s])+(rec.date?' · '+esc(rec.date):'')+'</span><span class="pill">'+esc(CATN[o.cat]||o.cat)+'</span>'+(o.minor?'<span class="pill minor">Minors</span>':'')+(o.mine?'<span class="pill mine">Your school</span>':'')+(o.edited?'<span class="pill">Edited</span>':'')+'</div>'+
+   '</div>';
+  if(open&&EDIT[o.id]){
+    var b=BASE.find?BASE.find(function(x){return x.id===o.id}):o;
+    h+='<form class="det" data-edit="'+esc(o.id)+'"><p class="small" style="margin:0">Change anything below, then Save. The original info is kept, so you can undo your changes.</p><div class="ef">'+
+      EF.map(function(f){var big=f[0]==="info"||f[0]==="note";return '<label for="e-'+f[0]+'-'+esc(o.id)+'">'+esc(f[1])+'</label>'+(big?'<textarea':'<input')+' id="e-'+f[0]+'-'+esc(o.id)+'" name="'+f[0]+'"'+(big?'>'+esc(o[f[0]])+'</textarea>':' value="'+esc(o[f[0]])+'"'+(f[0]==="email"?' type="email"':'')+'>')}).join("")+
+      '</div><div class="track"><button class="btn" type="submit">Save changes</button><button class="btn ghost" type="button" data-cancel="'+esc(o.id)+'">Cancel</button>'+(o.edited?'<button class="btn ghost" type="button" data-reset="'+esc(o.id)+'">Undo all my edits</button>':'')+'</div></form>';
+    return h+'</div>';
+  }
+  if(open){
+    h+='<div class="det">'+(o.minor?'<div class="warn" style="margin:0"><strong>Students here may be under 18.</strong>Talk only to the instructor or district. No student data, no direct student sales, and wait for Brandon\'s minor guidance before any student signs up.</div>':'')+
+    '<dl class="kv">'+
+    (o.who?'<dt>Contact</dt><dd>'+esc(o.who)+(o.role?', '+esc(o.role):'')+'</dd>':'')+
+    (o.who2?'<dt>Also</dt><dd>'+esc(o.who2)+(o.role2?', '+esc(o.role2):'')+'</dd>':'')+
+    (o.phone?'<dt>Phone</dt><dd><span class="mono">'+esc(o.phone)+'</span><button class="cp" data-cp="'+esc(o.phone)+'">Copy</button></dd>':'')+
+    (o.email?'<dt>Email</dt><dd><a href="mailto:'+esc(o.email)+'">'+esc(o.email)+'</a><button class="cp" data-cp="'+esc(o.email)+'">Copy</button></dd>':'<dt>Email</dt><dd class="small">None on file. Call or use the website.</dd>')+
+    (o.web?'<dt>Website</dt><dd><a href="'+esc(o.web)+'" target="_blank" rel="noopener">'+esc(o.web.replace(/^https?:\/\//,"").slice(0,70))+'</a></dd>':'')+
+    (o.info?'<dt>Details</dt><dd>'+esc(o.info)+'</dd>':'')+
+    (o.note?'<dt>Research note</dt><dd>'+esc(o.note)+'</dd>':'')+
+    '<dt>Distance</dt><dd>'+(o.mi===""?'Office is out of state':o.mi+' miles, about '+esc(hm(o.min))+' from College Station')+'</dd>'+
+    '<dt>Source</dt><dd class="small">'+esc(o.src)+'</dd></dl>'+mailBox(o,rec)+
+    '<div class="track">'+
+      '<label class="small" for="s-'+esc(o.id)+'">Status</label><select id="s-'+esc(o.id)+'" data-st="'+esc(o.id)+'"'+(CAN&&DB?'':' disabled')+'>'+ST.map(function(x){return '<option value="'+x[0]+'"'+(x[0]===s?' selected':'')+'>'+esc(x[1])+'</option>'}).join("")+'</select>'+
+      '<label class="small" for="d-'+esc(o.id)+'">Date</label><input type="date" id="d-'+esc(o.id)+'" data-dt="'+esc(o.id)+'" value="'+esc(rec.date||"")+'"'+(CAN&&DB?'':' disabled')+'>'+
+      (s==="new"&&CAN&&DB?'<button class="btn" data-quick="'+esc(o.id)+'">Mark contacted today</button>':'')+
+      '<textarea id="n-'+esc(o.id)+'" data-nt="'+esc(o.id)+'" placeholder="Notes: who you talked to, what they said, when to follow up"'+(CAN&&DB?'':' disabled')+'>'+esc(rec.note||"")+'</textarea>'+
+      '<span class="small" id="sv-'+esc(o.id)+'"></span>'+
+      (CAN&&DB?'<button class="btn ghost" type="button" data-editbtn="'+esc(o.id)+'">Edit name, contact or details</button>':'')+
+    '</div></div>';
+  }
+  return h+'</div>';
+}
+
+function mailBox(o,rec){
+  var id=esc(o.id), log=(rec.log||[]).slice().sort(function(a,b){return b.at-a.at}), live=CAN&&DB;
+  var h='<div class="mail"><h3>Email</h3>';
+  if(log.length)h+='<ul class="log">'+log.map(function(l){return '<li><time>'+fmtD(l.at)+'</time><span class="k'+(l.in?' in':'')+'">'+(l.in?'Reply':'Sent')+'</span><span>'+esc(l.t||"")+'</span></li>'}).join("")+'</ul>';
+  else h+='<p class="small" style="margin:0">No emails yet.</p>';
+  if(!o.email){return h+'<p class="small" style="margin:0">No email address on file. Call them, or click Edit to add one.</p></div>'}
+  h+='<div class="row"><a class="btn ghost" href="'+esc(gmailThread(o))+'" target="_blank" rel="noopener">See the conversation in Gmail</a>'+(live?'<button class="btn ghost" type="button" data-reply="'+id+'">They replied</button>':'')+(live&&!COMP[o.id]?'<button class="btn" type="button" data-compose="'+id+'">'+(log.some(function(l){return !l.in})?'Write a follow-up':'Write an email')+'</button>':'')+'</div>';
+  var c=COMP[o.id];
+  if(c&&live){
+    h+='<div class="row"><label class="small" for="ck-'+id+'">Template</label><select id="ck-'+id+'" data-ck="'+id+'">'+Object.keys(TPL0).map(function(k){return '<option value="'+k+'"'+(k===c.k?' selected':'')+'>'+esc(TPL0[k].n)+'</option>'}).join("")+'</select><span class="small">To: '+esc(o.email)+'</span></div>'+
+      '<label class="small" for="cs-'+id+'">Subject</label><input id="cs-'+id+'" data-cs="'+id+'" value="'+esc(c.s)+'">'+
+      '<label class="small" for="cb-'+id+'">Message</label><textarea id="cb-'+id+'" data-cb="'+id+'">'+esc(c.b)+'</textarea>'+
+      '<div class="row"><a class="btn" id="cg-'+id+'" data-send="'+id+'" href="'+esc(gmailCompose(o,c.s,c.b))+'" target="_blank" rel="noopener">Open in Gmail to send</a><button class="btn ghost" type="button" data-copymail="'+id+'">Copy text</button><button class="btn ghost" type="button" data-closec="'+id+'">Close</button></div>'+
+      '<p class="small" style="margin:0">Gmail opens with this filled in. Check it, then press Send there. The tracker logs it as sent and marks this place Contacted.</p>';
+  }
+  return h+'</div>';
+}
+function render(){
+  if(!BASE.length){tally();return}
+  var r=filtered();
+  document.getElementById("count").textContent=r.length+" match"+(r.length===1?"":"es")+(r.length>LIMIT?", showing the first "+LIMIT:"");
+  document.getElementById("list").innerHTML=r.slice(0,LIMIT).map(card).join("")||'<p class="small">Nothing matches these filters. Try a wider distance or a different type.</p>';
+  document.getElementById("more").hidden=r.length<=LIMIT;
+  document.getElementById("minorwarn").hidden=!(F.cat==="hs"||r.slice(0,LIMIT).some(function(o){return o.minor}));
+  [].forEach.call(document.querySelectorAll(".chip"),function(b){b.setAttribute("aria-pressed",String(b.getAttribute("data-cat")===F.cat))});
+  tally();
+}
+
+function write(id,patch){
+  var rec=Object.assign({s:"new",date:"",note:""},S[id]||{},patch);
+  delete rec.at; delete rec.up;
+  S[id]=DASH.put("outreach",id,rec);
+  var el=document.getElementById("sv-"+id); if(el)el.textContent="Saved";
+}
+
+document.getElementById("cats").addEventListener("click",function(e){var b=e.target.closest("[data-cat]");if(!b)return;F.cat=b.getAttribute("data-cat");LIMIT=100;save();render()});
+var qt;document.getElementById("q").addEventListener("input",function(e){clearTimeout(qt);qt=setTimeout(function(){F.q=e.target.value;LIMIT=100;render()},120)});
+[["fs","st"],["fd","d"],["fo","o"],["fc","c"]].forEach(function(p){document.getElementById(p[0]).addEventListener("change",function(e){F[p[1]]=p[1]==="d"?+e.target.value:e.target.value;LIMIT=100;save();render()})});
+document.getElementById("more").addEventListener("click",function(){LIMIT+=100;render()});
+function toggle(id){OPEN[id]=!OPEN[id];var o=BYID[id];var el=document.querySelector('.item[data-id="'+id+'"]');if(el)el.outerHTML=card(o)}
+document.getElementById("list").addEventListener("click",function(e){
+  var cp=e.target.closest("[data-cp]");
+  if(cp){var t=cp.getAttribute("data-cp");try{navigator.clipboard.writeText(t).then(function(){cp.textContent="Copied"},function(){cp.textContent="Select it"})}catch(x){cp.textContent="Select it"}return}
+  var qk=e.target.closest("[data-quick]");
+  if(qk){var id=qk.getAttribute("data-quick");write(id,{s:"contacted",date:(S[id]&&S[id].date)||today()});OPEN[id]=true;var el=document.querySelector('.item[data-id="'+id+'"]');if(el)el.outerHTML=card(BYID[id]);tally();return}
+  var cm=e.target.closest("[data-compose]");
+  if(cm){var id=cm.getAttribute("data-compose"),o=BYID[id],sent=((S[id]||{}).log||[]).some(function(l){return !l.in}),k=sent?"follow":tplFor(o),t=tpl(k);COMP[id]={k:k,s:fill(t.s,o),b:fill(t.b,o)};redraw(id);var x=document.getElementById("cb-"+id);if(x)x.focus();return}
+  var cc=e.target.closest("[data-closec]");
+  if(cc){delete COMP[cc.getAttribute("data-closec")];redraw(cc.getAttribute("data-closec"));return}
+  var sd=e.target.closest("[data-send]");
+  if(sd){var id=sd.getAttribute("data-send"),c=COMP[id],r0=S[id]||{},lg=(r0.log||[]).concat([{at:Date.now(),t:c.s}]).slice(-50),p={log:lg};if(!r0.s||r0.s==="new"){p.s="contacted";p.date=r0.date||today()}write(id,p);delete COMP[id];setTimeout(function(){redraw(id);tally()},50);return}
+  var rp=e.target.closest("[data-reply]");
+  if(rp){var id=rp.getAttribute("data-reply"),r0=S[id]||{},p={log:(r0.log||[]).concat([{at:Date.now(),t:"They replied",in:1}]).slice(-50)};if(!r0.s||r0.s==="new"||r0.s==="contacted")p.s="replied";write(id,p);redraw(id);tally();return}
+  var cy=e.target.closest("[data-copymail]");
+  if(cy){var c=COMP[cy.getAttribute("data-copymail")];try{navigator.clipboard.writeText("Subject: "+c.s+"\n\n"+c.b).then(function(){cy.textContent="Copied"},function(){cy.textContent="Select the text to copy"})}catch(x){cy.textContent="Select the text to copy"}return}
+  var eb=e.target.closest("[data-editbtn]");
+  if(eb){var id=eb.getAttribute("data-editbtn");EDIT[id]=true;redraw(id);var f=document.getElementById("e-name-"+id);if(f)f.focus();return}
+  var cn=e.target.closest("[data-cancel]");
+  if(cn){var id=cn.getAttribute("data-cancel");EDIT[id]=false;redraw(id);return}
+  var rs=e.target.closest("[data-reset]");
+  if(rs){var id=rs.getAttribute("data-reset");EDIT[id]=false;write(id,{ed:null});applyEdits();redraw(id);return}
+  var tg=e.target.closest("[data-tog]"); if(tg&&!e.target.closest("a"))toggle(tg.getAttribute("data-tog"));
+});
+function redraw(id){var el=document.querySelector('.item[data-id="'+id+'"]');if(el)el.outerHTML=card(BYID[id])}
+document.getElementById("list").addEventListener("submit",function(e){
+  var f=e.target.closest("[data-edit]");if(!f)return;e.preventDefault();
+  var id=f.getAttribute("data-edit"), base=BASE.find(function(x){return x.id===id}), ed={}, any=false;
+  EF.forEach(function(x){var v=(f.elements[x[0]].value||"").trim().slice(0,600);if(v!==String(base[x[0]]||"")){ed[x[0]]=v;any=true}});
+  write(id,{ed:any?ed:null});EDIT[id]=false;applyEdits();redraw(id);
+});
+document.getElementById("list").addEventListener("input",function(e){
+  var t=e.target,id=t.getAttribute("data-cs")||t.getAttribute("data-cb");if(!id||!COMP[id])return;
+  if(t.hasAttribute("data-cs"))COMP[id].s=t.value;else COMP[id].b=t.value;
+  var a=document.getElementById("cg-"+id);if(a)a.href=gmailCompose(BYID[id],COMP[id].s,COMP[id].b);
+});
+document.getElementById("list").addEventListener("keydown",function(e){var tg=e.target.closest("[data-tog]");if(tg&&e.target===tg&&(e.key==="Enter"||e.key===" ")){e.preventDefault();toggle(tg.getAttribute("data-tog"))}});
+document.getElementById("list").addEventListener("change",function(e){
+  var t=e.target, id;
+  if((id=t.getAttribute("data-st"))){var p={s:t.value};if(t.value!=="new"&&!(S[id]&&S[id].date))p.date=today();write(id,p);var el=document.querySelector('.item[data-id="'+id+'"]');if(el)el.outerHTML=card(BYID[id]);tally()}
+  else if((id=t.getAttribute("data-ck"))){var t2=tpl(t.value),o=BYID[id];COMP[id]={k:t.value,s:fill(t2.s,o),b:fill(t2.b,o)};redraw(id)}
+  else if((id=t.getAttribute("data-dt")))write(id,{date:t.value});
+  else if((id=t.getAttribute("data-nt")))write(id,{note:t.value.slice(0,4000)});
+});
+
+function setFill(){var k=document.getElementById("set-k").value||"ems",t=tpl(k);document.getElementById("set-s").value=t.s;document.getElementById("set-b").value=t.b}
+document.getElementById("set-k").innerHTML=Object.keys(TPL0).map(function(k){return '<option value="'+k+'">'+esc(TPL0[k].n)+'</option>'}).join("");
+document.getElementById("set-from").value=SET.from; setFill();
+document.getElementById("set-k").addEventListener("change",setFill);
+document.getElementById("set-reset").addEventListener("click",function(){var k=document.getElementById("set-k").value;document.getElementById("set-s").value=TPL0[k].s;document.getElementById("set-b").value=TPL0[k].b;document.getElementById("set-msg").textContent="Original text restored. Press Save to keep it."});
+document.getElementById("set-save").addEventListener("click",function(){
+  var k=document.getElementById("set-k").value, f=document.getElementById("set-from").value.trim();
+  if(f.indexOf("@")<1){document.getElementById("set-msg").textContent="Enter a full Gmail address.";return}
+  var tp=Object.assign({},SET.tpl||{}),ss=document.getElementById("set-s").value,bb=document.getElementById("set-b").value;
+  if(ss===TPL0[k].s&&bb===TPL0[k].b)delete tp[k];else tp[k]={s:ss.slice(0,300),b:bb.slice(0,5000)};
+  SET={from:f,tpl:tp};document.getElementById("set-msg").textContent="Saving…";
+  DASH.put("settings","email",SET);document.getElementById("set-msg").textContent="Saved";
+});
+buildControls(); render();
+function pull(){
+  S=DASH.all("outreach");
+  var e=DASH.get("settings","email"); if(e)SET={from:e.from||SET.from,tpl:e.tpl||{}};
+}
+pull();
+DASH.on(function(){
+  pull(); applyEdits();
+  var act=document.activeElement, keep=act&&act.id&&/^(n|d|cs|cb|ck)-/.test(act.id), editing=act&&act.closest&&(act.closest("[data-edit]")||act.closest("#setbox"));
+  if(!editing){document.getElementById("set-from").value=SET.from;setFill()}
+  if(!keep&&!editing)render(); else tally();
+});
+DASH.onStatus(function(st){document.getElementById("sync").textContent=DASH.statusText(st)});
+document.getElementById("list").innerHTML='<p class="small">Loading the contact list…</p>';
+DASH.contacts().then(initData);
+</script>
+</body>
+</html>

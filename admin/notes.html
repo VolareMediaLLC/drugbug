@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Update notes · DrugBug Dashboard</title>
+<link rel="icon" type="image/png" sizes="48x48" href="../icon-48.png">
+<style>
+/* Layout: an add box on top, then the notes grouped by stage (Doing, Planned, Ideas, Done). */
+:root{--bg:#13111c;--card:#1d1a2a;--ink:#f2effb;--mut:#aaa3c4;--line:#322c47;--soft:#251f37;--accent:#a78bfa;--accent-ink:#13111c;--hi:#f87171;--md:#fbbf24;--lo:#7d7896;--done:#34d399;color-scheme:dark}
+@media (prefers-color-scheme: light){:root{--bg:#f6f4fc;--card:#fff;--ink:#1c1730;--mut:#5f5878;--line:#e2dcef;--soft:#f1edfa;--accent:#6d28d9;--accent-ink:#fff;--hi:#b91c1c;--md:#b45309;--lo:#8a85a0;--done:#047857;color-scheme:light}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:20px 16px 60px}
+body.embed .wrap{padding-top:4px;max-width:none;padding-left:0;padding-right:0}
+h1{font-size:22px;margin:0}
+.sub,.sync,.small{color:var(--mut);font-size:13px;margin:4px 0 0}
+.add{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:14px 0 18px;display:grid;gap:10px}
+textarea,input,select{font:inherit;font-size:14px;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:9px;padding:8px 10px;min-width:0}
+textarea{width:100%;min-height:70px;resize:vertical}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{font:inherit;font-weight:700;font-size:14px;padding:8px 14px;border-radius:9px;border:0;background:var(--accent);color:var(--accent-ink);cursor:pointer}
+.ghost{font:inherit;font-size:13px;font-weight:650;padding:6px 11px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+.ghost.danger{color:var(--hi);border-color:color-mix(in srgb,var(--hi) 40%,var(--line))}
+.bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.bar input{flex:1 1 220px}
+h2{font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:22px 0 8px;display:flex;justify-content:space-between}
+h2 span{color:var(--mut);letter-spacing:0;text-transform:none;font-weight:500}
+.list{display:grid;gap:8px}
+.n{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--p,var(--lo));border-radius:10px;padding:10px 12px;display:grid;gap:8px}
+.n.done{opacity:.7}
+.n .t{white-space:pre-wrap;overflow-wrap:anywhere}
+.n.done .t{text-decoration:line-through;text-decoration-color:var(--mut)}
+.meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12.5px;color:var(--mut)}
+.pill{font-size:11.5px;font-weight:700;border-radius:99px;padding:2px 8px;background:var(--soft);color:var(--mut)}
+.pill.hi{color:var(--hi)}.pill.md{color:var(--md)}
+.meta select{font-size:12.5px;padding:3px 6px}
+.meta .sp{margin-left:auto;display:flex;gap:6px}
+.empty{color:var(--mut);font-size:14px;padding:6px 2px}
+.confirm{font-size:13px;color:var(--hi);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Update notes</h1>
+  <p class="sub">Ideas and changes you want to make to DrugBug. Saved on this computer right away and synced when you're online.</p>
+  <p class="sync" id="sync">Starting…</p>
+
+  <form class="add" id="add">
+    <label class="small" for="nt" style="margin:0">What do you want to change or add?</label>
+    <textarea id="nt" maxlength="4000" placeholder="Example: Add a pediatric dosing quiz to the paramedic level"></textarea>
+    <div class="row">
+      <label class="small" for="na" style="margin:0">Area</label>
+      <select id="na"></select>
+      <label class="small" for="np" style="margin:0">Priority</label>
+      <select id="np"><option value="hi">High</option><option value="md" selected>Medium</option><option value="lo">Low</option></select>
+      <button class="btn" type="submit">Add note</button>
+    </div>
+  </form>
+
+  <div class="bar">
+    <input type="search" id="q" placeholder="Search notes" aria-label="Search notes">
+    <select id="fa" aria-label="Area"></select>
+  </div>
+  <div id="groups"></div>
+</div>
+
+<script src="../app/vendor/firebase-app-compat.js"></script>
+<script src="../app/vendor/firebase-auth-compat.js"></script>
+<script src="dash.js"></script>
+<script>
+(function(){
+  "use strict";
+  if(/[?&]embed=1/.test(location.search))document.body.classList.add("embed");
+  var $=function(id){return document.getElementById(id)};
+  var esc=function(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})};
+  var AREAS=[["app","App"],["content","Drugs & questions"],["web","Website"],["school","Instructors & schools"],["dash","Dashboard"],["store","App Store & marketing"],["other","Other"]];
+  var AN={};AREAS.forEach(function(a){AN[a[0]]=a[1]});
+  var STAGES=[["doing","Doing now"],["planned","Planned"],["idea","Ideas"],["done","Done"]];
+  var PN={hi:"High",md:"Medium",lo:"Low"}, PR={hi:0,md:1,lo:2};
+  var EDIT={}, ASK={}, F={q:"",a:""};
+  $("na").innerHTML=AREAS.map(function(a){return '<option value="'+a[0]+'">'+esc(a[1])+'</option>'}).join("");
+  $("fa").innerHTML='<option value="">All areas</option>'+AREAS.map(function(a){return '<option value="'+a[0]+'">'+esc(a[1])+'</option>'}).join("");
+  try{var sa=localStorage.getItem("dbd:lastarea");if(sa)$("na").value=sa}catch(e){}
+
+  function item(id,n){
+    var h='<div class="n'+(n.s==="done"?' done':'')+'" style="--p:var(--'+(n.p||"md")+')" data-id="'+esc(id)+'">';
+    if(EDIT[id]){
+      h+='<textarea id="ed-'+esc(id)+'" maxlength="4000">'+esc(n.t)+'</textarea><div class="row"><button class="btn" type="button" data-save="'+esc(id)+'">Save</button><button class="ghost" type="button" data-cancel="'+esc(id)+'">Cancel</button></div>';
+    } else h+='<div class="t">'+esc(n.t)+'</div>';
+    h+='<div class="meta"><span class="pill '+esc(n.p||"md")+'">'+esc(PN[n.p]||"Medium")+'</span><span class="pill">'+esc(AN[n.a]||"Other")+'</span><span>Added '+new Date(n.c||n.at).toLocaleDateString()+(n.s==="done"&&n.d?' · done '+new Date(n.d).toLocaleDateString():'')+'</span>'+
+      '<span class="sp"><select data-stage="'+esc(id)+'" aria-label="Stage">'+STAGES.map(function(s){return '<option value="'+s[0]+'"'+(s[0]===(n.s||"idea")?' selected':'')+'>'+esc(s[1])+'</option>'}).join("")+'</select>'+
+      '<select data-prio="'+esc(id)+'" aria-label="Priority">'+["hi","md","lo"].map(function(p){return '<option value="'+p+'"'+(p===(n.p||"md")?' selected':'')+'>'+PN[p]+'</option>'}).join("")+'</select>'+
+      (EDIT[id]?'':'<button class="ghost" type="button" data-edit="'+esc(id)+'">Edit</button><button class="ghost danger" type="button" data-del="'+esc(id)+'">Delete</button>')+'</span></div>';
+    if(ASK[id])h+='<div class="confirm">Delete this note for good? <button class="ghost danger" type="button" data-yes="'+esc(id)+'">Delete</button><button class="ghost" type="button" data-no="'+esc(id)+'">Keep it</button></div>';
+    return h+'</div>';
+  }
+  function render(){
+    var all=DASH.all("notes"), q=F.q.trim().toLowerCase();
+    var ids=Object.keys(all).filter(function(id){var n=all[id];return (!F.a||n.a===F.a)&&(!q||(n.t||"").toLowerCase().indexOf(q)>=0)});
+    $("groups").innerHTML=STAGES.map(function(st){
+      var g=ids.filter(function(id){return (all[id].s||"idea")===st[0]}).sort(function(a,b){var x=all[a],y=all[b];return st[0]==="done"?(y.d||y.at)-(x.d||x.at):(PR[x.p]-PR[y.p])||((y.c||0)-(x.c||0))});
+      return '<h2>'+esc(st[1])+'<span>'+g.length+'</span></h2><div class="list">'+(g.length?g.map(function(id){return item(id,all[id])}).join(""):'<div class="empty">'+(st[0]==="idea"&&!ids.length?'No notes yet. Add your first one above.':'Nothing here.')+'</div>')+'</div>';
+    }).join("");
+  }
+  function upd(id,patch){var n=Object.assign({},DASH.get("notes",id)||{},patch);delete n.up;DASH.put("notes",id,n)}
+  $("add").addEventListener("submit",function(e){
+    e.preventDefault();var t=$("nt").value.trim();if(!t)return;
+    var id="n"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+    DASH.put("notes",id,{t:t.slice(0,4000),a:$("na").value,p:$("np").value,s:"idea",c:Date.now()});
+    try{localStorage.setItem("dbd:lastarea",$("na").value)}catch(x){}
+    $("nt").value="";$("nt").focus();
+  });
+  $("q").addEventListener("input",function(e){F.q=e.target.value;render()});
+  $("fa").addEventListener("change",function(e){F.a=e.target.value;render()});
+  $("groups").addEventListener("change",function(e){
+    var t=e.target,id;
+    if((id=t.getAttribute("data-stage"))){var p={s:t.value};if(t.value==="done")p.d=Date.now();upd(id,p)}
+    else if((id=t.getAttribute("data-prio")))upd(id,{p:t.value});
+  });
+  $("groups").addEventListener("click",function(e){
+    var b=e.target.closest("button");if(!b)return;var id;
+    if((id=b.getAttribute("data-edit"))){EDIT[id]=1;render();var x=$("ed-"+id);if(x)x.focus();}
+    else if((id=b.getAttribute("data-cancel"))){delete EDIT[id];render()}
+    else if((id=b.getAttribute("data-save"))){var v=$("ed-"+id).value.trim();delete EDIT[id];if(v)upd(id,{t:v.slice(0,4000)});else render()}
+    else if((id=b.getAttribute("data-del"))){ASK[id]=1;render()}
+    else if((id=b.getAttribute("data-no"))){delete ASK[id];render()}
+    else if((id=b.getAttribute("data-yes"))){delete ASK[id];DASH.del("notes",id)}
+  });
+  DASH.on(function(){var a=document.activeElement;if(a&&a.id&&/^ed-/.test(a.id))return;render()});
+  DASH.onStatus(function(st){$("sync").textContent=DASH.statusText(st)});
+  render();
+})();
+</script>
+</body>
+</html>

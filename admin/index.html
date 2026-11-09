@@ -4,7 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex">
-<title>DrugBug Admin</title>
+<title>DrugBug Dashboard</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#13111c">
 <link rel="icon" type="image/png" sizes="48x48" href="../icon-48.png">
 <style>
 :root{--bg:#13111c;--surface:#1d1a2a;--surface2:#251f37;--ink:#f2effb;--muted:#aaa3c4;--line:#322c47;--accent:#a78bfa;--teal:#2dd4bf;--good:#34d399;--warn:#fbbf24;--bad:#f87171;--bar:#2dd4bf;--track:#2b2540}
@@ -126,7 +128,7 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
 <body>
 <div class="wrap">
 <header class="site">
-  <a href="../index.html" class="brand"><img src="../icon-180.png" alt=""><b>DrugBug</b></a><span class="badge">Admin</span>
+  <a href="../index.html" class="brand"><img src="../icon-180.png" alt=""><b>DrugBug</b></a><span class="badge">Dashboard</span><span class="badge hide" id="offl" style="background:#d97706">Offline</span>
   <div class="who" id="who"></div>
 </header>
 
@@ -148,6 +150,8 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
   <button role="tab" data-tab="questions">Questions</button>
   <button role="tab" data-tab="classes">Schools</button>
   <button role="tab" data-tab="metrics">Usage</button>
+  <button role="tab" data-tab="outreach">Outreach</button>
+  <button role="tab" data-tab="notes">Update notes</button>
 </nav>
 <nav class="subtabs hide" id="subtabs" aria-label="Section pages"></nav>
 
@@ -230,6 +234,8 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
 <section data-page="evaluators" class="hide"><iframe class="emb" data-src="../instructor/?embed=evaluators" title="Evaluators"></iframe></section>
 <section data-page="classes" class="hide"><iframe class="emb" data-src="../instructor/?embed=classes" title="Classes"></iframe></section>
 <section data-page="metrics" class="hide"><iframe class="emb" data-src="../instructor/?embed=metrics" title="App metrics"></iframe></section>
+<section data-page="outreach" class="hide"><iframe class="emb" data-src="outreach.html?embed=1" title="Texas outreach"></iframe></section>
+<section data-page="notes" class="hide"><iframe class="emb" data-src="notes.html?embed=1" title="Update notes"></iframe></section>
 </div>
 </div>
 
@@ -297,7 +303,7 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
   /* ---------- tabs ---------- */
   var TAB = "", LOADED = {};
   /* five sections; People and Questions each hold a few pages (owner, Nov 7 2026) */
-  var GROUPS = { overview: ["overview"], people: ["signups", "evaluators"], codes: ["codes"], questions: ["grading", "analytics"], classes: ["classes"], metrics: ["metrics"] };
+  var GROUPS = { overview: ["overview"], people: ["signups", "evaluators"], codes: ["codes"], questions: ["grading", "analytics"], classes: ["classes"], metrics: ["metrics"], outreach: ["outreach"], notes: ["notes"] };
   var SUBNAME = { signups: "Evaluator sign-ups", evaluators: "Evaluators", codes: "Codes", grading: "Grade questions", analytics: "How students score" };
   var SUBNOTE = { evaluators: "Everyone with an evaluator code: what they graded, and their suggestions.", grading: "Read, rate and fix questions. Pilot questions go live after 2 Good votes." };
   var LASTSUB = { people: "signups", questions: "grading" };
@@ -758,6 +764,10 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
     var csv = ["Code,For,Gives,Used,Limit,Used by,Stops working,Label,Made,Status"].concat(L.map(function (c) { return [c.code, KIND[c.kind], gives(c), c.uses || 0, c.once ? 1 : c.max || "none", (c.who || []).map(function (w) { return w.name; }).join("; "), c.expires ? new Date(c.expires).toISOString().slice(0, 10) : "never", c.label || "", new Date(c.created).toISOString().slice(0, 10), status(c)[1]].map(q).join(","); })).join("\n");
     var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); a.download = "drugbug-codes.csv"; a.click();
   };
+  /* DrugBug Dashboard works offline: the pages are kept on this computer (sw.js) */
+  if ("serviceWorker" in navigator && !local) navigator.serviceWorker.register("sw.js").catch(function () {});
+  function offl() { show("offl", !navigator.onLine); }
+  window.addEventListener("online", offl); window.addEventListener("offline", offl); offl();
 })();
 </script>
 </body>
