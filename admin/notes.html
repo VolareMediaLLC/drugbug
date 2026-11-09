@@ -41,6 +41,13 @@ h2 span{color:var(--mut);letter-spacing:0;text-transform:none;font-weight:500}
 .empty{color:var(--mut);font-size:14px;padding:6px 2px}
 .confirm{font-size:13px;color:var(--hi);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.send{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.send b{font-size:14px}
+.send .small{margin:0}
+.pick{display:flex;align-items:flex-start;gap:10px;cursor:pointer}
+.pick input{width:18px;height:18px;margin:3px 0 0;flex:none;accent-color:var(--accent)}
+.pill.sent{color:var(--accent)}
+.copybox{width:100%;min-height:140px;font:13px/1.45 ui-monospace,Menlo,Consolas,monospace}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -66,6 +73,17 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
     <input type="search" id="q" placeholder="Search notes" aria-label="Search notes">
     <select id="fa" aria-label="Area"></select>
   </div>
+  <div class="send" id="sendbar">
+    <b>Send to Claude</b>
+    <span class="small" id="selcount">Tick the notes you want, or send them all.</span>
+    <span style="flex:1"></span>
+    <button class="ghost" type="button" id="selAll">Select all</button>
+    <button class="ghost" type="button" id="selNone">Clear</button>
+    <button class="btn" type="button" id="sendSel">Send selected</button>
+    <button class="btn" type="button" id="sendAll">Send all open notes</button>
+    <p class="small" id="sendmsg" style="flex-basis:100%" hidden></p>
+    <textarea class="copybox" id="copybox" readonly hidden aria-label="Notes to paste into Claude"></textarea>
+  </div>
   <div id="groups"></div>
 </div>
 
@@ -82,7 +100,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
   var AN={};AREAS.forEach(function(a){AN[a[0]]=a[1]});
   var STAGES=[["doing","Doing now"],["planned","Planned"],["idea","Ideas"],["done","Done"]];
   var PN={hi:"High",md:"Medium",lo:"Low"}, PR={hi:0,md:1,lo:2};
-  var EDIT={}, ASK={}, F={q:"",a:""};
+  var EDIT={}, ASK={}, SEL={}, F={q:"",a:""};
   $("na").innerHTML=AREAS.map(function(a){return '<option value="'+a[0]+'">'+esc(a[1])+'</option>'}).join("");
   $("fa").innerHTML='<option value="">All areas</option>'+AREAS.map(function(a){return '<option value="'+a[0]+'">'+esc(a[1])+'</option>'}).join("");
   try{var sa=localStorage.getItem("dbd:lastarea");if(sa)$("na").value=sa}catch(e){}
@@ -91,8 +109,8 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
     var h='<div class="n'+(n.s==="done"?' done':'')+'" style="--p:var(--'+(n.p||"md")+')" data-id="'+esc(id)+'">';
     if(EDIT[id]){
       h+='<textarea id="ed-'+esc(id)+'" maxlength="4000">'+esc(n.t)+'</textarea><div class="row"><button class="btn" type="button" data-save="'+esc(id)+'">Save</button><button class="ghost" type="button" data-cancel="'+esc(id)+'">Cancel</button></div>';
-    } else h+='<div class="t">'+esc(n.t)+'</div>';
-    h+='<div class="meta"><span class="pill '+esc(n.p||"md")+'">'+esc(PN[n.p]||"Medium")+'</span><span class="pill">'+esc(AN[n.a]||"Other")+'</span><span>Added '+new Date(n.c||n.at).toLocaleDateString()+(n.s==="done"&&n.d?' · done '+new Date(n.d).toLocaleDateString():'')+'</span>'+
+    } else h+='<label class="pick"><input type="checkbox" data-sel="'+esc(id)+'"'+(SEL[id]?' checked':'')+' aria-label="Select this note"><span class="t">'+esc(n.t)+'</span></label>';
+    h+='<div class="meta"><span class="pill '+esc(n.p||"md")+'">'+esc(PN[n.p]||"Medium")+'</span><span class="pill">'+esc(AN[n.a]||"Other")+'</span>'+(n.q?'<span class="pill sent">Sent to Claude '+new Date(n.q).toLocaleDateString()+'</span>':'')+'<span>Added '+new Date(n.c||n.at).toLocaleDateString()+(n.s==="done"&&n.d?' · done '+new Date(n.d).toLocaleDateString():'')+'</span>'+
       '<span class="sp"><select data-stage="'+esc(id)+'" aria-label="Stage">'+STAGES.map(function(s){return '<option value="'+s[0]+'"'+(s[0]===(n.s||"idea")?' selected':'')+'>'+esc(s[1])+'</option>'}).join("")+'</select>'+
       '<select data-prio="'+esc(id)+'" aria-label="Priority">'+["hi","md","lo"].map(function(p){return '<option value="'+p+'"'+(p===(n.p||"md")?' selected':'')+'>'+PN[p]+'</option>'}).join("")+'</select>'+
       (EDIT[id]?'':'<button class="ghost" type="button" data-edit="'+esc(id)+'">Edit</button><button class="ghost danger" type="button" data-del="'+esc(id)+'">Delete</button>')+'</span></div>';
@@ -106,6 +124,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
       var g=ids.filter(function(id){return (all[id].s||"idea")===st[0]}).sort(function(a,b){var x=all[a],y=all[b];return st[0]==="done"?(y.d||y.at)-(x.d||x.at):(PR[x.p]-PR[y.p])||((y.c||0)-(x.c||0))});
       return '<h2>'+esc(st[1])+'<span>'+g.length+'</span></h2><div class="list">'+(g.length?g.map(function(id){return item(id,all[id])}).join(""):'<div class="empty">'+(st[0]==="idea"&&!ids.length?'No notes yet. Add your first one above.':'Nothing here.')+'</div>')+'</div>';
     }).join("");
+    selCount();
   }
   function upd(id,patch){var n=Object.assign({},DASH.get("notes",id)||{},patch);delete n.up;DASH.put("notes",id,n)}
   $("add").addEventListener("submit",function(e){
@@ -131,6 +150,28 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
     else if((id=b.getAttribute("data-no"))){delete ASK[id];render()}
     else if((id=b.getAttribute("data-yes"))){delete ASK[id];DASH.del("notes",id)}
   });
+  function visibleOpen(){var all=DASH.all("notes"),q=F.q.trim().toLowerCase();return Object.keys(all).filter(function(id){var n=all[id];return (n.s||"idea")!=="done"&&(!F.a||n.a===F.a)&&(!q||(n.t||"").toLowerCase().indexOf(q)>=0)})}
+  function selCount(){var n=Object.keys(SEL).filter(function(k){return SEL[k]&&DASH.get("notes",k)}).length;$("selcount").textContent=n?n+" selected":"Tick the notes you want, or send them all.";$("sendSel").disabled=!n}
+  function compose(ids){
+    var all=DASH.all("notes"),order={doing:0,planned:1,idea:2,done:3};
+    ids=ids.filter(function(id){return all[id]}).sort(function(a,b){var x=all[a],y=all[b];return (order[x.s||"idea"]-order[y.s||"idea"])||(PR[x.p||"md"]-PR[y.p||"md"])});
+    var st={};STAGES.forEach(function(s){st[s[0]]=s[1]});
+    return "Here are my DrugBug update notes to work on ("+ids.length+"):\n\n"+ids.map(function(id,i){var n=all[id];return (i+1)+". "+n.t+"\n   ["+(PN[n.p]||"Medium")+" priority · "+(AN[n.a]||"Other")+" · "+st[n.s||"idea"]+" · note id "+id+"]"}).join("\n\n");
+  }
+  function send(ids){
+    if(!ids.length){$("sendmsg").textContent="No notes to send. Add one above, or tick the ones you want.";$("sendmsg").hidden=false;return}
+    var txt=compose(ids), now=Date.now();
+    ids.forEach(function(id){var n=DASH.get("notes",id);if(n){var c=Object.assign({},n,{q:now});delete c.up;DASH.put("notes",id,c)}});
+    $("copybox").value=txt;$("copybox").hidden=false;
+    var done=function(ok){$("sendmsg").textContent=(ok?"Copied "+ids.length+" note"+(ids.length===1?"":"s")+". ":"Select the text below and copy it (Ctrl+C). ")+"Paste it into your Claude chat. They're also marked \"Sent to Claude\", so you can just tell Claude \"check my dashboard notes\".";$("sendmsg").hidden=false;if(!ok){$("copybox").focus();$("copybox").select()}};
+    try{navigator.clipboard.writeText(txt).then(function(){done(true)},function(){done(false)})}catch(e){done(false)}
+    SEL={};render();
+  }
+  $("selAll").addEventListener("click",function(){visibleOpen().forEach(function(id){SEL[id]=1});render()});
+  $("selNone").addEventListener("click",function(){SEL={};render()});
+  $("sendSel").addEventListener("click",function(){send(Object.keys(SEL).filter(function(k){return SEL[k]}))});
+  $("sendAll").addEventListener("click",function(){send(Object.keys(DASH.all("notes")).filter(function(id){return (DASH.get("notes",id).s||"idea")!=="done"}))});
+  $("groups").addEventListener("change",function(e){var id=e.target.getAttribute("data-sel");if(id){if(e.target.checked)SEL[id]=1;else delete SEL[id];selCount()}});
   DASH.on(function(){var a=document.activeElement;if(a&&a.id&&/^ed-/.test(a.id))return;render()});
   DASH.onStatus(function(st){$("sync").textContent=DASH.statusText(st)});
   render();
