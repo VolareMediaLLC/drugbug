@@ -90,6 +90,9 @@ details.set .in{padding:0 14px 14px;display:grid;gap:10px}
 details.set label{font-size:13px;color:var(--mut)}
 details.set input,details.set textarea{font:inherit;font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 9px;width:100%;box-sizing:border-box}
 details.set textarea{min-height:200px;resize:vertical}
+.btn.danger{color:var(--s-no)}
+.pill.trash{background:var(--warn-bg);color:var(--warn-ink)}
+.undo{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:14px;margin:12px 0 0;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .btn{font:600 14px var(--body);border:0;border-radius:8px;padding:7px 12px;cursor:pointer;background:var(--accent);color:var(--accent-ink)}
 .btn.ghost{background:var(--soft);color:var(--ink)}
 .small{font-size:12.5px;color:var(--mut)}
@@ -153,6 +156,7 @@ body.embed h1{font-size:22px}
     High school programs (and college EMT classes with dual-credit students) have students under 18. Pitch only to the district, principal or instructor, never to students. Don't collect student names or emails yourself; use instructor-run class keys only. Get Brandon's written advice on minors, and finish minor mode, before any high school student signs up.
   </div>
 
+  <p class="undo" id="undo" hidden></p>
   <p class="count" id="count"></p>
   <div class="list" id="list"></div>
   <button class="btn ghost more" id="more" hidden>Show 100 more</button>
@@ -164,7 +168,7 @@ body.embed h1{font-size:22px}
 <script src="dash.js?v=5"></script>
 <script>
 if(/[?&]embed=1/.test(location.search))document.body.classList.add("embed");
-var CATS=[["all","All"],["col","EMS: colleges"],["acad","EMS: private academies"],["fdedu","EMS: fire & agency schools"],["hs","High school EMT"],["nurse","Nursing schools"],["agency","EMS agencies"],["fire","Fire departments"]];
+var CATS=[["all","All"],["col","EMS: colleges"],["acad","EMS: private academies"],["fdedu","EMS: fire & agency schools"],["hs","High school EMT"],["nurse","Nursing schools"],["agency","EMS agencies"],["fire","Fire departments"],["trash","Trash"]];
 var CATN={col:"EMS college",acad:"EMS academy",fdedu:"Fire/agency EMS school",hs:"High school EMT",nurse:"Nursing school",agency:"EMS agency",fire:"Fire department"};
 var ST=[["new","Not contacted"],["contacted","Contacted"],["bounced","Didn't go through"],["replied","Replied"],["followup","Follow up"],["interested","Interested"],["won","Signed"],["no","Not interested"]];
 var STN={}; ST.forEach(function(s){STN[s[0]]=s[1]});
@@ -189,7 +193,12 @@ function fill(t,o){var f=firstName(o);return t.replace(/Hi \{first\},/g,f?"Hi "+
 function gmailCompose(o,sub,body){var c=COMP[o.id];return "https://mail.google.com/mail/u/"+encodeURIComponent(SET.from)+"/?view=cm&fs=1&to="+encodeURIComponent((c&&c.to)||o.email)+"&su="+encodeURIComponent(sub)+"&body="+encodeURIComponent(body)}
 function gmailThread(o){return "https://mail.google.com/mail/u/"+encodeURIComponent(SET.from)+"/#search/"+encodeURIComponent("from:"+o.email+" OR to:"+o.email)}
 function goodSends(rec){var g=0;(rec&&rec.log||[]).slice().sort(function(x,y){return x.at-y.at}).forEach(function(l){if(l.bad)g=Math.max(0,g-1);else if(!l.in&&!l.mark)g++});return g}
-var VERSION="Nov 9, 2026 · v5";
+var VERSION="Nov 9, 2026 · v6";
+var DAY=86400000;
+function inTrash(o){var r=S[o.id];return !!(r&&r.trash&&!r.gone)}
+function gone(o){var r=S[o.id];return !!(r&&(r.gone||(r.trash&&Date.now()-r.trash>DAY)))}
+function live(o){return !inTrash(o)&&!gone(o)}
+function left(o){var ms=Math.max(0,DAY-(Date.now()-S[o.id].trash));var h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000);return h?h+" h "+m+" m":m+" m"}
 function fmtD(t){var d=new Date(t);return (d.getMonth()+1)+"/"+d.getDate()+"/"+String(d.getFullYear()).slice(2)}
 var S={}, DB={}, CAN=true, LIMIT=100, OPEN={}, EDIT={};
 function applyEdits(){
@@ -210,7 +219,7 @@ function today(){var d=new Date();return d.getFullYear()+"-"+String(d.getMonth()
 function note(t){document.getElementById("note").textContent=t||""}
 
 function buildControls(){
-  var cnt={all:ROWS.length}; ROWS.forEach(function(o){cnt[o.cat]=(cnt[o.cat]||0)+1});
+  var L=ROWS.filter(live),cnt={all:L.length}; L.forEach(function(o){cnt[o.cat]=(cnt[o.cat]||0)+1}); cnt.trash=ROWS.filter(function(o){return inTrash(o)&&!gone(o)}).length;
   document.getElementById("cats").innerHTML=CATS.map(function(c){return '<button class="chip" data-cat="'+c[0]+'" aria-pressed="'+(F.cat===c[0])+'">'+esc(c[1])+'<span>'+(cnt[c[0]]||0)+'</span></button>'}).join("");
   document.getElementById("fs").innerHTML='<option value="">Any status</option><option value="todo">Not contacted yet</option><option value="done">Already contacted</option>'+ST.map(function(s){return '<option value="'+s[0]+'">'+esc(s[1])+'</option>'}).join("");
   document.getElementById("fs").value=F.st; document.getElementById("fd").value=String(F.d); document.getElementById("fo").value=F.o; document.getElementById("fc").value=F.c;
@@ -219,16 +228,18 @@ function save(){try{localStorage.setItem("otf",JSON.stringify({cat:F.cat,st:F.st
 
 function tally(){
   var c={}; ST.forEach(function(s){c[s[0]]=0});
-  ROWS.forEach(function(o){c[st(o)]++});
-  var done=ROWS.length-c["new"]-(c["bounced"]||0);
-  document.getElementById("tally").innerHTML='<span><b>'+done+'</b> of '+ROWS.length+' reached</span>'+ST.slice(1).map(function(s){return '<span><b>'+c[s[0]]+'</b> '+esc(s[1].toLowerCase())+'</span>'}).join("");
-  document.getElementById("meter").innerHTML=ST.slice(1).map(function(s){return c[s[0]]?'<i style="width:'+(100*c[s[0]]/ROWS.length)+'%;background:var(--s-'+s[0]+')"></i>':''}).join("");
+  var L=ROWS.filter(live); L.forEach(function(o){c[st(o)]++});
+  var done=L.length-c["new"]-(c["bounced"]||0);
+  document.getElementById("tally").innerHTML='<span><b>'+done+'</b> of '+L.length+' reached</span>'+ST.slice(1).map(function(s){return '<span><b>'+c[s[0]]+'</b> '+esc(s[1].toLowerCase())+'</span>'}).join("");
+  document.getElementById("meter").innerHTML=ST.slice(1).map(function(s){return c[s[0]]?'<i style="width:'+(100*c[s[0]]/Math.max(1,L.length))+'%;background:var(--s-'+s[0]+')"></i>':''}).join("");
 }
 
 function filtered(){
   var q=F.q.trim().toLowerCase().split(/\s+/).filter(Boolean);
   var r=ROWS.filter(function(o){
-    if(F.cat!=="all"&&o.cat!==F.cat)return false;
+    if(gone(o))return false;
+    if(F.cat==="trash"){if(!inTrash(o))return false}
+    else{if(inTrash(o))return false;if(F.cat!=="all"&&o.cat!==F.cat)return false;}
     var s=st(o);
     if(F.st==="todo"&&s!=="new")return false;
     if(F.st==="done"&&s==="new")return false;
@@ -250,7 +261,7 @@ function card(o){
    '<div class="head" tabindex="0" role="button" aria-expanded="'+open+'" data-tog="'+esc(o.id)+'">'+
    '<div class="nm">'+esc(o.name)+'<small>'+esc([o.city,o.county?o.county+" County":""].filter(Boolean).join(", "))+(o.aka?' · '+esc(o.aka):'')+'</small></div>'+dist+
    '<div class="who">'+(o.who?'<span><b>'+esc(o.who)+'</b>'+(o.role?', '+esc(o.role):'')+'</span>':'<span>No contact name listed</span>')+(o.phone?'<span class="mono">'+esc(o.phone)+'</span>':'')+(o.email?'<span>'+esc(o.email)+'</span>':'')+'</div>'+
-   '<div class="pills"><span class="pill st">'+esc(STN[s])+(rec.date?' · '+esc(rec.date):'')+'</span><span class="pill">'+esc(CATN[o.cat]||o.cat)+'</span>'+(o.minor?'<span class="pill minor">Minors</span>':'')+(o.mine?'<span class="pill mine">Your school</span>':'')+(o.edited?'<span class="pill">Edited</span>':'')+'</div>'+
+   '<div class="pills"><span class="pill st">'+esc(STN[s])+(rec.date?' · '+esc(rec.date):'')+'</span><span class="pill">'+esc(CATN[o.cat]||o.cat)+'</span>'+(o.minor?'<span class="pill minor">Minors</span>':'')+(o.mine?'<span class="pill mine">Your school</span>':'')+(o.edited?'<span class="pill">Edited</span>':'')+(inTrash(o)?'<span class="pill trash">In trash · deletes in '+left(o)+'</span>':'')+'</div>'+
    '</div>';
   if(open&&EDIT[o.id]){
     var b=BASE.find?BASE.find(function(x){return x.id===o.id}):o;
@@ -260,7 +271,7 @@ function card(o){
     return h+'</div>';
   }
   if(open){
-    h+='<div class="det">'+(o.minor?'<div class="warn" style="margin:0"><strong>Students here may be under 18.</strong>Talk only to the instructor or district. No student data, no direct student sales, and wait for Brandon\'s minor guidance before any student signs up.</div>':'')+
+    h+='<div class="det">'+(inTrash(o)?'<div class="warn" style="margin:0"><strong>In the trash.</strong>It will be deleted for good in '+left(o)+'. <button class="btn" type="button" data-restore="'+esc(o.id)+'" style="margin-left:8px">Restore</button></div>':'')+(o.minor?'<div class="warn" style="margin:0"><strong>Students here may be under 18.</strong>Talk only to the instructor or district. No student data, no direct student sales, and wait for Brandon\'s minor guidance before any student signs up.</div>':'')+
     '<dl class="kv">'+
     (o.who?'<dt>Contact</dt><dd>'+esc(o.who)+(o.role?', '+esc(o.role):'')+'</dd>':'')+
     (o.who2?'<dt>Also</dt><dd>'+esc(o.who2)+(o.role2?', '+esc(o.role2):'')+'</dd>':'')+
@@ -277,7 +288,7 @@ function card(o){
       (s==="new"&&CAN&&DB?'<button class="btn" data-quick="'+esc(o.id)+'">Mark contacted today</button>':'')+
       '<textarea id="n-'+esc(o.id)+'" data-nt="'+esc(o.id)+'" placeholder="Notes: who you talked to, what they said, when to follow up"'+(CAN&&DB?'':' disabled')+'>'+esc(rec.note||"")+'</textarea>'+
       '<span class="small" id="sv-'+esc(o.id)+'"></span>'+
-      (CAN&&DB?'<button class="btn ghost" type="button" data-editbtn="'+esc(o.id)+'">Edit name, contact or details</button>':'')+
+      (CAN&&DB?'<button class="btn ghost" type="button" data-editbtn="'+esc(o.id)+'">Edit name, contact or details</button>'+(inTrash(o)?'':'<button class="btn ghost danger" type="button" data-trash="'+esc(o.id)+'">Not an agency or institution</button>'):'')+
     '</div></div>';
   }
   return h+'</div>';
@@ -303,9 +314,10 @@ function mailBox(o,rec){
 }
 function render(){
   if(!BASE.length){tally();return}
+  buildControls();
   var r=filtered();
   document.getElementById("count").textContent=r.length+" match"+(r.length===1?"":"es")+(r.length>LIMIT?", showing the first "+LIMIT:"");
-  document.getElementById("list").innerHTML=r.slice(0,LIMIT).map(card).join("")||'<p class="small">Nothing matches these filters. Try a wider distance or a different type.</p>';
+  document.getElementById("list").innerHTML=r.slice(0,LIMIT).map(card).join("")||(F.cat==="trash"?'<p class="small">The trash is empty. Places you mark "Not an agency or institution" wait here for 24 hours, then are deleted for good.</p>':'<p class="small">Nothing matches these filters. Try a wider distance or a different type.</p>');
   document.getElementById("more").hidden=r.length<=LIMIT;
   document.getElementById("minorwarn").hidden=!(F.cat==="hs"||r.slice(0,LIMIT).some(function(o){return o.minor}));
   [].forEach.call(document.querySelectorAll(".chip"),function(b){b.setAttribute("aria-pressed",String(b.getAttribute("data-cat")===F.cat))});
@@ -339,6 +351,10 @@ document.getElementById("list").addEventListener("click",function(e){
   if(cc){delete COMP[cc.getAttribute("data-closec")];redraw(cc.getAttribute("data-closec"));return}
   var sd=e.target.closest("[data-send]");
   if(sd){var id=sd.getAttribute("data-send"),c=COMP[id],r0=S[id]||{},o=BYID[id],to=(c.to||o.email||"").trim(),lg=(r0.log||[]).concat([{at:Date.now(),t:c.s,to:to}]).slice(-50),p={log:lg};if(!r0.s||r0.s==="new"||r0.s==="bounced"){p.s="contacted";p.date=r0.s==="bounced"?today():(r0.date||today())}if(to&&to!==o.email){p.ed=Object.assign({},r0.ed||{},{email:to})}write(id,p);delete COMP[id];setTimeout(function(){redraw(id);tally()},50);return}
+  var tr=e.target.closest("[data-trash]");
+  if(tr){var id=tr.getAttribute("data-trash");delete COMP[id];OPEN[id]=false;write(id,{trash:Date.now(),gone:0});applyEdits();buildControls();render();note("");var nm=BYID[id].name;var u=document.getElementById("undo");u.innerHTML="Moved <b>"+esc(nm)+"</b> to the trash. It deletes for good in 24 hours. <button class=\"btn ghost\" type=\"button\" data-restore=\""+esc(id)+"\">Undo</button>";u.hidden=false;clearTimeout(window.__ut);window.__ut=setTimeout(function(){u.hidden=true},12000);return}
+  var rs2=e.target.closest("[data-restore]");
+  if(rs2){var id=rs2.getAttribute("data-restore");write(id,{trash:0});applyEdits();buildControls();render();document.getElementById("undo").hidden=true;return}
   var bn=e.target.closest("[data-bounce]");
   if(bn){var id=bn.getAttribute("data-bounce"),r0=S[id]||{},p={s:"bounced",log:(r0.log||[]).concat([{at:Date.now(),t:"Email didn't go through ("+(BYID[id].email||"no address")+")",bad:1}]).slice(-50)};if(!r0.date)p.date=today();write(id,p);redraw(id);tally();return}
   var rp=e.target.closest("[data-reply]");
@@ -360,6 +376,7 @@ document.getElementById("list").addEventListener("submit",function(e){
   EF.forEach(function(x){var v=(f.elements[x[0]].value||"").trim().slice(0,600);if(v!==String(base[x[0]]||"")){ed[x[0]]=v;any=true}});
   write(id,{ed:any?ed:null});EDIT[id]=false;applyEdits();redraw(id);
 });
+document.getElementById("undo").addEventListener("click",function(e){var b=e.target.closest("[data-restore]");if(!b)return;var id=b.getAttribute("data-restore");write(id,{trash:0});applyEdits();render();document.getElementById("undo").hidden=true});
 document.getElementById("list").addEventListener("input",function(e){
   var t=e.target,id=t.getAttribute("data-cs")||t.getAttribute("data-cb")||t.getAttribute("data-ct");if(!id||!COMP[id])return;
   if(t.hasAttribute("data-cs"))COMP[id].s=t.value;else if(t.hasAttribute("data-ct"))COMP[id].to=t.value.trim();else COMP[id].b=t.value;
@@ -388,6 +405,8 @@ document.getElementById("set-save").addEventListener("click",function(){
   DASH.put("settings","email",SET);document.getElementById("set-msg").textContent="Saved";
 });
 buildControls(); render();
+function purge(){Object.keys(S).forEach(function(id){var r=S[id];if(r&&r.trash&&!r.gone&&Date.now()-r.trash>DAY)write(id,{gone:1,trash:r.trash})})}
+setInterval(function(){purge();if(BASE.length)render()},600000);
 function pull(){
   S=DASH.all("outreach");
   var e=DASH.get("settings","email"); if(e)SET={from:e.from||SET.from,tpl:e.tpl||{}};
@@ -401,7 +420,7 @@ DASH.on(function(){
 });
 DASH.onStatus(function(st){document.getElementById("sync").textContent=DASH.statusText(st)});
 document.getElementById("list").innerHTML='<p class="small">Loading the contact list…</p>';
-DASH.contacts().then(initData);
+DASH.contacts().then(function(d){initData(d);purge()});
 document.getElementById("ver").textContent="Version: "+VERSION;
 </script>
 </body>
