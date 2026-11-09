@@ -6842,7 +6842,7 @@ function exportMyData() {
       Object.keys(localStorage).forEach(function (k) {
         if (k.indexOf("drugbug:") !== 0) return;
         var short = k.slice(8);
-        if (short === "protocol" || short === "fmUnlock" || short === "agree") return;
+        if (short === "protocol" || short === "fmUnlock" || short === "agree" || short === "seatKey") return;
         try { out.device[short] = JSON.parse(localStorage.getItem(k)); } catch (e2) { out.device[short] = localStorage.getItem(k); }
       });
     } catch (e) {}
@@ -30134,10 +30134,10 @@ function subClear() {
    An instructor hands a student a key like DB-TAMU-4X9-B7K. Entered in Settings > Redeem a code,
    it goes to the groupRedeem Cloud Function (functions/groups.js), which writes
 
-       seats/{uid}   { tier: "pro", until, orgId, orgName, alias }
-
-   for this browser's account - the anonymous one every visitor already has, so a student never
-   signs up or gives an email. tier() treats an active seat like a subscription.
+   files the key under a hash of this device's seat secret (see seatSecret), not the account, and
+   groupSeat tells the app whether the seat is still good. A student never signs up or gives an
+   email, and a signed-in student's account isn't tied to the key. tier() treats an active seat
+   like a subscription.
 
    While a seat is active, every answer is tallied by medication system (the same groups as Meds by
    System) and sent in small batches to groupReport, which adds them to the KEY's running totals.
@@ -30148,7 +30148,32 @@ var SEAT = { tier: "", until: 0, orgName: "", alias: "", level: "", loaded: fals
 function seatTier() { return SEAT.until > Date.now() ? (SEAT.tier || "") : ""; }
 function seatActive() { return !!seatTier(); }
 function seatLabel() { return TIER_NAME[seatTier()] + " · " + SEAT.orgName + " (" + SEAT.alias + ") · until " + new Date(SEAT.until).toLocaleDateString(); }
+/* seats now come from groupSeat, not a seats/{uid} document (that document linked the account) */
+function seatCheck() {
+  if (!store("seatKey") && !seatActive()) return;   /* never had a class key here: nothing to ask */
+  fnCall("groupSeat", {}).then(function (r) {
+    var was = seatTier();
+    if (r && r.ok) {
+      SEAT.tier = "pro"; SEAT.until = r.live ? r.until : Math.min(r.until, Date.now()); SEAT.orgName = r.orgName || ""; SEAT.alias = r.alias || ""; SEAT.level = r.level || ""; SEAT.loaded = true;
+      store("seat", { tier: "pro", until: SEAT.until, orgName: SEAT.orgName, alias: SEAT.alias, level: SEAT.level });
+    } else if (r && !r.ok && !(SEAT.redeemedAt && Date.now() - SEAT.redeemedAt < 120000)) {
+      SEAT.tier = ""; SEAT.until = 0; SEAT.loaded = true; store("seat", null);
+    }
+    if (was !== seatTier() && typeof render === "function") render();
+    if (seatActive()) groupFlush();
+  }).catch(function () {});
+}
 function seatWatch(db, uid) {
+  if (SEAT.uid === uid && SEAT.polling) return;
+  SEAT.uid = uid;
+  if (SEAT.unsub) { try { SEAT.unsub(); } catch (e) {} SEAT.unsub = null; }
+  SEAT.polling = true;
+  seatCheck();
+  setInterval(seatCheck, 30 * 60000);
+  try { document.addEventListener("visibilitychange", function () { if (!document.hidden && Date.now() - (SEAT.lastCheck || 0) > 5 * 60000) { SEAT.lastCheck = Date.now(); seatCheck(); } }); } catch (e) {}
+  return;
+}
+function seatWatchLegacy(db, uid) {
   if (SEAT.uid === uid && SEAT.unsub) return;
   if (SEAT.unsub) { try { SEAT.unsub(); } catch (e) {} SEAT.unsub = null; }
   SEAT.uid = uid;
@@ -30171,8 +30196,21 @@ function seatWatch(db, uid) {
   } catch (e) {}
 }
 
+/* Seat secret (owner, Nov 8 2026, FERPA): a random value made on this device when a class key is
+   redeemed and kept only here (never synced to an account, never in a data export). The server
+   files the key under a hash of it instead of the account, so a signed-in student's email or
+   Apple ID can't be tied to their class key. Every class call sends it. */
+function seatSecret(make) {
+  var s = store("seatKey");
+  if (!s && make) {
+    try { var a = new Uint8Array(24); crypto.getRandomValues(a); s = Array.prototype.map.call(a, function (b) { return ("0" + b.toString(16)).slice(-2); }).join(""); } catch (e) { s = ""; }
+    if (s) store("seatKey", s);
+  }
+  return s || "";
+}
 /* any Cloud Function, callable protocol, with this browser's account token */
 function fnCall(name, data) {
+  if (/^group(Redeem|Report|SetName|PrizeClaim|Board|Seat)$/.test(name)) { var sk = seatSecret(name === "groupRedeem" || name === "groupSeat"); if (sk) { data = Object.assign({}, data || {}, { seat: sk }); } }
   var base = (window.DRUGBUG_CONFIG || {}).functionsUrl;
   if (!base || typeof ACCT === "undefined" || !ACCT || !ACCT.api || typeof ACCT.api.token !== "function") return Promise.reject(new Error("offline"));
   return ACCT.api.token().then(function (tok) {
