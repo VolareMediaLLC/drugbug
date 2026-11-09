@@ -410,18 +410,32 @@ html.embed .backrow,html.embed .wrap>.top:first-of-type{display:none!important}h
      any evaluator Bad = held for you, 2 evaluator Good = live */
   function pilotState(q) {
     if (q.b !== "pilot") return "";
+    var rpn = q.rp ? '<span class="pst wait">Re-check: ' + esc(q.rp.name || 'a drug in this question') + ' was updated from new FDA labeling</span> ' : '';
     var r = R[q.id] || {}, rv = REVS[q.id] || [], g = rv.filter(function (x) { return x.v === "good"; }).length, b = rv.filter(function (x) { return x.v === "bad"; }).length;
-    if (r.v === "good") return '<span class="pst live">Live for everyone (you approved it)</span>';
-    if (r.v === "bad" || r.v === "off") return '<span class="pst out">Rejected</span>';
-    if (b) return '<span class="pst held">Held for your review: ' + b + ' Bad vote' + (b === 1 ? '' : 's') + '</span>';
-    if (g >= 2) return '<span class="pst live">Live for everyone (' + g + ' Good votes)</span>';
-    return '<span class="pst wait">Pilot: waiting for evaluators (' + g + ' of 2 Good votes)</span>';
+    if (r.v === "good") return rpn + '<span class="pst live">Live for everyone (you approved it)</span>';
+    if (r.v === "bad" || r.v === "off") return rpn + '<span class="pst out">Rejected</span>';
+    if (b) return rpn + '<span class="pst held">Held for your review: ' + b + ' Bad vote' + (b === 1 ? '' : 's') + '</span>';
+    if (g >= 2) return rpn + '<span class="pst live">Live for everyone (' + g + ' Good votes)</span>';
+    return rpn + '<span class="pst wait">Pilot: waiting for evaluators (' + g + ' of 2 Good votes)</span>';
   }
   /* ---------- start ---------- */
   LEVELS.forEach(function (l) { var o = document.createElement("option"); o.value = l[0]; o.textContent = l[1]; $("fLv").appendChild(o); });
   try { var F = JSON.parse(store.get("qr-filters") || "null"); if (F) { $("fBank").value = F.bk || ""; $("fLv").value = F.lv || ""; $("fV").value = F.v == null ? "un" : F.v; $("fFlag").checked = !!F.fo; $("fQ").value = F.s || ""; $("fSort").value = F.so || ""; } } catch (e) {}
   $("bGoogle").onclick = function () { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(function (e) { msg("inMsg", e.message); }); };
-  var qsP = fetch("questions.json").then(function (r) { return r.json(); });
+  /* questions sent back to the pilot pool by a drug-data update (owner, Nov 9 2026): the app's update
+     file lists them; here the old copy is swapped for the re-check copy so evaluators and the owner
+     grade the new "qp" id, which is what pilotStatus counts */
+  var qsP = Promise.all([fetch("questions.json").then(function (r) { return r.json(); }),
+    fetch("../app/content/manifest.json", { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (m) { return m && /^updates-[0-9]+\.json$/.test(m.file) ? fetch("../app/content/" + m.file, { cache: "no-store" }).then(function (r) { return r.json(); }) : null; }).catch(function () { return null; })
+  ]).then(function (res) {
+    var j = res[0], u = res[1], rp = (u && u.repilot) || [];
+    if (!rp.length) return j;
+    var old = {}; rp.forEach(function (x) { old[x.o] = x; });
+    var hs = function (t) { var h = 5381; for (var i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0; return (h >>> 0).toString(36); };
+    j.qs = j.qs.filter(function (q) { return !old[q.id] && !old["q" + hs(q.lv + "|" + q.q)]; });
+    rp.forEach(function (x) { var q = JSON.parse(JSON.stringify(x.q || {})); q.id = x.n; q.b = "pilot"; q.rp = { name: x.name, at: x.at }; j.qs.push(q); });
+    return j;
+  });
   auth.onAuthStateChanged(function (u) {
     var real = u && !u.isAnonymous;
     $("who").innerHTML = real ? esc(u.email || "Signed in") + ' <button id="bOut">Sign out</button>' : "";
