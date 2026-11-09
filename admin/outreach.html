@@ -186,7 +186,7 @@ function tpl(k){var t=(SET.tpl&&SET.tpl[k])||{};return {n:TPL0[k].n,s:t.s||TPL0[
 function tplFor(o){return o.cat==="hs"?"hs":o.cat==="nurse"?"nurse":(o.cat==="agency"||o.cat==="fire")?"agency":"ems"}
 function firstName(o){var w=(o.who||"").replace(/^(dr|mr|mrs|ms|chief|capt|captain|lt)\.?\s+/i,"").split(/\s+/)[0]||"";return w&&!/^(the|ems|fire|program)$/i.test(w)?w:""}
 function fill(t,o){var f=firstName(o);return t.replace(/Hi \{first\},/g,f?"Hi "+f+",":"Hello,").replace(/\{first\}/g,f||"there").replace(/\{org\}/g,o.name)}
-function gmailCompose(o,sub,body){return "https://mail.google.com/mail/u/"+encodeURIComponent(SET.from)+"/?view=cm&fs=1&to="+encodeURIComponent(o.email)+"&su="+encodeURIComponent(sub)+"&body="+encodeURIComponent(body)}
+function gmailCompose(o,sub,body){var c=COMP[o.id];return "https://mail.google.com/mail/u/"+encodeURIComponent(SET.from)+"/?view=cm&fs=1&to="+encodeURIComponent((c&&c.to)||o.email)+"&su="+encodeURIComponent(sub)+"&body="+encodeURIComponent(body)}
 function gmailThread(o){return "https://mail.google.com/mail/u/"+encodeURIComponent(SET.from)+"/#search/"+encodeURIComponent("from:"+o.email+" OR to:"+o.email)}
 function fmtD(t){var d=new Date(t);return (d.getMonth()+1)+"/"+d.getDate()+"/"+String(d.getFullYear()).slice(2)}
 var S={}, DB={}, CAN=true, LIMIT=100, OPEN={}, EDIT={};
@@ -284,17 +284,18 @@ function card(o){
 function mailBox(o,rec){
   var id=esc(o.id), log=(rec.log||[]).slice().sort(function(a,b){return b.at-a.at}), live=CAN&&DB;
   var h='<div class="mail"><h3>Email</h3>';
-  if(log.length)h+='<ul class="log">'+log.map(function(l){return '<li><time>'+fmtD(l.at)+'</time><span class="k'+(l.in?' in':l.bad?' bad':'')+'">'+(l.in?'Reply':l.bad?'Didn\'t work':'Sent')+'</span><span>'+esc(l.t||"")+'</span></li>'}).join("")+'</ul>';
+  if(log.length)h+='<ul class="log">'+log.map(function(l){return '<li><time>'+fmtD(l.at)+'</time><span class="k'+(l.in?' in':l.bad?' bad':'')+'">'+(l.in?'Reply':l.bad?'Didn\'t work':l.mark?'Note':'Sent')+'</span><span>'+esc(l.t||"")+(l.to?' <span class="small">('+esc(l.to)+')</span>':'')+'</span></li>'}).join("")+'</ul>';
   else h+='<p class="small" style="margin:0">No emails yet.</p>';
   if(!o.email){return h+'<p class="small" style="margin:0">No email address on file. Call them, or click Edit to add one.</p></div>'}
-  h+='<div class="row"><a class="btn ghost" href="'+esc(gmailThread(o))+'" target="_blank" rel="noopener">See the conversation in Gmail</a>'+(live?'<button class="btn ghost" type="button" data-reply="'+id+'">They replied</button><button class="btn ghost" type="button" data-bounce="'+id+'">Didn\'t go through</button>':'')+(live&&!COMP[o.id]?'<button class="btn" type="button" data-compose="'+id+'">'+(log.some(function(l){return !l.in})?'Write a follow-up':'Write an email')+'</button>':'')+'</div>';
+  h+='<div class="row"><a class="btn ghost" href="'+esc(gmailThread(o))+'" target="_blank" rel="noopener">See the conversation in Gmail</a>'+(live?'<button class="btn ghost" type="button" data-reply="'+id+'">They replied</button>':'')+(live&&rec.s==="bounced"?(COMP[o.id]?'':'<button class="btn" type="button" data-retry="'+id+'">Try again</button>')+'<button class="btn ghost" type="button" data-uncontact="'+id+'">Still uncontacted</button>':(live?'<button class="btn ghost" type="button" data-bounce="'+id+'">Didn\'t go through</button>':'')+(live&&!COMP[o.id]?'<button class="btn" type="button" data-compose="'+id+'">'+(log.some(function(l){return !l.in&&!l.bad&&!l.mark})?'Write a follow-up':'Write an email')+'</button>':''))+'</div>';
   var c=COMP[o.id];
   if(c&&live){
-    h+='<div class="row"><label class="small" for="ck-'+id+'">Template</label><select id="ck-'+id+'" data-ck="'+id+'">'+Object.keys(TPL0).map(function(k){return '<option value="'+k+'"'+(k===c.k?' selected':'')+'>'+esc(TPL0[k].n)+'</option>'}).join("")+'</select><span class="small">To: '+esc(o.email)+'</span></div>'+
+    h+='<div class="row"><label class="small" for="ck-'+id+'">Template</label><select id="ck-'+id+'" data-ck="'+id+'">'+Object.keys(TPL0).map(function(k){return '<option value="'+k+'"'+(k===c.k?' selected':'')+'>'+esc(TPL0[k].n)+'</option>'}).join("")+'</select></div>'+
+      '<label class="small" for="ct-'+id+'">To</label><input id="ct-'+id+'" data-ct="'+id+'" type="email" value="'+esc(c.to||o.email)+'">'+
       '<label class="small" for="cs-'+id+'">Subject</label><input id="cs-'+id+'" data-cs="'+id+'" value="'+esc(c.s)+'">'+
       '<label class="small" for="cb-'+id+'">Message</label><textarea id="cb-'+id+'" data-cb="'+id+'">'+esc(c.b)+'</textarea>'+
       '<div class="row"><a class="btn" id="cg-'+id+'" data-send="'+id+'" href="'+esc(gmailCompose(o,c.s,c.b))+'" target="_blank" rel="noopener">Open in Gmail to send</a><button class="btn ghost" type="button" data-copymail="'+id+'">Copy text</button><button class="btn ghost" type="button" data-closec="'+id+'">Close</button></div>'+
-      '<p class="small" style="margin:0">Gmail opens with this filled in. Check it, then press Send there. The tracker logs it as sent and marks this place Contacted.</p>';
+      '<p class="small" style="margin:0">Gmail opens with this filled in. Check it, then press Send there. The tracker logs it as sent and marks this place Contacted. If you change the To address, it\'s saved as their new email.</p>';
   }
   return h+'</div>';
 }
@@ -327,11 +328,15 @@ document.getElementById("list").addEventListener("click",function(e){
   var qk=e.target.closest("[data-quick]");
   if(qk){var id=qk.getAttribute("data-quick");write(id,{s:"contacted",date:(S[id]&&S[id].date)||today()});OPEN[id]=true;var el=document.querySelector('.item[data-id="'+id+'"]');if(el)el.outerHTML=card(BYID[id]);tally();return}
   var cm=e.target.closest("[data-compose]");
-  if(cm){var id=cm.getAttribute("data-compose"),o=BYID[id],sent=((S[id]||{}).log||[]).some(function(l){return !l.in}),k=sent?"follow":tplFor(o),t=tpl(k);COMP[id]={k:k,s:fill(t.s,o),b:fill(t.b,o)};redraw(id);var x=document.getElementById("cb-"+id);if(x)x.focus();return}
+  if(cm){var id=cm.getAttribute("data-compose"),o=BYID[id],sent=((S[id]||{}).log||[]).some(function(l){return !l.in}),k=sent?"follow":tplFor(o),t=tpl(k);COMP[id]={k:k,s:fill(t.s,o),b:fill(t.b,o),to:o.email};redraw(id);var x=document.getElementById("cb-"+id);if(x)x.focus();return}
+  var rt=e.target.closest("[data-retry]");
+  if(rt){var id=rt.getAttribute("data-retry"),o=BYID[id],t=tpl(tplFor(o));COMP[id]={k:tplFor(o),s:fill(t.s,o),b:fill(t.b,o),to:o.email};redraw(id);var x=document.getElementById("ct-"+id);if(x){x.focus();x.select()}return}
+  var un=e.target.closest("[data-uncontact]");
+  if(un){var id=un.getAttribute("data-uncontact"),r0=S[id]||{};delete COMP[id];write(id,{s:"new",date:"",log:(r0.log||[]).concat([{at:Date.now(),t:"Marked still uncontacted",mark:1}]).slice(-50)});redraw(id);tally();return}
   var cc=e.target.closest("[data-closec]");
   if(cc){delete COMP[cc.getAttribute("data-closec")];redraw(cc.getAttribute("data-closec"));return}
   var sd=e.target.closest("[data-send]");
-  if(sd){var id=sd.getAttribute("data-send"),c=COMP[id],r0=S[id]||{},lg=(r0.log||[]).concat([{at:Date.now(),t:c.s}]).slice(-50),p={log:lg};if(!r0.s||r0.s==="new"){p.s="contacted";p.date=r0.date||today()}write(id,p);delete COMP[id];setTimeout(function(){redraw(id);tally()},50);return}
+  if(sd){var id=sd.getAttribute("data-send"),c=COMP[id],r0=S[id]||{},o=BYID[id],to=(c.to||o.email||"").trim(),lg=(r0.log||[]).concat([{at:Date.now(),t:c.s,to:to}]).slice(-50),p={log:lg};if(!r0.s||r0.s==="new"||r0.s==="bounced"){p.s="contacted";p.date=r0.s==="bounced"?today():(r0.date||today())}if(to&&to!==o.email){p.ed=Object.assign({},r0.ed||{},{email:to})}write(id,p);delete COMP[id];setTimeout(function(){redraw(id);tally()},50);return}
   var bn=e.target.closest("[data-bounce]");
   if(bn){var id=bn.getAttribute("data-bounce"),r0=S[id]||{},p={s:"bounced",log:(r0.log||[]).concat([{at:Date.now(),t:"Email didn't go through ("+(BYID[id].email||"no address")+")",bad:1}]).slice(-50)};if(!r0.date)p.date=today();write(id,p);redraw(id);tally();return}
   var rp=e.target.closest("[data-reply]");
@@ -354,8 +359,8 @@ document.getElementById("list").addEventListener("submit",function(e){
   write(id,{ed:any?ed:null});EDIT[id]=false;applyEdits();redraw(id);
 });
 document.getElementById("list").addEventListener("input",function(e){
-  var t=e.target,id=t.getAttribute("data-cs")||t.getAttribute("data-cb");if(!id||!COMP[id])return;
-  if(t.hasAttribute("data-cs"))COMP[id].s=t.value;else COMP[id].b=t.value;
+  var t=e.target,id=t.getAttribute("data-cs")||t.getAttribute("data-cb")||t.getAttribute("data-ct");if(!id||!COMP[id])return;
+  if(t.hasAttribute("data-cs"))COMP[id].s=t.value;else if(t.hasAttribute("data-ct"))COMP[id].to=t.value.trim();else COMP[id].b=t.value;
   var a=document.getElementById("cg-"+id);if(a)a.href=gmailCompose(BYID[id],COMP[id].s,COMP[id].b);
 });
 document.getElementById("list").addEventListener("keydown",function(e){var tg=e.target.closest("[data-tog]");if(tg&&e.target===tg&&(e.key==="Enter"||e.key===" ")){e.preventDefault();toggle(tg.getAttribute("data-tog"))}});
@@ -388,7 +393,7 @@ function pull(){
 pull();
 DASH.on(function(){
   pull(); applyEdits();
-  var act=document.activeElement, keep=act&&act.id&&/^(n|d|cs|cb|ck)-/.test(act.id), editing=act&&act.closest&&(act.closest("[data-edit]")||act.closest("#setbox"));
+  var act=document.activeElement, keep=act&&act.id&&/^(n|d|cs|cb|ck|ct)-/.test(act.id), editing=act&&act.closest&&(act.closest("[data-edit]")||act.closest("#setbox"));
   if(!editing){document.getElementById("set-from").value=SET.from;setFill()}
   if(!keep&&!editing)render(); else tally();
 });
