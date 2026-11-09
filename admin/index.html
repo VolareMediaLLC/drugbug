@@ -18,6 +18,8 @@ a{color:var(--accent)}
 .hide{display:none!important}
 header.site{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:2px 0 12px;border-bottom:1px solid var(--line)}
 header.site .brand{display:flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none}header.site img{width:36px;height:36px;border-radius:9px}header.site b{font-size:20px}
+a.dep{font:inherit;font-size:13px;font-weight:700;padding:7px 12px;border-radius:9px;border:1px solid var(--accent);color:var(--accent);text-decoration:none;margin-left:auto}a.dep:hover{background:color-mix(in srgb,var(--accent) 14%,transparent)}a.dep+.who{margin-left:0}
+.depmsg{max-width:560px;margin:0 0 14px auto}
 .badge{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:99px;background:var(--accent);color:#fff}
 .who{margin-left:auto;color:var(--muted);font-size:13px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 nav.tabs{position:sticky;top:0;z-index:5;background:var(--bg);display:flex;gap:4px;overflow-x:auto;padding:10px 0;margin-bottom:14px;border-bottom:1px solid var(--line);scrollbar-width:thin}
@@ -129,7 +131,7 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
 <div class="wrap">
 <header class="site">
   <a href="../index.html" class="brand"><img src="../icon-180.png" alt=""><b>DrugBug</b></a><span class="badge">Dashboard</span><span class="badge hide" id="offl" style="background:#d97706">Offline</span>
-  <div class="who" id="who"></div>
+  <a class="ghost dep hide" id="bDeploy" href="drugbug-deploy:run" title="Runs DEPLOY.cmd on this PC">Deploy server</a><div class="who" id="who"></div>
 </header>
 
 <section id="vIn" class="card signin hide">
@@ -143,6 +145,7 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
 <section id="vNo" class="card signin hide"><h2>Not an administrator</h2><p class="muted" id="noMsg">This account isn't the DrugBug owner account.</p><button class="ghost" id="bOut2">Sign out</button></section>
 
 <div id="vMain" class="hide">
+<div class="msg depmsg hide" id="depMsg"></div>
 <nav class="tabs" role="tablist" id="tabs">
   <button role="tab" data-tab="overview">Home</button>
   <button role="tab" data-tab="people">People</button>
@@ -341,7 +344,7 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
     var real = u && !u.isAnonymous;
     $("who").innerHTML = real ? esc(u.email || "Signed in") + ' <button class="ghost" id="bOut">Sign out</button>' : "";
     if (real) $("bOut").onclick = function () { auth.signOut(); };
-    show("vIn", !real); show("vNo", false); show("vMain", false);
+    show("vIn", !real); show("vNo", false); show("vMain", false); show("bDeploy", !!real);
     if (!real) return;
     LOADED = {};
     /* adminOverview answers only the owner; anyone else is shown the door */
@@ -383,7 +386,7 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
   }
   /* which server functions answer: a deployed callable always replies (even with an error for a
      bad request); one that was never deployed doesn't. Only read-only functions are asked. */
-  var PING_FNS = ["orgInquiryList", "revenueMonth", "evalQuota", "adminOverview", "codeList", "qrStats", "qrCoders", "pilotStatus", "qDifficulty", "qrChecked", "evalAppList", "appMetrics", "groupOwnerStats", "groupOrgList", "groupDashboard"];
+  var PING_FNS = ["dashSync", "groupSeat", "orgInquiryList", "revenueMonth", "evalQuota", "adminOverview", "codeList", "qrStats", "qrCoders", "pilotStatus", "qDifficulty", "qrChecked", "evalAppList", "appMetrics", "groupOwnerStats", "groupOrgList", "groupDashboard"];
   function pingAll() {
     PINGS = { ok: [], no: [], busy: true };
     Promise.all(PING_FNS.map(function (f) { return call(f, { ping: 1 }).then(function () { PINGS.ok.push(f); }, function (e) { if (/^not deployed$|failed to fetch|networkerror|load failed/i.test((e && e.message) || "")) PINGS.no.push(f); else PINGS.ok.push(f); }); }))
@@ -764,6 +767,15 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
     var csv = ["Code,For,Gives,Used,Limit,Used by,Stops working,Label,Made,Status"].concat(L.map(function (c) { return [c.code, KIND[c.kind], gives(c), c.uses || 0, c.once ? 1 : c.max || "none", (c.who || []).map(function (w) { return w.name; }).join("; "), c.expires ? new Date(c.expires).toISOString().slice(0, 10) : "never", c.label || "", new Date(c.created).toISOString().slice(0, 10), status(c)[1]].map(q).join(","); })).join("\n");
     var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); a.download = "drugbug-codes.csv"; a.click();
   };
+  /* Deploy button (Nov 9 2026): opens drugbug-deploy:, which "Set up Deploy button.reg" on the PC
+     points at DEPLOY.cmd. Then the server lights are re-checked a few times while it runs. */
+  var depT = [];
+  $("bDeploy").addEventListener("click", function () {
+    $("depMsg").innerHTML = "<b>Deploy started.</b> If your browser asks, choose <b>Open</b>. A black window opens on this PC; when it says <b>DONE</b>, press any key to close it. The server lights on Home re-check in 3 and 6 minutes.<br><span class='muted small'>Nothing happened? Run <b>Set up Deploy button</b> once (Downloads › DrugBug-classkeys-deploy), then try again. On another computer, use DEPLOY.cmd on your PC.</span>";
+    show("depMsg", true);
+    depT.forEach(clearTimeout); depT = [180000, 360000].map(function (ms) { return setTimeout(function () { PINGS = null; if (typeof loadOverview === "function") loadOverview(); }, ms); });
+    depT.push(setTimeout(function () { show("depMsg", false); }, 420000));
+  });
   /* DrugBug Dashboard works offline: the pages are kept on this computer (sw.js) */
   if ("serviceWorker" in navigator && !local) navigator.serviceWorker.register("sw.js").catch(function () {});
   function offl() { show("offl", !navigator.onLine); }
