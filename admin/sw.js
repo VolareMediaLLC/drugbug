@@ -1,7 +1,7 @@
 /* DrugBug Dashboard offline copy (Nov 9 2026). Network first, so you always get the newest
    version when online; the saved copy is used only when the computer is offline. Server
    calls (cloudfunctions, Google sign-in) are never cached. */
-var CACHE = "dbd-v1";
+var CACHE = "dbd-v2";
 var CORE = ["./", "index.html", "outreach.html", "notes.html", "dash.js", "manifest.json", "meta.json", "icon-192.png",
   "../app/vendor/firebase-app-compat.js", "../app/vendor/firebase-auth-compat.js", "../icon-48.png", "../icon-180.png"];
 self.addEventListener("install", function (e) {
@@ -13,7 +13,8 @@ self.addEventListener("activate", function (e) {
 self.addEventListener("fetch", function (e) {
   var r = e.request, u = new URL(r.url);
   if (r.method !== "GET" || u.origin !== self.location.origin) return;
-  e.respondWith(fetch(r).then(function (res) {
+  /* always ask the server for the newest copy (skip the 10-minute browser cache) */
+  e.respondWith(fetch(r.mode === "navigate" ? r.url : r, { cache: "no-cache", credentials: "same-origin" }).then(function (res) {
     if (res && res.ok && res.type === "basic") { var cp = res.clone(); caches.open(CACHE).then(function (c) { c.put(r, cp); }); }
     return res;
   }).catch(function () {
