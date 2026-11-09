@@ -156,7 +156,7 @@ body.embed h1{font-size:22px}
   <p class="count" id="count"></p>
   <div class="list" id="list"></div>
   <button class="btn ghost more" id="more" hidden>Show 100 more</button>
-  <p class="small" style="margin-top:24px">Sources: Texas DSHS EMS rosters (EMS Education Programs, EMS Provider Agencies and First Responder Organizations, updated Nov 5, 2026), and school websites for nursing (researched Oct 11, 2026). Phone and email are what each organization has on file with the state, which is often a main office line. Drive times are estimates.</p>
+  <p class="small" style="margin-top:24px">Sources: Texas DSHS EMS rosters (EMS Education Programs, EMS Provider Agencies and First Responder Organizations, updated Nov 5, 2026), and school websites for nursing (researched Oct 11, 2026). Phone and email are what each organization has on file with the state, which is often a main office line. Drive times are estimates. <span id="ver"></span></p>
 </div>
 
 <script src="../app/vendor/firebase-app-compat.js"></script>
@@ -188,6 +188,8 @@ function firstName(o){var w=(o.who||"").replace(/^(dr|mr|mrs|ms|chief|capt|capta
 function fill(t,o){var f=firstName(o);return t.replace(/Hi \{first\},/g,f?"Hi "+f+",":"Hello,").replace(/\{first\}/g,f||"there").replace(/\{org\}/g,o.name)}
 function gmailCompose(o,sub,body){var c=COMP[o.id];return "https://mail.google.com/mail/u/"+encodeURIComponent(SET.from)+"/?view=cm&fs=1&to="+encodeURIComponent((c&&c.to)||o.email)+"&su="+encodeURIComponent(sub)+"&body="+encodeURIComponent(body)}
 function gmailThread(o){return "https://mail.google.com/mail/u/"+encodeURIComponent(SET.from)+"/#search/"+encodeURIComponent("from:"+o.email+" OR to:"+o.email)}
+function goodSends(rec){var g=0;(rec&&rec.log||[]).slice().sort(function(x,y){return x.at-y.at}).forEach(function(l){if(l.bad)g=Math.max(0,g-1);else if(!l.in&&!l.mark)g++});return g}
+var VERSION="Nov 9, 2026 · v5";
 function fmtD(t){var d=new Date(t);return (d.getMonth()+1)+"/"+d.getDate()+"/"+String(d.getFullYear()).slice(2)}
 var S={}, DB={}, CAN=true, LIMIT=100, OPEN={}, EDIT={};
 function applyEdits(){
@@ -287,7 +289,7 @@ function mailBox(o,rec){
   if(log.length)h+='<ul class="log">'+log.map(function(l){return '<li><time>'+fmtD(l.at)+'</time><span class="k'+(l.in?' in':l.bad?' bad':'')+'">'+(l.in?'Reply':l.bad?'Didn\'t work':l.mark?'Note':'Sent')+'</span><span>'+esc(l.t||"")+(l.to?' <span class="small">('+esc(l.to)+')</span>':'')+'</span></li>'}).join("")+'</ul>';
   else h+='<p class="small" style="margin:0">No emails yet.</p>';
   if(!o.email){return h+'<p class="small" style="margin:0">No email address on file. Call them, or click Edit to add one.</p></div>'}
-  h+='<div class="row"><a class="btn ghost" href="'+esc(gmailThread(o))+'" target="_blank" rel="noopener">See the conversation in Gmail</a>'+(live?'<button class="btn ghost" type="button" data-reply="'+id+'">They replied</button>':'')+(live&&rec.s==="bounced"?(COMP[o.id]?'':'<button class="btn" type="button" data-retry="'+id+'">Try again</button>')+'<button class="btn ghost" type="button" data-uncontact="'+id+'">Still uncontacted</button>':(live?'<button class="btn ghost" type="button" data-bounce="'+id+'">Didn\'t go through</button>':'')+(live&&!COMP[o.id]?'<button class="btn" type="button" data-compose="'+id+'">'+(log.some(function(l){return !l.in&&!l.bad&&!l.mark})?'Write a follow-up':'Write an email')+'</button>':''))+'</div>';
+  h+='<div class="row"><a class="btn ghost" href="'+esc(gmailThread(o))+'" target="_blank" rel="noopener">See the conversation in Gmail</a>'+(live?'<button class="btn ghost" type="button" data-reply="'+id+'">They replied</button>':'')+(live&&rec.s==="bounced"?(COMP[o.id]?'':'<button class="btn" type="button" data-retry="'+id+'">Try again</button>')+'<button class="btn ghost" type="button" data-uncontact="'+id+'">Still uncontacted</button>':(live?'<button class="btn ghost" type="button" data-bounce="'+id+'">Didn\'t go through</button>':'')+(live&&!COMP[o.id]?'<button class="btn" type="button" data-compose="'+id+'">'+(goodSends(rec)?'Write a follow-up':'Write an email')+'</button>':''))+'</div>';
   var c=COMP[o.id];
   if(c&&live){
     h+='<div class="row"><label class="small" for="ck-'+id+'">Template</label><select id="ck-'+id+'" data-ck="'+id+'">'+Object.keys(TPL0).map(function(k){return '<option value="'+k+'"'+(k===c.k?' selected':'')+'>'+esc(TPL0[k].n)+'</option>'}).join("")+'</select></div>'+
@@ -328,7 +330,7 @@ document.getElementById("list").addEventListener("click",function(e){
   var qk=e.target.closest("[data-quick]");
   if(qk){var id=qk.getAttribute("data-quick");write(id,{s:"contacted",date:(S[id]&&S[id].date)||today()});OPEN[id]=true;var el=document.querySelector('.item[data-id="'+id+'"]');if(el)el.outerHTML=card(BYID[id]);tally();return}
   var cm=e.target.closest("[data-compose]");
-  if(cm){var id=cm.getAttribute("data-compose"),o=BYID[id],sent=((S[id]||{}).log||[]).some(function(l){return !l.in}),k=sent?"follow":tplFor(o),t=tpl(k);COMP[id]={k:k,s:fill(t.s,o),b:fill(t.b,o),to:o.email};redraw(id);var x=document.getElementById("cb-"+id);if(x)x.focus();return}
+  if(cm){var id=cm.getAttribute("data-compose"),o=BYID[id],k=goodSends(S[id])?"follow":tplFor(o),t=tpl(k);COMP[id]={k:k,s:fill(t.s,o),b:fill(t.b,o),to:o.email};redraw(id);var x=document.getElementById("cb-"+id);if(x)x.focus();return}
   var rt=e.target.closest("[data-retry]");
   if(rt){var id=rt.getAttribute("data-retry"),o=BYID[id],t=tpl(tplFor(o));COMP[id]={k:tplFor(o),s:fill(t.s,o),b:fill(t.b,o),to:o.email};redraw(id);var x=document.getElementById("ct-"+id);if(x){x.focus();x.select()}return}
   var un=e.target.closest("[data-uncontact]");
@@ -400,6 +402,7 @@ DASH.on(function(){
 DASH.onStatus(function(st){document.getElementById("sync").textContent=DASH.statusText(st)});
 document.getElementById("list").innerHTML='<p class="small">Loading the contact list…</p>';
 DASH.contacts().then(initData);
+document.getElementById("ver").textContent="Version: "+VERSION;
 </script>
 </body>
 </html>
