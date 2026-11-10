@@ -6,5 +6,12 @@
  "sha256": "33443882c62b4bdde47ea39af0535c612fa25f8419fb9da72c987f077367c48d",
  "bytes": 69261,
  "drugs": 6,
- "repilot": 28
+ "repilot": 28,
+ "recalls": {
+  "file": "recalls-rc20261103.json",
+  "v": "rc20261103",
+  "sha256": "73723096c1063cd6aefe5a5b804c8847c05cdfba0c4170db1f725e16baf0dfbf",
+  "bytes": 772772,
+  "drugs": 502
+ }
 }
