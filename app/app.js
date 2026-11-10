@@ -2070,6 +2070,7 @@ function drawSheet() {
   var rw = (DB.RW || {})[id] || {}, line = lang() !== "es" && nurseCtx() && rw.rl ? ["rn", "Nursing summary", rw.rl] : lang() !== "es" && medCtx() && rw.ml ? ["md", "Clinical summary", rw.ml] : lang() !== "es" && imCtx() && (DB.RWI || {})[id] ? ["im", "In imaging", DB.RWI[id].use] : get(d, 16, 0) ? ["", "", get(d, 16, 0)] : null;
   if (line) c += '<p class="plain' + (line[0] ? ' plain-' + line[0] : '') + '">' + (line[1] ? '<span class="plainlab">' + line[1] + '</span>' : '') + esc(line[2]) + '</p>';
   if (typeof agpDrugBox === "function") c += agpDrugBox(id);
+  if (typeof recallBox === "function") c += recallBox(id);
   if (typeof antiBox === "function") c += antiBox(id);
   if (typeof worldBox === "function") c += worldBox(id);
   c += '<div class="sheetacts"><button class="btn small" data-sess="study" data-drug-id="' + id + '">Study it</button><button class="btn small ghost" data-cmpgo="' + id + '">Compare</button>' + (medCtx() ? '<button class="btn small ghost" data-altgo="' + id + '">Alternatives</button>' : '') + '<button class="btn small ghost" data-mark="' + id + '" aria-pressed="' + isMarked(id) + '">' + (isMarked(id) ? "In My List ✓" : "Save to My List" + (typeof PAYWALL !== "undefined" && PAYWALL && !hasTier("plus") ? " " + tierBadge("plus") : "")) + '</button>' + (S.markHint === id && isMarked(id) ? '<span class="muted small markhint">Saved. Open it any time from the <strong>My List</strong> tile.</span>' : '') + '<button class="btn small ghost" data-act="srcjump">Sources</button>' + (typeof canPrint === "function" && canPrint() ? '<button class="btn small ghost" data-print="drug:' + id + '|cards">Print</button>' : '') + (Admin.can ? '<button class="btn small ghost" data-go-edit="' + id + '">Edit in Control Center</button>' : '') + '</div>' + famLinks(id) + eduBanner(true);
@@ -4203,6 +4204,39 @@ function otaInit() {
   setTimeout(function () { otaNews(); }, 2500);
   try { document.addEventListener("visibilitychange", function () { if (!document.hidden && Date.now() - OTA.at > 6 * 3600000) otaCheck(); }); } catch (e) {}
   document.addEventListener("click", function (e) { var b = e.target && e.target.closest && e.target.closest("[data-ota-news]"); if (b) { e.preventDefault(); otaNews(true); } });
+}
+/* ---------- FDA recalls (Nov 9 2026) ----------
+   Ongoing drug recalls from FDA enforcement reports (openFDA), matched to each drug by name and
+   refreshed with the weekly label check. app/content/manifest.json "recalls" names the file. It is
+   loaded the first time a drug page opens (online), kept for the visit, and never blocks the page. */
+var RC = { data: null, busy: false, failed: 0 };
+function recallLoad() {
+  if (RC.data || RC.busy || RC.failed > 1 || (typeof navigator !== "undefined" && navigator.onLine === false)) return;
+  RC.busy = true;
+  otaFetch(OTA_BASE + "manifest.json?t=" + Math.floor(Date.now() / 3600000), 6000).then(function (txt) {
+    var m = JSON.parse(txt), f = m && m.recalls && m.recalls.file;
+    if (!f || !/^recalls-[a-z0-9]+\.json$/.test(f)) throw new Error("none");
+    return otaFetch(OTA_BASE + f, 20000);
+  }).then(function (body) {
+    var p = JSON.parse(body); if (!p || !p.drugs) throw new Error("bad");
+    RC.data = p; RC.busy = false;
+    try { if (S.sheet && typeof drawSheet === "function" && typeof sheet !== "undefined" && !sheet.hidden) { var pp = $(".panel", sheet), y = pp ? pp.scrollTop : 0; drawSheet(); pp = $(".panel", sheet); if (pp) pp.scrollTop = y; } } catch (e) {}
+  }).catch(function () { RC.busy = false; RC.failed++; });
+}
+function recallMonth(d) { d = String(d || ""); return d.length >= 6 ? d.slice(4, 6) + "/" + d.slice(0, 4) : ""; }
+function recallBox(id) {
+  if (!RC.data) { recallLoad(); return ""; }
+  var r = RC.data.drugs[id], asOf = (RC.data.source || "").replace(/^.*as of\s*/, ""); if (/^\d{4}-\d\d-\d\d$/.test(asOf)) asOf = otaDay(Date.parse(asOf + "T12:00:00")) + ", " + asOf.slice(0, 4);
+  var src = '<p class="muted small">Source: FDA enforcement reports' + (asOf ? ', as of ' + esc(asOf) : '') + '. Education only. Check FDA\'s recall list and the lot number on the package. <a href="https://www.accessdata.fda.gov/scripts/ires/index.cfm" target="_blank" rel="noopener">FDA recall search</a></p>';
+  if (!r || !r.items || !r.items.length) return '<section class="rcbox rcnone"><h3 class="eh small">FDA recalls</h3><p class="muted small">No ongoing FDA recalls are listed for ' + esc(nameOf(id)) + '.</p>' + src + '</section>';
+  var item = function (x) {
+    return '<div class="rcitem"><div class="rctop"><span class="rccls rc' + esc(x.c) + '">Class ' + esc(x.c) + '</span><span class="muted small">' + esc(recallMonth(x.d)) + (x.f ? ' · ' + esc(x.f) : '') + '</span></div>' +
+      '<div class="rcprod">' + esc(x.p) + '</div><div class="small"><b>Reason:</b> ' + esc(x.r) + '</div></div>';
+  };
+  var c = '<section class="rcbox"><h3 class="eh small">FDA recalls</h3><p class="muted small">FDA lists ' + r.total + ' ongoing recall' + (r.total === 1 ? '' : 's') + ' of products containing ' + esc(nameOf(id)) + '. A recall covers specific products and lot numbers, not the drug itself. Class I is the most serious.</p>';
+  c += r.items.slice(0, 3).map(item).join("");
+  if (r.items.length > 3) c += '<details class="rcmore"><summary>Show ' + (r.items.length - 3) + ' more' + (r.total > r.items.length ? ' (newest ' + r.items.length + ' of ' + r.total + ')' : '') + '</summary>' + r.items.slice(3).map(item).join("") + '</details>';
+  return c + src + '</section>';
 }
 /* one every few questions: the 3rd, 7th, 11th... at most four in a quiz */
 function pilMix(qs, cands) {
