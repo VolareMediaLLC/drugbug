@@ -92,6 +92,19 @@ details.set input,details.set textarea{font:inherit;font-size:14px;color:var(--i
 details.set textarea{min-height:200px;resize:vertical}
 .btn.danger{color:var(--s-no)}
 .pill.trash{background:var(--warn-bg);color:var(--warn-ink)}
+.item.rej{border-color:#dc2626;border-left-color:#dc2626;background:color-mix(in srgb,#dc2626 14%,var(--card))}
+.pill.rej{background:#dc2626;color:#fff}
+.pill.visit{background:#f5c542;color:#3b2a00}
+.star{color:#e6b422;font-size:18px;margin-right:4px;vertical-align:-1px}
+.visitbox{border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:10px;background:var(--bg)}
+.visitbox h3{margin:0;font:600 13px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.visitbox .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.visitbox input,.visitbox textarea{font:inherit;font-size:14px;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 9px;min-width:0;box-sizing:border-box}
+.visitbox textarea{width:100%;min-height:70px;resize:vertical}
+.vlist{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-size:14px}
+.vlist li{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start}
+.vlist time{font:500 12.5px var(--mono);color:var(--mut)}
+.btn.good{background:#16a34a;color:#fff}.btn.bad{background:#dc2626;color:#fff}
 .undo{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:14px;margin:12px 0 0;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .btn{font:600 14px var(--body);border:0;border-radius:8px;padding:7px 12px;cursor:pointer;background:var(--accent);color:var(--accent-ink)}
 .btn.ghost{background:var(--soft);color:var(--ink)}
@@ -193,7 +206,10 @@ function fill(t,o){var f=firstName(o);return t.replace(/Hi \{first\},/g,f?"Hi "+
 function gmailCompose(o,sub,body){var c=COMP[o.id];return "https://mail.google.com/mail/u/"+encodeURIComponent(SET.from)+"/?view=cm&fs=1&to="+encodeURIComponent((c&&c.to)||o.email)+"&su="+encodeURIComponent(sub)+"&body="+encodeURIComponent(body)}
 function gmailThread(o){return "https://mail.google.com/mail/u/"+encodeURIComponent(SET.from)+"/#search/"+encodeURIComponent("from:"+o.email+" OR to:"+o.email)}
 function goodSends(rec){var g=0;(rec&&rec.log||[]).slice().sort(function(x,y){return x.at-y.at}).forEach(function(l){if(l.bad)g=Math.max(0,g-1);else if(!l.in&&!l.mark)g++});return g}
-var VERSION="Nov 9, 2026 · v6";
+var VERSION="Nov 9, 2026 · v7";
+var VIS={};
+function visits(rec){return ((rec&&rec.visits)||[]).slice().sort(function(a,b){return (a.date||"").localeCompare(b.date||"")||a.at-b.at})}
+function lastVisit(o){var v=visits(S[o.id]);return v.length?v[v.length-1]:null}
 var DAY=86400000;
 function inTrash(o){var r=S[o.id];return !!(r&&r.trash&&!r.gone)}
 function gone(o){var r=S[o.id];return !!(r&&(r.gone||(r.trash&&Date.now()-r.trash>DAY)))}
@@ -221,7 +237,7 @@ function note(t){document.getElementById("note").textContent=t||""}
 function buildControls(){
   var L=ROWS.filter(live),cnt={all:L.length}; L.forEach(function(o){cnt[o.cat]=(cnt[o.cat]||0)+1}); cnt.trash=ROWS.filter(function(o){return inTrash(o)&&!gone(o)}).length;
   document.getElementById("cats").innerHTML=CATS.map(function(c){return '<button class="chip" data-cat="'+c[0]+'" aria-pressed="'+(F.cat===c[0])+'">'+esc(c[1])+'<span>'+(cnt[c[0]]||0)+'</span></button>'}).join("");
-  document.getElementById("fs").innerHTML='<option value="">Any status</option><option value="todo">Not contacted yet</option><option value="done">Already contacted</option>'+ST.map(function(s){return '<option value="'+s[0]+'">'+esc(s[1])+'</option>'}).join("");
+  document.getElementById("fs").innerHTML='<option value="">Any status</option><option value="todo">Not contacted yet</option><option value="done">Already contacted</option><option value="visited">Visited in person</option><option value="rejected">Rejected in person</option>'+ST.map(function(s){return '<option value="'+s[0]+'">'+esc(s[1])+'</option>'}).join("");
   document.getElementById("fs").value=F.st; document.getElementById("fd").value=String(F.d); document.getElementById("fo").value=F.o; document.getElementById("fc").value=F.c;
 }
 function save(){try{localStorage.setItem("otf",JSON.stringify({cat:F.cat,st:F.st,d:F.d,o:F.o,c:F.c}))}catch(e){}}
@@ -243,7 +259,9 @@ function filtered(){
     var s=st(o);
     if(F.st==="todo"&&s!=="new")return false;
     if(F.st==="done"&&s==="new")return false;
-    if(F.st&&F.st!=="todo"&&F.st!=="done"&&s!==F.st)return false;
+    if(F.st==="visited"){var lv=lastVisit(o);if(!lv||lv.rej)return false}
+    else if(F.st==="rejected"){var lv2=lastVisit(o);if(!lv2||!lv2.rej)return false}
+    if(F.st&&F.st!=="todo"&&F.st!=="done"&&F.st!=="visited"&&F.st!=="rejected"&&s!==F.st)return false;
     if(F.d&&(o.min===""||o.min>F.d))return false;
     if(F.c==="e"&&!o.email)return false;
     if(F.c==="p"&&!o.who)return false;
@@ -257,11 +275,12 @@ function filtered(){
 function card(o){
   var s=st(o), rec=S[o.id]||{}, open=!!OPEN[o.id];
   var dist=o.mi===""?'<div class="dist">Out of state</div>':'<div class="dist">'+o.mi+' mi<small>'+esc(hm(o.min))+' drive</small></div>';
-  var h='<div class="item" style="--st:var(--s-'+s+')" data-id="'+esc(o.id)+'">'+
+  var lv=lastVisit(o);
+  var h='<div class="item'+(lv&&lv.rej?' rej':'')+'" style="--st:var(--s-'+s+')" data-id="'+esc(o.id)+'">'+
    '<div class="head" tabindex="0" role="button" aria-expanded="'+open+'" data-tog="'+esc(o.id)+'">'+
-   '<div class="nm">'+esc(o.name)+'<small>'+esc([o.city,o.county?o.county+" County":""].filter(Boolean).join(", "))+(o.aka?' · '+esc(o.aka):'')+'</small></div>'+dist+
+   '<div class="nm">'+(lv&&!lv.rej?'<span class="star" title="Visited in person" aria-label="Visited in person">★</span>':'')+esc(o.name)+'<small>'+esc([o.city,o.county?o.county+" County":""].filter(Boolean).join(", "))+(o.aka?' · '+esc(o.aka):'')+'</small></div>'+dist+
    '<div class="who">'+(o.who?'<span><b>'+esc(o.who)+'</b>'+(o.role?', '+esc(o.role):'')+'</span>':'<span>No contact name listed</span>')+(o.phone?'<span class="mono">'+esc(o.phone)+'</span>':'')+(o.email?'<span>'+esc(o.email)+'</span>':'')+'</div>'+
-   '<div class="pills"><span class="pill st">'+esc(STN[s])+(rec.date?' · '+esc(rec.date):'')+'</span><span class="pill">'+esc(CATN[o.cat]||o.cat)+'</span>'+(o.minor?'<span class="pill minor">Minors</span>':'')+(o.mine?'<span class="pill mine">Your school</span>':'')+(o.edited?'<span class="pill">Edited</span>':'')+(inTrash(o)?'<span class="pill trash">In trash · deletes in '+left(o)+'</span>':'')+'</div>'+
+   '<div class="pills"><span class="pill st">'+esc(STN[s])+(rec.date?' · '+esc(rec.date):'')+'</span><span class="pill">'+esc(CATN[o.cat]||o.cat)+'</span>'+(o.minor?'<span class="pill minor">Minors</span>':'')+(o.mine?'<span class="pill mine">Your school</span>':'')+(lv?(lv.rej?'<span class="pill rej">Rejected in person · '+esc(lv.date)+'</span>':'<span class="pill visit">★ Visited · '+esc(lv.date)+'</span>'):'')+(o.edited?'<span class="pill">Edited</span>':'')+(inTrash(o)?'<span class="pill trash">In trash · deletes in '+left(o)+'</span>':'')+'</div>'+
    '</div>';
   if(open&&EDIT[o.id]){
     var b=BASE.find?BASE.find(function(x){return x.id===o.id}):o;
@@ -281,7 +300,7 @@ function card(o){
     (o.info?'<dt>Details</dt><dd>'+esc(o.info)+'</dd>':'')+
     (o.note?'<dt>Research note</dt><dd>'+esc(o.note)+'</dd>':'')+
     '<dt>Distance</dt><dd>'+(o.mi===""?'Office is out of state':o.mi+' miles, about '+esc(hm(o.min))+' from College Station')+'</dd>'+
-    '<dt>Source</dt><dd class="small">'+esc(o.src)+'</dd></dl>'+mailBox(o,rec)+
+    '<dt>Source</dt><dd class="small">'+esc(o.src)+'</dd></dl>'+mailBox(o,rec)+visitBox(o,rec)+
     '<div class="track">'+
       '<label class="small" for="s-'+esc(o.id)+'">Status</label><select id="s-'+esc(o.id)+'" data-st="'+esc(o.id)+'"'+(CAN&&DB?'':' disabled')+'>'+ST.map(function(x){return '<option value="'+x[0]+'"'+(x[0]===s?' selected':'')+'>'+esc(x[1])+'</option>'}).join("")+'</select>'+
       '<label class="small" for="d-'+esc(o.id)+'">Date</label><input type="date" id="d-'+esc(o.id)+'" data-dt="'+esc(o.id)+'" value="'+esc(rec.date||"")+'"'+(CAN&&DB?'':' disabled')+'>'+
@@ -311,6 +330,17 @@ function mailBox(o,rec){
       '<p class="small" style="margin:0">Gmail opens with this filled in. Check it, then press Send there. The tracker logs it as sent and marks this place Contacted. If you change the To address, it\'s saved as their new email.</p>';
   }
   return h+'</div>';
+}
+function visitBox(o,rec){
+  var id=esc(o.id), v=visits(rec).reverse(), f=VIS[o.id];
+  var h='<div class="visitbox"><h3>In person</h3>';
+  if(v.length)h+='<ul class="vlist">'+v.map(function(x){return '<li><time>'+esc(x.date)+'</time><span>'+(x.rej?'<span class="pill rej">Rejected</span> ':'<span class="pill visit">★ Went well</span> ')+esc(x.n||"")+'</span><button class="btn ghost" type="button" data-vdel="'+id+'" data-vat="'+x.at+'" aria-label="Remove this visit">Remove</button></li>'}).join("")+'</ul>';
+  else h+='<p class="small" style="margin:0">No visits yet.</p>';
+  if(!(CAN&&DB))return h+'</div>';
+  if(!f)return h+'<div class="row"><button class="btn" type="button" data-vopen="'+id+'">I went in person</button></div></div>';
+  return h+'<div class="row"><label class="small" for="vd-'+id+'">Date</label><input type="date" id="vd-'+id+'" data-vd="'+id+'" value="'+esc(f.date)+'"></div>'+
+    '<label class="small" for="vn-'+id+'">What happened</label><textarea id="vn-'+id+'" data-vn="'+id+'" placeholder="Who you talked to, what they said, next steps">'+esc(f.n)+'</textarea>'+
+    '<div class="row"><button class="btn good" type="button" data-vsave="'+id+'" data-vrej="0">★ Save: went well</button><button class="btn bad" type="button" data-vsave="'+id+'" data-vrej="1">Save: they rejected me</button><button class="btn ghost" type="button" data-vclose="'+id+'">Cancel</button></div></div>';
 }
 function render(){
   if(!BASE.length){tally();return}
@@ -351,6 +381,17 @@ document.getElementById("list").addEventListener("click",function(e){
   if(cc){delete COMP[cc.getAttribute("data-closec")];redraw(cc.getAttribute("data-closec"));return}
   var sd=e.target.closest("[data-send]");
   if(sd){var id=sd.getAttribute("data-send"),c=COMP[id],r0=S[id]||{},o=BYID[id],to=(c.to||o.email||"").trim(),lg=(r0.log||[]).concat([{at:Date.now(),t:c.s,to:to}]).slice(-50),p={log:lg};if(!r0.s||r0.s==="new"||r0.s==="bounced"){p.s="contacted";p.date=r0.s==="bounced"?today():(r0.date||today())}if(to&&to!==o.email){p.ed=Object.assign({},r0.ed||{},{email:to})}write(id,p);delete COMP[id];setTimeout(function(){redraw(id);tally()},50);return}
+  var vo=e.target.closest("[data-vopen]");
+  if(vo){var id=vo.getAttribute("data-vopen");VIS[id]={date:today(),n:""};redraw(id);var x=document.getElementById("vn-"+id);if(x)x.focus();return}
+  var vc=e.target.closest("[data-vclose]");
+  if(vc){delete VIS[vc.getAttribute("data-vclose")];redraw(vc.getAttribute("data-vclose"));return}
+  var vs=e.target.closest("[data-vsave]");
+  if(vs){var id=vs.getAttribute("data-vsave"),f=VIS[id]||{},r0=S[id]||{},rej=vs.getAttribute("data-vrej")==="1";
+    var vv=(r0.visits||[]).concat([{at:Date.now(),date:f.date||today(),rej:rej?1:0,n:(f.n||"").slice(0,2000)}]).slice(-30),p={visits:vv};
+    if(!r0.s||r0.s==="new"||r0.s==="bounced"){p.s=rej?"no":"contacted";p.date=f.date||today()}else if(rej&&r0.s!=="won")p.s="no";
+    write(id,p);delete VIS[id];redraw(id);tally();return}
+  var vdl=e.target.closest("[data-vdel]");
+  if(vdl){var id=vdl.getAttribute("data-vdel"),at=+vdl.getAttribute("data-vat"),r0=S[id]||{};write(id,{visits:(r0.visits||[]).filter(function(x){return x.at!==at})});redraw(id);tally();return}
   var tr=e.target.closest("[data-trash]");
   if(tr){var id=tr.getAttribute("data-trash");delete COMP[id];OPEN[id]=false;write(id,{trash:Date.now(),gone:0});applyEdits();buildControls();render();note("");var nm=BYID[id].name;var u=document.getElementById("undo");u.innerHTML="Moved <b>"+esc(nm)+"</b> to the trash. It deletes for good in 24 hours. <button class=\"btn ghost\" type=\"button\" data-restore=\""+esc(id)+"\">Undo</button>";u.hidden=false;clearTimeout(window.__ut);window.__ut=setTimeout(function(){u.hidden=true},12000);return}
   var rs2=e.target.closest("[data-restore]");
@@ -378,6 +419,8 @@ document.getElementById("list").addEventListener("submit",function(e){
 });
 document.getElementById("undo").addEventListener("click",function(e){var b=e.target.closest("[data-restore]");if(!b)return;var id=b.getAttribute("data-restore");write(id,{trash:0});applyEdits();render();document.getElementById("undo").hidden=true});
 document.getElementById("list").addEventListener("input",function(e){
+  var vid=e.target.getAttribute("data-vn")||e.target.getAttribute("data-vd");
+  if(vid&&VIS[vid]){if(e.target.hasAttribute("data-vn"))VIS[vid].n=e.target.value;else VIS[vid].date=e.target.value;return}
   var t=e.target,id=t.getAttribute("data-cs")||t.getAttribute("data-cb")||t.getAttribute("data-ct");if(!id||!COMP[id])return;
   if(t.hasAttribute("data-cs"))COMP[id].s=t.value;else if(t.hasAttribute("data-ct"))COMP[id].to=t.value.trim();else COMP[id].b=t.value;
   var a=document.getElementById("cg-"+id);if(a)a.href=gmailCompose(BYID[id],COMP[id].s,COMP[id].b);
@@ -414,7 +457,7 @@ function pull(){
 pull();
 DASH.on(function(){
   pull(); applyEdits();
-  var act=document.activeElement, keep=act&&act.id&&/^(n|d|cs|cb|ck|ct)-/.test(act.id), editing=act&&act.closest&&(act.closest("[data-edit]")||act.closest("#setbox"));
+  var act=document.activeElement, keep=act&&act.id&&/^(n|d|cs|cb|ck|ct|vn|vd)-/.test(act.id), editing=act&&act.closest&&(act.closest("[data-edit]")||act.closest("#setbox"));
   if(!editing){document.getElementById("set-from").value=SET.from;setFill()}
   if(!keep&&!editing)render(); else tally();
 });
