@@ -592,7 +592,7 @@ var FPATH_ICO = {
 };
 /* what is inside each path, so the menu says more than one line (owner, Nov 5 2026) */
 var ROUTE_MORE = {
-  ph: ["Drugs matched to your scope, EMT to Flight and Community Paramedic", "Big Calls: stroke, STEMI, sepsis, trauma and ROSC", "NREMT-style questions, Megacode and scenarios"],
+  ph: ["Study paths from EMT to Flight and Community Paramedic", "Big Calls: stroke, STEMI, sepsis, trauma and ROSC", "NREMT-style questions, Megacode and scenarios"],
   rn: ["Hold parameters, labs to watch and patient teaching", "Specialty units: ICU, ER, L&D, NICU and more", "NCLEX-style questions and Nursing Bug drills"],
   md: ["Mechanisms, pharmacokinetics and drug classes", "Step-style questions and advanced lab patterns", "Drug Class Comparisons and Body Systems for rounds"],
   im: ["Contrast agents and radiopharmaceuticals", "Reactions, premedication, eGFR and screening", "Registry-style questions"],
@@ -657,7 +657,7 @@ function homeContinue() {
 function viewLevels() {
   if (routeCtx() === "fm") { S.view = "level"; S.level = "cpp"; S.tab = "hub"; return viewLevel(); }
   var rt = routeCtx(), nurse = rt === "rn", med = rt === "md", img = rt === "im", ally = rt === "ah", fm = rt === "fm", L = nurse ? DB.NLEVELS : med ? DB.MLEVELS : img ? DB.ILEVELS : ally ? DB.ALEVELS : fm ? DB.FLEVELS : DB.LEVELS;
-  var c = topbar() + '<header class="pagehead"><h1>' + (fm ? 'Field Medic: choose your tier <span class="pill proto">In development</span>' : nurse ? "Nursing: choose your license" : med ? "Medical school: choose your year" : img ? "Imaging: choose your modality" : ally ? "Allied Health: choose your field" : "Choose your level") + '</h1><p>' + (fm ? "Tactical Combat Casualty Care in four tiers, from every service member to the combat paramedic with prolonged casualty care. Each tier includes every skill and medication from the tiers before it." : img ? "Each modality covers the reaction cart and sedation drugs every tech needs, plus the contrast agents and radiopharmaceuticals for that modality." : ally ? "Each field has its own medicines and its own questions: mental health, nutrition, or airway and breathing." : med ? "Every year studies the full drug library; the exam prep, scenarios and focus change as you advance. Your bug evolves with you." : "Each level includes every drug from the levels before it. Your bug evolves as your scope grows.") + '</p></header><section class="levels' + (fm ? " flv" : (L.length === 3 || L.length === 5 ? " three" : "")) + '">';
+  var c = topbar() + '<header class="pagehead"><h1>' + (fm ? 'Field Medic: choose your tier <span class="pill proto">In development</span>' : nurse ? "Nursing: choose your license" : med ? "Medical school: choose your year" : img ? "Imaging: choose your modality" : ally ? "Allied Health: choose your field" : "Choose your level") + '</h1><p>' + (fm ? "Tactical Combat Casualty Care in four tiers, from every service member to the combat paramedic with prolonged casualty care. Each tier includes every skill and medication from the tiers before it." : img ? "Each modality covers the reaction cart and sedation drugs every tech needs, plus the contrast agents and radiopharmaceuticals for that modality." : ally ? "Each field has its own medicines and its own questions: mental health, nutrition, or airway and breathing." : med ? "Every year studies the full drug library; the exam prep, scenarios and focus change as you advance. Your bug evolves with you." : "Each level includes every drug from the levels before it. Your bug evolves as you level up.") + '</p></header><section class="levels' + (fm ? " flv" : (L.length === 3 || L.length === 5 ? " three" : "")) + '">';
   /* Combat Paramedic & Prolonged Care sits in Prehospital, just before Flight Paramedic, once Field Medic is unlocked (owner, Oct 29 2026) */
   if (!nurse && !med && !img && !ally && !fm && typeof fmUnlocked === "function" && fmUnlocked()) {   /* Prehospital only, never Allied Health (owner, Nov 5 2026) */
     var cp = DB.FLEVELS.filter(function (x) { return x.key === "cpp"; })[0], fi = L.map(function (x) { return x.key; }).indexOf("flight");
@@ -783,7 +783,7 @@ document.addEventListener("click", function (e) {
 });
 function tabList() {
   if (S.view === "level" && isF(S.level)) return [["registry", "Medications", "Every Tier 4 medication, by field use, by class or A to Z."], ["fm_blood", "Blood Products", "Whole blood, components, massive transfusion and every transfusion reaction."], ["fm_cond", FM_TABS.fm_cond[0], FM_TABS.fm_cond[1]], ["fm_store", FM_TABS.fm_store[0], FM_TABS.fm_store[1]], ["fm_istat", FM_TABS.fm_istat[0], FM_TABS.fm_istat[1]], ["fm_bio", FM_TABS.fm_bio[0], FM_TABS.fm_bio[1]], ["fm_ref", FM_TABS.fm_ref[0], FM_TABS.fm_ref[1]], ["tools", "Study Tools", "Questions, megacode, flashcards, brain games, med-list workout and safety drills."]];
-  var L = [["registry", S.view === "gen" ? "All Medications" : "Medications", S.view === "gen" ? "Every drug in DrugBug, A to Z." : isN(S.level) ? "The drugs nurses at your license give and monitor." : isI(S.level) ? "Contrast agents, radiopharmaceuticals and the reaction cart." : "Look up every drug in your scope."]];
+  var L = [["registry", S.view === "gen" ? "All Medications" : "Medications", S.view === "gen" ? "Every drug in DrugBug, A to Z." : isN(S.level) ? "The drugs nurses at your license give and monitor." : isI(S.level) ? "Contrast agents, radiopharmaceuticals and the reaction cart." : "Look up every drug in your study path."]];
   /* Meds by System now lives inside L.E.A.R.N as "Learn by system" (owner, Nov 5 2026) */
   L.push(["mylist", "My List", marks().length ? "Your saved drugs: study, quiz or print them." : "Tap \"Save to My List\" on any drug page to build your list."]);
   if (S.view === "level" && isN(S.level) && unitsFor(S.level).length) L.push(["units", "Specialty Units", "ICU, ER, L&D, peds and more: the meds your unit uses."]);
@@ -988,7 +988,7 @@ function hubView() {
   function tile(t) {
     used[t[0]] = 1;
     var fmt = typeof FM_TABS !== "undefined" && (FM_TABS[t[0]] || (t[0] === "diseases" && S.view === "level" && isF(S.level)));
-    return '<button class="hubtile t-' + t[0] + (fmt ? ' fmt' : '') + (proLocked(t[0]) ? ' locked' : '') + '" data-tab="' + t[0] + '">' + icon(t[0]) + '<span class="ht"><strong>' + esc(t[1]) + (proLocked(t[0]) ? ' ' + proBadge(t[0]) : '') + '</strong><span>' + esc(t[0] === "registry" && S.view !== "gen" ? (S.view === "level" && isF(S.level) ? "Every drug and blood product" : "Every drug in your scope") : hubShort(t[0]) || t[2]) + '</span></span>' + (t[0] === "shop" ? '<span class="hubsticks">' + stickIcon(14) + sticks().toLocaleString() + '</span>' : t[0] === "mylist" && marks().length ? '<span class="hubsticks">' + marks().length + '</span>' : '') + '</button>';
+    return '<button class="hubtile t-' + t[0] + (fmt ? ' fmt' : '') + (proLocked(t[0]) ? ' locked' : '') + '" data-tab="' + t[0] + '">' + icon(t[0]) + '<span class="ht"><strong>' + esc(t[1]) + (proLocked(t[0]) ? ' ' + proBadge(t[0]) : '') + '</strong><span>' + esc(t[0] === "registry" && S.view !== "gen" ? (S.view === "level" && isF(S.level) ? "Every drug and blood product" : "Every drug in your study path") : hubShort(t[0]) || t[2]) + '</span></span>' + (t[0] === "shop" ? '<span class="hubsticks">' + stickIcon(14) + sticks().toLocaleString() + '</span>' : t[0] === "mylist" && marks().length ? '<span class="hubsticks">' + marks().length + '</span>' : '') + '</button>';
   }
   var fld = S.view === "level" && isF(S.level), groups = fld ? [["Look it up", ["registry", "fm_blood", "fm_cond", "fm_store", "fm_istat", "fm_bio", "fm_ref"]], ["Study and practice", ["tools"]]] : HUB_GROUPS;
 
@@ -1233,7 +1233,7 @@ function scenView(s, list, inSess) {
   if (!st.opts) st.opts = shuffle(correct.concat(ok, wrong)), st.sel = {};
   var c = '<div class="scen">' + (inSess ? '' : '<button class="linkish" data-act="scenback">All scenarios</button>') + '<h2 style="margin-top:8px">' + esc(s.title) + '</h2><p class="vignette">' + esc(s.text) + '</p>';
   if (s.vitals) c += '<div class="vitals">' + s.vitals.map(function (v) { return '<span>' + esc(v) + '</span>'; }).join("") + '</div>';
-  c += '<div class="ask">' + esc(s.ask || "Select every medication you would give for this patient within your scope.") + '</div><div class="opts">';
+  c += '<div class="ask">' + esc(s.ask || "Select every medication that fits this fictional case on your study path.") + '</div><div class="opts">';
   c += st.opts.map(function (id) {
     var cls = "";
     if (st.checked) cls = correct.indexOf(id) >= 0 ? (st.sel[id] ? " right" : " missed") : ok.indexOf(id) >= 0 ? (st.sel[id] ? " right" : "") : (st.sel[id] ? " wrong" : "");
@@ -1807,7 +1807,7 @@ function okv(v) { v = String(v || "").trim(); return v && !NAV_RX.test(v) && !/^
 function expoOf(id) { return (DB.EXPO || {})[id] || null; }
 function callOf(id) { return (DB.CALL || {})[id] || ""; }
 function drugRole() { return medCtx() ? "md" : nurseCtx() ? "rn" : (S.view === "everyday" || S.view === "gen") ? "ev" : "ems"; }
-var ROLE_WHY = { ems: "On a call", rn: "At the bedside", md: "Clinically", ev: "For you and your family" };
+var ROLE_WHY = { ems: "EMS study points", rn: "Nursing study points", md: "Clinically", ev: "For you and your family" };
 function expoSimple(d, role) {
   var X = expoOf(d.id) || {};
   function F(k, si, fi) { var v = okv(get(d, si, fi)); return v ? field(k, v) : ""; }
@@ -2110,7 +2110,7 @@ function render() {
      already moved on, so buttons did nothing and nothing explained why. Now it says so and offers
      a way out. (owner reported Flight Paramedic doing this, Oct 30 2026) */
   try {
-    html = needDisc() ? discView() : !ok && S.view !== "legal" ? gateView() : S.view === "legal" ? legalView() : (typeof needFun === "function" && needFun()) ? funView() : (typeof needWelcome === "function" && needWelcome()) ? welcomeView() : needOnboard() ? obView() : S.view === "home" ? viewHome() : (S.view === "levels" || S.view === "flevels" || S.view === "nlevels" || S.view === "mlevels" || S.view === "ilevels" || S.view === "alevels") ? viewLevels() : S.view === "easy" ? viewEasy() : S.view === "admin" ? viewAdmin() : S.view === "classes" ? classesView() : S.view === "settings" ? settingsView() : S.view === "terrarium" ? ((typeof funOn === "function" && !funOn()) ? (S.view = "home", viewHome()) : terrariumView()) : S.view === "everyday" ? evView() : S.view === "field" && typeof fieldView === "function" ? fieldView() : viewLevel();
+    html = ageBlocked() && S.view !== "legal" ? ageBlockView() : needDisc() ? discView() : !ok && S.view !== "legal" ? gateView() : S.view === "legal" ? legalView() : (typeof needFun === "function" && needFun()) ? funView() : (typeof needWelcome === "function" && needWelcome()) ? welcomeView() : needOnboard() ? obView() : S.view === "home" ? viewHome() : (S.view === "levels" || S.view === "flevels" || S.view === "nlevels" || S.view === "mlevels" || S.view === "ilevels" || S.view === "alevels") ? viewLevels() : S.view === "easy" ? viewEasy() : S.view === "admin" ? viewAdmin() : S.view === "classes" ? classesView() : S.view === "settings" ? settingsView() : S.view === "terrarium" ? ((typeof funOn === "function" && !funOn()) ? (S.view = "home", viewHome()) : terrariumView()) : S.view === "everyday" ? evView() : S.view === "field" && typeof fieldView === "function" ? fieldView() : viewLevel();
   } catch (err) {
     LAST_ERR = (err && (err.message || err)) + "";
     try { if (window.console) console.error("DrugBug render failed:", err); } catch (e) {}
@@ -2280,6 +2280,7 @@ document.addEventListener("click", function (e) {
     case "allpaths": store("allPaths", homeAll() ? 0 : 1); render(); return;
     case "remindcal": remindCal(); return;
     case "codesgo": codesGo(); return;
+    case "agerecheck": ageCheck(true); return;
     case "funtog": {
       var on = !funOn();
       setSet("fun", on);
@@ -2689,12 +2690,12 @@ function labelSrc(id) {
 function doseWarn(id, compact) {
   if (!id) return "";
   var L = labelSrc(id), es = lang() === "es";
-  var head = es ? "Verifique antes de administrar." : "Check before you give.";
-  var body = es ? "Dosis y vías solo con fines educativos, no para uso clínico. Pueden cambiar y varían según el producto, el paciente y el protocolo. Verifique siempre con la etiqueta actual de la FDA, sus protocolos y la dirección médica." :
-    "Doses and routes are for education only, not for clinical use. They can change and differ by product, patient and protocol. Always verify against the current FDA label, your protocols and medical direction.";
-  var src = L ? (es ? "Fuente: Información de prescripción de la FDA" + (L.s ? " (DailyMed)" : "") : "Source: FDA Prescribing Information" + (L.s ? " (DailyMed)" : "")) + ' — ' + esc([L.b, L.m].filter(Boolean).join(", ")) + (L.d ? (es ? ", etiqueta del " : ", label dated ") + esc(L.d) : "") + '. <a href="' + (L.s ? 'https://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=' + encodeURIComponent(L.s) : esc(L.u)) + '" target="_blank" rel="noopener">' + (es ? "Ver la etiqueta" : "View the label") + '</a>. ' + (es ? "Las dosis marcadas “fuera de etiqueta” provienen de la guía indicada." : "Doses marked “Off-label” come from the guideline named with them.")
-    : (es ? "Fuente: no hay una etiqueta actual de la FDA en EE. UU.; las dosis provienen de la guía o referencia indicada en el texto." : "Source: no current US FDA label; dosing comes from the guideline or reference named in the text.");
-  if (compact) return '<div class="dosewarn small" role="note"><strong>' + head + '</strong> ' + (es ? "Solo educativo; verifique con la etiqueta de la FDA y su protocolo." : "Education only; verify with the FDA label and your protocol.") + ' <span class="dsrc">' + src + '</span></div>';
+  var head = es ? "Solo para estudio." : "For study only.";
+  var body = es ? "No use DrugBug para la atención de pacientes ni para decisiones clínicas. Los resúmenes pueden citar etiquetas de la FDA y otras fuentes educativas, y pueden contener errores o estar desactualizados." :
+    "Do not use DrugBug for patient care or clinical decisions. Study summaries may cite FDA labeling and other educational sources, and they can contain errors or fall behind current references.";
+  var src = L ? (es ? "Fuente: Información de prescripción de la FDA" + (L.s ? " (DailyMed)" : "") : "Reference cited: FDA Prescribing Information" + (L.s ? " (DailyMed)" : "")) + ' — ' + esc([L.b, L.m].filter(Boolean).join(", ")) + (L.d ? (es ? ", etiqueta del " : ", label dated ") + esc(L.d) : "") + '. <a href="' + (L.s ? 'https://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=' + encodeURIComponent(L.s) : esc(L.u)) + '" target="_blank" rel="noopener">' + (es ? "Ver la etiqueta" : "View the label") + '</a>. ' + (es ? "Las dosis marcadas “fuera de etiqueta” provienen de la guía indicada." : "Doses marked “Off-label” come from the guideline named with them.")
+    : (es ? "Fuente: no hay una etiqueta actual de la FDA en EE. UU.; las dosis provienen de la guía o referencia indicada en el texto." : "Reference cited: no current US FDA label; the study text names the guideline or reference it draws on.");
+  if (compact) return '<div class="dosewarn small" role="note"><strong>' + head + '</strong> ' + (es ? "Solo para estudio. No es para la atención de pacientes." : "Study only. Not for patient care.") + ' <span class="dsrc">' + src + '</span></div>';
   var q = L && L.q && L.q.length && !es ? '<details class="dlabel"><summary>FDA label wording</summary>' + L.q.map(function (x) { return '<p><b>' + esc(x[0]) + ':</b> “' + esc(x[1]) + '”</p>'; }).join("") + '</details>' : '';
   return '<div class="dosewarn" role="note"><strong>' + head + '</strong> ' + body + '<div class="dsrc">' + src + '</div>' + q + '</div>';
 }
@@ -2851,7 +2852,7 @@ function reviewBlock(d) {
   var p = rvParts(d), ok = p.lv !== "none";
   return '<div class="review ' + (ok ? "ok" : "draft") + '"><strong>' + (ok ? "Content review" : "Draft content") + '</strong><p>' +
     (ok ? esc("Last reviewed " + rvMonth(rvDate(d)) + " for educational accuracy against the references listed below. A content review is not a guarantee that the information is complete or current, and it is not a substitute for your protocols, current drug references, medical direction or clinical judgment.") :
-      "This entry was drafted with AI assistance from the sources listed and has not yet had a content review. Verify doses against the FDA label and your local protocols.") +
+      "This entry was drafted with AI assistance from the sources listed and has not yet had a content review. It can contain errors. Do not use it for patient care.") +
     '</p><p class="muted small">Content version ' + (d.rev || 1) + ' · last updated ' + esc(fmtDay(d.updatedAt || SEED_TS) || "—") + '</p></div>';
 }
 function sourcesBlock(d) {
@@ -5888,7 +5889,7 @@ function megaView2() {
   if (st && st.paused && !st.done && st.ans[st.i] == null) { st.paused = false; st.t0 = Date.now() - (megaSecs(st.cs.steps[st.i]) - st.left) * 1000; megaTick(); }
   if (!st) {
     var best = Prog.d.mega || {};
-    return '<section class="mega"><h2>Megacode</h2><div class="dosewarn" role="note"><strong>Check before you give.</strong> Megacode doses follow ACLS/PALS resuscitation guidelines, which are often off-label (not FDA label dosing). For education only; verify against your protocols and medical direction.</div><p class="muted">Run a code. The monitor changes as the case unfolds, and every decision is on the clock. Choose the best next action before time runs out.</p><div class="mclist">' +
+    return '<section class="mega"><h2>Megacode</h2><div class="dosewarn" role="note"><strong>Fictional practice only.</strong> Megacode follows published ACLS/PALS study material, which can differ from FDA labeling. Do not use it for patient care or clinical decisions.</div><p class="muted">Run a code. The monitor changes as the case unfolds, and every decision is on the clock. Choose the best next action before time runs out.</p><div class="mclist">' +
       megaCases().map(function (cs) { var b = best[cs.id]; return '<button class="mccard" data-mega="' + cs.id + '"><span class="eyebrow">' + esc(cs.tag) + (cs.group === "peds" ? " · Pediatric" : "") + '</span><strong>' + esc(cs.title) + '</strong><span class="muted small">' + cs.steps.length + ' decisions' + (b ? ' · best ' + b + '%' : '') + '</span></button>'; }).join("") + '</div><p class="muted small">Written from published resuscitation guidelines. Not an AHA course or product, and no ACLS/PALS certification. Practice only: follow your local protocols and medical direction.</p></section>';
   }
   var cs = st.cs, step = cs.steps[st.i];
@@ -6687,7 +6688,7 @@ function reviewQueueView() {
   c += '<details class="sec"' + (rvReady(rv) ? '' : ' open') + '><summary>' + (rvReady(rv) ? 'Reviewing as ' + esc((rvRole(rv) || [0, ""])[1] + (rv.cred ? ", " + rv.cred : "")) + ' (change)' : 'Set the reviewer first') + '</summary><form class="aform" data-rvform="1"><fieldset><legend>Reviewer (saved on this device)</legend><label>Credentials<input class="pinput" id="rvcred" value="' + esc(rv.cred) + '" placeholder="PharmD, BCPS"></label><label>Role<select class="pinput" id="rvrole"><option value="">Choose a role</option>' + RVROLES.map(function (x) { return '<option value="' + x[0] + '"' + (rv.role === x[0] ? " selected" : "") + '>' + esc(x[1]) + '</option>'; }).join("") + '</select></label><p class="muted small">Paramedics approve prehospital and flight drugs; RNs approve nursing drugs; NPs/PAs approve any drug. Pharmacists and physicians give the final \'verified\' sign-off.</p><label>License type<input class="pinput" id="rvlic" value="' + esc(rv.lic || "") + '" placeholder="Pharmacist, RN, MD, Paramedic"></label><label>License number<input class="pinput" id="rvlicno" value="' + esc(rv.licno || "") + '"></label><label>License state<input class="pinput" id="rvlicst" value="' + esc(rv.licst || "") + '" maxlength="20" placeholder="TX"></label><label class="chk"><input type="checkbox" id="rvagree"' + (rv.agree ? " checked" : "") + '> A signed Clinical Content Reviewer Agreement (scope, credentials, payment, content responsibility) is on file for this reviewer.</label><p class="muted small">Verify the license with the state board before the first approval.</p><button class="btn small" type="submit">Save reviewer</button></fieldset></form></details>';
   if (a.rqid) return c + reviewOne(a.rqid) + '</section>';
   c += '<div class="actions"><button class="btn" data-aact="rqnext"' + (pend.length && rvReady(rv) ? "" : " disabled") + '>Review the next drug</button>' + (!rvReady(rv) ? '<span class="muted small">Add your role, license and agreement first.</span>' : '') + '</div>';
-  if (rvReady(rv)) c += '<p class="muted small">Reviewing as <strong>' + esc((rvRole(rv) || [0, ""])[1]) + '</strong>: you can ' + (rvVerifier(rv) ? 'verify ' : 'approve ') + esc(rvScopeName(rv)) + '.' + (outside ? ' ' + outside + ' drug' + (outside === 1 ? ' is' : 's are') + ' outside your scope and hidden from your queue.' : '') + '</p>';
+  if (rvReady(rv)) c += '<p class="muted small">Reviewing as <strong>' + esc((rvRole(rv) || [0, ""])[1]) + '</strong>: you can ' + (rvVerifier(rv) ? 'verify ' : 'approve ') + esc(rvScopeName(rv)) + '.' + (outside ? ' ' + outside + ' drug' + (outside === 1 ? ' is' : 's are') + ' outside this study path and hidden from your queue.' : '') + '</p>';
   c += '<p class="muted small">Each approval creates a new version and records your name, credentials and the date for your records (license details are kept only in the admin-only revision history). Users see only "Content reviewed [month year]" with a note that a content review is not a guarantee. They never see reviewer names, credentials or license numbers. Use "Needs changes" to open the editor first.</p>';
   c += '<h3 class="eh small">Waiting for review (' + pend.length + ')</h3><div class="alist">' + pend.slice(0, 120).map(function (id) { return '<div class="arow"><button class="linkish" data-rqopen="' + id + '"><strong>' + esc(nameOf(id)) + '</strong></button><span class="muted small">' + esc(get(DB.drugs[id], 0, 3)) + '</span>' + (reportsFor(id) ? pill(reportsFor(id) + " open report" + (reportsFor(id) > 1 ? "s" : ""), "warn") : '') + '</div>'; }).join("") + '</div>';
   return c + '</section>';
@@ -6836,6 +6837,34 @@ function gateView() {
 }
 document.addEventListener("change", function (e) { if (e.target && e.target.id === "pwrauth") { PRO.rauth = e.target.checked; document.querySelectorAll('[data-pw="wbuy"]').forEach(function (b) { b.disabled = !PRO.rauth || PRO.busy; }); } });
 function agreeOld() { var g = store("agree"); return !!(g && g.v && g.v !== LEGAL_V); }
+/* App Store age signal (Texas SB 2420 and similar laws; counsel memo Nov 11 2026). On iPhone the app asks
+   Apple's Declared Age Range service, through the native "age" handler, whether the person is 18 or older.
+   Only the result category is kept ("adult", "minor", "declined", "unknown"), never a birth date, and only
+   to enforce the adults-only rule. A "minor" answer blocks the app; anything else falls back to the
+   app's own 18+ agreement. Re-checked every 30 days. Builds without the handler skip this. */
+var AGE_RECHECK = 30 * 86400000;
+function ageHandler() { try { return NATIVE && window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.age; } catch (e) { return null; } }
+function ageRec() { return store("ageSig") || null; }
+function ageBlocked() { var r = ageRec(); return !!(r && r.s === "minor"); }
+function ageCheck(force) {
+  var h = ageHandler(); if (!h) return;
+  var r = ageRec(); if (!force && r && r.s !== "minor" && Date.now() - (r.ts || 0) < AGE_RECHECK) return;
+  if (S.ageAsking) return; S.ageAsking = true;
+  try { h.postMessage({ cmd: "check", gate: 18 }); } catch (e) { S.ageAsking = false; }
+}
+window.DrugBugAge = { onResult: function (o) {
+  S.ageAsking = false;
+  var st = o && /^(adult|minor|declined|unknown|unavailable|error)$/.test(o.status) ? o.status : "unknown";
+  store("ageSig", { s: st, ts: Date.now() });
+  render();
+} };
+function ageBlockView() {
+  return '<div class="gate" role="alertdialog" aria-labelledby="ageh"><div class="glogo">' + bugSVG("sage") + '</div><h1 id="ageh">DrugBug is for adults</h1>' +
+    '<p>DrugBug is a study app for adults 18 and older. The age information shared through your Apple Account shows you are under 18, so DrugBug is not available on this device.</p>' +
+    '<p class="muted small">If this is wrong, update the age information in your Apple Account settings, then try again.</p>' +
+    '<p><button class="btn" data-act="agerecheck">Check again</button> <button class="linkish" data-legal="terms">Terms of Use</button> <button class="linkish" data-legal="privacy">Privacy Policy</button></p></div>';
+}
+setTimeout(function () { ageCheck(false); }, 1200);
 function acceptGate() {
   var g = S.gate; if (!g || !g.ok || g.age !== "adult" || !g.stats) return;
   var rec = { v: LEGAL_V, ts: Date.now(), age: g.age }; store("agree", rec);
@@ -7479,13 +7508,13 @@ var ES_UI = {
 "Theme": "Tema",
 "Control Center": "Centro de control",
 "Admin": "Admin",
-"Learn your meds by scope. Pick a route, find your level, and grow your bug as your scope grows.": "Aprenda sus medicamentos según su nivel. Elija una ruta, encuentre su nivel y haga crecer a su insecto a medida que avanza.",
+"Learn your meds. Pick a study path, find your level, and grow your bug as you learn.": "Aprenda sus medicamentos según su nivel. Elija una ruta, encuentre su nivel y haga crecer a su insecto a medida que avanza.",
 "Prehospital": "Prehospitalario",
 "General Medications": "Medicamentos generales",
 "Nursing": "Enfermería",
 "Medical School": "Escuela de medicina",
 "Med School": "Medicina",
-"EMT, AEMT, Paramedic and Flight Paramedic. Each level shows only the drugs in its scope, with depth that grows as you level up.": "EMT, AEMT, paramédico y paramédico de vuelo. Cada nivel muestra solo los medicamentos de su alcance, con más detalle a medida que sube de nivel.",
+"EMT, AEMT, Paramedic and Flight Paramedic. Each level is a study path, with depth that grows as you level up. Study paths do not define scope of practice.": "EMT, AEMT, paramédico y paramédico de vuelo. Cada nivel muestra solo los medicamentos de su alcance, con más detalle a medida que sube de nivel.",
 "Home meds, hospital drugs and everything in between, by drug class. Full monographs taught by Professor Sage.": "Medicamentos de casa, del hospital y todo lo demás, por clase. Monografías completas con el Profesor Sage.",
 "CNA, LVN/LPN and RN. Learn the meds for your license, from what to watch and report up to IV drips and high-alert drugs. Includes licensure-style exam prep.": "CNA, LVN/LPN y RN. Aprenda los medicamentos de su licencia, desde qué vigilar y reportar hasta infusiones IV y medicamentos de alto riesgo. Incluye preparación estilo examen de licencia.",
 "MS1–MS2, MS3–MS4 and Intern. Mechanisms to management to safe orders, with Step 1, Step 2 CK and Step 3–style prep.": "MS1–MS2, MS3–MS4 e interno. De los mecanismos al manejo y a órdenes seguras, con preparación estilo Step 1, Step 2 CK y Step 3.",
@@ -7520,7 +7549,7 @@ var ES_UI = {
 "and": "y",
 ". I understand DrugBug is for education only and is not for patient care.": ". Entiendo que DrugBug es solo para educación y no para atender pacientes.",
 "Choose your level": "Elija su nivel",
-"Each level includes every drug from the levels before it. Your bug evolves as your scope grows.": "Cada nivel incluye todos los medicamentos de los niveles anteriores. Su insecto evoluciona a medida que crece su alcance.",
+"Each level includes every drug from the levels before it. Your bug evolves as you level up.": "Cada nivel incluye todos los medicamentos de los niveles anteriores. Su insecto evoluciona a medida que crece su alcance.",
 "Paramedic": "Paramédico",
 "Flight Paramedic": "Paramédico de vuelo",
 "Intern": "Interno",
@@ -8651,7 +8680,7 @@ function settingsView() {
   pv += setRow("Reset my progress", "Clears mastery, XP, streaks, achievements and scores. Keeps your bugs, sticks, saved list and settings.", S.resetAsk ? '<span class="confirm">Reset everything? <button class="btn small again" data-act="resetyes">Reset</button><button class="btn small ghost" data-act="resetno">Cancel</button></span>' : '<button class="btn small ghost" data-act="resetask">Reset progress</button>');
   pv += setRow("Delete all my data", "Removes everything DrugBug stores about you, here and online. Cannot be undone.", '<button class="btn small again" data-legal="data">Delete…</button>');
   c += setCard("privacy", "Account & privacy", fmCodeRow() + (typeof accCard === "function" ? accCard() : "")
-    + (typeof giftBox === "function" ? setRow("Redeem a code", "Every code goes here: gift codes, access codes, school or agency codes, and your agency's protocol code." + (NATIVE ? " App Store offer codes open Apple's own screen." : ""), NATIVE ? '<button class="btn small ghost" data-pw="redeem">App Store offer code</button>' : "") + giftBox() : "")
+    + (NATIVE ? setRow("App Store offer code", "Redeem an App Store offer code on Apple's own screen.", '<button class="btn small ghost" data-pw="redeem">Redeem offer code</button>') : typeof giftBox === "function" ? setRow("Redeem a code", "Every code goes here: gift codes, access codes, school or agency codes, and your agency's protocol code." + (NATIVE ? " App Store offer codes open Apple's own screen." : ""), NATIVE ? '<button class="btn small ghost" data-pw="redeem">App Store offer code</button>' : "") + giftBox() : "")
     + pv);
   // feedback
   c += setCard("feedback", "Feedback",
@@ -8740,7 +8769,7 @@ document.addEventListener("change", function (e) {
 });
 document.addEventListener("submit", function (e) {
   var f = e.target; if (!f.getAttribute) return;
-  if (f.getAttribute("data-fmcode")) { e.preventDefault(); fmCodeTry((($("#fmcodein") || {}).value || "")); return; }
+  if (f.getAttribute("data-fmcode")) { e.preventDefault(); if (NATIVE) return; fmCodeTry((($("#fmcodein") || {}).value || "")); return; }
   if (f.getAttribute("data-setlb")) {
     e.preventDefault(); var nm = (($("#setlbname") || {}).value || "").trim(); if (!nm || isMinor()) return;
     if (!nameOk(nm)) { S.setMsg = ""; S.lbMsg = NAMEMSG; alertMsg(NAMEMSG); return; }
@@ -8772,7 +8801,7 @@ Object.assign(ES_UI, {
   "Age group": "Grupo de edad", "Download my data": "Descargar mis datos", "A file with your progress, scores, saved list and settings.": "Un archivo con su progreso, calificaciones, lista guardada y ajustes.", "Download": "Descargar",
   "Reset my progress": "Reiniciar mi progreso", "Clears mastery, XP, streaks, achievements and scores. Keeps your bugs, sticks, saved list and settings.": "Borra dominio, XP, rachas, logros y calificaciones. Conserva sus insectos, palitos, lista guardada y ajustes.", "Reset progress": "Reiniciar progreso", "Reset": "Reiniciar",
   "Delete all my data": "Borrar todos mis datos", "Removes everything DrugBug stores about you, here and online. Cannot be undone.": "Elimina todo lo que DrugBug guarda sobre usted, aquí y en línea. No se puede deshacer.", "Delete…": "Borrar…",
-  "Version": "Versión", "Medical review": "Revisión médica", "Something wrong?": "¿Algo está mal?", "Report a problem": "Reportar un problema", "Contact": "Contacto", "Legal": "Legal", "Professor Sage explains the medications people take at home. Filter by class or search by name.": "El Profesor Sage explica los medicamentos que la gente toma en casa. Filtre por clase o busque por nombre.", "The medications people take at home, by drug class. Plain-language guides from Professor Sage: what each drug treats, how it is taken, and what to ask a patient who takes it.": "Los medicamentos que la gente toma en casa, por clase. Guías sencillas del Profesor Sage: qué trata cada medicamento, cómo se toma y qué preguntar a quien lo toma.", "Professor Sage's notes": "Notas del Profesor Sage", "Nursing focus": "Enfoque de enfermería", "Board focus": "Enfoque para exámenes", "Field focus": "Enfoque prehospitalario", "Back to studying": "Volver a estudiar", "Dark collection": "Colección oscura", "Earn 1 stick for every correct answer, plus bonuses for perfect scores and achievements.": "Gane 1 palito por cada respuesta correcta, más bonos por calificaciones perfectas y logros.", "Every correct answer (any level)": "Cada respuesta correcta (cualquier nivel)", "Perfect score on 10 or more questions": "Calificación perfecta en 10 o más preguntas", "Each achievement unlocked": "Cada logro desbloqueado", "100% on a Megacode case": "100% en un caso de Megacode", "Terrarium": "Terrario", "Wardrobe": "Guardarropa", "Bugs": "Insectos", "Colors": "Colores", "How to earn sticks": "Cómo ganar palitos", "Filters": "Filtros", "Clear filters": "Quitar filtros", "Problem type": "Tipo de problema", "Exit": "Salir", "Look up every drug in your scope.": "Busque cada medicamento de su nivel.", "Timed practice tests with scores.": "Exámenes de práctica con calificación.", "Dose and drip math with worked answers.": "Cálculo de dosis y goteos con respuestas explicadas.", "Megacode, pediatric doses, med lists and safety drills.": "Megacode, dosis pediátricas, listas de medicamentos y seguridad.", "Clinical cases: choose what to give.": "Casos clínicos: elija qué administrar.", "Flip, sort and master each drug.": "Voltee, ordene y domine cada medicamento.", "Mastery, achievements, My List and leaderboard.": "Dominio, logros, Mi lista y clasificación.", "Your bugs, outfits, faces and sticks.": "Sus insectos, ropa, caras y palitos.", "Assess, hold, labs, teaching: one skill at a time.": "Valorar, retener, laboratorios, enseñanza: una habilidad a la vez.", "Study session": "Sesión de estudio", "Free faces": "Caras gratis", "Under 250 sticks": "Menos de 250 palitos", "250 to 500": "250 a 500", "The expensive ones": "Las caras caras", "Equip": "Equipar", "Keep studying to find it": "Sigue estudiando para encontrarla", "Answers reflect common national guidance at the time of writing. Where practice varies, the explanation says so; your protocols, facility policy and medical direction always come first.": "Las respuestas reflejan las guías nacionales comunes al momento de redactarlas. Cuando la práctica varía, la explicación lo indica; sus protocolos, la política del centro y la dirección médica siempre tienen prioridad.", "Outfits": "Ropa", "Other hand": "La otra mano", "Starter": "Inicial", "Free": "Gratis", "Free when you unlock them": "Gratis al desbloquearlos", "No bugs here yet.": "Aún no hay insectos aquí.", "Bug buddy": "Insecto compañero", "Your bug on the side of the screen, reacting to your answers.": "Su insecto al lado de la pantalla, reaccionando a sus respuestas.", "Hats & items": "Sombreros y objetos", "Faces": "Caras", "Hats": "Sombreros", "Eyewear": "Lentes", "Neck": "Cuello", "In hand": "En la mano", "Effects": "Efectos", "Wear": "Ponérselo", "Take off": "Quitárselo", "Wearing": "Puesto", "Secret face": "Cara secreta", "Show it off": "Lucirla", "Clinically reviewed": "Con revisión clínica", "Awaiting review": "Pendiente de revisión", "Pharmacist verified": "Verificado por farmacéutico", "Physician verified": "Verificado por médico", "Awaiting clinical review": "Pendiente de revisión clínica"
+  "Version": "Versión", "Medical review": "Revisión médica", "Something wrong?": "¿Algo está mal?", "Report a problem": "Reportar un problema", "Contact": "Contacto", "Legal": "Legal", "Professor Sage explains the medications people take at home. Filter by class or search by name.": "El Profesor Sage explica los medicamentos que la gente toma en casa. Filtre por clase o busque por nombre.", "The medications people take at home, by drug class. Plain-language guides from Professor Sage: what each drug treats, how it is taken, and what to ask a patient who takes it.": "Los medicamentos que la gente toma en casa, por clase. Guías sencillas del Profesor Sage: qué trata cada medicamento, cómo se toma y qué preguntar a quien lo toma.", "Professor Sage's notes": "Notas del Profesor Sage", "Nursing focus": "Enfoque de enfermería", "Board focus": "Enfoque para exámenes", "Field focus": "Enfoque prehospitalario", "Back to studying": "Volver a estudiar", "Dark collection": "Colección oscura", "Earn 1 stick for every correct answer, plus bonuses for perfect scores and achievements.": "Gane 1 palito por cada respuesta correcta, más bonos por calificaciones perfectas y logros.", "Every correct answer (any level)": "Cada respuesta correcta (cualquier nivel)", "Perfect score on 10 or more questions": "Calificación perfecta en 10 o más preguntas", "Each achievement unlocked": "Cada logro desbloqueado", "100% on a Megacode case": "100% en un caso de Megacode", "Terrarium": "Terrario", "Wardrobe": "Guardarropa", "Bugs": "Insectos", "Colors": "Colores", "How to earn sticks": "Cómo ganar palitos", "Filters": "Filtros", "Clear filters": "Quitar filtros", "Problem type": "Tipo de problema", "Exit": "Salir", "Look up every drug in your study path.": "Busque cada medicamento de su nivel.", "Timed practice tests with scores.": "Exámenes de práctica con calificación.", "Dose and drip math with worked answers.": "Cálculo de dosis y goteos con respuestas explicadas.", "Megacode, pediatric doses, med lists and safety drills.": "Megacode, dosis pediátricas, listas de medicamentos y seguridad.", "Clinical cases: choose what to give.": "Casos clínicos: elija qué administrar.", "Flip, sort and master each drug.": "Voltee, ordene y domine cada medicamento.", "Mastery, achievements, My List and leaderboard.": "Dominio, logros, Mi lista y clasificación.", "Your bugs, outfits, faces and sticks.": "Sus insectos, ropa, caras y palitos.", "Assess, hold, labs, teaching: one skill at a time.": "Valorar, retener, laboratorios, enseñanza: una habilidad a la vez.", "Study session": "Sesión de estudio", "Free faces": "Caras gratis", "Under 250 sticks": "Menos de 250 palitos", "250 to 500": "250 a 500", "The expensive ones": "Las caras caras", "Equip": "Equipar", "Keep studying to find it": "Sigue estudiando para encontrarla", "Answers reflect common national guidance at the time of writing. Where practice varies, the explanation says so; your protocols, facility policy and medical direction always come first.": "Las respuestas reflejan las guías nacionales comunes al momento de redactarlas. Cuando la práctica varía, la explicación lo indica; sus protocolos, la política del centro y la dirección médica siempre tienen prioridad.", "Outfits": "Ropa", "Other hand": "La otra mano", "Starter": "Inicial", "Free": "Gratis", "Free when you unlock them": "Gratis al desbloquearlos", "No bugs here yet.": "Aún no hay insectos aquí.", "Bug buddy": "Insecto compañero", "Your bug on the side of the screen, reacting to your answers.": "Su insecto al lado de la pantalla, reaccionando a sus respuestas.", "Hats & items": "Sombreros y objetos", "Faces": "Caras", "Hats": "Sombreros", "Eyewear": "Lentes", "Neck": "Cuello", "In hand": "En la mano", "Effects": "Efectos", "Wear": "Ponérselo", "Take off": "Quitárselo", "Wearing": "Puesto", "Secret face": "Cara secreta", "Show it off": "Lucirla", "Clinically reviewed": "Con revisión clínica", "Awaiting review": "Pendiente de revisión", "Pharmacist verified": "Verificado por farmacéutico", "Physician verified": "Verificado por médico", "Awaiting clinical review": "Pendiente de revisión clínica"
 });
 Object.assign(ES_UI, {
   "Medications": "Medicamentos", "All Medications": "Todos los medicamentos", "Specialty Units": "Unidades de especialidad",
@@ -9223,7 +9252,7 @@ document.addEventListener("input", function (e) { if (e.target.id === "plink") {
 /* ---------- Lab values (RN, Flight, Med School) ---------- */
 function labRoute() { var k = S.level; return k === "rn" || k === "diet" || k === "mh" ? "rn" : k === "rrt" ? "fl" : k === "flight" || k === "flightrn" || k === "cpp" || k === "pcc" ? "fl" : isM(k) ? "md" : null; }
 function hasLabs() { return S.view === "level" && !!labRoute(); }
-var LABHEAD = { rn: "At the bedside", fl: "In the aircraft", md: "Interpretation" };
+var LABHEAD = { rn: "Nursing study points", fl: "Flight study points", md: "Interpretation study points" };
 var LABGRP_ORDER = ["Electrolytes", "Kidney & glucose", "Blood count", "Clotting", "Blood gas", "Cardiac & other", "Acid-base", "Kidney & sodium", "Calcium & endocrine", "Liver & pancreas", "Hematology", "Coagulation", "Inflammation & infection", "Drug levels & toxicology", "Cardio-metabolic"];
 function labsFor(r) { return (DB.LABS || []).filter(function (l) { return l.lv.indexOf(r) >= 0; }); }
 function labChips(ids) {
@@ -9519,7 +9548,7 @@ var CR_TYPES = [
 ];
 var CR_LABEL = { origin: "Where it came from", timeline: "Timeline", cell: "Cellular level", body: "Organ by organ", journey: "Journey through the body", sidefx: "Why side effects happen", fun: "Fun fact", src: "Source", q: "Question", a: "Correct answer", w: "Wrong answer", x: "Explanation", sum: "Summary", rows: "Section", fl: "Flight note", md: "Physician note", pearl: "Pearl", title: "Title", box: "Box", plain: "In plain words", remember: "Remember it", mistake: "Common mistake", flight: "In the aircraft", wards: "On the wards", dept: "In the department",
   rl: "Nursing summary", rh: "Hold / notify", ml: "Physician summary", mp: "Physician pearl", use: "Imaging: why it is used", check: "Imaging: screening", watch: "Imaging: monitoring", act: "Imaging: what to do", edu: "Patient education", nurse: "Nursing considerations", cites: "Source",
-  name: "Name", what: "What it is", range: "Normal range", crit: "Critical", hi: "High", lo: "Low", rn: "At the bedside (RN)", share: "What they share", clue: "Name clue", tips: "Tip", diff: "How to tell apart", key: "Key point", how: "How", dont: "Do not use", warn: "Warning", dose: "Dose", rem: "Remember", members: "Drug" };
+  name: "Name", what: "What it is", range: "Normal range", crit: "Critical", hi: "High", lo: "Low", rn: "Nursing study points (RN)", share: "What they share", clue: "Name clue", tips: "Tip", diff: "How to tell apart", key: "Key point", how: "How", dont: "Do not use", warn: "Warning", dose: "Dose", rem: "Remember", members: "Drug" };
 function crType(k) { return CR_TYPES.filter(function (t) { return t[0] === k; })[0]; }
 function crItems(k) { var T = crType(k); if (!T) return []; var key = "_items_" + k; return CR[key] || (CR[key] = T[3]()); }
 function crGet(o, path) { return path.split(".").reduce(function (x, p) { return x == null ? x : x[p]; }, o); }
@@ -9910,7 +9939,7 @@ function drawPaywall() {
     });
     if (PRO.busy) c += '<p class="muted small" role="status">Opening checkout…</p>';
     if (PRO.msg) c += '<div class="presult" role="alert">' + esc(PRO.msg) + '</div>';
-    c += '<div class="pwrow">' + (subActive() && !NATIVE ? '<button class="linkish" data-pw="wmanage">Manage or cancel your subscription</button>' : '') + '<button class="linkish" data-act="codesgo">Have a code? Redeem it in Settings</button></div>';
+    c += '<div class="pwrow">' + (subActive() && !NATIVE ? '<button class="linkish" data-pw="wmanage">Manage or cancel your subscription</button>' : '') + '' + (NATIVE ? '<button class="linkish" data-pw="redeem">Redeem an App Store offer code</button>' : '<button class="linkish" data-act="codesgo">Have a code? Redeem it in Settings</button>') + '</div>';
     c += '<p class="muted small">DrugBug Free stays free forever: every tool in the app, over about 40 common medications.</p>';
     /* website checkout disclosure, counsel wording (Nov 11 2026), before Stripe collects billing details */
     c += '<p class="muted small pwfine">Each plan costs the price shown every month or year and renews automatically at the disclosed renewal price unless cancelled. To stop future renewals, cancel from Manage subscription before your renewal. If you cancel, access continues through the paid period unless separately suspended, terminated or discontinued under the Terms. Stripe processes payment. See our <button class="linkish" data-legal="terms">Terms of Use</button> for refunds and other purchase details. Choosing a plan below is your authorization of the recurring charge. For adult study only; not for patient care.' +
@@ -9932,7 +9961,7 @@ function drawPaywall() {
   if (PRO.msg) c += '<div class="presult" role="alert">' + esc(PRO.msg) + '</div>';
   c += '<p class="muted small">DrugBug Free stays free forever: about 40 common medications, flashcards for those drugs, the daily 5-minute DrugBug, the Small Sickness Guide, Normal Vitals &amp; Labs, and a free preview of the Wormhole and the Disease Lab.</p>';
   if (typeof iapBox === "function") c += iapBox();
-  c += '<div class="pwrow"><button class="linkish" data-pw="restore">Restore purchases</button><button class="linkish" data-act="codesgo">Have a code? Redeem it in Settings</button>' + (NATIVE && PRO.store ? '<button class="linkish" data-pw="manage">Manage subscription</button>' : '') + '</div>';
+  c += '<div class="pwrow"><button class="linkish" data-pw="restore">Restore purchases</button>' + (NATIVE ? '<button class="linkish" data-pw="redeem">Redeem an App Store offer code</button>' : '<button class="linkish" data-act="codesgo">Have a code? Redeem it in Settings</button>') + '' + (NATIVE && PRO.store ? '<button class="linkish" data-pw="manage">Manage subscription</button>' : '') + '</div>';
   /* codes are redeemed in one place only, Settings > Account (owner, Nov 5 2026) */
   /* iPhone checkout disclosure, counsel wording (Nov 11 2026) */
   c += '<p class="muted small pwfine">Your Apple Account is charged when you confirm. This subscription renews automatically unless you cancel at least 24 hours before the current period ends. To manage or cancel it, open Settings, tap your name, then tap Subscriptions. Request App Store refunds through Apple, subject to applicable law. Plus and Pro are in one subscription group; when a change takes effect and what you are charged are shown on Apple\'s purchase screen. For adult study only; not for patient care.' +
@@ -12953,7 +12982,7 @@ function gamesView() {
   if (k === "frog") return gmFrog();
   var n = gmIds().length, best = (Prog.d.games || {}).blitzBest || 0;
   if (n < 6) return '<div class="empty">There are not enough drugs at this level for games yet. Try the BugDex or a higher level.</div>';
-  var L = [["memory", "Memory Match", "Flip cards to match each drug with its class.", "&#129504;"], ["match", "Quick Match", "Connect drugs to what they treat, or poisons to their antidotes.", "&#128279;"], ["cross", "Crossword", "A new med crossword every time, built from your scope.", "&#9638;"], ["scramble", "Word Scramble", "Unscramble the drug name from the clue.", "&#128292;"], ["blitz", "Class Blitz", "60 seconds. Name the class of as many drugs as you can." + (best ? " Your best: " + best + "." : ""), "&#9889;"], ["frog", "Frog Snack", "Bugs fly by carrying answers. Only the right one can be caught." + ((Prog.d.games || {}).frogBest ? " Your best: " + Prog.d.games.frogBest + "." : ""), "&#128056;"]];
+  var L = [["memory", "Memory Match", "Flip cards to match each drug with its class.", "&#129504;"], ["match", "Quick Match", "Connect drugs to what they treat, or poisons to their antidotes.", "&#128279;"], ["cross", "Crossword", "A new med crossword every time, built from your study path.", "&#9638;"], ["scramble", "Word Scramble", "Unscramble the drug name from the clue.", "&#128292;"], ["blitz", "Class Blitz", "60 seconds. Name the class of as many drugs as you can." + (best ? " Your best: " + best + "." : ""), "&#9889;"], ["frog", "Frog Snack", "Bugs fly by carrying answers. Only the right one can be caught." + ((Prog.d.games || {}).frogBest ? " Your best: " + Prog.d.games.frogBest + "." : ""), "&#128056;"]];
   return '<p class="gmline"><span class="gmstick" aria-hidden="true">&#10022;</span> ' + n + ' medications, ' + L.length + ' games. Every finished game earns sticks.</p><div class="gmgrid">' + L.map(function (g) {
     return '<button class="gmcard" data-gm="' + g[0] + '"><span class="gmico" aria-hidden="true">' + g[3] + '</span><strong>' + esc(g[1]) + '</strong><span class="muted small">' + esc(g[2]) + '</span><span class="earned">+' + GM_STICKS[g[0]] + (g[0] === "scramble" ? " per word" : g[0] === "blitz" || g[0] === "frog" ? " per 3" : "") + ' sticks</span></button>';
   }).join("") + '</div>';
@@ -13073,7 +13102,7 @@ function gmCrossNew() {
 }
 function gmCross() {
   if (!GM || GM.kind !== "cross") gmCrossNew();
-  var X = GM.X, c = gmHead("Crossword", "Tap a square or a clue, then type. " + X.words.length + " drugs from your scope.");
+  var X = GM.X, c = gmHead("Crossword", "Tap a square or a clue, then type. " + X.words.length + " drugs from your study path.");
   if (X.words.length < 3) return c + '<div class="empty">Not enough drug names at this level for a crossword. Try a higher level or the BugDex.</div>';
   c += '<div class="xwrap"><div class="xgrid" style="grid-template-columns:repeat(' + X.C + ',1fr)">';
   for (var r = 0; r < X.R; r++) for (var cc = 0; cc < X.C; cc++) {
@@ -13868,7 +13897,7 @@ function agpCard() {
   if (!AGP.data) {
     c += '<p class="muted small">Enter the code from your agency or training officer to see your own protocols here, with each drug linked to its DrugBug page.</p>';
     if (!agpPro()) return c + '<button class="btn" data-agp="pro">See DrugBug Pro</button></section>';
-    c += '<p><button class="btn" data-act="codesgo">Enter my agency code in Settings</button></p>'; if (false) c += '<form class="inl" data-agpform="1"><input class="pinput" id="agpcode" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="32" placeholder="10-digit agency code" inputmode="numeric" aria-label="Agency code"><button class="btn" type="submit"' + (AGP.busy ? " disabled" : "") + '>' + (AGP.busy ? "Checking…" : "Unlock") + '</button></form>';
+    if (!NATIVE) c += '<p><button class="btn" data-act="codesgo">Enter my agency code in Settings</button></p>'; if (NATIVE) c += '<form class="inl" data-agpform="1"><input class="pinput" id="agpcode" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="32" placeholder="10-digit agency code" inputmode="numeric" aria-label="Agency code"><button class="btn" type="submit"' + (AGP.busy ? " disabled" : "") + '>' + (AGP.busy ? "Checking…" : "Unlock") + '</button></form>';
     if (AGP.err) c += '<p class="presult" role="alert">' + esc(AGP.err) + '</p>';
     return c + '</section>';
   }
@@ -29673,7 +29702,7 @@ function iapView() {
   /* virtual-item terms next to the buy buttons (legal update, Nov 7 2026) */
   c += stickTerms();
   /* a gift code sits with the packs: it is the other way sticks arrive (owner, Nov 1 2026) */
-  c += '<div class="iapcode"><h3>Have a code?</h3><p><button class="btn small ghost" data-act="codesgo">Redeem it in Settings</button></p></div>';
+  c += NATIVE ? '<div class="iapcode"><h3>Have an App Store offer code?</h3><p><button class="btn small ghost" data-pw="redeem">Redeem offer code</button></p></div>' : '<div class="iapcode"><h3>Have a code?</h3><p><button class="btn small ghost" data-act="codesgo">Redeem it in Settings</button></p></div>';
   if (where) c += '<p class="actions"><button class="btn ghost small" data-iaprestore="1"' + (IAP.busy === "restore" ? ' disabled' : '') + '>' + (IAP.busy === "restore" ? 'Checking...' : 'Restore purchases') + '</button></p>';
   c += '<div class="iapwhy"><h3>What a stick is for</h3><p>Sticks buy bugs, hats, faces, colours, borders, voices and music. That is the whole list. No drug page, question, tool or protocol has ever been behind one, and none ever will be.</p>' +
     '<p class="muted small">How they are earned:</p><ul>' +
@@ -30047,6 +30076,8 @@ function giftProDays() { var g = giftPro(); return g ? Math.ceil((g.until - Date
 
 function giftRedeem(code) {
   GIFT.msg = ""; GIFT.ok = ""; GIFT.web = "";
+  /* App Store 3.1.1 (review Nov 11 2026): the iPhone app redeems no codes except Apple's own offer codes */
+  if (typeof NATIVE !== "undefined" && NATIVE) { GIFT.msg = "The iPhone app only takes App Store offer codes."; return giftDraw(); }
   if (agpNorm(code).length < 4) { GIFT.msg = "Enter the code you were given."; return giftDraw(); }
   /* every code except a school class key needs the person's full name (owner, Nov 7 2026) */
   if (!(typeof groupKeyShape === "function" && groupKeyShape(code))) {
@@ -30569,6 +30600,7 @@ function fnCall(name, data) {
 /* DB-TAMU-4X9-B7K, typed any old way */
 function groupKeyShape(raw) { return /^DB[A-Z0-9]{8,12}$/.test(String(raw || "").toUpperCase().replace(/[^A-Z0-9]/g, "")); }
 function groupRedeemKey(raw, win, fail) {
+  if (typeof NATIVE !== "undefined" && NATIVE) return fail("Class keys are not available in the iPhone app.");   /* App Store 3.1.1 */
   GIFT.busy = true; giftDraw();
   fnCall("groupRedeem", { token: raw }).then(function (r) {
     SEAT.tier = "pro"; SEAT.until = r.until; SEAT.orgName = r.orgName; SEAT.alias = r.alias; SEAT.level = r.level || ""; SEAT.loaded = true; SEAT.redeemedAt = Date.now();
@@ -31076,6 +31108,7 @@ function clComp(m) {
 }
 function classView() {
   var c = '<div class="pbar"><h2>My class</h2><button class="theme-btn" data-clact="close">Close</button></div>';
+  if (!seatActive() && NATIVE) return c + '<p class="muted">Class keys are not available in the iPhone app.</p>';   /* App Store 3.1.1, Nov 11 2026 */
   if (!seatActive()) {
     c += '<p class="muted">Got a class key from your instructor? Enter it here to join your class. You get DrugBug Pro while the class runs, a class scoreboard, and your own scores broken down every way.</p>';
     c += '<form class="pform" id="clform"><label>Class key<input class="pinput clkey" id="clkey" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="DB-XXXX-XXX-XXX" value="' + esc(CL.key) + '"></label><button class="btn" type="submit"' + (CL.busy ? " disabled" : "") + '>' + (CL.busy ? "Checking…" : "Join my class") + '</button></form>';
