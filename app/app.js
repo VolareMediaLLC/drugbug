@@ -98,13 +98,16 @@ function rxWord(w) { return new RegExp("(^|[^A-Za-z0-9-])(" + w.replace(/[.*+?^$
 function mixQ(q) {
   var o = q._orig || q, all = [o.q, o.a].concat(o.w || []).join(" ");
   if (MIXNO.test(all + " " + (o.x || ""))) return o;
-  var genOnly = qNamesMode(o) === "generic";
-  if (genOnly) return genQ(o);
+  var nmode = qNamesMode(o);
+  if (nmode === "generic") return genQ(o);
   var swaps = [];
   mixMap().forEach(function (m) {
     var hasG = rxWord(m.gen).test(all), hasA = rxWord(m.alt).test(all);
     if (hasG === hasA) return; /* neither, or both already shown */
     if (MIXFORM[m.id] && MIXFORMRX.test(all + " " + (o.x || ""))) return; /* brand is tied to one dosage form */
+    /* brand names first (owner, Nov 10 2026): every drug with a brand name is asked by its brand;
+       nothing is swapped back to generic, and non-brand alternates (adrenaline) are left alone */
+    if (nmode === "brand") { if (hasG && /^[A-Z]/.test(m.alt)) swaps.push({ from: m.gen, to: m.alt, gen: m.gen, alt: m.alt }); return; }
     if (Math.random() < 0.5) return;
     swaps.push(hasG ? { from: m.gen, to: m.alt, gen: m.gen, alt: m.alt } : { from: m.alt, to: m.gen.toLowerCase(), gen: m.gen, alt: m.alt });
   });
@@ -141,8 +144,10 @@ function genQ(o) {
 }
 /* question names: "generic" = generic names only; "all" = generic and brand names mixed. Unset = by role
    (nursing / NCLEX prep generic only, everything else mixed). Settings → Study, and the chips on every test setup. */
-function qNamesMode(o) { var s = SET().qnames; if (s === "generic" || s === "all") return s; return (o && isN(o.lv)) || isN(S.level) || S.view === "nlevels" ? "generic" : "all"; }
-function qNamesChips() { var m = qNamesMode(); return '<div class="lbl">Medication names in questions</div><div class="chips"><button class="chip" data-qnames="generic" aria-pressed="' + (m === "generic") + '">Generic names only</button><button class="chip" data-qnames="all" aria-pressed="' + (m === "all") + '">Generic and brand names</button></div>'; }
+/* Nov 10 2026 (owner): brand names are the default; "all" adds generic names back in, mixed. Nursing /
+   NCLEX prep keeps generic as its default because the NCLEX only uses generic names. */
+function qNamesMode(o) { var s = SET().qnames; if (s === "generic" || s === "all" || s === "brand") return s; return (o && isN(o.lv)) || isN(S.level) || S.view === "nlevels" ? "generic" : "brand"; }
+function qNamesChips() { var m = qNamesMode(); return '<div class="lbl">Medication names in questions</div><div class="chips"><button class="chip" data-qnames="brand" aria-pressed="' + (m === "brand") + '">Brand names</button><button class="chip" data-qnames="all" aria-pressed="' + (m === "all") + '">Include generic names</button><button class="chip" data-qnames="generic" aria-pressed="' + (m === "generic") + '">Generic names only</button></div>'; }
 function mixItem(q) { if (q.t) return { q: q, opts: shuffle(q.opts.slice()) }; var m = mixQ(q); return { q: m, opts: shuffle([m.a].concat(m.w)) }; }
 /* answer check for every item type: single best answer, multiple response (select all that apply), ordered response */
 function nrRight(x, ans) { var q = x.q; if (ans == null) return false; if (!q.t) return ans === q.a; if (!Array.isArray(ans) || ans.length !== q.ok.length) return false;
@@ -559,7 +564,7 @@ function viewHome() {
    (owner, Nov 4 2026). */
 var ROUTE_CHIPS = {
   gen: ["Search", "Browse", "A to Z"],
-  ev:  ["Medicine cabinet", "Vitamins", "Probiotics", "Peptides"],
+  ev:  ["OTC medicines", "Vitamins", "Probiotics", "Lab concepts"],
   ph:  ["EMT", "AEMT", "Paramedic", "Flight"],
   rn:  ["CNA", "LVN/LPN", "RN", "Units"],
   md:  ["MS1-MS2", "MS3-MS4", "Intern"],
@@ -589,10 +594,10 @@ var FPATH_ICO = {
 var ROUTE_MORE = {
   ph: ["Drugs matched to your scope, EMT to Flight and Community Paramedic", "Big Calls: stroke, STEMI, sepsis, trauma and ROSC", "NREMT-style questions, Megacode and scenarios"],
   rn: ["Hold parameters, labs to watch and patient teaching", "Specialty units: ICU, ER, L&D, NICU and more", "NCLEX-style questions and Nursing Bug drills"],
-  md: ["Mechanisms, pharmacokinetics and drug classes", "Step-style questions and advanced lab patterns", "Drug Alternatives and Body Systems for rounds"],
+  md: ["Mechanisms, pharmacokinetics and drug classes", "Step-style questions and advanced lab patterns", "Drug Class Comparisons and Body Systems for rounds"],
   im: ["Contrast agents and radiopharmaceuticals", "Reactions, premedication, eGFR and screening", "Registry-style questions"],
   ah: ["Mental health, dietitian and respiratory therapy", "PT/OT, speech, surgical and anesthesia techs", "Dental hygiene, phlebotomy and EKG, with a study guide for each"],
-  ev: ["The medicine cabinet: OTC, vitamins and probiotics", "Small sicknesses, normal vitals and lab values", "What street drugs and peptides really do"]
+  ev: ["General study of OTC medicines, vitamins and probiotics", "Introductory vital-sign and lab concepts", "Ask a licensed clinician or pharmacist about your own medicines"]
 };
 function homeAll() { return !!store("allPaths"); }
 function homeMine() {
@@ -788,7 +793,7 @@ function tabList() {
   if (S.view === "level" && isM(S.level)) L.push(["body", "Body Systems", "Pick a part of the body to see the drugs that act on it and the drugs that harm it."]);
   /* Anatomy sits in every bug's menu, not just Med School (owner, Nov 1 2026) */
   if (typeof anatView === "function" && anatAll().length) L.push(["anatomy", "Anatomy", "Tap the body: every organ and body part, what it is and what it does."]);
-  if (S.view === "level" && isM(S.level)) L.push(["alts", "Drug Alternatives", "Can't order a drug? See same-class options and other drugs for the same problem, and how they differ."]);
+  if (S.view === "level" && isM(S.level)) L.push(["alts", "Drug Class Comparisons", "Compare drugs in the same class and drug classes studied for the same problems, and how they differ. For learning only."]);
   if (S.view === "level" && S.level === "diet") {
     L.splice(1, 0, ["vitc", "Vitamin Compounds", "Vitamins and minerals: what each one does, food sources, deficiency and excess."], ["vegc", "Vegetable Compounds", "The active compounds in vegetables and what the research shows."], ["fruitc", "Fruit Compounds", "Fruit compounds, grapefruit interactions and more."]);
   }
@@ -1342,7 +1347,7 @@ function viewLevel() {
   if (S.tab === "calc") S.tab = "hub";  /* Calc Lab was removed */
   var body = S.tab === "hub" ? "" : S.tab === "guide" ? guideView() : S.tab === "dash" && typeof dashView === "function" ? dashView() : S.tab === "anatomy" && typeof anatView === "function" ? anatView() : S.tab === "calls" && typeof callsView === "function" ? callsView() : S.tab === "scene" && typeof sceneView === "function" ? sceneView() : S.tab === "systems" && typeof sysView === "function" ? sysView() : S.tab === "protocols" && typeof agpTabView === "function" ? agpTabView() : typeof fieldTab === "function" && isF(S.level) && FM_TABS[S.tab] ? fieldTab(S.tab) : (S.tab === "vegc" || S.tab === "fruitc" || S.tab === "vitc") && typeof compoundView === "function" ? compoundView(S.tab) : S.tab === "illicit" && typeof illicitView === "function" ? illicitView() : S.tab === "registry" ? (S.view === "level" && isF(S.level) && typeof fieldMedsView === "function" ? fieldMedsView() : registry()) : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? (S.tab = "hub", "") : S.tab === "micro" && typeof microView === "function" ? microView() : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "flt_ref" && typeof fltRefView === "function" ? fltRefView() : S.tab === "tools" ? toolsView() : S.tab === "medlist" ? (typeof medlistView === "function" ? medlistView() : "") : flashcards();
   var msg = S.sessMsg ? '<div class="presult" role="status">' + esc(S.sessMsg) + '</div>' : ''; S.sessMsg = "";
-  var notes = (S.tab === "calc" || S.tab === "tools" ? eduBanner() : '') + (["prep", "session", "nbug", "scenarios", "cards"].indexOf(S.tab) >= 0 ? esQNote() : '');
+  var notes = (S.tab === "calc" || S.tab === "tools" ? eduBanner() : '') + (["scenarios", "calls", "scene"].indexOf(S.tab) >= 0 && typeof simBanner === "function" ? simBanner() : '') + (["registry", "guide", "families", "alts", "protocols", "mylist", "labs", "conds"].indexOf(S.tab) >= 0 ? eduBanner(true) : '') + (["prep", "session", "nbug", "scenarios", "cards"].indexOf(S.tab) >= 0 ? esQNote() : '');
   if (S.tab === "hub") return topbar() + '<div class="' + ctxClass() + '">' + band() + protocolBanner() + (isF(S.level) ? "" : dailyCard()) + msg + (S.learn && S.learn.done && typeof learnDoneView === "function" ? learnDoneView() : "") + hubView() + '</div>';
   return topbar() + '<div class="' + ctxClass() + ' insection">' + sectionHead() + protocolBanner() + msg + notes + '<div id="tabbody">' + body + '</div></div>';
 }
@@ -1422,7 +1427,8 @@ function nrPool(filter, noGen) {
   var allowed = nrLevelsFor(ctxKey());
   if (filter && filter !== "all" && !isF(ctxKey())) allowed = allowed.indexOf(filter) >= 0 ? [filter] : []; /* tiers always study their whole cumulative bank */
   var inScope = null;
-  if (S.view === "level" && (isN(S.level) || isI(S.level) || isF(S.level) || isA(S.level) || S.level === "tccc")) { inScope = {}; scopeFor(S.level).ids.forEach(function (id) { inScope[id] = 1; }); }
+  /* Flight Paramedic: only drugs in flight scope (owner, Nov 10 2026) */
+  if (S.view === "level" && (isN(S.level) || isI(S.level) || isF(S.level) || isA(S.level) || S.level === "tccc" || S.level === "flight")) { inScope = {}; scopeFor(S.level).ids.forEach(function (id) { inScope[id] = 1; }); }
   var ck = ctxKey();
   function ok(q) { return allowed.indexOf(q.lv) >= 0 && starOK(q, ck) && !(q.home && ck !== "gen") && qVisible(q) && (!inScope || (q.d ? inScope[q.d] : !isF(ck))) && (!q.d || !drugLocked(q.d)); }
   if (S.nr && S.nr.kind === "reg") return (DB.RQ || []).filter(function (q) { return allowed.indexOf(q.lv) >= 0 && starOK(q, ck) && qVisible(q) && (!isF(ck) || q.fm) && (typeof callScaleOK !== "function" || callScaleOK(q)); });
@@ -3208,12 +3214,13 @@ function startSession(kind, opt) {
     qs = adaptivePick(upool, 10); title = "Practice: " + (uo ? uo.name : "Unit"); sub = "Questions on the medications this unit uses most.";
   } else if (kind === "sys" && typeof sysIds === "function") {
     var sy = sysObj(opt.sys), sids = sysIds(opt.sys), inSys = {}; sids.forEach(function (x) { inSys[x] = 1; });
-    var spool = pool.filter(function (q) { return q.d && inSys[q.d]; });
-    /* a group's own question bank: the level's questions on these drugs first, then every other
-       visible question on them, so a category is never short of practice (owner, Nov 5 2026) */
-    if (spool.length < 30) { var have = {}; spool.forEach(function (q) { have[q.id || q.q] = 1; }); DB.Q.forEach(function (q) { if (q.d && inSys[q.d] && !have[q.id || q.q] && (typeof qVisible !== "function" || qVisible(q))) spool.push(q); }); }
+    /* Learn by system stays inside your level (owner, Nov 10 2026): only this level's question bank
+       and difficulty stars, and only drugs in this level's scope. The old top-up that borrowed every
+       other level's questions on these drugs is gone. */
+    var inScS = {}; scopeIds().forEach(function (x) { inScS[x] = 1; });
+    var spool = pool.filter(function (q) { return q.d && inSys[q.d] && inScS[q.d]; });
     qs = adaptivePick(spool, /^[cg]:/.test(opt.sys) ? 15 : 10);
-    qs = pilMix(qs, pilFor(function (q) { return inSys[q.d]; }));
+    var lvS = nrLevelsFor(ctxKey()); qs = pilMix(qs, pilFor(function (q) { return inSys[q.d] && inScS[q.d] && (!q.lv || lvS.indexOf(q.lv) >= 0); }));
     title = "Practice: " + (sy ? sy.name : "System"); sub = "Questions on the medicines in this group, weighted toward the ones you know least.";
   } else if (kind === "marks") {
     var mk = marks(); qs = adaptivePick(pool.filter(function (q) { return mk.indexOf(q.d) >= 0; }), 15); title = "Study my list"; sub = "Questions on the drugs you saved.";
@@ -3889,7 +3896,13 @@ var QRATE_Q = {};
    A LIFE- code makes its owner a question reviewer: after each answer, instead of the players'
    1-5 rating, they get a reviewer panel: difficulty 1-5, Good / Bad question, and a suggestion.
    Saved to the server (qrRate) for the owner's Review page. */
-function isReviewer() { return !!(Prog.d && Prog.d.reviewer && Prog.d.reviewer.id); }
+/* Evaluator enrollment and grading are paused (counsel, Nov 11 2026: wage-and-classification review).
+   Evaluator codes keep any Pro access they gave, but the grading panel, pilot questions, the agreement,
+   the weekly minimum and its warnings are all off. The owner's admin code is unaffected. */
+var EV_PAUSED = true;
+var EV_PAUSE_MSG = "Evaluator enrollment and grading are paused. If you have questions about an existing evaluator account, contact VolareMediaLLC@gmail.com.";
+function isReviewer() { var r = Prog.d && Prog.d.reviewer; if (!(r && r.id)) return false; if (EV_PAUSED && !(typeof ADMIN_GIFT !== "undefined" && r.id === ADMIN_GIFT)) return false; return true; }
+function evPausedFor() { var r = Prog.d && Prog.d.reviewer; return EV_PAUSED && !!(r && r.id) && !(typeof ADMIN_GIFT !== "undefined" && r.id === ADMIN_GIFT); }
 var QREV_T = {};
 function revHTML(q) {
   var k = qid(q), R = (Prog.d.qrev || {})[k] || {};
@@ -5807,7 +5820,7 @@ var TOOLS = [["prep", "Questions"], ["mega", "Megacode"], ["cards", "Flashcards"
 /* each tool keeps the tier it had before Study Tools absorbed it, so the move changed nothing about what anyone pays for */
 var TOOL_TIER = { prep: "pro", mega: "pro", cards: "free", games: "pro", safety: "pro" };
 function toolTier(k) { return TOOL_TIER[k] || "pro"; }
-function toolsAllowed() { var k = ctxKey(); return { mega: !!DB.MEGA_LEVELS[k], peds: ["emt", "cna"].indexOf(k) < 0, medlist: false, safety: true, prep: S.view !== "gen", cards: true, games: true }; }
+function toolsAllowed() { var k = ctxKey(); return { mega: !!DB.MEGA_LEVELS[k], peds: ["emt", "cna"].indexOf(k) < 0, medlist: false, safety: false /* ISMP-derived drills withheld: no written permission (counsel, Nov 11 2026) */, prep: S.view !== "gen", cards: true, games: true }; }
 var TOOLDESC = { mega: "Run a timed code with a live monitor.", peds: "Weight-based pediatric doses at a glance.", medlist: "A study exercise: read a practice medication list and work out the likely conditions, the questions to ask and the risky combinations.", safety: "Look-alike names and high-alert drug drills.", prep: "Timed practice tests at your star level, with scores.", cards: "Flip, sort and master each drug.", games: "Memory match, crossword, quick match, word scramble, Class Blitz and Frog Snack." };
 function toolsView() {
   var al = toolsAllowed(), list = TOOLS.filter(function (t) { return al[t[0]] && t[0] !== "mega"; });   /* Megacode lives in Scenarios now (owner, Nov 5 2026) */
@@ -6784,15 +6797,17 @@ function savePs() {
 }
 
 /* ---------- Legal: terms, privacy, disclaimers, agreement gate, safety labels, moderation, data deletion ---------- */
-var LEGAL_V = "2026-11-07", COMPANY = "Volare Media LLC", CONTACT = DB.PROTOCOL_EMAIL;
-var NONAFF = "Not affiliated with or endorsed by NREMT, NCSBN, FSMB, NBME, ARRT, IBSC, BCEN or AHA.";
+var LEGAL_V = "2026-11-11", COMPANY = "Volare Media LLC", CONTACT = DB.PROTOCOL_EMAIL;
+var NONAFF = "DrugBug is not affiliated with or endorsed by any examination, certification or professional organization named in DrugBug.";
 var LG = { owner: false, blocked: [], mod: null };
 function eduBanner(short) {
-  if (short || typeof eduNote !== "function") return '<div class="edubar" role="note"><strong>Educational use only.</strong> ' + (short ? "Not for clinical decision-making." : "Not for clinical decision-making or patient care, and not a medical device. Follow your protocols, medical direction and facility policy.") + '</div>';
-  return eduNote("<strong>Educational use only.</strong> Not for clinical decision-making or patient care.", "Not a medical device. Your protocols, medical direction and facility policy come first.");
+  /* counsel-approved point-of-use wording (Nov 11 2026) */
+  if (short || typeof eduNote !== "function") return '<div class="edubar" role="note"><strong>For adult study only.</strong> Do not use DrugBug for patient care or clinical decisions. No medical advice.</div>';
+  return eduNote("<strong>For adult study only.</strong> Do not use DrugBug for patient care or clinical decisions.", "No medical advice. Follow your protocols, medical direction and facility policy for real care.");
 }
-function phiLine() { return "No patient information: use made-up names and details (HIPAA)."; }
-function phiWarn() { return '<p class="phiwarn" role="note"><strong>No patient information.</strong> Do not enter names, birth dates, record numbers or anything else that could identify a patient (HIPAA).</p>'; }
+/* free-text warning, counsel wording (Nov 11 2026) */
+function phiLine() { return "Do not submit patient information or anyone else's personal information. Use fictional examples or DrugBug question IDs."; }
+function phiWarn() { return '<p class="phiwarn" role="note">Do not submit patient information, personal information about anyone else, confidential records, or materials you are not authorized to share. Describe errors with fictional examples or DrugBug question identifiers. This channel is for product support. For medical advice, contact a clinician or pharmacist. For an emergency in the United States, call 911.</p>'; }
 function agreeRec() { var g = store("agree"); return g && g.v === LEGAL_V && g.age === "adult" ? g : null; }
 function isMinor() { return false; } /* DrugBug is 18+ only since 2026-10-07 */
 /* display-name moderation */
@@ -6806,18 +6821,26 @@ var NAMEMSG = "Please choose a different name. Display names must be respectful,
 
 /* agreement gate (first run) */
 function gateView() {
-  var g = S.gate || (S.gate = { age: "", ok: false });
-  var c = '<div class="gate"><div class="glogo">' + bugSVG("sage") + '</div><h1>Welcome to DrugBug</h1><p>DrugBug is a study tool for EMS, nursing, medical, imaging and allied health students and curious adults. It is for people 18 and older. Before you start, please confirm two things.</p>' +
-    '<p class="gnote">DrugBug collects anonymous usage statistics, such as days active, time spent, sections opened and questions answered, to improve the app. They are never tied to your name or email, never sold and never used for ads. You can turn them off any time in Settings.</p>';
+  /* counsel-revised assent flow (Nov 11 2026): neutral age choice, an unchecked Terms box with its own
+     links, and a separate optional statistics choice with equal Share / Do not share buttons */
+  var g = S.gate || (S.gate = { age: "", ok: false, stats: "" });
+  var c = '<div class="gate"><div class="glogo">' + bugSVG("sage") + '</div><h1>Welcome to DrugBug</h1><p>DrugBug is a medication study tool for adults 18 and older. Before you start, please answer the questions below.</p>' +
+    (agreeOld() ? '<p class="gnote"><strong>Our Terms of Use and Privacy Policy have changed.</strong> Please review and accept the new versions to keep using DrugBug.</p>' : '');
   c += '<fieldset class="gfs"><legend>How old are you?</legend>' + [["adult", "I am 18 or older"], ["minor", "I am under 18"]].map(function (o) { return '<label class="chk"><input type="radio" name="gage" data-gage="' + o[0] + '"' + (g.age === o[0] ? " checked" : "") + '> ' + o[1] + '</label>'; }).join("") + '</fieldset>';
   if (g.age === "minor") return c + '<div class="presult" role="alert">Sorry, DrugBug is for adults 18 and older only. Please close the app.</div></div>';
-  c += '<label class="chk gagree"><input type="checkbox" id="gok"' + (g.ok ? " checked" : "") + '> I have read and agree to the <button class="linkish" data-legal="terms">Terms of Use</button> and <button class="linkish" data-legal="privacy">Privacy Policy</button>, including anonymous usage statistics. I understand DrugBug is for education only and is not for patient care.</label>';
-  c += '<div class="actions"><button class="btn" data-act="gateok"' + (g.age && g.ok ? "" : " disabled") + '>Start learning</button></div>';
+  c += '<label class="chk gagree"><input type="checkbox" id="gok"' + (g.ok ? " checked" : "") + '> I agree to the <button class="linkish" data-legal="terms">Terms of Use</button> and understand that DrugBug is for study only and may not be used for patient care. The <button class="linkish" data-legal="privacy">Privacy Policy</button> explains how DrugBug handles my information.</label>';
+  c += '<fieldset class="gfs gstats"><legend>Optional usage statistics</legend><p class="small">Help improve DrugBug by sharing optional usage statistics, such as time spent, sections opened and questions answered. DrugBug uses a randomly generated device identifier for these statistics. You can change your choice in Settings.</p>' +
+    '<div class="gstatbtns">' + [["yes", "Share"], ["no", "Do not share"]].map(function (o) { return '<label class="chk"><input type="radio" name="gstats" data-gstats="' + o[0] + '"' + (g.stats === o[0] ? " checked" : "") + '> ' + o[1] + '</label>'; }).join("") + '</div></fieldset>';
+  c += '<div class="actions"><button class="btn" data-act="gateok"' + (g.age && g.ok && g.stats ? "" : " disabled") + '>Start learning</button></div>';
   return c + '<p class="muted small">' + esc(NONAFF) + '</p></div>';
 }
+document.addEventListener("change", function (e) { if (e.target && e.target.id === "pwrauth") { PRO.rauth = e.target.checked; document.querySelectorAll('[data-pw="wbuy"]').forEach(function (b) { b.disabled = !PRO.rauth || PRO.busy; }); } });
+function agreeOld() { var g = store("agree"); return !!(g && g.v && g.v !== LEGAL_V); }
 function acceptGate() {
-  var g = S.gate; if (!g || !g.ok || g.age !== "adult") return;
+  var g = S.gate; if (!g || !g.ok || g.age !== "adult" || !g.stats) return;
   var rec = { v: LEGAL_V, ts: Date.now(), age: g.age }; store("agree", rec);
+  statsSet(g.stats === "yes", "gate");
+  try { assentLog(rec); } catch (e) {}
   Prog.d.agree = rec; if (typeof trialBegin === "function") trialBegin(); saveProg(); if (typeof wdwSync === "function") setTimeout(wdwSync, 800); if (typeof wdwAuto === "function") setTimeout(wdwAuto, 900); if (typeof holOpenFx === "function") setTimeout(holOpenFx, 400); S.gate = null; if (typeof muGesture === "function") muGesture(); render(); window.scrollTo(0, 0);
 }
 function syncAgree() { if (!agreeRec() && Prog.d.agree && Prog.d.agree.v === LEGAL_V) { store("agree", Prog.d.agree); render(); } }
@@ -6827,7 +6850,7 @@ function syncAgree() { if (!agreeRec() && Prog.d.agree && Prog.d.agree.v === LEG
 var DISC_SECS = 5, DISC_AWAY = 15000;
 /* The education-only notice is acknowledged once and then stays acknowledged (owner, Oct 31 2026).
    It is tied to LEGAL_V, so a change to the legal documents shows it once more. */
-var DISC_REV = 2;   /* bump to show the notice once more after its wording changes (2: the AI/FDA update line, Nov 5 2026) */
+var DISC_REV = 3;   /* bump to show the notice once more after its wording changes (2: the AI/FDA update line, Nov 5 2026) */
 function discRec() { var d = store("discok"); return d && d.v === LEGAL_V && d.av === APP_VERSION && (d.dr || 0) >= DISC_REV ? d : null; }   /* shown again after a legal change or an app update, never otherwise (owner, Nov 4 2026) */
 function needDisc() { return !S.discOk && !discRec() && !window.__DRUGBUG_SKIP_DISC && S.view !== "legal"; }
 function discView() {
@@ -6835,12 +6858,10 @@ function discView() {
   var left = Math.max(0, DISC_SECS - Math.floor((Date.now() - S.discT0) / 1000));
   if (left > 0 && !S.discTimer) S.discTimer = setInterval(discTick, 250);
   return '<div class="gate disc" role="alertdialog" aria-labelledby="disch" aria-describedby="discb"><div class="glogo">' + bugSVG("sage") + '</div><h1 id="disch">Education only</h1>' +
-    '<div id="discb" class="disctext"><p><strong>DrugBug is for education only. It is not to be used in patient care.</strong></p>' +
-    '<p>Nothing in this app is medical advice, a treatment recommendation or a medical device. Doses, practice scenarios and every other tool are study material only. DrugBug never tells anyone to take, give or use any drug.</p>' +
-    /* owner, Nov 5 2026 */
-    '<p><strong>AI is used to pull new updates from the FDA each week, including updated drug dosages.</strong> AI can make mistakes, and changes can reach DrugBug after the FDA publishes them, so this app should not be used for patient care.</p>' +
-    '<p>For real patients, always follow your protocols, medical direction, facility policy, the current FDA label and a licensed clinician. If you have a health question about yourself, ask your doctor or pharmacist. In an emergency, call 911.</p>' +
-    '<p><strong>DrugBug is for adults 18 and older only.</strong></p></div>' +
+    /* counsel wording (Nov 11 2026) */
+    '<div id="discb" class="disctext"><p><strong>DrugBug is for adults 18 and older to study medications and practice with fictional scenarios.</strong> Do not use it to assess, diagnose or treat a real person, select or give a medication or dose, or make any other patient-care decision.</p>' +
+    '<p>DrugBug does not give medical advice or create a clinician-patient relationship. We use AI to help prepare some study content and identify changes in FDA labeling. Content can contain errors or lag behind the current label.</p>' +
+    '<p>For a personal health question, contact a licensed clinician or pharmacist. For an emergency in the United States, call 911.</p></div>' +
     '<div class="actions"><button class="btn" id="discok" data-act="discok"' + (left > 0 ? ' disabled aria-disabled="true"' : '') + '>' + (left > 0 ? 'Please read (' + left + ')' : 'I understand') + '</button></div>' +
     '<p class="muted small">' + esc(NONAFF) + '</p></div>';
 }
@@ -6868,14 +6889,14 @@ document.addEventListener("visibilitychange", function () {
 });
 
 /* simulation framing for practice simulations (Megacode). Dose Cards, My vials and Pediatric dosing practice were removed Oct 27, 2026 */
-var SIM_V = 1;
+var SIM_V = 2;
 function simOk() { var a = store("simAck"); return !!(a && a.v === SIM_V); }
-function simBanner() { return '<div class="simbar" role="note"><span class="simtag">SIMULATION</span> Fictional practice patients only. <strong>Not for real human patients.</strong> Content can contain errors: check it against current guidelines, the FDA label and your protocol.</div>'; }
+/* counsel wording (Nov 11 2026): first-use checkbox plus a persistent banner on every scenario screen */
+function simBanner() { return '<div class="simbar" role="note"><span class="simtag">SIMULATION</span> <strong>Fictional study case. Do not use for patient care.</strong></div>'; }
 function simGate(what) {
-  return '<section class="simgate" role="alertdialog" aria-labelledby="simh"><span class="simtag">SIMULATION</span><h2 id="simh">' + esc(what || "Dose simulation") + ' is practice only</h2>' +
-    '<p>This runs fixed practice cases with <strong>fictional patients</strong> so you can learn the steps and the medications. You pick answers; it does not take patient values or calculate doses. It is not a clinical calculator, not a medication administration reference and not a dosing authority.</p>' +
-    '<p><strong>Never use it for a real person.</strong> Do not enter real patient information. Software and content can contain errors; check everything against current guidelines, the FDA label, your protocols and medical direction.</p>' +
-    '<label class="chk"><input type="checkbox" id="simchk"> I understand this is a simulation for fictional patients only and is not for use with real patients.</label>' +
+  return '<section class="simgate" role="alertdialog" aria-labelledby="simh"><span class="simtag">SIMULATION</span><h2 id="simh">' + esc(what || "Simulation") + ' is practice only</h2>' +
+    '<p>These fixed scenarios use fictional patients for practice. Do not enter real patient information or use this feature to assess a real person, calculate a real dose or make a treatment or transport decision.</p>' +
+    '<label class="chk"><input type="checkbox" id="simchk"> I understand this simulation is for fictional study cases only and may not be used in patient care.</label>' +
     '<div class="actions"><button class="btn" data-act="simok" disabled>Continue to the simulation</button></div></section>';
 }
 document.addEventListener("change", function (e) { if (e.target.id === "simchk") { var b = $('[data-act="simok"]'); if (b) b.disabled = !e.target.checked; } });
@@ -6883,62 +6904,54 @@ document.addEventListener("click", function (e) { var t = e.target.closest && e.
 
 /* footer */
 function footer() {
-  return '<footer class="foot"><nav><button class="linkish" data-legal="terms">Terms of Use</button><button class="linkish" data-legal="privacy">Privacy Policy</button><button class="linkish" data-legal="disclaimers">Disclaimers &amp; Attributions</button><button class="linkish" data-legal="data">Your data</button></nav><p>Educational use only. Scope of practice, doses and drug availability vary by state, agency, facility and medical direction. Not for clinical decision-making or patient care. Not a medical device.</p><p>' + esc(NONAFF) + '</p><p>© ' + new Date().getFullYear() + ' ' + COMPANY + ' · <a href="mailto:' + CONTACT + '">' + CONTACT + '</a></p></footer>';
+  return '<footer class="foot"><nav><button class="linkish" data-legal="terms">Terms of Use</button><button class="linkish" data-legal="privacy">Privacy Policy</button><button class="linkish" data-legal="disclaimers">Disclaimers &amp; Attributions</button><button class="linkish" data-legal="data">Your data</button></nav><p>For adult study only. Do not use DrugBug for patient care or clinical decisions. No medical advice.</p><p>' + esc(NONAFF) + '</p><p>© ' + new Date().getFullYear() + ' ' + COMPANY + ' · <a href="mailto:' + CONTACT + '">' + CONTACT + '</a></p></footer>';
 }
 
 /* legal pages */
 function L(h, ps) { return '<h2>' + h + '</h2>' + ps.filter(function (p) { return p != null; }).map(function (p) { return Array.isArray(p) ? '<ul>' + p.filter(function (x) { return x != null; }).map(function (x) { return '<li>' + x + '</li>'; }).join("") + '</ul>' : '<p>' + p + '</p>'; }).join(""); }
 var LEGAL_PAGES = {
-  /* Generated from work/legal/src.py (Nov 7 2026), the same source as the website pages and the
+  /* Generated from work/legal2/src.py (counsel-revised, Nov 11 2026), the same source as the website pages and the
      Word files sent for legal review. Edit the source, not these strings. */
   terms: ["Terms of Use", function () {
-    return L("1. Who we are", ["DrugBug is provided by Volare Media LLC (\"we\", \"us\"). Contact: <a href=\"mailto:VolareMediaLLC@gmail.com\">VolareMediaLLC@gmail.com</a>. By using DrugBug you agree to these Terms. If you do not agree, do not use DrugBug."]) +
-      L("2. Educational use only", ["DrugBug is an educational study tool for students and clinicians in training. It is <strong>not</strong> medical advice, is <strong>not</strong> a medical device, and is <strong>not</strong> intended for diagnosing, treating, or making decisions about any real patient.", "Study guides, the drug interaction information on drug pages, megacode cases, On Scene calls, Big Calls and every other tool are practice exercises. DrugBug is not a drug interaction checker and does not review anyone's medication list. Do not rely on any of it for patient care. Always follow your agency protocols, medical direction, facility policy, current drug references, and the judgment of a licensed clinician.", "Drug information changes. Content may be incomplete, out of date or contain errors, even after clinical review. Some content is drafted with the help of AI and is labeled with its review status. AI is also used to gather updates from FDA labeling each week; those updates can contain mistakes and can reach DrugBug after the FDA publishes a change.", "Content for specific roles, including allied health fields and Community Paramedic, is general medication education. It is not tactical, military, hazardous-materials or certification training, and it does not replace your agency's training, protocols or medical direction."]) +
-      L("3. Clinical use prohibited", ["DrugBug is designed only for education, exam preparation and simulated clinical scenarios.", "DrugBug must not be used as a clinical decision-support system, a medication administration reference, a drug dosing authority, or a substitute for independently verified clinical information. Do not use DrugBug for actual patient assessment, diagnosis, treatment, medication administration or any other clinical decision.", "Megacode, clinical scenarios and every other practice or calculation feature are <strong>simulations for fictional practice patients</strong>. They are not for real human patients. Do not enter real patient information into them. Software and content can contain errors; independently verify every number against the current FDA label, your protocols and medical direction.", "You acknowledge that relying on DrugBug during actual patient care may result in medication errors, injury or death. Volare Media LLC does not authorize or endorse any use of DrugBug in patient care."]) +
-      L("4. Who may use DrugBug", ["DrugBug is for adults only. You must be at least 18 years old to use it. DrugBug is not directed to anyone under 18, and we do not knowingly collect information from minors. Schools and agencies may give class keys only to students who are 18 or older."]) +
-      L("5. Your account and conduct", ["You agree not to: enter patient information or any protected health information; post offensive, harassing or misleading display names, nicknames or content; copy or resell DrugBug content; copy, share or publish pilot questions; sell, trade or publicly post codes; attempt to access other people's data; or interfere with the app.", "We may remove or hide display names, nicknames, scoreboard and competition entries, and anything else you submit to DrugBug that breaks these Terms. If you have a DrugBug account, we may suspend or close it, and turn off codes linked to it, for serious or repeated violations. Subscriptions bought through Apple are managed by Apple under its own terms."]) +
-      L("6. Classes, scoreboards and competitions", ["A school or agency instructor can create a class in DrugBug and hand out anonymous class keys. If you join a class with a key:", ["your instructor sees your results under the key's label (for example \"Student 07\"), not under your name: how many questions you answered and got right, by medication, drug class, body system, question style and study mode, and which questions you missed;", "your classmates see a class scoreboard with your alias, or a nickname you choose that your instructor approves, and your scores; and", "your class may run challenges with prizes, which are virtual items (section 8)."], "Class results are study aids. They are not designed to be a formal assessment or a grading tool, and how an instructor uses them is up to the instructor and their school or agency.", "The public leaderboard and competitions between schools are currently turned off. If they are turned on, other participants see only display names, school or team names and scores. You can leave a class, a competition or the leaderboard at any time."]) +
-      L("7. Instructors, schools and agencies", ["If you use DrugBug as an instructor or for a school or agency, you confirm you are authorized to do so for that organization, and you agree to: give class keys only to students 18 or older; keep your key sheet (the only record that links keys to students) secure and handle it under your organization's own student-records rules; and approve only respectful nicknames.", "Classes are currently offered free as a pilot, as is. A paid school or agency license may be covered by a separate written agreement, which controls if it conflicts with these Terms. We may end a class or a pilot, with notice to the instructor where practical."]) +
-      L("8. Codes, sticks and virtual items", ["Codes (gift, Pro, evaluator, sticks, bug, class, license and protocol codes) are issued by us. A code is for one person unless we say it is shared, and codes may not be sold or traded. Redeeming most codes requires your full name, as described in the Privacy Policy. Codes can expire, and we may turn off a code that was misused, issued by mistake, or whose organization's license ended.", "Sticks, bugs, outfits and other wardrobe items, faces, peeking pals and class prizes are virtual items. You receive a limited, personal, non-transferable and revocable license to use them inside DrugBug. They have no cash value, cannot be exchanged for money or anything outside DrugBug, and are not your property. We may change how virtual items are earned, priced or work.", "Purchased stick packs are delivered right away and are final, except where the law or the store's refund policy (Apple's, or ours for website purchases) requires a refund. If a feature that uses virtual items ends, or DrugBug closes, the items may end with it; where the law requires notice, we will give it."]) +
-      L("9. Evaluator program", ["Evaluators are volunteers we invite, or approve after they sign up, to review DrugBug's questions. Before grading, each evaluator signs the evaluator agreement in the app (and on the sign-up form, if they sign up there).", "<strong>Volunteer, unpaid.</strong> Evaluating is unpaid volunteer work. Evaluators are not employees, contractors or agents of Volare Media LLC, are not paid for evaluating, and will not be paid or otherwise compensated for it in the future. While an evaluator holds evaluator status, their account has DrugBug Pro as a thank-you; it is not payment and has no cash value.", "<strong>Weekly minimum.</strong> Evaluators agree to grade at least 40 questions each week (Monday to Sunday, Texas time). A week with fewer than 40 graded questions brings a warning; a second such week in a row ends evaluator status, and the account returns to DrugBug Free. We may restore evaluator status at our discretion.", "Evaluators see <strong>pilot questions</strong>: new questions, marked in yellow, that have not been reviewed yet. They may contain errors. They are confidential: do not copy, screenshot, share or publish them.", "Ratings, votes and comments help us decide which questions to publish, but the decision and the content remain ours. We credit an evaluator by name only with their permission. We may end the evaluator program, or an evaluator's status, at any time."]) +
-      L("10. Protocols", ["Agency, facility and school protocols belong to their owners. DrugBug adds an agency's protocols only with written permission, and shows them only as study material. By sending protocols you confirm you are authorized to share them or will help us get that permission."]) +
-      L("11. Trademarks", ["NREMT, NCLEX, NCSBN, USMLE, FSMB, NBME, ARRT, IBSC, FP-C, BCEN, CFRN, AHA, ACLS, PALS, ISMP, NBRC, CDR, NBSTSA, CST, JCNDE, NBDHE, ADA and NAEMT are trademarks of their owners. DrugBug uses these names only to describe the subjects it covers and is not affiliated with or endorsed by any of these organizations. Practice questions are original and are not official exam items."]) +
-      L("12. Our content and your feedback", ["DrugBug's text, questions, artwork and software are owned by Volare Media LLC or its licensors. You may use them for your own personal study.", "If you send us suggestions, error reports, question ratings, evaluator votes or comments, or other feedback, you give us a perpetual, irrevocable, worldwide, royalty-free license to use, change and publish it for any purpose, without payment or credit to you. Do not include patient information in feedback."]) +
-      L("13. Reporting errors", ["If you see an error, use \"Report an error\". Reports help us fix content but do not create any duty for us to respond within a set time."]) +
-      L("14. No warranty", ["DrugBug is provided \"as is\" and \"as available\", without warranties of any kind, express or implied, including accuracy, completeness, fitness for a particular purpose, and non-infringement."]) +
-      L("15. Limitation of liability", ["To the fullest extent allowed by law, Volare Media LLC and its members, employees, reviewers, evaluators and contributors are not liable for any indirect, incidental, special, consequential, exemplary or punitive damages, or for any loss or harm arising from or related to: use of DrugBug in patient care or any other unauthorized clinical use; inaccurate, incomplete or outdated medication or clinical information, including pilot questions and AI-gathered updates; calculation errors in any simulation or calculator; software errors; service interruptions, outages or data loss, including loss of progress or virtual items; or our negligence, to the extent the law allows negligence to be limited.", "To the fullest extent allowed by law, our total liability for all claims relating to DrugBug is limited to the amount you paid us for DrugBug in the 12 months before the claim, or US $50 if you paid nothing.", "Some laws do not allow certain limits or exclusions, for example for gross negligence, intentional misconduct or certain consumer rights. In those cases these limits apply only as far as the law allows."]) +
-      L("16. Indemnity", ["You agree to defend and hold harmless Volare Media LLC from claims arising from your misuse of DrugBug, including use of DrugBug for patient care, sharing pilot questions, misuse of class results or key sheets, or breaking these Terms."]) +
-      L("17. Subscriptions and billing", ["DrugBug Free is free. Some features require a paid subscription: DrugBug Plus or DrugBug Pro, billed monthly or yearly. The price and billing period are shown before you buy. A brand-new DrugBug account gets 3 days of DrugBug Pro free, once per account. It ends on its own after 3 days, no payment details are needed, and nothing renews or is charged. DrugBug does not otherwise offer free trials. Stick packs are one-time purchases of virtual items (section 8).", "Subscriptions bought in the iPhone app are billed and managed through your Apple Account and are subject to Apple's payment and subscription terms. Unless cancelled at least 24 hours before the end of the current period, subscriptions renew automatically at the end of each billing period, and your Apple Account is charged within 24 hours before the period ends. You can manage or cancel in iPhone Settings, your name, Subscriptions.", "Cancelling stops future renewals but does not normally refund the current billing period. Refund requests for App Store purchases are handled by Apple under its policies and applicable law.", (NATIVE ? null : "On the website, subscriptions and stick packs are paid through Stripe; DrugBug never sees your card. Website subscriptions renew automatically at the end of each billing period until cancelled. You can cancel at any time from Manage subscription, and the cancellation takes effect at the end of the current period. Website purchases are not refunded except where the law requires it or we choose to."), "We may change subscription prices. A new price applies only from your next renewal after notice (for the App Store, as Apple's rules require). Plus and Pro are in one subscription group, so changing plans replaces your current plan.", "School and agency codes give Pro for the period your organization paid for and can be ended by your organization or by us.", "Apple's Standard Licensed Application End User License Agreement also applies to the iPhone app, alongside these Terms."]) +
-      L("18. Accounts, deletion and your data", ["Accounts are optional. If you create one, keep your sign-in details secure and tell us if you think someone else used your account. You can delete everything DrugBug stores about you at any time from <button class=\"linkish\" data-legal=\"data\">Your data</button> or by emailing <a href=\"mailto:VolareMediaLLC@gmail.com\">VolareMediaLLC@gmail.com</a>. Deletion removes or de-identifies your personal information, subject to legal obligations and legitimate retention needs described in the Privacy Policy. Deleting your data does not cancel a subscription; cancel that in your Apple Account or from Manage subscription.", "DrugBug collects anonymous usage statistics to improve the app, as described in the Privacy Policy. You can turn them off in Settings.", "How we collect, use, store and share information is described in the separate <button class=\"linkish\" data-legal=\"privacy\">Privacy Policy</button>."]) +
-      L("19. Governing law and venue", ["These Terms are governed by the laws of the State of Texas, without regard to conflict-of-law principles. Except where applicable law requires otherwise, disputes arising from these Terms or the use of DrugBug shall be brought in the state or federal courts having jurisdiction in Brazos County, Texas."]) +
-      L("20. Changes and effective date", ["These Terms are effective 2026-11-07. We may update them. When we make a material change, we will ask you to agree again in the app, and we keep a record of the version you accepted and when."]);
+    return L("1. Who we are and how you agree", ["Volare Media LLC (\"Volare,\" \"we,\" or \"us\") operates DrugBug, a medication study service available through drugbugapp.com and the DrugBug app (together, \"DrugBug\"). These Terms apply to DrugBug, including optional accounts, paid features and class participation. By selecting the agreement checkbox and continuing, or otherwise affirmatively accepting these Terms where presented, you agree to be bound. If you do not agree, do not use DrugBug. Contact us at <a href=\"mailto:VolareMediaLLC@gmail.com\">VolareMediaLLC@gmail.com</a>."]) +
+      L("2. Educational use only", ["DrugBug is intended solely for education, exam preparation and fictional practice. DrugBug does not provide medical advice, individualized recommendations or healthcare services. Using DrugBug or contacting Volare does not establish a healthcare provider-patient relationship. DrugBug is not intended to function as a medical device, clinical decision-support tool or point-of-care reference.", "Drug pages may describe interactions reported in labeling as study material. DrugBug does not check a person's medications for interactions or evaluate a patient's medication list. My List is a study list. Do not use it to manage a person's medications. Drug Families, Drug Class Comparisons, general health topics, laboratory values and role-based study guides are for learning. They do not identify a suitable drug, dose, substitution, reference range, treatment or scope of practice for any individual.", "Study materials can be wrong, incomplete or outdated even if previously reviewed. Some content is prepared with AI assistance. We regularly use AI to help gather changes to FDA labeling. Automated summaries and updates may contain errors, omit changes or lag the current label. A review status describes an educational review at a particular time. DrugBug does not provide professional certification or determine what your credential, employer or jurisdiction permits you to do."]) +
+      L("3. Clinical use prohibited", ["You must not use DrugBug for actual patient assessment, diagnosis, triage, destination decisions, prescribing, dosing, medication administration, treatment, monitoring or any other clinical decision. Do not enter real patient information. Megacode, On Scene, Big Calls and other practice scenarios use fictional patients. Study calculations, examples and answer choices are for practice only.", "Reliance on DrugBug during real patient care can cause serious injury or death. For real care, use current, independently verified clinical sources and follow applicable protocols, medical direction and facility policy. Ask a licensed clinician or pharmacist about your own care or medicines. In a U.S. emergency, call 911."]) +
+      L("4. Eligibility", ["You must be at least 18 to use DrugBug or join a DrugBug class. If you act for an organization, you represent that you have authority to do so. You may bind the organization only if it has authorized you to enter the applicable agreement."]) +
+      L("5. Accounts and conduct", ["Accounts are optional for general study. Some features require an account or a valid access code or class key. Provide accurate information where required, protect your sign-in credentials and keys, and promptly notify us if you suspect unauthorized access.", "You must comply with applicable law and may not submit real patient data, someone else's personal information without authorization, classified or sensitive operational information, or material you lack permission to share. Do not submit unlawful, misleading, abusive or identifying display names or other content. Do not sell or publicly post codes, disclose confidential pilot questions, impersonate others, circumvent access controls, access others' records without authorization, or disrupt DrugBug.", "We may remove prohibited material or suspend or terminate access for material or repeated violations, fraud, security risks or legal requirements. Where practicable, we will notify you and provide a way to contact us about the action. We may act immediately to protect users, class data or DrugBug. Section 8 governs unused purchased Sticks. Section 17 governs subscription renewals and refunds when access is suspended, terminated or discontinued. Suspension or termination does not waive accrued obligations or rights."]) +
+      L("6. Classes and scoreboards", ["A school or agency may issue class keys to adults. A class key uses an alias such as \"Student 07\" and does not ask for a student name. If you join, authorized instructors can see the key's performance, including activity, counts and accuracy by study category, missed question identifiers and the answer selected. Class keys and aliases may be linkable to students, including through a school's own records.", "Where enabled, classmates may see class scores and aliases or instructor-approved nicknames. Where an agency program enables a protocol competition, participating members may see team names, team rankings and individual rankings shown under an alias or approved nickname. Use a nickname that does not identify you or anyone else. The public leaderboard and competitions between schools are currently disabled. A class may offer virtual prizes under Section 8. Class results are intended for study feedback and should not be used as a substitute for formal assessment, credentialing or employment decisions. You may leave a class. Leaving stops future participation but does not necessarily erase records maintained under school rules or a school agreement. See the Privacy Policy."]) +
+      L("7. Instructors, schools and agencies", ["Instructors must distribute keys only to adults, keep any key-to-student mapping outside DrugBug and secure, restrict access to authorized staff, and avoid identifying nicknames and unauthorized disclosures. Before an institution uses DrugBug to process identifiable or reasonably linkable education records on its behalf, an authorized institutional representative must arrange a written student data agreement with us. The institution must establish its authority to disclose and use records and must not enable student-level peer visibility without a lawful basis and required safeguards.", "Classes are currently a free pilot. We may change or end a pilot or class and will notify the instructor when practicable. A signed school or agency agreement controls over inconsistent provisions of these Terms for the institution's covered use. The applicable agreement governs handling of records on the institution's behalf."]) +
+      L("8. Codes, Sticks and other virtual items", ["Codes can grant access or virtual items. Unless specifically designated for sharing or initial gift delivery, a code is for its intended recipient. You may not resell, trade or publicly post codes. Some codes require your full name at redemption, and the redemption screen will say so. Class keys never do. We disclose applicable conditions before purchase or redemption, as appropriate. We may disable a code for fraud, misuse or error, or when the institutional license it depends on ends, subject to applicable law and any paid rights.", "\"Sticks\" are credits for designated features inside DrugBug. Sticks, bugs, outfits, faces, peeking pals and virtual class prizes are virtual items. Except as provided in Section 17 or required by law, they have no cash redemption value and may not be transferred, resold or used outside DrugBug. Your purchase gives you a limited right to use the items inside DrugBug under these Terms. It does not transfer ownership of DrugBug content. Promotional or earned items may carry conditions disclosed when offered. Purchased Sticks do not expire by lapse of time. We do not impose an inactivity fee on purchased Sticks. We track purchased Sticks separately from earned and promotional Sticks. When you spend Sticks, we use earned and promotional Sticks first.", "We may change future pack prices, earning rules and virtual item offerings. Changes to pack prices do not reduce the number of Sticks already purchased. We may correct a balance for refunds, unauthorized purchases, fraud or errors. We will address unused purchased Sticks separately from promotional or earned items if we suspend or terminate access. If we discontinue a feature needed to use purchased Sticks or discontinue DrugBug, we will, where practicable, give advance notice and a reasonable opportunity to spend unused purchased Sticks. We will handle unused purchased Sticks in accordance with applicable law and platform rules, including Apple's non-expiration requirement for currency purchased through in-app purchase. Nothing in these Terms limits a refund or other remedy available under law or Section 17.", "Except as required by law or provided in Section 17, purchases are not refundable because you change your mind. If a purchase fails to arrive, is charged incorrectly or is otherwise disputed, contact us for website purchases or request assistance from Apple for App Store purchases. See Section 17."]) +
+      L("9. Evaluators and pilot questions", ["Evaluator enrollment and assigned grading are paused. Any resumed participation requires a separate written arrangement approved by Volare. That arrangement and applicable law govern participation, any compensation and evaluator access. Ending evaluator access does not cancel or reduce a separately purchased subscription or any other independent entitlement.", "Pilot questions made available to evaluators are confidential. Use them only as authorized and do not copy, screenshot, distribute or publish them without our written permission. This restriction does not prevent a legally protected disclosure. Ratings and suggestions inform editorial decisions. Volare decides whether to publish a question. We identify an evaluator publicly only with permission."]) +
+      L("10. Protocol materials", ["Agency, facility and school protocols remain the property of their respective rights holders. We may publish protocol materials for study only after obtaining written permission from the appropriate rights holder and required medical direction approval. If you are seeking permission, submit only the request and contact details. Do not upload or send the underlying protocols unless you have authority to share them through a channel we have approved. DrugBug is not an official source for current protocols."]) +
+      L("11. Trademarks and exam materials", ["Names and marks of examining bodies, professional organizations and third-party sources belong to their respective owners. We use these names to identify study subjects and references. DrugBug has no affiliation, sponsorship or endorsement by those organizations. DrugBug's practice questions are study materials and do not purport to be official exam items. See the Disclaimers and Attributions."]) +
+      L("12. License and feedback", ["Volare and its licensors retain rights in DrugBug's software, artwork, questions and text. Subject to these Terms, we grant you a limited, nonexclusive, nontransferable right to access DrugBug for personal study or for authorized instruction using its built-in class functions. Section 21 governs the license to the iPhone app. You may not copy, distribute, sell, scrape or commercially exploit DrugBug or its materials without permission, except to the extent applicable law permits.", "You retain any rights you have in feedback. When you send suggestions, error reports, question ratings, votes, comments or other feedback, you grant Volare a nonexclusive, worldwide, perpetual, irrevocable, royalty-free license to use and adapt that feedback to operate and improve DrugBug, including publishing a correction or suggestion without identifying you. This license does not override the Privacy Policy or authorize use of student records or third-party materials beyond applicable permissions. An applicable written evaluator or institution agreement controls the materials it covers to the extent provided in Section 20."]) +
+      L("13. Reporting errors", ["Use the \"Report an error\" feature or email <a href=\"mailto:VolareMediaLLC@gmail.com\">VolareMediaLLC@gmail.com</a> to report a suspected content problem. Do not include patient information or confidential material. Reporting is not an emergency or clinical support channel. We do not promise to investigate or respond within a particular time, except as required by law or an applicable agreement."]) +
+      L("14. Disclaimers of warranties", ["TO THE FULLEST EXTENT PERMITTED BY APPLICABLE LAW, DRUGBUG IS PROVIDED \"AS IS\" AND \"AS AVAILABLE.\" VOLARE DISCLAIMS EXPRESS AND IMPLIED WARRANTIES, INCLUDING IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. VOLARE DOES NOT WARRANT ACCURACY, COMPLETENESS, TIMELINESS, CONTINUOUS AVAILABILITY OR ERROR-FREE OPERATION. THIS SECTION DOES NOT LIMIT WARRANTIES, REMEDIES OR OTHER RIGHTS THAT THE LAW DOES NOT ALLOW US TO EXCLUDE."]) +
+      L("15. Limitation of liability", ["TO THE FULLEST EXTENT PERMITTED BY APPLICABLE LAW, VOLARE AND ITS MEMBERS, PERSONNEL, REVIEWERS, EVALUATORS AND CONTRIBUTORS ARE NOT LIABLE FOR INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY OR PUNITIVE DAMAGES ARISING FROM DRUGBUG OR THESE TERMS. THIS APPLIES REGARDLESS OF THE LEGAL THEORY, INCLUDING ORDINARY NEGLIGENCE, AND WHETHER OR NOT THE POSSIBILITY OF SUCH DAMAGES WAS KNOWN.", "TO THE FULLEST EXTENT PERMITTED BY APPLICABLE LAW, THE COMBINED TOTAL LIABILITY OF VOLARE AND THOSE PERSONS TO YOU FOR CLAIMS ARISING FROM DRUGBUG OR THESE TERMS, INCLUDING CLAIMS FOR ORDINARY NEGLIGENCE, WILL NOT EXCEED THE GREATER OF US $50 OR THE AMOUNT YOU ACTUALLY PAID FOR DRUGBUG PURCHASES, INCLUDING SUBSCRIPTIONS AND STICK PACKS BOUGHT THROUGH APPLE OR OUR WEBSITE, DURING THE 12 MONTHS BEFORE THE FIRST EVENT GIVING RISE TO THE CLAIM OR SERIES OF RELATED CLAIMS.", "THESE EXCLUSIONS AND LIMITS DO NOT APPLY TO FRAUD, WILLFUL MISCONDUCT, GROSS NEGLIGENCE, LIABILITY FOR DEATH OR PERSONAL INJURY TO THE EXTENT IT CANNOT LAWFULLY BE LIMITED, REFUNDS REQUIRED UNDER SECTION 17 OR 20, BY LAW OR BY APPLICABLE PLATFORM RULES, OR ANY LIABILITY OR REMEDY THAT APPLICABLE LAW DOES NOT ALLOW US TO LIMIT. THESE TERMS DO NOT BIND A NONPARTY PATIENT OR RELEASE THAT PERSON'S CLAIMS."]) +
+      L("16. Third-party claims arising from misuse", ["To the extent permitted by law, you will indemnify Volare against a third-party claim to the extent caused by your prohibited clinical use, unauthorized disclosure of student or pilot material, infringement through material you submit, or other material violation of these Terms. This obligation covers reasonable defense costs and amounts paid under a final judgment or a settlement you approve in writing. You must not unreasonably withhold that approval. This obligation does not cover a claim to the extent caused by Volare's negligence or other wrongdoing. Volare will promptly notify you of a covered claim, may control the defense and will reasonably cooperate with you. You may participate through your own counsel at your expense. Neither party may settle a covered claim in a way that imposes a payment, admission or other obligation on the other party without that party's written consent."]) +
+      L("17. Purchases, subscriptions and cancellation", ["DrugBug offers a free tier. DrugBug Plus and DrugBug Pro are paid subscriptions offered for the billing periods displayed at checkout. The price, interval, automatic renewal terms and cancellation method are shown before you authorize payment. Stick packs are one-time purchases. A new DrugBug account receives three days of complimentary Pro access once per account. No payment method is required. Access ends automatically without a charge or conversion to a paid subscription.", "For an App Store purchase, Apple processes payment and manages billing, renewal, plan changes and refund requests under its terms and applicable law. Cancel an Apple subscription in iPhone Settings under your Apple Account, then Subscriptions. To prevent Apple renewal, cancel at least 24 hours before the end of the current period. Timing for Apple plan changes is governed by Apple's rules.", "For a website purchase, Stripe processes payment. Website subscriptions renew for the disclosed billing period unless canceled before renewal. To cancel, use \"Manage subscription\" on the website. Canceling stops future renewal charges. Access continues through the end of the period already paid for unless access is separately suspended, terminated or discontinued under these Terms. For a billing error, undelivered purchase or refund request, email <a href=\"mailto:VolareMediaLLC@gmail.com\">VolareMediaLLC@gmail.com</a>. For website purchases, this Section 17 is our purchase and refund policy. For App Store purchases, Apple's purchase and refund terms apply.", "If we terminate your access or discontinue DrugBug, we will stop future renewals of your website subscription. We will refund the unused portion of the current website billing period unless we terminated your access for your material violation of these Terms. If we discontinue a paid feature in a way that materially reduces your plan, we will notify you, and you may cancel and receive a refund of the unused portion of the current website billing period. If a temporary suspension continues through your website renewal date, we will stop that renewal. A stopped renewal will not restart without your affirmative authorization. You may contact us to cancel if you cannot access \"Manage subscription.\" For an affected App Store subscription, we will notify you where practicable so you can cancel through Apple. You may request a refund from Apple.", "Subscription price changes apply prospectively after required advance notice and any required consent. School and agency access runs for the period and on the terms of the applicable organizational arrangement. Except when we stop website renewals as stated in this section or Section 20, deleting your account does not cancel an Apple or website subscription. Cancel with the seller that bills you. We do not limit any cancellation or refund right required by law."]) +
+      L("18. Privacy, deletion and notices", ["The Privacy Policy describes information practices, privacy choices and how to request access or deletion. You can initiate account deletion from within the app through the account deletion option, or contact us by email. Before deleting an account, cancel recurring billing with the applicable seller to avoid further charges. Account deletion may affect your ability to access stored progress and virtual items. Any right to a refund or restoration remains subject to applicable law and platform rules.", "We may give you service notices in DrugBug or send them to the email address associated with your account, where available. We will use any other notice method required by law. Send inquiries and notices to <a href=\"mailto:VolareMediaLLC@gmail.com\">VolareMediaLLC@gmail.com</a>. This contact is not a substitute for service of process."]) +
+      L("19. Governing law and venue", ["Texas law governs these Terms without regard to conflict-of-laws rules, subject to mandatory protections that apply where you live. Unless applicable law permits or requires you to proceed elsewhere despite this provision, disputes arising out of DrugBug or these Terms must be brought in a Texas state court of competent jurisdiction in Brazos County or the United States District Court for the Southern District of Texas, Houston Division. You and Volare consent to personal jurisdiction there for such disputes. You may communicate with a regulator and exercise any nonwaivable right to bring a claim in another forum."]) +
+      L("20. Changes and other terms", ["These Terms take effect on the date shown above. We will give notice of material changes and require renewed affirmative acceptance before continued use under the changed Terms. The changes apply prospectively after acceptance. We will keep a record of the version accepted and the date of acceptance. We may make nonmaterial changes by posting an updated version with its effective date, subject to applicable law.", "If you do not accept a material change, you may stop using DrugBug. You may cancel a website subscription under Section 17. If we end your paid website access solely because you declined the change, we will stop future renewals and refund any unused portion of the current billing period. Cancel an App Store subscription through Apple.", "These Terms are the entire agreement between you and Volare for the DrugBug use they cover. A separate written agreement signed by Volare controls the activity it governs to the extent of a conflict. Apple's purchase terms govern App Store transactions. The Privacy Policy separately describes data practices. You may not assign these Terms or transfer an account without our written consent. We may assign these Terms in connection with a reorganization or transfer of DrugBug, subject to applicable law and without impairing accrued rights. If a provision is unenforceable, the remaining provisions continue in effect. Failure to enforce a provision on one occasion does not waive it. Provisions that by their nature continue after termination survive, including restrictions on confidential material, ownership and feedback, accrued payment and refund rights, and Sections 14 through 16 and 19. Volare's members, personnel, reviewers, evaluators and contributors may enforce Section 15. Apple and its subsidiaries may enforce these Terms as provided in Section 21. No other nonparty is an intended beneficiary of these Terms."]) +
+      L("21. Apple app terms", ["These Terms are between you and Volare. Apple is not a party. Volare, not Apple, is responsible for the iPhone app and its content. The usage rules in these Terms are subject to the applicable Apple Media Services Terms and Conditions and, where applicable, the Volume Content Terms in effect on the effective date above.", "Volare grants you a nontransferable license to use the app on Apple-branded products you own or control, as permitted by the Usage Rules in the Apple Media Services Terms and Conditions. Other accounts associated with the purchaser may access, acquire or use the app through Family Sharing, volume purchasing or Legacy Contacts where Apple's terms permit. You must comply with applicable third-party terms when using the app.", "Volare, not Apple, is responsible for app maintenance and support to the extent required by these Terms or applicable law. Apple has no obligation to maintain or support the app. Volare, not Apple, is responsible for applicable app warranties to the extent they have not been effectively disclaimed. If the app fails to conform to an applicable warranty, you may notify Apple, and Apple will refund any purchase price you paid for the app itself. To the maximum extent permitted by law, Apple has no other warranty obligation for the app. Volare, not Apple, is responsible for other claims, losses, liabilities, damages, costs or expenses attributable to a failure of the app to conform to an applicable warranty.", "Volare, not Apple, is responsible for addressing your claims and any third party's claims relating to the app or to your possession or use of it. This includes product liability claims, claims that the app fails to comply with an applicable legal or regulatory requirement, and claims under consumer protection, privacy or similar laws, including claims involving the app's use of Apple frameworks if applicable. If a third party claims that the app or your possession and use of it infringes that party's intellectual property rights, Volare, not Apple, is responsible for investigating, defending, settling and discharging that claim. This Section 21 allocates responsibility between Volare and Apple. It does not create or expand any warranty, obligation or liability of Volare to you, and it does not limit Sections 14 through 16.", "You represent and warrant that you are located neither in a region under a U.S. Government embargo nor in a region designated by the U.S. Government as supporting terrorism. You also represent and warrant that you are not on a U.S. Government list of prohibited or restricted parties.", "Direct questions, complaints or claims about the app to Volare Media LLC, at the business mailing address and telephone number posted at drugbugapp.com/contact, or <a href=\"mailto:VolareMediaLLC@gmail.com\">VolareMediaLLC@gmail.com</a>.", "You and Volare agree that Apple and its subsidiaries are third-party beneficiaries of these Terms as they apply to the iPhone app. Upon your acceptance, Apple and its subsidiaries may enforce those Terms against you as third-party beneficiaries. Apple will be deemed to have accepted that right."]);
   }],
   privacy: ["Privacy Policy", function () {
-    return L("What DrugBug stores", ["<strong>On your device:</strong> your settings (theme, level), study progress, saved drug list, wardrobe and virtual items, agreement record, score history, and a random device ID used for usage statistics.", "<strong>In DrugBug's online database (Google Firebase)</strong>, linked to a random device ID or an anonymous account ID, never to your name or email unless you create an account or redeem a code:", ["Usage statistics, described in the next section. These include your first difficulty rating of a question, without your name.", "If you create an account: your email address and your study data, so it syncs across your devices.", (NATIVE ? null : "If you subscribe or buy sticks on the website: which plan you have, when it renews or ends, and which packs you bought. Payment is handled by Stripe."), "If you redeem a code: your full name, with that redemption (see Codes).", "If you join a class with a class key: that key's results and, if you choose one, your scoreboard nickname (see Students and schools).", "If you are an evaluator: your ratings, votes and comments on questions, and which questions you have seen (see Evaluators).", "If you are an instructor: see Instructors.", "If you report an error or request protocols: what you write, and an email address only if you choose to give one."]]) +
-      L("Usage statistics", ["We collect anonymous usage statistics to understand how DrugBug is used and to improve it. They include: a random device ID that the app creates (not your name, email, Apple ID or an advertising ID); if you are signed in, a scrambled one-way code made from your account, so one person using DrugBug on more than one device is counted once (the code cannot be turned back into your account or email); the days you use DrugBug; about how many minutes you are active; which sections you open and which features you use; how many questions you answer and how many are correct; your first 1 to 5 difficulty rating of each question you rate; L.E.A.R.N cards you go through; your plan (Free, Plus or Pro); your study route and level; the app version; and whether you use the website or the iPhone app.", "We use them only to measure and improve DrugBug, for example which sections are used, how hard each question is, whether people come back, and how many free users upgrade. We do not use them for advertising, we do not sell or share them, we do not combine them with information from other companies, and we do not track you across other apps or websites.", "They are kept for up to 24 months, then deleted or combined into totals that cannot be tied to a device. You can turn them off at any time in Settings, Account &amp; privacy, Share usage statistics. Turning them off also deletes the statistics stored for that device."]) +
-      L("Optional account", ["DrugBug works without an account. If you choose to create one (Sign in with Apple or email and password), we store your email address (or Apple's private relay address if you use Hide My Email), an account ID, and your study data so it can sync across your devices.", "Passwords and sign-in are handled by our authentication provider (Google Firebase Authentication); DrugBug never sees or stores your password, your Apple Account password or your Google password. Apple sign-in tokens are verified by the provider's servers.", "Your account data is private to you: other users never see your email, account ID or study records. Data is encrypted in transit (HTTPS/TLS) and at rest by our provider. Access to the database is restricted by server-side security rules, and only authorized DrugBug administrators can manage content.", "You can export your data (Settings, Download my data) and delete your account in the app (Settings, Privacy &amp; account). Deleting your account deletes your account and its study records; copies in our provider's backups expire within 30 days."]) +
-      L("What we do not collect", ["We do not ask for patient information, and you must never enter it. We do not collect your contacts, location, photos or advertising ID, and we do not collect your name unless you redeem a code, sign up as an evaluator or use DrugBug as an instructor. We do not sell personal information, and we do not show ads."]) +
-      L("Codes", ["When you redeem a code (a gift, Pro, evaluator, sticks, bug, school or agency license, or agency protocol code), DrugBug asks for your full name. It is saved with that redemption and on your account, and only the DrugBug team sees it, so we know who used each code. School class keys never ask for a name. Your name is deleted with your account."]) +
-      L("Evaluators", ["If you sign up to evaluate questions (drugbugapp.com/evaluate.html), we keep the name, email, role, years of experience, workplace and anything else you write there, and use them only to review your sign-up and contact you about evaluating.", "When you sign the evaluator agreement, we keep the name you typed as your signature, the boxes you ticked, the agreement version and the date and time. While you evaluate, your difficulty ratings, Good or Bad votes, comments, the list of questions you have seen and how many questions you grade each week are stored with your evaluator code and name. Only the DrugBug team sees them with your name. Other users see only the result: a question going live, a check mark that an evaluator has seen it, and an average difficulty."]) +
-      L("Students and schools", ["A school or agency can give students anonymous class keys. If you redeem one, your results are reported to your instructor under the key's label, for example \"Student 07\", never under your name: how many questions you answered and how many were correct, by medication, drug class, body system, question style, study mode and drill topic; which questions you got wrong and which wrong answer you chose; and when you last studied. Only counts and question identifiers are sent, never anything you type. DrugBug does not know who holds which key; only your instructor's own key sheet does.", "Your class has a scoreboard. Classmates see your alias (for example \"Student 07\") or a nickname you choose, and your class scores. A nickname is checked automatically for offensive words and shown only after your instructor approves it; do not use your full real name. Class prizes you win are saved on your device and account.", "Deleting the class deletes every key, nickname and result. Schools that need a data agreement can contact us."]) +
-      L("Instructors", ["If you use DrugBug as an instructor (signing in with email and password or with Google), we store your email address and name, your school or agency, your classes, their key labels, the nicknames you approve, and class results. If you ask to join the instructor pilot by email, we keep your message so we can reply. If you ask about a package on the Protocols page, we keep your organization, name, work email, phone (if given) and what you wrote, and use them only to reply and prepare a quote. We use this only to run your classes and to contact you about DrugBug."]) +
-      L("Who can see it", ["Your progress and score history are private to your account. Usage statistics are seen only by the DrugBug team, as totals and trends. In a class, your instructor sees your key's totals and classmates see the class scoreboard, as described above. Names on codes, evaluator sign-ups and ratings, error reports and protocol requests are seen only by the DrugBug team. The public leaderboard and competitions between schools are currently turned off; if they are turned on, display names, school or team names and scores are visible to other participants."]) +
-      L("Account deletion and retention", ["Use <button class=\"linkish\" data-legal=\"data\">Your data</button> to delete everything DrugBug stores about you, including this device's usage statistics, or email us. We delete or de-identify your information promptly, except where we must keep limited records for legal reasons (for example records of purchases, or a record that you agreed to the Terms). Ratings an evaluator gave may be kept without their name after deletion. Data stored only on your device is removed when you delete the app or clear this site's data."]) +
-      L("Age", ["DrugBug is for adults 18 and older only. If you believe someone under 18 has used DrugBug, contact us and we will delete the data."]) +
-      L("Your choices and rights", ["Turn usage statistics off in Settings, Account &amp; privacy, Share usage statistics. Open <button class=\"linkish\" data-legal=\"data\">Your data</button> to leave the leaderboard or a class, or delete everything DrugBug stores about you. You can also email <a href=\"mailto:VolareMediaLLC@gmail.com\">VolareMediaLLC@gmail.com</a> to ask what we hold or to request deletion. Depending on where you live, you may have additional privacy rights; we will honor them."]) +
-      L("Subscriptions and payments", [(NATIVE ? null : "On the website, DrugBug Plus, Pro and stick packs are sold through Stripe. Stripe processes the payment under its own privacy policy; DrugBug never receives your full card details. We only learn which plan is active, when it renews or ends, and which packs you bought."), "In the iPhone app, DrugBug Plus and Pro are sold through Apple's App Store. Apple processes the payment; DrugBug never receives your card or billing details. We only learn which plan is active and when it renews or ends. Manage or cancel those subscriptions in iPhone Settings, your name, Subscriptions."]) +
-      L("Service providers", ["DrugBug's database, sign-in, usage statistics and server functions are hosted by Google Firebase (Google Cloud). Apple distributes the iPhone app and handles its purchases.", (NATIVE ? null : "The website is hosted on GitHub Pages (GitHub, Inc.), which receives standard request information such as your IP address when pages load. Website payments are handled by Stripe."), "Email you send us is handled by Google (Gmail). DrugBug contains no advertising and no third-party analytics or tracking tools; usage statistics are collected by DrugBug itself."]) +
-      L("Changes", ["We will update this policy when DrugBug changes and ask you to agree again. Effective 2026-11-07. Contact: Volare Media LLC, <a href=\"mailto:VolareMediaLLC@gmail.com\">VolareMediaLLC@gmail.com</a>."]);
+    return L("Who we are", ["Volare Media LLC (\"Volare,\" \"we,\" or \"us\") operates DrugBug, the medication study app and website at drugbugapp.com. This policy explains how we handle personal information when you use DrugBug in the United States, including on the web and in the iPhone app. Some features and purchase options are available only on certain platforms."]) +
+      L("Information we collect and why", ["Device and study information. DrugBug can be used without an account. It stores settings, study progress, a saved study list, score history, virtual items and an agreement record on your device or in your browser. Certain features send information to our systems using a device, account or class identifier. We use this information to operate the features you use, maintain access and protect the service. When you accept the Terms, we record the version, date and time, and your device or account identifier on our systems to maintain a record of acceptance.", "Optional accounts. When you create an account by email or use Sign in with Apple, we receive an account identifier and email address, which may be an Apple private relay address. We store study data so you can sync it across devices and use account features. Firebase Authentication handles email/password authentication. Apple handles your Apple Account credentials. We use the account and entitlement information to administer the one-time, three-day Pro access for new accounts. The offer does not require payment details and does not renew.", "Usage statistics. DrugBug collects optional usage statistics only after you choose to share them. We record these statistics under a randomly generated device identifier. These include active days and approximate time, sections and features used, counts of answered and correct questions, first difficulty ratings, study cards viewed, plan, study route and level, version and platform. We use the statistics to understand usage, measure upgrades and improve study content. A random identifier can distinguish one device from another, so we treat device-level statistics as potentially identifiable even when a name or email is absent. If you used DrugBug before the effective date of this policy, the update turned off optional statistics and asked you to choose whether to share them. We deleted the device-level usage statistics collected before this change. We delete or aggregate device-level usage statistics within 24 months after collection. Turn off optional statistics under Share usage statistics in Settings. Use Your data or contact us to request deletion of stored statistics associated with your device, where we can locate them. Turning off optional statistics does not stop records needed for an account, purchase, agreement, class or other feature you use.", "Purchases. On the website, Stripe processes subscription and stick-pack purchases. Apple processes purchases made through the App Store. We use the purchase and subscription records made available to us, such as the plan, its status and renewal or expiration date, or the pack purchased, to provide access, administer billing and handle purchase support. The payment provider handles your full payment card number. It may collect other information under its own privacy policy.", "Codes. For codes that require named redemption, such as gift, access, evaluator, school or agency license, and protocol codes, we collect your full name and associate it with the redemption and, where applicable, your account. We use that information to verify eligibility, administer access and prevent misuse. A student class key does not ask for your name. An institutional license or protocol code can be a named code even if it is supplied by a school or agency.", "Evaluator records. When enrollment is available, if you submit an evaluator application, we collect your name, email, credentials or role, years of experience, workplace and the information you choose to provide so we can evaluate and respond to the application. Evaluator records may include an evaluator code, typed signature, agreement choices and version, date and time, question ratings and votes, comments, questions viewed and activity counts. We use records from the program to administer participation, maintain agreement records and review and improve study content. Other users may see an aggregate difficulty rating or a content review indicator. We will seek permission before publicly crediting an evaluator by name.", "Instructors and organization contacts. We collect an instructor's name, work or account email, school or agency, classes, class key labels, nickname approvals and class results. Instructors can sign in with email/password or Google. If you contact us about the instructor pilot or an organizational package, we receive the details you provide, such as your name, organization, work email, optional phone number and message. We use these records to manage accounts and classes, respond and prepare a quote when requested.", "Support and feedback. If you email us or submit an error report, feedback or a protocol request, we receive the information you choose to send and any reply address the form or email supplies. We use it to respond, resolve issues, assess requests and improve DrugBug. Do not include patient data, another person's personal information or any document you are unauthorized to share.", "Technical information. Our hosting and service providers receive standard information needed to serve the app or site, such as an IP address when a page loads. We use local storage and similar technology to remember settings, maintain sessions and run features. Optional usage statistics measure activity within DrugBug across sessions. We do not sell personal information, share it for cross-context behavioral advertising or use it for targeted advertising. DrugBug does not track users over time and across third-party websites or apps, and we do not allow third parties to do so through DrugBug. DrugBug therefore does not change its practices in response to browser Do Not Track signals."]) +
+      L("Classes and organization programs", ["A class key identifies your activity to the instructor using a class alias such as \"Student 07.\" Your instructor can see question and accuracy counts by medication, drug class, body system, question style, study mode and drill topic, as well as the missed question identifiers, the answers you selected and when you last studied. Free-text responses are excluded from the class performance report. An instructor may be able to identify you through a separate key sheet the instructor maintains or other information available to the instructor. Do not send a class roster or a key sheet to DrugBug.", "Where a scoreboard is enabled and its use is authorized, classmates or participating members can see the displayed alias or instructor-approved nickname and relevant scores or rankings. Agency protocol competitions may display team names, team rankings and individual rankings to participants. Choose a nickname that does not identify you or another student. Class prizes may be saved to your device or account. The public leaderboard and interschool competitions are currently disabled.", "We use class records to provide and administer the authorized class features. When we handle student records on behalf of a school under a written agreement, we follow the school's authorized instructions and the applicable agreement and law. Contact your instructor or school for access to or correction of school-controlled records. You may also contact us for help directing a request. Leaving a class, closing an account and deleting a class are separate actions. Records held by a school or instructor are subject to that organization's policies and applicable law."]) +
+      L("Who receives information", [["Service providers receive the information needed for the services they provide. We require third parties to which we provide app user data for processing on our behalf to protect that data to at least the standard described in this policy and required by Apple's App Review Guidelines. Google Firebase and Google Cloud process account, study and device information to provide authentication, database hosting and server functions. GitHub Pages receives web request information to deliver the website. Google's Gmail service receives messages and reply information when you email our contact address. Use that address for general inquiries and to initiate a privacy request. Do not send identifiable patient information or school-controlled records to that address. Google or Apple handles the relevant sign-in information when you choose its sign-in service. Apple also handles app distribution and App Store purchases. Stripe handles website purchases. Apple, Stripe and other providers may also process information for their own services under their own privacy policies."], ["Instructors, classmates and participants may receive class or competition information as described above. We do not display named redemption records or account emails on class scoreboards."], ["We may disclose relevant information to comply with law, valid legal process or a lawful government request, or to investigate fraud, address a security issue or protect rights or safety. If Volare is involved in a proposed or completed sale, reorganization or similar transaction, we may disclose information as needed for that transaction subject to appropriate confidentiality and applicable law."]]) +
+      L("Patient information and personal health details", ["DrugBug is for education. The saved list is for medications you are studying. Do not use it to record a person's medication regimen or to check for interactions. Do not submit identifiable patient information, personal symptoms, diagnoses, medical records or other personal health details through any feature, form or message. If you believe you sent this information in error, contact us without repeating the information in your request."]) +
+      L("Retention and security", ["We keep personal information for as long as reasonably needed for the purposes described in this policy. We consider the type of record, the feature it supports and legal, security or recordkeeping requirements. For example, purchase and assent records may be kept for billing, accounting, legal compliance and dispute resolution. If we retain information after a deletion request, we limit its use to the reason for retaining it. Backup copies may remain until they are removed under the backup cycle. A school's instructions and applicable law may govern retention or return of school-controlled class records. We may keep aggregate or properly de-identified information. When we maintain data as de-identified, we take reasonable steps to prevent re-identification and do not attempt to re-identify it except where permitted by law to test whether it is properly de-identified. Where required, we require recipients of that data to honor the same restrictions.", "We use safeguards designed to protect the information we hold, including restricted administrative access and encryption in transit. No method of storage or transmission can eliminate every risk."]) +
+      L("Choices and privacy requests", ["Use Share usage statistics in Settings to turn optional statistics off. If you have an account, use Download my data in Settings to access the available export. Use Your data or the account settings in the app to start deleting your account, or email <a href=\"mailto:VolareMediaLLC@gmail.com\">VolareMediaLLC@gmail.com</a> for help. You can use the same email address to ask about information associated with your account or device. Removing the app or clearing browser storage can remove records stored locally. It does not send us a request to delete online records. Account deletion also does not cancel a paid subscription. Manage an App Store subscription through Apple and a web subscription through Manage subscription on the website.", "Depending on applicable law, you may have the right to confirm processing, access and obtain a portable copy, correct or delete personal information, learn about third-party disclosures, withdraw consent, or opt out of certain sales, sharing, targeted advertising or profiling. We do not use personal information for profiling in furtherance of decisions that produce legal or similarly significant effects. To start a privacy request, email <a href=\"mailto:VolareMediaLLC@gmail.com\">VolareMediaLLC@gmail.com</a>. Do not email sensitive records or identity documents. If we need to verify your identity or authority, we will direct you to a separate verification channel and request only information reasonably necessary for that purpose. We will explain any decision to decline a request as required by law. An authorized agent may submit a request where permitted by law. If an appeal is available, email the same address with \"Privacy appeal\" in the subject line. We will respond within the applicable period and tell you how to contact the appropriate regulator when required. We will not unlawfully discriminate against you for exercising your rights."]) +
+      L("Age, policy updates and contact", ["DrugBug is for people age 18 and older. If you believe a minor has provided personal information, email us so we can investigate and take appropriate action, including deletion where required.", "The effective date appears at the top of this policy. We will post updates here and give notice of material changes through the service or another appropriate channel. Where applicable law requires consent for a new use, we will obtain it separately before processing information for that use.", "Contact Volare Media LLC at <a href=\"mailto:VolareMediaLLC@gmail.com\">VolareMediaLLC@gmail.com</a>."]);
   }],
   disclaimers: ["Disclaimers & Attributions", function () {
-    return L("Not affiliated", ["Not affiliated with or endorsed by NREMT, NCSBN, FSMB, NBME, ARRT, IBSC, BCEN, AHA, NBRC, CDR, NBSTSA, JCNDE, ADA or NAEMT. Exam and organization names describe subjects DrugBug covers. Practice questions are original and are not official items from any exam.", "Resuscitation content is written from published resuscitation guidelines. DrugBug is not an AHA course, does not provide ACLS or PALS certification, and is not reviewed by AHA."]) +
-      L("Not a medical device", ["Every simulation in DrugBug (such as Megacode, On Scene and clinical scenarios) uses fictional practice patients and is not for real human patients. DrugBug is educational software. It is not intended for clinical decision support, diagnosis or treatment of real patients, and it has not been cleared or approved by the FDA. Calculators and the drug interaction information on drug pages are practice tools for learning. DrugBug does not check a person's medicines for interactions, review a medication list or recommend where a patient should be taken."]) +
-      L("Roles and scope of practice", ["Each level's medication list and study guide (for example Community Paramedic, surgical or anesthesia technologist, dental hygiene, phlebotomy and EKG technician) is a study list of medications that person may see or support. It is not a scope-of-practice determination; scope differs by state, employer, credentialing body and medical direction."]) +
-      L("Safety medication lists", ["High-alert medication drills are adapted from the ISMP List of High-Alert Medications, and look-alike/sound-alike pairs are informed by the ISMP List of Confused Drug Names and FDA/ISMP tall-man lettering guidance. ISMP lists &copy; Institute for Safe Medication Practices (ISMP), used for education with attribution. DrugBug is not affiliated with ISMP. Consult ismp.org for the current lists."]) +
-      L("Flashing and animation", ["DrugBug plays short animations between sections, and a few of them flash: an ambulance light bar, a cardioversion, an x-ray exposure. They are kept brief and below three flashes per second, which is the published limit for photosensitive seizures, but anyone with photosensitive epilepsy may prefer them off. Settings, Reduce motion turns off every animation and flash in the app, and DrugBug also follows the reduced-motion setting on your phone or computer on its own."]) +
-      L("Protocols", ["Agency and facility protocols shown in DrugBug are used with the written permission of their owners and remain their property. National default scopes follow publicly available scope-of-practice models and may differ from your state or agency."]) +
-      L("How content is made", ["Drug monographs, questions, study guides and scenarios are original writing. Some content was drafted with AI assistance, and AI is used to gather updates from FDA labeling each week. Each drug shows its content review status. A content review checks educational accuracy against standard references at a point in time; it is not a guarantee that the content is complete, current or error-free. Content marked as draft has not yet been reviewed.", "<strong>Pilot questions</strong>, marked in yellow, are new questions shown only to evaluators until they are reviewed. Question difficulty levels are averages of ratings from users and evaluators; they are opinions, not a measure of exam difficulty."]) +
-      L("Pronunciation", ["Spoken pronunciations use your device's built-in voice and may not be perfect."]);
+    return L("For education and study only", ["DrugBug is a medication study tool for adults. It provides general education, exam preparation and practice with fictional cases. DrugBug does not provide medical advice, individual recommendations, diagnosis or treatment. Using DrugBug or contacting Volare Media LLC does not establish a healthcare provider-patient relationship.", "Do not use DrugBug to assess a patient, choose a medication or dose, administer a drug, interpret an individual result, select a destination, decide whether to seek care or make any other clinical or personal healthcare decision. Do not start, stop, change or combine any medication based on DrugBug. For personal medical questions, contact a licensed healthcare professional or pharmacist. In a U.S. emergency, call 911. Our feedback and support channels are for product questions and reports and are not emergency services."]) +
+      L("Simulations, drug information and study lists", ["Megacode, On Scene, Big Calls and other scenarios use fictional patients for practice. Megacode uses fixed cases and does not accept patient values or calculate a dose for a real patient. Any calculations elsewhere in study exercises are for practice only. Do not enter or submit real patient information anywhere in DrugBug. DrugBug is not designed or offered as clinical decision-support software, a point-of-care reference or a medical device. It has not been cleared or approved by the U.S. Food and Drug Administration (FDA).", "My List is a study list. It does not analyze anyone's medications or check for drug interactions. Drug pages may discuss interactions described in labeling, and study questions may test that material. A comparison or discussion of drug families or drug classes is educational and does not recommend a substitution for a person. Content about over-the-counter medicines, minor illnesses, vitamins, vital signs, labs and label warnings is for study. It does not assess symptoms, determine whether a result is normal for you or recommend self-treatment. Where DrugBug includes pages about illicit substances and unapproved products, those pages describe effects and risks for education. They do not encourage use or provide dosing, sourcing or use instructions."]) +
+      L("Sources, review and updates", ["DrugBug uses FDA prescribing information and other sources for study content. Source dates and review indicators provide context for the material shown. A review reflects a check at a point in time. Content may be incomplete, inaccurate or out of date even after review. DrugBug uses AI to help draft some material and regularly check for FDA labeling changes. AI can introduce or miss information, and a change may appear in DrugBug after the FDA publishes it. A description of off-label use is for education and does not recommend that use. Read the cited source to verify study information. For patient care, rely on current authoritative references, applicable protocols, medical direction, facility policy and qualified clinical judgment independently of DrugBug.", "Content marked Draft has not completed DrugBug's content review. Content without that label may still contain errors. Pilot questions are restricted to authorized reviewers until approved for release. An evaluator label or difficulty rating describes a content review step or user feedback and does not establish clinical validation, official exam difficulty or accuracy. Device-generated pronunciations may be inaccurate. Use Report an error to flag a suspected error without including patient information."]) +
+      L("Roles and agency protocols", ["Role and level lists organize study topics. They do not determine what you are licensed, certified, credentialed or authorized to do. Scope of practice and drug availability vary by jurisdiction, agency, employer, facility and medical direction. DrugBug may use public scope models as study references. It does not authorize clinical practice, replace agency training or confer a credential.", "Agency and facility protocols remain the property of their owners. DrugBug will display them only for study and with the owner's written permission and applicable medical director sign-off. Follow the protocol actually in force through your agency or facility for patient care. A protocol shown in DrugBug may be outdated, may differ from local policy or may not apply to your role."]) +
+      L("Attributions and affiliations", ["Exam, credential and organization names identify study topics. They are the names or marks of their respective owners. DrugBug is not affiliated with or endorsed by any examination, certification or professional organization named in DrugBug, including NREMT, NCSBN, FSMB, NBME, ARRT, IBSC, BCEN, AHA, NBRC, CDR, NBSTSA, JCNDE, ADA, NAEMT and ISMP. Practice questions are independently prepared and are not official exam items. Resuscitation study content draws on published guidelines. AHA has not reviewed it. DrugBug does not offer an AHA course or provide ACLS or PALS certification."]) +
+      L("Flashing and animation", ["Some screens contain flashing effects, including animations depicting emergency lights, cardioversion and X-ray exposure. Flashing content may affect people with photosensitivity. If you are sensitive to flashes or motion, use Reduce motion in Settings before viewing animated content and avoid any remaining effects. Stop viewing the app or site if flashing or motion causes discomfort."]);
   }],
   data: ["Your data", function () {
     var c = L("What you can do here", ["Leave the leaderboard or a school competition, or delete everything DrugBug stores about you."]);
@@ -6961,7 +6974,7 @@ var LEGAL_PAGES = {
 function legalView() {
   var k = LEGAL_PAGES[S.legal] ? S.legal : "terms", pg = LEGAL_PAGES[k];
   var c = (agreeRec() ? topbar() : '') + '<div class="legal"><button class="linkish" data-act="legalback">Back</button><div class="chips subtabs">' + Object.keys(LEGAL_PAGES).map(function (x) { return '<button class="chip" data-legal="' + x + '" aria-pressed="' + (x === k) + '">' + esc(LEGAL_PAGES[x][0]) + '</button>'; }).join("") + '</div>';
-  c += '<header class="pagehead"><h1>' + esc(pg[0]) + '</h1>' + (k !== "data" ? '<p class="muted small">Effective ' + LEGAL_V + '. Draft pending legal review.'  + '</p>' : '') + '</header><article class="legaltext">' + pg[1]() + '</article></div>';
+  c += '<header class="pagehead"><h1>' + esc(pg[0]) + '</h1>' + (k !== "data" ? '<p class="muted small">Volare Media LLC · Effective ' + LEGAL_V + '</p>' : '') + '</header><article class="legaltext">' + pg[1]() + '</article></div>';
   return c;
 }
 function openLegal(k) { if (S.view !== "legal") S.legalBack = { view: S.view, tab: S.tab, level: S.level }; S.legal = k; S.delState = null; if (S.sheet) closeSheet(); S.view = "legal"; render(); window.scrollTo(0, 0); }
@@ -7116,7 +7129,8 @@ function legalClick(t, a) {
 document.addEventListener("change", function (e) {
   var t = e.target;
   if (t.getAttribute && t.getAttribute("data-gage")) { S.gate = S.gate || {}; S.gate.age = t.getAttribute("data-gage"); render(); }
-  else if (t.id === "gok") { S.gate = S.gate || {}; S.gate.ok = t.checked; var b = $('[data-act="gateok"]'); if (b) b.disabled = !(S.gate.age && S.gate.ok); }
+  else if (t.id === "gok") { S.gate = S.gate || {}; S.gate.ok = t.checked; var b = $('[data-act="gateok"]'); if (b) b.disabled = !(S.gate.age && S.gate.ok && S.gate.stats); }
+  else if (t.getAttribute && t.getAttribute("data-gstats")) { S.gate = S.gate || {}; S.gate.stats = t.getAttribute("data-gstats"); var b2 = $('[data-act="gateok"]'); if (b2) b2.disabled = !(S.gate.age && S.gate.ok && S.gate.stats); }
   else if (t.getAttribute && t.getAttribute("data-cpk")) toggleComply(t.getAttribute("data-cpk"), t.checked);
 });
 
@@ -7156,7 +7170,7 @@ function pickFun(on) {
 var OB_FLAGSHIP = { ph: "paramedic", rn: "rn", md: "intern", im: "rt", ah: "mh" };
 function obCards() {
   var ev = ROLES.filter(function (r) { return r[0] === "ev"; })[0];
-  var out = [{ code: "ev", name: ev[1], line: ev[2], bug: ev[3], blurb: "Peptides, probiotics, vitamins, the medicine cabinet, small sicknesses, normal vitals and much more.", sub: "For anyone \u2014 no clinical background needed." }];
+  var out = [{ code: "ev", name: ev[1], line: ev[2], bug: ev[3], blurb: "General medication, vitamin, vital-sign and lab concepts for study.", sub: "For anyone \u2014 no clinical background needed." }];
   var BLURB = {
     ph: "EMT, AEMT, Paramedic, Flight Paramedic and Community Paramedic, each with its own drug list, protocols and registry-style questions.",
     rn: "CNA, LVN/LPN, RN and Flight Nurse, with specialty units, lab values and licensure-style questions.",
@@ -8005,7 +8019,7 @@ function drawReport() {
   c += '<p class="muted">' + (o.kind === "app" ? 'About: <strong>the DrugBug app</strong>' : o.kind === "question" ? 'Question: <em>' + esc(o.qtext.slice(0, 220)) + '</em>' : 'Drug: <strong>' + esc(nameOf(o.drug)) + '</strong>') + '</p>';
   if (RP.sent === "ok") return rdlg.innerHTML = c + '<div class="presult good" role="status">' + (!HASDB ? 'Your email app opened with the report filled in. Tap Send there to reach the DrugBug team.' : 'Thanks. Your report was sent to the DrugBug team for clinical review.') + '</div><div class="actions"><button class="btn" data-ract="close">Done</button></div></div>';
   c += '<div class="pform"><label>What is wrong?<select class="pinput" id="rptype">' + RTYPES.map(function (t) { return '<option' + (o.type === t ? " selected" : "") + '>' + esc(t) + '</option>'; }).join("") + '</select></label>';
-  c += '<label>Details (what it says, what it should say, and your source if you have one)<textarea class="pinput" id="rptext" rows="5" maxlength="1500">' + esc(o.text) + '</textarea></label>';
+  c += phiWarn() + '<label>Details (what it says, what it should say, and your source if you have one)<textarea class="pinput" id="rptext" rows="5" maxlength="1500">' + esc(o.text) + '</textarea></label>';
   c += '<label>Your email (optional, only if you want a reply)<input class="pinput" id="rpemail" type="email" maxlength="200" value="' + esc(o.email) + '"></label>' + phiWarn();
   if (RP.err) c += '<div class="presult" role="alert">' + esc(RP.err) + ' <a class="linkish" href="' + esc(reportMail(o)) + '" target="_blank" rel="noopener">Email the report instead</a></div>';
   c += '<div class="actions"><button class="btn" data-ract="send"' + (RP.busy ? " disabled" : "") + '>Send report</button><button class="btn ghost" data-ract="close">Cancel</button></div></div>';
@@ -8283,7 +8297,7 @@ document.addEventListener("keydown", function (e) { if (e.key === "Escape" && PR
 function printClick(t, a) { if (a.print) { openPrint(a.print); return true; } return false; }
 
 /* ---------- Settings: display, study preferences, sound, protocols, printing, privacy & account, about ---------- */
-var APP_VERSION = "1.2", APP_DATE = "2026-11-08";
+var APP_VERSION = "1.2", APP_DATE = "2026-11-11";
 
 /* ---------- usage statistics (owner, Nov 5 2026) ----------
    Anonymous counts so the owner can see how DrugBug is used: a random device id (never a name,
@@ -8305,7 +8319,13 @@ function usgOwner() {
   } catch (e) {}
   return false;
 }
-function usgOn() { try { return !usgOwner() && SET().shareUsage !== false && !!agreeRec() && !(typeof DEMO !== "undefined" && DEMO && !NATIVE && !(window.DRUGBUG_CONFIG || {}).functionsUrl); } catch (e) { return false; } }
+/* optional statistics are opt-in (counsel + Apple 5.1.1(ii), Nov 11 2026). The old shareUsage setting is
+   ignored: every install starts at off and must choose Share again. statsOpt = {on, v, ts, src}. */
+var STATS_V = 2;
+function statsRec() { var r = store("statsOpt"); return r && r.v === STATS_V ? r : null; }
+function statsOn() { var r = statsRec(); return !!(r && r.on); }
+function statsSet(on, src) { var was = statsOn(); store("statsOpt", { on: !!on, v: STATS_V, ts: Date.now(), src: src || "settings" }); if (was && !on) { try { usgForget(); } catch (x) {} } if (on && !was) { try { USG.sessSent = false; } catch (x) {} } }
+function usgOn() { try { return !usgOwner() && statsOn() && !!agreeRec() && !(typeof DEMO !== "undefined" && DEMO && !NATIVE && !(window.DRUGBUG_CONFIG || {}).functionsUrl); } catch (e) { return false; } }
 function usgDid() {
   var d = store("did");
   if (!d || !/^[a-z0-9]{16,40}$/.test(d)) {
@@ -8331,7 +8351,7 @@ function usgFlush(leaving) {
   if (!leaving && Date.now() - USG.sentAt < 16000) return;
   var rc = (typeof routeCtx === "function" && routeCtx()) || "";
   var body = { data: { did: usgDid(), plat: NATIVE ? "ios" : "web", tier: (function () { try { return tier(); } catch (e) { return "free"; } })(),
-    route: rc || "other", level: S.view === "level" ? usgKey(S.level) : "", ver: APP_VERSION, pid: usgPid(),
+    route: rc || "other", level: S.view === "level" ? usgKey(S.level) : "", ver: APP_VERSION, pid: usgPid(), optin: { v: STATS_V, ts: (statsRec() || {}).ts || 0 },
     inc: { q: I.q, c: I.c, learn: I.learn, sec: I.sec, sess: USG.sessSent ? 0 : 1, tabs: I.tabs, feats: I.feats, dr: I.dr || {} }, rate: usgRates() } };
   USG.inc = usgNew(); USG.sentAt = Date.now(); USG.busy = true;
   var wasSess = USG.sessSent; USG.sessSent = true;
@@ -8353,6 +8373,21 @@ function usgPid() {
   } catch (e) { return ""; }
 }
 function usgRates() { var p = store("qratePend") || {}, o = {}, n = 0; for (var k in p) { if (n++ >= 50) break; o[k] = p[k]; } return o; }
+/* the record of acceptance, kept on Volare's systems for guests and account holders alike (counsel, Nov 11 2026):
+   Terms version, date and time, the device identifier (and the one-way account code when signed in), the age
+   answer and the statistics choice. Queued on the device until the server confirms it. */
+function assentLog(rec) {
+  var q = store("assentPend") || [];
+  if (rec) q.push({ v: rec.v, ts: rec.ts, age: rec.age, stats: statsOn() ? "share" : "no", plat: NATIVE ? "ios" : "web", ver: APP_VERSION, did: usgDid(), pid: (function () { try { return usgPid(); } catch (e) { return ""; } })(), text: "I agree to the Terms of Use and understand that DrugBug is for study only and may not be used for patient care. The Privacy Policy explains how DrugBug handles my information." });
+  q = q.slice(-10); store("assentPend", q);
+  if (!q.length || assentLog.busy) return;
+  assentLog.busy = true;
+  try {
+    fetch(usgUrl("assentLog"), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ data: { items: q } }) })
+      .then(function (r) { assentLog.busy = false; if (r.ok) { var left = (store("assentPend") || []).filter(function (x) { return !q.some(function (y) { return y.ts === x.ts; }); }); store("assentPend", left); } }, function () { assentLog.busy = false; });
+  } catch (e) { assentLog.busy = false; }
+}
+setTimeout(function () { try { if ((store("assentPend") || []).length) assentLog(); } catch (e) {} }, 6000);
 function usgForget() {
   var d = store("did"); if (!d) return;
   try { fetch(usgUrl("usageForget"), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ data: { did: d } }) }).catch(function () {}); } catch (e) {}
@@ -8576,7 +8611,7 @@ function settingsView() {
     setRow("Daily goal", "Questions in the Daily DrugBug.", setOpts("dailyGoal", s.dailyGoal, [[5, "5"], [10, "10"], [20, "20"]])) +
     setRow("Exam prep length", "Default number of questions.", setOpts("nrN", s.nrN, [[10, "10"], [25, "25"], [50, "50"], [100, "100"]])) +
     setRow("Exam prep mode", "", setOpts("nrMode", s.nrMode, [["practice", "Practice"], ["exam", "Exam"]])) +
-    setRow("Medication names in questions", "Generic only, or generic and brand names mixed. Default: generic only for nursing, mixed for other routes.", setOpts("qnames", s.qnames || "", [["", "By route (default)"], ["generic", "Generic only"], ["all", "Generic and brand"]])) +
+    setRow("Medication names in questions", "Brand names by default. Include generic names to mix them in, or use generic only. Nursing defaults to generic only, like the NCLEX.", setOpts("qnames", s.qnames || "", [["", "By route (default)"], ["brand", "Brand names"], ["all", "Brand, plus generic names"], ["generic", "Generic only"]])) +
     setRow("Question choice", "", setOpts("adaptive", s.adaptive ? "1" : "0", [["1", "Adaptive"], ["0", "Random"]])) +
     setRow("Megacode timer", "Relaxed doubles the time. Off removes the clock.", setOpts("megaTimer", s.megaTimer, [["on", "On"], ["relaxed", "Relaxed"], ["off", "Off"]])) +
     setRow("Drug pages open in", "", setOpts("fullDefault", s.fullDefault ? "1" : "0", [["0", "Simple view"], ["1", "Full record"]])) +
@@ -8610,7 +8645,8 @@ function settingsView() {
   pv += !SOCIAL ? "" : setRow("Classes", R ? (cls.length ? "In " + cls.length + " class" + (cls.length > 1 ? "es" : "") + ". Instructors see this name." : "Not in any classes.") : "Open Classes to load your memberships.", (R && cls.length ? '<form class="inl" data-setcl="1"><input class="pinput" id="setclname" maxlength="60" value="' + esc(R.name || "") + '"><button class="btn small" type="submit">Change name</button></form>' : '') + '<button class="btn small ghost" data-go="classes">Manage classes</button>');
   pv += setRow("Age group", ag ? "18 or older" + (ag.ts && !isNaN(new Date(ag.ts)) ? " · agreed " + fmtDate(ag.ts) : "") : "", '<button class="linkish" data-legal="terms">Terms of Use</button> <button class="linkish" data-legal="privacy">Privacy Policy</button>');
   if (NATIVE && HASDB) pv += setRow("Account ID", "Give this to DrugBug support, or add it to ownerUids to unlock the Control Center.", '<code class="small">' + esc(Prog.uid || (window.__fbDiag && /timeout|failed|error|missing/.test(window.__fbDiag.stage) ? "not connected (" + window.__fbDiag.stage + (window.__fbDiag.err ? ": " + window.__fbDiag.err : "") + ")" : "connecting…")) + '</code>');
-  pv += setRow("Share usage statistics", "Anonymous counts that show the DrugBug team how the app is used: days active, time spent, sections opened and questions answered. Never your name or email, never sold, never used for ads. Turning this off deletes this device's statistics.", setTog("shareUsage", SET().shareUsage !== false, SET().shareUsage !== false ? "On" : "Off"));
+  if (typeof evPausedFor === "function" && evPausedFor()) pv += setRow("Evaluator", EV_PAUSE_MSG, "");
+  pv += setRow("Share usage statistics", "Share optional usage statistics to help improve DrugBug. You can turn this off at any time to stop future optional collection. We delete or aggregate device-level usage statistics within 24 months after collection.", setTog("statsOpt", statsOn(), statsOn() ? "On" : "Off"));
   pv += setRow("Download my data", "A file with your progress, scores, saved list and settings.", '<button class="btn small ghost" data-act="exportdata">Download</button>');
   pv += setRow("Reset my progress", "Clears mastery, XP, streaks, achievements and scores. Keeps your bugs, sticks, saved list and settings.", S.resetAsk ? '<span class="confirm">Reset everything? <button class="btn small again" data-act="resetyes">Reset</button><button class="btn small ghost" data-act="resetno">Cancel</button></span>' : '<button class="btn small ghost" data-act="resetask">Reset progress</button>');
   pv += setRow("Delete all my data", "Removes everything DrugBug stores about you, here and online. Cannot be undone.", '<button class="btn small again" data-legal="data">Delete…</button>');
@@ -8678,6 +8714,7 @@ function settingsClick(t, a) {
       render(); return true;
     case "mutoggle": MU.armed = true; setSet("music", !muOn()); render(); return true;
     case "mupopclose": S.mupop = false; render(); return true;
+    case "munext": MU.armed = true; if (!muOn()) setSet("music", true); muNext(); if (!MU.playing) muSync(); return true;
     case "sfxtest": var was = SET().sfx; if (!was) setSet("sfx", true); sfx(true); setTimeout(function () { sfx(false); if (!was) setSet("sfx", false); render(); }, 450); return true;
     case "sndrecheck":
       audioCtx(); AUD.played = Math.max(0, AUD.played - 1);     /* the check itself should not count */
@@ -8695,7 +8732,7 @@ function settingsClick(t, a) {
 document.addEventListener("change", function (e) {
   var t = e.target; if (!t.getAttribute) return;
   var k = t.getAttribute("data-settog");
-  if (k === "shareUsage") { if (!t.checked) { try { usgForget(); } catch (x) {} } else { USG.sessSent = false; } }
+  if (k === "statsOpt") { statsSet(t.checked, "settings"); render(); var f0 = $('[data-settog="statsOpt"]'); if (f0) f0.focus(); return; }
   if (k) { setSet(k, t.checked); render(); var f = $('[data-settog="' + k + '"]'); if (f) f.focus(); return; }
   k = t.getAttribute("data-setsel");
   if (k === "protocol") { store("protocol", t.value || null); DB._ncache = {}; DB._mcache = null; S.setMsg = t.value ? "Protocols updated. Your levels now follow them." : "Using national defaults."; render(); return; }
@@ -8917,7 +8954,7 @@ function muPop() {
   var on = muOn(), v = muLevel();
   return '<div class="mupop" role="dialog" aria-label="Music"><div class="murow"><strong>Background music</strong><button class="btn small' + (on ? ' ghost' : '') + '" data-act="mutoggle" aria-pressed="' + on + '">' + (on ? "Turn off" : "Turn on") + '</button></div>' +
     '<label class="muvol"><span>Track</span><select class="pinput" id="mutrack">' + muTrackOptions() + '</select></label><p class="muted small mumore">More tracks in the <button class="linkish" data-goshop="1" data-shopf="music">Terrarium Music shop</button></p>' +
-    '<label class="muvol"><span>Volume</span><input type="range" min="0" max="100" step="5" id="muvol" value="' + v + '" aria-label="Music volume"><output id="muvolv">' + v + '%</output></label>' +
+    muListBox() + '<label class="muvol"><span>Volume</span><input type="range" min="0" max="100" step="5" id="muvol" value="' + v + '" aria-label="Music volume"><output id="muvolv">' + v + '%</output></label>' +
     '<div class="murow"><button class="btn small ghost" data-act="mupopclose">Done</button></div></div>';
 }
 document.addEventListener("input", function (e) {
@@ -8972,7 +9009,9 @@ function muFile(T) {
   var c = MU.ctx, f = { id: T.id, ctx: c }; MU.file = f;
   muLoadBuf(T).then(function (buf) {
     if (MU.file !== f) return;
-    var s = c.createBufferSource(), g = c.createGain(); s.buffer = buf; s.loop = true;
+    var s = c.createBufferSource(), g = c.createGain(); s.buffer = buf; s.loop = !muListOn();
+    /* playlist: when this song ends, the next one starts (owner, Nov 10 2026) */
+    s.onended = function () { if (MU.file === f && muListOn()) muNext(); };
     g.gain.setValueAtTime(0.0001, c.currentTime); g.gain.linearRampToValueAtTime(1, c.currentTime + 0.8);
     s.connect(g); g.connect(MU.fileOut); s.start(); f.src = s; f.g = g;
     f.t0 = c.currentTime; f.len = buf.duration; f.bpm = T.bpm || 0; danceStart(f);
@@ -9006,6 +9045,54 @@ function danceStop() {
   if (DANCE.raf) cancelAnimationFrame(DANCE.raf); DANCE.raf = 0; DANCE.f = null;
   var root = document.documentElement; root.classList.remove("mudance");
 }
+/* ----- playlist (owner, Nov 10 2026): pick songs and let them play through. Mode "one" loops the
+   current song (how it always worked); "list" plays the picked songs in order; "shuffle" plays them
+   in random order. Only songs you own can be on the list. Saved with progress so it syncs. ----- */
+function muMode() { var m = Prog && Prog.d && Prog.d.muMode; return m === "list" || m === "shuffle" ? m : "one"; }
+function muList() { var L = (Prog && Prog.d && Prog.d.muList) || []; return L.filter(function (id) { return TRACKS.some(function (t) { return t.id === id; }) && ownsTrack(id); }); }
+function muListOn() { return !MU.preview && muMode() !== "one" && muList().length >= 2; }
+function muNext() {
+  var L = muList(); if (!L.length) return;
+  var cur = curTrack().id, i = L.indexOf(cur), nx;
+  if (muMode() === "shuffle" && L.length > 1) { var o = L.filter(function (id) { return id !== cur; }); nx = o[Math.floor(Math.random() * o.length)]; }
+  else nx = L[(i + 1) % L.length];
+  Prog.d.track = nx; saveProg(); MU.trackId = null; MU.preview = null;
+  if (MU.playing) muTick();
+  var sel = $("#mutrack"); if (sel) sel.value = nx;
+  var nw = $(".munow"); if (nw) nw.textContent = trackById(nx).name;
+}
+function muListBox() {
+  var mine = shownTracks().filter(function (t) { return ownsTrack(t.id); }), L = muList(), m = muMode();
+  var c = '<label class="muvol"><span>Play</span><select class="pinput" id="mumode">' +
+    '<option value="one"' + (m === "one" ? " selected" : "") + '>Repeat this song</option>' +
+    '<option value="list"' + (m === "list" ? " selected" : "") + '>My playlist in order</option>' +
+    '<option value="shuffle"' + (m === "shuffle" ? " selected" : "") + '>Shuffle my playlist</option></select></label>';
+  if (m !== "one") {
+    c += '<div class="mulist" role="group" aria-label="Songs in my playlist">' + mine.map(function (t) {
+      return '<label class="mulrow"><input type="checkbox" data-mulist="' + t.id + '"' + (L.indexOf(t.id) >= 0 ? " checked" : "") + '> <span>' + esc(t.name) + '</span></label>';
+    }).join("") + '</div>' +
+    (L.length < 2 ? '<p class="muted small">Tick at least 2 songs to play through.</p>' : '<div class="murow"><span class="muted small">Now: <b class="munow">' + esc(curTrack().name) + '</b></span><button class="btn small ghost" data-act="munext" aria-label="Next song">Next \u23ed</button></div>');
+  }
+  return c;
+}
+document.addEventListener("change", function (e) {
+  var t = e.target;
+  if (t.id === "mumode") {
+    Prog.d.muMode = t.value;
+    if (t.value !== "one" && !(Prog.d.muList && Prog.d.muList.length)) Prog.d.muList = shownTracks().filter(function (x) { return ownsTrack(x.id); }).map(function (x) { return x.id; });
+    saveProg(); if (MU.file && MU.file.src) { try { MU.file.src.loop = !muListOn(); } catch (x) {} }
+    return render();
+  }
+  if (t.dataset && t.dataset.mulist) {
+    var L = (Prog.d.muList || []).filter(function (id) { return id !== t.dataset.mulist; });
+    if (t.checked) L.push(t.dataset.mulist);
+    var order = TRACKS.map(function (x) { return x.id; }); L.sort(function (a, b) { return order.indexOf(a) - order.indexOf(b); });
+    Prog.d.muList = L; saveProg();
+    if (MU.file && MU.file.src) { try { MU.file.src.loop = !muListOn(); } catch (x) {} }
+    if (t.checked && !MU.playing && muOn()) { MU.armed = true; muSync(); }
+    return render();
+  }
+});
 function muFileStop() {
   danceStop();
   var f = MU.file; MU.file = null; if (!f || !f.src) return;
@@ -9025,7 +9112,7 @@ function pqForm() {
     (PQ.photos.length < PQ_MAX ? '<label class="pqadd"><input type="file" id="pfiles" accept="image/*" multiple hidden><span>+ Add photos</span></label>' : '') + '</div>';
   c += '<p class="muted small">Take clear, flat photos of each page. For a PDF, paste a link above instead.</p>';
   c += '<label>Notes (levels, version or year, anything else)<textarea class="pinput" id="pnotes" rows="3">' + esc(P.form.notes) + '</textarea></label>';
-  c += phiWarn() + '<label class="chk"><input type="checkbox" id="pauth"' + (P.auth ? " checked" : "") + '> I am authorized to share these protocols, or I will help DrugBug get written permission from the agency. I understand DrugBug adds protocols only with written permission and medical director sign-off.</label>';
+  c += phiWarn() + '<label class="chk"><input type="checkbox" id="pauth"' + (P.auth ? " checked" : "") + '> I am authorized to make this request for my organization. I will not upload or email restricted materials or patient information. I understand that DrugBug uses protocols only for education and requires written permission from the owner before inclusion.</label>';
   if (PQ.err) c += '<div class="presult" role="alert">' + esc(PQ.err) + '</div>';
   if (PQ.msg) return c + '<div class="presult good" role="status">' + esc(PQ.msg) + '</div></div>';
   var ready = P.auth && (PQ.link.trim() || PQ.photos.length) && !PQ.busy;
@@ -9213,6 +9300,10 @@ function labAnswer(i) {
   saveProg();
 }
 
+/* Calculators that take typed-in patient values are off pending FDA and Apple 1.4.2 review (counsel, Nov 11 2026).
+   The formulas stay in the study text; nothing here computes a result from numbers a user enters. */
+var CALC_OFF = true;
+function calcOffNote() { return '<div class="callout small calcoff"><strong>Calculators are turned off.</strong> DrugBug does not calculate results or doses from values you enter. The formulas are still explained in the study material. Do not use DrugBug for patient care.</div>'; }
 /* lab math */
 var LABCALC = [
   ["ag", "Anion gap", [["na", "Na"], ["cl", "Cl"], ["hco3", "HCO3"]], function (v) { var g = v.na - (v.cl + v.hco3); return "Anion gap = " + g + " mEq/L. " + (g > 12 ? "Elevated: think MUDPILES / GOLDMARK (lactate, ketones, toxic alcohols, salicylates, uremia)." : g < 3 ? "Low: check albumin, lab error, paraproteins, lithium or bromide." : "Normal (about 8-12)."); }, "fl md"],
@@ -9222,7 +9313,7 @@ var LABCALC = [
   ["osmgap", "Osmolar gap", [["osm", "Measured osm"], ["na", "Na"], ["glu", "Glucose"], ["bun", "BUN"], ["etoh", "Ethanol (mg/dL, 0 if none)"]], function (v) { var calc = 2 * v.na + v.glu / 18 + v.bun / 2.8 + v.etoh / 3.7, g = v.osm - calc; return "Calculated osm = " + calc.toFixed(0) + "; gap = " + g.toFixed(0) + ". " + (g > 10 ? "Elevated: consider methanol, ethylene glycol, isopropanol, mannitol." : "Normal (< 10)."); }, "md"],
   ["aagrad", "A-a gradient (room air, sea level)", [["pao2", "PaO2"], ["paco2", "PaCO2"], ["age", "Age"], ["fio2", "FiO2 (0.21 = room air)"]], function (v) { var pA = v.fio2 * (760 - 47) - v.paco2 / 0.8, g = pA - v.pao2, n = v.age / 4 + 4; return "PAO2 = " + pA.toFixed(0) + "; A-a gradient = " + g.toFixed(0) + " (expected about " + n.toFixed(0) + " for age). " + (g > n + 5 ? "Elevated: V/Q mismatch, shunt or diffusion problem." : "Normal: hypoventilation or low inspired O2 if hypoxemic."); }, "md"]
 ];
-function labCalc(r) {
+function labCalc(r) { if (CALC_OFF) return calcOffNote();
   var vals = S.labcv || (S.labcv = {});
   return '<div class="labcalcs">' + LABCALC.filter(function (k) { return k[4].indexOf(r) >= 0; }).map(function (k) {
     var v = vals[k[0]] || {}, ok = k[2].every(function (f) { return v[f[0]] !== undefined && v[f[0]] !== "" && !isNaN(numIn(v[f[0]])); }), nums = {};
@@ -9347,7 +9438,7 @@ var HEMOCALC = [
   ["pvr", "Pulmonary vascular resistance", [["mpap", "Mean PA pressure"], ["pcwp", "PCWP"], ["co", "CO (L/min)"]], function (v) { var w = (v.mpap - v.pcwp) / v.co; return "PVR = " + w.toFixed(1) + " Wood units (" + (w * 80).toFixed(0) + " dynes-s/cm5). Above 2 Wood units is elevated."; }, "md"],
   ["cpp", "Cerebral perfusion pressure", [["map", "MAP"], ["icp", "ICP"]], function (v) { var p = v.map - v.icp; return "CPP = " + p.toFixed(0) + " mmHg. Common target 60-70 in TBI."; }, "fl md"]
 ];
-function labCalcList(list, r) {
+function labCalcList(list, r) { if (CALC_OFF) return calcOffNote();
   var vals = S.labcv || (S.labcv = {});
   return '<div class="labcalcs">' + list.filter(function (k) { return k[4].split(" ").indexOf(r) >= 0; }).map(function (k) {
     var v = vals[k[0]] || {}, ok = k[2].every(function (f) { return v[f[0]] !== undefined && v[f[0]] !== "" && !isNaN(numIn(v[f[0]])); }), nums = {};
@@ -9805,13 +9896,15 @@ function drawPaywall() {
   if (webBuy) {
     /* On the web the prices come from PLANS (and from Stripe at checkout), not from StoreKit, so
        there is nothing to wait for and the buttons can be drawn immediately. */
+    /* separate affirmative authorization for recurring charges (counsel, Nov 11 2026) */
+    c += '<label class="chk pwauth"><input type="checkbox" id="pwrauth"' + (PRO.rauth ? " checked" : "") + '> I authorize DrugBug (Volare Media LLC) to charge the plan price I choose every month or year, as shown, until I cancel. I can cancel future renewals any time from Manage subscription.</label>';
     ["plus", "pro"].forEach(function (t) {
       var P = PLANS[t], own = subTier() === t;
       c += '<section class="pwtier pw-' + t + '"><h3>' + TIER_NAME[t] + (own ? ' <span class="pill good">Your plan</span>' : '') + '</h3>' +
         '<ul class="pwperks">' + PLAN_PERKS[t].map(function (x) { return '<li><span>' + esc(x) + '</span></li>'; }).join("") + '</ul>';
       if (!own) c += '<div class="pwplans">' +
-        '<button class="pwplan best" data-pw="wbuy" data-plan="' + t + '_annual"' + (PRO.busy ? " disabled" : "") + '><span class="pwtag">Best value</span><strong>' + esc(P.y) + ' / year</strong><span>Billed yearly, renews automatically. Cancel any time.</span></button>' +
-        '<button class="pwplan" data-pw="wbuy" data-plan="' + t + '_monthly"' + (PRO.busy ? " disabled" : "") + '><strong>' + esc(P.m) + ' / month</strong><span>Billed monthly, renews automatically. Cancel any time.</span></button>' +
+        '<button class="pwplan best" data-pw="wbuy" data-plan="' + t + '_annual"' + (PRO.busy || !PRO.rauth ? " disabled" : "") + '><span class="pwtag">Best value</span><strong>' + esc(P.y) + ' / year</strong><span>Billed yearly, renews automatically. Cancel any time.</span></button>' +
+        '<button class="pwplan" data-pw="wbuy" data-plan="' + t + '_monthly"' + (PRO.busy || !PRO.rauth ? " disabled" : "") + '><strong>' + esc(P.m) + ' / month</strong><span>Billed monthly, renews automatically. Cancel any time.</span></button>' +
         '</div>';
       c += '</section>';
     });
@@ -9819,7 +9912,8 @@ function drawPaywall() {
     if (PRO.msg) c += '<div class="presult" role="alert">' + esc(PRO.msg) + '</div>';
     c += '<div class="pwrow">' + (subActive() && !NATIVE ? '<button class="linkish" data-pw="wmanage">Manage or cancel your subscription</button>' : '') + '<button class="linkish" data-act="codesgo">Have a code? Redeem it in Settings</button></div>';
     c += '<p class="muted small">DrugBug Free stays free forever: every tool in the app, over about 40 common medications.</p>';
-    c += '<p class="muted small pwfine">Payment is taken by Stripe; DrugBug never sees your card. Subscriptions renew automatically until cancelled, and you can cancel any time from Manage subscription above. Cancelling stops future renewals and your plan stays active until the end of the period you have paid for. DrugBug is for education only, not for patient care.' +
+    /* website checkout disclosure, counsel wording (Nov 11 2026), before Stripe collects billing details */
+    c += '<p class="muted small pwfine">Each plan costs the price shown every month or year and renews automatically at the disclosed renewal price unless cancelled. To stop future renewals, cancel from Manage subscription before your renewal. If you cancel, access continues through the paid period unless separately suspended, terminated or discontinued under the Terms. Stripe processes payment. See our <button class="linkish" data-legal="terms">Terms of Use</button> for refunds and other purchase details. Choosing a plan below is your authorization of the recurring charge. For adult study only; not for patient care.' +
       (site ? ' <a href="' + esc(site) + '/terms.html" target="_blank" rel="noopener">Terms of Use</a> · <a href="' + esc(site) + '/privacy.html" target="_blank" rel="noopener">Privacy Policy</a>' : '') + '</p>';
     pwdlg.innerHTML = c + '</div>'; translateDom(pwdlg);
     return;
@@ -9840,7 +9934,8 @@ function drawPaywall() {
   if (typeof iapBox === "function") c += iapBox();
   c += '<div class="pwrow"><button class="linkish" data-pw="restore">Restore purchases</button><button class="linkish" data-act="codesgo">Have a code? Redeem it in Settings</button>' + (NATIVE && PRO.store ? '<button class="linkish" data-pw="manage">Manage subscription</button>' : '') + '</div>';
   /* codes are redeemed in one place only, Settings > Account (owner, Nov 5 2026) */
-  c += '<p class="muted small pwfine">Prices are shown before you buy. Subscriptions renew automatically at the end of each billing period unless cancelled at least 24 hours before it ends. Payment is charged to your Apple Account when you confirm. Manage or cancel any time in iPhone Settings → your name → Subscriptions. Cancelling stops future renewals; refunds for App Store purchases are handled by Apple. Plus and Pro are in one subscription group, so changing plans replaces your current one. DrugBug is for education only, not for patient care.' +
+  /* iPhone checkout disclosure, counsel wording (Nov 11 2026) */
+  c += '<p class="muted small pwfine">Your Apple Account is charged when you confirm. This subscription renews automatically unless you cancel at least 24 hours before the current period ends. To manage or cancel it, open Settings, tap your name, then tap Subscriptions. Request App Store refunds through Apple, subject to applicable law. Plus and Pro are in one subscription group; when a change takes effect and what you are charged are shown on Apple\'s purchase screen. For adult study only; not for patient care.' +
     (site ? ' <a href="' + esc(site) + '/terms.html" target="_blank" rel="noopener">Terms of Use</a> · <a href="' + esc(site) + '/privacy.html" target="_blank" rel="noopener">Privacy Policy</a>' : ' <button class="linkish" data-legal="terms">Terms of Use</button> · <button class="linkish" data-legal="privacy">Privacy Policy</button>') + '</p>';
   pwdlg.innerHTML = c + '</div>'; translateDom(pwdlg);
 }
@@ -9904,7 +9999,7 @@ document.addEventListener("click", function (e) {
   if (a === "close") return closePaywall();
   if (a === "open") return openPaywall("");
   if (a === "buy") { PRO.busy = true; PRO.msg = ""; drawPaywall(); clearTimeout(PRO.busyT); PRO.busyT = setTimeout(function () { if (PRO.busy) { PRO.busy = false; PRO.msg = "No answer from the store yet. Try again in a moment."; drawPaywall(); } }, 60000); if (!storeCall("buy", { id: t.getAttribute("data-pid") })) { PRO.busy = false; PRO.msg = "Purchases work in the DrugBug iPhone app."; drawPaywall(); } return; }
-  if (a === "wbuy") { if (typeof subBuy === "function") subBuy(t.getAttribute("data-plan")); return; }
+  if (a === "wbuy") { if (!PRO.rauth) return; if (typeof subBuy === "function") subBuy(t.getAttribute("data-plan")); return; }
   if (a === "wmanage") { if (typeof subManage === "function") subManage(); return; }
   if (a === "restore") { PRO.restoring = true; PRO.msg = "Checking your purchases…"; drawPaywall(); if (!storeCall("restore")) { PRO.msg = "Restore works in the DrugBug iPhone app."; drawPaywall(); } return; }
   if (a === "manage") { if (!storeCall("manage")) { try { window.open("https://apps.apple.com/account/subscriptions", "_blank"); } catch (x) {} } return; }
@@ -9950,11 +10045,11 @@ document.addEventListener("click", function (e) {
 /* ---------- Drug Alternatives (medical route): "if this drug can't be ordered, what else is in the same class or treats the same thing?"
    Educational comparison only. Never says which drug to use; substitution is a prescriber/pharmacist decision. ---------- */
 var ALT_MODES = [
-  ["avail", "Not available / shortage"],
-  ["allergy", "Allergy or intolerance"],
-  ["renal", "Kidney disease"],
-  ["hepatic", "Liver disease"],
-  ["preg", "Pregnancy or breastfeeding"]
+  ["avail", "General comparison"],
+  ["allergy", "Allergy cross-reactivity"],
+  ["renal", "Kidney considerations"],
+  ["hepatic", "Liver considerations"],
+  ["preg", "Pregnancy and lactation labeling"]
 ];
 var ALT_STOP = { inhibitor: 1, inhibitors: 1, agonist: 1, agonists: 1, antagonist: 1, antagonists: 1, receptor: 1, receptors: 1, selective: 1, nonselective: 1, agent: 1, agents: 1, derivative: 1, non: 1, and: 1, of: 1, the: 1, with: 1, drug: 1, class: 1, type: 1, first: 1, second: 1, third: 1, fourth: 1, fifth: 1, generation: 1, short: 1, long: 1, acting: 1, intermediate: 1, synthetic: 1, analog: 1, analogue: 1, oral: 1, iv: 1, prodrug: 1, combination: 1, other: 1 };
 /* cross-reactivity facts, each cited ("according to" / "studies show"); shown only in allergy mode */
@@ -10020,13 +10115,13 @@ function altCard(it, mode, warn, rel) {
 function akaLine2(id) { var N = drugNames(id).filter(function (x) { var l = x.toLowerCase(), dn = nameOf(id).toLowerCase(); return dn.indexOf(l) < 0 && l.indexOf(dn.split(" ")[0]) < 0; }).slice(0, 2); return N.length ? '<span class="aka">' + esc(N.join(", ")) + '</span>' : ''; }
 function altsView() {
   var id = S.alt && DB.drugs[S.alt] ? S.alt : null, mode = S.altMode || "avail", q = S.altq || "";
-  var c = '<section class="alts"><p class="muted">Pick a drug to see others in the same class and drugs from other classes used for the same problems, with the differences that matter for the situation you choose.</p>' +
+  var c = '<section class="alts"><p class="muted">Pick a drug to study others in the same class and drug classes used for the same problems, with the label differences for the study focus you choose. For learning only: this does not recommend a substitution for anyone.</p>' +
     '<div class="callout legal small"><strong>Educational comparison only.</strong> This is not a substitution recommendation. Whether any drug is appropriate is a prescriber and pharmacist decision based on the FDA label, the patient and your formulary.</div>' +
-    '<div class="tools"><input class="search" id="altq" type="search" placeholder="Drug you wanted to order (generic or brand)" value="' + esc(q) + '" aria-label="Search for a drug" autocomplete="off"></div><div id="altres">' + altResults(q, id) + '</div>';
+    '<div class="tools"><input class="search" id="altq" type="search" placeholder="Drug to compare (generic or brand)" value="' + esc(q) + '" aria-label="Search for a drug" autocomplete="off"></div><div id="altres">' + altResults(q, id) + '</div>';
   if (!id) return c + '</section>';
   var d = DB.drugs[id], R = altsFor(id);
-  c += '<div class="altpick"><span class="eyebrow">Comparing alternatives to</span><h2><button class="altnm big" data-drug="' + id + '">' + esc(d.name) + '</button></h2>' + akaLine2(id) + '<div class="altcl">' + esc(get(d, 0, 4)) + '</div></div>';
-  c += '<div class="lbl">Why it can\'t be ordered</div><div class="chips">' + ALT_MODES.map(function (m) { return '<button class="chip" data-altmode="' + m[0] + '" aria-pressed="' + (mode === m[0]) + '">' + m[1] + '</button>'; }).join("") + '</div>';
+  c += '<div class="altpick"><span class="eyebrow">Drug class comparison for</span><h2><button class="altnm big" data-drug="' + id + '">' + esc(d.name) + '</button></h2>' + akaLine2(id) + '<div class="altcl">' + esc(get(d, 0, 4)) + '</div></div>';
+  c += '<div class="lbl">Compare with a study focus</div><div class="chips">' + ALT_MODES.map(function (m) { return '<button class="chip" data-altmode="' + m[0] + '" aria-pressed="' + (mode === m[0]) + '">' + m[1] + '</button>'; }).join("") + '</div>';
   if (mode === "allergy") {
     var cls = get(d, 0, 3) + " " + get(d, 0, 4), xr = ALT_XR.filter(function (x) { return x.test.test(cls); });
     c += '<div class="callout small"><strong>Allergy view.</strong> Drugs from a different class are listed first. Drugs in the same class are marked, because cross-reactivity is possible.' + xr.map(function (x) { return '<p>' + esc(x.text) + '</p>'; }).join("") + '</div>';
@@ -10772,7 +10867,17 @@ var D3 = (function () {
     trim:   { c: lin([0.95, 0.96, 0.97]), sp: 0.1, sh: 20, rim: 0.15 },
     skin:   null,  /* the gap at the open back shows the dummy himself (his yellow, re-tinted) */
     wood:   { c: lin([0.55, 0.38, 0.24]), sp: 0.18, sh: 30, rim: 0.12 },   /* the kitchen chair in On Scene */
-    metal:  { c: lin([0.62, 0.64, 0.68]), sp: 0.6, sh: 70, rim: 0.2 }
+    metal:  { c: lin([0.62, 0.64, 0.68]), sp: 0.6, sh: 70, rim: 0.2 },
+    /* Med Sandbox props (owner, Nov 10 2026) */
+    mattress: { c: lin([0.86, 0.88, 0.92]), sp: 0.15, sh: 20, rim: 0.18 },
+    pad:    { c: lin([0.20, 0.36, 0.58]), sp: 0.2, sh: 24, rim: 0.15 },
+    pump:   { c: lin([0.90, 0.91, 0.93]), sp: 0.4, sh: 50, rim: 0.2 },
+    screen: { c: lin([0.30, 0.85, 0.55]), sp: 0.7, sh: 90, rim: 0.4 },
+    bag:    { c: lin([0.86, 0.93, 0.98]), sp: 0.7, sh: 90, rim: 0.5 },
+    mask:   { c: lin([0.78, 0.92, 0.86]), sp: 0.7, sh: 80, rim: 0.45 },
+    tube:   { c: lin([0.82, 0.94, 0.90]), sp: 0.5, sh: 60, rim: 0.3 },
+    pill:   { c: lin([0.98, 0.98, 0.96]), sp: 0.4, sh: 50, rim: 0.2 },
+    bvm:    { c: lin([0.95, 0.72, 0.30]), sp: 0.3, sh: 40, rim: 0.2 }
   };
 
   /* ---------------- the skeleton ---------------- */
@@ -10781,7 +10886,18 @@ var D3 = (function () {
   /* the resting pose: arms a little away from the body, a soft elbow */
   var REST = { shL: [0, 0, 0.2], shR: [0, 0, -0.2], elL: [-0.14, 0, 0], elR: [-0.14, 0, 0], hipL: [0, 0, 0.03], hipR: [0, 0, -0.03] };
 
-  function Rig() {
+  /* body types (owner, Nov 10 2026): o.sex "m"/"f", o.build 0 thin / 1 average / 2 heavy, o.kid for a
+     child. Everything is scaled from the same skeleton, so every pose and reaction still fits. */
+  function Rig(o) {
+    o = o || {};
+    var fem = o.sex === "f", bd = o.build == null ? 1 : o.build, kid = !!o.kid;
+    var gw = [0.84, 1, 1.28][bd], lf = [0.82, 1, 1.24][bd];
+    var BS = {
+      pel: [1.04 * gw * (fem ? 1.14 : 1), 1, 0.76 * gw * (fem ? 1.06 : 1)],
+      abd: [1.22 * gw * (fem && bd < 2 ? 0.88 : 1), 1, 0.92 * gw],
+      chs: [1.08 * gw * (fem ? 0.92 : 1), 1, 0.74 * gw * (bd === 2 ? 1.08 : 1)],
+      lim: [lf, 1, lf], shx: fem ? 0.19 : 0.205, hipx: fem ? 0.094 : 0.088
+    };
     var nodes = {}, meshes = [], list = [];
     function node(name, parent, p, opt) {
       opt = opt || {};
@@ -10820,31 +10936,33 @@ var D3 = (function () {
       thigh: limb(0.44, [0.052, 0.058, 0.066, 0.075, 0.082, 0.084, 0.08]), shin: limb(0.4, [0.035, 0.037, 0.043, 0.054, 0.062, 0.058, 0.053]), shoe: capsule(0.058, 0.25, 8), hipball: sphere(0.08)
     };
     /* balance tilts him from his feet; spin turns him about his own vertical axis */
-    var bal = node("bal", null, [0, 0, 0]), spin = node("spin", bal, [0, 0, 0]);
+    var bal = node("bal", null, [0, 0, 0], { s: kid ? [0.6, 0.6, 0.6] : fem ? [0.94, 0.94, 0.94] : [1, 1, 1] }), spin = node("spin", bal, [0, 0, 0]);
     var hips = node("hips", spin, [0, HIPY, 0]);
     /* the skirt hangs from a pivot at the hip joints and swings with the thighs (see update) */
     /* no gown (owner, Nov 5 2026): a smooth mannequin torso in his skin tone */
     var skirtN = node("skirt", hips, [0, -0.07, 0]);
-    mesh(hips, G.pelvis, MAT.yellow, "pelvis", [0, 0, 0], null, [1.04, 1, 0.76], true);
+    mesh(hips, G.pelvis, MAT.yellow, "pelvis", [0, 0, 0], null, BS.pel, true);
     var spine = node("spine", hips, [0, 0.09, 0]);
-    mesh(spine, G.abdomen, MAT.yellow, "abdomen", [0, 0, 0], null, [1.22, 1, 0.92], true);
+    mesh(spine, G.abdomen, MAT.yellow, "abdomen", [0, 0, 0], null, BS.abd, true);
+    if (bd === 2) mesh(spine, sphere(0.14), MAT.yellow, "abdomen", [0, 0.06, 0.075], null, [1.12, 1.02, 1.12]);   /* a heavier build carries it in front */
     var chest = node("chest", spine, [0, 0.17, 0]);
-    mesh(chest, G.chest, MAT.yellow, "chest", [0, 0, 0], null, [1.08, 1, 0.74], true);
+    mesh(chest, G.chest, MAT.yellow, "chest", [0, 0, 0], null, BS.chs, true);
+    if (fem && !kid) [1, -1].forEach(function (sx) { var bk = [0.95, 1.08, 1.3][bd]; mesh(chest, G.pec, MAT.yellow, "chest", [0.074 * sx * gw, 0.185, 0.098 * gw], null, [0.9 * bk, 0.85 * bk, 0.75 * bk]); });
     /* a little pectoral definition, like the moulded chest plate on the real thing */
     var neck = node("neck", chest, [0, 0.335, 0]);
-    mesh(neck, G.neck, MAT.yellow, "neck", [0, 0.035, 0]);
+    mesh(neck, G.neck, MAT.yellow, "neck", [0, 0.035, 0], null, [Math.min(1.12, gw) * (fem ? 0.9 : 1), 1, Math.min(1.12, gw) * (fem ? 0.9 : 1)]);
     var head = node("head", neck, [0, 0.075, 0]);
-    mesh(head, G.head, MAT.yellow, "head", [0, 0, 0.008], null, [0.94, 1, 1.06]);
+    var hk = kid ? 1.22 : fem ? 0.96 : 1; mesh(head, G.head, MAT.yellow, "head", [0, 0, 0.008], null, [0.94 * hk, hk, 1.06 * hk]);
     /* no face and no hair (owner, Nov 5 2026): a smooth mannequin head */
     function arm(side, sx) {
-      var sh = node("sh" + side, chest, [0.205 * sx, 0.265, 0]);
+      var sh = node("sh" + side, chest, [BS.shx * sx * Math.min(1.1, gw), 0.265, 0]);
       mesh(sh, G.ball, MAT.yellow, "arm" + side, [0, 0, 0]);
-      mesh(sh, G.upper, MAT.yellow, "arm" + side, [0, -0.165, 0]);
+      mesh(sh, G.upper, MAT.yellow, "arm" + side, [0, -0.165, 0], null, BS.lim);
       var el = node("el" + side, sh, [0, -0.315, 0]);
       /* the elbow: a rounded joint with the point of the elbow showing at the back */
       mesh(el, G.jElbow, MAT.yellow, "arm" + side, [0, 0, 0]);
       mesh(el, G.knob, MAT.yellow, "arm" + side, [0, 0.004, -0.036], null, [1, 1.1, 0.9]);
-      mesh(el, G.fore, MAT.yellow, "arm" + side, [0, -0.145, 0]);
+      mesh(el, G.fore, MAT.yellow, "arm" + side, [0, -0.145, 0], null, BS.lim);
       var wr = node("wr" + side, el, [0, -0.285, 0]);
       mesh(wr, G.jWrist, MAT.yellow, "arm" + side, [0, -0.004, 0], null, [1.05, 0.9, 0.78]);
       /* a hand: palm, four fingers of different lengths, and a thumb on the outside */
@@ -10856,14 +10974,14 @@ var D3 = (function () {
     }
     arm("L", 1); arm("R", -1);
     function leg(side, sx) {
-      var hp = node("hip" + side, hips, [0.088 * sx, -0.07, 0]);
-      mesh(hp, G.hipball, MAT.yellow, "leg" + side, [0, -0.02, 0]);
-      mesh(hp, G.thigh, MAT.yellow, "leg" + side, [0, -0.235, 0]);
+      var hp = node("hip" + side, hips, [BS.hipx * sx * Math.min(1.12, gw), -0.07, 0]);
+      mesh(hp, G.hipball, MAT.yellow, "leg" + side, [0, -0.02, 0], null, BS.lim);
+      mesh(hp, G.thigh, MAT.yellow, "leg" + side, [0, -0.235, 0], null, [lf * (fem ? 1.05 : 1), 1, lf * (fem ? 1.05 : 1)]);
       var kn = node("kn" + side, hp, [0, -0.46, 0]);
       /* the knee: the joint itself with a kneecap sitting in front of it */
       mesh(kn, G.jKnee, MAT.yellow, "leg" + side, [0, 0, 0], null, [1, 1.05, 1]);
       mesh(kn, G.patella, MAT.yellow, "leg" + side, [0, 0.012, 0.042], null, [1.15, 1.3, 0.75]);
-      mesh(kn, G.shin, MAT.yellow, "leg" + side, [0, -0.215, 0]);
+      mesh(kn, G.shin, MAT.yellow, "leg" + side, [0, -0.215, 0], null, BS.lim);
       var an = node("an" + side, kn, [0, -0.415, 0]);
       /* the ankle: the joint and the two ankle bones either side */
       mesh(an, G.jAnkle, MAT.yellow, "leg" + side, [0, 0, 0]);
@@ -10884,6 +11002,40 @@ var D3 = (function () {
     mesh(chairN, rail, MAT.wood, "prop", [-0.17, 0.66, -0.08]).mesh.prop = "chair";
     mesh(chairN, slat, MAT.wood, "prop", [0, 0.78, -0.09], [0, 0, PI / 2]).mesh.prop = "chair";
     mesh(chairN, slat, MAT.wood, "prop", [0, 0.64, -0.09], [0, 0, PI / 2]).mesh.prop = "chair";
+    /* ---- Med Sandbox props (owner, Nov 10 2026); each shows only when the scene lists it ---- */
+    function prop(par, geo, mat, name, p, r, s) { mesh(par, geo, mat, "prop", p, r, s).mesh.prop = name; }
+    var RZ = [0, 0, PI / 2], RX = [PI / 2, 0, 0];
+    /* a stretcher: mattress top at 0.87 m, head end to his right (-X) */
+    var strN = node("stretcher", spin, [0, 0, 0]);
+    prop(strN, capsule(0.1, 1.96, 8), MAT.mattress, "stretcher", [0, 0.82, 0], RZ, [0.5, 1, 3.0]);
+    prop(strN, capsule(0.08, 0.36, 8), MAT.mattress, "stretcher", [-0.8, 0.9, 0], RZ, [0.45, 1, 2.6]);
+    [0.31, -0.31].forEach(function (z) { prop(strN, capsule(0.016, 1.98, 6), MAT.metal, "stretcher", [0, 0.76, z], RZ); prop(strN, capsule(0.012, 0.9, 6), MAT.pad, "stretcher", [0.1, 0.96, z * 1.05], RZ); });
+    [[0.82, 0.24], [0.82, -0.24], [-0.82, 0.24], [-0.82, -0.24]].forEach(function (q) { prop(strN, capsule(0.02, 0.7, 6), MAT.metal, "stretcher", [q[0], 0.4, q[1]]); prop(strN, sphere(0.045), MAT.black, "stretcher", [q[0], 0.045, q[1]]); });
+    prop(strN, capsule(0.016, 0.62, 6), MAT.metal, "stretcher", [0.82, 0.07, 0], RX); prop(strN, capsule(0.016, 0.62, 6), MAT.metal, "stretcher", [-0.82, 0.07, 0], RX);
+    /* an IV pole with a pump and a bag, beside him */
+    var ivN = node("ivpole", spin, [0.42, 0, -0.52]);
+    prop(ivN, capsule(0.012, 1.95, 6), MAT.metal, "pump", [0, 0.98, 0]);
+    [0, 1.26, 2.51, 3.77, 5.03].forEach(function (a) { prop(ivN, capsule(0.01, 0.3, 4), MAT.metal, "pump", [Math.sin(a) * 0.14, 0.03, Math.cos(a) * 0.14], [PI / 2, a, 0]); });
+    prop(ivN, capsule(0.07, 0.2, 8), MAT.pump, "pump", [0.03, 1.12, 0.05], RZ, [1, 1, 0.75]);
+    prop(ivN, capsule(0.03, 0.09, 6), MAT.screen, "pump", [0.03, 1.15, 0.105], RZ, [0.6, 1, 0.3]);
+    prop(ivN, capsule(0.06, 0.2, 8), MAT.bag, "pump", [0, 1.74, 0.03], null, [1, 1, 0.45]);
+    prop(ivN, capsule(0.004, 0.55, 4), MAT.tube, "pump", [0.01, 1.42, 0.04]);
+    prop(ivN, capsule(0.004, 0.75, 4), MAT.tube, "pump", [-0.14, 0.86, 0.22], [0.9, 0, 0.4]);
+    /* on his face: a nebulizer mask (DuoNeb), a non-rebreather or nasal cannula for oxygen, a bag-valve mask */
+    var maskGeo = lathe([[0.062, 0], [0.058, 0.025], [0.045, 0.05], [0.024, 0.07], [0, 0.076]], 20);
+    prop(head, maskGeo, MAT.mask, "neb", [0, 0.065, 0.075], RX);
+    prop(head, capsule(0.022, 0.07, 6), MAT.mask, "neb", [0, 0.012, 0.16]);
+    prop(head, capsule(0.008, 0.16, 4), MAT.tube, "neb", [0, -0.09, 0.16]);
+    prop(head, torus(0.1, 0.003, 26, 4), MAT.tube, "neb", [0, 0.1, -0.005], [0.25, 0, 0]);
+    prop(head, maskGeo, MAT.mask, "nrb", [0, 0.065, 0.075], RX);
+    prop(head, capsule(0.05, 0.13, 8), MAT.bag, "nrb", [0, -0.035, 0.15], null, [1, 1, 0.7]);
+    prop(head, torus(0.1, 0.003, 26, 4), MAT.tube, "nrb", [0, 0.1, -0.005], [0.25, 0, 0]);
+    prop(head, torus(0.098, 0.0035, 26, 4), MAT.tube, "nc", [0, 0.085, 0.002], [0.12, 0, 0]);
+    prop(head, capsule(0.005, 0.03, 4), MAT.tube, "nc", [0.008, 0.088, 0.1], RX); prop(head, capsule(0.005, 0.03, 4), MAT.tube, "nc", [-0.008, 0.088, 0.1], RX);
+    prop(head, maskGeo, MAT.mask, "bvm", [0, 0.065, 0.075], RX);
+    prop(head, capsule(0.055, 0.2, 8), MAT.bvm, "bvm", [0, 0.07, 0.24], RX, [1, 1, 0.85]);
+    /* a pill in his right hand, for medicines by mouth */
+    prop(nodes.wrR, sphere(0.011), MAT.pill, "pill", [0, -0.12, 0.03], null, [1.4, 1, 1]);
     this.nodes = nodes; this.meshes = meshes; this.list = list; this.G = G;
   }
   Rig.prototype.update = function () {
@@ -10902,7 +11054,9 @@ var D3 = (function () {
       var k = J[i], n = N[k], b = REST[k] || [0, 0, 0], d = P[k] || [0, 0, 0];
       n.r[0] = b[0] + d[0]; n.r[1] = b[1] + d[1]; n.r[2] = b[2] + d[2];
     }
-    N.hips.p[1] = HIPY + (P.drop || 0); N.hips.p[2] = P.shift || 0;
+    N.hips.p[1] = HIPY + (P.drop || 0); N.hips.p[2] = P.shift || 0; N.hips.p[0] = P.hipx || 0;
+    /* the hips' own turn: lets him lie down flat (Med Sandbox stretcher) */
+    if (P.hips) { N.hips.r[0] = P.hips[0]; N.hips.r[1] = P.hips[1]; N.hips.r[2] = P.hips[2]; } else { N.hips.r[0] = 0; N.hips.r[1] = 0; N.hips.r[2] = 0; }
     this.update();
   };
   Rig.prototype.at = function (name, off) { return xf(this.nodes[name].world, off || [0, 0, 0]); };
@@ -11101,6 +11255,13 @@ var D3GL = (function () {
     if (ao > 0.001) C.addInto(P, { shL: [-0.15, 0, 1.15], shR: [-0.15, 0, -1.15], elL: [0.1, 0, 0.25], elR: [0.1, 0, -0.25] }, ao);
     var tl = S.tilt;
     if (Math.abs(tl) > 0.002) C.addInto(P, { hipL: [0, 0, Math.max(0, -tl) * 0.9 + 0.05 * Math.abs(tl)], hipR: [0, 0, -Math.max(0, tl) * 0.9 - 0.05 * Math.abs(tl)], spine: [0, 0, -tl * 0.5], head: [0, 0, -tl * 0.6] }, 1);
+    /* walking in place (Med Sandbox): legs and arms swing in opposition, a small bob */
+    if (sc && sc.walk) {
+      var ph = t * sc.walk * PI * 2, sw = Math.sin(ph), cw = Math.cos(ph);
+      C.addInto(P, { hipL: [-0.36 * sw, 0, 0], hipR: [0.36 * sw, 0, 0], knL: [0.12 + 0.42 * Math.max(0, cw), 0, 0], knR: [0.12 + 0.42 * Math.max(0, -cw), 0, 0],
+        anL: [-0.12 * sw, 0, 0], anR: [0.12 * sw, 0, 0], shL: [0.3 * sw, 0, 0], shR: [-0.3 * sw, 0, 0], elL: [-0.25, 0, 0], elR: [-0.25, 0, 0],
+        drop: -0.018 + 0.016 * Math.abs(cw), spine: [0.04, Math.sin(ph) * 0.06, 0] }, 1);
+    }
     /* breathing, so he is never completely still */
     var br = sc && sc.breath ? sc.breath : null, bw = br ? br.rate : 1.5, ba = br ? br.amp : 0.014;
     C.addInto(P, { chest: [Math.sin(t * bw) * ba, 0, 0], spine: [Math.sin(t * bw + 0.6) * ba * 0.43, 0, 0], head: [Math.sin(t * 0.7) * 0.01, Math.sin(t * 0.43) * (br ? 0.02 : 0.05), 0] }, 1);
@@ -11220,9 +11381,11 @@ var D3GL = (function () {
     return o;
   }
   var SHM = shadowMat(), QUAD = { p: new Float32Array([-1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1]), n: new Float32Array(12), i: new Uint16Array([0, 1, 2, 0, 2, 3]) };
+  function propOn(p) { var sc = S.scene; if (!sc) return false; if (p === "chair") return !!sc.chair; return !!(sc.props && sc.props[p]); }
+  function cam() { return (S.scene && S.scene.cam) || CAM; }
   function viewProj() {
-    var cv = S.cv, asp = (cv.width / Math.max(1, cv.height)) || 0.66;
-    var V = C.lookAt(CAM.eye, CAM.at, [0, 1, 0]), P = C.persp(CAM.fov, asp, 0.1, 30);
+    var cv = S.cv, asp = (cv.width / Math.max(1, cv.height)) || 0.66, CM = cam();
+    var V = C.lookAt(CM.eye, CM.at, [0, 1, 0]), P = C.persp(CM.fov, asp, 0.1, 30);
     return C.mul(P, V);
   }
   function draw() {
@@ -11242,15 +11405,15 @@ var D3GL = (function () {
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, b.i); gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
     gl.enable(gl.STENCIL_TEST); gl.stencilFunc(gl.EQUAL, 0, 0xff); gl.stencilOp(gl.KEEP, gl.KEEP, gl.INCR);
     gl.useProgram(S.sprog.p); gl.uniformMatrix4fv(S.sprog.u.uVP, false, VP); gl.uniformMatrix4fv(S.sprog.u.uS, false, SHM); gl.uniform1f(S.sprog.u.uA, 0.26);
-    for (i = 0; i < M.length; i++) { m = M[i]; if (m.mesh.prop && !(S.scene && S.scene.chair)) continue; b = upload(gl, m.mesh.geo);
+    for (i = 0; i < M.length; i++) { m = M[i]; if (m.mesh.prop && !propOn(m.mesh.prop)) continue; b = upload(gl, m.mesh.geo);
       gl.uniformMatrix4fv(S.sprog.u.uM, false, m.world);
       gl.bindBuffer(gl.ARRAY_BUFFER, b.p); gl.enableVertexAttribArray(S.sprog.aP); gl.vertexAttribPointer(S.sprog.aP, 3, gl.FLOAT, false, 0, 0);
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, b.i); gl.drawElements(gl.TRIANGLES, b.c, gl.UNSIGNED_SHORT, 0); }
     gl.disable(gl.STENCIL_TEST); gl.disable(gl.BLEND); gl.depthMask(true); gl.enable(gl.DEPTH_TEST);
     /* the dummy himself */
     var pr = S.prog, now = performance.now(), sel = AREA_PARTS[S.sel] || [];
-    gl.useProgram(pr.p); gl.uniformMatrix4fv(pr.u.uVP, false, VP); gl.uniform3fv(pr.u.uCam, CAM.eye);
-    for (i = 0; i < M.length; i++) { m = M[i]; var mm = m.mesh, mat = mm.mat; if (mm.prop && !(S.scene && S.scene.chair)) continue; b = upload(gl, mm.geo);
+    gl.useProgram(pr.p); gl.uniformMatrix4fv(pr.u.uVP, false, VP); gl.uniform3fv(pr.u.uCam, cam().eye);
+    for (i = 0; i < M.length; i++) { m = M[i]; var mm = m.mesh, mat = mm.mat; if (mm.prop && !propOn(mm.prop)) continue; b = upload(gl, mm.geo);
       gl.uniformMatrix4fv(pr.u.uM, false, m.world); gl.uniformMatrix3fv(pr.u.uNM, false, C.nrm3(m.world));
       gl.uniform3fv(pr.u.uCol, mat.c); gl.uniform3f(pr.u.uSp, mat.sp, mat.sh, mat.rim); if (pr.u.uPat) gl.uniform1f(pr.u.uPat, mat.pat ? 1 : 0);
       var e = sel.indexOf(mm.part) >= 0 ? 0.045 : 0, fl = S.flash[mm.part];
@@ -11360,6 +11523,8 @@ var D3GL = (function () {
     /* the dummy wears the colour of the specialty you are in, toned down (owner, Nov 5 2026) */
     tint: function (rgb) { /* he is a person now: skin stays skin whatever the route colour (owner, Nov 5 2026) */ },
     mount: mount, react: react, live: function () { return S.ok && !!S.cv && S.cv.isConnected; },
+    /* body type (Med Sandbox, owner Nov 10 2026): {sex, build, kid}; rigs are kept once built */
+    body: function (o) { if (!init()) return; var k = JSON.stringify(o || {}); S.rigs = S.rigs || {}; if (S.rigKey === k) return; if (!S.rigs[k]) S.rigs[k] = new C.Rig(o); S.rig = S.rigs[k]; S.rigKey = k; S.rig.pose({}); kick(); },
     select: function (area) { S.sel = area || ""; },
     /* On Scene (owner, Nov 5 2026): a held posture, an optional chair, breathing rate and effort.
        scene(null) gives him back to the Anatomy tab. */
@@ -11886,7 +12051,7 @@ function accBonus() {
     Prog.d.proGift = { until: from + ACC_BONUS_HRS * 36e5 }; Prog.d.acctBonus = Date.now();
     if (typeof flushProg === "function") flushProg(); else saveProg();
     try { localStorage.setItem("drugbug:progress", JSON.stringify(Prog.d)); } catch (e) {}
-    return " You have DrugBug Pro free for the next 3 days.";
+    return " You have three days of Pro access. It ends automatically, with no payment method and no charge.";
   } catch (e) { return ""; }
 }
 function accDone(text, created) { if (created) text = (text || "") + accBonus(); ACCT.busy = false; ACCT.msg = text || ""; try { sessionStorage.setItem("drugbug:accmsg", ACCT.msg); } catch (e) {} setTimeout(function () { location.reload(); }, 300); }
@@ -11937,7 +12102,7 @@ function accAskOpen() {
   accdlg.innerHTML = '<div class="panel pwpanel accask" role="dialog" aria-modal="true" aria-label="Make a free account" tabindex="-1">' +
     '<p class="wdwkick">' + (Prog.d.earned || 0).toLocaleString() + ' sticks and counting</p><h2>' + (NATIVE ? 'Back up your bug with a free account' : 'Make a free account, get 3 days of Pro') + '</h2>' +
     '<p>Right now your bug, your sticks and your progress live only on this ' + (NATIVE ? 'phone' : 'browser') + '. A free account backs them up and brings them to your other devices' + (NATIVE ? ', including drugbugapp.com' : '') + '.</p>' +
-    (NATIVE ? '' : '<p><strong>Make one now and DrugBug Pro is yours free for 3 days:</strong> every drug, every level, every quiz.</p>') +
+    (NATIVE ? '' : '<p><strong>Free account benefit:</strong> Eligible new DrugBug accounts receive three days of Pro access once. Access ends automatically. No payment method is required and no subscription starts or charge occurs unless you separately choose to buy one.</p>') +
     '<div class="actions"><button class="btn" data-accask="go">Make my free account</button><button class="btn ghost" data-accask="no">Not now</button></div></div>';
   accdlg.hidden = false; var p = accdlg.querySelector(".panel"); if (p) p.focus();
 }
@@ -11951,7 +12116,7 @@ function accNudge() {
   if (!accNudgeOk()) return "";
   return '<div class="accnudge"><span class="annx" aria-hidden="true">' +
     '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11V8a7 7 0 0 1 14 0v3"/><rect x="4" y="11" width="16" height="10" rx="2.5"/></svg></span>' +
-    '<span class="antx"><strong>This is all saved in this browser only.</strong> Make a free account and it follows you to your phone, and survives clearing your history. New accounts get 3 days of DrugBug Pro free.</span>' +
+    '<span class="antx"><strong>This is all saved in this browser only.</strong> Make a free account and it follows you to your phone, and survives clearing your history. Eligible new accounts receive three days of Pro access once; it ends automatically, with no payment method and no charge.</span>' +
     '<span class="anact"><button class="btn small" data-acc="nudgego">Make an account</button>' +
     '<button class="linkish small" data-acc="nudgeno">Not now</button></span></div>';
 }
@@ -11978,13 +12143,13 @@ function accCard() {
       else c += setRow("Use it on " + (NATIVE ? "the website" : "your iPhone"), (NATIVE ? "The website signs in with Google or email, not Apple." : "The iPhone app signs in with Apple or email, not Google.") + " Add a password and sign in there with your email.", '<button class="btn small ghost" data-acc="mode" data-m="addpw">Add a password</button>');
     }
     if (ACCT.del) {
-      c += '<div class="presult"><strong>Delete your DrugBug account?</strong> This permanently deletes your account and everything stored with it: progress, scores, saved list, Terrarium, error reports and protocol requests. It cannot be undone. App Store subscriptions are not cancelled automatically; cancel them in iPhone Settings → your name → Subscriptions.' +
+      c += '<div class="presult"><strong>Delete your DrugBug account?</strong> This permanently deletes your account and everything stored with it: progress, scores, saved list, Terrarium, error reports and protocol requests. It cannot be undone. Deleting your account does not cancel a subscription: cancel an App Store subscription in iPhone Settings → your name → Subscriptions' + (NATIVE ? '' : ', or a website subscription from Manage subscription') + ' before deleting to avoid further charges. Paid access and purchased Sticks stored with the account may no longer be available.' + (NATIVE && typeof PRO !== "undefined" && PRO.store ? ' <button class="linkish" data-pw="manage">Manage subscriptions</button>' : '') +
         (s.provider === "email" ? '<label class="small">Confirm your password<input class="pinput" id="accdelpw" type="password" autocomplete="current-password"></label>' : '<p class="small">You will be asked to confirm with Apple.</p>') +
         '<div class="actions"><button class="btn small" data-acc="delyes"' + (ACCT.busy ? " disabled" : "") + '>Delete my account</button><button class="btn small ghost" data-acc="delno">Keep my account</button></div></div>';
     } else c += setRow("Delete account", "Permanently delete your account and its data.", '<button class="btn small ghost" data-acc="delask">Delete account</button>');
     return c;
   }
-  c += setRow("Account (optional)", "DrugBug works without an account. Create one to back up your progress and sync it across devices" + (NATIVE ? ", including drugbugapp.com" : "") + (Prog.d.acctBonus || NATIVE ? "" : ", and get 3 days of DrugBug Pro free") + ". We never show your email or account to other users.", "");
+  c += setRow("Account (optional)", "DrugBug works without an account. Create one to back up your progress and sync it across devices" + (NATIVE ? ", including drugbugapp.com" : "") + (Prog.d.acctBonus || NATIVE ? "" : ". Eligible new accounts receive three days of Pro access once, with no payment method and no charge") + ". We never show your email or account to other users.", "");
   /* Sign in with Apple needs the native AuthenticationServices bridge, so it only appears in the
      iPhone app; the website offers Google instead (owner, Nov 1 2026). Email works in both. */
   var hasApple = typeof ACCT.api.hasApple === "function" ? ACCT.api.hasApple() : true;
@@ -13459,8 +13624,8 @@ var FB_LIMITS = [
   ["Only what you have the right to share", "No agency protocols, internal documents, copyrighted material or other people's work without permission."],
   ["Nothing about other people, nothing unlawful", "No personal information about anyone else, and nothing harassing, threatening, defamatory or illegal."],
   ["Not for emergencies or medical advice", "Feedback is not monitored around the clock and DrugBug does not give individual medical advice. In an emergency, call 911."],
-  ["Use of your feedback", "By sending, you agree that Volare Media LLC may use, change and publish your suggestions to improve DrugBug, without payment, credit or any obligation to you."],
-  ["Privacy", "Feedback travels by email, so it is only as private as your email account. Your address and message are handled under the DrugBug Privacy Policy."]
+  ["Use of your feedback", "Product suggestions may be used to improve DrugBug without payment or credit, as the Terms of Use explain. This never permits publishing personal or patient information."],
+  ["Privacy", "We use the contact details and message you submit to respond and improve DrugBug, as explained in the Privacy Policy. Do not send confidential information by email."]
 ];
 function fbLimitsHTML(withBox) {
   return '<div class="fblimits"><strong>Before you send</strong><ul>' + FB_LIMITS.map(function (x) { return '<li><b>' + esc(x[0]) + '.</b> ' + esc(x[1]) + '</li>'; }).join("") + '</ul>' +
@@ -13543,7 +13708,7 @@ function drawIdeas() {
     '<p class="muted small">Email app did not open? Write to <a href="mailto:' + esc(ideaEmail()) + '">' + esc(ideaEmail()) + '</a>.</p><div class="actions"><button class="btn" data-iact="close">Done</button></div></div>';
   c += '<p class="muted">Feedback, bugs, corrections and ideas go straight to the DrugBug team. Every message is read.</p>';
   c += '<div class="pform"><label>What is it about?<select class="pinput" id="idtype">' + IDEA_TYPES.map(function (t) { return '<option' + (o.type === t ? " selected" : "") + '>' + esc(t) + '</option>'; }).join("") + '</select></label>';
-  c += '<label>Your message<textarea class="pinput" id="idtext" rows="6" maxlength="2000" placeholder="For example: the dose card for X looks wrong, or add a quiz on Y">' + esc(o.text) + '</textarea></label>' + fbLimitsHTML(true);
+  c += phiWarn() + '<label>Your message<textarea class="pinput" id="idtext" rows="6" maxlength="2000" placeholder="For example: a question that looks wrong (include its ID), or add a quiz on a topic">' + esc(o.text) + '</textarea></label>' + fbLimitsHTML(true);
   if (ID.err) c += '<div class="presult" role="alert">' + esc(ID.err) + '</div>';
   c += '<p class="muted small">This opens your email app, so the team can reply to you there. Sent to ' + esc(ideaEmail()) + '.</p>';
   c += '<div class="actions"><button class="btn" data-iact="send">Write email</button><button class="btn ghost" data-iact="close">Cancel</button></div></div>';
@@ -15699,7 +15864,7 @@ function dvAlt(g, ft) { var col = Math.min(10, Math.max(1, Math.ceil(ft / 1000))
 /* ---- views ---- */
 function dvNote() { return '<div class="dvwarn" role="note"><strong>Study tool, not for dive planning.</strong> Values from the U.S. Navy Diving Manual, Rev 7. Real dives and treatments follow the current official manual under a Dive Supervisor and a Diving Medical Officer.</div>'; }
 function dvGroupOpts(sel) { return DV_G.map(function (g) { return '<option' + (g === sel ? ' selected' : '') + '>' + g + '</option>'; }).join(""); }
-function diveCalcView() {
+function diveCalcView() { if (CALC_OFF) return calcOffNote();
   var D = S.dv || (S.dv = { d: 60, t: 40, si: 90, d2: 40, t2: 20, alt: 8000 });
   return dvNote() +
     '<section class="dvcard"><h3><span class="dvn">1</span>First dive</h3><div class="dvin"><label>Depth (fsw)<input type="number" inputmode="numeric" min="1" max="190" data-dv="d" value="' + D.d + '"></label><label>Bottom time (min)<input type="number" inputmode="numeric" min="1" data-dv="t" value="' + D.t + '"></label></div><div class="dvout" id="dvo1"></div></section>' +
@@ -15822,7 +15987,7 @@ var FM_VENT = [
 ];
 /* ARDSNet lower PEEP / higher FiO2 table */
 var FM_PEEP = [["0.3", "5"], ["0.4", "5 to 8"], ["0.5", "8 to 10"], ["0.6", "10"], ["0.7", "10 to 14"], ["0.8", "14"], ["0.9", "14 to 18"], ["1.0", "18 to 24"]];
-function fmVentView() {
+function fmVentView() { if (CALC_OFF) return calcOffNote();
   var V = S.fmv || (S.fmv = { h: 70, sex: "m" });
   var c = '<section class="dvcard"><h3>Ideal body weight and breath size</h3><div class="dvin"><label>Height (inches)<input type="number" inputmode="numeric" min="48" max="90" data-fmv="h" value="' + V.h + '"></label><label>Sex<select data-fmv="sex"><option value="m"' + (V.sex === "m" ? " selected" : "") + '>Male</option><option value="f"' + (V.sex === "f" ? " selected" : "") + '>Female</option></select></label></div><div class="dvout" id="fmvo"></div><p class="muted small">IBW: male 50 + 2.3 kg per inch over 5 ft; female 45.5 + 2.3 kg per inch over 5 ft.</p></section>';
   FM_VENT.forEach(function (v) { c += '<section class="dvcard"><h3>' + esc(v[0]) + '</h3><div class="pccrows">' + v[1].map(function (r) { return pccRow("", r[1], r[0]); }).join("") + '</div>' + (v[2] ? '<p class="muted small" style="margin:6px 0 0">' + esc(v[2]) + '</p>' : '') + '</section>'; });
@@ -27389,7 +27554,7 @@ var FM_CALC = {
   gcs: [["e", "Eyes (1 to 4)", 4], ["v", "Verbal (1 to 5)", 5], ["m", "Motor (1 to 6)", 6]],
   tbsa: [["head", "Head and neck (0 to 9)", 0], ["arms", "Arms (0 to 18)", 0], ["chest", "Front torso (0 to 18)", 0], ["back", "Back torso (0 to 18)", 0], ["legs", "Legs (0 to 36)", 0], ["peri", "Perineum (0 to 1)", 0]]
 };
-function fmCalc(k) {
+function fmCalc(k) { if (CALC_OFF) return calcOffNote();
   var F = FM_CALC[k]; if (!F) return "";
   var V = (S.calcV = S.calcV || {})[k] || {};
   return '<section class="refcalc" data-calc="' + k + '"><h4>Calculator</h4><div class="refin">' + F.map(function (f) { return '<label>' + esc(f[1]) + '<input class="pinput" data-cf="' + f[0] + '" value="' + esc(V[f[0]] != null ? V[f[0]] : f[2]) + '" inputmode="decimal"></label>'; }).join("") + '</div><div class="refout" id="calc-' + k + '">' + fmCalcOut(k) + '</div></section>';
@@ -28443,7 +28608,7 @@ function sysMap() {
   return map;
 }
 function sysIds(k) { if (/^[cg]:/.test(String(k || ""))) return lcatIds(k); return (sysMap()[k] || []).slice(); }
-function sysQCount(ids) { var pool = basePool(), n = 0; for (var i = 0; i < pool.length; i++) if (pool[i].d && ids.indexOf(pool[i].d) >= 0) n++; return n; }
+function sysQCount(ids) { var pool = basePool(), sc = {}, n = 0; scopeIds().forEach(function (x) { sc[x] = 1; }); for (var i = 0; i < pool.length; i++) if (pool[i].d && sc[pool[i].d] && ids.indexOf(pool[i].d) >= 0) n++; return n; }
 function sysRec(k) { return (Prog.d.sysq || {})[S.level + ":" + k] || null; }
 function sysSave(k, sc) {
   Prog.d.sysq = Prog.d.sysq || {};
@@ -29468,6 +29633,17 @@ function iapJar() {
     '<g>' + iapStick(18, 50, 28, -62, 4) + iapStick(28, 52, 30, -84, 4, "#a16207") + iapStick(40, 50, 26, -104, 4, "#7c4a21") + '</g></svg>';
 }
 
+/* purchase terms beside the buy buttons, counsel wording (Nov 11 2026). Purchased Sticks are counted
+   apart from earned ones (wallets/{uid} vs Prog.d.earned) and earned and promotional Sticks are spent
+   first, so the purchased Sticks left are min(balance, purchased). */
+function paidSticksLeft() { var b = typeof sticks === "function" ? sticks() : 0; return Math.max(0, Math.min(b, typeof walletSticks === "function" ? walletSticks() : 0)); }
+function stickTerms() {
+  var st = null; try { st = typeof ACCT !== "undefined" && ACCT.api && ACCT.api.state ? ACCT.api.state() : null; } catch (e) {}
+  var guest = !(st && st.email);
+  return '<div class="iapterms small"><p>Each pack is a one-time purchase of the number of Sticks shown, for the price shown. Sticks and items bought with them are for use in DrugBug only. You cannot sell, transfer or cash them out. Purchases are not refundable because you change your mind, except as required by law or provided in Section 17 of the <button class="linkish" data-legal="terms">Terms of Use</button>. If a purchase is missing, duplicated or unauthorized, use the support or refund process for the channel you used: Apple for App Store purchases, or ' + (NATIVE ? 'us at VolareMediaLLC@gmail.com' : '<a href="mailto:VolareMediaLLC@gmail.com">VolareMediaLLC@gmail.com</a>') + ' for website purchases.</p>' +
+    '<p>When you spend Sticks, earned and promotional Sticks are used first. Purchased Sticks do not expire.' + (paidSticksLeft() ? ' You have ' + paidSticksLeft().toLocaleString() + ' purchased Sticks left.' : '') + '</p>' +
+    (guest ? '<p><strong>No account:</strong> if you buy Sticks without a DrugBug account, the balance is tied to this installation of the app or this browser and may be lost if you delete the app, clear browser data or change devices. Create an account first to keep purchased Sticks across devices.</p>' : '') + '</div>';
+}
 /* ---------- the screen ---------- */
 function iapView() {
   var bal = typeof sticks === "function" ? sticks() : 0, where = iapAvailable();
@@ -29489,12 +29665,13 @@ function iapView() {
       '<span class="iapname">' + esc(p.name) + '</span>' +
       (p.bonus ? '<span class="iapbonus">+' + p.bonus.toLocaleString() + ' free</span>' : '<span class="iapbonus flat">no bonus</span>') +
       '<span class="muted small iapblurb">' + esc(p.blurb) + '</span>' +
-      '<button class="btn small' + (where ? '' : ' ghost') + '" data-iapbuy="' + p.id + '"' + (where && !busy ? '' : ' disabled') + '>' + (busy ? 'Opening the store...' : esc(iapPrice(p))) + '</button>' +
+      '<span class="small iapdeal">One-time purchase of ' + tot.toLocaleString() + ' Sticks for ' + esc(iapPrice(p)) + '</span>' +
+      '<button class="btn small' + (where ? '' : ' ghost') + '" data-iapbuy="' + p.id + '"' + (where && !busy ? '' : ' disabled') + ' aria-label="Buy ' + tot.toLocaleString() + ' Sticks for ' + esc(iapPrice(p)) + '">' + (busy ? 'Opening the store...' : 'Buy for ' + esc(iapPrice(p))) + '</button>' +
       (isFinite(per) ? '<span class="iapper">about ' + per.toLocaleString() + ' a dollar</span>' : '') +
       '</div>';
   }).join("") + '</div>';
   /* virtual-item terms next to the buy buttons (legal update, Nov 7 2026) */
-  c += '<p class="muted small iapfine">Sticks and everything you buy with them are virtual items for use in DrugBug only. They have no cash value and cannot be exchanged or transferred. Purchases are final except where the law or the store\'s refund policy requires a refund. See the <button class="linkish" data-legal="terms">Terms of Use</button>, section 8.</p>';
+  c += stickTerms();
   /* a gift code sits with the packs: it is the other way sticks arrive (owner, Nov 1 2026) */
   c += '<div class="iapcode"><h3>Have a code?</h3><p><button class="btn small ghost" data-act="codesgo">Redeem it in Settings</button></p></div>';
   if (where) c += '<p class="actions"><button class="btn ghost small" data-iaprestore="1"' + (IAP.busy === "restore" ? ' disabled' : '') + '>' + (IAP.busy === "restore" ? 'Checking...' : 'Restore purchases') + '</button></p>';
@@ -29502,7 +29679,7 @@ function iapView() {
     '<p class="muted small">How they are earned:</p><ul>' +
     [["Every correct answer", 3], ["Every question you try, even if you miss it", 1], ["A card you have not read before", 1], ["Perfect score on ten or more", 10], ["Each achievement", 25], ["The daily DrugBug", 10]]
       .map(function (r) { return '<li>' + r[0] + ' &mdash; ' + r[1] + '</li>'; }).join("") + '</ul></div>';
-  c += '<p class="muted small iapfine">Prices are set and charged by the app store, in your own currency, and may differ from the figures above. Sticks are a one-time purchase, not a subscription, and they stay with the account you bought them on. They have no cash value and cannot be refunded through DrugBug; refunds go through the store.</p>';
+  c += '<p class="muted small iapfine">Prices are set and charged by the app store in your own currency. Sticks are a one-time purchase, not a subscription.</p>';
   return c;
 }
 /* Stick packs box (owner, Nov 8 2026): App Review could not find the stick packs, which lived two taps
@@ -29512,11 +29689,11 @@ function iapBox() {
   var where = iapAvailable();
   if (!where) return "";
   return '<section class="iapbox" aria-label="Stick packs"><div class="iapboxh"><h3>' + (typeof stickIcon === "function" ? stickIcon(18) : "") + 'Stick packs</h3>' +
-    '<span class="muted small">One-time purchases, not a subscription. Sticks buy bugs, outfits and music; they never unlock study content.</span></div>' +
+    '<span class="muted small">One-time purchases, not a subscription. Sticks buy bugs, outfits and music; they never unlock study content.</span></div>' + stickTerms() +
     '<ul class="iapboxl">' + IAP_PACKS.map(function (p) {
       var busy = IAP.busy === p.id;
       return '<li><span class="iapbn"><strong>' + esc(p.name) + '</strong><span class="muted small">' + iapTotal(p).toLocaleString() + ' sticks' + (p.bonus ? ' (includes ' + p.bonus.toLocaleString() + ' bonus)' : '') + '</span></span>' +
-        '<button class="btn small" data-iapbuy="' + p.id + '"' + (busy ? ' disabled' : '') + '>' + (busy ? 'Opening...' : esc(iapPrice(p))) + '</button></li>';
+        '<button class="btn small" data-iapbuy="' + p.id + '"' + (busy ? ' disabled' : '') + ' aria-label="Buy ' + iapTotal(p).toLocaleString() + ' Sticks for ' + esc(iapPrice(p)) + '">' + (busy ? 'Opening...' : 'Buy ' + iapTotal(p).toLocaleString() + ' for ' + esc(iapPrice(p))) + '</button></li>';
     }).join("") + '</ul>' +
     (IAP.msg ? '<p class="presult good small" role="status">' + esc(IAP.msg) + '</p>' : '') + (IAP.err ? '<p class="presult bad small" role="alert">' + esc(IAP.err) + '</p>' : '') +
     '<p class="actions"><button class="btn small ghost" data-goshop="1" data-shopf="sticks">Open Get Sticks</button>' + (where ? '<button class="btn small ghost" data-iaprestore="1">Restore purchases</button>' : '') + '</p></section>';
@@ -29945,7 +30122,7 @@ function giftGive(d) {
       if (!owned(d.bug)) Prog.d.owned = (Prog.d.owned || []).concat([d.bug]);
       Prog.d.avatar = d.bug; Prog.d.avatarTs = Date.now(); got.push("the " + bugById(d.bug).name);
     }
-    if (d.rev) { Prog.d.reviewer = { id: d.id, at: Date.now() }; got.push("question reviewer access (a reviewer panel now shows after each answer)"); setTimeout(function () { try { evWelcome(); } catch (e) {} }, 350); }
+    if (d.rev) { Prog.d.reviewer = { id: d.id, at: Date.now() }; if (typeof evPausedFor === "function" && evPausedFor()) got.push("an evaluator code. " + EV_PAUSE_MSG); else { got.push("question reviewer access (a reviewer panel now shows after each answer)"); setTimeout(function () { try { evWelcome(); } catch (e) {} }, 350); } }
     if (d.ag) {
       store("agcode", d.ag);
       if (typeof AGP !== "undefined") { AGP.code = d.ag; AGP.tried = false; AGP.data = null; if (typeof agpAuto === "function") agpAuto(); }
@@ -30050,7 +30227,7 @@ function giftBox() {
     (GIFT.msg ? '<p class="presult" role="status">' + esc(GIFT.msg) + '</p>' : '') + giftWebBox() +
     '<form class="pform inl" data-giftform="1"><label class="gl gname">Your full name<input class="pinput pname" id="giftname" type="text" autocomplete="name" autocapitalize="words" maxlength="80" placeholder="First and last name" value="' + esc(GIFT.name || (Prog.d && Prog.d.fullName) || "") + '"></label><label class="gl">Code<input class="pinput" id="giftin" type="text" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="Enter your code" value="' + esc(GIFT.code) + '"></label>' +
     '<button class="btn small" type="submit"' + (GIFT.busy ? " disabled" : "") + '>' + (GIFT.busy ? "Checking..." : "Redeem") + '</button></form>' +
-    '<p class="muted small">Gift codes, access codes, school or agency codes and agency protocol codes all go here. Every code except a school class key needs your full name; only the DrugBug team sees it (<button class="linkish" data-legal="privacy">Privacy Policy</button>). Codes are personal and cannot be sold or traded (<button class="linkish" data-legal="terms">Terms of Use</button>, section 8).</p></div>';
+    '<p class="muted small">Gift codes, access codes, school or agency codes and agency protocol codes all go here. A class key does not ask for your name. If a different code requires your full name, we use it to verify and record redemption as described in the <button class="linkish" data-legal="privacy">Privacy Policy</button>. Do not sell or trade your code. The <button class="linkish" data-legal="terms">Terms of Use</button> explain how codes work.</p></div>';
 }
 function giftDraw() {
   var el = document.getElementById("giftbox");
@@ -30398,7 +30575,7 @@ function groupRedeemKey(raw, win, fail) {
     store("seat", { tier: "pro", until: r.until, orgName: r.orgName, alias: r.alias, level: SEAT.level });
     if (typeof webDeepLoad === "function") webDeepLoad();
     setTimeout(function () { try { classIntro(); } catch (e) {} }, 400);
-    win("You're in " + r.orgName + " as " + r.alias + ". DrugBug Pro is on until " + new Date(r.until).toLocaleDateString() + ". Your quiz results now count toward your class (no name or email is shared). Your class, its scoreboard and your scores are under My Class in " + (r.level && typeof levelObj === "function" && levelObj(r.level) ? "the " + levelObj(r.level).name + " menu" : "your level's menu") + ".");
+    win("You're in " + r.orgName + " as " + r.alias + ". DrugBug Pro is on until " + new Date(r.until).toLocaleDateString() + ". DrugBug displays your class results to your instructor under your class key label, without your name or email. Your class and your scores are under My Class in " + (r.level && typeof levelObj === "function" && levelObj(r.level) ? "the " + levelObj(r.level).name + " menu" : "your level's menu") + ".");
   }).catch(function (e) {
     fail(e && e.message === "offline" ? "Class keys need an internet connection. Connect and try again." : (e && e.message) || "Could not check that key right now. Try again in a moment.");
   });
@@ -30516,8 +30693,8 @@ function classIntroCards() {
   var until = SEAT.until ? new Date(SEAT.until).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" }) : "";
   return [
     ["Welcome to " + (SEAT.orgName || "your class"), "You are " + SEAT.alias + " in this class. DrugBug Pro is on for you" + (until ? " until " + until : "") + ", at no cost to you. Everything you study from now on counts toward your class."],
-    ["What your instructor sees", "Your instructor sees your scores: how many questions you answer, your accuracy, how you do on each medication and topic, and which questions you missed (with the answer you chose). They see you only as " + SEAT.alias + ". DrugBug never shares your name or email with them."],
-    ["Your Dashboard and weekly prizes", "Open the Dashboard in " + (lv ? "the " + lv + " menu" : "your level's menu") + " for your scores, your strengths and weak spots, and the class scoreboard. Each week the top three in your class win a bug for their Terrarium. In the last week of every month, first place wins a legendary bug."]
+    ["What your instructor sees", "DrugBug displays class results to your instructor under your class key label, " + SEAT.alias + ". Results include your scores and activity by medication and topic and may show missed questions and the answers you selected. Your instructor may know which key they gave you. DrugBug does not send your name or email as part of the class results."],
+    ["Your Dashboard", "Open the Dashboard in " + (lv ? "the " + lv + " menu" : "your level's menu") + " for your scores and your strengths and weak spots." + (clBoardOn() ? " This class has a scoreboard: other members of this class can see your alias or approved nickname and displayed scores. Choose a nickname that does not identify you or anyone else." : " Class scoreboards are off.")]
   ];
 }
 function classIntro() { CI.i = 0; ciDraw(); cidlg.hidden = false; }
@@ -30784,11 +30961,15 @@ document.addEventListener("click", function (e) {
   var b = e.target && e.target.closest && e.target.closest('[data-dnick="clear"]'); if (!b) return;
   dashNickSave("");
 });
+/* class scoreboards stay off until a school authorizes one (counsel, Nov 11 2026): the server can turn a
+   class's board on with data.boardOn; until then students see only their own results, no rank */
+function clBoardOn() { return !!(CL.data && CL.data.boardOn === true); }
 function dashMe() { var b = CL.data && CL.data.board; if (!b) return null; for (var i = 0; i < b.length; i++) if (b[i].me) return { rank: b[i].rank, of: CL.data.count || b.length, row: b[i] }; return null; }
 function dashStrip() {
   if (S.view !== "level") return "";
   var L = dashLocal(), cls = dashInClass(), me = cls ? dashMe() : null;
   if (cls) dashLoad();
+  if (cls && !clBoardOn()) cls = false;
   var st = function (v, lab) { return '<span class="dst"><b>' + esc(String(v)) + '</b><small>' + esc(lab) + '</small></span>'; };
   var cells = cls
     ? st(me ? "#" + me.rank : "—", me ? "of " + me.of + " in class" : "class rank") + st(me && me.row.accuracy != null ? Math.round(me.row.accuracy) + "%" : L.acc == null ? "—" : L.acc + "%", "accuracy") + st(me ? me.row.week : L.week, "this week")
@@ -30802,7 +30983,7 @@ function dashView() {
   var c = '<section class="dashpage">';
   /* in a class the headline numbers are the class's count (every quiz type), the same as the banner */
   var R = me ? me.row : null, ans = R ? Math.max(R.answered, L.answered) : L.answered, acc = R && R.accuracy != null ? Math.round(R.accuracy) : L.acc, wk = R ? R.week : L.week;
-  c += '<div class="dtiles">' + (cls ? tile(me ? "#" + me.rank + " of " + me.of : "—", "class rank") : "") + tile(ans.toLocaleString(), "questions answered") + tile(acc == null ? "—" : acc + "%", "accuracy") + tile(wk, "answered this week") + tile(L.streak, "day streak") + '</div>';
+  c += '<div class="dtiles">' + (cls && clBoardOn() ? tile(me ? "#" + me.rank + " of " + me.of : "—", "class rank") : "") + tile(ans.toLocaleString(), "questions answered") + tile(acc == null ? "—" : acc + "%", "accuracy") + tile(wk, "answered this week") + tile(L.streak, "day streak") + '</div>';
   var max = Math.max.apply(null, L.days.map(function (d) { return d[1]; }).concat([1]));
   c += '<div class="dcard2"><h3>Last 14 days</h3><div class="dbars">' + L.days.map(function (d) { var h = Math.round(100 * d[1] / max); return '<div class="dbar" title="' + esc(d[0].toLocaleDateString() + ": " + d[1] + " answered") + '"><i style="height:' + Math.max(d[1] ? 4 : 0, h) + '%"></i><span>' + (d[0].getMonth() + 1) + "/" + d[0].getDate() + '</span></div>'; }).join("") + '</div></div>';
   c += '<div class="dcard2"><h3>Your scores</h3>' + clMine(L.n ? L.m : null) + '</div>';
@@ -30810,7 +30991,8 @@ function dashView() {
     c += '<div class="dcard2" id="dashclass"><h3>' + esc(SEAT.orgName || "Your class") + '</h3><p class="muted small">You are <strong>' + esc(SEAT.alias) + '</strong> · Pro until ' + esc(new Date(SEAT.until).toLocaleDateString()) + '</p>';
     if (!CL.data) c += '<p class="muted">' + (CL.busy ? "Loading the class…" : (CL.msg || "The scoreboard needs an internet connection.")) + '</p>';
     else {
-      c += dashNick() + dashPrizeBox(CL.data) + '<div class="dtabs"><button class="' + (DASH.all ? "" : "on") + '" data-dboard="week">This week</button><button class="' + (DASH.all ? "on" : "") + '" data-dboard="all">All time</button></div>' + clBoard(CL.data, !DASH.all);
+      if (!clBoardOn()) c += '<p class="muted small">Class scoreboards are off. Your instructor sees your results under your class key label.</p>';
+      else c += dashNick() + dashPrizeBox(CL.data) + '<div class="dtabs"><button class="' + (DASH.all ? "" : "on") + '" data-dboard="week">This week</button><button class="' + (DASH.all ? "on" : "") + '" data-dboard="all">All time</button></div>' + clBoard(CL.data, !DASH.all);
       if (CL.data.mine) c += '<details class="cldim"><summary>Your class results, by quiz type and more</summary>' + clMine(CL.data.mine) + '</details>';
     }
     c += '</div>';
@@ -30875,6 +31057,7 @@ function clBoard(d, weekly) {
 function clComp(m) {
   var wk = CL.cw !== false, T = wk ? m.teams.week : m.teams.all, B = wk ? m.board.week : m.board.all;
   var c = '<p class="muted small">Your agency\'s protocol questions only, from Protocols in the menu.' + (m.myTeam ? ' Your team: <strong>' + esc(m.myTeam) + '</strong>.' : '') + '</p>';
+  c += '<p class="muted small">Participating members of this agency program can see team names, team rankings and individual rankings shown under your alias or approved nickname. Use a nickname that does not identify you or anyone else. Do not enter patient information.</p>';
   c += '<div class="cltabs clsub"><button class="' + (wk ? "on" : "") + '" data-clact="cweek">This week</button><button class="' + (wk ? "" : "on") + '" data-clact="call">All time</button></div>';
   if (wk && m.endsAt) { var dl = Math.max(0, Math.ceil((m.endsAt - Date.now()) / 864e5)); c += '<p class="muted small">This week ends in ' + dl + ' day' + (dl === 1 ? '' : 's') + '.</p>'; }
   if (m.teamCount) {
@@ -30897,13 +31080,14 @@ function classView() {
     c += '<p class="muted">Got a class key from your instructor? Enter it here to join your class. You get DrugBug Pro while the class runs, a class scoreboard, and your own scores broken down every way.</p>';
     c += '<form class="pform" id="clform"><label>Class key<input class="pinput clkey" id="clkey" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="DB-XXXX-XXX-XXX" value="' + esc(CL.key) + '"></label><button class="btn" type="submit"' + (CL.busy ? " disabled" : "") + '>' + (CL.busy ? "Checking…" : "Join my class") + '</button></form>';
     if (CL.msg) c += '<p class="presult' + (CL.err ? "" : " good") + '">' + esc(CL.msg) + '</p>';
-    c += '<p class="muted small">No name or email is shared. Your instructor sees you only as a student number.</p>';
+    c += '<p class="muted small">DrugBug displays class results to your instructor under your class key label, such as Student 07. Results include your scores and activity by medication and topic and may show missed questions and the answers you selected. Your instructor may know which key they gave you. DrugBug does not send your name or email as part of the class results.</p>';
     c += '<p class="muted small">Teaching a class? <a href="' + (NATIVE ? "https://drugbugapp.com/instructor/" : "../instructor/") + '" target="_blank" rel="noopener">Instructor portal</a></p>';
     return c;
   }
   c += '<div class="clhead"><b>' + esc(SEAT.orgName) + '</b><span>You are <strong>' + esc(SEAT.alias) + '</strong> · Pro until ' + esc(new Date(SEAT.until).toLocaleDateString()) + '</span></div>';
   var comp = CL.data && CL.data.comp && CL.data.comp.on;
   if (CL.view === "comp" && !comp) CL.view = "board";
+  if (!clBoardOn()) { if (CL.view === "board") CL.view = "mine"; if (CL.msg) c += '<p class="presult' + (CL.err ? "" : " good") + '">' + esc(CL.msg) + '</p>'; c += '<p class="muted small">Class scoreboards are off. Your instructor sees your results under your class key label.</p>' + (comp ? '<div class="cltabs"><button class="' + (CL.view === "comp" ? "on" : "") + '" data-clact="comp">Protocols</button><button class="' + (CL.view === "mine" ? "on" : "") + '" data-clact="mine">My results</button></div>' : ''); if (!CL.data) return c + '<p class="muted">' + (CL.busy ? "Loading…" : "") + '</p>'; return c + (CL.view === "comp" && comp ? clComp(CL.data.comp) : clMine(CL.data.mine)); }
   c += '<div class="cltabs"><button class="' + (CL.view === "board" ? "on" : "") + '" data-clact="board">Scoreboard</button>' + (comp ? '<button class="' + (CL.view === "comp" ? "on" : "") + '" data-clact="comp">Protocols</button>' : '') + '<button class="' + (CL.view === "mine" ? "on" : "") + '" data-clact="mine">My scores</button><button data-clact="refresh" aria-label="Refresh">↻</button></div>';
   if (CL.msg) c += '<p class="presult' + (CL.err ? "" : " good") + '">' + esc(CL.msg) + '</p>';
   if (!CL.data) c += '<p class="muted">' + (CL.busy ? "Loading…" : "") + '</p>';

@@ -2,12 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#f6f4fc" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#17132a" media="(prefers-color-scheme: dark)">
 <meta name="description" content="DrugBug: medications explained plainly for EMS, nursing, medical and imaging students.">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script>/* block pinch-zoom and double-tap zoom (Nov 10 2026) */
+(function(){var no=function(e){e.preventDefault()};["gesturestart","gesturechange","gestureend"].forEach(function(t){document.addEventListener(t,no,{passive:false})});
+document.addEventListener("touchmove",function(e){if(e.touches&&e.touches.length>1&&!(e.target.closest&&e.target.closest(".bm3dcv,.c3cv")))e.preventDefault()},{passive:false});
+})();</script>
 </head>
 <body>
 <!-- One shared grain filter for the grown-up bug shells. Defined once here rather than per bug:
@@ -2023,7 +2027,11 @@ html[data-motion="reduce"] *,html[data-motion="reduce"] *::before,html[data-moti
    The horizontal strips that DO scroll (tabs, the top bar, chip rows) get overscroll-behavior-x
    contain of their own, so flicking one to its end stops there instead of chaining the leftover
    momentum into the page behind it. */
-html,body{overflow-x:clip;overscroll-behavior:contain;touch-action:pan-y}
+/* No zooming (owner, Nov 10 2026, for 1.2.1): pinch or double-tap could leave the app stuck zoomed in and
+   sliding side to side. The viewport tag turns zoom off, the gesture script below catches Safari's pinch,
+   and touch-action stops double-tap zoom. Text size stays adjustable in Settings. */
+html,body{overflow-x:clip;overscroll-behavior:contain;touch-action:pan-y;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+button,a,input,select,textarea,label,summary,[role="button"]{touch-action:manipulation}
 .tabs,.tbacts,.subbar,.fchips,.settabs,.pickrow,.tablewrap,.tblwrap,.dvscroll,.xwrap{overscroll-behavior-x:contain;touch-action:pan-x pan-y}
 .filtpanel{min-width:0}.filtpanel .chips{flex-wrap:wrap;overflow:visible}.filtpanel .sel{width:100%;max-width:420px;min-width:0}
 .stickchip .tlabel{font-family:var(--f-display);font-weight:800;margin:0 2px}@media (max-width:430px){.stickchip .tlabel{display:none}.stickchip{padding:4px 8px 4px 4px}}.stickchip[aria-current="page"]{border-color:var(--lg2)}
@@ -2803,6 +2811,7 @@ table.cmptbl tr.dif th{border-left:3px solid var(--gold)}
 .dosewarn strong{color:var(--warn)}.dosewarn .dsrc{margin-top:4px;font-size:12.5px;color:var(--muted)}.dosewarn .dsrc a{color:inherit;text-decoration:underline}
 .dosewarn.small{font-size:12.5px;padding:7px 10px}.dosewarn.small .dsrc{display:block}
 .dlabel{margin-top:6px}.dlabel summary{cursor:pointer;font-weight:700;font-size:12.5px}.dlabel p{margin:4px 0;font-size:13px}
+.mulist{display:flex;flex-direction:column;gap:2px;max-height:200px;overflow-y:auto;border:1.5px solid var(--line);border-radius:12px;padding:6px 8px}.mulrow{display:flex;align-items:center;gap:8px;font-size:14px;padding:4px 0}.mulrow input{width:18px;height:18px;flex:none}
 .mupop{position:fixed;z-index:60;top:var(--mupopTop,72px);right:max(12px,calc((100vw - 1100px)/2 + 12px));width:min(320px,calc(100vw - 24px));margin:0;max-width:320px;background:var(--surface);border:1.5px solid var(--line);border-radius:16px;padding:12px 14px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px}
 .mupop .murow{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .muvol{display:flex;align-items:center;gap:10px;font-weight:700;font-size:14px}.muvol input[type=range]{flex:1;accent-color:var(--flight);min-width:120px}.muvol output{min-width:44px;text-align:right;font-variant-numeric:tabular-nums}
