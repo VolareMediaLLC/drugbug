@@ -176,15 +176,15 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
   <div class="card hero">
     <div>
       <h2>See exactly where every student stands on their medications</h2>
-      <p class="lead">DrugBug gives each of your students a private study app, and gives you a live dashboard: the exact questions your class misses most (and the wrong answer they chose), the medications and question styles they struggle with, and a weekly scoreboard that keeps them studying.</p>
+      <p class="lead">DrugBug gives each of your students a private study app, and gives you a live dashboard: the exact questions your class misses most (and the wrong answer they chose), the medications and question styles they struggle with, and an optional class scoreboard.</p>
       <div class="ctas"><a class="cta" href="#pilot">Start a free pilot</a><a class="cta2" href="#demo">See the demo dashboard</a></div>
-      <p class="muted small" style="margin-top:12px">No student names or emails, ever. Each student gets a class key and shows up as Student 01, 02, and so on. Your printed key sheet is the only link to a real person.</p>
+      <p class="muted small" style="margin-top:12px">DrugBug does not ask students for names or emails. Each student enters a class key, and DrugBug displays class results to you under the key label, such as Student 07. Results include scores and activity by medication and topic and may show missed questions and the answers selected. Keep your key-to-student list outside DrugBug.</p>
     </div>
     <ul class="feats">
       <li><b>What to reteach first</b>A plain-language summary of the class's biggest gaps, updated as they study.</li>
       <li><b>The questions they miss</b>Lowest-scoring questions with the right answer, the most-picked wrong answer and the explanation.</li>
       <li><b>Every drug, class and question style</b>Medications, drug classes, question styles, body systems and study modes, weakest first, plus a downloadable report.</li>
-      <li><b>A weekly scoreboard with prizes</b>Top three each week win a bug; the last week of each month, a legendary one.</li>
+      <li><b>An optional class scoreboard</b>Off unless you turn it on. When it is on, class members see aliases or approved nicknames and displayed scores. Keep labels and nicknames free of names, emails and student IDs.</li>
       <li><b>Pro for every student</b>The full app, free to them, for as long as your class runs.</li>
     </ul>
   </div>
@@ -205,6 +205,8 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
     <label>Start date<input id="pStart" type="date"></label>
   </div>
   <label style="margin-top:10px">Anything else<input id="pNote" placeholder="Optional"></label>
+  <label class="muted small" style="display:flex;gap:8px;align-items:flex-start;margin-top:12px"><input type="checkbox" id="pAuth" style="width:auto;margin-top:3px"> <span>I am authorized to request or administer this class for my school or agency. I agree to the <a href="../terms.html">Terms of Use</a>. I will distribute class keys only to adults 18 and older and keep any key-to-student list out of DrugBug. The <a href="../privacy.html">Privacy Policy</a> explains how DrugBug handles class and account data.</span></label>
+  <p class="muted small" style="margin-top:6px">Institutional approval and any data agreement your school or agency requires are confirmed separately before a pilot class starts. Before students join, they are told who can see their results. Leaving a class stops new results from being shared with the class; to delete class data, a student or instructor sends a deletion request as described in the Privacy Policy.</p>
   <div class="row" style="margin-top:12px"><button id="bPilot2">Send pilot request</button><span class="muted small">Or email <a href="mailto:VolareMediaLLC@gmail.com">VolareMediaLLC@gmail.com</a></span></div>
   <p class="muted small" style="margin-top:8px">Classes are a free pilot under the <a href="../terms.html">Terms of Use</a> (sections 6 and 7) and the <a href="../privacy.html">Privacy Policy</a>. Class keys are for students 18 and older.</p>
 </section>
@@ -224,7 +226,8 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
     <button class="ghost" id="bReset">Forgot password</button>
   </div>
   <p id="inMsg" class="msg hide"></p>
-  <p class="muted small">By signing in or creating an account you agree to the <a href="../terms.html">Terms of Use</a> and <a href="../privacy.html">Privacy Policy</a>.</p>
+  <label class="muted small" style="display:flex;gap:8px;align-items:flex-start"><input type="checkbox" id="upAuth" style="width:auto;margin-top:3px"> <span>Creating an account: I am authorized to request or administer this class for my school or agency. I agree to the <a href="../terms.html">Terms of Use</a>. I will distribute class keys only to adults 18 and older and keep any key-to-student list out of DrugBug. The <a href="../privacy.html">Privacy Policy</a> explains how DrugBug handles class and account data.</span></label>
+  <p class="muted small">By signing in you agree to the <a href="../terms.html">Terms of Use</a> and <a href="../privacy.html">Privacy Policy</a>.</p>
   <p class="muted small" style="margin-top:12px">New to DrugBug for instructors? <a href="./">See the demo dashboard</a> or start a free pilot.</p>
 </section>
 
@@ -497,7 +500,7 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
   </div>
 </section>
 </div>
-<footer class="sitef noprint"><p>Educational use only. Not for clinical decision-making or patient care. Not a medical device.</p><p>Not affiliated with or endorsed by NREMT, NCSBN, FSMB/NBME, ARRT or AHA.</p><p>&copy; Volare Media LLC &middot; <a href="mailto:VolareMediaLLC@gmail.com">VolareMediaLLC@gmail.com</a></p><p class="flinks"><a href="../about.html">About</a> &middot; <a href="../protocols.html">Protocols &amp; packages</a> &middot; <a href="../support.html">Support</a> &middot; <a href="../privacy.html">Privacy</a> &middot; <a href="../terms.html">Terms</a> &middot; <a href="../disclaimers.html">Disclaimers</a> &middot; <a href="../evaluate.html">Become an evaluator</a> &middot; <a href="../instructor/signin/">Instructor login</a></p></footer>
+<footer class="sitef noprint"><p>For adult study only. Do not use DrugBug for patient care or clinical decisions. No medical advice.</p><p>DrugBug is not affiliated with or endorsed by any examination, certification or professional organization named in DrugBug.</p><p>&copy; Volare Media LLC &middot; <a href="mailto:VolareMediaLLC@gmail.com">VolareMediaLLC@gmail.com</a></p><p class="flinks"><a href="../about.html">About</a> &middot; <a href="../protocols.html">Protocols &amp; packages</a> &middot; <a href="../support.html">Support</a> &middot; <a href="../privacy.html">Privacy</a> &middot; <a href="../terms.html">Terms</a> &middot; <a href="../disclaimers.html">Disclaimers</a> &middot; <a href="../evaluate.html">Become an evaluator</a> &middot; <a href="../instructor/signin/">Instructor login</a></p></footer>
 </div>
 
 <script src="../app/vendor/firebase-app-compat.js"></script>
@@ -635,6 +638,7 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
   $("bPilot2").onclick = function () {
     var v = function (id) { return ($(id).value || "").trim(); };
     if (!v("pProg") || !v("pMail")) { alert("Please add your program and work email."); return; }
+    if (!$("pAuth").checked) { alert("Please check the authorization and Terms box first."); return; }
     var body = "Hello DrugBug team,\n\nWe'd like to start a free pilot.\n\nProgram: " + v("pProg") + "\nName and role: " + v("pName") + "\nWork email: " + v("pMail") + "\nStudents: " + v("pN") + "\nLevel: " + v("pLv") + "\nStart date: " + v("pStart") + "\nNotes: " + v("pNote") + "\n";
     location.href = "mailto:VolareMediaLLC@gmail.com?subject=" + encodeURIComponent("DrugBug pilot request: " + v("pProg")) + "&body=" + encodeURIComponent(body);
   };
@@ -649,6 +653,7 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
   }
   $("bIn").onclick = function () { auth.signInWithEmailAndPassword($("em").value.trim(), $("pw").value).catch(function (e) { say("inMsg", authErr(e), true); }); };
   $("bUp").onclick = function () {
+    if (!$("upAuth").checked) return say("inMsg", "To create an account, check the authorization and Terms box.", true);
     if ($("pw").value.length < 8) return say("inMsg", "Use a password of at least 8 characters.", true);
     auth.createUserWithEmailAndPassword($("em").value.trim(), $("pw").value).catch(function (e) { say("inMsg", authErr(e), true); });
   };
