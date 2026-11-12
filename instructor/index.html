@@ -315,6 +315,7 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
   <div class="row" style="margin-top:10px">
     <label>Length<select id="nKind"><option value="30">30-day pilot</option><option value="60">60-day pilot</option><option value="365">1 year</option></select></label>
     <label>Question goal per student<input id="nGoal" type="number" min="25" value="300"></label>
+    <label>Package<select id="nPkg"><option value="">School class (no package)</option><option value="analytics">Analytics</option><option value="protocols">Protocols</option><option value="combined">Combined Suite</option><option value="premium">Premium</option></select></label>
     <label style="flex:2">School contact (staff only)<input id="nContact" placeholder="Program director name and work email"></label>
     <button id="bNew">Open class</button>
   </div>
@@ -327,8 +328,10 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
   <h2 id="listTitle">Your classes</h2>
   <div id="list"></div>
   <div id="joinBox" class="row" style="margin-top:12px">
-    <label>Instructor code from DrugBug<input id="inv" placeholder="INST-XXXX-XXXX" autocapitalize="characters"></label>
-    <button id="bJoin">Join class</button>
+    <label>Your full name<input id="jName" maxlength="80" placeholder="First and last name" autocomplete="name"></label>
+    <label>Your role<input id="jRole" maxlength="80" placeholder="e.g. Assistant Chief, EMS Supervisor"></label>
+    <label>Code from DrugBug<input id="inv" placeholder="INST-XXXX-XXXX" autocapitalize="characters"></label>
+    <button id="bJoin">Join</button>
   </div>
   <p id="joinMsg" class="msg hide"></p>
   <p class="muted small" id="uidLine"></p>
@@ -691,7 +694,7 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
       show("joinBox", !r.owner);
       $("list").innerHTML = r.list.length ? r.list.map(function (o) {
         var left = Math.ceil((o.expiresAt - Date.now()) / 864e5);
-        return '<div class="cls"><div><b>' + esc(o.name) + '</b> <span class="pill">' + esc(o.code) + '</span> <span class="pill' + (o.live ? " on" : "") + '">' + (o.live ? (left + " days left") : (o.status === "ended" ? "ended" : "expired")) + '</span>' +
+        return '<div class="cls"><div><b>' + esc(o.name) + '</b> <span class="pill">' + esc(o.code) + '</span> ' + (o.pkg ? '<span class="pill on">' + esc(PKGNAME[o.pkg] || o.pkg) + '</span> ' : '') + '<span class="pill' + (o.live ? " on" : "") + '">' + (o.live ? (left + " days left") : (o.status === "ended" ? "ended" : "expired")) + '</span>' +
           '<div class="muted small">' + o.activatedCount + ' of ' + o.keyCount + ' keys in use · ' + o.seats + ' seats · ends ' + day(o.expiresAt) +
           (r.owner ? ' · ' + o.instructors + ' instructor' + (o.instructors === 1 ? '' : 's') + ' · invite <span class="mono">' + esc(o.invite) + '</span>' + (o.contact ? ' · ' + esc(o.contact) : '') : '') + '</div></div>' +
           '<button data-open="' + esc(o.orgId) + '">Open</button></div>';
@@ -702,13 +705,14 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
     var b = e.target.closest && e.target.closest("[data-open]"); if (b) openClass(b.getAttribute("data-open"));
   });
   $("bJoin").onclick = function () {
-    call("groupJoin", { invite: $("inv").value }).then(function (r) { say("joinMsg", "Joined " + r.name + "."); $("inv").value = ""; loadList(); })
+    if ($("jName").value.trim().length < 3 || $("jRole").value.trim().length < 2) { say("joinMsg", "Enter your full name and your role first.", true); return; }
+    call("groupJoin", { invite: $("inv").value, name: $("jName").value, role: $("jRole").value }).then(function (r) { say("joinMsg", "Joined " + r.name + "."); $("inv").value = ""; loadList(); })
       .catch(function (e) { say("joinMsg", e.message, true); });
   };
   $("bNew").onclick = function () {
     var b = this; b.disabled = true;
     var days = Number($("nKind").value);
-    call("groupOrgCreate", { name: $("nName").value, code: $("nCode").value, seats: Number($("nSeats").value), days: days, goal: Number($("nGoal").value), contact: $("nContact").value, level: $("nLevel").value, kind: days >= 365 ? "annual" : "pilot" })
+    call("groupOrgCreate", { name: $("nName").value, code: $("nCode").value, seats: Number($("nSeats").value), days: days, goal: Number($("nGoal").value), contact: $("nContact").value, level: $("nLevel").value, kind: days >= 365 ? "annual" : "pilot", pkg: $("nPkg").value })
       .then(function (r) { say("newMsg", "Class opened. Instructor code: " + r.invite + " (send this to the school; it lets them sign in here and make keys). Ends " + day(r.expiresAt) + "."); ["nName", "nCode", "nContact"].forEach(function (i) { $(i).value = ""; }); loadList(); })
       .catch(function (e) { say("newMsg", e.message, true); })
       .then(function () { b.disabled = false; });
@@ -892,7 +896,7 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
     var d = ST.dash, o = d.org, t = d.totals;
     var left = Math.ceil((o.expiresAt - Date.now()) / 864e5);
     $("cName").textContent = o.name;
-    $("cSub").textContent = (o.kind === "annual" ? "Paid" : "Pilot") + " · " + (o.live ? left + " day" + (left === 1 ? "" : "s") + " left" : o.status === "ended" ? "Ended" : "Expired") +
+    $("cSub").textContent = (o.pkg ? (PKGNAME[o.pkg] || o.pkg) + " · " : "") + (o.kind === "annual" ? "Paid" : "Pilot") + " · " + (o.live ? left + " day" + (left === 1 ? "" : "s") + " left" : o.status === "ended" ? "Ended" : "Expired") +
       (o.level ? " · " + (LVNAME[o.level] || o.level) : "") + " · goal " + o.goal + " questions per student" + (o.instructors.length ? " · " + o.instructors.join(", ") : "");
     $("printTitle").textContent = o.name + " — DrugBug key sheet";
     $("tiles").innerHTML = [
@@ -934,6 +938,7 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
   document.addEventListener("click", function (e) { var b = e.target.closest && e.target.closest("[data-ctab]"); if (b) setTab(b.getAttribute("data-ctab")); });
 
   /* ---------- scores by every dimension ---------- */
+  var PKGNAME = { analytics: "Analytics package", protocols: "Protocols package", combined: "Combined Suite", premium: "Premium package" };
   var LVNAME = {}; [].forEach.call(document.querySelectorAll("#nLevel option"), function (op) { if (op.value) LVNAME[op.value] = op.textContent; });
   var KIND = { practice: "Practice tests", exam: "Exam mode", daily: "Daily 5-minute", study: "Study a drug", weak: "Weak-spot review", system: "Learn by system", acls: "ACLS / PALS", session: "Guided sessions", game: "Games", safety: "Safety checks", lab: "Lab drills", crit: "Critical-care drills", megacode: "Megacode", anatomy: "Anatomy quiz", calc: "Calculations", protocol: "Agency protocols" };
   var QT = { assess: "Assessment", hold: "When to hold", labs: "Labs to watch", vitals: "Vital signs", adverse: "Side effects", teach: "Patient teaching", interact: "Interactions", notify: "When to notify" };
