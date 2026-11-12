@@ -517,6 +517,139 @@ function backRow() {
 }
 
 /* ---------- views ---------- */
+/* ---------- Search everything (1.2.1, owner Nov 12 2026) ----------
+   One search box at the top of the main menu that finds anything in DrugBug without picking a path:
+   medicines (name, brand, class, use), diseases, conditions, drug families, microbes, anatomy, lab
+   values, Big Calls, scenarios, Megacode cases, flight, blood, hemodynamics and contrast topics,
+   field study guides, small sicknesses, levels and paths, study tools, Everyday Health sections,
+   bugs, music and settings. Each hit opens the exact page. The index is built once, on first use. */
+var SR = { idx: null, hits: [], q: "" };
+function srNorm(x) { return String(x || "").toLowerCase().replace(/[’']/g, "").replace(/[^a-z0-9]+/g, " ").trim(); }
+function srLevelFor(tab, prefer) {
+  var sv = S.view, sl = S.level, out = null;
+  var keys = [prefer, store("lastLevel"), Prog && Prog.d && Prog.d.startLevel, "paramedic", "flight", "intern", "flightrn", "ct"]
+    .concat(allLevels().map(function (l) { return l.key; })).filter(function (k, i, a) { return k && a.indexOf(k) === i && levelObj(k) && !isF(k) && (k !== "rn" || k === prefer); });   /* plain RN opens a department picker first */
+  try {
+    for (var i = 0; i < keys.length && !out; i++) { S.view = "level"; S.level = keys[i]; if (tabList().some(function (t) { return t[0] === tab; })) out = keys[i]; }
+  } catch (e) {}
+  S.view = sv; S.level = sl; return out;
+}
+function srGo(view, opts, after) {
+  if (typeof sheet !== "undefined" && sheet && !sheet.hidden && typeof closeSheet === "function") try { closeSheet(); } catch (e) {}
+  SR.q = ""; S.hsq = "";
+  go(view, opts || {});
+  if (after) { try { after(); } catch (e) {} render(); }
+}
+function srLevelGo(tab, set, prefer) {
+  var lv = srLevelFor(tab, prefer); if (!lv) return srGo("gen", { tab: "registry" });
+  srGo("level", Object.assign({ level: lv, tab: tab }, set || {}));
+}
+function srBuild() {
+  var I = [];
+  function add(name, kind, open, aka, sub) { if (name) I.push({ n: String(name), k: kind, o: open, a: srNorm((aka || "") + " " + (sub || "")), s: sub || "", nn: srNorm(name) }); }
+  function safe(f) { try { f(); } catch (e) {} }
+  safe(function () { allLevels().concat(DB.ALEVELS || []).forEach(function (l) { add(l.name, "Path", function () { srGo("level", { level: l.key }); }, l.sub || l.tag || "", routeOfLevel(l.key) === "rn" ? "Nursing" : routeOfLevel(l.key) === "md" ? "Medical school" : routeOfLevel(l.key) === "im" ? "Imaging" : routeOfLevel(l.key) === "ah" ? "Allied health" : "Prehospital"); }); });
+  add("BugDex", "Section", function () { srGo("gen"); }, "every medication all drugs a to z", "Every medication");
+  add("Everyday Health", "Section", function () { srGo("everyday"); }, "home health plain language", "For everyone");
+  safe(function () { EVTABS.forEach(function (t) { if (t[0] === "all") return; add(t[1], "Everyday Health", function () { srGo("everyday", { evTab: t[0] }); }, t[2]); }); });
+  safe(function () { (DB.DIS ? Object.keys(DB.DIS) : []).forEach(function (k) { var d = DB.DIS[k]; add(d.name, "Disease Lab", function () { srGo("gen", { tab: "diseases", disId: k }); }, (d.aka || []).join(" "), d.sys); }); });
+  safe(function () { CONDS.forEach(function (g) { g[1].forEach(function (x) { add(x[1], "Condition & medicine cautions", function () { srGo("gen", { tab: "conds", cond: x[0] }); }, "", g[0]); }); }); });
+  safe(function () { famList().forEach(function (f) { add(f.name, "Drug Family", function () { srGo("gen", { tab: "families", fam: f.id }); }, f.clue + " " + f.members.map(function (m) { return nameOf(m.id); }).join(" "), f.grp); }); });
+  safe(function () { (typeof MICRO !== "undefined" ? MICRO : []).forEach(function (m) { add(m.nm, "Microbiology", function () { srGo("gen", { tab: "micro", microK: m.k, micro: m.id }); }, m.also, m.g); }); });
+  safe(function () { (DB.ANAT || []).forEach(function (x) { add(x.name, "Anatomy", function () { srGo("gen", { tab: "anatomy", anId: x.id }); }, x.also, x.grp); }); });
+  safe(function () { (DB.LABS || []).forEach(function (l) { add(l.name, "Lab value", function () { srLevelGo("labs", { labv: "ref", labopen: l.id }, "intern"); setTimeout(function () { var d = document.querySelector("details.labcard[open]"); if (d) try { d.scrollIntoView({ block: "start" }); } catch (e) {} }, 80); }, l.range, l.grp); }); });
+  safe(function () { CALLS.forEach(function (c) { add(c.name, "Big Call", function () { srLevelGo("calls", { callId: c.id }, "paramedic"); }, c.line, "Big Calls"); }); });
+  safe(function () {
+    (DB.SCEN || []).forEach(function (s) {
+      if (s.hidden) return;
+      var lv = s.side === "gen" ? null : s.side === "im" ? "ct" : s.min || (s.side === "rn" ? "cna" : s.side === "md" ? "ms1" : "emt");
+      add(s.title, "Scenario", function () { if (!lv) srGo("gen", { tab: "scenarios", scen: { id: s.id } }); else srGo("level", { level: lv, tab: "scenarios", scen: { id: s.id } }); }, s.text && s.text.slice(0, 120), s.cat);
+    });
+  });
+  safe(function () { (DB.MEGACODE || []).forEach(function (m) { add(m.title, "Megacode", function () { srLevelGo("scenarios", {}, "paramedic"); }, m.tag, m.tag); }); });
+  safe(function () {
+    [["flightp", DB.FLIGHTP, "Flight Prep"], ["blood", DB.BLOOD, "Blood Products"], ["hemo", DB.HEMO, "Hemodynamics"], ["contrast", DB.CONTRAST, "Contrast Safety"]].forEach(function (k) {
+      add(k[2], "Section", function () { srLevelGo(k[0], {}); }, "", "Critical care");
+      ((k[1] || {}).topics || []).forEach(function (t) { add(t.title, k[2], function () { srLevelGo(k[0], { cn: { kind: k[0], topic: t.id, grp: t.grp } }); }, t.short || "", t.grp); });
+    });
+  });
+  safe(function () { Object.keys(DB.FGUIDE || {}).forEach(function (k) { var G = DB.FGUIDE[k], L = levelObj(k); if (G && L) add(G.tab, "Study guide", function () { srGo("level", { level: k, tab: "guide" }); }, G.sub, L.name); }); });
+  safe(function () { (DB.SICK || []).forEach(function (x) { add(x.name, "Small Sickness Guide", function () { srGo("everyday", { evTab: "sick", sick: x.id }); }, "", "Everyday Health"); }); });
+  [["Questions", "prep", "practice test exam questions quiz nclex registry board"], ["Flashcards", "cards", "cards flip study"], ["Brain Games", "games", "games crossword word scramble memory match"]].forEach(function (t) {
+    add(t[0], "Study tool", function () { if (t[1] === "prep") srLevelGo("tools", { tool: "prep" }); else srGo("gen", { tab: "tools", tool: t[1] }); }, t[2], "Study");
+  });
+  add("Megacode", "Study tool", function () { srLevelGo("scenarios", {}, "paramedic"); }, "code acls pals run a code monitor", "Scenarios");
+  add("Scenarios", "Section", function () { srGo("gen", { tab: "scenarios" }); }, "clinical cases practice", "Fictional cases");
+  add("My List", "Section", function () { srGo("gen", { tab: "mylist" }); }, "saved drugs study list", "Your saved medicines");
+  add("Progress", "Section", function () { srGo("gen", { tab: "progress" }); }, "mastery badges achievements leaderboard", "Your progress");
+  add("Drug Class Comparisons", "Section", function () { srGo("gen", { tab: "alts" }); }, "compare drug classes alternatives", "Compare to learn");
+  add("Illicit & Street Drugs", "Section", function () { srGo("gen", { tab: "illicit" }); }, "street recreational overdose", "Education only");
+  add("Terrarium", "Your bug", function () { srGo("terrarium"); }, "bug shop wardrobe sticks dress up", "Your bug and shop");
+  add("Get Sticks", "Your bug", function () { srGo("terrarium", { shopF: "sticks" }); }, "buy sticks packs", "Stick packs");
+  add("Settings", "App", function () { srGo("settings"); }, "account sign in theme dark mode language reminders notifications delete data privacy statistics", "Account and preferences");
+  add("Music", "App", function () { srGo("home"); setTimeout(function () { var b = document.querySelector('[data-act="music"]'); if (b) b.click(); }, 60); }, "songs tracks playlist", "Play study music");
+  safe(function () { BUGS.forEach(function (b) { if (b.admin || b.hidden) return; add(b.name, "Bug", function () { srGo("terrarium"); }, b.blurb, "Terrarium"); }); });
+  safe(function () { TRACKS.forEach(function (t) { add(t.name, "Music track", function () { srGo("home"); setTimeout(function () { var b = document.querySelector('[data-act="music"]'); if (b) b.click(); }, 60); }, t.desc, "Music"); }); });
+  add("Terms of Use", "Legal", function () { S.hsq = ""; openLegal("terms"); }, "terms eula", "");
+  add("Privacy Policy", "Legal", function () { S.hsq = ""; openLegal("privacy"); }, "privacy data", "");
+  return I;
+}
+function srRun(q) {
+  var nq = srNorm(q); if (nq.length < 2) return [];
+  if (!SR.idx) SR.idx = srBuild();
+  var words = nq.split(" "), out = [];
+  SR.idx.forEach(function (it) {
+    var r = it.nn === nq ? 0 : it.nn.indexOf(nq) === 0 ? 1 : (" " + it.nn).indexOf(" " + nq) >= 0 ? 2 :
+      words.every(function (w) { return (" " + it.nn + " " + it.a).indexOf(" " + w) >= 0; }) ? 4 : nq.length >= 4 && it.nn.indexOf(nq) >= 0 ? 6 : -1;
+    if (r >= 0) out.push({ r: r, it: it });
+  });
+  /* medicines: names and brands first, then class / use matches */
+  var qn = normName(q), dn = [];
+  try {
+    genIds().forEach(function (id) {
+      var N = drugNamesN(id), dn0 = normName(nameOf(id)), r = dn0 === qn ? 0 : N.some(function (n) { return n === qn; }) ? 0.5 : dn0.indexOf(qn) === 0 ? 1 : N.some(function (n) { return n.indexOf(qn) === 0; }) ? 1.5 : N.some(function (n) { return n.indexOf(qn) >= 0; }) ? 3 : qn.length >= 3 && drugMatch(id, q.trim().toLowerCase()) ? 5 : -1;
+      if (r >= 0) dn.push({ r: r, it: { n: nameOf(id), k: "Medicine", s: (function () { try { return String(DB.drugs[id].s[0][3] || "").split(/[;(]/)[0].trim(); } catch (e) { return ""; } })(), id: id } });
+    });
+  } catch (e) {}
+  var all = out.concat(dn).sort(function (a, b) { return a.r - b.r || a.it.n.length - b.it.n.length; });
+  SR.drugN = dn.length;
+  return all.slice(0, 40).map(function (x) { return x.it; });
+}
+function srList() {
+  var q = S.hsq || "", H = SR.hits = srRun(q);
+  if (srNorm(q).length < 2) return '';
+  if (!H.length) return '<div class="srnone">Nothing found for “' + esc(q) + '”. Try a drug, brand, condition, lab or topic.</div>';
+  return '<ul class="srlist" role="listbox" aria-label="Search results">' + H.map(function (h, i) {
+    return '<li><button class="srhit" role="option" data-sr="' + i + '"><span class="srn">' + esc(h.n) + '</span><span class="srk">' + esc(h.k) + (h.s && h.s !== h.k ? ' · ' + esc(h.s) : '') + '</span></button></li>';
+  }).join("") + '</ul>' + (SR.drugN > 8 ? '<button class="linkish srall" data-srall="1">See all ' + SR.drugN + ' medicines for “' + esc(q) + '”</button>' : '');
+}
+function homeSearch() {
+  return '<div class="hsearch" role="search"><svg class="hsicon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M16.5 16.5L21 21" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>' +
+    '<input id="hsq" type="search" placeholder="Search drugs, conditions, labs, topics…" value="' + esc(S.hsq || "") + '" aria-label="Search everything in DrugBug" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">' +
+    '<div id="hsr" class="hsr">' + srList() + '</div></div>';
+}
+function srOpen(i) {
+  var h = SR.hits[i]; if (!h) return;
+  try { usgFeat("home_search"); } catch (e) {}
+  if (h.id) { S.hsq = ""; var el = document.getElementById("hsq"); if (el) el.blur(); openSheet(h.id, SR.hits.filter(function (x) { return x.id; }).map(function (x) { return x.id; })); var r = document.getElementById("hsr"); if (r) r.innerHTML = ""; if (el) el.value = ""; return; }
+  h.o();
+}
+document.addEventListener("input", function (e) {
+  if (!e.target || e.target.id !== "hsq") return;
+  S.hsq = e.target.value; clearTimeout(SR.t);
+  SR.t = setTimeout(function () { var r = document.getElementById("hsr"); if (r) r.innerHTML = srList(); }, 90);
+});
+document.addEventListener("keydown", function (e) {
+  if (!e.target || e.target.id !== "hsq") return;
+  if (e.key === "Enter") { e.preventDefault(); S.hsq = e.target.value; SR.hits = srRun(S.hsq); if (SR.hits.length) srOpen(0); }
+  else if (e.key === "Escape") { S.hsq = ""; e.target.value = ""; var r = document.getElementById("hsr"); if (r) r.innerHTML = ""; }
+});
+document.addEventListener("click", function (e) {
+  var b = e.target && e.target.closest && e.target.closest("[data-sr],[data-srall]"); if (!b) return;
+  e.preventDefault(); e.stopPropagation();
+  if (b.hasAttribute("data-srall")) { var q = S.hsq; S.hsq = ""; srGo("gen", { tab: "registry", q: q }); return; }
+  srOpen(+b.getAttribute("data-sr"));
+}, true);
 function viewHome() {
   S.lvWheelFor = null; S.lvGrid = false; S.lvWheel = null;   /* the level turntable opens on your pick again next time */
   var genN = genIds().length, fun = typeof funOn !== "function" || funOn();
@@ -547,7 +680,7 @@ function viewHome() {
     var hit = S.pointGo === go;
     return '<button class="route rmini ' + cls + pt(go) + '" ' + (hit ? 'data-startlearn="' + go + '"' : go.indexOf("level:") === 0 ? 'data-level="' + go.slice(6) + '"' : 'data-go="' + go + '"') + '>' + (hit ? PT : '') + '<span class="mtx"><h2>' + title + '</h2><p>' + line + '</p>' + (ROUTE_MORE[cls] ? '<ul class="rmore">' + ROUTE_MORE[cls].map(function (x) { return '<li>' + esc(x) + '</li>'; }).join("") + '</ul>' : '') + (fun ? routeChips(cls) : '') + '</span><span class="mbug">' + art + '</span></button>';
   }
-  return topbar() + '<div class="homewrap' + hcls + '" data-hol="' + (HOL ? esc(holKey(HOL)) : '') + '">' + homeTip() +
+  return topbar() + '<div class="homewrap' + hcls + '" data-hol="' + (HOL ? esc(holKey(HOL)) : '') + '">' + homeSearch() + homeTip() +
    heroHTML() + loginCard() +
    homeStart() + homeProgress() + (typeof trialBanner === "function" ? trialBanner() : '') +
    '<h3 class="homegh">Look it up</h3><section class="routes"><div class="minis one">' +
@@ -2291,7 +2424,8 @@ document.addEventListener("click", function (e) {
       try { if (!on) { S.mupop = false; MU.preview = null; muStop(); } else muSync(); } catch (e) {}   /* Focused has no music at all */
       render(); return;
     }
-    case "gsearch": S.menu = false; go("gen", { tab: "registry" }); setTimeout(function () { var q = document.getElementById("q"); if (q) { q.focus(); q.scrollIntoView({ block: "center" }); } }, 60); return;
+    case "gsearch": S.menu = false; if (S.view !== "home") go("home"); setTimeout(function () { var hq = document.getElementById("hsq"); if (hq) { hq.focus(); try { hq.scrollIntoView({ block: "center" }); } catch (e) {} } }, 80); return;
+    case "gsearchold": S.menu = false; go("gen", { tab: "registry" }); setTimeout(function () { var q = document.getElementById("q"); if (q) { q.focus(); q.scrollIntoView({ block: "center" }); } }, 60); return;
     case "openproto": S.menu = false; render(); return openProto();
     case "openclass": S.menu = false; render(); return openClassPane();
     case "utilback": var ub = S.utilBack; S.utilBack = null; if (ub && ub.view && !UTIL_VIEWS[ub.view]) { go(ub.view, ub.level ? { level: ub.level } : {}); if (ub.tab && ub.tab !== "hub") { S.tab = ub.tab; render(); } return; } return go("home");
@@ -3900,7 +4034,7 @@ var QRATE_Q = {};
 /* Evaluator enrollment and grading are paused (counsel, Nov 11 2026: wage-and-classification review).
    Evaluator codes keep any Pro access they gave, but the grading panel, pilot questions, the agreement,
    the weekly minimum and its warnings are all off. The owner's admin code is unaffected. */
-var EV_PAUSED = true;
+var EV_PAUSED = false;   /* owner turned evaluators back on Nov 12 2026 (CSFD supervisors), against counsel's Nov 11 pause; see project notes */
 var EV_PAUSE_MSG = "Evaluator enrollment and grading are paused. If you have questions about an existing evaluator account, contact VolareMediaLLC@gmail.com.";
 function isReviewer() { var r = Prog.d && Prog.d.reviewer; if (!(r && r.id)) return false; if (EV_PAUSED && !(typeof ADMIN_GIFT !== "undefined" && r.id === ADMIN_GIFT)) return false; return true; }
 function evPausedFor() { var r = Prog.d && Prog.d.reviewer; return EV_PAUSED && !!(r && r.id) && !(typeof ADMIN_GIFT !== "undefined" && r.id === ADMIN_GIFT); }
@@ -14334,7 +14468,7 @@ function deepView(id) {
   if (lang() === "es") c += '<p class="dnote">La sección "Wormhole" solo está disponible en inglés por ahora.</p>';
   var st = e && typeof crStatus === "function" ? crStatus("deep", id) : "draft";
   if (typeof FREE_SET !== "undefined" && FREE_SET[id] && typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier("plus")) c += '<div class="callout evnote small"><strong>Free preview.</strong> The Wormhole is open on your free drugs. Every drug in DrugBug has one with DrugBug Plus. <button class="linkish" data-pw="open">See Plus</button></div>';
-  c += '<p class="dnote"><b>Go down the wormhole:</b> the deep dive on where this drug came from and how it works inside you.</p><p class="dnote">' + (e ? (st === "reviewed" ? "Deep dive reviewed for educational accuracy. " : "Draft study content. ") : "The full origin story for " + esc(nm) + " is still being written. Everything below comes from its DrugBug drug page. ") + 'For learning only: always follow your protocols, the FDA label and medical direction. Doses are on the drug page.</p>';
+  c += '<p class="dnote"><b>Go down the wormhole:</b> the deep dive on where this drug came from and how it works inside you.</p><p class="dnote">' + (e ? (st === "reviewed" ? "Deep dive reviewed for educational accuracy. " : "Draft study content. ") : "The full origin story for " + esc(nm) + " is still being written. Everything below comes from its DrugBug drug page. ") + 'For study only. Do not use DrugBug for patient care or clinical decisions.</p>';
   /* 1 origins */
   var org = '';
   if (e) {
