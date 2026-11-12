@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Friends &amp; family · DrugBug Dashboard</title>
+<link rel="icon" type="image/png" sizes="48x48" href="../icon-48.png">
+<style>
+/* Layout: an add box on top, then the notes grouped by stage (Doing, Planned, Ideas, Done). */
+:root{--bg:#13111c;--card:#1d1a2a;--ink:#f2effb;--mut:#aaa3c4;--line:#322c47;--soft:#251f37;--accent:#a78bfa;--accent-ink:#13111c;--hi:#f87171;--md:#fbbf24;--lo:#7d7896;--done:#34d399;color-scheme:dark}
+@media (prefers-color-scheme: light){:root{--bg:#f6f4fc;--card:#fff;--ink:#1c1730;--mut:#5f5878;--line:#e2dcef;--soft:#f1edfa;--accent:#6d28d9;--accent-ink:#fff;--hi:#b91c1c;--md:#b45309;--lo:#8a85a0;--done:#047857;color-scheme:light}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:20px 16px 60px}
+body.embed .wrap{padding-top:4px;max-width:none;padding-left:0;padding-right:0}
+h1{font-size:22px;margin:0}
+.sub,.sync,.small{color:var(--mut);font-size:13px;margin:4px 0 0}
+.add{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:14px 0 18px;display:grid;gap:10px}
+textarea,input,select{font:inherit;font-size:14px;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:9px;padding:8px 10px;min-width:0}
+textarea{width:100%;min-height:70px;resize:vertical}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{font:inherit;font-weight:700;font-size:14px;padding:8px 14px;border-radius:9px;border:0;background:var(--accent);color:var(--accent-ink);cursor:pointer}
+.ghost{font:inherit;font-size:13px;font-weight:650;padding:6px 11px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+.ghost.danger{color:var(--hi);border-color:color-mix(in srgb,var(--hi) 40%,var(--line))}
+.bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.bar input{flex:1 1 220px}
+h2{font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:22px 0 8px;display:flex;justify-content:space-between}
+h2 span{color:var(--mut);letter-spacing:0;text-transform:none;font-weight:500}
+.list{display:grid;gap:8px}
+.n{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--p,var(--lo));border-radius:10px;padding:10px 12px;display:grid;gap:8px}
+.n.done{opacity:.7}
+.n .t{white-space:pre-wrap;overflow-wrap:anywhere}
+.n.done .t{text-decoration:line-through;text-decoration-color:var(--mut)}
+.meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12.5px;color:var(--mut)}
+.pill{font-size:11.5px;font-weight:700;border-radius:99px;padding:2px 8px;background:var(--soft);color:var(--mut)}
+.pill.hi{color:var(--hi)}.pill.md{color:var(--md)}
+.meta select{font-size:12.5px;padding:3px 6px}
+.meta .sp{margin-left:auto;display:flex;gap:6px}
+.empty{color:var(--mut);font-size:14px;padding:6px 2px}
+.confirm{font-size:13px;color:var(--hi);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.send{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.send b{font-size:14px}
+.send .small{margin:0}
+.pick{display:flex;align-items:flex-start;gap:10px;cursor:pointer}
+.pick input{width:18px;height:18px;margin:3px 0 0;flex:none;accent-color:var(--accent)}
+.pill.sent{color:var(--accent)}
+.copybox{width:100%;min-height:140px;font:13px/1.45 ui-monospace,Menlo,Consolas,monospace}
+[hidden]{display:none!important}
+
+/* Friends & family tracker */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:12px 0}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.stat b{display:block;font-size:22px}.stat span{font-size:12.5px;color:var(--mut)}
+.add .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}
+.add .grid input,.add .grid select{width:100%}
+.p{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--sc,var(--lo));border-radius:10px;padding:10px 12px;display:grid;gap:8px}
+.p .top{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}
+.p .nm{font-weight:750;font-size:15.5px}
+.p .ct{font-size:12.5px;color:var(--mut);overflow-wrap:anywhere}
+.p .nt{white-space:pre-wrap;font-size:13.5px;color:var(--ink)}
+.p .log{font-size:12.5px;color:var(--mut);display:grid;gap:2px}
+.p .acts{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.p .acts select{font-size:12.5px;padding:4px 6px}
+.due{color:var(--md);font-weight:700}
+.tpl{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:12px}
+.tpl textarea{width:100%;min-height:90px}
+.edit{display:grid;gap:8px}
+a.ghost{text-decoration:none;display:inline-block}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Friends &amp; family</h1>
+  <p class="sub">People you know who could try DrugBug or pass it on. Track who you texted or emailed, who downloaded it and who to follow up with. Saved on this computer right away and synced when you're online.</p>
+  <p class="sync" id="sync">Starting…</p>
+  <div class="stats" id="stats"></div>
+
+  <form class="add" id="add">
+    <div class="grid">
+      <input id="fn" maxlength="80" placeholder="Name" aria-label="Name" required>
+      <select id="fr" aria-label="How you know them"></select>
+      <input id="fp" maxlength="40" placeholder="Phone (optional)" aria-label="Phone" inputmode="tel">
+      <input id="fe" maxlength="120" placeholder="Email (optional)" aria-label="Email" type="email">
+      <select id="fw" aria-label="Would be good for"></select>
+    </div>
+    <div class="row"><input id="fno" maxlength="500" placeholder="Note (optional): nursing student at Blinn, has a big group chat…" aria-label="Note" style="flex:1 1 260px"><button class="btn" type="submit">Add person</button></div>
+  </form>
+
+  <details class="tpl" id="tplbox">
+    <summary><b>Your message</b> <span class="small">used by the Text and Email buttons; edit it any time</span></summary>
+    <p class="small">{name} becomes their first name.</p>
+    <textarea id="tpl" maxlength="1000"></textarea>
+    <div class="row"><input id="tsub" maxlength="120" aria-label="Email subject" style="flex:1 1 260px"><button class="ghost" type="button" id="tsave">Save message</button><span class="small" id="tmsg"></span></div>
+  </details>
+
+  <div class="bar">
+    <input type="search" id="q" placeholder="Search people" aria-label="Search people">
+    <select id="fs" aria-label="Status"></select>
+    <select id="fo" aria-label="Sort"><option value="due">Follow up first</option><option value="recent">Recently contacted</option><option value="name">Name</option></select>
+  </div>
+  <div id="list"></div>
+</div>
+
+<script src="../app/vendor/firebase-app-compat.js"></script>
+<script src="../app/vendor/firebase-auth-compat.js"></script>
+<script src="dash.js?v=6"></script>
+<script>
+(function(){
+  "use strict";
+  if(/[?&]embed=1/.test(location.search))document.body.classList.add("embed");
+  var $=function(id){return document.getElementById(id)};
+  var esc=function(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})};
+  var COL="friends";
+  var REL=[["family","Family"],["friend","Friend"],["work","Coworker"],["school","Classmate / school"],["online","Online / social"],["other","Other"]];
+  var FOR=[["","Good for…"],["ems","EMS"],["nursing","Nursing"],["med","Med school"],["imaging","Imaging"],["allied","Allied health"],["everyday","Everyday Health"],["share","Could share it"],["teach","Instructor / teacher"]];
+  var ST=[["todo","Not contacted yet","--lo"],["sent","Reached out","--accent"],["replied","Replied","--md"],["tried","Downloaded / tried it","--done"],["paid","Subscribed","--done"],["shared","Shared it","--done"],["no","Not interested","--hi"]];
+  var SN={},SC={};ST.forEach(function(s){SN[s[0]]=s[1];SC[s[0]]=s[2]});
+  var RN={};REL.forEach(function(r){RN[r[0]]=r[1]});var FN={};FOR.forEach(function(r){FN[r[0]]=r[1]});
+  var how=["Text","Email","Call","In person","Social / DM"];
+  var F={q:"",s:"",o:"due"}, EDIT={}, ASK={};
+  try{var sv=JSON.parse(localStorage.getItem("dbd:ffilt")||"null");if(sv)F=Object.assign(F,sv,{q:""})}catch(e){}
+  $("fr").innerHTML=REL.map(function(r){return '<option value="'+r[0]+'">'+esc(r[1])+'</option>'}).join("");
+  $("fw").innerHTML=FOR.map(function(r){return '<option value="'+r[0]+'">'+esc(r[1])+'</option>'}).join("");
+  $("fs").innerHTML='<option value="">Everyone</option><option value="due">Follow-ups due</option>'+ST.map(function(s){return '<option value="'+s[0]+'">'+esc(s[1])+'</option>'}).join("");
+  $("fs").value=F.s;$("fo").value=F.o;
+  var DEF_T="Hey {name}! I built an app called DrugBug. It's a pharmacology study app with flashcards, quizzes and a little bug you grow as you learn. Would you try it and tell me what you think? It's on the App Store, or free in your browser at drugbugapp.com";
+  var DEF_S="Would you try my app, DrugBug?";
+  function tpl(){var s=DASH.get("settings","friendsTpl")||{};return{t:s.t||DEF_T,s:s.s||DEF_S}}
+  function first(n){return String(n||"").trim().split(/\s+/)[0]||"there"}
+  function msg(p){return tpl().t.replace(/\{name\}/g,first(p.n))}
+  function day(ms){return ms?new Date(ms).toLocaleDateString(undefined,{month:"short",day:"numeric"}):""}
+  function today0(){var d=new Date();d.setHours(0,0,0,0);return +d}
+  function isDue(p){return p.fu&&p.fu<=today0()+864e5-1&&p.s!=="no"}
+  function upd(id,patch){var p=Object.assign({},DASH.get(COL,id)||{},patch);delete p.up;DASH.put(COL,id,p)}
+  function logTouch(id,via,note){var p=DASH.get(COL,id)||{};var L=(p.log||[]).slice(-29);L.push({t:Date.now(),v:via,n:note||""});var patch={log:L,last:Date.now()};if(!p.s||p.s==="todo")patch.s="sent";if(!p.fu||p.fu<Date.now())patch.fu=today0()+4*864e5;upd(id,patch)}
+
+  function stats(all){
+    var ids=Object.keys(all),c={};ST.forEach(function(s){c[s[0]]=0});ids.forEach(function(id){c[all[id].s||"todo"]++});
+    var reached=ids.filter(function(id){return (all[id].s||"todo")!=="todo"}).length, tried=c.tried+c.paid+c.shared, due=ids.filter(function(id){return isDue(all[id])}).length;
+    var wk=Date.now()-7*864e5, wkN=0;ids.forEach(function(id){(all[id].log||[]).forEach(function(l){if(l.t>=wk)wkN++})});
+    $("stats").innerHTML=[[ids.length,"people on your list"],[reached,"reached out to"],[wkN,"texts and emails this week"],[tried,"tried DrugBug"],[c.paid,"subscribed"],[due,"follow-ups due"]].map(function(x){return '<div class="stat"><b>'+x[0]+'</b><span>'+esc(x[1])+'</span></div>'}).join("");
+  }
+  function card(id,p){
+    var s=p.s||"todo",ph=(p.ph||"").replace(/[^0-9+]/g,"");
+    var h='<div class="p" style="--sc:var('+SC[s]+')" data-id="'+esc(id)+'">';
+    if(EDIT[id]){
+      h+='<div class="edit"><input id="e-n-'+esc(id)+'" value="'+esc(p.n)+'" maxlength="80" aria-label="Name"><input id="e-p-'+esc(id)+'" value="'+esc(p.ph||"")+'" maxlength="40" placeholder="Phone" aria-label="Phone"><input id="e-e-'+esc(id)+'" value="'+esc(p.em||"")+'" maxlength="120" placeholder="Email" aria-label="Email"><textarea id="e-no-'+esc(id)+'" maxlength="500" placeholder="Note" aria-label="Note">'+esc(p.no||"")+'</textarea><div class="row"><button class="btn" type="button" data-save="'+esc(id)+'">Save</button><button class="ghost" type="button" data-cancel="'+esc(id)+'">Cancel</button></div></div></div>';
+      return h;
+    }
+    h+='<div class="top"><span class="nm">'+esc(p.n)+'</span><span class="pill">'+esc(RN[p.r]||"Other")+'</span>'+(p.w?'<span class="pill">'+esc(FN[p.w]||"")+'</span>':'')+(isDue(p)?'<span class="due">Follow up '+(p.fu<today0()?'(overdue since '+day(p.fu)+')':'today')+'</span>':p.fu&&p.s!=="no"?'<span class="ct">Follow up '+day(p.fu)+'</span>':'')+'</div>';
+    if(p.ph||p.em)h+='<div class="ct">'+[p.ph,p.em].filter(Boolean).map(esc).join(" · ")+'</div>';
+    if(p.no)h+='<div class="nt">'+esc(p.no)+'</div>';
+    var L=(p.log||[]).slice(-3).reverse();
+    if(L.length)h+='<div class="log">'+L.map(function(l){return '<span>'+esc(l.v)+' · '+esc(new Date(l.t).toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}))+(l.n?' · '+esc(l.n):'')+'</span>'}).join("")+((p.log||[]).length>3?'<span>and '+((p.log||[]).length-3)+' earlier</span>':'')+'</div>';
+    h+='<div class="acts">'+(ph?'<a class="ghost" href="sms:'+esc(ph)+'?&body='+encodeURIComponent(msg(p))+'" data-via="Text" data-id2="'+esc(id)+'">Text</a>':'')+
+      (p.em?'<a class="ghost" href="mailto:'+esc(p.em)+'?subject='+encodeURIComponent(tpl().s)+'&body='+encodeURIComponent(msg(p))+'" data-via="Email" data-id2="'+esc(id)+'">Email</a>':'')+
+      '<button class="ghost" type="button" data-copy="'+esc(id)+'">Copy message</button>'+
+      '<select data-log="'+esc(id)+'" aria-label="Log a contact"><option value="">Log it…</option>'+how.map(function(x){return '<option>'+esc(x)+'</option>'}).join("")+'</select>'+
+      '<select data-st="'+esc(id)+'" aria-label="Status">'+ST.map(function(x){return '<option value="'+x[0]+'"'+(x[0]===s?' selected':'')+'>'+esc(x[1])+'</option>'}).join("")+'</select>'+
+      '<input type="date" data-fu="'+esc(id)+'" value="'+(p.fu?new Date(p.fu-new Date(p.fu).getTimezoneOffset()*6e4).toISOString().slice(0,10):'')+'" aria-label="Follow-up date" title="Follow-up date">'+
+      '<button class="ghost" type="button" data-edit="'+esc(id)+'">Edit</button><button class="ghost danger" type="button" data-del="'+esc(id)+'">Remove</button></div>';
+    if(ASK[id])h+='<div class="confirm">Remove '+esc(p.n)+' from your list? <button class="ghost danger" type="button" data-yes="'+esc(id)+'">Remove</button><button class="ghost" type="button" data-no="'+esc(id)+'">Keep</button></div>';
+    return h+'</div>';
+  }
+  function render(){
+    var all=DASH.all(COL),q=F.q.trim().toLowerCase();stats(all);
+    var ids=Object.keys(all).filter(function(id){var p=all[id];if(F.s==="due"&&!isDue(p))return false;if(F.s&&F.s!=="due"&&(p.s||"todo")!==F.s)return false;return !q||[p.n,p.ph,p.em,p.no,RN[p.r],FN[p.w]].join(" ").toLowerCase().indexOf(q)>=0});
+    ids.sort(function(a,b){var x=all[a],y=all[b];
+      if(F.o==="name")return String(x.n).localeCompare(String(y.n));
+      if(F.o==="recent")return (y.last||0)-(x.last||0);
+      var dx=isDue(x)?0:(x.s||"todo")==="todo"?1:2, dy=isDue(y)?0:(y.s||"todo")==="todo"?1:2;return dx-dy||(x.fu||9e15)-(y.fu||9e15)||String(x.n).localeCompare(String(y.n));});
+    $("list").innerHTML=ids.length?'<div class="list">'+ids.map(function(id){return card(id,all[id])}).join("")+'</div>':'<div class="empty">'+(Object.keys(all).length?'Nobody matches.':'Nobody on your list yet. Add the first person above: family, friends, classmates, coworkers.')+'</div>';
+    var T=tpl();if(document.activeElement!==$("tpl"))$("tpl").value=T.t;if(document.activeElement!==$("tsub"))$("tsub").value=T.s;
+  }
+  function saveF(){try{localStorage.setItem("dbd:ffilt",JSON.stringify({s:F.s,o:F.o}))}catch(e){}}
+  $("add").addEventListener("submit",function(e){
+    e.preventDefault();var n=$("fn").value.trim();if(!n)return;
+    var id="f"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+    DASH.put(COL,id,{n:n.slice(0,80),r:$("fr").value,ph:$("fp").value.trim().slice(0,40),em:$("fe").value.trim().slice(0,120),w:$("fw").value,no:$("fno").value.trim().slice(0,500),s:"todo",c:Date.now(),log:[]});
+    ["fn","fp","fe","fno"].forEach(function(k){$(k).value=""});$("fn").focus();
+  });
+  $("q").addEventListener("input",function(e){F.q=e.target.value;render()});
+  $("fs").addEventListener("change",function(e){F.s=e.target.value;saveF();render()});
+  $("fo").addEventListener("change",function(e){F.o=e.target.value;saveF();render()});
+  $("tsave").addEventListener("click",function(){DASH.put("settings","friendsTpl",{t:$("tpl").value.trim().slice(0,1000)||DEF_T,s:$("tsub").value.trim().slice(0,120)||DEF_S});$("tmsg").textContent="Saved.";setTimeout(function(){$("tmsg").textContent=""},2000)});
+  $("list").addEventListener("change",function(e){
+    var t=e.target,id;
+    if((id=t.getAttribute("data-st"))){var pt={s:t.value};if(t.value==="no"||t.value==="paid"||t.value==="shared")pt.fu=0;upd(id,pt)}
+    else if((id=t.getAttribute("data-log"))&&t.value){logTouch(id,t.value)}
+    else if((id=t.getAttribute("data-fu"))){var v=t.value;upd(id,{fu:v?+new Date(v+"T00:00:00"):0})}
+  });
+  $("list").addEventListener("click",function(e){
+    var a=e.target.closest("a[data-via]");if(a){logTouch(a.getAttribute("data-id2"),a.getAttribute("data-via"));return}
+    var b=e.target.closest("button");if(!b)return;var id;
+    if((id=b.getAttribute("data-copy"))){var p=DASH.get(COL,id)||{};var m=msg(p);(navigator.clipboard?navigator.clipboard.writeText(m):Promise.reject()).then(function(){b.textContent="Copied";setTimeout(function(){b.textContent="Copy message"},1500)},function(){window.prompt("Copy this message:",m)})}
+    else if((id=b.getAttribute("data-edit"))){EDIT[id]=1;render()}
+    else if((id=b.getAttribute("data-cancel"))){delete EDIT[id];render()}
+    else if((id=b.getAttribute("data-save"))){var n=$("e-n-"+id).value.trim();delete EDIT[id];if(n)upd(id,{n:n.slice(0,80),ph:$("e-p-"+id).value.trim().slice(0,40),em:$("e-e-"+id).value.trim().slice(0,120),no:$("e-no-"+id).value.trim().slice(0,500)});else render()}
+    else if((id=b.getAttribute("data-del"))){ASK[id]=1;render()}
+    else if((id=b.getAttribute("data-no"))){delete ASK[id];render()}
+    else if((id=b.getAttribute("data-yes"))){delete ASK[id];DASH.del(COL,id)}
+  });
+  DASH.on(function(){var a=document.activeElement;if(a&&a.id&&(/^e-/.test(a.id)||a.id==="tpl"||a.id==="tsub"))return;render()});
+  DASH.onStatus(function(st){$("sync").textContent=DASH.statusText(st)});
+  render();
+})();
+</script>
+</body>
+</html>

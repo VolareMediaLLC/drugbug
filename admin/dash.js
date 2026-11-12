@@ -25,7 +25,7 @@
   function load(k, d) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
   function keep(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
 
-  var COLS = ["outreach", "notes", "settings"];
+  var COLS = ["outreach", "notes", "settings", "friends"];
   var docs = load(K.docs, {}); COLS.forEach(function (c) { docs[c] = docs[c] || {}; });
   var outbox = load(K.out, []);
   var since = load(K.since, 0);

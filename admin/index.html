@@ -125,6 +125,7 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
 .heat{font-size:11.5px;font-weight:750;border-radius:99px;padding:2px 8px;background:var(--surface2)}.heat.warm{color:var(--good)}.heat.lukewarm{color:var(--warn)}.heat.cold{color:var(--muted)}
 :root{--track2:#d9d2ec}@media(prefers-color-scheme:dark){:root{--track2:#433a5e}}
 .mbar{position:relative;height:14px;background:var(--track);border-radius:99px;margin-top:10px}.mbar i{display:block;height:100%;background:var(--good);border-radius:99px}.mbar b{position:absolute;top:-4px;width:2px;height:22px;background:var(--ink);border-radius:2px}
+.evlist{list-style:none;margin:0;padding:0}.evlist li{padding:6px 0;border-bottom:1px solid var(--line,#ddd)}
 </style>
 </head>
 <body>
@@ -237,8 +238,9 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
 <section data-page="evaluators" class="hide"><iframe class="emb" data-src="../instructor/?embed=evaluators" title="Evaluators"></iframe></section>
 <section data-page="classes" class="hide"><iframe class="emb" data-src="../instructor/?embed=classes" title="Classes"></iframe></section>
 <section data-page="metrics" class="hide"><iframe class="emb" data-src="../instructor/?embed=metrics" title="App metrics"></iframe></section>
-<section data-page="outreach" class="hide"><iframe class="emb" data-src="outreach.html?embed=1&v=8" title="Texas outreach"></iframe></section>
-<section data-page="notes" class="hide"><iframe class="emb" data-src="notes.html?embed=1&v=8" title="Update notes"></iframe></section>
+<section data-page="outreach" class="hide"><iframe class="emb" data-src="outreach.html?embed=1&v=9" title="Texas outreach"></iframe></section>
+<section data-page="friends" class="hide"><iframe class="emb" data-src="friends.html?embed=1&v=9" title="Friends and family"></iframe></section>
+<section data-page="notes" class="hide"><iframe class="emb" data-src="notes.html?embed=1&v=9" title="Update notes"></iframe></section>
 </div>
 </div>
 
@@ -306,10 +308,10 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
   /* ---------- tabs ---------- */
   var TAB = "", LOADED = {};
   /* five sections; People and Questions each hold a few pages (owner, Nov 7 2026) */
-  var GROUPS = { overview: ["overview"], people: ["signups", "evaluators"], codes: ["codes"], questions: ["grading", "analytics"], classes: ["classes"], metrics: ["metrics"], outreach: ["outreach"], notes: ["notes"] };
-  var SUBNAME = { signups: "Evaluator sign-ups", evaluators: "Evaluators", codes: "Codes", grading: "Grade questions", analytics: "How students score" };
+  var GROUPS = { overview: ["overview"], people: ["signups", "evaluators"], codes: ["codes"], questions: ["grading", "analytics"], classes: ["classes"], metrics: ["metrics"], outreach: ["outreach", "friends"], notes: ["notes"] };
+  var SUBNAME = { outreach: "Agencies & schools", friends: "Friends & family", signups: "Evaluator sign-ups", evaluators: "Evaluators", codes: "Codes", grading: "Grade questions", analytics: "How students score" };
   var SUBNOTE = { evaluators: "Everyone with an evaluator code: what they graded, and their suggestions.", grading: "Read, rate and fix questions. Pilot questions go live after 2 Good votes." };
-  var LASTSUB = { people: "signups", questions: "grading" };
+  var LASTSUB = { people: "signups", questions: "grading", outreach: "outreach" };
   function groupOf(t) { for (var g in GROUPS) if (GROUPS[g].indexOf(t) >= 0) return g; return null; }
   function go(t) {
     if (GROUPS[t] && GROUPS[t].length > 1) t = LASTSUB[t] || GROUPS[t][0];
@@ -361,13 +363,13 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
      Status lights, then one panel per area: a big number, the change, a trend line, three small
      numbers and what it measures. "Open" widens the panel and adds the detail and a plain-English
      reading. Every source loads on its own, so a slow or undeployed function only blanks its panel. */
-  var AP = null, GS = null, PIL = null, PILN = null, PINGS = null, EQ = null, RV = null, PK = null, OPEN = {};
+  var AP = null, GS = null, PIL = null, PILN = null, PINGS = null, EQ = null, RV = null, PK = null, AS = null, OPEN = {};
   function loadOverview() {
     $("ovSub").textContent = "Loading…";
     call("adminOverview").then(function (o) { OV = o; OV_ERR = ""; }).catch(function (e) { OV_ERR = errTxt(e); }).then(cockpit);
     loadOverviewLists();
   }
-  $("bOvRefresh").onclick = function () { STATS = null; CODES = null; AP = GS = PIL = PILN = PINGS = CODERS = EQ = RV = PK = null; loadOverview(); };
+  $("bOvRefresh").onclick = function () { STATS = null; CODES = null; AP = GS = PIL = PILN = PINGS = CODERS = EQ = RV = PK = AS = null; loadOverview(); };
   function kpi(tab, label, big, sub) { return '<button class="kpi" data-go="' + tab + '"><i>' + label + '</i><b>' + big + '</b><span>' + sub + '</span></button>'; }
   function drawOverview() { cockpit(); }
   function loadOverviewLists() {
@@ -381,12 +383,13 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
     (STATS ? Promise.resolve() : stats()).then(meta).catch(function () {}).then(done);
     (PK ? Promise.resolve() : call("orgInquiryList").then(function (r) { PK = r.list || []; })).catch(function () { PK = PK || false; }).then(done);
     (RV ? Promise.resolve() : call("revenueMonth").then(function (r) { RV = r; })).catch(function () { RV = RV || false; }).then(done);
+    (AS ? Promise.resolve() : call("appleSummary").then(function (r) { AS = r; })).catch(function () { AS = AS || false; }).then(done);
     (EQ ? Promise.resolve() : call("evalQuota").then(function (r) { EQ = r; })).catch(function () { EQ = EQ || false; }).then(done);
     if (!PINGS) pingAll();
   }
   /* which server functions answer: a deployed callable always replies (even with an error for a
      bad request); one that was never deployed doesn't. Only read-only functions are asked. */
-  var PING_FNS = ["dashSync", "groupSeat", "orgInquiryList", "revenueMonth", "evalQuota", "adminOverview", "codeList", "qrStats", "qrCoders", "pilotStatus", "qDifficulty", "qrChecked", "evalAppList", "appMetrics", "groupOwnerStats", "groupOrgList", "groupDashboard"];
+  var PING_FNS = ["appleSummary", "dashSync", "groupSeat", "orgInquiryList", "revenueMonth", "evalQuota", "adminOverview", "codeList", "qrStats", "qrCoders", "pilotStatus", "qDifficulty", "qrChecked", "evalAppList", "appMetrics", "groupOwnerStats", "groupOrgList", "groupDashboard"];
   function pingAll() {
     PINGS = { ok: [], no: [], busy: true };
     Promise.all(PING_FNS.map(function (f) { return call(f, { ping: 1 }).then(function () { PINGS.ok.push(f); }, function (e) { if (/^not deployed$|failed to fetch|networkerror|load failed/i.test((e && e.message) || "")) PINGS.no.push(f); else PINGS.ok.push(f); }); }))
@@ -485,7 +488,7 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
         var cum = [], run = 0; R.byDay.slice(0, R.dayIndex + 1).forEach(function (v) { run += v; cum.push(run); });
         var bodyM = '<div class="big">' + usd(R.projected) + '<small>by the end of ' + esc(mon) + '</small></div><div class="delta">' + usd(R.collected) + ' in so far · ' + usd(R.expected) + ' more expected from ' + R.renewals + ' renewal' + (R.renewals === 1 ? '' : 's') + '</div>' +
           '<div class="mbar" title="Collected so far vs expected by month end"><i style="width:' + (R.projected ? Math.round(100 * R.collected / R.projected) : 0) + '%"></i><b style="left:' + Math.round(100 * frac) + '%" title="Today"></b></div><div class="ccx"><span>' + esc(mon) + ' 1</span><span>' + dl + ' day' + (dl === 1 ? '' : 's') + ' left</span></div>' +
-          '<div class="minis">' + mini(usd(R.net), "after Stripe fees") + mini(usd(R.mrr), "monthly recurring") + mini(fmt(R.activeSubs != null ? R.activeSubs : (T.webSubs || 0)), "paying on the website") + '</div><p class="what">Website sales through Stripe (subscriptions and stick packs). App Store sales are in App Store Connect and aren\'t included.' + (AP ? ' <b>' + fmt(paid) + '</b> ' + (paid === 1 ? 'person has' : 'people have') + ' used Plus or Pro in the last 30 days. That counts everyone with access, not just people paying here: App Store subscribers, free Pro from codes (evaluators, gifts) and the 3-day trial for new accounts.' : '') + '</p>';
+          '<div class="minis">' + mini(usd(R.net), "after Stripe fees") + mini(usd(R.mrr), "monthly recurring") + mini(fmt(R.activeSubs != null ? R.activeSubs : (T.webSubs || 0)), "paying on the website") + '</div><p class="what">Website sales through Stripe (subscriptions and stick packs). iPhone sales are in the iPhone (App Store) panel.' + (AP ? ' <b>' + fmt(paid) + '</b> ' + (paid === 1 ? 'person has' : 'people have') + ' used Plus or Pro in the last 30 days. That counts everyone with access, not just people paying here: App Store subscribers, free Pro from codes (evaluators, gifts) and the 3-day trial for new accounts.' : '') + '</p>';
         var openM = '<div><h4>Money in, day by day (' + esc(mon) + ')</h4>' + (cum.length > 1 ? spark(cum, 110) : '<p class="muted small">Not enough days yet.</p>') +
           '<h4 style="margin-top:12px">Active website subscriptions</h4>' + hb(Object.keys(R.byPlan || {}).map(function (k) { return [k, R.byPlan[k], fmt(R.byPlan[k])]; })) + '</div>' +
           '<div><h4>What this tells you</h4><p><b>So far:</b> ' + usd(R.gross) + ' from ' + R.payments + ' payment' + (R.payments === 1 ? '' : 's') + (R.refunds ? ', less ' + usd(R.refunds) + ' refunded' : '') + '. Stripe kept ' + usd(Math.abs(R.fees || 0)) + ' in fees, so ' + usd(R.net) + ' reaches your bank.</p>' +
@@ -494,6 +497,29 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
           '<p><b>Monthly recurring:</b> ' + usd(R.mrr) + ' a month from website subscriptions (yearly plans counted as a twelfth).</p>' +
           (AP ? '<p><b>Conversion:</b> ' + (T.paidPct30 || 0) + '% of people active in the last 30 days are on Plus or Pro (App Store and website). 2 to 5% is typical; 5% is a good goal.</p>' : '') + '</div>';
         P.push(panel("money", "Money this month", vsLast && vsLast.c === "dn" ? ["w", "Behind last month"] : ["g", "On track"], bodyM, openM));
+      }
+    }
+    /* ---- Apple / iPhone money and subscriptions (owner, Nov 12 2026) ----
+       Two sources: Apple's daily sales reports (pulled every morning, about a day behind) and the
+       live App Store Server Notifications (each subscribe, renewal, trial, cancel and refund the
+       moment it happens). */
+    {
+      var d$ = function (v) { return v == null ? "—" : "$" + Number(v).toLocaleString(undefined, { minimumFractionDigits: v % 1 ? 2 : 0, maximumFractionDigits: 2 }); };
+      var EVN = { SUBSCRIBED: "New subscriber", DID_RENEW: "Renewed", DID_CHANGE_RENEWAL_STATUS: "Auto-renew changed", DID_FAIL_TO_RENEW: "Billing problem", EXPIRED: "Expired", REFUND: "Refunded", GRACE_PERIOD_EXPIRED: "Grace period ended", OFFER_REDEEMED: "Offer redeemed", DID_CHANGE_RENEWAL_PREF: "Changed plan", ONE_TIME_CHARGE: "Stick pack bought", CONSUMPTION_REQUEST: "Refund request", REVOKE: "Access revoked", TEST: "Test from Apple" };
+      var plan = function (p) { p = String(p || ""); var n = /pro/.test(p) ? "Pro" : /plus/.test(p) ? "Plus" : /stick/i.test(p) ? "Sticks" : p; return n + (/annual|year/.test(p) ? " yearly" : /month/.test(p) ? " monthly" : ""); };
+      if (AS === null) P.push(panel("apple", "iPhone (App Store)", null, LOAD));
+      else if (!AS) P.push(panel("apple", "iPhone (App Store)", ["w", "Not set up"], '<p class="muted small">The Apple functions aren\'t answering yet. Deploy them (appleNotify, appleSalesSync, appleSummary) and add the App Store Connect key secrets.</p>'));
+      else {
+        var L = AS.live || {}, RS = AS.reportSubs, M = AS.month || {};
+        var paying = Math.max(L.paying || 0, RS ? RS.paid : 0), trials = Math.max(L.trials || 0, RS ? RS.trials : 0);
+        var bodyA = '<div class="big">' + fmt(paying) + '<small>paying on iPhone</small></div><div class="delta">' + fmt(trials) + ' on a free trial' + (L.renewOff ? ' · ' + L.renewOff + ' turned off auto-renew' : '') + '</div>' +
+          '<div class="minis">' + mini(d$(M.proceedsUSD), "Apple proceeds this month") + mini(fmt(M.downloads || 0), "downloads this month") + mini(fmt(M.purchases || 0), "purchases this month") + '</div>' +
+          '<p class="what">From Apple: proceeds are what you keep after Apple\'s cut, through ' + esc(AS.reportThrough || "no report yet") + ' (Apple runs about a day behind). Subscriber counts update live.</p>';
+        var ev = (AS.events || []).filter(function (e) { return e.env !== "Sandbox"; }).slice(0, 12);
+        var openA = '<div><h4>Apple proceeds, last 30 days</h4>' + ((AS.last30 || []).length > 1 ? spark((AS.last30 || []).map(function (x) { return x.proceeds; }), 110) : '<p class="muted small">Not enough days yet.</p>') +
+          (RS && RS.byPlan && RS.byPlan.length ? '<h4 style="margin-top:12px">Subscribers by plan (' + esc(RS.date) + ')</h4>' + hb(RS.byPlan.map(function (r) { return [r.name + (r.country ? " · " + r.country : ""), r.paid + r.trials, r.paid + " paying" + (r.trials ? ", " + r.trials + " trial" : "")]; })) : '') + '</div>' +
+          '<div><h4>Latest from Apple</h4>' + (ev.length ? '<ul class="evlist">' + ev.map(function (e) { return '<li><b>' + esc(EVN[e.type] || e.type) + '</b> · ' + esc(plan(e.product)) + (e.price != null && e.paid ? ' · ' + d$(e.price) + (e.currency && e.currency !== "USD" ? " " + esc(e.currency) : "") : '') + '<br><span class="muted small">' + esc(new Date(e.at).toLocaleString()) + (e.sub ? ' · ' + esc(e.sub.toLowerCase().replace(/_/g, " ")) : '') + '</span></li>'; }).join("") + '</ul>' : '<p class="muted small">Nothing yet. Each new subscriber, renewal, trial, cancellation and refund shows here the moment Apple sends it.</p>') + '</div>';
+        P.push(panel("apple", "iPhone (App Store)", paying || trials ? ["g", paying + " paying"] : ["w", "No subscribers yet"], bodyA, openA));
       }
     }
     /* ---- questions and evaluators (wide) ---- */
