@@ -89,6 +89,7 @@ tr.clk{cursor:pointer}tr.clk:hover td{background:var(--surface2)}
 .dimtabs button{background:transparent;color:var(--ink);border:1px solid var(--line);font-weight:600;padding:6px 12px;border-radius:99px}
 .dimtabs button.on{background:var(--teal);color:#06231f;border-color:var(--teal)}
 .chart .bar i.mid{background:var(--warn)}.chart .bar i.low{background:var(--bad)}
+.boardsw{margin:6px 0 4px;padding:10px 12px;border:1px solid var(--line,#ddd);border-radius:10px}.boardsw input{transform:scale(1.25);margin-right:6px}
 .board td.rk{font-weight:700;width:46px}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:99px;overflow:hidden}.seg button{border:0;border-radius:0;background:none;color:var(--ink);padding:6px 12px;font-weight:700}.seg button.on{background:var(--accent,#6d28d9);color:#fff}
 #compCard .grid2>div{min-width:0}.teamed{margin-top:14px}.teamed summary{font-weight:700;cursor:pointer}.teamrow{margin:6px 0;flex-wrap:nowrap}.teamrow input{flex:1;min-width:0}.teamsel{font:inherit;font-size:13px;padding:4px 6px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);max-width:150px}
@@ -482,7 +483,9 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
   <div id="pBoard" class="hide noprint">
     <div class="card">
       <h2>Class scoreboard</h2>
-      <p class="muted small">Ranked by correct answers. Students see only the top 5 and their own place, on their Dashboard. Each week the top 3 by correct answers that week win a bug.</p>
+      <div class="boardsw"><label><input type="checkbox" id="boardSw"> <b>Show the scoreboard to students</b></label> <span class="muted small" id="boardSwMsg"></span></div>
+      <p class="muted small" id="boardSwHelp">Off: each student sees only their own results, and no one else's name, rank or score. On: students see the top 5 and their own place on their home screen and Dashboard, and the weekly prize bugs start. Turn it on only if your school or agency allows students or staff to see each other's displayed scores. Students appear as their class label (Student 07) or a nickname you approved.</p>
+      <p class="muted small">Ranked by correct answers. Each week the top 3 by correct answers that week win a bug.</p>
       <div class="tblwrap"><table class="board" id="boardTable"></table></div>
     </div>
     <div class="card" id="compCard">
@@ -617,6 +620,7 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
       if (data.action === "approve") st.nick.status = "ok"; else if (data.action === "reject" || data.action === "remove") st.nick = null; else if (data.action === "rename") st.nick = { text: String(data.name).slice(0, 20), status: "ok" };
       return Promise.resolve({ ok: true });
     }
+    if (name === "groupBoardSet") { D.org.boardOn = !!data.on; return Promise.resolve({ ok: true, boardOn: !!data.on }); }
     if (name === "groupKeyTeam") { D.students.forEach(function (x) { if (data.keyIds.indexOf(x.keyId) >= 0) x.team = data.team; }); return Promise.resolve({ ok: true }); }
     if (name === "groupTeamsSet") { var out = data.teams.map(function (t, i) { return { id: t.id || "tN" + i + Date.now() % 1000, name: t.name }; }); D.org.teams = out; return Promise.resolve({ ok: true, teams: out }); }
     return Promise.reject(new Error(DEMO_MSG));
@@ -1048,6 +1052,8 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
     $("hardSys").innerHTML = chartHTML(of("s"), "low", "", 12);
     $("dimTabs").innerHTML = tabsHTML(rows, ST.dim, "data-dim");
     $("dimChart").innerHTML = chartHTML(rows.filter(function (r) { return r.f === ST.dim; }), $("sortBy").value, $("dimFind").value);
+    /* scoreboard switch (owner, Nov 12 2026) */
+    var bsw = $("boardSw"); if (bsw) { bsw.checked = !!(d.org && d.org.boardOn); $("boardSwMsg").textContent = bsw.checked ? "On: students can see it." : "Off: students see only their own results."; }
     /* scoreboard */
     var board = studs.filter(function (s) { return s.activated; }).slice().sort(function (a, b) { return correctOf(b) - correctOf(a) || (b.accuracy || 0) - (a.accuracy || 0); });
     $("boardTable").innerHTML = '<tr><th>#</th><th>Student</th><th>Correct</th><th>Answered</th><th>Accuracy</th><th>This week</th></tr>' + (board.length ? board.map(function (s, i) {
@@ -1065,6 +1071,18 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
     $("stuBadge").textContent = waiting ? String(waiting) : "";
     drawStudent();
   }
+  (function () {
+    var bsw = $("boardSw"); if (!bsw) return;
+    bsw.addEventListener("change", function () {
+      var on = bsw.checked, msg = $("boardSwMsg");
+      if (on && !confirm("Turn the scoreboard on? Every student in this class will see the top 5 and their own place. Only do this if your school or agency allows it.")) { bsw.checked = false; return; }
+      bsw.disabled = true; msg.textContent = "Saving…";
+      call("groupBoardSet", { orgId: ST.orgId, on: on }).then(function () {
+        bsw.disabled = false; if (ST.dash && ST.dash.org) ST.dash.org.boardOn = on;
+        msg.textContent = on ? "On: students can see it." : "Off: students see only their own results.";
+      }).catch(function (e) { bsw.disabled = false; bsw.checked = !on; msg.textContent = (e && e.message) || "Couldn't save. Try again."; });
+    });
+  })();
   function correctOf(s) { return s.correct != null ? s.correct : s.answered && s.accuracy != null ? Math.round(s.answered * s.accuracy / 100) : 0; }
   function drawStudent() {
     var d = ST.dash, s = ST.stu && (d.students || []).filter(function (x) { return x.keyId === ST.stu; })[0];
