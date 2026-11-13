@@ -60,6 +60,7 @@ code.c{font:600 13.5px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;lett
 .pill{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--surface2);color:var(--muted);white-space:nowrap}
 .pill.ok{background:color-mix(in srgb,var(--good) 18%,transparent);color:var(--good)}
 .pill.off{background:color-mix(in srgb,var(--bad) 16%,transparent);color:var(--bad)}
+.gtabs{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}.gtabs button{font:inherit;font-size:13.5px;font-weight:650;padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:var(--surface);color:var(--muted);cursor:pointer}.gtabs button[aria-selected=true]{color:var(--ink);border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}.gtabs .n{opacity:.7;font-weight:500;margin-left:4px}.ghead{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:8px 0;background:var(--surface)}.ghead h3{margin:0 0 4px}
 .pill.used{background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent)}
 .bar{height:8px;border-radius:99px;background:var(--track);overflow:hidden;min-width:70px}.bar>i{display:block;height:100%;background:var(--bar);border-radius:99px}
 /* codes */
@@ -206,7 +207,8 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
         <select id="cExp"><option value="">Never</option><option value="7">In 7 days</option><option value="30">In 30 days</option><option value="90">In 90 days</option><option value="365">In 1 year</option><option value="date">On a date…</option></select>
         <input id="cExpD" type="date" class="hide">
       </label>
-      <label class="f">Label (only you see it)<input id="cLabel" maxlength="80" placeholder="e.g. Dayton's class, Instagram giveaway"></label>
+      <label class="f">Group (optional)<input id="cGroup" maxlength="40" list="cGroupList" placeholder="e.g. College Station Fire"><datalist id="cGroupList"></datalist></label>
+      <label class="f">Label or role (only you see it)<input id="cLabel" maxlength="80" placeholder="e.g. P2, Supervisor, Instagram giveaway"></label>
     </div>
     <div class="summary" id="cSum"></div>
     <div class="row" style="margin-top:12px"><button class="btn" id="bMint">Generate codes</button><span class="muted small" id="cMsg"></span></div>
@@ -217,7 +219,9 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
       <div class="row"><select id="cfKind" style="width:auto"><option value="">Every kind</option><option value="pro">Pro access</option><option value="eval">Evaluator</option><option value="sticks">Sticks</option><option value="bug">Bug</option></select>
       <select id="cfSt" style="width:auto"><option value="">Every status</option><option value="ready">Ready to use</option><option value="used">Used up</option><option value="off">Off or expired</option></select>
       <input id="cfQ" type="search" placeholder="Search code or label" style="width:200px"><button class="ghost" id="bCsv">Download CSV</button></div></div>
-    <p class="muted small" style="margin:6px 0 10px">The ten LIFE- codes built into the app are listed under Evaluators.</p>
+    <div class="gtabs" id="cGroups" role="tablist" aria-label="Code groups"></div>
+    <div id="cGroupHead"></div>
+    <p class="muted small" style="margin:6px 0 10px">The ten LIFE- codes built into the app are listed under Evaluators. Give codes a Group when you make them and they get their own tab here.</p>
     <div class="tblwrap"><table class="t" id="cTable"><tr><td class="muted">Loading…</td></tr></table></div>
   </div>
   <div class="card">
@@ -705,9 +709,10 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
   $("cDays").onchange = function () { show("cDaysN", this.value === "custom"); summ(); };
   $("cOnce").onchange = function () { show("cMax", this.value === "0"); summ(); };
   $("cExp").onchange = function () { show("cExpD", this.value === "date"); summ(); };
-  ["cDaysN", "cSticks", "cBug", "cCount", "cMax", "cExpD", "cLabel"].forEach(function (id) { $(id).addEventListener("input", summ); $(id).addEventListener("change", summ); });
+  ["cDaysN", "cSticks", "cBug", "cCount", "cMax", "cExpD", "cLabel", "cGroup"].forEach(function (id) { $(id).addEventListener("input", summ); $(id).addEventListener("change", summ); });
   function spec() {
-    var s = { kind: CK, count: Math.floor(+$("cCount").value || 0), once: $("cOnce").value === "1", label: $("cLabel").value.trim() };
+    var gp = $("cGroup").value.trim().replace(/·/g, "-"), lb = $("cLabel").value.trim();
+    var s = { kind: CK, count: Math.floor(+$("cCount").value || 0), once: $("cOnce").value === "1", label: (gp ? gp + " · " + lb : lb).slice(0, 80) };
     if (CK === "pro") s.days = $("cDays").value === "custom" ? Math.floor(+$("cDaysN").value || 0) : +$("cDays").value;
     if (CK === "sticks") s.sticks = Math.floor(+$("cSticks").value || 0);
     if (CK === "bug") s.bug = $("cBug").value;
@@ -751,21 +756,43 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
     (CODES ? Promise.resolve(CODES) : call("codeList").then(function (r) { CODES = r.list || []; REDS = r.redemptions || []; return CODES; })).then(meta).then(function () { drawCodes(); drawReds(); })
       .catch(function (e) { $("cTable").innerHTML = '<tr><td class="muted">' + esc(errTxt(e)) + '</td></tr>'; });
   }
+  /* group tabs (owner, Nov 12 2026): a label "Group · Role" puts the code under a Group tab */
+  var CG = ""; try { CG = localStorage.getItem("dbAdminCodeGroup") || ""; } catch (e) {}
+  function grp(c) { var l = c.label || "", i = l.indexOf(" · "); return i > 0 ? [l.slice(0, i), l.slice(i + 3)] : ["", l]; }
+  function roleKey(r) { var m = /^(.*?)(\d+)\D*$/.exec(r || ""); return m ? m[1] + String(m[2]).padStart(4, "0") : (r || ""); }
+  function drawGroups() {
+    var G = {}; (CODES || []).forEach(function (c) { var g = grp(c)[0]; if (g) { G[g] = G[g] || { n: 0, used: 0 }; G[g].n++; if ((c.uses || 0) > 0) G[g].used++; } });
+    var names = Object.keys(G).sort(); if (CG && !G[CG]) CG = "";
+    $("cGroupList").innerHTML = names.map(function (g) { return '<option value="' + esc(g) + '">'; }).join("");
+    $("cGroups").innerHTML = '<button role="tab" data-cg="" aria-selected="' + (!CG) + '">All codes<span class="n">' + fmt((CODES || []).length) + '</span></button>' +
+      names.map(function (g) { return '<button role="tab" data-cg="' + esc(g) + '" aria-selected="' + (CG === g) + '">' + esc(g) + '<span class="n">' + G[g].used + '/' + G[g].n + ' used</span></button>'; }).join("");
+    if (!CG) { $("cGroupHead").innerHTML = ""; return; }
+    var L = (CODES || []).filter(function (c) { return grp(c)[0] === CG; }), R = {};
+    L.forEach(function (c) { var r = grp(c)[1].replace(/\s*#?\d+\s*$/, "") || "Other"; R[r] = (R[r] || 0) + 1; });
+    $("cGroupHead").innerHTML = '<div class="ghead"><h3>' + esc(CG) + '</h3><div class="muted small">' + Object.keys(R).map(function (r) { return fmt(R[r]) + ' ' + esc(r); }).join(" · ") + ' · ' + L.filter(function (c) { return (c.uses || 0) > 0; }).length + ' of ' + L.length + ' used</div><div class="row" style="margin-top:8px"><button class="ghost" id="bCopyGroup">Copy the list (role and code)</button><span class="muted small" id="cgMsg"></span></div></div>';
+    $("bCopyGroup").onclick = function () {
+      var txt = L.slice().sort(function (a, b) { return roleKey(grp(a)[1]).localeCompare(roleKey(grp(b)[1])); }).map(function (c) { return grp(c)[1] + ": " + c.code; }).join("\n");
+      navigator.clipboard.writeText(CG + "\n" + txt).then(function () { $("cgMsg").textContent = "Copied."; });
+    };
+  }
+  $("cGroups").addEventListener("click", function (e) { var b = e.target.closest("[data-cg]"); if (!b) return; CG = b.getAttribute("data-cg"); try { localStorage.setItem("dbAdminCodeGroup", CG); } catch (x) {} drawCodes(); });
   function codeRows() {
     var k = $("cfKind").value, st = $("cfSt").value, q = $("cfQ").value.trim().toLowerCase();
     return (CODES || []).filter(function (c) {
       if (k && c.kind !== k) return false;
       var s = status(c)[0]; if (st === "ready" && s !== "ok") return false; if (st === "used" && s !== "used") return false; if (st === "off" && s !== "off") return false;
       if (q && (c.code + " " + (c.label || "") + " " + (c.name || "")).toLowerCase().indexOf(q) < 0) return false;
+      if (CG && grp(c)[0] !== CG) return false;
       return true;
-    });
+    }).sort(function (a, b) { return CG ? roleKey(grp(a)[1]).localeCompare(roleKey(grp(b)[1])) : 0; });
   }
   function drawCodes() {
+    drawGroups();
     var L = codeRows();
-    $("cTable").innerHTML = L.length ? '<tr><th>Code</th><th>For</th><th>Gives</th><th class="num">Used</th><th>Used by</th><th>Stops working</th><th>Label</th><th>Made</th><th>Status</th><th></th></tr>' + L.map(function (c) {
+    $("cTable").innerHTML = L.length ? '<tr><th>Code</th><th>For</th><th>Gives</th><th class="num">Used</th><th>Used by</th><th>Stops working</th><th>' + (CG ? 'Role' : 'Label') + '</th><th>Made</th><th>Status</th><th></th></tr>' + L.map(function (c) {
       var s = status(c);
-      return '<tr><td><code class="c">' + esc(c.code) + '</code></td><td>' + esc(KIND[c.kind] || c.kind) + '</td><td>' + esc(gives(c)) + '</td><td class="num">' + fmt(c.uses || 0) + (c.once ? " / 1" : c.max ? " / " + fmt(c.max) : "") + '</td><td class="small">' + ((c.who || []).length ? (c.who || []).map(function (w) { return '<b>' + esc(w.name || "no name") + '</b>'; }).slice(0, 3).join(", ") + ((c.who || []).length > 3 ? " +" + ((c.who || []).length - 3) : "") : '<span class="muted">' + (c.once ? "One person" : "Shared") + '</span>') + '</td><td class="small">' + (c.expires ? day(c.expires) : "Never") + '</td><td class="small">' + esc(c.label || "") + '</td><td class="small muted">' + day(c.created) + '</td><td><span class="pill ' + s[0] + '">' + s[1] + '</span></td>' +
-        '<td><div class="row" style="flex-wrap:nowrap"><button class="ghost" data-copy="' + esc(c.code) + '">Copy</button><button class="ghost" data-rev="' + esc(c.code) + '" data-on="' + (c.revoked ? "0" : "1") + '">' + (c.revoked ? "Turn on" : "Turn off") + '</button></div></td></tr>';
+      return '<tr><td><code class="c">' + esc(c.code) + '</code></td><td>' + esc(KIND[c.kind] || c.kind) + '</td><td>' + esc(gives(c)) + '</td><td class="num">' + fmt(c.uses || 0) + (c.once ? " / 1" : c.max ? " / " + fmt(c.max) : "") + '</td><td class="small">' + ((c.who || []).length ? (c.who || []).map(function (w) { return '<b>' + esc(w.name || "no name") + '</b>'; }).slice(0, 3).join(", ") + ((c.who || []).length > 3 ? " +" + ((c.who || []).length - 3) : "") : '<span class="muted">' + (c.once ? "One person" : "Shared") + '</span>') + '</td><td class="small">' + (c.expires ? day(c.expires) : "Never") + '</td><td class="small">' + (grp(c)[0] && !CG ? '<span class="pill">' + esc(grp(c)[0]) + '</span> ' : '') + esc(CG ? grp(c)[1] : grp(c)[0] ? grp(c)[1] : (c.label || "")) + '</td><td class="small muted">' + day(c.created) + '</td><td><span class="pill ' + s[0] + '">' + s[1] + '</span></td>' +
+        '<td><div class="row" style="flex-wrap:nowrap"><button class="ghost" data-copy="' + esc(c.code) + '">Copy</button><button class="ghost" data-relabel="' + esc(c.code) + '">Rename</button><button class="ghost" data-rev="' + esc(c.code) + '" data-on="' + (c.revoked ? "0" : "1") + '">' + (c.revoked ? "Turn on" : "Turn off") + '</button></div></td></tr>';
     }).join("") : '<tr><td class="muted">' + ((CODES || []).length ? "Nothing matches." : "No codes made here yet. Make some above.") + '</td></tr>';
   }
   var RK = { made: "Made here", evaluator: "LIFE / evaluator", gift: "Gift", license: "School or agency license", protocols: "Agency protocols", fieldmedic: "Field Medic", web: "Web Pro" };
@@ -782,6 +809,15 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
   $("cTable").addEventListener("click", function (e) {
     var c = e.target.closest("[data-copy]");
     if (c) { navigator.clipboard.writeText(c.getAttribute("data-copy")).then(function () { c.textContent = "Copied"; setTimeout(function () { c.textContent = "Copy"; }, 1200); }); return; }
+    var rl = e.target.closest("[data-relabel]");
+    if (rl) {
+      var cd = rl.getAttribute("data-relabel"), cur = ((CODES || []).filter(function (x) { return x.code === cd; })[0] || {}).label || "";
+      var nl = prompt("Label for " + cd + ". Use Group · Role to put it in a group tab, for example: College Station Fire · P2 #01", cur);
+      if (nl == null) return; nl = nl.trim().slice(0, 80);
+      rl.disabled = true;
+      call("codeEdit", { code: cd, label: nl }).then(function () { (CODES || []).forEach(function (x) { if (x.code === cd) x.label = nl; }); drawCodes(); }).catch(function (er) { rl.disabled = false; alert(errTxt(er) + (/not found|NOT_FOUND|internal/i.test(errTxt(er)) ? " (Run Deploy server first: renaming needs the new server code.)" : "")); });
+      return;
+    }
     var r = e.target.closest("[data-rev]"); if (!r) return;
     var code = r.getAttribute("data-rev"), off = r.getAttribute("data-on") === "1";
     if (off && !confirm("Turn off " + code + "? Nobody new can redeem it. People who already redeemed it keep what they got.")) return;
