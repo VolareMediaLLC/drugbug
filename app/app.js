@@ -3313,7 +3313,8 @@ function cmShuffle(ids, lv) {
   var W = [0, 1, 0.6, 0.25, 0.06];
   return ids.map(function (id) { return { id: id, k: Math.pow(Math.random(), 1 / W[cmTier(id, lv)]) }; }).sort(function (a, b) { return b.k - a.k; }).map(function (x) { return x.id; });
 }
-function qTier(q) { return q && q.d ? cmTier(q.d, q.lv) : 2; }
+function qBoosted(q) { try { var B = (typeof SEAT !== "undefined" && SEAT.boost) || store("seatBoost"); return !!(B && B.length && typeof seatActive === "function" && seatActive() && B.indexOf(qid(q)) >= 0); } catch (e) { return false; } }
+function qTier(q) { return qBoosted(q) ? 1 : q && q.d ? cmTier(q.d, q.lv) : 2; }
 function tierBalance(sel, pool) {
   var n = sel.length; if (n < 5 || !pool || !pool.length || !DB.GROUPS) return sel;
   var avail = [0, 0, 0, 0, 0], spare = { 1: [], 2: [], 3: [], 4: [] }, inS = {};
@@ -3342,14 +3343,14 @@ function tierBalance(sel, pool) {
    (it is never removed): relevance 5 or ungraded = normal, 4 = 0.79, 3 = 0.58, 2 = 0.36, 1 = 0.15 of the usual chance.
    This only changes how often; which questions a study path can get (its scope) is unchanged. */
 function relOf(q) { var v = DIFF.rel && DIFF.rel[qid(q)]; return v == null ? null : v; }
-function relW(q) { var v = relOf(q); return v == null ? 1 : Math.max(0.15, Math.min(1, 0.15 + 0.85 * (v - 1) / 4)); }
+function relW(q) { if (typeof qBoosted === "function" && qBoosted(q)) return 3; var v = relOf(q); return v == null ? 1 : Math.max(0.15, Math.min(1, 0.15 + 0.85 * (v - 1) / 4)); }
 function relBalance(sel, pool) {
   if (!DIFF.rel || !sel || !sel.length || !pool || !pool.length) return sel;
   var low = sel.some(function (q) { return relW(q) < 1; }); if (!low) return sel;
   var inS = {}; sel.forEach(function (q) { inS[qid(q)] = 1; });
   var spare = shuffle(pool.filter(function (q) { return !inS[qid(q)] && !q.t && relW(q) >= 0.8; }));
   return sel.map(function (q) {
-    var w = relW(q); if (w >= 1 || q.pilot || q.t || Math.random() < w || !spare.length) return q;
+    var w = Math.min(1, relW(q)); if (w >= 1 || q.pilot || q.t || Math.random() < w || !spare.length) return q;
     var r = spare.pop(); inS[qid(r)] = 1; return r;
   });
 }
@@ -4204,6 +4205,9 @@ function revHTML(q) {
     c += '<div class="qrevrow"><button type="button" class="qrevv w' + (R.wkOpen || wk.length ? ' on' : '') + '" data-qrwko="1">' + (wk.length ? 'Poor decoys: ' + wk.length : 'Poor decoys') + '</button></div>';
     if (R.wkOpen) c += '<div class="qrevimp"><p class="qrevguide">Tap each decoy (wrong answer) that is too easy to rule out. Better decoys are written and the question comes back for grading.</p>' + imp.map(function (t, i) { var on = wk.indexOf(t) >= 0; return '<button type="button" class="qrimp' + (on ? ' on' : '') + '" data-qrwk="' + i + '" aria-pressed="' + on + '">' + (on ? '\u2713 ' : '') + esc(t) + '</button>'; }).join("") + '<button type="button" class="btn small" data-qrwksend="1">' + (wk.length ? 'Send to fix' : 'Pick at least one') + '</button></div>';
   }
+  /* Boost for my class (owner, Nov 13 2026): a school's or department's evaluators make a question come up
+     more often for their people */
+  try { var bo = boostTarget(); if (bo) { var on = boostHas(k); c += '<div class="qrevrow"><button type="button" class="qrevv bst' + (on ? ' on' : '') + '" data-qrboost="1">' + (on ? '\u2605 Boosted for ' : 'Boost for ') + esc(bo.name) + '</button></div>'; } } catch (e) {}
   try { var fp = evFieldPct(q.lv); if (fp) c += '<p class="qrevguide qrevfp">' + esc(fp.name) + ' questions: <b>' + fp.pct + '% graded</b> · ' + (100 - fp.pct) + '% not graded yet (' + fp.g.toLocaleString() + ' of ' + fp.n.toLocaleString() + ' graded)</p>'; } catch (e) {}
   c += '<div class="qrevs"><textarea maxlength="1000" placeholder="Suggestion (optional): a better wording, a wrong answer, a missing fact…" data-qrs="1">' + esc(R.s || "") + '</textarea><button type="button" class="btn small" data-qrsend="1">Send suggestion</button></div>';
   return c + '</div>';
@@ -4241,6 +4245,21 @@ function evFieldPct(lv) {
   var F0 = EVFP.by[r0]; if (!F0 || !F0.n) return null;
   return { name: { ph: "Prehospital", rn: "Nursing", md: "Medical school", im: "Imaging", ah: "Allied health", fm: "Military / tactical", gen: "General" }[r0] || r0, pct: Math.round(100 * F0.g / F0.n), g: F0.g, n: F0.n };
 }
+/* where a boost goes: the class this evaluator studies in, or the first class they teach */
+var BOOSTI = {};
+function boostTarget() {
+  if (typeof seatActive === "function" && seatActive() && SEAT.orgName) return { name: SEAT.orgName, seat: true };
+  try { var R = typeof stxRoles === "function" ? stxRoles() : null, L = R && (R.classes || []).filter(function (c) { return c.live; }); if (L && L.length) return { name: L[0].name, orgId: L[0].orgId }; } catch (e) {}
+  return null;
+}
+function boostHas(k) { var t = boostTarget(); if (!t) return false; if (t.seat) return ((SEAT.boost || store("seatBoost") || []).indexOf(k) >= 0); return !!(BOOSTI[t.orgId] || {})[k]; }
+function boostToggle(k) {
+  var t = boostTarget(); if (!t) return; var on = !boostHas(k), R = (Prog.d.qrev || (Prog.d.qrev = {}))[k] || (Prog.d.qrev[k] = {});
+  if (t.seat) { var B = (SEAT.boost || store("seatBoost") || []).filter(function (x) { return x !== k; }); if (on) B.push(k); SEAT.boost = B; store("seatBoost", B); }
+  else { var M = BOOSTI[t.orgId] || (BOOSTI[t.orgId] = {}); if (on) M[k] = 1; else delete M[k]; }
+  revRedraw(k);
+  fnCall("groupBoost", t.seat ? { qid: k, on: on, gift: (Prog.d.reviewer || {}).id || "" } : { qid: k, on: on, orgId: t.orgId }).then(function (r) { if (t.seat && r && r.boost) { SEAT.boost = r.boost; store("seatBoost", r.boost); } }, function (e) { R.err = "Boost not saved: " + ((e && e.message) || "try again"); if (t.seat) { var B2 = (SEAT.boost || []).filter(function (x) { return x !== k; }); if (!on) B2.push(k); SEAT.boost = B2; store("seatBoost", B2); } revRedraw(k); });
+}
 function revSave(k, el) {
   var R = (Prog.d.qrev || (Prog.d.qrev = {}))[k] || (Prog.d.qrev[k] = {}), q = QRATE_Q[k] || {};
   R.sent = false; R.err = ""; saveProg();
@@ -4264,12 +4283,13 @@ function revRedraw(k) {
   });
 }
 document.addEventListener("click", function (e) {
-  var b = e.target && e.target.closest && e.target.closest("[data-qrd],[data-qrv],[data-qrsend],[data-qrrel],[data-qrwko],[data-qrwk],[data-qrwksend]"); if (!b) return;
+  var b = e.target && e.target.closest && e.target.closest("[data-qrd],[data-qrv],[data-qrsend],[data-qrrel],[data-qrwko],[data-qrwk],[data-qrwksend],[data-qrboost]"); if (!b) return;
   var box = b.closest(".qrev"); if (!box || !isReviewer()) return;
   e.preventDefault(); e.stopPropagation();
   var k = box.getAttribute("data-qrk"), R = (Prog.d.qrev || (Prog.d.qrev = {}))[k] || (Prog.d.qrev[k] = {});
   if (b.hasAttribute("data-qrd")) R.d = +b.getAttribute("data-qrd");
   if (b.hasAttribute("data-qrrel")) { R.rel = +b.getAttribute("data-qrrel"); R.v = "off"; revRedraw(k); }
+  if (b.hasAttribute("data-qrboost")) { e.preventDefault(); e.stopPropagation(); return boostToggle(box.getAttribute("data-qrk")); }
   if (b.hasAttribute("data-qrwko")) { R.wkOpen = !R.wkOpen; saveProg(); return revRedraw(k); }
   if (b.hasAttribute("data-qrwk")) {
     var qq = QRATE_Q[k] || {}, imp2 = (qq.w && qq.w.length ? qq.w : (qq.t === "multi" && qq.opts && qq.ok ? qq.opts.filter(function (o) { return qq.ok.indexOf(o) < 0; }) : [])).filter(Boolean), tx = imp2[+b.getAttribute("data-qrwk")];
@@ -9440,7 +9460,7 @@ function audSilentUnlock() {
   }, { passive: true, capture: true });
 });
 document.addEventListener("visibilitychange", function () { if (!document.hidden) { AUDH.lastT = -1; AUDH.stuck = 0; audWake(); } });
-(function () { var st = document.createElement("style"); st.textContent = '.muswitch{display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border:1.5px solid var(--line);border-radius:99px;background:var(--surface2,transparent);color:var(--ink);font:inherit;font-weight:800;font-size:14px;cursor:pointer}.muswitch .mustk{position:relative;width:42px;height:24px;border-radius:99px;background:color-mix(in srgb,var(--muted) 35%,transparent);transition:background .15s;flex:none}.muswitch .mustk i{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35);transition:transform .15s}.muswitch.on{border-color:#7c5cff}.muswitch.on .mustk{background:#7c5cff}.muswitch.on .mustk i{transform:translateX(18px)}.muswitch:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}.hubtile.hubqs{border:2.5px solid var(--c,#7c5cff)!important;box-shadow:0 6px 20px color-mix(in srgb,var(--c,#7c5cff) 30%,transparent);background:linear-gradient(160deg,color-mix(in srgb,var(--c,#7c5cff) 22%,var(--surface)),var(--surface) 70%)!important}.hubtile.hubqs strong{font-weight:900;font-size:1.08em}.qrevv.o.on{background:#d97706;border-color:#d97706;color:#fff}.qrevv.w.on{background:#7c5cff;border-color:#7c5cff;color:#fff}.qrevimp{display:flex;flex-direction:column;gap:6px;margin:4px 0 8px}.qrimp{text-align:left;padding:8px 10px;border-radius:10px;border:1.5px solid var(--line);background:transparent;color:var(--ink);font:inherit;font-size:14px;cursor:pointer}.qrimp.on{border-color:#7c5cff;background:color-mix(in srgb,#7c5cff 16%,transparent);font-weight:700}.qrevimp .btn{align-self:flex-start}.qrevmore{margin:6px 0}.qrevchk{display:grid;grid-template-columns:repeat(auto-fill,minmax(135px,1fr));gap:5px;margin-top:6px}.qrck{display:flex;align-items:center;gap:6px;padding:5px 8px;border:1.5px solid var(--line);border-radius:9px;font-size:13px;line-height:1.2;cursor:pointer}.qrck input{width:18px;height:18px;accent-color:#d97706;flex:none}.qrck.on{border-color:#d97706;background:color-mix(in srgb,#d97706 14%,transparent)}.qrevguide{margin:2px 0 6px;font-size:12.5px;color:var(--muted)}.qrev .qrevrow{flex-wrap:wrap}@media (prefers-reduced-motion:reduce){.muswitch .mustk,.muswitch .mustk i{transition:none}}'; document.head.appendChild(st); })();
+(function () { var st = document.createElement("style"); st.textContent = '.muswitch{display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border:1.5px solid var(--line);border-radius:99px;background:var(--surface2,transparent);color:var(--ink);font:inherit;font-weight:800;font-size:14px;cursor:pointer}.muswitch .mustk{position:relative;width:42px;height:24px;border-radius:99px;background:color-mix(in srgb,var(--muted) 35%,transparent);transition:background .15s;flex:none}.muswitch .mustk i{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35);transition:transform .15s}.muswitch.on{border-color:#7c5cff}.muswitch.on .mustk{background:#7c5cff}.muswitch.on .mustk i{transform:translateX(18px)}.muswitch:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}.hubtile.hubqs{border:2.5px solid var(--c,#7c5cff)!important;box-shadow:0 6px 20px color-mix(in srgb,var(--c,#7c5cff) 30%,transparent);background:linear-gradient(160deg,color-mix(in srgb,var(--c,#7c5cff) 22%,var(--surface)),var(--surface) 70%)!important}.hubtile.hubqs strong{font-weight:900;font-size:1.08em}.qrevv.o.on{background:#d97706;border-color:#d97706;color:#fff}.qrevv.bst.on{background:#f5b301;border-color:#f5b301;color:#1d1a2a}.qrevv.w.on{background:#7c5cff;border-color:#7c5cff;color:#fff}.qrevimp{display:flex;flex-direction:column;gap:6px;margin:4px 0 8px}.qrimp{text-align:left;padding:8px 10px;border-radius:10px;border:1.5px solid var(--line);background:transparent;color:var(--ink);font:inherit;font-size:14px;cursor:pointer}.qrimp.on{border-color:#7c5cff;background:color-mix(in srgb,#7c5cff 16%,transparent);font-weight:700}.qrevimp .btn{align-self:flex-start}.qrevmore{margin:6px 0}.qrevchk{display:grid;grid-template-columns:repeat(auto-fill,minmax(135px,1fr));gap:5px;margin-top:6px}.qrck{display:flex;align-items:center;gap:6px;padding:5px 8px;border:1.5px solid var(--line);border-radius:9px;font-size:13px;line-height:1.2;cursor:pointer}.qrck input{width:18px;height:18px;accent-color:#d97706;flex:none}.qrck.on{border-color:#d97706;background:color-mix(in srgb,#d97706 14%,transparent)}.qrevguide{margin:2px 0 6px;font-size:12.5px;color:var(--muted)}.qrev .qrevrow{flex-wrap:wrap}@media (prefers-reduced-motion:reduce){.muswitch .mustk,.muswitch .mustk i{transition:none}}'; document.head.appendChild(st); })();
 /* quick volume popover from the top-bar note button */
 function muPop() {
   if (!S.mupop) return "";
@@ -31274,7 +31294,7 @@ function seatCheck() {
   fnCall("groupSeat", {}).then(function (r) {
     var was = seatTier();
     if (r && r.ok) {
-      SEAT.tier = "pro"; SEAT.until = r.live ? r.until : Math.min(r.until, Date.now()); SEAT.orgName = r.orgName || ""; SEAT.alias = r.alias || ""; SEAT.level = r.level || ""; SEAT.loaded = true;
+      SEAT.tier = "pro"; SEAT.until = r.live ? r.until : Math.min(r.until, Date.now()); SEAT.orgName = r.orgName || ""; SEAT.alias = r.alias || ""; SEAT.level = r.level || ""; SEAT.loaded = true; if (r.boost) { SEAT.boost = r.boost; store("seatBoost", r.boost); }
       store("seat", { tier: "pro", until: SEAT.until, orgName: SEAT.orgName, alias: SEAT.alias, level: SEAT.level });
     } else if (r && !r.ok && !(SEAT.redeemedAt && Date.now() - SEAT.redeemedAt < 120000)) {
       SEAT.tier = ""; SEAT.until = 0; SEAT.loaded = true; store("seat", null);
@@ -31330,7 +31350,7 @@ function seatSecret(make) {
 }
 /* any Cloud Function, callable protocol, with this browser's account token */
 function fnCall(name, data) {
-  if (/^group(Redeem|Report|SetName|PrizeClaim|Board|Seat)$/.test(name)) { var sk = seatSecret(name === "groupRedeem" || name === "groupSeat"); if (sk) { data = Object.assign({}, data || {}, { seat: sk }); } }
+  if (/^group(Redeem|Report|SetName|PrizeClaim|Board|Seat|Boost)$/.test(name)) { var sk = seatSecret(name === "groupRedeem" || name === "groupSeat"); if (sk) { data = Object.assign({}, data || {}, { seat: sk }); } }
   var base = (window.DRUGBUG_CONFIG || {}).functionsUrl;
   if (!base || typeof ACCT === "undefined" || !ACCT || !ACCT.api || typeof ACCT.api.token !== "function") return Promise.reject(new Error("offline"));
   return ACCT.api.token().then(function (tok) {
