@@ -9130,11 +9130,70 @@ setInterval(function () {
   } catch (e) {}
 }, 3000);
 window.addEventListener("pageshow", function () { if (MU.armed && !document.hidden) muSync(); });
+/* ---------- Sound health (owner, Nov 13 2026: "the music only plays half the time, and when it's gone the
+   sound effects are too") ----------
+   Music and every sound effect share one audio channel. iPhones can leave that channel stuck after a call,
+   Siri, an alarm, another app's sound, or the phone sleeping: it says "running" but its clock has stopped,
+   or it stays "interrupted", and resume() never brings it back. Every 2 seconds we check that the clock
+   is moving; if it isn't, the next tap closes the stuck channel and opens a fresh one (a new channel needs
+   a tap on iPhones), and the music starts again where it should. The iPhone app also tells us when its
+   sound session comes back (window.DrugBugAudio.wake, from AudioKeeper in the app). */
+var AUDH = { lastT: -1, stuck: 0, rebuild: false, n: 0 };
+function audWanted() { var s0 = SET(); return s0.sfx !== false || muOn(); }
+function audRebuild() {
+  AUDH.n++; AUDH.stuck = 0; AUDH.lastT = -1; AUDH.rebuild = false;
+  try { var old = AUD.ctx; AUD.ctx = null; if (old && old.state !== "closed") { var cp = old.close(); if (cp && cp.catch) cp.catch(function () {}); } } catch (e) { AUD.ctx = null; }
+  try { muFileStop(); } catch (e) {}
+  clearInterval(MU.timer); MU.timer = null; MU.playing = false; MU.master = null; MU.outCtx = null; MU.file = null;
+  SFXBUF = {};
+  audioCtx();
+  if (MU.armed && muOn()) muSync();
+}
+function audWake() {
+  try {
+    var c = AUD.ctx; if (!c) return; muSession();
+    if (c.state === "closed") return audRebuild();
+    if (c.state !== "running") { var r = c.resume(); if (r && r.then) r.then(function () { if (MU.armed && muOn()) { MU.playing = false; muSync(); } }).catch(function () { AUDH.rebuild = true; }); }
+    else if (MU.armed && muOn() && !(MU.file && MU.file.src)) { MU.playing = false; muSync(); }
+  } catch (e) {}
+}
+window.DrugBugAudio = { wake: audWake, rebuild: audRebuild, state: function () { var c = AUD.ctx; return { state: c ? c.state : "none", t: c ? c.currentTime : 0, stuck: AUDH.stuck, rebuilt: AUDH.n, music: !!(MU.file && MU.file.src) }; } };
+setInterval(function () {
+  var c = AUD.ctx;
+  if (!c || document.hidden || !audWanted()) { AUDH.lastT = -1; AUDH.stuck = 0; return; }
+  if (c.state === "running") { if (AUDH.lastT >= 0 && c.currentTime <= AUDH.lastT) AUDH.stuck++; else AUDH.stuck = 0; AUDH.lastT = c.currentTime; }
+  else { AUDH.lastT = -1; if (AUD.gestured) AUDH.stuck++; }
+  if (AUDH.stuck >= 2) AUDH.rebuild = true;
+}, 2000);
+/* iPhone Safari before iOS 17 has no audioSession setting: a silent looping media element started from a tap
+   makes the page "media playback", so the ring/silent switch does not mute the music and effects */
+var AUD_SIL = null;
+function audSilentUnlock() {
+  try {
+    if (AUD_SIL || navigator.audioSession || NATIVE || !/iP(hone|ad|od)|Macintosh.*Mobile/.test(navigator.userAgent + (navigator.maxTouchPoints > 1 ? " Mobile" : ""))) return;
+    var n = 8000, b = new ArrayBuffer(44 + n * 2), v = new DataView(b), w = function (o, str) { for (var i = 0; i < str.length; i++) v.setUint8(o + i, str.charCodeAt(i)); };
+    w(0, "RIFF"); v.setUint32(4, 36 + n * 2, true); w(8, "WAVEfmt "); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, 8000, true); v.setUint32(28, 16000, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, "data"); v.setUint32(40, n * 2, true);
+    var bin = "", u = new Uint8Array(b); for (var i = 0; i < u.length; i++) bin += String.fromCharCode(u[i]);
+    var a = document.createElement("audio"); a.setAttribute("playsinline", ""); a.setAttribute("x-webkit-airplay", "deny"); a.loop = true; a.preload = "auto"; a.src = "data:audio/wav;base64," + btoa(bin);
+    var pr = a.play(); AUD_SIL = a; if (pr && pr.catch) pr.catch(function () { AUD_SIL = null; });
+  } catch (e) { AUD_SIL = null; }
+}
+["touchend", "click", "keydown"].forEach(function (ev) {
+  document.addEventListener(ev, function () {
+    AUD.gestured = true;
+    if (!audWanted()) return;
+    audSilentUnlock();
+    if (AUDH.rebuild) audRebuild();
+    else { var c = AUD.ctx; if (c && c.state !== "running") audWake(); }
+  }, { passive: true, capture: true });
+});
+document.addEventListener("visibilitychange", function () { if (!document.hidden) { AUDH.lastT = -1; AUDH.stuck = 0; audWake(); } });
+(function () { var st = document.createElement("style"); st.textContent = '.muswitch{display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border:1.5px solid var(--line);border-radius:99px;background:var(--surface2,transparent);color:var(--ink);font:inherit;font-weight:800;font-size:14px;cursor:pointer}.muswitch .mustk{position:relative;width:42px;height:24px;border-radius:99px;background:color-mix(in srgb,var(--muted) 35%,transparent);transition:background .15s;flex:none}.muswitch .mustk i{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35);transition:transform .15s}.muswitch.on{border-color:#7c5cff}.muswitch.on .mustk{background:#7c5cff}.muswitch.on .mustk i{transform:translateX(18px)}.muswitch:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}@media (prefers-reduced-motion:reduce){.muswitch .mustk,.muswitch .mustk i{transition:none}}'; document.head.appendChild(st); })();
 /* quick volume popover from the top-bar note button */
 function muPop() {
   if (!S.mupop) return "";
   var on = muOn(), v = muLevel();
-  return '<div class="mupop" role="dialog" aria-label="Music"><div class="murow"><strong>Background music</strong><button class="btn small' + (on ? ' ghost' : '') + '" data-act="mutoggle" aria-pressed="' + on + '">' + (on ? "Turn off" : "Turn on") + '</button></div>' +
+  return '<div class="mupop" role="dialog" aria-label="Music"><div class="murow"><strong>Background music</strong><button class="muswitch' + (on ? ' on' : '') + '" data-act="mutoggle" role="switch" aria-checked="' + on + '" aria-label="Background music"><span class="mustk" aria-hidden="true"><i></i></span><b>' + (on ? "On" : "Off") + '</b></button></div>' +
     '<label class="muvol"><span>Track</span><select class="pinput" id="mutrack">' + muTrackOptions() + '</select></label><p class="muted small mumore">More tracks in the <button class="linkish" data-goshop="1" data-shopf="music">Terrarium Music shop</button></p>' +
     muListBox() + '<label class="muvol"><span>Volume</span><input type="range" min="0" max="100" step="5" id="muvol" value="' + v + '" aria-label="Music volume"><output id="muvolv">' + v + '%</output></label>' +
     '<div class="murow"><button class="btn small ghost" data-act="mupopclose">Done</button></div></div>';
