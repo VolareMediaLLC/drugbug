@@ -30290,7 +30290,7 @@ function giftGive(d) {
   if (String(d.id || "").slice(0, 2) !== "c-") codeNameLog(d.rev ? "evaluator" : "gift", d.id); else giftNameKeep();
   Prog.d.gifts = Prog.d.gifts || {};
     Prog.d.gifts[d.id] = Date.now();
-    if (d.sticks > 0) { earn(d.sticks); got.push(d.sticks.toLocaleString() + " sticks"); }
+    if (d.sticks > 0) { try { if (typeof stickRepair === "function") stickRepair(); } catch (e) {} earn(d.sticks); got.push(d.sticks.toLocaleString() + " sticks"); }
     if (d.pro > 0) {
       var from = Math.max(Date.now(), (Prog.d.proGift && Prog.d.proGift.until) || 0);
       Prog.d.proGift = { until: from + d.pro * 864e5 };
