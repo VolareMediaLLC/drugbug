@@ -3216,7 +3216,10 @@ function weightOf(q) {
   return w * (typeof relW === "function" ? relW(q) : 1);
 }
 function adaptivePick(pool, n) {
-  var items = pool.map(function (q) { return { q: q, k: Math.pow(Math.random(), 1 / weightOf(q)) }; });
+  /* random by default (owner, Nov 13 2026: "make it random and not adaptive"); only relevance still
+     makes low-relevance questions rarer. Adaptive comes back when someone picks it for a test. */
+  var adapt = SET().adaptive === true || !!(S.nr && S.nr.adaptive === true);
+  var items = pool.map(function (q) { return { q: q, k: Math.pow(Math.random(), 1 / (adapt ? weightOf(q) : (typeof relW === "function" ? relW(q) : 1))) }; });
   items.sort(function (a, b) { return b.k - a.k; });
   var out = [], seenDrug = {};
   items.forEach(function (it) { if (out.length < n && (!it.q.d || (seenDrug[it.q.d] || 0) < 2)) { out.push(it.q); seenDrug[it.q.d] = (seenDrug[it.q.d] || 0) + 1; } });
@@ -8637,7 +8640,7 @@ document.addEventListener("visibilitychange", function () { if (document.visibil
 window.addEventListener("pagehide", function () { usgFlush(true); });
 setTimeout(function () { usgFlush(false); }, 8000);   /* the visit itself counts even before anything is answered */
 
-var SET_DEF = { remind: true, remindAt: "19:00", text: "normal", contrast: false, motion: false, homeLevel: "", dailyGoal: 10, nrN: 25, nrMode: "practice", adaptive: true, megaTimer: "on", fullDefault: false, voiceRate: "normal", showPhon: true, fun: true, sfx: true, music: true, musicVol: 30, printMode: "cards", printDetail: "std", printLang: "auto", printDense: false, state: "", buddy: true, weird: true, weirdAt: "12:00" };
+var SET_DEF = { remind: true, remindAt: "19:00", text: "normal", contrast: false, motion: false, homeLevel: "", dailyGoal: 10, nrN: 25, nrMode: "practice", adaptive: false, megaTimer: "on", fullDefault: false, voiceRate: "normal", showPhon: true, fun: true, sfx: true, music: true, musicVol: 30, printMode: "cards", printDetail: "std", printLang: "auto", printDense: false, state: "", buddy: true, weird: true, weirdAt: "12:00" };
 function SET() { var s = store("settings") || {}; return Object.assign({}, SET_DEF, s); }
 /* sound effects are on for everyone (owner, Nov 5 2026): anyone who had them off is switched back on
    once; after that the switch in Settings is theirs again */
