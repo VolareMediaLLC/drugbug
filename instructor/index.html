@@ -164,6 +164,10 @@ a.signbtn{background:var(--accent)!important;color:#fff!important;border-color:v
 .hq details{margin-top:6px;font-size:13.5px}.hq summary{cursor:pointer;color:var(--accent);font-weight:600}
 .h3s{font-size:15px;margin:18px 0 6px}
 details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webkit-details-marker{display:none}
+.qtybox{min-width:170px}.qtybox input{font-size:18px;font-weight:700;text-align:center;min-height:44px}
+.seatline{margin:0 0 10px;font-size:14px}.seatline a{font-weight:700}
+.seatreq{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin:0 0 12px;padding:12px;border:1px solid var(--line,#d8dde6);border-radius:12px}
+.seatreq label{flex:1 1 140px}
 </style>
 </head>
 <body>
@@ -479,11 +483,17 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
       <div class="row noprint" style="justify-content:space-between;align-items:center;margin-bottom:10px">
         <h2 style="margin:0">Students</h2>
         <div class="row">
-          <label style="max-width:120px">New keys<input id="qty" type="number" min="1" max="200" value="10"></label>
+          <label class="qtybox">How many keys? <span class="muted small">(1 per person)</span><input id="qty" type="number" inputmode="numeric" min="1" max="200" value="10" placeholder="Type a number"></label>
           <button id="bMake">Make keys</button>
           <button class="ghost" id="bCsv">Key sheet (CSV)</button>
           <button class="ghost" id="bPrint">Print key sheet</button>
         </div>
+      </div>
+      <div class="seatline noprint" id="seatLine"></div>
+      <div class="seatreq noprint hide" id="seatReq">
+        <label>Total seats you need<input id="seatWant" type="number" inputmode="numeric" min="1" max="5000" placeholder="e.g. 60"></label>
+        <label style="flex:2 1 220px">Note (optional)<input id="seatNote" maxlength="300" placeholder="e.g. B shift and C shift too"></label>
+        <button id="bSeatReq">Ask for more seats</button>
       </div>
       <p id="keyMsg" class="msg hide noprint"></p>
       <h2 class="hide" id="printTitle"></h2>
@@ -919,6 +929,7 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
       (o.level ? " · " + (LVNAME[o.level] || o.level) : "") + " · goal " + o.goal + " questions per student" + (o.instructors.length ? " · " + o.instructors.join(", ") : "");
     $("printTitle").textContent = o.name + " — DrugBug key sheet";
     try { drawLevel(); } catch (e) {}
+    drawSeats(o);
     $("tiles").innerHTML = [
       [t.activated + " of " + o.seats, "students joined"],
       [t.active7, "studied this week"],
@@ -1240,6 +1251,30 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
     call("groupNameReview", data).then(function () { say("keyMsg", { approve: "Approved.", reject: "Rejected. They show as " + alias + ".", rename: "Renamed.", remove: "Removed. They show as " + alias + "." }[act]); refresh(); })
       .catch(function (e2) { say("keyMsg", e2.message, true); b.disabled = false; });
   }, true);
+
+  /* seats: how many keys can still be made, and a way to ask for more (owner, Nov 13 2026) */
+  function drawSeats(o) {
+    var left = Math.max(0, (o.seats || 0) - (o.keyCount || 0)), q = $("qty");
+    q.max = Math.max(1, Math.min(200, left)); if (left && Number(q.value) > left) q.value = left;
+    $("seatLine").innerHTML = '<b>' + o.seats + '</b> seats · <b>' + (o.keyCount || 0) + '</b> keys made · <b>' + left + '</b> left to make' +
+      (o.seatRequest ? ' · <span class="pill on">asked for ' + o.seatRequest.want + ' seats</span>' : '') +
+      ' · <a href="#" id="seatMore">' + (left ? 'Need more seats?' : 'Out of seats: ask for more') + '</a>';
+    show("seatReq", !left && o.live !== false);
+    $("seatWant").placeholder = "more than " + o.seats;
+  }
+  document.addEventListener("click", function (e) {
+    if (!e.target || e.target.id !== "seatMore") return; e.preventDefault();
+    show("seatReq", true); $("seatWant").focus();
+  });
+  $("bSeatReq").onclick = function () {
+    var b = this, want = parseInt($("seatWant").value, 10);
+    if (!want) { say("keyMsg", "Type the total number of seats you need.", true); $("seatWant").focus(); return; }
+    b.disabled = true;
+    call("groupSeatRequest", { orgId: ST.orgId, seats: want, note: $("seatNote").value })
+      .then(function (r) { say("keyMsg", "Sent. Adam will add seats for " + r.want + " people, usually within a day. You'll be able to make the extra keys here."); $("seatNote").value = ""; return refresh(); })
+      .catch(function (e) { say("keyMsg", e.message, true); })
+      .then(function () { b.disabled = false; });
+  };
 
   $("bMake").onclick = function () {
     var b = this; b.disabled = true;
