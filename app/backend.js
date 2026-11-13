@@ -127,6 +127,8 @@
       if (String(pw || "").length < 8) return Promise.reject({ message: "Use a password of at least 8 characters." });
       return attach(firebase.auth.EmailAuthProvider.credential(email, pw)).then(function (r) { try { auth.currentUser.sendEmailVerification(); } catch (e) {} return r; });
     },
+    /* Link my other device (Nov 13 2026): a short code from the other device turns into a sign-in token */
+    signInToken: function (tok) { return auth.signInWithCustomToken(tok).then(function () { emit(); return { switched: true }; }); },
     signInEmail: function (email, pw) { return auth.signInWithEmailAndPassword(email, pw).then(function () { emit(); return { switched: true }; }); },
     resetPassword: function (email) { return auth.sendPasswordResetEmail(email); },
     /* an Apple or Google account adds a password, so it can sign in with email where that button is missing

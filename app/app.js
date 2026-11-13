@@ -464,7 +464,7 @@ function scopeIds() {
 }
 function scopeNote(id) { if (S.view !== "level") return ""; return scopeFor(S.level).notes[id] || ""; }
 
-var UTIL_VIEWS = { settings: 1, easy: 1, classes: 1, admin: 1 };
+var UTIL_VIEWS = { settings: 1, easy: 1, classes: 1, admin: 1, stats: 1 };
 /* Tabs that moved inside Study Tools, Oct 29 2026. Old links, restored sessions and saved state
    land on the tool instead of an orphan page. */
 var MOVED_TABS = { cards: "cards", games: "games", prep: "prep", ixn: null, medlist: null };
@@ -482,7 +482,7 @@ function go(view, opts) {
   if ((S.view === "flevels" || S.view === "field" || (S.view === "level" && isF(S.level))) && typeof fmUnlocked === "function" && !fmUnlocked()) { S.view = "home"; view = "home"; } /* Field Medic is hidden until a code is redeemed */
   fixTab();
   Admin.on = view === "admin"; if (view === "level") store("lastLevel", S.level);
-  var h = view === "home" ? "" : view === "admin" ? "admin" : view === "classes" ? "classes" : view === "settings" ? "settings" : view === "terrarium" ? "terrarium" : view === "levels" ? "prehospital" : view === "flevels" ? "fieldmedic" : view === "nlevels" ? "nursing" : view === "mlevels" ? "medschool" : view === "ilevels" ? "imaging" : view === "alevels" ? "allied" : view === "everyday" ? "everyday" : view === "field" ? "field" : view === "gen" ? "general" : view === "easy" ? "easy" : S.level;
+  var h = view === "home" ? "" : view === "admin" ? "admin" : view === "classes" ? "classes" : view === "settings" ? "settings" : view === "stats" ? "stats" : view === "terrarium" ? "terrarium" : view === "levels" ? "prehospital" : view === "flevels" ? "fieldmedic" : view === "nlevels" ? "nursing" : view === "mlevels" ? "medschool" : view === "ilevels" ? "imaging" : view === "alevels" ? "allied" : view === "everyday" ? "everyday" : view === "field" ? "field" : view === "gen" ? "general" : view === "easy" ? "easy" : S.level;
   try { history.replaceState(null, "", h ? "#" + h : location.pathname); } catch (e) {}
   render(); window.scrollTo(0, 0);
 }
@@ -500,10 +500,11 @@ function topbar() {
   if (S.view === "admin") c += '<span>/</span><span>Control Center</span>';
   if (S.view === "classes") c += '<span>/</span><span>Classes</span>';
   if (S.view === "settings") c += '<span>/</span><span>Settings</span>';
+  if (S.view === "stats") c += '<span>/</span><span>Stats</span>';
   if (S.view === "terrarium") c += '<span>/</span><span>Terrarium</span>';
   if (S.view === "everyday") c += '<span>/</span>' + (S.evTab ? '<button data-evtab="">Everyday Health</button>' : '<span>Everyday Health</span>');
   var extra = (!SOCIAL ? '' : '<button class="theme-btn" data-go="classes"' + (S.view === "classes" ? ' aria-current="page"' : '') + '>Classes</button>') + (Admin.can ? '<button class="theme-btn admin-btn" data-go="admin"' + (S.view === "admin" ? ' aria-current="page"' : '') + '><span class="lg">Control Center</span><span class="sm">Control Center</span></button>' : '');
-  c += '</nav><span class="spacer"></span><div class="tbacts">' + (stickChip() || tierChip()) + '<span class="tbx">' + extra + '</span><button class="theme-btn srch-btn" data-act="gsearch" aria-label="Search all drugs" title="Search all drugs"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button><button class="theme-btn menu-btn" data-act="tbmenu" aria-expanded="' + !!S.menu + '" aria-label="More">More</button>' + musicBtn() + gearBtn() + (typeof funOn === "function" && !funOn() ? '' : '<button class="tbsticks' + (typeof iapAvailable === "function" && iapAvailable() ? ' hasplus' : '') + '" data-goshop="1" data-shopf="sticks" aria-label="' + sticks() + ' sticks. Get more sticks" title="Get Sticks">' + stickIcon(18) + (typeof iapAvailable === "function" && iapAvailable() ? '<span class="tbplus" aria-hidden="true">+</span>' : '') + '<strong>' + sticks().toLocaleString() + '</strong></button>') + '</div>' + (S.menu ? '<div class="tbmenu" role="menu">' + extra + '<button class="theme-btn" data-idea="1">Send an idea</button></div>' : '') + '</div>';
+  c += '</nav><span class="spacer"></span><div class="tbacts">' + (stickChip() || tierChip()) + '<span class="tbx">' + extra + '</span><button class="theme-btn srch-btn" data-act="gsearch" aria-label="Search all drugs" title="Search all drugs"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button><button class="theme-btn menu-btn" data-act="tbmenu" aria-expanded="' + !!S.menu + '" aria-label="More">More</button>' + musicBtn() + gearBtn() + (typeof funOn === "function" && !funOn() ? '' : '<button class="tbsticks' + (typeof iapAvailable === "function" && iapAvailable() ? ' hasplus' : '') + '" data-goshop="1" data-shopf="sticks" aria-label="' + sticks() + ' sticks. Get more sticks" title="Get Sticks">' + stickIcon(18) + (typeof iapAvailable === "function" && iapAvailable() ? '<span class="tbplus" aria-hidden="true">+</span>' : '') + '<strong>' + sticks().toLocaleString() + '</strong></button>') + '</div>' + (S.menu ? '<div class="tbmenu" role="menu">' + extra + '' + (typeof stxBtn === "function" ? stxBtn() : '') + '<button class="theme-btn" data-idea="1">Send an idea</button></div>' : '') + '</div>';
   return c + (typeof muPop === "function" ? muPop() : "") + backRow();
 }
 function backRow() {
@@ -2243,7 +2244,7 @@ function render() {
      already moved on, so buttons did nothing and nothing explained why. Now it says so and offers
      a way out. (owner reported Flight Paramedic doing this, Oct 30 2026) */
   try {
-    html = ageBlocked() && S.view !== "legal" ? ageBlockView() : needDisc() ? discView() : !ok && S.view !== "legal" ? gateView() : S.view === "legal" ? legalView() : (typeof needFun === "function" && needFun()) ? funView() : (typeof needWelcome === "function" && needWelcome()) ? welcomeView() : needOnboard() ? obView() : S.view === "fire" && typeof fireView === "function" ? fireView() : S.view === "home" ? viewHome() : (S.view === "levels" || S.view === "flevels" || S.view === "nlevels" || S.view === "mlevels" || S.view === "ilevels" || S.view === "alevels") ? viewLevels() : S.view === "easy" ? viewEasy() : S.view === "admin" ? viewAdmin() : S.view === "classes" ? classesView() : S.view === "settings" ? settingsView() : S.view === "terrarium" ? ((typeof funOn === "function" && !funOn()) ? (S.view = "home", viewHome()) : terrariumView()) : S.view === "everyday" ? evView() : S.view === "field" && typeof fieldView === "function" ? fieldView() : viewLevel();
+    html = ageBlocked() && S.view !== "legal" ? ageBlockView() : needDisc() ? discView() : !ok && S.view !== "legal" ? gateView() : S.view === "legal" ? legalView() : (typeof needFun === "function" && needFun()) ? funView() : (typeof needWelcome === "function" && needWelcome()) ? welcomeView() : needOnboard() ? obView() : S.view === "fire" && typeof fireView === "function" ? fireView() : S.view === "home" ? viewHome() : (S.view === "levels" || S.view === "flevels" || S.view === "nlevels" || S.view === "mlevels" || S.view === "ilevels" || S.view === "alevels") ? viewLevels() : S.view === "easy" ? viewEasy() : S.view === "admin" ? viewAdmin() : S.view === "classes" ? classesView() : S.view === "settings" ? settingsView() : S.view === "stats" && typeof statsView === "function" ? statsView() : S.view === "terrarium" ? ((typeof funOn === "function" && !funOn()) ? (S.view = "home", viewHome()) : terrariumView()) : S.view === "everyday" ? evView() : S.view === "field" && typeof fieldView === "function" ? fieldView() : viewLevel();
   } catch (err) {
     LAST_ERR = (err && (err.message || err)) + "";
     try { if (window.console) console.error("DrugBug render failed:", err); } catch (e) {}
@@ -2409,10 +2410,11 @@ document.addEventListener("click", function (e) {
     case "logincollect": loginCollect(); render(); return;
     case "logintoggle": S.loginOpen = !S.loginOpen; render(); return;
     case "close": return closeSheet();
-    case "tbmenu": S.menu = !S.menu; return render();
+    case "tbmenu": S.menu = !S.menu; try { stxRolesFetch(); } catch (e) {} return render();
     case "allpaths": store("allPaths", homeAll() ? 0 : 1); render(); return;
     case "remindcal": remindCal(); return;
     case "codesgo": codesGo(); return;
+    case "linkgo": S.setTab = "privacy"; go("settings"); setTimeout(function () { var b = document.getElementById("linkbox"); if (b) try { b.scrollIntoView({ block: "center" }); } catch (e) {} }, 150); return;
     case "agerecheck": ageCheck(true); return;
     case "funtog": {
       var on = !funOn();
@@ -3173,7 +3175,7 @@ function xpLevel(xp) { var lv = 1, need = 100; while (xp >= need) { xp -= need; 
 /* recording answers */
 function record(q, ok, kind, pick) { try { recordInner(q, ok, kind, pick); } catch (e) { /* never let progress bookkeeping block the quiz from moving on */ try { console.warn("record", e); } catch (x) { } } }
 function recordInner(q, ok, kind, pick) {
-  if (typeof usgOn === "function" && usgOn()) { USG.inc.q++; if (ok) USG.inc.c++; if (q && q.d && /^[a-z0-9][a-z0-9-]{1,59}$/.test(q.d) && USG.inc.dr) { var ud = USG.inc.dr[q.d] || (USG.inc.dr[q.d] = [0, 0]); ud[0]++; if (ok) ud[1]++; } }
+  if (typeof usgOn === "function" && usgOn()) { USG.inc.q++; if (ok) USG.inc.c++; if (q && q.d && /^[a-z0-9][a-z0-9-]{1,59}$/.test(q.d) && USG.inc.dr) { var ud = USG.inc.dr[q.d] || (USG.inc.dr[q.d] = [0, 0]); ud[0]++; if (ok) ud[1]++; } try { var qk = q && typeof qid === "function" ? qid(q) : ""; if (qk && /^q[a-z0-9]{3,20}$/.test(qk) && USG.inc.qa && (USG.inc.qa[qk] || Object.keys(USG.inc.qa).length < 200)) { var uq = USG.inc.qa[qk] || (USG.inc.qa[qk] = [0, 0]); uq[0]++; if (ok) uq[1]++; } } catch (e) {} }
   var P = Prog.d, t = today();
   if (!P) return; P.days = P.days || {}; P.drugs = P.drugs || {}; P.xp = P.xp || 0;
   P.answered = (P.answered || 0) + 1; P.days[t] = (P.days[t] || 0) + 1; P.xp += ok ? 10 : 2;
@@ -7471,9 +7473,11 @@ function obView() {
       (sel[cur.code] ? 'Included' : 'Add ' + esc(cur.name)) + '</button></div>' +
     '<div class="obfoot"><button class="btn big" data-obnext="1"' + (n ? '' : ' disabled') + '>' +
       (n ? 'Continue with ' + n + ' selected' : 'Pick at least one') + '</button>' +
-      '<button class="btn ghost" data-obskip="1">' + (S.obRedo ? 'Cancel' : 'Skip for now') + '</button></div></div>';
+      '<button class="btn ghost" data-obskip="1">' + (S.obRedo ? 'Cancel' : 'Skip for now') + '</button></div>' +
+    (S.obRedo ? '' : '<div class="obkeybox"><button class="linkish" data-obkey="1">' + (S.obKey ? 'Hide' : 'Have a class key from your instructor? Enter it here') + '</button>' + (S.obKey ? '<p class="muted small">Your class already has its level, so you can skip choosing one.</p>' + clJoinForm("ob") : '') + '</div>') + '</div>';
 }
 function obClick(t, a) {
+  if (a.obkey) { S.obKey = !S.obKey; render(); return true; }
   if (a.obtog) {
     if (LZ.suppress) return true;                      /* that was a drag, not a tap */
     var s = obSel(); s[a.obtog] = !s[a.obtog]; render(); return true;
@@ -8482,7 +8486,7 @@ var APP_VERSION = "1.2", APP_DATE = "2026-11-11";
    Policy (effective 2026-11-05) and agreed to on the welcome screen. Settings > Account & privacy
    > Share usage statistics turns it off and deletes this device's record (functions/usage.js). */
 var USG = { inc: null, tab: "", lastAct: Date.now(), sentAt: 0, busy: false, sessSent: false };
-function usgNew() { return { q: 0, c: 0, learn: 0, sec: 0, tabs: {}, feats: {}, dr: {} }; }
+function usgNew() { return { q: 0, c: 0, learn: 0, sec: 0, tabs: {}, feats: {}, dr: {}, qa: {} }; }
 USG.inc = usgNew();
 /* the owner's own devices never count in the metrics (owner, Nov 5 2026): once the owner account signs
    in on a device, that device is marked, its earlier stats are removed and it stops reporting for good */
@@ -8768,6 +8772,7 @@ function fmCodeRow() {
 function settingsView() {
   var s = SET(), P = Prog.d, ag = agreeRec(), c = topbar() + '<div class="settings lvl-gen"><header class="pagehead"><h1>Settings</h1><p>' + (!HASDB ? 'Saved on this device.' : 'Saved on this device. Your progress, bugs and scores also sync to your account.') + '</p></header>' + proCard();
   if (S.setMsg) { c += '<div class="presult good" role="status">' + esc(S.setMsg) + '</div>'; S.setMsg = ""; }
+  if (typeof acctUI === "function" && acctUI() && HASDB) c += '<div class="setquick">' + (NATIVE ? '' : '<button class="btn" data-act="codesgo">Redeem a code</button>') + '<button class="btn ' + (NATIVE ? '' : 'ghost') + '" data-act="linkgo">' + (NATIVE ? 'Sync with drugbugapp.com' : 'Sync with my iPhone') + '</button>' + (typeof stxAny === "function" && stxAny() ? '<button class="btn ghost" data-go="stats">Stats dashboard</button>' : '') + '</div>';
   var tabs = [["display", "Display"], ["study", "Study"], ["sound", "Sound"], ["protocols", "Protocols"]].concat(!canPrint() ? [] : [["print", "Printing"]], [["privacy", "Account"], ["feedback", "Feedback"], ["about", "About"]]);
   if (!tabs.some(function (x) { return x[0] === S.setTab; })) S.setTab = "display";
   c += '<nav class="settabs" role="tablist" aria-label="Settings sections">' + tabs.map(function (x) { return '<button role="tab" data-settab="' + x[0] + '" aria-selected="' + (S.setTab === x[0]) + '">' + x[1] + '</button>'; }).join("") + '</nav>';
@@ -8822,12 +8827,13 @@ function settingsView() {
   pv += setRow("Age group", ag ? "18 or older" + (ag.ts && !isNaN(new Date(ag.ts)) ? " · agreed " + fmtDate(ag.ts) : "") : "", '<button class="linkish" data-legal="terms">Terms of Use</button> <button class="linkish" data-legal="privacy">Privacy Policy</button>');
   if (NATIVE && HASDB) pv += setRow("Account ID", "Give this to DrugBug support, or add it to ownerUids to unlock the Control Center.", '<code class="small">' + esc(Prog.uid || (window.__fbDiag && /timeout|failed|error|missing/.test(window.__fbDiag.stage) ? "not connected (" + window.__fbDiag.stage + (window.__fbDiag.err ? ": " + window.__fbDiag.err : "") + ")" : "connecting…")) + '</code>');
   if (typeof evPausedFor === "function" && evPausedFor()) pv += setRow("Evaluator", EV_PAUSE_MSG, "");
+  else if (typeof isReviewer === "function" && isReviewer()) pv += setRow("Evaluator", "You are a DrugBug question evaluator. After each answer, a reviewer panel lets you grade the question. DrugBug Pro is included while you are an evaluator.", '<span class="pill">Evaluator</span>');   /* (owner, Nov 13 2026) */
   pv += setRow("Share usage statistics", "Share optional usage statistics to help improve DrugBug. You can turn this off at any time to stop future optional collection. We delete or aggregate device-level usage statistics within 24 months after collection.", setTog("statsOpt", statsOn(), statsOn() ? "On" : "Off"));
   pv += setRow("Download my data", "A file with your progress, scores, saved list and settings.", '<button class="btn small ghost" data-act="exportdata">Download</button>');
   pv += setRow("Reset my progress", "Clears mastery, XP, streaks, achievements and scores. Keeps your bugs, sticks, saved list and settings.", S.resetAsk ? '<span class="confirm">Reset everything? <button class="btn small again" data-act="resetyes">Reset</button><button class="btn small ghost" data-act="resetno">Cancel</button></span>' : '<button class="btn small ghost" data-act="resetask">Reset progress</button>');
   pv += setRow("Delete all my data", "Removes everything DrugBug stores about you, here and online. Cannot be undone.", '<button class="btn small again" data-legal="data">Delete…</button>');
   c += setCard("privacy", "Account & privacy", fmCodeRow() + (typeof accCard === "function" ? accCard() : "")
-    + (NATIVE ? setRow("Have a code?", "Class keys from your instructor go in your level's Dashboard, under In a class?. Other codes are entered on drugbugapp.com, not in the app. Sign in there with the same account you use here, enter your code in Settings, and what it unlocks shows up here.", "") + setRow("App Store offer code", "Redeem an App Store offer code on Apple's own screen.", '<button class="btn small ghost" data-pw="redeem">Redeem offer code</button>') : typeof giftBox === "function" ? setRow("Redeem a code", "Every code goes here: gift codes, access codes, school or agency codes, and your agency's protocol code." + (NATIVE ? " App Store offer codes open Apple's own screen." : ""), NATIVE ? '<button class="btn small ghost" data-pw="redeem">App Store offer code</button>' : "") + giftBox() : "")
+    + (NATIVE ? '<div class="setrow codesteps"><div class="sl"><strong>Have a code?</strong>' + codeSteps() + '</div></div>' + setRow("App Store offer code", "Redeem an App Store offer code on Apple's own screen.", '<button class="btn small ghost" data-pw="redeem">Redeem offer code</button>') : typeof giftBox === "function" ? setRow("Redeem a code", "Every code goes here: gift codes, access codes, school or agency codes, and your agency's protocol code." + (NATIVE ? " App Store offer codes open Apple's own screen." : ""), NATIVE ? '<button class="btn small ghost" data-pw="redeem">App Store offer code</button>' : "") + giftBox() : "")
     + pv);
   // feedback
   c += setCard("feedback", "Feedback",
@@ -10037,7 +10043,7 @@ function proLabel() {
 function trialBanner() {
   if (DEMO && webPass()) return '<div class="callout evnote small trialbar"><strong>DrugBug Pro is unlocked</strong> with your access code until ' + new Date(webPass().until).toLocaleDateString() + '. Enjoy every drug, route and study tool.</div>';
   if (DEMO) return '<div class="callout evnote small trialbar"><strong>You are on DrugBug Free.</strong> That is about 40 common medications, with a free preview of the Wormhole. DrugBug Plus and Pro open all 2,100+ medications and every professional route. <button class="linkish" data-pw="open">See Plus and Pro</button></div>';
-  if (!PAYWALL || !NATIVE || PRO.store || licenseActive() || Prog.d.proGrant) return "";
+  if (!PAYWALL || !NATIVE || PRO.store || licenseActive() || Prog.d.proGrant || hasTier("plus")) return "";   /* Pro from a code, a class or the website is not "Free" (owner, Nov 13 2026) */
   if (trialEligible()) return '<div class="callout evnote small trialbar"><strong>Try DrugBug Pro free for 7 days.</strong> Then ' + esc(priceOf(PLANS.pro.annual, PLANS.pro.y)) + ' per year through the App Store. Cancel at least 24 hours before the trial ends and you are not charged. <button class="linkish" data-pw="open">See Pro</button></div>';
   return '<div class="callout evnote small trialbar"><strong>You are on DrugBug Free.</strong> Every tool in the app works on your free medications. <button class="linkish" data-pw="open">See Plus and Pro</button></div>';
 }
@@ -10158,7 +10164,7 @@ function planInfo() {
   if (o.src === "free") {
     if (typeof seatActive === "function" && seatActive()) { o.src = "school"; o.lines.push(seatLabel()); o.note = "Your school or program pays for this. There is nothing to cancel."; }
     else if (typeof licenseActive === "function" && licenseActive()) { o.src = "school"; o.lines.push("School license until " + new Date(Prog.d.license.until).toLocaleDateString()); o.note = "Your school or program pays for this. There is nothing to cancel."; }
-    else if (typeof giftPro === "function" && giftPro()) { o.src = "code"; o.lines.push(Prog.d.proGift.until - Date.now() > 50 * 365 * 864e5 ? "From a code, for life" : "From a code, until " + new Date(Prog.d.proGift.until).toLocaleDateString()); o.note = "Codes are not subscriptions: nothing renews and nothing is charged."; }
+    else if (typeof giftPro === "function" && giftPro()) { o.src = "code"; o.lines.push(typeof isReviewer === "function" && isReviewer() ? "Evaluator: Pro while you are a DrugBug evaluator" : Prog.d.proGift.until - Date.now() > 50 * 365 * 864e5 ? "From a code, for life" : "From a code, until " + new Date(Prog.d.proGift.until).toLocaleDateString()); o.note = "Codes are not subscriptions: nothing renews and nothing is charged."; }
     else if (DEMO && typeof webPass === "function" && webPass()) { o.src = "code"; o.lines.push("Access code, until " + new Date(webPass().until).toLocaleDateString()); o.note = "Codes are not subscriptions: nothing renews and nothing is charged."; }
     else if (Prog.d && Prog.d.proGrant) { o.src = "grant"; o.lines.push("Granted by DrugBug"); }
     else { o.lines.push("Free forever: every tool, over about 40 common medications"); o.note = NATIVE ? "No subscription. If you subscribed before on this Apple ID, tap Restore purchases." : "No subscription. Nothing is ever charged on Free."; }
@@ -12217,7 +12223,7 @@ function accInit() {
   window.claude.use("account").then(function (a) {
     if (!a) return; ACCT.api = a; ACCT.st = a.state();
     render();   /* the first-run account step waits on this (modules/welcome.js) */
-    a.onChange(function (s) { ACCT.st = s; if (S.view === "settings") render(); });
+    a.onChange(function (s) { ACCT.st = s; if (S.view === "settings") render(); try { if (typeof stxRolesFetch === "function") setTimeout(stxRolesFetch, 300); } catch (e) {} });
     if (S.view === "settings") render();
   }).catch(function () {});
 }
@@ -12316,6 +12322,7 @@ function accCard() {
   if (s.signedIn) {
     c += setRow("Signed in", (s.provider === "apple" ? "With Apple" : s.provider === "google" ? "With Google" : "With email") + (s.email ? " · " + (/privaterelay\.appleid\.com$/i.test(s.email) ? "Hide My Email address" : s.email) : "") + (s.provider === "email" && !s.emailVerified ? " · email not verified yet" : ""), '<button class="btn small ghost" data-acc="signout">Sign out</button>');
     c += setRow("Sync", "Your progress, scores, My List and Terrarium are saved to your account and sync to your other devices" + (NATIVE ? ", including drugbugapp.com" : ", including the DrugBug iPhone app") + ".", "");
+    c += linkBox(true);
     /* Apple sign-in is only in the iPhone app and Google only on the website, so a password lets the same
        account sign in on the other one with email (owner, Nov 8 2026) */
     if (NATIVE && !s.hasAppleLink && typeof ACCT.api.linkApple === "function" && (typeof ACCT.api.hasApple !== "function" || ACCT.api.hasApple()))
@@ -12331,6 +12338,7 @@ function accCard() {
     } else c += setRow("Delete account", "Permanently delete your account and its data.", '<button class="btn small ghost" data-acc="delask">Delete account</button>');
     return c;
   }
+  c += linkBox(false);
   c += setRow("Account (optional)", "DrugBug works without an account. Create one to back up your progress and sync it across devices" + (NATIVE ? ", including drugbugapp.com" : "") + (Prog.d.acctBonus || NATIVE ? "" : ". Eligible new accounts receive three days of Pro access once, with no payment method and no charge") + ". We never show your email or account to other users.", "");
   /* Sign in with Apple needs the native AuthenticationServices bridge, so it only appears in the
      iPhone app; the website offers Google instead (owner, Nov 1 2026). Email works in both. */
@@ -30343,6 +30351,272 @@ setTimeout(function () {
   } catch (e) {}
 }, 1800);
 /* The one place a code is entered (owner, Nov 5 2026): Settings > Account & privacy */
+/* ---------- Stats dashboard (owner, Nov 13 2026) ----------
+   "Anyone that can view stats gets a dashboard", on the phone too:
+     Class      instructors (and the owner): their class from groupDashboard
+     Questions  evaluators (and the owner): the question bank from qrStats, plus their own grading
+     Master     the owner: money, users, every class, the question bank, codes and outreach
+   Who is an instructor comes from dashRoles (the signed-in account); evaluators are known from their code. */
+var STX = { tab: "", org: "", cls: {}, clsBusy: "", clsErr: "", qBusy: false, qErr: "", my: null, open: {}, m: null, mBusy: false, mErr: "", mAt: 0, rolesBusy: false };
+function stxRoles() { return store("statsRoles") || { owner: false, classes: [], at: 0 }; }
+function stxCan() {
+  var R = stxRoles(), role = typeof codeRole === "function" ? codeRole() : "";
+  return { cls: (R.classes || []).length > 0 || !!R.owner, q: !!role || !!R.owner, m: !!R.owner };
+}
+function stxAny() { var c = stxCan(); return c.cls || c.q || c.m; }
+function stxRolesFetch(force) {
+  try {
+    if (STX.rolesBusy || typeof fnCall !== "function" || !ACCT || !ACCT.api) return;
+    var s = ACCT.api.state() || {};
+    if (!s.signedIn) { if (stxRoles().at) store("statsRoles", { owner: false, classes: [], at: Date.now() }); return; }
+    var R = stxRoles(); if (!force && R.uid === s.uid && Date.now() - (R.at || 0) < 3600e3) return;
+    STX.rolesBusy = true;
+    fnCall("dashRoles", {}).then(function (r) {
+      STX.rolesBusy = false; var had = stxAny();
+      store("statsRoles", { owner: !!(r && r.owner), classes: (r && r.classes) || [], uid: s.uid, at: Date.now() });
+      if (had !== stxAny() || S.view === "stats") render();
+    }, function () { STX.rolesBusy = false; });
+  } catch (e) { STX.rolesBusy = false; }
+}
+setTimeout(function () { stxRolesFetch(); }, 2500); setTimeout(function () { stxRolesFetch(); }, 9000);
+function stxBtn() { return stxAny() ? '<button class="theme-btn" data-go="stats">Stats dashboard</button>' : ''; }
+
+/* small pieces */
+function stxPct(c, n) { return n ? Math.round(100 * c / n) : null; }
+function stxTile(v, l, sub) { return '<div class="sxtile"><b>' + v + '</b><span>' + l + '</span>' + (sub ? '<small>' + sub + '</small>' : '') + '</div>'; }
+function stxAgo(ms) { if (!ms) return "never"; var d = Math.floor((Date.now() - ms) / 864e5); return d <= 0 ? "today" : d === 1 ? "yesterday" : d + " days ago"; }
+function stxMoney(cents) { return "$" + (Math.round(cents) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function stxBar(p) { var v = p == null ? 0 : Math.max(2, Math.min(100, p)); return '<span class="sxbar" aria-hidden="true"><i style="width:' + v + '%"></i></span>'; }
+/* a column chart: one hue, values in the hover title and the table below */
+function stxCols(vals, labels, unit) {
+  var max = Math.max.apply(null, vals.concat([1]));
+  return '<div class="sxcols" role="img" aria-label="' + esc(unit) + ' by ' + (labels.length > 14 ? 'day' : 'week') + '">' + vals.map(function (v, i) {
+    return '<span title="' + esc(labels[i] + ": " + v.toLocaleString() + " " + unit) + '"><i style="height:' + (v ? Math.max(3, Math.round(100 * v / max)) : 0) + '%"></i></span>';
+  }).join("") + '</div><div class="sxcolx"><span>' + esc(labels[0] || "") + '</span><span>' + esc(labels[labels.length - 1] || "") + '</span></div>';
+}
+function stxDay(ms) { var d = new Date(ms); return (d.getMonth() + 1) + "/" + d.getDate(); }
+var STX_QI = null;
+function stxQIndex() {
+  if (STX_QI) return STX_QI;
+  var by = {}; [].concat(DB.Q || [], DB.RQ || [], DB.QX || [], DB.PILOT || []).forEach(function (q) { if (q && q.q) try { by[qid(q)] = q; } catch (e) {} });
+  return (STX_QI = by);
+}
+function stxLv(lv) { try { var o = levelObj(lv); return (o && o.name) || lv || "General"; } catch (e) { return lv || "General"; } }
+function stxQText(id, max) { var q = stxQIndex()[id]; return q ? String(q.q).slice(0, max || 160) + (String(q.q).length > (max || 160) ? "…" : "") : "Question " + id + " (not in this version of the app)"; }
+function stxQOpen(id, extra) {
+  var q = stxQIndex()[id], on = !!STX.open[id];
+  var c = '<div class="sxq' + (on ? ' on' : '') + '"><button class="sxqh" data-sxq="' + esc(id) + '" aria-expanded="' + on + '"><span class="sxqt">' + esc(stxQText(id)) + '</span><span class="sxqm">' + extra + '</span></button>';
+  if (on && q) c += '<div class="sxqb"><p class="muted small">' + esc(stxLv(q.lv)) + (q.d && DB.drugs[q.d] ? ' · ' + esc(nameOf(q.d)) : '') + ' · id ' + esc(id) + '</p><p>' + esc(q.q) + '</p><ul><li class="ok">' + esc(q.a) + '</li>' + (q.w || []).map(function (w) { return '<li>' + esc(w) + '</li>'; }).join("") + '</ul>' + (q.x ? '<p class="small">' + esc(q.x) + '</p>' : '') + '</div>';
+  return c + '</div>';
+}
+
+/* ----- Class ----- */
+function stxClassLoad(orgId, force) {
+  if (!orgId || STX.clsBusy === orgId) return;
+  var have = STX.cls[orgId]; if (have && !force && Date.now() - have._at < 300000) return;
+  STX.clsBusy = orgId; STX.clsErr = "";
+  fnCall("groupDashboard", { orgId: orgId }).then(function (r) { r._at = Date.now(); STX.cls[orgId] = r; STX.clsBusy = ""; if (S.view === "stats") render(); },
+    function (e) { STX.clsBusy = ""; STX.clsErr = e && e.message !== "offline" ? e.message : "Stats need an internet connection."; if (S.view === "stats") render(); });
+}
+function stxClassView() {
+  var R = stxRoles(), L = R.classes || [];
+  if (!L.length) return '<p class="muted">' + (R.owner ? 'You are not an instructor in any class. Every class is on the Master tab.' : 'No classes yet.') + '</p>';
+  if (!STX.org || !L.some(function (x) { return x.orgId === STX.org; })) STX.org = L[0].orgId;
+  var c = L.length > 1 ? '<label class="sxpick">Class <select class="pinput" data-sxorg="1">' + L.map(function (x) { return '<option value="' + esc(x.orgId) + '"' + (x.orgId === STX.org ? ' selected' : '') + '>' + esc(x.name) + (x.live ? '' : ' (ended)') + '</option>'; }).join("") + '</select></label>' : '';
+  var d = STX.cls[STX.org]; stxClassLoad(STX.org);
+  if (!d) return c + '<p class="muted">' + (STX.clsErr ? esc(STX.clsErr) : 'Loading your class…') + '</p>';
+  var o = d.org || {}, t = d.totals || {}, S2 = d.students || [];
+  c += '<h2 class="sxh">' + esc(o.name || "Your class") + '</h2><p class="muted small">' + esc(o.level ? stxLv(o.level) : "") + (o.expiresAt ? ' · ' + (o.live ? 'runs until ' : 'ended ') + new Date(o.expiresAt).toLocaleDateString() : '') + ' · updated ' + new Date(d.generatedAt || Date.now()).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) + ' <button class="linkish" data-sxre="cls">Refresh</button></p>';
+  c += '<div class="sxtiles">' + stxTile((t.activated || 0) + ' / ' + (o.seats || 0), 'students joined') + stxTile(t.active7 || 0, 'studied this week') + stxTile((t.answered || 0).toLocaleString(), 'questions answered') + stxTile(t.answered ? t.accuracy + '%' : '—', 'answered right') + '</div>';
+  var wk = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]; S2.forEach(function (s) { (s.weeks || []).forEach(function (w, i) { wk[i] += w[0] || 0; }); });
+  c += '<section class="sxcard"><h3>Answers each week</h3>' + stxCols(wk, (d.weekStarts || []).map(function (ms) { return "Week of " + stxDay(ms); }), "answers") + '</section>';
+  var sys = (d.systems || []).slice().sort(function (a, b) { return a.pct - b.pct; });
+  c += '<section class="sxcard"><h3>By body system, weakest first</h3>' + (sys.length ? '<div class="sxrows">' + sys.map(function (s) { return '<div class="sxrow"><span class="n">' + esc(s.name) + '</span>' + stxBar(s.pct) + '<span class="v">' + s.pct + '%</span><span class="m">' + s.answered.toLocaleString() + '</span></div>'; }).join("") + '</div>' : '<p class="muted small">Nothing answered yet.</p>') + '</section>';
+  var qs = (d.questions || []).slice(0, 10);
+  c += '<section class="sxcard"><h3>Questions the class misses most</h3>' + (qs.length ? qs.map(function (q) { return stxQOpen(q.id, q.pct + '% right · ' + q.missed + ' of ' + q.students + ' students missed it'); }).join("") : '<p class="muted small">Shows after a question has ' + (d.qMin || 3) + ' answers.</p>') + '</section>';
+  var st = S2.slice().sort(function (a, b) { return (b.lastAt || 0) - (a.lastAt || 0); });
+  c += '<section class="sxcard"><h3>Students</h3>' + (st.length ? '<div class="sxtbl"><div class="sxth"><span>Student</span><span>Answers</span><span>Right</span><span>Last studied</span></div>' + st.slice(0, 100).map(function (s) {
+    var nm = s.nick && s.nick.status === "ok" && s.nick.text ? s.nick.text : s.alias || "Student";
+    return '<div class="sxtr' + (s.activated ? '' : ' off') + '"><span><b>' + esc(nm) + '</b>' + (s.weakest && s.weakest[0] ? '<small>Weakest: ' + esc(s.weakest[0].name) + '</small>' : !s.activated ? '<small>Has not joined yet</small>' : '') + '</span><span>' + (s.answered || 0).toLocaleString() + '</span><span>' + (s.answered ? s.accuracy + '%' : '—') + '</span><span>' + stxAgo(s.lastAt) + '</span></div>';
+  }).join("") + '</div>' : '<p class="muted small">No students yet.</p>') + '</section>';
+  c += '<p class="small"><a href="https://drugbugapp.com/instructor/" target="_blank" rel="noopener">Open the full instructor portal</a> for keys, teams, nicknames and printing.</p>';
+  return c;
+}
+
+/* ----- Questions ----- */
+function stxQLoad(force) {
+  if (STX.qBusy || (ANA.data && ANA.data.qa && !force && Date.now() - (ANA.at || 0) < 300000)) return;
+  STX.qBusy = true; STX.qErr = "";
+  var gift = Prog.d.reviewer && Prog.d.reviewer.id;
+  fnCall("qrStats", gift ? { gift: gift } : {}).then(function (r) { STX.qBusy = false; ANA.data = r || {}; ANA.at = Date.now(); if (S.view === "stats") render(); },
+    function (e) { STX.qBusy = false; STX.qErr = e && e.message !== "offline" ? e.message : "Stats need an internet connection."; if (S.view === "stats") render(); });
+  if (gift && gift !== ADMIN_GIFT && !STX.my) fnCall("evalStatus", { gift: gift }).then(function (r) { STX.my = r || {}; if (S.view === "stats") render(); }, function () { STX.my = { err: 1 }; });
+}
+function stxQView() {
+  stxQLoad();
+  var D = ANA.data; if (!D || !D.rates) return '<p class="muted">' + (STX.qErr ? esc(STX.qErr) : 'Loading the question bank…') + '</p>';
+  var QI = stxQIndex(), R = D.rates || {}, V = D.revs || {}, A = D.qa || {};
+  var ids = Object.keys(QI).filter(function (k) { var q = QI[k]; return !(typeof qRuleBad === "function" && qRuleBad(q)); });
+  var T = { n: ids.length, graded: 0, g: 0, b: 0, rs: 0, rn: 0, an: 0, ac: 0 }, lv = {};
+  ids.forEach(function (k) {
+    var q = QI[k], v = V[k], r = R[k], a = A[k], L = lv[q.lv || "general"] || (lv[q.lv || "general"] = { lv: q.lv || "general", n: 0, graded: 0, g: 0, b: 0, an: 0, ac: 0, rs: 0, rn: 0 });
+    L.n++;
+    if (v && (v.g || v.b || v.dN)) { T.graded++; L.graded++; T.g += v.g; T.b += v.b; L.g += v.g; L.b += v.b; }
+    if (r && r.n) { T.rs += r.s; T.rn += r.n; L.rs += r.s; L.rn += r.n; }
+    if (a && a.n) { T.an += a.n; T.ac += a.c || 0; L.an += a.n; L.ac += a.c || 0; }
+  });
+  var c = '<p class="muted small">Everyone\'s answers are anonymous. Grades are the evaluators\' Good / Bad votes; difficulty is players\' 1 to 5 ratings. <button class="linkish" data-sxre="q">Refresh</button></p>';
+  c += '<div class="sxtiles">' + stxTile(T.n.toLocaleString(), 'questions in the bank') + stxTile(T.graded.toLocaleString(), 'graded by evaluators', T.n ? Math.round(100 * T.graded / T.n) + '% of the bank' : '') + stxTile((T.g + T.b) ? Math.round(100 * T.g / (T.g + T.b)) + '%' : '—', 'of votes are Good', T.g + ' good · ' + T.b + ' bad') + stxTile(T.an ? stxPct(T.ac, T.an) + '%' : '—', 'answered right', T.an.toLocaleString() + ' answers') + '</div>';
+  /* my grading */
+  if (codeRole() === "eval") {
+    var my = Prog.d.qrev || {}, mg = 0, mb = 0, mn = 0; Object.keys(my).forEach(function (k) { var r = my[k]; if (!r) return; if (r.v || r.d) mn++; if (r.v === "good") mg++; if (r.v === "bad") mb++; });
+    var M = STX.my || {};
+    c += '<section class="sxcard"><h3>My grading</h3><div class="sxtiles">' + stxTile(M.thisWeek != null ? M.thisWeek + ' / ' + (M.need || 40) : '…', 'graded this week', M.weekEnds ? 'Week ends ' + new Date(M.weekEnds).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" }) : '') + stxTile(M.lastWeek != null ? M.lastWeek : '—', 'graded last week') + stxTile(mn.toLocaleString(), 'graded in all') + stxTile((mg + mb) ? Math.round(100 * mg / (mg + mb)) + '%' : '—', 'of my votes are Good', (T.g + T.b) ? 'Everyone: ' + Math.round(100 * T.g / (T.g + T.b)) + '%' : '') + '</div>' +
+      (M.warned ? '<p class="presult">You were under ' + (M.need || 40) + ' last week. Two short weeks in a row ends evaluator status.</p>' : '') + '</section>';
+  }
+  var LV = Object.keys(lv).map(function (k) { return lv[k]; }).sort(function (a, b) { return b.n - a.n; });
+  c += '<section class="sxcard"><h3>Bank health by level</h3><div class="sxtbl sx5"><div class="sxth"><span>Level</span><span>Questions</span><span>Graded</span><span>Good votes</span><span>Right</span></div>' + LV.map(function (L) {
+    return '<div class="sxtr"><span><b>' + esc(stxLv(L.lv)) + '</b>' + (L.rn ? '<small>Difficulty ' + (Math.round(10 * L.rs / L.rn) / 10) + ' / 5</small>' : '') + '</span><span>' + L.n.toLocaleString() + '</span><span>' + Math.round(100 * L.graded / L.n) + '%</span><span>' + ((L.g + L.b) ? Math.round(100 * L.g / (L.g + L.b)) + '%' : '—') + '</span><span>' + (L.an ? stxPct(L.ac, L.an) + '%' : '—') + '</span></div>';
+  }).join("") + '</div></section>';
+  var worst = ids.filter(function (k) { return V[k] && V[k].b > 0; }).sort(function (a, b) { return (V[b].b - V[b].g) - (V[a].b - V[a].g) || V[b].b - V[a].b; }).slice(0, 15);
+  c += '<section class="sxcard"><h3>Graded worst</h3><p class="muted small">Most Bad votes compared with Good. Tap one to see it.</p>' + (worst.length ? worst.map(function (k) { var v = V[k], a = A[k]; return stxQOpen(k, '<b class="b">' + v.b + ' bad</b> · ' + v.g + ' good' + (a && a.n ? ' · ' + stxPct(a.c || 0, a.n) + '% right' : '')); }).join("") : '<p class="muted small">No Bad votes yet.</p>') + '</section>';
+  var miss = ids.filter(function (k) { return A[k] && A[k].n >= 5; }).sort(function (a, b) { return (A[a].c / A[a].n) - (A[b].c / A[b].n) || A[b].n - A[a].n; }).slice(0, 15);
+  c += '<section class="sxcard"><h3>Missed most</h3><p class="muted small">Lowest % right, at least 5 answers. A question most people miss may be unclear or keyed wrong.</p>' + (miss.length ? miss.map(function (k) { var a = A[k], v = V[k] || { g: 0, b: 0 }; return stxQOpen(k, '<b class="b">' + stxPct(a.c || 0, a.n) + '% right</b> · ' + a.n + ' answers' + (v.g || v.b ? ' · ' + v.g + ' good / ' + v.b + ' bad' : '')); }).join("") : '<p class="muted small">Fills in as people answer (counting started with this update).</p>') + '</section>';
+  c += '<p><button class="btn small ghost" data-evopen="1">Each medication, system and class</button></p>';
+  return c;
+}
+
+/* ----- Master ----- */
+function stxMLoad(force) {
+  if (STX.mBusy || (STX.m && !force && Date.now() - STX.mAt < 300000)) return;
+  STX.mBusy = true; STX.mErr = "";
+  var safe = function (n, d) { return Promise.race([fnCall(n, d || {}), new Promise(function (res, rej) { setTimeout(function () { rej(new Error("timed out")); }, 20000); })]).then(function (r) { return r; }, function (e) { return { _err: (e && e.message) || "error" }; }); };
+  Promise.all([safe("adminOverview"), safe("appleSummary"), safe("revenueMonth"), safe("groupOwnerStats"), safe("masterExtras"), safe("pilotStatus", { fresh: 1 })]).then(function (r) {
+    STX.mBusy = false; STX.mAt = Date.now();
+    STX.m = { ov: r[0], ap: r[1], rv: r[2], gs: r[3], ex: r[4], pl: r[5] };
+    if (r.every(function (x) { return x && x._err; })) STX.mErr = r[0]._err === "offline" ? "Stats need an internet connection." : r[0]._err;
+    if (S.view === "stats") render();
+  });
+}
+function stxMView() {
+  stxMLoad();
+  var M = STX.m; if (!M) return '<p class="muted">' + (STX.mErr ? esc(STX.mErr) : 'Loading everything…') + '</p>';
+  if (STX.mErr) return '<p class="presult">' + esc(STX.mErr) + '</p>';
+  var ok = function (x) { return x && !x._err; }, ov = ok(M.ov) ? M.ov : {}, ap = ok(M.ap) ? M.ap : null, rv = ok(M.rv) ? M.rv : null, gs = ok(M.gs) ? M.gs : null, ex = ok(M.ex) ? M.ex : {};
+  var c = '<p class="muted small">Updated ' + new Date(STX.mAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) + ' <button class="linkish" data-sxre="m">Refresh</button></p>';
+  /* money + users */
+  c += '<section class="sxcard"><h3>Money and users</h3><div class="sxtiles">' +
+    stxTile(ap ? "$" + (ap.month.proceedsUSD || 0).toFixed(2) : '—', 'Apple proceeds this month', ap && ap.reportThrough ? 'through ' + ap.reportThrough : 'not connected') +
+    stxTile(rv ? stxMoney(rv.collected || 0) : '—', 'website this month', rv ? stxMoney(rv.mrr || 0) + ' monthly recurring' : '') +
+    stxTile(ap ? ap.live.paying : '—', 'paying Apple subscribers', ap ? ap.live.trials + ' on a trial' + (ap.live.renewOff ? ' · ' + ap.live.renewOff + ' renewal off' : '') : '') +
+    stxTile(rv ? rv.activeSubs : '—', 'website subscriptions', rv && rv.ending ? rv.ending + ' ending' : '') +
+    stxTile(ov.today ? ov.today.dau : '—', 'people today', ov.yesterday ? ov.yesterday.dau + ' yesterday' : '') +
+    stxTile(ov.today ? ov.today.newUsers : '—', 'new people today', ov.yesterday ? ov.yesterday.newUsers + ' yesterday' : '') +
+    stxTile(ov.today ? (ov.today.q || 0).toLocaleString() : '—', 'questions answered today', ov.today && ov.today.q ? stxPct(ov.today.c, ov.today.q) + '% right' : '') +
+    stxTile(ap ? ap.month.downloads : '—', 'App Store downloads this month') + '</div>';
+  if (ap && ap.last30 && ap.last30.length) c += '<h4 class="sxsub">Apple proceeds, last 30 days</h4>' + stxCols(ap.last30.map(function (d) { return d.proceeds; }), ap.last30.map(function (d) { return d.date; }), "dollars");
+  c += '</section>';
+  /* classes */
+  if (gs) {
+    var T = gs.totals || {};
+    c += '<section class="sxcard"><h3>All classes</h3><div class="sxtiles">' + stxTile(T.live || 0, 'running', (T.pilots || 0) + ' pilots · ' + (T.annual || 0) + ' paid') + stxTile((T.activated || 0) + ' / ' + (T.seats || 0), 'students joined', T.activationRate + '%') + stxTile(T.active7 || 0, 'studied this week') + stxTile(T.n ? T.accuracy + '%' : '—', 'answered right', (T.n || 0).toLocaleString() + ' answers') + '</div>';
+    c += '<div class="sxtbl sx5"><div class="sxth"><span>Class</span><span>Joined</span><span>This week</span><span>Right</span><span>Days left</span></div>' + (gs.schools || []).map(function (s) {
+      return '<div class="sxtr' + (s.live ? '' : ' off') + '"><span><b>' + esc(s.name) + '</b><small>' + esc(s.code || "") + ' · ' + esc(s.kind) + (s.lastAt ? ' · last ' + stxAgo(s.lastAt) : '') + '</small></span><span>' + s.activated + ' / ' + s.seats + '</span><span>' + s.active7 + '</span><span>' + (s.answered ? s.accuracy + '%' : '—') + '</span><span' + (s.live && s.daysLeft <= 14 ? ' class="warn"' : '') + '>' + (s.live ? s.daysLeft : 'ended') + '</span></div>';
+    }).join("") + '</div>';
+    if ((gs.followUp || []).length) c += '<p class="small"><b>Pilots ending soon:</b> ' + gs.followUp.map(function (f) { return esc(f.name) + ' (' + f.daysLeft + ' days, ' + f.heat + ')'; }).join(", ") + '</p>';
+    c += '</section>';
+  }
+  /* question bank */
+  var evs = ex.evaluators || [], pl = ok(M.pl) ? M.pl : {}, E = ov.evaluators || {};
+  c += '<section class="sxcard"><h3>Question bank</h3><div class="sxtiles">' + stxTile(E.questions != null ? E.questions.toLocaleString() : '—', 'questions graded', E.good != null ? E.good + ' good · ' + E.bad + ' bad' : '') + stxTile((pl.held || []).length, 'pilot questions held', 'need your decision') + stxTile(E.suggestions != null ? E.suggestions : '—', 'evaluator suggestions') + stxTile(ov.ratings ? ov.ratings.avg || '—' : '—', 'players\' difficulty', ov.ratings ? ov.ratings.ratings.toLocaleString() + ' ratings' : '') + '</div>';
+  if (evs.length) c += '<h4 class="sxsub">Evaluators this week (need ' + (ex.evalNeed || 40) + ')</h4><div class="sxrows">' + evs.map(function (e) { var p = Math.min(100, Math.round(100 * e.thisWeek / (ex.evalNeed || 40))); return '<div class="sxrow' + (e.removed ? ' off' : '') + '"><span class="n">' + esc(e.name) + (e.removed ? ' (ended)' : !e.signed ? ' (not signed)' : '') + '</span>' + stxBar(p) + '<span class="v">' + e.thisWeek + '</span><span class="m">last ' + e.lastWeek + '</span></div>'; }).join("") + '</div>';
+  c += '<p class="small">The Questions tab has the worst-graded and most-missed lists.</p></section>';
+  /* codes + outreach */
+  var cd = ov.codes || {}, ou = ex.outreach || {};
+  c += '<section class="sxcard"><h3>Codes and outreach</h3><div class="sxtiles">' + stxTile(cd.made != null ? cd.made : '—', 'codes made', cd.used != null ? cd.used + ' redeemed · ' + cd.active + ' still open' : '') + stxTile(ou.dueCount != null ? ou.dueCount : '—', 'follow-ups due') + stxTile((ou.counts || {}).interested || 0, 'interested') + stxTile((ou.counts || {}).won || 0, 'signed') + '</div>';
+  if ((ex.redeemed || []).length) c += '<h4 class="sxsub">Redeemed lately</h4><div class="sxrows">' + ex.redeemed.slice(0, 12).map(function (r) { return '<div class="sxrow"><span class="n">' + esc(r.code) + (r.label ? ' <small>' + esc(r.label) + '</small>' : '') + '</span><span class="m">' + stxAgo(r.at) + '</span></div>'; }).join("") + '</div>';
+  if ((ou.due || []).length) c += '<h4 class="sxsub">Follow up with</h4><div class="sxrows">' + ou.due.slice(0, 15).map(function (r) { return '<div class="sxrow"><span class="n">' + esc(r.name) + (r.who ? ' <small>' + esc(r.who) + '</small>' : '') + '</span><span class="m">' + esc(r.status === "followup" ? "follow up" : r.status) + (r.days != null ? ' · ' + r.days + 'd' : '') + '</span></div>'; }).join("") + '</div>';
+  c += '</section>';
+  if (!NATIVE) c += '<p class="small"><a href="/admin/" target="_blank" rel="noopener">Open the full admin page</a></p>';
+  return c;
+}
+
+function statsView() {
+  var can = stxCan(), tabs = [];
+  if (can.cls) tabs.push(["cls", "Class"]); if (can.q) tabs.push(["q", "Questions"]); if (can.m) tabs.push(["m", "Master"]);
+  var c = topbar() + '<div class="statsv lvl-gen"><header class="pagehead"><h1>Stats dashboard</h1></header>';
+  if (!tabs.length) { stxRolesFetch(true); return c + '<p class="muted">Stats are for instructors, evaluators and the owner. If you are an instructor, sign in with your instructor account in Settings › Account.</p></div>'; }
+  if (!tabs.some(function (t) { return t[0] === STX.tab; })) STX.tab = can.m ? "m" : can.cls && (stxRoles().classes || []).length ? "cls" : tabs[0][0];
+  if (tabs.length > 1) c += '<nav class="settabs" role="tablist">' + tabs.map(function (t) { return '<button role="tab" data-sxtab="' + t[0] + '" aria-selected="' + (STX.tab === t[0]) + '">' + t[1] + '</button>'; }).join("") + '</nav>';
+  c += STX.tab === "cls" ? stxClassView() : STX.tab === "q" ? stxQView() : stxMView();
+  return c + '</div>';
+}
+document.addEventListener("click", function (e) {
+  var t = e.target.closest && e.target.closest("[data-sxtab],[data-sxq],[data-sxre]"); if (!t) return;
+  if (t.hasAttribute("data-sxtab")) { STX.tab = t.getAttribute("data-sxtab"); render(); return; }
+  if (t.hasAttribute("data-sxq")) { var k = t.getAttribute("data-sxq"); STX.open[k] = !STX.open[k]; render(); return; }
+  var w = t.getAttribute("data-sxre");
+  if (w === "cls") stxClassLoad(STX.org, true); else if (w === "q") { STX.my = null; stxQLoad(true); } else stxMLoad(true);
+  stxRolesFetch(true); render();
+});
+document.addEventListener("change", function (e) { if (e.target && e.target.getAttribute && e.target.getAttribute("data-sxorg")) { STX.org = e.target.value; render(); } });
+(function () { var st = document.createElement("style"); st.textContent = '.statsv{max-width:880px;margin:0 auto}.sxh{margin:6px 0 2px}.sxtiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:10px 0}.sxtile{border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;background:var(--surface)}.sxtile b{font-size:22px;font-variant-numeric:tabular-nums}.sxtile span{font-size:13px;color:var(--muted)}.sxtile small{font-size:12px;color:var(--muted)}.sxcard{border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;margin:12px 0;background:var(--surface)}.sxcard h3{margin:0 0 6px;font-size:16px}.sxsub{margin:12px 0 4px;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}.sxcols{display:flex;align-items:flex-end;gap:2px;height:90px;margin-top:8px;border-bottom:1px solid var(--line)}.sxcols span{flex:1;height:100%;display:flex;align-items:flex-end}.sxcols i{display:block;width:100%;background:#7c5cff;border-radius:4px 4px 0 0;min-height:0}.sxcols span:hover i{background:#a58bff}.sxcolx{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:2px}.sxrows{display:flex;flex-direction:column}.sxrow{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line);font-size:14px}.sxrow:first-child{border-top:0}.sxrow .n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}.sxrow .n small{color:var(--muted)}.sxrow .v{width:44px;text-align:right;font-weight:700;font-variant-numeric:tabular-nums}.sxrow .m{min-width:60px;text-align:right;color:var(--muted);font-size:12px}.sxrow.off{opacity:.55}.sxbar{flex:0 0 32%;height:8px;border-radius:99px;background:color-mix(in srgb,var(--muted) 18%,transparent);overflow:hidden}.sxbar i{display:block;height:100%;background:#7c5cff;border-radius:99px}.sxtbl{display:flex;flex-direction:column;font-size:14px}.sxth,.sxtr{display:grid;grid-template-columns:2fr 1fr 1fr 1.2fr;gap:6px;padding:7px 0;border-top:1px solid var(--line);align-items:center}.sx5 .sxth,.sx5 .sxtr{grid-template-columns:2fr 1fr 1fr 1fr 1fr}.sxth{border-top:0;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}.sxtr>span:first-child{display:flex;flex-direction:column;min-width:0}.sxtr small{color:var(--muted);font-size:12px}.sxtr.off{opacity:.55}.sxtr .warn{color:#d97706;font-weight:800}.sxq{border-top:1px solid var(--line)}.sxqh{display:flex;flex-direction:column;gap:2px;width:100%;text-align:left;background:none;border:0;color:inherit;font:inherit;padding:8px 0;cursor:pointer}.sxqt{font-size:14px}.sxqm{font-size:12.5px;color:var(--muted)}.sxqm .b,.sxq .b{color:#dc2626}.sxqb{padding:0 0 10px}.sxqb ul{margin:6px 0;padding-left:18px}.sxqb li.ok{color:#16a34a;font-weight:700}.sxpick{display:flex;gap:8px;align-items:center;margin:6px 0}@media (max-width:520px){.sxtiles{grid-template-columns:1fr 1fr}.sxth,.sxtr{grid-template-columns:1.6fr .9fr .8fr 1fr;font-size:13px}.sx5 .sxth,.sx5 .sxtr{grid-template-columns:1.5fr .8fr .8fr .8fr .8fr}}'; document.head.appendChild(st); })();
+
+/* ---------- Link my other device + where codes go (owner, Nov 13 2026: "much easier to understand") ----------
+   One device shows a 6-character code, the other types it, and both are on the same account, whatever
+   sign-in each one used (Apple on the iPhone, Google on the website). Server: functions/link.js. */
+var LNK = { code: "", exp: 0, busy: false, msg: "", err: false, open: false, t: null };
+function lnkOther() { return NATIVE ? "drugbugapp.com" : "the DrugBug iPhone app"; }
+function linkBox(signedIn) {
+  var c = '<div class="linkbox" id="linkbox"><h3>' + (NATIVE ? 'Use the same account on drugbugapp.com' : 'Use the same account on your iPhone') + '</h3>';
+  if (LNK.msg) c += '<p class="presult' + (LNK.err ? '' : ' good') + '" role="status">' + esc(LNK.msg) + '</p>';
+  if (signedIn) {
+    var left = Math.max(0, LNK.exp - Date.now());
+    if (LNK.code && left > 0) {
+      c += '<p class="lkcode" aria-label="Link code">' + esc(LNK.code) + '</p><p class="muted small">Good for ' + Math.ceil(left / 60000) + ' more minute' + (left > 60000 ? 's' : '') + '. Use it once.</p>' +
+        '<ol class="lksteps"><li>Open ' + (NATIVE ? '<b>drugbugapp.com</b> on a computer or another phone' : 'the <b>DrugBug iPhone app</b>') + '.</li><li>Go to <b>Settings › Account</b> and tap <b>I have a link code</b>.</li><li>Type the code above. Done: everything you have here shows up there.</li></ol>' +
+        '<button class="linkish" data-lnk="new">Make a new code</button>';
+    } else c += '<p class="small">Tap the button, then type the code on ' + lnkOther() + '. Your progress, bugs, sticks, Pro and codes show up there. No passwords needed.</p><button class="btn small" data-lnk="make"' + (LNK.busy ? ' disabled' : '') + '>' + (LNK.busy ? 'Making a code…' : 'Show my link code') + '</button>';
+  } else {
+    c += '<p class="small">Already use DrugBug on ' + lnkOther() + '? Open Settings › Account there, tap <b>Show my link code</b>, and type it here.</p>';
+    if (LNK.open) c += '<form class="pform inl" data-lnkform="1"><input class="pinput lkin" id="lnkin" autocomplete="one-time-code" autocapitalize="characters" spellcheck="false" maxlength="9" placeholder="K7Q-4MX" aria-label="Link code"><button class="btn small" type="submit"' + (LNK.busy ? ' disabled' : '') + '>' + (LNK.busy ? 'Linking…' : 'Link') + '</button></form>';
+    else c += '<button class="btn small" data-lnk="open">I have a link code</button>';
+  }
+  return c + '</div>';
+}
+function lnkDraw() { if (LNK.t) clearTimeout(LNK.t); LNK.t = LNK.code ? setTimeout(function () { if (S.view === "settings" && document.getElementById("linkbox")) render(); if (LNK.exp > Date.now()) lnkDraw(); else LNK.code = ""; }, 30000) : null; render(); }
+document.addEventListener("click", function (e) {
+  var t = e.target.closest && e.target.closest("[data-lnk]"); if (!t) return;
+  var k = t.getAttribute("data-lnk"); LNK.msg = ""; LNK.err = false;
+  if (k === "open") { LNK.open = true; render(); setTimeout(function () { var i = document.getElementById("lnkin"); if (i) i.focus(); }, 60); return; }
+  if (k === "make" || k === "new") {
+    LNK.busy = true; LNK.code = ""; render();
+    fnCall("linkCodeMake", {}).then(function (r) { LNK.busy = false; LNK.code = r.code; LNK.exp = r.expiresAt; lnkDraw(); },
+      function (er) { LNK.busy = false; LNK.err = true; LNK.msg = er && er.message && er.message !== "offline" ? er.message : "Couldn't connect. Check your internet and try again."; render(); });
+  }
+});
+document.addEventListener("submit", function (e) {
+  var f = e.target; if (!f.getAttribute || !f.getAttribute("data-lnkform")) return; e.preventDefault();
+  var v = ((document.getElementById("lnkin") || {}).value || "").trim(); if (!v) return;
+  LNK.busy = true; LNK.msg = ""; render();
+  fnCall("linkCodeUse", { code: v }).then(function (r) {
+    if (r && r.same) { LNK.busy = false; LNK.msg = "This device is already on that account."; return render(); }
+    return ACCT.api.signInToken(r.token).then(function () { LNK.busy = false; LNK.open = false; accDone("Linked. This " + (NATIVE ? "phone" : "browser") + " is now on the same account as your other device, and its progress was merged in."); });
+  }).catch(function (er) { LNK.busy = false; LNK.err = true; LNK.msg = er && er.message && er.message !== "offline" ? er.message : "Couldn't connect. Check your internet and try again."; render(); });
+});
+/* iPhone: where codes go, in plain steps with this person's own sign-in */
+function codeSteps() {
+  var s = {}; try { s = (ACCT.api && ACCT.api.state()) || {}; } catch (e) {}
+  var how = s.signedIn ? (s.provider === "apple" ? "Apple" : s.provider === "google" ? "Google" : "email") : "";
+  var em = s.email && !/privaterelay\.appleid\.com$/i.test(s.email) ? " (" + esc(s.email) + ")" : "";
+  return '<ol class="lksteps">' +
+    (s.signedIn ? '' : '<li><b>Sign in here first</b>: Settings › Account. That is how your code reaches this phone.</li>') +
+    '<li>On a computer or your phone\'s web browser, go to <b>drugbugapp.com</b>.</li>' +
+    '<li>' + (s.signedIn ? 'Get on the same account: in this app tap <b>Sync with drugbugapp.com</b> above and type the link code there' + (how === "email" ? ', or sign in there with your email' + em : '') + '.' : 'Use the same account there: after you sign in here, Settings › Account shows a link code to type on the website.') + '</li>' +
+    '<li>On the website, tap <b>Redeem a code</b> at the top of Settings and enter it.</li>' +
+    '<li>Come back here. What it unlocks shows up within a minute.</li></ol>' +
+    '<p class="muted small">Class keys are different: enter them right here, in your level\'s Dashboard under <b>In a class?</b></p>';
+}
 function codesGo() {
   try { if (typeof PRO !== "undefined" && PRO.open && typeof closePaywall === "function") closePaywall(); } catch (e) {}
   try { if (typeof sheet !== "undefined" && sheet && !sheet.hidden && typeof closeSheet === "function") closeSheet(); } catch (e) {}
@@ -30762,6 +31036,7 @@ function groupKeyShape(raw) { return /^DB[A-Z0-9]{8,12}$/.test(String(raw || "")
    students and staff, which App Store Guideline 3.1.3(c) (Enterprise Services) allows outside in-app purchase.
    agreed = the student ticked the consent box on the join form (WKWebView has no confirm() dialog). */
 function groupRedeemKey(raw, win, fail, agreed) {
+  var where0 = agreed === true ? "form" : "code";
   /* a class key only works if the student agrees to share class results (owner, Nov 12 2026) */
   var ok = agreed === true;
   if (!ok && !(typeof NATIVE !== "undefined" && NATIVE)) try { ok = window.confirm("Class keys share your study results with your instructor.\n\nYour instructor will see your scores and activity by medication and topic, the questions you miss and the answers you chose, under your class label (for example Student 07). DrugBug does not ask for your name or email.\n\nPress OK to agree and use your class key. Press Cancel if you do not agree. You can't use a class key without sharing results."); } catch (e) {}
@@ -30772,6 +31047,7 @@ function groupRedeemKey(raw, win, fail, agreed) {
     SEAT.tier = "pro"; SEAT.until = r.until; SEAT.orgName = r.orgName; SEAT.alias = r.alias; SEAT.level = r.level || ""; SEAT.loaded = true; SEAT.redeemedAt = Date.now();
     store("seat", { tier: "pro", until: r.until, orgName: r.orgName, alias: r.alias, level: SEAT.level });
     if (typeof webDeepLoad === "function") webDeepLoad();
+    if (where0 !== "form") clAdoptLevel(SEAT.level);
     setTimeout(function () { try { classIntro(); } catch (e) {} }, 400);
     win("You're in " + r.orgName + " as " + r.alias + ". DrugBug Pro is on until " + new Date(r.until).toLocaleDateString() + ". DrugBug displays your class results to your instructor under your class key label, without your name or email. Your class and your scores are under My Class in " + (r.level && typeof levelObj === "function" && levelObj(r.level) ? "the " + levelObj(r.level).name + " menu" : "your level's menu") + ".");
   }).catch(function (e) {
@@ -31436,7 +31712,24 @@ function clReveal(d) {
   } catch (e) {}
 }
 document.addEventListener("click", function (e) { var b = e.target && e.target.closest && e.target.closest("[data-clopen]"); if (!b) return; e.preventDefault(); CL.view = clBoardOn() ? "board" : "mine"; openClassPane(); });
-(function () { var st = document.createElement("style"); st.textContent = '.hclass{background:var(--surface);border:1.5px solid var(--line);border-left:5px solid #f5b301;border-radius:16px;padding:12px 14px;margin:0 0 14px}.hchead{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.hchead b{font-size:17px}.hchead span{font-size:13px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em}.hcme{margin:6px 0}.hctop{list-style:none;margin:6px 0 10px;padding:0}.hctop li{display:flex;gap:8px;align-items:center;padding:5px 0;border-top:1px solid var(--line)}.hctop li.me{font-weight:700}.hcr{width:30px}.hcr .clrk{width:24px;height:24px;font-size:13px}.hcn{flex:1}.hcn em{font-style:normal;font-size:12px;color:var(--muted)}.hcs{font-variant-numeric:tabular-nums;color:var(--muted)}.hclass .btn{background:#7c5cff;color:#fff}.hclass .btn.ghost{background:transparent;color:inherit;border:1.5px solid var(--line)}.hclass.legend{border-left-color:#f5b301;box-shadow:0 0 0 2px #f5b301 inset,0 0 22px rgba(245,179,1,.25);background:linear-gradient(160deg,color-mix(in srgb,#f5b301 14%,var(--surface)),var(--surface) 55%)}.hclass.legend .hchead span{color:#f5b301}.hcleg{margin:4px 0 6px;font-weight:800;color:#d99a00}.hcfin{margin:6px 0 8px;padding:8px 10px;border-radius:10px;background:color-mix(in srgb,#f5b301 14%,transparent);font-weight:700}.hcrace{display:flex;flex-direction:column;gap:2px;margin:6px 0 8px;padding:8px 10px;border-radius:10px;background:color-mix(in srgb,#7c5cff 12%,transparent);font-size:14px}.hcrace b{font-size:15px}.hcrace span{color:var(--muted)}.hcrace .x{color:#d99a00;font-weight:700}.hcprz{margin:8px 0 10px;padding-top:8px;border-top:1px solid var(--line)}.hcpz-h{display:flex;justify-content:space-between;font-weight:800;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}.hcpz-h span{text-transform:none;letter-spacing:0;font-weight:700}.hcpz-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:6px 0}.hcpz{display:flex;flex-direction:column;align-items:center;border:1.5px solid var(--line);border-radius:10px;padding:6px 4px;text-align:center}.hcpz b{font-size:13px}.hcpz small{font-size:11px;color:var(--muted)}.hcpz .sil{position:relative;width:44px;height:44px;display:grid;place-items:center}.hcpz .sil svg{width:44px;height:44px}.hcpz .sil i{position:absolute;font-style:normal;font-weight:900;font-size:18px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.6)}.hcpz.p-legendary{border-color:#f5b301}.hcpz.p-epic{border-color:#a855f7}.hcpz.p-rare{border-color:#3b82f6}.hcpz-t{font-size:12.5px;color:var(--muted);margin:4px 0 0}.rvlist{list-style:none;padding:0;margin:10px 0;text-align:left}.rvlist li{display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid var(--line)}.rvbug{width:52px;height:52px;display:grid;place-items:center}.rvbug svg{width:52px;height:52px}.rvn{display:flex;flex-direction:column}.rvn small{color:var(--muted)}.rvlist li.rvt{padding-left:4px}.hcb{width:30px;height:30px;display:inline-grid;place-items:center}.hcb svg{width:30px;height:30px}.podium{display:grid;grid-template-columns:1fr 1.15fr 1fr;align-items:end;gap:6px;margin:14px 0 10px}.pod{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;min-width:0}.pod.empty{visibility:hidden}.pod .crown{font-size:22px;line-height:1;margin-bottom:-4px;animation:clcrown 2.4s ease-in-out infinite}.pbug{width:74px;height:74px;display:grid;place-items:center}.pod.p1 .pbug{width:92px;height:92px}.pbug svg{width:100%;height:100%}.pname{font-weight:800;font-size:14px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pname em,.clal em,.hcn em,.cltl em{font-style:normal;font-size:11px;background:#7c5cff;color:#fff;border-radius:99px;padding:1px 6px;margin-left:2px}.pscore{font-size:13px;color:var(--muted);margin:2px 0 4px}.pscore b{color:var(--ink);font-size:16px}.pblock{width:100%;border-radius:10px 10px 4px 4px;display:grid;place-items:center;font-weight:900;font-size:22px;color:#1d1a2a}.p1 .pblock{height:70px;background:linear-gradient(#ffe27a,#f5b301)}.p2 .pblock{height:50px;background:linear-gradient(#eef1f6,#b9c0cc)}.p3 .pblock{height:38px;background:linear-gradient(#f2c08f,#c97b3c)}.pod.me .pblock{box-shadow:0 0 0 3px #7c5cff}.pod .przchip{margin-bottom:4px}.clmv{font-size:11px;font-weight:800;border-radius:6px;padding:0 4px;margin-left:2px;white-space:nowrap}.clmv.up{color:#16a34a;background:color-mix(in srgb,#16a34a 15%,transparent)}.clmv.dn{color:#dc2626;background:color-mix(in srgb,#dc2626 13%,transparent)}.clmv.eq{color:var(--muted)}.clstk{font-size:11px;font-weight:800;margin-left:3px;white-space:nowrap;color:#ea580c;background:color-mix(in srgb,#f97316 15%,transparent);border-radius:6px;padding:0 5px}.cltitles{margin:12px 0 4px;border:1.5px solid var(--line);border-radius:14px;padding:10px 12px;background:var(--surface)}.cltitles h3{margin:0 0 6px;font-size:15px}.cltl{display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid var(--line)}.cltl:first-of-type{border-top:0}.cltl .ico{font-size:22px}.cltl .tn{flex:1;display:flex;flex-direction:column;font-size:14px}.cltl .tn b{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}.cltl .tv{font-weight:800;text-align:right;display:flex;flex-direction:column}.cltl .tv small{font-weight:700;font-size:11px;color:#f5b301}.cltl.me{background:color-mix(in srgb,#7c5cff 10%,transparent);border-radius:8px;padding-left:6px}.clpass{position:fixed;left:50%;top:18%;transform:translateX(-50%);z-index:9999;background:linear-gradient(135deg,#7c5cff,#f5b301);color:#fff;font-weight:900;font-size:18px;padding:14px 20px;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.35);animation:clpop .5s cubic-bezier(.2,1.6,.4,1);text-align:center;max-width:88vw}.clconf{position:fixed;inset:0;pointer-events:none;z-index:9998;overflow:hidden}.clconf i{position:absolute;top:-12px;width:8px;height:14px;border-radius:2px;animation:clfall linear forwards}@keyframes clfall{to{top:105%;transform:rotate(540deg) translateX(30px)}}@keyframes clpop{from{transform:translateX(-50%) scale(.6);opacity:0}}@keyframes clcrown{50%{transform:translateY(-3px) rotate(-6deg)}}@media (prefers-reduced-motion:reduce){.pod .crown,.clpass{animation:none}}.clagreel{display:flex;gap:8px;align-items:flex-start;font-size:14px;margin:8px 0;line-height:1.35}.clagreel input{margin-top:3px;flex:none;width:18px;height:18px}'; document.head.appendChild(st); })();
+(function () { var st = document.createElement("style"); st.textContent = '.hclass{background:var(--surface);border:1.5px solid var(--line);border-left:5px solid #f5b301;border-radius:16px;padding:12px 14px;margin:0 0 14px}.hchead{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.hchead b{font-size:17px}.hchead span{font-size:13px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em}.hcme{margin:6px 0}.hctop{list-style:none;margin:6px 0 10px;padding:0}.hctop li{display:flex;gap:8px;align-items:center;padding:5px 0;border-top:1px solid var(--line)}.hctop li.me{font-weight:700}.hcr{width:30px}.hcr .clrk{width:24px;height:24px;font-size:13px}.hcn{flex:1}.hcn em{font-style:normal;font-size:12px;color:var(--muted)}.hcs{font-variant-numeric:tabular-nums;color:var(--muted)}.hclass .btn{background:#7c5cff;color:#fff}.hclass .btn.ghost{background:transparent;color:inherit;border:1.5px solid var(--line)}.hclass.legend{border-left-color:#f5b301;box-shadow:0 0 0 2px #f5b301 inset,0 0 22px rgba(245,179,1,.25);background:linear-gradient(160deg,color-mix(in srgb,#f5b301 14%,var(--surface)),var(--surface) 55%)}.hclass.legend .hchead span{color:#f5b301}.hcleg{margin:4px 0 6px;font-weight:800;color:#d99a00}.hcfin{margin:6px 0 8px;padding:8px 10px;border-radius:10px;background:color-mix(in srgb,#f5b301 14%,transparent);font-weight:700}.hcrace{display:flex;flex-direction:column;gap:2px;margin:6px 0 8px;padding:8px 10px;border-radius:10px;background:color-mix(in srgb,#7c5cff 12%,transparent);font-size:14px}.hcrace b{font-size:15px}.hcrace span{color:var(--muted)}.hcrace .x{color:#d99a00;font-weight:700}.hcprz{margin:8px 0 10px;padding-top:8px;border-top:1px solid var(--line)}.hcpz-h{display:flex;justify-content:space-between;font-weight:800;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}.hcpz-h span{text-transform:none;letter-spacing:0;font-weight:700}.hcpz-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:6px 0}.hcpz{display:flex;flex-direction:column;align-items:center;border:1.5px solid var(--line);border-radius:10px;padding:6px 4px;text-align:center}.hcpz b{font-size:13px}.hcpz small{font-size:11px;color:var(--muted)}.hcpz .sil{position:relative;width:44px;height:44px;display:grid;place-items:center}.hcpz .sil svg{width:44px;height:44px}.hcpz .sil i{position:absolute;font-style:normal;font-weight:900;font-size:18px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.6)}.hcpz.p-legendary{border-color:#f5b301}.hcpz.p-epic{border-color:#a855f7}.hcpz.p-rare{border-color:#3b82f6}.hcpz-t{font-size:12.5px;color:var(--muted);margin:4px 0 0}.rvlist{list-style:none;padding:0;margin:10px 0;text-align:left}.rvlist li{display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid var(--line)}.rvbug{width:52px;height:52px;display:grid;place-items:center}.rvbug svg{width:52px;height:52px}.rvn{display:flex;flex-direction:column}.rvn small{color:var(--muted)}.rvlist li.rvt{padding-left:4px}.hcb{width:30px;height:30px;display:inline-grid;place-items:center}.hcb svg{width:30px;height:30px}.podium{display:grid;grid-template-columns:1fr 1.15fr 1fr;align-items:end;gap:6px;margin:14px 0 10px}.pod{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;min-width:0}.pod.empty{visibility:hidden}.pod .crown{font-size:22px;line-height:1;margin-bottom:-4px;animation:clcrown 2.4s ease-in-out infinite}.pbug{width:74px;height:74px;display:grid;place-items:center}.pod.p1 .pbug{width:92px;height:92px}.pbug svg{width:100%;height:100%}.pname{font-weight:800;font-size:14px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pname em,.clal em,.hcn em,.cltl em{font-style:normal;font-size:11px;background:#7c5cff;color:#fff;border-radius:99px;padding:1px 6px;margin-left:2px}.pscore{font-size:13px;color:var(--muted);margin:2px 0 4px}.pscore b{color:var(--ink);font-size:16px}.pblock{width:100%;border-radius:10px 10px 4px 4px;display:grid;place-items:center;font-weight:900;font-size:22px;color:#1d1a2a}.p1 .pblock{height:70px;background:linear-gradient(#ffe27a,#f5b301)}.p2 .pblock{height:50px;background:linear-gradient(#eef1f6,#b9c0cc)}.p3 .pblock{height:38px;background:linear-gradient(#f2c08f,#c97b3c)}.pod.me .pblock{box-shadow:0 0 0 3px #7c5cff}.pod .przchip{margin-bottom:4px}.clmv{font-size:11px;font-weight:800;border-radius:6px;padding:0 4px;margin-left:2px;white-space:nowrap}.clmv.up{color:#16a34a;background:color-mix(in srgb,#16a34a 15%,transparent)}.clmv.dn{color:#dc2626;background:color-mix(in srgb,#dc2626 13%,transparent)}.clmv.eq{color:var(--muted)}.clstk{font-size:11px;font-weight:800;margin-left:3px;white-space:nowrap;color:#ea580c;background:color-mix(in srgb,#f97316 15%,transparent);border-radius:6px;padding:0 5px}.cltitles{margin:12px 0 4px;border:1.5px solid var(--line);border-radius:14px;padding:10px 12px;background:var(--surface)}.cltitles h3{margin:0 0 6px;font-size:15px}.cltl{display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid var(--line)}.cltl:first-of-type{border-top:0}.cltl .ico{font-size:22px}.cltl .tn{flex:1;display:flex;flex-direction:column;font-size:14px}.cltl .tn b{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}.cltl .tv{font-weight:800;text-align:right;display:flex;flex-direction:column}.cltl .tv small{font-weight:700;font-size:11px;color:#f5b301}.cltl.me{background:color-mix(in srgb,#7c5cff 10%,transparent);border-radius:8px;padding-left:6px}.clpass{position:fixed;left:50%;top:18%;transform:translateX(-50%);z-index:9999;background:linear-gradient(135deg,#7c5cff,#f5b301);color:#fff;font-weight:900;font-size:18px;padding:14px 20px;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.35);animation:clpop .5s cubic-bezier(.2,1.6,.4,1);text-align:center;max-width:88vw}.clconf{position:fixed;inset:0;pointer-events:none;z-index:9998;overflow:hidden}.clconf i{position:absolute;top:-12px;width:8px;height:14px;border-radius:2px;animation:clfall linear forwards}@keyframes clfall{to{top:105%;transform:rotate(540deg) translateX(30px)}}@keyframes clpop{from{transform:translateX(-50%) scale(.6);opacity:0}}@keyframes clcrown{50%{transform:translateY(-3px) rotate(-6deg)}}@media (prefers-reduced-motion:reduce){.pod .crown,.clpass{animation:none}}.setquick{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}.setquick .btn{flex:1 1 180px}.linkbox{margin:10px 0;padding:12px 14px;border:1.5px solid var(--line);border-radius:14px}.linkbox h3{margin:0 0 6px;font-size:16px}.lkcode{font:800 34px/1.1 ui-monospace,Menlo,monospace;letter-spacing:.12em;margin:8px 0 2px;text-align:center}.lksteps{margin:8px 0;padding-left:20px;font-size:14.5px}.lksteps li{margin:4px 0}.lkin{text-transform:uppercase;letter-spacing:.1em;max-width:160px}.codesteps .sl{display:block}.obkeybox{margin-top:14px;text-align:center}.obkeybox .pform{text-align:left;max-width:440px;margin:8px auto}.clagreel{display:flex;gap:8px;align-items:flex-start;font-size:14px;margin:8px 0;line-height:1.35}.clagreel input{margin-top:3px;flex:none;width:18px;height:18px}'; document.head.appendChild(st); })();
+/* A class key carries the class's level (owner, Nov 13 2026: "it should already be chosen"). Joining sets the
+   student's path and level to it and skips choosing one; the instructor picks it in the instructor portal. */
+function clAdoptLevel(lv) {
+  try {
+    if (!lv || typeof levelObj !== "function" || !levelObj(lv)) return false;
+    var rt = routeOfLevel(lv), I = Prog.d.interests || [];
+    if (I.indexOf(rt) < 0) Prog.d.interests = I.filter(function (k) { return k !== "ev" || I.length > 1; }).concat([rt]);
+    Prog.d.startLevel = lv; store("lastLevel", lv);
+    if (!Prog.d.role || Prog.d.role === "ev") {
+      var R = ROLES.filter(function (x) { return x[0] === rt; })[0]; Prog.d.role = rt;
+      if (R) { var g = R[3]; if ((Prog.d.owned || []).indexOf(g) < 0) Prog.d.owned = (Prog.d.owned || []).concat([g]); if (!Prog.d.avatar || Prog.d.avatar === "starter") { Prog.d.avatar = g; Prog.d.avatarTs = Date.now(); } }
+    }
+    S.obRedo = 0; S.obSel = null; S.obStep = 1; S.obKey = false;
+    saveProg(); S.view = "level"; S.level = lv; S.tab = "hub";
+    return true;
+  } catch (e) { return false; }
+}
 function clJoinForm(where) {
   return '<form class="pform cljoin" data-cljoin="' + where + '"><label>Class key<input class="pinput clkey" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="DB-XXXX-XXX-XXX" value="' + esc(CL.key) + '"></label>' +
     '<label class="clagreel"><input type="checkbox" class="clagree"> I agree that my instructor sees my class results (scores and activity by medication and topic, missed questions and the answers I chose) under my class key label.</label>' +
@@ -31454,7 +31747,9 @@ document.addEventListener("submit", function (e) {
   groupRedeemKey(raw, function (m) {
     CL.busy = false; GIFT.busy = false; CL.key = ""; CL.msg = m; CL.err = false; CL.data = null; CL.view = "board";
     try { document.activeElement && document.activeElement.blur(); } catch (x) {}
-    if (where === "pane") drawClassPane(true); clLoad(true); if (typeof render === "function") render();
+    var moved = clAdoptLevel(SEAT.level);   /* straight to the class's level, no picking */
+    if (moved && where === "pane") closeClassPane();
+    if (where === "pane" && !moved) drawClassPane(true); clLoad(true); if (typeof render === "function") render(); if (moved) window.scrollTo(0, 0);
   }, function (m) { CL.busy = false; GIFT.busy = false; CL.msg = m; CL.err = true; redraw(); }, true);
 });
 function classView() {
