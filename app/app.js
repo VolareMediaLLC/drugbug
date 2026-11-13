@@ -4207,7 +4207,7 @@ function revHTML(q) {
   }
   /* Boost for my class (owner, Nov 13 2026): a school's or department's evaluators make a question come up
      more often for their people */
-  try { var bo = boostTarget(); if (bo) { var on = boostHas(k); c += '<div class="qrevrow"><button type="button" class="qrevv bst' + (on ? ' on' : '') + '" data-qrboost="1">' + (on ? '\u2605 Boosted for ' : 'Boost for ') + esc(bo.name) + '</button></div>'; } } catch (e) {}
+  try { var bo = boostTarget(); if (bo) { var on = boostHas(k); c += '<div class="qrevrow"><button type="button" class="qrevv bst' + (on ? ' on' : '') + '" data-qrboost="1">' + (on ? '\u2605 Boosted for ' : 'Boost for ') + esc(bo.name) + '</button>' + boostPick() + '</div>'; } } catch (e) {}
   try { var fp = evFieldPct(q.lv); if (fp) c += '<p class="qrevguide qrevfp">' + esc(fp.name) + ' questions: <b>' + fp.pct + '% graded</b> · ' + (100 - fp.pct) + '% not graded yet (' + fp.g.toLocaleString() + ' of ' + fp.n.toLocaleString() + ' graded)</p>'; } catch (e) {}
   c += '<div class="qrevs"><textarea maxlength="1000" placeholder="Suggestion (optional): a better wording, a wrong answer, a missing fact…" data-qrs="1">' + esc(R.s || "") + '</textarea><button type="button" class="btn small" data-qrsend="1">Send suggestion</button></div>';
   return c + '</div>';
@@ -4247,12 +4247,34 @@ function evFieldPct(lv) {
 }
 /* where a boost goes: the class this evaluator studies in, or the first class they teach */
 var BOOSTI = {};
+/* the schools/departments this account can Boost for: an instructor's own live classes; the owner
+   (Administrator) gets every live school and department and picks one (owner, Nov 13 2026) */
+function boostOrgs() {
+  try { var R = typeof stxRoles === "function" ? stxRoles() : null; if (!R) return [];
+    var L = (R.owner && R.boostOrgs && R.boostOrgs.length ? R.boostOrgs : (R.classes || [])).filter(function (c) { return c.live; });
+    return L; } catch (e) { return []; }
+}
+function boostSeed() { boostOrgs().forEach(function (c) { if (!c.boost) return; var M = BOOSTI[c.orgId] || (BOOSTI[c.orgId] = {}); c.boost.forEach(function (q) { if (M[q] !== 0) M[q] = 1; }); }); }
 function boostTarget() {
   /* Boost is for a school's or department's instructors (owner, Nov 13 2026), not for class members */
-  try { var R = typeof stxRoles === "function" ? stxRoles() : null, L = R && (R.classes || []).filter(function (c) { return c.live; }); if (L && L.length) return { name: L[0].name, orgId: L[0].orgId }; } catch (e) {}
-  return null;
+  var L = boostOrgs(); if (!L.length) return null;
+  var want = store("boostOrg"), c = L.filter(function (x) { return x.orgId === want; })[0] || L[0];
+  return { name: c.name, orgId: c.orgId };
 }
-function boostHas(k) { var t = boostTarget(); if (!t) return false; if (t.seat) return ((SEAT.boost || store("seatBoost") || []).indexOf(k) >= 0); return !!(BOOSTI[t.orgId] || {})[k]; }
+function boostPick() {
+  var L = boostOrgs(), t = boostTarget(); if (L.length < 2 || !t) return "";
+  return '<select class="qbstpick" data-qboostorg="1" aria-label="Boost for which school or department">' + L.map(function (c) { return '<option value="' + esc(c.orgId) + '"' + (c.orgId === t.orgId ? ' selected' : '') + '>' + esc(c.name) + '</option>'; }).join("") + '</select>';
+}
+document.addEventListener("change", function (e) {
+  var s = e.target; if (!s || !s.hasAttribute || !s.hasAttribute("data-qboostorg")) return;
+  store("boostOrg", s.value);
+  document.querySelectorAll("[data-qboost],[data-qrboost]").forEach(function (b) {
+    var k = b.getAttribute("data-qboost") || (b.closest(".qrev") || {}).getAttribute && b.closest(".qrev").getAttribute("data-qrk"); if (!k) return;
+    var on = boostHas(k), t = boostTarget(); b.classList.toggle("on", on); b.textContent = (on ? "\u2605 Boosted for " : "Boost for ") + (t ? t.name : "");
+  });
+  document.querySelectorAll("[data-qboostorg]").forEach(function (x) { x.value = s.value; });
+}, true);
+function boostHas(k) { var t = boostTarget(); if (!t) return false; if (t.seat) return ((SEAT.boost || store("seatBoost") || []).indexOf(k) >= 0); return (BOOSTI[t.orgId] || {})[k] === 1; }
 document.addEventListener("click", function (e) {
   var b = e.target && e.target.closest && e.target.closest("[data-qboost]"); if (!b) return;
   e.preventDefault(); e.stopPropagation();
@@ -4262,7 +4284,7 @@ document.addEventListener("click", function (e) {
 function boostToggle(k) {
   var t = boostTarget(); if (!t) return; var on = !boostHas(k), R = (Prog.d.qrev || (Prog.d.qrev = {}))[k] || (Prog.d.qrev[k] = {});
   if (t.seat) { var B = (SEAT.boost || store("seatBoost") || []).filter(function (x) { return x !== k; }); if (on) B.push(k); SEAT.boost = B; store("seatBoost", B); }
-  else { var M = BOOSTI[t.orgId] || (BOOSTI[t.orgId] = {}); if (on) M[k] = 1; else delete M[k]; }
+  else { var M = BOOSTI[t.orgId] || (BOOSTI[t.orgId] = {}); M[k] = on ? 1 : 0; }
   if (typeof revRedraw === "function") revRedraw(k);
   fnCall("groupBoost", t.seat ? { qid: k, on: on, gift: (Prog.d.reviewer || {}).id || "" } : { qid: k, on: on, orgId: t.orgId }).then(function (r) { if (t.seat && r && r.boost) { SEAT.boost = r.boost; store("seatBoost", r.boost); } }, function (e) { R.err = "Boost not saved: " + ((e && e.message) || "try again"); if (t.seat) { var B2 = (SEAT.boost || []).filter(function (x) { return x !== k; }); if (!on) B2.push(k); SEAT.boost = B2; store("seatBoost", B2); } revRedraw(k); });
 }
@@ -4417,7 +4439,7 @@ function qRateHTML(q) {
   for (var n = 1; n <= 5; n++) c += '<button type="button" class="qrbtn' + (cur === n ? ' on' : '') + '" data-qrate="' + n + '" aria-pressed="' + (cur === n) + '" aria-label="Difficulty ' + n + ' of 5">' + n + '</button>';
   c += '</span><span class="qrs">' + (cur ? '<span class="earned">+1 stick earned</span>' : '1 easy · 5 hard · <b>+1 stick</b>') + '</span></div>';
   /* instructors who are not evaluators get the Boost button here (owner, Nov 13 2026) */
-  try { var bo = boostTarget(); if (bo) c += '<div class="qboostrow"><button type="button" class="qrevv bst' + (boostHas(k) ? ' on' : '') + '" data-qboost="' + k + '">' + (boostHas(k) ? '\u2605 Boosted for ' : 'Boost for ') + esc(bo.name) + '</button></div>'; } catch (e) {}
+  try { var bo = boostTarget(); if (bo) c += '<div class="qboostrow"><button type="button" class="qrevv bst' + (boostHas(k) ? ' on' : '') + '" data-qboost="' + k + '">' + (boostHas(k) ? '\u2605 Boosted for ' : 'Boost for ') + esc(bo.name) + '</button>' + boostPick() + '</div>'; } catch (e) {}
   return c;
 }
 /* Administrator only (owner, Nov 7 2026): the average difficulty everyone gave this question,
@@ -9473,7 +9495,7 @@ function audSilentUnlock() {
   }, { passive: true, capture: true });
 });
 document.addEventListener("visibilitychange", function () { if (!document.hidden) { AUDH.lastT = -1; AUDH.stuck = 0; audWake(); } });
-(function () { var st = document.createElement("style"); st.textContent = '.muswitch{display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border:1.5px solid var(--line);border-radius:99px;background:var(--surface2,transparent);color:var(--ink);font:inherit;font-weight:800;font-size:14px;cursor:pointer}.muswitch .mustk{position:relative;width:42px;height:24px;border-radius:99px;background:color-mix(in srgb,var(--muted) 35%,transparent);transition:background .15s;flex:none}.muswitch .mustk i{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35);transition:transform .15s}.muswitch.on{border-color:#7c5cff}.muswitch.on .mustk{background:#7c5cff}.muswitch.on .mustk i{transform:translateX(18px)}.muswitch:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}.hubtile.hubqs{border:2.5px solid var(--c,#7c5cff)!important;box-shadow:0 6px 20px color-mix(in srgb,var(--c,#7c5cff) 30%,transparent);background:linear-gradient(160deg,color-mix(in srgb,var(--c,#7c5cff) 22%,var(--surface)),var(--surface) 70%)!important}.hubtile.hubqs strong{font-weight:900;font-size:1.08em}.qrevv.o.on{background:#d97706;border-color:#d97706;color:#fff}.qboostrow{margin:6px 0 2px}.tierchip.tc-inst{background:linear-gradient(135deg,#0f766e,#14b8a6);color:#fff;box-shadow:0 0 0 1.5px #5eead4 inset;cursor:pointer;pointer-events:auto}.qrevv.bst.on{background:#f5b301;border-color:#f5b301;color:#1d1a2a}.qrevv.w.on{background:#7c5cff;border-color:#7c5cff;color:#fff}.qrevimp{display:flex;flex-direction:column;gap:6px;margin:4px 0 8px}.qrimp{text-align:left;padding:8px 10px;border-radius:10px;border:1.5px solid var(--line);background:transparent;color:var(--ink);font:inherit;font-size:14px;cursor:pointer}.qrimp.on{border-color:#7c5cff;background:color-mix(in srgb,#7c5cff 16%,transparent);font-weight:700}.qrevimp .btn{align-self:flex-start}.qrevmore{margin:6px 0}.qrevchk{display:grid;grid-template-columns:repeat(auto-fill,minmax(135px,1fr));gap:5px;margin-top:6px}.qrck{display:flex;align-items:center;gap:6px;padding:5px 8px;border:1.5px solid var(--line);border-radius:9px;font-size:13px;line-height:1.2;cursor:pointer}.qrck input{width:18px;height:18px;accent-color:#d97706;flex:none}.qrck.on{border-color:#d97706;background:color-mix(in srgb,#d97706 14%,transparent)}.qrevguide{margin:2px 0 6px;font-size:12.5px;color:var(--muted)}.qrev .qrevrow{flex-wrap:wrap}@media (prefers-reduced-motion:reduce){.muswitch .mustk,.muswitch .mustk i{transition:none}}'; document.head.appendChild(st); })();
+(function () { var st = document.createElement("style"); st.textContent = '.muswitch{display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border:1.5px solid var(--line);border-radius:99px;background:var(--surface2,transparent);color:var(--ink);font:inherit;font-weight:800;font-size:14px;cursor:pointer}.muswitch .mustk{position:relative;width:42px;height:24px;border-radius:99px;background:color-mix(in srgb,var(--muted) 35%,transparent);transition:background .15s;flex:none}.muswitch .mustk i{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35);transition:transform .15s}.muswitch.on{border-color:#7c5cff}.muswitch.on .mustk{background:#7c5cff}.muswitch.on .mustk i{transform:translateX(18px)}.muswitch:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}.hubtile.hubqs{border:2.5px solid var(--c,#7c5cff)!important;box-shadow:0 6px 20px color-mix(in srgb,var(--c,#7c5cff) 30%,transparent);background:linear-gradient(160deg,color-mix(in srgb,var(--c,#7c5cff) 22%,var(--surface)),var(--surface) 70%)!important}.hubtile.hubqs strong{font-weight:900;font-size:1.08em}.qrevv.o.on{background:#d97706;border-color:#d97706;color:#fff}.qboostrow{margin:6px 0 2px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}.qbstpick{max-width:100%;min-height:36px;padding:4px 8px;border-radius:9px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:13px}.tierchip.tc-inst{background:linear-gradient(135deg,#0f766e,#14b8a6);color:#fff;box-shadow:0 0 0 1.5px #5eead4 inset;cursor:pointer;pointer-events:auto}.qrevv.bst.on{background:#f5b301;border-color:#f5b301;color:#1d1a2a}.qrevv.w.on{background:#7c5cff;border-color:#7c5cff;color:#fff}.qrevimp{display:flex;flex-direction:column;gap:6px;margin:4px 0 8px}.qrimp{text-align:left;padding:8px 10px;border-radius:10px;border:1.5px solid var(--line);background:transparent;color:var(--ink);font:inherit;font-size:14px;cursor:pointer}.qrimp.on{border-color:#7c5cff;background:color-mix(in srgb,#7c5cff 16%,transparent);font-weight:700}.qrevimp .btn{align-self:flex-start}.qrevmore{margin:6px 0}.qrevchk{display:grid;grid-template-columns:repeat(auto-fill,minmax(135px,1fr));gap:5px;margin-top:6px}.qrck{display:flex;align-items:center;gap:6px;padding:5px 8px;border:1.5px solid var(--line);border-radius:9px;font-size:13px;line-height:1.2;cursor:pointer}.qrck input{width:18px;height:18px;accent-color:#d97706;flex:none}.qrck.on{border-color:#d97706;background:color-mix(in srgb,#d97706 14%,transparent)}.qrevguide{margin:2px 0 6px;font-size:12.5px;color:var(--muted)}.qrev .qrevrow{flex-wrap:wrap}@media (prefers-reduced-motion:reduce){.muswitch .mustk,.muswitch .mustk i{transition:none}}'; document.head.appendChild(st); })();
 /* quick volume popover from the top-bar note button */
 function muPop() {
   if (!S.mupop) return "";
@@ -30717,12 +30739,13 @@ function stxRolesFetch(force) {
     STX.rolesBusy = true;
     fnCall("dashRoles", {}).then(function (r) {
       STX.rolesBusy = false; var had = stxAny();
-      store("statsRoles", { owner: !!(r && r.owner), classes: (r && r.classes) || [], uid: s.uid, at: Date.now() });
+      store("statsRoles", { owner: !!(r && r.owner), classes: (r && r.classes) || [], boostOrgs: (r && r.boostOrgs) || null, uid: s.uid, at: Date.now() });
+      boostSeed();
       if (had !== stxAny() || S.view === "stats") render();
     }, function () { STX.rolesBusy = false; });
   } catch (e) { STX.rolesBusy = false; }
 }
-setTimeout(function () { stxRolesFetch(); }, 2500); setTimeout(function () { stxRolesFetch(); }, 9000);
+setTimeout(function () { try { boostSeed(); } catch (e) {} }, 1200); setTimeout(function () { stxRolesFetch(); }, 2500); setTimeout(function () { stxRolesFetch(); }, 9000);
 function stxBtn() { return stxAny() ? '<button class="theme-btn" data-go="stats">Stats dashboard</button>' : ''; }
 
 /* small pieces */
