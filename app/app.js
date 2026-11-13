@@ -4248,16 +4248,22 @@ function evFieldPct(lv) {
 /* where a boost goes: the class this evaluator studies in, or the first class they teach */
 var BOOSTI = {};
 function boostTarget() {
-  if (typeof seatActive === "function" && seatActive() && SEAT.orgName) return { name: SEAT.orgName, seat: true };
+  /* Boost is for a school's or department's instructors (owner, Nov 13 2026), not for class members */
   try { var R = typeof stxRoles === "function" ? stxRoles() : null, L = R && (R.classes || []).filter(function (c) { return c.live; }); if (L && L.length) return { name: L[0].name, orgId: L[0].orgId }; } catch (e) {}
   return null;
 }
 function boostHas(k) { var t = boostTarget(); if (!t) return false; if (t.seat) return ((SEAT.boost || store("seatBoost") || []).indexOf(k) >= 0); return !!(BOOSTI[t.orgId] || {})[k]; }
+document.addEventListener("click", function (e) {
+  var b = e.target && e.target.closest && e.target.closest("[data-qboost]"); if (!b) return;
+  e.preventDefault(); e.stopPropagation();
+  var k = b.getAttribute("data-qboost"); boostToggle(k);
+  var on = boostHas(k), t = boostTarget(); b.classList.toggle("on", on); b.textContent = (on ? "\u2605 Boosted for " : "Boost for ") + (t ? t.name : "");
+}, true);
 function boostToggle(k) {
   var t = boostTarget(); if (!t) return; var on = !boostHas(k), R = (Prog.d.qrev || (Prog.d.qrev = {}))[k] || (Prog.d.qrev[k] = {});
   if (t.seat) { var B = (SEAT.boost || store("seatBoost") || []).filter(function (x) { return x !== k; }); if (on) B.push(k); SEAT.boost = B; store("seatBoost", B); }
   else { var M = BOOSTI[t.orgId] || (BOOSTI[t.orgId] = {}); if (on) M[k] = 1; else delete M[k]; }
-  revRedraw(k);
+  if (typeof revRedraw === "function") revRedraw(k);
   fnCall("groupBoost", t.seat ? { qid: k, on: on, gift: (Prog.d.reviewer || {}).id || "" } : { qid: k, on: on, orgId: t.orgId }).then(function (r) { if (t.seat && r && r.boost) { SEAT.boost = r.boost; store("seatBoost", r.boost); } }, function (e) { R.err = "Boost not saved: " + ((e && e.message) || "try again"); if (t.seat) { var B2 = (SEAT.boost || []).filter(function (x) { return x !== k; }); if (!on) B2.push(k); SEAT.boost = B2; store("seatBoost", B2); } revRedraw(k); });
 }
 function revSave(k, el) {
@@ -4409,7 +4415,10 @@ function qRateHTML(q) {
   QRATE_Q[k] = q;
   c = '<div class="qrate" data-qrk="' + k + '"><span class="qrl">' + (cur ? 'You rated this ' + cur + ' of 5' : 'How hard was this?') + '</span><span class="qrb" role="group" aria-label="Rate the difficulty from 1 to 5">';
   for (var n = 1; n <= 5; n++) c += '<button type="button" class="qrbtn' + (cur === n ? ' on' : '') + '" data-qrate="' + n + '" aria-pressed="' + (cur === n) + '" aria-label="Difficulty ' + n + ' of 5">' + n + '</button>';
-  return c + '</span><span class="qrs">' + (cur ? '<span class="earned">+1 stick earned</span>' : '1 easy · 5 hard · <b>+1 stick</b>') + '</span></div>';
+  c += '</span><span class="qrs">' + (cur ? '<span class="earned">+1 stick earned</span>' : '1 easy · 5 hard · <b>+1 stick</b>') + '</span></div>';
+  /* instructors who are not evaluators get the Boost button here (owner, Nov 13 2026) */
+  try { var bo = boostTarget(); if (bo) c += '<div class="qboostrow"><button type="button" class="qrevv bst' + (boostHas(k) ? ' on' : '') + '" data-qboost="' + k + '">' + (boostHas(k) ? '\u2605 Boosted for ' : 'Boost for ') + esc(bo.name) + '</button></div>'; } catch (e) {}
+  return c;
 }
 /* Administrator only (owner, Nov 7 2026): the average difficulty everyone gave this question,
    players and evaluators, under the question. Uses the same anonymous totals as Analytics. */
@@ -9460,7 +9469,7 @@ function audSilentUnlock() {
   }, { passive: true, capture: true });
 });
 document.addEventListener("visibilitychange", function () { if (!document.hidden) { AUDH.lastT = -1; AUDH.stuck = 0; audWake(); } });
-(function () { var st = document.createElement("style"); st.textContent = '.muswitch{display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border:1.5px solid var(--line);border-radius:99px;background:var(--surface2,transparent);color:var(--ink);font:inherit;font-weight:800;font-size:14px;cursor:pointer}.muswitch .mustk{position:relative;width:42px;height:24px;border-radius:99px;background:color-mix(in srgb,var(--muted) 35%,transparent);transition:background .15s;flex:none}.muswitch .mustk i{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35);transition:transform .15s}.muswitch.on{border-color:#7c5cff}.muswitch.on .mustk{background:#7c5cff}.muswitch.on .mustk i{transform:translateX(18px)}.muswitch:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}.hubtile.hubqs{border:2.5px solid var(--c,#7c5cff)!important;box-shadow:0 6px 20px color-mix(in srgb,var(--c,#7c5cff) 30%,transparent);background:linear-gradient(160deg,color-mix(in srgb,var(--c,#7c5cff) 22%,var(--surface)),var(--surface) 70%)!important}.hubtile.hubqs strong{font-weight:900;font-size:1.08em}.qrevv.o.on{background:#d97706;border-color:#d97706;color:#fff}.qrevv.bst.on{background:#f5b301;border-color:#f5b301;color:#1d1a2a}.qrevv.w.on{background:#7c5cff;border-color:#7c5cff;color:#fff}.qrevimp{display:flex;flex-direction:column;gap:6px;margin:4px 0 8px}.qrimp{text-align:left;padding:8px 10px;border-radius:10px;border:1.5px solid var(--line);background:transparent;color:var(--ink);font:inherit;font-size:14px;cursor:pointer}.qrimp.on{border-color:#7c5cff;background:color-mix(in srgb,#7c5cff 16%,transparent);font-weight:700}.qrevimp .btn{align-self:flex-start}.qrevmore{margin:6px 0}.qrevchk{display:grid;grid-template-columns:repeat(auto-fill,minmax(135px,1fr));gap:5px;margin-top:6px}.qrck{display:flex;align-items:center;gap:6px;padding:5px 8px;border:1.5px solid var(--line);border-radius:9px;font-size:13px;line-height:1.2;cursor:pointer}.qrck input{width:18px;height:18px;accent-color:#d97706;flex:none}.qrck.on{border-color:#d97706;background:color-mix(in srgb,#d97706 14%,transparent)}.qrevguide{margin:2px 0 6px;font-size:12.5px;color:var(--muted)}.qrev .qrevrow{flex-wrap:wrap}@media (prefers-reduced-motion:reduce){.muswitch .mustk,.muswitch .mustk i{transition:none}}'; document.head.appendChild(st); })();
+(function () { var st = document.createElement("style"); st.textContent = '.muswitch{display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border:1.5px solid var(--line);border-radius:99px;background:var(--surface2,transparent);color:var(--ink);font:inherit;font-weight:800;font-size:14px;cursor:pointer}.muswitch .mustk{position:relative;width:42px;height:24px;border-radius:99px;background:color-mix(in srgb,var(--muted) 35%,transparent);transition:background .15s;flex:none}.muswitch .mustk i{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35);transition:transform .15s}.muswitch.on{border-color:#7c5cff}.muswitch.on .mustk{background:#7c5cff}.muswitch.on .mustk i{transform:translateX(18px)}.muswitch:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}.hubtile.hubqs{border:2.5px solid var(--c,#7c5cff)!important;box-shadow:0 6px 20px color-mix(in srgb,var(--c,#7c5cff) 30%,transparent);background:linear-gradient(160deg,color-mix(in srgb,var(--c,#7c5cff) 22%,var(--surface)),var(--surface) 70%)!important}.hubtile.hubqs strong{font-weight:900;font-size:1.08em}.qrevv.o.on{background:#d97706;border-color:#d97706;color:#fff}.qboostrow{margin:6px 0 2px}.qrevv.bst.on{background:#f5b301;border-color:#f5b301;color:#1d1a2a}.qrevv.w.on{background:#7c5cff;border-color:#7c5cff;color:#fff}.qrevimp{display:flex;flex-direction:column;gap:6px;margin:4px 0 8px}.qrimp{text-align:left;padding:8px 10px;border-radius:10px;border:1.5px solid var(--line);background:transparent;color:var(--ink);font:inherit;font-size:14px;cursor:pointer}.qrimp.on{border-color:#7c5cff;background:color-mix(in srgb,#7c5cff 16%,transparent);font-weight:700}.qrevimp .btn{align-self:flex-start}.qrevmore{margin:6px 0}.qrevchk{display:grid;grid-template-columns:repeat(auto-fill,minmax(135px,1fr));gap:5px;margin-top:6px}.qrck{display:flex;align-items:center;gap:6px;padding:5px 8px;border:1.5px solid var(--line);border-radius:9px;font-size:13px;line-height:1.2;cursor:pointer}.qrck input{width:18px;height:18px;accent-color:#d97706;flex:none}.qrck.on{border-color:#d97706;background:color-mix(in srgb,#d97706 14%,transparent)}.qrevguide{margin:2px 0 6px;font-size:12.5px;color:var(--muted)}.qrev .qrevrow{flex-wrap:wrap}@media (prefers-reduced-motion:reduce){.muswitch .mustk,.muswitch .mustk i{transition:none}}'; document.head.appendChild(st); })();
 /* quick volume popover from the top-bar note button */
 function muPop() {
   if (!S.mupop) return "";
