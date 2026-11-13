@@ -51,6 +51,7 @@ label.f{display:grid;gap:4px;font-size:12.5px;font-weight:700;color:var(--muted)
 .mini{width:100%;border-collapse:collapse;font-size:13.5px}.mini td{padding:6px 4px;border-top:1px solid var(--line);vertical-align:top}
 /* tables */
 .tblwrap{overflow-x:auto}
+.tblwrap.scroll{max-height:min(520px,65vh);overflow-y:auto;border:1px solid var(--line);border-radius:10px}.tblwrap.scroll table.t th{z-index:1}
 table.t{width:100%;border-collapse:collapse;font-size:13.5px}
 table.t th{text-align:left;font-size:12px;color:var(--muted);font-weight:700;padding:8px 8px;border-bottom:1px solid var(--line);white-space:nowrap;position:sticky;top:0;background:var(--surface)}
 table.t td{padding:8px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
@@ -222,13 +223,13 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
     <div class="gtabs" id="cGroups" role="tablist" aria-label="Code groups"></div>
     <div id="cGroupHead"></div>
     <p class="muted small" style="margin:6px 0 10px">The ten LIFE- codes built into the app are listed under Evaluators. Give codes a Group when you make them and they get their own tab here.</p>
-    <div class="tblwrap"><table class="t" id="cTable"><tr><td class="muted">Loading…</td></tr></table></div>
+    <div class="tblwrap scroll"><table class="t" id="cTable"><tr><td class="muted">Loading…</td></tr></table></div>
   </div>
   <div class="card">
     <div class="row sp"><div><h2>Who used a code</h2><div class="muted small">Every code except school class keys asks for the person's full name. Newest first.</div></div>
       <div class="row"><select id="rfKind" style="width:auto"><option value="">Every kind</option><option value="made">Made here</option><option value="evaluator">LIFE / evaluator</option><option value="gift">Gift</option><option value="license">School or agency license</option><option value="protocols">Agency protocols</option><option value="fieldmedic">Field Medic</option><option value="web">Web Pro</option></select>
       <input id="rfQ" type="search" placeholder="Search name or code" style="width:200px"></div></div>
-    <div class="tblwrap" style="margin-top:10px"><table class="t" id="rTable"><tr><td class="muted">Loading…</td></tr></table></div>
+    <div class="tblwrap scroll" style="margin-top:10px"><table class="t" id="rTable"><tr><td class="muted">Loading…</td></tr></table></div>
   </div>
 </section>
 
