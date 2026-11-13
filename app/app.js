@@ -8827,7 +8827,7 @@ function settingsView() {
   pv += setRow("Reset my progress", "Clears mastery, XP, streaks, achievements and scores. Keeps your bugs, sticks, saved list and settings.", S.resetAsk ? '<span class="confirm">Reset everything? <button class="btn small again" data-act="resetyes">Reset</button><button class="btn small ghost" data-act="resetno">Cancel</button></span>' : '<button class="btn small ghost" data-act="resetask">Reset progress</button>');
   pv += setRow("Delete all my data", "Removes everything DrugBug stores about you, here and online. Cannot be undone.", '<button class="btn small again" data-legal="data">Delete…</button>');
   c += setCard("privacy", "Account & privacy", fmCodeRow() + (typeof accCard === "function" ? accCard() : "")
-    + (NATIVE ? setRow("App Store offer code", "Redeem an App Store offer code on Apple's own screen.", '<button class="btn small ghost" data-pw="redeem">Redeem offer code</button>') : typeof giftBox === "function" ? setRow("Redeem a code", "Every code goes here: gift codes, access codes, school or agency codes, and your agency's protocol code." + (NATIVE ? " App Store offer codes open Apple's own screen." : ""), NATIVE ? '<button class="btn small ghost" data-pw="redeem">App Store offer code</button>' : "") + giftBox() : "")
+    + (NATIVE ? setRow("Have a code?", "Codes are entered on drugbugapp.com, not in the app. Sign in there with the same account you use here, enter your code in Settings, and what it unlocks shows up here.", "") + setRow("App Store offer code", "Redeem an App Store offer code on Apple's own screen.", '<button class="btn small ghost" data-pw="redeem">Redeem offer code</button>') : typeof giftBox === "function" ? setRow("Redeem a code", "Every code goes here: gift codes, access codes, school or agency codes, and your agency's protocol code." + (NATIVE ? " App Store offer codes open Apple's own screen." : ""), NATIVE ? '<button class="btn small ghost" data-pw="redeem">App Store offer code</button>' : "") + giftBox() : "")
     + pv);
   // feedback
   c += setCard("feedback", "Feedback",
@@ -13953,9 +13953,11 @@ function agpTry(code) {
   for (var i = 0; i < sets.length; i++) { var d = agpDecrypt(sets[i], k); if (d) return d; }
   return null;
 }
+function agpSave(code) { try { if (Prog && Prog.d) { Prog.d.agcode = code || ""; if (typeof saveProg === "function") saveProg(); } } catch (e) {} }   /* the code follows the account, so a code entered on the website opens protocols in the iPhone app (Nov 12 2026) */
 function agpAuto() { /* reopen a saved code once */
+  if (!AGP.code && Prog && Prog.d && Prog.d.agcode) AGP.code = Prog.d.agcode;
   if (AGP.tried || AGP.data || !AGP.code || !agpPro()) return; AGP.tried = true;
-  var d = agpTry(AGP.code); if (d) AGP.data = d; else { AGP.code = ""; store("agcode", ""); }
+  var d = agpTry(AGP.code); if (d) { AGP.data = d; if (Prog && Prog.d && Prog.d.agcode !== AGP.code) agpSave(AGP.code); } else { AGP.code = ""; store("agcode", ""); }
 }
 function agpUnlock(code, el) {
   if (!agpPro()) { openPaywall("Your agency's protocols", "pro"); return; }
@@ -13963,7 +13965,7 @@ function agpUnlock(code, el) {
   AGP.busy = true; AGP.err = ""; agpRedraw(el);
   setTimeout(function () {
     var d = agpTry(code); AGP.busy = false;
-    if (d) { AGP.data = d; AGP.code = code; store("agcode", code); AGP.sec = null; AGP.view = null; }
+    if (d) { AGP.data = d; AGP.code = code; store("agcode", code); agpSave(code); AGP.sec = null; AGP.view = null; }
     else AGP.err = "That code did not match any agency. Check it with your agency or training officer.";
     agpRedraw(el);
   }, 30);
@@ -14044,7 +14046,7 @@ function agpCard() {
   if (!AGP.data) {
     c += '<p class="muted small">Enter the code from your agency or training officer to see your own protocols here, with each drug linked to its DrugBug page.</p>';
     if (!agpPro()) return c + '<button class="btn" data-agp="pro">See DrugBug Pro</button></section>';
-    if (!NATIVE) c += '<p><button class="btn" data-act="codesgo">Enter my agency code in Settings</button></p>'; if (NATIVE) c += '<form class="inl" data-agpform="1"><input class="pinput" id="agpcode" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="32" placeholder="10-digit agency code" inputmode="numeric" aria-label="Agency code"><button class="btn" type="submit"' + (AGP.busy ? " disabled" : "") + '>' + (AGP.busy ? "Checking…" : "Unlock") + '</button></form>';
+    if (!NATIVE) c += '<p><button class="btn" data-act="codesgo">Enter my agency code in Settings</button></p>'; if (NATIVE) c += '<p class="muted small">Agency codes are entered on drugbugapp.com, not in the app. Sign in there with the same account you use here, enter the code in Settings, and your protocols show up here.</p>'; if (false) c += '<form class="inl" data-agpform="1"><input class="pinput" id="agpcode" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="32" placeholder="10-digit agency code" inputmode="numeric" aria-label="Agency code"><button class="btn" type="submit"' + (AGP.busy ? " disabled" : "") + '>' + (AGP.busy ? "Checking…" : "Unlock") + '</button></form>';
     if (AGP.err) c += '<p class="presult" role="alert">' + esc(AGP.err) + '</p>';
     return c + '</section>';
   }
@@ -14069,7 +14071,7 @@ document.addEventListener("click", function (e) {
   if (a === "open") { AGP.view = id; var f = agpFind(id); if (f) AGP.sec = f.s.id; }
   if (a === "back") AGP.view = null;
   if (a === "role") { AGP.role = id; store("agrole", id); }
-  if (a === "forget") { AGP.data = null; AGP.code = ""; AGP.sec = null; AGP.view = null; AGP.err = ""; store("agcode", ""); }
+  if (a === "forget") { AGP.data = null; AGP.code = ""; AGP.sec = null; AGP.view = null; AGP.err = ""; store("agcode", ""); agpSave(""); }
   agpRedraw(t);
 });
 document.addEventListener("submit", function (e) {
@@ -30302,7 +30304,7 @@ function giftGive(d) {
     }
     if (d.rev) { Prog.d.reviewer = { id: d.id, at: Date.now() }; if (typeof evPausedFor === "function" && evPausedFor()) got.push("an evaluator code. " + EV_PAUSE_MSG); else { got.push("question reviewer access (a reviewer panel now shows after each answer)"); setTimeout(function () { try { evWelcome(); } catch (e) {} }, 350); } }
     if (d.ag) {
-      store("agcode", d.ag);
+      store("agcode", d.ag); agpSave(d.ag);
       if (typeof AGP !== "undefined") { AGP.code = d.ag; AGP.tried = false; AGP.data = null; if (typeof agpAuto === "function") agpAuto(); }
       got.push("your agency's protocols");
     }
@@ -30374,7 +30376,7 @@ function codeOther(raw) {
     var ad = null; try { ad = agpTry(raw); } catch (e) {}
     if (ad) {
       if (typeof agpPro === "function" && !agpPro()) { fail("That is your agency's protocols code. Agency protocols are part of DrugBug Pro."); return openPaywall("Your agency's protocols", "pro"); }
-      AGP.data = ad; AGP.code = raw; store("agcode", raw); AGP.sec = null; AGP.view = null; codeNameLog("protocols", raw);
+      AGP.data = ad; AGP.code = raw; store("agcode", raw); agpSave(raw); AGP.sec = null; AGP.view = null; codeNameLog("protocols", raw);
       return win("Your agency's protocols are unlocked. They are in the Prehospital levels.");
     }
   }
@@ -31264,7 +31266,7 @@ function clComp(m) {
 }
 function classView() {
   var c = '<div class="pbar"><h2>My class</h2><button class="theme-btn" data-clact="close">Close</button></div>';
-  if (!seatActive() && NATIVE) return c + '<p class="muted">Class keys are not available in the iPhone app.</p>';   /* App Store 3.1.1, Nov 11 2026 */
+  if (!seatActive() && NATIVE) return c + '<p class="muted">Class keys are entered on drugbugapp.com, not in the app. Your class, your scores and the Pro that comes with the key are on the website.</p>';   /* App Store 3.1.1, Nov 11 2026 */
   if (!seatActive()) {
     c += '<p class="muted">Got a class key from your instructor? Enter it here to join your class. You get DrugBug Pro while the class runs, a class scoreboard, and your own scores broken down every way.</p>';
     c += '<form class="pform" id="clform"><label>Class key<input class="pinput clkey" id="clkey" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="DB-XXXX-XXX-XXX" value="' + esc(CL.key) + '"></label><button class="btn" type="submit"' + (CL.busy ? " disabled" : "") + '>' + (CL.busy ? "Checking…" : "Join my class") + '</button></form>';
