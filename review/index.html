@@ -442,8 +442,16 @@ html.embed .backrow,html.embed .wrap>.top:first-of-type{display:none!important}h
     if (real) $("bOut").onclick = function () { auth.signOut(); };
     $("vIn").hidden = !!real; $("vMain").hidden = !real;
     if (!real) return;
-    Promise.all([qsP, call("qrLoad")]).then(function (res) {
-      var j = res[0]; NAMES = j.names || {}; R = res[1].items || {}; RATES = res[1].rates || {}; REVS = res[1].revs || {}; SEEN = res[1].seen || {}; (REVS && Object.keys(REVS)).forEach(function (k) { if (!SEEN[k]) SEEN[k] = 1; });
+    Promise.all([qsP, call("qrLoad"), call("pilotStatus", { fresh: 1 }).catch(function () { return null; })]).then(function (res) {
+      var j = res[0];
+      /* questions pulled after a problem report: hide the old copy, grade the fixed copy (owner, Nov 13 2026) */
+      var FX = res[2] && res[2].fix;
+      if (FX) {
+        var gone = {}; (FX.pulled || []).forEach(function (id) { gone[id] = 1; });
+        var hs0 = function (t) { var h = 5381; for (var i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0; return (h >>> 0).toString(36); };
+        j.qs = j.qs.filter(function (q) { return !gone[q.id] && !gone["q" + hs0(q.lv + "|" + q.q)]; });
+        (FX.fixes || []).forEach(function (f) { if (!j.qs.some(function (q) { return q.id === f.id; })) j.qs.push({ id: f.id, b: "pilot", lv: f.lv || "", d: f.d || "", q: f.q, a: f.a, w: f.w || [], x: f.x || "", rp: { name: "Fixed after a problem report", at: "" } }); });
+      } NAMES = j.names || {}; R = res[1].items || {}; RATES = res[1].rates || {}; REVS = res[1].revs || {}; SEEN = res[1].seen || {}; (REVS && Object.keys(REVS)).forEach(function (k) { if (!SEEN[k]) SEEN[k] = 1; });
       QS = j.qs.map(function (q) { q._s = (q.q + " " + (q.a || "") + " " + (q.opts || []).join(" ") + " " + (NAMES[q.d] || q.d || "") + " " + q.id).toLowerCase(); BYID[q.id] = q; return q; });
       QS.forEach(function (q) { q._f0 = flags(q).length > 0; });
       /* exam-prep (registry) questions have "reg-" ids here, but the app grades them under its own id
