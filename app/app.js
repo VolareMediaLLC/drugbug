@@ -4193,7 +4193,8 @@ function revHTML(q) {
     for (var rv = 1; rv <= 5; rv++) c += '<button type="button" class="qrbtn' + (R.rel === rv ? ' on' : '') + '" data-qrrel="' + rv + '" aria-pressed="' + (R.rel === rv) + '">' + rv + '</button>';
     c += '</span></div><p class="qrevguide">1 not relevant at all · 5 very relevant. Less relevant questions come up less often here; they are not removed.</p>';
   }
-  if (R.v === "off") c += '<div class="qrevrow"><span class="qrevl">Not relevant to</span><select class="pinput qrevnr" data-qrnr="1"><option value="">Choose…</option>' + QR_NR.map(function (o) { return '<option value="' + o[0] + '"' + (R.nr === o[0] ? ' selected' : '') + '>' + esc(o[1]) + '</option>'; }).join("") + '</select></div>';
+  /* "More relevant to" (owner, Nov 13 2026): tick every area it fits better, e.g. General RN and Home health */
+  if (R.v === "off") { var mo = R.more || []; c += '<div class="qrevmore"><span class="qrevl">More relevant to</span><div class="qrevchk">' + QR_NR.filter(function (o) { return o[0] !== "here" && o[0] !== "any"; }).map(function (o) { var on = mo.indexOf(o[0]) >= 0; return '<label class="qrck' + (on ? ' on' : '') + '"><input type="checkbox" data-qrmore="' + o[0] + '"' + (on ? ' checked' : '') + '> ' + esc(o[1]) + '</label>'; }).join("") + '</div></div>'; }
   if (EVS && !EVS.exempt && EVS.signed) c += '<div class="qrevwk">' + evWeekLine() + '</div>';
   /* "Needs more convincing imposter answers" (owner, Nov 13 2026): tap the wrong answers that are too easy to
      rule out; they go to the server, and the weekly fix check writes better ones for evaluators to grade */
@@ -4243,7 +4244,7 @@ function evFieldPct(lv) {
 function revSave(k, el) {
   var R = (Prog.d.qrev || (Prog.d.qrev = {}))[k] || (Prog.d.qrev[k] = {}), q = QRATE_Q[k] || {};
   R.sent = false; R.err = ""; saveProg();
-  fnCall("qrRate", { gift: Prog.d.reviewer.id, id: k, d: R.d || null, v: R.v || null, nr: R.v === "off" ? (R.nr || null) : null, rel: R.v === "off" ? (R.rel || null) : null, weak: R.weak && R.weak.length ? R.weak : null, where: R.v === "off" ? (S.level || q.lv || "") : null, s: R.s || null, lv: q.lv || (S.level || "") })
+  fnCall("qrRate", { gift: Prog.d.reviewer.id, id: k, d: R.d || null, v: R.v || null, nr: null, more: R.v === "off" && R.more && R.more.length ? R.more : null, rel: R.v === "off" ? (R.rel || null) : null, weak: R.weak && R.weak.length ? R.weak : null, where: R.v === "off" ? (S.level || q.lv || "") : null, s: R.s || null, lv: q.lv || (S.level || "") })
     .then(function () { var first = !R.counted; R.sent = true; R.counted = true; R.err = ""; saveProg(); if (first && EVS && !EVS.exempt) { EVS.thisWeek = (EVS.thisWeek || 0) + 1; evSaveLocal(); } revRedraw(k); if (typeof ANA !== "undefined") { ANA.at = 0; ADM_T = 0; setTimeout(admStats, 1200); } if (/^qp/.test(k)) setTimeout(function () { pilFetch(true); }, 1500); })
     .catch(function (e) { var m = (e && e.message) || ""; if (/agreement/i.test(m)) { EVS = Object.assign(EVS || {}, { signed: false }); evAgreeOpen(); } else if (/status ended/i.test(m)) { evStatusLoad(true); } R.err = m === "offline" ? "Not saved: no internet" : "Not saved: " + (m || "try again"); revRedraw(k); });
   revRedraw(k);
@@ -4276,15 +4277,16 @@ document.addEventListener("click", function (e) {
     return revRedraw(k);
   }
   if (b.hasAttribute("data-qrwksend")) { if (!(R.weak || []).length) return; R.wkOpen = false; }
-  if (b.hasAttribute("data-qrv")) { var v = b.getAttribute("data-qrv"); R.v = R.v === v ? null : v; if (R.v === "off" && !R.nr) return revRedraw(k); }
+  if (b.hasAttribute("data-qrv")) { var v = b.getAttribute("data-qrv"); R.v = R.v === v ? null : v; if (R.v === "off") revRedraw(k); }
   if (b.hasAttribute("data-qrsend")) { var ta = box.querySelector("textarea"); R.s = ta ? ta.value.trim().slice(0, 1000) : ""; if (!R.s) { R.err = "Type a suggestion first"; return revRedraw(k); } }
   clearTimeout(QREV_T[k]); QREV_T[k] = setTimeout(function () { revSave(k); }, b.hasAttribute("data-qrsend") ? 0 : 500);
 }, true);
 document.addEventListener("change", function (e) {
-  var t = e.target; if (!t || !t.getAttribute || !t.getAttribute("data-qrnr")) return;
+  var t = e.target; if (!t || !t.getAttribute || !t.getAttribute("data-qrmore")) return;
   var box = t.closest(".qrev"); if (!box || !isReviewer()) return;
-  var k = box.getAttribute("data-qrk"), R = (Prog.d.qrev || (Prog.d.qrev = {}))[k] || (Prog.d.qrev[k] = {});
-  R.nr = t.value || null; R.v = "off"; if (R.nr) revSave(k); else revRedraw(k);
+  var k = box.getAttribute("data-qrk"), R = (Prog.d.qrev || (Prog.d.qrev = {}))[k] || (Prog.d.qrev[k] = {}), key = t.getAttribute("data-qrmore");
+  var M = (R.more || []).filter(function (x) { return x !== key; }); if (t.checked) M.push(key); R.more = M; R.v = "off";
+  clearTimeout(QREV_T[k]); QREV_T[k] = setTimeout(function () { revSave(k); }, 600); t.parentNode.classList.toggle("on", t.checked);
 });
 /* ---------- evaluators' analytics (owner, Nov 7 2026) ----------
    How everyone does, anonymously, down to each medication: answers and % right per drug (all
@@ -9438,7 +9440,7 @@ function audSilentUnlock() {
   }, { passive: true, capture: true });
 });
 document.addEventListener("visibilitychange", function () { if (!document.hidden) { AUDH.lastT = -1; AUDH.stuck = 0; audWake(); } });
-(function () { var st = document.createElement("style"); st.textContent = '.muswitch{display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border:1.5px solid var(--line);border-radius:99px;background:var(--surface2,transparent);color:var(--ink);font:inherit;font-weight:800;font-size:14px;cursor:pointer}.muswitch .mustk{position:relative;width:42px;height:24px;border-radius:99px;background:color-mix(in srgb,var(--muted) 35%,transparent);transition:background .15s;flex:none}.muswitch .mustk i{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35);transition:transform .15s}.muswitch.on{border-color:#7c5cff}.muswitch.on .mustk{background:#7c5cff}.muswitch.on .mustk i{transform:translateX(18px)}.muswitch:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}.hubtile.hubqs{border:2.5px solid var(--c,#7c5cff)!important;box-shadow:0 6px 20px color-mix(in srgb,var(--c,#7c5cff) 30%,transparent);background:linear-gradient(160deg,color-mix(in srgb,var(--c,#7c5cff) 22%,var(--surface)),var(--surface) 70%)!important}.hubtile.hubqs strong{font-weight:900;font-size:1.08em}.qrevv.o.on{background:#d97706;border-color:#d97706;color:#fff}.qrevv.w.on{background:#7c5cff;border-color:#7c5cff;color:#fff}.qrevimp{display:flex;flex-direction:column;gap:6px;margin:4px 0 8px}.qrimp{text-align:left;padding:8px 10px;border-radius:10px;border:1.5px solid var(--line);background:transparent;color:var(--ink);font:inherit;font-size:14px;cursor:pointer}.qrimp.on{border-color:#7c5cff;background:color-mix(in srgb,#7c5cff 16%,transparent);font-weight:700}.qrevimp .btn{align-self:flex-start}.qrevnr{max-width:260px;flex:1;padding:6px 8px;font-size:14px}.qrevguide{margin:2px 0 6px;font-size:12.5px;color:var(--muted)}.qrev .qrevrow{flex-wrap:wrap}@media (prefers-reduced-motion:reduce){.muswitch .mustk,.muswitch .mustk i{transition:none}}'; document.head.appendChild(st); })();
+(function () { var st = document.createElement("style"); st.textContent = '.muswitch{display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border:1.5px solid var(--line);border-radius:99px;background:var(--surface2,transparent);color:var(--ink);font:inherit;font-weight:800;font-size:14px;cursor:pointer}.muswitch .mustk{position:relative;width:42px;height:24px;border-radius:99px;background:color-mix(in srgb,var(--muted) 35%,transparent);transition:background .15s;flex:none}.muswitch .mustk i{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35);transition:transform .15s}.muswitch.on{border-color:#7c5cff}.muswitch.on .mustk{background:#7c5cff}.muswitch.on .mustk i{transform:translateX(18px)}.muswitch:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}.hubtile.hubqs{border:2.5px solid var(--c,#7c5cff)!important;box-shadow:0 6px 20px color-mix(in srgb,var(--c,#7c5cff) 30%,transparent);background:linear-gradient(160deg,color-mix(in srgb,var(--c,#7c5cff) 22%,var(--surface)),var(--surface) 70%)!important}.hubtile.hubqs strong{font-weight:900;font-size:1.08em}.qrevv.o.on{background:#d97706;border-color:#d97706;color:#fff}.qrevv.w.on{background:#7c5cff;border-color:#7c5cff;color:#fff}.qrevimp{display:flex;flex-direction:column;gap:6px;margin:4px 0 8px}.qrimp{text-align:left;padding:8px 10px;border-radius:10px;border:1.5px solid var(--line);background:transparent;color:var(--ink);font:inherit;font-size:14px;cursor:pointer}.qrimp.on{border-color:#7c5cff;background:color-mix(in srgb,#7c5cff 16%,transparent);font-weight:700}.qrevimp .btn{align-self:flex-start}.qrevmore{margin:6px 0}.qrevchk{display:grid;grid-template-columns:repeat(auto-fill,minmax(135px,1fr));gap:5px;margin-top:6px}.qrck{display:flex;align-items:center;gap:6px;padding:5px 8px;border:1.5px solid var(--line);border-radius:9px;font-size:13px;line-height:1.2;cursor:pointer}.qrck input{width:18px;height:18px;accent-color:#d97706;flex:none}.qrck.on{border-color:#d97706;background:color-mix(in srgb,#d97706 14%,transparent)}.qrevguide{margin:2px 0 6px;font-size:12.5px;color:var(--muted)}.qrev .qrevrow{flex-wrap:wrap}@media (prefers-reduced-motion:reduce){.muswitch .mustk,.muswitch .mustk i{transition:none}}'; document.head.appendChild(st); })();
 /* quick volume popover from the top-bar note button */
 function muPop() {
   if (!S.mupop) return "";
