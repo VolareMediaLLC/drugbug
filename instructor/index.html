@@ -89,7 +89,12 @@ tr.clk{cursor:pointer}tr.clk:hover td{background:var(--surface2)}
 .dimtabs button{background:transparent;color:var(--ink);border:1px solid var(--line);font-weight:600;padding:6px 12px;border-radius:99px}
 .dimtabs button.on{background:var(--teal);color:#06231f;border-color:var(--teal)}
 .chart .bar i.mid{background:var(--warn)}.chart .bar i.low{background:var(--bad)}
-.boardsw{margin:6px 0 4px;padding:10px 12px;border:1px solid var(--line,#ddd);border-radius:10px}.boardsw input{transform:scale(1.25);margin-right:6px}
+.lvsum{display:flex;align-items:center;gap:12px;cursor:pointer;list-style:none}.lvsum::-webkit-details-marker{display:none}.lvsum>span:nth-child(2){flex:1;display:flex;flex-direction:column;gap:2px}.lvchg{font-weight:700;color:var(--accent,#7c5cff);font-size:14px}
+.lvimg{display:inline-block;width:56px;height:56px;flex:none;background:url(lvbugs.png) no-repeat;background-size:1512px 56px;border-radius:12px}
+.lvgrp{margin:14px 0 4px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--muted,#777)}.lvgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
+.lvt{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 6px;border:1.5px solid var(--line,#ddd);border-radius:12px;background:transparent;color:inherit;font:inherit;cursor:pointer;text-align:center}.lvt b{font-size:13px}.lvt small{font-size:11px;color:var(--muted,#777)}.lvt[aria-pressed=true]{border-color:var(--accent,#7c5cff);box-shadow:0 0 0 2px var(--accent,#7c5cff) inset}.lvt .lvimg{width:64px;height:64px;background-size:1728px 64px}
+input[type=checkbox],input[type=radio]{width:auto;padding:0;flex:none}label:has(>input[type=checkbox]),label:has(>input[type=radio]){flex-direction:row;align-items:center;gap:10px}
+.boardsw{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:6px 0 4px;padding:12px 14px;border:1px solid var(--line,#ddd);border-radius:12px}.boardsw label{flex:1 1 220px;min-width:0;flex-direction:row;align-items:center;gap:12px;color:var(--ink);font-size:15px;cursor:pointer}.boardsw input{appearance:none;-webkit-appearance:none;position:relative;width:50px;height:30px;border-radius:99px;background:var(--line);border:0;padding:0;flex:none;cursor:pointer;transition:background .15s}.boardsw input::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .15s}.boardsw input:checked{background:var(--good,#16a34a)}.boardsw input:checked::after{transform:translateX(20px)}.boardsw input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.boardsw #boardSwMsg{flex:1 1 100%}
 .board td.rk{font-weight:700;width:46px}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:99px;overflow:hidden}.seg button{border:0;border-radius:0;background:none;color:var(--ink);padding:6px 12px;font-weight:700}.seg button.on{background:var(--accent,#6d28d9);color:#fff}
 #compCard .grid2>div{min-width:0}.teamed{margin-top:14px}.teamed summary{font-weight:700;cursor:pointer}.teamrow{margin:6px 0;flex-wrap:nowrap}.teamrow input{flex:1;min-width:0}.teamsel{font:inherit;font-size:13px;padding:4px 6px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);max-width:150px}
@@ -139,6 +144,7 @@ a.signbtn{background:var(--accent)!important;color:#fff!important;border-color:v
 .ctabs{display:flex;gap:6px;margin-top:14px;border-top:1px solid var(--line);padding-top:12px;flex-wrap:wrap}
 .ctabs button{background:transparent;color:var(--ink);border:1px solid var(--line);font-weight:700;padding:8px 16px;border-radius:99px}
 .ctabs button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+@media (max-width:600px){.ctabs{flex-wrap:nowrap;gap:0;padding:4px;border:1px solid var(--line);border-radius:12px;background:var(--surface2)}.ctabs button{flex:1;border:0;border-radius:9px;padding:9px 4px;font-size:14px;white-space:nowrap}.card{padding:14px}.tip{font-size:13.5px}}
 #stuBadge:empty{display:none}#stuBadge{background:var(--warn);color:#fff;border-radius:99px;padding:0 7px;font-size:12px;margin-left:4px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.grid2>.card{margin:0 0 16px}
 @media (max-width:860px){.grid2{grid-template-columns:1fr}}
@@ -347,6 +353,14 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
     </div>
     <div class="tiles" id="tiles"></div>
     <nav class="ctabs noprint" id="cTabs" aria-label="Class sections"><button data-ctab="ins" class="on">Insights</button><button data-ctab="stu">Students <span id="stuBadge"></span></button><button data-ctab="board">Scoreboard</button></nav>
+  </div>
+
+  <!-- the class's bug (owner, Nov 13 2026): students who join start at this level -->
+  <div class="card noprint" id="lvCard">
+    <details id="lvDet"><summary class="lvsum"><span class="lvimg" id="lvNowImg"></span><span><b>Class level: <span id="lvNow">Not chosen</span></b><span class="muted small" id="lvNowSub">Pick your class's bug. Students who join start right at that level and skip choosing one.</span></span><span class="lvchg">Change</span></summary>
+      <div id="lvGrid"></div>
+      <p id="lvMsg" class="msg hide"></p>
+    </details>
   </div>
 
   <div class="card noprint" id="ownerTools">
@@ -620,6 +634,7 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
       if (data.action === "approve") st.nick.status = "ok"; else if (data.action === "reject" || data.action === "remove") st.nick = null; else if (data.action === "rename") st.nick = { text: String(data.name).slice(0, 20), status: "ok" };
       return Promise.resolve({ ok: true });
     }
+    if (name === "groupLevelSet") { D.org.level = data.level || ""; return Promise.resolve({ ok: true, level: D.org.level }); }
     if (name === "groupBoardSet") { D.org.boardOn = !!data.on; return Promise.resolve({ ok: true, boardOn: !!data.on }); }
     if (name === "groupKeyTeam") { D.students.forEach(function (x) { if (data.keyIds.indexOf(x.keyId) >= 0) x.team = data.team; }); return Promise.resolve({ ok: true }); }
     if (name === "groupTeamsSet") { var out = data.teams.map(function (t, i) { return { id: t.id || "tN" + i + Date.now() % 1000, name: t.name }; }); D.org.teams = out; return Promise.resolve({ ok: true, teams: out }); }
@@ -903,6 +918,7 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
     $("cSub").textContent = (o.pkg ? (PKGNAME[o.pkg] || o.pkg) + " · " : "") + (o.kind === "annual" ? "Paid" : "Pilot") + " · " + (o.live ? left + " day" + (left === 1 ? "" : "s") + " left" : o.status === "ended" ? "Ended" : "Expired") +
       (o.level ? " · " + (LVNAME[o.level] || o.level) : "") + " · goal " + o.goal + " questions per student" + (o.instructors.length ? " · " + o.instructors.join(", ") : "");
     $("printTitle").textContent = o.name + " — DrugBug key sheet";
+    try { drawLevel(); } catch (e) {}
     $("tiles").innerHTML = [
       [t.activated + " of " + o.seats, "students joined"],
       [t.active7, "studied this week"],
@@ -1083,6 +1099,33 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
       }).catch(function (e) { bsw.disabled = false; bsw.checked = !on; msg.textContent = (e && e.message) || "Couldn't save. Try again."; });
     });
   })();
+  /* class level picker */
+  var LV_ORDER = ["emt","aemt","paramedic","flight","cp","cna","lvn","rn","flightrn","ms1","ms3","intern","rt","ct","mri","nm","ir","mh","diet","rrt","pt","slp","surg","anes","dent","phleb","ekg"];
+  var LV_BUG = { emt: "Rookie Bug", aemt: "Beetle Medic", paramedic: "Siren Beetle", flight: "Sky Hornet", cp: "Armor Beetle", cna: "Helper Ladybug", lvn: "Busy Bee", rn: "Monarch Nurse", flightrn: "Night Monarch", ms1: "Bookworm Scholar", ms3: "Firefly Clerk", intern: "Stag Beetle Doc", rt: "X-Ray Firefly", ct: "Spiral Scarab", mri: "Magnet Moth", nm: "Glow Worm", ir: "Cath Cricket", mh: "Calm Cicada", diet: "Garden Grasshopper", rrt: "Breathing Bee", pt: "Gym Beetle", slp: "Echo Cricket", surg: "Scalpel Scorpion", anes: "Ether Earwig", dent: "Enamel Ant", phleb: "Vessel Vine-Borer", ekg: "Pulse Beetle" };
+  var LV_GROUPS = [["Prehospital", ["emt","aemt","paramedic","flight","cp"]], ["Nursing", ["cna","lvn","rn","flightrn"]], ["Medical school", ["ms1","ms3","intern"]], ["Imaging", ["rt","ct","mri","nm","ir"]], ["Allied health", ["mh","diet","rrt","pt","slp","surg","anes","dent","phleb","ekg"]]];
+  var LV_SHORT = { emt: "EMT", aemt: "AEMT", paramedic: "Paramedic", flight: "Flight Paramedic", cp: "Community Paramedic", cna: "CNA", lvn: "LVN / LPN", rn: "RN", flightrn: "Flight Nurse", ms1: "MS1–MS2", ms3: "MS3–MS4", intern: "Intern", rt: "Radiologic Tech", ct: "CT Tech", mri: "MRI Tech", nm: "Nuclear Medicine", ir: "Interventional Radiology", mh: "Mental Health", diet: "Dietitian", rrt: "Respiratory Therapist", pt: "PT / OT", slp: "Speech-Language", surg: "Surgical Tech", anes: "Anesthesia Tech", dent: "Dental Hygiene", phleb: "Phlebotomy", ekg: "EKG Tech" };
+  function lvPos(k, size) { var i = LV_ORDER.indexOf(k); return i < 0 ? "" : "background-position:" + (-i * size) + "px 0"; }
+  function drawLevel() {
+    var o = ST.dash && ST.dash.org; if (!o) return;
+    var k = o.level || "";
+    $("lvNow").textContent = k ? (LV_SHORT[k] || k) + " · " + (LV_BUG[k] || "") : "Not chosen";
+    $("lvNowSub").textContent = k ? "Students who join start at " + (LV_SHORT[k] || k) + " and skip choosing a level." : "Pick your class's bug. Students who join start right at that level and skip choosing one.";
+    $("lvNowImg").setAttribute("style", k ? lvPos(k, 56) : "background:none;border:2px dashed var(--line,#ccc)");
+    if (!k) $("lvDet").open = true;
+    $("lvGrid").innerHTML = LV_GROUPS.map(function (g) {
+      return '<div class="lvgrp">' + esc(g[0]) + '</div><div class="lvgrid">' + g[1].map(function (x) { return '<button class="lvt" data-lv="' + x + '" aria-pressed="' + (x === k) + '"><span class="lvimg" style="' + lvPos(x, 64) + '"></span><b>' + esc(LV_SHORT[x]) + '</b><small>' + esc(LV_BUG[x]) + '</small></button>'; }).join("") + '</div>';
+    }).join("");
+  }
+  $("lvGrid").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-lv]"); if (!b) return;
+    var k = b.getAttribute("data-lv"), o = ST.dash.org;
+    if (k === o.level) return;
+    if (o.level && !confirm("Change your class from " + (LV_SHORT[o.level] || o.level) + " to " + (LV_SHORT[k] || k) + "? Students who join from now on start at " + (LV_SHORT[k] || k) + ".")) return;
+    say("lvMsg", "Saving…");
+    call("groupLevelSet", { orgId: ST.orgId, level: k }).then(function () {
+      o.level = k; drawLevel(); $("lvDet").open = false; say("lvMsg", ""); drawClass();
+    }).catch(function (er) { say("lvMsg", (er && er.message) || "Couldn't save. Try again.", true); });
+  });
   function correctOf(s) { return s.correct != null ? s.correct : s.answered && s.accuracy != null ? Math.round(s.answered * s.accuracy / 100) : 0; }
   function drawStudent() {
     var d = ST.dash, s = ST.stu && (d.students || []).filter(function (x) { return x.keyId === ST.stu; })[0];
