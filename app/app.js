@@ -680,7 +680,7 @@ function viewHome() {
     var hit = S.pointGo === go;
     return '<button class="route rmini ' + cls + pt(go) + '" ' + (hit ? 'data-startlearn="' + go + '"' : go.indexOf("level:") === 0 ? 'data-level="' + go.slice(6) + '"' : 'data-go="' + go + '"') + '>' + (hit ? PT : '') + '<span class="mtx"><h2>' + title + '</h2><p>' + line + '</p>' + (ROUTE_MORE[cls] ? '<ul class="rmore">' + ROUTE_MORE[cls].map(function (x) { return '<li>' + esc(x) + '</li>'; }).join("") + '</ul>' : '') + (fun ? routeChips(cls) : '') + '</span><span class="mbug">' + art + '</span></button>';
   }
-  return topbar() + '<div class="homewrap' + hcls + '" data-hol="' + (HOL ? esc(holKey(HOL)) : '') + '">' + homeSearch() + homeTip() +
+  return topbar() + '<div class="homewrap' + hcls + '" data-hol="' + (HOL ? esc(holKey(HOL)) : '') + '">' + homeSearch() + (typeof homeClassCard === "function" ? homeClassCard() : '') + homeTip() +
    heroHTML() + loginCard() +
    homeStart() + homeProgress() + (typeof trialBanner === "function" ? trialBanner() : '') +
    '<h3 class="homegh">Look it up</h3><section class="routes"><div class="minis one">' +
@@ -8827,7 +8827,7 @@ function settingsView() {
   pv += setRow("Reset my progress", "Clears mastery, XP, streaks, achievements and scores. Keeps your bugs, sticks, saved list and settings.", S.resetAsk ? '<span class="confirm">Reset everything? <button class="btn small again" data-act="resetyes">Reset</button><button class="btn small ghost" data-act="resetno">Cancel</button></span>' : '<button class="btn small ghost" data-act="resetask">Reset progress</button>');
   pv += setRow("Delete all my data", "Removes everything DrugBug stores about you, here and online. Cannot be undone.", '<button class="btn small again" data-legal="data">Delete…</button>');
   c += setCard("privacy", "Account & privacy", fmCodeRow() + (typeof accCard === "function" ? accCard() : "")
-    + (NATIVE ? setRow("Have a code?", "Codes are entered on drugbugapp.com, not in the app. Sign in there with the same account you use here, enter your code in Settings, and what it unlocks shows up here.", "") + setRow("App Store offer code", "Redeem an App Store offer code on Apple's own screen.", '<button class="btn small ghost" data-pw="redeem">Redeem offer code</button>') : typeof giftBox === "function" ? setRow("Redeem a code", "Every code goes here: gift codes, access codes, school or agency codes, and your agency's protocol code." + (NATIVE ? " App Store offer codes open Apple's own screen." : ""), NATIVE ? '<button class="btn small ghost" data-pw="redeem">App Store offer code</button>' : "") + giftBox() : "")
+    + (NATIVE ? setRow("Have a code?", "Class keys from your instructor go in your level's Dashboard, under In a class?. Other codes are entered on drugbugapp.com, not in the app. Sign in there with the same account you use here, enter your code in Settings, and what it unlocks shows up here.", "") + setRow("App Store offer code", "Redeem an App Store offer code on Apple's own screen.", '<button class="btn small ghost" data-pw="redeem">Redeem offer code</button>') : typeof giftBox === "function" ? setRow("Redeem a code", "Every code goes here: gift codes, access codes, school or agency codes, and your agency's protocol code." + (NATIVE ? " App Store offer codes open Apple's own screen." : ""), NATIVE ? '<button class="btn small ghost" data-pw="redeem">App Store offer code</button>' : "") + giftBox() : "")
     + pv);
   // feedback
   c += setCard("feedback", "Feedback",
@@ -9932,10 +9932,14 @@ function licenseActive() { var L = Prog.d.license; return !!(L && L.until && L.u
    "7 free days without payment" period was removed (Guideline 3.1.1). trialBegin() stays as a no-op for old callers. */
 /* No App Store free trial (owner, Nov 8 2026): even if an introductory offer is still set in App Store Connect, the plans
    screen never advertises "7 days free". The only free Pro is the 3 days a brand-new account gets (accBonus). */
-var SHOW_TRIAL = false;
+/* Back on for the next iPhone update (owner, Nov 12 2026): a 1-week free trial on Pro Yearly only, run by Apple.
+   The switch is App Store Connect: nothing here shows until an introductory offer exists on Pro Yearly AND StoreKit
+   says this Apple Account is eligible (product.trial). Monthly stays full price. The website's 3-day account Pro
+   is unchanged and never runs in the iPhone app. Terms and paywall wording go to counsel first. */
+var SHOW_TRIAL = true;
 function trialBegin() {}
 function trialActive() { return false; }
-function trialEligible() { return false; }   /* no free trials: the owner removed them (Nov 2 2026) */
+function trialEligible() { if (!SHOW_TRIAL || !NATIVE || PRO.store) return false; var y = prodOf(PLANS.pro.annual); return !!(y && y.trial); }
 /* Public web demo (tools/build_demo.py sets DRUGBUG_CONFIG.demo): always DrugBug Free, no plan preview */
 var DEMO = CFG.demo === true && !NATIVE;
 /* Website access codes (web demo only): the build stores SHA-256 hashes of the codes in CFG.webCodes
@@ -10034,11 +10038,12 @@ function trialBanner() {
   if (DEMO && webPass()) return '<div class="callout evnote small trialbar"><strong>DrugBug Pro is unlocked</strong> with your access code until ' + new Date(webPass().until).toLocaleDateString() + '. Enjoy every drug, route and study tool.</div>';
   if (DEMO) return '<div class="callout evnote small trialbar"><strong>You are on DrugBug Free.</strong> That is about 40 common medications, with a free preview of the Wormhole. DrugBug Plus and Pro open all 2,100+ medications and every professional route. <button class="linkish" data-pw="open">See Plus and Pro</button></div>';
   if (!PAYWALL || !NATIVE || PRO.store || licenseActive() || Prog.d.proGrant) return "";
+  if (trialEligible()) return '<div class="callout evnote small trialbar"><strong>Try DrugBug Pro free for 7 days.</strong> Then ' + esc(priceOf(PLANS.pro.annual, PLANS.pro.y)) + ' per year through the App Store. Cancel at least 24 hours before the trial ends and you are not charged. <button class="linkish" data-pw="open">See Pro</button></div>';
   return '<div class="callout evnote small trialbar"><strong>You are on DrugBug Free.</strong> Every tool in the app works on your free medications. <button class="linkish" data-pw="open">See Plus and Pro</button></div>';
 }
 function prodOf(id) { return PRO.products.filter(function (x) { return x.id === id; })[0] || null; }
 function priceOf(id, fallback) { var p = PRO.products.filter(function (x) { return x.id === id; })[0]; return p ? p.price : fallback; }
-function trialOf(id) { return false; }   /* no free trials */
+function trialOf(id) { var p = SHOW_TRIAL && NATIVE ? prodOf(id) : null; return !!(p && p.trial); }
 
 /* paywall dialog */
 var pwdlg = document.createElement("div"); pwdlg.id = "pwdlg"; pwdlg.className = "sheet rsheet"; pwdlg.hidden = true; document.body.appendChild(pwdlg);
@@ -10099,7 +10104,7 @@ function drawPaywall() {
     var P = PLANS[t], pm = prodOf(P.monthly), py = prodOf(P.annual), m = pm ? pm.price : P.m, y = py ? py.price : P.y, own = PRO.store && PRO.tier === t;
     c += '<section class="pwtier pw-' + t + '"><h3>' + TIER_NAME[t] + (own ? ' <span class="pill good">Your plan</span>' : '') + '</h3><ul class="pwperks">' + PLAN_PERKS[t].map(function (x) { return '<li><span>' + esc(x) + '</span></li>'; }).join("") + '</ul>';
     if (canBuy && !own) {
-      if (pm || py) c += '<div class="pwplans">' + (py ? '<button class="pwplan best" data-pw="buy" data-pid="' + P.annual + '"' + (PRO.busy ? " disabled" : "") + '><span class="pwtag">' + ((SHOW_TRIAL && py.trial) ? '7 days free' : 'Best value') + '</span><strong>' + esc(y) + ' / year</strong><span>' + ((SHOW_TRIAL && py.trial) ? 'Free for 7 days, then ' + esc(y) + ' per year. Renews automatically unless cancelled.' : 'Billed yearly, renews automatically') + '</span></button>' : '') + (pm ? '<button class="pwplan" data-pw="buy" data-pid="' + P.monthly + '"' + (PRO.busy ? " disabled" : "") + '>' + ((SHOW_TRIAL && pm.trial) ? '<span class="pwtag">7 days free</span>' : '') + '<strong>' + esc(m) + ' / month</strong><span>' + ((SHOW_TRIAL && pm.trial) ? 'Free for 7 days, then ' + esc(m) + ' per month. Renews automatically unless cancelled.' : 'Billed monthly, renews automatically') + '</span></button>' : '') + '</div>';
+      if (pm || py) c += '<div class="pwplans">' + (py ? '<button class="pwplan best" data-pw="buy" data-pid="' + P.annual + '"' + (PRO.busy ? " disabled" : "") + '><span class="pwtag">' + ((SHOW_TRIAL && py.trial) ? '7 days free' : 'Best value') + '</span><strong>' + esc(y) + ' / year</strong><span>' + ((SHOW_TRIAL && py.trial) ? 'Free for 7 days, then ' + esc(y) + ' per year. Cancel at least 24 hours before the trial ends to avoid being charged.' : 'Billed yearly, renews automatically') + '</span></button>' : '') + (pm ? '<button class="pwplan" data-pw="buy" data-pid="' + P.monthly + '"' + (PRO.busy ? " disabled" : "") + '>' + ((SHOW_TRIAL && pm.trial) ? '<span class="pwtag">7 days free</span>' : '') + '<strong>' + esc(m) + ' / month</strong><span>' + ((SHOW_TRIAL && pm.trial) ? 'Free for 7 days, then ' + esc(m) + ' per month. Renews automatically unless cancelled.' : 'Billed monthly, renews automatically') + '</span></button>' : '') + '</div>';
       else c += '<p class="muted small" role="status">Loading prices from the App Store… If this does not change, check your internet connection and reopen this screen.</p>';
     } else if (!NATIVE) c += '<p class="muted small">US prices: ' + esc(P.m) + ' / month or ' + esc(P.y) + ' / year.</p>';
     c += '</section>';
@@ -10111,6 +10116,7 @@ function drawPaywall() {
   c += '<div class="pwrow"><button class="linkish" data-pw="restore">Restore purchases</button>' + (NATIVE ? '<button class="linkish" data-pw="redeem">Redeem an App Store offer code</button>' : '<button class="linkish" data-act="codesgo">Have a code? Redeem it in Settings</button>') + '' + (NATIVE && PRO.store ? '<button class="linkish" data-pw="manage">Manage subscription</button>' : '') + '</div>';
   /* codes are redeemed in one place only, Settings > Account (owner, Nov 5 2026) */
   /* iPhone checkout disclosure, counsel wording (Nov 11 2026) */
+  if (NATIVE && trialEligible()) c += '<p class="muted small pwfine"><strong>Free trial:</strong> Pro Yearly includes a 7-day free trial for eligible Apple Accounts (one per account). When the trial ends, your Apple Account is charged the yearly price shown unless you cancel at least 24 hours before the trial ends. Cancel in Settings, then your name, then Subscriptions.</p>';
   c += '<p class="muted small pwfine">Your Apple Account is charged when you confirm. This subscription renews automatically unless you cancel at least 24 hours before the current period ends. To manage or cancel it, open Settings, tap your name, then tap Subscriptions. Request App Store refunds through Apple, subject to applicable law. Plus and Pro are in one subscription group; when a change takes effect and what you are charged are shown on Apple\'s purchase screen. For adult study only; not for patient care.' +
     (site ? ' <a href="' + esc(site) + '/terms.html" target="_blank" rel="noopener">Terms of Use</a> · <a href="' + esc(site) + '/privacy.html" target="_blank" rel="noopener">Privacy Policy</a>' : ' <button class="linkish" data-legal="terms">Terms of Use</button> · <button class="linkish" data-legal="privacy">Privacy Policy</button>') + '</p>';
   pwdlg.innerHTML = c + '</div>'; translateDom(pwdlg);
@@ -30752,11 +30758,13 @@ function fnCall(name, data) {
 
 /* DB-TAMU-4X9-B7K, typed any old way */
 function groupKeyShape(raw) { return /^DB[A-Z0-9]{8,12}$/.test(String(raw || "").toUpperCase().replace(/[^A-Z0-9]/g, "")); }
-function groupRedeemKey(raw, win, fail) {
-  if (typeof NATIVE !== "undefined" && NATIVE) return fail("Class keys are not available in the iPhone app.");   /* App Store 3.1.1 */
+/* Class keys work in the iPhone app again (owner, Nov 12 2026). They are bought by schools and agencies for their
+   students and staff, which App Store Guideline 3.1.3(c) (Enterprise Services) allows outside in-app purchase.
+   agreed = the student ticked the consent box on the join form (WKWebView has no confirm() dialog). */
+function groupRedeemKey(raw, win, fail, agreed) {
   /* a class key only works if the student agrees to share class results (owner, Nov 12 2026) */
-  var ok = false;
-  try { ok = window.confirm("Class keys share your study results with your instructor.\n\nYour instructor will see your scores and activity by medication and topic, the questions you miss and the answers you chose, under your class label (for example Student 07). DrugBug does not ask for your name or email.\n\nPress OK to agree and use your class key. Press Cancel if you do not agree. You can't use a class key without sharing results."); } catch (e) {}
+  var ok = agreed === true;
+  if (!ok && !(typeof NATIVE !== "undefined" && NATIVE)) try { ok = window.confirm("Class keys share your study results with your instructor.\n\nYour instructor will see your scores and activity by medication and topic, the questions you miss and the answers you chose, under your class label (for example Student 07). DrugBug does not ask for your name or email.\n\nPress OK to agree and use your class key. Press Cancel if you do not agree. You can't use a class key without sharing results."); } catch (e) {}
   if (!ok) return fail("This class key was not used. Class keys only work if you agree to share your class results with your instructor.");
   store("classConsent", { at: Date.now(), v: 1 });
   GIFT.busy = true; giftDraw();
@@ -31187,7 +31195,7 @@ function dashView() {
     }
     c += '</div>';
   } else {
-    c += '<div class="dcard2"><h3>In a class?</h3><p class="muted small">Enter the class key from your instructor under Settings, Redeem a code. Your class rank and scoreboard then show here.</p><button class="btn ghost" data-go="settings">Open Settings</button></div>';
+    c += '<div class="dcard2"><h3>In a class?</h3><p class="muted small">Enter the class key from your instructor. You get DrugBug Pro while the class runs, and your class scoreboard if your instructor turns it on.</p>' + clJoinForm("dash") + '</div>';
   }
   return c + '</section>';
 }
@@ -31264,13 +31272,49 @@ function clComp(m) {
     return (r.rank > 5 ? '<li class="clgap" aria-hidden="true">···</li>' : '') + '<li class="' + (r.me ? "me" : "") + '"><span class="clrk' + (r.rank <= 3 ? " r" + r.rank : "") + '">' + r.rank + '</span><span class="clal">' + esc(r.name) + (r.me ? ' <em>you</em>' : '') + (r.team ? '<small class="muted"> · ' + esc(r.team) + '</small>' : '') + '</span><span class="clsc"><b>' + cc.toLocaleString() + '</b> right<small>' + Math.round(100 * cc / (n || 1)) + '% of ' + n + '</small></span></li>';
   }).join("") + '</ol>';
 }
+/* Class scoreboard on the main menu (owner, Nov 12 2026): rank, this week's top 3 and a button to the full board.
+   Shows only to a student holding a class key. With the board off it says so and shows nothing about anyone else. */
+function homeClassCard() {
+  if (!seatActive()) return "";
+  try { clLoad(false); } catch (e) {}
+  var d = CL.data, c = '<section class="hclass" aria-label="Your class"><div class="hchead"><b>' + esc(SEAT.orgName || "Your class") + '</b><span>' + (d && clBoardOn() ? "This week" : "Your class") + '</span></div>';
+  if (!d) return c + '<p class="muted small">' + esc(CL.busy || !CL.msg ? "Loading your class…" : CL.msg) + '</p></section>';
+  if (!clBoardOn()) return c + '<p class="muted small">The class scoreboard is off. Your instructor sees your results as ' + esc(SEAT.alias) + '.</p><button class="btn small ghost" data-clopen="1">My class results</button></section>';
+  var W = (d.wboard || []).slice().sort(function (a, b) { return a.rank - b.rank; }), me = W.filter(function (r) { return r.me; })[0];
+  var acc = me && me.week ? Math.round(100 * me.weekC / me.week) : null;
+  c += '<p class="hcme">You: <b>#' + (me ? me.rank : "—") + '</b> of ' + (d.count || W.length) + (me ? ' · ' + me.weekC + ' right' + (acc != null ? ' · ' + acc + '%' : '') : '') + '</p>';
+  var top = W.filter(function (r) { return r.rank <= 3; });
+  if (!top.length || !top.some(function (r) { return r.weekC > 0; })) c += '<p class="muted small">No one has a right answer yet this week. The top 3 on Sunday win a bug.</p>';
+  else c += '<ol class="hctop">' + top.map(function (r) { return '<li class="' + (r.me ? "me" : "") + '"><span class="hcr">' + ["🥇", "🥈", "🥉"][r.rank - 1] + '</span><span class="hcn">' + esc(r.alias) + (r.me ? ' <em>you</em>' : '') + '</span><span class="hcs">' + r.weekC + ' right</span></li>'; }).join("") + '</ol>';
+  return c + '<button class="btn small" data-clopen="1">See full scoreboard ›</button></section>';
+}
+document.addEventListener("click", function (e) { var b = e.target && e.target.closest && e.target.closest("[data-clopen]"); if (!b) return; e.preventDefault(); CL.view = clBoardOn() ? "board" : "mine"; openClassPane(); });
+(function () { var st = document.createElement("style"); st.textContent = '.hclass{background:var(--surface);border:1.5px solid var(--line);border-left:5px solid #f5b301;border-radius:16px;padding:12px 14px;margin:0 0 14px}.hchead{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.hchead b{font-size:17px}.hchead span{font-size:13px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em}.hcme{margin:6px 0}.hctop{list-style:none;margin:6px 0 10px;padding:0}.hctop li{display:flex;gap:8px;align-items:center;padding:5px 0;border-top:1px solid var(--line)}.hctop li.me{font-weight:700}.hcr{width:24px}.hcn{flex:1}.hcn em{font-style:normal;font-size:12px;color:var(--muted)}.hcs{font-variant-numeric:tabular-nums;color:var(--muted)}.hclass .btn{background:#7c5cff;color:#fff}.hclass .btn.ghost{background:transparent;color:inherit;border:1.5px solid var(--line)}.clagreel{display:flex;gap:8px;align-items:flex-start;font-size:14px;margin:8px 0;line-height:1.35}.clagreel input{margin-top:3px;flex:none;width:18px;height:18px}'; document.head.appendChild(st); })();
+function clJoinForm(where) {
+  return '<form class="pform cljoin" data-cljoin="' + where + '"><label>Class key<input class="pinput clkey" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="DB-XXXX-XXX-XXX" value="' + esc(CL.key) + '"></label>' +
+    '<label class="clagreel"><input type="checkbox" class="clagree"> I agree that my instructor sees my class results (scores and activity by medication and topic, missed questions and the answers I chose) under my class key label.</label>' +
+    '<button class="btn" type="submit"' + (CL.busy ? " disabled" : "") + '>' + (CL.busy ? "Checking…" : "Join my class") + '</button></form>' +
+    (CL.msg ? '<p class="presult' + (CL.err ? "" : " good") + '" role="status">' + esc(CL.msg) + '</p>' : '');
+}
+document.addEventListener("submit", function (e) {
+  var f = e.target && e.target.closest && e.target.closest("[data-cljoin]"); if (!f) return;
+  e.preventDefault();
+  var where = f.getAttribute("data-cljoin"), redraw = function () { if (where === "pane") drawClassPane(); else render(); };
+  var raw = ((f.querySelector(".clkey") || {}).value || "").trim(); CL.key = raw;
+  if (!groupKeyShape(raw)) { CL.msg = "That doesn't look like a class key. It starts with DB-, like DB-ABCD-123-XYZ."; CL.err = true; return redraw(); }
+  if (!(f.querySelector(".clagree") || {}).checked) { CL.msg = "Tick the box to agree to share your class results with your instructor. A class key only works with it."; CL.err = true; return redraw(); }
+  CL.busy = true; CL.msg = ""; redraw();
+  groupRedeemKey(raw, function (m) {
+    CL.busy = false; GIFT.busy = false; CL.key = ""; CL.msg = m; CL.err = false; CL.data = null; CL.view = "board";
+    try { document.activeElement && document.activeElement.blur(); } catch (x) {}
+    if (where === "pane") drawClassPane(true); clLoad(true); if (typeof render === "function") render();
+  }, function (m) { CL.busy = false; GIFT.busy = false; CL.msg = m; CL.err = true; redraw(); }, true);
+});
 function classView() {
   var c = '<div class="pbar"><h2>My class</h2><button class="theme-btn" data-clact="close">Close</button></div>';
-  if (!seatActive() && NATIVE) return c + '<p class="muted">Class keys are entered on drugbugapp.com, not in the app. Your class, your scores and the Pro that comes with the key are on the website.</p>';   /* App Store 3.1.1, Nov 11 2026 */
   if (!seatActive()) {
     c += '<p class="muted">Got a class key from your instructor? Enter it here to join your class. You get DrugBug Pro while the class runs, a class scoreboard, and your own scores broken down every way.</p>';
-    c += '<form class="pform" id="clform"><label>Class key<input class="pinput clkey" id="clkey" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="DB-XXXX-XXX-XXX" value="' + esc(CL.key) + '"></label><button class="btn" type="submit"' + (CL.busy ? " disabled" : "") + '>' + (CL.busy ? "Checking…" : "Join my class") + '</button></form>';
-    if (CL.msg) c += '<p class="presult' + (CL.err ? "" : " good") + '">' + esc(CL.msg) + '</p>';
+    c += clJoinForm("pane");
     c += '<p class="muted small">DrugBug displays class results to your instructor under your class key label, such as Student 07. Results include your scores and activity by medication and topic and may show missed questions and the answers you selected. Your instructor may know which key they gave you. DrugBug does not send your name or email as part of the class results.</p>';
     c += '<p class="muted small">Teaching a class? <a href="' + (NATIVE ? "https://drugbugapp.com/instructor/" : "../instructor/") + '" target="_blank" rel="noopener">Instructor portal</a></p>';
     return c;
@@ -31300,7 +31344,7 @@ function clLoad(force) {
     fnCall("groupBoard", {}).then(function (r) {
       CL.busy = false;
       if (!r || r.ok === false) { CL.data = null; CL.msg = "This device isn't holding a class key any more. Enter your key again to rejoin."; CL.err = true; }
-      else { CL.data = r; CL.at = Date.now(); DASH.failAt = 0; try { dashCollect(r); } catch (e) {} if (CL.err) CL.msg = ""; CL.err = false; if (!CL.open && S.view === "level" && (S.tab === "hub" || S.tab === "dash") && typeof render === "function") setTimeout(render, 0); if (r.level != null && r.level !== SEAT.level) { SEAT.level = r.level; var sc = store("seat"); if (sc) { sc.level = r.level; store("seat", sc); } } }
+      else { CL.data = r; CL.at = Date.now(); DASH.failAt = 0; try { dashCollect(r); } catch (e) {} if (CL.err) CL.msg = ""; CL.err = false; if (!CL.open && ((S.view === "level" && (S.tab === "hub" || S.tab === "dash")) || S.view === "home") && typeof render === "function") setTimeout(render, 0); if (r.level != null && r.level !== SEAT.level) { SEAT.level = r.level; var sc = store("seat"); if (sc) { sc.level = r.level; store("seat", sc); } } }
       if (CL.open) drawClassPane();
     }).catch(function (e) {
       CL.busy = false; CL.err = true;
