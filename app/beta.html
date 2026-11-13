@@ -3284,6 +3284,8 @@ b.innerHTML='<div class="bootlogo">Drug<span>Bug</span></div><p class="bootnote"
 var n=window.__blN||0,last=window.__blT||t0,now=Date.now();
 if(window.__blErr||(n>=8&&now-last>12000)||now-last>60000){clearInterval(iv);window.__bootFail();}},3000);})();</script>
 <script src="app-config.js"></script>
+<script>/* Endorsely affiliate tracking, website only (owner, Nov 13 2026) */
+if(!window.DRUGBUG_NATIVE){(function(){var s=document.createElement("script");s.async=true;s.src="https://assets.endorsely.com/endorsely.js";s.setAttribute("data-endorsely","0744afa8-d4c5-4293-984f-346990a29097");document.head.appendChild(s);})();}</script>
 <script>/* real loading progress, so a slow first load on a weak signal doesn't look stuck (Nov 13 2026) */
 (function(){var got=0,T=13.06,t0=Date.now();window.__bl=function(w){got+=w;window.__blN=(window.__blN||0)+1;window.__blT=Date.now();var n=document.querySelector("#boot .bootnote"),b=document.querySelector("#boot .bootbar i");if(!n)return;var p=Math.min(99,Math.round(100*got/T));if(b){b.style.animation="none";b.style.width=p+"%";b.style.transform="none";}n.textContent="Loading your medications\u2026 "+p+"%"+(Date.now()-t0>6000?" \u00b7 the first load takes longer on a slow signal":"");};})();</script>
 <script defer src="backend.js" onload="__bl(0.01)" onerror="window.__blErr=1"></script>

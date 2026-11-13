@@ -30116,7 +30116,7 @@ function iapWebCheckout(p) {
     return fetch(base.replace(/\/$/, "") + "/createCheckout", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: "Bearer " + tok },
-      body: JSON.stringify({ data: { pack: p.id } })
+      body: JSON.stringify({ data: { pack: p.id, ref: affRef() } })
     });
   }).then(function (r) { return r.json(); }).then(function (j) {
     var url = j && j.result && j.result.url;
@@ -32265,6 +32265,9 @@ function subCall(name, data) {
     return url;
   });
 }
+/* Endorsely affiliate referral (owner, Nov 13 2026: 30% for 12 months, website purchases only). endorsely.js
+   sets window.endorsely_referral when someone arrives from a creator's link; checkout passes it to Stripe. */
+function affRef() { try { var r = String(window.endorsely_referral || ""); return /^[0-9a-f-]{20,40}$/i.test(r) ? r : ""; } catch (e) { return ""; } }
 function subBuy(plan) {
   /* Say which thing is wrong, not "something is wrong". Each of these is a different problem with a
      different fix, and telling someone the wrong one wastes their time. */
@@ -32275,7 +32278,7 @@ function subBuy(plan) {
   PRO.busy = true; PRO.msg = ""; drawPaywall();
   clearTimeout(PRO.busyT);
   PRO.busyT = setTimeout(function () { if (PRO.busy) { PRO.busy = false; PRO.msg = "No answer yet. Try again in a moment."; drawPaywall(); } }, 30000);
-  subCall("createSubCheckout", { plan: plan }).then(function (url) {
+  subCall("createSubCheckout", { plan: plan, ref: affRef() }).then(function (url) {
     location.href = url;
   }).catch(function (e) {
     PRO.busy = false; clearTimeout(PRO.busyT);
