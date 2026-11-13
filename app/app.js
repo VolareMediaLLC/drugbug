@@ -30832,6 +30832,7 @@ function groupNote(q, ok, kind, topic, pick) {
     var drug = q && q.d && DB.drugs[q.d] ? q.d : "";
     var ks = drug ? sysOfDrug(drug) : ["general"];
     Q.t.n++; if (ok) Q.t.c++;
+    var hr = new Date().getHours(); if (hr >= 22 || hr < 4) Q.nt = (Q.nt || 0) + 1;   /* Night Owl title (owner, Nov 12 2026) */
     ks.forEach(function (k) { add(Q.s, k); });
     add(Q.k, kind || groupKindNow());
     if (drug && /^[a-z0-9][a-z0-9-]{0,62}$/.test(drug)) { var dk = drug.slice(0, 48); add(Q.d, dk); Q.lb["d_" + dk] = String(DB.drugs[drug].name || drug).slice(0, 60);
@@ -30860,13 +30861,19 @@ function groupFlush() {
     sent.x[f] = o;
   });
   SEAT.busy = true;
-  fnCall("groupReport", { counts: sent.s, total: sent.t, detail: sent.x, labels: sent.lb }).then(function (r) {
+  var sentNight = sent.t ? Math.min(Q.nt || 0, sent.t.n) : 0, look = clLook(), lookStr = look ? JSON.stringify(look) : "";
+  var payload = { counts: sent.s, total: sent.t, detail: sent.x, labels: sent.lb };
+  if (sentNight) payload.night = sentNight;
+  if (look && lookStr !== store("clLookSent")) payload.look = look;
+  fnCall("groupReport", payload).then(function (r) {
     SEAT.busy = false;
     var cur = store("groupq") || { t: { n: 0, c: 0 }, s: {} };
     if (r && r.ok === false) { store("groupq", null); return; }   /* key reset or class ended: stop counting */
     /* take away exactly what was sent; anything answered meanwhile stays queued */
     var take = function (m, part) { Object.keys(part).forEach(function (k) { var e = m && m[k]; if (!e) return; e.n = Math.max(0, e.n - part[k].n); e.c = Math.max(0, Math.min(e.n, e.c - part[k].c)); if (!e.n) delete m[k]; }); };
     if (sent.t) { cur.t.n = Math.max(0, cur.t.n - sent.t.n); cur.t.c = Math.max(0, Math.min(cur.t.n, cur.t.c - sent.t.c)); }
+    if (sentNight) cur.nt = Math.max(0, (cur.nt || 0) - sentNight);
+    if (payload.look && r && r.ok) store("clLookSent", lookStr);
     take(cur.s, sent.s);
     GROUP_DIMS.forEach(function (f) { if (cur[f]) take(cur[f], sent.x[f]); });
     /* labels go once; keep only those for rows still waiting */
@@ -31240,15 +31247,73 @@ function clMine(m) {
   });
   return c;
 }
+/* Scoreboard pizzazz (owner, Nov 12 2026): a podium with each winner's own bug, moves since yesterday,
+   study streaks and this week's titles. Everything comes from groupBoard, and only while the board is on. */
+function clLook() {
+  try { var b = myBug(); if (!b || b.hick) return null; return { bug: b.id, face: myFace(), style: Prog.d.style || "", wear: myWear() }; } catch (e) { return null; }
+}
+function clBugArt(look) {
+  try {
+    var b = look && bugById(look.bug); if (!b || b.id !== look.bug) b = bugById("starter");
+    var wear = {}; Object.keys((look && look.wear) || {}).forEach(function (sl) { var it = ITEMS_BY[look.wear[sl]]; if (it && it.slot === sl) wear[sl] = look.wear[sl]; });
+    var face = look && look.face && FACES.some(function (f) { return f[0] === look.face; }) ? look.face : "happy";
+    var a = bugArt(b, "podbug", { mood: face, wear: wear, stage: MAX_STAGE }), st = look && STYLES.filter(function (x) { return x[0] === look.style; })[0];
+    return st && st[3] ? a.replace('<svg class="bug', '<svg style="filter:' + st[3] + '" class="bug') : a;
+  } catch (e) { return ""; }
+}
+function clMove(r) {
+  if (!r || r.move == null) return '';
+  return r.move > 0 ? '<span class="clmv up" title="Up ' + r.move + ' since yesterday">▲' + r.move + '</span>' : r.move < 0 ? '<span class="clmv dn" title="Down ' + (-r.move) + ' since yesterday">▼' + (-r.move) + '</span>' : '<span class="clmv eq" title="Same place as yesterday">–</span>';
+}
+function clStreak(r) { return r && r.streak >= 2 ? '<span class="clstk" title="' + r.streak + '-day study streak">🔥' + r.streak + '</span>' : ''; }
+var CL_TITLE_ICO = { ace: "🎯", improved: "📈", owl: "🦉", back: "💪" };
+function clTitles(d) {
+  var T = d.titles || []; if (!T.length) return '';
+  return '<div class="cltitles"><h3>This week\'s titles</h3>' + T.map(function (t) { return '<div class="cltl' + (t.me ? " me" : "") + '"><span class="ico">' + (CL_TITLE_ICO[t.id] || "🏅") + '</span><span class="tn"><b>' + esc(t.label) + '</b><span>' + esc(t.alias) + (t.me ? ' <em>you</em>' : '') + '</span></span><span class="tv">' + esc(t.value) + '</span></div>'; }).join("") + '</div>';
+}
 function clBoard(d, weekly) {
   var src = weekly && d.wboard ? d.wboard : d.board;
   if (!src || !src.length) return '<p class="muted">No one in the class has started yet.</p>';
-  /* top 5 only, plus your own place if you're further down (owner, Nov 6 2026) */
-  var rows = src.filter(function (r) { return r.rank <= 5 || r.me; }), cnt = d.count || src.length, tiers = (d.prizes && d.prizes.tiers) || [];
-  return '<p class="muted small">Top 5 of ' + cnt + (weekly ? ', ranked by correct answers this week.' : ', ranked by correct answers since the class started.') + ' Everyone shows as their student number or a nickname their instructor approved.</p><ol class="clboard">' + rows.map(function (r) {
-    if (weekly) r = Object.assign({}, r, { correct: r.weekC || 0, prize: r.rank <= 3 && (r.weekC || 0) > 0 ? tiers[r.rank - 1] : "" });
-    return (r.rank > 5 ? '<li class="clgap" aria-hidden="true">···</li>' : '') + '<li class="' + (r.me ? "me" : "") + '"><span class="clrk' + (r.rank <= 3 ? " r" + r.rank : "") + '">' + r.rank + '</span><span class="clal">' + esc(r.alias) + (r.me ? ' <em>you</em>' : '') + (r.prize ? ' <span class="przchip p-' + r.prize + '">' + esc(RARITY[r.prize] || r.prize) + '</span>' : '') + '</span><span class="clsc"><b>' + r.correct.toLocaleString() + '</b> right<small>' + (r.accuracy == null ? "—" : Math.round(r.accuracy) + "%") + ' · ' + r.week + ' this week</small></span></li>';
+  var cnt = d.count || src.length, tiers = (d.prizes && d.prizes.tiers) || [];
+  var R = src.map(function (r) { return weekly ? Object.assign({}, r, { correct: r.weekC || 0, prize: r.rank <= 3 && (r.weekC || 0) > 0 ? tiers[r.rank - 1] : "" }) : r; }).sort(function (a, b) { return a.rank - b.rank; });
+  var top = R.filter(function (r) { return r.rank <= 3 && (!weekly || r.correct > 0); });
+  var c = '<p class="muted small">Top 5 of ' + cnt + (weekly ? ', ranked by correct answers this week.' : ', ranked by correct answers since the class started.') + ' Arrows show moves since yesterday. Everyone shows as their student number or a nickname their instructor approved.</p>';
+  if (top.length) {
+    var at = function (rk) { return top.filter(function (r) { return r.rank === rk; })[0]; };
+    c += '<div class="podium">' + [2, 1, 3].map(function (rk) {
+      var r = at(rk); if (!r) return '<div class="pod p' + rk + ' empty"></div>';
+      return '<div class="pod p' + rk + (r.me ? ' me' : '') + '">' + (rk === 1 ? '<span class="crown" aria-hidden="true">👑</span>' : '') + '<div class="pbug">' + clBugArt(r.look) + '</div>' +
+        '<div class="pname">' + esc(r.alias) + (r.me ? ' <em>you</em>' : '') + '</div><div class="pscore"><b>' + r.correct + '</b> right ' + clMove(r) + clStreak(r) + '</div>' +
+        (r.prize ? '<span class="przchip p-' + r.prize + '">' + esc(RARITY[r.prize] || r.prize) + '</span>' : '') + '<div class="pblock">' + rk + '</div></div>';
+    }).join("") + '</div>';
+  }
+  var rest = R.filter(function (r) { return top.indexOf(r) < 0 && (r.rank <= 5 || r.me); });
+  if (rest.length) c += '<ol class="clboard">' + rest.map(function (r) {
+    var acc = weekly ? (r.week ? Math.round(100 * (r.weekC || 0) / r.week) : null) : (r.accuracy != null ? Math.round(r.accuracy) : null);
+    return (r.rank > 5 ? '<li class="clgap" aria-hidden="true">···</li>' : '') + '<li class="' + (r.me ? "me" : "") + '"><span class="clrk">' + r.rank + '</span><span class="clal">' + esc(r.alias) + (r.me ? ' <em>you</em>' : '') + ' ' + clMove(r) + clStreak(r) + '</span><span class="clsc"><b>' + r.correct + '</b> right' + (acc != null ? '<small>' + acc + '%' + (weekly ? '' : ' · ' + (r.week || 0) + ' this week') + '</small>' : '') + '</span></li>';
   }).join("") + '</ol>';
+  return c + clTitles(d);
+}
+/* "You passed Tachy Tara!" with confetti, once, when your weekly place goes up */
+function clPassCheck(d) {
+  try {
+    if (!d || d.boardOn !== true || !d.wboard) return;
+    var me = d.wboard.filter(function (r) { return r.me; })[0]; if (!me || !me.weekC) return;
+    var wk = d.prizes && d.prizes.week, prev = store("clLast"), cur = { week: wk, rank: me.rank, above: d.wboard.filter(function (r) { return r.rank < me.rank; }).map(function (r) { return r.alias; }) };
+    store("clLast", cur);
+    if (!prev || prev.week !== wk || !(me.rank < prev.rank)) return;
+    var passed = (prev.above || []).filter(function (a) { return d.wboard.some(function (r) { return r.alias === a && r.rank > me.rank; }); });
+    clCelebrate(passed.length ? "You passed " + passed.slice(0, 2).join(" and ") + (passed.length > 2 ? " and " + (passed.length - 2) + " more" : "") + "!" : "You climbed to #" + me.rank + " this week!");
+  } catch (e) {}
+}
+function clCelebrate(msg) {
+  var t = document.createElement("div"); t.className = "clpass"; t.setAttribute("role", "status"); t.textContent = msg; document.body.appendChild(t);
+  setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, 4200);
+  if (SET().motion) return;
+  var box = document.createElement("div"), C = ["#f43f5e", "#facc15", "#22c55e", "#38bdf8", "#a855f7", "#fb923c"]; box.className = "clconf"; box.setAttribute("aria-hidden", "true");
+  for (var i = 0; i < 46; i++) { var p = document.createElement("i"); p.style.left = (Math.random() * 100) + "%"; p.style.background = C[i % C.length]; p.style.animationDelay = (Math.random() * .6) + "s"; p.style.animationDuration = (1.6 + Math.random() * 1.2) + "s"; p.style.transform = "rotate(" + Math.round(Math.random() * 360) + "deg)"; box.appendChild(p); }
+  document.body.appendChild(box); setTimeout(function () { if (box.parentNode) box.parentNode.removeChild(box); }, 3400);
+  try { if (typeof gfxSnd === "function") gfxSnd("win"); } catch (e) {}
 }
 /* Protocol competition (owner, Nov 8 2026): agency members race on their own protocol questions,
    as individuals and as teams (crews, stations, shifts). Teams rank by correct answers per member. */
@@ -31282,14 +31347,14 @@ function homeClassCard() {
   if (!clBoardOn()) return c + '<p class="muted small">The class scoreboard is off. Your instructor sees your results as ' + esc(SEAT.alias) + '.</p><button class="btn small ghost" data-clopen="1">My class results</button></section>';
   var W = (d.wboard || []).slice().sort(function (a, b) { return a.rank - b.rank; }), me = W.filter(function (r) { return r.me; })[0];
   var acc = me && me.week ? Math.round(100 * me.weekC / me.week) : null;
-  c += '<p class="hcme">You: <b>#' + (me ? me.rank : "—") + '</b> of ' + (d.count || W.length) + (me ? ' · ' + me.weekC + ' right' + (acc != null ? ' · ' + acc + '%' : '') : '') + '</p>';
+  c += '<p class="hcme">You: <b>#' + (me ? me.rank : "—") + '</b> of ' + (d.count || W.length) + (me ? ' · ' + me.weekC + ' right' + (acc != null ? ' · ' + acc + '%' : '') + ' ' + clMove(me) + clStreak(me) : '') + '</p>';
   var top = W.filter(function (r) { return r.rank <= 3; });
   if (!top.length || !top.some(function (r) { return r.weekC > 0; })) c += '<p class="muted small">No one has a right answer yet this week. The top 3 on Sunday win a bug.</p>';
-  else c += '<ol class="hctop">' + top.map(function (r) { return '<li class="' + (r.me ? "me" : "") + '"><span class="hcr">' + ["🥇", "🥈", "🥉"][r.rank - 1] + '</span><span class="hcn">' + esc(r.alias) + (r.me ? ' <em>you</em>' : '') + '</span><span class="hcs">' + r.weekC + ' right</span></li>'; }).join("") + '</ol>';
+  else c += '<ol class="hctop">' + top.map(function (r) { return '<li class="' + (r.me ? "me" : "") + '"><span class="hcr">' + ["🥇", "🥈", "🥉"][r.rank - 1] + '</span><span class="hcb">' + clBugArt(r.look) + '</span><span class="hcn">' + esc(r.alias) + (r.me ? ' <em>you</em>' : '') + ' ' + clMove(r) + '</span><span class="hcs">' + r.weekC + ' right</span></li>'; }).join("") + '</ol>';
   return c + '<button class="btn small" data-clopen="1">See full scoreboard ›</button></section>';
 }
 document.addEventListener("click", function (e) { var b = e.target && e.target.closest && e.target.closest("[data-clopen]"); if (!b) return; e.preventDefault(); CL.view = clBoardOn() ? "board" : "mine"; openClassPane(); });
-(function () { var st = document.createElement("style"); st.textContent = '.hclass{background:var(--surface);border:1.5px solid var(--line);border-left:5px solid #f5b301;border-radius:16px;padding:12px 14px;margin:0 0 14px}.hchead{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.hchead b{font-size:17px}.hchead span{font-size:13px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em}.hcme{margin:6px 0}.hctop{list-style:none;margin:6px 0 10px;padding:0}.hctop li{display:flex;gap:8px;align-items:center;padding:5px 0;border-top:1px solid var(--line)}.hctop li.me{font-weight:700}.hcr{width:24px}.hcn{flex:1}.hcn em{font-style:normal;font-size:12px;color:var(--muted)}.hcs{font-variant-numeric:tabular-nums;color:var(--muted)}.hclass .btn{background:#7c5cff;color:#fff}.hclass .btn.ghost{background:transparent;color:inherit;border:1.5px solid var(--line)}.clagreel{display:flex;gap:8px;align-items:flex-start;font-size:14px;margin:8px 0;line-height:1.35}.clagreel input{margin-top:3px;flex:none;width:18px;height:18px}'; document.head.appendChild(st); })();
+(function () { var st = document.createElement("style"); st.textContent = '.hclass{background:var(--surface);border:1.5px solid var(--line);border-left:5px solid #f5b301;border-radius:16px;padding:12px 14px;margin:0 0 14px}.hchead{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.hchead b{font-size:17px}.hchead span{font-size:13px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em}.hcme{margin:6px 0}.hctop{list-style:none;margin:6px 0 10px;padding:0}.hctop li{display:flex;gap:8px;align-items:center;padding:5px 0;border-top:1px solid var(--line)}.hctop li.me{font-weight:700}.hcr{width:24px}.hcn{flex:1}.hcn em{font-style:normal;font-size:12px;color:var(--muted)}.hcs{font-variant-numeric:tabular-nums;color:var(--muted)}.hclass .btn{background:#7c5cff;color:#fff}.hclass .btn.ghost{background:transparent;color:inherit;border:1.5px solid var(--line)}.hcb{width:30px;height:30px;display:inline-grid;place-items:center}.hcb svg{width:30px;height:30px}.podium{display:grid;grid-template-columns:1fr 1.15fr 1fr;align-items:end;gap:6px;margin:14px 0 10px}.pod{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;min-width:0}.pod.empty{visibility:hidden}.pod .crown{font-size:22px;line-height:1;margin-bottom:-4px;animation:clcrown 2.4s ease-in-out infinite}.pbug{width:74px;height:74px;display:grid;place-items:center}.pod.p1 .pbug{width:92px;height:92px}.pbug svg{width:100%;height:100%}.pname{font-weight:800;font-size:14px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pname em,.clal em,.hcn em,.cltl em{font-style:normal;font-size:11px;background:#7c5cff;color:#fff;border-radius:99px;padding:1px 6px;margin-left:2px}.pscore{font-size:13px;color:var(--muted);margin:2px 0 4px}.pscore b{color:var(--ink);font-size:16px}.pblock{width:100%;border-radius:10px 10px 4px 4px;display:grid;place-items:center;font-weight:900;font-size:22px;color:#1d1a2a}.p1 .pblock{height:70px;background:linear-gradient(#ffe27a,#f5b301)}.p2 .pblock{height:50px;background:linear-gradient(#eef1f6,#b9c0cc)}.p3 .pblock{height:38px;background:linear-gradient(#f2c08f,#c97b3c)}.pod.me .pblock{box-shadow:0 0 0 3px #7c5cff}.pod .przchip{margin-bottom:4px}.clmv{font-size:11px;font-weight:800;border-radius:6px;padding:0 4px;margin-left:2px;white-space:nowrap}.clmv.up{color:#16a34a;background:color-mix(in srgb,#16a34a 15%,transparent)}.clmv.dn{color:#dc2626;background:color-mix(in srgb,#dc2626 13%,transparent)}.clmv.eq{color:var(--muted)}.clstk{font-size:12px;font-weight:700;margin-left:3px;white-space:nowrap}.cltitles{margin:12px 0 4px;border:1.5px solid var(--line);border-radius:14px;padding:10px 12px;background:var(--surface)}.cltitles h3{margin:0 0 6px;font-size:15px}.cltl{display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid var(--line)}.cltl:first-of-type{border-top:0}.cltl .ico{font-size:22px}.cltl .tn{flex:1;display:flex;flex-direction:column;font-size:14px}.cltl .tn b{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}.cltl .tv{font-weight:800}.cltl.me{background:color-mix(in srgb,#7c5cff 10%,transparent);border-radius:8px;padding-left:6px}.clpass{position:fixed;left:50%;top:18%;transform:translateX(-50%);z-index:9999;background:linear-gradient(135deg,#7c5cff,#f5b301);color:#fff;font-weight:900;font-size:18px;padding:14px 20px;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.35);animation:clpop .5s cubic-bezier(.2,1.6,.4,1);text-align:center;max-width:88vw}.clconf{position:fixed;inset:0;pointer-events:none;z-index:9998;overflow:hidden}.clconf i{position:absolute;top:-12px;width:8px;height:14px;border-radius:2px;animation:clfall linear forwards}@keyframes clfall{to{top:105%;transform:rotate(540deg) translateX(30px)}}@keyframes clpop{from{transform:translateX(-50%) scale(.6);opacity:0}}@keyframes clcrown{50%{transform:translateY(-3px) rotate(-6deg)}}@media (prefers-reduced-motion:reduce){.pod .crown,.clpass{animation:none}}.clagreel{display:flex;gap:8px;align-items:flex-start;font-size:14px;margin:8px 0;line-height:1.35}.clagreel input{margin-top:3px;flex:none;width:18px;height:18px}'; document.head.appendChild(st); })();
 function clJoinForm(where) {
   return '<form class="pform cljoin" data-cljoin="' + where + '"><label>Class key<input class="pinput clkey" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="DB-XXXX-XXX-XXX" value="' + esc(CL.key) + '"></label>' +
     '<label class="clagreel"><input type="checkbox" class="clagree"> I agree that my instructor sees my class results (scores and activity by medication and topic, missed questions and the answers I chose) under my class key label.</label>' +
@@ -31326,7 +31391,7 @@ function classView() {
   c += '<div class="cltabs"><button class="' + (CL.view === "board" ? "on" : "") + '" data-clact="board">Scoreboard</button>' + (comp ? '<button class="' + (CL.view === "comp" ? "on" : "") + '" data-clact="comp">Protocols</button>' : '') + '<button class="' + (CL.view === "mine" ? "on" : "") + '" data-clact="mine">My scores</button><button data-clact="refresh" aria-label="Refresh">↻</button></div>';
   if (CL.msg) c += '<p class="presult' + (CL.err ? "" : " good") + '">' + esc(CL.msg) + '</p>';
   if (!CL.data) c += '<p class="muted">' + (CL.busy ? "Loading…" : "") + '</p>';
-  else c += CL.view === "board" ? clBoard(CL.data) : CL.view === "comp" ? clComp(CL.data.comp) : clMine(CL.data.mine);
+  else c += CL.view === "board" ? '<div class="cltabs clsub"><button class="' + (CL.bw !== false ? "on" : "") + '" data-clact="bweek">This week</button><button class="' + (CL.bw === false ? "on" : "") + '" data-clact="ball">All time</button></div>' + clBoard(CL.data, CL.bw !== false) : CL.view === "comp" ? clComp(CL.data.comp) : clMine(CL.data.mine);
   return c;
 }
 function drawClassPane(top) {
@@ -31344,7 +31409,7 @@ function clLoad(force) {
     fnCall("groupBoard", {}).then(function (r) {
       CL.busy = false;
       if (!r || r.ok === false) { CL.data = null; CL.msg = "This device isn't holding a class key any more. Enter your key again to rejoin."; CL.err = true; }
-      else { CL.data = r; CL.at = Date.now(); DASH.failAt = 0; try { dashCollect(r); } catch (e) {} if (CL.err) CL.msg = ""; CL.err = false; if (!CL.open && ((S.view === "level" && (S.tab === "hub" || S.tab === "dash")) || S.view === "home") && typeof render === "function") setTimeout(render, 0); if (r.level != null && r.level !== SEAT.level) { SEAT.level = r.level; var sc = store("seat"); if (sc) { sc.level = r.level; store("seat", sc); } } }
+      else { CL.data = r; CL.at = Date.now(); DASH.failAt = 0; try { dashCollect(r); } catch (e) {} try { clPassCheck(r); } catch (e) {} if (CL.err) CL.msg = ""; CL.err = false; if (!CL.open && ((S.view === "level" && (S.tab === "hub" || S.tab === "dash")) || S.view === "home") && typeof render === "function") setTimeout(render, 0); if (r.level != null && r.level !== SEAT.level) { SEAT.level = r.level; var sc = store("seat"); if (sc) { sc.level = r.level; store("seat", sc); } } }
       if (CL.open) drawClassPane();
     }).catch(function (e) {
       CL.busy = false; CL.err = true;
@@ -31362,6 +31427,7 @@ classPane.addEventListener("click", function (e) {
   var a = t.getAttribute("data-clact");
   if (a === "close") return closeClassPane();
   if (a === "board" || a === "mine" || a === "comp") { CL.view = a; return drawClassPane(true); }
+  if (a === "bweek" || a === "ball") { CL.bw = a === "bweek"; return drawClassPane(); }
   if (a === "cweek" || a === "call") { CL.cw = a === "cweek"; return drawClassPane(); }
   if (a === "refresh") { CL.msg = ""; return clLoad(true); }
 });
