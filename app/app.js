@@ -3210,10 +3210,10 @@ function recordCalc(type, ok) {
 
 /* adaptive selection: weak and due drugs come up more, mastered drugs less */
 function weightOf(q) {
-  if (!q.d) { var mm = q.reg && typeof qid === "function" ? ((Prog.d.miss || {})[qid(q)] || 0) : 0; return 1.2 + mm * 1.5; }
+  if (!q.d) { var mm = q.reg && typeof qid === "function" ? ((Prog.d.miss || {})[qid(q)] || 0) : 0; return (1.2 + mm * 1.5) * (typeof relW === "function" ? relW(q) : 1); }
   var s = stat(q.d), m = mastery(q.d), w = { "new": 2, learning: 4, familiar: 2.5, proficient: 1.2, mastered: 0.35 }[m];
   if (s) { if (Date.now() >= (s.due || 0)) w *= 1.6; var misses = (s.h || "").slice(-5).split("").filter(function (x) { return x === "0"; }).length; w += misses * 1.5; }
-  return w;
+  return w * (typeof relW === "function" ? relW(q) : 1);
 }
 function adaptivePick(pool, n) {
   var items = pool.map(function (q) { return { q: q, k: Math.pow(Math.random(), 1 / weightOf(q)) }; });
@@ -3228,21 +3228,39 @@ function adaptivePick(pool, n) {
    owner's ratings together; qDifficulty on the server). Every quiz is then mixed per 10 questions:
    2 easy (1 to 1.9), 6 normal (2 to 4) and 2 hard (4.1 to 5). Questions nobody has graded yet count
    as normal, and when there are not enough easy or hard ones the quiz simply keeps what it has. */
-var DIFF = { avg: {}, n: 0, at: 0, busy: false };
-try { var _dd = store("qdiff"); if (_dd && _dd.avg) { DIFF.avg = _dd.avg; DIFF.at = _dd.at || 0; DIFF.n = Object.keys(_dd.avg).length; } } catch (e) {}
+var DIFF = { avg: {}, rel: {}, n: 0, at: 0, busy: false };
+try { var _dd = store("qdiff"); if (_dd && _dd.avg) { DIFF.avg = _dd.avg; DIFF.rel = _dd.rel || {}; DIFF.at = _dd.at || 0; DIFF.n = Object.keys(_dd.avg).length; } } catch (e) {}
 function diffLoad() {
   if (DIFF.busy || typeof fnCall !== "function" || Date.now() - DIFF.at < 6 * 3600000) return;
   DIFF.busy = true;
   fnCall("qDifficulty", {}).then(function (r) {
     DIFF.busy = false; if (!r || !r.avg) return;
-    DIFF.avg = r.avg; DIFF.n = Object.keys(r.avg).length; DIFF.at = Date.now();
-    try { store("qdiff", { avg: r.avg, at: DIFF.at }); } catch (e) {}
+    DIFF.avg = r.avg; DIFF.rel = r.rel || {}; DIFF.n = Object.keys(r.avg).length; DIFF.at = Date.now();
+    try { store("qdiff", { avg: r.avg, rel: DIFF.rel, at: DIFF.at }); } catch (e) {}
   }).catch(function () { DIFF.busy = false; });
 }
 setTimeout(function () { try { diffLoad(); } catch (e) {} }, 8000);
 function diffOf(q) { var v = DIFF.avg[qid(q)]; return v == null ? null : v; }
 function diffCls(q) { var v = diffOf(q); return v == null ? "u" : v < 2 ? "e" : v > 4 ? "h" : "m"; }
+/* ---------- Relevance (owner, Nov 13 2026) ----------
+   Evaluators who mark a question "Not relevant" also say how relevant it is to the area it was asked in,
+   1 to 5 (a Good vote counts as 5). The average (qDifficulty: rel) makes a question come up less often
+   (it is never removed): relevance 5 or ungraded = normal, 4 = 0.79, 3 = 0.58, 2 = 0.36, 1 = 0.15 of the usual chance.
+   This only changes how often; which questions a study path can get (its scope) is unchanged. */
+function relOf(q) { var v = DIFF.rel && DIFF.rel[qid(q)]; return v == null ? null : v; }
+function relW(q) { var v = relOf(q); return v == null ? 1 : Math.max(0.15, Math.min(1, 0.15 + 0.85 * (v - 1) / 4)); }
+function relBalance(sel, pool) {
+  if (!DIFF.rel || !sel || !sel.length || !pool || !pool.length) return sel;
+  var low = sel.some(function (q) { return relW(q) < 1; }); if (!low) return sel;
+  var inS = {}; sel.forEach(function (q) { inS[qid(q)] = 1; });
+  var spare = shuffle(pool.filter(function (q) { return !inS[qid(q)] && !q.t && relW(q) >= 0.8; }));
+  return sel.map(function (q) {
+    var w = relW(q); if (w >= 1 || q.pilot || q.t || Math.random() < w || !spare.length) return q;
+    var r = spare.pop(); inS[qid(r)] = 1; return r;
+  });
+}
 function diffBalance(sel, pool) {
+  sel = relBalance(sel, pool);
   var n = sel.length; if (n < 5 || !DIFF.n || !pool || !pool.length) return sel;
   var want = { e: Math.round(n * 0.2), h: Math.round(n * 0.2) };
   var out = sel.slice(), inS = {}, ch = 0; out.forEach(function (q) { inS[qid(q)] = 1; });
@@ -4075,6 +4093,12 @@ function revHTML(q) {
   c += '</span></div>';
   c += '<p class="qrevguide">1–2 easy · 2–4 normal · 4–5 hard. A good mix is 2 easy, 6 normal and 2 hard in every 10 questions.</p>';
   c += '<div class="qrevrow"><span class="qrevl">This question is</span><button type="button" class="qrevv g' + (R.v === "good" ? ' on' : '') + '" data-qrv="good">Good</button><button type="button" class="qrevv b' + (R.v === "bad" ? ' on' : '') + '" data-qrv="bad">Bad</button><button type="button" class="qrevv o' + (R.v === "off" ? ' on' : '') + '" data-qrv="off">Not relevant</button></div>';
+  if (R.v === "off") {
+    var areaNm = (function () { try { var L = levelObj(S.level || q.lv); return L ? L.name : "this area"; } catch (e) { return "this area"; } })();
+    c += '<div class="qrevrow"><span class="qrevl">How relevant to ' + esc(areaNm) + '?</span><span class="qrb" role="group" aria-label="Relevance from 1 to 5">';
+    for (var rv = 1; rv <= 5; rv++) c += '<button type="button" class="qrbtn' + (R.rel === rv ? ' on' : '') + '" data-qrrel="' + rv + '" aria-pressed="' + (R.rel === rv) + '">' + rv + '</button>';
+    c += '</span></div><p class="qrevguide">1 not relevant at all · 5 very relevant. Less relevant questions come up less often here; they are not removed.</p>';
+  }
   if (R.v === "off") c += '<div class="qrevrow"><span class="qrevl">Not relevant to</span><select class="pinput qrevnr" data-qrnr="1"><option value="">Choose…</option>' + QR_NR.map(function (o) { return '<option value="' + o[0] + '"' + (R.nr === o[0] ? ' selected' : '') + '>' + esc(o[1]) + '</option>'; }).join("") + '</select></div>';
   if (EVS && !EVS.exempt && EVS.signed) c += '<div class="qrevwk">' + evWeekLine() + '</div>';
   c += '<div class="qrevs"><textarea maxlength="1000" placeholder="Suggestion (optional): a better wording, a wrong answer, a missing fact…" data-qrs="1">' + esc(R.s || "") + '</textarea><button type="button" class="btn small" data-qrsend="1">Send suggestion</button></div>';
@@ -4083,7 +4107,7 @@ function revHTML(q) {
 function revSave(k, el) {
   var R = (Prog.d.qrev || (Prog.d.qrev = {}))[k] || (Prog.d.qrev[k] = {}), q = QRATE_Q[k] || {};
   R.sent = false; R.err = ""; saveProg();
-  fnCall("qrRate", { gift: Prog.d.reviewer.id, id: k, d: R.d || null, v: R.v || null, nr: R.v === "off" ? (R.nr || null) : null, where: R.v === "off" ? (S.level || q.lv || "") : null, s: R.s || null, lv: q.lv || (S.level || "") })
+  fnCall("qrRate", { gift: Prog.d.reviewer.id, id: k, d: R.d || null, v: R.v || null, nr: R.v === "off" ? (R.nr || null) : null, rel: R.v === "off" ? (R.rel || null) : null, where: R.v === "off" ? (S.level || q.lv || "") : null, s: R.s || null, lv: q.lv || (S.level || "") })
     .then(function () { var first = !R.counted; R.sent = true; R.counted = true; R.err = ""; saveProg(); if (first && EVS && !EVS.exempt) { EVS.thisWeek = (EVS.thisWeek || 0) + 1; evSaveLocal(); } revRedraw(k); if (typeof ANA !== "undefined") { ANA.at = 0; ADM_T = 0; setTimeout(admStats, 1200); } if (/^qp/.test(k)) setTimeout(function () { pilFetch(true); }, 1500); })
     .catch(function (e) { var m = (e && e.message) || ""; if (/agreement/i.test(m)) { EVS = Object.assign(EVS || {}, { signed: false }); evAgreeOpen(); } else if (/status ended/i.test(m)) { evStatusLoad(true); } R.err = m === "offline" ? "Not saved: no internet" : "Not saved: " + (m || "try again"); revRedraw(k); });
   revRedraw(k);
@@ -4103,11 +4127,12 @@ function revRedraw(k) {
   });
 }
 document.addEventListener("click", function (e) {
-  var b = e.target && e.target.closest && e.target.closest("[data-qrd],[data-qrv],[data-qrsend]"); if (!b) return;
+  var b = e.target && e.target.closest && e.target.closest("[data-qrd],[data-qrv],[data-qrsend],[data-qrrel]"); if (!b) return;
   var box = b.closest(".qrev"); if (!box || !isReviewer()) return;
   e.preventDefault(); e.stopPropagation();
   var k = box.getAttribute("data-qrk"), R = (Prog.d.qrev || (Prog.d.qrev = {}))[k] || (Prog.d.qrev[k] = {});
   if (b.hasAttribute("data-qrd")) R.d = +b.getAttribute("data-qrd");
+  if (b.hasAttribute("data-qrrel")) { R.rel = +b.getAttribute("data-qrrel"); R.v = "off"; revRedraw(k); }
   if (b.hasAttribute("data-qrv")) { var v = b.getAttribute("data-qrv"); R.v = R.v === v ? null : v; if (R.v === "off" && !R.nr) return revRedraw(k); }
   if (b.hasAttribute("data-qrsend")) { var ta = box.querySelector("textarea"); R.s = ta ? ta.value.trim().slice(0, 1000) : ""; if (!R.s) { R.err = "Type a suggestion first"; return revRedraw(k); } }
   clearTimeout(QREV_T[k]); QREV_T[k] = setTimeout(function () { revSave(k); }, b.hasAttribute("data-qrsend") ? 0 : 500);
@@ -10130,7 +10155,7 @@ function proLabel() {
 function trialBanner() {
   if (DEMO && webPass()) return '<div class="callout evnote small trialbar"><strong>DrugBug Pro is unlocked</strong> with your access code until ' + new Date(webPass().until).toLocaleDateString() + '. Enjoy every drug, route and study tool.</div>';
   if (DEMO) return '<div class="callout evnote small trialbar"><strong>You are on DrugBug Free.</strong> That is about 40 common medications, with a free preview of the Wormhole. DrugBug Plus and Pro open all 2,100+ medications and every professional route. <button class="linkish" data-pw="open">See Plus and Pro</button></div>';
-  if (!PAYWALL || !NATIVE || PRO.store || licenseActive() || Prog.d.proGrant || hasTier("plus")) return "";   /* Pro from a code, a class or the website is not "Free" (owner, Nov 13 2026) */
+  if (!PAYWALL || !NATIVE || PRO.store || licenseActive() || Prog.d.proGrant || hasTier("plus") || (typeof isReviewer === "function" && isReviewer())) return "";   /* Pro from a code, a class or the website is not "Free" (owner, Nov 13 2026) */
   if (trialEligible()) return '<div class="callout evnote small trialbar"><strong>Try DrugBug Pro free for 7 days.</strong> Then ' + esc(priceOf(PLANS.pro.annual, PLANS.pro.y)) + ' per year through the App Store. Cancel at least 24 hours before the trial ends and you are not charged. <button class="linkish" data-pw="open">See Pro</button></div>';
   return '<div class="callout evnote small trialbar"><strong>You are on DrugBug Free.</strong> Every tool in the app works on your free medications. <button class="linkish" data-pw="open">See Plus and Pro</button></div>';
 }
@@ -12388,7 +12413,7 @@ document.addEventListener("click", function (e) {
 });
 /* One line, where they are already looking at what they have earned. */
 function accNudge() {
-  if (!accNudgeOk()) return "";
+  if (!accNudgeOk() || (typeof isReviewer === "function" && isReviewer()) || (typeof hasTier === "function" && hasTier("pro") && PAYWALL)) return "";
   return '<div class="accnudge"><span class="annx" aria-hidden="true">' +
     '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11V8a7 7 0 0 1 14 0v3"/><rect x="4" y="11" width="16" height="10" rx="2.5"/></svg></span>' +
     '<span class="antx"><strong>This is all saved in this browser only.</strong> Make a free account and it follows you to your phone, and survives clearing your history. Eligible new accounts receive three days of Pro access once; it ends automatically, with no payment method and no charge.</span>' +
