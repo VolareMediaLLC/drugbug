@@ -1381,7 +1381,9 @@ function scenView(s, list, inSess) {
     correct.forEach(function (id) { c += '<li><button class="linkish" data-drug="' + id + '">' + esc(nameOf(id)) + '</button>: ' + esc((s.notes && s.notes[id]) || "Indicated.") + '</li>'; });
     ok.forEach(function (id) { c += '<li><button class="linkish" data-drug="' + id + '">' + esc(nameOf(id)) + '</button> (also acceptable): ' + esc((s.notes && s.notes[id]) || "Reasonable option.") + '</li>'; });
     wrong.forEach(function (id) { if (st.sel[id] || (s.notes && s.notes[id])) c += '<li><strong>' + esc(nameOf(id)) + '</strong> (not indicated): ' + esc((s.notes && s.notes[id]) || "Not indicated for this patient.") + '</li>'; });
-    c += '</ul></div><div class="actions">' + (inSess ? '<button class="btn" data-act="sessnext">Continue</button>' : '<button class="btn" data-act="scennext">Next scenario</button><button class="btn ghost" data-act="scenretry">Try again</button>') + '</div>';
+    c += '</ul></div>';
+    if (typeof isReviewer === "function" && isReviewer()) c += qRateHTML(s.lv && s.q ? s : { id: "qs" + String(s.id || "").replace(/[^A-Za-z0-9]/g, "").slice(0, 40), lv: "scen", q: s.title + ": " + (s.ask || ""), d: "" });
+    c += '<div class="actions">' + (inSess ? '<button class="btn" data-act="sessnext">Continue</button>' : '<button class="btn" data-act="scennext">Next scenario</button><button class="btn ghost" data-act="scenretry">Try again</button>') + '</div>';
   }
   return c + '</div>';
 }
@@ -1865,6 +1867,10 @@ function nrDone(st) {
   c += '<div class="actions"><button class="btn" data-act="nrnew">New test</button>' + (missed.length ? '<button class="btn ghost" data-act="nrmissed">Practice my ' + missed.length + ' misses</button>' : '') + '</div>';
   if (missed.length) c += '<details class="sec" open><summary>Review what you missed (' + missed.length + ')</summary><div class="fields">' + missed.map(function (m) {
     return '<div class="miss">' + (m.x.q.cs ? '<p class="muted small"><strong>' + esc(m.x.q.csTitle) + ', part ' + m.x.q.part + ':</strong> ' + esc(m.x.q.story) + '</p>' : '') + '<p class="qstem small">' + esc(m.x.q.q) + '</p><p><span class="pill low">Your answer</span> ' + esc(nrAnsText(m.x, m.a)) + '</p><p><span class="pill good">Correct</span> ' + esc(m.x.q.a) + '</p><p class="muted">' + esc(m.x.q.x) + '</p>' + (m.x.q.d && DB.drugs[m.x.q.d] ? '<button class="linkish" data-drug="' + m.x.q.d + '">Review ' + esc(DB.drugs[m.x.q.d].name) + '</button>' : '') + '</div>';
+  }).join("") + '</div></details>';
+  /* evaluators grade every question of a test here, since a test hides answers until the end (owner, Nov 13 2026) */
+  if (typeof isReviewer === "function" && isReviewer()) c += '<details class="sec" open><summary>Grade these questions (' + total + ')</summary><div class="fields">' + st.qs.map(function (x, i) {
+    return '<div class="miss"><p class="qstem small">' + (i + 1) + '. ' + esc(x.q.q) + '</p><p><span class="pill good">Correct</span> ' + esc(x.q.a) + '</p>' + qRateHTML(x.q) + '</div>';
   }).join("") + '</div></details>';
   return c + '</section>';
 }
@@ -4054,6 +4060,11 @@ var EV_PAUSE_MSG = "Evaluator enrollment and grading are paused. If you have que
 function isReviewer() { var r = Prog.d && Prog.d.reviewer; if (!(r && r.id)) return false; if (EV_PAUSED && !(typeof ADMIN_GIFT !== "undefined" && r.id === ADMIN_GIFT)) return false; return true; }
 function evPausedFor() { var r = Prog.d && Prog.d.reviewer; return EV_PAUSED && !!(r && r.id) && !(typeof ADMIN_GIFT !== "undefined" && r.id === ADMIN_GIFT); }
 var QREV_T = {};
+/* "Not relevant" and to whom (owner, Nov 13 2026: "a paramedic question isn't relevant to allied health,
+   or home health nursing questions having ICU or flight questions") */
+var QR_NR = [["here", "This level / where I saw it"], ["emt", "EMT / AEMT"], ["paramedic", "Paramedic"], ["flight", "Flight & critical care transport"], ["cp", "Community paramedic"],
+  ["cna", "CNA"], ["lvn", "LVN / LPN"], ["rn", "RN (general)"], ["icu", "ICU / critical care nursing"], ["homehealth", "Home health nursing"], ["ob", "OB / L&D nursing"], ["peds", "Pediatrics"],
+  ["med", "Medical school"], ["imaging", "Imaging"], ["allied", "Allied health"], ["rt", "Respiratory therapy"], ["everyday", "Everyday Health (general public)"], ["any", "Anyone: outdated or off-topic"]];
 function revHTML(q) {
   var k = qid(q), R = (Prog.d.qrev || {})[k] || {};
   QRATE_Q[k] = q;
@@ -4061,8 +4072,10 @@ function revHTML(q) {
   var c = '<div class="qrev" data-qrk="' + k + '"><div class="qrevh"><b>Reviewer</b><span>' + (R.sent ? "Saved" : R.err ? esc(R.err) : "Your feedback goes to the DrugBug team") + '</span></div>';
   c += '<div class="qrevrow"><span class="qrevl">Difficulty</span><span class="qrb" role="group" aria-label="Difficulty from 1 to 5">';
   for (var n = 1; n <= 5; n++) c += '<button type="button" class="qrbtn' + (R.d === n ? ' on' : '') + '" data-qrd="' + n + '" aria-pressed="' + (R.d === n) + '">' + n + '</button>';
-  c += '</span><span class="qrevhint">1 easy · 5 hard</span></div>';
-  c += '<div class="qrevrow"><span class="qrevl">This question is</span><button type="button" class="qrevv g' + (R.v === "good" ? ' on' : '') + '" data-qrv="good">Good</button><button type="button" class="qrevv b' + (R.v === "bad" ? ' on' : '') + '" data-qrv="bad">Bad</button></div>';
+  c += '</span></div>';
+  c += '<p class="qrevguide">1–2 easy · 2–4 normal · 4–5 hard. A good mix is 2 easy, 6 normal and 2 hard in every 10 questions.</p>';
+  c += '<div class="qrevrow"><span class="qrevl">This question is</span><button type="button" class="qrevv g' + (R.v === "good" ? ' on' : '') + '" data-qrv="good">Good</button><button type="button" class="qrevv b' + (R.v === "bad" ? ' on' : '') + '" data-qrv="bad">Bad</button><button type="button" class="qrevv o' + (R.v === "off" ? ' on' : '') + '" data-qrv="off">Not relevant</button></div>';
+  if (R.v === "off") c += '<div class="qrevrow"><span class="qrevl">Not relevant to</span><select class="pinput qrevnr" data-qrnr="1"><option value="">Choose…</option>' + QR_NR.map(function (o) { return '<option value="' + o[0] + '"' + (R.nr === o[0] ? ' selected' : '') + '>' + esc(o[1]) + '</option>'; }).join("") + '</select></div>';
   if (EVS && !EVS.exempt && EVS.signed) c += '<div class="qrevwk">' + evWeekLine() + '</div>';
   c += '<div class="qrevs"><textarea maxlength="1000" placeholder="Suggestion (optional): a better wording, a wrong answer, a missing fact…" data-qrs="1">' + esc(R.s || "") + '</textarea><button type="button" class="btn small" data-qrsend="1">Send suggestion</button></div>';
   return c + '</div>';
@@ -4070,12 +4083,18 @@ function revHTML(q) {
 function revSave(k, el) {
   var R = (Prog.d.qrev || (Prog.d.qrev = {}))[k] || (Prog.d.qrev[k] = {}), q = QRATE_Q[k] || {};
   R.sent = false; R.err = ""; saveProg();
-  fnCall("qrRate", { gift: Prog.d.reviewer.id, id: k, d: R.d || null, v: R.v || null, s: R.s || null, lv: q.lv || (S.level || "") })
-    .then(function () { var first = !R.counted; R.sent = true; R.counted = true; R.err = ""; saveProg(); if (first && EVS && !EVS.exempt) { EVS.thisWeek = (EVS.thisWeek || 0) + 1; evSaveLocal(); } revRedraw(k); if (typeof ANA !== "undefined") ANA.at = 0; if (/^qp/.test(k)) setTimeout(function () { pilFetch(true); }, 1500); })
+  fnCall("qrRate", { gift: Prog.d.reviewer.id, id: k, d: R.d || null, v: R.v || null, nr: R.v === "off" ? (R.nr || null) : null, where: R.v === "off" ? (S.level || q.lv || "") : null, s: R.s || null, lv: q.lv || (S.level || "") })
+    .then(function () { var first = !R.counted; R.sent = true; R.counted = true; R.err = ""; saveProg(); if (first && EVS && !EVS.exempt) { EVS.thisWeek = (EVS.thisWeek || 0) + 1; evSaveLocal(); } revRedraw(k); if (typeof ANA !== "undefined") { ANA.at = 0; ADM_T = 0; setTimeout(admStats, 1200); } if (/^qp/.test(k)) setTimeout(function () { pilFetch(true); }, 1500); })
     .catch(function (e) { var m = (e && e.message) || ""; if (/agreement/i.test(m)) { EVS = Object.assign(EVS || {}, { signed: false }); evAgreeOpen(); } else if (/status ended/i.test(m)) { evStatusLoad(true); } R.err = m === "offline" ? "Not saved: no internet" : "Not saved: " + (m || "try again"); revRedraw(k); });
   revRedraw(k);
 }
 function revRedraw(k) {
+  /* the average shows (or refreshes) under the panel once the evaluator has graded the difficulty */
+  document.querySelectorAll('.qrev[data-qrk="' + k + '"]').forEach(function (el) {
+    var nx = el.nextElementSibling, w0 = document.createElement("div"); w0.innerHTML = admAvgHTML(k, true);
+    if (nx && nx.classList && nx.classList.contains("admavg")) { if (w0.firstChild) nx.replaceWith(w0.firstChild); else nx.remove(); }
+    else if (w0.firstChild) el.after(w0.firstChild);
+  });
   document.querySelectorAll('.qrev[data-qrk="' + k + '"]').forEach(function (el) {
     var ta = el.querySelector("textarea"), keep = ta ? ta.value : null, w = document.createElement("div");
     w.innerHTML = revHTML(QRATE_Q[k] || { q: "x", id: k }); var nw = w.firstChild;
@@ -4089,10 +4108,16 @@ document.addEventListener("click", function (e) {
   e.preventDefault(); e.stopPropagation();
   var k = box.getAttribute("data-qrk"), R = (Prog.d.qrev || (Prog.d.qrev = {}))[k] || (Prog.d.qrev[k] = {});
   if (b.hasAttribute("data-qrd")) R.d = +b.getAttribute("data-qrd");
-  if (b.hasAttribute("data-qrv")) { var v = b.getAttribute("data-qrv"); R.v = R.v === v ? null : v; }
+  if (b.hasAttribute("data-qrv")) { var v = b.getAttribute("data-qrv"); R.v = R.v === v ? null : v; if (R.v === "off" && !R.nr) return revRedraw(k); }
   if (b.hasAttribute("data-qrsend")) { var ta = box.querySelector("textarea"); R.s = ta ? ta.value.trim().slice(0, 1000) : ""; if (!R.s) { R.err = "Type a suggestion first"; return revRedraw(k); } }
   clearTimeout(QREV_T[k]); QREV_T[k] = setTimeout(function () { revSave(k); }, b.hasAttribute("data-qrsend") ? 0 : 500);
 }, true);
+document.addEventListener("change", function (e) {
+  var t = e.target; if (!t || !t.getAttribute || !t.getAttribute("data-qrnr")) return;
+  var box = t.closest(".qrev"); if (!box || !isReviewer()) return;
+  var k = box.getAttribute("data-qrk"), R = (Prog.d.qrev || (Prog.d.qrev = {}))[k] || (Prog.d.qrev[k] = {});
+  R.nr = t.value || null; R.v = "off"; if (R.nr) revSave(k); else revRedraw(k);
+});
 /* ---------- evaluators' analytics (owner, Nov 7 2026) ----------
    How everyone does, anonymously, down to each medication: answers and % right per drug (all
    players), players' difficulty ratings and evaluators' good / bad per question. Opened from the
@@ -4189,7 +4214,7 @@ anadlg.addEventListener("change", function (e) { if (e.target.id === "evsort") {
 document.addEventListener("keydown", function (e) { if (e.key === "Escape" && ANA.open) { ANA.open = false; anadlg.hidden = true; } if ((e.key === "Enter" || e.key === " ") && e.target && e.target.getAttribute && e.target.getAttribute("data-evopen")) { e.preventDefault(); anaOpen(); } });
 function qRateHTML(q) {
   if (!q || !q.q || typeof qid !== "function") return "";
-  if (isReviewer()) return revHTML(q) + admAvgHTML(qid(q));
+  if (isReviewer()) return revHTML(q) + admAvgHTML(qid(q), true);
   var k = qid(q), R = (Prog.d && Prog.d.qrate) || {}, cur = R[k] || 0, c;
   QRATE_Q[k] = q;
   c = '<div class="qrate" data-qrk="' + k + '"><span class="qrl">' + (cur ? 'You rated this ' + cur + ' of 5' : 'How hard was this?') + '</span><span class="qrb" role="group" aria-label="Rate the difficulty from 1 to 5">';
@@ -4199,8 +4224,10 @@ function qRateHTML(q) {
 /* Administrator only (owner, Nov 7 2026): the average difficulty everyone gave this question,
    players and evaluators, under the question. Uses the same anonymous totals as Analytics. */
 var ADM_T = 0;
-function admAvgHTML(k) {
-  if (typeof codeRole !== "function" || codeRole() !== "admin") return "";
+function admAvgHTML(k, ev) {
+  var role = typeof codeRole === "function" ? codeRole() : "";
+  /* evaluators see it too, once they have graded this question's difficulty (owner, Nov 13 2026) */
+  if (!(role === "admin" || (ev && role === "eval" && ((Prog.d.qrev || {})[k] || {}).d))) return "";
   var D = ANA.data;
   if (!D || Date.now() - (ANA.at || 0) > 600000) admStats();
   if (!D) return '<div class="admavg" data-admk="' + k + '"><b>Average difficulty</b><span class="muted">Loading ratings…</span></div>';
@@ -4212,14 +4239,14 @@ function admAvgHTML(k) {
   if (v.g || v.b) parts.push((v.g || 0) + " good · " + (v.b || 0) + " bad");
   return '<div class="admavg" data-admk="' + k + '"><b>Average difficulty</b>' +
     (avg != null ? '<span class="admnum">' + avg.toFixed(1) + '<small> / 5</small></span><span class="muted">' + all + ' rating' + (all === 1 ? '' : 's') + ' · ' + parts.join(' · ') + '</span>'
-      : '<span class="muted">No ratings yet</span>') + '<span class="admtag">Administrator</span></div>';
+      : '<span class="muted">No ratings yet</span>') + '<span class="admtag">' + (role === "admin" ? 'Administrator' : 'Everyone\'s average') + '</span></div>';
 }
 function admStats() {
   if (ANA.busy || Date.now() - ADM_T < 30000 || typeof fnCall !== "function" || !Prog.d || !Prog.d.reviewer) return;
   ADM_T = Date.now(); ANA.busy = true;
   fnCall("qrStats", { gift: Prog.d.reviewer.id }).then(function (r) {
     ANA.busy = false; ANA.data = r || {}; ANA.at = Date.now();
-    document.querySelectorAll(".admavg[data-admk]").forEach(function (el) { var w = document.createElement("div"); w.innerHTML = admAvgHTML(el.getAttribute("data-admk")); if (w.firstChild) el.replaceWith(w.firstChild); });
+    document.querySelectorAll(".admavg[data-admk]").forEach(function (el) { var w = document.createElement("div"); w.innerHTML = admAvgHTML(el.getAttribute("data-admk"), true); if (w.firstChild) el.replaceWith(w.firstChild); });
     if (ANA.open) anaDraw();
   }).catch(function () { ANA.busy = false; });
 }
@@ -6057,6 +6084,7 @@ function megaView2() {
   if (ans != null) {
     var right = ans >= 0 && step.options[ans].ok, okO = step.options.filter(function (o) { return o.ok; })[0];
     c += '<div class="explain ' + (right ? "ok" : "bad") + '"><strong>' + (ans === -1 ? "Time's up." : right ? "Correct." : "Not the best choice.") + '</strong>' + (ans >= 0 && !right ? '<p>' + esc(step.options[ans].fb) + '</p>' : '') + '<p>' + (right ? '' : '<strong>Best: </strong>' + esc(okO.t) + '. ') + esc(okO.fb) + '</p><p class="muted small">Rhythm: ' + esc(rhythmName(step.rhythm)) + '</p></div>';
+    if (typeof isReviewer === "function" && isReviewer()) c += qRateHTML({ lv: "mega-" + (cs.id || ""), q: step.prompt, a: okO ? okO.t : "", d: "" });
     c += '<div class="actions"><button class="btn" data-act="meganext">' + (st.i < cs.steps.length - 1 ? "Continue the code" : "See debrief") + '</button></div>';
   }
   return c + '</section>';
@@ -9188,7 +9216,7 @@ function audSilentUnlock() {
   }, { passive: true, capture: true });
 });
 document.addEventListener("visibilitychange", function () { if (!document.hidden) { AUDH.lastT = -1; AUDH.stuck = 0; audWake(); } });
-(function () { var st = document.createElement("style"); st.textContent = '.muswitch{display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border:1.5px solid var(--line);border-radius:99px;background:var(--surface2,transparent);color:var(--ink);font:inherit;font-weight:800;font-size:14px;cursor:pointer}.muswitch .mustk{position:relative;width:42px;height:24px;border-radius:99px;background:color-mix(in srgb,var(--muted) 35%,transparent);transition:background .15s;flex:none}.muswitch .mustk i{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35);transition:transform .15s}.muswitch.on{border-color:#7c5cff}.muswitch.on .mustk{background:#7c5cff}.muswitch.on .mustk i{transform:translateX(18px)}.muswitch:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}@media (prefers-reduced-motion:reduce){.muswitch .mustk,.muswitch .mustk i{transition:none}}'; document.head.appendChild(st); })();
+(function () { var st = document.createElement("style"); st.textContent = '.muswitch{display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border:1.5px solid var(--line);border-radius:99px;background:var(--surface2,transparent);color:var(--ink);font:inherit;font-weight:800;font-size:14px;cursor:pointer}.muswitch .mustk{position:relative;width:42px;height:24px;border-radius:99px;background:color-mix(in srgb,var(--muted) 35%,transparent);transition:background .15s;flex:none}.muswitch .mustk i{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35);transition:transform .15s}.muswitch.on{border-color:#7c5cff}.muswitch.on .mustk{background:#7c5cff}.muswitch.on .mustk i{transform:translateX(18px)}.muswitch:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}.qrevv.o.on{background:#d97706;border-color:#d97706;color:#fff}.qrevnr{max-width:260px;flex:1;padding:6px 8px;font-size:14px}.qrevguide{margin:2px 0 6px;font-size:12.5px;color:var(--muted)}.qrev .qrevrow{flex-wrap:wrap}@media (prefers-reduced-motion:reduce){.muswitch .mustk,.muswitch .mustk i{transition:none}}'; document.head.appendChild(st); })();
 /* quick volume popover from the top-bar note button */
 function muPop() {
   if (!S.mupop) return "";
@@ -14814,7 +14842,7 @@ function callQuizHTML(C) {
     }).join("") + '</div>' + (Z.ans == null && Z.seq.length ? '<button class="btn small ghost" data-cqreset="1">Start over</button>' : '');
     if (Z.ans != null) h += '<ol class="cqorder">' + q.opts.map(function (o) { return '<li>' + esc(o) + '</li>'; }).join("") + '</ol>';
   }
-  if (Z.ans != null) h += '<div class="cqx ' + (Z.ok ? 'ok' : 'no') + '"><b>' + (Z.ok ? 'Right.' : 'Not quite.') + '</b> ' + esc(q.x) + '</div><button class="btn small" data-cqnext="1">' + (Z.i + 1 < Z.list.length ? 'Next' : 'See score') + '</button>';
+  if (Z.ans != null) h += '<div class="cqx ' + (Z.ok ? 'ok' : 'no') + '"><b>' + (Z.ok ? 'Right.' : 'Not quite.') + '</b> ' + esc(q.x) + '</div>' + (typeof isReviewer === "function" && isReviewer() ? qRateHTML(q.lv ? q : Object.assign(q, { lv: "call-" + (C.id || "") })) : '') + '<button class="btn small" data-cqnext="1">' + (Z.i + 1 < Z.list.length ? 'Next' : 'See score') + '</button>';
   return h + '</div>';
 }
 function cqRender() { var el = document.querySelector(".cq"); if (!el || !S.callId) return render(); var C = CALLS.filter(function (c) { return c.id === S.callId; })[0]; var w = document.createElement("div"); w.innerHTML = callQuizHTML(C); el.parentNode.replaceChild(w.firstChild, el); }
