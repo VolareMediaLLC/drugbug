@@ -4192,6 +4192,14 @@ function revHTML(q) {
   }
   if (R.v === "off") c += '<div class="qrevrow"><span class="qrevl">Not relevant to</span><select class="pinput qrevnr" data-qrnr="1"><option value="">Choose…</option>' + QR_NR.map(function (o) { return '<option value="' + o[0] + '"' + (R.nr === o[0] ? ' selected' : '') + '>' + esc(o[1]) + '</option>'; }).join("") + '</select></div>';
   if (EVS && !EVS.exempt && EVS.signed) c += '<div class="qrevwk">' + evWeekLine() + '</div>';
+  /* "Needs more convincing imposter answers" (owner, Nov 13 2026): tap the wrong answers that are too easy to
+     rule out; they go to the server, and the weekly fix check writes better ones for evaluators to grade */
+  var imp = (q.w && q.w.length ? q.w : (q.t === "multi" && q.opts && q.ok ? q.opts.filter(function (o) { return q.ok.indexOf(o) < 0; }) : [])).filter(Boolean);
+  if (imp.length) {
+    var wk = R.weak || [];
+    c += '<div class="qrevrow"><button type="button" class="qrevv w' + (R.wkOpen || wk.length ? ' on' : '') + '" data-qrwko="1">' + (wk.length ? 'Weak wrong answers: ' + wk.length : 'Needs more convincing wrong answers') + '</button></div>';
+    if (R.wkOpen) c += '<div class="qrevimp"><p class="qrevguide">Tap each wrong answer that is too easy to rule out. The DrugBug team writes more convincing ones and sends the question back for grading.</p>' + imp.map(function (t, i) { var on = wk.indexOf(t) >= 0; return '<button type="button" class="qrimp' + (on ? ' on' : '') + '" data-qrwk="' + i + '" aria-pressed="' + on + '">' + (on ? '\u2713 ' : '') + esc(t) + '</button>'; }).join("") + '<button type="button" class="btn small" data-qrwksend="1">' + (wk.length ? 'Send to fix' : 'Pick at least one') + '</button></div>';
+  }
   try { var fp = evFieldPct(q.lv); if (fp) c += '<p class="qrevguide qrevfp">' + esc(fp.name) + ' questions: <b>' + fp.pct + '% graded</b> · ' + (100 - fp.pct) + '% not graded yet (' + fp.g.toLocaleString() + ' of ' + fp.n.toLocaleString() + ' graded)</p>'; } catch (e) {}
   c += '<div class="qrevs"><textarea maxlength="1000" placeholder="Suggestion (optional): a better wording, a wrong answer, a missing fact…" data-qrs="1">' + esc(R.s || "") + '</textarea><button type="button" class="btn small" data-qrsend="1">Send suggestion</button></div>';
   return c + '</div>';
@@ -4232,7 +4240,7 @@ function evFieldPct(lv) {
 function revSave(k, el) {
   var R = (Prog.d.qrev || (Prog.d.qrev = {}))[k] || (Prog.d.qrev[k] = {}), q = QRATE_Q[k] || {};
   R.sent = false; R.err = ""; saveProg();
-  fnCall("qrRate", { gift: Prog.d.reviewer.id, id: k, d: R.d || null, v: R.v || null, nr: R.v === "off" ? (R.nr || null) : null, rel: R.v === "off" ? (R.rel || null) : null, where: R.v === "off" ? (S.level || q.lv || "") : null, s: R.s || null, lv: q.lv || (S.level || "") })
+  fnCall("qrRate", { gift: Prog.d.reviewer.id, id: k, d: R.d || null, v: R.v || null, nr: R.v === "off" ? (R.nr || null) : null, rel: R.v === "off" ? (R.rel || null) : null, weak: R.weak && R.weak.length ? R.weak : null, where: R.v === "off" ? (S.level || q.lv || "") : null, s: R.s || null, lv: q.lv || (S.level || "") })
     .then(function () { var first = !R.counted; R.sent = true; R.counted = true; R.err = ""; saveProg(); if (first && EVS && !EVS.exempt) { EVS.thisWeek = (EVS.thisWeek || 0) + 1; evSaveLocal(); } revRedraw(k); if (typeof ANA !== "undefined") { ANA.at = 0; ADM_T = 0; setTimeout(admStats, 1200); } if (/^qp/.test(k)) setTimeout(function () { pilFetch(true); }, 1500); })
     .catch(function (e) { var m = (e && e.message) || ""; if (/agreement/i.test(m)) { EVS = Object.assign(EVS || {}, { signed: false }); evAgreeOpen(); } else if (/status ended/i.test(m)) { evStatusLoad(true); } R.err = m === "offline" ? "Not saved: no internet" : "Not saved: " + (m || "try again"); revRedraw(k); });
   revRedraw(k);
@@ -4252,12 +4260,19 @@ function revRedraw(k) {
   });
 }
 document.addEventListener("click", function (e) {
-  var b = e.target && e.target.closest && e.target.closest("[data-qrd],[data-qrv],[data-qrsend],[data-qrrel]"); if (!b) return;
+  var b = e.target && e.target.closest && e.target.closest("[data-qrd],[data-qrv],[data-qrsend],[data-qrrel],[data-qrwko],[data-qrwk],[data-qrwksend]"); if (!b) return;
   var box = b.closest(".qrev"); if (!box || !isReviewer()) return;
   e.preventDefault(); e.stopPropagation();
   var k = box.getAttribute("data-qrk"), R = (Prog.d.qrev || (Prog.d.qrev = {}))[k] || (Prog.d.qrev[k] = {});
   if (b.hasAttribute("data-qrd")) R.d = +b.getAttribute("data-qrd");
   if (b.hasAttribute("data-qrrel")) { R.rel = +b.getAttribute("data-qrrel"); R.v = "off"; revRedraw(k); }
+  if (b.hasAttribute("data-qrwko")) { R.wkOpen = !R.wkOpen; saveProg(); return revRedraw(k); }
+  if (b.hasAttribute("data-qrwk")) {
+    var qq = QRATE_Q[k] || {}, imp2 = (qq.w && qq.w.length ? qq.w : (qq.t === "multi" && qq.opts && qq.ok ? qq.opts.filter(function (o) { return qq.ok.indexOf(o) < 0; }) : [])).filter(Boolean), tx = imp2[+b.getAttribute("data-qrwk")];
+    if (tx) { var W = (R.weak || []).slice(), at = W.indexOf(tx); if (at >= 0) W.splice(at, 1); else W.push(tx); R.weak = W; }
+    return revRedraw(k);
+  }
+  if (b.hasAttribute("data-qrwksend")) { if (!(R.weak || []).length) return; R.wkOpen = false; }
   if (b.hasAttribute("data-qrv")) { var v = b.getAttribute("data-qrv"); R.v = R.v === v ? null : v; if (R.v === "off" && !R.nr) return revRedraw(k); }
   if (b.hasAttribute("data-qrsend")) { var ta = box.querySelector("textarea"); R.s = ta ? ta.value.trim().slice(0, 1000) : ""; if (!R.s) { R.err = "Type a suggestion first"; return revRedraw(k); } }
   clearTimeout(QREV_T[k]); QREV_T[k] = setTimeout(function () { revSave(k); }, b.hasAttribute("data-qrsend") ? 0 : 500);
@@ -9420,7 +9435,7 @@ function audSilentUnlock() {
   }, { passive: true, capture: true });
 });
 document.addEventListener("visibilitychange", function () { if (!document.hidden) { AUDH.lastT = -1; AUDH.stuck = 0; audWake(); } });
-(function () { var st = document.createElement("style"); st.textContent = '.muswitch{display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border:1.5px solid var(--line);border-radius:99px;background:var(--surface2,transparent);color:var(--ink);font:inherit;font-weight:800;font-size:14px;cursor:pointer}.muswitch .mustk{position:relative;width:42px;height:24px;border-radius:99px;background:color-mix(in srgb,var(--muted) 35%,transparent);transition:background .15s;flex:none}.muswitch .mustk i{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35);transition:transform .15s}.muswitch.on{border-color:#7c5cff}.muswitch.on .mustk{background:#7c5cff}.muswitch.on .mustk i{transform:translateX(18px)}.muswitch:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}.qrevv.o.on{background:#d97706;border-color:#d97706;color:#fff}.qrevnr{max-width:260px;flex:1;padding:6px 8px;font-size:14px}.qrevguide{margin:2px 0 6px;font-size:12.5px;color:var(--muted)}.qrev .qrevrow{flex-wrap:wrap}@media (prefers-reduced-motion:reduce){.muswitch .mustk,.muswitch .mustk i{transition:none}}'; document.head.appendChild(st); })();
+(function () { var st = document.createElement("style"); st.textContent = '.muswitch{display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border:1.5px solid var(--line);border-radius:99px;background:var(--surface2,transparent);color:var(--ink);font:inherit;font-weight:800;font-size:14px;cursor:pointer}.muswitch .mustk{position:relative;width:42px;height:24px;border-radius:99px;background:color-mix(in srgb,var(--muted) 35%,transparent);transition:background .15s;flex:none}.muswitch .mustk i{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35);transition:transform .15s}.muswitch.on{border-color:#7c5cff}.muswitch.on .mustk{background:#7c5cff}.muswitch.on .mustk i{transform:translateX(18px)}.muswitch:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}.qrevv.o.on{background:#d97706;border-color:#d97706;color:#fff}.qrevv.w.on{background:#7c5cff;border-color:#7c5cff;color:#fff}.qrevimp{display:flex;flex-direction:column;gap:6px;margin:4px 0 8px}.qrimp{text-align:left;padding:8px 10px;border-radius:10px;border:1.5px solid var(--line);background:transparent;color:var(--ink);font:inherit;font-size:14px;cursor:pointer}.qrimp.on{border-color:#7c5cff;background:color-mix(in srgb,#7c5cff 16%,transparent);font-weight:700}.qrevimp .btn{align-self:flex-start}.qrevnr{max-width:260px;flex:1;padding:6px 8px;font-size:14px}.qrevguide{margin:2px 0 6px;font-size:12.5px;color:var(--muted)}.qrev .qrevrow{flex-wrap:wrap}@media (prefers-reduced-motion:reduce){.muswitch .mustk,.muswitch .mustk i{transition:none}}'; document.head.appendChild(st); })();
 /* quick volume popover from the top-bar note button */
 function muPop() {
   if (!S.mupop) return "";
