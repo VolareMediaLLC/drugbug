@@ -146,8 +146,10 @@ function genQ(o) {
    (nursing / NCLEX prep generic only, everything else mixed). Settings → Study, and the chips on every test setup. */
 /* Nov 10 2026 (owner): brand names are the default; "all" adds generic names back in, mixed. Nursing /
    NCLEX prep keeps generic as its default because the NCLEX only uses generic names. */
-function qNamesMode(o) { var s = SET().qnames; if (s === "generic" || s === "all" || s === "brand") return s; return (o && isN(o.lv)) || isN(S.level) || S.view === "nlevels" ? "generic" : "brand"; }
-function qNamesChips() { var m = qNamesMode(); return '<div class="lbl">Medication names in questions</div><div class="chips"><button class="chip" data-qnames="brand" aria-pressed="' + (m === "brand") + '">Brand names</button><button class="chip" data-qnames="all" aria-pressed="' + (m === "all") + '">Include generic names</button><button class="chip" data-qnames="generic" aria-pressed="' + (m === "generic") + '">Generic names only</button></div>'; }
+/* Nov 13 2026 (owner): generic names are the default for every question, every path; brand names only
+   when the person picks "Brand names" (or "Generic and brand" to mix). */
+function qNamesMode(o) { var s = SET().qnames; if (s === "generic" || s === "all" || s === "brand") return s; return "generic"; }
+function qNamesChips() { var m = qNamesMode(); return '<div class="lbl">Medication names in questions</div><div class="chips"><button class="chip" data-qnames="generic" aria-pressed="' + (m === "generic") + '">Generic names</button><button class="chip" data-qnames="brand" aria-pressed="' + (m === "brand") + '">Brand names</button><button class="chip" data-qnames="all" aria-pressed="' + (m === "all") + '">Mix both</button></div>'; }
 function mixItem(q) { if (q.t) return { q: q, opts: shuffle(q.opts.slice()) }; var m = mixQ(q); return { q: m, opts: shuffle([m.a].concat(m.w)) }; }
 /* answer check for every item type: single best answer, multiple response (select all that apply), ordered response */
 function nrRight(x, ans) { var q = x.q; if (ans == null) return false; if (!q.t) return ans === q.a; if (!Array.isArray(ans) || ans.length !== q.ok.length) return false;
@@ -9022,7 +9024,7 @@ function settingsView() {
     setRow("Daily goal", "Questions in the Daily DrugBug.", setOpts("dailyGoal", s.dailyGoal, [[5, "5"], [10, "10"], [20, "20"]])) +
     setRow("Exam prep length", "Default number of questions.", setOpts("nrN", s.nrN, [[10, "10"], [25, "25"], [50, "50"], [100, "100"]])) +
     setRow("Exam prep mode", "", setOpts("nrMode", s.nrMode, [["practice", "Practice"], ["exam", "Exam"]])) +
-    setRow("Medication names in questions", "Brand names by default. Include generic names to mix them in, or use generic only. Nursing defaults to generic only, like the NCLEX.", setOpts("qnames", s.qnames || "", [["", "By route (default)"], ["brand", "Brand names"], ["all", "Brand, plus generic names"], ["generic", "Generic only"]])) +
+    setRow("Medication names in questions", "Generic names by default. Pick Brand names to be asked by brand, or mix both.", setOpts("qnames", s.qnames || "generic", [["generic", "Generic names (default)"], ["brand", "Brand names"], ["all", "Generic and brand mixed"]])) +
     setRow("Question choice", "", setOpts("adaptive", s.adaptive ? "1" : "0", [["1", "Adaptive"], ["0", "Random"]])) +
     setRow("Megacode timer", "Relaxed doubles the time. Off removes the clock.", setOpts("megaTimer", s.megaTimer, [["on", "On"], ["relaxed", "Relaxed"], ["off", "Off"]])) +
     setRow("Drug pages open in", "", setOpts("fullDefault", s.fullDefault ? "1" : "0", [["0", "Simple view"], ["1", "Full record"]])) +
