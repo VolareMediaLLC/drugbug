@@ -1393,7 +1393,7 @@ var MODES = [["basics", "What is it?"], ["use", "Uses & cautions"], ["dose", "Do
 function fcState() {
   if (!S.fc) {
     var ids = filteredDeck().filter(function (id) { return !drugLocked(id); });
-    S.fc = { mode: "basics", deck: shuffle(ids), i: 0, flipped: false };
+    S.fc = { mode: "basics", deck: S.group === "all" && typeof cmShuffle === "function" ? cmShuffle(ids) : shuffle(ids), i: 0, flipped: false };   /* common medications come first more often (Nov 13 2026) */
   }
   return S.fc;
 }
@@ -1846,6 +1846,7 @@ function nrQuiz(st) {
  c += '</div><div class="qreport">' + reportBtn("question", qRef(q), q.d) + '</div>';
   if (reveal) c += '<div class="explain ' + (nrRight(x, picked) ? "ok" : "bad") + '"><strong>' + (nrRight(x, picked) ? "Correct." + (st.mode === "practice" ? stickNote(true) : '') : (q.t === "order" ? "Not quite. The correct order is shown above." : (q.t === "multi" ? "Not quite. You found " + (picked || []).filter(function (v) { return q.ok.indexOf(v) >= 0; }).length + " of " + q.ok.length + " correct answers" + ((picked || []).some(function (v) { return q.ok.indexOf(v) < 0; }) ? " and picked a wrong one" : "") + ". Correct answers: " : "Not quite. Correct answer: ") + esc(q.a)) + (st.mode === "practice" ? stickNote(false) : '')) + '</strong><p>' + esc(q.x) + '</p>' + (q.d && DB.drugs[q.d] ? '<button class="linkish" data-drug="' + q.d + '">Review ' + esc(DB.drugs[q.d].name) + '</button>' : '') + '</div>';
   if (reveal) c += qRateHTML(q);
+  else if (picked != null && typeof isReviewer === "function" && isReviewer()) c += revHTML(q);   /* evaluators grade exam questions too (owner, Nov 13 2026) */
   c += '<div class="actions">';
   if (q.t && st.mode === "practice" && picked == null) c += '<button class="btn" data-act="nrsubmit"' + (nrSelReady(st, x) ? "" : " disabled") + '>Check answer</button>';
   if (st.i > 0) c += '<button class="btn ghost" data-act="nrprev">\u2190 Previous question</button>'; /* available in practice as well as exam (owner, Oct 29 2026) */
@@ -3179,7 +3180,7 @@ function masteryPct(ids) { if (!ids.length) return 0; return Math.round(100 * id
 function xpLevel(xp) { var lv = 1, need = 100; while (xp >= need) { xp -= need; lv++; need = 100 + (lv - 1) * 50; } return { lv: lv, into: xp, need: need }; }
 
 /* recording answers */
-function record(q, ok, kind, pick) { try { recordInner(q, ok, kind, pick); } catch (e) { /* never let progress bookkeeping block the quiz from moving on */ try { console.warn("record", e); } catch (x) { } } }
+function record(q, ok, kind, pick) { try { revFloatFor(q); } catch (e) {} try { recordInner(q, ok, kind, pick); } catch (e) { /* never let progress bookkeeping block the quiz from moving on */ try { console.warn("record", e); } catch (x) { } } }
 function recordInner(q, ok, kind, pick) {
   if (typeof usgOn === "function" && usgOn()) { USG.inc.q++; if (ok) USG.inc.c++; if (q && q.d && /^[a-z0-9][a-z0-9-]{1,59}$/.test(q.d) && USG.inc.dr) { var ud = USG.inc.dr[q.d] || (USG.inc.dr[q.d] = [0, 0]); ud[0]++; if (ok) ud[1]++; } try { var qk = q && typeof qid === "function" ? qid(q) : ""; if (qk && /^q[a-z0-9]{3,20}$/.test(qk) && USG.inc.qa && (USG.inc.qa[qk] || Object.keys(USG.inc.qa).length < 200)) { var uq = USG.inc.qa[qk] || (USG.inc.qa[qk] = [0, 0]); uq[0]++; if (ok) uq[1]++; } } catch (e) {} }
   var P = Prog.d, t = today();
@@ -3245,6 +3246,91 @@ function diffLoad() {
 setTimeout(function () { try { diffLoad(); } catch (e) {} }, 8000);
 function diffOf(q) { var v = DIFF.avg[qid(q)]; return v == null ? null : v; }
 function diffCls(q) { var v = diffOf(q); return v == null ? "u" : v < 2 ? "e" : v > 4 ? "h" : "m"; }
+/* ---------- Common medications come up most (owner, Nov 13 2026) ----------
+   "People are getting a lot of cancer medications, but that should be mostly oncology, not normal nursing.
+   Find the most common medications and test that percentage over them; test the least over the least
+   common type unless it's a specialist tab in that field."
+   Every medication gets a tier from how often people in that field meet it:
+     1 common   the ~240 most-used medications (US outpatient top lists + ED, ICU, OR and EMS staples),
+                plus whatever the field lives on (EMS: prehospital/RSI/critical care; nurses: ED/ICU and
+                nursing essentials; imaging: contrast; mental health: behavioral health; and so on)
+     2 core     everyday drug types (blood pressure, diabetes, antibiotics, pain, GI, psych, ...)
+     3 less common  dermatology, eye, vaccines, supplements, advanced classes, ...
+     4 specialist   oncology, rare disease, transplant, MS, antivenoms, research peptides, ...
+   A quiz then has at most about 6% specialist, 14% less common and 30% core questions; anything over that
+   is traded for more common ones, so common medications make up at least half (often more). Only tiers the quiz can draw
+   from count, so an Oncology quiz is still all oncology. Scope never changes: nurses still never get
+   prehospital-only questions and the other way round; this only changes how often. */
+var CM_TOP = "atorvastatin levothyroxine lisinopril metformin amlodipine metoprolol albuterol omeprazole losartan gabapentin hydrochlorothiazide sertraline simvastatin montelukast escitalopram rosuvastatin bupropion furosemide pantoprazole trazodone dextroamphetamine fluticasone tamsulosin fluoxetine carvedilol duloxetine meloxicam clopidogrel prednisone citalopram insulin-glargine potassium-chloride pravastatin tramadol aspirin alprazolam ibuprofen cyclobenzaprine amoxicillin methylphenidate allopurinol venlafaxine clonazepam ergocalciferol zolpidem apixaban glipizide lisinopril-hydrochlorothiazide spironolactone atenolol buspirone oxycodone cetirizine lamotrigine quetiapine topiramate warfarin ondansetron rivaroxaban diclofenac azithromycin hydroxyzine cephalexin famotidine estradiol loratadine sitagliptin semaglutide empagliflozin dapagliflozin tirzepatide valsartan diltiazem propranolol lorazepam clonidine aripiprazole mirtazapine paroxetine amitriptyline hydrocodone-acetaminophen acetaminophen oxybutynin finasteride doxycycline ciprofloxacin levofloxacin trimethoprim-sulfamethoxazole nitrofurantoin amoxicillin-clavulanate fluconazole valacyclovir prednisolone methylprednisolone dexamethasone baclofen tizanidine methocarbamol naproxen celecoxib morphine hydromorphone fentanyl ketorolac insulin-lispro insulin-aspart regular-insulin glimepiride pioglitazone dulaglutide liraglutide hydralazine nifedipine isosorbide-mononitrate nitroglycerin digoxin amiodarone enoxaparin heparin labetalol losartan-hydrochlorothiazide olmesartan benazepril ramipril chlorthalidone bumetanide torsemide metolazone ezetimibe fenofibrate levetiracetam phenytoin valproic-acid carbamazepine oxcarbazepine lithium risperidone olanzapine haloperidol ziprasidone donepezil memantine carbidopa-levodopa ropinirole pramipexole sumatriptan rizatriptan promethazine metoclopramide prochlorperazine meclizine diphenhydramine sucralfate docusate sennosides polyethylene-glycol bisacodyl loperamide lansoprazole esomeprazole budesonide-formoterol fluticasone-salmeterol tiotropium ipratropium albuterol-ipratropium benzonatate guaifenesin levocetirizine fexofenadine mupirocin triamcinolone hydrocortisone clotrimazole nystatin metronidazole clindamycin vancomycin ceftriaxone cefazolin piperacillin-tazobactam penicillin-v magnesium-sulfate calcium-gluconate calcium-chloride sodium-bicarbonate dextrose glucagon naloxone epinephrine norepinephrine dopamine adenosine atropine midazolam ketamine propofol etomidate succinylcholine rocuronium vecuronium flumazenil tranexamic-acid alteplase tenecteplase normal-saline lactated-ringers nicotine varenicline buprenorphine buprenorphine-naloxone methadone naltrexone thiamine folic-acid cyanocobalamin ferrous-sulfate cholecalciferol influenza-vaccine tdap-vaccine pneumococcal-conjugate-vaccine covid-19-vaccine medroxyprogesterone norethindrone oxytocin methylergonovine terbutaline diazepam phenobarbital fosphenytoin hydroxychloroquine methotrexate colchicine febuxostat alendronate calcitriol dutasteride-tamsulosin sildenafil tadalafil latanoprost timolol-ophthalmic".split(" ");
+var CM_SHARE = [0.5, 0.3, 0.14, 0.06];
+var CM_CORE = /^(Cardiovascular \/ Blood Pressure|Diuretics|Antiarrhythmics|Anticoagulants \/ Antiplatelets|Thrombolytics|Lipid|Diabetes|Respiratory|Steroids|Analgesics|Sedatives|Paralytics|Reversal|Antiemetics|GI|Antibiotics|Antifungals|Antivirals|Seizure|Antidepressants|Antipsychotics|Mood Stabilizers|ADHD|Parkinson|Dementia|Thyroid|Renal \/ Electrolyte|Vasopressors|ICU Sedation|Hospital Emergency|Anesthesia \/ OR|OB\/GYN Hospital|Blood \/ Hematology|Gout|Muscle Relaxants|BPH|Allergy|Sleep|Nursing Essentials|IV Fluids|Over-the-Counter|Prehospital|EMS Toxicology|Obstetric|Critical Care \/ Flight|Migraine|Women's Health)/;
+var CM_SPEC = /^(Oncology|Rare & Specialty|Immunosuppressants|Multiple Sclerosis|Antivenoms \(International|Peptides|Heavy Metal|Antimycobacterials|Antiparasitics|Antifungals \(Advanced|Antibacterials \(Advanced|Biologics|Toxic Plant|Vegetable Compounds|Fruit Compounds|Probiotics|Illicit)/;
+/* what each field meets every day: drug tags and group names that count as tier 1 there */
+var CM_FIELD = {
+  ph: { tags: ["PH", "ED", "RSI", "CCT"], groups: /^(Prehospital|EMS Toxicology|Obstetric|Critical Care \/ Flight|Hospital Emergency|Reversal|Vasopressors|Paralytics)/ },
+  flight: { tags: ["PH", "ED", "RSI", "CCT", "ICU", "FL"], groups: /^(Prehospital|EMS Toxicology|Obstetric|Critical Care \/ Flight|Hospital Emergency|Reversal|Vasopressors|Paralytics|ICU Sedation|Blood \/ Hematology)/ },
+  rn: { tags: ["ED", "ICU"], groups: /^(Nursing Essentials|IV Fluids|Hospital Emergency|Reversal|Vasopressors|ICU Sedation)/ },
+  md: { tags: ["ED"], groups: /^(Hospital Emergency)/ },
+  im: { tags: [], groups: /^(Imaging Agents)/ },
+  mh: { tags: ["BH"], groups: /^(Antidepressants|Antipsychotics|Mood Stabilizers|ADHD|Sedatives|Sleep|Neuro \/ Psych \/ Addiction)/ },
+  anes: { tags: ["AN", "RSI"], groups: /^(Anesthesia \/ OR|Inhaled Anesthetics|Paralytics|Reversal|ICU Sedation)/ },
+  rrt: { tags: ["RE"], groups: /^(Respiratory|Steroids)/ },
+  diet: { tags: [], groups: /^(Diabetes|Vitamins|IV Fluids|Renal \/ Electrolyte|GI)/ },
+  pt: { tags: [], groups: /^(Analgesics|Muscle Relaxants|Gout)/ },
+  dent: { tags: [], groups: /^(Antibiotics|Analgesics|Anticoagulants)/ },
+  ekg: { tags: ["CA"], groups: /^(Antiarrhythmics|Cardiovascular|Anticoagulants)/ },
+  phleb: { tags: [], groups: /^(Anticoagulants|Blood \/ Hematology)/ }
+};
+var CM_GRP = null, CM_TIER = {};
+function cmField(lv) {
+  var k = lv || (typeof ctxKey === "function" ? ctxKey() : "");
+  if (k === "flight" || k === "flightrn" || k === "cpp" || k === "cmc") return "flight";
+  if (CM_FIELD[k]) return k;
+  if (k === "surg") return "anes"; if (k === "slp") return "pt";
+  var r = ""; try { r = routeOfLevel(k); } catch (e) {}
+  return r === "ph" || r === "fm" ? "ph" : r === "rn" ? "rn" : r === "md" ? "md" : r === "im" ? "im" : "";
+}
+function cmTier(id, lv) {
+  if (!id || !DB.drugs[id]) return 2;
+  var f = cmField(lv), key = id + "|" + f; if (CM_TIER[key]) return CM_TIER[key];
+  if (!CM_GRP) { CM_GRP = {}; (DB.GROUPS || []).forEach(function (g) { (g.ids || []).forEach(function (x) { (CM_GRP[x] = CM_GRP[x] || []).push(g.name); }); }); CM_TOPSET = {}; CM_TOP.forEach(function (x) { CM_TOPSET[x] = 1; }); }
+  var G = CM_GRP[id] || [], tags = DB.drugs[id].tags || [], F = CM_FIELD[f], t;
+  if (CM_TOPSET[id] || (F && (tags.some(function (x) { return F.tags.indexOf(x) >= 0; }) || G.some(function (n) { return F.groups.test(n); })))) t = 1;
+  else if (G.some(function (n) { return CM_CORE.test(n); })) t = 2;
+  else if (G.length && G.every(function (n) { return CM_SPEC.test(n); })) t = 4;
+  else t = 3;
+  return (CM_TIER[key] = t);
+}
+var CM_TOPSET = null;
+/* a drug list in random order where common medications tend to come first and specialist ones late
+   (weights 1 / 0.6 / 0.25 / 0.06 by tier); used for flashcards and other "all medications" decks */
+function cmShuffle(ids, lv) {
+  var W = [0, 1, 0.6, 0.25, 0.06];
+  return ids.map(function (id) { return { id: id, k: Math.pow(Math.random(), 1 / W[cmTier(id, lv)]) }; }).sort(function (a, b) { return b.k - a.k; }).map(function (x) { return x.id; });
+}
+function qTier(q) { return q && q.d ? cmTier(q.d, q.lv) : 2; }
+function tierBalance(sel, pool) {
+  var n = sel.length; if (n < 5 || !pool || !pool.length || !DB.GROUPS) return sel;
+  var avail = [0, 0, 0, 0, 0], spare = { 1: [], 2: [], 3: [], 4: [] }, inS = {};
+  sel.forEach(function (q) { inS[qid(q)] = 1; });
+  pool.forEach(function (q) { var t = qTier(q); avail[t]++; if (!inS[qid(q)] && !q.pilot) spare[t].push(q); });
+  var tot = 0; [1, 2, 3, 4].forEach(function (t) { if (avail[t]) tot += CM_SHARE[t - 1]; });
+  if (!tot) return sel;
+  var want = {}; [1, 2, 3, 4].forEach(function (t) { want[t] = avail[t] ? Math.round(n * CM_SHARE[t - 1] / tot) : 0; });
+  [1, 2, 3, 4].forEach(function (t) { spare[t] = shuffle(spare[t]); });
+  var out = sel.slice(), cnt = function (t) { return out.filter(function (q) { return qTier(q) === t; }).length; }, ch = 0;
+  /* too many of a rarer tier: trade the extras for the most common tier that is short */
+  [4, 3, 2].forEach(function (t) {
+    var g = 0;
+    while (cnt(t) > want[t] && g++ < n) {
+      var need = [1, 2, 3, 4].filter(function (u) { return u < t && (cnt(u) < want[u] || u === 1) && spare[u].length; })[0]; if (!need) break;   /* only ever toward more common */
+      var i = -1; for (var j = out.length - 1; j >= 0; j--) if (qTier(out[j]) === t && !out[j].pilot) { i = j; break; } if (i < 0) break;
+      var lv = out[i].lv, sp = spare[need], k = -1; for (var m = sp.length - 1; m >= 0; m--) if (sp[m].lv === lv) { k = m; break; }
+      out[i] = k >= 0 ? sp.splice(k, 1)[0] : sp.pop(); ch = 1;
+    }
+  });
+  return ch ? shuffle(out) : out;
+}
 /* ---------- Relevance (owner, Nov 13 2026) ----------
    Evaluators who mark a question "Not relevant" also say how relevant it is to the area it was asked in,
    1 to 5 (a Good vote counts as 5). The average (qDifficulty: rel) makes a question come up less often
@@ -3263,7 +3349,7 @@ function relBalance(sel, pool) {
   });
 }
 function diffBalance(sel, pool) {
-  sel = relBalance(sel, pool);
+  sel = relBalance(tierBalance(sel, pool), pool);
   var n = sel.length; if (n < 5 || !DIFF.n || !pool || !pool.length) return sel;
   var want = { e: Math.round(n * 0.2), h: Math.round(n * 0.2) };
   var out = sel.slice(), inS = {}, ch = 0; out.forEach(function (q) { inS[qid(q)] = 1; });
@@ -4104,8 +4190,42 @@ function revHTML(q) {
   }
   if (R.v === "off") c += '<div class="qrevrow"><span class="qrevl">Not relevant to</span><select class="pinput qrevnr" data-qrnr="1"><option value="">Choose…</option>' + QR_NR.map(function (o) { return '<option value="' + o[0] + '"' + (R.nr === o[0] ? ' selected' : '') + '>' + esc(o[1]) + '</option>'; }).join("") + '</select></div>';
   if (EVS && !EVS.exempt && EVS.signed) c += '<div class="qrevwk">' + evWeekLine() + '</div>';
+  try { var fp = evFieldPct(q.lv); if (fp) c += '<p class="qrevguide qrevfp">' + esc(fp.name) + ' questions: <b>' + fp.pct + '% graded</b> · ' + (100 - fp.pct) + '% not graded yet (' + fp.g.toLocaleString() + ' of ' + fp.n.toLocaleString() + ' graded)</p>'; } catch (e) {}
   c += '<div class="qrevs"><textarea maxlength="1000" placeholder="Suggestion (optional): a better wording, a wrong answer, a missing fact…" data-qrs="1">' + esc(R.s || "") + '</textarea><button type="button" class="btn small" data-qrsend="1">Send suggestion</button></div>';
   return c + '</div>';
+}
+/* Evaluators grade EVERY question (owner, Nov 13 2026: "evaluate everything including exam questions").
+   Screens that show their own grading panel keep it; on any other screen that records an answer (FireBugs,
+   games, protocol drills, scenes, field medic, …) a small "Grade this question" card slides up at the bottom. */
+var REVF = { q: null, t: 0, open: false };
+var revfdlg = document.createElement("div"); revfdlg.id = "revfdlg"; revfdlg.hidden = true; document.body.appendChild(revfdlg);
+function revFloatFor(q) {
+  if (!q || !q.q || typeof isReviewer !== "function" || !isReviewer()) return;
+  REVF.q = q; clearTimeout(REVF.t);
+  REVF.t = setTimeout(function () {
+    var k = qid(REVF.q), onPage = [].some.call(document.querySelectorAll('.qrev[data-qrk="' + k + '"]'), function (el) { return !revfdlg.contains(el); }); if (onPage) { revfdlg.hidden = true; return; }
+    revfDraw();
+  }, 450);
+}
+function revfDraw() {
+  var q = REVF.q; if (!q) return;
+  revfdlg.innerHTML = '<div class="revfcard" role="region" aria-label="Grade this question"><div class="revfh"><b>Grade this question</b><span class="muted small">' + esc(String(q.q).slice(0, 90)) + (String(q.q).length > 90 ? '…' : '') + '</span><button class="linkish" data-revf="' + (REVF.open ? 'min' : 'open') + '">' + (REVF.open ? 'Hide' : 'Grade') + '</button><button class="revfx" data-revf="x" aria-label="Close">×</button></div>' + (REVF.open ? revHTML(q) + admAvgHTML(qid(q), true) : '') + '</div>';
+  revfdlg.hidden = false;
+}
+revfdlg.addEventListener("click", function (e) { var b = e.target.closest("[data-revf]"); if (!b) return; var a = b.getAttribute("data-revf"); if (a === "x") { revfdlg.hidden = true; REVF.q = null; return; } REVF.open = a === "open"; revfDraw(); });
+(function () { var st = document.createElement("style"); st.textContent = '#revfdlg{position:fixed;left:50%;bottom:calc(10px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:70;width:min(560px,calc(100vw - 20px));max-height:70vh;overflow:auto}.revfcard{background:var(--surface);border:1.5px solid #7c5cff;border-radius:16px;padding:10px 12px;box-shadow:0 10px 30px rgba(0,0,0,.35)}.revfh{display:flex;align-items:center;gap:8px}.revfh b{white-space:nowrap}.revfh .muted{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.revfx{background:none;border:0;color:var(--muted);font-size:22px;line-height:1;cursor:pointer;padding:0 4px}'; document.head.appendChild(st); })();
+/* share of a field's questions that evaluators have graded, shown under every grading panel (owner, Nov 13 2026) */
+var EVFP = { at: -1, by: null };
+function evFieldPct(lv) {
+  var D = typeof ANA !== "undefined" && ANA.data; if (!D || !D.revs) { if (typeof admStats === "function") admStats(); return null; }
+  if (EVFP.at !== ANA.at) {
+    var by = {}, V = D.revs, all = [].concat(DB.Q || [], DB.RQ || [], DB.QX || []);
+    all.forEach(function (q) { if (!q || !q.q) return; var r = "gen"; try { r = levelObj(q.lv) ? routeOfLevel(q.lv) : "gen"; } catch (e) {} var F = by[r] || (by[r] = { n: 0, g: 0 }); F.n++; var v = V[qid(q)]; if (v && (v.g || v.b || v.o || v.dN)) F.g++; });
+    EVFP = { at: ANA.at, by: by };
+  }
+  var r0 = "gen"; try { r0 = levelObj(lv) ? routeOfLevel(lv) : "gen"; } catch (e) {}
+  var F0 = EVFP.by[r0]; if (!F0 || !F0.n) return null;
+  return { name: { ph: "Prehospital", rn: "Nursing", md: "Medical school", im: "Imaging", ah: "Allied health", fm: "Military / tactical", gen: "General" }[r0] || r0, pct: Math.round(100 * F0.g / F0.n), g: F0.g, n: F0.n };
 }
 function revSave(k, el) {
   var R = (Prog.d.qrev || (Prog.d.qrev = {}))[k] || (Prog.d.qrev[k] = {}), q = QRATE_Q[k] || {};
@@ -4288,7 +4408,23 @@ var PIL = store("pilotSt") || { ok: [], held: [], no: [], at: 0 }, PIL_ADDED = {
 function pilHas(k, id) { return (PIL[k] || []).indexOf(id) >= 0; }
 function pilLive(id) { return pilHas("ok", id); }
 function pilDone(id) { return pilLive(id) || pilHas("no", id) || pilHas("held", id); }
+/* questions pulled after a problem report and their fixed copies (owner, Nov 13 2026): a pulled question
+   leaves every quiz right away; its fixed copy joins the pilot pool, so evaluators grade it, and it goes
+   live once the owner approves it (the normal pilot rule). */
+var PIL_FIXED = {};
+function pilFixApply() {
+  var F = PIL.fix; if (!F) return;
+  var gone = {}; (F.pulled || []).forEach(function (id) { gone[id] = 1; });
+  if (Object.keys(gone).length) ["Q", "RQ", "QX"].forEach(function (k) { if (DB[k]) DB[k] = DB[k].filter(function (q) { return !(q && gone[qid(q)]); }); });
+  DB.PILOT = DB.PILOT || [];
+  (F.fixes || []).forEach(function (f) {
+    if (!f || !f.id || PIL_FIXED[f.id]) return; PIL_FIXED[f.id] = 1;
+    if (DB.PILOT.some(function (q) { return q.id === f.id; })) return;
+    DB.PILOT.push({ id: f.id, pilot: 1, rp: { name: "fixed after a report", at: "" }, lv: f.lv || "", d: f.d || "", q: f.q, a: f.a, w: (f.w || []).slice(0, 3), x: f.x || "", cat: "" });
+  });
+}
 function pilApply() {
+  try { pilFixApply(); } catch (e) {}
   if (!DB.PILOT) return;
   var ok = {}; (PIL.ok || []).forEach(function (i) { ok[i] = 1; });
   DB.PILOT.forEach(function (q) { if (ok[q.id] && !PIL_ADDED[q.id]) { PIL_ADDED[q.id] = 1; DB.Q.push(q); } });
@@ -4298,7 +4434,7 @@ function pilFetch(force) {
   if (typeof fnCall !== "function" || (!force && Date.now() - (PIL.at || 0) < 3600000)) return;
   fnCall("pilotStatus", force ? { fresh: 1 } : {}).then(function (r) {
     if (!r || !r.ok) return;
-    PIL = { ok: r.ok, held: r.held || [], no: r.no || [], at: Date.now() }; store("pilotSt", PIL); pilApply();
+    PIL = { ok: r.ok, held: r.held || [], no: r.no || [], fix: r.fix || null, at: Date.now() }; store("pilotSt", PIL); pilApply();
   }).catch(function () {});
 }
 setTimeout(function () { try { pilFetch(); } catch (e) {} }, 6000);
@@ -5915,6 +6051,7 @@ function drawBuddy() {
   buddy.innerHTML = (BD.msg ? '<div class="bubble" role="status">' + esc(BD.msg) + '</div>' : '<div class="bubble" role="status" hidden></div>') + '<button class="bbtn" data-buddy="1" aria-label="Your bug, ' + esc(myBug().name) + '. Tap to say hi.">' + myBugArt("buddyart", mood, null, (typeof myStage === "function" ? myStage() : null)) + (typeof pkSide === "function" ? pkSide("bud") : "") + '</button>';
 }
 function buddySet(mood, msg, ms) {
+  if (msg && typeof BDC !== "undefined") BDC.last = Date.now(); BD.asleep = false;
   BD.mood = mood; BD.msg = msg || ""; drawBuddy();
   clearTimeout(BD.t); BD.t = setTimeout(function () { BD.mood = null; BD.msg = ""; drawBuddy(); }, ms || 2600);
   armIdle();
@@ -5935,7 +6072,44 @@ function buddyTap() {
   var m = pick(["wink", "joy", "think", "joy"]);
   buddySet(m, pickQ("tap"));
 }
-function armIdle() { clearTimeout(BD.idle); BD.idle = setTimeout(function () { if (!buddyOn()) return; BD.mood = "sleepy"; BD.msg = "Zzz… tap me when you're back."; drawBuddy(); }, 180000); }
+function armIdle() { clearTimeout(BD.idle); BD.idle = setTimeout(function () { if (!buddyOn()) return; BD.mood = "sleepy"; BD.msg = "Zzz…"; BD.asleep = true; drawBuddy(); setTimeout(function () { if (BD.asleep) { BD.msg = ""; drawBuddy(); } }, 4000); }, 180000); }
+/* Your bug talks to you while you use the app (owner, Nov 13 2026: "make comments while you're using the app;
+   don't make it so you have to tap him to wake him up"). Any touch, key or scroll wakes it by itself, and
+   while you're active it says something about what you're doing about once a minute or so (never more
+   than once every 50 seconds, only while you've been active in the last 20 seconds). */
+var BDC = { last: Date.now(), act: 0, said: {} };
+function bdName() { try { return myBug().name; } catch (e) { return "your bug"; } }
+function bdLine() {
+  var h = new Date().getHours(), L = [], sh = S.sheet && S.sheet.id && DB.drugs && DB.drugs[S.sheet.id] ? nameOf(S.sheet.id) : "";
+  if (sh) L.push("Ooh, " + sh + ". Check the memory trick.", sh + "? I know this one. Kind of.", "Look for the big warning on " + sh + ".", "Say " + sh + " out loud. It helps. Probably.");
+  else if (S.nr && S.nr.phase === "quiz") L.push("Read every answer before you pick.", "Take your time. I'll wait.", "You've got this one.", "Deep breath. Next question.");
+  else if (S.view === "level" && S.tab === "games") L.push("Game time! Don't tell the quizzes.", "Go for a high score.");
+  else if (S.view === "level" && (S.tab === "flash" || S.tab === "fc" || S.tab === "cards")) L.push("Flip, think, then check.", "Say it before you flip!", "Cards are my favorite. Don't tell the quizzes.");
+  else if (S.view === "level" && S.tab === "hub") L.push("Pick something and let's go.", "A quick 5-minute DrugBug sounds good right now.", "I could study all day. Well, you study, I'll watch.");
+  else if (S.view === "settings") L.push("Making it yours. Nice.", "Ooh, settings. Fancy.");
+  else if (S.view === "gen") L.push("So many meds, so little time.", "Find one you've never heard of.");
+  else if (S.view === "stats") L.push("Numbers! I love numbers.", "Look at all that studying.");
+  else L.push("I'm right here if you need me.", "Bzzz. Studying looks good on you.", "Every med you learn is one less surprise.", "Hydrate! I mean you, not me. I'm a bug.");
+  if (h >= 23 || h < 4) L.push("Late-night study! Sleep helps it stick, though.", "It's late. Your brain files things while you sleep.");
+  else if (h < 10) L.push("Good morning! Meds and coffee.", "Morning study is the best study.");
+  try { var st = liveStreak(); if (st >= 2) L.push("Day " + st + " of your streak. Keep it going!"); } catch (e) {}
+  L = L.filter(function (x) { return !BDC.said[x] || Date.now() - BDC.said[x] > 15 * 60000; });
+  return L.length ? pick(L) : "";
+}
+function bdActive() {
+  var now = Date.now(); BDC.act = now;
+  if (BD.asleep) { BD.asleep = false; if (buddyOn()) buddySet(pick(["joy", "shock", "wink"]), pick(["I'm awake!", "Oh! You're back!", "Huh? I was studying. With my eyes closed."]), 2600); else armIdle(); BDC.last = now; return; }
+  armIdle();
+}
+["pointerdown", "keydown", "wheel", "touchstart"].forEach(function (ev) { document.addEventListener(ev, function () { try { bdActive(); } catch (e) {} }, { passive: true, capture: true }); });
+setInterval(function () {
+  try {
+    var now = Date.now(); if (document.hidden || !buddyOn() || BD.asleep || BD.msg || now - BDC.act > 20000 || now - BDC.last < 50000) return;
+    if (Math.random() > 0.45) return;   /* about once every 1 to 2 minutes */
+    var t = bdLine(); if (!t) return; BDC.last = now; BDC.said[t] = now;
+    buddySet(pick(["joy", "wink", "think", "joy"]), t, 3800);
+  } catch (e) {}
+}, 10000);
 buddy.addEventListener("click", function (e) { if (e.target.closest("[data-buddy]")) buddyTap(); });
 function feedback(ok) { sfx(ok); buddyReact(ok); }
 /* special days */
@@ -30589,6 +30763,10 @@ function stxQView() {
     c += '<section class="sxcard"><h3>My grading</h3><div class="sxtiles">' + stxTile(M.thisWeek != null ? M.thisWeek + ' / ' + (M.need || 40) : '…', 'graded this week', M.weekEnds ? 'Week ends ' + new Date(M.weekEnds).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" }) : '') + stxTile(M.lastWeek != null ? M.lastWeek : '—', 'graded last week') + stxTile(mn.toLocaleString(), 'graded in all') + stxTile((mg + mb) ? Math.round(100 * mg / (mg + mb)) + '%' : '—', 'of my votes are Good', (T.g + T.b) ? 'Everyone: ' + Math.round(100 * T.g / (T.g + T.b)) + '%' : '') + '</div>' +
       (M.warned ? '<p class="presult">You were under ' + (M.need || 40) + ' last week. Two short weeks in a row ends evaluator status.</p>' : '') + '</section>';
   }
+  /* by field: Prehospital, Nursing, … (owner, Nov 13 2026) */
+  var FN = { ph: "Prehospital", rn: "Nursing", md: "Medical school", im: "Imaging", ah: "Allied health", fm: "Military / tactical", gen: "General" }, fd = {};
+  Object.keys(lv).forEach(function (k) { var L = lv[k], r = "gen"; try { r = levelObj(k) ? routeOfLevel(k) : "gen"; } catch (e) {} var F = fd[r] || (fd[r] = { n: 0, graded: 0 }); F.n += L.n; F.graded += L.graded; });
+  c += '<section class="sxcard"><h3>Graded by field</h3><div class="sxrows">' + Object.keys(fd).sort(function (a, b) { return fd[b].n - fd[a].n; }).map(function (r) { var F = fd[r], pc = Math.round(100 * F.graded / F.n); return '<div class="sxrow"><span class="n">' + esc(FN[r] || r) + ' <small>' + F.graded.toLocaleString() + ' of ' + F.n.toLocaleString() + '</small></span>' + stxBar(pc) + '<span class="v">' + pc + '%</span></div>'; }).join("") + '</div></section>';
   var LV = Object.keys(lv).map(function (k) { return lv[k]; }).sort(function (a, b) { return b.n - a.n; });
   c += '<section class="sxcard"><h3>Bank health by level</h3><div class="sxtbl sx5"><div class="sxth"><span>Level</span><span>Questions</span><span>Graded</span><span>Good votes</span><span>Right</span></div>' + LV.map(function (L) {
     return '<div class="sxtr"><span><b>' + esc(stxLv(L.lv)) + '</b>' + (L.rn ? '<small>Difficulty ' + (Math.round(10 * L.rs / L.rn) / 10) + ' / 5</small>' : '') + '</span><span>' + L.n.toLocaleString() + '</span><span>' + Math.round(100 * L.graded / L.n) + '%</span><span>' + ((L.g + L.b) ? Math.round(100 * L.g / (L.g + L.b)) + '%' : '—') + '</span><span>' + (L.an ? stxPct(L.ac, L.an) + '%' : '—') + '</span></div>';
@@ -30598,6 +30776,8 @@ function stxQView() {
   var miss = ids.filter(function (k) { return A[k] && A[k].n >= 5; }).sort(function (a, b) { return (A[a].c / A[a].n) - (A[b].c / A[b].n) || A[b].n - A[a].n; }).slice(0, 15);
   c += '<section class="sxcard"><h3>Missed most</h3><p class="muted small">Lowest % right, at least 5 answers. A question most people miss may be unclear or keyed wrong.</p>' + (miss.length ? miss.map(function (k) { var a = A[k], v = V[k] || { g: 0, b: 0 }; return stxQOpen(k, '<b class="b">' + stxPct(a.c || 0, a.n) + '% right</b> · ' + a.n + ' answers' + (v.g || v.b ? ' · ' + v.g + ' good / ' + v.b + ' bad' : '')); }).join("") : '<p class="muted small">Fills in as people answer (counting started with this update).</p>') + '</section>';
   c += '<p><button class="btn small ghost" data-evopen="1">Each medication, system and class</button></p>';
+  var gp = T.n ? Math.round(1000 * T.graded / T.n) / 10 : 0;
+  c += '<section class="sxcard sxgraded"><h3>Graded vs not graded</h3><div class="sxsplit" role="img" aria-label="' + gp + '% graded"><i style="width:' + Math.max(gp, 0.5) + '%"></i></div><p><b>' + gp + '% graded</b> (' + T.graded.toLocaleString() + ') · <b>' + (Math.round((100 - gp) * 10) / 10) + '% not graded</b> (' + (T.n - T.graded).toLocaleString() + ') of ' + T.n.toLocaleString() + ' questions</p></section>';
   return c;
 }
 
@@ -30675,7 +30855,7 @@ document.addEventListener("click", function (e) {
   stxRolesFetch(true); render();
 });
 document.addEventListener("change", function (e) { if (e.target && e.target.getAttribute && e.target.getAttribute("data-sxorg")) { STX.org = e.target.value; render(); } });
-(function () { var st = document.createElement("style"); st.textContent = '.statsv{max-width:880px;margin:0 auto}.sxh{margin:6px 0 2px}.sxtiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:10px 0}.sxtile{border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;background:var(--surface)}.sxtile b{font-size:22px;font-variant-numeric:tabular-nums}.sxtile span{font-size:13px;color:var(--muted)}.sxtile small{font-size:12px;color:var(--muted)}.sxcard{border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;margin:12px 0;background:var(--surface)}.sxcard h3{margin:0 0 6px;font-size:16px}.sxsub{margin:12px 0 4px;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}.sxcols{display:flex;align-items:flex-end;gap:2px;height:90px;margin-top:8px;border-bottom:1px solid var(--line)}.sxcols span{flex:1;height:100%;display:flex;align-items:flex-end}.sxcols i{display:block;width:100%;background:#7c5cff;border-radius:4px 4px 0 0;min-height:0}.sxcols span:hover i{background:#a58bff}.sxcolx{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:2px}.sxrows{display:flex;flex-direction:column}.sxrow{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line);font-size:14px}.sxrow:first-child{border-top:0}.sxrow .n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}.sxrow .n small{color:var(--muted)}.sxrow .v{width:44px;text-align:right;font-weight:700;font-variant-numeric:tabular-nums}.sxrow .m{min-width:60px;text-align:right;color:var(--muted);font-size:12px}.sxrow.off{opacity:.55}.sxbar{flex:0 0 32%;height:8px;border-radius:99px;background:color-mix(in srgb,var(--muted) 18%,transparent);overflow:hidden}.sxbar i{display:block;height:100%;background:#7c5cff;border-radius:99px}.sxtbl{display:flex;flex-direction:column;font-size:14px}.sxth,.sxtr{display:grid;grid-template-columns:2fr 1fr 1fr 1.2fr;gap:6px;padding:7px 0;border-top:1px solid var(--line);align-items:center}.sx5 .sxth,.sx5 .sxtr{grid-template-columns:2fr 1fr 1fr 1fr 1fr}.sxth{border-top:0;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}.sxtr>span:first-child{display:flex;flex-direction:column;min-width:0}.sxtr small{color:var(--muted);font-size:12px}.sxtr.off{opacity:.55}.sxtr .warn{color:#d97706;font-weight:800}.sxq{border-top:1px solid var(--line)}.sxqh{display:flex;flex-direction:column;gap:2px;width:100%;text-align:left;background:none;border:0;color:inherit;font:inherit;padding:8px 0;cursor:pointer}.sxqt{font-size:14px}.sxqm{font-size:12.5px;color:var(--muted)}.sxqm .b,.sxq .b{color:#dc2626}.sxqb{padding:0 0 10px}.sxqb ul{margin:6px 0;padding-left:18px}.sxqb li.ok{color:#16a34a;font-weight:700}.sxpick{display:flex;gap:8px;align-items:center;margin:6px 0}@media (max-width:520px){.sxtiles{grid-template-columns:1fr 1fr}.sxth,.sxtr{grid-template-columns:1.6fr .9fr .8fr 1fr;font-size:13px}.sx5 .sxth,.sx5 .sxtr{grid-template-columns:1.5fr .8fr .8fr .8fr .8fr}}'; document.head.appendChild(st); })();
+(function () { var st = document.createElement("style"); st.textContent = '.statsv{max-width:880px;margin:0 auto}.sxh{margin:6px 0 2px}.sxtiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:10px 0}.sxtile{border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;background:var(--surface)}.sxtile b{font-size:22px;font-variant-numeric:tabular-nums}.sxtile span{font-size:13px;color:var(--muted)}.sxtile small{font-size:12px;color:var(--muted)}.sxcard{border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;margin:12px 0;background:var(--surface)}.sxcard h3{margin:0 0 6px;font-size:16px}.sxsub{margin:12px 0 4px;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}.sxcols{display:flex;align-items:flex-end;gap:2px;height:90px;margin-top:8px;border-bottom:1px solid var(--line)}.sxcols span{flex:1;height:100%;display:flex;align-items:flex-end}.sxcols i{display:block;width:100%;background:#7c5cff;border-radius:4px 4px 0 0;min-height:0}.sxcols span:hover i{background:#a58bff}.sxcolx{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:2px}.sxrows{display:flex;flex-direction:column}.sxrow{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line);font-size:14px}.sxrow:first-child{border-top:0}.sxrow .n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}.sxrow .n small{color:var(--muted)}.sxrow .v{width:44px;text-align:right;font-weight:700;font-variant-numeric:tabular-nums}.sxrow .m{min-width:60px;text-align:right;color:var(--muted);font-size:12px}.sxrow.off{opacity:.55}.sxbar{flex:0 0 32%;height:8px;border-radius:99px;background:color-mix(in srgb,var(--muted) 18%,transparent);overflow:hidden}.sxbar i{display:block;height:100%;background:#7c5cff;border-radius:99px}.sxtbl{display:flex;flex-direction:column;font-size:14px}.sxth,.sxtr{display:grid;grid-template-columns:2fr 1fr 1fr 1.2fr;gap:6px;padding:7px 0;border-top:1px solid var(--line);align-items:center}.sx5 .sxth,.sx5 .sxtr{grid-template-columns:2fr 1fr 1fr 1fr 1fr}.sxth{border-top:0;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}.sxtr>span:first-child{display:flex;flex-direction:column;min-width:0}.sxtr small{color:var(--muted);font-size:12px}.sxtr.off{opacity:.55}.sxtr .warn{color:#d97706;font-weight:800}.sxq{border-top:1px solid var(--line)}.sxqh{display:flex;flex-direction:column;gap:2px;width:100%;text-align:left;background:none;border:0;color:inherit;font:inherit;padding:8px 0;cursor:pointer}.sxqt{font-size:14px}.sxqm{font-size:12.5px;color:var(--muted)}.sxqm .b,.sxq .b{color:#dc2626}.sxqb{padding:0 0 10px}.sxqb ul{margin:6px 0;padding-left:18px}.sxqb li.ok{color:#16a34a;font-weight:700}.sxpick{display:flex;gap:8px;align-items:center;margin:6px 0}.sxsplit{height:14px;border-radius:99px;background:color-mix(in srgb,var(--muted) 22%,transparent);overflow:hidden;margin:6px 0}.sxsplit i{display:block;height:100%;background:#16a34a;border-radius:99px}@media (max-width:520px){.sxtiles{grid-template-columns:1fr 1fr}.sxth,.sxtr{grid-template-columns:1.6fr .9fr .8fr 1fr;font-size:13px}.sx5 .sxth,.sx5 .sxtr{grid-template-columns:1.5fr .8fr .8fr .8fr .8fr}}'; document.head.appendChild(st); })();
 
 /* ---------- Link my other device + where codes go (owner, Nov 13 2026: "much easier to understand") ----------
    One device shows a 6-character code, the other types it, and both are on the same account, whatever
@@ -31202,6 +31382,7 @@ function groupKindNow() {
   return "practice";
 }
 function groupNote(q, ok, kind, topic, pick) {
+  try { if (q && kind !== undefined) revFloatFor(q); } catch (e) {}
   if (!seatActive()) return;   /* class keys work in the iPhone app too (owner, Nov 5 2026) */
   try {
     var Q = store("groupq") || { t: { n: 0, c: 0 }, s: {} };
