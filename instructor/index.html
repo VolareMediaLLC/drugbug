@@ -130,7 +130,7 @@ header.ptitle h1{font-size:24px}
 footer.sitef{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:13px;text-align:center}
 @media (max-width:640px){header.site nav{margin-left:0;gap:10px;font-size:14px}}
 body.embed header.site,body.embed header.ptitle,body.embed footer.sitef{display:none!important}body.embed .wrap{padding-top:4px;max-width:none}
-body.emb-evaluators #vApp>.card:not(#coderCard),body.emb-evaluators #vApp>.grid2{display:none!important}body.emb-metrics #coderCard{display:none!important}
+body.emb-evaluators #vApp>.card:not(#coderCard),body.emb-evaluators #vApp>.grid2{display:none!important}body.emb-metrics #coderCard{display:none!important}body.emb-evaluators #vApp>.mx{display:none!important}
 body.embed a[href="../admin/"]{display:none!important}
 header.site nav.tabs2{margin-left:auto;display:flex;gap:4px;padding:4px;border-radius:12px;background:var(--surface);border:1px solid var(--line)}
 nav.tabs2 a.tab{padding:7px 16px;border-radius:9px;font-weight:700;font-size:15px;text-decoration:none;color:var(--muted)}
@@ -245,52 +245,143 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
 
 <!-- owner overview -->
 <section id="vApp" class="hide">
-  <div class="card">
-    <div class="row" style="justify-content:space-between;align-items:center">
-      <div><h2 style="margin:0">App metrics</h2><div class="muted small" id="apSub">Everyone using DrugBug, website and iPhone. Anonymous: counted by device, never by name.</div></div>
-      <div class="row" style="align-items:center"><a href="../admin/" style="font-weight:700;padding:9px 12px;border:1px solid var(--line);border-radius:9px;text-decoration:none">Admin dashboard &rarr;</a><select id="apRange" style="width:auto"><option value="30" selected>Last 30 days</option><option value="14">Last 14 days</option><option value="90">Last 90 days</option></select><button class="ghost" id="bApRefresh">Refresh</button></div>
+<style>
+/* Usage page (owner, Nov 14 2026 redesign): one header, KPI row with change vs the period before, then
+   sections. Line charts for trends over time, columns for daily counts, a 100% bar for shares, ranked
+   bars for "which is used most", a shaded table for retention. Colors: blue = the main series,
+   orange = website (when iPhone and website are shown together). */
+#vApp{--s1:#3987e5;--s2:#d95926;--s3:#199e70;--grid:#2e2942;--axis:#8f88aa;--h1:#cde2fb;--h2:#86b6ef;--h3:#3987e5;--h4:#1c5cab;--h5:#104281}
+@media (prefers-color-scheme:light){#vApp{--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--grid:#ece8f4;--axis:#6f6888}}
+.mxhead{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between;margin:2px 0 14px}
+.mxhead h2{font-size:22px;margin:0;letter-spacing:-.01em}
+.mxhead .sub{color:var(--muted);font-size:13px;margin-top:2px}
+.mxctl{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.seg{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px}
+.seg button{background:none;color:var(--muted);font-weight:600;font-size:13px;padding:6px 11px;border-radius:7px}
+.seg button[aria-pressed=true]{background:var(--surface2);color:var(--ink);box-shadow:0 0 0 1px var(--line)}
+.mxctl .ghost{background:var(--surface);border:1px solid var(--line);color:var(--ink);font-size:13px;padding:7px 12px}
+.mxsec{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:26px 2px 10px;display:flex;align-items:center;gap:10px}
+.mxsec:after{content:"";flex:1;height:1px;background:var(--line)}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px 12px;min-width:0;position:relative}
+.kpi .kl{font-size:12.5px;color:var(--muted);font-weight:600}
+.kpi .kv{font-size:28px;font-weight:750;line-height:1.15;margin-top:4px;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.kpi .kv small{font-size:14px;font-weight:600;color:var(--muted);margin-left:3px}
+.kpi .kd{font-size:12.5px;color:var(--muted);margin-top:3px;min-height:1.3em}
+.kpi .kd b{font-weight:700}.kpi .kd .up{color:var(--good)}.kpi .kd .dn{color:var(--bad)}
+.kpi svg.spark{display:block;width:100%;height:30px;margin-top:6px}
+.mxg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.mxg.w3{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:900px){.mxg,.mxg.w3{grid-template-columns:1fr}}
+.mxc{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;min-width:0;margin:0}
+.mxc+.mxc,.mxg+.mxc,.mxc+.mxg,.mxg+.mxg{margin-top:14px}
+.mxg>.mxc{margin-top:0!important}
+.mxc h3{font-size:15px;margin:0;font-weight:700}
+.mxc .cs{font-size:12.5px;color:var(--muted);margin:2px 0 10px}
+.mxc .big{font-size:22px;font-weight:750;font-variant-numeric:tabular-nums;margin:2px 0 6px}
+.mxc .big small{font-size:13px;color:var(--muted);font-weight:600;margin-left:4px}
+.ch{position:relative;width:100%}
+.ch svg{display:block;overflow:visible}
+.ch text{font-size:11px;fill:var(--axis);font-variant-numeric:tabular-nums}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin:2px 0 8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+#mxTip{position:fixed;z-index:50;pointer-events:none;background:var(--surface2);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:12.5px;line-height:1.45;box-shadow:0 8px 24px rgba(0,0,0,.28);max-width:260px;display:none}
+#mxTip b{display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:2px}
+#mxTip i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}
+.rk{display:grid;grid-template-columns:minmax(90px,38%) 1fr auto;gap:7px 10px;align-items:center;font-size:13.5px}
+.rk .l{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rk .b{height:10px;background:var(--track);border-radius:5px;overflow:hidden}
+.rk .b i{display:block;height:100%;background:var(--s1);border-radius:5px}
+.rk .v{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}.rk .v span{color:var(--muted);font-size:12px;margin-left:6px;display:inline-block;min-width:32px}
+.rk .row:hover{background:var(--surface2)}
+.more{background:none;color:var(--accent);padding:6px 0 0;font-size:13px;font-weight:600}
+.st{margin:10px 0 2px}.st .sl{display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px}.st .sl span{color:var(--muted)}
+.st .sb{display:flex;height:14px;border-radius:7px;overflow:hidden;gap:2px;background:var(--surface)}
+.st .sb i{display:block;height:100%;min-width:3px}
+.st .lg{display:flex;gap:12px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:6px}.st .lg i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px}
+.st .lg b{color:var(--ink);font-weight:650;margin-left:4px}
+.ret{width:100%;border-collapse:separate;border-spacing:3px;font-size:13px}
+.ret th{background:none;color:var(--muted);font-weight:600;font-size:12px;text-align:center;position:static;padding:4px}
+.ret th:first-child,.ret td:first-child{text-align:left}
+.ret td{text-align:center;padding:8px 6px;border-radius:6px;font-variant-numeric:tabular-nums;border:0}
+.ret td.c{color:#0b1830}.ret td.c.dk{color:#fff}.ret td.na{color:var(--muted);background:var(--surface2);font-size:12px}
+.fun{display:grid;gap:10px}.fun .fr{display:grid;grid-template-columns:150px 1fr 90px;gap:10px;align-items:center;font-size:13.5px}
+.fun .fb{height:22px;background:var(--track);border-radius:6px;overflow:hidden}.fun .fb i{display:block;height:100%;background:var(--s1);border-radius:6px}
+.fun .fv{text-align:right;font-variant-numeric:tabular-nums}.fun .fv span{color:var(--muted);font-size:12px;margin-left:5px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chips span{font-size:12.5px;padding:3px 9px;border-radius:99px;background:var(--surface2);border:1px solid var(--line)}
+.mxtools>.card{margin-bottom:14px}
+details.mxlog>summary{cursor:pointer;font-weight:700;font-size:15px;list-style:none}details.mxlog>summary::-webkit-details-marker{display:none}
+details.mxlog>summary:after{content:"Show";float:right;font-size:13px;color:var(--accent);font-weight:600}details.mxlog[open]>summary:after{content:"Hide"}
+body.embed .mxhead .adm{display:none}
+@media (max-width:560px){.fun .fr{grid-template-columns:110px 1fr 80px}.kpi .kv{font-size:24px}}
+</style>
+<div class="mx">
+  <div class="mxhead">
+    <div><h2>Usage</h2><div class="sub" id="apSub">Everyone using DrugBug, website and iPhone. One person counts once, even on several devices.</div></div>
+    <div class="mxctl">
+      <a class="adm" href="../admin/" style="font-weight:600;font-size:13px;padding:7px 12px;border:1px solid var(--line);border-radius:9px;text-decoration:none">Admin dashboard &rarr;</a>
+      <div class="seg" id="apSeg" role="group" aria-label="Date range"><button type="button" data-r="7">7 days</button><button type="button" data-r="14">14 days</button><button type="button" data-r="30" aria-pressed="true">30 days</button><button type="button" data-r="90">90 days</button></div>
+      <select id="apRange" hidden><option value="7">7</option><option value="14">14</option><option value="30" selected>30</option><option value="90">90</option></select>
+      <button class="ghost" id="bApRefresh" type="button">Refresh</button>
     </div>
-    <div class="tiles" id="apTiles"></div>
   </div>
-  <div class="card" id="coderCard">
-    <div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Evaluator codes</h2><button class="ghost" id="bCoders">Refresh</button></div>
-    <p class="muted small">Who holds each lifetime code (shown in the app as Evaluator, or Administrator for yours) and the reviewing they have done. Names are yours to fill in; only you see them. Their own studying stays anonymous.</p>
-    <div class="tblwrap"><table id="coderTable"><tr><td class="muted">Loading…</td></tr></table></div>
-    <div id="coderSugg"></div>
+  <div class="kpis" id="apKpis"></div>
+
+  <div class="mxsec">Activity</div>
+  <div class="mxg">
+    <div class="mxc"><h3>Active people per day</h3><p class="cs">People who opened DrugBug each day (Texas time).</p><div class="ch" id="chDau"></div></div>
+    <div class="mxc"><h3>New people per day</h3><p class="cs">The first day someone opened DrugBug.</p><div class="ch" id="chNew"></div></div>
   </div>
-  <div class="card"><h2>Daily log</h2><p class="muted small">Each day's numbers from the morning digest, what changed in the app and on the website, and your notes. Also under Updates on your admin dashboard.</p>
-    <iframe src="about:blank" data-src="../admin/dailylog.html?embed=1&v=1" id="apLog" title="Daily log" loading="lazy" style="width:100%;height:720px;border:0;border-radius:12px;background:transparent"></iframe></div>
-  <div class="card"><h2>Website visits</h2><p class="muted small">Visits to the drugbugapp.com homepage and taps on its buttons (Texas time). No cookies and nothing about the person is recorded. Counting started Nov 14 2026.</p>
-    <div class="tiles" id="apSiteTiles"></div>
-    <div class="dcols" id="apSite"></div><div class="dcolx" id="apSiteX"></div>
-    <p class="small" id="apSiteSrc" style="margin-top:6px"></p></div>
-  <div class="card"><h2>iPhone app vs website</h2><p class="muted small">Where people use DrugBug. Each device counts once per day.</p>
-    <div class="tiles" id="apPlatTiles"></div>
-    <div class="dcols" id="apPD"></div><div class="dcolx" id="apPDX"></div>
-    <p class="small" style="margin-top:6px"><span class="key" style="background:var(--bar)"></span> Website &nbsp; <span class="key" style="background:var(--accent)"></span> iPhone app</p></div>
-  <div class="grid2">
-    <div class="card"><h2>Daily active users</h2><p class="muted small">Devices that opened DrugBug each day (Texas time).</p><div class="dcols" id="apDau"></div><div class="dcolx" id="apDauX"></div></div>
-    <div class="card"><h2>Questions answered per day</h2><p class="muted small">All users together. Hover a bar for accuracy and minutes studied.</p><div class="dcols" id="apQ"></div><div class="dcolx" id="apQX"></div></div>
+  <div class="mxg">
+    <div class="mxc"><h3>Questions answered per day</h3><p class="cs">Everyone together.</p><div class="ch" id="chQ"></div></div>
+    <div class="mxc"><h3>Accuracy per day</h3><p class="cs">Share of answers that were right. Days with fewer than 10 answers are left out.</p><div class="ch" id="chAcc"></div></div>
   </div>
-  <div class="grid2">
-    <div class="card"><h2>New users per day</h2><p class="muted small">First time a device opened DrugBug.</p><div class="dcols" id="apNew"></div><div class="dcolx" id="apNewX"></div></div>
-    <div class="card"><h2>Do people come back?</h2><p class="muted small">New users grouped by the week they started. Day 1 = came back the next day; 7 / 30 = came back within that many days.</p><div class="tblwrap"><table id="apRet"></table></div></div>
+  <div class="mxc"><h3>iPhone app vs website</h3><p class="cs">Where people used DrugBug each day. Each device counts once per day.</p>
+    <div class="legend"><span><i style="background:var(--s1)"></i>iPhone app</span><span><i style="background:var(--s2)"></i>Website</span><span id="apPlatShare"></span></div>
+    <div class="ch" id="chPlat"></div></div>
+
+  <div class="mxsec">Coming back</div>
+  <div class="mxc"><h3>Do people come back?</h3><p class="cs">New people grouped by the week they started. Darker = more came back. Day 1 = came back the next day.</p><div class="tblwrap"><table class="ret" id="apRet"></table></div></div>
+
+  <div class="mxsec">Website</div>
+  <div class="kpis" id="apSiteKpis"></div>
+  <div class="mxg" style="margin-top:14px">
+    <div class="mxc"><h3>Homepage visits per day</h3><p class="cs">No cookies; nothing about the person is recorded. Counting started Nov 14 2026.</p><div class="ch" id="chSite"></div></div>
+    <div class="mxc"><h3>From visit to download</h3><p class="cs">What visitors did, for the selected days.</p><div class="fun" id="apFunnel"></div>
+      <h3 style="margin-top:18px">Where visits came from</h3><div class="rk" id="apSrc" style="margin-top:8px"></div></div>
   </div>
-  <div class="grid2">
-    <div class="card"><h2>Plans (active in the last 30 days)</h2><div id="apTier" class="chart"></div><p class="muted small" id="apSubs" style="margin-top:8px"></p></div>
-    <div class="card"><h2>Platform and route (active in the last 30 days)</h2><div id="apPlat" class="chart"></div><div id="apRoute" class="chart" style="margin-top:12px"></div></div>
+
+  <div class="mxsec">Who uses DrugBug <span style="text-transform:none;letter-spacing:0;font-weight:500">· active in the last 30 days</span></div>
+  <div class="mxg">
+    <div class="mxc"><h3>Plans, devices and how they found it</h3><div id="apShares"></div><p class="cs" id="apSubs" style="margin:10px 0 0"></p></div>
+    <div class="mxc"><h3>Levels people study</h3><p class="cs">Each person counts once, under the level they spent the most time in.</p><div class="rk" id="apLevels"></div>
+      <h3 style="margin-top:18px">App versions in use</h3><div class="chips" id="apVer" style="margin-top:8px"></div></div>
   </div>
-  <div class="grid2">
-    <div class="card"><h2>Most-opened sections</h2><p class="muted small">Opens by people active in the last 30 days.</p><div id="apTabs" class="chart"></div></div>
-    <div class="card"><h2>Most-used features</h2><p class="muted small">Quizzes by type, drug pages, the dummy, L.E.A.R.N and more.</p><div id="apFeats" class="chart"></div></div>
+
+  <div class="mxsec">What people use <span style="text-transform:none;letter-spacing:0;font-weight:500">· last 30 days</span></div>
+  <div class="mxg">
+    <div class="mxc"><h3>Most-opened sections</h3><p class="cs">Times each part of the app was opened.</p><div class="rk" id="apTabs"></div></div>
+    <div class="mxc"><h3>Most-used features</h3><p class="cs">Quizzes by type, drug pages, the Great Bug, L.E.A.R.N and more.</p><div class="rk" id="apFeats"></div></div>
   </div>
-  <div class="card"><h2>Levels people study</h2><p class="muted small">Each person counts once, under the level they spent the most time in.</p><div id="apLevels" class="chart"></div><p class="muted small" id="apVer" style="margin-top:10px"></p></div>
+
+  <div class="mxsec">Tools</div>
+</div>
+<div id="mxTip" role="status" aria-live="off"></div>
 <div class="card" id="syncCard"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h2 style="margin:0">Sync check</h2><button class="btn ghost" id="syncRun" type="button">Scan now</button></div>
   <p class="muted small">People who may be stuck getting their account onto another device: codes used as a guest (what it unlocked never reached an account or their phone), wrong link codes typed in the last 14 days, and link codes made but never used.</p>
   <div id="syncOut" style="margin-top:10px"><p class="muted small">Tap Scan now.</p></div></div>
 <div class="card" id="exCard"><h2>Accounts left out of the statistics</h2><p class="muted small">Type the email of a DrugBug account. Everything already counted for it is deleted, and nothing from that account, or from any phone or computer it has signed in on, is counted again. One account on several devices always counts as one person.</p>
   <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:10px"><input id="exEmail" type="email" placeholder="name@example.com" autocomplete="off" style="flex:1;min-width:220px"><button class="btn" id="exAdd" type="button">Leave out</button></div>
   <p class="small" id="exMsg" style="margin:8px 0 0" aria-live="polite"></p><div id="exList" style="margin-top:10px"></div></div>
+<div class="card" id="coderCard">
+    <div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Evaluator codes</h2><button class="ghost" id="bCoders">Refresh</button></div>
+    <p class="muted small">Who holds each lifetime code (shown in the app as Evaluator, or Administrator for yours) and the reviewing they have done. Names are yours to fill in; only you see them. Their own studying stays anonymous.</p>
+    <div class="tblwrap"><table id="coderTable"><tr><td class="muted">Loading…</td></tr></table></div>
+    <div id="coderSugg"></div>
+  </div>
+<div class="card"><details class="mxlog" id="apLogBox"><summary>Daily log</summary><p class="muted small">Each day's numbers from the morning digest, what changed in the app and on the website, and your notes. Also under Updates on your admin dashboard.</p>
+    <iframe src="about:blank" data-src="../admin/dailylog.html?embed=1&v=1" id="apLog" title="Daily log" loading="lazy" style="width:100%;height:720px;border:0;border-radius:12px;background:transparent"></iframe></details></div>
 </section>
 
 <section id="vOverview" class="hide">
@@ -853,80 +944,139 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
       $("apSub").textContent = /not.?found|internal|unavailable|fetch|network/i.test(e.message) ? "App metrics will appear once the new server functions are deployed (DEPLOY.cmd on your PC)." : e.message;
     });
   }
-  function bars(id, xid, rows, val, tip) {
-    var max = Math.max.apply(null, rows.map(val).concat([1])), last = rows.length - 1;
-    $(id).innerHTML = rows.map(function (r, i) { var v = val(r), hgt = Math.round(100 * v / max);
-      return '<div class="dc' + (i === last ? ' today' : '') + '" title="' + esc(tip(r)) + '"><i style="height:' + (v ? Math.max(2, hgt) : 0) + '%"></i></div>'; }).join("");
-    var f = rows[0], m = rows[Math.floor(rows.length / 2)], l = rows[last];
-    var lab = function (r) { var p = r.day.split("-"); return (+p[1]) + "/" + (+p[2]); };
-    $(xid).innerHTML = '<span>' + lab(f) + '</span><span>' + lab(m) + '</span><span>' + lab(l) + ' (today)</span>';
+  /* ---------- Usage charts (owner, Nov 14 2026 redesign) ----------
+     Small SVG chart helpers drawn at the card's real width (redrawn on resize), with one shared tooltip. */
+  var NS = "http://www.w3.org/2000/svg";
+  function cssv(n) { return getComputedStyle($("vApp")).getPropertyValue(n).trim(); }
+  function short(n) { n = +n || 0; return n >= 1e6 ? (n / 1e6).toFixed(1).replace(/\.0$/, "") + "M" : n >= 1e4 ? Math.round(n / 1e3) + "k" : n >= 1e3 ? (n / 1e3).toFixed(1).replace(/\.0$/, "") + "k" : String(Math.round(n * 10) / 10); }
+  function dlab(day, long) { var p = String(day).split("-"), dt = new Date(+p[0], +p[1] - 1, +p[2]); return long ? dt.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" }) : (+p[1]) + "/" + (+p[2]); }
+  function nice5(max) { if (max <= 4) return Math.max(1, Math.ceil(max)); var p = Math.pow(10, Math.floor(Math.log10(max))), m = max / p; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10) * p; }
+  var tip = null;
+  function tipShow(e, html) { tip = tip || $("mxTip"); tip.innerHTML = html; tip.style.display = "block"; var w = tip.offsetWidth, h = tip.offsetHeight, x = e.clientX + 14, y = e.clientY - h - 12; if (x + w > innerWidth - 8) x = e.clientX - w - 14; if (y < 8) y = e.clientY + 16; tip.style.left = x + "px"; tip.style.top = y + "px"; }
+  function tipHide() { if (tip) tip.style.display = "none"; }
+  function el(tag, at, par) { var e = document.createElementNS(NS, tag); for (var k in at) e.setAttribute(k, at[k]); if (par) par.appendChild(e); return e; }
+  /* time chart: kind "line" (one series, optional pct) or "cols" (one or two stacked series).
+     series: [{v: fn(row) -> number|null, c: css var, name}] ; tipf(row) -> html */
+  function timeChart(id, rows, kind, series, o) {
+    o = o || {}; var box = $(id); if (!box) return; box.innerHTML = "";
+    var W = Math.max(260, box.clientWidth), H = o.h || 190, L = 34, Rm = 8, T = 10, B = 24, iw = W - L - Rm, ih = H - T - B, n = rows.length;
+    var tot = rows.map(function (r) { return series.reduce(function (s, x) { var v = x.v(r); return s + (v == null ? 0 : v); }, 0); });
+    var dmax = Math.max.apply(null, tot.concat([4])), raw = dmax / 4, pw = Math.pow(10, Math.floor(Math.log10(raw))), mm = raw / pw, stp = Math.max(1, (mm <= 1 ? 1 : mm <= 2 ? 2 : mm <= 2.5 && pw >= 10 ? 2.5 : mm <= 5 ? 5 : 10) * pw); if (o.pct) stp = 50; var max = o.pct ? 100 : Math.ceil(dmax / stp) * stp, nt = Math.round(max / stp);
+    var svg = el("svg", { width: W, height: H, role: "img", "aria-label": o.label || "" }, box);
+    var y = function (v) { return T + ih - (v / max) * ih; };
+    for (var g = 0; g <= nt; g++) { var gv = stp * g; el("line", { x1: L, x2: W - Rm, y1: y(gv), y2: y(gv), stroke: g ? cssv("--grid") : cssv("--axis"), "stroke-width": 1, "stroke-opacity": g ? 1 : .55 }, svg); el("text", { x: L - 6, y: y(gv) + 3.5, "text-anchor": "end" }, svg).textContent = o.pct ? gv + "%" : short(gv); }
+    var step = iw / n, xc = function (i) { return L + step * i + step / 2; };
+    var ticks = n <= 8 ? rows.map(function (r, i) { return i; }) : [0, Math.round((n - 1) / 3), Math.round(2 * (n - 1) / 3), n - 1];
+    ticks.forEach(function (i, k) { var t = el("text", { x: xc(i), y: H - 6, "text-anchor": k === 0 && n > 8 ? "start" : k === ticks.length - 1 && n > 8 ? "end" : "middle" }, svg); t.textContent = i === n - 1 ? "Today" : dlab(rows[i].day); if (k === 0 && n > 8) t.setAttribute("x", L); if (i === n - 1 && n > 8) t.setAttribute("x", W - Rm); });
+    if (kind === "cols") {
+      var bw = Math.max(2, Math.min(28, step - (n > 40 ? 2 : 4))), rad = Math.min(4, bw / 2);
+      rows.forEach(function (r, i) { var base = 0; series.forEach(function (s, si) { var v = s.v(r) || 0; if (!v) return; var y0 = y(base), y1 = y(base + v), top = si === series.length - 1 || !series.slice(si + 1).some(function (z) { return z.v(r); });
+        var hgt = Math.max(1.5, y0 - y1 - (base ? 2 : 0)); var x0 = xc(i) - bw / 2, yy = y0 - (base ? 2 : 0) - hgt;
+        el("path", { d: top ? "M" + x0 + "," + (yy + hgt) + "V" + (yy + rad) + "Q" + x0 + "," + yy + " " + (x0 + rad) + "," + yy + "H" + (x0 + bw - rad) + "Q" + (x0 + bw) + "," + yy + " " + (x0 + bw) + "," + (yy + rad) + "V" + (yy + hgt) + "Z" : "M" + x0 + "," + yy + "h" + bw + "v" + hgt + "h" + (-bw) + "Z", fill: cssv(s.c) }, svg); base += v; }); });
+    } else {
+      var s0 = series[0], pts = []; rows.forEach(function (r, i) { var v = s0.v(r); pts.push(v == null ? null : [xc(i), y(v)]); });
+      var segs = [], cur = []; pts.forEach(function (p) { if (p) cur.push(p); else if (cur.length) { segs.push(cur); cur = []; } }); if (cur.length) segs.push(cur);
+      segs.forEach(function (sg) { if (!o.pct) el("path", { d: "M" + sg[0][0] + "," + y(0) + sg.map(function (p) { return "L" + p[0] + "," + p[1]; }).join("") + "L" + sg[sg.length - 1][0] + "," + y(0) + "Z", fill: cssv(s0.c), "fill-opacity": .12 }, svg);
+        el("path", { d: "M" + sg.map(function (p) { return p[0] + "," + p[1]; }).join("L"), fill: "none", stroke: cssv(s0.c), "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }, svg);
+        if (sg.length === 1) el("circle", { cx: sg[0][0], cy: sg[0][1], r: 4, fill: cssv(s0.c) }, svg); });
+      var lp = null; for (var q = pts.length - 1; q >= 0; q--) if (pts[q]) { lp = pts[q]; break; }
+      if (lp) el("circle", { cx: lp[0], cy: lp[1], r: 4, fill: cssv(s0.c), stroke: cssv("--surface"), "stroke-width": 2 }, svg);
+    }
+    var cross = el("line", { x1: 0, x2: 0, y1: T, y2: T + ih, stroke: cssv("--axis"), "stroke-dasharray": "3 3", opacity: 0 }, svg);
+    var dot = kind === "line" ? el("circle", { r: 5, fill: cssv(series[0].c), stroke: cssv("--surface"), "stroke-width": 2, opacity: 0 }, svg) : null;
+    var hit = el("rect", { x: L, y: T, width: iw, height: ih + B, fill: "transparent" }, svg);
+    hit.addEventListener("mousemove", function (e) { var bb = svg.getBoundingClientRect(), i = Math.max(0, Math.min(n - 1, Math.floor((e.clientX - bb.left - L) / step))), r = rows[i];
+      cross.setAttribute("x1", xc(i)); cross.setAttribute("x2", xc(i)); cross.setAttribute("opacity", 1);
+      if (dot) { var v = series[0].v(r); if (v == null) dot.setAttribute("opacity", 0); else { dot.setAttribute("cx", xc(i)); dot.setAttribute("cy", y(v)); dot.setAttribute("opacity", 1); } }
+      tipShow(e, "<b>" + dlab(r.day, true) + "</b>" + o.tip(r)); });
+    hit.addEventListener("mouseleave", function () { cross.setAttribute("opacity", 0); if (dot) dot.setAttribute("opacity", 0); tipHide(); });
   }
-  function hbars(id, rows, total) {
-    var max = Math.max.apply(null, rows.map(function (r) { return r.n; }).concat([1]));
-    $(id).innerHTML = rows.length ? rows.map(function (r) {
-      return '<div class="lab">' + esc(nice(r.key)) + '</div><div class="bar"><i style="width:' + Math.max(2, Math.round(100 * r.n / max)) + '%"></i></div><div class="val"><b>' + num(r.n) + '</b>' + (total ? ' <span>' + Math.round(100 * r.n / total) + '%</span>' : '') + '</div>';
-    }).join("") : '<p class="muted" style="grid-column:1/-1">Nothing yet.</p>';
+  function spark(rows, f) { var n = rows.length, v = rows.map(f), mx = Math.max.apply(null, v.concat([1])), W = 200, H = 30;
+    var p = v.map(function (x, i) { return (n > 1 ? i * W / (n - 1) : W / 2).toFixed(1) + "," + (H - 2 - (x / mx) * (H - 6)).toFixed(1); });
+    return '<svg class="spark" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true"><path d="M0,' + H + 'L' + p.join("L") + 'L' + W + ',' + H + 'Z" fill="var(--s1)" fill-opacity=".12"/><path d="M' + p.join("L") + '" fill="none" stroke="var(--s1)" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg>'; }
+  function delta(cur, prev, unit) { if (prev == null) return ""; if (!prev && !cur) return '<span>no change</span>'; if (!prev) return '<b class="up">new</b> vs the ' + unit + ' before';
+    var p = Math.round(100 * (cur - prev) / prev); return (p === 0 ? '<b>±0%</b>' : '<b class="' + (p > 0 ? "up" : "dn") + '">' + (p > 0 ? "▲ " : "▼ ") + Math.abs(p) + '%</b>') + ' vs the ' + unit + ' before'; }
+  function kpi(label, val, unit, sub, sp) { return '<div class="kpi"><div class="kl">' + esc(label) + '</div><div class="kv">' + val + (unit ? '<small>' + esc(unit) + '</small>' : '') + '</div><div class="kd">' + (sub || "") + '</div>' + (sp || "") + '</div>'; }
+  var RK_OPEN = {};
+  function ranked(id, rows, o) { o = o || {}; var box = $(id); if (!box) return; var tot = rows.reduce(function (s, r) { return s + r.n; }, 0), max = Math.max.apply(null, rows.map(function (r) { return r.n; }).concat([1]));
+    if (!rows.length) { box.innerHTML = '<p class="muted small" style="grid-column:1/-1;margin:0">Nothing yet.</p>'; return; }
+    var lim = RK_OPEN[id] ? rows.length : (o.top || 8), show = rows.slice(0, lim);
+    box.innerHTML = show.map(function (r) { var nm = o.name ? o.name(r.key) : nice(r.key); return '<div class="l" title="' + esc(nm) + '">' + esc(nm) + '</div><div class="b"><i style="width:' + Math.max(1.5, 100 * r.n / max) + '%' + (o.c ? ';background:var(' + o.c + ')' : '') + '"></i></div><div class="v">' + num(r.n) + (o.pct !== false && tot ? '<span>' + Math.round(100 * r.n / tot) + '%</span>' : '') + '</div>'; }).join("") +
+      (rows.length > (o.top || 8) ? '<div style="grid-column:1/-1"><button class="more" type="button" data-rk="' + id + '">' + (RK_OPEN[id] ? "Show fewer" : "Show all " + rows.length) + '</button></div>' : '');
   }
-  function obj(o) { return Object.keys(o || {}).map(function (k) { return { key: k, n: o[k] }; }).filter(function (r) { return r.n; }).sort(function (a, b) { return b.n - a.n; }); }
+  document.addEventListener("click", function (e) { var b = e.target.closest && e.target.closest("[data-rk]"); if (!b) return; RK_OPEN[b.getAttribute("data-rk")] = !RK_OPEN[b.getAttribute("data-rk")]; if (AP) drawApp(AP); });
+  function share(title, parts, total) { if (!total) return '<div class="st"><div class="sl">' + esc(title) + '<span>no one yet</span></div></div>';
+    var C = ["--s1", "--s2", "--s3"];
+    return '<div class="st"><div class="sl">' + esc(title) + '<span>' + num(total) + ' people</span></div><div class="sb" role="img" aria-label="' + esc(title + ": " + parts.map(function (p) { return p.name + " " + Math.round(100 * p.n / total) + "%"; }).join(", ")) + '">' + parts.filter(function (p) { return p.n; }).map(function (p, i) { return '<i style="width:' + (100 * p.n / total) + '%;background:var(' + C[p.ci != null ? p.ci : i] + ')" data-tt="' + esc(p.name + ": " + num(p.n) + " (" + Math.round(100 * p.n / total) + "%)") + '"></i>'; }).join("") + '</div>' +
+      '<div class="lg">' + parts.map(function (p, i) { return '<span><i style="background:var(' + C[p.ci != null ? p.ci : i] + ')"></i>' + esc(p.name) + '<b>' + Math.round(100 * p.n / total) + '%</b></span>'; }).join("") + '</div></div>'; }
+  document.addEventListener("mousemove", function (e) { var t = e.target.closest && e.target.closest("#vApp [data-tt]"); if (t) tipShow(e, esc(t.getAttribute("data-tt"))); else if (e.target.closest && e.target.closest("#vApp .sb")) {} });
+  document.addEventListener("mouseout", function (e) { if (e.target.closest && e.target.closest("#vApp [data-tt]")) tipHide(); });
+  function heat(v) { if (v == null) return ''; var s = v < 10 ? ["--h1", 0] : v < 25 ? ["--h2", 0] : v < 45 ? ["--h3", 1] : v < 65 ? ["--h4", 1] : ["--h5", 1]; return s; }
+  var RS_T = null; window.addEventListener("resize", function () { clearTimeout(RS_T); RS_T = setTimeout(function () { if (AP && !$("vApp").classList.contains("hide")) drawApp(AP); }, 200); });
+  [].forEach.call(document.querySelectorAll("#apSeg button"), function (b) { b.onclick = function () { $("apRange").value = b.getAttribute("data-r"); [].forEach.call(document.querySelectorAll("#apSeg button"), function (x) { x.setAttribute("aria-pressed", String(x === b)); }); if (AP) drawApp(AP); }; });
+  var lgBox = $("apLogBox"); if (lgBox) lgBox.addEventListener("toggle", function () { var lg = $("apLog"); if (!lgBox.open || lg.getAttribute("src") !== "about:blank") return; lg.setAttribute("src", lg.getAttribute("data-src"));
+    setInterval(function () { try { var dd = lg.contentDocument; if (dd && dd.body) { var hh = Math.min(2400, Math.max(400, dd.documentElement.scrollHeight)); if (Math.abs(lg.offsetHeight - hh) > 4) lg.style.height = hh + "px"; } } catch (e) {} }, 800); });
+
   function drawApp(d) {
-    var T = d.totals, R = +$("apRange").value, rows = d.daily.slice(-R);
-    var sum = function (f) { return rows.reduce(function (s, r) { return s + f(r); }, 0); };
-    var q = sum(function (r) { return r.q; }), c = sum(function (r) { return r.c; }), mins = sum(function (r) { return r.minutes; }), dauSum = sum(function (r) { return r.dau; });
-    $("apSub").textContent = num(T.users) + " devices have ever opened DrugBug · updated " + new Date(d.generatedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-    $("apTiles").innerHTML = [
-      [num(T.active1), "active today"], [num(T.active7), "active in the last 7 days"], [num(T.active30), "active in the last 30 days"],
-      [num(sum(function (r) { return r.newUsers; })), "new users, last " + R + " days"],
-      [num(q), "questions answered, last " + R + " days" + (q ? " (" + Math.round(100 * c / q) + "% right)" : "")],
-      [(dauSum ? Math.round(10 * mins / dauSum) / 10 : 0) + " min", "average time per person per day"],
-      [T.daysActivePerUser30 + " days", "days active per person, last 30"],
-      [T.paidPct30 + "%", "of active users on Plus or Pro"]
-    ].map(function (x) { return '<div class="tile"><b>' + esc(x[0]) + '</b><span>' + esc(x[1]) + '</span></div>'; }).join("");
-    bars("apDau", "apDauX", rows, function (r) { return r.dau; }, function (r) { return r.day + ": " + r.dau + " active, " + r.newUsers + " new"; });
-    bars("apQ", "apQX", rows, function (r) { return r.q; }, function (r) { return r.day + ": " + r.q + " questions" + (r.accuracy != null ? ", " + r.accuracy + "% right" : "") + ", " + r.minutes + " min studied, " + r.learn + " L.E.A.R.N cards"; });
-    bars("apNew", "apNewX", rows, function (r) { return r.newUsers; }, function (r) { return r.day + ": " + r.newUsers + " new users"; });
-    var lg = document.getElementById("apLog"); if (lg && lg.getAttribute("src") === "about:blank") { lg.setAttribute("src", lg.getAttribute("data-src")); setInterval(function () { try { var dd = lg.contentDocument; if (dd && dd.body) { var hh = Math.min(2400, Math.max(400, dd.documentElement.scrollHeight)); if (Math.abs(lg.offsetHeight - hh) > 4) lg.style.height = hh + "px"; } } catch (e) {} }, 800); }
-    /* homepage visits and button taps (owner, Nov 14 2026) */
-    var sv = function (k) { return sum(function (r) { return (r.site || {})[k] || 0; }); }, sViews = sv("view"), sBr = sv("browser"), sAs = sv("appstore");
-    var tdy = rows[rows.length - 1] && rows[rows.length - 1].site || {};
-    var pc2 = function (a, b) { return b ? " (" + Math.round(100 * a / b) + "%)" : ""; };
-    $("apSiteTiles").innerHTML = [
-      [num(tdy.view || 0), "website visits today"],
-      [num(sViews), "website visits, last " + R + " days"],
-      [num(sBr) + pc2(sBr, sViews), "tapped Try it in your browser"],
-      [num(sAs) + pc2(sAs, sViews), "tapped the App Store button"]
-    ].map(function (x) { return '<div class="tile"><b>' + esc(x[0]) + '</b><span>' + esc(x[1]) + '</span></div>'; }).join("");
-    bars("apSite", "apSiteX", rows, function (r) { return (r.site || {}).view || 0; }, function (r) { var s = r.site || {}; return r.day + ": " + (s.view || 0) + " visits, " + (s.browser || 0) + " tapped browser, " + (s.appstore || 0) + " tapped App Store"; });
+    var T = d.totals, R = +$("apRange").value, all = d.daily, rows = all.slice(-R), prev = all.length >= 2 * R ? all.slice(-2 * R, -R) : null;
+    var sum = function (a, f) { return a.reduce(function (s, r) { return s + (f(r) || 0); }, 0); };
+    var per = R + " days", unit = R + " days";
+    $("apSub").textContent = num(T.users) + " people have opened DrugBug · one person counts once, even on several devices · updated " + new Date(d.generatedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    var nu = sum(rows, function (r) { return r.newUsers; }), q = sum(rows, function (r) { return r.q; }), c = sum(rows, function (r) { return r.c; }), mins = sum(rows, function (r) { return r.minutes; }), dau = sum(rows, function (r) { return r.dau; });
+    var pnu = prev && sum(prev, function (r) { return r.newUsers; }), pq = prev && sum(prev, function (r) { return r.q; }), pdau = prev && sum(prev, function (r) { return r.dau; }), pmins = prev && sum(prev, function (r) { return r.minutes; });
+    var avgD = dau / R, mpp = dau ? mins / dau : 0, pmpp = prev && pdau ? pmins / pdau : null;
+    $("apKpis").innerHTML = [
+      kpi("Active today", num(T.active1), "", "Average " + (Math.round(avgD * 10) / 10) + " a day over " + per, spark(rows, function (r) { return r.dau; })),
+      kpi("Active this week", num(T.active7), "", "Opened DrugBug in the last 7 days"),
+      kpi("Active this month", num(T.active30), "", (T.stickiness || 0) + "% of them open it on an average day" + (T.stickiness >= 20 ? " (a habit)" : "")),
+      kpi("New people", num(nu), "", delta(nu, pnu, unit), spark(rows, function (r) { return r.newUsers; })),
+      kpi("Questions answered", num(q), "", (q ? Math.round(100 * c / q) + "% right · " : "") + delta(q, pq, unit), spark(rows, function (r) { return r.q; })),
+      kpi("Time per person per day", String(Math.round(mpp * 10) / 10), "min", pmpp != null ? delta(mpp, pmpp, unit) : "On days they opened it"),
+      kpi("Days active per person", String(T.daysActivePerUser30 || 0), "of 30", "Among people active this month"),
+      kpi("On Plus or Pro", (T.paidPct30 || 0) + "%", "", num(T.paid30 || 0) + " of " + num(T.active30) + " active people" + (T.webSubs != null ? " · " + T.webSubs + " web subscriptions" : ""))
+    ].join("");
+    var pl = function (n, w) { return num(n) + " " + w + (n === 1 ? "" : "s"); };
+    timeChart("chDau", rows, "line", [{ v: function (r) { return r.dau; }, c: "--s1" }], { label: "Active people per day", tip: function (r) { return pl(r.dau, "active person").replace("persons", "people") + "<br>" + pl(r.newUsers, "new person").replace("persons", "people") + "<br>" + r.minutes + " min studied"; } });
+    timeChart("chNew", rows, "cols", [{ v: function (r) { return r.newUsers; }, c: "--s1" }], { label: "New people per day", tip: function (r) { return pl(r.newUsers, "new person").replace("persons", "people"); } });
+    timeChart("chQ", rows, "cols", [{ v: function (r) { return r.q; }, c: "--s1" }], { label: "Questions answered per day", tip: function (r) { return num(r.q) + " questions" + (r.accuracy != null ? "<br>" + r.accuracy + "% right" : "") + "<br>" + num(r.learn) + " L.E.A.R.N cards"; } });
+    timeChart("chAcc", rows, "line", [{ v: function (r) { return r.q >= 10 ? r.accuracy : null; }, c: "--s3" }], { pct: true, label: "Accuracy per day", tip: function (r) { return r.q >= 10 ? r.accuracy + "% right of " + num(r.q) : "Fewer than 10 answers"; } });
+    var ws = sum(rows, function (r) { return (r.plat || {}).web; }), is = sum(rows, function (r) { return (r.plat || {}).ios; }), both = ws + is;
+    $("apPlatShare").innerHTML = both ? "· iPhone " + Math.round(100 * is / both) + "% of daily visits, website " + Math.round(100 * ws / both) + "%" : "";
+    timeChart("chPlat", rows, "cols", [{ v: function (r) { return (r.plat || {}).ios || 0; }, c: "--s1" }, { v: function (r) { return (r.plat || {}).web || 0; }, c: "--s2" }], { h: 170, label: "iPhone app and website use per day", tip: function (r) { var p = r.plat || {}; return '<i style="background:var(--s1)"></i>iPhone app: ' + (p.ios || 0) + '<br><i style="background:var(--s2)"></i>Website: ' + (p.web || 0); } });
+    /* retention heatmap */
+    var cell = function (v, n) { if (v == null) return '<td class="na">too soon</td>'; var h = heat(v); return '<td class="c' + (h[1] ? " dk" : "") + '" style="background:var(' + h[0] + ')" data-tt="' + esc(v + "% of " + n + " came back") + '">' + v + '%</td>'; };
+    $("apRet").innerHTML = '<tr><th>Started</th><th>New people</th><th>Day 1</th><th>Within 7 days</th><th>Within 30 days</th></tr>' + (d.retention.length ? d.retention.map(function (r) {
+      return '<tr><td>' + (r.weeksAgo === 0 ? "This week" : r.weeksAgo === 1 ? "Last week" : r.weeksAgo + " weeks ago") + '</td><td style="text-align:center">' + r.size + '</td>' + cell(r.d1, r.size) + cell(r.d7, r.size) + cell(r.d30, r.size) + '</tr>'; }).join("") : '<tr><td colspan="5" class="muted">No new people yet.</td></tr>');
+    /* website */
+    var sv = function (k) { return sum(rows, function (r) { return (r.site || {})[k]; }); }, sViews = sv("view"), sBr = sv("browser"), sAs = sv("appstore"), psv = prev && sum(prev, function (r) { return (r.site || {}).view; });
+    var tdy = (rows[rows.length - 1] || {}).site || {};
+    var rate = function (a) { return sViews ? Math.round(100 * a / sViews) + "%" : "—"; };
+    $("apSiteKpis").innerHTML = [
+      kpi("Visits today", num(tdy.view || 0), "", ""),
+      kpi("Visits, last " + per, num(sViews), "", delta(sViews, psv, unit), spark(rows, function (r) { return (r.site || {}).view || 0; })),
+      kpi("Tried it in the browser", rate(sBr), "", num(sBr) + " taps on Try it free"),
+      kpi("Went to the App Store", rate(sAs), "", num(sAs) + " taps on the App Store button")
+    ].join("");
+    timeChart("chSite", rows, "line", [{ v: function (r) { return (r.site || {}).view || 0; }, c: "--s1" }], { label: "Homepage visits per day", tip: function (r) { var s = r.site || {}; return num(s.view || 0) + " visits<br>" + num(s.browser || 0) + " tried it in the browser<br>" + num(s.appstore || 0) + " went to the App Store"; } });
+    var fmax = Math.max(sViews, 1);
+    $("apFunnel").innerHTML = [["Visited the homepage", sViews], ["Tapped Try it free", sBr], ["Tapped the App Store", sAs]].map(function (f, i) {
+      return '<div class="fr"><div>' + f[0] + '</div><div class="fb"><i style="width:' + (f[1] ? Math.max(1.5, 100 * f[1] / fmax) : 0) + '%"></i></div><div class="fv">' + num(f[1]) + (i && sViews ? '<span>' + Math.round(100 * f[1] / sViews) + '%</span>' : '') + '</div></div>'; }).join("");
     var srcT = {}; rows.forEach(function (r) { var s = (r.site || {}).src || {}; Object.keys(s).forEach(function (k) { srcT[k] = (srcT[k] || 0) + s[k]; }); });
     var SRCN = { ad: "Your ads", instagram: "Instagram", facebook: "Facebook", google: "Google", tiktok: "TikTok", direct: "Typed in or bookmarked", other: "Other sites" };
-    var sl = Object.keys(srcT).sort(function (a, b) { return srcT[b] - srcT[a]; });
-    $("apSiteSrc").textContent = sl.length ? "Where visits came from: " + sl.map(function (k) { return (SRCN[k] || k) + " " + srcT[k]; }).join(" · ") : "No website visits counted yet.";
-    /* iPhone vs website: tiles for the chosen range, and stacked daily bars */
-    var ws = sum(function (r) { return (r.plat || {}).web || 0; }), is = sum(function (r) { return (r.plat || {}).ios || 0; }), both = ws + is;
-    var P30 = d.splits.plat || {};
-    $("apPlatTiles").innerHTML = [
-      [num(P30.ios || 0), "iPhone app users, active in the last 30 days"],
-      [num(P30.web || 0), "website users, active in the last 30 days"],
-      [both ? Math.round(100 * is / both) + "% / " + Math.round(100 * ws / both) + "%" : "—", "iPhone / website share of daily visits, last " + R + " days"]
-    ].map(function (x) { return '<div class="tile"><b>' + esc(x[0]) + '</b><span>' + esc(x[1]) + '</span></div>'; }).join("");
-    var pmax = Math.max.apply(null, rows.map(function (r) { return ((r.plat || {}).web || 0) + ((r.plat || {}).ios || 0); }).concat([1]));
-    $("apPD").innerHTML = rows.map(function (r) { var p = r.plat || {}, w = p.web || 0, i2 = p.ios || 0;
-      return '<div class="dc" title="' + esc(r.day + ": " + i2 + " on iPhone, " + w + " on the website") + '"><i class="ios" style="height:' + (100 * i2 / pmax) + '%"></i><i class="web" style="height:' + (100 * w / pmax) + '%;order:-1"></i></div>'; }).join("");
-    $("apPDX").innerHTML = $("apDauX").innerHTML;
-    var pc = function (v) { return v == null ? '<span class="muted">too soon</span>' : v + "%"; };
-    $("apRet").innerHTML = '<tr><th>Started</th><th>New users</th><th>Day 1</th><th>Within 7 days</th><th>Within 30 days</th></tr>' + (d.retention.length ? d.retention.map(function (r) {
-      return '<tr><td>' + (r.weeksAgo === 0 ? "This week" : r.weeksAgo === 1 ? "Last week" : r.weeksAgo + " weeks ago") + '</td><td class="num">' + r.size + '</td><td class="num">' + pc(r.d1) + '</td><td class="num">' + pc(r.d7) + '</td><td class="num">' + pc(r.d30) + '</td></tr>';
-    }).join("") : '<tr><td colspan="5" class="muted">No new users yet.</td></tr>');
-    var tier = obj(d.splits.tier), tt = tier.reduce(function (s, r) { return s + r.n; }, 0);
-    hbars("apTier", ["free", "plus", "pro"].map(function (k) { return { key: k, n: d.splits.tier[k] || 0 }; }), tt);
-    $("apSubs").textContent = T.webSubs != null ? "Website subscriptions currently paid up (Stripe): " + T.webSubs + ". iPhone subscriptions are counted in App Store Connect." : "";
-    var plat = obj(d.splits.plat), pt = plat.reduce(function (s, r) { return s + r.n; }, 0);
-    hbars("apPlat", plat, pt);
-    var route = obj(d.splits.route), rt = route.reduce(function (s, r) { return s + r.n; }, 0);
-    hbars("apRoute", route, rt);
-    hbars("apTabs", d.tabs);
-    hbars("apFeats", d.feats);
-    hbars("apLevels", d.splits.level.map(function (r) { return { key: LEVEL[r.key] || r.key.toUpperCase(), n: r.n }; }));
-    $("apVer").textContent = d.splits.version.length ? "App versions in use: " + d.splits.version.map(function (v) { return v.key + " (" + v.n + ")"; }).join(", ") : "";
+    ranked("apSrc", Object.keys(srcT).map(function (k) { return { key: k, n: srcT[k] }; }).sort(function (a, b) { return b.n - a.n; }), { name: function (k) { return SRCN[k] || k; } });
+    /* who: three 100% bars */
+    var sp = d.splits, tr = sp.tier || {}, pt = sp.plat || {}, ro = sp.route || {};
+    var tt = (tr.free || 0) + (tr.plus || 0) + (tr.pro || 0), ptot = Object.keys(pt).reduce(function (s, k) { return s + pt[k]; }, 0);
+    var routes = Object.keys(ro).map(function (k) { return { name: nice(k), n: ro[k] }; }).sort(function (a, b) { return b.n - a.n; }), rtot = routes.reduce(function (s, r) { return s + r.n; }, 0);
+    if (routes.length > 3) { var oth = routes.slice(2).reduce(function (s, r) { return s + r.n; }, 0); routes = routes.slice(0, 2).concat([{ name: "Other", n: oth }]); }
+    $("apShares").innerHTML = share("Plan", [{ name: "Free", n: tr.free || 0 }, { name: "Plus", n: tr.plus || 0 }, { name: "Pro", n: tr.pro || 0 }], tt) +
+      share("Device", [{ name: "iPhone app", n: pt.ios || 0, ci: 0 }, { name: "Website", n: pt.web || 0, ci: 1 }].concat(pt.android ? [{ name: "Android", n: pt.android, ci: 2 }] : []), ptot) +
+      share("How they got in", routes, rtot);
+    $("apSubs").textContent = T.webSubs != null ? "Website subscriptions paid up right now (Stripe): " + T.webSubs + ". iPhone subscriptions are in App Store Connect." : "";
+    ranked("apLevels", (sp.level || []).map(function (r) { return { key: r.key, n: r.n }; }), { name: function (k) { return LEVEL[k] || String(k).toUpperCase(); }, top: 10 });
+    $("apVer").innerHTML = (sp.version || []).length ? sp.version.map(function (v) { return '<span>' + esc(v.key) + ' · ' + num(v.n) + '</span>'; }).join("") : '<span class="muted">No app versions yet</span>';
+    ranked("apTabs", d.tabs || [], { top: 8 });
+    ranked("apFeats", d.feats || [], { top: 8 });
   }
 
   /* ---------- owner overview ---------- */
