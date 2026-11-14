@@ -42,6 +42,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
 code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px}
 .pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:12px;background:var(--surface2);color:var(--muted)}
 .pill.on{color:var(--good)}
+.sxt{width:100%;border-collapse:collapse;font-size:14px}.sxt td{padding:7px 0;border-top:1px solid var(--line);vertical-align:top}.sxt td.num{text-align:right;white-space:nowrap;padding-left:10px}
 .mini{display:inline-block;width:70px;height:6px;border-radius:3px;background:var(--track);vertical-align:middle;margin-right:6px;overflow:hidden}
 .mini i{display:block;height:100%;background:var(--bar)}
 .chart{display:grid;grid-template-columns:minmax(120px,210px) 1fr auto;gap:6px 12px;align-items:center}
@@ -257,6 +258,8 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
     <div class="tblwrap"><table id="coderTable"><tr><td class="muted">Loading…</td></tr></table></div>
     <div id="coderSugg"></div>
   </div>
+  <div class="card"><h2>Daily log</h2><p class="muted small">Each day's numbers from the morning digest, what changed in the app and on the website, and your notes. Also under Updates on your admin dashboard.</p>
+    <iframe src="about:blank" data-src="../admin/dailylog.html?embed=1&v=1" id="apLog" title="Daily log" loading="lazy" style="width:100%;height:720px;border:0;border-radius:12px;background:transparent"></iframe></div>
   <div class="card"><h2>Website visits</h2><p class="muted small">Visits to the drugbugapp.com homepage and taps on its buttons (Texas time). No cookies and nothing about the person is recorded. Counting started Nov 14 2026.</p>
     <div class="tiles" id="apSiteTiles"></div>
     <div class="dcols" id="apSite"></div><div class="dcolx" id="apSiteX"></div>
@@ -281,7 +284,13 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
     <div class="card"><h2>Most-opened sections</h2><p class="muted small">Opens by people active in the last 30 days.</p><div id="apTabs" class="chart"></div></div>
     <div class="card"><h2>Most-used features</h2><p class="muted small">Quizzes by type, drug pages, the dummy, L.E.A.R.N and more.</p><div id="apFeats" class="chart"></div></div>
   </div>
-  <div class="card"><h2>Levels people study</h2><div id="apLevels" class="chart"></div><p class="muted small" id="apVer" style="margin-top:10px"></p></div>
+  <div class="card"><h2>Levels people study</h2><p class="muted small">Each person counts once, under the level they spent the most time in.</p><div id="apLevels" class="chart"></div><p class="muted small" id="apVer" style="margin-top:10px"></p></div>
+<div class="card" id="syncCard"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h2 style="margin:0">Sync check</h2><button class="btn ghost" id="syncRun" type="button">Scan now</button></div>
+  <p class="muted small">People who may be stuck getting their account onto another device: codes used as a guest (what it unlocked never reached an account or their phone), wrong link codes typed in the last 14 days, and link codes made but never used.</p>
+  <div id="syncOut" style="margin-top:10px"><p class="muted small">Tap Scan now.</p></div></div>
+<div class="card" id="exCard"><h2>Accounts left out of the statistics</h2><p class="muted small">Type the email of a DrugBug account. Everything already counted for it is deleted, and nothing from that account, or from any phone or computer it has signed in on, is counted again. One account on several devices always counts as one person.</p>
+  <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:10px"><input id="exEmail" type="email" placeholder="name@example.com" autocomplete="off" style="flex:1;min-width:220px"><button class="btn" id="exAdd" type="button">Leave out</button></div>
+  <p class="small" id="exMsg" style="margin:8px 0 0" aria-live="polite"></p><div id="exList" style="margin-top:10px"></div></div>
 </section>
 
 <section id="vOverview" class="hide">
@@ -339,6 +348,11 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
 
 <!-- class list -->
 <p id="adminLink" class="card hide" style="padding:12px 16px">You are signed in as the DrugBug owner. App metrics, evaluator codes, every school and the owner tools are on the <a href="../admin/"><b>Admin dashboard →</b></a></p>
+<section id="vHelper" class="card hide">
+  <h2 style="margin:0 0 4px">DrugBug Outreach <span id="hTitleBadge" style="color:#b45309"></span></h2>
+  <p class="muted small" style="margin:0 0 10px">You're on Adam's outreach team. The outreach list (schools and agencies, shared notes, calls, visits and appointments) and your stats are in the DrugBug Outreach app. Open it here, or install it on your computer from inside the app.</p>
+  <div class="row" style="gap:8px;flex-wrap:wrap"><a class="signbtn" href="../outreach/">Open DrugBug Outreach</a><a class="ghost" href="../outreach/" id="hStats" style="padding:8px 12px">My stats</a></div>
+</section>
 <section id="vList" class="card hide">
   <h2 id="listTitle">Your classes</h2>
   <div id="list"></div>
@@ -709,13 +723,16 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
     $("who").innerHTML = real ? esc(u.email || "Signed in") + ' <button class="ghost" id="bOut">Sign out</button>' : "";
     if (real) $("bOut").onclick = function () { auth.signOut(); };
     show("vSignin", !real); show("vApp", false); show("vOwner", false); show("vList", false); show("vClass", false); show("vOverview", false);
-    if (real) loadList();
+    if (real) loadList(); else try { localStorage.removeItem("dbStaff"); } catch (x) {}
+    show("vHelper", false);
+    /* outreach helpers (owner, Nov 14 2026) see a way into their DrugBug Outreach app here too */
+    if (real && !EMB) call("dashMe").then(function (r) { if (r && r.role) try { localStorage.setItem("dbStaff", r.role); } catch (x) {} if (r && r.role === "helper") { show("vHelper", true); $("hTitleBadge").textContent = r.title || ""; } }).catch(function () {});
   });
 
   /* ---------- classes ---------- */
   function loadList() {
     call("groupOrgList").then(function (r) {
-      ST.owner = r.owner; ST.list = r.list;
+      ST.owner = r.owner; ST.list = r.list; if (r.owner) try { localStorage.setItem("dbStaff", "owner"); } catch (x) {}
       /* Owner tools live on the Admin dashboard only (owner, Nov 7 2026). Signed in here without
          ?embed=, the owner sees the same instructor view as everyone else, plus a link to Admin. */
       var ownerHere = r.owner && !!EMB, cls = !EMB || EMB === "classes", app = EMB === "metrics" || EMB === "evaluators";
@@ -799,8 +816,38 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
   });
   $("bCoders").onclick = loadCoders;
 
+  /* accounts left out of the statistics (owner, Nov 14 2026; functions/usage.js usageExclude) */
+  function exDraw(list) {
+    $("exList").innerHTML = list.length ? '<table class="sxt">' + list.map(function (x) { return '<tr><td><b>' + esc(x.email) + '</b><div class="muted small">' + (x.devices || 0) + ' device' + (x.devices === 1 ? '' : 's') + ' · since ' + new Date(x.at).toLocaleDateString() + '</div></td><td class="num"><button class="linkish" data-exrm="' + esc(x.email) + '">Count again</button></td></tr>'; }).join("") + '</table>' : '<p class="muted small">No accounts left out yet.</p>';
+  }
+  function exLoad() { call("usageExclude", { list: true }).then(function (d) { exDraw(d.list || []); }).catch(function () { $("exList").innerHTML = '<p class="muted small">This list appears once the new server functions are deployed (DEPLOY.cmd on your PC).</p>'; }); }
+  $("exAdd").onclick = function () {
+    var em = $("exEmail").value.trim(), b = $("exAdd"); if (!em) { $("exMsg").textContent = "Type an email first."; return; }
+    b.disabled = true; $("exMsg").textContent = "Working…";
+    call("usageExclude", { email: em }).then(function (d) { b.disabled = false; $("exEmail").value = ""; $("exMsg").textContent = d.email + " is left out now. Removed " + d.deleted + " device record" + (d.deleted === 1 ? "" : "s") + "."; exLoad(); loadApp(); })
+      .catch(function (e) { b.disabled = false; $("exMsg").textContent = e.message; });
+  };
+  $("exList").addEventListener("click", function (e) { var b = e.target.closest("[data-exrm]"); if (!b) return; b.disabled = true;
+    call("usageExclude", { email: b.getAttribute("data-exrm"), remove: true }).then(function () { $("exMsg").textContent = b.getAttribute("data-exrm") + " counts again from now on."; exLoad(); }).catch(function (er) { b.disabled = false; $("exMsg").textContent = er.message; }); });
+  /* sync check (owner, Nov 14 2026; functions/sync.js) */
+  function syncAgo(ms) { if (!ms) return ""; var h = (Date.now() - ms) / 36e5; return h < 1 ? "just now" : h < 24 ? Math.round(h) + " h ago" : Math.round(h / 24) + " d ago"; }
+  function syncDraw(r) {
+    var g = r.guestCodes || [], l = r.linkTrouble || [], u = r.codesUnused || [], h = "";
+    h += '<p class="small"><b>' + g.length + '</b> code' + (g.length === 1 ? '' : 's') + ' used as a guest · <b>' + l.length + '</b> stuck typing a link code · <b>' + u.length + '</b> link code' + (u.length === 1 ? '' : 's') + ' never used</p>';
+    if (g.length) h += '<h4 style="margin:12px 0 4px">Codes used as a guest</h4><p class="muted small">Tell the person to sign in on drugbugapp.com first, then tap "Let them use it again" and have them enter the same code.</p><table class="sxt">' + g.map(function (x) { return '<tr><td><b>' + esc(x.name || x.label || "Unknown") + '</b><div class="muted small">' + esc(x.code) + ' · ' + esc(x.kind || "") + ' · ' + syncAgo(x.at) + '</div></td><td class="num">' + (x.canReuse ? '<button class="linkish" data-syncfix="' + esc(x.code) + '" data-uid="' + esc(x.uid) + '">Let them use it again</button> · ' : '<span class="muted small">Built-in code: make them a new one · </span>') + '<button class="linkish" data-syncfix="' + esc(x.code) + '" data-uid="' + esc(x.uid) + '" data-ignore="1">Hide</button></td></tr>'; }).join("") + '</table>';
+    if (l.length) h += '<h4 style="margin:12px 0 4px">Typed wrong link codes</h4><table class="sxt">' + l.map(function (x) { return '<tr><td><b>' + esc(x.email || (x.guest ? "A guest (no account yet)" : "An account")) + '</b><div class="muted small">' + x.tries + ' wrong tr' + (x.tries === 1 ? 'y' : 'ies') + ' · ' + syncAgo(x.since) + '</div></td></tr>'; }).join("") + '</table>';
+    if (u.length) h += '<h4 style="margin:12px 0 4px">Made a link code, never used it</h4><table class="sxt">' + u.map(function (x) { return '<tr><td><b>' + esc(x.email || "An account") + '</b><div class="muted small">' + x.n + ' code' + (x.n === 1 ? '' : 's') + ' · last ' + syncAgo(x.made) + '</div></td></tr>'; }).join("") + '</table>';
+    if (!g.length && !l.length && !u.length) h += '<p class="small" style="color:var(--good,#15803d)">Nobody looks stuck right now.</p>';
+    h += '<p class="muted small" style="margin-top:8px">Scanned ' + new Date(r.at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) + '.</p>';
+    $("syncOut").innerHTML = h;
+  }
+  function syncLoad() { $("syncOut").innerHTML = '<p class="muted small">Scanning…</p>'; call("syncScan", {}).then(syncDraw).catch(function (e) { $("syncOut").innerHTML = '<p class="muted small">' + (/not.?found|internal|unavailable|fetch|network/i.test(e.message) ? "The sync check appears once the new server functions are deployed (DEPLOY.cmd on your PC)." : esc(e.message)) + '</p>'; }); }
+  $("syncRun").onclick = syncLoad;
+  $("syncOut").addEventListener("click", function (e) { var b = e.target.closest("[data-syncfix]"); if (!b) return; b.disabled = true;
+    call("syncFix", { code: b.getAttribute("data-syncfix"), uid: b.getAttribute("data-uid"), ignore: !!b.getAttribute("data-ignore") }).then(syncLoad).catch(function (er) { b.disabled = false; $("syncOut").insertAdjacentHTML("afterbegin", '<p class="small" style="color:var(--bad,#c2410c)">' + esc(er.message) + '</p>'); }); });
   function loadApp() {
     loadCoders();
+    exLoad(); syncLoad();
     $("apSub").textContent = "Loading…";
     call("appMetrics").then(function (d) { AP = d; drawApp(d); }).catch(function (e) {
       $("apSub").textContent = /not.?found|internal|unavailable|fetch|network/i.test(e.message) ? "App metrics will appear once the new server functions are deployed (DEPLOY.cmd on your PC)." : e.message;
@@ -837,6 +884,7 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
     bars("apDau", "apDauX", rows, function (r) { return r.dau; }, function (r) { return r.day + ": " + r.dau + " active, " + r.newUsers + " new"; });
     bars("apQ", "apQX", rows, function (r) { return r.q; }, function (r) { return r.day + ": " + r.q + " questions" + (r.accuracy != null ? ", " + r.accuracy + "% right" : "") + ", " + r.minutes + " min studied, " + r.learn + " L.E.A.R.N cards"; });
     bars("apNew", "apNewX", rows, function (r) { return r.newUsers; }, function (r) { return r.day + ": " + r.newUsers + " new users"; });
+    var lg = document.getElementById("apLog"); if (lg && lg.getAttribute("src") === "about:blank") { lg.setAttribute("src", lg.getAttribute("data-src")); setInterval(function () { try { var dd = lg.contentDocument; if (dd && dd.body) { var hh = Math.min(2400, Math.max(400, dd.documentElement.scrollHeight)); if (Math.abs(lg.offsetHeight - hh) > 4) lg.style.height = hh + "px"; } } catch (e) {} }, 800); }
     /* homepage visits and button taps (owner, Nov 14 2026) */
     var sv = function (k) { return sum(function (r) { return (r.site || {})[k] || 0; }); }, sViews = sv("view"), sBr = sv("browser"), sAs = sv("appstore");
     var tdy = rows[rows.length - 1] && rows[rows.length - 1].site || {};
@@ -1350,5 +1398,7 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
   };
 })();
 </script>
+<script>/* staff tab: shows "Admin" in the top bar only for the owner and outreach helpers on this browser */
+(function(){try{var r=localStorage.getItem("dbStaff");if(r!=="owner"&&r!=="helper")return;var n=document.querySelector("nav.tabs2");if(!n||n.querySelector(".stafftab"))return;var a=document.createElement("a");a.className="tab stafftab";a.href=(location.pathname.indexOf("/instructor/")>=0?"../":"")+(r==="owner"?"admin/":"outreach/");a.textContent="Admin";a.style.cssText="color:#b45309;font-weight:800;padding:7px 10px";n.style.flexWrap="nowrap";n.appendChild(a);[].forEach.call(n.querySelectorAll("a.tab"),function(x){x.style.whiteSpace="nowrap";if(x!==a)x.style.padding="7px 12px"})}catch(e){}})();</script>
 </body>
 </html>
