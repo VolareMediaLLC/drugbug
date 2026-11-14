@@ -914,7 +914,7 @@ table.suffix td{white-space:normal}
 .qrevv.g.on{background:#16a34a;border-color:#16a34a;color:#fff}.qrevv.b.on{background:#dc2626;border-color:#dc2626;color:#fff}
 .qrevs{display:flex;flex-direction:column;gap:6px;margin-top:6px}.qrevs textarea{width:100%;box-sizing:border-box;min-height:60px;font:400 14px var(--f-body);color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;resize:vertical}.qrevs .btn{align-self:flex-start}
 /* Administrator / Evaluator badge + evaluators' analytics (owner, Nov 7 2026) */
-.tierchip.tc-role,.tierchip.inbug.tc-role{cursor:pointer;color:#fff;pointer-events:auto}.tierchip.tc-admin{background:linear-gradient(135deg,#0f172a,#334155);box-shadow:0 0 0 1.5px #f5c542 inset}.tierchip.tc-eval{background:linear-gradient(135deg,#0f766e,#0891b2)}
+.tierchip.tc-role,.tierchip.inbug.tc-role{cursor:pointer;color:#fff;pointer-events:auto}.tierchip.tc-admin{background:linear-gradient(135deg,#0f172a,#334155);box-shadow:0 0 0 1.5px #f5c542 inset}.tierchip.tc-eval{background:linear-gradient(135deg,#0f766e,#0891b2)}.staff-btn{color:#f59e0b!important;font-weight:800;text-decoration:none;display:inline-flex;align-items:center}.tierchip.tc-emperor{background:linear-gradient(135deg,#4c1d95,#7c3aed);color:#fde047;box-shadow:0 0 0 1.5px #facc15 inset;cursor:default}
 .evpanel{max-width:760px;width:min(760px,100%)}.evpanel>.pbar{display:flex;gap:10px;align-items:center;height:auto;background:none;overflow:visible;border-radius:0;margin:0 0 6px}.evpanel .pbar h2{margin:0;flex:1}
 .evtiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin:10px 0}.evtile{background:var(--surface-2);border-radius:12px;padding:10px 12px}.evtile b{display:block;font-size:20px}.evtile span{font-size:12px;color:var(--muted)}
 .evtabs{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.evtabs button{font:700 13px var(--f-body);padding:6px 12px;border-radius:999px;border:1.5px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}.evtabs button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
@@ -931,6 +931,7 @@ button.evrow{cursor:pointer}button.evrow:hover{background:var(--surface-2)}.evn{
 .dbars{display:grid;grid-template-columns:repeat(14,1fr);gap:6px;align-items:end;height:130px}
 .dbar{display:flex;flex-direction:column;justify-content:flex-end;height:100%;gap:4px}
 .dbar i{display:block;background:var(--c,var(--flight));border-radius:5px 5px 2px 2px;min-height:0}
+.dbar em{flex:1;min-height:0;display:flex;align-items:flex-end}.dbar em i{width:100%;max-height:100%}
 .dbar span{font-size:10.5px;color:var(--muted);text-align:center;white-space:nowrap}
 @media (max-width:560px){.dbars{gap:3px}.dbar span{font-size:8.5px}}
 .clrk.r1,.clrk.r2,.clrk.r3{width:28px;height:28px;border-radius:50%;display:inline-grid;place-items:center;font-size:14px;color:#1d1a2a;justify-self:center}
@@ -1131,6 +1132,14 @@ button.evrow{cursor:pointer}button.evrow:hover{background:var(--surface-2)}.evn{
 .monitor{background:#07130d;border-radius:16px;padding:10px 12px;margin:10px 0;box-shadow:inset 0 0 0 2px #163323}
 .monitor .mtop{display:flex;justify-content:space-between;color:#4dff9a;font:700 16px var(--f-mono)}
 .monitor .strip{width:100%;height:90px;display:block}
+.monitor .stripw{position:relative;overflow:hidden}
+.acutag{display:inline-block;margin:0 0 6px 8px;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;vertical-align:middle}.rushacu{margin:0 0 6px}.rushacu .acutag{margin-left:0}.acu-c{background:#7c1d6f;color:#fff}.acu-r{background:#dc2626;color:#fff}.acu-y{background:#facc15;color:#1c1917}.acu-g{background:#16a34a;color:#fff}
+.rushbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:8px 12px;margin:0 0 12px;border-radius:12px;background:rgba(255,255,255,.06);font-size:14px}.rushbar .linkish{margin-left:auto}.rushbar .rushs b{color:#4dff9a}.rushbar .rushl b{color:#ff7a7a}.mcout:not(.ok):not(.bad){background:rgba(255,200,80,.12)}
+.mcout{margin:8px 0 12px;padding:10px 12px;border-radius:10px;background:rgba(77,255,154,.12)}.mcout.bad{background:rgba(255,99,99,.14)}.steps2 li p.small{margin:4px 0 10px;line-height:1.45}
+.monitor .lmcv{display:block;width:100%;height:90px;border-radius:6px}.mcnext{margin:8px 0 0}
+.monitor .sweep{position:absolute;top:0;bottom:0;left:-26px;width:26px;background:linear-gradient(90deg,rgba(7,19,13,0),#07130d 35%);box-shadow:-4px 0 10px -4px rgba(77,255,154,.55);animation:ecgsweep var(--sw,4s) linear infinite}
+@keyframes ecgsweep{from{left:-26px}to{left:100%}}
+@media (prefers-reduced-motion:reduce){.monitor .sweep{display:none}}
 .monitor .strip path{fill:none;stroke:#4dff9a;stroke-width:2.2;stroke-linejoin:round;vector-effect:non-scaling-stroke}
 .monitor .mvit{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
 .monitor .mvit span{font:600 13px var(--f-mono);color:#c7ffe0;background:#0f2a1c;border-radius:8px;padding:3px 8px}
@@ -3276,16 +3285,23 @@ button.tierchip:hover{filter:brightness(1.08)}
 
 <script>/* if the app never starts (a file missing from the build, or one that failed to load), say so
    instead of showing "Loading your medications" forever (owner, Nov 8 2026) */
-setTimeout(function(){var b=document.getElementById("boot");if(!b)return;var miss=[];["DB","DRUGBUG_CONFIG"].forEach(function(k){if(typeof window[k]==="undefined")miss.push(k);});
-b.innerHTML='<div class="bootlogo">Drug<span>Bug</span></div><p class="bootnote" style="max-width:300px;margin:12px auto;text-align:center">DrugBug didn\'t finish loading.'+(miss.length?' Part of the app is missing ('+miss.join(", ")+').':'')+'</p><button type="button" onclick="location.reload()" style="font:700 16px system-ui;padding:10px 22px;border-radius:12px;border:0;background:#14b8a6;color:#fff">Try again</button>';},15000);</script>
+window.__bootFail=function(){var b=document.getElementById("boot");if(!b)return;var miss=[];["DB","DRUGBUG_CONFIG"].forEach(function(k){if(typeof window[k]==="undefined")miss.push(k);});
+b.innerHTML='<div class="bootlogo">Drug<span>Bug</span></div><p class="bootnote" style="max-width:300px;margin:12px auto;text-align:center">DrugBug didn\'t finish loading.'+(miss.length?' Part of the app is missing ('+miss.join(", ")+').':'')+'</p><button type="button" onclick="location.reload()" style="font:700 16px system-ui;padding:10px 22px;border-radius:12px;border:0;background:#14b8a6;color:#fff">Try again</button>';};
+/* a slow signal is not a failure (Nov 13 2026): only give up when every file has arrived and the app still
+   hasn't started, when a file failed, or when nothing has arrived for 60 seconds */
+(function(){var t0=Date.now(),iv=setInterval(function(){if(!document.getElementById("boot")){clearInterval(iv);return;}
+var n=window.__blN||0,last=window.__blT||t0,now=Date.now();
+if(window.__blErr||(n>=8&&now-last>12000)||now-last>60000){clearInterval(iv);window.__bootFail();}},3000);})();</script>
 <script src="app-config.js"></script>
-<script defer src="backend.js"></script>
-<script defer src="data.js"></script>
-<script defer src="data2.js"></script>
-<script defer src="data3.js"></script>
-<script defer src="data4.js"></script>
-<script defer src="pilot.js"></script><script defer src="guides.js"></script>
-<script defer src="app.js"></script>
+<script>/* real loading progress, so a slow first load on a weak signal doesn't look stuck (Nov 13 2026) */
+(function(){var got=0,T=13.06,t0=Date.now();window.__bl=function(w){got+=w;window.__blN=(window.__blN||0)+1;window.__blT=Date.now();var n=document.querySelector("#boot .bootnote"),b=document.querySelector("#boot .bootbar i");if(!n)return;var p=Math.min(99,Math.round(100*got/T));if(b){b.style.animation="none";b.style.width=p+"%";b.style.transform="none";}n.textContent="Loading your medications\u2026 "+p+"%"+(Date.now()-t0>6000?" \u00b7 the first load takes longer on a slow signal":"");};})();</script>
+<script defer src="backend.js" onload="__bl(0.01)" onerror="window.__blErr=1"></script>
+<script defer src="data.js" onload="__bl(2.3)" onerror="window.__blErr=1"></script>
+<script defer src="data2.js" onload="__bl(2.7)" onerror="window.__blErr=1"></script>
+<script defer src="data3.js" onload="__bl(2.8)" onerror="window.__blErr=1"></script>
+<script defer src="data4.js" onload="__bl(3.4)" onerror="window.__blErr=1"></script>
+<script defer src="pilot.js" onload="__bl(0.4)" onerror="window.__blErr=1"></script><script defer src="guides.js" onload="__bl(0.05)" onerror="window.__blErr=1"></script>
+<script defer src="app.js" onload="__bl(1.4)" onerror="window.__blErr=1"></script>
 
 </body>
 </html>

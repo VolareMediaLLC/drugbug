@@ -2,6 +2,28 @@
 (function () {
 "use strict";
 
+/* Error tracking (owner, Nov 13 2026): when the app breaks on someone's phone, send what broke (the error
+   message and where in the code) to the Master dashboard. No account id, name or question text is sent.
+   At most 5 reports per visit, each different error once. */
+(function () {
+  var sent = {}, n = 0;
+  function send(m, src, line, col, stack) {
+    try {
+      m = String(m || "").slice(0, 300); if (!m || n >= 5) return;
+      if (/^Script error\.?$|ResizeObserver loop|Non-Error promise rejection captured|^offline$|Failed to fetch|NetworkError|Load failed|The operation was aborted|AbortError/i.test(m)) return;
+      var k = m + "|" + line; if (sent[k]) return; sent[k] = 1; n++;
+      var base = (window.DRUGBUG_CONFIG || {}).functionsUrl; if (!base) return;
+      var S0 = window.__dbS || {}, plat = window.webkit && window.webkit.messageHandlers ? "ios" : "web";
+      var v = (typeof window.__dbVer === "string" ? window.__dbVer : "") || "web";
+      fetch(base.replace(/\/$/, "") + "/clientErr", { method: "POST", headers: { "Content-Type": "application/json" }, keepalive: true,
+        body: JSON.stringify({ data: { m: m, src: String(src || ""), line: line || 0, col: col || 0, stack: String(stack || "").slice(0, 1500), view: S0.view || "", v: v, plat: plat } }) }).catch(function () {});
+    } catch (e) {}
+  }
+  window.addEventListener("error", function (e) { if (!e || e.target && e.target !== window && e.target.tagName) return; send(e.message, e.filename, e.lineno, e.colno, e.error && e.error.stack); });
+  window.addEventListener("unhandledrejection", function (e) { var r = e && e.reason; send(r && (r.message || r) || "Unhandled promise rejection", r && r.fileName, 0, 0, r && r.stack); });
+  window.__dbErr = function (m, stack) { send(m, "report", 0, 0, stack); };
+})();
+
 /* One quieter master level for every sound DrugBug makes (owner, Nov 7 2026: "so people aren't
    blasted"). Every sound, the music, Hickory's voice and the dummy all end at an audio context's
    speakers; anything connected straight to the speakers is sent through one gain node per context
@@ -80,7 +102,7 @@ function store(k, v) { try { if (v === undefined) return JSON.parse(localStorage
 function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
 
 /* ---------- name mixing: questions randomly show a drug by its brand OR generic name (consistent within a question) ---------- */
-var MIXALT = { epinephrine: "adrenaline", norepinephrine: "Levophed", naloxone: "Narcan", midazolam: "Versed", lorazepam: "Ativan", diazepam: "Valium", ondansetron: "Zofran", diphenhydramine: "Benadryl", furosemide: "Lasix", diltiazem: "Cardizem", metoprolol: "Lopressor", adenosine: "Adenocard", ketorolac: "Toradol", fentanyl: "Sublimaze", hydromorphone: "Dilaudid", ketamine: "Ketalar", etomidate: "Amidate", propofol: "Diprivan", rocuronium: "Zemuron", succinylcholine: "Anectine", dexmedetomidine: "Precedex", haloperidol: "Haldol", droperidol: "Inapsine", promethazine: "Phenergan", prochlorperazine: "Compazine", metoclopramide: "Reglan", famotidine: "Pepcid", methylprednisolone: "Solu-Medrol", dexamethasone: "Decadron", hydrocortisone: "Solu-Cortef", ipratropium: "Atrovent", levetiracetam: "Keppra", phenytoin: "Dilantin", fosphenytoin: "Cerebyx", "tranexamic-acid": "Cyklokapron", enoxaparin: "Lovenox", alteplase: "Activase", tenecteplase: "TNKase", warfarin: "Coumadin", apixaban: "Eliquis", rivaroxaban: "Xarelto", dabigatran: "Pradaxa", clopidogrel: "Plavix", ticagrelor: "Brilinta", nicardipine: "Cardene", clevidipine: "Cleviprex", esmolol: "Brevibloc", vasopressin: "Vasostrict", acetaminophen: "Tylenol", ibuprofen: "Motrin", oxytocin: "Pitocin", methylergonovine: "Methergine", misoprostol: "Cytotec", hydroxocobalamin: "Cyanokit", pralidoxime: "Protopam", flumazenil: "Romazicon", glycopyrrolate: "Robinul", sugammadex: "Bridion", lidocaine: "Xylocaine", bupivacaine: "Marcaine", ceftriaxone: "Rocephin", vancomycin: "Vancocin", "piperacillin-tazobactam": "Zosyn", cefazolin: "Ancef", azithromycin: "Zithromax", levofloxacin: "Levaquin", ciprofloxacin: "Cipro", sertraline: "Zoloft", fluoxetine: "Prozac", quetiapine: "Seroquel", olanzapine: "Zyprexa", alprazolam: "Xanax", lisinopril: "Zestril", losartan: "Cozaar", amlodipine: "Norvasc", atorvastatin: "Lipitor", metformin: "Glucophage", digoxin: "Lanoxin", spironolactone: "Aldactone", pantoprazole: "Protonix", omeprazole: "Prilosec", montelukast: "Singulair", cetirizine: "Zyrtec", loratadine: "Claritin", meclizine: "Antivert", hydroxyzine: "Vistaril", carbamazepine: "Tegretol", levothyroxine: "Synthroid", ziprasidone: "Geodon", risperidone: "Risperdal", methadone: "Dolophine", tramadol: "Ultram", gabapentin: "Neurontin", cyclobenzaprine: "Flexeril", sildenafil: "Viagra", tamsulosin: "Flomax", nitroprusside: "Nipride", milrinone: "Primacor", verapamil: "Calan", fomepizole: "Antizol", deferoxamine: "Desferal", octreotide: "Sandostatin", mannitol: "Osmitrol", desmopressin: "DDAVP", idarucizumab: "Praxbind", phytonadione: "vitamin K", heparin: null, pseudoephedrine: "Sudafed", oxymetazoline: "Afrin", fluticasone: "Flonase", buspirone: "Buspar", clonidine: "Catapres", labetalol: "Trandate", hydralazine: "Apresoline", "magnesium-sulfate": null };
+var MIXALT = { epinephrine: "adrenaline", norepinephrine: "Levophed", naloxone: "Narcan", midazolam: "Versed", lorazepam: "Ativan", diazepam: "Valium", ondansetron: "Zofran", diphenhydramine: "Benadryl", furosemide: "Lasix", diltiazem: "Cardizem", metoprolol: "Lopressor", adenosine: "Adenocard", ketorolac: "Toradol", fentanyl: "Sublimaze", hydromorphone: "Dilaudid", ketamine: "Ketalar", etomidate: "Amidate", propofol: "Diprivan", rocuronium: "Zemuron", succinylcholine: "Anectine", dexmedetomidine: "Precedex", haloperidol: "Haldol", droperidol: "Inapsine", promethazine: "Phenergan", prochlorperazine: "Compazine", metoclopramide: "Reglan", famotidine: "Pepcid", methylprednisolone: "Solu-Medrol", dexamethasone: "Decadron", hydrocortisone: "Solu-Cortef", ipratropium: "Atrovent", levetiracetam: "Keppra", phenytoin: "Dilantin", fosphenytoin: "Cerebyx", "tranexamic-acid": "Cyklokapron", enoxaparin: "Lovenox", alteplase: "Activase", tenecteplase: "TNKase", warfarin: "Coumadin", apixaban: "Eliquis", rivaroxaban: "Xarelto", dabigatran: "Pradaxa", clopidogrel: "Plavix", ticagrelor: "Brilinta", nicardipine: "Cardene", clevidipine: "Cleviprex", esmolol: "Brevibloc", vasopressin: "Vasostrict", acetaminophen: "Tylenol", ibuprofen: "Motrin", oxytocin: "Pitocin", methylergonovine: "Methergine", misoprostol: "Cytotec", hydroxocobalamin: "Cyanokit", pralidoxime: "Protopam", flumazenil: "Romazicon", glycopyrrolate: "Robinul", sugammadex: "Bridion", lidocaine: "Xylocaine", bupivacaine: "Marcaine", ceftriaxone: "Rocephin", vancomycin: "Vancocin", "piperacillin-tazobactam": "Zosyn", cefazolin: "Ancef", azithromycin: "Zithromax", levofloxacin: "Levaquin", ciprofloxacin: "Cipro", sertraline: "Zoloft", fluoxetine: "Prozac", quetiapine: "Seroquel", olanzapine: "Zyprexa", alprazolam: "Xanax", lisinopril: "Zestril", losartan: "Cozaar", amlodipine: "Norvasc", atorvastatin: "Lipitor", metformin: "Glucophage", digoxin: "Lanoxin", spironolactone: "Aldactone", pantoprazole: "Protonix", omeprazole: "Prilosec", montelukast: "Singulair", cetirizine: "Zyrtec", loratadine: "Claritin", meclizine: "Antivert", hydroxyzine: "Vistaril", carbamazepine: "Tegretol", levothyroxine: "Synthroid", ziprasidone: "Geodon", risperidone: "Risperdal", methadone: "Dolophine", tramadol: "Ultram", gabapentin: "Neurontin", cyclobenzaprine: "Flexeril", sildenafil: "Viagra", tamsulosin: "Flomax", nitroprusside: "Nipride", milrinone: "Primacor", verapamil: "Calan", fomepizole: "Antizol", deferoxamine: "Desferal", octreotide: "Sandostatin", mannitol: "Osmitrol", desmopressin: "DDAVP", idarucizumab: "Praxbind", phytonadione: "vitamin K", heparin: null, pseudoephedrine: "Sudafed", oxymetazoline: "Afrin", fluticasone: "Flonase", buspirone: "Buspar", clonidine: "Catapres", propranolol: "Inderal", metronidazole: "Flagyl", labetalol: "Trandate", hydralazine: "Apresoline", "magnesium-sulfate": null };
 var MIXFORM = { fentanyl: 1, naloxone: 1, diazepam: 1, metoprolol: 1, methylprednisolone: 1, hydrocortisone: 1, ketorolac: 1, lidocaine: 1, glucagon: 1, ondansetron: 1, diltiazem: 1, epinephrine: 1, fluticasone: 1, oxymetazoline: 1, pseudoephedrine: 1, buspirone: 1 };
 var MIXFORMRX = /\b(patch|transdermal|auto-?injectors?|inhaler|MDI|nebuli[sz]\w*|tablets?|sublingual|SL|oral|orally|PO|rectal|nasal|intranasal|IN|extended-release|ER|XL|XR|succinate|tartrate|spray|gel|suppositor\w*|ODT|topical|jelly|patch)\b/i;
 var MIXNO = /\b(brand|generic|trade name|suffix|spell|sound-alike|look-alike|also known as|aka)\b/i;
@@ -148,7 +170,9 @@ function genQ(o) {
    NCLEX prep keeps generic as its default because the NCLEX only uses generic names. */
 /* Nov 13 2026 (owner): generic names are the default for every question, every path; brand names only
    when the person picks "Brand names" (or "Generic and brand" to mix). */
-function qNamesMode(o) { var s = SET().qnames; if (s === "generic" || s === "all" || s === "brand") return s; return "generic"; }
+/* Nov 14 2026 (owner): "make the 5 minute daily quiz have brand name questions not generic". The daily
+   5-minute DrugBug asks by brand name unless the person picked "Mix both"; everything else is unchanged. */
+function qNamesMode(o) { var s = SET().qnames; if (typeof S !== "undefined" && S.sess && S.sess.kind === "daily") return s === "all" ? "all" : "brand"; if (s === "generic" || s === "all" || s === "brand") return s; return "generic"; }
 function qNamesChips() { var m = qNamesMode(); return '<div class="lbl">Medication names in questions</div><div class="chips"><button class="chip" data-qnames="generic" aria-pressed="' + (m === "generic") + '">Generic names</button><button class="chip" data-qnames="brand" aria-pressed="' + (m === "brand") + '">Brand names</button><button class="chip" data-qnames="all" aria-pressed="' + (m === "all") + '">Mix both</button></div>'; }
 function mixItem(q) { if (q.t) return { q: q, opts: shuffle(q.opts.slice()) }; var m = mixQ(q); return { q: m, opts: shuffle([m.a].concat(m.w)) }; }
 /* answer check for every item type: single best answer, multiple response (select all that apply), ordered response */
@@ -455,6 +479,7 @@ var NATIVE = !!window.DRUGBUG_NATIVE, HASDB = !!(window.claude && typeof window.
 /* Classes and the public leaderboard are parked (student-record / FERPA review pending). Turn back on with DRUGBUG_CONFIG.social = true. */
 var SOCIAL = HASDB && !!(window.DRUGBUG_CONFIG && window.DRUGBUG_CONFIG.social === true); if (NATIVE) document.documentElement.setAttribute("data-native", "1");
 var S = { view: "home", level: null, tab: "hub", q: "", tags: {}, group: "all", scen: null, fc: null, sheet: null, full: false };
+try { window.__dbS = S; } catch (e) {}
 var app = $("#app"), sheet = $("#sheet");
 
 function ctxKey() { return S.view === "gen" || S.view === "easy" || S.view === "everyday" ? "gen" : S.level; }
@@ -469,11 +494,13 @@ function scopeNote(id) { if (S.view !== "level") return ""; return scopeFor(S.le
 var UTIL_VIEWS = { settings: 1, easy: 1, classes: 1, admin: 1, stats: 1 };
 /* Tabs that moved inside Study Tools, Oct 29 2026. Old links, restored sessions and saved state
    land on the tool instead of an orphan page. */
-var MOVED_TABS = { cards: "cards", games: "games", prep: "prep", qs: "prep", ixn: null, medlist: null };
+/* Nov 14 2026 (owner): Questions, Flashcards and Brain Games are their own tabs again, and Scenarios and
+   Megacode are Bug Rush. Old links, search results and saved state that still point at Study land on the tab. */
 function fixTab() {
-  if (!S.tab || !(S.tab in MOVED_TABS)) return;
-  var tool = MOVED_TABS[S.tab];
-  S.tab = "tools"; S.tool = tool;
+  if (S.tab === "qs") S.tab = "prep";
+  if (S.tab === "tools") { var m = { prep: "prep", cards: "cards", games: "games", mega: "rush" }; S.tab = m[S.tool] || "hub"; S.tool = null; }
+  if (S.tab === "megacode" || S.tab === "scenarios") { S.tab = "rush"; S.tool = null; }
+  if (S.tab === "ixn" || S.tab === "medlist") S.tab = "hub";
 }
 function go(view, opts) {
   /* Oct 28 2026 (owner): Field Medic is Tier 4 only, medications only. The tier chooser and lower tiers send to Tier 4; back from Tier 4 goes home. */
@@ -506,7 +533,7 @@ function topbar() {
   if (S.view === "terrarium") c += '<span>/</span><span>Terrarium</span>';
   if (S.view === "everyday") c += '<span>/</span>' + (S.evTab ? '<button data-evtab="">Everyday Health</button>' : '<span>Everyday Health</span>');
   var extra = (!SOCIAL ? '' : '<button class="theme-btn" data-go="classes"' + (S.view === "classes" ? ' aria-current="page"' : '') + '>Classes</button>') + (Admin.can ? '<button class="theme-btn admin-btn" data-go="admin"' + (S.view === "admin" ? ' aria-current="page"' : '') + '><span class="lg">Control Center</span><span class="sm">Control Center</span></button>' : '');
-  c += '</nav><span class="spacer"></span><div class="tbacts">' + (stickChip() || tierChip()) + '<span class="tbx">' + extra + '</span><button class="theme-btn srch-btn" data-act="gsearch" aria-label="Search all drugs" title="Search all drugs"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button><button class="theme-btn menu-btn" data-act="tbmenu" aria-expanded="' + !!S.menu + '" aria-label="More">More</button>' + musicBtn() + gearBtn() + (typeof funOn === "function" && !funOn() ? '' : '<button class="tbsticks' + (typeof iapAvailable === "function" && iapAvailable() ? ' hasplus' : '') + '" data-goshop="1" data-shopf="sticks" aria-label="' + sticks() + ' sticks. Get more sticks" title="Get Sticks">' + stickIcon(18) + (typeof iapAvailable === "function" && iapAvailable() ? '<span class="tbplus" aria-hidden="true">+</span>' : '') + '<strong>' + sticks().toLocaleString() + '</strong></button>') + '</div>' + (S.menu ? '<div class="tbmenu" role="menu">' + extra + '' + (typeof stxBtn === "function" ? stxBtn() : '') + '<button class="theme-btn" data-idea="1">Send an idea</button></div>' : '') + '</div>';
+  c += '</nav><span class="spacer"></span><div class="tbacts">' + (stickChip() || tierChip()) + '<span class="tbx">' + extra + '</span><button class="theme-btn srch-btn" data-act="gsearch" aria-label="Search all drugs" title="Search all drugs"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>' + staffBtn() + '<button class="theme-btn menu-btn" data-act="tbmenu" aria-expanded="' + !!S.menu + '" aria-label="More">More</button>' + musicBtn() + gearBtn() + (typeof funOn === "function" && !funOn() ? '' : '<button class="tbsticks' + (typeof iapAvailable === "function" && iapAvailable() ? ' hasplus' : '') + '" data-goshop="1" data-shopf="sticks" aria-label="' + sticks() + ' sticks. Get more sticks" title="Get Sticks">' + stickIcon(18) + (typeof iapAvailable === "function" && iapAvailable() ? '<span class="tbplus" aria-hidden="true">+</span>' : '') + '<strong>' + sticks().toLocaleString() + '</strong></button>') + '</div>' + (S.menu ? '<div class="tbmenu" role="menu">' + extra + '' + (typeof stxBtn === "function" ? stxBtn() : '') + '<button class="theme-btn" data-idea="1">Send an idea</button></div>' : '') + '</div>';
   return c + (typeof muPop === "function" ? muPop() : "") + backRow();
 }
 function backRow() {
@@ -579,10 +606,9 @@ function srBuild() {
   safe(function () { Object.keys(DB.FGUIDE || {}).forEach(function (k) { var G = DB.FGUIDE[k], L = levelObj(k); if (G && L) add(G.tab, "Study guide", function () { srGo("level", { level: k, tab: "guide" }); }, G.sub, L.name); }); });
   safe(function () { (DB.SICK || []).forEach(function (x) { add(x.name, "Small Sickness Guide", function () { srGo("everyday", { evTab: "sick", sick: x.id }); }, "", "Everyday Health"); }); });
   [["Questions", "prep", "practice test exam questions quiz nclex registry board"], ["Flashcards", "cards", "cards flip study"], ["Brain Games", "games", "games crossword word scramble memory match"]].forEach(function (t) {
-    add(t[0], "Study tool", function () { if (t[1] === "prep") srLevelGo("tools", { tool: "prep" }); else srGo("gen", { tab: "tools", tool: t[1] }); }, t[2], "Study");
+    add(t[0], "Study", function () { if (t[1] === "prep") srLevelGo("qs", {}); else srGo("gen", { tab: t[1] }); }, t[2], "Study");
   });
-  add("Megacode", "Study tool", function () { srLevelGo("scenarios", {}, "paramedic"); }, "code acls pals run a code monitor", "Scenarios");
-  add("Scenarios", "Section", function () { srGo("gen", { tab: "scenarios" }); }, "clinical cases practice", "Fictional cases");
+  add("Bug Rush", "Study", function () { srLevelGo("rush", {}, "paramedic"); }, "megacode code acls pals monitor scenarios cases calls random", "Codes, cases and calls");
   add("My List", "Section", function () { srGo("gen", { tab: "mylist" }); }, "saved drugs study list", "Your saved medicines");
   add("Progress", "Section", function () { srGo("gen", { tab: "progress" }); }, "mastery badges achievements leaderboard", "Your progress");
   add("Drug Class Comparisons", "Section", function () { srGo("gen", { tab: "alts" }); }, "compare drug classes alternatives", "Compare to learn");
@@ -837,6 +863,7 @@ function band() {
   return '<header class="band' + (ds ? ' hasdash' : '') + '"><div class="bugstage">' + levelBug(S.level) + '</div><div><h1>' + esc(l.name) + '</h1><div class="sub">' + (funOn() ? esc(l.bug) : '') + (mu ? (funOn() ? ' · ' : '') + esc(unitObj(mu).name) : '') + '</div><div class="meter">' + (isI(S.level) ? '<span>' + esc(l.full) + '</span>' : (isA(S.level) || l.side) ? '<span>' + esc(scopeTag(S.level, i, tot)) + '</span>' : m + '<span>' + esc(scopeTag(S.level, i, tot)) + '</span>') + '</div></div>' + ds + '</header>';
 }
 var ICO = {
+  megacode: '<rect x="2" y="4" width="20" height="16" rx="3"/><path d="M5 12h3l2-4 3 8 2-4h4"/>',
   guide: '<path d="M4 5a2 2 0 0 1 2-2h5v17H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-5v17h5a2 2 0 0 1 2 2z"/><path d="M7 8h2M7 11h2M15 8h2M15 11h2"/>',
   dash: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
   myclass: '<path d="M3 9l9-4 9 4-9 4z"/><path d="M7 11v4c0 1.5 2.2 3 5 3s5-1.5 5-3v-4"/><path d="M21 9v5"/>',
@@ -918,7 +945,7 @@ document.addEventListener("click", function (e) {
   e.preventDefault(); var t = document.getElementById("fg" + a.getAttribute("data-fgjump")); if (t) t.scrollIntoView({ behavior: "smooth", block: "start" });
 });
 function tabList() {
-  if (S.view === "level" && isF(S.level)) return [["registry", "Medications", "Every Tier 4 medication, by field use, by class or A to Z."], ["fm_blood", "Blood Products", "Whole blood, components, massive transfusion and every transfusion reaction."], ["fm_cond", FM_TABS.fm_cond[0], FM_TABS.fm_cond[1]], ["fm_store", FM_TABS.fm_store[0], FM_TABS.fm_store[1]], ["fm_istat", FM_TABS.fm_istat[0], FM_TABS.fm_istat[1]], ["fm_bio", FM_TABS.fm_bio[0], FM_TABS.fm_bio[1]], ["fm_ref", FM_TABS.fm_ref[0], FM_TABS.fm_ref[1]], ["tools", "Study Tools", "Questions, megacode, flashcards, brain games, med-list workout and safety drills."]];
+  if (S.view === "level" && isF(S.level)) return [["registry", "Medications", "Every Tier 4 medication, by field use, by class or A to Z."], ["fm_blood", "Blood Products", "Whole blood, components, massive transfusion and every transfusion reaction."], ["fm_cond", FM_TABS.fm_cond[0], FM_TABS.fm_cond[1]], ["fm_store", FM_TABS.fm_store[0], FM_TABS.fm_store[1]], ["fm_istat", FM_TABS.fm_istat[0], FM_TABS.fm_istat[1]], ["fm_bio", FM_TABS.fm_bio[0], FM_TABS.fm_bio[1]], ["fm_ref", FM_TABS.fm_ref[0], FM_TABS.fm_ref[1]], ["qs", "Questions", "Practice and test questions for this level."], ["cards", "Flashcards", "Flip cards for every drug you study."], ["games", "Brain Games", "Crosswords, scrambles, memory match and more."]];
   var L = [["registry", S.view === "gen" ? "All Medications" : "Medications", S.view === "gen" ? "Every drug in DrugBug, A to Z." : isN(S.level) ? "The drugs nurses at your license give and monitor." : isI(S.level) ? "Contrast agents, radiopharmaceuticals and the reaction cart." : "Look up every drug in your study path."]];
   /* Meds by System now lives inside L.E.A.R.N as "Learn by system" (owner, Nov 5 2026) */
   /* Questions gets its own tile, a little bolder than the rest (owner, Nov 13 2026); it opens the same
@@ -961,8 +988,12 @@ function tabList() {
   var img = S.view === "level" && isI(S.level);
   if (img) L.splice(1, 0, ["contrast", "Contrast Safety", "Reactions, screening, eGFR, GBCA groups, nuclear medicine and IR safety."]);
   /* Calc Lab removed Oct 26, 2026 (owner decision) */
-  L.push(["tools", "Study", "Questions, flashcards, brain games and safety drills."]);
-  if (!img) L.push(["scenarios", "Scenarios", "Clinical cases and Megacode: choose what to give."]);
+  /* Study is gone: Questions, Flashcards and Brain Games each have their own tile, so questions live in one
+     place only (owner, Nov 14 2026: "make questions its own tab... move the brain games and flashcards into
+     their own tabs in the main menu"). Scenarios and Megacode are fused into Bug Rush (owner, Nov 14 2026). */
+  L.push(["cards", "Flashcards", "Flip cards for every drug you study."]);
+  L.push(["games", "Brain Games", "Crosswords, scrambles, memory match and more."]);
+  if (!img && typeof rushPool === "function" && rushPool().length) L.push(["rush", "Bug Rush", "Random calls back to back: codes you can win or lose, cases and unfolding calls."]);
   /* the Medication Disease Identifier is gone: the medicine pages already answer it (owner, Nov 5 2026).
      Its place goes to the live call with the dummy acting it out (working name "On Scene"). */
   if (SCENE_READY && typeof sceneView === "function" && S.view === "level" && !img) L.push(["scene", "On Scene", "Run a call live: The Great Bug acts it out, vitals change in real time, and the questions follow the call."]);
@@ -978,11 +1009,11 @@ function tabList() {
   /* the field study guide sits right after Medications (1.2, owner Nov 7 2026) */
   if (S.view === "level" && fgOf(S.level)) { var G0 = fgOf(S.level); L.splice(1, 0, ["guide", G0.tab, G0.sub]); }
   /* Study sits right after Medications (owner, Nov 5 2026) */
-  var ti = -1, ri = -1; L.forEach(function (t, i) { if (t[0] === "tools") ti = i; if (t[0] === "registry") ri = i; });
+  var ti = -1, ri = -1; L.forEach(function (t, i) { if (t[0] === "qs") ti = i; if (t[0] === "registry") ri = i; });
   if (ti > 0 && ri >= 0 && ti !== ri + 1) { var st = L.splice(ti, 1)[0]; ri = L.map(function (t) { return t[0]; }).indexOf("registry"); L.splice(ri + 1, 0, st); }
   return L;
 }
-function tabName(k) { if (k === "dash") return "Dashboard"; var t = tabList().filter(function (x) { return x[0] === k; })[0]; return t ? t[1] : k === "session" ? "Study session" : ""; }
+function tabName(k) { if (k === "dash") return "Dashboard"; if (k === "prep") return "Questions"; var t = tabList().filter(function (x) { return x[0] === k; })[0]; return t ? t[1] : k === "session" ? "Study session" : ""; }
 /* Hub tiles grouped into sections with short labels (UI cleanup, Oct 28 2026) */
 var HUB_GROUPS = [
   ["Field care", ["fm_cond", "fm_blood", "fm_hold", "fm_store", "fm_istat", "fm_dive", "fm_k9", "fm_anti", "fm_tele", "fm_trauma", "fm_care", "pcc", "pcc_icu", "fm_adv"]],
@@ -991,10 +1022,10 @@ var HUB_GROUPS = [
      your list, your progress) together in "Yours". */
   ["Look it up", ["registry", "guide", "diseases", "calls", "anatomy", "families", "conds", "micro", "illicit", "units", "body", "alts", "contrast", "labs", "blood", "hemo", "flightp", "flt_ref"]],
   ["Food and vitamin compounds", ["vegc", "fruitc", "vitc"]],
-  ["Study and practice", ["qs", "tools", "scenarios", "scene", "nbug"]],
+  ["Study and practice", ["qs", "rush", "cards", "games", "scene", "nbug"]],
   ["Yours", ["myclass", "protocols", "mylist", "progress", "shop"]]
 ];
-var HUB_SHORT = { qs: "Practice and test questions", protocols: "Your agency's protocols, or request yours", scene: "The Great Bug acts out the call, vitals live", systems: "Airway, cardiac, neuro and more, with quizzes", calls: "Stroke, STEMI, sepsis, trauma, ROSC", micro: "Bacteria, viruses, fungi, prions, parasites", fm_bio: "Bio, chem, rad and nuclear casualties", fm_ref: "Burns, vents, scores, handoff, K9, dive", medlist: "What a med list says about the patient", fm_store: "Heat, cold, light and mixing", fm_istat: "Values, cartridges and practice cases", fm_cond: "Trauma, medical and blood reactions, with types", fm_blood: "Whole blood, components, MTP, reactions", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "The drugs you are studying", tools: "Questions, megacode, cards, games, drills", scenarios: "Clinical cases", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", anatomy: "Every organ and body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time" };
+var HUB_SHORT = { qs: "Practice and test questions", protocols: "Your agency's protocols, or request yours", scene: "The Great Bug acts out the call, vitals live", systems: "Airway, cardiac, neuro and more, with quizzes", calls: "Stroke, STEMI, sepsis, trauma, ROSC", micro: "Bacteria, viruses, fungi, prions, parasites", fm_bio: "Bio, chem, rad and nuclear casualties", fm_ref: "Burns, vents, scores, handoff, K9, dive", medlist: "What a med list says about the patient", fm_store: "Heat, cold, light and mixing", fm_istat: "Values, cartridges and practice cases", fm_cond: "Trauma, medical and blood reactions, with types", fm_blood: "Whole blood, components, MTP, reactions", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "The drugs you are studying", tools: "Questions, cards, games, drills", megacode: "A timed code on a live monitor", rush: "Codes, cases and calls, back to back", cards: "Flip, think, then check", games: "Crosswords, scrambles and memory match", scenarios: "Clinical cases", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", anatomy: "Every organ and body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time" };
 /* ---------- Hold a tile, then move it (owner, Nov 4 2026) ----------
    The iPhone gesture: press and hold until the tile lifts, drag it where you want, and the
    others slide out of the way as you go. Order is kept per level and per section, so the
@@ -1129,7 +1160,7 @@ function hubView() {
     var fmt = typeof FM_TABS !== "undefined" && (FM_TABS[t[0]] || (t[0] === "diseases" && S.view === "level" && isF(S.level)));
     return '<button class="hubtile t-' + t[0] + (fmt ? ' fmt' : '') + (t[0] === "qs" ? ' hubqs' : '') + (proLocked(t[0]) ? ' locked' : '') + '" data-tab="' + t[0] + '">' + icon(t[0] === "qs" ? "prep" : t[0]) + '<span class="ht"><strong>' + esc(t[1]) + (proLocked(t[0]) ? ' ' + proBadge(t[0]) : '') + '</strong><span>' + esc(t[0] === "registry" && S.view !== "gen" ? (S.view === "level" && isF(S.level) ? "Every drug and blood product" : "Every drug in your study path") : hubShort(t[0]) || t[2]) + '</span></span>' + (t[0] === "shop" ? '<span class="hubsticks">' + stickIcon(14) + sticks().toLocaleString() + '</span>' : t[0] === "mylist" && marks().length ? '<span class="hubsticks">' + marks().length + '</span>' : '') + '</button>';
   }
-  var fld = S.view === "level" && isF(S.level), groups = fld ? [["Look it up", ["registry", "fm_blood", "fm_cond", "fm_store", "fm_istat", "fm_bio", "fm_ref"]], ["Study and practice", ["tools"]]] : HUB_GROUPS;
+  var fld = S.view === "level" && isF(S.level), groups = fld ? [["Look it up", ["registry", "fm_blood", "fm_cond", "fm_store", "fm_istat", "fm_bio", "fm_ref"]], ["Study and practice", ["qs", "cards", "games"]]] : HUB_GROUPS;
 
   groups.forEach(function (g, gi) {
     var items = L.filter(function (t) { return g[1].indexOf(t[0]) >= 0; }); if (!items.length) return;
@@ -1363,7 +1394,7 @@ function scenarios() {
   var n = list.filter(function (s) { return done[s.id]; }).length;
   var mlk = typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier(toolTier("mega"));
   var mega = DB.MEGA_LEVELS && DB.MEGA_LEVELS[ctxKey()] ? '<button class="scard megacard' + (mlk ? ' locked' : '') + '" data-act="' + (mlk ? 'megalock' : 'megago') + '"><span class="meta">Megacode' + (mlk ? ' · Pro' : '') + '</span><h3>Run a code</h3><span>A timed code with a live monitor: rhythms, shocks and drugs, in order.</span></button>' : '';
-  return mega + '<div class="fmprog scenprog"><span><strong>' + n + '</strong> of ' + list.length + ' scenarios cleared</span><span class="cmptrack"><span class="cmpfill" style="width:' + (list.length ? Math.round(100 * n / list.length) : 0) + '%"></span></span></div><div class="scenlist">' + list.map(function (s) {
+  return '<div class="fmprog scenprog"><span><strong>' + n + '</strong> of ' + list.length + ' scenarios cleared</span><span class="cmptrack"><span class="cmpfill" style="width:' + (list.length ? Math.round(100 * n / list.length) : 0) + '%"></span></span></div><div class="scenlist">' + list.map(function (s) {
     return '<button class="scard' + (done[s.id] ? " done" : "") + '" data-scen="' + s.id + '"><span class="meta">' + esc(s.cat || "") + (done[s.id] ? " · Cleared" : "") + '</span><h3>' + esc(s.title) + '</h3><span class="tapnote">Tap to open</span></button>';
   }).join("") + '</div>';
 }
@@ -1388,6 +1419,7 @@ function scenView(s, list, inSess) {
     wrong.forEach(function (id) { if (st.sel[id] || (s.notes && s.notes[id])) c += '<li><strong>' + esc(nameOf(id)) + '</strong> (not indicated): ' + esc((s.notes && s.notes[id]) || "Not indicated for this patient.") + '</li>'; });
     c += '</ul></div>';
     if (typeof isReviewer === "function" && isReviewer()) c += qRateHTML(s.lv && s.q ? s : { id: "qs" + String(s.id || "").replace(/[^A-Za-z0-9]/g, "").slice(0, 40), lv: "scen", q: s.title + ": " + (s.ask || ""), d: "" });
+    if (inSess === "rush") { var sc = perfect ? ["ok", "Outcome: your patient improved."] : hit && !bad ? ["", "Outcome: partly treated. Your patient is holding steady but not improving."] : ["bad", "Outcome: your patient got worse."]; c += '<p class="mcout ' + sc[0] + '"><strong>' + sc[1] + '</strong></p><div class="actions"><button class="btn" data-act="rushnext">Next call</button></div>'; return c + '</div>'; }
     c += '<div class="actions">' + (inSess ? '<button class="btn" data-act="sessnext">Continue</button>' : '<button class="btn" data-act="scennext">Next scenario</button><button class="btn ghost" data-act="scenretry">Try again</button>') + '</div>';
   }
   return c + '</div>';
@@ -1486,9 +1518,9 @@ function viewLevel() {
   if (!S.tab || (S.tab !== "hub" && S.tab !== "session" && !tabName(S.tab))) S.tab = "hub";
   if (S.tab !== "hub" && S.tab !== "session" && typeof proLocked === "function" && proLocked(S.tab)) { var lt = S.tab; S.tab = "hub"; setTimeout(function () { openPaywall(tabName(lt), tabTier(lt)); }, 0); }
   if (S.tab === "calc") S.tab = "hub";  /* Calc Lab was removed */
-  var body = S.tab === "hub" ? "" : S.tab === "guide" ? guideView() : S.tab === "dash" && typeof dashView === "function" ? dashView() : S.tab === "anatomy" && typeof anatView === "function" ? anatView() : S.tab === "calls" && typeof callsView === "function" ? callsView() : S.tab === "scene" && typeof sceneView === "function" ? sceneView() : S.tab === "systems" && typeof sysView === "function" ? sysView() : S.tab === "protocols" && typeof agpTabView === "function" ? agpTabView() : typeof fieldTab === "function" && isF(S.level) && FM_TABS[S.tab] ? fieldTab(S.tab) : (S.tab === "vegc" || S.tab === "fruitc" || S.tab === "vitc") && typeof compoundView === "function" ? compoundView(S.tab) : S.tab === "illicit" && typeof illicitView === "function" ? illicitView() : S.tab === "registry" ? (S.view === "level" && isF(S.level) && typeof fieldMedsView === "function" ? fieldMedsView() : registry()) : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? (S.tab = "hub", "") : S.tab === "micro" && typeof microView === "function" ? microView() : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "flt_ref" && typeof fltRefView === "function" ? fltRefView() : S.tab === "tools" ? toolsView() : S.tab === "medlist" ? (typeof medlistView === "function" ? medlistView() : "") : flashcards();
+  var body = S.tab === "hub" ? "" : S.tab === "guide" ? guideView() : S.tab === "dash" && typeof dashView === "function" ? dashView() : S.tab === "anatomy" && typeof anatView === "function" ? anatView() : S.tab === "calls" && typeof callsView === "function" ? callsView() : S.tab === "scene" && typeof sceneView === "function" ? sceneView() : S.tab === "systems" && typeof sysView === "function" ? sysView() : S.tab === "protocols" && typeof agpTabView === "function" ? agpTabView() : typeof fieldTab === "function" && isF(S.level) && FM_TABS[S.tab] ? fieldTab(S.tab) : (S.tab === "vegc" || S.tab === "fruitc" || S.tab === "vitc") && typeof compoundView === "function" ? compoundView(S.tab) : S.tab === "illicit" && typeof illicitView === "function" ? illicitView() : S.tab === "registry" ? (S.view === "level" && isF(S.level) && typeof fieldMedsView === "function" ? fieldMedsView() : registry()) : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? (S.tab = "hub", "") : S.tab === "micro" && typeof microView === "function" ? microView() : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "megacode" ? megaView() : S.tab === "rush" ? rushView() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "flt_ref" && typeof fltRefView === "function" ? fltRefView() : S.tab === "tools" ? toolsView() : S.tab === "medlist" ? (typeof medlistView === "function" ? medlistView() : "") : flashcards();
   var msg = S.sessMsg ? '<div class="presult" role="status">' + esc(S.sessMsg) + '</div>' : ''; S.sessMsg = "";
-  var notes = (S.tab === "calc" || S.tab === "tools" ? eduBanner() : '') + (["scenarios", "calls", "scene"].indexOf(S.tab) >= 0 && typeof simBanner === "function" ? simBanner() : '') + (["registry", "guide", "families", "alts", "protocols", "mylist", "labs", "conds"].indexOf(S.tab) >= 0 ? eduBanner(true) : '') + (["prep", "session", "nbug", "scenarios", "cards"].indexOf(S.tab) >= 0 ? esQNote() : '');
+  var notes = (S.tab === "calc" || S.tab === "tools" ? eduBanner() : '') + (["scenarios", "calls", "scene", "rush"].indexOf(S.tab) >= 0 && typeof simBanner === "function" ? simBanner() : '') + (["registry", "guide", "families", "alts", "protocols", "mylist", "labs", "conds"].indexOf(S.tab) >= 0 ? eduBanner(true) : '') + (["prep", "session", "nbug", "scenarios", "cards", "rush"].indexOf(S.tab) >= 0 ? esQNote() : '');
   if (S.tab === "hub") return topbar() + '<div class="' + ctxClass() + '">' + band() + protocolBanner() + (isF(S.level) ? "" : dailyCard()) + msg + (S.learn && S.learn.done && typeof learnDoneView === "function" ? learnDoneView() : "") + hubView() + '</div>';
   return topbar() + '<div class="' + ctxClass() + ' insection">' + sectionHead() + protocolBanner() + msg + notes + '<div id="tabbody">' + body + '</div></div>';
 }
@@ -2249,6 +2281,7 @@ function animKeep() {
   } catch (e) {}
 }
 function render() {
+  try { fixTab(); } catch (e) {}
   try { if (typeof usgTab === "function") usgTab(); } catch (e) {}
   var ok = agreeRec(); protoTab.hidden = true; if (typeof classTab !== "undefined" && classTab) classTab.hidden = true;   /* the class lives in its level's menu now (owner, Nov 6 2026) */ protoTab.textContent = lang() === "es" ? "Protocolos" : "Protocols"; document.documentElement.lang = lang();
   var html;
@@ -2319,8 +2352,9 @@ document.addEventListener("click", function (e) {
     if (typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier(tt)) { if (typeof openPaywall === "function") openPaywall(((typeof TOOLS !== "undefined" && (TOOLS.filter(function (x) { return x[0] === a.tool; })[0] || [])[1]) || "This tool"), tt); return; }
     S.tool = a.tool; if (a.tool !== "mega") { S.mega = null; clearInterval(MC.timer); } render(); return window.scrollTo(0, 0);
   }
+  if (a.rushopt != null && S.tab === "rush") { return rushCallAnswer(+a.rushopt); }
   if (a.mega) { return megaStart(a.mega); }
-  if (a.mopt != null) { return megaAnswer(+a.mopt); }
+  if (a.mopt != null) { try { var mst = S.mega && S.mega.cs.steps[S.mega.i], mo = mst && mst.options[+a.mopt]; if (mo && S.mega.ans[S.mega.i] == null && defibWords(mo.t)) defibSound(); } catch (e) {} return megaAnswer(+a.mopt); }
   if (a.mlrm) { S.medlist = (S.medlist || []).filter(function (x) { return x !== a.mlrm; }); return render(); }
   if (a.mlclear) { S.medlist = []; return render(); }
   if (a.mlex && typeof mlAddText === "function") { S.medlist = []; mlAddText(ML_EXAMPLE); return render(); }
@@ -2446,7 +2480,7 @@ document.addEventListener("click", function (e) {
     case "terrback": var tb = S.terrBack; S.terrBack = null; if (tb && tb.view && tb.view !== "terrarium") { go(tb.view, tb.level ? { level: tb.level } : {}); if (tb.tab) { S.tab = tb.tab; render(); } return; } return go("home");
     case "megalock": return openPaywall("Megacode", toolTier("mega"));
     case "megaback": S.megaFrom = null; S.tool = null; S.mega = null; clearInterval(MC.timer); S.tab = "scenarios"; render(); return window.scrollTo(0, 0);
-    case "megago": S.megaFrom = "scenarios"; S.tab = "tools"; S.tool = "mega"; render(); return window.scrollTo(0, 0);
+    case "megago": S.megaFrom = null; S.tab = "rush"; S.tool = null; render(); return window.scrollTo(0, 0);
     case "toolsback": S.tool = null; S.mega = null; clearInterval(MC.timer); render(); return window.scrollTo(0, 0);
     case "shopback": S.shopF = null; S.shopBuy = null; render(); return window.scrollTo(0, 0);
     case "filters": S.showFilt = !S.showFilt; return render();
@@ -2466,7 +2500,12 @@ document.addEventListener("click", function (e) {
     case "nrprev": S.nr.i--; render(); return window.scrollTo(0, 0);
     case "nrfinish": S.nr.end = Date.now(); S.nr.phase = "done"; if (S.nr.mode === "exam") { S.nr.rec = S.nr.rec || {}; S.nr.qs.forEach(function (x, i) { if (!S.nr.rec[i] && S.nr.ans[i] != null) { S.nr.rec[i] = 1; record(x.q, nrRight(x, S.nr.ans[i]), null, S.nr.ans[i]); } }); setTimeout(toastAch, 300); } render(); return window.scrollTo(0, 0);
     case "sessnext": return sessNext();
-    case "megaquit": S.mega = null; clearInterval(MC.timer); return render();
+    case "rushnext": clearInterval(MC.timer); clearTimeout(MC.adv); LM.cv = null; S.mega = null; S.scen = null; if (S.rush) S.rush.cur = null; render(); return window.scrollTo(0, 0);
+    case "rushend": clearInterval(MC.timer); clearTimeout(MC.adv); LM.cv = null; S.mega = null; S.scen = null; if (S.rush) S.rush.ended = true; render(); return window.scrollTo(0, 0);
+    case "rushagain": S.rush = null; S.mega = null; S.scen = null; render(); return window.scrollTo(0, 0);
+    case "rushcnext": var RC = S.rush && S.rush.call; if (RC) { RC.i++; RC.ans = null; RC.order = null; } render(); return window.scrollTo(0, 0);
+    case "meganew": clearInterval(MC.timer); clearTimeout(MC.adv); LM.cv = null; S.mega = null; render(); return window.scrollTo(0, 0);
+    case "megaquit": S.mega = null; clearInterval(MC.timer); clearTimeout(MC.adv); LM.cv = null; if (S.tab === "megacode" || S.tab === "rush") { S.tab = "hub"; S.rush = null; } render(); return window.scrollTo(0, 0);
     case "meganext": return megaNext();
     case "mlclear": S.medlist = []; return render();
     case "snext": S.safe.q = null; return render();
@@ -2489,6 +2528,7 @@ document.addEventListener("click", function (e) {
     case "check":
       S.scen.checked = true;
       var s = scenList().filter(function (x) { return x.id === S.scen.id; })[0], cor = pickByLevel(s.correct), wr = pickByLevel(s.wrong);
+      if (S.tab === "rush" && typeof rushScore === "function") rushScore(0, cor.every(function (id) { return S.scen.sel[id]; }) && !wr.some(function (id) { return S.scen.sel[id]; }) ? 1 : 0, 1);
       if (cor.every(function (id) { return S.scen.sel[id]; }) && !wr.some(function (id) { return S.scen.sel[id]; })) { Prog.d.xp += 15; earn(5); saveProg(); var dn = store("scen:" + ctxKey()) || {}; dn[s.id] = 1; store("scen:" + ctxKey(), dn); }
       return render();
     case "scenretry": S.scen = { id: S.scen.id }; return render();
@@ -4600,9 +4640,17 @@ function otaUnseen() {
 function otaMarkSeen(list) { var seen = store("newsSeen") || {}; (list || []).forEach(function (n) { seen[n.id] = Date.now(); }); store("newsSeen", seen); }
 function otaNews(force) {
   if (document.getElementById("otanews")) return;
+  /* a brand-new user (still on the first screens, no study yet) doesn't need "what changed" news:
+     count it as seen so their first minutes stay clean (Nov 13 2026) */
+  /* Nov 14 2026 (owner: "It says see whats new before anyone has ever even logged in"): someone who hasn't
+     studied anything yet never gets the news popup, wherever they are in the first screens (the old check
+     only caught it when the .gate screen was open, and read a progress field that doesn't exist). Their
+     news is counted as seen, so only later updates ever pop up. Nothing shows before the terms are agreed. */
+  if (!force && !(store("newsSeen") && Object.keys(store("newsSeen")).length) && !((Prog.d && (Prog.d.answered || Prog.d.xp)) || 0)) { otaMarkSeen(otaUnseen()); return; }
+  if (!force && typeof agreeRec === "function" && !agreeRec()) return;
   var list = force ? ((OTA.data && OTA.data.news) || []) : otaUnseen();
   if (!list.length) return;
-  if (!force && (S.sheet || [].some.call(document.querySelectorAll(".paywall, #pwdlg, #tourdlg, #evwdlg, .agree"), function (el) { return !el.hidden && (el.open || el.offsetParent !== null || getComputedStyle(el).position === "fixed" && getComputedStyle(el).display !== "none"); }))) { setTimeout(function () { otaNews(); }, 4000); return; }
+  if (!force && (S.sheet || [].some.call(document.querySelectorAll(".paywall, #pwdlg, #tourdlg, #evwdlg, .agree, .gate"), function (el) { return !el.hidden && (el.open || el.offsetParent !== null || getComputedStyle(el).position === "fixed" && getComputedStyle(el).display !== "none"); }))) { setTimeout(function () { otaNews(); }, 4000); return; }
   var n = 0; list.forEach(function (x) { n += (x.items || []).length; });
   var box = document.createElement("div"); box.id = "otanews"; box.className = "otanews"; box.setAttribute("role", "dialog"); box.setAttribute("aria-modal", "true"); box.setAttribute("aria-labelledby", "otanewsh");
   var head = '<div class="otacard"><button class="otax" data-ota="close" aria-label="Close">×</button><div class="otak">Drug updates</div><h2 id="otanewsh">See what\'s new</h2>';
@@ -5251,6 +5299,8 @@ function bugArt(b, cls, opt) {
 var RARITY = { admin: "Administrator", common: "Common", rare: "Rare", epic: "Epic", legendary: "Legendary", seasonal: "Seasonal", earned: "Earned" };
 var BUGS = [
   // starter (free)
+  /* the Emperor's own bug (owner, Nov 14 2026): given to the outreach helper titled "Emperor" (functions/dash.js dashMe) */
+  { id: "emperor-beetle", name: "Emperor Beetle", body: "hercules", c: ["#6d28d9", "#2e1065", "#fde047"], horn: "#facc15", ink: "#1e0b3a", smile: "#fef08a", eyes: "glow", glow: "#facc15", acc: ["crown", "stars"], rar: "admin", price: 0, admin: true, blurb: "Royal purple armor, a gold horn and a crown. There is only one Emperor." },
   { id: "admin-stickbug", name: "Stick Bug", body: "stick", c: ["#8bc34a", "#4e7d2a", "#ffffff"], ink: "#2f4a1a", acc: [], rar: "admin", price: 0, admin: true, blurb: "A stick insect, just for the DrugBug administrator. Dress it up in the Wardrobe." },
   { id: "starter", name: "Field Medic Beetle", body: "beetle", c: ["#5ad18f", "#1f9d61", "#ffffff"], acc: [], rar: "common", price: 0, blurb: "The original starter beetle. Free for everyone. Each path gets its own version of it." },
   { id: "grub-medic", name: "Medic Beetle", body: "beetle", c: ["#ff7a59", "#d93a33", "#ffffff"], acc: ["helmet"], rar: "common", price: 0, grub: "ph", blurb: "Starter beetle for prehospital learners." },
@@ -5480,7 +5530,7 @@ function shopView() {
   var f = S.shopF || "home", me = myBug(), bal = sticks();
   var c = '<section class="shop">';
   if (f === "home") {
-    c += '<div class="shophead"><div class="mybug">' + myBugArt("big", null, null, myStage()) + (typeof pkSide === "function" ? pkSide("terr") : "") + '</div><div class="shtx"><span class="eyebrow">Your bug</span><h2>' + esc(me.name) + '</h2>' + stageLine() + '<p class="balance">' + stickIcon(24) + '<strong>' + bal.toLocaleString() + '</strong> sticks</p></div></div>';
+    c += '<div class="shophead"><div class="mybug"' + (B3_READY ? ' data-bug3d="' + myBug().id + '" role="button" tabindex="0" aria-label="See your bug in 3D" title="See your bug in 3D"' : '') + '>' + myBugArt("big", null, null, myStage()) + (typeof pkSide === "function" ? pkSide("terr") : "") + '</div><div class="shtx"><span class="eyebrow">Your bug</span><h2>' + esc(me.name) + '</h2>' + stageLine() + '<p class="balance">' + stickIcon(24) + '<strong>' + bal.toLocaleString() + '</strong> sticks</p></div></div>';
     if (S.shopMsg) { c += '<div class="presult good" role="status">' + esc(S.shopMsg) + '</div>'; S.shopMsg = ""; }
     var mine = BUGS.filter(function (b) { return owned(b.id); });
     if (Admin.owner && !owned("admin-stickbug")) c += '<div class="adminbug">' + bugArt(bugById("admin-stickbug"), "", {}) + '<div><strong>Your administrator bug is ready</strong><p class="muted small">A stick bug that only you can use. Dress it up in the Wardrobe like any other bug.</p><button class="btn small" data-claim="admin-stickbug">Claim it</button></div></div>';
@@ -5518,7 +5568,7 @@ function shopView() {
       !b.price ? '<button class="btn small" data-buyok="' + b.id + '">Get it free</button>' :
       pend ? '<button class="btn small" data-buyok="' + b.id + '">Buy for ' + b.price + '</button><button class="btn small ghost" data-buyno="1">Cancel</button>' :
       '<button class="btn small' + (can ? '' : ' ghost') + '" data-buy="' + b.id + '"' + (can ? '' : ' disabled') + '>' + (can ? 'Buy' : 'Need ' + (b.price - bal) + ' more') + '</button>';
-    return '<div class="bugcard r-' + b.rar + (eq ? " eq" : "") + '">' + bugArt(b) + '<strong>' + esc(b.name) + '</strong><span class="rar">' + RARITY[b.rar] + '</span>' + (own ? '<span class="muted small">Owned</span>' : b.admin ? '<span class="muted small">Administrator only</span>' : b.login ? '<span class="muted small">Daily login prize</span>' : b.king ? '<span class="muted small">Collection king</span>' : !b.price ? '<span class="muted small">Free</span>' : b.unlock ? '<span class="muted small">Free when unlocked</span>' : stickTag(b.price) + (b.season && inSeason(b) ? '<span class="muted small">Until the end of ' + MONTHS[b.season[1]] + '</span>' : '')) + '<div class="bact">' + act + '</div></div>';
+    return '<div class="bugcard r-' + b.rar + (eq ? " eq" : "") + '"' + (B3_READY ? ' data-bug3d="' + b.id + '" title="Tap to see ' + esc(b.name) + ' in 3D"' : '') + '>' + bugArt(b) + (B3_READY ? '<span class="b3tag">3D</span>' : '') + '<strong>' + esc(b.name) + '</strong><span class="rar">' + RARITY[b.rar] + '</span>' + (own ? '<span class="muted small">Owned</span>' : b.admin ? '<span class="muted small">Administrator only</span>' : b.login ? '<span class="muted small">Daily login prize</span>' : b.king ? '<span class="muted small">Collection king</span>' : !b.price ? '<span class="muted small">Free</span>' : b.unlock ? '<span class="muted small">Free when unlocked</span>' : stickTag(b.price) + (b.season && inSeason(b) ? '<span class="muted small">Until the end of ' + MONTHS[b.season[1]] + '</span>' : '')) + '<div class="bact">' + act + '</div></div>';
   }
   var TIERS = [["admin", "Administrator only", "Just for you"], ["starter", "Starter", "Free"], ["common", "Common", "300–800 sticks"], ["rare", "Rare", "1,200–2,000 sticks"], ["epic", "Epic", "2,800–4,800 sticks"], ["legendary", "Legendary", "7,000–12,000 sticks"], ["seasonal", "Seasonal", "2,400 sticks, only in season"], ["earned", "Earned by mastery", "Free when you unlock them"]];
   function tierOf(b) { return b.admin ? "admin" : b.king ? "king" : b.login ? "login" : b.id === "starter" || b.grub || b.free ? "starter" : b.rar; }
@@ -5560,7 +5610,26 @@ function stylesView() {
 var ADMIN_GIFT = "once-life-nov7-8c3dfa44";
 function codeRole() { return typeof isReviewer === "function" && isReviewer() ? (Prog.d.reviewer.id === ADMIN_GIFT ? "admin" : "eval") : ""; }
 function isInstructorAcct() { try { var R = typeof stxRoles === "function" ? stxRoles() : null; return !!(R && (R.classes || []).length); } catch (e) { return false; } }
+/* a title and bug given by the owner to an outreach helper (owner, Nov 14 2026: "Give his status emperor and give
+   him an emperor beetle"). The server (dashMe) says who is a helper; nobody can give themselves a title. */
+function titleSync() {
+  try {
+    var st = typeof ACCT !== "undefined" && ACCT.api && ACCT.api.state ? ACCT.api.state() : null;
+    if (!st || !st.signedIn || typeof fnCall !== "function") { if (Prog.d && Prog.d.title && !(st && st.signedIn)) { /* keep: signed out briefly */ } return; }
+    fnCall("dashMe", {}).then(function (r) {
+      var t = r && r.title ? String(r.title).slice(0, 24) : "", ch = false;
+      /* staff Admin button (owner, Nov 14 2026: Admin tab "just for me and Cole") */
+      try { var was = localStorage.getItem("dbStaff") || ""; if (r && r.role && r.role !== was) { localStorage.setItem("dbStaff", r.role); ch = true; } } catch (x) {}
+      if ((Prog.d.title || "") !== t) { if (t) Prog.d.title = t; else delete Prog.d.title; ch = true; }
+      if (r && r.bug && bugById(r.bug) && !owned(r.bug)) { Prog.d.owned = (Prog.d.owned || []).concat([r.bug]); Prog.d.avatar = r.bug; Prog.d.avatarTs = Date.now(); ch = true; }
+      if (ch) { saveProg(); render(); }
+    }, function (e) { if (e && /set up|permission|owner/i.test(e.message || "")) { var rr = false; try { if (localStorage.getItem("dbStaff")) { localStorage.removeItem("dbStaff"); rr = true; } } catch (x) {} if (Prog.d.title) { delete Prog.d.title; saveProg(); rr = true; } if (rr) render(); } });
+  } catch (e) {}
+}
+setTimeout(function () { titleSync(); try { if (typeof ACCT !== "undefined" && ACCT.api && ACCT.api.onChange) ACCT.api.onChange(function () { setTimeout(titleSync, 1500); }); } catch (e) {} }, 5000);
+function staffBtn() { if (typeof NATIVE !== "undefined" && NATIVE) return ""; var r = ""; try { r = localStorage.getItem("dbStaff") || ""; } catch (e) {} if (r !== "owner" && r !== "helper") return ""; return '<a class="theme-btn staff-btn" href="' + (r === "owner" ? "../admin/" : "../outreach/") + '" title="' + (r === "owner" ? "Admin dashboard" : "DrugBug Outreach") + '">Admin</a>'; }
 function tierChip(inBug) {
+  if (Prog.d && Prog.d.title) return '<span class="tierchip ' + (inBug ? 'inbug ' : '') + 'tc-role tc-emperor" title="' + esc(Prog.d.title) + '">' + esc(Prog.d.title) + '</span>';
   var role = codeRole();
   /* school and department instructors show "Instructor" (owner, Nov 13 2026); instructors also hold evaluator
      access, but not every evaluator is an instructor */
@@ -5630,7 +5699,7 @@ function tankHTML(mine, withMore) {
   var es = lang() === "es", me = myBug(), st = myStage(), total = shopBugs().length;
   var bub = mine.map(function (b, i) {
     var on = me.id === b.id;
-    return '<button class="bubble' + (on ? ' on' : '') + '" role="listitem" style="--d:' + ((i * 0.37) % 3).toFixed(2) + 's" ' + (on ? 'aria-current="true"' : 'data-equip="' + b.id + '"') + ' aria-label="' + (on ? (es ? "Usando " : "Using ") : (es ? "Usar " : "Use ")) + esc(b.name) + '">' +
+    return '<button class="bubble' + (on ? ' on' : '') + '" data-b3id="' + b.id + '" role="listitem" style="--d:' + ((i * 0.37) % 3).toFixed(2) + 's" ' + (on ? 'aria-current="true"' : 'data-equip="' + b.id + '"') + ' aria-label="' + (on ? (es ? "Usando " : "Using ") : (es ? "Usar " : "Use ")) + esc(b.name) + '">' +
       '<span class="orb r-' + b.rar + '">' + bugArt(b, "", { stage: MAX_STAGE, wear: on ? myWear() : {}, mood: on ? myFace() : "happy" }) + '</span><span class="bname">' + esc(b.name) + '</span>' + (on ? '<em>' + (es ? "Usando" : "Using") + '</em>' : '') + '</button>';
   }).join("");
   if (withMore) bub += '<button class="bubble more" data-shopf="bugs" role="listitem"><span class="orb"><span class="plus" aria-hidden="true">+</span></span><span class="bname">' + (es ? "Conseguir más" : "Get more bugs") + '</span></button>';
@@ -6297,7 +6366,8 @@ function toolsView() {
 /* ===== Megacode ===== */
 // rhythm strips: original, schematic ECG drawings
 function stripPath(type, hr) {
-  var W = 640, H = 90, mid = 50, d = "M0 " + mid, x = 0, i, seed = 7;
+  var W = 640, H = 90, mid = 50, d = "M0 " + mid, x = 0, i, seed = 7, BT = stripPath.beats = [];
+  stripPath.sweep = 4;   /* seconds for the sweep to cross; set so the strip loops seamlessly at the real rate */
   function rnd() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
   function beat(x0, wide, pw) {
     var s = "";
@@ -6305,14 +6375,17 @@ function stripPath(type, hr) {
     var q = x0 + (pw ? 22 : 6), w = wide ? 9 : 4;
     s += " L" + q + " " + mid + " L" + (q + w * 0.4) + " " + (mid + 5) + " L" + (q + w) + " " + (mid - (wide ? 30 : 36)) + " L" + (q + w * 1.8) + " " + (mid + (wide ? 18 : 10)) + " L" + (q + w * 2.3) + " " + mid;
     s += " Q" + (q + w * 2.3 + 12) + " " + (mid - 11) + " " + (q + w * 2.3 + 24) + " " + mid;
+    BT.push(q + w);   /* the R wave: where the monitor beeps */
     return { s: s, end: q + w * 2.3 + 24 };
   }
   if (type === "vf") { for (x = 0; x <= W; x += 6) d += " L" + x + " " + (mid + Math.sin(x / 9) * (10 + rnd() * 14) + (rnd() - 0.5) * 10).toFixed(1); return d; }
   if (type === "asys") { for (x = 0; x <= W; x += 20) d += " L" + x + " " + (mid + Math.sin(x / 70) * 1.5).toFixed(1); return d; }
   if (type === "torsades") { for (x = 0; x <= W; x += 4) d += " L" + x + " " + (mid + Math.sin(x / 6) * (6 + 26 * Math.abs(Math.sin(x / 110)))).toFixed(1); return d; }
-  if (type === "vt") { var per = W / (hr / 60 * 4); for (x = 0; x <= W; x += 3) d += " L" + x + " " + (mid - Math.sin(x / per * Math.PI * 2) * 28).toFixed(1); return d; }
+  if (type === "vt") { var vn = Math.max(1, Math.round(hr / 15)), per = W / vn; stripPath.sweep = vn * 60 / hr; for (x = per * .25; x < W; x += per) BT.push(x); for (x = 0; x <= W; x += 3) d += " L" + x + " " + (mid - Math.sin(x / per * Math.PI * 2) * 28).toFixed(1); return d; }
   if (type === "chb") {
-    var pper = W / 6.5, qper = W / ((hr || 34) / 60 * 4), out = "M0 " + mid;
+    var qn = Math.max(1, Math.round((hr || 34) / 15)), pper = W / 6.5, qper = W / qn, out = "M0 " + mid;
+    stripPath.sweep = qn * 60 / (hr || 34);
+    for (x = 35; x < W; x += qper) BT.push(x);
     for (x = 0; x <= W; x += 2) {
       var y = mid, pp = x % pper, qq = x % qper;
       if (pp > 4 && pp < 16) y -= Math.sin((pp - 4) / 12 * Math.PI) * 7;
@@ -6323,18 +6396,168 @@ function stripPath(type, hr) {
   }
   var rate = hr || 80, spacing = W / (rate / 60 * 4), wide = type === "pea", pw = type !== "svt" && type !== "afib";
   x = 10; d = "M0 " + mid;
-  for (i = 0; x < W - 40 && i < 60; i++) { var b = beat(x, wide, pw); d += b.s; var nx = x + (type === "afib" ? spacing * (0.6 + rnd() * 0.8) : spacing); d += " L" + nx + " " + mid; x = nx; }
+  if (type === "afib") { for (i = 0; x < W - 40 && i < 60; i++) { var b = beat(x, wide, pw); d += b.s; var nx = x + spacing * (0.6 + rnd() * 0.8); d += " L" + nx + " " + mid; x = nx; } }
+  else {   /* a whole number of beats across the strip, evenly spaced, so it loops with no seam; the sweep time keeps the real rate */
+    var bn = Math.max(1, Math.round(rate / 15)); spacing = W / bn; stripPath.sweep = bn * 60 / rate;
+    for (i = 0; i < bn; i++) { x = 10 + i * spacing; d += " L" + x + " " + mid; d += beat(x, wide, pw).s; }
+  }
   return d + " L" + W + " " + mid;
 }
 function rhythmName(t) { return { vf: "Ventricular fibrillation", asys: "Asystole", torsades: "Polymorphic VT (torsades)", vt: "Monomorphic VT", chb: "Third-degree AV block", pea: "Organized rhythm, no pulse", svt: "Narrow-complex tachycardia", sinus: "Sinus rhythm", sinusbrady: "Sinus bradycardia", sinustachy: "Sinus tachycardia", afib: "Atrial fibrillation" }[t] || t; }
+/* ---------- LIVE MONITOR (owner, Nov 14 2026) ----------
+   "make the monitor change the rhythms live. Dont just swap the screen have the rhythms change like an actual
+   rhythm rate or rhythm change... some slight variability to the rate... bigger variability on afib... it's
+   gonna move up and down 1-3 beats every few seconds... light, moderate and severe afib are going to have their
+   own levels of variability. Add in a tiny amount of artifact."
+   One canvas is kept for the whole code and moved into each new screen, so the trace never restarts. The trace
+   is drawn beat by beat from the rhythm (P, QRS and T shapes; VF and torsades as continuous waves), swept left
+   to right with an erase gap like a real monitor. The rate drifts 1-3 bpm every few seconds; AF is irregular
+   (light, moderate or severe, from step.afib or from the rate). When the next decision brings a new rhythm the
+   rate glides there, a new rhythm starts on the next beat, and a shock shows its spike and a short pause first.
+   Beeps and heart sounds fire on the real beats (heart sounds only with a pulse; nothing in asystole). */
+var LM = { cv: null, raf: 0, t: 0, x: -1, y: 0, rh: "sinus", hr: 80, base: 80, drift: 0, driftAt: 0, next: 0, beats: [], pNext: 0, ps: [],
+  tgt: null, pulse: true, afib: 0, pause: 0, shock: 0, burst: 0, hrShow: 0, hrAt: 0, beepTimes: [] };
+var LM_ORG = { sinus: 1, sinusbrady: 1, sinustachy: 1, svt: 1, afib: 1, pea: 1, chb: 1, vt: 1 };
 function monitor(step, reveal) {
-  var p = stripPath(step.rhythm, step.hr);
-  return '<div class="monitor"><div class="mtop"><span class="hr">' + (step.hr ? "HR " + step.hr : (step.rhythm === "vf" || step.rhythm === "asys" || step.rhythm === "torsades" ? "HR ---" : "")) + '</span><span class="lead">II</span></div>' +
-    '<svg viewBox="0 0 640 90" preserveAspectRatio="none" class="strip" role="img" aria-label="ECG rhythm strip' + (reveal ? ': ' + rhythmName(step.rhythm) : '') + '"><path d="' + p + '"/></svg>' +
+  var hr = step.hr || +((/PEA at (\d+)/.exec((step.vit || []).join(" ")) || [])[1]) || 0;
+  var pulse = !/^(vf|asys|torsades|pea)$/.test(step.rhythm) && !(step.vit || []).some(function (v) { return /no pulse/i.test(v); });
+  lmTarget(step.rhythm, hr, pulse, step.afib, step.wide);
+  setTimeout(lmAttach, 0);
+  return '<div class="monitor live"><div class="mtop"><span class="hr" id="lmhr">' + lmHrText() + '</span><span class="lead">II</span></div>' +
+    '<div class="stripw"><canvas class="lmcv" role="img" aria-label="ECG monitor' + (reveal ? ': ' + esc(rhythmName(step.rhythm)) : '') + '"></canvas></div>' +
     '<div class="mvit">' + (step.vit || []).map(function (v) { return '<span>' + esc(v) + '</span>'; }).join("") + '</div></div>';
 }
+function lmHrText() { return LM_ORG[LM.rh] && LM.hrShow ? "HR " + LM.hrShow : "HR ---"; }
+/* afib variability: light / moderate / severe (owner) */
+function lmAfib(lv, hr) { var k = lv === "light" || lv === "mild" ? 0.12 : lv === "severe" ? 0.42 : lv === "moderate" ? 0.26 : (hr < 100 ? 0.12 : hr <= 130 ? 0.26 : 0.42); return k; }
+function lmTarget(rh, hr, pulse, afib, wide) {
+  var t = { rh: rh, hr: hr || (rh === "vf" || rh === "torsades" || rh === "asys" ? 0 : 80), pulse: pulse, afib: rh === "afib" ? lmAfib(afib, hr) : 0, wide: !!wide };
+  if (LM.reset || !LM.tgt) { LM.reset = false; LM.wide = t.wide; LM.rh = t.rh; LM.hr = LM.base = t.hr || 80; LM.pulse = pulse; LM.afib = t.afib; LM.tgt = t; LM.beats = []; LM.next = 0; LM.hrShow = t.hr; return; }
+  var o = LM.tgt; LM.tgt = t;
+  if (o.rh === t.rh && o.hr === t.hr && o.wide === t.wide) return;
+  var now = performance.now() / 1000;
+  /* leaving VF, VT or torsades for something else: the shock (if any) and a short flat pause, then the new rhythm */
+  if ((o.rh === "vf" || o.rh === "torsades" || o.rh === "vt") && t.rh !== o.rh) { LM.pause = Math.max(LM.pause, (LM.shock > now ? LM.shock : now) + 1.3); }
+  else if (!LM_ORG[o.rh] && LM_ORG[t.rh]) LM.pause = Math.max(LM.pause, now + 0.6);
+}
+function lmAttach() {
+  var cv = document.querySelector(".monitor.live .lmcv"); if (!cv) return;
+  if (LM.cv && LM.cv !== cv && LM.cv.width) { cv.replaceWith(LM.cv); cv = LM.cv; }   /* keep the trace already on screen */
+  else { LM.cv = cv; LM.x = -1; }
+  var w = Math.max(200, Math.round(cv.parentNode.clientWidth || 600)), dpr = Math.min(2, window.devicePixelRatio || 1), h = 90;
+  if (cv.width !== Math.round(w * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); cv.style.width = w + "px"; cv.style.height = h + "px"; var g = cv.getContext("2d"); g.fillStyle = "#07130d"; g.fillRect(0, 0, cv.width, cv.height); LM.x = -1; }
+  if (!LM.raf) { LM.t = performance.now() / 1000; LM.raf = requestAnimationFrame(lmFrame); }
+  ["monbeep", "heartbeat", "defcharge", "defthud"].forEach(function (n) { try { sfxLoad(n); } catch (e) {} });
+}
+function lmGauss(u, c, w) { var d = (u - c) / w; return Math.exp(-d * d); }
+/* one beat's shape, u seconds after it starts (R wave at 0.16 s) */
+function lmBeatY(b, u) {
+  if (u < 0 || u > 0.75) return 0;
+  var a = b.amp, y = 0;
+  if (b.k === "vt") return a * (0.95 * lmGauss(u, 0.13, 0.055) - 0.85 * lmGauss(u, 0.26, 0.06));
+  if (b.k === "wide") { y = 0.75 * lmGauss(u, 0.16, 0.03) - 0.45 * lmGauss(u, 0.23, 0.035) - 0.22 * lmGauss(u, 0.42, 0.08); return a * y; }
+  if (b.p) y += 0.12 * lmGauss(u, 0.05, 0.022);
+  y += -0.1 * lmGauss(u, 0.145, 0.007) + 1.0 * lmGauss(u, 0.16, 0.009) - 0.26 * lmGauss(u, 0.176, 0.009);
+  y += 0.24 * lmGauss(u, 0.16 + b.qt, 0.05);
+  return a * y;
+}
+function lmRand() { return Math.random() * 2 - 1; }
+function lmSample(t) {
+  /* baseline wander and a tiny bit of artifact */
+  var y = 0.035 * Math.sin(t * 1.3) + 0.02 * Math.sin(t * 0.37 + 1) + 0.012 * lmRand();
+  if (t < LM.burst) y += 0.05 * lmRand();
+  if (t < LM.pause) return y * 0.6 + (LM.shock && t > LM.shock && t < LM.shock + 0.12 ? 1.6 * Math.exp(-(t - LM.shock) * 30) : 0);
+  if (LM.shock && t > LM.shock && t < LM.shock + 0.12) y += 1.6 * Math.exp(-(t - LM.shock) * 30);
+  var rh = LM.rh;
+  if (rh === "vf") return y + 0.32 * Math.sin(t * 31 + Math.sin(t * 3.1) * 2) + 0.18 * Math.sin(t * 47 + 1.3) + 0.12 * Math.sin(t * 19 + Math.sin(t * 1.7));
+  if (rh === "torsades") return y + (0.25 + 0.7 * Math.abs(Math.sin(t * 1.4))) * Math.sin(t * 27);
+  if (rh === "afib") y += 0.03 * Math.sin(t * 37) + 0.02 * Math.sin(t * 53 + 2);
+  for (var i = 0; i < LM.beats.length; i++) y += lmBeatY(LM.beats[i], t - LM.beats[i].t0);
+  for (var j = 0; j < LM.ps.length; j++) { var u = t - LM.ps[j]; if (u >= 0 && u < 0.12) y += 0.12 * lmGauss(u, 0.05, 0.022); }
+  return y;
+}
+/* schedule beats up to time t */
+function lmSchedule(t) {
+  var T = LM.tgt || { rh: "sinus", hr: 80 };
+  if (t < LM.pause) { LM.next = Math.max(LM.next, LM.pause); }
+  else if (LM.rh !== T.rh && t >= LM.next - 0.05) { LM.rh = T.rh; LM.afib = T.afib; LM.wide = T.wide; LM.pulse = T.pulse; if (LM_ORG[T.rh] && (!LM.hr || T.rh === "pea" || Math.abs(LM.hr - T.hr) > 60)) LM.hr = LM.base = T.hr; }
+  LM.pulse = T.pulse;
+  /* rate: glide toward the target, plus a drift of 1-3 bpm every few seconds */
+  if (T.hr) LM.base += (T.hr - LM.base) * 0.04;
+  if (t > LM.driftAt) { LM.drift = Math.round(lmRand() * 3); LM.driftAt = t + 2 + Math.random() * 3; }
+  LM.hr += ((LM.base + LM.drift) - LM.hr) * 0.08;
+  if (!LM_ORG[LM.rh]) { LM.beats = []; return; }
+  if (!LM.next || LM.next < t - 2) LM.next = t + 0.2;
+  while (LM.next <= t + 0.02) {
+    var hr = Math.max(15, LM.hr), gap = 60 / hr, k = LM.rh === "vt" ? "vt" : LM.rh === "pea" || LM.rh === "chb" || LM.wide ? "wide" : "n";
+    var b = { t0: LM.next, k: k, p: !/^(svt|afib|vt|chb|pea)$/.test(LM.rh), amp: (LM.wide ? 0.85 + 0.3 * Math.random() : 0.92 + 0.08 * lmRand()), qt: Math.min(0.3, Math.max(0.16, 0.3 * Math.sqrt(gap))) };
+    LM.beats.push(b);
+    LM.beepTimes.push(b.t0 + (k === "vt" ? 0.13 : 0.16));
+    var jit = LM.rh === "afib" ? LM.afib * (Math.random() * 2 - 1) * 1.2 : 0.02 * lmRand();
+    LM.next += gap * (1 + jit);
+  }
+  LM.beats = LM.beats.filter(function (b) { return t - b.t0 < 1; });
+  /* complete heart block: P waves march through at their own rate */
+  if (LM.rh === "chb") { if (!LM.pNext || LM.pNext < t - 2) LM.pNext = t; while (LM.pNext <= t + 0.02) { LM.ps.push(LM.pNext); LM.pNext += 60 / 78; } LM.ps = LM.ps.filter(function (p) { return t - p < 1; }); }
+  else LM.ps = [];
+  if (Math.random() < 0.0015) LM.burst = t + 0.35;
+}
+function lmFrame() {
+  LM.raf = 0;
+  var cv = LM.cv; if (!cv || !cv.isConnected) { LM.x = -1; return; }
+  LM.raf = requestAnimationFrame(lmFrame);
+  var now = performance.now() / 1000, g = cv.getContext("2d"), W = cv.width, H = cv.height, dpr = W / (parseFloat(cv.style.width) || W), P = 4;
+  if (now - LM.t > 0.5) LM.t = now - 0.02;     /* came back from a hidden tab: don't draw the gap */
+  var step = 1 / 250;
+  g.lineWidth = 2 * dpr; g.strokeStyle = "#4dff9a"; g.lineJoin = "round";
+  for (var t = LM.t; t < now; t += step) {
+    lmSchedule(t);
+    var x = ((t % P) / P) * W, y = H * 0.56 - lmSample(t) * H * 0.36;
+    if (LM.x < 0 || x < LM.x) { LM.x = x; LM.y = y; }
+    var gap = 14 * dpr; g.fillStyle = "#07130d"; g.fillRect(x + 1, 0, gap, H);
+    g.beginPath(); g.moveTo(LM.x, LM.y); g.lineTo(x, y); g.stroke();
+    LM.x = x; LM.y = y;
+  }
+  LM.t = now;
+  /* sounds on the real beats */
+  while (LM.beepTimes.length && LM.beepTimes[0] <= now) { var bt = LM.beepTimes.shift(); if (now - bt < 0.25 && !document.hidden) lmBeat(); }
+  if (now > LM.hrAt) { LM.hrAt = now + 1.2; LM.hrShow = LM_ORG[LM.rh] && now > LM.pause ? Math.round(LM.hr) : 0; var el = document.getElementById("lmhr"); if (el) el.textContent = lmHrText(); }
+}
+function lmBeat() {
+  if (!SET().sfx || MONS.shock) return;
+  var c = audioCtx(); if (!c) return;
+  if (c.state === "suspended") { try { c.resume(); } catch (e) {} return; }
+  sfxPlay("monbeep", 0, 0.32);
+  if (LM.pulse) {
+    var gap = 60 / Math.max(20, LM.hr), rate = gap < 0.7 ? Math.min(1.75, 0.7 / gap) : 1;
+    sfxPlay("heartbeat", 0.04, 0.5, rate, null, Math.min(0.7 / rate, gap * 0.95));
+  }
+}
 var MC = { timer: null };
-function megaCases() { var k = ctxKey(); return DB.MEGACODE.filter(function (c) { return k !== "cna" && k !== "emt"; }); }
+/* Prehospital does not get a lactate (owner, Nov 14 2026: "Prehospital will not get to know lactate so keep that
+   out of these"); the cases built around one are left out of the prehospital levels */
+/* Prehospital labs (owner, Nov 14 2026): EMTs, AEMTs, paramedics and community paramedics don't get lab values
+   unless the call says where they came from (discharge paperwork, or the sending facility on a transfer).
+   Flight paramedics do work with labs. A one-time glucose is fine everywhere. Lactate stays out of prehospital. */
+var LAB_RX = /\b(K\+?|Na\+?|Mg|pH|PaCO2|PaO2|HCO3|BUN|INR|WBC|Hgb|Hct|CK|BNP|A1c|Cr)\s*(of|is|was|=|:|at)?\s*[<>]?\d|\b(potassium|sodium|lactate|lactic acid|troponin|creatinine|hemoglobin|hematocrit|platelet count|bicarbonate|anion gap|magnesium|ammonia|lipase|ketones|blood gas|INR)\s+(level\s+)?(of\s+|is\s+|was\s+|at\s+|=\s*|:\s*)?[<>]?\d+(\.\d+)?(?![\d.])(?!\s*(mg|g\b|mL|mEq\/kg|units|mcg|minutes|min\b|x))/i;
+function phNoLabs() { var k = ctxKey(); return typeof routeCtx === "function" && routeCtx() === "ph" && k !== "flight"; }
+function labOK(x) {
+  var s = typeof x === "string" ? x : JSON.stringify(x);
+  if (typeof routeCtx === "function" && routeCtx() === "ph" && /lactate|lactic acid/i.test(s)) return false;
+  if (!phNoLabs() || !LAB_RX.test(s)) return true;
+  return /discharge paperwork|transfer paperwork/i.test(s);
+}
+function megaCases() {
+  var k = ctxKey();
+  return DB.MEGACODE.filter(function (c) { return k !== "cna" && k !== "emt" && labOK(c); });
+}
+/* Megacode opens straight into a code, picked at random (owner, Nov 14 2026: "just bring you right in. But make it
+   randomize the situation"); never the same case twice in a row */
+function megaRandomId() {
+  var L = megaCases(); if (!L.length) return null;
+  var last = store("megaLast"), pool = L.length > 1 ? L.filter(function (c) { return c.id !== last; }) : L;
+  var id = pool[Math.floor(Math.random() * pool.length)].id; store("megaLast", id); return id;
+}
 function megaView() {
   if (!simOk()) return simGate("Megacode");
   return simBanner() + megaView2();
@@ -6342,6 +6565,7 @@ function megaView() {
 function megaView2() {
   var st = S.mega;
   if (st && st.paused && !st.done && st.ans[st.i] == null) { st.paused = false; st.t0 = Date.now() - (megaSecs(st.cs.steps[st.i]) - st.left) * 1000; megaTick(); }
+  if (!st && megaNew(megaRandomId())) st = S.mega;
   if (!st) {
     var best = Prog.d.mega || {};
     return '<section class="mega"><h2>Megacode</h2><div class="dosewarn" role="note"><strong>Fictional practice only.</strong> Megacode follows published ACLS/PALS study material, which can differ from FDA labeling. Do not use it for patient care or clinical decisions.</div><p class="muted">Run a code. The monitor changes as the case unfolds, and every decision is on the clock. Choose the best next action before time runs out.</p><div class="mclist">' +
@@ -6349,7 +6573,7 @@ function megaView2() {
   }
   var cs = st.cs, step = cs.steps[st.i];
   if (st.done) return megaDone();
-  var ans = st.ans[st.i], c = '<section class="mega run"><div class="mchead"><div><span class="eyebrow">' + esc(cs.title) + '</span><p class="muted small">' + esc(cs.age) + ' · ' + cs.kg + ' kg · Decision ' + (st.i + 1) + ' of ' + cs.steps.length + '</p></div><button class="linkish" data-act="megaquit">End code</button></div>';
+  var ans = st.ans[st.i], c = '<section class="mega run"><div class="mchead"><div><span class="eyebrow">' + esc(cs.title) + '</span><p class="muted small">' + esc(cs.age) + ' · ' + cs.kg + ' kg · Decision ' + (st.i + 1) + ' of ' + cs.steps.length + '</p></div>' + (S.tab === "rush" ? '' : '<button class="linkish" data-act="megaquit">End code</button>') + '</div>';
   if (st.i === 0 && ans == null) c += '<p class="vignette">' + esc(cs.intro) + '</p>';
   c += monitor(step, ans != null) + '<p class="vignette">' + esc(step.text) + '</p>';
   if (ans == null && megaTimed()) c += '<div class="mctimer"><span id="mctime">' + Math.ceil(st.left) + '</span>s<i style="width:' + Math.round(100 * st.left / megaSecs(step)) + '%" id="mcbar"></i></div>';
@@ -6364,20 +6588,23 @@ function megaView2() {
     var right = ans >= 0 && step.options[ans].ok, okO = step.options.filter(function (o) { return o.ok; })[0];
     c += '<div class="explain ' + (right ? "ok" : "bad") + '"><strong>' + (ans === -1 ? "Time's up." : right ? "Correct." : "Not the best choice.") + '</strong>' + (ans >= 0 && !right ? '<p>' + esc(step.options[ans].fb) + '</p>' : '') + '<p>' + (right ? '' : '<strong>Best: </strong>' + esc(okO.t) + '. ') + esc(okO.fb) + '</p><p class="muted small">Rhythm: ' + esc(rhythmName(step.rhythm)) + '</p></div>';
     if (typeof isReviewer === "function" && isReviewer()) c += qRateHTML({ lv: "mega-" + (cs.id || ""), q: step.prompt, a: okO ? okO.t : "", d: "" });
-    c += '<div class="actions"><button class="btn" data-act="meganext">' + (st.i < cs.steps.length - 1 ? "Continue the code" : "See debrief") + '</button></div>';
+    if (typeof isReviewer === "function" && isReviewer()) c += '<div class="actions"><button class="btn" data-act="meganext">' + (st.i < cs.steps.length - 1 ? "Continue the code" : "See debrief") + '</button></div>';
+    else c += '<p class="muted small mcnext">' + (st.i < cs.steps.length - 1 ? "Next decision coming up. The full explanations are in the debrief." : "Debrief coming up.") + '</p>';
   }
   return c + '</section>';
 }
-function megaStart(id) {
-  var cs = DB.MEGACODE.filter(function (c) { return c.id === id; })[0];
+function megaNew(id) {
+  var cs = DB.MEGACODE.filter(function (c) { return c.id === id; })[0]; if (!cs) return false;
+  LM.reset = true; LM.pause = 0; LM.shock = 0; LM.cv = null;
   S.mega = { cs: cs, i: 0, ans: {}, times: {}, order: cs.steps.map(function (s) { return shuffle(s.options.map(function (_, k) { return k; })); }), left: megaSecs(cs.steps[0]), t0: Date.now() };
-  megaTick(); render(); window.scrollTo(0, 0);
+  megaTick(); return true;
 }
+function megaStart(id) { if (megaNew(id)) { render(); window.scrollTo(0, 0); } }
 function megaTick() {
   clearInterval(MC.timer); if (!megaTimed()) return;
   MC.timer = setInterval(function () {
     var st = S.mega; if (!st || st.done || st.ans[st.i] != null) { clearInterval(MC.timer); return; }
-    if (S.tab !== "tools" || document.hidden) { st.paused = true; clearInterval(MC.timer); return; }  /* resumes where it left off (megaView2) */
+    if ((S.tab !== "megacode" && S.tab !== "tools" && S.tab !== "rush") || document.hidden) { st.paused = true; clearInterval(MC.timer); return; }  /* resumes where it left off (megaView2) */
     var step = st.cs.steps[st.i]; st.left = Math.max(0, megaSecs(step) - (Date.now() - st.t0) / 1000);
     var el = $("#mctime"), bar = $("#mcbar"); if (el) el.textContent = Math.ceil(st.left); if (bar) bar.style.width = Math.round(100 * st.left / megaSecs(step)) + "%";
     if (st.left <= 0) { megaAnswer(-1); }
@@ -6386,14 +6613,19 @@ function megaTick() {
 function megaAnswer(oi) {
   var st = S.mega; if (!st || st.ans[st.i] != null) return;
   st.ans[st.i] = oi; st.times[st.i] = (Date.now() - st.t0) / 1000; clearInterval(MC.timer); feedback(oi >= 0 && st.cs.steps[st.i].options[oi].ok);
+  /* straight on to the next decision, no "Continue the code" (owner, Nov 14 2026); a shock lands first */
+  if (!(typeof isReviewer === "function" && isReviewer())) {
+    var idx = st.i, ok = oi >= 0 && st.cs.steps[st.i].options[oi].ok, shock = oi >= 0 && defibWords(st.cs.steps[st.i].options[oi].t);
+    clearTimeout(MC.adv); MC.adv = setTimeout(function () { if (S.mega === st && st.i === idx && !st.done) megaNext(true); }, shock ? 2100 : ok ? 1100 : 2200);
+  }
   try { groupNote(null, !!(oi >= 0 && st.cs.steps[st.i].options[oi].ok), "megacode", { id: "mc-" + (st.cs.id || st.cs.title || "case"), name: "Megacode: " + (st.cs.title || st.cs.id || "case") }); } catch (e) {}
   render();
 }
-function megaNext() {
-  var st = S.mega; st.i++;
+function megaNext(auto) {
+  var st = S.mega; clearTimeout(MC.adv); st.i++;
   if (st.i >= st.cs.steps.length) { st.done = true; megaFinish(); }
   else { st.t0 = Date.now(); st.left = megaSecs(st.cs.steps[st.i]); megaTick(); }
-  render(); window.scrollTo(0, 0);
+  render(); if (!auto || st.done) window.scrollTo(0, 0); else { var m = document.querySelector(".monitor.live"); if (m && m.getBoundingClientRect().top < 0) window.scrollTo(0, 0); }
 }
 function megaFinish() {
   var st = S.mega, n = st.cs.steps.length, ok = 0;
@@ -6401,12 +6633,128 @@ function megaFinish() {
   st.pct = Math.round(100 * ok / n); st.ok = ok;
   var P = Prog.d; P.mega = P.mega || {}; P.mega[st.cs.id] = Math.max(P.mega[st.cs.id] || 0, st.pct);
   st.sticks = ok * (STICK_RIGHT + palBonus()) + (n - ok) * STICK_TRY + (st.pct === 100 ? 10 : 0); earn(st.sticks); P.xp += ok * 15; checkAch(); saveProg();
+  st.fin = megaOutcome(st);
+  if (S.tab === "rush" && typeof rushScore === "function") rushScore(st.fin === "saved" ? 1 : -1, ok, n);
+}
+/* Bug Rush (owner, Nov 14 2026): "Some where people die regardless of what you do and some where you can save
+   people." A case written to end without ROSC ends that way however well it is run. Every other code is
+   winnable: run it well (60% of decisions or better) and the patient makes it; run it poorly and they don't. */
+function megaOutcome(st) {
+  var o = st.cs.outcome;
+  if (o === "none") return "regardless";
+  return st.pct >= 60 ? "saved" : "lost";
 }
 function megaDone() {
   var st = S.mega, cs = st.cs, avg = Object.keys(st.times).reduce(function (t, k) { return t + st.times[k]; }, 0) / cs.steps.length;
   var c = '<section class="mega"><div class="learncard done"><span class="eyebrow">Debrief</span><h2>' + esc(cs.title) + '</h2><p class="big">' + st.pct + '%</p><p>' + st.ok + ' of ' + cs.steps.length + ' decisions correct · average ' + avg.toFixed(1) + ' s per decision · ' + stickTag(st.sticks) + ' earned</p>';
-  c += '<ol class="steps2">' + cs.steps.map(function (s, i) { var a = st.ans[i], good = a >= 0 && s.options[a].ok, best = s.options.filter(function (o) { return o.ok; })[0]; return '<li><strong>' + esc(rhythmName(s.rhythm)) + ':</strong> ' + (good ? "Correct" : a === -1 ? "Out of time" : "Missed") + ' · ' + esc(best.t) + '</li>'; }).join("") + '</ol></div>';
-  return c + '<div class="actions"><button class="btn" data-mega="' + cs.id + '">Run it again</button><button class="btn ghost" data-act="megaquit">All cases</button></div></section>';
+  /* how the code ended (owner, Nov 14 2026: some you get back, some you don't) */
+  var fin = st.fin || megaOutcome(st), arrest = cs.outcome === "rosc" || /^(vf|asys|pea|torsades)$/.test(cs.steps[0].rhythm);
+  var OUTC = fin === "regardless" ? ["bad", "Outcome: no ROSC. The resuscitation was stopped.", "Some patients cannot be saved, even when every decision is right. This was one of them."] :
+    fin === "saved" ? ["ok", cs.outcome === "rosc" ? "Outcome: ROSC. You got a pulse back." : cs.outcome === "stable" ? "Outcome: the patient was stabilized." : "Outcome: the patient made it to the receiving team alive."] :
+    ["bad", arrest ? "Outcome: no ROSC. The patient did not survive." : "Outcome: the patient deteriorated, arrested and did not survive.", "This one was winnable. Fewer than 60% of the decisions were right; go through the debrief and run it again."];
+  c += '<p class="mcout ' + OUTC[0] + '"><strong>' + esc(OUTC[1]) + '</strong>' + (OUTC[2] ? '<br><span class="small">' + esc(OUTC[2]) + '</span>' : '') + '</p>';
+  /* the full explanations live here now that the code moves straight on (owner, Nov 14 2026) */
+  c += '<ol class="steps2">' + cs.steps.map(function (s, i) { var a = st.ans[i], good = a >= 0 && s.options[a].ok, best = s.options.filter(function (o) { return o.ok; })[0];
+    return '<li><strong>' + esc(rhythmName(s.rhythm)) + ':</strong> ' + (good ? "Correct" : a === -1 ? "Out of time" : "Missed") + ' · ' + esc(s.prompt) +
+      '<p class="small">' + (good ? '' : (a >= 0 ? '<span class="muted">You chose: ' + esc(s.options[a].t) + '. ' + esc(s.options[a].fb) + '</span><br>' : '')) + '<strong>Best: </strong>' + esc(best.t) + '. ' + esc(best.fb) + '</p></li>'; }).join("") + '</ol></div>';
+  if (S.tab === "rush") return c + '<div class="actions"><button class="btn" data-act="rushnext">Next call</button></div></section>';
+  return c + '<div class="actions"><button class="btn" data-act="meganew">Next code</button><button class="btn ghost" data-mega="' + cs.id + '">Run this one again</button></div></section>';
+}
+
+/* ===== Bug Rush (owner, Nov 14 2026) =====
+   "Fuse scenarios with the Megacode and just call it Bug Rush and randomize a bunch of scenarios. Some where
+   people die regardless of what you do and some where you can save people and mix in just the random calls."
+   One call after another, picked at random: a code on the live monitor (megaCases), a treatment case
+   (scenList) or an unfolding call from dispatch to handoff (DB.CASES). Codes end in a save or a loss
+   (megaOutcome); cases and calls end in how the patient did. Prehospital never sees lactate. */
+/* developing calls, several questions on the same patient, come up most (owner, Nov 14 2026) */
+var RUSH_W = { mega: 3, scen: 1, call: 5 };
+var ACU = { critical: ["Critical", "acu-c"], red: ["Red", "acu-r"], yellow: ["Yellow", "acu-y"], green: ["Green", "acu-g"] };
+function acuTag(a) { var x = ACU[a]; return x ? '<span class="acutag ' + x[1] + '">' + x[0] + '</span>' : ''; }
+function rushPool() {
+  var P = [], nolac = labOK;
+  if (S.view === "level" && DB.MEGA_LEVELS && DB.MEGA_LEVELS[ctxKey()]) megaCases().forEach(function (c) { P.push({ k: "mega", id: c.id }); });
+  scenList().filter(nolac).forEach(function (s) { P.push({ k: "scen", id: s.id }); });
+  if (S.view === "level" && typeof nrLevelsFor === "function") {
+    var al = nrLevelsFor(ctxKey()) || [];
+    (DB.CASES || []).forEach(function (c) { if (al.indexOf(c.lv) >= 0 && c.steps.length && nolac(c)) P.push({ k: "call", id: c.id }); });
+  }
+  return P;
+}
+function rushPick() {
+  var P = rushPool(); if (!P.length) return null;
+  var recent = store("rushRecent") || [], fresh = P.filter(function (x) { return recent.indexOf(x.k + ":" + x.id) < 0; });
+  if (!fresh.length) fresh = P;
+  var kinds = Object.keys(RUSH_W).filter(function (k) { return fresh.some(function (x) { return x.k === k; }); });
+  var tot = kinds.reduce(function (s, k) { return s + RUSH_W[k]; }, 0), r = Math.random() * tot, kind = kinds[0];
+  for (var i = 0; i < kinds.length; i++) { r -= RUSH_W[kinds[i]]; if (r < 0) { kind = kinds[i]; break; } }
+  var L = fresh.filter(function (x) { return x.k === kind; }), pick = L[Math.floor(Math.random() * L.length)];
+  recent.push(pick.k + ":" + pick.id); store("rushRecent", recent.slice(-Math.min(12, Math.max(1, P.length - 1))));
+  return pick;
+}
+function rushScore(save, ok, n) {
+  var R = S.rush; if (!R || !R.cur || R.cur.scored) return;
+  R.cur.scored = true; R.ok += ok; R.tot += n;
+  if (save > 0) R.saved++; else if (save < 0) R.lost++;
+}
+function rushStart(R) {
+  var p = rushPick(); if (!p) return false;
+  R.n++; R.cur = { k: p.k, id: p.id }; S.mega = null; S.scen = null; R.call = null;
+  if (p.k === "mega") { if (!megaNew(p.id)) return false; }
+  else if (p.k === "scen") S.scen = { id: p.id };
+  else R.call = { id: p.id, i: 0, ans: null, right: 0 };
+  return true;
+}
+function rushView() {
+  if (!simOk()) return simGate("Bug Rush");
+  var R = S.rush || (S.rush = { n: 0, saved: 0, lost: 0, ok: 0, tot: 0 });
+  if (R.ended) return rushSummary(R);
+  if (!R.cur && !rushStart(R)) return '<div class="empty">Bug Rush is on the way for this level.</div>';
+  var kind = { mega: "Code", scen: "Case", call: "Call" }[R.cur.k];
+  var c = '<div class="rushbar"><span class="rushn"><strong>' + kind + ' ' + R.n + '</strong></span><span class="rushs">Saved <b>' + R.saved + '</b></span><span class="rushl">Lost <b>' + R.lost + '</b></span>' +
+    (R.tot ? '<span>Score <b>' + Math.round(100 * R.ok / R.tot) + '%</b></span>' : '') + '<button class="linkish" data-act="rushend">End rush</button></div>';
+  if (R.cur.k === "mega") return c + (S.mega && !S.mega.done ? '<p class="rushacu">' + acuTag("critical") + '</p>' : '') + megaView2();
+  if (R.cur.k === "scen") { var s = scenList().filter(function (x) { return x.id === R.cur.id; })[0]; if (!s) { R.cur = null; return rushView(); } return c + scenView(s, scenList(), "rush"); }
+  return c + rushCallView(R);
+}
+function rushCase(id) { return (DB.CASES || []).filter(function (c) { return c.id === id; })[0]; }
+function rushCallView(R) {
+  var C = R.call, cs = rushCase(C.id); if (!cs) { R.cur = null; return ""; }
+  var c = '<section class="rushcall"><span class="eyebrow">Developing call</span>' + acuTag(cs.acu) + '<h2>' + esc(cs.title) + '</h2>';
+  if (C.i >= cs.steps.length) {
+    var pct = Math.round(100 * C.right / cs.steps.length), good = pct >= 75, mid = pct >= 50;
+    c += '<div class="learncard done"><span class="eyebrow">Handoff</span><p class="big">' + pct + '%</p><p>' + C.right + ' of ' + cs.steps.length + ' decisions right on this call.</p>' +
+      '<p class="mcout ' + (good ? "ok" : mid ? "" : "bad") + '"><strong>' + (good ? (cs.acu === "critical" || cs.acu === "red" ? "Outcome: saved. Your patient reached the hospital in better shape." : "Outcome: good call. Your patient reached the hospital in better shape.") : mid ? "Outcome: your patient reached the hospital, but some care was missed or delayed." : cs.acu === "critical" ? "Outcome: your patient did not survive. This one was winnable; go back through each part." : "Outcome: your patient got worse on the way to the hospital.") + '</strong></p></div>';
+    return c + '<div class="actions"><button class="btn" data-act="rushnext">Next call</button></div></section>';
+  }
+  var st = cs.steps[C.i];
+  if (!C.order) C.order = shuffle([st.a].concat(st.w));
+  c += '<p class="muted small">Part ' + (C.i + 1) + ' of ' + cs.steps.length + '</p><p class="vignette">' + esc(st.story) + '</p><h3 class="qstem">' + esc(st.q) + '</h3><div class="qopts">';
+  C.order.forEach(function (o, k) {
+    var cls = C.ans == null ? "" : o === st.a ? " right" : C.ans === k ? " wrong" : " dim";
+    c += '<button class="qopt' + cls + '" data-rushopt="' + k + '"' + (C.ans != null ? " disabled" : "") + '><span class="letter">' + "ABCD"[k] + '</span><span>' + esc(o) + '</span></button>';
+  });
+  c += '</div>';
+  if (C.ans != null) {
+    var right = C.order[C.ans] === st.a;
+    c += '<div class="explain ' + (right ? "ok" : "bad") + '"><strong>' + (right ? "Correct." : "Not the best choice.") + '</strong><p>' + (right ? "" : '<strong>Best: </strong>' + esc(st.a) + '. ') + esc(st.x) + '</p></div>';
+    c += '<div class="actions"><button class="btn" data-act="rushcnext">' + (C.i < cs.steps.length - 1 ? "Continue the call" : "Hand off") + '</button></div>';
+  }
+  return c + '</section>';
+}
+function rushCallAnswer(k) {
+  var R = S.rush, C = R && R.call; if (!C || C.ans != null) return;
+  var cs = rushCase(C.id), st = cs.steps[C.i], right = C.order[k] === st.a;
+  C.ans = k; if (right) C.right++; feedback(right);
+  if (right) { Prog.d.xp += 10; earn(STICK_RIGHT); } else earn(STICK_TRY);
+  saveProg();
+  if (C.i === cs.steps.length - 1) { var p = C.right / cs.steps.length, hi = cs.acu === "critical" || cs.acu === "red"; rushScore(hi && p >= 0.75 ? 1 : cs.acu === "critical" && p < 0.5 ? -1 : 0, C.right, cs.steps.length); }
+  render();
+}
+function rushSummary(R) {
+  var c = '<section class="mega"><div class="learncard done"><span class="eyebrow">Bug Rush over</span><h2>' + R.n + ' call' + (R.n === 1 ? '' : 's') + ' run</h2>' +
+    '<p class="big">' + (R.tot ? Math.round(100 * R.ok / R.tot) : 0) + '%</p><p>Saved ' + R.saved + ' · Lost ' + R.lost + ' · ' + R.ok + ' of ' + R.tot + ' decisions right</p></div>';
+  return c + '<div class="actions"><button class="btn" data-act="rushagain">Start a new rush</button><button class="btn ghost" data-act="hub">Back to the menu</button></div></section>';
 }
 
 /* ===== Pediatric quick reference ===== */
@@ -6732,7 +7080,7 @@ function ixnPairs(ids) {
 /* Interaction explorer removed Oct 29 2026 (owner): My List already shows the same panel via ixnPanel().
    ixnSnip/ixnPairs stay because ixnPanel and the Medication Disease Identifier use them. */
 
-document.addEventListener("visibilitychange", function () { var st = S.mega; if (!document.hidden && st && st.paused && S.tab === "tools" && !st.done && st.ans[st.i] == null) { st.paused = false; st.t0 = Date.now() - (megaSecs(st.cs.steps[st.i]) - st.left) * 1000; megaTick(); } });
+document.addEventListener("visibilitychange", function () { var st = S.mega; if (!document.hidden && st && st.paused && (S.tab === "megacode" || S.tab === "tools" || S.tab === "rush") && !st.done && st.ans[st.i] == null) { st.paused = false; st.t0 = Date.now() - (megaSecs(st.cs.steps[st.i]) - st.left) * 1000; megaTick(); } });
 
 /* ---------- Interaction detail (Oct 28, 2026; owner: "much much more detail" on My List interactions) ----------
    Adds (1) a long-form explanation for every rule in ruleAlerts() and (2) more rules, including the new plant
@@ -7254,7 +7602,7 @@ function savePs() {
 }
 
 /* ---------- Legal: terms, privacy, disclaimers, agreement gate, safety labels, moderation, data deletion ---------- */
-var LEGAL_V = "2026-11-11", COMPANY = "Volare Media LLC", CONTACT = DB.PROTOCOL_EMAIL;
+var LEGAL_V = "2026-11-13", COMPANY = "Volare Media LLC", CONTACT = DB.PROTOCOL_EMAIL;
 var NONAFF = "DrugBug is not affiliated with or endorsed by any examination, certification or professional organization named in DrugBug.";
 var LG = { owner: false, blocked: [], mod: null };
 function eduBanner(short) {
@@ -7414,7 +7762,7 @@ var LEGAL_PAGES = {
       L("14. Disclaimers of warranties", ["TO THE FULLEST EXTENT PERMITTED BY APPLICABLE LAW, DRUGBUG IS PROVIDED \"AS IS\" AND \"AS AVAILABLE.\" VOLARE DISCLAIMS EXPRESS AND IMPLIED WARRANTIES, INCLUDING IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. VOLARE DOES NOT WARRANT ACCURACY, COMPLETENESS, TIMELINESS, CONTINUOUS AVAILABILITY OR ERROR-FREE OPERATION. THIS SECTION DOES NOT LIMIT WARRANTIES, REMEDIES OR OTHER RIGHTS THAT THE LAW DOES NOT ALLOW US TO EXCLUDE."]) +
       L("15. Limitation of liability", ["TO THE FULLEST EXTENT PERMITTED BY APPLICABLE LAW, VOLARE AND ITS MEMBERS, PERSONNEL, REVIEWERS, EVALUATORS AND CONTRIBUTORS ARE NOT LIABLE FOR INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY OR PUNITIVE DAMAGES ARISING FROM DRUGBUG OR THESE TERMS. THIS APPLIES REGARDLESS OF THE LEGAL THEORY, INCLUDING ORDINARY NEGLIGENCE, AND WHETHER OR NOT THE POSSIBILITY OF SUCH DAMAGES WAS KNOWN.", "TO THE FULLEST EXTENT PERMITTED BY APPLICABLE LAW, THE COMBINED TOTAL LIABILITY OF VOLARE AND THOSE PERSONS TO YOU FOR CLAIMS ARISING FROM DRUGBUG OR THESE TERMS, INCLUDING CLAIMS FOR ORDINARY NEGLIGENCE, WILL NOT EXCEED THE GREATER OF US $50 OR THE AMOUNT YOU ACTUALLY PAID FOR DRUGBUG PURCHASES, INCLUDING SUBSCRIPTIONS AND STICK PACKS BOUGHT THROUGH APPLE OR OUR WEBSITE, DURING THE 12 MONTHS BEFORE THE FIRST EVENT GIVING RISE TO THE CLAIM OR SERIES OF RELATED CLAIMS.", "THESE EXCLUSIONS AND LIMITS DO NOT APPLY TO FRAUD, WILLFUL MISCONDUCT, GROSS NEGLIGENCE, LIABILITY FOR DEATH OR PERSONAL INJURY TO THE EXTENT IT CANNOT LAWFULLY BE LIMITED, REFUNDS REQUIRED UNDER SECTION 17 OR 20, BY LAW OR BY APPLICABLE PLATFORM RULES, OR ANY LIABILITY OR REMEDY THAT APPLICABLE LAW DOES NOT ALLOW US TO LIMIT. THESE TERMS DO NOT BIND A NONPARTY PATIENT OR RELEASE THAT PERSON'S CLAIMS."]) +
       L("16. Third-party claims arising from misuse", ["To the extent permitted by law, you will indemnify Volare against a third-party claim to the extent caused by your prohibited clinical use, unauthorized disclosure of student or pilot material, infringement through material you submit, or other material violation of these Terms. This obligation covers reasonable defense costs and amounts paid under a final judgment or a settlement you approve in writing. You must not unreasonably withhold that approval. This obligation does not cover a claim to the extent caused by Volare's negligence or other wrongdoing. Volare will promptly notify you of a covered claim, may control the defense and will reasonably cooperate with you. You may participate through your own counsel at your expense. Neither party may settle a covered claim in a way that imposes a payment, admission or other obligation on the other party without that party's written consent."]) +
-      L("17. Purchases, subscriptions and cancellation", ["DrugBug offers a free tier. DrugBug Plus and DrugBug Pro are paid subscriptions offered for the billing periods displayed at checkout. The price, interval, automatic renewal terms and cancellation method are shown before you authorize payment. Stick packs are one-time purchases. A new DrugBug account receives three days of complimentary Pro access once per account. No payment method is required. Access ends automatically without a charge or conversion to a paid subscription.", "For an App Store purchase, Apple processes payment and manages billing, renewal, plan changes and refund requests under its terms and applicable law. Cancel an Apple subscription in iPhone Settings under your Apple Account, then Subscriptions. To prevent Apple renewal, cancel at least 24 hours before the end of the current period. Timing for Apple plan changes is governed by Apple's rules.", "For a website purchase, Stripe processes payment. Website subscriptions renew for the disclosed billing period unless canceled before renewal. To cancel, use \"Manage subscription\" on the website. Canceling stops future renewal charges. Access continues through the end of the period already paid for unless access is separately suspended, terminated or discontinued under these Terms. For a billing error, undelivered purchase or refund request, email <a href=\"mailto:VolareMediaLLC@gmail.com\">VolareMediaLLC@gmail.com</a>. For website purchases, this Section 17 is our purchase and refund policy. For App Store purchases, Apple's purchase and refund terms apply.", "If we terminate your access or discontinue DrugBug, we will stop future renewals of your website subscription. We will refund the unused portion of the current website billing period unless we terminated your access for your material violation of these Terms. If we discontinue a paid feature in a way that materially reduces your plan, we will notify you, and you may cancel and receive a refund of the unused portion of the current website billing period. If a temporary suspension continues through your website renewal date, we will stop that renewal. A stopped renewal will not restart without your affirmative authorization. You may contact us to cancel if you cannot access \"Manage subscription.\" For an affected App Store subscription, we will notify you where practicable so you can cancel through Apple. You may request a refund from Apple.", "Subscription price changes apply prospectively after required advance notice and any required consent. School and agency access runs for the period and on the terms of the applicable organizational arrangement. Except when we stop website renewals as stated in this section or Section 20, deleting your account does not cancel an Apple or website subscription. Cancel with the seller that bills you. We do not limit any cancellation or refund right required by law."]) +
+      L("17. Purchases, subscriptions and cancellation", ["DrugBug offers a free tier. DrugBug Plus and DrugBug Pro are paid subscriptions offered for the billing periods displayed at checkout. The price, interval, automatic renewal terms and cancellation method are shown before you authorize payment. Stick packs are one-time purchases.", "Website account access. A new DrugBug account created on the website receives three days of complimentary Pro access once per account. No payment method is required. Access ends automatically without a charge or conversion to a paid subscription. This complimentary access is not offered in the iPhone app.", "App Store free trial. Where the App Store shows it, DrugBug Pro Yearly may include a free trial for eligible Apple Accounts, as determined by Apple (generally one introductory offer per Apple Account per subscription group). The trial length and the price that applies after it are shown on Apple's purchase screen before you confirm. When the trial ends, Apple charges the yearly subscription price to your Apple Account and the subscription renews automatically each year unless you cancel at least 24 hours before the trial or the current period ends. Cancel in iPhone Settings under your Apple Account, then Subscriptions. If you cancel during the trial, you will not be charged. Apple manages the trial, billing and refund requests.", "For an App Store purchase, Apple processes payment and manages billing, renewal, plan changes and refund requests under its terms and applicable law. Cancel an Apple subscription in iPhone Settings under your Apple Account, then Subscriptions. To prevent Apple renewal, cancel at least 24 hours before the end of the current period. Timing for Apple plan changes is governed by Apple's rules.", "For a website purchase, Stripe processes payment. Website subscriptions renew for the disclosed billing period unless canceled before renewal. To cancel, use \"Manage subscription\" on the website. Canceling stops future renewal charges. Access continues through the end of the period already paid for unless access is separately suspended, terminated or discontinued under these Terms. For a billing error, undelivered purchase or refund request, email <a href=\"mailto:VolareMediaLLC@gmail.com\">VolareMediaLLC@gmail.com</a>. For website purchases, this Section 17 is our purchase and refund policy. For App Store purchases, Apple's purchase and refund terms apply.", "If we terminate your access or discontinue DrugBug, we will stop future renewals of your website subscription. We will refund the unused portion of the current website billing period unless we terminated your access for your material violation of these Terms. If we discontinue a paid feature in a way that materially reduces your plan, we will notify you, and you may cancel and receive a refund of the unused portion of the current website billing period. If a temporary suspension continues through your website renewal date, we will stop that renewal. A stopped renewal will not restart without your affirmative authorization. You may contact us to cancel if you cannot access \"Manage subscription.\" For an affected App Store subscription, we will notify you where practicable so you can cancel through Apple. You may request a refund from Apple.", "Subscription price changes apply prospectively after required advance notice and any required consent. School and agency access runs for the period and on the terms of the applicable organizational arrangement. Except when we stop website renewals as stated in this section or Section 20, deleting your account does not cancel an Apple or website subscription. Cancel with the seller that bills you. We do not limit any cancellation or refund right required by law."]) +
       L("18. Privacy, deletion and notices", ["The Privacy Policy describes information practices, privacy choices and how to request access or deletion. You can initiate account deletion from within the app through the account deletion option, or contact us by email. Before deleting an account, cancel recurring billing with the applicable seller to avoid further charges. Account deletion may affect your ability to access stored progress and virtual items. Any right to a refund or restoration remains subject to applicable law and platform rules.", "We may give you service notices in DrugBug or send them to the email address associated with your account, where available. We will use any other notice method required by law. Send inquiries and notices to <a href=\"mailto:VolareMediaLLC@gmail.com\">VolareMediaLLC@gmail.com</a>. This contact is not a substitute for service of process."]) +
       L("19. Governing law and venue", ["Texas law governs these Terms without regard to conflict-of-laws rules, subject to mandatory protections that apply where you live. Unless applicable law permits or requires you to proceed elsewhere despite this provision, disputes arising out of DrugBug or these Terms must be brought in a Texas state court of competent jurisdiction in Brazos County or the United States District Court for the Southern District of Texas, Houston Division. You and Volare consent to personal jurisdiction there for such disputes. You may communicate with a regulator and exercise any nonwaivable right to bring a claim in another forum."]) +
       L("20. Changes and other terms", ["These Terms take effect on the date shown above. We will give notice of material changes and require renewed affirmative acceptance before continued use under the changed Terms. The changes apply prospectively after acceptance. We will keep a record of the version accepted and the date of acceptance. We may make nonmaterial changes by posting an updated version with its effective date, subject to applicable law.", "If you do not accept a material change, you may stop using DrugBug. You may cancel a website subscription under Section 17. If we end your paid website access solely because you declined the change, we will stop future renewals and refund any unused portion of the current billing period. Cancel an App Store subscription through Apple.", "These Terms are the entire agreement between you and Volare for the DrugBug use they cover. A separate written agreement signed by Volare controls the activity it governs to the extent of a conflict. Apple's purchase terms govern App Store transactions. The Privacy Policy separately describes data practices. You may not assign these Terms or transfer an account without our written consent. We may assign these Terms in connection with a reorganization or transfer of DrugBug, subject to applicable law and without impairing accrued rights. If a provision is unenforceable, the remaining provisions continue in effect. Failure to enforce a provision on one occasion does not waive it. Provisions that by their nature continue after termination survive, including restrictions on confidential material, ownership and feedback, accrued payment and refund rights, and Sections 14 through 16 and 19. Volare's members, personnel, reviewers, evaluators and contributors may enforce Section 15. Apple and its subsidiaries may enforce these Terms as provided in Section 21. No other nonparty is an intended beneficiary of these Terms."]) +
@@ -7691,7 +8039,15 @@ function startLearnPath(sg) {
 }
 function needOnboard() { return needRole() || !!S.obRedo; }
 function obSel() {
-  if (!S.obSel) { S.obSel = {}; (Prog.d.interests || ["ev"]).forEach(function (k) { S.obSel[k] = 1; }); if (!Object.keys(S.obSel).length) S.obSel.ev = 1; }
+  if (!S.obSel) {
+    S.obSel = {};
+    /* drugbugapp.com/app/?path=ph (or rn, md, im, ah) from a pilot site's quick-start sheet or QR code picks
+       their path for them, so a crew member doesn't land on Everyday Health (Nov 13 2026) */
+    var qp = ((window.__DBQ || "").match(/[?&]path=([a-z]{2})\b/) || [])[1];
+    if (qp && /^(ph|rn|md|im|ah|ev)$/.test(qp) && !(Prog.d.interests || []).length) { S.obSel[qp] = 1; try { var qi = obCards().map(function (c) { return c.code; }).indexOf(qp); if (qi > 0 && S.obI == null) S.obI = qi; } catch (e) {} }
+    else (Prog.d.interests || ["ev"]).forEach(function (k) { S.obSel[k] = 1; });
+    if (!Object.keys(S.obSel).length) S.obSel.ev = 1;
+  }
   return S.obSel;
 }
 /* Step 2: once they have a clinical path, the second wheel asks which level, so Hickory knows
@@ -7781,7 +8137,7 @@ function obView() {
     '<div class="obfoot"><button class="btn big" data-obnext="1"' + (n ? '' : ' disabled') + '>' +
       (n ? 'Continue with ' + n + ' selected' : 'Pick at least one') + '</button>' +
       '<button class="btn ghost" data-obskip="1">' + (S.obRedo ? 'Cancel' : 'Skip for now') + '</button></div>' +
-    (S.obRedo ? '' : '<div class="obkeybox"><button class="linkish" data-obkey="1">' + (S.obKey ? 'Hide' : 'Have a class key from your instructor? Enter it here') + '</button>' + (S.obKey ? '<p class="muted small">Your class already has its level, so you can skip choosing one.</p>' + clJoinForm("ob") : '') + '</div>') + '</div>';
+    (S.obRedo ? '' : ((S.obKey == null && /[?&]key=1\b/.test(window.__DBQ || "")) ? (S.obKey = 1, '') : '') + '<div class="obkeybox"><button class="linkish" data-obkey="1">' + (S.obKey ? 'Hide' : 'Have a class key from your instructor? Enter it here') + '</button>' + (S.obKey ? '<p class="muted small">Your class already has its level, so you can skip choosing one.</p>' + clJoinForm("ob") : '') + '</div>') + '</div>';
 }
 function obClick(t, a) {
   if (a.obkey) { S.obKey = !S.obKey; render(); return true; }
@@ -8784,7 +9140,7 @@ document.addEventListener("keydown", function (e) { if (e.key === "Escape" && PR
 function printClick(t, a) { if (a.print) { openPrint(a.print); return true; } return false; }
 
 /* ---------- Settings: display, study preferences, sound, protocols, printing, privacy & account, about ---------- */
-var APP_VERSION = "1.2", APP_DATE = "2026-11-11";
+var APP_VERSION = "1.2.1", APP_DATE = "2026-11-14"; try { window.__dbVer = (window.webkit && window.webkit.messageHandlers ? "ios " : "web ") + APP_VERSION + " " + APP_DATE; } catch (e) {}
 
 /* ---------- usage statistics (owner, Nov 5 2026) ----------
    Anonymous counts so the owner can see how DrugBug is used: a random device id (never a name,
@@ -8961,7 +9317,9 @@ function audioCtx() {
    happened to the music when its folder was never published. (owner, Nov 4 2026) */
 var SFXBUF = {}, SFX_SRC = { gasp: "sfx/gasp.mp3", wheeze: "sfx/wheeze.mp3",
   /* the dummy's tap sounds, owner-supplied recordings (Pixabay), Nov 5 2026 */
-  whoosh: "sfx/whoosh.mp3", grunt: "sfx/grunt.mp3", squeak: "sfx/squeak.mp3", bonk: "sfx/bonk.mp3", punch: "sfx/punch.mp3" };   /* wheeze: owner-supplied recording (Pixabay / freesound_community), Nov 5 2026 */
+  whoosh: "sfx/whoosh.mp3", grunt: "sfx/grunt.mp3", squeak: "sfx/squeak.mp3", bonk: "sfx/bonk.mp3", punch: "sfx/punch.mp3",
+  /* megacode monitor, heart and defibrillator, owner-supplied recordings (Pixabay), Nov 14 2026; all levelled to about -18 LUFS like the others */
+  monbeep: "sfx/monitor-beep.mp3", heartbeat: "sfx/heartbeat.mp3", defcharge: "sfx/defib-charge.mp3", defthud: "sfx/defib-thud.mp3" };   /* wheeze: owner-supplied recording (Pixabay / freesound_community), Nov 5 2026 */
 var SFX_TRIM = { gasp: 0.14 };     /* the recording opens with silence; skip it so it lands on time */
 function sfxLoad(name) {
   var c = audioCtx(); if (!c || !SFX_SRC[name]) return null;
@@ -8986,6 +9344,58 @@ function sfxPlay(name, at, v, rate, dest, dur) {
     src.start(t0, off);
     return true;
   } catch (e) { return false; }
+}
+/* ---------- megacode monitor sound (owner, Nov 14 2026) ----------
+   "change the heart monitor sound to the rate of heart monitor on the scenarios... Do the same with the heart
+   sound. Make them match the rate and beat... If they are in asystole dont have any heart sound or monitor
+   sound. If they are 210 bpm make the heart beat and monitor match. But match the volume with everything else."
+   The beep fires as the sweep line crosses each R wave drawn on the strip (the strip is 4 seconds wide, the same
+   as the sweep), so the sound follows the picture: fast at 210, irregular in AF, nothing in asystole. VF and
+   torsades have no R waves to beep on. The heartbeat plays with each beep only when there is a pulse (not in
+   VF, PEA, torsades or asystole). Only while a monitor is on screen, the page is visible and sound effects are on. */
+var MONS = { raf: 0, prev: -1, t0: 0 };
+function monSoundStart() {
+  if (MONS.raf || !SET().sfx || !document.querySelector(".monitor[data-beats]")) return;
+  ["monbeep", "heartbeat", "defcharge", "defthud"].forEach(function (n) { try { sfxLoad(n); } catch (e) {} });
+  MONS.prev = -1; MONS.raf = requestAnimationFrame(monSoundTick);
+}
+function monSoundTick() {
+  MONS.raf = 0;
+  var m = document.querySelector(".monitor[data-beats]");
+  if (!m || !SET().sfx) { MONS.prev = -1; return; }
+  MONS.raf = requestAnimationFrame(monSoundTick);
+  if (document.hidden || m.offsetParent === null) { MONS.prev = -1; return; }
+  /* where the sweep is, 0..1: from its animation, or our own 4-second clock when motion is reduced */
+  var sw = m.querySelector(".sweep"), an = sw && sw.getAnimations ? sw.getAnimations()[0] : null, pos;
+  var per = (+m.getAttribute("data-sw") || 4) * 1000;
+  if (an && an.currentTime != null && getComputedStyle(sw).display !== "none") { try { per = an.effect.getComputedTiming().duration || per; } catch (e) {} pos = (an.currentTime % per) / per; }
+  else { if (!MONS.t0) MONS.t0 = performance.now(); pos = ((performance.now() - MONS.t0) % per) / per; }
+  var beats = (m.getAttribute("data-beats") || "").split(",").filter(Boolean).map(Number), prev = MONS.prev;
+  MONS.prev = pos;
+  if (prev < 0 || !beats.length) return;
+  var hit = beats.some(function (b) { return prev <= pos ? (b > prev && b <= pos) : (b > prev || b <= pos); });
+  if (hit && !MONS.shock) monBeat(m);
+}
+function monBeat(m) {
+  var c = audioCtx(); if (!c) return;
+  if (c.state === "suspended") { try { c.resume(); } catch (e) {} return; }
+  sfxPlay("monbeep", 0, 0.32);
+  if (m.getAttribute("data-pulse") === "1") {
+    var hr = +m.getAttribute("data-hr") || 80, gap = 60 / hr, rate = gap < 0.7 ? Math.min(1.75, 0.7 / gap) : 1;
+    sfxPlay("heartbeat", 0.04, 0.5, rate, null, Math.min(0.7 / rate, gap * 0.95));
+  }
+}
+/* defibrillate or cardiovert: the charge-up whine, then the thud as the shock goes in */
+function defibWords(t) { t = String(t || ""); return /defibrillat|cardiover|\bshock\b/i.test(t) && !/(do not|don't|without|withhold|hold|delay|no)\s+(the\s+)?(shock|defib|cardiover)/i.test(t); }
+function defibSound() {
+  if (!SET().sfx) return;
+  try {
+    var c = audioCtx(); if (!c) return;
+    if (c.state === "suspended") c.resume();
+    var go = function () { MONS.shock = true; LM.shock = performance.now() / 1000 + 1.45; LM.pause = Math.max(LM.pause, LM.shock + 1.3); sfxPlay("defcharge", 0, 0.85); sfxPlay("defthud", 1.45, 0.95); setTimeout(function () { MONS.shock = false; }, 2300); };
+    var a = sfxLoad("defcharge"), b = sfxLoad("defthud");
+    if (SFXBUF["defcharge:buf"] && SFXBUF["defthud:buf"]) go(); else if (a && b) Promise.all([a, b]).then(go, function () {});
+  } catch (e) {}
 }
 /* A plain-language readout of what the sound system is actually doing. Added because sound can
    fail for reasons the app cannot see from the inside - a browser that will not allow audio, a
@@ -10375,7 +10785,7 @@ function proView() { return S.view === "level"; } /* professional routes */
 
    So the gate moved off the feature and onto the drug, which is why tabTier is now free for
    everything and the work happens in drugTier() and studyLocked(). */
-function tabTier(tab) { return "free"; }
+function tabTier(tab) { return tab === "megacode" || tab === "rush" ? toolTier("mega") : tab === "qs" || tab === "prep" ? toolTier("prep") : tab === "games" ? toolTier("games") : "free"; }
 function proLocked(tab) { return PAYWALL && !hasTier(tabTier(tab)); }
 function drugTier(id) { return FREE_SET[id] ? "free" : "plus"; }   /* reading a drug: Free for the 40, Plus for the rest */
 /* The drill pool. A question, game or scenario about a medication outside the free set only appears
@@ -14062,7 +14472,7 @@ function sbCalm() {
   if (typeof tourDone === "function" && !tourDone()) return false;
   if (typeof topLayerOpen === "function" && topLayerOpen()) return false;
   if (S.sheet || S.sess || S.mupop) return false;
-  if (S.tab === "prep" || S.tab === "scenarios" || S.tab === "tools" || S.tab === "games" || S.tab === "calc") return false; /* never during a test or game */
+  if (S.tab === "prep" || S.tab === "scenarios" || S.tab === "megacode" || S.tab === "rush" || S.tab === "cards" || S.tab === "tools" || S.tab === "games" || S.tab === "calc") return false; /* never during a test or game */
   return true;
 }
 function sbArt(face, look) {
@@ -15037,7 +15447,8 @@ document.addEventListener("input", function (e) { if (e.target && e.target.id ==
    AHA Mission: Lifeline EMS routing algorithm; see tools/calls/ in the repo for the sources. */
 var CALLS = [{"id":"stroke","name":"Stroke and TIA","line":"Scales, mimics, last known well, windows, TNK or tPA, and who needs a thrombectomy center.","sec":[["Stroke or TIA?",["A stroke is brain tissue dying from a blocked artery (ischemic, about 87%) or a burst one (hemorrhagic).","A TIA (transient ischemic attack) is a short spell of stroke symptoms from a brief blockage that leaves no dead tissue on imaging. Most clear within an hour.","You cannot tell a TIA from a stroke in the field. If the symptoms are still there, it is a stroke until proven otherwise.","A TIA is a warning: the risk of a full stroke is highest in the first 48 hours. A patient whose symptoms have resolved still needs the emergency department, not a refusal.","Hemorrhagic strokes often bring a sudden severe headache, vomiting, very high blood pressure and a falling level of consciousness. Only a CT tells them apart."]],["Last known well (LKW)",["LKW is the last time someone saw the patient at their normal baseline. It is NOT when symptoms were found.","Woke up with symptoms: LKW is when they went to bed (or the last time they were up and normal in the night).","Symptoms that fully cleared and came back: the clock resets to when they were last fully normal. Symptoms that only improved do not reset it.","Pin down an exact clock time and a phone number for the witness. Every treatment window is measured from LKW.","Bring the witness, or their number, to the hospital: the stroke team will ask the same question."]],["Classic stroke mimics",["Hypoglycemia: the most important one. Check a glucose on every suspected stroke.","Seizure with a postictal (Todd's) paralysis: one-sided weakness after a seizure that clears over hours.","Complex migraine: aura, one-sided weakness or numbness, often a history of the same.","Bell's palsy: the whole side of the face, forehead included, is weak. A stroke usually spares the forehead.","Sepsis or infection in an older adult bringing back old stroke deficits (recrudescence).","Intoxication, overdose, hyponatremia, hepatic or uremic encephalopathy, Wernicke's.","Hypertensive encephalopathy, brain tumor, subdural hematoma (ask about falls and blood thinners).","Functional (conversion) disorder and syncope.","A mimic is a diagnosis made at the hospital. In the field, a positive screen with a normal glucose is treated as a stroke."]],["Blood pressure and the swollen brain",["Cerebral perfusion pressure (CPP) = mean arterial pressure (MAP) minus intracranial pressure (ICP).","Around a clot is the penumbra: stunned brain that is still alive but living on whatever pressure gets past the blockage.","Stroke breaks autoregulation in that area, so its blood flow follows the blood pressure directly.","As the brain swells (edema), ICP rises. Dropping the MAP at the same time drops CPP from both sides.","Less perfusion turns penumbra into dead core. Dying cells swell (cytotoxic edema), ICP rises further, and perfusion falls again: a spiral.","That is why high blood pressure is usually allowed in the field (permissive hypertension) and hypotension is treated. Many systems do not treat blood pressure prehospital unless it is over 220/120.","Before thrombolysis the hospital lowers it to under 185/110 and keeps it under 180/105 for 24 hours afterward. The 2026 guideline says pushing the systolic below 140 after a successful thrombectomy is harmful."]],["Clot-busters: tenecteplase or alteplase",["The 2026 AHA/ASA guideline endorses either tenecteplase (TNK) or alteplase (tPA) for eligible patients within 4.5 hours of last known well.","Tenecteplase is a single IV push. Alteplase is a bolus followed by a 60-minute infusion, which complicates transfers.","Tenecteplase is more fibrin-specific and has a longer half-life than alteplase, which is why one push is enough.","The higher tenecteplase dose studied in some trials is NOT recommended: it did not help and may cause harm.","Thrombolysis is for disabling deficits regardless of the NIHSS number. For a mild, non-disabling stroke, dual antiplatelet therapy is preferred instead.","Common reasons it cannot be given: bleeding on CT, blood pressure that cannot be brought under 185/110, glucose under 50, recent major surgery or head trauma, an ischemic stroke in the last 3 months, active internal bleeding, or recent use of a blood thinner with abnormal coagulation.","Doses are given by the hospital team. DrugBug does not list them here."]],["The time windows",["0 to 4.5 hours from LKW: IV thrombolysis (tenecteplase or alteplase) for eligible disabling strokes. Hospital goal is door to needle within 60 minutes, with many centers aiming for 30 to 45.","4.5 to 9 hours, or unknown onset (wake-up stroke): thrombolysis may be considered in selected patients if advanced imaging (MRI DWI-FLAIR mismatch or perfusion) shows brain that can still be saved.","0 to 6 hours: thrombectomy for an anterior LVO (ICA or M1) with NIHSS 6 or more.","6 to 24 hours: thrombectomy for selected anterior LVO patients picked by imaging, now including some large-core strokes.","Basilar artery occlusion: thrombectomy within 24 hours for selected patients with NIHSS 10 or more.","Field targets: scene time under 15 minutes, early hospital pre-notification with the LKW time, and a hospital CT within about 20 to 25 minutes of arrival."]],["Does this patient need a thrombectomy center?",["Only a Comprehensive Stroke Center (CSC) or a Thrombectomy-capable Stroke Center (TSC) can pull a clot. A Primary Stroke Center or Acute Stroke Ready Hospital can give thrombolysis but not thrombectomy.","Suspect an LVO when the severity scale your system uses is positive (for example LAMS 4 or more, RACE 5 or more, C-STAT 2 or more, FAST-ED 4 or more, VAN positive) and LKW is within 24 hours.","Cortical signs (gaze deviation, aphasia, neglect) plus dense weakness are the classic picture of a big clot.","The AHA Mission: Lifeline routing algorithm: suspected LVO goes to a CSC or TSC when the extra transport time is about 30 minutes or less (with total time limits that vary for urban, suburban and rural areas). If the bypass would push a thrombolysis-eligible patient past their window, go to the nearest stroke center first (drip and ship).","The 2026 guideline supports direct transport to the closest EVT-capable center where hospital-to-hospital transfer does not work well, and asks systems to cut door-in-door-out times where it does.","Your regional destination protocol decides the exact minutes. Know yours."]],["What to do on scene",["ABCs, oxygen only if SpO2 is under 94%.","Glucose on everyone. Treat hypoglycemia.","Run your system's screen and severity scale. Get the exact LKW and a witness phone number.","Head of the bed flat or up to 30 degrees per protocol; elevate if vomiting or airway risk.","IV access (often an antecubital site for CT angiography), but do not delay transport for it.","Nothing by mouth until the swallow is checked.","Pre-notify the hospital with the scale result and LKW. Scene time under 15 minutes."]]]},{"id":"stemi","name":"STEMI","line":"12-lead criteria, equivalents, time goals and field care.","sec":[["Recognize it",["STEMI: new ST elevation at the J point in 2 contiguous leads, at least 1 mm in most leads. In V2 and V3 the cutoff is 2 mm in men 40 and over, 2.5 mm in men under 40, and 1.5 mm in women.","Reciprocal ST depression in the opposite leads makes a STEMI much more likely than a mimic.","Get a 12-lead within 10 minutes of first medical contact, and repeat it if the first is normal but the story is not.","Atypical presentations (shortness of breath, nausea, weakness, jaw or back pain, no pain at all) are common in women, older adults and people with diabetes."]],["Location and what it means",["Inferior (II, III, aVF): usually the right coronary artery. Check right-sided V4R: 1 mm of elevation means right ventricle involvement.","Right ventricular infarct: preload-dependent. Nitroglycerin can crash the blood pressure; small fluid boluses help.","Anterior / septal (V1 to V4): left anterior descending artery, the widowmaker territory.","Lateral (I, aVL, V5, V6): circumflex or diagonal branches.","Posterior: ST depression in V1 to V3 with tall R waves. Posterior leads V7 to V9 with 0.5 mm of elevation confirm it."]],["STEMI equivalents and danger patterns",["Posterior MI: depression in V1 to V3 is often posterior elevation seen from the front.","De Winter T waves: upsloping ST depression with tall symmetric T waves in the precordial leads, a proximal LAD occlusion.","Left bundle branch block or a paced rhythm: use the Sgarbossa (or modified Smith-Sgarbossa) criteria: concordant ST elevation of 1 mm or more, concordant ST depression of 1 mm or more in V1 to V3, or excessively discordant elevation.","ST elevation in aVR with widespread ST depression: left main or multivessel disease. High risk, often not a classic STEMI activation; follow your protocol.","Wellens T waves (deep or biphasic T waves in V2 and V3, pain-free): critical LAD narrowing about to close. Not a STEMI, but a patient who needs the cath lab soon."]],["Time is muscle",["First medical contact (FMC) to device of 90 minutes or less when EMS takes the patient straight to a PCI center.","Patients who first reach a non-PCI hospital: FMC to device of 120 minutes or less, with door-in-door-out of 30 minutes or less.","If the PCI center cannot be reached within 120 minutes from FMC, fibrinolysis is the alternative for STEMI within 12 hours of symptom onset, with a door-to-needle goal of 30 minutes.","Transmit the 12-lead and activate early. Field cath lab activation cuts door-to-balloon time.","After fibrinolysis, patients go to a PCI center, with angiography within 3 to 24 hours (sooner for failed reperfusion)."]],["Field care",["Aspirin, chewed, unless allergy or active bleeding.","Oxygen only if SpO2 is under 90% or the patient is in distress; extra oxygen does not help a normal saturation.","Nitroglycerin is held for systolic BP under 90 (or 30 below baseline), right ventricular infarct, or a phosphodiesterase-5 inhibitor in the last 24 hours (48 for tadalafil).","Pads on: ventricular fibrillation is most common in the first hours of a STEMI.","Treat pain per protocol and avoid NSAIDs other than aspirin.","Doses follow your protocol. DrugBug does not list them here."]],["Fibrinolytic contraindications to know",["Absolute: any prior intracranial hemorrhage, known cerebral vascular lesion or malignant brain tumor, ischemic stroke within 3 months (except an acute stroke within 4.5 hours), suspected aortic dissection, active bleeding (not menses), significant head or facial trauma within 3 months, brain or spine surgery within 2 months, severe hypertension that does not respond to treatment.","Many prehospital fibrinolysis checklists screen these before the hospital is called."]]]},{"id":"sepsis","name":"Sepsis","line":"Recognition, the first hour and field care.","sec":[["Recognize it",["Sepsis is life-threatening organ dysfunction from the body's response to an infection.","Look for suspected infection plus signs of poor perfusion: altered mental status, fast breathing, low blood pressure, mottled skin, slow capillary refill.","qSOFA (respiratory rate 22 or more, altered mentation, systolic BP 100 or less) predicts poor outcome, but the 2021 Surviving Sepsis Campaign recommends against using it alone as the screening tool.","Low end-tidal CO2 (often 25 mmHg or less) tracks with a high lactate and is a useful field clue.","Septic shock: needs vasopressors to keep MAP 65 or more and lactate stays over 2 despite fluids."]],["Why time matters",["Every hour of delay to antibiotics in septic shock raises mortality. The goal in shock is antibiotics within 1 hour of recognition.","Pre-notification (a sepsis alert) gets cultures, lactate and antibiotics started at the door.","Fluids are given for hypotension or high lactate, reassessing lungs and perfusion between boluses."]],["Field care",["Oxygen to keep SpO2 in range, IV access, glucose, end-tidal CO2 if available.","Fluid boluses per protocol with reassessment; watch for crackles and worsening breathing.","Vasopressors for persistent shock per protocol (often norepinephrine first).","Some systems give prehospital antibiotics or draw blood cultures; follow yours."]]]},{"id":"trauma","name":"Major trauma","line":"Field triage criteria and stopping the dying.","sec":[["Field triage (2021 national guideline)",["RED criteria go to the highest level trauma center available.","Red injury patterns: penetrating injury to head, neck, torso or proximal limbs; skull deformity; suspected spinal injury with new weakness or numbness; chest wall instability or flail chest; suspected pelvic fracture; two or more proximal long-bone fractures; crushed, degloved, mangled or pulseless limb; amputation above the wrist or ankle; bleeding needing a tourniquet or wound packing with continuous pressure.","Red mental status and vitals: unable to follow commands (motor GCS under 6); respiratory rate under 10 or over 29, respiratory distress or need for ventilation support; room-air SpO2 under 90%; age 0 to 9 with SBP under 70 + (2 x age); age 10 to 64 with SBP under 90 or heart rate greater than SBP; age 65 and over with SBP under 110 or heart rate greater than SBP.","YELLOW criteria go to a trauma center (not always the highest level): high-risk crash (ejection, major intrusion, extrication, unrestrained child, vehicle telemetry), rider separated from a motorcycle or ATV, pedestrian or cyclist thrown, run over or hit hard, falls over 10 feet.","EMS judgment: older adult with a ground-level fall and head strike, anticoagulants, suspected child abuse, pregnancy over 20 weeks, burns with trauma, special health care needs."]],["Stop the dying",["Massive hemorrhage first: tourniquets and wound packing before airway in the bleeding patient (MARCH).","The lethal triad: hypothermia, acidosis and coagulopathy feed each other. Keep the patient warm from the start.","Permissive hypotension in penetrating torso trauma without head injury: enough pressure for mentation and a radial pulse, not a normal number. Head injury needs a normal pressure.","Tranexamic acid works best within 1 hour and is not given after 3 hours from injury.","Scene time goal of 10 minutes or less for critical patients."]]]},{"id":"rosc","name":"After cardiac arrest (ROSC)","line":"Oxygen, ventilation, pressure and the cath lab.","sec":[["After the pulse comes back",["Re-check the pulse and get a 12-lead as soon as possible; STEMI after arrest goes to a PCI center.","Oxygen: titrate to SpO2 92 to 98%. Too much oxygen is harmful.","Ventilation: about 10 breaths per minute, aiming for end-tidal CO2 35 to 45. Hyperventilation drops cerebral blood flow.","Blood pressure: keep systolic 90 or more and MAP 65 or more with fluids and vasopressors per protocol.","Check glucose and treat the cause (Hs and Ts).","Temperature control: prevent fever; the hospital continues targeted temperature management.","A sudden drop in end-tidal CO2 is often the first sign of re-arrest."]]]}];
 var CALL_SCALES = [{"id":"cpss","name":"Cincinnati Prehospital Stroke Scale (CPSS)","short":"Cincinnati","kind":"Stroke screen","tells":"Whether this could be a stroke at all. It does not say how big the stroke is or whether there is a large vessel occlusion.","items":[["Facial droop","Ask them to smile or show their teeth. One side not moving as well as the other is abnormal."],["Arm drift","Eyes closed, both arms straight out, palms up, for 10 seconds. One arm drifting down or not moving is abnormal."],["Abnormal speech","Repeat a simple sentence. Slurred words, wrong words or no words is abnormal."]],"pos":"Any one finding abnormal = suspect stroke. About 72% chance of stroke with one abnormal finding and over 85% with all three.","pearl":"Positive CPSS starts the stroke clock and the glucose check. If your system also uses a severity scale, the CPSS does not replace it."},{"id":"befast","name":"BE-FAST","short":"BE-FAST","kind":"Stroke screen","tells":"Whether this could be a stroke, including posterior (back of the brain) strokes that FAST alone misses.","items":[["B - Balance","Sudden loss of balance or coordination, trouble walking."],["E - Eyes","Sudden loss of vision in one or both eyes, or double vision."],["F - Face","One side of the face droops."],["A - Arm","One arm drifts down or is weak."],["S - Speech","Slurred, confused or absent speech."],["T - Time","Note the last known well time and get moving."]],"pos":"Any one sudden finding = suspect stroke.","pearl":"The B and E were added because posterior circulation strokes often show up as dizziness, imbalance or vision loss with a normal face, arm and speech exam."},{"id":"lapss","name":"Los Angeles Prehospital Stroke Screen (LAPSS)","short":"LAPSS","kind":"Stroke screen","tells":"Whether this is likely a stroke, using history and a glucose to screen out common mimics before the motor exam.","items":[["Age over 45","Yes or unknown."],["No history of seizures or epilepsy","Yes or unknown."],["Symptoms under 24 hours","Yes or unknown."],["Not wheelchair-bound or bedridden at baseline","Yes or unknown."],["Blood glucose 60 to 400 mg/dL","Must be yes."],["One-sided weakness","Unilateral weakness in facial smile or grimace, grip, or arm strength."]],"pos":"LAPSS positive when every criterion is yes (or unknown) and there is one-sided weakness.","pearl":"A negative LAPSS does not rule out stroke. If the story still sounds like a stroke, treat it like one."},{"id":"lams","name":"Los Angeles Motor Scale (LAMS)","short":"LAMS","kind":"Severity / LVO scale","tells":"How severe the motor deficit is, which predicts a large vessel occlusion (LVO) that may need a thrombectomy center.","items":[["Facial droop","0 absent, 1 present."],["Arm drift","0 absent, 1 drifts down, 2 falls rapidly."],["Grip strength","0 normal, 1 weak grip, 2 no grip."]],"pos":"Total 0 to 5. A score of 4 or 5 suggests an LVO.","pearl":"LAMS is built from the LAPSS motor items, so systems that use LAPSS often add LAMS on a positive screen."},{"id":"race","name":"Rapid Arterial oCclusion Evaluation (RACE)","short":"RACE","kind":"Severity / LVO scale","tells":"Likelihood of a large vessel occlusion, using items borrowed from the NIHSS.","items":[["Facial palsy","0 absent, 1 mild, 2 moderate to severe."],["Arm motor","0 normal or mild, 1 moderate, 2 severe."],["Leg motor","0 normal or mild, 1 moderate, 2 severe."],["Head and gaze deviation","0 absent, 1 present."],["Aphasia (right-sided weakness) or agnosia (left-sided weakness)","0 to 2. Aphasia is tested with commands; agnosia by asking whose arm this is and whether they can move it."]],"pos":"Total 0 to 9. A score of 5 or more suggests an LVO.","pearl":"Aphasia is scored when the right side is weak (left brain); agnosia or neglect when the left side is weak (right brain)."},{"id":"cstat","name":"Cincinnati Stroke Triage Assessment Tool (C-STAT)","short":"C-STAT","kind":"Severity / LVO scale","tells":"Likelihood of a large vessel occlusion, using three quick cortical findings.","items":[["Conjugate gaze deviation","2 points. Both eyes forced to one side."],["Level of consciousness questions and commands","1 point if the patient gets at least one of age or month wrong AND fails at least one command (close your eyes, make a fist)."],["Arm weakness","1 point if they cannot hold an arm up for 10 seconds."]],"pos":"Total 0 to 4. A score of 2 or more suggests an LVO.","pearl":"Gaze deviation alone scores 2, so it is LVO-positive on its own. Also called the Cincinnati Prehospital Stroke Severity Scale (CPSSS)."},{"id":"fasted","name":"Field Assessment Stroke Triage for Emergency Destination (FAST-ED)","short":"FAST-ED","kind":"Severity / LVO scale","tells":"Likelihood of a large vessel occlusion, to choose the destination.","items":[["F - Facial palsy","0 normal, 1 present."],["A - Arm weakness","0 none, 1 drift, 2 falls or no effort against gravity."],["S - Speech changes","0 none, 1 mild to moderate, 2 severe, global aphasia or mute."],["E - Eye deviation","0 none, 1 partial, 2 forced."],["D - Denial or neglect","0 none, 1 extinction to one side, 2 does not recognize own hand or orients to one side only."]],"pos":"Total 0 to 9. A score of 4 or more suggests an LVO.","pearl":"It reads like FAST with Eyes and Denial added, the two cortical signs that point to a big clot."},{"id":"van","name":"Vision, Aphasia, Neglect (VAN)","short":"VAN","kind":"Severity / LVO scale","tells":"Whether a weak patient also has cortical signs that point to a large vessel occlusion.","items":[["Arm weakness first","Arms up for 10 seconds. If there is no weakness, the patient is VAN negative."],["V - Vision","Field cut, double vision or new blindness."],["A - Aphasia","Cannot speak, cannot follow commands, or uses wrong words."],["N - Neglect","Forced gaze to one side, or ignores one side of the body."]],"pos":"VAN positive = arm weakness PLUS any one of V, A or N.","pearl":"No arm weakness, no VAN. Weakness alone without V, A or N is VAN negative."},{"id":"mend","name":"Miami Emergency Neurologic Deficit (MEND) exam","short":"MEND","kind":"Stroke exam","tells":"A fuller neuro exam that builds on the Cincinnati scale and lines up with the NIHSS the hospital will do.","items":[["Mental status","Level of consciousness, speech, questions (age, month) and commands (open and close eyes)."],["Cranial nerves","Facial droop, visual fields, horizontal gaze."],["Limbs","Arm and leg drift, sensation, coordination (finger to nose, heel to shin)."]],"pos":"Any abnormal finding is a positive exam. It is a checklist, not a point score.","pearl":"MEND contains the three Cincinnati items, so a MEND exam also answers the CPSS."},{"id":"nihss","name":"NIH Stroke Scale (NIHSS)","short":"NIHSS","kind":"Hospital severity scale","tells":"Stroke severity. It is the scale the stroke team uses for treatment decisions, and some flight and critical care teams use it too.","items":[["Level of consciousness","1a alertness, 1b questions (month, age), 1c commands."],["Best gaze and visual fields",""],["Facial palsy",""],["Motor arm and motor leg","Each side scored separately."],["Limb ataxia and sensory",""],["Best language, dysarthria",""],["Extinction and inattention (neglect)",""]],"pos":"0 to 42. 0 no deficit, 1 to 4 minor, 5 to 15 moderate, 16 to 20 moderate to severe, 21 to 42 severe. A score of 6 or more is the usual cutoff for thrombectomy in the 2026 guideline.","pearl":"The 2026 guideline says thrombolysis is for disabling deficits regardless of the NIHSS number, so a low score with a disabling deficit (like isolated aphasia) can still be treated."}];
-var CALLQ = [{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"cpss","q":"Which three findings make up the Cincinnati Prehospital Stroke Scale?","a":"Facial droop, arm drift and abnormal speech","w":["Facial droop, grip strength and gaze deviation","Balance, vision and speech","Arm drift, leg drift and level of consciousness"],"x":"The CPSS checks a smile for facial droop, 10 seconds of arm drift with eyes closed, and repeating a sentence."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"cpss","q":"How many abnormal Cincinnati findings are needed to suspect a stroke?","a":"One","w":["Two","All three","At least two plus a headache"],"x":"Any single abnormal CPSS finding is a positive screen. With one finding the chance of stroke is about 72%; with all three it is over 85%."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"cpss","q":"A positive Cincinnati Prehospital Stroke Scale tells you what?","a":"That this could be a stroke","w":["That there is a large vessel occlusion","That the stroke is hemorrhagic","That the patient qualifies for thrombolysis"],"x":"The CPSS is a screen. It does not measure severity or predict an LVO; a severity scale or the hospital exam does that."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"cpss","q":"How is arm drift tested in the Cincinnati scale?","a":"Eyes closed, both arms out with palms up for 10 seconds","w":["Squeeze both of your hands as hard as possible","Lift each leg off the stretcher for 5 seconds","Touch the finger to the nose with eyes open"],"x":"Closing the eyes removes visual correction, so a weak arm drifts down or pronates."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"befast","q":"What do the B and E in BE-FAST add to FAST?","a":"Balance and eyes, to catch posterior circulation strokes","w":["Breathing and EKG, to catch cardiac causes","Blood glucose and eyes, to rule out mimics","Bleeding and edema, to spot hemorrhagic strokes"],"x":"Strokes in the back of the brain (posterior circulation) often cause imbalance, vertigo or vision loss with a normal face, arm and speech exam."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"befast","q":"A 62-year-old has sudden vertigo, cannot walk straight and has double vision. Face, arms and speech are normal. With BE-FAST this patient is:","a":"Positive, because of the balance and eye findings","w":["Negative, because face, arm and speech are normal","Positive only if a headache is present","Negative until the symptoms last 24 hours"],"x":"Any one sudden BE-FAST finding is positive. This is the posterior stroke picture FAST alone would miss."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"befast","q":"What does the T in BE-FAST stand for?","a":"Time: note the last known well and move quickly","w":["Temperature: rule out sepsis","Tongue: check for deviation","Tone: check for rigidity"],"x":"Every stroke treatment window is measured from the last known well time."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"lapss","q":"Which glucose range is required for a positive LAPSS?","a":"60 to 400 mg/dL","w":["Over 60 mg/dL only","70 to 180 mg/dL","Under 400 mg/dL only"],"x":"LAPSS requires a glucose of 60 to 400 to help screen out hypoglycemia and severe hyperglycemia as mimics."},{"t":"M","lv":"emt","cat":"medical","call":"stroke","scale":"lapss","q":"Which are LAPSS screening criteria? Select all that apply.","opts":[[true,"Age over 45"],[true,"No history of seizures or epilepsy"],[true,"Symptoms present less than 24 hours"],[false,"Systolic blood pressure over 140"],[false,"Sudden severe headache"]],"x":"LAPSS criteria: age over 45, no seizure history, symptoms under 24 hours, not wheelchair-bound or bedridden, glucose 60 to 400, and one-sided weakness of face, grip or arm."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"lapss","q":"A patient has a negative LAPSS but a clear story of sudden one-sided numbness and confusion. What is the best approach?","a":"Treat it as a possible stroke anyway","w":["Document a negative stroke screen and transport routinely","Recheck in 30 minutes before deciding","Obtain a refusal since the screen is negative"],"x":"A negative LAPSS does not rule out stroke. Clinical suspicion wins."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"lams","q":"What is the Los Angeles Motor Scale total that suggests a large vessel occlusion?","a":"4 or more out of 5","w":["2 or more out of 5","3 or more out of 9","5 or more out of 9"],"x":"LAMS scores facial droop 0 to 1, arm drift 0 to 2 and grip 0 to 2. A total of 4 or 5 suggests an LVO."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"lams","q":"Which three items are scored in LAMS?","a":"Facial droop, arm drift and grip strength","w":["Gaze, aphasia and neglect","Facial droop, speech and leg drift","Level of consciousness, gaze and arm drift"],"x":"LAMS is a pure motor scale built from the LAPSS motor items."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"lams","q":"A patient has facial droop, an arm that falls rapidly and no grip on that side. What is the LAMS?","a":"5","w":["3","4","6"],"x":"Facial droop 1 + arm falls rapidly 2 + no grip 2 = 5, which suggests an LVO."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"race","q":"What RACE score suggests a large vessel occlusion?","a":"5 or more","w":["2 or more","4 or more","8 or more"],"x":"RACE runs 0 to 9; a score of 5 or more suggests an LVO."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"race","q":"In RACE, when do you score agnosia instead of aphasia?","a":"When the left side is weak","w":["When the right side is weak","When the patient is unconscious","When both sides are weak"],"x":"Left-sided weakness means a right-brain stroke, which causes neglect or agnosia. Right-sided weakness means a left-brain stroke, which causes aphasia."},{"t":"M","lv":"emt","cat":"medical","call":"stroke","scale":"race","q":"Which items are scored in RACE? Select all that apply.","opts":[[true,"Facial palsy"],[true,"Leg motor"],[true,"Head and gaze deviation"],[false,"Blood glucose"],[false,"Pupil size"]],"x":"RACE scores facial palsy, arm motor, leg motor, head and gaze deviation, and aphasia or agnosia."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"cstat","q":"How many points does conjugate gaze deviation earn on C-STAT?","a":"2","w":["1","3","It is not part of C-STAT"],"x":"Gaze deviation is worth 2 points, so it alone reaches the LVO cutoff of 2."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"cstat","q":"What C-STAT total suggests a large vessel occlusion?","a":"2 or more","w":["1 or more","3 or more","4 only"],"x":"C-STAT runs 0 to 4; 2 or more suggests an LVO."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"cstat","q":"A patient cannot hold the left arm up for 10 seconds, knows their age and the month, and follows commands. Gaze is midline. What is the C-STAT?","a":"1, which is below the LVO cutoff","w":["2, which suggests an LVO","3, which suggests an LVO","0, because the arm is not scored"],"x":"Only arm weakness scores (1 point). The LOC point needs a wrong answer AND a failed command."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"fasted","q":"What FAST-ED score suggests a large vessel occlusion?","a":"4 or more","w":["2 or more","6 or more","9 only"],"x":"FAST-ED runs 0 to 9; 4 or more suggests an LVO."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"fasted","q":"What do the E and D in FAST-ED stand for?","a":"Eye deviation and denial or neglect","w":["EKG and dysarthria","Edema and deficit","Extremity and drift"],"x":"Eye deviation and denial or neglect are cortical signs that point to a large clot."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"fasted","q":"Facial palsy (1), arm falls (2), mild aphasia (1), no eye deviation, no neglect. What is the FAST-ED and what does it suggest?","a":"4, which suggests an LVO","w":["3, which does not suggest an LVO","4, which rules out a stroke","6, which suggests hemorrhage"],"x":"1 + 2 + 1 + 0 + 0 = 4, the LVO cutoff."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"van","q":"What must be present before the rest of the VAN assessment counts?","a":"Arm weakness","w":["Facial droop","Altered mental status","A severe headache"],"x":"VAN starts with arm weakness. No weakness means VAN negative."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"van","q":"A patient has right arm drift and cannot name objects. Vision and attention are normal. The VAN is:","a":"Positive, from weakness plus aphasia","w":["Negative, because vision is normal","Positive only with gaze deviation","Negative, because only one cortical sign is present"],"x":"VAN positive = arm weakness plus any one of vision, aphasia or neglect."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"van","q":"A patient has left arm weakness only. Speech, vision and attention are normal. The VAN is:","a":"Negative","w":["Positive","Indeterminate until a glucose is checked","Positive if the weakness is severe"],"x":"Weakness alone, without a vision, aphasia or neglect finding, is VAN negative."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"mend","q":"What are the three parts of the MEND exam?","a":"Mental status, cranial nerves and limbs","w":["Airway, breathing and circulation","Motor, eyes, neglect and drift","Mood, energy, nutrition and dexterity"],"x":"MEND checks mental status, cranial nerves (face, fields, gaze) and limbs (drift, sensation, coordination)."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"mend","q":"Which scale is built into the MEND exam?","a":"The Cincinnati Prehospital Stroke Scale","w":["The Glasgow Coma Scale","The RACE scale","The Los Angeles Motor Scale"],"x":"MEND includes facial droop, arm drift and speech, so it also answers the CPSS."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"mend","q":"How is the MEND exam scored?","a":"Any abnormal finding is a positive exam","w":["It is scored 0 to 42","A total of 4 or more is positive","Only gaze deviation counts"],"x":"MEND is a checklist rather than a point score."},{"t":"S","lv":"paramedic","cat":"medical","call":"stroke","scale":"nihss","q":"What is the range of the NIH Stroke Scale?","a":"0 to 42","w":["0 to 9","3 to 15","0 to 100"],"x":"NIHSS runs 0 (no deficit) to 42."},{"t":"S","lv":"paramedic","cat":"medical","call":"stroke","scale":"nihss","q":"What NIHSS is the usual minimum for thrombectomy of an anterior LVO?","a":"6","w":["1","10","15"],"x":"The 2026 guideline uses NIHSS 6 or more for anterior LVO thrombectomy (10 or more for basilar occlusion)."},{"t":"S","lv":"paramedic","cat":"medical","call":"stroke","scale":"nihss","q":"A patient has NIHSS 3 from isolated severe aphasia that keeps them from working or communicating. Under the 2026 guideline, are they a thrombolysis candidate within 4.5 hours?","a":"Yes, because the deficit is disabling","w":["No, because the NIHSS is under 6","No, because aphasia is excluded","Only if a perfusion scan is done first"],"x":"Thrombolysis is for disabling deficits regardless of the NIHSS number."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"What is the key difference between a TIA and a stroke?","a":"A TIA leaves no infarct on imaging; a stroke does","w":["A TIA is always under 5 minutes","A TIA only affects speech","A TIA cannot be treated"],"x":"A TIA is a brief blockage without dead tissue. You cannot tell them apart in the field, so active symptoms are treated as a stroke."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"A 70-year-old had 20 minutes of right arm weakness that has fully resolved. Now he wants to stay home. What is the best response?","a":"Explain that stroke risk is highest in the next 48 hours and encourage transport","w":["Agree, since the symptoms resolved","Have him follow up with his doctor next week","Transport only if the blood pressure is high"],"x":"A TIA is a warning sign; urgent evaluation lowers the risk of a disabling stroke."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"A woman went to bed at 22:00 normal and woke at 06:00 with left-sided weakness. What is her last known well?","a":"22:00","w":["06:00","The time EMS arrived","Unknown, so no time is recorded"],"x":"Wake-up stroke: LKW is when she was last seen normal, not when symptoms were found."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"Symptoms started at 13:00, fully resolved at 13:30, then returned at 15:00. What is the last known well?","a":"13:30","w":["13:00","15:00","Unknown"],"x":"A complete return to baseline resets the clock to the time they were last fully normal."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"Symptoms started at 09:00 and partly improved at 09:40 but never fully cleared. What is the last known well?","a":"09:00","w":["09:40","The time of arrival","Unknown"],"x":"Only a full return to baseline resets the clock. Partial improvement does not."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"What is the single most important stroke mimic to rule out in the field?","a":"Hypoglycemia","w":["Bell's palsy","Migraine","Conversion disorder"],"x":"Low glucose can cause any focal deficit and is quickly reversible. Check a glucose on every suspected stroke."},{"t":"M","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"Which are classic stroke mimics? Select all that apply.","opts":[[true,"Postictal (Todd's) paralysis"],[true,"Complex migraine"],[true,"Hypoglycemia"],[false,"Atrial fibrillation"],[false,"Carotid stenosis"]],"x":"Atrial fibrillation and carotid stenosis are stroke causes, not mimics."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"Which finding points to Bell's palsy rather than a stroke?","a":"The forehead on the affected side cannot wrinkle","w":["Arm drift on the same side","Slurred speech","Forced gaze to one side"],"x":"Bell's palsy weakens the whole side of the face, forehead included. A stroke usually spares the forehead."},{"t":"S","lv":"paramedic","cat":"medical","call":"stroke","scale":null,"q":"Why can dropping the blood pressure worsen a swelling ischemic brain?","a":"CPP = MAP - ICP, so a lower MAP with a high ICP cuts perfusion to the penumbra","w":["Lower pressure increases bleeding into the clot","Low pressure raises intracranial pressure directly","It prevents thrombolytics from working"],"x":"Autoregulation is lost around the stroke, so flow follows pressure. Less flow turns penumbra into core and worsens swelling."},{"t":"S","lv":"paramedic","cat":"medical","call":"stroke","scale":null,"q":"What is the penumbra?","a":"Stunned but still living brain around the dead core","w":["The dead core of the infarct","Blood that has leaked into the brain","The swelling seen 3 days after a stroke"],"x":"Saving the penumbra is the whole point of reperfusion and of protecting blood pressure."},{"t":"S","lv":"paramedic","cat":"medical","call":"stroke","scale":null,"q":"In many EMS systems, when is the blood pressure of a suspected ischemic stroke treated in the field?","a":"Only when it is over 220/120 (or per medical control)","w":["Whenever it is over 140/90","Whenever it is over 160/100","Never, under any circumstances"],"x":"Permissive hypertension protects the penumbra. The hospital lowers it to under 185/110 only if thrombolysis is planned."},{"t":"S","lv":"paramedic","cat":"medical","call":"stroke","scale":null,"q":"What blood pressure must be reached before IV thrombolysis for stroke?","a":"Under 185/110","w":["Under 140/90","Under 160/100","Under 220/120"],"x":"After thrombolysis it is kept under 180/105 for 24 hours."},{"t":"S","lv":"paramedic","cat":"medical","call":"stroke","scale":null,"q":"After a successful thrombectomy, what does the 2026 guideline say about lowering systolic BP below 140?","a":"It is harmful and not recommended","w":["It is required for 72 hours","It is optional","It is recommended only for large-core strokes"],"x":"Intensive lowering below 140 after recanalization worsened outcomes in trials."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"Under the 2026 AHA/ASA guideline, what is the standard window for IV thrombolysis for stroke?","a":"Within 4.5 hours of last known well","w":["Within 3 hours of symptom discovery","Within 6 hours of last known well","Within 24 hours of last known well"],"x":"0 to 4.5 hours from LKW for eligible patients with disabling deficits."},{"t":"S","lv":"paramedic","cat":"medical","call":"stroke","scale":null,"q":"A wake-up stroke patient was last seen normal 8 hours ago. Under the 2026 guideline, can thrombolysis still be considered?","a":"Yes, if advanced imaging shows salvageable brain (for example DWI-FLAIR mismatch)","w":["No, the window is 4.5 hours with no exceptions","Yes, with no imaging needed","Only if the NIHSS is over 20"],"x":"Extended-window thrombolysis (about 4.5 to 9 hours or unknown onset) may be considered with imaging selection."},{"t":"S","lv":"paramedic","cat":"pharm","call":"stroke","scale":null,"q":"Which statement about tenecteplase versus alteplase for stroke is correct under the 2026 guideline?","a":"Either may be used within 4.5 hours; tenecteplase is a single IV push","w":["Only alteplase is recommended","Tenecteplase requires a 60-minute infusion","Tenecteplase is only for patients over 80"],"x":"The 2026 guideline endorses both. Tenecteplase's single bolus makes transfers simpler than alteplase's 60-minute infusion."},{"t":"S","lv":"paramedic","cat":"pharm","call":"stroke","scale":null,"q":"Why can tenecteplase be given as one push while alteplase needs an infusion?","a":"Tenecteplase has a longer half-life and more fibrin specificity","w":["Tenecteplase is a smaller dose of the same drug","Alteplase is only absorbed slowly","Tenecteplase does not need to reach the clot"],"x":"Tenecteplase was engineered from alteplase to last longer and bind fibrin more selectively."},{"t":"S","lv":"paramedic","cat":"pharm","call":"stroke","scale":null,"q":"What does the 2026 guideline say about the higher tenecteplase dose used in some trials?","a":"It is not recommended because it did not help and may cause harm","w":["It is preferred for basilar occlusion","It is preferred for patients over 100 kg","It is recommended after 4.5 hours"],"x":"Only the standard stroke dose is recommended."},{"t":"S","lv":"paramedic","cat":"pharm","call":"stroke","scale":null,"q":"A patient has a mild, non-disabling stroke 2 hours after onset. What does the 2026 guideline prefer?","a":"Dual antiplatelet therapy rather than thrombolysis","w":["Thrombolysis regardless of deficit","Thrombectomy","No treatment"],"x":"Thrombolysis has not been shown to help non-disabling deficits; DAPT is preferred."},{"t":"M","lv":"paramedic","cat":"pharm","call":"stroke","scale":null,"q":"Which would make a stroke patient ineligible for IV thrombolysis? Select all that apply.","opts":[[true,"Blood on the CT scan"],[true,"Blood pressure that cannot be brought under 185/110"],[true,"Glucose of 40 mg/dL"],[false,"Age over 80"],[false,"Atrial fibrillation not on an anticoagulant"]],"x":"Age alone and untreated atrial fibrillation are not exclusions. Low glucose must be corrected and reassessed because it may be the cause."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"Which hospitals can perform endovascular thrombectomy?","a":"Comprehensive and Thrombectomy-capable Stroke Centers","w":["Any Primary Stroke Center","Acute Stroke Ready Hospitals","Any emergency department with a CT"],"x":"Primary Stroke Centers and Acute Stroke Ready Hospitals can give thrombolysis but not thrombectomy."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"Which findings most strongly suggest a large vessel occlusion?","a":"Gaze deviation, aphasia or neglect with dense one-sided weakness","w":["Isolated numbness of one hand","Dizziness alone","Mild facial droop only"],"x":"Cortical signs plus dense weakness are the classic LVO picture, which is what the severity scales measure."},{"t":"S","lv":"emt","cat":"ops","call":"stroke","scale":null,"q":"Your severity scale is positive for LVO, LKW was 2 hours ago, and a thrombectomy center is 20 minutes farther than the nearest primary stroke center. Under the AHA Mission: Lifeline routing algorithm, where should most systems go?","a":"The thrombectomy-capable center","w":["The nearest primary stroke center","Whichever hospital the family prefers","Any ED with a CT"],"x":"Suspected LVO goes to a CSC or TSC when the extra time is about 30 minutes or less and thrombolysis eligibility is not lost. Local protocols set exact minutes."},{"t":"S","lv":"emt","cat":"ops","call":"stroke","scale":null,"q":"When does a suspected LVO patient go to the nearest stroke center instead of bypassing to a thrombectomy center?","a":"When the bypass would push a thrombolysis-eligible patient past their window","w":["Whenever the patient is over 80","Whenever the blood pressure is high","When the patient is on aspirin"],"x":"Getting thrombolysis started (drip and ship) can come first when the bypass costs the window."},{"t":"S","lv":"paramedic","cat":"medical","call":"stroke","scale":null,"q":"What is the standard time window for thrombectomy of an anterior LVO without advanced imaging selection?","a":"0 to 6 hours from last known well","w":["0 to 3 hours","0 to 4.5 hours","0 to 48 hours"],"x":"Up to 6 hours is the early window; 6 to 24 hours needs imaging selection."},{"t":"S","lv":"paramedic","cat":"medical","call":"stroke","scale":null,"q":"Up to how long after last known well can selected anterior LVO patients get a thrombectomy?","a":"24 hours","w":["6 hours","12 hours","72 hours"],"x":"From 6 to 24 hours, patients are selected by imaging; the 2026 guideline now includes some large-core strokes."},{"t":"S","lv":"paramedic","cat":"medical","call":"stroke","scale":null,"q":"For basilar artery occlusion, the 2026 guideline supports thrombectomy within 24 hours for patients with which NIHSS?","a":"10 or more","w":["1 or more","6 or more","20 or more"],"x":"Benefit for NIHSS 6 to 9 in basilar occlusion is not well established."},{"t":"S","lv":"emt","cat":"ops","call":"stroke","scale":null,"q":"What is the field scene-time goal for a suspected stroke?","a":"15 minutes or less","w":["30 minutes or less","5 minutes or less","No target; take as long as needed"],"x":"Short scene times and pre-notification shorten door-to-needle and door-to-puncture times."},{"t":"O","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"Put these stroke actions in order, first to last.","opts":["Check the airway, breathing and circulation","Check a blood glucose","Run the stroke screen and severity scale","Pin down the last known well time and a witness phone number","Pre-notify the stroke destination"],"x":"Life threats, then the most common treatable mimic, then the exam, the clock and the call ahead."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"What SpO2 is the usual threshold for giving oxygen to a stroke patient?","a":"Under 94%","w":["Under 98%","Under 90% only in COPD","Oxygen for everyone regardless of SpO2"],"x":"Routine oxygen for a normal saturation does not help stroke outcomes."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"Why should a stroke patient have nothing by mouth?","a":"Swallowing may be impaired and aspiration is common","w":["Food raises blood pressure","Food interferes with CT scans","Eating triggers seizures"],"x":"Dysphagia is common after stroke; the hospital screens the swallow first."},{"t":"S","lv":"emt","cat":"cardio","call":"stemi","scale":null,"q":"How soon after first medical contact should a 12-lead be obtained in suspected ACS?","a":"Within 10 minutes","w":["Within 30 minutes","On arrival at the hospital","Only if the pain is severe"],"x":"Early 12-leads let EMS activate the cath lab from the field."},{"t":"S","lv":"paramedic","cat":"cardio","call":"stemi","scale":null,"q":"What is the ST elevation threshold for V2 and V3 in a woman?","a":"1.5 mm","w":["1 mm","2 mm","2.5 mm"],"x":"In V2-V3: 1.5 mm in women, 2 mm in men 40 and over, 2.5 mm in men under 40. Other leads: 1 mm."},{"t":"S","lv":"paramedic","cat":"cardio","call":"stemi","scale":null,"q":"ST elevation in II, III and aVF points to which territory?","a":"Inferior, usually the right coronary artery","w":["Anterior, the LAD","Lateral, the circumflex","Septal only"],"x":"Inferior STEMI: check right-sided V4R for right ventricular involvement."},{"t":"S","lv":"paramedic","cat":"cardio","call":"stemi","scale":null,"q":"Inferior STEMI with 1 mm ST elevation in V4R and a BP of 92/60. Which drug is most likely to drop the pressure dangerously?","a":"Nitroglycerin","w":["Aspirin","Oxygen","Normal saline"],"x":"Right ventricular infarcts are preload-dependent; nitrates reduce preload and can crash the pressure."},{"t":"S","lv":"paramedic","cat":"cardio","call":"stemi","scale":null,"q":"ST depression in V1 to V3 with tall R waves suggests what?","a":"Posterior MI","w":["Normal variant","Pericarditis","Digoxin effect only"],"x":"Confirm with posterior leads V7 to V9: 0.5 mm of elevation."},{"t":"S","lv":"paramedic","cat":"cardio","call":"stemi","scale":null,"q":"What is the elevation threshold in posterior leads V7 to V9?","a":"0.5 mm","w":["1 mm","2 mm","3 mm"],"x":"Posterior leads are far from the heart, so the cutoff is lower."},{"t":"S","lv":"paramedic","cat":"cardio","call":"stemi","scale":null,"q":"Upsloping ST depression with tall symmetric T waves across V1 to V6 in chest pain suggests what?","a":"De Winter T waves, a proximal LAD occlusion","w":["Hyperkalemia only","Early repolarization","Wellens syndrome"],"x":"De Winter is a STEMI equivalent that deserves cath lab activation per protocol."},{"t":"S","lv":"paramedic","cat":"cardio","call":"stemi","scale":null,"q":"A pain-free patient has deep biphasic T waves in V2 and V3 after chest pain yesterday. What is this, and why does it matter?","a":"Wellens pattern: critical LAD narrowing at risk of closing","w":["Normal variant","A completed old MI","Pericarditis"],"x":"Wellens is not a STEMI, but these patients need urgent cardiology and should not get stress testing."},{"t":"S","lv":"paramedic","cat":"cardio","call":"stemi","scale":null,"q":"Which criteria help find an MI in a patient with left bundle branch block or a paced rhythm?","a":"Sgarbossa (or modified Smith-Sgarbossa)","w":["Wellens criteria","Brugada criteria","Duke criteria"],"x":"Concordant ST elevation of 1 mm or more, concordant ST depression of 1 mm or more in V1 to V3, or excessively discordant elevation."},{"t":"S","lv":"paramedic","cat":"cardio","call":"stemi","scale":null,"q":"ST elevation in aVR with widespread ST depression suggests what?","a":"Left main or multivessel ischemia","w":["A normal ECG","Isolated right ventricular infarct","Early repolarization"],"x":"High-risk pattern; follow your protocol on activation."},{"t":"S","lv":"emt","cat":"cardio","call":"stemi","scale":null,"q":"EMS takes a STEMI patient directly to a PCI-capable center. What is the first-medical-contact-to-device goal?","a":"90 minutes or less","w":["30 minutes or less","120 minutes or less","180 minutes or less"],"x":"Direct transport: FMC to device within 90 minutes."},{"t":"S","lv":"paramedic","cat":"cardio","call":"stemi","scale":null,"q":"When is fibrinolysis chosen over transfer for PCI in STEMI?","a":"When FMC to device would exceed 120 minutes, within 12 hours of onset","w":["Whenever the patient is over 75","Only after a failed PCI","Whenever the pain is under 1 hour"],"x":"If PCI cannot happen within 120 minutes, fibrinolysis (door to needle within 30 minutes) is the alternative."},{"t":"S","lv":"paramedic","cat":"cardio","call":"stemi","scale":null,"q":"What is the door-in-door-out goal at a non-PCI hospital transferring a STEMI?","a":"30 minutes or less","w":["60 minutes or less","90 minutes or less","10 minutes or less"],"x":"DIDO of 30 minutes keeps FMC to device near 120 minutes."},{"t":"S","lv":"emt","cat":"cardio","call":"stemi","scale":null,"q":"When is oxygen indicated in suspected ACS?","a":"SpO2 under 90% or respiratory distress","w":["For every chest pain patient","Only for STEMI","Only if the patient is over 65"],"x":"Extra oxygen does not help a normal saturation."},{"t":"M","lv":"emt","cat":"cardio","call":"stemi","scale":null,"q":"Which findings mean nitroglycerin is held in chest pain? Select all that apply.","opts":[[true,"Systolic BP under 90"],[true,"Sildenafil taken 6 hours ago"],[true,"Right ventricular infarct"],[false,"Heart rate of 88"],[false,"History of high cholesterol"]],"x":"Also held for tadalafil within 48 hours or a pressure 30 below baseline."},{"t":"M","lv":"paramedic","cat":"cardio","call":"stemi","scale":null,"q":"Which are absolute contraindications to fibrinolysis for STEMI? Select all that apply.","opts":[[true,"Any prior intracranial hemorrhage"],[true,"Suspected aortic dissection"],[true,"Ischemic stroke 6 weeks ago"],[false,"Age over 75"],[false,"Blood pressure of 150/90"]],"x":"Age and a controlled BP are not absolute contraindications."},{"t":"S","lv":"emt","cat":"cardio","call":"stemi","scale":null,"q":"Why are defibrillation pads placed early on a STEMI patient?","a":"Ventricular fibrillation is most common in the first hours","w":["To get a better 12-lead","To pace every patient","To monitor blood pressure"],"x":"Early VF is the most common cause of sudden death in STEMI."},{"t":"S","lv":"emt","cat":"medical","call":"sepsis","scale":null,"q":"Which best defines sepsis?","a":"Life-threatening organ dysfunction from the body's response to infection","w":["Any fever over 38 C","Bacteria in the blood","Infection with a fast heart rate"],"x":"Sepsis-3 definition."},{"t":"S","lv":"emt","cat":"medical","call":"sepsis","scale":null,"q":"Which qSOFA finding is NOT one of the three criteria?","a":"Heart rate over 100","w":["Respiratory rate 22 or more","Altered mentation","Systolic BP 100 or less"],"x":"qSOFA is respiratory rate, mentation and systolic BP. The 2021 Surviving Sepsis Campaign advises against using it alone as a screen."},{"t":"S","lv":"paramedic","cat":"medical","call":"sepsis","scale":null,"q":"A low end-tidal CO2 in a suspected sepsis patient often correlates with what?","a":"A high lactate","w":["A low glucose","A high potassium","Normal perfusion"],"x":"EtCO2 of about 25 mmHg or less tracks with elevated lactate and poor perfusion."},{"t":"S","lv":"paramedic","cat":"medical","call":"sepsis","scale":null,"q":"What defines septic shock?","a":"Vasopressors needed for MAP 65 or more and lactate over 2 despite fluids","w":["Any hypotension with fever","Heart rate over 120","Lactate over 1"],"x":"Septic shock carries a much higher mortality than sepsis alone."},{"t":"S","lv":"emt","cat":"medical","call":"sepsis","scale":null,"q":"What is the antibiotic time goal for septic shock?","a":"Within 1 hour of recognition","w":["Within 6 hours","Within 24 hours","After cultures result"],"x":"Each hour of delay raises mortality; a field sepsis alert speeds this up."},{"t":"S","lv":"paramedic","cat":"medical","call":"sepsis","scale":null,"q":"During fluid resuscitation in sepsis, what should be reassessed between boluses?","a":"Lung sounds, breathing and perfusion","w":["Pupil size","Grip strength","Capillary glucose only"],"x":"Fluids help until they cause pulmonary edema; reassess each time."},{"t":"M","lv":"emt","cat":"trauma","call":"trauma","scale":null,"q":"Which are RED criteria in the 2021 field triage guideline? Select all that apply.","opts":[[true,"Suspected pelvic fracture"],[true,"Amputation above the wrist"],[true,"Motor GCS under 6"],[false,"Fall from 8 feet"],[false,"Single closed forearm fracture"]],"x":"Red criteria go to the highest level trauma center."},{"t":"S","lv":"emt","cat":"trauma","call":"trauma","scale":null,"q":"In the 2021 field triage guideline, which vital sign is a red criterion for an adult aged 10 to 64?","a":"Heart rate greater than systolic BP","w":["Heart rate over 100","Systolic BP under 110","SpO2 under 95%"],"x":"For 10 to 64: SBP under 90 or HR greater than SBP. For 65 and over: SBP under 110 or HR greater than SBP."},{"t":"S","lv":"emt","cat":"trauma","call":"trauma","scale":null,"q":"What systolic BP is a red criterion for a patient 65 or older?","a":"Under 110","w":["Under 90","Under 100","Under 80"],"x":"Older adults decompensate at higher pressures."},{"t":"S","lv":"emt","cat":"trauma","call":"trauma","scale":null,"q":"A fall from what height is a yellow (mechanism) criterion for all ages?","a":"Over 10 feet","w":["Over 20 feet","Over 3 feet","Any fall"],"x":"The 2021 guideline uses 10 feet for all ages."},{"t":"S","lv":"emt","cat":"trauma","call":"trauma","scale":null,"q":"What are the parts of the trauma lethal triad?","a":"Hypothermia, acidosis and coagulopathy","w":["Hypoxia, hypotension and hypoglycemia","Bradycardia, hypertension and irregular breathing","Fever, tachycardia and hypotension"],"x":"Each worsens the others; keep trauma patients warm from the start."},{"t":"S","lv":"paramedic","cat":"trauma","call":"trauma","scale":null,"q":"Which patient should NOT get permissive hypotension?","a":"A patient with a traumatic brain injury","w":["A stab wound to the abdomen with no head injury","A gunshot to the torso","A patient with a pelvic fracture and no head injury"],"x":"The injured brain needs a normal blood pressure for perfusion."},{"t":"S","lv":"paramedic","cat":"trauma","call":"trauma","scale":null,"q":"Tranexamic acid for trauma bleeding is not started after how long from injury?","a":"3 hours","w":["1 hour","6 hours","24 hours"],"x":"Benefit is greatest within 1 hour; after 3 hours it may cause harm."},{"t":"S","lv":"emt","cat":"cardio","call":"rosc","scale":null,"q":"After ROSC, what SpO2 range is targeted?","a":"92 to 98%","w":["100%","88 to 92%","Over 85%"],"x":"Hyperoxia after arrest is harmful."},{"t":"S","lv":"paramedic","cat":"cardio","call":"rosc","scale":null,"q":"After ROSC, what end-tidal CO2 range is targeted?","a":"35 to 45 mmHg","w":["20 to 25 mmHg","50 to 60 mmHg","Under 30 mmHg"],"x":"Hyperventilation lowers CO2 and constricts cerebral vessels."},{"t":"S","lv":"paramedic","cat":"cardio","call":"rosc","scale":null,"q":"After ROSC, what blood pressure goals are typical?","a":"Systolic 90 or more and MAP 65 or more","w":["Systolic 140 or more","MAP 50 or more","Any pressure with a pulse"],"x":"Treat hypotension with fluids and vasopressors per protocol."},{"t":"S","lv":"paramedic","cat":"cardio","call":"rosc","scale":null,"q":"During post-ROSC care, the end-tidal CO2 suddenly falls from 38 to 12. What is the most likely cause?","a":"Re-arrest","w":["Improved perfusion","Hyperventilation only","A normal finding"],"x":"Check a pulse and resume CPR if absent."},{"t":"S","lv":"emt","cat":"cardio","call":"rosc","scale":null,"q":"Why is a 12-lead obtained soon after ROSC?","a":"To find a STEMI that needs the cath lab","w":["To check the defibrillator","To measure blood pressure","To confirm the patient's identity"],"x":"Post-arrest STEMI goes to a PCI center."}];
+var CALLQ = [{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"cpss","q":"Which three findings make up the Cincinnati Prehospital Stroke Scale?","a":"Facial droop, arm drift and abnormal speech","w":["Facial droop, grip strength and gaze deviation","Balance, vision and speech","Arm drift, leg drift and level of consciousness"],"x":"The CPSS checks a smile for facial droop, 10 seconds of arm drift with eyes closed, and repeating a sentence."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"cpss","q":"How many abnormal Cincinnati findings are needed to suspect a stroke?","a":"One","w":["Two","All three","At least two plus a headache"],"x":"Any single abnormal CPSS finding is a positive screen. With one finding the chance of stroke is about 72%; with all three it is over 85%."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"cpss","q":"A positive Cincinnati Prehospital Stroke Scale tells you what?","a":"That this could be a stroke","w":["That there is a large vessel occlusion","That the stroke is hemorrhagic","That the patient qualifies for thrombolysis"],"x":"The CPSS is a screen. It does not measure severity or predict an LVO; a severity scale or the hospital exam does that."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"cpss","q":"How is arm drift tested in the Cincinnati scale?","a":"Eyes closed, both arms out with palms up for 10 seconds","w":["Squeeze both of your hands as hard as possible","Lift each leg off the stretcher for 5 seconds","Touch the finger to the nose with eyes open"],"x":"Closing the eyes removes visual correction, so a weak arm drifts down or pronates."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"befast","q":"What do the B and E in BE-FAST add to FAST?","a":"Balance and eyes, to catch posterior circulation strokes","w":["Breathing and EKG, to catch cardiac causes","Blood glucose and eyes, to rule out mimics","Bleeding and edema, to spot hemorrhagic strokes"],"x":"Strokes in the back of the brain (posterior circulation) often cause imbalance, vertigo or vision loss with a normal face, arm and speech exam."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"befast","q":"A 62-year-old has sudden vertigo, cannot walk straight and has double vision. Face, arms and speech are normal. With BE-FAST this patient is:","a":"Positive, because of the balance and eye findings","w":["Negative, because face, arm and speech are normal","Positive only if a headache is present","Negative until the symptoms last 24 hours"],"x":"Any one sudden BE-FAST finding is positive. This is the posterior stroke picture FAST alone would miss."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"befast","q":"What does the T in BE-FAST stand for?","a":"Time: note the last known well and move quickly","w":["Temperature: rule out sepsis","Tongue: check for deviation","Tone: check for rigidity"],"x":"Every stroke treatment window is measured from the last known well time."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"lapss","q":"Which glucose range is required for a positive LAPSS?","a":"60 to 400 mg/dL","w":["Over 60 mg/dL only","70 to 180 mg/dL","Under 400 mg/dL only"],"x":"LAPSS requires a glucose of 60 to 400 to help screen out hypoglycemia and severe hyperglycemia as mimics."},{"t":"M","lv":"emt","cat":"medical","call":"stroke","scale":"lapss","q":"Which are LAPSS screening criteria? Select all that apply.","opts":[[true,"Age over 45"],[true,"No history of seizures or epilepsy"],[true,"Symptoms present less than 24 hours"],[false,"Systolic blood pressure over 140"],[false,"Sudden severe headache"]],"x":"LAPSS criteria: age over 45, no seizure history, symptoms under 24 hours, not wheelchair-bound or bedridden, glucose 60 to 400, and one-sided weakness of face, grip or arm."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"lapss","q":"A patient has a negative LAPSS but a clear story of sudden one-sided numbness and confusion. What is the best approach?","a":"Treat it as a possible stroke anyway","w":["Document a negative stroke screen and transport routinely","Recheck in 30 minutes before deciding","Obtain a refusal since the screen is negative"],"x":"A negative LAPSS does not rule out stroke. Clinical suspicion wins."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"lams","q":"What is the Los Angeles Motor Scale total that suggests a large vessel occlusion?","a":"4 or more out of 5","w":["2 or more out of 5","3 or more out of 9","5 or more out of 9"],"x":"LAMS scores facial droop 0 to 1, arm drift 0 to 2 and grip 0 to 2. A total of 4 or 5 suggests an LVO."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"lams","q":"Which three items are scored in LAMS?","a":"Facial droop, arm drift and grip strength","w":["Gaze, aphasia and neglect","Facial droop, speech and leg drift","Level of consciousness, gaze and arm drift"],"x":"LAMS is a pure motor scale built from the LAPSS motor items."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"lams","q":"A patient has facial droop, an arm that falls rapidly and no grip on that side. What is the LAMS?","a":"5","w":["3","4","6"],"x":"Facial droop 1 + arm falls rapidly 2 + no grip 2 = 5, which suggests an LVO."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"race","q":"What RACE score suggests a large vessel occlusion?","a":"5 or more","w":["2 or more","4 or more","8 or more"],"x":"RACE runs 0 to 9; a score of 5 or more suggests an LVO."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"race","q":"In RACE, when do you score agnosia instead of aphasia?","a":"When the left side is weak","w":["When the right side is weak","When the patient is unconscious","When both sides are weak"],"x":"Left-sided weakness means a right-brain stroke, which causes neglect or agnosia. Right-sided weakness means a left-brain stroke, which causes aphasia."},{"t":"M","lv":"emt","cat":"medical","call":"stroke","scale":"race","q":"Which items are scored in RACE? Select all that apply.","opts":[[true,"Facial palsy"],[true,"Leg motor"],[true,"Head and gaze deviation"],[false,"Blood glucose"],[false,"Pupil size"]],"x":"RACE scores facial palsy, arm motor, leg motor, head and gaze deviation, and aphasia or agnosia."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"cstat","q":"How many points does conjugate gaze deviation earn on C-STAT?","a":"2","w":["1","3","It is not part of C-STAT"],"x":"Gaze deviation is worth 2 points, so it alone reaches the LVO cutoff of 2."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"cstat","q":"What C-STAT total suggests a large vessel occlusion?","a":"2 or more","w":["1 or more","3 or more","4 only"],"x":"C-STAT runs 0 to 4; 2 or more suggests an LVO."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"cstat","q":"A patient cannot hold the left arm up for 10 seconds, knows their age and the month, and follows commands. Gaze is midline. What is the C-STAT?","a":"1, which is below the LVO cutoff","w":["2, which suggests an LVO","3, which suggests an LVO","0, because the arm is not scored"],"x":"Only arm weakness scores (1 point). The LOC point needs a wrong answer AND a failed command."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"fasted","q":"What FAST-ED score suggests a large vessel occlusion?","a":"4 or more","w":["2 or more","6 or more","9 only"],"x":"FAST-ED runs 0 to 9; 4 or more suggests an LVO."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"fasted","q":"What do the E and D in FAST-ED stand for?","a":"Eye deviation and denial or neglect","w":["EKG and dysarthria","Edema and deficit","Extremity and drift"],"x":"Eye deviation and denial or neglect are cortical signs that point to a large clot."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"fasted","q":"Facial palsy (1), arm falls (2), mild aphasia (1), no eye deviation, no neglect. What is the FAST-ED and what does it suggest?","a":"4, which suggests an LVO","w":["3, which does not suggest an LVO","4, which rules out a stroke","6, which suggests hemorrhage"],"x":"1 + 2 + 1 + 0 + 0 = 4, the LVO cutoff."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"van","q":"What must be present before the rest of the VAN assessment counts?","a":"Arm weakness","w":["Facial droop","Altered mental status","A severe headache"],"x":"VAN starts with arm weakness. No weakness means VAN negative."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"van","q":"A patient has right arm drift and cannot name objects. Vision and attention are normal. The VAN is:","a":"Positive, from weakness plus aphasia","w":["Negative, because vision is normal","Positive only with gaze deviation","Negative, because only one cortical sign is present"],"x":"VAN positive = arm weakness plus any one of vision, aphasia or neglect."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"van","q":"A patient has left arm weakness only. Speech, vision and attention are normal. The VAN is:","a":"Negative","w":["Positive","Indeterminate until a glucose is checked","Positive if the weakness is severe"],"x":"Weakness alone, without a vision, aphasia or neglect finding, is VAN negative."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"mend","q":"What are the three parts of the MEND exam?","a":"Mental status, cranial nerves and limbs","w":["Airway, breathing and circulation","Motor, eyes, neglect and drift","Mood, energy, nutrition and dexterity"],"x":"MEND checks mental status, cranial nerves (face, fields, gaze) and limbs (drift, sensation, coordination)."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"mend","q":"Which scale is built into the MEND exam?","a":"The Cincinnati Prehospital Stroke Scale","w":["The Glasgow Coma Scale","The RACE scale","The Los Angeles Motor Scale"],"x":"MEND includes facial droop, arm drift and speech, so it also answers the CPSS."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":"mend","q":"How is the MEND exam scored?","a":"Any abnormal finding is a positive exam","w":["It is scored 0 to 42","A total of 4 or more is positive","Only gaze deviation counts"],"x":"MEND is a checklist rather than a point score."},{"t":"S","lv":"paramedic","cat":"medical","call":"stroke","scale":"nihss","q":"What is the range of the NIH Stroke Scale?","a":"0 to 42","w":["0 to 9","3 to 15","0 to 100"],"x":"NIHSS runs 0 (no deficit) to 42."},{"t":"S","lv":"paramedic","cat":"medical","call":"stroke","scale":"nihss","q":"What NIHSS is the usual minimum for thrombectomy of an anterior LVO?","a":"6","w":["1","10","15"],"x":"The 2026 guideline uses NIHSS 6 or more for anterior LVO thrombectomy (10 or more for basilar occlusion)."},{"t":"S","lv":"paramedic","cat":"medical","call":"stroke","scale":"nihss","q":"A patient has NIHSS 3 from isolated severe aphasia that keeps them from working or communicating. Under the 2026 guideline, are they a thrombolysis candidate within 4.5 hours?","a":"Yes, because the deficit is disabling","w":["No, because the NIHSS is under 6","No, because aphasia is excluded","Only if a perfusion scan is done first"],"x":"Thrombolysis is for disabling deficits regardless of the NIHSS number."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"What is the key difference between a TIA and a stroke?","a":"A TIA leaves no infarct on imaging; a stroke does","w":["A TIA is always under 5 minutes","A TIA only affects speech","A TIA cannot be treated"],"x":"A TIA is a brief blockage without dead tissue. You cannot tell them apart in the field, so active symptoms are treated as a stroke."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"A 70-year-old had 20 minutes of right arm weakness that has fully resolved. Now he wants to refuse transport. What is the best response?","a":"Explain that stroke risk is highest in the next 48 hours and encourage transport","w":["Agree, since the symptoms resolved","Give aspirin and transport non-emergent","Transport only if the blood pressure is high"],"x":"A TIA is a warning sign; urgent evaluation lowers the risk of a disabling stroke."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"A woman went to bed at 22:00 normal and woke at 06:00 with left-sided weakness. What is her last known well?","a":"22:00","w":["06:00","The time EMS arrived","Unknown, so no time is recorded"],"x":"Wake-up stroke: LKW is when she was last seen normal, not when symptoms were found."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"Symptoms started at 13:00, fully resolved at 13:30, then returned at 15:00. What is the last known well?","a":"13:30","w":["13:00","15:00","Unknown"],"x":"A complete return to baseline resets the clock to the time they were last fully normal."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"Symptoms started at 09:00 and partly improved at 09:40 but never fully cleared. What is the last known well?","a":"09:00","w":["09:40","The time of arrival","Unknown"],"x":"Only a full return to baseline resets the clock. Partial improvement does not."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"What is the single most important stroke mimic to rule out in the field?","a":"Hypoglycemia","w":["Bell's palsy","Migraine","Conversion disorder"],"x":"Low glucose can cause any focal deficit and is quickly reversible. Check a glucose on every suspected stroke."},{"t":"M","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"Which are classic stroke mimics? Select all that apply.","opts":[[true,"Postictal (Todd's) paralysis"],[true,"Complex migraine"],[true,"Hypoglycemia"],[false,"Atrial fibrillation"],[false,"Carotid stenosis"]],"x":"Atrial fibrillation and carotid stenosis are stroke causes, not mimics."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"Which finding points to Bell's palsy rather than a stroke?","a":"The forehead on the affected side cannot wrinkle","w":["Arm drift on the same side","Slurred speech","Forced gaze to one side"],"x":"Bell's palsy weakens the whole side of the face, forehead included. A stroke usually spares the forehead."},{"t":"S","lv":"paramedic","cat":"medical","call":"stroke","scale":null,"q":"Why can dropping the blood pressure worsen a swelling ischemic brain?","a":"CPP = MAP - ICP, so a lower MAP with a high ICP cuts perfusion to the penumbra","w":["Lower pressure increases bleeding into the clot","Low pressure raises intracranial pressure directly","It prevents thrombolytics from working"],"x":"Autoregulation is lost around the stroke, so flow follows pressure. Less flow turns penumbra into core and worsens swelling."},{"t":"S","lv":"paramedic","cat":"medical","call":"stroke","scale":null,"q":"What is the penumbra?","a":"Stunned but still living brain around the dead core","w":["The dead core of the infarct","Blood that has leaked into the brain","The swelling seen 3 days after a stroke"],"x":"Saving the penumbra is the whole point of reperfusion and of protecting blood pressure."},{"t":"S","lv":"paramedic","cat":"medical","call":"stroke","scale":null,"q":"In many EMS systems, when is the blood pressure of a suspected ischemic stroke treated in the field?","a":"Only when it is over 220/120 (or per medical control)","w":["Whenever it is over 140/90","Whenever it is over 160/100","Never, under any circumstances"],"x":"Permissive hypertension protects the penumbra. The hospital lowers it to under 185/110 only if thrombolysis is planned."},{"t":"S","lv":"paramedic","cat":"medical","call":"stroke","scale":null,"q":"What blood pressure must be reached before IV thrombolysis for stroke?","a":"Under 185/110","w":["Under 140/90","Under 160/100","Under 220/120"],"x":"After thrombolysis it is kept under 180/105 for 24 hours."},{"t":"S","lv":"paramedic","cat":"medical","call":"stroke","scale":null,"q":"After a successful thrombectomy, what does the 2026 guideline say about lowering systolic BP below 140?","a":"It is harmful and not recommended","w":["It is required for 72 hours","It is optional","It is recommended only for large-core strokes"],"x":"Intensive lowering below 140 after recanalization worsened outcomes in trials."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"Under the 2026 AHA/ASA guideline, what is the standard window for IV thrombolysis for stroke?","a":"Within 4.5 hours of last known well","w":["Within 3 hours of symptom discovery","Within 6 hours of last known well","Within 24 hours of last known well"],"x":"0 to 4.5 hours from LKW for eligible patients with disabling deficits."},{"t":"S","lv":"paramedic","cat":"medical","call":"stroke","scale":null,"q":"A wake-up stroke patient was last seen normal 8 hours ago. Under the 2026 guideline, can thrombolysis still be considered?","a":"Yes, if advanced imaging shows salvageable brain (for example DWI-FLAIR mismatch)","w":["No, the window is 4.5 hours with no exceptions","Yes, with no imaging needed","Only if the NIHSS is over 20"],"x":"Extended-window thrombolysis (about 4.5 to 9 hours or unknown onset) may be considered with imaging selection."},{"t":"S","lv":"paramedic","cat":"pharm","call":"stroke","scale":null,"q":"Which statement about tenecteplase versus alteplase for stroke is correct under the 2026 guideline?","a":"Either may be used within 4.5 hours; tenecteplase is a single IV push","w":["Only alteplase is recommended","Tenecteplase requires a 60-minute infusion","Tenecteplase is only for patients over 80"],"x":"The 2026 guideline endorses both. Tenecteplase's single bolus makes transfers simpler than alteplase's 60-minute infusion."},{"t":"S","lv":"paramedic","cat":"pharm","call":"stroke","scale":null,"q":"Why can tenecteplase be given as one push while alteplase needs an infusion?","a":"Tenecteplase has a longer half-life and more fibrin specificity","w":["Tenecteplase is a smaller dose of the same drug","Alteplase is only absorbed slowly","Tenecteplase does not need to reach the clot"],"x":"Tenecteplase was engineered from alteplase to last longer and bind fibrin more selectively."},{"t":"S","lv":"paramedic","cat":"pharm","call":"stroke","scale":null,"q":"What does the 2026 guideline say about the higher tenecteplase dose used in some trials?","a":"It is not recommended because it did not help and may cause harm","w":["It is preferred for basilar occlusion","It is preferred for patients over 100 kg","It is recommended after 4.5 hours"],"x":"Only the standard stroke dose is recommended."},{"t":"S","lv":"paramedic","cat":"pharm","call":"stroke","scale":null,"q":"A patient has a mild, non-disabling stroke 2 hours after onset. What does the 2026 guideline prefer?","a":"Dual antiplatelet therapy rather than thrombolysis","w":["Thrombolysis regardless of deficit","Thrombectomy","No treatment"],"x":"Thrombolysis has not been shown to help non-disabling deficits; DAPT is preferred."},{"t":"M","lv":"paramedic","cat":"pharm","call":"stroke","scale":null,"q":"Which would make a stroke patient ineligible for IV thrombolysis? Select all that apply.","opts":[[true,"Blood on the CT scan"],[true,"Blood pressure that cannot be brought under 185/110"],[true,"Glucose of 40 mg/dL"],[false,"Age over 80"],[false,"Atrial fibrillation not on an anticoagulant"]],"x":"Age alone and untreated atrial fibrillation are not exclusions. Low glucose must be corrected and reassessed because it may be the cause."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"Which hospitals can perform endovascular thrombectomy?","a":"Comprehensive and Thrombectomy-capable Stroke Centers","w":["Any Primary Stroke Center","Acute Stroke Ready Hospitals","Any emergency department with a CT"],"x":"Primary Stroke Centers and Acute Stroke Ready Hospitals can give thrombolysis but not thrombectomy."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"Which findings most strongly suggest a large vessel occlusion?","a":"Gaze deviation, aphasia or neglect with dense one-sided weakness","w":["Isolated numbness of one hand","Dizziness alone","Mild facial droop only"],"x":"Cortical signs plus dense weakness are the classic LVO picture, which is what the severity scales measure."},{"t":"S","lv":"emt","cat":"ops","call":"stroke","scale":null,"q":"Your severity scale is positive for LVO, LKW was 2 hours ago, and a thrombectomy center is 20 minutes farther than the nearest primary stroke center. Under the AHA Mission: Lifeline routing algorithm, where should most systems go?","a":"The thrombectomy-capable center","w":["The nearest primary stroke center","Whichever hospital the family prefers","Any ED with a CT"],"x":"Suspected LVO goes to a CSC or TSC when the extra time is about 30 minutes or less and thrombolysis eligibility is not lost. Local protocols set exact minutes."},{"t":"S","lv":"emt","cat":"ops","call":"stroke","scale":null,"q":"When does a suspected LVO patient go to the nearest stroke center instead of bypassing to a thrombectomy center?","a":"When the bypass would push a thrombolysis-eligible patient past their window","w":["Whenever the patient is over 80","Whenever the blood pressure is high","When the patient is on aspirin"],"x":"Getting thrombolysis started (drip and ship) can come first when the bypass costs the window."},{"t":"S","lv":"paramedic","cat":"medical","call":"stroke","scale":null,"q":"What is the standard time window for thrombectomy of an anterior LVO without advanced imaging selection?","a":"0 to 6 hours from last known well","w":["0 to 3 hours","0 to 4.5 hours","0 to 48 hours"],"x":"Up to 6 hours is the early window; 6 to 24 hours needs imaging selection."},{"t":"S","lv":"paramedic","cat":"medical","call":"stroke","scale":null,"q":"Up to how long after last known well can selected anterior LVO patients get a thrombectomy?","a":"24 hours","w":["6 hours","12 hours","72 hours"],"x":"From 6 to 24 hours, patients are selected by imaging; the 2026 guideline now includes some large-core strokes."},{"t":"S","lv":"paramedic","cat":"medical","call":"stroke","scale":null,"q":"For basilar artery occlusion, the 2026 guideline supports thrombectomy within 24 hours for patients with which NIHSS?","a":"10 or more","w":["1 or more","6 or more","20 or more"],"x":"Benefit for NIHSS 6 to 9 in basilar occlusion is not well established."},{"t":"S","lv":"emt","cat":"ops","call":"stroke","scale":null,"q":"What is the field scene-time goal for a suspected stroke?","a":"15 minutes or less","w":["30 minutes or less","5 minutes or less","No target; take as long as needed"],"x":"Short scene times and pre-notification shorten door-to-needle and door-to-puncture times."},{"t":"O","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"Put these stroke actions in order, first to last.","opts":["Check the airway, breathing and circulation","Check a blood glucose","Run the stroke screen and severity scale","Pin down the last known well time and a witness phone number","Pre-notify the stroke destination"],"x":"Life threats, then the most common treatable mimic, then the exam, the clock and the call ahead."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"What SpO2 is the usual threshold for giving oxygen to a stroke patient?","a":"Under 94%","w":["Under 98%","Under 90% only in COPD","Oxygen for everyone regardless of SpO2"],"x":"Routine oxygen for a normal saturation does not help stroke outcomes."},{"t":"S","lv":"emt","cat":"medical","call":"stroke","scale":null,"q":"Why should a stroke patient have nothing by mouth?","a":"Swallowing may be impaired and aspiration is common","w":["Food raises blood pressure","Food interferes with CT scans","Eating triggers seizures"],"x":"Dysphagia is common after stroke; the hospital screens the swallow first."},{"t":"S","lv":"emt","cat":"cardio","call":"stemi","scale":null,"q":"How soon after first medical contact should a 12-lead be obtained in suspected ACS?","a":"Within 10 minutes","w":["Within 30 minutes","On arrival at the hospital","Only if the pain is severe"],"x":"Early 12-leads let EMS activate the cath lab from the field."},{"t":"S","lv":"paramedic","cat":"cardio","call":"stemi","scale":null,"q":"What is the ST elevation threshold for V2 and V3 in a woman?","a":"1.5 mm","w":["1 mm","2 mm","2.5 mm"],"x":"In V2-V3: 1.5 mm in women, 2 mm in men 40 and over, 2.5 mm in men under 40. Other leads: 1 mm."},{"t":"S","lv":"paramedic","cat":"cardio","call":"stemi","scale":null,"q":"ST elevation in II, III and aVF points to which territory?","a":"Inferior, usually the right coronary artery","w":["Anterior, the LAD","Lateral, the circumflex","Septal only"],"x":"Inferior STEMI: check right-sided V4R for right ventricular involvement."},{"t":"S","lv":"paramedic","cat":"cardio","call":"stemi","scale":null,"q":"Inferior STEMI with 1 mm ST elevation in V4R and a BP of 92/60. Which drug is most likely to drop the pressure dangerously?","a":"Nitroglycerin","w":["Aspirin","Oxygen","Normal saline"],"x":"Right ventricular infarcts are preload-dependent; nitrates reduce preload and can crash the pressure."},{"t":"S","lv":"paramedic","cat":"cardio","call":"stemi","scale":null,"q":"ST depression in V1 to V3 with tall R waves suggests what?","a":"Posterior MI","w":["Normal variant","Pericarditis","Digoxin effect only"],"x":"Confirm with posterior leads V7 to V9: 0.5 mm of elevation."},{"t":"S","lv":"paramedic","cat":"cardio","call":"stemi","scale":null,"q":"What is the elevation threshold in posterior leads V7 to V9?","a":"0.5 mm","w":["1 mm","2 mm","3 mm"],"x":"Posterior leads are far from the heart, so the cutoff is lower."},{"t":"S","lv":"paramedic","cat":"cardio","call":"stemi","scale":null,"q":"Upsloping ST depression with tall symmetric T waves across V1 to V6 in chest pain suggests what?","a":"De Winter T waves, a proximal LAD occlusion","w":["Hyperkalemia only","Early repolarization","Wellens syndrome"],"x":"De Winter is a STEMI equivalent that deserves cath lab activation per protocol."},{"t":"S","lv":"paramedic","cat":"cardio","call":"stemi","scale":null,"q":"A pain-free patient has deep biphasic T waves in V2 and V3 after chest pain yesterday. What is this, and why does it matter?","a":"Wellens pattern: critical LAD narrowing at risk of closing","w":["Normal variant","A completed old MI","Pericarditis"],"x":"Wellens is not a STEMI, but these patients need urgent cardiology and should not get stress testing."},{"t":"S","lv":"paramedic","cat":"cardio","call":"stemi","scale":null,"q":"Which criteria help find an MI in a patient with left bundle branch block or a paced rhythm?","a":"Sgarbossa (or modified Smith-Sgarbossa)","w":["Wellens criteria","Brugada criteria","Duke criteria"],"x":"Concordant ST elevation of 1 mm or more, concordant ST depression of 1 mm or more in V1 to V3, or excessively discordant elevation."},{"t":"S","lv":"paramedic","cat":"cardio","call":"stemi","scale":null,"q":"ST elevation in aVR with widespread ST depression suggests what?","a":"Left main or multivessel ischemia","w":["A normal ECG","Isolated right ventricular infarct","Early repolarization"],"x":"High-risk pattern; follow your protocol on activation."},{"t":"S","lv":"emt","cat":"cardio","call":"stemi","scale":null,"q":"EMS takes a STEMI patient directly to a PCI-capable center. What is the first-medical-contact-to-device goal?","a":"90 minutes or less","w":["30 minutes or less","120 minutes or less","180 minutes or less"],"x":"Direct transport: FMC to device within 90 minutes."},{"t":"S","lv":"paramedic","cat":"cardio","call":"stemi","scale":null,"q":"When is fibrinolysis chosen over transfer for PCI in STEMI?","a":"When FMC to device would exceed 120 minutes, within 12 hours of onset","w":["Whenever the patient is over 75","Only after a failed PCI","Whenever the pain is under 1 hour"],"x":"If PCI cannot happen within 120 minutes, fibrinolysis (door to needle within 30 minutes) is the alternative."},{"t":"S","lv":"paramedic","cat":"cardio","call":"stemi","scale":null,"q":"What is the door-in-door-out goal at a non-PCI hospital transferring a STEMI?","a":"30 minutes or less","w":["60 minutes or less","90 minutes or less","10 minutes or less"],"x":"DIDO of 30 minutes keeps FMC to device near 120 minutes."},{"t":"S","lv":"emt","cat":"cardio","call":"stemi","scale":null,"q":"When is oxygen indicated in suspected ACS?","a":"SpO2 under 90% or respiratory distress","w":["For every chest pain patient","Only for STEMI","Only if the patient is over 65"],"x":"Extra oxygen does not help a normal saturation."},{"t":"M","lv":"emt","cat":"cardio","call":"stemi","scale":null,"q":"Which findings mean nitroglycerin is held in chest pain? Select all that apply.","opts":[[true,"Systolic BP under 90"],[true,"Sildenafil taken 6 hours ago"],[true,"Right ventricular infarct"],[false,"Heart rate of 88"],[false,"History of high cholesterol"]],"x":"Also held for tadalafil within 48 hours or a pressure 30 below baseline."},{"t":"M","lv":"paramedic","cat":"cardio","call":"stemi","scale":null,"q":"Which are absolute contraindications to fibrinolysis for STEMI? Select all that apply.","opts":[[true,"Any prior intracranial hemorrhage"],[true,"Suspected aortic dissection"],[true,"Ischemic stroke 6 weeks ago"],[false,"Age over 75"],[false,"Blood pressure of 150/90"]],"x":"Age and a controlled BP are not absolute contraindications."},{"t":"S","lv":"emt","cat":"cardio","call":"stemi","scale":null,"q":"Why are defibrillation pads placed early on a STEMI patient?","a":"Ventricular fibrillation is most common in the first hours","w":["To get a better 12-lead","To pace every patient","To monitor blood pressure"],"x":"Early VF is the most common cause of sudden death in STEMI."},{"t":"S","lv":"emt","cat":"medical","call":"sepsis","scale":null,"q":"Which best defines sepsis?","a":"Life-threatening organ dysfunction from the body's response to infection","w":["Any fever over 38 C","Bacteria in the blood","Infection with a fast heart rate"],"x":"Sepsis-3 definition."},{"t":"S","lv":"emt","cat":"medical","call":"sepsis","scale":null,"q":"Which qSOFA finding is NOT one of the three criteria?","a":"Heart rate over 100","w":["Respiratory rate 22 or more","Altered mentation","Systolic BP 100 or less"],"x":"qSOFA is respiratory rate, mentation and systolic BP. The 2021 Surviving Sepsis Campaign advises against using it alone as a screen."},{"t":"S","lv":"paramedic","cat":"medical","call":"sepsis","scale":null,"q":"A low end-tidal CO2 in a suspected sepsis patient often correlates with what?","a":"A high lactate","w":["A low glucose","A high potassium","Normal perfusion"],"x":"EtCO2 of about 25 mmHg or less tracks with elevated lactate and poor perfusion."},{"t":"S","lv":"paramedic","cat":"medical","call":"sepsis","scale":null,"q":"What defines septic shock?","a":"Sepsis with hypotension that still needs a vasopressor after adequate fluids","w":["Any hypotension with fever","Heart rate over 120","A temperature over 39 C (102.2 F)"],"x":"Septic shock carries a much higher mortality than sepsis alone."},{"t":"S","lv":"emt","cat":"medical","call":"sepsis","scale":null,"q":"What is the antibiotic time goal for septic shock?","a":"Within 1 hour of recognition","w":["Within 6 hours","Within 24 hours","After cultures result"],"x":"Each hour of delay raises mortality; a field sepsis alert speeds this up."},{"t":"S","lv":"paramedic","cat":"medical","call":"sepsis","scale":null,"q":"During fluid resuscitation in sepsis, what should be reassessed between boluses?","a":"Lung sounds, breathing and perfusion","w":["Pupil size","Grip strength","Capillary glucose only"],"x":"Fluids help until they cause pulmonary edema; reassess each time."},{"t":"M","lv":"emt","cat":"trauma","call":"trauma","scale":null,"q":"Which are RED criteria in the 2021 field triage guideline? Select all that apply.","opts":[[true,"Suspected pelvic fracture"],[true,"Amputation above the wrist"],[true,"Motor GCS under 6"],[false,"Fall from 8 feet"],[false,"Single closed forearm fracture"]],"x":"Red criteria go to the highest level trauma center."},{"t":"S","lv":"emt","cat":"trauma","call":"trauma","scale":null,"q":"In the 2021 field triage guideline, which vital sign is a red criterion for an adult aged 10 to 64?","a":"Heart rate greater than systolic BP","w":["Heart rate over 100","Systolic BP under 110","SpO2 under 95%"],"x":"For 10 to 64: SBP under 90 or HR greater than SBP. For 65 and over: SBP under 110 or HR greater than SBP."},{"t":"S","lv":"emt","cat":"trauma","call":"trauma","scale":null,"q":"What systolic BP is a red criterion for a patient 65 or older?","a":"Under 110","w":["Under 90","Under 100","Under 80"],"x":"Older adults decompensate at higher pressures."},{"t":"S","lv":"emt","cat":"trauma","call":"trauma","scale":null,"q":"A fall from what height is a yellow (mechanism) criterion for all ages?","a":"Over 10 feet","w":["Over 20 feet","Over 3 feet","Any fall"],"x":"The 2021 guideline uses 10 feet for all ages."},{"t":"S","lv":"emt","cat":"trauma","call":"trauma","scale":null,"q":"What are the parts of the trauma lethal triad?","a":"Hypothermia, acidosis and coagulopathy","w":["Hypoxia, hypotension and hypoglycemia","Bradycardia, hypertension and irregular breathing","Fever, tachycardia and hypotension"],"x":"Each worsens the others; keep trauma patients warm from the start."},{"t":"S","lv":"paramedic","cat":"trauma","call":"trauma","scale":null,"q":"Which patient should NOT get permissive hypotension?","a":"A patient with a traumatic brain injury","w":["A stab wound to the abdomen with no head injury","A gunshot to the torso","A patient with a pelvic fracture and no head injury"],"x":"The injured brain needs a normal blood pressure for perfusion."},{"t":"S","lv":"paramedic","cat":"trauma","call":"trauma","scale":null,"q":"Tranexamic acid for trauma bleeding is not started after how long from injury?","a":"3 hours","w":["1 hour","6 hours","24 hours"],"x":"Benefit is greatest within 1 hour; after 3 hours it may cause harm."},{"t":"S","lv":"emt","cat":"cardio","call":"rosc","scale":null,"q":"After ROSC, what SpO2 range is targeted?","a":"92 to 98%","w":["100%","88 to 92%","Over 85%"],"x":"Hyperoxia after arrest is harmful."},{"t":"S","lv":"paramedic","cat":"cardio","call":"rosc","scale":null,"q":"After ROSC, what end-tidal CO2 range is targeted?","a":"35 to 45 mmHg","w":["20 to 25 mmHg","50 to 60 mmHg","Under 30 mmHg"],"x":"Hyperventilation lowers CO2 and constricts cerebral vessels."},{"t":"S","lv":"paramedic","cat":"cardio","call":"rosc","scale":null,"q":"After ROSC, what blood pressure goals are typical?","a":"Systolic 90 or more and MAP 65 or more","w":["Systolic 140 or more","MAP 50 or more","Any pressure with a pulse"],"x":"Treat hypotension with fluids and vasopressors per protocol."},{"t":"S","lv":"paramedic","cat":"cardio","call":"rosc","scale":null,"q":"During post-ROSC care, the end-tidal CO2 suddenly falls from 38 to 12. What is the most likely cause?","a":"Re-arrest","w":["Improved perfusion","Hyperventilation only","A normal finding"],"x":"Check a pulse and resume CPR if absent."},{"t":"S","lv":"emt","cat":"cardio","call":"rosc","scale":null,"q":"Why is a 12-lead obtained soon after ROSC?","a":"To find a STEMI that needs the cath lab","w":["To check the defibrillator","To measure blood pressure","To confirm the patient's identity"],"x":"Post-arrest STEMI goes to a PCI center."}];
+ICO.rush = '<path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/>';
 ICO.calls = '<path d="M3 12h4l2-5 4 10 2-5h6"/><circle cx="12" cy="12" r="10" stroke-opacity=".35"/>';
 (function () {
   if (typeof DB === "undefined") return;
@@ -30082,7 +30493,7 @@ function iapWebCheckout(p) {
     return fetch(base.replace(/\/$/, "") + "/createCheckout", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: "Bearer " + tok },
-      body: JSON.stringify({ data: { pack: p.id } })
+      body: JSON.stringify({ data: { pack: p.id, ref: affRef() } })
     });
   }).then(function (r) { return r.json(); }).then(function (j) {
     var url = j && j.result && j.result.url;
@@ -30603,8 +31014,14 @@ function giftFind(code) {
 function giftPro() { var g = Prog.d.proGift; return g && g.until > Date.now() ? g : null; }
 function giftProDays() { var g = giftPro(); return g ? Math.ceil((g.until - Date.now()) / 864e5) : 0; }
 
+/* codes need a real account (owner, Nov 14 2026: an evaluator redeemed his code as a guest, so his Pro
+   stayed on that browser and never reached his account or his phone). Guests are asked to make an account
+   or sign in first; the server refuses guest redemptions too (codes.js codeRedeem, groups.js groupRedeem). */
+function codeAcctOk() { try { var s = ACCT && ACCT.api && ACCT.api.state ? ACCT.api.state() : null; return !!(s && s.signedIn); } catch (e) { return false; } }
+var CODE_NEEDS_ACCT = "Make a free account (or sign in) first, then enter your code. That way what it unlocks stays with you on every device, including your phone.";
 function giftRedeem(code) {
   GIFT.msg = ""; GIFT.ok = ""; GIFT.web = "";
+  if (!(typeof NATIVE !== "undefined" && NATIVE) && !codeAcctOk()) { GIFT.msg = CODE_NEEDS_ACCT; return giftDraw(); }
   /* App Store 3.1.1 (review Nov 11 2026): the iPhone app redeems no codes except Apple's own offer codes */
   if (typeof NATIVE !== "undefined" && NATIVE) { GIFT.msg = "The iPhone app only takes App Store offer codes."; return giftDraw(); }
   if (agpNorm(code).length < 4) { GIFT.msg = "Enter the code you were given."; return giftDraw(); }
@@ -30910,6 +31327,15 @@ function stxMView() {
   if ((ex.redeemed || []).length) c += '<h4 class="sxsub">Redeemed lately</h4><div class="sxrows">' + ex.redeemed.slice(0, 12).map(function (r) { return '<div class="sxrow"><span class="n">' + esc(r.code) + (r.label ? ' <small>' + esc(r.label) + '</small>' : '') + '</span><span class="m">' + stxAgo(r.at) + '</span></div>'; }).join("") + '</div>';
   if ((ou.due || []).length) c += '<h4 class="sxsub">Follow up with</h4><div class="sxrows">' + ou.due.slice(0, 15).map(function (r) { return '<div class="sxrow"><span class="n">' + esc(r.name) + (r.who ? ' <small>' + esc(r.who) + '</small>' : '') + '</span><span class="m">' + esc(r.status === "followup" ? "follow up" : r.status) + (r.days != null ? ' · ' + r.days + 'd' : '') + '</span></div>'; }).join("") + '</div>';
   c += '</section>';
+  /* seat requests and app errors (owner, Nov 13 2026) */
+  if ((ex.seatRequests || []).length) c += '<section class="sxcard"><h3>Seat requests</h3><div class="sxrows">' + ex.seatRequests.slice(0, 15).map(function (r) { return '<div class="sxrow"><span class="n">' + esc(r.org || r.orgId) + ' <small>' + esc(r.from || "") + (r.note ? ' · ' + esc(r.note) : '') + '</small></span><span class="m">' + r.have + ' &rarr; <b>' + r.want + '</b> · ' + stxAgo(r.at) + '</span></div>'; }).join("") + '</div><p class="muted small">Raise their seats on the admin page (open the class, Seats). The request clears when you do.</p></section>';
+  if (ex.errors) {
+    var er = ex.errors, tot = er.reduce(function (a, e) { return a + (e.n || 0); }, 0);
+    c += '<section class="sxcard"><h3>App errors, last 7 days</h3>' + (er.length ? '<p class="muted small">' + er.length + ' different error' + (er.length === 1 ? '' : 's') + ', ' + tot + ' time' + (tot === 1 ? '' : 's') + ' in all. Newest first. Send me any that keep growing.</p><div class="sxrows">' + er.slice(0, 15).map(function (e) {
+      var pl = Object.keys(e.plat || {}).join(", "), vw = Object.keys(e.views || {}).slice(0, 3).join(", ");
+      return '<div class="sxrow"><span class="n">' + esc(e.m) + ' <small>' + esc((e.src || "").split("/").pop() + (e.line ? ":" + e.line : "")) + (vw ? ' · on ' + esc(vw) : '') + (pl ? ' · ' + esc(pl) : '') + '</small></span><span class="m"><b>' + (e.n || 0) + '×</b> · ' + stxAgo(e.last) + '</span></div>';
+    }).join("") + '</div>' : '<p class="muted small">No errors reported. Nice.</p>') + '</section>';
+  }
   if (!NATIVE) c += '<p class="small"><a href="/admin/" target="_blank" rel="noopener">Open the full admin page</a></p>';
   return c;
 }
@@ -31056,6 +31482,7 @@ function codeOther(raw) {
   }).catch(function () { fail("Could not check that code right now. Try again in a moment."); });
 }
 function giftBox() {
+  if (!(typeof NATIVE !== "undefined" && NATIVE) && !codeAcctOk()) return '<div class="giftbox" id="giftbox"><p class="small"><strong>Codes need a free account.</strong> Make one (or sign in) first, then enter your code here. What it unlocks then stays with you on every device, including your phone.</p><button class="btn small" data-acc="nudgego">Make an account or sign in</button></div>';
   return '<div class="giftbox" id="giftbox">' +
     (GIFT.ok ? '<p class="presult good" role="status">' + esc(GIFT.ok) + '</p>' : '') +
     (GIFT.msg ? '<p class="presult" role="status">' + esc(GIFT.msg) + '</p>' : '') + giftWebBox() +
@@ -31409,6 +31836,7 @@ function groupKeyShape(raw) { return /^DB[A-Z0-9]{8,12}$/.test(String(raw || "")
    students and staff, which App Store Guideline 3.1.3(c) (Enterprise Services) allows outside in-app purchase.
    agreed = the student ticked the consent box on the join form (WKWebView has no confirm() dialog). */
 function groupRedeemKey(raw, win, fail, agreed) {
+  if (!(typeof NATIVE !== "undefined" && NATIVE) && typeof codeAcctOk === "function" && !codeAcctOk()) return fail(CODE_NEEDS_ACCT);
   var where0 = agreed === true ? "form" : "code";
   /* a class key only works if the student agrees to share class results (owner, Nov 12 2026) */
   var ok = agreed === true;
@@ -31855,7 +32283,7 @@ function dashView() {
   var R = me ? me.row : null, ans = R ? Math.max(R.answered, L.answered) : L.answered, acc = R && R.accuracy != null ? Math.round(R.accuracy) : L.acc, wk = R ? R.week : L.week;
   c += '<div class="dtiles">' + (cls && clBoardOn() ? tile(me ? "#" + me.rank + " of " + me.of : "—", "rank this week") : "") + tile(ans.toLocaleString(), "questions answered") + tile(acc == null ? "—" : acc + "%", "accuracy") + tile(wk, "answered this week") + tile(L.streak, "day streak") + '</div>';
   var max = Math.max.apply(null, L.days.map(function (d) { return d[1]; }).concat([1]));
-  c += '<div class="dcard2"><h3>Last 14 days</h3><div class="dbars">' + L.days.map(function (d) { var h = Math.round(100 * d[1] / max); return '<div class="dbar" title="' + esc(d[0].toLocaleDateString() + ": " + d[1] + " answered") + '"><i style="height:' + Math.max(d[1] ? 4 : 0, h) + '%"></i><span>' + (d[0].getMonth() + 1) + "/" + d[0].getDate() + '</span></div>'; }).join("") + '</div></div>';
+  c += '<div class="dcard2"><h3>Last 14 days</h3><div class="dbars">' + L.days.map(function (d) { var h = Math.round(100 * d[1] / max); return '<div class="dbar" title="' + esc(d[0].toLocaleDateString() + ": " + d[1] + " answered") + '"><em><i style="height:' + Math.max(d[1] ? 4 : 0, h) + '%"></i></em><span>' + (d[0].getMonth() + 1) + "/" + d[0].getDate() + '</span></div>'; }).join("") + '</div></div>';
   c += '<div class="dcard2"><h3>Your scores</h3>' + clMine(L.n ? L.m : null) + '</div>';
   if (cls) {
     c += '<div class="dcard2" id="dashclass"><h3>' + esc(SEAT.orgName || "Your class") + '</h3><p class="muted small">You are <strong>' + esc(SEAT.alias) + '</strong> · Pro until ' + esc(new Date(SEAT.until).toLocaleDateString()) + '</p>';
@@ -32222,6 +32650,9 @@ function subCall(name, data) {
     return url;
   });
 }
+/* Endorsely affiliate referral (owner, Nov 13 2026: 30% for 12 months, website purchases only). endorsely.js
+   sets window.endorsely_referral when someone arrives from a creator's link; checkout passes it to Stripe. */
+function affRef() { try { var r = String(window.endorsely_referral || ""); return /^[0-9a-f-]{20,40}$/i.test(r) ? r : ""; } catch (e) { return ""; } }
 function subBuy(plan) {
   /* Say which thing is wrong, not "something is wrong". Each of these is a different problem with a
      different fix, and telling someone the wrong one wastes their time. */
@@ -32232,7 +32663,7 @@ function subBuy(plan) {
   PRO.busy = true; PRO.msg = ""; drawPaywall();
   clearTimeout(PRO.busyT);
   PRO.busyT = setTimeout(function () { if (PRO.busy) { PRO.busy = false; PRO.msg = "No answer yet. Try again in a moment."; drawPaywall(); } }, 30000);
-  subCall("createSubCheckout", { plan: plan }).then(function (url) {
+  subCall("createSubCheckout", { plan: plan, ref: affRef() }).then(function (url) {
     location.href = url;
   }).catch(function (e) {
     PRO.busy = false; clearTimeout(PRO.busyT);
@@ -32789,5 +33220,469 @@ if (!h) {
 render();
 /* Control Center edits baked into the build (tools/bake_edits.py) so the iPhone app has them without a database */
 if (DB.BAKED) { try { (DB.BAKED.drugdex || []).forEach(applyRecord); CR_TYPES.forEach(function (t) { if (t[0] !== "drug") crItems(t[0]); }); (DB.BAKED.content || []).forEach(applyContent); } catch (e) { } }
+/* ---------- Bug turntable (owner, Nov 13 2026): "build an engine with a turntable with the bug you click on. Make it
+   slowly rotate in front of you with dark in the back and a glow underneath. The bug needs to be 3d."
+   Plus (same day) "on the side it gives a bio about this particular bug".
+   Every bug in BUGS is built as a real 3D model from its body type, colours, horn and accessories
+   (B3build), then drawn with WebGL on a slowly turning stand: key light in front, a coloured rim light
+   behind it, a dark stage and a glow under the stand. Drag to spin it; it eases back to its slow turn.
+   Opens from a Bug Store card, the "Your bug" picture in the Terrarium, or a long press on a terrarium
+   bubble. No WebGL: the flat drawing sways on the same stage instead. */
+var B3 = { gl: null, cv: null, prog: null, geo: {}, parts: [], ang: 0, vel: 0, drag: null, raf: 0, last: 0, t: 0, open: false, still: false, glow: [1, .8, .3], ro: null };
+var B3_FACT = {
+  beetle: "Beetles are the largest group of insects. Scientists have named about 400,000 kinds.",
+  scarab: "Ancient Egyptians linked the scarab beetle with the rising sun.",
+  stag: "Male stag beetles use their huge jaws to wrestle rivals, a bit like stags with antlers.",
+  hercules: "Hercules beetles are among the longest beetles in the world, horn included.",
+  rhino: "Rhinoceros beetles are famous for lifting loads many times their own weight.",
+  longhorn: "Some longhorn beetles have antennae longer than their whole body.",
+  dung: "Some dung beetles steer by the Milky Way when they roll their balls at night.",
+  firefly: "Fireflies make light with a chemical reaction. The light gives off almost no heat.",
+  shield: "Shield bugs are also called stink bugs, for the smell they release when bothered.",
+  roach: "Cockroaches have been around for more than 300 million years.",
+  bedbug: "Bed bugs can go for months between meals.",
+  tick: "Ticks are not insects. Like spiders, they are arachnids with eight legs.",
+  louse: "Lice spend their whole lives on a single host.",
+  flea: "For their size, fleas are some of the best jumpers on Earth.",
+  cicada: "Some cicadas live underground for 13 or 17 years before they come up.",
+  bee: "Honeybees dance to tell their nestmates where to find flowers.",
+  wasp: "Many wasps help gardens by eating pests, and some pollinate flowers.",
+  mosquito: "Only female mosquitoes bite. They need the protein in blood to make eggs.",
+  dragonfly: "Dragonflies can move each of their four wings on its own, so they can hover and fly backward.",
+  butterfly: "Butterflies taste with sensors on their feet.",
+  moth: "There are far more kinds of moths than butterflies.",
+  ant: "Ants talk to each other mostly with scent signals called pheromones.",
+  mantis: "A praying mantis can turn its head to look over its shoulder.",
+  grasshopper: "Grasshoppers hear with ears on the sides of their abdomen.",
+  cricket: "Crickets chirp by rubbing their wings together.",
+  stick: "Stick insects can hold still for hours to pass as a twig.",
+  caterpillar: "A caterpillar sheds its skin several times as it grows.",
+  asp: "The asp caterpillar looks soft and furry, but its hairs hide stinging spines.",
+  millipede: "Most millipedes have two pairs of legs on each body segment.",
+  centipede: "Centipedes have one pair of legs on each body segment.",
+  spider: "Spiders are not insects. They have eight legs and two main body parts.",
+  harvestman: "Harvestmen look like spiders, but their body is one rounded piece and they make no silk.",
+  scorpion: "Scorpions glow blue-green under ultraviolet light.",
+  snail: "Snails glide on a layer of slime that they make themselves."
+};
+var B3_KIND = { beetle: "Beetle", scarab: "Scarab beetle", stag: "Stag beetle", hercules: "Hercules beetle", rhino: "Rhinoceros beetle", longhorn: "Longhorn beetle", dung: "Dung beetle", firefly: "Firefly", shield: "Shield bug", roach: "Cockroach", bedbug: "Bed bug", tick: "Tick", louse: "Louse", flea: "Flea", cicada: "Cicada", bee: "Bee", wasp: "Wasp", mosquito: "Mosquito", dragonfly: "Dragonfly", butterfly: "Butterfly", moth: "Moth", ant: "Ant", mantis: "Praying mantis", grasshopper: "Grasshopper", cricket: "Cricket", stick: "Stick insect", caterpillar: "Caterpillar", asp: "Asp caterpillar", millipede: "Millipede", centipede: "Centipede", spider: "Spider", harvestman: "Harvestman", scorpion: "Scorpion", snail: "Snail" };
+
+/* ---------------- tiny vector + matrix helpers (column-major, like D3) ---------------- */
+function b3v(a, b) { return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]; }
+function b3n(a) { var l = Math.hypot(a[0], a[1], a[2]) || 1; return [a[0] / l, a[1] / l, a[2] / l]; }
+function b3x(a, b) { return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]; }
+function b3add(a, b, k) { k = k == null ? 1 : k; return [a[0] + b[0] * k, a[1] + b[1] * k, a[2] + b[2] * k]; }
+/* matrix from three axes (already scaled) and a position */
+function b3basis(X, Y, Z, P) { var o = new Float32Array(16); o[0] = X[0]; o[1] = X[1]; o[2] = X[2]; o[4] = Y[0]; o[5] = Y[1]; o[6] = Y[2]; o[8] = Z[0]; o[9] = Z[1]; o[10] = Z[2]; o[12] = P[0]; o[13] = P[1]; o[14] = P[2]; o[15] = 1; return o; }
+/* a unit capsule (radius .5, length 2, along Y) stretched between two points */
+function b3seg(a, b, r) {
+  var d = b3v(b, a), L = Math.hypot(d[0], d[1], d[2]) || 1e-4, y = [d[0] / L, d[1] / L, d[2] / L];
+  var up = Math.abs(y[1]) > .9 ? [1, 0, 0] : [0, 1, 0], x = b3n(b3x(up, y)), z = b3x(x, y);
+  var h = L / 2 + r * .6;
+  return b3basis([x[0] * r * 2, x[1] * r * 2, x[2] * r * 2], [y[0] * h, y[1] * h, y[2] * h], [z[0] * r * 2, z[1] * r * 2, z[2] * r * 2], [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2]);
+}
+function b3hex(h) { h = String(h || "#888").replace("#", ""); if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2]; var n = parseInt(h, 16) || 0; return [(n >> 16 & 255) / 255, (n >> 8 & 255) / 255, (n & 255) / 255]; }
+function b3mix(a, b, k) { return [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k]; }
+
+/* ---------------- the model builder ----------------
+   Units: the bug is about 2 long, facing +Z (towards you at angle 0), feet on y = 0.
+   A part is { g: geometry name, m: matrix, c: colour, sp: shine, e: glow, a: opacity, flap: wing hinge } */
+function B3build(b, st) {
+  var P = [], c1 = b3hex(b.c[0]), c2 = b3hex(b.c[1]), c3 = b3hex(b.c[2] || "#ffffff"), ink = b3mix(b3hex(b.ink || "#1b1430"), b3hex(b.c[1]), .35);
+  /* very dark colours read as black holes in 3D: lift them a little */
+  var lift3 = function (c) { var m = Math.max(c[0], c[1], c[2]); return m < .28 ? b3mix(c, [1, 1, 1], .12) : c; }; c2 = lift3(c2); ink = lift3(ink);
+  var GOLD = [1, .78, .19], shine = st >= 4 ? 1.25 : .7;
+  var add = function (g, m, c, o) { o = o || {}; P.push({ g: g, m: m, c: c, sp: o.sp == null ? shine * .5 : o.sp, e: o.e || 0, a: o.a == null ? 1 : o.a, flap: o.flap || null, ec: o.ec }); };
+  var E = function (p, s, e, c, o) { add("sph", D3.trs(p, e || [0, 0, 0], s), c, o); };      /* ellipsoid: radii s */
+  var S = function (a, z, r, c, o) { add("cap", b3seg(a, z, r), c, o); };                    /* rod between two points */
+  var chain = function (pts, r, c, o) { for (var i = 0; i < pts.length - 1; i++) S(pts[i], pts[i + 1], typeof r === "function" ? r(i) : r, c, o); };
+  var body = b.body;
+  /* growth: stage 1 is a larva for the kinds that have one, stage 2 a chrysalis or cocoon */
+  var LARV = { wasp: 1, beetle: 1, stag: 1, scarab: 1, ant: 1, bee: 1, longhorn: 1, hercules: 1, rhino: 1, firefly: 1, dung: 1 };
+  if (st === 1 && (body === "butterfly" || body === "moth")) body = "caterpillar";
+  else if (st === 1 && LARV[body]) body = "larva";
+  else if (st === 2 && body === "butterfly") body = "chrysalis";
+  else if (st === 2 && body === "moth") body = "cocoon";
+  var wingK = st === 2 ? .55 : 1;
+
+  /* a face: big eyes with shiny pupils, and a little smile */
+  var face = function (h, r, fw) {
+    fw = fw || [0, 0, 1];
+    for (var s = -1; s <= 1; s += 2) {
+      var ep = [h[0] + s * r * .42, h[1] + r * .2, h[2] + r * .78];
+      E(ep, [r * .36, r * .4, r * .3], 0, [1, 1, 1], { sp: 1.4 });
+      E([ep[0] + s * r * .02, ep[1] - r * .02, ep[2] + r * .2], [r * .2, r * .24, r * .14], 0, ink, { sp: 2 });
+      E([ep[0] + s * r * .07, ep[1] + r * .08, ep[2] + r * .31], [r * .06, r * .06, r * .03], 0, [1, 1, 1], { e: .8 });
+    }
+    E([h[0], h[1] - r * .38, h[2] + r * .86], [r * .2, r * .05, r * .06], 0, ink, { sp: .3 });
+  };
+  var antennae = function (h, r, len, thick, curl, tip) {
+    for (var s = -1; s <= 1; s += 2) {
+      var a0 = [h[0] + s * r * .35, h[1] + r * .75, h[2] + r * .35], pts = [a0];
+      for (var i = 1; i <= 5; i++) { var t = i / 5; pts.push([a0[0] + s * len * .35 * t, a0[1] + len * (.85 * t - curl * t * t), a0[2] + len * (.25 + .45 * t) * t]); }
+      chain(pts, thick || r * .07, ink, { sp: .4 });
+      if (tip) E(pts[5], [r * tip, r * tip, r * tip], 0, tip > .2 ? c3 : ink);
+    }
+  };
+  /* a leg: hip on the body, knee out and up, foot on the floor */
+  var leg = function (hip, side, fwd, reach, kneeUp, r, c) {
+    var knee = [hip[0] + side * reach * .55, hip[1] + kneeUp, hip[2] + fwd * .55];
+    var foot = [hip[0] + side * reach, 0.02, hip[2] + fwd];
+    S(hip, knee, r, c || ink, { sp: .5 }); S(knee, foot, r * .8, c || ink, { sp: .5 });
+    E(foot, [r * 1.1, r * .7, r * 1.3], 0, c || ink);
+  };
+  var sixLegs = function (y, z0, z1, w, reach, r, c, ku) {
+    var zs = [z0, (z0 + z1) / 2, z1], fw = [.4, 0, -.4];
+    for (var i = 0; i < 3; i++) for (var s = -1; s <= 1; s += 2) leg([s * w, y, zs[i]], s, fw[i], reach * .85, ku == null ? .14 : ku, r, c);
+  };
+  var eightLegs = function (y, z0, z1, w, reach, up, r, c) {
+    var fw = [.7, .25, -.25, -.7];
+    for (var i = 0; i < 4; i++) for (var s = -1; s <= 1; s += 2) { var z = z0 + (z1 - z0) * i / 3; leg([s * w, y, z], s, fw[i], reach, up, r, c); }
+  };
+  /* a wing hinged at p (on the right side; mirrored for s = -1) */
+  var wing = function (p, s, len, wid, yaw, c, a, ph, amp, tilt, spots) {
+    len *= wingK; wid *= wingK;
+    var fl = { p: [s * p[0], p[1], p[2]], s: s, ph: ph || 0, amp: amp == null ? .35 : amp, tilt: tilt || 0 };
+    var lm = D3.trs([s * len * .5 * Math.cos(yaw), 0, -len * .5 * Math.sin(yaw)], [0, s * yaw, 0], [len * .5, .012, wid * .5]);
+    add("sph", lm, c, { a: a, sp: 1.2, flap: fl });
+    if (spots) spots.forEach(function (sp) { add("sph", D3.trs([s * len * sp[0] * Math.cos(yaw) + s * .0, .016, -len * sp[0] * Math.sin(yaw) + sp[1] * wid], [0, s * yaw, 0], [sp[2] * len, .01, sp[2] * len]), sp[3], { a: 1, sp: 1, flap: fl, e: sp[4] || 0 }); });
+  };
+
+  var head, hr = .3;
+  switch (body) {
+    case "larva": {   /* a plump grub curled into a C */
+      var pts = []; for (var i = 0; i < 7; i++) { var a = -1.2 + i * .42; pts.push([0, .32 + Math.sin(a) * .18, Math.cos(a) * .55 - .1]); }
+      pts.forEach(function (p, i) { var r = .26 + .07 * Math.sin(i / 6 * Math.PI); E(p, [r * 1.1, r, r], 0, i % 2 ? c3 : b3mix(c3, c1, .25), { sp: .5 }); });
+      head = [0, .52, .62]; hr = .26; E(head, [hr, hr, hr], 0, c1, { sp: .8 }); face(head, hr);
+      for (var k = 0; k < 3; k++) for (var s = -1; s <= 1; s += 2) S([s * .2, .3, .4 - k * .18], [s * .32, .05, .45 - k * .18], .035, ink);
+      break; }
+    case "caterpillar": case "asp": case "millipede": case "centipede": {
+      var n = body === "millipede" || body === "centipede" ? 11 : 8, seg = [];
+      for (var i = 0; i < n; i++) { var t = i / (n - 1); seg.push([Math.sin(t * Math.PI * 1.6) * .18, .26 + Math.max(0, Math.sin((t - .1) * Math.PI)) * .05, .95 - t * 1.95]); }
+      seg.forEach(function (p, i) {
+        var r = body === "centipede" ? .17 : body === "millipede" ? .19 : .24 - i * .006;
+        E(p, [r * 1.05, r, r * .9], 0, i % 2 ? c1 : c2, { sp: .6 });
+        if (body === "caterpillar" && i % 2 === 0) E([p[0], p[1] + r * .8, p[2]], [r * .25, r * .25, r * .25], 0, c3, { e: .2 });
+        if (body === "asp") for (var k = 0; k < 5; k++) { var an = k / 5 * Math.PI; S([p[0], p[1] + r * .5, p[2]], [p[0] + Math.cos(an) * r * 1.2, p[1] + r * .6 + Math.sin(an) * r * .9, p[2]], .03, c3); }
+        if (i > 0) for (var s = -1; s <= 1; s += 2) {
+          var pairs = body === "millipede" ? 2 : 1;
+          for (var q = 0; q < pairs; q++) { var zz = p[2] + (q ? .07 : -.03); var foot = [p[0] + s * (body === "centipede" ? .42 : .26), .02, zz + (body === "centipede" ? -.06 : 0)]; S([p[0] + s * r * .6, p[1] - r * .3, zz], foot, body === "centipede" ? .028 : .03, ink); }
+        }
+      });
+      head = [seg[0][0], .42, 1.08]; hr = .27; E(head, [hr, hr, hr], 0, c1, { sp: .8 }); face(head, hr); antennae(head, hr, .25, .03, .3, .12);
+      break; }
+    case "chrysalis": case "cocoon": {
+      S([-.7, 1.75, -.1], [.7, 1.75, -.1], .05, [.45, .3, .18], { sp: .2 });
+      E([.35, 1.82, -.1], [.12, .05, .07], [0, 0, .4], [.3, .7, .3]);
+      var ch = body === "chrysalis";
+      S([0, 1.72, -.1], [0, 1.55, -.1], .03, ch ? c2 : [.9, .9, .85]);
+      E([0, 1.0, -.1], ch ? [.36, .6, .33] : [.42, .62, .4], 0, ch ? c1 : b3mix([.95, .94, .9], c1, .15), { sp: ch ? 1.6 : .2 });
+      if (ch) { for (var k = 0; k < 6; k++) E([Math.cos(k) * .3, .95 + k * .08 - .2, -.1 + Math.sin(k) * .28 + .05], [.035, .035, .035], 0, GOLD, { e: .7, sp: 2 }); }
+      head = [0, 1.12, .2]; hr = .2; face([0, 1.1, .12], .22);
+      break; }
+    case "butterfly": case "moth": {
+      var moth = body === "moth", p0 = P.length;
+      chain([[0, .7, .6], [0, .72, .1], [0, .66, -.55]], moth ? .14 : .1, b3mix(c2, ink, .4), { sp: .5 });
+      E([0, .7, .05], [moth ? .2 : .14, moth ? .19 : .14, .32], 0, b3mix(c2, ink, .3), { sp: .4 });
+      head = [0, .78, .78]; hr = .22; E(head, [hr, hr, hr], 0, b3mix(c1, ink, .35), { sp: .8 }); face(head, hr);
+      if (moth) antennae(head, hr, .45, .045, .2, 0); else antennae(head, hr, .6, .025, .25, .18);
+      var spotF = [[.62, .1, .14, c3], [.35, -.05, .09, c3]], spotH = [[.55, .05, .12, c3, .2]];
+      for (var s = -1; s <= 1; s += 2) {
+        wing([.08, .76, .25], s, moth ? 1.2 : 1.35, moth ? .9 : 1.0, -.35, c1, .93, 0, .45, 0, spotF);
+        wing([.08, .72, -.05], s, moth ? 1.0 : 1.1, moth ? .8 : .95, .45, c2, .93, .1, .45, 0, spotH);
+      }
+      /* butterflies sit low on short legs */
+      P.slice(p0).forEach(function (p) { p.m = new Float32Array(p.m); p.m[13] -= .24; if (p.flap && !p.flap.low) { p.flap.p = [p.flap.p[0], p.flap.p[1] - .24, p.flap.p[2]]; p.flap.low = 1; } });
+      head = [head[0], head[1] - .24, head[2]];
+      sixLegs(.4, .35, -.05, .07, .42, .025, null, -.08);
+      break; }
+    case "dragonfly": {
+      head = [0, .7, .95]; hr = .24;
+      E(head, [hr * 1.15, hr, hr], 0, c3, { sp: 1.6 }); face(head, hr);
+      E([0, .68, .55], [.18, .19, .28], 0, c1, { sp: 1 });
+      var tail = []; for (var i = 0; i < 8; i++) tail.push([0, .7 - i * .012, .3 - i * .27]);
+      chain(tail, function (i) { return .075 - i * .004; }, c1, { sp: 1.1 });
+      for (var i = 0; i < 8; i += 2) E(tail[i], [.08, .08, .05], 0, c2);
+      for (var s = -1; s <= 1; s += 2) {
+        wing([.1, .8, .62], s, 1.5, .32, -.12, b3mix(c3, [1, 1, 1], .4), .38, 0, .25, .1);
+        wing([.1, .8, .42], s, 1.45, .36, .18, b3mix(c3, [1, 1, 1], .4), .38, 1.2, .25, .1);
+      }
+      sixLegs(.58, .7, .45, .08, .3, .022);
+      break; }
+    case "bee": case "wasp": case "mosquito": {
+      var bee = body === "bee", mos = body === "mosquito";
+      head = [0, .72, .82]; hr = mos ? .2 : .26;
+      E(head, [hr, hr, hr], 0, bee ? b3mix(c1, ink, .55) : c2, { sp: .8 }); face(head, hr); antennae(head, hr, mos ? .5 : .4, .03, .35, mos ? 0 : .12);
+      if (mos) S([0, .62, 1.0], [0, .3, 1.35], .02, ink);
+      E([0, .72, .42], [mos ? .15 : .27, mos ? .16 : .27, mos ? .2 : .26], 0, bee ? c1 : b3mix(c2, ink, .2), { sp: .3 });
+      if (!bee) E([0, .66, .14], [.07, .07, .09], 0, ink);
+      var az = bee ? -.15 : -.3, bands = mos ? 3 : 4;
+      for (var i = 0; i < bands; i++) { var t = i / (bands - 1), rr = (mos ? .13 : bee ? .36 : .27) * (1 - Math.pow(Math.abs(t - .35) * 1.4, 2) * .55); E([0, .64 - t * .05, az - t * (mos ? .7 : .55)], [rr, rr * .95, rr * .7 + .08], 0, i % 2 ? ink : c1, { sp: .9 }); }
+      if (!mos) S([0, .6, az - .62 * (bee ? 1 : 1.1)], [0, .55, az - .82], .025, ink);
+      for (var s = -1; s <= 1; s += 2) {
+        wing([.1, .9, .45], s, mos ? .8 : .85, mos ? .2 : .38, .55, [.88, .95, 1], .35, 0, .5, .3);
+        wing([.1, .88, .32], s, mos ? .5 : .6, .26, .85, [.88, .95, 1], .3, .4, .5, .3);
+      }
+      if (mos) { var fw = [.6, 0, -.6]; for (var i = 0; i < 3; i++) for (var s = -1; s <= 1; s += 2) leg([s * .07, .62, .45 - i * .05], s, fw[i], .75, .45, .016); }
+      else sixLegs(.58, .52, .3, .12, .42, .03);
+      break; }
+    case "ant": {
+      head = [0, .55, .85]; hr = .27;
+      E(head, [hr * 1.05, hr, hr], 0, c1, { sp: 1 }); face(head, hr);
+      for (var s = -1; s <= 1; s += 2) { var a0 = [s * .1, .76, .96], el = [s * .22, 1.08, 1.0]; S(a0, el, .028, ink); S(el, [s * .36, 1.0, 1.32], .025, ink); }
+      E([0, .5, .45], [.17, .16, .28], 0, c1, { sp: 1 });
+      E([0, .45, .12], [.08, .1, .07], 0, c2);
+      E([0, .52, -.35], [.3, .28, .42], 0, b3mix(c1, ink, .15), { sp: 1.2 });
+      sixLegs(.42, .58, .32, .1, .5, .03);
+      break; }
+    case "mantis": case "grasshopper": case "cricket": case "stick": {
+      var man = body === "mantis", stick = body === "stick", hop = body === "grasshopper" || body === "cricket";
+      var bl = stick ? 2.3 : 1.9;
+      chain([[0, man ? .95 : .5, man ? .75 : .7], [0, man ? .6 : .48, .25], [0, .44, -bl / 2]], stick ? .06 : man ? .1 : .16, stick ? c1 : b3mix(c1, c2, .2), { sp: .6 });
+      if (!stick) E([0, .46, -.45], man ? [.26, .14, .62] : [.2, .19, .62], 0, c1, { sp: .7 });
+      head = man ? [0, 1.08, .95] : [0, .58, .98]; hr = man ? .22 : .25;
+      E(head, man ? [hr * 1.3, hr, hr * .9] : [hr, hr * 1.1, hr * 1.05], 0, c2, { sp: .9 }); face(head, hr);
+      antennae(head, hr, body === "cricket" ? 1.3 : stick ? .9 : man ? .5 : .7, .02, .55, 0);
+      if (man) for (var s = -1; s <= 1; s += 2) { var sh = [s * .1, .82, .62], el = [s * .16, .6, .95], cl = [s * .12, .95, 1.15]; S(sh, el, .05, c1); S(el, cl, .04, c1); E(cl, [.04, .06, .04], 0, c3); }
+      if (hop) for (var s = -1; s <= 1; s += 2) { var hp = [s * .14, .45, -.15], kn = [s * .3, .95, -.55], ft = [s * .32, .02, -.85]; S(hp, kn, .07, c2, { sp: .6 }); S(kn, ft, .03, ink); }
+      var ns = hop || man ? 2 : 3, zs = stick ? [.5, -.1, -.6] : [.45, .15, -.15];
+      for (var i = man ? 1 : 0; i < ns + (man ? 1 : 0); i++) for (var s = -1; s <= 1; s += 2) leg([s * .08, .46, zs[i % 3]], s, [.4, 0, -.4][i % 3], stick ? .7 : .45, .32, stick ? .02 : .028);
+      break; }
+    case "spider": case "harvestman": case "tick": case "scorpion": {
+      if (body === "scorpion") {
+        head = [0, .4, .75]; hr = .22;
+        E([0, .35, .35], [.32, .14, .6], 0, c1, { sp: 1.1 }); E(head, [hr * 1.2, hr * .8, hr], 0, c1, { sp: 1 }); face(head, hr);
+        var tl = [[0, .35, -.22], [0, .4, -.58], [0, .62, -.86], [0, .95, -.88], [0, 1.18, -.66], [0, 1.24, -.36], [0, 1.12, -.12]];   /* the tail curls up over the back */
+        chain(tl, function (i) { return .11 - i * .009; }, c1, { sp: 1 });
+        var tip = tl[6]; E(tip, [.08, .07, .09], 0, c1); S(tip, [0, tip[1] - .2, tip[2] + .16], .035, c3, { e: .25 });
+        for (var s = -1; s <= 1; s += 2) { var sh = [s * .2, .38, .8], el = [s * .5, .36, 1.05], cl = [s * .55, .38, 1.35]; S(sh, el, .06, c2); S(el, cl, .07, c2); E([s * .5, .38, 1.42], [.1, .07, .16], [0, s * .3, 0], c2, { sp: 1 }); E([s * .62, .38, 1.48], [.05, .05, .14], [0, -s * .3, 0], c2); }
+        eightLegs(.33, .45, -.05, .2, .65, .3, .03);
+      } else if (body === "harvestman") {
+        head = [0, .62, .2]; hr = .2; E([0, .6, 0], [.28, .22, .3], 0, c1, { sp: .9 }); face(head, hr);
+        eightLegs(.6, .15, -.15, .15, 1.45, .75, .02);
+      } else if (body === "tick") {
+        head = [0, .32, .62]; hr = .16; E([0, .38, 0], [.5, .25, .62], 0, c1, { sp: 1.3 }); E([0, .52, .25], [.3, .08, .22], 0, c2); E(head, [hr, hr * .8, hr], 0, c2); face([0, .38, .66], .18);
+        eightLegs(.3, .35, -.25, .35, .45, .18, .03);
+      } else {
+        head = [0, .48, .58]; hr = .26;
+        E([0, .45, .5], [.3, .26, .33], 0, c2, { sp: 1 }); face(head, hr);
+        E([0, .6, -.25], [.48, .46, .55], 0, c1, { sp: 1.2 }); E([0, .9, -.3], [.18, .05, .2], 0, c3, { e: .1 });
+        eightLegs(.48, .7, .3, .2, .95, .55, .035);
+      }
+      break; }
+    case "snail": {
+      chain([[0, .2, .85], [0, .16, .2], [0, .1, -.75]], .2, c2, { sp: 1.4 });
+      head = [0, .36, .95]; hr = .22; E(head, [hr, hr * .9, hr], 0, c2, { sp: 1.4 });
+      for (var s = -1; s <= 1; s += 2) { var top = [s * .16, .95, 1.05]; S([s * .08, .45, 1.0], top, .035, c2); E(top, [.1, .1, .1], 0, [1, 1, 1], { sp: 1.4 }); E([top[0], top[1], top[2] + .07], [.05, .05, .04], 0, ink); }
+      E([0, .3, 1.15], [.07, .03, .03], 0, ink);
+      /* the shell: a coil that winds in towards its centre, seen from the side */
+      for (var i = 0; i < 34; i++) { var a = 1.6 + i * .4, k = Math.exp(-i * .052), rad = .5 * k, sr = .26 * k + .03; E([0, .78 + Math.sin(a) * rad, -.2 + Math.cos(a) * rad], [sr * 1.25, sr, sr], 0, (i >> 2) % 2 ? c1 : b3mix(c1, c3, .45), { sp: 1.3 }); }
+      break; }
+    default: {   /* the beetle family: beetle, scarab, stag, hercules, rhino, longhorn, dung, firefly, shield, roach, bedbug, louse, flea, cicada */
+      var wide = body === "shield" ? 1.35 : body === "scarab" || body === "dung" ? 1.15 : body === "roach" || body === "bedbug" ? 1.1 : body === "firefly" || body === "longhorn" ? .85 : 1;
+      var flat = body === "roach" || body === "bedbug" || body === "louse" ? .7 : body === "flea" ? 1.1 : 1;
+      head = [0, .55, .98]; hr = body === "flea" || body === "louse" ? .22 : .28;
+      E([0, .52, .62], [.42 * wide, .3 * flat, .32], 0, c2, { sp: shine });                          /* thorax */
+      var shell = [.6 * wide, .44 * flat, .82];
+      if (body === "flea") shell = [.38, .55, .62];
+      E([0, .58 * (flat < 1 ? .85 : 1), -.2], shell, [.08, 0, 0], c1, { sp: shine * 1.4 });            /* wing cases */
+      S([0, .58 + shell[1] * .9 * (flat < 1 ? .8 : 1), .35], [0, .58 + shell[1] * .62, -.8], .02, c3, { sp: 1 });   /* seam */
+      if (body === "firefly") E([0, .45, -.95], [.3, .24, .25], 0, [1, .95, .45], { e: 1.6, sp: .2, ec: [1, .92, .35] });
+      if (body === "scarab" || body === "dung") for (var k = 0; k < 2; k++) for (var s = -1; s <= 1; s += 2) E([s * .3, .9, -.1 - k * .35], [.08, .03, .08], 0, c3, { e: .25, sp: 1.5 });
+      E(head, [hr * 1.05, hr, hr], 0, c2, { sp: shine }); face(head, hr);
+      var hornC = b.horn ? b3hex(b.horn) : c3;
+      if (body === "stag") for (var s = -1; s <= 1; s += 2) chain([[s * .14, .5, 1.15], [s * .3, .6, 1.45], [s * .22, .68, 1.75], [s * .05, .72, 1.85]], .055, hornC, { sp: 1.3 });
+      if (body === "hercules") { chain([[0, .82, .7], [0, 1.15, 1.0], [0, 1.25, 1.45], [0, 1.05, 1.8]], function (i) { return .09 - i * .02; }, hornC, { sp: 1.4 }); chain([[0, .45, 1.15], [0, .55, 1.45], [0, .8, 1.6]], .06, hornC, { sp: 1.4 }); }
+      if (body === "rhino") chain([[0, .72, 1.12], [0, 1.0, 1.25], [0, 1.35, 1.2], [0, 1.5, 1.0]], function (i) { return .1 - i * .025; }, hornC, { sp: 1.4 });
+      if (body === "dung") chain([[0, .78, 1.05], [0, 1.0, 1.0]], .05, hornC);
+      antennae(head, hr, body === "longhorn" ? 1.7 : body === "roach" ? 1.3 : .45, body === "longhorn" ? .035 : .03, body === "longhorn" ? .9 : .3, body === "longhorn" || body === "roach" ? 0 : .13);
+      if (body === "longhorn") P.slice(-10).forEach(function (p, i) { if (i % 2) p.c = c3; });
+      if (body === "cicada") for (var s = -1; s <= 1; s += 2) wing([.25, .95, .45], s, 1.4, .45, 1.15, [.85, .95, .95], .4, 0, .12, .25);
+      if (body === "bedbug" || body === "louse" || body === "flea") sixLegs(.42, .55, -.1, .25, .5, .032);
+      else sixLegs(.42, .58, -.12, .3, .6, .04);
+    }
+  }
+
+  /* accessories, worn on the head */
+  var acc = b.acc || [];
+  var hd = head || [0, .7, .9];
+  acc.forEach(function (k) {
+    if (k === "crown") { add("tor", D3.trs([hd[0], hd[1] + hr * .92, hd[2]], [0, 0, 0], [hr * .62, hr * .62, hr * .62]), GOLD, { sp: 2.2, e: .15 }); for (var i = 0; i < 5; i++) { var a = i / 5 * 2 * Math.PI; add("cone", D3.trs([hd[0] + Math.sin(a) * hr * .6, hd[1] + hr * 1.0, hd[2] + Math.cos(a) * hr * .6], [0, 0, 0], [hr * .14, hr * .45, hr * .14]), GOLD, { sp: 2.2, e: .15 }); E([hd[0] + Math.sin(a) * hr * .6, hd[1] + hr * 1.47, hd[2] + Math.cos(a) * hr * .6], [hr * .07, hr * .07, hr * .07], 0, i % 2 ? [.95, .25, .35] : [.35, .75, 1], { e: .5 }); } }
+    else if (k === "halo") add("tor", D3.trs([hd[0], hd[1] + hr * 1.75, hd[2] - hr * .1], [.2, 0, 0], [hr * .75, hr * .75, hr * .75]), GOLD, { e: 1.4, ec: [1, .85, .35], sp: 1 });
+    else if (k === "helmet" || k === "halfhelm" || k === "jethelmet" || k === "cap" || k === "beanie") E([hd[0], hd[1] + hr * .35, hd[2] - hr * .08], [hr * 1.12, hr * .82, hr * 1.1], 0, k === "cap" ? [.85, .2, .25] : k === "beanie" ? c3 : [.92, .92, .95], { sp: 1.6 });
+    else if (k === "goggles") { for (var s = -1; s <= 1; s += 2) add("tor", D3.trs([hd[0] + s * hr * .42, hd[1] + hr * .55, hd[2] + hr * .72], [1.3, 0, 0], [hr * .3, hr * .3, hr * .3]), [.35, .3, .3], { sp: 1.5 }); S([hd[0] - hr, hd[1] + hr * .5, hd[2]], [hd[0] + hr, hd[1] + hr * .5, hd[2]], .025, [.3, .25, .25]); }
+    else if (k === "headset") { add("tor", D3.trs([hd[0], hd[1] + hr * .1, hd[2]], [0, 0, Math.PI / 2], [hr * 1.08, hr * 1.08, hr * 1.08]), [.2, .2, .25], { sp: 1 }); for (var s = -1; s <= 1; s += 2) E([hd[0] + s * hr * 1.02, hd[1] + hr * .05, hd[2]], [hr * .16, hr * .3, hr * .3], 0, [.2, .2, .25]); }
+    else if (k === "flame") for (var i = 0; i < 3; i++) add("cone", D3.trs([(i - 1) * .18, .95, -.3 - i * .05], [0, 0, (i - 1) * .3], [.08, .35 - Math.abs(i - 1) * .1, .08]), [1, .55, .15], { e: 1.5, ec: [1, .55, .15], sp: 0 });
+  });
+  /* veteran and legend: a little sparkle; legend adds a gold ring at the waist */
+  /* legend stage and the "stars" accessory: little lights floating around the bug */
+  if (b.rar === "legendary" || b.rar === "epic" || acc.indexOf("stars") >= 0) for (var i = 0; i < 7; i++) { var a = i / 7 * Math.PI * 2 + .3, rr = 1.05 + (i % 3) * .12; E([Math.sin(a) * rr, .55 + (i % 4) * .28, Math.cos(a) * rr * .85], [.035, .035, .035], 0, st >= 5 ? GOLD : c3, { e: 1.6, ec: st >= 5 ? [1, .85, .4] : c3, sp: 0 }); }
+  return P;
+}
+
+/* ---------------- WebGL ---------------- */
+var B3_VS = "attribute vec3 p;attribute vec3 n;uniform mat4 M;uniform mat4 VP;uniform mat3 NM;varying vec3 vN;varying vec3 vW;varying vec3 vL;void main(){vL=p;vec4 w=M*vec4(p,1.0);vW=w.xyz;vN=NM*n;gl_Position=VP*w;}";
+var B3_FS = "precision mediump float;varying vec3 vN;varying vec3 vW;varying vec3 vL;uniform vec3 col;uniform vec3 eye;uniform vec3 rimC;uniform vec3 ec;uniform float sp;uniform float em;uniform float al;uniform float mode;uniform float rk;" +
+  "void main(){if(mode>0.5){float r=length(vL.xz);float g=exp(-r*r*1.2)*al;gl_FragColor=vec4(rimC*g,g);return;}" +
+  "vec3 V=normalize(eye-vW);vec3 N=normalize(vN);if(dot(N,V)<0.)N=-N;vec3 c=pow(col,vec3(2.2));" +
+  "vec3 L1=normalize(vec3(.45,.95,.75));vec3 L2=normalize(vec3(-.7,.35,.5));vec3 L3=normalize(vec3(0.,.5,-1.));" +
+  "float d1=max(dot(N,L1),0.);float d2=max(dot(N,L2),0.);vec3 H=normalize(L1+V);float s=pow(max(dot(N,H),0.),40.)*sp;" +
+  "float rim=pow(1.-max(dot(N,V),0.),4.);float back=max(dot(N,L3),0.);" +
+  "float hemi=.5+.5*N.y;vec3 o=c*(.16+hemi*.22+d1*1.05+d2*.35)+vec3(1.,.97,.9)*s*.6+pow(rimC,vec3(2.2))*rim*(.25+back)*.6*rk+pow(ec,vec3(2.2))*em;" +
+  "o=o/(1.+o*.18);gl_FragColor=vec4(pow(o,vec3(1./2.2)),al);}";
+function b3sh(gl, t, s) { var o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(o)); return o; }
+function b3geo(gl, g) { var b = { n: g.i.length }; b.p = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b.p); gl.bufferData(gl.ARRAY_BUFFER, g.p, gl.STATIC_DRAW); b.nb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b.nb); gl.bufferData(gl.ARRAY_BUFFER, g.n, gl.STATIC_DRAW); b.i = gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, b.i); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, g.i, gl.STATIC_DRAW); return b; }
+function B3init(cv) {
+  var gl = cv.getContext("webgl", { alpha: true, antialias: true, premultipliedAlpha: false }); if (!gl) return false;
+  var pr = gl.createProgram(); gl.attachShader(pr, b3sh(gl, gl.VERTEX_SHADER, B3_VS)); gl.attachShader(pr, b3sh(gl, gl.FRAGMENT_SHADER, B3_FS)); gl.linkProgram(pr);
+  if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) return false;
+  var U = {}; ["M", "VP", "NM", "col", "eye", "rimC", "ec", "sp", "em", "al", "mode", "rk"].forEach(function (k) { U[k] = gl.getUniformLocation(pr, k); });
+  B3.gl = gl; B3.prog = pr; B3.U = U; B3.ap = gl.getAttribLocation(pr, "p"); B3.an = gl.getAttribLocation(pr, "n");
+  B3.geo = {
+    sph: b3geo(gl, D3.sphere(1)), cap: b3geo(gl, D3.capsule(.5, 2, 6)), tor: b3geo(gl, D3.torus(1, .12, 32, 10)), ring: b3geo(gl, D3.torus(1, .018, 64, 6)),
+    cone: b3geo(gl, D3.lathe([[0, -1], [1, -1], [0, 1]], 16)),
+    stand: b3geo(gl, D3.lathe([[0, -.42], [1.32, -.42], [1.4, -.36], [1.4, -.06], [1.33, 0], [0, 0]], 64)),
+    disc: b3geo(gl, D3.lathe([[3, 0], [0, 0]], 48))
+  };
+  return true;
+}
+function b3draw(g, M, c, sp, em, al, ec, mode, rk) {
+  var gl = B3.gl, U = B3.U, G = B3.geo[g]; gl.uniform1f(U.rk, rk == null ? 1 : rk);
+  gl.uniformMatrix4fv(U.M, false, M); gl.uniformMatrix3fv(U.NM, false, D3.nrm3(M));
+  gl.uniform3fv(U.col, c); gl.uniform1f(U.sp, sp); gl.uniform1f(U.em, em || 0); gl.uniform1f(U.al, al == null ? 1 : al); gl.uniform3fv(U.ec, ec || c); gl.uniform1f(U.mode, mode || 0);
+  gl.bindBuffer(gl.ARRAY_BUFFER, G.p); gl.vertexAttribPointer(B3.ap, 3, gl.FLOAT, false, 0, 0);
+  gl.bindBuffer(gl.ARRAY_BUFFER, G.nb); gl.vertexAttribPointer(B3.an, 3, gl.FLOAT, false, 0, 0);
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, G.i); gl.drawElements(gl.TRIANGLES, G.n, gl.UNSIGNED_SHORT, 0);
+}
+function B3frame(now) {
+  if (!B3.open) return;
+  var gl = B3.gl, cv = B3.cv, dt = Math.min(.05, ((now || 0) - (B3.last || now || 0)) / 1000); B3.last = now; B3.t += dt;
+  var w = cv.clientWidth, h = cv.clientHeight, dpr = Math.min(2.5, window.devicePixelRatio || 1);
+  if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+  /* slow turn; a drag sets the speed, then it eases back */
+  var base = B3.still ? 0 : .32;
+  if (!B3.drag) { B3.vel += (base - B3.vel) * Math.min(1, dt * 1.6); B3.ang += B3.vel * dt; }
+  gl.viewport(0, 0, cv.width, cv.height); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  gl.useProgram(B3.prog); gl.enableVertexAttribArray(B3.ap); gl.enableVertexAttribArray(B3.an);
+  var asp = cv.width / Math.max(1, cv.height), dist = asp < .8 ? 7.4 : asp < 1.2 ? 6.4 : 6.4, eye = [0, dist * .25, dist];
+  var VP = D3.mul(D3.persp(.6, asp, .1, 50), D3.lookAt(eye, [0, .55, 0], [0, 1, 0]));
+  gl.uniformMatrix4fv(B3.U.VP, false, VP); gl.uniform3fv(B3.U.eye, eye); gl.uniform3fv(B3.U.rimC, B3.glow);
+  gl.enable(gl.DEPTH_TEST); gl.depthMask(true); gl.disable(gl.BLEND); gl.disable(gl.CULL_FACE);
+  var R = D3.trs([0, 0, 0], [0, B3.ang, 0], [1, 1, 1]);
+  /* the stand: dark and glossy, with a lit rim and markers so you can see it turn */
+  b3draw("stand", D3.mul(R, D3.trs([0, 0, 0], [0, 0, 0], [1, 1, 1])), [.13, .12, .18], 1.4, 0, 1, null, 0, .2);
+  b3draw("ring", D3.mul(R, D3.trs([0, -.02, 0], [0, 0, 0], [1.38, 1, 1.38])), B3.glow, 0, 1.3, 1, B3.glow, 0, 0);
+  for (var i = 0; i < 12; i++) { var a = i / 12 * Math.PI * 2; b3draw("sph", D3.mul(R, D3.trs([Math.sin(a) * 1.2, .005, Math.cos(a) * 1.2], [0, 0, 0], [.028, .008, .028])), B3.glow, 0, .9, 1, B3.glow, 0, 0); }
+  var flapT = B3.still ? 0 : B3.t, trans = [];
+  var lift = D3.trs([0, .02, 0], [0, 0, 0], [B3.k, B3.k, B3.k]);
+  B3.parts.forEach(function (p) {
+    var M = p.m;
+    if (p.flap) {
+      var f = p.flap, ang = Math.sin(flapT * 2.2 + f.ph) * f.amp * .5 + f.amp * .35 + f.tilt;
+      M = D3.mul(D3.trs(f.p, [0, 0, f.s * ang], [1, 1, 1]), M);
+    }
+    M = D3.mul(R, D3.mul(lift, M));
+    if (p.a < 1) trans.push([p, M]); else b3draw(p.g, M, p.c, p.sp, p.e, 1, p.ec);
+  });
+  /* glow under the stand (added light), then see-through wings */
+  gl.enable(gl.BLEND); gl.depthMask(false);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+  b3draw("disc", D3.trs([0, -.43, 0], [0, 0, 0], [2, 1, 2]), B3.glow, 0, 0, .75, null, 1);
+  b3draw("disc", D3.trs([0, .012, 0], [0, 0, 0], [.6, 1, .6]), B3.glow, 0, 0, .22, null, 1);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  trans.forEach(function (x) { b3draw(x[0].g, x[1], x[0].c, x[0].sp, x[0].e, x[0].a, x[0].ec); });
+  gl.depthMask(true);
+  B3.raf = requestAnimationFrame(B3frame);
+}
+
+/* ---------------- the dialog ---------------- */
+var B3_GLOW = { common: [.45, .8, 1], rare: [.45, .7, 1], epic: [.75, .45, 1], legendary: [1, .78, .3], seasonal: [1, .5, .4], earned: [.5, 1, .7], admin: [1, .4, .5] };
+function b3how(b) {
+  if (owned(b.id)) return "In your terrarium";
+  if (b.admin) return "Administrator only";
+  if (b.unlock) return b.unlock.text || "Unlocked by playing";
+  if (b.login) return "Daily login prize";
+  if (b.king) return "Collection king";
+  if (!b.price) return "Free";
+  return b.price.toLocaleString() + " sticks";
+}
+/* 3D bug view switched off for this update (owner, Nov 14 2026); set B3_READY = true to bring it back */
+var B3_READY = false;
+function bug3dOpen(id) {
+  if (!B3_READY) return;
+  var b = bugById(id); if (!b) return;
+  var mine = owned(b.id) && myBug().id === b.id, st = mine ? myStage() : 5, rr = b.rar || "common";
+  var dlg = document.getElementById("bug3d");
+  if (!dlg) { dlg = document.createElement("div"); dlg.id = "bug3d"; dlg.className = "b3"; dlg.setAttribute("role", "dialog"); dlg.setAttribute("aria-modal", "true"); document.body.appendChild(dlg); }
+  B3.still = !!(SET().motion || (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches));
+  B3.glow = B3_GLOW[rr] || B3_GLOW.common;
+  var fact = B3_FACT[b.body] || "", kind = B3_KIND[b.body] || "Bug";
+  dlg.setAttribute("aria-label", b.name + ", 3D view");
+  dlg.innerHTML = '<div class="b3stage" style="--g:rgb(' + B3.glow.map(function (x) { return Math.round(x * 255); }).join(",") + ')"><canvas class="b3cv" aria-hidden="true"></canvas><div class="b3fall"></div><p class="b3hint">' + (B3.still ? "Drag to turn it" : "Drag to spin it") + '</p></div>' +
+    '<aside class="b3bio"><button class="b3x" data-b3="close" aria-label="Close">✕</button>' +
+    '<span class="b3rar r-' + esc(rr) + '">' + esc(RARITY[rr] || rr) + '</span><h2>' + esc(b.name) + '</h2>' +
+    '<p class="b3kind">' + esc(kind) + ' · ' + (mine ? 'Stage ' + st + ' · ' + esc(stageName(st)) : 'Shown fully grown') + '</p>' +
+    (b.blurb ? '<p class="b3blurb">' + esc(b.blurb) + '</p>' : '') +
+    '<dl class="b3dl"><div><dt>How to get it</dt><dd>' + esc(b3how(b)) + '</dd></div><div><dt>Colors</dt><dd>' + b.c.slice(0, 3).map(function (c) { return '<i style="background:' + esc(c) + '"></i>'; }).join("") + '</dd></div>' +
+    ((b.acc || []).length ? '<div><dt>Wearing</dt><dd>' + esc(b.acc.map(function (a) { return a === "stetho" ? "stethoscope" : a; }).join(", ")) + '</dd></div>' : '') + '</dl>' +
+    (fact ? '<p class="b3fact"><strong>Real bug fact.</strong> ' + esc(fact) + '</p>' : '') + '</aside>';
+  dlg.hidden = false; B3.open = true; document.documentElement.classList.add("b3on");
+  var cv = dlg.querySelector(".b3cv"); B3.cv = cv; B3.ang = -.5; B3.vel = .32; B3.t = 0; B3.last = 0;
+  var ok = false; try { ok = B3init(cv); } catch (e) { ok = false; }
+  if (!ok) { cv.outerHTML = '<div class="b3flat">' + bugArt(b, "", { stage: st }) + '</div>'; return; }
+  B3.parts = B3build(b, st);
+  /* fit: scale the model so it stands about the same size whatever its shape */
+  var mx = 0; B3.parts.forEach(function (p) { mx = Math.max(mx, Math.abs(p.m[12]) + Math.abs(p.m[0]) * .5, Math.abs(p.m[14]) + Math.abs(p.m[10]) * .5); });
+  B3.k = Math.min(1.4, Math.max(.8, 1.45 / Math.max(.8, mx)));
+  cancelAnimationFrame(B3.raf); B3.raf = requestAnimationFrame(B3frame);
+  var bx = dlg.querySelector(".b3x"); if (bx) try { bx.focus({ preventScroll: true }); } catch (e) {}
+  try { if (typeof sfx === "function") sfx("pop"); } catch (e) {}
+}
+function bug3dClose() {
+  var dlg = document.getElementById("bug3d"); if (!dlg) return;
+  B3.open = false; cancelAnimationFrame(B3.raf); dlg.hidden = true; dlg.innerHTML = ""; document.documentElement.classList.remove("b3on");
+  try { var ext = B3.gl && B3.gl.getExtension("WEBGL_lose_context"); if (ext) ext.loseContext(); } catch (e) {}
+  B3.gl = null;
+}
+/* drag to spin */
+document.addEventListener("pointerdown", function (e) { if (!B3.open || !e.target.closest || !e.target.closest(".b3stage")) return; B3.drag = { x: e.clientX, t: performance.now() }; B3.vel = 0; });
+document.addEventListener("pointermove", function (e) { if (!B3.drag) return; var dx = e.clientX - B3.drag.x, now = performance.now(), dt = Math.max(1, now - B3.drag.t) / 1000; B3.ang += dx * .012; B3.vel = Math.max(-6, Math.min(6, dx * .012 / dt)); B3.drag.x = e.clientX; B3.drag.t = now; });
+document.addEventListener("pointerup", function () { B3.drag = null; });
+document.addEventListener("pointercancel", function () { B3.drag = null; });
+document.addEventListener("click", function (e) {
+  if (!e.target.closest) return;
+  if (B3.open && (e.target.closest('[data-b3="close"]') || (e.target.id === "bug3d"))) { e.preventDefault(); return bug3dClose(); }
+  /* open from a Bug Store card (not its buttons) or the "Your bug" picture */
+  var c = e.target.closest("[data-bug3d]");
+  if (c && !e.target.closest("button:not([data-bug3d]), a")) { e.preventDefault(); e.stopPropagation(); bug3dOpen(c.getAttribute("data-bug3d")); }
+}, true);
+document.addEventListener("keydown", function (e) { if (B3.open && e.key === "Escape") { e.preventDefault(); bug3dClose(); } });
+/* a long press on a terrarium bubble opens it too (a tap still picks the bug) */
+(function () {
+  var t = null, id = null, fired = false;
+  document.addEventListener("pointerdown", function (e) { var b = e.target.closest && e.target.closest(".bubble[data-b3id]"); if (!b) return; id = b.getAttribute("data-b3id"); fired = false; clearTimeout(t); t = setTimeout(function () { fired = true; bug3dOpen(id); }, 480); });
+  ["pointerup", "pointercancel", "pointerleave"].forEach(function (k) { document.addEventListener(k, function () { clearTimeout(t); }, true); });
+  document.addEventListener("click", function (e) { if (fired && e.target.closest && e.target.closest(".bubble")) { fired = false; e.preventDefault(); e.stopPropagation(); } }, true);
+  document.addEventListener("contextmenu", function (e) { if (e.target.closest && e.target.closest(".bubble[data-b3id]")) e.preventDefault(); });
+})();
+(function () {
+  var st = document.createElement("style");
+  st.textContent = '#bug3d{position:fixed;inset:0;z-index:2000;display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,360px);background:radial-gradient(ellipse at 50% 72%,#1a1530 0%,#0b0913 55%,#040307 100%);color:#f4f1fc}#bug3d[hidden]{display:none}' +
+    'html.b3on body{overflow:hidden}.b3stage{position:relative;min-height:0;overflow:hidden;touch-action:none;cursor:grab}.b3stage:active{cursor:grabbing}' +
+    '.b3stage::before{content:"";position:absolute;left:50%;bottom:10%;width:min(70vw,620px);height:36%;transform:translateX(-50%);background:radial-gradient(ellipse at 50% 70%,color-mix(in srgb,var(--g) 55%,transparent),transparent 65%);filter:blur(18px);opacity:.75;pointer-events:none}' +
+    '.b3cv{position:absolute;inset:0;width:100%;height:100%;display:block}.b3fall{display:none}.b3hint{position:absolute;left:0;right:0;bottom:14px;text-align:center;margin:0;font-size:13px;color:rgba(255,255,255,.55)}' +
+    '.b3flat{position:absolute;inset:0;display:grid;place-items:center}.b3flat svg{width:min(70vw,360px);height:auto;animation:b3sway 5s ease-in-out infinite}@keyframes b3sway{0%,100%{transform:perspective(800px) rotateY(-28deg)}50%{transform:perspective(800px) rotateY(28deg)}}' +
+    '.b3bio{position:relative;overflow:auto;padding:28px 24px;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border-left:1px solid rgba(255,255,255,.09)}' +
+    '.b3x{position:absolute;top:14px;right:14px;width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-size:18px;cursor:pointer}' +
+    '.b3rar{display:inline-block;margin-top:6px;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;background:rgba(255,255,255,.12)}.b3rar.r-legendary{background:linear-gradient(90deg,#f59e0b,#fde68a);color:#3b2300}.b3rar.r-epic{background:linear-gradient(90deg,#7c3aed,#c084fc);color:#fff}.b3rar.r-rare{background:#2563eb;color:#fff}' +
+    '.b3bio h2{margin:10px 0 4px;font-size:28px;line-height:1.1}.b3kind{margin:0 0 14px;color:rgba(255,255,255,.65);font-size:14px}.b3blurb{font-size:16px;line-height:1.5;margin:0 0 16px}' +
+    '.b3dl{margin:0 0 16px;display:grid;gap:10px}.b3dl div{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid rgba(255,255,255,.08);padding-bottom:8px}.b3dl dt{color:rgba(255,255,255,.6);font-size:13px}.b3dl dd{margin:0;font-weight:700;font-size:14px;text-align:right}.b3dl i{display:inline-block;width:16px;height:16px;border-radius:50%;margin-left:4px;border:1px solid rgba(255,255,255,.3);vertical-align:middle}' +
+    '.b3fact{font-size:14px;line-height:1.5;background:rgba(255,255,255,.06);border-radius:12px;padding:12px 14px;margin:0;color:rgba(255,255,255,.85)}' +
+    '@media (max-width:760px){#bug3d{grid-template-columns:1fr;grid-template-rows:minmax(0,58%) minmax(0,42%)}.b3bio{border-left:0;border-top:1px solid rgba(255,255,255,.09);padding:18px 18px 28px}.b3bio h2{font-size:24px}}' +
+    '.bugcard[data-bug3d]{cursor:pointer}.bugcard[data-bug3d] > svg{transition:transform .2s}.bugcard[data-bug3d]:hover > svg{transform:scale(1.04)}.b3tag{display:inline-block;font-size:11px;font-weight:800;padding:2px 7px;border-radius:99px;background:rgba(124,92,255,.18);color:var(--ink);margin-top:2px}' +
+    '@media (prefers-reduced-motion:reduce){.b3flat svg{animation:none}}';
+  document.head.appendChild(st);
+})();
+
 Dex.load(); try { otaInit(); } catch (e) {} initProg(); if (typeof grubFix === "function") grubFix(); if (agreeRec() && typeof trialBegin === "function") trialBegin(); setTimeout(function () { if (typeof remindSync === "function") remindSync(); if (typeof wdwSync === "function") wdwSync(); if (typeof watchSync === "function") watchSync(); }, 1500); initAdmin(); initLegal(); if (typeof accInit === "function") accInit(); if (typeof walletInit === "function") walletInit(); if (typeof subInit === "function") subInit(); setTimeout(loadProtocolSets, 400);
 })();

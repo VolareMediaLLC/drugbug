@@ -201,7 +201,7 @@ DB.addCases = function (text) {
   text.split("\n").forEach(function (l) {
     l = l.trim(); if (!l || l.indexOf("//") === 0) return;
     var f = l.split("|").map(function (x) { return x.trim(); });
-    if (f[0] === "CASE" && f.length === 4) { cur = { lv: f[1], id: f[2], title: f[3], steps: [] }; DB.CASES.push(cur); return; }
+    if (f[0] === "CASE" && (f.length === 4 || f.length === 5)) { cur = { lv: f[1], id: f[2], title: f[3], acu: f[4] || "", steps: [] }; DB.CASES.push(cur); return; }
     if (f[0] === "STEP" && f.length === 9 && cur) { cur.steps.push({ story: f[1], d: f[2] === "-" ? "" : f[2], q: f[3], a: f[4], w: [f[5], f[6], f[7]], x: f[8] }); return; }
     if (window.console) console.warn("Bad case line", l);
   });
@@ -644,7 +644,7 @@ DB.MEGACODE = [
        { t: "Defibrillate at 200 J", fb: "PEA is not a shockable rhythm." },
        { t: "Give atropine 1 mg IV", fb: "Atropine is not part of the PEA/asystole algorithm." },
        { t: "Begin transcutaneous pacing", fb: "Pacing is not effective in PEA arrest." } ] },
-    { rhythm: "pea", hr: 34, vit: ["No pulse", "Missed dialysis x2"], text: "You think through the H's and T's. Her last potassium was 7.1 and she has missed dialysis.", prompt: "Which treatment targets the most likely cause?", secs: 20,
+    { rhythm: "pea", hr: 34, vit: ["No pulse", "Missed dialysis x2"], text: "You think through the H's and T's. She has missed her last two dialysis sessions.", prompt: "Which treatment targets the most likely cause?", secs: 20,
       options: [
        { t: "Calcium chloride 1 g IV (and consider sodium bicarbonate)", ok: true, fb: "Suspected hyperkalemia: calcium stabilizes the cardiac membrane; bicarbonate, insulin with dextrose and albuterol shift potassium." },
        { t: "Magnesium sulfate 2 g IV", fb: "Magnesium is for torsades de pointes or suspected hypomagnesemia." },
@@ -851,10 +851,10 @@ DB.MEGACODE = [
        { t: "A second dose of calcium and nothing else", fb: "Repeat calcium is reasonable, but on its own it leaves the potassium where it is."},
        { t: "Stop resuscitation; hyperkalemic arrest is not survivable", fb: "Hyperkalemic arrest is one of the more survivable arrests when the cause is treated, and prolonged efforts are often justified."},
        { t: "Give amiodarone 300 mg and stop the potassium treatment", fb: "Amiodarone is still part of the algorithm, but abandoning the reversible cause is the error."} ] },
-    { rhythm: "sinus", hr: 104, vit: ["ROSC", "BP 92/58", "K 7.9"], text: "ROSC after the fifth shock. The potassium is still 7.9 and he is going to the ICU.", prompt: "What has to be arranged?", secs: 15,
+    { rhythm: "sinus", hr: 104, vit: ["ROSC", "BP 92/58", "Peaked T waves"], text: "ROSC after the fifth shock. The T waves are still tall and peaked and he is going to the ICU.", prompt: "What has to be arranged?", secs: 15,
       options: [
        { t: "Urgent dialysis, with the shifting agents continued as a bridge", ok: true, fb: "Only dialysis removes potassium in a patient with no kidney function. Calcium, insulin and bicarbonate are a bridge to it, not a treatment."},
-       { t: "Oral binder and recheck in six hours", fb: "Far too slow for a potassium of 7.9 after an arrest."},
+       { t: "Oral binder and recheck in six hours", fb: "Far too slow for severe hyperkalemia that has just caused an arrest."},
        { t: "Furosemide 80 mg IV", fb: "A diuretic needs working kidneys. In end-stage renal disease it does nothing."},
        { t: "No further potassium treatment now that there is a pulse", fb: "The potassium that caused the arrest is still there and will cause another."} ] } ] },
  { id: "tca-od", title: "Tricyclic overdose with a wide QRS", group: "adult", tag: "Toxicology", age: "24-year-old woman", kg: 62,
@@ -878,11 +878,11 @@ DB.MEGACODE = [
        { t: "Dopamine, because it releases endogenous norepinephrine", fb: "Tricyclics deplete norepinephrine stores, so an indirect agent works poorly. A direct vasopressor is preferred."},
        { t: "A large fluid bolus and nothing else", fb: "The problem is vasodilation and myocardial depression from channel blockade, not volume."},
        { t: "Flumazenil to improve her level of consciousness", fb: "Contraindicated, and it does nothing for blood pressure."} ] },
-    { rhythm: "sinustachy", hr: 110, vit: ["pH 7.48", "Na 152", "QRS 102 ms"], text: "After repeated bicarbonate the pH is 7.48 and sodium is 152.", prompt: "What now?", secs: 15,
+    { rhythm: "sinustachy", hr: 110, vit: ["QRS 102 ms", "BP 104/66", "Bicarbonate x4"], text: "After four bicarbonate boluses the QRS has narrowed to 102 ms and her pressure has come up.", prompt: "What now?", secs: 15,
       options: [
-       { t: "Hold further bicarbonate boluses and watch the QRS, pH and sodium", ok: true, fb: "The endpoints are a narrowing QRS and a pH around 7.45 to 7.55. Past that, the sodium and alkalosis become their own problem."},
-       { t: "Continue bicarbonate at the same rate regardless of the pH", fb: "Alkalosis and hypernatremia are the limits on this treatment."},
-       { t: "Give hypertonic saline instead", fb: "Lipid emulsion and hypertonic saline have been reported, but the sodium here is already 152."},
+       { t: "Hold further bicarbonate boluses and keep watching the QRS", ok: true, fb: "The endpoint is a narrowing QRS. Past that, more bicarbonate causes alkalosis and a high sodium, which become their own problem."},
+       { t: "Keep giving bicarbonate boluses at the same rate", fb: "Alkalosis and a high sodium are the limits on this treatment once the QRS has narrowed."},
+       { t: "Give hypertonic saline instead", fb: "Hypertonic saline has been reported for refractory cases, but the QRS has already responded to bicarbonate."},
        { t: "Stop all treatment; the QRS is normal", fb: "Tricyclics redistribute, and the QRS can widen again. Monitoring continues."} ] } ] },
  { id: "ob-hemorrhage", title: "Postpartum hemorrhage in transport", group: "adult", tag: "Obstetric", age: "29-year-old woman", kg: 78,
    intro: "She delivered 40 minutes ago at a rural clinic. Bleeding has not stopped and the clinic is asking for transport.",
@@ -980,10 +980,10 @@ DB.MEGACODE = [
        { t: "Dopamine, for its renal protective effect", fb: "Renal-dose dopamine does not protect kidneys and dopamine causes more dysrhythmias than norepinephrine."},
        { t: "Another 2 L of crystalloid first", fb: "Past the initial resuscitation, more fluid in a vasodilated patient causes harm."},
        { t: "Phenylephrine", fb: "A pure alpha agent drops cardiac output here; norepinephrine is preferred."} ] },
-    { rhythm: "sinustachy", hr: 104, vit: ["MAP 66 on norepinephrine", "Lactate 5.1"], text: "Her pressure is at target on norepinephrine, but the lactate has risen to 5.1.", prompt: "What does a rising lactate on an adequate pressure suggest?", secs: 18,
+    { rhythm: "sinustachy", hr: 104, vit: ["MAP 66 on norepinephrine", "Mottled knees", "Urine 10 mL/h"], text: "Her pressure is at target on norepinephrine, but her knees are mottled, capillary refill is 5 seconds and almost no urine is coming out.", prompt: "What does poor perfusion on an adequate pressure suggest?", secs: 18,
       options: [
-       { t: "Perfusion is still inadequate; reassess volume, cardiac function and the source", ok: true, fb: "A mean pressure at target is not the same as adequate perfusion. A rising lactate prompts a re-look at volume status, cardiac output and whether the source is controlled."},
-       { t: "The lactate is from the norepinephrine and can be ignored", fb: "Catecholamines can raise lactate, but assuming that in septic shock is how source failure is missed."},
+       { t: "Perfusion is still inadequate; reassess volume, cardiac function and the source", ok: true, fb: "A mean pressure at target is not the same as adequate perfusion. Mottling and almost no urine prompt a re-look at volume status, cardiac output and whether the source is controlled."},
+       { t: "The mottling is from the norepinephrine and can be ignored", fb: "Vasopressors can clamp down the skin, but assuming that in septic shock is how source failure is missed."},
        { t: "Raise the mean pressure target to 85 mmHg for everyone", fb: "Higher targets have not improved outcomes generally and cause more dysrhythmias."},
        { t: "Stop the norepinephrine", fb: "This removes the pressure she needs."} ] },
     { rhythm: "sinustachy", hr: 100, vit: ["Still on norepinephrine", "Hydronephrosis on ultrasound"], text: "Ultrasound shows a dilated obstructed kidney.", prompt: "What is the priority?", secs: 15,
@@ -1012,7 +1012,7 @@ DB.MEGACODE = [
        { t: "Non-convulsive status epilepticus; he needs EEG monitoring", ok: true, fb: "A substantial proportion of people whose convulsions stop are still seizing electrically. Persistent coma after treated status is an indication for EEG."},
        { t: "Normal post-ictal state; simply observe", fb: "A post-ictal period this prolonged is not assumed to be benign."},
        { t: "The benzodiazepine dose was too high and he is oversedated", fb: "Possible, but non-convulsive status has to be excluded rather than assumed away."},
-       { t: "He is ready for discharge once he wakes", fb: "This needs a cause found and monitoring."} ] },
+       { t: "Nothing more is needed once he wakes", fb: "This needs a cause found and monitoring."} ] },
     { rhythm: "sinustachy", hr: 110, vit: ["Na 118 on the first chemistry"], text: "The chemistry returns with a sodium of 118 mmol/L.", prompt: "What does that change?", secs: 15,
       options: [
        { t: "Give hypertonic saline; this is a seizure from severe hyponatremia", ok: true, fb: "Seizures from severe hyponatremia respond to a small bolus of hypertonic saline, and anticonvulsants alone often will not control them."},
@@ -1034,11 +1034,11 @@ DB.MEGACODE = [
        { t: "Switch to intravenous epinephrine push at the same dose", fb: "An intramuscular dose given intravenously is a tenfold overdose. Intravenous epinephrine is an infusion, carefully dosed."},
        { t: "Wait another ten minutes before repeating", fb: "He is still symptomatic and hypotensive; the repeat is now."},
        { t: "Give ranitidine and more diphenhydramine", fb: "Adjuncts do not substitute for epinephrine."} ] },
-    { rhythm: "sinustachy", hr: 130, vit: ["BP 88/50", "Improving"], text: "After the second dose and fluid he improves markedly. The parents want to take him home.", prompt: "What do you advise?", secs: 15,
+    { rhythm: "sinustachy", hr: 130, vit: ["BP 88/50", "Improving"], text: "After the second dose and fluid he improves markedly. His parents ask if the danger is over.", prompt: "What do you advise?", secs: 15,
       options: [
-       { t: "Observation, because symptoms can return hours after the first reaction", ok: true, fb: "Biphasic reactions occur in a minority of patients hours after the initial episode, which is why observation and a prescribed auto-injector matter."},
-       { t: "Discharge now; he has had two doses and looks well", fb: "Two doses is a reason for more observation, not less."},
-       { t: "Discharge with antihistamines only", fb: "He leaves with an epinephrine auto-injector, instruction in its use, and an allergy referral."},
+       { t: "Observation, because symptoms can return hours after the first reaction", ok: true, fb: "Biphasic reactions occur in a minority of patients hours after the initial episode, which is why he stays under observation."},
+       { t: "Stop monitoring now; he has had two doses and looks well", fb: "Two doses is a reason for more monitoring, not less."},
+       { t: "Switch to antihistamines only", fb: "Antihistamines do not treat anaphylaxis. Epinephrine stays the treatment, and he will need an epinephrine auto-injector and an allergy referral."},
        { t: "Admit for a week regardless", fb: "A period of observation is standard; a week is not."} ] },
     { rhythm: "sinustachy", hr: 128, vit: ["BP 84/48 two hours later", "Wheeze returns"], text: "Two hours later the wheeze and hypotension return.", prompt: "What is this, and what do you do?", secs: 15,
       options: [
@@ -1155,6 +1155,403 @@ DB.MEGACODE = [
        { t: "Naloxone to reverse maternal opioids", fb: "Naloxone is not recommended as part of initial neonatal resuscitation."},
        { t: "Stop; a minute of compressions without response means futility", fb: "Resuscitation continues; newborns recover from this."} ] } ] }
 ];
+
+/* ---------- Longer codes, outcomes and AF cases (owner, Nov 14 2026) ----------
+   "make these megacodes last longer. add different scenarios, some where you get them back and some where you
+   dont. Add some AFIB scenarios." Short cases get more decisions (MEGA_MORE), every case gets an outcome for the
+   debrief (rosc / none / stable), and new cases are added below. Doses follow AHA ACLS (2020 guidelines with the
+   2023 and 2025 focused updates). No lactate or other lab-only values in cases meant for prehospital levels. */
+(function () {
+  var O = function (t, fb, ok) { var o = { t: t, fb: fb }; if (ok) o.ok = true; return o; };
+  var MEGA_MORE = {
+    "pea": { outcome: "rosc", steps: [
+      { rhythm: "sinus", hr: 96, vit: ["EtCO2 rose from 18 to 39 mmHg", "Organized rhythm"], secs: 12,
+        text: "After the shock and two more minutes of CPR you see a narrow, organized rhythm, and the EtCO2 jumped.",
+        prompt: "What now?", options: [
+          O("Check for a pulse (no more than 10 seconds)", "An organized rhythm with a sudden rise in EtCO2 suggests ROSC. Confirm it with a short pulse check.", true),
+          O("Shock again", "Organized rhythms are not shocked. Check for a pulse."),
+          O("Give the next epinephrine before checking", "Confirm whether there is a pulse first. Epinephrine boluses stop after ROSC."),
+          O("Keep compressing for another 2 minutes without a check", "An organized rhythm at a rhythm check gets a pulse check.")] },
+      { rhythm: "sinus", hr: 98, vit: ["Pulse present", "BP 84/50", "SpO2 95%", "EtCO2 37 mmHg"], secs: 20,
+        text: "She has a pulse. Her potassium was the likely cause and she still needs dialysis.",
+        prompt: "Best next step?", options: [
+          O("Support the pressure (fluid or a vasopressor to SBP ≥ 90 / MAP ≥ 65), get a 12-lead, and arrange urgent dialysis", "Post-arrest care: treat hypotension, avoid hyperventilation and hyperoxia (SpO2 92–98%), and fix the cause, here the potassium, with definitive dialysis.", true),
+          O("Give potassium chloride to replace what the calcium shifted", "Calcium does not lower potassium; it protects the heart for a short time. Giving potassium would be dangerous."),
+          O("Ventilate fast to blow off CO2 and drive potassium into cells", "Hyperventilation after ROSC lowers cerebral blood flow and venous return. Aim for a normal EtCO2."),
+          O("Stop monitoring now that she has a pulse", "Recurrent arrest is common after ROSC. Keep her on the monitor.")] }] },
+
+    "asys": { outcome: "none", steps: [
+      { rhythm: "asys", vit: ["No pulse", "EtCO2 9 mmHg"], secs: 20,
+        text: "Ten minutes in. Still asystole on two leads. The airway is in and CPR is good quality.",
+        prompt: "What do you do now?", options: [
+          O("Keep CPR going, give epinephrine every 3–5 minutes, and keep working the H's and T's", "Asystole is treated with high-quality CPR, epinephrine and a search for reversible causes.", true),
+          O("Pace him", "Pacing is not recommended for asystolic arrest."),
+          O("Give atropine 1 mg", "Atropine is no longer part of the arrest algorithm."),
+          O("Shock at the highest energy", "Asystole is not a shockable rhythm.")] },
+      { rhythm: "asys", vit: ["No pulse", "EtCO2 7 mmHg", "20 minutes of ALS"], secs: 20,
+        text: "Twenty minutes of high-quality CPR and ALS. Still asystole, no reversible cause found, and EtCO2 has stayed under 10 mmHg.",
+        prompt: "What should the team do?", options: [
+          O("Talk about stopping, together with medical direction, looking at the whole picture", "Low EtCO2 after 20 minutes of good CPR is one of several signs that ROSC is unlikely. It is never used alone; the decision follows your local protocol and medical direction.", true),
+          O("Stop now because EtCO2 is low, without discussing it", "EtCO2 alone is not enough to stop. The decision is made with the team and medical direction."),
+          O("Switch to 5 mg epinephrine doses", "High-dose epinephrine does not improve outcomes."),
+          O("Stop compressions and watch for 2 minutes", "Interrupting CPR is not a way to decide; it only lowers the chance of ROSC.")] },
+      { rhythm: "asys", vit: ["No pulse", "Resuscitation stopped"], secs: 20,
+        text: "With medical direction, the team stops the resuscitation. His wife is in the next room.",
+        prompt: "What comes next?", options: [
+          O("Tell the family clearly and kindly, in plain words, and offer support", "Use plain words such as \"died\", give them time, and offer the support your service or hospital has.", true),
+          O("Leave the family to find out from someone else later", "Telling the family is part of the job, done with care."),
+          O("Say that he is \"gone\" and leave quickly", "Vague words cause confusion. Say it plainly and stay with them for a moment."),
+          O("Remove all equipment before anyone speaks to the family", "Follow your local rules for the scene and the body, and speak to the family promptly.")] }] },
+
+    "brady": { outcome: "stable", steps: [
+      { rhythm: "chb", hr: 70, vit: ["Paced at 70", "BP 96/58"], secs: 15,
+        text: "Transcutaneous pacing is running at 70. The monitor shows a wide complex after each pacer spike.",
+        prompt: "How do you confirm the pacer is actually working?", options: [
+          O("Check for a femoral pulse that matches the paced rate (mechanical capture)", "Electrical capture on the screen is not enough. Feel a pulse at the paced rate, using the femoral artery to avoid confusing muscle twitching with a pulse.", true),
+          O("Electrical capture on the monitor is enough", "The screen can look captured while the heart is not pumping. Confirm a pulse."),
+          O("Check the carotid pulse", "Pacing makes the neck muscles twitch, which can feel like a pulse. Use the femoral pulse."),
+          O("Turn the current up to the maximum and leave it", "Set the current a little above the capture threshold; more current means more pain without more benefit.")] },
+      { rhythm: "chb", hr: 70, vit: ["Paced at 70", "BP 104/62", "Grimacing"], secs: 15,
+        text: "Capture is confirmed and her pressure is better, but she is in pain from the pacing.",
+        prompt: "What do you add?", options: [
+          O("Analgesia and sedation as tolerated, and get expert help for a transvenous pacer", "Pacing hurts. Treat the pain, and arrange transvenous pacing or cardiology review.", true),
+          O("Turn the pacer off to stop the pain", "Without pacing she will go back to a rate of 33 and shock."),
+          O("Give atropine again", "She already had the maximum 3 mg."),
+          O("Give lidocaine for the wide complexes", "Lidocaine can suppress the escape rhythm that keeps her alive.")] }] },
+
+    "svt": { outcome: "stable", steps: [
+      { rhythm: "sinus", hr: 92, vit: ["HR 92", "BP 124/78", "Feels better"], secs: 15,
+        text: "After the 12 mg dose she converts to a regular narrow rhythm at 92 with P waves. She feels better.",
+        prompt: "What do you do now?", options: [
+          O("Get a 12-lead and keep her on the monitor; recurrence is possible", "After conversion, record a 12-lead (looking for pre-excitation and ischemia) and watch for recurrence.", true),
+          O("Give another 12 mg to keep her converted", "Adenosine works for seconds and does not prevent recurrence."),
+          O("Start amiodarone 300 mg IV push", "300 mg push is an arrest dose. It is not used here."),
+          O("Synchronized cardioversion to be sure", "She is already in sinus rhythm.")] }] },
+
+    "unstable-tachy": { outcome: "stable", steps: [
+      { rhythm: "svt", hr: 208, vit: ["HR 208", "BP 72/40", "After 50 J"], secs: 12,
+        text: "The first synchronized shock at 50 J did not convert him. He is still hypotensive.",
+        prompt: "Next step?", options: [
+          O("Make sure sync is on and shock again at a higher energy (step up toward 100 J or more)", "If the first shock fails, step up the energy. Many defibrillators turn sync off after each shock, so turn it back on.", true),
+          O("Switch to unsynchronized defibrillation at 200 J", "He has a pulse and an organized rhythm, so the shock stays synchronized."),
+          O("Give diltiazem 20 mg IV", "Calcium channel blockers can worsen shock in an unstable patient."),
+          O("Wait 10 minutes for the sedation to deepen", "He is unstable. Do not delay.")] },
+      { rhythm: "sinus", hr: 104, vit: ["HR 104", "BP 98/62", "Still sedated"], secs: 15,
+        text: "He converts to sinus at 104. His pressure is coming up.",
+        prompt: "What now?", options: [
+          O("12-lead, watch his airway while sedated, and look for the cause (his chest pain)", "After conversion, get a 12-lead, protect the airway during sedation, and treat the cause.", true),
+          O("Give adenosine to prevent another episode", "Adenosine does not prevent recurrence."),
+          O("Shock again to be sure it stays in sinus", "Sinus rhythm is not shocked."),
+          O("Stop monitoring", "He needs continuous monitoring.")] }] },
+
+    "vt-pulse": { outcome: "rosc", steps: [
+      { rhythm: "vf", vit: ["No pulse", "Unresponsive"], secs: 12,
+        text: "As you charge for cardioversion he goes limp. The monitor now shows VF and there is no pulse.",
+        prompt: "What now?", options: [
+          O("Turn sync off, defibrillate, and start CPR", "Pulseless VF is shocked unsynchronized. A synchronized shock may never fire because there is no QRS to sync to.", true),
+          O("Deliver the synchronized shock you had charged", "In VF the sync mode cannot find a QRS and may never fire. Defibrillate."),
+          O("Give amiodarone 150 mg over 10 minutes", "He is in arrest. Shock and CPR come first."),
+          O("Check his pulse for 30 seconds", "Pulse checks take no more than 10 seconds. Shock now.")] },
+      { rhythm: "sinus", hr: 100, vit: ["Pulse present", "BP 92/58", "EtCO2 36 mmHg"], secs: 20,
+        text: "After one shock and two minutes of CPR he has an organized rhythm with a pulse.",
+        prompt: "Best next step?", options: [
+          O("Post-arrest care: 12-lead, support the pressure, SpO2 92–98%, and consider an antiarrhythmic infusion with expert input", "Treat the cause, keep him perfused, and avoid hyperoxia and hyperventilation.", true),
+          O("Give amiodarone 300 mg IV push now", "300 mg push is the arrest dose. With a pulse it can drop his pressure."),
+          O("Hyperventilate to 30 breaths a minute", "Hyperventilation is harmful after ROSC."),
+          O("Shock again to prevent VF", "Organized rhythms with a pulse are not shocked.")] }] },
+
+    "torsades": { outcome: "rosc", steps: [
+      { rhythm: "torsades", vit: ["No pulse", "Magnesium given"], secs: 15,
+        text: "Two minutes later it is still polymorphic VT with no pulse.",
+        prompt: "Next?", options: [
+          O("Defibrillate again and resume CPR; continue the arrest algorithm", "Pulseless polymorphic VT is treated like VF: shock, CPR, epinephrine.", true),
+          O("Synchronized cardioversion", "Polymorphic VT cannot be reliably synchronized. Defibrillate."),
+          O("Give more of her methadone", "The QT-prolonging drugs are part of the cause."),
+          O("Stop CPR to watch for the twisting to stop", "Keep CPR going.")] },
+      { rhythm: "sinus", hr: 64, vit: ["Pulse present", "BP 102/64", "QTc long"], secs: 20,
+        text: "She has ROSC in a slow sinus rhythm with a very long QT.",
+        prompt: "What helps prevent torsades coming back?", options: [
+          O("Stop the QT-prolonging drugs, correct magnesium and potassium, and avoid a slow heart rate", "Long QT plus slow rates sets up torsades. Remove the drugs, fix the electrolytes, and get expert help (overdrive pacing or isoproterenol may be used).", true),
+          O("Restart her antibiotic now that she is stable", "The macrolide and methadone are likely causes."),
+          O("Give amiodarone to prevent recurrence", "Amiodarone also prolongs the QT."),
+          O("Slow her heart with a beta blocker", "In acquired long QT, a slow rate makes torsades more likely.")] }] },
+
+    "peds-vf": { outcome: "rosc", steps: [
+      { rhythm: "sinus", hr: 118, vit: ["EtCO2 rose to 38 mmHg", "Organized rhythm"], secs: 12,
+        text: "After the third shock and two more minutes of CPR, the rhythm is organized and the EtCO2 jumped.",
+        prompt: "What now?", options: [
+          O("Check for a pulse (no more than 10 seconds)", "An organized rhythm with a jump in EtCO2 suggests ROSC. Confirm it with a short pulse check.", true),
+          O("Shock at 6 J/kg", "Organized rhythms are not shocked."),
+          O("Give the next epinephrine first", "Confirm whether there is a pulse first."),
+          O("Keep compressing without checking", "An organized rhythm at a rhythm check gets a pulse check.")] },
+      { rhythm: "sinus", hr: 124, vit: ["Pulse present", "BP 78/44", "SpO2 99%", "Not waking up"], secs: 20,
+        text: "He has a pulse. His pressure is low for his age and his saturation is 99% on high-flow oxygen.",
+        prompt: "Best post-arrest care?", options: [
+          O("Treat the low pressure (fluid 10–20 mL/kg and/or a vasopressor), titrate oxygen to SpO2 94–99%, and prevent fever", "After pediatric ROSC: avoid low blood pressure, avoid both low and very high oxygen, prevent fever, and keep him monitored.", true),
+          O("Keep him at 100% oxygen as long as possible", "Titrate oxygen once the saturation can be measured; very high oxygen levels are avoided."),
+          O("Give amiodarone 300 mg to prevent more VF", "300 mg is an adult arrest dose, far too much for a 20 kg child."),
+          O("Hyperventilate to keep his CO2 low", "Hyperventilation reduces blood flow to the brain.")] }] },
+    "massive-pe": { outcome: "rosc", steps: [
+      { rhythm: "pea", hr: 44, vit: ["No pulse", "Thrombolytic given", "EtCO2 24 mmHg"], secs: 20,
+        text: "The thrombolytic is in. It is still PEA two minutes later.",
+        prompt: "How long do you keep going?", options: [
+          O("Continue high-quality CPR and the arrest algorithm for 60–90 minutes after the thrombolytic before deciding to stop", "The clot needs time to break down. The usual practice is to keep CPR going 60 to 90 minutes after giving it.", true),
+          O("Stop now; it has not worked", "Thrombolysis takes time to work during CPR."),
+          O("Give a second full thrombolytic dose right away", "A repeat dose this soon raises bleeding risk without giving the first time to work."),
+          O("Defibrillate to help the drug work", "PEA is not shockable.")] },
+      { rhythm: "sinustachy", hr: 118, vit: ["Pulse present", "BP 88/54", "SpO2 90%", "EtCO2 33 mmHg"], secs: 20,
+        text: "After 25 minutes of CPR she has ROSC. She is still hypotensive and hypoxic.",
+        prompt: "What now?", options: [
+          O("Support the right ventricle with norepinephrine, avoid big fluid boluses, and watch for bleeding", "After lysis for PE, keep supporting the strained right ventricle and watch closely for bleeding from the thrombolytic and CPR.", true),
+          O("Give 3 L of fluid to fill the heart", "Large fluid volumes can overload the failing right ventricle."),
+          O("Start a second clot-dissolving drug at full dose", "Further treatment of the clot is decided with the team, and bleeding risk is high after lysis and CPR."),
+          O("Stop the monitor; she has a pulse", "She can arrest again and needs continuous monitoring.")] }] },
+    "anaphylaxis": { outcome: "stable", steps: [
+      { rhythm: "sinustachy", hr: 116, vit: ["HR 116", "BP 98/60", "SpO2 95%", "Hives fading"], secs: 15,
+        text: "On the epinephrine infusion and fluids she improves. Her wheeze is easing.",
+        prompt: "What do you add now?", options: [
+          O("Antihistamines and a steroid as add-ons, and keep the infusion going", "Antihistamines and steroids help symptoms but never replace epinephrine.", true),
+          O("Stop the epinephrine now that she looks better", "Wean it slowly while watching; stopping suddenly can bring the shock back."),
+          O("Give a beta blocker for the heart rate", "Beta blockers can make anaphylaxis harder to treat."),
+          O("Stop watching her now that she looks better", "She needs monitoring for a biphasic reaction.")] },
+      { rhythm: "sinus", hr: 96, vit: ["HR 96", "BP 112/70", "Infusion weaned"], secs: 15,
+        text: "She is stable and the infusion has been weaned.",
+        prompt: "What matters most over the next hours?", options: [
+          O("Keep her on the monitor and watch for a biphasic reaction", "A second reaction can come hours later, so she stays monitored. Longer term she will need an epinephrine auto-injector and an allergy plan.", true),
+          O("Switch her to antihistamines only", "Epinephrine is the treatment for anaphylaxis; antihistamines are add-ons."),
+          O("Take her off the monitor; the danger has passed", "A second reaction can come hours later."),
+          O("Start a beta blocker for her heart rate", "Beta blockers can make anaphylaxis harder to treat.")] }] }
+  };
+  DB.MEGACODE.forEach(function (cs) { var m = MEGA_MORE[cs.id]; if (m) { cs.steps = cs.steps.concat(m.steps); cs.outcome = m.outcome; } });
+
+  /* outcomes for the cases that already end one way or the other */
+  /* only cases that actually reach an end state get one; the rest end mid-treatment and show no outcome line */
+  var OUT = { "vf": "rosc", "hyperk-arrest": "rosc" };
+  DB.MEGACODE.forEach(function (cs) { if (!cs.outcome && OUT[cs.id]) cs.outcome = OUT[cs.id]; });
+
+  DB.MEGACODE.push(
+  { id: "afib-rvr", title: "AFib with rapid ventricular rate", group: "adult", tag: "Atrial fibrillation", age: "68-year-old man", kg: 84, outcome: "stable",
+    intro: "Palpitations since this morning. Mild shortness of breath, alert and talking. History of high blood pressure.",
+    steps: [
+      { rhythm: "afib", afib: "moderate", hr: 138, vit: ["HR 138", "BP 132/84", "SpO2 96%"], secs: 15,
+        text: "Irregularly irregular narrow-complex rhythm with no P waves. He is stable.",
+        prompt: "What is this rhythm, and what is the main goal right now?", options: [
+          O("Atrial fibrillation with a rapid rate; control the rate", "No P waves and an irregularly irregular rhythm is AF. In a stable patient the goal is rate control.", true),
+          O("SVT; give adenosine", "Adenosine is for regular narrow tachycardia. It will not stop AF."),
+          O("Sinus tachycardia; treat the cause only", "Sinus tachycardia is regular with P waves."),
+          O("VT; give amiodarone 300 mg", "The QRS is narrow, and 300 mg is an arrest dose.")] },
+      { rhythm: "afib", afib: "moderate", hr: 134, vit: ["HR 134", "BP 130/82", "No heart failure"], secs: 20,
+        text: "He has no heart failure and his pressure is good.",
+        prompt: "Which drug fits?", options: [
+          O("Diltiazem 0.25 mg/kg IV over 2 minutes (or a beta blocker such as metoprolol)", "A calcium channel blocker or beta blocker slows the ventricular rate in stable AF.", true),
+          O("Adenosine 6 mg rapid push", "Adenosine does not treat AF and is not used for irregular rhythms."),
+          O("Synchronized cardioversion at once", "He is stable. Cardioversion of AF of unknown duration also risks a stroke."),
+          O("Atropine 1 mg", "Atropine would speed the rate up.")] },
+      { rhythm: "afib", afib: "light", hr: 104, vit: ["HR 104", "BP 124/78", "After diltiazem"], secs: 15,
+        text: "His rate comes down to about 100. He feels better. He thinks this started this morning but is not sure.",
+        prompt: "What is the main risk to keep in mind before anyone converts him to sinus?", options: [
+          O("A clot in the atrium; if AF has gone on 48 hours or more (or the start is unclear), conversion can cause a stroke", "AF that has lasted 48 hours or more, or of unknown duration, needs anticoagulation or imaging before elective conversion.", true),
+          O("There is no risk; convert him now", "Conversion can throw a clot that formed in the atrium."),
+          O("Bleeding from the diltiazem", "Diltiazem does not cause bleeding."),
+          O("The rate will go too low from AF itself", "The risk to plan for is a stroke from a clot.")] },
+      { rhythm: "afib", afib: "light", hr: 96, vit: ["HR 96", "BP 122/76", "Rate controlled"], secs: 15,
+        text: "His rate is controlled. He will be admitted.",
+        prompt: "What stays important?", options: [
+          O("Keep him on the monitor and look for causes (infection, thyroid, alcohol, ischemia)", "AF often has a trigger worth finding, and the rate can climb again.", true),
+          O("Give adenosine to see if it converts", "Adenosine does not convert AF."),
+          O("Give a second diltiazem bolus even though the rate is controlled", "The rate is already controlled."),
+          O("Shock him to finish the job", "He is stable and the onset is unclear.")] }] },
+
+  { id: "afib-unstable", title: "Unstable AFib with rapid rate", group: "adult", tag: "Atrial fibrillation", age: "74-year-old woman", kg: 68, outcome: "stable",
+    intro: "Weak and short of breath for two hours. She looks gray, is sweating and keeps drifting off.",
+    steps: [
+      { rhythm: "afib", afib: "severe", hr: 168, vit: ["HR 168", "BP 76/44", "SpO2 89%", "Confused"], secs: 12,
+        text: "Very fast, irregularly irregular, narrow rhythm. She is hypotensive and confused.",
+        prompt: "Is she stable or unstable, and what is the treatment?", options: [
+          O("Unstable; synchronized cardioversion now (biphasic 200 J, per your device), with sedation if it will not delay", "Hypotension and altered mental status from a fast rhythm mean she is unstable. Shock now, synchronized.", true),
+          O("Stable; give diltiazem 20 mg IV", "She is unstable, and diltiazem can drop her pressure further."),
+          O("Unstable; unsynchronized defibrillation at 200 J", "She has a pulse and an organized rhythm, so the shock is synchronized."),
+          O("Stable; give adenosine 6 mg", "Adenosine does not treat AF.")] },
+      { rhythm: "afib", afib: "severe", hr: 162, vit: ["HR 162", "BP 74/42", "After 1 shock"], secs: 12,
+        text: "The first shock did not convert her.",
+        prompt: "Next?", options: [
+          O("Confirm sync is on, check pad position, and shock again at a higher energy", "Step up the energy and make sure sync is on, since many devices turn it off after each shock.", true),
+          O("Give up on shocks and start diltiazem", "She is still unstable. Repeat the cardioversion."),
+          O("Defibrillate unsynchronized", "She still has a pulse; keep the shock synchronized."),
+          O("Wait 30 minutes and try again", "She is unstable now.")] },
+      { rhythm: "sinus", hr: 96, vit: ["HR 96", "BP 108/66", "SpO2 95%"], secs: 15,
+        text: "She converts to sinus rhythm at 96. Her pressure and color improve.",
+        prompt: "What now?", options: [
+          O("12-lead, keep her on the monitor, and plan anticoagulation and the cause with the team", "After an emergency conversion, anticoagulation still matters because of the stroke risk, and the trigger needs to be found.", true),
+          O("Give adenosine to keep her in sinus", "Adenosine does not prevent AF."),
+          O("No more monitoring is needed", "AF often comes back."),
+          O("Shock once more to be sure", "Sinus rhythm is not shocked.")] },
+      { rhythm: "afib", afib: "moderate", hr: 128, vit: ["HR 128", "BP 104/64", "Mentating well"], secs: 15,
+        text: "An hour later she slips back into AF at 128, but her pressure holds and she is talking normally.",
+        prompt: "Now what?", options: [
+          O("She is stable now; rate control with careful dosing and close watching", "Stable AF is managed with rate control. Watch her pressure closely after the earlier shock.", true),
+          O("Shock again right away", "She is stable now; repeated shocks are for instability."),
+          O("Give amiodarone 300 mg IV push", "300 mg push is an arrest dose."),
+          O("Give adenosine 12 mg", "Adenosine does not treat AF.")] }] },
+
+  { id: "afib-wpw", title: "Very fast irregular wide-complex tachycardia", group: "adult", tag: "Atrial fibrillation", age: "24-year-old man", kg: 76, outcome: "stable",
+    intro: "Palpitations at the gym. Alert and talking, says this has happened before but never this fast.",
+    steps: [
+      { rhythm: "afib", afib: "severe", wide: true, hr: 236, vit: ["HR 236", "BP 118/72", "SpO2 98%"], secs: 20,
+        text: "Very fast, irregular rhythm at up to 240 with wide complexes that change shape from beat to beat. He is stable.",
+        prompt: "What should worry you most?", options: [
+          O("Pre-excited AF (WPW); drugs that block the AV node can make it worse", "A very fast, irregular, wide rhythm in a young person suggests AF going down an accessory pathway. Blocking the AV node can push it to VF.", true),
+          O("This is SVT; give adenosine", "The rhythm is irregular, and adenosine can be dangerous in pre-excited AF."),
+          O("This is sinus tachycardia from exercise", "Sinus tachycardia is regular, narrow and rarely this fast at rest."),
+          O("This is monomorphic VT; give verapamil", "Verapamil is dangerous in wide-complex tachycardia and in pre-excited AF.")] },
+      { rhythm: "afib", afib: "severe", wide: true, hr: 232, vit: ["HR 232", "BP 116/70"], secs: 20,
+        text: "He is still stable.",
+        prompt: "Which treatment fits?", options: [
+          O("Procainamide IV (or synchronized cardioversion), with expert input", "Procainamide slows conduction down the accessory pathway. Avoid adenosine, calcium channel blockers, beta blockers and digoxin.", true),
+          O("Diltiazem 0.25 mg/kg IV", "Blocking the AV node can speed conduction down the accessory pathway."),
+          O("Adenosine 12 mg rapid push", "Adenosine can trigger VF in pre-excited AF."),
+          O("Metoprolol 5 mg IV", "Beta blockers are avoided in pre-excited AF.")] },
+      { rhythm: "afib", afib: "severe", wide: true, hr: 248, vit: ["HR 248", "BP 78/44", "Now dizzy and gray"], secs: 12,
+        text: "Before the infusion is finished he becomes hypotensive and dizzy.",
+        prompt: "Now?", options: [
+          O("Synchronized cardioversion now", "He is now unstable. Cardiovert.", true),
+          O("Finish the procainamide first", "Instability means shock now."),
+          O("Give adenosine to slow it", "Adenosine can turn this into VF."),
+          O("Start CPR", "He still has a pulse. Cardioversion, not CPR.")] },
+      { rhythm: "sinus", hr: 88, vit: ["HR 88", "BP 120/74"], secs: 15,
+        text: "He converts to sinus rhythm. The 12-lead shows a short PR and a slurred upstroke (delta wave).",
+        prompt: "What does he need?", options: [
+          O("Referral to cardiology for the accessory pathway (often treated with ablation)", "Pre-excitation that caused AF this fast needs electrophysiology review.", true),
+          O("Start him on diltiazem to prevent another episode", "AV nodal blockers are avoided in pre-excited AF."),
+          O("Nothing; he is back in sinus", "The pathway is still there and this can recur."),
+          O("Tell him to treat the next episode with energy drinks and rest", "He needs a specialist and a plan.")] }] },
+
+  { id: "vf-refractory", title: "Refractory VF", group: "adult", tag: "Cardiac arrest", age: "62-year-old man", kg: 96, outcome: "none",
+    intro: "Collapsed at home 15 minutes before you arrived. Bystander CPR was started late. You attach the pads.",
+    steps: [
+      { rhythm: "vf", vit: ["No pulse", "Not breathing"], secs: 15,
+        text: "Coarse VF on the monitor.",
+        prompt: "First?", options: [
+          O("Defibrillate and resume CPR immediately", "Shock VF as soon as possible, then go straight back to compressions.", true),
+          O("Intubate first", "Airway can wait; defibrillation and compressions come first."),
+          O("Epinephrine before the first shock", "In VF, shock first."),
+          O("Check a pulse for 20 seconds", "Pulse checks take no more than 10 seconds, and VF is shocked.")] },
+      { rhythm: "vf", vit: ["No pulse", "IO in place", "EtCO2 15 mmHg"], secs: 15,
+        text: "Still VF after two minutes. The IO is in.",
+        prompt: "Next?", options: [
+          O("Shock, resume CPR, give epinephrine 1 mg IV/IO", "Second shock, then epinephrine every 3–5 minutes.", true),
+          O("Amiodarone 300 mg and hold the shock", "Shocks are not held for drugs."),
+          O("Atropine 1 mg", "Atropine has no role in arrest."),
+          O("Synchronized cardioversion", "VF is defibrillated unsynchronized.")] },
+      { rhythm: "vf", vit: ["No pulse", "EtCO2 14 mmHg"], secs: 15,
+        text: "Still VF at the next check.",
+        prompt: "Now?", options: [
+          O("Shock, CPR, and amiodarone 300 mg IV/IO (or lidocaine 1–1.5 mg/kg)", "After the third shock, give the first antiarrhythmic.", true),
+          O("Amiodarone 150 mg over 10 minutes", "That is the dose for VT with a pulse."),
+          O("Stop and wait for help", "Keep the code going."),
+          O("Magnesium 2 g as the main antiarrhythmic", "Magnesium is for torsades, not routine VF.")] },
+      { rhythm: "vf", vit: ["No pulse", "EtCO2 12 mmHg", "4 shocks so far"], secs: 20,
+        text: "VF keeps returning after every shock.",
+        prompt: "What can you try for refractory VF?", options: [
+          O("Keep the algorithm going and consider a pad vector change (front-to-back), per local protocol; second amiodarone dose 150 mg", "For refractory VF, keep shocking and giving drugs per the algorithm. Changing pad position may be considered.", true),
+          O("Stop shocking; it is not working", "VF is still shockable. Keep defibrillating."),
+          O("Give 3 mg of epinephrine at once", "High-dose epinephrine is not recommended."),
+          O("Switch to synchronized shocks", "VF cannot be synchronized.")] },
+      { rhythm: "asys", vit: ["No pulse", "EtCO2 8 mmHg", "30 minutes of ALS"], secs: 20,
+        text: "After 30 minutes the rhythm has decayed to asystole. EtCO2 has stayed under 10 mmHg for the last 20 minutes despite good CPR.",
+        prompt: "What should the team do?", options: [
+          O("Discuss stopping with medical direction, considering the whole picture", "Prolonged arrest, asystole and persistently low EtCO2 together suggest ROSC is very unlikely. The decision follows protocol and medical direction.", true),
+          O("Shock the asystole", "Asystole is not shockable."),
+          O("Start pacing", "Pacing does not help asystolic arrest."),
+          O("Stop now without talking to anyone", "Stopping is a team decision with medical direction.")] },
+      { rhythm: "asys", vit: ["No pulse", "Resuscitation stopped"], secs: 20,
+        text: "The resuscitation is stopped. His daughter arrives.",
+        prompt: "What do you do?", options: [
+          O("Tell her plainly and kindly that her father has died, and offer support", "Plain words and time matter. Offer the support your service or hospital has.", true),
+          O("Tell her everything possible is still being done", "Do not give false hope once the resuscitation has stopped."),
+          O("Avoid her and let the police tell her", "Speaking to the family is part of the work."),
+          O("Hand her a form and leave", "Stay with her for a moment and offer support.")] }] },
+
+  { id: "opioid-arrest", title: "Opioid overdose to arrest", group: "adult", tag: "Toxicology", age: "29-year-old man", kg: 72, outcome: "rosc",
+    intro: "Found in a bathroom by a friend. Pinpoint pupils, snoring then not breathing. A syringe is nearby.",
+    steps: [
+      { rhythm: "sinusbrady", hr: 52, vit: ["Pulse present", "Not breathing", "SpO2 78%"], secs: 12,
+        text: "He has a pulse but is not breathing.",
+        prompt: "First?", options: [
+          O("Open the airway and ventilate with a bag-mask, and give naloxone", "With a pulse and no breathing, ventilation is the priority. Naloxone reverses the opioid.", true),
+          O("Start chest compressions", "He has a pulse. He needs breaths."),
+          O("Give naloxone and wait without ventilating", "Ventilate while the naloxone works."),
+          O("Defibrillate", "He has a pulse and is not in a shockable rhythm.")] },
+      { rhythm: "pea", hr: 40, vit: ["No pulse", "Slow wide complexes"], secs: 12,
+        text: "Before the naloxone works, his pulse is lost. The monitor shows slow wide complexes.",
+        prompt: "What now?", options: [
+          O("Start high-quality CPR and give epinephrine 1 mg IV/IO as soon as possible", "Pulseless with an organized rhythm is PEA. CPR and epinephrine; naloxone may be given but never delays CPR.", true),
+          O("Give more naloxone and wait for him to wake", "In arrest, CPR comes first. Naloxone alone will not restart the heart."),
+          O("Defibrillate", "PEA is not shockable."),
+          O("Pace the slow rhythm", "Pacing is not used in PEA arrest.")] },
+      { rhythm: "pea", hr: 36, vit: ["No pulse", "EtCO2 22 mmHg", "Epinephrine given"], secs: 15,
+        text: "Two minutes later it is still PEA. CPR is good and you are ventilating with oxygen.",
+        prompt: "Next?", options: [
+          O("Continue CPR, epinephrine every 3–5 minutes, and treat the cause: oxygenation and ventilation", "Hypoxia from the overdose caused this arrest. Good ventilation is treatment.", true),
+          O("Give amiodarone 300 mg", "Amiodarone is for VF and pulseless VT."),
+          O("Shock at 200 J", "PEA is not shockable."),
+          O("Stop CPR to give rescue breaths only", "Keep compressions going.")] },
+      { rhythm: "sinustachy", hr: 112, vit: ["EtCO2 rose to 40 mmHg", "Organized rhythm"], secs: 12,
+        text: "At the next check the rhythm is faster and narrower, and the EtCO2 jumped.",
+        prompt: "What now?", options: [
+          O("Check for a pulse (no more than 10 seconds)", "A sudden rise in EtCO2 with an organized rhythm suggests ROSC.", true),
+          O("Shock", "Organized rhythms are not shocked."),
+          O("Give another epinephrine first", "Check for a pulse first."),
+          O("Keep compressing without a check", "An organized rhythm at a rhythm check gets a pulse check.")] },
+      { rhythm: "sinustachy", hr: 108, vit: ["Pulse present", "BP 104/66", "Breathing slowly", "SpO2 94%"], secs: 20,
+        text: "He has a pulse and is starting to breathe slowly.",
+        prompt: "What matters most now?", options: [
+          O("Support breathing, keep SpO2 92–98%, avoid hyperventilation, and watch for the opioid to outlast the naloxone", "Naloxone wears off before many opioids do, so he can stop breathing again. Watch him closely.", true),
+          O("Give a large naloxone dose to wake him fully", "Large doses can cause sudden withdrawal, vomiting and agitation. Titrate to breathing."),
+          O("Stop monitoring once he wakes up", "He needs monitoring; breathing can stop again."),
+          O("Hyperventilate him to clear the CO2", "Hyperventilation is harmful after ROSC.")] }] },
+
+  { id: "stemi-vf", title: "STEMI that goes into VF", group: "adult", tag: "Cardiac arrest", age: "56-year-old woman", kg: 78, outcome: "rosc",
+    intro: "Crushing chest pain for 40 minutes, sweating and nauseated. Alert. The 12-lead shows ST elevation in the inferior leads.",
+    steps: [
+      { rhythm: "sinustachy", hr: 104, vit: ["HR 104", "BP 138/86", "SpO2 97%", "ST elevation II, III, aVF"], secs: 20,
+        text: "She has an inferior STEMI and no allergies.",
+        prompt: "First treatment and plan?", options: [
+          O("Aspirin 162–325 mg chewed and activate the cath lab (or your STEMI system) early", "Aspirin and early reperfusion are the priorities in STEMI.", true),
+          O("Oxygen 15 L for everyone with chest pain", "Oxygen is for SpO2 under 90%. Her SpO2 is 97%."),
+          O("Give amiodarone to prevent arrhythmias", "Prophylactic antiarrhythmics are not recommended."),
+          O("Wait for troponin before calling anyone", "With ST elevation, do not wait for troponin.")] },
+      { rhythm: "vf", vit: ["No pulse", "Unresponsive"], secs: 12,
+        text: "Mid-conversation she goes limp. VF on the monitor.",
+        prompt: "What now?", options: [
+          O("Defibrillate and start CPR immediately", "Witnessed VF on the monitor is shocked right away.", true),
+          O("Give nitroglycerin", "She is in arrest."),
+          O("Check a pulse for 30 seconds first", "Pulse checks take no more than 10 seconds. Shock now."),
+          O("Synchronized cardioversion", "VF is defibrillated unsynchronized.")] },
+      { rhythm: "sinus", hr: 96, vit: ["EtCO2 jumped to 42 mmHg", "Organized rhythm"], secs: 12,
+        text: "After one shock and two minutes of CPR, an organized rhythm, and the EtCO2 rose sharply.",
+        prompt: "What now?", options: [
+          O("Check for a pulse (no more than 10 seconds)", "Organized rhythm plus a jump in EtCO2 suggests ROSC.", true),
+          O("Shock again", "Organized rhythms are not shocked."),
+          O("Give epinephrine first", "Check for a pulse first."),
+          O("Keep compressing 2 more minutes", "An organized rhythm gets a pulse check.")] },
+      { rhythm: "sinus", hr: 98, vit: ["Pulse present", "BP 84/52", "SpO2 99% on 15 L", "Not following commands"], secs: 20,
+        text: "She has a pulse. Pressure is low and her saturation is 99% on high-flow oxygen.",
+        prompt: "Best post-arrest care?", options: [
+          O("Support the pressure (MAP ≥ 65), titrate oxygen to SpO2 92–98%, avoid hyperventilation, and go to the cath lab", "Post-arrest care plus early reperfusion. Avoid hyperoxia; plan temperature control.", true),
+          O("Keep her at 100% oxygen", "Hyperoxia after arrest can harm the brain. Titrate down."),
+          O("Give nitroglycerin for the STEMI", "Nitrates are avoided in hypotension and in many inferior MIs."),
+          O("Wait for her to wake up before deciding on the cath lab", "Coma after arrest does not rule out the cath lab for STEMI.")] },
+      { rhythm: "sinus", hr: 92, vit: ["BP 104/66 on norepinephrine", "SpO2 95%", "EtCO2 38 mmHg"], secs: 15,
+        text: "Her pressure is supported and she is going to the cath lab.",
+        prompt: "What else should be started early?", options: [
+          O("Temperature control: prevent fever and keep her temperature steady per protocol", "Targeted temperature control and fever prevention are part of post-arrest care for patients who are not following commands.", true),
+          O("Warm her to 39 °C to speed waking", "Fever is harmful after arrest."),
+          O("Stop monitoring once she is in the cath lab", "She needs continuous monitoring."),
+          O("Give 2 L of cold fluid quickly in the field", "Rapid cold IV fluid right after ROSC is not recommended.")] }] }
+  );
+})();
+
 DB.MEGA_LEVELS = { paramedic: 1, flight: 1, flightrn: 1, cpp: 1, gen: 1, rn: 1, ms1: 1, ms3: 1, intern: 1 };
 
 ;
