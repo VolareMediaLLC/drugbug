@@ -270,4 +270,15 @@ if(!path&&c.getAttribute("data-k")!=="ev")open(c.getAttribute("data-k"),c.getAtt
 document.getElementById("tt").addEventListener("keydown",function(e){if(e.key==="ArrowLeft"){stop();to(Math.round(pos)-1)}if(e.key==="ArrowRight"){stop();to(Math.round(pos)+1)}if(e.key==="Escape"&&path)close()});
 var tt=document.getElementById("tt");tt.addEventListener("mouseenter",function(){hold=true});tt.addEventListener("mouseleave",function(){hold=false});
 load("tt-paths");lay(0,false);play()})();
-</script><script src="evform.js"></script><script>if(location.hash==="#evaluate")location.replace("questions.html#evaluate");</script></body></html>
+</script><script src="evform.js"></script><script>if(location.hash==="#evaluate")location.replace("questions.html#evaluate");</script><script>/* homepage visit counter (owner, Nov 14 2026): visits and button taps per day for the owner's
+   dashboard. No cookie, no device id, nothing about the person: only the event and where the visit came from. */
+(function(){try{
+if(!/drugbugapp\.com$/.test(location.hostname))return;
+var q=location.search,r=document.referrer||"",src=/utm_medium=paid|fbclid=|gclid=|ttclid=/i.test(q)?"ad":/instagram/i.test(r)||/utm_source=instagram/i.test(q)?"instagram":/facebook|fb\.com/i.test(r)||/utm_source=facebook/i.test(q)?"facebook":/google\./i.test(r)?"google":/tiktok/i.test(r)?"tiktok":!r||r.indexOf(location.origin)===0?"direct":"other";
+var U="https://us-central1-drugbug-69d42.cloudfunctions.net/sitePing";
+function ping(ev){try{fetch(U,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({data:{ev:ev,src:src}}),keepalive:true}).catch(function(){});}catch(e){}}
+ping("view");
+document.addEventListener("click",function(e){var a=e.target&&e.target.closest&&e.target.closest("a[href]");if(!a)return;var h=a.getAttribute("href")||"";
+if(/apps\.apple\.com/.test(h))ping("appstore");else if(/^(\.\/)?app\/?($|\?|#)/.test(h)||/drugbugapp\.com\/app\/?/.test(h))ping("browser");},true);
+}catch(e){}})();</script>
+</body></html>
