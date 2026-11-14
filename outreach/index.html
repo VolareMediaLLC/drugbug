@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>DrugBug Outreach</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#13111c">
+<link rel="icon" type="image/png" href="icon-192.png">
+<style>
+/* DrugBug Outreach (owner, Nov 14 2026): the app for friends who help book appointments. Their own login;
+   only the outreach list (shared with Adam) and their own stats. Access is set by Adam on his dashboard
+   (Outreach > Helpers & stats) and enforced by the server (functions/dash.js). */
+:root{--bg:#13111c;--surface:#1d1a2a;--ink:#f2effb;--muted:#aaa3c4;--line:#322c47;--accent:#a78bfa;--bad:#f87171}
+@media (prefers-color-scheme:light){:root{--bg:#f6f4fc;--surface:#fff;--ink:#1c1730;--muted:#5f5878;--line:#e2dcef;--accent:#6d28d9;--bad:#b91c1c}}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column}
+header{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+header img{width:34px;height:34px;border-radius:9px}header b{font-size:18px}
+nav{display:flex;gap:4px;margin-left:12px}
+nav button{font:inherit;font-weight:650;font-size:14px;padding:7px 14px;border-radius:10px;border:1px solid transparent;background:none;color:var(--muted);cursor:pointer}
+nav button[aria-selected=true]{color:var(--ink);background:var(--surface);border-color:var(--line)}
+.who{margin-left:auto;font-size:13px;color:var(--muted);display:flex;gap:10px;align-items:center}
+.who button,.inst{font:inherit;font-size:13px;padding:5px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+main{flex:1;display:flex;min-height:0}
+iframe{flex:1;border:0;width:100%;min-height:calc(100vh - 60px)}
+.signin{max-width:420px;margin:60px auto;padding:24px;background:var(--surface);border:1px solid var(--line);border-radius:16px;text-align:center}
+.signin img{width:84px;height:84px;border-radius:20px}
+.signin input{display:block;width:100%;font:inherit;padding:10px 12px;margin:8px 0;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.btn{font:inherit;font-weight:700;padding:10px 16px;border-radius:10px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;width:100%;margin-top:6px}
+.btn.ghost{background:transparent;color:var(--accent)}
+.msg{font-size:14px;color:var(--bad);min-height:1.2em}
+.muted{color:var(--muted);font-size:13.5px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header>
+  <img src="icon-192.png" alt=""><b>DrugBug Outreach</b>
+  <nav id="tabs" hidden><button data-v="list" aria-selected="true">Outreach list</button><button data-v="stats" aria-selected="false">My stats</button></nav>
+  <div class="who"><button class="inst" id="inst" hidden>Install on this computer</button><span id="me"></span><button id="out" hidden>Sign out</button></div>
+</header>
+<section class="signin" id="vIn" hidden>
+  <img src="icon-192.png" alt="">
+  <h2 style="margin:12px 0 4px">Sign in</h2>
+  <p class="muted">Use the DrugBug account Adam added. No account yet? Make a free one on <b>drugbugapp.com</b> with your email, then ask Adam to add you.</p>
+  <button class="btn ghost" id="bGoogle" type="button">Continue with Google</button>
+  <input id="em" type="email" placeholder="Email" autocomplete="email">
+  <input id="pw" type="password" placeholder="Password" autocomplete="current-password">
+  <button class="btn" id="bIn" type="button">Sign in</button>
+  <p class="msg" id="inMsg" aria-live="polite"></p>
+</section>
+<section class="signin" id="vNo" hidden>
+  <img src="icon-192.png" alt="">
+  <h2 style="margin:12px 0 4px">Almost there</h2>
+  <p class="muted" id="noMsg">This account isn't set up for DrugBug Outreach yet. Ask Adam to add your email on his dashboard, then tap Try again.</p>
+  <button class="btn" id="again" type="button">Try again</button>
+</section>
+<main id="vMain" hidden><iframe id="fr" title="Outreach"></iframe></main>
+<script src="../app/vendor/firebase-app-compat.js"></script>
+<script src="../app/vendor/firebase-auth-compat.js"></script>
+<script src="../admin/dash.js?v=7"></script>
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id)}, auth=DASH.auth, emu=/[?&]emu=1/.test(location.search)?"&emu=1":"";
+  var SRC={list:"../admin/outreach.html?embed=1&v=10"+emu,stats:"../admin/helpers.html?embed=1&v=1"+emu};
+  function show(v){["vIn","vNo","vMain"].forEach(function(k){$(k).hidden=k!==v});$("tabs").hidden=v!=="vMain";$("out").hidden=v==="vIn"}
+  function open(k){[].forEach.call(document.querySelectorAll("#tabs button"),function(b){b.setAttribute("aria-selected",String(b.getAttribute("data-v")===k))});$("fr").src=SRC[k]}
+  function check(){DASH.call("dashMe").then(function(r){try{localStorage.setItem("dbStaff",r.role)}catch(x){}$("me").innerHTML=(r.title?'<b style="color:#facc15">'+r.title.replace(/[<>&"]/g,"")+'</b> ':'')+(r.name||"").replace(/[<>&"]/g,"");show("vMain");open("list")}).catch(function(e){$("noMsg").textContent=/not deployed/i.test(e.message)?"DrugBug Outreach is being set up. Try again in a little while.":e.message;show("vNo")})}
+  auth.onAuthStateChanged(function(u){if(u&&!u.isAnonymous){$("me").textContent=u.email||"";check()}else{$("me").textContent="";show("vIn")}});
+  $("bIn").onclick=function(){auth.signInWithEmailAndPassword($("em").value.trim(),$("pw").value).catch(function(e){$("inMsg").textContent=/password|user-not-found|invalid/i.test(e.code||e.message)?"That email and password didn't match. Use the same ones as your DrugBug account.":(e.message||"Couldn't sign in.")})};
+  $("pw").addEventListener("keydown",function(e){if(e.key==="Enter")$("bIn").click()});
+  $("bGoogle").onclick=function(){auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(function(e){$("inMsg").textContent=e.message||"Couldn't sign in."})};
+  $("out").onclick=function(){auth.signOut()};
+  $("again").onclick=check;
+  $("tabs").addEventListener("click",function(e){var b=e.target.closest("[data-v]");if(b)open(b.getAttribute("data-v"))});
+  /* "Install on this computer": Chrome and Edge put DrugBug Outreach in the Start menu / Dock with its own icon */
+  var deferred=null;window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();deferred=e;$("inst").hidden=false});
+  $("inst").onclick=function(){if(deferred){deferred.prompt();deferred=null;$("inst").hidden=true}};
+  if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(function(){});
+})();
+</script>
+</body>
+</html>
