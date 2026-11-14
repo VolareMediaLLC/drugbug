@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Daily log · DrugBug Dashboard</title>
+<link rel="icon" type="image/png" sizes="48x48" href="../icon-48.png">
+<style>
+/* Daily log (owner, Nov 14 2026): one card per day with the digest's numbers, what changed in the
+   app and on the website, and the owner's own notes. Data: logList / logNote (functions/updatelog.js). */
+:root{--bg:#13111c;--card:#1d1a2a;--ink:#f2effb;--mut:#aaa3c4;--line:#322c47;--soft:#251f37;--accent:#a78bfa;--accent-ink:#13111c;--up:#34d399;--down:#f87171;--web:#60a5fa;--app:#a78bfa;--q:#fbbf24;--srv:#2dd4bf;--mkt:#f472b6;color-scheme:dark}
+@media (prefers-color-scheme: light){:root{--bg:#f6f4fc;--card:#fff;--ink:#1c1730;--mut:#5f5878;--line:#e2dcef;--soft:#f1edfa;--accent:#6d28d9;--accent-ink:#fff;--up:#047857;--down:#b91c1c;--web:#1d4ed8;--app:#6d28d9;--q:#b45309;--srv:#0f766e;--mkt:#be185d;color-scheme:light}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:980px;margin:0 auto;padding:20px 16px 60px}
+body.embed .wrap{padding-top:4px;max-width:none;padding-left:0;padding-right:0}
+h1{font-size:22px;margin:0}
+.sub{color:var(--mut);font-size:13px;margin:4px 0 0}
+.head{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;justify-content:space-between}
+.add{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:14px 0 18px;display:grid;gap:10px}
+.add b{font-size:14px}
+textarea,input,select{font:inherit;font-size:14px;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:9px;padding:8px 10px;min-width:0}
+textarea{width:100%;min-height:64px;resize:vertical}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{font:inherit;font-weight:700;font-size:14px;padding:8px 14px;border-radius:9px;border:0;background:var(--accent);color:var(--accent-ink);cursor:pointer}
+.ghost{font:inherit;font-size:13px;font-weight:650;padding:6px 11px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+.msg{font-size:13px;color:var(--mut)}
+.msg.err{color:var(--down)}
+.day{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin-bottom:14px}
+.day h2{font-size:17px;margin:0 0 12px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.day h2 span{font-size:12.5px;font-weight:500;color:var(--mut)}
+.sec{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);font-weight:700;margin:14px 0 8px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.kpi{background:var(--soft);border-radius:11px;padding:9px 11px}
+.kpi b{display:block;font-size:20px;line-height:1.2;font-variant-numeric:tabular-nums}
+.kpi span{display:block;font-size:12px;color:var(--mut)}
+.kpi i{font-style:normal;font-size:11.5px;font-weight:700}
+.kpi i.up{color:var(--up)}.kpi i.down{color:var(--down)}.kpi i.same{color:var(--mut)}
+.money{border:1px solid color-mix(in srgb,var(--up) 35%,var(--line));background:color-mix(in srgb,var(--up) 8%,var(--soft))}
+ul.ch{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+ul.ch li{display:flex;gap:9px;align-items:flex-start;font-size:14px}
+.tag{flex:none;font-size:11px;font-weight:800;letter-spacing:.03em;border-radius:99px;padding:2px 8px;margin-top:2px;color:var(--c);border:1px solid color-mix(in srgb,var(--c) 45%,transparent);background:color-mix(in srgb,var(--c) 12%,transparent)}
+.tag.web{--c:var(--web)}.tag.app{--c:var(--app)}.tag.questions{--c:var(--q)}.tag.server{--c:var(--srv)}.tag.marketing{--c:var(--mkt)}.tag.other,.tag.note{--c:var(--mut)}
+ul.ch a{color:var(--accent)}
+.note .x{margin-left:auto;font-size:12px;padding:2px 8px}
+details{margin-top:12px}
+summary{cursor:pointer;color:var(--accent);font-size:13px;font-weight:650}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;background:var(--soft);border-radius:10px;padding:12px;margin:8px 0 0}
+.empty{color:var(--mut);font-size:14px;padding:6px 2px}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div><h1>Daily log</h1><p class="sub">Each day: the numbers, what changed in the app and on the website, question grades from you and your evaluators, and your own notes. A change report is also emailed to you at noon and 10 pm.</p></div>
+    <div class="row"><select id="range" aria-label="How many days"><option value="14">Last 14 days</option><option value="30" selected>Last 30 days</option><option value="90">Last 90 days</option></select><button class="ghost" id="refresh" type="button">Refresh</button></div>
+  </div>
+  <form class="add" id="add">
+    <b>Add a note</b>
+    <textarea id="nt" maxlength="1000" placeholder="What did you change or decide today? For example: raised the Instagram boost to $40 a day."></textarea>
+    <div class="row"><input type="date" id="nd" aria-label="Day"><button class="btn" type="submit">Add to log</button><span class="msg" id="nmsg" role="status"></span></div>
+  </form>
+  <p class="msg" id="st" role="status">Loading…</p>
+  <div id="days"></div>
+</div>
+<script src="../app/vendor/firebase-app-compat.js"></script>
+<script src="../app/vendor/firebase-auth-compat.js"></script>
+<script src="dash.js?v=7"></script>
+<script>
+(function(){
+  "use strict";
+  if(/[?&]embed=1/.test(location.search))document.body.classList.add("embed");
+  var $=function(id){return document.getElementById(id)};
+  var esc=function(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})};
+  var DAYS=[], fmt=function(n){return Number(n).toLocaleString()};
+  var money=function(n){n=Number(n);var d=n%1?2:0;return "$"+n.toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:2})};
+  var KIND={web:"Website",app:"App",questions:"Questions",server:"Server",marketing:"Marketing",other:"Other"};
+  /* the numbers the digest saves, in the order they read best */
+  var KPIS=[
+    ["dau","Daily users",fmt],["newUsers","New people",fmt],["minutes","Minutes studied",fmt],["minPerUser","Minutes per person",fmt],
+    ["questions","Questions answered",fmt],["accuracy","Correct",function(n){return n+"%"}],["active7","Active, 7 days",fmt],["active30","Active, 30 days",fmt],
+    ["siteVisits","Website visits",fmt],["browserTaps","Tried in browser",fmt],["appstoreTaps","App Store taps",fmt],["downloads","App downloads",fmt],
+    ["trials","Free trials started",fmt],["paidSubs","Paying subscribers",fmt]];
+  var MONEY=[["webCollectedMonth","Website, this month",money],["proceedsMonth","App Store, this month",money],["expectedMonth","Expected this month",money],["mrr","Website monthly recurring",money]];
+  function dayName(k){var d=new Date(+k.slice(0,4),+k.slice(4,6)-1,+k.slice(6,8));return d.toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric",year:"numeric"})}
+  function iso(k){return k.slice(0,4)+"-"+k.slice(4,6)+"-"+k.slice(6,8)}
+  function trend(n,key){var a=n.avg7&&n.avg7[key];if(a==null||a===0&&n[key]===0)return "";var d=a?Math.round(100*(n[key]-a)/a):100;if(Math.abs(d)<5)return '<i class="same">about the same as the week</i>';return '<i class="'+(d>0?"up":"down")+'">'+(d>0?"▲ ":"▼ ")+Math.abs(d)+'% vs the week</i>'}
+  function kpi(n,k,cls){var v=n[k[0]];if(v==null||v==="")return "";return '<div class="kpi'+(cls||"")+'"><b>'+esc(k[2](v))+'</b><span>'+esc(k[1])+(k[0]==="downloads"&&n.downloadsDate?" ("+esc(n.downloadsDate)+")":"")+'</span>'+trend(n,k[0])+'</div>'}
+  function card(d){
+    var n=d.numbers||{}, ch=(d.changes||[]).slice().sort(function(a,b){return (a.at||0)-(b.at||0)}), notes=d.notes||[];
+    var h='<article class="day"><h2>'+esc(dayName(d.day))+(n.forDay?'<span>Numbers are for '+esc(n.forDay)+'</span>':'')+'</h2>';
+    var k=KPIS.map(function(x){return kpi(n,x)}).join(""), m=MONEY.map(function(x){return kpi(n,x," money")}).join("");
+    if(k||m)h+='<div class="sec">At a glance</div><div class="kpis">'+k+m+'</div>';
+    if(n.highlight)h+='<p class="sub" style="margin-top:10px">'+esc(n.highlight)+'</p>';
+    if(ch.length)h+='<div class="sec">What changed</div><ul class="ch">'+ch.map(function(c){return '<li><span class="tag '+esc(c.kind)+'">'+esc(KIND[c.kind]||"Other")+'</span><span>'+esc(c.text)+(c.ref&&/^https:\/\//.test(c.ref)?' <a href="'+esc(c.ref)+'" target="_blank" rel="noopener">details</a>':'')+'</span></li>'}).join("")+'</ul>';
+    if(notes.length)h+='<div class="sec">Your notes</div><ul class="ch">'+notes.map(function(x){return '<li class="note"><span class="tag note">Note</span><span>'+esc(x.text)+'</span><button class="ghost x" type="button" data-rm="'+esc(x.id)+'" data-day="'+esc(iso(d.day))+'" aria-label="Remove this note">Remove</button></li>'}).join("")+'</ul>';
+    var g=GR[d.day];
+    if(g){var o=g.own||{},ev=g.ev||[],gl=[];
+      if(o.reviewed)gl.push('<li><span class="tag questions">You</span><span>Reviewed '+fmt(o.reviewed)+' question'+(o.reviewed===1?"":"s")+part(o)+(o.edited?', edited '+fmt(o.edited):'')+'</span></li>');
+      ev.forEach(function(e){gl.push('<li><span class="tag server">Evaluator</span><span><b>'+esc(e.who)+'</b>: graded '+fmt(e.n)+part(e)+(e.weak?', flagged weak wrong answers on '+fmt(e.weak):'')+(e.sugg?', '+fmt(e.sugg)+' suggestion'+(e.sugg===1?"":"s"):'')+'</span></li>')});
+      if(gl.length)h+='<div class="sec">Question grades</div><ul class="ch">'+gl.join("")+'</ul>';}
+    if(!k&&!m&&!ch.length&&!notes.length&&!(g&&((g.own||{}).reviewed||(g.ev||[]).length)))h+='<p class="empty">Nothing logged for this day yet.</p>';
+    if(d.digest)h+='<details><summary>Full morning digest</summary><pre>'+esc(d.digest)+'</pre></details>';
+    return h+'</article>';
+  }
+  var GR={};
+  function part(x){var a=[];if(x.good)a.push(fmt(x.good)+' good');if(x.bad)a.push(fmt(x.bad)+' bad');if(x.off)a.push(fmt(x.off)+' not relevant');return a.length?' ('+a.join(', ')+')':''}
+  function render(){
+    var have={};DAYS.forEach(function(d){have[d.day]=1});Object.keys(GR).forEach(function(k){if(!have[k])DAYS.push({day:k})});DAYS.sort(function(a,b){return a.day<b.day?1:-1});$("days").innerHTML=DAYS.length?DAYS.map(card).join(""):'<p class="empty">No days logged yet. The morning digest adds a day every morning, and you can add notes above.</p>'}
+  function load(){
+    $("st").textContent="Loading…";$("st").className="msg";
+    var gp=DASH.call("logGrades",{days:+$("range").value}).then(function(r){return r.days||{}}).catch(function(){return {}});
+    DASH.call("logList",{days:+$("range").value}).then(function(r){return gp.then(function(g){GR=g;return r})}).then(function(r){DAYS=r.days||[];$("st").textContent="Updated "+new Date().toLocaleTimeString([], {hour:"numeric",minute:"2-digit"});render()})
+      .catch(function(e){$("st").className="msg err";$("st").textContent=/not deployed/i.test(e.message)?"The server part isn't installed yet. Run DEPLOY.cmd on your PC.":/Sign in/i.test(e.message)?"Sign in on the dashboard first.":e.message});
+  }
+  var t=new Date();$("nd").value=t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0");
+  $("add").addEventListener("submit",function(e){e.preventDefault();var v=$("nt").value.trim();if(!v){$("nmsg").textContent="Type a note first.";return}
+    $("nmsg").textContent="Saving…";DASH.call("logNote",{day:$("nd").value,text:v}).then(function(){$("nt").value="";$("nmsg").textContent="Added.";load()}).catch(function(e){$("nmsg").textContent=e.message})});
+  $("days").addEventListener("click",function(e){var b=e.target.closest("[data-rm]");if(!b)return;b.disabled=true;DASH.call("logNote",{day:b.getAttribute("data-day"),remove:b.getAttribute("data-rm")}).then(load).catch(function(err){b.disabled=false;$("st").className="msg err";$("st").textContent=err.message})});
+  $("refresh").addEventListener("click",load);$("range").addEventListener("change",load);
+  var started=false;DASH.auth.onAuthStateChanged(function(u){if(u&&!started){started=true;load()}else if(!u){$("st").textContent="Sign in on the dashboard first."}});
+})();
+</script>
+</body>
+</html>

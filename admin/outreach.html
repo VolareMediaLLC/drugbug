@@ -118,6 +118,15 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 body.embed .wrap{padding-top:4px;max-width:none;padding-left:0;padding-right:0}
 body.embed h1{font-size:22px}
 [hidden]{display:none!important}
+
+/* helpers and appointments (owner, Nov 14 2026) */
+body.helper .ownonly{display:none!important}
+.appts{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:10px 0}
+.appts h3{margin:0 0 6px;font-size:15px}.appts ul{margin:0;padding:0;list-style:none;display:grid;gap:6px}
+.appts li{display:flex;gap:10px;flex-wrap:wrap;align-items:baseline;font-size:14px}.appts li b{min-width:150px}
+.apptbox,.callbox{margin-top:12px}.apptbox h3,.callbox h3{font-size:14px;margin:0 0 6px}
+.apptbox ul,.callbox ul{margin:0 0 8px;padding:0;list-style:none;display:grid;gap:4px;font-size:14px}
+.byline{font-size:12px;color:var(--muted);margin-top:6px}
 </style>
 </head>
 <body>
@@ -133,7 +142,8 @@ body.embed h1{font-size:22px}
   </div>
   <div class="meter" id="meter" aria-hidden="true"></div>
   <p class="note" id="note"></p>
-  <details class="set" id="setbox">
+  <div class="appts" id="appts" hidden></div>
+  <details class="set ownonly" id="setbox">
     <summary>Email settings and templates</summary>
     <div class="in">
       <p class="small" style="margin:0">Emails open in Gmail, signed in as the address below, with the template filled in. You check it and press Send in Gmail. In templates, {first} becomes the contact's first name and {org} the school or agency name.</p>
@@ -178,7 +188,7 @@ body.embed h1{font-size:22px}
 
 <script src="../app/vendor/firebase-app-compat.js"></script>
 <script src="../app/vendor/firebase-auth-compat.js"></script>
-<script src="dash.js?v=6"></script>
+<script src="dash.js?v=7"></script>
 <script>
 if(/[?&]embed=1/.test(location.search))document.body.classList.add("embed");
 var CATS=[["all","All"],["col","EMS: colleges"],["acad","EMS: private academies"],["fdedu","EMS: fire & agency schools"],["hs","High school EMT"],["nurse","Nursing schools"],["agency","EMS agencies"],["fire","Fire departments"],["trash","Trash"]];
@@ -300,7 +310,7 @@ function card(o){
     (o.info?'<dt>Details</dt><dd>'+esc(o.info)+'</dd>':'')+
     (o.note?'<dt>Research note</dt><dd>'+esc(o.note)+'</dd>':'')+
     '<dt>Distance</dt><dd>'+(o.mi===""?'Office is out of state':o.mi+' miles, about '+esc(hm(o.min))+' from College Station')+'</dd>'+
-    '<dt>Source</dt><dd class="small">'+esc(o.src)+'</dd></dl>'+mailBox(o,rec)+visitBox(o,rec)+
+    '<dt>Source</dt><dd class="small">'+esc(o.src)+'</dd></dl>'+(rec.lastBy?'<p class="byline">Last updated by '+esc(rec.lastBy)+(rec.at?' · '+fmtD(rec.at):'')+'</p>':'')+apptBox(o,rec)+callBox(o,rec)+mailBox(o,rec)+visitBox(o,rec)+
     '<div class="track">'+
       '<label class="small" for="s-'+esc(o.id)+'">Status</label><select id="s-'+esc(o.id)+'" data-st="'+esc(o.id)+'"'+(CAN&&DB?'':' disabled')+'>'+ST.map(function(x){return '<option value="'+x[0]+'"'+(x[0]===s?' selected':'')+'>'+esc(x[1])+'</option>'}).join("")+'</select>'+
       '<label class="small" for="d-'+esc(o.id)+'">Date</label><input type="date" id="d-'+esc(o.id)+'" data-dt="'+esc(o.id)+'" value="'+esc(rec.date||"")+'"'+(CAN&&DB?'':' disabled')+'>'+
@@ -319,6 +329,7 @@ function mailBox(o,rec){
   if(log.length)h+='<ul class="log">'+log.map(function(l){return '<li><time>'+fmtD(l.at)+'</time><span class="k'+(l.in?' in':l.bad?' bad':'')+'">'+(l.in?'Reply':l.bad?'Didn\'t work':l.mark?'Note':'Sent')+'</span><span>'+esc(l.t||"")+(l.to?' <span class="small">('+esc(l.to)+')</span>':'')+'</span></li>'}).join("")+'</ul>';
   else h+='<p class="small" style="margin:0">No emails yet.</p>';
   if(!o.email){return h+'<p class="small" style="margin:0">No email address on file. Call them, or click Edit to add one.</p></div>'}
+  if(document.body.classList.contains("helper"))return h+'<p class="small" style="margin:0">Emails to this place go out from Adam. Log your calls and appointments above.</p></div>';
   h+='<div class="row"><a class="btn ghost" href="'+esc(gmailThread(o))+'" target="_blank" rel="noopener">See the conversation in Gmail</a>'+(live?'<button class="btn ghost" type="button" data-reply="'+id+'">They replied</button>':'')+(live&&rec.s==="bounced"?(COMP[o.id]?'':'<button class="btn" type="button" data-retry="'+id+'">Try again</button>')+'<button class="btn ghost" type="button" data-uncontact="'+id+'">Still uncontacted</button>':(live?'<button class="btn ghost" type="button" data-bounce="'+id+'">Didn\'t go through</button>':'')+(live&&!COMP[o.id]?'<button class="btn" type="button" data-compose="'+id+'">'+(goodSends(rec)?'Write a follow-up':'Write an email')+'</button>':''))+'</div>';
   var c=COMP[o.id];
   if(c&&live){
@@ -330,6 +341,35 @@ function mailBox(o,rec){
       '<p class="small" style="margin:0">Gmail opens with this filled in. Check it, then press Send there. The tracker logs it as sent and marks this place Contacted. If you change the To address, it\'s saved as their new email.</p>';
   }
   return h+'</div>';
+}
+var APT={}, CALL={};
+function apptBox(o,rec){
+  var id=esc(o.id), a=(rec.appts||[]).slice().sort(function(x,y){return String(x.when).localeCompare(String(y.when))}), f=APT[o.id], live=CAN&&DB;
+  var h='<div class="apptbox"><h3>Appointments</h3>';
+  h+=a.length?'<ul>'+a.map(function(x){return '<li><b>'+esc(fmtWhen(x.when))+'</b> '+esc(x.with||"")+(x.n?' · '+esc(x.n):'')+(x.by?' <span class="small">(set by '+esc(x.by)+')</span>':'')+(live?' <button class="btn ghost" type="button" data-adel="'+id+'" data-aat="'+x.at+'">Remove</button>':'')+'</li>'}).join("")+'</ul>':'<p class="small" style="margin:0 0 6px">No appointments yet.</p>';
+  if(!live)return h+'</div>';
+  if(!f)return h+'<button class="btn" type="button" data-aopen="'+id+'">Set an appointment</button></div>';
+  return h+'<div class="row"><label class="small" for="ad-'+id+'">Date</label><input type="date" id="ad-'+id+'" value="'+esc(f.d)+'"><label class="small" for="at-'+id+'">Time</label><input type="time" id="at-'+id+'" value="'+esc(f.t)+'"></div>'+
+    '<label class="small" for="aw-'+id+'">With whom</label><input id="aw-'+id+'" value="'+esc(f.w)+'" placeholder="Name and title">'+
+    '<label class="small" for="an-'+id+'">Notes</label><textarea id="an-'+id+'" placeholder="Where, what they want to see, who else is coming">'+esc(f.n)+'</textarea>'+
+    '<div class="row"><button class="btn good" type="button" data-asave="'+id+'">Save appointment</button><button class="btn ghost" type="button" data-aclose="'+id+'">Cancel</button></div></div>';
+}
+function callBox(o,rec){
+  var id=esc(o.id), c=(rec.calls||[]).slice().sort(function(x,y){return y.at-x.at}), f=CALL[o.id], live=CAN&&DB;
+  var h='<div class="callbox"><h3>Phone calls</h3>';
+  h+=c.length?'<ul>'+c.map(function(x){return '<li><time>'+fmtD(x.at)+'</time> '+esc(x.n||"")+(x.by?' <span class="small">('+esc(x.by)+')</span>':'')+'</li>'}).join("")+'</ul>':'<p class="small" style="margin:0 0 6px">No calls logged yet.</p>';
+  if(!live)return h+'</div>';
+  if(!f)return h+'<button class="btn ghost" type="button" data-copen="'+id+'">Log a call</button></div>';
+  return h+'<label class="small" for="cn-'+id+'">How did it go?</label><textarea id="cn-'+id+'" placeholder="Who you talked to, what they said, when to call back">'+esc(f.n)+'</textarea><div class="row"><button class="btn" type="button" data-csave="'+id+'">Save call</button><button class="btn ghost" type="button" data-cclose="'+id+'">Cancel</button></div></div>';
+}
+function fmtWhen(w){if(!w)return "";var p=String(w).split("T"),d=p[0].split("-");var s=(+d[1])+"/"+(+d[2])+"/"+String(d[0]).slice(2);if(p[1]){var hm2=p[1].split(":"),hh=+hm2[0];s+=" "+((hh%12)||12)+":"+hm2[1]+(hh<12?" am":" pm")}return s}
+function me(){var m=(window.DASH&&DASH.me&&DASH.me())||{};return m.name||(m.role==="owner"?"Adam":"")}
+function drawAppts(){
+  var el=document.getElementById("appts");if(!el)return;var now=today(),L=[];
+  Object.keys(S).forEach(function(id){var r=S[id];if(!r||!BYID[id])return;(r.appts||[]).forEach(function(x){if(String(x.when).slice(0,10)>=now)L.push({id:id,x:x})})});
+  L.sort(function(a,b){return String(a.x.when).localeCompare(String(b.x.when))});
+  el.hidden=!L.length;
+  el.innerHTML='<h3>Upcoming appointments ('+L.length+')</h3><ul>'+L.slice(0,12).map(function(a){return '<li><b>'+esc(fmtWhen(a.x.when))+'</b><span>'+esc(BYID[a.id].name)+(a.x.with?' · '+esc(a.x.with):'')+(a.x.by?' <span class="small">(set by '+esc(a.x.by)+')</span>':'')+'</span></li>'}).join("")+'</ul>';
 }
 function visitBox(o,rec){
   var id=esc(o.id), v=visits(rec).reverse(), f=VIS[o.id];
@@ -351,7 +391,7 @@ function render(){
   document.getElementById("more").hidden=r.length<=LIMIT;
   document.getElementById("minorwarn").hidden=!(F.cat==="hs"||r.slice(0,LIMIT).some(function(o){return o.minor}));
   [].forEach.call(document.querySelectorAll(".chip"),function(b){b.setAttribute("aria-pressed",String(b.getAttribute("data-cat")===F.cat))});
-  tally();
+  tally();drawAppts();
 }
 
 function write(id,patch){
@@ -381,6 +421,26 @@ document.getElementById("list").addEventListener("click",function(e){
   if(cc){delete COMP[cc.getAttribute("data-closec")];redraw(cc.getAttribute("data-closec"));return}
   var sd=e.target.closest("[data-send]");
   if(sd){var id=sd.getAttribute("data-send"),c=COMP[id],r0=S[id]||{},o=BYID[id],to=(c.to||o.email||"").trim(),lg=(r0.log||[]).concat([{at:Date.now(),t:c.s,to:to}]).slice(-50),p={log:lg};if(!r0.s||r0.s==="new"||r0.s==="bounced"){p.s="contacted";p.date=r0.s==="bounced"?today():(r0.date||today())}if(to&&to!==o.email){p.ed=Object.assign({},r0.ed||{},{email:to})}write(id,p);delete COMP[id];setTimeout(function(){redraw(id);tally()},50);return}
+  var ao=e.target.closest("[data-aopen]");
+  if(ao){var id=ao.getAttribute("data-aopen");APT[id]={d:today(),t:"10:00",w:(BYID[id]||{}).who||"",n:""};redraw(id);return}
+  var ac=e.target.closest("[data-aclose]");
+  if(ac){delete APT[ac.getAttribute("data-aclose")];redraw(ac.getAttribute("data-aclose"));return}
+  var as=e.target.closest("[data-asave]");
+  if(as){var id=as.getAttribute("data-asave"),r0=S[id]||{},g=function(k){var x=document.getElementById(k+"-"+id);return x?x.value.trim():""};
+    var d=g("ad");if(!d){note("Pick a date for the appointment.");return}
+    var ap=(r0.appts||[]).concat([{at:Date.now(),when:d+(g("at")?"T"+g("at"):""),with:g("aw").slice(0,120),n:g("an").slice(0,1000),by:me()}]).slice(-20),p={appts:ap};
+    if(!r0.s||r0.s==="new"||r0.s==="contacted"||r0.s==="replied"||r0.s==="followup")p.s="interested";
+    write(id,p);delete APT[id];redraw(id);tally();drawAppts();return}
+  var ad=e.target.closest("[data-adel]");
+  if(ad){var id=ad.getAttribute("data-adel"),at=+ad.getAttribute("data-aat"),r0=S[id]||{};write(id,{appts:(r0.appts||[]).filter(function(x){return x.at!==at})});redraw(id);drawAppts();return}
+  var co=e.target.closest("[data-copen]");
+  if(co){var id=co.getAttribute("data-copen");CALL[id]={n:""};redraw(id);var x=document.getElementById("cn-"+id);if(x)x.focus();return}
+  var cx=e.target.closest("[data-cclose]");
+  if(cx){delete CALL[cx.getAttribute("data-cclose")];redraw(cx.getAttribute("data-cclose"));return}
+  var cs2=e.target.closest("[data-csave]");
+  if(cs2){var id=cs2.getAttribute("data-csave"),r0=S[id]||{},x=document.getElementById("cn-"+id),n=x?x.value.trim():"";if(!n){note("Write a word about how the call went.");return}
+    var p={calls:(r0.calls||[]).concat([{at:Date.now(),n:n.slice(0,1000),by:me()}]).slice(-50)};if(!r0.s||r0.s==="new"||r0.s==="bounced"){p.s="contacted";p.date=today()}
+    write(id,p);delete CALL[id];redraw(id);tally();return}
   var vo=e.target.closest("[data-vopen]");
   if(vo){var id=vo.getAttribute("data-vopen");VIS[id]={date:today(),n:""};redraw(id);var x=document.getElementById("vn-"+id);if(x)x.focus();return}
   var vc=e.target.closest("[data-vclose]");
@@ -457,11 +517,11 @@ function pull(){
 pull();
 DASH.on(function(){
   pull(); applyEdits();
-  var act=document.activeElement, keep=act&&act.id&&/^(n|d|cs|cb|ck|ct|vn|vd)-/.test(act.id), editing=act&&act.closest&&(act.closest("[data-edit]")||act.closest("#setbox"));
+  var act=document.activeElement, keep=act&&act.id&&/^(n|d|cs|cb|ck|ct|vn|vd|ad|at|aw|an|cn)-/.test(act.id), editing=act&&act.closest&&(act.closest("[data-edit]")||act.closest("#setbox"));
   if(!editing){document.getElementById("set-from").value=SET.from;setFill()}
   if(!keep&&!editing)render(); else tally();
 });
-DASH.onStatus(function(st){document.getElementById("sync").textContent=DASH.statusText(st)});
+DASH.onStatus(function(st){document.getElementById("sync").textContent=DASH.statusText(st);document.body.classList.toggle("helper",st.role==="helper")});
 document.getElementById("list").innerHTML='<p class="small">Loading the contact list…</p>';
 DASH.contacts().then(function(d){initData(d);purge()});
 document.getElementById("ver").textContent="Version: "+VERSION;

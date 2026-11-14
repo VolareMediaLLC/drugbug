@@ -30,12 +30,12 @@
   var outbox = load(K.out, []);
   var since = load(K.since, 0);
   var lastSync = load(K.last, 0);
-  var subs = [], stSubs = [], state = { online: navigator.onLine, syncing: false, err: "", user: null, ready: false };
+  var subs = [], stSubs = [], state = { online: navigator.onLine, syncing: false, err: "", user: null, ready: false, role: (load("dbd:role", {}) || {}).role || "", name: (load("dbd:role", {}) || {}).name || "" };
   var dataCache = load(K.data, null);
 
   function emit() { subs.forEach(function (f) { try { f(); } catch (e) { console.error(e); } }); }
   function emitSt() { stSubs.forEach(function (f) { try { f(status()); } catch (e) {} }); }
-  function status() { return { online: navigator.onLine, syncing: state.syncing, pending: outbox.length, err: state.err, last: lastSync, user: state.user, ready: state.ready }; }
+  function status() { return { online: navigator.onLine, syncing: state.syncing, pending: outbox.length, err: state.err, last: lastSync, user: state.user, ready: state.ready, role: state.role, name: state.name }; }
 
   function get(col, id) { var d = docs[col][id]; return d && !d.del ? d : null; }
   function all(col) { var o = {}; Object.keys(docs[col]).forEach(function (k) { if (!docs[col][k].del) o[k] = docs[col][k]; }); return o; }
@@ -61,7 +61,7 @@
       outbox = outbox.filter(function (w) { return !sent.some(function (s) { return s.col === w.col && s.id === w.id && s.doc.at === w.doc.at; }); });
       var pend = {}; outbox.forEach(function (w) { pend[w.col + "/" + w.id] = 1; });
       COLS.forEach(function (c) { var got = (r.docs && r.docs[c]) || {}; Object.keys(got).forEach(function (id) { if (!pend[c + "/" + id]) { var cur = docs[c][id]; if (!cur || (got[id].at || 0) >= (cur.at || 0)) docs[c][id] = got[id]; } }); });
-      since = r.since || since; lastSync = Date.now();
+      since = r.since || since; lastSync = Date.now(); if (r.role) { state.role = r.role; state.name = r.name || ""; keep("dbd:role", { role: r.role, name: state.name }); try { localStorage.setItem("dbStaff", r.role); } catch (x) {} }
       keep(K.docs, docs); keep(K.out, outbox); keep(K.since, since); keep(K.last, lastSync);
       state.syncing = false; emit(); emitSt();
       if (r.dataV && (!dataCache || dataCache.v !== r.dataV)) fetchData();
@@ -69,7 +69,7 @@
     }).catch(function (e) {
       state.syncing = false;
       var m = (e && e.message) || "";
-      state.err = /not deployed|not.?found/i.test(m) ? "The server part isn't installed yet. Run DEPLOY.cmd on your PC." : /permission|owner/i.test(m) ? "This account isn't the DrugBug owner account." : /failed to fetch|network/i.test(m) ? "" : m;
+      state.err = /not deployed|not.?found/i.test(m) ? "The server part isn't installed yet. Run DEPLOY.cmd on your PC." : /permission|owner|isn.t set up/i.test(m) ? (/isn.t set up/i.test(m) ? m : "This account isn't the DrugBug owner account.") : /failed to fetch|network/i.test(m) ? "" : m;
       emitSt();
     });
   }
@@ -89,6 +89,7 @@
 
   auth.onAuthStateChanged(function (u) {
     state.user = u && !u.isAnonymous ? (u.email || "signed in") : null; state.ready = true; emitSt();
+    if (!state.user) try { localStorage.removeItem("dbStaff"); } catch (x) {}
     if (state.user) { sync(); if (!dataCache && dataWait.length) fetchData().catch(function () {}); }
   });
   window.addEventListener("online", function () { emitSt(); sync(); });
@@ -109,7 +110,7 @@
   }
 
   window.DASH = {
-    auth: auth, call: call, get: get, all: all, put: put, del: del, sync: sync, contacts: contacts,
+    auth: auth, call: call, role: function () { return state.role; }, me: function () { return { role: state.role, name: state.name }; }, get: get, all: all, put: put, del: del, sync: sync, contacts: contacts,
     on: function (f) { subs.push(f); }, onStatus: function (f) { stSubs.push(f); f(status()); }, status: status, statusText: statusText
   };
 })();

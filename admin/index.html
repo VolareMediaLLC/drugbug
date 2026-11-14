@@ -7,7 +7,7 @@
 <title>DrugBug Dashboard</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#13111c">
-<link rel="icon" type="image/png" sizes="48x48" href="../icon-48.png">
+<link rel="icon" type="image/png" sizes="48x48" href="icon-48.png">
 <style>
 :root{--bg:#13111c;--surface:#1d1a2a;--surface2:#251f37;--ink:#f2effb;--muted:#aaa3c4;--line:#322c47;--accent:#a78bfa;--teal:#2dd4bf;--good:#34d399;--warn:#fbbf24;--bad:#f87171;--bar:#2dd4bf;--track:#2b2540}
 @media (prefers-color-scheme:light){:root{--bg:#f6f4fc;--surface:#fff;--surface2:#f1edfa;--ink:#1c1730;--muted:#5f5878;--line:#e2dcef;--accent:#6d28d9;--teal:#0f766e;--good:#047857;--warn:#b45309;--bad:#b91c1c;--bar:#0f766e;--track:#ece7f6}}
@@ -157,7 +157,7 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
   <button role="tab" data-tab="classes">Schools</button>
   <button role="tab" data-tab="metrics">Usage</button>
   <button role="tab" data-tab="outreach">Outreach</button>
-  <button role="tab" data-tab="notes">Update notes</button>
+  <button role="tab" data-tab="notes">Updates</button>
 </nav>
 <nav class="subtabs hide" id="subtabs" aria-label="Section pages"></nav>
 
@@ -243,8 +243,10 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
 <section data-page="evaluators" class="hide"><iframe class="emb" data-src="../instructor/?embed=evaluators" title="Evaluators"></iframe></section>
 <section data-page="classes" class="hide"><iframe class="emb" data-src="../instructor/?embed=classes" title="Classes"></iframe></section>
 <section data-page="metrics" class="hide"><iframe class="emb" data-src="../instructor/?embed=metrics" title="App metrics"></iframe></section>
-<section data-page="outreach" class="hide"><iframe class="emb" data-src="outreach.html?embed=1&v=9" title="Texas outreach"></iframe></section>
+<section data-page="outreach" class="hide"><iframe class="emb" data-src="outreach.html?embed=1&v=10" title="Texas outreach"></iframe></section>
+<section data-page="helpers" class="hide"><iframe class="emb" data-src="helpers.html?embed=1&v=1" title="Outreach helpers and stats"></iframe></section>
 <section data-page="friends" class="hide"><iframe class="emb" data-src="friends.html?embed=1&v=9" title="Friends and family"></iframe></section>
+<section data-page="dailylog" class="hide"><iframe class="emb" data-src="dailylog.html?embed=1&v=1" title="Daily log"></iframe></section>
 <section data-page="notes" class="hide"><iframe class="emb" data-src="notes.html?embed=1&v=9" title="Update notes"></iframe></section>
 </div>
 </div>
@@ -313,10 +315,10 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
   /* ---------- tabs ---------- */
   var TAB = "", LOADED = {};
   /* five sections; People and Questions each hold a few pages (owner, Nov 7 2026) */
-  var GROUPS = { overview: ["overview"], people: ["signups", "evaluators"], codes: ["codes"], questions: ["grading", "analytics"], classes: ["classes"], metrics: ["metrics"], outreach: ["outreach", "friends"], notes: ["notes"] };
-  var SUBNAME = { outreach: "Agencies & schools", friends: "Friends & family", signups: "Evaluator sign-ups", evaluators: "Evaluators", codes: "Codes", grading: "Grade questions", analytics: "How students score" };
+  var GROUPS = { overview: ["overview"], people: ["signups", "evaluators"], codes: ["codes"], questions: ["grading", "analytics"], classes: ["classes"], metrics: ["metrics"], outreach: ["outreach", "helpers", "friends"], notes: ["dailylog", "notes"] };
+  var SUBNAME = { outreach: "Agencies & schools", helpers: "Helpers & stats", friends: "Friends & family", signups: "Evaluator sign-ups", evaluators: "Evaluators", codes: "Codes", grading: "Grade questions", analytics: "How students score", dailylog: "Daily log", notes: "Update notes" };
   var SUBNOTE = { evaluators: "Everyone with an evaluator code: what they graded, and their suggestions.", grading: "Read, rate and fix questions. Pilot questions go live after 2 Good votes." };
-  var LASTSUB = { people: "signups", questions: "grading", outreach: "outreach" };
+  var LASTSUB = { people: "signups", questions: "grading", outreach: "outreach", notes: "dailylog" };
   function groupOf(t) { for (var g in GROUPS) if (GROUPS[g].indexOf(t) >= 0) return g; return null; }
   function go(t) {
     if (GROUPS[t] && GROUPS[t].length > 1) t = LASTSUB[t] || GROUPS[t][0];
@@ -580,8 +582,8 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
       var sp = AP.splits || {}, lv = sp.level || [], tot = sumF(lv, function (x) { return x.n; }), pl = sp.plat || {}, pt = (pl.web || 0) + (pl.ios || 0);
       var LVN = { emt: "EMT", aemt: "AEMT", paramedic: "Paramedic", flight: "Flight Paramedic", cna: "CNA", lvn: "LVN / LPN", rn: "RN", flightrn: "Flight Nurse", ms1: "Med school 1-2", ms3: "Med school 3-4", intern: "Intern", gen: "Everyday", mh: "Mental health", diet: "Dietitian", rrt: "Respiratory", pt: "PT / OT", slp: "Speech-language", surg: "Surgical tech", anes: "Anesthesia tech", dent: "Dental hygiene", phleb: "Phlebotomy", ekg: "EKG tech", cp: "Community paramedic", tccc: "Tactical medic", rt: "X-ray", ct: "CT", mri: "MRI", nm: "Nuclear med", ir: "IR" };
       var rowsL = lv.slice(0, 5).map(function (x) { return [LVN[x.key] || x.key, x.n, pc(x.n, tot) + "%"]; });
-      var body7 = hb(rowsL) + '<p class="what">Share of people active in 30 days, by the level they study.' + (pt ? ' iPhone ' + pc(pl.ios || 0, pt) + '%, website ' + pc(pl.web || 0, pt) + '%.' : '') + '</p>';
-      var open7 = '<div><h4>Every level</h4>' + hb(lv.map(function (x) { return [LVN[x.key] || x.key, x.n, pc(x.n, tot) + "%"]; })) + '</div><div><h4>What this tells you</h4><p>Your biggest audiences are where new content and posts pay off most. Small levels with growing numbers are worth a closer look.</p><p><b>App versions:</b> ' + esc((sp.version || []).map(function (v) { return v.key + " (" + v.n + ")"; }).join(", ") || "—") + '</p><button class="linkish" data-go="metrics">Open Usage ▸</button></div>';
+      var body7 = hb(rowsL) + '<p class="what">People active in 30 days, each counted once under the level they spent the most time in.' + (pt ? ' iPhone ' + pc(pl.ios || 0, pt) + '%, website ' + pc(pl.web || 0, pt) + '%.' : '') + '</p>';
+      var open7 = '<div><h4>Every level</h4>' + hb(lv.map(function (x) { return [LVN[x.key] || x.key, x.n, pc(x.n, tot) + "%"]; })) + '<h4 style="margin-top:14px">Minutes studied per level</h4>' + ((sp.levelMinutes || []).length ? hb((sp.levelMinutes || []).map(function (x) { return [LVN[x.key] || x.key, x.n, "min"]; })) : '<p class="muted small">Starts filling in from today.</p>') + '</div><div><h4>What this tells you</h4><p>Your biggest audiences are where new content and posts pay off most. Small levels with growing numbers are worth a closer look.</p><p><b>App versions:</b> ' + esc((sp.version || []).map(function (v) { return v.key + " (" + v.n + ")"; }).join(", ") || "—") + '</p><button class="linkish" data-go="metrics">Open Usage ▸</button></div>';
       P.push(panel("where", "Where people study", ["g", "Info"], body7, open7));
     }
     $("cock").innerHTML = P.join("");

@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Outreach stats · DrugBug</title>
+<style>
+/* Outreach helpers (owner, Nov 14 2026): the owner adds a friend by email and sees everyone's outreach
+   activity; a helper sees only his own. Data: helperSet / helperStats (functions/dash.js). */
+:root{--bg:#13111c;--surface:#1d1a2a;--surface2:#251f37;--ink:#f2effb;--muted:#aaa3c4;--line:#322c47;--accent:#a78bfa;--teal:#2dd4bf;--good:#34d399;--warn:#fbbf24;--bad:#f87171}
+@media (prefers-color-scheme:light){:root{--bg:#f6f4fc;--surface:#fff;--surface2:#f1edfa;--ink:#1c1730;--muted:#5f5878;--line:#e2dcef;--accent:#6d28d9;--teal:#0f766e;--good:#047857;--warn:#b45309;--bad:#b91c1c}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1000px;margin:0 auto;padding:16px 16px 50px}
+body.embed .wrap{padding-top:4px}
+h1{font-size:22px;margin:0}h2{font-size:17px;margin:0 0 6px}h3{font-size:14px;margin:12px 0 6px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.sub{color:var(--muted);margin:2px 0 14px;font-size:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+input,select{font:inherit;font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:8px 10px;min-width:0}
+input{flex:1 1 220px}
+.btn{font:inherit;font-weight:700;font-size:14px;padding:8px 14px;border-radius:10px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn:disabled{opacity:.5}
+.msg{font-size:14px;margin:8px 0 0;min-height:1.2em}.msg.err{color:var(--bad)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.kpi{background:var(--surface2);border-radius:10px;padding:10px 12px}.kpi b{display:block;font-size:24px;line-height:1.1}.kpi span{font-size:12.5px;color:var(--muted)}
+.kpi.hi{outline:2px solid var(--good)}
+.days{display:flex;align-items:flex-end;gap:3px;height:70px;margin-top:6px}
+.days i{flex:1;min-width:4px;background:var(--teal);border-radius:3px 3px 0 0;opacity:.85}
+.days i.z{background:var(--line);height:2px!important}
+.dlab{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted)}
+ul.rec{list-style:none;margin:0;padding:0;display:grid;gap:4px;font-size:14px}ul.rec time{color:var(--muted);font-size:12.5px;margin-right:8px}
+table{width:100%;border-collapse:collapse;font-size:14px}td{padding:8px 0;border-top:1px solid var(--line);vertical-align:top}td.r{text-align:right;white-space:nowrap}
+.linkish{font:inherit;font-size:13px;background:none;border:0;color:var(--accent);cursor:pointer;padding:0;text-decoration:underline}
+.muted{color:var(--muted)}.small{font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="head"><h1>Outreach stats</h1><p class="sub" id="sub">Loading…</p></div>
+  <div class="card" id="addCard" hidden>
+    <h2>Outreach helpers</h2>
+    <p class="small muted" style="margin:0 0 10px">Add a friend who helps book appointments. They sign in at <b>drugbugapp.com/outreach</b> with their own DrugBug account and see only the outreach list (shared notes, calls, visits and appointments) and their own stats. Nothing else in your dashboard. They need a free DrugBug account with that email first.</p>
+    <div class="row"><input id="hName" placeholder="Their name" autocomplete="off" style="flex:0 1 200px"><input id="hEmail" type="email" placeholder="their@email.com" autocomplete="off"></div>
+    <div class="row" style="margin-top:8px"><input id="hTitle" placeholder="Title on their bug (optional), e.g. Emperor" autocomplete="off" style="flex:0 1 260px"><select id="hBug"><option value="">No special bug</option><option value="emperor-beetle">Give the Emperor Beetle</option></select><button class="btn" id="hAdd" type="button">Add helper</button></div>
+    <p class="msg" id="hMsg" aria-live="polite"></p>
+    <div id="hList"></div>
+  </div>
+  <div class="row" style="margin-bottom:10px"><label class="small muted" for="days">Show</label><select id="days"><option value="7">Last 7 days</option><option value="30" selected>Last 30 days</option><option value="90">Last 90 days</option></select><button class="linkish" id="refresh" type="button">Refresh</button></div>
+  <div id="stats"></div>
+</div>
+<script src="../app/vendor/firebase-app-compat.js"></script>
+<script src="../app/vendor/firebase-auth-compat.js"></script>
+<script src="dash.js?v=7"></script>
+<script>
+(function(){
+  if(/[?&]embed=1/.test(location.search))document.body.classList.add("embed");
+  var $=function(id){return document.getElementById(id)};
+  function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+  function fmtD(t){var d=new Date(t);return (d.getMonth()+1)+"/"+d.getDate()}
+  var STN={contacted:"Marked contacted",replied:"Got a reply",followup:"Set to follow up",interested:"Marked interested",won:"Signed",no:"Not interested",bounced:"Email bounced","new":"Reset to not contacted"};
+  var KIND={call:"Logged a call",visit:"Logged a visit",appt:"Set an appointment",email:"Logged an email",note:"Updated notes"};
+  var ROLE="", NAMES={};
+  function kpi(n,l,hi){return '<div class="kpi'+(hi&&n?' hi':'')+'"><b>'+(n||0)+'</b><span>'+l+'</span></div>'}
+  function person(p,days,mine){
+    var dd=[],now=new Date();for(var i=days-1;i>=0;i--){var d=new Date(now.getTime()-i*864e5);dd.push(new Intl.DateTimeFormat("en-CA",{timeZone:"America/Chicago"}).format(d))}
+    var mx=Math.max.apply(null,dd.map(function(k){return p.byDay[k]||0}).concat([1]));
+    var h='<div class="card"><h2>'+esc(mine?"Your outreach":(p.name||"Someone"))+'</h2><p class="small muted" style="margin:0 0 10px">'+(p.role==="owner"?"Adam":"Helper")+' · last '+days+' days</p>';
+    h+='<div class="kpis">'+kpi(p.appts,"Appointments set",1)+kpi(p.places,"Places worked")+kpi(p.calls,"Calls logged")+kpi(p.visits,"Visits logged")+kpi(p.interested,"Marked interested",1)+kpi(p.won,"Signed",1)+kpi(p.contacted,"Marked contacted")+kpi(p.no,"Not interested")+'</div>';
+    h+='<h3>Activity by day</h3><div class="days">'+dd.map(function(k){var v=p.byDay[k]||0;return '<i class="'+(v?'':'z')+'" style="height:'+(v?Math.max(6,Math.round(100*v/mx)):2)+'%" title="'+k+': '+v+'"></i>'}).join("")+'</div><div class="dlab"><span>'+dd[0].slice(5)+'</span><span>today</span></div>';
+    if(p.recent.length)h+='<h3>Recent</h3><ul class="rec">'+p.recent.slice(0,15).map(function(x){return '<li><time>'+fmtD(x.at)+'</time>'+esc(x.kind==="status"?(STN[x.s]||"Changed status"):(KIND[x.kind]||x.kind))+(x.when?' for '+esc(x.when.replace("T"," ")):'')+' · <span class="muted">'+esc(NAMES[x.id]||x.id)+'</span></li>'}).join("")+'</ul>';
+    return h+'</div>';
+  }
+  function load(){
+    var days=+$("days").value;$("stats").innerHTML='<p class="muted small">Loading…</p>';
+    DASH.call("helperStats",{days:days}).then(function(r){
+      ROLE=r.me.role;
+      $("sub").textContent=ROLE==="owner"?"Everyone's outreach work: calls, visits, appointments and results. Add helpers below.":"Your calls, visits and appointments, "+(r.me.name?r.me.name+", ":"")+"for the last "+days+" days.";
+      if(ROLE==="owner"){$("addCard").hidden=false;listHelpers()}
+      var P=r.people||[];
+      if(ROLE!=="owner"&&!P.length)P=[{name:r.me.name,role:"helper",places:0,appts:0,calls:0,visits:0,interested:0,won:0,contacted:0,no:0,byDay:{},recent:[]}];
+      P.sort(function(a,b){return (b.appts-a.appts)||(b.places-a.places)});
+      $("stats").innerHTML=P.length?P.map(function(p){return person(p,days,ROLE!=="owner")}).join(""):'<div class="card"><p class="muted small" style="margin:0">No outreach activity logged yet. It starts counting from the first call, visit, status change or appointment saved after this update.</p></div>';
+    }).catch(function(e){$("sub").textContent=/not deployed/i.test(e.message)?"The server part isn't installed yet. Run DEPLOY.cmd on your PC.":/Sign in/i.test(e.message)?"Sign in first.":e.message;$("stats").innerHTML=""});
+  }
+  function listHelpers(){
+    DASH.call("helperSet",{list:true}).then(function(r){var L=r.list||[];
+      $("hList").innerHTML=L.length?'<table>'+L.map(function(x){return '<tr><td><b>'+esc(x.name)+'</b>'+(x.title?' <span class="small" style="color:#facc15">'+esc(x.title)+'</span>':'')+'<div class="small muted">'+esc(x.email)+(x.bug==="emperor-beetle"?' · Emperor Beetle':'')+' · added '+new Date(x.at).toLocaleDateString()+'</div></td><td class="r"><button class="linkish" data-rm="'+esc(x.email)+'">Remove</button></td></tr>'}).join("")+'</table>':'<p class="small muted" style="margin:10px 0 0">No helpers yet.</p>';
+    }).catch(function(){});
+  }
+  $("hAdd").onclick=function(){var em=$("hEmail").value.trim(),nm=$("hName").value.trim(),b=$("hAdd");if(!em){$("hMsg").className="msg err";$("hMsg").textContent="Type their email.";return}
+    b.disabled=true;$("hMsg").className="msg";$("hMsg").textContent="Adding…";
+    DASH.call("helperSet",{email:em,name:nm,title:$("hTitle").value.trim(),bug:$("hBug").value}).then(function(){b.disabled=false;$("hEmail").value="";$("hName").value="";$("hTitle").value="";$("hBug").value="";$("hMsg").textContent="Added. Send them to drugbugapp.com/outreach to sign in with that email.";listHelpers()})
+      .catch(function(e){b.disabled=false;$("hMsg").className="msg err";$("hMsg").textContent=e.message})};
+  $("hList").addEventListener("click",function(e){var b=e.target.closest("[data-rm]");if(!b)return;b.disabled=true;DASH.call("helperSet",{email:b.getAttribute("data-rm"),remove:true}).then(function(){$("hMsg").className="msg";$("hMsg").textContent="Removed. They can no longer open the outreach list.";listHelpers()}).catch(function(er){b.disabled=false;$("hMsg").className="msg err";$("hMsg").textContent=er.message})});
+  $("days").onchange=load;$("refresh").onclick=load;
+  DASH.contacts().then(function(d){var i=d.k.indexOf("id"),n=d.k.indexOf("name");(d.r||[]).forEach(function(r){NAMES[r[i]]=r[n]});}).catch(function(){});
+  DASH.auth.onAuthStateChanged(function(u){if(u&&!u.isAnonymous)load();else{$("sub").textContent="Sign in first.";$("stats").innerHTML=""}});
+})();
+</script>
+</body>
+</html>
