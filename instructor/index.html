@@ -257,6 +257,10 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
     <div class="tblwrap"><table id="coderTable"><tr><td class="muted">Loading…</td></tr></table></div>
     <div id="coderSugg"></div>
   </div>
+  <div class="card"><h2>Website visits</h2><p class="muted small">Visits to the drugbugapp.com homepage and taps on its buttons (Texas time). No cookies and nothing about the person is recorded. Counting started Nov 14 2026.</p>
+    <div class="tiles" id="apSiteTiles"></div>
+    <div class="dcols" id="apSite"></div><div class="dcolx" id="apSiteX"></div>
+    <p class="small" id="apSiteSrc" style="margin-top:6px"></p></div>
   <div class="card"><h2>iPhone app vs website</h2><p class="muted small">Where people use DrugBug. Each device counts once per day.</p>
     <div class="tiles" id="apPlatTiles"></div>
     <div class="dcols" id="apPD"></div><div class="dcolx" id="apPDX"></div>
@@ -833,6 +837,21 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
     bars("apDau", "apDauX", rows, function (r) { return r.dau; }, function (r) { return r.day + ": " + r.dau + " active, " + r.newUsers + " new"; });
     bars("apQ", "apQX", rows, function (r) { return r.q; }, function (r) { return r.day + ": " + r.q + " questions" + (r.accuracy != null ? ", " + r.accuracy + "% right" : "") + ", " + r.minutes + " min studied, " + r.learn + " L.E.A.R.N cards"; });
     bars("apNew", "apNewX", rows, function (r) { return r.newUsers; }, function (r) { return r.day + ": " + r.newUsers + " new users"; });
+    /* homepage visits and button taps (owner, Nov 14 2026) */
+    var sv = function (k) { return sum(function (r) { return (r.site || {})[k] || 0; }); }, sViews = sv("view"), sBr = sv("browser"), sAs = sv("appstore");
+    var tdy = rows[rows.length - 1] && rows[rows.length - 1].site || {};
+    var pc2 = function (a, b) { return b ? " (" + Math.round(100 * a / b) + "%)" : ""; };
+    $("apSiteTiles").innerHTML = [
+      [num(tdy.view || 0), "website visits today"],
+      [num(sViews), "website visits, last " + R + " days"],
+      [num(sBr) + pc2(sBr, sViews), "tapped Try it in your browser"],
+      [num(sAs) + pc2(sAs, sViews), "tapped the App Store button"]
+    ].map(function (x) { return '<div class="tile"><b>' + esc(x[0]) + '</b><span>' + esc(x[1]) + '</span></div>'; }).join("");
+    bars("apSite", "apSiteX", rows, function (r) { return (r.site || {}).view || 0; }, function (r) { var s = r.site || {}; return r.day + ": " + (s.view || 0) + " visits, " + (s.browser || 0) + " tapped browser, " + (s.appstore || 0) + " tapped App Store"; });
+    var srcT = {}; rows.forEach(function (r) { var s = (r.site || {}).src || {}; Object.keys(s).forEach(function (k) { srcT[k] = (srcT[k] || 0) + s[k]; }); });
+    var SRCN = { ad: "Your ads", instagram: "Instagram", facebook: "Facebook", google: "Google", tiktok: "TikTok", direct: "Typed in or bookmarked", other: "Other sites" };
+    var sl = Object.keys(srcT).sort(function (a, b) { return srcT[b] - srcT[a]; });
+    $("apSiteSrc").textContent = sl.length ? "Where visits came from: " + sl.map(function (k) { return (SRCN[k] || k) + " " + srcT[k]; }).join(" · ") : "No website visits counted yet.";
     /* iPhone vs website: tiles for the chosen range, and stacked daily bars */
     var ws = sum(function (r) { return (r.plat || {}).web || 0; }), is = sum(function (r) { return (r.plat || {}).ios || 0; }), both = ws + is;
     var P30 = d.splits.plat || {};
