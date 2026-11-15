@@ -350,8 +350,109 @@ var hero=document.querySelector(".hero2"),hx=hero&&hero.querySelector(".htext");
 var av=document.getElementById("advid"),sb=document.getElementById("adsnd");if(av&&sb)sb.addEventListener("click",function(){var on=av.muted;av.muted=!on;if(on){av.volume=1;try{av.play()}catch(e){}}sb.setAttribute("aria-pressed",on?"true":"false");sb.innerHTML=on?'<span aria-hidden="true">🔊</span> Sound on':'<span aria-hidden="true">🔇</span> Tap for sound'});
 var src=document.getElementById("heroctas"),dst=document.getElementById("adendctas");if(src&&dst){var cl=src.cloneNode(true);cl.removeAttribute("id");cl.style.justifyContent="center";cl.style.alignItems="center";var dd=cl.querySelector(".addesk");if(dd)dd.remove();dst.appendChild(cl)}
 }catch(e){}})();</script>
-<script>/* staff tab: shows "Admin" in the top bar only for the owner and outreach helpers on this browser */
-(function(){try{var r=localStorage.getItem("dbStaff");if(r!=="owner"&&r!=="helper")return;var n=document.querySelector("nav.tabs2");if(!n||n.querySelector(".stafftab"))return;var a=document.createElement("a");a.className="tab stafftab";a.href=(location.pathname.indexOf("/instructor/")>=0?"../":"")+(r==="owner"?"admin/":"outreach/");a.textContent="Admin";a.style.cssText="color:#b45309;font-weight:800;padding:7px 10px";n.style.flexWrap="nowrap";n.appendChild(a);[].forEach.call(n.querySelectorAll("a.tab"),function(x){x.style.whiteSpace="nowrap";if(x!==a)x.style.padding="7px 12px"})}catch(e){}})();</script>
+<style>
+a.loginbtn{margin-left:8px;padding:9px 14px;border-radius:11px;font-weight:800;font-size:14.5px;text-decoration:none;border:2px solid var(--line);color:var(--ink);background:var(--surface);cursor:pointer;white-space:nowrap}
+a.loginbtn:hover{border-color:var(--accent)}
+body.admode a.loginbtn{display:none}
+@media(max-width:640px){header.top a.trybtn{margin-left:auto;padding:7px 10px;font-size:13.5px}header.top a.loginbtn{margin-left:6px;padding:7px 10px;font-size:13.5px}header.top>b{font-size:19px}}
+#dbLogin{position:fixed;inset:0;z-index:300;background:rgba(10,8,20,.6);display:flex;align-items:center;justify-content:center;padding:16px}
+#dbLogin[hidden]{display:none}
+#dbLogin [hidden]{display:none!important}
+#dbLogin .box{width:100%;max-width:380px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:16px;padding:22px;position:relative;text-align:center}
+#dbLogin h2{margin:4px 0 4px;font-size:21px}
+#dbLogin p{margin:0 0 12px;font-size:14px;color:var(--muted)}
+#dbLogin input{display:block;width:100%;box-sizing:border-box;font:inherit;font-size:15px;padding:10px 12px;margin:8px 0;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+#dbLogin .lb{display:block;width:100%;font:inherit;font-weight:700;font-size:15px;padding:11px 14px;border-radius:10px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;margin-top:8px;text-decoration:none;box-sizing:border-box}
+#dbLogin .lb.gh{background:transparent;color:var(--accent)}
+#dbLogin .lb.adm{background:#b45309;border-color:#b45309}
+#dbLogin .x{position:absolute;top:8px;right:10px;background:none;border:0;font-size:24px;line-height:1;color:var(--muted);cursor:pointer;padding:4px 8px}
+#dbLogin .or{margin:12px 0 2px;font-size:13px;color:var(--muted)}
+#dbLogin .err{color:#f87171;font-size:14px;min-height:1.2em;margin:8px 0 0}
+#dbLogin .who{font-weight:700;color:var(--ink);word-break:break-all}
+#dbLogin .ttl{color:#facc15;font-weight:800}
+</style>
+<div id="dbLogin" hidden role="dialog" aria-modal="true" aria-labelledby="dbLoginH"><div class="box">
+<button class="x" type="button" data-close aria-label="Close">×</button>
+<div id="dbLoginIn">
+<h2 id="dbLoginH">Log in</h2>
+<p>Use your DrugBug account. Your progress and anything you unlocked come with you.</p>
+<button class="lb gh" type="button" id="dbLgG">Continue with Google</button>
+<div class="or">or with email</div>
+<input id="dbLgE" type="email" placeholder="Email" autocomplete="email">
+<input id="dbLgP" type="password" placeholder="Password" autocomplete="current-password">
+<button class="lb" type="button" id="dbLgB">Log in</button>
+<p class="err" id="dbLgM" aria-live="polite"></p>
+<p style="margin:10px 0 0;font-size:13px">No account yet? <a href="app/">Make a free one in the app</a>.</p>
+</div>
+<div id="dbLoginPw" hidden>
+<h2>Create a password</h2>
+<p>Every DrugBug account has a password, so you can always sign in on the website or the iPhone app with <b id="dbLgPE"></b> and this password.</p>
+<input id="dbLgN1" type="password" placeholder="Password (8+ characters)" autocomplete="new-password">
+<input id="dbLgN2" type="password" placeholder="Type it again" autocomplete="new-password">
+<button class="lb" type="button" id="dbLgS">Save password</button>
+<button class="lb gh" type="button" data-out>Log out</button>
+<p class="err" id="dbLgPM" aria-live="polite"></p>
+</div>
+<div id="dbLoginOk" hidden>
+<h2>You're logged in</h2>
+<p><span class="ttl" id="dbLgT"></span> <span class="who" id="dbLgW"></span></p>
+<a class="lb adm" id="dbLgA" href="admin/" hidden>Open Admin</a>
+<a class="lb" href="app/">Open DrugBug</a>
+<button class="lb gh" type="button" id="dbLgO">Log out</button>
+</div>
+</div></div>
+<script>/* Log in on the homepage (owner, Nov 14 2026). A "Log in" button in the top bar; once signed in,
+   the server (dashMe) says whether this account is staff. Adam (owner) and outreach helpers (Cole) get an
+   "Admin" tab in the top bar. Firebase is only loaded when someone taps Log in or was already signed in
+   on this site, so normal and ad visitors download nothing extra. */
+(function(){try{
+var BASE=location.pathname.indexOf("/instructor/")>=0?"../":"";
+var CFG={apiKey:"AIzaSyC7cNkPSpPqfHPLNSY54u8QSL1jnaYsVMM",authDomain:"drugbug-69d42.firebaseapp.com",projectId:"drugbug-69d42",appId:"1:123306339603:web:2a0021f13fd8e620253ee6"};
+var FN="https://us-central1-drugbug-69d42.cloudfunctions.net/";
+var EMU=/^(localhost|127\.0\.0\.1)$/.test(location.hostname)&&/[?&]emu=1/.test(location.search);if(EMU){CFG.apiKey="demo-key";CFG.projectId="demo-drugbug";FN="http://127.0.0.1:5001/demo-drugbug/us-central1/"}
+var $=function(i){return document.getElementById(i)};
+function role(){try{var r=localStorage.getItem("dbStaff");return r==="owner"||r==="helper"?r:""}catch(e){return""}}
+function setRole(r){try{if(r)localStorage.setItem("dbStaff",r);else localStorage.removeItem("dbStaff")}catch(e){}}
+function adminHref(r){return BASE+(r==="owner"?"admin/":"outreach/")}
+function drawTab(){var r=role(),n=document.querySelector("nav.tabs2");if(!n)return;var a=n.querySelector(".stafftab");
+  if(!r){if(a)a.remove();return}
+  if(!a){a=document.createElement("a");a.className="tab stafftab";a.textContent="Admin";a.style.cssText="color:#b45309;font-weight:800";n.appendChild(a)}
+  a.href=adminHref(r);if(innerWidth>640){n.style.flexWrap="nowrap";[].forEach.call(n.querySelectorAll("a.tab"),function(x){x.style.whiteSpace="nowrap";x.style.padding="7px 10px"})}else n.style.flexWrap="wrap"}
+var btn=document.createElement("a");btn.className="loginbtn";btn.href="#login";btn.textContent="Log in";
+var hdr=document.querySelector("header.top"),tb=hdr&&hdr.querySelector("a.trybtn");if(hdr){if(tb)tb.after(btn);else hdr.appendChild(btn)}
+drawTab();
+var fb=null,me=null,user=null;
+function loadJs(s){return new Promise(function(ok,no){var e=document.createElement("script");e.src=s;e.onload=ok;e.onerror=no;document.head.appendChild(e)})}
+function boot(){if(fb)return fb;fb=(window.firebase&&firebase.auth?Promise.resolve():loadJs(BASE+"app/vendor/firebase-app-compat.js").then(function(){return loadJs(BASE+"app/vendor/firebase-auth-compat.js")})).then(function(){
+  if(!firebase.apps.length)firebase.initializeApp(CFG);var auth=firebase.auth();if(EMU)try{auth.useEmulator("http://127.0.0.1:9099",{disableWarnings:true})}catch(e){}
+  return new Promise(function(ok){var first=true;auth.onAuthStateChanged(function(u){user=u&&!u.isAnonymous?u:null;signedIn();if(first){first=false;ok(auth)}})})});return fb}
+function call(name){return user.getIdToken().then(function(t){return fetch(FN+name,{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+t},body:'{"data":{}}'})}).then(function(r){return r.json()}).then(function(j){if(j.error)throw new Error(j.error.message||j.error.status);return j.result})}
+function signedIn(){
+  btn.textContent=user?"Account":"Log in";
+  if(!user){me=null;setRole("");drawTab();showBox();return}
+  call("dashMe").then(function(r){me=r||{};setRole(r&&r.role);drawTab();showBox()},function(){me={};setRole("");drawTab();showBox()});
+  showBox()}
+/* new accounts only; older accounts are grandfathered (owner, Nov 14 2026) */var PW_CUTOFF=Date.UTC(2026,10,15,6);function needPw(){var c=user&&user.metadata&&Date.parse(user.metadata.creationTime)||0;return !!(user&&user.email&&c&&c>=PW_CUTOFF&&!(user.providerData||[]).some(function(p){return p&&p.providerId==="password"}))}
+function showBox(){var ok=!!user,np=needPw();$("dbLoginIn").hidden=ok;$("dbLoginPw").hidden=!np;$("dbLoginOk").hidden=!ok||np;document.querySelector("#dbLogin .x").hidden=np;if(np){$("dbLgPE").textContent=/privaterelay\.appleid\.com$/i.test(user.email)?"your Hide My Email address":user.email;if($("dbLogin").hidden)open()}if(!ok)return;
+  $("dbLgW").textContent=(me&&me.name)||user.email||"";$("dbLgT").textContent=(me&&me.title)||"";
+  var r=role(),a=$("dbLgA");a.hidden=!r;a.href=adminHref(r)}
+function open(){$("dbLogin").hidden=false;$("dbLgM").textContent="";showBox();boot().then(function(){showBox();if(!user)try{$("dbLgE").focus()}catch(e){}}).catch(function(){$("dbLgM").textContent="Couldn't load sign-in. Check your connection and try again.";fb=null})}
+function close(){if(needPw())return;$("dbLogin").hidden=true}
+function err(e){var c=(e&&(e.code||e.message))||"";$("dbLgM").textContent=/popup-closed|cancelled-popup/i.test(c)?"":/password|user-not-found|invalid|credential/i.test(c)?"That email and password didn't match.":/too-many/i.test(c)?"Too many tries. Wait a minute and try again.":/popup-blocked/i.test(c)?"Your browser blocked the Google window. Allow pop-ups for this site and try again.":"Couldn't log in. "+((e&&e.message)||"")}
+btn.addEventListener("click",function(e){e.preventDefault();open()});
+$("dbLogin").addEventListener("click",function(e){if(e.target.id==="dbLogin"||e.target.closest("[data-close]"))close()});
+document.addEventListener("keydown",function(e){if(e.key==="Escape"&&!$("dbLogin").hidden)close()});
+$("dbLgG").onclick=function(){$("dbLgM").textContent="";boot().then(function(a){return a.signInWithPopup(new firebase.auth.GoogleAuthProvider())}).catch(err)};
+$("dbLgB").onclick=function(){var em=$("dbLgE").value.trim(),pw=$("dbLgP").value;if(!em||!pw){$("dbLgM").textContent="Type your email and password.";return}$("dbLgM").textContent="Logging in…";boot().then(function(a){return a.signInWithEmailAndPassword(em,pw)}).then(function(){$("dbLgM").textContent="";$("dbLgP").value=""}).catch(err)};
+$("dbLgP").addEventListener("keydown",function(e){if(e.key==="Enter")$("dbLgB").click()});
+$("dbLgO").onclick=function(){boot().then(function(a){return a.signOut()}).then(close)};
+$("dbLogin").addEventListener("click",function(e){if(e.target.closest("[data-out]"))$("dbLgO").click()});
+$("dbLgS").onclick=function(){var a=$("dbLgN1").value,b=$("dbLgN2").value,m=$("dbLgPM");if(a.length<8){m.textContent="Use at least 8 characters.";return}if(a!==b){m.textContent="The two passwords don't match.";return}
+  m.textContent="Saving…";user.linkWithCredential(firebase.auth.EmailAuthProvider.credential(user.email,a)).then(function(){return user.reload()}).then(function(){user=firebase.auth().currentUser;m.textContent="";$("dbLgN1").value=$("dbLgN2").value="";showBox()}).catch(function(e){var c=(e&&(e.code||e.message))||"";m.textContent=/recent-login/i.test(c)?"For safety, log out, log back in, and set it right away.":/already-in-use|email-already/i.test(c)?"Another account already uses this email with a password. Log out and log in with that email and password.":/weak-password/i.test(c)?"Pick a stronger password.":"Couldn't save it. "+((e&&e.message)||"")})};
+if(location.hash==="#login")open();
+/* already signed in on this site (the app, Instructors or Outreach)? Check quietly, so Admin shows up by itself */
+try{var rq=indexedDB.open("firebaseLocalStorageDb");rq.onsuccess=function(){var d=rq.result;try{if(!d.objectStoreNames.contains("firebaseLocalStorage")){d.close();return}var g=d.transaction("firebaseLocalStorage","readonly").objectStore("firebaseLocalStorage").getAll();g.onsuccess=function(){var any=(g.result||[]).some(function(x){return x&&/^firebase:authUser:/.test(x.fbase_key||"")&&x.value&&!x.value.isAnonymous});d.close();if(any)boot();else if(role()){setRole("");drawTab()}}}catch(e){d.close()}};rq.onupgradeneeded=function(){try{rq.transaction.abort()}catch(e){}}}catch(e){}
+}catch(e){}})();</script>
 <script>/* homepage visit counter (owner, Nov 14 2026): visits and button taps per day for the owner's
    dashboard. No cookie, no device id, nothing about the person: only the event and where the visit came from. */
 (function(){try{
