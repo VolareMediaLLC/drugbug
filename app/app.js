@@ -609,6 +609,10 @@ function srBuild() {
     add(t[0], "Study", function () { if (t[1] === "prep") srLevelGo("qs", {}); else srGo("gen", { tab: t[1] }); }, t[2], "Study");
   });
   add("Bug Rush", "Study", function () { srLevelGo("rush", {}, "paramedic"); }, "megacode code acls pals monitor scenarios cases calls random", "Codes, cases and calls");
+  safe(function () { (typeof PLANTS !== "undefined" ? PLANTS : []).forEach(function (p) { var ids = p[2].filter(function (id) { return DB.drugs[id]; }); if (!ids.length) return;
+    add(p[0], "Plant", function () { S.plantq = p[0]; srGo("gen", { tab: "plants" }); }, p[1] + " " + ids.map(function (id) { return nameOf(id); }).join(" "), ids.length + (ids.length === 1 ? " compound" : " compounds"));
+    ids.forEach(function (id) { add(nameOf(id), "From " + p[0], function () { srGo("gen", { tab: "registry" }); setTimeout(function () { try { openSheet(id); } catch (e) {} }, 30); }, p[0] + " " + p[1], "Compound"); }); }); });
+  add("Plant Finder", "Section", function () { srGo("gen", { tab: "plants" }); }, "plants herbs mushrooms compounds botanicals", "Name a plant, see its compounds");
   add("My List", "Section", function () { srGo("gen", { tab: "mylist" }); }, "saved drugs study list", "Your saved medicines");
   add("Progress", "Section", function () { srGo("gen", { tab: "progress" }); }, "mastery badges achievements leaderboard", "Your progress");
   add("Drug Class Comparisons", "Section", function () { srGo("gen", { tab: "alts" }); }, "compare drug classes alternatives", "Compare to learn");
@@ -902,6 +906,10 @@ var ICO = {
   vegc: '<path d="M12 21c-4-3-6-7-5-11 3 0 5 2 5 5 0-3 2-5 5-5 1 4-1 8-5 11z"/><path d="M12 6V3M10 4l2 2 2-2"/>',
   fruitc: '<circle cx="12" cy="14" r="7"/><path d="M12 7c0-2 1-4 3-4M12 7c-2-2-4-2-5-1"/>',
   vitc: '<rect x="5" y="9" width="14" height="7" rx="3.5" transform="rotate(-35 12 12.5)"/><path d="M10 9.5l4 6"/>',
+  plants: '<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/><path d="M10.5 14c-2-1.5-3-3.5-2.5-6 2 0 3 1.2 2.5 3 0-1.8 1.2-3 3-3 .3 2.5-1 4.5-3 6z"/>',
+  herbc: '<path d="M12 22V9"/><path d="M12 13c-4 0-6-3-6-6 4 0 6 3 6 6zM12 10c0-4 3-6 6-6 0 4-3 6-6 6zM12 17c3 0 5-2 5-5-3 0-5 2-5 5z"/>',
+  fungc: '<path d="M3 11c0-4 4-7 9-7s9 3 9 7z"/><path d="M9 11v7a3 3 0 0 0 6 0v-7"/><circle cx="9" cy="8" r="1"/><circle cx="15" cy="7" r="1"/>',
+  nutc: '<rect x="6" y="7" width="12" height="14" rx="2"/><path d="M8 3h8v4H8zM9 12h6M9 16h4"/>',
   shop: '<path d="M7 7h10l1 3v9a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-9z"/><path d="M6 4h12v3H6zM10 14c0-2 2-3 2-5 0 2 2 3 2 5a2 2 0 0 1-4 0z"/>',
   protocols: '<path d="M6 3h9l4 4v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v5h5"/><path d="M9 13h6"/><path d="M9 17h4"/>',
   micro: '<circle cx="9" cy="9" r="3"/><circle cx="16" cy="14" r="2.2"/><path d="M4 18c2-3 5-2 7-5"/><path d="M13 5c3 0 4 2 6 2"/><circle cx="6.5" cy="15.5" r="1.2"/>'
@@ -961,7 +969,7 @@ function tabList() {
   if (typeof anatView === "function" && anatAll().length) L.push(["anatomy", "Anatomy", "Tap the body: every organ and body part, what it is and what it does."]);
   if (S.view === "level" && isM(S.level)) L.push(["alts", "Drug Class Comparisons", "Compare drugs in the same class and drug classes studied for the same problems, and how they differ. For learning only."]);
   if (S.view === "level" && S.level === "diet") {
-    L.splice(1, 0, ["vitc", "Vitamin Compounds", "Vitamins and minerals: what each one does, food sources, deficiency and excess."], ["vegc", "Vegetable Compounds", "The active compounds in vegetables and what the research shows."], ["fruitc", "Fruit Compounds", "Fruit compounds, grapefruit interactions and more."]);
+    L.splice(1, 0, ["vitc", "Vitamin Compounds", "Vitamins and minerals: what each one does, food sources, deficiency and excess."], ["vegc", "Vegetable Compounds", "The active compounds in vegetables and what the research shows."], ["fruitc", "Fruit Compounds", "Fruit compounds, grapefruit interactions and more."], ["plants", "Plant Finder", "Name a plant and see every compound from it."], ["herbc", "Herbs & Roots", "Herbal supplements and what the research shows."], ["fungc", "Mushrooms & Fungi", "Medicinal mushrooms and ferments."], ["nutc", "Supplement Shelf", "Popular supplements, from creatine to fish oil."]);
   }
   if (S.view === "gen" || (S.view === "level" && S.level === "diet")) L.splice(1, 0, ["conds", "Conditions & Medicine Cautions", "Pick a condition to see which medicines mention it in their contraindications and warnings. Education only."]);
   if (S.view === "gen") L.splice(1, 0, ["families", "Drug Families", "Similar drugs side by side: beta blockers, statins, SSRIs and more, and what makes each one different."]);
@@ -1004,7 +1012,7 @@ function tabList() {
   if (S.view === "level" && typeof seatActive === "function" && seatActive() && (!SEAT.level || SEAT.level === S.level))
     L.unshift(["myclass", "My Class", SEAT.orgName || "Your class"]);
   if (S.view === "gen" && typeof illicitView === "function") L.splice(1, 0, ["illicit", "Illicit & Street Drugs", "How illicit and recreational drugs affect the body, overdose signs and treatment. Education only."]);
-  if (S.view === "gen" && typeof COMPOUND_TABS !== "undefined") L.splice(1, 0, ["vegc", "Vegetable Compounds", "Sulforaphane, allicin, lycopene, favism beans and more cool compounds from vegetables."], ["fruitc", "Fruit Compounds", "Resveratrol, bromelain, star fruit toxin and more unique compounds from fruit."], ["vitc", "Vitamin Compounds", "Every vitamin form, from B12 types to vitamin K2, CoQ10 and choline."]);
+  if (S.view === "gen" && typeof COMPOUND_TABS !== "undefined") L.splice(1, 0, ["vegc", "Vegetable Compounds", "Sulforaphane, allicin, lycopene, favism beans and more cool compounds from vegetables."], ["fruitc", "Fruit Compounds", "Resveratrol, bromelain, star fruit toxin and more unique compounds from fruit."], ["vitc", "Vitamin Compounds", "Every vitamin form, from B12 types to vitamin K2, CoQ10 and choline."], ["plants", "Plant Finder", "Type a plant, herb or mushroom and see every compound DrugBug has from it."], ["herbc", "Herbs & Roots", "Rhodiola, ashwagandha, St. John's wort, kava, ginkgo, saw palmetto and 100 more herbs."], ["fungc", "Mushrooms & Fungi", "Lion's mane, reishi, cordyceps, turkey tail, red yeast rice and other fungi."], ["nutc", "Supplement Shelf", "Creatine, fish oil, nootropics, collagen, algae, bee products and the risky wild cards."]);
   if (typeof disView === "function" && !(S.view === "level" && isI(S.level))) L.splice(1, 0, ["diseases", "Disease Lab", Object.keys((DB && DB.DIS) || {}).length + " conditions explained: their history, what goes wrong from cell to organ, and the drugs that treat them."]);
   /* the field study guide sits right after Medications (1.2, owner Nov 7 2026) */
   if (S.view === "level" && fgOf(S.level)) { var G0 = fgOf(S.level); L.splice(1, 0, ["guide", G0.tab, G0.sub]); }
@@ -1021,11 +1029,11 @@ var HUB_GROUPS = [
      "Study and practice", and the things that are yours (your class, your agency's protocols,
      your list, your progress) together in "Yours". */
   ["Look it up", ["registry", "guide", "diseases", "calls", "anatomy", "families", "conds", "micro", "illicit", "units", "body", "alts", "contrast", "labs", "blood", "hemo", "flightp", "flt_ref"]],
-  ["Food and vitamin compounds", ["vegc", "fruitc", "vitc"]],
+  ["Plants, foods and supplements", ["plants", "herbc", "fungc", "nutc", "vegc", "fruitc", "vitc"]],
   ["Study and practice", ["qs", "rush", "cards", "games", "scene", "nbug"]],
   ["Yours", ["myclass", "protocols", "mylist", "progress", "shop"]]
 ];
-var HUB_SHORT = { qs: "Practice and test questions", protocols: "Your agency's protocols, or request yours", scene: "The Great Bug acts out the call, vitals live", systems: "Airway, cardiac, neuro and more, with quizzes", calls: "Stroke, STEMI, sepsis, trauma, ROSC", micro: "Bacteria, viruses, fungi, prions, parasites", fm_bio: "Bio, chem, rad and nuclear casualties", fm_ref: "Burns, vents, scores, handoff, K9, dive", medlist: "What a med list says about the patient", fm_store: "Heat, cold, light and mixing", fm_istat: "Values, cartridges and practice cases", fm_cond: "Trauma, medical and blood reactions, with types", fm_blood: "Whole blood, components, MTP, reactions", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "The drugs you are studying", tools: "Questions, cards, games, drills", megacode: "A timed code on a live monitor", rush: "Codes, cases and calls, back to back", cards: "Flip, think, then check", games: "Crosswords, scrambles and memory match", scenarios: "Clinical cases", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", anatomy: "Every organ and body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time" };
+var HUB_SHORT = { qs: "Practice and test questions", protocols: "Your agency's protocols, or request yours", scene: "The Great Bug acts out the call, vitals live", systems: "Airway, cardiac, neuro and more, with quizzes", calls: "Stroke, STEMI, sepsis, trauma, ROSC", micro: "Bacteria, viruses, fungi, prions, parasites", fm_bio: "Bio, chem, rad and nuclear casualties", fm_ref: "Burns, vents, scores, handoff, K9, dive", medlist: "What a med list says about the patient", fm_store: "Heat, cold, light and mixing", fm_istat: "Values, cartridges and practice cases", fm_cond: "Trauma, medical and blood reactions, with types", fm_blood: "Whole blood, components, MTP, reactions", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "The drugs you are studying", tools: "Questions, cards, games, drills", megacode: "A timed code on a live monitor", rush: "Codes, cases and calls, back to back", cards: "Flip, think, then check", games: "Crosswords, scrambles and memory match", scenarios: "Clinical cases", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", plants: "Name a plant, see its compounds", herbc: "Adaptogens, sleep herbs and more", fungc: "Medicinal mushrooms and ferments", nutc: "Creatine, fish oil, nootropics", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", anatomy: "Every organ and body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time" };
 /* ---------- Hold a tile, then move it (owner, Nov 4 2026) ----------
    The iPhone gesture: press and hold until the tile lifts, drag it where you want, and the
    others slide out of the way as you go. Order is kept per level and per section, so the
@@ -1518,7 +1526,7 @@ function viewLevel() {
   if (!S.tab || (S.tab !== "hub" && S.tab !== "session" && !tabName(S.tab))) S.tab = "hub";
   if (S.tab !== "hub" && S.tab !== "session" && typeof proLocked === "function" && proLocked(S.tab)) { var lt = S.tab; S.tab = "hub"; setTimeout(function () { openPaywall(tabName(lt), tabTier(lt)); }, 0); }
   if (S.tab === "calc") S.tab = "hub";  /* Calc Lab was removed */
-  var body = S.tab === "hub" ? "" : S.tab === "guide" ? guideView() : S.tab === "dash" && typeof dashView === "function" ? dashView() : S.tab === "anatomy" && typeof anatView === "function" ? anatView() : S.tab === "calls" && typeof callsView === "function" ? callsView() : S.tab === "scene" && typeof sceneView === "function" ? sceneView() : S.tab === "systems" && typeof sysView === "function" ? sysView() : S.tab === "protocols" && typeof agpTabView === "function" ? agpTabView() : typeof fieldTab === "function" && isF(S.level) && FM_TABS[S.tab] ? fieldTab(S.tab) : (S.tab === "vegc" || S.tab === "fruitc" || S.tab === "vitc") && typeof compoundView === "function" ? compoundView(S.tab) : S.tab === "illicit" && typeof illicitView === "function" ? illicitView() : S.tab === "registry" ? (S.view === "level" && isF(S.level) && typeof fieldMedsView === "function" ? fieldMedsView() : registry()) : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? (S.tab = "hub", "") : S.tab === "micro" && typeof microView === "function" ? microView() : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "megacode" ? megaView() : S.tab === "rush" ? rushView() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "flt_ref" && typeof fltRefView === "function" ? fltRefView() : S.tab === "tools" ? toolsView() : S.tab === "medlist" ? (typeof medlistView === "function" ? medlistView() : "") : flashcards();
+  var body = S.tab === "hub" ? "" : S.tab === "guide" ? guideView() : S.tab === "dash" && typeof dashView === "function" ? dashView() : S.tab === "anatomy" && typeof anatView === "function" ? anatView() : S.tab === "calls" && typeof callsView === "function" ? callsView() : S.tab === "scene" && typeof sceneView === "function" ? sceneView() : S.tab === "systems" && typeof sysView === "function" ? sysView() : S.tab === "protocols" && typeof agpTabView === "function" ? agpTabView() : typeof fieldTab === "function" && isF(S.level) && FM_TABS[S.tab] ? fieldTab(S.tab) : (typeof COMPOUND_TABS !== "undefined" && COMPOUND_TABS[S.tab]) && typeof compoundView === "function" ? compoundView(S.tab) : S.tab === "plants" && typeof plantView === "function" ? plantView() : S.tab === "illicit" && typeof illicitView === "function" ? illicitView() : S.tab === "registry" ? (S.view === "level" && isF(S.level) && typeof fieldMedsView === "function" ? fieldMedsView() : registry()) : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? (S.tab = "hub", "") : S.tab === "micro" && typeof microView === "function" ? microView() : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "megacode" ? megaView() : S.tab === "rush" ? rushView() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "flt_ref" && typeof fltRefView === "function" ? fltRefView() : S.tab === "tools" ? toolsView() : S.tab === "medlist" ? (typeof medlistView === "function" ? medlistView() : "") : flashcards();
   var msg = S.sessMsg ? '<div class="presult" role="status">' + esc(S.sessMsg) + '</div>' : ''; S.sessMsg = "";
   var notes = (S.tab === "calc" || S.tab === "tools" ? eduBanner() : '') + (["scenarios", "calls", "scene", "rush"].indexOf(S.tab) >= 0 && typeof simBanner === "function" ? simBanner() : '') + (["registry", "guide", "families", "alts", "protocols", "mylist", "labs", "conds"].indexOf(S.tab) >= 0 ? eduBanner(true) : '') + (["prep", "session", "nbug", "scenarios", "cards", "rush"].indexOf(S.tab) >= 0 ? esQNote() : '');
   if (S.tab === "hub") return topbar() + '<div class="' + ctxClass() + '">' + band() + protocolBanner() + (isF(S.level) ? "" : dailyCard()) + msg + (S.learn && S.learn.done && typeof learnDoneView === "function" ? learnDoneView() : "") + hubView() + '</div>';
@@ -1626,7 +1634,9 @@ function caseItems(c) {
 function nrWithCases(qs, allowed) {
   /* registry tests: roughly one whole call for every 10 questions, each kept in order as one block */
   var cases = shuffle((DB.CASES || []).filter(function (c) { return allowed.indexOf(c.lv) >= 0 && c.steps.length; }));
-  var want = qs.length >= 8 ? Math.max(1, Math.round(qs.length / 10)) : 0, blocks = [], used = 0;
+  /* nursing: case studies from your own department first (Nov 14 2026) */
+  try { var cu = nurseCtx() && typeof myUnit === "function" ? myUnit(S.level) : null; if (cu) cases.sort(function (a, b) { return (b.unit === cu) - (a.unit === cu); }); } catch (e) {}
+  var want = qs.length >= 8 ? Math.max(1, Math.round(qs.length / (nurseCtx() ? 25 : 10))) : 0, blocks = [], used = 0;
   for (var i = 0; i < cases.length && blocks.length < want; i++) { var it = caseItems(cases[i]); if (used + it.length > qs.length * 0.6) continue; blocks.push(it); used += it.length; }
   if (!blocks.length) return qs;
   var rest = qs.filter(function (q) { return !q.cs; }).slice(0, Math.max(0, qs.length - used)), out = [];
@@ -1711,11 +1721,114 @@ var RQ_DOM = { airway: "Airway, respiration & ventilation", cardio: "Cardiology 
 function drugCount() { var k = S.nr && S.nr.kind; if (S.nr) S.nr.kind = "drug"; var n = nrPool(S.nr ? S.nr.filter : "").length; if (S.nr) S.nr.kind = k; return n; }
 /* registry tests follow the NREMT blueprint: about 20% airway, 23% cardiology, 15% trauma, 30% medical/OB, 12% operations */
 var RQ_MIX = { airway: .2, cardio: .23, trauma: .15, medical: .3, ops: .12 };
+/* NCLEX-style nursing bank (data6.js, Nov 14 2026): client-needs categories from the NCLEX test plans */
+Object.assign(RQ_DOM, { moc: "Management of care", sic: "Safety & infection control", hpm: "Health promotion", psy: "Psychosocial integrity", bcc: "Basic care & comfort", pharm: "Pharmacological therapies", rrp: "Reduction of risk", phys: "Physiological adaptation" });
+var RQ_MIX_RN = { moc: .18, sic: .13, hpm: .09, psy: .09, bcc: .09, pharm: .16, rrp: .12, phys: .14 };
+var RQ_MIX_PN = { moc: .21, sic: .13, hpm: .09, psy: .12, bcc: .1, pharm: .13, rrp: .12, phys: .1 };
+var RQ_MIX_CNA = { bcc: .3, sic: .25, psy: .15, moc: .15, rrp: .15 };
+function rqMix() { if (!nurseCtx()) return RQ_MIX; return S.level === "cna" ? RQ_MIX_CNA : S.level === "lvn" ? RQ_MIX_PN : RQ_MIX_RN; }
+/* Department weighting (owner, Nov 14 2026: "research the most common case for each nurse field and most common medication ... an algorithm
+   with what percent the more common medications and cases should show up in"). Sources: HCUP statistical briefs #277, #281, #286, #299,
+   #249, #185; CDC NCHS natality data briefs 553/554; SEER 2026 estimates; Haidari 2021 (NICU admissions); Stark 2022 (NICU medication
+   exposures); Lin 2022 (30 most-used ED drugs); Tjia 2010 (nursing home daily medications). Lists are estimates where no data exists.
+   For an RN or LVN with a department picked, a drug quiz of n questions is built like this:
+     1. 75 percent of questions come from the department: questions written for it, on its unit medicines, or on its top-tier medicines.
+     2. Inside that share, medicines are tiered: Tier 1 (most given) 60 percent, Tier 2 (common) 30 percent, the rest of the unit 10 percent.
+        Each tier gets its share no matter how many questions it has, so a big tier doesn't crowd out a small one.
+     3. A question that matches one of the department's common cases (keywords in the question) gets up to 2x weight,
+        scaled by how common that case is (most common case = 2x, a rare case = just over 1x, no case = 1x).
+     4. Questions not answered before get full weight; ones already seen get 0.6x, so new material comes first.
+     5. At most 2 questions on the same medicine per quiz.
+     6. At least 1 in 10 department questions is on a high-alert medicine (ISMP list: insulin, heparin, opioids, potassium, etc.).
+     7. The other 25 percent comes from the rest of the level's pool, so students still see general nursing medicines. */
+var DEPT_PROF = {"medsurg":{"t1":["heparin","enoxaparin","regular-insulin","insulin-lispro","insulin-glargine","acetaminophen","ondansetron","morphine","hydromorphone","oxycodone","furosemide","pantoprazole","ceftriaxone","vancomycin","piperacillin-tazobactam","potassium-chloride"],"t2":["metoprolol","lisinopril","amlodipine","docusate","sennosides","polyethylene-glycol","cefazolin","levofloxacin","prednisone","albuterol","ipratropium","atorvastatin","aspirin","warfarin","apixaban","magnesium-sulfate"],"cases":[["Sepsis",8.0,["sepsis","septic"]],["Heart failure",4.1,["heart","failure"]],["Joint replacement / post-op",4.1,["arthroplasty","knee","replacement","hip","replacement","postoperative","post-op","surgery"]],["Pneumonia",2.7,["pneumonia"]],["Diabetes complications",2.4,["diabetes","glucose","hypoglycem","hyperglycem","dka"]],["Heart attack",2.4,["myocardial","infarction","mi","chest","pain"]],["Arrhythmia",2.2,["atrial","fibrillation","arrhythmia"]],["COPD",2.0,["copd","emphysema"]],["Kidney injury",2.0,["kidney","renal","creatinine"]],["Stroke",1.9,["stroke"]],["Cellulitis",1.9,["cellulitis","skin","infection"]],["UTI",1.8,["urinary","tract","infection","uti"]]]},"icu":{"t1":["norepinephrine","propofol","fentanyl","dexmedetomidine","midazolam","heparin","regular-insulin","vancomycin","piperacillin-tazobactam","pantoprazole","potassium-chloride"],"t2":["vasopressin","epinephrine","phenylephrine","dobutamine","cisatracurium","rocuronium","amiodarone","meropenem","cefepime","hydrocortisone","furosemide","magnesium-sulfate","ketamine"],"cases":[["Respiratory failure / ventilator",20,["ventilat","intubat","respiratory","failure","ards"]],["Sepsis / septic shock",20,["sepsis","septic","shock","lactate"]],["Heart attack, heart failure, shock",15,["myocardial","cardiogenic","heart","failure","shock"]],["Stroke / brain bleed",10,["stroke","hemorrhage","intracranial","icp"]],["Overdose / poisoning",8,["overdose","poisoning","toxicity"]],["Arrhythmia",7,["atrial","fibrillation","arrhythmia","ventricular"]],["GI bleed",6,["gi","bleed","bleeding","varice"]],["DKA",5,["dka","ketoacidosis"]],["Kidney injury",5,["kidney","renal","crrt"]]]},"ed":{"t1":["ondansetron","ibuprofen","hydrocodone-acetaminophen","acetaminophen","ketorolac","morphine","hydromorphone","promethazine","albuterol","oxycodone-acetaminophen"],"t2":["ceftriaxone","diphenhydramine","lidocaine","aspirin","lorazepam","prednisone","ciprofloxacin","methylprednisolone","azithromycin","cephalexin","amoxicillin","tramadol","tdap-vaccine","cyclobenzaprine","levofloxacin","naproxen","famotidine","trimethoprim-sulfamethoxazole","epinephrine","naloxone"],"cases":[["Abdominal pain / vomiting",5.2,["abdominal","vomiting","nausea","diarrhea"]],["Respiratory infection",4.8,["cough","respiratory","infection","upper","respiratory"]],["Chest pain",4.2,["chest","pain"]],["Injuries, sprains, wounds",10,["injury","sprain","fracture","laceration","wound","fall"]],["Back and muscle pain",3.5,["back","pain","musculoskeletal","muscle"]],["UTI",2.6,["urinary","tract","uti"]],["Headache / migraine",2.4,["headache","migraine"]],["Skin infection",2.2,["cellulitis","abscess"]],["Sepsis",2,["sepsis","septic"]],["Stroke",1.5,["stroke"]],["Overdose",1.5,["overdose","naloxone"]],["Asthma / allergic reaction",1.5,["asthma","anaphyla","allergic"]]]},"cardiac":{"t1":["aspirin","heparin","metoprolol","furosemide","atorvastatin","nitroglycerin","clopidogrel","ticagrelor","apixaban","enoxaparin"],"t2":["lisinopril","carvedilol","amiodarone","diltiazem","digoxin","spironolactone","sacubitril-valsartan","warfarin","potassium-chloride","magnesium-sulfate","adenosine","rivaroxaban"],"cases":[["Heart failure",4.1,["heart","failure","edema","weight","gain"]],["Heart attack / ACS",2.4,["myocardial","infarction","acs","stemi","chest","pain","troponin"]],["Atrial fibrillation / arrhythmia",2.2,["atrial","fibrillation","arrhythmia","heart","rate"]],["Coronary disease / after stent",1.3,["stent","pci","catheterization","coronary"]],["Hypertension crisis",0.8,["hypertensive","blood","pressure"]]]},"ob":{"t1":["oxytocin","bupivacaine","fentanyl","lidocaine","misoprostol","magnesium-sulfate","penicillin-g","ampicillin","rho-d-immune-globulin","ibuprofen"],"t2":["methylergonovine","carboprost","tranexamic-acid","terbutaline","labetalol","hydralazine","nifedipine","betamethasone","dinoprostone","cefazolin","docusate","acetaminophen"],"cases":[["Labor and birth",60,["labor","contraction","birth","delivery"]],["Induction",34.5,["induction","induce","cervix"]],["Cesarean",32.4,["cesarean","c-section"]],["Epidural / pain",25,["epidural","spinal","pain"]],["Preeclampsia / high blood pressure",12,["preeclampsia","hypertens","blood","pressure","seizure"]],["Group B strep",20,["group","b","strep","gbs"]],["Gestational diabetes",9,["gestational","diabetes","glucose"]],["Preterm labor",10,["preterm"]],["Postpartum hemorrhage",4,["hemorrhage","bleeding","postpartum","fundus"]],["Rh negative",15,["rh-negative","rh","negative"]]]},"nicu":{"t1":["ampicillin","gentamicin","caffeine-citrate","poractant-alfa","morphine","vancomycin","furosemide","fentanyl","midazolam","acetaminophen"],"t2":["dopamine","surfactant-beractant","phenobarbital","fluconazole","erythromycin","hydrocortisone","indomethacin","lorazepam","cefotaxime","albuterol","acyclovir","dexamethasone","epoetin-alfa","nitric-oxide-inhaled"],"cases":[["Suspected infection",17.5,["sepsis","infection","culture"]],["Breathing problems",16.9,["respiratory","distress","surfactant","apnea","breathing"]],["Jaundice",13.9,["bilirubin","jaundice","phototherapy"]],["Prematurity",15,["preterm","premature","weeks"]],["Low blood sugar",8,["hypoglycemia","glucose"]],["Withdrawal (NAS)",5,["withdrawal","neonatal","abstinence"]]]},"peds":{"t1":["acetaminophen","ibuprofen","albuterol","ondansetron","dexamethasone","prednisolone","ceftriaxone","amoxicillin","morphine"],"t2":["ampicillin","vancomycin","ipratropium","magnesium-sulfate","levetiracetam","lorazepam","midazolam","regular-insulin","methylprednisolone","clindamycin","cephalexin","diphenhydramine"],"cases":[["Bronchiolitis / bronchitis",9.8,["bronchiolitis","rsv","bronchitis"]],["Pneumonia",8.1,["pneumonia"]],["Asthma",8.5,["asthma","wheez"]],["Respiratory failure",6.1,["respiratory","failure"]],["Seizures",5.8,["seizure","epilep"]],["Depression / self-harm (teens)",14,["depress","suicid","self-harm"]],["Dehydration / gastroenteritis",5,["dehydrat","vomiting","diarrhea"]],["Diabetes / DKA",3,["dka","diabetes"]]]},"psych":{"t1":["sertraline","escitalopram","fluoxetine","olanzapine","quetiapine","risperidone","haloperidol","lorazepam","trazodone","hydroxyzine","lithium"],"t2":["aripiprazole","valproic-acid","lamotrigine","bupropion","mirtazapine","chlordiazepoxide","buprenorphine","naloxone","naltrexone","clonidine","diphenhydramine","benztropine","ziprasidone","clozapine"],"cases":[["Depression",26.1,["depress","suicid"]],["Alcohol use / withdrawal",18.5,["alcohol","withdrawal","ciwa"]],["Schizophrenia / psychosis",18.2,["schizophren","psychos","hallucinat"]],["Bipolar disorder",12.5,["bipolar","mania","manic"]],["Opioid use",6.7,["opioid"]],["Stimulant use",2.3,["stimulant","cocaine","methamphetamine"]],["Agitation",5,["agitat","aggress"]]]},"onc":{"t1":["ondansetron","dexamethasone","filgrastim","pegfilgrastim","carboplatin","paclitaxel","pembrolizumab","cyclophosphamide","doxorubicin"],"t2":["cisplatin","oxaliplatin","fluorouracil","docetaxel","rituximab","trastuzumab","gemcitabine","bortezomib","fosaprepitant","palonosetron","granisetron","diphenhydramine","morphine","allopurinol","cefepime"],"cases":[["Breast cancer",15,["breast"]],["Lung cancer",11,["lung"]],["Colorectal cancer",8,["colorectal","colon","rectal"]],["Lymphoma / leukemia / myeloma",8.7,["lymphoma","leukemia","myeloma"]],["Neutropenic fever / infection",14.4,["neutropen","fever","infection"]],["Nausea and vomiting",10,["nausea","vomiting"]],["Infusion reaction",6,["infusion","reaction","hypersensitiv"]]]},"periop":{"t1":["propofol","fentanyl","hydromorphone","ondansetron","cefazolin","midazolam","rocuronium","sugammadex","dexamethasone","lidocaine","ketorolac","acetaminophen"],"t2":["succinylcholine","neostigmine","glycopyrrolate","phenylephrine","ephedrine","scopolamine","naloxone","flumazenil","bupivacaine","vancomycin","tranexamic-acid","labetalol","dantrolene"],"cases":[["Joint replacement",9.2,["knee","hip","arthroplasty"]],["Cesarean",8.1,["cesarean"]],["Nausea after surgery",30,["nausea","vomiting","ponv"]],["Pain after surgery",30,["pain"]],["Airway / breathing in PACU",10,["airway","oxygen","respiratory","sedation"]],["Spine surgery",5.2,["spine"]],["Abdominal surgery",4.4,["cholecystectomy","colectomy","abdominal"]],["Malignant hyperthermia",2,["malignant","hyperthermia"]]]},"renal":{"t1":["heparin","epoetin-alfa","darbepoetin-alfa","iron-sucrose","sevelamer","calcium-acetate","calcitriol","paricalcitol","doxercalciferol","cinacalcet"],"t2":["regular-insulin","amlodipine","metoprolol","vancomycin","cefazolin","sodium-polystyrene-sulfonate","patiromer","alteplase","midodrine","ferric-citrate","etelcalcetide"],"cases":[["Anemia of kidney disease",30,["anemia","hemoglobin"]],["High potassium",15,["potassium","hyperkal"]],["Fluid overload",15,["fluid","weight","edema"]],["Phosphorus / bone disease",15,["phosph","calcium","parathyroid"]],["Low blood pressure during dialysis",10,["hypotens"]],["Access / catheter infection",8,["access","catheter","fistula","infection"]],["Diabetes",10,["diabet","glucose"]]]},"ltc":{"t1":["acetaminophen","docusate","sennosides","polyethylene-glycol","metoprolol","furosemide","omeprazole","pantoprazole","sertraline","citalopram","donepezil","insulin-glargine","levothyroxine","aspirin"],"t2":["memantine","lisinopril","amlodipine","apixaban","warfarin","oxycodone","hydrocodone-acetaminophen","quetiapine","mirtazapine","tramadol","cholecalciferol","nitrofurantoin","cephalexin","metformin"],"cases":[["Dementia",48,["dementia","alzheimer","confus"]],["High blood pressure",58,["blood","pressure","hypertens"]],["Diabetes",30,["diabet","glucose","insulin"]],["Heart failure",20,["heart","failure"]],["Depression",30,["depress"]],["Falls",20,["fall"]],["UTI",10,["urinary","tract","uti"]],["Pressure injury",8,["pressure","injury","ulcer","skin"]],["Pain",40,["pain"]]]}};
+var DEPT_MIX = { dept: .75, tiers: [.6, .3, .1], caseMax: 2, seen: .6, perDrug: 2, highAlert: .1 };
+var HIGH_ALERT = { "regular-insulin": 1, "insulin-glargine": 1, "insulin-lispro": 1, "insulin-aspart": 1, "heparin": 1, "enoxaparin": 1, "warfarin": 1, "apixaban": 1, "rivaroxaban": 1, "morphine": 1, "hydromorphone": 1, "fentanyl": 1, "oxycodone": 1, "methadone": 1, "potassium-chloride": 1, "magnesium-sulfate": 1, "norepinephrine": 1, "epinephrine": 1, "vasopressin": 1, "dopamine": 1, "dobutamine": 1, "phenylephrine": 1, "propofol": 1, "midazolam": 1, "dexmedetomidine": 1, "rocuronium": 1, "succinylcholine": 1, "cisatracurium": 1, "oxytocin": 1, "amiodarone": 1, "digoxin": 1, "alteplase": 1, "carboplatin": 1, "cisplatin": 1, "paclitaxel": 1, "doxorubicin": 1, "cyclophosphamide": 1, "methotrexate": 1, "lithium": 1, "clozapine": 1 };
+function deptTierOf(u, id) { var P = DEPT_PROF[u]; if (!P || !id) return 2; return P.t1.indexOf(id) >= 0 ? 0 : P.t2.indexOf(id) >= 0 ? 1 : 2; }
+function deptCaseOf(u, q) {
+  var P = DEPT_PROF[u]; if (!P) return null; var s = " " + String(q.q || "").toLowerCase() + " ", best = null;
+  P.cases.forEach(function (c) { if (c[2].some(function (k) { return s.indexOf(" " + k) >= 0; }) && (!best || c[1] > best[1])) best = c; });
+  return best;
+}
+/* Question balance for nursing (owner, Nov 14 2026: "fix all of this for the 1.2.2"). Builds every RN, LVN and CNA drug quiz:
+   - with a department picked: the research-weighted department share (see DEPT_MIX above), the rest from the general pool;
+   - without one: the whole pool, balanced the same way;
+   - each question's weight: new over seen (x0.6 once seen), missed ones come back sooner (+50% per miss, up to 3),
+     drugs that already have many questions are damped (1 / square root of their question count), department-written x1.25;
+   - at most 2 questions per medicine, at most 30% of a quiz on one skill (assess, teach, labs, interact, adverse, notify, vitals),
+     and at least 1 in 10 department questions on a high-alert medicine. */
+function deptMix(pool, n, pick) {
+  if (!nurseCtx() || ["rn", "lvn", "cna"].indexOf(S.level) < 0) return null;
+  var u = S.level !== "cna" && typeof myUnit === "function" ? myUnit(S.level) : null;
+  var P = (u && DEPT_PROF[u]) || { t1: [], t2: [], cases: [] }, ids = {};
+  if (u) { (DB.nunitIds(u, S.level) || []).forEach(function (id) { ids[id] = 1; }); P.t1.concat(P.t2).forEach(function (id) { ids[id] = 1; }); }
+  var inU = u ? pool.filter(function (q) { return q.unit === u || (q.d && ids[q.d]); }) : [], rest = pool.filter(function (q) { return inU.indexOf(q) < 0; });
+  var want = Math.min(inU.length, Math.round(n * DEPT_MIX.dept));
+  var seen = seenMap(), miss = (Prog.d && Prog.d.miss) || {}, dc = {};
+  pool.forEach(function (q) { if (q.d) dc[q.d] = (dc[q.d] || 0) + 1; });
+  function base(q) {
+    var k = qid(q), w = seen[k] ? DEPT_MIX.seen : 1, m = miss[k] || 0;
+    w *= 1 + Math.min(m, 3) * 0.5;
+    if (q.d && dc[q.d] > 1) w /= Math.sqrt(dc[q.d]);
+    if (u && q.unit === u) w *= 1.25;
+    return w;
+  }
+  function key(w) { return Math.pow(Math.random(), 1 / Math.max(w, 1e-9)); }
+  /* department part: tier quotas x case weight x base */
+  if (want) {
+    var maxShare = Math.max.apply(null, P.cases.map(function (c) { return c[1]; }).concat([1]));
+    var tierN = [0, 0, 0]; inU.forEach(function (q) { q._dt = deptTierOf(u, q.d); tierN[q._dt]++; });
+    var live = DEPT_MIX.tiers.reduce(function (s, w, i) { return s + (tierN[i] ? w : 0); }, 0) || 1;
+    inU.forEach(function (q) { var c = deptCaseOf(u, q); q._dk = key((DEPT_MIX.tiers[q._dt] / live) / tierN[q._dt] * (c ? 1 + (DEPT_MIX.caseMax - 1) * (c[1] / maxShare) : 1) * base(q)); });
+  }
+  rest.forEach(function (q) { q._dk = key(base(q)); });
+  var per = {}, catN = {}, catMax = Math.max(2, Math.ceil(n * 0.3));
+  function take(list, k, out) {
+    list.slice().sort(function (a, b) { return b._dk - a._dk; }).forEach(function (q) {
+      if (out.length >= k) return;
+      var d = q.d || ("_" + qid(q)), c = q.cat || "";
+      if ((per[d] || 0) >= DEPT_MIX.perDrug) return;
+      if (c && (catN[c] || 0) >= catMax) return;
+      per[d] = (per[d] || 0) + 1; if (c) catN[c] = (catN[c] || 0) + 1; out.push(q);
+    });
+    return out;
+  }
+  var A = want ? take(inU, want, []) : [];
+  if (want) {
+    var needHA = Math.ceil(want * DEPT_MIX.highAlert), haIn = A.filter(function (q) { return HIGH_ALERT[q.d]; });
+    if (haIn.length < needHA) {
+      var haOut = inU.filter(function (q) { return HIGH_ALERT[q.d] && A.indexOf(q) < 0; }).sort(function (a, b) { return b._dk - a._dk; });
+      for (var i = A.length - 1; i >= 0 && haIn.length < needHA && haOut.length; i--) if (!HIGH_ALERT[A[i].d]) { var h = haOut.shift(); A[i] = h; haIn.push(h); }
+    }
+  }
+  var B = take(rest, Math.max(0, n - A.length), []);
+  var out = A.concat(B);
+  if (out.length < n) { var left = pool.filter(function (q) { return out.indexOf(q) < 0; }); out = out.concat(pick(left, Math.min(left.length, n - out.length))); }
+  return out.length ? shuffle(out) : null;
+}
+
+function deptHas(u, q) { if (!q || !q.d) return false; var P = DEPT_PROF[u]; if (P && (P.t1.indexOf(q.d) >= 0 || P.t2.indexOf(q.d) >= 0)) return true; return (DB.nunitIds(u, S.level) || []).indexOf(q.d) >= 0; }
+function deptTopCases(u) { var P = DEPT_PROF[u]; return P ? P.cases.slice().sort(function (a, b) { return b[1] - a[1]; }).slice(0, 3).map(function (c) { return c[0]; }) : []; }
+
 function regCompose(pool, n, adaptive) {
   var pick = function (L, k) { return k <= 0 ? [] : adaptive ? adaptivePick(L, k) : shuffle(L.slice()).slice(0, k); }, out = [];
-  Object.keys(RQ_MIX).forEach(function (d) { out = out.concat(pick(pool.filter(function (q) { return q.cat === d; }), Math.round(n * RQ_MIX[d]))); });
+  var MX = rqMix(); Object.keys(MX).forEach(function (d) { out = out.concat(pick(pool.filter(function (q) { return q.cat === d; }), Math.round(n * MX[d]))); });
   if (out.length < n) out = out.concat(pick(pool.filter(function (q) { return out.indexOf(q) < 0; }), n - out.length));
   return shuffle(out.slice(0, n));
+}
+/* A note from the creator (owner, Nov 14 2026). Shows on the Questions screen until closed (store "cnote1").
+   The website invites people to become evaluators and use DrugBug free. The iPhone app leaves out "free" and opens an email
+   instead of a web page, because App Store rules (3.1.1) don't allow pointing people to other ways to unlock the app. */
+function creatorNote() {
+  if (store("cnote1")) return "";
+  var web = !(typeof NATIVE !== "undefined" && NATIVE);
+  return '<aside class="cnote" role="note"><button class="cnx" type="button" data-act="cnoteclose" aria-label="Close the note">&times;</button>' +
+    '<p class="cnk">A note from the creator</p>' +
+    '<p>Thanks for studying with DrugBug. The questions are in good shape, but I am working around the clock to balance them and make them more relevant to your specialty. New questions and fixes go out all the time.</p>' +
+    '<p class="cnsig">Adam, Paramedic, FP-C</p>' +
+    (web ? '<a class="cncta" href="../evaluate.html" target="_blank" rel="noopener">Request to be a question evaluator and use DrugBug free &rarr;</a>'
+         : '<a class="cncta" href="mailto:VolareMediaLLC@gmail.com?subject=Question%20evaluator">Want to help shape the questions? Request to be a question evaluator &rarr;</a>') +
+    '</aside>';
 }
 function regCount() { var k = ctxKey(), al = nrLevelsFor(k), f = isF(k); return (DB.RQ || []).filter(function (q) { return al.indexOf(q.lv) >= 0 && starOK(q, k) && qVisible(q) && (!f || q.fm); }).length; }
 function nrPrep() {
@@ -1727,11 +1840,12 @@ function nrPrep() {
   if (isF(ctxKey())) st.kind = "reg";
   var regN = regCount(), reg = st.kind === "reg", filters = nrLevelsFor(ctxKey()).concat(["all"]), n = Math.min(st.n, pool.length);
   /* one simple screen: pick a deck, a length and a mode, then go. Everything else sits under More options. */
-  var c = '<section class="nrsetup nrfun"><div class="nrtop">' + myBugArt("nrbug", null, null, myStage()) + '<p class="nrtag"><strong>' + esc(exam) + '-style practice.</strong> <span class="muted">' + (isF(ctxKey()) ? 'Pick a length, go.' : 'Pick a deck, pick a length, go.') + '</span></p></div>' + examPill(pool);
+  var c = '<section class="nrsetup nrfun"><div class="nrtop">' + myBugArt("nrbug", null, null, myStage()) + '<p class="nrtag"><strong>' + esc(exam) + '-style practice.</strong> <span class="muted">' + (isF(ctxKey()) ? 'Pick a length, go.' : 'Pick a deck, pick a length, go.') + '</span></p></div>' + examPill(pool) + creatorNote();
   if (regN && isF(ctxKey())) c += '<p class="muted small">' + regN + ' questions on medications, blood, trauma, prolonged care, ventilators, labs, CBRN, K9, dive and evacuation.</p>';
   else if (regN) c += '<div class="nrdecks" role="group" aria-label="Question type">' +
-    '<button class="nrdeck" data-nrkind="drug" aria-pressed="' + !reg + '"><span class="nrdk-ic" aria-hidden="true">' + icon("pillq") + '</span><strong>Drug questions</strong><span class="nrdk-n">' + drugCount() + '</span><span class="nrdk-sub">Doses, actions, uses and side effects</span></button>' +
-    '<button class="nrdeck" data-nrkind="reg" aria-pressed="' + reg + '"><span class="nrdk-ic" aria-hidden="true">' + icon("ecg") + '</span><strong>Registry-style questions</strong><span class="nrdk-n">' + regN + '</span><span class="nrdk-sub">Airway, cardiology, trauma, medical and operations</span></button></div>';
+    '<button class="nrdeck" data-nrkind="drug" aria-pressed="' + !reg + '"><span class="nrdk-ic" aria-hidden="true">' + icon("pillq") + '</span><strong>Drug questions</strong><span class="nrdk-n">' + drugCount() + '</span><span class="nrdk-sub">' + (nurse ? "Medicines: what to check, report and teach on your unit" : "Doses, actions, uses and side effects") + '</span></button>' +
+    '<button class="nrdeck" data-nrkind="reg" aria-pressed="' + reg + '"><span class="nrdk-ic" aria-hidden="true">' + icon("ecg") + '</span><strong>' + (nurse ? (S.level === "cna" ? "CNA exam-style questions" : "NCLEX-style questions") : "Registry-style questions") + '</strong><span class="nrdk-n">' + regN + '</span><span class="nrdk-sub">' + (nurse ? (S.level === "cna" ? "Care, safety, communication and your role" : "Priority, delegation, safety, care and the whole test plan") : "Airway, cardiology, trauma, medical and operations") + '</span></button></div>' +
+    (function () { if (!nurse || (S.level !== "rn" && S.level !== "lvn") || typeof myUnit !== "function") return ""; var u0 = myUnit(S.level), uo0 = u0 && typeof unitObj === "function" ? unitObj(u0) : null; return uo0 && !reg ? '<p class="muted small nrdept">About 3 of every 4 drug questions come from your department: <strong>' + esc(uo0.name) + '</strong>, weighted to its most-used medicines and most common cases' + (deptTopCases(u0).length ? ' (' + esc(deptTopCases(u0).join(', ')) + ')' : '') + '. The rest cover other medicines.</p>' : ""; })();
   (function () {
     var st2 = seenStats();
     if (st2.total) {
@@ -1860,7 +1974,7 @@ function nrItemOpts(st, x, reveal) {
   return c;
 }
 function caseBox(q) {
-  return '<div class="casebox"><div class="casehd"><span class="lbl">Call in progress</span><strong>' + esc(q.csTitle) + '</strong><span class="pill">Part ' + q.part + ' of ' + q.parts + '</span></div>' +
+  return '<div class="casebox"><div class="casehd"><span class="lbl">' + (nurseCtx() ? "Case study" : "Call in progress") + '</span><strong>' + esc(q.csTitle) + '</strong><span class="pill">Part ' + q.part + ' of ' + q.parts + '</span></div>' +
     (q.before && q.before.length ? '<details class="caseprev"><summary>Earlier on this call (' + q.before.length + ')</summary><ol>' + q.before.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join("") + '</ol></details>' : '') +
     '<p class="casenow">' + esc(q.story) + '</p></div>';
 }
@@ -1901,6 +2015,10 @@ function nrDone(st) {
   var msg = pct >= 85 ? "Excellent. You know this material." : pct >= 70 ? "Solid. You're on track." : pct >= 50 ? "Getting there. Review the misses below." : "Keep studying. Start with the BugDex.";
   var pb = perfectBonus(st, total, correct) || st.perfectPaid;
   var c = '<section class="result"><div class="bigscore ' + (pct >= 70 ? "good" : pct >= 50 ? "mid" : "low") + '"><span class="pct">' + pct + '%</span><span>' + correct + ' of ' + total + ' correct · ' + fmtTime(secs) + '</span></div><p class="resmsg">' + msg + '</p>' + (pb ? '<p class="presult good">Perfect score bonus: <strong>+' + PERFECT_BONUS + ' sticks</strong></p>' : '');
+  if (nurseCtx()) { var SK = { assess: "Assessment", teach: "Teaching", labs: "Labs", interact: "Interactions", adverse: "Side effects", notify: "When to report", vitals: "Vital signs" }, sk = {}, du = typeof myUnit === "function" ? myUnit(S.level) : null, dp = [0, 0];
+    st.qs.forEach(function (x, i) { var ok = nrRight(x, st.ans[i]), k = x.q.cat; if (SK[k] && !x.q.reg) { sk[k] = sk[k] || [0, 0]; sk[k][1]++; if (ok) sk[k][0]++; } if (du && (x.q.unit === du || deptHas(du, x.q) || x.q.cs && (DB.CASES || []).some(function (cc) { return cc.id === x.q.cs && cc.unit === du; }))) { dp[1]++; if (ok) dp[0]++; } });
+    var skk = Object.keys(sk); if (skk.length) { var weak = skk.filter(function (k) { return sk[k][1] >= 2 && sk[k][0] / sk[k][1] < 0.6; }); c += '<p class="small muted" style="margin:10px 0 4px"><strong>By skill</strong>' + (weak.length ? ' &middot; work on: ' + esc(weak.map(function (k) { return SK[k].toLowerCase(); }).join(", ")) : '') + '</p><div class="chips">' + skk.map(function (k) { return '<span class="chip static">' + SK[k] + ': ' + sk[k][0] + '/' + sk[k][1] + '</span>'; }).join("") + '</div>'; }
+    if (du && dp[1] && typeof unitObj === "function") c += '<p class="small muted" style="margin:6px 0 0">' + esc(unitObj(du).name) + ' questions: <strong>' + dp[0] + ' of ' + dp[1] + '</strong> right</p>'; }
   c += '<div class="chips">' + Object.keys(by).map(function (k) { return '<span class="chip static">' + (k.indexOf("d:") === 0 ? RQ_DOM[k.slice(2)] : NRLV[k]) + ': ' + by[k][0] + '/' + by[k][1] + '</span>'; }).join("") + '</div>';
   c += '<div class="actions"><button class="btn" data-act="nrnew">New test</button>' + (missed.length ? '<button class="btn ghost" data-act="nrmissed">Practice my ' + missed.length + ' misses</button>' : '') + '</div>';
   if (missed.length) c += '<details class="sec" open><summary>Review what you missed (' + missed.length + ')</summary><div class="fields">' + missed.map(function (m) {
@@ -2495,7 +2613,8 @@ document.addEventListener("click", function (e) {
     case "aclstest": return typeof fmAclsTest === "function" && fmAclsTest();
     case "nrmore": S.nrMore = !(S.nrMore || S.exEdit); S.exEdit = false; return render();
     case "exclear": if (Prog.d.exam) delete Prog.d.exam[examKey()]; S.exEdit = false; saveProg(); return render();
-    case "nrstart": var st0 = nrState(), pl0 = nrPool(st0.filter), pk0; if (S.nrFresh) { var fr0 = freshPool(pl0); if (fr0.length >= Math.min(5, st0.n)) pl0 = fr0; } pk0 = st0.kind === "reg" ? regCompose(pl0, st0.n, st0.adaptive !== false) : isEMSLv(ctxKey()) ? nrCompose(pl0, Math.min(st0.n, pl0.length), st0.filter && st0.filter !== "all" ? [st0.filter] : nrLevelsFor(ctxKey()), st0.adaptive !== false) : st0.adaptive !== false ? adaptivePick(pl0, st0.n) : shuffle(pl0).slice(0, st0.n); if (st0.kind !== "reg") { pk0 = diffBalance(pk0, pl0); var pf0 = st0.filter && st0.filter !== "all" ? st0.filter : null; var ck0 = ctxKey(), pc0 = pilFor(function (q) { return !pf0 || q.lv === pf0; }); pc0 = pc0.filter(function (q) { return q.lv === ck0; }).concat(pc0.filter(function (q) { return q.lv !== ck0; })); pk0 = pilMix(pk0, pc0.slice(0, 3)); } nrStart(pk0); render(); return window.scrollTo(0, 0);
+    case "cnoteclose": store("cnote1", 1); return render();
+    case "nrstart": var st0 = nrState(), pl0 = nrPool(st0.filter), pk0; if (S.nrFresh) { var fr0 = freshPool(pl0); if (fr0.length >= Math.min(5, st0.n)) pl0 = fr0; } pk0 = st0.kind === "reg" ? (nurseCtx() ? nrWithCases(regCompose(pl0, st0.n, st0.adaptive !== false), nrLevelsFor(ctxKey())) : regCompose(pl0, st0.n, st0.adaptive !== false)) : isEMSLv(ctxKey()) ? nrCompose(pl0, Math.min(st0.n, pl0.length), st0.filter && st0.filter !== "all" ? [st0.filter] : nrLevelsFor(ctxKey()), st0.adaptive !== false) : st0.adaptive !== false ? adaptivePick(pl0, st0.n) : shuffle(pl0).slice(0, st0.n); if (st0.kind !== "reg") { pk0 = diffBalance(pk0, pl0); var dm0 = deptMix(pl0, st0.n, st0.adaptive !== false ? adaptivePick : function (L, k) { return shuffle(L.slice()).slice(0, k); }); if (dm0 && dm0.length) pk0 = dm0; var pf0 = st0.filter && st0.filter !== "all" ? st0.filter : null; var ck0 = ctxKey(), pc0 = pilFor(function (q) { return !pf0 || q.lv === pf0; }); pc0 = pc0.filter(function (q) { return q.lv === ck0; }).concat(pc0.filter(function (q) { return q.lv !== ck0; })); pk0 = pilMix(pk0, pc0.slice(0, 3)); } nrStart(pk0); render(); return window.scrollTo(0, 0);
     case "nrnext": S.nr.i++; render(); return window.scrollTo(0, 0);
     case "nrprev": S.nr.i--; render(); return window.scrollTo(0, 0);
     case "nrfinish": S.nr.end = Date.now(); S.nr.phase = "done"; if (S.nr.mode === "exam") { S.nr.rec = S.nr.rec || {}; S.nr.qs.forEach(function (x, i) { if (!S.nr.rec[i] && S.nr.ans[i] != null) { S.nr.rec[i] = 1; record(x.q, nrRight(x, S.nr.ans[i]), null, S.nr.ans[i]); } }); setTimeout(toastAch, 300); } render(); return window.scrollTo(0, 0);
@@ -2762,7 +2881,7 @@ function qid(q) { return q.id || (q.id = "q" + hashStr(q.lv + "|" + q.q)); }
    3. No dose questions, unless the question is about ACLS or PALS (arrest, arrhythmia, resuscitation).
    Questions that break a rule are hidden from every quiz. They stay in the data so they can be
    rewritten at drugbugapp.com/review/ (which flags them with the same three tests). */
-var QR_STOP = /(^|\b)(stop|stopping|discontinue|discontinuing|hold|holding|withhold|withholding|cease|pause)\b[^.;]{0,40}\b(the )?(medication|medicine|drug|infusion|drip|dose|therapy|it|treatment|this)\b|^(stop|discontinue|hold|withhold)\b/i;
+var QR_STOP = /(^|\b)(stop|stopping|discontinue|discontinuing|hold|holding|withhold|withholding|cease|pause)\b[^.;]{0,40}\b(the )?(medication|medicine|drug|infusion|drip|dose|therapy|it|treatment|this)\b|^(stop|discontinue|hold|withhold)\b(?! (?:the |a |your )?(?:cane|linen|pressure|firm|soiled|bag|hand|head|breath))/i;
 var QR_UNIT = /\b\d+(?:[.,]\d+)?(?:\s?(?:-|to)\s?\d+(?:\.\d+)?)?\s?(?:mg|mcg|µg|micrograms?|milligrams?|g|grams?|units?|mEq|mmol|mL|ml|L|J|joules?)(?:\/(?:kg|min|hr|h|kg\/min|kg\/hr|dose))?\b/i;
 var QR_ASKD = /\b(dose|dosage|dosing|how much|how many (?:mg|mcg|units|mL)|rate of infusion|infusion rate|max(?:imum)? (?:daily )?dose|loading dose)\b/i;
 var QR_ACLS = /\b(ACLS|PALS|BLS|cardiac arrest|arrest|pulseless|v-?fib|ventricular fibrillation|VF|pVT|VT|ventricular tachycardia|asystole|PEA|ROSC|SVT|supraventricular|bradycardi|tachycardi|torsades|resuscitat|defibrillat|cardiover|post-arrest|megacode|neonatal resus|NRP)\b/i;
@@ -2772,7 +2891,7 @@ function qRuleBad(q) {
   if (q._rb != null) return q._rb;
   var ok = q.ok && q.ok.length ? q.ok : null, ans = ok ? ok.join(" | ") : String(q.a || "");
   var all = ans + " " + (q.w || []).join(" ") + " " + (q.opts || []).join(" ");
-  var bad = !!(q.opts && ok && q.opts.length && ok.length === q.opts.length) ||
+  var bad = !!(q.t !== "order" && q.opts && ok && q.opts.length && ok.length === q.opts.length) ||
     QR_STOP.test(ans) || !!(ok && ok.some(function (o) { return QR_STOP.test(o); })) ||
     ((QR_UNIT.test(ans) || (QR_ASKD.test(q.q || "") && QR_UNIT.test(all))) && !QR_ACLS.test((q.q || "") + " " + (q.x || "")));
   try { q._rb = bad; } catch (e) {}
@@ -7096,6 +7215,19 @@ var IXCLS = {
   kLoss: ["furosemide", "bumetanide", "torsemide", "hydrochlorothiazide", "chlorthalidone", "metolazone", "indapamide", "ethacrynic-acid", "prednisone", "prednisolone", "methylprednisolone", "dexamethasone", "hydrocortisone"],
   pipTarget: ["phenytoin", "propranolol", "theophylline", "cyclosporine", "tacrolimus"]
 };
+/* herbs and supplements from data5.js join the interaction rules (owner, Nov 14 2026): flags set by the card writers */
+(function () {
+  var F = (typeof DB !== "undefined" && DB.NUTRA_FLAGS) || {};
+  var IXM = { bleed: "suppBleed", stimulant: "stim", inducer: "inducer", bp_lower: "bpLower", hepatotoxic: "suppLiver" };
+  var CLM = { serotonergic: "sero", sedative: "cnsdep", qt: "qt", inhibitor3a4: "inhib3a4", hypoglycemic: "hypogly" };
+  IXCLS.suppLiver = IXCLS.suppLiver || ["egcg"];
+  Object.keys(F).forEach(function (id) {
+    (F[id] || []).forEach(function (f) {
+      var k = IXM[f]; if (k) { IXCLS[k] = IXCLS[k] || []; if (IXCLS[k].indexOf(id) < 0) IXCLS[k].push(id); }
+      var c = CLM[f]; if (c && typeof CLS !== "undefined" && CLS[c] && CLS[c].indexOf(id) < 0) CLS[c].push(id);
+    });
+  });
+})();
 function ixHas(ids, k) { var L = IXCLS[k] || []; return ids.filter(function (id) { return L.indexOf(id) >= 0; }); }
 function ruleAlertsMore(ids) {
   var A = [];
@@ -7103,6 +7235,8 @@ function ruleAlertsMore(ids) {
   var thin = hasAny(ids, "anticoag").concat(hasAny(ids, "antiplt"));
   var sb = ixHas(ids, "suppBleed");
   if (sb.length && thin.length) add("med", "Supplement with antiplatelet effects plus a blood thinner", sb.concat(thin), "Some supplements (turmeric/curcumin, ginger, garlic, resveratrol, fish oil, vitamin E, green tea extract) have antiplatelet effects in studies and may add to bleeding risk with anticoagulants and antiplatelets.");
+  var lv = ixHas(ids, "suppLiver"), lvd = ids.filter(function (x) { return ["acetaminophen", "isoniazid", "methotrexate", "valproic-acid", "amiodarone", "ketoconazole", "ethanol"].indexOf(x) >= 0; });
+  if (lv.length && (lv.length >= 2 || lvd.length)) add("med", "Supplements linked to liver injury", lv.concat(lvd), "Several herbal products (for example kava, green tea extract, ashwagandha and black cohosh) are linked to rare liver injury in LiverTox. Two of them together, or one with another drug that can stress the liver, adds to the concern, so liver symptoms are reported and supplement use is documented.", "add");
   var ind = ixHas(ids, "inducer"), tgt = ixHas(ids, "inducedTarget").filter(function (x) { return ind.indexOf(x) < 0; });
   if (ind.length && tgt.length) add("high", "Enzyme inducer lowers other drug levels", ind.concat(tgt), "Rifampin, carbamazepine, phenytoin and similar drugs speed up CYP3A4 and P-glycoprotein, which can drop levels of blood thinners, transplant drugs and statins enough to lose their effect.", "neg");
   var s3 = ixHas(ids, "strong3a4"), da = ixHas(ids, "doac").filter(function (x) { return x !== "dabigatran"; });
@@ -7216,6 +7350,10 @@ var COMPOUND_TABS = {
     ["Vitamin-ish Club", "Not official vitamins, but they act like it", "spark", "#818cf8", [["choline", "Eggs, liver, soybeans"], ["coq10", "Made in the body; meat, fish"], ["alpha-lipoic-acid", "Made in the body; spinach, broccoli"]]]
   ] }
 };
+/* herbs, mushrooms and supplements (owner, Nov 14 2026): cards are in data5.js */
+COMPOUND_TABS.herbc = {"name": "Herbs & Roots", "line": "Wander the herb garden: adaptogens, sleep herbs, heart and gut herbs, hormone herbs and the hemp corner.", "sec": [["Adaptogen Ridge", "Stress herbs and roots", "mountain", "#16a34a", [["rhodiola", "Rhodiola rosea root, cold mountain slopes"], ["salidroside", "Rhodiola root"], ["rosavin", "Rhodiola rosea root"], ["ashwagandha", "Ashwagandha root"], ["withanolides", "Ashwagandha root and leaf"], ["panax-ginseng", "Panax ginseng root"], ["ginsenosides", "Ginseng root"], ["american-ginseng", "American ginseng root"], ["eleuthero", "Eleutherococcus root"], ["schisandra", "Schisandra berries"], ["holy-basil", "Tulsi leaves"], ["maca", "Maca root"], ["astragalus", "Astragalus root"], ["bacopa", "Bacopa monnieri leaves"], ["gotu-kola", "Centella leaves"], ["shatavari", "Shatavari root"]]], ["Calm Corner", "Sleep and calm herbs", "moon", "#6366f1", [["kava", "Kava root", "tox"], ["kavalactones", "Kava root"], ["valerian", "Valerian root"], ["valerenic-acid", "Valerian root"], ["chamomile", "Chamomile flowers"], ["passionflower", "Passionflower vine"], ["lemon-balm", "Lemon balm leaves"], ["lavender-oil", "Lavender flowers"], ["hops", "Hop cones"], ["california-poppy", "California poppy"], ["skullcap", "Skullcap leaves and root"], ["magnolia-bark", "Magnolia bark"], ["kratom", "Kratom leaves (Mitragyna)", "tox"]]], ["Mood and Mind", "Mood, memory and focus", "brain", "#a855f7", [["saffron", "Crocus flower stigmas"], ["st-johns-wort", "Hypericum flowers"], ["hyperforin", "St. John's wort flowers"], ["hypericin", "St. John's wort flowers"], ["ginkgo", "Ginkgo tree leaves"], ["ginkgolides", "Ginkgo leaves"], ["huperzine-a", "Chinese club moss"], ["vinpocetine", "Made from lesser periwinkle vincamine", "tox"], ["mucuna", "Velvet bean seeds"], ["kanna", "Sceletium tortuosum"], ["damiana", "Damiana leaves"], ["blue-lotus", "Blue water lily flowers"]]], ["Heart and Blood", "Blood pressure, circulation and cholesterol", "heart", "#e11d48", [["hawthorn", "Hawthorn leaves, flowers and berries"], ["aged-garlic-extract", "Garlic aged for months"], ["guggul", "Mukul myrrh tree resin"], ["horse-chestnut", "Horse chestnut seeds"], ["butchers-broom", "Ruscus root"], ["dong-quai", "Angelica root"], ["bergamot-polyphenols", "Bergamot orange juice and peel"], ["arjuna", "Arjuna tree bark"], ["hibiscus", "Hibiscus calyces"], ["olive-leaf", "Olive leaves"]]], ["Gut and Liver", "Digestion, laxatives and liver herbs", "leaf", "#65a30d", [["milk-thistle", "Milk thistle seeds"], ["silymarin", "Milk thistle seeds"], ["artichoke-leaf", "Artichoke leaves"], ["dandelion", "Dandelion root and leaf"], ["peppermint-oil", "Peppermint leaves"], ["slippery-elm", "Slippery elm inner bark"], ["marshmallow-root", "Marshmallow root"], ["aloe-vera", "Aloe leaves"], ["cascara-sagrada", "Buckthorn tree bark"], ["berberine", "Goldenseal, barberry, Oregon grape"], ["goldenseal", "Goldenseal root"], ["fenugreek", "Fenugreek seeds"], ["triphala", "Amla, haritaki and bibhitaki fruits"], ["dgl-licorice", "Licorice root with glycyrrhizin removed"], ["black-seed", "Nigella sativa seeds"]]], ["Pain and Joints", "Inflammation, headache and joint herbs", "bolt", "#ea580c", [["boswellia", "Boswellia tree resin"], ["devils-claw", "Devil's claw root"], ["willow-bark", "Willow tree bark"], ["cats-claw", "Uncaria vine bark"], ["arnica", "Arnica flowers", "tox"], ["feverfew", "Feverfew leaves"], ["butterbur", "Butterbur root", "tox"]]], ["Hormone Garden", "Menopause, cycle, prostate and libido herbs", "flower", "#db2777", [["black-cohosh", "Black cohosh root"], ["chasteberry", "Chaste tree berries"], ["red-clover", "Red clover flowers"], ["evening-primrose-oil", "Evening primrose seeds"], ["saw-palmetto", "Saw palmetto berries"], ["pygeum", "Prunus africana bark"], ["stinging-nettle", "Nettle root and leaf"], ["tribulus", "Tribulus fruit"], ["tongkat-ali", "Eurycoma root"], ["horny-goat-weed", "Epimedium leaves"], ["yohimbe", "Yohimbe tree bark", "tox"], ["wild-yam", "Wild yam root"]]], ["Immune Patch", "Colds, wounds and immune herbs", "shield", "#0891b2", [["echinacea", "Coneflower root and flowers"], ["elderberry", "Cooked black elderberries"], ["andrographis", "Andrographis leaves"], ["pelargonium", "South African geranium root"], ["oregano-oil", "Oregano leaves"], ["eucalyptus-oil", "Eucalyptus leaves", "tox"], ["tea-tree-oil", "Melaleuca leaves", "tox"], ["propolis", "Resin collected by honeybees"], ["manuka-honey", "Honey from manuka flowers"], ["neem", "Neem leaves, bark and seed oil", "tox"]]], ["Sugar and Weight Shelf", "Blood sugar and weight-loss products", "scale", "#ca8a04", [["bitter-melon", "Bitter gourd fruit"], ["gymnema", "Gymnema leaves"], ["cinnamon-cassia", "Cassia cinnamon bark"], ["garcinia-cambogia", "Garcinia fruit rind", "tox"], ["green-coffee-bean", "Unroasted coffee beans"], ["white-kidney-bean", "White kidney beans"], ["banaba", "Banaba leaves"], ["glucomannan", "Konjac root"], ["bitter-orange", "Bitter orange peel", "tox"], ["raspberry-ketone", "Raspberries (supplements are lab-made)"], ["forskolin", "Coleus root"], ["hoodia", "Hoodia stems"]]], ["Hemp Corner", "Hemp, CBD and other cannabinoids", "herb", "#15803d", [["cbg", "Hemp flower"], ["cbn", "Aged cannabis"], ["delta-8-thc", "Made from hemp CBD", "tox"], ["thcv", "Some cannabis strains"], ["cannabidiol", "Hemp and cannabis flower"], ["hemp-seed-oil", "Hemp seeds"], ["beta-caryophyllene", "Black pepper, cloves, hops"]]]]};
+COMPOUND_TABS.fungc = {"name": "Mushrooms & Fungi", "line": "Into the forest floor: brain mushrooms, medicinal mushrooms and the ferment cellar.", "sec": [["Brain Caps", "Mushrooms marketed for the brain", "brain", "#8b5cf6", [["lions-mane", "Lion's mane mushroom"], ["hericenones", "Lion's mane fruiting body and mycelium"]]], ["Medicine Cabinet Mushrooms", "Medicinal mushrooms and their beta-glucans", "shroom", "#b45309", [["reishi", "Reishi (lingzhi) mushroom"], ["ganoderic-acids", "Reishi mushroom"], ["turkey-tail", "Turkey tail bracket fungus"], ["psk-krestin", "Turkey tail mycelium"], ["shiitake", "Shiitake mushroom"], ["lentinan", "Shiitake mushroom"], ["maitake", "Maitake (hen of the woods)"], ["chaga", "Chaga conk on birch trees", "tox"], ["cordyceps", "Cordyceps mushroom"], ["cordycepin", "Cordyceps militaris"], ["agaricus-blazei", "Almond mushroom"], ["tremella", "Snow fungus"], ["mushroom-beta-glucans", "Mushroom and yeast cell walls"]]], ["Ferment Cellar", "Yeasts, molds and ferments", "jar", "#d97706", [["red-yeast-rice", "Rice fermented with Monascus mold", "tox"], ["monacolin-k", "Red yeast rice"], ["citrinin", "Some Monascus ferments", "tox"], ["brewers-yeast", "Saccharomyces cerevisiae"], ["nutritional-yeast", "Deactivated Saccharomyces"], ["kombucha", "Tea fermented by yeast and bacteria"], ["koji-kojic-acid", "Aspergillus oryzae ferments"]]]]};
+COMPOUND_TABS.nutc = {"name": "Supplement Shelf", "line": "Browse the supplement aisle: gym, brain, oils, gut, antioxidants, algae, bee products and the wild cards.", "sec": [["Gym Bag", "Muscle, endurance and pre-workout", "bolt", "#0ea5e9", [["creatine", "Meat and fish; lab-made supplement"], ["caffeine", "Coffee, tea, energy drinks, pre-workout powders"], ["beta-alanine", "Meat; lab-made supplement"], ["hmb", "Made from leucine; supplement"], ["acetyl-l-carnitine", "Made in the body; supplement"], ["l-arginine", "Meat, nuts, seeds"], ["bcaa", "Protein foods; supplement powders"], ["taurine", "Meat, seafood, energy drinks"], ["d-ribose", "Made in the body; supplement"], ["whey-protein", "Milk"], ["ecdysterone", "Spinach, quinoa, Ajuga plants"], ["sodium-bicarbonate-sport", "Baking soda", "tox"], ["levocarnitine", "Red meat; made in the body (L-carnitine)"]]], ["Brain Shelf", "Nootropics and mood supplements", "brain", "#7c3aed", [["l-theanine", "Tea leaves"], ["five-htp", "Griffonia seeds"], ["l-tyrosine", "Protein foods"], ["l-tryptophan", "Protein foods"], ["gaba-supplement", "Fermented foods; supplement"], ["sam-e", "Made in the body; supplement"], ["phosphatidylserine", "Soy and sunflower lecithin"], ["citicoline", "Made in the body; supplement"], ["alpha-gpc", "Soy lecithin; supplement"], ["magnesium-l-threonate", "Lab-made magnesium salt"], ["uridine", "Made in the body; brewer's yeast"], ["piracetam", "Lab-made; sold online as a supplement", "tox"], ["melatonin", "Made in the brain; supplement"], ["phenibut", "Lab-made; sold online", "tox"], ["tianeptine", "Lab-made; sold as a supplement", "tox"]]], ["Oils and Heart", "Omega-3s, fats and heart supplements", "drop", "#f59e0b", [["fish-oil", "Fatty fish"], ["krill-oil", "Antarctic krill"], ["algal-oil", "Microalgae"], ["flaxseed", "Flax seeds"], ["nattokinase", "Natto (fermented soybeans)"], ["plant-sterols", "Nuts, seeds, fortified spreads"], ["policosanol", "Sugar cane wax"], ["mct-oil", "Coconut and palm kernel oil"], ["exogenous-ketones", "Lab-made"]]], ["Gut Shelf", "Fiber, collagen and gut products", "leaf", "#84cc16", [["psyllium", "Plantago seed husks"], ["collagen-peptides", "Animal skin, bone and fish scales"], ["colostrum", "First cow milk after calving"], ["digestive-enzymes", "Plant and animal enzymes"], ["apple-cider-vinegar", "Fermented apples"], ["d-mannose", "Cranberries, apples; supplement"]]], ["Antioxidant Lab", "Longevity and antioxidant supplements", "spark", "#06b6d4", [["glutathione", "Made in the body; supplement"], ["pqq", "Kiwi, parsley, natto"], ["astaxanthin", "Microalgae, salmon, shrimp"], ["spermidine", "Wheat germ, aged cheese, mushrooms"], ["msm", "Lab-made sulfur compound"], ["dim", "Made from cabbage-family indole-3-carbinol"], ["calcium-d-glucarate", "Oranges, apples, broccoli"]]], ["Algae and Bee Products", "Algae, seaweed and beehive products", "bee", "#eab308", [["chlorella", "Freshwater green algae"], ["spirulina", "Arthrospira cyanobacteria"], ["sea-moss", "Red seaweed"], ["kelp-iodine", "Brown seaweed", "tox"], ["bee-pollen", "Pollen packed by bees", "tox"], ["royal-jelly", "Secretion fed to queen bees", "tox"]]], ["Joints and Bones", "Joint, bone and recovery supplements", "bolt", "#64748b", [["glucosamine", "Shellfish shells; lab-made"], ["chondroitin", "Cow and shark cartilage"], ["oral-hyaluronic-acid", "Rooster combs; bacterial fermentation"], ["boron", "Fruits, nuts, legumes"], ["shilajit", "Himalayan rock resin", "tox"], ["deer-antler-velvet", "Growing deer antlers"]]], ["Wild Card Shelf", "Trendy, risky or misunderstood products", "flask", "#ef4444", [["lithium-orotate", "Lab-made lithium salt", "tox"], ["colloidal-silver", "Silver particles in water", "tox"], ["nad-iv", "Made in the body; IV wellness clinics"], ["activated-charcoal", "Charred coconut shell and wood"], ["methylene-blue", "Lab-made dye (nootropic use online)", "tox"], ["n-acetylcysteine", "Made from the amino acid cysteine"]]]]};
 /* small generic line art for each bed (no brands, no characters) */
 var CMP_ART = {
   leaf: '<path d="M12 21C6 18 4 12 6 5c6 0 11 4 11 10 0 3-2 5-5 6z"/><path d="M12 21C11 15 9 10 6 5"/>',
@@ -7230,7 +7368,18 @@ var CMP_ART = {
   vault: '<rect x="3" y="5" width="18" height="15" rx="2"/><circle cx="12" cy="12.5" r="4"/><path d="M12 10.5v2l1.5 1"/><path d="M6 20v1.5M18 20v1.5"/>',
   bee: '<ellipse cx="12" cy="14" rx="5" ry="6"/><path d="M7.5 12h9M7.5 15.5h9"/><path d="M10 8c-3-4-7-2-6 0 1 2 4 2 6 0zM14 8c3-4 7-2 6 0-1 2-4 2-6 0z"/>',
   orange: '<circle cx="12" cy="13" r="8"/><path d="M12 5c0-2 2-3 4-3-1 2-2 3-4 3z"/><path d="M9 11h.01M14 14h.01M11 16h.01"/>',
-  spark: '<path d="M12 2l2.2 6.3L21 9l-5.2 4.1L17.6 20 12 16.2 6.4 20l1.8-6.9L3 9l6.8-.7z"/>'
+  spark: '<path d="M12 2l2.2 6.3L21 9l-5.2 4.1L17.6 20 12 16.2 6.4 20l1.8-6.9L3 9l6.8-.7z"/>',
+  mountain: '<path d="M3 20l6-11 4 6 2-3 6 8z"/><path d="M9 9l1.5 3"/>',
+  moon: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
+  brain: '<path d="M9 4a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 2 5 3 3 0 0 0 3 3h0V4zM15 4a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-2 5 3 3 0 0 1-3 3V4z"/>',
+  heart: '<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/>',
+  bolt: '<path d="M13 2L5 14h6l-1 8 8-12h-6z"/>',
+  flower: '<circle cx="12" cy="9" r="2.5"/><path d="M12 6.5c0-3 3-3 3-.5s-3 3-3 3M12 6.5c0-3-3-3-3-.5s3 3 3 3M14.5 9c3 0 3 3 .5 3s-3-3-3-3M9.5 9c-3 0-3 3-.5 3s3-3 3-3M12 11.5V22"/>',
+  shield: '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
+  scale: '<path d="M5 7h14M12 4v16M8 20h8"/><path d="M5 7l-3 6a3 3 0 0 0 6 0zM19 7l-3 6a3 3 0 0 0 6 0z"/>',
+  jar: '<path d="M8 3h8v3H8zM7 6h10l1 3v10a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9z"/><path d="M9 13c1 1 2 1 3 0s2-1 3 0"/>',
+  drop: '<path d="M12 3c4 5 6 8 6 11a6 6 0 0 1-12 0c0-3 2-6 6-11z"/>',
+  flask: '<path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3"/><path d="M7.5 15h9"/>'
 };
 function cmpSeen() { return Prog.d.cmpSeen || (Prog.d.cmpSeen = []); }
 function compoundView(k) {
@@ -7259,6 +7408,48 @@ function compoundView(k) {
   });
   return c + '<p class="muted small">Many supplements interact with medicines, which is why health care teams ask about them. Save any compound to My List to study it.</p></section>';
 }
+/* Plant Finder (owner, Nov 14 2026: "I wanna be able to name a plant and every compound pops up").
+   PLANTS: [name, other names, [drug ids]]. Typing also searches the "Found in" text of every card on the
+   herb, mushroom, supplement, vegetable, fruit and vitamin tabs, so plants not on the list still find their compounds. */
+var PLANTS = [["Rhodiola", "golden root arctic root roseroot Rhodiola rosea", ["rhodiola", "salidroside", "rosavin"]], ["Ashwagandha", "Withania somnifera winter cherry", ["ashwagandha", "withanolides"]], ["Ginseng", "Panax Asian Korean American ginseng", ["panax-ginseng", "american-ginseng", "ginsenosides"]], ["Eleuthero", "Siberian ginseng Eleutherococcus", ["eleuthero"]], ["Kava", "kava kava Piper methysticum", ["kava", "kavalactones"]], ["Valerian", "Valeriana officinalis valerian root", ["valerian", "valerenic-acid"]], ["Chamomile", "Matricaria camomile tea", ["chamomile", "apigenin"]], ["St. John's wort", "Hypericum perforatum St Johns wort", ["st-johns-wort", "hyperforin", "hypericin"]], ["Ginkgo", "Ginkgo biloba maidenhair tree", ["ginkgo", "ginkgolides"]], ["Milk thistle", "Silybum marianum", ["milk-thistle", "silymarin"]], ["Green tea", "Camellia sinensis tea leaves matcha", ["egcg", "caffeine", "l-theanine"]], ["Black tea", "Camellia sinensis tea", ["caffeine", "l-theanine"]], ["Coffee", "Coffea coffee beans", ["caffeine", "green-coffee-bean"]], ["Garlic", "Allium sativum", ["allicin", "aged-garlic-extract"]], ["Licorice", "Glycyrrhiza licorice root liquorice", ["glycyrrhizin", "dgl-licorice"]], ["Turmeric", "Curcuma longa", ["curcumin"]], ["Ginger", "Zingiber officinale", ["gingerol"]], ["Black pepper", "Piper nigrum peppercorns", ["piperine", "beta-caryophyllene"]], ["Cannabis and hemp", "marijuana weed hemp Cannabis sativa", ["cannabis", "cannabidiol", "cbg", "cbn", "delta-8-thc", "thcv", "hemp-seed-oil", "beta-caryophyllene"]], ["Lion's mane", "Hericium erinaceus lions mane mushroom", ["lions-mane", "hericenones"]], ["Reishi", "Ganoderma lingzhi lucidum mushroom", ["reishi", "ganoderic-acids", "mushroom-beta-glucans"]], ["Turkey tail", "Trametes versicolor Coriolus mushroom", ["turkey-tail", "psk-krestin", "mushroom-beta-glucans"]], ["Shiitake", "Lentinula edodes mushroom", ["shiitake", "lentinan", "mushroom-beta-glucans", "ergothioneine"]], ["Maitake", "Grifola frondosa hen of the woods mushroom", ["maitake", "mushroom-beta-glucans"]], ["Cordyceps", "caterpillar fungus Cordyceps militaris sinensis mushroom", ["cordyceps", "cordycepin"]], ["Chaga", "Inonotus obliquus birch mushroom", ["chaga"]], ["Red yeast rice", "Monascus purpureus red rice", ["red-yeast-rice", "monacolin-k", "citrinin"]], ["Yeast", "Saccharomyces brewers yeast nutritional yeast", ["brewers-yeast", "nutritional-yeast", "mushroom-beta-glucans", "saccharomyces-boulardii"]], ["Goldenseal", "Hydrastis canadensis", ["goldenseal", "berberine"]], ["Barberry", "Berberis Oregon grape", ["berberine"]], ["Willow", "white willow bark Salix", ["willow-bark", "aspirin"]], ["Saffron", "Crocus sativus", ["saffron"]], ["Broccoli and cabbage family", "cruciferous broccoli cabbage kale Brussels sprouts cauliflower", ["sulforaphane", "indole-3-carbinol", "dim", "lutein-zeaxanthin"]], ["Tomato", "Solanum lycopersicum", ["lycopene", "solanine"]], ["Potato", "Solanum tuberosum", ["solanine"]], ["Grapes and red wine", "Vitis grape skins wine", ["resveratrol", "anthocyanins"]], ["Grapefruit", "Citrus paradisi", ["naringin", "furocoumarins"]], ["Orange", "Citrus sinensis bitter orange Seville", ["hesperidin", "bitter-orange", "ascorbic-acid"]], ["Bergamot", "Citrus bergamia", ["bergamot-polyphenols", "furocoumarins"]], ["Pineapple", "Ananas comosus", ["bromelain"]], ["Papaya", "Carica papaya", ["papain"]], ["Soy", "soybeans tofu edamame natto", ["soy-isoflavones", "nattokinase", "menaquinone-7", "pqq"]], ["Beets", "beetroot Beta vulgaris", ["betanin", "beetroot-nitrate"]], ["Velvet bean", "Mucuna pruriens", ["mucuna"]], ["Chinese club moss", "Huperzia serrata", ["huperzine-a"]], ["Periwinkle", "Vinca minor", ["vinpocetine"]], ["Hawthorn", "Crataegus", ["hawthorn"]], ["Aloe", "Aloe vera", ["aloe-vera"]], ["Senna", "Senna alexandrina", ["sennosides"]], ["Flax", "linseed flaxseed Linum", ["flaxseed"]], ["Fish", "fatty fish salmon", ["fish-oil", "omega-3-acid-ethyl-esters", "astaxanthin"]], ["Algae and seaweed", "algae seaweed kelp chlorella spirulina sea moss", ["algal-oil", "chlorella", "spirulina", "sea-moss", "kelp-iodine", "astaxanthin"]], ["Honeybee products", "bees honey hive", ["propolis", "royal-jelly", "bee-pollen", "manuka-honey"]], ["Yohimbe", "Pausinystalia johimbe", ["yohimbe"]], ["Ephedra", "ma huang", ["ephedrine", "pseudoephedrine"]], ["Kratom", "Mitragyna speciosa", ["kratom"]], ["Coca", "Erythroxylum coca leaf", ["cocaine"]], ["Opium poppy", "Papaver somniferum", ["morphine", "codeine"]], ["Foxglove", "Digitalis", ["digoxin"]], ["Cinchona", "cinchona bark", ["quinine"]], ["Belladonna", "deadly nightshade Atropa", ["atropine", "scopolamine"]], ["Psilocybin mushrooms", "magic mushrooms Psilocybe", ["psilocybin"]], ["Konjac", "Amorphophallus konjac", ["glucomannan"]], ["Psyllium", "Plantago ispaghula", ["psyllium"]], ["Cinnamon", "Cinnamomum cassia", ["cinnamon-cassia"]], ["Fenugreek", "Trigonella foenum-graecum", ["fenugreek"]], ["Echinacea", "purple coneflower", ["echinacea"]], ["Elderberry", "Sambucus", ["elderberry"]], ["Saw palmetto", "Serenoa repens", ["saw-palmetto"]], ["Black cohosh", "Actaea Cimicifuga", ["black-cohosh"]], ["Nettle", "stinging nettle Urtica", ["stinging-nettle"]], ["Peppermint", "Mentha peppermint", ["peppermint-oil", "cough-drops-menthol"]], ["Lavender", "Lavandula", ["lavender-oil"]], ["Tea tree", "Melaleuca", ["tea-tree-oil"]], ["Eucalyptus", "Eucalyptus globulus", ["eucalyptus-oil"]], ["Olive", "Olea europaea olive leaf olive oil", ["olive-leaf"]], ["Hops", "Humulus lupulus beer", ["hops", "beta-caryophyllene"]], ["Coconut", "Cocos nucifera", ["mct-oil"]], ["Apple", "Malus apple tree", ["quercetin", "phlorizin", "apple-cider-vinegar"]], ["Hemp seed", "hemp hearts", ["hemp-seed-oil"]]];
+function plantFoundIn() {
+  var out = [];
+  Object.keys(COMPOUND_TABS).forEach(function (k) { COMPOUND_TABS[k].sec.forEach(function (s) { s[4].forEach(function (it) { if (DB.drugs[it[0]]) out.push({ id: it[0], f: it[1], tox: it[2] === "tox" }); }); }); });
+  return out;
+}
+function plantChip(id, tox) { return '<button class="chip plchip' + (tox ? ' tox' : '') + '" type="button" data-drug="' + id + '">' + esc(nameOf(id)) + '</button>'; }
+function plantToxIds() { var T = {}; plantFoundIn().forEach(function (x) { if (x.tox) T[x.id] = 1; }); return T; }
+function plantView() {
+  var tox = plantToxIds(), q = S.plantq || "";
+  var c = '<section class="plantf"><p class="cmpline">Type any plant, herb, mushroom or food. Every compound DrugBug has from it pops up. Tap one to open its page.</p>' +
+    '<label class="plsearch"><span class="sr-only">Plant or mushroom</span><input class="pinput" id="plantq" type="search" placeholder="Try rhodiola, green tea, reishi, cannabis, garlic..." autocomplete="off" value="' + esc(q) + '" data-plantq="1"></label>' +
+    '<div id="plantres" aria-live="polite">' + plantResults(q, tox) + '</div>' +
+    '<p class="muted small">Education only. Most of these are supplements or food compounds, not FDA-approved drugs; each page says which. Many interact with medicines.</p></section>';
+  return c;
+}
+function plantResults(q, tox) {
+  tox = tox || plantToxIds();
+  var nq = srNorm(q || ""), words = nq ? nq.split(" ") : [];
+  var hit = function (txt) { var s = " " + srNorm(txt) + " "; return words.every(function (w) { return s.indexOf(" " + w) >= 0; }); };
+  var P = nq ? PLANTS.filter(function (p) { return hit(p[0] + " " + p[1]); }) : PLANTS;
+  var seen = {}, c = "";
+  P.forEach(function (p) {
+    var ids = p[2].filter(function (id) { return DB.drugs[id]; }); if (!ids.length) return;
+    ids.forEach(function (id) { seen[id] = 1; });
+    c += '<div class="plcard"><div class="plhead"><strong>' + esc(p[0]) + '</strong><span class="muted small">' + ids.length + (ids.length === 1 ? ' compound' : ' compounds') + '</span></div><div class="chips plchips">' + ids.map(function (id) { return plantChip(id, tox[id]); }).join("") + '</div></div>';
+  });
+  if (nq) {
+    var more = plantFoundIn().filter(function (x) { return !seen[x.id] && hit(x.f + " " + nameOf(x.id)); });
+    var mu = {}; more = more.filter(function (x) { if (mu[x.id]) return false; mu[x.id] = 1; return true; });
+    if (more.length) c += '<div class="plcard"><div class="plhead"><strong>Also found in &ldquo;' + esc(q) + '&rdquo;</strong></div><div class="chips plchips">' + more.map(function (x) { return plantChip(x.id, x.tox); }).join("") + '</div></div>';
+    if (!c) c = '<p class="muted">Nothing yet for &ldquo;' + esc(q) + '&rdquo;. Try the common name or the Latin name.</p>';
+  }
+  return c;
+}
+document.addEventListener("input", function (e) {
+  var t = e.target; if (!t || !t.getAttribute || !t.getAttribute("data-plantq")) return;
+  S.plantq = t.value; var r = document.getElementById("plantres"); if (r) r.innerHTML = plantResults(t.value);
+}, true);
 /* interactions handled here (no full re-render, so flips feel instant) */
 function cmpApplyFilter(sec, f) {
   var seen = cmpSeen();
@@ -12999,7 +13190,9 @@ function accInit() {
   window.claude.use("account").then(function (a) {
     if (!a) return; ACCT.api = a; ACCT.st = a.state();
     render();   /* the first-run account step waits on this (modules/welcome.js) */
-    a.onChange(function (s) { ACCT.st = s; if (S.view === "settings") render(); try { if (typeof stxRolesFetch === "function") setTimeout(stxRolesFetch, 300); } catch (e) {} });
+    try { if (typeof titleSync === "function") setTimeout(titleSync, 1500); } catch (e) {}
+    try { setTimeout(pwGate, 400); } catch (e) {}
+    a.onChange(function (s) { ACCT.st = s; if (S.view === "settings") render(); try { if (typeof titleSync === "function") setTimeout(titleSync, 1200); } catch (e) {} try { setTimeout(pwGate, 400); } catch (e) {} try { if (typeof stxRolesFetch === "function") setTimeout(stxRolesFetch, 300); } catch (e) {} });
     if (S.view === "settings") render();
   }).catch(function () {});
 }
@@ -13019,6 +13212,42 @@ function accBonus() {
   } catch (e) { return ""; }
 }
 function accDone(text, created) { if (created) text = (text || "") + accBonus(); ACCT.busy = false; ACCT.msg = text || ""; try { sessionStorage.setItem("drugbug:accmsg", ACCT.msg); } catch (e) {} setTimeout(function () { location.reload(); }, 300); }
+/* Every account needs a password (owner, Nov 14 2026: "make people have to make a password with their
+   accounts both in the app and in the webpage"). Email accounts already make one when they sign up. Anyone
+   signed in with Google or Apple and no password gets this sheet until they set one; it can't be closed,
+   only finished or signed out of. The password works with the account's email on the website and the app. */
+function pwGateNeeded() {
+  try { if (!ACCT.api || !acctUI()) return false; var s = ACCT.api.state() || {}; return !!(s.signedIn && s.email && !s.hasPassword && typeof ACCT.api.addPassword === "function"); } catch (e) { return false; }
+}
+function pwGate() {
+  var el = document.getElementById("pwgate"), need = pwGateNeeded();
+  if (!need) { if (el) el.remove(); return; }
+  if (el) return;
+  var s = ACCT.api.state() || {}, relay = /privaterelay\.appleid\.com$/i.test(s.email || "");
+  el = document.createElement("div"); el.id = "pwgate"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-labelledby", "pwgH");
+  el.style.cssText = "position:fixed;inset:0;z-index:9999;background:rgba(10,8,20,.72);display:flex;align-items:center;justify-content:center;padding:16px";
+  el.innerHTML = '<form style="width:100%;max-width:400px;background:var(--surface);color:var(--ink);border:1.5px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 20px 50px rgba(0,0,0,.35)">' +
+    '<h2 id="pwgH" style="margin:0 0 6px;font-size:21px">Create a password</h2>' +
+    '<p class="small" style="margin:0 0 12px;color:var(--muted)">Every DrugBug account has a password, so you can always get back in on the website or the iPhone app. You sign in with <strong>' + esc(relay ? "your Hide My Email address" : s.email) + '</strong> and this password.</p>' +
+    '<label class="small" style="display:block;margin:0 0 8px">Password (8+ characters)<input class="pinput" id="pwgA" type="password" autocomplete="new-password" minlength="8" required style="margin-top:4px"></label>' +
+    '<label class="small" style="display:block;margin:0 0 4px">Type it again<input class="pinput" id="pwgB" type="password" autocomplete="new-password" minlength="8" required style="margin-top:4px"></label>' +
+    '<p id="pwgM" class="small" role="alert" style="color:#dc2626;min-height:1.2em;margin:6px 0"></p>' +
+    '<div class="actions" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="submit" id="pwgGo">Save password</button><button class="btn ghost" type="button" id="pwgOut">Sign out</button></div></form>';
+  document.body.appendChild(el);
+  var f = el.querySelector("form"), m = el.querySelector("#pwgM");
+  setTimeout(function () { try { el.querySelector("#pwgA").focus(); } catch (e) {} }, 50);
+  f.addEventListener("submit", function (e) {
+    e.preventDefault(); var a = el.querySelector("#pwgA").value, b = el.querySelector("#pwgB").value;
+    if (a.length < 8) { m.textContent = "Use at least 8 characters."; return; }
+    if (a !== b) { m.textContent = "The two passwords don't match."; return; }
+    var go = el.querySelector("#pwgGo"); go.disabled = true; m.textContent = "";
+    ACCT.api.addPassword(a).then(function () { el.remove(); ACCT.msg = "Password saved. You can sign in with your email and this password anywhere."; render(); }, function (er) {
+      go.disabled = false; var c = (er && (er.code || er.message)) || "";
+      m.textContent = /recent-login/i.test(c) ? "For safety, sign out, sign back in, and set it right away." : /already-in-use|email-already/i.test(c) ? "Another account already uses this email with a password. Sign out and sign in with that email and password instead." : /weak-password/i.test(c) ? "Pick a stronger password." : (ACCT.api.error ? ACCT.api.error(er) : "Couldn't save it. Try again.");
+    });
+  });
+  el.querySelector("#pwgOut").onclick = function () { var bo = el.querySelector("#pwgOut"); bo.disabled = true; ACCT.api.signOut().then(function () { el.remove(); location.reload(); }, function () { bo.disabled = false; }); };
+}
 function accFail(e) { ACCT.busy = false; ACCT.msg = ACCT.api ? ACCT.api.error(e) : "Something went wrong."; render(); }
 /* ===== The quiet offer (owner, Nov 1 2026) =====
    Accounts are optional and the app never asks on arrival: someone looking up a drug mid-shift should

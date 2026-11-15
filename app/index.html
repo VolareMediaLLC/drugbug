@@ -3278,6 +3278,18 @@ button.tierchip:hover{filter:brightness(1.08)}
 .evwkbar{display:inline-block;width:90px;height:8px;border-radius:99px;background:rgba(127,127,160,.25);overflow:hidden}
 .evwkbar i{display:block;height:100%;background:#16a34a;border-radius:99px}
 .evwarn{flex-basis:100%;color:#b45309;font-weight:600}
+
+/* Plant Finder (Nov 14 2026) */
+.plantf .plsearch{display:block;margin:4px 0 12px}.plantf .plsearch .pinput{width:100%;max-width:520px}
+.plcard{border:1.5px solid var(--line);border-radius:14px;padding:10px 12px;margin:0 0 10px;background:var(--surface)}
+.plhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:6px}
+.plchips{display:flex;flex-wrap:wrap;gap:6px}.plchip.tox{border-color:#ef4444}.plchip.tox::after{content:" \26A0";color:#ef4444}
+
+/* A note from the creator (Nov 14 2026) */
+.cnote{position:relative;margin:12px 0;padding:14px 40px 14px 16px;border-radius:16px;border:1.5px solid var(--line);background:linear-gradient(135deg,rgba(45,212,191,.12),rgba(167,139,250,.12))}
+.cnote p{margin:0 0 8px;font-size:14px;line-height:1.5}.cnote .cnk{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.cnote .cnsig{font-weight:700;font-style:italic}.cnote .cncta{display:inline-block;font-weight:700;font-size:14px;margin-top:2px}
+.cnote .cnx{position:absolute;top:6px;right:8px;background:none;border:0;color:var(--muted);font-size:22px;line-height:1;cursor:pointer;padding:4px 8px}
 </style>
 
 <div class="wrap" id="app"><div id="boot" aria-hidden="true"><div class="bootlogo">Drug<span>Bug</span></div><div class="bootbar"><i></i></div><p class="bootnote">Loading your medications</p></div></div>
@@ -3291,15 +3303,18 @@ b.innerHTML='<div class="bootlogo">Drug<span>Bug</span></div><p class="bootnote"
    hasn't started, when a file failed, or when nothing has arrived for 60 seconds */
 (function(){var t0=Date.now(),iv=setInterval(function(){if(!document.getElementById("boot")){clearInterval(iv);return;}
 var n=window.__blN||0,last=window.__blT||t0,now=Date.now();
-if(window.__blErr||(n>=8&&now-last>12000)||now-last>60000){clearInterval(iv);window.__bootFail();}},3000);})();</script>
+if(window.__blErr||(n>=11&&now-last>12000)||now-last>60000){clearInterval(iv);window.__bootFail();}},3000);})();</script>
 <script src="app-config.js"></script>
 <script>/* real loading progress, so a slow first load on a weak signal doesn't look stuck (Nov 13 2026) */
-(function(){var got=0,T=13.06,t0=Date.now();window.__bl=function(w){got+=w;window.__blN=(window.__blN||0)+1;window.__blT=Date.now();var n=document.querySelector("#boot .bootnote"),b=document.querySelector("#boot .bootbar i");if(!n)return;var p=Math.min(99,Math.round(100*got/T));if(b){b.style.animation="none";b.style.width=p+"%";b.style.transform="none";}n.textContent="Loading your medications\u2026 "+p+"%"+(Date.now()-t0>6000?" \u00b7 the first load takes longer on a slow signal":"");};})();</script>
+(function(){var got=0,T=14.76,t0=Date.now();window.__bl=function(w){got+=w;window.__blN=(window.__blN||0)+1;window.__blT=Date.now();var n=document.querySelector("#boot .bootnote"),b=document.querySelector("#boot .bootbar i");if(!n)return;var p=Math.min(99,Math.round(100*got/T));if(b){b.style.animation="none";b.style.width=p+"%";b.style.transform="none";}n.textContent="Loading your medications\u2026 "+p+"%"+(Date.now()-t0>6000?" \u00b7 the first load takes longer on a slow signal":"");};})();</script>
 <script defer src="backend.js" onload="__bl(0.01)" onerror="window.__blErr=1"></script>
 <script defer src="data.js" onload="__bl(2.3)" onerror="window.__blErr=1"></script>
 <script defer src="data2.js" onload="__bl(2.7)" onerror="window.__blErr=1"></script>
 <script defer src="data3.js" onload="__bl(2.8)" onerror="window.__blErr=1"></script>
 <script defer src="data4.js" onload="__bl(3.4)" onerror="window.__blErr=1"></script>
+<script defer src="data5.js" onload="__bl(1.1)" onerror="window.__blErr=1"></script>
+<script defer src="data6.js" onload="__bl(0.3)" onerror="window.__blErr=1"></script>
+<script defer src="data7.js" onload="__bl(0.3)" onerror="window.__blErr=1"></script>
 <script defer src="pilot.js" onload="__bl(0.4)" onerror="window.__blErr=1"></script><script defer src="guides.js" onload="__bl(0.05)" onerror="window.__blErr=1"></script>
 <script defer src="app.js" onload="__bl(1.4)" onerror="window.__blErr=1"></script>
 
