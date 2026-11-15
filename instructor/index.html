@@ -879,15 +879,19 @@ body.embed .mxhead .adm{display:none}
       $("coderTable").innerHTML = '<tr><td class="muted">' + esc(/not.?found|internal|unavailable|fetch|network/i.test(e.message) ? "Reviewer codes appear once the new server functions are deployed (DEPLOY.cmd on your PC)." : e.message) + '</td></tr>';
     });
   }
+  function mins(sec) { sec = sec || 0; if (sec < 60) return sec ? "<1 min" : "0"; var m = Math.round(sec / 60); return m < 60 ? m + " min" : Math.floor(m / 60) + " h " + (m % 60) + " min"; }
   function drawCoders() {
     var L = CODERS || [];
-    $("coderTable").innerHTML = '<tr><th>#</th><th>Code</th><th>Role</th><th>Name</th><th>Redeemed</th><th>Graded</th><th>Good</th><th>Bad</th><th>Avg difficulty</th><th>Suggestions</th><th>Last active</th></tr>' + L.map(function (c) {
+    $("coderTable").innerHTML = '<tr><th>#</th><th>Code</th><th>Role</th><th>Name</th><th>Redeemed</th><th>Graded</th><th>Good</th><th>Bad</th><th>Avg difficulty</th><th>Suggestions</th><th title="Active time in DrugBug, Monday to Sunday (Central)">Time this week</th><th title="Part of that time with a grading panel open">Grading time</th><th>Time last week</th><th>Last active</th></tr>' + L.map(function (c) {
       return '<tr><td class="num">' + c.n + '</td><td class="mono">' + esc(c.code) + '</td><td>' + esc(c.role || "Evaluator") + '</td>' +
         '<td><input class="cname" data-cgift="' + esc(c.gift) + '" value="' + esc(c.name) + '" placeholder="Who has it?" style="min-width:170px;padding:6px 8px"></td>' +
         '<td>' + (c.redeemed ? '<span class="pill on">yes</span> <span class="muted small">' + (c.redeemedAt ? day(c.redeemedAt) : "") + '</span>' : '<span class="pill">not yet</span>') + '</td>' +
         '<td class="num">' + c.graded + '</td><td class="num" style="color:var(--good)">' + c.good + '</td><td class="num" style="color:var(--bad)">' + c.bad + '</td>' +
         '<td class="num">' + (c.avgDiff == null ? "—" : c.avgDiff) + '</td>' +
         '<td>' + (c.suggestions.length ? '<button class="ghost small" data-csugg="' + esc(c.gift) + '">' + c.suggestions.length + ' · read</button>' : '<span class="muted">0</span>') + '</td>' +
+        '<td class="num">' + (c.timed ? mins(c.timeThis) : '<span class="muted small" title="Not signed the Nov 15 agreement yet">not yet</span>') + '</td>' +
+        '<td class="num">' + (c.timed ? mins(c.gradeTimeThis) + (c.timeThis ? ' <span class="muted small">' + Math.round(100 * c.gradeTimeThis / c.timeThis) + '%</span>' : '') : '—') + '</td>' +
+        '<td class="num">' + (c.timed ? mins(c.timeLast) : '—') + '</td>' +
         '<td>' + ago(c.lastAt) + '</td></tr>';
     }).join("");
     var o = CODER_OPEN && L.filter(function (c) { return c.gift === CODER_OPEN; })[0];
