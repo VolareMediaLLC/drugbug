@@ -8497,7 +8497,12 @@ function gateView() {
   var g = S.gate || (S.gate = { age: "", ok: false, stats: (typeof statsRec === "function" && statsRec()) ? (statsOn() ? "yes" : "no") : "" });
   var c = '<div class="gate"><div class="glogo">' + bugSVG("sage") + '</div><h1>Welcome to DrugBug</h1><p>DrugBug is a medication study tool for adults 18 and older. Before you start, please answer the questions below.</p>' +
     (agreeOld() ? '<p class="gnote"><strong>Our Terms of Use and Privacy Policy have changed.</strong> Please review and accept the new versions to keep using DrugBug.</p>' : '');
-  c += '<fieldset class="gfs"><legend>How old are you?</legend>' + [["adult", "I am 18 or older"], ["minor", "I am under 18"]].map(function (o) { return '<label class="chk"><input type="radio" name="gage" data-gage="' + o[0] + '"' + (g.age === o[0] ? " checked" : "") + '> ' + o[1] + '</label>'; }).join("") + '</fieldset>';
+  /* no double age question (owner, Nov 15 2026: "it says share age range with Apple, then it asks if you are 18 or
+     older"): when Apple's Declared Age Range has just confirmed 18+, that answer stands and the app does not ask
+     again. If Apple's answer is declined, unknown or unavailable, the app's own question stays. */
+  var apr = typeof ageRec === "function" ? ageRec() : null, appleAdult = !!(apr && apr.s === "adult" && Date.now() - (apr.ts || 0) < AGE_RECHECK);
+  if (appleAdult) { g.age = "adult"; g.ageSrc = "apple"; c += '<p class="gnote gage-ok">&#10003; Age confirmed through your Apple Account: 18 or older.</p>'; }
+  else c += '<fieldset class="gfs"><legend>How old are you?</legend>' + [["adult", "I am 18 or older"], ["minor", "I am under 18"]].map(function (o) { return '<label class="chk"><input type="radio" name="gage" data-gage="' + o[0] + '"' + (g.age === o[0] ? " checked" : "") + '> ' + o[1] + '</label>'; }).join("") + '</fieldset>';
   if (g.age === "minor") return c + '<div class="presult" role="alert">Sorry, DrugBug is for adults 18 and older only. Please close the app.</div></div>';
   c += '<label class="chk gagree"><input type="checkbox" id="gok"' + (g.ok ? " checked" : "") + '> I agree to the <button class="linkish" data-legal="terms">Terms of Use</button> and understand that DrugBug is for study only and may not be used for patient care. The <button class="linkish" data-legal="privacy">Privacy Policy</button> explains how DrugBug handles my information.</label>';
   c += '<fieldset class="gfs gstats"><legend>Optional usage statistics</legend><p class="small">Help improve DrugBug by sharing optional usage statistics, such as time spent, sections opened and questions answered. DrugBug uses a randomly generated device identifier for these statistics. You can change your choice in Settings.</p>' +
@@ -8537,7 +8542,8 @@ function ageBlockView() {
 setTimeout(function () { ageCheck(false); }, 1200);
 function acceptGate() {
   var g = S.gate; if (!g || !g.ok || g.age !== "adult" || !g.stats) return;
-  var rec = { v: LEGAL_V, ts: Date.now(), age: g.age }; store("agree", rec);
+  var first = !store("agree") && !(Prog.d && Prog.d.agree);   /* first acceptance on this device, for the dashboard's new-people count */
+  var rec = { v: LEGAL_V, ts: Date.now(), age: g.age }; if (g.ageSrc) rec.ageSrc = g.ageSrc; store("agree", rec); rec = Object.assign({ first: first }, rec);
   statsSet(g.stats === "yes", "gate");
   try { assentLog(rec); } catch (e) {}
   Prog.d.agree = rec; if (typeof trialBegin === "function") trialBegin(); saveProg(); if (typeof wdwSync === "function") setTimeout(wdwSync, 800); if (typeof wdwAuto === "function") setTimeout(wdwAuto, 900); if (typeof holOpenFx === "function") setTimeout(holOpenFx, 400); S.gate = null; if (typeof muGesture === "function") muGesture(); render(); window.scrollTo(0, 0);
@@ -10106,7 +10112,7 @@ function usgRates() { var p = store("qratePend") || {}, o = {}, n = 0; for (var 
    answer and the statistics choice. Queued on the device until the server confirms it. */
 function assentLog(rec) {
   var q = store("assentPend") || [];
-  if (rec) q.push({ v: rec.v, ts: rec.ts, age: rec.age, stats: statsOn() ? "share" : "no", plat: NATIVE ? "ios" : "web", ver: APP_VERSION, did: usgDid(), pid: (function () { try { return usgPid(); } catch (e) { return ""; } })(), text: "I agree to the Terms of Use and understand that DrugBug is for study only and may not be used for patient care. The Privacy Policy explains how DrugBug handles my information." });
+  if (rec) q.push({ v: rec.v, ts: rec.ts, age: rec.age, first: !!rec.first, stats: statsOn() ? "share" : "no", plat: NATIVE ? "ios" : "web", ver: APP_VERSION, did: usgDid(), pid: (function () { try { return usgPid(); } catch (e) { return ""; } })(), text: "I agree to the Terms of Use and understand that DrugBug is for study only and may not be used for patient care. The Privacy Policy explains how DrugBug handles my information." });
   q = q.slice(-10); store("assentPend", q);
   if (!q.length || assentLog.busy) return;
   assentLog.busy = true;
@@ -13923,7 +13929,9 @@ function accDone(text, created) { if (created) text = (text || "") + accBonus();
    Accounts made before PW_CUTOFF never see the password screen. Unknown creation time counts as old. */
 var PW_CUTOFF = Date.UTC(2026,10,15,6);
 function pwNewAcct(s) { return !!(s && s.created && s.created >= PW_CUTOFF); }
+var PW_REQUIRED = false;   /* owner, Nov 15 2026: "do we really need to make people make a password?" ... "let's remove it for this update". Adding one stays optional in Settings. */
 function pwGateNeeded() {
+  if (!PW_REQUIRED) return false;
   try { if (!ACCT.api || !acctUI()) return false; var s = ACCT.api.state() || {}; if (!(s.signedIn && s.email && !s.hasPassword && typeof ACCT.api.addPassword === "function")) return false; return pwNewAcct(s); } catch (e) { return false; }
 }
 function pwGate() {
@@ -14060,6 +14068,7 @@ function accCard() {
     ? '<button class="btn small" data-acc="apple"' + (ACCT.busy ? " disabled" : "") + '>' + accAppleMark() + 'Sign in with Apple</button>'
     : (typeof ACCT.api.signInGoogle === "function" ? '<button class="btn small" data-acc="google"' + (ACCT.busy ? " disabled" : "") + '>' + accGoogleMark() + 'Sign in with Google</button>' : '');
   c += '<div class="actions">' + oneTap + '<button class="btn small ghost" data-acc="mode" data-m="' + (m === "email" ? "" : "email") + '">' + (m === "email" ? "Hide email sign-in" : "Use email instead") + '</button></div>';
+  if (!hasApple) c += '<p class="muted small">Signed up with Apple on your iPhone? Open DrugBug on the iPhone, go to Settings, tap "Use it on the website" and add a password. Then sign in here with your email and that password.</p>';
   if (m === "email" || m === "reset") {
     c += '<form class="pform" data-accform="1"><label>Email<input class="pinput" id="accemail" type="email" autocomplete="email" autocapitalize="none" required></label>' +
       (m === "reset" ? '' : '<label>Password (8+ characters)<input class="pinput" id="accpw" type="password" autocomplete="current-password" minlength="8" required></label>') +
