@@ -457,6 +457,9 @@ try{var rq=indexedDB.open("firebaseLocalStorageDb");rq.onsuccess=function(){var 
    dashboard. No cookie, no device id, nothing about the person: only the event and where the visit came from. */
 (function(){try{
 if(!/drugbugapp\.com$/.test(location.hostname))return;
+/* the owner's own browsers are not counted (Nov 15 2026): ?nocount marks this browser, ?count unmarks it; the app
+   marks it too once the owner signs in here */
+try{if(/[?&]nocount\b/.test(location.search))localStorage.setItem("drugbug:noCount","1");else if(/[?&]count\b/.test(location.search))localStorage.removeItem("drugbug:noCount");if(localStorage.getItem("drugbug:noCount")==="1")return;}catch(e){}
 var q=location.search,r=document.referrer||"",src=/utm_medium=paid|fbclid=|gclid=|ttclid=/i.test(q)?"ad":/instagram/i.test(r)||/utm_source=instagram/i.test(q)?"instagram":/facebook|fb\.com/i.test(r)||/utm_source=facebook/i.test(q)?"facebook":/google\./i.test(r)?"google":/tiktok/i.test(r)?"tiktok":!r||r.indexOf(location.origin)===0?"direct":"other";
 var U="https://us-central1-drugbug-69d42.cloudfunctions.net/sitePing";
 function ping(ev){try{fetch(U,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({data:{ev:ev,src:src}}),keepalive:true}).catch(function(){});}catch(e){}}
