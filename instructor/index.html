@@ -387,6 +387,15 @@ body.embed .mxhead .adm{display:none}
 <div class="card" id="agxCard"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h2 style="margin:0">Agency Challenge</h2><button class="btn ghost" id="agxRun" type="button">Load</button></div>
   <p class="muted small">New agencies people asked for (they show on the state board after you approve them) and nicknames people reported. Three reports hide a name until you look.</p>
   <div id="agxOut" style="margin-top:10px"><p class="muted small">Tap Load.</p></div></div>
+<div class="card" id="cleanCard"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h2 style="margin:0">Remove test visits</h2><button class="btn ghost" id="cleanLook" type="button">Find them</button></div>
+  <p class="muted small">Test copies of the app, run while building features on Nov 13, 15 and 16, were counted as people. The server ignores them now. This finds website devices first seen during those test runs that never signed in and did almost nothing (under 5 minutes and 5 questions), removes them from every chart and sets their Terms acceptances aside.</p>
+  <div id="cleanOut" style="margin-top:10px"></div></div>
+<div class="card" id="apnsCard"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h2 style="margin:0">Phone notifications (Apple)</h2><span class="pill" id="apnsState">Not checked</span></div>
+  <p class="muted small">"Someone passed you" alerts in the Agency Challenge go through Apple. Make an APNs key once at developer.apple.com &gt; Certificates, Identifiers &amp; Profiles &gt; Keys &gt; + (tick Apple Push Notifications service), download the AuthKey .p8 file, then add it here. The key is stored on your DrugBug server only.</p>
+  <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:10px"><input id="apnsKeyId" type="text" placeholder="Key ID (10 characters)" autocomplete="off" style="flex:1;min-width:160px"><input id="apnsTeam" type="text" placeholder="Team ID (10 characters)" autocomplete="off" style="flex:1;min-width:160px"></div>
+  <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center"><label class="small">AuthKey .p8 file <input id="apnsFile" type="file" accept=".p8,text/plain"></label></div>
+  <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn" id="apnsSave" type="button">Save</button><button class="btn ghost" id="apnsTest" type="button">Send me a test</button><button class="btn ghost" id="apnsCheck" type="button">Check</button></div>
+  <p class="small" id="apnsMsg" style="margin-top:8px"></p></div>
 <div class="card" id="syncCard"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h2 style="margin:0">Sync check</h2><button class="btn ghost" id="syncRun" type="button">Scan now</button></div>
   <p class="muted small">People who may be stuck getting their account onto another device: codes used as a guest (what it unlocked never reached an account or their phone), wrong link codes typed in the last 14 days, and link codes made but never used.</p>
   <div id="syncOut" style="margin-top:10px"><p class="muted small">Tap Scan now.</p></div></div>
@@ -982,6 +991,17 @@ body.embed .mxhead .adm{display:none}
   }
   function syncLoad() { $("syncOut").innerHTML = '<p class="muted small">Scanning…</p>'; call("syncScan", {}).then(syncDraw).catch(function (e) { $("syncOut").innerHTML = '<p class="muted small">' + (/not.?found|internal|unavailable|fetch|network/i.test(e.message) ? "The sync check appears once the new server functions are deployed (DEPLOY.cmd on your PC)." : esc(e.message)) + '</p>'; }); }
   $("syncRun").onclick = syncLoad;
+  /* Apple push key for "someone passed you" notifications (Nov 16 2026). The .p8 file is read in the browser and sent
+     straight to the server (pushSetup); it is never shown on the page. */
+  function apnsSay(t) { $("apnsMsg").textContent = t; }
+  function apnsCheck() { $("apnsState").textContent = "Checking…"; call("pushSetup", { status: true }).then(function (r) { $("apnsState").textContent = r.set ? "Set up" : "Not set up"; if (r.set) { $("apnsKeyId").value = r.keyId || ""; $("apnsTeam").value = r.teamId || ""; } apnsSay(r.set ? (r.myPhone ? "Your iPhone is registered, so Send me a test will reach it." : "Turn on “Tell me when someone passes me” in the Agency Challenge on your iPhone (app 1.2.3) to test it.") : ""); }).catch(function (e) { $("apnsState").textContent = "Server not updated"; apnsSay(/not.?found|internal|fetch/i.test(e.message || "") ? "Update the server (run DEPLOY) to turn this on." : e.message); }); }
+  $("apnsCheck").onclick = apnsCheck;
+  $("apnsSave").onclick = function () {
+    var f = $("apnsFile").files[0]; if (!f) return apnsSay("Pick the AuthKey .p8 file first.");
+    f.text().then(function (key) { apnsSay("Saving…"); return call("pushSetup", { keyId: $("apnsKeyId").value, teamId: $("apnsTeam").value, key: key }); })
+      .then(function () { $("apnsFile").value = ""; apnsSay("Saved."); apnsCheck(); }).catch(function (e) { apnsSay(e.message); });
+  };
+  $("apnsTest").onclick = function () { apnsSay("Sending…"); call("pushSetup", { test: true }).then(function (r) { apnsSay(r.sent ? "Sent. Check your iPhone." : r.why === "no-phone" ? "Your iPhone isn't registered yet: turn on “Tell me when someone passes me” in the Agency Challenge (app 1.2.3)." : r.why === "not-set-up" ? "Add the key first." : "Apple said: " + r.why); }).catch(function (e) { apnsSay(e.message); }); };
   /* Agency Challenge owner tools (Nov 16 2026) */
   var AGXT = { fire: "Fire", ems: "EMS", hospital: "Hospital", other: "Other" };
   function agxAdminDraw(r) {
@@ -998,6 +1018,18 @@ body.embed .mxhead .adm{display:none}
   var AGXA = null;
   function agxAdminLoad() { $("agxOut").innerHTML = '<p class="muted small">Loading…</p>'; call("agencyAdmin", { action: "list" }).then(agxAdminDraw).catch(function (e) { $("agxOut").innerHTML = '<p class="muted small">' + (/not.?found|internal|unavailable|fetch|network/i.test(e.message || "") ? "Update the server (run DEPLOY) to turn this on." : esc(e.message)) + '</p>'; }); }
   $("agxRun").onclick = agxAdminLoad;
+  /* test visits (Nov 16 2026): from 4 pm Nov 15 (Texas) until now */
+  var CLEAN = { since: Date.UTC(2026, 10, 15, 22, 0, 0) };
+  $("cleanLook").onclick = function () {
+    $("cleanOut").innerHTML = '<p class="muted small">Looking…</p>';
+    call("usageCleanup", { since: CLEAN.since }).then(function (r) {
+      var L = r.devices || [];
+      $("cleanOut").innerHTML = (L.length ? '<p class="small"><b>' + L.length + '</b> website device' + (L.length === 1 ? '' : 's') + ' and <b>' + r.acceptances + '</b> Terms acceptance' + (r.acceptances === 1 ? '' : 's') + ' look like tests:</p><div class="tblwrap"><table><tr><th>First seen</th><th>Minutes</th><th>Questions</th><th>Version</th></tr>' +
+        L.map(function (x) { return '<tr><td>' + esc(new Date(x.first).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })) + '</td><td class="num">' + x.min + '</td><td class="num">' + x.q + '</td><td>' + esc(x.ver) + '</td></tr>'; }).join("") + '</table></div>' +
+        '<p class="small" style="margin-top:8px">If one of these is a real person (your girlfriend on the website, say), she’ll just be counted as new again next time she opens it.</p><button class="btn" id="cleanGo" type="button">Remove these</button>' : '<p class="muted small">Nothing left to remove.</p>');
+      var g = $("cleanGo"); if (g) g.onclick = function () { g.disabled = true; call("usageCleanup", { since: CLEAN.since, remove: true }).then(function (x) { $("cleanOut").innerHTML = '<p class="small">Removed ' + x.removed + ' test device' + (x.removed === 1 ? '' : 's') + ' and set aside ' + x.acceptancesMarked + ' test acceptance' + (x.acceptancesMarked === 1 ? '' : 's') + '. Tap Refresh at the top to see the corrected numbers.</p>'; }).catch(function (e) { g.disabled = false; $("cleanOut").insertAdjacentHTML("beforeend", '<p class="small">' + esc(e.message) + '</p>'); }); };
+    }).catch(function (e) { $("cleanOut").innerHTML = '<p class="muted small">' + (/not.?found|internal|fetch/i.test(e.message || "") ? "Update the server (run DEPLOY) to turn this on." : esc(e.message)) + '</p>'; });
+  };
   $("agxOut").addEventListener("click", function (e) {
     var b = e.target.closest("[data-agxa]"); if (!b) return;
     var act = b.getAttribute("data-agxa"), d = { action: act, aid: b.getAttribute("data-aid") || "", uid: b.getAttribute("data-uid") || "" };
