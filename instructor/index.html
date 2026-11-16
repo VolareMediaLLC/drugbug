@@ -371,6 +371,13 @@ body.embed .mxhead .adm{display:none}
 <div class="card" id="syncCard"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h2 style="margin:0">Sync check</h2><button class="btn ghost" id="syncRun" type="button">Scan now</button></div>
   <p class="muted small">People who may be stuck getting their account onto another device: codes used as a guest (what it unlocked never reached an account or their phone), wrong link codes typed in the last 14 days, and link codes made but never used.</p>
   <div id="syncOut" style="margin-top:10px"><p class="muted small">Tap Scan now.</p></div></div>
+<div class="card" id="mailCard"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h2 style="margin:0">Email reports from the server</h2><span class="pill" id="mailState">Loading…</span></div>
+  <p class="muted small">Your DrugBug server emails the daily report (7:13 am), the noon report (11:45 am) and the evening report (9:45 pm), Texas time, even when your computer is off. It sends through your Gmail with an app password: Google Account &gt; Security &gt; 2-Step Verification &gt; App passwords, make one called DrugBug, and paste its 16 letters here. The password is kept on the server and never shown again.</p>
+  <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:10px"><input id="mailUser" type="email" placeholder="Send from (your Gmail)" autocomplete="off" style="flex:1;min-width:200px"><input id="mailTo" type="text" placeholder="Send to (comma between addresses)" autocomplete="off" style="flex:1;min-width:200px"></div>
+  <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px"><input id="mailPass" type="password" placeholder="Gmail app password (16 letters)" autocomplete="new-password" style="flex:1;min-width:200px">
+  <label class="small"><input type="checkbox" id="mailOnDaily" checked> Daily</label><label class="small"><input type="checkbox" id="mailOnNoon" checked> Noon</label><label class="small"><input type="checkbox" id="mailOnEve" checked> Evening</label></div>
+  <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn" id="mailSave" type="button">Save</button><button class="btn ghost" id="mailTest" type="button">Send a test now</button></div>
+  <p class="small" id="mailMsg" style="margin:8px 0 0" aria-live="polite"></p></div>
 <div class="card" id="exCard"><h2>Accounts left out of the statistics</h2><p class="muted small">Type the email of a DrugBug account. Everything already counted for it is deleted, and nothing from that account, or from any phone or computer it has signed in on, is counted again. One account on several devices always counts as one person.</p>
   <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:10px"><input id="exEmail" type="email" placeholder="name@example.com" autocomplete="off" style="flex:1;min-width:220px"><button class="btn" id="exAdd" type="button">Leave out</button></div>
   <p class="small" id="exMsg" style="margin:8px 0 0" aria-live="polite"></p><div id="exList" style="margin-top:10px"></div></div>
@@ -915,6 +922,24 @@ body.embed .mxhead .adm{display:none}
   function exDraw(list) {
     $("exList").innerHTML = list.length ? '<table class="sxt">' + list.map(function (x) { return '<tr><td><b>' + esc(x.email) + '</b><div class="muted small">' + (x.devices || 0) + ' device' + (x.devices === 1 ? '' : 's') + ' · since ' + new Date(x.at).toLocaleDateString() + '</div></td><td class="num"><button class="linkish" data-exrm="' + esc(x.email) + '">Count again</button></td></tr>'; }).join("") + '</table>' : '<p class="muted small">No accounts left out yet.</p>';
   }
+  /* emailed reports from the server (Nov 15 2026; functions/digest.js) */
+  function mailDraw(d) {
+    $("mailUser").value = d.user || ""; $("mailTo").value = d.to || ""; $("mailPass").value = "";
+    $("mailPass").placeholder = d.hasPass ? "App password saved (type a new one to replace it)" : "Gmail app password (16 letters)";
+    var on = d.on || {}; $("mailOnDaily").checked = on.daily !== false; $("mailOnNoon").checked = on.noon !== false; $("mailOnEve").checked = on.evening !== false;
+    var ok = d.user && d.to && d.hasPass; $("mailState").textContent = ok ? "On" : "Not set up"; $("mailState").className = "pill" + (ok ? " on" : "");
+  }
+  function mailLoad() { call("digestSetup", {}).then(mailDraw).catch(function () { $("mailState").textContent = "Run DEPLOY.cmd"; $("mailMsg").textContent = "This appears once the new server functions are deployed (DEPLOY.cmd on your PC)."; }); }
+  $("mailSave").onclick = function () {
+    var b = $("mailSave"), d = { user: $("mailUser").value, to: $("mailTo").value, on: { daily: $("mailOnDaily").checked, noon: $("mailOnNoon").checked, evening: $("mailOnEve").checked } };
+    if ($("mailPass").value.trim()) d.pass = $("mailPass").value;
+    b.disabled = true; $("mailMsg").textContent = "Saving…";
+    call("digestSetup", d).then(function (r) { b.disabled = false; mailDraw(r); $("mailMsg").textContent = "Saved."; }).catch(function (e) { b.disabled = false; $("mailMsg").textContent = e.message; });
+  };
+  $("mailTest").onclick = function () {
+    var b = $("mailTest"); b.disabled = true; $("mailMsg").textContent = "Building and sending a test report…";
+    call("digestNow", { kind: "noon" }).then(function (r) { b.disabled = false; $("mailMsg").textContent = r.sent ? "Sent. Check your inbox (and spam the first time)." : (r.why || "Not sent") + ". Fill in all three boxes and Save first."; }).catch(function (e) { b.disabled = false; $("mailMsg").textContent = e.message; });
+  };
   function exLoad() { call("usageExclude", { list: true }).then(function (d) { exDraw(d.list || []); }).catch(function () { $("exList").innerHTML = '<p class="muted small">This list appears once the new server functions are deployed (DEPLOY.cmd on your PC).</p>'; }); }
   $("exAdd").onclick = function () {
     var em = $("exEmail").value.trim(), b = $("exAdd"); if (!em) { $("exMsg").textContent = "Type an email first."; return; }
@@ -942,7 +967,7 @@ body.embed .mxhead .adm{display:none}
     call("syncFix", { code: b.getAttribute("data-syncfix"), uid: b.getAttribute("data-uid"), ignore: !!b.getAttribute("data-ignore") }).then(syncLoad).catch(function (er) { b.disabled = false; $("syncOut").insertAdjacentHTML("afterbegin", '<p class="small" style="color:var(--bad,#c2410c)">' + esc(er.message) + '</p>'); }); });
   function loadApp() {
     loadCoders();
-    exLoad(); syncLoad();
+    exLoad(); syncLoad(); mailLoad();
     $("apSub").textContent = "Loading…";
     call("appMetrics").then(function (d) { AP = d; drawApp(d); }).catch(function (e) {
       $("apSub").textContent = /not.?found|internal|unavailable|fetch|network/i.test(e.message) ? "App metrics will appear once the new server functions are deployed (DEPLOY.cmd on your PC)." : e.message;
