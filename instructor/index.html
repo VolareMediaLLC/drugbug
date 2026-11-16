@@ -990,7 +990,8 @@ body.embed .mxhead .adm{display:none}
   function timeChart(id, rows, kind, series, o) {
     o = o || {}; var box = $(id); if (!box) return; box.innerHTML = "";
     var W = Math.max(260, box.clientWidth), H = o.h || 190, L = 34, Rm = 8, T = 10, B = 24, iw = W - L - Rm, ih = H - T - B, n = rows.length;
-    var tot = rows.map(function (r) { return series.reduce(function (s, x) { var v = x.v(r); return s + (v == null ? 0 : v); }, 0); });
+    /* columns stack, so their scale is the total; lines sit side by side, so theirs is the biggest single value */
+    var tot = rows.map(function (r) { return kind === "line" ? series.reduce(function (s, x) { var v = x.v(r); return Math.max(s, v == null ? 0 : v); }, 0) : series.reduce(function (s, x) { var v = x.v(r); return s + (v == null ? 0 : v); }, 0); });
     var dmax = Math.max.apply(null, tot.concat([4])), raw = dmax / 4, pw = Math.pow(10, Math.floor(Math.log10(raw))), mm = raw / pw, stp = Math.max(1, (mm <= 1 ? 1 : mm <= 2 ? 2 : mm <= 2.5 && pw >= 10 ? 2.5 : mm <= 5 ? 5 : 10) * pw); if (o.pct) stp = 50; var max = o.pct ? 100 : Math.ceil(dmax / stp) * stp, nt = Math.round(max / stp);
     var svg = el("svg", { width: W, height: H, role: "img", "aria-label": o.label || "" }, box);
     var y = function (v) { return T + ih - (v / max) * ih; };
@@ -1004,13 +1005,16 @@ body.embed .mxhead .adm{display:none}
         var hgt = Math.max(1.5, y0 - y1 - (base ? 2 : 0)); var x0 = xc(i) - bw / 2, yy = y0 - (base ? 2 : 0) - hgt;
         el("path", { d: top ? "M" + x0 + "," + (yy + hgt) + "V" + (yy + rad) + "Q" + x0 + "," + yy + " " + (x0 + rad) + "," + yy + "H" + (x0 + bw - rad) + "Q" + (x0 + bw) + "," + yy + " " + (x0 + bw) + "," + (yy + rad) + "V" + (yy + hgt) + "Z" : "M" + x0 + "," + yy + "h" + bw + "v" + hgt + "h" + (-bw) + "Z", fill: cssv(s.c) }, svg); base += v; }); });
     } else {
-      var s0 = series[0], pts = []; rows.forEach(function (r, i) { var v = s0.v(r); pts.push(v == null ? null : [xc(i), y(v)]); });
-      var segs = [], cur = []; pts.forEach(function (p) { if (p) cur.push(p); else if (cur.length) { segs.push(cur); cur = []; } }); if (cur.length) segs.push(cur);
-      segs.forEach(function (sg) { if (!o.pct) el("path", { d: "M" + sg[0][0] + "," + y(0) + sg.map(function (p) { return "L" + p[0] + "," + p[1]; }).join("") + "L" + sg[sg.length - 1][0] + "," + y(0) + "Z", fill: cssv(s0.c), "fill-opacity": .12 }, svg);
-        el("path", { d: "M" + sg.map(function (p) { return p[0] + "," + p[1]; }).join("L"), fill: "none", stroke: cssv(s0.c), "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }, svg);
-        if (sg.length === 1) el("circle", { cx: sg[0][0], cy: sg[0][1], r: 4, fill: cssv(s0.c) }, svg); });
-      var lp = null; for (var q = pts.length - 1; q >= 0; q--) if (pts[q]) { lp = pts[q]; break; }
-      if (lp) el("circle", { cx: lp[0], cy: lp[1], r: 4, fill: cssv(s0.c), stroke: cssv("--surface"), "stroke-width": 2 }, svg);
+      /* every series gets its own line (counted in blue, ESTIMATED in orange); only the first one is shaded underneath */
+      series.forEach(function (s0, si) {
+        var pts = []; rows.forEach(function (r, i) { var v = s0.v(r); pts.push(v == null ? null : [xc(i), y(v)]); });
+        var segs = [], cur = []; pts.forEach(function (p) { if (p) cur.push(p); else if (cur.length) { segs.push(cur); cur = []; } }); if (cur.length) segs.push(cur);
+        segs.forEach(function (sg) { if (!o.pct && si === 0) el("path", { d: "M" + sg[0][0] + "," + y(0) + sg.map(function (p) { return "L" + p[0] + "," + p[1]; }).join("") + "L" + sg[sg.length - 1][0] + "," + y(0) + "Z", fill: cssv(s0.c), "fill-opacity": .12 }, svg);
+          el("path", { d: "M" + sg.map(function (p) { return p[0] + "," + p[1]; }).join("L"), fill: "none", stroke: cssv(s0.c), "stroke-width": si === 0 ? 2 : 2.5, "stroke-linejoin": "round", "stroke-linecap": "round", "stroke-dasharray": si === 0 ? "none" : "6 4" }, svg);
+          if (sg.length === 1) el("circle", { cx: sg[0][0], cy: sg[0][1], r: 4, fill: cssv(s0.c) }, svg); });
+        var lp = null; for (var q = pts.length - 1; q >= 0; q--) if (pts[q]) { lp = pts[q]; break; }
+        if (lp) el("circle", { cx: lp[0], cy: lp[1], r: 4, fill: cssv(s0.c), stroke: cssv("--surface"), "stroke-width": 2 }, svg);
+      });
     }
     var cross = el("line", { x1: 0, x2: 0, y1: T, y2: T + ih, stroke: cssv("--axis"), "stroke-dasharray": "3 3", opacity: 0 }, svg);
     var dot = kind === "line" ? el("circle", { r: 5, fill: cssv(series[0].c), stroke: cssv("--surface"), "stroke-width": 2, opacity: 0 }, svg) : null;
