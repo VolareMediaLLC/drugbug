@@ -965,8 +965,19 @@ button.evrow{cursor:pointer}button.evrow:hover{background:var(--surface-2)}.evn{
 .axpodn{font-size:14px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.axpodc small{font-size:11.5px;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .axstep{width:100%;margin-top:6px;border-radius:12px 12px 4px 4px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:6px 4px;color:#1d1a2a;font-weight:800}
 .axpodc.p1 .axstep{height:96px;background:linear-gradient(180deg,#ffe07a,#f5c542)}.axpodc.p2 .axstep{height:72px;background:linear-gradient(180deg,#eef1f6,#c9ced8)}.axpodc.p3 .axstep{height:56px;background:linear-gradient(180deg,#f0b47e,#d99a5b)}
+.axcd{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:center;gap:4px 10px;margin:12px 0 8px;padding:10px 12px;border-radius:14px;background:var(--surface);border:1.5px solid rgba(245,197,66,.55);text-align:center}.axcd span{font-size:13px;color:var(--muted)}.axcd b{font-size:20px;font-variant-numeric:tabular-nums;letter-spacing:.5px;color:#f5c542}.axcd small{flex-basis:100%;font-size:11.5px;color:var(--muted)}
+.axpodc{position:relative}.axconf{position:absolute;left:-6px;right:-6px;top:-14px;height:110px;overflow:hidden;pointer-events:none;z-index:2}
+.axconf i{position:absolute;top:-10px;height:7px;border-radius:2px;opacity:0;animation-name:axfall;animation-timing-function:linear;animation-iteration-count:infinite}
+@keyframes axfall{0%{transform:translateY(0) rotate(var(--r));opacity:0}12%{opacity:1}80%{opacity:.9}100%{transform:translateY(105px) rotate(calc(var(--r) + 300deg));opacity:0}}
+@media (prefers-reduced-motion:reduce){.axconf i{animation:none;opacity:.85;top:auto}.axconf i:nth-child(odd){top:8px}.axconf i:nth-child(even){top:34px}.axconf i:nth-child(3n){top:58px}}
+#statsRow{border-radius:14px}#statsRow.readyrow{box-shadow:0 0 0 2px #5ad18f;padding:2px 8px;margin:0 -8px}#statsRow.flashrow{animation:statflash 1.1s ease-in-out 5;box-shadow:0 0 0 2px #f5c542;padding:2px 8px;margin:0 -8px}
+@keyframes statflash{0%,100%{box-shadow:0 0 0 2px #f5c542;background:transparent}50%{box-shadow:0 0 0 4px #f5c542,0 0 22px rgba(245,197,66,.6);background:rgba(245,197,66,.14)}}
+.flashnote{margin:4px 0 10px;font-size:13.5px;color:var(--muted)}.flashnote.good{color:inherit}.flashnote .btn{margin-left:6px}
+@media (prefers-reduced-motion:reduce){#statsRow.flashrow{animation:none}}
 .axplace{font-size:22px;line-height:1}.axpts{font-size:12.5px;margin-top:2px}.axpodc.me .axpodn{color:var(--flight)}
 .axchav{display:flex;justify-content:center;margin:4px 0}.axchav .axav.big{width:72px;height:72px}
+.trialmo{display:flex;gap:12px;align-items:flex-start;margin:12px 0;padding:12px 14px;border-radius:16px;border:1.5px solid color-mix(in srgb,#f5c542 60%,var(--line));background:linear-gradient(135deg,color-mix(in srgb,#f5c542 14%,var(--surface)),var(--surface));text-align:left}
+.trialmo .tmbug svg{width:56px;height:56px;display:block}.trialmo .tmtx{display:flex;flex-direction:column;gap:4px;font-size:13.5px}.trialmo .tmtx strong{font-size:15px}.trialmo .tmtx>span{color:var(--muted)}.trialmo .tmact{display:flex;gap:10px;align-items:center;margin-top:6px;flex-wrap:wrap}
 .axreq.top{margin:0 0 10px}.axpush{margin:2px 0 10px;font-weight:600}.axlist mark{background:color-mix(in srgb,#f5c542 45%,transparent);color:inherit;border-radius:3px;padding:0 1px}.axnew{font-style:normal;font-size:11px;font-weight:800;color:#1d1a2a;background:#f5c542;border-radius:99px;padding:2px 8px;margin-left:6px;vertical-align:middle}.axreq{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:4px 0 8px}.axrw{margin:0 0 12px;border-color:color-mix(in srgb,#f5c542 70%,var(--line))}.axrw h4{color:#b7791f}.axch{margin:0 0 12px;border-color:color-mix(in srgb,#ef4444 45%,var(--line))}
 .clpanel .clkey{text-transform:uppercase;letter-spacing:.08em}
 .clhead{display:flex;flex-direction:column;gap:2px;background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:10px 14px;margin:8px 0 12px}
@@ -3403,7 +3414,6 @@ b.innerHTML='<div class="bootlogo">Drug<span>Bug</span></div><p class="bootnote"
 var n=window.__blN||0,last=window.__blT||t0,now=Date.now();
 if(window.__blErr||(n>=11&&now-last>12000)||now-last>60000){clearInterval(iv);window.__bootFail();}},3000);})();</script>
 <script src="app-config.js"></script>
-
 <script>/* real loading progress, so a slow first load on a weak signal doesn't look stuck (Nov 13 2026) */
 (function(){var got=0,T=14.76,t0=Date.now();window.__bl=function(w){got+=w;window.__blN=(window.__blN||0)+1;window.__blT=Date.now();var n=document.querySelector("#boot .bootnote"),b=document.querySelector("#boot .bootbar i");if(!n)return;var p=Math.min(99,Math.round(100*got/T));if(b){b.style.animation="none";b.style.width=p+"%";b.style.transform="none";}n.textContent="Loading your medications\u2026 "+p+"%"+(Date.now()-t0>6000?" \u00b7 the first load takes longer on a slow signal":"");};})();</script>
 <script defer src="backend.js" onload="__bl(0.01)" onerror="window.__blErr=1"></script>
