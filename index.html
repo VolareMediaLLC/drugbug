@@ -432,7 +432,7 @@ function signedIn(){
   if(!user){me=null;setRole("");drawTab();showBox();return}
   call("dashMe").then(function(r){me=r||{};setRole(r&&r.role);drawTab();showBox()},function(){me={};setRole("");drawTab();showBox()});
   showBox()}
-/* new accounts only; older accounts are grandfathered (owner, Nov 14 2026) */var PW_CUTOFF=Date.UTC(2026,10,15,6);function needPw(){var c=user&&user.metadata&&Date.parse(user.metadata.creationTime)||0;return !!(user&&user.email&&c&&c>=PW_CUTOFF&&!(user.providerData||[]).some(function(p){return p&&p.providerId==="password"}))}
+/* new accounts only; older accounts are grandfathered (owner, Nov 14 2026) */var PW_CUTOFF=Date.UTC(2026,10,15,6);function needPw(){return false;/* not required for now (owner, Nov 15 2026) */var c=user&&user.metadata&&Date.parse(user.metadata.creationTime)||0;return !!(user&&user.email&&c&&c>=PW_CUTOFF&&!(user.providerData||[]).some(function(p){return p&&p.providerId==="password"}))}
 function showBox(){var ok=!!user,np=needPw();$("dbLoginIn").hidden=ok;$("dbLoginPw").hidden=!np;$("dbLoginOk").hidden=!ok||np;document.querySelector("#dbLogin .x").hidden=np;if(np){$("dbLgPE").textContent=/privaterelay\.appleid\.com$/i.test(user.email)?"your Hide My Email address":user.email;if($("dbLogin").hidden)open()}if(!ok)return;
   $("dbLgW").textContent=(me&&me.name)||user.email||"";$("dbLgT").textContent=(me&&me.title)||"";
   var r=role(),a=$("dbLgA");a.hidden=!r;a.href=adminHref(r)}
