@@ -292,8 +292,8 @@ function levelsOf(k) { return isN(k) ? DB.NLEVELS : isM(k) ? DB.MLEVELS : isI(k)
 function levelObj(k) { return DB.LEVELS.concat(DB.NLEVELS, DB.MLEVELS, DB.ILEVELS || [], DB.FLEVELS || [], DB.ALEVELS || []).filter(function (l) { return l.key === k; })[0]; }
 function levelIdx(k) { return levelsOf(k).map(function (l) { return l.key; }).indexOf(k); }
 function scopeFor(k) {
-  var b = isN(k) ? DB.nscopeFor(k) : isM(k) ? DB.mscopeFor(k) : isI(k) ? DB.iscopeFor(k) : isA(k) ? DB.ascopeFor(k) : isF(k) ? DB.fscopeFor(k) : DB.scopeFor(k), u = isN(k) ? myUnit(k) : null;
-  if (u) { var ck = k + ":" + u; if (!UNITC[ck] || UNITC[ck].base !== b) { var have = {}; b.ids.forEach(function (id) { have[id] = 1; }); UNITC[ck] = { base: b, v: { ids: b.ids.concat(DB.nunitIds(u, k).filter(function (id) { return !have[id]; })), notes: b.notes } }; } b = UNITC[ck].v; }
+  var b = isN(k) ? DB.nscopeFor(k) : isM(k) ? DB.mscopeFor(k) : isI(k) ? DB.iscopeFor(k) : isA(k) ? DB.ascopeFor(k) : isF(k) ? DB.fscopeFor(k) : DB.scopeFor(k), u = isN(k) ? myUnits(k) : [];
+  if (u.length) { var ck = k + ":" + u.join(","); if (!UNITC[ck] || UNITC[ck].base !== b) { var have = {}, add = []; b.ids.forEach(function (id) { have[id] = 1; }); u.forEach(function (uu) { DB.nunitIds(uu, k).forEach(function (id) { if (!have[id]) { have[id] = 1; add.push(id); } }); }); UNITC[ck] = { base: b, v: { ids: b.ids.concat(add), notes: b.notes } }; } b = UNITC[ck].v; }
   var r = applyProtocolScope(k, b);
   if (isF(k)) return r;
   /* blood product cards (bp-*) belong to Combat Paramedic only; nursing and med school scopes are built from every record (debug pass Oct 29) */
@@ -305,7 +305,16 @@ var BPX = {};
 var UNITC = {};
 function unitsFor(k) { return (DB.NUNITS || []).filter(function (u) { return u.levels.indexOf(k) >= 0; }); }
 function unitObj(key) { return (DB.NUNITS || []).filter(function (u) { return u.key === key; })[0]; }
-function myUnit(k) { var u = store("nunit"); return u && unitsFor(k).some(function (x) { return x.key === u; }) ? u : null; }
+/* More than one specialty (owner, Nov 15 2026): "you can select what kind of specialty nurse you want. Nursing
+   student should be an option and it's mostly general nursing. If someone selects more than one it just combines
+   the questions and bug rushes and other stuff. And let you pick both or one or the other when you go to do
+   questions." store "nunits" = the picked specialties ("school" = nursing student), "nunitFocus" = "all" or one
+   of them. store "nunit" stays the first picked one for older code. */
+function nUnitsSel() { var a = store("nunits"); if (!Array.isArray(a) || !a.length) { var u = store("nunit"); a = [u ? u : "school"]; } return a; }
+function nFocus() { var f = store("nunitFocus") || "all", sel = nUnitsSel(); return f !== "all" && sel.indexOf(f) < 0 ? "all" : f; }
+function myUnits(k) { var sel = nFocus() === "all" ? nUnitsSel() : [nFocus()]; return sel.filter(function (u) { return u !== "school" && unitsFor(k).some(function (x) { return x.key === u; }); }); }
+function nSchoolOn() { var sel = nFocus() === "all" ? nUnitsSel() : [nFocus()]; return sel.indexOf("school") >= 0; }
+function myUnit(k) { return myUnits(k)[0] || null; }
 function routeCtx() { if (S.view === "level") return routeOfLevel(S.level); for (var r in ROUTES) if (ROUTES[r].view === S.view) return r; return S.view === "gen" ? "gen" : null; }
 function nurseCtx() { return routeCtx() === "rn"; }
 function medCtx() { return routeCtx() === "md"; }
@@ -578,7 +587,7 @@ function srBuild() {
   var I = [];
   function add(name, kind, open, aka, sub) { if (name) I.push({ n: String(name), k: kind, o: open, a: srNorm((aka || "") + " " + (sub || "")), s: sub || "", nn: srNorm(name) }); }
   function safe(f) { try { f(); } catch (e) {} }
-  safe(function () { allLevels().concat(DB.ALEVELS || []).forEach(function (l) { add(l.name, "Path", function () { srGo("level", { level: l.key }); }, l.sub || l.tag || "", routeOfLevel(l.key) === "rn" ? "Nursing" : routeOfLevel(l.key) === "md" ? "Medical school" : routeOfLevel(l.key) === "im" ? "Imaging" : routeOfLevel(l.key) === "ah" ? "Allied health" : "Prehospital"); }); });
+  safe(function () { allLevels().concat(ALLIED_OFF ? [] : (DB.ALEVELS || [])).forEach(function (l) { add(l.name, "Path", function () { srGo("level", { level: l.key }); }, l.sub || l.tag || "", routeOfLevel(l.key) === "rn" ? "Nursing" : routeOfLevel(l.key) === "md" ? "Medical school" : routeOfLevel(l.key) === "im" ? "Imaging" : routeOfLevel(l.key) === "ah" ? "Allied health" : "Prehospital"); }); });
   add("BugDex", "Section", function () { srGo("gen"); }, "every medication all drugs a to z", "Every medication");
   add("Everyday Health", "Section", function () { srGo("everyday"); }, "home health plain language", "For everyone");
   safe(function () { EVTABS.forEach(function (t) { if (t[0] === "all") return; add(t[1], "Everyday Health", function () { srGo("everyday", { evTab: t[0] }); }, t[2]); }); });
@@ -596,7 +605,7 @@ function srBuild() {
       add(s.title, "Scenario", function () { if (!lv) srGo("gen", { tab: "scenarios", scen: { id: s.id } }); else srGo("level", { level: lv, tab: "scenarios", scen: { id: s.id } }); }, s.text && s.text.slice(0, 120), s.cat);
     });
   });
-  safe(function () { (DB.MEGACODE || []).forEach(function (m) { add(m.title, "Megacode", function () { srLevelGo("scenarios", {}, "paramedic"); }, m.tag, m.tag); }); });
+  safe(function () { (DB.MEGACODE || []).forEach(function (m) { add(m.title, "Code", function () { srLevelGo("scenarios", {}, "paramedic"); }, m.tag, m.tag); }); });
   safe(function () {
     [["flightp", DB.FLIGHTP, "Flight Prep"], ["blood", DB.BLOOD, "Blood Products"], ["hemo", DB.HEMO, "Hemodynamics"], ["contrast", DB.CONTRAST, "Contrast Safety"]].forEach(function (k) {
       add(k[2], "Section", function () { srLevelGo(k[0], {}); }, "", "Critical care");
@@ -758,13 +767,17 @@ var FPATH_ICO = {
 };
 /* what is inside each path, so the menu says more than one line (owner, Nov 5 2026) */
 var ROUTE_MORE = {
-  ph: ["Study paths from EMT to Flight and Community Paramedic", "Big Calls: stroke, STEMI, sepsis, trauma and ROSC", "NREMT-style questions, Megacode and scenarios"],
+  ph: ["Study paths from EMT to Flight and Community Paramedic", "Big Calls: stroke, STEMI, sepsis, trauma and ROSC", "NREMT-style questions and Bug Rush calls and codes"],
   rn: ["Hold parameters, labs to watch and patient teaching", "Specialty units: ICU, ER, L&D, NICU and more", "NCLEX-style questions and Nursing Bug drills"],
   md: ["Mechanisms, pharmacokinetics and drug classes", "Step-style questions and advanced lab patterns", "Drug Class Comparisons and Body Systems for rounds"],
-  im: ["Contrast agents and radiopharmaceuticals", "Reactions, premedication, eGFR and screening", "Registry-style questions"],
+  im: ["Contrast agents and radiopharmaceuticals", "Reactions, premedication, eGFR and screening", "Exam-style questions"],
   ah: ["Mental health, dietitian and respiratory therapy", "PT/OT, speech, surgical and anesthesia techs", "Dental hygiene, phlebotomy and EKG, with a study guide for each"],
   ev: ["General study of OTC medicines, vitamins and probiotics", "Introductory vital-sign and lab concepts", "Ask a licensed clinician or pharmacist about your own medicines"]
 };
+/* Allied Health removed (owner, Nov 15 2026: "I want allied health removed ... pull all of them on our next update"). The
+   fields stay in the code but are hidden everywhere; anyone who had picked them is sent back to choose a path. */
+var ALLIED_OFF = true;
+if (ALLIED_OFF) HOME_ROUTES = HOME_ROUTES.filter(function (r) { return r[0] !== "ah"; });
 function homeAll() { return !!store("allPaths"); }
 function homeMine() {
   var picked = Prog.d.interests || [], r = Prog.d.role;
@@ -1001,7 +1014,7 @@ function tabList() {
      their own tabs in the main menu"). Scenarios and Megacode are fused into Bug Rush (owner, Nov 14 2026). */
   L.push(["cards", "Flashcards", "Flip cards for every drug you study."]);
   L.push(["games", "Brain Games", "Crosswords, scrambles, memory match and more."]);
-  if (!img && typeof rushPool === "function" && rushPool().length) L.push(["rush", "Bug Rush", "Random calls back to back: codes you can win or lose, cases and unfolding calls."]);
+  if (typeof rushPool === "function" && rushPool().length) L.push(["rush", "Bug Rush", "Random calls back to back: codes you can win or lose, cases and unfolding calls."]);
   /* the Medication Disease Identifier is gone: the medicine pages already answer it (owner, Nov 5 2026).
      Its place goes to the live call with the dummy acting it out (working name "On Scene"). */
   if (SCENE_READY && typeof sceneView === "function" && S.view === "level" && !img) L.push(["scene", "On Scene", "Run a call live: The Great Bug acts it out, vitals change in real time, and the questions follow the call."]);
@@ -1211,6 +1224,7 @@ function prepName() {
   if (S.view === "level" && isM(S.level)) return { ms1: "Step 1–Style Prep", ms3: "Step 2 CK–Style Prep", intern: "Step 3–Style Prep" }[S.level];
   if (S.view === "level" && S.level === "flight") return "Flight Certification Exam Prep";
   if (S.view === "level" && isF(S.level)) return "Combat Paramedic Questions";
+  if (S.view === "level" && isA(S.level)) return "Medication Questions";   /* allied fields have no registry bank (Nov 15 2026) */
   return "Registry Exam Prep";
 }
 function groupOptions() {
@@ -1401,7 +1415,7 @@ function scenarios() {
   if (S.scen) return scenView(list.filter(function (s) { return s.id === S.scen.id; })[0], list);
   var n = list.filter(function (s) { return done[s.id]; }).length;
   var mlk = typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier(toolTier("mega"));
-  var mega = DB.MEGA_LEVELS && DB.MEGA_LEVELS[ctxKey()] ? '<button class="scard megacard' + (mlk ? ' locked' : '') + '" data-act="' + (mlk ? 'megalock' : 'megago') + '"><span class="meta">Megacode' + (mlk ? ' · Pro' : '') + '</span><h3>Run a code</h3><span>A timed code with a live monitor: rhythms, shocks and drugs, in order.</span></button>' : '';
+  var mega = DB.MEGA_LEVELS && DB.MEGA_LEVELS[ctxKey()] ? '<button class="scard megacard' + (mlk ? ' locked' : '') + '" data-act="' + (mlk ? 'megalock' : 'megago') + '"><span class="meta">Code' + (mlk ? ' · Pro' : '') + '</span><h3>Run a code</h3><span>A timed code with a live monitor: rhythms, shocks and drugs, in order.</span></button>' : '';
   return '<div class="fmprog scenprog"><span><strong>' + n + '</strong> of ' + list.length + ' scenarios cleared</span><span class="cmptrack"><span class="cmpfill" style="width:' + (list.length ? Math.round(100 * n / list.length) : 0) + '%"></span></span></div><div class="scenlist">' + list.map(function (s) {
     return '<button class="scard' + (done[s.id] ? " done" : "") + '" data-scen="' + s.id + '"><span class="meta">' + esc(s.cat || "") + (done[s.id] ? " · Cleared" : "") + '</span><h3>' + esc(s.title) + '</h3><span class="tapnote">Tap to open</span></button>';
   }).join("") + '</div>';
@@ -1410,7 +1424,8 @@ function scenView(s, list, inSess) {
   var st = S.scen, correct = pickByLevel(s.correct), wrong = pickByLevel(s.wrong), ok = pickByLevel(s.ok);
   if (!st.opts) st.opts = shuffle(correct.concat(ok, wrong)), st.sel = {};
   var c = '<div class="scen">' + (inSess ? '' : '<button class="linkish" data-act="scenback">All scenarios</button>') + '<h2 style="margin-top:8px">' + esc(s.title) + '</h2><p class="vignette">' + esc(s.text) + '</p>';
-  if (s.vitals) c += '<div class="vitals">' + s.vitals.map(function (v) { return '<span>' + esc(v) + '</span>'; }).join("") + '</div>';
+  if (inSess === "rush" && typeof pvScen === "function") c += pvScen(s, st);
+  else if (s.vitals) c += '<div class="vitals">' + s.vitals.map(function (v) { return '<span>' + esc(v) + '</span>'; }).join("") + '</div>';
   c += '<div class="ask">' + esc(s.ask || "Select every medication that fits this fictional case on your study path.") + '</div><div class="opts">';
   c += st.opts.map(function (id) {
     var cls = "";
@@ -1428,7 +1443,9 @@ function scenView(s, list, inSess) {
     c += '</ul></div>';
     if (typeof isReviewer === "function" && isReviewer()) c += qRateHTML(s.lv && s.q ? s : { id: "qs" + String(s.id || "").replace(/[^A-Za-z0-9]/g, "").slice(0, 40), lv: "scen", q: s.title + ": " + (s.ask || ""), d: "" });
     if (inSess === "rush") { var sc = perfect ? ["ok", "Outcome: your patient improved."] : hit && !bad ? ["", "Outcome: partly treated. Your patient is holding steady but not improving."] : ["bad", "Outcome: your patient got worse."]; c += '<p class="mcout ' + sc[0] + '"><strong>' + sc[1] + '</strong></p><div class="actions"><button class="btn" data-act="rushnext">Next call</button></div>'; return c + '</div>'; }
-    c += '<div class="actions">' + (inSess ? '<button class="btn" data-act="sessnext">Continue</button>' : '<button class="btn" data-act="scennext">Next scenario</button><button class="btn ghost" data-act="scenretry">Try again</button>') + '</div>';
+    var sk = "rs-" + s.id + "-" + (S.rush ? S.rush.n : 0);
+    if (inSess === "rush") c += autoBar(sk, Math.max(4.5, autoSecs(s.why, perfect) + 2), "Next call coming in");
+    c += '<div class="actions">' + (inSess ? '<button class="btn" data-act="sessnext"' + (inSess === "rush" ? autoGo(sk) : '') + '>Continue</button>' : '<button class="btn" data-act="scennext">Next scenario</button><button class="btn ghost" data-act="scenretry">Try again</button>') + '</div>';
   }
   return c + '</div>';
 }
@@ -1492,32 +1509,52 @@ var RN_DEPTS = [["", "Nursing school RN", "start"], ["ed", "", "hosp"], ["icu", 
 var RN_SECT = { start: "Start here", hosp: "Hospital", nicu: "Newborn intensive care", other: "Specialty and beyond" };
 function rnDepts() { return RN_DEPTS.map(function (d) { var u = d[0] ? unitObj(d[0]) : null; return d[0] && !u ? null : { key: d[0], name: d[1] || u.name, sect: d[2], blurb: u ? u.blurb : "The core RN pharmacology for nursing school and the NCLEX-RN: every medicine an RN gives and monitors." }; }).filter(Boolean); }
 function rnDeptView() {
-  var cur = store("nunit") || "", D = rnDepts(), last = "";
+  var sel = S.rnPick || (S.rnPick = nUnitsSel().slice()), cur = store("nunit") || "", D = rnDepts(), last = "";
   var cards = D.map(function (d) {
+    var dk = d.key || "school", on = sel.indexOf(dk) >= 0;
     var lab = d.sect !== last ? '<span class="rdsect">' + esc(RN_SECT[d.sect]) + '</span>' : '<span class="rdsect" aria-hidden="true">&nbsp;</span>'; last = d.sect;
-    return '<div class="rdcell">' + lab + '<button class="rdcard' + (d.key === cur ? ' on' : '') + (d.sect === "start" ? ' first' : '') + '" data-rndept="' + d.key + '" data-rnd="' + (d.key || "school") + '">' +
+    return '<div class="rdcell">' + lab + '<button class="rdcard' + (on ? ' on' : '') + (d.sect === "start" ? ' first' : '') + '" data-rndept="' + d.key + '" data-rnd="' + dk + '" aria-pressed="' + on + '">' +
       '<span class="rdbug">' + bugSVG("rn") + '</span><strong>' + esc(d.name) + '</strong><span class="rdblurb">' + esc(d.blurb) + '</span>' +
-      (d.key === cur && store("rnDeptAsked") ? '<span class="rdnow">Current</span>' : '') + '</button></div>';
+      (on ? '<span class="rdnow">&#10003; Picked</span>' : '') + '</button></div>';
   }).join("");
-  return '<div class="gate rndept"><h1>Which RN are you?</h1><p>Start with Nursing school RN, or swipe to your department. Your department\'s medicines are added to everything you study. You can change it any time.</p>' +
+  var names = D.filter(function (d) { return sel.indexOf(d.key || "school") >= 0; }).map(function (d) { return d.name; });
+  return '<div class="gate rndept"><h1>Which RN are you?</h1><p>Pick one or more: Nursing school RN for general nursing, and any departments you work in. Everything you pick is mixed into your questions and Bug Rush, and you can study them together or one at a time. You can change this any time.</p>' +
     '<div class="rdwrap"><button class="rdarr l" data-rdscroll="-1" aria-label="Previous">&#8249;</button><div class="rdtrack" id="rdtrack">' + cards + '</div><button class="rdarr r" data-rdscroll="1" aria-label="Next">&#8250;</button></div>' +
-    (store("rnDeptAsked") ? '<div class="actions" style="justify-content:center"><button class="btn ghost" data-rndeptback="1">Keep ' + esc((D.filter(function (d) { return d.key === cur; })[0] || D[0]).name) + '</button></div>' : '') + '</div>';
+    '<p class="rdpicked">' + (names.length ? 'Picked: <strong>' + esc(names.join(", ")) + '</strong>' : 'Tap a card to pick it.') + '</p>' +
+    '<div class="actions" style="justify-content:center"><button class="btn" data-rndeptdone="1"' + (sel.length ? '' : ' disabled') + '>' + (sel.length > 1 ? 'Use these ' + sel.length : 'Use this') + '</button>' +
+    (store("rnDeptAsked") ? '<button class="btn ghost" data-rndeptback="1">Cancel</button>' : '') + '</div></div>';
 }
 function rnDeptNeeded() { return S.view === "level" && S.level === "rn" && (S.rnDept || !store("rnDeptAsked")); }
 document.addEventListener("click", function (e) {
-  var t = e.target.closest && e.target.closest("[data-rndept],[data-rdscroll],[data-rndeptch],[data-rndeptback]"); if (!t) return;
+  var t = e.target.closest && e.target.closest("[data-rndept],[data-rdscroll],[data-rndeptch],[data-rndeptback],[data-rndeptdone],[data-nfocus]"); if (!t) return;
+  if (t.hasAttribute("data-nfocus")) { store("nunitFocus", t.getAttribute("data-nfocus")); UNITC = {}; if (S.nr && S.nr.phase !== "quiz") S.nr = null; render(); return; }
+  if (t.hasAttribute("data-rndeptdone")) {
+    var pk = (S.rnPick || []).slice(); if (!pk.length) return;
+    store("nunits", pk); store("nunit", pk.filter(function (x) { return x !== "school"; })[0] || ""); store("nunitFocus", "all"); store("rnDeptAsked", 1);
+    UNITC = {}; S.rnDept = false; S.rnPick = null; S.tab = "hub"; S.learn = null; S.nr = null; S.rush = null;
+    try { if (typeof usgFeat === "function") pk.forEach(function (x) { usgFeat("rn_dept_" + x); }); } catch (x) {}
+    render(); window.scrollTo(0, 0); return;
+  }
   if (t.hasAttribute("data-rdscroll")) { var tr = document.getElementById("rdtrack"); if (tr) tr.scrollBy({ left: (+t.getAttribute("data-rdscroll")) * tr.clientWidth * 0.8, behavior: "smooth" }); return; }
-  if (t.hasAttribute("data-rndeptch")) { S.rnDept = true; render(); window.scrollTo(0, 0); return; }
-  if (t.hasAttribute("data-rndeptback")) { S.rnDept = false; render(); return; }
-  var k = t.getAttribute("data-rndept") || "";
-  store("nunit", k); store("rnDeptAsked", 1); UNITC = {}; S.rnDept = false; S.tab = "hub"; S.learn = null;
-  try { if (typeof usgFeat === "function") usgFeat("rn_dept_" + (k || "school")); } catch (x) {}
-  render(); window.scrollTo(0, 0);
+  if (t.hasAttribute("data-rndeptch")) { S.rnDept = true; S.rnPick = null; render(); window.scrollTo(0, 0); return; }
+  if (t.hasAttribute("data-rndeptback")) { S.rnDept = false; S.rnPick = null; render(); return; }
+  var k = t.getAttribute("data-rndept") || "school", P = S.rnPick || (S.rnPick = nUnitsSel().slice()), i = P.indexOf(k);
+  if (i >= 0) P.splice(i, 1); else P.push(k);
+  var y = document.getElementById("rdtrack"), sx = y ? y.scrollLeft : 0; render(); var y2 = document.getElementById("rdtrack"); if (y2) y2.scrollLeft = sx;
 });
 function rnDeptChip() {
   if (!(S.view === "level" && S.level === "rn")) return "";
-  var cur = store("nunit") || "", d = rnDepts().filter(function (x) { return x.key === cur; })[0] || rnDepts()[0];
-  return '<div class="rndchip"><span>Department</span><strong>' + esc(d.name) + '</strong><button class="btn small ghost" data-rndeptch="1">Change</button></div>';
+  return nFocusRow(true);
+}
+/* which of the picked specialties to study right now: all of them together, or one (shown on the RN home,
+   the question setup and Bug Rush) */
+function nFocusRow(withChange) {
+  if (!(S.view === "level" && S.level === "rn")) return "";
+  var sel = nUnitsSel(), D = rnDepts(), f = nFocus(), nm = function (k) { var d = D.filter(function (x) { return (x.key || "school") === k; })[0]; return d ? d.name : k; };
+  var c = '<div class="rndchip"><span>' + (sel.length > 1 ? "Specialties" : "Department") + '</span><strong>' + esc(sel.map(nm).join(", ")) + '</strong>' + (withChange ? '<button class="btn small ghost" data-rndeptch="1">Change</button>' : '') + '</div>';
+  if (sel.length > 1) c += '<div class="nfocus" role="group" aria-label="Study"><span>Study:</span><button class="chip' + (f === "all" ? ' on' : '') + '" data-nfocus="all" aria-pressed="' + (f === "all") + '">All of them</button>' +
+    sel.map(function (k) { return '<button class="chip' + (f === k ? ' on' : '') + '" data-nfocus="' + esc(k) + '" aria-pressed="' + (f === k) + '">' + esc(nm(k)) + '</button>'; }).join("") + '</div>';
+  return c;
 }
 function viewLevel() {
   if (rnDeptNeeded()) { setTimeout(function () { var tr = document.getElementById("rdtrack"), on = tr && tr.querySelector(".rdcard.on"); if (on) on.parentNode.scrollIntoView({ inline: "center", block: "nearest" }); }, 30); return topbar() + rnDeptView(); }
@@ -1611,7 +1648,12 @@ function nrPool(filter, noGen) {
   /* Flight Paramedic: only drugs in flight scope (owner, Nov 10 2026) */
   if (S.view === "level" && (isN(S.level) || isI(S.level) || isF(S.level) || isA(S.level) || S.level === "tccc" || S.level === "flight")) { inScope = {}; scopeFor(S.level).ids.forEach(function (id) { inScope[id] = 1; }); }
   var ck = ctxKey();
-  function ok(q) { return allowed.indexOf(q.lv) >= 0 && starOK(q, ck) && !(q.home && ck !== "gen") && qVisible(q) && (!inScope || (q.d ? inScope[q.d] : !isF(ck))) && (!q.d || !drugLocked(q.d)); }
+  /* Allied Health (owner, Nov 15 2026: "why is dental hygiene getting questions about EMT stuff"): the fields have no question
+     bank of their own yet, so they borrow drug questions on their own medicines from the other banks, but only ones not
+     written for another role (EMT, paramedic, nurse, flight, scene, transport...), and never the EMS/nursing registry items. */
+  var alliedRole = isA(ck) ? /\b(EMTs?|AEMTs?|paramedics?|medics?|EMS|prehospital|ambulance|crew|on scene|scene|dispatch(?:ed)?|transport(?:ing)?|flight|helicopter|nurses?|RNs?|LVNs?|LPNs?|CNAs?|nursing|charge nurse|medical director|protocol)\b/i : null;
+  function ok(q) { return allowed.indexOf(q.lv) >= 0 && starOK(q, ck) && !(q.home && ck !== "gen") && qVisible(q) && (!inScope || (q.d ? inScope[q.d] : !isF(ck))) && (!q.d || !drugLocked(q.d)) && !(alliedRole && q.lv !== ck && q.lv !== "gen" && (!q.d || alliedRole.test(q.q || ""))); }
+  if (S.nr && S.nr.kind === "reg" && isA(ck)) return (DB.RQ || []).filter(function (q) { return q.lv === ck && qVisible(q); });
   if (S.nr && S.nr.kind === "reg") return (DB.RQ || []).filter(function (q) { return allowed.indexOf(q.lv) >= 0 && starOK(q, ck) && qVisible(q) && (!isF(ck) || q.fm) && (typeof callScaleOK !== "function" || callScaleOK(q)); });
   return DB.Q.filter(ok).concat((DB.QX || []).filter(ok)).concat(!noGen && typeof qgPoolFor === "function" ? qgPoolFor(ck, ok) : []);
 }
@@ -1759,10 +1801,10 @@ function deptCaseOf(u, q) {
      and at least 1 in 10 department questions on a high-alert medicine. */
 function deptMix(pool, n, pick) {
   if (!nurseCtx() || ["rn", "lvn", "cna"].indexOf(S.level) < 0) return null;
-  var u = S.level !== "cna" && typeof myUnit === "function" ? myUnit(S.level) : null;
+  var us = S.level !== "cna" && typeof myUnits === "function" ? myUnits(S.level) : [], u = us[0] || null;
   var P = (u && DEPT_PROF[u]) || { t1: [], t2: [], cases: [] }, ids = {};
-  if (u) { (DB.nunitIds(u, S.level) || []).forEach(function (id) { ids[id] = 1; }); P.t1.concat(P.t2).forEach(function (id) { ids[id] = 1; }); }
-  var inU = u ? pool.filter(function (q) { return q.unit === u || (q.d && ids[q.d]); }) : [], rest = pool.filter(function (q) { return inU.indexOf(q) < 0; });
+  us.forEach(function (uu) { var PP = DEPT_PROF[uu] || { t1: [], t2: [] }; (DB.nunitIds(uu, S.level) || []).forEach(function (id) { ids[id] = 1; }); PP.t1.concat(PP.t2).forEach(function (id) { ids[id] = 1; }); });
+  var inU = us.length ? pool.filter(function (q) { return us.indexOf(q.unit) >= 0 || (q.d && ids[q.d]); }) : [], rest = pool.filter(function (q) { return inU.indexOf(q) < 0; });
   var want = Math.min(inU.length, Math.round(n * DEPT_MIX.dept));
   var seen = seenMap(), miss = (Prog.d && Prog.d.miss) || {}, dc = {};
   pool.forEach(function (q) { if (q.d) dc[q.d] = (dc[q.d] || 0) + 1; });
@@ -1830,13 +1872,13 @@ function creatorNote() {
          : '<a class="cncta" href="mailto:VolareMediaLLC@gmail.com?subject=Question%20evaluator">Want to help shape the questions? Request to be a question evaluator &rarr;</a>') +
     '</aside>';
 }
-function regCount() { var k = ctxKey(), al = nrLevelsFor(k), f = isF(k); return (DB.RQ || []).filter(function (q) { return al.indexOf(q.lv) >= 0 && starOK(q, k) && qVisible(q) && (!f || q.fm); }).length; }
+function regCount() { var k = ctxKey(), al = isA(k) ? [k] : nrLevelsFor(k), f = isF(k); return (DB.RQ || []).filter(function (q) { return al.indexOf(q.lv) >= 0 && starOK(q, k) && qVisible(q) && (!f || q.fm); }).length; }
 function nrPrep() {
   var st = nrState();
   if (st.phase === "quiz") return nrQuiz(st);
   if (st.phase === "done") return nrDone(st) + scoreArea();
   var pool = nrPool(st.filter);
-  var nurse = nurseCtx(), exam = nurse ? { cna: "CNA state exam", lvn: "NCLEX-PN", rn: "NCLEX-RN" }[S.level] : medCtx() ? { ms1: "USMLE Step 1", ms3: "USMLE Step 2 CK", intern: "USMLE Step 3" }[S.level] : imCtx() ? "Imaging exam" : S.level === "flight" ? "Flight and critical care certification exam" : isF(S.level) ? "TCCC" : "NREMT";
+  var nurse = nurseCtx(), exam = nurse ? { cna: "CNA state exam", lvn: "NCLEX-PN", rn: "NCLEX-RN" }[S.level] : medCtx() ? { ms1: "USMLE Step 1", ms3: "USMLE Step 2 CK", intern: "USMLE Step 3" }[S.level] : imCtx() ? "Imaging exam" : S.level === "flight" ? "Flight and critical care certification exam" : isF(S.level) ? "TCCC" : isA(S.level) ? ((levelObj(S.level) || {}).name || "Your field") + " medication" : "NREMT";
   if (isF(ctxKey())) st.kind = "reg";
   var regN = regCount(), reg = st.kind === "reg", filters = nrLevelsFor(ctxKey()).concat(["all"]), n = Math.min(st.n, pool.length);
   /* one simple screen: pick a deck, a length and a mode, then go. Everything else sits under More options. */
@@ -1844,8 +1886,8 @@ function nrPrep() {
   if (regN && isF(ctxKey())) c += '<p class="muted small">' + regN + ' questions on medications, blood, trauma, prolonged care, ventilators, labs, CBRN, K9, dive and evacuation.</p>';
   else if (regN) c += '<div class="nrdecks" role="group" aria-label="Question type">' +
     '<button class="nrdeck" data-nrkind="drug" aria-pressed="' + !reg + '"><span class="nrdk-ic" aria-hidden="true">' + icon("pillq") + '</span><strong>Drug questions</strong><span class="nrdk-n">' + drugCount() + '</span><span class="nrdk-sub">' + (nurse ? "Medicines: what to check, report and teach on your unit" : "Doses, actions, uses and side effects") + '</span></button>' +
-    '<button class="nrdeck" data-nrkind="reg" aria-pressed="' + reg + '"><span class="nrdk-ic" aria-hidden="true">' + icon("ecg") + '</span><strong>' + (nurse ? (S.level === "cna" ? "CNA exam-style questions" : "NCLEX-style questions") : "Registry-style questions") + '</strong><span class="nrdk-n">' + regN + '</span><span class="nrdk-sub">' + (nurse ? (S.level === "cna" ? "Care, safety, communication and your role" : "Priority, delegation, safety, care and the whole test plan") : "Airway, cardiology, trauma, medical and operations") + '</span></button></div>' +
-    (function () { if (!nurse || (S.level !== "rn" && S.level !== "lvn") || typeof myUnit !== "function") return ""; var u0 = myUnit(S.level), uo0 = u0 && typeof unitObj === "function" ? unitObj(u0) : null; return uo0 && !reg ? '<p class="muted small nrdept">About 3 of every 4 drug questions come from your department: <strong>' + esc(uo0.name) + '</strong>, weighted to its most-used medicines and most common cases' + (deptTopCases(u0).length ? ' (' + esc(deptTopCases(u0).join(', ')) + ')' : '') + '. The rest cover other medicines.</p>' : ""; })();
+    '<button class="nrdeck" data-nrkind="reg" aria-pressed="' + reg + '"><span class="nrdk-ic" aria-hidden="true">' + icon("ecg") + '</span><strong>' + (nurse ? (S.level === "cna" ? "CNA exam-style questions" : "NCLEX-style questions") : (isEMSLv(S.level) || S.level === "cp" ? "Registry-style questions" : "Exam-style questions")) + '</strong><span class="nrdk-n">' + regN + '</span><span class="nrdk-sub">' + (nurse ? (S.level === "cna" ? "Care, safety, communication and your role" : "Priority, delegation, safety, care and the whole test plan") : "Airway, cardiology, trauma, medical and operations") + '</span></button></div>' +
+    (function () { if (!nurse || (S.level !== "rn" && S.level !== "lvn") || typeof myUnit !== "function") return ""; var us0 = myUnits(S.level), u0 = us0[0], uo0 = u0 && typeof unitObj === "function" ? unitObj(u0) : null; return (S.level === "rn" ? nFocusRow(false) : "") + (uo0 && !reg ? '<p class="muted small nrdept">About 3 of every 4 drug questions come from ' + (us0.length > 1 ? 'your departments' : 'your department') + ': <strong>' + esc(us0.map(function (x) { var o = unitObj(x); return o ? o.name : x; }).join(", ")) + '</strong>, weighted to its most-used medicines and most common cases' + (deptTopCases(u0).length ? ' (' + esc(deptTopCases(u0).join(', ')) + ')' : '') + '. The rest cover other medicines.</p>' : ""); })();
   (function () {
     var st2 = seenStats();
     if (st2.total) {
@@ -1981,7 +2023,7 @@ function caseBox(q) {
 function nrQuiz(st) {
   var x = st.qs[st.i], q = x.q, picked = st.ans[st.i], reveal = st.mode === "practice" && picked != null, total = st.qs.length;
   var answered = Object.keys(st.ans).length;
-  var c = '<section class="quiz"><div class="qtop"><span class="lbl">Question ' + (st.i + 1) + ' of ' + total + ' ' + starHTML(qStar(q)) + '</span><span class="muted small">' + (NRLV[q.lv] || "") + (st.mode === "practice" ? " · Score so far " + nrScore({ qs: st.qs.slice(0, st.i + 1), ans: st.ans }) + "/" + answered : " · " + answered + " answered") + '</span><button class="linkish" data-act="nrquit">Quit</button></div>';
+  var c = '<section class="quiz"><div class="qtop"><span class="lbl">Question ' + (st.i + 1) + ' of ' + total + ' ' + starHTML(qStar(q)) + curiousHTML("q") + '</span><span class="muted small">' + (NRLV[q.lv] || "") + (st.mode === "practice" ? " · Score so far " + nrScore({ qs: st.qs.slice(0, st.i + 1), ans: st.ans }) + "/" + answered : " · " + answered + " answered") + '</span><button class="linkish" data-act="nrquit">Quit</button></div>';
   c += '<div class="prog"><i style="width:' + Math.round(100 * (st.i + (picked != null ? 1 : 0)) / total) + '%"></i></div>';
   if (q.cs) c += caseBox(q);
   if (q.pilot && !pilLive(q.id) && typeof isReviewer === "function" && isReviewer()) c += pilBanner(q);
@@ -1998,12 +2040,15 @@ function nrQuiz(st) {
   if (reveal) c += '<div class="explain ' + (nrRight(x, picked) ? "ok" : "bad") + '"><strong>' + (nrRight(x, picked) ? "Correct." + (st.mode === "practice" ? stickNote(true) : '') : (q.t === "order" ? "Not quite. The correct order is shown above." : (q.t === "multi" ? "Not quite. You found " + (picked || []).filter(function (v) { return q.ok.indexOf(v) >= 0; }).length + " of " + q.ok.length + " correct answers" + ((picked || []).some(function (v) { return q.ok.indexOf(v) < 0; }) ? " and picked a wrong one" : "") + ". Correct answers: " : "Not quite. Correct answer: ") + esc(q.a)) + (st.mode === "practice" ? stickNote(false) : '')) + '</strong><p>' + esc(q.x) + '</p>' + (q.d && DB.drugs[q.d] ? '<button class="linkish" data-drug="' + q.d + '">Review ' + esc(DB.drugs[q.d].name) + '</button>' : '') + '</div>';
   if (reveal) c += qRateHTML(q);
   else if (picked != null && typeof isReviewer === "function" && isReviewer()) c += revHTML(q);   /* evaluators grade exam questions too (owner, Nov 13 2026) */
+  /* auto-advance once the question you just answered has been read (owner, Nov 15 2026) */
+  var nk = picked != null && st.just === st.i && !(q.t && st.mode === "practice" && !reveal) ? "nr-" + (st.start || 0) + "-" + st.i : "";
+  if (nk) { var nexp = reveal ? (q.x || "") + " " + (q.q || "") : ""; c += autoBar(nk, reveal ? autoSecs(nexp, nrRight(x, picked)) : 1.2, st.i < total - 1 ? "Next question coming up" : "Your score is coming up"); }
   c += '<div class="actions">';
   if (q.t && st.mode === "practice" && picked == null) c += '<button class="btn" data-act="nrsubmit"' + (nrSelReady(st, x) ? "" : " disabled") + '>Check answer</button>';
   if (st.i > 0) c += '<button class="btn ghost" data-act="nrprev">\u2190 Previous question</button>'; /* available in practice as well as exam (owner, Oct 29 2026) */
   if (q.t && st.mode === "practice" && picked == null) {}
-  else if (st.i < total - 1) c += '<button class="btn" data-act="nrnext"' + (picked == null ? " disabled" : "") + '>Next question</button>';
-  else c += '<button class="btn" data-act="nrfinish"' + (picked == null ? " disabled" : "") + '>See my score</button>';
+  else if (st.i < total - 1) c += '<button class="btn" data-act="nrnext"' + (picked == null ? " disabled" : "") + (nk ? autoGo(nk) : '') + '>Next question</button>';
+  else c += '<button class="btn" data-act="nrfinish"' + (picked == null ? " disabled" : "") + (nk ? autoGo(nk) : '') + '>See my score</button>';
   return c + '</div></section>';
 }
 function nrDone(st) {
@@ -2227,11 +2272,20 @@ function formGo(fid, dir) {
   S.sheet.id = fid; S.full = SET().fullDefault; drawSheet();
   var pn = $(".panel", sheet); if (pn) { pn.scrollTop = 0; if (dir) { pn.classList.add(dir > 0 ? "swl" : "swr"); } }
 }
+/* swipe to the next / previous drug in the list the card was opened from (My List) */
+function sheetListStep(dir) {
+  var L = S.sheet && S.sheet.list; if (!L || L.length < 2) return;
+  var j = L.indexOf(S.sheet.anchor || S.sheet.id) + dir; S.sheet.anchor = null;
+  while (L[j] && typeof drugLocked === "function" && drugLocked(L[j])) j += dir;
+  if (!L[j]) { var pe = $(".panel", sheet); if (pe) { pe.classList.remove("swend"); void pe.offsetWidth; pe.classList.add("swend"); } return; }
+  S.sheet.id = L[j]; S.full = SET().fullDefault; drawSheet();
+  var pn = $(".panel", sheet); if (pn) { pn.scrollTop = 0; pn.classList.add(dir > 0 ? "swl" : "swr"); }
+}
 function formStep(dir) { if (!S.sheet) return; var F = formsOf(S.sheet.id); if (F.length < 2) return; var k = F.indexOf(S.sheet.id); formGo(F[(k + dir + F.length) % F.length], dir); }
 (function () {
   var sx = 0, sy = 0, st = 0, ok = false;
   sheet.addEventListener("touchstart", function (e) { if (e.touches.length !== 1) { ok = false; return; } var t = e.target; ok = !t.closest("input,textarea,select,.fchips,.tablewrap,table,.hscroll"); sx = e.touches[0].clientX; sy = e.touches[0].clientY; st = Date.now(); }, { passive: true });
-  sheet.addEventListener("touchend", function (e) { if (!ok || !S.sheet) return; ok = false; var t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy; if (Date.now() - st < 700 && Math.abs(dx) > 60 && Math.abs(dx) > 2 * Math.abs(dy)) formStep(dx < 0 ? 1 : -1); }, { passive: true });
+  sheet.addEventListener("touchend", function (e) { if (!ok || !S.sheet) return; ok = false; var t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy; if (Date.now() - st < 700 && Math.abs(dx) > 60 && Math.abs(dx) > 2 * Math.abs(dy)) { if (S.sheet.swipeList) sheetListStep(dx < 0 ? 1 : -1); else formStep(dx < 0 ? 1 : -1); } }, { passive: true });
 })();
 function dexCtx() { return S.view === "gen" || S.view === "admin" || nurseCtx() || medCtx() || imCtx() || S.view === "easy"; }
 /* ---------- Compare two drugs side by side (owner, Nov 4 2026) ----------
@@ -2352,6 +2406,7 @@ function drawSheet() {
   DW.id = S.sheet.id;
   var id = S.sheet.id, d = DB.drugs[id], tier = TIER[ctxKey()], list = S.sheet.list, i = list.indexOf(S.sheet.anchor || id);
   var c = '<div class="panel ' + ctxClass() + '" tabindex="-1" role="dialog" aria-modal="true" aria-label="' + esc(nameOf(id)) + '">' + sheetMini(id, list, i) + '<div class="phead"><div class="navrow"><button class="iconbtn" data-act="close">Close</button><span class="spacer"></span>' +
+    (S.sheet.swipeList && list.length > 1 ? '<span class="mlpos" aria-live="polite">My List · ' + (i + 1) + ' of ' + list.length + '</span>' : '') +
     (list.length > 1 ? '<button class="iconbtn" data-act="prev"' + (i <= 0 ? " disabled" : "") + '>Previous</button><button class="iconbtn" data-act="next"' + (i >= list.length - 1 ? " disabled" : "") + '>Next</button>' : '') + '</div>' + (typeof learnBar === "function" ? learnBar() : '');
   if (!d) return sheet.innerHTML = c + '<h2 class="dname">' + esc(nameOf(id)) + '</h2></div><div class="pending-msg">This monograph has not been written yet.</div></div>';
   var sch = get(d, 0, 5), ctrl = /schedule|C-?I/i.test(sch) && !/not/i.test(sch);
@@ -2399,6 +2454,7 @@ function animKeep() {
   } catch (e) {}
 }
 function render() {
+  if (ALLIED_OFF && ((S.view === "level" && isA(S.level)) || S.view === "alevels")) { S.view = "home"; S.level = null; S.tab = "hub"; }
   try { fixTab(); } catch (e) {}
   try { if (typeof usgTab === "function") usgTab(); } catch (e) {}
   var ok = agreeRec(); protoTab.hidden = true; if (typeof classTab !== "undefined" && classTab) classTab.hidden = true;   /* the class lives in its level's menu now (owner, Nov 6 2026) */ protoTab.textContent = lang() === "es" ? "Protocolos" : "Protocols"; document.documentElement.lang = lang();
@@ -2548,6 +2604,14 @@ document.addEventListener("click", function (e) {
   if (a.tab) { S.tab = a.tab; S.sysK = ""; S.scen = null; S.fc = null; S.fcPick = 0; S.group = "all"; fixTab(); render(); return window.scrollTo(0, 0); }
   if (a.tag) { S.tags[a.tag] = !S.tags[a.tag]; t.setAttribute("aria-pressed", !!S.tags[a.tag]); return refreshGrid(); }
   if (a.form && S.sheet && !sheet.hidden) { formGo(a.form); return; }
+  /* My List opens the normal drug cards and you swipe through your list (owner, Nov 15 2026: "Bring back the normal
+     drug cards for that. Make them where you can just swipe and go to the other one on your list") */
+  if (a.mlstudy) {
+    var ml = marks().filter(function (x) { return DB.drugs[x] && !(typeof drugLocked === "function" && drugLocked(x)); });
+    if (ml.indexOf(a.mlstudy) < 0) ml.unshift(a.mlstudy);
+    openSheet(a.mlstudy, ml); if (S.sheet) { S.sheet.swipeList = true; drawSheet(); }
+    return;
+  }
   if (a.drug) {
     var gl = t.closest("#grid,#egrid,#evgrid,#pbgrid"), tm = gl && gl.querySelector(".tilemore"), list = tm && TILE_LISTS[tm.getAttribute("data-tok")] ? TILE_LISTS[tm.getAttribute("data-tok")] : gl ? $$("[data-drug]", gl).map(function (b) { return b.getAttribute("data-drug"); }).filter(function (x, i, A) { return A.indexOf(x) === i; }) : [a.drug];
     return openSheet(a.drug, list);
@@ -2561,12 +2625,12 @@ document.addEventListener("click", function (e) {
   if (a.nrkind) { var nk = nrState(); nk.kind = a.nrkind; var pk = nrPool(nk.filter).length; if (nk.n > pk) nk.n = [10, 25, 50, 100].filter(function (v) { return v <= pk; }).pop() || 10; return render(); }
   if (a.nrfilter) { var ns = nrState(); ns.filter = a.nrfilter; var pl = nrPool(ns.filter).length; if (ns.n > pl) ns.n = [10, 25, 50, 100].filter(function (v) { return v <= pl; }).pop() || 10; return render(); }
   if (a.nrtog != null) { nrToggle(+a.nrtog); return render(); }
-  if (a.act === "nrsubmit") { nrSubmit(); return render(); }
+  if (a.act === "nrsubmit") { if (S.nr) S.nr.just = S.nr.i; nrSubmit(); return render(); }
   if (a.act === "nrclr") { var sc = S.nr; if (sc && sc.phase === "quiz") { sc.sel[sc.i] = []; if (sc.mode === "exam") delete sc.ans[sc.i]; } return render(); }
   if (a.nropt != null) {
     var st = S.nr; if (!st || st.phase !== "quiz") return;
     if (st.mode === "practice" && st.ans[st.i] != null) return;
-    st.ans[st.i] = st.qs[st.i].opts[+a.nropt];
+    st.ans[st.i] = st.qs[st.i].opts[+a.nropt]; st.just = st.i;
     if (st.mode === "practice") { st.rec = st.rec || {}; if (!st.rec[st.i]) { st.rec[st.i] = 1; record(st.qs[st.i].q, nrRight(st.qs[st.i], st.ans[st.i]), null, st.ans[st.i]); setTimeout(toastAch, 200); } }
     return render();
   }
@@ -2596,7 +2660,7 @@ document.addEventListener("click", function (e) {
     case "openclass": S.menu = false; render(); return openClassPane();
     case "utilback": var ub = S.utilBack; S.utilBack = null; if (ub && ub.view && !UTIL_VIEWS[ub.view]) { go(ub.view, ub.level ? { level: ub.level } : {}); if (ub.tab && ub.tab !== "hub") { S.tab = ub.tab; render(); } return; } return go("home");
     case "terrback": var tb = S.terrBack; S.terrBack = null; if (tb && tb.view && tb.view !== "terrarium") { go(tb.view, tb.level ? { level: tb.level } : {}); if (tb.tab) { S.tab = tb.tab; render(); } return; } return go("home");
-    case "megalock": return openPaywall("Megacode", toolTier("mega"));
+    case "megalock": return openPaywall("Bug Rush", toolTier("mega"));
     case "megaback": S.megaFrom = null; S.tool = null; S.mega = null; clearInterval(MC.timer); S.tab = "scenarios"; render(); return window.scrollTo(0, 0);
     case "megago": S.megaFrom = null; S.tab = "rush"; S.tool = null; render(); return window.scrollTo(0, 0);
     case "toolsback": S.tool = null; S.mega = null; clearInterval(MC.timer); render(); return window.scrollTo(0, 0);
@@ -2615,6 +2679,7 @@ document.addEventListener("click", function (e) {
     case "exclear": if (Prog.d.exam) delete Prog.d.exam[examKey()]; S.exEdit = false; saveProg(); return render();
     case "cnoteclose": store("cnote1", 1); return render();
     case "nrstart": var st0 = nrState(), pl0 = nrPool(st0.filter), pk0; if (S.nrFresh) { var fr0 = freshPool(pl0); if (fr0.length >= Math.min(5, st0.n)) pl0 = fr0; } pk0 = st0.kind === "reg" ? (nurseCtx() ? nrWithCases(regCompose(pl0, st0.n, st0.adaptive !== false), nrLevelsFor(ctxKey())) : regCompose(pl0, st0.n, st0.adaptive !== false)) : isEMSLv(ctxKey()) ? nrCompose(pl0, Math.min(st0.n, pl0.length), st0.filter && st0.filter !== "all" ? [st0.filter] : nrLevelsFor(ctxKey()), st0.adaptive !== false) : st0.adaptive !== false ? adaptivePick(pl0, st0.n) : shuffle(pl0).slice(0, st0.n); if (st0.kind !== "reg") { pk0 = diffBalance(pk0, pl0); var dm0 = deptMix(pl0, st0.n, st0.adaptive !== false ? adaptivePick : function (L, k) { return shuffle(L.slice()).slice(0, k); }); if (dm0 && dm0.length) pk0 = dm0; var pf0 = st0.filter && st0.filter !== "all" ? st0.filter : null; var ck0 = ctxKey(), pc0 = pilFor(function (q) { return !pf0 || q.lv === pf0; }); pc0 = pc0.filter(function (q) { return q.lv === ck0; }).concat(pc0.filter(function (q) { return q.lv !== ck0; })); pk0 = pilMix(pk0, pc0.slice(0, 3)); } nrStart(pk0); render(); return window.scrollTo(0, 0);
+    case "autostay": AUTO.stay = AUTO.key; autoCancel(); render(); return;
     case "nrnext": S.nr.i++; render(); return window.scrollTo(0, 0);
     case "nrprev": S.nr.i--; render(); return window.scrollTo(0, 0);
     case "nrfinish": S.nr.end = Date.now(); S.nr.phase = "done"; if (S.nr.mode === "exam") { S.nr.rec = S.nr.rec || {}; S.nr.qs.forEach(function (x, i) { if (!S.nr.rec[i] && S.nr.ans[i] != null) { S.nr.rec[i] = 1; record(x.q, nrRight(x, S.nr.ans[i]), null, S.nr.ans[i]); } }); setTimeout(toastAch, 300); } render(); return window.scrollTo(0, 0);
@@ -3004,7 +3069,7 @@ function doseWarn(id, compact) {
     : (es ? "Fuente: no hay una etiqueta actual de la FDA en EE. UU.; las dosis provienen de la guía o referencia indicada en el texto." : "Reference cited: no current US FDA label; the study text names the guideline or reference it draws on.");
   if (compact) return '<div class="dosewarn small" role="note"><strong>' + head + '</strong> ' + (es ? "Solo para estudio. No es para la atención de pacientes." : "Study only. Not for patient care.") + ' <span class="dsrc">' + src + '</span></div>';
   var q = L && L.q && L.q.length && !es ? '<details class="dlabel"><summary>FDA label wording</summary>' + L.q.map(function (x) { return '<p><b>' + esc(x[0]) + ':</b> “' + esc(x[1]) + '”</p>'; }).join("") + '</details>' : '';
-  return '<div class="dosewarn" role="note"><strong>' + head + '</strong> ' + body + '<div class="dsrc">' + src + '</div>' + q + '</div>';
+  return '<div class="dosewarn" role="note">' + curiousHTML("drug") + '<strong>' + head + '</strong> ' + body + '<div class="dsrc">' + src + '</div>' + q + '</div>';
 }
 function drugBox(cells, extra) {
   var c = '<section class="dbox" aria-label="Drug box"><h3>Drug box</h3>' + doseWarn(DW.id, true) + '<div class="dgrid">' + cells.filter(function (x) { return x[1]; }).map(function (x) {
@@ -3344,7 +3409,7 @@ function masteryPct(ids) { if (!ids.length) return 0; return Math.round(100 * id
 function xpLevel(xp) { var lv = 1, need = 100; while (xp >= need) { xp -= need; lv++; need = 100 + (lv - 1) * 50; } return { lv: lv, into: xp, need: need }; }
 
 /* recording answers */
-function record(q, ok, kind, pick) { try { revFloatFor(q); } catch (e) {} try { recordInner(q, ok, kind, pick); } catch (e) { /* never let progress bookkeeping block the quiz from moving on */ try { console.warn("record", e); } catch (x) { } } }
+function record(q, ok, kind, pick) { try { revFloatFor(q); } catch (e) {} try { secAnswer(!!ok); } catch (e) {} try { recordInner(q, ok, kind, pick); } catch (e) { /* never let progress bookkeeping block the quiz from moving on */ try { console.warn("record", e); } catch (x) { } } }
 function recordInner(q, ok, kind, pick) {
   if (typeof usgOn === "function" && usgOn()) { USG.inc.q++; if (ok) USG.inc.c++; if (q && q.d && /^[a-z0-9][a-z0-9-]{1,59}$/.test(q.d) && USG.inc.dr) { var ud = USG.inc.dr[q.d] || (USG.inc.dr[q.d] = [0, 0]); ud[0]++; if (ok) ud[1]++; } try { var qk = q && typeof qid === "function" ? qid(q) : ""; if (qk && /^q[a-z0-9]{3,20}$/.test(qk) && USG.inc.qa && (USG.inc.qa[qk] || Object.keys(USG.inc.qa).length < 200)) { var uq = USG.inc.qa[qk] || (USG.inc.qa[qk] = [0, 0]); uq[0]++; if (ok) uq[1]++; } } catch (e) {} }
   var P = Prog.d, t = today();
@@ -3695,7 +3760,7 @@ var STEPNAME = { learn: "Learn", quiz: "Questions", weak: "Weak areas", scen: "C
 function sessionView() {
   var ss = S.sess; if (!ss) return '';
   var step = ss.steps[ss.i];
-  var c = '<section class="sess"><div class="sesshead"><div><span class="eyebrow">' + esc(ss.title) + '</span><p class="muted small">' + esc(ss.sub) + '</p></div><button class="linkish" data-act="sessquit">Exit</button></div>';
+  var c = '<section class="sess"><div class="sesshead"><div><span class="eyebrow">' + esc(ss.title) + '</span>' + curiousHTML("q") + '<p class="muted small">' + esc(ss.sub) + '</p></div><button class="linkish" data-act="sessquit">Exit</button></div>';
   c += '<ol class="stepper">' + ss.steps.map(function (s2, k) { return '<li class="' + (k < ss.i ? "done" : k === ss.i ? "cur" : "") + '">' + STEPNAME[s2] + '</li>'; }).join("") + '</ol>';
   if (step === "learn") c += learnCard(ss.drug) + '<div class="actions"><button class="btn" data-act="sessnext">' + (ss.steps[1] === "quiz" ? "I'm ready: start questions" : "Continue") + '</button></div>';
   else if (step === "quiz") c += nrQuiz(S.nr).replace('data-act="nrfinish"', 'data-act="sessnext"').replace('>See my score<', '>Continue<').replace('data-act="nrquit"', 'data-act="sessquit"');
@@ -4336,7 +4401,7 @@ var QREV_T = {};
    or home health nursing questions having ICU or flight questions") */
 var QR_NR = [["here", "This level / where I saw it"], ["emt", "EMT / AEMT"], ["paramedic", "Paramedic"], ["flight", "Flight & critical care transport"], ["cp", "Community paramedic"],
   ["cna", "CNA"], ["lvn", "LVN / LPN"], ["rn", "RN (general)"], ["icu", "ICU / critical care nursing"], ["homehealth", "Home health nursing"], ["ob", "OB / L&D nursing"], ["peds", "Pediatrics"],
-  ["med", "Medical school"], ["imaging", "Imaging"], ["allied", "Allied health"], ["rt", "Respiratory therapy"], ["everyday", "Everyday Health (general public)"], ["any", "Anyone: outdated or off-topic"]];
+  ["med", "Medical school"], ["imaging", "Imaging"], ["everyday", "Everyday Health (general public)"], ["any", "Anyone: outdated or off-topic"]];
 function revHTML(q) {
   var k = qid(q), R = (Prog.d.qrev || {})[k] || {};
   QRATE_Q[k] = q;
@@ -4711,6 +4776,77 @@ function otaApply(p) {
   OTA.v = p.v; OTA.data = p;
   return true;
 }
+/* ---------- Question bank over the air (owner, Nov 14 2026: "the question banks still show up offline but we can
+   edit the question bank and change all of that from my server") ----------
+   The questions built into the app always load first, so DrugBug works offline and on a brand-new install. The
+   website can also host app/content/qbank-N.json, named in manifest.json as "qbank": {v, file, sha256}. It is DATA
+   only (App Review 2.5.2), in the same text formats the built-in data files use:
+     edit:  { "<level>|<question text>" or "<qid>": { q, a, w:[3 wrong], x, cat } }   change any part of a question
+     hide:  [ "<level>|<question text>" or "<qid>", ... ]                                 take questions out
+     addQ / addRQ / addQX / addCases: lines in the DB.addQ / addRQ / addQX / addCases formats   add questions
+   Each file is the whole current set of changes (not a diff on the last one), so a phone that missed a week is
+   right after one download. The app saves the last file and re-applies it on every open, offline included. */
+var QB = { v: 0, data: null, undo: null };
+function qbKeyOf(q) { return (q.lv || "") + "|" + (q.q || ""); }
+function qbLists() { return [DB.Q || [], DB.RQ || [], DB.QX || []]; }
+function qbRevert() {
+  var u = QB.undo; if (!u) return;
+  /* take out what the last file added, put back what it hid, and undo its edits */
+  DB.Q = (DB.Q || []).filter(function (q) { return !q.qbAdd; });
+  DB.RQ = (DB.RQ || []).filter(function (q) { return !q.qbAdd; });
+  DB.QX = (DB.QX || []).filter(function (q) { return !q.qbAdd; });
+  DB.CASES = (DB.CASES || []).filter(function (c) { return !c.qbAdd; });
+  u.edits.forEach(function (e) { Object.keys(e.o).forEach(function (k) { if (e.o[k] === undefined) delete e.q[k]; else e.q[k] = e.o[k]; }); });
+  u.hid.forEach(function (h) { var L = h.list === "RQ" ? DB.RQ : h.list === "QX" ? DB.QX : DB.Q; L.push(h.q); });
+  QB.undo = null; QB.v = 0; QB.data = null;
+}
+function qbApply(p) {
+  if (!p || p.schema !== 1 || !(p.v > 0)) return false;
+  qbRevert();
+  var undo = { edits: [], hid: [] }, names = ["Q", "RQ", "QX"];
+  var hide = {}; (p.hide || []).forEach(function (k) { if (typeof k === "string" && k) hide[k] = 1; });
+  var edit = p.edit && typeof p.edit === "object" ? p.edit : {};
+  names.forEach(function (nm) {
+    var L = DB[nm] || [], keep = [];
+    L.forEach(function (q) {
+      var id = qid(q), k = qbKeyOf(q);   /* qid first, so an edited question keeps its stats and votes */
+      if (hide[k] || hide[id]) { undo.hid.push({ list: nm, q: q }); return; }
+      var e = edit[k] || edit[id];
+      if (e && typeof e === "object") {
+        var o = {};
+        ["q", "a", "x", "cat"].forEach(function (f) { if (typeof e[f] === "string" && e[f]) { o[f] = q[f]; q[f] = e[f]; } });
+        if (Array.isArray(e.w) && e.w.length === 3 && Array.isArray(q.w) && q.w.length === 3) { o.w = q.w; q.w = e.w.map(String); }
+        if (Object.keys(o).length) undo.edits.push({ q: q, o: o });
+      }
+      keep.push(q);
+    });
+    DB[nm] = keep;
+  });
+  function addWith(fn, text, listName) {
+    if (typeof text !== "string" || !text || typeof DB[fn] !== "function") return;
+    var L = DB[listName] || (DB[listName] = []), n0 = L.length;
+    try { DB[fn](text); } catch (e) { return; }
+    for (var i = n0; i < L.length; i++) L[i].qbAdd = 1;
+  }
+  addWith("addQ", p.addQ, "Q"); addWith("addRQ", p.addRQ, "RQ"); addWith("addQX", p.addQX, "QX"); addWith("addCases", p.addCases, "CASES");
+  QB.undo = undo; QB.v = p.v; QB.data = { v: p.v, ts: p.ts || 0 };
+  try { if (typeof rebuildIndex === "function") rebuildIndex(); } catch (e) {}
+  return true;
+}
+function qbCheck(m) {
+  var b = m && m.qbank;
+  if (!b || !(b.v > QB.v) || !/^qbank-[0-9]+\.json$/.test(b.file || "")) return Promise.resolve(false);
+  return otaFetch(OTA_BASE + b.file, 20000).then(function (body) {
+    return otaSha(body).then(function (h) {
+      if (h && b.sha256 && h !== b.sha256) throw new Error("checksum");
+      var p = JSON.parse(body); if (p.v !== b.v) throw new Error("version");
+      if (!qbApply(p)) throw new Error("schema");
+      try { store("qbank", p); } catch (e) {}
+      if (typeof render === "function") render();
+      return true;
+    });
+  }).catch(function () { return false; });
+}
 function otaToast(text, ms) {
   var el = document.getElementById("otatoast");
   if (!text) { if (el) el.remove(); return; }
@@ -4731,6 +4867,7 @@ function otaCheck(quiet) {
   OTA.busy = true; OTA.at = Date.now();
   otaFetch(OTA_BASE + "manifest.json?t=" + Date.now(), 6000).then(function (txt) {
     var m = JSON.parse(txt);
+    try { qbCheck(m); } catch (e) {}   /* the question bank has its own version, separate from drug data */
     if (!m || m.schema !== 1 || !(m.v > Math.max(OTA.v, OTA_BAKED)) || !/^updates-[0-9]+\.json$/.test(m.file || "")) { OTA.busy = false; return; }
     if (!quiet) otaToast("Updating drug data…");
     return otaFetch(OTA_BASE + m.file, 20000).then(function (body) {
@@ -4794,6 +4931,7 @@ function otaNews(force) {
 }
 function otaInit() {
   try { var p = store("otaPatch"); if (p) otaApply(p); } catch (e) {}
+  try { var qb = store("qbank"); if (qb) qbApply(qb); } catch (e) {}
   setTimeout(function () { otaCheck(); }, 1500);
   setTimeout(function () { otaNews(); }, 2500);
   try { document.addEventListener("visibilitychange", function () { if (!document.hidden && Date.now() - OTA.at > 6 * 3600000) otaCheck(); }); } catch (e) {}
@@ -4849,6 +4987,44 @@ function pilBanner(q) {
    the ids go to qrSeen in small batches. The shared list comes from qrChecked (cached 30 min). */
 var CHK = { set: {}, at: 0, q: [], t: 0, busy: false };
 try { (store("chkSet") || []).forEach(function (i) { CHK.set[i] = 1; }); CHK.at = store("chkAt") || 0; } catch (e) {}
+/* "Curious how this works?" boxes (owner, Nov 15 2026: "a tiny question mark by questions ... explain a lot are AI
+   generated ... how evaluators work and how the auditing system works ... a similar box next to drugs ... we scour the
+   FDA using AI ... I think it will help build trust if we are open about AI use"). A small ? opens a box; X or ? closes it. */
+var CURIOUS = {
+  q: { t: "Curious about our questions?", p: [
+    "Many DrugBug questions are first drafted with the help of AI, working from FDA prescribing information and current published guidelines.",
+    "Our evaluators, volunteers with clinical or teaching backgrounds, grade questions as they study: Good or Bad, how hard it is, wrong answers that are too easy to rule out, and suggested fixes. Some new questions are held back until two evaluators approve them, and questions graded Bad are pulled and fixed. Not every question has been reviewed yet; we are working through all of them.",
+    "Auditing never stops. Anyone can report a question with Report a problem. Reported questions are pulled, checked against the FDA label or guideline, fixed and reviewed again before they come back. Automatic checks also hide questions that break our rules, and fixes can reach your app without an app update.",
+    "DrugBug is for study only. Questions can still contain mistakes, so please report anything that looks wrong." ] },
+  drug: { t: "Curious where this information comes from?", p: [
+    "Drug pages are built from FDA prescribing information (DailyMed) and published guidelines. AI helps us write the plain-language summaries, the study notes and the deep dives.",
+    "AI also helps us keep pages current. Every week it checks FDA sources for new label changes, boxed warnings, safety communications and recalls. Changes are logged with their source, and pages update in the app without waiting for an app update.",
+    "Supplements, herbs and other products without an FDA label are written from sources such as the NIH Office of Dietary Supplements, LiverTox and FDA warning letters, and they never list doses.",
+    "DrugBug is for study only, not for patient care, and it can contain errors or fall behind. Report anything that looks wrong." ] }
+};
+function curiousHTML(kind) {
+  var C = CURIOUS[kind]; if (!C) return "";
+  return '<span class="curious"><button type="button" class="curq" data-curious="' + kind + '" aria-expanded="false" aria-label="' + esc(C.t) + '" title="' + esc(C.t) + '">?</button></span>';
+}
+function curiousBox(kind) {
+  var C = CURIOUS[kind];
+  return '<div class="curbox" role="dialog" aria-label="' + esc(C.t) + '"><button type="button" class="curx" data-curclose="1" aria-label="Close">&times;</button><h4>' + esc(C.t) + '</h4>' + C.p.map(function (x) { return '<p>' + esc(x) + '</p>'; }).join("") + '</div>';
+}
+document.addEventListener("click", function (e) {
+  var x = e.target.closest && e.target.closest("[data-curclose]");
+  if (x) { e.preventDefault(); e.stopPropagation(); var w = x.closest(".curious"); if (w) { var bx = w.querySelector(".curbox"); if (bx) bx.remove(); var bb = w.querySelector(".curq"); if (bb) { bb.setAttribute("aria-expanded", "false"); bb.focus(); } } return; }
+  var b = e.target.closest && e.target.closest("[data-curious]");
+  if (b) {
+    e.preventDefault(); e.stopPropagation();
+    var wrap = b.parentNode, open = wrap.querySelector(".curbox");
+    document.querySelectorAll(".curious .curbox").forEach(function (el) { el.remove(); });
+    document.querySelectorAll(".curq[aria-expanded=true]").forEach(function (el) { el.setAttribute("aria-expanded", "false"); });
+    if (!open) { wrap.insertAdjacentHTML("beforeend", curiousBox(b.getAttribute("data-curious"))); b.setAttribute("aria-expanded", "true"); }
+    return;
+  }
+  if (!(e.target.closest && e.target.closest(".curbox"))) document.querySelectorAll(".curious .curbox").forEach(function (el) { el.remove(); var q = el.parentNode && el.parentNode.querySelector(".curq"); if (q) q.setAttribute("aria-expanded", "false"); });
+}, true);
+document.addEventListener("keydown", function (e) { if (e.key === "Escape") document.querySelectorAll(".curious .curbox").forEach(function (el) { el.remove(); }); });
 function chkOn() { return typeof isReviewer === "function" && isReviewer(); }
 function chkLoad(force) {
   if (!chkOn() || CHK.busy || typeof fnCall !== "function" || (!force && Date.now() - CHK.at < 1800000)) return;
@@ -4924,6 +5100,10 @@ function halfHelm(y, f, gog) { return '<path d="M68 ' + (y - 8) + ' Q68 ' + (y -
   (gog ? '<path d="M70 ' + (y - 22) + ' Q100 ' + (y - 30) + ' 130 ' + (y - 22) + '" stroke="#57534e" stroke-width="4" fill="none"/><circle cx="88" cy="' + (y - 26) + '" r="7" fill="#fbbf24" stroke="#57534e" stroke-width="2.5"/><circle cx="112" cy="' + (y - 26) + '" r="7" fill="#fbbf24" stroke="#57534e" stroke-width="2.5"/>' : ''); }
 function beanie(y, f) { var r = ''; for (var i = 0; i < 9; i++) r += '<path d="M' + (73 + i * 6.8) + ' ' + (y - 21) + ' v8" stroke="#000" stroke-opacity=".25" stroke-width="1.4"/>'; return '<path d="M70 ' + (y - 14) + ' Q70 ' + (y - 50) + ' 100 ' + (y - 51) + ' Q130 ' + (y - 50) + ' 130 ' + (y - 14) + 'Z" fill="' + f + '" stroke="#000" stroke-width="1.5"/><rect x="69" y="' + (y - 22) + '" width="62" height="10" rx="4" fill="' + f + '" stroke="#000" stroke-width="1.5"/>' + r; }
 var ACC = {
+  /* police cap: navy crown, black visor, gold badge (secret Officer Roly-Poly, Nov 15 2026) */
+  policecap: function (y) { return '<path d="M70 ' + (y - 22) + ' Q70 ' + (y - 46) + ' 100 ' + (y - 48) + ' Q130 ' + (y - 46) + ' 130 ' + (y - 22) + 'Z" fill="#1e3a8a" stroke="#0b1530" stroke-width="2"/>' +
+    '<rect x="70" y="' + (y - 26) + '" width="60" height="7" rx="2" fill="#0b1530"/><path d="M72 ' + (y - 19) + ' Q100 ' + (y - 10) + ' 128 ' + (y - 19) + ' L126 ' + (y - 15) + ' Q100 ' + (y - 5) + ' 74 ' + (y - 15) + 'Z" fill="#111827"/>' +
+    '<path d="M100 ' + (y - 44) + ' l4 6 7 1 -5 5 1 7 -7 -3 -7 3 1 -7 -5 -5 7 -1z" fill="#fbbf24" stroke="#92400e" stroke-width="1"/>'; },
   /* biker gear, so every bad bug in the gang looks like its own rider (owner, Nov 5 2026) */
   bandanaK: function (y) { return bandanaC(y, "#18181b", "#000", "#e5e7eb"); },
   bandanaB: function (y) { return bandanaC(y, "#1e3a8a", "#172554", "#bfdbfe"); },
@@ -5076,11 +5256,18 @@ function bugArt(b, cls, opt) {
   if (b && b.hick && typeof learnBugSVG === "function") {
     try { return learnBugSVG().replace('class="hickbug bug"', 'class="hickbug bug ' + (cls || "") + '"'); } catch (e) {}
   }
-  var wear = opt.wear || {}, mood = opt.mood || "happy";
+  var wear = opt.wear || {}, mood = opt.mood && (opt.mood !== "happy" || !b.mood) ? opt.mood : (b.mood || "happy");
   var id = "sb" + (++bid), c1 = b.c[0], c2 = b.c[1], c3 = b.c[2] || "#ffffff", ink = b.ink || "#1b1430", hy = 74, s = "";
   var grad = '<defs><linearGradient id="' + id + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + c1 + '"/><stop offset="1" stop-color="' + c2 + '"/></linearGradient>' +
     (b.body === "stick" ? '<linearGradient id="' + id + 'v" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe29a"/><stop offset=".5" stop-color="#f59e0b"/><stop offset="1" stop-color="#7c2d12"/></linearGradient>' : '') + '<radialGradient id="' + id + 'r"><stop offset="0" stop-color="' + c3 + '" stop-opacity=".95"/><stop offset="1" stop-color="' + c3 + '" stop-opacity="0"/></radialGradient></defs>';
   var F = 'url(#' + id + ')';
+  /* body variants (owner, Nov 15 2026: "the snails are all the exact same just with different faces and colors.
+     They can be different sizes and structurally different as well. But make sure all the clothes and items still
+     fit"): each bug's place among the bugs that share its body (or b.v) picks a shape and a size. Only the body
+     below the head changes, by a few tenths at most, and the whole bug (clothes included) is scaled together, so
+     everything worn still sits where it should. */
+  var BV = b.v != null ? b.v : (typeof speciesIx === "function" ? speciesIx(b)[0] : 0);
+  function SQ(m, cx, cy, sx, sy) { return (sx === 1 && sy === 1) ? m : '<g transform="translate(' + cx + ' ' + cy + ') scale(' + sx + ' ' + sy + ') translate(' + (-cx) + ' ' + (-cy) + ')">' + m + '</g>'; }
   var st = opt.stage || 5, adultT = b.body, t = stageBody(b.body, st), GOLD = "#ffc531";
   var noWing = st === 1, wingK = st === 2 ? .55 : 1, light = mixHex(c1, "#ffffff", .55);
   grad = grad.replace('</defs>', '<linearGradient id="' + id + 'i" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".95"/><stop offset=".35" stop-color="#a5f3fc" stop-opacity=".85"/><stop offset=".65" stop-color="#f0abfc" stop-opacity=".85"/><stop offset="1" stop-color="#fde68a" stop-opacity=".95"/></linearGradient><radialGradient id="' + id + 'a"><stop offset="0" stop-color="' + (st === 5 ? GOLD : c1) + '" stop-opacity="' + (st === 5 ? .5 : .32) + '"/><stop offset=".6" stop-color="' + c1 + '" stop-opacity=".12"/><stop offset="1" stop-color="' + c1 + '" stop-opacity="0"/></radialGradient></defs>');
@@ -5127,6 +5314,9 @@ function bugArt(b, cls, opt) {
       '<circle cx="48" cy="92" r="9" fill="' + c3 + '" opacity=".85"/><circle cx="152" cy="92" r="9" fill="' + c3 + '" opacity=".85"/><circle cx="64" cy="156" r="6" fill="' + c3 + '" opacity=".85"/><circle cx="136" cy="156" r="6" fill="' + c3 + '" opacity=".85"/>';
     else wm += '<path d="M96 104 L26 82 Q16 118 40 136 L96 132Z" fill="' + F + '" ' + wc + '/><path d="M104 104 L174 82 Q184 118 160 136 L104 132Z" fill="' + F + '" ' + wc + '/><path d="M96 134 L54 150 Q60 172 96 160Z" fill="' + F + '" ' + wc + '/><path d="M104 134 L146 150 Q140 172 104 160Z" fill="' + F + '" ' + wc + '/>' +
       '<circle cx="56" cy="112" r="10" fill="none" stroke="' + c3 + '" stroke-width="4"/><circle cx="144" cy="112" r="10" fill="none" stroke="' + c3 + '" stroke-width="4"/>';
+    if (BV % 3 === 1 && st >= 3) wm += t === "butterfly" ? '<path d="M58 168 Q50 186 46 198 Q60 190 66 172Z M142 168 Q150 186 154 198 Q140 190 134 172Z" fill="' + F + '" ' + wc + '/>'   /* swallowtail */
+      : '<path d="M62 162 Q52 184 58 200 Q68 186 72 166Z M138 162 Q148 184 142 200 Q132 186 128 166Z" fill="' + F + '" ' + wc + '/>';   /* luna-style tails */
+    if (BV % 3 === 2) wm = SQ(wm, 100, 120, 1.1, .9);   /* broader, lower wings */
     if (st >= 4) wm += (t === "butterfly" ? '<path d="M92 110 Q54 64 30 80 Q20 102 44 116 Q62 124 92 120Z M108 110 Q146 64 170 80 Q180 102 156 116 Q138 124 108 120Z' : '<path d="M92 106 L34 88 Q26 116 44 130 L92 128Z M108 106 L166 88 Q174 116 156 130 L108 128Z') + '" fill="none" stroke="' + c3 + '" stroke-width="3" opacity=".9"/>';
     if (st === 5) wm = '<path d="M60 166 Q50 196 40 200 Q58 194 70 172Z M140 166 Q150 196 160 200 Q142 194 130 172Z" fill="' + c2 + '" stroke="' + ink + '" stroke-width="3"/>' + wm + '<circle cx="62" cy="98" r="11" fill="' + ink + '"/><circle cx="62" cy="98" r="7" fill="' + GOLD + '"/><circle cx="138" cy="98" r="11" fill="' + ink + '"/><circle cx="138" cy="98" r="7" fill="' + GOLD + '"/>';
     s += W(wm, 100, 120);
@@ -5137,13 +5327,20 @@ function bugArt(b, cls, opt) {
     s += W('<ellipse cx="54" cy="98" rx="46" ry="11" fill="' + c3 + '" opacity=".55" stroke="' + c1 + '" stroke-width="2" transform="rotate(-8 54 98)"/><ellipse cx="146" cy="98" rx="46" ry="11" fill="' + c3 + '" opacity=".55" stroke="' + c1 + '" stroke-width="2" transform="rotate(8 146 98)"/>' +
       '<ellipse cx="58" cy="118" rx="40" ry="10" fill="' + c3 + '" opacity=".55" stroke="' + c1 + '" stroke-width="2" transform="rotate(10 58 118)"/><ellipse cx="142" cy="118" rx="40" ry="10" fill="' + c3 + '" opacity=".55" stroke="' + c1 + '" stroke-width="2" transform="rotate(-10 142 118)"/>' + (st >= 4 ? '<path d="M14 96 H94 M106 96 H186 M22 118 H94 M106 118 H178" stroke="' + c1 + '" stroke-width="1.2" opacity=".6"/>' : ''), 100, 108);
     if (noWing) s += bLegs(ink);
-    for (var k = 0; k < 6; k++) s += '<ellipse cx="100" cy="' + (118 + k * 12) + '" rx="' + (9 - k * 0.6) + '" ry="7" fill="' + F + '"/>';
+    var dk2 = [1, 1.35, .7][BV % 3];
+    for (var k = 0; k < 6; k++) s += '<ellipse cx="100" cy="' + (118 + k * 12) + '" rx="' + ((9 - k * 0.6) * dk2).toFixed(1) + '" ry="7" fill="' + F + '"/>';
     s += '<ellipse cx="100" cy="104" rx="16" ry="14" fill="' + F + '"/><circle cx="100" cy="' + hy + '" r="24" fill="' + c1 + '"/>';
   } else if (t === "ant") {
-    s += bLegs(ink) + antennae(ink, true) + '<ellipse cx="100" cy="158" rx="34" ry="28" fill="' + F + '"/><ellipse cx="100" cy="116" rx="18" ry="16" fill="' + F + '"/><circle cx="100" cy="' + hy + '" r="28" fill="' + c1 + '"/>';
+    s += bLegs(ink) + antennae(ink, true) + '' + (function () { var av = BV % 4;
+        if (av === 1) return '<ellipse cx="100" cy="160" rx="42" ry="34" fill="' + F + '"/><ellipse cx="100" cy="116" rx="17" ry="15" fill="' + F + '"/>';   /* honeypot: a big round gaster */
+        if (av === 2) return '<ellipse cx="100" cy="164" rx="26" ry="28" fill="' + F + '"/><circle cx="100" cy="136" r="7" fill="' + F + '"/><ellipse cx="100" cy="114" rx="15" ry="20" fill="' + F + '"/><path d="M88 104 l-8 -10 M112 104 l8 -10" stroke="' + ink + '" stroke-width="3" stroke-linecap="round"/>';   /* slim, with a waist node and spines */
+        if (av === 3) return '<path d="M70 150 Q72 128 100 130 Q128 128 130 150 Q128 176 100 196 Q72 176 70 150Z" fill="' + F + '"/><ellipse cx="100" cy="116" rx="20" ry="15" fill="' + F + '"/>';   /* pointed gaster */
+        return '<ellipse cx="100" cy="158" rx="34" ry="28" fill="' + F + '"/><ellipse cx="100" cy="116" rx="18" ry="16" fill="' + F + '"/>'; })() + '<circle cx="100" cy="' + hy + '" r="28" fill="' + c1 + '"/>';
   } else if (t === "caterpillar") {
     var segs = [[44, 162, 18], [66, 152, 20], [92, 146, 22], [120, 148, 21], [146, 156, 19]];
     if (adultT === "caterpillar" && st <= 2) segs = segs.slice(st === 1 ? 2 : 1);
+    if (adultT === "caterpillar" && BV % 3 === 1) s += '<path d="M40 150 Q30 128 42 120" stroke="' + ink + '" stroke-width="5" fill="none" stroke-linecap="round"/>';   /* hornworm */
+    if (adultT === "caterpillar" && BV % 3 === 2) segs.forEach(function (p) { s += '<path d="M' + (p[0] - 8) + ' ' + (p[1] - p[2] + 2) + ' l-3 -10 M' + (p[0] + 8) + ' ' + (p[1] - p[2] + 2) + ' l3 -10" stroke="' + ink + '" stroke-width="3" stroke-linecap="round"/>'; });   /* spiny */
     segs.forEach(function (p, i) { s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="' + p[2] + '" fill="' + (i % 2 ? c2 : c1) + '"/><path d="M' + (p[0] - 6) + ' ' + (p[1] + p[2] - 2) + ' v9 M' + (p[0] + 6) + ' ' + (p[1] + p[2] - 2) + ' v9" stroke="' + ink + '" stroke-width="4" stroke-linecap="round"/>'; });
     s += antennae(ink) + '<circle cx="100" cy="' + hy + '" r="30" fill="' + c1 + '"/>';
   } else if (t === "spider") {
@@ -5152,11 +5349,11 @@ function bugArt(b, cls, opt) {
     hy += 10;
   } else if (t === "mantis") {
     s += '<path d="M76 112 L56 84 L72 74 M124 112 L144 84 L128 74" stroke="' + c1 + '" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>' + bLegs(c2) +
-      '<ellipse cx="100" cy="146" rx="24" ry="44" fill="' + F + '"/><path d="M72 58 L128 58 L100 100Z" fill="' + c1 + '"/><path d="M84 52 Q76 26 64 22 M116 52 Q124 26 136 22" stroke="' + ink + '" stroke-width="3" fill="none"/>';
+      ([0, 2].indexOf(BV % 3) >= 0 ? SQ('<ellipse cx="100" cy="146" rx="24" ry="44" fill="' + F + '"/>', 100, 146, BV % 3 === 2 ? .72 : 1, BV % 3 === 2 ? 1.1 : 1) : '<path d="M100 100 Q140 120 134 160 Q122 192 100 196 Q78 192 66 160 Q60 120 100 100Z" fill="' + F + '"/><path d="M100 104 V192 M100 130 L80 146 M100 130 L120 146 M100 156 L84 170 M100 156 L116 170" stroke="' + c2 + '" stroke-width="2" fill="none"/>') + '<path d="M72 58 L128 58 L100 100Z" fill="' + c1 + '"/><path d="M84 52 Q76 26 64 22 M116 52 Q124 26 136 22" stroke="' + ink + '" stroke-width="3" fill="none"/>';
     hy = 68;
   } else if (t === "bee") {
     s += W((st === 5 ? '<ellipse cx="62" cy="128" rx="24" ry="14" fill="' + c3 + '" stroke="#9fc9e6" stroke-width="2" transform="rotate(-8 62 128)"/><ellipse cx="138" cy="128" rx="24" ry="14" fill="' + c3 + '" stroke="#9fc9e6" stroke-width="2" transform="rotate(8 138 128)"/>' : '') + '<ellipse cx="58" cy="104" rx="30" ry="20" fill="' + c3 + '" stroke="#9fc9e6" stroke-width="2" transform="rotate(-25 58 104)" opacity=".9"/><ellipse cx="142" cy="104" rx="30" ry="20" fill="' + c3 + '" stroke="#9fc9e6" stroke-width="2" transform="rotate(25 142 104)" opacity=".9"/>' + (st >= 4 ? '<path d="M78 112 Q58 98 34 96 M80 106 Q64 88 46 84 M122 112 Q142 98 166 96 M120 106 Q136 88 154 84" stroke="#7fb0d6" stroke-width="1.4" fill="none"/>' : ''), 100, 110) +
-      (st >= 4 ? '<path d="M94 184 L100 202 L106 184Z" fill="' + ink + '"/>' : '') + bLegs(ink) + antennae(ink) + '<ellipse cx="100" cy="142" rx="42" ry="46" fill="' + F + '"/><path d="M62 128 Q100 116 138 128 M60 152 Q100 140 140 152 M70 174 Q100 166 130 174" stroke="' + ink + '" stroke-width="9" fill="none"/><circle cx="100" cy="' + (hy + 2) + '" r="30" fill="' + c1 + '"/>';
+      (st >= 4 ? '<path d="M94 184 L100 202 L106 184Z" fill="' + ink + '"/>' : '') + bLegs(ink) + antennae(ink) + '' + SQ('<ellipse cx="100" cy="142" rx="42" ry="46" fill="' + F + '"/><path d="M62 128 Q100 116 138 128 M60 152 Q100 140 140 152 M70 174 Q100 166 130 174" stroke="' + ink + '" stroke-width="9" fill="none"/>', 100, 142, [1, 1.16, .82][BV % 3], [1, 1.04, 1.08][BV % 3]) + '<circle cx="100" cy="' + (hy + 2) + '" r="30" fill="' + c1 + '"/>';
     hy += 2;
   } else if (t === "cicada") {
     s += W('<path d="M92 104 Q40 120 44 176 Q72 170 96 130Z M108 104 Q160 120 156 176 Q128 170 104 130Z" fill="' + c3 + '" opacity=".6" stroke="' + c1 + '" stroke-width="2"/>' + (st >= 4 ? '<path d="M88 116 Q62 130 56 168 M112 116 Q138 130 144 168" stroke="' + c1 + '" stroke-width="1.4" fill="none"/>' : ''), 100, 120) + bLegs(ink) +
@@ -5188,9 +5385,18 @@ function bugArt(b, cls, opt) {
     s += '<path d="M70 150 L40 110 L30 176 M130 150 L160 110 L170 176" stroke="' + c2 + '" stroke-width="8" fill="none" stroke-linejoin="round" stroke-linecap="round"/>' + antennae(ink, true) +
       '<ellipse cx="100" cy="142" rx="30" ry="46" fill="' + F + '"/><path d="M76 124 Q100 116 124 124" stroke="' + c3 + '" stroke-width="4" fill="none"/><ellipse cx="100" cy="' + hy + '" rx="28" ry="30" fill="' + c1 + '"/>';
   } else if (t === "snail") {
-    s += '<ellipse cx="100" cy="176" rx="74" ry="14" fill="' + c2 + '"/><ellipse cx="96" cy="128" rx="22" ry="52" fill="' + c2 + '"/>' +
-      '<circle cx="134" cy="138" r="40" fill="' + F + '" stroke="' + ink + '" stroke-width="3"/><path d="M134 138 m-6 0 a6 6 0 1 1 12 0 a12 12 0 1 1 -24 0 a18 18 0 1 1 36 0 a26 26 0 1 1 -52 2" stroke="' + c3 + '" stroke-width="5" fill="none" stroke-linecap="round"/>' +
-      '<path d="M90 50 L80 22 M110 50 L120 22" stroke="' + c2 + '" stroke-width="6" stroke-linecap="round"/><circle cx="80" cy="20" r="6" fill="' + c2 + '"/><circle cx="120" cy="20" r="6" fill="' + c2 + '"/><circle cx="100" cy="' + hy + '" r="28" fill="' + c2 + '"/>';
+    /* six shells: garden spiral, tall turret, flat ramshorn, knobbed turban, spiky sea snail, little shell on a long slug-like foot */
+    var sv = BV % 6, foot = sv === 5 ? '<ellipse cx="104" cy="176" rx="86" ry="15" fill="' + c2 + '"/>' : '<ellipse cx="100" cy="176" rx="' + (sv === 2 ? 80 : 74) + '" ry="14" fill="' + c2 + '"/>';
+    s += foot + '<ellipse cx="96" cy="128" rx="22" ry="52" fill="' + c2 + '"/>';
+    if (sv === 0) s += '<circle cx="134" cy="138" r="40" fill="' + F + '" stroke="' + ink + '" stroke-width="3"/><path d="M134 138 m-6 0 a6 6 0 1 1 12 0 a12 12 0 1 1 -24 0 a18 18 0 1 1 36 0 a26 26 0 1 1 -52 2" stroke="' + c3 + '" stroke-width="5" fill="none" stroke-linecap="round"/>';
+    else if (sv === 1) s += '<path d="M112 172 L132 70 Q138 62 144 70 L170 172Z" fill="' + F + '" stroke="' + ink + '" stroke-width="3" stroke-linejoin="round"/><path d="M116 154 L166 146 M120 134 L160 126 M124 114 L154 106 M129 94 L148 88" stroke="' + c3 + '" stroke-width="4" stroke-linecap="round"/>';
+    else if (sv === 2) s += '<ellipse cx="136" cy="146" rx="44" ry="30" fill="' + F + '" stroke="' + ink + '" stroke-width="3"/><ellipse cx="136" cy="146" rx="32" ry="21" fill="none" stroke="' + c3 + '" stroke-width="4"/><ellipse cx="136" cy="146" rx="19" ry="12" fill="none" stroke="' + c3 + '" stroke-width="4"/><ellipse cx="136" cy="146" rx="7" ry="4" fill="' + c3 + '"/>';
+    else if (sv === 3) s += '<path d="M104 170 Q98 120 134 98 Q172 112 168 170Z" fill="' + F + '" stroke="' + ink + '" stroke-width="3"/><path d="M108 150 Q136 140 166 150 M114 128 Q136 118 160 128" stroke="' + c3 + '" stroke-width="4" fill="none"/>' +
+      [[118, 112], [134, 100], [150, 112], [112, 138], [164, 138]].map(function (k) { return '<circle cx="' + k[0] + '" cy="' + k[1] + '" r="5" fill="' + c3 + '" stroke="' + ink + '" stroke-width="1.5"/>'; }).join("");
+    else if (sv === 4) s += '<path d="M106 172 Q100 128 132 96 L150 72 L152 98 Q176 120 170 172Z" fill="' + F + '" stroke="' + ink + '" stroke-width="3" stroke-linejoin="round"/>' +
+      '<path d="M108 140 l-14 -6 M114 118 l-12 -10 M168 128 l14 -8 M172 152 l14 0 M156 104 l12 -10" stroke="' + ink + '" stroke-width="4" stroke-linecap="round"/><path d="M114 160 Q138 150 166 160 M120 134 Q140 126 162 134" stroke="' + c3 + '" stroke-width="4" fill="none"/>';
+    else s += '<path d="M118 150 Q122 120 146 122 Q166 128 160 152Z" fill="' + F + '" stroke="' + ink + '" stroke-width="3"/><path d="M128 144 q8 -14 22 -8" stroke="' + c3 + '" stroke-width="4" fill="none"/><path d="M60 170 Q104 160 186 170" stroke="' + c1 + '" stroke-width="3" fill="none" opacity=".5"/>';
+    s += '<path d="M90 50 L80 22 M110 50 L120 22" stroke="' + c2 + '" stroke-width="6" stroke-linecap="round"/><circle cx="80" cy="20" r="6" fill="' + c2 + '"/><circle cx="120" cy="20" r="6" fill="' + c2 + '"/><circle cx="100" cy="' + hy + '" r="28" fill="' + c2 + '"/>';
   } else if (t === "longhorn") {
     s += bLegs(ink) + '<path d="M90 50 Q60 10 20 30 Q8 40 14 70 M110 50 Q140 10 180 30 Q192 40 186 70" stroke="' + ink + '" stroke-width="4" fill="none" stroke-linecap="round" stroke-dasharray="10 3"/>' +
       '<ellipse cx="100" cy="146" rx="36" ry="52" fill="' + F + '"/><path d="M100 98 V196" stroke="' + ink + '" stroke-width="3"/><path d="M72 130 H128 M70 158 H130" stroke="' + c3 + '" stroke-width="4" opacity=".55"/><circle cx="100" cy="' + hy + '" r="28" fill="' + (b.head || c1) + '"/>';
@@ -5269,6 +5475,17 @@ function bugArt(b, cls, opt) {
       '<path d="M90 118 Q60 130 30 186 M110 118 Q140 130 170 186 M92 124 Q72 150 58 192 M108 124 Q128 150 142 192 M94 112 Q62 104 28 120 M106 112 Q138 104 172 120" stroke="' + ink + '" stroke-width="2.2" fill="none" stroke-linecap="round"/>' +
       '<ellipse cx="100" cy="114" rx="16" ry="14" fill="' + c2 + '"/><path d="M100 126 Q108 160 104 188 Q100 194 96 188 Q92 160 100 126Z" fill="' + F + '" stroke="' + ink + '" stroke-width="1.5"/>' +
       '<path d="M94 146 h12 M95 160 h10 M96 174 h8" stroke="' + c3 + '" stroke-width="2"/>' + antennae(ink) + '<circle cx="100" cy="' + hy + '" r="22" fill="' + (b.head || c1) + '"/><path d="M100 ' + (hy + 20) + ' V' + (hy + 52) + '" stroke="' + ink + '" stroke-width="2.5" stroke-linecap="round"/>';
+  } else if (t === "pillbug") {
+    /* a roly-poly (pill bug, an isopod): a high, rounded armored dome of overlapping gray plates, seven pairs of
+       short legs peeking out, short bent antennae, a small head tucked under the front plate (owner, Nov 15 2026:
+       "why doesn't Officer Roly-Poly look like a roly poly") */
+    var pl = "";
+    for (var pk = 0; pk < 7; pk++) { var py = 118 + pk * 11; pl += '<path d="M' + (60 + pk * 0.4) + ' ' + (py - 4) + ' l-12 6 M' + (140 - pk * 0.4) + ' ' + (py - 4) + ' l12 6" stroke="' + ink + '" stroke-width="3" stroke-linecap="round"/>'; }
+    s += pl + '<path d="M86 66 Q72 52 66 40 M114 66 Q128 52 134 40" stroke="' + ink + '" stroke-width="3.5" fill="none" stroke-linecap="round"/>' +
+      '<path d="M54 160 Q50 104 100 98 Q150 104 146 160 Q140 194 100 196 Q60 194 54 160Z" fill="' + F + '" stroke="' + ink + '" stroke-width="2.5"/>';
+    for (var pb = 0; pb < 7; pb++) { var yy = 112 + pb * 12, w = 46 - Math.abs(pb - 3) * 3.2; s += '<path d="M' + (100 - w) + ' ' + (yy + 4) + ' Q100 ' + (yy - 7) + ' ' + (100 + w) + ' ' + (yy + 4) + '" stroke="' + ink + '" stroke-width="2.2" fill="none" opacity=".75"/><path d="M' + (100 - w + 4) + ' ' + (yy + 1) + ' Q100 ' + (yy - 8) + ' ' + (100 + w - 4) + ' ' + (yy + 1) + '" stroke="' + c3 + '" stroke-width="1.6" fill="none" opacity=".35"/>'; }
+    s += '<path d="M90 194 l-4 6 M100 196 v7 M110 194 l4 6" stroke="' + ink + '" stroke-width="2.5" stroke-linecap="round"/>' +
+      '<ellipse cx="100" cy="' + (hy + 2) + '" rx="27" ry="24" fill="' + (b.head || c2) + '" stroke="' + ink + '" stroke-width="2"/>';
   } else if (t === "louse") {
     s += '<path d="M72 120 Q54 120 50 132 l-6 2 M70 140 Q50 144 48 156 l-6 2 M72 160 Q54 168 54 180 l-6 1 M128 120 Q146 120 150 132 l6 2 M130 140 Q150 144 152 156 l6 2 M128 160 Q146 168 146 180 l6 1" stroke="' + ink + '" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>' +
       '<path d="M66 128 Q66 104 100 104 Q134 104 134 128 L138 168 Q132 192 100 192 Q68 192 62 168Z" fill="' + F + '" opacity=".92" stroke="' + ink + '" stroke-width="2"/>' +
@@ -5317,6 +5534,15 @@ function bugArt(b, cls, opt) {
     if (t === "stag") s += '<path d="M80 52 Q60 22 72 8 Q76 28 92 40 M120 52 Q140 22 128 8 Q124 28 108 40" stroke="' + ink + '" stroke-width="7" fill="none" stroke-linecap="round"/>';
     s += bLegs(ink) + (t === "stag" ? "" : antennae(ink, t === "scarab"));
     if (t === "firefly") s += '<ellipse cx="100" cy="166" rx="24" ry="20" fill="' + c3 + '"/><ellipse cx="100" cy="130" rx="28" ry="26" fill="' + F + '"/>';
+    else if (t === "beetle" || t === "scarab" || t === "jewel") {
+      /* round, long oval, broad and flat, teardrop, plated (a shield across the shoulders) */
+      var bvv = BV % 5;
+      if (bvv === 1) s += '<ellipse cx="100" cy="146" rx="38" ry="54" fill="' + F + '"/><path d="M100 94 V198" stroke="' + ink + '" stroke-width="3.5"/>';
+      else if (bvv === 2) s += '<ellipse cx="100" cy="142" rx="56" ry="42" fill="' + F + '"/><path d="M100 102 V182" stroke="' + ink + '" stroke-width="3.5"/>';
+      else if (bvv === 3) s += '<path d="M54 128 Q56 94 100 94 Q144 94 146 128 Q142 170 100 196 Q58 170 54 128Z" fill="' + F + '"/><path d="M100 94 V194" stroke="' + ink + '" stroke-width="3.5"/>';
+      else if (bvv === 4) s += '<ellipse cx="100" cy="144" rx="46" ry="48" fill="' + F + '"/><path d="M100 112 V190" stroke="' + ink + '" stroke-width="3.5"/><path d="M58 112 Q100 88 142 112 Q138 124 100 122 Q62 124 58 112Z" fill="' + c2 + '" stroke="' + ink + '" stroke-width="2"/>';
+      else s += '<ellipse cx="100" cy="140" rx="46" ry="48" fill="' + F + '"/><path d="M100 94 V186" stroke="' + ink + '" stroke-width="3.5"/>';
+    }
     else s += '<ellipse cx="100" cy="140" rx="46" ry="48" fill="' + F + '"/><path d="M100 94 V186" stroke="' + ink + '" stroke-width="3.5"/>';
     if (b.pat === "spots") s += '<circle cx="78" cy="124" r="8" fill="' + (b.spot || ink) + '"/><circle cx="124" cy="122" r="7" fill="' + (b.spot || ink) + '"/><circle cx="74" cy="158" r="7" fill="' + (b.spot || ink) + '"/><circle cx="126" cy="160" r="8" fill="' + (b.spot || ink) + '"/><circle cx="100" cy="176" r="5" fill="' + (b.spot || ink) + '"/>';
     if (b.pat === "gems") s += '<path d="M78 118 l8 10 -8 10 -8 -10z M122 118 l8 10 -8 10 -8 -10z M100 150 l9 12 -9 12 -9 -12z" fill="' + c3 + '" opacity=".9"/>';
@@ -5338,7 +5564,7 @@ function bugArt(b, cls, opt) {
      body are never just a recolour of each other (owner, Nov 5 2026) */
   var spG = "";
   if (!b.hick && b.id) {
-    if (!b.biker) s += speciesMarks(b, t, id, ink, c1, c2, c3);
+    if (!b.biker && !b.plain) s += speciesMarks(b, t, id, ink, c1, c2, c3);
     /* and its own build: wider, slimmer, stockier - scaled about the head so the face still fits */
     var spI = speciesIx(b)[0], spK = [[1, 1], [1.13, .95], [.88, 1], [1.07, .93], [.93, 1]][(spI + (b.c[0].charCodeAt(2) || 0)) % 5];
     if (spK[0] !== 1 || spK[1] !== 1) { s = '<g transform="translate(100 ' + hy + ') scale(' + spK[0] + ' ' + spK[1] + ') translate(-100 -' + hy + ')">' + s; spG = "</g>"; }
@@ -5409,6 +5635,7 @@ function bugArt(b, cls, opt) {
   if (wear.fx && ITEMS_BY[wear.fx] && !ITEMS_BY[wear.fx].under) s += itemSVG(ITEMS_BY[wear.fx], hy);
   var sk = st === 1 ? (t === "larva" ? .9 : .8) : st === 2 ? .9 : 1;
   if (t === "stick") sk *= .82; /* the stick insect is drawn edge to edge; bring it in line with the other bugs */
+  if (!b.hick && !b.admin && b.id !== "starter") sk *= b.size || [1, .88, 1.08, .94, 1.04, .84, 1.1, .91][BV % 8];   /* each species its own size */
   if (sk !== 1) { var sy = t === "stick" ? 108 : 190; s = '<g transform="translate(' + (100 * (1 - sk)).toFixed(1) + ' ' + (sy * (1 - sk)).toFixed(1) + ') scale(' + sk.toFixed(3) + ')">' + s + '</g>'; }
   /* lift each body/stage so the drawing (body, face and anything worn) sits centered in its bubble or orb.
      Offsets were measured from the rendered art (big stage-4/5 aura circles excluded); only upward moves. */
@@ -5426,7 +5653,7 @@ var BUGS = [
   { id: "grub-nurse", name: "Scrub Beetle", body: "beetle", c: ["#4fd1c5", "#0f8f86", "#ffffff"], acc: ["stetho"], rar: "common", price: 0, grub: "rn", blurb: "Starter beetle for nursing learners." },
   { id: "grub-imaging", name: "Lead Apron Beetle", body: "beetle", c: ["#94a3b8", "#334155", "#ffffff"], acc: ["goggles"], rar: "common", price: 0, grub: "im", blurb: "Starter beetle for imaging technologists." },
   { id: "grub-everyday", name: "Garden Beetle", body: "beetle", c: ["#ffcf6b", "#e08a2c", "#ffffff"], acc: ["leaf"], rar: "common", price: 0, grub: "ev", blurb: "Starter beetle for Everyday Health learners. Just a regular, friendly bug." },
-  { id: "grub-allied", name: "Field Guide Beetle", body: "beetle", c: ["#c4b5fd", "#6d28d9", "#ffffff"], acc: ["headset"], rar: "common", price: 0, grub: "ah", blurb: "Starter beetle for allied health learners: mental health, dietitians and respiratory therapists." },
+  { id: "grub-allied", name: "Field Guide Beetle", body: "beetle", c: ["#c4b5fd", "#6d28d9", "#ffffff"], acc: ["headset"], rar: "common", price: 0, grub: "ah", blurb: "A starter beetle with a field guide and a headset." },
   { id: "grub-doc", name: "Bookworm Beetle", body: "beetle", c: ["#8fa8ff", "#4053c9", "#ffffff"], acc: ["bowtie"], rar: "common", price: 0, grub: "md", blurb: "Starter beetle for medical students." },
   // common
   { id: "free-mantis", name: "Praying Mantis", body: "mantis", c: ["#86efac", "#16a34a", "#ffffff"], acc: [], rar: "rare", price: 1500, blurb: "Patient, precise and always ready." },
@@ -5452,6 +5679,19 @@ var BUGS = [
   { id: "golden-return-stag", name: "Golden Return Stag", body: "stag", c: ["#fcd34d", "#92400e", "#fffbeb"], acc: ["crown"], rar: "legendary", price: 0, login: 30, unlock: { login: 30, text: "Log in on 30 different days" }, blurb: "Thirty days. The stag only shows itself to the faithful." },
   { id: "hundred-day-hercules", name: "Hundred-Day Hercules", body: "hercules", c: ["#f472b6", "#831843", "#fdf2f8"], horn: "#fde68a", rar: "legendary", price: 0, login: 60, unlock: { login: 60, text: "Log in on 60 different days" }, blurb: "Sixty days of learning. Strongest bug in the jungle." },
   { id: "year-of-the-scarab", name: "Year of the Scarab", body: "scarab", c: ["#22d3ee", "#155e75", "#ecfeff"], acc: ["halo"], rar: "legendary", price: 0, login: 90, unlock: { login: 90, text: "Log in on 90 different days" }, blurb: "Three full cycles of days. The rarest bug in DrugBug." },
+  /* SECRET BUGS (owner, Nov 15 2026): "add secret bugs that just show their silhouette in the bug store and you
+     can only win them in funny ways. Like if you tap on the dummy's crotch 5 times you unlock a police bug. But say
+     that's why you won him. And give him a concerned look on his face." Never for sale; won once, kept forever. */
+  { id: "officer-roly-poly", name: "Officer Roly-Poly", body: "pillbug", c: ["#94a3b8", "#475569", "#e2e8f0"], head: "#334155", plain: true, acc: ["policecap"], mood: "serious", rar: "legendary", price: 0, secret: "crotch", unlock: { secret: "crotch", text: "Secret" },
+    won: "You tapped the dummy's crotch 5 times. Officer Roly-Poly would like a word.", blurb: "Responded to a report of repeated inappropriate tapping. Still processing what he saw." },
+  { id: "three-am-moth", name: "3 AM Moth", body: "moth", c: ["#475569", "#0f172a", "#c7d2fe"], mood: "sleepy", rar: "epic", price: 0, secret: "3am", unlock: { secret: "3am", text: "Secret" },
+    won: "You opened DrugBug between 2 and 4 in the morning. The 3 AM Moth is worried about you. Go to bed.", blurb: "Drawn to the only light on at 3 AM: your phone." },
+  { id: "complaint-stick-bug", name: "Formal Complaint Stick Bug", body: "stick", c: ["#a3a37a", "#57534e", "#fef3c7"], mood: "grumpy", rar: "epic", price: 0, secret: "poke", unlock: { secret: "poke", text: "Secret" },
+    won: "You poked your bug 25 times in a row. It has filed a formal complaint, and this is the bug who filed it.", blurb: "Has a clipboard. Is writing your name on it." },
+  { id: "dizzy-dung-beetle", name: "Dizzy Dung Beetle", body: "dung", c: ["#a16207", "#3f2a0b", "#fde68a"], mood: "dizzy", rar: "epic", price: 0, secret: "shake", unlock: { secret: "shake", text: "Secret" },
+    won: "You shook your phone to shuffle 10 times. The Dizzy Dung Beetle has not stopped spinning since.", blurb: "Rolls the ball, gets rolled by your shaking. Still seeing stars." },
+  { id: "butterfingers-butterfly", name: "Butterfingers Butterfly", body: "butterfly", c: ["#fda4af", "#be123c", "#fff1f2"], mood: "pleading", rar: "rare", price: 0, secret: "oops", unlock: { secret: "oops", text: "Secret" },
+    won: "Five wrong answers in a row. The Butterfingers Butterfly flew in to say it happens to everybody. Keep going.", blurb: "Drops things constantly. Never gives up." },
   /* more real bugs (owner, Nov 5 2026) */
   { id: "stink-bug", name: "Stink Bug", body: "shield", c: ["#a3a37a", "#5f6b3a", "#fef3c7"], ink: "#2d3319", rar: "common", price: 500, blurb: "Shield-shaped and smells like cilantro when bothered. Harmless, just rude." },
   { id: "daddy-long-legs", name: "Daddy Long Legs", body: "harvestman", c: ["#c4a484", "#7c5a3a", "#fef3c7"], ink: "#3b2a1a", rar: "common", price: 500, blurb: "A harvestman, not a spider: one body section, no venom, no silk." },
@@ -5562,7 +5802,7 @@ var BUGS = [
   { id: "antidote-ace", name: "Antidote Ace", body: "scarab", c: ["#5eead4", "#115e59", "#ccfbf1"], acc: ["halo"], rar: "earned", price: 0, unlock: { group: "EMS Toxicology / Antidotes", pct: 80, text: "Reach 80% mastery in EMS Toxicology / Antidotes" } },
   { id: "airway-ace", name: "Airway Ace", body: "bee", c: ["#7dd3fc", "#0369a1", "#e0f2fe"], acc: ["goggles"], rar: "earned", price: 0, unlock: { group: "Respiratory", pct: 80, text: "Reach 80% mastery in Respiratory" } },
   { id: "neuro-navigator", name: "Neuro Navigator", body: "moth", c: ["#c4b5fd", "#5b21b6", "#ede9fe"], ink: "#2e1065", acc: ["headset"], rar: "earned", price: 0, unlock: { group: "Seizure / Antiepileptic", pct: 80, text: "Reach 80% mastery in Seizure / Antiepileptic" } },
-  { id: "code-commander", name: "Code Commander", body: "stag", c: ["#fde68a", "#b45309", "#ffffff"], acc: ["crown", "stetho"], rar: "earned", price: 0, unlock: { mega: true, text: "Score 100% on 5 different Megacode cases" } },
+  { id: "code-commander", name: "Code Commander", body: "stag", c: ["#fde68a", "#b45309", "#ffffff"], acc: ["crown", "stetho"], rar: "earned", price: 0, unlock: { mega: true, text: "Score 100% on 5 different codes" } },
   { id: "calc-champion", name: "Calc Champion", body: "ant", c: ["#a5b4fc", "#3730a3"], acc: ["goggles"], rar: "earned", price: 0, unlock: { calc: 100, text: "Retired: earned in Calc Lab" }, retired: 1 },
   /* Five bacteria hiding in Microbiology. The joke is that you can keep them as pets. (owner, Oct 30 2026) */
   { id: "mb-cluster", name: "Goldie the Cluster", body: "caterpillar", c: ["#fcd34d", "#b45309", "#fffbeb"], head: "#fbbf24", ink: "#451a03", rar: "earned", price: 0, unlock: { micro: "staph-aureus", text: "Found in Microbiology" }, blurb: "A bunch of golden grapes that gave itself a name and a nose to live in. Coagulase positive, personality negative. Do not let it near your IV line." },
@@ -5625,8 +5865,35 @@ function unlockMet(b) {
   if (u.calc) return calcCorrect(Prog.d) >= u.calc;
   if (u.login) return loginDays() >= u.login;
   if (u.coll) { var p = collProgress(u.coll); return p.all > 0 && p.have >= p.all; }
+  if (u.secret) return !!(Prog.d.secrets || {})[u.secret];
   return false;
 }
+/* winning a secret bug: it is yours at once, and a pop-up says what you did to earn it */
+function secretWin(key) {
+  try {
+    if (!Prog || !Prog.d) return; var W = Prog.d.secrets || (Prog.d.secrets = {}); if (W[key]) return;
+    var b = BUGS.filter(function (x) { return x.secret === key; })[0]; if (!b) return;
+    W[key] = Date.now(); if (!owned(b.id)) Prog.d.owned = (Prog.d.owned || []).concat([b.id]); saveProg();
+    try { usgFeat("secret_" + key); } catch (e) {}
+    try { if (typeof sfxPlay === "function" && SET().sfx) sfxPlay("whoosh", 0, 0.6); } catch (e) {}
+    var old = document.getElementById("secwin"); if (old) old.remove();
+    var el = document.createElement("div"); el.id = "secwin"; el.className = "secwin"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", "Secret bug unlocked");
+    el.innerHTML = '<div class="secpanel"><span class="eyebrow">Secret bug unlocked</span><div class="secart">' + bugArt(b, "", { stage: MAX_STAGE }) + '</div><h2>' + esc(b.name) + '</h2>' + (bugQuip(b) ? '<p class="secquip">\u201c' + esc(bugQuip(b)) + '\u201d</p>' : '') + '<p class="secwhy">' + esc(b.won) + '</p>' +
+      '<div class="actions" style="justify-content:center"><button class="btn" data-secequip="' + b.id + '">Make it my bug</button><button class="btn ghost" data-secclose="1">Nice</button></div></div>';
+    document.body.appendChild(el);
+    el.addEventListener("click", function (e) {
+      var t = e.target.closest && e.target.closest("[data-secequip],[data-secclose]"); if (!t && e.target !== el) return;
+      if (t && t.hasAttribute("data-secequip")) { Prog.d.avatar = t.getAttribute("data-secequip"); Prog.d.avatarTs = Date.now(); saveProg(); }
+      el.remove(); try { render(); } catch (x) {}
+    });
+    requestAnimationFrame(function () { el.classList.add("on"); });
+  } catch (e) {}
+}
+/* the funny ways in */
+var SEC = { crotch: [], poke: [], shakes: 0, wrong: 0 };
+function secTap(kind, n, windowMs) { var now = Date.now(), L = SEC[kind] = (SEC[kind] || []).filter(function (t) { return now - t < windowMs; }); L.push(now); if (L.length >= n) { SEC[kind] = []; secretWin(kind); } }
+function secAnswer(right) { if (right) { SEC.wrong = 0; return; } if (++SEC.wrong >= 5) { SEC.wrong = 0; secretWin("oops"); } }
+setTimeout(function () { try { var h = new Date().getHours(); if (h >= 2 && h < 4) secretWin("3am"); } catch (e) {} }, 4000);
 function claimBug(id) { var b = bugById(id); if (owned(id) || !(b.admin ? Admin.owner : unlockMet(b))) return; Prog.d.owned = (Prog.d.owned || []).concat([id]); Prog.d.avatar = id; Prog.d.avatarTs = Date.now(); saveProg(); S.shopMsg = "Unlocked " + b.name + ". It's now your bug."; }
 function styleFilter() { var st = STYLES.filter(function (x) { return x[0] === (Prog.d.style || "classic"); })[0]; return st ? st[3] : ""; }
 var MAX_STAGE = STAGE_LV.length;   /* Legend: how every bug is shown unless it is your avatar bubble */
@@ -5687,20 +5954,21 @@ function shopView() {
       !b.price ? '<button class="btn small" data-buyok="' + b.id + '">Get it free</button>' :
       pend ? '<button class="btn small" data-buyok="' + b.id + '">Buy for ' + b.price + '</button><button class="btn small ghost" data-buyno="1">Cancel</button>' :
       '<button class="btn small' + (can ? '' : ' ghost') + '" data-buy="' + b.id + '"' + (can ? '' : ' disabled') + '>' + (can ? 'Buy' : 'Need ' + (b.price - bal) + ' more') + '</button>';
-    return '<div class="bugcard r-' + b.rar + (eq ? " eq" : "") + '"' + (B3_READY ? ' data-bug3d="' + b.id + '" title="Tap to see ' + esc(b.name) + ' in 3D"' : '') + '>' + bugArt(b) + (B3_READY ? '<span class="b3tag">3D</span>' : '') + '<strong>' + esc(b.name) + '</strong><span class="rar">' + RARITY[b.rar] + '</span>' + (own ? '<span class="muted small">Owned</span>' : b.admin ? '<span class="muted small">Administrator only</span>' : b.login ? '<span class="muted small">Daily login prize</span>' : b.king ? '<span class="muted small">Collection king</span>' : !b.price ? '<span class="muted small">Free</span>' : b.unlock ? '<span class="muted small">Free when unlocked</span>' : stickTag(b.price) + (b.season && inSeason(b) ? '<span class="muted small">Until the end of ' + MONTHS[b.season[1]] + '</span>' : '')) + '<div class="bact">' + act + '</div></div>';
+    if (b.secret && !own) return '<div class="bugcard secret r-' + b.rar + '"><span class="secsil">' + bugArt(b, "", { mood: "happy" }) + '</span><strong>???</strong><span class="rar">Secret</span><span class="muted small">Won in a funny way</span><div class="bact"><span class="muted small">Locked</span></div></div>';
+    return '<div class="bugcard r-' + b.rar + (eq ? " eq" : "") + '"' + (B3_READY ? ' data-bug3d="' + b.id + '" title="Tap to see ' + esc(b.name) + ' in 3D"' : '') + '>' + bugArt(b) + (B3_READY ? '<span class="b3tag">3D</span>' : '') + '<strong>' + esc(b.name) + '</strong>' + (b.secret && b.won ? '<span class="muted small secwon">' + esc(b.won) + '</span>' : '') + '<span class="rar">' + RARITY[b.rar] + '</span>' + (own ? '<span class="muted small">Owned</span>' : b.admin ? '<span class="muted small">Administrator only</span>' : b.login ? '<span class="muted small">Daily login prize</span>' : b.king ? '<span class="muted small">Collection king</span>' : !b.price ? '<span class="muted small">Free</span>' : b.unlock ? '<span class="muted small">Free when unlocked</span>' : stickTag(b.price) + (b.season && inSeason(b) ? '<span class="muted small">Until the end of ' + MONTHS[b.season[1]] + '</span>' : '')) + '<div class="bact">' + act + '</div></div>';
   }
   var TIERS = [["admin", "Administrator only", "Just for you"], ["starter", "Starter", "Free"], ["common", "Common", "300–800 sticks"], ["rare", "Rare", "1,200–2,000 sticks"], ["epic", "Epic", "2,800–4,800 sticks"], ["legendary", "Legendary", "7,000–12,000 sticks"], ["seasonal", "Seasonal", "2,400 sticks, only in season"], ["earned", "Earned by mastery", "Free when you unlock them"]];
-  function tierOf(b) { return b.admin ? "admin" : b.king ? "king" : b.login ? "login" : b.id === "starter" || b.grub || b.free ? "starter" : b.rar; }
-  TIERS.splice(TIERS.length, 0, ["login", "Daily login bugs", "Rare, epic and legendary bugs you can only earn by coming back on different days"], ["king", "Collection kings", "Own every bug of one kind to crown its king"]);
+  function tierOf(b) { return b.secret ? "secret" : b.admin ? "admin" : b.king ? "king" : b.login ? "login" : b.id === "starter" || b.grub || b.free ? "starter" : b.rar; }
+  TIERS.splice(TIERS.length, 0, ["secret", "Secret bugs", "You can't buy these. Each one is won by doing something strange. You'll know when it happens."], ["login", "Daily login bugs", "Rare, epic and legendary bugs you can only earn by coming back on different days"], ["king", "Collection kings", "Own every bug of one kind to crown its king"]);
   TIERS.forEach(function (tr) {
     var L = list.filter(function (b) { return tierOf(b) === tr[0]; }).sort(function (a, b2) { return tr[0] === "seasonal" ? (inSeason(b2) - inSeason(a)) || a.season[0] - b2.season[0] : a.price - b2.price; });
     if (!L.length) return;
     var all = shopBugs().filter(function (b) { return tierOf(b) === tr[0]; }), mine = all.filter(function (b) { return owned(b.id); }).length;
     var need = PAYWALL && L[0] ? bugTier(L[0]) : "free";
-    c += '<div class="tierhead r-' + tr[0] + '"><h3>' + esc(tr[1]) + (need !== "free" && tr[0] !== "earned" && tr[0] !== "login" && tr[0] !== "king" && tr[0] !== "starter" && tr[0] !== "admin" ? ' ' + tierBadge(need) : '') + '</h3><span class="muted small">' + esc(tr[2]) + '</span><span class="tierown">' + mine + ' of ' + all.length + ' owned</span></div><div class="shopgrid">' + L.map(bugCard).join("") + '</div>';
+    c += '<div class="tierhead r-' + tr[0] + '"><h3>' + esc(tr[1]) + (need !== "free" && tr[0] !== "earned" && tr[0] !== "login" && tr[0] !== "secret" && tr[0] !== "king" && tr[0] !== "starter" && tr[0] !== "admin" ? ' ' + tierBadge(need) : '') + '</h3><span class="muted small">' + esc(tr[2]) + '</span><span class="tierown">' + mine + ' of ' + all.length + ' owned</span></div><div class="shopgrid">' + L.map(bugCard).join("") + '</div>';
   });
   if (!list.length) c += '<p class="muted">No bugs here yet.</p>';
-  c += '<details class="sec earn"><summary>How to earn sticks</summary><div class="worth">' + [["Every correct answer", 3], ["Every question you try, even if wrong", 1], ["Perfect score on 10 or more questions", PERFECT_BONUS], ["Each achievement unlocked", ACH_BONUS], ["Daily DrugBug or daily challenge", 10], ["Perfect clinical scenario", 5], ["100% on a Megacode case", 10]].map(function (r) { return '<div class="wrow"><span>' + r[0] + '</span>' + stickTag(r[1]) + '</div>'; }).join("") + '</div><p class="muted small">' + (Prog.synced ? "Your sticks and bugs are saved to your account." : "Your sticks and bugs are saved on this device.") + ' You have earned ' + (Prog.d.earned || 0).toLocaleString() + ' sticks in total.</p></details>';
+  c += '<details class="sec earn"><summary>How to earn sticks</summary><div class="worth">' + [["Every correct answer", 3], ["Every question you try, even if wrong", 1], ["Perfect score on 10 or more questions", PERFECT_BONUS], ["Each achievement unlocked", ACH_BONUS], ["Daily DrugBug or daily challenge", 10], ["Perfect clinical scenario", 5], ["100% on a code", 10]].map(function (r) { return '<div class="wrow"><span>' + r[0] + '</span>' + stickTag(r[1]) + '</div>'; }).join("") + '</div><p class="muted small">' + (Prog.synced ? "Your sticks and bugs are saved to your account." : "Your sticks and bugs are saved on this device.") + ' You have earned ' + (Prog.d.earned || 0).toLocaleString() + ' sticks in total.</p></details>';
   return c + '</section>';
 }
 function tracksView() {
@@ -5898,6 +6166,10 @@ function bugFace(y, mood, b, faceItem) {
     case "smug": s = '<path d="M80 ' + (y - 1) + ' Q88 ' + (y - 5) + ' 96 ' + (y - 1) + ' M104 ' + (y - 1) + ' Q112 ' + (y - 5) + ' 120 ' + (y - 1) + '" stroke="' + INK + '" stroke-width="3.5" fill="none" stroke-linecap="round"/>' + eyeBall(88, y + 3, 6, 2, 0) + eyeBall(112, y + 3, 6, 2, 0) + mouth("smirk", y + 15, mc); break;
     /* ---- the faces added when the secret hunt was retired (owner, Nov 4 2026) ---- */
     case "grumpy": s = eyeBall(88, y + 2, 8, 0, 2) + eyeBall(112, y + 2, 8, 0, 2) + '<path d="M78 ' + (y - 12) + ' L96 ' + (y - 6) + ' M122 ' + (y - 12) + ' L104 ' + (y - 6) + '" stroke="' + INK + '" stroke-width="4.5" stroke-linecap="round"/>' + mouth("frown", y + 16, mc); break;
+    /* serious: level, narrowed eyes, brows pulled down and in, a straight mouth with a slight downturn (Officer Roly-Poly) */
+    case "serious": s = eyeBall(88, y + 2, 8, 0, 1) + eyeBall(112, y + 2, 8, 0, 1) + '<path d="M78 ' + (y - 4) + ' H97 M103 ' + (y - 4) + ' H122" stroke="' + (b.head ? "#0b1530" : INK) + '" stroke-width="2" opacity=".55"/>' +
+      '<path d="M76 ' + (y - 14) + ' L97 ' + (y - 8) + ' M124 ' + (y - 14) + ' L103 ' + (y - 8) + '" stroke="' + INK + '" stroke-width="5" stroke-linecap="round"/>' +
+      '<path d="M91 ' + (y + 17) + ' Q100 ' + (y + 14) + ' 109 ' + (y + 17) + '" stroke="' + mc + '" stroke-width="3.5" fill="none" stroke-linecap="round"/>'; break;
     case "worried": s = eyeBall(88, y + 1, 9, 0, 2) + eyeBall(112, y + 1, 9, 0, 2) + '<path d="M78 ' + (y - 8) + ' Q86 ' + (y - 16) + ' 95 ' + (y - 11) + ' M122 ' + (y - 8) + ' Q114 ' + (y - 16) + ' 105 ' + (y - 11) + '" stroke="' + INK + '" stroke-width="3" fill="none" stroke-linecap="round"/>' + '<path d="M91 ' + (y + 15) + ' q4 -4 9 0 q4 4 9 0" stroke="' + mc + '" stroke-width="3" fill="none" stroke-linecap="round"/>'; break;
     case "sus": s = '<path d="M79 ' + (y - 3) + ' H97" stroke="' + INK + '" stroke-width="3.5" stroke-linecap="round"/>' + eyeBall(88, y + 3, 7, 3, 0) + eyeBall(112, y + 3, 7, 3, 0) + '<path d="M103 ' + (y - 3) + ' H121" stroke="' + INK + '" stroke-width="3.5" stroke-linecap="round"/>' + mouth("flat", y + 15, mc); break;
     case "crying": s = arcEye(88, y + 1, false) + arcEye(112, y + 1, false) + mouth("frown", y + 16, mc) + '<path d="M86 ' + (y + 6) + ' q-5 12 0 15 q5 -3 0 -15z M114 ' + (y + 6) + ' q5 12 0 15 q-5 -3 0 -15z" fill="#7dd3fc"/>'; break;
@@ -5924,7 +6196,7 @@ function bugFace(y, mood, b, faceItem) {
   return s;
 }
 /* wearable items: slot hat | face | neck | back | held | fx */
-var ACC_SLOT = { bandana: "hat", bandanaK: "hat", bandanaB: "hat", halfhelm: "hat", halfhelmG: "hat", beanie: "hat", beanieR: "hat", chain: "neck", jethelmet: "hat", aviscarf: "neck", crown: "hat", halo: "hat", cap: "hat", helmet: "hat", headset: "hat", flame: "hat", goggles: "face", mask: "face", stetho: "neck", bowtie: "neck", scarf: "neck", stars: "fx" };
+var ACC_SLOT = { policecap: "hat", bandana: "hat", bandanaK: "hat", bandanaB: "hat", halfhelm: "hat", halfhelmG: "hat", beanie: "hat", beanieR: "hat", chain: "neck", jethelmet: "hat", aviscarf: "neck", crown: "hat", halo: "hat", cap: "hat", helmet: "hat", headset: "hat", flame: "hat", goggles: "face", mask: "face", stetho: "neck", bowtie: "neck", scarf: "neck", stars: "fx" };
 function hatY(y) { return y - 26; }
 /* a ring of curls sitting on the head: used by every perm (owner, Oct 30 2026) */
 function permDraw(y, dark, light, big) {
@@ -6330,12 +6602,75 @@ function buddyReact(ok) {
   if (!ok && Math.random() < 0.08) return buddySet("dizzy", pickQ("wrong"));
   buddySet(ok ? "joy" : "sad", pickQ(ok ? "right" : "wrong"));
 }
+/* ===== Bug quips (owner, Nov 15 2026: "make some bugs have special quips, like Hickory will say 'I ain't do nothin,
+   I swear' and the officer bug says 'what's really goin on here'") =====
+   Your bug says one of its own lines now and then when you tap it; a specific bug's lines win, then lines for what
+   it is wearing, then lines for its kind of bug. */
+var BUG_QUIPS = {
+  "hickory": ["I ain't do nothin', I swear.", "Wasn't me. Coulda been the cricket.", "Don't look at me, I just work here.", "Well butter my biscuit.", "I seen things, partner. Pharmacology things."],
+  "officer-roly-poly": ["What's really goin' on here?", "License and study streak, please.", "Ma'am, do you know how many questions you skipped?", "I'm gonna need you to step away from the dummy.", "Nothing to see here. Keep studying.", "Roll call. Literally."],
+  "three-am-moth": ["Is that a screen? Is it on? I'm coming.", "Sleep is a myth. Like a 10-hour shift.", "One more card. Then bed. (It's never one more card.)"],
+  "complaint-stick-bug": ["This has been noted.", "Sign here, here and here.", "I'm escalating this to management.", "Please stop poking. I'm a stick, not a button."],
+  "dizzy-dung-beetle": ["Which way is up?", "I'm fine. I'm fine. The room is spinning, but I'm fine.", "Shake it again, I dare you."],
+  "butterfingers-butterfly": ["Oops. Did I do that?", "Missed one? Me too. Keep going.", "Wrong answers are just practice in disguise."]
+};
+var BODY_QUIPS = {
+  snail: ["Slow and steady passes the boards.", "I brought my house. Did you bring your flashcards?", "Speed is overrated. Accuracy isn't."],
+  pillbug: ["What's really goin' on here?"],
+  bee: ["Buzz off, I'm studying.", "Bee-lieve in yourself.", "Hive got a quiz for you."],
+  ant: ["I can lift 50 times my weight. You can lift one more chapter.", "Teamwork makes the drug work.", "March on."],
+  mantis: ["I'm not praying, I'm meditating on mechanisms of action.", "Stay still. Focus. Strike.", "Patience, grasshopper. Wrong bug, same advice."],
+  butterfly: ["Every expert was once a caterpillar.", "Float like me, sting like a pop quiz.", "Metamorphosis takes time."],
+  moth: ["Is that a lamp?", "I'm drawn to the light. And to pharmacology.", "Night shift crew, checking in."],
+  dragonfly: ["Zoom.", "Four wings, zero excuses.", "I catch mosquitoes. You catch mistakes."],
+  beetle: ["Shell yeah, let's study.", "Tough on the outside, soft on the dosing math.", "Beetle juice? Never heard of her."],
+  scarab: ["Ancient wisdom says: read the explanation.", "I roll with it."],
+  stag: ["Antlers? These are mandibles, thank you.", "Lock horns with this next question."],
+  hercules: ["Strongest bug in the jungle, weakest at renal dosing.", "Do you even lift (chapters)?"],
+  rhino: ["Horn's for show. Brains are for real.", "Charge!"],
+  firefly: ["Lighting the way.", "Glow up in progress."],
+  cicada: ["I studied underground for 17 years for this.", "LOUD NOISES. Sorry."],
+  cricket: ["Chirp. That means 'nice job'.", "Crickets? Not in this study session."],
+  grasshopper: ["Hop to it.", "Jumping to the next question."],
+  caterpillar: ["Eating my way through the drug list.", "Just a few more chapters till wings."],
+  spider: ["I've got eight legs and zero patience for wrong answers.", "Tangled in the web of pharmacology."],
+  scorpion: ["I've got a stinger and I'm not afraid to quiz you.", "Antivenom is a whole thing. Ask me."],
+  centipede: ["Fun fact: never exactly 100 legs.", "First on scene, every time."],
+  millipede: ["Curling up with a good textbook.", "So many legs, so many flashcards."],
+  roach: ["I'll outlive all your exams.", "Don't step on me, I'm studying."],
+  mosquito: ["Bzzz. I'm basically a tiny phlebotomist.", "I know a thing or two about blood."],
+  tick: ["Ask me about Lyme. Actually, don't.", "Clingy? Me? Never."],
+  flea: ["Small but mighty. Like a microgram.", "Jump scare!"],
+  louse: ["Nitpicking is my specialty.", "I'm just here for the head-to-toe assessment."],
+  bedbug: ["Don't let me bite. Study instead.", "Night shift buddy."],
+  stick: ["I'm a stick. I stick to the plan.", "Branching out into pharmacology."],
+  shield: ["I smell like cilantro and success.", "Shields up. Quiz incoming."],
+  wasp: ["I don't sting people who study.", "Mind your business. Then mind your meds."],
+  dung: ["I make the best of what I'm given.", "Roll with it."],
+  longhorn: ["These antennae pick up every wrong answer.", "Long story. Long horns."],
+  harvestman: ["Not a spider. Don't start.", "Long legs, long study sessions."],
+  cocoon: ["Do not disturb. Transforming."], chrysalis: ["Almost ready. Almost."], larva: ["Hungry. For knowledge. And leaves."]
+};
+var ACC_QUIPS = {
+  policecap: ["What's really goin' on here?"], stetho: ["Deep breath in. Now you."], crown: ["Bow before the drug knowledge."], headset: ["Dispatch, show me studying."],
+  tachelmet: ["Stay frosty. Read the explanation."], helmet: ["Safety first. Then pharmacology."], halo: ["I would never skip a question."], flame: ["I'm on fire. Answer streak incoming."], nvg: ["I see in the dark. And through your guesses."]
+};
+function bugQuip(b) {
+  b = b || (typeof myBug === "function" ? myBug() : null); if (!b) return "";
+  var L = (BUG_QUIPS[b.id] || []).slice();
+  (b.acc || []).forEach(function (a) { if (ACC_QUIPS[a]) L = L.concat(ACC_QUIPS[a]); });
+  if (!L.length && BODY_QUIPS[b.body]) L = BODY_QUIPS[b.body].slice();
+  if (b.hick) L = BUG_QUIPS.hickory.slice();
+  return L.length ? L[Math.floor(Math.random() * L.length)] : "";
+}
+
 function buddyTap() {
   var now = Date.now(); BD.taps = now - BD.tapT < 1500 ? BD.taps + 1 : 1; BD.tapT = now;
+  secTap("poke", 25, 20000);
   if (BD.taps >= 7) { BD.taps = 0; return buddySet("shock", "Okay, okay, I'm awake!"); }
   if (BD.taps === 3) return buddySet("silly", "Hehe.");
-  var m = pick(["wink", "joy", "think", "joy"]);
-  buddySet(m, pickQ("tap"));
+  var m = pick(["wink", "joy", "think", "joy"]), bq = Math.random() < 0.45 ? bugQuip() : "";
+  buddySet(m, bq || pickQ("tap"));
 }
 function armIdle() { clearTimeout(BD.idle); BD.idle = setTimeout(function () { if (!buddyOn()) return; BD.mood = "sleepy"; BD.msg = "Zzz…"; BD.asleep = true; drawBuddy(); setTimeout(function () { if (BD.asleep) { BD.msg = ""; drawBuddy(); } }, 4000); }, 180000); }
 /* Your bug talks to you while you use the app (owner, Nov 13 2026: "make comments while you're using the app;
@@ -6460,7 +6795,7 @@ function lvbTap(b) {
 document.addEventListener("click", function (e) { var b = e.target.closest && e.target.closest(".band .lvbug, .route .lvbug.t4"); if (!b) return; if (b.closest(".route") && !lvbStill()) { e.stopPropagation(); e.preventDefault(); } lvbTap(b); }, true);
 
 /* ---------- Clinical tools: Megacode, Medication Disease Identifier, Safety drills, My List ---------- */
-var TOOLS = [["prep", "Questions"], ["mega", "Megacode"], ["cards", "Flashcards"], ["games", "Brain Games"], ["safety", "Safety drills"]];
+var TOOLS = [["prep", "Questions"], ["mega", "Codes"], ["cards", "Flashcards"], ["games", "Brain Games"], ["safety", "Safety drills"]];
 /* each tool keeps the tier it had before Study Tools absorbed it, so the move changed nothing about what anyone pays for */
 var TOOL_TIER = { prep: "pro", mega: "pro", cards: "free", games: "pro", safety: "pro" };
 function toolTier(k) { return TOOL_TIER[k] || "pro"; }
@@ -6471,7 +6806,7 @@ function toolsView() {
   function toolLocked(k) { return typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier(toolTier(k)); }
   if (S.tool && !al[S.tool]) S.tool = null;
   if (!S.tool) return '<div class="hub sub">' + list.map(function (t) { var lk = toolLocked(t[0]); return '<button class="hubtile toolt' + (lk ? ' locked' : '') + '" data-tool="' + t[0] + '">' + (lk && typeof tierBadge === "function" ? '<span class="tbadge">' + tierBadge(toolTier(t[0])) + '</span>' : '') + '<span class="ht"><strong>' + esc(t[1]) + '</strong><span>' + esc(TOOLDESC[t[0]]) + '</span></span></button>'; }).join("") + '</div>';
-  var c = S.tool === "mega" && S.megaFrom ? '<button class="linkish subback" data-act="megaback">&larr; Scenarios</button>' : '<button class="linkish subback" data-act="toolsback">&larr; All of Study</button>';
+  var c = S.tool === "mega" && S.megaFrom ? '<button class="linkish subback" data-act="megaback">&larr; Bug Rush</button>' : '<button class="linkish subback" data-act="toolsback">&larr; All of Study</button>';
   if (S.tool === "peds" || S.tool === "ixn" || S.tool === "medlist") S.tool = "mega"; /* Pediatric dosing practice removed Oct 27 2026; Interaction explorer removed Oct 29 2026 */
   if (S.tool === "mega") c += megaView();
   else if (S.tool === "medlist") c += medlistView();
@@ -6603,7 +6938,7 @@ function lmSchedule(t) {
   LM.pulse = T.pulse;
   /* rate: glide toward the target, plus a drift of 1-3 bpm every few seconds */
   if (T.hr) LM.base += (T.hr - LM.base) * 0.04;
-  if (t > LM.driftAt) { LM.drift = Math.round(lmRand() * 3); LM.driftAt = t + 2 + Math.random() * 3; }
+  if (t > LM.driftAt) { LM.drift = Math.round(lmRand() * (PV.key ? 1.4 : 3)); LM.driftAt = t + 2 + Math.random() * 3; }
   LM.hr += ((LM.base + LM.drift) - LM.hr) * 0.08;
   if (!LM_ORG[LM.rh]) { LM.beats = []; return; }
   if (!LM.next || LM.next < t - 2) LM.next = t + 0.2;
@@ -6678,7 +7013,7 @@ function megaRandomId() {
   var id = pool[Math.floor(Math.random() * pool.length)].id; store("megaLast", id); return id;
 }
 function megaView() {
-  if (!simOk()) return simGate("Megacode");
+  if (!simOk()) return simGate("Bug Rush");
   return simBanner() + megaView2();
 }
 function megaView2() {
@@ -6687,7 +7022,7 @@ function megaView2() {
   if (!st && megaNew(megaRandomId())) st = S.mega;
   if (!st) {
     var best = Prog.d.mega || {};
-    return '<section class="mega"><h2>Megacode</h2><div class="dosewarn" role="note"><strong>Fictional practice only.</strong> Megacode follows published ACLS/PALS study material, which can differ from FDA labeling. Do not use it for patient care or clinical decisions.</div><p class="muted">Run a code. The monitor changes as the case unfolds, and every decision is on the clock. Choose the best next action before time runs out.</p><div class="mclist">' +
+    return '<section class="mega"><h2>Bug Rush</h2><div class="dosewarn" role="note"><strong>Fictional practice only.</strong> Codes follow published ACLS/PALS study material, which can differ from FDA labeling. Do not use it for patient care or clinical decisions.</div><p class="muted">Run a code. The monitor changes as the case unfolds, and every decision is on the clock. Choose the best next action before time runs out.</p><div class="mclist">' +
       megaCases().map(function (cs) { var b = best[cs.id]; return '<button class="mccard" data-mega="' + cs.id + '"><span class="eyebrow">' + esc(cs.tag) + (cs.group === "peds" ? " · Pediatric" : "") + '</span><strong>' + esc(cs.title) + '</strong><span class="muted small">' + cs.steps.length + ' decisions' + (b ? ' · best ' + b + '%' : '') + '</span></button>'; }).join("") + '</div><p class="muted small">Written from published resuscitation guidelines. Not an AHA course or product, and no ACLS/PALS certification. Practice only: follow your local protocols and medical direction.</p></section>';
   }
   var cs = st.cs, step = cs.steps[st.i];
@@ -6737,7 +7072,7 @@ function megaAnswer(oi) {
     var idx = st.i, ok = oi >= 0 && st.cs.steps[st.i].options[oi].ok, shock = oi >= 0 && defibWords(st.cs.steps[st.i].options[oi].t);
     clearTimeout(MC.adv); MC.adv = setTimeout(function () { if (S.mega === st && st.i === idx && !st.done) megaNext(true); }, shock ? 2100 : ok ? 1100 : 2200);
   }
-  try { groupNote(null, !!(oi >= 0 && st.cs.steps[st.i].options[oi].ok), "megacode", { id: "mc-" + (st.cs.id || st.cs.title || "case"), name: "Megacode: " + (st.cs.title || st.cs.id || "case") }); } catch (e) {}
+  try { groupNote(null, !!(oi >= 0 && st.cs.steps[st.i].options[oi].ok), "megacode", { id: "mc-" + (st.cs.id || st.cs.title || "case"), name: "Code: " + (st.cs.title || st.cs.id || "case") }); } catch (e) {}
   render();
 }
 function megaNext(auto) {
@@ -6795,8 +7130,16 @@ function rushPool() {
   if (S.view === "level" && DB.MEGA_LEVELS && DB.MEGA_LEVELS[ctxKey()]) megaCases().forEach(function (c) { P.push({ k: "mega", id: c.id }); });
   scenList().filter(nolac).forEach(function (s) { P.push({ k: "scen", id: s.id }); });
   if (S.view === "level" && typeof nrLevelsFor === "function") {
-    var al = nrLevelsFor(ctxKey()) || [];
-    (DB.CASES || []).forEach(function (c) { if (al.indexOf(c.lv) >= 0 && c.steps.length && nolac(c)) P.push({ k: "call", id: c.id }); });
+    var ck = ctxKey(), al = (nrLevelsFor(ck) || []).slice();
+    if (isM(ck)) ["ms1", "ms3", "intern"].forEach(function (x) { if (al.indexOf(x) < 0) al.push(x); });   /* med school shares EM, surgery and family medicine calls */
+    /* RN: calls from the picked specialties; nursing student (or nothing picked) gets every RN call */
+    var us = ck === "rn" && typeof myUnits === "function" ? myUnits("rn") : [], all = ck !== "rn" || !us.length || nSchoolOn();
+    (DB.CASES || []).forEach(function (c) {
+      if (al.indexOf(c.lv) < 0 || !c.steps.length || !nolac(c)) return;
+      if (c.lv === "rn" && !all && us.indexOf(c.unit) < 0) return;
+      P.push({ k: "call", id: c.id });
+      if (c.lv === "rn" && all && us.indexOf(c.unit) >= 0) P.push({ k: "call", id: c.id });   /* your own departments come up twice as often */
+    });
   }
   return P;
 }
@@ -6826,16 +7169,343 @@ function rushStart(R) {
 }
 function rushView() {
   if (!simOk()) return simGate("Bug Rush");
+  if (!xdataReady()) { xdataLoad(); if (!S.rush) return '<div class="empty">Loading the calls…</div>'; }
   var R = S.rush || (S.rush = { n: 0, saved: 0, lost: 0, ok: 0, tot: 0 });
   if (R.ended) return rushSummary(R);
   if (!R.cur && !rushStart(R)) return '<div class="empty">Bug Rush is on the way for this level.</div>';
   var kind = { mega: "Code", scen: "Case", call: "Call" }[R.cur.k];
-  var c = '<div class="rushbar"><span class="rushn"><strong>' + kind + ' ' + R.n + '</strong></span><span class="rushs">Saved <b>' + R.saved + '</b></span><span class="rushl">Lost <b>' + R.lost + '</b></span>' +
+  var c = (ctxKey() === "rn" && typeof nFocusRow === "function" ? nFocusRow(false) : "") + '<div class="rushbar"><span class="rushn"><strong>' + kind + ' ' + R.n + '</strong></span><span class="rushs">Saved <b>' + R.saved + '</b></span><span class="rushl">Lost <b>' + R.lost + '</b></span>' +
     (R.tot ? '<span>Score <b>' + Math.round(100 * R.ok / R.tot) + '%</b></span>' : '') + '<button class="linkish" data-act="rushend">End rush</button></div>';
   if (R.cur.k === "mega") return c + (S.mega && !S.mega.done ? '<p class="rushacu">' + acuTag("critical") + '</p>' : '') + megaView2();
   if (R.cur.k === "scen") { var s = scenList().filter(function (x) { return x.id === R.cur.id; })[0]; if (!s) { R.cur = null; return rushView(); } return c + scenView(s, scenList(), "rush"); }
   return c + rushCallView(R);
 }
+/* ===== Extra data, loaded after start (Nov 15 2026) =====
+   data8.js holds the 400 Bug Rush calls by role and department, 51 more anatomy parts and 60 more Disease Lab
+   conditions (about 620 KB on the wire). Only Bug Rush and Anatomy need them, so the app opens without waiting: it fetches them 2.5 s after
+   start, or right away when you open one of those two tabs, and redraws when they arrive. */
+var XDATA = { st: 0, cbs: [] };
+function xdataReady() { return XDATA.st === 2; }
+function xdataLoad(cb) {
+  if (XDATA.st === 2) { if (cb) cb(); return; }
+  if (cb) XDATA.cbs.push(cb);
+  if (XDATA.st === 1) return; XDATA.st = 1;
+  var sc = document.createElement("script"); sc.src = "data8.js"; sc.async = true;
+  sc.onload = function () { XDATA.st = 2; try { SR.idx = null; } catch (e) {} var L = XDATA.cbs; XDATA.cbs = []; L.forEach(function (f) { try { f(); } catch (e) {} });
+    try { if (S.tab === "rush" || S.tab === "anatomy" || S.tab === "diseases" || S.tab === "hub") render(); } catch (e) {} };
+  sc.onerror = function () { XDATA.st = 0; setTimeout(xdataLoad, 15000); };
+  document.head.appendChild(sc);
+}
+setTimeout(function () { xdataLoad(); }, 2500);
+/* ===== Bug Rush patient monitor (owner, Nov 15 2026) =====
+   "Do a heart rhythm for every pt on there as well as real time vitals engine that change as you click the answer.
+   Match those times up. Remember EMTs can't do a lot of this so their Bug Rush should look different."
+   "Put a live monitor with vitals and a 3 lead on every one of the bug rushes. Only after you make contact with the pt."
+   - Nothing shows while you are still being dispatched or driving there; the monitor goes on at patient contact.
+   - Paramedic, flight, community paramedic and nursing levels get a 3-lead (lead II) ECG with the rhythm,
+     HR, SpO2 with a pleth, NIBP, RR and EtCO2 once it has been mentioned.
+   - EMR, EMT, AEMT and CNA get a BLS set: pulse oximeter with its pleth, pulse, a manual BP, RR, skin and the last
+     glucose. No ECG; a pulseless patient shows an AED pad check instead.
+   - Every number the story gives is the number on the screen for that part. Between numbers the monitor drifts a
+     little like a real one. Answering moves the patient: a right choice eases the vitals toward normal over about
+     4 seconds, a wrong one makes them worse over the same 4 seconds, and the next part glides to its own numbers
+     over about 3 seconds. The NIBP cycles (about 2 s of "measuring") when it changes, like a real cuff. */
+var PV = { key: "", cur: null, tgt: null, from: null, t0: 0, dur: 3, timer: 0, als: true, arrest: "", other: [], gl: null, temp: null, etco2On: false, bpAt: 0, cycling: 0, trend: 0,
+  pl: { cv: null, raf: 0, t: 0, x: -1, y: 0, ph: 0 } };
+var PV_BLS = { emr: 1, emt: 1, aemt: 1, cna: 1 };
+function pvALS() { return !PV_BLS[ctxKey()]; }
+var PV_PRE = /\b(dispatched|dispatch (reports|says|adds|tells)|you are (called|sent|toned|requested|paged|assigned)|en route to (the|a|an)\b|responding to|staging|on the way to (the|a)|the call comes in|while en route to)\b/i;
+var PV_CONTACT = /\b(you (find|reach|see|arrive|enter|approach|walk in|kneel|assess)|on arrival|he is|she is|they are|the patient|pt is|is lying|is sitting|is seated|lying|sitting|held|crying|moaning|unresponsive|awake|alert)\b/i;
+function pvNum(re, s) { var m = re.exec(s); return m ? +m[1] : null; }
+function pvParse(s) {
+  var v = {}, m;
+  v.hr = pvNum(/\b(?:HR|heart rate|pulse(?: rate)?|rate)\s*(?:of|is|was|at|now|:|=|down to|up to|to)?\s*(\d{2,3})\b/i, s);
+  m = /\b(?:BP|blood pressure|pressure)\D{0,14}?(\d{2,3})\s*\/\s*(\d{2,3})\b/i.exec(s) || /(?:^|[\s,(])(\d{2,3})\/(\d{2,3})(?=[\s,.;)]|$)/.exec(s);
+  if (m && +m[1] >= 40 && +m[1] <= 280 && +m[2] >= 15 && +m[2] <= 170 && +m[1] > +m[2]) { v.sbp = +m[1]; v.dbp = +m[2]; }
+  v.rr = pvNum(/\b(?:RR|resp(?:iratory)? rate|respirations?(?: are| of)?|breathing(?: rate)?(?: is| at)?)\s*(?:of|is|at|:|=)?\s*(\d{1,2})\b/i, s);
+  v.spo2 = pvNum(/\b(?:SpO2|sats?|saturation|O2 sat(?:uration)?|pulse ox(?:imetry)?)\s*(?:of|is|was|reads|now|at|:|=|falls to|drops to|rises to|climbs to|improves to|to)?\s*(\d{2,3})\s*%/i, s);
+  v.etco2 = pvNum(/\b(?:ETCO2|EtCO2|end-tidal(?: CO2)?|capnography)\s*(?:of|is|was|reads|now|at|:|=|falls to|rises to|to)?\s*(\d{1,3})\b/i, s);
+  v.gl = pvNum(/\b(?:glucose|blood sugar|BGL|sugar|CBG|fingerstick)\s*(?:of|is|was|reads|at|:|=)?\s*(\d{2,3})\b/i, s);
+  m = /(\d{2,3}(?:\.\d)?)\s*°?\s*(F|C)\b/.exec(s); if (m && /temp|fever|°|degrees|\d\s*°/i.test(s)) v.temp = m[1] + " °" + m[2];
+  Object.keys(v).forEach(function (k) { if (v[k] == null) delete v[k]; });
+  return v;
+}
+function pvRhythm(s) {
+  if (/\b(ventricular fibrillation|v-?fib|\bVF\b)/i.test(s)) return "vf";
+  if (/\b(pulseless ventricular tachycardia|pulseless v-?tach)/i.test(s)) return "vt-np";
+  if (/\btorsades/i.test(s)) return "torsades";
+  if (/\b(asystole|flat ?line)/i.test(s)) return "asys";
+  if (/\b(PEA|pulseless electrical activity)\b/i.test(s)) return "pea";
+  if (/\b(ventricular tachycardia|v-?tach|wide[- ]complex tachycardia)\b/i.test(s)) return "vt";
+  if (/\b(atrial fibrillation|a-?fib|irregularly irregular)\b/i.test(s)) return "afib";
+  if (/\b(SVT|supraventricular tachycardia)\b/i.test(s)) return "svt";
+  if (/\b(complete heart block|third-degree (AV )?block|3rd-degree block)\b/i.test(s)) return "chb";
+  if (/\b(pulse returns|ROSC|return of spontaneous circulation|regains a pulse|has a pulse again)\b/i.test(s)) return "rosc";
+  if (/\b(no pulse|pulseless|cardiac arrest|not breathing and has no pulse|goes into arrest|arrests)\b/i.test(s)) return "arrest";
+  return "";
+}
+function pvAge(s) {
+  var m = /(\d{1,2})[- ](month|week|day)s?[- ]old/i.exec(s); if (m || /\b(newborn|neonate|infant|baby)\b/i.test(s)) return 0.5;
+  m = /(\d{1,3})[- ]year[- ]old/i.exec(s); return m ? +m[1] : 40;
+}
+function pvNormal(age) {
+  if (age < 1) return { hr: 140, sbp: 80, dbp: 50, rr: 36, spo2: 98 };
+  if (age < 5) return { hr: 115, sbp: 94, dbp: 58, rr: 26, spo2: 98 };
+  if (age < 13) return { hr: 95, sbp: 104, dbp: 64, rr: 20, spo2: 98 };
+  return { hr: 84, sbp: 128, dbp: 80, rr: 16, spo2: 97 };
+}
+/* starting picture at patient contact, from what the story says about the patient */
+function pvBase(s, age) {
+  var v = pvNormal(age), k = function (re) { return re.test(s); };
+  if (k(/\b(sweat|diaphore|agitat|anxious|panic|pain|struggl|scream)/i)) v.hr += 18;
+  if (k(/\b(pale|cool|clammy|diaphoretic)\b/i)) v.hr += 12;
+  if (k(/\b(mottled|shock|hypotens|bleeding heavily|hemorrhag|weak radial|thready|absent radial)/i)) { v.hr = Math.max(v.hr, age < 13 ? v.hr + 40 : 124); v.sbp = age < 13 ? v.sbp - 24 : 84; v.dbp = age < 13 ? v.dbp - 16 : 50; v.rr += 8; }
+  if (k(/\b(short(ness)? of breath|wheez|respiratory distress|dyspnea|tripod|accessory muscle|retractions|can't catch|gasping|crackles|rales|stridor)/i)) { v.rr += age < 13 ? 14 : 12; v.spo2 = 89; v.hr += 14; }
+  if (k(/\b(cyano|blue lips|gray|grey)\b/i)) v.spo2 = Math.min(v.spo2, 82);
+  if (k(/\b(anaphyla|hives and|swollen (lips|tongue))/i)) { v.hr = Math.max(v.hr, 128); v.sbp = 78; v.dbp = 42; v.rr = 26; v.spo2 = 90; }
+  if (k(/\b(methamphetamine|meth\b|cocaine|stimulant|amphetamine|excited delirium|hyperactive delirium)/i)) { v.hr = Math.max(v.hr, 140); v.sbp = 172; v.dbp = 100; v.rr = Math.max(v.rr, 24); }
+  if (k(/\b(stroke|facial droop|slurred speech|arm drift)/i)) { v.sbp = 186; v.dbp = 102; }
+  if (k(/\b(hot to the touch|hypertherm|heat stroke|febrile|fever)/i)) v.hr += 14;
+  if (k(/\b(overdose|pinpoint|snoring respirations|barely breathing|slow, shallow|agonal)/i)) { v.rr = 6; v.spo2 = 84; v.hr = Math.max(60, v.hr - 20); }
+  if (k(/\b(unresponsive|apneic|not breathing)\b/i) && !k(/\bbreathing (normally|fine)/i)) { v.rr = Math.min(v.rr, 6); v.spo2 = Math.min(v.spo2, 84); }
+  if (k(/\b(bradycard|slow pulse)/i)) v.hr = 42;
+  if (k(/\b(seiz|post-?ictal)/i)) v.hr = Math.max(v.hr, 118);
+  return v;
+}
+function pvRhName(rh, hr) { return rh === "sinus" && hr >= 100 ? "sinustachy" : rh === "sinus" && hr < 60 ? "sinusbrady" : rh; }
+/* the vitals plan for one call: who, when contact happens, and the numbers for each part */
+function pvPlan(cs) {
+  if (cs._pv) return cs._pv;
+  /* calls written with their own vitals (Nov 15 2026): v on each part from the moment the patient is on the
+     monitor, vr / vw where the numbers drift after a right / wrong answer, pumps for running drips */
+  if ((cs.steps || []).some(function (s) { return s.v !== undefined; })) {
+    var ex = [], first = -1, last = null, ag = pvAge(cs.title + " " + cs.steps.map(function (s) { return s.story; }).join(" "));
+    cs.steps.forEach(function (s, i) { if (s.v && first < 0) first = i; if (s.v) last = s.v; ex.push(s.v ? Object.assign({}, s.v) : (first >= 0 && last ? Object.assign({}, last) : null)); });
+    var ea = 99; for (var e = 0; e < cs.steps.length; e++) if (cs.steps[e].v && cs.steps[e].v.etco2 != null) { ea = e; break; }
+    cs._pv = { age: ag, contact: first < 0 ? 999 : first, plan: ex, normal: pvNormal(ag), etco2At: ea, explicit: true };
+    return cs._pv;
+  }
+  var steps = cs.steps || [], all = steps.map(function (s) { return s.story; }).join(" ");
+  var age = pvAge(cs.title + " " + all), contact = -1;
+  for (var i = 0; i < steps.length; i++) {
+    var t = steps[i].story || "", hasV = Object.keys(pvParse(t)).length > 0;
+    if (hasV || (!PV_PRE.test(t) && (PV_CONTACT.test(t) || i > 0)) || /^(rn|lvn|cna)$/.test(cs.lv)) { contact = i; break; }
+  }
+  if (contact < 0) contact = 0;
+  /* the monitor goes on when the story puts the patient on it, if it says so (owner: "only when the pt is on it") */
+  for (var mi = 0; mi < steps.length; mi++) if (/\b(attach|apply|applies|place|places|hook(s|ed)? (him|her|them|the patient) up|put (him|her|them|the patient) on)\b[^.]{0,40}\b(monitor|leads|electrodes|pulse ox(imeter)?|pads|cardiac monitor|telemetry)\b/i.test(steps[mi].story || "")) { if (mi > contact) contact = mi; break; }
+  var base = pvBase(steps.slice(contact, contact + 2).map(function (s) { return s.story; }).join(" "), age), cur = base, rh = "sinus", plan = [];
+  for (var j = 0; j < steps.length; j++) {
+    var s = steps[j].story || "", p = pvParse(s), r = pvRhythm(s), v = Object.assign({}, cur);
+    Object.keys(p).forEach(function (k) { v[k] = p[k]; });
+    if (r === "arrest") rh = /\bPEA\b/.test(all) ? "pea" : /asystole/i.test(all) ? "asys" : "vf";
+    else if (r === "rosc") { rh = "sinus"; v.hr = p.hr || 108; v.sbp = p.sbp || 92; v.dbp = p.dbp || 58; v.spo2 = p.spo2 || 93; v.rr = p.rr || 12; }
+    else if (r === "vt-np") rh = "vt-np";
+    else if (r) rh = r;
+    if (/\b(improv|stabiliz|calm(er)?|resolv|breathing easier|pink(er)?|color returns|alert and talking)/i.test(s) && !Object.keys(p).length) v = pvToward(v, pvNormal(age), 0.45);
+    if (/\b(worsen|deteriorat|becomes (unresponsive|confused|pale|gray|grey)|decompensat|drops?|falls?)\b/i.test(s) && !Object.keys(p).length) v = Object.assign(pvWorse(v, pvNormal(age)), { gl: v.gl, temp: v.temp });
+    v.rh = rh; plan.push(v); cur = v;
+  }
+  /* a number first given later in the call is what it was all along (the story only says it when someone checks) */
+  ["hr", "sbp", "rr", "spo2"].forEach(function (k) {
+    for (var q = contact; q < steps.length; q++) {
+      var pq = pvParse(steps[q].story || "");
+      if (pq[k] != null && /\b(falls?|drops?|rises?|climbs?|improves?|increases?|decreases?|now|down to|up to|after)\b/i.test(steps[q].story || "")) break;
+      if (pq[k] != null) { for (var z = contact; z < q; z++) { plan[z][k] = pq[k]; if (k === "sbp") plan[z].dbp = pq.dbp; } break; }
+      if (pvRhythm(steps[q].story || "") || /\b(worsen|deteriorat|improv|stabiliz)/i.test(steps[q].story || "")) break;
+    }
+  });
+  cs._pv = { age: age, contact: contact, plan: plan, normal: pvNormal(age), etco2At: (function () { for (var q = 0; q < steps.length; q++) if (/etco2|end-tidal|capnograph|intubat|i-?gel|king airway|supraglottic|BVM|bag-valve/i.test(steps[q].story + " " + (steps[q].a || ""))) return q; return 99; })() };
+  return cs._pv;
+}
+/* move vitals part of the way toward normal (f between 0 and 1) */
+function pvToward(v, n, f) {
+  var o = Object.assign({}, v);
+  ["hr", "sbp", "dbp", "rr"].forEach(function (k) { if (o[k] != null && n[k] != null) o[k] = o[k] + (n[k] - o[k]) * f; });
+  if (o.spo2 != null) o.spo2 = o.spo2 + (Math.min(99, n.spo2 + 1) - o.spo2) * f;
+  ["hr", "sbp", "dbp", "rr", "spo2"].forEach(function (k) { if (o[k] != null) o[k] = Math.round(o[k]); });
+  if (o.hr != null) o.hr = Math.max(20, Math.min(220, o.hr)); if (o.spo2 != null) o.spo2 = Math.max(60, Math.min(100, o.spo2));
+  if (o.sbp != null) { o.sbp = Math.max(50, Math.min(260, o.sbp)); o.dbp = Math.max(25, Math.min(o.sbp - 15, o.dbp)); }
+  if (o.rr != null) o.rr = Math.max(0, Math.min(60, o.rr));
+  return o;
+}
+/* worse: heart rate further from normal (faster), pressure lower, breathing faster, saturation lower */
+function pvWorse(v, n) {
+  var o = Object.assign({}, v);
+  if (o.hr != null) o.hr = o.hr < n.hr - 20 ? o.hr - 8 : o.hr + Math.max(8, Math.round(o.hr * 0.07));
+  if (o.sbp != null) { o.sbp = o.sbp > 170 ? o.sbp + 10 : o.sbp - Math.max(8, Math.round(o.sbp * 0.08)); o.dbp = o.sbp > 170 ? o.dbp + 6 : o.dbp - 5; }
+  if (o.rr != null) o.rr = o.rr < 10 ? Math.max(0, o.rr - 2) : o.rr + 4;
+  if (o.spo2 != null) o.spo2 = o.spo2 - 4;
+  return pvToward(o, n, 0);
+}
+function pvBetter(v, n) { return pvToward(v, n, 0.35); }
+/* set where the numbers are heading; called from the views, does nothing if nothing changed */
+function pvSync(key, tgt, dur, opt) {
+  opt = opt || {};
+  if (PV.key === key) { setTimeout(pvAttach, 0); return; }
+  var first = !PV.cur || opt.fresh;
+  PV.key = key; PV.als = (PV.mode || (pvALS() ? "full" : "bls")) === "full"; PV.trend = opt.trend || 0; PV.etco2On = !!opt.etco2;
+  if (first) { PV.gl = null; PV.temp = null; }
+  if (tgt.gl != null) PV.gl = tgt.gl; if (tgt.temp) PV.temp = tgt.temp;
+  if (first) { PV.cur = Object.assign({}, tgt); PV.from = Object.assign({}, tgt); PV.tgt = tgt; PV.t0 = performance.now() / 1000; PV.dur = 0.01; LM.reset = true; }
+  else { PV.from = Object.assign({}, PV.cur); PV.tgt = tgt; PV.t0 = performance.now() / 1000; PV.dur = dur || 3; }
+  if (PV.from.sbp !== tgt.sbp && !first) { PV.cycling = PV.t0 + Math.min(PV.dur, 2.2); }
+  PV.arrest = /^(vf|vt-np|asys|pea|torsades)$/.test(tgt.rh) ? tgt.rh : "";
+  var rh = tgt.rh === "vt-np" ? "vt" : pvRhName(tgt.rh || "sinus", tgt.hr || 80), pulse = !PV.arrest;
+  if (PV.als) lmTarget(rh, PV.arrest && PV.arrest !== "pea" && PV.arrest !== "vt-np" ? 0 : (PV.cur.hr || 80), pulse, null, false);
+  if (!PV.timer) PV.timer = setInterval(pvTick, 250);
+  setTimeout(pvAttach, 0);
+}
+function pvStop() { clearInterval(PV.timer); PV.timer = 0; PV.key = ""; PV.cur = null; PV.gl = null; PV.temp = null; PV.pl.cv = null; }
+function pvEase(u) { return u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u); }
+function pvTick() {
+  if (!document.querySelector(".pvmon")) { if (!S.rush) pvStop(); return; }
+  var now = performance.now() / 1000, u = pvEase((now - PV.t0) / PV.dur), F = PV.from, T = PV.tgt, C = PV.cur;
+  ["hr", "sbp", "dbp", "rr", "spo2", "etco2"].forEach(function (k) {
+    if (T[k] == null) return; var a = F[k] == null ? T[k] : F[k];
+    /* a checked set of vitals holds still; a monitor wanders a little on the SpO2 only (the ECG rate drifts on its own) */
+    var wob = PV.mode !== "vitals" && k === "spo2" ? (Math.random() < 0.06 ? (Math.random() < 0.5 ? -1 : 1) : 0) : 0;
+    C[k] = a + (T[k] - a) * u + (u >= 1 ? wob * 0.5 : 0);
+  });
+  if (PV.als && LM.tgt && !PV.arrest) { LM.tgt.hr = Math.round(C.hr); }
+  pvPaint(now);
+}
+function pvVal(k) {
+  var C = PV.cur || {}, now = performance.now() / 1000;
+  if (PV.arrest && (k === "hr" || k === "spo2" || k === "sbp")) return k === "sbp" ? "---/---" : "---";
+  if (k === "bp") return now < PV.cycling ? "<i>measuring</i>" : C.sbp != null ? Math.round(C.sbp) + "/" + Math.round(C.dbp) : "---/---";
+  if (k === "hr") return PV.als && LM.hrShow ? LM.hrShow : C.hr != null ? Math.round(C.hr) : "---";
+  if (k === "etco2" && C.etco2 == null && PV.mode !== "full") return "---";
+  if (k === "spo2") return C.spo2 != null ? Math.round(Math.min(100, C.spo2)) : "---";
+  if (k === "rr") return C.rr != null ? Math.max(0, Math.round(C.rr)) : "---";
+  if (k === "etco2") return C.etco2 != null ? Math.round(C.etco2) : PV.arrest ? 14 : C.rr != null && C.rr < 8 ? 58 : 36;
+  return "";
+}
+function pvPaint(now) {
+  ["hr", "spo2", "bp", "rr", "etco2"].forEach(function (k) { var el = document.getElementById("pv-" + k); if (el) { var v = String(pvVal(k)); if (el.innerHTML !== v) el.innerHTML = v; } });
+  var tr = document.getElementById("pv-trend");
+  if (tr) { var on = now - PV.t0 < PV.dur + 0.4 && PV.trend; tr.className = "pvtrend" + (on ? (PV.trend > 0 ? " up" : " down") : ""); tr.textContent = on ? (PV.trend > 0 ? "Improving" : "Getting worse") : ""; }
+}
+function pvTile(k, label, unit, cls) { return '<div class="pvt ' + cls + '"><span class="pvl">' + label + '</span><b id="pv-' + k + '">' + pvVal(k) + '</b>' + (unit ? '<span class="pvu">' + unit + '</span>' : '') + '</div>'; }
+function pvPumps() {
+  if (!PV.pumps || !PV.pumps.length) return "";
+  return '<div class="pvpumps" aria-label="Infusions running">' + PV.pumps.map(function (p) { return '<span class="pvpump"><b>' + esc(p[0]) + '</b><i>' + esc(p[1]) + '</i></span>'; }).join("") + '</div>';
+}
+function pvHTML(where) {
+  var C = PV.cur || {}, chips = [];
+  if (PV.gl != null) chips.push("Glucose " + PV.gl + " mg/dL");
+  if (PV.temp) chips.push("Temp " + PV.temp);
+  if (PV.als) {
+    var nurse = where === "nurse";
+    return '<div class="monitor live pvmon"><div class="mtop"><span class="hr" id="lmhr">' + lmHrText() + '</span><span class="lead">' + (nurse ? "Bedside monitor · II" : where === "imaging" ? "Patient monitor · II" : "3-lead · II") + '</span></div>' +
+      '<div class="stripw"><canvas class="lmcv" role="img" aria-label="Live ECG, lead II"></canvas></div>' +
+      '<div class="pvplw"><canvas class="pvpl" role="img" aria-label="Pulse oximeter waveform"></canvas></div>' +
+      '<div class="pvgrid">' + pvTile("spo2", "SpO2", "%", "sp") + pvTile("bp", "NIBP", "mmHg", "bp") + pvTile("rr", "RR", "/min", "rr") + (PV.etco2On ? pvTile("etco2", "EtCO2", "mmHg", "co") : '') + '</div>' +
+      pvPumps() + '<div class="pvfoot"><span id="pv-trend" class="pvtrend"></span>' + chips.map(function (c) { return '<span class="pvchip">' + esc(c) + '</span>'; }).join("") + '</div></div>';
+  }
+  /* plain vital signs (clinic, home visit, floor without telemetry): numbers only, no waveforms */
+  if (PV.mode === "vitals") {
+    if (PV.temp) chips.shift && (chips = chips.filter(function (c) { return c.indexOf("Temp ") !== 0; }));
+    return '<div class="pvmon pvbls pvplain"><div class="pvbtop"><span class="pvbt">Vital signs</span><span class="pvbs">' + (where === "nurse" ? "Last set" : "Checked now") + '</span></div>' +
+      '<div class="pvgrid">' + pvTile("hr", "Pulse", "/min", "hrb") + pvTile("bp", "BP", "mmHg", "bp") + pvTile("rr", "RR", "/min", "rr") + pvTile("spo2", "SpO2", "%", "sp") +
+      (PV.temp ? '<div class="pvt rr pvtemp"><span class="pvl">Temp</span><b>' + esc(PV.temp) + '</b></div>' : '') + '</div>' +
+      pvPumps() + '<div class="pvfoot"><span id="pv-trend" class="pvtrend"></span>' + chips.map(function (c) { return '<span class="pvchip">' + esc(c) + '</span>'; }).join("") + '</div></div>';
+  }
+  /* BLS: no ECG. A pulse oximeter, a manual cuff and your own count; an AED pad check if there is no pulse */
+  return '<div class="pvmon pvbls"><div class="pvbtop"><span class="pvbt">Patient vitals</span><span class="pvbs">Pulse ox · manual BP</span></div>' +
+    (PV.arrest ? '<div class="pvaed"><strong>No pulse.</strong> AED pads on. Follow the AED prompts and keep doing CPR.</div>' : '<div class="pvplw"><canvas class="pvpl" role="img" aria-label="Pulse oximeter waveform"></canvas></div>') +
+    '<div class="pvgrid">' + pvTile("hr", "Pulse", "/min", "hrb") + pvTile("spo2", "SpO2", "%", "sp") + pvTile("bp", "BP", "mmHg", "bp") + pvTile("rr", "RR", "/min", "rr") + '</div>' +
+    pvPumps() + '<div class="pvfoot"><span id="pv-trend" class="pvtrend"></span>' + chips.map(function (c) { return '<span class="pvchip">' + esc(c) + '</span>'; }).join("") + '</div></div>';
+}
+function pvAttach() {
+  if (PV.als) lmAttach();
+  var cv = document.querySelector(".pvmon .pvpl"), P = PV.pl; if (!cv) return;
+  if (P.cv && P.cv !== cv && P.cv.width) { cv.replaceWith(P.cv); cv = P.cv; } else { P.cv = cv; P.x = -1; }
+  var w = Math.max(200, Math.round(cv.parentNode.clientWidth || 600)), dpr = Math.min(2, window.devicePixelRatio || 1), h = PV.als ? 40 : 70;
+  if (cv.width !== Math.round(w * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); cv.style.width = w + "px"; cv.style.height = h + "px"; var pg = cv.getContext("2d"); pg.fillStyle = PV.als ? "#07130d" : "#0b1a24"; pg.fillRect(0, 0, cv.width, cv.height); P.x = -1; }
+  if (!P.raf) { P.t = performance.now() / 1000; P.raf = requestAnimationFrame(pvPlFrame); }
+}
+/* pulse oximeter pleth: one bump per beat, smaller when the pressure is low, flat with no pulse */
+function pvPlFrame() {
+  var P = PV.pl; P.raf = 0; var cv = P.cv; if (!cv || !cv.isConnected) { P.x = -1; return; }
+  P.raf = requestAnimationFrame(pvPlFrame);
+  var now = performance.now() / 1000, g = cv.getContext("2d"), W = cv.width, H = cv.height, dpr = W / (parseFloat(cv.style.width) || W), per = PV.als ? 4 : 5;
+  if (now - P.t > 0.5) P.t = now - 0.02;
+  var C = PV.cur || {}, hr = PV.als && LM.hr ? LM.hr : (C.hr || 80), amp = PV.arrest ? 0 : Math.max(0.25, Math.min(1, ((C.sbp || 120) - 50) / 80)) * (C.spo2 && C.spo2 < 85 ? 0.75 : 1);
+  g.lineWidth = 2 * dpr; g.strokeStyle = PV.als ? "#5ad8ff" : "#7fd4ff"; g.lineJoin = "round";
+  for (var t = P.t; t < now; t += 1 / 200) {
+    P.ph += (1 / 200) * Math.max(20, hr) / 60; var f = P.ph % 1;
+    var y0 = f < 0.18 ? Math.sin(f / 0.18 * Math.PI / 2) : f < 0.42 ? 1 - (f - 0.18) / 0.24 * 0.55 + 0.12 * Math.sin((f - 0.18) / 0.24 * Math.PI) : 0.45 * (1 - (f - 0.42) / 0.58);
+    var x = ((t % per) / per) * W, y = H * 0.85 - (amp * y0 + 0.02 * Math.sin(t * 2)) * H * 0.7;
+    if (P.x < 0 || x < P.x) { P.x = x; P.y = y; }
+    g.fillStyle = PV.als ? "#07130d" : "#0b1a24"; g.fillRect(x + 1, 0, 12 * dpr, H);
+    g.beginPath(); g.moveTo(P.x, P.y); g.lineTo(x, y); g.stroke(); P.x = x; P.y = y;
+  }
+  P.t = now;
+}
+/* Bug Rush developing call: which numbers belong on screen right now */
+function pvCall(cs, C) {
+  var pl = pvPlan(cs); if (C.i < pl.contact || C.i >= cs.steps.length) return "";
+  var mode = cs.mon || (pvALS() ? "full" : "bls"); if (mode === "none") return "";
+  var stp = cs.steps[C.i], v = pl.plan[C.i], n = pl.normal, key = cs.id + ":" + C.i + ":" + (C.ans == null ? "q" : "a"), tgt = v, trend = 0;
+  if (!v) return "";
+  if (C.ans != null) {
+    var right = C.order[C.ans] === stp.a, ov = right ? stp.vr : stp.vw;
+    tgt = ov ? Object.assign({}, v, ov) : Object.assign(right ? pvBetter(v, n) : pvWorse(v, n), { rh: v.rh }); trend = right ? 1 : -1;
+    if (!ov && /^(vf|vt-np|asys|pea|torsades)$/.test(v.rh)) tgt = v;
+  }
+  PV.mode = mode; PV.pumps = stp.pumps || [];
+  pvSync(key, tgt, C.ans != null ? 4 : 3, { fresh: PV.key.indexOf(cs.id + ":") !== 0, trend: trend, etco2: C.i >= pl.etco2At });
+  return pvHTML(/^(rn|lvn|cna)$/.test(cs.lv) ? "nurse" : /^(im)$/.test(cs.lv) ? "imaging" : "field");
+}
+/* Bug Rush treatment case (select every medication): its listed vitals, and the change once you check */
+function pvScen(s, st) {
+  var txt = (s.text || "") + " " + (s.vitals || []).join(", "), age = pvAge(txt), n = pvNormal(age);
+  var v = Object.assign(pvBase(txt, age), pvParse(txt)), r = pvRhythm(txt); v.rh = r && r !== "arrest" && r !== "rosc" ? r : r === "arrest" ? "vf" : "sinus";
+  var key = "scen:" + s.id + ":" + (st.checked ? "a" : "q"), tgt = v, trend = 0;
+  if (st.checked) {
+    var correct = pickByLevel(s.correct), wrong = pickByLevel(s.wrong);
+    var hit = correct.filter(function (id) { return st.sel[id]; }).length, bad = wrong.filter(function (id) { return st.sel[id]; }).length;
+    trend = hit === correct.length && !bad ? 1 : hit && !bad ? 0 : -1;
+    tgt = Object.assign(trend > 0 ? pvBetter(v, n) : trend < 0 ? pvWorse(v, n) : v, { rh: v.rh });
+  }
+  PV.mode = pvALS() ? "full" : "bls"; PV.pumps = [];
+  pvSync(key, tgt, 4, { fresh: !st.checked, trend: trend, etco2: /etco2|intubat/i.test(txt) });
+  return pvHTML("field");
+}
+
+/* ===== Auto-advance (owner, Nov 15 2026) =====
+   "I don't want you to have to click next question. I just want it to go to the next one unless you're an evaluator."
+   After you answer, the next question (or the next part of a Bug Rush call) comes up on its own once there has been
+   time to read the explanation: about 3 s plus a little for every word, longer after a wrong answer. A bar shows
+   the time left; "Next" goes now and "Stay here" stops it for this question. Evaluators (and question reviewers)
+   keep the Next button only, because they grade each question before moving on. */
+var AUTO = { key: "", timer: 0, stay: "" };
+function autoOn() { return !((typeof evIsEval === "function" && evIsEval()) || (typeof isReviewer === "function" && isReviewer())); }
+function autoSecs(text, right, min) {
+  var w = String(text || "").replace(/<[^>]*>/g, " ").split(/\s+/).filter(Boolean).length;
+  return Math.max(min || 3, Math.min(16, 2.5 + w / (right ? 5 : 4) + (right ? 0 : 1.5)));
+}
+/* a countdown bar; when it runs out it presses the button marked data-autogo="key" (the same key keeps the
+   same timer across re-renders, and nothing happens if that button is gone or disabled) */
+function autoBar(key, secs, label) {
+  if (!autoOn() || AUTO.stay === key) return "";
+  var now = Date.now();
+  if (AUTO.key !== key) {
+    clearTimeout(AUTO.timer); AUTO.key = key; AUTO.end = now + secs * 1000; AUTO.secs = secs;
+    AUTO.timer = setTimeout(function autoFire() {
+      if (AUTO.key !== key) return;
+      if (document.hidden) { AUTO.timer = setTimeout(autoFire, 1500); return; }   /* wait until the app is back on screen */
+      AUTO.key = ""; var b = document.querySelector('button[data-autogo="' + key + '"]'); if (b && !b.disabled) b.click();
+    }, secs * 1000);
+  }
+  var left = Math.max(0, (AUTO.end - now) / 1000);
+  return '<div class="autonext"><div class="anbar"><i style="--from:' + (1 - left / AUTO.secs).toFixed(3) + ';animation-duration:' + left.toFixed(2) + 's"></i></div>' +
+    '<span class="anlbl">' + esc(label || "Next question coming up") + '</span><button class="linkish" data-act="autostay">Stay here</button></div>';
+}
+function autoGo(key) { return autoOn() && AUTO.stay !== key ? ' data-autogo="' + key + '"' : ''; }
+function autoCancel() { clearTimeout(AUTO.timer); AUTO.key = ""; }
+
 function rushCase(id) { return (DB.CASES || []).filter(function (c) { return c.id === id; })[0]; }
 function rushCallView(R) {
   var C = R.call, cs = rushCase(C.id); if (!cs) { R.cur = null; return ""; }
@@ -6844,11 +7514,12 @@ function rushCallView(R) {
     var pct = Math.round(100 * C.right / cs.steps.length), good = pct >= 75, mid = pct >= 50;
     c += '<div class="learncard done"><span class="eyebrow">Handoff</span><p class="big">' + pct + '%</p><p>' + C.right + ' of ' + cs.steps.length + ' decisions right on this call.</p>' +
       '<p class="mcout ' + (good ? "ok" : mid ? "" : "bad") + '"><strong>' + (good ? (cs.acu === "critical" || cs.acu === "red" ? "Outcome: saved. Your patient reached the hospital in better shape." : "Outcome: good call. Your patient reached the hospital in better shape.") : mid ? "Outcome: your patient reached the hospital, but some care was missed or delayed." : cs.acu === "critical" ? "Outcome: your patient did not survive. This one was winnable; go back through each part." : "Outcome: your patient got worse on the way to the hospital.") + '</strong></p></div>';
-    return c + '<div class="actions"><button class="btn" data-act="rushnext">Next call</button></div></section>';
+    var hk = "rh-" + C.id + "-" + R.n;
+    return c + autoBar(hk, 7, "Next call coming in") + '<div class="actions"><button class="btn" data-act="rushnext"' + autoGo(hk) + '>Next call</button></div></section>';
   }
   var st = cs.steps[C.i];
   if (!C.order) C.order = shuffle([st.a].concat(st.w));
-  c += '<p class="muted small">Part ' + (C.i + 1) + ' of ' + cs.steps.length + '</p><p class="vignette">' + esc(st.story) + '</p><h3 class="qstem">' + esc(st.q) + '</h3><div class="qopts">';
+  c += '<p class="muted small">Part ' + (C.i + 1) + ' of ' + cs.steps.length + '</p>' + pvCall(cs, C) + '<p class="vignette">' + esc(st.story) + '</p><h3 class="qstem">' + esc(st.q) + '</h3><div class="qopts">';
   C.order.forEach(function (o, k) {
     var cls = C.ans == null ? "" : o === st.a ? " right" : C.ans === k ? " wrong" : " dim";
     c += '<button class="qopt' + cls + '" data-rushopt="' + k + '"' + (C.ans != null ? " disabled" : "") + '><span class="letter">' + "ABCD"[k] + '</span><span>' + esc(o) + '</span></button>';
@@ -6857,7 +7528,9 @@ function rushCallView(R) {
   if (C.ans != null) {
     var right = C.order[C.ans] === st.a;
     c += '<div class="explain ' + (right ? "ok" : "bad") + '"><strong>' + (right ? "Correct." : "Not the best choice.") + '</strong><p>' + (right ? "" : '<strong>Best: </strong>' + esc(st.a) + '. ') + esc(st.x) + '</p></div>';
-    c += '<div class="actions"><button class="btn" data-act="rushcnext">' + (C.i < cs.steps.length - 1 ? "Continue the call" : "Hand off") + '</button></div>';
+    var rk = "rc-" + C.id + "-" + C.i, rlast = C.i >= cs.steps.length - 1;
+    c += autoBar(rk, Math.max(4.5, autoSecs(st.x, right)), rlast ? "Handing off in a moment" : "The call continues in a moment");
+    c += '<div class="actions"><button class="btn" data-act="rushcnext"' + autoGo(rk) + '>' + (rlast ? "Hand off" : "Continue the call") + '</button></div>';
   }
   return c + '</section>';
 }
@@ -6866,6 +7539,7 @@ function rushCallAnswer(k) {
   var cs = rushCase(C.id), st = cs.steps[C.i], right = C.order[k] === st.a;
   C.ans = k; if (right) C.right++; feedback(right);
   if (right) { Prog.d.xp += 10; earn(STICK_RIGHT); } else earn(STICK_TRY);
+  try { secAnswer(right); } catch (e) {}
   saveProg();
   if (C.i === cs.steps.length - 1) { var p = C.right / cs.steps.length, hi = cs.acu === "critical" || cs.acu === "red"; rushScore(hi && p >= 0.75 ? 1 : cs.acu === "critical" && p < 0.5 ? -1 : 0, C.right, cs.steps.length); }
   render();
@@ -7176,8 +7850,8 @@ function myListBase(own) {
   var m = marks().filter(function (id) { return DB.drugs[id]; });
   var c = own ? '' : '<h3 class="eh small">My List</h3>';
   if (!m.length) return c + '<div class="learncard"><p><strong>Your list is empty.</strong></p><p class="muted">This is your study list: the drugs you are learning. Open any drug and tap <strong>Save to My List</strong>, then quiz yourself on them or print them as a study list.</p><button class="btn" data-tab="registry">Browse medications</button></div>';
-  c += '<p class="muted small">The drugs you are studying. Quiz yourself on them or print their study cards.</p>';
-  return c + '<div class="actions"><button class="btn" data-sess="marks">Quiz me on my list</button><span class="muted small">' + m.length + ' saved drug' + (m.length === 1 ? '' : 's') + '</span></div>' + (typeof canPrint === "function" && canPrint() ? '<div class="actions"><button class="btn" data-print="marks|cards">Print all study cards (' + m.length + ')</button><button class="btn small ghost" data-print="marks|sheet">Print cheat sheet</button></div>' : '') + '<ul class="weaklist">' + m.map(function (id) { return '<li><button class="linkish" data-drug="' + id + '">' + esc(nameOf(id)) + '</button><span class="mchip m-' + mastery(id) + '">' + esc(mlabel(mastery(id))) + '</span><button class="btn small ghost" data-sess="study" data-drug-id="' + id + '">Study</button><button class="btn small ghost" data-unmark="' + id + '" aria-label="Remove ' + esc(nameOf(id)) + ' from My List">Remove</button></li>'; }).join("") + '</ul>';
+  c += '<p class="muted small">The drugs you are studying. Tap one to open its drug card, then swipe to go through your list. Quiz yourself on them or print their study cards.</p>';
+  return c + '<div class="actions"><button class="btn" data-sess="marks">Quiz me on my list</button><span class="muted small">' + m.length + ' saved drug' + (m.length === 1 ? '' : 's') + '</span></div>' + (typeof canPrint === "function" && canPrint() ? '<div class="actions"><button class="btn" data-print="marks|cards">Print all study cards (' + m.length + ')</button><button class="btn small ghost" data-print="marks|sheet">Print cheat sheet</button></div>' : '') + '<ul class="weaklist">' + m.map(function (id) { return '<li><button class="linkish" data-mlstudy="' + id + '">' + esc(nameOf(id)) + '</button><span class="mchip m-' + mastery(id) + '">' + esc(mlabel(mastery(id))) + '</span><button class="btn small ghost" data-mlstudy="' + id + '">Study</button><button class="btn small ghost" data-unmark="' + id + '" aria-label="Remove ' + esc(nameOf(id)) + ' from My List">Remove</button></li>'; }).join("") + '</ul>';
 }
 
 /* ===== Interaction explorer ===== */
@@ -7353,7 +8027,7 @@ var COMPOUND_TABS = {
 /* herbs, mushrooms and supplements (owner, Nov 14 2026): cards are in data5.js */
 COMPOUND_TABS.herbc = {"name": "Herbs & Roots", "line": "Wander the herb garden: adaptogens, sleep herbs, heart and gut herbs, hormone herbs and the hemp corner.", "sec": [["Adaptogen Ridge", "Stress herbs and roots", "mountain", "#16a34a", [["rhodiola", "Rhodiola rosea root, cold mountain slopes"], ["salidroside", "Rhodiola root"], ["rosavin", "Rhodiola rosea root"], ["ashwagandha", "Ashwagandha root"], ["withanolides", "Ashwagandha root and leaf"], ["panax-ginseng", "Panax ginseng root"], ["ginsenosides", "Ginseng root"], ["american-ginseng", "American ginseng root"], ["eleuthero", "Eleutherococcus root"], ["schisandra", "Schisandra berries"], ["holy-basil", "Tulsi leaves"], ["maca", "Maca root"], ["astragalus", "Astragalus root"], ["bacopa", "Bacopa monnieri leaves"], ["gotu-kola", "Centella leaves"], ["shatavari", "Shatavari root"]]], ["Calm Corner", "Sleep and calm herbs", "moon", "#6366f1", [["kava", "Kava root", "tox"], ["kavalactones", "Kava root"], ["valerian", "Valerian root"], ["valerenic-acid", "Valerian root"], ["chamomile", "Chamomile flowers"], ["passionflower", "Passionflower vine"], ["lemon-balm", "Lemon balm leaves"], ["lavender-oil", "Lavender flowers"], ["hops", "Hop cones"], ["california-poppy", "California poppy"], ["skullcap", "Skullcap leaves and root"], ["magnolia-bark", "Magnolia bark"], ["kratom", "Kratom leaves (Mitragyna)", "tox"]]], ["Mood and Mind", "Mood, memory and focus", "brain", "#a855f7", [["saffron", "Crocus flower stigmas"], ["st-johns-wort", "Hypericum flowers"], ["hyperforin", "St. John's wort flowers"], ["hypericin", "St. John's wort flowers"], ["ginkgo", "Ginkgo tree leaves"], ["ginkgolides", "Ginkgo leaves"], ["huperzine-a", "Chinese club moss"], ["vinpocetine", "Made from lesser periwinkle vincamine", "tox"], ["mucuna", "Velvet bean seeds"], ["kanna", "Sceletium tortuosum"], ["damiana", "Damiana leaves"], ["blue-lotus", "Blue water lily flowers"]]], ["Heart and Blood", "Blood pressure, circulation and cholesterol", "heart", "#e11d48", [["hawthorn", "Hawthorn leaves, flowers and berries"], ["aged-garlic-extract", "Garlic aged for months"], ["guggul", "Mukul myrrh tree resin"], ["horse-chestnut", "Horse chestnut seeds"], ["butchers-broom", "Ruscus root"], ["dong-quai", "Angelica root"], ["bergamot-polyphenols", "Bergamot orange juice and peel"], ["arjuna", "Arjuna tree bark"], ["hibiscus", "Hibiscus calyces"], ["olive-leaf", "Olive leaves"]]], ["Gut and Liver", "Digestion, laxatives and liver herbs", "leaf", "#65a30d", [["milk-thistle", "Milk thistle seeds"], ["silymarin", "Milk thistle seeds"], ["artichoke-leaf", "Artichoke leaves"], ["dandelion", "Dandelion root and leaf"], ["peppermint-oil", "Peppermint leaves"], ["slippery-elm", "Slippery elm inner bark"], ["marshmallow-root", "Marshmallow root"], ["aloe-vera", "Aloe leaves"], ["cascara-sagrada", "Buckthorn tree bark"], ["berberine", "Goldenseal, barberry, Oregon grape"], ["goldenseal", "Goldenseal root"], ["fenugreek", "Fenugreek seeds"], ["triphala", "Amla, haritaki and bibhitaki fruits"], ["dgl-licorice", "Licorice root with glycyrrhizin removed"], ["black-seed", "Nigella sativa seeds"]]], ["Pain and Joints", "Inflammation, headache and joint herbs", "bolt", "#ea580c", [["boswellia", "Boswellia tree resin"], ["devils-claw", "Devil's claw root"], ["willow-bark", "Willow tree bark"], ["cats-claw", "Uncaria vine bark"], ["arnica", "Arnica flowers", "tox"], ["feverfew", "Feverfew leaves"], ["butterbur", "Butterbur root", "tox"]]], ["Hormone Garden", "Menopause, cycle, prostate and libido herbs", "flower", "#db2777", [["black-cohosh", "Black cohosh root"], ["chasteberry", "Chaste tree berries"], ["red-clover", "Red clover flowers"], ["evening-primrose-oil", "Evening primrose seeds"], ["saw-palmetto", "Saw palmetto berries"], ["pygeum", "Prunus africana bark"], ["stinging-nettle", "Nettle root and leaf"], ["tribulus", "Tribulus fruit"], ["tongkat-ali", "Eurycoma root"], ["horny-goat-weed", "Epimedium leaves"], ["yohimbe", "Yohimbe tree bark", "tox"], ["wild-yam", "Wild yam root"]]], ["Immune Patch", "Colds, wounds and immune herbs", "shield", "#0891b2", [["echinacea", "Coneflower root and flowers"], ["elderberry", "Cooked black elderberries"], ["andrographis", "Andrographis leaves"], ["pelargonium", "South African geranium root"], ["oregano-oil", "Oregano leaves"], ["eucalyptus-oil", "Eucalyptus leaves", "tox"], ["tea-tree-oil", "Melaleuca leaves", "tox"], ["propolis", "Resin collected by honeybees"], ["manuka-honey", "Honey from manuka flowers"], ["neem", "Neem leaves, bark and seed oil", "tox"]]], ["Sugar and Weight Shelf", "Blood sugar and weight-loss products", "scale", "#ca8a04", [["bitter-melon", "Bitter gourd fruit"], ["gymnema", "Gymnema leaves"], ["cinnamon-cassia", "Cassia cinnamon bark"], ["garcinia-cambogia", "Garcinia fruit rind", "tox"], ["green-coffee-bean", "Unroasted coffee beans"], ["white-kidney-bean", "White kidney beans"], ["banaba", "Banaba leaves"], ["glucomannan", "Konjac root"], ["bitter-orange", "Bitter orange peel", "tox"], ["raspberry-ketone", "Raspberries (supplements are lab-made)"], ["forskolin", "Coleus root"], ["hoodia", "Hoodia stems"]]], ["Hemp Corner", "Hemp, CBD and other cannabinoids", "herb", "#15803d", [["cbg", "Hemp flower"], ["cbn", "Aged cannabis"], ["delta-8-thc", "Made from hemp CBD", "tox"], ["thcv", "Some cannabis strains"], ["cannabidiol", "Hemp and cannabis flower"], ["hemp-seed-oil", "Hemp seeds"], ["beta-caryophyllene", "Black pepper, cloves, hops"]]]]};
 COMPOUND_TABS.fungc = {"name": "Mushrooms & Fungi", "line": "Into the forest floor: brain mushrooms, medicinal mushrooms and the ferment cellar.", "sec": [["Brain Caps", "Mushrooms marketed for the brain", "brain", "#8b5cf6", [["lions-mane", "Lion's mane mushroom"], ["hericenones", "Lion's mane fruiting body and mycelium"]]], ["Medicine Cabinet Mushrooms", "Medicinal mushrooms and their beta-glucans", "shroom", "#b45309", [["reishi", "Reishi (lingzhi) mushroom"], ["ganoderic-acids", "Reishi mushroom"], ["turkey-tail", "Turkey tail bracket fungus"], ["psk-krestin", "Turkey tail mycelium"], ["shiitake", "Shiitake mushroom"], ["lentinan", "Shiitake mushroom"], ["maitake", "Maitake (hen of the woods)"], ["chaga", "Chaga conk on birch trees", "tox"], ["cordyceps", "Cordyceps mushroom"], ["cordycepin", "Cordyceps militaris"], ["agaricus-blazei", "Almond mushroom"], ["tremella", "Snow fungus"], ["mushroom-beta-glucans", "Mushroom and yeast cell walls"]]], ["Ferment Cellar", "Yeasts, molds and ferments", "jar", "#d97706", [["red-yeast-rice", "Rice fermented with Monascus mold", "tox"], ["monacolin-k", "Red yeast rice"], ["citrinin", "Some Monascus ferments", "tox"], ["brewers-yeast", "Saccharomyces cerevisiae"], ["nutritional-yeast", "Deactivated Saccharomyces"], ["kombucha", "Tea fermented by yeast and bacteria"], ["koji-kojic-acid", "Aspergillus oryzae ferments"]]]]};
-COMPOUND_TABS.nutc = {"name": "Supplement Shelf", "line": "Browse the supplement aisle: gym, brain, oils, gut, antioxidants, algae, bee products and the wild cards.", "sec": [["Gym Bag", "Muscle, endurance and pre-workout", "bolt", "#0ea5e9", [["creatine", "Meat and fish; lab-made supplement"], ["caffeine", "Coffee, tea, energy drinks, pre-workout powders"], ["beta-alanine", "Meat; lab-made supplement"], ["hmb", "Made from leucine; supplement"], ["acetyl-l-carnitine", "Made in the body; supplement"], ["l-arginine", "Meat, nuts, seeds"], ["bcaa", "Protein foods; supplement powders"], ["taurine", "Meat, seafood, energy drinks"], ["d-ribose", "Made in the body; supplement"], ["whey-protein", "Milk"], ["ecdysterone", "Spinach, quinoa, Ajuga plants"], ["sodium-bicarbonate-sport", "Baking soda", "tox"], ["levocarnitine", "Red meat; made in the body (L-carnitine)"]]], ["Brain Shelf", "Nootropics and mood supplements", "brain", "#7c3aed", [["l-theanine", "Tea leaves"], ["five-htp", "Griffonia seeds"], ["l-tyrosine", "Protein foods"], ["l-tryptophan", "Protein foods"], ["gaba-supplement", "Fermented foods; supplement"], ["sam-e", "Made in the body; supplement"], ["phosphatidylserine", "Soy and sunflower lecithin"], ["citicoline", "Made in the body; supplement"], ["alpha-gpc", "Soy lecithin; supplement"], ["magnesium-l-threonate", "Lab-made magnesium salt"], ["uridine", "Made in the body; brewer's yeast"], ["piracetam", "Lab-made; sold online as a supplement", "tox"], ["melatonin", "Made in the brain; supplement"], ["phenibut", "Lab-made; sold online", "tox"], ["tianeptine", "Lab-made; sold as a supplement", "tox"]]], ["Oils and Heart", "Omega-3s, fats and heart supplements", "drop", "#f59e0b", [["fish-oil", "Fatty fish"], ["krill-oil", "Antarctic krill"], ["algal-oil", "Microalgae"], ["flaxseed", "Flax seeds"], ["nattokinase", "Natto (fermented soybeans)"], ["plant-sterols", "Nuts, seeds, fortified spreads"], ["policosanol", "Sugar cane wax"], ["mct-oil", "Coconut and palm kernel oil"], ["exogenous-ketones", "Lab-made"]]], ["Gut Shelf", "Fiber, collagen and gut products", "leaf", "#84cc16", [["psyllium", "Plantago seed husks"], ["collagen-peptides", "Animal skin, bone and fish scales"], ["colostrum", "First cow milk after calving"], ["digestive-enzymes", "Plant and animal enzymes"], ["apple-cider-vinegar", "Fermented apples"], ["d-mannose", "Cranberries, apples; supplement"]]], ["Antioxidant Lab", "Longevity and antioxidant supplements", "spark", "#06b6d4", [["glutathione", "Made in the body; supplement"], ["pqq", "Kiwi, parsley, natto"], ["astaxanthin", "Microalgae, salmon, shrimp"], ["spermidine", "Wheat germ, aged cheese, mushrooms"], ["msm", "Lab-made sulfur compound"], ["dim", "Made from cabbage-family indole-3-carbinol"], ["calcium-d-glucarate", "Oranges, apples, broccoli"]]], ["Algae and Bee Products", "Algae, seaweed and beehive products", "bee", "#eab308", [["chlorella", "Freshwater green algae"], ["spirulina", "Arthrospira cyanobacteria"], ["sea-moss", "Red seaweed"], ["kelp-iodine", "Brown seaweed", "tox"], ["bee-pollen", "Pollen packed by bees", "tox"], ["royal-jelly", "Secretion fed to queen bees", "tox"]]], ["Joints and Bones", "Joint, bone and recovery supplements", "bolt", "#64748b", [["glucosamine", "Shellfish shells; lab-made"], ["chondroitin", "Cow and shark cartilage"], ["oral-hyaluronic-acid", "Rooster combs; bacterial fermentation"], ["boron", "Fruits, nuts, legumes"], ["shilajit", "Himalayan rock resin", "tox"], ["deer-antler-velvet", "Growing deer antlers"]]], ["Wild Card Shelf", "Trendy, risky or misunderstood products", "flask", "#ef4444", [["lithium-orotate", "Lab-made lithium salt", "tox"], ["colloidal-silver", "Silver particles in water", "tox"], ["nad-iv", "Made in the body; IV wellness clinics"], ["activated-charcoal", "Charred coconut shell and wood"], ["methylene-blue", "Lab-made dye (nootropic use online)", "tox"], ["n-acetylcysteine", "Made from the amino acid cysteine"]]]]};
+COMPOUND_TABS.nutc = {"name": "Supplement Shelf", "line": "Browse the supplement aisle: gym, brain, oils, gut, antioxidants, algae, bee products and the wild cards.", "sec": [["Gym Bag", "Muscle, endurance and pre-workout", "bolt", "#0ea5e9", [["creatine", "Meat and fish; lab-made supplement"], ["caffeine", "Coffee, tea, energy drinks, pre-workout powders"], ["beta-alanine", "Meat; lab-made supplement"], ["hmb", "Made from leucine; supplement"], ["acetyl-l-carnitine", "Made in the body; supplement"], ["l-arginine", "Meat, nuts, seeds"], ["bcaa", "Protein foods; supplement powders"], ["taurine", "Meat, seafood, energy drinks"], ["d-ribose", "Made in the body; supplement"], ["whey-protein", "Milk"], ["ecdysterone", "Spinach, quinoa, Ajuga plants"], ["sodium-bicarbonate-sport", "Baking soda", "tox"], ["levocarnitine", "Red meat; made in the body (L-carnitine)"], ["theacrine", "Kucha tea leaves; also lab-made"], ["dynamine", "Kucha tea and coffee plants in tiny amounts; also lab-made"], ["paraxanthine", "Made in the liver from caffeine; also lab-made as a supplement"], ["hordenine", "Sprouted barley and bitter orange"], ["phenylethylamine", "Trace amounts in chocolate; also lab-made", "tox"], ["dmba", "Lab-made stimulant found in some pre-workouts", "tox"], ["yohimbine", "Purified from yohimbe tree bark; sold in prescription and supplement forms", "tox"], ["fadogia-agrestis", "Stems of the Fadogia agrestis shrub (West Africa)", "tox"]]], ["Brain Shelf", "Nootropics and mood supplements", "brain", "#7c3aed", [["l-theanine", "Tea leaves"], ["five-htp", "Griffonia seeds"], ["l-tyrosine", "Protein foods"], ["l-tryptophan", "Protein foods"], ["gaba-supplement", "Fermented foods; supplement"], ["sam-e", "Made in the body; supplement"], ["phosphatidylserine", "Soy and sunflower lecithin"], ["citicoline", "Made in the body; supplement"], ["alpha-gpc", "Soy lecithin; supplement"], ["magnesium-l-threonate", "Lab-made magnesium salt"], ["uridine", "Made in the body; brewer's yeast"], ["piracetam", "Lab-made; sold online as a supplement", "tox"], ["melatonin", "Made in the brain; supplement"], ["phenibut", "Lab-made; sold online", "tox"], ["tianeptine", "Lab-made; sold as a supplement", "tox"], ["choline-bitartrate", "Lab-made choline salt; eggs and liver supply choline"], ["lecithin", "Soy, sunflower and egg yolk"], ["dmae", "Small amounts in fish; lab-made"], ["agmatine", "Made in the body from arginine; fermented foods"], ["glycine", "Gelatin, bone broth and meat"]]], ["Research Chemicals", "Racetams and other lab-made \"nootropics\" sold online, not supplements", "flask", "#64748b", [["noopept", "Lab-made; sold online as a nootropic", "tox"], ["phenylpiracetam", "Lab-made; prescription drug in Russia, sold online as a nootropic", "tox"], ["aniracetam", "Lab-made; sold online as a nootropic", "tox"], ["oxiracetam", "Lab-made; sold online as a nootropic", "tox"], ["pramiracetam", "Lab-made; sold online as a nootropic", "tox"], ["fasoracetam", "Lab-made; studied as a drug, sold online as a nootropic", "tox"], ["sunifiram", "Lab-made research chemical sold online", "tox"], ["centrophenoxine", "Lab-made; prescription drug in some countries"], ["adrafinil", "Lab-made; sold online", "tox"], ["picamilon", "Lab-made; Russian prescription drug", "tox"]]], ["Oils and Heart", "Omega-3s, fats and heart supplements", "drop", "#f59e0b", [["fish-oil", "Fatty fish"], ["krill-oil", "Antarctic krill"], ["algal-oil", "Microalgae"], ["flaxseed", "Flax seeds"], ["nattokinase", "Natto (fermented soybeans)"], ["plant-sterols", "Nuts, seeds, fortified spreads"], ["policosanol", "Sugar cane wax"], ["mct-oil", "Coconut and palm kernel oil"], ["exogenous-ketones", "Lab-made"]]], ["Gut Shelf", "Fiber, collagen and gut products", "leaf", "#84cc16", [["psyllium", "Plantago seed husks"], ["collagen-peptides", "Animal skin, bone and fish scales"], ["colostrum", "First cow milk after calving"], ["digestive-enzymes", "Plant and animal enzymes"], ["apple-cider-vinegar", "Fermented apples"], ["d-mannose", "Cranberries, apples; supplement"], ["tudca", "Bear bile historically; now lab-made"]]], ["Antioxidant Lab", "Longevity and antioxidant supplements", "spark", "#06b6d4", [["glutathione", "Made in the body; supplement"], ["pqq", "Kiwi, parsley, natto"], ["astaxanthin", "Microalgae, salmon, shrimp"], ["spermidine", "Wheat germ, aged cheese, mushrooms"], ["msm", "Lab-made sulfur compound"], ["dim", "Made from cabbage-family indole-3-carbinol"], ["calcium-d-glucarate", "Oranges, apples, broccoli"], ["idebenone", "Lab-made; a prescription drug in Europe for one rare eye disease"], ["pterostilbene", "Blueberries, grapes and the Indian kino tree"], ["oxaloacetate", "Made in every cell (Krebs cycle); lab-made supplement"]]], ["Algae and Bee Products", "Algae, seaweed and beehive products", "bee", "#eab308", [["chlorella", "Freshwater green algae"], ["spirulina", "Arthrospira cyanobacteria"], ["sea-moss", "Red seaweed"], ["kelp-iodine", "Brown seaweed", "tox"], ["bee-pollen", "Pollen packed by bees", "tox"], ["royal-jelly", "Secretion fed to queen bees", "tox"]]], ["Joints and Bones", "Joint, bone and recovery supplements", "bolt", "#64748b", [["glucosamine", "Shellfish shells; lab-made"], ["chondroitin", "Cow and shark cartilage"], ["oral-hyaluronic-acid", "Rooster combs; bacterial fermentation"], ["boron", "Fruits, nuts, legumes"], ["shilajit", "Himalayan rock resin", "tox"], ["deer-antler-velvet", "Growing deer antlers"]]], ["Wild Card Shelf", "Trendy, risky or misunderstood products", "flask", "#ef4444", [["lithium-orotate", "Lab-made lithium salt", "tox"], ["colloidal-silver", "Silver particles in water", "tox"], ["nad-iv", "Made in the body; IV wellness clinics"], ["activated-charcoal", "Charred coconut shell and wood"], ["methylene-blue", "Lab-made dye (nootropic use online)", "tox"], ["n-acetylcysteine", "Made from the amino acid cysteine"]]]]};
 /* small generic line art for each bed (no brands, no characters) */
 var CMP_ART = {
   leaf: '<path d="M12 21C6 18 4 12 6 5c6 0 11 4 11 10 0 3-2 5-5 6z"/><path d="M12 21C11 15 9 10 6 5"/>',
@@ -7793,7 +8467,7 @@ function savePs() {
 }
 
 /* ---------- Legal: terms, privacy, disclaimers, agreement gate, safety labels, moderation, data deletion ---------- */
-var LEGAL_V = "2026-11-13", COMPANY = "Volare Media LLC", CONTACT = DB.PROTOCOL_EMAIL;
+var LEGAL_V = "2026-11-15", COMPANY = "Volare Media LLC", CONTACT = DB.PROTOCOL_EMAIL;
 var NONAFF = "DrugBug is not affiliated with or endorsed by any examination, certification or professional organization named in DrugBug.";
 var LG = { owner: false, blocked: [], mod: null };
 function eduBanner(short) {
@@ -7819,7 +8493,8 @@ var NAMEMSG = "Please choose a different name. Display names must be respectful,
 function gateView() {
   /* counsel-revised assent flow (Nov 11 2026): neutral age choice, an unchecked Terms box with its own
      links, and a separate optional statistics choice with equal Share / Do not share buttons */
-  var g = S.gate || (S.gate = { age: "", ok: false, stats: "" });
+  /* returning users keep the statistics choice they already made (Nov 15 2026: a policy update must not reset or delete anyone's data) */
+  var g = S.gate || (S.gate = { age: "", ok: false, stats: (typeof statsRec === "function" && statsRec()) ? (statsOn() ? "yes" : "no") : "" });
   var c = '<div class="gate"><div class="glogo">' + bugSVG("sage") + '</div><h1>Welcome to DrugBug</h1><p>DrugBug is a medication study tool for adults 18 and older. Before you start, please answer the questions below.</p>' +
     (agreeOld() ? '<p class="gnote"><strong>Our Terms of Use and Privacy Policy have changed.</strong> Please review and accept the new versions to keep using DrugBug.</p>' : '');
   c += '<fieldset class="gfs"><legend>How old are you?</legend>' + [["adult", "I am 18 or older"], ["minor", "I am under 18"]].map(function (o) { return '<label class="chk"><input type="radio" name="gage" data-gage="' + o[0] + '"' + (g.age === o[0] ? " checked" : "") + '> ' + o[1] + '</label>'; }).join("") + '</fieldset>';
@@ -7961,12 +8636,12 @@ var LEGAL_PAGES = {
   }],
   privacy: ["Privacy Policy", function () {
     return L("Who we are", ["Volare Media LLC (\"Volare,\" \"we,\" or \"us\") operates DrugBug, the medication study app and website at drugbugapp.com. This policy explains how we handle personal information when you use DrugBug in the United States, including on the web and in the iPhone app. Some features and purchase options are available only on certain platforms."]) +
-      L("Information we collect and why", ["Device and study information. DrugBug can be used without an account. It stores settings, study progress, a saved study list, score history, virtual items and an agreement record on your device or in your browser. Certain features send information to our systems using a device, account or class identifier. We use this information to operate the features you use, maintain access and protect the service. When you accept the Terms, we record the version, date and time, and your device or account identifier on our systems to maintain a record of acceptance.", "Optional accounts. When you create an account by email or use Sign in with Apple, we receive an account identifier and email address, which may be an Apple private relay address. We store study data so you can sync it across devices and use account features. Firebase Authentication handles email/password authentication. Apple handles your Apple Account credentials. We use the account and entitlement information to administer the one-time, three-day Pro access for new accounts. The offer does not require payment details and does not renew.", "Usage statistics. DrugBug collects optional usage statistics only after you choose to share them. We record these statistics under a randomly generated device identifier. These include active days and approximate time, sections and features used, counts of answered and correct questions, first difficulty ratings, study cards viewed, plan, study route and level, version and platform. We use the statistics to understand usage, measure upgrades and improve study content. A random identifier can distinguish one device from another, so we treat device-level statistics as potentially identifiable even when a name or email is absent. If you used DrugBug before the effective date of this policy, the update turned off optional statistics and asked you to choose whether to share them. We deleted the device-level usage statistics collected before this change. We delete or aggregate device-level usage statistics within 24 months after collection. Turn off optional statistics under Share usage statistics in Settings. Use Your data or contact us to request deletion of stored statistics associated with your device, where we can locate them. Turning off optional statistics does not stop records needed for an account, purchase, agreement, class or other feature you use.", "Purchases. On the website, Stripe processes subscription and stick-pack purchases. Apple processes purchases made through the App Store. We use the purchase and subscription records made available to us, such as the plan, its status and renewal or expiration date, or the pack purchased, to provide access, administer billing and handle purchase support. The payment provider handles your full payment card number. It may collect other information under its own privacy policy.", "Codes. For codes that require named redemption, such as gift, access, evaluator, school or agency license, and protocol codes, we collect your full name and associate it with the redemption and, where applicable, your account. We use that information to verify eligibility, administer access and prevent misuse. A student class key does not ask for your name. An institutional license or protocol code can be a named code even if it is supplied by a school or agency.", "Evaluator records. When enrollment is available, if you submit an evaluator application, we collect your name, email, credentials or role, years of experience, workplace and the information you choose to provide so we can evaluate and respond to the application. Evaluator records may include an evaluator code, typed signature, agreement choices and version, date and time, question ratings and votes, comments, questions viewed and activity counts. We use records from the program to administer participation, maintain agreement records and review and improve study content. Other users may see an aggregate difficulty rating or a content review indicator. We will seek permission before publicly crediting an evaluator by name.", "Instructors and organization contacts. We collect an instructor's name, work or account email, school or agency, classes, class key labels, nickname approvals and class results. Instructors can sign in with email/password or Google. If you contact us about the instructor pilot or an organizational package, we receive the details you provide, such as your name, organization, work email, optional phone number and message. We use these records to manage accounts and classes, respond and prepare a quote when requested.", "Support and feedback. If you email us or submit an error report, feedback or a protocol request, we receive the information you choose to send and any reply address the form or email supplies. We use it to respond, resolve issues, assess requests and improve DrugBug. Do not include patient data, another person's personal information or any document you are unauthorized to share.", "Technical information. Our hosting and service providers receive standard information needed to serve the app or site, such as an IP address when a page loads. We use local storage and similar technology to remember settings, maintain sessions and run features. Optional usage statistics measure activity within DrugBug across sessions. We do not sell personal information, share it for cross-context behavioral advertising or use it for targeted advertising. DrugBug does not track users over time and across third-party websites or apps, and we do not allow third parties to do so through DrugBug. DrugBug therefore does not change its practices in response to browser Do Not Track signals."]) +
+      L("Information we collect and why", ["Device and study information. DrugBug can be used without an account. It stores settings, study progress, a saved study list, score history, virtual items and an agreement record on your device or in your browser. Certain features send information to our systems using a device, account or class identifier. We use this information to operate the features you use, maintain access and protect the service. When you accept the Terms, we record the version, date and time, and your device or account identifier on our systems to maintain a record of acceptance.", "Optional accounts. When you create an account by email or use Sign in with Apple, we receive an account identifier and email address, which may be an Apple private relay address. We store study data so you can sync it across devices and use account features. Firebase Authentication handles email/password authentication. Apple handles your Apple Account credentials. We use the account and entitlement information to administer the one-time, three-day Pro access for new accounts. The offer does not require payment details and does not renew.", "Usage statistics. DrugBug collects optional usage statistics only after you choose to share them. We record these statistics under a randomly generated device identifier. These include active days and approximate time, sections and features used, counts of answered and correct questions, first difficulty ratings, study cards viewed, plan, study route and level, version and platform. We use the statistics to understand usage, measure upgrades and improve study content. A random identifier can distinguish one device from another, so we treat device-level statistics as potentially identifiable even when a name or email is absent. If you used DrugBug before the effective date of this policy, the update turned off optional statistics and asked you to choose whether to share them. We deleted the device-level usage statistics collected before this change. We delete or aggregate device-level usage statistics within 24 months after collection. Turn off optional statistics under Share usage statistics in Settings. Use Your data or contact us to request deletion of stored statistics associated with your device, where we can locate them. Turning off optional statistics does not stop records needed for an account, purchase, agreement, class or other feature you use.", "Purchases. On the website, Stripe processes subscription and stick-pack purchases. Apple processes purchases made through the App Store. We use the purchase and subscription records made available to us, such as the plan, its status and renewal or expiration date, or the pack purchased, to provide access, administer billing and handle purchase support. The payment provider handles your full payment card number. It may collect other information under its own privacy policy.", "Codes. For codes that require named redemption, such as gift, access, evaluator, school or agency license, and protocol codes, we collect your full name and associate it with the redemption and, where applicable, your account. We use that information to verify eligibility, administer access and prevent misuse. A student class key does not ask for your name. An institutional license or protocol code can be a named code even if it is supplied by a school or agency.", "Evaluator records. When enrollment is available, if you submit an evaluator application, we collect your name, email, credentials or role, years of experience, workplace and the information you choose to provide so we can evaluate and respond to the application. Evaluator records may include an evaluator code, typed signature, agreement choices and version, date and time, question ratings and votes, comments, questions viewed, activity counts, and time spent in DrugBug and on grading screens while using an evaluator code. We use records from the program to administer participation, maintain agreement records and review and improve study content. Other users may see an aggregate difficulty rating or a content review indicator. We will seek permission before publicly crediting an evaluator by name.", "Instructors and organization contacts. We collect an instructor's name, work or account email, school or agency, classes, class key labels, nickname approvals and class results. Instructors can sign in with email/password or Google. If you contact us about the instructor pilot or an organizational package, we receive the details you provide, such as your name, organization, work email, optional phone number and message. We use these records to manage accounts and classes, respond and prepare a quote when requested.", "Support and feedback. If you email us or submit an error report, feedback or a protocol request, we receive the information you choose to send and any reply address the form or email supplies. We use it to respond, resolve issues, assess requests and improve DrugBug. Do not include patient data, another person's personal information or any document you are unauthorized to share.", "Technical information. Our hosting and service providers receive standard information needed to serve the app or site, such as an IP address when a page loads. We use local storage and similar technology to remember settings, maintain sessions and run features. Optional usage statistics measure activity within DrugBug across sessions. We do not sell personal information in exchange for money. DrugBug does not collect the Apple advertising identifier (IDFA) and does not track you across other companies’ apps and websites as Apple defines tracking. Some state privacy laws may treat the ad measurement described below as “sharing” personal information or as targeted advertising. You can turn it off at any time, as described below. DrugBug does not change its practices in response to browser Do Not Track signals.", "Ad measurement in the iPhone app. Starting with version 1.2.2, the DrugBug iPhone app includes the Meta Platforms software development kit (Meta SDK) so we can measure whether our ads on Facebook and Instagram lead people to install and open DrugBug. The Meta SDK sends Meta app events, such as app installs, app opens and App Store purchase events (the product and price), with technical information such as the app version, device model, operating system version, IP address and an identifier the Meta SDK creates for the app on your device. We turned off the Meta SDK’s collection of the Apple advertising identifier, and the app does not ask permission to track you. We do not send Meta your name, email address, study progress, scores or answers. Meta may use this information to measure our ads and to help show our ads to people likely to be interested, under its own privacy policy. You can turn this off in the app under Settings, Account & privacy, Ad measurement. When it is off, the app stops sending these app events to Meta. Apple may still report anonymous, combined install counts to Meta through its SKAdNetwork system, which does not identify you or your device. The DrugBug website does not use the Meta SDK or a Meta pixel."]) +
       L("Classes and organization programs", ["A class key identifies your activity to the instructor using a class alias such as \"Student 07.\" Your instructor can see question and accuracy counts by medication, drug class, body system, question style, study mode and drill topic, as well as the missed question identifiers, the answers you selected and when you last studied. Free-text responses are excluded from the class performance report. An instructor may be able to identify you through a separate key sheet the instructor maintains or other information available to the instructor. Do not send a class roster or a key sheet to DrugBug.", "Where a scoreboard is enabled and its use is authorized, classmates or participating members can see the displayed alias or instructor-approved nickname and relevant scores or rankings. Agency protocol competitions may display team names, team rankings and individual rankings to participants. Choose a nickname that does not identify you or another student. Class prizes may be saved to your device or account. The public leaderboard and interschool competitions are currently disabled.", "We use class records to provide and administer the authorized class features. When we handle student records on behalf of a school under a written agreement, we follow the school's authorized instructions and the applicable agreement and law. Contact your instructor or school for access to or correction of school-controlled records. You may also contact us for help directing a request. Leaving a class, closing an account and deleting a class are separate actions. Records held by a school or instructor are subject to that organization's policies and applicable law."]) +
       L("Who receives information", [["Service providers receive the information needed for the services they provide. We require third parties to which we provide app user data for processing on our behalf to protect that data to at least the standard described in this policy and required by Apple's App Review Guidelines. Google Firebase and Google Cloud process account, study and device information to provide authentication, database hosting and server functions. GitHub Pages receives web request information to deliver the website. Google's Gmail service receives messages and reply information when you email our contact address. Use that address for general inquiries and to initiate a privacy request. Do not send identifiable patient information or school-controlled records to that address. Google or Apple handles the relevant sign-in information when you choose its sign-in service. Apple also handles app distribution and App Store purchases. Stripe handles website purchases. Apple, Stripe and other providers may also process information for their own services under their own privacy policies."], ["Instructors, classmates and participants may receive class or competition information as described above. We do not display named redemption records or account emails on class scoreboards."], ["We may disclose relevant information to comply with law, valid legal process or a lawful government request, or to investigate fraud, address a security issue or protect rights or safety. If Volare is involved in a proposed or completed sale, reorganization or similar transaction, we may disclose information as needed for that transaction subject to appropriate confidentiality and applicable law."]]) +
       L("Patient information and personal health details", ["DrugBug is for education. The saved list is for medications you are studying. Do not use it to record a person's medication regimen or to check for interactions. Do not submit identifiable patient information, personal symptoms, diagnoses, medical records or other personal health details through any feature, form or message. If you believe you sent this information in error, contact us without repeating the information in your request."]) +
       L("Retention and security", ["We keep personal information for as long as reasonably needed for the purposes described in this policy. We consider the type of record, the feature it supports and legal, security or recordkeeping requirements. For example, purchase and assent records may be kept for billing, accounting, legal compliance and dispute resolution. If we retain information after a deletion request, we limit its use to the reason for retaining it. Backup copies may remain until they are removed under the backup cycle. A school's instructions and applicable law may govern retention or return of school-controlled class records. We may keep aggregate or properly de-identified information. When we maintain data as de-identified, we take reasonable steps to prevent re-identification and do not attempt to re-identify it except where permitted by law to test whether it is properly de-identified. Where required, we require recipients of that data to honor the same restrictions.", "We use safeguards designed to protect the information we hold, including restricted administrative access and encryption in transit. No method of storage or transmission can eliminate every risk."]) +
-      L("Choices and privacy requests", ["Use Share usage statistics in Settings to turn optional statistics off. If you have an account, use Download my data in Settings to access the available export. Use Your data or the account settings in the app to start deleting your account, or email <a href=\"mailto:VolareMediaLLC@gmail.com\">VolareMediaLLC@gmail.com</a> for help. You can use the same email address to ask about information associated with your account or device. Removing the app or clearing browser storage can remove records stored locally. It does not send us a request to delete online records. Account deletion also does not cancel a paid subscription. Manage an App Store subscription through Apple and a web subscription through Manage subscription on the website.", "Depending on applicable law, you may have the right to confirm processing, access and obtain a portable copy, correct or delete personal information, learn about third-party disclosures, withdraw consent, or opt out of certain sales, sharing, targeted advertising or profiling. We do not use personal information for profiling in furtherance of decisions that produce legal or similarly significant effects. To start a privacy request, email <a href=\"mailto:VolareMediaLLC@gmail.com\">VolareMediaLLC@gmail.com</a>. Do not email sensitive records or identity documents. If we need to verify your identity or authority, we will direct you to a separate verification channel and request only information reasonably necessary for that purpose. We will explain any decision to decline a request as required by law. An authorized agent may submit a request where permitted by law. If an appeal is available, email the same address with \"Privacy appeal\" in the subject line. We will respond within the applicable period and tell you how to contact the appropriate regulator when required. We will not unlawfully discriminate against you for exercising your rights."]) +
+      L("Choices and privacy requests", ["Use Share usage statistics in Settings to turn optional statistics off. In the iPhone app, use Ad measurement in Settings to stop sending app events to Meta. If you have an account, use Download my data in Settings to access the available export. Use Your data or the account settings in the app to start deleting your account, or email <a href=\"mailto:VolareMediaLLC@gmail.com\">VolareMediaLLC@gmail.com</a> for help. You can use the same email address to ask about information associated with your account or device. Removing the app or clearing browser storage can remove records stored locally. It does not send us a request to delete online records. Account deletion also does not cancel a paid subscription. Manage an App Store subscription through Apple and a web subscription through Manage subscription on the website.", "Depending on applicable law, you may have the right to confirm processing, access and obtain a portable copy, correct or delete personal information, learn about third-party disclosures, withdraw consent, or opt out of certain sales, sharing, targeted advertising or profiling. We do not use personal information for profiling in furtherance of decisions that produce legal or similarly significant effects. To start a privacy request, email <a href=\"mailto:VolareMediaLLC@gmail.com\">VolareMediaLLC@gmail.com</a>. Do not email sensitive records or identity documents. If we need to verify your identity or authority, we will direct you to a separate verification channel and request only information reasonably necessary for that purpose. We will explain any decision to decline a request as required by law. An authorized agent may submit a request where permitted by law. If an appeal is available, email the same address with \"Privacy appeal\" in the subject line. We will respond within the applicable period and tell you how to contact the appropriate regulator when required. We will not unlawfully discriminate against you for exercising your rights."]) +
       L("Age, policy updates and contact", ["DrugBug is for people age 18 and older. If you believe a minor has provided personal information, email us so we can investigate and take appropriate action, including deletion where required.", "The effective date appears at the top of this policy. We will post updates here and give notice of material changes through the service or another appropriate channel. Where applicable law requires consent for a new use, we will obtain it separately before processing information for that use.", "Contact Volare Media LLC at <a href=\"mailto:VolareMediaLLC@gmail.com\">VolareMediaLLC@gmail.com</a>."]);
   }],
   disclaimers: ["Disclaimers & Attributions", function () {
@@ -8170,6 +8845,16 @@ function grubFix() { /* give each path its own starter beetle once (older builds
   P.grubFix = 1; saveProg();
 }
 var ROLES = [["ev", "Everyday Health", "Not a clinician: medicines, vitamins and your body", "grub-everyday", "everyday"], ["ph", "Prehospital", "EMT, AEMT, Paramedic or Flight Paramedic", "grub-medic", "levels"], ["rn", "Nursing", "CNA, LVN/LPN or RN", "grub-nurse", "nlevels"], ["md", "Medical School", "MS1-MS2, MS3-MS4 or Intern", "grub-doc", "mlevels"], ["im", "Imaging", "X-ray, CT, MRI, nuclear medicine or IR", "grub-imaging", "ilevels"], ["ah", "Allied Health", "Mental health, dietitian or respiratory therapist", "grub-allied", "alevels"]];
+if (ALLIED_OFF) ROLES = ROLES.filter(function (r) { return r[0] !== "ah"; });
+function alliedOff() {
+  if (!ALLIED_OFF || !Prog || !Prog.d) return;
+  var P = Prog.d, ch = false;
+  if (P.role === "ah") { P.role = ""; ch = true; }
+  if (Array.isArray(P.interests) && P.interests.indexOf("ah") >= 0) { P.interests = P.interests.filter(function (x) { return x !== "ah"; }); ch = true; }
+  if (P.startLevel && isA(P.startLevel)) { delete P.startLevel; ch = true; }
+  try { var ll = store("lastLevel"); if (ll && isA(ll)) store("lastLevel", ""); } catch (e) {}
+  if (ch) saveProg();
+}
 function needRole() { return !!agreeRec() && !Prog.d.role && S.view !== "legal"; }
 /* First open, straight after the disclaimer: how do you want the app to behave? (owner, Oct 30 2026) */
 function needFun() { return false; }   /* the choice now lives in the first card of the tour (owner, Oct 30 2026) */
@@ -8707,7 +9392,7 @@ var ES_UI = {
 "Infusion titration": "Titulación de infusiones",
 "Check": "Revisar",
 "Next problem": "Siguiente problema",
-"Megacode": "Megacode",
+"Codes": "Códigos", "Code": "Código",
 "Pediatric quick reference": "Referencia pediátrica rápida",
 "Conditions & Medicine Cautions": "Afecciones y precauciones de medicamentos",
 "All conditions": "Todas las afecciones",
@@ -9378,6 +10063,15 @@ function usgTab() {
   USG.tab = k; if (usgOn()) USG.inc.tabs[k] = (USG.inc.tabs[k] || 0) + 1;
 }
 function usgUrl(fn) { var b = (window.DRUGBUG_CONFIG || {}).functionsUrl || "https://us-central1-drugbug-69d42.cloudfunctions.net"; return b.replace(/\/$/, "") + "/" + fn; }
+/* the owner's own devices are never counted (owner, Nov 15 2026: "the webpage keeps tracking me as another user
+   today. I don't want it to count me"). A device is marked once the owner signs in on it, or by opening
+   drugbugapp.com/?nocount (or /app/?nocount) once in that browser; ?count turns it back on. The mark is shared
+   with the homepage visit counter (same site), and the server also drops the device's earlier reports. */
+function usgNoCount() {
+  try { var q = location.search || ""; if (/[?&]nocount\b/.test(q)) store("noCount", 1); else if (/[?&]count\b/.test(q)) store("noCount", null); } catch (e) {}
+  if (typeof LG !== "undefined" && LG && LG.owner && !store("noCount")) store("noCount", 1);
+  return !!store("noCount");
+}
 function usgFlush(leaving) {
   if (!usgOn() || USG.busy) return;
   var I = USG.inc, has = I.q || I.learn || I.sec >= 15 || Object.keys(I.tabs).length || Object.keys(I.feats).length || Object.keys(usgRates()).length;
@@ -9385,7 +10079,7 @@ function usgFlush(leaving) {
   if (!leaving && Date.now() - USG.sentAt < 16000) return;
   var rc = (typeof routeCtx === "function" && routeCtx()) || "";
   var body = { data: { did: usgDid(), plat: NATIVE ? "ios" : "web", tier: (function () { try { return tier(); } catch (e) { return "free"; } })(),
-    route: rc || "other", level: S.view === "level" ? usgKey(S.level) : "", ver: APP_VERSION, pid: usgPid(), optin: { v: STATS_V, ts: (statsRec() || {}).ts || 0 },
+    route: rc || "other", level: S.view === "level" ? usgKey(S.level) : "", ver: APP_VERSION, pid: usgPid(), nocount: usgNoCount(), optin: { v: STATS_V, ts: (statsRec() || {}).ts || 0 },
     inc: { q: I.q, c: I.c, learn: I.learn, sec: I.sec, sess: USG.sessSent ? 0 : 1, tabs: I.tabs, feats: I.feats, dr: I.dr || {} }, rate: usgRates() } };
   USG.inc = usgNew(); USG.sentAt = Date.now(); USG.busy = true;
   var wasSess = USG.sessSent; USG.sessSent = true;
@@ -9638,6 +10332,11 @@ function gearBtn() { return '<button class="theme-btn gear" data-go="settings" a
 /* view */
 function setOpts(name, cur, list) { return '<div class="segs" role="radiogroup" aria-label="' + esc(name) + '">' + list.map(function (o) { return '<button class="seg" role="radio" data-set="' + esc(name) + '" data-val="' + esc(String(o[0])) + '" aria-checked="' + (String(cur) === String(o[0])) + '">' + esc(o[1]) + '</button>'; }).join("") + '</div>'; }
 function setTog(name, on, label) { return '<label class="tog"><input type="checkbox" data-settog="' + esc(name) + '"' + (on ? " checked" : "") + '><span class="tgl" aria-hidden="true"></span><span>' + esc(label) + '</span></label>'; }
+/* Ad measurement opt-out (Nov 14 2026). iPhone only: the switch tells the app shell to stop the Meta SDK's automatic
+   app events (install, app open, App Store purchases) and remembers the choice for every later launch. On by default. */
+function adMeasOn() { return store("adMeasOff") !== true; }
+function adMeasSync() { try { if (NATIVE && window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.admeasure) window.webkit.messageHandlers.admeasure.postMessage({ on: adMeasOn() }); } catch (e) {} }
+setTimeout(adMeasSync, 2000);
 function setRow(label, help, ctl) { return '<div class="setrow"><div class="sl"><strong>' + esc(label) + '</strong>' + (help ? '<span class="muted small">' + esc(help) + '</span>' : '') + '</div><div class="sc">' + ctl + '</div></div>'; }
 function setCard(id, title, body) { return (S.setTab || "display") !== id ? "" : '<section class="setcard" id="set-' + id + '"><h2>' + esc(title) + '</h2>' + body + '</section>'; }
 /* hidden Field Medic (military) section: unlocked by a code, shown as a prototype (owner, Oct 28 2026). Only SHA-256 hashes ship. */
@@ -9702,7 +10401,7 @@ function settingsView() {
     setRow("Exam prep mode", "", setOpts("nrMode", s.nrMode, [["practice", "Practice"], ["exam", "Exam"]])) +
     setRow("Medication names in questions", "Generic names by default. Pick Brand names to be asked by brand, or mix both.", setOpts("qnames", s.qnames || "generic", [["generic", "Generic names (default)"], ["brand", "Brand names"], ["all", "Generic and brand mixed"]])) +
     setRow("Question choice", "", setOpts("adaptive", s.adaptive ? "1" : "0", [["1", "Adaptive"], ["0", "Random"]])) +
-    setRow("Megacode timer", "Relaxed doubles the time. Off removes the clock.", setOpts("megaTimer", s.megaTimer, [["on", "On"], ["relaxed", "Relaxed"], ["off", "Off"]])) +
+    setRow("Code timer", "Relaxed doubles the time. Off removes the clock.", setOpts("megaTimer", s.megaTimer, [["on", "On"], ["relaxed", "Relaxed"], ["off", "Off"]])) +
     setRow("Drug pages open in", "", setOpts("fullDefault", s.fullDefault ? "1" : "0", [["0", "Simple view"], ["1", "Full record"]])) +
     (NATIVE ? setRow("Daily reminder", "A notification once a day to come learn and collect your daily sticks.", setTog("remind", s.remind !== false, "Daily reminder") + (s.remind ? ' <input class="pinput" type="time" data-setsel="remindAt" value="' + esc(s.remindAt || "19:00") + '" aria-label="Reminder time">' : '')) : "") +
     (!NATIVE ? setRow("Daily reminder", "Add a daily reminder to your phone's calendar to come learn and collect your sticks. Pick a time, then open the file it saves.", '<input class="pinput" type="time" data-setsel="remindAt" value="' + esc(s.remindAt || "19:00") + '" aria-label="Reminder time"> <button class="btn small ghost" data-act="remindcal">Add to my calendar</button>') : "") +
@@ -9737,6 +10436,7 @@ function settingsView() {
   if (typeof evPausedFor === "function" && evPausedFor()) pv += setRow("Evaluator", EV_PAUSE_MSG, "");
   else if (typeof isReviewer === "function" && isReviewer()) pv += setRow("Evaluator", "You are a DrugBug question evaluator. After each answer, a reviewer panel lets you grade the question. DrugBug Pro is included while you are an evaluator.", '<span class="pill">Evaluator</span>');   /* (owner, Nov 13 2026) */
   pv += setRow("Share usage statistics", "Share optional usage statistics to help improve DrugBug. You can turn this off at any time to stop future optional collection. We delete or aggregate device-level usage statistics within 24 months after collection.", setTog("statsOpt", statsOn(), statsOn() ? "On" : "Off"));
+  if (NATIVE) pv += setRow("Ad measurement", "Lets Meta count whether our Facebook and Instagram ads led to installs and app use. Turn off to stop sending these app events to Meta. No name, email, progress or scores are sent.", setTog("adMeas", adMeasOn(), adMeasOn() ? "On" : "Off"));
   pv += setRow("Download my data", "A file with your progress, scores, saved list and settings.", '<button class="btn small ghost" data-act="exportdata">Download</button>');
   pv += setRow("Reset my progress", "Clears mastery, XP, streaks, achievements and scores. Keeps your bugs, sticks, saved list and settings.", S.resetAsk ? '<span class="confirm">Reset everything? <button class="btn small again" data-act="resetyes">Reset</button><button class="btn small ghost" data-act="resetno">Cancel</button></span>' : '<button class="btn small ghost" data-act="resetask">Reset progress</button>');
   pv += setRow("Delete all my data", "Removes everything DrugBug stores about you, here and online. Cannot be undone.", '<button class="btn small again" data-legal="data">Delete…</button>');
@@ -9822,6 +10522,7 @@ function settingsClick(t, a) {
 document.addEventListener("change", function (e) {
   var t = e.target; if (!t.getAttribute) return;
   var k = t.getAttribute("data-settog");
+  if (k === "adMeas") { store("adMeasOff", !t.checked); adMeasSync(); render(); var f1 = $('[data-settog="adMeas"]'); if (f1) f1.focus(); return; }
   if (k === "statsOpt") { statsSet(t.checked, "settings"); render(); var f0 = $('[data-settog="statsOpt"]'); if (f0) f0.focus(); return; }
   if (k) { setSet(k, t.checked); render(); var f = $('[data-settog="' + k + '"]'); if (f) f.focus(); return; }
   k = t.getAttribute("data-setsel");
@@ -9852,7 +10553,7 @@ Object.assign(ES_UI, {
   "Reduce motion": "Reducir movimiento", "Turns off card flips, animations and the flashing in level transitions.": "Desactiva los giros de tarjetas, las animaciones y los destellos de las transiciones.",
   "Study preferences": "Preferencias de estudio", "Open DrugBug to": "Abrir DrugBug en", "Skip the route picker and start on your level.": "Saltar la selección de ruta y empezar en su nivel.", "The home page": "La página de inicio",
   "Daily goal": "Meta diaria", "Questions in the Daily DrugBug.": "Preguntas del DrugBug diario.", "Exam prep length": "Largo de la preparación", "Default number of questions.": "Número de preguntas predeterminado.", "Exam prep mode": "Modo de preparación", "Exam": "Examen", "Adaptive": "Adaptativo",
-  "Megacode timer": "Reloj del Megacode", "Relaxed doubles the time. Off removes the clock.": "Relajado duplica el tiempo. Apagado quita el reloj.", "On": "Encendido", "Relaxed": "Relajado", "Off": "Apagado",
+  "Code timer": "Reloj de los códigos", "Relaxed doubles the time. Off removes the clock.": "Relajado duplica el tiempo. Apagado quita el reloj.", "On": "Encendido", "Relaxed": "Relajado", "Off": "Apagado",
   "Drug pages open in": "Las páginas de medicamentos abren en", "Full record": "Registro completo",
   "Sound & pronunciation": "Sonido y pronunciación", "Voice speed": "Velocidad de la voz", "Slow": "Lenta", "Fast": "Rápida", "Test": "Probar", "Written pronunciation": "Pronunciación escrita", "Shows a guide like ep-ih-NEF-rin.": "Muestra una guía como ep-ih-NEF-rin.", "Show pronunciation": "Mostrar pronunciación",
   "Sound effects": "Efectos de sonido", "A short tone for right and wrong answers.": "Un tono corto para respuestas correctas e incorrectas.",
@@ -9862,7 +10563,7 @@ Object.assign(ES_UI, {
   "Age group": "Grupo de edad", "Download my data": "Descargar mis datos", "A file with your progress, scores, saved list and settings.": "Un archivo con su progreso, calificaciones, lista guardada y ajustes.", "Download": "Descargar",
   "Reset my progress": "Reiniciar mi progreso", "Clears mastery, XP, streaks, achievements and scores. Keeps your bugs, sticks, saved list and settings.": "Borra dominio, XP, rachas, logros y calificaciones. Conserva sus insectos, palitos, lista guardada y ajustes.", "Reset progress": "Reiniciar progreso", "Reset": "Reiniciar",
   "Delete all my data": "Borrar todos mis datos", "Removes everything DrugBug stores about you, here and online. Cannot be undone.": "Elimina todo lo que DrugBug guarda sobre usted, aquí y en línea. No se puede deshacer.", "Delete…": "Borrar…",
-  "Version": "Versión", "Medical review": "Revisión médica", "Something wrong?": "¿Algo está mal?", "Report a problem": "Reportar un problema", "Contact": "Contacto", "Legal": "Legal", "Professor Sage explains the medications people take at home. Filter by class or search by name.": "El Profesor Sage explica los medicamentos que la gente toma en casa. Filtre por clase o busque por nombre.", "The medications people take at home, by drug class. Plain-language guides from Professor Sage: what each drug treats, how it is taken, and what to ask a patient who takes it.": "Los medicamentos que la gente toma en casa, por clase. Guías sencillas del Profesor Sage: qué trata cada medicamento, cómo se toma y qué preguntar a quien lo toma.", "Professor Sage's notes": "Notas del Profesor Sage", "Nursing focus": "Enfoque de enfermería", "Board focus": "Enfoque para exámenes", "Field focus": "Enfoque prehospitalario", "Back to studying": "Volver a estudiar", "Dark collection": "Colección oscura", "Earn 1 stick for every correct answer, plus bonuses for perfect scores and achievements.": "Gane 1 palito por cada respuesta correcta, más bonos por calificaciones perfectas y logros.", "Every correct answer (any level)": "Cada respuesta correcta (cualquier nivel)", "Perfect score on 10 or more questions": "Calificación perfecta en 10 o más preguntas", "Each achievement unlocked": "Cada logro desbloqueado", "100% on a Megacode case": "100% en un caso de Megacode", "Terrarium": "Terrario", "Wardrobe": "Guardarropa", "Bugs": "Insectos", "Colors": "Colores", "How to earn sticks": "Cómo ganar palitos", "Filters": "Filtros", "Clear filters": "Quitar filtros", "Problem type": "Tipo de problema", "Exit": "Salir", "Look up every drug in your study path.": "Busque cada medicamento de su nivel.", "Timed practice tests with scores.": "Exámenes de práctica con calificación.", "Dose and drip math with worked answers.": "Cálculo de dosis y goteos con respuestas explicadas.", "Megacode, pediatric doses, med lists and safety drills.": "Megacode, dosis pediátricas, listas de medicamentos y seguridad.", "Clinical cases: choose what to give.": "Casos clínicos: elija qué administrar.", "Flip, sort and master each drug.": "Voltee, ordene y domine cada medicamento.", "Mastery, achievements, My List and leaderboard.": "Dominio, logros, Mi lista y clasificación.", "Your bugs, outfits, faces and sticks.": "Sus insectos, ropa, caras y palitos.", "Assess, hold, labs, teaching: one skill at a time.": "Valorar, retener, laboratorios, enseñanza: una habilidad a la vez.", "Study session": "Sesión de estudio", "Free faces": "Caras gratis", "Under 250 sticks": "Menos de 250 palitos", "250 to 500": "250 a 500", "The expensive ones": "Las caras caras", "Equip": "Equipar", "Keep studying to find it": "Sigue estudiando para encontrarla", "Answers reflect common national guidance at the time of writing. Where practice varies, the explanation says so; your protocols, facility policy and medical direction always come first.": "Las respuestas reflejan las guías nacionales comunes al momento de redactarlas. Cuando la práctica varía, la explicación lo indica; sus protocolos, la política del centro y la dirección médica siempre tienen prioridad.", "Outfits": "Ropa", "Other hand": "La otra mano", "Starter": "Inicial", "Free": "Gratis", "Free when you unlock them": "Gratis al desbloquearlos", "No bugs here yet.": "Aún no hay insectos aquí.", "Bug buddy": "Insecto compañero", "Your bug on the side of the screen, reacting to your answers.": "Su insecto al lado de la pantalla, reaccionando a sus respuestas.", "Hats & items": "Sombreros y objetos", "Faces": "Caras", "Hats": "Sombreros", "Eyewear": "Lentes", "Neck": "Cuello", "In hand": "En la mano", "Effects": "Efectos", "Wear": "Ponérselo", "Take off": "Quitárselo", "Wearing": "Puesto", "Secret face": "Cara secreta", "Show it off": "Lucirla", "Clinically reviewed": "Con revisión clínica", "Awaiting review": "Pendiente de revisión", "Pharmacist verified": "Verificado por farmacéutico", "Physician verified": "Verificado por médico", "Awaiting clinical review": "Pendiente de revisión clínica"
+  "Version": "Versión", "Medical review": "Revisión médica", "Something wrong?": "¿Algo está mal?", "Report a problem": "Reportar un problema", "Contact": "Contacto", "Legal": "Legal", "Professor Sage explains the medications people take at home. Filter by class or search by name.": "El Profesor Sage explica los medicamentos que la gente toma en casa. Filtre por clase o busque por nombre.", "The medications people take at home, by drug class. Plain-language guides from Professor Sage: what each drug treats, how it is taken, and what to ask a patient who takes it.": "Los medicamentos que la gente toma en casa, por clase. Guías sencillas del Profesor Sage: qué trata cada medicamento, cómo se toma y qué preguntar a quien lo toma.", "Professor Sage's notes": "Notas del Profesor Sage", "Nursing focus": "Enfoque de enfermería", "Board focus": "Enfoque para exámenes", "Field focus": "Enfoque prehospitalario", "Back to studying": "Volver a estudiar", "Dark collection": "Colección oscura", "Earn 1 stick for every correct answer, plus bonuses for perfect scores and achievements.": "Gane 1 palito por cada respuesta correcta, más bonos por calificaciones perfectas y logros.", "Every correct answer (any level)": "Cada respuesta correcta (cualquier nivel)", "Perfect score on 10 or more questions": "Calificación perfecta en 10 o más preguntas", "Each achievement unlocked": "Cada logro desbloqueado", "100% on a code": "100% en un código", "Terrarium": "Terrario", "Wardrobe": "Guardarropa", "Bugs": "Insectos", "Colors": "Colores", "How to earn sticks": "Cómo ganar palitos", "Filters": "Filtros", "Clear filters": "Quitar filtros", "Problem type": "Tipo de problema", "Exit": "Salir", "Look up every drug in your study path.": "Busque cada medicamento de su nivel.", "Timed practice tests with scores.": "Exámenes de práctica con calificación.", "Dose and drip math with worked answers.": "Cálculo de dosis y goteos con respuestas explicadas.", "Codes, pediatric doses, med lists and safety drills.": "Códigos, dosis pediátricas, listas de medicamentos y seguridad.", "Clinical cases: choose what to give.": "Casos clínicos: elija qué administrar.", "Flip, sort and master each drug.": "Voltee, ordene y domine cada medicamento.", "Mastery, achievements, My List and leaderboard.": "Dominio, logros, Mi lista y clasificación.", "Your bugs, outfits, faces and sticks.": "Sus insectos, ropa, caras y palitos.", "Assess, hold, labs, teaching: one skill at a time.": "Valorar, retener, laboratorios, enseñanza: una habilidad a la vez.", "Study session": "Sesión de estudio", "Free faces": "Caras gratis", "Under 250 sticks": "Menos de 250 palitos", "250 to 500": "250 a 500", "The expensive ones": "Las caras caras", "Equip": "Equipar", "Keep studying to find it": "Sigue estudiando para encontrarla", "Answers reflect common national guidance at the time of writing. Where practice varies, the explanation says so; your protocols, facility policy and medical direction always come first.": "Las respuestas reflejan las guías nacionales comunes al momento de redactarlas. Cuando la práctica varía, la explicación lo indica; sus protocolos, la política del centro y la dirección médica siempre tienen prioridad.", "Outfits": "Ropa", "Other hand": "La otra mano", "Starter": "Inicial", "Free": "Gratis", "Free when you unlock them": "Gratis al desbloquearlos", "No bugs here yet.": "Aún no hay insectos aquí.", "Bug buddy": "Insecto compañero", "Your bug on the side of the screen, reacting to your answers.": "Su insecto al lado de la pantalla, reaccionando a sus respuestas.", "Hats & items": "Sombreros y objetos", "Faces": "Caras", "Hats": "Sombreros", "Eyewear": "Lentes", "Neck": "Cuello", "In hand": "En la mano", "Effects": "Efectos", "Wear": "Ponérselo", "Take off": "Quitárselo", "Wearing": "Puesto", "Secret face": "Cara secreta", "Show it off": "Lucirla", "Clinically reviewed": "Con revisión clínica", "Awaiting review": "Pendiente de revisión", "Pharmacist verified": "Verificado por farmacéutico", "Physician verified": "Verificado por médico", "Awaiting clinical review": "Pendiente de revisión clínica"
 });
 Object.assign(ES_UI, {
   "Medications": "Medicamentos", "All Medications": "Todos los medicamentos", "Specialty Units": "Unidades de especialidad",
@@ -9908,7 +10609,7 @@ function muOn() { return SET().music !== false && (typeof funOn !== "function" |
 /* Oct 2026 (owner): only the seasonal tracks for now, until the rest of the music is sorted out.
    Set MU_ONLY = null to bring back the full list. Each entry still has to pass its own season
    check below, so Haunted Study Hall steps aside for Harvest Table on November 1. */
-var MU_ONLY = ["haunted-study-hall", "harvest-table", "plain-bug-beat", "slow-bug-jazz", "bug-house", "bugstep", "bug-rock", "banjo-bug", "bug-pop", "bug-house-deep-hive", "bug-house-disco-beetle", "bug-house-acid-ant", "bug-house-piano-moth"];
+var MU_ONLY = ["haunted-study-hall", "harvest-table", "plain-bug-beat", "slow-bug-jazz", "bug-house", "bugstep", "bug-rock", "banjo-bug", "bug-pop", "bug-house-deep-hive", "bug-house-disco-beetle", "bug-house-acid-ant", "bug-house-piano-moth", "boss-fight"];
 function muOnly(id) { return !MU_ONLY || MU_ONLY.indexOf(id) >= 0; }
 var TRACKS = [
   { id: "study-session", name: "Study Session", price: 0, desc: "Warm electric piano, a laid-back beat and a little vinyl crackle.", bpm: 82, src: "music/study-session.mp3" },
@@ -9923,6 +10624,7 @@ var TRACKS = [
      crickets, wing buzz and wobble bass. Source: tools/music/compose.py */
   { id: "slow-bug-jazz", name: "Slow Bug Jazz", price: 0, tier: "plus", desc: "A late-night ballad: brushes, walking bass, Rhodes and a breathy tenor sax.", bpm: 66, src: "music/slow-bug-jazz.mp3" },
   /* Bug House is the main track, free for everyone (owner, Nov 8 2026) */
+  { id: "boss-fight", name: "Boss Fight", price: 0, tier: "plus", desc: "The DrugBug ad theme as a full song: a big trailer hit, a driving groove, a breakdown and a final boss drop.", bpm: 120, src: "music/boss-fight.mp3" },
   { id: "bug-house", name: "Bug House", price: 0, desc: "Four on the floor, house piano stabs and a cricket on the hi-hats.", bpm: 122, src: "music/bug-house.mp3" },
   /* more Bug House: Pro only (owner, Nov 5 2026) */
   { id: "bug-house-deep-hive", name: "Bug House: Deep Hive", price: 0, tier: "pro", desc: "Deep house: minor-ninth Rhodes, warm pads and a rolling low end.", bpm: 120, src: "music/bug-house-deep-hive.mp3" },
@@ -11031,8 +11733,8 @@ var PLAN_PERKS = {
          "The Wormhole deep dive on every drug, and the Disease Lab"],
   pro: ["Everything in Plus",
         "And the part Plus does not include: the drills run over every medication, not just the free ones",
-        "Exam prep over all 2,000+: NREMT-style, NCLEX-style, Step-style and Registry-style practice tests, select-all and put-in-order questions, and Exam mode",
-        "Brain Games, scenarios, Megacode and the study tools on any drug in the app"]
+        "Exam prep over all 2,000+: NREMT-style, NCLEX-style and Step-style practice tests, select-all and put-in-order questions, and Exam mode",
+        "Brain Games, Bug Rush calls and codes, and the study tools on any drug in the app"]
 };
 function drawPaywall() {
   if (!PRO.open) return;
@@ -11772,7 +12474,7 @@ var BM_AREA = { "Head and face": "head", "Neck and throat": "neck", "Chest and r
 /* Hickory pokes his head round the edge of the screen, the same way the peeking pals do -
    same position, same angle, same wiggle - and says his piece. Fun mode only, one at a time.
    (owner, Nov 4 2026) */
-var HICK_LINES = ["Wow.", "That's messed up, man.", "We're just here to learn.", "Poor fella.", "Have some respect."];
+var HICK_LINES = ["Wow.", "That's messed up, man.", "We're just here to learn.", "Poor fella.", "Have some respect.", "I ain't do nothin', I swear.", "Wasn't me. I was over yonder."];
 function hickPop(line) {
   if (typeof funOn === "function" && !funOn()) return;
   if (typeof hfxOk === "function" && !hfxOk()) return;
@@ -11811,6 +12513,7 @@ function bodyReact(area, snd, part) {
   }
   if (!played) try { if (typeof anatSnd === "function") anatSnd(snd || M.snd); } catch (e) {}
   if (M.then) setTimeout(function () { try { anatSnd(M.then); } catch (e) {} }, M.thenAt || 250);
+  if (key === "pelvis") secTap("crotch", 5, 15000);
   if (key === "pelvis" || key === "butt") {
     /* the whole room reacts, and Hickory turns up to make it worse */
     setTimeout(function () { try { anatSnd("crowd"); } catch (e) {} }, 170);
@@ -13216,8 +13919,12 @@ function accDone(text, created) { if (created) text = (text || "") + accBonus();
    accounts both in the app and in the webpage"). Email accounts already make one when they sign up. Anyone
    signed in with Google or Apple and no password gets this sheet until they set one; it can't be closed,
    only finished or signed out of. The password works with the account's email on the website and the app. */
+/* Grandfathered (owner, Nov 14 2026: "make new people have to put a password but anyone in it before is grandfathered in").
+   Accounts made before PW_CUTOFF never see the password screen. Unknown creation time counts as old. */
+var PW_CUTOFF = Date.UTC(2026,10,15,6);
+function pwNewAcct(s) { return !!(s && s.created && s.created >= PW_CUTOFF); }
 function pwGateNeeded() {
-  try { if (!ACCT.api || !acctUI()) return false; var s = ACCT.api.state() || {}; return !!(s.signedIn && s.email && !s.hasPassword && typeof ACCT.api.addPassword === "function"); } catch (e) { return false; }
+  try { if (!ACCT.api || !acctUI()) return false; var s = ACCT.api.state() || {}; if (!(s.signedIn && s.email && !s.hasPassword && typeof ACCT.api.addPassword === "function")) return false; return pwNewAcct(s); } catch (e) { return false; }
 }
 function pwGate() {
   var el = document.getElementById("pwgate"), need = pwGateNeeded();
@@ -13246,7 +13953,8 @@ function pwGate() {
       m.textContent = /recent-login/i.test(c) ? "For safety, sign out, sign back in, and set it right away." : /already-in-use|email-already/i.test(c) ? "Another account already uses this email with a password. Sign out and sign in with that email and password instead." : /weak-password/i.test(c) ? "Pick a stronger password." : (ACCT.api.error ? ACCT.api.error(er) : "Couldn't save it. Try again.");
     });
   });
-  el.querySelector("#pwgOut").onclick = function () { var bo = el.querySelector("#pwgOut"); bo.disabled = true; ACCT.api.signOut().then(function () { el.remove(); location.reload(); }, function () { bo.disabled = false; }); };
+  /* Only brand-new accounts see this screen, so signing out here cannot cost anyone an older account's status; progress is saved first. */
+  el.querySelector("#pwgOut").onclick = function () { var bo = el.querySelector("#pwgOut"); bo.disabled = true; try { if (typeof flushProg === "function") flushProg(); } catch (x) {} setTimeout(function () { ACCT.api.signOut().then(function () { try { accClearLocal(); } catch (x) {} el.remove(); location.reload(); }, function () { bo.disabled = false; }); }, 800); };
 }
 function accFail(e) { ACCT.busy = false; ACCT.msg = ACCT.api ? ACCT.api.error(e) : "Something went wrong."; render(); }
 /* ===== The quiet offer (owner, Nov 1 2026) =====
@@ -14861,6 +15569,8 @@ function rateMaybe(sc) {
       if (S.sess && !S.sess.result) return; /* a new quiz already started */
       if (topLayerOpen()) return;
       r.last = Date.now(); r.asks = (r.asks || 0) + 1; saveProg();
+      /* iPhone app with Apple's rating sheet: show only Apple's sheet, no custom screen first (Guideline 5.6.1, Nov 15 2026) */
+      if (hasReview()) { try { window.webkit.messageHandlers.review.postMessage({}); return; } catch (x) {} }
       rvAskOpen();
     }, 1800);
   } catch (e) {}
@@ -15609,6 +16319,7 @@ function disListHTML() {
   return head + '<div class="dislist">' + ids.map(item).join("") + '</div>';
 }
 function disView() {
+  if (typeof xdataReady === "function" && !xdataReady()) xdataLoad();
   var D = disAll();
   if (S.disSys == null && S.view === "level" && S.level === "mh" && !disFieldMode()) S.disSys = "Mental Health";
   if (S.disId && D[S.disId] && !disLocked(S.disId)) return disDetail(S.disId);
@@ -29015,6 +29726,81 @@ function learnNext() {
 function learnStop() { learnMark(S.sheet && S.sheet.id); S.learn = null; if (typeof closeSheet === "function") closeSheet(); render(); }
 function learnReset() { var L = learnAll(); L[learnKey()] = {}; if (typeof saveProg === "function") saveProg(); S.learn = null; render(); }
 
+/* ===== Shake to shuffle (owner, Nov 15 2026: "if you shake your phone hard it shuffles the learn decks. Maybe
+   have Hickory say that too") =====
+   During a L.E.A.R.N run a hard shake jumps to a different random drug you have not done yet (the one you were
+   on stays in the deck). In Flashcards it reshuffles the deck. Hickory pops up with a line about it (a plain
+   "Shuffled" note when fun mode is off). iPhone asks for motion access the first time you start a deck; the
+   app grants it on its own. A shake is two hard jolts within 0.7 s; then it rests 1.5 s. */
+var SHK = { asked: false, on: false, last: 0, hits: [], px: null, py: null, pz: null };
+var SHK_LINES = [
+  "Whoa nelly! Ya shook the whole deck loose. Try this one.",
+  "Easy now, I ain't a snow globe! Shuffled 'em for ya.",
+  "Hoo-wee, that'll mix 'em up. Here's a fresh card.",
+  "Well I'll be, ya rattled my hat clean off. New drug comin' up.",
+  "Shook like a tractor on a dirt road. Deck's all mixed now.",
+  "Land sakes! Cards went flyin'. Grabbed ya a new one."
+];
+function shkWhere() {
+  if (S.learn && S.learn.on && S.sheet && !sheet.hidden) return "learn";
+  if (S.fc && S.fc.deck && S.fc.deck.length > 1 && (S.tab === "cards" || S.tool === "cards") && sheet.hidden) return "cards";
+  return "";
+}
+/* ask for motion access from a tap (iPhone needs that); safe to call on every tap */
+function shkArm() {
+  if (SHK.on || SHK.asked) return; SHK.asked = true;
+  try {
+    var D = window.DeviceMotionEvent;
+    if (D && typeof D.requestPermission === "function") D.requestPermission().then(shkListen, shkListen);   /* if it says no, no motion events arrive anyway */
+    else if (D) shkListen();
+  } catch (e) {}
+}
+function shkListen() {
+  if (SHK.on) return; SHK.on = true;
+  window.addEventListener("devicemotion", function (e) {
+    var a = e.accelerationIncludingGravity || e.acceleration; if (!a || a.x == null) return;
+    var now = Date.now();
+    if (SHK.px != null) {
+      var j = Math.abs(a.x - SHK.px) + Math.abs(a.y - SHK.py) + Math.abs(a.z - SHK.pz);
+      if (j > 32) { SHK.hits = SHK.hits.filter(function (t) { return now - t < 700; }); SHK.hits.push(now); }
+      if (SHK.hits.length >= 2 && now - SHK.last > 1500) { SHK.hits = []; SHK.last = now; shkShuffle(); }
+    }
+    SHK.px = a.x; SHK.py = a.y; SHK.pz = a.z;
+  }, { passive: true });
+}
+function shkShuffle() {
+  var w = shkWhere(); if (!w) return;
+  try { if (navigator.vibrate) navigator.vibrate(40); } catch (e) {}
+  try { if (typeof sfxPlay === "function" && SET().sfx) sfxPlay("whoosh", 0, 0.5); } catch (e) {}
+  if (w === "learn") {
+    var st = learnStats(), cur = S.sheet.id, left = st.left.filter(function (x) { return x !== cur; });
+    if (!left.length) { shkSay("Ain't nothin' left to shuffle, partner. That's the last one."); return; }
+    var id = left[Math.floor(Math.random() * left.length)];
+    openSheet(id); var p = sheet && sheet.querySelector(".panel"); if (p) { p.scrollTop = 0; p.classList.add("shkspin"); }
+  } else {
+    S.fc.deck = shuffle(S.fc.deck); S.fc.i = 0; S.fc.flipped = false; render();
+    var fc = document.getElementById("fc"); if (fc) fc.classList.add("shkspin");
+  }
+  try { usgFeat("shake_shuffle"); } catch (e) {}
+  if (++SEC.shakes >= 10) secretWin("shake");
+  shkSay(SHK_LINES[Math.floor(Math.random() * SHK_LINES.length)]);
+}
+/* Hickory pops up in the corner with his line (fun mode), or a plain note */
+function shkSay(text) {
+  var fun = typeof funOn !== "function" || funOn();
+  var old = document.getElementById("shksay"); if (old) old.remove();
+  var el = document.createElement("div"); el.id = "shksay"; el.className = "shksay" + (fun ? "" : " plain"); el.setAttribute("role", "status");
+  el.innerHTML = fun ? '<span class="shkbug" aria-hidden="true">' + (typeof learnBugSVG === "function" ? learnBugSVG() : "") + '</span><span class="shktx">' + esc(text) + '</span>' : '<span class="shktx">Shuffled.</span>';
+  document.body.appendChild(el);
+  requestAnimationFrame(function () { el.classList.add("on"); });
+  if (fun) setTimeout(function () { try { if (typeof voiceSay === "function") voiceSay(text, "hick"); } catch (e) {} }, 80);
+  setTimeout(function () { el.classList.remove("on"); setTimeout(function () { el.remove(); }, 400); }, 3600);
+}
+document.addEventListener("click", function (e) {
+  var t = e.target && e.target.closest && e.target.closest('[data-act="lrngo"],[data-act="lrnnext"],[data-act="shuffle"],.lrntab,[data-learn],[data-tab="cards"],#fc,[data-lrnstart]');
+  if (t) shkArm();
+}, true);
+
 /* the bar that rides on top of the drug page while a LEARN run is going */
 function learnBar() {
   if (!(S.learn && S.learn.on)) return "";
@@ -29022,7 +29808,8 @@ function learnBar() {
   return '<div class="lrnbar"><div class="lrnhd"><strong>L.E.A.R.N</strong><span class="muted small">' + n.toLocaleString() + ' of ' + st.total.toLocaleString() + ' in ' + esc(learnName()) + '</span></div>' +
     '<div class="lrnmeter"><i style="width:' + Math.round(st.done / Math.max(1, st.total) * 100) + '%"></i></div>' +
     '<div class="lrnacts"><button class="btn lrnnext" data-act="lrnnext">Next drug <span aria-hidden="true">&rarr;</span></button><button class="btn ghost small" data-act="lrnstop">Stop</button>' +
-    (learnSysK() ? '<button class="btn ghost small" data-sess="sys" data-sys="' + learnSysK() + '">Quiz me on this system</button>' : '') + '</div></div>';
+    (learnSysK() ? '<button class="btn ghost small" data-sess="sys" data-sys="' + learnSysK() + '">Quiz me on this system</button>' : '') + '</div>' +
+    (window.DeviceMotionEvent && ("ontouchstart" in window) ? '<p class="lrnshk muted small">Shake your phone to shuffle the deck.</p>' : '') + '</div>';
 }
 
 /* Hickory, the LEARN bug: straw hat, three teeth, one pitchfork, no hurry.
@@ -29206,6 +29993,8 @@ function learnLines() {
   var ph = learnPhase(), me = learnIsSelf(), BK = me ? LRN_SELF : LRN_BANTER, set = (BK[ph] || BK[0]).slice();
   /* the acronym is an occasional treat, not his catchphrase: about one time in eight (owner, Oct 30 2026) */
   if (Math.random() < 0.12 && LRN_LAST_LINE !== -2) { LRN_LAST_LINE = -2; var R = me ? LRN_ACR_SELF : LRN_ACR_REPLY; return ["@ACR", R[ph] || R[0]]; }
+  /* now and then he mentions shake to shuffle on a phone (owner, Nov 15 2026) */
+  if (!me && ("ontouchstart" in window) && Math.random() < 0.15 && LRN_LAST_LINE !== -3) { LRN_LAST_LINE = -3; return ["Psst. Give yer phone a good hard shake in a deck and I'll shuffle it for ya.", "Shake it? Like a can of bug spray?"]; }
   var pick = Math.floor(Math.random() * set.length);
   if (set.length > 1 && pick === LRN_LAST_LINE) pick = (pick + 1 + Math.floor(Math.random() * (set.length - 1))) % set.length;
   LRN_LAST_LINE = pick;
@@ -29676,7 +30465,7 @@ function anatIndex() {
 function anatOf(id) { anatIndex(); return ANAT_BY[id] || null; }
 /* "What it does in the body, organ by organ" (drug Wormhole and Disease Lab) links each organ to
    its Anatomy page, so "take me to it" goes somewhere (owner, Nov 5 2026). First match wins. */
-var ANAT_JUMP = [["bone marrow","bone-marrow"],["spinal","spinal-cord"],["red blood","blood-red-cells"],["white blood","blood-white-cells"],["platelet","blood-platelets"],["clot","clotting-cascade"],
+var ANAT_JUMP = [["uter","uterus"],["cervi","cervix"],["prostat","prostate"],["breast","breasts-mammary-glands"],["vagus","vagus-nerve"],["sinus cavit","paranasal-sinuses"],["fat tissue","adipose-tissue"],["portal vein","hepatic-portal-vein"],["bone marrow","bone-marrow"],["spinal","spinal-cord"],["red blood","blood-red-cells"],["white blood","blood-white-cells"],["platelet","blood-platelets"],["clot","clotting-cascade"],
   ["blood vessel","arteries"],["arter","arteries"],["vein","veins"],["heart","heart-muscle"],["brain","brain-cerebrum"],["nerv","peripheral-nerve"],["lung","alveoli"],["airway","bronchi"],["breath","diaphragm"],
   ["liver","liver"],["kidney","kidney"],["bladder","bladder"],["urinary","bladder"],["stomach","gi-stomach"],["colon","gi-colon"],["esophag","gi-esophagus"],["intestin","gi-jejunum-and-ileum"],["gut","gi-jejunum-and-ileum"],
   ["pancrea","pancreatic-islets"],["gallbladder","gallbladder-and-bile-ducts"],["skin","skin-epidermis"],["hair","skin-hair-nails-and-sweat-glands"],["eye","eye-retina"],["ear","ear-cochlea"],["nose","nose-and-nasal-passages"],["mouth","gi-mouth-and-teeth"],["throat","pharynx"],
@@ -30146,7 +30935,11 @@ var ANAT_BODYMAP = [
   [/islets|pancreatic-islets/, "pancreas-blood-sugar"],
   [/^kidney|nephron|glomerulus|ureter|bladder|urethra/, "kidneys-bladder"],
   [/adrenal/, "adrenal-stress"], [/pituitary|pineal|thyroid|parathyroid|thymus/, "thyroid-hormones"],
-  [/ovaries|testes|placenta|uterus/, "reproductive-pregnancy"],
+  [/ovaries|testes|placenta|uterus|cervix|fallopian|vagina|breasts|prostate|penis|epididymis|seminal/, "reproductive-pregnancy"],
+  [/vagus|plexus|sciatic|phrenic|spinal-nerves/, "brain-nerves"], [/sinuses|epiglottis/, "ears-nose-throat"],
+  [/circle-of-willis|jugular|femoral-artery|subclavian|hepatic-portal/, "blood-vessels-bp"], [/mediastinum/, "heart"],
+  [/lung-lobes/, "airway-lungs"], [/omentum|ileocecal|esophageal-sphincter/, "stomach-intestines"], [/pelvic-floor/, "muscles-nerve-junction"],
+  [/fascia|adipose/, "skin"],
   [/^bone-|^joint-|^cartilage/, "bones-joints"],
   [/^muscle-|^tendons|^ligaments|neuromuscular/, "muscles-nerve-junction"],
   [/^skin-/, "skin"],
@@ -30161,13 +30954,126 @@ function anatBody(x) {
   }
   return null;
 }
+/* ===== Anatomy: body-systems view (owner, Nov 15 2026: "add way more body parts and things on anatomy",
+   chose "more organs and structures" plus "a systems view (nerves, vessels, lymph, skeleton layers)") =====
+   A see-through body with layers you switch on and off (skeleton, nerves, arteries and veins, lymph, organs).
+   Pick a body system and its layer lights up while the rest fades, and its parts are listed underneath; tap an
+   organ on the drawing or a part in the list to open its card. Drawn in SVG (viewBox 200 x 440), schematic. */
+var ANAT_SYS = [
+  ["nervous", "Nervous system", "#eab308", "nerves", ["Brain and nervous system", "Nerves and signalling"], "Brain, spinal cord and nerves: sensing, thinking, moving and the automatic controls."],
+  ["cardio", "Cardiovascular system", "#ef4444", "vessels", ["Heart and circulation", "Blood vessels"], "The heart and about 100,000 km of vessels that carry blood to every cell."],
+  ["resp", "Respiratory system", "#38bdf8", "organs", ["Airway and lungs"], "Airway and lungs: oxygen in, carbon dioxide out."],
+  ["digest", "Digestive system", "#f59e0b", "organs", ["Digestive system"], "Mouth to rectum plus the liver, gallbladder and pancreas."],
+  ["urinary", "Urinary system", "#a78bfa", "organs", ["Kidneys and urinary system"], "Kidneys, ureters, bladder and urethra: filtering blood and balancing water and salts."],
+  ["endo", "Endocrine system", "#f472b6", "organs", ["Hormone glands"], "Glands that send hormones through the blood."],
+  ["repro", "Reproductive system", "#fb7185", "organs", ["Reproductive system"], "The organs of reproduction and pregnancy."],
+  ["immune", "Immune and lymphatic system", "#22c55e", "lymph", ["Blood and immunity"], "Lymph nodes, spleen, thymus, marrow and the cells in the blood."],
+  ["skeletal", "Skeletal system", "#d6d3d1", "skeleton", ["Bones and joints"], "206 bones and the joints between them."],
+  ["muscular", "Muscular system", "#fb923c", "muscle", ["Muscles and movement"], "Skeletal, smooth and cardiac muscle, plus tendons and ligaments."],
+  ["skin", "Skin and covering", "#c4a484", "", ["Skin and covering"], "The body's largest organ and the layers under it."],
+  ["senses", "Senses", "#60a5fa", "", ["Eyes and vision", "Ears, nose and taste"], "Eyes, ears, nose and tongue."]
+];
+var ANAT_LAYERS = [["skeleton", "Skeleton"], ["muscle", "Muscles"], ["nerves", "Nerves"], ["vessels", "Arteries and veins"], ["lymph", "Lymph"], ["organs", "Organs"]];
+function anatSysOf(k) { return ANAT_SYS.filter(function (s) { return s[0] === k; })[0] || null; }
+function anatLayerOn(k) { var L = S.anLayers || (S.anLayers = { skeleton: 1, nerves: 1, vessels: 1, lymph: 1, organs: 1, muscle: 0 }); return !!L[k]; }
+function anatSysSVG() {
+  var sy = anatSysOf(S.anSys || ""), hi = sy ? sy[3] : "", sysGrp = sy ? sy[4] : [];
+  function L(k, inner) { if (!anatLayerOn(k) && hi !== k) return ""; var dim = hi && hi !== k && k !== "organs";   /* organs stay; the ones outside the picked system fade on their own */ return '<g class="anl anl-' + k + (dim ? ' dim' : '') + (hi === k ? ' hi' : '') + '">' + inner + '</g>'; }
+  function O(id, shape, grp) { /* an organ you can tap; lit only when its system is picked */
+    var on = !sy || sysGrp.indexOf(grp) >= 0;
+    return '<g class="anorg' + (on ? '' : ' off') + '" data-anid="' + id + '" role="button" aria-label="' + esc((anatOf(id) || { name: id }).name) + '">' + shape + '</g>'; }
+  var s = '<svg class="anatsys" viewBox="0 0 200 440" role="img" aria-label="Body systems figure">';
+  /* the body, see-through */
+  s += '<g class="anbody"><circle cx="100" cy="38" r="25"/><rect x="91" y="60" width="18" height="18" rx="5"/>' +
+    '<path d="M64 78 Q100 70 136 78 L142 150 Q140 200 132 238 L68 238 Q60 200 58 150Z"/>' +
+    '<path d="M62 84 L46 160 L38 228" class="limb"/><path d="M138 84 L154 160 L162 228" class="limb"/>' +
+    '<path d="M86 236 L82 330 L79 420" class="limb leg"/><path d="M114 236 L118 330 L121 420" class="limb leg"/></g>';
+  /* muscles: big groups as soft shapes */
+  s += L("muscle", '<path d="M70 84 Q84 80 98 90 L96 120 Q80 122 70 110Z M130 84 Q116 80 102 90 L104 120 Q120 122 130 110Z" class="mu"/>' +
+    '<path d="M84 160 h32 v62 h-32z" class="mu"/><path d="M62 88 L50 150 M138 88 L150 150 M86 248 L84 320 M114 248 L116 320 M82 338 L80 400 M118 338 L120 400" class="mul"/>');
+  /* skeleton */
+  var ribs = ""; for (var r = 0; r < 7; r++) { var y = 92 + r * 9; ribs += '<path d="M99 ' + y + ' Q78 ' + (y - 3) + ' ' + (70 + r) + ' ' + (y + 11) + ' M101 ' + y + ' Q122 ' + (y - 3) + ' ' + (130 - r) + ' ' + (y + 11) + '"/>'; }
+  var verts = ""; for (var v = 0; v < 22; v++) verts += '<rect x="96.5" y="' + (62 + v * 7.8) + '" width="7" height="5.6" rx="1.5"/>';
+  s += L("skeleton", O("bone-skull", '<ellipse cx="100" cy="35" rx="19" ry="21" class="bn"/><path d="M88 50 Q100 62 112 50" class="bnl"/>', "Bones and joints") +
+    O("bone-vertebral-column", '<g class="bnv">' + verts + '</g>', "Bones and joints") +
+    O("bone-ribs-and-sternum", '<g class="bnl">' + ribs + '<path d="M100 88 V142"/></g>', "Bones and joints") +
+    O("bone-clavicle-and-scapula", '<path d="M98 82 L68 85 M102 82 L132 85" class="bnl"/>', "Bones and joints") +
+    O("bone-humerus", '<path d="M64 88 L50 152 M136 88 L150 152" class="bnl"/>', "Bones and joints") +
+    O("bone-radius-and-ulna", '<path d="M49 157 L41 222 M53 157 L45 222 M151 157 L159 222 M147 157 L155 222" class="bnl thin"/>', "Bones and joints") +
+    O("bone-pelvis", '<path d="M72 226 Q100 250 128 226 Q126 250 100 258 Q74 250 72 226Z" class="bn"/>', "Bones and joints") +
+    O("bone-femur", '<path d="M88 246 L84 326 M112 246 L116 326" class="bnl"/>', "Bones and joints") +
+    O("bone-tibia-and-fibula", '<path d="M83 334 L80 410 M88 336 L85 408 M117 334 L120 410 M112 336 L115 408" class="bnl thin"/>', "Bones and joints"));
+  /* organs */
+  s += L("organs", O("brain-cerebrum", '<path d="M83 34 Q82 16 100 14 Q118 16 117 34 Q116 44 100 44 Q84 44 83 34Z" class="og br"/>', "Brain and nervous system") +
+    O("thyroid-gland", '<path d="M93 70 Q96 66 100 70 Q104 66 107 70 Q106 76 100 74 Q94 76 93 70Z" class="og en"/>', "Hormone glands") +
+    O("lung-lobes", '<path d="M96 96 Q78 92 74 120 Q72 140 82 146 Q94 146 96 132Z M104 96 Q122 92 126 120 Q128 140 118 146 Q106 146 104 132Z" class="og lu"/>', "Airway and lungs") +
+    O("heart-muscle", '<path d="M98 116 Q104 108 112 114 Q116 124 104 134 Q96 128 96 120Z" class="og ht"/>', "Heart and circulation") +
+    O("liver", '<path d="M70 150 Q90 144 106 150 Q104 164 84 166 Q70 164 70 150Z" class="og lv"/>', "Digestive system") +
+    O("gi-stomach", '<path d="M106 152 Q122 146 126 158 Q124 172 110 170 Q104 164 106 152Z" class="og st"/>', "Digestive system") +
+    O("pancreatic-islets", '<path d="M92 172 Q106 168 120 172" class="ogl en"/>', "Hormone glands") +
+    O("kidney", '<ellipse cx="82" cy="182" rx="5" ry="8" class="og kd"/><ellipse cx="118" cy="182" rx="5" ry="8" class="og kd"/>', "Kidneys and urinary system") +
+    O("gi-jejunum-and-ileum", '<path d="M86 186 q6 -6 12 0 t12 0 t10 0 M84 196 q6 -6 12 0 t12 0 t12 0 M86 206 q6 -6 12 0 t12 0 t10 0" class="ogl gi"/><path d="M82 184 V214 H118 V184" class="ogl co"/>', "Digestive system") +
+    O("bladder", '<ellipse cx="100" cy="226" rx="8" ry="6" class="og bl"/>', "Kidneys and urinary system") +
+    O("uterus", '<path d="M93 214 Q100 208 107 214 Q106 222 100 222 Q94 222 93 214Z" class="og rp"/>', "Reproductive system") +
+    O("adrenal-cortex", '<path d="M79 172 l3 -4 3 4z M115 172 l3 -4 3 4z" class="og en"/>', "Hormone glands"));
+  /* lymph */
+  var nodes = [[90, 66], [110, 66], [86, 72], [114, 72], [68, 96], [132, 96], [72, 102], [128, 102], [96, 188], [104, 194], [100, 200], [86, 236], [114, 236], [90, 242], [110, 242], [60, 150], [140, 150]];
+  s += L("lymph", '<path d="M90 66 L100 108 L110 66 M68 96 L100 108 L132 96 M100 108 L100 200 L86 236 M100 200 L114 236" class="lyl"/>' +
+    nodes.map(function (n) { return '<circle cx="' + n[0] + '" cy="' + n[1] + '" r="2.6" class="lyn"/>'; }).join("") +
+    O("thymus", '<ellipse cx="100" cy="98" rx="5" ry="6" class="lyo"/>', "Hormone glands") + O("spleen", '<ellipse cx="128" cy="166" rx="6" ry="4.5" class="lyo"/>', "Blood and immunity") +
+    O("lymph-nodes", '<circle cx="68" cy="96" r="4" class="lyn big"/><circle cx="132" cy="96" r="4" class="lyn big"/>', "Blood and immunity"));
+  /* vessels: arteries red, veins blue */
+  s += L("vessels", O("aorta", '<path d="M104 116 Q104 98 96 102 L97 230" class="art"/>', "Heart and circulation") +
+    O("carotid-and-vertebral-arteries", '<path d="M97 102 L94 60 L95 40 M101 102 L106 60 L105 40" class="art thin"/>', "Blood vessels") +
+    O("arteries", '<path d="M96 104 L64 92 L50 156 L42 222 M100 102 L136 92 L150 156 L158 222 M97 230 L86 248 L83 330 L80 410 M97 230 L112 248 L117 330 L120 410" class="art thin"/>', "Blood vessels") +
+    O("vena-cava", '<path d="M108 120 L107 230" class="vein"/>', "Heart and circulation") +
+    O("jugular-veins", '<path d="M104 104 L103 62 M96 104 L92 62" class="vein thin"/>', "Blood vessels") +
+    O("veins", '<path d="M104 106 L68 96 L54 158 L46 222 M106 106 L132 96 L146 158 L154 222 M107 230 L92 248 L88 330 L85 410 M107 230 L108 248 L112 330 L115 410" class="vein thin"/>', "Blood vessels"));
+  /* nerves */
+  s += L("nerves", O("brain-cerebrum", '<ellipse cx="100" cy="30" rx="15" ry="12" class="nvo"/>', "Brain and nervous system") +
+    O("spinal-cord", '<path d="M100 44 L100 232" class="nv"/>', "Brain and nervous system") +
+    O("brachial-plexus", '<path d="M100 92 L62 96 L48 158 L40 224 M100 92 L138 96 L152 158 L160 224" class="nv thin"/>', "Nerves and signalling") +
+    O("sciatic-nerve", '<path d="M100 232 L88 250 L84 330 L81 414 M100 232 L112 250 L116 330 L119 414" class="nv thin"/>', "Nerves and signalling") +
+    O("vagus-nerve", '<path d="M96 50 Q92 90 94 130 Q96 170 98 200" class="nv thin dash"/>', "Nerves and signalling") +
+    O("spinal-nerves-and-dermatomes", (function () { var o = ""; for (var k = 0; k < 8; k++) { var yy = 120 + k * 12; o += '<path d="M100 ' + yy + ' L' + (84 - k) + ' ' + (yy + 6) + ' M100 ' + yy + ' L' + (116 + k) + ' ' + (yy + 6) + '" class="nv hair"/>'; } return o; })(), "Nerves and signalling"));
+  return s + '</svg>';
+}
+function anatSysView() {
+  var sy = anatSysOf(S.anSys || ""), L = anatAll();
+  var c = '<div class="anlayers" role="group" aria-label="Layers"><span>Layers:</span>' + ANAT_LAYERS.map(function (l) { var on = anatLayerOn(l[0]); return '<button class="chip' + (on ? ' on' : '') + '" data-anlayer="' + l[0] + '" aria-pressed="' + on + '">' + l[1] + '</button>'; }).join("") + '</div>';
+  c += '<div class="ansyswrap"><div class="ansysfig">' + anatSysSVG() + '<p class="muted small">Tap an organ or bone to open it.</p></div><div class="ansyslist">';
+  c += '<div class="ansysgrid">' + ANAT_SYS.map(function (s) {
+    var n = L.filter(function (x) { return s[4].indexOf(x.grp) >= 0; }).length;
+    return '<button class="ansys' + (sy && sy[0] === s[0] ? ' on' : '') + '" data-ansys="' + s[0] + '" style="--sc:' + s[2] + '" aria-pressed="' + !!(sy && sy[0] === s[0]) + '"><i aria-hidden="true"></i><strong>' + esc(s[1]) + '</strong><span>' + n + ' parts</span></button>';
+  }).join("") + '</div>';
+  if (sy) {
+    var parts = L.filter(function (x) { return sy[4].indexOf(x.grp) >= 0; });
+    c += '<div class="anatgrp ansyssel" style="--sc:' + sy[2] + '"><h3 class="anath">' + esc(sy[1]) + '<span class="qacount">' + parts.length + '</span></h3><p class="muted small">' + esc(sy[5]) + '</p><div class="chips">' + parts.map(function (x) { return anatChip(x, S.anId || ""); }).join("") + '</div></div>';
+  }
+  c += '</div></div>';
+  var x = S.anId ? anatOf(S.anId) : null;
+  if (x) c += anatCard(x);
+  return c;
+}
+document.addEventListener("click", function (e) {
+  var t = e.target.closest && e.target.closest("[data-anlayer],[data-ansys],[data-anmode]"); if (!t) return;
+  var d = t.dataset;
+  if (d.anmode) { S.anMode = d.anmode; S.anId = ""; render(); return; }
+  if (d.anlayer) { anatLayerOn(d.anlayer); S.anLayers[d.anlayer] = S.anLayers[d.anlayer] ? 0 : 1; render(); return; }
+  if (d.ansys) { S.anSys = S.anSys === d.ansys ? "" : d.ansys; S.anId = ""; var sy = anatSysOf(S.anSys); if (sy && sy[3]) { anatLayerOn(sy[3]); S.anLayers[sy[3]] = 1; } render(); return; }
+});
+
 function anatView() {
+  if (!xdataReady()) xdataLoad();
   var L = anatAll();
   if (!L.length) return '<p class="empty">The anatomy cards are still loading.</p>';
   var area = S.anArea || "", grp = S.anGrp || "", q = String(S.anQ || "").trim().toLowerCase(), cur = S.anId || "";
   var hits = L.filter(function (x) { return (!area || x.area === area) && (!grp || x.grp === grp) && (!q || anatMatch(x, q)); });
 
   var c = '<p class="muted anatlead">Every organ and body part, with what it is and what it does. Tap the body, or pick a part below. Education only.</p>';
+  var md = S.anMode === "sys" ? "sys" : "area";
+  c += '<div class="segs anmodes">' + [["area", "By body area"], ["sys", "By body system"]].map(function (m) { return '<button class="seg" data-anmode="' + m[0] + '" aria-checked="' + (md === m[0]) + '">' + m[1] + '</button>'; }).join("") + '</div>';
+  if (md === "sys") return c + anatSysView();
   c += '<div class="tools"><input class="search" id="anq" type="search" autocomplete="off" placeholder="Search a part: alveoli, SA node, glomerulus, cochlea" aria-label="Search anatomy" value="' + esc(S.anQ || "") + '"></div>';
 
   /* body figure + area chips, reusing the Body Systems silhouette */
@@ -32245,12 +33151,13 @@ var EVW = { i: 0 };
    compensation, at least 40 graded questions a week, pilot questions confidential. The server
    (evalSign / evalStatus) keeps the signature and judges each finished week: one short week is a
    warning, a second in a row ends evaluator status and the Pro that came with it. */
-var EVAG_V = "2026-11-08", EV_NEED = 40;
+var EVAG_V = "2026-11-15", EV_NEED = 40;   /* 2026-11-15 adds the "Activity time" point (Nov 15 2026) */
 var EVAG_ACKS = [
   ["unpaid", "I am participating as an unpaid volunteer. I am not an employee, independent contractor or agent of Volare Media LLC.", "Volunteer status."],
   ["nofuture", "I will not receive wages, fees or any other compensation for evaluating, now or in the future, and I will not request any. Complimentary DrugBug Pro during my participation is a courtesy, not payment.", "No compensation."],
   ["quota", "I will grade at least 40 questions per week (Monday through Sunday, Central Time). If I grade fewer than 40 in a week, I will receive a warning. A second consecutive week below 40 ends my evaluator status and returns my account to DrugBug Free.", "Weekly minimum."],
-  ["confidential", "Pilot questions are confidential. I will not copy, screenshot or share them. Volare Media LLC may use my ratings and suggestions without restriction (Terms of Use, Section 9).", "Confidentiality."]
+  ["confidential", "Pilot questions are confidential. I will not copy, screenshot or share them. Volare Media LLC may use my ratings and suggestions without restriction (Terms of Use, Section 9).", "Confidentiality."],
+  ["time", "While my evaluator code is active, DrugBug records how much time I spend in DrugBug and how much of it I spend on grading screens, and shows those times to Volare Media LLC with my grading activity.", "Activity time."]
 ];
 var EVAG_EASE = "Grading is quick: rate each question 1 to 5, mark it Good or Bad, and add a comment only if you want to. Most questions take under 30 seconds, so 40 a week is about 20 minutes.";
 var EVS = store("evStat") || null, EVSIGN = { acks: {}, name: "", msg: "", busy: false };
@@ -32278,6 +33185,27 @@ function evRemoved() {
   evagdlg.innerHTML = '<div class="panel cipanel evagpanel" role="dialog" aria-modal="true" aria-label="Evaluator status ended"><h2>Evaluator status ended</h2><p>You graded fewer than ' + EV_NEED + ' questions two weeks in a row, so your evaluator status has ended and your account is back on DrugBug Free. Thank you for the questions you checked.</p><p>If you think this is a mistake, email <a href="mailto:' + CONTACT + '">' + CONTACT + '</a>.</p><div class="actions"><button class="btn" data-evag="close">OK</button></div></div>';
   evagdlg.hidden = false; if (typeof render === "function") render();
 }
+/* Evaluator time (owner, Nov 15 2026: "track the time the evaluators spend on the app", part of the evaluator agreement).
+   Only for someone holding an evaluator code who signed agreement 2026-11-15 (which says so). Counts 15-second ticks while
+   DrugBug is on screen and was touched in the last 2 minutes, the same rule the usage statistics use, and separately the
+   ticks when a question's grading panel is on screen. Sent every 2 minutes and when the app goes to the background. */
+var EVT = { sec: 0, gsec: 0, sentAt: Date.now(), busy: false };
+function evTimed() { return evIsEval() && EVS && EVS.signed && EVS.v === EVAG_V && !EVS.removed; }
+function evTimeFlush(force) {
+  if (EVT.busy || !EVT.sec || typeof fnCall !== "function" || !Prog.d.reviewer) return;
+  if (!force && Date.now() - EVT.sentAt < 120000) return;
+  var sec = EVT.sec, gsec = EVT.gsec; EVT.sec = 0; EVT.gsec = 0; EVT.sentAt = Date.now(); EVT.busy = true;
+  fnCall("evalTime", { gift: Prog.d.reviewer.id, sec: sec, gsec: gsec }).then(function () { EVT.busy = false; }, function () { EVT.busy = false; EVT.sec += sec; EVT.gsec += gsec; });
+}
+setInterval(function () {
+  try {
+    if (!evTimed() || document.visibilityState !== "visible" || Date.now() - USG.lastAct > 120000) return;
+    EVT.sec += 15;
+    var qr = document.querySelector(".qrev"); if (qr && qr.offsetParent !== null) EVT.gsec += 15;
+    evTimeFlush(false);
+  } catch (e) {}
+}, 15000);
+document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden") try { evTimeFlush(true); } catch (e) {} });
 var evagdlg = document.createElement("div"); evagdlg.id = "evagdlg"; evagdlg.className = "sheet rsheet"; evagdlg.hidden = true; document.body.appendChild(evagdlg);
 function evAgreeOpen() { if (!evIsEval()) return; EVSIGN.msg = ""; evAgreeDraw(); evagdlg.hidden = false; }
 function evAgreeDraw() {
@@ -32536,7 +33464,7 @@ function dashView() {
 var CL = { open: false, view: "board", data: null, busy: false, msg: "", err: false, at: 0, key: "" };
 var classPane = document.createElement("aside"); classPane.id = "classPane"; classPane.hidden = true; classPane.setAttribute("aria-label", "My class"); document.body.appendChild(classPane);
 var classTab = document.createElement("button"); classTab.id = "classTab"; classTab.className = "class-tab"; classTab.textContent = "My class"; classTab.setAttribute("aria-controls", "classPane"); classTab.hidden = true; document.body.appendChild(classTab);
-var CL_KIND = { practice: "Practice tests", exam: "Exam mode", daily: "Daily 5-minute", study: "Study a drug", weak: "Weak-spot review", system: "Learn by system", acls: "ACLS / PALS", session: "Guided sessions", game: "Games", safety: "Safety checks", lab: "Lab drills", crit: "Critical-care drills", megacode: "Megacode", anatomy: "Anatomy quiz", calc: "Calculations", protocol: "Agency protocols" };
+var CL_KIND = { practice: "Practice tests", exam: "Exam mode", daily: "Daily 5-minute", study: "Study a drug", weak: "Weak-spot review", system: "Learn by system", acls: "ACLS / PALS", session: "Guided sessions", game: "Games", safety: "Safety checks", lab: "Lab drills", crit: "Critical-care drills", megacode: "Codes", anatomy: "Anatomy quiz", calc: "Calculations", protocol: "Agency protocols" };
 var CL_QT = { assess: "Assessment", hold: "When to hold", labs: "Labs to watch", vitals: "Vital signs", adverse: "Side effects", teach: "Patient teaching", interact: "Interactions", notify: "When to notify" };
 var CL_DIMS = [["s", "Medication systems"], ["k", "Quiz types"], ["y", "Question types"], ["l", "Drug classes"], ["p", "Drill topics"], ["d", "Each drug"]];
 var CL_MIN = 5;
@@ -33913,5 +34841,5 @@ document.addEventListener("keydown", function (e) { if (B3.open && e.key === "Es
   document.head.appendChild(st);
 })();
 
-Dex.load(); try { otaInit(); } catch (e) {} initProg(); if (typeof grubFix === "function") grubFix(); if (agreeRec() && typeof trialBegin === "function") trialBegin(); setTimeout(function () { if (typeof remindSync === "function") remindSync(); if (typeof wdwSync === "function") wdwSync(); if (typeof watchSync === "function") watchSync(); }, 1500); initAdmin(); initLegal(); if (typeof accInit === "function") accInit(); if (typeof walletInit === "function") walletInit(); if (typeof subInit === "function") subInit(); setTimeout(loadProtocolSets, 400);
+Dex.load(); try { otaInit(); } catch (e) {} initProg(); try { alliedOff(); } catch (e) {} if (typeof grubFix === "function") grubFix(); if (agreeRec() && typeof trialBegin === "function") trialBegin(); setTimeout(function () { if (typeof remindSync === "function") remindSync(); if (typeof wdwSync === "function") wdwSync(); if (typeof watchSync === "function") watchSync(); }, 1500); initAdmin(); initLegal(); if (typeof accInit === "function") accInit(); if (typeof walletInit === "function") walletInit(); if (typeof subInit === "function") subInit(); setTimeout(loadProtocolSets, 400);
 })();

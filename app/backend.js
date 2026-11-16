@@ -25,7 +25,8 @@
     var prov = (u.providerData || []).map(function (p) { return p.providerId; });
     return { uid: u.uid, anonymous: u.isAnonymous, signedIn: !u.isAnonymous, email: u.email || "", emailVerified: !!u.emailVerified,
       provider: prov.indexOf("apple.com") >= 0 ? "apple" : prov.indexOf("google.com") >= 0 ? "google" : prov.indexOf("password") >= 0 ? "email" : "",
-      hasPassword: prov.indexOf("password") >= 0, hasAppleLink: prov.indexOf("apple.com") >= 0 };
+      hasPassword: prov.indexOf("password") >= 0, hasAppleLink: prov.indexOf("apple.com") >= 0,
+      created: (u.metadata && Date.parse(u.metadata.creationTime)) || 0 };
   }
   /* what happened while connecting, shown in Settings when the phone cannot connect (owner, Nov 8 2026) */
   var D = window.__fbDiag = { stage: "loading", err: "" };
