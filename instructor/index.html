@@ -250,6 +250,7 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
    sections. Line charts for trends over time, columns for daily counts, a 100% bar for shares, ranked
    bars for "which is used most", a shaded table for retention. Colors: blue = the main series,
    orange = website (when iPhone and website are shown together). */
+.estkey{display:flex;flex-wrap:wrap;gap:4px 14px}.estkey span{display:inline-flex;align-items:center;gap:6px}.estkey i{width:12px;height:3px;border-radius:2px;display:inline-block}
 #vApp{--s1:#3987e5;--s2:#d95926;--s3:#199e70;--grid:#2e2942;--axis:#8f88aa;--h1:#cde2fb;--h2:#86b6ef;--h3:#3987e5;--h4:#1c5cab;--h5:#104281}
 @media (prefers-color-scheme:light){#vApp{--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--grid:#ece8f4;--axis:#6f6888}}
 .mxhead{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between;margin:2px 0 14px}
@@ -330,8 +331,8 @@ body.embed .mxhead .adm{display:none}
 
   <div class="mxsec">Activity</div>
   <div class="mxg">
-    <div class="mxc"><h3>Active people per day</h3><p class="cs">People who opened DrugBug each day (Texas time).</p><div class="ch" id="chDau"></div></div>
-    <div class="mxc"><h3>New people per day</h3><p class="cs">The first day someone opened DrugBug.</p><div class="ch" id="chNew"></div></div>
+    <div class="mxc"><h3>Active people per day</h3><p class="cs">People who opened DrugBug each day (Texas time).</p><p class="cs estkey"><span><i style="background:var(--s1)"></i>Counted: people who chose Share</span> <span><i style="background:var(--s2)"></i>ESTIMATED: everyone, including people who chose Do not share (not an exact count)</span></p><div class="ch" id="chDau"></div></div>
+    <div class="mxc"><h3>New people per day</h3><p class="cs">The first day someone opened DrugBug.</p><p class="cs estkey"><span><i style="background:var(--s1)"></i>Counted: people who chose Share</span> <span><i style="background:var(--s2)"></i>ESTIMATED: everyone, including people who chose Do not share (not an exact count)</span></p><div class="ch" id="chNew"></div></div>
   </div>
   <div class="mxg">
     <div class="mxc"><h3>Questions answered per day</h3><p class="cs">Everyone together.</p><div class="ch" id="chQ"></div></div>
@@ -1058,15 +1059,17 @@ body.embed .mxhead .adm{display:none}
       kpi("Active today", num(T.active1), "", "Average " + (Math.round(avgD * 10) / 10) + " a day over " + per, spark(rows, function (r) { return r.dau; })),
       kpi("Active this week", num(T.active7), "", "Opened DrugBug in the last 7 days"),
       kpi("Active this month", num(T.active30), "", (T.stickiness || 0) + "% of them open it on an average day" + (T.stickiness >= 20 ? " (a habit)" : "")),
-      kpi("New people", num(nu), "", delta(nu, pnu, unit), spark(rows, function (r) { return r.newUsers; })),
+      kpi("New people", num(nu), "", (rows.some(function (r) { return r.estNew != null; }) ? "Estimated about " + num(sum(rows, function (r) { return r.estNew; })) + " (not exact) · " : "") + delta(nu, pnu, unit), spark(rows, function (r) { return r.newUsers; })),
       kpi("Questions answered", num(q), "", (q ? Math.round(100 * c / q) + "% right · " : "") + delta(q, pq, unit), spark(rows, function (r) { return r.q; })),
       kpi("Time per person per day", String(Math.round(mpp * 10) / 10), "min", pmpp != null ? delta(mpp, pmpp, unit) : "On days they opened it"),
       kpi("Days active per person", String(T.daysActivePerUser30 || 0), "of 30", "Among people active this month"),
       kpi("On Plus or Pro", (T.paidPct30 || 0) + "%", "", num(T.paid30 || 0) + " of " + num(T.active30) + " active people" + (T.webSubs != null ? " · " + T.webSubs + " web subscriptions" : ""))
     ].join("");
     var pl = function (n, w) { return num(n) + " " + w + (n === 1 ? "" : "s"); };
-    timeChart("chDau", rows, "line", [{ v: function (r) { return r.dau; }, c: "--s1" }], { label: "Active people per day", tip: function (r) { return pl(r.dau, "active person").replace("persons", "people") + "<br>" + pl(r.newUsers, "new person").replace("persons", "people") + "<br>" + r.minutes + " min studied"; } });
-    timeChart("chNew", rows, "cols", [{ v: function (r) { return r.newUsers; }, c: "--s1" }], { label: "New people per day", tip: function (r) { return pl(r.newUsers, "new person").replace("persons", "people"); } });
+    timeChart("chDau", rows, "line", [{ v: function (r) { return r.dau; }, c: "--s1" }].concat(rows.some(function (r) { return r.estDau != null; }) ? [{ v: function (r) { return r.estDau; }, c: "--s2" }] : []), { label: "Active people per day", tip: function (r) { return pl(r.dau, "active person").replace("persons", "people") + "<br>" + pl(r.newUsers, "new person").replace("persons", "people") + "<br>" + r.minutes + " min studied"; } });
+    /* counted (chose Share) and estimated (everyone), back-filled for every day (owner, Nov 15 2026) */
+    var hasEst = rows.some(function (r) { return r.estNew != null; });
+    timeChart("chNew", rows, hasEst ? "line" : "cols", [{ v: function (r) { return r.newUsers; }, c: "--s1" }].concat(hasEst ? [{ v: function (r) { return r.estNew; }, c: "--s2" }] : []), { label: "New people per day: counted (blue) and estimated (orange)", tip: function (r) { return pl(r.newUsers, "new person").replace("persons", "people") + " counted" + (r.estNew != null ? "<br>About " + num(r.estNew) + " ESTIMATED (not exact)" + (r.accepted ? "<br>" + num(r.accepted) + " accepted the Terms" : "") : ""); } });
     timeChart("chQ", rows, "cols", [{ v: function (r) { return r.q; }, c: "--s1" }], { label: "Questions answered per day", tip: function (r) { return num(r.q) + " questions" + (r.accuracy != null ? "<br>" + r.accuracy + "% right" : "") + "<br>" + num(r.learn) + " L.E.A.R.N cards"; } });
     timeChart("chAcc", rows, "line", [{ v: function (r) { return r.q >= 10 ? r.accuracy : null; }, c: "--s3" }], { pct: true, label: "Accuracy per day", tip: function (r) { return r.q >= 10 ? r.accuracy + "% right of " + num(r.q) : "Fewer than 10 answers"; } });
     var ws = sum(rows, function (r) { return (r.plat || {}).web; }), is = sum(rows, function (r) { return (r.plat || {}).ios; }), both = ws + is;
