@@ -170,7 +170,7 @@ ol.opts{gap:5px}ol.opts li{padding:7px 10px;font-size:15px}
       </select>
       <select id="fLv" aria-label="Level"><option value="">All levels</option></select>
       <select id="fV" aria-label="Review status">
-        <option value="un">Not reviewed yet</option><option value="">Everything</option><option value="unchk">Not checked by an evaluator yet</option><option value="chk">Checked by an evaluator</option><option value="rated">Has difficulty ratings</option><option value="good">Marked good</option><option value="bad">Marked bad (by you or an evaluator)</option><option value="off">Marked not relevant</option><option value="rvbad">Marked bad by an evaluator</option><option value="mybad">Marked bad by you (this page)</option><option value="rvsug">Reviewers left a suggestion</option><option value="rvany">Any reviewer feedback</option><option value="ed">Edited by me</option>
+        <option value="un">Not reviewed yet</option><option value="audit">Audit: pulled for a Bad grade, waiting for you</option><option value="">Everything</option><option value="unchk">Not checked by an evaluator yet</option><option value="chk">Checked by an evaluator</option><option value="rated">Has difficulty ratings</option><option value="good">Marked good</option><option value="bad">Marked bad (by you or an evaluator)</option><option value="off">Marked not relevant</option><option value="rvbad">Marked bad by an evaluator</option><option value="mybad">Marked bad by you (this page)</option><option value="rvsug">Reviewers left a suggestion</option><option value="rvany">Any reviewer feedback</option><option value="ed">Edited by me</option>
       </select>
       <select id="fSort" aria-label="Order"><option value="">Question order</option><option value="hard">Rated hardest first</option><option value="easy">Rated easiest first</option><option value="many">Most ratings first</option></select>
       <label class="tg"><input type="checkbox" id="fFlag"> Rule breakers only</label>
@@ -267,6 +267,7 @@ ol.opts{gap:5px}ol.opts li{padding:7px 10px;font-size:15px}
       if (v === "ed" && !(r && r.e)) return false;
       var rv = REVS[q.id] || [];
       if (v === "rvbad" && !rv.some(function (x) { return x.v === "bad"; })) return false;
+      if (v === "audit" && !inAudit(q)) return false;
       if (v === "bad" && !(r && r.v === "bad") && !rv.some(function (x) { return x.v === "bad"; })) return false;
       if (v === "mybad" && !(r && r.v === "bad")) return false;
       if (v === "rvsug" && !rv.some(function (x) { return x.s; })) return false;
@@ -274,7 +275,7 @@ ol.opts{gap:5px}ol.opts li{padding:7px 10px;font-size:15px}
       if (v === "rated" && !avgOf(q).n) return false;
       if (v === "unchk" && SEEN[q.id]) return false;
       if (v === "chk" && !SEEN[q.id]) return false;
-      if (v && v !== "un" && v !== "ed" && v !== "rated" && v !== "unchk" && v !== "chk" && v !== "bad" && v !== "mybad" && v.indexOf("rv") !== 0 && !(r && r.v === v)) return false;
+      if (v && v !== "un" && v !== "ed" && v !== "rated" && v !== "unchk" && v !== "chk" && v !== "bad" && v !== "mybad" && v !== "audit" && v.indexOf("rv") !== 0 && !(r && r.v === v)) return false;
       if (fo && !flags(q).length) return false;
       if (s && q._s.indexOf(s) < 0) return false;
       return true;
@@ -446,11 +447,12 @@ ol.opts{gap:5px}ol.opts li{padding:7px 10px;font-size:15px}
     (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { msg("topMsg", "Summary copied. Paste it into your chat with Claude. For edited wording, use Download for Claude."); }, function () { msg("topMsg", "Your browser blocked copying. Use Download for Claude instead."); });
   };
 
-  var SEEN = {};
+  var SEEN = {}, AUDIT = {};
+  function inAudit(q) { if (AUDIT[q.id]) return true; if (/^q/.test(q.id)) return false; var h = 5381, t = q.lv + "|" + q.q; for (var i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0; return !!AUDIT["q" + (h >>> 0).toString(36)]; }
   /* pilot status, worked out here the same way the server does: owner Good = live, owner Bad = out,
      any evaluator Bad = held for you, 2 evaluator Good = live */
   function pilotState(q) {
-    if (q.b !== "pilot") return "";
+    if (q.b !== "pilot") return inAudit(q) ? '<span class="pst out">Pulled from quizzes: graded Bad. Mark it Good (after fixing it if needed) to put it back.</span>' : "";
     var rpn = q.rp ? '<span class="pst wait">Re-check: ' + esc(q.rp.name || 'a drug in this question') + ' was updated from new FDA labeling</span> ' : '';
     var r = R[q.id] || {}, rv = REVS[q.id] || [], g = rv.filter(function (x) { return x.v === "good"; }).length, b = rv.filter(function (x) { return x.v === "bad"; }).length;
     if (r.v === "good") return rpn + '<span class="pst live">Live for everyone (you approved it)</span>';
@@ -488,7 +490,9 @@ ol.opts{gap:5px}ol.opts li{padding:7px 10px;font-size:15px}
       /* questions pulled after a problem report: hide the old copy, grade the fixed copy (owner, Nov 13 2026) */
       var FX = res[2] && res[2].fix;
       if (FX) {
-        var gone = {}; (FX.pulled || []).forEach(function (id) { gone[id] = 1; });
+        /* questions graded Bad stay here, in the audit, so you can fix or re-approve them (Nov 16 2026) */
+        AUDIT = {}; (FX.audit || []).forEach(function (id) { AUDIT[id] = 1; });
+        var gone = {}; (FX.pulled || []).forEach(function (id) { if (!AUDIT[id]) gone[id] = 1; });
         var hs0 = function (t) { var h = 5381; for (var i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0; return (h >>> 0).toString(36); };
         j.qs = j.qs.filter(function (q) { return !gone[q.id] && !gone["q" + hs0(q.lv + "|" + q.q)]; });
         (FX.fixes || []).forEach(function (f) { if (!j.qs.some(function (q) { return q.id === f.id; })) j.qs.push({ id: f.id, b: "pilot", lv: f.lv || "", d: f.d || "", q: f.q, a: f.a, w: f.w || [], x: f.x || "", rp: { name: "Fixed after a problem report", at: "" } }); });
