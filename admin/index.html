@@ -373,13 +373,13 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
      Status lights, then one panel per area: a big number, the change, a trend line, three small
      numbers and what it measures. "Open" widens the panel and adds the detail and a plain-English
      reading. Every source loads on its own, so a slow or undeployed function only blanks its panel. */
-  var AP = null, GS = null, PIL = null, PILN = null, PINGS = null, EQ = null, RV = null, PK = null, AS = null, OPEN = {};
+  var AP = null, GS = null, PIL = null, PILN = null, PINGS = null, EQ = null, RV = null, PK = null, AS = null, OPEN = {}; var ADS = null, ADMSG = "";
   function loadOverview() {
     $("ovSub").textContent = "Loading…";
     call("adminOverview").then(function (o) { OV = o; OV_ERR = ""; }).catch(function (e) { OV_ERR = errTxt(e); }).then(cockpit);
     loadOverviewLists();
   }
-  $("bOvRefresh").onclick = function () { STATS = null; CODES = null; AP = GS = PIL = PILN = PINGS = CODERS = EQ = RV = PK = AS = null; loadOverview(); };
+  $("bOvRefresh").onclick = function () { STATS = null; CODES = null; AP = GS = PIL = PILN = PINGS = CODERS = EQ = RV = PK = AS = ADS = null; loadOverview(); };
   function kpi(tab, label, big, sub) { return '<button class="kpi" data-go="' + tab + '"><i>' + label + '</i><b>' + big + '</b><span>' + sub + '</span></button>'; }
   function drawOverview() { cockpit(); }
   function loadOverviewLists() {
@@ -394,12 +394,13 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
     (PK ? Promise.resolve() : call("orgInquiryList").then(function (r) { PK = r.list || []; })).catch(function () { PK = PK || false; }).then(done);
     (RV ? Promise.resolve() : call("revenueMonth").then(function (r) { RV = r; })).catch(function () { RV = RV || false; }).then(done);
     (AS ? Promise.resolve() : call("appleSummary").then(function (r) { AS = r; })).catch(function () { AS = AS || false; }).then(done);
+    (ADS ? Promise.resolve() : call("adsSummary", { days: 30 }).then(function (r) { ADS = r; })).catch(function () { ADS = ADS || false; }).then(done);
     (EQ ? Promise.resolve() : call("evalQuota").then(function (r) { EQ = r; })).catch(function () { EQ = EQ || false; }).then(done);
     if (!PINGS) pingAll();
   }
   /* which server functions answer: a deployed callable always replies (even with an error for a
      bad request); one that was never deployed doesn't. Only read-only functions are asked. */
-  var PING_FNS = ["appleSummary", "dashSync", "groupSeat", "orgInquiryList", "revenueMonth", "evalQuota", "adminOverview", "codeList", "qrStats", "qrCoders", "pilotStatus", "qDifficulty", "qrChecked", "evalAppList", "appMetrics", "groupOwnerStats", "groupOrgList", "groupDashboard"];
+  var PING_FNS = ["appleSummary", "adsSummary", "dashSync", "groupSeat", "orgInquiryList", "revenueMonth", "evalQuota", "adminOverview", "codeList", "qrStats", "qrCoders", "pilotStatus", "qDifficulty", "qrChecked", "evalAppList", "appMetrics", "groupOwnerStats", "groupOrgList", "groupDashboard"];
   function pingAll() {
     PINGS = { ok: [], no: [], busy: true };
     Promise.all(PING_FNS.map(function (f) { return call(f, { ping: 1 }).then(function () { PINGS.ok.push(f); }, function (e) { if (/^not deployed$|failed to fetch|networkerror|load failed/i.test((e && e.message) || "")) PINGS.no.push(f); else PINGS.ok.push(f); }); }))
@@ -437,6 +438,21 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
   }
   document.addEventListener("change", function (e) { var t = e.target; if (!t.getAttribute || !t.getAttribute("data-pkst")) return; var id = t.getAttribute("data-pkst"), st = t.value; t.disabled = true; call("orgInquirySet", { id: id, status: st }).then(function () { (PK || []).forEach(function (x) { if (x.id === id) x.status = st; }); t.disabled = false; cockpit(); }).catch(function (e2) { alert(e2.message); t.disabled = false; }); });
   document.addEventListener("click", function (e) { var b = e.target.closest && e.target.closest("[data-restore]"); if (!b) return; var g = b.getAttribute("data-restore"); if (!confirm("Restore this evaluator? Their status and Pro come back, and weeks are counted again from this week.")) return; b.disabled = true; call("evalRestore", { gift: g }).then(function () { EQ = null; loadOverviewLists(); }).catch(function (e2) { alert(e2.message); b.disabled = false; }); });
+  /* ads panel buttons */
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest("[data-ads]"); if (!b) return; e.preventDefault(); e.stopPropagation();
+    var k = b.getAttribute("data-ads"), v = function (id) { var x = $(id); return x ? x.value.trim() : ""; }, req;
+    if (k === "connect") req = { account: v("adAcct"), token: v("adTok") };
+    else if (k === "pull") req = { pull: 1, days: 30 };
+    else if (k === "disconnect") { if (!confirm("Stop pulling Meta ad numbers? Days already pulled stay.")) return; req = { disconnect: 1 }; }
+    else if (k === "manual") req = { manual: { date: v("adDate"), spend: v("adSpend").replace(/[$,]/g, ""), impressions: v("adImp").replace(/,/g, ""), clicks: v("adClk").replace(/,/g, ""), where: v("adWhere") } };
+    if (!req) return;
+    b.disabled = true; ADMSG = "Working…";
+    call("adsSetup", req).then(function (r) {
+      ADMSG = k === "manual" ? "Saved." : r && r.ok === false ? "Meta said: " + (r.why || "no answer") : k === "disconnect" ? "Disconnected." : "Pulled " + ((r && r.days) || 0) + " days from Meta.";
+      return call("adsSummary", { days: 30 }).then(function (x) { ADS = x; });
+    }).catch(function (er) { ADMSG = errTxt(er); }).then(function () { OPEN.ads = true; cockpit(); });
+  }, true);
   document.addEventListener("click", function (e) { var b = e.target.closest && e.target.closest("[data-open]"); if (!b || !$("cock").contains(b)) return; var id = b.getAttribute("data-open"); OPEN[id] = !OPEN[id]; cockpit(); if (OPEN[id]) $("p-" + id).scrollIntoView({ behavior: "smooth", block: "nearest" }); });
   var pc = function (a, b) { return b ? Math.round(100 * a / b) : null; };
   var lastN = function (arr, n, off) { return arr.slice(Math.max(0, arr.length - n - (off || 0)), arr.length - (off || 0)); };
@@ -524,7 +540,7 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
           '<p><b>Still coming:</b> ' + R.renewals + ' website subscription' + (R.renewals === 1 ? '' : 's') + ' renew before the month ends, worth ' + usd(R.expected) + '. New sign-ups and stick packs come on top of that.' + (R.ending ? ' ' + R.ending + ' subscription' + (R.ending === 1 ? ' is' : 's are') + ' set to cancel and aren\'t counted.' : '') + '</p>' +
           (vsLast ? '<p><b>Compared with last month</b> at this point: ' + esc(vsLast.t.replace("vs last week", "")) + ' (' + usd(R.lastMonth.sameDay) + ' by this day last month; ' + usd(R.lastMonth.collected) + ' for the whole month).</p>' : '') +
           '<p><b>Monthly recurring:</b> ' + usd(R.mrr) + ' a month from website subscriptions (yearly plans counted as a twelfth).</p>' +
-          (AP ? '<p><b>Conversion:</b> ' + (T.paidPct30 || 0) + '% of people active in the last 30 days are on Plus or Pro (App Store and website). 2 to 5% is typical; 5% is a good goal.</p>' : '') + '</div>';
+          (AP ? '<p><b>Conversion:</b> ' + (T.paidPct30 || 0) + '% of people active in the last 30 days are paying customers (App Store and website; free Pro from codes, class seats and free trials not counted). 2 to 5% is typical; 5% is a good goal.</p>' : '') + '</div>';
         P.push(panel("money", "Money this month", vsLast && vsLast.c === "dn" ? ["w", "Behind last month"] : ["g", "On track"], bodyM, openM));
       }
     }
@@ -549,6 +565,51 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
           (RS && RS.byPlan && RS.byPlan.length ? '<h4 style="margin-top:12px">Subscribers by plan (' + esc(RS.date) + ')</h4>' + hb(RS.byPlan.map(function (r) { return [r.name + (r.country ? " · " + r.country : ""), r.paid + r.trials, r.paid + " paying" + (r.trials ? ", " + r.trials + " trial" : "")]; })) : '') + '</div>' +
           '<div><h4>Latest from Apple</h4>' + (ev.length ? '<ul class="evlist">' + ev.map(function (e) { return '<li><b>' + esc(EVN[e.type] || e.type) + '</b> · ' + esc(plan(e.product)) + (e.price != null && e.paid ? ' · ' + d$(e.price) + (e.currency && e.currency !== "USD" ? " " + esc(e.currency) : "") : '') + '<br><span class="muted small">' + esc(new Date(e.at).toLocaleString()) + (e.sub ? ' · ' + esc(e.sub.toLowerCase().replace(/_/g, " ")) : '') + '</span></li>'; }).join("") + '</ul>' : '<p class="muted small">Nothing yet. Each new subscriber, renewal, trial, cancellation and refund shows here the moment Apple sends it.</p>') + '</div>';
         P.push(panel("apple", "iPhone (App Store)", paying || trials ? ["g", paying + " paying"] : ["w", "No subscribers yet"], bodyA, openA));
+      }
+    }
+    /* ---- ads, prices and the funnel (owner, Nov 16 2026: "Your cost per 1,000 impressions (CPM) or cost per click (CPC) /
+       Your subscription price (monthly/annual) / Where the biggest drop-off happens (clicks -> installs or installs -> paid)
+       put these stats in my dashboard and track these") ---- */
+    {
+      var m$ = function (v) { return v == null ? "—" : "$" + Number(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+      var pp = function (v) { return v == null ? "—" : (v < 0.1 ? (Math.round(v * 1000) / 10) : Math.round(v * 100)) + "%"; };
+      if (ADS === null) P.push(panel("ads", "Ads and the funnel", null, LOAD));
+      else if (!ADS) P.push(panel("ads", "Ads and the funnel", ["w", "Not deployed"], '<p class="muted small">' + esc(NOTDEP) + ' (it needs adsSummary and adsSetup)</p>'));
+      else {
+        var AT = ADS.totals || {}, MT = ADS.meta || {}, ST = ADS.steps || [], W = ST.filter(function (x) { return x.key === ADS.weakest; })[0];
+        var stepName = function (x) { return x.from + " → " + x.to; };
+        var bodyAd = (AT.adDays ? '<div class="big">' + m$(AT.cpc) + '<small>per link click (CPC)</small></div><div class="delta">' + m$(AT.cpm) + ' per 1,000 impressions (CPM) · ' + m$(AT.spend) + ' spent in 30 days</div>'
+            : '<div class="big">—<small>no ad numbers yet</small></div><div class="delta">Connect Meta ads or type a day in (open this panel).</div>') +
+          '<div class="minis">' + mini(m$(AT.costPerInstall), "per install") + mini(m$(AT.costPerPaid), "per paying customer") + mini(W ? esc(W.from + " → " + W.to) : "—", "biggest drop-off") + '</div>' +
+          '<p class="what">Prices: Plus ' + m$(4.99) + '/mo or ' + m$(39.99) + '/yr · Pro ' + m$(9.99) + '/mo or ' + m$(79.99) + '/yr.' + (ADS.arppu != null ? ' Paying customers bring in about ' + m$(ADS.arppu) + ' a month each.' : '') + '</p>';
+        /* the funnel, step by step, against typical rates */
+        var FS = [["Impressions", AT.impressions], ["Link clicks", AT.clicks], ["Ad visits to the website", AT.adVisits], ["App Store taps from ads", AT.adStoreTaps], ["Installs (all App Store downloads)", AT.installs], ["Free trials started", AT.trials], ["Paid (App Store + website)", AT.paid]];
+        var fun = '<table class="mini"><tr><td><b>Step</b></td><td><b>Count</b></td><td><b>Of the step above</b></td></tr>' +
+          FS.map(function (x, i) { var pr = i ? FS[i - 1][1] : 0; return '<tr><td>' + esc(x[0]) + '</td><td>' + fmt(x[1] || 0) + '</td><td>' + (i && pr ? pp((x[1] || 0) / pr) : '') + '</td></tr>'; }).join("") + '</table>';
+        var stepT = '<table class="mini"><tr><td><b>Step</b></td><td><b>You</b></td><td><b>Typical</b></td></tr>' + ST.map(function (x) {
+          var weak = x.key === ADS.weakest;
+          return '<tr' + (weak ? ' style="background:rgba(224,85,85,.10)"' : '') + '><td>' + (weak ? '<b>Biggest drop-off:</b> ' : '') + esc(stepName(x)) + (x.note ? '<br><span class="muted small">' + esc(x.note) + '</span>' : '') + '</td><td><b>' + pp(x.rate) + '</b></td><td>' + pp(x.bench) + '</td></tr>';
+        }).join("") + '</table>';
+        var why = W && W.vsBench >= 1 ? 'Both steps are at or above typical right now; this is the one with the least room to spare.' : W ? (W.key === "clickToInstall" ? 'Most people who click the ad don’t end up installing. Check the page they land on: the App Store button should be the first thing they see, and the ad should match what the app is.' : 'People install but don’t pay. Work on the moment of value inside the app (the trial card after a good quiz, the paywall wording, the 7-day trial).') : 'Not enough numbers yet to compare the two steps.';
+        var R = (ADS.rows || []).filter(function (r) { return r.spend != null; });
+        var dl = function (r) { var q = r.date.split("-"); return +q[1] + "/" + +q[2]; };
+        var openAd = '<div><h4>Cost per click, day by day</h4>' + (R.length > 1 ? spark(R.map(function (r) { return r.cpc || 0; }), 70) + '<div class="ccx"><span>' + esc(dl(R[0])) + '</span><span>' + esc(dl(R[R.length - 1])) + '</span></div>' : '<p class="muted small">Needs 2 days of ad numbers.</p>') +
+          '<h4 style="margin-top:12px">Cost per 1,000 impressions, day by day</h4>' + (R.length > 1 ? spark(R.map(function (r) { return r.cpm || 0; }), 70) : '<p class="muted small">Needs 2 days of ad numbers.</p>') +
+          '<h4 style="margin-top:12px">Spend per day</h4>' + (R.length ? cols(R, function (r) { return r.spend; }, dl, function (r) { return r.date + ": " + m$(r.spend) + " · " + fmt(r.impressions) + " impressions · " + fmt(r.clicks) + " clicks · CPC " + m$(r.cpc) + " · CPM " + m$(r.cpm) + (r.src === "manual" ? " (typed in)" : ""); }) : '<p class="muted small">No ad days yet.</p>') +
+          '<h4 style="margin-top:12px">Funnel, last 30 days</h4>' + fun + '</div>' +
+          '<div><h4>Where people drop off</h4>' + stepT + '<p class="small"><b>Biggest drop-off:</b> ' + (W ? esc(stepName(W)) + ', at ' + pp(W.rate) + ' against a typical ' + pp(W.bench) + '. ' : '') + esc(why) + '</p>' +
+          '<p class="muted small">"Typical" rates are rough averages for app ads; use them as a guide, not a rule. Installs include people who found DrugBug without an ad.</p>' +
+          '<h4 style="margin-top:12px">Your prices</h4><table class="mini">' + (ADS.prices || []).map(function (x) { return '<tr><td>' + esc(x.plan) + '</td><td>' + m$(x.monthly) + ' a month</td><td>' + m$(x.yearly) + ' a year (' + m$(x.yearly / 12) + '/mo)</td></tr>'; }).join("") + '</table><p class="muted small">Pro Yearly on iPhone has a 7-day free trial.</p>' +
+          '<h4 style="margin-top:12px">What paying people are on</h4>' + hb(Object.keys(ADS.mix || {}).map(function (k) { return [k, ADS.mix[k], fmt(ADS.mix[k])]; })) +
+          '<p class="small">' + fmt(ADS.payers || 0) + ' paying · about ' + m$(ADS.mrr) + ' a month in all (yearly counted as a twelfth, list prices before Apple’s cut)' + (ADS.arppu && AT.costPerPaid ? ' · an ad-bought customer pays back in about ' + Math.max(1, Math.round(AT.costPerPaid / ADS.arppu)) + ' month' + (Math.round(AT.costPerPaid / ADS.arppu) === 1 ? '' : 's') : '') + '.</p>' +
+          '<h4 style="margin-top:12px">Meta ads ' + (MT.set ? '(connected, account ' + esc(MT.account) + ')' : '(not connected)') + '</h4>' +
+          (MT.set ? '<p class="small">Pulled every morning.' + (MT.lastSync ? ' Last pull ' + esc(ago(MT.lastSync)) + '.' : '') + (MT.lastErr ? ' <b style="color:var(--bad)">Last error: ' + esc(MT.lastErr) + '</b>' : '') + '</p><p><button class="ghost" data-ads="pull">Pull now</button> <button class="linkish" data-ads="disconnect">Disconnect</button></p>'
+            : '<p class="small">In Meta Business settings: <b>Users → System users</b> → add one (Admin is fine) → <b>Add assets</b> → your ad account with "View performance" → <b>Generate new token</b> for the DrugBug app with <b>ads_read</b>. Paste it below with the ad account ID (Ads Manager, top left). It is stored on the server only and never shown again.</p>' +
+              '<div class="row" style="gap:8px;flex-wrap:wrap"><input id="adAcct" placeholder="Ad account ID" inputmode="numeric" autocomplete="off" style="max-width:180px"><input id="adTok" type="password" placeholder="Access token" autocomplete="off" style="flex:1;min-width:180px"><button data-ads="connect">Connect</button></div>') +
+          '<h4 style="margin-top:12px">Type a day in by hand</h4><p class="muted small">For any ad network, or a day Meta missed. Meta’s numbers win when both exist.</p>' +
+          '<div class="row" style="gap:8px;flex-wrap:wrap"><input id="adDate" type="date" value="' + new Date(Date.now() - 864e5).toISOString().slice(0, 10) + '" style="max-width:160px"><input id="adSpend" inputmode="decimal" placeholder="Spent $" style="max-width:110px"><input id="adImp" inputmode="numeric" placeholder="Impressions" style="max-width:130px"><input id="adClk" inputmode="numeric" placeholder="Link clicks" style="max-width:120px"><input id="adWhere" placeholder="Where (optional)" style="max-width:150px"><button data-ads="manual">Save day</button></div>' +
+          (ADMSG ? '<p class="small" role="status">' + esc(ADMSG) + '</p>' : '') + '</div>';
+        P.push(panel("ads", "Ads and the funnel", !AT.adDays ? ["w", "No ad numbers"] : W && W.vsBench < 0.5 ? ["w", "Leak: " + W.to.toLowerCase()] : ["g", m$(AT.cpc) + " a click"], bodyAd, openAd));
       }
     }
     /* ---- questions and evaluators (wide) ---- */
