@@ -12,6 +12,8 @@
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 a{color:var(--accent)}
 .wrap{max-width:1100px;margin:0 auto;padding:20px 16px 60px}
+/* the Usage page uses the whole width of the window (owner, Nov 16 2026) */
+.wrap:has(#vApp:not(.hide)){max-width:none}
 header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
 header img{width:40px;height:40px;border-radius:10px}
 header h1{font-size:22px;margin:0}
@@ -294,6 +296,7 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
 .rk .l{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rk .b{height:10px;background:var(--track);border-radius:5px;overflow:hidden}
 .rk .b i{display:block;height:100%;background:var(--s1);border-radius:5px}
+.rk2 .b{position:relative}.rk2 .b i{position:absolute;left:0;top:0}.rk2 .b i.e{background:var(--s2);opacity:.55}.rk2 .v b{font-weight:600}.rk2 .v em{font-style:normal;color:var(--s2);margin-left:6px;font-size:12.5px}
 .rk .v{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}.rk .v span{color:var(--muted);font-size:12px;margin-left:6px;display:inline-block;min-width:32px}
 .rk .row:hover{background:var(--surface2)}
 .more{background:none;color:var(--accent);padding:6px 0 0;font-size:13px;font-weight:600}
@@ -360,6 +363,18 @@ body.embed .mxhead .adm{display:none}
       <h3 style="margin-top:18px">App versions in use</h3><div class="chips" id="apVer" style="margin-top:8px"></div></div>
   </div>
 
+  <div class="mxsec">Ages, areas and time per day <span style="text-transform:none;letter-spacing:0;font-weight:500">· active in the last 30 days</span></div>
+  <p class="cs estkey" id="apProfKey" style="margin:0 0 10px"><span><i style="background:var(--s1)"></i>Counted: people who chose Share</span> <span><i style="background:var(--s2)"></i>ESTIMATED (≈): everyone, including people who chose Do not share (not an exact count)</span></p>
+  <div class="mxg">
+    <div class="mxc"><h3>Ages</h3><p class="cs" id="apAgeNote">The age range people chose in the app (optional).</p><div class="rk rk2" id="apAge"></div></div>
+    <div class="mxc"><h3>Where people use DrugBug</h3><p class="cs" id="apAreaNote">From the phone or computer's time zone setting, not GPS. A US time zone covers several states, so most show the time zone band.</p><div class="rk rk2" id="apArea"></div></div>
+  </div>
+  <div class="mxg">
+    <div class="mxc"><h3>Minutes per day, by path</h3><p class="cs">Average minutes a person studies on the days they open DrugBug, grouped by the path they use most.</p><div class="rk rk2" id="apMinRoute"></div></div>
+    <div class="mxc"><h3>Minutes per day, by level</h3><p class="cs">Grouped by the level each person spent the most time in.</p><div class="rk rk2" id="apMinLevel"></div></div>
+  </div>
+  <div class="mxc"><h3>Minutes per day, by nursing specialty</h3><p class="cs">Nurses who picked a specialty. Someone who picked two specialties counts in both.</p><div class="rk rk2" id="apMinNurse"></div></div>
+
   <div class="mxsec">What people use <span style="text-transform:none;letter-spacing:0;font-weight:500">· last 30 days</span></div>
   <div class="mxg">
     <div class="mxc"><h3>Most-opened sections</h3><p class="cs">Times each part of the app was opened.</p><div class="rk" id="apTabs"></div></div>
@@ -369,6 +384,9 @@ body.embed .mxhead .adm{display:none}
   <div class="mxsec">Tools</div>
 </div>
 <div id="mxTip" role="status" aria-live="off"></div>
+<div class="card" id="agxCard"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h2 style="margin:0">Agency Challenge</h2><button class="btn ghost" id="agxRun" type="button">Load</button></div>
+  <p class="muted small">New agencies people asked for (they show on the state board after you approve them) and nicknames people reported. Three reports hide a name until you look.</p>
+  <div id="agxOut" style="margin-top:10px"><p class="muted small">Tap Load.</p></div></div>
 <div class="card" id="syncCard"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h2 style="margin:0">Sync check</h2><button class="btn ghost" id="syncRun" type="button">Scan now</button></div>
   <p class="muted small">People who may be stuck getting their account onto another device: codes used as a guest (what it unlocked never reached an account or their phone), wrong link codes typed in the last 14 days, and link codes made but never used.</p>
   <div id="syncOut" style="margin-top:10px"><p class="muted small">Tap Scan now.</p></div></div>
@@ -964,6 +982,31 @@ body.embed .mxhead .adm{display:none}
   }
   function syncLoad() { $("syncOut").innerHTML = '<p class="muted small">Scanning…</p>'; call("syncScan", {}).then(syncDraw).catch(function (e) { $("syncOut").innerHTML = '<p class="muted small">' + (/not.?found|internal|unavailable|fetch|network/i.test(e.message) ? "The sync check appears once the new server functions are deployed (DEPLOY.cmd on your PC)." : esc(e.message)) + '</p>'; }); }
   $("syncRun").onclick = syncLoad;
+  /* Agency Challenge owner tools (Nov 16 2026) */
+  var AGXT = { fire: "Fire", ems: "EMS", hospital: "Hospital", other: "Other" };
+  function agxAdminDraw(r) {
+    var h = '<p class="small"><b>' + r.approved + '</b> agencies on the list.</p>';
+    h += '<h3 style="margin:12px 0 6px">Waiting for approval (' + r.pending.length + ')</h3>' + (r.pending.length ? r.pending.map(function (a) {
+      return '<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0"><span style="flex:1;min-width:200px"><b>' + esc(a.name) + '</b> <span class="muted small">' + esc(AGXT[a.type] || a.type) + " · " + esc(a.city) + ", " + esc(a.state) + " · " + a.members + ' joined</span></span>' +
+        '<button class="btn" data-agxa="approve" data-aid="' + esc(a.id) + '">Approve</button><button class="btn ghost" data-agxa="rename" data-aid="' + esc(a.id) + '" data-name="' + esc(a.name) + '">Rename</button><button class="btn ghost" data-agxa="merge" data-aid="' + esc(a.id) + '" data-st="' + esc(a.state) + '">Merge into…</button><button class="btn ghost" data-agxa="hideAgency" data-aid="' + esc(a.id) + '">Hide</button></div>'; }).join("") : '<p class="muted small">None.</p>');
+    h += '<h3 style="margin:12px 0 6px">Reported nicknames (' + r.flagged.length + ')</h3>' + (r.flagged.length ? r.flagged.map(function (m) {
+      return '<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0"><span style="flex:1;min-width:200px"><b>' + esc(m.nick) + '</b> <span class="muted small">' + esc(m.agency) + " · " + m.reports + " report" + (m.reports === 1 ? "" : "s") + (m.hidden ? " · hidden" : "") + '</span></span>' +
+        '<button class="btn ghost" data-agxa="showName" data-uid="' + esc(m.uid) + '">It\u2019s fine</button><button class="btn ghost" data-agxa="renameName" data-uid="' + esc(m.uid) + '">Rename</button><button class="btn ghost" data-agxa="hideName" data-uid="' + esc(m.uid) + '">Hide</button><button class="btn ghost" data-agxa="remove" data-uid="' + esc(m.uid) + '">Remove</button></div>'; }).join("") : '<p class="muted small">None.</p>');
+    h += '<details style="margin-top:12px"><summary>All agencies</summary>' + r.agencies.map(function (a) { return '<div class="small" style="margin:4px 0">' + esc(a.name) + ' <span class="muted">' + esc(AGXT[a.type] || a.type) + " · " + esc(a.city) + ", " + esc(a.state) + " · " + a.members + ' · ' + esc(a.id) + '</span> <button class="linkish" data-agxa="rename" data-aid="' + esc(a.id) + '" data-name="' + esc(a.name) + '">Rename</button> <button class="linkish" data-agxa="hideAgency" data-aid="' + esc(a.id) + '">Hide</button></div>'; }).join("") + '</details>';
+    AGXA = r; $("agxOut").innerHTML = h;
+  }
+  var AGXA = null;
+  function agxAdminLoad() { $("agxOut").innerHTML = '<p class="muted small">Loading…</p>'; call("agencyAdmin", { action: "list" }).then(agxAdminDraw).catch(function (e) { $("agxOut").innerHTML = '<p class="muted small">' + (/not.?found|internal|unavailable|fetch|network/i.test(e.message || "") ? "Update the server (run DEPLOY) to turn this on." : esc(e.message)) + '</p>'; }); }
+  $("agxRun").onclick = agxAdminLoad;
+  $("agxOut").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-agxa]"); if (!b) return;
+    var act = b.getAttribute("data-agxa"), d = { action: act, aid: b.getAttribute("data-aid") || "", uid: b.getAttribute("data-uid") || "" };
+    if (act === "rename") { var nn = prompt("New name for this agency:", b.getAttribute("data-name") || ""); if (!nn) return; d.action = "renameAgency"; d.name = nn; }
+    if (act === "renameName") { var nk = prompt("New nickname:"); if (!nk) return; d.nick = nk; }
+    if (act === "merge") { var same = (AGXA && AGXA.agencies || []).filter(function (a) { return a.state === b.getAttribute("data-st"); }); var pick = prompt("Merge into which agency? Type the number:\n" + same.map(function (a, i) { return (i + 1) + ". " + a.name + " (" + a.city + ")"; }).join("\n")); var ix = parseInt(pick, 10) - 1; if (!same[ix]) return; d.into = same[ix].id; }
+    if (act === "remove" && !confirm("Remove this person from the Agency Challenge? Their points are deleted.")) return;
+    b.disabled = true; call("agencyAdmin", d).then(agxAdminLoad).catch(function (er) { b.disabled = false; alert(er.message); });
+  });
   $("syncOut").addEventListener("click", function (e) { var b = e.target.closest("[data-syncfix]"); if (!b) return; b.disabled = true;
     call("syncFix", { code: b.getAttribute("data-syncfix"), uid: b.getAttribute("data-uid"), ignore: !!b.getAttribute("data-ignore") }).then(syncLoad).catch(function (er) { b.disabled = false; $("syncOut").insertAdjacentHTML("afterbegin", '<p class="small" style="color:var(--bad,#c2410c)">' + esc(er.message) + '</p>'); }); });
   function loadApp() {
@@ -1051,6 +1094,33 @@ body.embed .mxhead .adm{display:none}
   var lgBox = $("apLogBox"); if (lgBox) lgBox.addEventListener("toggle", function () { var lg = $("apLog"); if (!lgBox.open || lg.getAttribute("src") !== "about:blank") return; lg.setAttribute("src", lg.getAttribute("data-src"));
     setInterval(function () { try { var dd = lg.contentDocument; if (dd && dd.body) { var hh = Math.min(2400, Math.max(400, dd.documentElement.scrollHeight)); if (Math.abs(lg.offsetHeight - hh) > 4) lg.style.height = hh + "px"; } } catch (e) {} }, 800); });
 
+  /* ages, areas and minutes per day (owner, Nov 15 2026): "always use the count we know, then the estimation" */
+  var AGEN = { "18_24": "18\u201324", "25_34": "25\u201334", "35_44": "35\u201344", "45_54": "45\u201354", "55p": "55 or older" };
+  var NUN = { school: "Nursing student", medsurg: "Med-Surg", icu: "ICU / Critical Care", ed: "Emergency Department", cardiac: "Cardiac / Telemetry", ob: "Labor & Delivery / Mother-Baby", peds: "Pediatrics", psych: "Behavioral Health", onc: "Oncology / Infusion", periop: "Perioperative / PACU", renal: "Dialysis / Renal", flight: "Flight / Transport Nurse", nicu: "NICU", ltc: "Long-Term Care / Home Health" };
+  function profRows(id, rows, o) {
+    var box = $(id); if (!box) return; o = o || {};
+    if (!rows || !rows.length || !rows.some(function (r) { return r.n; })) { box.innerHTML = '<p class="muted small" style="grid-column:1/-1;margin:0">' + esc(o.empty || "Nothing yet.") + '</p>'; return; }
+    var lim = RK_OPEN[id] ? rows.length : (o.top || 8), show = rows.slice(0, lim);
+    var max = Math.max.apply(null, rows.map(function (r) { return o.min ? r.min : r.est; }).concat([o.min ? 1 : 1]));
+    box.innerHTML = show.map(function (r) {
+      var nm = o.name ? o.name(r.key) : nice(r.key), bar, val;
+      if (o.min) { bar = '<i style="width:' + Math.max(1.5, 100 * r.min / max) + '%"></i>'; val = '<b>' + r.min + ' min</b><span>' + num(r.n) + ' counted</span><em>\u2248' + num(r.est) + ' est.</em>'; }
+      else { bar = '<i class="e" style="width:' + Math.max(1.5, 100 * r.est / max) + '%"></i><i style="width:' + (r.n ? Math.max(1.5, 100 * r.n / max) : 0) + '%"></i>'; val = '<b>' + num(r.n) + '</b><em>\u2248' + num(r.est) + '</em>'; }
+      return '<div class="l" title="' + esc(nm) + '">' + esc(nm) + '</div><div class="b">' + bar + '</div><div class="v">' + val + '</div>';
+    }).join("") + (rows.length > (o.top || 8) ? '<div style="grid-column:1/-1"><button class="more" type="button" data-rk="' + id + '">' + (RK_OPEN[id] ? "Show fewer" : "Show all " + rows.length) + '</button></div>' : '');
+  }
+  function drawProfile(P) {
+    if (!P) { ["apAge", "apArea", "apMinRoute", "apMinLevel", "apMinNurse"].forEach(function (id) { profRows(id, [], { empty: "Update the server to see this." }); }); return; }
+    var sr = P.shareRate ? P.shareRate + "% of people chose Share, so each counted person stands for about " + (Math.round(1000 / P.shareRate) / 10) + " people. " : "";
+    $("apProfKey").title = sr;
+    $("apAgeNote").textContent = "The age range people chose in the app (optional, new in 1.2.3). " + num(P.ageAnswered) + " of " + num(P.people) + " counted people answered" + (P.ageSkipped ? ", " + num(P.ageSkipped) + " chose Prefer not to say" : "") + ". " + sr;
+    $("apAreaNote").textContent = "From the phone or computer's time zone setting, not GPS (new in 1.2.3). A big US time zone covers several states, so it shows the time zone band. " + num(P.areaKnown) + " of " + num(P.people) + " counted people known so far.";
+    profRows("apAge", P.age, { name: function (k) { return AGEN[k] || k; }, top: 6, empty: "No age ranges yet. They start arriving with app 1.2.3." });
+    profRows("apArea", P.area, { name: function (k) { return k; }, top: 10, empty: "No areas yet. They start arriving with app 1.2.3." });
+    profRows("apMinRoute", P.route, { min: true });
+    profRows("apMinLevel", P.level, { min: true, top: 10, name: function (k) { return LEVEL[k] || String(k).toUpperCase(); } });
+    profRows("apMinNurse", P.nursing, { min: true, top: 10, name: function (k) { return NUN[k] || nice(k); }, empty: "No nursing specialties yet. They start arriving with app 1.2.3." });
+  }
   function drawApp(d) {
     var T = d.totals, R = +$("apRange").value, all = d.daily, rows = all.slice(-R), prev = all.length >= 2 * R ? all.slice(-2 * R, -R) : null;
     var sum = function (a, f) { return a.reduce(function (s, r) { return s + (f(r) || 0); }, 0); };
@@ -1113,6 +1183,7 @@ body.embed .mxhead .adm{display:none}
     $("apSubs").textContent = T.webSubs != null ? "Website subscriptions paid up right now (Stripe): " + T.webSubs + ". iPhone subscriptions are in App Store Connect." : "";
     ranked("apLevels", (sp.level || []).map(function (r) { return { key: r.key, n: r.n }; }), { name: function (k) { return LEVEL[k] || String(k).toUpperCase(); }, top: 10 });
     $("apVer").innerHTML = (sp.version || []).length ? sp.version.map(function (v) { return '<span>' + esc(v.key) + ' · ' + num(v.n) + '</span>'; }).join("") : '<span class="muted">No app versions yet</span>';
+    drawProfile(d.profile);
     ranked("apTabs", d.tabs || [], { top: 8 });
     ranked("apFeats", d.feats || [], { top: 8 });
   }
