@@ -722,7 +722,7 @@ function viewHome() {
     var hit = S.pointGo === go;
     return '<button class="route rmini ' + cls + pt(go) + '" ' + (hit ? 'data-startlearn="' + go + '"' : go.indexOf("level:") === 0 ? 'data-level="' + go.slice(6) + '"' : 'data-go="' + go + '"') + '>' + (hit ? PT : '') + '<span class="mtx"><h2>' + title + '</h2><p>' + line + '</p>' + (ROUTE_MORE[cls] ? '<ul class="rmore">' + ROUTE_MORE[cls].map(function (x) { return '<li>' + esc(x) + '</li>'; }).join("") + '</ul>' : '') + (fun ? routeChips(cls) : '') + '</span><span class="mbug">' + art + '</span></button>';
   }
-  return topbar() + '<div class="homewrap' + hcls + '" data-hol="' + (HOL ? esc(holKey(HOL)) : '') + '">' + homeSearch() + (typeof homeClassCard === "function" ? homeClassCard() : '') + homeTip() +
+  return topbar() + '<div class="homewrap' + hcls + '" data-hol="' + (HOL ? esc(holKey(HOL)) : '') + '">' + homeSearch() + (typeof homeClassCard === "function" ? homeClassCard() : '') + homeTip() + homeAgeAsk() +
    heroHTML() + loginCard() +
    homeStart() + homeProgress() + (typeof trialBanner === "function" ? trialBanner() : '') +
    '<h3 class="homegh">Look it up</h3><section class="routes"><div class="minis one">' +
@@ -1175,7 +1175,7 @@ function hubView() {
     lead += fmsBar();
     if (String(S.fmQ || "").trim()) return lead;
   } else if (S.fmQ) { S.fmQ = ""; }
-  var c = lead + '<nav class="hub2" aria-label="Sections">';
+  var c = lead + (typeof homeAgencyCard === "function" ? homeAgencyCard() : '') + '<nav class="hub2" aria-label="Sections">';
   function tile(t) {
     used[t[0]] = 1;
     var fmt = typeof FM_TABS !== "undefined" && (FM_TABS[t[0]] || (t[0] === "diseases" && S.view === "level" && isF(S.level)));
@@ -8505,8 +8505,9 @@ function gateView() {
   else c += '<fieldset class="gfs"><legend>How old are you?</legend>' + [["adult", "I am 18 or older"], ["minor", "I am under 18"]].map(function (o) { return '<label class="chk"><input type="radio" name="gage" data-gage="' + o[0] + '"' + (g.age === o[0] ? " checked" : "") + '> ' + o[1] + '</label>'; }).join("") + '</fieldset>';
   if (g.age === "minor") return c + '<div class="presult" role="alert">Sorry, DrugBug is for adults 18 and older only. Please close the app.</div></div>';
   c += '<label class="chk gagree"><input type="checkbox" id="gok"' + (g.ok ? " checked" : "") + '> I agree to the <button class="linkish" data-legal="terms">Terms of Use</button> and understand that DrugBug is for study only and may not be used for patient care. The <button class="linkish" data-legal="privacy">Privacy Policy</button> explains how DrugBug handles my information.</label>';
-  c += '<fieldset class="gfs gstats"><legend>Optional usage statistics</legend><p class="small">Help improve DrugBug by sharing optional usage statistics, such as time spent, sections opened and questions answered. DrugBug uses a randomly generated device identifier for these statistics. You can change your choice in Settings.</p>' +
-    '<div class="gstatbtns">' + [["yes", "Share"], ["no", "Do not share"]].map(function (o) { return '<label class="chk"><input type="radio" name="gstats" data-gstats="' + o[0] + '"' + (g.stats === o[0] ? " checked" : "") + '> ' + o[1] + '</label>'; }).join("") + '</div></fieldset>';
+  c += '<fieldset class="gfs gstats"><legend>Optional usage statistics</legend><p class="small">Help improve DrugBug by sharing optional usage statistics, such as time spent, sections opened, questions answered, your device\u2019s time zone and an optional age range. DrugBug uses a randomly generated device identifier for these statistics. You can change your choice in Settings.</p>' +
+    '<div class="gstatbtns">' + [["yes", "Share"], ["no", "Do not share"]].map(function (o) { return '<label class="chk"><input type="radio" name="gstats" data-gstats="' + o[0] + '"' + (g.stats === o[0] ? " checked" : "") + '> ' + o[1] + '</label>'; }).join("") + '</div>' +
+    '<label class="small gagerng">Age range (optional, sent only if you choose Share) ' + ageRangeSel() + '</label></fieldset>';
   c += '<div class="actions"><button class="btn" data-act="gateok"' + (g.age && g.ok && g.stats ? "" : " disabled") + '>Start learning</button></div>';
   return c + '<p class="muted small">' + esc(NONAFF) + '</p></div>';
 }
@@ -8545,6 +8546,7 @@ function acceptGate() {
   var first = !store("agree") && !(Prog.d && Prog.d.agree);   /* first acceptance on this device, for the dashboard's new-people count */
   var rec = { v: LEGAL_V, ts: Date.now(), age: g.age }; if (g.ageSrc) rec.ageSrc = g.ageSrc; store("agree", rec); rec = Object.assign({ first: first }, rec);
   statsSet(g.stats === "yes", "gate");
+  store("ageAsk", 1);   /* the age range was offered on this screen, so the home card does not ask again */
   try { assentLog(rec); } catch (e) {}
   Prog.d.agree = rec; if (typeof trialBegin === "function") trialBegin(); saveProg(); if (typeof wdwSync === "function") setTimeout(wdwSync, 800); if (typeof wdwAuto === "function") setTimeout(wdwAuto, 900); if (typeof holOpenFx === "function") setTimeout(holOpenFx, 400); S.gate = null; if (typeof muGesture === "function") muGesture(); render(); window.scrollTo(0, 0);
 }
@@ -8642,7 +8644,7 @@ var LEGAL_PAGES = {
   }],
   privacy: ["Privacy Policy", function () {
     return L("Who we are", ["Volare Media LLC (\"Volare,\" \"we,\" or \"us\") operates DrugBug, the medication study app and website at drugbugapp.com. This policy explains how we handle personal information when you use DrugBug in the United States, including on the web and in the iPhone app. Some features and purchase options are available only on certain platforms."]) +
-      L("Information we collect and why", ["Device and study information. DrugBug can be used without an account. It stores settings, study progress, a saved study list, score history, virtual items and an agreement record on your device or in your browser. Certain features send information to our systems using a device, account or class identifier. We use this information to operate the features you use, maintain access and protect the service. When you accept the Terms, we record the version, date and time, and your device or account identifier on our systems to maintain a record of acceptance.", "Optional accounts. When you create an account by email or use Sign in with Apple, we receive an account identifier and email address, which may be an Apple private relay address. We store study data so you can sync it across devices and use account features. Firebase Authentication handles email/password authentication. Apple handles your Apple Account credentials. We use the account and entitlement information to administer the one-time, three-day Pro access for new accounts. The offer does not require payment details and does not renew.", "Usage statistics. DrugBug collects optional usage statistics only after you choose to share them. We record these statistics under a randomly generated device identifier. These include active days and approximate time, sections and features used, counts of answered and correct questions, first difficulty ratings, study cards viewed, plan, study route and level, version and platform. We use the statistics to understand usage, measure upgrades and improve study content. A random identifier can distinguish one device from another, so we treat device-level statistics as potentially identifiable even when a name or email is absent. If you used DrugBug before the effective date of this policy, the update turned off optional statistics and asked you to choose whether to share them. We deleted the device-level usage statistics collected before this change. We delete or aggregate device-level usage statistics within 24 months after collection. Turn off optional statistics under Share usage statistics in Settings. Use Your data or contact us to request deletion of stored statistics associated with your device, where we can locate them. Turning off optional statistics does not stop records needed for an account, purchase, agreement, class or other feature you use.", "Purchases. On the website, Stripe processes subscription and stick-pack purchases. Apple processes purchases made through the App Store. We use the purchase and subscription records made available to us, such as the plan, its status and renewal or expiration date, or the pack purchased, to provide access, administer billing and handle purchase support. The payment provider handles your full payment card number. It may collect other information under its own privacy policy.", "Codes. For codes that require named redemption, such as gift, access, evaluator, school or agency license, and protocol codes, we collect your full name and associate it with the redemption and, where applicable, your account. We use that information to verify eligibility, administer access and prevent misuse. A student class key does not ask for your name. An institutional license or protocol code can be a named code even if it is supplied by a school or agency.", "Evaluator records. When enrollment is available, if you submit an evaluator application, we collect your name, email, credentials or role, years of experience, workplace and the information you choose to provide so we can evaluate and respond to the application. Evaluator records may include an evaluator code, typed signature, agreement choices and version, date and time, question ratings and votes, comments, questions viewed, activity counts, and time spent in DrugBug and on grading screens while using an evaluator code. We use records from the program to administer participation, maintain agreement records and review and improve study content. Other users may see an aggregate difficulty rating or a content review indicator. We will seek permission before publicly crediting an evaluator by name.", "Instructors and organization contacts. We collect an instructor's name, work or account email, school or agency, classes, class key labels, nickname approvals and class results. Instructors can sign in with email/password or Google. If you contact us about the instructor pilot or an organizational package, we receive the details you provide, such as your name, organization, work email, optional phone number and message. We use these records to manage accounts and classes, respond and prepare a quote when requested.", "Support and feedback. If you email us or submit an error report, feedback or a protocol request, we receive the information you choose to send and any reply address the form or email supplies. We use it to respond, resolve issues, assess requests and improve DrugBug. Do not include patient data, another person's personal information or any document you are unauthorized to share.", "Technical information. Our hosting and service providers receive standard information needed to serve the app or site, such as an IP address when a page loads. We use local storage and similar technology to remember settings, maintain sessions and run features. Optional usage statistics measure activity within DrugBug across sessions. We do not sell personal information in exchange for money. DrugBug does not collect the Apple advertising identifier (IDFA) and does not track you across other companies’ apps and websites as Apple defines tracking. Some state privacy laws may treat the ad measurement described below as “sharing” personal information or as targeted advertising. You can turn it off at any time, as described below. DrugBug does not change its practices in response to browser Do Not Track signals.", "Ad measurement in the iPhone app. Starting with version 1.2.2, the DrugBug iPhone app includes the Meta Platforms software development kit (Meta SDK) so we can measure whether our ads on Facebook and Instagram lead people to install and open DrugBug. The Meta SDK sends Meta app events, such as app installs, app opens and App Store purchase events (the product and price), with technical information such as the app version, device model, operating system version, IP address and an identifier the Meta SDK creates for the app on your device. We turned off the Meta SDK’s collection of the Apple advertising identifier, and the app does not ask permission to track you. We do not send Meta your name, email address, study progress, scores or answers. Meta may use this information to measure our ads and to help show our ads to people likely to be interested, under its own privacy policy. You can turn this off in the app under Settings, Account & privacy, Ad measurement. When it is off, the app stops sending these app events to Meta. Apple may still report anonymous, combined install counts to Meta through its SKAdNetwork system, which does not identify you or your device. The DrugBug website does not use the Meta SDK or a Meta pixel."]) +
+      L("Information we collect and why", ["Device and study information. DrugBug can be used without an account. It stores settings, study progress, a saved study list, score history, virtual items and an agreement record on your device or in your browser. Certain features send information to our systems using a device, account or class identifier. We use this information to operate the features you use, maintain access and protect the service. When you accept the Terms, we record the version, date and time, and your device or account identifier on our systems to maintain a record of acceptance.", "Optional accounts. When you create an account by email or use Sign in with Apple, we receive an account identifier and email address, which may be an Apple private relay address. We store study data so you can sync it across devices and use account features. Firebase Authentication handles email/password authentication. Apple handles your Apple Account credentials. We use the account and entitlement information to administer the one-time, three-day Pro access for new accounts. The offer does not require payment details and does not renew.", "Usage statistics. DrugBug collects optional usage statistics only after you choose to share them. We record these statistics under a randomly generated device identifier. These include active days and approximate time, sections and features used, counts of answered and correct questions, first difficulty ratings, study cards viewed, plan, study route, level and nursing specialties, version and platform, your device\u2019s time zone setting, and an age range if you choose to give one. We use the time zone only to estimate a general area, such as a state or country. DrugBug does not collect GPS or precise location. We use the statistics to understand usage, measure upgrades and improve study content. A random identifier can distinguish one device from another, so we treat device-level statistics as potentially identifiable even when a name or email is absent. If you used DrugBug before the effective date of this policy, the update turned off optional statistics and asked you to choose whether to share them. We deleted the device-level usage statistics collected before this change. We delete or aggregate device-level usage statistics within 24 months after collection. Turn off optional statistics under Share usage statistics in Settings. Use Your data or contact us to request deletion of stored statistics associated with your device, where we can locate them. Turning off optional statistics does not stop records needed for an account, purchase, agreement, class or other feature you use.", "Purchases. On the website, Stripe processes subscription and stick-pack purchases. Apple processes purchases made through the App Store. We use the purchase and subscription records made available to us, such as the plan, its status and renewal or expiration date, or the pack purchased, to provide access, administer billing and handle purchase support. The payment provider handles your full payment card number. It may collect other information under its own privacy policy.", "Agency Challenge. The Agency Challenge is optional and needs optional usage statistics turned on. If you join, we store the agency you pick, the nickname and department you choose, and your answer counts and points for the current week and in total, under your account or guest identifier. Other DrugBug users see your nickname, department, points and accuracy on your agency board, and your agency’s combined points on the state board. If you share a challenge link, the person who opens it sees your nickname, department, agency and points. We use this information to run the boards, prevent abuse and review reported nicknames. Leave the challenge in the app to delete your nickname and points. Listed agencies are not affiliated with DrugBug and do not endorse it, and the boards are not a measure of anyone’s job performance.", "Codes. For codes that require named redemption, such as gift, access, evaluator, school or agency license, and protocol codes, we collect your full name and associate it with the redemption and, where applicable, your account. We use that information to verify eligibility, administer access and prevent misuse. A student class key does not ask for your name. An institutional license or protocol code can be a named code even if it is supplied by a school or agency.", "Evaluator records. When enrollment is available, if you submit an evaluator application, we collect your name, email, credentials or role, years of experience, workplace and the information you choose to provide so we can evaluate and respond to the application. Evaluator records may include an evaluator code, typed signature, agreement choices and version, date and time, question ratings and votes, comments, questions viewed, activity counts, and time spent in DrugBug and on grading screens while using an evaluator code. We use records from the program to administer participation, maintain agreement records and review and improve study content. Other users may see an aggregate difficulty rating or a content review indicator. We will seek permission before publicly crediting an evaluator by name.", "Instructors and organization contacts. We collect an instructor's name, work or account email, school or agency, classes, class key labels, nickname approvals and class results. Instructors can sign in with email/password or Google. If you contact us about the instructor pilot or an organizational package, we receive the details you provide, such as your name, organization, work email, optional phone number and message. We use these records to manage accounts and classes, respond and prepare a quote when requested.", "Support and feedback. If you email us or submit an error report, feedback or a protocol request, we receive the information you choose to send and any reply address the form or email supplies. We use it to respond, resolve issues, assess requests and improve DrugBug. Do not include patient data, another person's personal information or any document you are unauthorized to share.", "Technical information. Our hosting and service providers receive standard information needed to serve the app or site, such as an IP address when a page loads. We use local storage and similar technology to remember settings, maintain sessions and run features. Optional usage statistics measure activity within DrugBug across sessions. We do not sell personal information in exchange for money. DrugBug does not collect the Apple advertising identifier (IDFA) and does not track you across other companies’ apps and websites as Apple defines tracking. Some state privacy laws may treat the ad measurement described below as “sharing” personal information or as targeted advertising. You can turn it off at any time, as described below. DrugBug does not change its practices in response to browser Do Not Track signals.", "Ad measurement in the iPhone app. Starting with version 1.2.2, the DrugBug iPhone app includes the Meta Platforms software development kit (Meta SDK) so we can measure whether our ads on Facebook and Instagram lead people to install and open DrugBug. The Meta SDK sends Meta app events, such as app installs, app opens and App Store purchase events (the product and price), with technical information such as the app version, device model, operating system version, IP address and an identifier the Meta SDK creates for the app on your device. We turned off the Meta SDK’s collection of the Apple advertising identifier, and the app does not ask permission to track you. We do not send Meta your name, email address, study progress, scores or answers. Meta may use this information to measure our ads and to help show our ads to people likely to be interested, under its own privacy policy. You can turn this off in the app under Settings, Account & privacy, Ad measurement. When it is off, the app stops sending these app events to Meta. Apple may still report anonymous, combined install counts to Meta through its SKAdNetwork system, which does not identify you or your device. The DrugBug website does not use the Meta SDK or a Meta pixel."]) +
       L("Classes and organization programs", ["A class key identifies your activity to the instructor using a class alias such as \"Student 07.\" Your instructor can see question and accuracy counts by medication, drug class, body system, question style, study mode and drill topic, as well as the missed question identifiers, the answers you selected and when you last studied. Free-text responses are excluded from the class performance report. An instructor may be able to identify you through a separate key sheet the instructor maintains or other information available to the instructor. Do not send a class roster or a key sheet to DrugBug.", "Where a scoreboard is enabled and its use is authorized, classmates or participating members can see the displayed alias or instructor-approved nickname and relevant scores or rankings. Agency protocol competitions may display team names, team rankings and individual rankings to participants. Choose a nickname that does not identify you or another student. Class prizes may be saved to your device or account. The public leaderboard and interschool competitions are currently disabled.", "We use class records to provide and administer the authorized class features. When we handle student records on behalf of a school under a written agreement, we follow the school's authorized instructions and the applicable agreement and law. Contact your instructor or school for access to or correction of school-controlled records. You may also contact us for help directing a request. Leaving a class, closing an account and deleting a class are separate actions. Records held by a school or instructor are subject to that organization's policies and applicable law."]) +
       L("Who receives information", [["Service providers receive the information needed for the services they provide. We require third parties to which we provide app user data for processing on our behalf to protect that data to at least the standard described in this policy and required by Apple's App Review Guidelines. Google Firebase and Google Cloud process account, study and device information to provide authentication, database hosting and server functions. GitHub Pages receives web request information to deliver the website. Google's Gmail service receives messages and reply information when you email our contact address. Use that address for general inquiries and to initiate a privacy request. Do not send identifiable patient information or school-controlled records to that address. Google or Apple handles the relevant sign-in information when you choose its sign-in service. Apple also handles app distribution and App Store purchases. Stripe handles website purchases. Apple, Stripe and other providers may also process information for their own services under their own privacy policies."], ["Instructors, classmates and participants may receive class or competition information as described above. We do not display named redemption records or account emails on class scoreboards."], ["We may disclose relevant information to comply with law, valid legal process or a lawful government request, or to investigate fraud, address a security issue or protect rights or safety. If Volare is involved in a proposed or completed sale, reorganization or similar transaction, we may disclose information as needed for that transaction subject to appropriate confidentiality and applicable law."]]) +
       L("Patient information and personal health details", ["DrugBug is for education. The saved list is for medications you are studying. Do not use it to record a person's medication regimen or to check for interactions. Do not submit identifiable patient information, personal symptoms, diagnoses, medical records or other personal health details through any feature, form or message. If you believe you sent this information in error, contact us without repeating the information in your request."]) +
@@ -8833,6 +8835,7 @@ function legalClick(t, a) {
 }
 document.addEventListener("change", function (e) {
   var t = e.target;
+  if (t.getAttribute && t.getAttribute("data-agerng")) { if (t.value) { ageRangeSet(t.value); if (!S.gate) render(); } return; }
   if (t.getAttribute && t.getAttribute("data-gage")) { S.gate = S.gate || {}; S.gate.age = t.getAttribute("data-gage"); render(); }
   else if (t.id === "gok") { S.gate = S.gate || {}; S.gate.ok = t.checked; var b = $('[data-act="gateok"]'); if (b) b.disabled = !(S.gate.age && S.gate.ok && S.gate.stats); }
   else if (t.getAttribute && t.getAttribute("data-gstats")) { S.gate = S.gate || {}; S.gate.stats = t.getAttribute("data-gstats"); var b2 = $('[data-act="gateok"]'); if (b2) b2.disabled = !(S.gate.age && S.gate.ok && S.gate.stats); }
@@ -9695,27 +9698,11 @@ function esView(id) {
     sec("Para recordar", "", true, R("Dato clave", e.rem)) +
     sec("Educación al paciente", "", true, R("Qué decirle al paciente", e.edu)) + '</div>';
 }
-/* pronunciation */
-var SPEAK_OK = typeof window.speechSynthesis !== "undefined" && typeof window.SpeechSynthesisUtterance !== "undefined";
-var SPK = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M3 9v6h4l5 4V5L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z"/></svg>';
-function sayBtn(id) {
-  var e = DB.ES[id] || {}, ph = e.ph && SET().showPhon ? '<span class="phon" data-notr>' + esc(e.ph) + '</span>' : '';
-  if (!SPEAK_OK) return ph ? '<div class="sayrow">' + ph + '</div>' : '';
-  return '<div class="sayrow"><button class="iconbtn say" data-say="' + id + '" aria-label="Hear how to say ' + esc(nameOf(id)) + '">' + SPK + '<span>Say it</span></button>' + ph + (lang() === "es" && e.name ? '<button class="iconbtn say" data-say="' + id + '" data-sayes="1" aria-label="Escuchar en español">' + SPK + '<span>En español</span></button>' : '') + '</div>';
-}
-function say(id, es) {
-  if (!SPEAK_OK) return;
-  var e = DB.ES[id] || {}, d = DB.drugs[id], txt = es && e.name ? e.name.replace(/\(.*?\)/g, "") : (d ? d.name : nameOf(id)).replace(/\(.*?\)/g, "");
-  try {
-    speechSynthesis.cancel();
-    var u = new SpeechSynthesisUtterance(txt), want = es ? "es" : "en", vs = speechSynthesis.getVoices().filter(function (v) { return (v.lang || "").toLowerCase().indexOf(want) === 0; });
-    u.lang = es ? "es-US" : "en-US"; if (vs.length) u.voice = vs.filter(function (v) { return /US/i.test(v.lang); })[0] || vs[0]; u.rate = voiceRate();
-    speechSynthesis.speak(u);
-  } catch (err) {}
-}
+/* pronunciation: the "Say it" voice was removed (owner, Nov 16 2026: "remove the how to say it voice on the app. get rid
+   of it completely"). The written pronunciation stays when Settings > show pronunciation is on. */
+function sayBtn(id) { var e = DB.ES[id] || {}; return e.ph && SET().showPhon ? '<div class="sayrow"><span class="phon" data-notr>' + esc(e.ph) + '</span></div>' : ''; }
 function i18nClick(t, a) {
   if (a.act === "lang") { setLang(lang() === "es" ? "en" : "es"); return true; }
-  if (a.say) { say(a.say, !!a.sayes); return true; }
   return false;
 }
 function esQNote() { return lang() === "es" ? '<p class="esnote">Las preguntas de práctica, los casos y las tarjetas están en inglés por ahora. Las páginas de cada medicamento tienen versión en español.</p>' : ''; }
@@ -10050,6 +10037,20 @@ var STATS_V = 2;
 function statsRec() { var r = store("statsOpt"); return r && r.v === STATS_V ? r : null; }
 function statsOn() { var r = statsRec(); return !!(r && r.on); }
 function statsSet(on, src) { var was = statsOn(); store("statsOpt", { on: !!on, v: STATS_V, ts: Date.now(), src: src || "settings" }); if (was && !on) { try { usgForget(); } catch (x) {} } if (on && !was) { try { USG.sessSent = false; } catch (x) {} } }
+/* optional age range and area for the owner's Usage page (owner, Nov 15 2026: "I want to know the ages of people using
+   the app, the area people are using it from"). Both are sent only with the optional usage statistics, after Share. The
+   age range is one the person picks (or "Prefer not to say"); the area is the device's time zone setting (for example
+   America/Chicago), never GPS or a precise location. */
+var AGE_RANGES = [["18_24", "18\u201324"], ["25_34", "25\u201334"], ["35_44", "35\u201344"], ["45_54", "45\u201354"], ["55p", "55 or older"], ["na", "Prefer not to say"]];
+function ageRange() { var a = store("ageRng"); return a && a.r ? a.r : ""; }
+function ageRangeSet(r) { if (!AGE_RANGES.some(function (o) { return o[0] === r; })) return; store("ageRng", { r: r, ts: Date.now() }); try { USG.sessSent = false; } catch (e) {} }
+function ageRangeSel() { var cur = ageRange(); return '<select data-agerng="1" aria-label="Age range (optional)"><option value=""' + (cur ? '' : ' selected') + '>Choose\u2026</option>' + AGE_RANGES.map(function (o) { return '<option value="' + o[0] + '"' + (cur === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join("") + '</select>'; }
+function usgTz() { try { var z = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; return /^[A-Za-z_]+(\/[A-Za-z0-9_+\-]+){0,2}$/.test(z) ? z.slice(0, 40) : ""; } catch (e) { return ""; } }
+function homeAgeAsk() {
+  if (!statsOn() || ageRange() || store("ageAsk") || (typeof tourDone === "function" && !tourDone())) return "";
+  return '<div class="tbtip agetip" role="note"><span>Optional: your age range helps us make DrugBug better.</span>' + ageRangeSel() + '<button class="linkish small" data-agex="1">No thanks</button></div>';
+}
+document.addEventListener("click", function (e) { var t = e.target.closest && e.target.closest("[data-agex]"); if (!t) return; store("ageAsk", 1); render(); });
 function usgOn() { try { return !usgOwner() && statsOn() && !!agreeRec() && !(typeof DEMO !== "undefined" && DEMO && !NATIVE && !(window.DRUGBUG_CONFIG || {}).functionsUrl); } catch (e) { return false; } }
 function usgDid() {
   var d = store("did");
@@ -10085,7 +10086,7 @@ function usgFlush(leaving) {
   if (!leaving && Date.now() - USG.sentAt < 16000) return;
   var rc = (typeof routeCtx === "function" && routeCtx()) || "";
   var body = { data: { did: usgDid(), plat: NATIVE ? "ios" : "web", tier: (function () { try { return tier(); } catch (e) { return "free"; } })(),
-    route: rc || "other", level: S.view === "level" ? usgKey(S.level) : "", ver: APP_VERSION, pid: usgPid(), nocount: usgNoCount(), optin: { v: STATS_V, ts: (statsRec() || {}).ts || 0 },
+    route: rc || "other", level: S.view === "level" ? usgKey(S.level) : "", ver: APP_VERSION, pid: usgPid(), ar: ageRange(), tz: usgTz(), nu: (function () { try { return nUnitsSel().slice(0, 6); } catch (e) { return []; } })(), nocount: usgNoCount(), optin: { v: STATS_V, ts: (statsRec() || {}).ts || 0 },
     inc: { q: I.q, c: I.c, learn: I.learn, sec: I.sec, sess: USG.sessSent ? 0 : 1, tabs: I.tabs, feats: I.feats, dr: I.dr || {} }, rate: usgRates() } };
   USG.inc = usgNew(); USG.sentAt = Date.now(); USG.busy = true;
   var wasSess = USG.sessSent; USG.sessSent = true;
@@ -10179,7 +10180,6 @@ function applySettings() {
 function megaFactor() { var m = SET().megaTimer; return m === "relaxed" ? 2 : 1; }
 function megaSecs(step) { return step.secs * megaFactor(); }
 function megaTimed() { return SET().megaTimer !== "off"; }
-function voiceRate() { return { slow: 0.6, normal: 0.85, fast: 1.1 }[SET().voiceRate] || 0.85; }
 /* sound effects (generated tones, no files) */
 /* ---------- one AudioContext for the whole app ----------
    There used to be five (effects, music, anatomy, transitions, voices). Browsers cap how many a
@@ -10418,7 +10418,6 @@ function settingsView() {
       '<button class="btn small ghost" data-act="allpaths">' + (homeAll() ? "Show only mine" : "Show every path") + '</button>'));
   // sound
   c += setCard("sound", "Sound & pronunciation",
-    setRow("Voice speed", "For the \"Say it\" button." + (SPEAK_OK ? "" : " Your device does not support speech."), setOpts("voiceRate", s.voiceRate, [["slow", "Slow"], ["normal", "Normal"], ["fast", "Fast"]]) + (SPEAK_OK ? ' <button class="btn small ghost" data-say="epinephrine">Test</button>' : '')) +
     setRow("Written pronunciation", "Shows a guide like ep-ih-NEF-rin.", setTog("showPhon", s.showPhon, "Show pronunciation")) +
     setRow("Bug buddy", "Your bug on the side of the screen, reacting to your answers.", setTog("buddy", s.buddy, "Show my bug buddy")) +
     setRow("Background music", "Jazz, house, bugstep, rock, banjo or pop while you study. You can also tap the music note at the top of any page.", setTog("music", s.music !== false, "Background music") + '<label class="muvol"><span>Volume</span><input type="range" min="0" max="100" step="5" id="muvolset" value="' + muLevel() + '" aria-label="Music volume"><output id="muvolsetv">' + muLevel() + '%</output></label>') +
@@ -10442,6 +10441,8 @@ function settingsView() {
   if (typeof evPausedFor === "function" && evPausedFor()) pv += setRow("Evaluator", EV_PAUSE_MSG, "");
   else if (typeof isReviewer === "function" && isReviewer()) pv += setRow("Evaluator", "You are a DrugBug question evaluator. After each answer, a reviewer panel lets you grade the question. DrugBug Pro is included while you are an evaluator.", '<span class="pill">Evaluator</span>');   /* (owner, Nov 13 2026) */
   pv += setRow("Share usage statistics", "Share optional usage statistics to help improve DrugBug. You can turn this off at any time to stop future optional collection. We delete or aggregate device-level usage statistics within 24 months after collection.", setTog("statsOpt", statsOn(), statsOn() ? "On" : "Off"));
+  pv += setRow("Agency Challenge", "Study for your fire department, EMS agency, hospital or school and compete with others in your state for weekly rewards. Only your nickname shows.", '<button class="btn small ghost" data-openagency="1">' + (agxJoined() ? "Open" : "Join") + '</button>');
+  if (statsOn()) pv += setRow("Age range (optional)", "Sent with the usage statistics so we can see who studies with DrugBug. Choose Prefer not to say to skip it.", ageRangeSel());
   if (NATIVE) pv += setRow("Ad measurement", "Lets Meta count whether our Facebook and Instagram ads led to installs and app use. Turn off to stop sending these app events to Meta. No name, email, progress or scores are sent.", setTog("adMeas", adMeasOn(), adMeasOn() ? "On" : "Off"));
   pv += setRow("Download my data", "A file with your progress, scores, saved list and settings.", '<button class="btn small ghost" data-act="exportdata">Download</button>');
   pv += setRow("Reset my progress", "Clears mastery, XP, streaks, achievements and scores. Keeps your bugs, sticks, saved list and settings.", S.resetAsk ? '<span class="confirm">Reset everything? <button class="btn small again" data-act="resetyes">Reset</button><button class="btn small ghost" data-act="resetno">Cancel</button></span>' : '<button class="btn small ghost" data-act="resetask">Reset progress</button>');
@@ -33033,6 +33034,7 @@ function groupKindNow() {
 }
 function groupNote(q, ok, kind, topic, pick) {
   try { if (q && kind !== undefined) revFloatFor(q); } catch (e) {}
+  try { agxNote(ok); } catch (e) {}   /* Agency Challenge points (Nov 16 2026) */
   if (!seatActive()) return;   /* class keys work in the iPhone app too (owner, Nov 5 2026) */
   try {
     var Q = store("groupq") || { t: { n: 0, c: 0 }, s: {} };
@@ -33065,6 +33067,233 @@ function groupNote(q, ok, kind, topic, pick) {
     clearTimeout(SEAT.t);
     if (Q.t.n >= 15) groupFlush(); else SEAT.t = setTimeout(groupFlush, 60000);
   } catch (e) {}
+}
+/* ---------- AGENCY CHALLENGE (owner, Nov 16 2026) ----------
+   "People click the hospital they are with and compete for top 3 within the institution. They then compete with local
+   agencies or hospitals but only the top three are the ones competing." Boards live on the server (functions/agency.js):
+   10 points for each correct answer (at most 3,000 a day), a Monday-to-Sunday week, an agency board, and a state board
+   ranked by each agency's top 3 added together. Joining is optional and shows only a nickname, which the server checks. */
+var AGX = { open: false, data: null, busy: false, msg: "", err: false, tab: "agency", st: store("agxState") || "", q: "", list: null, pick: null, adding: false, at: 0, t: null, rep: "" };
+var AGX_STATES = ["AL","AK","AZ","AR","CA","CO","CT","DE","DC","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","PR","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","GU","VI"];
+var AGX_TYPES = { fire: "Fire department", ems: "EMS agency", hospital: "Hospital", school: "School or college", other: "Other" };
+/* department inside the agency: only shown next to the nickname so people know where you work (owner, Nov 16 2026) */
+var AGX_DEPTS = {
+  hospital: [["ed", "Emergency Department"], ["icu", "ICU / Critical Care"], ["medsurg", "Med-Surg"], ["cardiac", "Cardiac / Telemetry"], ["ob", "Labor & Delivery / Mother-Baby"], ["nicu", "NICU"], ["peds", "Pediatrics"], ["periop", "Surgery / OR / PACU"], ["onc", "Oncology / Infusion"], ["psych", "Behavioral Health"], ["renal", "Dialysis / Renal"], ["pharm", "Pharmacy"], ["rt", "Respiratory Therapy"], ["imaging", "Radiology / Imaging"], ["lab", "Lab"], ["float", "Float Pool"], ["transport", "Transport / Flight"], ["edu", "Education"], ["admin", "Administration"], ["student", "Student / Clinicals"], ["other", "Other"]],
+  fire: [["engine", "Engine / Suppression"], ["truck", "Truck / Ladder"], ["rescue", "Rescue"], ["ems", "EMS / Ambulance"], ["hazmat", "Hazmat"], ["prevention", "Fire Prevention"], ["training", "Training"], ["dispatch", "Dispatch"], ["admin", "Administration"], ["volunteer", "Volunteer"], ["other", "Other"]],
+  ems: [["truck", "Truck"], ["cct", "Critical Care / Flight"], ["special", "Special Events / Ops"], ["dispatch", "Dispatch"], ["super", "Supervisor / FTO"], ["other", "Other"]],
+  school: [["nursing", "Nursing"], ["ems", "EMS / Paramedic"], ["medical", "Medical"], ["pharm", "Pharmacy"], ["rt", "Respiratory Therapy"], ["imaging", "Imaging"], ["allied", "Allied Health"], ["faculty", "Faculty / Staff"], ["other", "Other"]],
+  other: [["other", "Other"]]
+};
+function agxDeptName(type, k) { var L = AGX_DEPTS[type] || []; for (var i = 0; i < L.length; i++) if (L[i][0] === k) return L[i][1]; return ""; }
+function agxDeptSel(type, cur) { return '<select class="pinput" id="agxDept"><option value="">Choose your department\u2026</option>' + (AGX_DEPTS[type] || AGX_DEPTS.other).map(function (o) { return '<option value="' + o[0] + '"' + (o[0] === cur ? " selected" : "") + '>' + esc(o[1]) + '</option>'; }).join("") + '</select>'; }
+/* a challenge link from a friend: drugbugapp.com/app/?agxch=<agency id>.<member code> */
+var AGX_CHGO = false;
+(function () { try { var m = /[?&]agxch=([A-Za-z0-9-]{6,40})\.([a-f0-9]{14})\b/.exec(location.search || ""); if (m) { store("agxCh", { aid: m[1], mid: m[2], at: Date.now() }); AGX_CHGO = true; } } catch (e) {} })();
+function agxJoined() { return !!store("agxJoined"); }
+/* every answer anywhere in the app (the same place class answers are counted) */
+function agxNote(ok) {
+  if (!agxJoined() || !statsOn()) return;   /* the challenge needs usage statistics turned on (owner, Nov 16 2026) */
+  try {
+    var Q = store("agxq") || { n: 0, c: 0 }; Q.n++; if (ok) Q.c++; store("agxq", Q);
+    clearTimeout(AGX.t); if (Q.n >= 10) agxFlush(); else AGX.t = setTimeout(agxFlush, 45000);
+  } catch (e) {}
+}
+function agxFlush() {
+  var Q = store("agxq"); if (!Q || !Q.n || AGX.sending || !agxJoined()) return;
+  var sent = { n: Math.min(Q.n, 500), c: Math.min(Q.c, Q.n, 500) }; AGX.sending = true;
+  fnCall("agencyScore", sent).then(function (r) {
+    AGX.sending = false;
+    if (r && r.member === false) { store("agxJoined", null); }
+    var L = store("agxq") || { n: 0, c: 0 }; L.n = Math.max(0, L.n - sent.n); L.c = Math.max(0, L.c - sent.c); store("agxq", L);
+  }).catch(function () { AGX.sending = false; });
+}
+window.addEventListener("pagehide", function () { try { agxFlush(); } catch (e) {} });
+var agxPane = document.createElement("aside"); agxPane.id = "agxPane"; agxPane.hidden = true; agxPane.setAttribute("aria-label", "Agency Challenge"); document.body.appendChild(agxPane);
+function agxStateSel(id, cur) { return '<select class="pinput" id="' + id + '" aria-label="State"><option value="">State…</option>' + AGX_STATES.map(function (s) { return '<option' + (s === cur ? " selected" : "") + '>' + s + '</option>'; }).join("") + '</select>'; }
+function agxView() {
+  var c = '<div class="pbar"><h2>Agency Challenge</h2><button class="iconbtn" data-agx="close" aria-label="Close">Close</button></div>';
+  if (AGX.msg) c += '<p class="presult' + (AGX.err ? "" : " good") + '" role="status">' + esc(AGX.msg) + '</p>';
+  var D = AGX.data;
+  if (!D) return c + '<p class="muted">' + (AGX.busy ? "Loading…" : "") + '</p>';
+  if (!D.member) return c + agxJoinView();
+  var A = D.agency, M = D.me;
+  c += '<div class="clhead"><b>' + esc(A.name) + '</b><span>' + esc(AGX_TYPES[A.type] || "") + " · " + esc(A.city) + ", " + esc(A.state) + " · " + A.members + (A.members === 1 ? " person" : " people") + '</span>' +
+    (A.status === "pending" ? '<span class="axnote">New agency: it shows on the ' + esc(A.state) + ' board once we check it (usually within a day). Your agency board works now.</span>' : '') + '</div>';
+  c += agxRewardBox(D);
+  c += '<div class="axme"><div><b>#' + (M.rank || "–") + '</b><span>your rank</span></div><div><b>' + num0(M.pts) + '</b><span>your points this week</span></div><div><b>' + num0(A.team) + '</b><span>your top 3 together</span></div></div>';
+  if (!statsOn()) c += '<div class="axrecruit"><b>Your answers aren\u2019t earning points</b><span>Share usage statistics is off. Turn it back on to keep earning points for your team.</span><button class="btn" data-agx="statson">Turn on</button></div>';
+  if (M.onTeam) c += '<p class="axteam">You\u2019re on your agency\u2019s top 3 this week.</p>';
+  c += agxChBox() + '<p><button class="btn ghost" data-agx="challenge">Challenge a friend</button> <span class="muted small">Send a link to a friend at any agency or hospital.</span></p>';
+  c += '<div class="cltabs" role="tablist"><button class="' + (AGX.tab === "agency" ? "on" : "") + '" data-agx="tab-agency">My agency</button><button class="' + (AGX.tab === "state" ? "on" : "") + '" data-agx="tab-state">' + esc(A.state) + ' agencies</button><button data-agx="refresh" aria-label="Refresh">↻</button></div>';
+  if (AGX.tab === "agency") {
+    c += '<ol class="clboard axboard">' + D.board.map(function (r) {
+      return '<li class="' + (r.me ? "me" : "") + (r.rank <= 3 && r.pts > 0 ? " axtop" : "") + '"><span class="clrk' + (r.rank <= 3 && r.pts > 0 ? " r" + r.rank : "") + '">' + r.rank + '</span><span class="clal">' + esc(r.nick) + (r.me ? ' <em>you</em>' : '') + (r.dept ? '<small class="axsub">' + esc(agxDeptName(A.type, r.dept)) + '</small>' : '') + '</span><span class="clsc"><b>' + num0(r.pts) + '</b><small>' + (r.acc != null ? r.acc + "% right" : "no answers yet") + '</small></span>' +
+        (r.me || r.hidden ? '' : '<button class="axrep" data-agxrep="' + esc(r.mid) + '" aria-label="Report this name">' + (AGX.rep === r.mid ? "Report?" : "⚑") + '</button>') + '</li>';
+    }).join("") + '</ol>';
+    c += '<p class="muted small">The top 3 this week are your agency’s team on the ' + esc(A.state) + ' board. 10 points for each right answer, up to ' + num0(D.dayCap) + ' a day (' + num0(M.todayLeft) + ' left today). Starts over every Monday.</p>';
+    if (A.members < 3 || A.teamFilled < 3) c += '<div class="axrecruit"><b>' + (A.members < 3 ? "Your agency needs " + (3 - A.members) + " more " + (3 - A.members === 1 ? "person" : "people") : "Your top 3 isn’t full yet") + '</b><span>An agency competes at full strength with three people studying.</span><button class="btn" data-agx="recruit">Invite a coworker</button></div>';
+  } else {
+    if (A.status !== "ok") c += '<p class="muted">Your agency joins this board once it’s checked.</p>';
+    else {
+      c += '<ol class="clboard axboard">' + D.state.map(function (r) {
+        return '<li class="' + (r.mine ? "me" : "") + '"><span class="clrk' + (r.rank <= 3 && r.top3 > 0 ? " r" + r.rank : "") + '">' + r.rank + '</span><span class="clal">' + esc(r.name) + (r.mine ? ' <em>yours</em>' : '') + '<small class="axsub">' + esc(AGX_TYPES[r.type] || "") + " · " + esc(r.city) + '</small></span><span class="clsc"><b>' + num0(r.top3) + '</b><small>' + (r.filled < 3 ? "needs " + (3 - r.filled) + " more" : "top 3") + '</small></span></li>';
+      }).join("") + '</ol><p class="muted small">Agencies in ' + esc(A.state) + ', ranked by their top 3 people’s points added together this week.</p>';
+      var L = D.lastWeek; if (L && L.agencies && L.agencies.length) c += '<div class="clbox"><h4>Last week’s winners</h4>' + L.agencies.map(function (x, i) { return '<p>' + ["🥇", "🥈", "🥉"][i] + " " + esc(x.name) + '<span>' + num0(x.top3) + '</span></p>'; }).join("") + '</div>';
+    }
+  }
+  if (D.rewardsInfo) c += '<details class="cldim axmore"><summary>\ud83c\udf81 What you can win each week</summary>' + D.rewardsInfo.map(function (x) { return '<p class="small"><b>' + esc(x.what) + ':</b> ' + esc(x.reward) + '</p>'; }).join("") + '<p class="muted small">Rewards are sticks and bugs for the app. Collect them here after the week ends on Sunday night.</p></details>';
+  c += '<details class="cldim axmore"><summary>Nickname and agency</summary><form class="pform" id="agxNickF"><label>Nickname (shown on the boards)<input class="pinput" id="agxNick" maxlength="20" value="' + esc(M.nick) + '" autocomplete="off"></label><label>Department' + agxDeptSel(A.type, M.dept) + '</label><button class="btn ghost" type="submit">Save</button></form>' +
+    (M.nickHidden ? '<p class="small">Your name is hidden while we review a report. Choosing a new nickname shows it again.</p>' : '') +
+    '<p class="small"><button class="linkish" data-agx="change">Change agency</button> · <button class="linkish" data-agx="reqnew">Request a new institution</button> · <button class="linkish" data-agx="leave">' + (AGX.leaveAsk ? "Tap again to leave" : "Leave the challenge") + '</button></p>' +
+    '<p class="muted small">Only your nickname shows. Boards are for fun and study, not a measure of job performance. Agencies aren’t affiliated with DrugBug and don’t endorse it.</p></details>';
+  return c;
+}
+/* ---------- rewards (owner, Nov 16 2026: "we need to build rewards into this") ----------
+   The server works out each finished week's rewards once; collecting marks them claimed there first, so they can only
+   be added once, then the app adds the sticks and picks the bugs (the same pool as class prizes). */
+function agxWeekLabel(w) { try { return new Date(w + "T12:00:00Z").toLocaleDateString(undefined, { month: "short", day: "numeric", timeZone: "UTC" }); } catch (e) { return w; } }
+function agxRewardBox(D) {
+  var R = (D && D.rewards) || []; if (!R.length) return "";
+  return '<div class="clbox axrw"><h4>\ud83c\udf81 Rewards waiting</h4>' + R.map(function (r) { return '<p class="small"><b>Week of ' + esc(agxWeekLabel(r.wk)) + '</b></p>' + r.items.map(function (it) { return '<p>' + esc(it.label) + '<span>' + (it.kind === "bug" ? esc(RARITY[it.rar] || it.rar) + " bug" : "+" + num0(it.sticks) + " sticks") + '</span></p>'; }).join(""); }).join("") +
+    '<p><button class="btn" data-agx="collect"' + (AGX.collecting ? " disabled" : "") + '>Collect</button></p></div>';
+}
+function agxCollect() {
+  var R = (AGX.data && AGX.data.rewards) || []; if (!R.length || AGX.collecting) return;
+  AGX.collecting = true; agxDraw();
+  var got = [], sticks = 0;
+  var next = function (i) {
+    if (i >= R.length) {
+      AGX.collecting = false; AGX.data.rewards = []; store("agxRw", null); try { saveProg(); } catch (e) {}
+      AGX.msg = got.length || sticks ? "Collected" + (sticks ? " " + num0(sticks) + " sticks" : "") + (got.length ? (sticks ? " and " : " ") + got.join(", ") : "") + "." : "Already collected."; AGX.err = false;
+      try { render(); } catch (e2) {} return agxDraw(true);
+    }
+    fnCall("agencyRewardClaim", { wk: R[i].wk }).then(function (r) {
+      (r && r.items || []).forEach(function (it) {
+        if (it.kind === "sticks") { earn(it.sticks || 0); sticks += it.sticks || 0; return; }
+        var pool = prizePool(it.rar), pick = pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+        if (pick) { Prog.d.owned = (Prog.d.owned || []).concat([pick.id]); got.push("the " + pick.name + " (" + (RARITY[it.rar] || it.rar) + ")"); }
+        else { var n = PRIZE_STICKS[it.rar] || 200; earn(n); sticks += n; }
+      });
+      next(i + 1);
+    }).catch(function (e) { AGX.collecting = false; agxFail(e, "collect your rewards"); });
+  };
+  next(0);
+}
+/* a quiet check now and then, so the card can say rewards are waiting */
+setTimeout(function () {
+  if (!agxJoined()) return; var last = store("agxRwAt") || 0; if (Date.now() - last < 6 * 3600000) return; store("agxRwAt", Date.now());
+  fnCall("agencyBoard", {}).then(function (r) { var n = r && r.rewards ? r.rewards.length : 0; store("agxRw", n || null); if (n && S.view === "level") render(); }).catch(function () {});
+}, 12000);
+function agxChBox() {
+  var C = AGX.ch; if (!C) return "";
+  if (C.err) return '<div class="clbox axch"><h4>Challenge</h4><p>' + esc(C.err) + '</p><p><button class="linkish" data-agx="chclose">Dismiss</button></p></div>';
+  if (C.self) return "";
+  var T = C.them, M = C.me, td = T.dept ? (agxDeptName("hospital", T.dept) || agxDeptName("fire", T.dept) || agxDeptName("ems", T.dept)) : "";
+  var c = '<div class="clbox axch"><h4>\u2694\ufe0f ' + esc(T.nick) + ' challenged you</h4><p>' + esc(T.nick) + (td ? ' (' + esc(td) + ')' : '') + ' \u00b7 ' + esc(T.agency) + ', ' + esc(T.city) + '<span>' + num0(T.pts) + '</span></p>';
+  if (M) c += '<p>You \u00b7 ' + esc(M.agency) + '<span>' + num0(M.pts) + '</span></p><p class="small">' + (M.pts > T.pts ? "You\u2019re ahead this week. Keep it up." : M.pts === T.pts ? "Tied this week." : "You\u2019re " + num0(T.pts - M.pts) + " points behind this week.") + (M.same ? "" : " Their agency\u2019s top 3: " + num0(T.team) + " vs yours: " + num0(M.team) + ".") + '</p>';
+  else c += '<p class="small">Pick your agency or hospital below to take them on.</p>';
+  return c + '<p><button class="linkish" data-agx="chclose">Dismiss</button></p></div>';
+}
+function agxChLoad() {
+  var k = store("agxCh"); if (!k) { AGX.ch = null; return; }
+  if (Date.now() - (k.at || 0) > 14 * 86400000) { store("agxCh", null); AGX.ch = null; return; }
+  fnCall("agencyChallenge", { aid: k.aid, mid: k.mid }).then(function (r) { AGX.ch = r; if (AGX.open) agxDraw(); }).catch(function (e) { AGX.ch = { err: (e && e.message) || "That challenge couldn\u2019t be loaded." }; if (AGX.open) agxDraw(); });
+}
+function num0(n) { return (+n || 0).toLocaleString(); }
+function agxJoinView() {
+  var c = '<p>Pick your fire department, EMS agency, hospital or school and study for your team. The top 3 at each one compete with others in your state, and there are rewards every week. Boards start over every Monday.</p>' + agxChBox();
+  if (!statsOn()) return c + '<div class="axrecruit"><b>Turn on usage statistics first</b><span>The Agency Challenge counts your right answers through Share usage statistics, so it needs them on. You can turn them off later in Settings, which also stops your points.</span><button class="btn" data-agx="statson">Turn on and continue</button></div>';
+  if (AGX.pick) {
+    return c + '<div class="clhead"><b>' + esc(AGX.pick.name) + '</b><span>' + esc(AGX_TYPES[AGX.pick.type] || "") + " · " + esc(AGX.pick.city) + ", " + esc(AGX.pick.state) + '</span></div>' +
+      '<form class="pform" id="agxJoinF"><label>Your nickname (2 to 20 letters, shown on the boards)<input class="pinput" id="agxNick" maxlength="20" autocomplete="off" required value="' + esc(AGX.fNick || "") + '"></label>' +
+      '<label>Your department (shown next to your nickname)' + agxDeptSel(AGX.pick.type, AGX.fDept || "") + '</label>' +
+      '<p class="muted small">Use a first name or a nickname, not your full name. Names that aren’t respectful are blocked, and anyone can report a name. Boards are for fun and study, not a measure of job performance.</p>' +
+      '<button class="btn" type="submit"' + (AGX.busy ? " disabled" : "") + '>Join</button> <button class="linkish" type="button" data-agx="unpick">Pick a different agency</button></form>';
+  }
+  if (AGX.adding) {
+    return c + '<form class="pform" id="agxAddF"><h3>Request your institution</h3><p class="muted small">A hospital, fire department, EMS agency, or nursing, EMS or medical school.</p><label>Name<input class="pinput" id="agxAN" maxlength="80" required placeholder="Example: Dallas Fire-Rescue"></label>' +
+      '<label>Type<select class="pinput" id="agxAT">' + Object.keys(AGX_TYPES).map(function (k) { return '<option value="' + k + '">' + AGX_TYPES[k] + '</option>'; }).join("") + '</select></label>' +
+      '<label>City<input class="pinput" id="agxAC" maxlength="40" required></label><label>State' + agxStateSel("agxAS", AGX.st) + '</label>' +
+      '<p class="muted small">New institutions show on the state board after a quick check (usually within a day). You can join it and start on its own board right away.</p>' +
+      '<button class="btn" type="submit"' + (AGX.busy ? " disabled" : "") + '>Send request</button> <button class="linkish" type="button" data-agx="noadd">Back to the list</button></form>';
+  }
+  c += '<p class="axreq"><button class="btn ghost small" data-agx="add">Request your institution</button> <span class="muted small">Not on the list yet? Ask for it and start right away.</span></p>';
+  c += '<form class="pform" id="agxFindF"><label>State' + agxStateSel("agxST", AGX.st) + '</label><label>Search<input class="pinput" id="agxQ" value="' + esc(AGX.q) + '" placeholder="Agency, hospital or city" autocomplete="off"></label><button class="btn" type="submit">Find</button></form>';
+  if (AGX.list) c += AGX.list.length ? '<ul class="axlist">' + AGX.list.map(function (a, i) { return '<li><button data-agxpick="' + i + '"><b>' + esc(a.name) + '</b><span>' + esc(AGX_TYPES[a.type] || "") + " · " + esc(a.city) + (a.status === "pending" ? " · waiting for a check" : " · " + a.members + (a.members === 1 ? " person" : " people")) + '</span></button></li>'; }).join("") + '</ul>' : '<p class="muted">No agencies match yet.</p>';
+  if (AGX.list) c += '<p><button class="btn ghost" data-agx="add">My institution isn\u2019t listed</button></p>';
+  return c;
+}
+function agxDraw(top) { var old = agxPane.querySelector(".ppanel"), y = old && !top ? old.scrollTop : 0; agxPane.innerHTML = '<div class="ppanel">' + agxView() + '</div>'; try { translateDom(agxPane); } catch (e) {} var nw = agxPane.querySelector(".ppanel"); if (nw) nw.scrollTop = y; }
+function agxFail(e, what) { AGX.busy = false; AGX.err = true; AGX.msg = e && e.message === "offline" ? "The Agency Challenge needs an internet connection." : (e && e.message) || ("Couldn’t " + what + " right now. Try again in a moment."); agxDraw(); }
+function agxOk(r) { if (r && r.error) throw new Error(r.error.message || "error"); return r; }
+function agxLoad(force) {
+  if (AGX.busy) return; if (!force && AGX.data && Date.now() - AGX.at < 30000) return agxDraw();
+  AGX.busy = true; agxDraw(); try { agxFlush(); } catch (e) {}
+  setTimeout(function () {
+    fnCall("agencyBoard", {}).then(agxOk).then(function (r) { AGX.busy = false; AGX.data = r; AGX.at = Date.now(); store("agxJoined", r.member ? 1 : null); store("agxRw", r.rewards && r.rewards.length ? r.rewards.length : null); if (AGX.err) AGX.msg = ""; AGX.err = false; agxDraw(); }).catch(function (e) { agxFail(e, "load the boards"); });
+  }, agxJoined() ? 900 : 0);
+}
+function openAgency() { AGX.open = true; agxPane.hidden = false; AGX.msg = ""; AGX.err = false; agxDraw(true); agxLoad(false); agxChLoad(); try { usgFeat("agency"); } catch (e) {} }
+function closeAgency() { AGX.open = false; agxPane.hidden = true; }
+agxPane.addEventListener("click", function (e) {
+  if (e.target === agxPane) return closeAgency();
+  var rp = e.target.closest("[data-agxrep]");
+  if (rp) { var mid = rp.getAttribute("data-agxrep"); if (AGX.rep !== mid) { AGX.rep = mid; return agxDraw(); }
+    AGX.rep = ""; fnCall("agencyReportName", { mid: mid }).then(agxOk).then(function () { AGX.msg = "Thanks. We’ll take a look at that name."; AGX.err = false; agxLoad(true); }).catch(function (e2) { agxFail(e2, "send that report"); }); return; }
+  var pk = e.target.closest("[data-agxpick]"); if (pk) { AGX.pick = AGX.list[+pk.getAttribute("data-agxpick")]; AGX.msg = ""; return agxDraw(true); }
+  var t = e.target.closest("[data-agx]"); if (!t) return;
+  var a = t.getAttribute("data-agx");
+  if (a === "close") return closeAgency();
+  if (a === "tab-agency" || a === "tab-state") { AGX.tab = a.slice(4); return agxDraw(); }
+  if (a === "refresh") { AGX.msg = ""; return agxLoad(true); }
+  if (a === "reqnew") { AGX.data = { member: false }; AGX.pick = null; AGX.list = null; AGX.adding = true; AGX.msg = "Once it\u2019s added you can move to it (you can change agencies once a week)."; AGX.err = false; return agxDraw(true); }
+  if (a === "collect") return agxCollect();
+  if (a === "statson") { statsSet(true, "agency"); AGX.msg = ""; agxDraw(); try { render(); } catch (e5) {} return; }
+  if (a === "chclose") { store("agxCh", null); AGX.ch = null; return agxDraw(); }
+  if (a === "challenge") {
+    var D2 = AGX.data, link = "https://drugbugapp.com/app/?agxch=" + D2.agency.id + "." + D2.me.mid;
+    var ctx = "I challenge you on DrugBug! I\u2019m studying for " + D2.agency.name + " with " + num0(D2.me.pts) + " points this week. Pick your agency or hospital and try to beat me: " + link;
+    try { if (navigator.share) return navigator.share({ text: ctx }).catch(function () {}); } catch (e6) {}
+    try { navigator.clipboard.writeText(ctx).then(function () { AGX.msg = "Challenge link copied. Paste it in a text to your friend."; AGX.err = false; agxDraw(); }); } catch (e7) { AGX.msg = ctx; agxDraw(); }
+    return;
+  }
+  if (a === "add") { AGX.adding = true; AGX.msg = ""; return agxDraw(true); }
+  if (a === "noadd") { AGX.adding = false; return agxDraw(true); }
+  if (a === "unpick") { AGX.pick = null; return agxDraw(true); }
+  if (a === "change") { AGX.data = { member: false }; AGX.pick = null; AGX.list = null; AGX.msg = "Pick your new agency. Your points this week start over when you move."; AGX.err = false; return agxDraw(true); }
+  if (a === "leave") { if (!AGX.leaveAsk) { AGX.leaveAsk = true; return agxDraw(); } AGX.leaveAsk = false;
+    return fnCall("agencyLeave", {}).then(agxOk).then(function () { store("agxJoined", null); store("agxq", null); AGX.data = { member: false }; AGX.msg = "You left the Agency Challenge. Your nickname and points were removed."; AGX.err = false; agxDraw(true); }).catch(function (e2) { agxFail(e2, "leave"); }); }
+  if (a === "recruit") {
+    var txt = "I’m studying for " + (AGX.data && AGX.data.agency ? AGX.data.agency.name : "our agency") + " in the DrugBug Agency Challenge. Join our team: https://drugbugapp.com";
+    try { if (navigator.share) return navigator.share({ text: txt }).catch(function () {}); } catch (e3) {}
+    try { navigator.clipboard.writeText(txt).then(function () { AGX.msg = "Invite copied. Paste it in a text or your group chat."; AGX.err = false; agxDraw(); }); } catch (e4) { AGX.msg = txt; agxDraw(); }
+  }
+});
+agxPane.addEventListener("submit", function (e) {
+  var f = e.target; e.preventDefault();
+  if (f.id === "agxFindF") {
+    AGX.st = ($("#agxST") || {}).value || ""; AGX.q = ($("#agxQ") || {}).value || ""; store("agxState", AGX.st);
+    if (!AGX.st) { AGX.msg = "Pick your state first."; AGX.err = true; return agxDraw(); }
+    AGX.busy = true; AGX.msg = ""; agxDraw();
+    return fnCall("agencySearch", { state: AGX.st, q: AGX.q }).then(agxOk).then(function (r) { AGX.busy = false; AGX.list = r.list || []; agxDraw(); }).catch(function (e2) { agxFail(e2, "search"); });
+  }
+  if (f.id === "agxAddF") {
+    var d = { name: ($("#agxAN") || {}).value, type: ($("#agxAT") || {}).value, city: ($("#agxAC") || {}).value, state: ($("#agxAS") || {}).value };
+    AGX.busy = true; AGX.msg = ""; agxDraw();
+    return fnCall("agencyAdd", d).then(agxOk).then(function (r) { AGX.busy = false; AGX.adding = false; AGX.pick = r.agency; AGX.st = d.state; store("agxState", d.state); AGX.msg = r.existed ? "That agency was already on the list, so we picked it for you." : ""; AGX.err = false; agxDraw(true); }).catch(function (e2) { agxFail(e2, "add the agency"); });
+  }
+  if (f.id === "agxJoinF" || f.id === "agxNickF") {
+    var nick = ($("#agxNick") || {}).value || ""; AGX.fNick = nick; AGX.fDept = ($("#agxDept") || {}).value || ""; var aid = f.id === "agxJoinF" ? AGX.pick.id : AGX.data.agency.id;
+    AGX.busy = true; AGX.msg = ""; agxDraw();
+    return fnCall("agencyJoin", { aid: aid, nick: nick, dept: ($("#agxDept") || {}).value || "" }).then(agxOk).then(function () { AGX.busy = false; store("agxJoined", 1); AGX.pick = null; AGX.list = null; AGX.tab = "agency"; AGX.msg = f.id === "agxJoinF" ? "You’re in. Every right answer now earns points for your team." : "Saved."; AGX.err = false; agxLoad(true); }).catch(function (e2) { agxFail(e2, "save that"); });
+  }
+});
+document.addEventListener("keydown", function (e) { if (e.key === "Escape" && AGX.open) closeAgency(); });
+(function agxChOpen(tries) { if (!AGX_CHGO) return; if (agreeRec() && !needDisc()) { AGX_CHGO = false; return setTimeout(openAgency, 600); } if (tries < 600) setTimeout(function () { agxChOpen(tries + 1); }, 1000); })(0);
+document.addEventListener("click", function (e) { var t = e.target.closest && e.target.closest("[data-openagency]"); if (t) { e.preventDefault(); openAgency(); } });
+function homeAgencyCard() {
+  if (S.view === "gen") return "";   /* every specialty except BugDex (owner, Nov 16 2026) */
+  return '<button class="axcard" data-openagency="1"><span class="axic" aria-hidden="true">🏆</span><span class="axtx"><b>Agency Challenge' + (store("agxRw") ? ' <em class="axnew">Rewards waiting</em>' : '') + '</b><span>' + (agxJoined() ? "See where you and your agency rank this week" : "Study for your fire department, EMS agency, hospital or school. Weekly rewards.") + '</span></span><span class="fpgo" aria-hidden="true">&rsaquo;</span></button>';
 }
 var GROUP_DIMS = ["k", "d", "l", "y", "p", "q", "w"];
 function groupFlush() {

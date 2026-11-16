@@ -945,6 +945,17 @@ button.evrow{cursor:pointer}button.evrow:hover{background:var(--surface-2)}.evn{
 #classPane{position:fixed;inset:0;z-index:60;background:rgba(10,8,20,.45);display:flex;justify-content:flex-end}
 .proto-tab{display:none!important}
 #classPane[hidden]{display:none!important}
+#agxPane{position:fixed;inset:0;z-index:60;background:rgba(10,8,20,.45);display:flex;justify-content:flex-end}#agxPane[hidden]{display:none!important}
+.axcard{display:flex;align-items:center;gap:12px;width:100%;text-align:left;margin:10px 0 4px;padding:12px 14px;border-radius:16px;border:1.5px solid color-mix(in srgb,#f5c542 60%,var(--line));background:linear-gradient(90deg,color-mix(in srgb,#f5c542 14%,var(--surface)),var(--surface));color:var(--ink);font:inherit;cursor:pointer}
+.axcard .axic{font-size:26px}.axcard .axtx{flex:1;display:flex;flex-direction:column;gap:2px}.axcard .axtx b{font-size:16px}.axcard .axtx span{font-size:13px;color:var(--muted)}.axcard .fpgo{font-size:24px;color:var(--muted)}
+.axme{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 10px}.axme div{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:8px 10px;display:flex;flex-direction:column}.axme b{font-size:20px}.axme span{font-size:11.5px;color:var(--muted)}
+.axteam{margin:0 0 10px;font-weight:700;color:#b7791f}.axnote{color:#b45309;font-size:12.5px;margin-top:4px}
+.clboard.axboard li{grid-template-columns:38px 1fr auto auto}.clboard.axboard li.axtop{border-color:color-mix(in srgb,#f5c542 70%,var(--line))}
+.axsub{display:block;font-weight:500;font-size:12px;color:var(--muted)}
+.axrep{border:0;background:none;color:var(--muted);font:inherit;font-size:13px;cursor:pointer;padding:4px 2px}
+.axrecruit{display:flex;flex-direction:column;gap:4px;border:1.5px dashed var(--flight);border-radius:14px;padding:10px 12px;margin:10px 0}.axrecruit span{font-size:13px;color:var(--muted)}.axrecruit .btn{align-self:flex-start;margin-top:4px}
+.axlist{list-style:none;padding:0;margin:8px 0;display:grid;gap:6px}.axlist button{width:100%;text-align:left;display:flex;flex-direction:column;gap:2px;background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;color:var(--ink);font:inherit;cursor:pointer}.axlist button span{font-size:12.5px;color:var(--muted)}
+.axmore{margin-top:16px}.axnew{font-style:normal;font-size:11px;font-weight:800;color:#1d1a2a;background:#f5c542;border-radius:99px;padding:2px 8px;margin-left:6px;vertical-align:middle}.axreq{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:4px 0 8px}.axrw{margin:0 0 12px;border-color:color-mix(in srgb,#f5c542 70%,var(--line))}.axrw h4{color:#b7791f}.axch{margin:0 0 12px;border-color:color-mix(in srgb,#ef4444 45%,var(--line))}
 .clpanel .clkey{text-transform:uppercase;letter-spacing:.08em}
 .clhead{display:flex;flex-direction:column;gap:2px;background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:10px 14px;margin:8px 0 12px}
 .clhead b{font-size:18px}.clhead span{font-size:13px;color:var(--muted)}
@@ -2216,6 +2227,7 @@ button,a,input,select,textarea,label,summary,[role="button"]{touch-action:manipu
 .topbar .brand.onhome{display:none}
 .tbtip{position:relative;display:flex;align-items:center;gap:10px;justify-content:space-between;margin:6px 0 4px;padding:8px 10px 8px 14px;border-radius:14px;background:var(--surface);border:1.5px solid var(--flight);font-size:14px;font-weight:600}
 .tbtip::before{content:"";position:absolute;top:-8px;left:26px;border:8px solid transparent;border-top:0;border-bottom-color:var(--flight)}
+.agetip{flex-wrap:wrap;border-color:var(--line,#8884)}.agetip::before{display:none}.agetip select,.gagerng select,.setrow select[data-agerng]{font:inherit;font-size:14px;padding:6px 8px;border-radius:10px;border:1.5px solid var(--line,#8886);background:var(--surface);color:inherit}.gagerng{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px}
 .startcard{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--surface);border:1.5px solid var(--line);border-radius:22px;padding:14px 16px;margin:4px 0 12px;box-shadow:var(--shadow)}
 .startcard .sct{display:flex;flex-direction:column}.startcard .eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:800;color:var(--flight)}.startcard strong{font:800 18px var(--f-display)}
 .startcard .sca{display:flex;gap:8px;flex-wrap:wrap}.btn.big{padding:12px 20px;font-size:16px;border-radius:14px}
@@ -3379,6 +3391,7 @@ b.innerHTML='<div class="bootlogo">Drug<span>Bug</span></div><p class="bootnote"
 var n=window.__blN||0,last=window.__blT||t0,now=Date.now();
 if(window.__blErr||(n>=11&&now-last>12000)||now-last>60000){clearInterval(iv);window.__bootFail();}},3000);})();</script>
 <script src="app-config.js"></script>
+
 <script>/* real loading progress, so a slow first load on a weak signal doesn't look stuck (Nov 13 2026) */
 (function(){var got=0,T=14.76,t0=Date.now();window.__bl=function(w){got+=w;window.__blN=(window.__blN||0)+1;window.__blT=Date.now();var n=document.querySelector("#boot .bootnote"),b=document.querySelector("#boot .bootbar i");if(!n)return;var p=Math.min(99,Math.round(100*got/T));if(b){b.style.animation="none";b.style.width=p+"%";b.style.transform="none";}n.textContent="Loading your medications\u2026 "+p+"%"+(Date.now()-t0>6000?" \u00b7 the first load takes longer on a slow signal":"");};})();</script>
 <script defer src="backend.js" onload="__bl(0.01)" onerror="window.__blErr=1"></script>
