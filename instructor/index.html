@@ -173,6 +173,8 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
 .seatreq label{flex:1 1 140px}
 .pickh select.pickt{font-weight:700;font-size:15px;border-color:var(--s1);cursor:pointer;min-width:0;flex:1 1 200px}.pickhint{font-size:12px;font-weight:600;color:var(--s1);cursor:pointer;white-space:nowrap}.mxc.swap .ch{cursor:pointer}
 .pickh{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.pickh h3{margin:0}.pickh select{width:auto;min-width:220px;font:inherit;font-size:14px;padding:6px 10px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);color:inherit;max-width:100%}
+.hrbars{display:flex;align-items:flex-end;gap:2px;height:120px;padding-top:6px}.hrb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0}.hrb i{display:block;width:100%;background:var(--s1,#3b82f6);border-radius:3px 3px 1px 1px}.hrb span{font-size:10px;color:var(--muted);height:13px;margin-top:3px;white-space:nowrap}
+.dlrow{display:grid;grid-template-columns:96px 1fr 36px;align-items:center;gap:8px;font-size:13px;margin:5px 0}.dlbar{height:10px;border-radius:99px;background:var(--track,rgba(127,127,127,.2));overflow:hidden}.dlbar i{display:block;height:100%;background:var(--s1,#3b82f6);border-radius:99px}.dlrow b{text-align:right;font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
@@ -366,6 +368,9 @@ body.embed .mxhead .adm{display:none}
   <div class="mxsec">Who uses DrugBug <span style="text-transform:none;letter-spacing:0;font-weight:500">· active in the last 30 days</span></div>
   <div class="mxg">
     <div class="mxc"><h3>Plans, devices and how they found it</h3><div id="apShares"></div><p class="cs" id="apSubs" style="margin:10px 0 0"></p></div>
+    <div class="mxc"><h3>What time people study</h3><p class="cs">Minutes in DrugBug by hour of the day, US Central time, for the selected days. Everyone together.</p><div id="apHours"></div></div>
+    <div class="mxc"><h3>How long a study day lasts</h3><p class="cs" id="apDayLenNote">Each day someone opened DrugBug in the last 30 days, by how long they stayed.</p><div id="apDayLen"></div></div>
+    <div class="mxc"><h3>Weakest study subject</h3><p class="cs">Each person counts once, under the broad body-system subject they score lowest in (10+ answers). Never a specific medicine.</p><div class="rk" id="apWeak"></div></div>
     <div class="mxc"><h3>Levels people study</h3><p class="cs">Each person counts once, under the level they spent the most time in.</p><div class="rk" id="apLevels"></div>
       <h3 style="margin-top:18px">App versions in use</h3><div class="chips" id="apVer" style="margin-top:8px"></div></div>
   </div>
@@ -1164,12 +1169,16 @@ body.embed .mxhead .adm{display:none}
     var T = d.totals, R = +$("apRange").value, all = d.daily, rows = all.slice(-R), prev = all.length >= 2 * R ? all.slice(-2 * R, -R) : null;
     var sum = function (a, f) { return a.reduce(function (s, r) { return s + (f(r) || 0); }, 0); };
     var per = R + " days", unit = R + " days";
-    $("apSub").textContent = num(T.users) + " people have opened DrugBug · one person counts once, even on several devices · updated " + new Date(d.generatedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    var EA = d.est || {};
+    /* owner, Nov 17 2026: "what does 75 people have opened drug bug even mean" — say who is counted */
+    $("apSub").textContent = (EA.estAllUsers ? num(EA.estAllUsers) + " people have used DrugBug" + (EA.everAccepted != null ? ": " + num(EA.everAccepted) + " accepted the Terms (everyone does, sharing or not)" + (EA.preLog ? " plus " + num(EA.preLog) + " who used it before the Terms log started on Nov 11 and haven't been back" : "") : "") + ". " : "") + num(T.users) + " share usage statistics; the counted lines on the charts come from them · updated " + new Date(d.generatedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
     var nu = sum(rows, function (r) { return r.newUsers; }), q = sum(rows, function (r) { return r.q; }), c = sum(rows, function (r) { return r.c; }), mins = sum(rows, function (r) { return r.minutes; }), dau = sum(rows, function (r) { return r.dau; });
     var pnu = prev && sum(prev, function (r) { return r.newUsers; }), pq = prev && sum(prev, function (r) { return r.q; }), pdau = prev && sum(prev, function (r) { return r.dau; }), pmins = prev && sum(prev, function (r) { return r.minutes; });
     var avgD = dau / R, mpp = dau ? mins / dau : 0, pmpp = prev && pdau ? pmins / pdau : null;
     $("apKpis").innerHTML = [
-      kpi("Active today", num(T.active1), "", "Average " + (Math.round(avgD * 10) / 10) + " a day over " + per, spark(rows, function (r) { return r.dau; })),
+      (function () { var td = rows.length ? rows[rows.length - 1] : null, est = td && td.estDau != null ? td.estDau : null, acc = td ? td.accepted || 0 : 0;
+        /* counted = people who chose Share; the estimate adds everyone else, and is never below today's first-time Terms acceptances (owner, Nov 17 2026) */
+        return kpi("Active today", num(T.active1), "", (est != null && est > T.active1 ? "About " + num(est) + " ESTIMATED with people who don't share" + (acc ? " (" + num(acc) + " new today)" : "") + ". " : "") + "Counted average " + (Math.round(avgD * 10) / 10) + " a day over " + per, spark(rows, function (r) { return r.dau; })); })(),
       kpi("Active this week", num(T.active7), "", "Opened DrugBug in the last 7 days"),
       kpi("Active this month", num(T.active30), "", (T.stickiness || 0) + "% of them open it on an average day" + (T.stickiness >= 20 ? " (a habit)" : "")),
       (function () { var af = -1; rows.forEach(function (r, i) { if (af < 0 && r.accepted) af = i; }); var nx = function (r, i) { return af >= 0 && i >= af ? (r.accepted || 0) : r.newUsers; };
@@ -1288,6 +1297,20 @@ body.embed .mxhead .adm{display:none}
       share("How they got in", routes, rtot);
     $("apSubs").textContent = T.webSubs != null ? "Website subscriptions paid up right now (Stripe): " + T.webSubs + ". iPhone subscriptions are in App Store Connect." : "";
     ranked("apLevels", (sp.level || []).map(function (r) { return { key: r.key, n: r.n }; }), { name: function (k) { return LEVEL[k] || String(k).toUpperCase(); }, top: 10 });
+    /* times of day and length of a study day (owner, Nov 17 2026: "how long they are on for each day ... and the times they are on") */
+    (function () {
+      var H = []; for (var h = 0; h < 24; h++) H.push(0);
+      rows.forEach(function (r) { var o = r.hours || {}; Object.keys(o).forEach(function (k) { var i = +k; if (i >= 0 && i < 24) H[i] += (o[k].sec || 0) / 60; }); });
+      var mx = Math.max.apply(null, H), lab = function (i) { return i === 0 ? "12a" : i < 12 ? i + "a" : i === 12 ? "12p" : (i - 12) + "p"; };
+      if ($("apHours")) $("apHours").innerHTML = mx ? '<div class="hrbars" role="img" aria-label="Minutes by hour of day">' + H.map(function (v, i) { return '<div class="hrb" title="' + lab(i) + ': ' + Math.round(v) + ' min"><i style="height:' + Math.max(2, Math.round(100 * v / mx)) + '%"></i><span>' + (i % 3 === 0 ? lab(i) : "") + '</span></div>'; }).join("") + '</div><p class="cs" style="margin-top:6px">Busiest hour: <b>' + lab(H.indexOf(mx)) + '</b> (' + Math.round(mx) + ' min)</p>' : '<p class="muted small">Fills in from Nov 17 on, as people use DrugBug.</p>';
+      var DL = (d.profile || {}).dayLength, B = DL && DL.buckets, names = [["lt5", "Under 5 min"], ["5_15", "5-15 min"], ["15_30", "15-30 min"], ["30_60", "30-60 min"], ["60p", "Over an hour"]];
+      if ($("apDayLen")) { if (DL && DL.days) { var bm = Math.max.apply(null, names.map(function (x) { return B[x[0]] || 0; })) || 1;
+        $("apDayLen").innerHTML = names.map(function (x) { var n = B[x[0]] || 0; return '<div class="dlrow"><span>' + x[1] + '</span><div class="dlbar"><i style="width:' + Math.round(100 * n / bm) + '%"></i></div><b>' + n + '</b></div>'; }).join("") + '<p class="cs" style="margin-top:6px">Average study day: <b>' + DL.avgMin + ' min</b> across ' + DL.days + ' days</p>'; }
+        else $("apDayLen").innerHTML = '<p class="muted small">Fills in from Nov 17 on, as people use DrugBug.</p>'; }
+    })();
+    /* weakest subject (owner, Nov 17 2026): broad subjects only, never a medicine */
+    var WEAKN = { airway: "Airway & RSI", resp: "Breathing & lungs", cardio: "Cardiology", shock: "Shock & pressors", blood: "Blood & clotting", neuro: "Neuro & seizures", pain: "Pain & sedation", endo: "Diabetes & endocrine", bone: "Bones & joints", gi: "GI & nausea", renal: "Fluids, electrolytes & kidneys", infect: "Infection", immune: "Allergy & immune", skin: "Skin, eyes & ears" };
+    if ($("apWeak")) { if ((sp.weak || []).length) ranked("apWeak", sp.weak.map(function (r) { return { key: r.key, n: r.n }; }), { name: function (k) { return WEAKN[k] || k; }, top: 8 }); else $("apWeak").innerHTML = '<p class="muted small">Starts filling in as people answer questions on app versions from Nov 17 on.</p>'; }
     $("apVer").innerHTML = (sp.version || []).length ? sp.version.map(function (v) { return '<span>' + esc(v.key) + ' · ' + num(v.n) + '</span>'; }).join("") : '<span class="muted">No app versions yet</span>';
     drawProfile(d.profile);
     ranked("apTabs", d.tabs || [], { top: 8 });
