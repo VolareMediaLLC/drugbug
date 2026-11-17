@@ -27,7 +27,9 @@
         b.disabled = false; b.textContent = "Sign me up";
         if (j.error) return say(j.error.message || "Something went wrong. Try again.");
         f.querySelectorAll("input,select,textarea").forEach(function (x) { if (x.type === "checkbox") x.checked = false; else x.value = ""; });
-        say("Thank you! We got your sign-up. We will email you if you are chosen as an evaluator.", true);
+        var R = j.result || {};
+        if (R.waitlist) say("Thank you! We got your sign-up. We have all the " + (R.group ? R.group + " " : "") + "evaluators we need right now, so you are on the waitlist. We will email you if a spot opens.", true);
+        else say("Thank you! We got your sign-up. We will email you if you are chosen as an evaluator.", true);
       })
       .catch(function () { b.disabled = false; b.textContent = "Sign me up"; mail(); });
   });

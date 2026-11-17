@@ -380,9 +380,10 @@ body.admode a.loginbtn{display:none}
 <div class="or">or with email</div>
 <input id="dbLgE" type="email" placeholder="Email" autocomplete="email">
 <input id="dbLgP" type="password" placeholder="Password" autocomplete="current-password">
+<input id="dbLgP2" type="password" placeholder="Type the password again" autocomplete="new-password" hidden>
 <button class="lb" type="button" id="dbLgB">Log in</button>
 <p class="err" id="dbLgM" aria-live="polite"></p>
-<p style="margin:10px 0 0;font-size:13px">No account yet? <a href="app/">Make a free one in the app</a>.</p>
+<p style="margin:10px 0 0;font-size:13px" id="dbLgSw">No account yet? <a href="#" id="dbLgMk">Create a free one here</a>.</p>
 </div>
 <div id="dbLoginPw" hidden>
 <h2>Create a password</h2>
@@ -394,7 +395,8 @@ body.admode a.loginbtn{display:none}
 <p class="err" id="dbLgPM" aria-live="polite"></p>
 </div>
 <div id="dbLoginOk" hidden>
-<h2>You're logged in</h2>
+<h2 id="dbLgOkH">You're logged in</h2>
+<p id="dbLgNew" hidden style="font-size:14px">Your account is ready. Open DrugBug on this browser to start your 7 days of Pro, free with no card, and your progress will follow you to any browser or your iPhone.</p>
 <p><span class="ttl" id="dbLgT"></span> <span class="who" id="dbLgW"></span></p>
 <a class="lb adm" id="dbLgA" href="admin/" hidden>Open Admin</a>
 <a class="lb" href="app/">Open DrugBug</a>
@@ -434,6 +436,7 @@ function signedIn(){
   showBox()}
 /* new accounts only; older accounts are grandfathered (owner, Nov 14 2026) */var PW_CUTOFF=Date.UTC(2026,10,15,6);function needPw(){return false;/* not required for now (owner, Nov 15 2026) */var c=user&&user.metadata&&Date.parse(user.metadata.creationTime)||0;return !!(user&&user.email&&c&&c>=PW_CUTOFF&&!(user.providerData||[]).some(function(p){return p&&p.providerId==="password"}))}
 function showBox(){var ok=!!user,np=needPw();$("dbLoginIn").hidden=ok;$("dbLoginPw").hidden=!np;$("dbLoginOk").hidden=!ok||np;document.querySelector("#dbLogin .x").hidden=np;if(np){$("dbLgPE").textContent=/privaterelay\.appleid\.com$/i.test(user.email)?"your Hide My Email address":user.email;if($("dbLogin").hidden)open()}if(!ok)return;
+  var fresh=justMade||(user.metadata&&Date.now()-Date.parse(user.metadata.creationTime)<10*60000);$("dbLgNew").hidden=!fresh;$("dbLgOkH").textContent=fresh?"Welcome to DrugBug":"You're logged in";
   $("dbLgW").textContent=(me&&me.name)||user.email||"";$("dbLgT").textContent=(me&&me.title)||"";
   var r=role(),a=$("dbLgA");a.hidden=!r;a.href=adminHref(r)}
 function open(){$("dbLogin").hidden=false;$("dbLgM").textContent="";showBox();boot().then(function(){showBox();if(!user)try{$("dbLgE").focus()}catch(e){}}).catch(function(){$("dbLgM").textContent="Couldn't load sign-in. Check your connection and try again.";fb=null})}
@@ -443,7 +446,14 @@ btn.addEventListener("click",function(e){e.preventDefault();open()});
 $("dbLogin").addEventListener("click",function(e){if(e.target.id==="dbLogin"||e.target.closest("[data-close]"))close()});
 document.addEventListener("keydown",function(e){if(e.key==="Escape"&&!$("dbLogin").hidden)close()});
 $("dbLgG").onclick=function(){$("dbLgM").textContent="";boot().then(function(a){return a.signInWithPopup(new firebase.auth.GoogleAuthProvider())}).catch(err)};
-$("dbLgB").onclick=function(){var em=$("dbLgE").value.trim(),pw=$("dbLgP").value;if(!em||!pw){$("dbLgM").textContent="Type your email and password.";return}$("dbLgM").textContent="Logging in…";boot().then(function(a){return a.signInWithEmailAndPassword(em,pw)}).then(function(){$("dbLgM").textContent="";$("dbLgP").value=""}).catch(err)};
+/* make an account right here instead of sending people into the app (owner, Nov 16 2026: "why is it sending people to the
+   app when they are trying to make an account on the webpage") */
+var mk=false,justMade=false;function mode(m){mk=m;$("dbLoginH").textContent=m?"Create your free account":"Log in";$("dbLgP2").hidden=!m;$("dbLgB").textContent=m?"Create account":"Log in";$("dbLgP").placeholder=m?"Password (8+ characters)":"Password";$("dbLgP").autocomplete=m?"new-password":"current-password";$("dbLgM").textContent="";$("dbLgSw").innerHTML=m?'Already have an account? <a href="#" id="dbLgMk">Log in</a>.':'No account yet? <a href="#" id="dbLgMk">Create a free one here</a>.';var g=$("dbLgG");if(g)g.textContent=m?"Sign up with Google":"Continue with Google"}
+$("dbLgSw").addEventListener("click",function(e){if(e.target.id!=="dbLgMk")return;e.preventDefault();mode(!mk);try{$("dbLgE").focus()}catch(x){}});
+function errMk(e){var c=(e&&(e.code||e.message))||"";$("dbLgM").textContent=/email-already-in-use/i.test(c)?"That email already has a DrugBug account. Log in instead.":/invalid-email/i.test(c)?"That email address doesn't look right.":/weak-password/i.test(c)?"Pick a longer password (8 or more characters).":/too-many/i.test(c)?"Too many tries. Wait a minute and try again.":/operation-not-allowed/i.test(c)?"Email sign-up isn't available right now. Use Google, or try again later.":"Couldn't make the account. "+((e&&e.message)||"")}
+$("dbLgB").onclick=function(){if(mk){var em2=$("dbLgE").value.trim(),p1=$("dbLgP").value,p2=$("dbLgP2").value;if(!em2||!p1){$("dbLgM").textContent="Type your email and a password.";return}if(p1.length<8){$("dbLgM").textContent="Use at least 8 characters for the password.";return}if(p1!==p2){$("dbLgM").textContent="The two passwords don't match.";return}$("dbLgM").textContent="Making your account…";justMade=true;boot().then(function(a){return a.createUserWithEmailAndPassword(em2,p1)}).then(function(){$("dbLgM").textContent="";$("dbLgP").value=$("dbLgP2").value="";mode(false);showBox()}).catch(function(e){justMade=false;errMk(e)});return}
+  var em=$("dbLgE").value.trim(),pw=$("dbLgP").value;if(!em||!pw){$("dbLgM").textContent="Type your email and password.";return}$("dbLgM").textContent="Logging in…";boot().then(function(a){return a.signInWithEmailAndPassword(em,pw)}).then(function(){$("dbLgM").textContent="";$("dbLgP").value=""}).catch(err)};
+$("dbLgP2").addEventListener("keydown",function(e){if(e.key==="Enter")$("dbLgB").click()});
 $("dbLgP").addEventListener("keydown",function(e){if(e.key==="Enter")$("dbLgB").click()});
 $("dbLgO").onclick=function(){boot().then(function(a){return a.signOut()}).then(close)};
 $("dbLogin").addEventListener("click",function(e){if(e.target.closest("[data-out]"))$("dbLgO").click()});
