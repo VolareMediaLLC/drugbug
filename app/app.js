@@ -722,7 +722,7 @@ function viewHome() {
     var hit = S.pointGo === go;
     return '<button class="route rmini ' + cls + pt(go) + '" ' + (hit ? 'data-startlearn="' + go + '"' : go.indexOf("level:") === 0 ? 'data-level="' + go.slice(6) + '"' : 'data-go="' + go + '"') + '>' + (hit ? PT : '') + '<span class="mtx"><h2>' + title + '</h2><p>' + line + '</p>' + (ROUTE_MORE[cls] ? '<ul class="rmore">' + ROUTE_MORE[cls].map(function (x) { return '<li>' + esc(x) + '</li>'; }).join("") + '</ul>' : '') + (fun ? routeChips(cls) : '') + '</span><span class="mbug">' + art + '</span></button>';
   }
-  return topbar() + '<div class="homewrap' + hcls + '" data-hol="' + (HOL ? esc(holKey(HOL)) : '') + '">' + homeSearch() + (typeof homeClassCard === "function" ? homeClassCard() : '') + homeTip() + homeAgeAsk() +
+  return topbar() + '<div class="homewrap' + hcls + '" data-hol="' + (HOL ? esc(holKey(HOL)) : '') + '">' + homeSearch() + (typeof homeClassCard === "function" ? homeClassCard() : '') + homeTip() +
    heroHTML() + loginCard() +
    homeStart() + homeProgress() + (typeof trialBanner === "function" ? trialBanner() : '') +
    '<h3 class="homegh">Look it up</h3><section class="routes"><div class="minis one">' +
@@ -1436,6 +1436,7 @@ function scenView(s, list, inSess) {
     if (st.checked) cls = correct.indexOf(id) >= 0 ? (st.sel[id] ? " right" : " missed") : ok.indexOf(id) >= 0 ? (st.sel[id] ? " right" : "") : (st.sel[id] ? " wrong" : "");
     return '<button class="opt' + cls + '" data-opt="' + id + '" aria-pressed="' + !!st.sel[id] + '"' + (st.checked ? " disabled" : "") + '>' + esc(nameOf(id)) + '</button>';
   }).join("") + '</div>';
+  if (!st.checked && inSess === "rush") c += decBar("ds-" + s.id + "-" + (S.rush ? S.rush.n : 0), decSecs(s.acu || "red", s.text + " " + (s.ask || ""), 0, 3 * st.opts.length), function () { var b = document.querySelector('[data-act="check"]'); if (b) b.click(); });
   if (!st.checked) c += '<div class="actions"><button class="btn" data-act="check">Check answer</button></div>';
   else {
     var hit = correct.filter(function (id) { return st.sel[id]; }).length, bad = wrong.filter(function (id) { return st.sel[id]; }).length;
@@ -2733,6 +2734,7 @@ document.addEventListener("click", function (e) {
     case "full": S.full = !S.full; drawSheet(); return;
     case "scenback": S.scen = null; return render();
     case "check":
+      if (typeof decStop === "function") decStop();
       S.scen.checked = true;
       var s = scenList().filter(function (x) { return x.id === S.scen.id; })[0], cor = pickByLevel(s.correct), wr = pickByLevel(s.wrong);
       if (S.tab === "rush" && typeof rushScore === "function") rushScore(0, cor.every(function (id) { return S.scen.sel[id]; }) && !wr.some(function (id) { return S.scen.sel[id]; }) ? 1 : 0, 1);
@@ -4456,7 +4458,9 @@ function revHTML(q) {
      more often for their people */
   try { var bo = boostTarget(); if (bo) { var on = boostHas(k); c += '<div class="qrevrow"><button type="button" class="qrevv bst' + (on ? ' on' : '') + '" data-qrboost="1">' + (on ? '\u2605 Boosted for ' : 'Boost for ') + esc(bo.name) + '</button>' + boostPick() + '</div>'; } } catch (e) {}
   try { var fp = evFieldPct(q.lv); if (fp) c += '<p class="qrevguide qrevfp">' + esc(fp.name) + ' questions: <b>' + fp.pct + '% graded</b> · ' + (100 - fp.pct) + '% not graded yet (' + fp.g.toLocaleString() + ' of ' + fp.n.toLocaleString() + ' graded)</p>'; } catch (e) {}
-  c += '<div class="qrevs"><textarea maxlength="1000" placeholder="Suggestion (optional): a better wording, a wrong answer, a missing fact…" data-qrs="1">' + esc(R.s || "") + '</textarea><button type="button" class="btn small" data-qrsend="1">Send suggestion</button></div>';
+  /* let people know their suggestion went through (owner, Nov 16 2026) */
+  var sst = R.sSending ? '<p class="qrsst wait" role="status">Sending your suggestion…</p>' : R.sOk && R.s ? '<p class="qrsst ok" role="status">\u2713 Suggestion sent. The DrugBug team has it. Thank you!' + (R.sOkAt ? ' <span>' + esc(new Date(R.sOkAt).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })) + '</span>' : '') + '</p>' : R.sErr ? '<p class="qrsst bad" role="alert">' + esc(R.sErr) + ' Your text is still here, so tap Send to try again.</p>' : '';
+  c += '<div class="qrevs"><textarea maxlength="1000" placeholder="Suggestion (optional): a better wording, a wrong answer, a missing fact…" data-qrs="1">' + esc(R.s || "") + '</textarea><button type="button" class="btn small" data-qrsend="1"' + (R.sSending ? ' disabled' : '') + '>' + (R.sSending ? 'Sending…' : R.sOk && R.s ? 'Send changes' : 'Send suggestion') + '</button></div>' + sst;
   return c + '</div>';
 }
 /* Evaluators grade EVERY question (owner, Nov 13 2026: "evaluate everything including exam questions").
@@ -4539,8 +4543,8 @@ function revSave(k, el) {
   var R = (Prog.d.qrev || (Prog.d.qrev = {}))[k] || (Prog.d.qrev[k] = {}), q = QRATE_Q[k] || {};
   R.sent = false; R.err = ""; saveProg();
   fnCall("qrRate", { gift: Prog.d.reviewer.id, id: k, d: R.d || null, v: R.v || null, nr: null, more: R.v === "off" && R.more && R.more.length ? R.more : null, rel: R.v === "off" ? (R.rel || null) : null, weak: R.weak && R.weak.length ? R.weak : null, where: R.v === "off" ? (S.level || q.lv || "") : null, s: R.s || null, lv: q.lv || (S.level || "") })
-    .then(function () { var first = !R.counted; R.sent = true; R.counted = true; R.err = ""; saveProg(); if (first && EVS && !EVS.exempt) { EVS.thisWeek = (EVS.thisWeek || 0) + 1; evSaveLocal(); } revRedraw(k); if (typeof ANA !== "undefined") { ANA.at = 0; ADM_T = 0; setTimeout(admStats, 1200); } if (/^qp/.test(k)) setTimeout(function () { pilFetch(true); }, 1500); })
-    .catch(function (e) { var m = (e && e.message) || ""; if (/agreement/i.test(m)) { EVS = Object.assign(EVS || {}, { signed: false }); evAgreeOpen(); } else if (/status ended/i.test(m)) { evStatusLoad(true); } R.err = m === "offline" ? "Not saved: no internet" : "Not saved: " + (m || "try again"); revRedraw(k); });
+    .then(function () { if (R.sSending) { R.sSending = false; R.sOk = true; R.sOkAt = Date.now(); try { var tz = document.createElement("div"); tz.className = "toast"; tz.setAttribute("role", "status"); tz.textContent = "Suggestion sent. Thank you!"; document.body.appendChild(tz); setTimeout(function () { tz.remove(); }, 3500); } catch (x) {} } var first = !R.counted; R.sent = true; R.counted = true; R.err = ""; saveProg(); if (first && EVS && !EVS.exempt) { EVS.thisWeek = (EVS.thisWeek || 0) + 1; evSaveLocal(); } revRedraw(k); if (typeof ANA !== "undefined") { ANA.at = 0; ADM_T = 0; setTimeout(admStats, 1200); } if (/^qp/.test(k)) setTimeout(function () { pilFetch(true); }, 1500); })
+    .catch(function (e) { var m = (e && e.message) || ""; if (R.sSending) { R.sSending = false; R.sOk = false; R.sErr = m === "offline" ? "Not sent: no internet." : "Not sent: " + (m || "something went wrong") + "."; } if (/agreement/i.test(m)) { EVS = Object.assign(EVS || {}, { signed: false }); evAgreeOpen(); } else if (/status ended/i.test(m)) { evStatusLoad(true); } R.err = m === "offline" ? "Not saved: no internet" : "Not saved: " + (m || "try again"); revRedraw(k); });
   revRedraw(k);
 }
 function revRedraw(k) {
@@ -4573,7 +4577,7 @@ document.addEventListener("click", function (e) {
   }
   if (b.hasAttribute("data-qrwksend")) { if (!(R.weak || []).length) return; R.wkOpen = false; }
   if (b.hasAttribute("data-qrv")) { var v = b.getAttribute("data-qrv"); R.v = R.v === v ? null : v; if (R.v === "off") revRedraw(k); }
-  if (b.hasAttribute("data-qrsend")) { var ta = box.querySelector("textarea"); R.s = ta ? ta.value.trim().slice(0, 1000) : ""; if (!R.s) { R.err = "Type a suggestion first"; return revRedraw(k); } }
+  if (b.hasAttribute("data-qrsend")) { var ta = box.querySelector("textarea"); R.s = ta ? ta.value.trim().slice(0, 1000) : ""; if (!R.s) { R.err = "Type a suggestion first"; return revRedraw(k); } R.sSending = true; R.sOk = false; R.sErr = ""; revRedraw(k); }
   clearTimeout(QREV_T[k]); QREV_T[k] = setTimeout(function () { revSave(k); }, b.hasAttribute("data-qrsend") ? 0 : 500);
 }, true);
 document.addEventListener("change", function (e) {
@@ -7001,8 +7005,11 @@ function lmFrame() {
   while (LM.beepTimes.length && LM.beepTimes[0] <= now) { var bt = LM.beepTimes.shift(); if (now - bt < 0.25 && !document.hidden) lmBeat(); }
   if (now > LM.hrAt) { LM.hrAt = now + 1.2; LM.hrShow = LM_ORG[LM.rh] && now > LM.pause ? Math.round(LM.hr) : 0; var el = document.getElementById("lmhr"); if (el) el.textContent = lmHrText(); }
 }
+/* evaluators: once a question is answered and its grading panel is open, the monitor goes quiet until they move on to
+   the next question (owner, Nov 16 2026: "after you grade the question as an evaluator mute the monitor") */
+function monMuted() { try { if (!(typeof evIsEval === "function" && evIsEval())) return false; var L = document.querySelectorAll(".qrev, #revfdlg:not([hidden]) .panel"); for (var i = 0; i < L.length; i++) if (L[i].offsetParent !== null) return true; return false; } catch (e) { return false; } }
 function lmBeat() {
-  if (!SET().sfx || MONS.shock) return;
+  if (!SET().sfx || MONS.shock || monMuted()) return;
   var c = audioCtx(); if (!c) return;
   if (c.state === "suspended") { try { c.resume(); } catch (e) {} return; }
   sfxPlay("monbeep", 0, 0.32);
@@ -7051,7 +7058,7 @@ function megaView2() {
   }
   var cs = st.cs, step = cs.steps[st.i];
   if (st.done) return megaDone();
-  var ans = st.ans[st.i], c = '<section class="mega run"><div class="mchead"><div><span class="eyebrow">' + esc(cs.title) + '</span><p class="muted small">' + esc(cs.age) + ' · ' + cs.kg + ' kg · Decision ' + (st.i + 1) + ' of ' + cs.steps.length + '</p></div>' + (S.tab === "rush" ? '' : '<button class="linkish" data-act="megaquit">End code</button>') + '</div>';
+  var ans = st.ans[st.i], c = '<section class="mega run"><div class="mchead"><div><span class="eyebrow">' + esc(rhyTitle(cs.title, false)) + '</span><p class="muted small">' + esc(cs.age) + ' · ' + cs.kg + ' kg · Decision ' + (st.i + 1) + ' of ' + cs.steps.length + '</p></div>' + (S.tab === "rush" ? '' : '<button class="linkish" data-act="megaquit">End code</button>') + '</div>';
   if (st.i === 0 && ans == null) c += '<p class="vignette">' + esc(cs.intro) + '</p>';
   c += monitor(step, ans != null) + '<p class="vignette">' + esc(step.text) + '</p>';
   if (ans == null && megaTimed()) c += '<div class="mctimer"><span id="mctime">' + Math.ceil(st.left) + '</span>s<i style="width:' + Math.round(100 * st.left / megaSecs(step)) + '%" id="mcbar"></i></div>';
@@ -7471,6 +7478,11 @@ function pvPlFrame() {
 function pvCall(cs, C) {
   var pl = pvPlan(cs); if (C.i < pl.contact || C.i >= cs.steps.length) return "";
   var mode = cs.mon || (pvALS() ? "full" : "bls"); if (mode === "none") return "";
+  /* a heart monitor wherever the call needs one (owner, Nov 16 2026: "make sure any of the bug rushes that required a
+     monitor and heart monitor are on there"): an ALS player on a BLS-written call gets the full monitor, and a plain-vitals
+     call switches to the full monitor from the part where the story brings in an ECG, telemetry, a code or a lethal rhythm */
+  if (mode === "bls" && pvALS()) mode = "full";
+  if (mode === "vitals" && pvNeedEcg(cs, C.i)) mode = "full";
   var stp = cs.steps[C.i], v = pl.plan[C.i], n = pl.normal, key = cs.id + ":" + C.i + ":" + (C.ans == null ? "q" : "a"), tgt = v, trend = 0;
   if (!v) return "";
   if (C.ans != null) {
@@ -7478,9 +7490,20 @@ function pvCall(cs, C) {
     tgt = ov ? Object.assign({}, v, ov) : Object.assign(right ? pvBetter(v, n) : pvWorse(v, n), { rh: v.rh }); trend = right ? 1 : -1;
     if (!ov && /^(vf|vt-np|asys|pea|torsades)$/.test(v.rh)) tgt = v;
   }
-  PV.mode = mode; PV.pumps = stp.pumps || [];
+  /* don't give away the answer (owner, Nov 16 2026): while the question is open the pumps show what was already running
+     (the previous part's drips); the drug or change this part asks about shows on the pump only after you answer */
+  PV.mode = mode; PV.pumps = C.ans == null ? (C.i > 0 ? (cs.steps[C.i - 1].pumps || []) : []) : (stp.pumps || []);
   pvSync(key, tgt, C.ans != null ? 4 : 3, { fresh: PV.key.indexOf(cs.id + ":") !== 0, trend: trend, etco2: C.i >= pl.etco2At });
   return pvHTML(/^(rn|lvn|cna)$/.test(cs.lv) ? "nurse" : /^(im)$/.test(cs.lv) ? "imaging" : "field");
+}
+var PV_ECG_RX = /\b(ECG|EKG|12-lead|telemetry|cardiac monitor|monitor shows|rhythm strip|defibrillat\w*|AED|code blue|pulseless|no pulse|peaked T|cardiac arrest)\b/i;
+function pvNeedEcg(cs, i) {
+  for (var j = 0; j <= i && j < cs.steps.length; j++) {
+    var st = cs.steps[j], rh = st.v && st.v.rh;
+    if (PV_ECG_RX.test((st.story || "") + " " + (st.q || ""))) return true;
+    if (rh && /^(vf|vt|vt-np|asys|pea|torsades|chb)$/.test(rh)) return true;
+  }
+  return false;
 }
 /* Bug Rush treatment case (select every medication): its listed vitals, and the change once you check */
 function pvScen(s, st) {
@@ -7530,10 +7553,51 @@ function autoBar(key, secs, label) {
 function autoGo(key) { return autoOn() && AUTO.stay !== key ? ' data-autogo="' + key + '"' : ''; }
 function autoCancel() { clearTimeout(AUTO.timer); AUTO.key = ""; }
 
+/* ===== Decision timer (owner, Nov 16 2026) =====
+   "Add a timer to all of the questions based off of the priority. So worse calls speed up the timer. Don't make evaluators
+   have the timer though. They need time to grade." ... "make sure they have enough time to answer the questions for all of them."
+   Every Bug Rush call part and treatment case gets a countdown: Critical 15 s, Red 17 s, Yellow 19 s, Green 21 s. It starts
+   after a reading period sized to the story, question and answers, so there is always time to read first. Running out counts
+   as no decision (wrong). Paused while the app is in the background. Evaluators and question reviewers never see it. */
+var DEC = { key: "", end: 0, secs: 0, iv: 0, onEnd: null, hid: 0, readEnd: 0 };
+/* owner, Nov 16 2026: "for high acuity calls we want 15 seconds. For red calls 17 seconds. for yellow 19 and for green 21".
+   That countdown starts once there has been time to read the story, the question and the answers (about 3 words a second),
+   so everyone still has enough time to read before the clock runs. */
+var DEC_ACU = { critical: 15, red: 17, yellow: 19, green: 21 };
+function decSecs(acu, text, wrongs, extra) {
+  var w = String(text || "").replace(/<[^>]*>/g, " ").split(/\s+/).filter(Boolean).length;
+  return { read: Math.round(Math.min(60, 2 + w / 3 + (extra || 0))), decide: DEC_ACU[acu] || 17 };
+}
+function decStop() { clearInterval(DEC.iv); DEC.iv = 0; DEC.key = ""; DEC.onEnd = null; }
+function decTick() {
+  var el = document.getElementById("dec-s"), bar = document.getElementById("dec-i");
+  if (!el) { decStop(); return; }   /* left the screen: the next visit starts a fresh timer */
+  var now = Date.now();
+  if (document.hidden) { if (!DEC.hid) DEC.hid = now; return; }
+  if (DEC.hid) { DEC.end += now - DEC.hid; DEC.readEnd += now - DEC.hid; DEC.hid = 0; }
+  if (now < DEC.readEnd) { el.textContent = "Read the call · timer starts in " + Math.ceil((DEC.readEnd - now) / 1000) + " s"; if (bar) bar.style.width = "100%"; return; }
+  var left = Math.max(0, (DEC.end - now) / 1000), frac = left / DEC.secs;
+  el.textContent = left > 0 ? "Decide in " + Math.ceil(left) + " s" : "Time's up";
+  if (bar) bar.style.width = (100 * frac).toFixed(1) + "%";
+  var box = el.closest(".dectimer"); if (box) { box.classList.remove("reading"); box.classList.toggle("low", left <= 5); }
+  if (left <= 0) { var f = DEC.onEnd; decStop(); if (f) try { f(); } catch (e) {} }
+}
+function decBar(key, secs, onEnd) {
+  if (!autoOn()) return "";   /* evaluators and reviewers: no timer */
+  if (DEC.key !== key) { decStop(); DEC.key = key; DEC.secs = secs.decide; DEC.readEnd = Date.now() + secs.read * 1000; DEC.end = DEC.readEnd + secs.decide * 1000; DEC.hid = 0; }
+  DEC.onEnd = onEnd;
+  if (!DEC.iv) DEC.iv = setInterval(decTick, 250);
+  var now = Date.now(), reading = now < DEC.readEnd, left = Math.max(0, (DEC.end - now) / 1000);
+  return '<div class="dectimer' + (reading ? ' reading' : '') + '" role="timer" aria-live="off"><div class="decbar"><i id="dec-i" style="width:' + (reading ? 100 : (100 * left / DEC.secs)).toFixed(1) + '%"></i></div><span id="dec-s">' + (reading ? 'Read the call · timer starts in ' + Math.ceil((DEC.readEnd - now) / 1000) + ' s' : 'Decide in ' + Math.ceil(left) + ' s') + '</span></div>';
+}
+/* don't give away the rhythm (owner, Nov 16 2026: "On questions like what is the rhythm make sure its not telling you what
+   the rhythm is above it"): a call or code title that names a rhythm or an ECG diagnosis stays hidden until the end */
+var RHY_LEAK = /(V-?fib|ventricular fib|\bVF\b|V-?tach|ventricular tach|\bVT\b|asystole|\bPEA\b|torsades|\bSVT\b|atrial fib|a-?fib|flutter|heart block|AV block|bradycardia|tachycardia|STEMI|long QT|WPW|idioventricular|junctional)/i;
+function rhyTitle(title, done) { return !done && RHY_LEAK.test(String(title || "")) ? "Patient in front of you" : title; }
 function rushCase(id) { return (DB.CASES || []).filter(function (c) { return c.id === id; })[0]; }
 function rushCallView(R) {
   var C = R.call, cs = rushCase(C.id); if (!cs) { R.cur = null; return ""; }
-  var c = '<section class="rushcall"><span class="eyebrow">Developing call</span>' + acuTag(cs.acu) + '<h2>' + esc(cs.title) + '</h2>';
+  var c = '<section class="rushcall"><span class="eyebrow">Developing call</span>' + acuTag(cs.acu) + '<h2>' + esc(rhyTitle(cs.title, C.i >= cs.steps.length)) + '</h2>';
   if (C.i >= cs.steps.length) {
     var pct = Math.round(100 * C.right / cs.steps.length), good = pct >= 75, mid = pct >= 50;
     c += '<div class="learncard done"><span class="eyebrow">Handoff</span><p class="big">' + pct + '%</p><p>' + C.right + ' of ' + cs.steps.length + ' decisions right on this call.</p>' +
@@ -7543,7 +7607,17 @@ function rushCallView(R) {
   }
   var st = cs.steps[C.i];
   if (!C.order) C.order = shuffle([st.a].concat(st.w));
-  c += '<p class="muted small">Part ' + (C.i + 1) + ' of ' + cs.steps.length + '</p>' + pvCall(cs, C) + '<p class="vignette">' + esc(st.story) + '</p><h3 class="qstem">' + esc(st.q) + '</h3><div class="qopts">';
+  var dt = "";
+  if (C.ans == null) { C.wrongs = C.wrongs || 0; dt = decBar("dc-" + C.id + "-" + C.i + "-" + (S.rush ? S.rush.n : 0), decSecs(cs.acu, st.story + " " + st.q + " " + C.order.join(" "), C.wrongs, C.i > 0 ? 5 : 0), function () { rushCallAnswer(-1); }); }
+  /* look back at the scene size-up and earlier parts of the call (owner, Nov 16 2026: "add a way to view the scene size
+     up ... in case you need to view previous information"). Opens in place; the decision timer keeps running. */
+  var back = "";
+  if (C.i > 0) {
+    back = '<details class="rushback"><summary>Call so far: scene size-up and parts 1' + (C.i > 1 ? '\u2013' + C.i : '') + '</summary><ol>' + cs.steps.slice(0, C.i).map(function (p, j) {
+      return '<li><span class="rbk">' + (j === 0 ? 'Scene size-up' : 'Part ' + (j + 1)) + '</span><p>' + esc(p.story) + '</p><p class="rbd"><b>Decision:</b> ' + esc(p.a) + '</p></li>';
+    }).join("") + '</ol></details>';
+  }
+  c += '<p class="muted small">Part ' + (C.i + 1) + ' of ' + cs.steps.length + '</p>' + back + pvCall(cs, C) + '<p class="vignette">' + esc(st.story) + '</p><h3 class="qstem">' + esc(st.q) + '</h3>' + dt + '<div class="qopts">';
   C.order.forEach(function (o, k) {
     var cls = C.ans == null ? "" : o === st.a ? " right" : C.ans === k ? " wrong" : " dim";
     c += '<button class="qopt' + cls + '" data-rushopt="' + k + '"' + (C.ans != null ? " disabled" : "") + '><span class="letter">' + "ABCD"[k] + '</span><span>' + esc(o) + '</span></button>';
@@ -7551,7 +7625,9 @@ function rushCallView(R) {
   c += '</div>';
   if (C.ans != null) {
     var right = C.order[C.ans] === st.a;
-    c += '<div class="explain ' + (right ? "ok" : "bad") + '"><strong>' + (right ? "Correct." : "Not the best choice.") + '</strong><p>' + (right ? "" : '<strong>Best: </strong>' + esc(st.a) + '. ') + esc(st.x) + '</p></div>';
+    c += '<div class="explain ' + (right ? "ok" : "bad") + '"><strong>' + (right ? "Correct." : C.ans < 0 ? "Time ran out. The patient waited." : "Not the best choice.") + '</strong><p>' + (right ? "" : '<strong>Best: </strong>' + esc(st.a) + '. ') + esc(st.x) + '</p></div>';
+    /* evaluators grade Bug Rush call parts too (owner, Nov 16 2026: "it won't let my evaluator grade some of the questions") */
+    if (typeof isReviewer === "function" && isReviewer()) c += qRateHTML({ id: "rc_" + String(cs.id).replace(/[^A-Za-z0-9-]/g, "") + "_" + C.i, lv: cs.lv, q: st.story + " " + st.q, a: st.a, w: st.w, x: st.x, d: "" });
     var rk = "rc-" + C.id + "-" + C.i, rlast = C.i >= cs.steps.length - 1;
     c += autoBar(rk, Math.max(4.5, autoSecs(st.x, right)), rlast ? "Handing off in a moment" : "The call continues in a moment");
     c += '<div class="actions"><button class="btn" data-act="rushcnext"' + autoGo(rk) + '>' + (rlast ? "Hand off" : "Continue the call") + '</button></div>';
@@ -7560,8 +7636,9 @@ function rushCallView(R) {
 }
 function rushCallAnswer(k) {
   var R = S.rush, C = R && R.call; if (!C || C.ans != null) return;
-  var cs = rushCase(C.id), st = cs.steps[C.i], right = C.order[k] === st.a;
-  C.ans = k; if (right) C.right++; feedback(right);
+  decStop();
+  var cs = rushCase(C.id), st = cs.steps[C.i], right = k >= 0 && C.order[k] === st.a;
+  C.ans = k; if (right) C.right++; else C.wrongs = (C.wrongs || 0) + 1; feedback(right);
   if (right) { Prog.d.xp += 10; earn(STICK_RIGHT); } else earn(STICK_TRY);
   try { secAnswer(right); } catch (e) {}
   saveProg();
@@ -8526,9 +8603,11 @@ function gateView() {
      again. If Apple's answer is declined, unknown or unavailable, the app's own question stays. */
   var apr = typeof ageRec === "function" ? ageRec() : null, appleAdult = !!(apr && apr.s === "adult" && Date.now() - (apr.ts || 0) < AGE_RECHECK);
   if (appleAdult) { g.age = "adult"; g.ageSrc = "apple"; c += '<p class="gnote gage-ok">&#10003; Age confirmed through your Apple Account: 18 or older.</p>'; }
-  else c += '<fieldset class="gfs"><legend>How old are you?</legend>' + [["adult", "I am 18 or older"], ["minor", "I am under 18"]].map(function (o) { return '<label class="chk"><input type="radio" name="gage" data-gage="' + o[0] + '"' + (g.age === o[0] ? " checked" : "") + '> ' + o[1] + '</label>'; }).join("") + '</fieldset>';
+  /* no separate age question (owner, Nov 16 2026: "stop asking people for their age just include that in the analytics
+     question"): the 18+ confirmation is part of the agreement checkbox, and the optional age range sits with the
+     usage statistics question. Apple's age signal still blocks minors on iPhone. */
   if (g.age === "minor") return c + '<div class="presult" role="alert">Sorry, DrugBug is for adults 18 and older only. Please close the app.</div></div>';
-  c += '<label class="chk gagree"><input type="checkbox" id="gok"' + (g.ok ? " checked" : "") + '> I agree to the <button class="linkish" data-legal="terms">Terms of Use</button> and understand that DrugBug is for study only and may not be used for patient care. The <button class="linkish" data-legal="privacy">Privacy Policy</button> explains how DrugBug handles my information.</label>';
+  c += '<label class="chk gagree"><input type="checkbox" id="gok"' + (g.ok ? " checked" : "") + '> ' + (appleAdult ? '' : 'I am 18 or older, and ') + (appleAdult ? 'I agree' : 'I agree') + ' to the <button class="linkish" data-legal="terms">Terms of Use</button> and understand that DrugBug is for study only and may not be used for patient care. The <button class="linkish" data-legal="privacy">Privacy Policy</button> explains how DrugBug handles my information.</label>';
   c += '<fieldset class="gfs gstats"><legend>Optional usage statistics</legend><p class="small">Help improve DrugBug by sharing optional usage statistics, such as time spent, sections opened, questions answered, your device\u2019s time zone and an optional age range. DrugBug uses a randomly generated device identifier for these statistics. You can change your choice in Settings.</p>' +
     '<div class="gstatbtns">' + [["yes", "Share"], ["no", "Do not share"]].map(function (o) { return '<label class="chk"><input type="radio" name="gstats" data-gstats="' + o[0] + '"' + (g.stats === o[0] ? " checked" : "") + '> ' + o[1] + '</label>'; }).join("") + '</div>' +
     '<label class="small gagerng">Age range (optional, sent only if you choose Share) ' + ageRangeSel() + '</label></fieldset>';
@@ -8861,7 +8940,7 @@ document.addEventListener("change", function (e) {
   var t = e.target;
   if (t.getAttribute && t.getAttribute("data-agerng")) { if (t.value) { ageRangeSet(t.value); if (!S.gate) render(); } return; }
   if (t.getAttribute && t.getAttribute("data-gage")) { S.gate = S.gate || {}; S.gate.age = t.getAttribute("data-gage"); render(); }
-  else if (t.id === "gok") { S.gate = S.gate || {}; S.gate.ok = t.checked; var b = $('[data-act="gateok"]'); if (b) b.disabled = !(S.gate.age && S.gate.ok && S.gate.stats); }
+  else if (t.id === "gok") { S.gate = S.gate || {}; S.gate.ok = t.checked; if (S.gate.ageSrc !== "apple") S.gate.age = t.checked ? "adult" : ""; var b = $('[data-act="gateok"]'); if (b) b.disabled = !(S.gate.age && S.gate.ok && S.gate.stats); }
   else if (t.getAttribute && t.getAttribute("data-gstats")) { S.gate = S.gate || {}; S.gate.stats = t.getAttribute("data-gstats"); var b2 = $('[data-act="gateok"]'); if (b2) b2.disabled = !(S.gate.age && S.gate.ok && S.gate.stats); }
   else if (t.getAttribute && t.getAttribute("data-cpk")) toggleComply(t.getAttribute("data-cpk"), t.checked);
 });
@@ -10305,6 +10384,7 @@ function monSoundTick() {
   if (hit && !MONS.shock) monBeat(m);
 }
 function monBeat(m) {
+  if (monMuted()) return;
   var c = audioCtx(); if (!c) return;
   if (c.state === "suspended") { try { c.resume(); } catch (e) {} return; }
   sfxPlay("monbeep", 0, 0.32);
@@ -13938,11 +14018,11 @@ var ACCT = { api: null, st: null, mode: "", msg: "", busy: false, del: null };
 function accInit() {
   if (!window.claude || typeof window.claude.use !== "function") return;
   window.claude.use("account").then(function (a) {
-    if (!a) return; ACCT.api = a; ACCT.st = a.state();
+    if (!a) return; ACCT.api = a; ACCT.st = a.state(); accBonusAuto(ACCT.st);
     render();   /* the first-run account step waits on this (modules/welcome.js) */
     try { if (typeof titleSync === "function") setTimeout(titleSync, 1500); } catch (e) {}
     try { setTimeout(pwGate, 400); } catch (e) {}
-    a.onChange(function (s) { ACCT.st = s; if (S.view === "settings") render(); try { if (typeof titleSync === "function") setTimeout(titleSync, 1200); } catch (e) {} try { setTimeout(pwGate, 400); } catch (e) {} try { if (typeof stxRolesFetch === "function") setTimeout(stxRolesFetch, 300); } catch (e) {} });
+    a.onChange(function (s) { ACCT.st = s; accBonusAuto(s); if (S.view === "settings") render(); try { if (typeof titleSync === "function") setTimeout(titleSync, 1200); } catch (e) {} try { setTimeout(pwGate, 400); } catch (e) {} try { if (typeof stxRolesFetch === "function") setTimeout(stxRolesFetch, 300); } catch (e) {} });
     if (S.view === "settings") render();
   }).catch(function () {});
 }
@@ -13960,6 +14040,18 @@ function accBonus() {
     try { localStorage.setItem("drugbug:progress", JSON.stringify(Prog.d)); } catch (e) {}
     return " You have seven days of Pro access. It ends automatically, with no payment method and no charge.";
   } catch (e) { return ""; }
+}
+/* an account made on the homepage (owner, Nov 16 2026) gets the same 7 days of website Pro the first time this browser's
+   app sees it, if it was made in the last 2 days and never had the bonus */
+function accBonusAuto(st) {
+  try {
+    if (NATIVE || !st || !st.signedIn || !st.created || Prog.d.acctBonus || Date.now() - st.created > 48 * 36e5) return;
+    setTimeout(function () {
+      if (Prog.d.acctBonus) return; var t = accBonus(); if (!t) return;
+      var el = document.createElement("div"); el.className = "toast"; el.setAttribute("role", "status"); el.textContent = "Welcome to DrugBug." + t; document.body.appendChild(el); setTimeout(function () { el.remove(); }, 7000);
+      try { render(); } catch (e) {}
+    }, 4000);
+  } catch (e) {}
 }
 function accDone(text, created) { if (created) text = (text || "") + accBonus(); ACCT.busy = false; ACCT.msg = text || ""; try { sessionStorage.setItem("drugbug:accmsg", ACCT.msg); } catch (e) {} setTimeout(function () { location.reload(); }, 300); }
 /* Every account needs a password (owner, Nov 14 2026: "make people have to make a password with their
@@ -33656,26 +33748,45 @@ document.addEventListener("visibilitychange", function () { if (document.visibil
 var evagdlg = document.createElement("div"); evagdlg.id = "evagdlg"; evagdlg.className = "sheet rsheet"; evagdlg.hidden = true; document.body.appendChild(evagdlg);
 function evAgreeOpen() { if (!evIsEval()) return; EVSIGN.msg = ""; evAgreeDraw(); evagdlg.hidden = false; }
 function evAgreeDraw() {
-  var all = EVAG_ACKS.every(function (a) { return EVSIGN.acks[a[0]]; }), nm = String(EVSIGN.name || "").trim();
-  evagdlg.innerHTML = '<div class="panel cipanel evagpanel" role="dialog" aria-modal="true" aria-labelledby="evagh" tabindex="-1"><h2 id="evagh">Evaluator agreement</h2>' +
+  /* a clear checklist (owner, Nov 16 2026: "make the evaluator check list much more clear that its a checklist acknowledging
+     they have to do this to be an evaluator"): numbered requirements, each ticked on its own, a live count, and signing only
+     unlocks when every requirement is acknowledged and a full name is typed */
+  var n = EVAG_ACKS.length, done = EVAG_ACKS.filter(function (a) { return EVSIGN.acks[a[0]]; }).length, nm = String(EVSIGN.name || "").trim();
+  var ready = done === n && /\S+\s+\S+/.test(nm);
+  evagdlg.innerHTML = '<div class="panel cipanel evagpanel" role="dialog" aria-modal="true" aria-labelledby="evagh" tabindex="-1">' +
+    '<p class="evagkick">Required to become an evaluator</p><h2 id="evagh">Evaluator requirements checklist</h2>' +
+    '<p class="evaglead">To be a DrugBug evaluator, you must agree to <b>all ' + n + ' requirements</b> below. Read each one and tick <b>I agree</b> to acknowledge it. If you do not agree to any one of them, you cannot be an evaluator.</p>' +
     '<p class="small">' + esc(EVAG_EASE) + '</p>' +
-    '<p class="muted small">Please read each point and tick it, then type your full name to sign. Version ' + EVAG_V + '.</p>' +
-    EVAG_ACKS.map(function (a) { return '<label class="chk evag"><input type="checkbox" data-evack="' + a[0] + '"' + (EVSIGN.acks[a[0]] ? ' checked' : '') + '> <span>' + (a[2] ? '<b>' + esc(a[2]) + '</b> ' : '') + esc(a[1]) + '</span></label>'; }).join("") +
-    '<label class="gl" style="margin-top:10px">Type your full name to sign<input class="pinput" id="evagname" autocomplete="name" maxlength="80" placeholder="First and last name" value="' + esc(EVSIGN.name || "") + '"></label>' +
-    '<p class="muted small">Signed ' + new Date().toLocaleDateString() + '. DrugBug keeps a copy with the date and time.</p>' +
+    '<div class="evagprog" aria-live="polite"><span class="evagbar"><i style="width:' + Math.round(100 * done / n) + '%"></i></span><b id="evagcount">' + done + ' of ' + n + ' acknowledged</b></div>' +
+    '<ol class="evaglist">' + EVAG_ACKS.map(function (a, i) {
+      var on = !!EVSIGN.acks[a[0]];
+      return '<li class="evagitem' + (on ? ' on' : '') + '"><div class="evagnum" aria-hidden="true">' + (i + 1) + '</div><div class="evagbody"><p class="evagt">Requirement ' + (i + 1) + ' of ' + n + ': <b>' + esc(a[2].replace(/\.$/, "")) + '</b></p><p class="evagtext">' + esc(a[1]) + '</p>' +
+        '<label class="evagok"><input type="checkbox" data-evack="' + a[0] + '"' + (on ? ' checked' : '') + '> <span>I agree to requirement ' + (i + 1) + '</span></label></div></li>';
+    }).join("") + '</ol>' +
+    '<label class="gl evagsign">Sign: type your full name to confirm you agree to all ' + n + ' requirements<input class="pinput" id="evagname" autocomplete="name" maxlength="80" placeholder="First and last name" value="' + esc(EVSIGN.name || "") + '"></label>' +
+    '<p class="muted small">Signed ' + new Date().toLocaleDateString() + '. DrugBug keeps a copy with the date and time. Version ' + EVAG_V + '.</p>' +
     (EVSIGN.msg ? '<p class="presult" role="alert">' + esc(EVSIGN.msg) + '</p>' : '') +
-    '<div class="actions"><button class="btn" data-evag="sign"' + (EVSIGN.busy ? ' disabled' : '') + '>' + (EVSIGN.busy ? 'Signing…' : 'I agree and sign') + '</button><button class="btn ghost" data-evag="later">Not now</button></div>' +
-    '<p class="muted small">Not now: you can keep studying, but grading stays off until you sign.</p></div>';
+    '<div class="actions"><button class="btn" data-evag="sign" id="evagbtn"' + (EVSIGN.busy || !ready ? ' disabled' : '') + '>' + (EVSIGN.busy ? 'Signing…' : 'I agree to all ' + n + ' and sign') + '</button><button class="btn ghost" data-evag="later">Not now</button></div>' +
+    '<p class="muted small" id="evaghint">' + (done < n ? 'Tick all ' + n + ' requirements to continue (' + (n - done) + ' left).' : !ready ? 'Now type your first and last name to sign.' : 'Ready to sign.') + ' Not now: you can keep studying, but grading stays off until you sign.</p></div>';
   var p = evagdlg.querySelector(".panel"); if (p) p.focus();
 }
-evagdlg.addEventListener("change", function (e) { var k = e.target.getAttribute && e.target.getAttribute("data-evack"); if (k) EVSIGN.acks[k] = e.target.checked; });
-evagdlg.addEventListener("input", function (e) { if (e.target.id === "evagname") EVSIGN.name = e.target.value; });
+/* update the count, the ticked card and the sign button without redrawing (keeps the scroll position) */
+function evAgreeRefresh() {
+  var n = EVAG_ACKS.length, done = EVAG_ACKS.filter(function (a) { return EVSIGN.acks[a[0]]; }).length, ready = done === n && /\S+\s+\S+/.test(String(EVSIGN.name || "").trim());
+  var c = document.getElementById("evagcount"); if (c) c.textContent = done + " of " + n + " acknowledged";
+  var bar = evagdlg.querySelector(".evagbar i"); if (bar) bar.style.width = Math.round(100 * done / n) + "%";
+  evagdlg.querySelectorAll("[data-evack]").forEach(function (cb) { var li = cb.closest(".evagitem"); if (li) li.classList.toggle("on", cb.checked); });
+  var b = document.getElementById("evagbtn"); if (b && !EVSIGN.busy) b.disabled = !ready;
+  var h = document.getElementById("evaghint"); if (h) h.textContent = (done < n ? "Tick all " + n + " requirements to continue (" + (n - done) + " left)." : !ready ? "Now type your first and last name to sign." : "Ready to sign.") + " Not now: you can keep studying, but grading stays off until you sign.";
+}
+evagdlg.addEventListener("change", function (e) { var k = e.target.getAttribute && e.target.getAttribute("data-evack"); if (k) { EVSIGN.acks[k] = e.target.checked; evAgreeRefresh(); } });
+evagdlg.addEventListener("input", function (e) { if (e.target.id === "evagname") { EVSIGN.name = e.target.value; evAgreeRefresh(); } });
 evagdlg.addEventListener("click", function (e) {
   var b = e.target.closest && e.target.closest("[data-evag]"); if (!b) return;
   var act = b.getAttribute("data-evag");
   if (act === "later" || act === "close") { evagdlg.hidden = true; evagdlg.innerHTML = ""; return; }
   var ni = document.getElementById("evagname"); if (ni) EVSIGN.name = ni.value;
-  if (!EVAG_ACKS.every(function (a) { return EVSIGN.acks[a[0]]; })) { EVSIGN.msg = "Please tick every box."; return evAgreeDraw(); }
+  if (!EVAG_ACKS.every(function (a) { return EVSIGN.acks[a[0]]; })) { EVSIGN.msg = "Please tick I agree on all " + EVAG_ACKS.length + " requirements."; return evAgreeDraw(); }
   if (!(typeof giftNameOk === "function" ? giftNameOk(EVSIGN.name) : /\S+\s+\S+/.test(EVSIGN.name))) { EVSIGN.msg = "Type your full name (first and last) to sign."; return evAgreeDraw(); }
   EVSIGN.busy = true; EVSIGN.msg = ""; evAgreeDraw();
   fnCall("evalSign", { gift: Prog.d.reviewer.id, name: EVSIGN.name.trim(), acks: EVAG_ACKS.map(function (a) { return a[0]; }), v: EVAG_V }).then(function (r) {
