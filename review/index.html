@@ -170,7 +170,7 @@ ol.opts{gap:5px}ol.opts li{padding:7px 10px;font-size:15px}
       </select>
       <select id="fLv" aria-label="Level"><option value="">All levels</option></select>
       <select id="fV" aria-label="Review status">
-        <option value="un">Not reviewed yet</option><option value="audit">Audit: pulled for a Bad grade, waiting for you</option><option value="">Everything</option><option value="unchk">Not checked by an evaluator yet</option><option value="chk">Checked by an evaluator</option><option value="rated">Has difficulty ratings</option><option value="good">Marked good</option><option value="bad">Marked bad (by you or an evaluator)</option><option value="off">Marked not relevant</option><option value="rvbad">Marked bad by an evaluator</option><option value="mybad">Marked bad by you (this page)</option><option value="rvsug">Reviewers left a suggestion</option><option value="rvany">Any reviewer feedback</option><option value="ed">Edited by me</option>
+        <option value="todo">Evaluator changes waiting for you</option><option value="un">Not reviewed yet</option><option value="audit">Audit: pulled for a Bad grade, waiting for you</option><option value="">Everything</option><option value="unchk">Not checked by an evaluator yet</option><option value="chk">Checked by an evaluator</option><option value="rated">Has difficulty ratings</option><option value="good">Marked good</option><option value="bad">Marked bad (by you or an evaluator)</option><option value="off">Marked not relevant</option><option value="rvbad">Marked bad by an evaluator</option><option value="mybad">Marked bad by you (this page)</option><option value="rvsug">Reviewers left a suggestion</option><option value="rvany">Any reviewer feedback</option><option value="ed">Edited by me</option>
       </select>
       <select id="fSort" aria-label="Order"><option value="">Question order</option><option value="hard">Rated hardest first</option><option value="easy">Rated easiest first</option><option value="many">Most ratings first</option></select>
       <label class="tg"><input type="checkbox" id="fFlag"> Rule breakers only</label>
@@ -268,6 +268,9 @@ ol.opts{gap:5px}ol.opts li{padding:7px 10px;font-size:15px}
       var rv = REVS[q.id] || [];
       if (v === "rvbad" && !rv.some(function (x) { return x.v === "bad"; })) return false;
       if (v === "audit" && !inAudit(q)) return false;
+      /* evaluator feedback you haven't acted on: a Bad or Not relevant vote, a suggestion or weak wrong answers newer than
+         your own last decision, plus anything pulled into the audit or held as a pilot (owner, Nov 16 2026) */
+      if (v === "todo" && !(inAudit(q) || rv.some(function (x) { return (x.v === "bad" || x.v === "off" || x.s || (x.weak && x.weak.length)) && (!r || !r.ts || (x.at || 0) > r.ts); }))) return false;
       if (v === "bad" && !(r && r.v === "bad") && !rv.some(function (x) { return x.v === "bad"; })) return false;
       if (v === "mybad" && !(r && r.v === "bad")) return false;
       if (v === "rvsug" && !rv.some(function (x) { return x.s; })) return false;
@@ -275,7 +278,7 @@ ol.opts{gap:5px}ol.opts li{padding:7px 10px;font-size:15px}
       if (v === "rated" && !avgOf(q).n) return false;
       if (v === "unchk" && SEEN[q.id]) return false;
       if (v === "chk" && !SEEN[q.id]) return false;
-      if (v && v !== "un" && v !== "ed" && v !== "rated" && v !== "unchk" && v !== "chk" && v !== "bad" && v !== "mybad" && v !== "audit" && v.indexOf("rv") !== 0 && !(r && r.v === v)) return false;
+      if (v && v !== "todo" && v !== "un" && v !== "ed" && v !== "rated" && v !== "unchk" && v !== "chk" && v !== "bad" && v !== "mybad" && v !== "audit" && v.indexOf("rv") !== 0 && !(r && r.v === v)) return false;
       if (fo && !flags(q).length) return false;
       if (s && q._s.indexOf(s) < 0) return false;
       return true;
@@ -463,15 +466,21 @@ ol.opts{gap:5px}ol.opts li{padding:7px 10px;font-size:15px}
   }
   /* ---------- start ---------- */
   LEVELS.forEach(function (l) { var o = document.createElement("option"); o.value = l[0]; o.textContent = l[1]; $("fLv").appendChild(o); });
+  var urlV = (location.search.match(/[?&]v=([a-z]+)/) || [])[1];
   try { var F = JSON.parse(store.get("qr-filters") || "null"); if (F) { $("fBank").value = F.bk || ""; $("fLv").value = F.lv || ""; $("fV").value = F.v == null ? "un" : F.v; $("fFlag").checked = !!F.fo; $("fQ").value = F.s || ""; $("fSort").value = F.so || ""; } } catch (e) {}
+  if (urlV && document.querySelector('#fV option[value="' + urlV + '"]')) { $("fV").value = urlV; $("fBank").value = ""; $("fLv").value = ""; $("fQ").value = ""; $("fFlag").checked = false; }
   $("bGoogle").onclick = function () { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(function (e) { msg("inMsg", e.message); }); };
   /* questions sent back to the pilot pool by a drug-data update (owner, Nov 9 2026): the app's update
      file lists them; here the old copy is swapped for the re-check copy so evaluators and the owner
      grade the new "qp" id, which is what pilotStatus counts */
   var qsP = Promise.all([fetch("questions.json").then(function (r) { return r.json(); }),
-    fetch("../app/content/manifest.json", { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (m) { return m && /^updates-[0-9]+\.json$/.test(m.file) ? fetch("../app/content/" + m.file, { cache: "no-store" }).then(function (r) { return r.json(); }) : null; }).catch(function () { return null; })
+    fetch("../app/content/manifest.json", { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (m) { return m && /^updates-[0-9]+\.json$/.test(m.file) ? fetch("../app/content/" + m.file, { cache: "no-store" }).then(function (r) { return r.json(); }) : null; }).catch(function () { return null; }),
+    fetch("../app/pilot.js", { cache: "no-store" }).then(function (r) { return r.ok ? r.text() : ""; }).then(function (t) { var a = t.indexOf("DB.PILOT="), b = t.lastIndexOf("];"); return a >= 0 && b > a ? JSON.parse(t.slice(a + 9, b + 1)) : []; }).catch(function () { return []; })
   ]).then(function (res) {
     var j = res[0], u = res[1], rp = (u && u.repilot) || [];
+    /* pilot questions added after questions.json was made (owner, Nov 16 2026: the dashboard said 3 were voted Bad but this
+       page showed none, because they were only in app/pilot.js) */
+    if (res[2] && res[2].length) { var have = {}; j.qs.forEach(function (q) { have[q.id] = 1; }); res[2].forEach(function (q) { if (q && q.id && !have[q.id]) { q.b = "pilot"; j.qs.push(q); } }); }
     if (!rp.length) return j;
     var old = {}; rp.forEach(function (x) { old[x.o] = x; });
     var hs = function (t) { var h = 5381; for (var i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0; return (h >>> 0).toString(36); };
@@ -498,6 +507,11 @@ ol.opts{gap:5px}ol.opts li{padding:7px 10px;font-size:15px}
         (FX.fixes || []).forEach(function (f) { if (!j.qs.some(function (q) { return q.id === f.id; })) j.qs.push({ id: f.id, b: "pilot", lv: f.lv || "", d: f.d || "", q: f.q, a: f.a, w: f.w || [], x: f.x || "", rp: { name: "Fixed after a problem report", at: "" } }); });
       } NAMES = j.names || {}; R = res[1].items || {}; RATES = res[1].rates || {}; REVS = res[1].revs || {}; SEEN = res[1].seen || {}; (REVS && Object.keys(REVS)).forEach(function (k) { if (!SEEN[k]) SEEN[k] = 1; });
       QS = j.qs.map(function (q) { q._s = (q.q + " " + (q.a || "") + " " + (q.opts || []).join(" ") + " " + (NAMES[q.d] || q.d || "") + " " + q.id).toLowerCase(); BYID[q.id] = q; return q; });
+      /* feedback on things that aren't in any question file here (Bug Rush call parts "rc_<case>_<part>", or an older copy):
+         still listed, so no evaluator grade goes missing (owner, Nov 16 2026) */
+      Object.keys(REVS).forEach(function (k) { if (BYID[k] || !(REVS[k] || []).length || !/^[A-Za-z0-9_-]+$/.test(k)) return;
+        var m = k.match(/^rc_(.+)_(\d+)$/), q = { id: k, b: m ? "rush" : "other", lv: "", d: "", q: m ? "Bug Rush call \u201c" + m[1].replace(/[-_]/g, " ") + "\u201d, part " + (Number(m[2]) + 1) + ". Open the call in the app to see it; the evaluators\u2019 votes and suggestions are on the right." : "Question " + k + " (not in this page\u2019s files; it may have been rewritten or removed). Evaluator feedback is on the right.", a: "", w: [], x: "" };
+        q._s = (q.q + " " + k).toLowerCase(); BYID[k] = q; QS.push(q); });
       QS.forEach(function (q) { q._f0 = flags(q).length > 0; });
       /* exam-prep (registry) questions have "reg-" ids here, but the app grades them under its own id
          ("q" + a hash of level and wording). Join the two so their ratings, votes and check marks show (Nov 8 2026). */
