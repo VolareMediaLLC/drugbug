@@ -173,6 +173,7 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
 </section>
 
 <!-- GRADING -->
+<section data-page="changes" class="hide"><iframe class="emb" data-src="../review/?embed=1&v=todo" title="Evaluator changes"></iframe></section>
 <section data-page="grading" class="hide"><iframe class="emb" data-src="../review/?embed=1" title="Question grading"></iframe></section>
 
 <!-- ANALYTICS -->
@@ -230,8 +231,8 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
     <div class="tblwrap scroll"><table class="t" id="cTable"><tr><td class="muted">Loading…</td></tr></table></div>
   </div>
   <div class="card">
-    <div class="row sp"><div><h2>Who used a code</h2><div class="muted small">Every code except school class keys asks for the person's full name. Newest first.</div></div>
-      <div class="row"><select id="rfKind" style="width:auto"><option value="">Every kind</option><option value="made">Made here</option><option value="evaluator">LIFE / evaluator</option><option value="gift">Gift</option><option value="license">School or agency license</option><option value="protocols">Agency protocols</option><option value="fieldmedic">Field Medic</option><option value="web">Web Pro</option></select>
+    <div class="row sp"><div><h2>Who used a code</h2><div class="muted small">Every code except school class keys asks for the person's full name; evaluator codes also ask for their role and company. By person puts every code one person used under their name.</div></div>
+      <div class="row"><div class="seg" id="rMode"><button data-v="person" aria-pressed="true">By person</button><button data-v="use" aria-pressed="false">Every use</button></div><select id="rfKind" style="width:auto"><option value="">Every kind</option><option value="made">Made here</option><option value="evaluator">LIFE / evaluator</option><option value="gift">Gift</option><option value="license">School or agency license</option><option value="protocols">Agency protocols</option><option value="fieldmedic">Field Medic</option><option value="web">Web Pro</option></select>
       <input id="rfQ" type="search" placeholder="Search name or code" style="width:200px"></div></div>
     <div class="tblwrap scroll" style="margin-top:10px"><table class="t" id="rTable"><tr><td class="muted">Loading…</td></tr></table></div>
   </div>
@@ -320,10 +321,10 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
   /* ---------- tabs ---------- */
   var TAB = "", LOADED = {};
   /* five sections; People and Questions each hold a few pages (owner, Nov 7 2026) */
-  var GROUPS = { overview: ["overview"], people: ["signups", "evaluators"], codes: ["codes"], questions: ["grading", "analytics"], classes: ["classes"], metrics: ["metrics"], outreach: ["outreach", "helpers", "friends"], notes: ["dailylog", "notes"] };
-  var SUBNAME = { outreach: "Agencies & schools", helpers: "Helpers & stats", friends: "Friends & family", signups: "Evaluator sign-ups", evaluators: "Evaluators", codes: "Codes", grading: "Grade questions", analytics: "How students score", dailylog: "Daily log", notes: "Update notes" };
-  var SUBNOTE = { evaluators: "Everyone with an evaluator code: what they graded, and their suggestions.", grading: "Read, rate and fix questions. Pilot questions go live after 2 Good votes." };
-  var LASTSUB = { people: "signups", questions: "grading", outreach: "outreach", notes: "dailylog" };
+  var GROUPS = { overview: ["overview"], people: ["signups", "evaluators"], codes: ["codes"], questions: ["changes", "grading", "analytics"], classes: ["classes"], metrics: ["metrics"], outreach: ["outreach", "helpers", "friends"], notes: ["dailylog", "notes"] };
+  var SUBNAME = { outreach: "Agencies & schools", helpers: "Helpers & stats", friends: "Friends & family", signups: "Evaluator sign-ups", evaluators: "Evaluators", codes: "Codes", changes: "Evaluator changes", grading: "Grade questions", analytics: "How students score", dailylog: "Daily log", notes: "Update notes" };
+  var SUBNOTE = { changes: "Everything evaluators flagged that you haven't decided yet: Bad or Not relevant votes, suggested fixes, weak wrong answers, pulled questions in the audit and held pilot questions. Mark each one Good (after editing it if needed), Bad or Not relevant and it leaves this list.", evaluators: "Everyone with an evaluator code: what they graded, and their suggestions.", grading: "Read, rate and fix questions. Pilot questions go live after 2 Good votes." };
+  var LASTSUB = { people: "signups", questions: "changes", outreach: "outreach", notes: "dailylog" };
   function groupOf(t) { for (var g in GROUPS) if (GROUPS[g].indexOf(t) >= 0) return g; return null; }
   function go(t) {
     if (GROUPS[t] && GROUPS[t].length > 1) t = LASTSUB[t] || GROUPS[t][0];
@@ -370,7 +371,7 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
   function enter() { show("vMain", true); LOADED.overview = true; cockpit(); go(location.hash.slice(1) || "overview"); loadOverviewLists(); }
 
   /* ---------- overview ---------- */
-  var REDS = [], OV = null, OV_ERR = "", CODES = null, STATS = null, CODERS = null;
+  var REDS = [], PEOPLE = null, OV = null, OV_ERR = "", CODES = null, STATS = null, CODERS = null;
   /* ---------- Home: the cockpit (owner, Nov 7 2026) ----------
      Status lights, then one panel per area: a big number, the change, a trend line, three small
      numbers and what it measures. "Open" widens the panel and adds the detail and a plain-English
@@ -386,7 +387,7 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
   function drawOverview() { cockpit(); }
   function loadOverviewLists() {
     var done = function () { cockpit(); };
-    (CODES ? Promise.resolve() : call("codeList").then(function (r) { CODES = r.list || []; REDS = r.redemptions || []; })).catch(function () { CODES = CODES || []; }).then(meta).then(done, done);
+    (CODES ? Promise.resolve() : call("codeList").then(function (r) { CODES = r.list || []; REDS = r.redemptions || []; PEOPLE = r.people || null; })).catch(function () { CODES = CODES || []; }).then(meta).then(done, done);
     (CODERS ? Promise.resolve() : call("qrCoders").then(function (r) { CODERS = r.list || []; })).catch(function () { CODERS = CODERS || []; }).then(done);
     (AP ? Promise.resolve() : call("appMetrics").then(function (r) { AP = r; })).catch(function () { AP = AP || false; }).then(done);
     (GS ? Promise.resolve() : call("groupOwnerStats").then(function (r) { GS = r; })).catch(function () { GS = GS || false; }).then(done);
@@ -632,7 +633,7 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
         var st = x.removed ? ['bad', 'Removed'] : !x.signed ? ['warn', 'Not signed'] : x.warned ? ['warn', 'Warned'] : x.thisWeek >= x.need ? ['ok', 'Done this week'] : ['ok', 'On track'];
         return '<tr><td><b>' + esc(x.name || NM[x.gift] || x.gift) + '</b><div class="muted small">' + (x.at ? 'signed ' + day(x.at) : 'no signature yet') + '</div></td><td class="num">' + x.thisWeek + '</td><td class="num">' + x.lastWeek + '</td><td><span class="st ' + st[0] + '">' + st[1] + '</span></td><td>' + (x.removed ? '<button class="ghost" data-restore="' + esc(x.gift) + '">Restore</button>' : '') + '</td></tr>'; }).join("") + '</table><p class="muted small">One short week is a warning; two in a row ends evaluator status and their Pro. Restore gives them a fresh start from this week.</p>' : '<p class="muted small">No one has signed the evaluator agreement yet.</p>');
       var open4 = '<div style="grid-column:1/-1">' + quota + '</div><div><h4>Recent evaluator activity</h4>' + (EV.length ? '<table class="mini">' + EV.map(function (c) { return '<tr><td><b>' + esc(c.name || c.code) + '</b><div class="muted small">' + esc(c.role || "") + '</div></td><td class="num">' + fmt(c.graded) + ' graded</td><td class="num muted small">' + ago(c.lastAt) + '</td></tr>'; }).join("") + '</table>' : '<p class="muted small">No evaluator has redeemed a code yet.</p>') + '</div>' +
-        '<div><h4>Your part</h4><p>' + (bad ? '<b>' + bad + ' voted Bad:</b> open Grade questions, filter to Pilot, and fix or drop them.' : 'Nothing voted Bad right now.') + '</p><p>Marking a pilot question Good yourself puts it live at once.</p><button class="linkish" data-go="grading">Open Grade questions ▸</button> &nbsp; <button class="linkish" data-go="evaluators">Evaluators ▸</button></div>';
+        '<div><h4>Your part</h4><p>' + (bad ? '<b>' + bad + ' voted Bad:</b> <button class="linkish" data-go="changes">open Evaluator changes</button> to fix, approve or drop them.' : 'Nothing voted Bad right now.') + '</p><p>Marking a pilot question Good yourself puts it live at once.</p><button class="linkish" data-go="grading">Open Grade questions ▸</button> &nbsp; <button class="linkish" data-go="evaluators">Evaluators ▸</button></div>';
       P.push(panel("qs", "Questions and evaluators", bad ? ["b", "Needs you"] : wait ? ["w", "Waiting on votes"] : ["g", "Clear"], body4, open4, "wide"));
     }
     /* ---- schools ---- */
@@ -859,7 +860,7 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
       summ();
     });
     $("cTable").innerHTML = '<tr><td class="muted">Loading…</td></tr>';
-    (CODES ? Promise.resolve(CODES) : call("codeList").then(function (r) { CODES = r.list || []; REDS = r.redemptions || []; return CODES; })).then(meta).then(function () { drawCodes(); drawReds(); })
+    (CODES ? Promise.resolve(CODES) : call("codeList").then(function (r) { CODES = r.list || []; REDS = r.redemptions || []; PEOPLE = r.people || null; return CODES; })).then(meta).then(function () { drawCodes(); drawReds(); })
       .catch(function (e) { $("cTable").innerHTML = '<tr><td class="muted">' + esc(errTxt(e)) + '</td></tr>'; });
   }
   /* group tabs (owner, Nov 12 2026): a label "Group · Role" puts the code under a Group tab */
@@ -902,8 +903,30 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
     }).join("") : '<tr><td class="muted">' + ((CODES || []).length ? "Nothing matches." : "No codes made here yet. Make some above.") + '</td></tr>';
   }
   var RK = { made: "Made here", evaluator: "LIFE / evaluator", gift: "Gift", license: "School or agency license", protocols: "Agency protocols", fieldmedic: "Field Medic", web: "Web Pro" };
-  function drawReds() {
+  /* every code one person used, under their name (owner, Nov 16 2026: "clump codes under one persons name") */
+  var RMODE = "person"; try { RMODE = localStorage.getItem("dbAdminRMode") || "person"; } catch (e) {}
+  var ROPEN = {};
+  function drawPeople() {
     var k = $("rfKind").value, q = $("rfQ").value.trim().toLowerCase();
+    var L = (PEOPLE || []).filter(function (p) {
+      if (k && !p.codes.some(function (c) { return c.kind === k || (k === "made" && KIND[c.kind]) || (k === "evaluator" && c.kind === "eval"); })) return false;
+      return !q || (p.names.join(" ") + " " + p.role + " " + p.org + " " + p.codes.map(function (c) { return c.code; }).join(" ")).toLowerCase().indexOf(q) >= 0;
+    });
+    $("rTable").innerHTML = L.length ? '<tr><th>Name</th><th>Role and company</th><th class="num">Codes</th><th>Codes used</th><th>Last used</th></tr>' + L.slice(0, 800).map(function (p) {
+      var open = ROPEN[p.id], cs = p.codes, show = open ? cs : cs.slice(0, 3);
+      return '<tr><td><b>' + esc(p.name || "—") + '</b>' + (p.names.length > 1 ? '<div class="muted small">also typed: ' + esc(p.names.filter(function (n) { return n !== p.name; }).join(", ")) + '</div>' : '') + '</td>' +
+        '<td class="small">' + (p.role || p.org ? esc(p.role || "") + (p.role && p.org ? '<br>' : '') + '<span class="muted">' + esc(p.org || "") + '</span>' : '<span class="muted">—</span>') + '</td>' +
+        '<td class="num">' + cs.length + '</td><td class="small">' + show.map(function (c) { return '<div><code class="c">' + esc(c.code || "") + '</code> <span class="muted">' + esc(KIND[c.kind] || RK[c.kind] || c.kind || "") + ' · ' + day(c.at) + '</span></div>'; }).join("") +
+        (cs.length > 3 ? '<button class="linkish" data-rp="' + esc(p.id) + '">' + (open ? "Show less" : "Show all " + cs.length) + '</button>' : '') + '</td><td class="small muted">' + day(p.last) + '</td></tr>';
+    }).join("") : '<tr><td class="muted">' + ((PEOPLE || []).length ? "Nothing matches." : "Nobody has used a code with a name yet.") + '</td></tr>';
+  }
+  $("rTable").addEventListener("click", function (e) { var b = e.target.closest("[data-rp]"); if (!b) return; var id = b.getAttribute("data-rp"); ROPEN[id] = !ROPEN[id]; drawPeople(); });
+  $("rMode").addEventListener("click", function (e) { var b = e.target.closest("[data-v]"); if (!b) return; RMODE = b.getAttribute("data-v"); try { localStorage.setItem("dbAdminRMode", RMODE); } catch (x) {} drawReds(); });
+  function drawReds() {
+    [].forEach.call($("rMode").querySelectorAll("button"), function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-v") === RMODE)); });
+    if (RMODE === "person" && PEOPLE) return drawPeople();
+    var k = $("rfKind").value, q = $("rfQ").value.trim().toLowerCase();
+
     var L = REDS.filter(function (r) { return (!k || r.kind === k) && (!q || ((r.name || "") + " " + (r.code || "")).toLowerCase().indexOf(q) >= 0); });
     $("rTable").innerHTML = L.length ? '<tr><th>Name</th><th>Code</th><th>Kind</th><th>When</th></tr>' + L.slice(0, 500).map(function (r) {
       return '<tr><td><b>' + esc(r.name || "—") + '</b></td><td><code class="c">' + esc(r.code || r.ref || "") + '</code></td><td class="small">' + esc(RK[r.kind] || r.kind) + '</td><td class="small muted">' + day(r.at) + '</td></tr>';
