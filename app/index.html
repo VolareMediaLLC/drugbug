@@ -949,7 +949,7 @@ button.evrow{cursor:pointer}button.evrow:hover{background:var(--surface-2)}.evn{
 .axcard{display:flex;align-items:center;gap:12px;width:100%;text-align:left;margin:10px 0 4px;padding:12px 14px;border-radius:16px;border:1.5px solid color-mix(in srgb,#f5c542 60%,var(--line));background:linear-gradient(90deg,color-mix(in srgb,#f5c542 14%,var(--surface)),var(--surface));color:var(--ink);font:inherit;cursor:pointer}
 .axcard .axic{font-size:26px}.axcard .axtx{flex:1;display:flex;flex-direction:column;gap:2px}.axcard .axtx b{font-size:16px}.axcard .axtx span{font-size:13px;color:var(--muted)}.axcard .fpgo{font-size:24px;color:var(--muted)}
 .axme{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 10px}.axme div{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:8px 10px;display:flex;flex-direction:column}.axme b{font-size:20px}.axme span{font-size:11.5px;color:var(--muted)}
-.axteam{margin:0 0 10px;font-weight:700;color:#b7791f}.axnote{color:#b45309;font-size:12.5px;margin-top:4px}
+.axteam{margin:0 0 10px;font-weight:700;color:#b7791f}.axnote{color:#b45309;font-size:12.5px;margin-top:4px}.axunv{display:inline-block;font-size:10.5px;font-weight:700;color:#b45309;border:1px solid currentColor;border-radius:99px;padding:0 6px;margin-left:4px;vertical-align:middle}
 .clboard.axboard li{grid-template-columns:38px 1fr auto auto}.clboard.axboard li.axtop{border-color:color-mix(in srgb,#f5c542 70%,var(--line))}
 .axsub{display:block;font-weight:500;font-size:12px;color:var(--muted)}
 .axrep{border:0;background:none;color:var(--muted);font:inherit;font-size:13px;cursor:pointer;padding:4px 2px}
@@ -3413,6 +3413,14 @@ button.tierchip:hover{filter:brightness(1.08)}
 .cnote p{margin:0 0 8px;font-size:14px;line-height:1.5}.cnote .cnk{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
 .cnote .cnsig{font-weight:700;font-style:italic}.cnote .cncta{display:inline-block;font-weight:700;font-size:14px;margin-top:2px}
 .cnote .cnx{position:absolute;top:6px;right:8px;background:none;border:0;color:var(--muted);font-size:22px;line-height:1;cursor:pointer;padding:4px 8px}
+.sbpanel{max-width:440px;text-align:center}.sbpanel h2{margin:2px 0 6px;font-size:24px}.sbsub{margin:0 0 14px;color:var(--muted,#666)}
+.sbpod{display:flex;align-items:flex-end;justify-content:center;gap:10px;height:118px;margin:6px auto 14px;max-width:320px}
+.sbcol{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0}
+.sbbar{width:100%;border-radius:10px 10px 4px 4px;background:linear-gradient(180deg,#8b5cf6,#6d28d9);display:flex;align-items:flex-start;justify-content:center;padding-top:6px;color:#fff;transform-origin:bottom;animation:sbgrow .7s cubic-bezier(.2,.8,.3,1) both}
+.sbcol.first .sbbar{background:linear-gradient(180deg,#f6c453,#d4961c)}.sbcol:nth-child(1) .sbbar{animation-delay:.12s}.sbcol:nth-child(3) .sbbar{animation-delay:.24s}
+.sbbar b{font-size:20px}.sbpts{font-size:12px;font-weight:700;margin-bottom:4px;font-variant-numeric:tabular-nums}.sbnm{font-size:12px;font-weight:650;margin-top:6px;line-height:1.2}
+.sbsteps{text-align:left;margin:0 0 10px;padding-left:22px;line-height:1.45}.sbsteps li{margin:0 0 6px}
+@keyframes sbgrow{from{transform:scaleY(0)}to{transform:scaleY(1)}}@media (prefers-reduced-motion:reduce){.sbbar{animation:none}}
 </style>
 
 <div class="wrap" id="app"><div id="boot" aria-hidden="true"><div class="bootlogo">Drug<span>Bug</span></div><div class="bootbar"><i></i></div><p class="bootnote">Loading your medications</p></div></div>

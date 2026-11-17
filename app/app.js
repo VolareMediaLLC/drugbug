@@ -621,7 +621,7 @@ function srBuild() {
   safe(function () { (typeof PLANTS !== "undefined" ? PLANTS : []).forEach(function (p) { var ids = p[2].filter(function (id) { return DB.drugs[id]; }); if (!ids.length) return;
     add(p[0], "Plant", function () { S.plantq = p[0]; srGo("gen", { tab: "plants" }); }, p[1] + " " + ids.map(function (id) { return nameOf(id); }).join(" "), ids.length + (ids.length === 1 ? " compound" : " compounds"));
     ids.forEach(function (id) { add(nameOf(id), "From " + p[0], function () { srGo("gen", { tab: "registry" }); setTimeout(function () { try { openSheet(id); } catch (e) {} }, 30); }, p[0] + " " + p[1], "Compound"); }); }); });
-  add("Plant Finder", "Section", function () { srGo("gen", { tab: "plants" }); }, "plants herbs mushrooms compounds botanicals", "Name a plant, see its compounds");
+  add("Compound Lookup", "Section", function () { srGo("gen", { tab: "plants" }); }, "plants herbs mushrooms compounds botanicals plant finder lookup", "Type a plant, herb, mushroom or food to see the compounds DrugBug covers from it");
   add("My List", "Section", function () { srGo("gen", { tab: "mylist" }); }, "saved drugs study list", "Your saved medicines");
   add("Progress", "Section", function () { srGo("gen", { tab: "progress" }); }, "mastery badges achievements leaderboard", "Your progress");
   add("Drug Class Comparisons", "Section", function () { srGo("gen", { tab: "alts" }); }, "compare drug classes alternatives", "Compare to learn");
@@ -693,6 +693,7 @@ document.addEventListener("click", function (e) {
   srOpen(+b.getAttribute("data-sr"));
 }, true);
 function viewHome() {
+  setTimeout(sbIntroCheck, 900);
   S.lvWheelFor = null; S.lvGrid = false; S.lvWheel = null;   /* the level turntable opens on your pick again next time */
   var genN = genIds().length, fun = typeof funOn !== "function" || funOn();
   /* the whole main menu wears the season, not just the hero (owner, Nov 1 2026) */
@@ -982,7 +983,7 @@ function tabList() {
   if (typeof anatView === "function" && anatAll().length) L.push(["anatomy", "Anatomy", "Tap the body: every organ and body part, what it is and what it does."]);
   if (S.view === "level" && isM(S.level)) L.push(["alts", "Drug Class Comparisons", "Compare drugs in the same class and drug classes studied for the same problems, and how they differ. For learning only."]);
   if (S.view === "level" && S.level === "diet") {
-    L.splice(1, 0, ["vitc", "Vitamin Compounds", "Vitamins and minerals: what each one does, food sources, deficiency and excess."], ["vegc", "Vegetable Compounds", "The active compounds in vegetables and what the research shows."], ["fruitc", "Fruit Compounds", "Fruit compounds, grapefruit interactions and more."], ["plants", "Plant Finder", "Name a plant and see every compound from it."], ["herbc", "Herbs & Roots", "Herbal supplements and what the research shows."], ["fungc", "Mushrooms & Fungi", "Medicinal mushrooms and ferments."], ["nutc", "Supplement Shelf", "Popular supplements, from creatine to fish oil."]);
+    L.splice(1, 0, ["vitc", "Vitamin Compounds", "Vitamins and minerals: what each one does, food sources, deficiency and excess."], ["vegc", "Vegetable Compounds", "The active compounds in vegetables and what the research shows."], ["fruitc", "Fruit Compounds", "Fruit compounds, grapefruit interactions and more."], ["plants", "Compound Lookup", "Type a plant, herb, mushroom or food to see the compounds DrugBug covers from it."], ["herbc", "Herbs & Roots", "Herbal supplements and what the research shows."], ["fungc", "Mushrooms & Fungi", "Medicinal mushrooms and ferments."], ["nutc", "Supplement Shelf", "Popular supplements, from creatine to fish oil."]);
   }
   if (S.view === "gen" || (S.view === "level" && S.level === "diet")) L.splice(1, 0, ["conds", "Conditions & Medicine Cautions", "Pick a condition to see which medicines mention it in their contraindications and warnings. Education only."]);
   if (S.view === "gen") L.splice(1, 0, ["families", "Drug Families", "Similar drugs side by side: beta blockers, statins, SSRIs and more, and what makes each one different."]);
@@ -1025,7 +1026,7 @@ function tabList() {
   if (S.view === "level" && typeof seatActive === "function" && seatActive() && (!SEAT.level || SEAT.level === S.level))
     L.unshift(["myclass", "My Class", SEAT.orgName || "Your class"]);
   if (S.view === "gen" && typeof illicitView === "function") L.splice(1, 0, ["illicit", "Illicit & Street Drugs", "How illicit and recreational drugs affect the body, overdose signs and treatment. Education only."]);
-  if (S.view === "gen" && typeof COMPOUND_TABS !== "undefined") L.splice(1, 0, ["vegc", "Vegetable Compounds", "Sulforaphane, allicin, lycopene, favism beans and more cool compounds from vegetables."], ["fruitc", "Fruit Compounds", "Resveratrol, bromelain, star fruit toxin and more unique compounds from fruit."], ["vitc", "Vitamin Compounds", "Every vitamin form, from B12 types to vitamin K2, CoQ10 and choline."], ["plants", "Plant Finder", "Type a plant, herb or mushroom and see every compound DrugBug has from it."], ["herbc", "Herbs & Roots", "Rhodiola, ashwagandha, St. John's wort, kava, ginkgo, saw palmetto and 100 more herbs."], ["fungc", "Mushrooms & Fungi", "Lion's mane, reishi, cordyceps, turkey tail, red yeast rice and other fungi."], ["nutc", "Supplement Shelf", "Creatine, fish oil, nootropics, collagen, algae, bee products and the risky wild cards."]);
+  if (S.view === "gen" && typeof COMPOUND_TABS !== "undefined") L.splice(1, 0, ["vegc", "Vegetable Compounds", "Sulforaphane, allicin, lycopene, favism beans and more cool compounds from vegetables."], ["fruitc", "Fruit Compounds", "Resveratrol, bromelain, star fruit toxin and more unique compounds from fruit."], ["vitc", "Vitamin Compounds", "Every vitamin form, from B12 types to vitamin K2, CoQ10 and choline."], ["plants", "Compound Lookup", "Type a plant, herb, mushroom or food to see the compounds DrugBug covers from it."], ["herbc", "Herbs & Roots", "Rhodiola, ashwagandha, St. John's wort, kava, ginkgo, saw palmetto and 100 more herbs."], ["fungc", "Mushrooms & Fungi", "Lion's mane, reishi, cordyceps, turkey tail, red yeast rice and other fungi."], ["nutc", "Supplement Shelf", "Creatine, fish oil, nootropics, collagen, algae, bee products and the risky wild cards."]);
   if (typeof disView === "function" && !(S.view === "level" && isI(S.level))) L.splice(1, 0, ["diseases", "Disease Lab", Object.keys((DB && DB.DIS) || {}).length + " conditions explained: their history, what goes wrong from cell to organ, and the drugs that treat them."]);
   /* the field study guide sits right after Medications (1.2, owner Nov 7 2026) */
   if (S.view === "level" && fgOf(S.level)) { var G0 = fgOf(S.level); L.splice(1, 0, ["guide", G0.tab, G0.sub]); }
@@ -2915,11 +2916,11 @@ function heroHTML() {
   var hol = typeof holToday === "function" ? holToday() : null;
   return '<section class="hero ha' + (hol ? ' hol hol-' + hol.id + (hol.base ? ' hol-' + hol.base : '') : '') + '">' + (hol ? holFx(hol) : '') + '<div class="hatx lr-' + rr + '">' + (rr === "legendary" ? '<svg class="lcrown" viewBox="0 0 64 44" aria-hidden="true"><path d="M4 40 L8 12 L22 26 L32 4 L42 26 L56 12 L60 40Z" fill="#fbbf24" stroke="#92400e" stroke-width="3" stroke-linejoin="round"/><circle cx="32" cy="6" r="4" fill="#f43f5e"/><circle cx="8" cy="12" r="3.5" fill="#38bdf8"/><circle cx="56" cy="12" r="3.5" fill="#38bdf8"/><rect x="6" y="34" width="52" height="6" rx="2" fill="#f59e0b"/></svg>' : '') + '<h1 class="logo">Drug<span>Bug</span></h1>' + spk + '</div>' + (typeof funOn === "function" && !funOn() ? '' : '<button class="hbub" data-goshop="1" aria-label="' + lbl + '"><span class="orb">' + myBugArt("herobug", null, hol ? holWear(hol) : null, myStage()) + (typeof pkSide === "function" ? pkSide("hero") : "") + '</span>' + chip + '</button>') + tag + (hol ? holBanner(hol) : '') + '</section>';
 }
-function topLayerOpen() { return ["accdlg", "rvdlg", "pwdlg", "wdwdlg", "evodlg", "pkdlg", "chemdlg", "tourdlg", "rdlg", "idlg"].some(function (i) { var el = document.getElementById(i); return el && !el.hidden; }); }
+function topLayerOpen() { return ["sbdlg", "accdlg", "rvdlg", "pwdlg", "wdwdlg", "evodlg", "pkdlg", "chemdlg", "tourdlg", "rdlg", "idlg"].some(function (i) { var el = document.getElementById(i); return el && !el.hidden; }); }
 /* Android back button: closes the top layer or goes back one step; returns true when it handled it */
 window.drugbugBack = function () {
   try {
-    var layers = [["idlg", function () { if (typeof closeIdeas === "function") closeIdeas(); }], ["rdlg", function () { var el = document.getElementById("rdlg"); if (typeof closeReport === "function") closeReport(); else el.hidden = true; }], ["wdwdlg", function () { if (typeof wdwClose === "function") wdwClose(); }], ["evodlg", function () { if (typeof evoClose === "function") evoClose(); }], ["pkdlg", function () { if (typeof pkClose === "function") pkClose(); }], ["chemdlg", function () { if (typeof chem3Close === "function") chem3Close(); }], ["pwdlg", function () { if (typeof closePaywall === "function") closePaywall(); }], ["tourdlg", function () { if (typeof tourClose === "function") tourClose(); }]];
+    var layers = [["sbdlg", function () { sbIntroClose(); }], ["idlg", function () { if (typeof closeIdeas === "function") closeIdeas(); }], ["rdlg", function () { var el = document.getElementById("rdlg"); if (typeof closeReport === "function") closeReport(); else el.hidden = true; }], ["wdwdlg", function () { if (typeof wdwClose === "function") wdwClose(); }], ["evodlg", function () { if (typeof evoClose === "function") evoClose(); }], ["pkdlg", function () { if (typeof pkClose === "function") pkClose(); }], ["chemdlg", function () { if (typeof chem3Close === "function") chem3Close(); }], ["pwdlg", function () { if (typeof closePaywall === "function") closePaywall(); }], ["tourdlg", function () { if (typeof tourClose === "function") tourClose(); }]];
     for (var i = 0; i < layers.length; i++) { var el = document.getElementById(layers[i][0]); if (el && !el.hidden) { layers[i][1](); return true; } }
     if (document.body.classList.contains("printing") && typeof closePrint === "function") { closePrint(); return true; }
     if (S.sheet) { closeSheet(); return true; }
@@ -6092,6 +6093,38 @@ function showEvolve(st) {
     '<div class="btnrow"><button class="btn" data-evo="shop">' + (es ? "Ver en el Terrario" : "See it in the Terrarium") + '</button><button class="btn ghost" data-evo="close">' + (es ? "¡Genial!" : "Nice!") + '</button></div></div>';
   evodlg.hidden = false; var p = evodlg.querySelector(".panel"); if (p) p.focus();
 }
+/* INTRODUCING SCOREBOARDS (owner, Nov 16 2026: "when people open their main menu with the newest update it say
+   introducing scoreboards and show quickly what the scoreboards do for institution competition"). Shown once, on the
+   main menu, after the start-up notice and tour; never to someone who already joined the Agency Challenge. */
+var sbdlg = document.createElement("div"); sbdlg.id = "sbdlg"; sbdlg.className = "sheet rsheet"; sbdlg.hidden = true; document.body.appendChild(sbdlg);
+function sbIntroCheck() {
+  try {
+    if (store("sbIntro") || store("agxJoined") || S.view !== "home" || !Prog.d) return;
+    if ((typeof needDisc === "function" && needDisc()) || (typeof tourDone === "function" && !tourDone())) return;
+    if (S.sheet || topLayerOpen() || (typeof AGX !== "undefined" && AGX.open)) return;
+    if (typeof openAgency !== "function") return;
+    showSbIntro();
+  } catch (e) {}
+}
+function showSbIntro() {
+  store("sbIntro", Date.now());
+  var bars = [["2", "County EMS", "18,240", 74], ["1", "Your hospital", "21,910", 100], ["3", "City Fire", "15,030", 58]];
+  sbdlg.innerHTML = '<div class="panel pwpanel sbpanel" role="dialog" aria-modal="true" aria-labelledby="sbH" tabindex="-1"><p class="wdwkick">New in this update</p><h2 id="sbH">Introducing Scoreboards</h2>' +
+    '<p class="sbsub">Put your hospital, fire department, EMS agency or school on the board and compete with the other institutions in your state.</p>' +
+    '<div class="sbpod" aria-hidden="true">' + bars.map(function (b) { return '<div class="sbcol' + (b[0] === "1" ? ' first' : '') + '"><span class="sbpts">' + b[2] + '</span><div class="sbbar" style="height:' + b[3] + '%"><b>' + b[0] + '</b></div><span class="sbnm">' + b[1] + '</span></div>'; }).join("") + '</div>' +
+    '<ol class="sbsteps"><li><b>Pick your institution.</b> Not listed? Add it in a few seconds.</li><li><b>Every right answer is 10 points.</b> Your institution\u2019s top 3 people are its team.</li><li><b>Teams race the whole state.</b> The top 3\u2019s points are added together, and the boards start over every Sunday at 7 pm Central.</li></ol>' +
+    '<p class="muted small">You choose a nickname, so your name is never shown. Joining is optional.</p>' +
+    '<div class="btnrow"><button class="btn" data-sbi="go">See the scoreboards</button><button class="btn ghost" data-sbi="close">Maybe later</button></div></div>';
+  sbdlg.hidden = false; var p = sbdlg.querySelector(".panel"); if (p) p.focus();
+}
+function sbIntroClose() { sbdlg.hidden = true; sbdlg.innerHTML = ""; }
+document.addEventListener("click", function (e) {
+  if (sbdlg.hidden) return;
+  var t = e.target.closest("[data-sbi]"); if (!t) { if (e.target === sbdlg) sbIntroClose(); return; }
+  var a = t.getAttribute("data-sbi"); sbIntroClose();
+  if (a === "go") { try { openAgency(); } catch (err) {} }
+});
+document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !sbdlg.hidden) sbIntroClose(); });
 function evoClose() { evodlg.hidden = true; evodlg.innerHTML = ""; }
 document.addEventListener("click", function (e) {
   var t = e.target.closest("[data-evo]"); if (!t) { if (e.target === evodlg) evoClose(); return; }
@@ -8183,7 +8216,7 @@ function compoundView(k) {
   });
   return c + '<p class="muted small">Many supplements interact with medicines, which is why health care teams ask about them. Save any compound to My List to study it.</p></section>';
 }
-/* Plant Finder (owner, Nov 14 2026: "I wanna be able to name a plant and every compound pops up").
+/* Compound Lookup, formerly "Plant Finder" (renamed Nov 16 2026: the old name felt misleading) (owner, Nov 14 2026: "I wanna be able to name a plant and every compound pops up").
    PLANTS: [name, other names, [drug ids]]. Typing also searches the "Found in" text of every card on the
    herb, mushroom, supplement, vegetable, fruit and vitamin tabs, so plants not on the list still find their compounds. */
 var PLANTS = [["Rhodiola", "golden root arctic root roseroot Rhodiola rosea", ["rhodiola", "salidroside", "rosavin"]], ["Ashwagandha", "Withania somnifera winter cherry", ["ashwagandha", "withanolides"]], ["Ginseng", "Panax Asian Korean American ginseng", ["panax-ginseng", "american-ginseng", "ginsenosides"]], ["Eleuthero", "Siberian ginseng Eleutherococcus", ["eleuthero"]], ["Kava", "kava kava Piper methysticum", ["kava", "kavalactones"]], ["Valerian", "Valeriana officinalis valerian root", ["valerian", "valerenic-acid"]], ["Chamomile", "Matricaria camomile tea", ["chamomile", "apigenin"]], ["St. John's wort", "Hypericum perforatum St Johns wort", ["st-johns-wort", "hyperforin", "hypericin"]], ["Ginkgo", "Ginkgo biloba maidenhair tree", ["ginkgo", "ginkgolides"]], ["Milk thistle", "Silybum marianum", ["milk-thistle", "silymarin"]], ["Green tea", "Camellia sinensis tea leaves matcha", ["egcg", "caffeine", "l-theanine"]], ["Black tea", "Camellia sinensis tea", ["caffeine", "l-theanine"]], ["Coffee", "Coffea coffee beans", ["caffeine", "green-coffee-bean"]], ["Garlic", "Allium sativum", ["allicin", "aged-garlic-extract"]], ["Licorice", "Glycyrrhiza licorice root liquorice", ["glycyrrhizin", "dgl-licorice"]], ["Turmeric", "Curcuma longa", ["curcumin"]], ["Ginger", "Zingiber officinale", ["gingerol"]], ["Black pepper", "Piper nigrum peppercorns", ["piperine", "beta-caryophyllene"]], ["Cannabis and hemp", "marijuana weed hemp Cannabis sativa", ["cannabis", "cannabidiol", "cbg", "cbn", "delta-8-thc", "thcv", "hemp-seed-oil", "beta-caryophyllene"]], ["Lion's mane", "Hericium erinaceus lions mane mushroom", ["lions-mane", "hericenones"]], ["Reishi", "Ganoderma lingzhi lucidum mushroom", ["reishi", "ganoderic-acids", "mushroom-beta-glucans"]], ["Turkey tail", "Trametes versicolor Coriolus mushroom", ["turkey-tail", "psk-krestin", "mushroom-beta-glucans"]], ["Shiitake", "Lentinula edodes mushroom", ["shiitake", "lentinan", "mushroom-beta-glucans", "ergothioneine"]], ["Maitake", "Grifola frondosa hen of the woods mushroom", ["maitake", "mushroom-beta-glucans"]], ["Cordyceps", "caterpillar fungus Cordyceps militaris sinensis mushroom", ["cordyceps", "cordycepin"]], ["Chaga", "Inonotus obliquus birch mushroom", ["chaga"]], ["Red yeast rice", "Monascus purpureus red rice", ["red-yeast-rice", "monacolin-k", "citrinin"]], ["Yeast", "Saccharomyces brewers yeast nutritional yeast", ["brewers-yeast", "nutritional-yeast", "mushroom-beta-glucans", "saccharomyces-boulardii"]], ["Goldenseal", "Hydrastis canadensis", ["goldenseal", "berberine"]], ["Barberry", "Berberis Oregon grape", ["berberine"]], ["Willow", "white willow bark Salix", ["willow-bark", "aspirin"]], ["Saffron", "Crocus sativus", ["saffron"]], ["Broccoli and cabbage family", "cruciferous broccoli cabbage kale Brussels sprouts cauliflower", ["sulforaphane", "indole-3-carbinol", "dim", "lutein-zeaxanthin"]], ["Tomato", "Solanum lycopersicum", ["lycopene", "solanine"]], ["Potato", "Solanum tuberosum", ["solanine"]], ["Grapes and red wine", "Vitis grape skins wine", ["resveratrol", "anthocyanins"]], ["Grapefruit", "Citrus paradisi", ["naringin", "furocoumarins"]], ["Orange", "Citrus sinensis bitter orange Seville", ["hesperidin", "bitter-orange", "ascorbic-acid"]], ["Bergamot", "Citrus bergamia", ["bergamot-polyphenols", "furocoumarins"]], ["Pineapple", "Ananas comosus", ["bromelain"]], ["Papaya", "Carica papaya", ["papain"]], ["Soy", "soybeans tofu edamame natto", ["soy-isoflavones", "nattokinase", "menaquinone-7", "pqq"]], ["Beets", "beetroot Beta vulgaris", ["betanin", "beetroot-nitrate"]], ["Velvet bean", "Mucuna pruriens", ["mucuna"]], ["Chinese club moss", "Huperzia serrata", ["huperzine-a"]], ["Periwinkle", "Vinca minor", ["vinpocetine"]], ["Hawthorn", "Crataegus", ["hawthorn"]], ["Aloe", "Aloe vera", ["aloe-vera"]], ["Senna", "Senna alexandrina", ["sennosides"]], ["Flax", "linseed flaxseed Linum", ["flaxseed"]], ["Fish", "fatty fish salmon", ["fish-oil", "omega-3-acid-ethyl-esters", "astaxanthin"]], ["Algae and seaweed", "algae seaweed kelp chlorella spirulina sea moss", ["algal-oil", "chlorella", "spirulina", "sea-moss", "kelp-iodine", "astaxanthin"]], ["Honeybee products", "bees honey hive", ["propolis", "royal-jelly", "bee-pollen", "manuka-honey"]], ["Yohimbe", "Pausinystalia johimbe", ["yohimbe"]], ["Ephedra", "ma huang", ["ephedrine", "pseudoephedrine"]], ["Kratom", "Mitragyna speciosa", ["kratom"]], ["Coca", "Erythroxylum coca leaf", ["cocaine"]], ["Opium poppy", "Papaver somniferum", ["morphine", "codeine"]], ["Foxglove", "Digitalis", ["digoxin"]], ["Cinchona", "cinchona bark", ["quinine"]], ["Belladonna", "deadly nightshade Atropa", ["atropine", "scopolamine"]], ["Psilocybin mushrooms", "magic mushrooms Psilocybe", ["psilocybin"]], ["Konjac", "Amorphophallus konjac", ["glucomannan"]], ["Psyllium", "Plantago ispaghula", ["psyllium"]], ["Cinnamon", "Cinnamomum cassia", ["cinnamon-cassia"]], ["Fenugreek", "Trigonella foenum-graecum", ["fenugreek"]], ["Echinacea", "purple coneflower", ["echinacea"]], ["Elderberry", "Sambucus", ["elderberry"]], ["Saw palmetto", "Serenoa repens", ["saw-palmetto"]], ["Black cohosh", "Actaea Cimicifuga", ["black-cohosh"]], ["Nettle", "stinging nettle Urtica", ["stinging-nettle"]], ["Peppermint", "Mentha peppermint", ["peppermint-oil", "cough-drops-menthol"]], ["Lavender", "Lavandula", ["lavender-oil"]], ["Tea tree", "Melaleuca", ["tea-tree-oil"]], ["Eucalyptus", "Eucalyptus globulus", ["eucalyptus-oil"]], ["Olive", "Olea europaea olive leaf olive oil", ["olive-leaf"]], ["Hops", "Humulus lupulus beer", ["hops", "beta-caryophyllene"]], ["Coconut", "Cocos nucifera", ["mct-oil"]], ["Apple", "Malus apple tree", ["quercetin", "phlorizin", "apple-cider-vinegar"]], ["Hemp seed", "hemp hearts", ["hemp-seed-oil"]]];
@@ -8196,7 +8229,7 @@ function plantChip(id, tox) { return '<button class="chip plchip' + (tox ? ' tox
 function plantToxIds() { var T = {}; plantFoundIn().forEach(function (x) { if (x.tox) T[x.id] = 1; }); return T; }
 function plantView() {
   var tox = plantToxIds(), q = S.plantq || "";
-  var c = '<section class="plantf"><p class="cmpline">Type any plant, herb, mushroom or food. Every compound DrugBug has from it pops up. Tap one to open its page.</p>' +
+  var c = '<section class="plantf"><p class="cmpline">Compound Lookup: type a plant, herb, mushroom or food to see the compounds DrugBug has pages for that come from it. It does not identify plants. Tap a compound to open its page.</p>' +
     '<label class="plsearch"><span class="sr-only">Plant or mushroom</span><input class="pinput" id="plantq" type="search" placeholder="Try rhodiola, green tea, reishi, cannabis, garlic..." autocomplete="off" value="' + esc(q) + '" data-plantq="1"></label>' +
     '<div id="plantres" aria-live="polite">' + plantResults(q, tox) + '</div>' +
     '<p class="muted small">Education only. Most of these are supplements or food compounds, not FDA-approved drugs; each page says which. Many interact with medicines.</p></section>';
@@ -32273,7 +32306,14 @@ document.addEventListener("click", function (e) {
    code cannot be run again on a second device. There is no server check, so a code handed to the world
    can be used by the world; these are for handing out deliberately, not for public promotion. */
 
-var GIFT = { open: false, code: "", msg: "", ok: "", busy: false, name: "" };
+var GIFT = { open: false, code: "", msg: "", ok: "", busy: false, name: "", role: "", org: "" };
+/* evaluator codes also ask for the person's role and where they work (owner, Nov 16 2026: "when someone redeems a code
+   they have to put their name and Role and Company IF its for evaluators. All other codes just needs names").
+   Same role list as the evaluator sign-up form (codes.js CREDS). */
+var GIFT_ROLES = ["EMT", "AEMT", "Paramedic", "Flight Paramedic", "CNA", "LVN/LPN", "RN", "Flight or critical care RN", "Nurse practitioner", "Physician (MD/DO)", "Physician assistant", "Pharmacist", "Resident or fellow", "Medical student", "Nursing student", "EMS student", "Radiologic or imaging technologist", "Respiratory therapist", "Educator or instructor", "Other"];
+/* by its look only (giftFind is slow on purpose); built-in evaluator gift codes are also checked once found, in giftRedeem */
+function giftIsEval(code) { return /^(EVAL|LIFE)/.test(String(code || "").toUpperCase().replace(/[^A-Z0-9]/g, "")); }
+function giftEvalOk() { return GIFT_ROLES.indexOf(GIFT.role) >= 0 && String(GIFT.org || "").trim().length >= 2; }
 
 function giftSalt() { return (DB.GIFTS || {}).salt || ""; }
 function giftKey(code) {   /* stretched once per try, same 100,000 rounds as the protocol codes */
@@ -32305,12 +32345,16 @@ function giftRedeem(code) {
   /* every code except a school class key needs the person's full name (owner, Nov 7 2026) */
   if (!(typeof groupKeyShape === "function" && groupKeyShape(code))) {
     if (!giftNameOk(GIFT.name)) { GIFT.msg = "Enter your full name (first and last) to use this code."; giftDraw(); var ni = document.getElementById("giftname"); if (ni) ni.focus(); return; }
+    if (giftIsEval(code) && !giftEvalOk()) { GIFT.needEval = true; GIFT.code = code; GIFT.msg = "Evaluator codes also need your role and the company, agency or school you work for."; giftDraw(); var ri = document.getElementById(GIFT_ROLES.indexOf(GIFT.role) >= 0 ? "giftorg" : "giftrole"); if (ri) ri.focus(); return; }
+    if (giftIsEval(code) && Prog.d) { Prog.d.evRole = GIFT.role; Prog.d.evOrg = String(GIFT.org).trim(); }
     GIFT.lastCode = code;
   }
   GIFT.busy = true; giftDraw();
   setTimeout(function () {
     var d = giftFind(code); GIFT.busy = false;
     if (!d) return codeOther(code);
+    if (d.rev && !giftEvalOk()) { GIFT.needEval = true; GIFT.code = code; GIFT.msg = "Evaluator codes also need your role and the company, agency or school you work for."; return giftDraw(); }
+    if (d.rev && Prog.d) { Prog.d.evRole = GIFT.role; Prog.d.evOrg = String(GIFT.org).trim(); }
     Prog.d.gifts = Prog.d.gifts || {};
     if (Prog.d.gifts[d.id]) { GIFT.msg = "That code has already been used on this account."; return giftDraw(); }
     /* App Store Guideline 3.1.1: in the iPhone app, paid access only comes through in-app purchase,
@@ -32350,7 +32394,9 @@ function giftNameOk(n) {
 function giftNameKeep() { var n = String(GIFT.name || "").trim().replace(/\s+/g, " "); if (Prog.d && n && Prog.d.fullName !== n) { Prog.d.fullName = n; saveProg(); } return n; }
 function codeNameLog(kind, ref) {
   var n = giftNameKeep(); if (!n) return;
-  var pend = store("codeNamePend") || []; pend.push({ kind: kind, ref: String(ref || "").slice(0, 80), code: String(GIFT.lastCode || "").slice(0, 40), name: n, at: Date.now() });
+  var it = { kind: kind, ref: String(ref || "").slice(0, 80), code: String(GIFT.lastCode || "").slice(0, 40), name: n, at: Date.now() };
+  if (kind === "evaluator" && GIFT.role) { it.role = GIFT.role; it.org = String(GIFT.org || "").trim().slice(0, 80); }
+  var pend = store("codeNamePend") || []; pend.push(it);
   store("codeNamePend", pend.slice(-20)); codeNameFlush();
 }
 function codeNameFlush() {
@@ -32711,9 +32757,10 @@ function codeServer(raw, fail) {
   if (typeof NATIVE !== "undefined" && NATIVE && /^(PRO|EVAL)/.test(up)) { GIFT.web = raw; return fail("This code unlocks DrugBug Pro, so it is redeemed on our website."); }
   if (!Prog.uid || typeof fnCall !== "function") return fail("This code needs an internet connection. Connect and try again in a moment.");
   GIFT.busy = true; giftDraw();
-  fnCall("codeRedeem", { code: raw, name: giftNameKeep() }).then(function (r) {
+  fnCall("codeRedeem", { code: raw, name: giftNameKeep(), role: GIFT.role || "", org: String(GIFT.org || "").trim() }).then(function (r) {
     GIFT.busy = false;
     if (!r || !r.found) return fail();
+    if (r.needEval) { GIFT.needEval = true; }
     if (r.error) return fail(r.error);
     var g = r.grant || {}, d = { id: g.id, pro: g.pro || 0, sticks: g.sticks || 0, bug: g.bug || null, rev: !!g.rev };
     Prog.d.gifts = Prog.d.gifts || {};
@@ -32763,7 +32810,9 @@ function giftBox() {
   return '<div class="giftbox" id="giftbox">' +
     (GIFT.ok ? '<p class="presult good" role="status">' + esc(GIFT.ok) + '</p>' : '') +
     (GIFT.msg ? '<p class="presult" role="status">' + esc(GIFT.msg) + '</p>' : '') + giftWebBox() +
-    '<form class="pform inl" data-giftform="1"><label class="gl gname">Your full name<input class="pinput pname" id="giftname" type="text" autocomplete="name" autocapitalize="words" maxlength="80" placeholder="First and last name" value="' + esc(GIFT.name || (Prog.d && Prog.d.fullName) || "") + '"></label><label class="gl">Code<input class="pinput" id="giftin" type="text" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="Enter your code" value="' + esc(GIFT.code) + '"></label>' +
+    '<form class="pform inl" data-giftform="1"><label class="gl gname">Your full name<input class="pinput pname" id="giftname" type="text" autocomplete="name" autocapitalize="words" maxlength="80" placeholder="First and last name" value="' + esc(GIFT.name || (Prog.d && Prog.d.fullName) || "") + '"></label>' +
+      '<div class="giftev" id="giftev"' + (GIFT.needEval || giftIsEval(GIFT.code) ? '' : ' hidden') + '><label class="gl">Your role (evaluator codes)<select class="pinput" id="giftrole"><option value="">Pick your role</option>' + GIFT_ROLES.map(function (r) { return '<option' + (GIFT.role === r ? ' selected' : '') + '>' + esc(r) + '</option>'; }).join("") + '</select></label>' +
+      '<label class="gl">Company, agency or school<input class="pinput" id="giftorg" type="text" autocomplete="organization" maxlength="80" placeholder="Where you work or study" value="' + esc(GIFT.org || (Prog.d && Prog.d.evOrg) || "") + '"></label></div><label class="gl">Code<input class="pinput" id="giftin" type="text" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="Enter your code" value="' + esc(GIFT.code) + '"></label>' +
     '<button class="btn small" type="submit"' + (GIFT.busy ? " disabled" : "") + '>' + (GIFT.busy ? "Checking..." : "Redeem") + '</button></form>' +
     '<p class="muted small">Gift codes, access codes, school or agency codes and agency protocol codes all go here. A class key does not ask for your name. If a different code requires your full name, we use it to verify and record redemption as described in the <button class="linkish" data-legal="privacy">Privacy Policy</button>. Do not sell or trade your code. The <button class="linkish" data-legal="terms">Terms of Use</button> explain how codes work.</p></div>';
 }
@@ -32772,12 +32821,19 @@ function giftDraw() {
   if (!el) return;
   var v = (document.getElementById("giftin") || {}).value; if (v !== undefined && !GIFT.ok) GIFT.code = v;
   var nm = (document.getElementById("giftname") || {}).value; if (nm !== undefined) GIFT.name = nm;
+  var gr = (document.getElementById("giftrole") || {}).value; if (gr !== undefined) GIFT.role = gr;
+  var go = (document.getElementById("giftorg") || {}).value; if (go !== undefined) GIFT.org = go;
   el.outerHTML = giftBox();
 }
+document.addEventListener("input", function (e) {
+  if (!e.target || e.target.id !== "giftin") return;
+  var ev = document.getElementById("giftev"); if (ev) ev.hidden = !(GIFT.needEval || giftIsEval(e.target.value));
+});
 document.addEventListener("submit", function (e) {
   var f = e.target; if (!f.getAttribute || !f.getAttribute("data-giftform")) return;
   e.preventDefault();
   GIFT.name = ((document.getElementById("giftname") || {}).value || "").trim();
+  var gr0 = document.getElementById("giftrole"), go0 = document.getElementById("giftorg"); if (gr0) GIFT.role = gr0.value; if (go0) GIFT.org = go0.value.trim();
   giftRedeem((document.getElementById("giftin") || {}).value || "");
 });
 
@@ -33319,7 +33375,7 @@ function agxView() {
   if (!D.member) return c + agxJoinView();
   var A = D.agency, M = D.me;
   c += '<div class="clhead"><b>' + esc(A.name) + '</b><span>' + esc(AGX_TYPES[A.type] || "") + " · " + esc(A.city) + ", " + esc(A.state) + " · " + A.members + (A.members === 1 ? " person" : " people") + '</span>' +
-    (A.status === "pending" ? '<span class="axnote">New agency: it shows on the ' + esc(A.state) + ' board once we check it (usually within a day). Your agency board works now.</span>' : '') + '</div>';
+    (A.status === "pending" ? '<span class="axnote">Not checked yet: anyone can join it and it\u2019s on the ' + esc(A.state) + ' board now. Prizes start once we confirm it\u2019s a real place (usually within a day).</span>' : '') + '</div>';
   c += agxRewardBox(D);
   c += '<div class="axme"><div><b>#' + (M.rank || "–") + '</b><span>your rank</span></div><div><b>' + num0(M.pts) + '</b><span>your points this week</span></div><div><b>' + num0(A.team) + '</b><span>your top 3 together</span></div></div>';
   if (!statsOn()) c += '<div class="axrecruit"><b>Your answers aren\u2019t earning points</b><span>Share usage statistics is off. Turn it back on to keep earning points for your team.</span><button class="btn" data-agx="statson">Turn on</button></div>';
@@ -33339,11 +33395,10 @@ function agxView() {
     c += '<p class="muted small">The top 3 this week are your agency’s team on the ' + esc(A.state) + ' board. 10 points for each right answer and minus 5 for each wrong one, up to ' + num0(D.dayCap) + ' points a day (' + num0(M.todayLeft) + ' left today). Starts over for everyone every Sunday at 7 pm Central.</p>';
     if (A.members < 3 || A.teamFilled < 3) c += '<div class="axrecruit"><b>Grow your team</b><span>Your agency\u2019s score is its top 3 people added together, so each coworker who joins can add up to 3,000 points a day.</span><button class="btn" data-agx="recruit">Invite a coworker</button></div>';
   } else {
-    if (A.status !== "ok") c += '<p class="muted">Your agency joins this board once it’s checked.</p>';
-    else {
+    {
       c += agxPodium(D.state, function (r) { return r.name; }, function (r) { return r.city; }, function (r) { return r.top3; });
       c += '<ol class="clboard axboard">' + D.state.map(function (r) {
-        return '<li class="' + (r.mine ? "me" : "") + '"><span class="clrk' + (r.rank <= 3 && r.top3 > 0 ? " r" + r.rank : "") + '">' + r.rank + '</span>' + agxAvArt(r.av) + '<span class="clal">' + esc(r.name) + (r.mine ? ' <em>yours</em>' : '') + '<small class="axsub">' + esc(AGX_TYPES[r.type] || "") + " · " + esc(r.city) + '</small></span><span class="clsc"><b>' + num0(r.top3) + '</b><small>' + (r.filled < 3 ? r.filled + " of 3 on the team" : "top 3") + '</small></span></li>';
+        return '<li class="' + (r.mine ? "me" : "") + '"><span class="clrk' + (r.rank <= 3 && r.top3 > 0 ? " r" + r.rank : "") + '">' + r.rank + '</span>' + agxAvArt(r.av) + '<span class="clal">' + esc(r.name) + (r.mine ? ' <em>yours</em>' : '') + (r.unv ? ' <small class="axunv">not checked yet</small>' : '') + '<small class="axsub">' + esc(AGX_TYPES[r.type] || "") + " · " + esc(r.city) + '</small></span><span class="clsc"><b>' + num0(r.top3) + '</b><small>' + (r.filled < 3 ? r.filled + " of 3 on the team" : "top 3") + '</small></span></li>';
       }).join("") + '</ol><p class="muted small">Agencies in ' + esc(A.state) + ', ranked by their top 3 people’s points added together this week.</p>';
       var L = D.lastWeek; if (L && L.agencies && L.agencies.length) c += '<div class="clbox"><h4>Last week’s winners</h4>' + L.agencies.map(function (x, i) { return '<p>' + ["🥇", "🥈", "🥉"][i] + " " + esc(x.name) + '<span>' + num0(x.top3) + '</span></p>'; }).join("") + '</div>';
     }
@@ -33351,7 +33406,7 @@ function agxView() {
   if (D.rewardsInfo) c += '<details class="cldim axmore"><summary>\ud83c\udf81 What you can win each week</summary>' + D.rewardsInfo.map(function (x) { return '<p class="small"><b>' + esc(x.what) + ':</b> ' + esc(x.reward) + '</p>'; }).join("") + '<p class="muted small">Rewards are sticks and bugs for the app. Collect them here after the week ends on Sunday at 7 pm Central.</p></details>';
   c += '<details class="cldim axmore"><summary>Nickname and agency</summary><form class="pform" id="agxNickF"><label>Nickname (shown on the boards)<input class="pinput" id="agxNick" maxlength="20" value="' + esc(M.nick) + '" autocomplete="off"></label><label>Department' + agxDeptSel(A.type, M.dept) + '</label><button class="btn ghost" type="submit">Save</button></form>' +
     (M.nickHidden ? '<p class="small">Your name is hidden while we review a report. Choosing a new nickname shows it again.</p>' : '') +
-    '<p class="small"><button class="linkish" data-agx="change">Change agency</button> · <button class="linkish" data-agx="reqnew">Request a new institution</button> · <button class="linkish" data-agx="leave">' + (AGX.leaveAsk ? "Tap again to leave" : "Leave the challenge") + '</button></p>' +
+    '<p class="small"><button class="linkish" data-agx="change">Change agency</button> · <button class="linkish" data-agx="reqnew">Add a new institution</button> · <button class="linkish" data-agx="leave">' + (AGX.leaveAsk ? "Tap again to leave" : "Leave the challenge") + '</button></p>' +
     '<p class="muted small">Only your nickname shows. Boards are for fun and study, not a measure of job performance. Agencies aren’t affiliated with DrugBug and don’t endorse it.</p></details>';
   return c;
 }
@@ -33418,11 +33473,11 @@ function agxJoinView() {
       '<button class="btn" type="submit"' + (AGX.busy ? " disabled" : "") + '>Join</button> <button class="linkish" type="button" data-agx="unpick">Pick a different agency</button></form>';
   }
   if (AGX.adding) {
-    return c + '<form class="pform" id="agxAddF"><h3>Request your institution</h3><p class="muted small">A hospital, fire department, EMS agency, or nursing, EMS or medical school.</p><label>Name<input class="pinput" id="agxAN" maxlength="80" required placeholder="Example: Dallas Fire-Rescue" autocomplete="off"></label><div id="agxAddSug"></div>' +
+    return c + '<form class="pform" id="agxAddF"><h3>Add your institution</h3><p class="muted small">A hospital, fire department, EMS agency, or nursing, EMS or medical school.</p><label>Name<input class="pinput" id="agxAN" maxlength="80" required placeholder="Example: Dallas Fire-Rescue" autocomplete="off"></label><div id="agxAddSug"></div>' +
       '<label>Type<select class="pinput" id="agxAT">' + Object.keys(AGX_TYPES).map(function (k) { return '<option value="' + k + '">' + AGX_TYPES[k] + '</option>'; }).join("") + '</select></label>' +
       '<label>City<input class="pinput" id="agxAC" maxlength="40" required></label><label>State' + agxStateSel("agxAS", AGX.st) + '</label>' +
-      '<p class="muted small">New institutions show on the state board after a quick check (usually within a day). You can join it and start on its own board right away.</p>' +
-      '<button class="btn" type="submit"' + (AGX.busy ? " disabled" : "") + '>Send request</button> <button class="linkish" type="button" data-agx="noadd">Back to the list</button></form>';
+      '<p class="muted small">It\u2019s added right away, so you and your coworkers can join it and show up on the boards now. We check every new one to make sure it\u2019s a real place; fake or duplicate ones are merged or removed.</p>' +
+      '<button class="btn" type="submit"' + (AGX.busy ? " disabled" : "") + '>Add it</button> <button class="linkish" type="button" data-agx="noadd">Back to the list</button></form>';
   }
   if (!AGX.st) AGX.st = "TX";
   c += '<form class="pform" id="agxFindF"><label>State' + agxStateSel("agxST", AGX.st) + '</label><label>Your agency or institution<input class="pinput" id="agxQ" value="' + esc(AGX.q) + '" placeholder="Start typing: name or city" autocomplete="off"></label></form>';
@@ -33433,7 +33488,7 @@ function agxJoinView() {
 function agxResHtml() {
   if (!AGX.list) return '<p class="muted small">' + (AGX.searching ? "Looking\u2026" : "Start typing to see matches.") + '</p>';
   return (AGX.list.length ? '<ul class="axlist">' + AGX.list.map(function (a, i) { return '<li><button data-agxpick="' + i + '"><b>' + agxMark(a.name, AGX.q) + '</b><span>' + esc(AGX_TYPES[a.type] || "") + " · " + esc(a.city) + (a.status === "pending" ? " · waiting for a check" : " · " + a.members + (a.members === 1 ? " person" : " people")) + '</span></button></li>'; }).join("") + '</ul>' : '<p class="muted">No matches yet.</p>') +
-    '<p><button class="btn ghost small" data-agx="add">Not here? Request it</button></p>';
+    '<p><button class="btn ghost small" data-agx="add">Not here? Add it</button></p>';
 }
 function agxMark(name, q) {
   var out = esc(name); String(q || "").toLowerCase().split(/\s+/).filter(function (w) { return w.length > 1; }).forEach(function (w) {
