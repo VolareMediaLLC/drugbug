@@ -131,6 +131,7 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
 :root{--track2:#d9d2ec}@media(prefers-color-scheme:dark){:root{--track2:#433a5e}}
 .mbar{position:relative;height:14px;background:var(--track);border-radius:99px;margin-top:10px}.mbar i{display:block;height:100%;background:var(--good);border-radius:99px}.mbar b{position:absolute;top:-4px;width:2px;height:22px;background:var(--ink);border-radius:2px}
 .evlist{list-style:none;margin:0;padding:0}.evlist li{padding:6px 0;border-bottom:1px solid var(--line,#ddd)}
+.capgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}.capc{display:flex;flex-direction:column;gap:4px;padding:10px 12px;border:1.5px solid var(--line);border-radius:12px}.capc.full{border-color:var(--bad)}.capn{font-weight:700;font-size:14px}.capv{font-size:13px;color:var(--muted)}.capf{color:var(--bad)}.capc input{max-width:140px}
 </style>
 </head>
 <body>
@@ -239,7 +240,8 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
 <section data-page="signups" class="hide">
   <div class="card">
     <div class="row sp"><div><h2>Evaluator sign-ups</h2><div class="muted small">From drugbugapp.com/evaluate.html, newest first. Make a code for the people you pick, then email it to them.</div></div>
-      <div class="row"><select id="sfSt" style="width:auto"><option value="" selected>Everyone</option><option value="new">New</option><option value="approved">Approved</option><option value="declined">Declined</option></select><button class="ghost" id="bSuRefresh">Refresh</button></div></div>
+      <div class="row"><select id="sfSt" style="width:auto"><option value="" selected>Everyone</option><option value="new">New</option><option value="approved">Approved</option><option value="declined">Declined</option><option value="waitlist">Waitlist</option></select><button class="ghost" id="bSuRefresh">Refresh</button></div></div>
+    <div class="evcaps" id="evCaps"><p class="muted small">Loading specialty caps…</p></div>
     <div class="tblwrap" style="margin-top:10px"><table class="t" id="suTable"><tr><td class="muted">Loading…</td></tr></table></div>
   </div>
 </section>
@@ -750,7 +752,24 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
 
   /* ---------- evaluator sign-ups ---------- */
   var SU = [];
+  /* evaluator caps per specialty (owner, Nov 16 2026) */
+  var EVC = null;
+  function evGroupOf(cred) { var g = (EVC && EVC.groups || []).filter(function (x) { return x.roles.indexOf(cred) >= 0; })[0]; return g ? g.key : "other"; }
+  function evFull(cred) { if (!EVC) return null; var k = evGroupOf(cred), cap = EVC.caps[k]; return cap != null && (EVC.active[k] || 0) >= cap ? (EVC.groups.filter(function (x) { return x.key === k; })[0] || {}).name : null; }
+  function drawCaps() {
+    if (!EVC) return;
+    $("evCaps").innerHTML = '<h3 style="margin:14px 0 4px;font-size:15px">Evaluator caps by role</h3><p class="muted small" style="margin:0 0 8px">Set the most evaluators you want for each role (Paramedic, EMT, RN and so on). Every role starts at 5. Change any number and press Save caps; clear a box for no cap. When a role is full, new sign-ups for it go on the waitlist and are told so. Active = evaluator codes that are switched on.</p>' +
+      '<div class="capgrid">' + EVC.groups.map(function (g) { var a = EVC.active[g.key] || 0, cap = EVC.caps[g.key], w = EVC.wait[g.key] || 0, full = cap != null && a >= cap;
+        return '<label class="capc' + (full ? ' full' : '') + '"><span class="capn">' + esc(g.name) + '</span><span class="capv"><b>' + a + '</b> active' + (cap != null ? ' of ' + cap : '') + (w ? ' · ' + w + ' waiting' : '') + (full ? ' · <b class="capf">Full</b>' : '') + '</span><input type="number" min="0" max="10000" placeholder="No cap" data-cap="' + g.key + '" value="' + (cap != null ? cap : '') + '"></label>'; }).join("") +
+      '</div><div class="row" style="margin-top:8px"><button id="bCapSave">Save caps</button><span class="muted small" id="capMsg"></span></div>';
+    $("bCapSave").onclick = function () {
+      var caps = {}; document.querySelectorAll("[data-cap]").forEach(function (i) { caps[i.getAttribute("data-cap")] = i.value.trim(); });
+      $("capMsg").textContent = "Saving…"; call("evalCaps", { caps: caps }).then(function (r) { EVC = r; drawCaps(); $("capMsg").textContent = "Saved."; drawSignups(); }).catch(function (e) { $("capMsg").textContent = errTxt(e); });
+    };
+  }
+  function loadCaps() { call("evalCaps", {}).then(function (r) { EVC = r; drawCaps(); drawSignups(); }).catch(function (e) { $("evCaps").innerHTML = '<p class="muted small">' + esc(errTxt(e)) + ' (caps need the newest server)</p>'; }); }
   function loadSignups() {
+    loadCaps();
     $("suTable").innerHTML = '<tr><td class="muted">Loading…</td></tr>';
     call("evalAppList").then(function (r) { SU = r.list || []; drawSignups(); }).catch(function (e) { $("suTable").innerHTML = '<tr><td class="muted">' + esc(errTxt(e)) + '</td></tr>'; });
   }
@@ -764,7 +783,7 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
     $("suTable").innerHTML = L.length ? '<tr><th>Name</th><th>Role</th><th>Years</th><th>Where</th><th>Why</th><th>Signed up</th><th>Status</th><th></th></tr>' + L.map(function (a) {
       var s = a.status || "new";
       return '<tr><td><b>' + esc(a.name) + '</b><div class="muted small">' + esc(a.email) + '</div></td><td class="small">' + esc(a.cred) + '</td><td class="small">' + esc(a.years || "") + '</td><td class="small">' + esc(a.place || "") + '</td><td class="small" style="max-width:280px">' + esc(a.why || "") + '</td><td class="small muted">' + day(a.at) + '</td>' +
-        '<td><span class="pill ' + (s === "approved" ? "ok" : s === "declined" ? "off" : "") + '">' + (s === "approved" ? "Approved" : s === "declined" ? "Declined" : "New") + '</span>' + (a.code ? '<div><code class="c">' + esc(a.code) + '</code></div>' : '') + '</td>' +
+        '<td><span class="pill ' + (s === "approved" ? "ok" : s === "declined" ? "off" : "") + '">' + (s === "approved" ? "Approved" : s === "declined" ? "Declined" : s === "waitlist" ? "Waitlist" : "New") + '</span>' + (s !== "approved" && evFull(a.cred) ? '<div class="muted small">Role full</div>' : '') + (a.code ? '<div><code class="c">' + esc(a.code) + '</code></div>' : '') + '</td>' +
         '<td><div class="row" style="flex-wrap:nowrap">' + (a.code ? '<a class="btn" style="padding:7px 12px;font-size:13px" href="' + suMail(a) + '">Email the code</a>' : '<button class="ghost" data-sumake="' + esc(a.id) + '">Make evaluator code</button>') + (s !== "declined" && !a.code ? '<button class="ghost" data-sudecline="' + esc(a.id) + '">Decline</button>' : '') + '</div></td></tr>';
     }).join("") : '<tr><td class="muted">' + (SU.length ? "Nobody here." : "No sign-ups yet.") + '</td></tr>';
   }
@@ -773,11 +792,12 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
     var mk = e.target.closest("[data-sumake]"), dc = e.target.closest("[data-sudecline]");
     if (mk) {
       var a = SU.filter(function (x) { return x.id === mk.getAttribute("data-sumake"); })[0]; if (!a) return;
+      var fullG = evFull(a.cred); if (fullG && !confirm(fullG + " evaluators are at their cap. Make a code for " + a.name + " anyway?")) return;
       mk.disabled = true; mk.textContent = "Making…";
       call("codeMint", { kind: "eval", count: 1, once: true, label: a.name + " (" + a.cred + ")" }).then(function (r) {
         a.code = (r.codes || [])[0]; a.status = "approved";
         return call("evalAppSet", { id: a.id, status: "approved", code: a.code });
-      }).then(function () { CODES = null; drawSignups(); }).catch(function (er) { mk.disabled = false; mk.textContent = "Make evaluator code"; alert(errTxt(er)); });
+      }).then(function () { CODES = null; drawSignups(); loadCaps(); }).catch(function (er) { mk.disabled = false; mk.textContent = "Make evaluator code"; alert(errTxt(er)); });
     }
     if (dc) {
       var b = SU.filter(function (x) { return x.id === dc.getAttribute("data-sudecline"); })[0]; if (!b) return;
@@ -878,7 +898,7 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
     $("cTable").innerHTML = L.length ? '<tr><th>Code</th><th>For</th><th>Gives</th><th class="num">Used</th><th>Used by</th><th>Stops working</th><th>' + (CG ? 'Role' : 'Label') + '</th><th>Made</th><th>Status</th><th></th></tr>' + L.map(function (c) {
       var s = status(c);
       return '<tr><td><code class="c">' + esc(c.code) + '</code></td><td>' + esc(KIND[c.kind] || c.kind) + '</td><td>' + esc(gives(c)) + '</td><td class="num">' + fmt(c.uses || 0) + (c.once ? " / 1" : c.max ? " / " + fmt(c.max) : "") + '</td><td class="small">' + ((c.who || []).length ? (c.who || []).map(function (w) { return '<b>' + esc(w.name || "no name") + '</b>'; }).slice(0, 3).join(", ") + ((c.who || []).length > 3 ? " +" + ((c.who || []).length - 3) : "") : '<span class="muted">' + (c.once ? "One person" : "Shared") + '</span>') + '</td><td class="small">' + (c.expires ? day(c.expires) : "Never") + '</td><td class="small">' + (grp(c)[0] && !CG ? '<span class="pill">' + esc(grp(c)[0]) + '</span> ' : '') + esc(CG ? grp(c)[1] : grp(c)[0] ? grp(c)[1] : (c.label || "")) + '</td><td class="small muted">' + day(c.created) + '</td><td><span class="pill ' + s[0] + '">' + s[1] + '</span></td>' +
-        '<td><div class="row" style="flex-wrap:nowrap"><button class="ghost" data-copy="' + esc(c.code) + '">Copy</button><button class="ghost" data-relabel="' + esc(c.code) + '">Rename</button><button class="ghost" data-rev="' + esc(c.code) + '" data-on="' + (c.revoked ? "0" : "1") + '">' + (c.revoked ? "Turn on" : "Turn off") + '</button></div></td></tr>';
+        '<td><div class="row" style="flex-wrap:nowrap"><button class="ghost" data-copy="' + esc(c.code) + '">Copy</button><button class="ghost" data-relabel="' + esc(c.code) + '">Rename</button><button class="ghost" data-del="' + esc(c.code) + '" style="color:var(--bad)">Delete</button><button class="ghost" data-rev="' + esc(c.code) + '" data-on="' + (c.revoked ? "0" : "1") + '">' + (c.revoked ? "Turn on" : "Turn off") + '</button></div></td></tr>';
     }).join("") : '<tr><td class="muted">' + ((CODES || []).length ? "Nothing matches." : "No codes made here yet. Make some above.") + '</td></tr>';
   }
   var RK = { made: "Made here", evaluator: "LIFE / evaluator", gift: "Gift", license: "School or agency license", protocols: "Agency protocols", fieldmedic: "Field Medic", web: "Web Pro" };
@@ -902,6 +922,14 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
       if (nl == null) return; nl = nl.trim().slice(0, 80);
       rl.disabled = true;
       call("codeEdit", { code: cd, label: nl }).then(function () { (CODES || []).forEach(function (x) { if (x.code === cd) x.label = nl; }); drawCodes(); }).catch(function (er) { rl.disabled = false; alert(errTxt(er) + (/not found|NOT_FOUND|internal/i.test(errTxt(er)) ? " (Run Deploy server first: renaming needs the new server code.)" : "")); });
+      return;
+    }
+    var dl = e.target.closest("[data-del]");
+    if (dl) {
+      var dc = dl.getAttribute("data-del"), cx = (CODES || []).filter(function (x) { return x.code === dc; })[0] || {};
+      if (!confirm("Delete " + dc + " for good?" + (cx.label ? " (" + cx.label + ")" : "") + "\n\nIt disappears from this list and can't be redeemed again. People who already used it keep what they got." + (cx.kind === "eval" ? "\n\nThis is an evaluator code: that evaluator will drop off the evaluator lists." : "") + "\n\nThis can't be undone.")) return;
+      dl.disabled = true;
+      call("codeDelete", { code: dc }).then(function () { CODES = (CODES || []).filter(function (x) { return x.code !== dc; }); drawCodes(); }).catch(function (er) { dl.disabled = false; alert(errTxt(er)); });
       return;
     }
     var r = e.target.closest("[data-rev]"); if (!r) return;
