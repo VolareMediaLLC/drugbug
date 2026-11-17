@@ -171,6 +171,7 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
 .seatline{margin:0 0 10px;font-size:14px}.seatline a{font-weight:700}
 .seatreq{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin:0 0 12px;padding:12px;border:1px solid var(--line,#d8dde6);border-radius:12px}
 .seatreq label{flex:1 1 140px}
+.pickh{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.pickh h3{margin:0}.pickh select{width:auto;min-width:220px;font:inherit;font-size:14px;padding:6px 10px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);color:inherit;max-width:100%}
 </style>
 </head>
 <body>
@@ -335,15 +336,24 @@ body.embed .mxhead .adm{display:none}
   <div class="mxsec">Activity</div>
   <div class="mxg">
     <div class="mxc"><h3>Active people per day</h3><p class="cs">People who opened DrugBug each day (Texas time).</p><p class="cs estkey"><span><i style="background:var(--s1)"></i>Counted: people who chose Share</span> <span><i style="background:var(--s2)"></i>ESTIMATED: everyone, including people who chose Do not share (not an exact count)</span></p><div class="ch" id="chDau"></div></div>
-    <div class="mxc"><h3>New people per day</h3><p class="cs">The first day someone opened DrugBug.</p><p class="cs estkey"><span><i style="background:var(--s1)"></i>Counted: people who chose Share</span> <span><i style="background:var(--s2)"></i>ESTIMATED: everyone, including people who chose Do not share (not an exact count)</span></p><div class="ch" id="chNew"></div></div>
+    <div class="mxc"><h3>New people per day</h3><p class="cs">Exact: everyone who accepted the Terms for the first time that day (everyone does this once, whether or not they share statistics). Days before the Terms log started (Nov 11 2026) show the people who chose Share.</p><div class="ch" id="chNew"></div></div>
   </div>
   <div class="mxg">
     <div class="mxc"><h3>Questions answered per day</h3><p class="cs">Everyone together.</p><p class="cs estkey"><span><i style="background:var(--s1)"></i>Counted: people who chose Share</span> <span><i style="background:var(--s2)"></i>ESTIMATED: everyone, including people who chose Do not share (not an exact count)</span></p><div class="ch" id="chQ"></div></div><div class="mxc"><h3>Paying customers per day</h3><p class="cs">Only people who pay: App Store or website subscribers who opened DrugBug that day. Free trials, gift and evaluator codes, and class seats are not counted.</p><p class="cs estkey"><span><i style="background:var(--s1)"></i>Paying people who opened DrugBug that day (people who chose Share)</span> <span><i style="background:var(--s2)"></i>All paying customers that day (exact: Apple's report plus website subscriptions)</span></p><div class="ch" id="chPay"></div></div>
     <div class="mxc"><h3>Accuracy per day</h3><p class="cs">Share of answers that were right. Days with fewer than 10 answers are left out.</p><div class="ch" id="chAcc"></div></div>
   </div>
-  <div class="mxc"><h3>iPhone app vs website</h3><p class="cs">Where people used DrugBug each day. Each device counts once per day.</p>
-    <div class="legend"><span><i style="background:var(--s1)"></i>iPhone app</span><span><i style="background:var(--s2)"></i>Website</span><span id="apPlatShare"></span></div>
-    <div class="ch" id="chPlat"></div></div>
+  <div class="mxg">
+    <div class="mxc"><h3>Bought per day</h3><p class="cs">New paying customers that day (App Store or website). Website purchases are exact; iPhone purchases are counted from people who share statistics (app 1.2.3 and later).</p><p class="cs estkey"><span><i style="background:var(--s1)"></i>Counted: people who chose Share</span> <span><i style="background:var(--s2)"></i>ESTIMATED: everyone, including people who chose Do not share (not an exact count)</span></p><div class="ch" id="chBuy"></div></div>
+    <div class="mxc"><h3>Free trials started per day</h3><p class="cs">People who started the 7-day free trial that day.</p><p class="cs estkey"><span><i style="background:var(--s1)"></i>Counted: people who chose Share</span> <span><i style="background:var(--s2)"></i>ESTIMATED: everyone, including people who chose Do not share (not an exact count)</span></p><div class="ch" id="chTrial"></div></div>
+  </div>
+  <div class="mxg">
+    <div class="mxc"><h3>Minutes studied per day</h3><p class="cs">Total time in DrugBug that day, everyone together.</p><p class="cs estkey"><span><i style="background:var(--s1)"></i>Counted: people who chose Share</span> <span><i style="background:var(--s2)"></i>ESTIMATED: everyone, including people who chose Do not share (not an exact count)</span></p><div class="ch" id="chMin"></div></div>
+    <div class="mxc"><h3>Sessions per day</h3><p class="cs">How many times DrugBug was opened that day.</p><p class="cs estkey"><span><i style="background:var(--s1)"></i>Counted: people who chose Share</span> <span><i style="background:var(--s2)"></i>ESTIMATED: everyone, including people who chose Do not share (not an exact count)</span></p><div class="ch" id="chSess"></div></div>
+  </div>
+  <div class="mxc"><div class="pickh"><h3>Pick a graph</h3><select id="chPickSel" aria-label="Choose what the graph shows"></select></div>
+    <p class="cs" id="chPickNote">Choose any number to see it day by day.</p>
+    <div class="legend" id="chPickLeg"></div>
+    <div class="ch" id="chPick"></div></div>
 
   <div class="mxsec">Coming back</div>
   <div class="mxc"><h3>Do people come back?</h3><p class="cs">New people grouped by the week they started. Darker = more came back. Day 1 = came back the next day.</p><div class="tblwrap"><table class="ret" id="apRet"></table></div></div>
@@ -351,7 +361,6 @@ body.embed .mxhead .adm{display:none}
   <div class="mxsec">Website</div>
   <div class="kpis" id="apSiteKpis"></div>
   <div class="mxg" style="margin-top:14px">
-    <div class="mxc"><h3>Homepage visits per day</h3><p class="cs">No cookies; nothing about the person is recorded. Counting started Nov 14 2026.</p><div class="ch" id="chSite"></div></div>
     <div class="mxc"><h3>From visit to download</h3><p class="cs">What visitors did, for the selected days.</p><div class="fun" id="apFunnel"></div>
       <h3 style="margin-top:18px">Where visits came from</h3><div class="rk" id="apSrc" style="margin-top:8px"></div></div>
   </div>
@@ -1165,10 +1174,18 @@ body.embed .mxhead .adm{display:none}
       kpi("Active today", num(T.active1), "", "Average " + (Math.round(avgD * 10) / 10) + " a day over " + per, spark(rows, function (r) { return r.dau; })),
       kpi("Active this week", num(T.active7), "", "Opened DrugBug in the last 7 days"),
       kpi("Active this month", num(T.active30), "", (T.stickiness || 0) + "% of them open it on an average day" + (T.stickiness >= 20 ? " (a habit)" : "")),
-      kpi("New people", num(nu), "", (rows.some(function (r) { return r.estNew != null; }) ? "Estimated about " + num(sum(rows, function (r) { return r.estNew; })) + " (not exact) · " : "") + delta(nu, pnu, unit), spark(rows, function (r) { return r.newUsers; })),
+      (function () { var af = -1; rows.forEach(function (r, i) { if (af < 0 && r.accepted) af = i; }); var nx = function (r, i) { return af >= 0 && i >= af ? (r.accepted || 0) : r.newUsers; };
+        var tot = rows.reduce(function (t, r, i) { return t + nx(r, i); }, 0);
+        /* exact from the Terms acceptances (owner, Nov 16 2026: "On the new users you don't have to estimate") */
+        return kpi("New people", num(tot), "", "Exact: accepted the Terms for the first time" + (pnu != null ? " · " + delta(tot, prev ? prev.reduce(function (t, r) { return t + (r.accepted || r.newUsers || 0); }, 0) : null, unit) : ""), spark(rows.map(function (r, i) { return Object.assign({}, r, { _nx: nx(r, i) }); }), function (r) { return r._nx; })); })(),
       kpi("Questions answered", num(q), "", (q ? Math.round(100 * c / q) + "% right · " : "") + delta(q, pq, unit), spark(rows, function (r) { return r.q; })),
       kpi("Time per person per day", String(Math.round(mpp * 10) / 10), "min", pmpp != null ? delta(mpp, pmpp, unit) : "On days they opened it"),
       kpi("Days active per person", String(T.daysActivePerUser30 || 0), "of 30", "Among people active this month"),
+      (function () { var B = d.est && d.est.boughtToday; if (!B) return "";
+        /* who bought today, counted and estimated (owner, Nov 16 2026). App Store reports are ~2 days late, so they're not used here. */
+        return kpi("Bought today", num(B.counted), "", "Counted: " + num(B.apple) + " on iPhone, " + num(B.web) + " on the website" + (B.webExact ? " (website exact)" : "") +
+          " · ESTIMATED about " + num(B.estimated) + " in all (not exact)" + " · Free trials started: " + num(B.trials) + (B.estTrials !== B.trials ? " counted, about " + num(B.estTrials) + " estimated" : "") +
+          " · Last 7 days: " + num(B.week.counted) + " counted, about " + num(B.week.estimated) + " estimated"); })(),
       (function () { var P = (d.est && d.est.pay) || {}, pp = T.pay30 || {}, fp = (pp.free || 0) + (pp.code || 0);
         /* paid only: App Store and website subscribers. Codes, gifts, class seats and free trials are not counted (owner, Nov 16 2026) */
         var E = d.est || {};
@@ -1179,14 +1196,58 @@ body.embed .mxhead .adm{display:none}
     timeChart("chDau", rows, "line", [{ v: function (r) { return r.dau; }, c: "--s1" }].concat(rows.some(function (r) { return r.estDau != null; }) ? [{ v: function (r) { return r.estDau; }, c: "--s2" }] : []), { label: "Active people per day", tip: function (r) { return pl(r.dau, "active person").replace("persons", "people") + "<br>" + pl(r.newUsers, "new person").replace("persons", "people") + "<br>" + r.minutes + " min studied"; } });
     /* counted (chose Share) and estimated (everyone), back-filled for every day (owner, Nov 15 2026) */
     var hasEst = rows.some(function (r) { return r.estNew != null; });
-    timeChart("chNew", rows, hasEst ? "line" : "cols", [{ v: function (r) { return r.newUsers; }, c: "--s1" }].concat(hasEst ? [{ v: function (r) { return r.estNew; }, c: "--s2" }] : []), { label: "New people per day: counted (blue) and estimated (orange)", tip: function (r) { return pl(r.newUsers, "new person").replace("persons", "people") + " counted" + (r.estNew != null ? "<br>About " + num(r.estNew) + " ESTIMATED (not exact)" + (r.accepted ? "<br>" + num(r.accepted) + " accepted the Terms" : "") : ""); } });
+    /* new people are exact from the Terms acceptances, no estimate needed (owner, Nov 16 2026) */
+    var accFrom = -1; rows.forEach(function (r, i) { if (accFrom < 0 && r.accepted) accFrom = i; });
+    var newExact = function (r, i) { return accFrom >= 0 && i >= accFrom ? (r.accepted || 0) : r.newUsers; };
+    timeChart("chNew", rows.map(function (r, i) { return Object.assign({}, r, { _nx: newExact(r, i) }); }), "cols", [{ v: function (r) { return r._nx; }, c: "--s1" }], { label: "New people per day (exact)", tip: function (r) { return num(r._nx) + " new " + (r._nx === 1 ? "person" : "people") + (r.accepted ? " (accepted the Terms for the first time)" : " (chose Share; before the Terms log)"); } });
+    var SR = d.est && d.est.shareRate ? d.est.shareRate / 100 : null, estOf = function (n) { return SR ? Math.round(n / SR) : null; };
+    timeChart("chBuy", rows, "line", [{ v: function (r) { return r.boughtN || 0; }, c: "--s1" }, { v: function (r) { return r.estBought != null ? r.estBought : null; }, c: "--s2" }], { label: "Bought per day: counted (blue) and ESTIMATED (orange)", tip: function (r) { return num(r.boughtN || 0) + " counted (" + num(r.boughtApple || 0) + " iPhone, " + num(r.boughtWeb || 0) + " website)" + (r.estBought != null ? "<br>About " + num(r.estBought) + " ESTIMATED (not exact)" : ""); } });
+    timeChart("chTrial", rows, "line", [{ v: function (r) { return r.trials || 0; }, c: "--s1" }, { v: function (r) { return r.estTrials != null ? r.estTrials : null; }, c: "--s2" }], { label: "Free trials started per day: counted (blue) and ESTIMATED (orange)", tip: function (r) { return num(r.trials || 0) + " counted" + (r.estTrials != null ? "<br>About " + num(r.estTrials) + " ESTIMATED (not exact)" : ""); } });
+    timeChart("chMin", rows, "line", [{ v: function (r) { return r.minutes || 0; }, c: "--s1" }].concat(SR ? [{ v: function (r) { return estOf(r.minutes || 0); }, c: "--s2" }] : []), { label: "Minutes studied per day: counted (blue) and ESTIMATED (orange)", tip: function (r) { return num(r.minutes || 0) + " min counted" + (SR ? "<br>About " + num(estOf(r.minutes || 0)) + " min ESTIMATED (not exact)" : "") + (r.dau ? "<br>" + (Math.round(10 * (r.minutes || 0) / r.dau) / 10) + " min per person" : ""); } });
+    timeChart("chSess", rows, "line", [{ v: function (r) { return r.sessions || 0; }, c: "--s1" }].concat(SR ? [{ v: function (r) { return estOf(r.sessions || 0); }, c: "--s2" }] : []), { label: "Sessions per day: counted (blue) and ESTIMATED (orange)", tip: function (r) { return num(r.sessions || 0) + " sessions counted" + (SR ? "<br>About " + num(estOf(r.sessions || 0)) + " ESTIMATED (not exact)" : ""); } });
     var hasQE = rows.some(function (r) { return r.estQ != null; });
     timeChart("chPay", rows, "line", [{ v: function (r) { return r.paid; }, c: "--s1" }].concat(rows.some(function (r) { return r.estPaid != null; }) ? [{ v: function (r) { return r.estPaid; }, c: "--s2" }] : []), { label: "Paying customers per day (paid only, no codes or trials): paying people who opened DrugBug (blue) and all paying customers (orange)", tip: function (r) { if (r.paid == null && r.exactPaid == null) return "Not tracked on this day"; var p = r.pay || {}; return (r.paid != null ? num(r.paid) + " paying people opened DrugBug" + (r.pay ? " (" + num(p.apple || 0) + " App Store, " + num(p.web || 0) + " website)" : " (at most; free Pro from codes removed)") : "") + (r.exactPaid != null ? "<br>" + num(r.exactPaid) + " paying customers in all (" + num(r.exactApple || 0) + " App Store, " + num(r.exactWeb || 0) + " website)" : r.estPaid != null ? "<br>About " + num(r.estPaid) + " ESTIMATED (not exact)" : "") + ((p.trial || p.code || p.free) ? "<br>Not counted: " + num(p.trial || 0) + " trial, " + num((p.code || 0) + (p.free || 0)) + " free Pro" : ""); } });
     timeChart("chQ", rows, hasQE ? "line" : "cols", [{ v: function (r) { return r.q; }, c: "--s1" }].concat(hasQE ? [{ v: function (r) { return r.estQ; }, c: "--s2" }] : []), { label: "Questions answered per day", tip: function (r) { return num(r.q) + " questions counted" + (r.estQ != null ? " · about " + num(r.estQ) + " ESTIMATED" : "") + (r.accuracy != null ? "<br>" + r.accuracy + "% right" : "") + "<br>" + num(r.learn) + " L.E.A.R.N cards"; } });
     timeChart("chAcc", rows, "line", [{ v: function (r) { return r.q >= 10 ? r.accuracy : null; }, c: "--s3" }], { pct: true, label: "Accuracy per day", tip: function (r) { return r.q >= 10 ? r.accuracy + "% right of " + num(r.q) : "Fewer than 10 answers"; } });
     var ws = sum(rows, function (r) { return (r.plat || {}).web; }), is = sum(rows, function (r) { return (r.plat || {}).ios; }), both = ws + is;
-    $("apPlatShare").innerHTML = both ? "· iPhone " + Math.round(100 * is / both) + "% of daily visits, website " + Math.round(100 * ws / both) + "%" : "";
-    timeChart("chPlat", rows, "cols", [{ v: function (r) { return (r.plat || {}).ios || 0; }, c: "--s1" }, { v: function (r) { return (r.plat || {}).web || 0; }, c: "--s2" }], { h: 170, label: "iPhone app and website use per day", tip: function (r) { var p = r.plat || {}; return '<i style="background:var(--s1)"></i>iPhone app: ' + (p.ios || 0) + '<br><i style="background:var(--s2)"></i>Website: ' + (p.web || 0); } });
+    /* PICK A GRAPH (owner, Nov 16 2026: "the web versus phone users don't need to be that big ... make it to where I can click
+       on the graph and select the graph I want there. So create a bunch of different types of information I can select from").
+       Counted in blue, ESTIMATED in orange wherever an estimate makes sense. The choice is remembered on this browser. */
+    (function () {
+      var SR2 = d.est && d.est.shareRate ? d.est.shareRate / 100 : null, E = function (n) { return SR2 && n != null ? Math.round(n / SR2) : null; };
+      var af2 = -1; rows.forEach(function (r, i) { if (af2 < 0 && r.accepted) af2 = i; });
+      var R2 = rows.map(function (r, i) { return Object.assign({}, r, { _nx: af2 >= 0 && i >= af2 ? (r.accepted || 0) : r.newUsers, _mpp: r.dau ? Math.round(10 * (r.minutes || 0) / r.dau) / 10 : null, _qpp: r.dau ? Math.round(10 * (r.q || 0) / r.dau) / 10 : null, _ret: r.dau ? Math.max(0, r.dau - (r.newUsers || 0)) : 0 }); });
+      var CE = function (f, ef) { return [{ v: f, c: "--s1" }].concat(SR2 ? [{ v: ef || function (r) { return E(f(r)); }, c: "--s2" }] : []); };
+      var P = {
+        plat: { t: "iPhone app vs website", n: "Where people used DrugBug each day. Each device counts once per day." + (both ? " iPhone " + Math.round(100 * is / both) + "%, website " + Math.round(100 * ws / both) + "%." : ""), kind: "cols", s: [{ v: function (r) { return (r.plat || {}).ios || 0; }, c: "--s1" }, { v: function (r) { return (r.plat || {}).web || 0; }, c: "--s2" }], leg: ["iPhone app", "Website"] },
+        dau: { t: "Active people", n: "People who opened DrugBug each day.", s: CE(function (r) { return r.dau; }, function (r) { return r.estDau; }) },
+        newp: { t: "New people (exact)", n: "First-time Terms acceptances each day.", kind: "cols", s: [{ v: function (r) { return r._nx; }, c: "--s1" }], leg: ["Exact"] },
+        ret: { t: "Returning people", n: "Active people who were not new that day.", s: CE(function (r) { return r._ret; }) },
+        q: { t: "Questions answered", n: "All answers, everyone together.", s: CE(function (r) { return r.q; }, function (r) { return r.estQ; }) },
+        acc: { t: "Accuracy", n: "Share of answers that were right (days with 10+ answers).", pct: true, s: [{ v: function (r) { return r.q >= 10 ? r.accuracy : null; }, c: "--s3" }], leg: ["% right"] },
+        qpp: { t: "Questions per person", n: "Average questions answered by each active person.", s: [{ v: function (r) { return r._qpp; }, c: "--s1" }], leg: ["Per person"] },
+        min: { t: "Minutes studied", n: "Total minutes in DrugBug each day.", s: CE(function (r) { return r.minutes || 0; }) },
+        mpp: { t: "Minutes per person", n: "Average minutes for each person who opened DrugBug that day.", s: [{ v: function (r) { return r._mpp; }, c: "--s1" }], leg: ["Per person"] },
+        sess: { t: "Sessions", n: "Times DrugBug was opened.", s: CE(function (r) { return r.sessions || 0; }) },
+        learn: { t: "L.E.A.R.N cards", n: "L.E.A.R.N cards studied each day.", s: CE(function (r) { return r.learn || 0; }) },
+        buy: { t: "Bought", n: "New paying customers each day.", s: [{ v: function (r) { return r.boughtN || 0; }, c: "--s1" }, { v: function (r) { return r.estBought != null ? r.estBought : null; }, c: "--s2" }] },
+        trial: { t: "Free trials started", n: "7-day free trials started each day.", s: [{ v: function (r) { return r.trials || 0; }, c: "--s1" }, { v: function (r) { return r.estTrials != null ? r.estTrials : null; }, c: "--s2" }] },
+        paid: { t: "Paying customers", n: "Paying people who opened DrugBug (blue) and all paying customers (orange).", s: [{ v: function (r) { return r.paid; }, c: "--s1" }, { v: function (r) { return r.estPaid; }, c: "--s2" }], leg: ["Opened DrugBug", "All paying"] },
+        ios: { t: "iPhone app users", n: "Devices using the iPhone app each day.", s: CE(function (r) { return (r.plat || {}).ios || 0; }) },
+        web: { t: "Website users", n: "Devices using the website app each day.", s: CE(function (r) { return (r.plat || {}).web || 0; }) },
+        site: { t: "Homepage visits", n: "Visits to drugbugapp.com (no cookies).", s: [{ v: function (r) { return (r.site || {}).view || 0; }, c: "--s1" }], leg: ["Visits"] }
+      };
+      var sel = $("chPickSel"), cur = "plat"; try { cur = localStorage.getItem("dbChPick") || "plat"; } catch (e) {} if (!P[cur]) cur = "plat";
+      sel.innerHTML = Object.keys(P).map(function (k) { return '<option value="' + k + '"' + (k === cur ? " selected" : "") + '>' + esc(P[k].t) + '</option>'; }).join("");
+      var draw = function (k) {
+        var g = P[k]; $("chPickNote").textContent = g.n;
+        var leg = g.leg || (g.s.length > 1 ? ["Counted", "ESTIMATED (not exact)"] : ["Counted"]);
+        $("chPickLeg").innerHTML = leg.map(function (l, i) { return '<span><i style="background:var(' + (g.s[i] ? g.s[i].c : "--s1") + ')"></i>' + esc(l) + '</span>'; }).join("");
+        timeChart("chPick", R2, g.kind || "line", g.s, { h: 150, pct: g.pct, label: g.t + " per day", tip: function (r) { return g.s.map(function (x, i) { var v = x.v(r); return v == null ? "" : esc(leg[i] || "") + ": " + num(v) + (g.pct ? "%" : ""); }).filter(Boolean).join("<br>"); } });
+      };
+      sel.onchange = function () { try { localStorage.setItem("dbChPick", sel.value); } catch (e) {} draw(sel.value); };
+      draw(cur);
+    })();
     /* retention heatmap */
     var cell = function (v, n) { if (v == null) return '<td class="na">too soon</td>'; var h = heat(v); return '<td class="c' + (h[1] ? " dk" : "") + '" style="background:var(' + h[0] + ')" data-tt="' + esc(v + "% of " + n + " came back") + '">' + v + '%</td>'; };
     $("apRet").innerHTML = '<tr><th>Started</th><th>New people</th><th>Day 1</th><th>Within 7 days</th><th>Within 30 days</th></tr>' + (d.retention.length ? d.retention.map(function (r) {
@@ -1201,7 +1262,6 @@ body.embed .mxhead .adm{display:none}
       kpi("Tried it in the browser", rate(sBr), "", num(sBr) + " taps on Try it free"),
       kpi("Went to the App Store", rate(sAs), "", num(sAs) + " taps on the App Store button")
     ].join("");
-    timeChart("chSite", rows, "line", [{ v: function (r) { return (r.site || {}).view || 0; }, c: "--s1" }], { label: "Homepage visits per day", tip: function (r) { var s = r.site || {}; return num(s.view || 0) + " visits<br>" + num(s.browser || 0) + " tried it in the browser<br>" + num(s.appstore || 0) + " went to the App Store"; } });
     var fmax = Math.max(sViews, 1);
     $("apFunnel").innerHTML = [["Visited the homepage", sViews], ["Tapped Try it free", sBr], ["Tapped the App Store", sAs]].map(function (f, i) {
       return '<div class="fr"><div>' + f[0] + '</div><div class="fb"><i style="width:' + (f[1] ? Math.max(1.5, 100 * f[1] / fmax) : 0) + '%"></i></div><div class="fv">' + num(f[1]) + (i && sViews ? '<span>' + Math.round(100 * f[1] / sViews) + '%</span>' : '') + '</div></div>'; }).join("");
