@@ -1660,6 +1660,10 @@ function nrLevelsFor(k) {
   return ["flight"];
 }
 function nrPool(filter, noGen) {
+  var full = nrPoolAll(filter, noGen);
+  return freeSample() ? freeCut(full, freeQsCap(), qid) : full;
+}
+function nrPoolAll(filter, noGen) {
   var allowed = nrLevelsFor(ctxKey());
   if (filter && filter !== "all" && !isF(ctxKey())) allowed = allowed.indexOf(filter) >= 0 ? [filter] : []; /* tiers always study their whole cumulative bank */
   var inScope = null;
@@ -1900,11 +1904,12 @@ function nrPrep() {
   if (isF(ctxKey())) st.kind = "reg";
   var regN = regCount(), reg = st.kind === "reg", filters = nrLevelsFor(ctxKey()).concat(["all"]), n = Math.min(st.n, pool.length);
   /* one simple screen: pick a deck, a length and a mode, then go. Everything else sits under More options. */
-  var c = '<section class="nrsetup nrfun"><div class="nrtop">' + myBugArt("nrbug", null, null, myStage()) + '<p class="nrtag"><strong>' + esc(exam) + '-style practice.</strong> <span class="muted">' + (isF(ctxKey()) ? 'Pick a length, go.' : 'Pick a deck, pick a length, go.') + '</span></p></div>' + examPill(pool) + creatorNote();
-  if (regN && isF(ctxKey())) c += '<p class="muted small">' + regN + ' questions on medications, blood, trauma, prolonged care, ventilators, labs, CBRN, K9, dive and evacuation.</p>';
+  var c = freeSample() ? freeNote("questions", (function () { var cap = freeQsCap(); return regN && !isF(ctxKey()) ? Math.min(cap, drugCount()) + Math.min(cap, regN) : Math.min(FREE_QS, pool.length); })(), 0) : '';
+  c += '<section class="nrsetup nrfun"><div class="nrtop">' + myBugArt("nrbug", null, null, myStage()) + '<p class="nrtag"><strong>' + esc(exam) + '-style practice.</strong> <span class="muted">' + (isF(ctxKey()) ? 'Pick a length, go.' : 'Pick a deck, pick a length, go.') + '</span></p></div>' + examPill(pool) + creatorNote();
+  if (regN && isF(ctxKey())) c += '<p class="muted small">' + (freeSample() ? Math.min(regN, freeQsCap()) : regN) + ' questions on medications, blood, trauma, prolonged care, ventilators, labs, CBRN, K9, dive and evacuation.</p>';
   else if (regN) c += '<div class="nrdecks" role="group" aria-label="Question type">' +
     '<button class="nrdeck" data-nrkind="drug" aria-pressed="' + !reg + '"><span class="nrdk-ic" aria-hidden="true">' + icon("pillq") + '</span><strong>Drug questions</strong><span class="nrdk-n">' + drugCount() + '</span><span class="nrdk-sub">' + (nurse ? "Medicines: what to check, report and teach on your unit" : "Doses, actions, uses and side effects") + '</span></button>' +
-    '<button class="nrdeck" data-nrkind="reg" aria-pressed="' + reg + '"><span class="nrdk-ic" aria-hidden="true">' + icon("ecg") + '</span><strong>' + (nurse ? (S.level === "cna" ? "CNA exam-style questions" : "NCLEX-style questions") : (isEMSLv(S.level) || S.level === "cp" ? "Registry-style questions" : "Exam-style questions")) + '</strong><span class="nrdk-n">' + regN + '</span><span class="nrdk-sub">' + (nurse ? (S.level === "cna" ? "Care, safety, communication and your role" : "Priority, delegation, safety, care and the whole test plan") : "Airway, cardiology, trauma, medical and operations") + '</span></button></div>' +
+    '<button class="nrdeck" data-nrkind="reg" aria-pressed="' + reg + '"><span class="nrdk-ic" aria-hidden="true">' + icon("ecg") + '</span><strong>' + (nurse ? (S.level === "cna" ? "CNA exam-style questions" : "NCLEX-style questions") : (isEMSLv(S.level) || S.level === "cp" ? "Registry-style questions" : "Exam-style questions")) + '</strong><span class="nrdk-n">' + (freeSample() ? Math.min(regN, freeQsCap()) : regN) + '</span><span class="nrdk-sub">' + (nurse ? (S.level === "cna" ? "Care, safety, communication and your role" : "Priority, delegation, safety, care and the whole test plan") : "Airway, cardiology, trauma, medical and operations") + '</span></button></div>' +
     (function () { if (!nurse || (S.level !== "rn" && S.level !== "lvn") || typeof myUnit !== "function") return ""; var us0 = myUnits(S.level), u0 = us0[0], uo0 = u0 && typeof unitObj === "function" ? unitObj(u0) : null; return (S.level === "rn" ? nFocusRow(false) : "") + (uo0 && !reg ? '<p class="muted small nrdept">About 3 of every 4 drug questions come from ' + (us0.length > 1 ? 'your departments' : 'your department') + ': <strong>' + esc(us0.map(function (x) { var o = unitObj(x); return o ? o.name : x; }).join(", ")) + '</strong>, weighted to its most-used medicines and most common cases' + (deptTopCases(u0).length ? ' (' + esc(deptTopCases(u0).join(', ')) + ')' : '') + '. The rest cover other medicines.</p>' : ""); })();
   (function () {
     var st2 = seenStats();
@@ -2698,6 +2703,7 @@ document.addEventListener("click", function (e) {
     case "utilback": var ub = S.utilBack; S.utilBack = null; if (ub && ub.view && !UTIL_VIEWS[ub.view]) { go(ub.view, ub.level ? { level: ub.level } : {}); if (ub.tab && ub.tab !== "hub") { S.tab = ub.tab; render(); } return; } return go("home");
     case "terrback": var tb = S.terrBack; S.terrBack = null; if (tb && tb.view && tb.view !== "terrarium") { go(tb.view, tb.level ? { level: tb.level } : {}); if (tb.tab) { S.tab = tb.tab; render(); } return; } return go("home");
     case "megalock": return openPaywall("Bug Rush", toolTier("mega"));
+    case "freepro": return openPaywall(S.tab === "rush" ? "Bug Rush" : "Questions", "pro");
     case "megaback": S.megaFrom = null; S.tool = null; S.mega = null; clearInterval(MC.timer); S.tab = "scenarios"; render(); return window.scrollTo(0, 0);
     case "megago": S.megaFrom = null; S.tab = "rush"; S.tool = null; render(); return window.scrollTo(0, 0);
     case "toolsback": S.tool = null; S.mega = null; clearInterval(MC.timer); render(); return window.scrollTo(0, 0);
@@ -6871,7 +6877,7 @@ document.addEventListener("click", function (e) { var b = e.target.closest && e.
 /* ---------- Clinical tools: Megacode, Medication Disease Identifier, Safety drills, My List ---------- */
 var TOOLS = [["prep", "Questions"], ["mega", "Codes"], ["cards", "Flashcards"], ["games", "Brain Games"], ["safety", "Safety drills"]];
 /* each tool keeps the tier it had before Study Tools absorbed it, so the move changed nothing about what anyone pays for */
-var TOOL_TIER = { prep: "pro", mega: "pro", cards: "free", games: "pro", safety: "pro" };
+var TOOL_TIER = { prep: "free", mega: "pro", cards: "free", games: "pro", safety: "pro" };   /* prep free with the 50-question sample (Nov 17 2026) */
 function toolTier(k) { return TOOL_TIER[k] || "pro"; }
 function toolsAllowed() { var k = ctxKey(); return { mega: !!DB.MEGA_LEVELS[k], peds: ["emt", "cna"].indexOf(k) < 0, medlist: false, safety: false /* ISMP-derived drills withheld: no written permission (counsel, Nov 11 2026) */, prep: S.view !== "gen", cards: true, games: true }; }
 var TOOLDESC = { mega: "Run a timed code with a live monitor.", peds: "Weight-based pediatric doses at a glance.", medlist: "A study exercise: read a practice medication list and work out the likely conditions, the questions to ask and the risky combinations.", safety: "Look-alike names and high-alert drug drills.", prep: "Timed practice tests at your star level, with scores.", cards: "Flip, sort and master each drug.", games: "Memory match, crossword, quick match, word scramble, Class Blitz and Frog Snack." };
@@ -7218,7 +7224,7 @@ function rushPool() {
       if (c.lv === "rn" && all && us.indexOf(c.unit) >= 0) P.push({ k: "call", id: c.id });   /* your own departments come up twice as often */
     });
   }
-  return P;
+  return freeSample() ? freeCut(P, FREE_RUSH, function (x) { return x.k + ":" + x.id; }) : P;
 }
 function rushPick() {
   var P = rushPool(); if (!P.length) return null;
@@ -7251,7 +7257,7 @@ function rushView() {
   if (R.ended) return rushSummary(R);
   if (!R.cur && !rushStart(R)) return '<div class="empty">Bug Rush is on the way for this level.</div>';
   var kind = { mega: "Code", scen: "Case", call: "Call" }[R.cur.k];
-  var c = (ctxKey() === "rn" && typeof nFocusRow === "function" ? nFocusRow(false) : "") + '<div class="rushbar"><span class="rushn"><strong>' + kind + ' ' + R.n + '</strong></span><span class="rushs">Saved <b>' + R.saved + '</b></span><span class="rushl">Lost <b>' + R.lost + '</b></span>' +
+  var c = (R.n <= 1 ? freeNote("Bug Rush calls", rushPool().filter(function (x, i, a) { return a.findIndex(function (y) { return y.k === x.k && y.id === x.id; }) === i; }).length, 0) : '') + (ctxKey() === "rn" && typeof nFocusRow === "function" ? nFocusRow(false) : "") + '<div class="rushbar"><span class="rushn"><strong>' + kind + ' ' + R.n + '</strong></span><span class="rushs">Saved <b>' + R.saved + '</b></span><span class="rushl">Lost <b>' + R.lost + '</b></span>' +
     (R.tot ? '<span>Score <b>' + Math.round(100 * R.ok / R.tot) + '%</b></span>' : '') + '<button class="linkish" data-act="rushend">End rush</button></div>';
   if (R.cur.k === "mega") return c + (S.mega && !S.mega.done ? '<p class="rushacu">' + acuTag("critical") + '</p>' : '') + megaView2();
   if (R.cur.k === "scen") { var s = scenList().filter(function (x) { return x.id === R.cur.id; })[0]; if (!s) { R.cur = null; return rushView(); } return c + scenView(s, scenList(), "rush"); }
@@ -11908,7 +11914,25 @@ function proView() { return S.view === "level"; } /* professional routes */
 
    So the gate moved off the feature and onto the drug, which is why tabTier is now free for
    everything and the work happens in drugTier() and studyLocked(). */
-function tabTier(tab) { return tab === "megacode" || tab === "rush" ? toolTier("mega") : tab === "qs" || tab === "prep" ? toolTier("prep") : tab === "games" ? toolTier("games") : "free"; }
+function tabTier(tab) { return tab === "megacode" ? toolTier("mega") : tab === "rush" || tab === "qs" || tab === "prep" ? "free" : tab === "games" ? toolTier("games") : "free"; }
+/* FREE SAMPLE (owner, Nov 17 2026: "give the free version like 10 free bug rush scenarios and 50 free questions",
+   "every specialty will need its free questions and bug rushes"). Free gets a fixed, replayable sample in every
+   role: 10 Bug Rush calls and 50 questions (25 drug + 25 exam-style where a role has both decks). The sample is
+   picked by a stable hash, so it is the same set every time; Pro opens everything. */
+var FREE_RUSH = 10, FREE_QS = 50;
+function freeSample() { return typeof PAYWALL !== "undefined" && PAYWALL && !hasTier("pro"); }
+function freeCut(list, n, key) {
+  var seen = {}, u = [];
+  list.forEach(function (x) { var k = key(x); if (!seen[k]) { seen[k] = 1; u.push(x); } });
+  u.sort(function (a, b) { var ha = hashStr("fs|" + key(a)), hb = hashStr("fs|" + key(b)); return ha < hb ? -1 : ha > hb ? 1 : 0; });
+  var keep = {}; u.slice(0, n).forEach(function (x) { keep[key(x)] = 1; });
+  return list.filter(function (x) { return keep[key(x)]; });
+}
+function freeQsCap() { var both = (typeof regCount === "function" ? regCount() : 0) > 0 && !isF(ctxKey()); return both ? Math.floor(FREE_QS / 2) : FREE_QS; }
+function freeNote(what, n, all) {
+  if (!freeSample()) return "";
+  return '<div class="freesamp"><span><b>Free sample:</b> ' + n + ' ' + what + (all > n ? ' of ' + all.toLocaleString() : '') + ' for this specialty, yours to replay any time.</span><button class="btn small" data-act="freepro">Unlock all with Pro</button></div>';
+}
 function proLocked(tab) { return PAYWALL && !hasTier(tabTier(tab)); }
 function drugTier(id) { return FREE_SET[id] ? "free" : "plus"; }   /* reading a drug: Free for the 40, Plus for the rest */
 /* The drill pool. A question, game or scenario about a medication outside the free set only appears
