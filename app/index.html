@@ -3421,6 +3421,10 @@ button.tierchip:hover{filter:brightness(1.08)}
 .sbbar b{font-size:20px}.sbpts{font-size:12px;font-weight:700;margin-bottom:4px;font-variant-numeric:tabular-nums}.sbnm{font-size:12px;font-weight:650;margin-top:6px;line-height:1.2}
 .sbsteps{text-align:left;margin:0 0 10px;padding-left:22px;line-height:1.45}.sbsteps li{margin:0 0 6px}
 @keyframes sbgrow{from{transform:scaleY(0)}to{transform:scaleY(1)}}@media (prefers-reduced-motion:reduce){.sbbar{animation:none}}
+.anGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}.anTile{background:var(--surface2,rgba(127,127,127,.08));border:1px solid var(--line,rgba(127,127,127,.25));border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}.anTile b{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}.anTile span{font-size:13px;font-weight:650}.anTile small{font-size:12px;opacity:.7}
+.anList{border:1px solid var(--line,rgba(127,127,127,.25));border-radius:14px;margin:6px 0 12px;overflow:hidden}.anList div{display:flex;justify-content:space-between;gap:12px;padding:10px 14px;border-top:1px solid var(--line,rgba(127,127,127,.18))}.anList div:first-child{border-top:0}.anList span{opacity:.75;font-size:14px}.anList b{text-align:right;font-size:14px}.anList small{font-weight:500;opacity:.75}
+.anNever{display:flex;flex-direction:column;gap:2px;padding:10px 14px;border-radius:12px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.35);margin:0 0 12px;font-size:14px}.anNever b{color:#059669}
+@media (min-width:640px){.anGrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 </style>
 
 <div class="wrap" id="app"><div id="boot" aria-hidden="true"><div class="bootlogo">Drug<span>Bug</span></div><div class="bootbar"><i></i></div><p class="bootnote">Loading your medications</p></div></div>
