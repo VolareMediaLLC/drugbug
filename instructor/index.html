@@ -171,6 +171,7 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
 .seatline{margin:0 0 10px;font-size:14px}.seatline a{font-weight:700}
 .seatreq{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin:0 0 12px;padding:12px;border:1px solid var(--line,#d8dde6);border-radius:12px}
 .seatreq label{flex:1 1 140px}
+.pickh select.pickt{font-weight:700;font-size:15px;border-color:var(--s1);cursor:pointer;min-width:0;flex:1 1 200px}.pickhint{font-size:12px;font-weight:600;color:var(--s1);cursor:pointer;white-space:nowrap}.mxc.swap .ch{cursor:pointer}
 .pickh{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.pickh h3{margin:0}.pickh select{width:auto;min-width:220px;font:inherit;font-size:14px;padding:6px 10px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);color:inherit;max-width:100%}
 </style>
 </head>
@@ -350,10 +351,7 @@ body.embed .mxhead .adm{display:none}
     <div class="mxc"><h3>Minutes studied per day</h3><p class="cs">Total time in DrugBug that day, everyone together.</p><p class="cs estkey"><span><i style="background:var(--s1)"></i>Counted: people who chose Share</span> <span><i style="background:var(--s2)"></i>ESTIMATED: everyone, including people who chose Do not share (not an exact count)</span></p><div class="ch" id="chMin"></div></div>
     <div class="mxc"><h3>Sessions per day</h3><p class="cs">How many times DrugBug was opened that day.</p><p class="cs estkey"><span><i style="background:var(--s1)"></i>Counted: people who chose Share</span> <span><i style="background:var(--s2)"></i>ESTIMATED: everyone, including people who chose Do not share (not an exact count)</span></p><div class="ch" id="chSess"></div></div>
   </div>
-  <div class="mxc"><div class="pickh"><h3>Pick a graph</h3><select id="chPickSel" aria-label="Choose what the graph shows"></select></div>
-    <p class="cs" id="chPickNote">Choose any number to see it day by day.</p>
-    <div class="legend" id="chPickLeg"></div>
-    <div class="ch" id="chPick"></div></div>
+  <div class="mxc"><div class="ch" id="chPick"></div></div>
 
   <div class="mxsec">Coming back</div>
   <div class="mxc"><h3>Do people come back?</h3><p class="cs">New people grouped by the week they started. Darker = more came back. Day 1 = came back the next day.</p><div class="tblwrap"><table class="ret" id="apRet"></table></div></div>
@@ -1234,19 +1232,31 @@ body.embed .mxhead .adm{display:none}
         trial: { t: "Free trials started", n: "7-day free trials started each day.", s: [{ v: function (r) { return r.trials || 0; }, c: "--s1" }, { v: function (r) { return r.estTrials != null ? r.estTrials : null; }, c: "--s2" }] },
         paid: { t: "Paying customers", n: "Paying people who opened DrugBug (blue) and all paying customers (orange).", s: [{ v: function (r) { return r.paid; }, c: "--s1" }, { v: function (r) { return r.estPaid; }, c: "--s2" }], leg: ["Opened DrugBug", "All paying"] },
         ios: { t: "iPhone app users", n: "Devices using the iPhone app each day.", s: CE(function (r) { return (r.plat || {}).ios || 0; }) },
-        web: { t: "Website users", n: "Devices using the website app each day.", s: CE(function (r) { return (r.plat || {}).web || 0; }) },
-        site: { t: "Homepage visits", n: "Visits to drugbugapp.com (no cookies).", s: [{ v: function (r) { return (r.site || {}).view || 0; }, c: "--s1" }], leg: ["Visits"] }
+        web: { t: "Website users", n: "Devices using the website app each day.", s: CE(function (r) { return (r.plat || {}).web || 0; }) }
       };
-      var sel = $("chPickSel"), cur = "plat"; try { cur = localStorage.getItem("dbChPick") || "plat"; } catch (e) {} if (!P[cur]) cur = "plat";
-      sel.innerHTML = Object.keys(P).map(function (k) { return '<option value="' + k + '"' + (k === cur ? " selected" : "") + '>' + esc(P[k].t) + '</option>'; }).join("");
-      var draw = function (k) {
-        var g = P[k]; $("chPickNote").textContent = g.n;
-        var leg = g.leg || (g.s.length > 1 ? ["Counted", "ESTIMATED (not exact)"] : ["Counted"]);
-        $("chPickLeg").innerHTML = leg.map(function (l, i) { return '<span><i style="background:var(' + (g.s[i] ? g.s[i].c : "--s1") + ')"></i>' + esc(l) + '</span>'; }).join("");
-        timeChart("chPick", R2, g.kind || "line", g.s, { h: 150, pct: g.pct, label: g.t + " per day", tip: function (r) { return g.s.map(function (x, i) { var v = x.v(r); return v == null ? "" : esc(leg[i] || "") + ": " + num(v) + (g.pct ? "%" : ""); }).filter(Boolean).join("<br>"); } });
+      /* EVERY graph is swappable (owner, Nov 16 2026: "I still cant manually change them like i requested"). Each card's
+         title is a menu; tapping the graph opens it too. Choices are remembered per card on this browser. */
+      var SLOTS = [["chDau", "dau"], ["chNew", "newp"], ["chQ", "q"], ["chAcc", "acc"], ["chBuy", "buy"], ["chTrial", "trial"], ["chMin", "min"], ["chSess", "sess"], ["chPay", "paid"], ["chPick", "plat"]];
+      var saved = {}; try { saved = JSON.parse(localStorage.getItem("dbChSlots") || "{}") || {}; } catch (e) { saved = {}; }
+      try { var old = localStorage.getItem("dbChPick"); if (old && !saved.chPick) saved.chPick = old; } catch (e) {}
+      var opts = function (cur) { return Object.keys(P).map(function (k) { return '<option value="' + k + '"' + (k === cur ? " selected" : "") + '>' + esc(P[k].t) + '</option>'; }).join(""); };
+      var draw = function (id, k) {
+        var g = P[k], leg = g.leg || (g.s.length > 1 ? ["Counted", "ESTIMATED (not exact)"] : ["Counted"]);
+        $(id + "Note").textContent = g.n;
+        $(id + "Leg").innerHTML = leg.map(function (l, i) { return '<span><i style="background:var(' + (g.s[i] ? g.s[i].c : "--s1") + ')"></i>' + esc(l) + '</span>'; }).join("");
+        timeChart(id, R2, g.kind || "line", g.s, { h: 150, pct: g.pct, label: g.t + " per day", tip: function (r) { return g.s.map(function (x, i) { var v = x.v(r); return v == null ? "" : esc(leg[i] || "") + ": " + num(v) + (g.pct ? "%" : ""); }).filter(Boolean).join("<br>"); } });
       };
-      sel.onchange = function () { try { localStorage.setItem("dbChPick", sel.value); } catch (e) {} draw(sel.value); };
-      draw(cur);
+      SLOTS.forEach(function (sl) {
+        var id = sl[0], el = $(id); if (!el) return;
+        var card = el.closest(".mxc"), cur = P[saved[id]] ? saved[id] : sl[1];
+        card.classList.add("swap");
+        card.innerHTML = '<div class="pickh"><select class="pickt" id="' + id + 'Sel" aria-label="Choose what this graph shows">' + opts(cur) + '</select><span class="pickhint">Change graph ▾</span></div>' +
+          '<p class="cs" id="' + id + 'Note"></p><div class="legend" id="' + id + 'Leg"></div><div class="ch" id="' + id + '" title="Tap the title to change this graph"></div>';
+        var s2 = $(id + "Sel");
+        s2.onchange = function () { saved[id] = s2.value; try { localStorage.setItem("dbChSlots", JSON.stringify(saved)); } catch (e) {} draw(id, s2.value); };
+        card.querySelector(".pickhint").onclick = function () { s2.focus(); try { s2.showPicker(); } catch (e) { s2.click(); } };
+        draw(id, cur);
+      });
     })();
     /* retention heatmap */
     var cell = function (v, n) { if (v == null) return '<td class="na">too soon</td>'; var h = heat(v); return '<td class="c' + (h[1] ? " dk" : "") + '" style="background:var(' + h[0] + ')" data-tt="' + esc(v + "% of " + n + " came back") + '">' + v + '%</td>'; };
