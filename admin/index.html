@@ -561,7 +561,8 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
         var L = AS.live || {}, RS = AS.reportSubs, M = AS.month || {};
         var paying = Math.max(L.paying || 0, RS ? RS.paid : 0), trials = Math.max(L.trials || 0, RS ? RS.trials : 0);
         var bodyA = '<div class="big">' + fmt(paying) + '<small>paying on iPhone</small></div><div class="delta">' + fmt(trials) + ' on a free trial' + (L.renewOff ? ' · ' + L.renewOff + ' turned off auto-renew' : '') + '</div>' +
-          '<div class="minis">' + mini(d$(M.proceedsUSD), "Apple proceeds this month") + mini(fmt(M.downloads || 0), "downloads this month") + mini(fmt(M.purchases || 0), "purchases this month") + '</div>' +
+          '<div class="minis">' + mini(d$(M.proceedsUSD), "Apple proceeds this month") + mini(fmt(M.downloads || 0), "downloads this month") + mini(fmt(M.purchases || 0), "paid charges this month") + (M.freeStarts != null ? mini(fmt(M.freeStarts || 0), "free trials started") : '') + '</div>' +
+          (M.updates != null ? '<p class="muted small">Paid charges count every subscription payment, so a renewal counts again each month. Not counted: ' + fmt(M.updates || 0) + ' app updates and ' + fmt(M.redownloads || 0) + ' re-downloads this month.</p>' : '') +
           '<p class="what">From Apple: proceeds are what you keep after Apple\'s cut, through ' + esc(AS.reportThrough || "no report yet") + ' (Apple runs about a day behind). Subscriber counts update live.</p>';
         var ev = (AS.events || []).filter(function (e) { return e.env !== "Sandbox"; }).slice(0, 12);
         var openA = '<div><h4>Apple proceeds, last 30 days</h4>' + ((AS.last30 || []).length > 1 ? spark((AS.last30 || []).map(function (x) { return x.proceeds; }), 110) : '<p class="muted small">Not enough days yet.</p>') +
