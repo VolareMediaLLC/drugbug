@@ -498,7 +498,7 @@ var S = { view: "home", level: null, tab: "hub", q: "", tags: {}, group: "all", 
 try { window.__dbS = S; } catch (e) {}
 var app = $("#app"), sheet = $("#sheet");
 
-function ctxKey() { return S.view === "gen" || S.view === "easy" || S.view === "everyday" ? "gen" : S.level; }
+function ctxKey() { return S.view === "gen" || S.view === "easy" || S.view === "everyday" || S.view === "beginner" ? "gen" : S.level; }
 function ctxClass() { return LVCLASS[ctxKey()] || "lvl-gen"; }
 function genIds() { return DB.ALLIDS.filter(function (id) { return DB.drugs[id]; }); }
 function scopeIds() {
@@ -523,11 +523,11 @@ function go(view, opts) {
   if (view === "flevels" || view === "field") { if (S.view === "level" && isF(S.level)) view = "home"; else { view = "level"; opts = Object.assign({}, opts || {}, { level: "cpp" }); } }
   if (view === "level" && opts && opts.level && isF(opts.level) && opts.level !== "cpp") opts = Object.assign({}, opts, { level: "cpp" });
   if (UTIL_VIEWS[view] && !UTIL_VIEWS[S.view] && S.view !== view && S.view !== "terrarium") S.utilBack = { view: S.view, level: S.level, tab: S.tab };
-  clearTimeout(S.qT); S.view = view; Object.assign(S, { cmpOn: 0, cmpB: null, cmpQ: "", pointGo: null, showFilt: false, onlyMarks: false, tool: null, shopF: null, tab: "hub", q: "", tags: {}, group: "all", scen: null, fc: null, nr: null, sess: null, prepNr: null, unit: null, fam: null, famq: "", cn: null, menu: false, mupop: false, fmq: "", trId: null, blT: "", disId: null }, opts || {});
+  clearTimeout(S.qT); S.view = view; Object.assign(S, { bgRun: null, cmpOn: 0, cmpB: null, cmpQ: "", pointGo: null, showFilt: false, onlyMarks: false, tool: null, shopF: null, tab: "hub", q: "", tags: {}, group: "all", scen: null, fc: null, nr: null, sess: null, prepNr: null, unit: null, fam: null, famq: "", cn: null, menu: false, mupop: false, fmq: "", trId: null, blT: "", disId: null }, opts || {});
   if ((S.view === "flevels" || S.view === "field" || (S.view === "level" && isF(S.level))) && typeof fmUnlocked === "function" && !fmUnlocked()) { S.view = "home"; view = "home"; } /* Field Medic is hidden until a code is redeemed */
   fixTab();
   Admin.on = view === "admin"; if (view === "level") store("lastLevel", S.level);
-  var h = view === "home" ? "" : view === "admin" ? "admin" : view === "classes" ? "classes" : view === "settings" ? "settings" : view === "stats" ? "stats" : view === "terrarium" ? "terrarium" : view === "levels" ? "prehospital" : view === "flevels" ? "fieldmedic" : view === "nlevels" ? "nursing" : view === "mlevels" ? "medschool" : view === "ilevels" ? "imaging" : view === "alevels" ? "allied" : view === "everyday" ? "everyday" : view === "field" ? "field" : view === "gen" ? "general" : view === "easy" ? "easy" : S.level;
+  var h = view === "home" ? "" : view === "admin" ? "admin" : view === "classes" ? "classes" : view === "settings" ? "settings" : view === "stats" ? "stats" : view === "terrarium" ? "terrarium" : view === "levels" ? "prehospital" : view === "flevels" ? "fieldmedic" : view === "nlevels" ? "nursing" : view === "mlevels" ? "medschool" : view === "ilevels" ? "imaging" : view === "alevels" ? "allied" : view === "everyday" ? "everyday" : view === "beginner" ? "beginner" : view === "field" ? "field" : view === "gen" ? "general" : view === "easy" ? "easy" : S.level;
   try { history.replaceState(null, "", h ? "#" + h : location.pathname); } catch (e) {}
   render(); window.scrollTo(0, 0);
 }
@@ -547,6 +547,7 @@ function topbar() {
   if (S.view === "settings") c += '<span>/</span><span>Settings</span>';
   if (S.view === "stats") c += '<span>/</span><span>Stats</span>';
   if (S.view === "terrarium") c += '<span>/</span><span>Terrarium</span>';
+  if (S.view === "beginner") c += '<span>/</span><span>Beginner to Medicine</span>';
   if (S.view === "everyday") c += '<span>/</span>' + (S.evTab ? '<button data-evtab="">Everyday Health</button>' : '<span>Everyday Health</span>');
   var extra = (!SOCIAL ? '' : '<button class="theme-btn" data-go="classes"' + (S.view === "classes" ? ' aria-current="page"' : '') + '>Classes</button>') + (Admin.can ? '<button class="theme-btn admin-btn" data-go="admin"' + (S.view === "admin" ? ' aria-current="page"' : '') + '><span class="lg">Control Center</span><span class="sm">Control Center</span></button>' : '');
   c += '</nav><span class="spacer"></span><div class="tbacts">' + (stickChip() || tierChip()) + '<span class="tbx">' + extra + '</span><button class="theme-btn srch-btn" data-act="gsearch" aria-label="Search all drugs" title="Search all drugs"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>' + staffBtn() + '<button class="theme-btn menu-btn" data-act="tbmenu" aria-expanded="' + !!S.menu + '" aria-label="More">More</button>' + musicBtn() + gearBtn() + (typeof funOn === "function" && !funOn() ? '' : '<button class="tbsticks' + (typeof iapAvailable === "function" && iapAvailable() ? ' hasplus' : '') + '" data-goshop="1" data-shopf="sticks" aria-label="' + sticks() + ' sticks. Get more sticks" title="Get Sticks">' + stickIcon(18) + (typeof iapAvailable === "function" && iapAvailable() ? '<span class="tbplus" aria-hidden="true">+</span>' : '') + '<strong>' + sticks().toLocaleString() + '</strong></button>') + '</div>' + (S.menu ? '<div class="tbmenu" role="menu">' + extra + '' + (typeof stxBtn === "function" ? stxBtn() : '') + '<button class="theme-btn" data-idea="1">Send an idea</button></div>' : '') + '</div>';
@@ -554,7 +555,7 @@ function topbar() {
 }
 function backRow() {
   var v = S.view, lab = "", act = "";
-  if (v === "levels" || v === "flevels" || v === "nlevels" || v === "mlevels" || v === "ilevels" || v === "alevels" || (v === "everyday" && !S.evTab)) { lab = "Main menu"; act = 'data-go="home"'; }
+  if (v === "levels" || v === "flevels" || v === "nlevels" || v === "mlevels" || v === "ilevels" || v === "alevels" || (v === "everyday" && !S.evTab) || (v === "beginner" && !S.bgRun)) { lab = "Main menu"; act = 'data-go="home"'; }
   else if (v === "gen" && S.tab === "hub") { lab = "Main menu"; act = 'data-go="home"'; }
   else if (v === "level" && S.tab === "hub") { var r = isF(S.level) ? ROUTES.ph : ROUTES[routeOfLevel(S.level)]; lab = r ? r.name : "Main menu"; act = 'data-go="' + (r ? r.view : "home") + '"'; }
   else if (UTIL_VIEWS[v]) { var ub = S.utilBack; lab = ub && ub.view && ub.view !== "home" ? "Back" : "Main menu"; act = 'data-act="utilback"'; }
@@ -752,7 +753,8 @@ var ROUTE_CHIPS = {
   rn:  ["CNA", "LVN/LPN", "RN", "Units"],
   md:  ["MS1-MS2", "MS3-MS4", "Intern"],
   im:  ["X-ray", "CT", "MRI", "NM", "IR"],
-  ah:  ["Mental health", "Dietitian", "Respiratory"]
+  ah:  ["Mental health", "Dietitian", "Respiratory"],
+  bg:  ["Lessons", "Step by step", "No background needed"]
 };
 function routeChips(code) {
   var L = ROUTE_CHIPS[code];
@@ -768,6 +770,7 @@ var HOME_ROUTES = [
 var FPATH_ICO = {
   gen: '<path d="M4 4.5A1.5 1.5 0 0 1 5.5 3H20v15H5.5A1.5 1.5 0 0 0 4 19.5z"/><path d="M4 19.5A1.5 1.5 0 0 0 5.5 21H20"/><path d="M9 8h7M9 11.5h5"/>',
   ev: '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/>',
+  bg: '<path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9z"/>',
   ph: '<path d="M3 12h4l2-5 4 10 2-5h6"/>',
   rn: '<path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z"/>',
   md: '<path d="M6 3v6a5 5 0 0 0 10 0V3"/><path d="M11 14v2a4 4 0 0 0 8 0v-2"/><circle cx="19" cy="12" r="2"/>',
@@ -780,6 +783,7 @@ var ROUTE_MORE = {
   md: ["Mechanisms, pharmacokinetics and drug classes", "Step-style questions and advanced lab patterns", "Drug Class Comparisons and Body Systems for rounds"],
   im: ["Contrast agents and radiopharmaceuticals", "Reactions, premedication, eGFR and screening", "Exam-style questions"],
   ah: ["Respiratory therapy: oxygen devices, vent modes, ABGs, aerosols and weaning", "Dietitian / nutritionist: assessment, tube feeding, TPN and refeeding, deficiencies", "Phlebotomy: order of draw, specimen handling, drug-level timing, with questions for each field"],
+  bg: ["Six short units: medicines 101, routes, drug cards, name clues, body basics and safety", "Three small ideas and three quick questions per lesson", "Finish one to open the next"],
   ev: ["General study of OTC medicines, vitamins and probiotics", "Introductory vital-sign and lab concepts", "Ask a licensed clinician or pharmacist about your own medicines"]
 };
 /* Allied Health removed (owner, Nov 15 2026), then brought back as Hospital Allied Health with only Respiratory
@@ -795,10 +799,11 @@ function homeMine() {
 function homeRoutes(mini) {
   var all = homeAll(), mine = homeMine(), list = all || !mine.length ? HOME_ROUTES : mine;
   var picked = Prog.d.interests || [];
-  var showEv = all || picked.indexOf("ev") >= 0 || (!picked.length && Prog.d.role === "ev") || (!picked.length && !mine.length);
-  var cards = (showEv ? mini("ev", "everyday", "Everyday Health", EV_LINE, "grub-everyday") : "") +
-    list.map(function (x) { return mini(x[0], x[1], x[2], x[3], x[4]); }).join("");
-  var n = list.length + (showEv ? 1 : 0);
+  var showBg = all || picked.indexOf("ev") >= 0 || (!picked.length && Prog.d.role === "ev") || (!picked.length && !mine.length);
+  /* Beginner to Medicine takes the old Everyday Health spot; Everyday Health is on everyone's menu (owner, Nov 18 2026) */
+  var cards = (showBg ? mini("bg", "beginner", "Beginner to Medicine", BG_LINE, "grub-eager") : "") +
+    list.map(function (x) { return mini(x[0], x[1], x[2], x[3], x[4]); }).join("") + mini("ev", "everyday", "Everyday Health", EV_LINE, "grub-everyday");
+  var n = list.length + 1 + (showBg ? 1 : 0);
   var head = all || !mine.length ? "Study by role" : (n === 1 ? "Your path" : "Your paths");
   /* the other paths live in Settings now, not on the menu (owner, Nov 4 2026) */
   return '<h3 class="homegh">' + head + '</h3><section class="routes"><div class="minis' + (n === 1 ? ' one' : '') + '">' + cards + '</div></section>';
@@ -816,7 +821,7 @@ function myListRoute() {
 }
 /* the first thing after the header: get studying */
 function homeStart() {
-  var ll = store("lastLevel"), lo = ll && levelObj(ll), RV = { ph: "levels", fm: "flevels", rn: "nlevels", md: "mlevels", im: "ilevels", ah: "alevels", ev: "everyday" };
+  var ll = store("lastLevel"), lo = ll && levelObj(ll), RV = { ph: "levels", fm: "flevels", rn: "nlevels", md: "mlevels", im: "ilevels", ah: "alevels", ev: "beginner" };
   var main = lo ? '<button class="btn big" data-level="' + ll + '">Continue: ' + esc(lo.name) + '</button>' : '<button class="btn big" data-go="' + (RV[Prog.d.role] || "gen") + '">Start studying</button>';
   var daily = dailyDone() ? '<span class="sdone">Today\'s 5-min DrugBug: done</span>' : '<button class="btn big ghost" data-sess="daily">Today\'s 5-min DrugBug</button>';
   var gn = typeof growNudge === "function" ? growNudge(200) : null;
@@ -2504,7 +2509,7 @@ function render() {
      already moved on, so buttons did nothing and nothing explained why. Now it says so and offers
      a way out. (owner reported Flight Paramedic doing this, Oct 30 2026) */
   try {
-    html = ageBlocked() && S.view !== "legal" ? ageBlockView() : needDisc() ? discView() : !ok && S.view !== "legal" ? gateView() : S.view === "legal" ? legalView() : (typeof needFun === "function" && needFun()) ? funView() : (typeof needWelcome === "function" && needWelcome()) ? welcomeView() : needOnboard() ? obView() : S.view === "fire" && typeof fireView === "function" ? fireView() : S.view === "home" ? viewHome() : (S.view === "levels" || S.view === "flevels" || S.view === "nlevels" || S.view === "mlevels" || S.view === "ilevels" || S.view === "alevels") ? viewLevels() : S.view === "easy" ? viewEasy() : S.view === "admin" ? viewAdmin() : S.view === "classes" ? classesView() : S.view === "settings" ? settingsView() : S.view === "stats" && typeof statsView === "function" ? statsView() : S.view === "terrarium" ? ((typeof funOn === "function" && !funOn()) ? (S.view = "home", viewHome()) : terrariumView()) : S.view === "everyday" ? evView() : S.view === "field" && typeof fieldView === "function" ? fieldView() : viewLevel();
+    html = ageBlocked() && S.view !== "legal" ? ageBlockView() : needDisc() ? discView() : !ok && S.view !== "legal" ? gateView() : S.view === "legal" ? legalView() : (typeof needFun === "function" && needFun()) ? funView() : (typeof needWelcome === "function" && needWelcome()) ? welcomeView() : needOnboard() ? obView() : S.view === "fire" && typeof fireView === "function" ? fireView() : S.view === "home" ? viewHome() : (S.view === "levels" || S.view === "flevels" || S.view === "nlevels" || S.view === "mlevels" || S.view === "ilevels" || S.view === "alevels") ? viewLevels() : S.view === "easy" ? viewEasy() : S.view === "admin" ? viewAdmin() : S.view === "classes" ? classesView() : S.view === "settings" ? settingsView() : S.view === "stats" && typeof statsView === "function" ? statsView() : S.view === "terrarium" ? ((typeof funOn === "function" && !funOn()) ? (S.view = "home", viewHome()) : terrariumView()) : S.view === "everyday" ? evView() : S.view === "beginner" ? bgView() : S.view === "field" && typeof fieldView === "function" ? fieldView() : viewLevel();
   } catch (err) {
     LAST_ERR = (err && (err.message || err)) + "";
     try { if (window.console) console.error("DrugBug render failed:", err); } catch (e) {}
@@ -5731,6 +5736,7 @@ var BUGS = [
   { id: "grub-nurse", name: "Scrub Beetle", body: "beetle", c: ["#4fd1c5", "#0f8f86", "#ffffff"], acc: ["stetho"], rar: "common", price: 0, grub: "rn", blurb: "Starter beetle for nursing learners." },
   { id: "grub-imaging", name: "Lead Apron Beetle", body: "beetle", c: ["#94a3b8", "#334155", "#ffffff"], acc: ["goggles"], rar: "common", price: 0, grub: "im", blurb: "Starter beetle for imaging technologists." },
   { id: "grub-everyday", name: "Garden Beetle", body: "beetle", c: ["#ffcf6b", "#e08a2c", "#ffffff"], acc: ["leaf"], rar: "common", price: 0, grub: "ev", blurb: "Starter beetle for Everyday Health learners. Just a regular, friendly bug." },
+  { id: "grub-eager", name: "Eager Bug", body: "beetle", c: ["#7dd3fc", "#2563eb", "#ffffff"], acc: ["beanie", "stars"], rar: "common", price: 0, grub: "ev", blurb: "A tiny, very excited beetle for Beginner to Medicine. It has no idea what a beta blocker is yet, and it cannot wait to find out." },
   { id: "grub-allied", name: "Field Guide Beetle", body: "beetle", c: ["#c4b5fd", "#6d28d9", "#ffffff"], acc: ["headset"], rar: "common", price: 0, grub: "ah", blurb: "A starter beetle with a field guide and a headset." },
   { id: "grub-doc", name: "Bookworm Beetle", body: "beetle", c: ["#8fa8ff", "#4053c9", "#ffffff"], acc: ["bowtie"], rar: "common", price: 0, grub: "md", blurb: "Starter beetle for medical students." },
   // common
@@ -9031,13 +9037,14 @@ function grubFix() { /* give each path its own starter beetle once (older builds
   var P = Prog.d; if (!P) return;
   /* mantis and stick bug used to be free for everyone; testers already using one keep it */
   if ((P.avatar === "free-mantis" || P.avatar === "free-stickbug") && (P.owned || []).indexOf(P.avatar) < 0) { P.owned = (P.owned || []).concat([P.avatar]); saveProg(); }
+  if (P.role === "ev" && (P.owned || []).indexOf("grub-eager") < 0) { P.owned = (P.owned || []).concat(["grub-eager"]); saveProg(); }   /* Beginner to Medicine starter (Nov 18 2026) */
   if (!P.role || P.grubFix) return;
   var R = ROLES.filter(function (x) { return x[0] === P.role; })[0] || ROLES[0], g = R[3];
   if ((P.owned || []).indexOf(g) < 0) P.owned = (P.owned || []).concat([g]);
   if (!P.avatar || P.avatar === "starter") { P.avatar = g; P.avatarTs = Date.now(); }
   P.grubFix = 1; saveProg();
 }
-var ROLES = [["ev", "Everyday Health", "Not a clinician: medicines, vitamins and your body", "grub-everyday", "everyday"], ["ph", "Prehospital", "EMT, AEMT, Paramedic or Flight Paramedic", "grub-medic", "levels"], ["rn", "Nursing", "CNA, LVN/LPN or RN", "grub-nurse", "nlevels"], ["md", "Medical School", "MS1-MS2, MS3-MS4 or Intern", "grub-doc", "mlevels"], ["im", "Imaging", "X-ray, CT, MRI, nuclear medicine or IR", "grub-imaging", "ilevels"], ["ah", "Hospital Allied Health", "Respiratory therapist, dietitian / nutritionist or phlebotomist", "grub-allied", "alevels"]];
+var ROLES = [["ev", "Beginner to Medicine", "New to medicine: start from zero, one short lesson at a time", "grub-eager", "beginner"], ["ph", "Prehospital", "EMT, AEMT, Paramedic or Flight Paramedic", "grub-medic", "levels"], ["rn", "Nursing", "CNA, LVN/LPN or RN", "grub-nurse", "nlevels"], ["md", "Medical School", "MS1-MS2, MS3-MS4 or Intern", "grub-doc", "mlevels"], ["im", "Imaging", "X-ray, CT, MRI, nuclear medicine or IR", "grub-imaging", "ilevels"], ["ah", "Hospital Allied Health", "Respiratory therapist, dietitian / nutritionist or phlebotomist", "grub-allied", "alevels"]];
 if (ALLIED_OFF) ROLES = ROLES.filter(function (r) { return r[0] !== "ah"; });
 function alliedOff() {
   if (!Prog || !Prog.d) return;
@@ -9074,7 +9081,7 @@ function pickFun(on) {
 var OB_FLAGSHIP = { ph: "paramedic", rn: "rn", md: "intern", im: "rt", ah: "mh" };
 function obCards() {
   var ev = ROLES.filter(function (r) { return r[0] === "ev"; })[0];
-  var out = [{ code: "ev", name: ev[1], line: ev[2], bug: ev[3], blurb: "General medication, vitamin, vital-sign and lab concepts for study.", sub: "For anyone \u2014 no clinical background needed." }];
+  var out = [{ code: "ev", name: ev[1], line: ev[2], bug: ev[3], blurb: "Never studied medicine? Short lessons teach the basics one small idea at a time, then you can move on to a specialty.", sub: "For anyone \u2014 no clinical background needed. Everyday Health comes with every path." }];
   var BLURB = {
     ph: "EMT, AEMT, Paramedic, Flight Paramedic and Community Paramedic, each with its own drug list, protocols and registry-style questions.",
     rn: "CNA, LVN/LPN, RN and Flight Nurse, with specialty units, lab values and licensure-style questions.",
@@ -9100,9 +9107,9 @@ function obCards() {
    synchronously, and render() picks it up once the path is actually on screen so the level
    transition cannot redraw over it (owner, Nov 4 2026). */
 function startLearnPath(sg) {
-  if (!sg) sg = { ph: "levels", rn: "nlevels", md: "mlevels", im: "ilevels", ah: "alevels", ev: "everyday" }[Prog.d.role] || "gen";
+  if (!sg) sg = { ph: "levels", rn: "nlevels", md: "mlevels", im: "ilevels", ah: "alevels", ev: "beginner" }[Prog.d.role] || "gen";
   S.learnGo = 1;
-  if (sg === "gen" || sg === "everyday") return go(sg);
+  if (sg === "gen" || sg === "everyday" || sg === "beginner") return go(sg);
   var arr = sg === "nlevels" ? DB.NLEVELS : sg === "mlevels" ? DB.MLEVELS : sg === "ilevels" ? (DB.ILEVELS || []) : sg === "alevels" ? (DB.ALEVELS || []) : DB.LEVELS;
   arr = (arr || []).filter(function (l) { return !(typeof isF === "function" && isF(l.key)); });
   var last = store("lastLevel"), pick = arr.filter(function (l) { return l.key === last; })[0] || arr[0];
@@ -11861,12 +11868,22 @@ window.DrugBugStore = {
     else if (d.pending) PRO.msg = "Your purchase is waiting for approval (for example Ask to Buy).";
     if (d.pro && PRO.open && !hasTier(PRO.need) && !d.error) PRO.msg = TIER_NAME[tier()] + " is active. This part needs " + TIER_NAME[PRO.need] + ".";
     if (d.pro && PRO.open && hasTier(PRO.need)) { closePaywall(); PRO.msg = ""; S.proMsg = "Welcome to " + TIER_NAME[tier()] + "!"; }
+    try { if (d.pro && d.intro) trialGift(); } catch (e) {}
     render(); drawPaywall();
   }
 };
 /* Paid access comes only from StoreKit's verified entitlements (pushed by the native StoreBridge at launch and on every change).
    The proStore value saved on the device is a display hint only and never unlocks anything. */
 try { localStorage.removeItem("drugbug:proStore"); } catch (e) {}
+/* Starting the Pro trial gives one random Epic bug to keep, once per account (owner, Nov 18 2026) */
+function trialGift() {
+  var P = Prog.d; if (!P || P.trialBug) return;
+  var pool = BUGS.filter(function (b) { return b.rar === "epic" && !b.admin && !b.secret && !b.login && !b.unlock && !b.season && !b.retired && !b.king && !owned(b.id); });
+  if (!pool.length) { P.trialBug = "none"; saveProg(); return; }
+  var g = pool[Math.floor(Math.random() * pool.length)];
+  P.owned = (P.owned || []).concat([g.id]); P.trialBug = g.id; saveProg();
+  S.proMsg = "Trial gift: the " + g.name + ", an Epic bug, is yours to keep. Find it in your Terrarium.";
+}
 function licenseActive() { var L = Prog.d.license; return !!(L && L.until && L.until > Date.now()); }
 /* Free trial (App Store rules): a 1-week free introductory offer on the two Pro subscriptions, set up in App Store
    Connect and run by Apple. The person starts it with their Apple Account; it renews into paid Pro unless cancelled.
@@ -12299,44 +12316,65 @@ document.addEventListener("input", function (e) {
    leading into L.E.A.R.N, and the bug and stick cards only when Seriously Fun is on
    (owner, Nov 4 2026). Rebuilt each time it opens so it follows the mode. */
 function tourCards() {
-  var fun = typeof funOn !== "function" || funOn();
-  /* Hickory hosts it: he is the face of L.E.A.R.N, and the tour ends by handing you to him
-     (owner, Nov 4 2026). In Focused mode he steps aside and the cards speak plainly. */
-  if (!fun) return [
-    ["Where to start", "Your paths are on the main menu. The card marked Start here opens L.E.A.R.N: every drug in that scope, one at a time, in random order, nothing repeated.", "plain"],
-    ["Looking things up", "The BugDex holds every medication. Open one for the plain-language version or the full monograph, use Compare to set two drugs side by side, and save what matters to My List.", "plain"],
-    ["Where the questions are", "Open your path from the main menu and look under Study and practice: Questions is there, with practice and exam mode, Weak spots and an exam countdown. Questions are checked by working clinicians and fixed and added all the time; updates arrive without updating the app.", "plain"],
-    ["Bug Rush", "Also under Study and practice. Codes, cases and calls come back to back on a live monitor, and the vitals react to what you choose.", "plain"]
-  ];
-  var c = [
-    ["Well, howdy there",
-     "Name's Hickory. Now, I run the L.E.A.R.N round these parts, and what that means is this. I'm fixin' to walk ya through every last drug in your patch. One at a time, mind. All shuffled up so's ya can't guess what's comin'. And I ain't never gonna show ya the same one twice. Slow and steady, that's the way. Beats crammin' the night before, every single time.",
-     "hick"],
-    ["Now, lookin' somethin' up",
-     "The BugDex has got the whole mess of 'em in there. Ya open one up and ya can have it plain-spoke, or ya can have the whole long story, whichever suits ya that day. See two that keep gettin' tangled up in your head? Hit Compare and I'll set 'em side by each so ya can see just where they part ways. And anything worth hangin' onto, go on and star it into My List.",
-     "hick"],
+  var fun = typeof funOn !== "function" || funOn(), beg = Prog && Prog.d && Prog.d.role === "ev";
+  /* Nov 18 2026 (owner): a much fuller walk-through, with Back and Skip on every card.
+     Hickory hosts it; in Focused mode the same cards speak plainly. */
+  if (!fun) {
+    var F = [["Welcome to DrugBug", "Here is a quick look around. Skip at any time; you can replay this from Settings.", "plain"]];
+    if (beg) F.push(["Beginner to Medicine", "Your path starts from zero: short lessons, each three small ideas and three quick questions. Finish one to open the next.", "plain"]);
+    F.push(
+      ["Your path", "Your path is on the main menu. Open it to pick your level. Each level has its own drug list, questions and tools. The card marked Start here opens L.E.A.R.N: every drug in that scope, one at a time, shuffled, nothing repeated.", "plain"],
+      ["The BugDex", "Every medication lives in the BugDex. Search by name, browse by class or go A to Z. Open one for the plain-language view or the full monograph.", "plain"],
+      ["Inside a drug card", "Say it reads the name aloud. The Wormhole tells where the drug came from. Many drugs have a 3D molecule you can spin. Compare sets two drugs side by side, and the star saves a drug to My List.", "plain"],
+      ["Where the questions are", "Open your path and look under Study and practice. Questions has practice and exam mode, Weak spots and an exam countdown. Clinicians check the questions, and fixes and new ones arrive without updating the app. Something looks wrong? Tap Report a problem under any question.", "plain"],
+      ["Bug Rush", "Also under Study and practice: codes, cases and calls back to back on a live monitor. The vitals react to what you choose.", "plain"],
+      ["Flashcards, games and Weak spots", "Flashcards flip, sort and quiz. Games turn drug names into matching, crosswords and more. Weak spots keeps track of what you miss and brings it back until it sticks.", "plain"],
+      ["Everyday Health", "Everyone gets Everyday Health on the main menu: medicines, vitamins and your body, in plain words.", "plain"],
+      ["Every day", "Today's 5-min DrugBug on the main menu is a short daily set. Keep it going to build a streak.", "plain"],
+      ["Agency Challenge", "Join your agency, hospital or school and climb the weekly scoreboard together.", "plain"],
+      ["Focused or Enhanced", "The button at the top left switches modes. Focused is just the studying. Enhanced adds your bug, the Terrarium, music and animations.", "plain"],
+      ["For study only", "DrugBug is for learning. It is not for patient care. Always follow your protocols, your instructors and medical direction.", "plain"]);
+    return F;
+  }
+  var c = [["Well, howdy there",
+     "Name's Hickory. I'm the bug that runs things round here. Let me show ya the place. It won't take long, and if ya get bored, the Skip button's right there. I won't take it personal. Much.", "hick"]];
+  if (beg) c.push(["Startin' from scratch",
+     "Ya picked Beginner to Medicine. Good on ya. We start right at the bottom: what a medicine even is, how it gets in ya, how to read a drug card. Little lessons, three bitty ideas and three quick questions each. Finish one and the next one opens up. And that eager little fella? That's your bug. He's as new at this as you are.", "bug"]);
+  c.push(
+    ["Your patch",
+     "Your path's right there on the main menu. Open it up and pick your level. Every level's got its own drugs, its own questions and its own tools, so ya ain't wadin' through stuff that ain't yours.", "hick"],
+    ["The L.E.A.R.N round",
+     "The card that says Start here, that's me. L.E.A.R.N walks ya through every last drug in your patch. One at a time, all shuffled up, and I ain't never showin' ya the same one twice. Slow and steady beats crammin' the night before, every single time.", "hick"],
+    ["The BugDex",
+     "The BugDex has got the whole mess of 'em. Search by name, browse by family or go A to Z. Open one up and ya can have it plain-spoke, or ya can have the whole long story. Whichever suits ya that day.", "hick"],
+    ["Inside a drug card",
+     "Now there's tricks in there. Say it reads the name out loud, so ya quit mumblin' it. The Wormhole tells ya where that drug come from. Lots of 'em got a 3D molecule ya can spin around with your finger. Compare sets two drugs side by each. And the star tucks one into My List for later.", "hick"],
     ["Where the questions live",
-     "Pick your path off the main menu, then look under Study and practice. Questions is right there. Thousands of 'em, written for your job. Now here's the thing: real medics and nurses check 'em every day, and we're always fixin' and addin' more. New ones just show up. Ya don't even gotta update the app.",
-     "hick"],
+     "Pick your path, then look under Study and practice. Questions is right there. Thousands of 'em, written for your job, with practice mode, exam mode and a countdown to test day. Real medics and nurses check 'em, and we're always fixin' and addin'. New ones just show up, no app update needed. See one that looks off? Tap Report a problem and I'll get a fella on it.", "hick"],
     ["Bug Rush",
-     "Right next door is Bug Rush. Codes, cases and calls, one after another, on a live monitor. Pick right and your patient perks up. Pick wrong and, well, ya'll see them numbers go south. Save as many as ya can.",
-     "hick"],
+     "Right next door is Bug Rush. Codes, cases and calls, one after another, on a live monitor. Pick right and your patient perks up. Pick wrong and, well, ya'll see them numbers go south. Save as many as ya can.", "hick"],
     ["Then ya gotta go test yourself",
-     "Flashcards and Weak spots, too. Now that last one's the sneaky one. It keeps a quiet little tally of whatever ya keep gettin' wrong, and it'll feed 'em right back to ya till they finally stick.",
-     "hick"]
-  ];
-  c.push(["Sticks and bugs",
-    "Every question ya take a swing at pays ya one stick. Get the thing right, well, that's three. Spend 'em in the Terrarium on bugs and hats and music and all manner of foolishness. Tap your bug up at the top of the screen to find it. And your bug? He grows right along with ya.",
-    "sticks"]);
-  c.push(["Right then",
-    "That's about enough jawin' out of me. Come on, let me show ya how this works on a real drug.",
-    "hick"]);
+     "Flashcards flip and sort. Games turn drug names into matchin', crosswords, scrambles and a frog that eats wrong answers. And Weak spots? That's the sneaky one. It keeps a quiet tally of whatever ya keep missin' and feeds 'em right back till they stick.", "hick"],
+    ["Everyday Health",
+     "Everybody gets Everyday Health on the main menu, whatever path ya pick. Medicines, vitamins and your own body, said plain. Good for you, and good for explainin' things to your mama.", "hick"],
+    ["Every day, a little",
+     "Today's 5-min DrugBug sits on the main menu. Five minutes, every day. Keep it up and ya build a streak, and streaks pay.", "hick"],
+    ["Agency Challenge",
+     "Got a crew? Join your agency, hospital or school and climb the weekly scoreboard together. Top folks win bugs nobody else can get.", "hick"],
+    ["Sticks and bugs",
+     "Every question ya take a swing at pays ya one stick. Get it right, that's three. Spend 'em in the Terrarium on bugs and hats and music and all manner of foolishness. Tap your bug up at the top of the screen to find it. And your bug grows right along with ya.", "sticks"],
+    ["Serious mode",
+     "Ain't feelin' the bugs today? The button up top left flips ya to Focused: just the studyin', no fuss, no me. I'll be fine. I'll just sit here.", "hick"],
+    ["One more thing",
+     "This here's for learnin', not for takin' care of real patients. Out there, ya follow your protocols, your teachers and your medical director. In here, ya can mess up all ya want. That's the point.", "hick"],
+    ["Right then",
+     "That's about enough jawin' out of me. Come on, let me show ya how this works on a real drug.", "hick"]);
   return c;
 }
 var TOUR = tourCards();
 var TR = { i: 0, open: false };
 var trdlg = document.createElement("div"); trdlg.id = "tourdlg"; trdlg.className = "sheet rsheet"; trdlg.hidden = true; document.body.appendChild(trdlg);
-var TOUR_V = 2;   /* Nov 18 2026: questions, Bug Rush and the Terrarium added; everyone sees the new tour once */
+var TOUR_V = 3;   /* Nov 18 2026: the full walk-through; everyone sees the new tour once */
 function tourDone() { return TR.done || (store("tourV") || 0) >= TOUR_V; }
 function tourOpen(force) { if (TR.open || (!force && tourDone())) return; TOUR = tourCards(); TR.open = true; TR.i = 0;   /* the Serious / Seriously fun choice lives in Settings now (owner, Oct 30 2026) */ drawTour(); trdlg.hidden = false; }
 function tourClose() { try { if (typeof voiceStop === "function") voiceStop(); } catch (e) {} TR.done = true; TR.open = false; trdlg.hidden = true; trdlg.innerHTML = ""; store("tourDone", 1); store("tourV", TOUR_V); if (typeof wdwSync === "function") setTimeout(wdwSync, 600); if (typeof remindSync === "function") setTimeout(remindSync, 900); }
@@ -12347,7 +12385,7 @@ function drawTour() {
     : t[2] === "bug" ? myBugArt("tourbug", null, null, myStage()) : "";
   trdlg.innerHTML = '<div class="panel tourpanel" role="dialog" aria-modal="true" aria-label="' + esc(t[0]) + '" tabindex="-1">' + (art ? '<div class="tourart">' + art + '</div>' : '') +
     '<h2>' + esc(t[0]) + '</h2><p>' + esc(t[1]) + '</p><div class="tourdots">' + TOUR.map(function (x, i) { return '<i class="' + (i === TR.i ? "on" : "") + '"></i>'; }).join("") + '</div>' +
-    '<div class="actions"><button class="btn small ghost" data-tour="skip">' + (last ? "Not now" : "Skip") + '</button><button class="btn" data-tour="next">' + (last ? "Show me" : "Next") + '</button></div></div>';
+    '<p class="muted small tourstep">' + (TR.i + 1) + ' of ' + TOUR.length + '</p><div class="actions"><button class="btn small ghost" data-tour="skip">' + (last ? "Not now" : "Skip") + '</button>' + (TR.i > 0 ? '<button class="btn small ghost" data-tour="back">Back</button>' : '') + '<button class="btn" data-tour="next">' + (last ? "Show me" : "Next") + '</button></div></div>';
   translateDom(trdlg); var p = trdlg.querySelector(".panel"); if (p) p.focus();
   /* Hickory talks you through the tour (owner, Nov 5 2026) */
   try { if (typeof voiceSay === "function") { var w = String(t[1]).split(/\s+/).slice(0, 14).join(" "); if (typeof voiceStop === "function") voiceStop(); VX.pend = setTimeout(function () { voiceSay(w, "hick"); }, 120); } } catch (e) {}
@@ -12355,6 +12393,7 @@ function drawTour() {
 document.addEventListener("click", function (e) {
   var b = e.target.closest && e.target.closest("[data-tour]"); if (!b) return;
   if (b.dataset.tour === "skip") return tourClose();
+  if (b.dataset.tour === "back") { if (TR.i > 0) { TR.i--; drawTour(); } return; }
   if (b.dataset.tour === "again") { TR.done = false; store("tourDone", null); store("tourV", null); return tourOpen(true); }
   if (TR.i < TOUR.length - 1) { TR.i++; drawTour(); return; }
   /* the last card is Hickory offering to show you: closing it opens L.E.A.R.N on the path
@@ -35592,4 +35631,125 @@ document.addEventListener("keydown", function (e) { if (B3.open && e.key === "Es
 })();
 
 Dex.load(); try { otaInit(); } catch (e) {} initProg(); try { alliedOff(); } catch (e) {} if (typeof grubFix === "function") grubFix(); if (agreeRec() && typeof trialBegin === "function") trialBegin(); setTimeout(function () { if (typeof remindSync === "function") remindSync(); if (typeof wdwSync === "function") wdwSync(); if (typeof watchSync === "function") watchSync(); }, 1500); initAdmin(); initLegal(); if (typeof accInit === "function") accInit(); if (typeof walletInit === "function") walletInit(); if (typeof subInit === "function") subInit(); setTimeout(loadProtocolSets, 400);
+/* ---------- Beginner to Medicine (owner, Nov 18 2026) ----------
+   A route for people who have never studied medicine: short lessons in order, Duolingo-style.
+   Each lesson is three small idea cards, then three quick questions. Finishing one opens the next.
+   It takes the old Everyday Health spot in the path picker (role code "ev" is kept so nothing else
+   moves); Everyday Health itself is now on everyone's menu. Education only, no doses. */
+var BG_LINE = "New to medicine? Start from zero with short lessons, one small idea at a time.";
+var BG_UNITS = [
+ { t: "Medicines 101", ic: "\u{1F48A}", L: [
+  { t: "What a medicine does", c: ["A medicine is a substance that changes how the body works, to treat, prevent or ease a problem.", "Most medicines work by attaching to a target in the body, like a key fitting a lock. That target is often a receptor on a cell.", "Every medicine has benefits and risks. The goal is to get the benefit while keeping the risk low."],
+    q: [["A medicine usually works by:", "Attaching to a target in the body", "Changing your blood type", "Cleaning germs out of the air"], ["A receptor is best described as:", "A target on a cell that a medicine can fit", "A type of pill coating", "A pharmacy record"], ["Every medicine has:", "Both benefits and risks", "Only benefits", "Only risks"]] },
+  { t: "Generic and brand names", c: ["The generic name is the official name of the ingredient, like acetaminophen or ibuprofen.", "A brand name is the name a company sells it under. One medicine can have many brand names, but it has one generic name.", "Clinicians mostly use generic names. They are the same everywhere, which helps avoid mix-ups."],
+    q: [["Acetaminophen is a:", "Generic name", "Brand name", "Drug class"], ["One medicine can have:", "Many brand names but one generic name", "One brand name but many generic names", "Only one name of any kind"], ["Why do clinicians usually use generic names?", "They are the same everywhere and avoid mix-ups", "They are always shorter", "Brand names are not allowed"]] },
+  { t: "Prescription or over the counter", c: ["Over-the-counter (OTC) medicines can be bought without a prescription.", "Prescription medicines need an order from a licensed prescriber, like a doctor, nurse practitioner or PA.", "OTC medicines are still real medicines. Two different products can hide the same ingredient, so the label matters."],
+    q: [["An over-the-counter medicine:", "Can be bought without a prescription", "Is always stronger than a prescription", "Has no side effects"], ["Two cold products both contain acetaminophen. Why does that matter?", "Someone could take more of it than they meant to", "They cancel each other out", "It makes both work faster"], ["OTC medicines are:", "Real medicines with real risks", "Completely safe in any amount", "Just vitamins"]] }
+ ]},
+ { t: "Into the body", ic: "\u{1F6E3}️", L: [
+  { t: "Routes", c: ["The route is how a medicine gets into the body. By mouth (oral) is the most common.", "IV means into a vein. It goes straight into the blood, so it usually works the fastest.", "Other routes have their own names: sublingual (under the tongue), IM (into a muscle), subcutaneous (just under the skin), inhaled and topical (on the skin)."],
+    q: [["IV means:", "Into a vein", "Into a muscle", "Under the tongue"], ["Which route usually works the fastest?", "IV", "By mouth", "A skin cream"], ["Sublingual means:", "Under the tongue", "Into the skin", "Through the nose"]] },
+  { t: "Onset, peak and duration", c: ["Onset is how long a medicine takes to start working.", "Peak is when its effect is strongest.", "Duration is how long the effect lasts. Short-acting medicines wear off sooner than long-acting ones."],
+    q: [["Onset means:", "How long until it starts working", "How long it lasts", "How strong it is"], ["The peak is when the effect is:", "Strongest", "Just starting", "Gone"], ["A long-acting medicine:", "Lasts longer than a short-acting one", "Starts faster than everything else", "Never wears off"]] },
+  { t: "How the body clears medicines", c: ["The liver breaks many medicines down. This is called metabolism.", "The kidneys remove many medicines in urine. This is called excretion.", "Half-life is the time it takes for the amount in the body to drop by half."],
+    q: [["Which two organs clear most medicines?", "Liver and kidneys", "Heart and lungs", "Skin and stomach"], ["Half-life is:", "The time for the amount in the body to drop by half", "Half of a pill", "The time until a medicine expires"], ["If the kidneys are not working well, a medicine they clear may:", "Build up in the body", "Work less than water", "Turn into a vitamin"]] }
+ ]},
+ { t: "Reading a drug card", ic: "\u{1F4C7}", L: [
+  { t: "Class and indication", c: ["A drug class is a family of medicines that work in a similar way, like antibiotics or beta blockers.", "The indication is the reason a medicine is used, for example high blood pressure or pain.", "Knowing the class tells you a lot: medicines in the same class often share uses and side effects."],
+    q: [["A drug class is:", "A family of medicines that work in a similar way", "The price group of a medicine", "The shape of the pill"], ["The indication is:", "The reason the medicine is used", "The color of the label", "The company that makes it"], ["Medicines in the same class often:", "Share uses and side effects", "Have the same brand name", "Are all taken by IV"]] },
+  { t: "Side effects and allergies", c: ["A side effect is an expected, usually mild effect, like drowsiness or an upset stomach.", "An adverse effect is an unwanted effect that causes harm.", "An allergy is the immune system reacting to the medicine: hives, swelling or trouble breathing. Trouble breathing is an emergency."],
+    q: [["Hives and lip swelling after a new medicine suggest:", "An allergic reaction", "The medicine working well", "A normal, expected side effect"], ["Drowsiness from an allergy pill is usually:", "A side effect", "An allergy", "An overdose"], ["Trouble breathing after a medicine is:", "An emergency", "Nothing to worry about", "A sign it is working"]] },
+  { t: "Contraindications and interactions", c: ["A contraindication is a reason a medicine should not be used for a certain person.", "An interaction is when one thing changes how a medicine works.", "Other medicines, foods, alcohol and supplements can all interact with medicines."],
+    q: [["A contraindication is:", "A reason a medicine should not be used", "The best time to take a medicine", "A type of side effect"], ["An interaction is when:", "One thing changes how a medicine works", "Two pills look alike", "A medicine expires"], ["Which can interact with medicines?", "Other medicines, foods, alcohol and supplements", "Only other prescription medicines", "Nothing, if the medicine is new"]] }
+ ]},
+ { t: "Name clues", ic: "\u{1F50E}", L: [
+  { t: "Heart and blood pressure", c: ["Many drug names end in clues. Names ending in -olol, like metoprolol, are usually beta blockers. They slow the heart.", "Names ending in -pril, like lisinopril, are ACE inhibitors. They relax blood vessels.", "Names ending in -sartan, like losartan, are ARBs. They also lower blood pressure."],
+    q: [["Metoprolol ends in -olol, so it is probably a:", "Beta blocker", "Antibiotic", "Pain reliever"], ["Lisinopril is an:", "ACE inhibitor", "Antibiotic", "Antihistamine"], ["Losartan most likely treats:", "High blood pressure", "Infection", "Allergies"]] },
+  { t: "Cholesterol and stomach", c: ["Names ending in -statin, like atorvastatin, lower cholesterol.", "Names ending in -prazole, like omeprazole, lower stomach acid. They are called PPIs.", "Names ending in -tidine, like famotidine, also lower stomach acid in a different way."],
+    q: [["Atorvastatin is used to lower:", "Cholesterol", "Blood sugar", "Fever"], ["Omeprazole lowers:", "Stomach acid", "Heart rate", "Cholesterol"], ["Which ending points to a cholesterol medicine?", "-statin", "-prazole", "-cillin"]] },
+  { t: "Infection and anxiety", c: ["Names ending in -cillin, like amoxicillin, are in the penicillin family of antibiotics.", "Many names ending in -mycin, like azithromycin, are antibiotics too.", "Names ending in -azepam or -azolam, like lorazepam, are benzodiazepines. They calm the brain and cause drowsiness."],
+    q: [["Amoxicillin is an:", "Antibiotic", "Antacid", "Blood pressure medicine"], ["Someone with a penicillin allergy should be careful with names ending in:", "-cillin", "-statin", "-olol"], ["Lorazepam is a benzodiazepine, so a common effect is:", "Drowsiness", "Faster heart rate", "Lower cholesterol"]] }
+ ]},
+ { t: "Body basics", ic: "❤️", L: [
+  { t: "Heart and blood", c: ["The heart pumps blood through the body. Heart rate is how many times it beats in a minute.", "Blood pressure is the force of blood pushing on the vessel walls. It has two numbers, like 120/80.", "Blood thinners make blood clot less. That prevents dangerous clots but raises the risk of bleeding."],
+    q: [["Heart rate is measured in:", "Beats per minute", "Breaths per hour", "Milliliters"], ["Blood pressure is:", "The force of blood on the vessel walls", "How fast you breathe", "The amount of sugar in blood"], ["A main risk of blood thinners is:", "Bleeding", "High blood sugar", "Hair growth"]] },
+  { t: "Lungs and breathing", c: ["The lungs bring oxygen in and let carbon dioxide out.", "In asthma, the airways tighten and narrow. Inhalers like albuterol open them back up. These are called bronchodilators.", "SpO2 is the oxygen saturation number on a pulse oximeter: how full of oxygen the blood is."],
+    q: [["The lungs bring in oxygen and remove:", "Carbon dioxide", "Sugar", "Salt"], ["Albuterol helps asthma by:", "Opening the airways", "Thinning the blood", "Lowering blood sugar"], ["SpO2 tells you:", "How full of oxygen the blood is", "The heart rate", "The blood pressure"]] },
+  { t: "Brain and blood sugar", c: ["Insulin lowers blood sugar. People with diabetes may need it.", "Low blood sugar can cause shakiness, sweating and confusion. It can become an emergency.", "Opioids treat severe pain but can slow breathing. Naloxone can reverse an opioid overdose."],
+    q: [["Insulin:", "Lowers blood sugar", "Raises blood pressure", "Kills bacteria"], ["A common sign of low blood sugar is:", "Shakiness and confusion", "A slow, steady calm", "Itchy eyes"], ["Naloxone is used to:", "Reverse an opioid overdose", "Treat an infection", "Lower cholesterol"]] }
+ ]},
+ { t: "Staying safe", ic: "\u{1F6E1}️", L: [
+  { t: "Reading a label", c: ["A medicine label lists the active ingredient: the part that does the work.", "It also lists the purpose, the warnings and the directions.", "Medicines have an expiration date. After it, they may not work as well."],
+    q: [["The active ingredient is:", "The part of the medicine that does the work", "The color of the pill", "The brand logo"], ["Where would you find warnings about a medicine?", "On the label", "On the receipt", "On the bottle cap only"], ["After the expiration date, a medicine:", "May not work as well", "Becomes stronger", "Turns into a different medicine"]] },
+  { t: "High-alert medicines", c: ["Some medicines can cause serious harm if a mistake happens. These are called high-alert medicines.", "Insulin, opioids and blood thinners are common examples.", "Hospitals use extra checks for them, like a second nurse double-checking."],
+    q: [["High-alert medicines are ones that:", "Can cause serious harm if a mistake happens", "Are always the newest", "Make an alarm sound"], ["Which is a common high-alert medicine?", "Insulin", "Saline nose spray", "A vitamin C tablet"], ["A common hospital safety step for high-alert medicines is:", "A second person double-checks", "Giving them faster", "Skipping the label"]] },
+  { t: "Where to get help", c: ["A pharmacist can answer questions about medicines and how they mix.", "In a medical emergency in the US, call 911. Poison Control is 1-800-222-1222.", "Prescription medicines are prescribed for one person. Sharing them is not safe."],
+    q: [["Who is a great person to ask about how medicines mix?", "A pharmacist", "A cashier", "A friend online"], ["In a US medical emergency, call:", "911", "The pharmacy", "Your gym"], ["Sharing a prescription medicine with a friend is:", "Not safe: it was prescribed for one person", "Fine if they feel the same", "Fine if it is a small amount"]] }
+ ]}
+];
+function bgAll() { var L = []; BG_UNITS.forEach(function (u, ui) { u.L.forEach(function (l, li) { L.push({ id: ui + "-" + li, u: ui, l: li, o: l }); }); }); return L; }
+function bgDone() { var P = Prog.d; if (!P.bgDone || typeof P.bgDone !== "object") P.bgDone = {}; return P.bgDone; }
+function bgNextId() { var d = bgDone(), A = bgAll(); for (var i = 0; i < A.length; i++) if (!d[A[i].id]) return A[i].id; return null; }
+function bgOpen(id) { var d = bgDone(), A = bgAll(), i = A.map(function (x) { return x.id; }).indexOf(id); return i >= 0 && (i === 0 || !!d[A[i - 1].id] || !!d[id]); }
+function bgShuf(n) { var a = []; for (var i = 0; i < n; i++) a.push(i); for (var j = a.length - 1; j > 0; j--) { var k = Math.floor(Math.random() * (j + 1)), t = a[j]; a[j] = a[k]; a[k] = t; } return a; }
+function bgBug(mood) { try { var b = bugById("grub-eager"); return b && typeof bugArt === "function" ? bugArt(b, "", { mood: mood || "happy" }) : ""; } catch (e) { return ""; } }
+function bgView() {
+  var c = topbar(), R = S.bgRun;
+  if (R) return c + bgRunView(R);
+  var d = bgDone(), A = bgAll(), n = A.filter(function (x) { return d[x.id]; }).length, nx = bgNextId(), fun = typeof funOn !== "function" || funOn();
+  c += '<header class="pagehead bghead">' + (fun ? '<span class="bgbug">' + bgBug("happy") + '</span>' : '') + '<div><h1>Beginner to Medicine</h1><p>Short lessons that start from zero. Each one is three small ideas and three quick questions.</p></div></header>';
+  c += '<div class="fmprog"><span><strong>' + n + '</strong> of ' + A.length + ' lessons done</span><span class="cmptrack"><span class="cmpfill" style="width:' + Math.round(100 * n / A.length) + '%"></span></span></div>';
+  if (nx) c += '<button class="btn big bgcont" data-bgl="' + nx + '">' + (n ? 'Keep going' : 'Start lesson 1') + '</button>';
+  c += '<div class="bgpath">';
+  var k = 0;
+  BG_UNITS.forEach(function (u, ui) {
+    c += '<section class="bgunit"><h2><span aria-hidden="true">' + u.ic + '</span> Unit ' + (ui + 1) + ': ' + esc(u.t) + '</h2><div class="bgnodes">';
+    u.L.forEach(function (l, li) {
+      var id = ui + "-" + li, dn = !!d[id], op = bgOpen(id), cur = id === nx, side = ["l", "c", "r", "c"][k++ % 4];
+      c += '<button class="bgnode ' + side + (dn ? ' done' : cur ? ' cur' : op ? '' : ' lock') + '"' + (op ? ' data-bgl="' + id + '"' : ' disabled') + '><span class="bgdot" aria-hidden="true">' + (dn ? '✓' : op ? (li + 1) : '\u{1F512}') + '</span><span class="bgnt">' + esc(l.t) + '</span></button>';
+    });
+    c += '</div></section>';
+  });
+  c += '</div>';
+  if (!nx) c += '<section class="bgdone"><h2>You finished every lesson!</h2><p>You know the basics now. Pick a specialty to keep going, or explore Everyday Health.</p><div class="actions"><button class="btn" data-act="bgpaths">Pick a specialty</button><button class="btn ghost" data-go="everyday">Everyday Health</button></div></section>';
+  else c += '<button class="route mlsmall" data-go="everyday"><span class="mls-ic" aria-hidden="true">\u{1F3E1}</span><span class="mls-tx"><strong>Everyday Health</strong><span>' + esc(EV_LINE) + '</span></span><span class="evs-go" aria-hidden="true">&rsaquo;</span></button>';
+  c += '<p class="muted small">For adult study only. Education, not medical advice: ask a licensed clinician or pharmacist about your own medicines.</p>';
+  return c;
+}
+function bgRunView(R) {
+  var A = bgAll().filter(function (x) { return x.id === R.id; })[0]; if (!A) { S.bgRun = null; return ""; }
+  var L = A.o, nC = L.c.length, nQ = L.q.length, tot = nC + nQ, st = Math.min(R.step, tot), pct = Math.round(100 * st / tot);
+  var c = '<section class="bgrun"><div class="bgtop"><button class="linkish" data-bgquit="1">&larr; Lessons</button><span class="cmptrack"><span class="cmpfill" style="width:' + pct + '%"></span></span></div><p class="eyebrow">Unit ' + (A.u + 1) + ' · ' + esc(L.t) + '</p>';
+  if (R.step < nC) {
+    c += '<div class="bgcard"><span class="bgbug sm">' + bgBug("happy") + '</span><p>' + esc(L.c[R.step]) + '</p></div><div class="actions"><button class="btn big" data-bgnext="1">' + (R.step < nC - 1 ? 'Next' : 'Quiz me') + '</button></div>';
+  } else if (R.step < tot) {
+    var qi = R.step - nC, Q = L.q[qi], opts = [Q[1], Q[2], Q[3]];
+    if (!R.ord || R.ordFor !== R.step) { R.ord = bgShuf(3); R.ordFor = R.step; R.pick = null; }
+    c += '<h3 class="qstem">' + esc(Q[0]) + '</h3><div class="qopts">';
+    R.ord.forEach(function (oi, j) {
+      var cls = R.pick == null ? "" : oi === 0 ? " right" : R.pick === oi ? " wrong" : " dim";
+      c += '<button class="qopt' + cls + '" data-bgopt="' + oi + '"' + (R.pick != null ? ' disabled' : '') + '><span class="letter">' + "ABC"[j] + '</span><span>' + esc(opts[oi]) + '</span></button>';
+    });
+    c += '</div>';
+    if (R.pick != null) c += '<div class="explain ' + (R.pick === 0 ? 'ok' : 'bad') + '"><strong>' + (R.pick === 0 ? ['Nice!', 'You got it.', 'Exactly.'][qi % 3] : 'Not quite.') + '</strong>' + (R.pick === 0 ? '' : '<p>The answer is: ' + esc(Q[1]) + '.</p>') + '</div><div class="actions"><button class="btn big" data-bgnext="1">Continue</button></div>';
+  } else {
+    var first = !R.counted;
+    if (first) { R.counted = 1; var was = !!bgDone()[R.id]; bgDone()[R.id] = Date.now(); if (!was) { try { earn(10); } catch (e) {} Prog.d.xp = (Prog.d.xp || 0) + 20; R.gave = 1; } saveProg(); }
+    var nx = bgNextId();
+    c += '<div class="bgcard end"><span class="bgbug">' + bgBug("happy") + '</span><h2>Lesson done!</h2><p>You got <strong>' + R.right + ' of ' + nQ + '</strong> right' + (R.gave ? ' and earned 10 sticks' : '') + '.</p></div><div class="actions">' + (nx ? '<button class="btn big" data-bgl="' + nx + '">Next lesson</button>' : '') + '<button class="btn ghost" data-bgquit="1">Back to lessons</button></div>';
+  }
+  return c + '</section>';
+}
+document.addEventListener("click", function (e) {
+  var t = e.target && e.target.closest ? e.target.closest("[data-bgl],[data-bgnext],[data-bgopt],[data-bgquit],[data-act=bgpaths]") : null;
+  if (!t) return;
+  e.preventDefault(); e.stopPropagation();
+  if (t.hasAttribute("data-bgl")) { var id = t.getAttribute("data-bgl"); if (!bgOpen(id)) return; S.bgRun = { id: id, step: 0, right: 0 }; if (S.view !== "beginner") return go("beginner", { bgRun: S.bgRun }); render(); return window.scrollTo(0, 0); }
+  if (t.hasAttribute("data-bgquit")) { S.bgRun = null; render(); return window.scrollTo(0, 0); }
+  var R = S.bgRun; if (!R && t.getAttribute("data-act") !== "bgpaths") return;
+  if (t.hasAttribute("data-bgopt")) { if (R.pick != null) return; R.pick = +t.getAttribute("data-bgopt"); if (R.pick === 0) R.right++; try { if (typeof sfx === "function") sfx(R.pick === 0 ? "right" : "wrong"); } catch (e2) {} render(); return; }
+  if (t.hasAttribute("data-bgnext")) { R.step++; R.ord = null; render(); return window.scrollTo(0, 0); }
+  if (t.getAttribute("data-act") === "bgpaths") { S.obRedo = 1; S.obSel = null; S.obStep = 1; return go("home"); }
+}, true);
+
 })();
