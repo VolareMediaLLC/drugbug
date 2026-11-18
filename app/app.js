@@ -4910,12 +4910,42 @@ function otaSha(text) {
   try { if (!(window.crypto && crypto.subtle && window.TextEncoder)) return Promise.resolve(""); } catch (e) { return Promise.resolve(""); }
   return crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)).then(function (b) { return Array.prototype.map.call(new Uint8Array(b), function (x) { return ("0" + x.toString(16)).slice(-2); }).join(""); }).catch(function () { return ""; });
 }
+/* ---------- Forced updates (owner, Nov 18 2026: "can we make a way to force updates?") ----------
+   app/content/manifest.json can carry "minIos": "1.2.3" (and optionally "softIos" and "updateMsg").
+   iPhone app older than minIos: a full-screen "Update required" card with an App Store button, no way past it.
+   Older than softIos only: a dismissible "Update available" card, at most once a day. The last minimum seen is
+   saved, so the block also holds offline. The website always runs the newest code, so this is iPhone only. */
+function verLt(a, b) { var x = String(a || "0").split("."), y = String(b || "0").split("."); for (var i = 0; i < Math.max(x.length, y.length); i++) { var p = +x[i] || 0, q = +y[i] || 0; if (p !== q) return p < q; } return false; }
+var FU_URL = "https://apps.apple.com/app/id6820225080";
+function forceUpdShow(hard, msg) {
+  if (!NATIVE) return;
+  var d = document.getElementById("fuWall"); if (d && d.getAttribute("data-hard") === "1" && !hard) return;
+  if (!d) { d = document.createElement("div"); d.id = "fuWall"; document.body.appendChild(d); }
+  d.setAttribute("data-hard", hard ? "1" : "0");
+  d.style.cssText = "position:fixed;inset:0;z-index:2147483000;background:rgba(10,12,28,.94);display:flex;align-items:center;justify-content:center;padding:24px";
+  d.innerHTML = '<div style="max-width:420px;width:100%;background:#1c1f3a;color:#fff;border-radius:22px;padding:28px 24px;text-align:center;font-size:17px;line-height:1.45">' +
+    '<h2 style="margin:0 0 10px;font-size:26px">' + (hard ? "Update required" : "Update available") + '</h2>' +
+    '<p style="margin:0 0 20px;opacity:.9">' + esc(msg || (hard ? "This version of DrugBug is no longer supported. Update to the newest version on the App Store to keep studying." : "A newer version of DrugBug is on the App Store.")) + '</p>' +
+    '<a class="btn" href="' + FU_URL + '" target="_blank" rel="noopener" style="display:block;font-size:18px;padding:14px">Update on the App Store</a>' +
+    (hard ? '' : '<button class="linkish" id="fuLater" style="margin-top:14px;color:#fff;opacity:.8">Not now</button>') + '</div>';
+  var l = document.getElementById("fuLater"); if (l) l.onclick = function () { try { store("fuSoftAt", Date.now()); } catch (e) {} d.remove(); };
+}
+function forceUpdCheck(m) {
+  if (!NATIVE || !m) return;
+  if (typeof m.minIos === "string") { try { store("fuMin", m.minIos); } catch (e) {} }
+  var min = (m.minIos !== undefined ? m.minIos : store("fuMin")) || "";
+  if (min && verLt(APP_VERSION, min)) return forceUpdShow(true, m.updateMsg);
+  var w = document.getElementById("fuWall"); if (w && w.getAttribute("data-hard") === "1") w.remove();
+  if (m.softIos && verLt(APP_VERSION, m.softIos) && Date.now() - (store("fuSoftAt") || 0) > 864e5) forceUpdShow(false, m.updateMsg);
+}
+setTimeout(function () { try { var mn = store("fuMin"); if (NATIVE && mn && verLt(APP_VERSION, mn)) forceUpdShow(true); } catch (e) {} }, 800);
 function otaCheck(quiet) {
   if (OTA.busy || (typeof navigator !== "undefined" && navigator.onLine === false)) return;
   OTA.busy = true; OTA.at = Date.now();
   otaFetch(OTA_BASE + "manifest.json?t=" + Date.now(), 6000).then(function (txt) {
     var m = JSON.parse(txt);
     try { qbCheck(m); } catch (e) {}   /* the question bank has its own version, separate from drug data */
+    try { forceUpdCheck(m); } catch (e) {}
     if (!m || m.schema !== 1 || !(m.v > Math.max(OTA.v, OTA_BAKED)) || !/^updates-[0-9]+\.json$/.test(m.file || "")) { OTA.busy = false; return; }
     if (!quiet) otaToast("Updating drug data…");
     return otaFetch(OTA_BASE + m.file, 20000).then(function (body) {
@@ -6877,7 +6907,7 @@ document.addEventListener("click", function (e) { var b = e.target.closest && e.
 /* ---------- Clinical tools: Megacode, Medication Disease Identifier, Safety drills, My List ---------- */
 var TOOLS = [["prep", "Questions"], ["mega", "Codes"], ["cards", "Flashcards"], ["games", "Brain Games"], ["safety", "Safety drills"]];
 /* each tool keeps the tier it had before Study Tools absorbed it, so the move changed nothing about what anyone pays for */
-var TOOL_TIER = { prep: "free", mega: "pro", cards: "free", games: "pro", safety: "pro" };   /* prep free with the 50-question sample (Nov 17 2026) */
+var TOOL_TIER = { prep: "free", mega: "free", cards: "free", games: "free", safety: "pro" };   /* games and codes open as small samples (owner, Nov 18 2026) */   /* prep free with the 50-question sample (Nov 17 2026) */
 function toolTier(k) { return TOOL_TIER[k] || "pro"; }
 function toolsAllowed() { var k = ctxKey(); return { mega: !!DB.MEGA_LEVELS[k], peds: ["emt", "cna"].indexOf(k) < 0, medlist: false, safety: false /* ISMP-derived drills withheld: no written permission (counsel, Nov 11 2026) */, prep: S.view !== "gen", cards: true, games: true }; }
 var TOOLDESC = { mega: "Run a timed code with a live monitor.", peds: "Weight-based pediatric doses at a glance.", medlist: "A study exercise: read a practice medication list and work out the likely conditions, the questions to ask and the risky combinations.", safety: "Look-alike names and high-alert drug drills.", prep: "Timed practice tests at your star level, with scores.", cards: "Flip, sort and master each drug.", games: "Memory match, crossword, quick match, word scramble, Class Blitz and Frog Snack." };
@@ -7086,7 +7116,8 @@ function labOK(x) {
 }
 function megaCases() {
   var k = ctxKey();
-  return DB.MEGACODE.filter(function (c) { return k !== "cna" && k !== "emt" && labOK(c); });
+  var L = DB.MEGACODE.filter(function (c) { return k !== "cna" && k !== "emt" && labOK(c); });
+  return typeof freeSample === "function" && freeSample() ? freeCut(L, FREE_MEGA, function (c) { return c.id; }) : L;
 }
 /* Megacode opens straight into a code, picked at random (owner, Nov 14 2026: "just bring you right in. But make it
    randomize the situation"); never the same case twice in a row */
@@ -11919,7 +11950,7 @@ function tabTier(tab) { return tab === "megacode" ? toolTier("mega") : tab === "
    "every specialty will need its free questions and bug rushes"). Free gets a fixed, replayable sample in every
    role: 10 Bug Rush calls and 50 questions (25 drug + 25 exam-style where a role has both decks). The sample is
    picked by a stable hash, so it is the same set every time; Pro opens everything. */
-var FREE_RUSH = 10, FREE_QS = 50;
+var FREE_RUSH = 10, FREE_QS = 50, FREE_MEGA = 2;
 function freeSample() { return typeof PAYWALL !== "undefined" && PAYWALL && !hasTier("pro"); }
 function freeCut(list, n, key) {
   var seen = {}, u = [];
@@ -11931,7 +11962,8 @@ function freeCut(list, n, key) {
 function freeQsCap() { var both = (typeof regCount === "function" ? regCount() : 0) > 0 && !isF(ctxKey()); return both ? Math.floor(FREE_QS / 2) : FREE_QS; }
 function freeNote(what, n, all) {
   if (!freeSample()) return "";
-  return '<div class="freesamp"><span><b>Free sample:</b> ' + n + ' ' + what + (all > n ? ' of ' + all.toLocaleString() : '') + ' for this specialty, yours to replay any time.</span><button class="btn small" data-act="freepro">Unlock all with Pro</button></div>';
+  /* kept quiet on purpose (owner, Nov 18): one small line, no button, no push to buy */
+  return '<p class="freesamp quiet muted small">Sample set: ' + n + ' ' + what + ', yours to replay any time.</p>';
 }
 function proLocked(tab) { return PAYWALL && !hasTier(tabTier(tab)); }
 function drugTier(id) { return FREE_SET[id] ? "free" : "plus"; }   /* reading a drug: Free for the 40, Plus for the rest */
@@ -12273,7 +12305,8 @@ function tourCards() {
   if (!fun) return [
     ["Where to start", "Your paths are on the main menu. The card marked Start here opens L.E.A.R.N: every drug in that scope, one at a time, in random order, nothing repeated.", "plain"],
     ["Looking things up", "The BugDex holds every medication. Open one for the plain-language version or the full monograph, use Compare to set two drugs side by side, and save what matters to My List.", "plain"],
-    ["Practice", "Registry and licensure-style questions, flashcards, Weak spots for what you keep missing, and an exam countdown that sets a daily target.", "plain"]
+    ["Where the questions are", "Open your path from the main menu and look under Study and practice: Questions is there, with practice and exam mode, Weak spots and an exam countdown. Questions are checked by working clinicians and fixed and added all the time; updates arrive without updating the app.", "plain"],
+    ["Bug Rush", "Also under Study and practice. Codes, cases and calls come back to back on a live monitor, and the vitals react to what you choose.", "plain"]
   ];
   var c = [
     ["Well, howdy there",
@@ -12282,12 +12315,18 @@ function tourCards() {
     ["Now, lookin' somethin' up",
      "The BugDex has got the whole mess of 'em in there. Ya open one up and ya can have it plain-spoke, or ya can have the whole long story, whichever suits ya that day. See two that keep gettin' tangled up in your head? Hit Compare and I'll set 'em side by each so ya can see just where they part ways. And anything worth hangin' onto, go on and star it into My List.",
      "hick"],
+    ["Where the questions live",
+     "Pick your path off the main menu, then look under Study and practice. Questions is right there. Thousands of 'em, written for your job. Now here's the thing: real medics and nurses check 'em every day, and we're always fixin' and addin' more. New ones just show up. Ya don't even gotta update the app.",
+     "hick"],
+    ["Bug Rush",
+     "Right next door is Bug Rush. Codes, cases and calls, one after another, on a live monitor. Pick right and your patient perks up. Pick wrong and, well, ya'll see them numbers go south. Save as many as ya can.",
+     "hick"],
     ["Then ya gotta go test yourself",
-     "Questions, flashcards, and Weak spots. Now that last one's the sneaky one. It keeps a quiet little tally of whatever ya keep gettin' wrong, and it'll feed 'em right back to ya till they finally stick.",
+     "Flashcards and Weak spots, too. Now that last one's the sneaky one. It keeps a quiet little tally of whatever ya keep gettin' wrong, and it'll feed 'em right back to ya till they finally stick.",
      "hick"]
   ];
   c.push(["Sticks and bugs",
-    "Every question ya take a swing at pays ya one stick. Get the thing right, well, that's three. Spend 'em over yonder in the Terrarium on bugs and hats and music and all manner of foolishness. And your bug? He grows right along with ya.",
+    "Every question ya take a swing at pays ya one stick. Get the thing right, well, that's three. Spend 'em in the Terrarium on bugs and hats and music and all manner of foolishness. Tap your bug up at the top of the screen to find it. And your bug? He grows right along with ya.",
     "sticks"]);
   c.push(["Right then",
     "That's about enough jawin' out of me. Come on, let me show ya how this works on a real drug.",
@@ -12297,9 +12336,10 @@ function tourCards() {
 var TOUR = tourCards();
 var TR = { i: 0, open: false };
 var trdlg = document.createElement("div"); trdlg.id = "tourdlg"; trdlg.className = "sheet rsheet"; trdlg.hidden = true; document.body.appendChild(trdlg);
-function tourDone() { return TR.done || !!store("tourDone"); }
+var TOUR_V = 2;   /* Nov 18 2026: questions, Bug Rush and the Terrarium added; everyone sees the new tour once */
+function tourDone() { return TR.done || (store("tourV") || 0) >= TOUR_V; }
 function tourOpen(force) { if (TR.open || (!force && tourDone())) return; TOUR = tourCards(); TR.open = true; TR.i = 0;   /* the Serious / Seriously fun choice lives in Settings now (owner, Oct 30 2026) */ drawTour(); trdlg.hidden = false; }
-function tourClose() { try { if (typeof voiceStop === "function") voiceStop(); } catch (e) {} TR.done = true; TR.open = false; trdlg.hidden = true; trdlg.innerHTML = ""; store("tourDone", 1); if (typeof wdwSync === "function") setTimeout(wdwSync, 600); if (typeof remindSync === "function") setTimeout(remindSync, 900); }
+function tourClose() { try { if (typeof voiceStop === "function") voiceStop(); } catch (e) {} TR.done = true; TR.open = false; trdlg.hidden = true; trdlg.innerHTML = ""; store("tourDone", 1); store("tourV", TOUR_V); if (typeof wdwSync === "function") setTimeout(wdwSync, 600); if (typeof remindSync === "function") setTimeout(remindSync, 900); }
 function drawTour() {
   var t = TOUR[TR.i], last = TR.i === TOUR.length - 1;
     var art = t[2] === "sticks" ? '<div class="tourbig">' + stickTag(3) + '</div>'
@@ -12315,7 +12355,7 @@ function drawTour() {
 document.addEventListener("click", function (e) {
   var b = e.target.closest && e.target.closest("[data-tour]"); if (!b) return;
   if (b.dataset.tour === "skip") return tourClose();
-  if (b.dataset.tour === "again") { TR.done = false; store("tourDone", null); return tourOpen(true); }
+  if (b.dataset.tour === "again") { TR.done = false; store("tourDone", null); store("tourV", null); return tourOpen(true); }
   if (TR.i < TOUR.length - 1) { TR.i++; drawTour(); return; }
   /* the last card is Hickory offering to show you: closing it opens L.E.A.R.N on the path
      the menu is pointing at, or the one they are already in (owner, Nov 4 2026) */
@@ -15100,7 +15140,10 @@ var GM_ANTIDOTES = [["Opioids", "Naloxone"], ["Benzodiazepines", "Flumazenil"], 
 function gmShort(t, n) { t = String(t || "").replace(/\s*\([^)]*\)/g, "").split(/[;.]/)[0].trim(); n = n || 46; if (t.length > n) t = t.slice(0, n).replace(/[\s,]+\S*$/, "") + "…"; return t; }
 function gmIds() {
   var ids = S.view === "level" ? scopeFor(S.level).ids : DB.ALLIDS;
-  return ids.filter(function (id) { var d = DB.drugs[id]; return d && !(typeof expoOf === "function" && expoOf(id)) && get(d, 0, 3) && (get(d, 3, 0) || get(d, 16, 0)); });
+  function ok(id) { var d = DB.drugs[id]; return d && !(typeof expoOf === "function" && expoOf(id)) && get(d, 0, 3) && (get(d, 3, 0) || get(d, 16, 0)); }
+  var L = ids.filter(ok);
+  if (typeof freeSample === "function" && freeSample()) { var f = L.filter(function (id) { return FREE_SET[id]; }); L = f.length >= 6 ? f : FREE_DRUGS.filter(ok); }   /* sample: games use the starter meds */
+  return L;
 }
 function gmFact(id) { var d = DB.drugs[id]; return { id: id, name: d.name, cls: gmShort(get(d, 0, 3), 40), use: gmShort(get(d, 16, 0) || get(d, 3, 0), 60) }; }
 function gmPick(n, keyFn) {
