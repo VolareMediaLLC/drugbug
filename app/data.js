@@ -118,6 +118,13 @@ DB.GROUPS = [
 // only when a drug page is actually opened, which is one drug at a time. So the raw text is kept
 // and split on first read, then cached in place of the getter. A setter is kept because
 // modules/dex.js assigns `d.s` outright when a Firestore document overrides the bundled copy.
+/* Lists and filters mostly need only the first section (name, class, routes...). Reading it no longer
+   parses all 17 sections of every drug (Nov 18 2026: the BugDex hub spent ~110 ms doing that). */
+function dbLine0(text) {
+  var i = 0, n = text.length, j;
+  while (i < n) { j = text.indexOf("\n", i); if (j < 0) j = n; var l = text.slice(i, j).trim(); if (l) return l.split("|").map(function (f) { f = f.trim(); return f === "-" ? "" : f; }); i = j + 1; }
+  return [];
+}
 function dbParseS(text) {
   return text.split("\n").map(function (l) { return l.trim(); }).filter(Boolean)
     .map(function (l) { return l.split("|").map(function (f) { f = f.trim(); return f === "-" ? "" : f; }); });
@@ -131,10 +138,12 @@ DB.add = function (id, name, tags, text) {
     get: function () {
       var v = dbParseS(this.t_);
       Object.defineProperty(this, "s", { value: v, writable: true, enumerable: true, configurable: true });
+      Object.defineProperty(this, "sP", { value: 1, writable: true, enumerable: false, configurable: true });
       return v;
     },
     set: function (v) {
       Object.defineProperty(this, "s", { value: v, writable: true, enumerable: true, configurable: true });
+      Object.defineProperty(this, "sP", { value: 1, writable: true, enumerable: false, configurable: true });
     }
   });
   DB.drugs[id] = d;

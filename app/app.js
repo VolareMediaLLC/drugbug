@@ -93,12 +93,12 @@ var TIER = { rt: 3, ct: 3, mri: 3, nm: 3, ir: 3, emt: 0, aemt: 1, paramedic: 2, 
 function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
 function $(s, r) { return (r || document).querySelector(s); }
 function $$(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
-function get(d, si, fi) { return (d && d.s[si] && d.s[si][fi]) || ""; }
+function get(d, si, fi) { if (!d) return ""; if (si === 0 && !d.sP && typeof d.t_ === "string" && typeof dbLine0 === "function") { var s0 = d.s0_; if (!s0) { s0 = dbLine0(d.t_); try { Object.defineProperty(d, "s0_", { value: s0, writable: true, enumerable: false, configurable: true }); } catch (e) {} } return s0[fi] || ""; } return (d.s[si] && d.s[si][fi]) || ""; }
 /* number typed by the user: accepts "1,25" (comma decimal) as well as "1,250" (thousands) and "1.25" */
 function numIn(raw) { var s = String(raw == null ? "" : raw).trim().replace(/\s/g, ""); if (!s) return NaN; if (/^-?\d+,\d{1,2}$/.test(s)) s = s.replace(",", "."); else s = s.replace(/,/g, ""); return isNaN(+s) ? NaN : +s; }
 /* calculator result text; a zero divisor gives a message instead of "Infinity" or "NaN" */
 function calcOut(fn, nums) { var r = fn(nums); return /Infinity|NaN/.test(r) ? "Enter values greater than zero." : r; }
-function store(k, v) { try { if (v === undefined) return JSON.parse(localStorage.getItem("drugbug:" + k)); localStorage.setItem("drugbug:" + k, JSON.stringify(v)); } catch (e) { return null; } }
+function store(k, v) { if (k === "settings" && v !== undefined) { SET_OBJ = null; SET_M = null; } try { if (v === undefined) return JSON.parse(localStorage.getItem("drugbug:" + k)); localStorage.setItem("drugbug:" + k, JSON.stringify(v)); } catch (e) { return null; } }
 function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
 
 /* ---------- name mixing: questions randomly show a drug by its brand OR generic name (consistent within a question) ---------- */
@@ -547,7 +547,7 @@ function topbar() {
   if (S.view === "settings") c += '<span>/</span><span>Settings</span>';
   if (S.view === "stats") c += '<span>/</span><span>Stats</span>';
   if (S.view === "terrarium") c += '<span>/</span><span>Terrarium</span>';
-  if (S.view === "beginner") c += '<span>/</span><span>Beginner to Medicine</span>';
+  if (S.view === "beginner") c += '<span>/</span><span>' + bgTrackName() + '</span>';
   if (S.view === "everyday") c += '<span>/</span>' + (S.evTab ? '<button data-evtab="">Everyday Health</button>' : '<span>Everyday Health</span>');
   var extra = (!SOCIAL ? '' : '<button class="theme-btn" data-go="classes"' + (S.view === "classes" ? ' aria-current="page"' : '') + '>Classes</button>') + (Admin.can ? '<button class="theme-btn admin-btn" data-go="admin"' + (S.view === "admin" ? ' aria-current="page"' : '') + '><span class="lg">Control Center</span><span class="sm">Control Center</span></button>' : '');
   c += '</nav><span class="spacer"></span><div class="tbacts">' + (stickChip() || tierChip()) + '<span class="tbx">' + extra + '</span><button class="theme-btn srch-btn" data-act="gsearch" aria-label="Search all drugs" title="Search all drugs"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>' + staffBtn() + '<button class="theme-btn menu-btn" data-act="tbmenu" aria-expanded="' + !!S.menu + '" aria-label="More">More</button>' + musicBtn() + gearBtn() + (typeof funOn === "function" && !funOn() ? '' : '<button class="tbsticks' + (typeof iapAvailable === "function" && iapAvailable() ? ' hasplus' : '') + '" data-goshop="1" data-shopf="sticks" aria-label="' + sticks() + ' sticks. Get more sticks" title="Get Sticks">' + stickIcon(18) + (typeof iapAvailable === "function" && iapAvailable() ? '<span class="tbplus" aria-hidden="true">+</span>' : '') + '<strong>' + sticks().toLocaleString() + '</strong></button>') + '</div>' + (S.menu ? '<div class="tbmenu" role="menu">' + extra + '' + (typeof stxBtn === "function" ? stxBtn() : '') + '<button class="theme-btn" data-idea="1">Send an idea</button></div>' : '') + '</div>';
@@ -739,7 +739,8 @@ function viewHome() {
    (!fun ? '' : '<button class="route rmini gen' + pt("gen") + '" ' + (S.pointGo === "gen" ? 'data-startlearn="gen"' : 'data-go="gen"') + '>' + (S.pointGo === "gen" ? PT : '') +
      '<span class="mtx">' + (fun ? '<span class="eyebrow">Start here</span>' : '') + '<h2>BugDex</h2><p>Every medication, explained in plain language. Search or browse.</p>' +
      (fun ? routeChips("gen") + '<span class="count">' + genN + ' medications</span>' : '') + '</span>' +
-     '<span class="mbug">' + bugSVG("sage") + '</span></button>') + '</div>' + myListRoute() +
+     '<span class="mbug">' + bugSVG("sage") + '</span></button>') + '</div>' +
+   '<div class="minis one evbox">' + mini("ev", "everyday", "Everyday Health", EV_LINE, "grub-everyday") + '</div>' + myListRoute() +   /* its own box under the BugDex, for everyone (owner, Nov 18 2026) */
    '</section>' + homeRoutes(mini) + (typeof fireHomeCard === "function" ? fireHomeCard() : '') + (typeof harvestStrip === "function" ? harvestStrip() : '') + '</div>';
 }
 /* The main menu shows the path picked on the first run, not all of them (owner, Nov 4 2026).
@@ -783,7 +784,7 @@ var ROUTE_MORE = {
   md: ["Mechanisms, pharmacokinetics and drug classes", "Step-style questions and advanced lab patterns", "Drug Class Comparisons and Body Systems for rounds"],
   im: ["Contrast agents and radiopharmaceuticals", "Reactions, premedication, eGFR and screening", "Exam-style questions"],
   ah: ["Respiratory therapy: oxygen devices, vent modes, ABGs, aerosols and weaning", "Dietitian / nutritionist: assessment, tube feeding, TPN and refeeding, deficiencies", "Phlebotomy: order of draw, specimen handling, drug-level timing, with questions for each field"],
-  bg: ["Six short units: medicines 101, routes, drug cards, name clues, body basics and safety", "Three small ideas and three quick questions per lesson", "Finish one to open the next"],
+  bg: ["47 units in 5 stages, from drug types and how they work up to master level", "Five short cards and four quick questions per lesson", "Your title grows with you: Beginner, Apprentice, Intermediate, Advanced, Master of Medicine"],
   ev: ["General study of OTC medicines, vitamins and probiotics", "Introductory vital-sign and lab concepts", "Ask a licensed clinician or pharmacist about your own medicines"]
 };
 /* Allied Health removed (owner, Nov 15 2026), then brought back as Hospital Allied Health with only Respiratory
@@ -801,9 +802,9 @@ function homeRoutes(mini) {
   var picked = Prog.d.interests || [];
   var showBg = all || picked.indexOf("ev") >= 0 || (!picked.length && Prog.d.role === "ev") || (!picked.length && !mine.length);
   /* Beginner to Medicine takes the old Everyday Health spot; Everyday Health is on everyone's menu (owner, Nov 18 2026) */
-  var cards = (showBg ? mini("bg", "beginner", "Beginner to Medicine", BG_LINE, "grub-eager") : "") +
-    list.map(function (x) { return mini(x[0], x[1], x[2], x[3], x[4]); }).join("") + mini("ev", "everyday", "Everyday Health", EV_LINE, "grub-everyday");
-  var n = list.length + 1 + (showBg ? 1 : 0);
+  var cards = (showBg ? mini("bg", "beginner", bgTrackName(), BG_LINE, "grub-eager") : "") +
+    list.map(function (x) { return mini(x[0], x[1], x[2], x[3], x[4]); }).join("");
+  var n = list.length + (showBg ? 1 : 0);
   var head = all || !mine.length ? "Study by role" : (n === 1 ? "Your path" : "Your paths");
   /* the other paths live in Settings now, not on the menu (owner, Nov 4 2026) */
   return '<h3 class="homegh">' + head + '</h3><section class="routes"><div class="minis' + (n === 1 ? ' one' : '') + '">' + cards + '</div></section>';
@@ -849,7 +850,7 @@ function homeContinue() {
 function viewLevels() {
   if (routeCtx() === "fm") { S.view = "level"; S.level = "cpp"; S.tab = "hub"; return viewLevel(); }
   var rt = routeCtx(), nurse = rt === "rn", med = rt === "md", img = rt === "im", ally = rt === "ah", fm = rt === "fm", L = nurse ? DB.NLEVELS : med ? DB.MLEVELS : img ? DB.ILEVELS : ally ? DB.ALEVELS : fm ? DB.FLEVELS : DB.LEVELS;
-  var c = topbar() + '<header class="pagehead"><h1>' + (fm ? 'Field Medic: choose your tier <span class="pill proto">In development</span>' : nurse ? "Nursing: choose your license" : med ? "Medical school: choose your year" : img ? "Imaging: choose your modality" : ally ? "Allied Health: choose your field" : "Choose your level") + '</h1><p>' + (fm ? "Tactical Combat Casualty Care in four tiers, from every service member to the combat paramedic with prolonged casualty care. Each tier includes every skill and medication from the tiers before it." : img ? "Each modality covers the reaction cart and sedation drugs every tech needs, plus the contrast agents and radiopharmaceuticals for that modality." : ally ? "Each field has its own medicines and its own questions: mental health, nutrition, or airway and breathing." : med ? "Every year studies the full drug library; the exam prep, scenarios and focus change as you advance. Your bug evolves with you." : "Each level includes every drug from the levels before it. Your bug evolves as you level up.") + '</p></header><section class="levels' + (fm ? " flv" : (L.length === 3 || L.length === 5 ? " three" : "")) + '">';
+  var c = topbar() + '<header class="pagehead lvhero ' + (nurse ? "rn" : med ? "md" : img ? "im" : ally ? "ah" : fm ? "fm" : "ph") + '"><h1>' + (fm ? 'Field Medic: choose your tier <span class="pill proto">In development</span>' : nurse ? "Nursing: choose your license" : med ? "Medical school: choose your year" : img ? "Imaging: choose your modality" : ally ? "Allied Health: choose your field" : "Choose your level") + '</h1><p>' + (fm ? "Tactical Combat Casualty Care in four tiers, from every service member to the combat paramedic with prolonged casualty care. Each tier includes every skill and medication from the tiers before it." : img ? "Each modality covers the reaction cart and sedation drugs every tech needs, plus the contrast agents and radiopharmaceuticals for that modality." : ally ? "Each field has its own medicines and its own questions: mental health, nutrition, or airway and breathing." : med ? "Every year studies the full drug library; the exam prep, scenarios and focus change as you advance. Your bug evolves with you." : "Each level includes every drug from the levels before it. Your bug evolves as you level up.") + '</p></header><section class="levels' + (fm ? " flv" : (L.length === 3 || L.length === 5 ? " three" : "")) + '">';
   /* Combat Paramedic & Prolonged Care sits in Prehospital, just before Flight Paramedic, once Field Medic is unlocked (owner, Oct 29 2026) */
   if (!nurse && !med && !img && !ally && !fm && typeof fmUnlocked === "function" && fmUnlocked()) {   /* Prehospital only, never Allied Health (owner, Nov 5 2026) */
     var cp = DB.FLEVELS.filter(function (x) { return x.key === "cpp"; })[0], fi = L.map(function (x) { return x.key; }).indexOf("flight");
@@ -1665,7 +1666,8 @@ function nrLevelsFor(k) {
   return ["flight"];
 }
 function nrPool(filter, noGen) {
-  var full = nrPoolAll(filter, noGen);
+  /* the sample is drawn from the whole bank, so every deck has its full 50 (owner, Nov 18 2026) */
+  var full = freeSample() ? fullCount(function () { return nrPoolAll(filter, noGen); }) : nrPoolAll(filter, noGen);
   return freeSample() ? freeCut(full, freeQsCap(), qid) : full;
 }
 function nrPoolAll(filter, noGen) {
@@ -1681,7 +1683,7 @@ function nrPoolAll(filter, noGen) {
   var alliedRole = isA(ck) ? /\b(EMTs?|AEMTs?|paramedics?|medics?|EMS|prehospital|ambulance|crew|on scene|scene|dispatch(?:ed)?|transport(?:ing)?|flight|helicopter|nurses?|RNs?|LVNs?|LPNs?|CNAs?|nursing|charge nurse|medical director|protocol)\b/i : null;
   function ok(q) { return allowed.indexOf(q.lv) >= 0 && starOK(q, ck) && !(q.home && ck !== "gen") && qVisible(q) && (!inScope || (q.d ? inScope[q.d] : !isF(ck))) && (!q.d || !drugLocked(q.d)) && !(alliedRole && q.lv !== ck && q.lv !== "gen" && (!q.d || alliedRole.test(q.q || ""))); }
   if (S.nr && S.nr.kind === "reg" && isA(ck)) return (DB.RQ || []).filter(function (q) { return q.lv === ck && qVisible(q); });
-  if (S.nr && S.nr.kind === "reg") return (DB.RQ || []).filter(function (q) { return allowed.indexOf(q.lv) >= 0 && starOK(q, ck) && qVisible(q) && (!isF(ck) || q.fm) && (typeof callScaleOK !== "function" || callScaleOK(q)); });
+  if (S.nr && S.nr.kind === "reg") { var rAl = regLevels(ck, allowed); return (DB.RQ || []).filter(function (q) { return rAl.indexOf(q.lv) >= 0 && regStarOK(q, ck) && qVisible(q) && (!isF(ck) || q.fm) && (typeof callScaleOK !== "function" || callScaleOK(q)); }); }
   return DB.Q.filter(ok).concat((DB.QX || []).filter(ok)).concat(!noGen && typeof qgPoolFor === "function" ? qgPoolFor(ck, ok) : []);
 }
 function nrState() {
@@ -1899,7 +1901,11 @@ function creatorNote() {
          : '<a class="cncta" href="mailto:VolareMediaLLC@gmail.com?subject=Question%20evaluator">Want to help shape the questions? Request to be a question evaluator &rarr;</a>') +
     '</aside>';
 }
-function regCount() { var k = ctxKey(), al = isA(k) ? [k] : nrLevelsFor(k), f = isF(k); return (DB.RQ || []).filter(function (q) { return al.indexOf(q.lv) >= 0 && starOK(q, k) && qVisible(q) && (!f || q.fm); }).length; }
+/* the flight exams build on the ground ones, so Flight Paramedic and Flight Nurse exam-style decks
+   include the paramedic and RN banks under their own (owner, Nov 18 2026: the flight deck had only 5) */
+function regLevels(k, al) { al = (al || nrLevelsFor(k)).slice(); if (k === "flight" && al.indexOf("paramedic") < 0) al.push("paramedic"); if (k === "flightrn" && al.indexOf("rn") < 0) al.push("rn"); return al; }
+function regStarOK(q, k) { return starOK(q, k) || (k === "flight" && q.lv === "paramedic") || (k === "flightrn" && q.lv === "rn"); }
+function regCount() { if (freeSample()) return Math.min(FREE_QS, fullCount(regCount)); var k = ctxKey(), al = isA(k) ? [k] : regLevels(k), f = isF(k); return (DB.RQ || []).filter(function (q) { return al.indexOf(q.lv) >= 0 && regStarOK(q, k) && qVisible(q) && (!f || q.fm); }).length; }
 function nrPrep() {
   var st = nrState();
   if (st.phase === "quiz") return nrQuiz(st);
@@ -1909,18 +1915,19 @@ function nrPrep() {
   if (isF(ctxKey())) st.kind = "reg";
   var regN = regCount(), reg = st.kind === "reg", filters = nrLevelsFor(ctxKey()).concat(["all"]), n = Math.min(st.n, pool.length);
   /* one simple screen: pick a deck, a length and a mode, then go. Everything else sits under More options. */
-  var c = freeSample() ? freeNote("questions", (function () { var cap = freeQsCap(); return regN && !isF(ctxKey()) ? Math.min(cap, drugCount()) + Math.min(cap, regN) : Math.min(FREE_QS, pool.length); })(), 0) : '';
+  var c = freeSample() ? freeNote("questions", (function () { var cap = freeQsCap(); return regN && !isF(ctxKey()) ? Math.min(cap, drugCount()) + Math.min(cap, regN) : Math.min(FREE_QS, pool.length); })(), fullCount(function () { return (regN && !isF(ctxKey()) ? drugCount() + regCount() : nrPool(st.filter).length); })) : '';
+  var drugAll = freeSample() ? fullCount(drugCount) : 0, regAll = freeSample() ? fullCount(regCount) : 0;
   c += '<section class="nrsetup nrfun"><div class="nrtop">' + myBugArt("nrbug", null, null, myStage()) + '<p class="nrtag"><strong>' + esc(exam) + '-style practice.</strong> <span class="muted">' + (isF(ctxKey()) ? 'Pick a length, go.' : 'Pick a deck, pick a length, go.') + '</span></p></div>' + examPill(pool) + creatorNote();
   if (regN && isF(ctxKey())) c += '<p class="muted small">' + (freeSample() ? Math.min(regN, freeQsCap()) : regN) + ' questions on medications, blood, trauma, prolonged care, ventilators, labs, CBRN, K9, dive and evacuation.</p>';
   else if (regN) c += '<div class="nrdecks" role="group" aria-label="Question type">' +
-    '<button class="nrdeck" data-nrkind="drug" aria-pressed="' + !reg + '"><span class="nrdk-ic" aria-hidden="true">' + icon("pillq") + '</span><strong>Drug questions</strong><span class="nrdk-n">' + drugCount() + '</span><span class="nrdk-sub">' + (nurse ? "Medicines: what to check, report and teach on your unit" : "Doses, actions, uses and side effects") + '</span></button>' +
-    '<button class="nrdeck" data-nrkind="reg" aria-pressed="' + reg + '"><span class="nrdk-ic" aria-hidden="true">' + icon("ecg") + '</span><strong>' + (nurse ? (S.level === "cna" ? "CNA exam-style questions" : "NCLEX-style questions") : (isEMSLv(S.level) || S.level === "cp" ? "Registry-style questions" : "Exam-style questions")) + '</strong><span class="nrdk-n">' + (freeSample() ? Math.min(regN, freeQsCap()) : regN) + '</span><span class="nrdk-sub">' + (nurse ? (S.level === "cna" ? "Care, safety, communication and your role" : "Priority, delegation, safety, care and the whole test plan") : "Airway, cardiology, trauma, medical and operations") + '</span></button></div>' +
+    '<button class="nrdeck" data-nrkind="drug" aria-pressed="' + !reg + '"><span class="nrdk-ic" aria-hidden="true">' + icon("pillq") + '</span><strong>Drug questions</strong><span class="nrdk-n">' + drugCount() + '</span>' + proMore(drugCount(), drugAll, "questions") + '<span class="nrdk-sub">' + (nurse ? "Medicines: what to check, report and teach on your unit" : "Doses, actions, uses and side effects") + '</span></button>' +
+    '<button class="nrdeck" data-nrkind="reg" aria-pressed="' + reg + '"><span class="nrdk-ic" aria-hidden="true">' + icon("ecg") + '</span><strong>' + (nurse ? (S.level === "cna" ? "CNA exam-style questions" : "NCLEX-style questions") : (isEMSLv(S.level) || S.level === "cp" ? "Registry-style questions" : "Exam-style questions")) + '</strong><span class="nrdk-n">' + (freeSample() ? Math.min(regN, freeQsCap()) : regN) + '</span>' + proMore(freeSample() ? Math.min(regN, freeQsCap()) : regN, regAll, "questions") + '<span class="nrdk-sub">' + (nurse ? (S.level === "cna" ? "Care, safety, communication and your role" : "Priority, delegation, safety, care and the whole test plan") : "Airway, cardiology, trauma, medical and operations") + '</span></button></div>' +
     (function () { if (!nurse || (S.level !== "rn" && S.level !== "lvn") || typeof myUnit !== "function") return ""; var us0 = myUnits(S.level), u0 = us0[0], uo0 = u0 && typeof unitObj === "function" ? unitObj(u0) : null; return (S.level === "rn" ? nFocusRow(false) : "") + (uo0 && !reg ? '<p class="muted small nrdept">About 3 of every 4 drug questions come from ' + (us0.length > 1 ? 'your departments' : 'your department') + ': <strong>' + esc(us0.map(function (x) { var o = unitObj(x); return o ? o.name : x; }).join(", ")) + '</strong>, weighted to its most-used medicines and most common cases' + (deptTopCases(u0).length ? ' (' + esc(deptTopCases(u0).join(', ')) + ')' : '') + '. The rest cover other medicines.</p>' : ""); })();
   (function () {
     var st2 = seenStats();
     if (st2.total) {
       var pct = Math.round(st2.done / st2.total * 100);
-      c += '<div class="seenbar"><div class="seenhead"><strong>' + st2.done.toLocaleString() + ' of ' + st2.total.toLocaleString() + ' answered</strong><span class="muted small">' + st2.left.toLocaleString() + ' you have not seen yet</span></div>' +
+      c += '<div class="seenbar"><div class="seenhead"><strong>' + st2.done.toLocaleString() + ' of ' + st2.total.toLocaleString() + ' answered</strong><span class="muted small">' + st2.left.toLocaleString() + ' you have not seen yet</span></div>' + (function () { if (!freeSample()) return ""; var all = fullCount(function () { return seenStats().total; }); return all > st2.total ? '<p class="seenpro">Pro adds <b>' + (all - st2.total).toLocaleString() + '</b> more questions here. <span class="promore" role="button" tabindex="0" data-freepro="questions">See Pro</span></p>' : ""; })() +
         '<div class="seenmeter"><i style="width:' + pct + '%"></i></div>' +
         (st2.left ? '<button class="chip" data-act="nrfresh" aria-pressed="' + !!S.nrFresh + '">Only questions I have not seen</button>' : '<p class="muted small">You have been through every question at this level. Starting over will repeat them.</p>') +
         '</div>';
@@ -3687,9 +3694,10 @@ function dailyDone() { return Prog.d.lastDaily === today(); }
 
 /* class (drug group) progress in the current scope */
 function scopeGroups() {
-  var ids = scopeIds(), side = S.view === "gen" ? null : (nurseCtx() || medCtx() || imCtx()) ? "gen" : "ph";
+  var ids = scopeIds(), side = S.view === "gen" ? null : (nurseCtx() || medCtx() || imCtx()) ? "gen" : "ph", has = {};
+  ids.forEach(function (id) { has[id] = 1; });   /* lookup table instead of indexOf per drug (Nov 18 2026) */
   return DB.GROUPS.filter(function (g) { return !side || g.side === side; }).map(function (g) {
-    var gi = g.ids.filter(function (id) { return ids.indexOf(id) >= 0 && DB.drugs[id]; }); return { g: g, ids: gi };
+    var gi = g.ids.filter(function (id) { return has[id] === 1 && DB.drugs[id]; }); return { g: g, ids: gi };
   }).filter(function (x) { return x.ids.length >= 2; });
 }
 function challengeGroup() {
@@ -4421,7 +4429,8 @@ var STICK_TRY = 1, STICK_RIGHT = 3; /* every answered question pays 1 stick for 
 /* the peeking pal riding with your bug adds sticks to every right answer (owner, Nov 5 2026).
    Every level up now adds one more (owner, Nov 7 2026): +1 at level 1, +2 at level 2 ... +10 at
    level 10. It used to step only at levels 5 and 10. */
-function palBonusAt(lv) { return Math.max(1, Math.min(10, lv || 1)); }
+/* Nov 18 2026 (owner): one more stick every other level, capped at +5 (levels 1-2 +1, 3-4 +2 ... 9 and up +5) */
+function palBonusAt(lv) { return Math.max(1, Math.min(5, Math.ceil((lv || 1) / 2))); }
 function palBonus() { var id = Prog.d.pal; if (!id || typeof pkCaught !== "function" || !pkCaught(id)) return 0; return palBonusAt(typeof pkLv === "function" ? pkLv(id) : 1); }
 function qSticks(ok) { return ok ? STICK_RIGHT + palBonus() : STICK_TRY; }
 function stickNote(ok) { var n = qSticks(ok), pb = ok ? palBonus() : 0; return ' <span class="earned">+' + n + (n === 1 ? " stick" : " sticks") + (ok ? "" : " for trying") + (pb ? ' (' + pb + ' from your pal)' : '') + '</span>'; }
@@ -5329,7 +5338,7 @@ function speciesMarks(b, t, id, ink, c1, c2, c3) {
   else if (feat === "crest") for (k = 0; k < 4; k++) out += '<circle cx="' + cx + '" cy="' + (cy - ry * .6 + k * ry * .38).toFixed(1) + '" r="' + (fw * .09).toFixed(1) + '" fill="' + c3 + '" stroke="' + ink + '" stroke-width="1.6"/>';
   else if (feat === "fringe") { var fr = ""; for (k = 0; k < 7; k++) { var a = Math.PI * (.2 + k * .1); [-1, 1].forEach(function (sd) { var x1 = cx + sd * Math.sin(a) * rx, y1 = cy - Math.cos(a) * ry; fr += 'M' + x1.toFixed(1) + ' ' + y1.toFixed(1) + ' l' + (sd * 5).toFixed(1) + ' ' + (k % 2 ? 2 : -2) + ' '; }); } out += '<path d="' + fr + '" stroke="' + ink + '" stroke-width="2" stroke-linecap="round"/>'; }
   else if (feat === "horn" && !{ stag: 1, hercules: 1, rhino: 1, longhorn: 1 }[t]) { var hr2 = F.r || 30; out += '<path d="M' + (100 - 5) + ' ' + (hy - hr2 + 4) + ' Q100 ' + (hy - hr2 - 16) + ' ' + (100 + 9) + ' ' + (hy - hr2 - 14) + ' Q103 ' + (hy - hr2 - 4) + ' ' + (100 + 6) + ' ' + (hy - hr2 + 4) + 'Z" fill="' + c2 + '" stroke="' + ink + '" stroke-width="2.5" stroke-linejoin="round"/>'; }
-  else if (feat === "crown") { var hr3 = F.r || 30; [-1, 0, 1].forEach(function (q) { out += '<circle cx="' + (100 + q * hr3 * .42).toFixed(1) + '" cy="' + (hy - hr3 * (q ? .72 : .86)).toFixed(1) + '" r="' + (hr3 * .1).toFixed(1) + '" fill="' + c3 + '" stroke="' + ink + '" stroke-width="1.5"/>'; }); }
+  else if (feat === "crown" && t !== "larva") {   /* no forehead dots on grubs (owner, Nov 18 2026) */ var hr3 = F.r || 30; [-1, 0, 1].forEach(function (q) { out += '<circle cx="' + (100 + q * hr3 * .42).toFixed(1) + '" cy="' + (hy - hr3 * (q ? .72 : .86)).toFixed(1) + '" r="' + (hr3 * .1).toFixed(1) + '" fill="' + c3 + '" stroke="' + ink + '" stroke-width="1.5"/>'; }); }
   else if (feat === "lobes") [-1, 1].forEach(function (sd) { out += '<ellipse cx="' + (cx + sd * rx * .95).toFixed(1) + '" cy="' + (cy + ry * .35).toFixed(1) + '" rx="' + (fw * .16).toFixed(1) + '" ry="' + (fw * .26).toFixed(1) + '" fill="' + c2 + '" stroke="' + ink + '" stroke-width="2.5"/>'; });
   return out;
 }
@@ -6206,7 +6215,7 @@ function tankHTML(mine, withMore) {
       '<span class="orb r-' + b.rar + '">' + bugArt(b, "", { stage: MAX_STAGE, wear: on ? myWear() : {}, mood: on ? myFace() : "happy" }) + '</span><span class="bname">' + esc(b.name) + '</span>' + (on ? '<em>' + (es ? "Usando" : "Using") + '</em>' : '') + '</button>';
   }).join("");
   if (withMore) bub += '<button class="bubble more" data-shopf="bugs" role="listitem"><span class="orb"><span class="plus" aria-hidden="true">+</span></span><span class="bname">' + (es ? "Conseguir más" : "Get more bugs") + '</span></button>';
-  return '<div class="pickhead"><h3>' + (es ? "Mi terrario" : "My terrarium") + '</h3><span class="muted small">' + (es ? "Toca una burbuja para usar ese insecto" : "Tap a bubble to use that bug") + '</span></div>' +
+  return '<div class="pickhead"><h3>' + (es ? "Mi terrario" : "My terrarium") + '</h3><span class="muted small">' + (es ? "Toca para usarlo, mantén pulsado para ver su ficha" : "Tap to use, hold to see its card") + '</span></div>' +
     '<div class="tank" role="group" aria-label="' + (es ? "Mi terrario" : "My terrarium") + '"><div class="tanklid" aria-hidden="true"></div><div class="tankglow" aria-hidden="true"></div>' + TANK_PLANTS +
     '<div class="bubbles" role="list">' + bub + '</div>' + TANK_SOIL +
     '<div class="tankcap">' + mine.length + (es ? " de " : " of ") + total + (es ? " insectos coleccionados" : " bugs collected") + '</div></div>';
@@ -7143,7 +7152,7 @@ function megaView2() {
   if (!st) {
     var best = Prog.d.mega || {};
     return '<section class="mega"><h2>Bug Rush</h2><div class="dosewarn" role="note"><strong>Fictional practice only.</strong> Codes follow published ACLS/PALS study material, which can differ from FDA labeling. Do not use it for patient care or clinical decisions.</div><p class="muted">Run a code. The monitor changes as the case unfolds, and every decision is on the clock. Choose the best next action before time runs out.</p><div class="mclist">' +
-      megaCases().map(function (cs) { var b = best[cs.id]; return '<button class="mccard" data-mega="' + cs.id + '"><span class="eyebrow">' + esc(cs.tag) + (cs.group === "peds" ? " · Pediatric" : "") + '</span><strong>' + esc(cs.title) + '</strong><span class="muted small">' + cs.steps.length + ' decisions' + (b ? ' · best ' + b + '%' : '') + '</span></button>'; }).join("") + '</div><p class="muted small">Written from published resuscitation guidelines. Not an AHA course or product, and no ACLS/PALS certification. Practice only: follow your local protocols and medical direction.</p></section>';
+      megaCases().map(function (cs) { var b = best[cs.id]; return '<button class="mccard" data-mega="' + cs.id + '"><span class="eyebrow">' + esc(cs.tag) + (cs.group === "peds" ? " · Pediatric" : "") + '</span><strong>' + esc(cs.title) + '</strong><span class="muted small">' + cs.steps.length + ' decisions' + (b ? ' · best ' + b + '%' : '') + '</span></button>'; }).join("") + (function () { var nf = megaCases().length, na = freeSample() ? fullCount(function () { return megaCases().length; }) : nf; return na > nf ? '<button class="mccard mcmore" data-freepro="Megacode cases"><span class="eyebrow">Pro</span><strong>+' + (na - nf) + ' more codes</strong><span class="muted small">' + na + ' Megacode cases in all with Pro</span></button>' : ''; })() + '</div><p class="muted small">Written from published resuscitation guidelines. Not an AHA course or product, and no ACLS/PALS certification. Practice only: follow your local protocols and medical direction.</p></section>';
   }
   var cs = st.cs, step = cs.steps[st.i];
   if (st.done) return megaDone();
@@ -7245,6 +7254,7 @@ function megaDone() {
 var RUSH_W = { mega: 3, scen: 1, call: 5 };
 var ACU = { critical: ["Critical", "acu-c"], red: ["Red", "acu-r"], yellow: ["Yellow", "acu-y"], green: ["Green", "acu-g"] };
 function acuTag(a) { var x = ACU[a]; return x ? '<span class="acutag ' + x[1] + '">' + x[0] + '</span>' : ''; }
+function rushUniq(P) { var seen = {}, n = 0; P.forEach(function (x) { var k = x.k + ":" + x.id; if (!seen[k]) { seen[k] = 1; n++; } }); return n; }
 function rushPool() {
   var P = [], nolac = labOK;
   if (S.view === "level" && DB.MEGA_LEVELS && DB.MEGA_LEVELS[ctxKey()]) megaCases().forEach(function (c) { P.push({ k: "mega", id: c.id }); });
@@ -7294,7 +7304,7 @@ function rushView() {
   if (R.ended) return rushSummary(R);
   if (!R.cur && !rushStart(R)) return '<div class="empty">Bug Rush is on the way for this level.</div>';
   var kind = { mega: "Code", scen: "Case", call: "Call" }[R.cur.k];
-  var c = (R.n <= 1 ? freeNote("Bug Rush calls", rushPool().filter(function (x, i, a) { return a.findIndex(function (y) { return y.k === x.k && y.id === x.id; }) === i; }).length, 0) : '') + (ctxKey() === "rn" && typeof nFocusRow === "function" ? nFocusRow(false) : "") + '<div class="rushbar"><span class="rushn"><strong>' + kind + ' ' + R.n + '</strong></span><span class="rushs">Saved <b>' + R.saved + '</b></span><span class="rushl">Lost <b>' + R.lost + '</b></span>' +
+  var c = (R.n <= 1 ? freeNote("Bug Rush calls", rushUniq(rushPool()), fullCount(function () { return rushUniq(rushPool()); })) : '') + (ctxKey() === "rn" && typeof nFocusRow === "function" ? nFocusRow(false) : "") + '<div class="rushbar"><span class="rushn"><strong>' + kind + ' ' + R.n + '</strong></span><span class="rushs">Saved <b>' + R.saved + '</b></span><span class="rushl">Lost <b>' + R.lost + '</b></span>' +
     (R.tot ? '<span>Score <b>' + Math.round(100 * R.ok / R.tot) + '%</b></span>' : '') + '<button class="linkish" data-act="rushend">End rush</button></div>';
   if (R.cur.k === "mega") return c + (S.mega && !S.mega.done ? '<p class="rushacu">' + acuTag("critical") + '</p>' : '') + megaView2();
   if (R.cur.k === "scen") { var s = scenList().filter(function (x) { return x.id === R.cur.id; })[0]; if (!s) { R.cur = null; return rushView(); } return c + scenView(s, scenList(), "rush"); }
@@ -10375,7 +10385,9 @@ window.addEventListener("pagehide", function () { usgFlush(true); });
 setTimeout(function () { usgFlush(false); }, 8000);   /* the visit itself counts even before anything is answered */
 
 var SET_DEF = { remind: true, remindAt: "19:00", text: "normal", contrast: false, motion: false, homeLevel: "", dailyGoal: 10, nrN: 25, nrMode: "practice", adaptive: false, megaTimer: "on", fullDefault: false, voiceRate: "normal", showPhon: true, fun: true, sfx: true, music: true, musicVol: 30, printMode: "cards", printDetail: "std", printLang: "auto", printDense: false, state: "", buddy: true, weird: true, weirdAt: "12:00" };
-function SET() { var s = store("settings") || {}; return Object.assign({}, SET_DEF, s); }
+var SET_RAW = null, SET_OBJ = null;
+var SET_TS = 0, SET_M = null;
+function SET() { var now = Date.now(); if (SET_OBJ && SET_M && now - SET_TS < 300) return SET_M; SET_TS = now; var raw = null; try { raw = localStorage.getItem("drugbug:settings"); } catch (e) {} if (raw !== SET_RAW || !SET_OBJ) { SET_RAW = raw; try { SET_OBJ = raw ? JSON.parse(raw) || {} : {}; } catch (e) { SET_OBJ = {}; } } SET_M = Object.assign({}, SET_DEF, SET_OBJ); return SET_M; }   /* parsed once per change, not on every call (Nov 18 2026) */
 /* sound effects are on for everyone (owner, Nov 5 2026): anyone who had them off is switched back on
    once; after that the switch in Settings is theirs again */
 (function () { try { if (!store("sfxOnce1")) { var s0 = store("settings") || {}; if (s0.sfx === false) { s0.sfx = true; store("settings", s0); } store("sfxOnce1", 1); } } catch (e) {} })();
@@ -10647,12 +10659,13 @@ function myAnalyticsView() {
   return c;
 }
 function settingsView() {
-  var s = SET(), P = Prog.d, ag = agreeRec(), c = topbar() + '<div class="settings lvl-gen"><header class="pagehead"><h1>Settings</h1><p>' + (!HASDB ? 'Saved on this device.' : 'Saved on this device. Your progress, bugs and scores also sync to your account.') + '</p></header>' + proCard();
+  var s = SET(), P = Prog.d, ag = agreeRec(), c = topbar() + '<div class="settings lvl-gen"><header class="pagehead"><h1>Settings</h1><p>' + (!HASDB ? 'Saved on this device.' : 'Saved on this device. Your progress, bugs and scores also sync to your account.') + '</p></header>' + '<!--SETTABS-->' + proCard();
   if (S.setMsg) { c += '<div class="presult good" role="status">' + esc(S.setMsg) + '</div>'; S.setMsg = ""; }
   if (typeof acctUI === "function" && acctUI() && HASDB) c += '<div class="setquick">' + (NATIVE ? '' : '<button class="btn" data-act="codesgo">Redeem a code</button>') + '<button class="btn ' + (NATIVE ? '' : 'ghost') + '" data-act="linkgo">' + (NATIVE ? 'Sync with drugbugapp.com' : 'Sync with my iPhone') + '</button>' + (typeof stxAny === "function" && stxAny() ? '<button class="btn ghost" data-go="stats">Stats dashboard</button>' : '') + '</div>';
   var tabs = [["display", "Display"], ["study", "Study"], ["sound", "Sound"], ["protocols", "Protocols"]].concat(!canPrint() ? [] : [["print", "Printing"]], [["analytics", "Analytics"], ["privacy", "Account"], ["feedback", "Feedback"], ["about", "About"]]);
   if (!tabs.some(function (x) { return x[0] === S.setTab; })) S.setTab = "display";
-  c += '<nav class="settabs" role="tablist" aria-label="Settings sections">' + tabs.map(function (x) { return '<button role="tab" data-settab="' + x[0] + '" aria-selected="' + (S.setTab === x[0]) + '">' + x[1] + '</button>'; }).join("") + '</nav>';
+  /* the section slider sits at the top, above the plan card, so Account is one tap away (owner, Nov 18 2026) */
+  c = c.replace('<!--SETTABS-->', '<nav class="settabs settop" role="tablist" aria-label="Settings sections">' + tabs.map(function (x) { return '<button role="tab" data-settab="' + x[0] + '" aria-selected="' + (S.setTab === x[0]) + '">' + x[1] + '</button>'; }).join("") + '</nav>');
   // display
   c += setCard("display", "Display",
     setRow("Theme", "", setOpts("theme", themePref(), [["dark", "Night shift (default)"], ["light", "Day shift"], ["system", "Match my device"]])) +
@@ -11968,7 +11981,12 @@ function tabTier(tab) { return tab === "megacode" ? toolTier("mega") : tab === "
    role: 10 Bug Rush calls and 50 questions (25 drug + 25 exam-style where a role has both decks). The sample is
    picked by a stable hash, so it is the same set every time; Pro opens everything. */
 var FREE_RUSH = 10, FREE_QS = 50, FREE_MEGA = 2;
-function freeSample() { return typeof PAYWALL !== "undefined" && PAYWALL && !hasTier("pro"); }
+var FREE_PEEK = 0;
+function freeSample() { return !FREE_PEEK && typeof PAYWALL !== "undefined" && PAYWALL && !hasTier("pro"); }
+/* how much Pro opens: the same count with the free sample switched off (owner, Nov 18 2026:
+   "people are not buying because they don't understand more questions will show if they get Pro") */
+function fullCount(fn) { FREE_PEEK++; try { return fn(); } catch (e) { return 0; } finally { FREE_PEEK--; } }
+function proMore(n, all, what) { if (!freeSample() || !(all > n)) return ""; return '<span class="promore" role="button" tabindex="0" data-freepro="' + esc(what || "") + '">' + all.toLocaleString() + ' with Pro</span>'; }
 function freeCut(list, n, key) {
   var seen = {}, u = [];
   list.forEach(function (x) { var k = key(x); if (!seen[k]) { seen[k] = 1; u.push(x); } });
@@ -11976,10 +11994,11 @@ function freeCut(list, n, key) {
   var keep = {}; u.slice(0, n).forEach(function (x) { keep[key(x)] = 1; });
   return list.filter(function (x) { return keep[key(x)]; });
 }
-function freeQsCap() { var both = (typeof regCount === "function" ? regCount() : 0) > 0 && !isF(ctxKey()); return both ? Math.floor(FREE_QS / 2) : FREE_QS; }
+function freeQsCap() { return FREE_QS; }   /* 50 per deck in every specialty (owner, Nov 18 2026) */
 function freeNote(what, n, all) {
   if (!freeSample()) return "";
-  /* kept quiet on purpose (owner, Nov 18): one small line, no button, no push to buy */
+  /* show what Pro opens, with real numbers (owner, Nov 18 2026) */
+  if (all > n) return '<div class="freesamp prosee"><div><strong>Your sample: ' + n.toLocaleString() + ' ' + what + '</strong><span>Pro has <b>' + all.toLocaleString() + '</b> here, ' + (all - n).toLocaleString() + ' more for you to unlock.</span></div><button type="button" class="btn small" data-freepro="' + esc(what) + '">See Pro</button></div>';
   return '<p class="freesamp quiet muted small">Sample set: ' + n + ' ' + what + ', yours to replay any time.</p>';
 }
 function proLocked(tab) { return PAYWALL && !hasTier(tabTier(tab)); }
@@ -11987,8 +12006,8 @@ function drugTier(id) { return FREE_SET[id] ? "free" : "plus"; }   /* reading a 
 /* The drill pool. A question, game or scenario about a medication outside the free set only appears
    on Pro - that is the one thing Plus does not include. Checked in qVisible (modules/dex.js), which
    every question pool in the app already runs through. */
-function studyLocked(id) { return PAYWALL && !!id && !FREE_SET[id] && !hasTier("pro"); }
-function drugLocked(id) { return PAYWALL && !hasTier(drugTier(id)); }
+function studyLocked(id) { return !FREE_PEEK && PAYWALL && !!id && !FREE_SET[id] && !hasTier("pro"); }
+function drugLocked(id) { return !FREE_PEEK && PAYWALL && !hasTier(drugTier(id)); }
 /* bugs by subscription: Common, starter and earned bugs are free; Rare and Seasonal need Plus; Epic and Legendary need Pro. Bugs already owned stay owned. */
 function bugTier(b) { if (!b || b.login || b.king) return "free"; if (b.rar === "epic" || b.rar === "legendary") return "pro"; if (b.rar === "rare" || b.rar === "seasonal") return "plus"; return "free"; }
 function proBug(id) { var b = bugById(id); return PAYWALL && !!b && !owned(id) && !hasTier(bugTier(b)); }
@@ -12321,7 +12340,7 @@ function tourCards() {
      Hickory hosts it; in Focused mode the same cards speak plainly. */
   if (!fun) {
     var F = [["Welcome to DrugBug", "Here is a quick look around. Skip at any time; you can replay this from Settings.", "plain"]];
-    if (beg) F.push(["Beginner to Medicine", "Your path starts from zero: short lessons, each three small ideas and three quick questions. Finish one to open the next.", "plain"]);
+    if (beg) F.push(["Beginner to Medicine", "Your path starts from zero: short lessons, each five small ideas and four quick questions. As you grow, the title climbs from Beginner to Master of Medicine.", "plain"]);
     F.push(
       ["Your path", "Your path is on the main menu. Open it to pick your level. Each level has its own drug list, questions and tools. The card marked Start here opens L.E.A.R.N: every drug in that scope, one at a time, shuffled, nothing repeated.", "plain"],
       ["The BugDex", "Every medication lives in the BugDex. Search by name, browse by class or go A to Z. Open one for the plain-language view or the full monograph.", "plain"],
@@ -12339,7 +12358,7 @@ function tourCards() {
   var c = [["Well, howdy there",
      "Name's Hickory. I'm the bug that runs things round here. Let me show ya the place. It won't take long, and if ya get bored, the Skip button's right there. I won't take it personal. Much.", "hick"]];
   if (beg) c.push(["Startin' from scratch",
-     "Ya picked Beginner to Medicine. Good on ya. We start right at the bottom: what a medicine even is, how it gets in ya, how to read a drug card. Little lessons, three bitty ideas and three quick questions each. Finish one and the next one opens up. And that eager little fella? That's your bug. He's as new at this as you are.", "bug"]);
+     "Ya picked Beginner to Medicine. Good on ya. We start right at the bottom: what a medicine even is, how it gets in ya, how to read a drug card. It's a whole course, near about a year of it, little bits at a time: a few ideas, then some quick questions, and a checkpoint at the end of each unit. Finish one and the next one opens up. And that eager little fella? That's your bug. He grows up right along with ya as ya learn.", "bug"]);
   c.push(
     ["Your patch",
      "Your path's right there on the main menu. Open it up and pick your level. Every level's got its own drugs, its own questions and its own tools, so ya ain't wadin' through stuff that ain't yours.", "hick"],
@@ -12374,9 +12393,9 @@ function tourCards() {
 var TOUR = tourCards();
 var TR = { i: 0, open: false };
 var trdlg = document.createElement("div"); trdlg.id = "tourdlg"; trdlg.className = "sheet rsheet"; trdlg.hidden = true; document.body.appendChild(trdlg);
-var TOUR_V = 3;   /* Nov 18 2026: the full walk-through; everyone sees the new tour once */
+var TOUR_V = 4;   /* Nov 18 2026: Hickory walks you to each place; everyone sees it once */
 function tourDone() { return TR.done || (store("tourV") || 0) >= TOUR_V; }
-function tourOpen(force) { if (TR.open || (!force && tourDone())) return; TOUR = tourCards(); TR.open = true; TR.i = 0;   /* the Serious / Seriously fun choice lives in Settings now (owner, Oct 30 2026) */ drawTour(); trdlg.hidden = false; }
+function tourOpen(force) { if (TR.open || (!force && tourDone())) return; if (typeof gtStart === "function") return gtStart();   /* the guided tour replaces the card deck (owner, Nov 18 2026) */ TOUR = tourCards(); TR.open = true; TR.i = 0;   /* the Serious / Seriously fun choice lives in Settings now (owner, Oct 30 2026) */ drawTour(); trdlg.hidden = false; }
 function tourClose() { try { if (typeof voiceStop === "function") voiceStop(); } catch (e) {} TR.done = true; TR.open = false; trdlg.hidden = true; trdlg.innerHTML = ""; store("tourDone", 1); store("tourV", TOUR_V); if (typeof wdwSync === "function") setTimeout(wdwSync, 600); if (typeof remindSync === "function") setTimeout(remindSync, 900); }
 function drawTour() {
   var t = TOUR[TR.i], last = TR.i === TOUR.length - 1;
@@ -13972,7 +13991,15 @@ function bodyStage(ctx, sel) {
   var sr = '<div class="bm3dsr">' + D3_PARTS.map(function (p) {
     return '<button type="button" data-barea="' + esc(D3GL.area(p)) + '" data-bpart="' + p + '">' + esc(D3_LABEL[p]) + '</button>';
   }).join("") + '</div>';
-  return '<p class="bm3dname" aria-hidden="true"><span>The Great Bug</span></p><div class="bm3d" data-ctx="' + ctx + '"><div class="bm3dfb">' + bodySVG(sel) + '</div>' + sr +
+  /* Hickory explains the dummy, with a hint at Officer Roly-Poly (owner, Nov 18 2026); first few visits, Enhanced only */
+  var hk = "";
+  try {
+    if ((typeof funOn !== "function" || funOn()) && typeof learnBugSVG === "function") {
+      if (!S.gbHickSeen) { S.gbHickSeen = 1; store("gbHick", (store("gbHick") || 0) + 1); }
+      if ((store("gbHick") || 0) <= 3) hk = '<div class="gbhick"><span class="gbhart">' + learnBugSVG() + '</span><p><strong>Hickory:</strong> That there\'s The Great Bug. Drag him round to turn him, and tap a part to see what\'s in it. Now don\'t go gettin\' weird with him. The authorities are watchin\', and they will show up.</p></div>';
+    }
+  } catch (e) {}
+  return hk + '<p class="bm3dname" aria-hidden="true"><span>The Great Bug</span></p><div class="bm3d" data-ctx="' + ctx + '"><div class="bm3dfb">' + bodySVG(sel) + '</div>' + sr +
     '<p class="bm3dhint" aria-hidden="true">Drag to turn The Great Bug · tap a part</p></div>';
 }
 /* areas that exist in one list may not exist in the other (the Body Systems list has no Back) */
@@ -14652,10 +14679,11 @@ function hfxLoop() {
     HFX.bits = HFX.bits.filter(function (b) {
       b.vx = b.vx * .97 + wind * .06; b.vy = Math.min(b.vy * .97 + .16, 2.4); b.x += b.vx + Math.sin(b.ph += .08) * .6; b.y += b.vy; b.r += b.vr;
       if (b.y > H + 20) return false; if (b.y > H * .8 && b.vy > 0) b.life -= .01; if (b.life <= 0) return false;
-      g.save(); g.globalAlpha = Math.min(1, b.life); g.translate(b.x, b.y); g.rotate(b.r); g.fillStyle = b.c;
+      var co = Math.cos(b.r), si = Math.sin(b.r); g.globalAlpha = Math.min(1, b.life); g.setTransform(co, si, -si, co, b.x, b.y); g.fillStyle = b.c;
       if (b.round) { g.beginPath(); g.arc(0, 0, b.h * .7, 0, 7); g.fill(); } else g.fillRect(-b.w / 2, -b.h / 2 * Math.abs(Math.cos(b.ph)), b.w, b.h * Math.max(.2, Math.abs(Math.cos(b.ph))));
-      g.restore(); return true;
+      return true;
     });
+    g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1;
     if (HFX.rockets.length || HFX.sparks.length || HFX.bits.length) requestAnimationFrame(frame); else { HFX.run = false; g.clearRect(0, 0, W, H); }
   }
   requestAnimationFrame(frame);
@@ -14728,8 +14756,9 @@ function tglCanvas(cls, z) {
   if (z === 0) document.body.insertBefore(c, document.body.firstChild); else document.body.appendChild(c);
   return c;
 }
+var TGL_DPR = Math.min(1.5, window.devicePixelRatio || 1);   /* soft shapes: full retina resolution only doubles the per-frame work */
 function tglSize() {
-  var dpr = Math.min(2, window.devicePixelRatio || 1); TGL.W = window.innerWidth; TGL.H = window.innerHeight;
+  var dpr = TGL_DPR; TGL.W = window.innerWidth; TGL.H = window.innerHeight;
   [TGL.cb, TGL.cf].forEach(function (c) { if (!c) return; c.width = TGL.W * dpr; c.height = TGL.H * dpr; c.getContext("2d").setTransform(dpr, 0, 0, dpr, 0, 0); });
 }
 function tglSpawn(top) {
@@ -14748,10 +14777,16 @@ function tglRects() {
   var b = document.querySelector(".hero.ha .hbub");
   if (b) { var el = b.firstElementChild || b, q = el.getBoundingClientRect(), R = Math.min(q.width, q.height) / 2; if (R > 10) TGL.bub = { x: q.left + q.width / 2, y: q.top + Math.min(q.width, q.height) / 2, R: R }; }
 }
-function tglDraw(g, f) {
-  g.save(); g.globalAlpha = f.a; g.translate(f.x, f.y); g.rotate(f.r); g.scale(Math.max(0.25, Math.abs(Math.cos(f.ph))), 1);
-  var s = f.s; g.fillStyle = f.c; g.beginPath();
-  if (f.maple) {   /* a broad, lobed leaf */
+/* Each leaf shape is drawn once into a small sprite and then stamped, instead of tracing bezier paths
+   for every leaf (and every leaf in the pile) on every frame (Nov 18 2026). */
+var TGL_SPR = {};
+function tglSprite(f) {
+  var s = Math.max(2, Math.round(f.s)), k = (f.maple ? "m" : "o") + s + f.c, sp = TGL_SPR[k];
+  if (sp) return sp;
+  var dpr = Math.min(2, window.devicePixelRatio || 1), w = Math.ceil(s * 2.2), h = Math.ceil(s * 2.5), c = document.createElement("canvas");
+  c.width = w * dpr; c.height = h * dpr; var g = c.getContext("2d"); g.scale(dpr, dpr); g.translate(w / 2, h / 2 - s * 0.08);
+  g.fillStyle = f.c; g.beginPath();
+  if (f.maple) {
     g.moveTo(0, -s);
     g.bezierCurveTo(s * 0.5, -s * 0.9, s * 0.55, -s * 0.35, s * 0.35, -s * 0.2);
     g.bezierCurveTo(s * 0.95, -s * 0.25, s * 0.95, s * 0.35, s * 0.4, s * 0.35);
@@ -14762,13 +14797,21 @@ function tglDraw(g, f) {
   } else { g.moveTo(0, -s); g.quadraticCurveTo(s * 0.85, -s * 0.2, 0, s); g.quadraticCurveTo(-s * 0.85, -s * 0.2, 0, -s); }
   g.fill();
   g.strokeStyle = "rgba(60,25,5,.45)"; g.lineWidth = 1; g.beginPath(); g.moveTo(0, -s * 0.8); g.lineTo(0, s * 1.15); g.stroke();
-  g.restore();
+  sp = TGL_SPR[k] = { c: c, w: w, h: h, oy: h / 2 - s * 0.08 };
+  return sp;
+}
+function tglDraw(g, f) {
+  var sp = tglSprite(f), sx = Math.max(0.25, Math.abs(Math.cos(f.ph))), co = Math.cos(f.r), si = Math.sin(f.r), dpr = TGL_DPR;
+  g.globalAlpha = f.a;
+  g.setTransform(dpr * co * sx, dpr * si * sx, -dpr * si, dpr * co, dpr * f.x, dpr * f.y);
+  g.drawImage(sp.c, -sp.w / 2, -sp.oy, sp.w, sp.h);
+  g.setTransform(dpr, 0, 0, dpr, 0, 0); g.globalAlpha = 1;
 }
 function tglFrame() {
   if (!TGL.run) return;
   var now = Date.now();
   if (now - TGL.chk > 1000) { TGL.chk = now; if (!tglWant()) return tglStop(); }
-  if (now - TGL.rt > 250) { TGL.rt = now; tglRects(); }
+  if (now - TGL.rt > 500) { TGL.rt = now; tglRects(); }
   /* wind: a slow sway, plus a gust every so often */
   if (!TGL_GENTLE && now > TGL.nextGust) { TGL.gust = (Math.random() < 0.5 ? -1 : 1) * (1.2 + Math.random() * 1.4); TGL.nextGust = now + 6000 + Math.random() * 9000; }
   TGL.gust *= 0.985;
@@ -15173,6 +15216,7 @@ setTimeout(function () { pkSchedule(true); }, 1000);
 
 /* ---------- Brain Games: memory match, matching, crossword, word scramble, speed round ----------
    Built from the drugs in the current scope (level view) or all drugs (general). Sticks for finishing. */
+var GM_ALL = {};
 var GM = null; /* current game state; S.game holds the kind */
 var GM_STICKS = { memory: 3, match: 3, cross: 5, scramble: 1, blitz: 1 };
 var GM_ANTIDOTES = [["Opioids", "Naloxone"], ["Benzodiazepines", "Flumazenil"], ["Beta blockers", "Glucagon"], ["Calcium channel blockers", "Calcium"], ["Acetaminophen", "Acetylcysteine"], ["Cyanide", "Hydroxocobalamin"], ["Organophosphates", "Atropine + pralidoxime"], ["Heparin", "Protamine"], ["Warfarin", "Vitamin K"], ["Digoxin", "Digoxin immune Fab"], ["Methemoglobinemia", "Methylene blue"], ["Tricyclic antidepressants", "Sodium bicarbonate"], ["Insulin / sulfonylurea low sugar", "Dextrose"], ["Dabigatran", "Idarucizumab"], ["Malignant hyperthermia", "Dantrolene"], ["Magnesium toxicity", "Calcium gluconate"]];
@@ -15208,7 +15252,8 @@ function gamesView() {
   var n = gmIds().length, best = (Prog.d.games || {}).blitzBest || 0;
   if (n < 6) return '<div class="empty">There are not enough drugs at this level for games yet. Try the BugDex or a higher level.</div>';
   var L = [["memory", "Memory Match", "Flip cards to match each drug with its class.", "&#129504;"], ["match", "Quick Match", "Connect drugs to what they treat, or poisons to their antidotes.", "&#128279;"], ["cross", "Crossword", "A new med crossword every time, built from your study path.", "&#9638;"], ["scramble", "Word Scramble", "Unscramble the drug name from the clue.", "&#128292;"], ["blitz", "Class Blitz", "60 seconds. Name the class of as many drugs as you can." + (best ? " Your best: " + best + "." : ""), "&#9889;"], ["frog", "Frog Snack", "Bugs fly by carrying answers. Only the right one can be caught." + ((Prog.d.games || {}).frogBest ? " Your best: " + Prog.d.games.frogBest + "." : ""), "&#128056;"]];
-  return '<p class="gmline"><span class="gmstick" aria-hidden="true">&#10022;</span> ' + n + ' medications, ' + L.length + ' games. Every finished game earns sticks.</p><div class="gmgrid">' + L.map(function (g) {
+  var gk = ctxKey() + "|" + DB.ALLIDS.length, nAll = !freeSample() ? n : GM_ALL[gk] != null ? GM_ALL[gk] : (GM_ALL[gk] = fullCount(function () { return gmIds().length; }));   /* counted once per path */
+  return freeNote("medications in games", n, nAll) + '<p class="gmline"><span class="gmstick" aria-hidden="true">&#10022;</span> ' + n + ' medications, ' + L.length + ' games. Every finished game earns sticks.</p><div class="gmgrid">' + L.map(function (g) {
     return '<button class="gmcard" data-gm="' + g[0] + '"><span class="gmico" aria-hidden="true">' + g[3] + '</span><strong>' + esc(g[1]) + '</strong><span class="muted small">' + esc(g[2]) + '</span><span class="earned">+' + GM_STICKS[g[0]] + (g[0] === "scramble" ? " per word" : g[0] === "blitz" || g[0] === "frog" ? " per 3" : "") + ' sticks</span></button>';
   }).join("") + '</div>';
 }
@@ -35631,112 +35676,102 @@ document.addEventListener("keydown", function (e) { if (B3.open && e.key === "Es
 })();
 
 Dex.load(); try { otaInit(); } catch (e) {} initProg(); try { alliedOff(); } catch (e) {} if (typeof grubFix === "function") grubFix(); if (agreeRec() && typeof trialBegin === "function") trialBegin(); setTimeout(function () { if (typeof remindSync === "function") remindSync(); if (typeof wdwSync === "function") wdwSync(); if (typeof watchSync === "function") watchSync(); }, 1500); initAdmin(); initLegal(); if (typeof accInit === "function") accInit(); if (typeof walletInit === "function") walletInit(); if (typeof subInit === "function") subInit(); setTimeout(loadProtocolSets, 400);
-/* ---------- Beginner to Medicine (owner, Nov 18 2026) ----------
-   A route for people who have never studied medicine: short lessons in order, Duolingo-style.
-   Each lesson is three small idea cards, then three quick questions. Finishing one opens the next.
-   It takes the old Everyday Health spot in the path picker (role code "ev" is kept so nothing else
-   moves); Everyday Health itself is now on everyone's menu. Education only, no doses. */
-var BG_LINE = "New to medicine? Start from zero with short lessons, one small idea at a time.";
-var BG_UNITS = [
- { t: "Medicines 101", ic: "\u{1F48A}", L: [
-  { t: "What a medicine does", c: ["A medicine is a substance that changes how the body works, to treat, prevent or ease a problem.", "Most medicines work by attaching to a target in the body, like a key fitting a lock. That target is often a receptor on a cell.", "Every medicine has benefits and risks. The goal is to get the benefit while keeping the risk low."],
-    q: [["A medicine usually works by:", "Attaching to a target in the body", "Changing your blood type", "Cleaning germs out of the air"], ["A receptor is best described as:", "A target on a cell that a medicine can fit", "A type of pill coating", "A pharmacy record"], ["Every medicine has:", "Both benefits and risks", "Only benefits", "Only risks"]] },
-  { t: "Generic and brand names", c: ["The generic name is the official name of the ingredient, like acetaminophen or ibuprofen.", "A brand name is the name a company sells it under. One medicine can have many brand names, but it has one generic name.", "Clinicians mostly use generic names. They are the same everywhere, which helps avoid mix-ups."],
-    q: [["Acetaminophen is a:", "Generic name", "Brand name", "Drug class"], ["One medicine can have:", "Many brand names but one generic name", "One brand name but many generic names", "Only one name of any kind"], ["Why do clinicians usually use generic names?", "They are the same everywhere and avoid mix-ups", "They are always shorter", "Brand names are not allowed"]] },
-  { t: "Prescription or over the counter", c: ["Over-the-counter (OTC) medicines can be bought without a prescription.", "Prescription medicines need an order from a licensed prescriber, like a doctor, nurse practitioner or PA.", "OTC medicines are still real medicines. Two different products can hide the same ingredient, so the label matters."],
-    q: [["An over-the-counter medicine:", "Can be bought without a prescription", "Is always stronger than a prescription", "Has no side effects"], ["Two cold products both contain acetaminophen. Why does that matter?", "Someone could take more of it than they meant to", "They cancel each other out", "It makes both work faster"], ["OTC medicines are:", "Real medicines with real risks", "Completely safe in any amount", "Just vitamins"]] }
- ]},
- { t: "Into the body", ic: "\u{1F6E3}️", L: [
-  { t: "Routes", c: ["The route is how a medicine gets into the body. By mouth (oral) is the most common.", "IV means into a vein. It goes straight into the blood, so it usually works the fastest.", "Other routes have their own names: sublingual (under the tongue), IM (into a muscle), subcutaneous (just under the skin), inhaled and topical (on the skin)."],
-    q: [["IV means:", "Into a vein", "Into a muscle", "Under the tongue"], ["Which route usually works the fastest?", "IV", "By mouth", "A skin cream"], ["Sublingual means:", "Under the tongue", "Into the skin", "Through the nose"]] },
-  { t: "Onset, peak and duration", c: ["Onset is how long a medicine takes to start working.", "Peak is when its effect is strongest.", "Duration is how long the effect lasts. Short-acting medicines wear off sooner than long-acting ones."],
-    q: [["Onset means:", "How long until it starts working", "How long it lasts", "How strong it is"], ["The peak is when the effect is:", "Strongest", "Just starting", "Gone"], ["A long-acting medicine:", "Lasts longer than a short-acting one", "Starts faster than everything else", "Never wears off"]] },
-  { t: "How the body clears medicines", c: ["The liver breaks many medicines down. This is called metabolism.", "The kidneys remove many medicines in urine. This is called excretion.", "Half-life is the time it takes for the amount in the body to drop by half."],
-    q: [["Which two organs clear most medicines?", "Liver and kidneys", "Heart and lungs", "Skin and stomach"], ["Half-life is:", "The time for the amount in the body to drop by half", "Half of a pill", "The time until a medicine expires"], ["If the kidneys are not working well, a medicine they clear may:", "Build up in the body", "Work less than water", "Turn into a vitamin"]] }
- ]},
- { t: "Reading a drug card", ic: "\u{1F4C7}", L: [
-  { t: "Class and indication", c: ["A drug class is a family of medicines that work in a similar way, like antibiotics or beta blockers.", "The indication is the reason a medicine is used, for example high blood pressure or pain.", "Knowing the class tells you a lot: medicines in the same class often share uses and side effects."],
-    q: [["A drug class is:", "A family of medicines that work in a similar way", "The price group of a medicine", "The shape of the pill"], ["The indication is:", "The reason the medicine is used", "The color of the label", "The company that makes it"], ["Medicines in the same class often:", "Share uses and side effects", "Have the same brand name", "Are all taken by IV"]] },
-  { t: "Side effects and allergies", c: ["A side effect is an expected, usually mild effect, like drowsiness or an upset stomach.", "An adverse effect is an unwanted effect that causes harm.", "An allergy is the immune system reacting to the medicine: hives, swelling or trouble breathing. Trouble breathing is an emergency."],
-    q: [["Hives and lip swelling after a new medicine suggest:", "An allergic reaction", "The medicine working well", "A normal, expected side effect"], ["Drowsiness from an allergy pill is usually:", "A side effect", "An allergy", "An overdose"], ["Trouble breathing after a medicine is:", "An emergency", "Nothing to worry about", "A sign it is working"]] },
-  { t: "Contraindications and interactions", c: ["A contraindication is a reason a medicine should not be used for a certain person.", "An interaction is when one thing changes how a medicine works.", "Other medicines, foods, alcohol and supplements can all interact with medicines."],
-    q: [["A contraindication is:", "A reason a medicine should not be used", "The best time to take a medicine", "A type of side effect"], ["An interaction is when:", "One thing changes how a medicine works", "Two pills look alike", "A medicine expires"], ["Which can interact with medicines?", "Other medicines, foods, alcohol and supplements", "Only other prescription medicines", "Nothing, if the medicine is new"]] }
- ]},
- { t: "Name clues", ic: "\u{1F50E}", L: [
-  { t: "Heart and blood pressure", c: ["Many drug names end in clues. Names ending in -olol, like metoprolol, are usually beta blockers. They slow the heart.", "Names ending in -pril, like lisinopril, are ACE inhibitors. They relax blood vessels.", "Names ending in -sartan, like losartan, are ARBs. They also lower blood pressure."],
-    q: [["Metoprolol ends in -olol, so it is probably a:", "Beta blocker", "Antibiotic", "Pain reliever"], ["Lisinopril is an:", "ACE inhibitor", "Antibiotic", "Antihistamine"], ["Losartan most likely treats:", "High blood pressure", "Infection", "Allergies"]] },
-  { t: "Cholesterol and stomach", c: ["Names ending in -statin, like atorvastatin, lower cholesterol.", "Names ending in -prazole, like omeprazole, lower stomach acid. They are called PPIs.", "Names ending in -tidine, like famotidine, also lower stomach acid in a different way."],
-    q: [["Atorvastatin is used to lower:", "Cholesterol", "Blood sugar", "Fever"], ["Omeprazole lowers:", "Stomach acid", "Heart rate", "Cholesterol"], ["Which ending points to a cholesterol medicine?", "-statin", "-prazole", "-cillin"]] },
-  { t: "Infection and anxiety", c: ["Names ending in -cillin, like amoxicillin, are in the penicillin family of antibiotics.", "Many names ending in -mycin, like azithromycin, are antibiotics too.", "Names ending in -azepam or -azolam, like lorazepam, are benzodiazepines. They calm the brain and cause drowsiness."],
-    q: [["Amoxicillin is an:", "Antibiotic", "Antacid", "Blood pressure medicine"], ["Someone with a penicillin allergy should be careful with names ending in:", "-cillin", "-statin", "-olol"], ["Lorazepam is a benzodiazepine, so a common effect is:", "Drowsiness", "Faster heart rate", "Lower cholesterol"]] }
- ]},
- { t: "Body basics", ic: "❤️", L: [
-  { t: "Heart and blood", c: ["The heart pumps blood through the body. Heart rate is how many times it beats in a minute.", "Blood pressure is the force of blood pushing on the vessel walls. It has two numbers, like 120/80.", "Blood thinners make blood clot less. That prevents dangerous clots but raises the risk of bleeding."],
-    q: [["Heart rate is measured in:", "Beats per minute", "Breaths per hour", "Milliliters"], ["Blood pressure is:", "The force of blood on the vessel walls", "How fast you breathe", "The amount of sugar in blood"], ["A main risk of blood thinners is:", "Bleeding", "High blood sugar", "Hair growth"]] },
-  { t: "Lungs and breathing", c: ["The lungs bring oxygen in and let carbon dioxide out.", "In asthma, the airways tighten and narrow. Inhalers like albuterol open them back up. These are called bronchodilators.", "SpO2 is the oxygen saturation number on a pulse oximeter: how full of oxygen the blood is."],
-    q: [["The lungs bring in oxygen and remove:", "Carbon dioxide", "Sugar", "Salt"], ["Albuterol helps asthma by:", "Opening the airways", "Thinning the blood", "Lowering blood sugar"], ["SpO2 tells you:", "How full of oxygen the blood is", "The heart rate", "The blood pressure"]] },
-  { t: "Brain and blood sugar", c: ["Insulin lowers blood sugar. People with diabetes may need it.", "Low blood sugar can cause shakiness, sweating and confusion. It can become an emergency.", "Opioids treat severe pain but can slow breathing. Naloxone can reverse an opioid overdose."],
-    q: [["Insulin:", "Lowers blood sugar", "Raises blood pressure", "Kills bacteria"], ["A common sign of low blood sugar is:", "Shakiness and confusion", "A slow, steady calm", "Itchy eyes"], ["Naloxone is used to:", "Reverse an opioid overdose", "Treat an infection", "Lower cholesterol"]] }
- ]},
- { t: "Staying safe", ic: "\u{1F6E1}️", L: [
-  { t: "Reading a label", c: ["A medicine label lists the active ingredient: the part that does the work.", "It also lists the purpose, the warnings and the directions.", "Medicines have an expiration date. After it, they may not work as well."],
-    q: [["The active ingredient is:", "The part of the medicine that does the work", "The color of the pill", "The brand logo"], ["Where would you find warnings about a medicine?", "On the label", "On the receipt", "On the bottle cap only"], ["After the expiration date, a medicine:", "May not work as well", "Becomes stronger", "Turns into a different medicine"]] },
-  { t: "High-alert medicines", c: ["Some medicines can cause serious harm if a mistake happens. These are called high-alert medicines.", "Insulin, opioids and blood thinners are common examples.", "Hospitals use extra checks for them, like a second nurse double-checking."],
-    q: [["High-alert medicines are ones that:", "Can cause serious harm if a mistake happens", "Are always the newest", "Make an alarm sound"], ["Which is a common high-alert medicine?", "Insulin", "Saline nose spray", "A vitamin C tablet"], ["A common hospital safety step for high-alert medicines is:", "A second person double-checks", "Giving them faster", "Skipping the label"]] },
-  { t: "Where to get help", c: ["A pharmacist can answer questions about medicines and how they mix.", "In a medical emergency in the US, call 911. Poison Control is 1-800-222-1222.", "Prescription medicines are prescribed for one person. Sharing them is not safe."],
-    q: [["Who is a great person to ask about how medicines mix?", "A pharmacist", "A cashier", "A friend online"], ["In a US medical emergency, call:", "911", "The pharmacy", "Your gym"], ["Sharing a prescription medicine with a friend is:", "Not safe: it was prescribed for one person", "Fine if they feel the same", "Fine if it is a small amount"]] }
- ]}
-];
-function bgAll() { var L = []; BG_UNITS.forEach(function (u, ui) { u.L.forEach(function (l, li) { L.push({ id: ui + "-" + li, u: ui, l: li, o: l }); }); }); return L; }
+/* ---------- Beginner to Medicine, the full course (owner, Nov 18 2026) ----------
+   47 units in 5 stages that match the bug stages (Hatchling to Legend). Each lesson: five idea cards,
+   then four questions with explanations. Each unit ends with a checkpoint: eight questions from the
+   unit, six right to open the next unit. Beginner XP (Prog.d.bgXP) evolves the Eager Bug.
+   Everything is open until the Eager Bug evolves the first time; after that, new lessons need Plus.
+   Education only, no doses. The course content is DB.BEGIN (guides.js). */
+var BG_STAGE_XP = [0, 400, 2000, 4000, 6300];   /* about a year of steady study to Legend (owner, Nov 18 2026) */
+var BG_STAGE_NAME = ["Hatchling", "Rookie", "Adult", "Veteran", "Legend"];
+/* the course name grows with you (owner, Nov 18 2026) */
+var BG_TRACK_NAME = ["Beginner to Medicine", "Apprentice of Medicine", "Intermediate to Medicine", "Advanced in Medicine", "Master of Medicine"];
+function bgTrackName(st) { try { return BG_TRACK_NAME[(st || bgStage()) - 1] || BG_TRACK_NAME[0]; } catch (e) { return "Beginner to Medicine"; } }
+var BG_LINE = "New to medicine? A full course from zero, one small idea at a time. Your Eager Bug grows as you learn.";
+function bgUnits() { return (DB.BEGIN && DB.BEGIN.length) ? DB.BEGIN : []; }
+function bgAll() { var L = []; bgUnits().forEach(function (u, ui) { u.L.forEach(function (l, li) { L.push({ id: ui + "-" + li, u: ui, l: li, o: l }); }); L.push({ id: ui + "-ck", u: ui, ck: 1, o: { t: "Unit " + (ui + 1) + " checkpoint" } }); }); return L; }
 function bgDone() { var P = Prog.d; if (!P.bgDone || typeof P.bgDone !== "object") P.bgDone = {}; return P.bgDone; }
+function bgXP() { return (Prog.d && Prog.d.bgXP) || 0; }
+function bgStage() { var x = bgXP(), s = 1; for (var i = 1; i < BG_STAGE_XP.length; i++) if (x >= BG_STAGE_XP[i]) s = i + 1; return s; }
 function bgNextId() { var d = bgDone(), A = bgAll(); for (var i = 0; i < A.length; i++) if (!d[A[i].id]) return A[i].id; return null; }
 function bgOpen(id) { var d = bgDone(), A = bgAll(), i = A.map(function (x) { return x.id; }).indexOf(id); return i >= 0 && (i === 0 || !!d[A[i - 1].id] || !!d[id]); }
+/* the paywall: free until the Eager Bug's first evolution; anything already finished stays open to replay */
+function bgPaid(id) { return typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier("plus") && bgStage() >= 2 && !bgDone()[id] && !(S.bgRun && S.bgRun.id === id); }
 function bgShuf(n) { var a = []; for (var i = 0; i < n; i++) a.push(i); for (var j = a.length - 1; j > 0; j--) { var k = Math.floor(Math.random() * (j + 1)), t = a[j]; a[j] = a[k]; a[k] = t; } return a; }
-function bgBug(mood) { try { var b = bugById("grub-eager"); return b && typeof bugArt === "function" ? bugArt(b, "", { mood: mood || "happy" }) : ""; } catch (e) { return ""; } }
+function bgBug(st) { try { var b = bugById("grub-eager"); return b && typeof bugArt === "function" ? bugArt(b, "", { mood: "happy", stage: st || bgStage() }) : ""; } catch (e) { return ""; } }
+function bgStageBar() {
+  var st = bgStage(), x = bgXP(), lo = BG_STAGE_XP[st - 1], hi = BG_STAGE_XP[st] || null;
+  return '<div class="bgevo"><span class="bgbug">' + bgBug() + '</span><div class="bgevt"><span class="eyebrow">Eager Bug · ' + BG_STAGE_NAME[st - 1] + '</span><strong>' + x.toLocaleString() + ' XP</strong>' +
+    (hi ? '<span class="cmptrack"><span class="cmpfill" style="width:' + Math.round(100 * (x - lo) / (hi - lo)) + '%"></span></span><span class="muted small">' + (hi - x).toLocaleString() + ' XP to ' + BG_STAGE_NAME[st] + '</span>' : '<span class="muted small">Fully grown. You finished the climb.</span>') + '</div></div>';
+}
 function bgView() {
   var c = topbar(), R = S.bgRun;
   if (R) return c + bgRunView(R);
-  var d = bgDone(), A = bgAll(), n = A.filter(function (x) { return d[x.id]; }).length, nx = bgNextId(), fun = typeof funOn !== "function" || funOn();
-  c += '<header class="pagehead bghead">' + (fun ? '<span class="bgbug">' + bgBug("happy") + '</span>' : '') + '<div><h1>Beginner to Medicine</h1><p>Short lessons that start from zero. Each one is three small ideas and three quick questions.</p></div></header>';
-  c += '<div class="fmprog"><span><strong>' + n + '</strong> of ' + A.length + ' lessons done</span><span class="cmptrack"><span class="cmpfill" style="width:' + Math.round(100 * n / A.length) + '%"></span></span></div>';
-  if (nx) c += '<button class="btn big bgcont" data-bgl="' + nx + '">' + (n ? 'Keep going' : 'Start lesson 1') + '</button>';
-  c += '<div class="bgpath">';
-  var k = 0;
-  BG_UNITS.forEach(function (u, ui) {
-    c += '<section class="bgunit"><h2><span aria-hidden="true">' + u.ic + '</span> Unit ' + (ui + 1) + ': ' + esc(u.t) + '</h2><div class="bgnodes">';
-    u.L.forEach(function (l, li) {
-      var id = ui + "-" + li, dn = !!d[id], op = bgOpen(id), cur = id === nx, side = ["l", "c", "r", "c"][k++ % 4];
-      c += '<button class="bgnode ' + side + (dn ? ' done' : cur ? ' cur' : op ? '' : ' lock') + '"' + (op ? ' data-bgl="' + id + '"' : ' disabled') + '><span class="bgdot" aria-hidden="true">' + (dn ? '✓' : op ? (li + 1) : '\u{1F512}') + '</span><span class="bgnt">' + esc(l.t) + '</span></button>';
-    });
-    c += '</div></section>';
+  /* clean list layout (owner, Nov 18 2026): one card per unit, lessons as rows on a rail, nothing zigzags */
+  var d = bgDone(), A = bgAll(), n = A.filter(function (x) { return d[x.id]; }).length, nx = bgNextId(), nxA = A.filter(function (x) { return x.id === nx; })[0];
+  c += '<header class="bghero">' + bgStageBar() + '<div class="bgsum"><h1>' + bgTrackName() + '</h1><p class="muted">' + n + ' of ' + A.length + ' steps · ' + bgUnits().length + ' units in 5 stages · about a year to master</p></div>' +
+    (nxA ? '<button class="btn big bgcont" data-bgl="' + nx + '"><span class="bgcl">' + (n ? 'Continue' : 'Start') + '</span><span class="bgcn">Unit ' + (nxA.u + 1) + ': ' + esc(nxA.o.t) + '</span></button>' : '') + '</header>';
+  var lastSt = 0;
+  bgUnits().forEach(function (u, ui) {
+    if (u.st !== lastSt) { lastSt = u.st; c += '<h2 class="bgstage"><span>Stage ' + u.st + '</span> ' + BG_STAGE_NAME[u.st - 1] + '</h2>'; }
+    var rows = u.L.map(function (l, li) { return { id: ui + "-" + li, t: l.t, n: li + 1 }; }).concat([{ id: ui + "-ck", t: "Checkpoint", ck: 1 }]);
+    var dn = rows.filter(function (r) { return d[r.id]; }).length, here = rows.some(function (r) { return r.id === nx; }), allLock = !bgOpen(rows[0].id);
+    c += '<section class="bgu' + (here ? ' here' : '') + (dn === rows.length ? ' full' : '') + (allLock ? ' locked' : '') + '"><div class="bguh"><span class="bgui" aria-hidden="true">' + u.ic + '</span><div class="bgut"><span class="eyebrow">Unit ' + (ui + 1) + '</span><strong>' + esc(u.t) + '</strong></div><span class="bguc">' + dn + '/' + rows.length + '</span></div>';
+    if (!allLock || here) {
+      c += '<ol class="bgrows">';
+      rows.forEach(function (r) {
+        var done = !!d[r.id], op = bgOpen(r.id), cur = r.id === nx, pay = op && bgPaid(r.id);
+        var st = done ? 'done' : cur ? 'cur' : op ? 'open' : 'lock';
+        c += '<li><button class="bgr ' + st + (r.ck ? ' ck' : '') + '"' + (op ? ' data-bgl="' + r.id + '"' : ' disabled') + '><span class="bgrd" aria-hidden="true">' + (done ? '✓' : !op ? '' : r.ck ? '★' : r.n) + '</span><span class="bgrt">' + esc(r.t) + '</span>' + (pay ? '<span class="lockpill">Plus</span>' : cur ? '<span class="bgrgo">Start</span>' : done ? '<span class="muted small">Replay</span>' : '') + '</button></li>';
+      });
+      c += '</ol>';
+    }
+    c += '</section>';
   });
-  c += '</div>';
-  if (!nx) c += '<section class="bgdone"><h2>You finished every lesson!</h2><p>You know the basics now. Pick a specialty to keep going, or explore Everyday Health.</p><div class="actions"><button class="btn" data-act="bgpaths">Pick a specialty</button><button class="btn ghost" data-go="everyday">Everyday Health</button></div></section>';
-  else c += '<button class="route mlsmall" data-go="everyday"><span class="mls-ic" aria-hidden="true">\u{1F3E1}</span><span class="mls-tx"><strong>Everyday Health</strong><span>' + esc(EV_LINE) + '</span></span><span class="evs-go" aria-hidden="true">&rsaquo;</span></button>';
+  if (!nx) c += '<section class="bgdone"><h2>You finished the course!</h2><p>You have the foundation now. Pick a specialty to keep going, or explore Everyday Health.</p><div class="actions"><button class="btn" data-act="bgpaths">Pick a specialty</button><button class="btn ghost" data-go="everyday">Everyday Health</button></div></section>';
+  /* no Everyday Health box on the course page; it lives on the main menu (owner, Nov 18 2026) */
   c += '<p class="muted small">For adult study only. Education, not medical advice: ask a licensed clinician or pharmacist about your own medicines.</p>';
   return c;
 }
+function bgItems(A) {   /* cards then questions; a checkpoint is eight questions from the unit */
+  if (!A.ck) return { c: A.o.c, q: A.o.q };
+  var pool = []; bgUnits()[A.u].L.forEach(function (l) { l.q.forEach(function (q) { pool.push(q); }); });
+  var o = bgShuf(pool.length).slice(0, 8).map(function (i) { return pool[i]; });
+  return { c: [], q: o };
+}
 function bgRunView(R) {
   var A = bgAll().filter(function (x) { return x.id === R.id; })[0]; if (!A) { S.bgRun = null; return ""; }
-  var L = A.o, nC = L.c.length, nQ = L.q.length, tot = nC + nQ, st = Math.min(R.step, tot), pct = Math.round(100 * st / tot);
-  var c = '<section class="bgrun"><div class="bgtop"><button class="linkish" data-bgquit="1">&larr; Lessons</button><span class="cmptrack"><span class="cmpfill" style="width:' + pct + '%"></span></span></div><p class="eyebrow">Unit ' + (A.u + 1) + ' · ' + esc(L.t) + '</p>';
+  if (!R.it) R.it = bgItems(A);
+  var C = R.it.c, Qs = R.it.q, nC = C.length, nQ = Qs.length, tot = nC + nQ, pct = Math.round(100 * Math.min(R.step, tot) / tot), U = bgUnits()[A.u];
+  var c = '<section class="bgrun"><div class="bgtop"><button class="linkish" data-bgquit="1">&larr; Lessons</button><span class="cmptrack"><span class="cmpfill" style="width:' + pct + '%"></span></span></div><p class="eyebrow">Unit ' + (A.u + 1) + ' · ' + esc(A.ck ? "Checkpoint: " + U.t : A.o.t) + '</p>';
   if (R.step < nC) {
-    c += '<div class="bgcard"><span class="bgbug sm">' + bgBug("happy") + '</span><p>' + esc(L.c[R.step]) + '</p></div><div class="actions"><button class="btn big" data-bgnext="1">' + (R.step < nC - 1 ? 'Next' : 'Quiz me') + '</button></div>';
+    c += '<div class="bgcard"><span class="bgbug sm">' + bgBug() + '</span><h2>' + esc(C[R.step][0]) + '</h2><p>' + esc(C[R.step][1]) + '</p><span class="muted small">' + (R.step + 1) + ' of ' + nC + '</span></div><div class="actions"><button class="btn big" data-bgnext="1">' + (R.step < nC - 1 ? 'Next' : 'Quiz me') + '</button></div>';
   } else if (R.step < tot) {
-    var qi = R.step - nC, Q = L.q[qi], opts = [Q[1], Q[2], Q[3]];
-    if (!R.ord || R.ordFor !== R.step) { R.ord = bgShuf(3); R.ordFor = R.step; R.pick = null; }
+    var qi = R.step - nC, Q = Qs[qi], opts = [Q[1], Q[2], Q[3], Q[4]];
+    if (!R.ord || R.ordFor !== R.step) { R.ord = bgShuf(4); R.ordFor = R.step; R.pick = null; }
+    if (A.ck && qi === 0) c += '<p class="muted small">Get 6 of 8 right to open the next unit.</p>';
     c += '<h3 class="qstem">' + esc(Q[0]) + '</h3><div class="qopts">';
     R.ord.forEach(function (oi, j) {
       var cls = R.pick == null ? "" : oi === 0 ? " right" : R.pick === oi ? " wrong" : " dim";
-      c += '<button class="qopt' + cls + '" data-bgopt="' + oi + '"' + (R.pick != null ? ' disabled' : '') + '><span class="letter">' + "ABC"[j] + '</span><span>' + esc(opts[oi]) + '</span></button>';
+      c += '<button class="qopt' + cls + '" data-bgopt="' + oi + '"' + (R.pick != null ? ' disabled' : '') + '><span class="letter">' + "ABCD"[j] + '</span><span>' + esc(opts[oi]) + '</span></button>';
     });
     c += '</div>';
-    if (R.pick != null) c += '<div class="explain ' + (R.pick === 0 ? 'ok' : 'bad') + '"><strong>' + (R.pick === 0 ? ['Nice!', 'You got it.', 'Exactly.'][qi % 3] : 'Not quite.') + '</strong>' + (R.pick === 0 ? '' : '<p>The answer is: ' + esc(Q[1]) + '.</p>') + '</div><div class="actions"><button class="btn big" data-bgnext="1">Continue</button></div>';
+    if (R.pick != null) c += '<div class="explain ' + (R.pick === 0 ? 'ok' : 'bad') + '"><strong>' + (R.pick === 0 ? ['Nice!', 'You got it.', 'Exactly.', 'Right on.'][qi % 4] : 'Not quite. The answer is: ' + esc(Q[1]) + '.') + '</strong><p>' + esc(Q[5] || "") + '</p></div><div class="actions"><button class="btn big" data-bgnext="1">Continue</button></div>';
   } else {
-    var first = !R.counted;
-    if (first) { R.counted = 1; var was = !!bgDone()[R.id]; bgDone()[R.id] = Date.now(); if (!was) { try { earn(10); } catch (e) {} Prog.d.xp = (Prog.d.xp || 0) + 20; R.gave = 1; } saveProg(); }
+    var pass = !A.ck || R.right >= 6;
+    if (!R.counted) {
+      R.counted = 1; var was = !!bgDone()[R.id], before = bgStage(), gain = 0;
+      if (pass) {
+        gain = was ? 2 * R.right : (A.ck ? 40 : 10 + 5 * R.right);
+        if (!was) { bgDone()[R.id] = Date.now(); try { earn(A.ck ? 25 : 10); } catch (e) {} R.sticks = A.ck ? 25 : 10; }
+      } else gain = R.right;
+      Prog.d.bgXP = bgXP() + gain; Prog.d.xp = (Prog.d.xp || 0) + gain; R.gain = gain;
+      R.evolved = bgStage() > before ? bgStage() : 0; saveProg();
+    }
     var nx = bgNextId();
-    c += '<div class="bgcard end"><span class="bgbug">' + bgBug("happy") + '</span><h2>Lesson done!</h2><p>You got <strong>' + R.right + ' of ' + nQ + '</strong> right' + (R.gave ? ' and earned 10 sticks' : '') + '.</p></div><div class="actions">' + (nx ? '<button class="btn big" data-bgl="' + nx + '">Next lesson</button>' : '') + '<button class="btn ghost" data-bgquit="1">Back to lessons</button></div>';
+    if (R.evolved) c += '<div class="bgcard end evo"><span class="eyebrow">Evolution!</span><span class="bgbug big">' + bgBug(R.evolved) + '</span><h2>Your Eager Bug grew into a ' + BG_STAGE_NAME[R.evolved - 1] + '!</h2><p>All that learning is paying off. You\'re now on <strong>' + bgTrackName(R.evolved) + '</strong>.' + (typeof PAYWALL !== "undefined" && PAYWALL && R.evolved === 2 && typeof hasTier === "function" && !hasTier("plus") ? ' You finished the first stretch of the course. The rest of the course comes with Plus.' : '') + '</p></div>';
+    c += '<div class="bgcard end"><span class="bgbug">' + bgBug() + '</span><h2>' + (pass ? (A.ck ? 'Checkpoint passed!' : 'Lesson done!') : 'Almost there') + '</h2><p>You got <strong>' + R.right + ' of ' + nQ + '</strong> right' + (pass ? '' : '. You need 6 to pass. Review the unit and try again') + '. +' + R.gain + ' XP' + (R.sticks ? ', +' + R.sticks + ' sticks' : '') + '.</p></div><div class="actions">' +
+      (!pass ? '<button class="btn big" data-bgl="' + R.id + '">Try again</button>' : nx ? '<button class="btn big" data-bgl="' + nx + '">' + (bgPaid(nx) ? 'Next lesson (Plus)' : 'Next lesson') + '</button>' : '') + '<button class="btn ghost" data-bgquit="1">Back to lessons</button></div>';
   }
   return c + '</section>';
 }
@@ -35744,12 +35779,156 @@ document.addEventListener("click", function (e) {
   var t = e.target && e.target.closest ? e.target.closest("[data-bgl],[data-bgnext],[data-bgopt],[data-bgquit],[data-act=bgpaths]") : null;
   if (!t) return;
   e.preventDefault(); e.stopPropagation();
-  if (t.hasAttribute("data-bgl")) { var id = t.getAttribute("data-bgl"); if (!bgOpen(id)) return; S.bgRun = { id: id, step: 0, right: 0 }; if (S.view !== "beginner") return go("beginner", { bgRun: S.bgRun }); render(); return window.scrollTo(0, 0); }
+  if (t.hasAttribute("data-bgl")) {
+    var id = t.getAttribute("data-bgl"); if (!bgOpen(id)) return;
+    if (bgPaid(id)) { S.bgRun = null; if (typeof openPaywall === "function") openPaywall("Beginner to Medicine", "plus"); return; }
+    S.bgRun = { id: id, step: 0, right: 0 }; if (S.view !== "beginner") return go("beginner", { bgRun: S.bgRun }); render(); return window.scrollTo(0, 0);
+  }
   if (t.hasAttribute("data-bgquit")) { S.bgRun = null; render(); return window.scrollTo(0, 0); }
   var R = S.bgRun; if (!R && t.getAttribute("data-act") !== "bgpaths") return;
-  if (t.hasAttribute("data-bgopt")) { if (R.pick != null) return; R.pick = +t.getAttribute("data-bgopt"); if (R.pick === 0) R.right++; try { if (typeof sfx === "function") sfx(R.pick === 0 ? "right" : "wrong"); } catch (e2) {} render(); return; }
+  if (t.hasAttribute("data-bgopt")) { if (R.pick != null) return; R.pick = +t.getAttribute("data-bgopt"); if (R.pick === 0) R.right++; render(); return; }
   if (t.hasAttribute("data-bgnext")) { R.step++; R.ord = null; render(); return window.scrollTo(0, 0); }
   if (t.getAttribute("data-act") === "bgpaths") { S.obRedo = 1; S.obSel = null; S.obStep = 1; return go("home"); }
 }, true);
 
+
+
+/* ---------- Bug cards: hold any bug to see its stats and lore (owner, Nov 18 2026) ---------- */
+var BUG_LORE = {"emperor-beetle": ["The top of the admin tower", "Whatever is in the vault", "Title", "Keeper of the keys", "The Emperor Beetle watches over DrugBug from behind the curtain. It has seen every bug ever drawn and approved every single one with a slow, royal nod."], "admin-stickbug": ["Behind the control panel", "Coffee, black", "Job", "Pushing buttons", "This Stick Bug lives behind the Control Center and blends in with the code. If something breaks at 2 AM, it was already there, holding very still."], "starter": ["The first page of the app", "Acetaminophen", "Motto", "Everyone starts somewhere", "The Field Medic Beetle is the bug everyone meets first. It has a scuffed shell, a can-do attitude and a pocket full of gauze it will never let you borrow."], "grub-medic": ["The back of the rig", "Epinephrine", "Motto", "Load and go", "The Medic Beetle hatched in the jump seat of an ambulance. It knows every bump on the road to the hospital and sleeps sitting up, just in case."], "grub-nurse": ["The med room", "Ondansetron", "Motto", "Two identifiers, every time", "The Scrub Beetle has walked about a million laps of the unit. It double-checks everything, triple-checks insulin and somehow always has a pen."], "grub-imaging": ["Behind the lead wall", "Contrast, gently", "Motto", "Hold still, please", "The Lead Apron Beetle has posed for more X-rays than any bug alive. It knows exactly where your keys are, because it saw them on the scan."], "grub-everyday": ["A sunny windowsill", "Vitamin D", "Motto", "Read the label", "The Garden Beetle is a regular, friendly bug who just wants to understand what is in the medicine cabinet. It is the bug you ask before you ask the internet."], "grub-eager": ["The front row of every class", "Whatever you are reading", "Motto", "Wait, tell me more", "The Eager Bug hatched the day you opened DrugBug. It does not know what a beta blocker is yet, and that is exactly why it is so excited. Every lesson, it grows a little more."], "grub-allied": ["The respiratory department", "Albuterol", "Motto", "Breathe, measure, repeat", "The Field Guide Beetle carries a guidebook for every lab tube, vent setting and meal plan. It has never once drawn the tubes in the wrong order."], "grub-doc": ["The library, third floor", "Whatever is on the exam", "Motto", "One more chapter", "The Bookworm Beetle has read the pharmacology textbook cover to cover, twice. It still adjusts its bow tie before every pop quiz."], "free-mantis": ["Tall grass by the hospital", "Ketamine", "Motto", "Patience is a skill", "The Praying Mantis holds perfectly still until the right moment, then strikes with the correct answer. It has never rushed a decision in its life."], "free-stickbug": ["A twig on the break room plant", "Melatonin", "Motto", "Blend in, chill out", "This Stick Bug has been mistaken for decoration for three years. It prefers it that way."], "garden-ladybug": ["Rose leaves", "Loratadine", "Motto", "Spots are lucky", "The Garden Ladybug counts its spots every morning for luck. It has never sneezed in spring, which it credits entirely to good habits."], "honey-bee": ["The hive by the clinic", "Honey for a sore throat", "Motto", "Busy is good", "The Honey Bee works all day and still has time to tell you that honey is not for babies under one. It is very serious about that."], "leaf-beetle": ["The underside of a big green leaf", "Folic acid", "Motto", "Eat your greens", "The Leaf Beetle eats nothing but leafy greens and will remind anyone on warfarin to keep their vitamin K steady."], "sugar-ant": ["Near the vending machine", "Glucose", "Motto", "Sugar first, questions later", "The Sugar Ant can smell a candy bar from three floors away. It is the first bug on scene for anyone with low blood sugar."], "moss-caterpillar": ["A mossy log", "Fiber", "Motto", "Slow and steady", "The Moss Caterpillar is in no hurry. It knows that one day it will become something amazing, and so will you."], "dusk-moth": ["The porch light at sunset", "Melatonin", "Motto", "Night is just beginning", "The Dusk Moth wakes up as everyone else goes home. It keeps the night shift company and never misses the sunset."], "epi-ladybug": ["Clipped to a backpack strap", "Epinephrine", "Motto", "Thigh, not thumb", "The Epi Ladybug rides along with anyone who has a bad allergy. It has red wings, black spots and very strong opinions about where auto-injectors go."], "pond-dragonfly": ["A lily pad on a quiet pond", "Albuterol", "Motto", "Breathe deep", "The Pond Dragonfly can hover in place for minutes. It says the trick is calm, steady breathing."], "garden-snail": ["A damp garden path", "Lactulose", "Motto", "Get there eventually", "The Garden Snail is slow, but it has never once taken a wrong turn. It carries its home and its study notes on its back."], "meadow-hopper": ["A wildflower meadow", "Pseudoephedrine", "Motto", "Jump right in", "The Meadow Hopper answers before you finish the question. It is right about half the time and fully confident every time."], "rookie-rhino": ["The gym at the fire station", "Ibuprofen", "Motto", "Lift with your legs", "The Rookie Rhino Beetle is strong, eager and still learning. It carries the heaviest bag on every call without being asked."], "sky-mantis": ["A rooftop helipad", "Fentanyl, carefully", "Motto", "Eyes on the horizon", "The Sky Mantis watches the sky for incoming helicopters. It can spot a landing zone from a mile away."], "rapid-centipede": ["The ambulance bay", "Naloxone", "Motto", "A hundred legs, zero wasted steps", "The Rapid Response Centipede gets to every call first. With that many legs, it is never the one tripping over the stretcher."], "sunrise-firefly": ["The east window at dawn", "Caffeine", "Motto", "Show up every day", "The Sunrise Firefly only glows for people who keep coming back. Ten days of showing up, and it lights the way."], "dawn-patrol-dragonfly": ["The flight line before sunrise", "Ondansetron", "Motto", "Wheels up at first light", "The Dawn Patrol Dragonfly has flown more early shifts than anyone can count. It earned its headset one sunrise at a time."], "royal-jelly-bee": ["The center of the hive", "Royal jelly, obviously", "Motto", "Loyalty is royalty", "The Royal Jelly Bee rewards the faithful. It only crowns those who have come back again and again."], "moonlit-mantis": ["A silver branch at midnight", "Melatonin", "Motto", "Quiet focus", "The Moonlit Mantis studies by moonlight and has never once needed a highlighter. Fifty nights of loyalty earn its trust."], "golden-return-stag": ["A sunlit clearing", "Aspirin", "Motto", "Always come back", "The Golden Return Stag guards the path for those who return. Thirty days in, it bows its golden antlers to you."], "hundred-day-hercules": ["A mountain trail", "Electrolytes", "Motto", "Strength is consistency", "The Hundred-Day Hercules does not care how smart you are. It cares that you showed up, day after day after day."], "year-of-the-scarab": ["The temple of the sun", "Time", "Motto", "The long game wins", "The Year of the Scarab rolls the sun across the sky, one day at a time. It only appears to those patient enough to walk the whole road."], "officer-roly-poly": ["Patrolling the terrarium", "Ibuprofen for the knees", "Motto", "Roll with it", "Officer Roly-Poly keeps the peace in the terrarium. When things get tense, it curls into a ball and waits for backup."], "three-am-moth": ["The break room vending machine", "Caffeine", "Sleep", "Not since 2019", "Drawn to the glow of a phone screen in the dead of night, the 3 AM Moth only appears to those who study while everyone else sleeps. It would like you to know it is fine. Totally fine."], "complaint-stick-bug": ["A clipboard", "Antacids", "Motto", "This will be documented", "The Formal Complaint Stick Bug has been poked one too many times. It has filed the paperwork, in triplicate, and would like a meeting."], "dizzy-dung-beetle": ["Wherever it stopped spinning", "Meclizine", "Motto", "Which way is up", "The Dizzy Dung Beetle got shaken and has not been the same since. It is still rolling, just not in a straight line."], "butterfingers-butterfly": ["Under the stretcher", "Gauze", "Motto", "Oops", "The Butterfingers Butterfly has dropped every pen, every cap and one very expensive monitor cable. Everyone loves it anyway."], "stink-bug": ["The window screen", "Activated charcoal", "Motto", "Do not squish", "The Stink Bug has one defense and it is very effective. It would like everyone to keep a respectful distance."], "daddy-long-legs": ["A dusty corner", "Calcium", "Motto", "Technically not a spider", "The Daddy Long Legs wants everyone to know it is not actually a spider. It has explained this many, many times."], "garden-millipede": ["Under a garden stone", "Fiber", "Motto", "One step at a time, times a thousand", "The Garden Millipede is never in a rush. It figures if it has this many legs, it may as well use them carefully."], "dung-beetle": ["A pasture at dawn", "Probiotics", "Motto", "Nothing is wasted", "The Dung Beetle can roll a ball fifty times its own weight. It is the hardest worker in the terrarium and the least appreciated."], "flea": ["A sleeping dog", "Permethrin, its enemy", "Motto", "Small but mighty", "The Flea can jump a hundred times its own height. It wears a bandana to look tough, and honestly, it works."], "deer-tick": ["Tall grass on a hiking trail", "Doxycycline, its nemesis", "Motto", "Check your socks", "The Deer Tick is the reason everyone checks their legs after a hike. It respects anyone who knows about Lyme disease."], "bed-bug": ["A cheap hotel mattress", "Heat treatment, its fear", "Motto", "Sleep tight", "The Bed Bug wears a beanie because it is always cold in the mattress. It is not welcome anywhere, and it knows it."], "head-louse": ["The back of a school bus seat", "Permethrin, its foe", "Motto", "Share nothing", "The Head Louse wears a bandana and a chain to look scary. Its biggest enemy is a fine-tooth comb."], "cockroach": ["Behind the hospital fridge", "Nothing, it will survive", "Motto", "Outlast everything", "The Cockroach has survived every cleaning crew, every pest control visit and probably a few disasters. It is a little proud of that."], "tiger-mosquito": ["A puddle in a flowerpot", "DEET, its arch-enemy", "Motto", "Bzzzz", "The Tiger Mosquito is striped, fast and annoying. It is the reason people learn about mosquito-borne viruses."], "chigger": ["Summer grass", "Hydrocortisone cream, its foe", "Motto", "Itch and run", "The Chigger is so small most people never see it. They just feel the itch hours later and wonder what happened."], "kissing-bug": ["A crack in an old wall", "Benznidazole, its enemy", "Motto", "Not as sweet as it sounds", "The Kissing Bug has a cute name and a bad reputation. It wants you to learn about Chagas disease, mostly so you will avoid it."], "puss-asp": ["A shady tree branch", "Ice packs for its victims", "Motto", "Do not pet", "The Asp looks like a fluffy toy, but its hidden spines sting hard. It is the most misunderstood caterpillar in the terrarium."], "bubblegum-ant": ["The candy aisle", "Glucose gel", "Motto", "Stay sweet", "The Bubblegum Ant is pink, cheerful and always offering snacks. It is the morale officer of the ant colony."], "glow-firefly": ["A summer backyard", "Vitamin B12", "Motto", "Light it up", "The Glow Firefly blinks in a pattern that spells out drug names, if you watch long enough."], "ruby-ladybug": ["A velvet cushion", "Iron supplements", "Motto", "Dress for the job you want", "The Ruby Ladybug wears a bow tie to every exam. It believes looking sharp helps you think sharp."], "midnight-moth": ["The streetlight outside the ER", "Diphenhydramine", "Motto", "Darkness is just a vibe", "The Midnight Moth only comes out after midnight. It knows every night nurse by name."], "teal-jewel": ["A rainforest leaf", "Zinc", "Motto", "Shine on", "The Teal Jewel Beetle sparkles in any light. It spends a lot of time admiring its reflection in stethoscopes."], "blue-morpho": ["The rainforest canopy", "Methylene blue", "Motto", "Be bold", "The Blue Morpho flashes brilliant blue when it flies and vanishes when it lands. Seeing it is said to bring good luck on exam day."], "fire-ant": ["The station bay", "Diphenhydramine for the stings", "Motto", "First in, last out", "The Fire Ant Responder runs toward trouble. It is small, tough and always the first one geared up."], "narcan-ninja": ["The shadows by the bus stop", "Naloxone", "Motto", "Silent, fast, lifesaving", "The Narcan Ninja Ant moves quietly and carries naloxone everywhere. It has saved more bugs than it will ever talk about."], "siren-cicada": ["A tree by the highway", "Ear plugs", "Motto", "Make some noise", "The Siren Cicada can be heard from a mile away. It considers itself the terrarium's emergency alert system."], "iv-pole-mantis": ["Clinging to an IV pole", "Normal saline", "Motto", "Steady drip", "The IV Pole Mantis rides along with every IV pump in the hospital. It has opinions about tubing labels."], "banded-bee": ["A wildflower patch", "Antihistamines", "Motto", "Stripes and scarves", "The Banded Bee wears a cozy scarf all year. It insists bees can get cold too."], "night-nurse-moth": ["The nurses' station at 3 AM", "Ondansetron", "Motto", "Rounds every two hours", "The Night Nurse Moth has done a thousand night shifts. It knows exactly which call light means trouble."], "lab-coat-snail": ["The lab bench", "Microscope oil", "Motto", "Results in 24 to 48 hours", "The Lab Coat Snail runs every culture personally. It is slow, but its results are never wrong."], "jade-mantis": ["A jade plant on the windowsill", "Green tea", "Motto", "Calm mind, quick claws", "The Jade Mantis meditates before every test. It says panic is the only wrong answer."], "medic-rhino": ["The back of a busy rig", "Ketamine", "Motto", "Push through", "The Medic Rhino Beetle has carried patients down more stairs than anyone. Its headset never comes off."], "code-blue-stag": ["Crash carts, bottom drawer", "Epinephrine", "Motto", "Push hard, push fast", "Legend says the Code Blue Stag has run more codes than anyone on the unit and has never once raised its voice. It counts compressions under its breath and taps its stethoscope twice before every rhythm check."], "neon-dragonfly": ["A neon sign outside a 24-hour pharmacy", "Fluorescein", "Motto", "Glow up", "The Neon Dragonfly buzzes with electric color. It wears goggles because its own glow is too bright to look at."], "chopper-dragonfly": ["The rotor wash of a medical helicopter", "Ondansetron", "Motto", "Fly fast, land soft", "The Chopper Dragonfly was born on a helipad. It can hover in a crosswind and never gets airsick, unlike its passengers."], "shadow-mantis": ["Wherever you are not looking", "Midazolam", "Motto", "Unseen, unshaken", "The Shadow Mantis wears a mask and moves without a sound. Nobody has ever caught it studying, but it always knows the answer."], "defib-firefly": ["Mounted on the AED box", "Electricity", "Motto", "Charging, stand clear", "The Defib Firefly glows with a charge of pure energy. It has a lightning bolt on its back and a very serious respect for safety."], "aurora-butterfly": ["The northern sky", "Vitamin D", "Motto", "Every color counts", "The Aurora Butterfly only appears in the darkest, coldest months. Its wings shimmer with every color of the northern lights."], "pager-cicada": ["The on-call room", "Caffeine", "Motto", "Always reachable", "The Pager Cicada has never had a full night of sleep. Its headset buzzes at the worst times, and it always answers."], "thunder-beetle": ["A storm cloud", "Magnesium", "Motto", "Bring the boom", "The Thunder Beetle shows up when things get loud. It has a lightning bolt on its back and a soft spot for calm, quiet patients."], "night-shift-spider": ["The corner of the ICU ceiling", "Caffeine", "Motto", "Eight eyes on every monitor", "The Night Shift Spider watches every monitor at once. It has never missed an alarm in its life."], "trauma-bay-hornet": ["Trauma bay one", "Tranexamic acid", "Motto", "Stop the bleed", "The Trauma Bay Hornet zips between patients faster than anyone. It wears goggles because trauma gets messy."], "flight-hornet": ["The flight helmet rack", "Ketamine", "Motto", "Packaged and moving", "The Flight Hornet has flown every kind of mission. It packs a patient faster than anyone and never forgets the extra blanket."], "charge-nurse-bee": ["The center of the nurses' station", "Everything, organized", "Motto", "Who needs help?", "The Charge Nurse Bee knows where every patient, every nurse and every missing pump is at all times. Nobody knows how."], "cardiac-scarab": ["A heart-shaped stone", "Aspirin", "Motto", "Every beat matters", "The Cardiac Scarab carries a glowing heart on its shell. It beats in perfect rhythm, sixty to a hundred times a minute."], "golden-scarab": ["Atop the leaderboard", "Gold standard therapy", "Motto", "Earn the crown", "The ancient Egyptians believed scarabs rolled the sun across the sky. The Golden Scarab believes it rolls the whole BugDex, and it wears its crown at a slight angle on purpose."], "phoenix-moth": ["The ashes of a hard shift", "Resilience", "Motto", "Rise again", "The Phoenix Moth burns bright, burns out and rises again every morning. It is the patron bug of anyone who failed a test and tried again."], "diamond-beetle": ["A velvet display case", "Nothing, it is flawless", "Motto", "Pressure makes diamonds", "The Diamond Scarab was formed under enormous pressure. It wears a halo and expects to be treated accordingly."], "rainbow-snail": ["The end of a rainbow", "Multivitamin", "Motto", "Slow and colorful", "The Rainbow Snail leaves a shimmering trail wherever it goes. It is never in a hurry and always in a good mood."], "chief-resident-stag": ["The front of morning rounds", "Coffee and evidence", "Motto", "What is the evidence?", "The Chief Resident Stag has a crown, a stethoscope and an answer for everything. It has not been home in four days."], "galaxy-rhino": ["Orbiting the terrarium", "Stardust", "Motto", "Think bigger", "The Galaxy Rhino Beetle carries a whole universe on its shell. When you stare into it, you can see every question you have ever answered."], "cosmic-butterfly": ["Between the stars", "Starlight", "Motto", "Infinite curiosity", "The Cosmic Butterfly drifted down from space to learn about medicine. It finds human bodies fascinating and a little gross."], "queen-bee": ["The royal chamber", "Royal jelly", "Motto", "Long live the queen", "The Queen Bee rules the hive with grace. Every bee in the terrarium bows when she buzzes past."], "tiger-longhorn": ["A fallen log in the jungle", "Iron", "Motto", "Antennae up", "The Tiger Longhorn has antennae longer than its body. It uses them to sense trouble before it starts."], "sunset-longhorn": ["An orange evening sky", "Vitamin A", "Motto", "End every day well", "The Sunset Longhorn glows orange and pink. It likes to review the day's questions while the sun goes down."], "coral-snail": ["A tide pool", "Calcium", "Motto", "Go with the flow", "The Coral Snail lives by the sea and moves with the tide. It has a calm answer for every stressful question."], "desert-scorpion": ["Under a hot rock", "Water, always", "Motto", "Hydrate or else", "The Desert Scorpion lives where it never rains and is obsessed with hydration. It will remind you to drink water."], "mint-hercules": ["A mint garden", "Peppermint oil", "Motto", "Stay fresh", "The Mint Hercules is huge, green and smells surprisingly nice. It lifts heavy things and calms upset stomachs."], "hercules-hero": ["The gym and the library", "Creatine", "Motto", "Brains and brawn", "The Hercules Hero wears a bow tie to the gym. It believes strength and study go together."], "jade-scorpion": ["A jade carving", "Green tea", "Motto", "Precise and patient", "The Jade Scorpion moves with perfect precision. It has never once stung the wrong target."], "aurora-longhorn": ["The northern lights", "Vitamin D", "Motto", "Reach for the sky", "The Aurora Longhorn's antennae glow like the northern sky. It only comes out in winter and always looks magical."], "coal-beetle": ["A coal mine", "Activated charcoal", "Motto", "Absorb it all", "The Coal Beetle is jet black and very absorbent. It is the terrarium's expert on activated charcoal."], "soot-ant": ["A chimney", "Oxygen", "Motto", "Clear the air", "The Soot Ant survived a chimney fire and now lectures everyone about carbon monoxide detectors."], "ink-caterpillar": ["An inkwell", "Ink, unfortunately", "Motto", "Write it down", "The Ink Caterpillar writes everything down. It believes if it is not documented, it did not happen."], "graphite-snail": ["A pencil cup", "Pencil shavings", "Motto", "Erase and retry", "The Graphite Snail leaves a gray trail like a pencil line. It never minds starting over."], "dusk-raven-moth": ["A raven's nest at dusk", "Melatonin", "Motto", "Quoth the moth", "The Raven Moth is dramatic, dark and a little bit poetic. It recites drug side effects like verses."], "onyx-ladybug": ["A black velvet box", "Activated charcoal", "Motto", "Dark and lucky", "The Onyx Ladybug is the rarest of the ladybugs, black with deep red spots. It brings luck to night-time studying."], "smoke-mantis": ["A wisp of smoke", "Albuterol", "Motto", "Now you see me", "The Smoke Mantis fades in and out like smoke. It is a reminder that smoke and lungs do not mix."], "gunmetal-rhino": ["A steel workshop", "Iron", "Motto", "Built tough", "The Gunmetal Rhino Beetle is armored like a tank. It is not afraid of anything except running out of coffee."], "shadow-longhorn": ["The back of the library", "Melatonin", "Motto", "Quiet study", "The Shadow Longhorn studies in the darkest corner of the library. Its antennae pick up every whisper of the answer."], "obsidian-scorpion": ["A volcanic rock", "Calcium gluconate", "Motto", "Sharp and steady", "The Obsidian Scorpion is glossy, black and sharp as volcanic glass. It knows its antidotes cold."], "crimson-widow": ["A dark corner of the attic", "Antivenom, its nemesis", "Motto", "Red means stop", "The Crimson Widow wears a red mark as a warning. It is beautiful, dangerous and very good at pharmacology."], "void-scarab": ["The space between stars", "Nothing at all", "Motto", "Stare into the void", "The Void Scarab is darker than night. Looking into its shell feels like looking into an empty exam room at 3 AM."], "phantom-dragonfly": ["A foggy marsh", "Ghost-white saline", "Motto", "Gone in a blink", "The Phantom Dragonfly appears and disappears in the fog. Some say it is the ghost of a dragonfly that never finished nursing school."], "abyss-firefly": ["The deep ocean", "Bioluminescence", "Motto", "Light in the dark", "The Abyss Firefly glows in the deepest, darkest places. It is a reminder that there is always a light somewhere."], "eclipse-butterfly": ["The moment of a solar eclipse", "Melatonin", "Motto", "Rare moments matter", "The Eclipse Butterfly only appears during an eclipse. Seeing it is rare, and catching it is rarer."], "midnight-hercules": ["A moonlit mountain", "Magnesium", "Motto", "Strength in the dark", "The Midnight Hercules lifts heavy things only at night. It is the strongest night shift worker in the terrarium."], "nightmare-stag": ["A haunted forest", "Prazosin for the nightmares", "Motto", "Face your fears", "The Nightmare Stag has flaming antlers and a terrifying stare. It helps students conquer the questions that scare them most."], "wraith-mantis": ["A cold wind", "Lorazepam", "Motto", "Haunt the test", "The Wraith Mantis floats instead of walks. It haunts the hardest questions until you finally get them right."], "galaxy-scorpion": ["A spiral galaxy", "Stardust", "Motto", "Sting like a supernova", "The Galaxy Scorpion's tail glitters with a thousand stars. It is very proud and slightly vain."], "obsidian-emperor": ["A throne of black glass", "Power", "Motto", "Rule with wisdom", "The Obsidian Emperor is the largest, darkest beetle in the terrarium. It wears a crown and judges every answer."], "hickory": ["The front porch", "Sweet tea", "Motto", "Slow and steady, now", "Hickory is a stick bug from the hills who never stops talking. He runs the L.E.A.R.N round, knows every drug in the patch, and will tell you all about it whether you asked or not."], "atlas-moth": ["A rainforest canopy", "Vitamin B complex", "Motto", "Carry the world", "The Atlas Moth has wings bigger than your hand. It does not eat as an adult, so it studies instead."], "goliath-beetle": ["Deep in the African forest", "Protein", "Motto", "Big brain, bigger body", "The Goliath Beetle is one of the heaviest insects on Earth. It moves slowly and thinks carefully."], "orchid-mantis": ["A pink orchid", "Nothing, it is a flower", "Motto", "Hide in plain sight", "The Orchid Mantis looks exactly like a flower. Most people walk right past it, which is exactly how it likes it."], "emperor-dragonfly": ["Above a royal pond", "Oxygen", "Motto", "Rule the sky", "The Emperor Dragonfly is the largest, fastest dragonfly around. It catches every question mid-flight."], "field-cricket": ["A summer field", "Calcium", "Motto", "Chirp chirp", "The Field Cricket chirps faster when it is warmer. It can tell you the temperature better than a thermometer."], "katydid": ["A leafy tree", "Vitamin K", "Motto", "Katy did, Katy didn't", "The Katydid looks like a leaf and argues with itself every summer night."], "green-lacewing": ["A garden full of aphids", "Natural pest control", "Motto", "Delicate but deadly", "The Green Lacewing has lace-thin wings and an appetite for pests. Gardeners love it."], "giant-hornet": ["A huge paper nest", "Epinephrine for its victims", "Motto", "Respect the sting", "The Giant Hornet is the biggest hornet in the world. It knows exactly why people carry epinephrine."], "tarantula-hawk": ["The desert sky", "Pain relief for its victims", "Motto", "Pain is temporary", "The Tarantula Hawk has one of the most painful stings on Earth. It is honestly sorry about that."], "sky-ace-wasp": ["The cockpit of a vintage plane", "Ondansetron", "Motto", "Top of the class", "The Sky Ace Wasp wears a jet helmet and a flowing scarf. It aces every test and does a victory roll afterward."], "shadow-cricket": ["Under the porch at night", "Melatonin", "Motto", "Chirp quietly", "The Shadow Cricket only chirps in the dark. It is the soundtrack of every late-night study session."], "ghost-moth": ["A haunted house in October", "Pumpkin spice", "Motto", "Boo", "The Ghost Moth appears every autumn and drifts through the terrarium. It loves scaring other bugs and then apologizing."], "frost-firefly": ["A snowy pine tree", "Warm tea", "Motto", "Stay cozy", "The Frost Firefly glows ice blue in the winter. It wears a scarf and shares hot cocoa with every bug."], "bloom-butterfly": ["A spring garden", "Loratadine", "Motto", "Bloom where you are planted", "The Bloom Butterfly arrives with the spring flowers. It sneezes a lot but never lets allergies slow it down."], "sunburst-dragonfly": ["A summer lake", "Sunscreen", "Motto", "Stay bright", "The Sunburst Dragonfly glows like the summer sun. It wears goggles and reminds everyone to reapply sunscreen."], "pumpkin-beetle": ["A pumpkin patch", "Pumpkin pie", "Motto", "Gather and give thanks", "The Pumpkin Beetle appears in the fall harvest. It is thankful for every bug in the terrarium."], "cardiac-crusader": ["The cardiology wing", "Metoprolol", "Motto", "Mastery of the heart", "The Cardiac Crusader only appears to those who master heart medicines. It carries a stethoscope and a sense of duty."], "antidote-ace": ["The poison control center", "Every antidote", "Motto", "There is always an answer", "The Antidote Ace knows every antidote by heart. It earned its halo by saving bugs from every poison."], "airway-ace": ["The respiratory unit", "Albuterol", "Motto", "Airway first", "The Airway Ace mastered the lungs and never lets anyone forget that airway comes first."], "neuro-navigator": ["The neurology floor", "Levetiracetam", "Motto", "Map the mind", "The Neuro Navigator mastered the brain and nerves. It wears a headset to listen to every neuron fire."], "code-commander": ["The center of every code", "Epinephrine", "Motto", "Run the room", "The Code Commander has run five perfect codes. It wears a crown and a stethoscope and calls out every step with calm confidence."], "calc-champion": ["The old Calc Lab", "A calculator", "Motto", "Check your math", "The Calc Champion was earned in the old Calc Lab. It still checks every number twice."], "mb-cluster": ["A microscope slide", "Vancomycin, its rival", "Motto", "Grape-like clusters", "Goldie the Cluster is a friendly staph bacterium. It clusters together like grapes and wants you to learn which antibiotics beat it."], "mb-chain": ["A microscope slide", "Penicillin, its rival", "Motto", "Strength in chains", "Chainy the Strep links up in long chains. It causes strep throat and respects penicillin."], "mb-comma": ["A water sample", "Oral rehydration", "Motto", "Comma, not a period", "Comma the Vibrio is shaped like a comma. It is the reason clean water matters."], "mb-coil": ["A microscope slide", "Doxycycline, its rival", "Motto", "Twist and turn", "Corky the Spirochete is shaped like a corkscrew. It is related to the germ behind Lyme disease."], "mb-yog": ["A cup of yogurt", "Probiotics", "Motto", "Good bacteria are real", "Lacto the Good One is a helpful bacterium that lives in yogurt and in your gut. It wants everyone to know not all germs are bad."], "king-mantis": ["The tallest blade of grass", "Patience", "Motto", "Rule with stillness", "The Mantis King only bows to those who collect every mantis. It is the calmest ruler in the terrarium."], "king-ladybug": ["A crown of rose petals", "Luck", "Motto", "Every spot counts", "The Ladybug King appears for those who collect every ladybug. Its spots form a perfect crown."], "king-bee": ["The golden hive", "Honey", "Motto", "Unite the hive", "The Bee King rules over every bee you collected. It hums a royal tune."], "king-beetle": ["A throne of bark", "Strength", "Motto", "The shell of a king", "The Beetle King is the toughest of all beetles. It appears only to the most dedicated collectors."], "king-ant": ["The center of the colony", "Sugar", "Motto", "Together we lift", "The Ant King commands the entire colony. It can lift a hundred times its own weight and a hundred questions at once."], "king-moth": ["The brightest lamp", "Moonlight", "Motto", "Drawn to light", "The Moth King is drawn to the light of learning. It rules over every moth you caught."], "king-dragonfly": ["Above every pond", "Oxygen", "Motto", "Rule the skies", "The Dragonfly King is the fastest flyer in the terrarium. It appears to those who collect every dragonfly."], "king-snail": ["The slowest throne", "Patience", "Motto", "Slow and steady wins", "The Snail King took a very long time to get here. It respects anyone who collected every snail."], "king-hopper": ["The highest jump", "Calcium", "Motto", "Leap ahead", "The Hopper King jumps higher than any bug. It rules over hoppers and crickets alike."], "king-rhino": ["A mountain throne", "Iron", "Motto", "Unstoppable", "The Rhino King charges through every obstacle. It bows only to complete collectors."], "king-bad": ["The dark side of the terrarium", "Every antiparasitic", "Motto", "Know your enemy", "The Bad Bug King rules over every pest. It wants you to know your enemies well enough to beat them."], "king-firefly": ["The night sky", "Light", "Motto", "Shine brightest", "The Firefly King lights up the whole terrarium at night. It glows for those who collected every firefly."], "king-butterfly": ["A garden of every flower", "Nectar", "Motto", "Transformation", "The Butterfly King knows that every bug starts as something small. It rules over those who transformed."], "king-stag": ["A clearing in the forest", "Strength", "Motto", "Lock antlers, never lose", "The Stag King has antlers like a crown. It respects only the most dedicated collectors."], "king-scarab": ["The temple of the sun", "Sunlight", "Motto", "Roll the sun", "The Scarab King rolls the sun across the sky. It appears to those who collect every scarab."], "king-longhorn": ["The tallest tree", "Iron", "Motto", "Reach further", "The Longhorn King has the longest antennae of any bug. It senses everything in the terrarium."], "king-scorpion": ["A desert throne", "Antivenom", "Motto", "Sting with honor", "The Scorpion King rules the desert. It respects anyone who collected every scorpion."], "king-hercules": ["A mountain peak", "Protein", "Motto", "Strongest of all", "The Hercules King is the strongest bug in the terrarium. It lifts anyone who collected every hercules beetle."], "king-wasp": ["A towering nest", "Epinephrine for everyone else", "Motto", "Respect the hive", "The Hornet King commands every wasp and hornet. It is loud, proud and surprisingly fair."]};
+var BUG_STAT_FIX = { "grub-eager": [10, 3, 4, 8], "code-blue-stag": [6, 8, 10, 3], "three-am-moth": [2, 9, 7, 10], "golden-scarab": [7, 10, 9, 5] };
+var BUG_STATS = ["Eagerness", "Smarts", "Calm under pressure", "Snack drive"];
+function bugStats(b) {
+  if (BUG_STAT_FIX[b.id]) return BUG_STAT_FIX[b.id];
+  var lo = { common: 2, rare: 3, seasonal: 4, earned: 5, epic: 5, legendary: 6, admin: 7 }[b.rar] || 2, sp = 10 - lo;
+  return [0, 1, 2, 3].map(function (i) { return lo + (parseInt(hashStr("bs" + i + b.id), 36) % (sp + 1)); });
+}
+function bugFound(b) {
+  if (b.grub) return "Your starting path";
+  if (b.unlock && b.unlock.text) return b.unlock.text === "Secret" ? "Secret" : b.unlock.text;
+  if (b.season) return "Seasonal, Bug Shop";
+  if (b.admin) return "DrugBug staff";
+  if (b.price) return "Bug Shop, " + b.price.toLocaleString() + " sticks";
+  return "Starter";
+}
+var LORE_RC = { common: "#94a3b8", rare: "#38bdf8", epic: "#c084fc", legendary: "#fbbf24", seasonal: "#fb923c", earned: "#34d399", admin: "#f472b6" };
+function loreOpen(id) {
+  var b = bugById(id); if (!b) return;
+  var L = BUG_LORE[b.id] || ["Your terrarium", "Curiosity", "Motto", "Keep learning", b.blurb || "A bug with a story still being written."];
+  var rc = LORE_RC[b.rar] || LORE_RC.common, st = bugStats(b), own = owned(b.id);
+  var dlg = document.getElementById("loredlg");
+  if (!dlg) { dlg = document.createElement("div"); dlg.id = "loredlg"; document.body.appendChild(dlg); }
+  dlg.innerHTML = '<div class="lorescrim" data-loreclose="1"><div class="lorecard" role="dialog" aria-modal="true" aria-label="' + esc(b.name) + '" style="--rc:' + rc + '"><div class="loregrab"></div>' +
+    '<div class="lorehead"><div class="loreart">' + bugArt(b, "", { mood: "happy" }) + '</div><div><span class="lorepill">' + esc(b.rar === "admin" ? "staff" : b.rar) + '</span><h2>' + esc(b.name) + '</h2><span class="muted small">' + esc((b.body || "").replace(/^./, function (c) { return c.toUpperCase(); })) + (own ? ' · In your terrarium' : '') + '</span></div></div>' +
+    '<div class="lorestats">' + BUG_STATS.map(function (n, i) { return '<div class="lorestat"><span class="muted">' + n + '</span><span class="loretrack"><i style="width:' + st[i] * 10 + '%"></i></span><b>' + st[i] + '</b></div>'; }).join("") + '</div>' +
+    '<div class="lorefacts"><div><small>Habitat</small><span>' + esc(L[0]) + '</span></div><div><small>Favorite med</small><span>' + esc(L[1]) + '</span></div><div><small>Found</small><span>' + esc(bugFound(b)) + '</span></div><div><small>' + esc(L[2]) + '</small><span>' + esc(L[3]) + '</span></div></div>' +
+    '<h3 class="lorehd">Lore</h3><p class="loretx">' + esc(L[4]) + '</p><div class="actions" style="justify-content:center"><button class="btn small" data-loreclose="1">Close</button></div></div></div>';
+  dlg.hidden = false;
+}
+(function () {
+  var T = null, el = null, fired = false, sx = 0, sy = 0;
+  var SEL = "[data-equip],[data-buy],[data-claim],[data-buyok],[data-b],[data-lorebug]";
+  function idOf(e) { return e.getAttribute("data-lorebug") || e.getAttribute("data-equip") || e.getAttribute("data-buy") || e.getAttribute("data-claim") || e.getAttribute("data-buyok") || e.getAttribute("data-b"); }
+  document.addEventListener("pointerdown", function (e) {
+    var t = e.target && e.target.closest ? e.target.closest(SEL) : null; if (!t) return;
+    var id = idOf(t); if (!id || typeof bugById !== "function" || !BUGS.some(function (b) { return b.id === id; })) return;
+    el = t; fired = false; sx = e.clientX; sy = e.clientY; el.classList.add("loreholding");
+    T = setTimeout(function () { fired = true; if (el) el.classList.remove("loreholding"); try { navigator.vibrate && navigator.vibrate(12); } catch (x) {} loreOpen(id); }, 480);
+  }, true);
+  function end() { clearTimeout(T); if (el) el.classList.remove("loreholding"); el = null; }
+  document.addEventListener("pointermove", function (e) { if (el && (Math.abs(e.clientX - sx) > 10 || Math.abs(e.clientY - sy) > 10)) end(); }, true);
+  document.addEventListener("pointerup", end, true); document.addEventListener("pointercancel", end, true);
+  document.addEventListener("click", function (e) {
+    if (fired) { fired = false; e.preventDefault(); e.stopPropagation(); return; }   /* a hold is not a tap */
+    var c = e.target && e.target.closest ? e.target.closest("[data-loreclose]") : null;
+    if (c && (c === e.target || c.tagName === "BUTTON")) { var d = document.getElementById("loredlg"); if (d) { d.hidden = true; d.innerHTML = ""; } e.stopPropagation(); }
+  }, true);
+  document.addEventListener("contextmenu", function (e) { if (e.target && e.target.closest && e.target.closest(SEL)) e.preventDefault(); }, true);
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") { var d = document.getElementById("loredlg"); if (d && !d.hidden) { d.hidden = true; d.innerHTML = ""; } } });
+})();
+
+
+/* ---------- Hickory's guided tour (owner, Nov 18 2026) ----------
+   Hickory walks you to each place and you tap the glowing spot to move on. Skip ends it at any time.
+   No step counter. Steps whose spot is not on screen are skipped quietly. */
+var GT = { on: false, i: 0, steps: [], el: null };
+function gtSteps() {
+  var fun = typeof funOn !== "function" || funOn(), role = (Prog.d && Prog.d.role) || "", beg = role === "ev";
+  var RV = { ph: "levels", rn: "nlevels", md: "mlevels", im: "ilevels", ah: "alevels", ev: "beginner" }, pv = RV[role] || "gen";
+  function H(h, p) { return fun ? h : p; }
+  var L = [];
+  L.push({ t: H("Well, howdy there", "Welcome to DrugBug"), x: H("Name's Hickory. Let me walk ya around the place. Tap the spot that's glowin' and we'll go to the next one. If ya get bored, hit Skip. I won't take it personal. Much.", "A quick walk around the app. Tap the highlighted spot to move on, or skip at any time."), btn: H("Let's go", "Start") });
+  L.push({ pre: function () { if (S.view !== "home") go("home"); }, sel: beg ? ".route.rmini.bg" : ".route.rmini." + role + ", [data-go='" + pv + "'].route", t: H("Your patch", "Your path"), x: beg ? H("This here's Beginner to Medicine. A whole course, startin' from scratch. Tap it.", "This is Beginner to Medicine, a full course from zero. Tap it.") : H("This here's your path. Every level's got its own drugs and questions. Tap it.", "This is your path. Each level has its own drugs and questions. Tap it."), act: function () { go(pv); } });
+  if (beg) {
+    L.push({ sel: ".bgcont", t: H("Your lessons", "Your lessons"), x: H("Lessons start right here. Little bits at a time, with a checkpoint at the end of each unit. Your Eager Bug grows up as ya go. Tap it.", "Lessons start here, a few ideas at a time, with a checkpoint at the end of each unit. Your bug grows as you learn. Tap it."), act: function () {} });
+  } else {
+    L.push({ sel: "[data-level]", t: H("Pick a level", "Pick a level"), x: H("Pick your level here. Tap this one and I'll show ya inside.", "Pick your level here. Tap it to look inside."), act: function (el) { var k = el.getAttribute("data-level"); go("level", { level: k }); } });
+    L.push({ sel: "[data-tab='qs'], [data-tab='prep']", t: H("Where the questions live", "Where the questions are"), x: H("Questions live right here. Thousands of 'em. Real medics and nurses check 'em, and we're always fixin' and addin'. See one that looks off? Tap Report a problem. Tap it.", "Questions are here, with practice and exam modes. Clinicians check them, and fixes arrive without an app update. Tap it."), act: function () {} });
+    L.push({ sel: "[data-tab='rush']", t: "Bug Rush", x: H("Bug Rush: codes, cases and calls on a live monitor. Pick right and your patient perks up. Tap it.", "Bug Rush: codes, cases and calls on a live monitor. The vitals react to your choices. Tap it."), act: function () {} });
+  }
+  L.push({ pre: function () { if (S.view !== "home") go("home"); }, sel: "[data-go='gen'].route, [data-startlearn='gen'].route", t: "The BugDex", x: H("The BugDex has got every last drug. Plain-spoke or the whole long story, your pick. Tap it.", "The BugDex has every medication, in plain language or in full. Tap it."), act: function () {} });
+  L.push({ sel: ".evbox .route", t: "Everyday Health", x: H("Everybody gets Everyday Health. Medicines, vitamins and your own body, said plain. Tap it.", "Everyone gets Everyday Health: medicines, vitamins and your body, in plain words. Tap it."), act: function () {} });
+  if (fun) {
+    L.push({ sel: ".stickchip", t: "Your bug", x: "That's your bug up top. Tap it and I'll show ya the Terrarium.", act: function () { go("terrarium"); } });
+    L.push({ sel: "[data-equip]", t: "The Terrarium", x: "Here's where your bugs live. Tap one to use it. Hold one down to read its story and stats. Tap it.", act: function () {} });
+  }
+  L.push({ sel: ".gear", t: H("Settings", "Settings"), x: H("Settings is the little gear. Account, sound, text size, all that. Tap it.", "Settings has your account, sound and display options. Tap it."), act: function () {} });
+  if (typeof FOCUSED_READY !== "undefined" && FOCUSED_READY) L.push({ sel: ".modetog", t: H("Serious mode", "Focused or Enhanced"), x: H("This button flips ya to Focused: just the studyin', no bugs, no me. I'll be fine. Tap it.", "This switches between Focused (just studying) and Enhanced (bugs, music and animations). Tap it."), act: function () {} });
+  L.push({ pre: function () { if (S.view !== "home") go("home"); }, t: H("One more thing", "For study only"), x: H("This here's for learnin', not for takin' care of real patients. Out there, follow your protocols and your medical director. In here, mess up all ya want. That's the point.", "DrugBug is for learning, not patient care. Follow your protocols, instructors and medical direction."), btn: H("Got it", "Got it") });
+  L.push({ t: H("Right then", "All set"), x: H("That's about enough jawin'. Come on, let me show ya how this works on a real drug.", "You are ready to start."), btn: H("Show me", "Done"), last: 1 });
+  return L;
+}
+function gtStart() { GT.on = true; GT.i = 0; GT.steps = gtSteps(); TR.open = true; gtShow(); }
+function gtEnd(showMe) {
+  GT.on = false; var w = document.getElementById("gtwrap"); if (w) w.remove(); window.removeEventListener("scroll", gtPlace, true); window.removeEventListener("resize", gtPlace);
+  tourClose();
+  if (showMe && (typeof funOn !== "function" || funOn())) { var pointed = document.querySelector("[data-startlearn]"); try { startLearnPath(pointed ? pointed.getAttribute("data-startlearn") : ""); } catch (e) {} }
+}
+function gtShow() {
+  if (!GT.on) return;
+  var st = GT.steps[GT.i]; if (!st) return gtEnd(false);
+  try { if (st.pre) st.pre(); } catch (e) {}
+  var tries = 0;
+  (function find() {
+    var el = st.sel ? document.querySelector(st.sel) : null;
+    if (st.sel && !el) { if (++tries < 20) return setTimeout(find, 150); GT.i++; return gtShow(); }   /* not on this screen: skip it */
+    GT.el = el;
+    if (el) { try { el.scrollIntoView({ block: "center", behavior: "instant" }); } catch (e) { el.scrollIntoView(); } }
+    gtDraw(st);
+  })();
+}
+function gtDraw(st) {
+  var w = document.getElementById("gtwrap"); if (!w) { w = document.createElement("div"); w.id = "gtwrap"; document.body.appendChild(w); }
+  var fun = typeof funOn !== "function" || funOn();
+  w.innerHTML = '<div class="gtdim' + (GT.el ? ' hole' : '') + '"></div>' + (GT.el ? '<div class="gtspot"></div>' : '') +
+    '<div class="gtbub' + (GT.el ? '' : ' mid') + '" role="dialog" aria-label="' + esc(st.t) + '">' + (fun && typeof learnBugSVG === "function" ? '<div class="gthick">' + learnBugSVG() + '</div>' : '') +
+    '<div class="gttx"><strong>' + esc(st.t) + '</strong><p>' + esc(st.x) + '</p>' + (GT.el ? '<span class="gttap">\u{1F446} Tap the glowing spot</span>' : '') +
+    '<div class="gtbtns"><button class="btn small ghost" data-gt="skip">' + (st.last ? "Not now" : "Skip") + '</button>' + (st.btn ? '<button class="btn small" data-gt="next">' + esc(st.btn) + '</button>' : '') + '</div></div></div>';
+  try { translateDom(w); } catch (e) {}
+  gtPlace();
+  window.addEventListener("scroll", gtPlace, true); window.addEventListener("resize", gtPlace);
+  try { if (fun && typeof voiceSay === "function") { if (typeof voiceStop === "function") voiceStop(); voiceSay(String(st.x).split(/\s+/).slice(0, 14).join(" "), "hick"); } } catch (e) {}
+}
+function gtPlace() {
+  var w = document.getElementById("gtwrap"); if (!w) return;
+  var sp = w.querySelector(".gtspot"), bub = w.querySelector(".gtbub");
+  if (!GT.el || !sp) return;
+  var r = GT.el.getBoundingClientRect(), pad = 8, vh = window.innerHeight;
+  sp.style.left = (r.left - pad) + "px"; sp.style.top = (r.top - pad) + "px"; sp.style.width = (r.width + pad * 2) + "px"; sp.style.height = (r.height + pad * 2) + "px";
+  var below = r.top + r.height / 2 < vh / 2;
+  bub.style.top = below ? Math.min(vh - bub.offsetHeight - 12, r.bottom + pad + 14) + "px" : "";
+  bub.style.bottom = below ? "" : Math.min(vh - 12 - bub.offsetHeight, vh - r.top + pad + 14) + "px";
+}
+window.addEventListener("click", function (e) {   /* window capture runs before every document handler */
+  if (!GT.on) return;
+  var b = e.target && e.target.closest ? e.target.closest("[data-gt]") : null;
+  if (b) { e.preventDefault(); e.stopPropagation(); if (b.dataset.gt === "skip") return gtEnd(false); var st = GT.steps[GT.i]; if (st && st.last) return gtEnd(true); GT.i++; return gtShow(); }
+  if (e.target.closest && e.target.closest(".gtbub")) return;
+  e.preventDefault(); e.stopPropagation();   /* while touring, only the glowing spot works */
+  var st2 = GT.steps[GT.i]; if (!st2 || !GT.el) return;
+  if (GT.el.contains(e.target) || GT.el === e.target) { var el = GT.el; try { if (st2.act) st2.act(el); } catch (x) {} GT.i++; setTimeout(gtShow, 250); }
+  else { var bub = document.querySelector(".gtbub"); if (bub) { bub.classList.remove("gtnudge"); void bub.offsetWidth; bub.classList.add("gtnudge"); } }
+}, true);
+
+/* "See Pro" on the free sample notes opens the plans (owner, Nov 18 2026) */
+document.addEventListener("click", function (e) { var b = e.target && e.target.closest && e.target.closest("[data-freepro]"); if (!b) return; e.preventDefault(); e.stopPropagation(); if (typeof openPaywall === "function") openPaywall("More " + (b.getAttribute("data-freepro") || "practice"), "pro"); }, true);
 })();
