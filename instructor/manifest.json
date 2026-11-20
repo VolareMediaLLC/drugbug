@@ -1,0 +1,14 @@
+{
+  "name": "DrugBug for Instructors",
+  "short_name": "DrugBug Instructors",
+  "description": "Your DrugBug class dashboard: progress, weak spots, the questions students miss and the class scoreboard.",
+  "start_url": "./?signin=1",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#13111c",
+  "theme_color": "#13111c",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

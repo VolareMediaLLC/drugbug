@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>DrugBug for Instructors</title>
 <link rel="icon" type="image/png" sizes="48x48" href="../icon-48.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#13111c">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
 :root{--bg:#13111c;--surface:#1d1a2a;--surface2:#251f37;--ink:#f2effb;--muted:#aaa3c4;--line:#322c47;--accent:#a78bfa;--teal:#2dd4bf;--good:#34d399;--warn:#fbbf24;--bad:#f87171;--bar:#2dd4bf;--track:#2b2540}
 @media (prefers-color-scheme:light){:root{--bg:#f6f4fc;--surface:#fff;--surface2:#f1edfa;--ink:#1c1730;--muted:#5f5878;--line:#e2dcef;--accent:#6d28d9;--teal:#0f766e;--good:#047857;--warn:#b45309;--bad:#b91c1c;--bar:#0f766e;--track:#ece7f6}}
@@ -178,14 +181,57 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
 .dlrow{display:grid;grid-template-columns:96px 1fr 36px;align-items:center;gap:8px;font-size:13px;margin:5px 0}.dlbar{height:10px;border-radius:99px;background:var(--track,rgba(127,127,127,.2));overflow:hidden}.dlbar i{display:block;height:100%;background:var(--s1,#3b82f6);border-radius:99px}.dlrow b{text-align:right;font-variant-numeric:tabular-nums}
 
 /* Overview chart grid (owner, Nov 20 2026) */
-#pOv,#pOvMine,#ovTip,#vOverview{--s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#8b7fd6;--grid:#2e2942;--axis:#8f88aa;--q1:#cde2fb;--q2:#86b6ef;--q3:#3987e5;--q4:#1c5cab;--q5:#104281}
-@media (prefers-color-scheme:light){#pOv,#pOvMine,#ovTip,#vOverview{--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#6d5fc7;--grid:#ece8f4;--axis:#6f6888}}
+#pOv,#pOvMine,#ovTip,#vOverview,#pBoard{--s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#8b7fd6;--grid:#2e2942;--axis:#8f88aa;--q1:#cde2fb;--q2:#86b6ef;--q3:#3987e5;--q4:#1c5cab;--q5:#104281}
+@media (prefers-color-scheme:light){#pOv,#pOvMine,#ovTip,#vOverview,#pBoard{--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#6d5fc7;--grid:#ece8f4;--axis:#6f6888}}
 #ovTip{position:fixed;z-index:60;pointer-events:none;background:var(--surface2);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:12.5px;line-height:1.5;box-shadow:0 8px 24px rgba(0,0,0,.28);max-width:280px;display:none}
 #ovTip b{display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:2px}#ovTip i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}#ovTip strong{font-variant-numeric:tabular-nums}
 #pOv{margin-top:14px}#pOv .mxg+.mxsec,#pOv .kpis+.mxsec{margin-top:26px}#pOvMine{margin-bottom:18px}
 .ovrk .b{position:relative;overflow:visible}.ovrk .b s{position:absolute;left:70%;top:-3px;bottom:-3px;width:2px;border-radius:1px;background:var(--axis);opacity:.55}
 .ovrk .v b{font-weight:650}.ovrk .v span{min-width:38px}
 #vOverview .mini i{background:var(--s1)}#vOverview .mxc+.mxc{margin-top:14px}
+#sbWrap{margin-top:12px}
+.sbhead{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;margin-bottom:14px}
+.sbstats{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--muted)}.sbstats b{color:var(--ink);font-variant-numeric:tabular-nums}
+.sbpod{display:grid;grid-template-columns:1fr 1.12fr 1fr;gap:12px;align-items:end}
+@media (max-width:640px){.sbpod{grid-template-columns:1fr}.sbp.p1{order:-1}}
+.sbp{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 16px 0;cursor:pointer;overflow:hidden;transform:translateY(10px);opacity:0;transition:transform .5s cubic-bezier(.2,.8,.2,1),opacity .5s,border-color .2s}
+.sbp:hover{border-color:var(--s1)}.sbp.empty{visibility:hidden}
+.sbgo .sbp{transform:none;opacity:1}.sbgo .sbp.p1{transition-delay:.05s}.sbgo .sbp.p2{transition-delay:.18s}.sbgo .sbp.p3{transition-delay:.3s}
+.sbp.p1{padding-top:22px;border-color:color-mix(in srgb,var(--s1) 55%,var(--line));box-shadow:0 10px 30px -18px var(--s1)}
+.sbmedal{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:15px;color:#1b1406;background:linear-gradient(145deg,#f3d27a,#c99a2e);box-shadow:inset 0 -2px 0 rgba(0,0,0,.18)}
+.sbp.p2 .sbmedal{background:linear-gradient(145deg,#e6ebf2,#a9b3c1)}.sbp.p3 .sbmedal{background:linear-gradient(145deg,#e7b48a,#b5763f)}
+.sbpn{font-weight:700;font-size:16px;margin-top:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sbpv{font-size:28px;font-weight:780;letter-spacing:-.01em;font-variant-numeric:tabular-nums;margin-top:2px}.sbp.p1 .sbpv{font-size:34px}
+.sbpv small{display:block;font-size:12px;font-weight:600;color:var(--muted);letter-spacing:0;margin-top:-2px}
+.sbpm{font-size:12.5px;color:var(--muted);margin-top:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sbp svg.spark{display:block;width:100%;height:30px;margin-top:8px}
+.sbstep{height:6px;margin:10px -16px 0;background:var(--s1);opacity:.85}.sbp.p2 .sbstep{opacity:.55}.sbp.p3 .sbstep{opacity:.35}
+.sbrows{margin-top:14px;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.sbr{display:grid;grid-template-columns:34px minmax(90px,1.2fr) 2fr 70px 70px 54px;gap:10px;align-items:center;padding:10px 14px;font-size:14px;border-top:1px solid var(--line);cursor:pointer}
+.sbr:first-child{border-top:0}.sbr:not(.sbth):hover{background:var(--surface2)}
+.sbth{cursor:default;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700;padding-top:9px;padding-bottom:9px;background:var(--surface)}
+.sbrk{font-weight:750;color:var(--muted);font-variant-numeric:tabular-nums;text-align:center}
+.sbnm{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sbbar{height:8px;border-radius:4px;background:var(--track);overflow:hidden}.sbbar i{display:block;height:100%;width:0;border-radius:4px;background:var(--s1);transition:width .7s cubic-bezier(.2,.8,.2,1) .25s}.sbgo .sbbar i{width:var(--w)}
+.sbv,.sbacc{text-align:right;font-variant-numeric:tabular-nums}.sbacc{color:var(--muted);font-size:13px}
+.sbmv{font-size:12px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}.sbmv.up{color:var(--good)}.sbmv.dn{color:var(--bad)}.sbmv.eq{color:var(--muted)}.sbmv.new{color:var(--s1);font-weight:600}
+@media (max-width:640px){.sbr{grid-template-columns:28px 1fr 64px 50px}.sbr .sbbar,.sbr .sbacc,.sbth span:nth-child(3),.sbth span:nth-child(5){display:none}}
+.sbrace .cs{font-size:12.5px;color:var(--muted);margin:2px 0 8px}.sbrace{margin-top:16px;border:1px solid var(--line);border-radius:14px;padding:14px 16px}.sbrace h3{margin:0;font-size:15px}
+.delbox{margin-top:12px;padding:14px 16px;border:1px solid var(--bad);border-radius:12px;background:color-mix(in srgb,var(--bad) 7%,transparent)}.delbox h3{margin:0 0 6px;font-size:15px}.delcode{font:700 17px ui-monospace,Menlo,monospace;letter-spacing:.12em;padding:2px 8px;border-radius:6px;background:var(--surface2);border:1px solid var(--line)}
+.cls.gone{opacity:.75}.gonehd{font-size:14px;margin:18px 0 4px}
+.itspot{position:fixed;z-index:80;border-radius:14px;box-shadow:0 0 0 9999px rgba(10,8,20,.62),0 0 0 2px var(--accent,#a78bfa);pointer-events:none;transition:all .35s cubic-bezier(.2,.8,.2,1)}
+.itspot.full{inset:0;border-radius:0;box-shadow:none;background:rgba(10,8,20,.62)}
+.itcard{position:fixed;z-index:81;width:min(430px,calc(100vw - 24px));display:flex;gap:14px;align-items:flex-start;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 18px 50px rgba(0,0,0,.45);transition:top .35s cubic-bezier(.2,.8,.2,1),left .35s cubic-bezier(.2,.8,.2,1);animation:itin .35s ease-out}
+.itcard.mid{left:50%!important;top:50%!important;transform:translate(-50%,-50%);width:min(500px,calc(100vw - 24px))}
+.itcard.sheet{left:12px!important;right:12px;bottom:12px;top:auto!important;width:auto}
+.ithk{flex:0 0 86px;width:86px;height:86px;animation:ithop 2.6s ease-in-out infinite}.ithk svg{width:100%;height:100%}
+.itcard.mid .ithk{flex-basis:110px;width:110px;height:110px}
+.itbody{flex:1;min-width:0}.itstep{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.itbody h3{margin:2px 0 6px;font-size:17px}.itbody p{margin:0 0 12px;font-size:14px;line-height:1.5}
+.itbtns{display:flex;gap:8px;align-items:center}.itbtns span{flex:1}.itbtns button{padding:7px 14px;font-size:13.5px}
+@keyframes itin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}.itcard.mid{animation:none}
+@keyframes ithop{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-4px) rotate(-2deg)}}
+@media (prefers-reduced-motion:reduce){.ithk,.itcard{animation:none}.itspot,.itcard{transition:none}}
 .ovfoot{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
 .ovall{flex:1;min-width:0}.ovall>summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:13px;list-style:none;display:inline-flex;align-items:center;gap:8px}.ovall>summary::-webkit-details-marker{display:none}
 .ovall>summary:after{content:"";width:6px;height:6px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg) translateY(-2px);transition:transform .15s}.ovall[open]>summary:after{transform:rotate(-135deg) translateY(-1px)}
@@ -229,7 +275,7 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
       <li><b>What to reteach first</b>A plain-language summary of the class's biggest gaps, updated as they study.</li>
       <li><b>The questions they miss</b>Lowest-scoring questions with the right answer, the most-picked wrong answer and the explanation.</li>
       <li><b>Every drug, class and question style</b>Medications, drug classes, question styles, body systems and study modes, weakest first, plus a downloadable report.</li>
-      <li><b>An optional class scoreboard</b>Off unless you turn it on. When it is on, class members see aliases or approved nicknames and displayed scores. Keep labels and nicknames free of names, emails and student IDs.</li>
+      <li><b>A class scoreboard</b>On for new classes, and you can turn it off. Students choose whether to join it, and see the top 10 under class labels or approved nicknames. Keep labels and nicknames free of names, emails and student IDs.</li>
       <li><b>Pro for every student</b>The full app, free to them, for as long as your class runs.</li>
     </ul>
   </div>
@@ -523,8 +569,8 @@ body.embed .mxhead .adm{display:none}
 <section id="vClass" class="hide">
   <div class="card">
     <div class="row" style="justify-content:space-between;align-items:center">
-      <div><h2 id="cName" style="margin:0"></h2><div class="muted small" id="cSub"></div><div id="sampleNote" class="small hide" style="margin-top:4px;color:var(--warn)">Sample students shown for this demo. Real results replace them as soon as students join and start studying.</div></div>
-      <div class="row noprint"><button class="ghost" id="bBack">All classes</button><button class="ghost" id="bRefresh">Refresh</button><button class="ghost" id="bReport">Download report</button></div>
+      <div><h2 id="cName" style="margin:0"></h2><div class="muted small" id="cSub"></div><div id="liveAt" class="muted small" title="Refreshes by itself every minute while this page is open"></div><div id="sampleNote" class="small hide" style="margin-top:4px;color:var(--warn)">Sample students shown for this demo. Real results replace them as soon as students join and start studying.</div></div>
+      <div class="row noprint"><button class="ghost" id="bBack">All classes</button><button class="ghost" id="bRefresh">Refresh</button><button class="ghost" id="bTour">Tour with Hickory</button><button class="ghost hide" id="bInstall">Put on my desktop</button><button class="ghost" id="bReport">Download report</button></div>
     </div>
     <div class="tiles" id="tiles"></div>
     <nav class="ctabs noprint" id="cTabs" aria-label="Class sections"><button data-ctab="ov" class="on">Overview</button><button data-ctab="ins">Insights</button><button data-ctab="stu">Students <span id="stuBadge"></span></button><button data-ctab="board">Scoreboard</button><button data-ctab="req">Request a chart</button></nav>
@@ -556,6 +602,7 @@ body.embed .mxhead .adm{display:none}
     </div>
     <p class="muted small" id="oInfo"></p>
     <p id="oMsg" class="msg hide"></p>
+    <div id="delBox" class="delbox hide"></div>
   </div>
 
   <!-- INSIGHTS -->
@@ -687,14 +734,13 @@ body.embed .mxhead .adm{display:none}
     <div class="card">
       <h2>Class scoreboard</h2>
       <div class="boardsw"><label><input type="checkbox" id="boardSw"> <b>Show the scoreboard to students</b></label> <span class="muted small" id="boardSwMsg"></span></div>
-      <p class="muted small" id="boardSwHelp">Off: each student sees only their own results, and no one else's name, rank or score. On: students see the top 5 and their own place on their home screen and Dashboard, and the weekly prize bugs start. Turn it on only if your school or agency allows students or staff to see each other's displayed scores. Students appear as their class label (Student 07) or a nickname you approved.</p>
-      <p class="muted small">Ranked by correct answers. Each week the top 3 by correct answers that week win a bug.</p>
-      <div class="tblwrap"><table class="board" id="boardTable"></table></div>
+      <p class="muted small" id="boardSwHelp">Off: each student sees only their own results, and no one else's name, rank or score. On: students who press Join scoreboard are ranked; everyone sees the top 10 and their own place on their home screen and Dashboard, and the weekly prize bugs start. Turn it on only if your school or agency allows students or staff to see each other's displayed scores. Students appear as their class label (Student 07) or a nickname you approved.</p>
+      <div id="sbWrap"></div>
     </div>
     <div class="card" id="compCard">
       <div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Protocol competition</h2>
         <div class="seg" role="group" aria-label="Period"><button data-cw="1" class="on">This week</button><button data-cw="0">All time</button></div></div>
-      <p class="muted small">Your members race on your agency's protocol questions, as individuals and as teams. Teams are ranked by correct answers <b>per member</b>, so a small crew can beat a big station. Members see the team standings and the top 5 people on the Protocols tab of their class scoreboard.</p>
+      <p class="muted small">Your members race on your agency's protocol questions, as individuals and as teams. Teams are ranked by correct answers <b>per member</b>, so a small crew can beat a big station. Members see the team standings and the top 10 people on the Protocols tab of their class scoreboard.</p>
       <div class="grid2">
         <div><h3 style="font-size:15px;margin:6px 0">Teams</h3><div class="tblwrap"><table class="board" id="compTeams"></table></div></div>
         <div><h3 style="font-size:15px;margin:6px 0">Individuals</h3><div class="tblwrap"><table class="board" id="compPeople"></table></div></div>
@@ -909,6 +955,10 @@ body.embed .mxhead .adm{display:none}
       $("listTitle").textContent = r.owner ? "All classes (" + r.list.length + ")" : "Your classes";
       $("uidLine").textContent = r.owner ? "" : "Your account id: " + r.uid;
       show("joinBox", !r.owner);
+      var gone = r.list.filter(function (o) { return o.status === "deleted"; }); r.list = r.list.filter(function (o) { return o.status !== "deleted"; });
+      setTimeout(function () { var g = $("listGone"); if (!g) { g = document.createElement("div"); g.id = "listGone"; $("list").parentNode.insertBefore(g, $("list").nextSibling); }
+        g.innerHTML = gone.length ? '<h3 class="gonehd">Deleted classes</h3><p class="muted small">Students can\'t use these. Each one is erased for good on the date shown unless you restore it.</p>' + gone.map(function (o) { return '<div class="cls gone"><div><b>' + esc(o.name) + '</b> <span class="pill">' + esc(o.code) + '</span><div class="muted small">Erased for good on ' + esc(new Date(o.purgeAt).toLocaleDateString()) + ' (' + Math.max(0, Math.ceil((o.purgeAt - Date.now()) / 864e5)) + ' days left)</div></div><button class="ghost" data-restore="' + esc(o.orgId) + '">Restore</button></div>'; }).join("") : ""; }, 0);
+      $("listTitle").textContent = r.owner ? "All classes (" + r.list.length + ")" : "Your classes";
       $("list").innerHTML = r.list.length ? r.list.map(function (o) {
         var left = Math.ceil((o.expiresAt - Date.now()) / 864e5);
         return '<div class="cls"><div><b>' + esc(o.name) + '</b> <span class="pill">' + esc(o.code) + '</span> ' + (o.pkg ? '<span class="pill on">' + esc(PKGNAME[o.pkg] || o.pkg) + '</span> ' : '') + '<span class="pill' + (o.live ? " on" : "") + '">' + (o.live ? (left + " days left") : (o.status === "ended" ? "ended" : "expired")) + '</span>' +
@@ -1391,6 +1441,16 @@ body.embed .mxhead .adm{display:none}
     $("ovSys").innerHTML = ovBars(sysRows.slice(0, 10), "%", "No answers yet.") + (sysRows.length ? ovFoot("Body systems, all schools", sysRows, "%", "body systems", "low") : "");
   }
 
+  /* live refresh (owner, Nov 20 2026): while a class is open and the page is on screen, pull fresh numbers every
+     60 seconds and redraw in place, keeping the tab, the scroll position and anything typed. */
+  setInterval(function () {
+    if (ST.demo || !ST.orgId || !ST.dash || document.visibilityState !== "visible" || $("vClass").classList.contains("hide")) return;
+    var a = document.activeElement; if (a && /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName)) return;
+    if (document.querySelector(".ovall[open]") || !$("delBox").classList.contains("hide")) return;
+    var y = window.scrollY, id = ST.orgId;
+    call("groupDashboard", { orgId: id }).then(function (d) { if (ST.orgId !== id) return; ST.dash = sampleFill(d); try { drawClass(); } catch (e) {} window.scrollTo(0, y); var lu = $("liveAt"); if (lu) lu.textContent = "Updated " + new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }); }).catch(function () {});
+  }, 60000);
+
   /* ---------- sample students for a demo class (owner, Nov 20 2026: "autofill the Blinn cohort with a bunch of fake
      student stats"). Only for classes listed here, only while no real student has answered anything, and only on this
      page: nothing is written to the server, and the class header says the students are a sample. The moment a real
@@ -1517,7 +1577,7 @@ body.embed .mxhead .adm{display:none}
     return '<div class="st"><div class="sl">' + esc(title) + '<span>' + tot + ' students</span></div><div class="sb">' + parts.map(function (p, i) { return p[1] ? '<i style="width:' + (100 * p[1] / tot) + '%;background:var(' + OV_RAMP[i % 5] + ')" data-ovtt="' + esc(p[0] + ": " + p[1] + " student" + (p[1] === 1 ? "" : "s") + " (" + Math.round(100 * p[1] / tot) + "%)") + '"></i>' : ''; }).join("") + '</div><div class="lg">' + parts.map(function (p, i) { return '<span><i style="background:var(' + OV_RAMP[i % 5] + ')"></i>' + esc(p[0]) + '<b>' + p[1] + '</b></span>'; }).join("") + '</div></div>'; }
   document.addEventListener("mousemove", function (e) { var t = e.target.closest && e.target.closest("[data-ovtt]"); if (t) ovTip(e, esc(t.getAttribute("data-ovtt"))); });
   document.addEventListener("mouseout", function (e) { if (e.target.closest && e.target.closest("[data-ovtt]")) ovTipHide(); });
-  var OV_RS = null; window.addEventListener("resize", function () { clearTimeout(OV_RS); OV_RS = setTimeout(function () { var p = $("pOv"); if (p && !p.classList.contains("hide") && ST.dash) { ovDrawAll(p); ovDrawAll($("pOvMine")); } }, 180); });
+  var OV_RS = null; window.addEventListener("resize", function () { clearTimeout(OV_RS); OV_RS = setTimeout(function () { var p = $("pOv"); if (p && !p.classList.contains("hide") && ST.dash) { ovDrawAll(p); ovDrawAll($("pOvMine")); } var pb = $("pBoard"); if (pb && !pb.classList.contains("hide")) ovDrawAll(pb); var vo = $("vOverview"); if (vo && !vo.classList.contains("hide")) ovDrawAll(vo); }, 180); });
   function ovWeeks() { var d = ST.dash, W = (d.weekStarts || []).length, out = [];
     for (var i = 0; i < W; i++) { var n = 0, c = 0, a = 0; (d.students || []).forEach(function (s) { var w = (s.weeks || [])[i]; if (w && w[0]) { n += w[0]; c += w[1]; a++; } }); var dt = new Date(d.weekStarts[i]); out.push({ i: i, lab: (dt.getUTCMonth() + 1) + "/" + dt.getUTCDate(), n: n, c: c, a: a, p: n ? vzPct(c, n) : null }); }
     var f = 0; while (f < out.length - 4 && !out[f].n) f++; return out.slice(f); }
@@ -1699,12 +1759,95 @@ body.embed .mxhead .adm{display:none}
     drawNicks();
     drawComp();
     setTab(ST.ctab || "ov");
+    itMaybe();
   }
+  /* ---------- Hickory's walk-through of the instructor dashboard (owner, Nov 20 2026: "have Hickory quickly introduce
+     himself then walk the instructors through their dashboards"). A spotlight on each part of the page, Hickory on a
+     card beside it, Back / Next / Skip. It opens by itself the first time someone opens a class (and in the demo), and
+     "Tour with Hickory" in the class header replays it. Nothing is saved but "seen it" on this computer. ---------- */
+  var HICK = "<svg class=\"hickbug bug\" viewBox=\"0 0 200 200\" role=\"img\" aria-label=\"Hickory, the LEARN bug\"><defs><linearGradient id=\"ithickg\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#9bcb5a\"/><stop offset=\"1\" stop-color=\"#5f8f33\"/></linearGradient></defs><g><g class=\"hkfork\"><path d=\"M168 192 L150 56\" stroke=\"#a16207\" stroke-width=\"6\" stroke-linecap=\"round\"/><path d=\"M136 58 L139 28 M151 56 L151 24 M166 58 L163 28\" stroke=\"#cbd5e1\" stroke-width=\"5\" stroke-linecap=\"round\"/><path d=\"M134 60 Q151 51 168 60\" stroke=\"#cbd5e1\" stroke-width=\"6\" fill=\"none\" stroke-linecap=\"round\"/></g><path d=\"M72 118 Q46 104 34 86\" stroke=\"#3f5420\" stroke-width=\"6\" fill=\"none\" stroke-linecap=\"round\"/><path d=\"M128 118 Q154 104 166 86\" stroke=\"#3f5420\" stroke-width=\"6\" fill=\"none\" stroke-linecap=\"round\"/><path d=\"M66 136 Q40 136 24 128\" stroke=\"#3f5420\" stroke-width=\"6\" fill=\"none\" stroke-linecap=\"round\"/><path d=\"M134 136 Q160 136 176 128\" stroke=\"#3f5420\" stroke-width=\"6\" fill=\"none\" stroke-linecap=\"round\"/><path d=\"M72 154 Q52 168 42 184\" stroke=\"#3f5420\" stroke-width=\"6\" fill=\"none\" stroke-linecap=\"round\"/><path d=\"M128 154 Q148 168 158 184\" stroke=\"#3f5420\" stroke-width=\"6\" fill=\"none\" stroke-linecap=\"round\"/><path d=\"M90 48 Q80 24 68 20\" stroke=\"#3f5420\" stroke-width=\"4\" fill=\"none\" stroke-linecap=\"round\"/><path d=\"M110 48 Q120 24 132 20\" stroke=\"#3f5420\" stroke-width=\"4\" fill=\"none\" stroke-linecap=\"round\"/><circle cx=\"68\" cy=\"20\" r=\"6\" fill=\"#3f5420\"/><circle cx=\"132\" cy=\"20\" r=\"6\" fill=\"#3f5420\"/><ellipse cx=\"100\" cy=\"140\" rx=\"42\" ry=\"45\" fill=\"url(#ithickg)\"/><path d=\"M78 108 L100 122 L122 108 L118 100 L100 110 L82 100Z\" fill=\"#f4f1e6\"/><path d=\"M80 110 Q68 134 76 170 L100 176 L124 170 Q132 134 120 110 L100 128Z\" fill=\"#3f3663\"/><path d=\"M100 130 v40\" stroke=\"#2e2749\" stroke-width=\"2\"/><circle cx=\"94\" cy=\"142\" r=\"2.6\" fill=\"#e0b964\"/><circle cx=\"94\" cy=\"156\" r=\"2.6\" fill=\"#e0b964\"/><path d=\"M100 112 l-13 -7 v14z M100 112 l13 -7 v14z\" fill=\"#b3324a\"/><circle cx=\"100\" cy=\"112\" r=\"4\" fill=\"#8f2439\"/><rect x=\"112\" y=\"140\" width=\"12\" height=\"7\" rx=\"1.5\" fill=\"#f4f1e6\" transform=\"rotate(-6 118 143)\"/><circle cx=\"100\" cy=\"74\" r=\"30\" fill=\"#8fbb52\"/><g fill=\"#6d9440\" opacity=\".35\"><circle cx=\"76\" cy=\"80\" r=\"2.2\"/><circle cx=\"71\" cy=\"87\" r=\"1.9\"/><circle cx=\"81\" cy=\"88\" r=\"1.9\"/><circle cx=\"124\" cy=\"80\" r=\"2.2\"/><circle cx=\"129\" cy=\"87\" r=\"1.9\"/><circle cx=\"119\" cy=\"88\" r=\"1.9\"/></g><circle cx=\"88\" cy=\"74\" r=\"9\" fill=\"#fff\"/><circle cx=\"112\" cy=\"74\" r=\"9\" fill=\"#fff\"/><g class=\"pupils\"><circle cx=\"90\" cy=\"75\" r=\"4.5\" fill=\"#1b1430\"/><circle cx=\"114\" cy=\"75\" r=\"4.5\" fill=\"#1b1430\"/><circle cx=\"92\" cy=\"72\" r=\"1.53\" fill=\"#fff\"/><circle cx=\"116\" cy=\"72\" r=\"1.53\" fill=\"#fff\"/></g><path d=\"M86 88 Q100 102 114 88 Q100 95 86 88Z\" fill=\"#5d2233\"/><path d=\"M88 88.5 Q100 99 112 88.5 Q100 93 88 88.5Z\" fill=\"#ffffff\"/><path d=\"M72 50 Q100 30 128 50 L128 56 Q100 62 72 56Z\" fill=\"#2e2749\"/><path d=\"M50 44 L100 28 L150 44 L100 60Z\" fill=\"#3f3663\"/><circle cx=\"100\" cy=\"44\" r=\"4\" fill=\"#2e2749\"/><path d=\"M100 44 Q132 46 134 52 L134 70\" stroke=\"#d4af37\" stroke-width=\"3\" fill=\"none\" stroke-linecap=\"round\"/><circle cx=\"134\" cy=\"73\" r=\"4\" fill=\"#d4af37\"/><g fill=\"none\" stroke=\"#4b5563\" stroke-width=\"2.6\"><circle cx=\"88\" cy=\"74\" r=\"12.5\"/><circle cx=\"112\" cy=\"74\" r=\"12.5\"/><path d=\"M100.5 73 h-1 M75.5 72 l-6 -3 M124.5 72 l6 -3\"/></g></g></svg>";
+  var IT_V = 1, IT = { i: 0, on: false };
+  var IT_STEPS = [
+    { t: "Howdy, I'm Hickory", x: "I'm the bug that runs things round here, and your students already know me from the app. Give me two minutes and I'll show ya how to read your class. Skip any time; I won't take it personal." },
+    { sel: "#tiles", tab: "ov", t: "Your class at a glance", x: "Up top: how many students joined, who studied this week, how many questions they've answered and how many they got right. Students show up under class labels like Student 07, never their names." },
+    { sel: "#cTabs", t: "Five tabs", x: "Overview for the big picture, Insights for what to reteach, Students for keys and each student, Scoreboard for the weekly race, and Request a chart if ya want somethin' we don't show yet." },
+    { sel: "#pOv .kpis", tab: "ov", t: "This week, against last week", x: "Studied this week, questions, percent right and questions per student. The little arrows tell ya if it's goin' up or down since last week." },
+    { sel: "#pOv .mxg", tab: "ov", t: "The trend lines", x: "Every answer from your class, week by week, and how many they got right. That dashed line is the 70% goal. Hover any point for the details." },
+    { sel: "#pOv .ovrk", tab: "ov", pick: 0, t: "Where they're strugglin'", x: "Medications, drug classes, body systems and question styles, least to greatest. Hit See all for the whole list, sort it how ya like, and Print hands ya a clean page for class." },
+    { sel: "#vzPick", tab: "ov", t: "Build your own charts", x: "Pick from 34 things to measure and how to draw it: lines, columns, ranked bars and more. Your charts stay put on this computer." },
+    { sel: "#focus", tab: "ins", t: "What to reteach", x: "Insights reads every answer and tells ya in plain words where the class is weakest right now." },
+    { sel: "#hardQ", tab: "ins", t: "The questions they miss", x: "The exact questions your class misses most, the right answer, and the wrong answer most of 'em picked. That wrong answer is usually the misconception to clear up." },
+    { sel: "#stuTable", tab: "stu", t: "Keys and students", x: "Make class keys, print the key sheet and keep names on your own copy. Click any student to see their scores and the questions they missed. Nicknames wait for your OK." },
+    { sel: "#boardSw", tab: "board", alt: "#pBoard", t: "The scoreboard", x: "Flip it on and students can choose to join. Only the top 10 show, under class labels or nicknames you approved, and they race for weekly prize bugs. Nobody's on it unless they press Join." },
+    { sel: "#pReq", tab: "req", t: "Want somethin' else?", x: "Tell us what you'd like to see, and it comes straight to us." },
+    { t: "That's the place", x: "The numbers refresh by themselves every minute while this page is open, so ya can leave it up durin' class. Replay me any time with Tour with Hickory up top. Now go teach 'em somethin'." }
+  ];
+  var itBox = null, itSpot = null;
+  function itEl() {
+    if (itBox) return;
+    itSpot = document.createElement("div"); itSpot.className = "itspot"; document.body.appendChild(itSpot);
+    itBox = document.createElement("div"); itBox.className = "itcard"; itBox.setAttribute("role", "dialog"); itBox.setAttribute("aria-live", "polite"); document.body.appendChild(itBox);
+  }
+  function itTarget(st) { if (!st.sel) return null; var L = document.querySelectorAll(st.sel), e = L[st.pick || 0] || null; if ((!e || !e.offsetParent) && st.alt) e = document.querySelector(st.alt); return e && e.offsetParent ? e : null; }
+  function itPlace() {
+    if (!IT.on) return; var st = IT_STEPS[IT.i], e = itTarget(st);
+    if (!e) { itSpot.className = "itspot full"; itSpot.removeAttribute("style"); itBox.classList.add("mid"); return; }
+    itBox.classList.remove("mid");
+    var r = e.getBoundingClientRect(), pad = 8;
+    itSpot.className = "itspot"; itSpot.style.cssText = "top:" + (r.top - pad) + "px;left:" + (r.left - pad) + "px;width:" + (r.width + 2 * pad) + "px;height:" + Math.min(r.height + 2 * pad, innerHeight - 20) + "px";
+    var below = r.bottom + 16 + itBox.offsetHeight < innerHeight, above = r.top - 16 - itBox.offsetHeight > 0;
+    if (innerWidth < 700) { itBox.style.left = ""; itBox.style.top = ""; itBox.classList.add("sheet"); return; }
+    itBox.classList.remove("sheet");
+    var left = Math.max(12, Math.min(innerWidth - itBox.offsetWidth - 12, r.left));
+    var top = below ? r.bottom + 16 : above ? r.top - 16 - itBox.offsetHeight : Math.max(12, innerHeight - itBox.offsetHeight - 16);
+    itBox.style.left = left + "px"; itBox.style.top = top + "px";
+  }
+  function itShow() {
+    var st = IT_STEPS[IT.i], last = IT.i === IT_STEPS.length - 1;
+    if (st.tab && ST.dash) try { if (ST.ctab !== st.tab) setTab(st.tab); } catch (e) {}
+    itBox.innerHTML = '<div class="ithk">' + HICK + '</div><div class="itbody"><div class="itstep">' + (IT.i + 1) + ' of ' + IT_STEPS.length + '</div><h3>' + esc(st.t) + '</h3><p>' + esc(st.x) + '</p>' +
+      '<div class="itbtns"><button type="button" class="ghost" data-it="skip">' + (last ? "Close" : "Skip") + '</button><span></span>' + (IT.i ? '<button type="button" class="ghost" data-it="back">Back</button>' : '') + '<button type="button" data-it="next">' + (last ? "Done" : IT.i ? "Next" : "Show me") + '</button></div></div>';
+    var e = itTarget(st);
+    if (!e && IT.i === 0) { var vc = $("vClass"); if (vc) window.scrollTo({ top: Math.max(0, window.scrollY + vc.getBoundingClientRect().top - 20), behavior: "smooth" }); }
+    if (e) { var r = e.getBoundingClientRect(); if (r.top < 70 || r.bottom > innerHeight - 220) window.scrollTo({ top: Math.max(0, window.scrollY + r.top - 110), behavior: "smooth" }); }
+    itPlace(); setTimeout(itPlace, 380); setTimeout(itPlace, 800);
+    try { itBox.querySelector('[data-it="next"]').focus({ preventScroll: true }); } catch (x) {}
+  }
+  function itOpen() { if (!ST.dash) return; itEl(); IT.on = true; IT.i = 0; document.body.classList.add("ittour"); itSpot.hidden = false; itBox.hidden = false; itShow(); }
+  function itClose() { IT.on = false; if (itBox) { itBox.hidden = true; itSpot.hidden = true; } document.body.classList.remove("ittour"); try { localStorage.setItem("insTourV", String(IT_V)); } catch (e) {} try { setTab("ov"); } catch (e) {} window.scrollTo({ top: 0, behavior: "smooth" }); }
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest("[data-it]"); if (!b) { if (e.target.id === "bTour") itOpen(); return; }
+    var a = b.getAttribute("data-it");
+    if (a === "skip") return itClose();
+    if (a === "back" && IT.i > 0) { IT.i--; return itShow(); }
+    if (a === "next") { if (IT.i >= IT_STEPS.length - 1) return itClose(); IT.i++; return itShow(); }
+  });
+  document.addEventListener("keydown", function (e) { if (!IT.on) return; if (e.key === "Escape") itClose(); else if (e.key === "ArrowRight") { if (IT.i < IT_STEPS.length - 1) { IT.i++; itShow(); } } else if (e.key === "ArrowLeft" && IT.i > 0) { IT.i--; itShow(); } });
+  window.addEventListener("resize", function () { if (IT.on) itPlace(); });
+  window.addEventListener("scroll", function () { if (IT.on) itPlace(); }, { passive: true });
+  /* first time a class opens on this computer (or the demo), Hickory says hello */
+  function itMaybe() { var seen = 0; try { seen = +localStorage.getItem("insTourV") || 0; } catch (e) {} if (seen >= IT_V || IT.on || EMB) return; setTimeout(function () { if (ST.dash && !IT.on && !$("vClass").classList.contains("hide")) itOpen(); }, 900); }
+
+  /* ---------- put the dashboard on your desktop (owner, Nov 20 2026): the page installs as an app in Chrome and Edge
+     ("Install DrugBug for Instructors"); Safari users get the Add to Dock / Home Screen steps. ---------- */
+  var IN_PROMPT = null;
+  window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); IN_PROMPT = e; var b = $("bInstall"); if (b) b.classList.remove("hide"); });
+  window.addEventListener("appinstalled", function () { IN_PROMPT = null; var b = $("bInstall"); if (b) b.classList.add("hide"); });
+  document.addEventListener("click", function (e) {
+    if (!e.target || e.target.id !== "bInstall") return;
+    if (IN_PROMPT) { IN_PROMPT.prompt(); IN_PROMPT.userChoice.finally(function () { IN_PROMPT = null; }); return; }
+    var mac = /Macintosh/.test(navigator.userAgent), safari = /Safari/.test(navigator.userAgent) && !/Chrome|Edg/.test(navigator.userAgent);
+    alert(safari ? (mac ? "In Safari: File menu, then Add to Dock." : "Tap the Share button, then Add to Home Screen.") : "In Chrome or Edge: open the menu (three dots), then Cast, save and share, then Install page as app. Or use the install icon at the right end of the address bar.");
+  });
+  try { if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(function () {}); } catch (e) {}
+  try { if (!(window.matchMedia && matchMedia("(display-mode: standalone)").matches)) { var bi = $("bInstall"); if (bi) bi.classList.remove("hide"); } } catch (e) {}
+
   /* section tabs inside a class */
   function setTab(k) {
     ST.ctab = k;
     [].forEach.call(document.querySelectorAll("[data-ctab]"), function (b) { b.classList.toggle("on", b.getAttribute("data-ctab") === k); });
     show("pOv", k === "ov"); show("pOvMine", k === "ov"); show("pReq", k === "req"); show("pIns", k === "ins"); show("pStu", k === "stu"); show("pBoard", k === "board");
+    if (k === "board") { try { drawBoard2(); } catch (e) { console.warn(e); } }
     if (k === "ov") { try { drawViz(); $("vzPick").innerHTML = vzPicker(); drawCustom(); } catch (e) { console.warn(e); } }
   }
   document.addEventListener("click", function (e) { var b = e.target.closest && e.target.closest("[data-ctab]"); if (b) setTab(b.getAttribute("data-ctab")); });
@@ -1823,11 +1966,7 @@ body.embed .mxhead .adm{display:none}
     /* scoreboard switch (owner, Nov 12 2026) */
     var bsw = $("boardSw"); if (bsw) { bsw.checked = !!(d.org && d.org.boardOn); $("boardSwMsg").textContent = bsw.checked ? "On: students can see it." : "Off: students see only their own results."; }
     /* scoreboard */
-    var board = studs.filter(function (s) { return s.activated; }).slice().sort(function (a, b) { return correctOf(b) - correctOf(a) || (b.accuracy || 0) - (a.accuracy || 0); });
-    $("boardTable").innerHTML = '<tr><th>#</th><th>Student</th><th>Correct</th><th>Answered</th><th>Accuracy</th><th>This week</th></tr>' + (board.length ? board.map(function (s, i) {
-      var wk = (s.weeks || [])[11] || [0, 0];
-      return '<tr class="clk" data-stu="' + esc(s.keyId) + '"><td class="rk">' + (i < 3 ? ["🥇", "🥈", "🥉"][i] : i + 1) + '</td><td><b>' + esc(s.alias) + '</b>' + (s.nick && s.nick.status === "ok" && s.nick.text ? ' <span class="muted">(' + esc(s.nick.text) + ')</span>' : '') + '</td><td class="num">' + correctOf(s).toLocaleString() + '</td><td class="num">' + s.answered.toLocaleString() + '</td><td class="num">' + pctTxt(s.accuracy) + '</td><td class="num">' + wk[0] + '</td></tr>';
-    }).join("") : '<tr><td colspan="6" class="muted">No one has started yet.</td></tr>');
+    try { drawBoard2(); } catch (e) { console.warn(e); }
     /* class trend */
     var weeks = []; for (var i = 0; i < 12; i++) weeks.push([0, 0]);
     studs.forEach(function (s) { (s.weeks || []).forEach(function (w, j) { weeks[j][0] += w[0]; weeks[j][1] += w[1]; }); });
@@ -1843,7 +1982,7 @@ body.embed .mxhead .adm{display:none}
     var bsw = $("boardSw"); if (!bsw) return;
     bsw.addEventListener("change", function () {
       var on = bsw.checked, msg = $("boardSwMsg");
-      if (on && !confirm("Turn the scoreboard on? Every student in this class will see the top 5 and their own place. Only do this if your school or agency allows it.")) { bsw.checked = false; return; }
+      if (on && !confirm("Turn the scoreboard on? Every student in this class will see the top 10 and their own place. Only do this if your school or agency allows it.")) { bsw.checked = false; return; }
       bsw.disabled = true; msg.textContent = "Saving…";
       call("groupBoardSet", { orgId: ST.orgId, on: on }).then(function () {
         bsw.disabled = false; if (ST.dash && ST.dash.org) ST.dash.org.boardOn = on;
@@ -1878,6 +2017,44 @@ body.embed .mxhead .adm{display:none}
       o.level = k; drawLevel(); $("lvDet").open = false; say("lvMsg", ""); drawClass();
     }).catch(function (er) { say("lvMsg", (er && er.message) || "Couldn't save. Try again.", true); });
   });
+  /* ---------- the class scoreboard, instructor view (owner, Nov 20 2026: "more lively and more professional and only
+     add the top 10 people"). The same top 10 students see: a podium for the top 3, ranks 4-10 with bars against the
+     leader and movement since last week, and a line chart of the race. Students who left the scoreboard aren't ranked. ---------- */
+  ST.sbPer = "wk";
+  function sbName(s) { return s.nick && s.nick.status === "ok" && s.nick.text ? s.nick.text : s.alias; }
+  function sbRank(list, f) { return list.slice().sort(function (a, b) { return f(b) - f(a) || (b.accuracy || 0) - (a.accuracy || 0) || String(a.alias).localeCompare(String(b.alias)); }); }
+  function drawBoard2() {
+    var box = $("sbWrap"); if (!box || !ST.dash) return;
+    var d = ST.dash, S = (d.students || []).filter(function (s) { return s.activated; }), on = S.filter(function (s) { return !s.boardOut; }), out = S.length - on.length;
+    var W = (d.weekStarts || []).length || 12, wkC = function (s, i) { var w = (s.weeks || [])[i]; return w ? w[1] : 0; }, wkN = function (s, i) { var w = (s.weeks || [])[i]; return w ? w[0] : 0; };
+    var per = ST.sbPer, val = per === "wk" ? function (s) { return wkC(s, W - 1); } : correctOf;
+    var R = sbRank(on, val).filter(function (s) { return per !== "wk" || val(s) > 0; });
+    var prev = sbRank(on, per === "wk" ? function (s) { return wkC(s, W - 2); } : function (s) { return correctOf(s) - wkC(s, W - 1); }), prevRank = {};
+    prev.forEach(function (s, i) { prevRank[s.keyId] = i + 1; });
+    var top = R.slice(0, 10), lead = top.length ? Math.max(1, val(top[0])) : 1;
+    var mv = function (s, i) { var p = prevRank[s.keyId]; if (!p) return '<span class="sbmv new">new</span>'; var dlt = p - (i + 1); return dlt > 0 ? '<span class="sbmv up" title="Up ' + dlt + ' since last week">▲ ' + dlt + '</span>' : dlt < 0 ? '<span class="sbmv dn" title="Down ' + (-dlt) + ' since last week">▼ ' + (-dlt) + '</span>' : '<span class="sbmv eq" title="Same place as last week">–</span>'; };
+    var acc = function (s) { if (per !== "wk") return s.accuracy; var n = wkN(s, W - 1); return n ? Math.round(1000 * wkC(s, W - 1) / n) / 10 : null; };
+    var unit = per === "wk" ? "right this week" : "right answers";
+    var head = '<div class="sbhead"><div class="seg" role="group" aria-label="Period"><button type="button" data-sbper="wk" aria-pressed="' + (per === "wk") + '">This week</button><button type="button" data-sbper="all" aria-pressed="' + (per === "all") + '">All time</button></div>' +
+      '<div class="sbstats"><span><b>' + on.length + '</b> on the board</span>' + (out ? '<span><b>' + out + '</b> haven\'t joined</span>' : '') + '<span>' + (per === "wk" ? 'Race ends Sunday night' : 'Ranked by right answers') + '</span></div></div>';
+    if (!top.length) { box.innerHTML = head + '<p class="muted" style="margin:18px 0 6px">' + (per === "wk" ? "No right answers yet this week. The race starts with the first one." : "No one has started yet.") + '</p>'; return; }
+    var pod = [top[1], top[0], top[2]].map(function (s, j) { if (!s) return '<div class="sbp empty"></div>'; var place = [2, 1, 3][j], i = place - 1;
+      var sp = []; for (var k = Math.max(0, W - 8); k < W; k++) sp.push({ v: wkC(s, k) });
+      return '<div class="sbp p' + place + '" data-stu="' + esc(s.keyId) + '"><div class="sbmedal">' + place + '</div><div class="sbpn" title="' + esc(sbName(s)) + '">' + esc(sbName(s)) + '</div><div class="sbpv">' + val(s).toLocaleString() + '<small>' + unit + '</small></div><div class="sbpm">' + (acc(s) == null ? "--" : acc(s) + "%") + ' accuracy ' + mv(s, i) + '</div>' + spark(sp, function (x) { return x.v; }) + '<div class="sbstep"></div></div>'; }).join("");
+    var rows = top.slice(3).map(function (s, j) { var i = j + 3;
+      return '<div class="sbr" data-stu="' + esc(s.keyId) + '"><span class="sbrk">' + (i + 1) + '</span><span class="sbnm" title="' + esc(sbName(s)) + '">' + esc(sbName(s)) + '</span><span class="sbbar"><i style="--w:' + Math.max(2, 100 * val(s) / lead) + '%"></i></span><span class="sbv"><b>' + val(s).toLocaleString() + '</b></span><span class="sbacc">' + (acc(s) == null ? "--" : acc(s) + "%") + '</span>' + mv(s, i) + '</div>'; }).join("");
+    /* the race: right answers each week for the top 3, against the class average */
+    var labs = [], from = Math.max(0, W - 8); for (var w = from; w < W; w++) { var dt = new Date(d.weekStarts[w]); labs.push((dt.getUTCMonth() + 1) + "/" + dt.getUTCDate()); }
+    var ser = top.slice(0, 3).map(function (s, j) { var v = []; for (var w2 = from; w2 < W; w2++) v.push(wkC(s, w2)); return { name: sbName(s), c: OV_SER[j], v: v }; });
+    var avg = []; for (var w3 = from; w3 < W; w3++) { var t = 0; on.forEach(function (s) { t += wkC(s, w3); }); avg.push(on.length ? Math.round(t / on.length) : 0); }
+    ser.push({ name: "Class average", c: "--axis", v: avg });
+    box.innerHTML = head + '<div class="sbpod">' + pod + '</div>' + (rows ? '<div class="sbrows"><div class="sbr sbth"><span>#</span><span>Student</span><span></span><span>' + (per === "wk" ? "This week" : "Right") + '</span><span>Accuracy</span><span>Move</span></div>' + rows + '</div>' : '') +
+      '<div class="sbrace"><h3>The race</h3><div class="cs">Right answers each week: the top 3 against the class average</div>' + ovLegend(ser) + ovSlot({ kind: "line", labels: labs, tipHead: "Week of ", series: ser }, 220) + '</div>' +
+      '<p class="muted small" style="margin:10px 0 0">Students see this same top 10 and their own place, under their class label or a nickname you approved. ' + (R.length > 10 ? (R.length - 10) + ' more student' + (R.length - 10 === 1 ? ' is' : 's are') + ' ranked below the top 10 and see only their own place. ' : '') + 'Click a student to see their results.</p>';
+    ovDrawAll(box);
+    requestAnimationFrame(function () { box.classList.add("sbgo"); });
+  }
+  document.addEventListener("click", function (e) { var b = e.target.closest && e.target.closest("[data-sbper]"); if (!b) return; ST.sbPer = b.getAttribute("data-sbper"); var bx = $("sbWrap"); if (bx) bx.classList.remove("sbgo"); drawBoard2(); });
   function correctOf(s) { return s.correct != null ? s.correct : s.answered && s.accuracy != null ? Math.round(s.answered * s.accuracy / 100) : 0; }
   function drawStudent() {
     var d = ST.dash, s = ST.stu && (d.students || []).filter(function (x) { return x.keyId === ST.stu; })[0];
@@ -1900,7 +2077,7 @@ body.embed .mxhead .adm{display:none}
   $("dimFind").oninput = drawDetail;
   $("bStuClose").onclick = function () { ST.stu = null; drawStudent(); };
   document.addEventListener("click", function (e) {
-    var t = e.target.closest && e.target.closest("[data-dim],[data-sdim],tr[data-stu]"); if (!t || !ST.dash) return;
+    var t = e.target.closest && e.target.closest("[data-dim],[data-sdim],tr[data-stu],#sbWrap [data-stu]"); if (!t || !ST.dash) return;
     if (e.target.closest("button[data-reset],button[data-nick]")) return;
     if (t.hasAttribute("data-dim")) { ST.dim = t.getAttribute("data-dim"); $("dimFind").value = ""; return drawDetail(); }
     if (t.hasAttribute("data-sdim")) { ST.stuDim = t.getAttribute("data-sdim"); return drawStudent(); }
@@ -1939,7 +2116,7 @@ body.embed .mxhead .adm{display:none}
     var d = ST.dash, wk = ST.cw, T = {}, studs = (d.students || []).filter(function (s) { return s.activated; });
     teamsOf().forEach(function (t) { T[t.id] = { name: t.name, m: 0, n: 0, c: 0 }; });
     var people = studs.map(function (s) { var v = wk ? s.pw || {} : s.pr || {}, t = T[s.team]; if (t) { t.m++; t.n += v.n || 0; t.c += v.c || 0; } return { s: s, n: v.n || 0, c: v.c || 0, team: t ? t.name : "" }; })
-      .filter(function (r) { return r.n > 0; }).sort(function (a, b) { return b.c - a.c || b.c / b.n - a.c / a.n; });
+      .filter(function (r) { return r.n > 0 && !r.s.boardOut; }).sort(function (a, b) { return b.c - a.c || b.c / b.n - a.c / a.n; }).slice(0, 10);   /* top 10 only, for everyone (owner, Nov 20 2026) */
     var teams = Object.keys(T).map(function (k) { var t = T[k]; t.per = t.m ? Math.round(10 * t.c / t.m) / 10 : 0; return t; }).filter(function (t) { return t.m; }).sort(function (a, b) { return b.per - a.per || b.c / (b.n || 1) - a.c / (a.n || 1); });
     var medal = function (i) { return i < 3 ? ["🥇", "🥈", "🥉"][i] : i + 1; }, pc = function (c, n) { return n ? Math.round(100 * c / n) + "%" : "—"; };
     $("compTeams").innerHTML = teams.length ? '<tr><th>#</th><th>Team</th><th>Members</th><th>Per member</th><th>Correct</th><th>Accuracy</th></tr>' + teams.map(function (t, i) { return '<tr><td class="rk">' + (t.n ? medal(i) : "–") + '</td><td><b>' + esc(t.name) + '</b></td><td class="num">' + t.m + '</td><td class="num"><b>' + t.per + '</b></td><td class="num">' + t.c.toLocaleString() + '</td><td class="num">' + pc(t.c, t.n) + '</td></tr>'; }).join("")
@@ -2066,11 +2243,34 @@ body.embed .mxhead .adm{display:none}
   $("bEnd").onclick = function () { if (confirm("End this class now? Students lose Pro immediately.")) upd({ status: "ended" }, "Class ended."); };
   $("bReopen").onclick = function () { upd({ status: "active" }, "Class reopened."); };
   $("bDemo").onclick = function () { var on = !(ST.dash && ST.dash.org && ST.dash.org.demo); upd({ demo: on }, on ? "Demo bots on: the dashboard shows bot students until real students answer. (Needs the latest server update.)" : "Demo bots off."); };
+  /* delete a class: password again + a one-time code + the class code, then a 30-day hold before anything is erased
+     (owner, Nov 20 2026). The page never sees or keeps the password; Firebase checks it. */
   $("bDel").onclick = function () {
-    var code = prompt("This deletes the class, every key and all its results, for good.\nType the class code (" + ST.dash.org.code + ") to confirm:");
-    if (!code) return;
-    call("groupOrgDelete", { orgId: ST.orgId, confirm: code }).then(function () { ST.orgId = null; loadList(); }).catch(function (e) { say("oMsg", e.message, true); });
+    var box = $("delBox"), o = ST.dash.org; box.classList.remove("hide"); box.innerHTML = '<p class="muted small">Getting a delete code…</p>';
+    call("groupOrgDelete", { orgId: ST.orgId, action: "start" }).then(function (r) {
+      var u = auth.currentUser, pwd = u && u.providerData.some(function (p) { return p.providerId === "password"; });
+      box.innerHTML = '<h3>Delete ' + esc(o.name) + '?</h3><p class="small">Students lose access right away. Nothing is erased for <b>30 days</b>: until then you can restore the class from the class list. After 30 days the class, every key and all results are erased for good.</p>' +
+        '<p class="small">Your one-time delete code: <span class="delcode">' + esc(r.code) + '</span> <span class="muted">(good for 10 minutes)</span></p>' +
+        '<div class="row">' + (pwd ? '<label>Your password<input id="delPw" type="password" autocomplete="current-password"></label>' : '<label>Confirm it\'s you<button type="button" class="ghost" id="delGoogle">Sign in again with Google</button></label>') +
+        '<label>Delete code<input id="delCode" autocomplete="off" spellcheck="false" placeholder="' + esc(r.code.replace(/./g, "X")) + '"></label><label>Class code<input id="delConf" autocomplete="off" placeholder="' + esc(o.code) + '"></label></div>' +
+        '<div class="row" style="margin-top:10px"><button class="danger" id="delGo">Move to Deleted (30-day hold)</button><button class="ghost" id="delCancel">Cancel</button></div><p id="delMsg" class="msg hide"></p>';
+      $("delCancel").onclick = function () { box.classList.add("hide"); box.innerHTML = ""; };
+      var reauthed = false;
+      if (!pwd) $("delGoogle").onclick = function () { u.reauthenticateWithPopup(new firebase.auth.GoogleAuthProvider()).then(function () { reauthed = true; say("delMsg", "Confirmed. Now type the two codes."); }).catch(function (e) { say("delMsg", authErr(e), true); }); };
+      $("delGo").onclick = function () {
+        var go = $("delGo"); go.disabled = true; say("delMsg", "Checking…");
+        var step = pwd ? u.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(u.email, $("delPw").value)) : (reauthed ? Promise.resolve() : Promise.reject(new Error("Sign in again with Google first.")));
+        step.then(function () { try { $("delPw").value = ""; } catch (x) {} return u.getIdToken(true); })
+          .then(function () { return call("groupOrgDelete", { orgId: ST.orgId, code: $("delCode").value, confirm: $("delConf").value }); })
+          .then(function (res) { box.innerHTML = '<p class="small"><b>' + esc(o.name) + '</b> moved to Deleted. It will be erased for good on ' + esc(new Date(res.purgeAt).toLocaleDateString()) + '. Restore it from the class list before then if you change your mind.</p>'; setTimeout(function () { ST.orgId = null; loadList(); }, 2500); })
+          .catch(function (e) { go.disabled = false; try { $("delPw").value = ""; } catch (x) {} say("delMsg", e && e.code ? authErr(e) : (e && e.message) || "Couldn't delete. Try again.", true); });
+      };
+    }).catch(function (e) { box.innerHTML = '<p class="msg err">' + esc(e.message) + '</p>'; });
   };
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest("[data-restore]"); if (!b) return;
+    b.disabled = true; call("groupOrgDelete", { orgId: b.getAttribute("data-restore"), action: "restore" }).then(function () { loadList(); }).catch(function (er) { b.disabled = false; alert(er.message); });
+  });
 })();
 </script>
 <script>/* staff tab: shows "Admin" in the top bar only for the owner and outreach helpers on this browser */
