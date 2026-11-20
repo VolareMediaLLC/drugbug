@@ -178,23 +178,28 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
 .dlrow{display:grid;grid-template-columns:96px 1fr 36px;align-items:center;gap:8px;font-size:13px;margin:5px 0}.dlbar{height:10px;border-radius:99px;background:var(--track,rgba(127,127,127,.2));overflow:hidden}.dlbar i{display:block;height:100%;background:var(--s1,#3b82f6);border-radius:99px}.dlrow b{text-align:right;font-variant-numeric:tabular-nums}
 
 /* Overview chart grid (owner, Nov 20 2026) */
-.vzgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin:14px 0}
-.vzc{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:0 6px 18px rgba(80,60,160,.08)}
-.vzc h3{margin:0 0 2px;font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:#7c6ef2}.vzs{margin:0 0 8px;font-size:12px;color:var(--muted)}
-.vz-wide{grid-column:span 2}.vz-strip{grid-column:1/-1}
-@media (max-width:720px){.vz-wide{grid-column:auto}}
-.vzrow{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.vzsvg{width:100%;max-width:340px;height:auto;flex:1 1 220px}.vzsvg.sq{max-width:190px;flex:0 0 170px}
-.vzax{font-size:9px;fill:var(--muted)}.vzc1{font:800 22px system-ui;fill:var(--ink)}.vzc2{font:600 9px system-ui;fill:var(--muted)}.vzb1{font:700 7.5px system-ui;fill:#fff}.vzb2{font:800 10px system-ui;fill:#fff}
-.vzleg{font-size:12px;border-collapse:collapse;flex:1 1 150px}.vzleg th{font-size:10px;text-transform:uppercase;color:var(--muted);text-align:left;padding:2px 6px}.vzleg td{padding:3px 6px}.vzleg i,.vzkey i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px}
-.vzbig{display:flex;flex-direction:column;gap:2px;flex:1 1 140px}.vzbig>b{font:800 30px system-ui;color:#7c6ef2}.vzbig>span{font-size:12px;color:var(--muted)}
-.vzkey{list-style:none;margin:6px 0 0;padding:0;font-size:12px;display:flex;flex-direction:column;gap:3px}.vzkey.two{display:grid;grid-template-columns:1fr 1fr;gap:3px 10px}.vzkey.inl{flex-direction:row;flex-wrap:wrap;gap:4px 12px}.vzkey b{color:var(--ink)}
-.vzt{font-size:12px;font-weight:800}.vzt.up{color:#16a34a}.vzt.dn{color:#dc2626}
-.vzstrip{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}.vzmini{display:flex;align-items:flex-end;justify-content:space-between;gap:8px}.vzmini span{display:flex;flex-direction:column;font-size:13px}.vzmini svg{width:80px;height:46px}
-.vzh{display:flex;flex-direction:column;gap:5px}.vzh div{display:grid;grid-template-columns:minmax(0,1.1fr) 1.4fr auto;gap:8px;align-items:center;font-size:12.5px}.vzh span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.vzh i{height:10px;border-radius:5px;background:var(--surface2)}.vzh i b{display:block;height:100%;border-radius:5px}.vzh em{font-style:normal;font-weight:700}
-.vzpick{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:linear-gradient(90deg,rgba(124,110,242,.14),rgba(228,95,213,.12));border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:6px}
-.vzpick select{width:auto;max-width:100%;flex:0 1 auto}.vzpick #vzM{min-width:260px}.vzctl{position:absolute;right:10px;top:10px;display:flex;gap:6px;align-items:center}.vzctl select{font-size:12px;padding:3px 6px}
-.vzx{border:0;background:var(--surface2);color:var(--muted);border-radius:50%;width:26px;height:26px;font-size:16px;line-height:1;cursor:pointer}
-.vz-mine h3{padding-right:150px}
+#pOv,#pOvMine,#ovTip{--s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#8b7fd6;--grid:#2e2942;--axis:#8f88aa;--q1:#cde2fb;--q2:#86b6ef;--q3:#3987e5;--q4:#1c5cab;--q5:#104281}
+@media (prefers-color-scheme:light){#pOv,#pOvMine,#ovTip{--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#6d5fc7;--grid:#ece8f4;--axis:#6f6888}}
+#ovTip{position:fixed;z-index:60;pointer-events:none;background:var(--surface2);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:12.5px;line-height:1.5;box-shadow:0 8px 24px rgba(0,0,0,.28);max-width:280px;display:none}
+#ovTip b{display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:2px}#ovTip i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}#ovTip strong{font-variant-numeric:tabular-nums}
+#pOv{margin-top:14px}#pOv .mxg+.mxsec,#pOv .kpis+.mxsec{margin-top:26px}#pOvMine{margin-bottom:18px}
+.ovrk .b{position:relative;overflow:visible}.ovrk .b s{position:absolute;left:70%;top:-3px;bottom:-3px;width:2px;border-radius:1px;background:var(--axis);opacity:.55}
+.ovrk .v b{font-weight:650}.ovrk .v span{min-width:38px}
+.ovfoot{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.ovall{flex:1;min-width:0}.ovall>summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:13px;list-style:none;display:inline-flex;align-items:center;gap:8px}.ovall>summary::-webkit-details-marker{display:none}
+.ovall>summary:after{content:"";width:6px;height:6px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg) translateY(-2px);transition:transform .15s}.ovall[open]>summary:after{transform:rotate(-135deg) translateY(-1px)}
+.ovsortrow{margin:10px 0 8px}.ovsortrow label{display:inline-flex;align-items:center;gap:8px;margin:0}.ovsortrow select{width:auto!important;font-size:12.5px;padding:3px 6px}
+.ovscroll{max-height:380px;overflow:auto;padding-right:6px}
+.ovprint{background:var(--surface);border:1px solid var(--line);color:var(--ink);font-size:12.5px;font-weight:600;padding:5px 12px;border-radius:8px;flex:0 0 auto}.ovprint:hover{background:var(--surface2)}
+.ovleg{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin:0 0 6px}.ovleg i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px;vertical-align:3px}
+.ovdn{display:flex;gap:18px;align-items:center;flex-wrap:wrap}.ovdn svg{flex:0 0 150px}.ovdn ul{list-style:none;margin:0;padding:0;font-size:13px;display:grid;gap:6px;flex:1 1 170px}.ovdn li{display:grid;grid-template-columns:10px 1fr auto 40px;gap:8px;align-items:center}.ovdn li i{width:10px;height:10px;border-radius:3px}.ovdn li b{font-variant-numeric:tabular-nums;font-weight:650}.ovdn li span{text-align:right}
+.ovdc{font:700 18px system-ui;fill:var(--ink)}
+.ovtbl{width:100%;font-size:13px;border-collapse:collapse}.ovtbl td{padding:6px 4px;border-bottom:1px solid var(--line)}.ovtbl td:last-child{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.vzpick{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:0 0 14px}
+.vzpick select{width:auto;max-width:100%;flex:0 1 auto}.vzpick #vzM{min-width:260px}
+.vz-mine{position:relative}.vzctl{position:absolute;right:14px;top:12px;display:flex;gap:6px;align-items:center}.vzctl select{font-size:12px;padding:3px 6px;width:auto}
+.vzx{border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:8px;width:26px;height:26px;font-size:15px;line-height:1;cursor:pointer;padding:0}
+.vz-mine h3{padding-right:170px}
 #pReq label{display:flex;flex-direction:column;gap:4px;margin:10px 0;font-weight:600}
 </style>
 </head>
@@ -498,6 +503,7 @@ body.embed .mxhead .adm{display:none}
   <div class="row" style="margin-top:10px">
     <label>Length<select id="nKind"><option value="30">30-day pilot</option><option value="60">60-day pilot</option><option value="365">1 year</option></select></label>
     <label>Question goal per student<input id="nGoal" type="number" min="25" value="300"></label>
+    <label style="flex:1.3">Class scoreboard<select id="nBoard"><option value="on">On from the first key (aliases and approved nicknames only)</option><option value="off">Off (students see only their own results)</option></select></label>
     <label>Package<select id="nPkg"><option value="">School class (no package)</option><option value="analytics">Analytics</option><option value="protocols">Protocols</option><option value="combined">Combined Suite</option><option value="premium">Premium</option></select></label>
     <label style="flex:2">School contact (staff only)<input id="nContact" placeholder="Program director name and work email"></label>
     <button id="bNew">Open class</button>
@@ -529,7 +535,7 @@ body.embed .mxhead .adm{display:none}
 <section id="vClass" class="hide">
   <div class="card">
     <div class="row" style="justify-content:space-between;align-items:center">
-      <div><h2 id="cName" style="margin:0"></h2><div class="muted small" id="cSub"></div></div>
+      <div><h2 id="cName" style="margin:0"></h2><div class="muted small" id="cSub"></div><div id="sampleNote" class="small hide" style="margin-top:4px;color:var(--warn)">Sample students shown for this demo. Real results replace them as soon as students join and start studying.</div></div>
       <div class="row noprint"><button class="ghost" id="bBack">All classes</button><button class="ghost" id="bRefresh">Refresh</button><button class="ghost" id="bReport">Download report</button></div>
     </div>
     <div class="tiles" id="tiles"></div>
@@ -565,7 +571,7 @@ body.embed .mxhead .adm{display:none}
 
   <!-- INSIGHTS -->
   <div id="pOv" class="noprint"></div>
-  <div id="pOvMine" class="noprint"><div id="vzPick"></div><div class="vzgrid" id="vzMine"></div></div>
+  <div id="pOvMine" class="noprint"><div id="vzPick"></div><div class="mxg" id="vzMine"></div></div>
   <div id="pReq" class="card noprint hide"><h2>Request a chart</h2><p class="muted">Want to see something the dashboard doesn't show yet? Tell us and we'll look at adding it for every class.</p>
     <label>What would you like to see?<input id="rqWhat" placeholder="For example: accuracy on dosage calculations by week"></label>
     <label>How would it help you teach?<textarea id="rqWhy" rows="3" placeholder="Optional"></textarea></label>
@@ -769,9 +775,9 @@ body.embed .mxhead .adm{display:none}
   var MODE = EMB || /[?&]signin=1/.test(location.search) ? "signin" : "show";
   /* a nursing version of the demo (owner, Nov 20 2026, for the Blinn nursing meeting): ?demo=nursing or the toggle */
   var DEMO_NURSE = /[?&]demo=nurs/.test(location.search);
-  function demoData() {
-    var NU = DEMO_NURSE;
-    var seed = 7; function rnd() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
+  function demoData(opt) {
+    opt = opt || {}; var NU = opt.nurse != null ? opt.nurse : DEMO_NURSE, NS = opt.n || 24;
+    var seed = opt.seed || 7; function rnd() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
     var SYSN = { airway: "Airway & RSI", resp: "Breathing & Lungs", cardio: "Cardiology", shock: "Shock & Pressors", blood: "Blood & Clotting", neuro: "Neuro & Seizures", pain: "Pain & Sedation", psych: "Behavioral Health", tox: "Toxicology & Antidotes", endo: "Diabetes & Endocrine", gi: "GI & Nausea", renal: "Fluids, Electrolytes & Kidneys", ob: "OB & Women's Health", immune: "Allergy & Immune", general: "General & dosage math" };
     var sysK = Object.keys(SYSN), kinds = ["practice", "exam", "daily", "game", "lab", "crit", "megacode", "safety"], qts = ["assess", "hold", "labs", "vitals", "adverse", "teach", "interact", "notify"];
     var drugsN = [["metoprolol", "Metoprolol", "Beta blocker"], ["furosemide", "Furosemide", "Loop diuretic"], ["heparin", "Heparin", "Anticoagulant"], ["warfarin", "Warfarin", "Anticoagulant"], ["insulin-regular", "Regular insulin", "Insulin"], ["digoxin", "Digoxin", "Cardiac glycoside"], ["potassium-chloride", "Potassium chloride", "Electrolyte"], ["vancomycin", "Vancomycin", "Glycopeptide antibiotic"], ["lisinopril", "Lisinopril", "ACE inhibitor"], ["enoxaparin", "Enoxaparin", "Anticoagulant"], ["morphine", "Morphine", "Opioid analgesic"], ["ondansetron", "Ondansetron", "Antiemetic"], ["levothyroxine", "Levothyroxine", "Thyroid hormone"], ["lithium", "Lithium", "Mood stabilizer"], ["magnesium-sulfate", "Magnesium sulfate", "Electrolyte"], ["oxytocin", "Oxytocin", "Uterotonic"]];
@@ -787,12 +793,12 @@ body.embed .mxhead .adm{display:none}
     /* class-wide strengths and weak spots, so the demo has a story to tell */
     var DRB = NU ? { heparin: -0.22, digoxin: -0.2, "potassium-chloride": -0.16, "insulin-regular": -0.12, ondansetron: 0.12, levothyroxine: 0.08 } : { amiodarone: -0.24, diltiazem: -0.2, epinephrine: -0.14, adenosine: -0.1, naloxone: 0.12, albuterol: 0.1 };
     var CB = NU ? { blood: -0.18, renal: -0.16, general: -0.14, endo: -0.1, ob: -0.08, cardio: -0.06, psych: 0.02, pain: 0.08, gi: 0.1, resp: 0.04 } : { cardio: -0.16, ob: -0.2, renal: -0.12, psych: -0.08, airway: 0.06, tox: 0.12, pain: 0.1, endo: 0.08, resp: 0.04, general: -0.1 };
-    for (var i = 1; i <= 24; i++) {
-      var alias = "Student " + (i < 10 ? "0" : "") + i, on = i <= 22, skill = 0.55 + rnd() * 0.32, vol = 0.4 + rnd() * 1.4;
+    for (var i = 1; i <= NS; i++) {
+      var alias = "Student " + (i < 10 ? "0" : "") + i, on = i <= Math.round(NS * 0.92), skill = 0.55 + rnd() * 0.32, vol = 0.4 + rnd() * 1.4;
       var det = { s: {}, k: {}, d: {}, l: {}, y: {}, p: {} }, n = 0, c = 0, weeks = [];
       var bias = {}; sysK.forEach(function (k) { bias[k] = (CB[k] || 0) + (rnd() - 0.5) * 0.3; });
       if (on) {
-        for (var w2 = 0; w2 < 12; w2++) { var wn = w2 < 5 ? 0 : Math.round((8 + rnd() * 34) * vol * (0.6 + w2 / 12)); var wc = Math.round(wn * Math.min(0.97, skill + (w2 - 5) * 0.012)); weeks.push([wn, wc]); n += wn; c += wc; }
+        for (var w2 = 0; w2 < 12; w2++) { var wn = w2 < 5 ? 0 : Math.round((8 + rnd() * 34) * vol * (0.6 + w2 / 12)); if (w2 > 5 && w2 < 11 && rnd() < 0.12) wn = 0; var wc = Math.round(wn * Math.min(0.97, skill + (w2 - 5) * 0.012)); weeks.push([wn, wc]); n += wn; c += wc; }
         var add = function (m, k, cnt, p) { var x = Math.max(1, Math.round(cnt)), y = Math.min(x, Math.max(0, Math.round(x * Math.min(0.99, Math.max(0.2, p))))); m[k] = { n: x, c: y }; return m[k]; };
         sysK.forEach(function (k) { if (rnd() < 0.85) { var e = add(det.s, k, n * (0.05 + rnd() * 0.12), skill + bias[k]); var t = sysTot[k] || (sysTot[k] = { n: 0, c: 0, students: 0 }); t.n += e.n; t.c += e.c; t.students++; } });
         var KB = { exam: -0.1, megacode: -0.12, crit: -0.08, game: 0.1, daily: 0.04 };
@@ -818,8 +824,8 @@ body.embed .mxhead .adm{display:none}
     students.forEach(function (st, i) { st.missedQ = st.activated ? DQ.slice(i % 3, i % 3 + 3).map(function (x) { return { id: x[0], n: 2, c: i % 2 }; }) : []; });
     var systems = sysK.filter(function (k) { return sysTot[k]; }).map(function (k) { var t = sysTot[k]; return { key: k, name: SYSN[k], answered: t.n, pct: Math.round(1000 * t.c / t.n) / 10, students: t.students }; });
     return {
-      org: { orgId: "demo", name: NU ? "Demo Nursing Program · Transition Cohort" : "Demo Paramedic Academy · Spring Cohort", code: "DEMO", kind: "pilot", level: NU ? "rnschool" : "paramedic", status: "active", live: true, expiresAt: now + 51 * 86400000, createdAt: now - 40 * 86400000, seats: 24, keyCount: 24, goal: 300, teams: DT, comp: true, instructors: [NU ? "nursing.faculty@demo-college.edu" : "program.director@demo-academy.edu"] },
-      totals: { activated: activated, active7: act7, answered: N, accuracy: Math.round(1000 * C / N) / 10, keys: 24 },
+      org: { orgId: "demo", name: NU ? "Demo Nursing Program · Transition Cohort" : "Demo Paramedic Academy · Spring Cohort", code: "DEMO", kind: "pilot", level: NU ? "rnschool" : "paramedic", status: "active", live: true, expiresAt: now + 51 * 86400000, createdAt: now - 40 * 86400000, seats: NS, keyCount: NS, goal: 300, teams: DT, comp: true, instructors: [NU ? "nursing.faculty@demo-college.edu" : "program.director@demo-academy.edu"] },
+      totals: { activated: activated, active7: act7, answered: N, accuracy: Math.round(1000 * C / N) / 10, keys: NS },
       systems: systems, students: students, weakMin: 5, labels: labels, sysNames: SYSN, weekStarts: weekStarts, generatedAt: now,
       questions: questions, qAnswered: 412, qMin: 3
     };
@@ -934,7 +940,7 @@ body.embed .mxhead .adm{display:none}
   $("bNew").onclick = function () {
     var b = this; b.disabled = true;
     var days = Number($("nKind").value);
-    call("groupOrgCreate", { name: $("nName").value, code: $("nCode").value, seats: Number($("nSeats").value), days: days, goal: Number($("nGoal").value), contact: $("nContact").value, level: $("nLevel").value, kind: days >= 365 ? "annual" : "pilot", pkg: $("nPkg").value })
+    call("groupOrgCreate", { name: $("nName").value, code: $("nCode").value, seats: Number($("nSeats").value), days: days, goal: Number($("nGoal").value), contact: $("nContact").value, level: $("nLevel").value, kind: days >= 365 ? "annual" : "pilot", pkg: $("nPkg").value, boardOn: $("nBoard").value !== "off" })
       .then(function (r) { say("newMsg", "Class opened. Instructor code: " + r.invite + " (send this to the school; it lets them sign in here and make keys). Ends " + day(r.expiresAt) + "."); ["nName", "nCode", "nContact"].forEach(function (i) { $(i).value = ""; }); loadList(); })
       .catch(function (e) { say("newMsg", e.message, true); })
       .then(function () { b.disabled = false; });
@@ -1400,6 +1406,25 @@ body.embed .mxhead .adm{display:none}
     }).join("") : '<p class="muted" style="grid-column:1/-1">No answers yet.</p>';
   }
 
+  /* ---------- sample students for a demo class (owner, Nov 20 2026: "autofill the Blinn cohort with a bunch of fake
+     student stats"). Only for classes listed here, only while no real student has answered anything, and only on this
+     page: nothing is written to the server, and the class header says the students are a sample. The moment a real
+     student answers a question, the real numbers replace the sample. ---------- */
+  var SAMPLE_CODES = { BLINN: { nurse: true, seed: 41 } };
+  function sampleFill(d) {
+    try {
+      var cfg = d && d.org && SAMPLE_CODES[String(d.org.code || "").toUpperCase()];
+      if (ST.demo || !cfg || (d.totals && d.totals.answered)) return d;
+      var x = demoData({ nurse: cfg.nurse, n: d.org.seats || 50, seed: cfg.seed });
+      ["students", "totals", "systems", "labels", "sysNames", "weekStarts", "questions", "qAnswered", "qMin", "weakMin"].forEach(function (k) { d[k] = x[k]; });
+      d.students.forEach(function (s) { s.keyId = "sample" + s.keyId.replace(/\D/g, ""); s.token = s.token.replace("DEMO", "BLNN"); });
+      if (!(d.org.teams || []).length) d.org.teams = x.org.teams;
+      if (!d.org.goal) d.org.goal = 300;
+      d.sample = true;
+    } catch (e) { console.warn(e); }
+    return d;
+  }
+
   /* ---------- one class ---------- */
   function openClass(id) { ST.orgId = id; ST.newKeys = null; say("keyMsg", ""); say("oMsg", ""); refresh(); }
   $("bBack").onclick = function () { ST.orgId = null; loadList(); };
@@ -1407,66 +1432,143 @@ body.embed .mxhead .adm{display:none}
   function refresh() {
     show("vList", false); show("vOwner", false); show("vOverview", false); show("vApp", false); show("vClass", true);
     $("cName").textContent = "Loading…";
-    return call("groupDashboard", { orgId: ST.orgId }).then(function (d) { ST.dash = d; drawClass(); })
+    return call("groupDashboard", { orgId: ST.orgId }).then(function (d) { ST.dash = sampleFill(d); drawClass(); })
       .catch(function (e) { $("cName").textContent = "Couldn't load this class"; $("cSub").textContent = e.message; });
   }
 
-  /* ---------- Overview: the class at a glance in pictures (owner, Nov 20 2026: "make the dashboard something like this")
-     A grid of colorful chart cards, drawn as plain SVG from the same class data: weekly study bars, body-system
-     rings, question-style donut, weakest drug classes as bubbles, a burst of every student, and team trends. */
-  var VZ = ["#7c6ef2", "#e45fd5", "#2ec4b6", "#ff6b6b", "#2f7de1", "#9b5de5", "#f59e0b", "#14b8a6"];
+  /* ---------- Overview (owner, Nov 20 2026 redesign: "make the charts way more professional, take away all of the
+     rainbow colors, kinda like my usage dashboard" + "I like line graphs and charts"). Same look as the owner Usage
+     page: KPI cards with sparklines and change vs last week, line charts for anything over time, one blue for the main
+     series, ranked bars for "weakest first" (a tick marks 70%), and a light-to-dark blue ramp only where a shade means
+     "more". Charts are drawn at the card's real width and redrawn on resize, with one shared tooltip. ---------- */
   function vzPct(c, n) { return n ? Math.round(1000 * c / n) / 10 : 0; }
-  function vzArc(cx, cy, r, a0, a1) { var x0 = cx + r * Math.cos(a0), y0 = cy + r * Math.sin(a0), x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1); return "M" + x0.toFixed(1) + " " + y0.toFixed(1) + " A" + r + " " + r + " 0 " + (a1 - a0 > Math.PI ? 1 : 0) + " 1 " + x1.toFixed(1) + " " + y1.toFixed(1); }
-  function vzCard(cls, title, body, sub) { return '<div class="vzc ' + cls + '"><h3>' + esc(title) + '</h3>' + (sub ? '<p class="vzs">' + sub + '</p>' : '') + body + '</div>'; }
-  function vzTrend(a, b) { if (!b) return ""; var d = Math.round(100 * (a - b) / Math.max(1, b)); return '<span class="vzt ' + (d >= 0 ? "up" : "dn") + '">' + (d >= 0 ? "&#9650; +" : "&#9660; ") + d + '%</span>'; }
+  var OVC = {}, OVN = 0, OV_SER = ["--s1", "--s2", "--s3", "--s4"], OV_RAMP = ["--q1", "--q2", "--q3", "--q4", "--q5"];
+  function ovTip(e, html) { var t = $("ovTip"); if (!t) { t = document.createElement("div"); t.id = "ovTip"; document.body.appendChild(t); } t.innerHTML = html; t.style.display = "block"; var w = t.offsetWidth, h = t.offsetHeight, x = e.clientX + 14, y = e.clientY - h - 12; if (x + w > innerWidth - 8) x = e.clientX - w - 14; if (y < 8) y = e.clientY + 16; t.style.left = x + "px"; t.style.top = y + "px"; }
+  function ovTipHide() { var t = $("ovTip"); if (t) t.style.display = "none"; }
+  function ovSlot(spec, h) { var id = "ovc" + (++OVN); OVC[id] = spec; return '<div class="ch ovch" id="' + id + '" style="height:' + (h || 210) + 'px"></div>'; }
+  function ovDrawAll(root) { [].forEach.call((root || document).querySelectorAll(".ovch"), function (b) { var s = OVC[b.id]; if (s) ovPlot(b, s); }); }
+  function sv(tag, at, par) { var e = document.createElementNS("http://www.w3.org/2000/svg", tag); for (var k in at) e.setAttribute(k, at[k]); if (par) par.appendChild(e); return e; }
+  function ovFmt(v, u) { return v == null ? "--" : (u === "%" ? (Math.round(v * 10) / 10) + "%" : Math.round(v).toLocaleString()); }
+  /* spec: { kind: "line" | "cols", labels: [...], series: [{ name, v: [...], c: "--s1" }], unit: "%" | "", ref: 70 } */
+  function ovPlot(box, s) {
+    box.innerHTML = ""; var n = s.labels.length; if (!n) { box.innerHTML = '<p class="muted small">Not enough answers yet.</p>'; return; }
+    var W = Math.max(240, box.clientWidth), H = box.clientHeight || 210, L = 40, R = 12, T = 12, B = 26, iw = W - L - R, ih = H - T - B, pct = s.unit === "%";
+    var vals = []; s.series.forEach(function (x) { x.v.forEach(function (v) { if (v != null) vals.push(v); }); });
+    var lo = 0, hi, step;
+    if (pct) { var mn = Math.min.apply(null, vals.concat(s.ref ? [s.ref] : []).concat([100])); step = 100 - mn > 50 ? 20 : 10; lo = s.kind === "line" ? Math.max(0, 100 - Math.ceil((100 - Math.max(0, mn - 6)) / step) * step) : 0; if (s.kind !== "line") step = 25; hi = 100; }
+    else { var mx = Math.max.apply(null, vals.concat([4])), raw = mx / 4, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; step = Math.max(1, (m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 && p >= 10 ? 2.5 : m <= 5 ? 5 : 10) * p); hi = Math.ceil(mx / step) * step; }
+    var svg = sv("svg", { width: W, height: H, role: "img", "aria-label": s.aria || "" }, box);
+    var y = function (v) { return T + ih - (v - lo) / (hi - lo) * ih; };
+    for (var g = lo; g <= hi + 1e-9; g += step) { sv("line", { x1: L, x2: W - R, y1: y(g), y2: y(g), style: "stroke:var(" + (g === lo ? "--axis" : "--grid") + ")", "stroke-opacity": g === lo ? .5 : 1 }, svg); sv("text", { x: L - 7, y: y(g) + 3.5, "text-anchor": "end" }, svg).textContent = pct ? g + "%" : (g >= 1e4 ? Math.round(g / 1e3) + "k" : g >= 1e3 ? (g / 1e3).toFixed(1).replace(/\.0$/, "") + "k" : g); }
+    var st = iw / n, xc = function (i) { return s.kind === "line" && n > 1 ? L + 8 + (iw - 16) * i / (n - 1) : L + st * i + st / 2; };
+    var every = Math.max(1, Math.ceil(n / Math.max(1, Math.floor(iw / 54)))), chars = Math.max(3, Math.floor((s.kind === "line" ? (iw / Math.max(1, n - 1)) : st) * every / 6.6));
+    s.labels.forEach(function (lb, i) { if (i % every && i !== n - 1) return; if (i !== n - 1 && n - 1 - i < every) return; var tx = String(lb); if (tx.length > chars) tx = tx.slice(0, chars - 1) + "…"; sv("text", { x: xc(i), y: H - 7, "text-anchor": "middle" }, svg).textContent = tx; });
+    if (s.ref != null && s.ref > lo && s.ref < hi) { sv("line", { x1: L, x2: W - R, y1: y(s.ref), y2: y(s.ref), style: "stroke:var(--axis)", "stroke-dasharray": "4 4", "stroke-opacity": .8 }, svg); if (s.series.length === 1) sv("text", { x: W - R, y: y(s.ref) - 5, "text-anchor": "end" }, svg).textContent = "goal " + s.ref + "%"; }
+    if (s.kind === "cols") {
+      var bw = Math.max(3, Math.min(30, st - (n > 30 ? 2 : 6))), rad = Math.min(4, bw / 2);
+      s.series[0].v.forEach(function (v, i) { if (!v) return; var x0 = xc(i) - bw / 2, yt = y(v), yb = y(lo), hh = Math.max(1.5, yb - yt); sv("path", { d: "M" + x0 + "," + yb + "V" + (yb - hh + rad) + "Q" + x0 + "," + (yb - hh) + " " + (x0 + rad) + "," + (yb - hh) + "H" + (x0 + bw - rad) + "Q" + (x0 + bw) + "," + (yb - hh) + " " + (x0 + bw) + "," + (yb - hh + rad) + "V" + yb + "Z", style: "fill:var(" + s.series[0].c + ")" }, svg); });
+    } else {
+      s.series.forEach(function (se, si) {
+        var segs = [], cur = []; se.v.forEach(function (v, i) { if (v == null) { if (cur.length) segs.push(cur); cur = []; } else cur.push([xc(i), y(v)]); }); if (cur.length) segs.push(cur);
+        segs.forEach(function (sg) {
+          if (si === 0 && s.series.length === 1) sv("path", { d: "M" + sg[0][0] + "," + y(lo) + sg.map(function (p) { return "L" + p[0] + "," + p[1]; }).join("") + "L" + sg[sg.length - 1][0] + "," + y(lo) + "Z", style: "fill:var(" + se.c + ")", "fill-opacity": .1 }, svg);
+          sv("path", { d: "M" + sg.map(function (p) { return p[0] + "," + p[1]; }).join("L"), fill: "none", style: "stroke:var(" + se.c + ")", "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }, svg);
+          if (n <= 16) sg.forEach(function (p) { sv("circle", { cx: p[0], cy: p[1], r: 2.6, style: "fill:var(" + se.c + ");stroke:var(--surface)", "stroke-width": 1.5 }, svg); });
+        });
+        var lp = null; for (var q = se.v.length - 1; q >= 0; q--) if (se.v[q] != null) { lp = [xc(q), y(se.v[q])]; break; }
+        if (lp) sv("circle", { cx: lp[0], cy: lp[1], r: 4.5, style: "fill:var(" + se.c + ");stroke:var(--surface)", "stroke-width": 2 }, svg);
+      });
+    }
+    var cross = sv("line", { x1: 0, x2: 0, y1: T, y2: T + ih, style: "stroke:var(--axis)", "stroke-dasharray": "3 3", opacity: 0 }, svg);
+    var hit = sv("rect", { x: L, y: 0, width: iw, height: H, fill: "transparent" }, svg);
+    hit.addEventListener("mousemove", function (e) { var bb = svg.getBoundingClientRect(), mxp = e.clientX - bb.left, i = 0, bd = 1e9; for (var k = 0; k < n; k++) { var dd = Math.abs(xc(k) - mxp); if (dd < bd) { bd = dd; i = k; } }
+      cross.setAttribute("x1", xc(i)); cross.setAttribute("x2", xc(i)); cross.setAttribute("opacity", 1);
+      ovTip(e, "<b>" + esc((s.tipHead || "") + s.labels[i]) + "</b>" + s.series.map(function (se) { return (s.series.length > 1 ? '<i style="background:var(' + se.c + ')"></i>' + esc(se.name) + ": " : "") + "<strong>" + ovFmt(se.v[i], s.unit) + "</strong>" + (se.sub ? ' <span class="muted">' + esc(se.sub[i] || "") + '</span>' : ""); }).join("<br>")); });
+    hit.addEventListener("mouseleave", function () { cross.setAttribute("opacity", 0); ovTipHide(); });
+  }
+  function ovLegend(series) { return series.length < 2 ? "" : '<div class="ovleg">' + series.map(function (se) { return '<span><i style="background:var(' + se.c + ')"></i>' + esc(se.name) + '</span>'; }).join("") + '</div>'; }
+  function ovCard(title, sub, body, cls) { return '<div class="mxc' + (cls ? " " + cls : "") + '"><h3>' + esc(title) + '</h3>' + (sub ? '<div class="cs">' + sub + '</div>' : '') + body + '</div>'; }
+  function ovSec(t) { return '<div class="mxsec">' + esc(t) + '</div>'; }
+  /* ranked bars: [{name, v, n?}] -> bar length = value (a tick at 70% when it's % right) */
+  var VZ_ALL = false;
+  function ovBars(rows, u, empty) { if (!rows.length) return '<p class="muted small">' + esc(empty || "Not enough answers yet.") + '</p>';
+    var mx = u === "%" ? 100 : Math.max.apply(null, rows.map(function (r) { return r.v; }).concat([1])), hasN = rows.some(function (r) { return r.n != null; });
+    return '<div class="rk ovrk">' + rows.map(function (r) { return '<div class="l" title="' + esc(r.name) + '">' + esc(r.name) + '</div><div class="b" data-ovtt="' + esc(r.name + ": " + ovFmt(r.v, u) + (u === "%" ? " right" : "") + (r.n != null ? " of " + r.n.toLocaleString() + " answers" : "")) + '"><i style="width:' + Math.max(1.5, 100 * r.v / mx) + '%"></i>' + (u === "%" ? '<s></s>' : '') + '</div><div class="v"><b>' + ovFmt(r.v, u) + '</b>' + (hasN ? '<span>' + (r.n != null ? r.n.toLocaleString() : "") + '</span>' : '') + '</div>'; }).join("") + '</div>'; }
+  /* every list opens in full in a drop-down under its card, can be re-sorted, and printed (owner, Nov 20 2026) */
+  var OVL = {}, OVLN = 0;
+  function ovSorts(L) { return [["low", "Least to greatest"], ["high", "Greatest to least"]].concat(L.rows.some(function (r) { return r.n != null; }) ? [["n", "Most answered"]] : []).concat([["az", "A to Z"]]).concat(L.time ? [["", "By week"]] : []); }
+  function ovSorted(L, how) { var R = L.rows.slice(); how = how == null ? L.def : how;
+    if (how === "low") R.sort(function (a, b) { return a.v - b.v || (b.n || 0) - (a.n || 0); }); else if (how === "high") R.sort(function (a, b) { return b.v - a.v || (b.n || 0) - (a.n || 0); });
+    else if (how === "n") R.sort(function (a, b) { return (b.n || 0) - (a.n || 0); }); else if (how === "az") R.sort(function (a, b) { return String(a.name).localeCompare(String(b.name), undefined, { numeric: true }); }); return R; }
+  var OV_TIME = false;
+  function ovFoot(title, rows, u, noun, def) { var id = "ovl" + (++OVLN), L = OVL[id] = { title: title, rows: rows, unit: u, noun: noun, def: def || "", time: OV_TIME };
+    return '<div class="ovfoot noprint">' + (rows.length ? '<details class="ovall"><summary>' + (noun === "rows" ? 'See the full list (' + rows.length + ')' : 'See all ' + rows.length + ' ' + esc(noun)) + '</summary><div class="ovsortrow"><label class="muted small">Sort <select data-ovsort="' + id + '">' + ovSorts(L).map(function (o) { return '<option value="' + o[0] + '"' + (o[0] === L.def ? " selected" : "") + '>' + o[1] + '</option>'; }).join("") + '</select></label></div><div class="ovscroll" id="' + id + '_b">' + ovBars(ovSorted(L), u) + '</div></details>' : '<span></span>') +
+      '<button type="button" class="ovprint" data-ovprint="' + id + '" title="Print the full list">Print</button></div>'; }
+  function ovListCard(title, sub, rows, u, noun, def) { return ovCard(title, sub, ovBars(rows.slice(0, 8), u) + ovFoot(title, rows, u, noun, def)); }
+  document.addEventListener("change", function (e) { var s = e.target, id = s && s.getAttribute && s.getAttribute("data-ovsort"); if (!id || !OVL[id]) return; var b = $(id + "_b"); if (b) b.innerHTML = ovBars(ovSorted(OVL[id], s.value), OVL[id].unit); });
+  document.addEventListener("click", function (e) { var b = e.target.closest && e.target.closest("[data-ovprint]"); if (b) ovPrint(b.getAttribute("data-ovprint")); });
+  function ovPrint(id) {
+    var L = OVL[id]; if (!L) return; var d = ST.dash || {}, o = d.org || {}, sel = document.querySelector('[data-ovsort="' + id + '"]'), rows = ovSorted(L, sel ? sel.value : null), hasN = rows.some(function (r) { return r.n != null; }), pc = L.unit === "%";
+    var mx = pc ? 100 : Math.max.apply(null, rows.map(function (r) { return r.v; }).concat([1])), noun = { medications: "Medication", "drug classes": "Drug class", "body systems": "Body system", "question styles": "Question style" }[L.noun] || "Item";
+    var html = '<!doctype html><html><head><meta charset="utf-8"><title>' + esc(L.title) + ' · ' + esc(o.name || "DrugBug") + '</title><style>@page{margin:14mm}body{font:12.5px system-ui,-apple-system,Segoe UI,sans-serif;color:#15131c;margin:0}h1{font-size:18px;margin:0 0 3px}.sub{color:#555;margin:0 0 14px}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:5px 8px;border-bottom:1px solid #e3e1ea}th{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:#666}td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}td.bar{width:34%}td.bar i{display:block;height:8px;border-radius:4px;background:#2a78d6;-webkit-print-color-adjust:exact;print-color-adjust:exact}tr{break-inside:avoid}.foot{margin-top:14px;font-size:10.5px;color:#777}</style></head><body>' +
+      '<h1>' + esc(L.title) + '</h1><p class="sub">' + esc(o.name || "") + ' · printed ' + esc(new Date().toLocaleDateString()) + ' · ' + rows.length + ' ' + esc(L.noun === "rows" ? "items" : L.noun) + ' · sorted ' + esc((ovSorts(L).filter(function (x) { return x[0] === (sel ? sel.value : L.def); })[0] || ["", "as shown"])[1].toLowerCase()) + (d.sample ? ' · sample students' : '') + '</p>' +
+      '<table><tr><th class="n">#</th><th>' + esc(noun) + '</th><th class="n">' + (pc ? "% right" : "Value") + '</th>' + (hasN ? '<th class="n">Answers</th>' : '') + '<th></th></tr>' +
+      rows.map(function (r, i) { return '<tr><td class="n">' + (i + 1) + '</td><td>' + esc(r.name) + '</td><td class="n"><b>' + ovFmt(r.v, L.unit) + '</b></td>' + (hasN ? '<td class="n">' + (r.n != null ? r.n.toLocaleString() : "") + '</td>' : '') + '<td class="bar"><i style="width:' + Math.max(1, 100 * r.v / mx) + '%"></i></td></tr>'; }).join("") +
+      '</table><p class="foot">DrugBug instructor dashboard. Students appear only under class key labels.</p></body></html>';
+    var f = document.createElement("iframe"); f.setAttribute("aria-hidden", "true"); f.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0"; document.body.appendChild(f);
+    var doc = f.contentWindow.document; doc.open(); doc.write(html); doc.close();
+    setTimeout(function () { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (er) {} setTimeout(function () { f.remove(); }, 1500); }, 250);
+  }
+  function ovDim(dim, min) { var M = vzSum(dim); return Object.keys(M).filter(function (k) { return M[k].n >= (min || 5) && !(dim === "s" && k === "general"); }).map(function (k) { return { name: vzName(dim, k), v: vzPct(M[k].c, M[k].n), n: M[k].n }; }).sort(function (a, b) { return a.v - b.v || b.n - a.n; }); }
+  /* 100% bar with the light-to-dark ramp (low to high) */
+  function ovShare(title, parts) { var tot = parts.reduce(function (s, p) { return s + p[1]; }, 0); if (!tot) return '<div class="st"><div class="sl">' + esc(title) + '<span>no one yet</span></div></div>';
+    return '<div class="st"><div class="sl">' + esc(title) + '<span>' + tot + ' students</span></div><div class="sb">' + parts.map(function (p, i) { return p[1] ? '<i style="width:' + (100 * p[1] / tot) + '%;background:var(' + OV_RAMP[i % 5] + ')" data-ovtt="' + esc(p[0] + ": " + p[1] + " student" + (p[1] === 1 ? "" : "s") + " (" + Math.round(100 * p[1] / tot) + "%)") + '"></i>' : ''; }).join("") + '</div><div class="lg">' + parts.map(function (p, i) { return '<span><i style="background:var(' + OV_RAMP[i % 5] + ')"></i>' + esc(p[0]) + '<b>' + p[1] + '</b></span>'; }).join("") + '</div></div>'; }
+  document.addEventListener("mousemove", function (e) { var t = e.target.closest && e.target.closest("[data-ovtt]"); if (t) ovTip(e, esc(t.getAttribute("data-ovtt"))); });
+  document.addEventListener("mouseout", function (e) { if (e.target.closest && e.target.closest("[data-ovtt]")) ovTipHide(); });
+  var OV_RS = null; window.addEventListener("resize", function () { clearTimeout(OV_RS); OV_RS = setTimeout(function () { var p = $("pOv"); if (p && !p.classList.contains("hide") && ST.dash) { ovDrawAll(p); ovDrawAll($("pOvMine")); } }, 180); });
+  function ovWeeks() { var d = ST.dash, W = (d.weekStarts || []).length, out = [];
+    for (var i = 0; i < W; i++) { var n = 0, c = 0, a = 0; (d.students || []).forEach(function (s) { var w = (s.weeks || [])[i]; if (w && w[0]) { n += w[0]; c += w[1]; a++; } }); var dt = new Date(d.weekStarts[i]); out.push({ i: i, lab: (dt.getUTCMonth() + 1) + "/" + dt.getUTCDate(), n: n, c: c, a: a, p: n ? vzPct(c, n) : null }); }
+    var f = 0; while (f < out.length - 4 && !out[f].n) f++; return out.slice(f); }
+  function ovPts(cur, prev) { if (cur == null || prev == null) return ""; var dp = Math.round((cur - prev) * 10) / 10; return (dp === 0 ? '<b>±0 pts</b>' : '<b class="' + (dp > 0 ? "up" : "dn") + '">' + (dp > 0 ? "▲ " : "▼ ") + Math.abs(dp) + ' pts</b>') + ' vs the week before'; }
   function drawViz() {
-    var el = $("pOv"); if (!el || !ST.dash) return;
-    var d = ST.dash, S = d.students || [], t = d.totals, W = (d.weekStarts || []).length || 12;
-    /* weekly totals */
-    var wk = []; for (var i = 0; i < W; i++) wk.push([0, 0]);
-    S.forEach(function (s) { (s.weeks || []).forEach(function (w, i) { if (wk[i]) { wk[i][0] += w[0]; wk[i][1] += w[1]; } }); });
-    var last8 = wk.slice(-8), mx = Math.max.apply(null, last8.map(function (w) { return w[0]; }).concat([1]));
-    var lab = (d.weekStarts || []).slice(-8).map(function (ms) { var dt = new Date(ms); return (dt.getUTCMonth() + 1) + "/" + dt.getUTCDate(); });
-    var bars = last8.map(function (w, i) { var h = Math.round(120 * w[0] / mx), x = 14 + i * 34; return '<rect x="' + x + '" y="' + (132 - h) + '" width="24" height="' + h + '" rx="3" fill="' + VZ[i % VZ.length] + '"' + (i < last8.length - 1 ? ' opacity=".85"' : '') + '><title>' + w[0] + ' answered, ' + vzPct(w[1], w[0]) + '% right</title></rect><text x="' + (x + 12) + '" y="148" text-anchor="middle" class="vzax">' + esc(lab[i] || "") + '</text>'; }).join("");
-    var wkList = last8.slice(-5).reverse().map(function (w, i) { return '<tr><td><i style="background:' + VZ[(last8.length - 1 - i) % VZ.length] + '"></i>' + esc(lab[last8.length - 1 - i] || "") + '</td><td>' + w[0].toLocaleString() + '</td><td>' + vzPct(w[1], w[0]) + '%</td></tr>'; }).join("");
-    var c1 = vzCard("vz-wide", "Weekly study", '<div class="vzrow"><svg viewBox="0 0 290 156" class="vzsvg" role="img" aria-label="Questions answered per week">' + bars + '</svg><table class="vzleg"><tr><th>Week of</th><th>Answered</th><th>Right</th></tr>' + wkList + '</table></div>', "Questions the class answered each week");
-    /* body-system rings: the four most-studied systems, ring length = % right */
-    var sys = (d.systems || []).slice().sort(function (a, b) { return b.answered - a.answered; }).slice(0, 4);
-    var rings = sys.map(function (s, i) { var r = 64 - i * 13, a0 = Math.PI * 0.5, a1 = a0 + Math.PI * 1.5 * Math.min(1, s.pct / 100); return '<path d="' + vzArc(80, 80, r, a0, a0 + Math.PI * 1.5) + '" stroke="var(--track,#2a2440)" stroke-width="9" fill="none" stroke-linecap="round"/><path d="' + vzArc(80, 80, r, a0, a1) + '" stroke="' + VZ[i] + '" stroke-width="9" fill="none" stroke-linecap="round"><title>' + esc(s.name) + ': ' + s.pct + '%</title></path><circle cx="' + (80 + r * Math.cos(a1)).toFixed(1) + '" cy="' + (80 + r * Math.sin(a1)).toFixed(1) + '" r="5" fill="#fff" stroke="' + VZ[i] + '" stroke-width="3"/>'; }).join("");
-    var prevAcc = wk.length > 1 ? vzPct(wk[W - 2][1], wk[W - 2][0]) : 0, nowAcc = wk.length ? vzPct(wk[W - 1][1], wk[W - 1][0]) : 0;
-    var c2 = vzCard("", "Body systems", '<div class="vzrow"><svg viewBox="0 0 160 160" class="vzsvg sq">' + rings + '</svg><div class="vzbig"><b>' + esc(String(t.accuracy == null ? "--" : t.accuracy)) + '%</b><span>right overall</span>' + (prevAcc ? vzTrend(nowAcc, prevAcc) + '<small> this week</small>' : '') +
-      '<ul class="vzkey">' + sys.map(function (s, i) { return '<li><i style="background:' + VZ[i] + '"></i>' + esc(s.name) + ' <b>' + s.pct + '%</b></li>'; }).join("") + '</ul></div></div>', "Most-studied systems; the ring shows % right");
-    /* question-style donut */
-    var Y = {}; S.forEach(function (s) { var y = (s.detail || {}).y || {}; Object.keys(y).forEach(function (k) { var a = Y[k] || (Y[k] = { n: 0, c: 0 }); a.n += y[k].n; a.c += y[k].c; }); });
-    var yk = Object.keys(Y).sort(function (a, b) { return Y[b].n - Y[a].n; }), yt = yk.reduce(function (s, k) { return s + Y[k].n; }, 0) || 1, ang = -Math.PI / 2;
-    var segs = yk.map(function (k, i) { var f = Y[k].n / yt, a1 = ang + f * Math.PI * 2 - 0.04, p = '<path d="' + vzArc(80, 80, 56, ang, a1) + '" stroke="' + VZ[i % VZ.length] + '" stroke-width="' + (20 + 10 * (1 - vzPct(Y[k].c, Y[k].n) / 100)) + '" fill="none"><title>' + esc(QT[k] || k) + ': ' + Math.round(f * 100) + '% of answers, ' + vzPct(Y[k].c, Y[k].n) + '% right</title></path>'; ang += f * Math.PI * 2; return p; }).join("");
-    var weakY = yk.slice().sort(function (a, b) { return vzPct(Y[a].c, Y[a].n) - vzPct(Y[b].c, Y[b].n); })[0];
-    var c3 = vzCard("", "Question styles", '<svg viewBox="0 0 160 160" class="vzsvg sq">' + segs + '<text x="80" y="76" text-anchor="middle" class="vzc1">' + (weakY ? vzPct(Y[weakY].c, Y[weakY].n) + "%" : "--") + '</text><text x="80" y="94" text-anchor="middle" class="vzc2">' + esc(weakY ? (QT[weakY] || weakY) : "") + '</text></svg><ul class="vzkey two">' + yk.slice(0, 8).map(function (k, i) { return '<li><i style="background:' + VZ[i % VZ.length] + '"></i>' + esc(QT[k] || k) + ' <b>' + vzPct(Y[k].c, Y[k].n) + '%</b></li>'; }).join("") + '</ul>', "Share of answers; thicker = weaker. Center: the weakest style");
-    /* weakest drug classes as bubbles */
-    var L = {}; S.forEach(function (s) { var l = (s.detail || {}).l || {}; Object.keys(l).forEach(function (k) { var a = L[k] || (L[k] = { n: 0, c: 0 }); a.n += l[k].n; a.c += l[k].c; }); });
-    var lk = Object.keys(L).filter(function (k) { return L[k].n >= 10; }).sort(function (a, b) { return vzPct(L[a].c, L[a].n) - vzPct(L[b].c, L[b].n); }).slice(0, 5), lmx = Math.max.apply(null, lk.map(function (k) { return L[k].n; }).concat([1]));
-    var pos = [[52, 58], [112, 46], [150, 104], [86, 118], [30, 120]];
-    var bub = lk.map(function (k, i) { var r = 18 + 22 * Math.sqrt(L[k].n / lmx), p = vzPct(L[k].c, L[k].n), col = p < 60 ? "#ff6b6b" : p < 70 ? "#f59e0b" : p < 80 ? "#9b5de5" : "#2ec4b6", nm = (d.labels && d.labels["l_" + k]) || k.replace(/-/g, " "); return '<g><circle cx="' + pos[i][0] + '" cy="' + pos[i][1] + '" r="' + r.toFixed(1) + '" fill="' + col + '" opacity=".88"><title>' + esc(nm) + ': ' + p + '% right of ' + L[k].n + '</title></circle><text x="' + pos[i][0] + '" y="' + (pos[i][1] - 2) + '" text-anchor="middle" class="vzb1">' + esc(nm.length > 14 ? nm.slice(0, 13) + "…" : nm) + '</text><text x="' + pos[i][0] + '" y="' + (pos[i][1] + 11) + '" text-anchor="middle" class="vzb2">' + p + '%</text></g>'; }).join("");
-    var c4 = vzCard("", "Weakest drug classes", '<svg viewBox="0 0 185 160" class="vzsvg sq">' + bub + '</svg><ul class="vzkey inl"><li><i style="background:#ff6b6b"></i>under 60%</li><li><i style="background:#f59e0b"></i>60-69%</li><li><i style="background:#9b5de5"></i>70-79%</li></ul>', "Bigger bubble = more answers");
-    /* every student as a ray: length = questions answered, color = % right */
-    var on = S.filter(function (s) { return s.activated; }), smx = Math.max.apply(null, on.map(function (s) { return s.answered; }).concat([1])), n = Math.max(1, on.length);
-    var rays = on.map(function (s, i) { var a = -Math.PI / 2 + i * 2 * Math.PI / n, r0 = 30, r1 = r0 + 6 + 44 * s.answered / smx, p = s.accuracy || 0, col = p < 60 ? "#ff6b6b" : p < 70 ? "#f59e0b" : p < 80 ? "#7c6ef2" : "#2ec4b6"; return '<line x1="' + (80 + r0 * Math.cos(a)).toFixed(1) + '" y1="' + (80 + r0 * Math.sin(a)).toFixed(1) + '" x2="' + (80 + r1 * Math.cos(a)).toFixed(1) + '" y2="' + (80 + r1 * Math.sin(a)).toFixed(1) + '" stroke="' + col + '" stroke-width="' + Math.max(2, Math.min(7, 140 / n)) + '" stroke-linecap="round"><title>' + esc(s.alias) + ': ' + s.answered + ' answered, ' + pctTxt(s.accuracy) + '</title></line>'; }).join("");
-    var c5 = vzCard("", "Every student", '<svg viewBox="0 0 160 160" class="vzsvg sq">' + rays + '<text x="80" y="80" text-anchor="middle" class="vzc1">' + t.active7 + '</text><text x="80" y="96" text-anchor="middle" class="vzc2">active this week</text></svg><ul class="vzkey inl"><li><i style="background:#ff6b6b"></i>under 60%</li><li><i style="background:#f59e0b"></i>60-69%</li><li><i style="background:#7c6ef2"></i>70-79%</li><li><i style="background:#2ec4b6"></i>80%+</li></ul>', "One line per student: longer = more questions");
-    /* team (or study mode) trends: last five weeks */
-    var teams = (d.org.teams || []).slice(0, 4), groups;
-    if (teams.length) groups = teams.map(function (tm) { var g = []; for (var i = 0; i < 5; i++) g.push(0); S.forEach(function (s) { if (s.team === tm.id) (s.weeks || []).slice(-5).forEach(function (w, i) { g[i] += w[0]; }); }); return [tm.name, g]; });
-    else { var K = {}; S.forEach(function (s) { var k = (s.detail || {}).k || {}; Object.keys(k).forEach(function (x) { K[x] = (K[x] || 0) + k[x].n; }); }); groups = Object.keys(K).sort(function (a, b) { return K[b] - K[a]; }).slice(0, 4).map(function (x) { var g = [], base = K[x] / 5; for (var i = 0; i < 5; i++) g.push(Math.round(base * (0.7 + i * 0.12))); return [KIND[x] || x, g]; }); }
-    var strip = groups.map(function (g, j) { var gm = Math.max.apply(null, g[1].concat([1])); return '<div class="vzmini"><span><b>' + esc(g[0]) + '</b>' + vzTrend(g[1][4], g[1][3]) + '</span><svg viewBox="0 0 70 40">' + g[1].map(function (v, i) { var h = Math.max(2, Math.round(36 * v / gm)); return '<rect x="' + (i * 14 + 1) + '" y="' + (38 - h) + '" width="10" height="' + h + '" rx="2" fill="' + VZ[(j * 2) % VZ.length] + '" opacity="' + (0.55 + i * 0.1) + '"/>'; }).join("") + '</svg></div>'; }).join("");
-    var c6 = vzCard("vz-strip", teams.length ? "Teams, last five weeks" : "How they study, last five weeks", '<div class="vzstrip">' + strip + '</div>');
-    el.innerHTML = '<div class="vzgrid">' + c1 + c2 + c3 + c4 + c5 + c6 + '</div>';
+    var el = $("pOv"); if (!el || !ST.dash) return; OVC = {};
+    var d = ST.dash, o = d.org || {}, S = d.students || [], wk = ovWeeks(), cur = wk[wk.length - 1] || { n: 0, c: 0, a: 0, p: null }, prev = wk[wk.length - 2];
+    var per = function (w) { return w.a ? Math.round(w.n / w.a) : 0; };
+    var kp = kpi("Studied this week", cur.a, "of " + (d.totals.activated || 0), prev ? delta(cur.a, prev.a, "week") : "", spark(wk, function (w) { return w.a; })) +
+      kpi("Questions this week", cur.n.toLocaleString(), "", prev ? delta(cur.n, prev.n, "week") : "", spark(wk, function (w) { return w.n; })) +
+      kpi("Right this week", cur.p == null ? "--" : cur.p, cur.p == null ? "" : "%", ovPts(cur.p, prev && prev.p), spark(wk, function (w) { return w.p || 0; })) +
+      kpi("Per active student", per(cur), "questions", prev ? delta(per(cur), per(prev), "week") : "", spark(wk, per));
+    var labs = wk.map(function (w) { return w.lab; });
+    var act = ovCard("Questions answered", "Every answer from the class, by week", ovSlot({ kind: "line", labels: labs, tipHead: "Week of ", series: [{ name: "Questions", v: wk.map(function (w) { return w.n; }), c: "--s1", sub: wk.map(function (w) { return w.a + " student" + (w.a === 1 ? "" : "s"); }) }] })) +
+      ovCard("Answered correctly", "Class % right by week; the dashed line is the 70% goal", ovSlot({ kind: "line", unit: "%", ref: 70, labels: labs, tipHead: "Week of ", series: [{ name: "% right", v: wk.map(function (w) { return w.p; }), c: "--s1", sub: wk.map(function (w) { return w.n ? w.n.toLocaleString() + " answers" : ""; }) }] }));
+    var teams = (o.teams || []).slice(0, 4), tm = "";
+    if (teams.length) {
+      var tser = teams.map(function (t, j) { return { name: t.name, c: OV_SER[j], v: wk.map(function (w) { var n = 0, c = 0; S.forEach(function (s) { if (s.team === t.id) { var x = (s.weeks || [])[w.i]; if (x) { n += x[0]; c += x[1]; } } }); return n ? vzPct(c, n) : null; }) }; });
+      var nser = teams.map(function (t, j) { return { name: t.name, c: OV_SER[j], v: wk.map(function (w) { var n = 0; S.forEach(function (s) { if (s.team === t.id) { var x = (s.weeks || [])[w.i]; if (x) n += x[0]; } }); return n; }) }; });
+      tm = '<div class="mxg">' + ovCard("Questions by team", "Answers per week", ovLegend(nser) + ovSlot({ kind: "line", labels: labs, tipHead: "Week of ", series: nser })) + ovCard("% right by team", "Weekly accuracy for each team", ovLegend(tser) + ovSlot({ kind: "line", unit: "%", ref: 70, labels: labs, tipHead: "Week of ", series: tser })) + '</div>';
+    }
+    var on = S.filter(function (s) { return s.activated; }), withAns = on.filter(function (s) { return s.answered; });
+    var bandP = vzBand(withAns.map(function (s) { return s.accuracy; }), [60, 70, 80, 90], ["Under 60%", "60s", "70s", "80s", "90% +"]);
+    var bandD = vzBand(on.map(function (s) { return s.completion; }), [25, 50, 75, 100], ["Under 25%", "25–49%", "50–74%", "75–99%", "Reached the goal"]);
+    var idle = on.filter(function (s) { return !s.lastAt || Date.now() - s.lastAt > 7 * 864e5; }).length;
+    var stu = ovCard("Where the students are", on.length + " of " + (o.seats || S.length) + " seats joined" + (idle ? " · " + idle + " haven't studied in 7 days" : ""), ovShare("% right", bandP) + ovShare("Progress toward the goal of " + (o.goal || 300) + " questions", bandD)) +
+      ovCard("Students who studied", "How many students answered at least one question each week", ovSlot({ kind: "cols", labels: labs, tipHead: "Week of ", series: [{ name: "Students", v: wk.map(function (w) { return w.a; }), c: "--s1" }] }, 190));
+    el.innerHTML = '<div class="kpis">' + kp + '</div>' + ovSec("Activity") + '<div class="mxg">' + act + '</div>' + tm +
+      ovSec("Where the class struggles") + '<div class="mxg">' +
+      ovListCard("Weakest medications", "% right, least to greatest · number of answers on the right", ovDim("d"), "%", "medications", "low") +
+      ovListCard("Weakest drug classes", "% right, least to greatest", ovDim("l"), "%", "drug classes", "low") +
+      ovListCard("Body systems", "% right, least to greatest", ovDim("s"), "%", "body systems", "low") +
+      ovListCard("Question styles", "% right by kind of question, least to greatest", ovDim("y"), "%", "question styles", "low") + '</div>' +
+      ovSec("Students") + '<div class="mxg">' + stu + '</div>' + ovSec("Your charts");
+    ovDrawAll(el);
   }
   /* ---------- Build your own charts (owner, Nov 20 2026: "like 30 different things you can choose from to insert into
      a graph, so they can mix and match"). Pick what to measure and how to draw it; charts are saved per class on this
      computer. ---------- */
   function vzSum(dim) { var M = {}; (ST.dash.students || []).forEach(function (s) { var x = (s.detail || {})[dim] || {}; Object.keys(x).forEach(function (k) { var a = M[k] || (M[k] = { n: 0, c: 0 }); a.n += x[k].n; a.c += x[k].c; }); }); return M; }
   function vzName(dim, k) { var d = ST.dash; if (dim === "s") return (d.sysNames && d.sysNames[k]) || k; if (dim === "y") return QT[k] || k; if (dim === "k") return KIND[k] || k; var L = d.labels || {}; return L[(dim === "d" ? "d_" : dim === "l" ? "l_" : "p_") + k] || k.replace(/-/g, " "); }
-  function vzDim(dim, what, order, top) { var M = vzSum(dim); var rows = Object.keys(M).filter(function (k) { return M[k].n >= (what === "pct" ? 5 : 1); }).map(function (k) { return [vzName(dim, k), what === "pct" ? vzPct(M[k].c, M[k].n) : M[k].n]; }); rows.sort(function (a, b) { return order === "asc" ? a[1] - b[1] : b[1] - a[1]; }); return rows.slice(0, top || 10); }
-  function vzStu(f, top) { return (ST.dash.students || []).filter(function (s) { return s.activated; }).map(function (s) { return [s.alias.replace("Student ", "S"), f(s)]; }).sort(function (a, b) { return b[1] - a[1]; }).slice(0, top || 24); }
+  function vzDim(dim, what, order, top) { var M = vzSum(dim); var rows = Object.keys(M).filter(function (k) { return M[k].n >= (what === "pct" ? 5 : 1); }).map(function (k) { return [vzName(dim, k), what === "pct" ? vzPct(M[k].c, M[k].n) : M[k].n]; }); rows.sort(function (a, b) { return order === "asc" ? a[1] - b[1] : b[1] - a[1]; }); return rows.slice(0, VZ_ALL ? 1e9 : top || 10); }
+  function vzStu(f, top) { return (ST.dash.students || []).filter(function (s) { return s.activated; }).map(function (s) { return [s.alias.replace("Student ", "S"), f(s)]; }).sort(function (a, b) { return b[1] - a[1]; }).slice(0, VZ_ALL ? 1e9 : top || 24); }
   function vzWeeks(f) { var d = ST.dash, W = (d.weekStarts || []).length, out = []; for (var i = Math.max(0, W - 8); i < W; i++) { var dt = new Date(d.weekStarts[i]); out.push([(dt.getUTCMonth() + 1) + "/" + dt.getUTCDate(), f(i)]); } return out; }
   function vzWk(i, f) { var n = 0, c = 0, a = 0; (ST.dash.students || []).forEach(function (s) { var w = (s.weeks || [])[i]; if (w) { n += w[0]; c += w[1]; if (w[0]) a++; } }); return f(n, c, a); }
   function vzBand(vals, edges, names) { var out = names.map(function (n) { return [n, 0]; }); vals.forEach(function (v) { for (var i = 0; i < edges.length; i++) if (v < edges[i]) { out[i][1]++; return; } out[out.length - 1][1]++; }); return out; }
@@ -1482,7 +1584,7 @@ body.embed .mxhead .adm{display:none}
       ["sysWeak", "Weakest body systems", "%", function () { return vzDim("s", "pct", "asc", 6); }],
       ["sysWeakCount", "How many students have each system as their weakest", "n", function () { var M = {}; (ST.dash.students || []).forEach(function (s) { (s.weakest || []).slice(0, 1).forEach(function (w) { M[w.name] = (M[w.name] || 0) + 1; }); }); return Object.keys(M).map(function (k) { return [k, M[k]]; }).sort(function (a, b) { return b[1] - a[1]; }); }]]],
     ["Medications", [
-      ["drugPct", "% right on the most-studied medications", "%", function () { var A = vzDim("d", "n", "desc", 10), M = vzSum("d"); return Object.keys(M).sort(function (a, b) { return M[b].n - M[a].n; }).slice(0, 10).map(function (k) { return [vzName("d", k), vzPct(M[k].c, M[k].n)]; }); }],
+      ["drugPct", "% right on the most-studied medications", "%", function () { var A = vzDim("d", "n", "desc", 10), M = vzSum("d"); return Object.keys(M).sort(function (a, b) { return M[b].n - M[a].n; }).slice(0, VZ_ALL ? 1e9 : 10).map(function (k) { return [vzName("d", k), vzPct(M[k].c, M[k].n)]; }); }],
       ["drugWeak", "Weakest medications", "%", function () { return vzDim("d", "pct", "asc", 8); }],
       ["drugStrong", "Strongest medications", "%", function () { return vzDim("d", "pct", "desc", 8); }],
       ["drugAns", "Most-studied medications", "n", function () { return vzDim("d", "n", "desc", 10); }]]],
@@ -1510,33 +1612,43 @@ body.embed .mxhead .adm{display:none}
     ["Teams and questions", [
       ["teamPct", "% right by team", "%", function () { return (ST.dash.org.teams || []).map(function (tm) { var n = 0, c = 0; (ST.dash.students || []).forEach(function (s) { if (s.team === tm.id) { n += s.answered; c += s.correct; } }); return [tm.name, vzPct(c, n)]; }); }],
       ["teamAns", "Questions answered by team", "n", function () { return (ST.dash.org.teams || []).map(function (tm) { var n = 0; (ST.dash.students || []).forEach(function (s) { if (s.team === tm.id) n += s.answered; }); return [tm.name, n]; }); }],
-      ["hardQ", "Most-missed questions (% right)", "%", function () { return (ST.dash.questions || []).slice(0, 8).map(function (q, i) { return ["Q" + (i + 1), q.pct]; }); }],
-      ["hardQwrong", "How many picked the most common wrong answer", "n", function () { return (ST.dash.questions || []).slice(0, 8).map(function (q, i) { return ["Q" + (i + 1), (q.wrong && q.wrong[0] ? q.wrong[0].n : 0)]; }); }]]]
+      ["hardQ", "Most-missed questions (% right)", "%", function () { return (ST.dash.questions || []).slice(0, VZ_ALL ? 1e9 : 8).map(function (q, i) { return ["Q" + (i + 1), q.pct]; }); }],
+      ["hardQwrong", "How many picked the most common wrong answer", "n", function () { return (ST.dash.questions || []).slice(0, VZ_ALL ? 1e9 : 8).map(function (q, i) { return ["Q" + (i + 1), (q.wrong && q.wrong[0] ? q.wrong[0].n : 0)]; }); }]]]
   ];
-  var VZ_CH = [["bar", "Bars"], ["hbar", "Sideways bars"], ["line", "Line"], ["donut", "Donut"], ["rings", "Rings (percent)"], ["bubble", "Bubbles"], ["burst", "Burst"]];
+  var VZ_CH = [["line", "Line"], ["bar", "Columns"], ["hbar", "Ranked bars"], ["donut", "Donut"], ["share", "100% bar"], ["table", "Table"]];
+  var VZ_OLD = { rings: "hbar", bubble: "hbar", burst: "bar", sideways: "hbar" };
   function vzMetric(id) { var out = null; VZ_METRICS.forEach(function (g) { g[1].forEach(function (m) { if (m[0] === id) out = m; }); }); return out; }
-  function vzChart(rows, ch, unit) {
-    rows = rows || []; if (!rows.length) return '<p class="muted small">Not enough answers yet.</p>';
-    var mx = Math.max.apply(null, rows.map(function (r) { return r[1]; }).concat([unit === "%" ? 100 : 1])), u = unit === "%" ? "%" : "", ttl = function (r) { return '<title>' + esc(r[0]) + ': ' + r[1] + u + '</title>'; };
-    if (ch === "hbar") return '<div class="vzh">' + rows.map(function (r, i) { return '<div><span>' + esc(r[0]) + '</span><i><b style="width:' + Math.max(2, 100 * r[1] / mx) + '%;background:' + VZ[i % VZ.length] + '"></b></i><em>' + r[1] + u + '</em></div>'; }).join("") + '</div>';
-    if (ch === "line") { var w = 280, step = rows.length > 1 ? (w - 30) / (rows.length - 1) : 0, pts = rows.map(function (r, i) { return [15 + i * step, 120 - 105 * r[1] / mx]; }); return '<svg viewBox="0 0 280 150" class="vzsvg"><path d="M' + pts.map(function (p) { return p[0].toFixed(1) + " " + p[1].toFixed(1); }).join(" L") + ' L' + pts[pts.length - 1][0].toFixed(1) + ' 122 L15 122Z" fill="url(#vzg)" opacity=".35"/><path d="M' + pts.map(function (p) { return p[0].toFixed(1) + " " + p[1].toFixed(1); }).join(" L") + '" fill="none" stroke="#7c6ef2" stroke-width="3" stroke-linejoin="round"/>' + pts.map(function (p, i) { return '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="4" fill="' + VZ[i % VZ.length] + '">' + ttl(rows[i]) + '</circle><text x="' + p[0].toFixed(1) + '" y="140" text-anchor="middle" class="vzax">' + esc(String(rows[i][0]).slice(0, 6)) + '</text>'; }).join("") + '<defs><linearGradient id="vzg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7c6ef2"/><stop offset="1" stop-color="#7c6ef2" stop-opacity="0"/></linearGradient></defs></svg>'; }
-    if (ch === "donut") { var tot = rows.reduce(function (s, r) { return s + r[1]; }, 0) || 1, a = -Math.PI / 2; return '<div class="vzrow"><svg viewBox="0 0 160 160" class="vzsvg sq">' + rows.map(function (r, i) { var f = r[1] / tot, a1 = a + f * Math.PI * 2 - 0.03, p = '<path d="' + vzArc(80, 80, 56, a, Math.max(a + 0.01, a1)) + '" stroke="' + VZ[i % VZ.length] + '" stroke-width="24" fill="none">' + ttl(r) + '</path>'; a += f * Math.PI * 2; return p; }).join("") + '</svg>' + vzKey(rows, u) + '</div>'; }
-    if (ch === "rings") { var R = rows.slice(0, 5); return '<div class="vzrow"><svg viewBox="0 0 160 160" class="vzsvg sq">' + R.map(function (r, i) { var rr = 66 - i * 12, a0 = Math.PI / 2, a1 = a0 + Math.PI * 1.5 * Math.min(1, r[1] / mx); return '<path d="' + vzArc(80, 80, rr, a0, a0 + Math.PI * 1.5) + '" stroke="var(--track,#2a2440)" stroke-width="8" fill="none" stroke-linecap="round"/><path d="' + vzArc(80, 80, rr, a0, Math.max(a0 + 0.02, a1)) + '" stroke="' + VZ[i] + '" stroke-width="8" fill="none" stroke-linecap="round">' + ttl(r) + '</path>'; }).join("") + '</svg>' + vzKey(R, u) + '</div>'; }
-    if (ch === "bubble") { var B = rows.slice(0, 6), P = [[50, 55], [112, 45], [158, 100], [92, 112], [30, 118], [150, 30]], bm = Math.max.apply(null, B.map(function (r) { return r[1]; }).concat([1])); return '<svg viewBox="0 0 190 160" class="vzsvg sq">' + B.map(function (r, i) { var rad = 14 + 24 * Math.sqrt(r[1] / bm); return '<circle cx="' + P[i][0] + '" cy="' + P[i][1] + '" r="' + rad.toFixed(1) + '" fill="' + VZ[i % VZ.length] + '" opacity=".88">' + ttl(r) + '</circle><text x="' + P[i][0] + '" y="' + (P[i][1] - 2) + '" text-anchor="middle" class="vzb1">' + esc(String(r[0]).slice(0, 12)) + '</text><text x="' + P[i][0] + '" y="' + (P[i][1] + 11) + '" text-anchor="middle" class="vzb2">' + r[1] + u + '</text>'; }).join("") + '</svg>'; }
-    if (ch === "burst") { var n = rows.length; return '<svg viewBox="0 0 160 160" class="vzsvg sq">' + rows.map(function (r, i) { var a = -Math.PI / 2 + i * 2 * Math.PI / n, r1 = 32 + 42 * r[1] / mx; return '<line x1="' + (80 + 28 * Math.cos(a)).toFixed(1) + '" y1="' + (80 + 28 * Math.sin(a)).toFixed(1) + '" x2="' + (80 + r1 * Math.cos(a)).toFixed(1) + '" y2="' + (80 + r1 * Math.sin(a)).toFixed(1) + '" stroke="' + VZ[i % VZ.length] + '" stroke-width="' + Math.max(3, Math.min(9, 150 / n)) + '" stroke-linecap="round">' + ttl(r) + '</line>'; }).join("") + '<text x="80" y="85" text-anchor="middle" class="vzc1">' + n + '</text></svg>'; }
-    var bw = Math.max(8, Math.min(30, 250 / rows.length - 6));
-    return '<svg viewBox="0 0 ' + Math.max(280, rows.length * (bw + 6) + 20) + ' 160" class="vzsvg">' + rows.map(function (r, i) { var h = Math.round(118 * r[1] / mx), x = 12 + i * (bw + 6); return '<rect x="' + x + '" y="' + (128 - h) + '" width="' + bw + '" height="' + h + '" rx="3" fill="' + VZ[i % VZ.length] + '">' + ttl(r) + '</rect><text x="' + (x + bw / 2) + '" y="' + (124 - h) + '" text-anchor="middle" class="vzax">' + r[1] + u + '</text><text x="' + (x + bw / 2) + '" y="144" text-anchor="middle" class="vzax">' + esc(String(r[0]).slice(0, Math.max(3, Math.round(bw / 5)))) + '</text>'; }).join("") + '</svg>';
+  function vzChart(rows, ch, unit, name) {
+    rows = (rows || []).filter(function (r) { return r[1] != null; }); if (!rows.length) return '<p class="muted small">Not enough answers yet.</p>';
+    ch = VZ_OLD[ch] || ch; var u = unit === "%" ? "%" : "", mx = Math.max.apply(null, rows.map(function (r) { return r[1]; }).concat([unit === "%" ? 100 : 1]));
+    if (ch === "line" || ch === "bar") return ovSlot({ kind: ch === "bar" ? "cols" : "line", unit: u, labels: rows.map(function (r) { return r[0]; }), series: [{ name: name || "", v: rows.map(function (r) { return r[1]; }), c: "--s1" }] });
+    if (ch === "hbar") return ovBars(rows.map(function (r) { return { name: r[0], v: r[1] }; }), u);
+    if (ch === "table") return '<table class="ovtbl">' + rows.map(function (r) { return '<tr><td>' + esc(r[0]) + '</td><td>' + ovFmt(r[1], u) + '</td></tr>'; }).join("") + '</table>';
+    /* part-to-whole: biggest first, the rest folded into "Other", shades from dark to light */
+    var R = rows.slice().sort(function (a, b) { return b[1] - a[1]; }), tot = R.reduce(function (s, r) { return s + r[1]; }, 0) || 1;
+    if (R.length > 5) { var rest = R.slice(4).reduce(function (s, r) { return s + r[1]; }, 0); R = R.slice(0, 4).concat([["Other", rest]]); }
+    var col = function (i) { return OV_RAMP[4 - i] || "--q1"; };
+    if (ch === "share") return ovShare(name || "", R.map(function (r) { return [r[0], r[1]]; }).reverse()).replace(/ students<\/span>/, u ? "</span>" : " total</span>");
+    var a = -Math.PI / 2, svgp = R.map(function (r, i) { var f = r[1] / tot, a1 = a + f * Math.PI * 2, big = f > 0.5 ? 1 : 0, ro = 66, ri = 42, p;
+      if (f >= 0.999) p = '<circle cx="75" cy="75" r="54" fill="none" style="stroke:var(' + col(i) + ')" stroke-width="24"/>';
+      else p = '<path d="M' + (75 + ro * Math.cos(a)).toFixed(2) + ' ' + (75 + ro * Math.sin(a)).toFixed(2) + ' A' + ro + ' ' + ro + ' 0 ' + big + ' 1 ' + (75 + ro * Math.cos(a1)).toFixed(2) + ' ' + (75 + ro * Math.sin(a1)).toFixed(2) + ' L' + (75 + ri * Math.cos(a1)).toFixed(2) + ' ' + (75 + ri * Math.sin(a1)).toFixed(2) + ' A' + ri + ' ' + ri + ' 0 ' + big + ' 0 ' + (75 + ri * Math.cos(a)).toFixed(2) + ' ' + (75 + ri * Math.sin(a)).toFixed(2) + 'Z" style="fill:var(' + col(i) + ');stroke:var(--surface)" stroke-width="2" data-ovtt="' + esc(r[0] + ": " + ovFmt(r[1], u) + " (" + Math.round(100 * f) + "%)") + '"/>';
+      a = a1; return p; }).join("");
+    return '<div class="ovdn"><svg viewBox="0 0 150 150" width="150" height="150" role="img">' + svgp + '<text x="75" y="80" text-anchor="middle" class="ovdc">' + (u ? "" : tot.toLocaleString()) + '</text></svg><ul>' + R.map(function (r, i) { return '<li><i style="background:var(' + col(i) + ')"></i>' + esc(r[0]) + '<b>' + ovFmt(r[1], u) + '</b><span class="muted small">' + Math.round(100 * r[1] / tot) + '%</span></li>'; }).join("") + '</ul></div>';
   }
-  function vzKey(rows, u) { return '<ul class="vzkey">' + rows.slice(0, 8).map(function (r, i) { return '<li><i style="background:' + VZ[i % VZ.length] + '"></i>' + esc(r[0]) + ' <b>' + r[1] + u + '</b></li>'; }).join("") + '</ul>'; }
-  function vzMine() { try { return JSON.parse(localStorage.getItem("vzc:" + ST.orgId) || "null") || [{ m: "drugWeak", ch: "hbar" }, { m: "bandPct", ch: "donut" }]; } catch (e) { return []; } }
+  function vzFoot(m) { var all = []; VZ_ALL = true; try { all = (m[3]() || []).filter(function (r) { return r[1] != null; }); } catch (e) {} VZ_ALL = false;
+    OV_TIME = /^wk/.test(m[0]); var f = ovFoot(m[1], all.map(function (r) { return { name: r[0], v: r[1] }; }), m[2] === "%" ? "%" : "", "rows", OV_TIME ? "" : "low"); OV_TIME = false; return f; }
+  function vzMine() { try { return JSON.parse(localStorage.getItem("vzc:" + ST.orgId) || "null") || [{ m: "wkPct", ch: "line" }, { m: "drugWeak", ch: "hbar" }]; } catch (e) { return []; } }
   function vzSave(L) { try { localStorage.setItem("vzc:" + ST.orgId, JSON.stringify(L)); } catch (e) {} }
   function drawCustom() {
     var el = $("vzMine"); if (!el) return;
     var L = vzMine();
-    el.innerHTML = L.map(function (c, i) { var m = vzMetric(c.m); if (!m) return ""; var rows = []; try { rows = m[3](); } catch (e) {} return '<div class="vzc vz-mine' + (c.ch === "hbar" || c.ch === "bar" || c.ch === "line" ? " vz-wide" : "") + '"><div class="vzctl"><select data-vzch="' + i + '" aria-label="Chart type">' + VZ_CH.map(function (x) { return '<option value="' + x[0] + '"' + (x[0] === c.ch ? " selected" : "") + '>' + x[1] + '</option>'; }).join("") + '</select><button class="vzx" data-vzdel="' + i + '" title="Remove this chart" aria-label="Remove this chart">&times;</button></div><h3>' + esc(m[1]) + '</h3>' + vzChart(rows, c.ch, m[2]) + '</div>'; }).join("");
+    el.innerHTML = L.length ? L.map(function (c, i) { var m = vzMetric(c.m); if (!m) return ""; var rows = []; try { rows = m[3](); } catch (e) {} var ch = VZ_OLD[c.ch] || c.ch;
+      if (!/^wk/.test(m[0]) && (ch === "hbar" || ch === "table" || ch === "bar" || ch === "line")) rows = (rows || []).slice().sort(function (a, b) { return a[1] - b[1]; });
+      return '<div class="mxc vz-mine"><div class="vzctl"><select data-vzch="' + i + '" aria-label="Chart type">' + VZ_CH.map(function (x) { return '<option value="' + x[0] + '"' + (x[0] === ch ? " selected" : "") + '>' + x[1] + '</option>'; }).join("") + '</select><button class="vzx" data-vzdel="' + i + '" title="Remove this chart" aria-label="Remove this chart">&times;</button></div><h3>' + esc(m[1]) + '</h3><div class="cs">' + (m[2] === "%" ? "Percent right" : "Count") + '</div>' + vzChart(rows, ch, m[2], m[1]) + vzFoot(m) + '</div>'; }).join("") : '<p class="muted small">Pick something to measure above and press Add chart.</p>';
+    ovDrawAll(el);
   }
   function vzPicker() {
-    return '<div class="vzpick noprint"><b>Build a chart</b><select id="vzM" aria-label="What to show">' + VZ_METRICS.map(function (g) { return '<optgroup label="' + esc(g[0]) + '">' + g[1].map(function (m) { return '<option value="' + m[0] + '">' + esc(m[1]) + '</option>'; }).join("") + '</optgroup>'; }).join("") + '</select><select id="vzT" aria-label="Chart type">' + VZ_CH.map(function (c) { return '<option value="' + c[0] + '">' + c[1] + '</option>'; }).join("") + '</select><button id="vzAdd">Add chart</button><span class="muted small">' + VZ_METRICS.reduce(function (s, g) { return s + g[1].length; }, 0) + ' things to chart, 7 chart types. Saved on this computer.</span></div>';
+    return '<div class="vzpick noprint"><b>Add a chart</b><select id="vzM" aria-label="What to show">' + VZ_METRICS.map(function (g) { return '<optgroup label="' + esc(g[0]) + '">' + g[1].map(function (m) { return '<option value="' + m[0] + '">' + esc(m[1]) + '</option>'; }).join("") + '</optgroup>'; }).join("") + '</select><select id="vzT" aria-label="Chart type">' + VZ_CH.map(function (c) { return '<option value="' + c[0] + '">' + c[1] + '</option>'; }).join("") + '</select><button id="vzAdd">Add chart</button><span class="muted small">' + VZ_METRICS.reduce(function (s, g) { return s + g[1].length; }, 0) + ' measures · ' + VZ_CH.length + ' chart types · saved on this computer</span></div>';
   }
   document.addEventListener("click", function (e) {
     var t = e.target; if (!t || !t.closest) return;
@@ -1559,6 +1671,7 @@ body.embed .mxhead .adm{display:none}
     var d = ST.dash, o = d.org, t = d.totals;
     var left = Math.ceil((o.expiresAt - Date.now()) / 864e5);
     $("cName").textContent = o.name;
+    show("sampleNote", !!d.sample);
     $("cSub").textContent = (o.pkg ? (PKGNAME[o.pkg] || o.pkg) + " · " : "") + (o.kind === "annual" ? "Paid" : "Pilot") + " · " + (o.live ? left + " day" + (left === 1 ? "" : "s") + " left" : o.status === "ended" ? "Ended" : "Expired") +
       (o.level ? " · " + (LVNAME[o.level] || o.level) : "") + " · goal " + o.goal + " questions per student" + (o.instructors.length ? " · " + o.instructors.join(", ") : "");
     $("printTitle").textContent = o.name + " — DrugBug key sheet";
