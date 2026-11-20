@@ -323,6 +323,28 @@ function myUnits(k) { var sel = nFocus() === "all" ? nUnitsSel() : [nFocus()]; r
 function nSchoolOn() { var sel = nFocus() === "all" ? nUnitsSel() : [nFocus()]; return sel.indexOf("school") >= 0; }
 function myUnit(k) { return myUnits(k)[0] || null; }
 function routeCtx() { if (S.view === "level") return routeOfLevel(S.level); for (var r in ROUTES) if (ROUTES[r].view === S.view) return r; return S.view === "gen" ? "gen" : null; }
+/* ---------- NCLEX Clinical Judgment Measurement Model (owner, Nov 19 2026) ----------
+   Every nursing question is tagged with the NCJMM step it tests, from its wording:
+   1 Recognize cues, 2 Analyze cues, 3 Prioritize hypotheses, 4 Generate solutions, 5 Take action,
+   6 Evaluate outcomes. Nursing quizzes show the step, can practise one step at a time, and the results
+   break down by step so a student sees which part of clinical judgment is weakest. */
+var CJ_STEPS = [["cues", "Recognize cues"], ["analyze", "Analyze cues"], ["prior", "Prioritize hypotheses"], ["solve", "Generate solutions"], ["act", "Take action"], ["eval", "Evaluate outcomes"]];
+var CJ_RX = {
+  eval: /\bstatement\b.*\b(requires follow-up|indicates|needs)\b|\b(effective|effectiveness|improv(ed|ing|ement)|indicates? (that )?(the )?(treatment|therapy|medication|teaching|intervention)|response to|evaluat|outcome|reassess|desired effect|working|understands?|understanding of|further teaching|needs more teaching|teaching (was|has been) (effective|successful)|goal (was|has been) met)\b/i,
+  act: /\b(administer|give|giving|route|which action|what (action )?should the nurse (do|take)|nurse should (do|first|immediately)|implement|perform|first action|initial action|immediate action|next action|hold|withhold|notify|report to the (provider|physician))\b/i,
+  prior: /\b(priority|prioritize|most urgent|highest|most concerning|most important|which (patient|client) should|see first|immediate(ly)? (threat|concern)|life-threatening|greatest risk|most at risk)\b/i,
+  solve: /\b(plan|planning|expected|goal|appropriate intervention|which (orders?|interventions?)|anticipate|prepare|expect (to|the)|include in the (plan|teaching)|teach(ing)? (the|a) (patient|client)|instruct)\b/i,
+  analyze: /\b(most likely|cause|explain|because|why|indicat(es|ive|ing)|consistent with|suggest|associated with|due to|result of|related to|caused by|mechanism)\b/i,
+  cues: /\b(finding|assessment|which (signs?|symptoms?|data|values?|labs?|results?)|abnormal|monitor for|notice|observe|vital signs?|watch for|look for|requires follow-up|of concern|expected finding)\b/i
+};
+function cjStep(q) {
+  if (!q) return "analyze"; if (q._cj) return q._cj; if (typeof q.cj === "string" && CJ_RX[q.cj]) return q.cj;
+  var t = String(q.q || q.stem || "");
+  var k = CJ_RX.eval.test(t) ? "eval" : CJ_RX.prior.test(t) ? "prior" : CJ_RX.act.test(t) ? "act" : CJ_RX.solve.test(t) ? "solve" : CJ_RX.cues.test(t) ? "cues" : CJ_RX.analyze.test(t) ? "analyze" : "analyze";
+  return (q._cj = k);
+}
+function cjName(k) { var x = CJ_STEPS.filter(function (s) { return s[0] === k; })[0]; return x ? x[1] : k; }
+function cjTag(q) { var k = cjStep(q), i = CJ_STEPS.map(function (s) { return s[0]; }).indexOf(k); return '<span class="cjtag cj-' + k + '" title="NCLEX clinical judgment step">' + (i + 1) + ' · ' + esc(cjName(k)) + '</span>'; }
 function nurseCtx() { return routeCtx() === "rn"; }
 function medCtx() { return routeCtx() === "md"; }
 function imCtx() { return routeCtx() === "im"; }
@@ -526,7 +548,7 @@ function go(view, opts) {
   clearTimeout(S.qT); S.view = view; Object.assign(S, { bgRun: null, cmpOn: 0, cmpB: null, cmpQ: "", pointGo: null, showFilt: false, onlyMarks: false, tool: null, shopF: null, tab: "hub", q: "", tags: {}, group: "all", scen: null, fc: null, nr: null, sess: null, prepNr: null, unit: null, fam: null, famq: "", cn: null, menu: false, mupop: false, fmq: "", trId: null, blT: "", disId: null }, opts || {});
   if ((S.view === "flevels" || S.view === "field" || (S.view === "level" && isF(S.level))) && typeof fmUnlocked === "function" && !fmUnlocked()) { S.view = "home"; view = "home"; } /* Field Medic is hidden until a code is redeemed */
   fixTab();
-  Admin.on = view === "admin"; if (view === "level") store("lastLevel", S.level);
+  Admin.on = view === "admin"; if (view === "level") { store("lastLevel", S.level); S.lvWheelFor = null; S.obI = null; }   /* the level wheel reopens on the bug you just picked (owner, Nov 19 2026) */
   var h = view === "home" ? "" : view === "admin" ? "admin" : view === "classes" ? "classes" : view === "settings" ? "settings" : view === "stats" ? "stats" : view === "terrarium" ? "terrarium" : view === "levels" ? "prehospital" : view === "flevels" ? "fieldmedic" : view === "nlevels" ? "nursing" : view === "mlevels" ? "medschool" : view === "ilevels" ? "imaging" : view === "alevels" ? "allied" : view === "everyday" ? "everyday" : view === "beginner" ? "beginner" : view === "field" ? "field" : view === "gen" ? "general" : view === "easy" ? "easy" : S.level;
   try { history.replaceState(null, "", h ? "#" + h : location.pathname); } catch (e) {}
   render(); window.scrollTo(0, 0);
@@ -557,7 +579,8 @@ function backRow() {
   var v = S.view, lab = "", act = "";
   if (v === "levels" || v === "flevels" || v === "nlevels" || v === "mlevels" || v === "ilevels" || v === "alevels" || (v === "everyday" && !S.evTab) || (v === "beginner" && !S.bgRun)) { lab = "Main menu"; act = 'data-go="home"'; }
   else if (v === "gen" && S.tab === "hub") { lab = "Main menu"; act = 'data-go="home"'; }
-  else if (v === "level" && S.tab === "hub") { var r = isF(S.level) ? ROUTES.ph : ROUTES[routeOfLevel(S.level)]; lab = r ? r.name : "Main menu"; act = 'data-go="' + (r ? r.view : "home") + '"'; }
+  /* back from inside a specialty goes straight to the main menu, not the level picker (owner, Nov 19 2026) */
+  else if (v === "level" && S.tab === "hub") { lab = "Main menu"; act = 'data-go="home"'; }
   else if (UTIL_VIEWS[v]) { var ub = S.utilBack; lab = ub && ub.view && ub.view !== "home" ? "Back" : "Main menu"; act = 'data-act="utilback"'; }
   if (!lab) return "";
   return '<div class="backrow"><button class="backbtn" ' + act + '><span aria-hidden="true">&larr;</span> ' + esc(lab) + '</button></div>';
@@ -864,7 +887,7 @@ function viewLevels() {
     var W = L.map(function (l) { return { code: l.key, name: l.name, bug: l.bug, blurb: l.blurb || scopeTag(l.key, 0, 1), lvl: 1 }; });
     S.lvWheel = W;
     if (S.lvWheelFor !== rt || S.obI == null) {
-      var pickK = [Prog.d.startLevel, store("lastLevel")].filter(function (k) { return k && W.some(function (w) { return w.code === k; }); })[0];
+      var pickK = [store("lastLevel"), Prog.d.startLevel].filter(function (k) { return k && W.some(function (w) { return w.code === k; }); })[0];
       S.obI = Math.max(0, W.map(function (w) { return w.code; }).indexOf(pickK)); S.lvWheelFor = rt;
     }
     var wi = ((S.obI % W.length) + W.length) % W.length, cw = W[wi];
@@ -918,6 +941,7 @@ var ICO = {
   flightp: '<path d="M2 13l20-7-6 14-4-5-6 3 2-5z"/><path d="M12 15l4-9"/>',
   blood: '<path d="M12 3c3 4.5 6 8 6 11a6 6 0 0 1-12 0c0-3 3-6.5 6-11z"/><path d="M9.5 14.5a2.5 2.5 0 0 0 2.5 2.5"/>',
   hemo: '<path d="M3 13h3l2-6 3 11 2.5-8 1.5 3h6"/>',
+  vlab: '<rect x="2" y="3" width="20" height="13" rx="2"/><path d="M5 10h3l1.5-3 2 6 1.5-3h6M8 21h8M12 16v5"/>',
   labs: '<path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3"/><path d="M7.5 15h9"/>',
   units: '<path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-5h6v5M12 8v5M9.5 10.5h5"/>',
   body: '<circle cx="12" cy="4.5" r="2.5"/><path d="M12 7v8M7 10h10M12 15l-3 6M12 15l3 6"/>',
@@ -1004,6 +1028,7 @@ function tabList() {
   if (hasBlood() && !isF(S.level)) L.push(["flightp", "Flight Prep", "Gas laws, stresses of flight and hard critical care questions."]);
   if (hasBlood()) L.push(["blood", "Blood Products", "PRBCs, whole blood, plasma, MTP and transfusion reactions."]);
   if (hasHemo()) L.push(["hemo", "Hemodynamics", "A-lines, PA catheters, IABP, Impella, ECMO, LVAD and shock profiles."]);
+  if (typeof vlOk === "function" && vlOk() && typeof vlabView === "function") L.push(["vlab", "Virtual Lab", "The Great Bug on a balloon pump, Impella, LVAD, ECMO and more: read the live monitor and answer."]);
   /* Flight Paramedic and Flight Nurse share one reference across hemodynamics, flight physiology,
      blood and the transport topics, with a star that pins any of it to this menu. (owner, Nov 3 2026) */
   if (typeof isFlightLv === "function" && S.view === "level" && isFlightLv(S.level))
@@ -1062,10 +1087,10 @@ var HUB_GROUPS = [
   ["Your field", ["ft0", "ft1", "ft2", "ft3", "ft4", "ft5", "ft6", "ft7", "ft8", "ft9"]],
   ["Look it up", ["registry", "guide", "diseases", "calls", "anatomy", "families", "conds", "micro", "illicit", "units", "body", "alts", "contrast", "labs", "blood", "hemo", "flightp", "flt_ref"]],
   ["Plants, foods and supplements", ["plants", "herbc", "fungc", "nutc", "vegc", "fruitc", "vitc"]],
-  ["Study and practice", ["qs", "rush", "cards", "games", "scene", "nbug"]],
+  ["Study and practice", ["qs", "rush", "vlab", "cards", "games", "scene", "nbug"]],
   ["Yours", ["myclass", "protocols", "mylist", "progress", "shop"]]
 ];
-var HUB_SHORT = { qs: "Practice and test questions", protocols: "Your agency's protocols, or request yours", scene: "The Great Bug acts out the call, vitals live", systems: "Airway, cardiac, neuro and more, with quizzes", calls: "Stroke, STEMI, sepsis, trauma, ROSC", micro: "Bacteria, viruses, fungi, prions, parasites", fm_bio: "Bio, chem, rad and nuclear casualties", fm_ref: "Burns, vents, scores, handoff, K9, dive", medlist: "What a med list says about the patient", fm_store: "Heat, cold, light and mixing", fm_istat: "Values, cartridges and practice cases", fm_cond: "Trauma, medical and blood reactions, with types", fm_blood: "Whole blood, components, MTP, reactions", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "The drugs you are studying", tools: "Questions, cards, games, drills", megacode: "A timed code on a live monitor", rush: "Codes, cases and calls, back to back", cards: "Flip, think, then check", games: "Crosswords, scrambles and memory match", scenarios: "Clinical cases", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", plants: "Name a plant, see its compounds", herbc: "Adaptogens, sleep herbs and more", fungc: "Medicinal mushrooms and ferments", nutc: "Creatine, fish oil, nootropics", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", anatomy: "Every organ and body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time" };
+var HUB_SHORT = { vlab: "The Great Bug on live devices", qs: "Practice and test questions", protocols: "Your agency's protocols, or request yours", scene: "The Great Bug acts out the call, vitals live", systems: "Airway, cardiac, neuro and more, with quizzes", calls: "Stroke, STEMI, sepsis, trauma, ROSC", micro: "Bacteria, viruses, fungi, prions, parasites", fm_bio: "Bio, chem, rad and nuclear casualties", fm_ref: "Burns, vents, scores, handoff, K9, dive", medlist: "What a med list says about the patient", fm_store: "Heat, cold, light and mixing", fm_istat: "Values, cartridges and practice cases", fm_cond: "Trauma, medical and blood reactions, with types", fm_blood: "Whole blood, components, MTP, reactions", illicit: "Effects, overdose signs, treatment", registry: "Every drug, A to Z", diseases: "250 conditions, cell to organ", families: "Similar drugs side by side", conds: "Which meds mention a condition", mylist: "The drugs you are studying", tools: "Questions, cards, games, drills", megacode: "A timed code on a live monitor", rush: "Codes, cases and calls, back to back", cards: "Flip, think, then check", games: "Crosswords, scrambles and memory match", scenarios: "Clinical cases", progress: "Mastery, badges and streaks", vegc: "Greens, roots, beans and herbs", fruitc: "Berries, citrus and tropical fruit", vitc: "Every vitamin form", plants: "Name a plant, see its compounds", herbc: "Adaptogens, sleep herbs and more", fungc: "Medicinal mushrooms and ferments", nutc: "Creatine, fish oil, nootropics", units: "ICU, ER, L&D, peds and more", body: "Drugs by body part", anatomy: "Every organ and body part", alts: "Same-class options", contrast: "Reactions, eGFR, GBCA safety", labs: "What the numbers mean", blood: "Products, MTP, reactions", hemo: "A-lines to ECMO", flightp: "Gas laws and flight stress", nbug: "One nursing skill at a time" };
 /* ---------- Hold a tile, then move it (owner, Nov 4 2026) ----------
    The iPhone gesture: press and hold until the tile lifts, drag it where you want, and the
    others slide out of the way as you go. Order is kept per level and per section, so the
@@ -1531,6 +1556,24 @@ function flashcards() {
 var RN_DEPTS = [["", "Nursing school RN", "start"], ["ed", "", "hosp"], ["icu", "", "hosp"], ["medsurg", "", "hosp"], ["ob", "", "hosp"], ["peds", "", "hosp"], ["periop", "", "hosp"],
   ["nicu", "", "nicu"], ["cardiac", "", "other"], ["onc", "", "other"], ["renal", "", "other"], ["psych", "", "other"], ["ltc", "", "other"]];   /* no Flight here: Flight Nurse has its own level (owner, Nov 5 2026) */
 var RN_SECT = { start: "Start here", hosp: "Hospital", nicu: "Newborn intensive care", other: "Specialty and beyond" };
+/* every RN card gets its own bug (owner, Nov 19 2026): nursing school is a bright-eyed baby nurse bug,
+   and each department a different species dressed for the unit */
+var RN_BUG = {
+  school: { id: "rn-school", name: "Baby Nurse Bug", body: "beetle", c: ["#fbcfe8", "#ec4899", "#ffffff"], acc: ["cap", "stars"], stage: 1 },
+  ed: { id: "rn-ed", name: "ER Hornet", body: "wasp", c: ["#fb923c", "#dc2626", "#fff7ed"], acc: ["stetho", "bolt"] },
+  icu: { id: "rn-icu", name: "ICU Stag", body: "stag", c: ["#60a5fa", "#1e3a8a", "#eff6ff"], acc: ["stetho", "goggles"] },
+  medsurg: { id: "rn-medsurg", name: "Med-Surg Ant", body: "ant", c: ["#86efac", "#15803d", "#f0fdf4"], acc: ["cap", "stetho"] },
+  ob: { id: "rn-ob", name: "Labor and Delivery Butterfly", body: "butterfly", c: ["#f9a8d4", "#a21caf", "#fdf4ff"], acc: ["scarf"] },
+  peds: { id: "rn-peds", name: "Peds Firefly", body: "firefly", c: ["#fde047", "#f59e0b", "#fefce8"], acc: ["beanie", "stars"] },
+  periop: { id: "rn-periop", name: "OR Mantis", body: "mantis", c: ["#5eead4", "#0f766e", "#f0fdfa"], acc: ["mask", "goggles"] },
+  nicu: { id: "rn-nicu", name: "NICU Caterpillar", body: "caterpillar", c: ["#bbf7d0", "#34d399", "#ffffff"], acc: ["stars"] },
+  cardiac: { id: "rn-cardiac", name: "Cardiac Scarab", body: "scarab", c: ["#fca5a5", "#b91c1c", "#fff1f2"], acc: ["stetho"] },
+  onc: { id: "rn-onc", name: "Oncology Moth", body: "moth", c: ["#c4b5fd", "#6d28d9", "#f5f3ff"], acc: ["scarf"] },
+  renal: { id: "rn-renal", name: "Dialysis Snail", body: "snail", c: ["#67e8f9", "#0e7490", "#ecfeff"], acc: ["goggles"] },
+  psych: { id: "rn-psych", name: "Psych Cicada", body: "cicada", c: ["#a5b4fc", "#4338ca", "#eef2ff"], acc: ["bowtie"] },
+  ltc: { id: "rn-ltc", name: "Long-Term Care Pillbug", body: "pillbug", c: ["#e7d3b5", "#a16207", "#fffbeb"], acc: ["cap", "scarf"] }
+};
+function rnBugArt(k) { var b = RN_BUG[k]; if (!b || typeof bugArt !== "function") return bugSVG("rn"); try { return bugArt(b, "bug", { mood: "happy", stage: b.stage }); } catch (e) { return bugSVG("rn"); } }
 function rnDepts() { return RN_DEPTS.map(function (d) { var u = d[0] ? unitObj(d[0]) : null; return d[0] && !u ? null : { key: d[0], name: d[1] || u.name, sect: d[2], blurb: u ? u.blurb : "The core RN pharmacology for nursing school and the NCLEX-RN: every medicine an RN gives and monitors." }; }).filter(Boolean); }
 function rnDeptView() {
   var sel = S.rnPick || (S.rnPick = nUnitsSel().slice()), cur = store("nunit") || "", D = rnDepts(), last = "";
@@ -1538,7 +1581,7 @@ function rnDeptView() {
     var dk = d.key || "school", on = sel.indexOf(dk) >= 0;
     var lab = d.sect !== last ? '<span class="rdsect">' + esc(RN_SECT[d.sect]) + '</span>' : '<span class="rdsect" aria-hidden="true">&nbsp;</span>'; last = d.sect;
     return '<div class="rdcell">' + lab + '<button class="rdcard' + (on ? ' on' : '') + (d.sect === "start" ? ' first' : '') + '" data-rndept="' + d.key + '" data-rnd="' + dk + '" aria-pressed="' + on + '">' +
-      '<span class="rdbug">' + bugSVG("rn") + '</span><strong>' + esc(d.name) + '</strong><span class="rdblurb">' + esc(d.blurb) + '</span>' +
+      '<span class="rdbug">' + rnBugArt(dk) + '</span><strong>' + esc(d.name) + '</strong><span class="rdbugn">' + esc((RN_BUG[dk] || {}).name || "") + '</span><span class="rdblurb">' + esc(d.blurb) + '</span>' +
       (on ? '<span class="rdnow">&#10003; Picked</span>' : '') + '</button></div>';
   }).join("");
   var names = D.filter(function (d) { return sel.indexOf(d.key || "school") >= 0; }).map(function (d) { return d.name; });
@@ -1587,7 +1630,7 @@ function viewLevel() {
   if (!S.tab || (S.tab !== "hub" && S.tab !== "session" && !tabName(S.tab))) S.tab = "hub";
   if (S.tab !== "hub" && S.tab !== "session" && typeof proLocked === "function" && proLocked(S.tab)) { var lt = S.tab; S.tab = "hub"; setTimeout(function () { openPaywall(tabName(lt), tabTier(lt)); }, 0); }
   if (S.tab === "calc") S.tab = "hub";  /* Calc Lab was removed */
-  var body = S.tab === "hub" ? "" : S.tab === "guide" ? guideView() : /^ft\d$/.test(S.tab) ? guideView(ftOf(S.level, +S.tab.slice(2))) : S.tab === "dash" && typeof dashView === "function" ? dashView() : S.tab === "anatomy" && typeof anatView === "function" ? anatView() : S.tab === "calls" && typeof callsView === "function" ? callsView() : S.tab === "scene" && typeof sceneView === "function" ? sceneView() : S.tab === "systems" && typeof sysView === "function" ? sysView() : S.tab === "protocols" && typeof agpTabView === "function" ? agpTabView() : typeof fieldTab === "function" && isF(S.level) && FM_TABS[S.tab] ? fieldTab(S.tab) : (typeof COMPOUND_TABS !== "undefined" && COMPOUND_TABS[S.tab]) && typeof compoundView === "function" ? compoundView(S.tab) : S.tab === "plants" && typeof plantView === "function" ? plantView() : S.tab === "illicit" && typeof illicitView === "function" ? illicitView() : S.tab === "registry" ? (S.view === "level" && isF(S.level) && typeof fieldMedsView === "function" ? fieldMedsView() : registry()) : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? (S.tab = "hub", "") : S.tab === "micro" && typeof microView === "function" ? microView() : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "megacode" ? megaView() : S.tab === "rush" ? rushView() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "flt_ref" && typeof fltRefView === "function" ? fltRefView() : S.tab === "tools" ? toolsView() : S.tab === "medlist" ? (typeof medlistView === "function" ? medlistView() : "") : flashcards();
+  var body = S.tab === "hub" ? "" : S.tab === "guide" ? guideView() : /^ft\d$/.test(S.tab) ? guideView(ftOf(S.level, +S.tab.slice(2))) : S.tab === "dash" && typeof dashView === "function" ? dashView() : S.tab === "anatomy" && typeof anatView === "function" ? anatView() : S.tab === "calls" && typeof callsView === "function" ? callsView() : S.tab === "scene" && typeof sceneView === "function" ? sceneView() : S.tab === "systems" && typeof sysView === "function" ? sysView() : S.tab === "protocols" && typeof agpTabView === "function" ? agpTabView() : typeof fieldTab === "function" && isF(S.level) && FM_TABS[S.tab] ? fieldTab(S.tab) : (typeof COMPOUND_TABS !== "undefined" && COMPOUND_TABS[S.tab]) && typeof compoundView === "function" ? compoundView(S.tab) : S.tab === "plants" && typeof plantView === "function" ? plantView() : S.tab === "illicit" && typeof illicitView === "function" ? illicitView() : S.tab === "registry" ? (S.view === "level" && isF(S.level) && typeof fieldMedsView === "function" ? fieldMedsView() : registry()) : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "vlab" ? vlabView() : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? (S.tab = "hub", "") : S.tab === "micro" && typeof microView === "function" ? microView() : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "megacode" ? megaView() : S.tab === "rush" ? rushView() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "flt_ref" && typeof fltRefView === "function" ? fltRefView() : S.tab === "tools" ? toolsView() : S.tab === "medlist" ? (typeof medlistView === "function" ? medlistView() : "") : flashcards();
   var msg = S.sessMsg ? '<div class="presult" role="status">' + esc(S.sessMsg) + '</div>' : ''; S.sessMsg = "";
   var notes = (S.tab === "calc" || S.tab === "tools" ? eduBanner() : '') + (["scenarios", "calls", "scene", "rush"].indexOf(S.tab) >= 0 && typeof simBanner === "function" ? simBanner() : '') + (["registry", "guide", "families", "alts", "protocols", "mylist", "labs", "conds"].indexOf(S.tab) >= 0 || /^ft\d$/.test(S.tab) ? eduBanner(true) : '') + (["prep", "session", "nbug", "scenarios", "cards", "rush"].indexOf(S.tab) >= 0 ? esQNote() : '');
   if (S.tab === "hub") return topbar() + '<div class="' + ctxClass() + '">' + band() + protocolBanner() + (isF(S.level) ? "" : dailyCard()) + msg + (S.learn && S.learn.done && typeof learnDoneView === "function" ? learnDoneView() : "") + hubView() + '</div>';
@@ -1671,6 +1714,10 @@ function nrPool(filter, noGen) {
   return freeSample() ? freeCut(full, freeQsCap(), qid) : full;
 }
 function nrPoolAll(filter, noGen) {
+  var P0 = nrPoolAll0(filter, noGen);
+  return S.cjF && nurseCtx() ? P0.filter(function (q) { return cjStep(q) === S.cjF; }) : P0;
+}
+function nrPoolAll0(filter, noGen) {
   var allowed = nrLevelsFor(ctxKey());
   if (filter && filter !== "all" && !isF(ctxKey())) allowed = allowed.indexOf(filter) >= 0 ? [filter] : []; /* tiers always study their whole cumulative bank */
   var inScope = null;
@@ -1918,6 +1965,7 @@ function nrPrep() {
   var c = freeSample() ? freeNote("questions", (function () { var cap = freeQsCap(); return regN && !isF(ctxKey()) ? Math.min(cap, drugCount()) + Math.min(cap, regN) : Math.min(FREE_QS, pool.length); })(), fullCount(function () { return (regN && !isF(ctxKey()) ? drugCount() + regCount() : nrPool(st.filter).length); })) : '';
   var drugAll = freeSample() ? fullCount(drugCount) : 0, regAll = freeSample() ? fullCount(regCount) : 0;
   c += '<section class="nrsetup nrfun"><div class="nrtop">' + myBugArt("nrbug", null, null, myStage()) + '<p class="nrtag"><strong>' + esc(exam) + '-style practice.</strong> <span class="muted">' + (isF(ctxKey()) ? 'Pick a length, go.' : 'Pick a deck, pick a length, go.') + '</span></p></div>' + examPill(pool) + creatorNote();
+  c += adpNote();
   if (regN && isF(ctxKey())) c += '<p class="muted small">' + (freeSample() ? Math.min(regN, freeQsCap()) : regN) + ' questions on medications, blood, trauma, prolonged care, ventilators, labs, CBRN, K9, dive and evacuation.</p>';
   else if (regN) c += '<div class="nrdecks" role="group" aria-label="Question type">' +
     '<button class="nrdeck" data-nrkind="drug" aria-pressed="' + !reg + '"><span class="nrdk-ic" aria-hidden="true">' + icon("pillq") + '</span><strong>Drug questions</strong><span class="nrdk-n">' + drugCount() + '</span>' + proMore(drugCount(), drugAll, "questions") + '<span class="nrdk-sub">' + (nurse ? "Medicines: what to check, report and teach on your unit" : "Doses, actions, uses and side effects") + '</span></button>' +
@@ -1939,6 +1987,7 @@ function nrPrep() {
   c += '<button class="btn nrgo" data-act="nrstart"' + (pool.length ? "" : " disabled") + '>Start ' + n + ' question' + (n === 1 ? '' : 's') + ' <span aria-hidden="true">&rarr;</span></button>';
   var wn = weakPool().length;
   if (wn) c += '<button class="nrweak" data-act="weakgo"><span class="nrweak-n">' + wn + '</span><span><strong>Weak spots</strong><span class="muted small">Questions you missed and drugs under 70%. Drill ' + Math.min(wn, 20) + ' now.</span></span><span aria-hidden="true">&rsaquo;</span></button>';
+  if (nurseCtx()) c += '<div class="lbl">Clinical judgment step (NCLEX)</div><div class="chips cjchips"><button class="chip" data-cjf="" aria-pressed="' + !S.cjF + '">All six</button>' + CJ_STEPS.map(function (s, i) { return '<button class="chip cj-' + s[0] + '" data-cjf="' + s[0] + '" aria-pressed="' + (S.cjF === s[0]) + '">' + (i + 1) + '. ' + esc(s[1]) + '</button>'; }).join("") + '</div>';
   c += '<button class="linkish nrmorebtn" data-act="nrmore" aria-expanded="' + !!(S.nrMore || S.exEdit) + '">' + (S.nrMore || S.exEdit ? "Hide options" : "More options") + '</button>';
   if (S.nrMore || S.exEdit) {
     c += '<div class="nrmore">';
@@ -2058,7 +2107,7 @@ function caseBox(q) {
 function nrQuiz(st) {
   var x = st.qs[st.i], q = x.q, picked = st.ans[st.i], reveal = st.mode === "practice" && picked != null, total = st.qs.length;
   var answered = Object.keys(st.ans).length;
-  var c = '<section class="quiz"><div class="qtop"><span class="lbl">Question ' + (st.i + 1) + ' of ' + total + ' ' + starHTML(qStar(q)) + curiousHTML("q") + '</span><span class="muted small">' + (NRLV[q.lv] || "") + (st.mode === "practice" ? " · Score so far " + nrScore({ qs: st.qs.slice(0, st.i + 1), ans: st.ans }) + "/" + answered : " · " + answered + " answered") + '</span><button class="linkish" data-act="nrquit">Quit</button></div>';
+  var c = '<section class="quiz"><div class="qtop"><span class="lbl">Question ' + (st.i + 1) + ' of ' + total + ' ' + starHTML(qStar(q)) + curiousHTML("q") + (nurseCtx() ? ' ' + cjTag(q) : '') + '</span><span class="muted small">' + (NRLV[q.lv] || "") + (st.mode === "practice" ? " · Score so far " + nrScore({ qs: st.qs.slice(0, st.i + 1), ans: st.ans }) + "/" + answered : " · " + answered + " answered") + '</span><button class="linkish" data-act="nrquit">Quit</button></div>';
   c += '<div class="prog"><i style="width:' + Math.round(100 * (st.i + (picked != null ? 1 : 0)) / total) + '%"></i></div>';
   if (q.cs) c += caseBox(q);
   if (q.pilot && !pilLive(q.id) && typeof isReviewer === "function" && isReviewer()) c += pilBanner(q);
@@ -2117,6 +2166,8 @@ function nrDone(st) {
     st.qs.forEach(function (x, i) { var ok = nrRight(x, st.ans[i]), k = x.q.cat; if (SK[k] && !x.q.reg) { sk[k] = sk[k] || [0, 0]; sk[k][1]++; if (ok) sk[k][0]++; } if (du && (x.q.unit === du || deptHas(du, x.q) || x.q.cs && (DB.CASES || []).some(function (cc) { return cc.id === x.q.cs && cc.unit === du; }))) { dp[1]++; if (ok) dp[0]++; } });
     var skk = Object.keys(sk); if (skk.length) { var weak = skk.filter(function (k) { return sk[k][1] >= 2 && sk[k][0] / sk[k][1] < 0.6; }); c += '<p class="small muted" style="margin:10px 0 4px"><strong>By skill</strong>' + (weak.length ? ' &middot; work on: ' + esc(weak.map(function (k) { return SK[k].toLowerCase(); }).join(", ")) : '') + '</p><div class="chips">' + skk.map(function (k) { return '<span class="chip static">' + SK[k] + ': ' + sk[k][0] + '/' + sk[k][1] + '</span>'; }).join("") + '</div>'; }
     if (du && dp[1] && typeof unitObj === "function") c += '<p class="small muted" style="margin:6px 0 0">' + esc(unitObj(du).name) + ' questions: <strong>' + dp[0] + ' of ' + dp[1] + '</strong> right</p>'; }
+  if (nurseCtx()) { var cjb = {}; st.qs.forEach(function (x, i) { var k = cjStep(x.q); cjb[k] = cjb[k] || [0, 0]; cjb[k][1]++; if (nrRight(x, st.ans[i])) cjb[k][0]++; });
+    c += '<div class="cjres"><p class="small"><strong>Clinical judgment (NCLEX)</strong></p>' + CJ_STEPS.map(function (s, i) { var v = cjb[s[0]]; if (!v) return ''; var p = Math.round(100 * v[0] / v[1]); return '<div class="cjrow cj-' + s[0] + '"><span>' + (i + 1) + '. ' + esc(s[1]) + '</span><i><b style="width:' + p + '%"></b></i><em>' + v[0] + '/' + v[1] + '</em></div>'; }).join("") + '</div>'; }
   c += '<div class="chips">' + Object.keys(by).map(function (k) { return '<span class="chip static">' + (k.indexOf("d:") === 0 ? RQ_DOM[k.slice(2)] : NRLV[k]) + ': ' + by[k][0] + '/' + by[k][1] + '</span>'; }).join("") + '</div>';
   c += '<div class="actions"><button class="btn" data-act="nrnew">New test</button>' + (missed.length ? '<button class="btn ghost" data-act="nrmissed">Practice my ' + missed.length + ' misses</button>' : '') + '</div>';
   if (missed.length) c += '<details class="sec" open><summary>Review what you missed (' + missed.length + ')</summary><div class="fields">' + missed.map(function (m) {
@@ -2472,20 +2523,22 @@ function drawSheet() {
   if (S.cmpOn) { c += cmpView(id); sheet.innerHTML = c + '</div>'; translateDom(sheet); return; }
   if (typeof deepView === "function") {
     c += deepTabs();
+    if (S.dtab === "chem" && typeof chemTab === "function") { c += chemTab(id) + '<div class="sheetfoot">' + reportBtn("drug", id, id) + '</div>'; sheet.innerHTML = c + '</div>'; return; }
     if (S.dtab === "deep") { c += deepView(id) + '<div class="sheetfoot">' + reportBtn("drug", id, id) + '</div>'; sheet.innerHTML = c + '</div>'; translateDom(sheet); return; }
     if (S.dtab === "allied" && typeof alliedView === "function") { c += alliedView(id); sheet.innerHTML = c + '</div>'; return; }
-    if (typeof chemCard === "function") c += chemCard(id);
+    /* the structure and 3D molecule live only on the Chemistry tab now (owner, Nov 19 2026) */
   }
   if (scopeNote(id) && !S.full) c += '<div class="scopenote">' + esc(scopeNote(id)) + '</div>';
   var rw = (DB.RW || {})[id] || {}, line = lang() !== "es" && nurseCtx() && rw.rl ? ["rn", "Nursing summary", rw.rl] : lang() !== "es" && medCtx() && rw.ml ? ["md", "Clinical summary", rw.ml] : lang() !== "es" && imCtx() && (DB.RWI || {})[id] ? ["im", "In imaging", DB.RWI[id].use] : get(d, 16, 0) ? ["", "", get(d, 16, 0)] : null;
   if (line) c += '<p class="plain' + (line[0] ? ' plain-' + line[0] : '') + '">' + (line[1] ? '<span class="plainlab">' + line[1] + '</span>' : '') + esc(line[2]) + '</p>';
+  c += '<div class="sheetacts"><button class="btn small" data-sess="study" data-drug-id="' + id + '">Study it</button><button class="btn small ghost" data-cmpgo="' + id + '">Compare</button>' + (medCtx() ? '<button class="btn small ghost" data-altgo="' + id + '">Alternatives</button>' : '') + '<button class="btn small ghost" data-mark="' + id + '" aria-pressed="' + isMarked(id) + '">' + (isMarked(id) ? "In My List ✓" : "Save to My List" + (typeof PAYWALL !== "undefined" && PAYWALL && !hasTier("plus") ? " " + tierBadge("plus") : "")) + '</button>' + (S.markHint === id && isMarked(id) ? '<span class="muted small markhint">Saved. Open it any time from the <strong>My List</strong> tile.</span>' : '') + '<button class="btn small ghost" data-act="srcjump">Sources</button>' + (typeof canPrint === "function" && canPrint() ? '<button class="btn small ghost" data-print="drug:' + id + '|cards">Print</button>' : '') + (Admin.can ? '<button class="btn small ghost" data-go-edit="' + id + '">Edit in Control Center</button>' : '') + '</div>' + famLinks(id) + eduBanner(true);   /* Study it and Compare first (owner, Nov 19 2026) */
   if (typeof agpDrugBox === "function") c += agpDrugBox(id);
-  if (typeof recallBox === "function") c += recallBox(id);
   if (typeof antiBox === "function") c += antiBox(id);
   if (typeof worldBox === "function") c += worldBox(id);
-  c += '<div class="sheetacts"><button class="btn small" data-sess="study" data-drug-id="' + id + '">Study it</button><button class="btn small ghost" data-cmpgo="' + id + '">Compare</button>' + (medCtx() ? '<button class="btn small ghost" data-altgo="' + id + '">Alternatives</button>' : '') + '<button class="btn small ghost" data-mark="' + id + '" aria-pressed="' + isMarked(id) + '">' + (isMarked(id) ? "In My List ✓" : "Save to My List" + (typeof PAYWALL !== "undefined" && PAYWALL && !hasTier("plus") ? " " + tierBadge("plus") : "")) + '</button>' + (S.markHint === id && isMarked(id) ? '<span class="muted small markhint">Saved. Open it any time from the <strong>My List</strong> tile.</span>' : '') + '<button class="btn small ghost" data-act="srcjump">Sources</button>' + (typeof canPrint === "function" && canPrint() ? '<button class="btn small ghost" data-print="drug:' + id + '|cards">Print</button>' : '') + (Admin.can ? '<button class="btn small ghost" data-go-edit="' + id + '">Edit in Control Center</button>' : '') + '</div>' + famLinks(id) + eduBanner(true);
   if (S.full) c += '<button class="toggle-full" data-act="full">Back to the simple view</button>' + (typeof probioSection === "function" ? probioSection(id) : "") + (dexCtx() ? dexView(d) : fullView(d, tier)) + '<button class="toggle-full" data-act="full">Back to the simple view</button>';
   else c += (dexCtx() ? dexBox(d) : tierBox(d, tier)) + (typeof probioSection === "function" ? probioSection(id) : "") + lensCard(d) + (lang() === "es" && DB.ES[id] ? esView(id) : simpleView(d, tier)) + '<button class="toggle-full" data-act="full">' + (dexCtx() ? "Show the full DrugDex record" : "Show everything (full monograph)") + '</button>';
+  /* FDA recalls folded into a dropdown near the bottom (owner, Nov 19 2026) */
+  if (typeof recallBox === "function") { var rcb = recallBox(id); if (rcb) { var rcn = RC.data && RC.data.drugs[id] && RC.data.drugs[id].items ? RC.data.drugs[id].items.length : 0; c += '<details class="sec rcdrop"><summary>FDA recalls' + (rcn ? ' (' + rcn + ')' : '') + '</summary>' + rcb.replace(/<h3 class="eh small">FDA recalls<\/h3>/, "") + '</details>'; } }
   c += sourcesPanel(d) + '<div class="sheetfoot">' + reportBtn("drug", id, id) + '</div>';
   sheet.innerHTML = c + '</div>'; translateDom(sheet);
 }
@@ -2676,6 +2729,7 @@ document.addEventListener("click", function (e) {
   if (a.nrmode) { if (a.nrmode === "exam" && !isPro()) return openPaywall("Exam mode"); nrState().mode = a.nrmode; return render(); }
   if (a.qnames) { setSet("qnames", a.qnames); return render(); }
   if (a.nrkind) { var nk = nrState(); nk.kind = a.nrkind; var pk = nrPool(nk.filter).length; if (nk.n > pk) nk.n = [10, 25, 50, 100].filter(function (v) { return v <= pk; }).pop() || 10; return render(); }
+  if (a.cjf != null && S.view === "level") { S.cjF = a.cjf || null; render(); return; }
   if (a.nrfilter) { var ns = nrState(); ns.filter = a.nrfilter; var pl = nrPool(ns.filter).length; if (ns.n > pl) ns.n = [10, 25, 50, 100].filter(function (v) { return v <= pl; }).pop() || 10; return render(); }
   if (a.nrtog != null) { nrToggle(+a.nrtog); return render(); }
   if (a.act === "nrsubmit") { if (S.nr) S.nr.just = S.nr.i; nrSubmit(); return render(); }
@@ -3486,6 +3540,10 @@ function recordInner(q, ok, kind, pick) {
     var SN = P.seen || (P.seen = {}); if (!SN[k]) SN[k] = 1; else if (SN[k] < 99) SN[k]++;
   }
   if (q && q.cat) { P.qcat = P.qcat || {}; var cs = P.qcat[q.cat] || (P.qcat[q.cat] = { n: 0, c: 0 }); cs.n++; if (ok) cs.c++; }
+  /* the last 30 answers drive the adaptive mix (owner, Nov 19 2026) */
+  if (q && q.q) { var AD = P.adp || (P.adp = []); AD.push(ok ? 1 : 0); if (AD.length > 30) AD.splice(0, AD.length - 30); }
+  try { adpLearn(q, ok); } catch (e) {}
+  try { if (q && q.q && nurseCtx()) { var CJ = P.cj || (P.cj = {}), ck = cjStep(q), cs2 = CJ[ck] || (CJ[ck] = { n: 0, c: 0 }); cs2.n++; if (ok) cs2.c++; } } catch (e) {}
   if (typeof groupNote === "function") groupNote(q, ok, kind, null, pick);
   checkAch(); saveProg();
 }
@@ -3531,7 +3589,58 @@ function diffLoad() {
 }
 setTimeout(function () { try { diffLoad(); } catch (e) {} }, 8000);
 function diffOf(q) { var v = DIFF.avg[qid(q)]; return v == null ? null : v; }
-function diffCls(q) { var v = diffOf(q); return v == null ? "u" : v < 2 ? "e" : v > 4 ? "h" : "m"; }
+function diffCls(q) { var g = qGrade(q); return g < 2 ? "e" : g >= 3.6 ? "h" : "m"; }
+/* ---------- Every question graded 1 to 5 (owner, Nov 19 2026: "grade every question on a scale of 1 - 5
+   and apply it to this algorithm") ----------
+   A fixed rubric scores each question the moment it is first used, so every question in DrugBug has a
+   grade, graded or not by people:
+     start  from the role's star level (CNA/LVN 1 ... flight/residency 4)
+     harder stems: long multi-sentence cases, vital signs or lab numbers in the stem, "best / next /
+            first / most likely" judgment wording, EXCEPT / NOT / LEAST negatives, the new hard banks
+     harder decoys: wrong answers that share most of their words with the right one, and long answers
+     easier: short one-line recall ("Which class is...", "What is the brand name...")
+   Once players and evaluators have rated a question (qDifficulty, 1-5), their average carries 70% of the
+   grade and the rubric 30%. */
+var QG_JUDGE = /\b(best|next|first|most likely|most appropriate|priority|initial|most concerning|greatest|immediately|should you)\b/i, QG_NEG = /\b(EXCEPT|NOT|LEAST|never)\b/, QG_RECALL = /^(what|which) (is|are) (the )?(drug )?(class|brand|generic|trade|antidote|route|other name)/i, QG_NUM = /\b\d{2,3}\s*\/\s*\d{2,3}\b|\b(HR|BP|SpO2|RR|MAP|CVP|PCWP|PaO2|PaCO2|pH|K\+?|Na|lactate|GCS|ETCO2|INR|creatinine|troponin|glucose)\b/i;
+function qgWords(t) { return String(t || "").toLowerCase().replace(/[^a-z0-9 ]+/g, " ").split(/\s+/).filter(function (w) { return w.length > 3; }); }
+function qgRubric(q) {
+  var st = String(q.q || q.stem || ""), a = String(q.a || ""), w = q.w || [], star = typeof qStar === "function" ? qStar(q) : 2;
+  var g = [0, 1.4, 2.1, 2.8, 3.4][star] || 2.4;
+  if (st.length > 260) g += 0.7; else if (st.length > 170) g += 0.45; else if (st.length > 110) g += 0.2; else if (st.length < 60) g -= 0.35;
+  if ((st.match(/[.?!]\s/g) || []).length >= 2) g += 0.2;
+  if (QG_NUM.test(st)) g += 0.3;
+  if (QG_JUDGE.test(st)) g += 0.3;
+  if (QG_NEG.test(st)) g += 0.35;
+  if (QG_RECALL.test(st)) g -= 0.5;
+  if (q.fx === "nov19" || q.reg && star >= 4) g += 0.4;
+  /* how close the decoys sit to the answer */
+  var aw = qgWords(a); if (aw.length && w.length) {
+    var sim = w.map(function (x) { var xw = qgWords(x), hit = xw.filter(function (y) { return aw.indexOf(y) >= 0; }).length; return hit / Math.max(1, Math.min(aw.length, xw.length)); });
+    g += 0.9 * (sim.reduce(function (s, v) { return s + v; }, 0) / sim.length);
+    var la = a.length, lw = w.reduce(function (s, x) { return s + String(x).length; }, 0) / w.length;
+    if (la > 55) g += 0.2; if (lw > la * 0.85) g += 0.15;   /* decoys as long as the answer give nothing away */
+  }
+  return Math.max(1, Math.min(5, g));
+}
+function qGrade(q) {
+  if (!q) return 3;
+  if (q._g == null) q._g = Math.round(qgRubric(q) * 10) / 10;
+  var v = typeof diffOf === "function" ? diffOf(q) : null;
+  return v == null ? q._g : Math.round((0.7 * v + 0.3 * q._g) * 10) / 10;
+}
+function diffGuess(q) { var g = qGrade(q); return g < 2 ? "e" : g >= 3.6 ? "h" : "u"; }
+/* ---------- Adaptive mix: aim for about 65% right (owner, Nov 19 2026) ----------
+   Each learner has an ability on the same 1-5 scale (Prog.d.th), nudged after every answer by how
+   surprising it was for that question's grade. Quizzes are then built around the grade a learner should
+   get right about 65% of the time, a little easier or harder when the last 30 answers drift out of 60-70%. */
+var ADP_TARGET = 0.65, ADP_K = 1.3;
+function adpTheta() { var t = Prog.d && Prog.d.th; if (t == null) { var k = typeof ctxKey === "function" ? ctxKey() : ""; t = [0, 1.6, 2.4, 3.1, 3.7][(typeof starsFor === "function" ? starsFor(k)[0] : 2)] || 2.6; } return t; }
+function adpP(th, g) { return 1 / (1 + Math.exp(ADP_K * (g - th))); }
+function adpLearn(q, ok) { if (!q || !Prog.d) return; var th = adpTheta(), g = qGrade(q); Prog.d.th = Math.max(1, Math.min(5.5, th + 0.12 * ((ok ? 1 : 0) - adpP(th, g)))); }
+function adpRate() { var A = (Prog.d && Prog.d.adp) || []; if (A.length < 10) return null; return A.reduce(function (a, b) { return a + b; }, 0) / A.length; }
+function adpMode() { var r = adpRate(); return r == null ? "mid" : r < 0.6 ? "easy" : r > 0.7 ? "hard" : "mid"; }
+function adpCenter() { var c = adpTheta() + Math.log(1 / ADP_TARGET - 1) / ADP_K, m = adpMode(); if (m === "easy") c -= 0.35; if (m === "hard") c += 0.35; return Math.max(1, Math.min(5, c)); }
+function adpNote() { var r = adpRate(), m = adpMode(); if (r == null) return ""; return '<p class="adpnote adp-' + m + '"><b>' + Math.round(r * 100) + '% right lately.</b> ' + (m === "easy" ? "Mixing in easier questions until you are back near 65%." : m === "hard" ? "You're above 70%, so harder questions are coming." : "Right in the learning zone, around 65%.") + ' <span class="muted">Question level ' + adpCenter().toFixed(1) + ' of 5.</span></p>'; }
 /* ---------- Common medications come up most (owner, Nov 13 2026) ----------
    "People are getting a lot of cancer medications, but that should be mostly oncology, not normal nursing.
    Find the most common medications and test that percentage over them; test the least over the least
@@ -3637,19 +3746,26 @@ function relBalance(sel, pool) {
 }
 function diffBalance(sel, pool) {
   sel = relBalance(tierBalance(sel, pool), pool);
-  var n = sel.length; if (n < 5 || !DIFF.n || !pool || !pool.length) return sel;
-  var want = { e: Math.round(n * 0.2), h: Math.round(n * 0.2) };
+  var n = sel.length; if (n < 5 || !pool || !pool.length) return sel;
+  /* how many of each grade (1-5) this quiz wants: a bell around the learner's 65% level */
+  var ctr = adpCenter(), wt = [1, 2, 3, 4, 5].map(function (b) { return Math.exp(-Math.pow(b - ctr, 2) / (2 * 0.85 * 0.85)); }), ws = wt.reduce(function (a, b) { return a + b; }, 0);
+  var want = wt.map(function (w) { return Math.round(n * w / ws); });
+  var B = function (q) { return Math.max(1, Math.min(5, Math.round(qGrade(q)))) - 1; };
   var out = sel.slice(), inS = {}, ch = 0; out.forEach(function (q) { inS[qid(q)] = 1; });
-  var spare = { e: [], h: [], m: [], u: [] };
-  shuffle(pool.slice()).forEach(function (q) { if (!inS[qid(q)] && !q.t) spare[diffCls(q)].push(q); });
-  var cnt = function (c) { return out.filter(function (q) { return diffCls(q) === c; }).length; };
-  var lastOf = function (cls) { for (var i = out.length - 1; i >= 0; i--) if (cls.indexOf(diffCls(out[i])) >= 0 && !out[i].pilot) return i; return -1; };
-  ["e", "h"].forEach(function (c) {
-    /* too many of this kind: trade the extras for normal (or ungraded) ones */
-    var g = 0; while (cnt(c) > want[c] && g++ < n) { var i = lastOf([c]), r = spare.m.pop() || spare.u.pop(); if (i < 0 || !r) break; out[i] = r; ch = 1; }
-    /* too few: bring some in, in place of ungraded first, then normal */
-    g = 0; while (cnt(c) < want[c] && spare[c].length && g++ < n) { var j = lastOf(["u"]); if (j < 0) j = lastOf(["m"]); if (j < 0) break; out[j] = spare[c].pop(); ch = 1; }
-  });
+  var spare = [[], [], [], [], []];
+  shuffle(pool.slice()).forEach(function (q) { if (!inS[qid(q)] && !q.t) spare[B(q)].push(q); });
+  var cnt = function (b) { return out.filter(function (q) { return B(q) === b; }).length; };
+  /* move questions from over-full grades to under-full ones, nearest grade first */
+  for (var pass = 0; pass < n; pass++) {
+    var over = -1, under = -1, best = 0;
+    for (var b = 0; b < 5; b++) { var d = cnt(b) - want[b]; if (d > best) { best = d; over = b; } }
+    if (over < 0) break;
+    var cands = [0, 1, 2, 3, 4].filter(function (b) { return cnt(b) < want[b] && spare[b].length; }).sort(function (x, y) { return Math.abs(x - over) - Math.abs(y - over); });
+    if (!cands.length) break; under = cands[0];
+    var idx = -1; for (var i = out.length - 1; i >= 0; i--) if (B(out[i]) === over && !out[i].pilot) { idx = i; break; }
+    if (idx < 0) break;
+    out[idx] = spare[under].pop(); ch = 1;
+  }
   return ch ? shuffle(out) : out;
 }
 function weakest(ids, n) {
@@ -7320,7 +7436,7 @@ function xdataLoad(cb) {
   if (XDATA.st === 2) { if (cb) cb(); return; }
   if (cb) XDATA.cbs.push(cb);
   if (XDATA.st === 1) return; XDATA.st = 1;
-  var sc = document.createElement("script"); sc.src = "data8.js"; sc.async = true;
+  var sc = document.createElement("script"); sc.src = "data8.js?v=20261120"; sc.async = true;
   sc.onload = function () { XDATA.st = 2; try { SR.idx = null; } catch (e) {} var L = XDATA.cbs; XDATA.cbs = []; L.forEach(function (f) { try { f(); } catch (e) {} });
     try { if (S.tab === "rush" || S.tab === "anatomy" || S.tab === "diseases" || S.tab === "hub") render(); } catch (e) {} };
   sc.onerror = function () { XDATA.st = 0; setTimeout(xdataLoad, 15000); };
@@ -10727,7 +10843,10 @@ function settingsView() {
   pv += setRow("Reset my progress", "Clears mastery, XP, streaks, achievements and scores. Keeps your bugs, sticks, saved list and settings.", S.resetAsk ? '<span class="confirm">Reset everything? <button class="btn small again" data-act="resetyes">Reset</button><button class="btn small ghost" data-act="resetno">Cancel</button></span>' : '<button class="btn small ghost" data-act="resetask">Reset progress</button>');
   pv += setRow("Delete all my data", "Removes everything DrugBug stores about you, here and online. Cannot be undone.", '<button class="btn small again" data-legal="data">Delete…</button>');
   c += setCard("analytics", "Your analytics", myAnalyticsView());
-  c += setCard("privacy", "Account & privacy", fmCodeRow() + (typeof accCard === "function" ? accCard() : "")
+  /* join a class right from Settings, on the phone too (owner, Nov 19 2026) */
+  /* in the iPhone app class keys stay on the website (App Store 3.1.1); phone browsers get the box */
+  var joinRow = NATIVE ? "" : (typeof seatActive === "function" && seatActive()) ? setRow("Your class", (typeof SEAT !== "undefined" && SEAT.orgName) || "You are in a class.", '<span class="muted small">Joined</span>') : '<div class="setrow" id="setjoin"><div class="sl"><strong>Join a class</strong><p class="muted small">Type the class key your instructor gave you (it starts with DB-).</p>' + clJoinForm("set") + '</div></div>';
+  c += setCard("privacy", "Account & privacy", joinRow + fmCodeRow() + (typeof accCard === "function" ? accCard() : "")
     + (NATIVE ? '<div class="setrow codesteps"><div class="sl"><strong>Have a code?</strong>' + codeSteps() + '</div></div>' + setRow("App Store offer code", "Redeem an App Store offer code on Apple's own screen.", '<button class="btn small ghost" data-pw="redeem">Redeem offer code</button>') : typeof giftBox === "function" ? setRow("Redeem a code", "Every code goes here: gift codes, access codes, school or agency codes, and your agency's protocol code." + (NATIVE ? " App Store offer codes open Apple's own screen." : ""), NATIVE ? '<button class="btn small ghost" data-pw="redeem">App Store offer code</button>' : "") + giftBox() : "")
     + pv);
   // feedback
@@ -11133,12 +11252,33 @@ function muLoadBuf(T) {
   if (MU.fbufCtx !== MU.ctx) { MU.fbufs = {}; MU.fbufCtx = MU.ctx; }
   if (!MU.fbufs[T.id]) {
     var c = MU.ctx;
+    /* keep only the playing song and the next one decoded (a decoded song is ~50 MB) */
+    Object.keys(MU.fbufs).forEach(function (k) { if (k !== T.id && k !== (MU.file && MU.file.id) && k !== MU.nextId) delete MU.fbufs[k]; });
     MU.fbufs[T.id] = fetch(T.src).then(function (r) { if (!r.ok) throw new Error("music " + r.status); return r.arrayBuffer(); })
       .then(function (ab) { return new Promise(function (res, rej) { var p = c.decodeAudioData(ab, res, rej); if (p && p.catch) p.catch(rej); }); })
       .then(function (buf) { AUD.music = "ok"; return buf; });
     MU.fbufs[T.id].catch(function () { AUD.music = "fail"; delete MU.fbufs[T.id]; });
   }
   return MU.fbufs[T.id];
+}
+/* smooth song changes (owner, Nov 19 2026): every song is matched to the same loudness, and a
+   change (a pick, the playlist moving on, shuffle) is a ~3 s equal-power crossfade instead of a
+   cut. In a playlist the next song is loaded early and starts fading in before the current one ends. */
+var MU_XF = 3;
+function muNorm(buf) {
+  if (buf._norm) return buf._norm;
+  var d = buf.getChannelData(0), n = d.length, step = Math.max(1, Math.floor(n / 60000)), sum = 0, k = 0;
+  for (var i = 0; i < n; i += step) { sum += d[i] * d[i]; k++; }
+  var rms = Math.sqrt(sum / Math.max(1, k)) || 0.1;
+  buf._norm = Math.max(0.6, Math.min(1.5, 0.1 / rms));   /* the files are mastered to about -20 dB; this evens out the quieter ones */
+  return buf._norm;
+}
+function muCurve(from, to, n) { var a = new Float32Array(n || 64); for (var i = 0; i < a.length; i++) { var x = i / (a.length - 1); a[i] = from > to ? from * Math.cos(x * Math.PI / 2) + 0.0001 : to * Math.sin(x * Math.PI / 2) + 0.0001; } return a; }
+function muPeekNext() {
+  var L = muList(); if (L.length < 2) return null;
+  var cur = curTrack().id, i = L.indexOf(cur);
+  if (muMode() === "shuffle") { var o = L.filter(function (id) { return id !== cur; }); return o[Math.floor(Math.random() * o.length)]; }
+  return L[(i + 1) % L.length];
 }
 function muFile(T) {
   /* a track whose download or decode failed once used to stay silent for the whole session; retry it (owner, Nov 8 2026) */
@@ -11148,10 +11288,15 @@ function muFile(T) {
   muLoadBuf(T).then(function (buf) {
     if (MU.file !== f) return;
     var s = c.createBufferSource(), g = c.createGain(); s.buffer = buf; s.loop = !muListOn();
-    /* playlist: when this song ends, the next one starts (owner, Nov 10 2026) */
-    s.onended = function () { if (MU.file === f && muListOn()) muNext(); };
-    g.gain.setValueAtTime(0.0001, c.currentTime); g.gain.linearRampToValueAtTime(1, c.currentTime + 0.8);
-    s.connect(g); g.connect(MU.fileOut); s.start(); f.src = s; f.g = g;
+    var lvl = muNorm(buf), xf = MU.lastEnd && Date.now() - MU.lastEnd < 6000 ? MU_XF : 0.8;
+    /* playlist: the next song is picked and loaded now, and starts crossfading in before this one ends */
+    s.onended = function () { if (MU.file === f && muListOn() && !f.adv) { f.adv = 1; muNext(); } };
+    try { g.gain.setValueCurveAtTime(muCurve(0, lvl), c.currentTime, xf); } catch (e) { g.gain.setValueAtTime(lvl, c.currentTime); }
+    s.connect(g); g.connect(MU.fileOut); s.start(); f.src = s; f.g = g; f.lvl = lvl;
+    if (muListOn()) {
+      MU.nextId = muPeekNext(); if (MU.nextId) muLoadBuf(trackById(MU.nextId)).catch(function () {});
+      clearTimeout(MU.advT); MU.advT = setTimeout(function () { if (MU.file === f && muListOn() && !f.adv) { f.adv = 1; muNext(); } }, Math.max(1000, (buf.duration - MU_XF - 0.3) * 1000));
+    }
     f.t0 = c.currentTime; f.len = buf.duration; f.bpm = T.bpm || 0; danceStart(f);
     try { if (f.bpm) document.documentElement.style.setProperty("--beatdur", (60 / f.bpm).toFixed(3) + "s"); } catch (e) {}
   }).catch(function () { f.failed = Date.now(); });
@@ -11192,7 +11337,8 @@ function muListOn() { return !MU.preview && muMode() !== "one" && muList().lengt
 function muNext() {
   var L = muList(); if (!L.length) return;
   var cur = curTrack().id, i = L.indexOf(cur), nx;
-  if (muMode() === "shuffle" && L.length > 1) { var o = L.filter(function (id) { return id !== cur; }); nx = o[Math.floor(Math.random() * o.length)]; }
+  if (MU.nextId && L.indexOf(MU.nextId) >= 0 && MU.nextId !== cur) { nx = MU.nextId; MU.nextId = null; }
+  else if (muMode() === "shuffle" && L.length > 1) { var o = L.filter(function (id) { return id !== cur; }); nx = o[Math.floor(Math.random() * o.length)]; }
   else nx = L[(i + 1) % L.length];
   Prog.d.track = nx; saveProg(); MU.trackId = null; MU.preview = null;
   if (MU.playing) muTick();
@@ -11233,8 +11379,10 @@ document.addEventListener("change", function (e) {
 });
 function muFileStop() {
   danceStop();
+  clearTimeout(MU.advT);
   var f = MU.file; MU.file = null; if (!f || !f.src) return;
-  try { var c = MU.ctx; f.g.gain.cancelScheduledValues(c.currentTime); f.g.gain.setTargetAtTime(0.0001, c.currentTime, 0.15); f.src.stop(c.currentTime + 0.8); } catch (e) {}
+  MU.lastEnd = Date.now();   /* a song that starts right after this one crossfades in */
+  try { var c = MU.ctx, now = c.currentTime, v = Math.max(0.0002, f.g.gain.value || f.lvl || 1); f.g.gain.cancelScheduledValues(now); f.g.gain.setValueAtTime(v, now); f.g.gain.setValueCurveAtTime(muCurve(v, 0), now + 0.01, MU_XF); f.src.stop(now + MU_XF + 0.1); } catch (e) { try { f.src.stop(); } catch (x) {} }
 }
 
 /* ---------- Protocol submissions: link + photos saved in DrugBug; owner inbox with photo viewer ---------- */
@@ -11547,16 +11695,11 @@ function critView(kind) {
     }
     N.topic = null;
   }
-  if (N.grp && groups[N.grp]) return '<div class="crows">' + groups[N.grp].map(function (t) { return '<button class="crow" data-ctopic="' + t.id + '"><span>' + esc(ctShort(t)) + '</span>' + (critBox(kind, t.id) ? ctChip(kind, t.id) : '') + '<i aria-hidden="true">&rsaquo;</i></button>'; }).join("") + '</div>';
+  if (N.grp && groups[N.grp]) return critGroup(kind, N.grp, groups[N.grp], order.indexOf(N.grp));
   N.grp = null;
-  return '<div class="crows">' + order.map(function (g) { return '<button class="crow" data-cgrp="' + esc(g) + '"><span>' + esc(g) + '</span><em>' + groups[g].length + '</em><i aria-hidden="true">&rsaquo;</i></button>'; }).join("") + '</div>' +
-    '<div class="crows prac">' + (kind === "flightp" ? '<button class="crow" data-cmode="drill" data-cdgrp="gas"><span>Gas laws &amp; flight drill</span><i aria-hidden="true">&rsaquo;</i></button><button class="crow" data-cmode="drill" data-cdgrp="cc"><span>Critical care challenge (hard)</span><i aria-hidden="true">&rsaquo;</i></button>' : '<button class="crow" data-cmode="drill"><span>Drill</span><i aria-hidden="true">&rsaquo;</i></button>') + (kind === "contrast" ? '<button class="crow" data-cmode="calc"><span>eGFR calculator</span><i aria-hidden="true">&rsaquo;</i></button>' : '') + (kind === "hemo" ? '<button class="crow" data-cmode="profiles"><span>Shock profiles</span><i aria-hidden="true">&rsaquo;</i></button><button class="crow" data-cmode="calc"><span>Hemo math</span><i aria-hidden="true">&rsaquo;</i></button>' : '') + '</div>';
+  return critHome(kind, order, groups);
 }
-function hemoProfiles() {
-  var P = (DB.HEMO && DB.HEMO.profiles) || [];
-  return '<div class="tablewrap"><table class="hist hemotab"><thead><tr><th>Shock</th><th>CO</th><th>SVR</th><th>PCWP</th><th>CVP</th><th>SvO2</th><th>Notes</th></tr></thead><tbody>' +
-    P.map(function (p) { return '<tr><td><strong>' + esc(p.shock) + '</strong></td>' + ["co", "svr", "pcwp", "cvp", "svo2"].map(function (k) { var v = p[k] || ""; return '<td class="hv ' + (/high|up|incr/i.test(v) ? "hi" : /low|down|decr/i.test(v) ? "lo" : "") + '">' + esc(v) + '</td>'; }).join("") + '<td class="small">' + esc(p.note || "") + '</td></tr>'; }).join("") + '</tbody></table></div>';
-}
+function hemoProfiles() { return hemoProfCards(); }
 /* drill shared by both */
 function critDrill(kind) {
   var st = S.cd, pool = critQs(kind);
@@ -11611,6 +11754,9 @@ function famLinks(id) {
 }
 
 function critClick(t, a) {
+  if (typeof vlClick === "function" && vlClick(t, a)) return true;
+  if (a.hpguess != null) { S.hpGuess = !S.hpGuess; S.hpShown = {}; render(); return true; }
+  if (a.hpflip != null) { var H = S.hpShown || (S.hpShown = {}); H[a.hpflip] = !H[a.hpflip]; render(); return true; }
   if (a.cgrp) { critNav().grp = a.cgrp; critNav().topic = null; render(); window.scrollTo(0, 0); return true; }
   if (a.ctopic) { var tp = critTopics(critNav().kind).filter(function (x) { return x.id === a.ctopic; })[0]; critNav().topic = a.ctopic; if (tp) critNav().grp = tp.grp; render(); window.scrollTo(0, 0); return true; }
   if (a.cmode) { if (a.cdgrp) { S.cdGrp = a.cdgrp; S.cd = null; } critNav().mode = a.cmode; render(); window.scrollTo(0, 0); return true; }
@@ -12827,7 +12973,7 @@ var BM_AREA = { "Head and face": "head", "Neck and throat": "neck", "Chest and r
    same position, same angle, same wiggle - and says his piece. Fun mode only, one at a time.
    (owner, Nov 4 2026) */
 var HICK_LINES = ["Wow.", "That's messed up, man.", "We're just here to learn.", "Poor fella.", "Have some respect.", "I ain't do nothin', I swear.", "Wasn't me. I was over yonder."];
-function hickPop(line) {
+function hickPop(line, dur) {
   if (typeof funOn === "function" && !funOn()) return;
   if (typeof hfxOk === "function" && !hfxOk()) return;
   var gone = document.querySelector(".hickpop"); if (gone) gone.remove();
@@ -12838,14 +12984,14 @@ function hickPop(line) {
     else if (typeof bugById === "function" && typeof bugArt === "function") art = bugArt(bugById("hickory"), "hickart", { mood: "joy" });
   } catch (e) {}
   var el = document.createElement("div");
-  el.className = "hickpop hp-" + side;
+  el.className = "hickpop hp-" + side + (line.length > 60 ? " hplong" : "");
   el.setAttribute("aria-hidden", "true");
   el.innerHTML = '<span class="hpbug">' + art + '</span><span class="hpsay"></span>';
   el.querySelector(".hpsay").textContent = line;
   document.body.appendChild(el);
   requestAnimationFrame(function () { el.classList.add("in"); });
   try { if (typeof voiceSay === "function") setTimeout(function () { voiceSay(line, "hick"); }, 500); } catch (e) {}
-  setTimeout(function () { el.classList.remove("in"); setTimeout(function () { if (el.parentNode) el.remove(); }, 480); }, 2600);
+  setTimeout(function () { el.classList.remove("in"); setTimeout(function () { if (el.parentNode) el.remove(); }, 480); }, dur || 2600);
 }
 var BM_CLASSES = ["rx-head", "rx-neck", "rx-chest", "rx-abd", "rx-pelv", "rx-armL", "rx-armR", "rx-legL", "rx-legR", "rx-back", "rx-butt"];
 function bodyReact(area, snd, part) {
@@ -13991,12 +14137,13 @@ function bodyStage(ctx, sel) {
   var sr = '<div class="bm3dsr">' + D3_PARTS.map(function (p) {
     return '<button type="button" data-barea="' + esc(D3GL.area(p)) + '" data-bpart="' + p + '">' + esc(D3_LABEL[p]) + '</button>';
   }).join("") + '</div>';
-  /* Hickory explains the dummy, with a hint at Officer Roly-Poly (owner, Nov 18 2026); first few visits, Enhanced only */
+  /* Hickory explains the dummy, with a hint at Officer Roly-Poly (owner, Nov 18 2026); first few visits, Enhanced only.
+     He says it in his pop-up bubble (and voice) instead of a fixed box on the page (owner, Nov 19 2026) */
   var hk = "";
   try {
-    if ((typeof funOn !== "function" || funOn()) && typeof learnBugSVG === "function") {
-      if (!S.gbHickSeen) { S.gbHickSeen = 1; store("gbHick", (store("gbHick") || 0) + 1); }
-      if ((store("gbHick") || 0) <= 3) hk = '<div class="gbhick"><span class="gbhart">' + learnBugSVG() + '</span><p><strong>Hickory:</strong> That there\'s The Great Bug. Drag him round to turn him, and tap a part to see what\'s in it. Now don\'t go gettin\' weird with him. The authorities are watchin\', and they will show up.</p></div>';
+    if ((typeof funOn !== "function" || funOn()) && !S.gbHickSeen) {
+      S.gbHickSeen = 1; var nH = (store("gbHick") || 0) + 1; store("gbHick", nH);
+      if (nH <= 3) setTimeout(function () { try { hickPop("That there's The Great Bug. Drag him round to turn him, and tap a part to see what's in it. Now don't go gettin' weird with him. The authorities are watchin', and they will show up.", 9000); } catch (e) {} }, 700);
     }
   } catch (e) {}
   return hk + '<p class="bm3dname" aria-hidden="true"><span>The Great Bug</span></p><div class="bm3d" data-ctx="' + ctx + '"><div class="bm3dfb">' + bodySVG(sel) + '</div>' + sr +
@@ -14035,8 +14182,8 @@ function d3Mount() {
   try { D3GL.tint(d3Tint(h)); } catch (e) {}
   if (!D3GL.mount(h)) return;
   var ctx = h.getAttribute("data-ctx");
-  try { var scc = ctx === "scene" && typeof scCase === "function" ? scCase() : null; D3GL.scene(scc ? scc.scene : null); } catch (e) {}
-  D3GL.select(ctx === "body" ? S.barea : ctx === "scene" ? "" : S.anArea);
+  try { var scc = ctx === "scene" && typeof scCase === "function" ? scCase() : null; D3GL.scene(ctx === "lab" ? LAB_POSE : scc ? scc.scene : null); } catch (e) {}
+  D3GL.select(ctx === "body" ? S.barea : ctx === "scene" || ctx === "lab" ? "" : S.anArea);
 }
 try { window.__D3GL = D3GL; } catch (e) {}   /* a handle for the automated tests */
 D3GL.on("sound", function (k) { try { anatSnd(k); } catch (e) {} });
@@ -14044,7 +14191,8 @@ D3GL.on("reduced", function () { return typeof hfxOk === "function" && !hfxOk();
 D3GL.on("lost", function () { var h = document.querySelector(".bm3d.live"); if (h) h.classList.remove("live"); });
 D3GL.on("tap", function (part, x, y) {
   var host = document.querySelector(".bm3d.live"), ctx = host ? host.getAttribute("data-ctx") : "anat";
-  if (ctx === "scene") { try { scExam(part, x, y); } catch (e) {} return; }   /* On Scene: tapping him examines him */
+  if (ctx === "scene") { try { scExam(part, x, y); } catch (e) {} return; }
+  if (ctx === "lab") { try { if (S.sb) sbExam(part, x, y); else vlTap(part, x, y); } catch (e) {} return; }   /* On Scene: tapping him examines him */
   var area = d3AreaFor(ctx, D3GL.area(part));
   if (ctx === "body") { S.barea = area; S.breg = null; }
   else { S.anArea = area; S.anGrp = ""; S.anId = ""; }
@@ -15228,6 +15376,21 @@ function gmIds() {
   if (typeof freeSample === "function" && freeSample()) { var f = L.filter(function (id) { return FREE_SET[id]; }); L = f.length >= 6 ? f : FREE_DRUGS.filter(ok); }   /* sample: games use the starter meds */
   return L;
 }
+/* Brain Games match the bug or specialty you are on (owner, Nov 19 2026: "make the games of every bug and specialty
+   match the difficulty"): EMT and CNA get small, slow games; flight and residency get big, fast ones. */
+var GM_DIFF_NAME = ["", "Starter", "Steady", "Tough", "Expert"];
+function gmDiff() {
+  var k = ctxKey();
+  if (S.view === "beginner" || S.view === "everyday" || S.view === "easy") return 1;
+  if (k === "gen") return 2;
+  if (typeof isA === "function" && isA(k)) return 1;
+  if (["emt", "cna", "asm"].indexOf(k) >= 0) return 1;
+  if (["aemt", "lvn", "cls", "ms1", "tccc", "rt", "ct", "mri", "nm", "ir"].indexOf(k) >= 0) return 2;
+  if (["flight", "flightrn", "cpp", "pcc", "intern"].indexOf(k) >= 0) return 4;
+  if (k === "rn" && typeof myUnit === "function" && myUnit("rn") === "icu") return 4;
+  return 3;
+}
+function gmD(a) { return a[gmDiff() - 1]; }
 function gmFact(id) { var d = DB.drugs[id]; return { id: id, name: d.name, cls: gmShort(get(d, 0, 3), 40), use: gmShort(get(d, 16, 0) || get(d, 3, 0), 60) }; }
 function gmPick(n, keyFn) {
   /* n drugs with distinct answers (class or use) so every pair is unambiguous */
@@ -15251,16 +15414,16 @@ function gamesView() {
   if (k === "frog") return gmFrog();
   var n = gmIds().length, best = (Prog.d.games || {}).blitzBest || 0;
   if (n < 6) return '<div class="empty">There are not enough drugs at this level for games yet. Try the BugDex or a higher level.</div>';
-  var L = [["memory", "Memory Match", "Flip cards to match each drug with its class.", "&#129504;"], ["match", "Quick Match", "Connect drugs to what they treat, or poisons to their antidotes.", "&#128279;"], ["cross", "Crossword", "A new med crossword every time, built from your study path.", "&#9638;"], ["scramble", "Word Scramble", "Unscramble the drug name from the clue.", "&#128292;"], ["blitz", "Class Blitz", "60 seconds. Name the class of as many drugs as you can." + (best ? " Your best: " + best + "." : ""), "&#9889;"], ["frog", "Frog Snack", "Bugs fly by carrying answers. Only the right one can be caught." + ((Prog.d.games || {}).frogBest ? " Your best: " + Prog.d.games.frogBest + "." : ""), "&#128056;"]];
+  var L = [["memory", "Memory Match", "Flip cards to match each drug with its class.", "&#129504;"], ["match", "Quick Match", "Connect drugs to what they treat, or poisons to their antidotes.", "&#128279;"], ["cross", "Crossword", "A new med crossword every time, built from your study path.", "&#9638;"], ["scramble", "Word Scramble", "Unscramble the drug name from the clue.", "&#128292;"], ["blitz", "Class Blitz", gmD([75, 60, 50, 40]) + " seconds. Name the class of as many drugs as you can." + (best ? " Your best: " + best + "." : ""), "&#9889;"], ["frog", "Frog Snack", "Bugs fly by carrying answers. Only the right one can be caught." + ((Prog.d.games || {}).frogBest ? " Your best: " + Prog.d.games.frogBest + "." : ""), "&#128056;"]];
   var gk = ctxKey() + "|" + DB.ALLIDS.length, nAll = !freeSample() ? n : GM_ALL[gk] != null ? GM_ALL[gk] : (GM_ALL[gk] = fullCount(function () { return gmIds().length; }));   /* counted once per path */
-  return freeNote("medications in games", n, nAll) + '<p class="gmline"><span class="gmstick" aria-hidden="true">&#10022;</span> ' + n + ' medications, ' + L.length + ' games. Every finished game earns sticks.</p><div class="gmgrid">' + L.map(function (g) {
+  return freeNote("medications in games", n, nAll) + '<p class="gmline"><span class="gmstick" aria-hidden="true">&#10022;</span> ' + n + ' medications, ' + L.length + ' games. Every finished game earns sticks. <span class="gmdiff d' + gmDiff() + '">' + GM_DIFF_NAME[gmDiff()] + ' difficulty</span></p><div class="gmgrid">' + L.map(function (g) {
     return '<button class="gmcard" data-gm="' + g[0] + '"><span class="gmico" aria-hidden="true">' + g[3] + '</span><strong>' + esc(g[1]) + '</strong><span class="muted small">' + esc(g[2]) + '</span><span class="earned">+' + GM_STICKS[g[0]] + (g[0] === "scramble" ? " per word" : g[0] === "blitz" || g[0] === "frog" ? " per 3" : "") + ' sticks</span></button>';
   }).join("") + '</div>';
 }
 
 /* ---- Memory Match ---- */
 function gmMemoryNew() {
-  var F = gmPick(6, function (f) { return f.cls; }), cards = [];
+  var F = gmPick(gmD([4, 6, 8, 10]), function (f) { return f.cls; }), cards = [];
   F.forEach(function (f, k) { cards.push({ p: k, t: f.name, kind: "drug" }, { p: k, t: f.cls, kind: "cls" }); });
   GM = { kind: "memory", cards: shuffle(cards), up: [], done: {}, moves: 0, start: Date.now(), lock: false, won: 0 };
 }
@@ -15293,8 +15456,8 @@ function gmMemTap(i) {
 function gmMatchNew(mode) {
   mode = mode || (GM && GM.mode) || "use";
   var pairs;
-  if (mode === "anti") pairs = shuffle(GM_ANTIDOTES.slice()).slice(0, 5).map(function (p) { return { l: p[0], r: p[1] }; });
-  else pairs = gmPick(5, function (f) { return mode === "cls" ? f.cls : f.use; }).map(function (f) { return { l: f.name, r: mode === "cls" ? f.cls : f.use }; });
+  if (mode === "anti") pairs = shuffle(GM_ANTIDOTES.slice()).slice(0, gmD([4, 5, 6, 7])).map(function (p) { return { l: p[0], r: p[1] }; });
+  else pairs = gmPick(gmD([4, 5, 6, 7]), function (f) { return mode === "cls" ? f.cls : f.use; }).map(function (f) { return { l: f.name, r: mode === "cls" ? f.cls : f.use }; });
   GM = { kind: "match", mode: mode, pairs: pairs, right: shuffle(pairs.map(function (p, k) { return k; })), sel: null, got: {}, miss: 0, bad: null, won: 0 };
 }
 function gmMatch() {
@@ -15367,7 +15530,7 @@ function gmCrossBuild(words, want) {
 }
 function gmCrossNew() {
   var W = gmCrossWords(), X = null;
-  for (var t = 0; t < 6; t++) { var x = gmCrossBuild(shuffle(W.slice()), 8); if (!X || x.words.length > X.words.length) X = x; if (X.words.length >= 7) break; }
+  for (var t = 0; t < 6; t++) { var want = gmD([5, 8, 10, 12]), x = gmCrossBuild(shuffle(W.slice()), want); if (!X || x.words.length > X.words.length) X = x; if (X.words.length >= want - 1) break; }
   GM = { kind: "cross", X: X, fill: {}, dir: "a", cur: null, checked: false, won: 0, revealed: false };
 }
 function gmCross() {
@@ -15435,7 +15598,7 @@ function gmCrossFocus(k) {
 
 /* ---- Word Scramble ---- */
 function gmScrambleNew() {
-  var W = gmCrossWords().filter(function (w) { return w.w.length <= 10; }).slice(0, 5);
+  var mx = gmD([8, 10, 12, 16]), W = gmCrossWords().filter(function (w) { return w.w.length <= mx && w.w.length >= gmD([3, 4, 6, 8]); }); if (W.length < 4) W = gmCrossWords().filter(function (w) { return w.w.length <= mx; }); W = W.slice(0, gmD([4, 5, 6, 7]));
   GM = { kind: "scramble", words: W, i: 0, pick: [], tiles: [], right: 0, shown: false, won: 0 };
   gmScrTiles();
 }
@@ -15470,12 +15633,12 @@ function gmBlitzNew() { GM = { kind: "blitz", phase: "ready", score: 0, tries: 0
 function gmBlitzQ() {
   var all = gmIds().map(gmFact), f = all[Math.floor(Math.random() * all.length)], cls = {};
   all.forEach(function (x) { if (x.cls.toLowerCase() !== f.cls.toLowerCase()) cls[x.cls.toLowerCase()] = x.cls; });
-  var wrong = shuffle(Object.keys(cls)).slice(0, 3).map(function (k) { return cls[k]; });
+  var wrong = shuffle(Object.keys(cls)).slice(0, gmD([2, 3, 3, 3])).map(function (k) { return cls[k]; });
   GM.q = { f: f, opts: shuffle([f.cls].concat(wrong)) };
 }
 function gmBlitz() {
   if (!GM || GM.kind !== "blitz") gmBlitzNew();
-  var c = gmHead("Class Blitz", "Name the drug class. 60 seconds.");
+  var c = gmHead("Class Blitz", "Name the drug class. " + gmD([75, 60, 50, 40]) + " seconds.");
   if (GM.phase === "ready") return c + '<div class="actions"><button class="btn" data-gm="bgo">Start</button></div>';
   if (GM.phase === "done") { var best = (Prog.d.games || {}).blitzBest || 0; return c + '<div class="explain ok"><strong>' + GM.score + ' right out of ' + GM.tries + '.</strong> ' + (GM.score >= best && GM.score ? "New best! " : "Best: " + best + ". ") + (GM.won ? '<span class="earned">+' + GM.won + ' sticks</span>' : '') + '</div><div class="actions"><button class="btn" data-gm="again">Play again</button></div>'; }
   var left = Math.max(0, Math.ceil((GM.end - Date.now()) / 1000));
@@ -15484,7 +15647,7 @@ function gmBlitz() {
   return c;
 }
 function gmBlitzStart() {
-  GM.phase = "play"; GM.end = Date.now() + 60000; gmBlitzQ();
+  GM.phase = "play"; GM.end = Date.now() + gmD([75, 60, 50, 40]) * 1000; gmBlitzQ();
   clearInterval(GM.timer); var me = GM;
   GM.timer = setInterval(function () {
     if (GM !== me || S.tab !== "games") { clearInterval(me.timer); return; }
@@ -15550,7 +15713,7 @@ function gmFrogQ() {
   var x = mixItem(q), lanes = shuffle([0, 1, 2, 3]);
   GM.q = x; GM.shot = null;
   /* bugs speed up as the score climbs; sometimes the right bug is golden (more often on drugs you're weak on) */
-  var fast = Math.max(0.45, 1 - GM.score * 0.05), weak = q.d && typeof mastery === "function" && ["new", "learning"].indexOf(mastery(q.d)) >= 0, gold = Math.random() < (weak ? 0.3 : 0.12);
+  var fast = Math.max(gmD([0.6, 0.45, 0.38, 0.3]), gmD([1.3, 1, 0.85, 0.7]) - GM.score * gmD([0.04, 0.05, 0.055, 0.06])), weak = q.d && typeof mastery === "function" && ["new", "learning"].indexOf(mastery(q.d)) >= 0, gold = Math.random() < (weak ? 0.3 : 0.12);
   GM.bugs = x.opts.map(function (o, k) { var ok = o === x.q.a; return { t: o, ok: ok, gold: ok && gold, lane: lanes[k], dur: (7 + Math.random() * 4) * fast, delay: -Math.random() * 6 * fast, dir: Math.random() < .5 ? 1 : -1, gone: false }; });
 }
 function gmFrog() {
@@ -16561,7 +16724,7 @@ window.addEventListener("resize", function () { if (!chemdlg.hidden) chem3Draw()
 (function () {
   var css = '.dtabs{display:flex;gap:6px;margin:10px 0 4px;padding:4px;border-radius:12px;background:var(--surface-2,rgba(127,127,127,.12))}' +
     '.dtabs button{flex:1;border:0;background:transparent;padding:9px 10px;border-radius:9px;font:inherit;font-weight:700;color:inherit;cursor:pointer;opacity:.75}' +
-    '.dtabs button[data-dtab="deep"],.dtabs button[data-dtab="allied"]{flex:0 0 auto;min-width:112px;font-size:.82rem;font-weight:600;padding:7px 12px}' +
+    '.dtabs button[data-dtab="deep"],.dtabs button[data-dtab="chem"],.dtabs button[data-dtab="allied"]{flex:0 0 auto;min-width:112px;font-size:.82rem;font-weight:600;padding:7px 12px}' +
     '.dtabs button[aria-selected="true"]{background:var(--c,#6b3fbf);color:#fff;opacity:1;box-shadow:0 1px 4px rgba(0,0,0,.18)}' +
     '.deep{display:flex;flex-direction:column;gap:14px;margin-top:10px}' +
     '.deep .dsec{border:1px solid var(--line,rgba(127,127,127,.25));border-radius:14px;padding:14px 16px;background:var(--surface,transparent)}' +
@@ -16587,16 +16750,20 @@ window.addEventListener("resize", function () { if (!chemdlg.hidden) chem3Draw()
 function deepOf(id) { return (DB.DEEP || {})[id] || null; }
 /* The Wormhole is a DrugBug Pro feature (locked only when subscriptions are on; see modules/pro.js) */
 /* Free teaser: the ~40 free drugs (FREE_SET) open their Wormhole on every plan, so Free users can try it */
-function deepLocked() { var id = S.sheet && S.sheet.id; if (id && typeof FREE_SET !== "undefined" && FREE_SET[id]) return false; return typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier("plus"); }
+/* The Wormhole and Chemistry are free on every drug you can open (owner, Nov 19 2026): they lock only
+   with the drug itself (Free: the starter drugs; Plus and Pro: every drug) */
+function deepLocked() { var id = S.sheet && S.sheet.id; return !!id && typeof drugLocked === "function" && drugLocked(id); }
 function deepTabs() {
-  if (S.dtab === "deep" && deepLocked()) S.dtab = "main";
+  if ((S.dtab === "deep" || S.dtab === "chem") && deepLocked()) S.dtab = "main";
   var al = typeof alliedTabOk === "function" && S.sheet && alliedTabOk(S.sheet.id);
   if (S.dtab === "allied" && !al) S.dtab = "main";
-  var t = S.dtab === "deep" ? "deep" : S.dtab === "allied" ? "allied" : "main", lk = deepLocked();
-  return '<div class="dtabs" role="tablist" aria-label="Drug page sections">' + (al ? '<button role="tab" data-dtab="allied" aria-selected="' + (t === "allied") + '">Worldwide</button>' : '') + '<button role="tab" data-dtab="main" aria-selected="' + (t === "main") + '">Drug page</button><button role="tab" data-dtab="deep" aria-selected="' + (t === "deep") + '"' + (lk ? ' aria-label="Wormhole, DrugBug Plus"' : '') + '>🪱 Wormhole' + (lk && typeof tierBadge === "function" ? ' ' + tierBadge("plus") : '') + '</button></div>';
+  var t = S.dtab === "deep" ? "deep" : S.dtab === "allied" ? "allied" : S.dtab === "chem" ? "chem" : "main", lk = deepLocked();
+  /* Chemistry on the left, the Wormhole on the right (owner, Nov 19 2026) */
+  return '<div class="dtabs" role="tablist" aria-label="Drug page sections"><button role="tab" data-dtab="chem" aria-selected="' + (t === "chem") + '"' + (lk ? ' aria-label="Chemistry, DrugBug Plus"' : '') + '>\u{1F9EA} Chemistry' + (lk && typeof tierBadge === "function" ? ' ' + tierBadge("plus") : '') + '</button>' + (al ? '<button role="tab" data-dtab="allied" aria-selected="' + (t === "allied") + '">Worldwide</button>' : '') + '<button role="tab" data-dtab="main" aria-selected="' + (t === "main") + '">Drug page</button><button role="tab" data-dtab="deep" aria-selected="' + (t === "deep") + '"' + (lk ? ' aria-label="Wormhole, DrugBug Plus"' : '') + '>🪱 Wormhole' + (lk && typeof tierBadge === "function" ? ' ' + tierBadge("plus") : '') + '</button></div>';
 }
 function deepClick(t, a) {
   if (a.dtab === "deep" && deepLocked()) { openPaywall("The Wormhole", "plus"); return true; }
+  if (a.dtab === "chem" && deepLocked()) { openPaywall("Drug chemistry", "plus"); return true; }
   if (a.dtab) { S.dtab = a.dtab; drawSheet(); var pn = $(".panel", sheet); if (pn) { var tb = $(".dtabs", pn); pn.scrollTop = tb ? Math.max(0, tb.offsetTop - 70) : 0; } return true; }
   return false;
 }
@@ -16607,7 +16774,7 @@ function deepView(id) {
   var d = DB.drugs[id], e = deepOf(id), nm = nameOf(id), c = '<div class="deep">';
   if (lang() === "es") c += '<p class="dnote">La sección "Wormhole" solo está disponible en inglés por ahora.</p>';
   var st = e && typeof crStatus === "function" ? crStatus("deep", id) : "draft";
-  if (typeof FREE_SET !== "undefined" && FREE_SET[id] && typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier("plus")) c += '<div class="callout evnote small"><strong>Free preview.</strong> The Wormhole is open on your free drugs. Every drug in DrugBug has one with DrugBug Plus. <button class="linkish" data-pw="open">See Plus</button></div>';
+  if (typeof FREE_SET !== "undefined" && FREE_SET[id] && typeof PAYWALL !== "undefined" && PAYWALL && typeof hasTier === "function" && !hasTier("plus")) c += '<div class="callout evnote small"><strong>Free on your drugs.</strong> The Wormhole and Chemistry are open on every drug you can open. DrugBug Plus opens every drug in DrugBug, each with its own Wormhole and Chemistry. <button class="linkish" data-pw="open">See Plus</button></div>';
   c += '<p class="dnote"><b>Go down the wormhole:</b> the deep dive on where this drug came from and how it works inside you.</p><p class="dnote">' + (e ? (st === "reviewed" ? "Deep dive reviewed for educational accuracy. " : "Draft study content. ") : "The full origin story for " + esc(nm) + " is still being written. Everything below comes from its DrugBug drug page. ") + 'For study only. Do not use DrugBug for patient care or clinical decisions.</p>';
   /* 1 origins */
   var org = '';
@@ -16624,7 +16791,7 @@ function deepView(id) {
   var cell = e ? deepP(e.cell) : deepP(get(d, 2, 0));
   var tgt = [["Target", get(d, 2, 1)], ["Action", get(d, 2, 2)]].filter(function (x) { return deepOk(x[1]); });
   if (tgt.length) cell += '<div class="pk">' + tgt.map(function (x) { return '<div><span>' + x[0] + '</span>' + esc(x[1]) + '</div>'; }).join("") + '</div>';
-  c += deepSec("🔬", "What happens at the cellular level", (typeof chemCard === "function" ? chemCard(id) : "") + cell);
+  c += deepSec("🔬", "What happens at the cellular level", cell);
   /* 3 organ by organ */
   var org2 = '';
   if (e && e.body && e.body.length) org2 = '<div class="organs">' + e.body.map(function (b) { return typeof organHTML === "function" ? organHTML(b) : '<div class="organ"><b>' + esc(b[0]) + '</b>' + esc(b[1]) + '</div>'; }).join("") + '</div>';
@@ -30541,6 +30708,7 @@ function learnSysRow() {
   if (typeof SYS === "undefined" || typeof sysMap !== "function") return "";
   if (S.view === "level" && typeof isA === "function" && isA(S.level)) return "";   /* not on Allied Health (owner, Nov 5 2026) */
   if (typeof isF === "function" && S.view === "level" && isF(S.level)) return "";
+  if (S.view === "gen") return "";   /* not in the BugDex (owner, Nov 19 2026) */
   var SN = learnSeen(), open = {}, ph = lcatMode() === "ph";
   learnPool(null, null).forEach(function (id) { open[id] = 1; });
   var cnt = function (ids) { ids = ids.filter(function (id) { return open[id]; }); var d = 0; ids.forEach(function (id) { if (SN[id]) d++; }); return { n: ids.length, d: d }; };
@@ -30659,6 +30827,14 @@ function microCard(id) {
   c += '<header class="pagehead"><h1>' + esc(m.nm) + '</h1>' + (m.also ? '<p class="muted">' + esc(m.also) + '</p>' : '') + '</header>';
   if (m.cls) c += '<p class="scopenote">' + esc(m.cls) + '</p>';
   if (m.plain) c += '<p class="plain">' + esc(m.plain) + '</p>';
+  /* the Wormhole is its own tab on the right, like a drug page (owner, Nov 19 2026) */
+  var hasW = !!(m.worm && m.worm.length), wt = hasW && S.microTab === "worm";
+  if (hasW) c += '<div class="dtabs" role="tablist" aria-label="Card sections"><button role="tab" data-microtab="card" aria-selected="' + !wt + '">Card</button><button role="tab" data-microtab="worm" aria-selected="' + wt + '">\u{1FAB1} Wormhole</button></div>';
+  if (wt) {
+    c += '<div class="deep"><p class="dnote"><b>Go down the wormhole:</b> the deep dive on where this organism came from and how it works.</p><div class="fields">' + m.worm.map(function (x) { return '<div class="f wf"><div class="k">' + esc(x[0]) + '</div><div class="v">' + esc(x[1]) + '</div></div>'; }).join("") + '</div></div>';
+    if (typeof qaMicroSection === "function") c += qaMicroSection(m.id);
+    return c + '<p class="muted small nrfine">Draft reference for study, not a treatment guide. Education only.</p>';
+  }
   c += '<details class="sec go" open><summary>What it is and what it does</summary><div class="fields">' +
     microRow("Where it lives", m.live) + microRow("How it spreads", m.spread) + microRow("What it causes", m.causes) + '</div></details>';
   c += '<details class="sec"><summary>Mechanism and virulence</summary><div class="fields">' + microRow("How it causes harm", m.mech) + '</div></details>';
@@ -30666,15 +30842,15 @@ function microCard(id) {
   c += '<details class="sec dose"><summary>Treatment and prevention</summary><div class="fields">' +
     microRow("First line", m.tx) + microRow("Alternatives", m.alt) + microRow("Resistance", m.res) + microRow("Prevention", m.prev) + '</div></details>';
   if (m.mem && m.mem.length) c += '<details class="sec" open><summary>High yield</summary><div class="fields">' + m.mem.map(function (x) { return microRow(x[0], x[1]); }).join("") + '</div></details>';
-  if (m.worm && m.worm.length) c += '<details class="sec"><summary>The Wormhole</summary><div class="fields">' + m.worm.map(function (x) { return '<div class="f wf"><div class="k">' + esc(x[0]) + '</div><div class="v">' + esc(x[1]) + '</div></div>'; }).join("") + '</div></details>';
-  if (typeof qaMicroSection === "function") c += qaMicroSection(m.id);
+  if (!hasW && typeof qaMicroSection === "function") c += qaMicroSection(m.id);
   c += '<p class="muted small nrfine">Draft reference for study, not a treatment guide. Education only.</p>';
   return c;
 }
 /* clicks */
 function microClick(t, a) {
   if (a.mk) { S.microK = a.mk; S.micro = null; S.microQ = ""; render(); try { window.scrollTo(0, 0); } catch (e) {} return true; }
-  if (a.micro) { S.micro = a.micro; microEgg(a.micro); render(); try { window.scrollTo(0, 0); } catch (e) {} return true; }
+  if (a.microtab) { S.microTab = a.microtab; render(); return true; }
+  if (a.micro) { S.micro = a.micro; S.microTab = "card"; microEgg(a.micro); render(); try { window.scrollTo(0, 0); } catch (e) {} return true; }
   if (a.act === "microback") { S.micro = null; render(); try { window.scrollTo(0, 0); } catch (e) {} return true; }
   return false;
 }
@@ -31302,7 +31478,7 @@ function anatCard(x) {
   var c = '<section class="sickcard anatcard"><span class="eyebrow">' + esc(x.area) + ' &middot; ' + esc(x.grp) + '</span>' +
     '<h2>' + esc(x.name) + '</h2>' +
     (x.also ? '<p class="muted small anatalso">Also called: ' + esc(x.also) + '</p>' : '') +
-    '<p class="anatwhat">' + esc(x.what) + '</p>' +
+    '<h3 class="anatdef">Definition</h3><p class="anatwhat">' + esc(x.what) + '</p>' + (x.loc ? '<h3>Where it is</h3><p>' + esc(x.loc) + '</p>' : '') +
     '<h3>What it does</h3><p>' + esc(x.does) + '</p>';
   if (x.facts && x.facts.length) c += '<h3>Worth knowing</h3><ul>' + x.facts.map(function (f) { return '<li>' + esc(f) + '</li>'; }).join("") + '</ul>';
   if (x.fail) c += '<h3>When it is not working</h3><p class="anatfail">' + esc(x.fail) + '</p>';
@@ -31370,6 +31546,15 @@ var ANAT_SYS = [
   ["senses", "Senses", "#60a5fa", "", ["Eyes and vision", "Ears, nose and taste"], "Eyes, ears, nose and tongue."]
 ];
 var ANAT_LAYERS = [["skeleton", "Skeleton"], ["muscle", "Muscles"], ["nerves", "Nerves"], ["vessels", "Arteries and veins"], ["lymph", "Lymph"], ["organs", "Organs"]];
+var ANAT_SUB = {
+  "muscle-skeletal": "Muscle types and tissue", "muscle-smooth": "Muscle types and tissue", "muscle-cardiac": "Muscle types and tissue", "tendons": "Muscle types and tissue", "ligaments": "Muscle types and tissue", "neuromuscular-junction": "Muscle types and tissue",
+  "muscle-rotator-cuff": "Shoulder and arm", "muscle-quadriceps-and-hamstrings": "Hip and thigh", "muscle-abdominal-wall": "Back and trunk", "muscle-intercostals": "Back and trunk", "pelvic-floor-muscles": "Back and trunk",
+  "bone-skull": "Skull and face", "bone-mandible-and-tmj": "Skull and face", "bone-hyoid": "Skull and face", "bone-vertebral-column": "Spine", "bone-sacrum-and-coccyx": "Spine", "bone-ribs-and-sternum": "Chest and shoulder", "bone-clavicle-and-scapula": "Chest and shoulder",
+  "bone-humerus": "Arm and hand", "bone-radius-and-ulna": "Arm and hand", "bone-hand-and-wrist": "Arm and hand", "bone-pelvis": "Pelvis and leg", "bone-femur": "Pelvis and leg", "bone-tibia-and-fibula": "Pelvis and leg", "bone-patella-and-knee": "Joints", "bone-foot-and-ankle": "Pelvis and leg",
+  "joint-synovial": "Bone and joint tissue", "cartilage": "Bone and joint tissue", "bone-marrow": "Bone and joint tissue",
+  "brachial-plexus": "Limb nerves", "sciatic-nerve": "Limb nerves", "femoral-artery-and-vein": "Limb vessels", "subclavian-vessels": "Limb vessels"
+};
+function anatSub(x) { return x.sub || ANAT_SUB[x.id] || "General"; }
 function anatSysOf(k) { return ANAT_SYS.filter(function (s) { return s[0] === k; })[0] || null; }
 function anatLayerOn(k) { var L = S.anLayers || (S.anLayers = { skeleton: 1, nerves: 1, vessels: 1, lymph: 1, organs: 1, muscle: 0 }); return !!L[k]; }
 function anatSysSVG() {
@@ -31444,7 +31629,13 @@ function anatSysView() {
   }).join("") + '</div>';
   if (sy) {
     var parts = L.filter(function (x) { return sy[4].indexOf(x.grp) >= 0; });
-    c += '<div class="anatgrp ansyssel" style="--sc:' + sy[2] + '"><h3 class="anath">' + esc(sy[1]) + '<span class="qacount">' + parts.length + '</span></h3><p class="muted small">' + esc(sy[5]) + '</p><div class="chips">' + parts.map(function (x) { return anatChip(x, S.anId || ""); }).join("") + '</div></div>';
+    /* parts sorted into regions (thigh, arm, spine...) so a system reads like an atlas (owner, Nov 19 2026) */
+    var subs = [], bySub = {};
+    parts.forEach(function (x) { var k = anatSub(x); if (!bySub[k]) { bySub[k] = []; subs.push(k); } bySub[k].push(x); });
+    var SO = ["Head and neck", "Skull and face", "Spine", "Back and trunk", "Chest and shoulder", "Shoulder and arm", "Arm and hand", "Hip and thigh", "Pelvis and leg", "Leg and foot", "Joints", "Limb nerves", "Limb vessels", "Muscle types and tissue", "Bone and joint tissue", "General"];
+    subs.sort(function (p, q) { var i = SO.indexOf(p), j = SO.indexOf(q); return (i < 0 ? 50 : i) - (j < 0 ? 50 : j); });
+    c += '<div class="anatgrp ansyssel" style="--sc:' + sy[2] + '"><h3 class="anath">' + esc(sy[1]) + '<span class="qacount">' + parts.length + '</span></h3><p class="muted small">' + esc(sy[5]) + '</p>' +
+      subs.map(function (k) { return (subs.length > 1 ? '<h4 class="ansub">' + esc(k) + '</h4>' : '') + '<div class="chips">' + bySub[k].map(function (x) { return anatChip(x, S.anId || ""); }).join("") + '</div>'; }).join("") + '</div>';
   }
   c += '</div></div>';
   var x = S.anId ? anatOf(S.anId) : null;
@@ -32958,7 +33149,7 @@ function codeSteps() {
     '<li>' + (s.signedIn ? 'Get on the same account: in this app tap <b>Sync with drugbugapp.com</b> above and type the link code there' + (how === "email" ? ', or sign in there with your email' + em : '') + '.' : 'Use the same account there: after you sign in here, Settings › Account shows a link code to type on the website.') + '</li>' +
     '<li>On the website, tap <b>Redeem a code</b> at the top of Settings and enter it.</li>' +
     '<li>Come back here. What it unlocks shows up within a minute.</li></ol>' +
-    '<p class="muted small">Class keys are different: enter them right here, in your level\'s Dashboard under <b>In a class?</b></p>';
+    '<p class="muted small">Class keys are different: enter them right here in Settings under <b>Join a class</b>, or in your level\'s Dashboard under <b>In a class?</b></p>';
 }
 function codesGo() {
   try { if (typeof PRO !== "undefined" && PRO.open && typeof closePaywall === "function") closePaywall(); } catch (e) {}
@@ -33301,7 +33492,7 @@ function subClear() {
    Nothing about the student goes with it: no name, no email, no device, no individual answers.
    The instructor sees "Student 07", and only their own sheet says who that is. */
 var SEAT = { tier: "", until: 0, orgName: "", alias: "", level: "", loaded: false, unsub: null, uid: null, busy: false, t: null };
-(function () { var c = store("seat"); if (c && typeof c.until === "number") { SEAT.tier = c.tier || ""; SEAT.until = c.until; SEAT.orgName = c.orgName || ""; SEAT.alias = c.alias || ""; SEAT.level = c.level || ""; } })();
+(function () { var c = store("seat"); if (c && typeof c.until === "number") { SEAT.tier = c.tier || ""; SEAT.until = c.until; SEAT.orgName = c.orgName || ""; SEAT.alias = c.alias || ""; SEAT.level = seatLvNorm(c.level); } })();
 function seatTier() { return SEAT.until > Date.now() ? (SEAT.tier || "") : ""; }
 function seatActive() { return !!seatTier(); }
 function seatLabel() { return TIER_NAME[seatTier()] + " · " + SEAT.orgName + " (" + SEAT.alias + ") · until " + new Date(SEAT.until).toLocaleDateString(); }
@@ -33311,7 +33502,7 @@ function seatCheck() {
   fnCall("groupSeat", {}).then(function (r) {
     var was = seatTier();
     if (r && r.ok) {
-      SEAT.tier = "pro"; SEAT.until = r.live ? r.until : Math.min(r.until, Date.now()); SEAT.orgName = r.orgName || ""; SEAT.alias = r.alias || ""; SEAT.level = r.level || ""; SEAT.loaded = true; if (r.boost) { SEAT.boost = r.boost; store("seatBoost", r.boost); }
+      SEAT.tier = "pro"; SEAT.until = r.live ? r.until : Math.min(r.until, Date.now()); SEAT.orgName = r.orgName || ""; SEAT.alias = r.alias || ""; SEAT.level = seatLvNorm(r.level); SEAT.loaded = true; if (r.boost) { SEAT.boost = r.boost; store("seatBoost", r.boost); }
       store("seat", { tier: "pro", until: SEAT.until, orgName: SEAT.orgName, alias: SEAT.alias, level: SEAT.level });
     } else if (r && !r.ok && !(SEAT.redeemedAt && Date.now() - SEAT.redeemedAt < 120000)) {
       SEAT.tier = ""; SEAT.until = 0; SEAT.loaded = true; store("seat", null);
@@ -33343,8 +33534,8 @@ function seatWatchLegacy(db, uid) {
       /* a "no seat" that arrives just after redeeming is the listener catching up, not a removal */
       if (!has && SEAT.redeemedAt && Date.now() - SEAT.redeemedAt < 120000) return;
       var was = seatTier(), first = !SEAT.loaded;
-      if (!first && until === SEAT.until && (d.tier || "") === SEAT.tier && (d.orgName || "") === SEAT.orgName && (d.level || "") === SEAT.level) return;
-      SEAT.tier = d.tier || ""; SEAT.until = until; SEAT.orgName = d.orgName || ""; SEAT.alias = d.alias || ""; SEAT.level = d.level || ""; SEAT.loaded = true;
+      if (!first && until === SEAT.until && (d.tier || "") === SEAT.tier && (d.orgName || "") === SEAT.orgName && seatLvNorm(d.level) === SEAT.level) return;
+      SEAT.tier = d.tier || ""; SEAT.until = until; SEAT.orgName = d.orgName || ""; SEAT.alias = d.alias || ""; SEAT.level = seatLvNorm(d.level); SEAT.loaded = true;
       store("seat", has ? { tier: SEAT.tier, until: SEAT.until, orgName: SEAT.orgName, alias: SEAT.alias, level: SEAT.level } : null);
       if (!first && !was && seatTier()) S.proMsg = "Welcome, " + SEAT.alias + ". DrugBug Pro is on for " + SEAT.orgName + ".";
       if (typeof render === "function") render();
@@ -33399,7 +33590,7 @@ function groupRedeemKey(raw, win, fail, agreed) {
   store("classConsent", { at: Date.now(), v: 1 });
   GIFT.busy = true; giftDraw();
   fnCall("groupRedeem", { token: raw, consent: true }).then(function (r) {
-    SEAT.tier = "pro"; SEAT.until = r.until; SEAT.orgName = r.orgName; SEAT.alias = r.alias; SEAT.level = r.level || ""; SEAT.loaded = true; SEAT.redeemedAt = Date.now();
+    SEAT.tier = "pro"; SEAT.until = r.until; SEAT.orgName = r.orgName; SEAT.alias = r.alias; SEAT.level = seatLvNorm(r.level); SEAT.loaded = true; SEAT.redeemedAt = Date.now();
     store("seat", { tier: "pro", until: r.until, orgName: r.orgName, alias: r.alias, level: SEAT.level });
     if (typeof webDeepLoad === "function") webDeepLoad();
     if (where0 !== "form") clAdoptLevel(SEAT.level);
@@ -33922,7 +34113,7 @@ document.addEventListener("visibilitychange", function () { if (document.visibil
 var CI = { i: 0 };
 var cidlg = document.createElement("div"); cidlg.id = "cidlg"; cidlg.className = "sheet rsheet"; cidlg.hidden = true; document.body.appendChild(cidlg);
 function classIntroCards() {
-  var lv = SEAT.level && typeof levelObj === "function" && levelObj(SEAT.level) ? levelObj(SEAT.level).name : "";
+  var lv = seatTrackName() || (SEAT.level && typeof levelObj === "function" && levelObj(SEAT.level) ? levelObj(SEAT.level).name : "");
   var until = SEAT.until ? new Date(SEAT.until).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" }) : "";
   return [
     ["Welcome to " + (SEAT.orgName || "your class"), "You are " + SEAT.alias + " in this class. DrugBug Pro is on for you" + (until ? " until " + until : "") + ", at no cost to you. Everything you study from now on counts toward your class."],
@@ -34190,6 +34381,14 @@ przdlg.addEventListener("click", function (e) {
   if (przdlg._after) { var f = przdlg._after; przdlg._after = null; return f(); }
   if (typeof render === "function") render();
 });
+/* RN classes can be for nursing school or a paramedic-to-RN bridge (owner, Nov 19 2026): both live in the RN
+   menu; the track is remembered so the class shows its real name and nursing school is picked for the student */
+function seatLvNorm(l) {
+  l = String(l || ""); var tr = l === "rnschool" ? "school" : l === "rnbridge" ? "bridge" : "";
+  if (tr) { SEAT.track = tr; try { store("seatTrack", tr); var u = store("nunits"); if (!Array.isArray(u) || !u.length) store("nunits", ["school"]); } catch (e) {} return "rn"; }
+  SEAT.track = ""; return l;
+}
+function seatTrackName() { return SEAT.track === "school" ? "Nursing school (RN)" : SEAT.track === "bridge" ? "Paramedic to RN bridge" : ""; }
 function dashInClass() { return typeof seatActive === "function" && seatActive() && S.view === "level" && (!SEAT.level || SEAT.level === S.level); }
 function dashLoad() {
   if (!dashInClass() || CL.busy) return;
@@ -35931,4 +36130,1999 @@ window.addEventListener("click", function (e) {   /* window capture runs before 
 
 /* "See Pro" on the free sample notes opens the plans (owner, Nov 18 2026) */
 document.addEventListener("click", function (e) { var b = e.target && e.target.closest && e.target.closest("[data-freepro]"); if (!b) return; e.preventDefault(); e.stopPropagation(); if (typeof openPaywall === "function") openPaywall("More " + (b.getAttribute("data-freepro") || "practice"), "pro"); }, true);
+/* ===== Chemistry tab on every drug page (owner, Nov 19 2026: "add a chemistry tab, kinda like the
+   wormhole but on the left side. talk everything chemistry about every drug") =====
+   Built from three things:
+   1. the 2D structure we already draw (DB.CHEM: atoms and bonds), read here to find rings,
+      functional groups and the drug's chemical family;
+   2. PubChem's computed properties (DB.CHEMP, data9.js: IUPAC name, XLogP, polar surface area,
+      hydrogen-bond donors and acceptors, rotatable bonds, stereocenters, charge, exact mass);
+   3. what the drug page already says (generic name for the salt form, class and mechanism).
+   Everything is explained in plain words, with the numbers. Biologics, ions and mixtures without
+   a single small-molecule structure get their own explanation. Education only. */
+var CHEM_EL = { H: 1.008, C: 12.011, N: 14.007, O: 15.999, S: 32.06, P: 30.974, F: 18.998, Cl: 35.45, Br: 79.904, I: 126.9, B: 10.81, Si: 28.085, Se: 78.97 };
+var CHEM_ELNAME = { C: "carbon", H: "hydrogen", N: "nitrogen", O: "oxygen", S: "sulfur", P: "phosphorus", F: "fluorine", Cl: "chlorine", Br: "bromine", I: "iodine", B: "boron", Si: "silicon", Se: "selenium", Na: "sodium", K: "potassium", Ca: "calcium", Mg: "magnesium", Fe: "iron", Zn: "zinc", Li: "lithium", Pt: "platinum", Gd: "gadolinium", Tc: "technetium", Au: "gold", Bi: "bismuth", Al: "aluminum", Co: "cobalt", Cu: "copper", Mn: "manganese", Ag: "silver", As: "arsenic", Sb: "antimony", Ga: "gallium", Ba: "barium" };
+function chemP(id) { return (typeof DB !== "undefined" && DB.CHEMP && DB.CHEMP[id]) || null; }
+function chemFormulaCount(f) { var o = {}; String(f || "").replace(/([A-Z][a-z]?)(\d*)/g, function (_, e, n) { o[e] = (o[e] || 0) + (n ? +n : 1); return ""; }); return o; }
+
+/* ---- read the structure into a graph ---- */
+function chemGraph(m) {
+  if (!m || !m.a) return null;
+  var A = m.a.split(";").map(function (s) { var p = s.split(","); return { e: p[0] || "C", h: +(p[3] || 0), q: +(p[4] || 0) }; });
+  var n = A.length, adj = A.map(function () { return []; }), ord = {};
+  (m.b || "").split(";").filter(Boolean).forEach(function (s) {
+    var p = s.split(","), i = +p[0], j = +p[1], o = +(p[2] || 1); if (!A[i] || !A[j]) return;
+    adj[i].push(j); adj[j].push(i); ord[i + "," + j] = o; ord[j + "," + i] = o;
+  });
+  function bo(i, j) { return ord[i + "," + j] || 0; }
+  /* valence-based hydrogens for carbon (the data only stores H on heteroatoms) */
+  A.forEach(function (a, i) {
+    if (a.e === "C") { var v = 0; adj[i].forEach(function (j) { v += bo(i, j); }); a.h = Math.max(0, 4 - v + (a.q < 0 ? -1 : 0)); }
+  });
+  /* rings: smallest ring through each bond (good enough for drug-sized molecules) */
+  var rings = [], seen = {};
+  for (var i = 0; i < n; i++) adj[i].forEach(function (j) {
+    if (j < i) return;
+    /* BFS from j to i without the i-j bond */
+    var prev = {}; prev[j] = -1; var q = [j], found = false;
+    while (q.length && !found) { var x = q.shift(); for (var k = 0; k < adj[x].length; k++) { var y = adj[x][k]; if ((x === j && y === i) || (x === i && y === j)) continue; if (prev[y] === undefined) { prev[y] = x; if (y === i) { found = true; break; } q.push(y); } } }
+    if (!found) return;
+    var path = [], c = i; while (c !== -1) { path.push(c); c = prev[c]; }
+    if (path.length > 8) return;
+    var key = path.slice().sort(function (a, b) { return a - b; }).join(".");
+    if (!seen[key]) { seen[key] = 1; rings.push(path); }
+  });
+  /* a ring is aromatic when every atom is sp2-ish: alternating double bonds or a lone-pair N/O/S in a 5-ring */
+  var dbl = A.map(function () { return false; });
+  for (var a2 = 0; a2 < n; a2++) adj[a2].forEach(function (j) { if (bo(a2, j) === 2) dbl[a2] = true; });
+  var arom = rings.map(function (r) {
+    if (r.length !== 5 && r.length !== 6) return false;
+    var inr = {}; r.forEach(function (x) { inr[x] = 1; });
+    var ok = r.every(function (x) { if (A[x].e === "C") return adj[x].some(function (y) { return inr[y] && bo(x, y) === 2; }) || adj[x].some(function (y) { return bo(x, y) === 2 && A[y].e === "C" && false; }); return true; });
+    if (r.length === 6) return ok && r.filter(function (x) { return A[x].e === "C" && adj[x].some(function (y) { return inr[y] && bo(x, y) === 2; }); }).length >= 4;
+    var hetero = r.filter(function (x) { return A[x].e !== "C"; }).length;
+    return ok && hetero >= 1 && r.filter(function (x) { return adj[x].some(function (y) { return inr[y] && bo(x, y) === 2; }); }).length >= 4;
+  });
+  var aromAt = A.map(function () { return false; }); rings.forEach(function (r, k) { if (arom[k]) r.forEach(function (x) { aromAt[x] = true; }); });
+  return { A: A, adj: adj, bo: bo, rings: rings, arom: arom, aromAt: aromAt, n: n };
+}
+
+/* ---- functional groups ---- */
+function chemGroups(G) {
+  var A = G.A, adj = G.adj, bo = G.bo, out = {}, rs = G.rings;
+  function add(k) { out[k] = (out[k] || 0) + 1; }
+  function isCarbonyl(c) { return A[c].e === "C" && adj[c].some(function (o) { return A[o].e === "O" && bo(c, o) === 2; }); }
+  function inRingSize(x, sz) { return rs.some(function (r) { return r.length === sz && r.indexOf(x) >= 0; }); }
+  A.forEach(function (a, i) {
+    var nb = adj[i];
+    if (a.e === "O") {
+      if (nb.length === 1) {
+        var c = nb[0];
+        if (bo(i, c) === 2) {
+          if (A[c].e === "C") {
+            var others = adj[c].filter(function (y) { return y !== i; });
+            var hasO = others.some(function (y) { return A[y].e === "O"; }), hasN = others.some(function (y) { return A[y].e === "N"; });
+            if (!hasO && !hasN) { if (others.length === 2 && others.every(function (y) { return A[y].e === "C"; })) add(inRingSize(c, 6) || inRingSize(c, 5) ? "ketone" : "ketone"); else if (others.length <= 1) add("aldehyde"); }
+          }
+        } else if (A[c].e === "C") {
+          if (isCarbonyl(c)) { if (a.h || a.q < 0) add("carboxylic acid"); }
+          else if (a.h) add(G.aromAt[c] ? "phenol" : "alcohol");
+        }
+      } else if (nb.length === 2 && nb.every(function (y) { return A[y].e === "C"; })) {
+        var cc = nb.filter(isCarbonyl);
+        if (cc.length === 1) { if (rs.some(function (r) { return r.indexOf(i) >= 0; })) add("lactone"); else add("ester"); }
+        else if (cc.length === 0) add("ether");
+      }
+    }
+    if (a.e === "N") {
+      var hasCarbonyl = nb.some(isCarbonyl), hasS = nb.some(function (y) { return A[y].e === "S" && adj[y].filter(function (o) { return A[o].e === "O" && bo(y, o) === 2; }).length >= 2; });
+      var nO = nb.filter(function (y) { return A[y].e === "O"; }).length;
+      if (nO >= 2 || (a.q > 0 && nO >= 1 && nb.some(function (y) { return A[y].e === "O" && bo(i, y) === 2; }))) add("nitro");
+      else if (hasS) add("sulfonamide");
+      else if (hasCarbonyl) { if (rs.some(function (r) { return r.length === 4 && r.indexOf(i) >= 0; })) add("beta-lactam"); else if (rs.some(function (r) { return r.indexOf(i) >= 0; })) add("lactam"); else add("amide"); }
+      else if (nb.some(function (y) { return bo(i, y) === 3; })) add("nitrile");
+      else if (G.aromAt[i]) add("aromatic nitrogen");
+      else if (nb.some(function (y) { return bo(i, y) === 2; })) {
+        if (nb.some(function (y) { return A[y].e === "N"; })) add("azo or hydrazone");
+        else { var cdb = nb.filter(function (y) { return bo(i, y) === 2; })[0]; add(adj[cdb].some(function (y) { return y !== i && A[y].e === "N" && bo(cdb, y) === 1 && !isCarbonyl(y); }) ? "amidine or guanidine" : "imine"); }
+      }
+      else if (nb.some(function (y) { return A[y].e === "C" && adj[y].some(function (z) { return z !== i && A[z].e === "N" && bo(y, z) === 2; }); })) { /* the NH2 or NH of an amidine/guanidine: counted with that group */ }
+      else if (nb.length === 4 || a.q > 0) add("quaternary ammonium");
+      else if (nb.some(function (y) { return G.aromAt[y]; }) && nb.length - (a.h ? 0 : 0) >= 1) add("aniline-type amine");
+      else add(nb.length === 1 ? "primary amine" : nb.length === 2 ? "secondary amine" : "tertiary amine");
+    }
+    if (a.e === "S") {
+      var so = nb.filter(function (y) { return A[y].e === "O" && bo(i, y) === 2; }).length;
+      if (so >= 2 && !nb.some(function (y) { return A[y].e === "N"; })) add("sulfone or sulfonate");
+      else if (so === 1) add("sulfoxide");
+      else if (so === 0 && nb.length === 2 && !G.aromAt[i]) add("thioether");
+      else if (so === 0 && nb.length === 1 && a.h) add("thiol");
+      else if (G.aromAt[i]) add("thiophene or thiazole ring");
+    }
+    if (a.e === "P") add("phosphate or phosphonate");
+    if (a.e === "F" || a.e === "Cl" || a.e === "Br" || a.e === "I") add("halogen:" + a.e);
+    if (a.e === "C" && nb.filter(function (y) { return A[y].e === "F"; }).length === 3) add("trifluoromethyl");
+  });
+  /* rings worth naming */
+  var nArom = G.arom.filter(Boolean).length;
+  if (nArom) out["aromatic ring"] = nArom;
+  rs.forEach(function (r, k) {
+    var el = r.map(function (x) { return A[x].e; }), nN = el.filter(function (e) { return e === "N"; }).length, nO = el.filter(function (e) { return e === "O"; }).length, nS = el.filter(function (e) { return e === "S"; }).length;
+    if (r.length === 6 && !G.arom[k] && nN === 1 && nO === 0) add("piperidine ring");
+    if (r.length === 6 && !G.arom[k] && nN === 2) add("piperazine ring");
+    if (r.length === 6 && !G.arom[k] && nN === 1 && nO === 1) add("morpholine ring");
+    if (r.length === 6 && G.arom[k] && nN === 1) add("pyridine ring");
+    if (r.length === 6 && G.arom[k] && nN === 2) add("pyrimidine or pyrazine ring");
+    if (r.length === 5 && nN === 2 && G.arom[k]) add("imidazole or pyrazole ring");
+    if (r.length === 5 && nN === 3) add("triazole ring");
+    if (r.length === 5 && nN === 4) add("tetrazole ring");
+    if (r.length === 5 && nO === 1 && nN === 0 && !G.arom[k]) add("five-membered oxygen ring (furanose/THF)");
+    if (r.length === 6 && nO === 1 && nN === 0 && !G.arom[k]) add("six-membered oxygen ring (pyranose sugar)");
+    if (r.length === 7 && nN === 2) add("diazepine ring");
+  });
+  /* catechol: aromatic ring with OH on two neighboring carbons */
+  rs.forEach(function (r, k) {
+    if (!G.arom[k] || r.length !== 6) return;
+    var oh = r.map(function (x) { return adj[x].some(function (y) { return A[y].e === "O" && A[y].h && adj[y].length === 1; }); });
+    for (var t = 0; t < 6; t++) if (oh[t] && oh[(t + 1) % 6]) { add("catechol"); break; }
+  });
+  return out;
+}
+
+/* ---- chemical family (scaffold) ---- */
+function chemFamily(G, gr, d) {
+  var fam = [], rs = G.rings, A = G.A;
+  var cls = ((typeof get === "function" && d) ? (get(d, 0, 3) + " " + get(d, 0, 4)) : "").toLowerCase();
+  function has(k) { return gr[k]; }
+  /* fused ring systems */
+  var six = rs.filter(function (r) { return r.length === 6; }), five = rs.filter(function (r) { return r.length === 5; });
+  function fused(r1, r2) { var s = 0; r1.forEach(function (x) { if (r2.indexOf(x) >= 0) s++; }); return s >= 2; }
+  var carbo = function (r) { return r.every(function (x) { return A[x].e === "C"; }); };
+  var c6 = six.filter(carbo), c5 = five.filter(carbo);
+  if (c6.length >= 3 && c5.length >= 1 && c5.some(function (r) { return c6.some(function (s) { return fused(r, s); }); }) && /steroid|cortico|estrogen|androgen|progest|testosterone|glucocorticoid|mineralocorticoid|bile|digoxin|cardiac glycoside|vitamin d/.test(cls + " " + (d && d.name || "").toLowerCase())) fam.push("steroid");
+  else if (c6.length >= 3 && c5.length >= 1 && c5.some(function (r) { return c6.filter(function (s) { return fused(r, s); }).length >= 1; })) fam.push("steroid-like fused rings");
+  if (has("beta-lactam")) fam.push("beta-lactam");
+  if (has("diazepine ring") && has("aromatic ring")) fam.push("benzodiazepine");
+  if (has("catechol") && (has("primary amine") || has("secondary amine"))) fam.push("catecholamine");
+  if (has("sulfonamide")) fam.push("sulfonamide");
+  if (has("tetrazole ring")) fam.push("tetrazole (acid stand-in)");
+  if (has("triazole ring") && /antifungal|azole/.test(cls)) fam.push("azole antifungal");
+  if (has("imidazole or pyrazole ring") && /antifungal|azole/.test(cls)) fam.push("azole antifungal");
+  if (has("lactone") && rs.some(function (r) { return r.length > 8; })) fam.push("macrolide");
+  if (/fluoroquinolone|quinolone/.test(cls)) fam.push("quinolone");
+  if (/tetracycline/.test(cls)) fam.push("tetracycline");
+  if (/phenothiazine/.test(cls) || (has("thiophene or thiazole ring") && six.length >= 3 && /antipsychotic|antiemetic/.test(cls))) fam.push("phenothiazine-type");
+  if (/opioid|opiate/.test(cls)) fam.push("opioid");
+  if (/barbiturate/.test(cls)) fam.push("barbiturate");
+  if (/aminoglycoside/.test(cls)) fam.push("aminoglycoside");
+  if (/nucleoside|nucleotide|purine|pyrimidine analog/.test(cls)) fam.push("nucleoside analog");
+  if (/local anesthetic|anesthetic \(local\)|amide anesthetic|ester anesthetic/.test(cls)) fam.push("local anesthetic");
+  if (/beta[- ]?(adrenergic )?blocker|beta-1|beta1|beta blocker/.test(cls)) fam.push("beta blocker");
+  /* class chemistry (owner: "talk everything chemistry about every drug") */
+  var nm0 = ((d && d.name) || "").toLowerCase(), add2 = function (k) { if (fam.indexOf(k) < 0) fam.push(k); };
+  if (/statin|hmg-coa/.test(cls)) add2("statin");
+  if (/ace inhibitor|angiotensin-converting/.test(cls)) add2("ACE inhibitor");
+  if (/angiotensin ii receptor|\barb\b|angiotensin receptor blocker/.test(cls)) add2("ARB");
+  if (/proton pump/.test(cls)) add2("proton pump inhibitor");
+  if (/nsaid|cox-2|cyclooxygenase/.test(cls)) add2("NSAID");
+  if (/nitrate|nitric oxide donor|nitrovasodilator/.test(cls) && /nitr/.test(nm0)) add2("organic nitrate");
+  if (/cardiac glycoside/.test(cls)) add2("cardiac glycoside");
+  if (/loop diuretic/.test(cls)) add2("loop diuretic");
+  if (/thiazide/.test(cls)) add2("thiazide");
+  if (/sulfonylurea/.test(cls)) add2("sulfonylurea");
+  if (/ssri|selective serotonin reuptake/.test(cls)) add2("SSRI");
+  if (/tricyclic/.test(cls)) add2("tricyclic");
+  if (/antipsychotic/.test(cls)) add2("antipsychotic");
+  if (/antihistamine|h1 /.test(cls)) add2("antihistamine");
+  if (/neuromuscular block/.test(cls)) add2("neuromuscular blocker");
+  if (/anticholinergic|antimuscarinic|muscarinic antagonist/.test(cls)) add2("antimuscarinic");
+  if (/cholinesterase|acetylcholinesterase/.test(cls)) add2("cholinesterase inhibitor");
+  if (/coumarin|vitamin k antagonist/.test(cls)) add2("coumarin");
+  if (/hydantoin/.test(cls) || /phenytoin/.test(nm0)) add2("hydantoin");
+  if (/calcium channel blocker|dihydropyridine/.test(cls) && /dipine/.test(nm0)) add2("dihydropyridine");
+  if (/gabapentinoid|alpha-2-delta/.test(cls)) add2("gabapentinoid");
+  if (/factor xa|direct thrombin|doac/.test(cls)) add2("direct oral anticoagulant");
+  return fam;
+}
+
+/* ---- the words ---- */
+var CHEM_GROUP_TXT = {
+  "carboxylic acid": "Acid group (COOH). In blood it gives up its hydrogen and carries a negative charge, which makes the drug more water soluble and often makes it stick to albumin, the main protein in plasma.",
+  "ester": "Ester (C(=O)O–C). Esterase enzymes in blood and tissue can split esters, so drugs built around one can be broken down fast (esmolol and remifentanil are made that way on purpose). Some prodrugs use an ester to get absorbed, then are cut to the active form.",
+  "lactone": "Lactone: an ester tied into a ring. Rings like this are common in natural products and can be opened by water or enzymes.",
+  "amide": "Amide (C(=O)N). Much tougher than an ester; the body breaks amides slowly, mostly in the liver. Amides do not carry a charge at body pH.",
+  "lactam": "Lactam: an amide tied into a ring.",
+  "beta-lactam": "Beta-lactam: a strained four-membered ring with a nitrogen and a carbonyl. The strain makes it reactive. It is the business end of penicillins, cephalosporins and carbapenems: it bonds to the bacterial enzymes that build the cell wall. Bacterial beta-lactamase enzymes break this ring, which is how many bacteria resist.",
+  "primary amine": "Primary amine (–NH2). Basic: at body pH it picks up a hydrogen and carries a positive charge.",
+  "secondary amine": "Secondary amine (–NH–). Basic: mostly positively charged at body pH, which helps it dissolve in water and is why many drugs are sold as hydrochloride salts.",
+  "tertiary amine": "Tertiary amine (N with three carbon neighbors). Basic and usually positively charged at body pH. The liver often trims carbons off it (N-dealkylation), sometimes making an active metabolite.",
+  "quaternary ammonium": "Quaternary ammonium: a nitrogen with four carbon neighbors and a permanent positive charge. Charged molecules cross fat barriers poorly, so these drugs absorb poorly by mouth and hardly enter the brain.",
+  "aniline-type amine": "Amine on an aromatic ring. Much weaker base than ordinary amines, so it is mostly uncharged at body pH.",
+  "aromatic nitrogen": "Nitrogen inside an aromatic ring, like pyridine or imidazole. These are weak bases and good hydrogen-bond acceptors that help the drug grip its target.",
+  "imine": "Imine (C=N). A weak base, so it is mostly uncharged at body pH.",
+  "amidine or guanidine": "Amidine or guanidine (a carbon with two or three nitrogens). These are strong bases and stay positively charged in blood (metformin is a guanidine-type drug).",
+  "azo or hydrazone": "N=N or C=N–N group. Can be cleaved by gut bacteria or reduced in the liver.",
+  "nitrile": "Nitrile (C≡N). Small, polar and stable; often used to tune how tightly a drug binds.",
+  "nitro": "Nitro group (NO2). Can be reduced in the body; in some antimicrobials (metronidazole, nitrofurantoin) that reduction is what kills the microbe.",
+  "alcohol": "Alcohol (–OH on a non-aromatic carbon). Adds water solubility and hydrogen bonding. A common handle for the liver to attach glucuronic acid so the kidneys can clear it.",
+  "phenol": "Phenol (–OH on an aromatic ring). Weakly acidic; a favorite spot for the liver to attach sulfate or glucuronic acid.",
+  "catechol": "Catechol: two OH groups side by side on a benzene ring. It is the signature of adrenaline, noradrenaline and dopamine. The enzyme COMT inactivates catechols quickly, which is one reason these drugs work for minutes, not hours, and are useless by mouth.",
+  "ether": "Ether (C–O–C). Stable and fairly unreactive. A methoxy group (O–CH3) on a ring is often removed by liver CYP enzymes (O-demethylation).",
+  "ketone": "Ketone (C=O between two carbons). Polar; the body may reduce it to an alcohol.",
+  "aldehyde": "Aldehyde (–CHO). Reactive; usually oxidized to an acid in the body.",
+  "sulfonamide": "Sulfonamide (SO2–N). Found in sulfa antibiotics, thiazide and loop diuretics, some diabetes pills and more. The NH can be weakly acidic. People with sulfa antibiotic allergy react mainly to the specific arylamine part of sulfa antibiotics, not to every sulfonamide.",
+  "sulfone or sulfonate": "Sulfone or sulfonate (SO2). Very polar and stable.",
+  "sulfoxide": "Sulfoxide (S=O). Polar; the sulfur can be a chiral center (as in esomeprazole).",
+  "thioether": "Thioether (C–S–C). The sulfur can be oxidized by the liver to a sulfoxide.",
+  "thiol": "Thiol (–SH). Reactive; can bind metals and form disulfide bonds (acetylcysteine and captopril use this).",
+  "thiophene or thiazole ring": "A ring containing sulfur.",
+  "phosphate or phosphonate": "Phosphorus group. Phosphates are often added to make a drug water soluble for IV use (fosphenytoin) and are cut off in the body.",
+  "trifluoromethyl": "CF3 group: three fluorines on one carbon. Makes the drug more fat soluble and harder for the liver to break down.",
+  "aromatic ring": "Aromatic ring (flat, like benzene). Flat rings stack against flat parts of proteins and make a drug more fat soluble.",
+  "piperidine ring": "Piperidine: a six-membered ring with one nitrogen. Very common in opioids, antihistamines and antipsychotics; the nitrogen is the basic, charged part.",
+  "piperazine ring": "Piperazine: a six-membered ring with two nitrogens. Common in antipsychotics, antihistamines and fluoroquinolones.",
+  "morpholine ring": "Morpholine: a six-membered ring with one nitrogen and one oxygen; adds water solubility.",
+  "pyridine ring": "Pyridine: a benzene-like ring with one nitrogen.",
+  "pyrimidine or pyrazine ring": "A benzene-like ring with two nitrogens, the same kind of ring found in DNA bases.",
+  "imidazole or pyrazole ring": "Five-membered ring with two nitrogens. Imidazole nitrogens can grab the iron in CYP enzymes, which is why many imidazole drugs cause drug interactions.",
+  "triazole ring": "Five-membered ring with three nitrogens. In azole antifungals it binds the iron of the fungal enzyme that makes ergosterol, and it also blocks human CYP enzymes (interactions).",
+  "tetrazole ring": "Tetrazole: a ring of four nitrogens and one carbon that is acidic, like a carboxylic acid. ARBs such as losartan use it.",
+  "five-membered oxygen ring (furanose/THF)": "Five-membered ring with oxygen, like the ribose sugar in nucleosides.",
+  "six-membered oxygen ring (pyranose sugar)": "Six-membered ring with oxygen, like a glucose sugar.",
+  "diazepine ring": "Seven-membered ring with two nitrogens."
+};
+var CHEM_FAM_TXT = {
+  "steroid": "Steroid: four fused rings (three six-membered and one five-membered), the same skeleton the body builds from cholesterol. Steroids are fat soluble, slip through cell membranes, and many act on receptors inside the cell that switch genes on and off.",
+  "steroid-like fused rings": "Several fused rings in a steroid-like layout, which makes the molecule rigid and fat soluble.",
+  "beta-lactam": "Beta-lactam antibiotic: the strained four-membered ring acylates the bacterial enzymes (penicillin-binding proteins) that cross-link the cell wall.",
+  "benzodiazepine": "Benzodiazepine: a benzene ring fused to a seven-membered ring with two nitrogens. This shape fits a site on the GABA-A receptor and makes it respond more strongly to GABA.",
+  "catecholamine": "Catecholamine: a catechol ring with a two-carbon chain to an amine. This is the natural shape that adrenergic receptors recognize.",
+  "sulfonamide": "Sulfonamide drug.",
+  "tetrazole (acid stand-in)": "Uses a tetrazole as an acid that resists metabolism better than a carboxylic acid.",
+  "azole antifungal": "Azole antifungal: an imidazole or triazole that binds the heme iron of lanosterol 14-alpha-demethylase, so fungi cannot make ergosterol for their membranes.",
+  "macrolide": "Macrolide: a large lactone ring (12 or more atoms) with sugars attached; it binds the bacterial ribosome.",
+  "quinolone": "Quinolone: a two-ring core with a carboxylic acid and a ketone side by side. That pair grabs magnesium and the bacterial DNA gyrase together, and it is also why antacids, calcium and iron block absorption.",
+  "tetracycline": "Tetracycline: four fused six-membered rings covered in OH and C=O groups. They grab calcium and other metals, which is why they stain growing teeth and bone and are blocked by dairy and antacids.",
+  "phenothiazine-type": "Phenothiazine-type tricyclic: two benzene rings bridged by sulfur and nitrogen, with a side chain ending in an amine. The shape blocks dopamine receptors.",
+  "opioid": "Opioid: the shape that fits the mu-opioid receptor has a basic nitrogen (charged at body pH) placed a set distance from an aromatic ring.",
+  "barbiturate": "Barbiturate: a six-membered ring with two nitrogens and three C=O groups (barbituric acid) with side groups that set how fat soluble and how long acting it is.",
+  "aminoglycoside": "Aminoglycoside: sugars studded with amine groups, so the drug is highly charged. That is why aminoglycosides are not absorbed by mouth, stay out of the brain and are cleared by the kidneys.",
+  "nucleoside analog": "Nucleoside analog: built to look like a DNA or RNA building block, so a virus, a cancer cell or the body's own enzymes pick it up and it stops the chain.",
+  "local anesthetic": "Local anesthetic: an aromatic ring (fat-loving end) joined by an ester or amide link to an amine (water-loving end). Ester types (procaine, tetracaine) are broken down in blood; amide types (lidocaine, bupivacaine) by the liver.",
+  "statin": "Statin: part of the molecule (a dihydroxy acid, or a lactone the body opens into one) mimics HMG-CoA, the natural substrate, so it plugs the enzyme's active site. Fat-loving statins (simvastatin, atorvastatin) enter most cells; water-loving ones (pravastatin, rosuvastatin) rely more on liver uptake transporters.",
+  "ACE inhibitor": "ACE inhibitor: built to grab the zinc atom inside angiotensin-converting enzyme, with a thiol (captopril), carboxylate or phosphinate. Most are given as ethyl ester prodrugs (enalapril, ramipril) that absorb better and are cut by liver esterases into the active acid (enalaprilat, ramiprilat).",
+  "ARB": "ARB: most carry an acidic tetrazole or carboxylic acid on a two-ring (biphenyl) frame that sits in the AT1 receptor. Some are ester prodrugs (candesartan cilexetil, olmesartan medoxomil).",
+  "proton pump inhibitor": "Proton pump inhibitor: a benzimidazole joined to a pyridine through a sulfoxide. It is a prodrug: in the strong acid next to the stomach's parietal cells it rearranges into a reactive sulfenamide that bonds to the pump for good. That acid sensitivity is why the pills are enteric coated.",
+  "NSAID": "NSAID: most are aromatic acids (aryl-acetic or aryl-propionic acids such as ibuprofen and naproxen). The acid group anchors them in the COX enzyme and makes them bind albumin tightly. Ibuprofen-type drugs have a chiral carbon; the S form does the work and the body converts much of the R form.",
+  "organic nitrate": "Organic nitrate: nitrate esters (O–NO2) that the body breaks down to release nitric oxide, which relaxes blood vessel muscle. Many are oily or volatile and absorb well under the tongue and through skin.",
+  "cardiac glycoside": "Cardiac glycoside: a steroid core with a five-membered lactone ring on top and a chain of sugars on the bottom. The steroid and lactone fit the Na+/K+ ATPase pump; the sugars set how long it lasts. Potassium competes for the same site, which is why low potassium makes digoxin more toxic.",
+  "loop diuretic": "Loop diuretic: most are acids with a sulfonamide (furosemide, bumetanide). Being acids, they are carried in the blood bound to albumin and pumped into the urine by kidney acid transporters, which brings them to their target inside the tubule.",
+  "thiazide": "Thiazide: a benzothiadiazine ring with a sulfonamide. The kidney secretes it into the tubule fluid, where it blocks the sodium-chloride carrier.",
+  "sulfonylurea": "Sulfonylurea: a sulfonyl group joined to a urea (SO2–NH–CO–NH). It binds the sulfonylurea receptor on the insulin-releasing beta cells. These drugs are weak acids and bind albumin tightly.",
+  "SSRI": "SSRI: most combine an aromatic ring (often with fluorine or chlorine) and a basic amine, set a fixed distance apart, matching the shape the serotonin transporter recognizes.",
+  "tricyclic": "Tricyclic: three fused rings with a side chain ending in an amine. The flat, fat-loving rings and basic amine let them block many targets at once (serotonin and norepinephrine reuptake, histamine, acetylcholine, sodium channels), which explains both effects and toxicity.",
+  "antipsychotic": "Antipsychotic: most have a basic nitrogen (often in a piperazine or piperidine) a set distance from aromatic rings, the layout that blocks dopamine D2 receptors.",
+  "antihistamine": "Antihistamine: classic ones have two aromatic rings and a basic amine on a short chain. Older, fat-loving ones cross into the brain (drowsy); newer ones are more polar or acidic and are pumped back out, so they cause less sleepiness.",
+  "neuromuscular blocker": "Neuromuscular blocker: two positively charged nitrogens held a set distance apart, mimicking two acetylcholine molecules. Permanently charged, they stay in the blood, cannot reach the brain and do not cross the placenta much.",
+  "antimuscarinic": "Antimuscarinic: many are tropane alkaloids like atropine, an ester with an amine. A tertiary amine reaches the brain; turning it into a quaternary amine (glycopyrrolate, ipratropium) keeps it out.",
+  "cholinesterase inhibitor": "Cholinesterase inhibitor: many are carbamates that temporarily bond to the enzyme's active site. Charged quaternary ones (neostigmine) stay out of the brain; uncharged ones (physostigmine) get in.",
+  "coumarin": "Coumarin: a two-ring lactone (4-hydroxycoumarin) that mimics vitamin K and blocks the enzyme that recycles it. Warfarin is a racemate; the S form is several times stronger and is cleared by CYP2C9, which drives many interactions.",
+  "hydantoin": "Hydantoin: a five-membered ring with two nitrogens and two carbonyls. Phenytoin is barely water soluble, which is why IV phenytoin needs a harsh alkaline solution and why fosphenytoin (a phosphate prodrug) was made.",
+  "dihydropyridine": "Dihydropyridine: a partly saturated pyridine ring with ester groups on both sides and an aromatic ring on top. These are fat-loving, broken down by CYP3A4 (grapefruit interaction) and sensitive to light.",
+  "gabapentinoid": "Gabapentinoid: built to look like GABA (an amino acid with a fat-loving side group), but it actually binds the alpha-2-delta part of calcium channels. It rides an amino acid transporter into the body, which can saturate at high doses.",
+  "direct oral anticoagulant": "Direct oral anticoagulant: small molecules shaped to fit the active site of factor Xa or thrombin directly. Some are prodrugs (dabigatran etexilate) that are cut into the active form after absorption.",
+  "beta blocker": "Beta blocker: most share an aryloxypropanolamine chain (aromatic ring–O–CH2–CH(OH)–CH2–NH–) that mimics the side chain of adrenaline. The OH-bearing carbon is chiral, and the S form does most of the blocking."
+};
+var CHEM_SALT = [
+  [/hydrochloride|\bhcl\b/i, "hydrochloride", "Sold as a hydrochloride salt: the drug's basic nitrogen is paired with chloride so it dissolves in water for tablets and injections."],
+  [/hydrobromide/i, "hydrobromide", "Sold as a hydrobromide salt (the base paired with bromide) to make it water soluble."],
+  [/succinate/i, "succinate", "Succinate salt (paired with succinic acid)."],
+  [/tartrate/i, "tartrate", "Sold as a tartrate salt (paired with tartaric acid) for water solubility."],
+  [/maleate/i, "maleate", "Sold as a maleate salt (paired with maleic acid)."],
+  [/mesylate|methanesulfonate/i, "mesylate", "Sold as a mesylate salt (paired with methanesulfonic acid), often to make a poorly soluble base dissolve."],
+  [/besylate|besilate/i, "besylate", "Sold as a besylate salt (paired with benzenesulfonic acid)."],
+  [/fumarate/i, "fumarate", "Sold as a fumarate salt."],
+  [/citrate/i, "citrate", "Sold as a citrate salt."],
+  [/phosphate/i, "phosphate", "Sold as a phosphate salt or phosphate ester, often to make it water soluble."],
+  [/sulfate/i, "sulfate", "Sold as a sulfate salt."],
+  [/acetate/i, "acetate", "Sold as an acetate salt or ester."],
+  [/sodium/i, "sodium", "Sold as a sodium salt: an acidic drug paired with sodium so it dissolves in water."],
+  [/potassium/i, "potassium", "Sold as a potassium salt."],
+  [/calcium/i, "calcium", "Contains calcium as a salt partner or as the active ion."],
+  [/bromide/i, "bromide", "Paired with bromide."]
+];
+function chemSalt(d) {
+  var g = (typeof get === "function" && d) ? get(d, 0, 0) : "", hit = CHEM_SALT.filter(function (x) { return x[0].test(g); });
+  if (/hydrobromide/i.test(g)) hit = hit.filter(function (x) { return x[1] !== "bromide"; });
+  if (!hit.length) return null;
+  if (hit.length === 1) return hit[0];
+  return [null, "", "It comes in more than one salt form (" + hit.map(function (x) { return x[1]; }).join(" and ") + "). The active part of the molecule is the same; the partner changes how fast it dissolves, which is why different salts can be used in immediate-release and extended-release products. " + hit.map(function (x) { return x[2]; }).join(" ")];
+}
+
+/* drugs with no single small-molecule structure */
+function chemKind(id, d) {
+  var nm = ((d && d.name) || id).toLowerCase(), cls = ((typeof get === "function" && d) ? (get(d, 0, 3) + " " + get(d, 0, 4)) : "").toLowerCase(), all = nm + " " + id + " " + cls;
+  if (/^bp-|blood product/.test(id + " " + cls)) return "blood";
+  if (/leucel|cabtagene|car[- ]t\b|cell therapy|sipuleucel|lifileucel|islet|thymus tissue|keratinocyte|cellularized|cellular therapy/.test(all)) return "cell";
+  if (/rsen\b|siran\b|antisense|sirna|oligonucleotide|aptamer|morpholino|rnai/.test(all)) return "oligo";
+  if (/botulinum|toxin type/.test(all)) return "toxin";
+  if (/allergen|pollen extract|peanut allergen|tuberculin|purified protein derivative/.test(all)) return "allergen";
+  if (/coagulation factor|factor (viii|ix|viia|xiii|x)\b|fibrinogen|prothrombin complex|protein c\b|von willebrand|antithrombin|thrombin|plasma-derived|kallikrein inhibitor/.test(all)) return "plasmaprot";
+  if (/somatropin|tropin\b|tropin-alfa|gonadotropin|follitropin|menotropins|leptin|corticotropin|thyroid-stimulating|growth hormone|recombinant human|fc fragment|decoy protein|kunitz/.test(all)) return "cytokine";
+  if (/iron sucrose|carboxymaltose|derisomaltose|iron carbohydrate|ferumoxytol|iron dextran/.test(all)) return "iron";
+  if (/iud|intrauterine|implant\b|insert\b|ring\b/.test(all) && !/implantation/.test(all)) return "device";
+  if (/parenteral nutrition|amino acids|lipid emulsion|multivitamin|trace element|crystalloid|electrolyte solution|sterile water|oral rehydration|plasma-lyte/.test(all)) return "nutrition";
+  if (/surfactant|lung extract/.test(all)) return "mixture";
+  if (/botanical|dietary supplement|mushroom|fungus|essential oil|bee product|alga|seaweed|cyanobacter|food\b|plant toxin|plant compounds|resin|yeast|ferment|lectin|honey/.test(all)) return "plant";
+  if (/vec\b|parvovec|firadenovec|laherparepvec|gene therapy|oncolytic|viral vector/.test(all)) return "gene";
+  if (/vedotin|deruxtecan|govitecan|ozogamicin|emtansine|mafodotin|tesirine|soravtansine|antibody[- ]drug conjugate/.test(all)) return "adc";
+  if (/lutetium|radium|technetium|iodine-131|yttrium|radiopharm|\bf-18\b|fluorine-18|gallium-68/.test(all)) return "radio";
+  if (/bcg\b|live bacteria|probiotic/.test(all)) return "live";
+  if (/cannabis|kratom|marijuana|herbal|plant extract|psilocybin mushroom/.test(all)) return "plant";
+  if (/synthetic-cannabinoid|synthetic cannabinoid|cathinone|nitazene|designer-benzo|designer benzo|inhalant|anabolic-steroid-misuse|bath salts/.test(all)) return "class";
+  if (/liposom|protein-bound|nanoparticle/.test(all)) return "formulation";
+  if (/cept\b|fusp\b|diftitox|fusion protein/.test(all)) return "fusion";
+  if (/grastim|ermin\b|leukin|poetin|kinra|interferon|interleukin|cytokine|growth factor|kin-?alfa|inbakicept/.test(all)) return "cytokine";
+  if (/mab\b|monoclonal|bispecific|t-cell engager/.test(all)) return "antibody";
+  if (/\bfab\b|immune fab|antivenom|antitoxin|immune globulin|immunoglobulin/.test(nm + " " + cls)) return "antibody-fragment";
+  if (/insulin/.test(nm)) return "insulin";
+  if (/relin\b|relix\b|melanotide|natide\b|gnrh|lhrh/.test(all)) return "peptide";
+  if (/glutide|tirzepatide|exenatide|pramlintide|teriparatide|octreotide|lanreotide|liraglutide|semaglutide|calcitonin|vasopressin|oxytocin|desmopressin|glucagon|bivalirudin|leuprolide|goserelin|terlipressin|peptide/.test(nm + " " + cls)) return "peptide";
+  if (/plase\b|ase\b|kinase|enzyme/.test(nm) && !/base\b/.test(nm)) return "enzyme";
+  if (/heparin|enoxaparin|dalteparin|fondaparinux|protamine/.test(nm)) return "heparin";
+  if (/vaccine|toxoid/.test(nm + " " + cls)) return "vaccine";
+  if (/charcoal/.test(nm)) return "charcoal";
+  if (/polyethylene glycol|peg\b|psyllium|methylcellulose|dextran|hetastarch|albumin|sucralfate|sevelamer|cholestyramine|colesevelam|patiromer|sodium polystyrene/.test(nm)) return "polymer";
+  if (/chloride|sulfate|bicarbonate|carbonate|phosphate|gluconate|lithium|oxide|hydroxide|iodide|fluoride|citrate|lactated|saline|dextrose|electrolyte/.test(nm) && !/[a-z]{6,}(ine|ol|am|il|one)\b/.test(nm.split(" ")[0])) return "ion";
+  return "";
+}
+var CHEM_KIND_TXT = {
+  "antibody": ["Monoclonal antibody (a large protein)", "This drug is an antibody: a Y-shaped protein of about 1,300 amino acids and roughly 150,000 daltons, hundreds of times heavier than a typical pill drug. It is made by living cells, not by chemical synthesis. Its two arms are shaped to grip one exact target. Stomach acid and enzymes would digest it, so it is given by injection or infusion, and it lasts days to weeks because the body recycles antibodies through the FcRn receptor."],
+  "antibody-fragment": ["Antibody fragment (protein)", "This is made from antibodies or pieces of them (Fab fragments), proteins that bind one specific target such as a toxin or a drug. As proteins they are given IV and can cause allergic reactions, especially if they come from animal sources."],
+  "insulin": ["Insulin (a peptide hormone)", "Insulin is a small protein of 51 amino acids in two chains (A and B) held together by two disulfide bridges. Rapid- and long-acting insulins differ by a few amino acids or an added fatty chain: those changes control whether the molecules clump into six-unit hexamers under the skin (slower) or come apart quickly (faster). Being a protein, it would be digested by mouth, so it is injected."],
+  "peptide": ["Peptide (a short chain of amino acids)", "This drug is a peptide: a chain of amino acids, usually based on a natural hormone. Small changes to the chain (swapping an amino acid, adding a fatty side chain) protect it from enzymes and stretch how long it lasts. Most peptides are digested in the gut, so they are injected or given in the nose."],
+  "enzyme": ["Enzyme (a protein that speeds a reaction)", "This drug is an enzyme, a large protein made by living cells. It works by speeding up one chemical reaction in the body (for clot busters: turning plasminogen into plasmin, which dissolves fibrin). Proteins this size are given by IV."],
+  "heparin": ["Sugar chain (glycosaminoglycan) or its partner", "Heparins are long chains of sugars covered in sulfate groups, which makes them among the most negatively charged molecules in the body. That charge is how they bind antithrombin, and it is why positively charged protamine can neutralize them. Too large and charged to be absorbed by mouth, they are injected."],
+  "blood": ["Blood product", "Blood products are living blood or parts of it (red cells, plasma, platelets, clotting proteins), not a manufactured chemical. Their chemistry is the body's own: hemoglobin carrying oxygen, clotting factors, albumin. Stored blood also contains citrate, which binds calcium so the blood doesn't clot in the bag; large transfusions can lower the patient's calcium the same way."],
+  "oligo": ["Oligonucleotide (a short strand of RNA or DNA)", "This drug is a short, chemically armored strand of nucleic acid (about 15 to 25 building blocks). It works by pairing with a specific RNA message in the cell, which blocks it, destroys it, or changes how it is spliced. The backbone is chemically modified (phosphorothioate, 2'-O-methoxyethyl, morpholino) so enzymes don't chew it up, and many carry a GalNAc sugar tag that steers them to liver cells."],
+  "toxin": ["Protein toxin", "Botulinum toxin is a large protein (about 150,000 daltons) made by Clostridium bacteria, one of the most potent substances known. One part docks on nerve endings; the other is an enzyme that cuts the proteins nerves need to release acetylcholine. Doses are measured in biological units, not milligrams, and units are not interchangeable between brands."],
+  "allergen": ["Allergen extract (proteins)", "This is a standardized mixture of proteins from a natural source (pollen, dust mites, peanuts or bacteria). The proteins are what the immune system reacts to, so the amount is measured by biological potency rather than as one chemical."],
+  "plasmaprot": ["Plasma protein or clotting factor", "This is one of the body's own blood proteins (a clotting factor or regulator), either purified from donated plasma or made by engineered cells. Most clotting factors are enzymes that cut the next factor in the cascade. Large proteins like these are given IV, and plasma-derived products are virus-inactivated during manufacturing."],
+  "iron": ["Iron-carbohydrate complex", "This is a tiny particle with an iron oxide-hydroxide core wrapped in a sugar shell. The shell keeps the iron from being released all at once (free iron is toxic); immune cells in the liver and spleen take up the particles and release the iron slowly to transferrin."],
+  "device": ["Drug-releasing device or implant", "This is a device or implant that releases a known drug slowly, or works by itself (copper ions in a copper IUD). The chemistry of the active drug is the same as its regular form; the device controls how much comes out each day."],
+  "nutrition": ["Nutrition or IV solution", "This is a mixture of simple nutrients or salts (amino acids, fats, vitamins, electrolytes or water) rather than one drug molecule. What matters chemically is the concentration (osmolality) and the balance of ions, which decide whether fluid shifts into or out of cells."],
+  "mixture": ["Natural mixture", "This is a natural mixture of several substances (for example lung surfactant is mostly phospholipids like DPPC plus a few proteins), so there is no single structure."],
+  "cell": ["Living cell therapy", "This is not a chemical at all: it is a dose of living cells, often the patient's own T cells collected, genetically engineered in a lab to carry a receptor (CAR) that recognizes a cancer marker, grown into millions and infused back. The cells multiply in the body and can persist for years."],
+  "gene": ["Gene therapy or engineered virus", "This drug delivers genetic material, usually packed inside a modified virus that has been made unable to cause disease. The virus carries DNA instructions into cells so they make a missing protein, or (for cancer) it infects and bursts tumor cells. Its chemistry is DNA, RNA and protein rather than a small molecule."],
+  "adc": ["Antibody-drug conjugate", "An antibody-drug conjugate is a monoclonal antibody (a large protein that homes in on one marker on cancer cells) with several very toxic small-molecule drugs chemically chained to it by a linker. The antibody carries the poison to the cell, the cell swallows it, and the linker is cut inside so the poison is released there. The linker chemistry decides how much leaks out in the blood."],
+  "radio": ["Radiopharmaceutical", "This drug carries a radioactive atom. A targeting molecule (a peptide or small molecule) is wrapped around a metal-binding cage that holds the radioactive metal, so the drug sticks to tumor cells and the radiation does the damage up close. Its chemistry is about the targeting part and the cage (chelator) that keeps the metal from leaking."],
+  "live": ["Live bacteria", "This is a preparation of living, weakened bacteria, not a chemical compound."],
+  "plant": ["Plant material (a natural mixture)", "This is a plant or plant product, so it contains many chemicals at once, and the amount of each varies from batch to batch. The drug page lists the main active compounds."],
+  "class": ["A group of related chemicals", "This entry covers a whole family of substances rather than one molecule. Members share a core shape but differ in side groups, which changes how strong and how long acting each one is. New versions keep appearing because small chemical changes make a substance legally new."],
+  "formulation": ["Special formulation of a known drug", "This is a known drug packaged in a carrier, such as a liposome (a tiny fat bubble) or albumin nanoparticles. The carrier changes where the drug goes in the body and how long it stays, not the drug molecule itself."],
+  "fusion": ["Fusion protein", "A fusion protein is two proteins joined into one chain by genetic engineering, often a receptor or toxin joined to part of an antibody so it lasts longer in the blood. Being a large protein, it is given by injection or infusion."],
+  "cytokine": ["Recombinant protein (cytokine or growth factor)", "This is a copy of one of the body's own signaling proteins, made by bacteria or cultured cells that were given the human gene. Some are attached to polyethylene glycol (PEG) chains, which makes them last longer. As proteins, they are injected."],
+  "vaccine": ["Vaccine", "A vaccine is a biologic mixture (proteins, inactivated organisms or genetic instructions) rather than a single chemical structure."],
+  "charcoal": ["Activated carbon", "Activated charcoal is almost pure carbon, heated with steam or gas to riddle it with tiny pores. One gram has a surface area of roughly 1,000 square meters. Drug molecules stick to that surface by weak attractions (adsorption) and pass out in the stool. Small charged ions like lithium, iron and alcohols do not stick well."],
+  "polymer": ["Polymer or large mixture", "This is a large molecule made of many repeating units, or a mixture of them, so it has no single structure. Large polymers stay in the gut or the bloodstream depending on where they are given."],
+  "ion": ["Mineral salt or simple ion", "This is a simple inorganic salt or ion, not a carbon-based drug molecule. In water it splits into charged ions (for example calcium chloride gives Ca2+ and 2 Cl-), and the ion itself is the active part. Ions do not cross membranes freely; the body moves them with dedicated channels and pumps."]
+};
+
+/* ---- property explanations ---- */
+function chemSizeTxt(w) { w = +w; if (!w) return ""; return w < 200 ? "very small" : w < 350 ? "small" : w < 500 ? "typical size for a pill drug" : w < 900 ? "large for a small-molecule drug" : "very large"; }
+function chemLogTxt(x) {
+  if (x == null || isNaN(x)) return "";
+  return x < 0 ? "water-loving (hydrophilic). It stays mostly in blood and body water and tends to be cleared by the kidneys." :
+    x < 1.5 ? "leans water-loving, with some fat solubility." :
+    x < 3.5 ? "balanced between water and fat, the sweet spot for absorbing through the gut and spreading into tissues." :
+    x < 5 ? "fat-loving (lipophilic). It moves into tissues and fat easily, and the liver usually has to change it before it can leave the body." :
+    "very fat-loving. It soaks into fat, which can stretch out how long it lingers, and it binds proteins heavily.";
+}
+function chemTpsaTxt(t) {
+  if (t == null || isNaN(t)) return "";
+  return t < 60 ? "low, so it can slip through fatty membranes easily, including into the brain." :
+    t < 90 ? "moderate, so it gets into the brain to some degree." :
+    t <= 140 ? "high, so it mostly stays out of the brain, though the gut can still absorb it." :
+    "very high, so it crosses membranes poorly; gut absorption and brain entry are low unless a transporter carries it.";
+}
+function chemRo5(p, w) {
+  var v = [];
+  if (+w > 500) v.push("weight over 500");
+  if (p.x != null && p.x > 5) v.push("XLogP over 5");
+  if (p.d > 5) v.push("more than 5 H-bond donors");
+  if (p.a > 10) v.push("more than 10 H-bond acceptors");
+  return v;
+}
+
+/* ---- pH and pKa ----
+   p.ph = [low, high, route, labels]: the pH of the liquid product from FDA labels (openFDA, the
+   "pH ..." line in the label's description); p.pk = numeric pKa values and p.pkt = PubChem's
+   experimental text. Body fluids for comparison: blood 7.35-7.45, stomach 1.5-3.5, urine 4.5-8. */
+function chemPhWord(lo, hi) {
+  var m = (lo + (hi == null ? lo : hi)) / 2;
+  return m < 3 ? "strongly acidic" : m < 5 ? "acidic" : m < 6.5 ? "slightly acidic" : m <= 7.6 ? "close to blood (7.35 to 7.45)" : m <= 9 ? "slightly alkaline" : "strongly alkaline";
+}
+function chemPhWhy(lo, hi) {
+  var m = (lo + (hi == null ? lo : hi)) / 2;
+  if (m < 3) return "Solutions this acidic can sting, irritate veins and damage tissue if they leak out of the vein. Mixing them in the same IV line with alkaline drugs can make crystals form.";
+  if (m < 5) return "Many injections are kept acidic because the drug is more stable or dissolves better that way. It can sting a little going in and can form a precipitate if mixed with alkaline drugs like bicarbonate or phenytoin.";
+  if (m < 6.5) return "Mildly acidic, which most veins and tissues tolerate well.";
+  if (m <= 7.6) return "About the same pH as blood, so it is gentle on veins and tissue.";
+  if (m <= 9) return "Mildly alkaline; usually well tolerated.";
+  return "Solutions this alkaline are harsh on veins and can cause serious tissue injury if they leak out (extravasation). Keep them in their own line or flush before and after, since acidic drugs can make them precipitate.";
+}
+function chemPhSec(id, d, p, gr) {
+  var b = "", ph = p.ph, pk = p.pk || [];
+  if (ph && ph.length) {
+    var lo = ph[0], hi = ph[1], rt = ph[2] || "";
+    b += '<p><b>pH of the product: ' + (hi != null && hi !== lo ? lo + ' to ' + hi : lo) + '</b>' + (rt ? ' (' + esc(rt) + ' form, from the FDA label)' : ' (from the FDA label)') + ', which is ' + chemPhWord(lo, hi) + '. ' + esc(chemPhWhy(lo, hi)) + '</p>';
+  } else {
+    b += '<p><b>pH of the product:</b> ' + (/tablet|capsule|oral|po\b/i.test((d && get(d, 0, 0)) || "") ? 'tablets and capsules do not have a pH of their own; pH only applies to liquids. ' : 'no pH is listed in the FDA labels we read for this drug. ') + 'Once dissolved in the body, the drug sits in fluids with their own pH: stomach 1.5 to 3.5, blood 7.35 to 7.45, urine 4.5 to 8.</p>';
+  }
+  if (pk.length) {
+    var base = gr && (gr["primary amine"] || gr["secondary amine"] || gr["tertiary amine"] || gr["amidine or guanidine"]), acid = gr && (gr["carboxylic acid"] || gr["tetrazole ring"] || gr["sulfonamide"] || gr["phenol"]);
+    var vals = pk.slice(0, 3), t = vals.join(", ");
+    var how = "";
+    if (vals.length === 1 && (base ? !acid : acid)) {
+      var k = vals[0], ion = base ? 1 / (1 + Math.pow(10, 7.4 - k)) : 1 / (1 + Math.pow(10, k - 7.4)), pct = Math.round(ion * 100);
+      how = ' For ' + (base ? 'a base' : 'an acid') + ' with this pKa, about ' + (pct >= 99 ? 'over 99' : pct <= 1 ? 'under 1' : pct) + '% is charged in blood (pH 7.4) and the rest is uncharged; the uncharged part is what crosses membranes. In the stomach (pH about 2) ' + (base ? 'nearly all of it is charged.' : 'nearly all of it is uncharged, so acids like this are absorbed partly in the stomach.');
+    } else how = ' Each value belongs to a different acidic or basic group in the molecule.';
+    b += '<p><b>pKa: ' + esc(t) + '.</b> The pKa is the pH at which half of that group is charged and half is not.' + how + '</p>';
+  } else if (p.pkt && p.pkt.length) {
+    b += '<p><b>pKa (PubChem):</b> ' + esc(p.pkt.slice(0, 2).join("; ")) + '</p>';
+  }
+  return deepSec("\u{1F9EB}", "pH and pKa", b + '<p class="muted small">Product pH from FDA drug labels (openFDA); pKa from PubChem where measured. Products from different makers can differ slightly.</p>');
+}
+/* ---- the tab ---- */
+/* chemx.js (PubChem properties and extra structures, ~500 KB) loads the first time the tab opens */
+var CHEMX = 0;
+function chemLoad() {
+  if (DB.CHEMP || CHEMX === 2) return true;
+  if (!CHEMX) {
+    CHEMX = 1;
+    var sc = document.createElement("script"); sc.src = "chemx.js?v=20261119"; sc.async = true;
+    sc.onload = function () { CHEMX = 2; if (S.sheet && S.dtab === "chem") drawSheet(); };
+    sc.onerror = function () { CHEMX = 2; if (S.sheet && S.dtab === "chem") drawSheet(); };
+    document.head.appendChild(sc);
+  }
+  return false;
+}
+function chemTab(id) {
+  if (!chemLoad()) return '<div class="deep chemtab"><p class="dnote">Loading the chemistry\u2026</p></div>';
+  var d = DB.drugs[id], m = chemOf(id), p = chemP(id) || {}, es = false, baseId = "";
+  /* a form of a drug we already have (ciprofloxacin-ophthalmic, ivermectin-topical): same molecule */
+  if (!m && !chemP(id)) { var bp = id.split("-"); for (var bi = bp.length - 1; bi >= 1; bi--) { var cand = bp.slice(0, bi).join("-"); if (cand !== id && (chemOf(cand) || chemP(cand))) { baseId = cand; break; } } }
+  if (baseId) { m = chemOf(baseId); p = chemP(baseId) || {}; }
+  var c = '<div class="deep chemtab"><p class="dnote"><b>The chemistry:</b> what this molecule is made of, its shape, and how that shape decides how it behaves in the body.</p>';
+  /* combinations: point to each part */
+  if (baseId) c += '<p class="dnote">Same molecule as <button class="linkish" data-drug="' + esc(baseId) + '">' + esc(DB.drugs[baseId] ? DB.drugs[baseId].name : baseId) + '</button>; this is a different form or use of it.</p>';
+  var cparts = id.split("-"), combo = !m && !baseId && cparts.length >= 2 && (cparts.some(function (x) { return DB.drugs[x]; }) || /combination|\bplus\b/.test((typeof get === "function" && d) ? (get(d, 0, 3) + " " + get(d, 0, 4)).toLowerCase() : "")) && /[\/+-]| and /.test((d && d.name) || "");
+  if (combo) {
+    c += deepSec("\u{1F9EA}", "A combination", '<p>This product combines more than one drug, so there is no single molecule. Each part has its own chemistry:</p><div class="drugchips">' + cparts.map(function (x) { return DB.drugs[x] ? '<button class="chip" data-drug="' + esc(x) + '">' + esc(DB.drugs[x].name) + '</button>' : '<span class="chip">' + esc(x.charAt(0).toUpperCase() + x.slice(1)) + '</span>'; }).join("") + '</div>');
+  }
+  var kind = !m ? chemKind(id, d) : "";
+  /* a protein, cell or mixture: PubChem's small-molecule numbers would mislead, so leave them out */
+  if (kind) p = kind === "ion" ? { c: p.c, f: p.f, w: p.w, ph: p.ph, pk: p.pk, pkt: p.pkt } : { c: p.c, ph: p.ph };
+  if (!m && kind && CHEM_KIND_TXT[kind]) c += deepSec("\u{1F9EC}", esc(CHEM_KIND_TXT[kind][0]), '<p>' + esc(CHEM_KIND_TXT[kind][1]) + '</p>');
+  /* at a glance */
+  var f = (m && m.f) || p.f || "", w = (m && m.w) || p.w || "";
+  var rows = [];
+  if (f && !m) rows.push(["Formula", '<span class="cf">' + chemFormulaHTML(f) + '</span>']);
+  if (w) rows.push(["Size", esc(w) + ' g/mol, ' + chemSizeTxt(w)]);
+  if (p.iu) rows.push(["Chemical (IUPAC) name", '<span class="iupac">' + esc(p.iu) + '</span>']);
+  if (f) { var cnt = chemFormulaCount(f), parts2 = Object.keys(cnt).map(function (e) { return cnt[e] + " " + (CHEM_ELNAME[e] || e) + (cnt[e] > 1 && CHEM_ELNAME[e] ? "" : ""); }); rows.push(["Atoms", esc(parts2.join(", "))]); }
+  if (!m && p.c) rows.push(["PubChem", '<a href="https://pubchem.ncbi.nlm.nih.gov/compound/' + p.c + '" target="_blank" rel="noopener">Compound ' + p.c + '</a>']);
+  if (m) c += chemCard(baseId || id);
+  if (rows.length) c += deepSec("⚗️", "At a glance", '<div class="fields">' + rows.map(function (r) { return '<div class="f"><div class="k">' + r[0] + '</div><div class="v">' + r[1] + '</div></div>'; }).join("") + '</div>');
+  var G = m ? chemGraph(m) : null, gr = G ? chemGroups(G) : {}, fam = G ? chemFamily(G, gr, d) : [];
+  /* family */
+  if (fam.length) c += deepSec("\u{1F3DB}️", "Chemical family", fam.map(function (x) { var tx = CHEM_FAM_TXT[x] ? CHEM_FAM_TXT[x].replace(/^[^:]*:\s*/, "") : ""; return tx ? '<p><b>' + esc(x.charAt(0).toUpperCase() + x.slice(1)) + '.</b> ' + esc(tx.charAt(0).toUpperCase() + tx.slice(1)) + '</p>' : ''; }).join(""));
+  /* groups */
+  var gk = Object.keys(gr).filter(function (k) { return k.indexOf("halogen:") !== 0; });
+  var hal = Object.keys(gr).filter(function (k) { return k.indexOf("halogen:") === 0; });
+  if (gk.length || hal.length) {
+    var gl = gk.map(function (k) { return CHEM_GROUP_TXT[k] ? '<li><b>' + esc(k.charAt(0).toUpperCase() + k.slice(1)) + (gr[k] > 1 ? ' ×' + gr[k] : '') + '.</b> ' + esc((function (t) { t = t || CHEM_GROUP_TXT[k]; return t.charAt(0).toUpperCase() + t.slice(1); })(CHEM_GROUP_TXT[k].replace(/^[^.:]*[.:]\s*/, ""))) + '</li>' : ''; }).join("");
+    if (hal.length) gl += '<li><b>Halogens (' + hal.map(function (k) { var e = k.split(":")[1]; return (gr[k] > 1 ? gr[k] + " " : "") + (CHEM_ELNAME[e] || e); }).join(", ") + ').</b> Halogen atoms make a drug more fat soluble and can block spots where the liver would otherwise attack it, so the drug lasts longer.</li>';
+    c += deepSec("\u{1F9E9}", "The working parts (functional groups)", '<ul class="chemgl">' + gl + '</ul><p class="muted small">Found by reading the structure; small groups are explained once even if they appear more than once.</p>');
+  }
+  /* acid / base */
+  if (G) {
+    var base = gr["primary amine"] || gr["secondary amine"] || gr["tertiary amine"] || gr["amidine or guanidine"], quat = gr["quaternary ammonium"], acid = gr["carboxylic acid"] || gr["tetrazole ring"], ab = [];
+    if (quat) ab.push("It carries a permanent positive charge (quaternary nitrogen), whatever the pH. That keeps it out of the brain and makes it poorly absorbed by mouth.");
+    if (base && acid) ab.push("It has both a basic amine and an acidic group, so at body pH it can carry a plus and a minus charge at the same time (a zwitterion). Molecules like this dissolve well in water.");
+    else if (base) ab.push("It is a base. In blood (pH 7.4) most of it carries a positive charge on the nitrogen. The charged form dissolves in water; the small uncharged fraction is what slips through membranes. Bases can get trapped in more acidic places, like the stomach or acidic urine, because they pick up a charge there.");
+    else if (acid) ab.push("It is an acid. In blood it mostly carries a negative charge, so it tends to bind albumin and stay in the bloodstream. Making urine more alkaline traps acids in the urine, which is the idea behind giving bicarbonate in aspirin overdose.");
+    else if (gr["phenol"] || gr["sulfonamide"]) ab.push("Its only ionizable groups are weak (phenol or sulfonamide NH), so it is mostly uncharged at body pH.");
+    else ab.push("It has no strongly acidic or basic group, so it is mostly uncharged at body pH, which helps it cross membranes.");
+    c += deepSec("\u{1F50B}", "Charge at body pH", '<p>' + ab.join(" ") + '</p>');
+  }
+  /* water vs fat, brain, rule of five */
+  if (p.x != null || p.t != null || p.d != null) {
+    var b = "";
+    if (p.x != null) b += '<p><b>XLogP ' + p.x + ':</b> ' + esc(chemLogTxt(p.x)) + '</p>';
+    if (p.t != null) b += '<p><b>Polar surface area ' + p.t + ' Å²:</b> ' + esc(chemTpsaTxt(p.t)) + '</p>';
+    if (p.d != null) b += '<p><b>Hydrogen bonds:</b> ' + p.d + ' donor' + (p.d === 1 ? '' : 's') + ' and ' + p.a + ' acceptor' + (p.a === 1 ? '' : 's') + '. These are the hooks it uses to grip its target and water.</p>';
+    if (p.r != null) b += '<p><b>Rotatable bonds: ' + p.r + '.</b> ' + (p.r <= 3 ? 'A stiff molecule.' : p.r <= 10 ? 'Moderately flexible.' : 'Very floppy, which can make it harder to absorb by mouth.') + '</p>';
+    var v = chemRo5(p, w);
+    if (p.d != null && w) b += '<p><b>Rule of five:</b> ' + (v.length ? 'breaks ' + v.length + ' of Lipinski\'s rules (' + esc(v.join(", ")) + '). Drugs like this are often harder to absorb by mouth unless a transporter helps, or they are given another way.' : 'passes all of Lipinski\'s rules for a typical drug that absorbs well by mouth (weight, fat solubility, hydrogen bonds).') + '</p>';
+    c += deepSec("\u{1F4A7}", "Water or fat, gut and brain", b + '<p class="muted small">XLogP, polar surface area and hydrogen-bond counts are computed by PubChem from the structure. They are estimates; real absorption also depends on transporters, the dose form and the salt.</p>');
+  }
+  /* pH and pKa (owner, Nov 19 2026: "include the pH of every drug") */
+  c += chemPhSec(id, d, p, gr);
+  /* stereo */
+  if (p.sd != null || p.su != null) {
+    var sd = p.sd || 0, su = p.su || 0, st = "";
+    if (!sd && !su) st = "It has no stereocenters, so it has no mirror-image twin.";
+    else {
+      st = "It has " + (sd + su) + " stereocenter" + (sd + su === 1 ? "" : "s") + ": spots where four different groups sit around one atom, so the molecule can come in mirror-image (left- and right-handed) forms. Receptors are handed too, so one form usually does most of the work.";
+      if (su && !sd) st += " This record shows no fixed arrangement, which usually means the drug is sold as a 50:50 mix of both forms (a racemate).";
+      else if (sd && !su) st += " The arrangement is fixed: the product is one specific form.";
+    }
+    c += deepSec("\u{1FA9E}", "Left- and right-handed forms", '<p>' + esc(st) + '</p>');
+  }
+  /* salt */
+  var sl = chemSalt(d);
+  if (sl) c += deepSec("\u{1F9C2}", "Salt form", '<p>' + esc(sl[2]) + '</p>');
+  /* metabolism hints from groups */
+  if (G) {
+    var mh = [];
+    if (gr["ester"]) mh.push("ester bonds can be split by esterases in blood and tissues");
+    if (gr["tertiary amine"] || gr["secondary amine"]) mh.push("carbons on the nitrogen can be clipped off by liver CYP enzymes (N-dealkylation)");
+    if (gr["ether"] && G.A.some(function (a, i) { return a.e === "O" && G.adj[i].some(function (j) { return G.aromAt[j]; }); })) mh.push("a methoxy or other ether on a ring can be removed (O-dealkylation)");
+    if (gr["alcohol"] || gr["phenol"] || gr["carboxylic acid"]) mh.push("OH and COOH groups are handles for attaching glucuronic acid or sulfate (phase II), which makes it water soluble for the kidneys");
+    if (gr["aromatic ring"]) mh.push("aromatic rings can be oxidized by CYP enzymes (hydroxylation)");
+    if (gr["nitro"]) mh.push("the nitro group can be reduced");
+    if (gr["thioether"]) mh.push("the sulfur can be oxidized to a sulfoxide");
+    if (mh.length) c += deepSec("\u{1F527}", "Where the body attacks it", '<p>Reading the structure, these are the likely chemical handles for metabolism: ' + esc(mh.join("; ")) + '. Which ones actually matter is set by the drug\'s own studies (see the drug page and the Wormhole).</p>');
+  }
+  if (!m && !kind && !combo) c += deepSec("\u{1F50E}", "Structure", '<p>A drawn structure is not loaded for this drug yet.' + (p.c ? ' PubChem has it: <a href="https://pubchem.ncbi.nlm.nih.gov/compound/' + p.c + '" target="_blank" rel="noopener">open the record</a>.' : '') + '</p>');
+  c += '<p class="muted small nrfine">Structure and computed properties from PubChem (NIH). Chemistry explained for study; education only.</p></div>';
+  return c;
+}
+
+
+/* ---- Flight bank (nov19): IABP, Impella, LVAD, hemodynamics, shock, gas laws, blood, aircraft safety/CRM ---- */
+(function () {
+  if (typeof DB === "undefined") return; DB.RQ = DB.RQ || [];
+  var FLQ = [{"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "On a 1:2 IABP arterial tracing, the dicrotic notch is lost and inflation begins on the downslope of the systolic upstroke, before the aortic valve closes. What is the main harm of this timing?", "a": "Early inflation forces the aortic valve closed early, cutting stroke volume and raising afterload", "w": ["Early inflation lowers coronary perfusion because diastolic augmentation is shortened", "Early inflation is harmless as long as the augmented diastolic pressure exceeds the patient's systolic pressure", "Early inflation mainly raises the risk of balloon rupture and helium embolism"], "x": "Inflating before the dicrotic notch means the balloon expands while the ventricle is still ejecting. The aortic valve closes prematurely, stroke volume falls and LV wall stress rises. The fix is to move inflation later until it starts at the dicrotic notch.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "On a 1:2 IABP tracing, the assisted aortic end-diastolic pressure equals the unassisted end-diastolic pressure, and the assisted systole is lower than the unassisted systole only slightly. The augmented diastolic wave rises well after the dicrotic notch. What timing error is present?", "a": "Late inflation", "w": ["Early deflation", "Late deflation", "Early inflation"], "x": "When inflation starts after the dicrotic notch, part of diastole passes before augmentation, so diastolic augmentation is suboptimal and coronary perfusion gains are reduced. A clearly visible dicrotic notch before the augmentation upstroke is the clue.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "An IABP tracing at 1:2 shows a sharp drop after diastolic augmentation, the assisted aortic end-diastolic pressure is equal to the unassisted end-diastolic pressure, and the assisted systolic pressure rises above the unassisted systolic pressure. What is the timing error and its consequence?", "a": "Early deflation, which loses afterload reduction and can cause retrograde coronary and carotid flow", "w": ["Late deflation, which makes the ventricle eject against a still-inflated balloon", "Early inflation, which closes the aortic valve prematurely", "Late inflation, which shortens diastolic augmentation only"], "x": "Deflating too early lets aortic pressure rebound to baseline before systole, so there is no afterload reduction (assisted systole is not lower). The sharp U-shaped dip can pull blood backward from the coronary and carotid arteries.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "On a 1:2 IABP tracing, the assisted aortic end-diastolic pressure is HIGHER than the unassisted end-diastolic pressure and the rate of rise of the next (assisted) systole is prolonged. Which timing error is most dangerous here and why?", "a": "Late deflation: the LV ejects against a balloon still partly inflated, raising afterload", "w": ["Early deflation: aortic pressure falls too soon, so coronary flow reverses before systole", "Late inflation: augmentation starts after diastole is half over, losing coronary benefit", "Early inflation: the balloon fills before the valve closes, cutting stroke volume short"], "x": "Late deflation is the most harmful timing error: the balloon is still occupying the aorta when the aortic valve opens, so it impedes ejection. The tell is assisted end-diastolic pressure equal to or higher than unassisted.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "During transport, a patient on an IABP set to ECG trigger develops atrial fibrillation with a rapid, irregular ventricular response and the pump begins alarming and assisting poorly. What is the most appropriate trigger change?", "a": "Switch to arterial pressure trigger or the AF mode so deflation tracks each real systole", "w": ["Change the assist ratio to 1:3 so fewer beats are mistimed while keeping ECG trigger", "Switch to internal trigger at a fixed rate so the console ignores the irregular rhythm", "Increase balloon volume so the beats that are assisted make up for the ones missed"], "x": "In irregular rhythms, ECG-based timing can mistime deflation. Most consoles offer an AF mode (deflation on the R-wave) or pressure trigger. Internal trigger is used only when there is no cardiac output, such as during CPR without a usable ECG or pressure.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "An IABP patient goes into cardiac arrest and CPR is started. The ECG shows only CPR artifact. Which IABP setting best supports perfusion during compressions?", "a": "Arterial pressure trigger so the balloon times off the compression-generated pressure", "w": ["Internal trigger at a fixed rate of 120 per minute, independent of compressions", "ECG trigger at 1:1 so the balloon follows the CPR artifact on the monitor", "Standby mode until ROSC, to avoid inflating against chest compressions"], "x": "During CPR the compressions create a pressure waveform the console can follow, so pressure trigger synchronizes the balloon with compressions. Internal trigger is used when there is no pressure signal; standby risks clot forming on the idle balloon.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "Brownish flecks appear in the helium tubing of an IABP shortly after a flight medic notes a loss of augmentation and a gas leak alarm. What is the most likely problem?", "a": "Balloon membrane rupture with blood entering the gas line", "w": ["Kinked catheter causing hemolysis inside the shuttle line", "Condensation from altitude-related humidity changes", "Helium tank contamination from the aircraft cabin"], "x": "Blood in the gas tubing means the balloon membrane has torn. The risks are helium embolism and the balloon clotting in place, so the pump is stopped and the team prepares to remove the catheter promptly.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "A patient on an IABP has a cool, pale left leg with weak pedal pulses one hour after insertion through the left femoral artery. Which finding would most strongly suggest the catheter is too high rather than causing limb ischemia?", "a": "A new drop in left radial pulse and urine output staying normal", "w": ["A new fall in urine output with normal radial pulses", "Worsening chest pain with ST elevation", "A rising PA occlusion pressure"], "x": "A balloon placed too high (proximal) can occlude the left subclavian artery, reducing the left radial pulse. Placed too low, it can block the renal arteries and cut urine output. Leg ischemia is from the sheath itself.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "Why is helium, rather than air or carbon dioxide, the usual driving gas in an IABP?", "a": "Its low density lets the balloon fill and empty fast enough to match each beat", "w": ["It is more soluble in blood than CO2, so a membrane rupture causes less embolism", "It expands less with altitude than other gases, so volume stays steady in flight", "It coats the balloon membrane and keeps clot from forming during long support"], "x": "Helium's low density allows rapid shuttling. Its drawback is poor solubility in blood, so a rupture carries a gas embolism risk; CO2 is more soluble but slower.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "At altitude in an unpressurized aircraft, what happens to the IABP balloon volume if the console does not automatically compensate?", "a": "The helium expands as cabin pressure falls, which can over-distend the balloon", "w": ["The helium contracts and the balloon under-fills", "The helium dissolves into the blood faster", "Nothing changes because the system is a closed, rigid circuit"], "x": "Boyle's law: lower ambient pressure lets the gas expand. Modern transport consoles auto-vent or refill as altitude changes, but crews monitor for over- or under-inflation alarms during climb and descent.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "Which hemodynamic change best shows that an IABP is helping a patient in cardiogenic shock?", "a": "Lower assisted systolic and end-diastolic pressures, higher augmentation, better urine output", "w": ["Assisted systolic pressure higher than unassisted, showing the LV is ejecting harder", "A rising heart rate as the balloon raises cardiac output and coronary blood flow", "A higher PA occlusion pressure because the balloon is supporting left-sided preload"], "x": "An effective IABP lowers afterload (assisted systole and end-diastolic pressure fall) and raises diastolic pressure for coronary perfusion. Clinically, filling pressures fall and end-organ perfusion improves.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "Which condition is an absolute contraindication to an intra-aortic balloon pump?", "a": "Significant aortic regurgitation", "w": ["Mitral regurgitation from papillary muscle rupture", "Ventricular septal rupture after myocardial infarction", "Refractory angina awaiting catheterization"], "x": "Diastolic inflation would push more blood backward through an incompetent aortic valve. Acute MR and post-MI VSD are classic indications, because afterload reduction improves forward flow.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "An IABP patient has a new platelet count of 68,000 on day 3. What is the most likely cause linked to the device?", "a": "Mechanical platelet destruction by the balloon, made worse by heparin exposure", "w": ["Dilution from fluids and helium leaking slowly across the balloon membrane", "Marrow suppression from the aspirin and P2Y12 inhibitor given after the MI", "Splenic sequestration from the low cardiac output state before balloon placement"], "x": "Balloon pumping damages platelets, and the heparin given with it adds the possibility of HIT. Platelet counts are followed daily.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "A patient on an Impella CP has a sudden fall in device flow with a 'suction' alarm and a falling CVP. What is the most likely cause?", "a": "Low LV filling (hypovolemia or RV failure) letting the inlet suck against the ventricular wall", "w": ["Pump thrombosis raising motor current and lowering the delivered flow", "The pump migrating fully into the aorta so both ends sit above the valve", "New aortic regurgitation from the cannula holding the valve leaflets open"], "x": "Suction events happen when the LV is underfilled, so the inlet pulls against tissue. A low CVP suggests volume depletion; a high CVP with low LV filling suggests RV failure. Treat the cause and reduce the P-level if needed.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "On an Impella console, the placement signal (aortic pressure waveform) changes to a ventricular-looking waveform. What does this indicate?", "a": "The pump has slid too far into the ventricle, so the outlet now sits in the LV", "w": ["The pump has backed out into the aorta, so both openings now sit above the valve", "The pressure line is damped by a clot and needs flushing before any change", "The patient has new severe aortic stenosis narrowing flow around the cannula"], "x": "The Impella's pressure sensor sits near the outlet. A ventricular waveform means the outlet is in the LV (too deep). An aortic waveform on the motor current with flat pulsatility suggests the inlet is in the aorta (pulled back).", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "An Impella motor current waveform becomes flat (non-pulsatile) while the placement signal shows an aortic waveform. What is the most likely position problem?", "a": "The whole pump has backed out into the aorta", "w": ["The pump is too deep in the left ventricle", "The pump is correctly placed with very poor native contractility", "There is a purge pressure failure"], "x": "When both the inlet and outlet are in the aorta, there is no pressure difference across the pump, so the motor current loses its pulsatility and the placement signal reads aortic. The pump needs repositioning under imaging.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "Why does an Impella need a continuous purge solution?", "a": "To keep blood out of the motor housing and prevent the bearings from clotting", "w": ["To cool the pump motor during high P-levels", "To deliver the patient's anticoagulant systemically as the main dose", "To flush air bubbles out of the aortic pressure line"], "x": "The purge fluid flows opposite to blood across the motor seal, creating a pressure barrier. It usually contains heparin or bicarbonate, but its main job is to protect the motor.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "A patient on an Impella has dark red-brown urine and a rising plasma free hemoglobin. What is the most likely cause?", "a": "Hemolysis from pump malposition or high pump speed", "w": ["Rhabdomyolysis from groin ischemia", "Contrast nephropathy after the procedure", "Acute tubular necrosis from the purge solution"], "x": "Red cell shearing by the rotor causes hemolysis, worse with malposition, suction or a high P-level. Checking position and lowering speed are first steps.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "An Impella supports the left ventricle. A patient on one develops a rising CVP, falling Impella flow and a falling MAP while the LV looks small on ultrasound. What is the most likely problem?", "a": "Right ventricular failure that is not delivering enough blood to the left side", "w": ["Cardiac tamponade compressing the left ventricle more than the right", "Impella pump thrombosis limiting forward flow despite good LV filling", "Over-diuresis causing both ventricles to collapse around the inlet"], "x": "A left-sided device can only move what reaches the LV. Rising right-sided pressure with a small LV points to RV failure; options include inotropes, pulmonary vasodilators or a right-sided device (such as an Impella RP).", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "Compared with an IABP, what is the main hemodynamic advantage of a left-sided Impella?", "a": "It moves blood forward actively and does not depend on the patient's own cardiac rhythm or output", "w": ["It raises diastolic coronary perfusion more through timed counterpulsation", "It lowers right ventricular afterload directly by venting the pulmonary artery", "It works without any anticoagulation because the purge prevents clotting"], "x": "The IABP only augments what the heart does and relies on timing. The Impella is a microaxial pump that pulls blood from the LV into the aorta, unloading the ventricle and adding forward flow independently.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "A conscious LVAD patient (continuous-flow device) has no palpable pulse and a cuff that will not read a blood pressure. What is the best way to measure perfusion pressure?", "a": "Doppler opening pressure, which approximates the mean arterial pressure", "w": ["The height of the pulse oximetry waveform, which tracks the systolic pressure", "Capillary refill time, which reflects the mean arterial pressure on its own", "An automated cuff on the thigh, which reads accurately without pulsatility"], "x": "Continuous-flow LVADs often abolish a palpable pulse. A manual cuff with Doppler: the pressure at which flow is first heard estimates the MAP (goal is usually around 70 to 90 mmHg).", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "An LVAD patient is unresponsive, pale and apneic. The device makes no hum, and the controller shows a red heart alarm. What is the first priority?", "a": "Check power and connections, then start compressions if there is no perfusion", "w": ["Avoid compressions entirely, because they will dislodge the pump from the apex", "Defibrillate at once, before looking at the controller or the power source", "Disconnect and reconnect the driveline to reset the controller's alarm"], "x": "Current guidance (AHA) supports compressions in an unresponsive LVAD patient with no perfusion, after a quick device check. Many arrests are from power loss, so batteries and connections are checked first.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "An LVAD patient's controller history shows a steady climb in power with a matching rise in the displayed (estimated) flow, while the patient feels worse. LDH is markedly elevated and the urine is tea-colored. What is the most likely problem?", "a": "Pump thrombosis", "w": ["Hypovolemia with suction events", "Right ventricular failure", "Driveline infection"], "x": "Thrombus on the rotor makes the motor draw more power. Because the controller estimates flow from power, the displayed flow rises falsely even though real output may fall. Hemolysis raises LDH and plasma free hemoglobin and darkens the urine.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "An LVAD patient has repeated low-flow alarms after a day of vomiting and diarrhea, and is having runs of ventricular tachycardia. What is the most likely cause?", "a": "Suction events from hypovolemia, with the inflow cannula pulling against the septum", "w": ["Pump thrombosis slowing the rotor and lowering the displayed flow", "Driveline fracture causing intermittent loss of power to the pump", "Aortic insufficiency from the outflow graft recirculating blood"], "x": "A dry LV collapses around the inflow cannula. The septum is pulled toward it, which can trigger ventricular arrhythmias. Careful fluid replacement usually resolves it.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "Why do patients with continuous-flow LVADs commonly develop gastrointestinal bleeding from arteriovenous malformations?", "a": "Low pulsatility promotes AV malformations, and high shear breaks down von Willebrand factor", "w": ["The warfarin target is set very high to protect the pump, so the gut bleeds easily", "Splanchnic flow is diverted to the pump, causing ischemic ulcers in the stomach wall", "Tiny bubbles from the pump's bearings lodge in gut vessels and cause them to rupture"], "x": "This is acquired von Willebrand syndrome plus angiodysplasia, made worse by anticoagulation and antiplatelet therapy.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "An LVAD patient's Doppler MAP is 118 mmHg. Why is this a concern specific to continuous-flow pumps?", "a": "Pump flow falls as afterload rises, and high pressure raises the risk of stroke", "w": ["High pressure makes the pump spin faster and cause hemolysis", "High pressure prevents the aortic valve from closing", "High pressure collapses the LV around the inflow cannula"], "x": "Continuous-flow pumps are afterload sensitive: higher pressure reduces flow. Hypertension in LVAD patients is also strongly linked to hemorrhagic and ischemic stroke.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "A PA catheter reading shows CVP 18, PA 28/16, PAOP 8, cardiac index 1.8 and SVR 1,600. Which condition best fits?", "a": "Right ventricular infarction or failure", "w": ["Left ventricular cardiogenic shock", "Hypovolemic shock", "Septic shock"], "x": "A high CVP with a low wedge pressure means the right side is failing to fill the left. Low output and high SVR follow. Treat with careful volume and inotropes rather than diuresis or nitrates.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "Which hemodynamic profile is most consistent with cardiac tamponade?", "a": "Equalization of CVP, PA diastolic and PAOP with low cardiac output", "w": ["High PAOP with low CVP and low output", "Low CVP and low PAOP with high cardiac output", "High PA systolic with normal PAOP and normal output"], "x": "Fluid around the heart limits filling of all chambers equally, so diastolic pressures rise and equalize (often within a few mmHg) while output falls.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "A patient has a PA pressure of 60/34, a PAOP of 10 and a cardiac output of 3.1 L/min. What does the gap between the PA diastolic and the wedge suggest?", "a": "Pre-capillary pulmonary hypertension, such as from massive PE or primary pulmonary vascular disease", "w": ["Left heart failure with pressure backing up into the lungs", "Mitral stenosis raising left atrial and pulmonary pressures", "Volume overload from aggressive fluid resuscitation in transport"], "x": "Normally PA diastolic is within about 5 mmHg of the wedge. A large gap means the resistance is in the pulmonary vessels themselves, not in the left heart.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "Using the formula MAP = CO x SVR, what is the most likely effect of starting a pure vasodilator in a patient with a fixed cardiac output?", "a": "MAP falls because SVR falls with no rise in output", "w": ["MAP rises because preload increases", "MAP stays the same because the heart compensates instantly", "MAP rises because afterload falls"], "x": "If output cannot rise (fixed stroke volume, beta blockade, or stenotic valve), lowering SVR lowers pressure. In a failing heart that can respond, afterload reduction raises output and pressure may hold.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "An arterial line waveform shows a slurred upstroke, an absent dicrotic notch and a falsely narrow pulse pressure. What is the most likely problem?", "a": "Over-damping from air bubbles, a clot or a kink in the line", "w": ["Under-damping from tubing that is too long", "The transducer is above the phlebostatic axis", "Severe aortic regurgitation"], "x": "Over-damped lines under-read the systolic and over-read the diastolic pressure; the MAP stays roughly accurate. A square-wave (fast flush) test shows fewer than one or two oscillations.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "A transducer is leveled at the phlebostatic axis, but the patient is then moved to a stretcher and the transducer is now 10 cm below the heart. What happens to the displayed pressures?", "a": "They read falsely high by about 7 to 8 mmHg", "w": ["They read falsely low by about 7 to 8 mmHg", "They read falsely high by about 10 mmHg", "There is no change because the system is zeroed"], "x": "Every 1 cm of height difference changes the reading by about 0.74 mmHg. A transducer below the heart reads high; above reads low.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "What does a mixed venous oxygen saturation (SvO2) of 48% most likely indicate in a hypotensive patient?", "a": "Oxygen delivery is not meeting demand, as in cardiogenic or hypovolemic shock", "w": ["The tissues cannot use oxygen, as in late sepsis or cyanide poisoning", "Normal oxygen extraction for a patient at rest in the ICU", "A left-to-right intracardiac shunt raising venous oxygen content"], "x": "Normal SvO2 is about 60 to 80%. A low value means tissues are extracting more because delivery is too low. A high SvO2 in shock suggests impaired uptake (distributive shock, cyanide).", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "medical", "d": "", "q": "Which profile best fits early (warm) septic shock?", "a": "Low SVR, high or normal cardiac output, low or normal CVP and PAOP", "w": ["High SVR, low cardiac output, high PAOP and a high CVP", "High SVR, low cardiac output, low PAOP and a low CVP", "Normal SVR, low cardiac output, high CVP and a normal PAOP"], "x": "Vasodilation drops SVR and the heart compensates with high output. Filling pressures are low or normal from leaky capillaries and venodilation.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "medical", "d": "", "q": "A patient with a high thoracic spinal cord injury has a heart rate of 48, BP 74/40, warm dry skin and a low SVR. Which shock type best explains it?", "a": "Neurogenic shock from loss of sympathetic tone", "w": ["Hypovolemic shock with paradoxical bradycardia", "Septic shock", "Cardiogenic shock from contusion"], "x": "Loss of sympathetic outflow causes vasodilation (low SVR, warm skin) and unopposed vagal tone (bradycardia). Hemorrhage must still be excluded in trauma.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "medical", "d": "", "q": "Which profile is most consistent with hemorrhagic shock?", "a": "Low CVP, low PAOP, low cardiac output, high SVR", "w": ["High CVP, low PAOP, low cardiac output, high SVR", "Low CVP, low PAOP, high cardiac output, low SVR", "High CVP, high PAOP, low cardiac output, high SVR"], "x": "Blood loss reduces all filling pressures and output; the body compensates by vasoconstricting, so SVR rises.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "medical", "d": "", "q": "A patient in shock has a CVP of 4, a PAOP of 6, a cardiac index of 4.6 and an SVR of 520 after an anaphylactic reaction. What is the most important early treatment besides epinephrine?", "a": "Large-volume crystalloid to fill the dilated vascular space", "w": ["Dobutamine to support the failing myocardium", "Diuretics to reduce capillary leak", "Nitroglycerin to reduce afterload"], "x": "Anaphylaxis is distributive: vessels dilate and leak, so filling pressures drop. Epinephrine treats the cause; fluids refill the tank.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "medical", "d": "", "q": "Which profile is most consistent with left ventricular cardiogenic shock?", "a": "High PAOP, low cardiac index, high SVR", "w": ["Low PAOP, high cardiac index, low SVR", "Low PAOP, low cardiac index, high SVR", "High PAOP, high cardiac index, low SVR"], "x": "The failing LV backs up pressure (high wedge), output falls, and vasoconstriction raises SVR.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "medical", "d": "", "q": "A shocked patient's cardiac output is low, CVP 17, PAOP 9, SVR high and the RV is dilated with septal flattening on ultrasound. Lactate is rising. What is the most likely cause?", "a": "Obstructive shock from massive pulmonary embolism", "w": ["Left ventricular cardiogenic shock", "Hypovolemic shock", "Neurogenic shock"], "x": "A blockage in the pulmonary circulation raises RV afterload. The RV dilates and fails, CVP rises, and too little blood reaches the left side, so wedge pressure is low.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "phys", "d": "", "q": "An endotracheal tube cuff is inflated with 8 mL of air at sea level. Without adjustment, what happens to it at a cabin altitude of 8,000 feet, where the pressure is about 0.75 atmospheres?", "a": "The cuff volume grows by about a third, raising the risk of tracheal mucosal injury", "w": ["The cuff shrinks by about a quarter, so it may leak around the tube", "The cuff stays the same size because the pilot balloon seals it", "The cuff doubles in size and is likely to burst at that altitude"], "x": "Boyle's law: P1V1 = P2V2. 1 atm x 8 mL = 0.75 atm x V2, so V2 is about 10.7 mL, roughly a 33% increase. Many programs fill cuffs with saline or check cuff pressure during climb and descent.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "phys", "d": "", "q": "Which gas law best explains why a patient's hypoxia worsens at altitude even though the air is still 21% oxygen?", "a": "Dalton's law: the partial pressure of oxygen falls as total barometric pressure falls", "w": ["Boyle's law: the lungs expand and dilute the oxygen", "Henry's law: less oxygen dissolves because the temperature drops", "Charles's law: colder air holds less oxygen"], "x": "Dalton's law says each gas exerts a share of the total pressure. With lower barometric pressure, PO2 = 0.21 x barometric pressure falls, so alveolar PO2 falls too.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "phys", "d": "", "q": "A patient needs an FiO2 of 0.40 at sea level to keep a PaO2 near target. Roughly what FiO2 would they need at a cabin altitude of 8,000 feet (barometric pressure about 565 mmHg)?", "a": "About 0.54", "w": ["About 0.40, because FiO2 is a fraction that does not change with altitude", "About 0.30, because colder air at altitude carries more oxygen per breath", "About 0.80, because oxygen pressure halves by 8,000 feet"], "x": "FiO2 x barometric pressure at sea level / barometric pressure at altitude: 0.40 x 760 / 565 is about 0.54.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "phys", "d": "", "q": "Which gas law explains decompression sickness after a diver flies too soon?", "a": "Henry's law: dissolved nitrogen leaves solution as surrounding pressure falls", "w": ["Boyle's law: trapped gas in the sinuses and joints expands as pressure falls", "Dalton's law: the partial pressure of nitrogen rises as the diver ascends", "Charles's law: nitrogen in the tissues expands as the diver's body warms"], "x": "Henry's law says the amount of gas dissolved in a liquid depends on the gas pressure above it. Lowering cabin pressure lets nitrogen bubble out of the tissues.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "phys", "d": "", "q": "Which gas law explains why an oxygen cylinder's gauge pressure rises when it sits in a hot aircraft on the ramp?", "a": "Gay-Lussac's law: in a fixed volume, pressure rises with temperature", "w": ["Boyle's law: volume falls as pressure rises", "Henry's law: more oxygen dissolves in the metal", "Graham's law: oxygen diffuses faster when warm"], "x": "In a rigid tank, volume cannot change, so pressure is proportional to absolute temperature.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "phys", "d": "", "q": "A patient with a small, untreated pneumothorax is flown at a cabin altitude of 8,000 feet. Why is this risky, and which law applies?", "a": "Boyle's law: the trapped air expands by about a third and can tension", "w": ["Henry's law: nitrogen comes out of the blood and fills the pleural space", "Dalton's law: the pneumothorax absorbs oxygen faster as pressure drops", "Charles's law: the cold cabin air shrinks the lung away from the chest wall"], "x": "Gas in closed spaces expands as pressure falls. Flying low or pressurizing the cabin to sea level, or decompressing the chest first, reduces the risk.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "phys", "d": "", "q": "What effect does Graham's law describe that matters in flight physiology?", "a": "Gases diffuse from high to low concentration at a rate inversely related to the square root of their density", "w": ["Gas volume is inversely related to pressure at a constant temperature", "Gas pressure is proportional to temperature at a constant volume", "Each gas in a mixture exerts its own partial pressure"], "x": "Graham's law of diffusion explains how gases move across the alveolar membrane and between tissues, which is part of why hypoxia can develop as altitude rises.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "phys", "d": "", "q": "During descent, a patient with an upper respiratory infection develops severe ear pain and vertigo. What is happening?", "a": "Air trapped behind a blocked eustachian tube cannot equalize, so rising pressure pushes the eardrum in", "w": ["Expanding gas in the middle ear bursts the eardrum outward during descent", "Nitrogen bubbles form in the inner ear fluid as the pressure rises on descent", "Mild hypoxia at altitude irritates the vestibular nerve and causes vertigo"], "x": "On descent, external pressure rises and the relative vacuum in the middle ear pulls the eardrum inward. Ascent is usually easier because expanding gas vents through the tube more easily.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "trauma", "d": "", "q": "A massively transfused trauma patient becomes hypotensive and has a prolonged QT after 8 units of products. What is the most likely cause and treatment?", "a": "Hypocalcemia from citrate binding calcium, treated with IV calcium", "w": ["Hyperkalemia from stored blood, treated with insulin and dextrose", "Hypomagnesemia, treated with magnesium only", "Transfusion-related acute lung injury, treated with diuretics"], "x": "Citrate in stored products binds ionized calcium. Low calcium causes hypotension, poor clotting and a long QT. Many protocols give calcium early in massive transfusion.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "trauma", "d": "", "q": "Which part of the 'lethal diamond' of trauma does whole blood or a 1:1:1 transfusion strategy NOT directly fix?", "a": "Hypothermia", "w": ["Coagulopathy", "Acidosis from hypoperfusion", "Hypocalcemia from citrate"], "x": "Balanced resuscitation addresses coagulopathy and acidosis, and calcium addresses hypocalcemia. Cold products actually worsen hypothermia, which is why fluid warmers and active warming are needed.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "trauma", "d": "", "q": "A patient develops fever, hypotension and dark urine 10 minutes into a red cell transfusion. Labs later show a positive direct antiglobulin test. What is the most likely reaction?", "a": "Acute hemolytic transfusion reaction from ABO incompatibility", "w": ["Febrile non-hemolytic reaction", "Transfusion-associated circulatory overload", "Delayed hemolytic reaction"], "x": "ABO mismatch causes rapid intravascular hemolysis, fever, hypotension, hemoglobinuria and DIC. The transfusion is stopped and the product sent back for testing.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "trauma", "d": "", "q": "Within 2 hours of a plasma transfusion, a patient develops acute hypoxemia, bilateral infiltrates, fever and hypotension with normal filling pressures. What is the most likely diagnosis?", "a": "Transfusion-related acute lung injury (TRALI)", "w": ["Transfusion-associated circulatory overload (TACO)", "Anaphylaxis from IgA deficiency", "Septic transfusion reaction"], "x": "TRALI is non-cardiogenic pulmonary edema from donor antibodies, often with hypotension and fever and normal or low filling pressures. TACO usually has hypertension, high filling pressures and responds to diuretics.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "trauma", "d": "", "q": "Why is low-titer group O whole blood considered safe to give to patients of any blood type in an emergency?", "a": "Its red cells lack A and B antigens, and its plasma has low anti-A and anti-B levels", "w": ["Its red cells carry both A and B antigens, so no antibody can recognize them", "It is washed before use to remove the plasma and all of its antibodies", "The citrate in the bag inactivates any anti-A or anti-B antibodies present"], "x": "Group O red cells lack A and B antigens. Using low-titer donors limits the anti-A and anti-B in the plasma, reducing hemolysis in non-O recipients.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "trauma", "d": "", "q": "A Rh-negative woman of childbearing age receives Rh-positive blood in a prehospital massive hemorrhage. What is the main long-term concern?", "a": "Forming anti-D, which can harm a future Rh-positive pregnancy", "w": ["Immediate hemolysis from anti-D already present in her plasma", "Graft-versus-host disease from donor lymphocytes in the unit", "Iron overload from the hemoglobin in a single massive transfusion"], "x": "Most Rh-negative people have no anti-D until exposed, so acute hemolysis is unlikely. The risk is forming anti-D, which matters in later pregnancies. Hospitals follow up and may give Rh immune globulin.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "trauma", "d": "", "q": "A ROTEM or TEG in a bleeding trauma patient shows a normal clotting time but a very low clot amplitude, and a separate fibrinogen-specific test is also low. Which product best targets the problem?", "a": "Cryoprecipitate or fibrinogen concentrate", "w": ["Platelets, to raise clot firmness", "Plasma, to replace clotting factors", "Tranexamic acid, to stop lysis"], "x": "Low clot firmness that is driven by low fibrinogen (low FIBTEM) needs fibrinogen replacement. Low firmness with normal fibrinogen suggests platelets.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "trauma", "d": "", "q": "A TEG shows a normal R time, normal MA, and 45% clot lysis at 30 minutes in a hypotensive trauma patient. What does this suggest?", "a": "Hyperfibrinolysis, which antifibrinolytics treat", "w": ["Low clotting factors, which plasma treats", "Low platelet function, which platelets treat", "Heparin effect, which protamine reverses"], "x": "LY30 above about 3% means the clot is breaking down too fast. Tranexamic acid blocks plasminogen activation.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "trauma", "d": "", "q": "Why is tranexamic acid most useful when given early (within 3 hours) after injury?", "a": "Fibrinolysis peaks early after injury; given late, it is linked to more harm", "w": ["It needs about 3 hours to be converted by the liver to its active form", "It must be given before any blood products or it binds to the plasma", "Its anticoagulant effect wears off after 3 hours and can no longer help"], "x": "The CRASH-2 trial showed the benefit of TXA was greatest early and absent or harmful after 3 hours.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "trauma", "d": "", "q": "During a long transport, a patient receiving packed red cells develops sudden hives, wheezing and hypotension. They have a history of IgA deficiency. What is the most likely reaction?", "a": "Anaphylaxis from anti-IgA antibodies reacting to IgA in the donor plasma", "w": ["Febrile non-hemolytic reaction from donor white cell cytokines", "Transfusion-associated circulatory overload from the volume", "Delayed hemolytic reaction from antibodies to minor antigens"], "x": "People with IgA deficiency can make anti-IgA. Even small amounts of plasma in red cell units can trigger anaphylaxis. Future products may need to be washed or come from IgA-deficient donors.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "Which arterial line finding suggests that a ventilated patient will likely respond to a fluid bolus?", "a": "Pulse pressure variation greater than about 13% with a regular rhythm and adequate tidal volumes", "w": ["A dicrotic notch that is well defined", "A wide pulse pressure with a low diastolic pressure", "Pulse pressure variation under 5% during spontaneous breathing"], "x": "Large swings in pulse pressure with mechanical breaths mean the heart is on the steep part of the Starling curve. The test is unreliable with arrhythmias, spontaneous breathing, open chest or low tidal volumes.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "A patient's cardiac output is 4 L/min, MAP is 70 mmHg and CVP is 10 mmHg. Using SVR = 80 x (MAP - CVP) / CO, what is the SVR?", "a": "1,200 dynes·sec/cm5", "w": ["1,400 dynes·sec/cm5", "1,000 dynes·sec/cm5", "1,600 dynes·sec/cm5"], "x": "80 x (70 - 10) / 4 = 80 x 60 / 4 = 1,200. Normal is about 800 to 1,200.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "Which change raises myocardial oxygen supply AND lowers demand?", "a": "Slowing the heart rate in a patient who is tachycardic", "w": ["Raising afterload with a vasopressor", "Increasing contractility with an inotrope", "Raising preload with a fluid bolus"], "x": "A slower rate lengthens diastole (when the coronaries fill) and lowers the number of contractions. Inotropes and vasopressors raise demand.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "A patient's PA catheter shows giant V waves on the wedge tracing after an inferior MI, with a new loud holosystolic murmur and pulmonary edema. What is the most likely complication?", "a": "Acute mitral regurgitation from papillary muscle rupture", "w": ["Ventricular septal rupture with a left-to-right shunt", "Free wall rupture with early cardiac tamponade", "Right ventricular infarction with tricuspid leak"], "x": "Large V waves come from blood flowing back into the left atrium in systole. VSD also causes a loud murmur, but shows an oxygen step-up from the right atrium to the PA.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "Blood drawn from the right atrium has an O2 saturation of 64% and from the pulmonary artery 82% in a post-MI patient with a new murmur. What does this step-up mean?", "a": "A left-to-right shunt across a ruptured ventricular septum", "w": ["Acute mitral regurgitation from papillary muscle rupture", "Severe tricuspid regurgitation from RV dilation", "A wedged catheter sampling pulmonary capillary blood"], "x": "Oxygenated blood from the LV crosses the ruptured septum into the RV, raising the PA saturation above the right atrial saturation.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "In right ventricular infarction with hypotension, why are nitrates and diuretics risky?", "a": "The RV depends on preload, so lowering it drops LV filling and cardiac output", "w": ["They cause reflex bradycardia that worsens existing heart block", "They raise RV afterload by constricting the pulmonary arteries", "They worsen pulmonary edema by raising left atrial pressure"], "x": "A stiff, ischemic RV needs adequate filling. Reducing preload can cause profound hypotension; careful fluids and inotropes are used instead.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "medical", "d": "", "q": "Which statement about a lactate of 6 mmol/L in a septic patient with a normal blood pressure is most accurate?", "a": "It shows tissue hypoperfusion and high mortality even without hypotension", "w": ["It can be ignored as long as the MAP stays above 65 mmHg after fluids", "It most likely means metformin toxicity rather than septic shock", "It comes mainly from the liver making too much lactate under stress"], "x": "Lactate of 4 or higher with infection defines a high-risk group whatever the blood pressure. Clearance over time is used to judge resuscitation.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "ops", "d": "", "q": "A helicopter is running on a sloped landing zone. From which direction should the crew approach to stay clear of the main rotor?", "a": "From the downslope side, in view of the pilot", "w": ["From the upslope side, because the rotor is higher there", "From the rear, so the pilot does not see you", "From any side once the pilot gives a thumbs-up"], "x": "On a slope the rotor disk is closer to the ground on the upslope side. Approaching downslope, in the 2 o'clock to 10 o'clock arc where the pilot can see you, keeps the most clearance.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "ops", "d": "", "q": "Why is approaching a running helicopter from the rear dangerous even if the main rotor seems high?", "a": "The tail rotor spins nearly invisibly and sits at head height on many aircraft", "w": ["The hot exhaust is directed down and back, toward anyone near the tail", "The main rotor droops lowest at the rear when the aircraft is idling", "The rear clamshell doors are locked whenever the engines are running"], "x": "Tail rotor strikes are often fatal. Crews approach only from the front or sides, under the pilot's view, and never walk around the tail.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "ops", "d": "", "q": "While loading a patient into a hot (running) aircraft, an IV pole and a long antenna are on the stretcher. What is the safest practice?", "a": "Keep all long objects carried horizontally below shoulder height", "w": ["Hold IV bags high above the head so they stay visible", "Carry tall objects vertically so they are easy to see", "Only remove long objects after the doors close"], "x": "Anything held upright can contact the rotor disk. IV bags are placed on the patient or held low.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "ops", "d": "", "q": "Which practice best reflects crew resource management (CRM) during a high-workload night flight?", "a": "Any crew member can raise a safety concern and the flight is paused to reassess, with no penalty", "w": ["Only the pilot can raise safety concerns during flight", "Medical crew should never distract the pilot with weather comments", "Concerns are saved for the debrief to avoid disrupting the mission"], "x": "CRM flattens the hierarchy so everyone speaks up. 'Three to go, one to say no' means any crew member can decline a flight, and the reason is not questioned in the moment.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "ops", "d": "", "q": "What is the purpose of the 'sterile cockpit' rule during takeoff, landing and critical phases of flight?", "a": "Only talk essential to flight safety is allowed, so the pilot is not distracted", "w": ["No medical procedures may be done in the cabin until the aircraft is level", "Crew members must remove and stow all metal objects before the doors close", "Radios must stay silent except for calls to and from medical control"], "x": "Distraction during takeoff and landing is a known cause of accidents. Medical crew still report urgent safety hazards immediately.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "ops", "d": "", "q": "A patient is combative and the crew considers whether to fly. Which approach best fits aviation safety principles?", "a": "The patient is restrained or sedated before lift-off, since a combative patient threatens the aircraft", "w": ["Fly as planned and restrain only if the patient becomes violent once in the air", "Let the patient sit unrestrained if they agree to stay calm during the flight", "Fly with the doors unlatched so the crew can get out quickly if needed"], "x": "A patient who can reach the controls, doors or crew endangers everyone. The patient must be controlled before the aircraft leaves the ground.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "ops", "d": "", "q": "All cabin equipment, including monitors, pumps and oxygen cylinders, must be secured before takeoff. What is the main reason?", "a": "Unsecured items become projectiles in turbulence or a hard landing", "w": ["The FAA requires it only for fixed-wing aircraft", "Loose equipment interferes with avionics", "It keeps batteries from draining"], "x": "In a crash or severe turbulence, even small items can cause serious injury. Rated mounts and straps are used.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "ops", "d": "", "q": "After a hard landing, the aircraft is on fire. Where should the crew meet after exiting?", "a": "At the pre-briefed rally point, upwind and at a safe distance, to account for everyone", "w": ["At the nose of the aircraft so the pilot can see everyone", "Downwind of the aircraft to avoid the smoke", "At the tail, which is usually the most intact part"], "x": "The pre-flight briefing includes exits, emergency equipment and a rally point. Upwind avoids smoke and fuel vapors.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "ops", "d": "", "q": "Before a scene landing, ground crews are briefed on landing zone (LZ) safety. Which LZ setup is most appropriate for a typical medical helicopter at night?", "a": "A level area about 100 by 100 feet, clear of wires and debris, with hazards reported to the pilot", "w": ["A spot on a highway shoulder next to the power lines, lit by headlights pointed at the aircraft", "Any open field, as the pilot will choose the exact spot", "A 30 by 30 foot area marked by flares at the center"], "x": "Most programs ask for about 100 x 100 feet (some 60 x 60 for smaller aircraft). Wires are the main hazard; lights must never be aimed at the pilot.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "ops", "d": "", "q": "Why is the use of white light pointed at the aircraft during a night landing dangerous?", "a": "It can blind the pilot and ruin night vision, including through NVGs", "w": ["It interferes with the aircraft's GPS and moving-map display", "It can ignite fuel vapors venting near the landing skids", "It confuses the radar altimeter and causes false altitude readings"], "x": "Bright lights aimed at the cockpit can cause temporary blindness. Ground crews illuminate hazards, not the aircraft.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "ops", "d": "", "q": "A patient on a stretcher needs to be moved under a helicopter whose rotors are still turning. Who controls the approach?", "a": "The pilot or a designated crew member signals when it is safe", "w": ["The ground EMS officer in charge of the landing zone", "The first crew member who reaches the aircraft", "Anyone, once the cabin doors are opened"], "x": "No one approaches a running aircraft until the pilot or crew gives the signal. Crews escort ground personnel in and out.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "ops", "d": "", "q": "What is the difference between AGL and MSL altitude?", "a": "AGL is height above the ground below the aircraft; MSL is height above mean sea level", "w": ["AGL is the altitude shown on the altimeter; MSL is radar altitude", "AGL is used only for fixed-wing aircraft", "They mean the same thing over flat terrain at sea level only"], "x": "Altimeters read MSL. Terrain clearance depends on AGL. A flight at 3,000 feet MSL over 2,500-foot terrain is only 500 feet AGL.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "ops", "d": "", "q": "What is inadvertent instrument meteorological conditions (IIMC) in a helicopter flying VFR?", "a": "Unexpectedly entering cloud or fog so the pilot loses outside references", "w": ["Planned flight in clouds on an instrument flight plan with ATC", "Losing radio contact with dispatch while flying over mountains", "Flying below the minimum safe altitude over a populated area"], "x": "IIMC is a leading cause of fatal HEMS accidents. Crews brief an IIMC recovery plan and use strict weather minimums.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "ops", "d": "", "q": "Which statement best describes VFR versus IFR flight?", "a": "VFR relies on outside visual references; IFR relies on instruments and ATC routing", "w": ["VFR is flown only at night, and IFR only in daylight hours", "IFR means the aircraft must stay above 10,000 feet at all times", "VFR requires two pilots, while IFR can be flown by one pilot"], "x": "Many medical helicopters fly VFR with weather minimums. IFR-capable programs can fly in clouds with certified aircraft and pilots.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "ops", "d": "", "q": "Why do medical flight crews use 'clock positions' when calling out traffic or hazards?", "a": "To give the pilot a fast, standard direction from the nose", "w": ["To mark where each patient sits in the cabin during loading", "To time each leg of the flight for the billing record", "To describe the patient's rhythm strip to medical control"], "x": "Twelve o'clock is straight ahead. A call such as 'Wires, two o'clock, low' tells the pilot exactly where to look.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "Which landmark on the arterial waveform should IABP inflation be timed to?", "a": "The dicrotic notch, which marks aortic valve closure", "w": ["The peak of the systolic upstroke", "The R wave on the ECG", "The end of the T wave on the ECG"], "x": "Inflation starts at the dicrotic notch (the start of diastole). On ECG timing this is roughly the middle of the T wave; deflation is timed to just before the next systole, near the R wave.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "At 1:2 assist, a properly timed IABP tracing should show which relationship?", "a": "Augmentation above unassisted systole, with lower assisted end-diastolic and systolic pressures", "w": ["Assisted systole higher than unassisted systole, with augmentation below it", "Assisted end-diastolic pressure higher than the unassisted end-diastolic", "No dicrotic notch on the unassisted beat and a flat augmentation wave"], "x": "Good timing gives a tall augmentation peak (often above the patient's systole), a dip below the unassisted end-diastolic pressure, and a lower next systole, which shows afterload reduction.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "Why is the IABP often switched to 1:2 when checking timing, even if the patient needs 1:1 support?", "a": "So assisted and unassisted beats can be compared side by side", "w": ["Because 1:1 timing cannot be adjusted", "Because 1:2 gives more augmentation per beat", "To give the balloon a rest and prevent rupture"], "x": "Timing is judged by comparing assisted beats with the unassisted beat right before them. The pump is returned to the needed ratio after adjustment.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "An IABP patient's augmented diastolic pressure gradually falls over an hour while the heart rate and blood pressure are unchanged. The gas volume is correct. What is the most likely cause?", "a": "Worsening intravascular volume or a falling SVR that limits how much the balloon can augment", "w": ["Early inflation shortening the effective systolic ejection time", "A slow helium leak that the console has not yet detected", "New aortic stenosis limiting forward flow from the ventricle"], "x": "Augmentation depends on the volume and tone of the aorta around the balloon. Hypovolemia or vasodilation reduce it even with correct timing and gas.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "During transport, the IABP console shows 'no trigger' and the patient's ECG lead has fallen off. The arterial line is working. What is the best immediate action?", "a": "Switch to arterial pressure trigger while the electrode is replaced", "w": ["Switch to internal trigger at 80 per minute until the ECG returns", "Put the pump in standby until the ECG lead is fully fixed", "Increase the assist ratio to 1:1 so every detected beat is used"], "x": "Pressure trigger keeps the balloon synchronized with the patient's own beats. Internal trigger would inflate regardless of the heart, which is unsafe when the heart is beating.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "An Impella patient has a rising purge pressure and a falling purge flow. What does this suggest?", "a": "A kink or blockage in the purge line, or clot in the purge system", "w": ["The pump has migrated into the aorta and is now pumping against it", "The patient is hypovolemic and the inlet is sucking against the wall", "The motor is running too slowly and the purge is backing up"], "x": "Purge pressure rises when the purge cannot flow freely. Without purge, blood can enter the motor and clot it.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "A patient on an Impella CP at a high P-level has a new soft systolic murmur and a ventricular-looking placement signal. What is the main risk?", "a": "The pump sitting too deep, irritating the mitral apparatus and the ventricle", "w": ["The pump unloading the LV so well that the ventricle becomes irritable", "The pump pulling blood back from the aorta into the left ventricle", "The patient's aortic valve closing fully around the pump cannula"], "x": "A pump too deep in the LV can catch on the mitral valve chordae or papillary muscle, cause arrhythmias and suction events. It needs to be repositioned.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "Why might a patient on VA-ECMO also need an Impella or IABP?", "a": "To unload the left ventricle, which faces the high afterload from retrograde ECMO flow", "w": ["To add oxygen to the blood when the oxygenator starts to fail", "To take over all flow if the ECMO pump fails during transport", "To prevent right ventricular failure from the venous drainage"], "x": "Peripheral VA-ECMO returns blood up the aorta against the LV. A weak LV may not open its valve, causing distension, pulmonary edema and clot. An Impella or IABP vents the LV.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "An LVAD patient has a speed setting of 5,600 RPM, normal power, low flow and a high Doppler MAP. What is the first intervention most programs recommend?", "a": "Lower the blood pressure, because high afterload reduces continuous-flow pump output", "w": ["Increase the pump speed above the prescribed setting to raise flow", "Give a large fluid bolus to fill the ventricle and raise flow", "Swap to the backup controller in case the primary is faulty"], "x": "Continuous-flow LVADs are afterload sensitive. Field crews never change pump speed; they treat hypertension and contact the LVAD team.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "An LVAD patient is in ventricular fibrillation but is awake and talking. Why is this possible?", "a": "The LVAD keeps moving blood, and the lungs can still fill it passively", "w": ["The VF on the monitor is artifact created by the pump motor", "LVAD patients do not develop true ventricular fibrillation", "The controller paces the heart whenever it detects VF"], "x": "LVAD patients can tolerate VT or VF for a time, but the right ventricle fails without its own contraction. They still need treatment, often electrical cardioversion, which is safe with an LVAD.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "Which part of the LVAD system is most commonly infected?", "a": "The driveline exit site on the abdomen", "w": ["The pump housing inside the chest", "The outflow graft to the aorta", "The controller battery pack"], "x": "The driveline crosses the skin, so bacteria can track along it. Fever with a red, draining exit site is a driveline infection until proven otherwise.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "In a PA catheter, which waveform change tells you the balloon has wedged?", "a": "The PA waveform drops to a lower, atrial-type waveform with a and v waves", "w": ["The waveform turns into a tall, square right ventricular tracing", "The waveform becomes a flat line at zero until the balloon deflates", "The diastolic pressure rises sharply to match the systolic pressure"], "x": "When the balloon floats into a small branch and blocks it, the catheter reads pressure transmitted back from the left atrium. A ventricular tracing means the tip has slipped back into the RV.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "A PA catheter shows a RV waveform during transport, and the patient has new runs of PVCs. What is the most likely problem?", "a": "The catheter tip has migrated back into the right ventricle", "w": ["The catheter has wedged permanently in a small pulmonary artery", "The balloon has ruptured and is no longer holding its position", "The transducer is leveled too high and is reading falsely low"], "x": "The tip in the RV can irritate the myocardium. The balloon is inflated (if the program allows) to float it forward, or it is pulled back to the RA.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "Which formula gives cardiac output?", "a": "Heart rate x stroke volume", "w": ["Mean arterial pressure x heart rate", "Stroke volume / body surface area", "SVR x CVP / heart rate"], "x": "Cardiac output = HR x SV. Cardiac index = CO / body surface area. MAP = CO x SVR (plus CVP).", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "cardio", "d": "", "q": "Which change in preload, afterload and contractility does dobutamine mainly produce?", "a": "Raises contractility and lowers afterload", "w": ["Raises afterload and lowers contractility", "Raises preload and afterload", "Lowers preload only"], "x": "Dobutamine is mainly a beta-1 agonist (contractility) with some beta-2 vasodilation (lower afterload). It can drop the blood pressure in hypovolemic patients.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "medical", "d": "", "q": "Which profile fits late (cold) septic shock?", "a": "Low cardiac output, high SVR and a falling SvO2", "w": ["High cardiac output and low SVR", "Low SVR with very high SvO2 and warm skin", "High PAOP with high output"], "x": "As sepsis progresses, myocardial depression and vasoconstriction can turn the profile cold, resembling cardiogenic shock.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "medical", "d": "", "q": "A patient in shock with an SvO2 of 88% and a lactate of 9 after a house fire is most likely suffering from which problem?", "a": "Cyanide poisoning, which stops the cells from using oxygen", "w": ["Hemorrhagic shock from injuries during the escape", "Cardiogenic shock from smoke-related myocardial ischemia", "Carbon monoxide alone, with normal cellular oxygen use"], "x": "A high venous saturation with severe lactic acidosis means oxygen is being delivered but not used. Hydroxocobalamin is the usual antidote.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "trauma", "d": "", "q": "What does a 'base deficit' of 12 in a trauma patient indicate?", "a": "Severe acidosis from hypoperfusion, linked to more transfusion and death", "w": ["Respiratory alkalosis from pain-driven hyperventilation at the scene", "A normal finding after heavy exertion that clears without treatment", "Hypocalcemia from citrate in the products given in transport"], "x": "Base deficit reflects how much base is needed to correct the acidosis. A deficit above 6 to 10 suggests significant shock.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "trauma", "d": "", "q": "A trauma patient's potassium rises to 6.4 after rapid transfusion of older red cell units. Why?", "a": "Potassium leaks out of stored red cells and enters with rapid transfusion", "w": ["Citrate binds potassium in the bag and releases it in the patient", "Cold products push potassium out of the patient's own cells", "Fluid warmers lyse red cells and release potassium in the line"], "x": "Stored red cells lose potassium into the bag over time. Rapid transfusion, especially through a central line in children or patients with kidney failure, can cause hyperkalemia.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "trauma", "d": "", "q": "Why should red cells never be given through the same line as lactated Ringer's in some protocols?", "a": "The calcium in LR can bind citrate and cause clotting in the line", "w": ["LR causes hemolysis of red cells", "LR makes the blood too acidic", "LR inactivates platelets in the red cell unit"], "x": "Calcium overcomes the citrate anticoagulant and can trigger clots in the tubing. Normal saline is the traditional compatible fluid, though some newer guidance allows LR.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "trauma", "d": "", "q": "During massive transfusion, why is the platelet count often low even if platelets are given?", "a": "Consumption at bleeding sites and dilution outpace what is given", "w": ["Citrate in the products destroys platelets in the circulation", "Cold products make platelets pool and clump inside the spleen", "Platelets are not affected by blood loss or by the transfusion"], "x": "Bleeding uses up platelets, and crystalloids and red cells dilute them. Balanced ratios and viscoelastic testing guide replacement.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "phys", "d": "", "q": "Why do flight crews often fill an endotracheal tube cuff with sterile saline instead of air for long, unpressurized flights?", "a": "Liquid does not expand with altitude, so cuff pressure stays steady", "w": ["Saline seals better against aspiration", "Saline prevents ventilator-associated pneumonia", "Air cuffs are not approved for flight"], "x": "Liquids are nearly incompressible, so Boyle's law does not change their volume. Measuring cuff pressure is the alternative.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "phys", "d": "", "q": "A patient with a fresh bowel obstruction is flown. What is the main altitude concern?", "a": "Trapped gas in the bowel expands, causing pain, vomiting and pressure on the diaphragm", "w": ["Nitrogen comes out of solution in the bowel wall at altitude", "The bowel wall absorbs less oxygen as cabin pressure falls", "The bowel contracts on ascent and can perforate from the force"], "x": "Boyle's law applies to any gas in a closed space. A nasogastric tube vented to air helps release the gas.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "phys", "d": "", "q": "What does the 'time of useful consciousness' describe?", "a": "How long a person can act effectively after losing oxygen at a given altitude", "w": ["How long a person can stay alert on a night flight before needing rest", "How long it takes a crew member to recover fully after landing", "How long a sedated patient stays asleep at a given cabin altitude"], "x": "It shortens quickly as altitude rises: minutes at 18,000 feet, seconds above 35,000 feet. It matters in pressurized aircraft with a sudden decompression.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "ops", "d": "", "q": "On a fixed-wing transport, a cabin decompression occurs at cruise. What is the crew's first action?", "a": "Put on your own oxygen mask first, then help the patient", "w": ["Secure the patient's airway before your own mask", "Open a window to equalize pressure", "Turn off the patient's oxygen to reduce fire risk"], "x": "Crew members have only seconds of useful consciousness at high altitude. They must protect themselves first so they can care for the patient.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "ops", "d": "", "q": "Before a flight, the crew completes a risk assessment and decides the weather is marginal. What should happen if one crew member does not want to fly?", "a": "The flight is declined without pressure on the person who said no", "w": ["The pilot decides alone whether the concern is valid", "The flight proceeds if the medical crew agrees", "The request is reassigned to another crew without telling them about the weather"], "x": "Many programs follow 'three to go, one to say no' and make declined-flight information visible to other programs to prevent 'helicopter shopping'.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "ops", "d": "", "q": "Why do HEMS programs record and share information on flights they turn down for weather?", "a": "To keep a turned-down flight from being shopped to program after program", "w": ["To bill the requesting agency for the time spent on planning", "To report the requesting agency to the FAA for the request", "To keep track of crew overtime hours on declined requests"], "x": "Sharing turn-downs lets the next program know about the weather concern so the risk is judged with the same information.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "ops", "d": "", "q": "During patient loading, the medical crew hears a new grinding noise from the aircraft. What is the most appropriate action?", "a": "Tell the pilot immediately, even if it seems minor", "w": ["Mention it during the post-flight debrief", "Ignore it because the pilot monitors the engine instruments", "Unload the patient without informing anyone"], "x": "Every crew member is a set of eyes and ears for safety. Speaking up about abnormal sounds, smells or vibrations is part of CRM.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "ops", "d": "", "q": "What is the main purpose of a pre-flight safety briefing for a patient's family member who will ride along?", "a": "To cover seat belts, headsets, exits, and not touching controls or doors", "w": ["To have them sign consent for the patient's care before departure", "To explain the medications the patient will receive in flight", "To review the flight plan, the route and the fuel on board"], "x": "Passengers must know how to wear restraints, use exits and stay clear of aircraft controls and medical equipment.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "ops", "d": "", "q": "Which radio phrase most clearly tells the pilot that the crew is ready for takeoff?", "a": "A standard callout: patient secure, doors closed and latched, crew ready", "w": ["'We're good to go whenever you are up there'", "A thumbs-up through the window without any radio call", "'Patient is stable, vitals are within normal limits'"], "x": "Standard phrases confirm each required item and reduce misunderstanding.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "ops", "d": "", "q": "What is the main danger of 'get-home-itis' at the end of a long shift?", "a": "Pressure to finish leads crews to accept risks they would normally refuse", "w": ["Crews skip charting so that they can leave on time", "Crews fly faster than normal and burn extra fuel", "Patients go to the closest hospital instead of the best one"], "x": "Plan continuation bias is a recognized factor in accidents. Fixed limits and a no-fault culture help crews stop.", "fx": "nov19"}, {"reg": 1, "lv": "flight", "cat": "ops", "d": "", "q": "What does 'Class B airspace' near a major airport mean for a medical helicopter?", "a": "The pilot must get an air traffic control clearance before entering", "w": ["Medical helicopters may enter without contacting anyone", "Only instrument flight is allowed", "Flight is prohibited below 10,000 feet"], "x": "Class B surrounds the busiest airports. A clearance is required, which can affect routing and arrival times.", "fx": "nov19"}];
+  var have = {}; DB.RQ.forEach(function (q) { have[q.q] = 1; });
+  FLQ.forEach(function (q) { if (!have[q.q]) DB.RQ.push(q); });
+})();
+
+/* ---------- Study-area layout (owner, Nov 19 2026: "I really hate the layout... make them more fun"):
+   the plain list of rows became colored station tiles with an icon, a one-line blurb and a mastery ring;
+   a topic group is a numbered trail; practice is three big game buttons; shock profiles are flip cards
+   with up/down arrows and a guess mode. Same data-* hooks as before, so every click still works. ---------- */
+var CT_PAL = [["#e11d48", "#f97316"], ["#7c3aed", "#2563eb"], ["#0891b2", "#10b981"], ["#db2777", "#7c3aed"], ["#ea580c", "#eab308"], ["#2563eb", "#06b6d4"], ["#16a34a", "#84cc16"], ["#9333ea", "#ec4899"]];
+var CT_ICO = [
+  [/intervention|cath|valve/i, '<path d="M4 20c4-1 5-6 8-8s6-2 8-8"/><circle cx="20" cy="4" r="1.6"/><path d="M4 20l2-3"/>'],
+  [/shock|heart|cardio|foundation/i, '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/><path d="M5 12h3l2-3 2 6 2-3h5"/>'],
+  [/monitor|line|gas|blood gas|acid/i, '<rect x="3" y="5" width="18" height="13" rx="2"/><path d="M5 13h3l2-4 3 7 2-3h4"/>'],
+  [/mechanical|support|pump/i, '<circle cx="12" cy="12" r="7"/><path d="M12 5v3M12 16v3M5 12h3M16 12h3"/><circle cx="12" cy="12" r="2.2"/>'],
+  [/product|blood|hemorrhage|transfus|clot|coag/i, '<path d="M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z"/><path d="M9.5 14.5a2.5 2.5 0 0 0 2.5 2.5"/>'],
+  [/compat|check|safety/i, '<path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/><path d="M9 12l2 2 4-4"/>'],
+  [/flight|transport|stress|altitude/i, '<path d="M3 13l18-7-5 14-4-5-4 2z"/><path d="M12 15l4-6"/>'],
+  [/challenge|hard/i, '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>'],
+  [/special|reaction|contrast|kidney/i, '<path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6L12 16.8 6.7 19.6l1.1-6L3.4 9.4l6-.8z"/>']
+];
+function ctIco(g) { var m = CT_ICO.filter(function (x) { return x[0].test(g); })[0]; return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (m ? m[1] : CT_ICO[0][1]) + '</svg>'; }
+function ctGrad(i) { var p = CT_PAL[((i % CT_PAL.length) + CT_PAL.length) % CT_PAL.length]; return "background:linear-gradient(135deg," + p[0] + "," + p[1] + ")"; }
+function ctRing(done, n) {
+  var f = n ? done / n : 0, C = 2 * Math.PI * 15;
+  return '<span class="ctring" aria-label="' + done + ' of ' + n + ' learned"><svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="15" class="bg"/><circle cx="18" cy="18" r="15" class="fg" stroke-dasharray="' + (C * f).toFixed(1) + ' ' + C.toFixed(1) + '"/></svg><b>' + done + '/' + n + '</b></span>';
+}
+function critHome(kind, order, groups) {
+  var c = '<div class="ctstations">' + order.map(function (g, i) {
+    var L = groups[g], done = L.filter(function (t) { var l = ctLevel(kind, t.id); return l === "familiar" || l === "mastered"; }).length;
+    return '<button class="ctst" data-cgrp="' + esc(g) + '" style="' + ctGrad(i) + '"><span class="ctico">' + ctIco(g) + '</span><span class="ctname">' + esc(g) + '</span>' +
+      (CRIT_GDESC[g] ? '<span class="ctdesc">' + esc(CRIT_GDESC[g]) + '</span>' : '') + '<span class="ctfoot"><span class="ctn">' + L.length + ' topic' + (L.length === 1 ? '' : 's') + '</span>' + ctRing(done, L.length) + '</span></button>';
+  }).join("") + '</div>';
+  var P = [];
+  if (kind === "flightp") { P.push(["drill", "gas", "Flight drill", "Gas laws and flight physiology, 10 at a time", "#0891b2,#2563eb", 6]); P.push(["drill", "cc", "Critical care challenge", "Hard FP-C and CFRN style scenarios", "#be123c,#7c3aed", 7]); }
+  else P.push(["drill", "", "Drill", "10 quick questions, sticks for each one right", "#e11d48,#f97316", 7]);
+  if (kind === "hemo") { P.push(["profiles", "", "Shock profiles", "Flip cards: guess the shock from the numbers", "#7c3aed,#db2777", 0]); P.push(["calc", "", "Hemo math", "MAP, SVR, CO and more, worked for you", "#059669,#0891b2", 1]); }
+  if (kind === "contrast") P.push(["calc", "", "eGFR calculator", "Kidney check before contrast", "#059669,#0891b2", 8]);
+  c += '<h3 class="ctpracth">Practice</h3><div class="ctgames">' + P.map(function (p) {
+    return '<button class="ctgame" data-cmode="' + p[0] + '"' + (p[1] ? ' data-cdgrp="' + p[1] + '"' : '') + ' style="background:linear-gradient(135deg,' + p[4] + ')"><span class="ctico">' + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (p[0] === "profiles" ? '<rect x="4" y="4" width="11" height="15" rx="2"/><path d="M9 8h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9"/>' : p[0] === "calc" ? '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 11h2M12 11h2M8 15h2M12 15h4"/>' : CT_ICO[p[5] + 1][1]) + '</svg></span><span class="ctgt"><strong>' + esc(p[2]) + '</strong><small>' + esc(p[3]) + '</small></span><i aria-hidden="true">&rsaquo;</i></button>';
+  }).join("") + '</div>';
+  return c;
+}
+function critGroup(kind, g, list, gi) {
+  var done = list.filter(function (t) { var l = ctLevel(kind, t.id); return l === "familiar" || l === "mastered"; }).length;
+  var c = '<div class="ctbanner" style="' + ctGrad(gi) + '"><span class="ctico">' + ctIco(g) + '</span><span class="ctbt"><strong>' + esc(g) + '</strong>' + (CRIT_GDESC[g] ? '<small>' + esc(CRIT_GDESC[g]) + '</small>' : '') + '</span>' + ctRing(done, list.length) + '</div>';
+  return c + '<ul class="cttrail">' + list.map(function (t, i) {
+    var l = ctLevel(kind, t.id);
+    return '<li class="ctstep s-' + l + '"><button data-ctopic="' + t.id + '"><span class="ctnum">' + (l === "mastered" ? '&#10003;' : '') + '</span><span class="ctsn">' + esc(ctShort(t)) + (t.sum ? '<small>' + esc(t.sum.length > 90 ? t.sum.slice(0, 88).replace(/\s+\S*$/, "") + "…" : t.sum) + '</small>' : '') + '</span>' + (critBox(kind, t.id) ? ctChip(kind, t.id) : '') + '</button></li>';
+  }).join("") + '</ul>';
+}
+function hpArrow(v) {
+  v = String(v || ""); var up = /high|up|incr/i.test(v), dn = /low|down|decr/i.test(v);
+  var cls = up && dn ? "mix" : up ? "up" : dn ? "dn" : "nl";
+  var ar = cls === "up" ? "&#9650;" : cls === "dn" ? "&#9660;" : cls === "mix" ? "&#8597;" : "&#9679;";
+  return '<span class="hpv ' + cls + '" title="' + esc(v) + '"><b>' + ar + '</b><small>' + esc(v.replace(/\s*\(.*\)/, "")) + '</small></span>';
+}
+function hemoProfCards() {
+  var P = (DB.HEMO && DB.HEMO.profiles) || [], G = !!S.hpGuess, H = S.hpShown || {};
+  var K = [["co", "CO"], ["svr", "SVR"], ["pcwp", "PCWP"], ["cvp", "CVP"], ["svo2", "SvO2"]];
+  var c = '<div class="hptop"><p class="muted small">' + (G ? "Read the arrows, name the shock, then tap the card to check." : "Every shock state at a glance. Turn on guess mode to quiz yourself.") + '</p><button class="hpgbtn' + (G ? ' on' : '') + '" data-hpguess="1" aria-pressed="' + G + '">' + (G ? 'Guess mode on' : 'Guess mode') + '</button></div>';
+  c += '<div class="hplegend"><span class="hpv up"><b>&#9650;</b><small>High</small></span><span class="hpv dn"><b>&#9660;</b><small>Low</small></span><span class="hpv nl"><b>&#9679;</b><small>Normal</small></span><span class="hpv mix"><b>&#8597;</b><small>Varies</small></span></div>';
+  return c + '<div class="hpgrid">' + P.map(function (p, i) {
+    var hide = G && !H[i], parts = p.shock.split(/\s+-\s+/);
+    return '<button class="hpcard' + (hide ? ' hidden' : '') + '" ' + (G ? 'data-hpflip="' + i + '"' : 'tabindex="-1"') + ' style="--hpc:' + CT_PAL[i % CT_PAL.length][0] + '">' +
+      '<span class="hpname">' + (hide ? '<span class="hpq">Which shock?</span>' : esc(parts[0]) + (parts[1] ? ' <em>' + esc(parts[1]) + '</em>' : '')) + '</span>' +
+      '<span class="hprow">' + K.map(function (k) { return '<span class="hpk"><span class="hpl">' + k[1] + '</span>' + hpArrow(p[k[0]]) + '</span>'; }).join("") + '</span>' +
+      (hide ? '<span class="hptap">Tap to reveal</span>' : (p.note ? '<span class="hpnote">' + esc(p.note) + '</span>' : '')) + '</button>';
+  }).join("") + '</div>';
+}
+
+/* ---- Flight Bug Rush calls (nov19): A-line, CVP, PA catheter, wedge, SvO2, IABP, Impella, LVAD, ECMO, shock, hemo math, gas laws, blood ---- */
+(function () {
+  if (typeof DB === "undefined") return;
+  var FLH = [{"lv": "flight", "unit": "", "id": "flh-01", "title": "Damped arterial line in cardiogenic shock", "acu": "critical", "mon": "full", "steps": [{"story": "You are sent to a community ICU for a 66-year-old man with an anterior STEMI, now in cardiogenic shock. He has a radial arterial line, a central line and a PA catheter. Dobutamine and norepinephrine are running.", "d": "", "q": "Before you trust any numbers for the transfer, what should you do with the transducers?", "a": "Level them at the phlebostatic axis on your monitor and zero them to air", "w": ["Copy the sending monitor's numbers, since those lines were already zeroed there", "Level them at the mid-axillary line of whichever side he is lying on and leave the zero", "Zero them once in flight, after cabin pressure has settled at altitude"], "x": "Every move to a new monitor and stretcher needs a new level and zero at the phlebostatic axis (4th intercostal space, mid-chest). The zero is to atmosphere, so it does not need to wait for altitude.", "v": {"hr": 108, "sbp": 86, "dbp": 54, "rr": 24, "spo2": 93, "rh": "sinustachy"}, "vr": {"hr": 103, "sbp": 91, "dbp": 57, "rr": 22, "spo2": 95}, "vw": {"hr": 117, "sbp": 77, "dbp": 49, "rr": 27, "spo2": 90}, "pumps": [["Norepinephrine", "running"], ["Dobutamine", "running"]]}, {"story": "After loading, the arterial waveform looks rounded with no dicrotic notch. It reads 74/58. His cuff pressure is 92/50 and he is talking to you.", "d": "", "q": "What best explains the arterial reading?", "a": "An overdamped line, which reads systolic falsely low and diastolic falsely high", "w": ["An underdamped line, which exaggerates systolic and needs a longer tubing run", "True loss of pulse pressure from worsening shock that needs more norepinephrine", "Transducer placed too high, which lowers all three numbers by the same amount"], "x": "A rounded trace with a lost notch and a narrowed pulse pressure that does not match the cuff points to overdamping: air, a clot, a kink or a soft line. The MAP stays fairly accurate, but systolic and diastolic do not.", "v": {"hr": 106, "sbp": 74, "dbp": 58, "rr": 24, "spo2": 93, "rh": "sinustachy"}, "vr": {"hr": 102, "sbp": 81, "dbp": 60, "rr": 22, "spo2": 95}, "vw": {"hr": 114, "sbp": 67, "dbp": 52, "rr": 27, "spo2": 90}}, {"story": "You flush the line. The square wave test shows one slow, sloping return to baseline with no oscillations.", "d": "", "q": "What does this square wave test confirm, and what is the next step?", "a": "Still overdamped; look for air bubbles, a clot or a kink and check the pressure bag", "w": ["Optimally damped; trust the reading and titrate to it", "Underdamped; add a damping device to the tubing", "Normal for a radial line; switch to a femoral line"], "x": "Optimal damping gives one or two quick oscillations before baseline. A single slow slope means overdamping. Check for bubbles, kinks, clot at the tip and a pressure bag below 300 mmHg.", "v": {"hr": 104, "sbp": 78, "dbp": 56, "rr": 24, "spo2": 94, "rh": "sinustachy"}, "vr": {"hr": 100, "sbp": 84, "dbp": 58, "rr": 22, "spo2": 96}, "vw": {"hr": 112, "sbp": 70, "dbp": 50, "rr": 27, "spo2": 91}}, {"story": "After clearing a bubble, the line shows a crisp waveform at 94/52 (MAP 66). The PA catheter reads PA 44/26, wedge 24, CVP 12, CO 3.1 L/min, SvO2 52%.", "d": "", "q": "Which profile do these numbers fit?", "a": "Left heart cardiogenic shock with low output and high filling pressure", "w": ["Right ventricular infarction with a preload-dependent right heart", "Mixed septic shock with high output and a low SVR", "Hypovolemia with a high SVR and low filling pressures"], "x": "A wedge of 24, low CO and a low SvO2 with a moderate CVP point to LV failure. RV infarct would show a CVP higher than the wedge.", "v": {"hr": 104, "sbp": 94, "dbp": 52, "rr": 24, "spo2": 93, "rh": "sinustachy"}, "vr": {"hr": 100, "sbp": 98, "dbp": 55, "rr": 22, "spo2": 95}, "vw": {"hr": 112, "sbp": 85, "dbp": 47, "rr": 27, "spo2": 90}}, {"story": "Twenty minutes into flight, his SvO2 falls from 52% to 41%. MAP and heart rate are unchanged. He is restless and pulling at his mask; SpO2 89%.", "d": "", "q": "What is the most useful first action?", "a": "Raise the inspired oxygen and treat the agitation, then recheck the SvO2", "w": ["Increase the dobutamine, because the cardiac output must have fallen", "Ignore it, because SvO2 reads falsely low at altitude", "Give a fluid bolus because the wedge must have dropped"], "x": "SvO2 depends on arterial saturation, hemoglobin, output and oxygen use. His SpO2 fell and restlessness raises oxygen demand, so fix delivery and demand before blaming the heart.", "v": {"hr": 110, "sbp": 92, "dbp": 52, "rr": 26, "spo2": 89, "rh": "sinustachy"}, "vr": {"hr": 105, "sbp": 96, "dbp": 55, "rr": 24, "spo2": 91}, "vw": {"hr": 119, "sbp": 83, "dbp": 47, "rr": 29, "spo2": 86}, "pumps": [["Norepinephrine", "running"], ["Dobutamine", "running"]]}]}, {"lv": "flight", "unit": "", "id": "flh-02", "title": "PA catheter that will not stay put", "acu": "red", "mon": "full", "steps": [{"story": "You are transferring a 58-year-old woman with severe mitral regurgitation and pulmonary edema to a cardiac surgery center. She has a PA catheter and is on a nitroprusside drip.", "d": "nitroprusside", "q": "During loading, which PA catheter safety step matters most?", "a": "Keep the balloon deflated and the syringe locked closed unless you are taking a wedge", "w": ["Leave the balloon inflated during the move so the tip does not migrate", "Leave the balloon syringe open so the balloon can deflate by itself", "Pull the catheter back to the RA so it cannot wedge in flight"], "x": "A balloon left up, or a loose syringe that lets it creep up, can wedge the catheter for a long time and infarct or rupture a pulmonary artery. Inflate only to wedge, then let it deflate passively.", "v": {"hr": 112, "sbp": 124, "dbp": 70, "rr": 28, "spo2": 91, "rh": "sinustachy"}, "vr": {"hr": 107, "sbp": 123, "dbp": 70, "rr": 26, "spo2": 93}, "vw": {"hr": 121, "sbp": 112, "dbp": 63, "rr": 31, "spo2": 88}, "pumps": [["Nitroprusside", "running"]]}, {"story": "In flight, the PA trace changes from a PA waveform to a lower, flatter waveform with a and v waves, even though no one has touched the balloon.", "d": "", "q": "What has most likely happened?", "a": "The catheter has migrated distally into a spontaneous wedge", "w": ["The catheter has slipped back into the right ventricle", "The balloon has ruptured and the PA trace is now damped", "The transducer has slipped and now reads a lower level"], "x": "A wedge-type trace without inflating the balloon means the tip has drifted forward into a small branch. Left there, it can cause pulmonary infarction.", "v": {"hr": 114, "sbp": 120, "dbp": 68, "rr": 28, "spo2": 91, "rh": "sinustachy"}, "vr": {"hr": 108, "sbp": 120, "dbp": 69, "rr": 26, "spo2": 93}, "vw": {"hr": 123, "sbp": 108, "dbp": 61, "rr": 31, "spo2": 88}}, {"story": "You confirm the balloon is down. The wedge trace stays.", "d": "", "q": "What is the correct next step?", "a": "Pull the catheter back a short distance until a PA waveform returns", "w": ["Inflate the balloon to push the tip back out of the branch", "Flush the distal port hard to clear the wedge", "Leave it, since a constant wedge reading is more useful in flight"], "x": "Withdraw slowly until a PA trace returns and recheck the depth marking. A forceful flush in a wedged position can rupture the artery, and inflating the balloon makes it worse.", "v": {"hr": 110, "sbp": 118, "dbp": 66, "rr": 26, "spo2": 92, "rh": "sinustachy"}, "vr": {"hr": 105, "sbp": 118, "dbp": 67, "rr": 24, "spo2": 94}, "vw": {"hr": 119, "sbp": 106, "dbp": 59, "rr": 29, "spo2": 89}}, {"story": "Her wedge trace shows giant v waves reaching 48 mmHg with a mean of 30. CVP is 14, CO 3.4 L/min, SVR 1,650.", "d": "", "q": "What explains the giant v waves?", "a": "Severe mitral regurgitation filling the left atrium during systole", "w": ["Mitral stenosis slowing left atrial emptying in diastole", "Tricuspid regurgitation reflected through to the wedge", "Atrial fibrillation with loss of the atrial kick"], "x": "Blood thrown back into a small left atrium during systole creates a large v wave. The high SVR worsens the backflow, which is why afterload reduction helps her.", "v": {"hr": 108, "sbp": 116, "dbp": 66, "rr": 26, "spo2": 92, "rh": "sinustachy"}, "vr": {"hr": 103, "sbp": 117, "dbp": 67, "rr": 24, "spo2": 94}, "vw": {"hr": 117, "sbp": 104, "dbp": 59, "rr": 29, "spo2": 89}, "pumps": [["Nitroprusside", "running"]]}, {"story": "Later, the PA trace suddenly becomes a tall, square waveform with a diastolic near zero, and she has runs of PVCs.", "d": "", "q": "What has happened, and what do you do?", "a": "The tip has fallen back into the RV; inflate the balloon to float it forward or pull it to the RA", "w": ["The tip is in a deep wedge; pull it back several centimeters at once", "The balloon has ruptured; inject air to find the leak", "This is normal PA catheter whip in turbulence; ignore it"], "x": "A square trace with a diastolic near zero is the RV. A tip in the RV causes ectopy, so float it back to the PA with the balloon, or pull it back to the RA if you cannot.", "v": {"hr": 116, "sbp": 112, "dbp": 64, "rr": 28, "spo2": 91, "rh": "sinustachy"}, "vr": {"hr": 110, "sbp": 113, "dbp": 65, "rr": 26, "spo2": 93}, "vw": {"hr": 125, "sbp": 101, "dbp": 58, "rr": 31, "spo2": 88}}]}, {"lv": "flight", "unit": "", "id": "flh-03", "title": "Septic shock with a CVP and SvO2 line", "acu": "critical", "mon": "full", "steps": [{"story": "A 72-year-old man with pneumonia and septic shock has had 30 mL/kg of crystalloid and is on norepinephrine. He has a central line that measures continuous ScvO2. His wife says he was well last week.", "d": "norepinephrine", "q": "His CVP is 14. What does this number tell you about fluid?", "a": "Very little by itself; a single CVP does not predict whether he will respond to fluid", "w": ["He is overloaded and needs diuresis right away", "He is still dry, because a CVP under 16 always means more fluid", "His right heart is failing and he needs an inotrope"], "x": "A static CVP is a poor guide to fluid responsiveness. Trends, pulse pressure variation on the A-line or a passive leg raise tell you more.", "v": {"hr": 122, "sbp": 84, "dbp": 46, "rr": 28, "spo2": 92, "rh": "sinustachy"}, "vr": {"hr": 115, "sbp": 89, "dbp": 50, "rr": 26, "spo2": 94}, "vw": {"hr": 132, "sbp": 76, "dbp": 41, "rr": 31, "spo2": 89}, "pumps": [["Norepinephrine", "running"]]}, {"story": "On a volume-controlled ventilator, his arterial waveform shows pulse pressure variation of 18%. He is in a regular sinus rhythm with tidal volumes of 8 mL/kg.", "d": "", "q": "What does the pulse pressure variation suggest?", "a": "He is likely to raise his cardiac output with fluid", "w": ["His arterial line is underdamped and the reading is invalid", "He has tamponade from his central line", "He has auto-PEEP, so the ventilator needs a faster rate"], "x": "PPV above about 12-13% in a passively ventilated patient in sinus rhythm suggests fluid responsiveness. It loses meaning with arrhythmias, spontaneous breaths or low tidal volumes.", "v": {"hr": 120, "sbp": 82, "dbp": 46, "rr": 24, "spo2": 93, "rh": "sinustachy"}, "vr": {"hr": 113, "sbp": 88, "dbp": 50, "rr": 22, "spo2": 95}, "vw": {"hr": 130, "sbp": 74, "dbp": 41, "rr": 27, "spo2": 90}}, {"story": "After fluid his MAP is 68. His ScvO2 is 86% and his lactate is 6.1 and rising. His legs are mottled.", "d": "", "q": "What does a high ScvO2 with a rising lactate most likely mean here?", "a": "The tissues are not taking up oxygen well, so a normal ScvO2 does not mean he is resuscitated", "w": ["He is fully resuscitated and the lactate is from his liver", "The central line tip is in the right atrium, so the reading is wrong", "He is over-oxygenated and his FiO2 should come down to fix it"], "x": "In sepsis, shunting and mitochondrial failure can make ScvO2 look high while the tissues starve. Mottling and rising lactate trump a reassuring ScvO2.", "v": {"hr": 118, "sbp": 92, "dbp": 50, "rr": 24, "spo2": 94, "rh": "sinustachy"}, "vr": {"hr": 111, "sbp": 96, "dbp": 53, "rr": 22, "spo2": 96}, "vw": {"hr": 127, "sbp": 83, "dbp": 45, "rr": 27, "spo2": 91}}, {"story": "Norepinephrine is now at a high rate. MAP is 63.", "d": "vasopressin", "q": "What is the usual next drug?", "a": "Add vasopressin as a second pressor", "w": ["Switch to phenylephrine as the only pressor", "Replace norepinephrine with dopamine", "Start nitroglycerin to open the microcirculation"], "x": "Guidelines add vasopressin when norepinephrine needs are rising. Dopamine causes more arrhythmias, and phenylephrine alone can drop cardiac output.", "v": {"hr": 124, "sbp": 86, "dbp": 46, "rr": 26, "spo2": 93, "rh": "sinustachy"}, "vr": {"hr": 116, "sbp": 91, "dbp": 50, "rr": 24, "spo2": 95}, "vw": {"hr": 134, "sbp": 77, "dbp": 41, "rr": 29, "spo2": 90}, "pumps": [["Norepinephrine", "running"]]}, {"story": "At 6,000 feet cabin altitude his SpO2 drops from 94% to 88% with the same ventilator settings.", "d": "", "q": "Which law explains this, and what is the fix?", "a": "Dalton's law: lower barometric pressure lowers the inspired oxygen pressure, so raise the FiO2 or PEEP", "w": ["Boyle's law: his lungs have expanded, so lower the tidal volume", "Henry's law: oxygen leaves his blood, so slow the ventilator", "Charles's law: the cold cabin lowers his saturation, so warm him"], "x": "The fraction of oxygen stays 21%, but the total pressure falls with altitude, so the partial pressure of oxygen falls. Raise FiO2 (or PEEP) to keep the same alveolar oxygen.", "v": {"hr": 126, "sbp": 90, "dbp": 50, "rr": 24, "spo2": 88, "rh": "sinustachy"}, "vr": {"hr": 118, "sbp": 94, "dbp": 53, "rr": 22, "spo2": 90}, "vw": {"hr": 136, "sbp": 81, "dbp": 45, "rr": 27, "spo2": 85}}]}, {"lv": "flight", "unit": "", "id": "flh-04", "title": "IABP timing on the way to surgery", "acu": "critical", "mon": "full", "steps": [{"story": "A 63-year-old man with a ruptured papillary muscle has an IABP at 1:1 and is going for emergency mitral surgery. You set the console to 1:2 to check the timing.", "d": "", "q": "On a 1:2 tracing, where should inflation begin?", "a": "At the dicrotic notch, when the aortic valve closes", "w": ["At the peak of the T wave on the ECG, before the valve closes", "At the start of the QRS, as the ventricle begins to contract", "Halfway through diastole, so the balloon fills a relaxed aorta"], "x": "Inflation at the dicrotic notch fills the balloon just after the aortic valve closes, pushing blood back to the coronaries without fighting ejection.", "v": {"hr": 102, "sbp": 88, "dbp": 56, "rr": 22, "spo2": 94, "rh": "sinustachy"}, "vr": {"hr": 99, "sbp": 93, "dbp": 58, "rr": 21, "spo2": 96}, "vw": {"hr": 110, "sbp": 79, "dbp": 50, "rr": 25, "spo2": 91}}, {"story": "On 1:2 you see the augmented pressure start before the dicrotic notch and the notch is lost.", "d": "", "q": "What is this timing error and its risk?", "a": "Early inflation, which can close the aortic valve early and cut stroke volume", "w": ["Late inflation, which loses part of the diastolic augmentation", "Early deflation, which lets coronary blood flow reverse", "Late deflation, which makes the LV eject against the balloon"], "x": "Inflating before the valve closes forces it shut early, raises LV pressure and volume and can worsen the regurgitation. Move inflation later until it starts at the notch.", "v": {"hr": 104, "sbp": 86, "dbp": 56, "rr": 22, "spo2": 94, "rh": "sinustachy"}, "vr": {"hr": 100, "sbp": 91, "dbp": 58, "rr": 21, "spo2": 96}, "vw": {"hr": 112, "sbp": 77, "dbp": 50, "rr": 25, "spo2": 91}}, {"story": "After correcting inflation, the assisted end-diastolic pressure is 4 mmHg lower than the unassisted end-diastolic, and the assisted systolic is lower than the unassisted.", "d": "", "q": "What does this show?", "a": "Deflation timing is correct and the balloon is lowering afterload", "w": ["Deflation is too early, so the balloon is not helping", "Deflation is too late, so the LV is ejecting against it", "The balloon is too small for this patient's aorta"], "x": "Good deflation drops the assisted end-diastolic below the unassisted one, and the next systole is lower because the heart ejects into an emptier aorta.", "v": {"hr": 98, "sbp": 92, "dbp": 58, "rr": 20, "spo2": 95, "rh": "sinustachy"}, "vr": {"hr": 95, "sbp": 96, "dbp": 60, "rr": 19, "spo2": 97}, "vw": {"hr": 106, "sbp": 83, "dbp": 52, "rr": 23, "spo2": 92}}, {"story": "Over the next 10 minutes, his left radial pulse is strong but his urine output drops to zero and his left arm and both legs look fine.", "d": "", "q": "What complication should you suspect?", "a": "The balloon has migrated down and is blocking the renal arteries", "w": ["The balloon has migrated up and is blocking the left subclavian", "He has an aortic dissection from the balloon", "Prerenal failure from too much helium in the balloon"], "x": "A balloon sitting too low covers the renal arteries and cuts urine output. Too high a balloon blocks the left subclavian, so the left radial pulse weakens.", "v": {"hr": 100, "sbp": 90, "dbp": 56, "rr": 20, "spo2": 95, "rh": "sinustachy"}, "vr": {"hr": 97, "sbp": 94, "dbp": 58, "rr": 19, "spo2": 97}, "vw": {"hr": 108, "sbp": 81, "dbp": 50, "rr": 23, "spo2": 92}}, {"story": "Near landing, the console alarms for blood in the helium line, with brown flecks in the tubing.", "d": "", "q": "What has happened, and what is the priority?", "a": "Balloon rupture; put the pump in standby, clamp the line and plan for removal", "w": ["Normal condensation; drain the line and keep pumping", "A kink in the line; straighten it and restart", "A loose connector; tighten it and refill the helium"], "x": "Blood in the gas line means the membrane is torn. Pumping can send helium into the aorta, and clotted blood can trap the balloon, so it must be stopped and removed quickly.", "v": {"hr": 104, "sbp": 84, "dbp": 54, "rr": 22, "spo2": 94, "rh": "sinustachy"}, "vr": {"hr": 100, "sbp": 89, "dbp": 57, "rr": 21, "spo2": 96}, "vw": {"hr": 112, "sbp": 76, "dbp": 49, "rr": 25, "spo2": 91}}]}, {"lv": "flight", "unit": "", "id": "flh-05", "title": "Impella CP with suction alarms", "acu": "critical", "mon": "full", "steps": [{"story": "A 55-year-old man with cardiogenic shock after an anterior MI is on an Impella CP at P-8 and on norepinephrine. You are moving him to a heart center.", "d": "", "q": "What does a good Impella placement signal look like?", "a": "An aortic pressure waveform, because the outlet sits in the aorta", "w": ["A ventricular waveform, because the inlet sits in the LV", "A flat line, because the pump flow is continuous", "A PA waveform, because the pump crosses the pulmonic valve"], "x": "The placement signal comes from the outlet area. When the outlet sits above the aortic valve, it shows an aortic waveform. A ventricular waveform means the pump is too deep.", "v": {"hr": 110, "sbp": 92, "dbp": 66, "rr": 22, "spo2": 94, "rh": "sinustachy"}, "vr": {"hr": 105, "sbp": 96, "dbp": 67, "rr": 21, "spo2": 96}, "vw": {"hr": 119, "sbp": 83, "dbp": 59, "rr": 25, "spo2": 91}, "pumps": [["Norepinephrine", "running"]]}, {"story": "In flight you get repeated suction alarms. Flow is dropping, the CVP is 4 and the patient has had high urine output on furosemide.", "d": "", "q": "What is the most likely cause?", "a": "Low LV filling, so the inlet sucks against the ventricle wall", "w": ["The pump has migrated into the aorta and is pumping against itself", "Pump thrombosis slowing the motor", "Aortic regurgitation from the cannula"], "x": "Suction with a low CVP and recent diuresis points to an underfilled LV. Give volume and lower the P-level if needed; check the position with echo when possible.", "v": {"hr": 116, "sbp": 84, "dbp": 62, "rr": 22, "spo2": 94, "rh": "sinustachy"}, "vr": {"hr": 110, "sbp": 89, "dbp": 64, "rr": 21, "spo2": 96}, "vw": {"hr": 125, "sbp": 76, "dbp": 56, "rr": 25, "spo2": 91}}, {"story": "After volume, the alarms settle. Then his urine turns dark red and his hemoglobin falls.", "d": "", "q": "What is the likely cause?", "a": "Hemolysis from shear stress in the pump", "w": ["A transfusion reaction from blood given earlier", "A kidney injury from the contrast in the cath lab", "Rhabdomyolysis from lying still in the cath lab"], "x": "Impella pumps can damage red cells, especially at high speeds or with poor position or suction. Check plasma free hemoglobin and LDH and consider lowering the P-level or repositioning.", "v": {"hr": 112, "sbp": 90, "dbp": 64, "rr": 22, "spo2": 94, "rh": "sinustachy"}, "vr": {"hr": 107, "sbp": 94, "dbp": 65, "rr": 21, "spo2": 96}, "vw": {"hr": 121, "sbp": 81, "dbp": 58, "rr": 25, "spo2": 91}}, {"story": "His MAP is now 60 despite the pump. CVP has risen to 18, the PA pressure is low and his liver is getting larger.", "d": "", "q": "What new problem is this?", "a": "Right ventricular failure, so the LV pump cannot get enough blood", "w": ["Left ventricular recovery, so the pump is no longer needed", "Pump thrombosis from low anticoagulation", "Tamponade from a perforated LV"], "x": "A high CVP with a low PA pressure and low pump flow means the RV is not delivering blood to the left side. It may need inotropes, pulmonary vasodilators or RV support.", "v": {"hr": 118, "sbp": 82, "dbp": 58, "rr": 24, "spo2": 92, "rh": "sinustachy"}, "vr": {"hr": 111, "sbp": 88, "dbp": 60, "rr": 22, "spo2": 94}, "vw": {"hr": 127, "sbp": 74, "dbp": 52, "rr": 27, "spo2": 89}}, {"story": "On landing, the purge pressure is rising and the purge flow is falling.", "d": "", "q": "What is the likely cause?", "a": "A kink or blockage in the purge line or a clot forming in the purge system", "w": ["The pump has moved too deep into the ventricle", "The patient has become hypovolemic again", "The motor is spinning too slowly to keep the purge moving"], "x": "The purge keeps blood out of the motor. Rising pressure with falling flow means resistance in the purge path, which must be fixed fast to protect the motor.", "v": {"hr": 112, "sbp": 86, "dbp": 60, "rr": 22, "spo2": 93, "rh": "sinustachy"}, "vr": {"hr": 107, "sbp": 91, "dbp": 62, "rr": 21, "spo2": 95}, "vw": {"hr": 121, "sbp": 77, "dbp": 54, "rr": 25, "spo2": 90}}]}, {"lv": "flight", "unit": "", "id": "flh-06", "title": "LVAD patient with a low flow alarm", "acu": "red", "mon": "full", "steps": [{"story": "A 49-year-old man with a HeartMate 3 LVAD has vomiting and diarrhea for 2 days. He is dizzy and his controller shows low flow alarms.", "d": "", "q": "How do you get a blood pressure on him?", "a": "Use a Doppler over the brachial artery as the cuff deflates; it gives roughly the MAP", "w": ["Use the automatic cuff, which reads normally with an LVAD", "Feel for a radial pulse to estimate the systolic", "Use the pulse oximeter waveform as the blood pressure"], "x": "Continuous flow pumps give little pulse, so cuffs and pulse checks fail. The Doppler opening pressure approximates the MAP; the goal is usually about 70-80.", "v": {"hr": 104, "sbp": 66, "dbp": 60, "rr": 20, "spo2": 96, "rh": "sinustachy"}, "vr": {"hr": 100, "sbp": 74, "dbp": 62, "rr": 19, "spo2": 98}, "vw": {"hr": 112, "sbp": 59, "dbp": 54, "rr": 23, "spo2": 93}}, {"story": "His Doppler MAP is 58. The pump speed is normal, the power is normal and the flow is low.", "d": "", "q": "What is the most likely cause?", "a": "Low preload from dehydration", "w": ["Pump thrombosis", "A driveline fracture", "High afterload from hypertension"], "x": "Low flow with normal power fits low filling. Thrombosis raises power, and high afterload usually comes with a high MAP.", "v": {"hr": 108, "sbp": 62, "dbp": 56, "rr": 20, "spo2": 96, "rh": "sinustachy"}, "vr": {"hr": 103, "sbp": 71, "dbp": 58, "rr": 19, "spo2": 98}, "vw": {"hr": 117, "sbp": 56, "dbp": 50, "rr": 23, "spo2": 93}}, {"story": "You give a fluid bolus. The flow improves and the alarms stop. His rhythm on the monitor is sustained VT at 190, but he is awake and talking.", "d": "", "q": "Why is he awake in VT?", "a": "The LVAD keeps moving blood forward while the RV fills it passively", "w": ["The VT on the monitor is artifact from the pump motor", "LVAD patients cannot develop true VT", "The controller is pacing his heart at a normal rate"], "x": "The LVAD does the LV's work, so many patients tolerate VT for a while. Over time the RV fails and LVAD flow falls, so it still needs treatment.", "v": {"hr": 190, "sbp": 76, "dbp": 70, "rr": 22, "spo2": 95, "rh": "vt"}, "vr": {"hr": 169, "sbp": 83, "dbp": 70, "rr": 21, "spo2": 97}, "vw": {"hr": 205, "sbp": 68, "dbp": 63, "rr": 25, "spo2": 92}}, {"story": "His VT continues and his flow begins to fall again.", "d": "", "q": "What is the right approach to this VT?", "a": "Treat the VT normally, cardioverting if needed, with the pump left running", "w": ["Avoid all shocks, since the current can stop the LVAD motor", "Slow the LVAD speed so the RV can catch up with it", "Disconnect the controller from power before any shock"], "x": "Cardioversion and defibrillation are safe with an LVAD. Keep the controller connected and powered throughout.", "v": {"hr": 186, "sbp": 70, "dbp": 64, "rr": 22, "spo2": 94, "rh": "vt"}, "vr": {"hr": 166, "sbp": 78, "dbp": 65, "rr": 21, "spo2": 96}, "vw": {"hr": 201, "sbp": 63, "dbp": 58, "rr": 25, "spo2": 91}}, {"story": "After cardioversion he is in sinus rhythm. On the way out, his wife asks why his stools have been black for a week.", "d": "", "q": "What is the most likely reason?", "a": "GI bleeding from AV malformations and acquired von Willebrand loss", "w": ["Iron tablets from his heart failure regimen", "Bleeding from the driveline exit site", "Swallowed blood from a nosebleed on warfarin"], "x": "Low pulsatility promotes gut AV malformations, and high shear breaks down von Willebrand factor. Add warfarin and GI bleeding is common.", "v": {"hr": 98, "sbp": 84, "dbp": 76, "rr": 18, "spo2": 97, "rh": "sinus"}, "vr": {"hr": 95, "sbp": 89, "dbp": 75, "rr": 18, "spo2": 99}, "vw": {"hr": 106, "sbp": 76, "dbp": 68, "rr": 21, "spo2": 94}}]}, {"lv": "flight", "unit": "", "id": "flh-07", "title": "VA-ECMO with a pale right hand", "acu": "critical", "mon": "full", "steps": [{"story": "A 44-year-old woman with myocarditis is on peripheral VA-ECMO (femoral artery return). You are moving her to a transplant center.", "d": "", "q": "Where should SpO2 and arterial gases be checked to see what her brain gets?", "a": "From the right arm, which shows the blood her heart and lungs are ejecting", "w": ["From the left leg, closest to where the ECMO flow returns", "From the ECMO circuit's return line", "From any site, because ECMO mixes blood evenly"], "x": "With femoral VA-ECMO, ECMO blood goes up the aorta while the heart's own output goes to the arch first. The right radial shows what reaches the brain and coronaries.", "v": {"hr": 96, "sbp": 88, "dbp": 82, "rr": 16, "spo2": 94, "rh": "sinus"}, "vr": {"hr": 94, "sbp": 93, "dbp": 80, "rr": 16, "spo2": 96}, "vw": {"hr": 104, "sbp": 79, "dbp": 74, "rr": 19, "spo2": 91}}, {"story": "Her right radial SpO2 falls to 82% while her leg sats are 100%. Her lungs on x-ray are white.", "d": "", "q": "What is this called?", "a": "North-South syndrome (differential hypoxia)", "w": ["Recirculation of ECMO blood", "Oxygenator failure from clot", "Cannula chatter from low volume"], "x": "The heart is pumping deoxygenated blood from poor lungs into the upper body while ECMO blood supplies the legs. Recirculation is a VV-ECMO problem.", "v": {"hr": 100, "sbp": 86, "dbp": 80, "rr": 16, "spo2": 82, "rh": "sinustachy"}, "vr": {"hr": 97, "sbp": 91, "dbp": 79, "rr": 16, "spo2": 84}, "vw": {"hr": 108, "sbp": 77, "dbp": 72, "rr": 19, "spo2": 79}}, {"story": "Her arterial line pulse pressure is only 6 mmHg. The echo from the sending team showed the aortic valve barely opening.", "d": "", "q": "What is the risk?", "a": "LV distension and clot in the LV or aortic root", "w": ["Over-pumping that will tear the femoral artery", "Air entry through the venous cannula", "Hemolysis from too much ECMO flow"], "x": "Retrograde ECMO flow raises LV afterload. A heart that cannot open its valve swells, causing pulmonary edema and stagnant blood that can clot. The LV may need venting (for example with an Impella).", "v": {"hr": 100, "sbp": 86, "dbp": 80, "rr": 16, "spo2": 86, "rh": "sinustachy"}, "vr": {"hr": 97, "sbp": 91, "dbp": 79, "rr": 16, "spo2": 88}, "vw": {"hr": 108, "sbp": 77, "dbp": 72, "rr": 19, "spo2": 83}}, {"story": "Her right leg below the arterial cannula is pale and cool.", "d": "", "q": "What is the likely cause?", "a": "Leg ischemia from the cannula; check the distal perfusion catheter", "w": ["A DVT from the venous drainage cannula in the groin", "Compartment syndrome from the fluid given in the ED", "Expected ECMO change from non-pulsatile flow"], "x": "The return cannula can block flow to the leg below it. A distal perfusion catheter feeds the limb; check it is working.", "v": {"hr": 100, "sbp": 88, "dbp": 80, "rr": 16, "spo2": 88, "rh": "sinustachy"}, "vr": {"hr": 97, "sbp": 93, "dbp": 79, "rr": 16, "spo2": 90}, "vw": {"hr": 108, "sbp": 79, "dbp": 72, "rr": 19, "spo2": 85}}, {"story": "During loading the circuit shakes (chatters) and the flow drops.", "d": "", "q": "What is the most likely cause?", "a": "Low volume, so the drainage cannula sucks against the vein", "w": ["The oxygenator has started clotting", "The pump head is failing at high RPM", "The sweep gas has been turned down"], "x": "Chatter with falling flow means the venous side is not getting enough blood. Give volume, check for kinks and reduce RPM if needed.", "v": {"hr": 104, "sbp": 84, "dbp": 78, "rr": 16, "spo2": 88, "rh": "sinustachy"}, "vr": {"hr": 100, "sbp": 89, "dbp": 77, "rr": 16, "spo2": 90}, "vw": {"hr": 112, "sbp": 76, "dbp": 70, "rr": 19, "spo2": 85}}]}, {"lv": "flight", "unit": "", "id": "flh-08", "title": "Wedge pressure that does not fit", "acu": "red", "mon": "full", "steps": [{"story": "A 70-year-old man is going to a tertiary center for worsening shortness of breath. He has a PA catheter. PA 52/24, wedge 12, CVP 18, CO 3.2 L/min.", "d": "", "q": "What does this profile fit best?", "a": "Pulmonary hypertension with right heart strain", "w": ["Left heart failure with fluid in the lungs", "Mitral stenosis raising the wedge", "Volume overload from too much fluid"], "x": "A high PA with a normal wedge means the problem lies in the lungs' vessels, not the left heart. The high CVP shows the RV is struggling.", "v": {"hr": 102, "sbp": 104, "dbp": 66, "rr": 26, "spo2": 89, "rh": "sinustachy"}, "vr": {"hr": 99, "sbp": 106, "dbp": 67, "rr": 24, "spo2": 91}, "vw": {"hr": 110, "sbp": 94, "dbp": 59, "rr": 29, "spo2": 86}}, {"story": "His PEEP is raised from 5 to 15 on the ventilator. The wedge reading now reads 18.", "d": "", "q": "Why did the wedge rise?", "a": "PEEP is transmitted to the vessels and falsely raises the wedge", "w": ["His LV is failing under the higher intrathoracic pressure", "The catheter has migrated forward into the left atrium", "The balloon was over-inflated and is overwedging"], "x": "PEEP is transmitted to the vessels in the chest, especially in zone 1 or 2 lung, so the measured wedge rises without a real change in LV filling.", "v": {"hr": 104, "sbp": 100, "dbp": 64, "rr": 22, "spo2": 92, "rh": "sinustachy"}, "vr": {"hr": 100, "sbp": 103, "dbp": 65, "rr": 21, "spo2": 94}, "vw": {"hr": 112, "sbp": 90, "dbp": 58, "rr": 25, "spo2": 89}}, {"story": "You go to record a fresh wedge on the new PEEP before handing over to the pilot for takeoff.", "d": "", "q": "At what point in the breathing cycle should the wedge be read?", "a": "At end expiration", "w": ["At peak inspiration", "Midway through inspiration", "During a breath hold after a full sigh"], "x": "End expiration is the point where chest pressure is closest to zero, for both spontaneous and ventilated breaths.", "v": {"hr": 104, "sbp": 100, "dbp": 64, "rr": 22, "spo2": 92, "rh": "sinustachy"}, "vr": {"hr": 100, "sbp": 103, "dbp": 65, "rr": 21, "spo2": 94}, "vw": {"hr": 112, "sbp": 90, "dbp": 58, "rr": 25, "spo2": 89}}, {"story": "He becomes more hypotensive: MAP 58. CVP 22, PA 54/26, CO 2.6 L/min. His lungs remain clear.", "d": "", "q": "What is the best treatment approach?", "a": "Keep systemic pressure up and lower pulmonary pressures", "w": ["Give a large fluid bolus to raise RV preload", "Start furosemide to bring the high CVP down", "Start dobutamine alone, accepting a lower MAP"], "x": "The RV is failing from pulmonary hypertension. More fluid overstretches it. Use a pressor for systemic pressure and pulmonary vasodilators (like inhaled nitric oxide).", "v": {"hr": 108, "sbp": 80, "dbp": 48, "rr": 24, "spo2": 90, "rh": "sinustachy"}, "vr": {"hr": 103, "sbp": 86, "dbp": 52, "rr": 22, "spo2": 92}, "vw": {"hr": 117, "sbp": 72, "dbp": 43, "rr": 27, "spo2": 87}}, {"story": "Then his CVP and wedge both read about 22, and his pulse pressure narrows.", "d": "", "q": "What must you rule out?", "a": "Cardiac tamponade causing equal diastolic pressures", "w": ["Worsening pulmonary hypertension", "A pneumothorax from the central line", "A transducer leveling error"], "x": "Equalization of diastolic pressures (CVP, PA diastolic and wedge within about 5 mmHg) with falling output is classic for tamponade.", "v": {"hr": 118, "sbp": 76, "dbp": 62, "rr": 26, "spo2": 88, "rh": "sinustachy"}, "vr": {"hr": 111, "sbp": 83, "dbp": 64, "rr": 24, "spo2": 90}, "vw": {"hr": 127, "sbp": 68, "dbp": 56, "rr": 29, "spo2": 85}}]}, {"lv": "flight", "unit": "", "id": "flh-09", "title": "Massive transfusion from a rural ED", "acu": "critical", "mon": "full", "steps": [{"story": "A 31-year-old man was kicked by a horse and has a liver injury. He has had 4 units of red cells and 2 plasma. HR 132, BP 78/50, temp 34.8 °C.", "d": "", "q": "Which step most directly protects his clotting during the flight?", "a": "Run every product through a warmer and actively rewarm him", "w": ["Give sodium bicarbonate to correct his acidosis before each unit", "Wait on the ground for platelets before starting more red cells", "Switch to crystalloid until his temperature comes back up"], "x": "Cold blood makes clotting worse. Warm all products and the patient. Treat hypocalcemia too. The lethal diamond is hypothermia, acidosis, coagulopathy and hypocalcemia.", "v": {"hr": 132, "sbp": 78, "dbp": 50, "rr": 28, "spo2": 94, "rh": "sinustachy"}, "vr": {"hr": 123, "sbp": 84, "dbp": 53, "rr": 26, "spo2": 96}, "vw": {"hr": 143, "sbp": 70, "dbp": 45, "rr": 31, "spo2": 91}}, {"story": "After 2 more units, he has tingling lips and a long QT on the monitor.", "d": "calcium-chloride", "q": "What is the likely cause?", "a": "Low ionized calcium from citrate in the blood products", "w": ["High potassium from stored red cells", "Low magnesium from the crystalloid", "A transfusion reaction"], "x": "Citrate binds calcium. Rapid transfusion lowers ionized calcium, causing weak heart pumping, low pressure and a long QT. Give calcium.", "v": {"hr": 128, "sbp": 82, "dbp": 52, "rr": 26, "spo2": 94, "rh": "sinustachy"}, "vr": {"hr": 119, "sbp": 88, "dbp": 55, "rr": 24, "spo2": 96}, "vw": {"hr": 138, "sbp": 74, "dbp": 47, "rr": 29, "spo2": 91}}, {"story": "His heart rhythm develops peaked T waves after the 8th unit.", "d": "", "q": "What is the likely cause?", "a": "Potassium released from stored red cells", "w": ["Calcium given too fast", "Low potassium from the IV fluids", "A normal change in a trauma patient"], "x": "Potassium leaks from stored red cells. Rapid transfusion through a central line can cause a high potassium. Treat with calcium first.", "v": {"hr": 124, "sbp": 84, "dbp": 52, "rr": 26, "spo2": 94, "rh": "sinustachy"}, "vr": {"hr": 116, "sbp": 89, "dbp": 55, "rr": 24, "spo2": 96}, "vw": {"hr": 134, "sbp": 76, "dbp": 47, "rr": 29, "spo2": 91}}, {"story": "Twenty minutes later he becomes hypoxic, with frothy secretions in the ET tube and a temperature of 38.5 °C. His CVP is 4.", "d": "", "q": "What is the likely cause?", "a": "Transfusion-related acute lung injury (TRALI)", "w": ["Transfusion-associated circulatory overload (TACO)", "A pneumothorax from the chest tube", "Aspiration from the intubation"], "x": "TRALI is noncardiogenic pulmonary edema with fever and a low or normal CVP. TACO comes with volume overload, high pressure and a high CVP.", "v": {"hr": 126, "sbp": 80, "dbp": 50, "rr": 30, "spo2": 84, "rh": "sinustachy"}, "vr": {"hr": 118, "sbp": 86, "dbp": 53, "rr": 27, "spo2": 86}, "vw": {"hr": 136, "sbp": 72, "dbp": 45, "rr": 33, "spo2": 81}}, {"story": "His TEG shows a long R time.", "d": "", "q": "Which product does this point to?", "a": "Plasma, to replace clotting factors", "w": ["Platelets, to strengthen the clot", "Cryoprecipitate, to raise fibrinogen", "TXA, to stop clot breakdown"], "x": "A long R time means slow clot formation from low clotting factors. Low MA points to platelets, and high lysis points to TXA.", "v": {"hr": 122, "sbp": 84, "dbp": 52, "rr": 26, "spo2": 90, "rh": "sinustachy"}, "vr": {"hr": 115, "sbp": 89, "dbp": 55, "rr": 24, "spo2": 92}, "vw": {"hr": 132, "sbp": 76, "dbp": 47, "rr": 29, "spo2": 87}}]}, {"lv": "flight", "unit": "", "id": "flh-10", "title": "Pneumothorax and the altitude climb", "acu": "red", "mon": "full", "steps": [{"story": "A 27-year-old woman fell 20 feet and has rib fractures and a small left pneumothorax on CT. She is not intubated. SpO2 95% on 4 L.", "d": "", "q": "What is the safest plan before you fly?", "a": "Decompress or place a chest tube, because trapped air expands with altitude", "w": ["Fly low and watch closely, since small ones do not grow", "Give 100% oxygen, which will absorb the air before you land", "Give a diuretic to lower lung fluid"], "x": "Boyle's law: trapped gas expands as pressure falls. A small pneumothorax can grow and tension at altitude. Many programs place a tube first.", "v": {"hr": 104, "sbp": 118, "dbp": 72, "rr": 22, "spo2": 95, "rh": "sinustachy"}, "vr": {"hr": 100, "sbp": 118, "dbp": 72, "rr": 21, "spo2": 97}, "vw": {"hr": 112, "sbp": 106, "dbp": 65, "rr": 25, "spo2": 92}}, {"story": "A chest tube is placed. The Heimlich valve is attached. She has an ET tube for a GCS of 8 after she deteriorates.", "d": "", "q": "What happens to the ET tube cuff at altitude if it was filled with air?", "a": "The cuff expands and can injure the trachea, so use saline or check pressure", "w": ["The cuff shrinks and leaks, so add more air at cruise", "The cuff stays the same size because the pilot balloon seals it", "The cuff bursts at altitude, so deflate it before takeoff"], "x": "Boyle's law: the air-filled cuff expands. Fill it with saline or check pressure often.", "v": {"hr": 102, "sbp": 120, "dbp": 74, "rr": 16, "spo2": 97, "rh": "sinus"}, "vr": {"hr": 99, "sbp": 120, "dbp": 74, "rr": 16, "spo2": 99}, "vw": {"hr": 110, "sbp": 108, "dbp": 67, "rr": 19, "spo2": 94}}, {"story": "At cruising altitude, she becomes hypotensive and her SpO2 drops. Her trachea is midline and the chest tube is not bubbling.", "d": "", "q": "What should you check first?", "a": "That the chest tube is still working and not kinked or clotted", "w": ["That the Heimlich valve is pointing in the right direction", "Her ET tube position", "Her blood pressure cuff size"], "x": "A blocked tube lets a pneumothorax build up again. Check for kinks, clots and the valve.", "v": {"hr": 128, "sbp": 82, "dbp": 50, "rr": 16, "spo2": 86, "rh": "sinustachy"}, "vr": {"hr": 119, "sbp": 88, "dbp": 53, "rr": 16, "spo2": 88}, "vw": {"hr": 138, "sbp": 74, "dbp": 45, "rr": 19, "spo2": 83}}, {"story": "You find a kink and fix it. Her pressure improves. Her ETCO2 drops from 38 to 22 during descent.", "d": "", "q": "What most likely happened?", "a": "A leak in the circuit or a dislodged tube", "w": ["A drop in cardiac output", "A sudden pulmonary embolism", "Normal change with descent"], "x": "A sudden drop in ETCO2 in a stable patient points to a circuit leak or displaced tube. Check the tube first.", "v": {"hr": 110, "sbp": 112, "dbp": 70, "rr": 16, "spo2": 95, "rh": "sinus"}, "vr": {"hr": 105, "sbp": 113, "dbp": 70, "rr": 16, "spo2": 97}, "vw": {"hr": 119, "sbp": 101, "dbp": 63, "rr": 19, "spo2": 92}}, {"story": "On short final, the pilot descends quickly. She is sedated, but her heart rate jumps and she grimaces, and blood appears at her right ear.", "d": "", "q": "What most likely happened?", "a": "Gas trapped in the middle ear could not equalize on descent, so the eardrum was pushed in", "w": ["Gas in the middle ear expanded on descent and blew the eardrum outward", "A basilar skull fracture began leaking because the cabin pressure rose", "Nitrogen bubbles formed in her inner ear as the pressure increased"], "x": "On descent the outside pressure rises. Sedated or intubated patients cannot clear their ears, so the trapped space stays at low pressure and the drum is pulled in. Slower descents help.", "v": {"hr": 118, "sbp": 120, "dbp": 74, "rr": 16, "spo2": 97, "rh": "sinustachy"}, "vr": {"hr": 111, "sbp": 120, "dbp": 74, "rr": 16, "spo2": 99}, "vw": {"hr": 127, "sbp": 108, "dbp": 67, "rr": 19, "spo2": 94}}]}, {"lv": "flight", "unit": "", "id": "flh-11", "title": "Right ventricular infarct on the PA catheter", "acu": "critical", "mon": "full", "steps": [{"story": "A 68-year-old woman with an inferior STEMI has a PA catheter after a failed cath lab attempt. CVP 19, PA 26/12, wedge 9, CO 2.8 L/min, MAP 60. Lungs are clear.", "d": "", "q": "What profile is this?", "a": "RV infarction, with a CVP higher than the wedge", "w": ["LV cardiogenic shock with a high wedge", "Hypovolemia with low filling on both sides", "Pulmonary hypertension with a high PA pressure"], "x": "A CVP above the wedge with a low PA pressure means the RV cannot push blood forward. The LV is underfilled, not failing.", "v": {"hr": 54, "sbp": 80, "dbp": 50, "rr": 22, "spo2": 93, "rh": "sinusbrady"}, "vr": {"hr": 60, "sbp": 86, "dbp": 53, "rr": 21, "spo2": 95}, "vw": {"hr": 48, "sbp": 72, "dbp": 45, "rr": 25, "spo2": 90}}, {"story": "She is in sinus bradycardia at 46 with a first-degree block.", "d": "", "q": "Why does losing atrial kick or rate hurt her so much?", "a": "A stiff, failing RV depends on rate and atrial timing to fill and empty", "w": ["A slow rate lowers her LV wedge and worsens pulmonary edema", "Bradycardia raises her PA pressure and strains the LV", "A slow rate makes her nitroglycerin work too well"], "x": "In RV infarct, a slow rate or AV dyssynchrony drops output sharply. AV sequential pacing may be needed.", "v": {"hr": 46, "sbp": 76, "dbp": 48, "rr": 22, "spo2": 93, "rh": "sinusbrady"}, "vr": {"hr": 54, "sbp": 83, "dbp": 52, "rr": 21, "spo2": 95}, "vw": {"hr": 40, "sbp": 68, "dbp": 43, "rr": 25, "spo2": 90}}, {"story": "After a fluid bolus her CVP is 24, the septum bows into the LV on echo and her MAP falls to 56.", "d": "", "q": "What happened?", "a": "Too much fluid overstretched the RV and squeezed the LV", "w": ["The fluid fixed her preload, so the MAP fall is from sedation", "The bolus has caused TACO and she needs intubation", "Her LV recovered and is now overfilling"], "x": "Fluid helps a dry RV infarct only up to a point. Past that, the RV dilates, the septum shifts and LV filling falls. Switch to inotropes or pressors.", "v": {"hr": 50, "sbp": 70, "dbp": 44, "rr": 24, "spo2": 92, "rh": "sinusbrady"}, "vr": {"hr": 57, "sbp": 78, "dbp": 48, "rr": 22, "spo2": 94}, "vw": {"hr": 44, "sbp": 63, "dbp": 40, "rr": 27, "spo2": 89}}, {"story": "You start an inotrope. Her pressure improves.", "d": "", "q": "Which drug class must be avoided in this patient?", "a": "Nitrates and other preload reducers", "w": ["Inotropes such as dobutamine", "Pressors such as norepinephrine", "Inhaled pulmonary vasodilators"], "x": "Nitrates, diuretics and morphine drop preload, which the RV depends on.", "v": {"hr": 60, "sbp": 88, "dbp": 54, "rr": 20, "spo2": 95, "rh": "sinus"}, "vr": {"hr": 65, "sbp": 93, "dbp": 57, "rr": 19, "spo2": 97}, "vw": {"hr": 65, "sbp": 79, "dbp": 49, "rr": 23, "spo2": 92}}, {"story": "She asks why her neck veins are so full but her lungs are clear.", "d": "", "q": "What is the best explanation?", "a": "The RV cannot push blood forward, so it backs up into her veins", "w": ["Her LV is failing and pushing blood back into the neck", "A tension pneumothorax is trapping her venous return", "Her neck veins are full from fluid given for the low pressure"], "x": "JVD with clear lungs and hypotension is the classic RV infarct triad.", "v": {"hr": 62, "sbp": 92, "dbp": 56, "rr": 20, "spo2": 96, "rh": "sinus"}, "vr": {"hr": 67, "sbp": 96, "dbp": 58, "rr": 19, "spo2": 98}, "vw": {"hr": 67, "sbp": 83, "dbp": 50, "rr": 23, "spo2": 93}}]}, {"lv": "flight", "unit": "", "id": "flh-12", "title": "Tamponade after an ablation", "acu": "critical", "mon": "full", "steps": [{"story": "A 59-year-old man had an AF ablation 4 hours ago. He is now hypotensive. HR 124, BP 82/68. The sending ED placed a CVP line: CVP 20.", "d": "", "q": "What does the narrow pulse pressure and high CVP suggest?", "a": "Cardiac tamponade from a perforation", "w": ["Hypovolemia from a groin bleed", "Vagal reaction after the procedure", "Pulmonary embolism from the catheters"], "x": "Perforation is a known ablation risk. Narrow pulse pressure, high CVP and hypotension point to tamponade.", "v": {"hr": 124, "sbp": 82, "dbp": 68, "rr": 26, "spo2": 93, "rh": "sinustachy"}, "vr": {"hr": 116, "sbp": 88, "dbp": 69, "rr": 24, "spo2": 95}, "vw": {"hr": 134, "sbp": 74, "dbp": 61, "rr": 29, "spo2": 90}}, {"story": "His arterial line shows the systolic falling 18 mmHg with each breath in.", "d": "", "q": "What is this called?", "a": "Pulsus paradoxus", "w": ["Pulsus alternans", "Pulse pressure variation from low volume", "Respiratory artifact on an underdamped line"], "x": "A fall in systolic of more than 10 mmHg with inspiration is pulsus paradoxus, typical of tamponade.", "v": {"hr": 126, "sbp": 80, "dbp": 66, "rr": 26, "spo2": 93, "rh": "sinustachy"}, "vr": {"hr": 118, "sbp": 86, "dbp": 67, "rr": 24, "spo2": 95}, "vw": {"hr": 136, "sbp": 72, "dbp": 59, "rr": 29, "spo2": 90}}, {"story": "The sending team wants to intubate before the flight because he is anxious.", "d": "", "q": "What is the biggest risk of intubating him?", "a": "Positive pressure can cut his venous return and cause arrest", "w": ["Aspiration from a full stomach after the procedure", "Bleeding from the airway on his anticoagulation", "Hypoxia from a long apneic time"], "x": "In tamponade, the heart depends on venous return. Positive pressure ventilation and sedation can drop the preload and cause cardiovascular collapse. Drain first if possible.", "v": {"hr": 128, "sbp": 78, "dbp": 64, "rr": 28, "spo2": 92, "rh": "sinustachy"}, "vr": {"hr": 119, "sbp": 84, "dbp": 65, "rr": 26, "spo2": 94}, "vw": {"hr": 138, "sbp": 70, "dbp": 58, "rr": 31, "spo2": 89}}, {"story": "A pericardial drain is placed and 150 mL of blood is drained. His pressure jumps to 118/74.", "d": "", "q": "What should you expect during flight?", "a": "Bleeding may recur, so watch drain output and the CVP trend", "w": ["Clamp the drain for flight so it cannot pull air in", "Expect the CVP to stay high now, since that is normal after drainage", "Pull the drain before flight to lower infection risk"], "x": "A perforation can keep bleeding. A rising CVP, falling pressure or a blocked drain means tamponade is coming back.", "v": {"hr": 104, "sbp": 118, "dbp": 74, "rr": 20, "spo2": 96, "rh": "sinustachy"}, "vr": {"hr": 100, "sbp": 118, "dbp": 74, "rr": 19, "spo2": 98}, "vw": {"hr": 112, "sbp": 106, "dbp": 67, "rr": 23, "spo2": 93}}, {"story": "In flight the drain stops draining and his CVP rises again with a falling MAP.", "d": "", "q": "What should you do first?", "a": "Check the drain for clots or kinks and aspirate it", "w": ["Give a fluid bolus and recheck the CVP in 10 minutes", "Start norepinephrine to hold the MAP until landing", "Raise the head of the bed to lower the CVP"], "x": "A clotted drain lets tamponade build up again. Clearing it is the fastest fix.", "v": {"hr": 122, "sbp": 86, "dbp": 72, "rr": 24, "spo2": 94, "rh": "sinustachy"}, "vr": {"hr": 115, "sbp": 91, "dbp": 72, "rr": 22, "spo2": 96}, "vw": {"hr": 132, "sbp": 77, "dbp": 65, "rr": 27, "spo2": 91}}]}, {"lv": "flight", "unit": "", "id": "flh-13", "title": "Hemo math on a septic transfer", "acu": "red", "mon": "full", "steps": [{"story": "A 63-year-old woman in septic shock has a PA catheter. MAP 62, CVP 8, CO 8.0 L/min.", "d": "", "q": "What is her SVR, about?", "a": "About 540 dynes·s/cm5, which is low", "w": ["About 1,080 dynes·s/cm5, which is normal", "About 270 dynes·s/cm5, which is very low", "About 1,500 dynes·s/cm5, which is high"], "x": "SVR = 80 × (MAP − CVP) ÷ CO = 80 × 54 ÷ 8 = 540. Low SVR fits warm septic shock.", "v": {"hr": 118, "sbp": 86, "dbp": 50, "rr": 26, "spo2": 93, "rh": "sinustachy"}, "vr": {"hr": 111, "sbp": 91, "dbp": 53, "rr": 24, "spo2": 95}, "vw": {"hr": 127, "sbp": 77, "dbp": 45, "rr": 29, "spo2": 90}}, {"story": "Her BSA is 1.8 m2.", "d": "", "q": "What is her cardiac index?", "a": "About 4.4 L/min/m2, which is high", "w": ["About 2.2 L/min/m2, which is low", "About 14 L/min/m2, which is very high", "About 3.0 L/min/m2, which is normal"], "x": "CI = CO ÷ BSA = 8.0 ÷ 1.8 = 4.4. A high cardiac index is typical of early septic shock.", "v": {"hr": 118, "sbp": 86, "dbp": 50, "rr": 26, "spo2": 93, "rh": "sinustachy"}, "vr": {"hr": 111, "sbp": 91, "dbp": 53, "rr": 24, "spo2": 95}, "vw": {"hr": 127, "sbp": 77, "dbp": 45, "rr": 29, "spo2": 90}}, {"story": "Her hemoglobin is 7, SaO2 is 96% and PaO2 is 80.", "d": "", "q": "Which change would raise her oxygen delivery the most?", "a": "Raising her hemoglobin", "w": ["Raising her PaO2 to 200", "Raising her SaO2 to 100%", "Raising her MAP to 75 with more pressor"], "x": "Oxygen content is mostly hemoglobin × saturation. Dissolved oxygen (PaO2 × 0.003) adds little.", "v": {"hr": 120, "sbp": 84, "dbp": 48, "rr": 26, "spo2": 93, "rh": "sinustachy"}, "vr": {"hr": 113, "sbp": 89, "dbp": 52, "rr": 24, "spo2": 95}, "vw": {"hr": 130, "sbp": 76, "dbp": 43, "rr": 29, "spo2": 90}}, {"story": "Her SvO2 is 82% and lactate is 5.", "d": "", "q": "What is the best explanation?", "a": "Poor oxygen use by the tissues despite good delivery", "w": ["Very low cardiac output forcing high extraction", "Severe anemia lowering delivery", "A sample drawn while the catheter was wedged"], "x": "A high SvO2 with high lactate in sepsis means the cells are not extracting oxygen.", "v": {"hr": 118, "sbp": 88, "dbp": 50, "rr": 24, "spo2": 94, "rh": "sinustachy"}, "vr": {"hr": 111, "sbp": 93, "dbp": 53, "rr": 22, "spo2": 96}, "vw": {"hr": 127, "sbp": 79, "dbp": 45, "rr": 27, "spo2": 91}}, {"story": "Her shock index is calculated: HR 118, SBP 88.", "d": "", "q": "What is her shock index and what does it suggest?", "a": "About 1.3, a sign of significant shock", "w": ["About 0.75, at the top of normal", "About 1.0, borderline shock", "About 1.6, near-arrest shock"], "x": "Shock index = HR ÷ SBP. Above 1.0 suggests significant shock.", "v": {"hr": 118, "sbp": 88, "dbp": 50, "rr": 24, "spo2": 94, "rh": "sinustachy"}, "vr": {"hr": 111, "sbp": 93, "dbp": 53, "rr": 22, "spo2": 96}, "vw": {"hr": 127, "sbp": 79, "dbp": 45, "rr": 27, "spo2": 91}}]}, {"lv": "flight", "unit": "", "id": "flh-14", "title": "Groin bleed after PCI", "acu": "red", "mon": "full", "steps": [{"story": "A 74-year-old woman had a femoral PCI 3 hours ago. She now has back pain, HR 118, BP 86/54 and no groin swelling.", "d": "", "q": "What is the most likely cause?", "a": "Retroperitoneal bleed from the femoral puncture", "w": ["Stent thrombosis with a new STEMI", "Aortic dissection from the catheter", "A vasovagal reaction to the sheath pull"], "x": "A high stick can bleed into the retroperitoneum, causing back or flank pain and hypotension without visible groin swelling.", "v": {"hr": 118, "sbp": 86, "dbp": 54, "rr": 24, "spo2": 95, "rh": "sinustachy"}, "vr": {"hr": 111, "sbp": 91, "dbp": 57, "rr": 22, "spo2": 97}, "vw": {"hr": 127, "sbp": 77, "dbp": 49, "rr": 27, "spo2": 92}}, {"story": "Her PA catheter shows CVP 2, wedge 4, CO 3.0 L/min.", "d": "", "q": "What profile is this?", "a": "Hypovolemic shock", "w": ["Cardiogenic shock from stent thrombosis", "Distributive shock from a contrast reaction", "Obstructive shock from tamponade"], "x": "Low filling pressures and low output with a high heart rate fit blood loss.", "v": {"hr": 122, "sbp": 84, "dbp": 52, "rr": 24, "spo2": 95, "rh": "sinustachy"}, "vr": {"hr": 115, "sbp": 89, "dbp": 55, "rr": 22, "spo2": 97}, "vw": {"hr": 132, "sbp": 76, "dbp": 47, "rr": 27, "spo2": 92}}, {"story": "She is on heparin, aspirin and ticagrelor.", "d": "protamine", "q": "What is the first step for the heparin?", "a": "Turn off the heparin and give protamine per protocol", "w": ["Continue heparin to protect the stent", "Give platelets first", "Give vitamin K"], "x": "Protamine reverses heparin. Antiplatelets are harder to reverse, and stopping them risks stent thrombosis, so talk to cardiology.", "v": {"hr": 124, "sbp": 82, "dbp": 50, "rr": 24, "spo2": 95, "rh": "sinustachy"}, "vr": {"hr": 116, "sbp": 88, "dbp": 53, "rr": 22, "spo2": 97}, "vw": {"hr": 134, "sbp": 74, "dbp": 45, "rr": 27, "spo2": 92}}, {"story": "She needs blood. Her blood type is unknown.", "d": "", "q": "What is the safest blood to give now?", "a": "Uncrossmatched group O red cells", "w": ["Uncrossmatched group AB red cells, the universal donor", "Type-specific red cells from a quick bedside type", "Group O plasma, which has no A or B antigens"], "x": "Group O red cells lack A and B antigens. AB is the universal plasma donor, not red cells.", "v": {"hr": 126, "sbp": 80, "dbp": 50, "rr": 24, "spo2": 94, "rh": "sinustachy"}, "vr": {"hr": 118, "sbp": 86, "dbp": 53, "rr": 22, "spo2": 96}, "vw": {"hr": 136, "sbp": 72, "dbp": 45, "rr": 27, "spo2": 91}}, {"story": "After 2 units she has hives and itching but stable vitals.", "d": "", "q": "What is the most likely reaction?", "a": "A mild allergic reaction to donor plasma proteins", "w": ["An early acute hemolytic reaction", "A febrile non-hemolytic reaction", "Early TACO from the transfusion volume"], "x": "Hives and itching without fever or hypotension is a mild allergic reaction.", "v": {"hr": 108, "sbp": 100, "dbp": 62, "rr": 20, "spo2": 96, "rh": "sinustachy"}, "vr": {"hr": 103, "sbp": 103, "dbp": 64, "rr": 19, "spo2": 98}, "vw": {"hr": 117, "sbp": 90, "dbp": 56, "rr": 23, "spo2": 93}}]}, {"lv": "flight", "unit": "", "id": "flh-15", "title": "IABP patient who codes", "acu": "critical", "mon": "full", "steps": [{"story": "A 71-year-old man with severe 3-vessel disease is on an IABP at 1:1 with ECG trigger. He suddenly goes into VF.", "d": "", "q": "What happens to the IABP during CPR?", "a": "Switch the trigger to arterial pressure so the balloon follows the compressions", "w": ["Put the pump in standby to avoid damaging the balloon", "Switch to internal trigger at 120 per minute", "Keep ECG trigger, since compressions create a QRS-like signal"], "x": "In CPR, arterial pressure trigger lets the pump time to the compressions. Internal trigger is used only when there is no output at all.", "v": {"hr": 0, "sbp": 0, "dbp": 0, "rr": 0, "spo2": 0, "rh": "vf"}, "vr": {"hr": 0, "sbp": 0, "dbp": 0, "rr": 0, "spo2": 0, "rh": "vf"}, "vw": {"hr": 0, "sbp": 0, "dbp": 0, "rr": 0, "spo2": 0, "rh": "vf"}}, {"story": "He is defibrillated.", "d": "", "q": "What should you do with the IABP during defibrillation?", "a": "Keep it running; the console is electrically isolated, so follow the maker's guide", "w": ["Disconnect the helium line so the shock cannot travel along it", "Put the console in standby for 2 minutes after each shock", "Switch to internal trigger so the shock does not confuse it"], "x": "Most IABP consoles are electrically isolated. Follow the device guide, but you do not need to stop the pump.", "v": {"hr": 0, "sbp": 0, "dbp": 0, "rr": 0, "spo2": 0, "rh": "vf"}, "vr": {"hr": 0, "sbp": 0, "dbp": 0, "rr": 0, "spo2": 0, "rh": "vf"}, "vw": {"hr": 0, "sbp": 0, "dbp": 0, "rr": 0, "spo2": 0, "rh": "vf"}}, {"story": "He has ROSC with a sinus rhythm.", "d": "", "q": "What do you check on the IABP right after ROSC?", "a": "Timing and trigger, moving back to ECG trigger once the signal is clean", "w": ["Leave pressure trigger on, since it worked during CPR", "Switch to internal trigger until the rhythm settles", "Drop to 1:3 so fewer beats are mistimed"], "x": "After CPR, the timing and trigger must be rechecked for the new rhythm.", "v": {"hr": 110, "sbp": 92, "dbp": 56, "rr": 18, "spo2": 94, "rh": "sinustachy"}, "vr": {"hr": 105, "sbp": 96, "dbp": 58, "rr": 18, "spo2": 96}, "vw": {"hr": 119, "sbp": 83, "dbp": 50, "rr": 21, "spo2": 91}}, {"story": "He develops AF with a fast ventricular rate.", "d": "", "q": "Which IABP setting works best for AF?", "a": "An AF or arrhythmia mode that deflates on the R wave", "w": ["Internal trigger at a fixed rate of 80", "Pressure trigger at 1:2 to skip short beats", "ECG trigger with deflation set later than usual"], "x": "AF modes deflate on each R wave so the balloon is never inflated when the heart ejects.", "v": {"hr": 138, "sbp": 88, "dbp": 54, "rr": 20, "spo2": 93, "rh": "afib"}, "vr": {"hr": 127, "sbp": 93, "dbp": 57, "rr": 19, "spo2": 95}, "vw": {"hr": 149, "sbp": 79, "dbp": 49, "rr": 23, "spo2": 90}}, {"story": "His left arm becomes cool and the left radial pulse weakens.", "d": "", "q": "What does this suggest?", "a": "The balloon has moved up and is blocking the left subclavian artery", "w": ["The balloon has moved down and is blocking the renal arteries", "A clot from the balloon has lodged in the left brachial artery", "AF has dropped his output so the left arm is poorly perfused"], "x": "Upward migration blocks the left subclavian. Check the position on x-ray.", "v": {"hr": 120, "sbp": 90, "dbp": 56, "rr": 18, "spo2": 94, "rh": "afib"}, "vr": {"hr": 113, "sbp": 94, "dbp": 58, "rr": 18, "spo2": 96}, "vw": {"hr": 130, "sbp": 81, "dbp": 50, "rr": 21, "spo2": 91}}]}, {"lv": "flight", "unit": "", "id": "flh-16", "title": "SCAI stage and the decision to escalate", "acu": "red", "mon": "full", "steps": [{"story": "A 57-year-old man with a large anterior MI has HR 112, BP 92/60, lactate 2.6, cool hands and no pressors yet.", "d": "", "q": "Which SCAI stage fits?", "a": "Stage C (classic): hypoperfusion with cool hands and a raised lactate", "w": ["Stage B (beginning): no pressors yet, so not true shock", "Stage A (at risk): a large MI with a normal-ish pressure", "Stage D (deteriorating): failing initial treatment"], "x": "Cool extremities and a lactate over 2 mean hypoperfusion, which is SCAI C even before pressors start. B is hypotension or tachycardia without hypoperfusion.", "v": {"hr": 112, "sbp": 92, "dbp": 60, "rr": 22, "spo2": 95, "rh": "sinustachy"}, "vr": {"hr": 107, "sbp": 96, "dbp": 62, "rr": 21, "spo2": 97}, "vw": {"hr": 121, "sbp": 83, "dbp": 54, "rr": 25, "spo2": 92}}, {"story": "After norepinephrine and dobutamine, his MAP is 62, lactate 5.2, urine 10 mL/hr.", "d": "", "q": "Which stage is he in now?", "a": "Stage D (deteriorating) despite initial treatment", "w": ["Stage C (classic), since he is on two drugs", "Stage E (extremis), since his lactate is above 5", "Stage B (beginning), since his MAP is above 60"], "x": "Getting worse despite initial therapy is SCAI D.", "v": {"hr": 122, "sbp": 84, "dbp": 50, "rr": 24, "spo2": 93, "rh": "sinustachy"}, "vr": {"hr": 115, "sbp": 89, "dbp": 53, "rr": 22, "spo2": 95}, "vw": {"hr": 132, "sbp": 76, "dbp": 45, "rr": 27, "spo2": 90}}, {"story": "His team is choosing a mechanical device.", "d": "", "q": "Which device gives the most LV unloading?", "a": "An Impella, which pulls blood straight out of the LV", "w": ["An IABP, which lowers afterload with each beat", "VA-ECMO, which takes over all of the heart's output", "An ECMO with an IABP, which adds pulsatility"], "x": "Impella directly unloads the LV. VA-ECMO raises afterload and may load the LV.", "v": {"hr": 124, "sbp": 82, "dbp": 50, "rr": 24, "spo2": 93, "rh": "sinustachy"}, "vr": {"hr": 116, "sbp": 88, "dbp": 53, "rr": 22, "spo2": 95}, "vw": {"hr": 134, "sbp": 74, "dbp": 45, "rr": 27, "spo2": 90}}, {"story": "He has an Impella placed. His cardiac power output is calculated as MAP × CO ÷ 451.", "d": "", "q": "What cardiac power output predicts poor survival in cardiogenic shock?", "a": "Below 0.6 watts", "w": ["Below 1.2 watts", "Below 0.9 watts", "Below 0.3 watts only"], "x": "A cardiac power output below 0.6 W is a strong sign of poor outcome.", "v": {"hr": 114, "sbp": 88, "dbp": 60, "rr": 22, "spo2": 94, "rh": "sinustachy"}, "vr": {"hr": 108, "sbp": 93, "dbp": 62, "rr": 21, "spo2": 96}, "vw": {"hr": 123, "sbp": 79, "dbp": 54, "rr": 25, "spo2": 91}}, {"story": "His lactate is now 2.1 and falling.", "d": "", "q": "What best shows that the support is working?", "a": "Falling lactate and rising urine output", "w": ["A higher MAP on the same pressor doses", "A cardiac output reading above 4 on the console", "A wedge that has risen toward 18"], "x": "Signs of better perfusion, such as clearing lactate and urine output, show success.", "v": {"hr": 102, "sbp": 96, "dbp": 64, "rr": 20, "spo2": 96, "rh": "sinus"}, "vr": {"hr": 99, "sbp": 100, "dbp": 65, "rr": 19, "spo2": 98}, "vw": {"hr": 110, "sbp": 86, "dbp": 58, "rr": 23, "spo2": 93}}]}, {"lv": "flight", "unit": "", "id": "flh-17", "title": "Severe aortic stenosis with low pressure", "acu": "red", "mon": "full", "steps": [{"story": "An 84-year-old man with severe aortic stenosis is septic from a UTI. BP 78/50.", "d": "", "q": "Which drug should be avoided?", "a": "Strong vasodilators such as nitroglycerin", "w": ["Phenylephrine, which raises afterload on the LV", "Norepinephrine, which may raise his heart rate", "Fluids, which may cause pulmonary edema"], "x": "A fixed outflow cannot raise output when the SVR drops. Vasodilators can cause collapse.", "v": {"hr": 104, "sbp": 78, "dbp": 50, "rr": 24, "spo2": 94, "rh": "sinustachy"}, "vr": {"hr": 100, "sbp": 84, "dbp": 53, "rr": 22, "spo2": 96}, "vw": {"hr": 112, "sbp": 70, "dbp": 45, "rr": 27, "spo2": 91}}, {"story": "His heart rate rises to 140 in AF.", "d": "", "q": "Why is this so dangerous in aortic stenosis?", "a": "A thick, stiff LV needs time and the atrial kick to fill", "w": ["AF raises the gradient so much that the valve cannot open", "AF throws clot that blocks the narrowed valve", "AF lowers the SVR and causes distributive shock"], "x": "A stiff LV depends on atrial kick and a slower rate to fill.", "v": {"hr": 140, "sbp": 76, "dbp": 48, "rr": 24, "spo2": 93, "rh": "afib"}, "vr": {"hr": 129, "sbp": 83, "dbp": 52, "rr": 22, "spo2": 95}, "vw": {"hr": 151, "sbp": 68, "dbp": 43, "rr": 27, "spo2": 90}}, {"story": "His A-line waveform has a slow upstroke and a late peak.", "d": "", "q": "What is this called?", "a": "Pulsus parvus et tardus", "w": ["Pulsus alternans", "Pulsus paradoxus", "An overdamped arterial line"], "x": "A small, slow pulse is typical of severe aortic stenosis.", "v": {"hr": 138, "sbp": 78, "dbp": 50, "rr": 24, "spo2": 93, "rh": "afib"}, "vr": {"hr": 127, "sbp": 84, "dbp": 53, "rr": 22, "spo2": 95}, "vw": {"hr": 149, "sbp": 70, "dbp": 45, "rr": 27, "spo2": 90}}, {"story": "He is given phenylephrine and his BP rises.", "d": "", "q": "Why is phenylephrine a reasonable choice?", "a": "It raises the SVR and coronary pressure without speeding the heart", "w": ["It raises the heart rate to push more blood across the valve", "It dilates the coronaries feeding the thick LV", "It lowers the gradient across the valve"], "x": "Pure alpha agents raise pressure and often slow the heart reflexively, which helps aortic stenosis.", "v": {"hr": 118, "sbp": 98, "dbp": 60, "rr": 22, "spo2": 94, "rh": "afib"}, "vr": {"hr": 111, "sbp": 101, "dbp": 62, "rr": 21, "spo2": 96}, "vw": {"hr": 127, "sbp": 88, "dbp": 54, "rr": 25, "spo2": 91}}, {"story": "His wedge is 22 and CO is 3.0.", "d": "", "q": "What problem is starting?", "a": "Pulmonary edema from a stiff LV backing up", "w": ["RV failure from rising pulmonary pressure", "A falsely high wedge from a high PEEP", "Mitral stenosis from calcium on the valve"], "x": "A high wedge with low output means the stiff LV is backing up into the lungs.", "v": {"hr": 116, "sbp": 96, "dbp": 58, "rr": 24, "spo2": 92, "rh": "afib"}, "vr": {"hr": 110, "sbp": 100, "dbp": 60, "rr": 22, "spo2": 94}, "vw": {"hr": 125, "sbp": 86, "dbp": 52, "rr": 27, "spo2": 89}}]}, {"lv": "flight", "unit": "", "id": "flh-18", "title": "Aortic dissection in flight", "acu": "critical", "mon": "full", "steps": [{"story": "A 55-year-old man with a type A dissection has HR 104 and BP 172/96 in the right arm and 128/80 in the left.", "d": "esmolol", "q": "What should be controlled first?", "a": "Heart rate, with a beta blocker", "w": ["Blood pressure, with nitroprusside alone", "Pain, with morphine only", "Fluid status, with a fluid bolus"], "x": "Lowering heart rate and the force of ejection first prevents reflex tachycardia when vasodilators are added.", "v": {"hr": 104, "sbp": 172, "dbp": 96, "rr": 20, "spo2": 96, "rh": "sinustachy"}, "vr": {"hr": 100, "sbp": 164, "dbp": 92, "rr": 19, "spo2": 98}, "vw": {"hr": 112, "sbp": 155, "dbp": 86, "rr": 23, "spo2": 93}}, {"story": "On esmolol his heart rate is 64. The sending team wants a radial arterial line placed before you leave.", "d": "", "q": "Which arm should the arterial line go in?", "a": "The right arm, which reads the higher pressure", "w": ["The left arm, so the right stays free for blood draws", "Either arm, because both reflect the true aortic pressure", "The left arm, because the lower reading is the safer target"], "x": "Treat the higher reading so you do not under-treat the true aortic pressure.", "v": {"hr": 88, "sbp": 128, "dbp": 78, "rr": 18, "spo2": 97, "rh": "sinus"}, "vr": {"hr": 87, "sbp": 127, "dbp": 77, "rr": 18, "spo2": 99}, "vw": {"hr": 95, "sbp": 115, "dbp": 70, "rr": 21, "spo2": 94}}, {"story": "His pressure suddenly falls to 82/60 with muffled heart sounds and JVD.", "d": "", "q": "What is the most likely cause?", "a": "Dissection into the pericardium causing tamponade", "w": ["A new MI from the dissection flap", "Hypotension from too much esmolol", "A tension pneumothorax from the line"], "x": "Type A dissections can rupture into the pericardium. Hypotension, JVD and muffled sounds are a warning sign.", "v": {"hr": 122, "sbp": 82, "dbp": 60, "rr": 22, "spo2": 93, "rh": "sinustachy"}, "vr": {"hr": 115, "sbp": 88, "dbp": 62, "rr": 21, "spo2": 95}, "vw": {"hr": 132, "sbp": 74, "dbp": 54, "rr": 25, "spo2": 90}}, {"story": "You land in 10 minutes.", "d": "", "q": "What is the best treatment approach?", "a": "Blood for pressure and straight to surgery; drain only if he arrests", "w": ["Full pericardiocentesis in flight to empty the sac", "Nitroprusside to lower the shear on the torn aorta", "A furosemide bolus to bring down the high CVP"], "x": "Drainage can speed bleeding in dissection-related tamponade. Surgery is the fix.", "v": {"hr": 124, "sbp": 80, "dbp": 58, "rr": 22, "spo2": 93, "rh": "sinustachy"}, "vr": {"hr": 116, "sbp": 86, "dbp": 60, "rr": 21, "spo2": 95}, "vw": {"hr": 134, "sbp": 72, "dbp": 52, "rr": 25, "spo2": 90}}, {"story": "At 4,000 feet cabin altitude his SpO2 slides from 96% to 92%.", "d": "", "q": "Which altitude effect is this?", "a": "Lower inspired oxygen pressure, so his oxygen needs to go up", "w": ["Expanding gas in the false lumen widening the tear", "Higher blood pressure from the lower cabin pressure", "Nitrogen bubbles forming in the clot in the false lumen"], "x": "Dalton's law: oxygen pressure falls with altitude.", "v": {"hr": 120, "sbp": 84, "dbp": 60, "rr": 22, "spo2": 92, "rh": "sinustachy"}, "vr": {"hr": 113, "sbp": 89, "dbp": 62, "rr": 21, "spo2": 94}, "vw": {"hr": 130, "sbp": 76, "dbp": 54, "rr": 25, "spo2": 89}}]}, {"lv": "flight", "unit": "", "id": "flh-19", "title": "Hypovolemia vs cardiogenic shock in a crash", "acu": "red", "mon": "full", "steps": [{"story": "A 46-year-old man was in a car crash. HR 128, BP 86/58. He has a central line: CVP 3.", "d": "", "q": "What shock type is most likely?", "a": "Hypovolemic shock from blood loss", "w": ["Cardiogenic shock from a cardiac contusion", "Obstructive shock from tamponade", "Neurogenic shock from a spinal injury"], "x": "A low CVP with tachycardia and hypotension points to blood loss.", "v": {"hr": 128, "sbp": 86, "dbp": 58, "rr": 26, "spo2": 95, "rh": "sinustachy"}, "vr": {"hr": 119, "sbp": 91, "dbp": 60, "rr": 24, "spo2": 97}, "vw": {"hr": 138, "sbp": 77, "dbp": 52, "rr": 29, "spo2": 92}}, {"story": "After 2 units, his CVP is 16 and BP is 80/60. He has new JVD.", "d": "", "q": "What new problem must you consider?", "a": "An obstructive cause: tamponade or tension pneumothorax", "w": ["TACO from blood given too fast", "Hyperkalemia from stored red cells", "A transducer that has fallen below the patient"], "x": "A rising CVP with low pressure after a crash points to an obstructive cause.", "v": {"hr": 132, "sbp": 80, "dbp": 60, "rr": 28, "spo2": 92, "rh": "sinustachy"}, "vr": {"hr": 123, "sbp": 86, "dbp": 62, "rr": 26, "spo2": 94}, "vw": {"hr": 143, "sbp": 72, "dbp": 54, "rr": 31, "spo2": 89}}, {"story": "His trachea is midline and both sides of the chest move. FAST shows fluid around the heart.", "d": "", "q": "What is the next step?", "a": "Relieve the tamponade: surgery, or pericardiocentesis if he is crashing", "w": ["Place a left chest tube to drain the blood", "Start norepinephrine and fly to the trauma center", "Give 2 more units to overcome the pressure"], "x": "Trauma tamponade needs relief, ideally surgery.", "v": {"hr": 134, "sbp": 78, "dbp": 62, "rr": 28, "spo2": 92, "rh": "sinustachy"}, "vr": {"hr": 124, "sbp": 84, "dbp": 64, "rr": 26, "spo2": 94}, "vw": {"hr": 145, "sbp": 70, "dbp": 56, "rr": 31, "spo2": 89}}, {"story": "After relief, his pressure is 110/70. His SvO2 is 52% and hemoglobin 6.", "d": "", "q": "What explains the low SvO2?", "a": "Low hemoglobin limiting oxygen delivery", "w": ["High oxygen use from shivering and pain", "Poor tissue oxygen use from early sepsis", "A wedged catheter giving a pulmonary capillary sample"], "x": "Low hemoglobin cuts oxygen delivery, so the tissues extract more oxygen.", "v": {"hr": 110, "sbp": 110, "dbp": 70, "rr": 22, "spo2": 96, "rh": "sinustachy"}, "vr": {"hr": 105, "sbp": 112, "dbp": 70, "rr": 21, "spo2": 98}, "vw": {"hr": 119, "sbp": 99, "dbp": 63, "rr": 25, "spo2": 93}}, {"story": "He needs more blood. The flight will be 40 minutes.", "d": "", "q": "What should be used to give blood quickly and safely?", "a": "A blood warmer with a pressure infuser", "w": ["A rapid gravity line through a large bore IV", "Blood straight from the cooler to save time", "A normal saline co-infusion to speed the flow"], "x": "Cold blood worsens bleeding. Warm all blood and use pressure for speed.", "v": {"hr": 108, "sbp": 112, "dbp": 70, "rr": 22, "spo2": 96, "rh": "sinustachy"}, "vr": {"hr": 103, "sbp": 113, "dbp": 70, "rr": 21, "spo2": 98}, "vw": {"hr": 117, "sbp": 101, "dbp": 63, "rr": 25, "spo2": 93}}]}, {"lv": "flight", "unit": "", "id": "flh-20", "title": "Decompression sickness from a dive trip", "acu": "red", "mon": "full", "steps": [{"story": "A 39-year-old diver surfaced quickly from 100 feet. He now has joint pain and numbness in his legs.", "d": "", "q": "Which gas law explains his problem?", "a": "Henry's law: dissolved nitrogen leaves solution as pressure drops", "w": ["Boyle's law: trapped gas in the lungs expands on ascent", "Dalton's law: nitrogen partial pressure rises on ascent", "Graham's law: nitrogen diffuses out of the tissues"], "x": "As he rose, the dissolved nitrogen came out of solution as bubbles in his tissues.", "v": {"hr": 98, "sbp": 124, "dbp": 78, "rr": 18, "spo2": 97, "rh": "sinus"}, "vr": {"hr": 95, "sbp": 123, "dbp": 77, "rr": 18, "spo2": 99}, "vw": {"hr": 106, "sbp": 112, "dbp": 70, "rr": 21, "spo2": 94}}, {"story": "He needs to be flown to a hyperbaric chamber.", "d": "", "q": "What is the best altitude for the flight?", "a": "As low as safely possible, or a cabin pressurized to sea level", "w": ["Under 8,000 feet, the same as an airliner cabin", "Normal cruise, as long as he is on oxygen", "Any altitude, since the bubbles have already formed"], "x": "Lower pressure at altitude makes nitrogen bubbles grow. Fly low or pressurize to sea level.", "v": {"hr": 98, "sbp": 124, "dbp": 78, "rr": 18, "spo2": 97, "rh": "sinus"}, "vr": {"hr": 95, "sbp": 123, "dbp": 77, "rr": 18, "spo2": 99}, "vw": {"hr": 106, "sbp": 112, "dbp": 70, "rr": 21, "spo2": 94}}, {"story": "His SpO2 is 97% on room air and he asks if he really needs a mask.", "d": "", "q": "What oxygen should he get during the flight?", "a": "High-flow 100% oxygen, whatever his SpO2, to wash out nitrogen", "w": ["Low-flow oxygen titrated to an SpO2 of 94-98%", "Room air, because a normal SpO2 shows no hypoxia", "Oxygen only during the climb, then room air at cruise"], "x": "High oxygen washes nitrogen out of the bubbles and helps the tissues.", "v": {"hr": 96, "sbp": 122, "dbp": 78, "rr": 16, "spo2": 99, "rh": "sinus"}, "vr": {"hr": 94, "sbp": 122, "dbp": 77, "rr": 16, "spo2": 99}, "vw": {"hr": 104, "sbp": 110, "dbp": 70, "rr": 19, "spo2": 96}}, {"story": "He becomes short of breath with chest pain and a cough.", "d": "", "q": "What is this called?", "a": "The chokes, a pulmonary form of decompression sickness", "w": ["Arterial gas embolism from lung overpressure", "Nitrogen narcosis from the dive", "Oxygen toxicity from 100% oxygen"], "x": "Bubbles in the lung vessels cause chest pain, cough and shortness of breath.", "v": {"hr": 118, "sbp": 110, "dbp": 70, "rr": 26, "spo2": 92, "rh": "sinustachy"}, "vr": {"hr": 111, "sbp": 112, "dbp": 70, "rr": 24, "spo2": 94}, "vw": {"hr": 127, "sbp": 99, "dbp": 63, "rr": 29, "spo2": 89}}, {"story": "He asks why he cannot fly home after the chamber.", "d": "", "q": "Why should he wait before commercial flight?", "a": "Lower cabin pressure can bring the bubbles back", "w": ["The chamber oxygen can cause seizures for days after", "Jet cabin air is too dry for his healing lungs", "Pressure changes can reopen his ear barotrauma"], "x": "Commercial cabins are pressurized to about 8,000 feet, so nitrogen can come out of solution again.", "v": {"hr": 88, "sbp": 118, "dbp": 74, "rr": 16, "spo2": 98, "rh": "sinus"}, "vr": {"hr": 87, "sbp": 118, "dbp": 74, "rr": 16, "spo2": 99}, "vw": {"hr": 95, "sbp": 106, "dbp": 67, "rr": 19, "spo2": 95}}]}];
+  var have = {}; (DB.CASES || []).forEach(function (c) { have[c.id] = 1; });
+  DB.CASES = (DB.CASES || []).concat(FLH.filter(function (c) { return !have[c.id]; }));
+})();
+
+/* ===== Virtual Lab (owner, Nov 19 2026: "a mix of the dummy and the bug rush. have them on various random monitors
+   such as the aortic balloon pump and do questions while he is on that") =====
+   The Great Bug sits up on the stretcher, hooked to a device. A live monitor runs underneath him, drawn
+   sample by sample like a real bedside sweep: ECG, arterial line with true IABP augmentation and timing
+   errors, PA catheter traces, Impella placement signal and motor current, LVAD and ECMO consoles.
+   Each lab is a short run of hard questions about what is on the screen. A right answer fixes the
+   problem on the monitor; a wrong one lets it get worse. Tap him to see where the lines go. */
+var LAB_POSE = { chair: true, pose: scPose({ spine: [-0.12, 0, 0], chest: [-0.04, 0, 0], head: [0.12, 0, 0] }), breath: { rate: 1.7, amp: 0.03, acc: 0.35 }, ang: 0.55 };
+var VL = { run: 0 };
+/* the lab is for every hands-on clinical level; the guided device labs only where hemodynamics are taught */
+/* the Virtual Lab is parked for now (owner, Nov 20 2026: "take out this mode for now but remember how to make it");
+   all of its code stays; flip VLAB_ON to bring it back */
+var VLAB_ON = false;
+function vlOk() { if (!VLAB_ON) return false; if (S.view !== "level") return false; var k = S.level; if ((typeof isA === "function" && isA(k)) || (typeof isI === "function" && isI(k))) return false; return true; }
+function vlGuided() { return typeof hasHemo === "function" && hasHemo(); }
+/* emergency people get the trauma bay; everyone else a rapid response on the floor (owner, Nov 19 2026) */
+function vlEmerg() {
+  var k = S.level; if (["emt", "aemt", "paramedic", "flight", "flightrn", "cp", "tccc", "cpp", "cmc", "pcc", "asm", "cls", "intern"].indexOf(k) >= 0) return true;
+  if (typeof isF === "function" && isF(k)) return true;
+  if (k === "rn") { var u = typeof myUnits === "function" ? myUnits("rn") : []; return u.indexOf("ed") >= 0 || u.indexOf("icu") >= 0; }
+  return false;
+}
+
+/* ---------- the labs ---------- */
+var VLABS = [
+ { id: "iabp1", dev: "iabp", title: "Balloon pump timing", tag: "IABP", blurb: "Read the 1:2 tracing and fix the timing before the flight.",
+   exam: { chest: "Clear lungs. A sternotomy scar from an old bypass.", legL: "IABP catheter in the left femoral artery. Dressing dry, foot warm with a Doppler pulse.", legR: "Right foot warm, good pulse.", armL: "Left radial pulse strong: the balloon is not covering the subclavian.", armR: "Right radial arterial line.", abdomen: "Soft. Foley draining clear urine.", head: "Awake and anxious. \"Is that thing supposed to thump?\"" },
+   intro: "A 66-year-old man with cardiogenic shock after an anterior MI. The IABP runs at 1:1. You set it to 1:2 to check the timing before you load him.",
+   steps: [
+    { q: "Look at the assisted beats. What is wrong with the timing?", a: "Early inflation: the balloon fills before the dicrotic notch",
+      w: ["Late inflation: the balloon fills well after the dicrotic notch", "Early deflation: the pressure dips in the middle of diastole", "Late deflation: the balloon is still up when the next beat starts"],
+      x: "The augmentation starts on the downslope of systole and swallows the dicrotic notch. Inflating before the aortic valve closes forces it shut early, cuts stroke volume and raises LV wall stress.",
+      m: { hr: 92, sys: 96, dia: 58, ratio: 2, inf: "early", def: "ok", aug: 112 }, r: { inf: "ok" }, wr: { inf: "early", sys: 90, dia: 55 } },
+    { q: "You move inflation to the notch. Now look at the end of each assisted beat. What does this show?", a: "Late deflation: assisted end-diastolic pressure is not below the unassisted one",
+      w: ["Correct deflation: the assisted end-diastolic dip is deep and sharp", "Early deflation: pressure drops, then climbs back before systole", "Late inflation: augmentation starts after the notch"],
+      x: "With late deflation the balloon is still partly up as the ventricle starts to eject. There is no dip before the next systole, so the LV pushes against the balloon: afterload and oxygen demand rise.",
+      m: { hr: 92, sys: 96, dia: 58, ratio: 2, inf: "ok", def: "late", aug: 112 }, r: { def: "ok" }, wr: { def: "late", sys: 90 } },
+    { q: "Timing is now set. Which feature best proves deflation is right?", a: "Assisted end-diastolic and assisted systolic pressures both lower than unassisted",
+      w: ["Augmented pressure higher than the patient's own systolic pressure", "A dicrotic notch on every assisted beat", "Assisted end-diastolic pressure equal to the unassisted end-diastolic"],
+      x: "Good deflation empties the aorta just before systole: the assisted end-diastolic falls below the unassisted, and the next systole is lower because the heart ejects against less resistance. Augmentation above systole shows good inflation, not deflation.",
+      m: { hr: 92, sys: 96, dia: 58, ratio: 2, inf: "ok", def: "ok", aug: 114 }, r: {}, wr: {} },
+    { q: "Ten minutes later he goes into atrial fibrillation at about 120. What trigger setting is best?", a: "ECG trigger with the AF or arrhythmia mode, deflating on each R wave",
+      w: ["Internal trigger at a fixed rate of 80", "Arterial pressure trigger at 1:3 so short beats are skipped", "Keep standard ECG timing and widen the deflation window"],
+      x: "In AF the R-R interval changes every beat. AF mode inflates on the notch and deflates on the R wave, so the balloon is always down when the ventricle ejects. Internal trigger ignores the heart and is only for no output.",
+      m: { hr: 122, rh: "afib", sys: 92, dia: 56, ratio: 2, inf: "ok", def: "late", aug: 104 }, r: { rh: "afib", def: "ok" }, wr: { rh: "afib", def: "late", sys: 86 } },
+    { q: "In flight his urine output stops, though the pressures look good. His left radial pulse is still strong. What do you suspect?", a: "The balloon has slipped low and is covering the renal arteries",
+      w: ["The balloon has migrated up and is blocking the left subclavian", "Prerenal failure because the augmentation is too high", "A clot on the balloon has broken off into the left leg"],
+      x: "A balloon sitting low covers the renal arteries and urine output falls. Too high a balloon weakens the left radial pulse. Check placement on imaging; the tip should sit about 2 cm below the left subclavian.",
+      m: { hr: 104, rh: "afib", sys: 94, dia: 58, ratio: 2, inf: "ok", def: "ok", aug: 110, num: { "Urine": "0 mL/hr" } }, r: {}, wr: {} }
+   ] },
+ { id: "iabp2", dev: "iabp", title: "Balloon pump alarms", tag: "IABP", blurb: "Late inflation, early deflation, a lost trigger and blood in the line.",
+   exam: { legR: "IABP in the right femoral artery. The sheath is sutured and dry.", legL: "Left foot warm.", chest: "Coarse crackles at both bases.", head: "Sedated, intubated, comfortable.", armR: "Right radial arterial line." },
+   intro: "A 59-year-old woman with a ruptured papillary muscle, intubated, on an IABP at 1:2 for a timing check while you wait for the aircraft.",
+   steps: [
+    { q: "What is the timing problem on these assisted beats?", a: "Late inflation: augmentation starts well after the dicrotic notch",
+      w: ["Early inflation: augmentation starts before the dicrotic notch", "Late deflation: no dip before the next systole", "Early deflation: a U-shaped dip mid-diastole"],
+      x: "The notch is clearly visible and the balloon fills after it, so part of diastole is wasted and coronary perfusion is lower than it could be. Move inflation earlier, to the notch.",
+      m: { hr: 88, sys: 98, dia: 60, ratio: 2, inf: "late", def: "ok", aug: 106 }, r: { inf: "ok" }, wr: { inf: "late", dia: 56 } },
+    { q: "Now the end of each assisted beat dips sharply, then climbs back up before the next systole. What is this?", a: "Early deflation: the benefit is lost and coronary flow may reverse",
+      w: ["Late deflation: the ventricle ejects against the balloon", "Correct timing with a strong afterload drop", "Late inflation: augmentation is cut short"],
+      x: "Deflating too early gives a sharp dip and then the pressure recovers before systole, so there is no afterload benefit, and coronary and carotid flow can reverse. Move deflation later.",
+      m: { hr: 88, sys: 98, dia: 60, ratio: 2, inf: "ok", def: "early", aug: 112 }, r: { def: "ok" }, wr: { def: "early" } },
+    { q: "During loading an ECG lead pops off and the console shows 'No trigger'. What do you do?", a: "Switch to arterial pressure trigger while you fix the ECG lead",
+      w: ["Switch to internal trigger at 80 per minute", "Put the pump in standby until you land", "Increase the assist ratio to 1:1"],
+      x: "She still has a good arterial waveform, so pressure trigger keeps the balloon synchronized. Internal trigger fires regardless of her heart and is only for a patient with no output, as in a code without compressions.",
+      m: { hr: 90, rh: "lead", sys: 96, dia: 58, ratio: 2, inf: "ok", def: "ok", aug: 0, num: { "Alarm": "No trigger" } }, r: { rh: "sinus", aug: 112, num: { "Trigger": "Pressure" } }, wr: { rh: "lead", aug: 0, sys: 86 } },
+    { q: "Near landing the console alarms and you see brown flecks in the helium tubing. What is the priority?", a: "Balloon rupture: put the pump in standby, clamp the line, plan quick removal",
+      w: ["Condensation in the line: drain it and keep pumping", "A loose connector: tighten it and refill the helium", "A kink in the line: straighten it and restart"],
+      x: "Blood in the gas line means a torn balloon. Pumping can push helium into the aorta, and blood clotting inside the balloon can trap it. The balloon must come out soon.",
+      m: { hr: 96, sys: 92, dia: 56, ratio: 2, inf: "ok", def: "ok", aug: 0, num: { "Alarm": "Blood in gas line" } }, r: {}, wr: {} }
+   ] },
+ { id: "imp", dev: "impella", title: "Impella CP in transport", tag: "Impella", blurb: "Placement signal, suction, hemolysis and a failing right heart.",
+   exam: { armR: "Impella CP through the right axillary artery. Dressing dry, hand warm.", chest: "Lungs: fine crackles at both bases.", abdomen: "Liver edge tender, 3 cm below the ribs.", legL: "Feet cool to the ankles.", head: "Drowsy but answers questions." },
+   intro: "A 55-year-old man in cardiogenic shock after an anterior MI, on an Impella CP and norepinephrine, going to a heart center.",
+   steps: [
+    { q: "Look at the placement signal. Where is the pump?", a: "In good position: the outlet sits in the aorta, so the signal is aortic",
+      w: ["Too deep: the outlet is in the ventricle", "Backed out: the whole pump is in the aorta", "Unknown: the placement signal only works on P-2"],
+      x: "The placement signal comes from the outlet area. Above the aortic valve it shows an aortic waveform with a dicrotic notch, and the motor current is pulsatile. A ventricular waveform means the pump is too deep.",
+      m: { hr: 108, sys: 88, dia: 64, plc: "ao", mc: "puls", num: { "P-level": "P-8", "Flow": "3.1 L/min", "Purge": "Normal" } }, r: {}, wr: {} },
+    { q: "During loading the placement signal changes to this, and the motor current flattens. What happened?", a: "The pump slid too deep: the outlet is now inside the ventricle",
+      w: ["The pump backed out: both ends now sit in the aorta", "Pump thrombosis has slowed the motor", "Severe aortic regurgitation from the cannula"],
+      x: "A ventricular placement signal (low diastolic) with flat motor current means the outlet has crossed into the LV, so the pump is moving blood in a circle. It needs repositioning, ideally with echo.",
+      m: { hr: 112, sys: 82, dia: 60, plc: "lv", mc: "flat", num: { "P-level": "P-8", "Flow": "2.2 L/min", "Alarm": "Position wrong" } }, r: { plc: "ao", mc: "puls", num: { "P-level": "P-8", "Flow": "3.0 L/min" } }, wr: { sys: 76, dia: 56 } },
+    { q: "Repositioned. Now suction alarms fire again and again. CVP is 3 and he had 2 L of urine this afternoon. What first?", a: "Give volume and drop the P-level until the suction settles",
+      w: ["Raise the P-level to pull harder through the obstruction", "Give furosemide because the alarms mean overload", "Pull the pump back 3 cm without imaging"],
+      x: "Suction with a low CVP means the LV is underfilled and the inlet is sucking against the wall. Fill the tank and turn the speed down; raising the speed makes it worse.",
+      m: { hr: 116, sys: 84, dia: 62, plc: "ao", mc: "suck", num: { "P-level": "P-8", "Flow": "1.8 L/min", "CVP": "3", "Alarm": "Suction" } }, r: { mc: "puls", num: { "P-level": "P-6", "Flow": "2.8 L/min", "CVP": "8" } }, wr: { sys: 76, num: { "P-level": "P-9", "Flow": "1.4 L/min", "Alarm": "Suction" } } },
+    { q: "His urine turns dark red and his LDH climbs. What is the most likely cause?", a: "Hemolysis from shear stress in the pump",
+      w: ["A delayed hemolytic transfusion reaction", "Contrast nephropathy from the cath lab", "Rhabdomyolysis from lying on the table"],
+      x: "Impella pumps can damage red cells, worse with high speed, poor position or suction. Check plasma free hemoglobin and LDH; lowering the P-level or repositioning often helps.",
+      m: { hr: 110, sys: 88, dia: 64, plc: "ao", mc: "puls", num: { "P-level": "P-6", "Flow": "2.8 L/min", "LDH": "1,240" } }, r: {}, wr: {} },
+    { q: "MAP now falls to 58. CVP 19, PA pressure low, pump flow low and his liver is growing. What is happening?", a: "Right ventricular failure: the LV pump cannot get blood to move",
+      w: ["The LV has recovered, so the pump is no longer needed", "The pump is too deep again", "Tamponade from a perforated left ventricle"],
+      x: "A high CVP with a low PA pressure and low pump flow means the right heart is not delivering blood to the left side. He needs RV support: inotropes, pulmonary vasodilators or an RV device.",
+      m: { hr: 122, sys: 74, dia: 52, plc: "ao", mc: "puls", num: { "P-level": "P-6", "Flow": "1.9 L/min", "CVP": "19", "PA": "24/14" } }, r: { sys: 84, dia: 58 }, wr: { sys: 68, dia: 48 } }
+   ] },
+ { id: "lvad", dev: "lvad", title: "LVAD controller", tag: "LVAD", blurb: "Low flow, high power, suction events and VT you can talk through.",
+   exam: { abdomen: "Driveline exits the left upper abdomen. Dressing clean, no redness.", chest: "A soft hum over the heart: the pump is running.", armR: "No palpable radial pulse. A Doppler finds flow at 76.", head: "Awake. \"My controller keeps beeping.\"", back: "Controller and two batteries in a shoulder bag." },
+   intro: "A 49-year-old man with a HeartMate 3 who has had vomiting and diarrhea for two days. He has no palpable pulse; you get pressures by Doppler.",
+   steps: [
+    { q: "The controller shows low flow with normal power and a high pulsatility index. What fits best?", a: "Low preload from dehydration",
+      w: ["Pump thrombosis", "A driveline fracture", "High afterload from hypertension"],
+      x: "Low flow with normal power fits an underfilled pump. Thrombosis raises power, a driveline break causes power loss alarms, and high afterload usually comes with a high MAP.",
+      m: { hr: 104, sys: 72, dia: 64, lvad: { spd: "5,600", flow: "3.1", pwr: "4.2", pi: "6.2" }, num: { "Doppler MAP": "62" } }, r: { lvad: { spd: "5,600", flow: "4.4", pwr: "4.4", pi: "4.1" }, num: { "Doppler MAP": "74" } }, wr: { lvad: { spd: "5,600", flow: "2.6", pwr: "4.1", pi: "7.0" } } },
+    { q: "A different patient's controller: power has crept up for two days, flow reads high, and his urine is tea-colored. What is this?", a: "Pump thrombosis",
+      w: ["Normal adaptation after a speed change", "Dehydration with low preload", "Aortic insufficiency with recirculation"],
+      x: "A clot in the rotor makes the motor work harder: power rises, so the displayed flow (calculated from power) rises falsely. Hemolysis turns the urine dark and the LDH high.",
+      m: { hr: 96, sys: 82, dia: 74, lvad: { spd: "5,600", flow: "7.8", pwr: "9.6", pi: "1.8" }, num: { "LDH": "2,100" } }, r: {}, wr: {} },
+    { q: "Back to your patient. During a coughing fit, the controller logs repeated PI events and the flow drops for a few seconds. What is happening?", a: "Suction: the LV walls collapse toward the inflow cannula",
+      w: ["Driveline damage when he coughs", "A brief run of pump thrombosis", "Normal pump speed cycling"],
+      x: "Coughing and low volume let the ventricle collapse onto the inflow, so the pump slows to protect itself. Treat the cause: volume, and look for arrhythmias or RV failure.",
+      m: { hr: 110, sys: 70, dia: 64, lvad: { spd: "5,600", flow: "2.9", pwr: "4.0", pi: "PI event" } }, r: { lvad: { spd: "5,600", flow: "4.3", pwr: "4.4", pi: "4.0" } }, wr: {} },
+    { q: "Now he is in sustained VT at 190, but awake and talking. Why?", a: "The LVAD keeps moving blood, and the lungs still fill it passively",
+      w: ["The VT on the monitor is artifact from the pump motor", "LVAD patients cannot develop true VT", "The controller is pacing his heart at a normal rate"],
+      x: "The pump does the LV's work, so many patients tolerate VT for a while. The RV fails over time and flow falls, so it still needs treatment, including cardioversion, with the pump left running.",
+      m: { hr: 190, rh: "vt", sys: 76, dia: 70, lvad: { spd: "5,600", flow: "3.6", pwr: "4.3", pi: "2.1" } }, r: { rh: "sinus", hr: 96, lvad: { spd: "5,600", flow: "4.5", pwr: "4.4", pi: "3.9" } }, wr: { lvad: { spd: "5,600", flow: "2.8", pwr: "4.1", pi: "1.5" } } }
+   ] },
+ { id: "pa", dev: "pa", title: "PA catheter on the move", tag: "PA catheter", blurb: "Spontaneous wedge, RV tracing, giant v waves and PEEP.",
+   exam: { neck: "PA catheter through the right internal jugular. Marked at 52 cm.", chest: "Crackles to the mid lung fields.", head: "Sedated and intubated.", armR: "Right radial arterial line." },
+   intro: "A 62-year-old woman with acute mitral regurgitation and pulmonary edema, intubated, with a PA catheter, going for surgery.",
+   steps: [
+    { q: "This is the PA trace on loading. What should you do with the balloon during the move?", a: "Keep it deflated with the syringe locked shut",
+      w: ["Inflate it so the tip cannot drift", "Leave the syringe open so the balloon vents itself", "Pull the catheter back into the RA for flight"],
+      x: "A balloon left up, or a syringe that lets it creep up, can wedge the catheter for a long time and infarct or rupture a pulmonary artery. Inflate only to measure a wedge.",
+      m: { hr: 108, sys: 118, dia: 66, pa: "pa", ps: 52, pd: 28 }, r: {}, wr: {} },
+    { q: "In flight the PA trace changes to this, though no one has touched the balloon. What happened?", a: "The tip drifted forward into a spontaneous wedge",
+      w: ["The tip fell back into the right ventricle", "The balloon ruptured and the line is damped", "The transducer slipped and reads a lower level"],
+      x: "A low, wedge-type waveform with a and v waves and the balloon down means the catheter has migrated into a small branch. Pull it back until a PA trace returns; never flush hard in a wedge.",
+      m: { hr: 106, sys: 116, dia: 64, pa: "wedge", ps: 24, pd: 18 }, r: { pa: "pa", ps: 52, pd: 28 }, wr: { pa: "wedge", ps: 24, pd: 18 } },
+    { q: "A proper wedge shows these big waves reaching 48. What causes them?", a: "Severe mitral regurgitation filling the left atrium in systole",
+      w: ["Mitral stenosis slowing left atrial emptying", "Tricuspid regurgitation reflected to the wedge", "Atrial fibrillation with loss of the atrial kick"],
+      x: "Blood thrown back into a small, stiff left atrium during systole makes a large v wave. Lowering afterload cuts the backflow, which is why she is on a vasodilator or a balloon pump.",
+      m: { hr: 110, sys: 114, dia: 64, pa: "giantv", ps: 48, pd: 22 }, r: { pa: "pa", ps: 52, pd: 28 }, wr: {} },
+    { q: "Later the trace becomes tall and square, the diastolic is near zero, and she throws PVCs. Where is the tip?", a: "Back in the right ventricle: float it forward with the balloon or pull to the RA",
+      w: ["Deep in a wedge: pull back several centimeters at once", "In the left atrium through a PFO", "In the PA, with turbulence from the aircraft"],
+      x: "A square trace with a diastolic near zero is the RV. A tip in the RV causes ectopy, so float it back into the PA with the balloon up, or pull it to the RA if you cannot.",
+      m: { hr: 118, rh: "pvc", sys: 110, dia: 62, pa: "rv", ps: 50, pd: 6 }, r: { rh: "sinus", pa: "pa", ps: 52, pd: 28 }, wr: { rh: "pvc" } }
+   ] },
+ { id: "aline", dev: "aline", title: "Arterial line troubleshooting", tag: "A-line", blurb: "Damping, square wave test and a transducer on the floor.",
+   exam: { armR: "Right radial arterial line, 20 gauge. Pressure bag at 300.", chest: "Clear lungs.", head: "Awake. Cuff pressure 124/70." },
+   intro: "A 70-year-old man with sepsis, on norepinephrine, with a radial arterial line. His cuff pressure is 124/70.",
+   steps: [
+    { q: "The line reads 102/82 and looks rounded with no notch. What is the problem?", a: "Overdamping: systolic reads falsely low and diastolic falsely high",
+      w: ["Underdamping: the trace exaggerates systolic", "True loss of pulse pressure from worsening shock", "The transducer is too high, lowering every number equally"],
+      x: "A rounded trace that loses the notch and narrows the pulse pressure, out of step with the cuff, points to air, clot, kinks or soft tubing. The mean stays close to accurate.",
+      m: { hr: 98, sys: 124, dia: 70, damp: "over" }, r: { damp: "ok" }, wr: { damp: "over" } },
+    { q: "After a flush the trace now overshoots with a sharp spike and ringing. It reads 156/68. What is this?", a: "Underdamping: systolic reads falsely high",
+      w: ["Overdamping from a clot at the tip", "A true hypertensive surge from the norepinephrine", "Correct damping with a strong heart"],
+      x: "Too many oscillations after the upstroke (long stiff tubing, extra stopcocks, a fast heart) exaggerate systolic. Shorten the tubing, remove extras or add a damping device; the mean is still reliable.",
+      m: { hr: 98, sys: 124, dia: 70, damp: "under" }, r: { damp: "ok" }, wr: { damp: "under" } },
+    { q: "During loading the transducer falls about 20 cm below his heart. What happens to the reading?", a: "It reads about 15 mmHg too high",
+      w: ["It reads about 15 mmHg too low", "No change, because it was zeroed", "Only the waveform changes, not the numbers"],
+      x: "Every 10 cm of height adds about 7.5 mmHg. A transducer below the phlebostatic axis reads high, above it reads low. Re-level after every move.",
+      m: { hr: 100, sys: 139, dia: 85, damp: "ok" }, r: { sys: 124, dia: 70 }, wr: { sys: 139, dia: 85 } },
+    { q: "On a ventilator, his arterial pulse pressure swings 18% with each breath. He is in sinus rhythm and fully sedated. What does this suggest?", a: "He will probably raise his output with fluid",
+      w: ["The line is underdamped and unreliable", "He has tamponade from his central line", "He needs a faster ventilator rate"],
+      x: "Pulse pressure variation over about 12-13% in a passive patient in sinus rhythm suggests fluid responsiveness. It is not valid with arrhythmias, spontaneous breathing or low tidal volumes.",
+      m: { hr: 104, sys: 104, dia: 60, damp: "ok", ppv: 0.18 }, r: { ppv: 0.06, sys: 118, dia: 66 }, wr: { ppv: 0.2, sys: 96, dia: 56 } }
+   ] },
+ { id: "ecmo", dev: "ecmo", title: "VA-ECMO transfer", tag: "ECMO", blurb: "Differential hypoxia, a heart that will not open and a chattering circuit.",
+   exam: { legR: "Arterial return cannula in the right femoral artery, distal perfusion catheter in place.", legL: "Venous drainage cannula in the left femoral vein.", armR: "Right radial line: dusky right hand.", chest: "White-out on the chest x-ray.", head: "Sedated." },
+   intro: "A 44-year-old woman with fulminant myocarditis on peripheral VA-ECMO, going to a transplant center.",
+   steps: [
+    { q: "Her right radial SpO2 reads 82% while her leg reads 100%. What is this?", a: "Differential (North-South) hypoxia",
+      w: ["Recirculation of oxygenated blood", "Oxygenator failure", "Cannula chatter from low volume"],
+      x: "Her own heart is pumping blood through poor lungs into the arch and the right arm and brain, while ECMO blood from the femoral artery supplies the legs. Raise the ventilator oxygen, or change the configuration.",
+      m: { hr: 98, sys: 86, dia: 78, ecmo: { rpm: "3,400", flow: "4.1", sweep: "4", post: "420" }, num: { "SpO2 R hand": "82%", "SpO2 leg": "100%" } }, r: { num: { "SpO2 R hand": "93%", "SpO2 leg": "100%" } }, wr: {} },
+    { q: "The arterial trace is almost flat, pulse pressure 4. The echo shows the aortic valve not opening. What is the risk?", a: "LV distension, pulmonary edema and clot in the LV or aortic root",
+      w: ["Too much ECMO flow tearing the artery", "Air entering through the venous cannula", "Hemolysis from low pump speed"],
+      x: "Retrograde ECMO flow raises LV afterload. A heart that cannot open its valve distends, the lungs flood and the still blood can clot. The LV may need venting, for example with an Impella.",
+      m: { hr: 96, sys: 82, dia: 78, ecmo: { rpm: "3,400", flow: "4.2", sweep: "4", post: "410" } }, r: {}, wr: {} },
+    { q: "On loading the circuit shakes and the flow drops from 4.2 to 2.6. What is the most likely cause?", a: "Low volume: the drainage cannula is sucking against the vein",
+      w: ["The oxygenator has clotted", "The pump head is failing", "The sweep gas has been turned off"],
+      x: "Chatter with falling flow is a drainage problem: low volume, kinks or cannula position. Give volume, check the lines and turn the RPM down until it settles.",
+      m: { hr: 110, sys: 72, dia: 68, ecmo: { rpm: "3,400", flow: "2.6", sweep: "4", post: "400", alarm: "Chatter" } }, r: { sys: 84, dia: 76, ecmo: { rpm: "3,200", flow: "4.0", sweep: "4", post: "410" } }, wr: { sys: 64, dia: 60 } },
+    { q: "Her post-oxygenator PaO2 falls from 410 to 90 over an hour, with rising pressure across the oxygenator. What is happening?", a: "The oxygenator is clotting and failing",
+      w: ["Her lungs are recovering", "The sweep is too high", "The venous cannula has moved"],
+      x: "A falling post-oxygenator PaO2 with a rising trans-membrane pressure drop means the oxygenator is clotting. Plan an oxygenator change with the ECMO team.",
+      m: { hr: 104, sys: 82, dia: 76, ecmo: { rpm: "3,400", flow: "3.9", sweep: "4", post: "90", alarm: "dP high" } }, r: {}, wr: {} }
+   ] }
+];
+
+/* ---------- the live monitor ---------- */
+function vlRnd(k) { var x = Math.sin(k * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); }
+function vlGauss(t, c, w) { var d = (t - c) / w; return Math.exp(-d * d); }
+function vlEcg(tau, T, rh, k) {
+  if (rh === "lead") return 0.02 * Math.sin(tau * 40);
+  if (rh === "vt") return 0.9 * Math.sin(2 * Math.PI * tau / T) + 0.1 * Math.sin(4 * Math.PI * tau / T);
+  var v = 0, wide = rh === "pvc" && k % 4 === 3;
+  if (rh === "afib") v += 0.05 * Math.sin(tau * 47 + k) + 0.04 * Math.sin(tau * 31 + 2 * k);
+  else if (!wide) v += 0.12 * vlGauss(tau, T - 0.15, 0.025);
+  if (wide) { v += 1.1 * vlGauss(tau, 0.03, 0.04) - 0.5 * vlGauss(tau, 0.12, 0.05) - 0.35 * vlGauss(tau, 0.3, 0.07); return v; }
+  v += -0.12 * vlGauss(tau, -0.02, 0.008) + 1.0 * vlGauss(tau, 0.0, 0.011) - 0.25 * vlGauss(tau, 0.025, 0.01);
+  v += 0.25 * vlGauss(tau, 0.27, 0.05);
+  return v;
+}
+function vlSmooth(a, b, f) { f = Math.max(0, Math.min(1, f)); f = f * f * (3 - 2 * f); return a + (b - a) * f; }
+/* one arterial beat: upstroke, peak, dicrotic notch, run-off */
+function vlArt(tau, T, base, sys, dia) {
+  var notch = dia + 0.5 * (sys - dia);
+  if (tau < 0.05) return base;
+  if (tau < 0.15) return vlSmooth(base, sys, (tau - 0.05) / 0.1);
+  if (tau < 0.3) return vlSmooth(sys, notch, (tau - 0.15) / 0.15);
+  if (tau < 0.33) return notch - 3 * Math.sin(Math.PI * (tau - 0.3) / 0.03);
+  if (tau < 0.37) return notch + 2.5 * Math.sin(Math.PI * (tau - 0.33) / 0.04);
+  var f = (tau - 0.37) / Math.max(0.05, T - 0.37);
+  return notch + (dia - notch) * (1 - Math.exp(-2.4 * f)) / (1 - Math.exp(-2.4));
+}
+function vlNew(m) {
+  var G = { m: m, t: 0, k: 0, tb: 0, T: 60 / (m.hr || 80), base: m.dia || 60, carry: null, prevAss: false, y: [0, 0, 0], v: 0, last: [0, 0, 0] };
+  G.T = vlBeatLen(G, 0);
+  return G;
+}
+function vlBeatLen(G, k) { var m = G.m, T = 60 / (m.hr || 80); if (m.rh === "afib") T *= 0.65 + 0.7 * vlRnd(k + 3); return T; }
+function vlAssisted(G, k) { var m = G.m; return m.ratio && m.aug ? (k % m.ratio === 0) : false; }
+/* returns [ecg, trace2, trace3] at time G.t, then advances */
+function vlStep(G, dt) {
+  var m = G.m;
+  G.t += dt;
+  if (G.t - G.tb >= G.T) {
+    /* end of beat: remember the pressure the next beat starts from */
+    G.base = G.endP; G.prevAss = vlAssisted(G, G.k); G.lateCarry = G.prevAss && m.def === "late";
+    G.tb += G.T; G.k++; G.T = vlBeatLen(G, G.k);
+  }
+  var tau = G.t - G.tb, T = G.T, k = G.k, ecg = vlEcg(tau, T, m.rh || "sinus", k);
+  var p2 = 0, p3 = 0, sys = m.sys || 100, dia = m.dia || 60;
+  if (m.rh === "lead") { /* no trigger: balloon idle, plain arterial */ }
+  if (m.dev === "pa") {
+    var t = m.pa || "pa", ps = m.ps || 30, pd = m.pd || 14;
+    if (t === "pa") p2 = vlArt(tau, T, G.base == null ? pd : Math.min(G.base, pd + 4), ps, pd);
+    else if (t === "rv") p2 = tau < 0.05 ? vlSmooth(G.rvEnd || 8, 8, tau / 0.05) : tau < 0.12 ? vlSmooth(8, ps, (tau - 0.05) / 0.07) : tau < 0.3 ? ps - 4 * (tau - 0.12) / 0.18 : tau < 0.38 ? vlSmooth(ps - 4, 2, (tau - 0.3) / 0.08) : 2 + 6 * (tau - 0.38) / Math.max(0.1, T - 0.38);
+    else { var mean = (ps + pd) / 2 - (t === "giantv" ? 6 : 0), va = t === "giantv" ? (ps - mean) : 3; p2 = mean + 2.5 * vlGauss(tau, T - 0.08, 0.05) + va * vlGauss(tau, 0.38, t === "giantv" ? 0.07 : 0.05) - 1.5 * vlGauss(tau, 0.2, 0.05); }
+    if (t === "rv") G.rvEnd = p2;
+    G.endP = p2;
+    return [ecg, p2, 0];
+  }
+  if (m.dev === "impella") {
+    var base0 = G.base == null ? dia : G.base;
+    if (m.plc === "lv") { p2 = tau < 0.05 ? vlSmooth(base0, 8, tau / 0.05) : tau < 0.15 ? vlSmooth(8, sys, (tau - 0.05) / 0.1) : tau < 0.32 ? vlSmooth(sys, sys - 8, (tau - 0.15) / 0.17) : tau < 0.42 ? vlSmooth(sys - 8, 6, (tau - 0.32) / 0.1) : 6 + 6 * (tau - 0.42) / Math.max(0.1, T - 0.42); }
+    else p2 = vlArt(tau, T, base0, sys, dia);
+    G.endP = p2;
+    p3 = m.mc === "flat" ? 0.5 : m.mc === "suck" ? 0.5 + 0.35 * Math.sin(tau * 9) * (vlRnd(k) > 0.4 ? 1 : 0.2) : 0.5 + 0.3 * Math.sin(2 * Math.PI * (tau - 0.1) / T);
+    return [ecg, p2, p3];
+  }
+  if (m.dev === "lvad" || m.dev === "ecmo") {
+    /* continuous flow: a pulse pressure of only a few mmHg */
+    p2 = dia + (sys - dia) * (0.5 + 0.5 * Math.sin(2 * Math.PI * (tau - 0.1) / T)) + (m.dev === "ecmo" && m.ecmo && m.ecmo.alarm === "Chatter" ? 2 * Math.sin(G.t * 31) : 0);
+    G.endP = p2; return [ecg, p2, 0];
+  }
+  /* arterial line, with or without a balloon pump */
+  var base = G.base == null ? dia : G.base, ass = vlAssisted(G, k) && m.rh !== "lead", s = sys;
+  if (G.prevAss && m.def === "ok" && m.aug) s = sys - 7;          /* assisted systole is lower after good deflation */
+  if (G.lateCarry) { base = Math.max(base, m.aug - 10); s = Math.max(sys, base + 3); }
+  var art = vlArt(tau, T, base, s, dia);
+  if (G.lateCarry && tau < 0.12) art = vlSmooth(base, s, tau / 0.12);
+  if (ass) {
+    var ti = m.inf === "early" ? 0.2 : m.inf === "late" ? 0.46 : 0.31, aug = m.aug, aedp = dia - 10;
+    var td = m.def === "early" ? ti + 0.45 * (T - ti) : m.def === "late" ? T + 1 : T - 0.07;
+    if (tau >= ti) {
+      var bal;
+      if (tau < ti + 0.05) bal = vlSmooth(Math.min(art, aug), aug, (tau - ti) / 0.05);
+      else bal = aug - 10 * (tau - ti) / Math.max(0.2, T - ti);
+      if (tau >= td) {
+        var drop = vlSmooth(bal, aedp, (tau - td) / 0.06);
+        if (m.def === "early") { var nat = vlArt(tau, T, base, s, dia); drop = tau - td < 0.06 ? drop : vlSmooth(aedp, nat, (tau - td - 0.06) / 0.18); }
+        bal = drop;
+      }
+      art = m.inf === "early" ? Math.max(art * 0.6 + bal * 0.4, bal) : Math.max(tau >= td ? -1e9 : art, bal);
+      if (tau >= td) art = bal;
+    }
+  }
+  if (m.ppv) art = art + (art - dia) * m.ppv * Math.sin(G.t * 2 * Math.PI / 4.2) * 1.2;
+  G.endP = art;
+  /* the tubing: over- and underdamping */
+  if (m.damp === "over") { G.y[1] += (art - G.y[1]) * Math.min(1, dt * 7); art = G.y[1]; }
+  else if (m.damp === "under") { var acc = 2200 * (art - G.y[1]) - 14 * G.v; G.v += acc * dt; G.y[1] += G.v * dt; art = G.y[1]; }
+  else G.y[1] = art;
+  return [ecg, art, 0];
+}
+function vlTraces(m) {
+  if (m.dev === "pa") return [["II", "#22c55e", -0.4, 1.2], ["PA", "#facc15", 0, 60]];
+  if (m.dev === "impella") return [["II", "#22c55e", -0.4, 1.2], ["Placement", "#f87171", 0, 130], ["Motor current", "#38bdf8", 0, 1]];
+  if (m.dev === "lvad" || m.dev === "ecmo") return [["II", "#22c55e", -0.4, 1.2], ["ART", "#f87171", 40, 120]];
+  return [["II", "#22c55e", -0.4, 1.2], ["ART" + (m.dev === "iabp" ? " · IABP 1:" + (m.ratio || 1) : ""), "#f87171", 40, 125]];
+}
+function vlLoop() {
+  var cv = document.getElementById("vlcv");
+  if (!cv || !VL.G) { VL.raf = 0; return; }
+  var now = performance.now(), dt = Math.min(0.1, (now - (VL.lt || now)) / 1000); VL.lt = now;
+  var ctx = cv.getContext("2d"), W = cv.width, H = cv.height, dpr = cv._dpr || 1, tr = vlTraces(VL.G.m), n = tr.length, wsum = 0.6 + (n - 1), LH = tr.map(function (r, i) { return H * (i === 0 ? 0.6 : 1) / wsum; }), LT = LH.map(function (h, i) { return LH.slice(0, i).reduce(function (a, b) { return a + b; }, 0); });
+  var speed = 70 * dpr, steps = Math.max(1, Math.round(dt * speed));
+  for (var s = 0; s < steps; s++) {
+    var v = vlStep(VL.G, dt / steps), x = VL.x || 0;
+    ctx.fillStyle = "#05070d"; ctx.fillRect(x, 0, 14 * dpr, H);
+    for (var i = 0; i < n; i++) {
+      var r = tr[i], y = LT[i] + LH[i] - 6 * dpr - (v[i] - r[2]) / (r[3] - r[2]) * (LH[i] - 18 * dpr);
+      var py = VL.py && VL.py[i] != null ? VL.py[i] : y;
+      ctx.strokeStyle = r[1]; ctx.lineWidth = 2 * dpr; ctx.beginPath(); ctx.moveTo(x - 1, py); ctx.lineTo(x, y); ctx.stroke();
+      VL.py = VL.py || []; VL.py[i] = y;
+    }
+    VL.x = x + 1; if (VL.x >= W) { VL.x = 0; VL.py = null; }
+  }
+  /* labels stay on top */
+  ctx.font = (11 * dpr) + "px system-ui,sans-serif";
+  for (var j = 0; j < n; j++) { ctx.fillStyle = "#05070d"; ctx.fillRect(0, LT[j] + 2 * dpr, ctx.measureText(tr[j][0]).width + 10 * dpr, 15 * dpr); ctx.fillStyle = tr[j][1]; ctx.fillText(tr[j][0], 4 * dpr, LT[j] + 13 * dpr); }
+  try { vlEngine(VL.G); } catch (e) {}
+  VL.raf = requestAnimationFrame(vlLoop);
+}
+/* ---------- the engine view (owner, Nov 19 2026: "engines to showcase what's happening in all of the specialized
+   equipment, such as the preload and afterload, just to have a visual") ----------
+   A moving cut-away of the heart and aorta, in step with the monitor: the ventricle fills (preload) and
+   squeezes, blood streams out, and the device does its job where it really sits. Four gauges read
+   preload, afterload, coronary flow and forward output for the state on the screen. */
+function vlGauges(m) {
+  var g = { pre: 0.5, aft: 0.5, cor: 0.5, out: 0.5 };
+  if (m.dev === "iabp") {
+    var on = m.aug && m.rh !== "lead";
+    g.aft = !on ? 0.75 : m.def === "late" ? 0.9 : m.def === "early" ? 0.7 : 0.35;
+    g.cor = !on ? 0.4 : m.inf === "late" ? 0.5 : m.def === "early" ? 0.45 : 0.85;
+    g.out = !on ? 0.35 : m.inf === "early" || m.def === "late" ? 0.4 : 0.65; g.pre = 0.65;
+  } else if (m.dev === "impella") {
+    g.pre = m.mc === "suck" ? 0.12 : (m.num && +String(m.num.CVP || 8) > 15) ? 0.25 : 0.4;
+    g.aft = 0.45; g.out = m.plc === "lv" ? 0.3 : m.mc === "suck" ? 0.3 : 0.7; g.cor = g.out;
+  } else if (m.dev === "lvad") {
+    var fl = parseFloat((m.lvad || {}).flow) || 4; g.pre = fl < 3.3 ? 0.18 : 0.5; g.out = Math.min(1, fl / 6.5); g.aft = (m.sys + 2 * m.dia) / 3 > 90 ? 0.75 : 0.45; g.cor = 0.55;
+  } else if (m.dev === "ecmo") {
+    g.pre = 0.35; g.aft = 0.9; g.out = Math.min(1, (parseFloat((m.ecmo || {}).flow) || 4) / 5); g.cor = 0.45;
+  } else if (m.dev === "pa") {
+    g.pre = m.pa === "giantv" ? 0.85 : 0.65; g.aft = 0.7; g.out = 0.45; g.cor = 0.5;
+  } else { g.pre = m.ppv && m.ppv > 0.12 ? 0.25 : 0.55; g.aft = m.sys > 130 ? 0.7 : 0.45; g.out = 0.55; g.cor = 0.55; }
+  return g;
+}
+function vlEngine(G) {
+  var cv = document.getElementById("vleng"); if (!cv) return;
+  if (!cv._dpr) { var dp = Math.min(2, window.devicePixelRatio || 1), rr = cv.getBoundingClientRect(); cv.width = Math.round(rr.width * dp); cv.height = Math.round(rr.height * dp); cv._dpr = dp; }
+  var c = cv.getContext("2d"), W = cv.width, H = cv.height, dpr = cv._dpr, m = G.m, tau = G.t - G.tb, T = G.T;
+  c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, W, H);
+  var sys = m.rh === "vt" ? 0.5 + 0.5 * Math.sin(2 * Math.PI * tau / T) : tau < 0.05 ? 0 : tau < 0.3 ? Math.sin(Math.PI * (tau - 0.05) / 0.5) : Math.max(0, 1 - (tau - 0.3) / 0.12) * Math.sin(Math.PI * 0.25 / 0.5);
+  var gz = m.gz || vlGauges(m);
+  /* gauges on the left */
+  var GL = [["Preload", gz.pre, "#38bdf8"], ["Afterload", gz.aft, "#f87171"], ["Coronary flow", gz.cor, "#facc15"], ["Output", gz.out, "#4ade80"]], gw = Math.min(W * 0.27, 130 * dpr), gx = 6 * dpr;
+  c.textAlign = "left"; c.font = "700 " + (11 * dpr) + "px system-ui,sans-serif";
+  GL.forEach(function (g, j) { var y = 18 * dpr + j * 34 * dpr; G["g" + j] = (G["g" + j] == null ? g[1] : G["g" + j] + (g[1] - G["g" + j]) * 0.05); c.fillStyle = "#cbd5e1"; c.fillText(g[0], gx, y); c.fillStyle = "#1f2937"; c.fillRect(gx, y + 5 * dpr, gw, 8 * dpr); c.fillStyle = g[2]; c.fillRect(gx, y + 5 * dpr, gw * G["g" + j], 8 * dpr); });
+  var tag = m.tag ? m.tag : m.dev === "iabp" ? (m.def === "late" ? "Late deflation: the heart pushes against the balloon" : m.inf === "early" ? "Early inflation: the balloon shuts the valve early" : m.def === "early" ? "Early deflation: the benefit is lost before systole" : m.inf === "late" ? "Late inflation: part of diastole is wasted" : !m.aug || m.rh === "lead" ? "Balloon idle" : "Up in diastole, down just before systole")
+    : m.dev === "impella" ? (m.plc === "lv" ? "Outlet inside the LV: blood goes round in a circle" : m.mc === "suck" ? "Empty LV: the inlet sucks on the wall" : "Pulls blood out of the LV, pushes it into the aorta")
+    : m.dev === "lvad" ? "Spins nonstop: blood leaves the apex, enters the aorta" : m.dev === "ecmo" ? "Blood is pumped backwards up the aorta: higher afterload" : m.dev === "pa" ? "Where the catheter tip sits" : "Transducer height and tubing change the numbers";
+  c.fillStyle = "#e2e8f0"; c.font = "600 " + (11 * dpr) + "px system-ui,sans-serif";
+  (function wrap(t, x, y, mw) { var words = t.split(" "), line = ""; words.forEach(function (w) { var tt = line ? line + " " + w : w; if (c.measureText(tt).width > mw && line) { c.fillText(line, x, y); y += 14 * dpr; line = w; } else line = tt; }); c.fillText(line, x, y); })(tag, gx, 18 * dpr + 4 * 34 * dpr + 4 * dpr, gw + 10 * dpr);
+  /* the heart scene in design units (300 x 230) on the right */
+  var x0 = gw + 18 * dpr, sw = W - x0, s = Math.min(sw / 300, H / 230);
+  c.setTransform(s, 0, 0, s, x0 + (sw - 300 * s) / 2, (H - 230 * s) / 2);
+  var cx = 95, cy = 165, aoX = 108, aoTop = 22, dX = 205, root = 128;
+  c.lineCap = "round"; c.strokeStyle = "#7f1d1d"; c.lineWidth = 26;
+  c.beginPath(); c.moveTo(aoX, root); c.lineTo(aoX, aoTop + 28); c.quadraticCurveTo(aoX, aoTop, aoX + 40, aoTop); c.lineTo(dX - 30, aoTop); c.quadraticCurveTo(dX, aoTop, dX, aoTop + 30); c.lineTo(dX, 240); c.stroke();
+  c.strokeStyle = "#b91c1c"; c.lineWidth = 19; c.stroke();
+  var fill = 0.78 + 0.32 * gz.pre, k = fill * (1 - 0.28 * sys);
+  if (m.dev === "impella" && m.mc === "suck") k *= 0.82 + 0.1 * Math.sin(G.t * 9);
+  c.fillStyle = "#4c0519"; c.beginPath(); c.ellipse(cx, cy, 62 * k, 44 * k, -0.45, 0, Math.PI * 2); c.fill();
+  c.fillStyle = "#e11d48"; c.beginPath(); c.ellipse(cx, cy, 51 * k, 35 * k, -0.45, 0, Math.PI * 2); c.fill();
+  c.fillStyle = "rgba(255,255,255,.9)"; c.font = "800 12px system-ui,sans-serif"; c.textAlign = "center"; c.fillText("LV", cx - 6, cy + 5);
+  var vo = sys > 0.15 && m.dev !== "ecmo"; c.strokeStyle = "#fde68a"; c.lineWidth = 3;
+  c.beginPath(); c.moveTo(aoX - 10, root); c.lineTo(aoX - (vo ? 10 : 1), root - (vo ? 16 : 7)); c.moveTo(aoX + 10, root); c.lineTo(aoX + (vo ? 10 : 1), root - (vo ? 16 : 7)); c.stroke();
+  var L1 = root - aoTop, L2 = dX - aoX, L3 = 240 - aoTop, tot = L1 + L2 + L3;
+  var path = function (f) { var d = f * tot; if (d < L1) return [aoX, root - d]; d -= L1; if (d < L2) return [aoX + d, aoTop]; d -= L2; return [dX, aoTop + d]; };
+  G.parts = G.parts || []; while (G.parts.length < 30) G.parts.push(Math.random());
+  var push = m.dev === "lvad" || m.dev === "impella" ? 0.15 + 0.4 * gz.out * (m.plc === "lv" ? 0.2 : 1) : 0;
+  var beat = m.dev === "ecmo" ? -0.3 * gz.out : (m.dev === "lvad" ? 0.1 : 1) * 0.9 * sys * (0.4 + gz.out);
+  if (m.dev === "iabp" && G.bal > 0.5) beat -= 0.25;   /* the balloon pushes blood back toward the root and the coronaries */
+  for (var i = 0; i < G.parts.length; i++) {
+    G.parts[i] += (beat + push) * 0.012; if (G.parts[i] > 1) G.parts[i] -= 1; if (G.parts[i] < 0) G.parts[i] += 1;
+    var p = path(G.parts[i]); c.fillStyle = "#fee2e2"; c.beginPath(); c.arc(p[0], p[1], 2.6, 0, Math.PI * 2); c.fill();
+  }
+  var corOn = (1 - sys) * gz.cor; c.strokeStyle = "rgba(250,204,21," + (0.2 + 0.8 * corOn) + ")"; c.lineWidth = 4;
+  c.beginPath(); c.moveTo(aoX - 12, root - 12); c.quadraticCurveTo(cx - 60, root - 14, cx - 58, cy - 10); c.stroke();
+  c.fillStyle = "#fde68a"; c.font = "700 10px system-ui,sans-serif"; c.textAlign = "right"; c.fillText("coronaries", aoX - 18, root - 20);
+  c.textAlign = "center"; c.font = "800 10px system-ui,sans-serif";
+  if (m.dev === "iabp") {
+    var ass = m.ratio && m.aug && m.rh !== "lead" && (G.k % m.ratio === 0), ti = m.inf === "early" ? 0.2 : m.inf === "late" ? 0.46 : 0.31, td = m.def === "early" ? ti + 0.45 * (T - ti) : m.def === "late" ? T + 0.12 : T - 0.07;
+    var up = ass && tau >= ti && tau < td ? 1 : (G.prevAss && m.def === "late" && tau < 0.12 ? 1 : 0);
+    G.bal = (G.bal || 0) + (up - (G.bal || 0)) * 0.35;
+    c.fillStyle = "#c084fc"; c.beginPath(); c.ellipse(dX, 120, 3 + 7 * G.bal, 50, 0, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = "#a855f7"; c.lineWidth = 2; c.beginPath(); c.moveTo(dX, 170); c.lineTo(dX, 232); c.stroke();
+    c.fillStyle = G.bal > 0.5 ? "#f5d0fe" : "#94a3b8"; c.textAlign = "left"; c.fillText(G.bal > 0.5 ? "BALLOON UP" : "balloon down", dX + 16, 124);
+  } else if (m.dev === "impella") {
+    var deep = m.plc === "lv", oy = deep ? root + 22 : root - 26, iy = deep ? cy + 18 : cy - 4;
+    c.strokeStyle = "#38bdf8"; c.lineWidth = 6; c.beginPath(); c.moveTo(aoX, oy); c.lineTo(aoX - 8, iy); c.stroke();
+    c.fillStyle = "#0ea5e9"; c.beginPath(); c.arc(aoX, oy, 5, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = "#38bdf8"; c.lineWidth = 2; c.beginPath(); c.moveTo(aoX, oy); c.lineTo(aoX, aoTop + 6); c.lineTo(aoX + 30, aoTop - 18); c.stroke();
+    c.fillStyle = deep ? "#fca5a5" : "#bae6fd"; c.textAlign = "left"; c.fillText(deep ? "outlet in the LV!" : "outlet in the aorta", aoX + 16, oy + 4);
+  } else if (m.dev === "lvad") {
+    var px = cx - 30, py = cy + 44, ang = G.t * 18 * gz.out;
+    c.strokeStyle = "#38bdf8"; c.lineWidth = 6; c.beginPath(); c.moveTo(px - 14, py); c.quadraticCurveTo(10, 120, aoX - 12, aoTop + 40); c.stroke();
+    c.fillStyle = "#0369a1"; c.beginPath(); c.arc(px, py, 13, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = "#7dd3fc"; c.lineWidth = 2; for (var b = 0; b < 3; b++) { var aa = ang + b * 2.09; c.beginPath(); c.moveTo(px, py); c.lineTo(px + Math.cos(aa) * 10, py + Math.sin(aa) * 10); c.stroke(); }
+    c.fillStyle = "#bae6fd"; c.textAlign = "left"; c.fillText("LVAD", px + 16, py + 4);
+  } else if (m.dev === "ecmo") {
+    c.fillStyle = "#0f766e"; c.fillRect(250, 95, 40, 54); c.fillStyle = "#99f6e4"; c.fillText("ECMO", 270, 126);
+    c.strokeStyle = "#2dd4bf"; c.lineWidth = 4; c.beginPath(); c.moveTo(270, 149); c.lineTo(270, 222); c.lineTo(dX + 8, 222); c.stroke();
+    c.strokeStyle = "#60a5fa"; c.beginPath(); c.moveTo(270, 95); c.lineTo(270, 60); c.lineTo(240, 60); c.stroke();
+    c.fillStyle = "#93c5fd"; c.textAlign = "left"; c.fillText("from the vein", 222, 52); c.fillText("up the aorta", 220, 214);
+  } else if (m.dev === "pa") {
+    var tip = m.pa === "rv" ? [cx + 50, cy + 26] : m.pa === "wedge" ? [24, 50] : [42, 72];
+    c.strokeStyle = "#facc15"; c.lineWidth = 3; c.beginPath(); c.moveTo(290, 10); c.quadraticCurveTo(250, 210, cx + 50, cy + 26); if (m.pa !== "rv") c.quadraticCurveTo(cx - 10, cy - 70, tip[0], tip[1]); c.stroke();
+    c.fillStyle = "#fde047"; c.beginPath(); c.arc(tip[0], tip[1], 5, 0, Math.PI * 2); c.fill(); c.textAlign = "left";
+    c.fillText(m.pa === "rv" ? "tip in the RV" : m.pa === "wedge" ? "tip wedged" : m.pa === "giantv" ? "wedged: big v waves" : "tip in the PA", tip[0] + 8, tip[1] - 8);
+  } else {
+    var low = m.sys > 135 ? 34 : 0;
+    c.strokeStyle = "#94a3b8"; c.setLineDash([4, 4]); c.lineWidth = 1.5; c.beginPath(); c.moveTo(cx, cy - 10); c.lineTo(296, cy - 10); c.stroke(); c.setLineDash([]);
+    c.fillStyle = "#f87171"; c.fillRect(236, cy - 18 + low, 36, 16); c.fillStyle = "#fecaca"; c.textAlign = "center"; c.fillText(low ? "transducer LOW" : "heart level", 250, cy - 24 + low);
+    if (m.damp && m.damp !== "ok") c.fillText(m.damp === "over" ? "soft, damped line" : "ringing line", 255, 60);
+  }
+  c.setTransform(1, 0, 0, 1, 0, 0);
+}
+function vlStart(m) {
+  var cv = document.getElementById("vlcv"); if (!cv) return;
+  var dpr = Math.min(2, window.devicePixelRatio || 1), r = cv.getBoundingClientRect();
+  if (cv.width !== Math.round(r.width * dpr)) { cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr); VL.x = 0; VL.py = null; var c2 = cv.getContext("2d"); c2.fillStyle = "#05070d"; c2.fillRect(0, 0, cv.width, cv.height); }
+  cv._dpr = dpr;
+  if (!VL.G || VL.mKey !== JSON.stringify(m)) { var keep = VL.G; VL.G = vlNew(m); if (keep) { VL.G.y = keep.y; } VL.mKey = JSON.stringify(m); }
+  if (!VL.raf) { VL.lt = 0; VL.raf = requestAnimationFrame(vlLoop); }
+}
+/* the numbers beside the sweep */
+function vlNums(m) {
+  var map = Math.round(((m.sys || 0) + 2 * (m.dia || 0)) / 3), out = [["HR", m.rh === "lead" ? "--" : m.hr, "#22c55e"]];
+  if (m.dev === "pa") { out.push(["ART", m.sys + "/" + m.dia + " (" + map + ")", "#f87171"]); out.push([m.pa === "wedge" || m.pa === "giantv" ? "PAOP" : m.pa === "rv" ? "RV" : "PA", m.pa === "wedge" || m.pa === "giantv" ? Math.round((m.ps + m.pd) / 2) + (m.pa === "giantv" ? " (v " + m.ps + ")" : "") : m.ps + "/" + m.pd, "#facc15"]); }
+  else out.push(["ART", m.sys + "/" + m.dia + " (" + map + ")", "#f87171"]);
+  if (m.dev === "iabp") { out.push(["Assist", "1:" + (m.ratio || 1), "#c084fc"]); out.push(["Aug", m.aug ? m.aug : "--", "#c084fc"]); out.push(["Trigger", m.rh === "lead" ? "None" : m.rh === "afib" ? "ECG AF" : "ECG", "#c084fc"]); }
+  if (m.lvad) { out.push(["Speed", m.lvad.spd + " rpm", "#38bdf8"]); out.push(["Flow", m.lvad.flow + " L/min", "#38bdf8"]); out.push(["Power", m.lvad.pwr + " W", "#38bdf8"]); out.push(["PI", m.lvad.pi, "#38bdf8"]); }
+  if (m.ecmo) { out.push(["RPM", m.ecmo.rpm, "#38bdf8"]); out.push(["Flow", m.ecmo.flow + " L/min", "#38bdf8"]); out.push(["Sweep", m.ecmo.sweep + " L/min", "#38bdf8"]); out.push(["Post-oxy PaO2", m.ecmo.post, "#38bdf8"]); if (m.ecmo.alarm) out.push(["Alarm", m.ecmo.alarm, "#ef4444"]); }
+  Object.keys(m.num || {}).forEach(function (k) { out.push([k, m.num[k], k === "Alarm" ? "#ef4444" : "#e5e7eb"]); });
+  return '<div class="vlnums">' + out.map(function (o) { return '<span class="vln' + (o[0] === "Alarm" ? " alarm" : "") + '" style="--vc:' + o[2] + '"><small>' + esc(String(o[0])) + '</small><b>' + esc(String(o[1])) + '</b></span>'; }).join("") + '</div>';
+}
+function vlMerge(a, b) { var o = {}, k; for (k in a) o[k] = a[k]; for (k in (b || {})) o[k] = b[k]; return o; }
+function vlState() {
+  var L = S.vlab, lab = L && VLABS.filter(function (x) { return x.id === L.id; })[0]; if (!lab) return null;
+  var st = lab.steps[Math.min(L.i, lab.steps.length - 1)], m = vlMerge({ dev: lab.dev }, st.m);
+  if (L.ans != null) m = vlMerge(m, L.ok ? st.r : st.wr);
+  return { lab: lab, st: st, m: m };
+}
+
+/* ---------- the view ---------- */
+function vlabView() {
+  if (!vlOk()) return '<div class="empty">The Virtual Lab is in Flight Paramedic, Flight Nurse, ICU and medical levels.</div>';
+  if (S.sb) return sbView();
+  var L = S.vlab;
+  if (!L) {
+    VL.G = null;
+    return '<div class="sbmodes">' +
+      (vlEmerg() ? '<button class="sbmode m1" data-sbgo="random"><span class="sbpic">' + SB_PIC.amb + '</span><span class="sbmt"><em>Incoming</em><strong>Trauma Bay: Unknown Patient</strong><span>EMS is rolling in with a surprise emergency. Assess him, put on what you need, treat him, keep him alive.</span></span></button>'
+        : '<button class="sbmode m1 m3" data-sbgo="random"><span class="sbpic">' + SB_PIC.bed + '</span><span class="sbmt"><em>Rapid response</em><strong>Your Patient Is Changing</strong><span>Your patient on the floor suddenly looks worse. Assess him, put on what you need and treat him before it turns into a code.</span></span></button>') +
+      '<button class="sbmode m2" data-sbgo="free"><span class="sbpic">' + SB_PIC.mon + '</span><span class="sbmt"><em>Open</em><strong>Simulation Lab: Build Your Own</strong><span>A stable patient on the stretcher. Hook up any line or device, run any drip, and watch the physiology change.</span></span></button></div>' +
+      '<h3 class="ctpracth">Pick a patient</h3><div class="sbcases">' + SB_CASES.map(function (x) { return '<button class="sbcase sc-' + x.id + '" data-sbgo="' + x.id + '"><span class="sbcpic">' + (SB_PIC[x.id] || SB_PIC.heart) + '</span><span><span class="vltag">' + esc(x.tag) + '</span><strong>' + esc(x.name) + '</strong></span></button>'; }).join("") + '</div>' +
+      (!vlGuided() ? '' : '<h3 class="ctpracth">Guided labs</h3><p class="muted">The Great Bug is hooked up to a real device. Watch the live monitor, answer what it is telling you, and the screen changes with your decisions. Tap him to see where every line goes.</p><div class="vlgrid">' +
+      VLABS.map(function (x, i) { var best = (Prog.d.vlab || {})[x.id]; return '<button class="vlcard" data-vlgo="' + x.id + '" style="' + (typeof ctGrad === "function" ? ctGrad(i + 1) : "") + '"><span class="vltag">' + esc(x.tag) + '</span><strong>' + esc(x.title) + '</strong><span>' + esc(x.blurb) + '</span><em>' + x.steps.length + ' questions' + (best != null ? ' · best ' + best + '/' + x.steps.length : '') + '</em></button>'; }).join("") + '</div>') +
+      '<p class="muted small">Fictional practice only. Device settings and alarms vary by manufacturer; follow your program\'s protocols.</p>';
+  }
+  var V = vlState(); if (!V) { S.vlab = null; return vlabView(); }
+  var lab = V.lab, c = '<div class="vlwrap"><button class="linkish subback" data-vlback="1">&larr; All labs</button><h2 class="vltitle">' + esc(lab.title) + '</h2>';
+  c += '<div class="vlstage"><div class="bm3d scene" data-ctx="lab"><div class="bm3dfb"><p class="muted small">Your browser cannot show The Great Bug in 3D.</p></div>' +
+    '<div class="bm3dsr">' + Object.keys(lab.exam).map(function (p) { return '<button type="button" data-vlpart="' + p + '">Check ' + esc((D3_LABEL[p] || p).toLowerCase()) + '</button>'; }).join("") + '</div>' +
+    '<p class="bm3dhint" aria-hidden="true">Drag to turn him · tap to see the lines</p></div></div>';
+  c += '<div class="vlmon" aria-label="Live monitor"><div class="vlmhead"><span class="vldev">' + esc(lab.tag) + '</span><span class="vllive"><i></i>LIVE</span></div><canvas id="vlcv" class="vlcv vlh' + vlTraces(V.m).length + '" aria-hidden="true"></canvas>' + vlNums(V.m) + '</div><div class="vleng"><div class="vlmhead"><span class="vldev">Inside him</span><span class="muted small">preload, afterload and the device, live</span></div><canvas id="vleng" class="vlengcv" aria-hidden="true"></canvas></div>';
+  if (L.i >= lab.steps.length) {
+    var pct = Math.round(100 * L.right / lab.steps.length);
+    return c + '<section class="labdrill"><h3>' + L.right + ' of ' + lab.steps.length + ' right</h3><p>' + (pct === 100 ? "Perfect run. The Great Bug made it to the receiving unit in better shape." : pct >= 60 ? "Good work. Look back at the ones that tripped you up." : "Tough lab. Run it again: the monitor will be waiting.") + (L.earned ? ' <span class="earned">+' + L.earned + ' sticks</span>' : '') + '</p><div class="actions"><button class="btn" data-vlgo="' + lab.id + '">Run it again</button><button class="btn ghost" data-vlback="1">All labs</button></div></section></div>';
+  }
+  var st = V.st;
+  if (!L.order) L.order = shuffle([st.a].concat(st.w));
+  c += '<section class="labdrill vlq"><div class="muted small">Question ' + (L.i + 1) + ' of ' + lab.steps.length + '</div>' + (L.i === 0 ? '<p class="vignette">' + esc(lab.intro) + '</p>' : '') + '<p class="qstem">' + esc(st.q) + '</p><div class="opts">' +
+    L.order.map(function (o, i) { var cls = L.ans == null ? "" : o === st.a ? " right" : i === L.ans ? " wrong" : ""; return '<button class="opt' + cls + '" data-vlopt="' + i + '"' + (L.ans != null ? ' disabled' : '') + '>' + esc(o) + '</button>'; }).join("") + '</div>';
+  if (L.ans != null) c += '<div class="explain ' + (L.ok ? "ok" : "bad") + '"><strong>' + (L.ok ? "Correct. Watch the monitor change." : "Not quite. Correct answer: " + esc(st.a)) + '</strong><p>' + esc(st.x) + '</p></div><div class="actions"><button class="btn" data-vlnext="1">' + (L.i + 1 < lab.steps.length ? "Next question" : "See results") + '</button></div>';
+  return c + '</section></div>';
+}
+function vlAfter() { try { var V = vlState(); if (V && document.getElementById("vlcv")) vlStart(V.m); else VL.G = null; } catch (e) {} }
+if (typeof render === "function") (function () { var r0 = render; render = function () { var v = r0.apply(this, arguments); vlAfter(); return v; }; })();
+function vlClick(t, a) {
+  if (typeof sbClick === "function" && sbClick(t, a)) return true;
+  if (a.vlgo) { S.vlab = { id: a.vlgo, i: 0, ans: null, right: 0, earned: 0 }; VL.G = null; render(); window.scrollTo(0, 0); return true; }
+  if (a.vlback) { S.vlab = null; VL.G = null; render(); window.scrollTo(0, 0); return true; }
+  if (a.vlopt != null && S.vlab) {
+    var L = S.vlab, V = vlState(); if (!V || L.ans != null) return true;
+    L.ans = +a.vlopt; L.ok = L.order[L.ans] === V.st.a; if (L.ok) { L.right++; try { earn(1); L.earned++; } catch (e) {} }
+    try { feedback(L.ok); } catch (e) {}
+    render(); return true;
+  }
+  if (a.vlnext && S.vlab) {
+    var L2 = S.vlab, lab = VLABS.filter(function (x) { return x.id === L2.id; })[0];
+    L2.i++; L2.ans = null; L2.order = null;
+    if (lab && L2.i >= lab.steps.length) { var B = Prog.d.vlab || (Prog.d.vlab = {}); B[lab.id] = Math.max(B[lab.id] || 0, L2.right); if (L2.right === lab.steps.length) { try { earn(3); L2.earned += 3; } catch (e) {} } try { saveProg(); } catch (e) {} }
+    render(); var q = document.querySelector(".vlmon"); if (q) try { q.scrollIntoView({ block: "start", behavior: "smooth" }); } catch (e) {}
+    return true;
+  }
+  if (a.vlpart) { vlTap(a.vlpart, null, null); return true; }
+  return false;
+}
+function vlTap(part, x, y) {
+  var V = vlState(); if (!V) return;
+  var txt = V.lab.exam[part] || V.lab.exam[{ armL: "armR", armR: "armL", legL: "legR", legR: "legL" }[part]] && "Nothing attached here." || "Nothing attached here.";
+  var host = document.querySelector(".bm3d.live") || document.querySelector(".bm3d");
+  if (host && x != null) d3Pop(host, txt, x, y);
+  else { var r = host && host.getBoundingClientRect(); if (host) d3Pop(host, txt, r.left + r.width / 2, r.top + r.height / 3); }
+  try { if (typeof D3GL !== "undefined") D3GL.flash(part); } catch (e) {}
+}
+
+/* ===== Virtual Lab sandbox (owner, Nov 19 2026: "Make the lab a sandbox where you can do randomized scenarios or
+   you can hook him up to whatever you want and give whatever medication you want. Add sound. Show him on a
+   stretcher on an actual monitor.") =====
+   A small physiology engine drives everything: heart rate, contractility, volume, SVR, PVR, right heart
+   function, tamponade and lung function make the cardiac output, pressures, saturation and lactate. Drips
+   titrate Off / Low / Medium / High (no doses: this is a teaching model, not a dosing tool), pushes act once
+   and fade, devices add or change flow, and the monitor, the "inside him" engine and the sounds all follow. */
+var SB_PI = Math.PI;
+function sbPose(o2) {
+  var k = o2 || "ra"; SB_POSES[k] = SB_POSES[k] || { props: (function () { var p = { stretcher: 1, pump: 1 }; if (k === "nc") p.nc = 1; if (k === "nrb") p.nrb = 1; if (k === "bvm" || k === "vent") p.bvm = 1; return p; })(),
+    pose: { hips: [-SB_PI / 2, 0, SB_PI / 2], drop: -0.06, hipx: 0.15, shL: [0, 0, -0.1], shR: [0, 0, 0.1] }, ang: 0.35, cam: { eye: [0.5, 2.4, 4.6], at: [0, 0.8, 0], fov: 0.6 }, breath: { rate: 1.6, amp: 0.02, acc: 0.3 } };
+  return SB_POSES[k];
+}
+var SB_POSES = {};
+LAB_POSE = sbPose("ra");
+
+/* ---------- patients ---------- */
+
+/* little pictures for the lab menu (owner, Nov 19 2026: "more realistic... a little picture near the titles") */
+var SB_PIC = (function () {
+  function svg(inner) { return '<svg viewBox="0 0 64 64" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + inner + '</svg>'; }
+  return {
+    amb: svg('<rect x="4" y="20" width="36" height="24" rx="3" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/><path d="M40 26h10l8 9v9H40z" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/><path d="M44 29h6l5 6h-11z" fill="#93c5fd"/><rect x="4" y="34" width="54" height="3" fill="#dc2626"/><path d="M22 25v12M16 31h12" stroke="#dc2626" stroke-width="4"/><circle cx="16" cy="46" r="5" fill="#1f2937" stroke="#94a3b8" stroke-width="2"/><circle cx="48" cy="46" r="5" fill="#1f2937" stroke="#94a3b8" stroke-width="2"/><rect x="14" y="15" width="10" height="5" rx="1.5" fill="#ef4444"/><rect x="24" y="15" width="10" height="5" rx="1.5" fill="#3b82f6"/>'),
+    mon: svg('<rect x="6" y="8" width="52" height="38" rx="5" fill="#334155" stroke="#94a3b8" stroke-width="2"/><rect x="10" y="12" width="44" height="30" rx="2" fill="#020617"/><path d="M12 24h7l3-6 4 12 3-6h6" stroke="#22c55e" stroke-width="2"/><path d="M12 34c3-5 5-5 8 0s5 5 8 0 5-5 8 0" stroke="#f87171" stroke-width="2"/><text x="40" y="25" fill="#22c55e" font-size="8" font-family="monospace" font-weight="700">88</text><text x="40" y="37" fill="#38bdf8" font-size="8" font-family="monospace" font-weight="700">98</text><path d="M28 46v8M20 56h24" stroke="#94a3b8" stroke-width="3"/>'),
+    bed: svg('<rect x="6" y="30" width="52" height="8" rx="3" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/><rect x="8" y="24" width="14" height="8" rx="3" fill="#bfdbfe"/><path d="M6 20v32M58 30v22" stroke="#94a3b8" stroke-width="3"/><path d="M24 30c4-6 26-6 30 0" fill="#93c5fd"/><path d="M40 8h12v12H40z" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/><path d="M46 10v8M42 14h8" stroke="#dc2626" stroke-width="2.5"/>'),
+    heart: svg('<path d="M32 54S10 41 10 25a11 11 0 0 1 22-4 11 11 0 0 1 22 4c0 16-22 29-22 29z" fill="#ef4444"/><path d="M14 30h9l3-6 5 12 3-6h12" stroke="#fff" stroke-width="2.5"/>'),
+    sepsis: svg('<rect x="27" y="8" width="10" height="36" rx="5" fill="#f1f5f9" stroke="#94a3b8" stroke-width="2"/><circle cx="32" cy="48" r="9" fill="#ef4444" stroke="#94a3b8" stroke-width="2"/><rect x="30" y="18" width="4" height="26" fill="#ef4444"/><path d="M44 14c3 3 3 7 0 10M48 10c5 5 5 13 0 18" stroke="#f97316" stroke-width="2.5"/>'),
+    cardio: svg('<path d="M32 54S10 41 10 25a11 11 0 0 1 22-4 11 11 0 0 1 22 4c0 16-22 29-22 29z" fill="#b91c1c"/><path d="M32 22l-4 10h7l-5 12" stroke="#fde047" stroke-width="3"/>'),
+    bleed: svg('<path d="M32 8s16 18 16 30a16 16 0 0 1-32 0C16 26 32 8 32 8z" fill="#dc2626"/><path d="M24 40a8 8 0 0 0 8 8" stroke="#fecaca" stroke-width="3"/>'),
+    rvmi: svg('<path d="M32 54S10 41 10 25a11 11 0 0 1 22-4 11 11 0 0 1 22 4c0 16-22 29-22 29z" fill="#7f1d1d"/><path d="M12 24a11 11 0 0 1 20-3v30C24 46 12 37 12 24z" fill="#3b82f6"/><text x="16" y="36" fill="#fff" font-size="11" font-weight="800" font-family="system-ui">RV</text>'),
+    tamp: svg('<circle cx="32" cy="32" r="22" fill="#fca5a5" stroke="#b91c1c" stroke-width="2"/><path d="M32 46S20 39 20 30a6 6 0 0 1 12-2 6 6 0 0 1 12 2c0 9-12 16-12 16z" fill="#b91c1c"/><path d="M14 20l6 4M50 20l-6 4M14 44l6-4M50 44l-6-4" stroke="#7f1d1d" stroke-width="2.5"/>'),
+    pe: svg('<path d="M30 10v14c-8 2-18 10-18 24 0 4 4 6 8 4 6-3 10-12 10-20M34 10v14c8 2 18 10 18 24 0 4-4 6-8 4-6-3-10-12-10-20" fill="#fda4af" stroke="#be123c" stroke-width="2"/><circle cx="40" cy="30" r="5" fill="#450a0a"/>'),
+    ana: svg('<ellipse cx="32" cy="34" rx="10" ry="14" fill="#facc15" stroke="#1f2937" stroke-width="2"/><path d="M23 30h18M22 38h20" stroke="#1f2937" stroke-width="4"/><path d="M24 22c-8-10-16-6-14 0s10 6 14 4M40 22c8-10 16-6 14 0s-10 6-14 4" fill="#e0f2fe" stroke="#7dd3fc" stroke-width="1.5"/><path d="M32 48v8" stroke="#1f2937" stroke-width="2.5"/>'),
+    afrvr: svg('<rect x="6" y="14" width="52" height="36" rx="4" fill="#020617"/><path d="M8 34l4-1 3 2 2-14 2 20 3-6 3 2 3-1 2-12 2 18 2-5 4 1 2-10 2 14 3-3 3 1" stroke="#22c55e" stroke-width="2"/>'),
+    chb: svg('<rect x="6" y="14" width="52" height="36" rx="4" fill="#020617"/><path d="M8 34h5l1-3 1 3h8l2-12 2 18 2-6h12l1-3 1 3h9" stroke="#22c55e" stroke-width="2"/><text x="38" y="26" fill="#f87171" font-size="9" font-weight="800" font-family="monospace">34</text>'),
+    htn: svg('<circle cx="32" cy="34" r="20" fill="#f8fafc" stroke="#94a3b8" stroke-width="2"/><path d="M18 40a16 16 0 0 1 28 0" stroke="#e2e8f0" stroke-width="4"/><path d="M32 34l12-12" stroke="#dc2626" stroke-width="3.5"/><circle cx="32" cy="34" r="3" fill="#1f2937"/><path d="M42 12h8v6" stroke="#dc2626" stroke-width="3"/>')
+  };
+})();
+var SB_CASES = [
+  { id: "sepsis", name: "Septic shock", tag: "Distributive", story: "68-year-old with pneumonia: hot, flushed, confused. Bounding pulses, warm hands.", p: { hr: 122, contr: 1.05, vol: 0.62, svr: 520, lung: 0.86, temp: 39.4, lact: 4.8 }, goal: "MAP 65 or more, lactate falling", hint: "Fill the tank, then squeeze the vessels: fluid and norepinephrine, then vasopressin." },
+  { id: "cardio", name: "Cardiogenic shock", tag: "Pump failure", story: "61-year-old, anterior STEMI 6 hours ago. Cold, clammy, crackles to the mid lungs.", p: { hr: 104, contr: 0.33, vol: 1.18, svr: 1150, lung: 0.8, lact: 4.1, isch: 1 }, goal: "MAP 65, output up, lungs not worse", hint: "More fluid floods the lungs. Squeeze the pump (dobutamine, norepinephrine) or add a device (IABP, Impella)." },
+  { id: "bleed", name: "Hemorrhagic shock", tag: "Hypovolemic", story: "34-year-old, motorcycle crash, pelvic fracture. Pale, cool, anxious.", p: { hr: 118, contr: 1.0, vol: 0.33, svr: 1100, lung: 0.95, hb: 7.0, lact: 5.6 }, goal: "MAP 65 (or a radial pulse), lactate falling", hint: "He needs blood, not pressors. Crystalloid dilutes and cools him." },
+  { id: "rvmi", name: "Right ventricular infarct", tag: "RV failure", story: "70-year-old, inferior STEMI. BP dropped hard after nitroglycerin. JVD, clear lungs.", p: { hr: 50, rh: "sinusbrady", contr: 0.95, vol: 0.78, svr: 1100, rvf: 0.55, lung: 0.96, lact: 3.2 }, goal: "MAP 65 without crackles", hint: "Preload-dependent: careful fluid, no nitrates. Rate and AV timing matter (pacing)." },
+  { id: "tamp", name: "Cardiac tamponade", tag: "Obstructive", story: "55-year-old, 4 hours after a pacemaker lead change. Muffled heart sounds, JVD, narrow pulse pressure.", p: { hr: 112, contr: 1.0, vol: 0.95, svr: 1100, tamp: 0.86, lung: 0.95, lact: 4.0 }, goal: "Relieve the obstruction", hint: "Fluid buys a little time. The fix is getting the fluid out of the pericardium." },
+  { id: "pe", name: "Massive pulmonary embolism", tag: "Obstructive", story: "48-year-old, 10 days after knee surgery. Sudden dyspnea, hypoxic, JVD.", p: { hr: 112, contr: 1.0, vol: 0.85, svr: 1050, pvr: 5.2, rvf: 0.6, lung: 0.72, lact: 4.4 }, goal: "MAP 65 and SpO2 92%", hint: "The RV is choking on afterload. A thrombolytic removes the clot; norepinephrine supports the RV meanwhile." },
+  { id: "ana", name: "Anaphylaxis", tag: "Distributive", story: "29-year-old stung by a bee: hives, stridor, wheezing, BP crashing.", p: { hr: 138, contr: 1.0, vol: 0.6, svr: 480, lung: 0.72, lact: 3.6, ana: 1 }, goal: "MAP 65 and SpO2 92%", hint: "Epinephrine first, then fluid. Everything else is second line." },
+  { id: "afrvr", name: "AF with rapid ventricular response", tag: "Rhythm", story: "74-year-old with palpitations and dizziness. Irregular, fast pulse.", p: { hr: 168, rh: "afib", contr: 0.9, vol: 0.9, svr: 1100, lung: 0.92, lact: 2.6 }, goal: "Rate under 110 with MAP 65", hint: "Unstable? Synchronized cardioversion. Stable? Rate control (diltiazem, beta blocker, amiodarone)." },
+  { id: "chb", name: "Complete heart block", tag: "Rhythm", story: "81-year-old found dizzy and gray. Pulse in the 30s.", p: { hr: 34, rh: "chb", contr: 1.0, vol: 0.95, svr: 1150, lung: 0.95, lact: 3.4 }, goal: "Rate 60 or more with MAP 65", hint: "Atropine rarely fixes a wide-complex block. Pace, or a chronotropic drip." },
+  { id: "htn", name: "Hypertensive emergency", tag: "Afterload", story: "52-year-old, headache and blurred vision. BP 228/132, crackles.", p: { hr: 96, contr: 0.9, vol: 1.05, svr: 2650, lung: 0.86, lact: 1.8, htn: 1 }, goal: "Bring MAP down by no more than about 25% (to about 110-125)", hint: "A titratable vasodilator: nicardipine, clevidipine or nitroprusside. Not too fast." }
+];
+var SB_HEALTHY = { id: "free", name: "Free sandbox", tag: "Healthy", story: "A healthy Great Bug, ready for anything you want to try.", p: { hr: 76, contr: 1.0, vol: 1.0, svr: 1100, lung: 1.0, lact: 1.0 }, goal: "No goal: experiment.", hint: "" };
+
+/* ---------- medicines: drips titrate 0-3, pushes act once ---------- */
+var SB_DRIPS = [
+  ["norepi", "Norepinephrine", "Pressor", { svr: 0.2, contr: 0.07, hr: 0.09 }],
+  ["vaso", "Vasopressin", "Pressor", { svr: 0.16 }],
+  ["epi", "Epinephrine", "Pressor / inotrope", { contr: 0.14, hr: 0.16, svr: 0.13, lungAna: 1 }],
+  ["phenyl", "Phenylephrine", "Pressor", { svr: 0.2, hr: -0.06 }],
+  ["dopa", "Dopamine", "Inotrope / pressor", { hr: 0.12, contr: 0.09, svr: 0.09 }],
+  ["dobut", "Dobutamine", "Inotrope", { contr: 0.24, hr: 0.08, svr: -0.09 }],
+  ["milri", "Milrinone", "Inodilator", { contr: 0.2, svr: -0.14, pvr: -0.18 }],
+  ["ntg", "Nitroglycerin", "Vasodilator", { vol: -0.09, svr: -0.07, pvr: -0.08 }],
+  ["nipride", "Nitroprusside", "Vasodilator", { svr: -0.26, vol: -0.04 }],
+  ["nicard", "Nicardipine", "Vasodilator", { svr: -0.2 }],
+  ["esmolol", "Esmolol", "Beta blocker", { hr: -0.14, contr: -0.09 }],
+  ["dilt", "Diltiazem", "Rate control", { hr: -0.16, contr: -0.07, svr: -0.05 }],
+  ["amio", "Amiodarone", "Antiarrhythmic", { hr: -0.06, conv: 0.04 }],
+  ["propofol", "Propofol", "Sedation", { svr: -0.11, contr: -0.07, sed: 1 }],
+  ["ino", "Inhaled nitric oxide", "Pulmonary vasodilator", { pvr: -0.33, lung: 0.03 }]
+];
+var SB_PUSH = [
+  ["fluid", "Fluid bolus", "Volume"], ["blood", "Blood (1 unit)", "Volume"], ["lasix", "Furosemide", "Diuretic"],
+  ["atropine", "Atropine", "Anticholinergic"], ["adenosine", "Adenosine", "Antiarrhythmic"], ["epipush", "Epinephrine (code / anaphylaxis)", "Pressor"],
+  ["amiobolus", "Amiodarone bolus", "Antiarrhythmic"], ["metop", "Metoprolol", "Beta blocker"], ["labet", "Labetalol", "Alpha/beta blocker"],
+  ["calcium", "Calcium", "Electrolyte"], ["tpa", "Alteplase (tPA)", "Thrombolytic"], ["ketamine", "Ketamine", "Sedation"], ["naloxone", "Naloxone", "Reversal"]
+];
+var SB_DEV = [["aline", "Arterial line"], ["pa", "PA catheter"], ["iabp", "Balloon pump (IABP)"], ["impella", "Impella"], ["lvad", "LVAD"], ["ecmo", "VA-ECMO"], ["pacer", "Transcutaneous pacer"]];
+var SB_O2 = [["ra", "Room air", 0.21], ["nc", "Nasal cannula", 0.32], ["nrb", "Non-rebreather", 0.7], ["vent", "Intubated, ventilator", 0.6]];
+var SB_ACT = [["sync", "Synchronized cardioversion"], ["defib", "Defibrillate"], ["cpr", "Start / stop CPR"], ["pcc", "Pericardiocentesis"], ["fio2", "Ventilator FiO2 100%"]];
+
+function sbNew(cs) {
+  var b = cs.p, P = { hr0: b.hr, hr: b.hr, rh: b.rh || "sinus", contr: b.contr, vol: b.vol, svr0: b.svr, pvr: b.pvr || 1.2, rvf: b.rvf || 1, tamp: b.tamp || 0, lung: b.lung, hb: b.hb || 12.5, temp: b.temp || 37, lact: b.lact, isch: b.isch || 0, ana: b.ana || 0, anaCase: !!b.ana, htn: b.htn || 0, ptx: b.ptx || 0, ptxSide: b.ptxSide || "R", htx: b.htx || 0, icp: b.icp || 10, refl: 1, rgain: cs.id === "sepsis" || b.ana ? 0.35 : b.htn ? 0.1 : 1 };
+  var Z = { cs: cs, P: P, drip: {}, push: [], dev: {}, o2: "ra", t: 0, ok: 0, low: 0, arrest: false, cpr: false, log: [], won: false, done: false, nibpAt: -99, nibp: null, view: "meds" };
+  /* let his own reflexes settle before you walk in */
+  var keep = S.sb; S.sb = Z; Z.warm = true; for (var i = 0; i < 240; i++) sbTick(0.25); S.sb = keep; Z.warm = false; Z.arrest = false; P.rh = cs.p.rh || "sinus"; P.ptx = cs.p.ptx || 0; if (cs.p.icp) P.icp = cs.p.icp;
+  Z.t = 0; Z.ok = 0; Z.low = 0; Z.won = false; Z.log = [{ t: 0, m: cs.story }]; P.lact = cs.p.lact;
+  return Z;
+}
+function sbLog(Z, m) { Z.log.unshift({ t: Z.t, m: m }); if (Z.log.length > 40) Z.log.length = 40; }
+function sbEff() {
+  var Z = S.sb, E = { svr: 0, contr: 0, hr: 0, vol: 0, pvr: 0, conv: 0, lung: 0, sed: 0, lungAna: 0 };
+  SB_DRIPS.forEach(function (d) { var lv = Z.drip[d[0]] || 0; if (!lv) return; Object.keys(d[3]).forEach(function (k) { E[k] += d[3][k] * lv; }); });
+  Z.push.forEach(function (p) { var f = Math.max(0, 1 - (Z.t - p.t) / p.dur); Object.keys(p.e).forEach(function (k) { E[k] += p.e[k] * f; }); });
+  return E;
+}
+/* one physiology step (dt seconds) */
+function sbTick(dt) {
+  var Z = S.sb; if (!Z || Z.done) return; var P = Z.P; Z.t += dt;
+  var E = sbEff(), D = Z.dev, fio2 = sbFio2(Z), sv0 = function (k, q, d) { return sbSet(Z, k, q, d); };
+  /* slow drifts: diuresis, ongoing bleeding, anaphylaxis, sepsis */
+  if (E.vol) P.vol = Math.max(0.2, Math.min(1.7, P.vol + E.vol * dt * 0.01));
+  if (Z.cs.id === "bleed") P.vol = Math.max(0.25, P.vol - 0.0012 * dt * (P.bleedStop ? 0 : 1));
+  try { sbExtraTick(Z, dt, E); } catch (e) {}
+  if (P.ana && E.lungAna > 0.3) { P.ana = Math.max(0, P.ana - 0.02 * dt * E.lungAna); }
+  var anaF = P.ana ? 1 : 0;
+  /* targets */
+  var svr = P.svr0 * (1 + E.svr) * (P.anaCase ? 1 + 1.1 * (1 - P.ana) : 1);
+  if (D.ecmo) svr *= 1 + 0.03 * sv0("ecmo", "flow", 4); if (sbHas("reboa")) { svr *= sv0("reboa", "zone", 1) < 2 ? 1.8 : 1.25; P.lact += (sv0("reboa", "zone", 1) < 2 ? 0.02 : 0.006) * dt; P.bleedStop = 1; P.htxStop = P.htxStop || 0; } if (D.iabp) svr *= 1 - 0.12 / sv0("iabp", "ratio", 1);
+  /* the baroreflex: low pressure tightens the vessels and speeds the heart, high pressure relaxes them;
+     blunted in sepsis and anaphylaxis (vasoplegia), reset in chronic hypertension, dulled by sedation */
+  var gain = P.rgain * (E.sed ? 0.7 : 1), mapNow = Z.v ? Z.v.map : 80;
+  var rT = Math.max(0.7, Math.min(1.55, 1 + gain * 0.013 * (82 - mapNow)));
+  P.refl += (rT - P.refl) * Math.min(1, dt / 5);
+  svr *= P.refl;
+  svr = Math.max(250, Math.min(4000, svr));
+  var contr = Math.max(0.1, P.contr * (1 + E.contr) + (D.iabp && P.isch ? 0.06 / sv0("iabp", "ratio", 1) : 0));
+  var hrT = P.hr0 * (1 + E.hr);
+  if (P.rh === "chb") hrT = Math.max(28, P.hr0 * (1 + 0.6 * Math.max(0, E.hr)));
+  if (P.rh === "afib") hrT = P.hr0 * (1 + E.hr * 1.2);
+  Z.capture = (D.pacer && sv0("pacer", "ma", 80) >= 65) || (sbHas("tvp") && sv0("tvp", "ma", 5) >= 1.5);
+  if (Z.capture && P.rh !== "vf" && P.rh !== "asys") hrT = Math.max(hrT, sbHas("tvp") ? sv0("tvp", "rate", 70) : sv0("pacer", "rate", 70));
+  if (P.rh !== "chb" && !D.pacer) hrT *= 1 + 0.7 * (P.refl - 1);
+  if (P.temp > 38.5) hrT += 6;
+  if (Z.arrest) hrT = P.rh === "pea" ? 40 : 0;
+  P.hr += (hrT - P.hr) * Math.min(1, dt / 2.5);
+  var pvr = Math.max(0.8, P.pvr * (1 + E.pvr) * (Z.o2 === "ra" ? 1 : 0.92));
+  var rvLoad = Math.max(0.35, 1 - (pvr - 1.2) * 0.11) * P.rvf;
+  var pre = P.vol * (1 - P.tamp * 0.75) * rvLoad * sbExtraObstruct(P);
+  if (sbHas("vent")) pre *= 1 - 0.015 * Math.max(0, sv0("vent", "peep", 5) - 5);
+  if (sbHas("bvm") && sv0("bvm", "rate", 10) > 16) pre *= 0.85;   /* bagging too fast: air trapping cuts venous return */
+  var hr = Math.max(0, P.hr), fillPen = hr > 140 ? Math.max(0.45, 1 - (hr - 140) / 110) : 1;
+  var sv = 72 * contr * Math.min(1.35, Math.pow(Math.max(0.05, pre), 0.85)) / (1 + 0.32 * (svr / 1100 - 1)) * fillPen;
+  if (P.rh === "afib") sv *= 0.85;
+  var co = hr * sv / 1000, devFlow = 0;
+  if (D.impella) devFlow += (0.5 + 0.33 * sv0("impella", "p", 6)) * Math.min(1, pre * 1.3);
+  if (D.lvad) devFlow += 4.4 * Math.min(1, pre * 1.2);
+  if (D.ecmo) devFlow += sv0("ecmo", "flow", 4);
+  if (Z.arrest) co = Z.cpr ? 1.6 * sbCprQ(Z) : 0;
+  co = co + devFlow;
+  var cvp = Math.max(0, 3 + 9 * (P.vol - 0.6) + 9 * (1 - P.rvf) + 14 * P.tamp + (pvr - 1.2) * 1.4 - (D.ecmo ? 4 : 0));
+  var wedge = Math.max(2, 5 + 14 * (P.vol - 0.6) + 12 * Math.max(0, 1 - contr) + 14 * P.tamp - (D.impella || D.lvad ? 6 : 0) - (D.iabp ? 2 : 0) + (D.ecmo ? 3 : 0));
+  var map = co * svr / 80 + cvp * 0.6;
+  var pp = Z.arrest ? (Z.cpr ? 25 : 0) : Math.max(D.lvad || D.ecmo ? 6 : 10, sv * (D.lvad ? 0.15 : 0.62) * (1 + (svr - 1100) / 5000));
+  var sbp = map + pp * 0.62, dbp = Math.max(5, map - pp * 0.38);
+  /* lungs: wet lungs (high wedge) and the underlying problem */
+  var lung = Math.max(0.15, Math.min(1, sbExtraLung(Z) + (sbHas("vent") ? Math.min(0.12, 0.008 * sv0("vent", "peep", 5)) : 0) + P.lung + (P.anaCase ? 0.24 * (1 - P.ana) : 0) + E.lung - Math.max(0, wedge - 20) * 0.012 + (P.ana ? -0.15 * P.ana * (E.lungAna > 0.3 ? 0 : 1) : 0)));
+  var spo2 = Math.max(55, Math.min(100, 100 - (1 - lung) * 55 * (1 - (fio2 - 0.21) * 1.1)));
+  if (co < 2) spo2 = spo2; var shunt = D.ecmo ? 0 : 0;
+  var hb = P.hb, do2 = co * hb * 1.34 * spo2 / 100 * 10, svo2 = Math.max(20, Math.min(88, spo2 - 250 * 1.0 / Math.max(0.3, co * hb * 1.34 / 10) * 0.29 * 10 / 10 * 4));
+  /* lactate rises when delivery or pressure is poor, clears slowly when fixed */
+  var bad = map < 60 || do2 < 450 || co < 2.4;
+  P.lact = Math.max(0.6, Math.min(18, P.lact + (bad ? 0.06 : -0.035) * dt));
+  /* rhythm events: cardioversion of AF by amiodarone, deterioration to arrest */
+  if (P.rh === "afib" && E.conv > 0 && Math.random() < E.conv * dt * 0.08) { P.rh = "sinus"; P.hr0 = 92; sbLog(Z, "Converted to sinus rhythm."); }
+  if (!Z.arrest && !Z.warm) { if (map < 38 || spo2 < 66) Z.low += dt; else Z.low = Math.max(0, Z.low - dt); if (Z.low > 14) { Z.arrest = true; P.rh = P.isch || P.htn || Z.cs.id === "afrvr" ? "vf" : "pea"; sbLog(Z, P.rh === "vf" ? "He went into ventricular fibrillation. Start CPR and shock." : "No pulse: PEA. Start CPR, give epinephrine and find the cause."); sbAlarm(true); } }
+  /* scenario win: in range for 30 seconds */
+  var inRange = !Z.arrest && sbGoalMet(Z, { map: map, hr: hr, spo2: spo2, wedge: wedge });
+  if (Z.cs.id !== "free" && !Z.won) { Z.ok = inRange ? Z.ok + dt : Math.max(0, Z.ok - dt * 0.5); if (Z.ok >= 30) { Z.won = true; sbLog(Z, "Stabilized. Nice work."); try { earn(5); } catch (e) {} try { feedback(true); } catch (e) {} } }
+  Z.v = { hr: Math.round(hr), sbp: Math.round(sbp), dbp: Math.round(dbp), map: Math.round(map), co: co, ci: co / 1.9, svr: Math.round(svr), cvp: Math.round(cvp), wedge: Math.round(wedge), pas: Math.round(wedge + 10 + pvr * 3.5), pad: Math.round(wedge + 2 + pvr), spo2: Math.round(spo2), svo2: Math.round(svo2), lact: P.lact, sv: sv, pre: pre, contr: contr, rh: P.rh, temp: P.temp, etco2: Z.arrest ? (Z.cpr ? Math.round(8 + 10 * sbCprQ(Z)) : 4) : Math.round(Math.max(8, Math.min(70, (20 + co * 3.2) * Math.pow(14 / sbRR(Z), 0.7)))) };
+}
+function sbGoalMet(Z, v) {
+  var id = Z.cs.id;
+  if (id === "htn") return v.map >= 105 && v.map <= 128;
+  if (id === "tbi") return Z.P.icp < 22 && v.map - Z.P.icp >= 60 && v.map - Z.P.icp <= 75 && v.spo2 >= 92;
+  if (id === "tptx" || id === "htx") return v.map >= 65 && v.spo2 >= 92;
+  if (id === "afrvr") return v.hr < 110 && v.map >= 65;
+  if (id === "chb") return v.hr >= 58 && v.map >= 65;
+  if (id === "pe" || id === "ana") return v.map >= 65 && v.spo2 >= 92;
+  if (id === "cardio" || id === "rvmi") return v.map >= 65 && v.spo2 >= 90 && v.wedge < 24;
+  return v.map >= 65 && v.map <= 110 && v.spo2 >= 90;
+}
+/* ---------- interventions ---------- */
+function sbPush(k) {
+  var Z = S.sb, P = Z.P, m = "";
+  function add(e, dur) { Z.push.push({ t: Z.t, e: e, dur: dur }); }
+  if (k === "fluid") { P.vol += 0.12; P.hb = Math.max(5, P.hb - 0.25); m = "Fluid bolus running."; if (Z.cs.id === "bleed") P.temp -= 0.1; }
+  else if (k === "blood") { P.vol += 0.13; P.hb += 0.9; m = "One unit of blood in, through a warmer."; }
+  else if (k === "lasix") { add({ vol: -1.2 }, 90); m = "Furosemide given: he will diurese over the next minutes."; }
+  else if (k === "atropine") { if (P.rh === "chb") { P.hr0 += 2; m = "Atropine given. Little effect on this wide-complex block."; } else { add({ hr: 0.35 }, 60); m = "Atropine given."; } }
+  else if (k === "adenosine") { m = P.rh === "afib" ? "Adenosine only shows the flutter waves for a moment: AF continues." : "Adenosine given: a brief pause."; add({ hr: -0.6 }, 6); }
+  else if (k === "epipush") { if (Z.arrest) { add({ svr: 0.9, contr: 0.4 }, 60); Z.epi = (Z.epi || 0) + 1; m = "Epinephrine given during the code."; } else { add({ svr: 0.55, contr: 0.25, hr: 0.25, lungAna: 2 }, 90); if (P.ana) P.ana = Math.max(0, P.ana - 0.45); m = "Epinephrine given."; } }
+  else if (k === "amiobolus") { add({ hr: -0.12, conv: 0.5 }, 120); m = "Amiodarone bolus given."; if (Z.arrest && P.rh === "vf") Z.amio = 1; }
+  else if (k === "metop") { add({ hr: -0.22, contr: -0.12 }, 120); m = "Metoprolol given."; }
+  else if (k === "labet") { add({ hr: -0.12, svr: -0.2, contr: -0.05 }, 150); m = "Labetalol given."; }
+  else if (k === "calcium") { add({ contr: 0.12 }, 60); m = "Calcium given."; }
+  else if (k === "tpa") { if (Z.cs.id === "pe") { P.pvr = Math.max(1.3, P.pvr * 0.35); P.rvf = Math.min(1, P.rvf + 0.3); P.lung = Math.min(0.97, P.lung + 0.18); m = "Alteplase given: the clot is breaking up."; } else { m = "Alteplase given. Watch closely for bleeding: it was not needed here."; if (Z.cs.id === "bleed") P.vol -= 0.15; } }
+  else if (k === "ketamine") { add({ svr: 0.08, hr: 0.08 }, 90); m = "Ketamine given: sedated, pressure holds."; }
+  else if (k === "naloxone") { m = "Naloxone given. No change: this is not an opioid problem."; }
+  sbLog(Z, m); try { sbBeepTone(520, 0.08, 0.05); } catch (e) {}
+}
+function sbAct(k) {
+  var Z = S.sb, P = Z.P;
+  if (k === "cpr") { Z.cpr = !Z.cpr; sbLog(Z, Z.cpr ? "CPR started: push hard and fast." : "CPR paused."); return; }
+  if (k === "defib" || k === "sync") {
+    sbShock(); var shock = (P.rh === "vf" || P.rh === "vt"), sync = k === "sync";
+    if (sync && Z.arrest) { sbLog(Z, "Synchronized shock will not fire in VF: there is no QRS to sync to."); return; }
+    if (!sync && !Z.arrest) { sbLog(Z, "You shocked a patient with a pulse, unsynchronized. He went into VF."); Z.arrest = true; P.rh = "vf"; return; }
+    if (sync && P.rh === "afib") { if (Math.random() < 0.85) { P.rh = "sinus"; P.hr0 = 88; sbLog(Z, "Cardioverted to sinus rhythm."); } else sbLog(Z, "Still in AF after the shock."); return; }
+    if (shock && Z.arrest) { var p = 0.35 + (Z.epi ? 0.15 : 0) + (Z.amio ? 0.15 : 0) + (Z.cpr ? 0.1 : 0); if (Math.random() < p) { sbRosc(); } else sbLog(Z, "Still in VF. Two more minutes of CPR."); return; }
+    sbLog(Z, "Shock delivered, but this rhythm is not shockable."); return;
+  }
+  if (k === "pcc") { if (P.tamp > 0.1) { P.tamp = 0.08; sbLog(Z, "Pericardiocentesis: blood drawn off. Pressure jumps up."); } else sbLog(Z, "No effusion to drain."); return; }
+  if (k === "fio2") { if (Z.o2 !== "vent") { sbLog(Z, "Intubate first to use the ventilator."); return; } Z.fio2hi = !Z.fio2hi; sbLog(Z, Z.fio2hi ? "FiO2 turned to 100%." : "FiO2 back to 60%."); return; }
+}
+function sbRosc() { var Z = S.sb, P = Z.P; Z.arrest = false; Z.cpr = false; Z.low = 0; P.rh = "sinustachy"; P.hr0 = Math.max(P.hr0, 100); sbLog(Z, "ROSC! Pulse is back. Support the pressure."); sbAlarm(false); }
+/* pulseless electrical activity resolves with good CPR, epinephrine and a fixed cause */
+function sbArrestCheck(dt) { var Z = S.sb; if (!Z || !Z.arrest || Z.P.rh !== "pea") return; if (Z.cpr && Z.epi && (Z.P.tamp < 0.2 && Z.P.vol > 0.55 && Z.P.pvr < 3) && Math.random() < 0.02 * dt) sbRosc(); }
+
+/* ---------- sound ---------- */
+var SBSND = { on: true, lastAlarm: 0, lastBeat: -1 };
+function sbBeepTone(f, len, vol) {
+  if (!SBSND.on || (typeof SET === "function" && SET().sfx === false)) return;
+  var c = typeof audioCtx === "function" ? audioCtx() : null; if (!c) return;
+  var o = c.createOscillator(), g = c.createGain(), t = c.currentTime; o.type = "sine"; o.frequency.value = f;
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol || 0.08, t + 0.006); g.gain.exponentialRampToValueAtTime(0.0008, t + len);
+  o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + len + 0.02);
+}
+function sbBeat(spo2) { sbBeepTone(560 + Math.max(0, Math.min(25, spo2 - 75)) * 14, 0.09, 0.07); }
+function sbAlarm(on) { SBSND.alarm = on; }
+function sbAlarmTick(now, v) {
+  if (!SBSND.on || !v || !(sbHas("ecg") || sbHas("spo2") || sbHas("nibp") || (S.sb && S.sb.dev && S.sb.dev.aline))) return; var Z = S.sb, alarm = Z && (Z.arrest || v.map < 60 || v.spo2 < 88 || v.hr > 150 || (v.hr < 40 && !Z.arrest));
+  if (!alarm || now - SBSND.lastAlarm < (Z.arrest ? 1.6 : 3)) return; SBSND.lastAlarm = now;
+  [0, 0.18, 0.36].forEach(function (d, i) { setTimeout(function () { sbBeepTone(Z.arrest ? 960 : 740, 0.14, 0.06); }, d * 1000); });
+}
+function sbWhoosh() {
+  if (!SBSND.on) return; var c = typeof audioCtx === "function" ? audioCtx() : null; if (!c) return;
+  try { var n = c.sampleRate * 0.18, b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0); for (var i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.sin(Math.PI * i / n) * 0.3;
+    var s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(); s.buffer = b; f.type = "lowpass"; f.frequency.value = 600; g.gain.value = 0.25; s.connect(f); f.connect(g); g.connect(c.destination); s.start(); } catch (e) {}
+}
+function sbShock() { try { sfxLoad("defib-charge"); sfxLoad("defib-thud"); sfxPlay("defib-charge", 0, 0.8); setTimeout(function () { sfxPlay("defib-thud", 0, 1); try { D3GL.flash("chest"); } catch (e) {} }, 1200); } catch (e) { sbBeepTone(1200, 0.4, 0.06); } }
+
+/* ---------- the live monitor (sandbox) ---------- */
+function sbGenStep(G, dt) {
+  var Z = S.sb, v = Z.v || {}, rh = v.rh || "sinus";
+  G.t += dt;
+  if (G.t - G.tb >= G.T) { G.tb += G.T; G.k++; var hr = Math.max(1, v.hr || 60); G.T = rh === "afib" ? 60 / hr * (0.65 + 0.7 * vlRnd(G.k)) : 60 / Math.max(hr, 1); G.beeped = false; G.base = G.endP; G.prevAss = !!Z.dev.iabp; }
+  var tau = G.t - G.tb, T = G.T, ecg;
+  if (rh === "vf") ecg = 0.35 * Math.sin(G.t * 31) + 0.25 * Math.sin(G.t * 17 + 1) + 0.15 * Math.sin(G.t * 47);
+  else if (rh === "asys" || (v.hr || 0) < 1) ecg = 0.01 * Math.sin(G.t * 3);
+  else if (rh === "chb") { var pT = 0.72; ecg = vlEcg(tau, T, "afib", G.k) * 0 + (function () { var e = 0, pt = (G.t % pT); e += 0.13 * vlGauss(pt, 0.1, 0.025); var w = 1.0 * vlGauss(tau, 0.04, 0.03) - 0.4 * vlGauss(tau, 0.12, 0.05) + 0.3 * vlGauss(tau, 0.36, 0.07); return e + w; })(); }
+  else ecg = vlEcg(tau, T, rh === "sinustachy" || rh === "sinusbrady" || rh === "pea" ? "sinus" : rh, G.k);
+  if (Z.dev.pacer && rh !== "vf") ecg += tau < 0.006 ? 1.1 : 0;
+  if (Z.cpr && Z.arrest) ecg += 0.5 * Math.sin(G.t * 2 * Math.PI * 1.85);
+  if (!G.beeped && tau > 0.02 && (v.hr || 0) > 0 && !(Z.arrest && rh !== "pea") && (sbHas("ecg") || sbHas("spo2") || sbHas("pads"))) { G.beeped = true; sbBeat(v.spo2 || 95); if (Z.dev.iabp && !Z.arrest) setTimeout(sbWhoosh, 280); }
+  var sys = v.sbp || 0, dia = v.dbp || 0, out = [];
+  if (sbHas("ecg") || sbHas("pads")) out.push(ecg);
+  var pulse = Z.arrest ? (Z.cpr ? 0.5 + 0.5 * Math.sin(G.t * 2 * Math.PI * 1.85) : 0) : 1;
+  if (Z.dev.aline) {
+    var art;
+    if (Z.arrest) art = Z.cpr ? 20 + 50 * Math.max(0, Math.sin(G.t * 2 * Math.PI * 1.85)) : 12;
+    else if (Z.dev.lvad || Z.dev.ecmo) art = dia + (sys - dia) * (0.5 + 0.5 * Math.sin(2 * Math.PI * (tau - 0.1) / T));
+    else { art = vlArt(tau, T, G.base == null ? dia : Math.min(G.base, dia + 10), sys, dia); if (Z.dev.iabp && tau > 0.31 && tau < T - 0.07) art = Math.max(art, Math.min(sys + 22, (v.map || 60) + 30) - 8 * (tau - 0.31)); }
+    G.endP = art; out.push(art);
+  }
+  if (Z.dev.pa) out.push(Z.arrest ? 8 : vlArt(tau, T, v.pad, v.pas, v.pad));
+  if (sbHas("spo2")) out.push(pulse * (tau < 0.12 ? 0 : 0.85 * Math.exp(-Math.pow((tau - 0.28) / 0.1, 2)) + 0.25 * Math.exp(-Math.pow((tau - 0.45) / 0.07, 2))) * Math.min(1, (v.spo2 || 90) / 95));
+  if (sbHas("etco2")) { var br = Z.arrest && !Z.cpr ? 0 : (G.t % 3.75) / 3.75; out.push(br < 0.08 ? (v.etco2 || 35) * br / 0.08 : br < 0.5 ? (v.etco2 || 35) * (0.94 + 0.06 * (br - 0.08) / 0.42) : br < 0.56 ? (v.etco2 || 35) * (1 - (br - 0.5) / 0.06) : 0); }
+  return out;
+}
+
+function sbLoop() {
+  var cv = document.getElementById("sbcv"), Z = S.sb;
+  if (!Z || !document.getElementById("sbstat")) { SBL.raf = 0; return; }
+  var now = performance.now(), dt = Math.min(0.1, (now - (SBL.lt || now)) / 1000); SBL.lt = now;
+  if (!Z.paused) { SBL.acc = (SBL.acc || 0) + dt; while (SBL.acc > 0.25) { sbTick(0.25); sbArrestCheck(0.25); SBL.acc -= 0.25; } }
+  if (!Z.v) sbTick(0.01);
+  var tr = sbTraces(Z), n = tr.length;
+  if (cv && n && !cv._dpr) { var dp0 = Math.min(2, window.devicePixelRatio || 1), r0 = cv.getBoundingClientRect(); cv.width = Math.round(r0.width * dp0); cv.height = Math.round(r0.height * dp0); cv._dpr = dp0; SBL.x = 0; SBL.py = null; SBL.n = 0; }
+  if (!cv || !n) { if (!SBL.nt || now - SBL.nt > 250) { SBL.nt = now; sbDrawNums(); } SBL.G.t += dt; try { if (document.getElementById("vleng")) { VL.G = VL.G || { t: 0, tb: 0, T: 0.8, k: 0 }; VL.G.t = SBL.G.t; VL.G.m = sbEngM(Z); vlEngine(VL.G); } } catch (e) {} SBL.raf = requestAnimationFrame(sbLoop); return; }
+  var ctx = cv.getContext("2d"), W = cv.width, H = cv.height, dpr = cv._dpr || 1, lh = H / n;
+  var steps = Math.max(1, Math.round(dt * 80 * dpr));
+  for (var s = 0; s < steps; s++) {
+    var vals = sbGenStep(SBL.G, dt / steps), x = SBL.x || 0;
+    ctx.fillStyle = "#020409"; ctx.fillRect(x, 0, 14 * dpr, H);
+    for (var i = 0; i < n; i++) { var r = tr[i], y = i * lh + lh - 5 * dpr - (vals[i] - r[2]) / (r[3] - r[2]) * (lh - 16 * dpr), py = SBL.py && SBL.py[i] != null ? SBL.py[i] : y;
+      ctx.strokeStyle = r[1]; ctx.lineWidth = 1.8 * dpr; ctx.beginPath(); ctx.moveTo(x - 1, py); ctx.lineTo(x, y); ctx.stroke(); SBL.py = SBL.py || []; SBL.py[i] = y; }
+    SBL.x = x + 1; if (SBL.x >= W) { SBL.x = 0; SBL.py = null; }
+  }
+  ctx.font = (10 * dpr) + "px system-ui,sans-serif";
+  for (var j = 0; j < n; j++) { ctx.fillStyle = "#020409"; ctx.fillRect(0, j * lh + 2 * dpr, ctx.measureText(tr[j][0]).width + 8 * dpr, 13 * dpr); ctx.fillStyle = tr[j][1]; ctx.fillText(tr[j][0], 3 * dpr, j * lh + 12 * dpr); }
+  if (n !== SBL.n) { SBL.n = n; ctx.fillStyle = "#020409"; ctx.fillRect(0, 0, W, H); SBL.x = 0; SBL.py = null; }
+  /* numbers, 4 times a second */
+  if (!SBL.nt || now - SBL.nt > 250) { SBL.nt = now; sbDrawNums(); sbAlarmTick(now / 1000, Z.v); }
+  try { if (document.getElementById("vleng")) { VL.G = VL.G || { t: 0, tb: 0, T: 0.8, k: 0 }; var g = VL.G; g.t = SBL.G.t; g.tb = SBL.G.tb; g.T = SBL.G.T; g.k = SBL.G.k; g.prevAss = !!Z.dev.iabp; g.m = sbEngM(Z); vlEngine(g); } } catch (e) {}
+  SBL.raf = requestAnimationFrame(sbLoop);
+}
+var SBL = { raf: 0 };
+function sbEngM(Z) {
+  var v = Z.v || {}, D = Z.dev, dev = D.ecmo ? "ecmo" : D.lvad ? "lvad" : D.impella ? "impella" : D.iabp ? "iabp" : D.pa ? "pa" : "aline";
+  var m = { dev: dev, hr: v.hr, sys: v.sbp, dia: v.dbp, rh: v.rh === "afib" ? "afib" : "sinus", ratio: 1, inf: "ok", def: "ok", aug: (v.map || 60) + 25, plc: "ao", mc: "puls", pa: "pa", lvad: { flow: (v.co || 4).toFixed(1) }, ecmo: { flow: "4.0" } };
+  m.gz = { pre: Math.max(0.05, Math.min(1, (v.pre || 0.8) / 1.4)), aft: Math.max(0.05, Math.min(1, (v.svr || 1100) / 2600)), cor: Math.max(0.05, Math.min(1, ((v.dbp || 50) - (v.cvp || 6)) / 80)), out: Math.max(0.03, Math.min(1, (v.co || 0) / 7)) };
+  if (Z.arrest && !Z.cpr) m.gz.out = 0.02;
+  m.tag = sbStatus(Z);
+  return m;
+}
+function sbStatus(Z) { var v = Z.v || {}; if (Z.arrest) return Z.cpr ? "Cardiac arrest: CPR is moving a little blood" : "Cardiac arrest: no output"; if ((v.map || 0) < 60) return "Low pressure: the organs are not getting enough"; if ((v.wedge || 0) > 24) return "High filling pressure: fluid is backing into the lungs"; if ((v.svr || 0) < 700) return "Wide-open vessels: afterload very low"; if ((v.svr || 0) > 2200) return "Clamped-down vessels: afterload very high"; return "Holding steady"; }
+
+/* ---------- the sandbox, hands-on (owner, Nov 19 2026): tap a body part for what you can do there, IV access before
+   IV medicines, routes that work or do not (some medicines do nothing intranasally), a dose you type in, and no
+   machine until you put it on. Search, press Apply, and the monitor shows what that thing is doing and measuring.
+   Adult model patient, 80 kg. The doses drive a teaching model only: not a dosing reference. ---------- */
+var SB_KG = 80;
+/* equipment: [id, name, search words, body site, needs, what it measures or does, group] */
+var SB_EQ = [
+  ["ecg", "ECG leads (3/5-lead)", "ecg ekg leads cardiac monitor rhythm", "chest", [], "Heart rate and rhythm (lead II).", "Monitor"],
+  ["spo2", "Pulse oximeter", "pulse ox spo2 oximeter saturation finger probe", "armR", [], "Oxygen saturation and the pleth waveform.", "Monitor"],
+  ["nibp", "Blood pressure cuff (NIBP)", "bp cuff blood pressure nibp noninvasive", "armL", [], "Blood pressure on the cycle you set (every 5 minutes to start; Cycle takes one now).", "Monitor"],
+  ["etco2", "Capnography (EtCO2)", "capnography etco2 end tidal co2 capno", "head", [], "End-tidal CO2 and the capnogram: ventilation, perfusion and CPR quality.", "Monitor"],
+  ["temp", "Temperature probe", "temperature temp probe thermometer", "head", [], "Core temperature.", "Monitor"],
+  ["foley", "Foley catheter", "foley urinary catheter urine output", "abdomen", [], "Hourly urine output, a window on kidney perfusion.", "Monitor"],
+  ["iv", "Peripheral IV", "iv peripheral line access angiocath 18 gauge", "armL", [], "IV access: lets you give IV medicines, fluids and drips.", "Access"],
+  ["io", "IO (proximal tibia)", "io intraosseous tibia access ez-io", "legR", [], "IO access: anything that can go IV can go IO.", "Access"],
+  ["cvc", "Central line (internal jugular)", "central line cvc triple lumen ij internal jugular", "neck", [], "Central access for pressors, plus central venous pressure (CVP).", "Access"],
+  ["aline", "Arterial line (radial)", "arterial line a-line art radial", "armR", [], "Beat-to-beat blood pressure and the arterial waveform.", "Invasive"],
+  ["pa", "PA catheter (Swan-Ganz)", "pa catheter swan ganz pulmonary artery wedge", "neck", ["cvc"], "PA pressures, wedge (PAOP), cardiac output, SvO2 and SVR.", "Invasive"],
+  ["pads", "Defib / pacer pads", "pads defib defibrillator pacer pads", "chest", [], "Lets you defibrillate, cardiovert and pace.", "Devices"],
+  ["pacer", "Transcutaneous pacing", "pacer pacing transcutaneous tcp", "chest", ["pads", "ecg"], "Paces at 70 with capture.", "Devices"],
+  ["iabp", "Intra-aortic balloon pump", "iabp balloon pump intra-aortic counterpulsation", "legL", ["ecg"], "Inflates in diastole and deflates before systole: lower afterload, better coronary flow.", "Devices"],
+  ["impella", "Impella CP", "impella cp mcs mechanical support", "legL", [], "Pulls blood out of the LV into the aorta: about 2.5-3.5 L/min of extra flow.", "Devices"],
+  ["ecmo", "VA-ECMO", "ecmo va-ecmo extracorporeal", "legR", [], "Drains venous blood, oxygenates it and returns it to the femoral artery: about 4 L/min.", "Devices"],
+  ["lvad", "LVAD (already implanted)", "lvad heartmate ventricular assist", "chest", [], "Continuous flow from the LV apex to the aorta.", "Devices"],
+  ["nc", "Nasal cannula", "nasal cannula nc oxygen o2", "head", [], "Oxygen, FiO2 about 32%.", "Airway"],
+  ["nrb", "Non-rebreather mask", "non-rebreather nrb mask oxygen o2", "head", [], "Oxygen, FiO2 about 70%.", "Airway"],
+  ["bvm", "Bag-valve mask", "bvm bag valve mask ventilate", "head", [], "Assisted breaths with oxygen.", "Airway"],
+  ["vent", "Intubate (ETT) + ventilator", "intubate intubation ett endotracheal tube ventilator vent", "head", [], "Secured airway, controlled breaths, FiO2 60% (100% from Actions).", "Airway"]
+];
+/* actions you can search for */
+var SB_ACTS = [["cpr", "CPR (start / stop)", "cpr compressions chest", "chest", []], ["defib", "Defibrillate", "defib shock defibrillate unsynchronized", "chest", ["pads"]], ["sync", "Synchronized cardioversion", "cardioversion synchronized sync", "chest", ["pads", "ecg"]],
+  ["pcc", "Pericardiocentesis", "pericardiocentesis tap pericardium drain", "chest", []], ["fio2", "Ventilator FiO2 100%", "fio2 100 oxygen ventilator", "head", ["vent"]], ["cycle", "Cycle the BP cuff now", "cycle nibp bp now", "armL", ["nibp"]]];
+/* medicines: [id, name, search words, class, routes {route: [unit, usual low, usual high, kind]}] ; drips map to SB_DRIPS */
+var SB_MEDS = [
+  ["norepi", "Norepinephrine", "norepinephrine levophed", "Pressor", { IV: ["mcg/min", 2, 30, "drip"] }],
+  ["vaso", "Vasopressin", "vasopressin vasostrict", "Pressor", { IV: ["units/min", 0.03, 0.04, "drip"] }],
+  ["epi", "Epinephrine drip", "epinephrine adrenaline drip infusion", "Pressor / inotrope", { IV: ["mcg/min", 1, 20, "drip"] }],
+  ["epipush", "Epinephrine", "epinephrine adrenaline push im epipen code", "Pressor / anaphylaxis", { IV: ["mg", 0.01, 1, "push"], IM: ["mg", 0.3, 0.5, "push"], IN: ["mg", 0, 0, "none"] }],
+  ["phenyl", "Phenylephrine drip", "phenylephrine neosynephrine", "Pressor", { IV: ["mcg/min", 20, 200, "drip"] }],
+  ["dopa", "Dopamine", "dopamine", "Inotrope / pressor", { IV: ["mcg/kg/min", 5, 20, "drip"] }],
+  ["dobut", "Dobutamine", "dobutamine dobutrex", "Inotrope", { IV: ["mcg/kg/min", 2.5, 20, "drip"] }],
+  ["milri", "Milrinone", "milrinone primacor", "Inodilator", { IV: ["mcg/kg/min", 0.125, 0.75, "drip"] }],
+  ["ntg", "Nitroglycerin", "nitroglycerin ntg nitro", "Vasodilator", { IV: ["mcg/min", 5, 200, "drip"], SL: ["mg", 0.4, 0.4, "push"] }],
+  ["nipride", "Nitroprusside", "nitroprusside nipride", "Vasodilator", { IV: ["mcg/kg/min", 0.3, 10, "drip"] }],
+  ["nicard", "Nicardipine", "nicardipine cardene", "Vasodilator", { IV: ["mg/hr", 5, 15, "drip"] }],
+  ["esmolol", "Esmolol", "esmolol brevibloc", "Beta blocker", { IV: ["mcg/kg/min", 50, 300, "drip"] }],
+  ["dilt", "Diltiazem drip", "diltiazem cardizem drip", "Rate control", { IV: ["mg/hr", 5, 15, "drip"] }],
+  ["diltpush", "Diltiazem", "diltiazem cardizem push bolus", "Rate control", { IV: ["mg", 10, 25, "push"] }],
+  ["amio", "Amiodarone drip", "amiodarone cordarone drip", "Antiarrhythmic", { IV: ["mg/min", 0.5, 1, "drip"] }],
+  ["amiobolus", "Amiodarone", "amiodarone cordarone bolus push", "Antiarrhythmic", { IV: ["mg", 150, 300, "push"], IN: ["mg", 0, 0, "none"] }],
+  ["propofol", "Propofol", "propofol diprivan sedation", "Sedation", { IV: ["mcg/kg/min", 5, 50, "drip"] }],
+  ["ino", "Inhaled nitric oxide", "nitric oxide ino inhaled", "Pulmonary vasodilator", { INH: ["ppm", 5, 40, "drip"] }],
+  ["fluid", "Normal saline / LR bolus", "fluid bolus normal saline ns lactated ringers lr crystalloid", "Volume", { IV: ["mL", 250, 1000, "push"] }],
+  ["blood", "Packed red cells", "blood prbc packed red cells transfusion", "Volume", { IV: ["units", 1, 2, "push"] }],
+  ["lasix", "Furosemide", "furosemide lasix diuretic", "Diuretic", { IV: ["mg", 20, 80, "push"], IM: ["mg", 20, 40, "push"] }],
+  ["atropine", "Atropine", "atropine", "Anticholinergic", { IV: ["mg", 0.5, 1, "push"], IM: ["mg", 0.5, 2, "push"] }],
+  ["adenosine", "Adenosine", "adenosine adenocard", "Antiarrhythmic", { IV: ["mg", 6, 12, "push"], IM: ["mg", 0, 0, "none"], IN: ["mg", 0, 0, "none"] }],
+  ["metop", "Metoprolol", "metoprolol lopressor", "Beta blocker", { IV: ["mg", 2.5, 5, "push"], PO: ["mg", 25, 50, "push"] }],
+  ["labet", "Labetalol", "labetalol", "Alpha/beta blocker", { IV: ["mg", 10, 20, "push"] }],
+  ["calcium", "Calcium chloride", "calcium chloride gluconate", "Electrolyte", { IV: ["g", 1, 1, "push"], IM: ["g", 0, 0, "harm"] }],
+  ["tpa", "Alteplase (tPA)", "alteplase tpa thrombolytic", "Thrombolytic", { IV: ["mg", 50, 100, "push"] }],
+  ["ketamine", "Ketamine", "ketamine", "Sedation", { IV: ["mg", 50, 150, "push"], IM: ["mg", 200, 400, "push"], IN: ["mg", 50, 100, "push"] }],
+  ["midaz", "Midazolam", "midazolam versed benzodiazepine", "Sedation", { IV: ["mg", 1, 5, "push"], IM: ["mg", 5, 10, "push"], IN: ["mg", 5, 10, "push"] }],
+  ["fentanyl", "Fentanyl", "fentanyl opioid pain", "Analgesic", { IV: ["mcg", 25, 100, "push"], IN: ["mcg", 50, 100, "push"], IM: ["mcg", 50, 100, "push"] }],
+  ["naloxone", "Naloxone", "naloxone narcan", "Reversal", { IV: ["mg", 0.4, 2, "push"], IM: ["mg", 0.4, 2, "push"], IN: ["mg", 2, 4, "push"] }],
+  ["diphen", "Diphenhydramine", "diphenhydramine benadryl antihistamine", "Antihistamine", { IV: ["mg", 25, 50, "push"], IM: ["mg", 25, 50, "push"], PO: ["mg", 25, 50, "push"] }],
+  ["aspirin", "Aspirin", "aspirin asa chewable", "Antiplatelet", { PO: ["mg", 162, 324, "push"], IV: ["mg", 0, 0, "none"] }],
+  ["glucose", "Oral glucose", "oral glucose gel sugar", "Sugar", { PO: ["g", 15, 15, "push"] }],
+  ["dextrose", "Dextrose 10%", "dextrose d10 d50 sugar glucose iv", "Sugar", { IV: ["g", 10, 25, "push"] }],
+  ["albuterol", "Albuterol (nebulized)", "albuterol nebulizer neb ventolin bronchodilator", "Bronchodilator", { INH: ["mg", 2.5, 5, "push"] }],
+  ["solumed", "Methylprednisolone", "methylprednisolone solumedrol steroid", "Steroid", { IV: ["mg", 60, 125, "push"], IM: ["mg", 60, 125, "push"] }]
+];
+var SB_ROUTE = { IV: "IV", IO: "IO", IM: "IM", IN: "Intranasal (IN)", SL: "Sublingual", PO: "By mouth", INH: "Inhaled" };
+/* ---------- settings on everything you put on him (owner, Nov 19 2026: "be able to set a rate") ---------- */
+var SB_SETS = {
+  nc: [["lpm", "Flow", "L/min", 1, 6, 1, 2]],
+  nrb: [["lpm", "Flow", "L/min", 1, 15, 1, 15]],
+  bvm: [["rate", "Breaths", "/min", 0, 40, 1, 10], ["lpm", "O2 flow", "L/min", 0, 15, 1, 15]],
+  vent: [["rate", "Rate", "/min", 4, 40, 1, 16], ["vt", "Tidal volume", "mL", 200, 900, 10, 450], ["peep", "PEEP", "cmH2O", 0, 20, 1, 5], ["fio2", "FiO2", "%", 21, 100, 1, 60]],
+  pacer: [["rate", "Rate", "/min", 30, 180, 5, 70], ["ma", "Output", "mA", 0, 200, 5, 80]],
+  iabp: [["ratio", "Assist ratio 1:", "", 1, 3, 1, 1]],
+  impella: [["p", "P-level", "", 1, 9, 1, 6]],
+  ecmo: [["flow", "Blood flow", "L/min", 1, 6, 0.5, 4], ["sweep", "Sweep gas", "L/min", 0, 10, 0.5, 4]],
+  nibp: [["min", "Cycle every", "min", 1, 15, 1, 5]],
+  cpr: [["rate", "Compression rate", "/min", 60, 160, 5, 110]]
+};
+function sbSet(Z, eq, key, def) { var v = Z && Z.set && Z.set[eq] && Z.set[eq][key]; if (v != null && !isNaN(v)) return +v; var d = (SB_SETS[eq] || []).filter(function (x) { return x[0] === key; })[0]; return d ? d[6] : def; }
+function sbFio2(Z) {
+  if (sbHas("vent")) return sbSet(Z, "vent", "fio2", 60) / 100;
+  if (sbHas("bvm")) { var l = sbSet(Z, "bvm", "lpm", 15); return l >= 10 ? 0.9 : 0.21 + 0.05 * l; }
+  if (sbHas("igel") || sbHas("cric")) return 0.9;
+  if (sbHas("nrb")) { var n = sbSet(Z, "nrb", "lpm", 15); return n >= 10 ? 0.6 + 0.03 * Math.min(5, n - 10) : 0.3; }   /* under 10 L the bag collapses and he rebreathes */
+  if (sbHas("nc")) return 0.21 + 0.04 * sbSet(Z, "nc", "lpm", 2);
+  return 0.21;
+}
+function sbRR(Z) { if (sbHas("vent")) return sbSet(Z, "vent", "rate", 16); if (sbHas("bvm")) return Math.max(1, sbSet(Z, "bvm", "rate", 10)); if (sbHas("igel") || sbHas("cric")) return 12; if (Z.apnea) return 1; return Z.arrest ? 1 : 16; }
+function sbCprQ(Z) { var r = sbSet(Z, "cpr", "rate", 110); return r >= 100 && r <= 120 ? 1 : Math.max(0.25, 1 - Math.abs(r - 110) / 80); }
+function sbSetUI(k) {
+  var Z = S.sb, L = SB_SETS[k]; if (!L) return "";
+  return '<span class="sbsets">' + L.map(function (d) { return '<label>' + esc(d[1]) + ' <input type="number" inputmode="decimal" min="' + d[3] + '" max="' + d[4] + '" step="' + d[5] + '" data-sbset="' + k + ':' + d[0] + '" value="' + sbSet(Z, k, d[0]) + '"> ' + esc(d[2]) + '</label>'; }).join("") + '</span>';
+}
+document.addEventListener("change", function (e) {
+  var t = e.target; if (!t || !t.getAttribute || !t.getAttribute("data-sbset") || !S.sb) return;
+  var p = t.getAttribute("data-sbset").split(":"), Z = S.sb, d = (SB_SETS[p[0]] || []).filter(function (x) { return x[0] === p[1]; })[0], v = parseFloat(t.value);
+  if (!d || isNaN(v)) return; v = Math.max(d[3], Math.min(d[4], v)); t.value = v;
+  Z.set = Z.set || {}; Z.set[p[0]] = Z.set[p[0]] || {}; Z.set[p[0]][p[1]] = v;
+  var e2 = sbEq(p[0]), nm = e2 ? e2[1] : p[0] === "cpr" ? "CPR" : p[0], note = "";
+  if (p[0] === "pacer" && p[1] === "ma") note = v < 65 ? " No capture: the spikes are not followed by a beat. Turn the output up." : " Electrical capture: every spike is followed by a wide beat.";
+  if (p[0] === "bvm" && p[1] === "rate") note = v > 16 ? " Too fast: air trapping and less blood back to the heart." : v < 8 ? " Too slow: CO2 will climb." : "";
+  if (p[0] === "nrb" && p[1] === "lpm" && v < 10) note = " The reservoir bag collapses below about 10 L/min, so he rebreathes and gets less oxygen.";
+  if (p[0] === "vent" && p[1] === "vt" && v > 8 * 70) note = " That is more than about 8 mL/kg of ideal body weight: a lung-injury risk.";
+  if (p[0] === "cpr") note = v < 100 || v > 120 ? " Aim for 100-120 per minute." : " Good rate.";
+  sbLog(Z, nm + ": " + d[1].replace(/ 1:$/, " 1:") + " set to " + v + (d[2] ? " " + d[2] : "") + "." + note); sbToast(nm + " " + v + (d[2] ? " " + d[2] : ""));
+});
+
+/* ---------- who may do what (owner, Nov 19 2026: "don't let EMT or CNA do all of this, but let them do things like BVM") ---------- */
+var SB_SCOPE = {
+  cna: { eq: ["spo2", "nibp", "temp", "bvm", "pads", "nc"], acts: ["cpr", "defib", "cycle"], meds: {}, aed: true, name: "CNA" },
+  emt: { eq: ["spo2", "nibp", "temp", "bvm", "nc", "nrb", "pads", "ecg", "etco2"], acts: ["cpr", "defib", "cycle"], meds: { epipush: ["IM"], naloxone: ["IN", "IM"], aspirin: ["PO"], glucose: ["PO"], ntg: ["SL"], albuterol: ["INH"] }, aed: true, name: "EMT" },
+  aemt: { eq: ["spo2", "nibp", "temp", "bvm", "nc", "nrb", "pads", "ecg", "etco2", "iv", "io"], acts: ["cpr", "defib", "cycle"], meds: { epipush: ["IM", "IV"], naloxone: ["IN", "IM", "IV"], aspirin: ["PO"], glucose: ["PO"], dextrose: ["IV"], ntg: ["SL"], albuterol: ["INH"], fluid: ["IV"] }, aed: true, name: "AEMT" },
+  lvn: { eq: ["spo2", "nibp", "temp", "bvm", "nc", "nrb", "pads", "ecg", "iv", "foley"], acts: ["cpr", "defib", "cycle"], meds: { aspirin: ["PO"], glucose: ["PO"], ntg: ["SL"], albuterol: ["INH"], fluid: ["IV"], diphen: ["PO", "IM"], metop: ["PO"], lasix: ["IM"], naloxone: ["IM", "IN"], epipush: ["IM"] }, aed: true, name: "LVN" },
+  paramedic: { not: ["cvc", "aline", "pa", "iabp", "impella", "ecmo", "lvad"], notMeds: ["milri", "nipride", "ino", "nicard"], name: "Paramedic" }
+};
+function sbScope() { var k = S.level; if (k === "cp" || k === "tccc") k = "paramedic"; return SB_SCOPE[k] || null; }
+function sbOkEq(id) { var c = sbScope(); if (!c) return true; if (c.eq) return c.eq.indexOf(id) >= 0; return (c.not || []).indexOf(id) < 0; }
+function sbOkAct(id) { var c = sbScope(); if (!c) return true; if (c.acts) return c.acts.indexOf(id) >= 0; return (c.notActs || ["pcc"]).indexOf(id) < 0; }
+function sbOkMed(id, route) { var c = sbScope(); if (!c) return true; if (c.meds) { var r = c.meds[id]; return !!r && (!route || r.indexOf(route === "IO" ? "IV" : route) >= 0); } return (c.notMeds || []).indexOf(id) < 0; }
+function sbScopeMsg() { var c = sbScope(); return "Not in the " + (c ? c.name : "") + " scope of practice."; }
+
+/* ---------- ICU and flight tools (owner, Nov 19 2026: "way more ways to monitor for ICU nurse and flight crews:
+   interventional hemodynamics, finger thoracostomy, chest tube, intubations") ---------- */
+SB_EQ.push(
+  ["flotrac", "Pulse contour CO (FloTrac)", "flotrac pulse contour cardiac output svv stroke volume variation picco", "armR", ["aline"], "Stroke volume, SVV and cardiac output from the arterial waveform.", "Invasive"],
+  ["scvo2", "ScvO2 oximetry catheter", "scvo2 central venous oximetry presep", "neck", ["cvc"], "Continuous central venous O2 saturation.", "Invasive"],
+  ["tvp", "Transvenous pacer", "transvenous pacer tvp pacing wire", "neck", ["cvc", "ecg"], "Pacing from inside the right ventricle: capture at 1-5 mA.", "Devices"],
+  ["icp", "ICP monitor / EVD", "icp evd ventriculostomy intracranial pressure bolt camino", "head", [], "Intracranial pressure, CPP (MAP - ICP), and a drain for CSF.", "Invasive"],
+  ["nirs", "Cerebral oximetry (NIRS)", "nirs cerebral oximetry rso2 invos", "head", [], "Regional brain O2 saturation (rSO2).", "Monitor"],
+  ["bis", "BIS sedation monitor", "bis bispectral sedation depth", "head", [], "Depth of sedation, 0-100 (40-60 for general anesthesia).", "Monitor"],
+  ["iap", "Bladder pressure (IAP)", "bladder pressure iap intra abdominal compartment", "abdomen", ["foley"], "Intra-abdominal pressure through the Foley.", "Monitor"],
+  ["ctR", "Chest tube (right)", "chest tube thoracostomy right pleural drain pleurevac", "chest", [], "Drains air and blood from the right chest; shows output and air leak.", "Procedures"],
+  ["ctL", "Chest tube (left)", "chest tube thoracostomy left pleural drain", "chest", [], "Drains air and blood from the left chest; shows output and air leak.", "Procedures"],
+  ["igel", "Supraglottic airway (i-gel)", "igel i-gel supraglottic king lma sga", "head", [], "A rescue airway above the vocal cords, bagged with oxygen.", "Airway"],
+  ["cric", "Surgical cricothyrotomy", "cric cricothyrotomy surgical airway", "neck", [], "A tube through the cricothyroid membrane when you cannot intubate or oxygenate.", "Airway"],
+  ["binder", "Pelvic binder", "pelvic binder sam sling", "abdomen", [], "Closes an open-book pelvis and slows pelvic bleeding.", "Procedures"],
+  ["tq", "Tourniquet (leg)", "tourniquet cat tq hemorrhage", "legL", [], "Stops arterial bleeding from the leg.", "Procedures"],
+  ["reboa", "REBOA", "reboa resuscitative endovascular balloon occlusion aorta", "legR", [], "A balloon in the aorta that stops bleeding below it, at the cost of ischemia.", "Devices"]
+);
+SB_SETS.vent.push(["mode", "Mode (1 AC, 2 SIMV, 3 PS)", "", 1, 3, 1, 1]);
+SB_SETS.tvp = [["rate", "Rate", "/min", 30, 180, 5, 70], ["ma", "Output", "mA", 0, 20, 0.5, 5]];
+SB_SETS.icp = [["drain", "EVD drain at", "cmH2O", 0, 25, 1, 15], ["open", "Drain open (1 yes, 0 no)", "", 0, 1, 1, 0]];
+SB_SETS.ctR = [["suction", "Suction", "cmH2O", 0, 40, 5, 20]]; SB_SETS.ctL = [["suction", "Suction", "cmH2O", 0, 40, 5, 20]];
+SB_SETS.reboa = [["zone", "Zone (1 or 3)", "", 1, 3, 2, 1]];
+SB_ACTS.push(
+  ["needle", "Needle decompression (2nd ICS / 4th-5th ICS)", "needle decompression thoracostomy tension pneumothorax", "chest", []],
+  ["finger", "Finger thoracostomy", "finger thoracostomy simple thoracostomy open", "chest", []],
+  ["abg", "Draw an ABG", "abg arterial blood gas istat lab", "armR", ["aline"]],
+  ["vbg", "Draw labs (VBG, lactate, K, Hb)", "vbg labs lactate potassium hemoglobin istat venous", "armL", []],
+  ["pocus", "Point-of-care ultrasound", "pocus ultrasound echo efast fast bedside", "chest", []],
+  ["hob", "Head of bed up 30 degrees", "head of bed hob elevate 30", "head", []]
+);
+SB_MEDS.push(
+  ["etomidate", "Etomidate", "etomidate amidate rsi induction", "Induction", { IV: ["mg", 20, 30, "push"] }],
+  ["roc", "Rocuronium", "rocuronium roc paralytic rsi", "Paralytic", { IV: ["mg", 80, 100, "push"] }],
+  ["sux", "Succinylcholine", "succinylcholine sux paralytic rsi", "Paralytic", { IV: ["mg", 100, 150, "push"], IM: ["mg", 300, 400, "push"] }],
+  ["txa", "Tranexamic acid", "txa tranexamic acid", "Antifibrinolytic", { IV: ["g", 1, 2, "push"] }],
+  ["wb", "Whole blood (low-titer O)", "whole blood ltowb", "Volume", { IV: ["units", 1, 2, "push"] }],
+  ["hts", "Hypertonic saline 3%", "hypertonic saline 3% 23.4% hts", "Osmotic", { IV: ["mL", 250, 500, "push"] }],
+  ["mannitol", "Mannitol", "mannitol osmotic", "Osmotic", { IV: ["g", 50, 100, "push"] }]
+);
+/* new patients */
+SB_CASES.push(
+  { id: "tptx", name: "Tension pneumothorax", tag: "Obstructive", story: "26-year-old, stabbed in the right chest. Air hunger, absent breath sounds on the right, JVD, trachea shifting left.", p: { hr: 132, contr: 1.0, vol: 0.85, svr: 1100, lung: 0.7, lact: 4.2, ptx: 0.85, ptxSide: "R" }, goal: "MAP 65 and SpO2 92%", hint: "Decompress the right chest now (needle or finger thoracostomy), then a chest tube." },
+  { id: "htx", name: "Massive hemothorax", tag: "Hypovolemic", story: "41-year-old, rollover crash. Left chest dull to percussion, no breath sounds, pale and tachycardic.", p: { hr: 128, contr: 1.0, vol: 0.45, svr: 1100, lung: 0.78, hb: 8.5, lact: 5.0, htx: 1, ptxSide: "L" }, goal: "MAP 65 and SpO2 92%", hint: "Left chest tube, blood products (whole blood), TXA. Over 1,500 mL out at once means the OR." },
+  { id: "tbi", name: "Severe head injury", tag: "Neuro", story: "33-year-old, fell from a ladder. GCS 6, right pupil blown, BP 186/94, HR 52 and irregular breathing.", p: { hr: 52, rh: "sinusbrady", contr: 1.0, vol: 1.0, svr: 1900, lung: 0.88, lact: 2.2, icp: 32 }, goal: "ICP under 22 and CPP 60-70", hint: "Secure the airway, EtCO2 35-40 (brief 30-35 only for herniation), head up, hypertonic saline or mannitol, ICP monitor and drain." }
+);
+SB_SCOPE.paramedic.not = SB_SCOPE.paramedic.not.concat(["flotrac", "scvo2", "tvp", "icp", "nirs", "bis", "iap", "ctR", "ctL", "reboa"]);
+SB_SCOPE.paramedic.notActs = ["pcc", "finger", "abg"];
+(function () { var e = SB_SCOPE.emt, a = SB_SCOPE.aemt; ["binder", "tq"].forEach(function (x) { e.eq.push(x); a.eq.push(x); SB_SCOPE.cna.eq.indexOf(x) < 0; }); a.eq.push("igel"); e.acts.push("hob"); a.acts.push("hob"); })();
+/* who places it: for nurses, the provider does the invasive procedures and you run them */
+var SB_PROVIDER = ["cvc", "aline", "pa", "tvp", "icp", "ctR", "ctL", "cric", "reboa", "iabp", "impella", "ecmo"];
+function sbProviderNote(id) { var k = S.level; return (k === "rn" || k === "lvn") && SB_PROVIDER.indexOf(id) >= 0 ? " (placed by the provider; you monitor and manage it)" : ""; }
+
+/* the extra physiology: chest, head and labs */
+function sbExtraTick(Z, dt, E) {
+  var P = Z.P;
+  if (P.ptx == null) P.ptx = 0; if (P.icp == null) P.icp = 10;
+  /* a tension pneumothorax grows, faster under positive pressure, until it is decompressed */
+  var ctSide = P.ptxSide === "L" ? "ctL" : "ctR";
+  if (P.ptx > 0 && !sbHas(ctSide) && !Z.warm) P.ptx = Math.min(1, P.ptx + dt * (sbHas("vent") || sbHas("bvm") || sbHas("igel") ? 0.004 : 0.0015) * (P.needle ? 0.4 : 1));
+  if (sbHas(ctSide) && P.ptx > 0) P.ptx = Math.max(0, P.ptx - dt * 0.05);
+  /* hemothorax: blood keeps coming; a chest tube shows it */
+  if (P.htx) { var bleedRate = P.htxStop ? 0 : 0.0008; P.vol = Math.max(0.2, P.vol - bleedRate * dt); Z.ctOut = (Z.ctOut || 0) + (sbHas(ctSide) ? (Z.ctFirst ? 4 : 0) * dt : 0); if (sbHas(ctSide) && !Z.ctFirst) { Z.ctFirst = 1; Z.ctOut = 1300; sbLog(Z, "Chest tube in: 1,300 mL of blood out at once. Over 1,500 mL, or 200 mL/h for several hours, means the OR."); } }
+  /* bleeding from the leg or pelvis in the trauma cases */
+  if (Z.cs.id === "bleed" && (sbHas("binder") || sbHas("reboa"))) P.bleedStop = 1;
+  /* intracranial pressure: CO2, head position, osmotic drugs and the drain */
+  if (Z.cs.id === "tbi") {
+    var co2 = Z.v ? Z.v.etco2 : 40, drain = sbHas("icp") && sbSet(Z, "icp", "open", 0) ? Math.max(0, (P.icp - sbSet(Z, "icp", "drain", 15) * 0.74) * 0.04) : 0;
+    var target = 32 + (co2 - 40) * 0.6 - (Z.hob ? 4 : 0) - (Z.osm || 0) - (E.sed ? 3 : 0);
+    P.icp += (target - P.icp) * Math.min(1, dt / 20) - drain * dt;
+    if (Z.osm) Z.osm = Math.max(0, Z.osm - dt * 0.01);
+    /* Cushing: high ICP pushes the pressure up and the heart rate down */
+    P.svr0 = 1100 + Math.max(0, P.icp - 20) * 55; P.hr0 = Math.max(40, 80 - Math.max(0, P.icp - 20) * 2);
+  }
+  /* paralysed with nobody breathing for him: he desaturates fast */
+  Z.apnea = Z.paralyzed && !(sbHas("vent") || (sbHas("bvm") && sbSet(Z, "bvm", "rate", 10) > 4) || sbHas("igel") || sbHas("cric"));
+  if (Z.paralyzed && Z.t - Z.paralyzed > 600) Z.paralyzed = 0;
+}
+function sbExtraObstruct(P) { return 1 - (P.ptx || 0) * 0.7; }
+function sbExtraLung(Z) { var P = Z.P, l = 0; l -= (P.ptx || 0) * 0.25; if (P.htx && !sbHas(P.ptxSide === "L" ? "ctL" : "ctR")) l -= 0.12; if (Z.apnea) l -= Math.min(0.6, (Z.t - (Z.apneaT || Z.t)) * 0.01); return l; }
+/* actions */
+function sbExtraAct(id) {
+  var Z = S.sb, P = Z.P;
+  if (id === "needle") { if (P.ptx > 0.15) { P.ptx = 0.3; P.needle = 1; sbLog(Z, "Needle in: a hiss of air. Pressure comes up, but needles kink and clot, so the air can build again. Follow with a chest tube."); } else sbLog(Z, "No tension pneumothorax: nothing comes out."); return true; }
+  if (id === "finger") { if (P.ptx > 0.1) { P.ptx = 0.05; P.needle = 1; sbLog(Z, "Finger thoracostomy: a rush of air, the lung re-expands under positive pressure. A chest tube can go through the same hole."); } else if (P.htx) sbLog(Z, "Blood pours out of the opening: a hemothorax. Place a chest tube to measure it."); else sbLog(Z, "Nothing under tension."); return true; }
+  if (id === "hob") { Z.hob = !Z.hob; sbLog(Z, Z.hob ? "Head of bed up 30 degrees: better venous drainage from the head." : "Head of bed flat."); return true; }
+  if (id === "abg" || id === "vbg") { var v = Z.v || {}, paco2 = Math.round((v.etco2 || 35) + 5 + (Z.P.ptx || 0) * 8), hco3 = Math.max(8, 24 - (v.lact - 1) * 1.6), pH = 6.1 + Math.log10(hco3 / (0.03 * paco2)), pao2 = Math.round(v.spo2 >= 97 ? 100 + sbFio2(Z) * 300 : v.spo2 >= 92 ? 70 : v.spo2 >= 88 ? 58 : 45);
+    var r = (id === "abg" ? "ABG: pH " + pH.toFixed(2) + ", PaCO2 " + paco2 + ", PaO2 " + pao2 + ", HCO3 " + Math.round(hco3) + ", BE " + Math.round(hco3 - 24) + ". " : "VBG: pH " + (pH - 0.03).toFixed(2) + ", PvCO2 " + (paco2 + 5) + ". ") + "Lactate " + v.lact.toFixed(1) + ", K " + (4.1 + (v.lact > 4 ? 0.5 : 0)).toFixed(1) + ", Hb " + Z.P.hb.toFixed(1) + ", iCa " + (1.15 - (Z.units || 0) * 0.04).toFixed(2) + ".";
+    Z.lastLab = r; sbLog(Z, r); return true; }
+  if (id === "pocus") { var v2 = Z.v || {}, f = [];
+    if (P.tamp > 0.2) f.push("pericardial effusion with RV collapse in diastole (tamponade)");
+    if (P.ptx > 0.1) f.push("no lung sliding on the " + (P.ptxSide === "L" ? "left" : "right") + ", a lung point (pneumothorax)");
+    if (P.htx) f.push("anechoic fluid above the " + (P.ptxSide === "L" ? "left" : "right") + " diaphragm (hemothorax)");
+    if (v2.wedge > 20) f.push("B-lines in both lungs (pulmonary edema)");
+    if ((P.pvr || 1) > 3 || P.rvf < 0.7) f.push("a dilated RV with the septum flattened toward the LV");
+    if (v2.contr < 0.6) f.push("a poorly squeezing LV");
+    f.push(v2.cvp < 4 ? "a small IVC collapsing with each breath (likely fluid responsive)" : v2.cvp > 14 ? "a fat IVC that does not collapse" : "an IVC of normal size");
+    if (Z.cs.id === "bleed") f.push("free fluid in the pelvis");
+    sbLog(Z, "Ultrasound: " + f.join("; ") + "."); return true; }
+  return false;
+}
+function sbExtraPush(k, f, dose) {
+  var Z = S.sb, P = Z.P;
+  if (k === "etomidate") { Z.push.push({ t: Z.t, e: { sed: 1, svr: -0.02 }, dur: 300 }); return "Induced: unconscious, blood pressure holds."; }
+  if (k === "roc" || k === "sux") { Z.paralyzed = Z.t; Z.apneaT = Z.t; return "Paralyzed: he has stopped breathing. Intubate, or bag him, now." + (k === "sux" && Z.cs.id === "tbi" ? "" : ""); }
+  if (k === "txa") { if (Z.cs.id === "bleed" || P.htx) { P.htxStop = 1; Z.txa = 1; } return "TXA in: slows clot breakdown. Best within 3 hours of injury."; }
+  if (k === "wb") { P.vol += 0.14 * dose; P.hb += 1 * dose; Z.units = (Z.units || 0) + dose; return "Whole blood in: red cells, plasma and platelets together. Watch the calcium."; }
+  if (k === "hts" || k === "mannitol") { Z.osm = (Z.osm || 0) + 6 * Math.min(1.5, f); if (k === "hts") P.vol += 0.03; else Z.push.push({ t: Z.t, e: { vol: -0.6 }, dur: 120 }); return Z.cs.id === "tbi" ? "Osmotic therapy: water is pulled out of the brain and the ICP falls." : "Osmotic load given."; }
+  return null;
+}
+
+/* ---------- living numbers and a voice (owner, Nov 19 2026: "make the vitals fluctuate like the other monitor",
+   "a live disappearing feed on the top right explaining how the patient feels") ---------- */
+var SBJ = { hr: 0, bp: 0, sp: 0, co2: 0, t: 0 };
+function sbJit(v) {
+  /* a slow random walk, so the numbers drift like a real monitor instead of sitting still */
+  var now = Date.now(); if (now - SBJ.t > 900) { SBJ.t = now; SBJ.hr = Math.max(-3, Math.min(3, SBJ.hr + (Math.random() - 0.5) * 2.2)); SBJ.bp = Math.max(-4, Math.min(4, SBJ.bp + (Math.random() - 0.5) * 2.6)); SBJ.sp = Math.max(-1, Math.min(1, SBJ.sp + (Math.random() - 0.5) * 0.9)); SBJ.co2 = Math.max(-2, Math.min(2, SBJ.co2 + (Math.random() - 0.5) * 1.4)); }
+  var o = {}; for (var k in v) o[k] = v[k];
+  if (v.hr > 0) o.hr = Math.round(v.hr + SBJ.hr * (v.rh === "afib" ? 3 : 1) + (v.rh === "afib" ? (Math.random() - 0.5) * 14 : 0));
+  if (v.sbp > 20) { o.sbp = Math.round(v.sbp + SBJ.bp * 1.3); o.dbp = Math.round(v.dbp + SBJ.bp * 0.7); o.map = Math.round((o.sbp + 2 * o.dbp) / 3); }
+  if (v.spo2 > 50) o.spo2 = Math.max(50, Math.min(100, Math.round(v.spo2 + SBJ.sp)));
+  if (v.etco2 > 5) o.etco2 = Math.round(v.etco2 + SBJ.co2);
+  return o;
+}
+/* what he says or what you notice, picked from his state; each line fades after a few seconds */
+function sbVoice(Z) {
+  var v = Z.v || {}, P = Z.P, L = [], awake = !Z.arrest && !(sbEff().sed > 0.3) && !Z.paralyzed && v.map > 50 && !(Z.cs.id === "tbi" && P.icp > 20);
+  if (Z.arrest) L.push(Z.cpr ? "[Compressions: ribs creak, the monitor bounces with each push]" : "[No breathing. No pulse.]");
+  else if (Z.apnea) L.push("[Not breathing: lips turning blue]");
+  else if (!awake) { if (Z.cs.id === "tbi" || v.map < 50) L.push("[Snoring respirations]", "[Gurgling in the airway]", "[Moans to pain only]"); else L.push("[Sedated, breathing with the vent]"); }
+  else {
+    if (P.isch || Z.cs.id === "cardio") L.push("My chest hurts... like an elephant sitting on it.", "I feel like I'm going to die.");
+    if (v.spo2 < 90 || P.ptx > 0.3 || P.ana) L.push("I... can't... breathe.", "[Using his neck muscles to breathe]");
+    if (P.ana) L.push("My throat is closing up!", "I itch everywhere.");
+    if (v.map < 62) L.push("I'm so dizzy...", "[Pale, cool and sweaty]");
+    if (v.hr > 140) L.push("My heart is racing out of my chest.");
+    if (v.hr < 45) L.push("I feel like I'm going to pass out.");
+    if (Z.cs.id === "sepsis") L.push("I'm freezing... no, I'm burning up.", "[Confused: asks what year it is]");
+    if (Z.cs.id === "bleed" || P.htx) L.push("I'm so thirsty.", "[Anxious, restless]");
+    if (Z.cs.id === "htn") L.push("My head is pounding. Everything is blurry.");
+    if (Z.cs.id === "pe") L.push("It hurts to take a deep breath.");
+    if (Z.cs.id === "rvmi") L.push("I feel weak. My stomach is queasy.");
+    if (Z.cs.id === "tamp") L.push("I can't get comfortable. I feel heavy.");
+    if (v.sbp > 180) L.push("My head... it's pounding.");
+    if (!L.length) L.push(v.map > 70 && v.spo2 > 93 ? "I'm feeling a little better." : "I don't feel right.");
+    if (sbHas("bvm") && !Z.paralyzed) L.push("[Fighting the mask]");
+    if (sbHas("pacer") && Z.capture) L.push("Ow! What is that thumping? It hurts!");
+  }
+  return L[Math.floor(Math.random() * L.length)];
+}
+function sbSay(t, kind) { var Z = S.sb; if (!Z || !t) return; Z.feed = (Z.feed || []).concat([{ t: t, at: Date.now(), k: kind || "" }]).slice(-4); sbFeedDraw(); }
+function sbFeedDraw() {
+  var el = document.getElementById("sbfeed"), Z = S.sb; if (!el || !Z) return; var now = Date.now();
+  Z.feed = (Z.feed || []).filter(function (f) { return now - f.at < 7000; });
+  el.innerHTML = Z.feed.map(function (f) { var age = (now - f.at) / 7000; return '<p class="sbf' + (f.t.charAt(0) === "[" ? " obs" : "") + (f.k ? " " + f.k : "") + '" style="opacity:' + Math.max(0, 1 - Math.max(0, age - 0.6) * 2.5).toFixed(2) + '">' + esc(f.t) + '</p>'; }).join("");
+}
+function sbVoiceTick() { var Z = S.sb; if (!Z || Z.paused) return; var now = Date.now(); if (!Z.nextSay || now > Z.nextSay) { Z.nextSay = now + 6000 + Math.random() * 5000; sbSay(sbVoice(Z)); } sbFeedDraw(); }
+/* how a medicine feels to him, right after it goes in */
+var SB_FEEL = { norepi: "My heart is pounding.", epi: "Whoa... my heart is racing.", epipush: "My heart is racing! I'm shaking.", dopa: "My heart is fluttering.", dobut: "I feel my heart beating hard.", phenyl: "", vaso: "", ntg: "My head is throbbing.", nipride: "", esmolol: "", metop: "", dilt: "", diltpush: "", adenosine: "I feel like I'm dying! ...oh, it passed.", atropine: "My mouth is so dry.", fentanyl: "That's better.", midaz: "[Eyes getting heavy]", ketamine: "[Staring, eyes flicking side to side]", etomidate: "[Out: eyes close, muscles twitch]", roc: "[Completely limp. Not breathing.]", sux: "[Muscles ripple, then he goes limp]", naloxone: "", diphen: "I feel sleepy.", calcium: "I feel warm all over.", lasix: "I need to pee.", fluid: "", blood: "", wb: "", albuterol: "I'm shaky.", hts: "", mannitol: "", txa: "", tpa: "", amiobolus: "", aspirin: "", glucose: "", dextrose: "" };
+
+function sbEq(id) { return SB_EQ.filter(function (e) { return e[0] === id; })[0]; }
+function sbMed(id) { return SB_MEDS.filter(function (m) { return m[0] === id; })[0]; }
+function sbHas(k) { var Z = S.sb; return !!(Z && Z.eq && Z.eq[k]); }
+function sbAccess() { return sbHas("iv") || sbHas("io") || sbHas("cvc"); }
+function sbMissing(needs) { return (needs || []).filter(function (n) { return !sbHas(n); }).map(function (n) { var e = sbEq(n); return e ? e[1] : n; }); }
+/* put something on him */
+function sbApplyEq(id) {
+  var Z = S.sb, e = sbEq(id); if (!e) return;
+  if (!sbOkEq(id)) { sbLog(Z, e[1] + ": " + sbScopeMsg()); sbToast(sbScopeMsg()); return; }
+  var miss = sbMissing(e[4]); if (miss.length) { sbLog(Z, "Cannot place " + e[1] + " yet: first add " + miss.join(" and ") + "."); sbToast("Needs " + miss.join(" and ") + " first"); return; }
+  Z.eq = Z.eq || {};
+  if (e[6] === "Airway") { ["nc", "nrb", "bvm", "vent"].forEach(function (k) { delete Z.eq[k]; }); Z.eq[id] = 1; Z.o2 = id === "bvm" ? "vent" : id; if (id === "bvm") Z.o2 = "nrb"; LAB_POSE = sbPose(id); sbZoomApply(); try { D3GL.scene(LAB_POSE); } catch (x) {} }
+  else Z.eq[id] = 1;
+  if (["aline", "pa", "iabp", "impella", "lvad", "ecmo", "pacer"].indexOf(id) >= 0) { Z.dev[id] = true; if (id === "lvad") { Z.dev.ecmo = false; delete Z.eq.ecmo; } if (id === "ecmo") { Z.dev.lvad = false; delete Z.eq.lvad; } }
+  if (id === "nibp") Z.nibpAt = -99;
+  if (id === "reboa") Z.reboaT = Z.t;
+  if ((id === "vent" || id === "igel") && !Z.arrest && !Z.paralyzed && !(sbEff().sed > 0.3) && (!Z.v || Z.v.map > 50)) sbLog(Z, "He is awake and fighting it: gagging, biting, heart rate and pressure surging. Sedation and a paralytic (RSI) first.");
+  if (id === "vent" || id === "igel" || id === "cric") { Z.apnea = false; }
+  sbLog(Z, e[1] + " on" + sbProviderNote(id) + ". " + e[5]); sbToast(e[1] + " applied");
+}
+function sbRemoveEq(id) {
+  var Z = S.sb, e = sbEq(id); if (!e || !Z.eq[id]) return;
+  delete Z.eq[id]; if (Z.dev[id]) Z.dev[id] = false;
+  if (e[6] === "Airway") { Z.o2 = "ra"; LAB_POSE = sbPose("ra"); sbZoomApply(); try { D3GL.scene(LAB_POSE); } catch (x) {} }
+  if (id === "cvc" && Z.eq.pa) { delete Z.eq.pa; Z.dev.pa = false; }
+  if (id === "pads") { delete Z.eq.pacer; Z.dev.pacer = false; }
+  sbLog(Z, e[1] + " removed.");
+}
+/* give a medicine: route and access checks, then a dose-scaled effect */
+function sbGive(id, route, dose) {
+  var Z = S.sb, m = sbMed(id); if (!m) return;
+  var R = m[4][route] || (route === "IO" ? m[4].IV : null), name = m[1];
+  dose = parseFloat(dose);
+  if (!sbOkMed(id, route)) { sbLog(Z, name + " " + (SB_ROUTE[route] || route) + ": " + sbScopeMsg()); sbToast(sbScopeMsg()); return; }
+  if ((route === "IV" || route === "IO") && !sbAccess()) { sbLog(Z, "No IV access: start a peripheral IV, an IO or a central line before giving " + name + " " + route + "."); sbToast("Start an IV or IO first"); return; }
+  if (!R) { sbLog(Z, name + " is not given " + (SB_ROUTE[route] || route) + ". Nothing useful happens."); sbToast("Wrong route: no effect"); return; }
+  if (R[3] === "none") { sbLog(Z, name + " " + (SB_ROUTE[route] || route) + ": it is not absorbed that way, so nothing happens."); sbToast("No effect by that route"); return; }
+  if (R[3] === "harm") { sbLog(Z, name + " " + route + " burns tissue and is never given that way. No benefit, and now he has a painful injury."); sbToast("Never give it that way"); return; }
+  if (!(dose >= 0)) { sbToast("Type a dose"); return; }
+  var ref = (R[1] + R[2]) / 2 || 1, f = dose / ref, hi = R[2];
+  var warn = dose > hi * 1.6 ? " That is well above the usual range (" + R[1] + "-" + R[2] + " " + R[0] + ")." : dose > 0 && dose < R[1] * 0.4 ? " That is well below the usual range, so expect little effect." : "";
+  if (R[3] === "drip") {
+    var lv = dose <= 0 ? 0 : Math.min(4.5, 1.5 * f);
+    Z.drip[id] = lv; Z.dripDose = Z.dripDose || {}; Z.dripDose[id] = dose ? dose + " " + R[0] : "";
+    if (lv && ["norepi", "vaso", "epi", "phenyl", "dopa"].indexOf(id) >= 0 && !sbHas("cvc") && (sbHas("iv") || sbHas("io"))) warn += " Running a pressor through a peripheral IV: watch the site closely for infiltration.";
+    sbLog(Z, dose ? name + " running at " + dose + " " + R[0] + " " + route + "." + warn : name + " stopped.");
+    if (dose && SB_FEEL[id] && !Z.arrest) setTimeout(function () { sbSay(SB_FEEL[id], "med"); }, 4000);
+    sbToast(dose ? name + " " + dose + " " + R[0] : name + " off");
+    return;
+  }
+  var slow = route === "IM" ? 0.55 : route === "IN" ? 0.6 : route === "PO" ? 0.25 : route === "SL" ? 0.8 : 1;
+  sbPushDose(id, f * slow, route, dose + " " + R[0], warn, dose);
+}
+function sbPushDose(k, f, route, txt, warn, dose) {
+  var xm, Z = S.sb, P = Z.P, m = sbMed(k), name = m ? m[1] : k, msg = "";
+  function add(e, dur) { var o = {}; for (var q in e) o[q] = e[q] * f; Z.push.push({ t: Z.t, e: o, dur: dur }); }
+  if (k === "fluid") { P.vol += 0.12 * (dose / 500); P.hb = Math.max(5, P.hb - 0.2 * (dose / 500)); msg = "Fluid running in."; }
+  else if (k === "blood") { P.vol += 0.13 * dose; P.hb += 0.9 * dose; msg = "Blood in, through a warmer."; }
+  else if (k === "lasix") { add({ vol: -1.2 }, 90); msg = "He will diurese over the next minutes."; }
+  else if (k === "atropine") { if (P.rh === "chb") msg = "Little effect on this wide-complex block."; else { add({ hr: 0.35 }, 60); msg = "Heart rate climbing."; } }
+  else if (k === "adenosine") { add({ hr: -0.6 }, 6); msg = P.rh === "afib" ? "A brief pause shows the fibrillation, then AF continues." : "A brief pause."; }
+  else if (k === "epipush") {
+    if (Z.arrest) { add({ svr: 0.9, contr: 0.4 }, 60); Z.epi = (Z.epi || 0) + 1; msg = "Epinephrine in during the code."; }
+    else if (route === "IV" && dose >= 0.1) { add({ svr: 1.2, contr: 0.5, hr: 0.6 }, 60); if (Math.random() < 0.5) { P.rh = "vt"; P.hr0 = 180; } msg = "A cardiac-arrest-sized IV dose in a patient with a pulse: pressure and heart rate shoot up and the rhythm becomes unstable."; }
+    else { add({ svr: route === "IV" ? 0.35 : 0.55, contr: 0.25, hr: 0.25, lungAna: 2 }, route === "IV" ? 25 : 90); if (P.ana) P.ana = Math.max(0, P.ana - 0.45 * Math.min(1.5, f)); msg = route === "IV" ? "Push-dose epinephrine: a short pressure bump." : "Epinephrine absorbed from the muscle."; }
+  }
+  else if (k === "diltpush") { add({ hr: -0.25, contr: -0.1, svr: -0.08 }, 120); msg = "Rate slowing."; }
+  else if (k === "amiobolus") { add({ hr: -0.12, conv: 0.5 }, 120); msg = ""; if (Z.arrest && P.rh === "vf") Z.amio = 1; }
+  else if (k === "metop") { add({ hr: -0.22, contr: -0.12 }, 120); }
+  else if (k === "labet") { add({ hr: -0.12, svr: -0.2, contr: -0.05 }, 150); }
+  else if (k === "calcium") { add({ contr: 0.12 }, 60); }
+  else if (k === "tpa") { if (Z.cs.id === "pe") { P.pvr = Math.max(1.3, P.pvr * 0.35); P.rvf = Math.min(1, P.rvf + 0.3); P.lung = Math.min(0.97, P.lung + 0.18); msg = "The clot is breaking up."; } else { msg = "Not needed here: now he is at risk of bleeding."; if (Z.cs.id === "bleed") P.vol -= 0.15; } }
+  else if (k === "ketamine") { add({ svr: 0.08, hr: 0.08, sed: 1 }, 120); msg = "Sedated; pressure holds."; }
+  else if (k === "midaz") { add({ svr: -0.08, sed: 1 }, 120); msg = "Sedated; pressure dips a little."; }
+  else if (k === "fentanyl") { add({ hr: -0.04, svr: -0.04 }, 90); msg = "Pain eases."; }
+  else if (k === "naloxone") { msg = "No change: this is not an opioid problem."; }
+  else if (k === "diphen") { if (P.ana) P.ana = Math.max(0, P.ana - 0.05); msg = "Itching eases; it does not fix the airway or the pressure."; }
+  else if (k === "solumed") { if (P.ana) P.ana = Math.max(0, P.ana - 0.05); msg = "Works over hours, not minutes."; }
+  else if (k === "ntg") { add({ vol: -1.0, svr: -0.3 }, 300); msg = "Preload drops."; }
+  else if ((xm = sbExtraPush(k, f, dose)) != null) { msg = xm; }
+  else if (k === "aspirin") { msg = "Chewed. It helps a heart attack over hours, not the numbers on the monitor."; }
+  else if (k === "glucose" || k === "dextrose") { msg = "His sugar was not low, so nothing changes."; }
+  else if (k === "albuterol") { add({ hr: 0.08 }, 120); if (P.ana) { P.lung = Math.min(0.95, P.lung + 0.04); msg = "Wheezing eases a little; it does not treat the shock."; } else msg = "Heart rate up a little; no wheezing to treat."; }
+  sbLog(Z, name + " " + txt + " " + route + ". " + msg + (warn || "")); sbToast(name + " given");
+  if (SB_FEEL[k] && !Z.arrest) setTimeout(function () { sbSay(SB_FEEL[k], "med"); }, 2500);
+  try { sbBeepTone(520, 0.08, 0.05); } catch (e) {}
+}
+/* actions */
+function sbDo(id) {
+  var a0 = SB_ACTS.filter(function (x) { return x[0] === id; })[0]; if (a0 && sbOkAct(id) && !sbMissing(a0[4]).length && sbExtraAct(id)) return;
+  var a = SB_ACTS.filter(function (x) { return x[0] === id; })[0], Z = S.sb; if (!a) return;
+  if (!sbOkAct(id)) { sbLog(Z, a[1] + ": " + sbScopeMsg()); sbToast(sbScopeMsg()); return; }
+  var miss = sbMissing(a[4]); if (miss.length) { sbLog(Z, a[1] + " needs " + miss.join(" and ") + " first."); sbToast("Needs " + miss.join(" and ")); return; }
+  if (id === "defib" && sbScope() && sbScope().aed) { var P = Z.P; if (P.rh === "vf" || (P.rh === "vt" && Z.arrest)) { sbLog(Z, "AED: shock advised."); sbAct("defib"); } else { sbLog(Z, "AED: no shock advised. Continue CPR if there is no pulse."); sbToast("No shock advised"); } return; }
+  if (id === "cycle") { Z.nibpAt = -99; sbToast("Cuff cycling"); return; }
+  sbAct(id);
+}
+/* little message under the dummy */
+function sbToast(t) { S.sbToast = { t: t, at: Date.now() }; }
+
+/* ---------- zoom ---------- */
+function sbZoomApply() {
+  var z = (S.sb && S.sb.zoom) || 1; [LAB_POSE].forEach(function (P) { if (!P || !P.cam) return; var at = P.cam.at, b = P._eye0 || (P._eye0 = P.cam.eye.slice()); P.cam.eye = [at[0] + (b[0] - at[0]) * z, at[1] + (b[1] - at[1]) * z, at[2] + (b[2] - at[2]) * z]; });
+}
+function sbZoom(f) { var Z = S.sb; if (!Z) return; Z.zoom = Math.max(0.35, Math.min(1.7, (Z.zoom || 1) * f)); sbZoomApply(); try { D3GL.scene(LAB_POSE); } catch (e) {} }
+document.addEventListener("wheel", function (e) { var h = e.target.closest && e.target.closest('.bm3d[data-ctx="lab"]'); if (!h || !S.sb) return; e.preventDefault(); sbZoom(e.deltaY > 0 ? 1.08 : 0.93); }, { passive: false });
+(function () { var d0 = 0; document.addEventListener("touchmove", function (e) { if (e.touches.length !== 2 || !S.sb) { d0 = 0; return; } var h = e.target.closest && e.target.closest('.bm3d[data-ctx="lab"]'); if (!h) return; var dx = e.touches[0].clientX - e.touches[1].clientX, dy = e.touches[0].clientY - e.touches[1].clientY, d = Math.sqrt(dx * dx + dy * dy); if (d0) sbZoom(d0 / d); d0 = d; e.preventDefault(); }, { passive: false }); document.addEventListener("touchend", function () { d0 = 0; }); })();
+
+/* ---------- body sites: tap him for what you can do there ---------- */
+var SB_SITE_NAME = { head: "Head and airway", neck: "Neck", chest: "Chest", back: "Back", abdomen: "Abdomen", armL: "Left arm", armR: "Right arm", legL: "Left leg", legR: "Right leg", pelvis: "Groin", butt: "Buttocks" };
+function sbSiteFor(part) { return { pelvis: "legL", butt: "legR", back: "chest", handL: "armL", handR: "armR", footL: "legL", footR: "legR" }[part] || part; }
+function sbSiteMenu(site) {
+  var Z = S.sb, arm = site === "armL" || site === "armR", leg = site === "legL" || site === "legR";
+  var eqs = SB_EQ.filter(function (e) { return e[3] === site || (arm && (e[0] === "iv" || e[0] === "spo2" || e[0] === "nibp" || e[0] === "aline")) || (leg && (e[0] === "io" || e[0] === "iabp" || e[0] === "impella" || e[0] === "ecmo")); });
+  var acts = SB_ACTS.filter(function (a) { return a[3] === site || (arm && a[0] === "cycle"); });
+  var c = '<div class="sbsite"><div class="sbsh"><strong>' + esc(SB_SITE_NAME[site] || site) + '</strong><button class="linkish" data-sbsite="">Close</button></div><p class="sbexam">' + esc(sbExamText(site)) + '</p><div class="sbopts">';
+  c += eqs.map(function (e) { var on = sbHas(e[0]), miss = sbMissing(e[4]), ok = sbOkEq(e[0]); return '<button class="sbopt' + (on ? ' on' : '') + (ok ? '' : ' noscope') + '" data-sbeq="' + e[0] + '"' + ((miss.length || !ok) && !on ? ' data-miss="1"' : '') + '><strong>' + (on ? "Remove " : "") + esc(e[1]) + '</strong><small>' + (on ? "On him now" : !ok ? esc(sbScopeMsg()) : miss.length ? "Needs " + esc(miss.join(", ")) : esc(e[5])) + '</small></button>'; }).join("");
+  c += acts.map(function (a) { var ok = sbOkAct(a[0]); return '<button class="sbopt act' + (ok ? '' : ' noscope') + '" data-sbdo="' + a[0] + '"' + (ok ? '' : ' data-miss="1"') + '><strong>' + esc(a[0] === "defib" && sbScope() && sbScope().aed ? "AED: analyze and shock" : a[1]) + '</strong>' + (ok ? '' : '<small>' + esc(sbScopeMsg()) + '</small>') + '</button>'; }).join("");
+  var anyR = function (r) { var sc = sbScope(); if (!sc || !sc.meds) return true; return Object.keys(sc.meds).some(function (m) { return sc.meds[m].indexOf(r) >= 0; }); };
+  if (arm && anyR("IM")) c += '<button class="sbopt med" data-sbroute="IM"><strong>IM injection (deltoid)</strong><small>Pick a medicine to give IM</small></button>';
+  if (leg && anyR("IM")) c += '<button class="sbopt med" data-sbroute="IM"><strong>IM injection (thigh)</strong><small>Pick a medicine to give IM</small></button>';
+  if (site === "head" && anyR("IN")) c += '<button class="sbopt med" data-sbroute="IN"><strong>Intranasal (IN) medicine</strong><small>Atomizer: only some medicines work this way</small></button><button class="sbopt med" data-sbroute="SL"><strong>Under the tongue (SL)</strong><small>Sublingual tablet or spray</small></button>';
+  if ((arm || leg || site === "neck") && sbAccess()) c += '<button class="sbopt med" data-sbroute="IV"><strong>Give an IV medicine</strong><small>Through the line you placed</small></button>';
+  return c + '</div></div>';
+}
+function sbExamText(site) {
+  var Z = S.sb, v = Z.v || {}, P = Z.P;
+  if ((site === "chest" || site === "back") && (P.ptx > 0.15 || P.htx)) return (P.ptx > 0.15 ? "No breath sounds and hyperresonance on the " : "No breath sounds and dullness on the ") + (P.ptxSide === "L" ? "left" : "right") + "." + (P.ptx > 0.5 ? " Trachea shifting away." : "");
+  if (site === "head" && Z.cs.id === "tbi") return "GCS " + (P.icp > 25 ? 5 : P.icp > 20 ? 7 : 9) + ". Right pupil " + (P.icp > 25 ? "blown and fixed." : "sluggish.");
+  if (site === "chest" || site === "back") return v.wedge > 22 ? "Crackles at both bases." : P.ana ? "Wheezes everywhere, poor air movement." : P.tamp > 0.3 ? "Muffled heart sounds." : "Clear lungs, regular heart sounds.";
+  if (site === "neck") return v.cvp > 14 ? "Distended neck veins." : "Flat neck veins.";
+  if (site === "head") return Z.arrest ? "Unresponsive, not breathing normally." : v.map < 60 ? "Confused and drowsy." : "Awake and talking.";
+  if (site === "abdomen") return "Soft." + (sbHas("foley") ? " Urine: " + (v.map < 60 ? "almost none." : "flowing well.") : "");
+  return v.svr < 700 ? "Warm and flushed, bounding pulses." : v.map < 60 || v.svr > 1800 ? "Cool and mottled, weak pulses, slow capillary refill." : "Warm skin, normal pulses.";
+}
+function sbExam(part, x, y) { var Z = S.sb; Z.site = sbSiteFor(part); render(); var m = document.querySelector(".sbsite"); if (m) try { m.scrollIntoView({ block: "nearest", behavior: "smooth" }); } catch (e) {} }
+
+/* ---------- search: equipment, medicines and actions ---------- */
+function sbSearchHits(q) {
+  q = String(q || "").toLowerCase().trim(); if (!q) return [];
+  var H = [];
+  SB_EQ.forEach(function (e) { if ((e[1] + " " + e[2]).toLowerCase().indexOf(q) >= 0) H.push({ k: "eq", id: e[0], name: e[1], sub: sbOkEq(e[0]) ? e[6] + " · " + e[5] : sbScopeMsg(), no: !sbOkEq(e[0]) }); });
+  SB_MEDS.forEach(function (m) { if ((m[1] + " " + m[2]).toLowerCase().indexOf(q) >= 0) H.push({ k: "med", id: m[0], name: m[1], no: !sbOkMed(m[0]), sub: !sbOkMed(m[0]) ? sbScopeMsg() : m[3] + " · " + Object.keys(m[4]).filter(function (r) { return m[4][r][3] !== "none" && m[4][r][3] !== "harm"; }).join(", ") }); });
+  SB_ACTS.forEach(function (a) { if ((a[1] + " " + a[2]).toLowerCase().indexOf(q) >= 0) H.push({ k: "act", id: a[0], name: a[1], sub: "Action" }); });
+  return H.slice(0, 8);
+}
+function sbPickPanel() {
+  var Z = S.sb, P = Z.pick; if (!P) return "";
+  if (P.k === "eq") { var e = sbEq(P.id), on = sbHas(P.id), miss = sbMissing(e[4]);
+    return '<div class="sbcfg"><strong>' + esc(e[1]) + '</strong><p class="small">' + esc(e[5]) + '</p>' + (miss.length && !on ? '<p class="small sbwarn">Needs ' + esc(miss.join(", ")) + ' first.</p>' : '') + '<div class="actions"><button class="btn" data-sbapply="1">' + (on ? "Remove" : "Apply") + '</button><button class="btn ghost" data-sbcancel="1">Cancel</button></div></div>'; }
+  if (P.k === "act") { var a = SB_ACTS.filter(function (x) { return x[0] === P.id; })[0]; return '<div class="sbcfg"><strong>' + esc(a[1]) + '</strong><div class="actions"><button class="btn" data-sbapply="1">Do it</button><button class="btn ghost" data-sbcancel="1">Cancel</button></div></div>'; }
+  var m = sbMed(P.id), routes = Object.keys(m[4]).concat(["IV", "IM", "IN", "IO"]).filter(function (r, i, A) { return A.indexOf(r) === i; });
+  var r = P.route || Object.keys(m[4])[0], R = m[4][r] || (r === "IO" ? m[4].IV : null), unit = R ? R[0] : (m[4][Object.keys(m[4])[0]] || ["mg"])[0];
+  var cur = Z.dripDose && Z.dripDose[P.id];
+  return '<div class="sbcfg"><strong>' + esc(m[1]) + '</strong> <span class="muted small">' + esc(m[3]) + '</span>' +
+    '<div class="sbrt">' + routes.map(function (x) { return '<button data-sbrt="' + x + '" aria-pressed="' + (x === r) + '">' + esc(SB_ROUTE[x] || x) + '</button>'; }).join("") + '</div>' +
+    '<label class="sbdose">Dose <input id="sbdose" inputmode="decimal" placeholder="' + (R && R[3] !== "none" && R[3] !== "harm" ? R[1] + (R[2] !== R[1] ? "-" + R[2] : "") : "") + '" value="' + esc(P.dose || "") + '"> <span>' + esc(unit) + (R && R[3] === "drip" ? ' (infusion)' : '') + '</span></label>' +
+    (cur ? '<p class="small">Running now: ' + esc(cur) + '. Enter 0 to stop.</p>' : '') + '<p class="muted small">Patient 80 kg. Teaching model only, not a dosing reference.</p>' +
+    '<div class="actions"><button class="btn" data-sbapply="1">Apply</button><button class="btn ghost" data-sbcancel="1">Cancel</button></div></div>';
+}
+
+/* ---------- monitor: only what is on him ---------- */
+function sbTraces(Z) { var T = []; if (sbHas("ecg") || sbHas("pads")) T.push(["II", "#22c55e", -0.4, 1.2]); if (Z.dev.aline) T.push(["ART", "#f87171", 20, 160]); if (Z.dev.pa) T.push(["PA", "#facc15", 0, 60]); if (sbHas("spo2")) T.push(["Pleth", "#38bdf8", 0, 1]); if (sbHas("etco2")) T.push(["CO2", "#fde047", 0, 50]); return T; }
+function sbMonOn() { var Z = S.sb; return !!(Z && Z.eq && ["ecg", "spo2", "nibp", "etco2", "temp", "aline", "pa", "pads", "cvc", "foley"].some(function (k) { return Z.eq[k]; })); }
+function sbDrawNums() {
+  var el = document.getElementById("sbnums"), Z = S.sb; if (!el || !Z || !Z.v) return; var v = sbJit(Z.v), D = Z.dev; try { sbVoiceTick(); } catch (e) {}
+  if (sbHas("nibp") && !D.aline && (Z.t - Z.nibpAt > 60 * sbSet(Z, "nibp", "min", 5) || !Z.nibp)) { Z.nibpAt = Z.t; Z.nibp = Z.arrest ? null : [v.sbp, v.dbp, v.map]; }
+  function tile(lab, val, col, cls) { return '<div class="sbn ' + (cls || "") + '" style="--nc:' + col + '"><small>' + lab + '</small><b>' + val + '</b></div>'; }
+  var h = "", noPulse = Z.arrest && v.rh !== "pea";
+  if (sbHas("ecg") || sbHas("pads")) h += tile("HR", noPulse ? "---" : v.hr, "#22c55e", "big" + (v.hr > 150 || v.hr < 40 ? " al" : ""));
+  if (D.aline) h += tile("ART", v.sbp + "/" + v.dbp + "<i>(" + v.map + ")</i>", "#f87171", "big wide" + (v.map < 60 ? " al" : ""));
+  else if (sbHas("nibp")) h += tile("NIBP " + (Z.nibp ? fmtClock(Z.t - Z.nibpAt) + " ago" : ""), Z.nibp ? Z.nibp[0] + "/" + Z.nibp[1] + "<i>(" + Z.nibp[2] + ")</i>" : "---", "#f87171", "big wide" + (Z.nibp && Z.nibp[2] < 60 ? " al" : ""));
+  if (sbHas("spo2")) h += tile("SpO2", Z.arrest && !Z.cpr ? "--" : v.spo2, "#38bdf8", "big" + (v.spo2 < 88 ? " al" : ""));
+  if (sbHas("etco2")) h += tile("EtCO2", v.etco2, "#fde047");
+  if (sbHas("temp")) h += tile("Temp", (v.temp || 37).toFixed(1), "#e5e7eb");
+  if (sbHas("cvc") && !D.pa) h += tile("CVP", v.cvp, "#93c5fd");
+  if (D.pa) h += tile("PA", v.pas + "/" + v.pad, "#facc15", "wide") + tile("PAOP", v.wedge, "#facc15") + tile("CVP", v.cvp, "#93c5fd") + tile("CO", v.co.toFixed(1), "#a3e635") + tile("CI", v.ci.toFixed(1), "#a3e635") + tile("SvO2", v.svo2, "#c084fc") + tile("SVR", v.svr, "#fda4af");
+  if (sbHas("flotrac")) { var svv = Math.round(sbHas("vent") ? Math.max(5, 26 - v.pre * 18) : 0); h += tile("SV", Math.round(v.sv), "#a3e635") + tile("SVV", sbHas("vent") ? svv + "%" : "n/a*", "#a3e635") + tile("CO", v.co.toFixed(1), "#a3e635"); }
+  if (sbHas("scvo2")) h += tile("ScvO2", Math.min(90, v.svo2 + 4), "#c084fc");
+  if (sbHas("icp")) { var icp = Math.round(Z.P.icp || 10); h += tile("ICP", icp, "#f472b6", icp > 22 ? "al" : "") + tile("CPP", (Z.nibp || D.aline ? v.map - icp : "--"), "#f472b6", v.map - icp < 60 ? "al" : ""); }
+  if (sbHas("nirs")) h += tile("rSO2", Math.round(Math.max(30, Math.min(80, 38 + 0.42 * v.svo2 - Math.max(0, (Z.P.icp || 10) - 20)))), "#2dd4bf");
+  if (sbHas("bis")) h += tile("BIS", sbEff().sed > 0.3 ? 45 : Z.arrest ? 10 : 94, "#e879f9", Z.paralyzed && !(sbEff().sed > 0.3) ? "al" : "");
+  if (sbHas("iap")) h += tile("IAP", Math.round(6 + Math.max(0, Z.P.vol - 1.2) * 30), "#fde68a");
+  ["ctR", "ctL"].forEach(function (k) { if (!sbHas(k)) return; var side = k === "ctR" ? "R" : "L", mine = Z.P.ptxSide === side; h += tile("CT " + side, (mine && Z.P.htx ? Math.round(Z.ctOut || 0) + " mL" : "40 mL") + (mine && (Z.P.ptx > 0.02 || Z.P.needle) ? " · leak" : ""), "#fca5a5", "wide"); });
+  if (sbHas("foley")) h += tile("Urine", v.map < 60 ? "5 mL/h" : v.map < 65 ? "20 mL/h" : "60 mL/h", "#fde68a");
+  el.innerHTML = h || '<p class="muted small">Nothing is measuring yet.</p>';
+  var cons = document.getElementById("sbcons");
+  if (cons) { var cs = "";
+    if (D.iabp) cs += '<div class="sbcon"><b>IABP</b> 1:' + sbSet(Z, "iabp", "ratio") + ' · ECG trigger · Aug ' + Math.round(v.map + 25) + '</div>';
+    if (D.impella) cs += '<div class="sbcon"><b>Impella CP</b> P-' + sbSet(Z, "impella", "p") + ' · flow ' + (0.5 + 0.33 * sbSet(Z, "impella", "p")).toFixed(1) + ' L/min · placement OK</div>';
+    if (D.lvad) cs += '<div class="sbcon"><b>LVAD</b> 5,600 rpm · flow ' + Math.max(2.5, Math.min(6, v.co)).toFixed(1) + ' L/min · power 4.4 W</div>';
+    if (D.ecmo) cs += '<div class="sbcon"><b>VA-ECMO</b> ' + sbSet(Z, "ecmo", "flow") + ' L/min · sweep ' + sbSet(Z, "ecmo", "sweep") + ' L/min</div>';
+    if (sbHas("tvp")) cs += '<div class="sbcon"><b>Transvenous pacer</b> rate ' + sbSet(Z, "tvp", "rate") + ' · ' + sbSet(Z, "tvp", "ma") + ' mA · ' + (Z.capture ? "capture" : "NO CAPTURE") + '</div>';
+    if (sbHas("reboa")) cs += '<div class="sbcon"><b>REBOA</b> zone ' + sbSet(Z, "reboa", "zone") + ' · inflated ' + fmtClock(Z.t - (Z.reboaT || Z.t)) + ' (keep it short)</div>';
+    if (sbHas("icp")) cs += '<div class="sbcon"><b>EVD</b> ' + (sbSet(Z, "icp", "open") ? "open, draining at " + sbSet(Z, "icp", "drain") + " cmH2O" : "clamped, transducing") + '</div>';
+    if (Z.lastLab) cs += '<div class="sbcon drip"><b>Last labs</b> ' + esc(Z.lastLab) + '</div>';
+    if (Z.paralyzed) cs += '<div class="sbcon" style="border-left-color:#ef4444"><b>Paralyzed</b> ' + (Z.apnea ? "NOT BREATHING: ventilate now" : "ventilated") + '</div>';
+    if (D.pacer) cs += '<div class="sbcon"><b>Pacer</b> rate ' + sbSet(Z, "pacer", "rate") + ' · ' + sbSet(Z, "pacer", "ma") + ' mA · ' + (Z.capture ? "capture" : "NO CAPTURE") + '</div>';
+    if (sbHas("vent")) cs += '<div class="sbcon"><b>Ventilator</b> AC ' + sbSet(Z, "vent", "rate") + ' · Vt ' + sbSet(Z, "vent", "vt") + ' · PEEP ' + sbSet(Z, "vent", "peep") + ' · FiO2 ' + sbSet(Z, "vent", "fio2") + '%</div>';
+    if (sbHas("bvm")) cs += '<div class="sbcon"><b>BVM</b> ' + sbSet(Z, "bvm", "rate") + ' breaths/min · O2 ' + sbSet(Z, "bvm", "lpm") + ' L/min</div>';
+    Object.keys(Z.drip || {}).forEach(function (k) { if (Z.drip[k]) { var m = sbMed(k); cs += '<div class="sbcon drip"><b>' + esc(m ? m[1] : k) + '</b> ' + esc((Z.dripDose || {})[k] || "") + '</div>'; } });
+    cons.innerHTML = cs; }
+  var st = document.getElementById("sbstat"); if (st) { st.textContent = (Z.won ? "Stabilized! " : "") + (Z.cs.id === "free" ? "" : "Goal: " + Z.cs.goal + (Z.won ? "" : " · in range " + Math.floor(Z.ok) + "/30 s")) + " · " + fmtClock(Z.t); st.className = "sbstat" + (Z.won ? " won" : Z.arrest ? " code" : ""); }
+  var ts = document.getElementById("sbtoast"); if (ts) { var T = S.sbToast; ts.textContent = T && Date.now() - T.at < 3500 ? T.t : ""; }
+}
+
+/* ---------- the sandbox view ---------- */
+function sbView() {
+  var Z = S.sb, cs = Z.cs; Z.eq = Z.eq || {};
+  var c = '<div class="vlwrap sbwrap"><button class="linkish subback" data-sbquit="1">&larr; Lab menu</button><div class="sbhead"><h2 class="vltitle">' + esc(cs.name) + '</h2><span class="vltag">' + esc(cs.tag) + '</span></div><p class="muted small">' + esc(cs.story) + '</p>';
+  c += '<div class="vlstage sbstage"><div class="bm3d scene" data-ctx="lab"><div class="bm3dfb"><p class="muted small">Your browser cannot show The Great Bug in 3D.</p></div><p class="bm3dhint" aria-hidden="true">Drag to turn · pinch or +/- to zoom · tap a body part</p></div>' +
+    '<div class="sbzoom"><button data-sbzoom="0.8" aria-label="Zoom in">+</button><button data-sbzoom="1.25" aria-label="Zoom out">&minus;</button></div><div id="sbtoast" class="sbtoast" role="status"></div><div id="sbfeed" class="sbfeed" aria-live="polite"></div></div>' +
+    '<div class="sbparts">' + ["head", "neck", "chest", "abdomen", "armL", "armR", "legL", "legR"].map(function (p) { return '<button data-sbsite="' + p + '"' + (Z.site === p ? ' aria-pressed="true"' : '') + '>' + esc(SB_SITE_NAME[p]) + '</button>'; }).join("") + '</div>';
+  if (Z.site) c += sbSiteMenu(Z.site);
+  /* search */
+  var hits = sbSearchHits(Z.q);
+  c += '<div class="sbsearch"><input id="sbq" type="search" placeholder="Search equipment, a medicine or an action (ECG, IV, norepinephrine, intubate...)" value="' + esc(Z.q || "") + '" autocomplete="off">' +
+    (hits.length && !Z.pick ? '<div class="sbhits">' + hits.map(function (h) { return '<button class="sbhit' + (h.no ? ' noscope' : '') + '" data-sbhk="' + h.k + '" data-sbhid="' + h.id + '"><strong>' + esc(h.name) + '</strong><small>' + esc(h.sub) + '</small></button>'; }).join("") + '</div>' : '') + sbPickPanel() + '</div>';
+  /* monitor only once something measures */
+  if (sbMonOn()) c += '<div class="sbmonitor"><div class="sbbezel"><div class="sbbrand"><span>BUG-MON 7</span><span class="sbsnd"><button class="sbmute" data-sbmute="1" aria-pressed="' + !SBSND.on + '">' + (SBSND.on ? "Sound on" : "Muted") + '</button></span></div><div class="sbscreen">' + (sbTraces(Z).length ? '<canvas id="sbcv" class="sbcv sbn' + sbTraces(Z).length + '" aria-hidden="true"></canvas>' : '<canvas id="sbcv" class="sbcv sbn0" aria-hidden="true"></canvas>') + '<div id="sbnums" class="sbnums"></div></div><div id="sbstat" class="sbstat"></div></div><div class="sbstand"></div></div>';
+  else c += '<div class="sbempty"><b>No monitor yet.</b> Nothing is measuring him. Tap his chest for ECG leads, his finger for a pulse oximeter, his arm for a BP cuff, or search for them.<div id="sbstat" class="sbstat"></div><div id="sbnums" hidden></div></div>';
+  c += '<div id="sbcons" class="sbcons"></div>';
+  /* on him now */
+  var on = Object.keys(Z.eq).filter(function (k) { return Z.eq[k]; });
+  if (on.length) c += '<div class="sbon"><span class="muted small">On him now</span>' + on.map(function (k) { var e = sbEq(k); return '<div class="sbonrow"><span class="sbonn"><strong>' + esc(e ? e[1] : k) + '</strong><small>' + esc(e ? e[5] : "") + '</small></span>' + sbSetUI(k) + '<button class="linkish" data-sbeq="' + k + '">Remove</button></div>'; }).join("") + '</div>';
+  c += '<div class="sbquick">' + (Z.arrest || Z.cpr ? '<button class="btn small' + (Z.cpr ? '' : ' ghost') + '" data-sbdo="cpr">' + (Z.cpr ? "Stop CPR" : "Start CPR") + '</button>' + (Z.cpr ? sbSetUI("cpr") : '') : '') + (sbHas("pads") ? (sbScope() && sbScope().aed ? '<button class="btn small ghost" data-sbdo="defib">AED: analyze</button>' : '<button class="btn small ghost" data-sbdo="defib">Shock</button><button class="btn small ghost" data-sbdo="sync">Sync shock</button>') : '') + '<button class="btn small ghost" data-sbpause="1">' + (Z.paused ? "Resume" : "Pause") + '</button><button class="btn small ghost" data-sbreset="1">Restart</button>' + (cs.hint ? '<details class="sbhint"><summary>Hint</summary><p>' + esc(cs.hint) + '</p></details>' : '') + '</div>';
+  c += '<details class="vleng sbengd"' + (Z.engOpen ? ' open' : '') + '><summary class="vlmhead"><span class="vldev">Inside him</span><span class="muted small">preload, afterload and devices, live</span></summary><canvas id="vleng" class="vlengcv" aria-hidden="true"></canvas></details>';
+  c += '<div class="sblog"><h3>What happened</h3><ol>' + Z.log.slice(0, 14).map(function (l) { return '<li><span>' + fmtClock(l.t) + '</span> ' + esc(l.m) + '</li>'; }).join("") + '</ol></div>';
+  return c + '<p class="muted small">Fictional practice only. A simplified physiology model for learning how drugs and devices change the patient; real patients respond differently. Doses here are not a dosing reference.</p></div>';
+}
+function sbClick(t, a) {
+  if (a.sbgo) { var cs = a.sbgo === "random" ? SB_CASES[Math.floor(Math.random() * SB_CASES.length)] : a.sbgo === "free" ? SB_HEALTHY : SB_CASES.filter(function (x) { return x.id === a.sbgo; })[0]; if (!cs) return true; S.sb = sbNew(cs); S.sb.eq = {}; S.sb.zoom = 1; S.vlab = null; SBL.G = null; LAB_POSE = sbPose("ra"); sbZoomApply(); try { audioCtx(); } catch (e) {} render(); window.scrollTo(0, 0); return true; }
+  if (!S.sb) return false;
+  var Z = S.sb;
+  if (a.sbquit) { S.sb = null; render(); return true; }
+  if (a.sbreset) { var z = Z.zoom; S.sb = sbNew(Z.cs); S.sb.eq = {}; S.sb.zoom = z; LAB_POSE = sbPose("ra"); sbZoomApply(); render(); return true; }
+  if (a.sbpause) { Z.paused = !Z.paused; render(); return true; }
+  if (a.sbmute) { SBSND.on = !SBSND.on; render(); return true; }
+  if (a.sbzoom) { sbZoom(+a.sbzoom); return true; }
+  if (a.sbsite != null) { Z.site = a.sbsite && Z.site !== a.sbsite ? a.sbsite : null; render(); return true; }
+  if (a.sbeq) { if (sbHas(a.sbeq)) sbRemoveEq(a.sbeq); else sbApplyEq(a.sbeq); render(); return true; }
+  if (a.sbdo) { sbDo(a.sbdo); render(); return true; }
+  if (a.sbroute) { Z.pick = null; Z.q = ""; Z.wantRoute = a.sbroute; render(); var q = document.getElementById("sbq"); if (q) { q.placeholder = "Search a medicine to give " + (SB_ROUTE[a.sbroute] || a.sbroute); try { q.scrollIntoView({ block: "center" }); } catch (x) {} q.focus(); } return true; }
+  if (a.sbhk) { Z.pick = { k: a.sbhk, id: a.sbhid, route: a.sbhk === "med" ? (Z.wantRoute && sbMed(a.sbhid)[4][Z.wantRoute] ? Z.wantRoute : Z.wantRoute || Object.keys(sbMed(a.sbhid)[4])[0]) : null }; render(); var d = document.getElementById("sbdose"); if (d) d.focus(); return true; }
+  if (a.sbrt) { var dv = document.getElementById("sbdose"); if (Z.pick) { Z.pick.route = a.sbrt; Z.pick.dose = dv ? dv.value : ""; } render(); return true; }
+  if (a.sbcancel) { Z.pick = null; Z.wantRoute = null; render(); return true; }
+  if (a.sbapply && Z.pick) {
+    var P = Z.pick;
+    if (P.k === "eq") { if (sbHas(P.id)) sbRemoveEq(P.id); else sbApplyEq(P.id); }
+    else if (P.k === "act") sbDo(P.id);
+    else { var dd = document.getElementById("sbdose"); sbGive(P.id, P.route, dd ? dd.value : ""); }
+    Z.pick = null; Z.q = ""; Z.wantRoute = null; render(); return true;
+  }
+  return false;
+}
+document.addEventListener("input", function (e) { if (e.target && e.target.id === "sbq" && S.sb) { S.sb.q = e.target.value; S.sb.pick = null; var pos = e.target.selectionStart; render(); var q = document.getElementById("sbq"); if (q) { q.focus(); try { q.setSelectionRange(pos, pos); } catch (x) {} } } });
+document.addEventListener("toggle", function (e) { if (e.target && e.target.classList && e.target.classList.contains("sbengd") && S.sb) { S.sb.engOpen = e.target.open; } }, true);
+
+function fmtClock(t) { t = Math.floor(t); return Math.floor(t / 60) + ":" + ("0" + (t % 60)).slice(-2); }
+
+/* ---------- the sandbox view ---------- */
+function sbStart() {
+  var cv = document.getElementById("sbcv");
+  if (cv) { var dpr = Math.min(2, window.devicePixelRatio || 1), r = cv.getBoundingClientRect();
+    if (r.width && (cv.width !== Math.round(r.width * dpr) || cv.height !== Math.round(r.height * dpr))) { cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr); SBL.x = 0; SBL.py = null; SBL.n = 0; }
+    cv._dpr = dpr; }
+  SBL.G = SBL.G || { t: 0, tb: 0, T: 0.8, k: 0 };
+  if (!SBL.raf) { SBL.lt = 0; SBL.raf = requestAnimationFrame(sbLoop); }
+  sbDrawNums();
+}
+if (typeof render === "function") (function () { var r0 = render; render = function () { var v = r0.apply(this, arguments); try { if (S.sb && document.getElementById("sbstat")) sbStart(); } catch (e) {} return v; }; })();
+/* tapping him in the sandbox: a quick exam */
 })();
