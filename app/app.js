@@ -1490,7 +1490,7 @@ function scenView(s, list, inSess) {
     ok.forEach(function (id) { c += '<li><button class="linkish" data-drug="' + id + '">' + esc(nameOf(id)) + '</button> (also acceptable): ' + esc((s.notes && s.notes[id]) || "Reasonable option.") + '</li>'; });
     wrong.forEach(function (id) { if (st.sel[id] || (s.notes && s.notes[id])) c += '<li><strong>' + esc(nameOf(id)) + '</strong> (not indicated): ' + esc((s.notes && s.notes[id]) || "Not indicated for this patient.") + '</li>'; });
     c += '</ul></div>';
-    if (typeof isReviewer === "function" && isReviewer()) c += qRateHTML(s.lv && s.q ? s : { id: "qs" + String(s.id || "").replace(/[^A-Za-z0-9]/g, "").slice(0, 40), lv: "scen", q: s.title + ": " + (s.ask || ""), d: "" });
+    if ((typeof isReviewer === "function" && isReviewer()) || inSess !== "rush") c += qRateHTML(s.lv && s.q ? s : { id: "qs" + String(s.id || "").replace(/[^A-Za-z0-9]/g, "").slice(0, 40), lv: "scen", q: s.title + ": " + (s.ask || ""), d: "" });
     if (inSess === "rush") { var sc = perfect ? ["ok", "Outcome: your patient improved."] : hit && !bad ? ["", "Outcome: partly treated. Your patient is holding steady but not improving."] : ["bad", "Outcome: your patient got worse."]; c += '<p class="mcout ' + sc[0] + '"><strong>' + sc[1] + '</strong></p><div class="actions"><button class="btn" data-act="rushnext">Next call</button></div>'; return c + '</div>'; }
     var sk = "rs-" + s.id + "-" + (S.rush ? S.rush.n : 0);
     if (inSess === "rush") c += autoBar(sk, Math.max(4.5, autoSecs(s.why, perfect) + 2), "Next call coming in");
@@ -2122,7 +2122,8 @@ function nrQuiz(st) {
   });
  c += '</div><div class="qreport">' + reportBtn("question", qRef(q), q.d) + '</div>';
   if (reveal) c += '<div class="explain ' + (nrRight(x, picked) ? "ok" : "bad") + '"><strong>' + (nrRight(x, picked) ? "Correct." + (st.mode === "practice" ? stickNote(true) : '') : (q.t === "order" ? "Not quite. The correct order is shown above." : (q.t === "multi" ? "Not quite. You found " + (picked || []).filter(function (v) { return q.ok.indexOf(v) >= 0; }).length + " of " + q.ok.length + " correct answers" + ((picked || []).some(function (v) { return q.ok.indexOf(v) < 0; }) ? " and picked a wrong one" : "") + ". Correct answers: " : "Not quite. Correct answer: ") + esc(q.a)) + (st.mode === "practice" ? stickNote(false) : '')) + '</strong><p>' + esc(q.x) + '</p>' + (q.d && DB.drugs[q.d] ? '<button class="linkish" data-drug="' + q.d + '">Review ' + esc(DB.drugs[q.d].name) + '</button>' : '') + '</div>';
-  if (reveal) c += qRateHTML(q);
+  /* students rate every question 1-5, except where the quiz moves on by itself (owner, Nov 20 2026) */
+  if (reveal) c += qRateHTML(q, picked != null && st.just === st.i && !(q.t && st.mode === "practice" && !reveal));
   else if (picked != null && typeof isReviewer === "function" && isReviewer()) c += revHTML(q);   /* evaluators grade exam questions too (owner, Nov 13 2026) */
   /* auto-advance once the question you just answered has been read (owner, Nov 15 2026) */
   var nk = picked != null && st.just === st.i && !(q.t && st.mode === "practice" && !reveal) ? "nr-" + (st.start || 0) + "-" + st.i : "";
@@ -3209,6 +3210,60 @@ var LENS = {
   im: ["Imaging focus", [["Why imaging uses it", "@rwi.use"], ["Screen before giving", "@rwi.check"], ["Watch during and after", "@rwi.watch"], ["If something goes wrong", "@rwi.act"]]],
   ems: ["Field focus", [["Why EMS gives it", "pearl.whyEMSGivesIt"], ["What EMS should know", "pearl.whatEMSShouldKnow"], ["Check before giving", "pearl.whatToCheckBeforeGiving"], ["Monitor after giving", "pearl.whatToMonitorAfterGiving"], ["When to stop", "pearl.whenToStopAdministration"]]]
 };
+/* ---------- the "why" behind each thing to monitor (owner, Nov 20 2026: "I see monitor after giving: Glucose, but you
+   dont explain why"). Each item in a "Monitor after giving" or "Labs to check" line gets a short reason, chosen from the
+   drug's own side effects, warnings and toxicity text (so insulin says sugar can drop and a steroid says it can rise). */
+function monCtx(d) { var o = []; [9, 13].forEach(function (si) { var r = d && d.s && d.s[si]; if (r) o.push(r.join(" ")); }); return o.join(" ").toLowerCase(); }
+var MON_WHY = [
+  [/\b(blood )?(glucose|sugar|bg|fingerstick)\b/i, function (c) { var lo = /hypoglyc|low blood sugar/.test(c), hi = /hyperglyc|high blood sugar/.test(c); return lo && hi ? "it can push blood sugar too low or too high" : lo ? "it can drop blood sugar (hypoglycemia)" : hi ? "it can raise blood sugar (hyperglycemia)" : "a sugar change shows up here first"; }],
+  [/\b(potassium|k\+|k\b)/i, function (c) { var hi = /hyperkal/.test(c), lo = /hypokal/.test(c); return hi && lo ? "it can push potassium up or down, and both can cause dangerous rhythms" : hi ? "it can raise potassium, which can cause dangerous heart rhythms" : lo ? "it can lower potassium, which brings weakness and arrhythmias" : "potassium shifts change how the heart conducts"; }],
+  [/\bmagnesium|\bmg\b/i, function (c) { return /hypermagnes|magnesium toxicity/.test(c) ? "too much magnesium causes weakness, low blood pressure and slowed breathing" : "low magnesium makes arrhythmias (including torsades) more likely"; }],
+  [/\bsodium|\bna\b/i, function (c) { return /hyponat|siadh/.test(c) ? "it can lower sodium, which causes confusion and seizures" : /hypernat/.test(c) ? "it can raise sodium" : "sodium shifts affect the brain and fluid balance"; }],
+  [/\bcalcium|\bca\b/i, function (c) { return /hypercalc/.test(c) ? "it can raise calcium" : /hypocalc/.test(c) ? "it can lower calcium, which causes cramps, tetany and arrhythmias" : "calcium affects the heart and muscles"; }],
+  [/\b(blood pressure|bp|hypotension|hypertension|map)\b/i, function (c) { var lo = /hypotens|low blood pressure/.test(c), hi = /hypertens|high blood pressure|raises blood pressure/.test(c); return lo && hi ? "it can swing blood pressure either way" : lo ? "it can drop blood pressure" : hi ? "it can raise blood pressure" : "it shows how the circulation is handling the drug"; }],
+  [/\b(heart rate|hr|pulse|pulses)\b/i, function (c) { var b = /bradycard|heart block|slow heart/.test(c), t = /tachycard|palpitat/.test(c); return b && t ? "it can slow or speed the heart" : b ? "it can slow the heart (bradycardia)" : t ? "it can speed the heart (tachycardia)" : "a rate change is often the first sign of trouble"; }],
+  [/\b(ecg|ekg|rhythm|qt|qtc|telemetry|cardiac monitor|cardiac monitoring)\b/i, function (c) { return /\bqt\b|qtc|torsade/.test(c) ? "it can lengthen the QT interval and trigger torsades" : /heart block|av block|bradycard/.test(c) ? "it can slow conduction and cause heart block" : /arrhythm|dysrhythm|v-?fib|ventricular/.test(c) ? "it can cause dangerous rhythms" : "rhythm changes show up here right away"; }],
+  [/\b(spo2|oxygen saturation|o2 sat|oxygenation|pulse ox)/i, function (c) { return /respiratory depress|apnea|hypoventil/.test(c) ? "it can slow breathing, and oxygen falls after that" : /bronchospasm|pulmonary edema|pneumonitis/.test(c) ? "it can affect the lungs" : "it shows whether oxygen is keeping up"; }],
+  [/\betco2|capnograph|end-tidal/i, function () { return "it's the earliest sign of slowed breathing or a tube out of place"; }],
+  [/\b(respirat\w*|breathing|rr|resp|work of breathing|ventilation)\b/i, function (c) { return /respiratory depress|apnea|hypoventil/.test(c) ? "it can slow or stop breathing" : /bronchospasm|wheez/.test(c) ? "it can tighten the airways" : "breathing changes come early"; }],
+  [/\bairway\b/i, function (c) { return /angioedema|swelling of the (face|tongue|throat)|laryngeal/.test(c) ? "swelling can close the airway" : /sedat|vomit|aspirat/.test(c) ? "sedation and vomiting can block or soil the airway" : "the airway comes first"; }],
+  [/\b(mental status|loc|level of consciousness|sedation|alertness|consciousness|confusion|mentation)\b/i, function (c) { return /sedat|drowsi|somnol|cns depress/.test(c) ? "it can sedate, and too much sedation slows breathing" : /confus|delirium|encephalopath/.test(c) ? "it can cause confusion or delirium" : "brain effects show up as a change in alertness"; }],
+  [/\b(neuro|neurologic\w*|neuro exam)\b/i, function (c) { return /bleed|hemorrhag/.test(c) ? "a new deficit can mean bleeding in the brain" : /seizure/.test(c) ? "it can cause seizures or other brain effects" : "new deficits are caught early"; }],
+  [/\bseizure/i, function (c) { return /seizure/.test(c) ? "it can lower the seizure threshold" : "to see whether seizures stop or return"; }],
+  [/\b(temp|temperature|fever)\b/i, function (c) { return /malignant hypertherm/.test(c) ? "a rising temperature can mean malignant hyperthermia" : /neuroleptic malignant|serotonin syndrome|hypertherm/.test(c) ? "a high temperature can mean NMS, serotonin syndrome or overheating" : /infection|neutropen|immunosupp/.test(c) ? "fever may be the only sign of infection when immunity is down" : /infusion reaction|cytokine/.test(c) ? "fever is part of an infusion reaction" : "fever or a temperature swing is an early warning"; }],
+  [/\b(lfts?|liver|hepatic|jaundice|ast|alt|bilirubin)\b/i, function (c) { return /hepatotox|liver (injury|failure|damage)|hepatitis|hepatic failure/.test(c) ? "it can injure the liver" : "the liver clears it, so liver problems let it build up"; }],
+  [/\b(renal|kidney|creatinine|scr|bun|egfr|urine output|uop)\b/i, function (c) { return /nephrotox|kidney (injury|damage|failure)|acute kidney|aki|renal (failure|toxicity)/.test(c) ? "it can harm the kidneys" : /renal|kidney/.test(c) ? "it's cleared by the kidneys, so poor function lets it build up" : "urine output shows how the kidneys and fluids are doing"; }],
+  [/\b(inr|pt|ptt|aptt|anti-xa|coag\w*|clotting)\b/i, function () { return "it changes clotting, so the right level keeps bleeding and clots in check"; }],
+  [/\b(bleed\w*|hemorrhage|bruising|stool|hematuria)\b/i, function (c) { return /bleed|hemorrhag|anticoag|antiplatelet/.test(c) ? "it raises the risk of bleeding" : "to catch bleeding early"; }],
+  [/\b(platelets?|cbc|blood counts?|wbc|anc|neutrophils?|hemoglobin|hgb|hematocrit)\b/i, function (c) { return /myelosupp|neutropen|agranulocyt|thrombocytopen|bone marrow|pancytopen/.test(c) ? "it can lower blood counts" : /bleed/.test(c) ? "a falling count can mean bleeding" : "blood counts show side effects before symptoms do"; }],
+  [/\b(iv site|infusion site|injection site|extravasation|infiltration|phlebitis)\b/i, function (c) { return /vesicant|extravasat|necrosis|tissue (damage|injury)/.test(c) ? "a leak outside the vein can damage the tissue" : "the site shows leaks and irritation early"; }],
+  [/\b(allerg\w*|hypersensitiv\w*|anaphyla\w*|infusion reaction|rash|hives|urticaria)\b/i, function () { return "reactions usually start during or soon after a dose"; }],
+  [/\b(pain|pain score|relief)\b/i, function () { return "it shows whether the drug is working"; }],
+  [/\b(weight|edema|fluid|i&o|intake and output|hydration|dehydration|lung sounds|crackles)\b/i, function (c) { return /fluid retention|edema|heart failure/.test(c) ? "it can hold onto fluid or worsen heart failure" : /diures|dehydrat|volume deplet/.test(c) ? "it moves fluid out, and too much causes dehydration" : "fluid balance shifts with it"; }],
+  [/\b(levels?|trough|peak|drug level|serum concentration)\b/i, function () { return "the safe range is narrow, so levels guide the dose"; }],
+  [/\b(ck|cpk|creatine kinase|muscle)\b/i, function (c) { return /rhabdo|myopath|myalgia/.test(c) ? "it can break down muscle" : "muscle injury shows up here"; }],
+  [/\b(lipase|amylase|pancrea\w*)\b/i, function () { return "it can inflame the pancreas"; }],
+  [/\b(tsh|thyroid)\b/i, function () { return "it can change thyroid function"; }],
+  [/\b(mood|depression|suicid\w*|behavior)\b/i, function () { return "mood changes and suicidal thoughts can start after it's begun"; }],
+  [/\b(movement|eps|rigidity|tremor|dystonia|akathisia)\b/i, function () { return "it can cause movement side effects"; }],
+  [/\b(vision|visual|eye|intraocular)\b/i, function () { return "it can affect the eyes or vision"; }],
+  [/\b(nausea|vomiting|diarrhea|gi)\b/i, function () { return "GI effects are common and can dehydrate"; }],
+  [/\b(lactate|acidosis|ph|abg|bicarbonate)\b/i, function () { return "it can shift the acid-base balance"; }],
+  [/\b(lipids|triglycerides|cholesterol)\b/i, function () { return "it can raise blood fats"; }],
+  [/\binfection/i, function (c) { return /immunosupp|infection/.test(c) ? "it weakens the immune response, so infections can start quietly" : "to catch an infection early"; }],
+  [/\b(skin|flushing|itching)\b/i, function (c) { return /red man|vancomycin infusion|flushing/.test(c) ? "a fast infusion can cause flushing and itching" : /stevens|sjs|toxic epidermal|severe rash/.test(c) ? "it can cause a serious rash" : "skin reactions show up here first"; }],
+  [/\b(infusion rate|drip rate|rate)\b/i, function () { return "the dose depends on the rate, so a pump error matters"; }],
+  [/\b(injection site|site)\b/i, function () { return "redness or swelling at the site is an early sign of a reaction"; }]
+];
+function monWhy(d, v) {
+  if (!v || /^not applicable/i.test(v) || v.length > 260) return null;
+  var items = v.replace(/\.$/, "").split(/;\s*|,\s*(?:and\s+)?|\s+and\s+/).map(function (x) { return x.trim(); }).filter(Boolean);
+  if (items.length < 1 || items.length > 9 || items.some(function (x) { return x.length > 60; })) return null;
+  var c = monCtx(d), hits = 0;
+  var out = items.map(function (it) { for (var i = 0; i < MON_WHY.length; i++) if (MON_WHY[i][0].test(it)) { hits++; return [it, MON_WHY[i][1](c)]; } return [it, ""]; });
+  if (!hits) return null;
+  return '<ul class="monwhy">' + out.map(function (x) { return '<li><b>' + esc(x[0].charAt(0).toUpperCase() + x[0].slice(1)) + '</b>' + (x[1] ? '<span>' + esc(x[1]) + '</span>' : '') + '</li>'; }).join("") + '</ul>';
+}
 function lensVal(d, k) {
   var e = DB.EXT[d.id] || {};
   if (k.indexOf("@rwi.") === 0) return ((DB.RWI || {})[d.id] || {})[k.slice(5)] || "";
@@ -3223,7 +3278,7 @@ function lensCard(d) {
   if (typeof expoOf === "function" && expoOf(d.id)) return ""; /* illicit / unapproved: the "Why it matters" section replaces the lens */
   var cl = r === "ems" && typeof callOf === "function" ? callOf(d.id) : "";
   if (cl) L = ["Field focus", [["On a call", "@call"], ["What EMS should know", "pearl.whatEMSShouldKnow"], ["What to check", "pearl.whatToCheckBeforeGiving"], ["What to monitor", "pearl.whatToMonitorAfterGiving"]]];
-  var rows = L[1].map(function (x) { var v = x[1] === "@call" ? cl : lensVal(d, x[1]); if (typeof okv === "function") v = okv(v); return v && !/^not given by ems\.?$/i.test(v.trim()) ? '<div class="lrow2"><div class="k">' + esc(x[0]) + '</div><div class="v">' + esc(v).replace(/\n/g, "<br>") + '</div></div>' : ""; }).join("");
+  var rows = L[1].map(function (x) { var v = x[1] === "@call" ? cl : lensVal(d, x[1]); if (typeof okv === "function") v = okv(v); var w = v && (x[1] === "pearl.whatToMonitorAfterGiving" || x[1] === "mon.labs") ? monWhy(d, v) : null; return v && !/^not given by ems\.?$/i.test(v.trim()) ? '<div class="lrow2"><div class="k">' + esc(x[0]) + '</div><div class="v">' + (w || esc(v).replace(/\n/g, "<br>")) + '</div></div>' : ""; }).join("");
   if (!rows) return "";
   return '<section class="lens lens-' + r + '"><h3>' + (r === "gen" ? bugSVG("sage").replace('class="bug"', 'class="bug lensbug"') : '') + esc(L[0]) + '</h3>' + rows + '</section>';
 }
@@ -4831,12 +4886,13 @@ anadlg.addEventListener("click", function (e) {
 anadlg.addEventListener("input", function (e) { if (e.target.id === "evq") { ANA.q = e.target.value; anaDraw(true); } });
 anadlg.addEventListener("change", function (e) { if (e.target.id === "evsort") { ANA.sort = e.target.value; anaDraw(); } });
 document.addEventListener("keydown", function (e) { if (e.key === "Escape" && ANA.open) { ANA.open = false; anadlg.hidden = true; } if ((e.key === "Enter" || e.key === " ") && e.target && e.target.getAttribute && e.target.getAttribute("data-evopen")) { e.preventDefault(); anaOpen(); } });
-function qRateHTML(q) {
+function qRateHTML(q, auto) {
   if (!q || !q.q || typeof qid !== "function") return "";
   if (isReviewer()) return revHTML(q) + admAvgHTML(qid(q), true);
+  if (auto) return "";   /* the quiz moves on by itself here: no rating row for students (owner, Nov 20 2026) */
   var k = qid(q), R = (Prog.d && Prog.d.qrate) || {}, cur = R[k] || 0, c;
   QRATE_Q[k] = q;
-  c = '<div class="qrate" data-qrk="' + k + '"><span class="qrl">' + (cur ? 'You rated this ' + cur + ' of 5' : 'How hard was this?') + '</span><span class="qrb" role="group" aria-label="Rate the difficulty from 1 to 5">';
+  c = '<div class="qrate slim" data-qrk="' + k + '"><span class="qrl">' + (cur ? 'You rated it ' + cur + ' of 5' : 'How hard was it?') + '</span><span class="qrb" role="group" aria-label="Rate the difficulty from 1 to 5">';
   for (var n = 1; n <= 5; n++) c += '<button type="button" class="qrbtn' + (cur === n ? ' on' : '') + '" data-qrate="' + n + '" aria-pressed="' + (cur === n) + '" aria-label="Difficulty ' + n + ' of 5">' + n + '</button>';
   c += '</span><span class="qrs">' + (cur ? '<span class="earned">+1 stick earned</span>' : '1 easy · 5 hard · <b>+1 stick</b>') + '</span></div>';
   /* instructors who are not evaluators get the Boost button here (owner, Nov 13 2026) */
@@ -6125,7 +6181,7 @@ function shopView() {
   var f = S.shopF || "home", me = myBug(), bal = sticks();
   var c = '<section class="shop">';
   if (f === "home") {
-    c += '<div class="shophead"><div class="mybug"' + (B3_READY ? ' data-bug3d="' + myBug().id + '" role="button" tabindex="0" aria-label="See your bug in 3D" title="See your bug in 3D"' : '') + '>' + myBugArt("big", null, null, myStage()) + (typeof pkSide === "function" ? pkSide("terr") : "") + '</div><div class="shtx"><span class="eyebrow">Your bug</span><h2>' + esc(me.name) + '</h2>' + stageLine() + '<p class="balance">' + stickIcon(24) + '<strong>' + bal.toLocaleString() + '</strong> sticks</p></div></div>';
+    c += '<div class="shophead"><div class="mybug" data-bugid="' + myBug().id + '"' + (B3_READY ? ' data-bug3d="' + myBug().id + '" role="button" tabindex="0" aria-label="See your bug in 3D" title="See your bug in 3D"' : '') + '>' + myBugArt("big", null, null, myStage()) + (typeof pkSide === "function" ? pkSide("terr") : "") + '</div><div class="shtx"><span class="eyebrow">Your bug</span><h2>' + esc(me.name) + '</h2>' + stageLine() + '<p class="balance">' + stickIcon(24) + '<strong>' + bal.toLocaleString() + '</strong> sticks</p></div></div>';
     if (S.shopMsg) { c += '<div class="presult good" role="status">' + esc(S.shopMsg) + '</div>'; S.shopMsg = ""; }
     var mine = BUGS.filter(function (b) { return owned(b.id); });
     if (Admin.owner && !owned("admin-stickbug")) c += '<div class="adminbug">' + bugArt(bugById("admin-stickbug"), "", {}) + '<div><strong>Your administrator bug is ready</strong><p class="muted small">A stick bug that only you can use. Dress it up in the Wardrobe like any other bug.</p><button class="btn small" data-claim="admin-stickbug">Claim it</button></div></div>';
@@ -6163,8 +6219,8 @@ function shopView() {
       !b.price ? '<button class="btn small" data-buyok="' + b.id + '">Get it free</button>' :
       pend ? '<button class="btn small" data-buyok="' + b.id + '">Buy for ' + b.price + '</button><button class="btn small ghost" data-buyno="1">Cancel</button>' :
       '<button class="btn small' + (can ? '' : ' ghost') + '" data-buy="' + b.id + '"' + (can ? '' : ' disabled') + '>' + (can ? 'Buy' : 'Need ' + (b.price - bal) + ' more') + '</button>';
-    if (b.secret && !own) return '<div class="bugcard secret r-' + b.rar + '"><span class="secsil">' + bugArt(b, "", { mood: "happy" }) + '</span><strong>???</strong><span class="rar">Secret</span><span class="muted small">Won in a funny way</span><div class="bact"><span class="muted small">Locked</span></div></div>';
-    return '<div class="bugcard r-' + b.rar + (eq ? " eq" : "") + '"' + (B3_READY ? ' data-bug3d="' + b.id + '" title="Tap to see ' + esc(b.name) + ' in 3D"' : '') + '>' + bugArt(b) + (B3_READY ? '<span class="b3tag">3D</span>' : '') + '<strong>' + esc(b.name) + '</strong>' + (b.secret && b.won ? '<span class="muted small secwon">' + esc(b.won) + '</span>' : '') + '<span class="rar">' + RARITY[b.rar] + '</span>' + (own ? '<span class="muted small">Owned</span>' : b.admin ? '<span class="muted small">Administrator only</span>' : b.login ? '<span class="muted small">Daily login prize</span>' : b.king ? '<span class="muted small">Collection king</span>' : !b.price ? '<span class="muted small">Free</span>' : b.unlock ? '<span class="muted small">Free when unlocked</span>' : stickTag(b.price) + (b.season && inSeason(b) ? '<span class="muted small">Until the end of ' + MONTHS[b.season[1]] + '</span>' : '')) + '<div class="bact">' + act + '</div></div>';
+    if (b.secret && !own) return '<div class="bugcard secret r-' + b.rar + '" data-bugid="' + b.id + '"><span class="secsil">' + bugArt(b, "", { mood: "happy" }) + '</span><strong>???</strong><span class="rar">Secret</span><span class="muted small">Won in a funny way</span><div class="bact"><span class="muted small">Locked</span></div></div>';
+    return '<div class="bugcard r-' + b.rar + (eq ? " eq" : "") + '" data-bugid="' + b.id + '"' + (B3_READY ? ' data-bug3d="' + b.id + '" title="Tap to see ' + esc(b.name) + ' in 3D"' : '') + '>' + bugArt(b) + (B3_READY ? '<span class="b3tag">3D</span>' : '') + '<strong>' + esc(b.name) + '</strong>' + (b.secret && b.won ? '<span class="muted small secwon">' + esc(b.won) + '</span>' : '') + '<span class="rar">' + RARITY[b.rar] + '</span>' + (own ? '<span class="muted small">Owned</span>' : b.admin ? '<span class="muted small">Administrator only</span>' : b.login ? '<span class="muted small">Daily login prize</span>' : b.king ? '<span class="muted small">Collection king</span>' : !b.price ? '<span class="muted small">Free</span>' : b.unlock ? '<span class="muted small">Free when unlocked</span>' : stickTag(b.price) + (b.season && inSeason(b) ? '<span class="muted small">Until the end of ' + MONTHS[b.season[1]] + '</span>' : '')) + '<div class="bact">' + act + '</div></div>';
   }
   var TIERS = [["admin", "Administrator only", "Just for you"], ["starter", "Starter", "Free"], ["common", "Common", "300–800 sticks"], ["rare", "Rare", "1,200–2,000 sticks"], ["epic", "Epic", "2,800–4,800 sticks"], ["legendary", "Legendary", "7,000–12,000 sticks"], ["seasonal", "Seasonal", "2,400 sticks, only in season"], ["earned", "Earned by mastery", "Free when you unlock them"]];
   function tierOf(b) { return b.secret ? "secret" : b.admin ? "admin" : b.king ? "king" : b.login ? "login" : b.id === "starter" || b.grub || b.free ? "starter" : b.rar; }
@@ -7286,7 +7342,7 @@ function megaView2() {
   if (ans != null) {
     var right = ans >= 0 && step.options[ans].ok, okO = step.options.filter(function (o) { return o.ok; })[0];
     c += '<div class="explain ' + (right ? "ok" : "bad") + '"><strong>' + (ans === -1 ? "Time's up." : right ? "Correct." : "Not the best choice.") + '</strong>' + (ans >= 0 && !right ? '<p>' + esc(step.options[ans].fb) + '</p>' : '') + '<p>' + (right ? '' : '<strong>Best: </strong>' + esc(okO.t) + '. ') + esc(okO.fb) + '</p><p class="muted small">Rhythm: ' + esc(rhythmName(step.rhythm)) + '</p></div>';
-    if (typeof isReviewer === "function" && isReviewer()) c += qRateHTML({ lv: "mega-" + (cs.id || ""), q: step.prompt, a: okO ? okO.t : "", d: "" });
+    c += qRateHTML({ lv: "mega-" + (cs.id || ""), q: step.prompt, a: okO ? okO.t : "", d: "" });
     if (typeof isReviewer === "function" && isReviewer()) c += '<div class="actions"><button class="btn" data-act="meganext">' + (st.i < cs.steps.length - 1 ? "Continue the code" : "See debrief") + '</button></div>';
     else c += '<p class="muted small mcnext">' + (st.i < cs.steps.length - 1 ? "Next decision coming up. The full explanations are in the debrief." : "Debrief coming up.") + '</p>';
   }
@@ -8789,7 +8845,7 @@ function savePs() {
 }
 
 /* ---------- Legal: terms, privacy, disclaimers, agreement gate, safety labels, moderation, data deletion ---------- */
-var LEGAL_V = "2026-11-17", COMPANY = "Volare Media LLC", CONTACT = DB.PROTOCOL_EMAIL;
+var LEGAL_V = "2026-11-20", COMPANY = "Volare Media LLC", CONTACT = DB.PROTOCOL_EMAIL;
 var NONAFF = "DrugBug is not affiliated with or endorsed by any examination, certification or professional organization named in DrugBug.";
 var LG = { owner: false, blocked: [], mod: null };
 function eduBanner(short) {
@@ -8947,7 +9003,7 @@ var LEGAL_PAGES = {
       L("3. Clinical use prohibited", ["You must not use DrugBug for actual patient assessment, diagnosis, triage, destination decisions, prescribing, dosing, medication administration, treatment, monitoring or any other clinical decision. Do not enter real patient information. Megacode, On Scene, Big Calls and other practice scenarios use fictional patients. Study calculations, examples and answer choices are for practice only.", "Reliance on DrugBug during real patient care can cause serious injury or death. For real care, use current, independently verified clinical sources and follow applicable protocols, medical direction and facility policy. Ask a licensed clinician or pharmacist about your own care or medicines. In a U.S. emergency, call 911."]) +
       L("4. Eligibility", ["You must be at least 18 to use DrugBug or join a DrugBug class. If you act for an organization, you represent that you have authority to do so. You may bind the organization only if it has authorized you to enter the applicable agreement."]) +
       L("5. Accounts and conduct", ["Accounts are optional for general study. Some features require an account or a valid access code or class key. Provide accurate information where required, protect your sign-in credentials and keys, and promptly notify us if you suspect unauthorized access.", "You must comply with applicable law and may not submit real patient data, someone else's personal information without authorization, classified or sensitive operational information, or material you lack permission to share. Do not submit unlawful, misleading, abusive or identifying display names or other content. Do not sell or publicly post codes, disclose confidential pilot questions, impersonate others, circumvent access controls, access others' records without authorization, or disrupt DrugBug.", "We may remove prohibited material or suspend or terminate access for material or repeated violations, fraud, security risks or legal requirements. Where practicable, we will notify you and provide a way to contact us about the action. We may act immediately to protect users, class data or DrugBug. Section 8 governs unused purchased Sticks. Section 17 governs subscription renewals and refunds when access is suspended, terminated or discontinued. Suspension or termination does not waive accrued obligations or rights."]) +
-      L("6. Classes and scoreboards", ["A school or agency may issue class keys to adults. A class key uses an alias such as \"Student 07\" and does not ask for a student name. If you join, authorized instructors can see the key's performance, including activity, counts and accuracy by study category, missed question identifiers and the answer selected. Class keys and aliases may be linkable to students, including through a school's own records.", "Where enabled, classmates may see class scores and aliases or instructor-approved nicknames. Where an agency program enables a protocol competition, participating members may see team names, team rankings and individual rankings shown under an alias or approved nickname. Use a nickname that does not identify you or anyone else. The public leaderboard and competitions between schools are currently disabled. A class may offer virtual prizes under Section 8. Class results are intended for study feedback and should not be used as a substitute for formal assessment, credentialing or employment decisions. You may leave a class. Leaving stops future participation but does not necessarily erase records maintained under school rules or a school agreement. See the Privacy Policy."]) +
+      L("6. Classes and scoreboards", ["A school or agency may issue class keys to adults. A class key uses an alias such as \"Student 07\" and does not ask for a student name. If you join, authorized instructors can see the key's performance, including activity, counts and accuracy by study category, missed question identifiers and the answer selected. Class keys and aliases may be linkable to students, including through a school's own records.", "Joining a class with a class key removes you from the public leaderboard, if one is offered. You appear on your class scoreboard only if you choose Join scoreboard. Class scoreboards are on for new classes unless the school or agency turns them off. Where a class scoreboard is on, classmates see the top 10 and their own place, shown only under class aliases (such as \"Student 07\") or instructor-approved nicknames, with scores, accuracy and weekly results. You may leave the class scoreboard at any time under My class. If you leave, classmates do not see you, you are not ranked and you are not eligible for weekly scoreboard prizes, but your instructor still sees your class results. Where an agency program enables a protocol competition, participating members may see team names, team rankings and individual rankings shown under an alias or approved nickname. Use a nickname that does not identify you or anyone else. The public leaderboard and competitions between schools are currently disabled. A class may offer virtual prizes under Section 8. Class results are intended for study feedback and should not be used as a substitute for formal assessment, credentialing or employment decisions. You may leave a class. Leaving stops future participation but does not necessarily erase records maintained under school rules or a school agreement. See the Privacy Policy."]) +
       L("7. Instructors, schools and agencies", ["Instructors must distribute keys only to adults, keep any key-to-student mapping outside DrugBug and secure, restrict access to authorized staff, and avoid identifying nicknames and unauthorized disclosures. Before an institution uses DrugBug to process identifiable or reasonably linkable education records on its behalf, an authorized institutional representative must arrange a written student data agreement with us. The institution must establish its authority to disclose and use records and must not enable student-level peer visibility without a lawful basis and required safeguards.", "Classes are currently a free pilot. We may change or end a pilot or class and will notify the instructor when practicable. A signed school or agency agreement controls over inconsistent provisions of these Terms for the institution's covered use. The applicable agreement governs handling of records on the institution's behalf."]) +
       L("8. Codes, Sticks and other virtual items", ["Codes can grant access or virtual items. Unless specifically designated for sharing or initial gift delivery, a code is for its intended recipient. You may not resell, trade or publicly post codes. Some codes require your full name at redemption, and the redemption screen will say so. Class keys never do. We disclose applicable conditions before purchase or redemption, as appropriate. We may disable a code for fraud, misuse or error, or when the institutional license it depends on ends, subject to applicable law and any paid rights.", "\"Sticks\" are credits for designated features inside DrugBug. Sticks, bugs, outfits, faces, peeking pals and virtual class prizes are virtual items. Except as provided in Section 17 or required by law, they have no cash redemption value and may not be transferred, resold or used outside DrugBug. Your purchase gives you a limited right to use the items inside DrugBug under these Terms. It does not transfer ownership of DrugBug content. Promotional or earned items may carry conditions disclosed when offered. Purchased Sticks do not expire by lapse of time. We do not impose an inactivity fee on purchased Sticks. We track purchased Sticks separately from earned and promotional Sticks. When you spend Sticks, we use earned and promotional Sticks first.", "We may change future pack prices, earning rules and virtual item offerings. Changes to pack prices do not reduce the number of Sticks already purchased. We may correct a balance for refunds, unauthorized purchases, fraud or errors. We will address unused purchased Sticks separately from promotional or earned items if we suspend or terminate access. If we discontinue a feature needed to use purchased Sticks or discontinue DrugBug, we will, where practicable, give advance notice and a reasonable opportunity to spend unused purchased Sticks. We will handle unused purchased Sticks in accordance with applicable law and platform rules, including Apple's non-expiration requirement for currency purchased through in-app purchase. Nothing in these Terms limits a refund or other remedy available under law or Section 17.", "Except as required by law or provided in Section 17, purchases are not refundable because you change your mind. If a purchase fails to arrive, is charged incorrectly or is otherwise disputed, contact us for website purchases or request assistance from Apple for App Store purchases. See Section 17."]) +
       L("9. Evaluators and pilot questions", ["Evaluator enrollment and assigned grading are paused. Any resumed participation requires a separate written arrangement approved by Volare. That arrangement and applicable law govern participation, any compensation and evaluator access. Ending evaluator access does not cancel or reduce a separately purchased subscription or any other independent entitlement.", "Pilot questions made available to evaluators are confidential. Use them only as authorized and do not copy, screenshot, distribute or publish them without our written permission. This restriction does not prevent a legally protected disclosure. Ratings and suggestions inform editorial decisions. Volare decides whether to publish a question. We identify an evaluator publicly only with permission."]) +
@@ -8967,7 +9023,7 @@ var LEGAL_PAGES = {
   privacy: ["Privacy Policy", function () {
     return L("Who we are", ["Volare Media LLC (\"Volare,\" \"we,\" or \"us\") operates DrugBug, the medication study app and website at drugbugapp.com. This policy explains how we handle personal information when you use DrugBug in the United States, including on the web and in the iPhone app. Some features and purchase options are available only on certain platforms."]) +
       L("Information we collect and why", ["Device and study information. DrugBug can be used without an account. It stores settings, study progress, a saved study list, score history, virtual items and an agreement record on your device or in your browser. Certain features send information to our systems using a device, account or class identifier. We use this information to operate the features you use, maintain access and protect the service. When you accept the Terms, we record the version, date and time, and your device or account identifier on our systems to maintain a record of acceptance.", "Optional accounts. When you create an account by email or use Sign in with Apple, we receive an account identifier and email address, which may be an Apple private relay address. We store study data so you can sync it across devices and use account features. Firebase Authentication handles email/password authentication. Apple handles your Apple Account credentials. We use the account and entitlement information to administer the one-time, seven-day Pro access for new accounts. The offer does not require payment details and does not renew.", "Basic study statistics. When you accept the Terms, DrugBug records basic study statistics under a randomly generated device identifier (and a one-way code made from your account, if you are signed in, so one person on several devices counts once). These are limited to: active days, approximate time in the app each day and the hours of the day you use it (US Central time, worked out by our server from when the app checks in; your device’s time zone is not collected), number of sessions, counts of questions answered and answered correctly, first difficulty ratings you choose to give, your study path and level, your plan (free, Plus or Pro, and whether it is paid through the App Store, the website, a trial or a code), app version and device type, and your weakest broad study subject from a fixed list of body systems. We do not record which medicines, questions or sections you study, your age, your time zone or location, or any information about your own health, and we do not use these statistics to infer anything about your health. Evaluators: if you use an evaluator code, we record, with your name and evaluator code, your time in DrugBug and on grading screens, the questions you view, your ratings, votes, comments and question changes, and your activity counts, and Volare Media LLC sees these records. Everyone else: if you do not use an evaluator code, these statistics are not tied to your name or email. They are kept under the random device identifier (and, if you are signed in, the one-way account code), and we do not use them to identify you. Study subjects related to behavioral health, substance use, reproductive health and cancer are never recorded. We use the statistics to understand how DrugBug is used, measure upgrades and improve study content. A random identifier can distinguish one device from another, so we treat device-level statistics as potentially identifiable even when a name or email is absent. We delete or aggregate device-level statistics within 24 months after collection. These statistics are part of using DrugBug under the Terms of Use. Use Delete all my data in Settings, Your data, or contact us to request deletion of stored statistics associated with your device, where we can locate them.", "Purchases. On the website, Stripe processes subscription and stick-pack purchases. Apple processes purchases made through the App Store. We use the purchase and subscription records made available to us, such as the plan, its status and renewal or expiration date, or the pack purchased, to provide access, administer billing and handle purchase support. The payment provider handles your full payment card number. It may collect other information under its own privacy policy.", "Agency Challenge. The Agency Challenge is optional and needs basic study statistics turned on. If you join, we store the agency you pick, the nickname and department you choose, and your answer counts and points for the current week and in total, under your account or guest identifier. Other DrugBug users see your nickname, department, points and accuracy on your agency board, and your agency’s combined points on the state board. If you share a challenge link, the person who opens it sees your nickname, department, agency and points. We use this information to run the boards, prevent abuse and review reported nicknames. Leave the challenge in the app to delete your nickname and points. If you turn on Agency Challenge notifications in the iPhone app, we store the notification token Apple assigns to your device and use it only to tell you when someone passes you on your agency’s board, through Apple’s push notification service. Turn this off in the Agency Challenge or in iPhone Settings. Listed agencies are not affiliated with DrugBug and do not endorse it, and the boards are not a measure of anyone’s job performance.", "Codes. For codes that require named redemption, such as gift, access, evaluator, school or agency license, and protocol codes, we collect your full name and associate it with the redemption and, where applicable, your account. We use that information to verify eligibility, administer access and prevent misuse. A student class key does not ask for your name. An institutional license or protocol code can be a named code even if it is supplied by a school or agency.", "Evaluator records. When enrollment is available, if you submit an evaluator application, we collect your name, email, credentials or role, years of experience, workplace and the information you choose to provide so we can evaluate and respond to the application. Evaluator records may include an evaluator code, typed signature, agreement choices and version, date and time, question ratings and votes, comments, questions viewed, activity counts, and time spent in DrugBug and on grading screens while using an evaluator code. We use records from the program to administer participation, maintain agreement records and review and improve study content. Other users may see an aggregate difficulty rating or a content review indicator. We will seek permission before publicly crediting an evaluator by name.", "Instructors and organization contacts. We collect an instructor's name, work or account email, school or agency, classes, class key labels, nickname approvals and class results. Instructors can sign in with email/password or Google. If you contact us about the instructor pilot or an organizational package, we receive the details you provide, such as your name, organization, work email, optional phone number and message. We use these records to manage accounts and classes, respond and prepare a quote when requested.", "Support and feedback. If you email us or submit an error report, feedback or a protocol request, we receive the information you choose to send and any reply address the form or email supplies. We use it to respond, resolve issues, assess requests and improve DrugBug. Do not include patient data, another person's personal information or any document you are unauthorized to share.", "Technical information. Our hosting and service providers receive standard information needed to serve the app or site, such as an IP address when a page loads. We use local storage and similar technology to remember settings, maintain sessions and run features. Optional usage statistics measure activity within DrugBug across sessions. We do not sell personal information in exchange for money. DrugBug does not collect the Apple advertising identifier (IDFA) and does not track you across other companies’ apps and websites as Apple defines tracking. Some state privacy laws may treat the ad measurement described below as “sharing” personal information or as targeted advertising. You can turn it off at any time, as described below. DrugBug does not change its practices in response to browser Do Not Track signals.", "Ad measurement in the iPhone app. Starting with version 1.2.2, the DrugBug iPhone app includes the Meta Platforms software development kit (Meta SDK) so we can measure whether our ads on Facebook and Instagram lead people to install and open DrugBug. The Meta SDK sends Meta app events, such as app installs, app opens and App Store purchase events (the product and price), with technical information such as the app version, device model, operating system version, IP address and an identifier the Meta SDK creates for the app on your device. We turned off the Meta SDK’s collection of the Apple advertising identifier, and the app does not ask permission to track you. We do not send Meta your name, email address, study progress, scores or answers. Meta may use this information to measure our ads and to help show our ads to people likely to be interested, under its own privacy policy. You can turn this off in the app under Settings, Account & privacy, Ad measurement. When it is off, the app stops sending these app events to Meta. Apple may still report anonymous, combined install counts to Meta through its SKAdNetwork system, which does not identify you or your device. The DrugBug website does not use the Meta SDK or a Meta pixel."]) +
-      L("Classes and organization programs", ["A class key identifies your activity to the instructor using a class alias such as \"Student 07.\" Your instructor can see question and accuracy counts by medication, drug class, body system, question style, study mode and drill topic, as well as the missed question identifiers, the answers you selected and when you last studied. Free-text responses are excluded from the class performance report. An instructor may be able to identify you through a separate key sheet the instructor maintains or other information available to the instructor. Do not send a class roster or a key sheet to DrugBug.", "Where a scoreboard is enabled and its use is authorized, classmates or participating members can see the displayed alias or instructor-approved nickname and relevant scores or rankings. Agency protocol competitions may display team names, team rankings and individual rankings to participants. Choose a nickname that does not identify you or another student. Class prizes may be saved to your device or account. The public leaderboard and interschool competitions are currently disabled.", "We use class records to provide and administer the authorized class features. When we handle student records on behalf of a school under a written agreement, we follow the school's authorized instructions and the applicable agreement and law. Contact your instructor or school for access to or correction of school-controlled records. You may also contact us for help directing a request. Leaving a class, closing an account and deleting a class are separate actions. Records held by a school or instructor are subject to that organization's policies and applicable law."]) +
+      L("Classes and organization programs", ["A class key identifies your activity to the instructor using a class alias such as \"Student 07.\" Your instructor can see question and accuracy counts by medication, drug class, body system, question style, study mode and drill topic, as well as the missed question identifiers, the answers you selected and when you last studied. Free-text responses are excluded from the class performance report. An instructor may be able to identify you through a separate key sheet the instructor maintains or other information available to the instructor. Do not send a class roster or a key sheet to DrugBug.", "Class scoreboards are on for new classes unless the school or agency turns them off. Where a class scoreboard is on, classmates can see the top 10 and their own place, shown under the class alias or an instructor-approved nickname with scores, accuracy, weekly results and rankings. You can leave the class scoreboard at any time under My class; your instructor still receives your class results. Joining a class removes any public leaderboard entry you have. You appear on a class scoreboard only after you choose to join it. Agency protocol competitions may display team names, team rankings and individual rankings to participants. Choose a nickname that does not identify you or another student. Class prizes may be saved to your device or account. The public leaderboard and interschool competitions are currently disabled.", "We use class records to provide and administer the authorized class features. When we handle student records on behalf of a school under a written agreement, we follow the school's authorized instructions and the applicable agreement and law. Contact your instructor or school for access to or correction of school-controlled records. You may also contact us for help directing a request. Leaving a class, closing an account and deleting a class are separate actions. Records held by a school or instructor are subject to that organization's policies and applicable law."]) +
       L("Who receives information", [["Service providers receive the information needed for the services they provide. We require third parties to which we provide app user data for processing on our behalf to protect that data to at least the standard described in this policy and required by Apple's App Review Guidelines. Google Firebase and Google Cloud process account, study and device information to provide authentication, database hosting and server functions. GitHub Pages receives web request information to deliver the website. Google's Gmail service receives messages and reply information when you email our contact address. Use that address for general inquiries and to initiate a privacy request. Do not send identifiable patient information or school-controlled records to that address. Google or Apple handles the relevant sign-in information when you choose its sign-in service. Apple also handles app distribution and App Store purchases. Stripe handles website purchases. Apple, Stripe and other providers may also process information for their own services under their own privacy policies."], ["Instructors, classmates and participants may receive class or competition information as described above. We do not display named redemption records or account emails on class scoreboards."], ["We may disclose relevant information to comply with law, valid legal process or a lawful government request, or to investigate fraud, address a security issue or protect rights or safety. If Volare is involved in a proposed or completed sale, reorganization or similar transaction, we may disclose information as needed for that transaction subject to appropriate confidentiality and applicable law."]]) +
       L("Patient information and personal health details", ["DrugBug is for education. The saved list is for medications you are studying. Do not use it to record a person's medication regimen or to check for interactions. Do not submit identifiable patient information, personal symptoms, diagnoses, medical records or other personal health details through any feature, form or message. If you believe you sent this information in error, contact us without repeating the information in your request."]) +
       L("Retention and security", ["We keep personal information for as long as reasonably needed for the purposes described in this policy. We consider the type of record, the feature it supports and legal, security or recordkeeping requirements. For example, purchase and assent records may be kept for billing, accounting, legal compliance and dispute resolution. If we retain information after a deletion request, we limit its use to the reason for retaining it. Backup copies may remain until they are removed under the backup cycle. A school's instructions and applicable law may govern retention or return of school-controlled class records. We may keep aggregate or properly de-identified information. When we maintain data as de-identified, we take reasonable steps to prevent re-identification and do not attempt to re-identify it except where permitted by law to test whether it is properly de-identified. Where required, we require recipients of that data to honor the same restrictions.", "We use safeguards designed to protect the information we hold, including restricted administrative access and encryption in transit. No method of storage or transmission can eliminate every risk."]) +
@@ -10851,7 +10907,7 @@ function settingsView() {
   c += setCard("analytics", "Your analytics", myAnalyticsView());
   /* join a class right from Settings, on the phone too (owner, Nov 19 2026) */
   /* in the iPhone app class keys stay on the website (App Store 3.1.1); phone browsers get the box */
-  var joinRow = NATIVE ? "" : (typeof seatActive === "function" && seatActive()) ? setRow("Your class", (typeof SEAT !== "undefined" && SEAT.orgName) || "You are in a class.", '<span class="muted small">Joined</span>') : '<div class="setrow" id="setjoin"><div class="sl"><strong>Join a class</strong><p class="muted small">Type the class key your instructor gave you (it starts with DB-).</p>' + clJoinForm("set") + '</div></div>';
+  var joinRow = (typeof seatActive === "function" && seatActive()) ? setRow("Your class", (typeof SEAT !== "undefined" && SEAT.orgName) || "You are in a class.", '<span class="muted small">Joined</span>') : '<div class="setrow" id="setjoin"><div class="sl"><strong>Join a class</strong><p class="muted small">Type the class key your instructor gave you (it starts with DB-).' + (NATIVE ? ' In this app it connects you to your class results and scoreboard.' : '') + '</p>' + clJoinForm("set") + '</div></div>';
   c += setCard("privacy", "Account & privacy", joinRow + fmCodeRow() + (typeof accCard === "function" ? accCard() : "")
     + (NATIVE ? '<div class="setrow codesteps"><div class="sl"><strong>Have a code?</strong>' + codeSteps() + '</div></div>' + setRow("App Store offer code", "Redeem an App Store offer code on Apple's own screen.", '<button class="btn small ghost" data-pw="redeem">Redeem offer code</button>') : typeof giftBox === "function" ? setRow("Redeem a code", "Every code goes here: gift codes, access codes, school or agency codes, and your agency's protocol code." + (NATIVE ? " App Store offer codes open Apple's own screen." : ""), NATIVE ? '<button class="btn small ghost" data-pw="redeem">App Store offer code</button>' : "") + giftBox() : "")
     + pv);
@@ -12110,7 +12166,7 @@ function tier() {
   if (PRO.tier === "pro" || licenseActive()) return "pro";
   /* signed in to a DrugBug account on the iPhone: a plan bought on the website, or a school seat,
      counts here too (App Store 3.1.3(b), multiplatform). Nothing here sells or links to it. (owner, Nov 8 2026) */
-  var wt = (typeof subTier === "function" && subTier()) || "", sk = (typeof seatTier === "function" && seatTier()) || "", ap = PRO.tier || "";
+  var wt = (typeof subTier === "function" && subTier()) || "", sk = (typeof seatTier === "function" && seatTier() && !SEAT.inApp) ? seatTier() : "", ap = PRO.tier || "";   /* a key typed in the iPhone app: class results and scoreboard only (Apple 3.1.1) */
   var best = [ap, wt, sk].reduce(function (m, x) { return (TIER_RANK[x] || 0) > (TIER_RANK[m] || 0) ? x : m; }, "");
   return best === "pro" ? "pro" : best === "plus" ? "plus" : "free";
 }
@@ -16636,8 +16692,8 @@ function c3Rad(a) { return a.H ? .17 : (CHEM3_RAD[a.e] || .42); }
 function c3Shade(hex, f) { /* f > 0 lightens toward white, f < 0 darkens toward black */
   var h = hex.replace("#", ""); if (h.length === 3) h = h.replace(/(.)/g, "$1$1"); var r = parseInt(h.slice(0, 2), 16), gg = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
   function m(c) { return Math.round(f > 0 ? c + (255 - c) * f : c * (1 + f)); } return "rgb(" + m(r) + "," + m(gg) + "," + m(b) + ")"; }
-function chem3Draw() {
-  var cv = chemdlg.querySelector("canvas"); if (!cv || !C3.mol) return;
+function chem3Draw(cvIn) {
+  var cv = cvIn || chemdlg.querySelector("canvas"); if (!cv || !C3.mol) return;
   var dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight;
   if (cv.width !== Math.round(W * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
   var g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
@@ -16707,6 +16763,80 @@ function chem3Open(id) {
   cv.addEventListener("wheel", function (e) { e.preventDefault(); C3.zoom = Math.max(.4, Math.min(4, C3.zoom * (e.deltaY < 0 ? 1.1 : .9))); chem3Draw(); }, { passive: false });
   chem3Loop();
 }
+
+/* ---------- hold a medication for a big preview (owner, Nov 14 + Nov 20 2026: "when you hold down a medication it
+   opens a box. In the top corner it has a 3D molecule spinning and there is an actual wide screen box with all the
+   information on the drug"). Press and hold (or right-click) any medication in a list, grid or chip. The box shows
+   the key facts at a glance, with the molecule turning in the corner; Open the full card goes to the usual sheet. ---------- */
+var PV = { id: null, mol: null, rot: null, raf: 0, t: 0, x: 0, y: 0, el: null, fired: 0 };
+var pvdlg = document.createElement("div"); pvdlg.id = "pvdlg"; pvdlg.className = "pvwrap"; pvdlg.hidden = true; document.body.appendChild(pvdlg);
+function pvFact(d, k) { var v = typeof F2 === "function" ? F2(d, k) : ""; if (typeof okv === "function") v = okv(v); return v && !/^not applicable\.?$/i.test(v.trim()) ? v : ""; }
+function pvOpen(id) {
+  var d = DB.drugs[id]; if (!d) return;
+  PV.id = id; cancelAnimationFrame(PV.raf);
+  var m = typeof chemOf === "function" ? chemOf(id) : null;
+  PV.mol = m && typeof chem3Build === "function" ? (function () { try { return chem3Build(m); } catch (e) { return null; } })() : null;
+  PV.rot = typeof c3Rot === "function" ? c3Rot(-.35, .5) : null;
+  var cls = pvFact(d, "id.drugClass") || pvFact(d, "id.pharmacologicClass"), brand = pvFact(d, "id.brandName");
+  var rows = [
+    ["What it is", pvFact(d, "bd.whatItIs")],
+    ["What it does", pvFact(d, "bd.whatItDoes") || pvFact(d, "moa.mechanismOfAction")],
+    ["Why it's used", pvFact(d, "ind.primaryIndications") || pvFact(d, "bd.whyItIsUsed")],
+    ["Don't give if", pvFact(d, "ci.absoluteContraindications")],
+    ["Common side effects", pvFact(d, "se.commonSideEffects")],
+    ["Watch out for", pvFact(d, "wp.boxedWarning") || pvFact(d, "se.lifeThreateningAdverseEffects") || pvFact(d, "se.seriousSideEffects")]
+  ].filter(function (r) { return r[1]; });
+  var mon = pvFact(d, "pearl.whatToMonitorAfterGiving"), monH = mon ? (typeof monWhy === "function" && monWhy(d, mon)) || esc(mon) : "";
+  var trick = pvFact(d, "mem.memoryTrick");
+  var c = '<div class="pvbox" role="dialog" aria-modal="true" aria-label="Quick look: ' + esc(nameOf(id)) + '" tabindex="-1">' +
+    '<div class="pvhead"><div class="pvttl"><h2>' + esc(nameOf(id)) + '</h2>' + (brand ? '<p class="pvbrand">' + esc(brand) + '</p>' : '') + (cls ? '<span class="pvcls">' + esc(cls) + '</span>' : '') + '</div>' +
+    (PV.mol ? '<button class="pvmol" data-pv="mol" aria-label="Open the 3D model"><canvas aria-hidden="true"></canvas><span>3D</span></button>' : '') +
+    '<button class="iconbtn pvx" data-pv="close" aria-label="Close">✕</button></div>' +
+    '<div class="pvgrid">' + rows.map(function (r) { return '<div class="pvf"><div class="k">' + esc(r[0]) + '</div><div class="v">' + esc(r[1]) + '</div></div>'; }).join("") +
+    (monH ? '<div class="pvf pvwide"><div class="k">Monitor after giving</div><div class="v">' + monH + '</div></div>' : '') +
+    (trick ? '<div class="pvf pvwide pvtrick"><div class="k">Memory trick</div><div class="v">' + esc(trick) + '</div></div>' : '') + '</div>' +
+    '<div class="pvacts"><button class="btn" data-pv="open">Open the full card</button><button class="btn ghost" data-pv="study">Study it</button><button class="btn ghost" data-pv="cmp">Compare</button></div>' +
+    '<p class="muted small pvfoot">For study only. Hold any medication to see this.</p></div>';
+  pvdlg.innerHTML = c; pvdlg.hidden = false; document.body.classList.add("pvon");
+  var bx = pvdlg.querySelector(".pvbox"); if (bx) bx.focus();
+  try { if (typeof translateDom === "function") translateDom(pvdlg); } catch (e) {}
+  if (PV.mol) pvLoop();
+}
+function pvLoop() {
+  cancelAnimationFrame(PV.raf); if (pvdlg.hidden || !PV.mol) return;
+  var cv = pvdlg.querySelector(".pvmol canvas"); if (!cv) return;
+  var still = typeof SET === "function" && SET().motion || (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+  if (!still && typeof c3Mul === "function") PV.rot = c3Mul(c3Rot(0, .012), PV.rot);
+  var sv = { mol: C3.mol, rot: C3.rot, zoom: C3.zoom }; C3.mol = PV.mol; C3.rot = PV.rot; C3.zoom = 1.05;
+  try { chem3Draw(cv); } catch (e) {}
+  C3.mol = sv.mol; C3.rot = sv.rot; C3.zoom = sv.zoom;
+  if (!still) PV.raf = requestAnimationFrame(pvLoop);
+}
+function pvClose() { cancelAnimationFrame(PV.raf); pvdlg.hidden = true; pvdlg.innerHTML = ""; document.body.classList.remove("pvon"); PV.id = null; }
+pvdlg.addEventListener("click", function (e) {
+  if (e.target === pvdlg) return pvClose();
+  var b = e.target.closest && e.target.closest("[data-pv]"); if (!b) return;
+  var a = b.getAttribute("data-pv"), id = PV.id;
+  if (a === "close") return pvClose();
+  pvClose();
+  if (a === "open") openSheet(id);
+  else if (a === "mol" && typeof chem3Open === "function") chem3Open(id);
+  else if (a === "study") { var t = document.createElement("button"); t.setAttribute("data-sess", "study"); t.setAttribute("data-drug-id", id); t.style.display = "none"; document.body.appendChild(t); t.click(); t.remove(); }
+  else if (a === "cmp") { var c2 = document.createElement("button"); c2.setAttribute("data-cmpgo", id); c2.style.display = "none"; document.body.appendChild(c2); openSheet(id); setTimeout(function () { c2.click(); c2.remove(); }, 60); }
+});
+document.addEventListener("keydown", function (e) { if (!pvdlg.hidden && e.key === "Escape") pvClose(); });
+/* press and hold: 450 ms without moving more than 8 px; the click that follows the hold is swallowed */
+function pvTarget(t) { var el = t && t.closest && t.closest("[data-drug]"); if (!el || el.closest("#pvdlg") || el.closest(".sheet") && el.closest(".sheet").id === "sheet" && el.classList.contains("noquick")) return null; var id = el.getAttribute("data-drug"); return id && DB.drugs[id] ? el : null; }
+document.addEventListener("pointerdown", function (e) {
+  if (e.button !== 0 && e.pointerType === "mouse") return;
+  var el = pvTarget(e.target); if (!el) return;
+  clearTimeout(PV.t); PV.x = e.clientX; PV.y = e.clientY; PV.el = el;
+  PV.t = setTimeout(function () { PV.fired = Date.now(); try { if (navigator.vibrate) navigator.vibrate(12); } catch (x) {} pvOpen(el.getAttribute("data-drug")); }, 450);
+}, true);
+["pointerup", "pointercancel", "scroll"].forEach(function (k) { document.addEventListener(k, function () { clearTimeout(PV.t); }, true); });
+document.addEventListener("pointermove", function (e) { if (PV.t && Math.hypot(e.clientX - PV.x, e.clientY - PV.y) > 8) clearTimeout(PV.t); }, true);
+document.addEventListener("click", function (e) { if (PV.fired && Date.now() - PV.fired < 700) { e.preventDefault(); e.stopPropagation(); PV.fired = 0; } }, true);
+document.addEventListener("contextmenu", function (e) { var el = pvTarget(e.target); if (!el) return; e.preventDefault(); clearTimeout(PV.t); pvOpen(el.getAttribute("data-drug")); });
 function chem3Close() { cancelAnimationFrame(C3.raf); chemdlg.hidden = true; chemdlg.innerHTML = ""; C3.mol = null; }
 document.addEventListener("click", function (e) {
   var o = e.target.closest && e.target.closest("[data-chem3d]");
@@ -17041,7 +17171,7 @@ function callQuizHTML(C) {
     }).join("") + '</div>' + (Z.ans == null && Z.seq.length ? '<button class="btn small ghost" data-cqreset="1">Start over</button>' : '');
     if (Z.ans != null) h += '<ol class="cqorder">' + q.opts.map(function (o) { return '<li>' + esc(o) + '</li>'; }).join("") + '</ol>';
   }
-  if (Z.ans != null) h += '<div class="cqx ' + (Z.ok ? 'ok' : 'no') + '"><b>' + (Z.ok ? 'Right.' : 'Not quite.') + '</b> ' + esc(q.x) + '</div>' + (typeof isReviewer === "function" && isReviewer() ? qRateHTML(q.lv ? q : Object.assign(q, { lv: "call-" + (C.id || "") })) : '') + '<button class="btn small" data-cqnext="1">' + (Z.i + 1 < Z.list.length ? 'Next' : 'See score') + '</button>';
+  if (Z.ans != null) h += '<div class="cqx ' + (Z.ok ? 'ok' : 'no') + '"><b>' + (Z.ok ? 'Right.' : 'Not quite.') + '</b> ' + esc(q.x) + '</div>' + (true ? qRateHTML(q.lv ? q : Object.assign(q, { lv: "call-" + (C.id || "") })) : '') + '<button class="btn small" data-cqnext="1">' + (Z.i + 1 < Z.list.length ? 'Next' : 'See score') + '</button>';
   return h + '</div>';
 }
 function cqRender() { var el = document.querySelector(".cq"); if (!el || !S.callId) return render(); var C = CALLS.filter(function (c) { return c.id === S.callId; })[0]; var w = document.createElement("div"); w.innerHTML = callQuizHTML(C); el.parentNode.replaceChild(w.firstChild, el); }
@@ -33498,7 +33628,7 @@ function subClear() {
    Nothing about the student goes with it: no name, no email, no device, no individual answers.
    The instructor sees "Student 07", and only their own sheet says who that is. */
 var SEAT = { tier: "", until: 0, orgName: "", alias: "", level: "", loaded: false, unsub: null, uid: null, busy: false, t: null };
-(function () { var c = store("seat"); if (c && typeof c.until === "number") { SEAT.tier = c.tier || ""; SEAT.until = c.until; SEAT.orgName = c.orgName || ""; SEAT.alias = c.alias || ""; SEAT.level = seatLvNorm(c.level); } })();
+(function () { var c = store("seat"); if (c && typeof c.until === "number") { SEAT.tier = c.tier || ""; SEAT.until = c.until; SEAT.orgName = c.orgName || ""; SEAT.alias = c.alias || ""; SEAT.level = seatLvNorm(c.level); SEAT.inApp = !!c.inApp; } })();
 function seatTier() { return SEAT.until > Date.now() ? (SEAT.tier || "") : ""; }
 function seatActive() { return !!seatTier(); }
 function seatLabel() { return TIER_NAME[seatTier()] + " · " + SEAT.orgName + " (" + SEAT.alias + ") · until " + new Date(SEAT.until).toLocaleDateString(); }
@@ -33508,8 +33638,8 @@ function seatCheck() {
   fnCall("groupSeat", {}).then(function (r) {
     var was = seatTier();
     if (r && r.ok) {
-      SEAT.tier = "pro"; SEAT.until = r.live ? r.until : Math.min(r.until, Date.now()); SEAT.orgName = r.orgName || ""; SEAT.alias = r.alias || ""; SEAT.level = seatLvNorm(r.level); SEAT.loaded = true; if (r.boost) { SEAT.boost = r.boost; store("seatBoost", r.boost); }
-      store("seat", { tier: "pro", until: SEAT.until, orgName: SEAT.orgName, alias: SEAT.alias, level: SEAT.level });
+      SEAT.tier = "pro"; SEAT.until = r.live ? r.until : Math.min(r.until, Date.now()); SEAT.orgName = r.orgName || ""; SEAT.alias = r.alias || ""; SEAT.level = seatLvNorm(r.level); SEAT.loaded = true; SEAT.inApp = !!r.inApp; if (r.boost) { SEAT.boost = r.boost; store("seatBoost", r.boost); }
+      store("seat", { tier: "pro", until: SEAT.until, orgName: SEAT.orgName, alias: SEAT.alias, level: SEAT.level, inApp: SEAT.inApp });
     } else if (r && !r.ok && !(SEAT.redeemedAt && Date.now() - SEAT.redeemedAt < 120000)) {
       SEAT.tier = ""; SEAT.until = 0; SEAT.loaded = true; store("seat", null);
     }
@@ -33564,7 +33694,7 @@ function seatSecret(make) {
 }
 /* any Cloud Function, callable protocol, with this browser's account token */
 function fnCall(name, data) {
-  if (/^group(Redeem|Report|SetName|PrizeClaim|Board|Seat|Boost)$/.test(name)) { var sk = seatSecret(name === "groupRedeem" || name === "groupSeat"); if (sk) { data = Object.assign({}, data || {}, { seat: sk }); } }
+  if (/^group(Redeem|Report|SetName|PrizeClaim|Board|BoardOpt|Seat|Boost)$/.test(name)) { var sk = seatSecret(name === "groupRedeem" || name === "groupSeat"); if (sk) { data = Object.assign({}, data || {}, { seat: sk }); } }
   var base = (window.DRUGBUG_CONFIG || {}).functionsUrl;
   if (!base || typeof ACCT === "undefined" || !ACCT || !ACCT.api || typeof ACCT.api.token !== "function") return Promise.reject(new Error("offline"));
   return ACCT.api.token().then(function (tok) {
@@ -33591,18 +33721,18 @@ function groupRedeemKey(raw, win, fail, agreed) {
   var where0 = agreed === true ? "form" : "code";
   /* a class key only works if the student agrees to share class results (owner, Nov 12 2026) */
   var ok = agreed === true;
-  if (!ok && !(typeof NATIVE !== "undefined" && NATIVE)) try { ok = window.confirm("Class keys share your study results with your instructor.\n\nYour instructor will see your scores and activity by medication and topic, the questions you miss and the answers you chose, under your class label (for example Student 07). DrugBug does not ask for your name or email.\n\nPress OK to agree and use your class key. Press Cancel if you do not agree. You can't use a class key without sharing results."); } catch (e) {}
+  if (!ok && !(typeof NATIVE !== "undefined" && NATIVE)) try { ok = window.confirm("Class keys share your study results with your instructor.\n\nYour instructor will see your scores and activity by medication and topic, the questions you miss and the answers you chose, under your class label (for example Student 07). DrugBug does not ask for your name or email.\n\nYou leave the public leaderboard. Your class scoreboard is your choice: you appear on it only after you press Join scoreboard under My class, and only under your class label or an approved nickname. You can leave it any time.\n\nPress OK to agree and use your class key. Press Cancel if you do not agree. You can't use a class key without sharing results."); } catch (e) {}
   if (!ok) return fail("This class key was not used. Class keys only work if you agree to share your class results with your instructor.");
   store("classConsent", { at: Date.now(), v: 1 });
   GIFT.busy = true; giftDraw();
-  fnCall("groupRedeem", { token: raw, consent: true }).then(function (r) {
-    SEAT.tier = "pro"; SEAT.until = r.until; SEAT.orgName = r.orgName; SEAT.alias = r.alias; SEAT.level = seatLvNorm(r.level); SEAT.loaded = true; SEAT.redeemedAt = Date.now();
-    store("seat", { tier: "pro", until: r.until, orgName: r.orgName, alias: r.alias, level: SEAT.level });
+  fnCall("groupRedeem", { token: raw, consent: true, app: NATIVE ? "ios" : "web" }).then(function (r) {
+    SEAT.tier = "pro"; SEAT.until = r.until; SEAT.orgName = r.orgName; SEAT.alias = r.alias; SEAT.level = seatLvNorm(r.level); SEAT.loaded = true; SEAT.redeemedAt = Date.now(); SEAT.inApp = !!(r.inApp || NATIVE);
+    store("seat", { tier: "pro", until: r.until, orgName: r.orgName, alias: r.alias, level: SEAT.level, inApp: SEAT.inApp });
     if (typeof webDeepLoad === "function") webDeepLoad();
     if (where0 !== "form") clAdoptLevel(SEAT.level);
     lbLeaveForClass();
     setTimeout(function () { try { classIntro(); } catch (e) {} }, 400);
-    win("You're in " + r.orgName + " as " + r.alias + ". DrugBug Pro is on until " + new Date(r.until).toLocaleDateString() + ". DrugBug displays your class results to your instructor under your class key label, without your name or email. Your class and your scores are under My Class in " + (r.level && typeof levelObj === "function" && levelObj(r.level) ? "the " + levelObj(r.level).name + " menu" : "your level's menu") + ".");
+    win("You're in " + r.orgName + " as " + r.alias + "." + (NATIVE ? "" : " DrugBug Pro is on until " + new Date(r.until).toLocaleDateString() + ".") + " DrugBug displays your class results to your instructor under your class key label, without your name or email. Your class and your scores are under My Class in " + (r.level && typeof levelObj === "function" && levelObj(r.level) ? "the " + levelObj(r.level).name + " menu" : "your level's menu") + ".");
   }).catch(function (e) {
     fail(e && e.message === "offline" ? "Class keys need an internet connection. Connect and try again." : (e && e.message) || "Could not check that key right now. Try again in a moment.");
   });
@@ -34422,6 +34552,19 @@ function dashLocal() {
 /* scoreboard nickname: typed by the student, checked by the server, shown only after the
    instructor approves it (owner, Nov 6 2026) */
 var DNICK = { busy: false, msg: "", err: false };
+/* join or leave the class scoreboard (owner, Nov 20 2026: "allow people to join or not join the scoreboard") */
+var CLOPT = { busy: false, msg: "" };
+function clOptBox() {
+  var out = !!(CL.data && CL.data.out);
+  return '<div class="clopt' + (out ? ' off' : '') + '"><p class="small">' + (out ? 'You\'re <strong>not on</strong> the class scoreboard. Join to be ranked with your class and race for the weekly prizes. Classmates see only the top 10, under class labels or approved nicknames. Your instructor sees your results either way.' : 'You\'re <strong>on</strong> the class scoreboard. The top 10 are shown to the class, under class labels or approved nicknames.') + '</p>' +
+    '<button class="btn ghost small" data-clopt="' + (out ? "on" : "off") + '"' + (CLOPT.busy ? " disabled" : "") + '>' + (out ? "Join scoreboard" : "Leave scoreboard") + '</button>' + (CLOPT.msg ? '<p class="presult good" role="status">' + esc(CLOPT.msg) + '</p>' : '') + '</div>';
+}
+document.addEventListener("click", function (e) {
+  var b = e.target && e.target.closest && e.target.closest("[data-clopt]"); if (!b) return;
+  var on = b.getAttribute("data-clopt") === "on"; CLOPT.busy = true; CLOPT.msg = ""; render(); if (CL.open) drawClassPane();
+  fnCall("groupBoardOpt", { on: on }).then(function () { CLOPT.busy = false; CLOPT.msg = on ? "You joined the scoreboard." : "You left the scoreboard."; if (CL.data) CL.data.out = !on; clLoad(true); render(); if (CL.open) drawClassPane(); })
+    .catch(function (er) { CLOPT.busy = false; CLOPT.msg = (er && er.message === "offline") ? "Needs an internet connection." : "Couldn't change that right now. Try again in a moment."; render(); if (CL.open) drawClassPane(); });
+});
 function dashNick() {
   var nk = (CL.data && CL.data.nick) || null, st = nk ? nk.status : "";
   var line = st === "ok" ? 'Classmates see you as <strong>' + esc(nk.text) + '</strong>.'
@@ -34487,12 +34630,12 @@ function dashView() {
     if (!CL.data) c += '<p class="muted">' + (CL.busy ? "Loading the class…" : (CL.msg || "The scoreboard needs an internet connection.")) + '</p>';
     else {
       if (!clBoardOn()) c += '<p class="muted small">Class scoreboards are off. Your instructor sees your results under your class key label.</p>';
-      else c += dashNick() + dashPrizeBox(CL.data) + '' + clBoard(CL.data, true);
+      else c += clOptBox() + (CL.data.out ? '' : dashNick()) + dashPrizeBox(CL.data) + '' + clBoard(CL.data, true);
       if (CL.data.mine) c += '<details class="cldim"><summary>Your class results, by quiz type and more</summary>' + clMine(CL.data.mine) + '</details>';
     }
     c += '</div>';
   } else {
-    c += '<div class="dcard2"><h3>In a class?</h3><p class="muted small">Enter the class key from your instructor. You get DrugBug Pro while the class runs, and your class scoreboard if your instructor turns it on.</p>' + clJoinForm("dash") + '</div>';
+    c += '<div class="dcard2"><h3>In a class?</h3><p class="muted small">Enter the class key from your instructor. ' + (NATIVE ? 'Your instructor sees your class results, and you can join your class scoreboard.' : 'You get DrugBug Pro while the class runs, and you can join your class scoreboard.') + '</p>' + clJoinForm("dash") + '</div>';
   }
   return c + '</section>';
 }
@@ -34567,7 +34710,7 @@ function clBoard(d, weekly) {
   var cnt = d.count || src.length, tiers = (d.prizes && d.prizes.tiers) || [];
   var R = src.map(function (r) { return weekly ? Object.assign({}, r, { correct: r.weekC || 0, prize: r.rank <= 3 && (r.weekC || 0) > 0 ? tiers[r.rank - 1] : "" }) : r; }).sort(function (a, b) { return a.rank - b.rank; });
   var top = R.filter(function (r) { return r.rank <= 3 && (!weekly || r.correct > 0); });
-  var c = '<p class="muted small">Top 5 of ' + cnt + (weekly ? ', ranked by correct answers this week.' : ', ranked by correct answers since the class started.') + ' Arrows show moves since yesterday. The race runs Monday to Saturday, winners are shown Sunday, and it starts over Monday. Everyone shows as their student number or a nickname their instructor approved.</p>';
+  var c = '<p class="muted small">Top 10 of ' + cnt + (weekly ? ', ranked by correct answers this week.' : ', ranked by correct answers since the class started.') + ' Arrows show moves since yesterday. The race runs Monday to Saturday, winners are shown Sunday, and it starts over Monday. Everyone shows as their student number or a nickname their instructor approved.</p>';
   if (top.length) {
     var at = function (rk) { return top.filter(function (r) { return r.rank === rk; })[0]; };
     c += '<div class="podium">' + [2, 1, 3].map(function (rk) {
@@ -34622,7 +34765,7 @@ function clComp(m) {
   }
   c += '<h3 class="eh small">Individuals</h3>';
   if (!B.length) return c + '<p class="muted small">No one has answered a protocol question ' + (wk ? 'this week' : 'yet') + '. Open Protocols in the menu, then Protocol practice.</p>';
-  return c + '<p class="muted small">Top 5 by correct protocol answers, plus your own place.</p><ol class="clboard">' + B.map(function (r) {
+  return c + '<p class="muted small">Top 10 by correct protocol answers, plus your own place.</p><ol class="clboard">' + B.map(function (r) {
     var n = wk ? r.wn : r.n, cc = wk ? r.wc : r.c;
     return (r.rank > 5 ? '<li class="clgap" aria-hidden="true">···</li>' : '') + '<li class="' + (r.me ? "me" : "") + '"><span class="clrk' + (r.rank <= 3 ? " r" + r.rank : "") + '">' + r.rank + '</span><span class="clal">' + esc(r.name) + (r.me ? ' <em>you</em>' : '') + (r.team ? '<small class="muted"> · ' + esc(r.team) + '</small>' : '') + '</span><span class="clsc"><b>' + cc.toLocaleString() + '</b> right<small>' + Math.round(100 * cc / (n || 1)) + '% of ' + n + '</small></span></li>';
   }).join("") + '</ol>';
@@ -34731,7 +34874,7 @@ function clAdoptLevel(lv) {
 }
 function clJoinForm(where) {
   return '<form class="pform cljoin" data-cljoin="' + where + '"><label>Class key<input class="pinput clkey" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="DB-XXXX-XXX-XXX" value="' + esc(CL.key) + '"></label>' +
-    '<label class="clagreel"><input type="checkbox" class="clagree"> I agree that my instructor sees my class results (scores and activity by medication and topic, missed questions and the answers I chose) under my class key label.</label>' +
+    '<label class="clagreel"><input type="checkbox" class="clagree"> I agree that my instructor sees my class results (scores and activity by medication and topic, missed questions and the answers I chose) under my class key label. Joining the class scoreboard is my choice, under My class.</label>' +
     '<button class="btn" type="submit"' + (CL.busy ? " disabled" : "") + '>' + (CL.busy ? "Checking…" : "Join my class") + '</button></form>' +
     (CL.msg ? '<p class="presult' + (CL.err ? "" : " good") + '" role="status">' + esc(CL.msg) + '</p>' : '');
 }
@@ -34754,7 +34897,7 @@ document.addEventListener("submit", function (e) {
 function classView() {
   var c = '<div class="pbar"><h2>My class</h2><button class="theme-btn" data-clact="close">Close</button></div>';
   if (!seatActive()) {
-    c += '<p class="muted">Got a class key from your instructor? Enter it here to join your class. You get DrugBug Pro while the class runs, a class scoreboard, and your own scores broken down every way.</p>';
+    c += '<p class="muted">Got a class key from your instructor? Enter it here to join your class. ' + (NATIVE ? 'You get your class scoreboard and your own scores broken down every way.' : 'You get DrugBug Pro while the class runs, a class scoreboard, and your own scores broken down every way.') + '</p>';
     c += clJoinForm("pane");
     c += '<p class="muted small">DrugBug displays class results to your instructor under your class key label, such as Student 07. Results include your scores and activity by medication and topic and may show missed questions and the answers you selected. Your instructor may know which key they gave you. DrugBug does not send your name or email as part of the class results.</p>';
     c += '<p class="muted small">Teaching a class? <a href="' + (NATIVE ? "https://drugbugapp.com/instructor/" : "../instructor/") + '" target="_blank" rel="noopener">Instructor portal</a></p>';
@@ -34767,7 +34910,7 @@ function classView() {
   c += '<div class="cltabs"><button class="' + (CL.view === "board" ? "on" : "") + '" data-clact="board">Scoreboard</button>' + (comp ? '<button class="' + (CL.view === "comp" ? "on" : "") + '" data-clact="comp">Protocols</button>' : '') + '<button class="' + (CL.view === "mine" ? "on" : "") + '" data-clact="mine">My scores</button><button data-clact="refresh" aria-label="Refresh">↻</button></div>';
   if (CL.msg) c += '<p class="presult' + (CL.err ? "" : " good") + '">' + esc(CL.msg) + '</p>';
   if (!CL.data) c += '<p class="muted">' + (CL.busy ? "Loading…" : "") + '</p>';
-  else c += CL.view === "board" ? clBoard(CL.data, true) : CL.view === "comp" ? clComp(CL.data.comp) : clMine(CL.data.mine);
+  else c += CL.view === "board" ? clOptBox() + clBoard(CL.data, true) : CL.view === "comp" ? clComp(CL.data.comp) : clMine(CL.data.mine);
   return c;
 }
 function drawClassPane(top) {
@@ -35854,14 +35997,7 @@ document.addEventListener("click", function (e) {
   if (c && !e.target.closest("button:not([data-bug3d]), a")) { e.preventDefault(); e.stopPropagation(); bug3dOpen(c.getAttribute("data-bug3d")); }
 }, true);
 document.addEventListener("keydown", function (e) { if (B3.open && e.key === "Escape") { e.preventDefault(); bug3dClose(); } });
-/* a long press on a terrarium bubble opens it too (a tap still picks the bug) */
-(function () {
-  var t = null, id = null, fired = false;
-  document.addEventListener("pointerdown", function (e) { var b = e.target.closest && e.target.closest(".bubble[data-b3id]"); if (!b) return; id = b.getAttribute("data-b3id"); fired = false; clearTimeout(t); t = setTimeout(function () { fired = true; bug3dOpen(id); }, 480); });
-  ["pointerup", "pointercancel", "pointerleave"].forEach(function (k) { document.addEventListener(k, function () { clearTimeout(t); }, true); });
-  document.addEventListener("click", function (e) { if (fired && e.target.closest && e.target.closest(".bubble")) { fired = false; e.preventDefault(); e.stopPropagation(); } }, true);
-  document.addEventListener("contextmenu", function (e) { if (e.target.closest && e.target.closest(".bubble[data-b3id]")) e.preventDefault(); });
-})();
+/* the Terrarium bubble long press now opens the bug card too (see "Bug cards" below; owner, Nov 20 2026) */
 (function () {
   var st = document.createElement("style");
   st.textContent = '#bug3d{position:fixed;inset:0;z-index:2000;display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,360px);background:radial-gradient(ellipse at 50% 72%,#1a1530 0%,#0b0913 55%,#040307 100%);color:#f4f1fc}#bug3d[hidden]{display:none}' +
@@ -36016,24 +36152,35 @@ function bugFound(b) {
   if (b.price) return "Bug Shop, " + b.price.toLocaleString() + " sticks";
   return "Starter";
 }
+function loreSecret(b) {
+  var dlg = document.getElementById("loredlg");
+  if (!dlg) { dlg = document.createElement("div"); dlg.id = "loredlg"; document.body.appendChild(dlg); }
+  dlg.innerHTML = '<div class="lorescrim" data-loreclose="1"><div class="lorecard" role="dialog" aria-modal="true" aria-label="Secret bug" style="--rc:#64748b"><div class="loregrab"></div>' +
+    '<div class="lorehead"><div class="loreart secsil">' + bugArt(b, "", { mood: "happy" }) + '</div><div><span class="lorepill">secret</span><h2>???</h2><span class="muted small">Locked</span></div></div>' +
+    '<h3 class="lorehd">Lore</h3><p class="loretx">This one keeps to itself. You can\'t buy it: it\'s won by doing something strange. Win it and its whole story shows up here.</p><div class="actions" style="justify-content:center"><button class="btn small" data-loreclose="1">Close</button></div></div></div>';
+  dlg.hidden = false;
+}
 var LORE_RC = { common: "#94a3b8", rare: "#38bdf8", epic: "#c084fc", legendary: "#fbbf24", seasonal: "#fb923c", earned: "#34d399", admin: "#f472b6" };
 function loreOpen(id) {
   var b = bugById(id); if (!b) return;
+  /* locked bugs open too (owner, Nov 20 2026); a secret bug you haven't won keeps its secret */
+  if (b.secret && !owned(b.id)) return loreSecret(b);
   var L = BUG_LORE[b.id] || ["Your terrarium", "Curiosity", "Motto", "Keep learning", b.blurb || "A bug with a story still being written."];
   var rc = LORE_RC[b.rar] || LORE_RC.common, st = bugStats(b), own = owned(b.id);
   var dlg = document.getElementById("loredlg");
   if (!dlg) { dlg = document.createElement("div"); dlg.id = "loredlg"; document.body.appendChild(dlg); }
   dlg.innerHTML = '<div class="lorescrim" data-loreclose="1"><div class="lorecard" role="dialog" aria-modal="true" aria-label="' + esc(b.name) + '" style="--rc:' + rc + '"><div class="loregrab"></div>' +
-    '<div class="lorehead"><div class="loreart">' + bugArt(b, "", { mood: "happy" }) + '</div><div><span class="lorepill">' + esc(b.rar === "admin" ? "staff" : b.rar) + '</span><h2>' + esc(b.name) + '</h2><span class="muted small">' + esc((b.body || "").replace(/^./, function (c) { return c.toUpperCase(); })) + (own ? ' · In your terrarium' : '') + '</span></div></div>' +
+    '<div class="lorehead"><div class="loreart">' + bugArt(b, "", { mood: "happy" }) + '</div><div><span class="lorepill">' + esc(b.rar === "admin" ? "staff" : b.rar) + '</span><h2>' + esc(b.name) + '</h2><span class="muted small">' + esc((b.body || "").replace(/^./, function (c) { return c.toUpperCase(); })) + (own ? ' · In your terrarium' : ' · Locked') + '</span></div></div>' +
     '<div class="lorestats">' + BUG_STATS.map(function (n, i) { return '<div class="lorestat"><span class="muted">' + n + '</span><span class="loretrack"><i style="width:' + st[i] * 10 + '%"></i></span><b>' + st[i] + '</b></div>'; }).join("") + '</div>' +
     '<div class="lorefacts"><div><small>Habitat</small><span>' + esc(L[0]) + '</span></div><div><small>Favorite med</small><span>' + esc(L[1]) + '</span></div><div><small>Found</small><span>' + esc(bugFound(b)) + '</span></div><div><small>' + esc(L[2]) + '</small><span>' + esc(L[3]) + '</span></div></div>' +
-    '<h3 class="lorehd">Lore</h3><p class="loretx">' + esc(L[4]) + '</p><div class="actions" style="justify-content:center"><button class="btn small" data-loreclose="1">Close</button></div></div></div>';
+    '<h3 class="lorehd">Lore</h3><p class="loretx">' + esc(L[4]) + '</p><div class="actions" style="justify-content:center">' + (typeof B3_READY !== "undefined" && B3_READY ? '<button class="btn small ghost" data-lore3d="' + esc(b.id) + '">See in 3D</button>' : '') + '<button class="btn small" data-loreclose="1">Close</button></div></div></div>';
   dlg.hidden = false;
 }
 (function () {
   var T = null, el = null, fired = false, sx = 0, sy = 0;
-  var SEL = "[data-equip],[data-buy],[data-claim],[data-buyok],[data-b],[data-lorebug]";
-  function idOf(e) { return e.getAttribute("data-lorebug") || e.getAttribute("data-equip") || e.getAttribute("data-buy") || e.getAttribute("data-claim") || e.getAttribute("data-buyok") || e.getAttribute("data-b"); }
+  /* every place a bug is drawn: shop cards, Terrarium bubbles (the equipped one too) and your own bug (owner, Nov 20 2026) */
+  var SEL = "[data-equip],[data-buy],[data-claim],[data-buyok],[data-b],[data-lorebug],[data-bugid],[data-b3id],[data-bug3d]";
+  function idOf(e) { return e.getAttribute("data-lorebug") || e.getAttribute("data-equip") || e.getAttribute("data-buy") || e.getAttribute("data-claim") || e.getAttribute("data-buyok") || e.getAttribute("data-b") || e.getAttribute("data-bugid") || e.getAttribute("data-b3id") || e.getAttribute("data-bug3d"); }
   document.addEventListener("pointerdown", function (e) {
     var t = e.target && e.target.closest ? e.target.closest(SEL) : null; if (!t) return;
     var id = idOf(t); if (!id || typeof bugById !== "function" || !BUGS.some(function (b) { return b.id === id; })) return;
@@ -36045,10 +36192,12 @@ function loreOpen(id) {
   document.addEventListener("pointerup", end, true); document.addEventListener("pointercancel", end, true);
   document.addEventListener("click", function (e) {
     if (fired) { fired = false; e.preventDefault(); e.stopPropagation(); return; }   /* a hold is not a tap */
+    var l3 = e.target && e.target.closest ? e.target.closest("[data-lore3d]") : null;
+    if (l3) { var d3 = document.getElementById("loredlg"); if (d3) { d3.hidden = true; d3.innerHTML = ""; } e.stopPropagation(); e.preventDefault(); if (typeof bug3dOpen === "function") bug3dOpen(l3.getAttribute("data-lore3d")); return; }
     var c = e.target && e.target.closest ? e.target.closest("[data-loreclose]") : null;
     if (c && (c === e.target || c.tagName === "BUTTON")) { var d = document.getElementById("loredlg"); if (d) { d.hidden = true; d.innerHTML = ""; } e.stopPropagation(); }
   }, true);
-  document.addEventListener("contextmenu", function (e) { if (e.target && e.target.closest && e.target.closest(SEL)) e.preventDefault(); }, true);
+  document.addEventListener("contextmenu", function (e) { var t = e.target && e.target.closest ? e.target.closest(SEL) : null; if (!t) return; e.preventDefault(); var id = idOf(t); if (id && BUGS.some(function (b) { return b.id === id; })) { end(); loreOpen(id); } }, true);
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") { var d = document.getElementById("loredlg"); if (d && !d.hidden) { d.hidden = true; d.innerHTML = ""; } } });
 })();
 
