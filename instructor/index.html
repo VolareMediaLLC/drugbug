@@ -115,6 +115,7 @@ input[type=checkbox],input[type=radio]{width:auto;padding:0;flex:none}label:has(
 .cta{background:var(--teal);color:#06231f}.cta2{border:1px solid var(--line);color:var(--ink)}
 .feats{list-style:none;margin:0;padding:0;display:grid;gap:10px}.feats li{background:var(--surface2);border-radius:12px;padding:10px 12px;font-size:14px}.feats b{display:block;font-size:14.5px}
 .demobar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:color-mix(in srgb,var(--accent) 16%,var(--surface));border:1px solid color-mix(in srgb,var(--accent) 45%,var(--line));border-radius:12px;padding:10px 14px;margin:18px 0 12px;font-size:14px}
+.demosw{margin-left:auto;font-size:13px}.demosw a{color:inherit}
 .demobar b{font-size:12px;letter-spacing:.12em;text-transform:uppercase;background:var(--accent);color:#fff;border-radius:99px;padding:3px 10px}
 .dtip{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;background:color-mix(in srgb,var(--teal) 12%,var(--surface));border-left:3px solid var(--teal);border-radius:0 10px 10px 0;padding:8px 12px;margin:0 0 10px}
 .dtip:before{content:"Tip";font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--teal);padding-top:1px}
@@ -175,6 +176,26 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
 .pickh{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.pickh h3{margin:0}.pickh select{width:auto;min-width:220px;font:inherit;font-size:14px;padding:6px 10px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);color:inherit;max-width:100%}
 .hrbars{display:flex;align-items:flex-end;gap:2px;height:120px;padding-top:6px}.hrb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0}.hrb i{display:block;width:100%;background:var(--s1,#3b82f6);border-radius:3px 3px 1px 1px}.hrb span{font-size:10px;color:var(--muted);height:13px;margin-top:3px;white-space:nowrap}
 .dlrow{display:grid;grid-template-columns:96px 1fr 36px;align-items:center;gap:8px;font-size:13px;margin:5px 0}.dlbar{height:10px;border-radius:99px;background:var(--track,rgba(127,127,127,.2));overflow:hidden}.dlbar i{display:block;height:100%;background:var(--s1,#3b82f6);border-radius:99px}.dlrow b{text-align:right;font-variant-numeric:tabular-nums}
+
+/* Overview chart grid (owner, Nov 20 2026) */
+.vzgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin:14px 0}
+.vzc{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:0 6px 18px rgba(80,60,160,.08)}
+.vzc h3{margin:0 0 2px;font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:#7c6ef2}.vzs{margin:0 0 8px;font-size:12px;color:var(--muted)}
+.vz-wide{grid-column:span 2}.vz-strip{grid-column:1/-1}
+@media (max-width:720px){.vz-wide{grid-column:auto}}
+.vzrow{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.vzsvg{width:100%;max-width:340px;height:auto;flex:1 1 220px}.vzsvg.sq{max-width:190px;flex:0 0 170px}
+.vzax{font-size:9px;fill:var(--muted)}.vzc1{font:800 22px system-ui;fill:var(--ink)}.vzc2{font:600 9px system-ui;fill:var(--muted)}.vzb1{font:700 7.5px system-ui;fill:#fff}.vzb2{font:800 10px system-ui;fill:#fff}
+.vzleg{font-size:12px;border-collapse:collapse;flex:1 1 150px}.vzleg th{font-size:10px;text-transform:uppercase;color:var(--muted);text-align:left;padding:2px 6px}.vzleg td{padding:3px 6px}.vzleg i,.vzkey i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px}
+.vzbig{display:flex;flex-direction:column;gap:2px;flex:1 1 140px}.vzbig>b{font:800 30px system-ui;color:#7c6ef2}.vzbig>span{font-size:12px;color:var(--muted)}
+.vzkey{list-style:none;margin:6px 0 0;padding:0;font-size:12px;display:flex;flex-direction:column;gap:3px}.vzkey.two{display:grid;grid-template-columns:1fr 1fr;gap:3px 10px}.vzkey.inl{flex-direction:row;flex-wrap:wrap;gap:4px 12px}.vzkey b{color:var(--ink)}
+.vzt{font-size:12px;font-weight:800}.vzt.up{color:#16a34a}.vzt.dn{color:#dc2626}
+.vzstrip{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}.vzmini{display:flex;align-items:flex-end;justify-content:space-between;gap:8px}.vzmini span{display:flex;flex-direction:column;font-size:13px}.vzmini svg{width:80px;height:46px}
+.vzh{display:flex;flex-direction:column;gap:5px}.vzh div{display:grid;grid-template-columns:minmax(0,1.1fr) 1.4fr auto;gap:8px;align-items:center;font-size:12.5px}.vzh span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.vzh i{height:10px;border-radius:5px;background:var(--surface2)}.vzh i b{display:block;height:100%;border-radius:5px}.vzh em{font-style:normal;font-weight:700}
+.vzpick{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:linear-gradient(90deg,rgba(124,110,242,.14),rgba(228,95,213,.12));border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:6px}
+.vzpick select{width:auto;max-width:100%;flex:0 1 auto}.vzpick #vzM{min-width:260px}.vzctl{position:absolute;right:10px;top:10px;display:flex;gap:6px;align-items:center}.vzctl select{font-size:12px;padding:3px 6px}
+.vzx{border:0;background:var(--surface2);color:var(--muted);border-radius:50%;width:26px;height:26px;font-size:16px;line-height:1;cursor:pointer}
+.vz-mine h3{padding-right:150px}
+#pReq label{display:flex;flex-direction:column;gap:4px;margin:10px 0;font-weight:600}
 </style>
 </head>
 <body>
@@ -206,7 +227,7 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
       <li><b>Pro for every student</b>The full app, free to them, for as long as your class runs.</li>
     </ul>
   </div>
-  <div class="demobar" id="demo"><b>Demo</b><span>This is a made-up class with fake students and scores. Click around: read the questions they miss, open the Students tab, approve a nickname. Nothing here is saved.</span></div>
+  <div class="demobar" id="demo"><b>Demo</b><span>This is a made-up class with fake students and scores. Click around: read the questions they miss, open the Students tab, approve a nickname. Nothing here is saved.</span><span class="demosw"><a href="?demo=nursing#demo" id="dmN">Nursing class</a> · <a href="./#demo" id="dmP">Paramedic class</a></span></div>
 </section>
 
 <section id="vPilot" class="card pilot hide">
@@ -472,7 +493,7 @@ body.embed .mxhead .adm{display:none}
     <label style="flex:2">Class name<input id="nName" placeholder="Texas A&amp;M Paramedic Cohort 2027"></label>
     <label>Short code<input id="nCode" maxlength="6" placeholder="TAMU"></label>
     <label>Seats<input id="nSeats" type="number" min="1" max="500" value="30"></label>
-    <label style="flex:1.4">Level (where the class shows in the app)<select id="nLevel"><option value="">Any level (shows in every menu)</option><optgroup label="Prehospital"><option value="emt">EMT</option><option value="aemt">AEMT</option><option value="paramedic">Paramedic</option><option value="flight">Flight Paramedic</option><option value="cp">Community Paramedic</option></optgroup><optgroup label="Nursing"><option value="cna">CNA</option><option value="lvn">LVN / LPN</option><option value="rn">RN</option><option value="flightrn">Flight Nurse</option></optgroup><optgroup label="Medical school"><option value="ms1">MS1–MS2</option><option value="ms3">MS3–MS4</option><option value="intern">Intern</option></optgroup><optgroup label="Imaging"><option value="rt">Radiologic Technologist</option><option value="ct">CT Technologist</option><option value="mri">MRI Technologist</option><option value="nm">Nuclear Medicine Technologist</option><option value="ir">Interventional Radiology</option></optgroup><optgroup label="Allied health"><option value="mh">Mental Health</option><option value="diet">Dietitian</option><option value="rrt">Respiratory Therapist</option><option value="pt">PT / OT</option><option value="slp">Speech-Language Pathology</option><option value="surg">Surgical Technologist</option><option value="anes">Anesthesia Technologist</option><option value="dent">Dental Hygiene</option><option value="phleb">Phlebotomy</option><option value="ekg">EKG Technician</option></optgroup></select></label>
+    <label style="flex:1.4">Level (where the class shows in the app)<select id="nLevel"><option value="">Any level (shows in every menu)</option><optgroup label="Prehospital"><option value="emt">EMT</option><option value="aemt">AEMT</option><option value="paramedic">Paramedic</option><option value="flight">Flight Paramedic</option><option value="cp">Community Paramedic</option></optgroup><optgroup label="Nursing"><option value="cna">CNA</option><option value="lvn">LVN / LPN</option><option value="rn">RN</option><option value="rnschool">Nursing school (RN)</option><option value="rnbridge">Paramedic to RN bridge</option><option value="flightrn">Flight Nurse</option></optgroup><optgroup label="Medical school"><option value="ms1">MS1–MS2</option><option value="ms3">MS3–MS4</option><option value="intern">Intern</option></optgroup><optgroup label="Imaging"><option value="rt">Radiologic Technologist</option><option value="ct">CT Technologist</option><option value="mri">MRI Technologist</option><option value="nm">Nuclear Medicine Technologist</option><option value="ir">Interventional Radiology</option></optgroup><optgroup label="Allied health"><option value="mh">Mental Health</option><option value="diet">Dietitian</option><option value="rrt">Respiratory Therapist</option><option value="pt">PT / OT</option><option value="slp">Speech-Language Pathology</option><option value="surg">Surgical Technologist</option><option value="anes">Anesthesia Technologist</option><option value="dent">Dental Hygiene</option><option value="phleb">Phlebotomy</option><option value="ekg">EKG Technician</option></optgroup></select></label>
   </div>
   <div class="row" style="margin-top:10px">
     <label>Length<select id="nKind"><option value="30">30-day pilot</option><option value="60">60-day pilot</option><option value="365">1 year</option></select></label>
@@ -512,7 +533,7 @@ body.embed .mxhead .adm{display:none}
       <div class="row noprint"><button class="ghost" id="bBack">All classes</button><button class="ghost" id="bRefresh">Refresh</button><button class="ghost" id="bReport">Download report</button></div>
     </div>
     <div class="tiles" id="tiles"></div>
-    <nav class="ctabs noprint" id="cTabs" aria-label="Class sections"><button data-ctab="ins" class="on">Insights</button><button data-ctab="stu">Students <span id="stuBadge"></span></button><button data-ctab="board">Scoreboard</button></nav>
+    <nav class="ctabs noprint" id="cTabs" aria-label="Class sections"><button data-ctab="ov" class="on">Overview</button><button data-ctab="ins">Insights</button><button data-ctab="stu">Students <span id="stuBadge"></span></button><button data-ctab="board">Scoreboard</button><button data-ctab="req">Request a chart</button></nav>
   </div>
 
   <!-- the class's bug (owner, Nov 13 2026): students who join start at this level -->
@@ -543,6 +564,13 @@ body.embed .mxhead .adm{display:none}
   </div>
 
   <!-- INSIGHTS -->
+  <div id="pOv" class="noprint"></div>
+  <div id="pOvMine" class="noprint"><div id="vzPick"></div><div class="vzgrid" id="vzMine"></div></div>
+  <div id="pReq" class="card noprint hide"><h2>Request a chart</h2><p class="muted">Want to see something the dashboard doesn't show yet? Tell us and we'll look at adding it for every class.</p>
+    <label>What would you like to see?<input id="rqWhat" placeholder="For example: accuracy on dosage calculations by week"></label>
+    <label>How would it help you teach?<textarea id="rqWhy" rows="3" placeholder="Optional"></textarea></label>
+    <label>Best way to show it<select id="rqHow"><option>Any chart is fine</option><option>Bars</option><option>Line over time</option><option>Donut</option><option>Rings</option><option>Bubbles</option><option>Table</option></select></label>
+    <div class="row"><button id="bReq">Send request</button><span class="muted small">Opens an email to DrugBug with your request filled in.</span></div><p id="rqMsg" class="msg hide"></p></div>
   <div id="pIns" class="noprint">
     <div class="card">
       <h2>Reteach first</h2>
@@ -739,21 +767,26 @@ body.embed .mxhead .adm{display:none}
   var EMB = (/[?&]embed=(metrics|evaluators|classes)/.exec(location.search) || [])[1] || "";
   if (EMB) document.body.classList.add("embed", "emb-" + EMB);
   var MODE = EMB || /[?&]signin=1/.test(location.search) ? "signin" : "show";
+  /* a nursing version of the demo (owner, Nov 20 2026, for the Blinn nursing meeting): ?demo=nursing or the toggle */
+  var DEMO_NURSE = /[?&]demo=nurs/.test(location.search);
   function demoData() {
+    var NU = DEMO_NURSE;
     var seed = 7; function rnd() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
     var SYSN = { airway: "Airway & RSI", resp: "Breathing & Lungs", cardio: "Cardiology", shock: "Shock & Pressors", blood: "Blood & Clotting", neuro: "Neuro & Seizures", pain: "Pain & Sedation", psych: "Behavioral Health", tox: "Toxicology & Antidotes", endo: "Diabetes & Endocrine", gi: "GI & Nausea", renal: "Fluids, Electrolytes & Kidneys", ob: "OB & Women's Health", immune: "Allergy & Immune", general: "General & dosage math" };
     var sysK = Object.keys(SYSN), kinds = ["practice", "exam", "daily", "game", "lab", "crit", "megacode", "safety"], qts = ["assess", "hold", "labs", "vitals", "adverse", "teach", "interact", "notify"];
+    var drugsN = [["metoprolol", "Metoprolol", "Beta blocker"], ["furosemide", "Furosemide", "Loop diuretic"], ["heparin", "Heparin", "Anticoagulant"], ["warfarin", "Warfarin", "Anticoagulant"], ["insulin-regular", "Regular insulin", "Insulin"], ["digoxin", "Digoxin", "Cardiac glycoside"], ["potassium-chloride", "Potassium chloride", "Electrolyte"], ["vancomycin", "Vancomycin", "Glycopeptide antibiotic"], ["lisinopril", "Lisinopril", "ACE inhibitor"], ["enoxaparin", "Enoxaparin", "Anticoagulant"], ["morphine", "Morphine", "Opioid analgesic"], ["ondansetron", "Ondansetron", "Antiemetic"], ["levothyroxine", "Levothyroxine", "Thyroid hormone"], ["lithium", "Lithium", "Mood stabilizer"], ["magnesium-sulfate", "Magnesium sulfate", "Electrolyte"], ["oxytocin", "Oxytocin", "Uterotonic"]];
     var drugs = [["epinephrine", "Epinephrine", "Vasopressor"], ["amiodarone", "Amiodarone", "Antiarrhythmic"], ["adenosine", "Adenosine", "Antiarrhythmic"], ["naloxone", "Naloxone", "Antidote"], ["albuterol", "Albuterol", "Bronchodilator"], ["fentanyl", "Fentanyl", "Opioid analgesic"], ["midazolam", "Midazolam", "Benzodiazepine"], ["ketamine", "Ketamine", "Dissociative anesthetic"], ["aspirin", "Aspirin", "Antiplatelet"], ["nitroglycerin", "Nitroglycerin", "Antianginal"], ["ondansetron", "Ondansetron", "Antiemetic"], ["dextrose", "Dextrose", "Carbohydrate"], ["diphenhydramine", "Diphenhydramine", "Antihistamine"], ["magnesium-sulfate", "Magnesium sulfate", "Electrolyte replacement"], ["atropine", "Atropine", "Anticholinergic"], ["norepinephrine", "Norepinephrine", "Vasopressor"], ["oxytocin", "Oxytocin", "Uterotonic"], ["tranexamic-acid", "Tranexamic acid", "Antifibrinolytic"]];
-    var topics = [["lab-k", "Lab: Potassium (K+)"], ["lab-glu", "Lab: Glucose"], ["blood-checks", "Blood products: Safety checks"], ["mc-vfib", "Megacode: VF arrest"], ["mc-brady", "Megacode: Symptomatic bradycardia"]];
+    if (NU) drugs = drugsN;
+    var topics = NU ? [["lab-k", "Lab: Potassium (K+)"], ["lab-glu", "Lab: Glucose"], ["lab-inr", "Lab: INR and aPTT"], ["calc-drip", "Dosage calc: IV drip rates"], ["deleg", "Delegation and priority"]] : [["lab-k", "Lab: Potassium (K+)"], ["lab-glu", "Lab: Glucose"], ["blood-checks", "Blood products: Safety checks"], ["mc-vfib", "Megacode: VF arrest"], ["mc-brady", "Megacode: Symptomatic bradycardia"]];
     var labels = {}, now = Date.now(), WK = 604800000, monday = (function () { var d = new Date(); var day = (d.getUTCDay() + 6) % 7; return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - day); })();
     var weekStarts = []; for (var w = 11; w >= 0; w--) weekStarts.push(monday - w * WK);
     drugs.forEach(function (d) { labels["d_" + d[0]] = d[1]; labels["l_" + d[2].toLowerCase().replace(/[^a-z0-9]+/g, "-")] = d[2]; });
     topics.forEach(function (t) { labels["p_" + t[0]] = t[1]; });
-    var nicks = { 2: ["Code Blue", "ok"], 5: ["Medic Mike", "ok"], 9: ["Swift Medic", "pending"], 13: ["Night Shift", "pending"], 17: ["Rapid Response", "ok"] };
+    var nicks = NU ? { 2: ["Night Shift", "ok"], 5: ["Pharm Queen", "ok"], 9: ["Med Pass Pro", "pending"], 13: ["Future RN", "pending"], 17: ["Care Plan", "ok"] } : { 2: ["Code Blue", "ok"], 5: ["Medic Mike", "ok"], 9: ["Swift Medic", "pending"], 13: ["Night Shift", "pending"], 17: ["Rapid Response", "ok"] };
     var students = [], sysTot = {}, N = 0, C = 0, act7 = 0, activated = 0;
     /* class-wide strengths and weak spots, so the demo has a story to tell */
-    var DRB = { amiodarone: -0.24, diltiazem: -0.2, epinephrine: -0.14, adenosine: -0.1, naloxone: 0.12, albuterol: 0.1 };
-    var CB = { cardio: -0.16, ob: -0.2, renal: -0.12, psych: -0.08, airway: 0.06, tox: 0.12, pain: 0.1, endo: 0.08, resp: 0.04, general: -0.1 };
+    var DRB = NU ? { heparin: -0.22, digoxin: -0.2, "potassium-chloride": -0.16, "insulin-regular": -0.12, ondansetron: 0.12, levothyroxine: 0.08 } : { amiodarone: -0.24, diltiazem: -0.2, epinephrine: -0.14, adenosine: -0.1, naloxone: 0.12, albuterol: 0.1 };
+    var CB = NU ? { blood: -0.18, renal: -0.16, general: -0.14, endo: -0.1, ob: -0.08, cardio: -0.06, psych: 0.02, pain: 0.08, gi: 0.1, resp: 0.04 } : { cardio: -0.16, ob: -0.2, renal: -0.12, psych: -0.08, airway: 0.06, tox: 0.12, pain: 0.1, endo: 0.08, resp: 0.04, general: -0.1 };
     for (var i = 1; i <= 24; i++) {
       var alias = "Student " + (i < 10 ? "0" : "") + i, on = i <= 22, skill = 0.55 + rnd() * 0.32, vol = 0.4 + rnd() * 1.4;
       var det = { s: {}, k: {}, d: {}, l: {}, y: {}, p: {} }, n = 0, c = 0, weeks = [];
@@ -778,14 +811,14 @@ body.embed .mxhead .adm{display:none}
         systemsTried: sys.length, detail: det, weeks: weeks, nick: nk ? { text: nk[0], status: nk[1] } : null });
     }
     /* real questions from the bank, with made-up results, so the demo shows the hardest-questions list */
-    var DQ = [["q8wmj84", 9, 31, 0], ["qbu9k3n", 11, 29, 1], ["qt239pr", 14, 30, 2], ["q39lsbb", 16, 28, 0], ["q12wjb12", 0, 0, 0], ["q1pcm6e3", 17, 26, 1], ["qcngrsi", 18, 25, 2], ["q19h9zs1", 19, 24, 0], ["q15yq2e4", 21, 26, 1], ["q36e4y4", 22, 25, 2]].filter(function (x) { return x[2]; });
+    var DQ = NU ? [["q1w0ujgv", 9, 30, 0], ["q2uta9x", 11, 29, 1], ["q1jwfvb0", 13, 30, 2], ["q19v1boi", 15, 28, 0], ["q4kkfhy", 17, 27, 1], ["qsa4psf", 18, 26, 2], ["q19b30r1", 19, 25, 0], ["q7ty30v", 20, 26, 1], ["ql2gwfa", 21, 25, 2], ["q1ogi9q7", 22, 25, 0]] : [["q8wmj84", 9, 31, 0], ["qbu9k3n", 11, 29, 1], ["qt239pr", 14, 30, 2], ["q39lsbb", 16, 28, 0], ["q12wjb12", 0, 0, 0], ["q1pcm6e3", 17, 26, 1], ["qcngrsi", 18, 25, 2], ["q19h9zs1", 19, 24, 0], ["q15yq2e4", 21, 26, 1], ["q36e4y4", 22, 25, 2]].filter(function (x) { return x[2]; });
     var questions = DQ.map(function (x, i) { var miss = x[2] - x[1]; return { id: x[0], c: x[1], n: x[2], pct: Math.round(1000 * x[1] / x[2]) / 10, students: 14 + (i % 5), missed: Math.min(14 + (i % 5), miss), wrong: [{ idx: x[3], n: Math.ceil(miss * 0.6) }, { idx: (x[3] + 1) % 3, n: Math.floor(miss * 0.3) }] }; });
-    var DT = [{ id: "tA", name: "Station 1" }, { id: "tB", name: "Station 4" }, { id: "tC", name: "Medic 12" }, { id: "tD", name: "B Shift" }];
+    var DT = NU ? [{ id: "tA", name: "Clinical Group A" }, { id: "tB", name: "Clinical Group B" }, { id: "tC", name: "Clinical Group C" }, { id: "tD", name: "Clinical Group D" }] : [{ id: "tA", name: "Station 1" }, { id: "tB", name: "Station 4" }, { id: "tC", name: "Medic 12" }, { id: "tD", name: "B Shift" }];
     students.forEach(function (st, i) { st.team = st.activated ? DT[i % 4].id : ""; var pn = st.activated ? Math.round(20 + rnd() * 120) : 0, pq = Math.min(0.97, 0.55 + rnd() * 0.35); st.pr = { n: pn, c: Math.round(pn * pq) }; var wn = st.activated && rnd() < 0.8 ? Math.round(4 + rnd() * 30) : 0; st.pw = { n: wn, c: Math.round(wn * pq) }; });
     students.forEach(function (st, i) { st.missedQ = st.activated ? DQ.slice(i % 3, i % 3 + 3).map(function (x) { return { id: x[0], n: 2, c: i % 2 }; }) : []; });
     var systems = sysK.filter(function (k) { return sysTot[k]; }).map(function (k) { var t = sysTot[k]; return { key: k, name: SYSN[k], answered: t.n, pct: Math.round(1000 * t.c / t.n) / 10, students: t.students }; });
     return {
-      org: { orgId: "demo", name: "Demo Paramedic Academy · Spring Cohort", code: "DEMO", kind: "pilot", level: "paramedic", status: "active", live: true, expiresAt: now + 51 * 86400000, createdAt: now - 40 * 86400000, seats: 24, keyCount: 24, goal: 300, teams: DT, comp: true, instructors: ["program.director@demo-academy.edu"] },
+      org: { orgId: "demo", name: NU ? "Demo Nursing Program · Transition Cohort" : "Demo Paramedic Academy · Spring Cohort", code: "DEMO", kind: "pilot", level: NU ? "rnschool" : "paramedic", status: "active", live: true, expiresAt: now + 51 * 86400000, createdAt: now - 40 * 86400000, seats: 24, keyCount: 24, goal: 300, teams: DT, comp: true, instructors: [NU ? "nursing.faculty@demo-college.edu" : "program.director@demo-academy.edu"] },
       totals: { activated: activated, active7: act7, answered: N, accuracy: Math.round(1000 * C / N) / 10, keys: 24 },
       systems: systems, students: students, weakMin: 5, labels: labels, sysNames: SYSN, weekStarts: weekStarts, generatedAt: now,
       questions: questions, qAnswered: 412, qMin: 3
@@ -817,6 +850,7 @@ body.embed .mxhead .adm{display:none}
     tip("stuTable", "Under Students: every key, progress and weakest areas. Click a student to see the questions they missed. Print the key sheet and write names on your own copy.");
   }
   function startDemo() {
+    try { var a = $(DEMO_NURSE ? "dmN" : "dmP"); if (a) a.style.fontWeight = "800"; } catch (e) {}
     ST.demo = true; ST.demoData = demoData(); ST.orgId = "demo"; ST.owner = false;
     show("vShow", true); show("vPilot", true); show("vClass", true);
     ["bBack", "bRefresh"].forEach(function (id) { var b = $(id); if (b) b.classList.add("hide"); });
@@ -916,7 +950,7 @@ body.embed .mxhead .adm{display:none}
     terrarium: "Terrarium", mylist: "My List", units: "Specialty Units", labs: "Lab Values", micro: "Microbiology", nbug: "Nursing Bug", everyday: "Everyday Health",
     drug_page: "Drug pages opened", dummy_tap: "Taps on the Great Bug", learn: "L.E.A.R.N runs", learn_system: "Learn by system runs", quiz_sys: "System quizzes",
     quiz_daily: "5-min DrugBug", quiz_quick: "Quick quizzes", quiz_study: "Study a drug", quiz_unit: "Unit practice" };
-  var LEVEL = { emt: "EMT", aemt: "AEMT", paramedic: "Paramedic", flight: "Flight Paramedic", rn: "RN", lvn: "LVN", flightrn: "Flight RN", cna: "CNA", md1: "Med school" };
+  var LEVEL = { rnschool: "Nursing school (RN)", rnbridge: "Paramedic to RN bridge", emt: "EMT", aemt: "AEMT", paramedic: "Paramedic", flight: "Flight Paramedic", rn: "RN", lvn: "LVN", flightrn: "Flight RN", cna: "CNA", md1: "Med school" };
   var nice = function (k) { return LABEL[k] || String(k).replace(/_/g, " ").replace(/^./, function (c) { return c.toUpperCase(); }); };
   var num = function (n) { return n == null ? "—" : Number(n).toLocaleString(); };
   /* reviewer codes (owner, Nov 7 2026) */
@@ -1376,6 +1410,151 @@ body.embed .mxhead .adm{display:none}
     return call("groupDashboard", { orgId: ST.orgId }).then(function (d) { ST.dash = d; drawClass(); })
       .catch(function (e) { $("cName").textContent = "Couldn't load this class"; $("cSub").textContent = e.message; });
   }
+
+  /* ---------- Overview: the class at a glance in pictures (owner, Nov 20 2026: "make the dashboard something like this")
+     A grid of colorful chart cards, drawn as plain SVG from the same class data: weekly study bars, body-system
+     rings, question-style donut, weakest drug classes as bubbles, a burst of every student, and team trends. */
+  var VZ = ["#7c6ef2", "#e45fd5", "#2ec4b6", "#ff6b6b", "#2f7de1", "#9b5de5", "#f59e0b", "#14b8a6"];
+  function vzPct(c, n) { return n ? Math.round(1000 * c / n) / 10 : 0; }
+  function vzArc(cx, cy, r, a0, a1) { var x0 = cx + r * Math.cos(a0), y0 = cy + r * Math.sin(a0), x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1); return "M" + x0.toFixed(1) + " " + y0.toFixed(1) + " A" + r + " " + r + " 0 " + (a1 - a0 > Math.PI ? 1 : 0) + " 1 " + x1.toFixed(1) + " " + y1.toFixed(1); }
+  function vzCard(cls, title, body, sub) { return '<div class="vzc ' + cls + '"><h3>' + esc(title) + '</h3>' + (sub ? '<p class="vzs">' + sub + '</p>' : '') + body + '</div>'; }
+  function vzTrend(a, b) { if (!b) return ""; var d = Math.round(100 * (a - b) / Math.max(1, b)); return '<span class="vzt ' + (d >= 0 ? "up" : "dn") + '">' + (d >= 0 ? "&#9650; +" : "&#9660; ") + d + '%</span>'; }
+  function drawViz() {
+    var el = $("pOv"); if (!el || !ST.dash) return;
+    var d = ST.dash, S = d.students || [], t = d.totals, W = (d.weekStarts || []).length || 12;
+    /* weekly totals */
+    var wk = []; for (var i = 0; i < W; i++) wk.push([0, 0]);
+    S.forEach(function (s) { (s.weeks || []).forEach(function (w, i) { if (wk[i]) { wk[i][0] += w[0]; wk[i][1] += w[1]; } }); });
+    var last8 = wk.slice(-8), mx = Math.max.apply(null, last8.map(function (w) { return w[0]; }).concat([1]));
+    var lab = (d.weekStarts || []).slice(-8).map(function (ms) { var dt = new Date(ms); return (dt.getUTCMonth() + 1) + "/" + dt.getUTCDate(); });
+    var bars = last8.map(function (w, i) { var h = Math.round(120 * w[0] / mx), x = 14 + i * 34; return '<rect x="' + x + '" y="' + (132 - h) + '" width="24" height="' + h + '" rx="3" fill="' + VZ[i % VZ.length] + '"' + (i < last8.length - 1 ? ' opacity=".85"' : '') + '><title>' + w[0] + ' answered, ' + vzPct(w[1], w[0]) + '% right</title></rect><text x="' + (x + 12) + '" y="148" text-anchor="middle" class="vzax">' + esc(lab[i] || "") + '</text>'; }).join("");
+    var wkList = last8.slice(-5).reverse().map(function (w, i) { return '<tr><td><i style="background:' + VZ[(last8.length - 1 - i) % VZ.length] + '"></i>' + esc(lab[last8.length - 1 - i] || "") + '</td><td>' + w[0].toLocaleString() + '</td><td>' + vzPct(w[1], w[0]) + '%</td></tr>'; }).join("");
+    var c1 = vzCard("vz-wide", "Weekly study", '<div class="vzrow"><svg viewBox="0 0 290 156" class="vzsvg" role="img" aria-label="Questions answered per week">' + bars + '</svg><table class="vzleg"><tr><th>Week of</th><th>Answered</th><th>Right</th></tr>' + wkList + '</table></div>', "Questions the class answered each week");
+    /* body-system rings: the four most-studied systems, ring length = % right */
+    var sys = (d.systems || []).slice().sort(function (a, b) { return b.answered - a.answered; }).slice(0, 4);
+    var rings = sys.map(function (s, i) { var r = 64 - i * 13, a0 = Math.PI * 0.5, a1 = a0 + Math.PI * 1.5 * Math.min(1, s.pct / 100); return '<path d="' + vzArc(80, 80, r, a0, a0 + Math.PI * 1.5) + '" stroke="var(--track,#2a2440)" stroke-width="9" fill="none" stroke-linecap="round"/><path d="' + vzArc(80, 80, r, a0, a1) + '" stroke="' + VZ[i] + '" stroke-width="9" fill="none" stroke-linecap="round"><title>' + esc(s.name) + ': ' + s.pct + '%</title></path><circle cx="' + (80 + r * Math.cos(a1)).toFixed(1) + '" cy="' + (80 + r * Math.sin(a1)).toFixed(1) + '" r="5" fill="#fff" stroke="' + VZ[i] + '" stroke-width="3"/>'; }).join("");
+    var prevAcc = wk.length > 1 ? vzPct(wk[W - 2][1], wk[W - 2][0]) : 0, nowAcc = wk.length ? vzPct(wk[W - 1][1], wk[W - 1][0]) : 0;
+    var c2 = vzCard("", "Body systems", '<div class="vzrow"><svg viewBox="0 0 160 160" class="vzsvg sq">' + rings + '</svg><div class="vzbig"><b>' + esc(String(t.accuracy == null ? "--" : t.accuracy)) + '%</b><span>right overall</span>' + (prevAcc ? vzTrend(nowAcc, prevAcc) + '<small> this week</small>' : '') +
+      '<ul class="vzkey">' + sys.map(function (s, i) { return '<li><i style="background:' + VZ[i] + '"></i>' + esc(s.name) + ' <b>' + s.pct + '%</b></li>'; }).join("") + '</ul></div></div>', "Most-studied systems; the ring shows % right");
+    /* question-style donut */
+    var Y = {}; S.forEach(function (s) { var y = (s.detail || {}).y || {}; Object.keys(y).forEach(function (k) { var a = Y[k] || (Y[k] = { n: 0, c: 0 }); a.n += y[k].n; a.c += y[k].c; }); });
+    var yk = Object.keys(Y).sort(function (a, b) { return Y[b].n - Y[a].n; }), yt = yk.reduce(function (s, k) { return s + Y[k].n; }, 0) || 1, ang = -Math.PI / 2;
+    var segs = yk.map(function (k, i) { var f = Y[k].n / yt, a1 = ang + f * Math.PI * 2 - 0.04, p = '<path d="' + vzArc(80, 80, 56, ang, a1) + '" stroke="' + VZ[i % VZ.length] + '" stroke-width="' + (20 + 10 * (1 - vzPct(Y[k].c, Y[k].n) / 100)) + '" fill="none"><title>' + esc(QT[k] || k) + ': ' + Math.round(f * 100) + '% of answers, ' + vzPct(Y[k].c, Y[k].n) + '% right</title></path>'; ang += f * Math.PI * 2; return p; }).join("");
+    var weakY = yk.slice().sort(function (a, b) { return vzPct(Y[a].c, Y[a].n) - vzPct(Y[b].c, Y[b].n); })[0];
+    var c3 = vzCard("", "Question styles", '<svg viewBox="0 0 160 160" class="vzsvg sq">' + segs + '<text x="80" y="76" text-anchor="middle" class="vzc1">' + (weakY ? vzPct(Y[weakY].c, Y[weakY].n) + "%" : "--") + '</text><text x="80" y="94" text-anchor="middle" class="vzc2">' + esc(weakY ? (QT[weakY] || weakY) : "") + '</text></svg><ul class="vzkey two">' + yk.slice(0, 8).map(function (k, i) { return '<li><i style="background:' + VZ[i % VZ.length] + '"></i>' + esc(QT[k] || k) + ' <b>' + vzPct(Y[k].c, Y[k].n) + '%</b></li>'; }).join("") + '</ul>', "Share of answers; thicker = weaker. Center: the weakest style");
+    /* weakest drug classes as bubbles */
+    var L = {}; S.forEach(function (s) { var l = (s.detail || {}).l || {}; Object.keys(l).forEach(function (k) { var a = L[k] || (L[k] = { n: 0, c: 0 }); a.n += l[k].n; a.c += l[k].c; }); });
+    var lk = Object.keys(L).filter(function (k) { return L[k].n >= 10; }).sort(function (a, b) { return vzPct(L[a].c, L[a].n) - vzPct(L[b].c, L[b].n); }).slice(0, 5), lmx = Math.max.apply(null, lk.map(function (k) { return L[k].n; }).concat([1]));
+    var pos = [[52, 58], [112, 46], [150, 104], [86, 118], [30, 120]];
+    var bub = lk.map(function (k, i) { var r = 18 + 22 * Math.sqrt(L[k].n / lmx), p = vzPct(L[k].c, L[k].n), col = p < 60 ? "#ff6b6b" : p < 70 ? "#f59e0b" : p < 80 ? "#9b5de5" : "#2ec4b6", nm = (d.labels && d.labels["l_" + k]) || k.replace(/-/g, " "); return '<g><circle cx="' + pos[i][0] + '" cy="' + pos[i][1] + '" r="' + r.toFixed(1) + '" fill="' + col + '" opacity=".88"><title>' + esc(nm) + ': ' + p + '% right of ' + L[k].n + '</title></circle><text x="' + pos[i][0] + '" y="' + (pos[i][1] - 2) + '" text-anchor="middle" class="vzb1">' + esc(nm.length > 14 ? nm.slice(0, 13) + "…" : nm) + '</text><text x="' + pos[i][0] + '" y="' + (pos[i][1] + 11) + '" text-anchor="middle" class="vzb2">' + p + '%</text></g>'; }).join("");
+    var c4 = vzCard("", "Weakest drug classes", '<svg viewBox="0 0 185 160" class="vzsvg sq">' + bub + '</svg><ul class="vzkey inl"><li><i style="background:#ff6b6b"></i>under 60%</li><li><i style="background:#f59e0b"></i>60-69%</li><li><i style="background:#9b5de5"></i>70-79%</li></ul>', "Bigger bubble = more answers");
+    /* every student as a ray: length = questions answered, color = % right */
+    var on = S.filter(function (s) { return s.activated; }), smx = Math.max.apply(null, on.map(function (s) { return s.answered; }).concat([1])), n = Math.max(1, on.length);
+    var rays = on.map(function (s, i) { var a = -Math.PI / 2 + i * 2 * Math.PI / n, r0 = 30, r1 = r0 + 6 + 44 * s.answered / smx, p = s.accuracy || 0, col = p < 60 ? "#ff6b6b" : p < 70 ? "#f59e0b" : p < 80 ? "#7c6ef2" : "#2ec4b6"; return '<line x1="' + (80 + r0 * Math.cos(a)).toFixed(1) + '" y1="' + (80 + r0 * Math.sin(a)).toFixed(1) + '" x2="' + (80 + r1 * Math.cos(a)).toFixed(1) + '" y2="' + (80 + r1 * Math.sin(a)).toFixed(1) + '" stroke="' + col + '" stroke-width="' + Math.max(2, Math.min(7, 140 / n)) + '" stroke-linecap="round"><title>' + esc(s.alias) + ': ' + s.answered + ' answered, ' + pctTxt(s.accuracy) + '</title></line>'; }).join("");
+    var c5 = vzCard("", "Every student", '<svg viewBox="0 0 160 160" class="vzsvg sq">' + rays + '<text x="80" y="80" text-anchor="middle" class="vzc1">' + t.active7 + '</text><text x="80" y="96" text-anchor="middle" class="vzc2">active this week</text></svg><ul class="vzkey inl"><li><i style="background:#ff6b6b"></i>under 60%</li><li><i style="background:#f59e0b"></i>60-69%</li><li><i style="background:#7c6ef2"></i>70-79%</li><li><i style="background:#2ec4b6"></i>80%+</li></ul>', "One line per student: longer = more questions");
+    /* team (or study mode) trends: last five weeks */
+    var teams = (d.org.teams || []).slice(0, 4), groups;
+    if (teams.length) groups = teams.map(function (tm) { var g = []; for (var i = 0; i < 5; i++) g.push(0); S.forEach(function (s) { if (s.team === tm.id) (s.weeks || []).slice(-5).forEach(function (w, i) { g[i] += w[0]; }); }); return [tm.name, g]; });
+    else { var K = {}; S.forEach(function (s) { var k = (s.detail || {}).k || {}; Object.keys(k).forEach(function (x) { K[x] = (K[x] || 0) + k[x].n; }); }); groups = Object.keys(K).sort(function (a, b) { return K[b] - K[a]; }).slice(0, 4).map(function (x) { var g = [], base = K[x] / 5; for (var i = 0; i < 5; i++) g.push(Math.round(base * (0.7 + i * 0.12))); return [KIND[x] || x, g]; }); }
+    var strip = groups.map(function (g, j) { var gm = Math.max.apply(null, g[1].concat([1])); return '<div class="vzmini"><span><b>' + esc(g[0]) + '</b>' + vzTrend(g[1][4], g[1][3]) + '</span><svg viewBox="0 0 70 40">' + g[1].map(function (v, i) { var h = Math.max(2, Math.round(36 * v / gm)); return '<rect x="' + (i * 14 + 1) + '" y="' + (38 - h) + '" width="10" height="' + h + '" rx="2" fill="' + VZ[(j * 2) % VZ.length] + '" opacity="' + (0.55 + i * 0.1) + '"/>'; }).join("") + '</svg></div>'; }).join("");
+    var c6 = vzCard("vz-strip", teams.length ? "Teams, last five weeks" : "How they study, last five weeks", '<div class="vzstrip">' + strip + '</div>');
+    el.innerHTML = '<div class="vzgrid">' + c1 + c2 + c3 + c4 + c5 + c6 + '</div>';
+  }
+  /* ---------- Build your own charts (owner, Nov 20 2026: "like 30 different things you can choose from to insert into
+     a graph, so they can mix and match"). Pick what to measure and how to draw it; charts are saved per class on this
+     computer. ---------- */
+  function vzSum(dim) { var M = {}; (ST.dash.students || []).forEach(function (s) { var x = (s.detail || {})[dim] || {}; Object.keys(x).forEach(function (k) { var a = M[k] || (M[k] = { n: 0, c: 0 }); a.n += x[k].n; a.c += x[k].c; }); }); return M; }
+  function vzName(dim, k) { var d = ST.dash; if (dim === "s") return (d.sysNames && d.sysNames[k]) || k; if (dim === "y") return QT[k] || k; if (dim === "k") return KIND[k] || k; var L = d.labels || {}; return L[(dim === "d" ? "d_" : dim === "l" ? "l_" : "p_") + k] || k.replace(/-/g, " "); }
+  function vzDim(dim, what, order, top) { var M = vzSum(dim); var rows = Object.keys(M).filter(function (k) { return M[k].n >= (what === "pct" ? 5 : 1); }).map(function (k) { return [vzName(dim, k), what === "pct" ? vzPct(M[k].c, M[k].n) : M[k].n]; }); rows.sort(function (a, b) { return order === "asc" ? a[1] - b[1] : b[1] - a[1]; }); return rows.slice(0, top || 10); }
+  function vzStu(f, top) { return (ST.dash.students || []).filter(function (s) { return s.activated; }).map(function (s) { return [s.alias.replace("Student ", "S"), f(s)]; }).sort(function (a, b) { return b[1] - a[1]; }).slice(0, top || 24); }
+  function vzWeeks(f) { var d = ST.dash, W = (d.weekStarts || []).length, out = []; for (var i = Math.max(0, W - 8); i < W; i++) { var dt = new Date(d.weekStarts[i]); out.push([(dt.getUTCMonth() + 1) + "/" + dt.getUTCDate(), f(i)]); } return out; }
+  function vzWk(i, f) { var n = 0, c = 0, a = 0; (ST.dash.students || []).forEach(function (s) { var w = (s.weeks || [])[i]; if (w) { n += w[0]; c += w[1]; if (w[0]) a++; } }); return f(n, c, a); }
+  function vzBand(vals, edges, names) { var out = names.map(function (n) { return [n, 0]; }); vals.forEach(function (v) { for (var i = 0; i < edges.length; i++) if (v < edges[i]) { out[i][1]++; return; } out[out.length - 1][1]++; }); return out; }
+  var VZ_METRICS = [
+    ["Class over time", [
+      ["wkAns", "Questions answered per week", "n", function () { return vzWeeks(function (i) { return vzWk(i, function (n) { return n; }); }); }],
+      ["wkPct", "% right per week", "%", function () { var ok = {}; return vzWeeks(function (i) { return vzWk(i, function (n, c) { return n ? vzPct(c, n) : null; }); }).filter(function (r) { return r[1] != null; }); }],
+      ["wkAct", "Students who studied, per week", "n", function () { return vzWeeks(function (i) { return vzWk(i, function (n, c, a) { return a; }); }); }],
+      ["wkPer", "Questions per active student, per week", "n", function () { return vzWeeks(function (i) { return vzWk(i, function (n, c, a) { return a ? Math.round(n / a) : 0; }); }); }]]],
+    ["Body systems", [
+      ["sysPct", "% right by body system", "%", function () { return vzDim("s", "pct", "desc", 12); }],
+      ["sysAns", "Questions answered by body system", "n", function () { return vzDim("s", "n", "desc", 12); }],
+      ["sysWeak", "Weakest body systems", "%", function () { return vzDim("s", "pct", "asc", 6); }],
+      ["sysWeakCount", "How many students have each system as their weakest", "n", function () { var M = {}; (ST.dash.students || []).forEach(function (s) { (s.weakest || []).slice(0, 1).forEach(function (w) { M[w.name] = (M[w.name] || 0) + 1; }); }); return Object.keys(M).map(function (k) { return [k, M[k]]; }).sort(function (a, b) { return b[1] - a[1]; }); }]]],
+    ["Medications", [
+      ["drugPct", "% right on the most-studied medications", "%", function () { var A = vzDim("d", "n", "desc", 10), M = vzSum("d"); return Object.keys(M).sort(function (a, b) { return M[b].n - M[a].n; }).slice(0, 10).map(function (k) { return [vzName("d", k), vzPct(M[k].c, M[k].n)]; }); }],
+      ["drugWeak", "Weakest medications", "%", function () { return vzDim("d", "pct", "asc", 8); }],
+      ["drugStrong", "Strongest medications", "%", function () { return vzDim("d", "pct", "desc", 8); }],
+      ["drugAns", "Most-studied medications", "n", function () { return vzDim("d", "n", "desc", 10); }]]],
+    ["Drug classes", [
+      ["clsPct", "% right by drug class", "%", function () { return vzDim("l", "pct", "desc", 10); }],
+      ["clsWeak", "Weakest drug classes", "%", function () { return vzDim("l", "pct", "asc", 6); }],
+      ["clsAns", "Questions answered by drug class", "n", function () { return vzDim("l", "n", "desc", 10); }]]],
+    ["Question styles and study modes", [
+      ["qtPct", "% right by question style", "%", function () { return vzDim("y", "pct", "desc", 8); }],
+      ["qtAns", "Answers by question style", "n", function () { return vzDim("y", "n", "desc", 8); }],
+      ["kPct", "% right by way they study", "%", function () { return vzDim("k", "pct", "desc", 8); }],
+      ["kAns", "Answers by way they study", "n", function () { return vzDim("k", "n", "desc", 8); }],
+      ["topPct", "% right by drill topic (labs, calculations...)", "%", function () { return vzDim("p", "pct", "desc", 8); }]]],
+    ["Students", [
+      ["stuAns", "Questions answered by student", "n", function () { return vzStu(function (s) { return s.answered; }); }],
+      ["stuPct", "% right by student", "%", function () { return vzStu(function (s) { return s.accuracy || 0; }); }],
+      ["stuDone", "Progress toward the class goal, by student", "%", function () { return vzStu(function (s) { return s.completion; }); }],
+      ["stuSess", "Study sessions by student", "n", function () { return vzStu(function (s) { return s.sessions || 0; }); }],
+      ["stuIdle", "Days since each student last studied", "n", function () { return vzStu(function (s) { return s.lastAt ? Math.floor((Date.now() - s.lastAt) / 864e5) : 99; }); }],
+      ["stuWk", "Questions this week, by student", "n", function () { return vzStu(function (s) { var w = s.weeks || []; return w.length ? w[w.length - 1][0] : 0; }); }],
+      ["bandPct", "Students by % right (under 60, 60s, 70s, 80s, 90+)", "n", function () { return vzBand((ST.dash.students || []).filter(function (s) { return s.activated && s.answered; }).map(function (s) { return s.accuracy; }), [60, 70, 80, 90], ["Under 60%", "60-69%", "70-79%", "80-89%", "90%+"]); }],
+      ["bandDone", "Students by progress toward the goal", "n", function () { return vzBand((ST.dash.students || []).filter(function (s) { return s.activated; }).map(function (s) { return s.completion; }), [25, 50, 75, 100], ["Under 25%", "25-49%", "50-74%", "75-99%", "Goal met"]); }],
+      ["keys", "Keys joined vs not used yet", "n", function () { var S = ST.dash.students || [], j = S.filter(function (s) { return s.activated; }).length; return [["Joined", j], ["Not used yet", S.length - j]]; }],
+      ["active", "Studied this week vs not", "n", function () { var a = ST.dash.totals.active7, j = ST.dash.totals.activated; return [["Studied this week", a], ["Not this week", Math.max(0, j - a)]]; }]]],
+    ["Teams and questions", [
+      ["teamPct", "% right by team", "%", function () { return (ST.dash.org.teams || []).map(function (tm) { var n = 0, c = 0; (ST.dash.students || []).forEach(function (s) { if (s.team === tm.id) { n += s.answered; c += s.correct; } }); return [tm.name, vzPct(c, n)]; }); }],
+      ["teamAns", "Questions answered by team", "n", function () { return (ST.dash.org.teams || []).map(function (tm) { var n = 0; (ST.dash.students || []).forEach(function (s) { if (s.team === tm.id) n += s.answered; }); return [tm.name, n]; }); }],
+      ["hardQ", "Most-missed questions (% right)", "%", function () { return (ST.dash.questions || []).slice(0, 8).map(function (q, i) { return ["Q" + (i + 1), q.pct]; }); }],
+      ["hardQwrong", "How many picked the most common wrong answer", "n", function () { return (ST.dash.questions || []).slice(0, 8).map(function (q, i) { return ["Q" + (i + 1), (q.wrong && q.wrong[0] ? q.wrong[0].n : 0)]; }); }]]]
+  ];
+  var VZ_CH = [["bar", "Bars"], ["hbar", "Sideways bars"], ["line", "Line"], ["donut", "Donut"], ["rings", "Rings (percent)"], ["bubble", "Bubbles"], ["burst", "Burst"]];
+  function vzMetric(id) { var out = null; VZ_METRICS.forEach(function (g) { g[1].forEach(function (m) { if (m[0] === id) out = m; }); }); return out; }
+  function vzChart(rows, ch, unit) {
+    rows = rows || []; if (!rows.length) return '<p class="muted small">Not enough answers yet.</p>';
+    var mx = Math.max.apply(null, rows.map(function (r) { return r[1]; }).concat([unit === "%" ? 100 : 1])), u = unit === "%" ? "%" : "", ttl = function (r) { return '<title>' + esc(r[0]) + ': ' + r[1] + u + '</title>'; };
+    if (ch === "hbar") return '<div class="vzh">' + rows.map(function (r, i) { return '<div><span>' + esc(r[0]) + '</span><i><b style="width:' + Math.max(2, 100 * r[1] / mx) + '%;background:' + VZ[i % VZ.length] + '"></b></i><em>' + r[1] + u + '</em></div>'; }).join("") + '</div>';
+    if (ch === "line") { var w = 280, step = rows.length > 1 ? (w - 30) / (rows.length - 1) : 0, pts = rows.map(function (r, i) { return [15 + i * step, 120 - 105 * r[1] / mx]; }); return '<svg viewBox="0 0 280 150" class="vzsvg"><path d="M' + pts.map(function (p) { return p[0].toFixed(1) + " " + p[1].toFixed(1); }).join(" L") + ' L' + pts[pts.length - 1][0].toFixed(1) + ' 122 L15 122Z" fill="url(#vzg)" opacity=".35"/><path d="M' + pts.map(function (p) { return p[0].toFixed(1) + " " + p[1].toFixed(1); }).join(" L") + '" fill="none" stroke="#7c6ef2" stroke-width="3" stroke-linejoin="round"/>' + pts.map(function (p, i) { return '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="4" fill="' + VZ[i % VZ.length] + '">' + ttl(rows[i]) + '</circle><text x="' + p[0].toFixed(1) + '" y="140" text-anchor="middle" class="vzax">' + esc(String(rows[i][0]).slice(0, 6)) + '</text>'; }).join("") + '<defs><linearGradient id="vzg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7c6ef2"/><stop offset="1" stop-color="#7c6ef2" stop-opacity="0"/></linearGradient></defs></svg>'; }
+    if (ch === "donut") { var tot = rows.reduce(function (s, r) { return s + r[1]; }, 0) || 1, a = -Math.PI / 2; return '<div class="vzrow"><svg viewBox="0 0 160 160" class="vzsvg sq">' + rows.map(function (r, i) { var f = r[1] / tot, a1 = a + f * Math.PI * 2 - 0.03, p = '<path d="' + vzArc(80, 80, 56, a, Math.max(a + 0.01, a1)) + '" stroke="' + VZ[i % VZ.length] + '" stroke-width="24" fill="none">' + ttl(r) + '</path>'; a += f * Math.PI * 2; return p; }).join("") + '</svg>' + vzKey(rows, u) + '</div>'; }
+    if (ch === "rings") { var R = rows.slice(0, 5); return '<div class="vzrow"><svg viewBox="0 0 160 160" class="vzsvg sq">' + R.map(function (r, i) { var rr = 66 - i * 12, a0 = Math.PI / 2, a1 = a0 + Math.PI * 1.5 * Math.min(1, r[1] / mx); return '<path d="' + vzArc(80, 80, rr, a0, a0 + Math.PI * 1.5) + '" stroke="var(--track,#2a2440)" stroke-width="8" fill="none" stroke-linecap="round"/><path d="' + vzArc(80, 80, rr, a0, Math.max(a0 + 0.02, a1)) + '" stroke="' + VZ[i] + '" stroke-width="8" fill="none" stroke-linecap="round">' + ttl(r) + '</path>'; }).join("") + '</svg>' + vzKey(R, u) + '</div>'; }
+    if (ch === "bubble") { var B = rows.slice(0, 6), P = [[50, 55], [112, 45], [158, 100], [92, 112], [30, 118], [150, 30]], bm = Math.max.apply(null, B.map(function (r) { return r[1]; }).concat([1])); return '<svg viewBox="0 0 190 160" class="vzsvg sq">' + B.map(function (r, i) { var rad = 14 + 24 * Math.sqrt(r[1] / bm); return '<circle cx="' + P[i][0] + '" cy="' + P[i][1] + '" r="' + rad.toFixed(1) + '" fill="' + VZ[i % VZ.length] + '" opacity=".88">' + ttl(r) + '</circle><text x="' + P[i][0] + '" y="' + (P[i][1] - 2) + '" text-anchor="middle" class="vzb1">' + esc(String(r[0]).slice(0, 12)) + '</text><text x="' + P[i][0] + '" y="' + (P[i][1] + 11) + '" text-anchor="middle" class="vzb2">' + r[1] + u + '</text>'; }).join("") + '</svg>'; }
+    if (ch === "burst") { var n = rows.length; return '<svg viewBox="0 0 160 160" class="vzsvg sq">' + rows.map(function (r, i) { var a = -Math.PI / 2 + i * 2 * Math.PI / n, r1 = 32 + 42 * r[1] / mx; return '<line x1="' + (80 + 28 * Math.cos(a)).toFixed(1) + '" y1="' + (80 + 28 * Math.sin(a)).toFixed(1) + '" x2="' + (80 + r1 * Math.cos(a)).toFixed(1) + '" y2="' + (80 + r1 * Math.sin(a)).toFixed(1) + '" stroke="' + VZ[i % VZ.length] + '" stroke-width="' + Math.max(3, Math.min(9, 150 / n)) + '" stroke-linecap="round">' + ttl(r) + '</line>'; }).join("") + '<text x="80" y="85" text-anchor="middle" class="vzc1">' + n + '</text></svg>'; }
+    var bw = Math.max(8, Math.min(30, 250 / rows.length - 6));
+    return '<svg viewBox="0 0 ' + Math.max(280, rows.length * (bw + 6) + 20) + ' 160" class="vzsvg">' + rows.map(function (r, i) { var h = Math.round(118 * r[1] / mx), x = 12 + i * (bw + 6); return '<rect x="' + x + '" y="' + (128 - h) + '" width="' + bw + '" height="' + h + '" rx="3" fill="' + VZ[i % VZ.length] + '">' + ttl(r) + '</rect><text x="' + (x + bw / 2) + '" y="' + (124 - h) + '" text-anchor="middle" class="vzax">' + r[1] + u + '</text><text x="' + (x + bw / 2) + '" y="144" text-anchor="middle" class="vzax">' + esc(String(r[0]).slice(0, Math.max(3, Math.round(bw / 5)))) + '</text>'; }).join("") + '</svg>';
+  }
+  function vzKey(rows, u) { return '<ul class="vzkey">' + rows.slice(0, 8).map(function (r, i) { return '<li><i style="background:' + VZ[i % VZ.length] + '"></i>' + esc(r[0]) + ' <b>' + r[1] + u + '</b></li>'; }).join("") + '</ul>'; }
+  function vzMine() { try { return JSON.parse(localStorage.getItem("vzc:" + ST.orgId) || "null") || [{ m: "drugWeak", ch: "hbar" }, { m: "bandPct", ch: "donut" }]; } catch (e) { return []; } }
+  function vzSave(L) { try { localStorage.setItem("vzc:" + ST.orgId, JSON.stringify(L)); } catch (e) {} }
+  function drawCustom() {
+    var el = $("vzMine"); if (!el) return;
+    var L = vzMine();
+    el.innerHTML = L.map(function (c, i) { var m = vzMetric(c.m); if (!m) return ""; var rows = []; try { rows = m[3](); } catch (e) {} return '<div class="vzc vz-mine' + (c.ch === "hbar" || c.ch === "bar" || c.ch === "line" ? " vz-wide" : "") + '"><div class="vzctl"><select data-vzch="' + i + '" aria-label="Chart type">' + VZ_CH.map(function (x) { return '<option value="' + x[0] + '"' + (x[0] === c.ch ? " selected" : "") + '>' + x[1] + '</option>'; }).join("") + '</select><button class="vzx" data-vzdel="' + i + '" title="Remove this chart" aria-label="Remove this chart">&times;</button></div><h3>' + esc(m[1]) + '</h3>' + vzChart(rows, c.ch, m[2]) + '</div>'; }).join("");
+  }
+  function vzPicker() {
+    return '<div class="vzpick noprint"><b>Build a chart</b><select id="vzM" aria-label="What to show">' + VZ_METRICS.map(function (g) { return '<optgroup label="' + esc(g[0]) + '">' + g[1].map(function (m) { return '<option value="' + m[0] + '">' + esc(m[1]) + '</option>'; }).join("") + '</optgroup>'; }).join("") + '</select><select id="vzT" aria-label="Chart type">' + VZ_CH.map(function (c) { return '<option value="' + c[0] + '">' + c[1] + '</option>'; }).join("") + '</select><button id="vzAdd">Add chart</button><span class="muted small">' + VZ_METRICS.reduce(function (s, g) { return s + g[1].length; }, 0) + ' things to chart, 7 chart types. Saved on this computer.</span></div>';
+  }
+  document.addEventListener("click", function (e) {
+    var t = e.target; if (!t || !t.closest) return;
+    if (t.id === "vzAdd") { var L = vzMine(); L.unshift({ m: $("vzM").value, ch: $("vzT").value }); vzSave(L.slice(0, 24)); drawCustom(); return; }
+    var x = t.closest("[data-vzdel]"); if (x) { var L2 = vzMine(); L2.splice(+x.getAttribute("data-vzdel"), 1); vzSave(L2); drawCustom(); }
+  });
+
+  document.addEventListener("change", function (e) { var s = e.target; if (!s || !s.getAttribute || s.getAttribute("data-vzch") == null) return; var L = vzMine(), i = +s.getAttribute("data-vzch"); if (L[i]) { L[i].ch = s.value; vzSave(L); drawCustom(); } });
+  /* ---------- ask for a chart we don't have (owner, Nov 20 2026): opens an email to DrugBug ---------- */
+  document.addEventListener("click", function (e) {
+    if (!e.target || e.target.id !== "bReq") return;
+    var w = ($("rqWhat").value || "").trim(); if (!w) { alert("Tell us what you'd like to see."); return; }
+    var o = (ST.dash && ST.dash.org) || {};
+    var body = "Hello DrugBug team,\n\nI'd like a new measure on my instructor dashboard.\n\nWhat I want to see: " + w + "\nWhy it would help: " + ($("rqWhy").value || "") + "\nBest way to show it: " + ($("rqHow").value || "") + "\n\nClass: " + (o.name || "") + "\nClass code: " + (o.code || "") + "\n";
+    location.href = "mailto:VolareMediaLLC@gmail.com?subject=" + encodeURIComponent("Dashboard request: " + w.slice(0, 60)) + "&body=" + encodeURIComponent(body);
+    $("rqMsg").textContent = "Your email app should open with the request filled in. Press Send there. Thank you!"; $("rqMsg").classList.remove("hide");
+  });
+
   function drawClass() {
     var d = ST.dash, o = d.org, t = d.totals;
     var left = Math.ceil((o.expiresAt - Date.now()) / 864e5);
@@ -1413,13 +1592,14 @@ body.embed .mxhead .adm{display:none}
     drawDetail();
     drawNicks();
     drawComp();
-    setTab(ST.ctab || "ins");
+    setTab(ST.ctab || "ov");
   }
   /* section tabs inside a class */
   function setTab(k) {
     ST.ctab = k;
     [].forEach.call(document.querySelectorAll("[data-ctab]"), function (b) { b.classList.toggle("on", b.getAttribute("data-ctab") === k); });
-    show("pIns", k === "ins"); show("pStu", k === "stu"); show("pBoard", k === "board");
+    show("pOv", k === "ov"); show("pOvMine", k === "ov"); show("pReq", k === "req"); show("pIns", k === "ins"); show("pStu", k === "stu"); show("pBoard", k === "board");
+    if (k === "ov") { try { drawViz(); $("vzPick").innerHTML = vzPicker(); drawCustom(); } catch (e) { console.warn(e); } }
   }
   document.addEventListener("click", function (e) { var b = e.target.closest && e.target.closest("[data-ctab]"); if (b) setTab(b.getAttribute("data-ctab")); });
 
@@ -1568,8 +1748,8 @@ body.embed .mxhead .adm{display:none}
   /* class level picker */
   var LV_ORDER = ["emt","aemt","paramedic","flight","cp","cna","lvn","rn","flightrn","ms1","ms3","intern","rt","ct","mri","nm","ir","mh","diet","rrt","pt","slp","surg","anes","dent","phleb","ekg"];
   var LV_BUG = { emt: "Rookie Bug", aemt: "Beetle Medic", paramedic: "Siren Beetle", flight: "Sky Hornet", cp: "Armor Beetle", cna: "Helper Ladybug", lvn: "Busy Bee", rn: "Monarch Nurse", flightrn: "Night Monarch", ms1: "Bookworm Scholar", ms3: "Firefly Clerk", intern: "Stag Beetle Doc", rt: "X-Ray Firefly", ct: "Spiral Scarab", mri: "Magnet Moth", nm: "Glow Worm", ir: "Cath Cricket", mh: "Calm Cicada", diet: "Garden Grasshopper", rrt: "Breathing Bee", pt: "Gym Beetle", slp: "Echo Cricket", surg: "Scalpel Scorpion", anes: "Ether Earwig", dent: "Enamel Ant", phleb: "Vessel Vine-Borer", ekg: "Pulse Beetle" };
-  var LV_GROUPS = [["Prehospital", ["emt","aemt","paramedic","flight","cp"]], ["Nursing", ["cna","lvn","rn","flightrn"]], ["Medical school", ["ms1","ms3","intern"]], ["Imaging", ["rt","ct","mri","nm","ir"]], ["Allied health", ["mh","diet","rrt","pt","slp","surg","anes","dent","phleb","ekg"]]];
-  var LV_SHORT = { emt: "EMT", aemt: "AEMT", paramedic: "Paramedic", flight: "Flight Paramedic", cp: "Community Paramedic", cna: "CNA", lvn: "LVN / LPN", rn: "RN", flightrn: "Flight Nurse", ms1: "MS1–MS2", ms3: "MS3–MS4", intern: "Intern", rt: "Radiologic Tech", ct: "CT Tech", mri: "MRI Tech", nm: "Nuclear Medicine", ir: "Interventional Radiology", mh: "Mental Health", diet: "Dietitian", rrt: "Respiratory Therapist", pt: "PT / OT", slp: "Speech-Language", surg: "Surgical Tech", anes: "Anesthesia Tech", dent: "Dental Hygiene", phleb: "Phlebotomy", ekg: "EKG Tech" };
+  var LV_GROUPS = [["Prehospital", ["emt","aemt","paramedic","flight","cp"]], ["Nursing", ["cna","lvn","rn","rnschool","rnbridge","flightrn"]], ["Medical school", ["ms1","ms3","intern"]], ["Imaging", ["rt","ct","mri","nm","ir"]], ["Allied health", ["mh","diet","rrt","pt","slp","surg","anes","dent","phleb","ekg"]]];
+  var LV_SHORT = { rnschool: "Nursing school", rnbridge: "Paramedic to RN", emt: "EMT", aemt: "AEMT", paramedic: "Paramedic", flight: "Flight Paramedic", cp: "Community Paramedic", cna: "CNA", lvn: "LVN / LPN", rn: "RN", flightrn: "Flight Nurse", ms1: "MS1–MS2", ms3: "MS3–MS4", intern: "Intern", rt: "Radiologic Tech", ct: "CT Tech", mri: "MRI Tech", nm: "Nuclear Medicine", ir: "Interventional Radiology", mh: "Mental Health", diet: "Dietitian", rrt: "Respiratory Therapist", pt: "PT / OT", slp: "Speech-Language", surg: "Surgical Tech", anes: "Anesthesia Tech", dent: "Dental Hygiene", phleb: "Phlebotomy", ekg: "EKG Tech" };
   function lvPos(k, size) { var i = LV_ORDER.indexOf(k); return i < 0 ? "" : "background-position:" + (-i * size) + "px 0"; }
   function drawLevel() {
     var o = ST.dash && ST.dash.org; if (!o) return;
