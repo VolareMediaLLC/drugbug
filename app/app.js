@@ -8609,10 +8609,15 @@ function saveAssignResult(opt, sc, weak) {
   saveRoster().catch(function () {});
 }
 /* weekly leaderboard (opt-in) */
+/* a class key moves the student onto their school's scoreboard and off the public one (owner, Nov 20 2026: "when
+   students put in the code... it immediately puts them in a school scoreboard competition and pulls them out of the
+   global one"). The class board shows only class aliases ("Student 07") or instructor-approved nicknames, never names. */
+function lbInClass() { return typeof seatActive === "function" && seatActive(); }
+function lbLeaveForClass() { try { var P = Prog.d; if (!P) return; if (P.lbName) { delete P.lbName; saveProg(); } if (Prog.db && Prog.uid && P.lbPid) Prog.db.doc("leaderboard/" + P.lbPid).delete().catch(function () {}); CL.lb = null; } catch (e) {} }
 function lbRoll() { var P = Prog.d, wk = weekKey(); if (P.week !== wk) { P.week = wk; P.weekBase = P.xp || 0; } }
 function myWeekXp() { lbRoll(); return (Prog.d.xp || 0) - (Prog.d.weekBase || 0); }
 function lbPush() {
-  if (!SOCIAL) return;
+  if (!SOCIAL || lbInClass()) return;
   var P = Prog.d; if (!P.lbName || !Prog.db || !Prog.uid || isMinor() || LG.blocked.indexOf(lbPid()) >= 0) return;
   lbRoll(); var av = { b: myBug().id, f: myFace(), w: myWear(), s: P.style || "classic" }, sig = JSON.stringify(av);
   if (Date.now() - (CL.lbTs || 0) < 20000 && sig === CL.lbSig) return; CL.lbTs = Date.now(); CL.lbSig = sig;
@@ -8634,6 +8639,7 @@ function lbView() {
   if (!SOCIAL) return "";
   if (!HASDB) return "";
   var P = Prog.d, c = '<h3 class="eh small">This week\'s leaderboard</h3>';
+  if (lbInClass()) { if (P.lbName) lbLeaveForClass(); return c + '<p class="muted small">You\'re competing on your class scoreboard in ' + esc(SEAT.orgName || "your class") + ', under your class label or approved nickname. Open My class to see it.</p>'; }
   if (isMinor()) return c + '<p class="muted small">The public leaderboard is for users 18 and older.</p>';
   if (P.lbName && Prog.uid && LG.blocked.indexOf(lbPid()) >= 0) return c + '<p class="muted small">Your display name was removed by a moderator. Contact ' + esc(CONTACT) + ' with questions.</p>';
   if (S.lbMsg) c += '<p class="presult" role="alert">' + esc(S.lbMsg) + '</p>';
@@ -33594,6 +33600,7 @@ function groupRedeemKey(raw, win, fail, agreed) {
     store("seat", { tier: "pro", until: r.until, orgName: r.orgName, alias: r.alias, level: SEAT.level });
     if (typeof webDeepLoad === "function") webDeepLoad();
     if (where0 !== "form") clAdoptLevel(SEAT.level);
+    lbLeaveForClass();
     setTimeout(function () { try { classIntro(); } catch (e) {} }, 400);
     win("You're in " + r.orgName + " as " + r.alias + ". DrugBug Pro is on until " + new Date(r.until).toLocaleDateString() + ". DrugBug displays your class results to your instructor under your class key label, without your name or email. Your class and your scores are under My Class in " + (r.level && typeof levelObj === "function" && levelObj(r.level) ? "the " + levelObj(r.level).name + " menu" : "your level's menu") + ".");
   }).catch(function (e) {
