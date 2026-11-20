@@ -31794,9 +31794,10 @@ function anatView() {
   var hits = L.filter(function (x) { return (!area || x.area === area) && (!grp || x.grp === grp) && (!q || anatMatch(x, q)); });
 
   var c = '<p class="muted anatlead">Every organ and body part, with what it is and what it does. Tap the body, or pick a part below. Education only.</p>';
-  var md = S.anMode === "sys" ? "sys" : "area";
-  c += '<div class="segs anmodes">' + [["area", "By body area"], ["sys", "By body system"]].map(function (m) { return '<button class="seg" data-anmode="' + m[0] + '" aria-checked="' + (md === m[0]) + '">' + m[1] + '</button>'; }).join("") + '</div>';
-  if (md === "sys") return c + anatSysView();
+  /* one view only: The Great Bug from the outside (owner, Nov 20 2026: "take every special view off and make the only
+     view of the dummy just the exterior"). The body-system layers and the muscle atlas are gone; every card is still
+     in the lists below the figure. */
+  S.anMode = "area";
   c += '<div class="tools"><input class="search" id="anq" type="search" autocomplete="off" placeholder="Search a part: alveoli, SA node, glomerulus, cochlea" aria-label="Search anatomy" value="' + esc(S.anQ || "") + '"></div>';
 
   /* body figure + area chips, reusing the Body Systems silhouette */
@@ -36058,7 +36059,7 @@ function bgView() {
     if (u.st !== lastSt) { lastSt = u.st; c += '<h2 class="bgstage"><span>Stage ' + u.st + '</span> ' + BG_STAGE_NAME[u.st - 1] + '</h2>'; }
     var rows = u.L.map(function (l, li) { return { id: ui + "-" + li, t: l.t, n: li + 1 }; }).concat([{ id: ui + "-ck", t: "Checkpoint", ck: 1 }]);
     var dn = rows.filter(function (r) { return d[r.id]; }).length, here = rows.some(function (r) { return r.id === nx; }), allLock = !bgOpen(rows[0].id);
-    c += '<section class="bgu' + (here ? ' here' : '') + (dn === rows.length ? ' full' : '') + (allLock ? ' locked' : '') + '"><div class="bguh"><span class="bgui" aria-hidden="true">' + u.ic + '</span><div class="bgut"><span class="eyebrow">Unit ' + (ui + 1) + '</span><strong>' + esc(u.t) + '</strong></div><span class="bguc">' + dn + '/' + rows.length + '</span></div>';
+    c += '<section class="bgu' + (here ? ' here' : '') + (dn === rows.length ? ' full' : '') + (allLock ? ' locked' : '') + '" style="--bga:' + bgGrad(u.st)[0] + ';--bgb:' + bgGrad(u.st)[1] + ';--bgp:' + Math.round(100 * dn / rows.length) + '%"><div class="bguh"><span class="bgui" aria-hidden="true">' + u.ic + '</span><div class="bgut"><span class="eyebrow">Unit ' + (ui + 1) + '</span><strong>' + esc(u.t) + '</strong></div><span class="bguc">' + dn + '/' + rows.length + '</span></div>';
     if (!allLock || here) {
       c += '<ol class="bgrows">';
       rows.forEach(function (r) {
@@ -36075,6 +36076,9 @@ function bgView() {
   c += '<p class="muted small">For adult study only. Education, not medical advice: ask a licensed clinician or pharmacist about your own medicines.</p>';
   return c;
 }
+var BG_GRAD = [["#0284c7", "#5b3fe0"], ["#0d9488", "#16a34a"], ["#ea580c", "#f59e0b"], ["#9333ea", "#db2777"], ["#312e81", "#4338ca"]];
+function bgGrad(st) { return BG_GRAD[Math.max(0, Math.min(4, (st || 1) - 1))]; }
+var BG_SAY = ["Ooh, this one's good.", "Read that twice. I did.", "Tiny idea, big deal.", "You're getting the hang of this.", "This shows up on the quiz. Just saying.", "Picture it in your head.", "Say it out loud. It sticks better.", "One more brick in the wall.", "This is the part nurses love.", "Easy, right? Told you.", "Keep going, you're growing!", "Brain: officially snacking."];
 function bgItems(A) {   /* cards then questions; a checkpoint is eight questions from the unit */
   if (!A.ck) return { c: A.o.c, q: A.o.q };
   var pool = []; bgUnits()[A.u].L.forEach(function (l) { l.q.forEach(function (q) { pool.push(q); }); });
@@ -36087,11 +36091,21 @@ function bgRunView(R) {
   var C = R.it.c, Qs = R.it.q, nC = C.length, nQ = Qs.length, tot = nC + nQ, pct = Math.round(100 * Math.min(R.step, tot) / tot), U = bgUnits()[A.u];
   var c = '<section class="bgrun"><div class="bgtop"><button class="linkish" data-bgquit="1">&larr; Lessons</button><span class="cmptrack"><span class="cmpfill" style="width:' + pct + '%"></span></span></div><p class="eyebrow">Unit ' + (A.u + 1) + ' · ' + esc(A.ck ? "Checkpoint: " + U.t : A.o.t) + '</p>';
   if (R.step < nC) {
-    c += '<div class="bgcard"><span class="bgbug sm">' + bgBug() + '</span><h2>' + esc(C[R.step][0]) + '</h2><p>' + esc(C[R.step][1]) + '</p><span class="muted small">' + (R.step + 1) + ' of ' + nC + '</span></div><div class="actions"><button class="btn big" data-bgnext="1">' + (R.step < nC - 1 ? 'Next' : 'Quiz me') + '</button></div>';
+    /* learning cards, redone (owner, Nov 20 2026: "the Beginner to Medicine still feels way too bland. I hate the learning
+       cards"): a colored card per stage, the main idea pulled out big, the rest under it, the Eager Bug chiming in,
+       a stack of cards behind showing how many are left, dots for progress, and a little entrance each time */
+    var cd = C[R.step], sents = String(cd[1]).match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g) || [cd[1]], big = sents[0].trim(), rest = sents.slice(1).join("").trim(), left = nC - R.step - 1;
+    c += '<div class="bglc" style="--bga:' + bgGrad(U.st)[0] + ';--bgb:' + bgGrad(U.st)[1] + '">' + (left > 0 ? '<span class="bglcs s1" aria-hidden="true"></span>' : '') + (left > 1 ? '<span class="bglcs s2" aria-hidden="true"></span>' : '') +
+      '<div class="bglcin" data-bgk="' + R.step + '"><div class="bglct"><span class="bglci" aria-hidden="true">' + (U.ic || "") + '</span><span class="bglcn">Idea ' + (R.step + 1) + ' of ' + nC + '</span></div>' +
+      '<h2>' + esc(cd[0]) + '</h2><p class="bglcbig">' + esc(big) + '</p>' + (rest ? '<p class="bglcrest">' + esc(rest) + '</p>' : '') +
+      '<div class="bglcsay"><span class="bgbug sm">' + bgBug() + '</span><span class="bglcbub">' + esc(BG_SAY[(A.u * 7 + A.l * 3 + R.step) % BG_SAY.length]) + '</span></div>' +
+      '<div class="bglcdots" aria-hidden="true">' + C.map(function (x, i) { return '<i class="' + (i < R.step ? 'd' : i === R.step ? 'on' : '') + '"></i>'; }).join("") + '</div></div></div>' +
+      '<div class="actions bglcacts">' + (R.step > 0 ? '<button class="btn ghost" data-bgprev="1">Back</button>' : '') + '<button class="btn big" data-bgnext="1">' + (R.step < nC - 1 ? 'Next idea' : 'Quiz me') + '</button></div>';
   } else if (R.step < tot) {
     var qi = R.step - nC, Q = Qs[qi], opts = [Q[1], Q[2], Q[3], Q[4]];
     if (!R.ord || R.ordFor !== R.step) { R.ord = bgShuf(4); R.ordFor = R.step; R.pick = null; }
     if (A.ck && qi === 0) c += '<p class="muted small">Get 6 of 8 right to open the next unit.</p>';
+    c += '<div class="bgqhead" style="--bga:' + bgGrad(U.st)[0] + ';--bgb:' + bgGrad(U.st)[1] + '"><span class="bgqn">Question ' + (qi + 1) + ' of ' + nQ + '</span>' + ((R.streak || 0) >= 2 ? '<span class="bgstreak">' + R.streak + ' in a row!</span>' : '') + '</div>';
     c += '<h3 class="qstem">' + esc(Q[0]) + '</h3><div class="qopts">';
     R.ord.forEach(function (oi, j) {
       var cls = R.pick == null ? "" : oi === 0 ? " right" : R.pick === oi ? " wrong" : " dim";
@@ -36112,13 +36126,14 @@ function bgRunView(R) {
     }
     var nx = bgNextId();
     if (R.evolved) c += '<div class="bgcard end evo"><span class="eyebrow">Evolution!</span><span class="bgbug big">' + bgBug(R.evolved) + '</span><h2>Your Eager Bug grew into a ' + BG_STAGE_NAME[R.evolved - 1] + '!</h2><p>All that learning is paying off. You\'re now on <strong>' + bgTrackName(R.evolved) + '</strong>.' + (typeof PAYWALL !== "undefined" && PAYWALL && R.evolved === 2 && typeof hasTier === "function" && !hasTier("plus") ? ' You finished the first stretch of the course. The rest of the course comes with Plus.' : '') + '</p></div>';
-    c += '<div class="bgcard end"><span class="bgbug">' + bgBug() + '</span><h2>' + (pass ? (A.ck ? 'Checkpoint passed!' : 'Lesson done!') : 'Almost there') + '</h2><p>You got <strong>' + R.right + ' of ' + nQ + '</strong> right' + (pass ? '' : '. You need 6 to pass. Review the unit and try again') + '. +' + R.gain + ' XP' + (R.sticks ? ', +' + R.sticks + ' sticks' : '') + '.</p></div><div class="actions">' +
+    var stars = !pass ? 0 : R.right === nQ ? 3 : R.right >= Math.ceil(nQ * 0.75) ? 2 : 1;
+    c += '<div class="bgcard end bgend" style="--bga:' + bgGrad(U.st)[0] + ';--bgb:' + bgGrad(U.st)[1] + '"><span class="bgbug">' + bgBug() + '</span>' + (pass ? '<div class="bgstars" aria-label="' + stars + ' of 3 stars">' + [1, 2, 3].map(function (k) { return '<i class="' + (k <= stars ? 'on' : '') + '" style="--d:' + (k * 0.15) + 's">\u2605</i>'; }).join("") + '</div>' : '') + '<h2>' + (pass ? (A.ck ? 'Checkpoint passed!' : stars === 3 ? 'Perfect lesson!' : 'Lesson done!') : 'Almost there') + '</h2><p>You got <strong>' + R.right + ' of ' + nQ + '</strong> right' + (pass ? '' : '. You need 6 to pass. Review the unit and try again') + '. +' + R.gain + ' XP' + (R.sticks ? ', +' + R.sticks + ' sticks' : '') + '.</p></div><div class="actions">' +
       (!pass ? '<button class="btn big" data-bgl="' + R.id + '">Try again</button>' : nx ? '<button class="btn big" data-bgl="' + nx + '">' + (bgPaid(nx) ? 'Next lesson (Plus)' : 'Next lesson') + '</button>' : '') + '<button class="btn ghost" data-bgquit="1">Back to lessons</button></div>';
   }
   return c + '</section>';
 }
 document.addEventListener("click", function (e) {
-  var t = e.target && e.target.closest ? e.target.closest("[data-bgl],[data-bgnext],[data-bgopt],[data-bgquit],[data-act=bgpaths]") : null;
+  var t = e.target && e.target.closest ? e.target.closest("[data-bgl],[data-bgnext],[data-bgprev],[data-bgopt],[data-bgquit],[data-act=bgpaths]") : null;
   if (!t) return;
   e.preventDefault(); e.stopPropagation();
   if (t.hasAttribute("data-bgl")) {
@@ -36128,7 +36143,8 @@ document.addEventListener("click", function (e) {
   }
   if (t.hasAttribute("data-bgquit")) { S.bgRun = null; render(); return window.scrollTo(0, 0); }
   var R = S.bgRun; if (!R && t.getAttribute("data-act") !== "bgpaths") return;
-  if (t.hasAttribute("data-bgopt")) { if (R.pick != null) return; R.pick = +t.getAttribute("data-bgopt"); if (R.pick === 0) R.right++; render(); return; }
+  if (t.hasAttribute("data-bgopt")) { if (R.pick != null) return; R.pick = +t.getAttribute("data-bgopt"); if (R.pick === 0) { R.right++; R.streak = (R.streak || 0) + 1; } else R.streak = 0; render(); return; }
+  if (t.hasAttribute("data-bgprev")) { if (R.step > 0) R.step--; R.ord = null; render(); return; }
   if (t.hasAttribute("data-bgnext")) { R.step++; R.ord = null; render(); return window.scrollTo(0, 0); }
   if (t.getAttribute("data-act") === "bgpaths") { S.obRedo = 1; S.obSel = null; S.obStep = 1; return go("home"); }
 }, true);
