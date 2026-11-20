@@ -178,13 +178,14 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
 .dlrow{display:grid;grid-template-columns:96px 1fr 36px;align-items:center;gap:8px;font-size:13px;margin:5px 0}.dlbar{height:10px;border-radius:99px;background:var(--track,rgba(127,127,127,.2));overflow:hidden}.dlbar i{display:block;height:100%;background:var(--s1,#3b82f6);border-radius:99px}.dlrow b{text-align:right;font-variant-numeric:tabular-nums}
 
 /* Overview chart grid (owner, Nov 20 2026) */
-#pOv,#pOvMine,#ovTip{--s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#8b7fd6;--grid:#2e2942;--axis:#8f88aa;--q1:#cde2fb;--q2:#86b6ef;--q3:#3987e5;--q4:#1c5cab;--q5:#104281}
-@media (prefers-color-scheme:light){#pOv,#pOvMine,#ovTip{--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#6d5fc7;--grid:#ece8f4;--axis:#6f6888}}
+#pOv,#pOvMine,#ovTip,#vOverview{--s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#8b7fd6;--grid:#2e2942;--axis:#8f88aa;--q1:#cde2fb;--q2:#86b6ef;--q3:#3987e5;--q4:#1c5cab;--q5:#104281}
+@media (prefers-color-scheme:light){#pOv,#pOvMine,#ovTip,#vOverview{--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#6d5fc7;--grid:#ece8f4;--axis:#6f6888}}
 #ovTip{position:fixed;z-index:60;pointer-events:none;background:var(--surface2);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:12.5px;line-height:1.5;box-shadow:0 8px 24px rgba(0,0,0,.28);max-width:280px;display:none}
 #ovTip b{display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:2px}#ovTip i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}#ovTip strong{font-variant-numeric:tabular-nums}
 #pOv{margin-top:14px}#pOv .mxg+.mxsec,#pOv .kpis+.mxsec{margin-top:26px}#pOvMine{margin-bottom:18px}
 .ovrk .b{position:relative;overflow:visible}.ovrk .b s{position:absolute;left:70%;top:-3px;bottom:-3px;width:2px;border-radius:1px;background:var(--axis);opacity:.55}
 .ovrk .v b{font-weight:650}.ovrk .v span{min-width:38px}
+#vOverview .mini i{background:var(--s1)}#vOverview .mxc+.mxc{margin-top:14px}
 .ovfoot{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
 .ovall{flex:1;min-width:0}.ovall>summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:13px;list-style:none;display:inline-flex;align-items:center;gap:8px}.ovall>summary::-webkit-details-marker{display:none}
 .ovall>summary:after{content:"";width:6px;height:6px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg) translateY(-2px);transition:transform .15s}.ovall[open]>summary:after{transform:rotate(-135deg) translateY(-1px)}
@@ -458,36 +459,22 @@ body.embed .mxhead .adm{display:none}
 </section>
 
 <section id="vOverview" class="hide">
-  <div class="card">
-    <div class="row" style="justify-content:space-between;align-items:center">
-      <div><h2 style="margin:0">Your DrugBug schools</h2><div class="muted small" id="ovSub"></div></div>
-      <button class="ghost" id="bOvRefresh">Refresh</button>
-    </div>
-    <div class="tiles" id="ovTiles"></div>
+  <div class="mxhead"><div><h2>Your DrugBug schools</h2><div class="sub" id="ovSub"></div></div><div class="mxctl"><button class="ghost" id="bOvRefresh">Refresh</button></div></div>
+  <div class="kpis" id="ovTiles"></div>
+  <div class="mxsec">Activity, all schools</div>
+  <div class="mxg">
+    <div class="mxc"><h3>Questions answered</h3><div class="cs">All schools together, by week (Monday to Sunday)</div><div id="ovWeeks"></div><div class="cs" id="ovWeekNote" style="margin-top:6px"></div></div>
+    <div class="mxc"><h3>Answered correctly</h3><div class="cs">All schools, % right by week; the dashed line is the 70% goal</div><div id="ovWeekAcc"></div></div>
   </div>
-  <div class="grid2">
-    <div class="card">
-      <h2>Questions answered per week</h2>
-      <p class="muted small">All schools together, last 12 weeks (Monday to Sunday).</p>
-      <div class="cols" id="ovWeeks"></div><div class="colx" id="ovWeekX"></div>
-      <p class="muted small" id="ovWeekNote" style="margin-top:8px"></p>
-    </div>
-    <div class="card">
-      <h2>Pilots to follow up</h2>
-      <p class="muted small">Live pilots ending in the next 14 days. <b>Warm</b> = most seats in use and students still studying: ask about a paid plan.</p>
-      <div id="ovFollow"></div>
-    </div>
-  </div>
-  <div class="card">
-    <h2>Every school</h2>
+  <div class="mxsec">Schools</div>
+  <div class="mxc"><h3>Pilots to follow up</h3><div class="cs">Live pilots ending in the next 14 days. <b>Warm</b> = most seats in use and students still studying: ask about a paid plan.</div><div id="ovFollow"></div></div>
+  <div class="mxc">
+    <h3>Every school</h3>
     <div class="tblwrap"><table id="ovSchools"></table></div>
     <p class="muted small" style="margin-top:8px">Click a school to open its dashboard. Activated = students who entered a key. Per student = questions answered per activated student.</p>
   </div>
-  <div class="card">
-    <h2>Where students struggle, across all schools</h2>
-    <p class="muted small">Useful for deciding what DrugBug should teach better. Weakest first.</p>
-    <div id="ovSys" class="chart"></div>
-  </div>
+  <div class="mxsec">Where students struggle, all schools</div>
+  <div class="mxc"><h3>Body systems</h3><div class="cs">% right, least to greatest · answers on the right. Useful for deciding what DrugBug should teach better.</div><div id="ovSys"></div></div>
 </section>
 
 <!-- owner console -->
@@ -503,6 +490,7 @@ body.embed .mxhead .adm{display:none}
   <div class="row" style="margin-top:10px">
     <label>Length<select id="nKind"><option value="30">30-day pilot</option><option value="60">60-day pilot</option><option value="365">1 year</option></select></label>
     <label>Question goal per student<input id="nGoal" type="number" min="25" value="300"></label>
+    <label style="flex:1.1">Demo class<select id="nDemo"><option value="">No, a real class</option><option value="1">Yes, fill it with bot students</option></select></label>
     <label style="flex:1.3">Class scoreboard<select id="nBoard"><option value="on">On from the first key (aliases and approved nicknames only)</option><option value="off">Off (students see only their own results)</option></select></label>
     <label>Package<select id="nPkg"><option value="">School class (no package)</option><option value="analytics">Analytics</option><option value="protocols">Protocols</option><option value="combined">Combined Suite</option><option value="premium">Premium</option></select></label>
     <label style="flex:2">School contact (staff only)<input id="nContact" placeholder="Program director name and work email"></label>
@@ -559,6 +547,7 @@ body.embed .mxhead .adm{display:none}
       <label style="max-width:240px">Level<select id="oLevel"></select></label>
       <button class="ghost" id="bLevel">Save level</button>
       <button class="ghost" id="bSeats">Save seats</button>
+      <button class="ghost" id="bDemo">Demo bots: off</button>
       <button class="ghost" id="bEnd">End class now</button>
       <button class="ghost" id="bReopen">Reopen</button>
       <button class="ghost" id="bPaid">Mark as paid (annual)</button>
@@ -940,7 +929,7 @@ body.embed .mxhead .adm{display:none}
   $("bNew").onclick = function () {
     var b = this; b.disabled = true;
     var days = Number($("nKind").value);
-    call("groupOrgCreate", { name: $("nName").value, code: $("nCode").value, seats: Number($("nSeats").value), days: days, goal: Number($("nGoal").value), contact: $("nContact").value, level: $("nLevel").value, kind: days >= 365 ? "annual" : "pilot", pkg: $("nPkg").value, boardOn: $("nBoard").value !== "off" })
+    call("groupOrgCreate", { name: $("nName").value, code: $("nCode").value, seats: Number($("nSeats").value), days: days, goal: Number($("nGoal").value), contact: $("nContact").value, level: $("nLevel").value, kind: days >= 365 ? "annual" : "pilot", pkg: $("nPkg").value, boardOn: $("nBoard").value !== "off", demo: $("nDemo").value === "1" })
       .then(function (r) { say("newMsg", "Class opened. Instructor code: " + r.invite + " (send this to the school; it lets them sign in here and make keys). Ends " + day(r.expiresAt) + "."); ["nName", "nCode", "nContact"].forEach(function (i) { $(i).value = ""; }); loadList(); })
       .catch(function (e) { say("newMsg", e.message, true); })
       .then(function () { b.disabled = false; });
@@ -1366,25 +1355,22 @@ body.embed .mxhead .adm{display:none}
   function drawOverview(d) {
     var T = d.totals;
     $("ovSub").textContent = T.schools + " school" + (T.schools === 1 ? "" : "s") + " · " + T.live + " live · " + T.pilots + " pilot" + (T.pilots === 1 ? "" : "s") + ", " + T.annual + " paid · updated " + new Date(d.generatedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-    $("ovTiles").innerHTML = [
-      [T.activated + " / " + T.seats, "students activated / seats (" + T.activationRate + "%)"],
-      [T.active7, "students active in the last 7 days"],
-      [T.n.toLocaleString(), "questions answered, all schools"],
-      [pctTxt(T.accuracy), "average accuracy"],
-      [T.annual + (T.conversions ? " (" + T.conversions + " converted)" : ""), "paying schools"],
-      [T.instructors, "instructors signed in"]
-    ].map(function (x) { return '<div class="tile"><b>' + esc(x[0]) + '</b><span>' + esc(x[1]) + '</span></div>'; }).join("");
-
-    /* weekly columns: one series, value on top of each bar */
-    var max = Math.max.apply(null, d.weeks.map(function (w) { return w.answered; }).concat([1]));
-    $("ovWeeks").innerHTML = d.weeks.map(function (w) {
-      var h = Math.round(100 * w.answered / max);
-      return '<div class="col" title="' + esc("Week of " + day(w.start) + ": " + w.answered + " questions, " + w.students + " students, " + w.schools + " schools" + (w.accuracy != null ? ", " + pctTxt(w.accuracy) + " correct" : "")) + '">' +
-        (w.answered ? '<b style="bottom:calc(' + h + '% + 2px)">' + (w.answered >= 1000 ? (w.answered / 1000).toFixed(1) + "k" : w.answered) + '</b>' : '') + '<i style="height:' + h + '%"></i></div>';
-    }).join("");
-    $("ovWeekX").innerHTML = d.weeks.map(function (w) { var dt = new Date(w.start); return '<span>' + (dt.getUTCMonth() + 1) + "/" + dt.getUTCDate() + '</span>'; }).join("");
-    var last = d.weeks[d.weeks.length - 1];
-    $("ovWeekNote").textContent = "This week so far: " + last.answered.toLocaleString() + " questions from " + last.students + " student" + (last.students === 1 ? "" : "s") + " at " + last.schools + " school" + (last.schools === 1 ? "" : "s") + ".";
+    /* same look as a class's Overview (owner, Nov 20 2026: "make my view on their class the same as far as stats and graphs") */
+    OVC = {};
+    var wk = d.weeks || [], cw = wk[wk.length - 1] || { answered: 0, students: 0, schools: 0, accuracy: null }, pw = wk[wk.length - 2];
+    var labs = wk.map(function (w) { var dt = new Date(w.start); return (dt.getUTCMonth() + 1) + "/" + dt.getUTCDate(); });
+    $("ovTiles").innerHTML = kpi("Students joined", T.activated, "of " + T.seats, T.activationRate + "% of seats · " + T.schools + " school" + (T.schools === 1 ? "" : "s"), "") +
+      kpi("Studied this week", cw.students, "", pw ? delta(cw.students, pw.students, "week") : "", spark(wk, function (w) { return w.students; })) +
+      kpi("Questions this week", cw.answered.toLocaleString(), "", pw ? delta(cw.answered, pw.answered, "week") : "", spark(wk, function (w) { return w.answered; })) +
+      kpi("Right this week", cw.accuracy == null ? "--" : cw.accuracy, cw.accuracy == null ? "" : "%", ovPts(cw.accuracy, pw && pw.accuracy), spark(wk, function (w) { return w.accuracy || 0; }));
+    $("ovWeeks").innerHTML = ovSlot({ kind: "line", labels: labs, tipHead: "Week of ", series: [{ name: "Questions", v: wk.map(function (w) { return w.answered; }), c: "--s1", sub: wk.map(function (w) { return w.students + " students · " + w.schools + " school" + (w.schools === 1 ? "" : "s"); }) }] });
+    $("ovWeekAcc").innerHTML = ovSlot({ kind: "line", unit: "%", ref: 70, labels: labs, tipHead: "Week of ", series: [{ name: "% right", v: wk.map(function (w) { return w.answered ? w.accuracy : null; }), c: "--s1" }] });
+    $("ovWeekNote").textContent = "This week so far: " + cw.answered.toLocaleString() + " questions from " + cw.students + " student" + (cw.students === 1 ? "" : "s") + " at " + cw.schools + " school" + (cw.schools === 1 ? "" : "s") + ". " + T.annual + " paying school" + (T.annual === 1 ? "" : "s") + ", " + T.instructors + " instructor" + (T.instructors === 1 ? "" : "s") + " signed in.";
+    ovDrawAll($("vOverview"));
+    /* demo classes show their bot students here too, marked "demo"; the totals above stay real */
+    d.schools.forEach(function (s) { var cfg = sampleCfg(s.code, s.demo, s.level); if (!cfg || s.answered) return;
+      var x = demoData({ nurse: cfg.nurse, n: s.seats || 50, seed: cfg.seed }), last = 0; x.students.forEach(function (st) { if (st.lastAt > last) last = st.lastAt; });
+      s.activated = x.totals.activated; s.active7 = x.totals.active7; s.answered = x.totals.answered; s.accuracy = x.totals.accuracy; s.perStudent = s.activated ? Math.round(s.answered / s.activated) : 0; s.lastAt = last; s.sample = true; });
 
     $("ovFollow").innerHTML = d.followUp.length ? '<div class="tblwrap"><table><tr><th>School</th><th>Ends</th><th>Seats used</th><th>Still studying</th><th></th></tr>' + d.followUp.map(function (f) {
       return '<tr class="clk" data-open="' + esc(f.orgId) + '"><td><b>' + esc(f.name) + '</b>' + (f.contact ? '<div class="muted small">' + esc(f.contact) + '</div>' : '') + '</td><td>' + (f.daysLeft <= 0 ? "today" : "in " + f.daysLeft + " d") + '</td><td class="num">' + f.activation + '%</td><td class="num">' + f.engaged + '%</td><td><span class="heat ' + f.heat + '">' + f.heat + '</span></td></tr>';
@@ -1393,7 +1379,7 @@ body.embed .mxhead .adm{display:none}
     $("ovSchools").innerHTML = '<tr><th>School</th><th>Plan</th><th>Ends</th><th>Seats</th><th>Activated</th><th>Active 7 d</th><th>Questions</th><th>Per student</th><th>Accuracy</th><th>Last activity</th></tr>' +
       (d.schools.length ? d.schools.map(function (s) {
         var act = s.seats ? Math.round(100 * s.activated / s.seats) : 0;
-        return '<tr class="clk" data-open="' + esc(s.orgId) + '"><td><b>' + esc(s.name) + '</b> <span class="pill">' + esc(s.code) + '</span></td>' +
+        return '<tr class="clk" data-open="' + esc(s.orgId) + '"><td><b>' + esc(s.name) + '</b> <span class="pill">' + esc(s.code) + '</span>' + (s.sample ? ' <span class="pill" title="Bot students for demos; real results replace them">demo</span>' : '') + '</td>' +
           '<td>' + (s.kind === "annual" ? '<span class="pill on">paid</span>' : '<span class="pill">pilot</span>') + '</td>' +
           '<td>' + (s.live ? (s.daysLeft + " d") : '<span class="muted">' + (s.status === "ended" ? "ended" : "expired") + '</span>') + '</td>' +
           '<td class="num">' + s.seats + '</td><td><span class="mini"><i style="width:' + act + '%"></i></span>' + s.activated + '</td>' +
@@ -1401,9 +1387,8 @@ body.embed .mxhead .adm{display:none}
           '<td class="num">' + pctTxt(s.accuracy) + '</td><td>' + ago(s.lastAt) + '</td></tr>';
       }).join("") : '<tr><td colspan="10" class="muted">No schools yet. Open your first class below.</td></tr>');
 
-    $("ovSys").innerHTML = d.systems.length ? d.systems.map(function (s) {
-      return '<div class="lab">' + esc(s.name) + '</div><div class="bar"><i style="width:' + Math.max(2, s.pct) + '%"></i></div><div class="val"><b>' + pctTxt(s.pct) + '</b> <span>' + s.answered.toLocaleString() + ' · ' + s.schools + ' school' + (s.schools === 1 ? '' : 's') + '</span></div>';
-    }).join("") : '<p class="muted" style="grid-column:1/-1">No answers yet.</p>';
+    var sysRows = (d.systems || []).map(function (x) { return { name: x.name, v: x.pct, n: x.answered }; }).sort(function (a, b) { return a.v - b.v; });
+    $("ovSys").innerHTML = ovBars(sysRows.slice(0, 10), "%", "No answers yet.") + (sysRows.length ? ovFoot("Body systems, all schools", sysRows, "%", "body systems", "low") : "");
   }
 
   /* ---------- sample students for a demo class (owner, Nov 20 2026: "autofill the Blinn cohort with a bunch of fake
@@ -1411,9 +1396,16 @@ body.embed .mxhead .adm{display:none}
      page: nothing is written to the server, and the class header says the students are a sample. The moment a real
      student answers a question, the real numbers replace the sample. ---------- */
   var SAMPLE_CODES = { BLINN: { nurse: true, seed: 41 } };
+  /* any class the owner marks as a demo gets bot students too (owner, Nov 20 2026: "a demo button that automatically
+     fills out a bunch of bot scores"); nursing-style bots for nursing levels, paramedic-style for the rest */
+  function sampleCfg(code, demo, level) {
+    var c = SAMPLE_CODES[String(code || "").toUpperCase()]; if (c) return c; if (!demo) return null;
+    var h = 7; String(code || "demo").split("").forEach(function (ch) { h = (h * 31 + ch.charCodeAt(0)) % 99991; });
+    return { nurse: /^(rn|lvn|lpn|cna|np|nurs|ob|icu|med)/i.test(level || ""), seed: 11 + h };
+  }
   function sampleFill(d) {
     try {
-      var cfg = d && d.org && SAMPLE_CODES[String(d.org.code || "").toUpperCase()];
+      var cfg = d && d.org && sampleCfg(d.org.code, d.org.demo, d.org.level);
       if (ST.demo || !cfg || (d.totals && d.totals.answered)) return d;
       var x = demoData({ nurse: cfg.nurse, n: d.org.seats || 50, seed: cfg.seed });
       ["students", "totals", "systems", "labels", "sysNames", "weekStarts", "questions", "qAnswered", "qMin", "weakMin"].forEach(function (k) { d[k] = x[k]; });
@@ -1672,6 +1664,7 @@ body.embed .mxhead .adm{display:none}
     var left = Math.ceil((o.expiresAt - Date.now()) / 864e5);
     $("cName").textContent = o.name;
     show("sampleNote", !!d.sample);
+    try { $("bDemo").textContent = "Demo bots: " + (o.demo ? "on" : "off"); } catch (e) {}
     $("cSub").textContent = (o.pkg ? (PKGNAME[o.pkg] || o.pkg) + " · " : "") + (o.kind === "annual" ? "Paid" : "Pilot") + " · " + (o.live ? left + " day" + (left === 1 ? "" : "s") + " left" : o.status === "ended" ? "Ended" : "Expired") +
       (o.level ? " · " + (LVNAME[o.level] || o.level) : "") + " · goal " + o.goal + " questions per student" + (o.instructors.length ? " · " + o.instructors.join(", ") : "");
     $("printTitle").textContent = o.name + " — DrugBug key sheet";
@@ -2072,6 +2065,7 @@ body.embed .mxhead .adm{display:none}
   $("bLevel").onclick = function () { upd({ level: $("oLevel").value }, "Level saved. Students see the class in that level's menu."); };
   $("bEnd").onclick = function () { if (confirm("End this class now? Students lose Pro immediately.")) upd({ status: "ended" }, "Class ended."); };
   $("bReopen").onclick = function () { upd({ status: "active" }, "Class reopened."); };
+  $("bDemo").onclick = function () { var on = !(ST.dash && ST.dash.org && ST.dash.org.demo); upd({ demo: on }, on ? "Demo bots on: the dashboard shows bot students until real students answer. (Needs the latest server update.)" : "Demo bots off."); };
   $("bDel").onclick = function () {
     var code = prompt("This deletes the class, every key and all its results, for good.\nType the class code (" + ST.dash.org.code + ") to confirm:");
     if (!code) return;
