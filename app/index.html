@@ -3764,16 +3764,6 @@ html.hive #hvnav{display:none}
 /* ---- v4 (owner, Nov 20: "I love what you did with the main menu boxes. but revert everything else back to normal") ----
    Kept: the home Look it up slabs and the centre Menu bar. Everything else is the v1 Hive skin again. */
 html.hive:root{--hv-cut:13px}
-/* home Look it up cards: field-guide slabs with a honey spine, no gradient */
-html.hive .route.rmini,html.hive .route.mlsmall{background:var(--surface)!important;background-image:none!important;color:var(--ink);border-radius:0;box-shadow:none;border:0;border-left:8px solid var(--hv-hn);border-bottom:5px solid var(--hv-lip);
- clip-path:polygon(0 0,100% 0,100% calc(100% - var(--hv-cut)),calc(100% - var(--hv-cut)) 100%,0 100%)}
-html.hive .route.rmini:active,html.hive .route.mlsmall:active{transform:translateY(3px);box-shadow:none}
-html.hive .route.rmini h2{color:var(--ink);font-size:19px}html.hive .route.rmini p,html.hive .route.rmini .rmore{color:var(--muted);opacity:1}
-html.hive .route .eyebrow{color:var(--hv-hn);opacity:1;font-size:11px}
-html.hive .rchips span{background:var(--surface-2);color:var(--hv-br);border-radius:6px;font-weight:700}
-html.hive .route .count{background:none;padding:0;color:var(--muted)}
-html.hive .route.mlsmall strong{color:var(--ink)}html.hive .route.mlsmall span{color:var(--muted)}
-html.hive .route.rmini::after,html.hive .route.rmini::before{display:none!important}
 /* level Look it up tiles, second design: small slabs in the same family as the home cards */
 html.hive .hub.hvlook .hubtile{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:6px 10px;background:var(--surface);border:0;border-left:7px solid var(--hv-hn);border-bottom:5px solid var(--hv-lip);border-radius:0;box-shadow:none;min-height:0;padding:12px 12px 11px 12px;
  clip-path:polygon(0 0,100% 0,100% calc(100% - var(--hv-cut)),calc(100% - var(--hv-cut)) 100%,0 100%)}
@@ -3845,6 +3835,159 @@ html.hive .bugcard.hvlk{background:none;border:0;border-radius:0;padding:6px 4px
 html.hive .bugcard.hvlk>svg.bug,html.hive .bugcard.hvlk>.secsil,html.hive .bugcard.hvlk>.b3wrap{width:132px;height:148px;padding:20px 14px;box-sizing:border-box;background:var(--surface-2);clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}
 html.hive .bugcard.hvlk>.secsil svg{width:100%;height:100%}
 html.hive .bugcard.hvlk.r-rare>svg.bug{background:var(--hvg3)}html.hive .bugcard.hvlk.r-epic>svg.bug{background:var(--hvg2)}html.hive .bugcard.hvlk.r-legendary>svg.bug{background:var(--hv-hnt)}
+/* ===== v6 (owner, Nov 20 2026): livelier hive cells, The Hive tile and page, top bar scrolls away, Scoreboard ===== */
+html.hive .topbar{position:static}
+html.hive .settabs{top:env(safe-area-inset-top,0px)}
+html.hive:root{--hvr0:#3B6FF5;--hvr1:#18B8C4;--hvr2:#8B6CF6;--hvr3:#4A9BE8;--hvr4:#B56BDD;--hvr5:#3DA98F;--hvr6:#8793AD;--hvg6:#E7EBF2;--hv-wax:#FFFFFF}
+html.hive:root[data-theme="dark"]{--hvr0:#5C88FF;--hvr1:#2CC5D0;--hvr2:#9C82FA;--hvr3:#5DAEF2;--hvr4:#C583E8;--hvr5:#55C2A8;--hvr6:#7F8CA8;--hvg6:#273147;--hv-wax:#0E1424}
+html.hive .hvx.g0{--r:var(--hvr0);--g:var(--hvg0)}html.hive .hvx.g1{--r:var(--hvr1);--g:var(--hvg1)}html.hive .hvx.g2{--r:var(--hvr2);--g:var(--hvg2)}html.hive .hvx.g3{--r:var(--hvr3);--g:var(--hvg3)}html.hive .hvx.g4{--r:var(--hvr4);--g:var(--hvg4)}html.hive .hvx.g5{--r:var(--hvr5);--g:var(--hvg5)}html.hive .hvx.g6{--r:var(--hvr6);--g:var(--hvg6)}
+html.hive .hvdot.g0{background:var(--hvr0)}html.hive .hvdot.g1{background:var(--hvr1)}html.hive .hvdot.g2{background:var(--hvr2)}html.hive .hvdot.g3{background:var(--hvr3)}html.hive .hvdot.g4{background:var(--hvr4)}html.hive .hvdot.g5{background:var(--hvr5)}html.hive .hvdot.g6{background:var(--hvr6)}
+html.hive:root:not([data-theme="dark"]) .hvdot{outline:0}
+/* a cell: coloured wax rim, a recessed well, honey that rises inside it */
+html.hive .hvbig .hvx{filter:drop-shadow(0 4px 0 color-mix(in srgb,var(--r) 45%,var(--hv-lip)))}
+html.hive .hvbig .hvx .hvi{background:linear-gradient(160deg,color-mix(in srgb,var(--r) 78%,#fff) 0%,var(--r) 45%,color-mix(in srgb,var(--r) 70%,#000) 100%)}
+html.hive .hvc{position:absolute;inset:3.500px;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:radial-gradient(120% 80% at 50% 8%,color-mix(in srgb,var(--g) 82%,var(--r)) 0%,var(--g) 55%,color-mix(in srgb,var(--g) 86%,var(--hv-wax)) 100%);overflow:hidden}
+html.hive .hvc::after{content:"";position:absolute;inset:0;background:linear-gradient(128deg,rgba(255,255,255,.26) 0 14%,rgba(255,255,255,0) 15% 100%);pointer-events:none}
+html.hive .hvbig .hvf{background:linear-gradient(180deg,#FFCB52 0%,#F5A524 46%,#E38D0C 100%);box-shadow:0 -2px 0 #FFE29A}
+html.hive .hvbig .hvf::before{content:"";position:absolute;left:-4px;right:-4px;top:-5px;height:7px;background:radial-gradient(circle at 50% 120%,#FFCB52 62%,transparent 64%) 0 0/15px 7px repeat-x}
+html.hive .hvbig .hvi b{position:relative;z-index:1;background:none;border-radius:0;padding:0 2px;font:700 9.800px/1.14 var(--f-display);letter-spacing:.01em;max-width:82%;color:var(--ink);text-shadow:0 1px 0 var(--hv-wax),0 0 6px var(--hv-wax),0 0 3px var(--hv-wax)}
+html.hive .hvbig .hvx.lg .hvi b{font-size:8.600px;max-width:90%}html.hive .hvbig .hvx.xl .hvi b{font-size:7.600px;max-width:92%;letter-spacing:0}html.hive .hvx.some.lg .hvi b,html.hive .hvx.some.xl .hvi b{padding:1px 2px}
+html.hive .hvi em{position:absolute;z-index:1;left:50%;bottom:13%;transform:translateX(-50%);font:700 8.500px/1 var(--f-display);font-style:normal;color:var(--hv-ink);background:#FFE29A;border-radius:99px;padding:2px 5px}
+html.hive .hvx.some .hvi b{background:color-mix(in srgb,var(--hv-wax) 78%,transparent);border-radius:6px;padding:1px 4px;text-shadow:none}
+html.hive .hvx.full{filter:drop-shadow(0 4px 0 var(--hv-hnd))}
+html.hive .hvx.full .hvi{background:linear-gradient(160deg,#FFE29A,#F5A524 50%,#C77F0A)}
+html.hive .hvx.full .hvi b{color:var(--hv-ink);text-shadow:0 1px 0 rgba(255,236,180,.9)}
+html.hive .hvx.full .hvf{box-shadow:none}html.hive .hvx.full .hvf::before{display:none}
+html.hive .hvx.full .hvc::before{content:"";position:absolute;inset:0;z-index:1;background:repeating-linear-gradient(60deg,rgba(255,255,255,.14) 0 2px,transparent 2px 9px),repeating-linear-gradient(-60deg,rgba(255,255,255,.14) 0 2px,transparent 2px 9px)}
+html.hive .hvx.weak .hvi{background:linear-gradient(160deg,#fff,var(--hv-br));box-shadow:none}
+html.hive .hvx.weak{animation:hvpulse 1.8s ease-in-out infinite;filter:drop-shadow(0 4px 0 var(--hv-brd))}
+@keyframes hvpulse{50%{transform:translateY(-3px)}}
+@media (prefers-reduced-motion:reduce){html.hive .hvx.weak{animation:none}}
+html.hive .hvx.lk .hvi{background:var(--hv-lip)}html.hive .hvx.lk{filter:drop-shadow(0 4px 0 var(--hv-lip))}
+html.hive .hvx.lk .hvc{background:var(--surface-2);opacity:.75}html.hive .hvx.lk .hvi b{color:var(--muted)}
+html.hive .hvi em.hvlock{background:none;padding:0;bottom:9%}html.hive .hvlock svg{width:12px;height:12px;fill:var(--muted);display:block}
+/* the legend rides in one row you can swipe */
+html.hive .hvpage .hvlegend{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:2px 16px 4px}
+html.hive .hvpage .hvlegend::-webkit-scrollbar{display:none}
+html.hive .hvpage .hvlegend button{flex:none;border:2px solid var(--line);border-bottom-width:4px;border-bottom-color:var(--hv-lip);border-radius:12px;padding:6px 10px}
+html.hive .hvback{align-self:flex-start;border:0;background:none;color:var(--hv-br);font:700 14px var(--f-display);padding:4px 0}
+/* The Hive tile on the level page */
+html.hive .hvtile{display:flex;align-items:center;gap:14px;width:100%;text-align:left;border:0;padding:16px 16px 18px;margin:0 0 14px;color:#fff;background:var(--hv-grad);box-shadow:none;filter:drop-shadow(0 5px 0 var(--hv-brd));clip-path:polygon(var(--hv-cut,13px) 0,100% 0,100% calc(100% - var(--hv-cut,13px)),calc(100% - var(--hv-cut,13px)) 100%,0 100%,0 var(--hv-cut,13px));position:relative;overflow:hidden}
+html.hive .hvtile:active{transform:translateY(3px)}
+html.hive .hvtic{flex:none;position:relative;width:62px;height:62px}
+html.hive .hvtic i{position:absolute;width:32px;height:36px;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:linear-gradient(180deg,#FFD46B,#F5A524)}
+html.hive .hvtic i:nth-child(1){left:0;top:0}html.hive .hvtic i:nth-child(2){left:30px;top:0;background:rgba(255,255,255,.28)}html.hive .hvtic i:nth-child(3){left:15px;top:26px;background:linear-gradient(180deg,rgba(255,255,255,.28) 45%,#F5A524 45%)}
+html.hive .hvttx{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+html.hive .hvttx strong{font:800 22px/1.1 var(--f-display);letter-spacing:.01em}
+html.hive .hvtsub{font-size:13px;line-height:1.35;opacity:.92}
+html.hive .hvtmeter{height:8px;border-radius:99px;background:rgba(255,255,255,.25);overflow:hidden}html.hive .hvtmeter i{display:block;height:100%;min-width:6px;border-radius:99px;background:linear-gradient(90deg,#FFD46B,#F5A524)}
+html.hive .hvtn{font:600 12px var(--f-display);opacity:.95}
+html.hive .hvtgo{font:700 30px/1 var(--f-display);opacity:.9}
+/* Scoreboard page */
+html.hive .hvboard{background:var(--surface);border:2px solid var(--line);border-bottom:5px solid var(--hv-lip);border-radius:18px;padding:14px 14px 10px;margin:0 0 18px}
+html.hive .hvboard .eh{margin-top:0;color:var(--hv-hn)}
+html.hive .hvboard .lb li.me{background:var(--hv-hnt);border-radius:12px}
+html.hive .hvsth{font:800 20px var(--f-display);margin:0 0 8px;display:inline-block;border-bottom:4px solid var(--hv-hn);padding-bottom:3px}
+html.hive #hvnav button{font:600 9.500px Inter,system-ui,sans-serif;letter-spacing:-.01em;padding:4px 0;flex:1;min-width:0}
+/* v8 (owner, Nov 20 2026): main menu path boxes = the classic coloured cards blended with the honey slab:
+   each path keeps its own classic colour, with the honey spine, honey lip, honey underline and cut corners */
+html.hive .route.rmini,html.hive .route.mlsmall{border-radius:0;box-shadow:none;border:0;border-left:7px solid var(--hv-hn);border-bottom:5px solid var(--hv-hnd);
+ clip-path:polygon(var(--hv-cut) 0,100% 0,100% calc(100% - var(--hv-cut)),calc(100% - var(--hv-cut)) 100%,0 100%,0 var(--hv-cut))}
+html.hive .route.rmini.ph{--pc:#E02424}html.hive .route.rmini.rn{--pc:#3B5BDB}html.hive .route.rmini.md{--pc:#C9D4EA}html.hive .route.rmini.im{--pc:#0FA3B5}html.hive .route.rmini.ah{--pc:#12A07A}html.hive .route.rmini.ev{--pc:#C2185B}html.hive .route.rmini.gen{--pc:#7C3AED}html.hive .route.rmini.bg{--pc:#2DD4A7}html.hive .route.rmini.fireroute{--pc:#EA580C}
+html.hive .route.rmini::before{content:"";position:absolute;inset:0;background:linear-gradient(100deg,rgba(245,165,36,.28) 0%,rgba(17,24,39,.42) 30%,rgba(17,24,39,.36) 100%);pointer-events:none;display:block!important}
+html.hive .route.rmini>*{position:relative}
+html.hive .route.rmini::after{display:none!important}
+html.hive .route.rmini:active,html.hive .route.mlsmall:active{transform:translateY(3px)}
+html.hive .route.rmini h2{color:#fff;font-size:19px}
+html.hive .route.rmini h2::after{content:"";display:block;width:34px;height:4px;border-radius:2px;background:var(--hv-hn);margin-top:5px}
+html.hive .route.rmini p,html.hive .route.rmini .rmore{color:#fff;opacity:.92}
+html.hive .route .eyebrow{color:#FFD46B;opacity:1;font-size:11px}
+html.hive .route.rmini .rchips span{background:rgba(10,14,26,.42);color:#FFD46B;border:0;border-radius:6px;font-weight:700}
+html.hive .route.rmini .rmore li:before{background:var(--hv-hn);opacity:1}
+html.hive .route .count{background:none;padding:0;color:#fff;opacity:.85}
+html.hive .route.mlsmall{background:linear-gradient(100deg,color-mix(in srgb,var(--hv-hn) 22%,var(--surface)),var(--surface))!important;color:var(--ink)}
+html.hive .route.mlsmall strong{color:var(--ink)}html.hive .route.mlsmall span{color:var(--muted)}
+html.hive .route.mlsmall .mls-ic{background:var(--hv-hn);color:#3D2700}
+/* level page "Look it up" boxes: the top corner is cut too, like the Study and practice boxes */
+html.hive .hub.hvlook .hubtile{clip-path:polygon(var(--hv-cut) 0,100% 0,100% calc(100% - var(--hv-cut)),calc(100% - var(--hv-cut)) 100%,0 100%,0 var(--hv-cut))}
+
+html.hive .hvteam{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:0;border-left:7px solid var(--hv-hn);border-bottom:5px solid var(--hv-hnd);padding:14px;margin:0 0 14px;color:var(--ink);background:linear-gradient(100deg,color-mix(in srgb,var(--hv-hn) 22%,var(--surface)),var(--surface));clip-path:polygon(var(--hv-cut) 0,100% 0,100% calc(100% - var(--hv-cut)),calc(100% - var(--hv-cut)) 100%,0 100%,0 var(--hv-cut))}
+html.hive .hvteam:active{transform:translateY(3px)}
+html.hive .hvthex{flex:none;width:40px;height:45px;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:linear-gradient(180deg,#FFD46B,#F5A524)}
+html.hive .hvttx2{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}html.hive .hvttx2 b{font:800 18px var(--f-display)}html.hive .hvttx2 span{font-size:13px;line-height:1.35;color:var(--muted)}
+html.hive .hvtgo2{font:700 26px/1 var(--f-display);color:var(--hv-hn)}
+/* v9 (owner, Nov 20 2026): topic cards on Blood products, Hemodynamics, Contrast and Flight prep join the same family:
+   cut-corner slabs with the honey spine and lip. Blood products is blood red running into honey. */
+html.hive .ctst{--pc:#2A52C9;border-radius:0!important;box-shadow:none!important;border:0;border-left:6px solid var(--hv-hn);border-bottom:5px solid var(--hv-hnd);color:#fff;
+ background:linear-gradient(125deg,color-mix(in srgb,var(--pc) 78%,#0b1020) 0%,color-mix(in srgb,var(--pc) 46%,#141b2e) 58%,color-mix(in srgb,var(--hv-hn) 46%,#1a2338) 100%)!important;
+ clip-path:polygon(var(--hv-cut) 0,100% 0,100% calc(100% - var(--hv-cut)),calc(100% - var(--hv-cut)) 100%,0 100%,0 var(--hv-cut))}
+html.hive .ctst::before,html.hive .ctst::after{display:none!important}
+html.hive .ctst:active{transform:translateY(3px)}
+html.hive .ctst .ctico{border-radius:0;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:rgba(255,212,107,.22);color:#FFD46B;width:46px;height:52px}
+html.hive .ctst .ctring{border-color:rgba(255,212,107,.55);color:#FFE29A}
+html.hive body:has(.tabhero.t-blood) .ctst,html.hive body:has(.tabhero.t-fm_blood) .ctst{--pc:#A3121F}
+html.hive body:has(.tabhero.t-hemo) .ctst{--pc:#6D28B0}
+html.hive body:has(.tabhero.t-contrast) .ctst{--pc:#0E7490}
+html.hive .tabhero{border-radius:0;border:0;border-left:6px solid var(--hv-hn);border-bottom:4px solid var(--hv-lip);clip-path:polygon(var(--hv-cut) 0,100% 0,100% calc(100% - var(--hv-cut)),calc(100% - var(--hv-cut)) 100%,0 100%,0 var(--hv-cut))}
+html.hive .tabhero .thic{border-radius:0;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);width:46px;height:52px}
+html.hive .tabhero.t-blood,html.hive .tabhero.t-fm_blood{--c:#E5484D;background:linear-gradient(110deg,color-mix(in srgb,#A3121F 34%,var(--surface)),color-mix(in srgb,var(--hv-hn) 14%,var(--surface)) 80%)}
+html.hive .ctgame{border-radius:0;clip-path:polygon(var(--hv-cut) 0,100% 0,100% calc(100% - var(--hv-cut)),calc(100% - var(--hv-cut)) 100%,0 100%,0 var(--hv-cut))}
+
+
+html.hive .route.rmini.md .rchips span{background:rgba(10,14,26,.5)}
+
+/* v10 (owner, Nov 20 2026): the terrarium is a planted glass tank, not a space station: woodland light, leaves, a wooden lid, soil */
+html.hive:root .tank,html.hive:root[data-theme="dark"] .tank{border:0;border-bottom:7px solid #5A3A1C;border-radius:18px;box-shadow:inset 0 0 0 2px rgba(255,255,255,.10);background:
+ radial-gradient(60% 40% at 18% 0%,rgba(255,236,170,.22),transparent 70%),
+ radial-gradient(38% 26% at 88% 22%,rgba(72,140,74,.45),transparent 72%),radial-gradient(34% 24% at 6% 46%,rgba(60,125,66,.42),transparent 72%),radial-gradient(46% 30% at 62% 8%,rgba(92,160,84,.30),transparent 72%),
+ linear-gradient(180deg,#1B3A26 0%,#234A2D 48%,#2C4F2B 78%,#3A4A22 100%)}
+html.hive:root[data-theme="light"] .tank,html.hive:root:not([data-theme="dark"]) .tank{border-bottom-color:#8A5A2B;box-shadow:inset 0 0 0 2px rgba(255,255,255,.6);background:
+ radial-gradient(60% 40% at 18% 0%,rgba(255,244,200,.85),transparent 70%),
+ radial-gradient(38% 26% at 88% 22%,rgba(120,190,110,.45),transparent 72%),radial-gradient(34% 24% at 6% 46%,rgba(110,180,105,.40),transparent 72%),
+ linear-gradient(180deg,#E4F3DC 0%,#CDE8C4 55%,#BFDDB0 100%)}
+html.hive .tanklid{height:10px;opacity:1;background:repeating-linear-gradient(90deg,#8A5A2B 0 46px,#7A4E24 46px 48px),linear-gradient(#9A6A36,#6B4420)}
+html.hive .tankglow{opacity:.16}
+html.hive .tank .orb{border:1.500px solid rgba(255,255,255,.34);background:radial-gradient(circle at 32% 26%,rgba(255,255,255,.60) 0 5%,rgba(255,255,255,.14) 17%,transparent 46%),radial-gradient(circle,rgba(200,235,175,.16),transparent 74%);box-shadow:inset 0 -8px 16px rgba(30,70,30,.28)}
+html.hive .tank .orb::after{opacity:.5}
+/* the hive is real comb: beeswax walls in natural wax tones, dark cells, honey rising inside */
+html.hive:root{--hvr0:#E8B23A;--hvr1:#D2941F;--hvr2:#F0C766;--hvr3:#C58418;--hvr4:#E1A244;--hvr5:#B87814;--hvr6:#A8905A;--hvg0:#FFF1CC;--hvg1:#FBE8BA;--hvg2:#FFF5D8;--hvg3:#F6E0AC;--hvg4:#FCEBC2;--hvg5:#F2D9A0;--hvg6:#EFE6CC;--hv-wax:#FFFFFF}
+html.hive:root[data-theme="dark"]{--hvr0:#E8B23A;--hvr1:#D2941F;--hvr2:#F0C766;--hvr3:#C58418;--hvr4:#E1A244;--hvr5:#B87814;--hvr6:#A8905A;--hvg0:#3A2A0F;--hvg1:#33240C;--hvg2:#423112;--hvg3:#2E200A;--hvg4:#3D2C13;--hvg5:#2A1D08;--hvg6:#332B18;--hv-wax:#1A1104}
+html.hive .hvbig .hvx{filter:drop-shadow(0 4px 0 color-mix(in srgb,var(--r) 50%,#3a2606))}
+html.hive .hvbig .hvx .hvi{background:linear-gradient(160deg,color-mix(in srgb,var(--r) 70%,#fff3c4) 0%,var(--r) 48%,color-mix(in srgb,var(--r) 62%,#3a2606) 100%)}
+html.hive .hvc{inset:4px;background:radial-gradient(110% 85% at 50% 108%,color-mix(in srgb,var(--g) 70%,var(--r)) 0%,var(--g) 46%,color-mix(in srgb,var(--g) 80%,#000) 100%);box-shadow:inset 0 6px 10px rgba(0,0,0,.35)}
+html.hive:root:not([data-theme="dark"]) .hvc{background:radial-gradient(110% 85% at 50% 108%,#fff 0%,var(--g) 55%,color-mix(in srgb,var(--g) 82%,var(--r)) 100%)}
+html.hive .hvc::after{background:linear-gradient(128deg,rgba(255,244,200,.20) 0 12%,rgba(255,255,255,0) 13% 100%)}
+html.hive .hvx.full .hvi{background:linear-gradient(160deg,#FFF0B8,#F2C24C 48%,#C98A1B)}
+html.hive .hvx.full .hvf{background:linear-gradient(180deg,#FBE08E 0%,#F1C04A 55%,#E0A52E 100%)}
+html.hive .hvx.weak .hvi{background:linear-gradient(160deg,#fff,#FFE29A 45%,#F5A524)}
+html.hive .hvx.weak{filter:drop-shadow(0 4px 0 #fff)}
+html.hive .hvhive.hvbig{padding:14px 6px 18px;border-radius:14px;background:linear-gradient(180deg,color-mix(in srgb,#8A5A2B 26%,transparent),color-mix(in srgb,#5A3A1C 30%,transparent));box-shadow:inset 0 0 0 3px color-mix(in srgb,#8A5A2B 55%,transparent)}
+
+/* v11 (owner, Nov 20 2026): topic cards and practice tiles drop the loud gradients and match the rest: plain slabs,
+   honey spine and lip, hex icon, cut corners */
+html.hive .ctst,html.hive body:has(.tabhero) .ctst{color:var(--ink);background:linear-gradient(100deg,color-mix(in srgb,var(--hv-hn) 12%,var(--surface)) 0%,var(--surface) 46%)!important;border-left:6px solid var(--hv-hn);border-bottom:5px solid var(--hv-lip)}
+html.hive .ctst .ctname{color:var(--ink)}html.hive .ctst .ctdesc{color:var(--muted);opacity:1}html.hive .ctst .ctn{color:var(--ink)}
+html.hive .ctst .ctico{background:var(--hv-tint);color:var(--hv-br)}
+html.hive .ctst .ctring{border-color:var(--line);color:var(--ink)}
+html.hive .ctgame{color:var(--ink);background:linear-gradient(100deg,color-mix(in srgb,var(--hv-br) 12%,var(--surface)) 0%,var(--surface) 50%)!important;border:0;border-left:6px solid var(--hv-br);border-bottom:5px solid var(--hv-lip);box-shadow:none}
+html.hive .ctgame strong,html.hive .ctgame .ctgt strong{color:var(--ink)}html.hive .ctgame span,html.hive .ctgame .ctgt span{color:var(--muted);opacity:1}
+html.hive .ctgame>svg,html.hive .ctgame .ctgi,html.hive .ctgame>span:first-child{color:var(--hv-br)}
+html.hive .tabhero.t-blood,html.hive .tabhero.t-fm_blood{background:linear-gradient(110deg,color-mix(in srgb,#A3121F 22%,var(--surface)),var(--surface) 70%)}
+/* look switch, top left */
+#lookbtn{flex:none;border:1.500px solid var(--line);background:var(--surface);color:var(--muted);font:700 11px/1 system-ui,sans-serif;border-radius:999px;padding:6px 9px;margin-right:2px;white-space:nowrap}
+#lookbtn b{color:var(--ink)}
+
+html.hive .hvfilter{display:flex;gap:6px;align-self:flex-start}
+
+/* v12 (owner, Nov 20 2026): the main menu path boxes were too bright for the rest of the app. They are now the same dark
+   slab as every other card: honey spine and wash on the left, a quiet tint of the path's own colour on the right. */
+html.hive .route.rmini{--pc:var(--hv-br);color:var(--ink);background:linear-gradient(100deg,color-mix(in srgb,var(--hv-hn) 14%,var(--surface)) 0%,var(--surface) 34%,var(--surface) 58%,color-mix(in srgb,var(--pc) 26%,var(--surface)) 100%)!important;background-image:linear-gradient(100deg,color-mix(in srgb,var(--hv-hn) 14%,var(--surface)) 0%,var(--surface) 34%,var(--surface) 58%,color-mix(in srgb,var(--pc) 26%,var(--surface)) 100%)!important;border-bottom-color:var(--hv-lip)}
+html.hive .route.rmini::before{display:none!important}
+html.hive .route.rmini h2{color:var(--ink)}
+html.hive .route.rmini p,html.hive .route.rmini .rmore{color:var(--muted);opacity:1}
+html.hive .route.rmini .eyebrow{color:var(--hv-hn)}
+html.hive .route.rmini .rchips span,html.hive .route.rmini.md .rchips span{background:color-mix(in srgb,var(--pc) 18%,var(--surface-2));color:var(--ink)}
+html.hive .route.rmini .count{color:var(--muted)}
 /* personal stats (both looks) */
 .mstats{display:flex;flex-direction:column;gap:12px}
 .mstgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px}
@@ -3869,6 +4012,58 @@ html.hive .bugcard.hvlk.r-rare>svg.bug{background:var(--hvg3)}html.hive .bugcard
 .mstdrug b{font-variant-numeric:tabular-nums}.mstdrug small{grid-column:1/-1;font-size:11.500px;color:var(--muted)}
 /* Beginner to Medicine: on touch screens you swipe the idea card; the buttons stay for mouse and keyboard */
 @media (pointer:coarse){.bglcacts .bgswn{display:none}.bglcdots::after{content:"swipe";margin-left:8px;font:700 10px var(--f-body);letter-spacing:.14em;text-transform:uppercase;opacity:.7}}
+/* Settings: when the section tabs stick to the top they replace the top bar (it scrolls away) instead of sitting over it,
+   so the plan badge no longer peeks out underneath (owner, Nov 20 2026) */
+body:has(.settabs.settop) .topbar{position:static}
+.settabs.settop{z-index:6;box-shadow:0 8px 0 var(--bg)}
+.gbctl{display:flex;flex-wrap:wrap;gap:8px 12px;justify-content:center;margin:6px 0 4px}
+/* live devices in Bug Rush (Nov 20 2026) */
+.rdv{max-width:760px}.rvg{display:block;width:100%;height:132px}.rvcv{height:270px}
+.rvnums{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin:4px 0 8px}.rvnums .vln{min-width:0;padding:4px 7px}.rvnums .vln b{font-size:15px}
+.rvalarm{background:#b91c1c;color:#fff;font:800 12.500px system-ui,sans-serif;letter-spacing:.06em;text-align:center;padding:6px;border-radius:8px;margin-bottom:6px;animation:vlblink 1s infinite}
+.rvset{color:#9ca3af;font:600 11.500px system-ui,sans-serif;padding:7px 4px 2px}
+@media (min-width:700px){.rvnums{grid-template-columns:repeat(6,1fr)}}
+/* the pulse waveform strip keeps its height even before the script sizes it (no tall empty block on wide screens) */
+.pvmon .pvpl{height:40px}.pvmon.pvbls .pvpl{height:70px}
+/* the sheet from the sending facility */
+.rdvpaper{position:relative;max-width:460px;margin:14px 4px 12px;padding:22px 18px 14px;background:#F6F1E4;color:#1d2433;border-radius:3px;box-shadow:0 2px 0 #d8cfb8,0 10px 22px rgba(0,0,0,.35);transform:rotate(-.6deg);font-family:"Courier New",ui-monospace,monospace;background-image:repeating-linear-gradient(#F6F1E4 0 27px,#e3dcc9 27px 28px)}
+.rdvpaper .rpclip{position:absolute;top:-9px;left:50%;transform:translateX(-50%);width:84px;height:20px;border-radius:5px;background:linear-gradient(#aab2c0,#6d7686);box-shadow:0 2px 3px rgba(0,0,0,.35)}
+.rdvpaper .rphead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;border-bottom:2px solid #1d2433;padding-bottom:5px;margin-bottom:4px}
+.rdvpaper .rphead b{font-size:15px;letter-spacing:.06em;text-transform:uppercase}.rdvpaper .rphead span{font-size:11px;color:#5b6477}
+.rdvpaper dl{margin:0}.rdvpaper dl div{display:flex;justify-content:space-between;gap:12px;height:28px;align-items:center}
+.rdvpaper dt{font-size:13px;color:#3b4459}.rdvpaper dd{margin:0;font-size:15px;font-weight:700;color:#12325f}
+/* Bug Rush ambience: lights at the screen edge (slow, faint, never under the content's contrast) */
+#rushamb{position:fixed;inset:0;pointer-events:none;z-index:3}#rushamb[hidden]{display:none}
+#rushamb::before,#rushamb::after{content:"";position:absolute;top:0;bottom:0;width:34vw;opacity:0}
+#rushamb::before{left:0}#rushamb::after{right:0}
+#rushamb.ra-ph::before{background:linear-gradient(90deg,rgba(239,48,48,.26),transparent);animation:raA 1.6s ease-in-out infinite}
+#rushamb.ra-ph::after{background:linear-gradient(270deg,rgba(58,110,255,.26),transparent);animation:raA 1.6s ease-in-out .8s infinite}
+#rushamb.ra-fl::before{left:0;right:0;width:auto;background:radial-gradient(120% 60% at 50% -10%,rgba(255,255,255,.07),transparent 70%);animation:raF .42s steps(2,jump-none) infinite}
+#rushamb.ra-fl::after{left:0;right:0;width:auto;background:linear-gradient(180deg,transparent 60%,rgba(40,220,120,.05));animation:raA 2.4s ease-in-out infinite}
+@keyframes raA{0%,100%{opacity:0}45%,55%{opacity:1}}
+@keyframes raF{0%{opacity:.35}100%{opacity:1}}
+@media (prefers-reduced-motion:reduce){#rushamb::before,#rushamb::after{animation:none;opacity:.35}}
+#lookbtn{flex:none;border:1.500px solid var(--line);background:var(--surface);color:var(--muted);font:700 11px/1 system-ui,sans-serif;border-radius:999px;padding:6px 9px;margin-right:2px;white-space:nowrap}#lookbtn b{color:var(--ink)}
+.rushrev{margin:14px 0 6px}.rushrev h3{margin:0 0 8px;font-size:18px}
+.rrv{border-left:5px solid #F5A524;background:var(--surface);padding:10px 12px;margin:0 0 10px;border-radius:0 10px 10px 0}
+.rrn{font:700 11px system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.rrq{margin:3px 0 6px;font-weight:600}.rra{margin:0 0 4px}.rrx{margin:0;color:var(--muted);font-size:14px}
+.organ .organwhy{display:block;margin-top:4px;font-size:.92em;color:var(--muted)}.organ .organwhy b{color:var(--ink);font-weight:700}
+/* 12-lead printout */
+.e12wrap{max-width:900px;margin:8px 0 12px;background:#FFF7F5;border-radius:6px;box-shadow:0 2px 0 #d8cfc8,0 10px 22px rgba(0,0,0,.35);padding:8px 8px 6px;color:#1d2433}
+.e12head{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;justify-content:space-between;font-family:"Courier New",ui-monospace,monospace;padding:0 2px 6px}
+.e12head b{font-size:14px;letter-spacing:.06em}.e12head span{font-size:11.500px;color:#3b4459}
+.e12scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid #e9b9b4;border-radius:3px}
+.e12cv{display:block;width:100%;min-width:560px}.e12wrap.zoom .e12cv{min-width:1120px}
+.e12foot{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:5px 2px 0;font:600 10.500px "Courier New",ui-monospace,monospace;color:#5b6477}
+.e12foot .linkish{color:#12325f;font:700 12px system-ui,sans-serif}
+#hvintro{position:fixed;inset:0;z-index:60}#hvintro .gtdim{position:absolute;inset:0;background:rgba(6,10,20,.62)}
+#hvintro .gtbub{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92vw,440px)}
+.rushsticks{margin:8px 0 0;font-weight:600}
+.tbacts #lookbtn{order:0;margin:0;padding:7px 8px;font-size:10.500px}
+@media (max-width:480px){.tbacts:has(#lookbtn){gap:5px}.tbacts:has(#lookbtn) .theme-btn{padding-left:9px;padding-right:9px}}
+.tbacts #lookbtn{display:inline-flex;align-items:center;gap:5px;color:var(--ink)}
+@media (max-width:480px){.tbacts #lookbtn .lkt{display:none}.tbacts #lookbtn{padding:8px}}
 </style>
 <script src="app-config.js"></script>
 <script>/* Endorsely affiliate tracking, website only (owner, Nov 13 2026) */
