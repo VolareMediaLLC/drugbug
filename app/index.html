@@ -4064,6 +4064,24 @@ body:has(.settabs.settop) .topbar{position:static}
 @media (max-width:480px){.tbacts:has(#lookbtn){gap:5px}.tbacts:has(#lookbtn) .theme-btn{padding-left:9px;padding-right:9px}}
 .tbacts #lookbtn{display:inline-flex;align-items:center;gap:5px;color:var(--ink)}
 @media (max-width:480px){.tbacts #lookbtn .lkt{display:none}.tbacts #lookbtn{padding:8px}}
+
+/* The look button added one more control to the top row. On iPhones wider than 400px (402, 414, 430, 440) the row used the roomier sizes,
+   ran about 28px over and pushed Settings off the right edge. Use the compact sizes on every phone when the look button is there. */
+@media (max-width:480px){
+  .topbar .tbacts:has(#lookbtn) .theme-btn{padding-left:7px!important;padding-right:7px!important}
+  .topbar .tbacts:has(#lookbtn) .stickchip{padding:2px 6px!important}
+  .topbar .tbacts:has(#lookbtn) .stickchip svg{width:32px!important;height:32px!important}
+  .topbar .tbacts:has(#lookbtn) .tbsticks{font-size:15px!important}
+}
+@media (max-width:389px){
+  .topbar .tbacts:has(#lookbtn){gap:3px!important}
+  .topbar .tbacts:has(#lookbtn) .theme-btn{padding-left:5px!important;padding-right:5px!important}
+  .topbar .tbacts:has(#lookbtn) .menu-btn{font-size:12.5px!important}
+  .topbar .tbacts:has(#lookbtn) .stickchip{padding:2px 3px!important}
+  .topbar .tbacts:has(#lookbtn) .stickchip svg{width:28px!important;height:28px!important}
+  .topbar .tbacts:has(#lookbtn) .tbsticks{font-size:14px!important;padding:3px 6px 3px 5px!important}
+  .topbar .tbacts:has(#lookbtn) #lookbtn{padding-left:5px!important;padding-right:5px!important}
+}
 </style>
 <script src="app-config.js"></script>
 <script>/* Endorsely affiliate tracking, website only (owner, Nov 13 2026) */
