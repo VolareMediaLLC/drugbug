@@ -3686,6 +3686,190 @@ b.innerHTML='<div class="bootlogo">Drug<span>Bug</span></div><p class="bootnote"
 (function(){var t0=Date.now(),iv=setInterval(function(){if(!document.getElementById("boot")){clearInterval(iv);return;}
 var n=window.__blN||0,last=window.__blT||t0,now=Date.now();
 if(window.__blErr||(n>=11&&now-last>12000)||now-last>60000){clearInterval(iv);window.__bootFail();}},3000);})();</script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<script>/* The Hive look (Nov 20 2026). Settings > Display > Look switches back to Classic. */try{if(localStorage.getItem("drugbug:look")!=='"classic"')document.documentElement.classList.add("hive");}catch(e){document.documentElement.classList.add("hive");}</script>
+<style id="hiveskin">html.hive:root{--bg:#F7F9FC;--surface:#FFFFFF;--surface-2:#E9EFFA;--ink:#16203A;--muted:#5E6A84;--line:#E1E7F0;--hv-lip:#C9D3E2;--hv-br:#3B6FF5;--hv-brd:#2A52C9;--hv-tint:#DCE7FF;--hv-hn:#F5A524;--hv-hnd:#C77F0A;--hv-hnt:#FFF4DC;--hv-ink:#3D2700;
+ --hv-grad:linear-gradient(90deg,#18B8C4,#3B6FF5 55%,#8B6CF6);--aemt:#3B6FF5;--aemt-soft:#DCE7FF;--anes:#3B6FF5;--anes-soft:#DCE7FF;--cna:#3B6FF5;--cna-soft:#DCE7FF;--cp:#3B6FF5;--cp-soft:#DCE7FF;--ct:#3B6FF5;--ct-soft:#DCE7FF;--dent:#3B6FF5;--dent-soft:#DCE7FF;--diet:#3B6FF5;--diet-soft:#DCE7FF;--ekg:#3B6FF5;--ekg-soft:#DCE7FF;--emt:#3B6FF5;--emt-soft:#DCE7FF;--flight:#3B6FF5;--flight-soft:#DCE7FF;--gen:#3B6FF5;--gen-soft:#DCE7FF;--intern:#3B6FF5;--intern-soft:#DCE7FF;--ir:#3B6FF5;--ir-soft:#DCE7FF;--lvn:#3B6FF5;--lvn-soft:#DCE7FF;--medic:#3B6FF5;--medic-soft:#DCE7FF;--mh:#3B6FF5;--mh-soft:#DCE7FF;--mri:#3B6FF5;--mri-soft:#DCE7FF;--ms1:#3B6FF5;--ms1-soft:#DCE7FF;--ms3:#3B6FF5;--ms3-soft:#DCE7FF;--nm:#3B6FF5;--nm-soft:#DCE7FF;--phleb:#3B6FF5;--phleb-soft:#DCE7FF;--plum:#3B6FF5;--plum-soft:#DCE7FF;--pt:#3B6FF5;--pt-soft:#DCE7FF;--rn:#3B6FF5;--rn-soft:#DCE7FF;--rrt:#3B6FF5;--rrt-soft:#DCE7FF;--rt:#3B6FF5;--rt-soft:#DCE7FF;--slp:#3B6FF5;--slp-soft:#DCE7FF;--surg:#3B6FF5;--surg-soft:#DCE7FF;--tccc:#3B6FF5;--tccc-soft:#DCE7FF;--gold:#F5A524;--lg1:#18B8C4;--lg2:#3B6FF5;--lg3:#8B6CF6;--ok:#1E9E55;--bad:#E5484D;--warn:#B8740A;
+ --shadow:none;--f-display:Poppins,"Baloo 2","Trebuchet MS",system-ui,sans-serif;--f-body:Inter,"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif}
+html.hive:root[data-theme="dark"]{--bg:#111827;--surface:#1A2338;--surface-2:#1F2A44;--ink:#EEF2FF;--muted:#9AA6C6;--line:#2A3550;--hv-lip:#080C17;--hv-br:#7FA4FF;--hv-brd:#2A46A8;--hv-tint:#22315E;--hv-hnd:#A86A06;--hv-hnt:#33270F;--aemt:#7FA4FF;--aemt-soft:#22315E;--anes:#7FA4FF;--anes-soft:#22315E;--cna:#7FA4FF;--cna-soft:#22315E;--cp:#7FA4FF;--cp-soft:#22315E;--ct:#7FA4FF;--ct-soft:#22315E;--dent:#7FA4FF;--dent-soft:#22315E;--diet:#7FA4FF;--diet-soft:#22315E;--ekg:#7FA4FF;--ekg-soft:#22315E;--emt:#7FA4FF;--emt-soft:#22315E;--flight:#7FA4FF;--flight-soft:#22315E;--gen:#7FA4FF;--gen-soft:#22315E;--intern:#7FA4FF;--intern-soft:#22315E;--ir:#7FA4FF;--ir-soft:#22315E;--lvn:#7FA4FF;--lvn-soft:#22315E;--medic:#7FA4FF;--medic-soft:#22315E;--mh:#7FA4FF;--mh-soft:#22315E;--mri:#7FA4FF;--mri-soft:#22315E;--ms1:#7FA4FF;--ms1-soft:#22315E;--ms3:#7FA4FF;--ms3-soft:#22315E;--nm:#7FA4FF;--nm-soft:#22315E;--phleb:#7FA4FF;--phleb-soft:#22315E;--plum:#7FA4FF;--plum-soft:#22315E;--pt:#7FA4FF;--pt-soft:#22315E;--rn:#7FA4FF;--rn-soft:#22315E;--rrt:#7FA4FF;--rrt-soft:#22315E;--rt:#7FA4FF;--rt-soft:#22315E;--slp:#7FA4FF;--slp-soft:#22315E;--surg:#7FA4FF;--surg-soft:#22315E;--tccc:#7FA4FF;--tccc-soft:#22315E;--ok:#34C374;--bad:#F2686C;--warn:#F5A524}
+html.hive body{letter-spacing:0}
+html.hive h1,html.hive h2,html.hive h3{letter-spacing:-.01em;font-weight:700}
+/* buttons: pills with a lip */
+html.hive .btn{border-radius:999px;box-shadow:0 4px 0 var(--hv-brd);transition:transform .08s,box-shadow .08s;font-weight:700;font-size:16px}
+html.hive .btn:not(.ghost):not(.ok):not(.again):not(.gold){background:var(--hv-grad)}
+html.hive .btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--hv-brd)}
+html.hive .btn.ghost{background:var(--surface)!important;color:var(--hv-br);border:2px solid var(--line);box-shadow:0 4px 0 var(--hv-lip)}
+html.hive .btn.ghost:active{box-shadow:0 1px 0 var(--hv-lip)}
+html.hive .btn.ok{box-shadow:0 4px 0 color-mix(in srgb,var(--ok) 70%,#000)}html.hive .btn.again{box-shadow:0 4px 0 color-mix(in srgb,var(--bad) 70%,#000)}
+/* cards: flat white with a bottom lip */
+html.hive .hubtile,html.hive .tile,html.hive .lvcard,html.hive .sec,html.hive .learncard,html.hive .bugcard,html.hive .qopt,html.hive .ecard,html.hive .panel .sec{border:2px solid var(--line);border-bottom:5px solid var(--hv-lip);box-shadow:none;background:var(--surface)}
+html.hive .hubtile,html.hive .tile,html.hive .lvcard,html.hive .qopt{transition:transform .08s}
+html.hive .hubtile:hover,html.hive .tile:hover,html.hive .lvcard:hover{transform:none;border-color:var(--line);border-bottom-color:var(--hv-lip)}
+html.hive .hubtile:active,html.hive .tile:active,html.hive .lvcard:active,html.hive .qopt:not([disabled]):active{transform:translateY(3px);border-bottom-width:2px;margin-bottom:3px}
+html.hive .hubtile .ico{width:46px;height:52px;padding:11px 9px;border-radius:0;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:var(--hv-tint);color:var(--hv-br)}
+html.hive .hubtile .ht strong{font-size:17px;font-weight:700}
+/* level band and home routes: the logo gradient */
+html.hive .band{background:var(--hv-grad);border-radius:28px;box-shadow:0 5px 0 var(--hv-brd)}
+html.hive .route{background:var(--hv-grad)!important;background-image:var(--hv-grad)!important;border-radius:28px;box-shadow:0 5px 0 var(--hv-brd)}
+html.hive .route:active{transform:translateY(3px);box-shadow:0 2px 0 var(--hv-brd)}
+/* questions */
+html.hive .qopt{border-radius:18px;font-weight:600}
+html.hive .qopt .letter{width:30px;height:34px;border-radius:0;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:var(--surface-2);color:var(--muted)}
+html.hive .qopt.sel{border-color:var(--hv-br);background:var(--hv-tint)}
+html.hive .qopt.right{border-color:var(--hv-hn);border-bottom-color:var(--hv-hnd);background:var(--hv-hnt)}
+html.hive .qopt.right .letter{background:var(--hv-hn);color:var(--hv-ink)}
+html.hive .qopt.wrong .letter{background:var(--bad);color:#fff}
+/* progress = honey */
+html.hive .pbar i,html.hive .xpbar i,html.hive .lvbar i,html.hive progress::-webkit-progress-value{background:var(--hv-hn)}
+html.hive .tab,html.hive .chip,html.hive .stickchip{border-width:2px}
+html.hive :focus-visible{outline-color:var(--hv-br)}
+/* honeycomb colony map (mock) */
+html.hive .lrnsys.hvsec{background:none;border:0;padding:0;margin:0 0 18px;display:flex;flex-direction:column;gap:12px}
+html.hive .hvcols{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}
+html.hive .hvcol{flex:none;font:600 13px var(--f-display);padding:8px 14px;border-radius:99px;background:var(--surface);border:2px solid var(--line);border-bottom:4px solid var(--hv-lip);color:var(--muted)}
+html.hive .hvcol[aria-pressed="true"]{color:#fff;background:var(--hv-br);border-color:var(--hv-brd)}
+html.hive .hvcap{position:relative;min-height:66px;border-radius:99px;background:var(--surface);border:2px solid var(--line);box-shadow:0 5px 0 var(--hv-lip);overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 22px}
+html.hive .hvcap i{position:absolute;left:0;top:0;bottom:0;background:var(--hv-grad)}
+html.hive .hvcap>div{position:relative}
+html.hive .hvcl small{display:block;font:700 10.500px var(--f-display);letter-spacing:1.500px;color:#ffffffd9}
+html.hive .hvcl b{display:block;font:700 16px/1.15 var(--f-display);color:#fff}
+html.hive .hvcr{font:600 14px var(--f-display);color:var(--muted);white-space:nowrap}html.hive .hvcr b{font-size:20px;color:var(--ink)}
+html.hive .hvhint{font-size:13px;color:var(--muted);text-align:center;margin:0}
+html.hive .hvhive{--w:clamp(92px,29vw,116px);--h:calc(var(--w)*1.120);display:flex;flex-direction:column;align-items:center;padding:2px 0 8px}
+html.hive .hvrow{display:flex;gap:7px;margin-top:calc(var(--h)*-.210)}html.hive .hvrow:first-child{margin-top:0}
+html.hive .hvx{width:var(--w);height:var(--h);padding:0;border:0;background:none;filter:drop-shadow(0 5px 0 var(--hv-lip));transition:transform .08s,filter .08s}
+html.hive .hvx:active{transform:translateY(3px);filter:drop-shadow(0 2px 0 var(--hv-lip))}
+html.hive .hvi{position:relative;display:flex;align-items:center;justify-content:center;width:100%;height:100%;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:var(--surface-2)}
+html.hive .hvf{position:absolute;left:0;right:0;bottom:0;background:var(--hv-hn);transition:height .7s}
+html.hive .hvi b{position:relative;font:600 11px/1.2 var(--f-display);color:var(--ink);padding:2px 6px;border-radius:7px;background:color-mix(in srgb,var(--surface) 84%,transparent);max-width:84%;text-align:center;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+html.hive .hvx.full{filter:drop-shadow(0 5px 0 var(--hv-hnd))}
+html.hive .hvx.weak{filter:drop-shadow(0 5px 0 var(--hv-brd))}html.hive .hvx.weak .hvi{background:var(--hv-tint)}
+html.hive .hvsay{display:flex;gap:8px;align-items:center}
+html.hive .hvbug{flex:none;width:48px;height:48px;display:grid;place-items:center}html.hive .hvbug svg{width:48px;height:48px}
+html.hive .hvsay p{margin:0;background:var(--surface);border:2px solid var(--line);border-radius:4px 16px 16px 16px;padding:9px 12px;font-size:13.500px;color:var(--muted);min-width:0}
+html.hive .hvsay p b{color:var(--ink)}
+html.hive .hvbtns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+/* bottom tab bar (phones and small tablets) */
+html.hive #hvnav{display:none}
+@media (max-width:899px){
+ html.hive #hvnav{position:fixed;left:0;right:0;bottom:0;z-index:14;display:flex;justify-content:space-around;background:var(--bg);border-top:2px solid var(--line);padding:8px max(6px,env(safe-area-inset-left,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-right,0px))}
+ html.hive #hvnav[hidden]{display:none}
+ html.hive #hvnav button{display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:none;font:600 11px var(--f-display);color:var(--muted);padding:4px 8px;border-radius:12px}
+ html.hive #hvnav svg{width:24px;height:24px;fill:currentColor}
+ html.hive #hvnav [aria-current]{color:var(--hv-br)}
+ html.hive body{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+ html.hive #buddy{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+ html.hive .toast,html.hive .pktoast,html.hive .protoast,html.hive .shksay{bottom:calc(86px + env(safe-area-inset-bottom,0px))}
+}
+/* ---- v4 (owner, Nov 20: "I love what you did with the main menu boxes. but revert everything else back to normal") ----
+   Kept: the home Look it up slabs and the centre Menu bar. Everything else is the v1 Hive skin again. */
+html.hive:root{--hv-cut:13px}
+/* home Look it up cards: field-guide slabs with a honey spine, no gradient */
+html.hive .route.rmini,html.hive .route.mlsmall{background:var(--surface)!important;background-image:none!important;color:var(--ink);border-radius:0;box-shadow:none;border:0;border-left:8px solid var(--hv-hn);border-bottom:5px solid var(--hv-lip);
+ clip-path:polygon(0 0,100% 0,100% calc(100% - var(--hv-cut)),calc(100% - var(--hv-cut)) 100%,0 100%)}
+html.hive .route.rmini:active,html.hive .route.mlsmall:active{transform:translateY(3px);box-shadow:none}
+html.hive .route.rmini h2{color:var(--ink);font-size:19px}html.hive .route.rmini p,html.hive .route.rmini .rmore{color:var(--muted);opacity:1}
+html.hive .route .eyebrow{color:var(--hv-hn);opacity:1;font-size:11px}
+html.hive .rchips span{background:var(--surface-2);color:var(--hv-br);border-radius:6px;font-weight:700}
+html.hive .route .count{background:none;padding:0;color:var(--muted)}
+html.hive .route.mlsmall strong{color:var(--ink)}html.hive .route.mlsmall span{color:var(--muted)}
+html.hive .route.rmini::after,html.hive .route.rmini::before{display:none!important}
+/* level Look it up tiles, second design: small slabs in the same family as the home cards */
+html.hive .hub.hvlook .hubtile{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:6px 10px;background:var(--surface);border:0;border-left:7px solid var(--hv-hn);border-bottom:5px solid var(--hv-lip);border-radius:0;box-shadow:none;min-height:0;padding:12px 12px 11px 12px;
+ clip-path:polygon(0 0,100% 0,100% calc(100% - var(--hv-cut)),calc(100% - var(--hv-cut)) 100%,0 100%)}
+html.hive .hub.hvlook .hubtile:hover{border-color:transparent;border-left-color:var(--hv-hn);border-bottom-color:var(--hv-lip)}
+html.hive .hub.hvlook .hubtile:active{transform:translateY(3px);border-bottom-width:2px;margin-bottom:3px}
+html.hive .hub.hvlook .hubtile .ico{width:34px;height:38px;padding:8px 6px}
+html.hive .hub.hvlook .hubtile .ht{display:contents}
+html.hive .hub.hvlook .hubtile .ht strong{font-size:16px;line-height:1.15}
+html.hive .hub.hvlook .hubtile .ht span{grid-column:1/-1;font-size:12.500px;line-height:1.35}
+/* bottom bar: three, Menu in the middle, three */
+@media (max-width:899px){
+ html.hive #hvnav{align-items:flex-end;padding-left:max(2px,env(safe-area-inset-left,0px));padding-right:max(2px,env(safe-area-inset-right,0px))}
+ html.hive #hvnav button{padding:4px 2px;font-size:10px;flex:1;min-width:0}
+ html.hive #hvnav .hvmenu{color:var(--ink);font-weight:700}
+ html.hive #hvnav .hvhex{display:grid;place-items:center;width:52px;height:58px;margin-top:-26px;background:var(--hv-grad);color:#fff;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}
+ html.hive #hvnav .hvhex svg{width:26px;height:26px}
+}
+html.hive .hub.hvlook .hubtile,html.hive .hub.hvlook .hubtile:hover{border-left-color:var(--hv-hn)!important;border-bottom-color:var(--hv-lip)!important}
+/* ---- v5 (owner, Nov 20): one big hive, honey tab bar, cut-corner tiles inside the specialties, Terrarium in the scheme ---- */
+html.hive:root{--hvg0:#DCE7FF;--hvg1:#D3F1F0;--hvg2:#E6E0FF;--hvg3:#D8ECFA;--hvg4:#EFE0F7;--hvg5:#DDE9EE;--hv-navi:#5B79C9}
+html.hive:root[data-theme="dark"]{--hvg0:#22315E;--hvg1:#1B3B4F;--hvg2:#2F2A60;--hvg3:#1E3557;--hvg4:#372A5A;--hvg5:#24394B;--hv-navi:#8FA6E0}
+/* tiles inside a specialty: both corners cut, no outline (the earlier design the owner liked) */
+html.hive .hub:not(.hvlook) .hubtile{border:0;border-bottom:5px solid var(--hv-lip);border-radius:0;background:var(--surface);
+ clip-path:polygon(var(--hv-cut) 0,100% 0,100% calc(100% - var(--hv-cut)),calc(100% - var(--hv-cut)) 100%,0 100%,0 var(--hv-cut))}
+html.hive .hub:not(.hvlook) .hubtile:hover{border-color:transparent;border-bottom-color:var(--hv-lip)}
+/* the big hive */
+html.hive .hvhive.hvbig{--w:clamp(70px,22.500vw,96px)}
+html.hive .hvbig .hvrow{gap:5px}
+html.hive .hvbig .hvi b{font-size:9.500px;line-height:1.15;padding:1px 4px;max-width:90%}
+html.hive .hvx.g0 .hvi{background:var(--hvg0)}html.hive .hvx.g1 .hvi{background:var(--hvg1)}html.hive .hvx.g2 .hvi{background:var(--hvg2)}html.hive .hvx.g3 .hvi{background:var(--hvg3)}html.hive .hvx.g4 .hvi{background:var(--hvg4)}html.hive .hvx.g5 .hvi{background:var(--hvg5)}
+html.hive .hvx.weak .hvi{box-shadow:inset 0 0 0 3px var(--hv-br)}
+html.hive .hvlegend{display:flex;flex-wrap:wrap;gap:6px 8px}
+html.hive .hvlegend button{display:flex;align-items:center;gap:6px;border:0;background:var(--surface);border-radius:8px;padding:5px 9px;font:600 12px var(--f-display);color:var(--ink)}
+html.hive .hvlegend span{color:var(--muted);font-weight:500}
+html.hive .hvdot{width:13px;height:14px;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}
+html.hive .hvdot.g0{background:var(--hvg0)}html.hive .hvdot.g1{background:var(--hvg1)}html.hive .hvdot.g2{background:var(--hvg2)}html.hive .hvdot.g3{background:var(--hvg3)}html.hive .hvdot.g4{background:var(--hvg4)}html.hive .hvdot.g5{background:var(--hvg5)}
+html.hive:root:not([data-theme="dark"]) .hvdot{outline:1.500px solid var(--hv-lip);outline-offset:-1px}
+/* tab bar: honey */
+@media (max-width:899px){
+ html.hive #hvnav button{color:var(--hv-navi)}
+ html.hive #hvnav [aria-current]{color:var(--hv-hn)}
+ html.hive #hvnav [aria-current] svg{filter:drop-shadow(0 0 6px color-mix(in srgb,var(--hv-hn) 55%,transparent))}
+ html.hive #hvnav .hvmenu{color:var(--hv-hn)}
+ html.hive #hvnav .hvhex{background:linear-gradient(160deg,#FFD166,#F5A524 55%,#DD8508);color:#3D2700}
+ html.hive #hvnav .hvmenu[aria-current] .hvhex{box-shadow:none;filter:drop-shadow(0 0 0 #000)}
+ html.hive #hvnav{border-top-color:color-mix(in srgb,var(--hv-hn) 35%,var(--line))}
+}
+/* Terrarium tank in the Hive scheme: a night hive wall with a honey floor */
+html.hive .tank{border:0;border-bottom:6px solid var(--hv-hnd);border-radius:22px;box-shadow:none;
+ background:
+  url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='97' viewBox='0 0 56 97'%3E%3Cpath d='M28 1 55 16.500v32L28 64 1 48.500v-32z M28 64v32 M1 48.500 -26 64 M55 48.500 82 64' fill='none' stroke='%237FA4FF' stroke-opacity='.16' stroke-width='2'/%3E%3C/svg%3E") 0 0/56px 97px,
+  radial-gradient(120% 80% at 50% 0%,#2B3D78 0%,#1A2550 55%,#121A38 100%)}
+html.hive:root:not([data-theme="dark"]) .tank{background:
+  url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='97' viewBox='0 0 56 97'%3E%3Cpath d='M28 1 55 16.500v32L28 64 1 48.500v-32z M28 64v32 M1 48.500 -26 64 M55 48.500 82 64' fill='none' stroke='%233B6FF5' stroke-opacity='.18' stroke-width='2'/%3E%3C/svg%3E") 0 0/56px 97px,
+  radial-gradient(120% 80% at 50% 0%,#F4F8FF 0%,#DCE7FF 60%,#C9D8FB 100%)}
+html.hive .tanklid{background:var(--hv-grad);opacity:1;height:8px}
+html.hive .tankglow{opacity:.25}
+html.hive .tankcap{color:#FFE2A6}
+html.hive:root:not([data-theme="dark"]) .tankcap{color:#6B4300;text-shadow:none}
+html.hive:root .tank,html.hive:root[data-theme="dark"] .tank{border:0;border-bottom:6px solid var(--hv-hnd);border-radius:22px;box-shadow:none;background:
+  url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='97' viewBox='0 0 56 97'%3E%3Cpath d='M28 1 55 16.500v32L28 64 1 48.500v-32z M28 64v32 M1 48.500 -26 64 M55 48.500 82 64' fill='none' stroke='%237FA4FF' stroke-opacity='.16' stroke-width='2'/%3E%3C/svg%3E") 0 0/56px 97px,
+  radial-gradient(120% 80% at 50% 0%,#2B3D78 0%,#1A2550 55%,#121A38 100%)}
+html.hive:root[data-theme="light"] .tank{background:
+  url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='97' viewBox='0 0 56 97'%3E%3Cpath d='M28 1 55 16.500v32L28 64 1 48.500v-32z M28 64v32 M1 48.500 -26 64 M55 48.500 82 64' fill='none' stroke='%233B6FF5' stroke-opacity='.18' stroke-width='2'/%3E%3C/svg%3E") 0 0/56px 97px,
+  radial-gradient(120% 80% at 50% 0%,#F4F8FF 0%,#DCE7FF 60%,#C9D8FB 100%)}
+html.hive .lrntab{background:var(--hv-grad)!important;background-image:var(--hv-grad)!important;box-shadow:0 5px 0 var(--hv-brd)}
+/* Bug Store: bugs you don't own yet wait in a hive cell */
+html.hive .bugcard.hvlk{background:none;border:0;border-radius:0;padding:6px 4px 10px}
+html.hive .bugcard.hvlk>svg.bug,html.hive .bugcard.hvlk>.secsil,html.hive .bugcard.hvlk>.b3wrap{width:132px;height:148px;padding:20px 14px;box-sizing:border-box;background:var(--surface-2);clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}
+html.hive .bugcard.hvlk>.secsil svg{width:100%;height:100%}
+html.hive .bugcard.hvlk.r-rare>svg.bug{background:var(--hvg3)}html.hive .bugcard.hvlk.r-epic>svg.bug{background:var(--hvg2)}html.hive .bugcard.hvlk.r-legendary>svg.bug{background:var(--hv-hnt)}
+/* personal stats (both looks) */
+.mstats{display:flex;flex-direction:column;gap:12px}
+.mstgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px}
+.mst{background:var(--surface);border:2px solid var(--line);border-bottom:5px solid var(--hv-lip,var(--line));border-radius:16px;padding:12px 13px;display:flex;flex-direction:column;gap:1px;min-width:0}
+.mst b{font:700 24px/1.1 var(--f-display);font-variant-numeric:tabular-nums;color:var(--hv-hn,var(--gold))}
+.mst span{font:700 13px var(--f-display)}.mst small{font-size:11.500px;color:var(--muted)}
+.msth{font:700 15px var(--f-display);margin:8px 0 0}
+.mstdays{display:flex;align-items:flex-end;gap:5px;height:118px;background:var(--surface);border-radius:14px;padding:12px 12px 8px}
+.mstday{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px}
+.mstday i{display:block;width:100%;max-width:26px;border-radius:5px 5px 2px 2px;background:var(--hv-hn,var(--gold))}.mstday i.z{background:var(--line)}
+.mstday span{font:600 10.500px var(--f-body);color:var(--muted)}
+.mstbar{display:flex;height:18px;border-radius:99px;overflow:hidden;gap:2px;background:var(--line)}
+.mstbar i,.mstleg i{display:block}.mstleg{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.500px;color:var(--muted)}
+.mstleg span{display:flex;align-items:center;gap:6px}.mstleg i{width:11px;height:11px;border-radius:3px}
+.m-mastered{background:var(--hv-hn,var(--gold))}.m-proficient{background:var(--hv-br,var(--flight))}.m-familiar{background:#18B8C4}.m-learning{background:var(--muted)}
+.mstrows{display:flex;flex-direction:column;gap:8px;background:var(--surface);border-radius:14px;padding:12px}
+.mstrow{display:grid;grid-template-columns:minmax(0,1.300fr) minmax(60px,1fr) 44px;gap:4px 10px;align-items:center;font-size:13.500px}
+.mstrow small{grid-column:1/-1;font-size:11.500px;color:var(--muted);margin-top:-4px}.mstrow b{text-align:right;font-variant-numeric:tabular-nums}
+.mstrk{height:10px;border-radius:99px;background:var(--line);overflow:hidden}.mstrk i{display:block;height:100%;border-radius:99px;background:var(--hv-hn,var(--gold))}
+.mst2{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:4px 16px}
+.mstdrug{display:grid;grid-template-columns:1fr auto;gap:0 10px;width:100%;text-align:left;border:0;border-bottom:1.500px solid var(--line);background:none;padding:8px 2px;font-size:14px;color:var(--ink)}
+.mstdrug b{font-variant-numeric:tabular-nums}.mstdrug small{grid-column:1/-1;font-size:11.500px;color:var(--muted)}
+/* Beginner to Medicine: on touch screens you swipe the idea card; the buttons stay for mouse and keyboard */
+@media (pointer:coarse){.bglcacts .bgswn{display:none}.bglcdots::after{content:"swipe";margin-left:8px;font:700 10px var(--f-body);letter-spacing:.14em;text-transform:uppercase;opacity:.7}}
+</style>
 <script src="app-config.js"></script>
 <script>/* Endorsely affiliate tracking, website only (owner, Nov 13 2026) */
 if(!window.DRUGBUG_NATIVE){(function(){var s=document.createElement("script");s.async=true;s.src="https://assets.endorsely.com/endorsely.js";s.setAttribute("data-endorsely","0744afa8-d4c5-4293-984f-346990a29097");document.head.appendChild(s);})();}</script>

@@ -545,6 +545,7 @@ function go(view, opts) {
   if (view === "flevels" || view === "field") { if (S.view === "level" && isF(S.level)) view = "home"; else { view = "level"; opts = Object.assign({}, opts || {}, { level: "cpp" }); } }
   if (view === "level" && opts && opts.level && isF(opts.level) && opts.level !== "cpp") opts = Object.assign({}, opts, { level: "cpp" });
   if (UTIL_VIEWS[view] && !UTIL_VIEWS[S.view] && S.view !== view && S.view !== "terrarium") S.utilBack = { view: S.view, level: S.level, tab: S.tab };
+  try { var hp0 = document.querySelector(".hickpop"); if (hp0) hp0.remove(); } catch (e) {}   /* Hickory's speech bubble does not follow you to the next screen (Nov 20 2026) */
   clearTimeout(S.qT); S.view = view; Object.assign(S, { bgRun: null, cmpOn: 0, cmpB: null, cmpQ: "", pointGo: null, showFilt: false, onlyMarks: false, tool: null, shopF: null, tab: "hub", q: "", tags: {}, group: "all", scen: null, fc: null, nr: null, sess: null, prepNr: null, unit: null, fam: null, famq: "", cn: null, menu: false, mupop: false, fmq: "", trId: null, blT: "", disId: null }, opts || {});
   if ((S.view === "flevels" || S.view === "field" || (S.view === "level" && isF(S.level))) && typeof fmUnlocked === "function" && !fmUnlocked()) { S.view = "home"; view = "home"; } /* Field Medic is hidden until a code is redeemed */
   fixTab();
@@ -885,6 +886,7 @@ function viewLevels() {
      "Let's go" plays that level's own entrance (owner, Nov 5 2026). Focused keeps the grid. */
   if (!fm && !S.lvGrid && typeof funOn === "function" && funOn() && typeof obWheel === "function") {
     var W = L.map(function (l) { return { code: l.key, name: l.name, bug: l.bug, blurb: l.blurb || scopeTag(l.key, 0, 1), lvl: 1 }; });
+    try { (Prog.d.interests || []).forEach(function (k) { if (!/^(ph|rn|md|im|ah)$/.test(k) || k === rt) return; obLevelsFor(k).forEach(function (o) { if ((ALLIED_OFF ? isA(o.code) : alliedHidden(o.code)) || W.some(function (w) { return w.code === o.code; })) return; W.push(o); }); }); } catch (e) {}   /* the other paths they picked at the start ride the same carousel (owner, Nov 20 2026) */
     S.lvWheel = W;
     if (S.lvWheelFor !== rt || S.obI == null) {
       var pickK = [store("lastLevel"), Prog.d.startLevel].filter(function (k) { return k && W.some(function (w) { return w.code === k; }); })[0];
@@ -1232,7 +1234,7 @@ function hubView() {
     /* the section's own order (Medications first, then Disease Lab...) unless they rearranged it */
     items.sort(function (x, y) { return g[1].indexOf(x[0]) - g[1].indexOf(y[0]); });
     items = hubSort(items, gi);          /* whatever order they dragged these into */
-    c += '<h3 class="hubgh">' + esc(g[0]) + '</h3><div class="hub hubg' + (items.length % 2 ? ' odd' : '') + (items.length === 1 ? ' solo' : '') + (fld && gi === 2 ? ' minis' : '') + '">' + items.map(tile).join("") + '</div>';
+    c += '<h3 class="hubgh">' + esc(g[0]) + '</h3><div class="hub hubg' + (g[0] === "Look it up" ? ' hvlook' : '') + (items.length % 2 ? ' odd' : '') + (items.length === 1 ? ' solo' : '') + (fld && gi === 2 ? ' minis' : '') + '">' + items.map(tile).join("") + '</div>';
   });
   /* topics pinned out of the Field Reference get their own tiles here (owner, Oct 30 2026) */
   if (fld && typeof fmPinTiles === "function") { var pt = fmPinTiles(); if (pt) c += '<h3 class="hubgh">Pinned</h3>' + pt; }
@@ -6219,8 +6221,8 @@ function shopView() {
       !b.price ? '<button class="btn small" data-buyok="' + b.id + '">Get it free</button>' :
       pend ? '<button class="btn small" data-buyok="' + b.id + '">Buy for ' + b.price + '</button><button class="btn small ghost" data-buyno="1">Cancel</button>' :
       '<button class="btn small' + (can ? '' : ' ghost') + '" data-buy="' + b.id + '"' + (can ? '' : ' disabled') + '>' + (can ? 'Buy' : 'Need ' + (b.price - bal) + ' more') + '</button>';
-    if (b.secret && !own) return '<div class="bugcard secret r-' + b.rar + '" data-bugid="' + b.id + '"><span class="secsil">' + bugArt(b, "", { mood: "happy" }) + '</span><strong>???</strong><span class="rar">Secret</span><span class="muted small">Won in a funny way</span><div class="bact"><span class="muted small">Locked</span></div></div>';
-    return '<div class="bugcard r-' + b.rar + (eq ? " eq" : "") + '" data-bugid="' + b.id + '"' + (B3_READY ? ' data-bug3d="' + b.id + '" title="Tap to see ' + esc(b.name) + ' in 3D"' : '') + '>' + bugArt(b) + (B3_READY ? '<span class="b3tag">3D</span>' : '') + '<strong>' + esc(b.name) + '</strong>' + (b.secret && b.won ? '<span class="muted small secwon">' + esc(b.won) + '</span>' : '') + '<span class="rar">' + RARITY[b.rar] + '</span>' + (own ? '<span class="muted small">Owned</span>' : b.admin ? '<span class="muted small">Administrator only</span>' : b.login ? '<span class="muted small">Daily login prize</span>' : b.king ? '<span class="muted small">Collection king</span>' : !b.price ? '<span class="muted small">Free</span>' : b.unlock ? '<span class="muted small">Free when unlocked</span>' : stickTag(b.price) + (b.season && inSeason(b) ? '<span class="muted small">Until the end of ' + MONTHS[b.season[1]] + '</span>' : '')) + '<div class="bact">' + act + '</div></div>';
+    if (b.secret && !own) return '<div class="bugcard secret hvlk r-' + b.rar + '" data-bugid="' + b.id + '"><span class="secsil">' + bugArt(b, "", { mood: "happy" }) + '</span><strong>???</strong><span class="rar">Secret</span><span class="muted small">Won in a funny way</span><div class="bact"><span class="muted small">Locked</span></div></div>';
+    return '<div class="bugcard r-' + b.rar + (eq ? " eq" : "") + (own ? "" : " hvlk") + '" data-bugid="' + b.id + '"' + (B3_READY ? ' data-bug3d="' + b.id + '" title="Tap to see ' + esc(b.name) + ' in 3D"' : '') + '>' + bugArt(b) + (B3_READY ? '<span class="b3tag">3D</span>' : '') + '<strong>' + esc(b.name) + '</strong>' + (b.secret && b.won ? '<span class="muted small secwon">' + esc(b.won) + '</span>' : '') + '<span class="rar">' + RARITY[b.rar] + '</span>' + (own ? '<span class="muted small">Owned</span>' : b.admin ? '<span class="muted small">Administrator only</span>' : b.login ? '<span class="muted small">Daily login prize</span>' : b.king ? '<span class="muted small">Collection king</span>' : !b.price ? '<span class="muted small">Free</span>' : b.unlock ? '<span class="muted small">Free when unlocked</span>' : stickTag(b.price) + (b.season && inSeason(b) ? '<span class="muted small">Until the end of ' + MONTHS[b.season[1]] + '</span>' : '')) + '<div class="bact">' + act + '</div></div>';
   }
   var TIERS = [["admin", "Administrator only", "Just for you"], ["starter", "Starter", "Free"], ["common", "Common", "300–800 sticks"], ["rare", "Rare", "1,200–2,000 sticks"], ["epic", "Epic", "2,800–4,800 sticks"], ["legendary", "Legendary", "7,000–12,000 sticks"], ["seasonal", "Seasonal", "2,400 sticks, only in season"], ["earned", "Earned by mastery", "Free when you unlock them"]];
   function tierOf(b) { return b.secret ? "secret" : b.admin ? "admin" : b.king ? "king" : b.login ? "login" : b.id === "starter" || b.grub || b.free ? "starter" : b.rar; }
@@ -9355,7 +9357,8 @@ function obModePick(m) {
   if (nx && nx.ev) { S.obSel = null; S.obI = null; return pickRole("ev"); }
   return obFinish(nx ? nx.level : "", true);
 }
-function obList() { if (S.lvWheel && !needOnboard()) return S.lvWheel; return obStep() === 2 ? obLevelsFor(obPrimary()) : obCards(); }
+function obPicked() { var sel = obSel(), out = []; obCards().map(function (c) { return c.code; }).filter(function (k) { return sel[k] && k !== "ev"; }).forEach(function (k) { out = out.concat(obLevelsFor(k)); }); return out.length ? out : obLevelsFor(obPrimary()); }
+function obList() { if (S.lvWheel && !needOnboard()) return S.lvWheel; return obStep() === 2 ? obPicked() : obCards(); }
 /* one wheel, both steps */
 function obWheel(C, i, sel) {
   return '<div class="lazy" data-lazy="1">' +
@@ -10390,7 +10393,7 @@ document.addEventListener("keydown", function (e) { if (e.key === "Escape" && PR
 function printClick(t, a) { if (a.print) { openPrint(a.print); return true; } return false; }
 
 /* ---------- Settings: display, study preferences, sound, protocols, printing, privacy & account, about ---------- */
-var APP_VERSION = "1.2.1", APP_DATE = "2026-11-14"; try { window.__dbVer = (window.webkit && window.webkit.messageHandlers ? "ios " : "web ") + APP_VERSION + " " + APP_DATE; } catch (e) {}
+var APP_VERSION = "1.2.4", APP_DATE = "2026-11-20"; try { window.__dbVer = (window.webkit && window.webkit.messageHandlers ? "ios " : "web ") + APP_VERSION + " " + APP_DATE; } catch (e) {}
 
 /* ---------- usage statistics (owner, Nov 5 2026) ----------
    Anonymous counts so the owner can see how DrugBug is used: a random device id (never a name,
@@ -10868,6 +10871,7 @@ function settingsView() {
   // display
   c += setCard("display", "Display",
     setRow("Theme", "", setOpts("theme", themePref(), [["dark", "Night shift (default)"], ["light", "Day shift"], ["system", "Match my device"]])) +
+    setRow("Look", "The Hive is the new design. Classic is the one from before.", '<div class="segs" role="radiogroup" aria-label="Look"><button class="seg" role="radio" data-hvlook="hive" aria-checked="' + hvOn() + '">The Hive</button><button class="seg" role="radio" data-hvlook="classic" aria-checked="' + !hvOn() + '">Classic</button></div>') +
     setRow("Text size", "", setOpts("text", s.text, [["normal", "Normal"], ["large", "Large"], ["xl", "Extra large"]])) +
     setRow("High contrast", "Darker text and borders.", setTog("contrast", s.contrast, "High contrast")) +
         setRow("Reduce motion", "Turns off card flips, animations and the flashing in level transitions.", setTog("motion", s.motion, "Reduce motion")));
@@ -14226,7 +14230,7 @@ function bodyStage(ctx, sel) {
   try {
     if ((typeof funOn !== "function" || funOn()) && !S.gbHickSeen) {
       S.gbHickSeen = 1; var nH = (store("gbHick") || 0) + 1; store("gbHick", nH);
-      if (nH <= 3) setTimeout(function () { try { hickPop("That there's The Great Bug. Drag him round to turn him, and tap a part to see what's in it. Now don't go gettin' weird with him. The authorities are watchin', and they will show up.", 9000); } catch (e) {} }, 700);
+      if (Math.random() < 0.34) setTimeout(function () { try { hickPop("That there's The Great Bug. Drag him round to turn him, and tap a part to see what's in it. Now don't go gettin' weird with him. The authorities are watchin', and they will show up.", 9000); } catch (e) {} }, 700);
     }
   } catch (e) {}
   return hk + '<p class="bm3dname" aria-hidden="true"><span>The Great Bug</span></p><div class="bm3d" data-ctx="' + ctx + '"><div class="bm3dfb">' + bodySVG(sel) + '</div>' + sr +
@@ -14863,7 +14867,7 @@ var HFX = { cv: null, g: null, W: 0, H: 0, rockets: [], sparks: [], bits: [], ru
 var HFX_RWB = ["#ef4444", "#ffffff", "#3b82f6"], HFX_NY = ["#fbbf24", "#fde68a", "#e5e7eb", "#a855f7", "#f472b6", "#22d3ee", "#facc15"];
 var HFX_TG = ["#d97706", "#b45309", "#ea580c", "#ca8a04", "#9a3412", "#eab308", "#78350f"];
 function hfxOk() { return !(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) && !SET().motion; }
-function hfxSize() { var dpr = Math.min(2, window.devicePixelRatio || 1); HFX.W = window.innerWidth; HFX.H = window.innerHeight; HFX.cv.width = HFX.W * dpr; HFX.cv.height = HFX.H * dpr; HFX.g.setTransform(dpr, 0, 0, dpr, 0, 0); }
+function hfxSize() { var dpr = HFX.dpr = Math.min(2, window.devicePixelRatio || 1); HFX.W = window.innerWidth; HFX.H = window.innerHeight; HFX.cv.width = HFX.W * dpr; HFX.cv.height = HFX.H * dpr; HFX.g.setTransform(dpr, 0, 0, dpr, 0, 0); }
 function hfxLayer() {
   if (HFX.cv && HFX.cv.parentNode) return;
   HFX.cv = document.createElement("canvas"); HFX.cv.className = "holbg"; HFX.cv.setAttribute("aria-hidden", "true");
@@ -14904,18 +14908,21 @@ function hfxShowerTG(n) { for (var i = 0; i < n; i++) HFX.bits.push({ x: Math.ra
 function hfxLoop() {
   if (HFX.run) return; HFX.run = true;
   function frame() {
-    var g = HFX.g, W = HFX.W, H = HFX.H, wind = Math.sin(Date.now() / 900) * .25 + .15; g.clearRect(0, 0, W, H);
+    var g = HFX.g, W = HFX.W, H = HFX.H, wind = Math.sin(Date.now() / 900) * .25 + .15, dpr = HFX.dpr || 1;
+    /* clear the whole canvas in device pixels, then draw in page pixels (Nov 20 2026: on screens scaled above 100% the old
+       code cleared only part of the canvas and drew leaves at the wrong scale, leaving smeared trails on start-up) */
+    g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, HFX.cv.width, HFX.cv.height); g.setTransform(dpr, 0, 0, dpr, 0, 0);
     HFX.rockets = HFX.rockets.filter(function (r) { r.y += r.vy; g.fillStyle = r.c; g.beginPath(); g.arc(r.x, r.y, 2.4, 0, 7); g.fill(); g.fillStyle = "rgba(255,220,160,.5)"; g.fillRect(r.x - 1, r.y, 2, 14); if (r.y <= r.ty) { hfxBurst(r); return false; } return true; });
     HFX.sparks = HFX.sparks.filter(function (p) { var ox = p.x, oy = p.y; p.x += p.vx; p.y += p.vy; p.vy += p.trail ? .03 : .045; p.vx *= .985; p.life -= .012; if (p.life <= 0) return false; g.globalAlpha = Math.min(1, p.life) * (p.tw && Math.random() < .25 ? .35 : 1); if (p.trail) { g.strokeStyle = p.c; g.lineWidth = 1.6; g.beginPath(); g.moveTo(ox - p.vx * 3, oy - p.vy * 3); g.lineTo(p.x, p.y); g.stroke(); } g.fillStyle = p.c; g.beginPath(); g.arc(p.x, p.y, 2.2, 0, 7); g.fill(); g.globalAlpha = 1; return true; });
     HFX.bits = HFX.bits.filter(function (b) {
       b.vx = b.vx * .97 + wind * .06; b.vy = Math.min(b.vy * .97 + .16, 2.4); b.x += b.vx + Math.sin(b.ph += .08) * .6; b.y += b.vy; b.r += b.vr;
       if (b.y > H + 20) return false; if (b.y > H * .8 && b.vy > 0) b.life -= .01; if (b.life <= 0) return false;
-      var co = Math.cos(b.r), si = Math.sin(b.r); g.globalAlpha = Math.min(1, b.life); g.setTransform(co, si, -si, co, b.x, b.y); g.fillStyle = b.c;
+      var co = Math.cos(b.r), si = Math.sin(b.r); g.globalAlpha = Math.min(1, b.life); g.setTransform(dpr * co, dpr * si, -dpr * si, dpr * co, dpr * b.x, dpr * b.y); g.fillStyle = b.c;
       if (b.round) { g.beginPath(); g.arc(0, 0, b.h * .7, 0, 7); g.fill(); } else g.fillRect(-b.w / 2, -b.h / 2 * Math.abs(Math.cos(b.ph)), b.w, b.h * Math.max(.2, Math.abs(Math.cos(b.ph))));
       return true;
     });
-    g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1;
-    if (HFX.rockets.length || HFX.sparks.length || HFX.bits.length) requestAnimationFrame(frame); else { HFX.run = false; g.clearRect(0, 0, W, H); }
+    g.setTransform(dpr, 0, 0, dpr, 0, 0); g.globalAlpha = 1;
+    if (HFX.rockets.length || HFX.sparks.length || HFX.bits.length) requestAnimationFrame(frame); else { HFX.run = false; g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, HFX.cv.width, HFX.cv.height); g.setTransform(dpr, 0, 0, dpr, 0, 0); }
   }
   requestAnimationFrame(frame);
 }
@@ -14993,7 +15000,7 @@ function tglSize() {
   [TGL.cb, TGL.cf].forEach(function (c) { if (!c) return; c.width = TGL.W * dpr; c.height = TGL.H * dpr; c.getContext("2d").setTransform(dpr, 0, 0, dpr, 0, 0); });
 }
 function tglSpawn(top) {
-  var s = (TGL_GENTLE ? 10 : 7) + Math.random() * 9, front = TGL_GENTLE ? false : Math.random() < 0.5;   /* gentle: every leaf behind the boxes (owner, Nov 5 2026) */   /* gentle: all behind the menu cards (owner, Nov 5 2026) */
+  var s = (TGL_GENTLE ? 10 : 7) + Math.random() * 9, front = TGL_GENTLE ? (TGL.L.filter(function (f) { return f.front; }).length < 4 && Math.random() < 0.4) : Math.random() < 0.5;   /* a few pass in front of the page (owner, Nov 20 2026) */   /* gentle: every leaf behind the boxes (owner, Nov 5 2026) */   /* gentle: all behind the menu cards (owner, Nov 5 2026) */
   TGL.L.push({ x: Math.random() * (TGL.W + 120) - 60, y: top ? -20 - Math.random() * 60 : Math.random() * TGL.H * 0.7,
     vx: (Math.random() - 0.5) * 0.6, vy: 0.4 + Math.random() * 0.5, s: front ? s : s * 0.8, c: TGL_C[Math.floor(Math.random() * TGL_C.length)],
     r: Math.random() * 6.3, vr: (Math.random() - 0.5) * 0.04, ph: Math.random() * 6.3, vph: 0.03 + Math.random() * 0.04,
@@ -15001,8 +15008,10 @@ function tglSpawn(top) {
 }
 /* where the DrugBug name and your bubble are right now (home only) */
 function tglRects() {
-  TGL.title = null; TGL.bub = null;
+  TGL.title = null; TGL.bub = null; TGL.topY = 0;
   if (S.view !== "home") return;
+  /* the top bar is a solid strip: leaves show in front of it until they are past it, so they no longer vanish the moment they appear (owner, Nov 20 2026) */
+  try { var tbx = document.querySelector(".topbar"); if (tbx) TGL.topY = Math.max(0, tbx.getBoundingClientRect().bottom); } catch (e) {}
   var h = document.querySelector(".hero.ha .logo") || document.querySelector(".hero.ha h1");
   if (h) { try { var rg = document.createRange(); rg.selectNodeContents(h); var r = rg.getBoundingClientRect(); if (r.width) TGL.title = { l: r.left + 4, r: r.right - 4, t: r.top + r.height * 0.18 }; } catch (e) {} }
   var b = document.querySelector(".hero.ha .hbub");
@@ -15048,7 +15057,7 @@ function tglFrame() {
   TGL.gust *= 0.985;
   var wind = TGL_GENTLE ? Math.sin(now / 6000) * 0.18 + 0.08 : Math.sin(now / 4200) * 0.35 + 0.15 + TGL.gust;
   var want = TGL_GENTLE ? (TGL.W < 520 ? 24 : 40) : (TGL.W < 520 ? 13 : 20);   /* more leaves (owner, Nov 5 2026) */
-  if (TGL.L.length < want && Math.random() < (TGL_GENTLE ? 0.08 : 0.05)) tglSpawn(true);
+  if (TGL.L.length < want && (TGL.L.length < want * 0.6 || Math.random() < (TGL_GENTLE ? 0.12 : 0.05))) tglSpawn(true);   /* never thins out to nothing: a steady loop (owner, Nov 20 2026) */
   /* the leaves scroll with the page (owner, Nov 8 2026): when the page moves, every leaf moves the same amount */
   var sy = window.pageYOffset || document.documentElement.scrollTop || 0, dsy = TGL.sy == null ? 0 : sy - TGL.sy; TGL.sy = sy;
   if (dsy) { TGL.L.forEach(function (f) { f.y -= dsy; }); TGL.pile.forEach(function (p) { p.y -= dsy; }); }
@@ -15091,7 +15100,7 @@ function tglFrame() {
       if (tglPileH(f.x) < TGL_PILE_MAX && TGL.pile.length < 70) TGL.pile.push({ x: f.x, y: H - f.s * 0.45 - tglPileH(f.x) * 0.7, s: f.s, c: f.c, r: (Math.random() - 0.5) * 1.2, ph: Math.random() * 3, a: 0.9, maple: f.maple, born: now, life: 22000 + Math.random() * 20000 });
       return false;
     }
-    tglDraw(f.front ? gf : gb, f);
+    tglDraw(f.front || f.y < (TGL.topY || 0) ? gf : gb, f);
     return true;
   });
   TGL.pile = TGL.pile.filter(function (p) {
@@ -15115,7 +15124,7 @@ function tglStop() {
   [TGL.cb, TGL.cf].forEach(function (c) { if (c) c.getContext("2d").clearRect(0, 0, c.width, c.height); });
 }
 document.addEventListener("visibilitychange", function () { if (document.hidden) tglStop(); else setTimeout(tglStart, 400); });
-setTimeout(tglStart, 2600);   /* after the opening gust has blown through */
+setTimeout(tglStart, 700);   /* straight away, so there is no gap after the opening gust (owner, Nov 20 2026) */
 setInterval(function () { if (!TGL.run) tglStart(); }, 1500);   /* starts once the start-up notice is done, or motion is allowed again */
 /* scrolling sets off more */
 window.addEventListener("scroll", function () {
@@ -30876,6 +30885,7 @@ function learnSysRow() {
     return { key: "g:" + g[0], id: g[0], name: g[1], subs: subs, n: all.n, d: all.d };
   }).filter(function (g) { return g.n; });
   if (groups.length < 2) return "";
+  if (typeof hvOn === "function" && hvOn()) { var hvh = hvHive(groups, open); if (hvh) return hvh; }   /* The Hive (owner, Nov 20 2026) */
   var openG = S.lsysOpen && groups.filter(function (g) { return g.id === S.lsysOpen; })[0];
   var out = groups.map(function (g) {
     var pct = Math.round(g.d / g.n * 100), on = openG && openG.id === g.id;
@@ -33234,13 +33244,14 @@ function stxMView() {
 }
 
 function statsView() {
-  var can = stxCan(), tabs = [];
+  /* Your own stats for everyone; class, question and master stats only for instructors, evaluators and the owner (owner, Nov 20 2026) */
+  var can = stxCan(), tabs = [["me", "You"]];
   if (can.cls) tabs.push(["cls", "Class"]); if (can.q) tabs.push(["q", "Questions"]); if (can.m) tabs.push(["m", "Master"]);
-  var c = topbar() + '<div class="statsv lvl-gen"><header class="pagehead"><h1>Stats dashboard</h1></header>';
-  if (!tabs.length) { stxRolesFetch(true); return c + '<p class="muted">Stats are for instructors, evaluators and the owner. If you are an instructor, sign in with your instructor account in Settings › Account.</p></div>'; }
-  if (!tabs.some(function (t) { return t[0] === STX.tab; })) STX.tab = can.m ? "m" : can.cls && (stxRoles().classes || []).length ? "cls" : tabs[0][0];
-  if (tabs.length > 1) c += '<nav class="settabs" role="tablist">' + tabs.map(function (t) { return '<button role="tab" data-sxtab="' + t[0] + '" aria-selected="' + (STX.tab === t[0]) + '">' + t[1] + '</button>'; }).join("") + '</nav>';
-  c += STX.tab === "cls" ? stxClassView() : STX.tab === "q" ? stxQView() : stxMView();
+  var c = topbar() + '<div class="statsv lvl-gen"><header class="pagehead"><h1>' + (tabs.length > 1 ? "Stats dashboard" : "Your stats") + '</h1></header>';
+  if (tabs.length === 1) { try { stxRolesFetch(true); } catch (e) {} return c + hvMeStats() + '</div>'; }
+  if (!tabs.some(function (t) { return t[0] === STX.tab; })) STX.tab = "me";
+  c += '<nav class="settabs" role="tablist">' + tabs.map(function (t) { return '<button role="tab" data-sxtab="' + t[0] + '" aria-selected="' + (STX.tab === t[0]) + '">' + t[1] + '</button>'; }).join("") + '</nav>';
+  c += STX.tab === "me" ? hvMeStats() : STX.tab === "cls" ? stxClassView() : STX.tab === "q" ? stxQView() : stxMView();
   return c + '</div>';
 }
 document.addEventListener("click", function (e) {
@@ -36119,9 +36130,9 @@ function bgRunView(R) {
     c += '<div class="bglc" style="--bga:' + bgGrad(U.st)[0] + ';--bgb:' + bgGrad(U.st)[1] + '">' + (left > 0 ? '<span class="bglcs s1" aria-hidden="true"></span>' : '') + (left > 1 ? '<span class="bglcs s2" aria-hidden="true"></span>' : '') +
       '<div class="bglcin" data-bgk="' + R.step + '"><div class="bglct"><span class="bglci" aria-hidden="true">' + (U.ic || "") + '</span><span class="bglcn">Idea ' + (R.step + 1) + ' of ' + nC + '</span></div>' +
       '<h2>' + esc(cd[0]) + '</h2><p class="bglcbig">' + esc(big) + '</p>' + (rest ? '<p class="bglcrest">' + esc(rest) + '</p>' : '') +
-      '<div class="bglcsay"><span class="bgbug sm">' + bgBug() + '</span><span class="bglcbub">' + esc(BG_SAY[(A.u * 7 + A.l * 3 + R.step) % BG_SAY.length]) + '</span></div>' +
+      '<div class="bglcsay"><span class="bgbug sm">' + bgBug() + '</span><span class="bglcbub">' + esc((store("bgSw") || 0) < 4 ? (R.step ? "Swipe left for the next idea, right to go back." : "Swipe left for the next idea.") : BG_SAY[(A.u * 7 + A.l * 3 + R.step) % BG_SAY.length]) + '</span></div>' +
       '<div class="bglcdots" aria-hidden="true">' + C.map(function (x, i) { return '<i class="' + (i < R.step ? 'd' : i === R.step ? 'on' : '') + '"></i>'; }).join("") + '</div></div></div>' +
-      '<div class="actions bglcacts">' + (R.step > 0 ? '<button class="btn ghost" data-bgprev="1">Back</button>' : '') + '<button class="btn big" data-bgnext="1">' + (R.step < nC - 1 ? 'Next idea' : 'Quiz me') + '</button></div>';
+      '<div class="actions bglcacts">' + (R.step > 0 ? '<button class="btn ghost bgswn" data-bgprev="1">Back</button>' : '') + '<button class="btn big' + (R.step < nC - 1 ? ' bgswn' : '') + '" data-bgnext="1">' + (R.step < nC - 1 ? 'Next idea' : 'Quiz me') + '</button></div>';
   } else if (R.step < tot) {
     var qi = R.step - nC, Q = Qs[qi], opts = [Q[1], Q[2], Q[3], Q[4]];
     if (!R.ord || R.ordFor !== R.step) { R.ord = bgShuf(4); R.ordFor = R.step; R.pick = null; }
@@ -38318,4 +38329,135 @@ function sbStart() {
 }
 if (typeof render === "function") (function () { var r0 = render; render = function () { var v = r0.apply(this, arguments); try { if (S.sb && document.getElementById("sbstat")) sbStart(); } catch (e) {} return v; }; })();
 /* tapping him in the sandbox: a quick exam */
+
+/* ===== THE HIVE (owner, Nov 20 2026: "I want to replace the UI I have now with this one") =====
+   One big honeycomb of every drug in the level, clumped by body-system group in slightly different shades; honey is
+   the mastery the app already tracks. A bottom tab bar on phones with the main menu in the middle. Personal stats
+   for everyone on the Stats tab; class, question and master stats stay with instructors, evaluators and the owner. */
+function hvOn() { return document.documentElement.classList.contains("hive"); }
+/* the old look is kept: Settings > Display > Look > Classic (owner, Nov 20 2026: "remember the old UI in case I want to bring it back") */
+document.addEventListener("click", function (e) {
+  var t = e.target.closest && e.target.closest("[data-hvlook]"); if (!t) return;
+  var v = t.getAttribute("data-hvlook"); store("look", v); document.documentElement.classList.toggle("hive", v !== "classic"); render();
+});
+function hvIc(p) { return '<svg viewBox="0 0 24 24" aria-hidden="true">' + p + '</svg>'; }
+function hvHive(groups, open) {
+  var seen = {}, cells = [], G = groups.map(function (g, gi) {
+    var ids = lcatIds(g.key).filter(function (id) { if (!open[id] || seen[id]) return false; seen[id] = 1; return true; });
+    ids.forEach(function (id) { cells.push([id, gi]); });
+    return { g: g, gi: gi, ids: ids, pct: masteryPct(ids), full: ids.filter(function (id) { return mastery(id) === "mastered"; }).length };
+  }).filter(function (x) { return x.ids.length; });
+  if (!cells.length) return "";
+  var allIds = cells.map(function (x) { return x[0]; }), pct = masteryPct(allIds), full = allIds.filter(function (id) { return mastery(id) === "mastered"; }).length;
+  var lvName = ""; try { lvName = (levelObj(S.level) || {}).name || ""; } catch (e) {}
+  var weakG = G.slice().sort(function (a, b) { return a.pct - b.pct; })[0];
+  var low = allIds.slice().sort(function (a, b) { return MSCORE[mastery(a)] - MSCORE[mastery(b)]; })[0], lp = Math.round(MSCORE[mastery(low)] * 100);
+  var c = '<section class="lrnsys hvsec"><div class="hvcap"><i style="width:' + Math.max(64, pct) + '%"></i><div class="hvcl"><small>THE HIVE</small><b>' + esc(lvName || "Your medications") + '</b></div><div class="hvcr"><b>' + full + '</b>/' + allIds.length + ' full</div></div>';
+  var art = ""; try { art = learnBugSVG(); } catch (e) {}
+  var line = pct >= 100 ? "Whole hive's full of honey. Mighty fine work, partner." : lp === 0 ? esc(nameOf(low)) + " is bone dry. A few questions'll get it started." : esc(nameOf(low)) + "'s runnin' low, partner. Let's top it off.";
+  c += '<div class="hvsay"><span class="hvbug">' + art + '</span><p><b>Hickory:</b> ' + line + '</p></div>';
+  c += '<div class="hvbtns"><button class="btn" data-sess="sys" data-sys="' + weakG.g.key + '">Quiz ' + esc(weakG.g.name.split(/ & |, /)[0]) + '</button><button class="btn ghost" data-act="lrngo" data-lsys="' + weakG.g.key + '">Learn it</button></div>';
+  c += '<div class="hvlegend">' + G.map(function (x) { return '<button data-hvjump="' + x.gi + '"><i class="hvdot g' + (x.gi % 6) + '"></i>' + esc(x.g.name) + '<span>' + x.pct + '%</span></button>'; }).join("") + '</div>';
+  c += '<p class="hvhint">Each cell is a drug. Right answers fill it with honey. Tap a cell to open its card.</p>';
+  var per = window.innerWidth >= 900 ? [9, 8] : window.innerWidth >= 600 ? [6, 5] : [4, 3], rows = [], i = 0, r = 0, first = {};
+  while (i < cells.length) { rows.push(cells.slice(i, i + per[r % 2])); i += per[r % 2]; r++; }
+  c += '<div class="hvhive hvbig">' + rows.map(function (row) {
+    return '<div class="hvrow">' + row.map(function (x) {
+      var id = x[0], p = Math.round(MSCORE[mastery(id)] * 100), anchor = first[x[1]] ? "" : ' id="hvg' + x[1] + '"'; first[x[1]] = 1;
+      return '<button' + anchor + ' class="hvx g' + (x[1] % 6) + (p >= 100 ? ' full' : '') + (id === low && p < 100 ? ' weak' : '') + '" data-drug="' + esc(id) + '" aria-label="' + esc(nameOf(id)) + ', ' + p + '% honey"><span class="hvi"><span class="hvf" style="height:' + p + '%"></span><b>' + esc(nameOf(id)) + '</b></span></button>';
+    }).join("") + '</div>';
+  }).join("") + '</div></section>';
+  return c;
+}
+/* ---- your own stats (everyone) ---- */
+function hvMeStats() {
+  var P = Prog.d || {}, D = P.drugs || {}, ids = Object.keys(D).filter(function (id) { return D[id] && D[id].n; });
+  var n = 0, ok = 0; ids.forEach(function (id) { n += D[id].n; ok += D[id].c || 0; });
+  var answered = Math.max(P.answered || 0, n), acc = n ? Math.round(100 * ok / n) : null, lv = xpLevel(P.xp || 0);
+  var cnt = { "new": 0, learning: 0, familiar: 0, proficient: 0, mastered: 0 }; ids.forEach(function (id) { cnt[mastery(id)]++; });
+  var honey = ids.length ? Math.round(100 * ids.reduce(function (t, id) { return t + MSCORE[mastery(id)]; }, 0) / ids.length) : 0;
+  var days = P.days || {}, dkeys = Object.keys(days).filter(function (k) { return days[k] > 0; }), adp = P.adp || [], adpOk = adp.reduce(function (t, x) { return t + (x ? 1 : 0); }, 0);
+  var now = Date.now(), due = ids.filter(function (id) { return D[id].due && D[id].due < now && mastery(id) !== "mastered"; }).length;
+  var achN = Object.keys(P.ach || {}).length, games = 0; Object.keys(P.games || {}).forEach(function (k) { games += P.games[k] || 0; });
+  var cn = 0, cc = 0; Object.keys(P.calc || {}).forEach(function (k) { cn += P.calc[k].n || 0; cc += P.calc[k].c || 0; });
+  var tile = function (v, l, s) { return '<div class="mst"><b>' + v + '</b><span>' + l + '</span>' + (s ? '<small>' + s + '</small>' : '') + '</div>'; };
+  var c = '<section class="mstats"><p class="muted small">These are your own numbers. They are saved on this device' + (Prog.synced ? " and in your account" : "") + ', and nobody else sees this page.</p>';
+  if (!answered) c += '<div class="hvsay"><span class="hvbug">' + (function () { try { return learnBugSVG(); } catch (e) { return ""; } })() + '</span><p><b>Hickory:</b> Nothin\' to count yet, partner. Answer a few questions and this page fills right up.</p></div>';
+  c += '<div class="mstgrid">' +
+    tile(lv.lv, "Level", lv.into + " of " + lv.need + " XP to the next") +
+    tile(P.streak || 0, "Day streak", "Best " + (P.best || 0)) +
+    tile(answered.toLocaleString(), "Questions answered", dkeys.length + " day" + (dkeys.length === 1 ? "" : "s") + " studied") +
+    tile(acc == null ? "--" : acc + "%", "Right overall", n ? ok.toLocaleString() + " of " + n.toLocaleString() : "") +
+    tile(adp.length ? adpOk + "/" + adp.length : "--", "Last " + (adp.length || 30) + " answers", adp.length ? Math.round(100 * adpOk / adp.length) + "% right" : "") +
+    tile(ids.length, "Drugs studied", cnt.mastered + " mastered") +
+    tile(honey + "%", "Honey", "Across the drugs you have studied") +
+    tile(due, "Due for review", due ? "Ready to quiz again" : "All caught up") +
+    tile(achN + "/" + ACH.length, "Achievements", "") +
+    tile((P.earned || 0).toLocaleString(), "Sticks earned", sticks().toLocaleString() + " to spend") +
+    (games ? tile(games, "Games played", "") : "") + (cn ? tile(Math.round(100 * cc / cn) + "%", "Calculations right", cc + " of " + cn) : "") + '</div>';
+  /* last 14 days */
+  var L = [], mx = 1, d0 = new Date(); d0.setHours(12, 0, 0, 0);
+  for (var i = 13; i >= 0; i--) { var d = new Date(d0.getTime() - i * 864e5), k = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"), v = days[k] || 0; if (v > mx) mx = v; L.push([d, v]); }
+  c += '<h3 class="msth">Last 14 days</h3><div class="mstdays">' + L.map(function (x) { return '<div class="mstday" title="' + x[1] + ' answered"><i style="height:' + Math.max(x[1] ? 8 : 2, Math.round(100 * x[1] / mx)) + '%"' + (x[1] ? "" : ' class="z"') + '></i><span>' + "SMTWTFS"[x[0].getDay()] + '</span></div>'; }).join("") + '</div>';
+  /* mastery spread */
+  if (ids.length) {
+    var ML = [["mastered", "Mastered"], ["proficient", "Proficient"], ["familiar", "Familiar"], ["learning", "Learning"]];
+    c += '<h3 class="msth">Mastery of the drugs you have studied</h3><div class="mstbar">' + ML.map(function (m) { return cnt[m[0]] ? '<i class="m-' + m[0] + '" style="flex:' + cnt[m[0]] + '"></i>' : ""; }).join("") + '</div><div class="mstleg">' + ML.map(function (m) { return '<span><i class="m-' + m[0] + '"></i>' + m[1] + ' ' + cnt[m[0]] + '</span>'; }).join("") + '</div>';
+  }
+  /* by body system */
+  try {
+    var GR = LGROUPS.map(function (g) { var gi = lcatIds("g:" + g[0]).filter(function (id) { return D[id] && D[id].n; }), a = 0, b = 0; gi.forEach(function (id) { a += D[id].n; b += D[id].c || 0; }); return { name: g[1], n: a, pct: a ? Math.round(100 * b / a) : 0, k: gi.length }; }).filter(function (x) { return x.n; }).sort(function (a, b) { return a.pct - b.pct; });
+    if (GR.length) c += '<h3 class="msth">By body system, weakest first</h3><div class="mstrows">' + GR.map(function (x) { return '<div class="mstrow"><span>' + esc(x.name) + '</span><div class="mstrk"><i style="width:' + x.pct + '%"></i></div><b>' + x.pct + '%</b><small>' + x.n + ' answers</small></div>'; }).join("") + '</div>';
+  } catch (e) {}
+  /* strongest and weakest drugs */
+  var R = ids.filter(function (id) { return D[id].n >= 3 && DB.drugs[id]; }).map(function (id) { return { id: id, pct: Math.round(100 * (D[id].c || 0) / D[id].n), n: D[id].n }; });
+  var li = function (x) { return '<button class="mstdrug" data-drug="' + esc(x.id) + '"><span>' + esc(nameOf(x.id)) + '</span><b>' + x.pct + '%</b><small>' + x.n + ' answers</small></button>'; };
+  if (R.length >= 2) {
+    var up = R.slice().sort(function (a, b) { return b.pct - a.pct || b.n - a.n; }).slice(0, 5), dn = R.slice().sort(function (a, b) { return a.pct - b.pct || b.n - a.n; }).slice(0, 5);
+    c += '<div class="mst2"><div><h3 class="msth">Strongest drugs</h3>' + up.map(li).join("") + '</div><div><h3 class="msth">Needs work</h3>' + dn.map(li).join("") + '</div></div>';
+  }
+  return c + '</section>';
+}
+document.addEventListener("click", function (e) {
+  var t = e.target.closest && e.target.closest("[data-hvjump]");
+  if (t) { var el = document.getElementById("hvg" + t.getAttribute("data-hvjump")); if (el) try { el.scrollIntoView({ behavior: "smooth", block: "center" }); } catch (x) { el.scrollIntoView(); } return; }
+  t = e.target.closest && e.target.closest("[data-hvgo]"); if (!t) return;
+  var k = t.getAttribute("data-hvgo"), lv = store("lastLevel") || (Prog.d && Prog.d.startLevel) || "paramedic";
+  if (k === "menu") go("home"); else if (k === "hive") go("level", { level: lv });
+  else if (k === "qs") { go("level", { level: lv }); S.tab = "prep"; render(); }
+  else if (k === "rush") { go("level", { level: lv }); S.tab = "rush"; render(); }
+  else if (k === "search") { var sb = document.querySelector('[data-act="gsearch"]'); if (sb) sb.click(); }
+  else if (k === "terr") go("terrarium"); else if (k === "stats") go("stats");
+});
+function hvNav() {
+  var n = document.getElementById("hvnav");
+  if (!hvOn()) { if (n) n.hidden = true; return; }
+  if (!n) {
+    n = document.createElement("nav"); n.id = "hvnav"; n.setAttribute("aria-label", "Main");
+    n.innerHTML = [["search", "Search", '<path d="M10.500 3a7.500 7.500 0 0 1 5.900 12.100l4.300 4.200-1.500 1.500-4.200-4.300A7.500 7.500 0 1 1 10.500 3zm0 2.500a5 5 0 1 0 0 10 5 5 0 0 0 0-10z"/>'], ["hive", "Hive", '<path d="M12 2 21 7v10l-9 5-9-5V7z"/>'], ["qs", "Questions", '<path d="M4 4h16v13H9l-5 4zm7 9h2v2h-2zm1-7a3 3 0 0 0-3 3h2a1 1 0 1 1 1.500.9c-.9.5-1.500 1.200-1.500 2.100h2c0-.4.300-.6.800-.9A3 3 0 0 0 12 6z"/>'],
+      ["menu", "Menu", '<path d="M12 4 4 11h2v8h4.500v-5h3v5H18v-8h2z"/>'],
+      ["rush", "Bug Rush", '<path d="M13 2 4 14h6l-1 8 9-12h-6z"/>'], ["terr", "Terrarium", '<path d="M9 3l1.500 2h3L15 3l1.500 1-1.300 1.800A5 5 0 0 1 17 9h3v2h-3v2h3v2h-3a5 5 0 0 1-10 0H4v-2h3v-2H4V9h3a5 5 0 0 1 1.800-3.200L7.500 4z"/>'], ["stats", "Stats", '<path d="M4 20V10h4v10zm6 0V4h4v16zm6 0v-7h4v7z"/>']]
+      .map(function (x) { return x[0] === "menu" ? '<button class="hvmenu" data-hvgo="menu" aria-label="Main menu"><span class="hvhex">' + hvIc(x[2]) + '</span>Menu</button>' : '<button data-hvgo="' + x[0] + '">' + hvIc(x[2]) + x[1] + '</button>'; }).join("");
+    document.body.appendChild(n);
+  }
+  var cur = S.view === "home" ? "menu" : S.view === "terrarium" ? "terr" : S.view === "stats" ? "stats" : S.view === "level" ? (S.tab === "prep" ? "qs" : S.tab === "rush" ? "rush" : "hive") : "";
+  Array.prototype.forEach.call(n.children, function (b) { if (b.getAttribute("data-hvgo") === cur) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
+  n.hidden = !agreeRec();
+}
+var hvRender0 = render;
+render = function () { var r = hvRender0.apply(this, arguments); try { hvNav(); } catch (e) {} return r; };
+try { hvNav(); } catch (e) {}
+
+/* Beginner to Medicine: swipe the idea card (owner, Nov 20 2026) */
+(function () {
+  var sx = 0, sy = 0, on = false;
+  document.addEventListener("touchstart", function (e) { var c = e.target.closest && e.target.closest(".bglc"); on = !!c && e.touches.length === 1; if (on) { sx = e.touches[0].clientX; sy = e.touches[0].clientY; } }, { passive: true });
+  document.addEventListener("touchend", function (e) {
+    if (!on) return; on = false; var t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+    if (Math.abs(dx) < 45 || Math.abs(dy) > 70) return;
+    var b = document.querySelector(dx < 0 ? "[data-bgnext]" : "[data-bgprev]"); if (!b) return;
+    store("bgSw", (store("bgSw") || 0) + 1); b.click();
+  }, { passive: true });
+})();
+
 })();
