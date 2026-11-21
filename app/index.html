@@ -3988,6 +3988,22 @@ html.hive .route.rmini p,html.hive .route.rmini .rmore{color:var(--muted);opacit
 html.hive .route.rmini .eyebrow{color:var(--hv-hn)}
 html.hive .route.rmini .rchips span,html.hive .route.rmini.md .rchips span{background:color-mix(in srgb,var(--pc) 18%,var(--surface-2));color:var(--ink)}
 html.hive .route.rmini .count{color:var(--muted)}
+
+/* ---- Plans screen in the Hive look (owner, Nov 20 2026: "redo the pay wall screen to match the new theme"). Colours and shapes only;
+   every word, price, button and legal line is unchanged. Classic look keeps the old colours. ---- */
+html.hive #pwdlg .panel:focus{outline:none}
+html.hive #pwdlg .pwpanel{border:1px solid var(--line);border-top:4px solid #F5A524}
+html.hive .pwhead{padding-bottom:12px;border-bottom:1px solid var(--line);margin-bottom:14px}
+html.hive .pwhead h2{background:none;-webkit-background-clip:border-box;background-clip:border-box;color:var(--ink)}
+html.hive .pwtier{background:var(--surface-2);border:1px solid var(--line);border-left:4px solid #F5A524;border-radius:14px;padding:14px 14px 6px;margin:0 0 14px}
+html.hive .pwtier.pw-pro{border-left-color:#E0890B}
+html.hive .pwtier h3{margin:0 0 10px;font-family:var(--f-display);font-size:19px}
+html.hive .pwperks li:before{content:"";left:1px;top:4px;width:11px;height:12px;background:#F5A524;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}
+html.hive .pwperks span{color:var(--ink);opacity:.86}
+html.hive .pwplan{background:var(--bg);border:2px solid var(--line);min-height:64px}
+html.hive .pwplan strong{font-size:20px}
+html.hive .pwplan.best{border-color:#F5A524}
+html.hive .pwtag{background:#F5A524;color:#1A1305!important}
 /* personal stats (both looks) */
 .mstats{display:flex;flex-direction:column;gap:12px}
 .mstgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px}
