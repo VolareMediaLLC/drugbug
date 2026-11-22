@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>DrugBug Analytics</title>
+<meta name="theme-color" content="#13111c">
+<link rel="icon" type="image/png" sizes="48x48" href="../admin/icon-48.png">
+<style>
+:root{--bg:#f6f4fc;--surface:#fff;--surface2:#f1edfa;--ink:#1c1730;--muted:#5f5878;--line:#e2dcef;--grid:#ece8f4;--accent:#6d28d9;--s1:#2a78d6;--s2:#eb6834;--good:#047857;--warn:#b45309;--bad:#b91c1c;--h0:#f1edfa;--h1:#cde2fb;--h2:#9ec5f4;--h3:#6da7ec;--h4:#3987e5;--h5:#256abf;--h6:#184f95;--h7:#0d366b;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#13111c;--surface:#1d1a2a;--surface2:#251f37;--ink:#f2effb;--muted:#aaa3c4;--line:#322c47;--grid:#2a2540;--accent:#a78bfa;--s1:#3987e5;--s2:#d95926;--good:#34d399;--warn:#fbbf24;--bad:#f87171;--h0:#251f37;--h1:#0d366b;--h2:#104281;--h3:#184f95;--h4:#1c5cab;--h5:#2a78d6;--h6:#5598e7;--h7:#9ec5f4;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#13111c;--surface:#1d1a2a;--surface2:#251f37;--ink:#f2effb;--muted:#aaa3c4;--line:#322c47;--grid:#2a2540;--accent:#a78bfa;--s1:#3987e5;--s2:#d95926;--good:#34d399;--warn:#fbbf24;--bad:#f87171;--h0:#251f37;--h1:#0d366b;--h2:#104281;--h3:#184f95;--h4:#1c5cab;--h5:#2a78d6;--h6:#5598e7;--h7:#9ec5f4;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1320px;margin:0 auto;padding:14px 16px 70px}
+.hide{display:none!important}
+header.site{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:2px 0 12px;border-bottom:1px solid var(--line)}
+header.site img{width:34px;height:34px;border-radius:9px}header.site b{font-size:19px}
+.badge{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:99px;background:var(--accent);color:#fff}
+.who{margin-left:auto;color:var(--muted);font-size:13px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.bar{position:sticky;top:0;z-index:5;background:var(--bg);display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);margin-bottom:14px}
+.bar select{width:auto;max-width:100%}
+nav.tabs{display:flex;gap:4px;overflow-x:auto}
+nav.tabs button{flex:none;font:inherit;font-weight:650;font-size:14px;padding:7px 12px;border-radius:10px;border:1px solid transparent;background:transparent;color:var(--muted);cursor:pointer}
+nav.tabs button[aria-selected=true]{color:var(--ink);background:var(--surface);border-color:var(--line);box-shadow:inset 0 -2px 0 var(--accent)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px;min-width:0}
+.card h2{font-size:17px;margin:0 0 2px}.card h3{font-size:15px;margin:0 0 2px}
+.sub{color:var(--muted);font-size:13px;margin:0 0 12px}
+.muted{color:var(--muted)}.small{font-size:13px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media (max-width:900px){.grid2{grid-template-columns:1fr}}
+button.btn{font:inherit;font-weight:700;font-size:14px;padding:8px 13px;border-radius:10px;border:0;background:var(--accent);color:#fff;cursor:pointer}
+button.ghost{font:inherit;font-size:13px;font-weight:650;padding:6px 11px;border-radius:9px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+button.ghost:hover{border-color:var(--accent)}button:disabled{opacity:.5;cursor:default}
+a{color:var(--accent)}
+input,select,textarea{font:inherit;font-size:14px;padding:7px 10px;border-radius:9px;border:1px solid var(--line);background:var(--surface2);color:var(--ink);width:100%}
+label.sw{display:inline-flex;gap:6px;align-items:center;font-size:13px;color:var(--muted)}label.sw input{width:auto}
+.msg{padding:10px 12px;border-radius:10px;background:var(--surface2);border:1px solid var(--line);font-size:14px;margin:8px 0}.msg.err{border-color:var(--bad)}.msg.ok{border-color:var(--good)}
+/* KPI tiles */
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:14px}
+@media (max-width:1000px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px}
+.kpi .l{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.kpi .v{font-size:28px;font-weight:750;font-variant-numeric:tabular-nums;line-height:1.2;margin-top:4px}
+.kpi .d{font-size:12.5px;color:var(--muted);margin-top:4px;font-variant-numeric:tabular-nums}
+.kpi .d b.up{color:var(--good)}.kpi .d b.dn{color:var(--bad)}
+/* charts */
+.chart{position:relative;width:100%}
+.chart svg{display:block;width:100%;overflow:visible}
+.chart text{fill:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
+.tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:7px 9px;font-size:12.5px;box-shadow:0 6px 18px rgba(0,0,0,.18);white-space:nowrap;z-index:3;color:var(--ink)}
+.tip b{font-variant-numeric:tabular-nums}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin:2px 0 8px}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.legend i.dash{background:repeating-linear-gradient(90deg,var(--muted) 0 4px,transparent 4px 7px)!important}
+/* heatmap */
+.heat{display:grid;grid-template-columns:38px repeat(24,minmax(0,1fr));gap:2px;font-size:11px;color:var(--muted)}
+.heat .c{aspect-ratio:1/1;border-radius:3px;background:var(--h0);min-height:10px}
+.heat .c:hover{outline:2px solid var(--ink)}
+.heat .rl{display:flex;align-items:center}
+.heatkey{display:flex;gap:2px;align-items:center;font-size:11.5px;color:var(--muted);margin-top:8px}.heatkey span{width:18px;height:10px;border-radius:2px}
+/* bars and tables */
+.trk{display:grid;grid-template-columns:150px repeat(3,minmax(0,1fr));gap:6px 14px;align-items:center;font-size:13.5px}
+.trk .h{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.hb{display:flex;align-items:center;gap:8px}.hb span.b{height:12px;border-radius:0 4px 4px 0;background:var(--s1);min-width:2px}.hb em{font-style:normal;font-variant-numeric:tabular-nums;color:var(--ink)}
+@media (max-width:700px){.trk{grid-template-columns:100px repeat(3,minmax(0,1fr));font-size:12.5px}}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;white-space:nowrap}
+th[data-s]{cursor:pointer}th[data-s]:hover{color:var(--ink)}
+td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}th.n{text-align:right}
+.flag{display:inline-block;font-size:11.5px;font-weight:700;padding:1px 7px;border-radius:99px;border:1px solid currentColor;margin:1px 4px 1px 0;white-space:nowrap}
+.flag.bad{color:var(--bad)}.flag.warn{color:var(--warn)}.flag.ok{color:var(--good)}
+.dist{display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--grid);margin-top:4px;max-width:240px}
+.dist span{display:block;height:100%}
+.qtext{max-width:520px}
+.lab{width:150px;padding:4px 8px;font-size:13px}
+.divnote{font-size:12px;color:var(--muted)}
+.guide h3{margin:4px 0 8px;font-size:18px}.guide h4{margin:16px 0 4px;font-size:15px}.guide ul,.guide ol{padding-left:22px}.guide li{margin:4px 0}.guide p{margin:6px 0}
+.hero{border:2px solid var(--good);border-radius:14px;padding:16px;background:var(--surface)}
+.hero h2{margin:0 0 6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="site">
+  <img src="../admin/icon-48.png" alt=""><b>DrugBug Analytics</b><span class="badge" id="roleBadge"></span>
+  <div class="who" id="who"></div>
+</header>
+
+<section id="vIn" class="card hide" style="max-width:440px;margin:40px auto">
+  <h2>Sign in</h2><p class="sub">For the DrugBug owner and class instructors.</p>
+  <label class="small" for="em">Email</label><input id="em" type="email" autocomplete="email">
+  <label class="small" for="pw" style="display:block;margin-top:8px">Password</label><input id="pw" type="password" autocomplete="current-password">
+  <div class="row" style="margin-top:12px"><button class="btn" id="bIn">Sign in</button><button class="ghost" id="bGoogle">Continue with Google</button></div>
+  <div id="inMsg" class="msg err hide"></div>
+</section>
+
+<div id="vMain" class="hide">
+  <div class="bar">
+    <select id="scope" aria-label="What to show"></select>
+    <select id="range" aria-label="Date range"><option value="30">Last 30 days</option><option value="90" selected>Last 90 days</option><option value="180">Last 180 days</option><option value="365">Last 365 days</option></select>
+    <select id="plat" aria-label="Platform"><option value="">Web and iPhone</option><option value="web">Web</option><option value="ios">iPhone</option></select>
+    <select id="trackSel" aria-label="Specialty track"><option value="">All tracks</option></select>
+    <label class="sw" id="intWrap"><input type="checkbox" id="internal"> Include internal / test traffic</label>
+    <nav class="tabs" id="tabs" style="margin-left:auto"></nav>
+  </div>
+  <div id="topMsg" class="msg hide"></div>
+  <div id="page"></div>
+</div>
+</div>
+
+<script src="../app/vendor/firebase-app-compat.js"></script>
+<script src="../app/vendor/firebase-auth-compat.js"></script>
+<script>
+(function () {
+  "use strict";
+  /* DrugBug Analytics (Nov 21 2026). The owner sees everyone, all schools, or any one school; an instructor sees only their
+     own classes. Who may see what is decided by the server (functions/analytics.js), never by this page. Student names
+     never leave the instructor's browser: the roster labels below are kept in this browser's storage and in a file the
+     instructor saves on their own computer. */
+  var CFG = { apiKey: "AIzaSyC7cNkPSpPqfHPLNSY54u8QSL1jnaYsVMM", authDomain: "drugbug-69d42.firebaseapp.com", projectId: "drugbug-69d42", appId: "1:123306339603:web:2a0021f13fd8e620253ee6" };
+  var FN = "https://us-central1-drugbug-69d42.cloudfunctions.net/";
+  var local = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) && /[?&]emu=1/.test(location.search);
+  if (local) { CFG.apiKey = "demo-key"; CFG.projectId = "demo-drugbug"; FN = "http://127.0.0.1:5001/demo-drugbug/us-central1/"; }
+  firebase.initializeApp(CFG);
+  var auth = firebase.auth();
+  if (local) auth.useEmulator("http://127.0.0.1:9099", { disableWarnings: true });
+
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
+  var show = function (el, on) { (typeof el === "string" ? $(el) : el).classList.toggle("hide", !on); };
+  var fmt = function (n) { return n == null || isNaN(n) ? "—" : Math.round(n).toLocaleString(); };
+  var pct = function (c, n) { return n ? (100 * c) / n : null; };
+  var pf = function (v) { return v == null ? "—" : (Math.round(v * 10) / 10).toFixed(1) + "%"; };
+  var ago = function (ms) { if (!ms) return "never"; var d = Math.floor((Date.now() - ms) / 86400000); return d < 1 ? "today" : d === 1 ? "yesterday" : d + " days ago"; };
+  function call(name, data) {
+    var u = auth.currentUser; if (!u) return Promise.reject(new Error("Sign in first."));
+    return u.getIdToken().then(function (tok) { return fetch(FN + name, { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + tok }, body: JSON.stringify({ data: data || {} }) }); })
+      .then(function (r) { if (r.status === 404) throw new Error("not deployed"); return r.json(); }).then(function (j) { if (j.error) throw new Error(j.error.message || j.error.status); return j.result; });
+  }
+  var errTxt = function (e) { return /not deployed|failed to fetch|cors/i.test((e && e.message) || "") ? "The analytics part of the server is not deployed yet. Double-click DEPLOY.cmd on your PC, then refresh." : (e && e.message) || "Something went wrong."; };
+  function top(t, k) { var m = $("topMsg"); m.className = "msg " + (k || ""); m.textContent = t; show(m, !!t); }
+
+  var TRACKS = { ph: "Prehospital (EMS)", rn: "Nursing", md: "Medical school", im: "Imaging", ah: "Allied health", gen: "General public", ev: "Evaluators", fm: "Field medic", other: "Not chosen" };
+  var MODES = { std: "Question banks", rush: "Bug Rush", proto: "Protocols", game: "Games" };
+  var LV = { emt: "EMT", aemt: "AEMT", paramedic: "Paramedic", flight: "Flight Paramedic", cp: "Community Paramedic", cpp: "Critical Care Paramedic", cna: "CNA", lvn: "LVN / LPN", rn: "RN", rnschool: "Nursing school (RN)", rnbridge: "Paramedic to RN bridge", flightrn: "Flight Nurse", ms1: "Medical Student (Preclinical)", ms3: "Medical Student (Clinical)", intern: "Intern" };
+  var DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  
+  /* ---------- catalogue: question text, drug and drug class for question ids (public question bank) ---------- */
+  var CAT = null;
+  function catalog() {
+    if (CAT) return Promise.resolve(CAT);
+    return fetch("../qedit/catalog.json?v=" + Math.floor(Date.now() / 3600000)).then(function (r) { return r.json(); }).then(function (c) {
+      var by = {}; c.items.forEach(function (it) { by[it.id] = it; by[String(it.id).toLowerCase()] = by[String(it.id).toLowerCase()] || it; });
+      CAT = { by: by, classes: c.classes || {} }; return CAT;
+    }).catch(function () { CAT = { by: {}, classes: {} }; return CAT; });
+  }
+  function hashStr(s) { var h = 5381; s = String(s); for (var i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0; return (h >>> 0).toString(36); }
+  function wrongText(it, h) { if (!it || !it.w) return null; for (var i = 0; i < it.w.length; i++) if (hashStr(it.w[i]).slice(0, 6) === h) return it.w[i]; return null; }
+  var EDGES = [0, 10, 20, 40, 90, 180, 300];   /* band edges in seconds; the last band is "over 3 minutes" */
+  function medianSec(t) { var n = 0, i; for (i = 0; i < 6; i++) n += t[i] || 0; if (!n) return null; var half = n / 2, run = 0; for (i = 0; i < 6; i++) { var b = t[i] || 0; if (b && run + b >= half) return Math.round(EDGES[i] + ((half - run) / b) * (EDGES[i + 1] - EDGES[i])); run += b; } return 300; }   /* interpolated inside the band */
+
+  /* ---------- chart helpers (hand-built SVG: one axis, recessive grid, hover crosshair + tooltip) ---------- */
+  function niceMax(v) { if (!(v > 0)) return 1; var p = Math.pow(10, Math.floor(Math.log10(v))), m = v / p; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10) * p; }
+  /* series: [{name, color (css var), values: [number|null], dash?}], x: labels. marker: index of the clean-telemetry divider */
+  function lineChart(el, x, series, o) {
+    o = o || {}; var W = el.clientWidth || 600, H = o.h || 200, L = 44, R = 12, T = 10, B = 24, iw = W - L - R, ih = H - T - B;
+    var max = niceMax(Math.max.apply(null, series.map(function (s) { return Math.max.apply(null, s.values.map(function (v) { return v || 0; })); })) * 1.05);
+    var X = function (i) { return L + (x.length <= 1 ? iw / 2 : (i * iw) / (x.length - 1)); }, Y = function (v) { return T + ih - (v / max) * ih; };
+    var g = "", k;
+    for (k = 0; k <= 4; k++) { var gv = (max * k) / 4, gy = Y(gv); g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + gy + '" y2="' + gy + '" stroke="var(--grid)"/><text x="' + (L - 6) + '" y="' + (gy + 4) + '" text-anchor="end">' + (o.fmt ? o.fmt(gv) : fmt(gv)) + "</text>"; }
+    var step = Math.max(1, Math.ceil(x.length / Math.max(2, Math.floor(iw / 80))));
+    for (k = 0; k < x.length; k += step) g += '<text x="' + X(k) + '" y="' + (H - 6) + '" text-anchor="middle">' + esc(o.xfmt ? o.xfmt(x[k]) : x[k]) + "</text>";
+    if (o.marker != null && o.marker >= 0 && o.marker < x.length) { var mx = X(o.marker); var right = mx > W * 0.55; g += '<line x1="' + mx + '" x2="' + mx + '" y1="' + T + '" y2="' + (T + ih) + '" stroke="var(--good)" stroke-width="1.5" stroke-dasharray="4 3"/><text x="' + (right ? mx - 5 : mx + 5) + '" y="' + (T + 11) + '" text-anchor="' + (right ? "end" : "start") + '" style="fill:var(--good);font-weight:700">Clean telemetry active</text>'; }
+    series.forEach(function (s) {
+      var d = "", pen = false;
+      s.values.forEach(function (v, i) { if (v == null) { pen = false; return; } d += (pen ? "L" : "M") + X(i).toFixed(1) + " " + Y(v).toFixed(1); pen = true; });
+      g += '<path d="' + d + '" fill="none" stroke="' + s.color + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"' + (s.dash ? ' stroke-dasharray="5 4"' : "") + "/>";
+    });
+    el.innerHTML = '<svg viewBox="0 0 ' + W + " " + H + '" height="' + H + '" role="img" aria-label="' + esc(o.label || "chart") + '">' + g + '<line class="xh" y1="' + T + '" y2="' + (T + ih) + '" stroke="var(--muted)" stroke-width="1" visibility="hidden"/>' + series.map(function (s, i) { return '<circle class="dot' + i + '" r="4" fill="' + s.color + '" stroke="var(--surface)" stroke-width="2" visibility="hidden"/>'; }).join("") + '<rect x="' + L + '" y="' + T + '" width="' + iw + '" height="' + ih + '" fill="transparent"/></svg><div class="tip hide"></div>';
+    var svg = el.querySelector("svg"), tip = el.querySelector(".tip"), xh = svg.querySelector(".xh");
+    svg.addEventListener("mousemove", function (e) {
+      var r = svg.getBoundingClientRect(), px = ((e.clientX - r.left) / r.width) * W, i = Math.round(((px - L) / iw) * (x.length - 1)); i = Math.max(0, Math.min(x.length - 1, i));
+      xh.setAttribute("x1", X(i)); xh.setAttribute("x2", X(i)); xh.setAttribute("visibility", "visible");
+      series.forEach(function (s, j) { var c = svg.querySelector(".dot" + j), v = s.values[i]; if (v == null) c.setAttribute("visibility", "hidden"); else { c.setAttribute("cx", X(i)); c.setAttribute("cy", Y(v)); c.setAttribute("visibility", "visible"); } });
+      tip.innerHTML = "<div>" + esc(o.tfmt ? o.tfmt(x[i]) : x[i]) + "</div>" + series.map(function (s) { return '<div><span style="display:inline-block;width:10px;height:3px;background:' + s.color + ';vertical-align:middle;margin-right:6px"></span>' + esc(s.name) + " <b>" + (s.values[i] == null ? "—" : o.fmt ? o.fmt(s.values[i]) : fmt(s.values[i])) + "</b></div>"; }).join("");
+      show(tip, true); var tx = (X(i) / W) * r.width; tip.style.left = Math.min(r.width - tip.offsetWidth - 4, Math.max(0, tx + 12)) + "px"; tip.style.top = "8px";
+    });
+    svg.addEventListener("mouseleave", function () { show(tip, false); xh.setAttribute("visibility", "hidden"); series.forEach(function (s, j) { svg.querySelector(".dot" + j).setAttribute("visibility", "hidden"); }); });
+  }
+  function legend(items) { return '<div class="legend">' + items.map(function (s) { return '<span><i' + (s.dash ? ' class="dash"' : "") + ' style="background:' + s.color + '"></i>' + esc(s.name) + "</span>"; }).join("") + "</div>"; }
+  function heatmap(el, cells, note) {
+    /* cells[dow][hour] = number */
+    var max = 0, d, h; for (d = 0; d < 7; d++) for (h = 0; h < 24; h++) max = Math.max(max, cells[d][h] || 0);
+    var lev = function (v) { return !v ? 0 : Math.min(7, 1 + Math.floor((v / max) * 6.999)); };
+    var c = '<div class="heat"><span></span>' + Array.from({ length: 24 }, function (_, i) { return '<span style="text-align:center">' + (i % 3 === 0 ? (i === 0 ? "12a" : i < 12 ? i + "a" : i === 12 ? "12p" : i - 12 + "p") : "") + "</span>"; }).join("");
+    for (d = 0; d < 7; d++) { c += '<span class="rl">' + DAYS[d] + "</span>"; for (h = 0; h < 24; h++) c += '<span class="c" style="background:var(--h' + lev(cells[d][h]) + ')" data-t="' + DAYS[d] + " " + (h === 0 ? "12 am" : h < 12 ? h + " am" : h === 12 ? "12 pm" : h - 12 + " pm") + ": " + fmt(cells[d][h] || 0) + ' active minutes"></span>'; }
+    c += '</div><div class="heatkey">Fewer <span style="background:var(--h1)"></span><span style="background:var(--h3)"></span><span style="background:var(--h5)"></span><span style="background:var(--h7)"></span> More active minutes' + (note ? ' <span style="margin-left:auto">' + esc(note) + "</span>" : "") + '</div><div class="tip hide"></div>';
+    el.innerHTML = c; el.style.position = "relative";
+    var tip = el.querySelector(".tip");
+    el.querySelectorAll(".c").forEach(function (x) { x.onmouseenter = function () { tip.textContent = x.dataset.t; show(tip, true); var r = el.getBoundingClientRect(), b = x.getBoundingClientRect(); tip.style.left = Math.min(r.width - tip.offsetWidth - 4, b.left - r.left + 14) + "px"; tip.style.top = b.top - r.top - 34 + "px"; }; x.onmouseleave = function () { show(tip, false); }; });
+  }
+  function scatter(el, pts, o) {
+    /* pts: [{x: accuracy 0-100, y: seconds, n: volume, label, id, flag}] */
+    var W = el.clientWidth || 600, H = 300, L = 44, R = 14, T = 12, B = 34, iw = W - L - R, ih = H - T - B;
+    var ymax = niceMax(Math.max.apply(null, pts.map(function (p) { return p.y; }).concat([60])) * 1.05), nmax = Math.max.apply(null, pts.map(function (p) { return p.n; }).concat([1]));
+    var X = function (v) { return L + (v / 100) * iw; }, Y = function (v) { return T + ih - (v / ymax) * ih; }, Rr = function (n) { return 4 + 10 * Math.sqrt(n / nmax); };
+    var g = "", k;
+    for (k = 0; k <= 4; k++) { var gv = (ymax * k) / 4; g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(gv) + '" y2="' + Y(gv) + '" stroke="var(--grid)"/><text x="' + (L - 6) + '" y="' + (Y(gv) + 4) + '" text-anchor="end">' + Math.round(gv) + "s</text>"; }
+    for (k = 0; k <= 100; k += 20) g += '<text x="' + X(k) + '" y="' + (H - 16) + '" text-anchor="middle">' + k + "%</text>";
+    g += '<text x="' + (L + iw / 2) + '" y="' + (H - 2) + '" text-anchor="middle">First-try accuracy</text>';
+    g += '<line x1="' + X(35) + '" x2="' + X(35) + '" y1="' + T + '" y2="' + (T + ih) + '" stroke="var(--bad)" stroke-dasharray="4 3"/>';
+    g += '<text x="' + (X(35) - 6) + '" y="' + (T + 12) + '" text-anchor="end" style="fill:var(--bad)">Under 35%</text>';
+    g += '<text x="' + (X(17)) + '" y="' + (T + ih - 6) + '" text-anchor="middle">Quick and wrong: confusing or mis-keyed?</text><text x="' + X(17) + '" y="' + (T + 26) + '" text-anchor="middle">Slow and wrong: hard</text>';
+    pts.forEach(function (p, i) { g += '<circle data-i="' + i + '" cx="' + X(p.x).toFixed(1) + '" cy="' + Y(p.y).toFixed(1) + '" r="' + Rr(p.n).toFixed(1) + '" fill="var(--s1)" fill-opacity=".55" stroke="var(--surface)" stroke-width="2" style="cursor:pointer"/>'; });
+    el.innerHTML = '<svg viewBox="0 0 ' + W + " " + H + '" height="' + H + '" role="img" aria-label="' + esc(o.label) + '">' + g + '</svg><div class="tip hide"></div>';
+    var svg = el.querySelector("svg"), tip = el.querySelector(".tip");
+    svg.querySelectorAll("circle").forEach(function (c) {
+      c.onmouseenter = function () { var p = pts[+c.dataset.i]; tip.innerHTML = "<div style='max-width:340px;white-space:normal'>" + esc(p.label) + "</div><div>First try <b>" + pf(p.x) + "</b> · median <b>" + p.y + " s</b> · <b>" + fmt(p.n) + "</b> answers</div>"; show(tip, true); var r = svg.getBoundingClientRect(); tip.style.left = Math.min(r.width - tip.offsetWidth - 4, (X(p.x) / W) * r.width + 12) + "px"; tip.style.top = Math.max(0, (Y(p.y) / H) * r.height - 30) + "px"; c.setAttribute("fill-opacity", ".9"); };
+      c.onmouseleave = function () { show(tip, false); c.setAttribute("fill-opacity", ".55"); };
+      c.onclick = function () { if (o.onClick) o.onClick(pts[+c.dataset.i]); };
+    });
+  }
+  function hbars(rows, cols) {
+    /* small multiples: one bar column per measure, each with its own scale */
+    var max = cols.map(function (c) { return Math.max.apply(null, rows.map(function (r) { return r[c.k] || 0; }).concat([c.pct ? 100 : 1])); });
+    return '<div class="trk"><span class="h">Track</span>' + cols.map(function (c) { return '<span class="h">' + esc(c.name) + "</span>"; }).join("") +
+      rows.map(function (r) { return "<span>" + esc(r.name) + "</span>" + cols.map(function (c, j) { var v = r[c.k]; return '<span class="hb"><span class="b" style="width:' + (v == null ? 0 : Math.max(2, (v / max[j]) * 70)) + '%"></span><em>' + (v == null ? "—" : c.pct ? pf(v) : fmt(v)) + "</em></span>"; }).join(""); }).join("") + "</div>";
+  }
+  function sortable(tbl, rows, cols, draw) {
+    tbl.querySelectorAll("th[data-s]").forEach(function (th) { th.onclick = function () { var k = th.dataset.s, dir = th.dataset.dir === "asc" ? "desc" : "asc"; rows.sort(function (a, b) { var x = a[k], y = b[k]; if (x == null) return 1; if (y == null) return -1; return (x > y ? 1 : x < y ? -1 : 0) * (dir === "asc" ? 1 : -1); }); draw(); var nth = tbl.querySelector('th[data-s="' + k + '"]'); if (nth) nth.dataset.dir = dir; }; });
+  }
+  function csv(name, head, rows) {
+    var q = function (v) { v = v == null ? "" : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+    var text = [head.map(q).join(",")].concat(rows.map(function (r) { return r.map(q).join(","); })).join("\n");
+    var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type: "text/csv" })); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  }
+
+  /* ---------- state ---------- */
+  var ME = null, TAB = "", DATA = {};
+  function scope() { return $("scope").value; }
+  function tabsFor(s) { return s === "global" ? [["ov", "Overview"], ["content", "Content struggle"], ["clin", "Clinical alerts"]] : s === "schools" ? [["cmp", "Compare schools"], ["new", "Create agency / institution"], ["guide", "Program guide & compliance"]] : [["ov", "Overview"], ["roster", "Roster"], ["content", "Weak areas"], ["codes", "Codes"], ["guide", "Program guide & compliance"]]; }
+  function drawTabs() {
+    var T = tabsFor(scope() === "global" ? "global" : scope() === "schools" ? "schools" : "school");
+    if (!T.some(function (t) { return t[0] === TAB; })) TAB = T[0][0];
+    $("tabs").innerHTML = T.map(function (t) { return '<button data-t="' + t[0] + '" aria-selected="' + (TAB === t[0]) + '">' + t[1] + "</button>"; }).join("");
+    $("tabs").querySelectorAll("button").forEach(function (b) { b.onclick = function () { TAB = b.dataset.t; drawTabs(); draw(); }; });
+    show("intWrap", scope() === "global"); show("plat", scope() === "global"); show("trackSel", scope() === "global");
+  }
+  function load() {
+    var s = scope(); top("");
+    $("page").innerHTML = '<div class="card"><p class="muted">Loading…</p></div>';
+    var p = s === "global" ? call("anaGlobal", { days: +$("range").value, internal: $("internal").checked }).then(function (r) { DATA.g = r; })
+      : s === "schools" ? call("anaSchools").then(function (r) { DATA.s = r; })
+      : call("anaSchool", { orgId: s.slice(4) }).then(function (r) { DATA.o = r; });
+    Promise.all([p, catalog()]).then(draw).catch(function (e) { $("page").innerHTML = '<div class="msg err">' + esc(errTxt(e)) + "</div>"; });
+  }
+  function draw() {
+    var s = scope();
+    if (TAB === "guide") return drawGuide();
+    if (s === "global") return TAB === "content" ? drawContent() : TAB === "clin" ? drawClin() : drawGlobal();
+    if (s === "schools") return TAB === "new" ? drawNewOrg() : drawSchools();
+    if (!DATA.o) return;
+    return ({ ov: drawSchool, roster: drawRoster, content: drawSchoolContent, codes: drawCodes })[TAB]();
+  }
+
+  /* ======================= GLOBAL ======================= */
+  function gDays() {
+    var G = DATA.g, all = G.daily, cut = all.length - G.days, plat = $("plat").value, trk = $("trackSel").value, withInt = $("internal").checked;
+    return all.map(function (d, i) {
+      var cl = d.cl, clean = !!cl, src = cl ? (plat ? (cl.plat || {})[plat] : trk ? (cl.trk || {})[trk] : cl) : null;
+      var o = { day: d.day, inRange: i >= cut, clean: clean };
+      if (clean && src) { o.q = src.q || 0; o.c = src.c || 0; o.sec = src.sec || 0; o.fq = src.fq || 0; o.fc = src.fc || 0; o.sess = src.sess || 0; o.dauC = src.dau || 0; }
+      else if (!plat && !trk) { o.q = d.leg.q; o.c = d.leg.c; o.sec = Math.max(0, d.leg.sec - (d.roll ? d.roll.secAdj : 0)); o.sess = d.leg.sess; o.fq = null; o.fc = null; }
+      else { o.q = null; o.c = null; o.sec = null; o.fq = null; o.fc = null; o.sess = null; }
+      /* people (recomputed nightly: one person across devices; internal and owner left out); with a platform/track filter, clean dau of that slice */
+      o.dau = plat || trk ? (clean && src ? src.dau || 0 : null) : d.roll ? d.roll.dau : d.leg.dau;
+      o.wau = plat || trk ? null : d.roll ? d.roll.wau : null; o.mau = plat || trk ? null : d.roll ? d.roll.mau : null;
+      o.ret = d.roll && d.roll.ret7 && d.roll.ret7.complete ? d.roll.ret7 : null;
+      if (withInt && d.int && !plat && !trk) { o.q = (o.q || 0) + d.int.q; o.c = (o.c || 0) + d.int.c; o.sec = (o.sec || 0) + d.int.sec; if (o.fq != null) { o.fq += d.int.fq; o.fc += d.int.fc; } o.dau = (o.dau || 0) + d.int.dev; }
+      o.raw = d; return o;
+    });
+  }
+  function sum(arr, k) { var t = 0, any = false; arr.forEach(function (x) { if (x[k] != null) { t += x[k]; any = true; } }); return any ? t : null; }
+  function delta(cur, prev, isPct) {
+    if (cur == null || prev == null) return '<span class="muted">no earlier week to compare</span>';
+    var d = isPct ? cur - prev : prev ? ((cur - prev) / prev) * 100 : null; if (d == null) return "";
+    var up = d >= 0; return "<b class='" + (up ? "up" : "dn") + "'>" + (up ? "▲ " : "▼ ") + (isPct ? Math.abs(d).toFixed(1) + " pts" : Math.abs(Math.round(d)) + "%") + "</b> last 7 days vs the 7 before";
+  }
+  function drawGlobal() {
+    var G = DATA.g, D = gDays(), R = D.filter(function (d) { return d.inRange; }), n = D.length;
+    var last7 = D.slice(n - 7), prev7 = D.slice(n - 14, n - 7);
+    var lastRoll = D.slice().reverse().find(function (d) { return d.mau != null; });
+    var learners = $("plat").value || $("trackSel").value ? Math.max.apply(null, R.map(function (d) { return d.dau || 0; })) : lastRoll ? lastRoll.mau : null;
+    var hrs = sum(R, "sec"), q = sum(R, "q"), fq = sum(R, "fq"), fc = sum(R, "fc");
+    var rets = R.filter(function (d) { return d.ret && d.ret.cohort; }), rc = rets.reduce(function (t, d) { return t + d.ret.cohort; }, 0), rb = rets.reduce(function (t, d) { return t + d.ret.back; }, 0);
+    var r7 = function (a) { var c = a.filter(function (d) { return d.ret && d.ret.cohort; }); var x = c.reduce(function (t, d) { return t + d.ret.cohort; }, 0); return x ? (100 * c.reduce(function (t, d) { return t + d.ret.back; }, 0)) / x : null; };
+    var acc7 = function (a) { var f = sum(a, "fq"); return f ? (100 * sum(a, "fc")) / f : null; };
+    var mark = G.cleanDay ? R.findIndex(function (d) { return d.day >= G.cleanDay; }) : -1;
+    var c = '';
+    if (!G.cleanSince) c += '<div class="msg">Clean telemetry has not started yet: it begins with the first report from the new website app or iPhone build 16. Until then, first-try accuracy, the local-time heatmap, modes and platform/track splits stay empty, and the other numbers use the older counting (people are recomputed nightly).</div>';
+    else c += '<p class="divnote">Clean telemetry active since <b>' + esc(G.cleanDay) + "</b>. Numbers before that day use the older counting; active learners are recomputed nightly for every day (one person across devices; internal and test people left out" + (G.isolated ? ", " + fmt(G.isolated.devices) + " internal devices isolated" : "") + ").</p>";
+    c += '<div class="kpis">' +
+      kpi("Unique active learners", fmt(learners), $("plat").value || $("trackSel").value ? "busiest day in range (this slice)" : "people active in the last 30 days") +
+      kpi("Active study hours", hrs == null ? "—" : fmt(hrs / 3600), delta(sum(last7, "sec"), sum(prev7, "sec"))) +
+      kpi("Questions answered", fmt(q), delta(sum(last7, "q"), sum(prev7, "q"))) +
+      kpi("First-try accuracy", fq ? pf((100 * fc) / fq) : "—", fq ? delta(acc7(last7), acc7(prev7), true) : '<span class="muted">from clean builds only</span>') +
+      kpi("7-day retention", rc ? pf((100 * rb) / rc) : "—", ($("plat").value || $("trackSel").value) && rc ? '<span class="muted">all platforms and tracks</span>' : rc ? delta(r7(last7.length ? D.slice(n - 14, n - 7) : []), r7(D.slice(n - 21, n - 14)), true) : '<span class="muted">needs a full week</span>') + "</div>";
+    c += '<div class="grid2"><div class="card"><h3>Active learners</h3><p class="sub">People per day and per rolling 7 days.</p><div id="cLearn"></div><div class="chart" id="chLearn"></div></div>' +
+      '<div class="card"><h3>Active minutes per learner</h3><p class="sub">Active study minutes per active learner per day. Shown on its own chart, not on a second axis.</p><div class="chart" id="chMin"></div></div></div>';
+    c += '<div class="card"><h3>When people study</h3><p class="sub" id="heatSub"></p><div id="heat"></div></div>';
+    c += '<div class="grid2"><div class="card"><h3>By specialty track</h3><p class="sub">Learners, questions and first-try accuracy in this range (clean builds). Each measure has its own scale.</p><div id="trk"></div></div><div class="card"><h3>By mode</h3><p class="sub">Answers and accuracy in each part of the app (clean builds).</p><div id="modes"></div></div></div>';
+    c += '<div class="grid2"><div class="card"><h3>Platform and version</h3><p class="sub">Active learners on the last day with data, by platform and by app version (clean builds).</p><div id="vers"></div></div><div class="card"><h3>Retention</h3><p class="sub">Of the people who first came on a day, how many came back within 7 days. Only days at least a week old.</p><div class="chart" id="chRet"></div></div></div>';
+    if ($("internal").checked) c += '<div class="card"><h3>Internal and test traffic in this range</h3><div id="intTbl"></div></div>';
+    c += '<div class="card"><h3>Bug Rush sticks</h3><p class="sub">What a correct Bug Rush decision pays. Changes reach every copy of the app within a few minutes, with no app update. A bank question pays 3 sticks (1 for trying).</p><div id="rsCfg"><p class="muted small">Loading…</p></div></div>';
+    $("page").innerHTML = c;
+    var x = R.map(function (d) { return d.day; }), xf = function (s) { return s.slice(5); };
+    var Ls = [{ name: "Daily active", color: "var(--s1)", values: R.map(function (d) { return d.dau; }) }];
+    if (R.some(function (d) { return d.wau != null; })) Ls.push({ name: "7-day active", color: "var(--s2)", values: R.map(function (d) { return d.wau; }) });
+    $("cLearn").innerHTML = legend(Ls);
+    lineChart($("chLearn"), x, Ls, { xfmt: xf, marker: mark, label: "Active learners over time" });
+    lineChart($("chMin"), x, [{ name: "Minutes per learner", color: "var(--s1)", values: R.map(function (d) { return d.sec == null || !d.dau ? null : d.sec / 60 / d.dau; }) }], { xfmt: xf, marker: mark, fmt: function (v) { return (Math.round(v * 10) / 10).toString(); }, label: "Active minutes per learner" });
+    /* heatmap: local time from clean builds; older days by server time in Central */
+    var cells = Array.from({ length: 7 }, function () { return new Array(24).fill(0); }), cleanH = false;
+    R.forEach(function (d) { var h = d.raw.cl && d.raw.cl.heat; if (h) { cleanH = true; Object.keys(h).forEach(function (k) { cells[+k[0]][+k.slice(1)] += (h[k].sec || 0) / 60; }); } });
+    if (!cleanH) R.forEach(function (d) { var dw = new Date(d.day + "T12:00:00Z").getUTCDay(); Object.keys(d.raw.leg.hours || {}).forEach(function (hh) { cells[dw][+hh] += ((d.raw.leg.hours[hh] || {}).sec || 0) / 60; }); });
+    $("heatSub").textContent = cleanH ? "Active minutes by weekday and hour, in each learner's own local time." : "Active minutes by weekday and hour in US Central time (older counting; each learner's own local time starts with clean telemetry).";
+    heatmap($("heat"), cells);
+    /* tracks */
+    var tk = {}; R.forEach(function (d) { var t = d.raw.cl && d.raw.cl.trk; if (t) Object.keys(t).forEach(function (k) { var e = tk[k] || (tk[k] = { dmax: 0, q: 0, fq: 0, fc: 0 }); e.q += t[k].q || 0; e.fq += t[k].fq || 0; e.fc += t[k].fc || 0; e.dmax = Math.max(e.dmax, t[k].dau || 0); }); });
+    var tr = Object.keys(tk).map(function (k) { return { name: TRACKS[k] || k, learners: tk[k].dmax, q: tk[k].q, acc: tk[k].fq ? (100 * tk[k].fc) / tk[k].fq : null }; }).sort(function (a, b) { return b.q - a.q; });
+    $("trk").innerHTML = tr.length ? hbars(tr, [{ k: "learners", name: "Busiest day" }, { k: "q", name: "Questions" }, { k: "acc", name: "First try", pct: true }]) : '<p class="muted small">Starts with clean telemetry.</p>';
+    var md = {}; R.forEach(function (d) { var m = d.raw.cl && d.raw.cl.md; if (m) Object.keys(m).forEach(function (k) { var e = md[k] || (md[k] = { n: 0, c: 0 }); e.n += m[k].n || 0; e.c += m[k].c || 0; }); });
+    var rr = { n: 0, read: 0, dec: 0 }; R.forEach(function (d) { var r = d.raw.cl && d.raw.cl.rr; if (r) { rr.n += r.n || 0; rr.read += r.read || 0; rr.dec += r.dec || 0; } });
+    $("modes").innerHTML = Object.keys(md).length ? '<table><tr><th>Mode</th><th class="n">Answers</th><th class="n">Accuracy</th></tr>' + Object.keys(MODES).filter(function (k) { return md[k]; }).map(function (k) { return "<tr><td>" + MODES[k] + '</td><td class="n">' + fmt(md[k].n) + '</td><td class="n">' + pf(pct(md[k].c, md[k].n)) + "</td></tr>"; }).join("") + "</table>" : '<p class="muted small">Starts with clean telemetry. Bug Rush answers were not counted at all before it.</p>';
+    if (rr.n) $("modes").innerHTML += '<p class="small" style="margin-top:8px">Bug Rush, per decision: <b>' + (rr.read / rr.n).toFixed(1) + ' s</b> reading the scene (no clock) and <b>' + (rr.dec / rr.n).toFixed(1) + ' s</b> deciding after tapping Okay, over ' + fmt(rr.n) + ' decisions.</p>';
+    var lastCl = R.slice().reverse().find(function (d) { return d.raw.cl && d.raw.cl.dau; });
+    if (lastCl) { var cl = lastCl.raw.cl, tot = cl.dau || 1, vv = cl.ver || {}, pp = cl.plat || {};
+      $("vers").innerHTML = '<p class="small">' + esc(lastCl.day) + "</p><table><tr><th>Platform</th><th class='n'>Learners</th><th class='n'>Share</th></tr>" + Object.keys(pp).map(function (k) { return "<tr><td>" + (k === "ios" ? "iPhone" : k === "web" ? "Web" : esc(k)) + '</td><td class="n">' + fmt(pp[k].dau || 0) + '</td><td class="n">' + pf(pct(pp[k].dau || 0, tot)) + "</td></tr>"; }).join("") + "</table><table style='margin-top:10px'><tr><th>App version</th><th class='n'>Learners</th><th class='n'>Share</th></tr>" + Object.keys(vv).sort().reverse().map(function (k) { return "<tr><td>" + esc(k.replace(/_/g, ".")) + '</td><td class="n">' + fmt(vv[k]) + '</td><td class="n">' + pf(pct(vv[k], tot)) + "</td></tr>"; }).join("") + "</table>"; }
+    else $("vers").innerHTML = '<p class="muted small">Starts with clean telemetry.</p>';
+    rsCfg();
+    lineChart($("chRet"), x, [{ name: "Came back within 7 days", color: "var(--s1)", values: R.map(function (d) { return d.ret && d.ret.cohort ? (100 * d.ret.back) / d.ret.cohort : null; }) }], { xfmt: xf, fmt: function (v) { return Math.round(v) + "%"; }, label: "Seven-day retention" });
+    if ($("intTbl")) { var why = {}, iq = 0; R.forEach(function (d) { if (d.raw.int) { iq += d.raw.int.q; Object.keys(d.raw.int.why).forEach(function (k) { why[k] = (why[k] || 0) + d.raw.int.why[k]; }); } }); $("intTbl").innerHTML = '<p class="small">' + fmt(iq) + " questions from internal copies are included above. Reports by reason: " + (Object.keys(why).map(function (k) { return esc(k) + " " + fmt(why[k]); }).join(", ") || "none") + ".</p>"; }
+  }
+  function rsCfg() {
+    var F = [["base", "Sticks for a correct decision (before the multiplier)", 1], ["mult", "Multiplier, standard calls", 0.5], ["multHi", "Multiplier, critical and red calls", 0.5], ["fast", "Quick-decision bonus (sticks)", 1], ["fastFrac", "Quick means within this share of the clock (0.5 = first half)", 0.05], ["streak3", "Bonus at 3 correct in a row", 1], ["streak5", "Bonus at 5 or more in a row", 1], ["tryPay", "Sticks for a wrong answer (for trying)", 1]];
+    var D = { base: 3, mult: 2, multHi: 3, fast: 2, fastFrac: 0.5, streak3: 1, streak5: 2, tryPay: 1 };
+    call("appCfgPub").then(function (r) {
+      var v = Object.assign({}, D, (r && r.rushSticks) || {});
+      $("rsCfg").innerHTML = '<div class="grid2" style="gap:8px 16px">' + F.map(function (f) { return '<label class="small">' + esc(f[1]) + '<input type="number" step="' + f[2] + '" data-rs="' + f[0] + '" value="' + v[f[0]] + '"></label>'; }).join("") + '</div><p class="small" id="rsEx" style="margin:10px 0"></p><div class="row"><button class="btn" id="rsSave">Save for every app</button><span class="small muted" id="rsMsg">' + (r && r.v ? "Last changed " + new Date(r.v).toLocaleString() : "Using the starting values") + '</span></div>';
+      var ex = function () { var g = function (k) { return +document.querySelector('[data-rs="' + k + '"]').value || 0; }; var std = g("base") * g("mult"), hi = g("base") * g("multHi"); $("rsEx").innerHTML = "Example: a correct decision pays <b>" + std + "</b> sticks on a standard call and <b>" + hi + "</b> on a critical or red call, plus <b>" + g("fast") + "</b> if decided quickly and up to <b>" + g("streak5") + "</b> for a streak."; };
+      document.querySelectorAll("[data-rs]").forEach(function (i) { i.oninput = ex; }); ex();
+      $("rsSave").onclick = function () { var b = this, o = {}; document.querySelectorAll("[data-rs]").forEach(function (i) { o[i.dataset.rs] = +i.value; }); b.disabled = true; call("appCfgSet", { rushSticks: o }).then(function () { b.disabled = false; $("rsMsg").textContent = "Saved. Apps pick it up within a few minutes."; }).catch(function (e) { b.disabled = false; $("rsMsg").textContent = errTxt(e); }); };
+    }).catch(function (e) { $("rsCfg").innerHTML = '<p class="small muted">' + esc(errTxt(e)) + "</p>"; });
+  }
+  function kpi(l, v, d) { return '<div class="kpi"><div class="l">' + esc(l) + '</div><div class="v">' + v + '</div><div class="d">' + (d || "") + "</div></div>"; }
+
+  /* ---------- content struggle (owner, everyone together; anonymous totals) ---------- */
+  function qRows() {
+    var G = DATA.g, out = [];
+    Object.keys(G.qa || {}).forEach(function (id) {
+      var v = G.qa[id], it = CAT.by[id] || CAT.by[id.toLowerCase()];
+      var n = v[0], c = v[1], a1 = v[2], c1 = v[3], a2 = v[4], c2 = v[5], cl = v[6], cc = v[14] || 0, t = v.slice(8, 14), med = medianSec(t);
+      var useFirst = a1 >= 20, acc = useFirst ? (100 * c1) / a1 : n ? (100 * c) / n : null;
+      out.push({ id: id, it: it, n: n, a1: a1, c1: c1, a2: a2, c2: c2, cl: cl, cc: cc, acc: acc, first: useFirst, med: med, w: (G.qw || {})[id] || {}, drug: it ? it.d : "", dn: it ? it.dn : "", cls: it && it.d && CAT.classes[it.d] ? CAT.classes[it.d][1] : "" });
+    });
+    return out;
+  }
+  function drawContent() {
+    var rows = qRows(), N = 20, G = DATA.g;
+    var elig = rows.filter(function (r) { return (r.first ? r.a1 : r.n) >= N && r.it; });
+    var group = function (key) { var m = {}; elig.forEach(function (r) { var k = r[key]; if (!k) return; var e = m[k] || (m[k] = { name: key === "drug" ? r.dn || k : k, n: 0, c: 0, a1: 0, c1: 0, t: [0, 0, 0, 0, 0, 0], q: 0 }); e.n += r.n; e.c += r.acc / 100 * (r.first ? r.a1 : r.n); e.a1 += r.first ? r.a1 : r.n; e.q++; var tt = G.qa[r.id].slice(8, 14); tt.forEach(function (x, i) { e.t[i] += x; }); }); return Object.keys(m).map(function (k) { var e = m[k]; return { name: e.name, n: e.a1, acc: e.a1 ? (100 * e.c) / e.a1 : null, med: medianSec(e.t), q: e.q }; }).filter(function (e) { return e.n >= N; }).sort(function (a, b) { return a.acc - b.acc || (b.med || 0) - (a.med || 0); }).slice(0, 15); };
+    var drugs = group("drug"), classes = group("cls");
+    var anyFirst = rows.some(function (r) { return r.a1 > 0; });
+    var flagged = elig.map(function (r) { var f = []; if (r.acc < 35) f.push(["bad", "Under 35%"]); if (r.med != null && r.med >= 65) f.push(["warn", "Slow (median " + r.med + " s)"]); var wt = Object.keys(r.w).map(function (h) { return r.w[h]; }), wn = wt.reduce(function (a, b) { return a + b; }, 0), wmax = Math.max.apply(null, wt.concat([0])); if (wn >= 10 && wmax / wn >= 0.7) f.push(["warn", "One wrong answer draws most misses"]); r.flags = f; return r; })
+      .filter(function (r) { return r.flags.length; }).sort(function (a, b) { return a.acc - b.acc; }).slice(0, 15);
+    var c = '<div class="card"><h2>Content struggle</h2><p class="sub">Everyone together, anonymous totals (no person is ever stored with these). Accuracy is first-try accuracy where a question has 20+ first tries from clean builds; otherwise all answers. Minimum 20 answers. Updated nightly' + (G.qAt ? " (last " + new Date(G.qAt).toLocaleString() + ")" : "") + ' <button class="ghost" id="qRef">Refresh now</button></p>' + (anyFirst ? "" : '<div class="msg">First tries, wrong-answer picks and time-to-answer start with clean telemetry; until then this uses all answers.</div>') + "</div>";
+    c += '<div class="grid2"><div class="card"><h3>Hardest medications</h3><p class="sub">Lowest accuracy first.</p>' + simpleTbl(drugs, "Medication") + '</div><div class="card"><h3>Hardest drug classes</h3><p class="sub">Lowest accuracy first.</p>' + simpleTbl(classes, "Drug class") + "</div></div>";
+    c += '<div class="card"><h3>Struggle matrix</h3><p class="sub">Each dot is a question with 20+ first tries and timing data. Left = more students miss it. Low and left (quick and wrong) often means a confusing stem or a mis-keyed answer; high and left is hard but students work at it. Bigger dot = more answers. Click a dot to open it in the Question Editor.</p><div class="chart" id="scat"></div></div>';
+    c += '<div class="card"><h3>Problem questions</h3><p class="sub">Under 35% accuracy, slow to answer (median 65 s or more), or one wrong answer drawing 70%+ of misses. "Skipped" is not tracked yet.</p><div class="tw">' + probTbl(flagged) + "</div></div>";
+    $("page").innerHTML = c;
+    $("qRef").onclick = function () { var b = this; b.disabled = true; b.textContent = "Refreshing…"; call("anaRefresh", { what: "questions" }).then(load).catch(function (e) { top(errTxt(e), "err"); b.disabled = false; }); };
+    var pts = elig.filter(function (r) { return r.first && r.med != null; }).map(function (r) { return { x: r.acc, y: r.med, n: r.a1, label: (r.dn ? r.dn + ": " : "") + r.it.q, id: r.id }; });
+    if (pts.length) scatter($("scat"), pts, { label: "Question struggle matrix", onClick: function (p) { window.open("../qedit/#q=" + encodeURIComponent(p.id), "_blank"); } });
+    else $("scat").innerHTML = '<p class="muted small">Needs questions with 20+ first tries from clean builds.</p>';
+    wireRepair();
+  }
+  function simpleTbl(rows, name) { return rows.length ? '<div class="tw"><table><tr><th>' + name + '</th><th class="n">Answers</th><th class="n">Accuracy</th><th class="n">Median time</th></tr>' + rows.map(function (r) { return "<tr><td>" + esc(r.name) + '</td><td class="n">' + fmt(r.n) + '</td><td class="n">' + pf(r.acc) + '</td><td class="n">' + (r.med == null ? "—" : r.med + " s") + "</td></tr>"; }).join("") + "</table></div>" : '<p class="muted small">Not enough answers yet.</p>'; }
+  function distHtml(r) {
+    var it = r.it, wn = Object.keys(r.w).reduce(function (t, h) { return t + r.w[h]; }, 0); if (!wn) return '<span class="muted small">wrong-answer picks start with clean telemetry</span>';
+    var cols = ["var(--s2)", "var(--warn)", "var(--muted)"], i = 0;
+    var parts = Object.keys(r.w).sort(function (a, b) { return r.w[b] - r.w[a]; }).map(function (h) { var t = wrongText(it, h); return { t: t || "(an older wording)", n: r.w[h], col: cols[i++ % 3] }; });
+    return '<div class="dist">' + parts.map(function (p) { return '<span style="width:' + (100 * p.n) / wn + "%;background:" + p.col + '"></span>'; }).join("") + "</div>" + parts.map(function (p) { return '<div class="small"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:' + p.col + ';margin-right:6px"></span>' + esc(p.t) + " <b>" + Math.round((100 * p.n) / wn) + "%</b> of misses</div>"; }).join("");
+  }
+  function probTbl(rows) {
+    if (!rows.length) return '<p class="muted small">No question meets the flags yet.</p>';
+    return '<table><tr><th>Question</th><th class="n">Accuracy</th><th class="n">Answers</th><th>Wrong answers picked</th><th></th></tr>' + rows.map(function (r) {
+      return '<tr><td class="qtext"><div class="small muted">' + esc(r.dn || "general") + (r.it && LV[r.it.lv] ? " · " + LV[r.it.lv] : "") + "</div>" + esc(r.it.q) + '<div class="small" style="color:var(--good)">Right: ' + esc(r.it.a || (r.it.ok || []).join("; ")) + "</div><div>" + r.flags.map(function (f) { return '<span class="flag ' + f[0] + '">' + esc(f[1]) + "</span>"; }).join("") + '</div></td><td class="n">' + pf(r.acc) + (r.first ? "<div class='small muted'>first try</div>" : "") + '</td><td class="n">' + fmt(r.first ? r.a1 : r.n) + "</td><td>" + distHtml(r) + '</td><td><div class="row" style="flex-direction:column;align-items:stretch;gap:6px"><a class="ghost" style="text-align:center;text-decoration:none;padding:6px 10px;border:1px solid var(--line);border-radius:9px" href="../qedit/#q=' + encodeURIComponent(r.id) + '" target="_blank" rel="noopener">Open in Question Editor</a>' + (ME.role === "owner" ? '<button class="ghost" data-rep="' + esc(r.id) + '" data-note="' + esc("From Analytics: " + pf(r.acc) + " accuracy on " + fmt(r.first ? r.a1 : r.n) + " answers; " + r.flags.map(function (f) { return f[1]; }).join("; ")) + '">Send to Repair Queue</button>' : "") + "</div></td></tr>";
+    }).join("") + "</table>";
+  }
+  function wireRepair() {
+    document.querySelectorAll("[data-rep]").forEach(function (b) { b.onclick = function () {
+      var it = CAT.by[b.dataset.rep]; if (!it) return; b.disabled = true; b.textContent = "Sending…";
+      call("qeReview", { id: it.id, bank: it.b, lv: it.lv, baseQ: String(it.q).slice(0, 300), verdict: "repair", tags: [], note: b.dataset.note }).then(function () { b.textContent = "In the Repair Queue"; }).catch(function (e) { b.disabled = false; b.textContent = "Send to Repair Queue"; top(errTxt(e), "err"); });
+    }; });
+  }
+
+  /* ======================= ALL SCHOOLS ======================= */
+  function drawSchools() {
+    var S = DATA.s;
+    if (!S.at && !S.tried) { S.tried = true; $("page").innerHTML = '<div class="card"><p class="muted">Building the school table for the first time…</p></div>'; call("anaSchools", { refresh: true }).then(function (r) { DATA.s = r; DATA.s.tried = true; drawSchools(); }).catch(function (e) { top(errTxt(e), "err"); }); return; }
+    var rows = (S.rows || []).slice();
+    var t = rows.reduce(function (a, r) { a.seats += r.seatsUsed || 0; a.s7 += r.students7 || 0; a.q += r.questions || 0; a.min += r.minutes || 0; a.fn += r.firstN || 0; a.fc += (r.firstTry || 0) * (r.firstN || 0) / 100; return a; }, { seats: 0, s7: 0, q: 0, min: 0, fn: 0, fc: 0 });
+    var c = '<div class="kpis">' + kpi("Schools", fmt(rows.length), "") + kpi("Students with a seat", fmt(t.seats), fmt(t.s7) + " active in the last 7 days") + kpi("Active study hours", fmt(t.min / 60), "") + kpi("Questions answered", fmt(t.q), "") + kpi("First-try accuracy", t.fn ? pf((100 * t.fc) / t.fn) : "—", "") + "</div>";
+    c += '<div class="card"><div class="row" style="justify-content:space-between"><div><h2>Compare schools</h2><p class="sub">One line per class. Saved nightly' + (S.at ? ", last " + new Date(S.at).toLocaleString() : "") + '. Click a heading to sort; click a name to open that school.</p></div><button class="ghost" id="sRef">Refresh now</button></div><div class="tw"><table id="cmp"></table></div></div>';
+    $("page").innerHTML = c;
+    var cols = [["name", "School / class"], ["level", "Track"], ["seatsUsed", "Students"], ["students7", "Active 7 days"], ["minutes", "Active minutes"], ["minPerStudent", "Min / student"], ["questions", "Questions"], ["accuracy", "Accuracy"], ["firstTry", "First try"]];
+    var drawT = function () { $("cmp").innerHTML = "<tr>" + cols.map(function (k, i) { return '<th data-s="' + k[0] + '"' + (i > 1 ? ' class="n"' : "") + ">" + k[1] + "</th>"; }).join("") + "</tr>" + rows.map(function (r) { return '<tr><td><a href="#" data-org="' + esc(r.id) + '">' + esc(r.name) + "</a></td><td>" + esc(LV[r.level] || r.level || "—") + "</td>" + ["seatsUsed", "students7", "minutes", "minPerStudent", "questions"].map(function (k) { return '<td class="n">' + fmt(r[k]) + "</td>"; }).join("") + '<td class="n">' + pf(r.accuracy) + '</td><td class="n">' + pf(r.firstTry) + "</td></tr>"; }).join(""); sortable($("cmp"), rows, cols, drawT); document.querySelectorAll("[data-org]").forEach(function (a) { a.onclick = function (e) { e.preventDefault(); $("scope").value = "org:" + a.dataset.org; TAB = "ov"; drawTabs(); load(); }; }); };
+    rows.sort(function (a, b) { return (b.minutes || 0) - (a.minutes || 0); }); drawT();
+    $("sRef").onclick = function () { var b = this; b.disabled = true; call("anaSchools", { refresh: true }).then(function (r) { DATA.s = r; drawSchools(); }).catch(function (e) { b.disabled = false; top(errTxt(e), "err"); }); };
+  }
+
+  /* ======================= ONE SCHOOL ======================= */
+  var LBL_KEY = function () { return "dbRosterLabels:" + DATA.o.org.id; };
+  function labels() { try { return JSON.parse(localStorage.getItem(LBL_KEY()) || "{}") || {}; } catch (e) { return {}; } }
+  function setLabel(alias, name) { var m = labels(); if (name) m[alias] = name; else delete m[alias]; try { localStorage.setItem(LBL_KEY(), JSON.stringify(m)); } catch (e) { top("This browser would not save the label (private window?). Use Export labels to keep a copy.", "err"); } }
+  function drawSchool() {
+    var O = DATA.o, K = O.kpi, wk = O.weeks || [];
+    var c = '<div class="card"><h2>' + esc(O.org.name) + '</h2><p class="sub">' + esc(LV[O.org.level] || "Track not set") + " · " + fmt(O.org.seats) + " seats · access until " + (O.org.expiresAt ? new Date(O.org.expiresAt).toLocaleDateString() : "—") + ". Students appear as seats (Student 01…); DrugBug never knows their names.</p></div>";
+    c += '<div class="kpis">' + kpi("Students with a seat", fmt(K.seatsUsed), fmt(K.students7) + " active in the last 7 days") + kpi("Active study hours", fmt(K.minutes / 60), fmt(K.minPerStudent) + " min per student") + kpi("Questions answered", fmt(K.questions), "") + kpi("First-try accuracy", pf(K.firstTry), K.firstN ? fmt(K.firstN) + " first tries" : '<span class="muted">starts with clean telemetry</span>') + kpi("Overall accuracy", pf(K.accuracy), "all answers, repeats included") + "</div>";
+    c += '<div class="grid2"><div class="card"><h3>Students active per week</h3><p class="sub">Students who answered at least one question that week.</p><div class="chart" id="wS"></div></div><div class="card"><h3>Class accuracy per week</h3><p class="sub">All answers that week.</p><div class="chart" id="wA"></div></div></div>';
+    c += '<div class="card"><h3>Learning curve</h3><p class="sub">Accuracy on a question the first, second and third-or-later time a student answers it (clean telemetry).</p><div id="lc"></div></div>';
+    $("page").innerHTML = c;
+    var x = wk.map(function (w) { return w.start; }), xf = function (s) { return s.slice(5); };
+    lineChart($("wS"), x, [{ name: "Students", color: "var(--s1)", values: wk.map(function (w) { return w.students; }) }], { xfmt: xf, tfmt: function (s) { return "Week of " + s; }, label: "Students active per week", h: 180 });
+    lineChart($("wA"), x, [{ name: "Accuracy", color: "var(--s1)", values: wk.map(function (w) { return w.acc; }) }], { xfmt: xf, tfmt: function (s) { return "Week of " + s; }, fmt: function (v) { return Math.round(v) + "%"; }, label: "Class accuracy per week", h: 180 });
+    var A = O.att || {}, pts = [["First try", A.a1], ["Second try", A.a2], ["Third try or later", A.a3]];
+    $("lc").innerHTML = pts.some(function (p) { return p[1] && p[1][0]; }) ? hbars(pts.map(function (p) { return { name: p[0], n: p[1] ? p[1][0] : 0, acc: p[1] && p[1][0] ? (100 * p[1][1]) / p[1][0] : null }; }), [{ k: "n", name: "Answers" }, { k: "acc", name: "Accuracy", pct: true }]).replace("repeat(3,minmax(0,1fr))", "repeat(2,minmax(0,1fr))").replace('<span class="h">Track</span>', '<span class="h">Attempt</span>') : '<p class="muted small">Starts with clean telemetry (website now, iPhone build 16).</p>';
+    var lcEl = $("lc").querySelector(".trk"); if (lcEl) lcEl.style.gridTemplateColumns = "150px repeat(2,minmax(0,1fr))";
+  }
+  function drawRoster() {
+    var O = DATA.o, L = labels(), rows = (O.roster || []).map(function (r) { var o = Object.assign({}, r); o.label = L[r.alias] || ""; o.growthPts = r.growth ? r.growth.to - r.growth.from : null; o.days = r.lastAt ? Math.floor((Date.now() - r.lastAt) / 86400000) : null; o.weakTxt = (r.weak || []).map(function (w) { return w.lb + " " + w.acc + "%"; }).join(", "); return o; });
+    var c = '<div class="card"><div class="row" style="justify-content:space-between"><div><h2>Roster</h2><p class="sub">Type a name next to a seat to see it here. <b>Names are saved only in this browser on this computer, never on DrugBug.</b> Use Export labels to keep a file on your own computer, and Import labels on another browser.</p></div><div class="row"><button class="ghost" id="lExp">Export labels</button><label class="ghost" style="cursor:pointer;display:inline-block;padding:6px 11px;border:1px solid var(--line);border-radius:9px;font-size:13px;font-weight:650">Import labels<input type="file" id="lImp" accept=".json,application/json" class="hide"></label><button class="btn" id="csv">Export roster (CSV)</button></div></div>' +
+      '<div class="tw"><table id="rost"></table></div><p class="small muted">At risk: no answers in 7+ days, or first-try accuracy under 60% with 20+ first tries. Weakest classes need 5+ answers each and use first tries when there are enough.</p></div>';
+    $("page").innerHTML = c;
+    var cols = [["alias", "Seat"], ["label", "Your label (this browser)"], ["min", "Active min"], ["n", "Questions"], ["first", "First-try %"], ["growthPts", "Growth"], ["weakTxt", "Weakest 3 drug classes"], ["lastAt", "Last active"]];
+    var drawT = function () {
+      $("rost").innerHTML = "<tr>" + cols.map(function (k, i) { return '<th data-s="' + k[0] + '"' + (i >= 2 && i <= 5 ? ' class="n"' : "") + ">" + k[1] + "</th>"; }).join("") + "</tr>" + rows.map(function (r) {
+        if (!r.activated) return "<tr><td>" + esc(r.alias) + '</td><td><input class="lab" data-a="' + esc(r.alias) + '" value="' + esc(r.label) + '" placeholder="name"></td><td colspan="6" class="muted small">Key not used yet</td></tr>';
+        var risk = r.days == null || r.days >= 7 || (r.first != null && r.first < 60 && r.firstN >= 20);
+        return "<tr><td>" + esc(r.alias) + (r.left ? ' <span class="flag warn">left</span>' : "") + (risk ? ' <span class="flag bad">At risk</span>' : "") + '</td><td><input class="lab" data-a="' + esc(r.alias) + '" value="' + esc(r.label) + '" placeholder="name"></td><td class="n">' + fmt(r.min) + '</td><td class="n">' + fmt(r.n) + '</td><td class="n">' + (r.first == null ? "—" : r.first + "%") + '</td><td class="n">' + (r.growth ? (r.growthPts >= 0 ? "+" : "") + r.growthPts + " pts<div class='small muted'>" + r.growth.from + "% → " + r.growth.to + "%</div>" : "—") + "</td><td class='small'>" + esc(r.weakTxt || "—") + "</td><td>" + esc(ago(r.lastAt)) + "</td></tr>";
+      }).join("");
+      $("rost").querySelectorAll("input.lab").forEach(function (i) { i.onchange = function () { setLabel(i.dataset.a, i.value.trim()); rows.forEach(function (r) { if (r.alias === i.dataset.a) r.label = i.value.trim(); }); }; });
+      sortable($("rost"), rows, cols, drawT);
+    };
+    drawT();
+    $("lExp").onclick = function () { var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify({ drugbugRosterLabels: 1, classId: O.org.id, className: O.org.name, savedAt: new Date().toISOString(), labels: labels() }, null, 1)], { type: "application/json" })); a.download = "drugbug-roster-labels-" + O.org.name.replace(/[^A-Za-z0-9]+/g, "-").toLowerCase() + ".json"; document.body.appendChild(a); a.click(); a.remove(); };
+    $("lImp").onchange = function () { var f = this.files[0]; if (!f) return; var fr = new FileReader(); fr.onload = function () { try { var j = JSON.parse(fr.result); if (!j || !j.labels || typeof j.labels !== "object") throw 0; if (j.classId && j.classId !== O.org.id && !confirm("This file was saved for another class (" + (j.className || j.classId) + "). Use it here anyway?")) return; var m = labels(); Object.keys(j.labels).forEach(function (k) { if (typeof j.labels[k] === "string") m[k] = j.labels[k].slice(0, 80); }); localStorage.setItem(LBL_KEY(), JSON.stringify(m)); top("Labels imported into this browser.", "ok"); drawRoster(); } catch (e) { top("That file is not a DrugBug roster label file.", "err"); } }; fr.readAsText(f); };
+    $("csv").onclick = function () { csv("drugbug-roster-" + O.org.name.replace(/[^A-Za-z0-9]+/g, "-").toLowerCase() + ".csv", ["Seat", "Your label", "Active minutes", "Questions", "First-try %", "Overall %", "First week %", "Latest week %", "Weakest 3 drug classes", "Last active"], rows.filter(function (r) { return r.activated; }).map(function (r) { return [r.alias, r.label, r.min, r.n, r.first, r.acc, r.growth ? r.growth.from : "", r.growth ? r.growth.to : "", r.weakTxt, r.lastAt ? new Date(r.lastAt).toISOString().slice(0, 10) : ""]; })); };
+  }
+  function drawSchoolContent() {
+    var O = DATA.o, cls = Object.keys(O.classes || {}).map(function (k) { var e = O.classes[k], useF = e.fn >= 20; return { name: e.lb || k, n: useF ? e.fn : e.n, acc: useF ? (100 * e.fc) / e.fn : e.n ? (100 * e.c) / e.n : null, first: useF }; }).filter(function (e) { return e.n >= 20; }).sort(function (a, b) { return a.acc - b.acc; }).slice(0, 15);
+    var qs = Object.keys(O.qq || {}).map(function (k) { var e = O.qq[k], it = CAT.by[k] || CAT.by[k.toLowerCase()]; var w = {}; Object.keys(O.wa || {}).forEach(function (wk) { if (wk.indexOf(k + "-") === 0) w[wk.slice(k.length + 1)] = O.wa[wk]; }); return { id: it ? it.id : k, it: it, n: e.n, acc: e.n ? (100 * e.c) / e.n : null, w: w, first: false, a1: 0, dn: it ? it.dn : "", flags: [] }; })
+      .filter(function (r) { return r.it && r.n >= 3; }).sort(function (a, b) { return a.acc - b.acc || b.n - a.n; }).slice(0, 15);
+    var c = '<div class="grid2"><div class="card"><h3>Weakest drug classes</h3><p class="sub">This class only, 20+ answers. First tries when there are 20+ of them.</p>' + (cls.length ? '<div class="tw"><table><tr><th>Drug class</th><th class="n">Answers</th><th class="n">Accuracy</th></tr>' + cls.map(function (r) { return "<tr><td>" + esc(r.name) + '</td><td class="n">' + fmt(r.n) + '</td><td class="n">' + pf(r.acc) + (r.first ? " <span class='small muted'>first try</span>" : "") + "</td></tr>"; }).join("") + "</table></div>" : '<p class="muted small">Not enough answers yet.</p>') + '</div><div class="card"><h3>Body systems</h3><p class="sub">This class only.</p><div class="tw"><table><tr><th>System</th><th class="n">Answers</th><th class="n">Accuracy</th></tr>' + Object.keys(O.systems || {}).map(function (k) { return { k: k, n: O.systems[k].n, acc: pct(O.systems[k].c, O.systems[k].n) }; }).filter(function (r) { return r.n >= 5; }).sort(function (a, b) { return a.acc - b.acc; }).map(function (r) { return "<tr><td>" + esc(r.k) + '</td><td class="n">' + fmt(r.n) + '</td><td class="n">' + pf(r.acc) + "</td></tr>"; }).join("") + "</table></div></div></div>";
+    c += '<div class="card"><h3>Most missed questions in this class</h3><p class="sub">3+ answers each, with the wrong answers your students picked.</p><div class="tw">' + (qs.length ? '<table><tr><th>Question</th><th class="n">Accuracy</th><th class="n">Answers</th><th>Wrong answers picked</th>' + (ME.role === "owner" ? "<th></th>" : "") + "</tr>" + qs.map(function (r) { return '<tr><td class="qtext"><div class="small muted">' + esc(r.dn || "general") + "</div>" + esc(r.it.q) + '<div class="small" style="color:var(--good)">Right: ' + esc(r.it.a || "") + '</div></td><td class="n">' + pf(r.acc) + '</td><td class="n">' + fmt(r.n) + "</td><td>" + distHtml(r) + "</td>" + (ME.role === "owner" ? '<td><a href="../qedit/#q=' + encodeURIComponent(r.id) + '" target="_blank" rel="noopener">Open in Question Editor</a></td>' : "") + "</tr>"; }).join("") + "</table>" : '<p class="muted small">Not enough answers yet.</p>') + "</div></div>";
+    $("page").innerHTML = c;
+  }
+  function drawCodes() {
+    var O = DATA.o;
+    var c = '<div class="card"><h2>Class join code</h2><p class="sub">One code for the whole class. Each student enters it in DrugBug (Settings &gt; Redeem a code) and gets the next free seat, anonymously. Switching to another class code moves them; they can also leave from their dashboard.</p><div class="row"><b id="jc" style="font-size:22px;letter-spacing:.04em">' + esc(O.org.joinCode || "No join code yet") + '</b><button class="btn" id="jMake">' + (O.org.joinCode ? "Make a new code" : "Make a join code") + "</button>" + (O.org.joinCode ? '<button class="ghost" id="jOff">Turn off</button>' : "") + '</div><p class="small muted">A new code turns off the old one. Students already in keep their seats.</p></div>';
+    if (ME.role === "owner") c += '<div class="card"><h2>Instructor invite code</h2><p class="sub">Owner only. An instructor enters this on the instructor page to get read-only analytics for this class and nothing else.</p><div class="row"><b style="font-size:20px">' + esc(O.org.invite || "—") + '</b><button class="ghost" id="iNew">Make a new invite code</button></div><p class="small muted">A new code stops the old one from adding instructors; instructors already added keep access (remove them on the instructor page).</p></div>';
+    $("page").innerHTML = c;
+    $("jMake").onclick = function () { if (O.org.joinCode && !confirm("Make a new code? The old one stops working.")) return; call("groupJoinCode", { orgId: O.org.id, action: "make" }).then(function (r) { O.org.joinCode = r.joinCode; drawCodes(); }).catch(function (e) { top(errTxt(e), "err"); }); };
+    if ($("jOff")) $("jOff").onclick = function () { call("groupJoinCode", { orgId: O.org.id, action: "off" }).then(function () { O.org.joinCode = null; drawCodes(); }).catch(function (e) { top(errTxt(e), "err"); }); };
+    if ($("iNew")) $("iNew").onclick = function () { if (!confirm("Make a new instructor invite code?")) return; call("anaInviteReset", { orgId: O.org.id }).then(function (r) { O.org.invite = r.invite; drawCodes(); }).catch(function (e) { top(errTxt(e), "err"); }); };
+  }
+
+
+  /* ======================= CREATE AGENCY / INSTITUTION (owner) ======================= */
+  var STATES = "AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY PR GU VI".split(" ");
+  function drawNewOrg() {
+    var P = $("page"); P.innerHTML = '<div class="card"><p class="muted">Loading…</p></div>';
+    call("qpList").then(function (r) { return r.sets || []; }).catch(function () { return []; }).then(function (sets) {
+      P.innerHTML = '<div class="card" style="max-width:860px"><h2>Create an agency or institution</h2><p class="sub">Opens a class right away. Students join with the class join code it makes; instructors get analytics with the instructor invite code. Nothing about students is stored except anonymous seats. The cross-school challenge board stays off.</p>' +
+        '<div class="grid2" style="gap:10px 16px">' +
+        '<label class="small">Name<input id="nName" placeholder="Bryan Fire Department"></label>' +
+        '<label class="small">Type<select id="nType"><option>EMS Agency</option><option>Fire Department</option><option>Hospital / Health System</option><option>University / School</option><option>Flight Program</option><option>Other</option></select></label>' +
+        '<label class="small">State<select id="nState"><option value="">Choose…</option>' + STATES.map(function (x) { return "<option>" + x + "</option>"; }).join("") + '</select></label>' +
+        '<label class="small">Short code (2 to 6 letters, appears in seat keys)<input id="nCode" maxlength="6" placeholder="BFD" style="text-transform:uppercase"></label>' +
+        '<label class="small">Default track<select id="nLevel"><option value="">Not set</option>' + Object.keys(LV).map(function (k) { return '<option value="' + k + '">' + esc(LV[k]) + "</option>"; }).join("") + '</select></label>' +
+        '<label class="small">Linked protocol (members get it automatically)<select id="nProto"><option value="">None</option>' + sets.map(function (x) { return '<option value="' + esc(x.id) + '">' + esc(x.name) + (x.state ? " (" + esc(x.state) + ")" : "") + "</option>"; }).join("") + '</select></label>' +
+        '<label class="small">Seats<input id="nSeats" type="number" min="1" max="500" value="30"></label>' +
+        '<label class="small">Access for (days)<input id="nDays" type="number" min="1" max="800" value="365"></label>' +
+        '<label class="small">Package<select id="nPkg"><option value="">Not set</option><option value="analytics">Analytics</option><option value="protocols">Protocols</option><option value="combined">Combined Suite</option><option value="premium">Premium</option></select></label>' +
+        '<label class="small">Billing<select id="nKind"><option value="pilot">Pilot</option><option value="annual">Annual (paid)</option></select></label>' +
+        '<label class="small">Class scoreboard<select id="nBoard"><option value="on">On</option><option value="off">Off</option></select></label>' +
+        '<label class="small">Names on the scoreboard<select id="nMode"><option value="alias">Seat aliases only (Student 01…)</option><option value="nick">Seat aliases or nicknames the instructor approves</option></select></label>' +
+        '<label class="small">Contact at the organization (staff, for your records)<input id="nContact" placeholder="Name, role, work email"></label>' +
+        '</div><div class="row" style="margin-top:12px"><button class="btn" id="nGo">Create</button><span class="small muted" id="nMsg"></span></div><div id="nOut"></div></div>';
+      $("nGo").onclick = function () {
+        var b = this; b.disabled = true; $("nMsg").textContent = "Creating…";
+        call("groupOrgCreate", { name: $("nName").value, orgType: $("nType").value, state: $("nState").value, code: $("nCode").value, level: $("nLevel").value, protocolSet: $("nProto").value, seats: +$("nSeats").value, days: +$("nDays").value, pkg: $("nPkg").value, kind: $("nKind").value, boardOn: $("nBoard").value === "on", boardMode: $("nMode").value, contact: $("nContact").value }).then(function (r) {
+          return call("groupKeysGenerate", { orgId: r.orgId, quantity: Math.min(200, +$("nSeats").value || 1) }).then(function () { return r; }, function () { return r; });
+        }).then(function (r) {
+          b.disabled = false; $("nMsg").textContent = "";
+          $("nOut").innerHTML = '<div class="msg ok" style="margin-top:12px"><b>' + esc($("nName").value) + '</b> is open.<br>Student join code: <b style="font-size:18px">' + esc(r.joinCode || "make one on its Codes tab") + '</b><br>Instructor invite code: <b>' + esc(r.invite) + '</b><br>Access until ' + new Date(r.expiresAt).toLocaleDateString() + '. <a href="#" id="nOpen">Open this school</a></div>';
+          ME.orgs.push({ id: r.orgId, name: $("nName").value }); var o = document.createElement("option"); o.value = "org:" + r.orgId; o.textContent = $("nName").value; $("scope").appendChild(o);
+          $("nOpen").onclick = function (e) { e.preventDefault(); $("scope").value = "org:" + r.orgId; TAB = "codes"; drawTabs(); load(); };
+        }).catch(function (e) { b.disabled = false; $("nMsg").textContent = errTxt(e); });
+      };
+    });
+  }
+
+  /* ======================= CLINICAL WATCH & ALERTS (owner) ======================= */
+  var BADGE = { recall: ["FDA Recall", "var(--bad)"], label: ["Pharmacology / Guideline", "var(--warn)"], qbank: ["Question Bank Update", "var(--s1)"], custom: ["App Update", "var(--s1)"] };
+  function badge(k) { var b = BADGE[k] || BADGE.custom; return '<span class="flag" style="color:' + b[1] + '">' + esc(b[0]) + "</span>"; }
+  function drawClin() {
+    var P = $("page"); P.innerHTML = '<div class="card"><p class="muted">Loading…</p></div>';
+    call("clinList").then(function (r) {
+      var st = r.status, res = st && st.result;
+      var c = '<div class="card"><div class="row" style="justify-content:space-between"><div><h2>Clinical Watch</h2><p class="sub">Every night at 03:00 UTC the server checks openFDA for Class I and II recalls and FDA label changes (boxed warning, contraindications, warnings) on DrugBug medications. Label changes open Repair Queue tickets on that medication\'s questions; nothing changes in a question until you approve a fix.</p></div><button class="ghost" id="cRun">Run now</button></div>' +
+        '<p class="small">' + (st ? "Last run " + new Date(st.lastRun).toLocaleString() + " · " + (st.ok ? '<b style="color:var(--good)">OK</b>' : '<b style="color:var(--bad)">Problem: ' + esc((res && res.errors || []).join("; ")) + "</b>") + (res ? " · " + res.recalls + " recalls, " + res.labels + " label changes, " + res.tickets + " question tickets" + (res.labelBaselines ? ", " + res.labelBaselines + " labels recorded for the first time" : "") : "") : "Not run yet.") + '</p>' +
+        '<label class="sw" style="color:var(--ink)"><input type="checkbox" id="cAuto"' + (r.autoPublishRecalls ? " checked" : "") + '> Auto-publish FDA Class I and II recalls to learners (otherwise they wait here for you)</label></div>';
+      c += '<div class="card"><h3>Detections</h3><div class="tw"><table><tr><th>When</th><th>Type</th><th>Medication</th><th>What</th><th>Questions</th></tr>' + (r.feed.filter(function (f) { return f.matched; }).map(function (f) {
+        return "<tr><td class='small'>" + new Date(f.at).toLocaleDateString() + "</td><td>" + badge(f.kind) + "</td><td>" + esc(f.drugName || "") + "</td><td class='small'>" + (f.kind === "recall" ? esc((f.cls || "") + " · " + (f.firm || "") + " · " + (f.reason || "").slice(0, 160)) : "Label changed: " + esc((f.changed || []).join(", ")) + (f.url ? ' · <a href="' + esc(f.url) + '" target="_blank" rel="noopener">DailyMed</a>' : "")) + "</td><td>" + (f.qids && f.qids.length ? '<a href="../qedit/#queue" target="_blank" rel="noopener">View ' + f.qids.length + " affected question" + (f.qids.length > 1 ? "s" : "") + "</a>" : '<span class="muted small">—</span>') + "</td></tr>";
+      }).join("") || '<tr><td colspan="5" class="muted">Nothing found yet.</td></tr>') + "</table></div></div>";
+      c += '<div class="card"><div class="row" style="justify-content:space-between"><h3 style="margin:0">Updates shown to learners</h3><button class="btn" id="aNew">Post an update</button></div><p class="sub">Live updates appear once in a skippable "Clinical & app updates" window when people open DrugBug, and stay under the bell. Held ones are not shown.</p><div id="aForm"></div><div class="tw"><table><tr><th>Status</th><th>Type</th><th>Update</th><th></th></tr>' + r.ann.map(function (a) {
+        return "<tr><td>" + (a.status === "live" ? '<span class="flag ok">Live</span>' : a.status === "held" ? '<span class="flag warn">Held</span>' : '<span class="flag">Hidden</span>') + "</td><td>" + badge(a.kind) + '</td><td><b>' + esc(a.title) + '</b><div class="small muted">' + esc(a.body) + '</div></td><td style="white-space:nowrap">' + (a.status !== "live" ? '<button class="ghost" data-pub="' + esc(a.id) + '">Publish</button> ' : '<button class="ghost" data-hide="' + esc(a.id) + '">Hide</button> ') + '<button class="ghost" data-ed="' + esc(a.id) + '">Edit</button></td></tr>';
+      }).join("") + "</table></div></div>";
+      P.innerHTML = c;
+      $("cRun").onclick = function () { var b = this; b.disabled = true; b.textContent = "Running… (up to a few minutes)"; call("clinRun").then(drawClin).catch(function (e) { b.disabled = false; b.textContent = "Run now"; top(errTxt(e), "err"); }); };
+      $("cAuto").onchange = function () { call("clinSettings", { autoPublishRecalls: this.checked }).then(function () { top("Saved.", "ok"); }).catch(function (e) { top(errTxt(e), "err"); }); };
+      var form = function (a) {
+        a = a || { kind: "custom", title: "", body: "", url: "", status: "held" };
+        $("aForm").innerHTML = '<div class="card" style="background:var(--surface2)"><div class="grid2" style="gap:8px 16px"><label class="small">Type<select id="fK">' + Object.keys(BADGE).map(function (k) { return '<option value="' + k + '"' + (a.kind === k ? " selected" : "") + ">" + BADGE[k][0] + "</option>"; }).join("") + '</select></label><label class="small">Link (optional, https)<input id="fU" value="' + esc(a.url || "") + '"></label></div><label class="small">Title<input id="fT" maxlength="140" value="' + esc(a.title) + '"></label><label class="small" style="display:block;margin-top:6px">Text<textarea id="fB" rows="3" maxlength="800">' + esc(a.body) + '</textarea></label><div class="row" style="margin-top:8px"><button class="btn" id="fLive">Save and publish</button><button class="ghost" id="fHeld">Save, keep held</button><button class="ghost" id="fX">Cancel</button></div></div>';
+        var save = function (st) { call("annSave", { id: a.id, kind: $("fK").value, title: $("fT").value, body: $("fB").value, url: $("fU").value, status: st }).then(drawClin).catch(function (e) { top(errTxt(e), "err"); }); };
+        $("fLive").onclick = function () { save("live"); }; $("fHeld").onclick = function () { save("held"); }; $("fX").onclick = function () { $("aForm").innerHTML = ""; };
+      };
+      $("aNew").onclick = function () { form(); };
+      P.querySelectorAll("[data-ed]").forEach(function (b) { b.onclick = function () { form(r.ann.filter(function (a) { return a.id === b.dataset.ed; })[0]); }; });
+      P.querySelectorAll("[data-pub]").forEach(function (b) { b.onclick = function () { call("annSave", { id: b.dataset.pub, status: "live" }).then(drawClin); }; });
+      P.querySelectorAll("[data-hide]").forEach(function (b) { b.onclick = function () { call("annSave", { id: b.dataset.hide, status: "hidden" }).then(drawClin); }; });
+    }).catch(function (e) { P.innerHTML = '<div class="msg err">' + esc(errTxt(e)) + "</div>"; });
+  }
+  /* ======================= GUIDE & COMPLIANCE ======================= */
+  /* the guide text comes from the server (Firestore portal_content/instructor_guide, owner-editable) */
+  var GUIDE = null;
+  function mdInline(t) { return esc(t).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>").replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+|mailto:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>'); }
+  function md(src) {
+    var L = String(src || "").split("\n"), out = "", i = 0;
+    while (i < L.length) {
+      var l = L[i];
+      if (/^\s*$/.test(l)) { i++; continue; }
+      if (/^### /.test(l)) { out += "<h4>" + mdInline(l.slice(4)) + "</h4>"; i++; continue; }
+      if (/^## /.test(l)) { out += "<h3>" + mdInline(l.slice(3)) + "</h3>"; i++; continue; }
+      if (/^\|/.test(l)) { var rows = []; while (i < L.length && /^\|/.test(L[i])) { rows.push(L[i]); i++; } var cells = function (r) { return r.replace(/^\||\|$/g, "").split("|").map(function (c) { return c.trim(); }); }; var h = cells(rows[0]), body = rows.slice(/^\|\s*-/.test(rows[1] || "") ? 2 : 1); out += '<div class="tw"><table><tr>' + h.map(function (c) { return "<th>" + mdInline(c) + "</th>"; }).join("") + "</tr>" + body.map(function (r) { return "<tr>" + cells(r).map(function (c) { return "<td>" + mdInline(c) + "</td>"; }).join("") + "</tr>"; }).join("") + "</table></div>"; continue; }
+      if (/^- /.test(l)) { out += "<ul>"; while (i < L.length && /^- /.test(L[i])) { out += "<li>" + mdInline(L[i].slice(2)) + "</li>"; i++; } out += "</ul>"; continue; }
+      if (/^\d+\. /.test(l)) { out += "<ol>"; while (i < L.length && /^\d+\. /.test(L[i])) { out += "<li>" + mdInline(L[i].replace(/^\d+\. /, "")) + "</li>"; i++; } out += "</ol>"; continue; }
+      out += "<p>" + mdInline(l) + "</p>"; i++;
+    }
+    return out;
+  }
+  function fillGuide(t) {
+    var O = scope().slice(0, 4) === "org:" && DATA.o ? DATA.o.org : null;
+    var v = { className: O ? O.name : "Your class", joinCode: O ? (O.joinCode || "No join code yet: make one on the Codes tab") : "your class join code (on each class's Codes tab)", seats: O ? String(O.seats || "") : "your", level: O ? (LV[O.level] || O.level || "") : "", endDate: O && O.expiresAt ? new Date(O.expiresAt).toLocaleDateString() : "the end of your term" };
+    return String(t || "").replace(/\{\{(\w+)\}\}/g, function (m, k) { return v[k] != null ? v[k] : m; });
+  }
+  function drawGuide() {
+    var P = $("page");
+    if (!GUIDE) { P.innerHTML = '<div class="card"><p class="muted">Loading the program guide…</p></div>'; call("anaGuide").then(function (g) { GUIDE = g; drawGuide(); }).catch(function (e) { P.innerHTML = '<div class="msg err">' + esc(errTxt(e)) + "</div>"; }); return; }
+    /* level-only sections (for example Nursing school: NGN) show for classes of that level; the owner sees them all, marked */
+    var OV = scope().slice(0, 4) === "org:" && DATA.o ? DATA.o.org : null, lvlNow = OV ? OV.level : "";
+    var G = Object.assign({}, GUIDE, { sections: GUIDE.sections.filter(function (x) { return !x.only || ME.role === "owner" || x.only === lvlNow; }) }), nav = G.sections.map(function (x) { return '<a href="#" data-go="' + esc(x.id) + '">' + esc(x.title) + "</a>"; }).join(" · ");
+    var c = '<div class="hero"><h2>Zero student PII by design</h2><p style="margin:0">DrugBug never receives or stores a student\'s name, email, student ID or account link for class results. Each student is a numbered <b>seat</b> (Student 01, Student 02…). Only you connect a seat to a person, in your own browser or on paper.</p></div>' +
+      '<div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between"><div class="small">' + nav + "</div>" + (G.canEdit ? '<span class="small muted">' + (G.isDefault ? "Starting text (not edited yet)" : "Edited " + new Date(G.updatedAt).toLocaleString()) + (G.isDefault ? "" : ' · <a href="#" id="gReset">Go back to the starting text</a>') + "</span>" : "") + "</div></div>";
+    G.sections.forEach(function (x) {
+      c += '<div class="card guide" id="g-' + esc(x.id) + '">' + (x.only && ME.role === "owner" ? '<p class="small muted" style="margin:0 0 6px">Shown only to ' + esc(LV[x.only] || (x.only === "rnschool" ? "nursing school" : x.only)) + ' classes.</p>' : '') + '<div class="row" style="justify-content:flex-end;gap:6px">' + (x.print ? '<button class="ghost" data-print="' + esc(x.id) + '">Print or save as PDF</button><button class="ghost" data-dl="' + esc(x.id) + '">Download</button>' : "") + (G.canEdit ? '<button class="ghost" data-edit="' + esc(x.id) + '">Edit</button>' : "") + "</div>" + '<div class="gbody">' + md(fillGuide(x.md)) + "</div>" + (x.id === "pricing" ? reqForm() : "") + "</div>";
+    });
+    P.innerHTML = c;
+    P.querySelectorAll("[data-go]").forEach(function (a) { a.onclick = function (e) { e.preventDefault(); var t = $("g-" + a.dataset.go); if (t) t.scrollIntoView({ behavior: "smooth", block: "start" }); }; });
+    P.querySelectorAll("[data-print]").forEach(function (b) { b.onclick = function () { printSection(sec(b.dataset.print)); }; });
+    P.querySelectorAll("[data-dl]").forEach(function (b) { b.onclick = function () { var x = sec(b.dataset.dl), a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([pageHtml(x)], { type: "text/html" })); a.download = "DrugBug-FERPA-Institutional-Data-Privacy-Summary.html"; document.body.appendChild(a); a.click(); a.remove(); }; });
+    P.querySelectorAll("[data-edit]").forEach(function (b) { b.onclick = function () { editSection(sec(b.dataset.edit)); }; });
+    if ($("gReset")) $("gReset").onclick = function (e) { e.preventDefault(); if (!confirm("Go back to the starting text for every section? The current text is kept in the history.")) return; call("anaGuideSet", { reset: true }).then(function () { GUIDE = null; drawGuide(); }).catch(function (er) { top(errTxt(er), "err"); }); };
+    wireReq();
+  }
+  function sec(id) { return GUIDE.sections.filter(function (x) { return x.id === id; })[0]; }
+  function pageHtml(x) { return "<!doctype html><html><head><meta charset='utf-8'><title>" + esc(x.title) + "</title><style>body{font:14px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#111;max-width:760px;margin:32px auto;padding:0 24px}h3{font-size:22px;margin:0 0 6px}h4{font-size:15px;margin:18px 0 4px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ccc;padding:6px 8px;text-align:left;vertical-align:top}footer{margin-top:28px;font-size:12px;color:#555;border-top:1px solid #ccc;padding-top:8px}</style></head><body>" + md(fillGuide(x.md)) + "<footer>DrugBug · Volare Media LLC · drugbugapp.com · " + new Date().toLocaleDateString() + "</footer></body></html>"; }
+  function printSection(x) { var w = window.open("", "_blank"); if (!w) { top("Allow pop-ups for this page to print.", "err"); return; } w.document.write(pageHtml(x)); w.document.close(); w.focus(); setTimeout(function () { w.print(); }, 300); }
+  function editSection(x) {
+    var el = $("g-" + x.id);
+    el.innerHTML = '<h3>Edit: ' + esc(x.title) + '</h3><p class="sub">Markdown: ## heading, ### small heading, - bullet, 1. step, **bold**, [text](https://link), | table |. Placeholders for the class being viewed: {{className}} {{joinCode}} {{seats}} {{level}} {{endDate}}. Saved text shows to every instructor right away.</p><label class="small" for="gT">Section name</label><input id="gT" value="' + esc(x.title) + '"><label class="small" for="gM" style="display:block;margin-top:8px">Text</label><textarea id="gM" rows="22" spellcheck="true" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px">' + esc(x.md) + '</textarea><div class="row" style="margin-top:10px"><button class="btn" id="gSave">Save for every instructor</button><button class="ghost" id="gCancel">Cancel</button><span class="small muted" id="gMsg"></span></div><div class="card" style="margin-top:12px"><p class="small muted">Preview</p><div id="gPrev"></div></div>';
+    var prev = function () { $("gPrev").innerHTML = md(fillGuide($("gM").value)); }; $("gM").oninput = prev; prev();
+    $("gCancel").onclick = drawGuide;
+    $("gSave").onclick = function () {
+      var b = this; b.disabled = true;
+      var next = GUIDE.sections.map(function (s) { return s.id === x.id ? { id: s.id, title: $("gT").value.trim() || s.title, md: $("gM").value, print: !!s.print, only: s.only } : s; });
+      call("anaGuideSet", { sections: next }).then(function () { GUIDE = null; top("Saved. Instructors see the new text now.", "ok"); drawGuide(); }).catch(function (e) { b.disabled = false; $("gMsg").textContent = errTxt(e); });
+    };
+  }
+  function reqForm() {
+    var O = scope().slice(0, 4) === "org:" && DATA.o ? DATA.o.org : null, u = auth.currentUser;
+    return '<div style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px"><h4>Add classes, seats or your own protocols</h4><div class="row"><input id="rqName" placeholder="Your full name" style="flex:1;min-width:180px"><input id="rqEmail" type="email" placeholder="Work email" value="' + esc((u && u.email) || "") + '" style="flex:1;min-width:200px"><input id="rqOrg" placeholder="School or agency" value="' + esc(O ? O.name : "") + '" style="flex:1;min-width:200px"></div><div class="row" style="margin-top:8px"><select id="rqPkg" style="max-width:220px"><option value="unsure">Not sure yet</option><option value="analytics">Analytics</option><option value="protocols">Protocols</option><option value="combined">Combined Suite</option><option value="premium">Premium</option></select><input id="rqPeople" type="number" min="1" placeholder="How many people" style="max-width:170px"><input id="rqNotes" placeholder="What you need (more seats, another cohort, custom protocols…)" style="flex:2;min-width:240px"></div><div class="row" style="margin-top:8px"><button class="btn" id="rqGo">Send request</button><span class="small muted" id="rqMsg">DrugBug replies by email, usually within one business day.</span></div></div>';
+  }
+  function wireReq() {
+    if (!$("rqGo")) return;
+    $("rqGo").onclick = function () {
+      var b = this; b.disabled = true;
+      call("orgInquiry", { org: $("rqOrg").value, name: $("rqName").value, email: $("rqEmail").value, pkg: $("rqPkg").value, people: $("rqPeople").value, kind: "School or program", notes: "From the instructor portal: " + $("rqNotes").value }).then(function () { $("rqMsg").textContent = "Sent. DrugBug will reply by email."; }).catch(function (e) { b.disabled = false; $("rqMsg").textContent = errTxt(e); });
+    };
+  }
+
+  /* ---------- boot ---------- */
+  ["range", "internal"].forEach(function (id) { $(id).onchange = function () { if (scope() === "global") load(); }; });
+  ["plat", "trackSel"].forEach(function (id) { $(id).onchange = function () { if (this.id === "plat" && this.value) $("trackSel").value = ""; if (this.id === "trackSel" && this.value) $("plat").value = ""; if (scope() === "global" && DATA.g) draw(); }; });
+  $("scope").onchange = function () { TAB = ""; drawTabs(); load(); };
+  $("trackSel").innerHTML = '<option value="">All tracks</option>' + Object.keys(TRACKS).filter(function (k) { return k !== "ev"; }).map(function (k) { return '<option value="' + k + '">' + TRACKS[k] + "</option>"; }).join("");
+  $("bIn").onclick = function () { auth.signInWithEmailAndPassword($("em").value.trim(), $("pw").value).catch(function (e) { $("inMsg").textContent = (e && e.message) || "Couldn't sign in."; show("inMsg", true); }); };
+  $("bGoogle").onclick = function () { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(function (e) { $("inMsg").textContent = (e && e.message) || "Couldn't sign in."; show("inMsg", true); }); };
+  auth.onAuthStateChanged(function (u) {
+    var real = u && !u.isAnonymous;
+    $("who").innerHTML = real ? esc(u.email || "Signed in") + ' <button class="ghost" id="bOut">Sign out</button>' : "";
+    if (real) $("bOut").onclick = function () { auth.signOut(); };
+    show("vIn", !real); show("vMain", false); if (!real) return;
+    call("anaWho").then(function (w) {
+      ME = w; $("roleBadge").textContent = w.role === "owner" ? "Owner" : "Instructor";
+      var o = w.role === "owner" ? '<option value="global">All users (global)</option><option value="schools">All schools combined</option>' : "";
+      o += w.orgs.map(function (g) { return '<option value="org:' + esc(g.id) + '">' + esc(g.name) + "</option>"; }).join("");
+      $("scope").innerHTML = o;
+      var h = location.hash.slice(1); if (h && $("scope").querySelector('option[value="' + h + '"]')) $("scope").value = h;
+      show("vMain", true); drawTabs(); load();
+    }).catch(function (e) { show("vMain", true); $("page").innerHTML = '<div class="msg err">' + esc(errTxt(e)) + "</div>"; });
+  });
+})();
+</script>
+</body>
+</html>
