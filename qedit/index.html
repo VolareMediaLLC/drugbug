@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>DrugBug Question Editor</title>
+<meta name="theme-color" content="#13111c">
+<link rel="icon" type="image/png" sizes="48x48" href="../admin/icon-48.png">
+<style>
+:root{--bg:#13111c;--surface:#1d1a2a;--surface2:#251f37;--ink:#f2effb;--muted:#aaa3c4;--line:#322c47;--accent:#a78bfa;--teal:#2dd4bf;--good:#34d399;--warn:#fbbf24;--bad:#f87171;--track:#2b2540;--add:#12372b;--del:#45202a}
+@media (prefers-color-scheme:light){:root{--bg:#f6f4fc;--surface:#fff;--surface2:#f1edfa;--ink:#1c1730;--muted:#5f5878;--line:#e2dcef;--accent:#6d28d9;--teal:#0f766e;--good:#047857;--warn:#b45309;--bad:#b91c1c;--track:#ece7f6;--add:#d6f5e3;--del:#fde0e0}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1380px;margin:0 auto;padding:14px 16px 70px}
+.hide{display:none!important}
+header.site{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:2px 0 12px;border-bottom:1px solid var(--line)}
+header.site img{width:34px;height:34px;border-radius:9px}header.site b{font-size:19px}
+.badge{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:99px;background:var(--accent);color:#fff}
+.who{margin-left:auto;color:var(--muted);font-size:13px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+nav.tabs{position:sticky;top:0;z-index:5;background:var(--bg);display:flex;gap:4px;overflow-x:auto;padding:10px 0;margin-bottom:14px;border-bottom:1px solid var(--line)}
+nav.tabs button{flex:none;font:inherit;font-weight:650;font-size:14px;padding:8px 14px;border-radius:10px;border:1px solid transparent;background:transparent;color:var(--muted);cursor:pointer}
+nav.tabs button:hover{color:var(--ink);background:var(--surface)}
+nav.tabs button[aria-selected=true]{color:var(--ink);background:var(--surface);border-color:var(--line);box-shadow:inset 0 -2px 0 var(--accent)}
+nav.tabs .n{display:inline-block;min-width:20px;padding:0 6px;margin-left:6px;border-radius:99px;background:var(--bad);color:#fff;font-size:12px;text-align:center}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.card h2{font-size:17px;margin:0 0 4px}.card h3{font-size:14px;margin:0 0 8px}
+.muted{color:var(--muted)}.small{font-size:13px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.sp{justify-content:space-between}
+button.btn{font:inherit;font-weight:700;font-size:14px;padding:9px 14px;border-radius:10px;border:0;background:var(--accent);color:#fff;cursor:pointer}
+button.btn.good{background:var(--good);color:#04261a}button.btn.bad{background:var(--bad);color:#2b0606}button.btn.warn{background:var(--warn);color:#2b1c02}
+button.ghost{font:inherit;font-size:13px;font-weight:650;padding:7px 12px;border-radius:9px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+button.ghost:hover{border-color:var(--accent)}button.ghost[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:#fff}
+button:disabled{opacity:.5;cursor:default}
+input,select,textarea{font:inherit;font-size:14px;padding:8px 10px;border-radius:9px;border:1px solid var(--line);background:var(--surface2);color:var(--ink);width:100%}
+textarea{resize:vertical;min-height:44px}
+input[type=checkbox]{width:auto}
+label.f{display:block;font-size:12px;font-weight:700;color:var(--muted);margin:10px 0 4px;text-transform:uppercase;letter-spacing:.04em}
+.msg{padding:10px 12px;border-radius:10px;background:var(--surface2);border:1px solid var(--line);font-size:14px;margin:8px 0}
+.msg.err{border-color:var(--bad)}.msg.ok{border-color:var(--good)}.msg.warn{border-color:var(--warn)}
+/* filter bar */
+.filters{display:grid;grid-template-columns:2fr repeat(6,1fr);gap:8px}
+@media (max-width:1000px){.filters{grid-template-columns:1fr 1fr}}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.chip{font-size:12px;font-weight:700;padding:3px 9px;border-radius:99px;border:1px solid var(--line);background:var(--surface2);color:var(--muted);cursor:pointer;white-space:nowrap}
+.chip.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.chip.flag{border-color:var(--warn);color:var(--warn)}.chip.block{border-color:var(--bad);color:var(--bad)}.chip.okc{border-color:var(--good);color:var(--good)}
+.chip.s-live{color:var(--good);border-color:var(--good)}.chip.s-draft{color:var(--teal);border-color:var(--teal)}.chip.s-needs_ai_repair,.chip.s-hidden{color:var(--bad);border-color:var(--bad)}.chip.s-ai_fixed_pending_review{color:var(--warn);border-color:var(--warn)}.chip.s-retired,.chip.s-rule{color:var(--muted)}
+/* list */
+.qrow{display:grid;grid-template-columns:26px 150px 1fr auto;gap:10px;align-items:center;padding:9px 6px;border-bottom:1px solid var(--line);cursor:pointer}
+.qrow:hover{background:var(--surface2)}.qrow .st{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qrow .meta{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:800px){.qrow{grid-template-columns:26px 1fr}.qrow .meta,.qrow .fl{grid-column:2}}
+/* editor */
+.split{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:16px;align-items:start}
+@media (max-width:1050px){.split{grid-template-columns:1fr}}
+.opt{display:grid;grid-template-columns:30px 1fr 60px;gap:8px;align-items:center;margin-bottom:6px}
+.opt .let{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-weight:800;background:var(--track)}
+.opt.right .let{background:var(--good);color:#04261a}
+.bar{height:8px;border-radius:9px;background:var(--track);overflow:hidden}.bar i{display:block;height:100%;background:var(--teal)}.bar.over i{background:var(--bad)}
+.lint li{margin:2px 0}.lint{margin:6px 0 0;padding-left:18px;font-size:13px}
+.phone{width:100%;max-width:360px;margin:0 auto;border:10px solid #0b0a12;border-radius:36px;background:#111827;color:#EEF2FF;padding:18px 14px 20px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.phone .ph-top{font-size:11px;color:#9AA6C6;display:flex;justify-content:space-between;margin-bottom:10px}
+.phone .ph-q{font-size:16px;font-weight:650;line-height:1.4;margin-bottom:14px}
+.phone button.ph-o{display:block;width:100%;text-align:left;font:inherit;font-size:14.5px;line-height:1.35;padding:12px 14px;margin-bottom:9px;border-radius:14px;border:1.5px solid #2A3550;background:#1A2338;color:#EEF2FF;cursor:pointer;box-shadow:0 3px 0 #080C17}
+.phone button.ph-o.ok{border-color:#34C374;background:#123524}.phone button.ph-o.no{border-color:#F2686C;background:#3b1a1e}
+.phone .ph-x{font-size:13.5px;line-height:1.45;background:#1F2A44;border-radius:12px;padding:10px 12px;margin-top:6px}
+/* diff */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media (max-width:900px){.two{grid-template-columns:1fr}}
+.side{background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:12px}
+.side h4{margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.side ol{margin:8px 0;padding-left:22px}.side li{margin:3px 0}.side li.right{font-weight:700;color:var(--good)}
+ins{background:var(--add);text-decoration:none;border-radius:3px;padding:0 2px}del{background:var(--del);border-radius:3px;padding:0 2px}
+.tk{border-left:3px solid var(--warn);padding:4px 10px;margin:6px 0;font-size:13px;background:var(--surface2);border-radius:0 8px 8px 0}.tk.urgent{border-color:var(--bad)}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}th{font-size:12px;color:var(--muted);text-transform:uppercase}
+.verd{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}@media (max-width:600px){.verd{grid-template-columns:1fr}}
+.verd button{padding:14px 8px;font-size:15px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="site">
+  <img src="../admin/icon-48.png" alt=""><b>DrugBug Question Editor</b><span class="badge" id="roleBadge"></span>
+  <div class="who" id="who"></div>
+</header>
+
+<section id="vIn" class="card hide" style="max-width:440px;margin:40px auto">
+  <h2>Sign in</h2><p class="muted small">For the DrugBug owner and evaluators.</p>
+  <label class="f" for="em">Email</label><input id="em" type="email" autocomplete="email">
+  <label class="f" for="pw">Password</label><input id="pw" type="password" autocomplete="current-password">
+  <div class="row" style="margin-top:12px"><button class="btn" id="bIn">Sign in</button><button class="ghost" id="bGoogle">Continue with Google</button></div>
+  <div id="inMsg" class="msg err hide"></div>
+</section>
+
+<section id="vJoin" class="card hide" style="max-width:480px;margin:40px auto">
+  <h2>Enter your evaluator code</h2>
+  <p class="muted small">This sign-in is not linked to an evaluator code yet. Type the code Adam gave you (it starts with EVAL). You only do this once.</p>
+  <input id="joinCode" placeholder="EVAL-XXXXXX" autocomplete="off" style="text-transform:uppercase">
+  <div class="row" style="margin-top:12px"><button class="btn" id="bJoin">Link my code</button></div>
+  <div id="joinMsg" class="msg err hide"></div>
+</section>
+
+<div id="vMain" class="hide">
+  <nav class="tabs" id="tabs"></nav>
+  <div id="topMsg" class="msg hide"></div>
+  <section data-page="browse" class="hide"></section>
+  <section data-page="edit" class="hide"></section>
+  <section data-page="review" class="hide"></section>
+  <section data-page="queue" class="hide"></section>
+  <section data-page="signoff" class="hide"></section>
+  <section data-page="evals" class="hide"></section>
+  <section data-page="proto" class="hide"></section>
+</div>
+</div>
+
+<script src="../app/vendor/firebase-app-compat.js"></script>
+<script src="../app/vendor/firebase-auth-compat.js"></script>
+<script>
+(function () {
+  "use strict";
+  /* The Question Editor (Nov 21 2026). The questions ship inside the app; this page keeps edits on top of them.
+     Every rule about who may do what is enforced by the server functions (functions/qedit.js). This page holds
+     no secrets, and nothing an AI writes goes live without the owner's sign-off. */
+  var CFG = { apiKey: "AIzaSyC7cNkPSpPqfHPLNSY54u8QSL1jnaYsVMM", authDomain: "drugbug-69d42.firebaseapp.com", projectId: "drugbug-69d42", appId: "1:123306339603:web:2a0021f13fd8e620253ee6" };
+  var FN = "https://us-central1-drugbug-69d42.cloudfunctions.net/";
+  var local = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) && /[?&]emu=1/.test(location.search);
+  if (local) { CFG.apiKey = "demo-key"; CFG.projectId = "demo-drugbug"; FN = "http://127.0.0.1:5001/demo-drugbug/us-central1/"; }
+  firebase.initializeApp(CFG);
+  var auth = firebase.auth();
+  if (local) auth.useEmulator("http://127.0.0.1:9099", { disableWarnings: true });
+
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
+  var show = function (el, on) { (typeof el === "string" ? $(el) : el).classList.toggle("hide", !on); };
+  var page = function (k) { return document.querySelector('section[data-page="' + k + '"]'); };
+  var ago = function (ms) { if (!ms) return ""; var m = Math.round((Date.now() - ms) / 60000); return m < 1 ? "just now" : m < 60 ? m + " min ago" : m < 1440 ? Math.round(m / 60) + " h ago" : Math.round(m / 1440) + " d ago"; };
+  function call(name, data) {
+    var u = auth.currentUser;
+    var go = function (tok) { var h = { "Content-Type": "application/json" }; if (tok) h.Authorization = "Bearer " + tok; return fetch(FN + name, { method: "POST", headers: h, body: JSON.stringify({ data: data || {} }) }); };
+    return (u ? u.getIdToken().then(go) : go(null)).then(function (r) { if (r.status === 404) throw new Error("not deployed"); return r.json(); })
+      .then(function (j) { if (j.error) { var e = new Error(j.error.message || j.error.status); e.status = j.error.status; throw e; } return j.result; });
+  }
+  var errTxt = function (e) { return /not deployed|failed to fetch|cors/i.test((e && e.message) || "") ? "The server part of the editor is not deployed yet. Double-click DEPLOY.cmd on your PC, then refresh." : (e && e.message) || "Something went wrong."; };
+  function top(text, kind) { var m = $("topMsg"); m.className = "msg " + (kind || ""); m.textContent = text; show(m, !!text); if (text && kind !== "err") setTimeout(function () { if (m.textContent === text) show(m, false); }, 6000); }
+
+  /* ---------- names ---------- */
+  var LV = { emt: "EMT", aemt: "AEMT", paramedic: "Paramedic", flight: "Flight Paramedic", cp: "Community Paramedic", cpp: "Critical Care Paramedic", tccc: "Tactical", cna: "CNA", lvn: "LVN / LPN", rn: "RN", flightrn: "Flight Nurse", ms1: "Medical Student (Preclinical)", ms3: "Medical Student (Clinical / Step 2)", intern: "Intern", im: "Imaging Technologist", asm: "Imaging: ASM", cls: "Imaging: CLS", cmc: "Imaging: CMC", gen: "General public", diet: "Dietitian", rrt: "Respiratory Therapist", phleb: "Phlebotomist", anes: "Anesthesia Tech", mh: "Mental Health Tech", dent: "Dental", slp: "Speech-Language Pathology", pt: "PT / OT", surg: "Surgical Tech", ekg: "EKG Tech" };
+  var TRACK_OF = { emt: "ph", aemt: "ph", paramedic: "ph", flight: "ph", cp: "ph", cpp: "ph", tccc: "ph", cna: "rn", lvn: "rn", rn: "rn", flightrn: "rn", ms1: "md", ms3: "md", intern: "md", im: "im", asm: "im", cls: "im", cmc: "im", gen: "gen" };
+  var TRACKS = { ph: "Prehospital", rn: "Nursing", md: "Medical school", im: "Imaging", ah: "Allied health", gen: "General public" };
+  var trackOf = function (lv) { return TRACK_OF[lv] || "ah"; };
+  var BANK = { Q: "Standard bank", RQ: "Clinical bank", QX: "Select-all / ordering", PILOT: "Pilot bank", PROTO: "Protocol packs" };
+  var STATUS = { live: "Live", draft: "Draft", needs_ai_repair: "Needs repair", ai_fixed_pending_review: "Ready for sign-off", retired: "Retired", hidden: "Pulled (hidden)", rule: "Hidden by app rule" };
+  var MODE = { standard: "Standard Drug Bank", step2: "Step 2 exception", givehold: "Nursing Give / Hold", protocol: "Protocol pack (protocol doses allowed)" };
+  var FLAG = { dose_unit: "Dose or unit in an answer", hold_stop: "Hold / stop answer", negative_stem: "Negative stem", action_stem: "Action-style stem", long_stem: "Stem too long", longest_answer: "Right answer is the longest (>25%)", all_none: "All / none of the above" };
+  var TAGS = { clinical_error: "Clinical error", too_easy: "Too easy", weak_decoys: "Weak decoys", too_long: "Too long", rule_break: "Rule break", wrong_scope: "Wrong scope" };
+  var TAG_SYS = { student_report: "Student report", fda_update: "FDA label update" };   /* tickets made by the server (reports, Clinical Watch) */
+  var CATS = ["Mechanism", "Indication", "Contraindication", "Side Effects", "Interaction", "Monitoring", "Drug Class"];
+
+  /* ---------- the linter (the server runs the same checks before anything is saved) ---------- */
+  var RX_UNIT = /\b\d[\d,.]*\s?(mg|mcg|µg|mL|ml|units?|mEq|IU|gtt)(\/(kg|min|hr|h|hour|dose|day|mL|L))*\b|\bbolus of \d/i;
+  var RX_HOLD = /\b(hold|withhold|stop|discontinue)\b/i, RX_NEG = /\b(NOT|EXCEPT|LEAST)\b|should not|all of the following except/;
+  var RX_ALL = /all of the above|none of the above|both a and b/i, RX_ACT = /what (should|would|do) you do|next (step|action)|best (next|first|initial) (step|action)/i;
+  var words = function (s) { return String(s || "").split(/\s+/).filter(Boolean).length; };
+  function lint(f, meta, isX) {
+    var block = [], warn = [], opts = isX ? (f.opts || []) : [f.a].concat(f.w || []);
+    if (RX_ALL.test(opts.join(" | "))) block.push("all_none");
+    if (opts.some(function (s) { return RX_UNIT.test(s); }) && !meta.doseOk && meta.mode !== "protocol") warn.push("dose_unit");
+    if (opts.some(function (s) { return RX_HOLD.test(s); }) && meta.mode !== "givehold" && meta.mode !== "protocol") warn.push("hold_stop");
+    if (RX_NEG.test(f.q) && meta.mode === "standard") warn.push("negative_stem");
+    if (RX_ACT.test(f.q) && meta.mode === "standard") warn.push("action_stem");
+    if (words(f.q) > (meta.difficulty >= 4 ? 35 : 25)) warn.push("long_stem");
+    if (!isX) { var L = opts.map(function (s) { return String(s || "").length; }), avg = (L[1] + L[2] + L[3]) / 3; if (avg && L[0] > avg * 1.25 && L[0] === Math.max.apply(null, L)) warn.push("longest_answer"); }
+    return { block: block, warn: warn };
+  }
+
+  /* ---------- data ---------- */
+  var ME = null, CAT = [], BY = {}, ST = {}, OPEN = {}, LIVE = { edit: {}, hide: [] }, MINE = {}, URGENT_LEFT = 3;
+  function protoItem(id, lv, f, meta) { return { id: id, b: "PROTO", lv: lv || "", d: "", dn: (meta && meta.drug) || (meta && meta.protocolName) || "protocol", q: f.q, a: f.a, w: (f.w || []).slice(), x: f.x || "", cat: f.cat || "" }; }
+  function fieldsOf(it) { return it.t ? { q: it.q, x: it.x, cat: it.cat || "", opts: it.opts.slice(), ok: it.ok.slice() } : { q: it.q, x: it.x, cat: it.cat || "", a: it.a, w: it.w.slice() }; }
+  function liveFields(it) { var s = ST[it.id], l = (s && s.live) || LIVE.edit[it.id]; return l ? Object.assign(fieldsOf(it), l) : fieldsOf(it); }
+  function metaOf(it) { var s = ST[it.id], m = (s && s.meta) || {}; return { mode: m.mode || (it.gh ? "givehold" : it.lv === "ms3" || it.lv === "intern" ? "step2" : "standard"), difficulty: m.difficulty || 0, category: m.category || it.cat || "", role: LV[it.lv] || it.lv, drug: it.dn || it.d || "", doseOk: !!m.doseOk }; }
+  function statusOf(it) { var s = ST[it.id]; if (s) { if (s.status === "retired") return "retired"; if (s.hidden) return "hidden"; if (s.status && s.status !== "live") return s.status; } return it.off === 2 ? "rule" : "live"; }
+  function base(it) { return { id: it.id, bank: it.b, lv: it.lv, baseQ: String(it.q).slice(0, 300) }; }
+  function flagsOf(it) { if (it._fl && it._flv === (ST[it.id] ? ST[it.id].rev : 0)) return it._fl; var L = lint(liveFields(it), metaOf(it), !!it.t); it._fl = L.block.concat(L.warn); it._flv = ST[it.id] ? ST[it.id].rev : 0; return it._fl; }
+  function loadCatalog() { return fetch("catalog.json?v=" + Math.floor(Date.now() / 3600000)).then(function (r) { return r.json(); }).then(function (c) { CAT = []; BY = {}; c.items.forEach(function (it) { if (BY[it.id]) return; BY[it.id] = it; CAT.push(it); }); }); }
+  function loadState() {
+    if (ME.role !== "admin") return Promise.all([call("qeState"), call("qeLive")]).then(function (r) { MINE = {}; (r[0].mine || []).forEach(function (id) { MINE[id] = 1; }); URGENT_LEFT = r[0].urgentLeft; LIVE = { edit: r[1].edit || {}, hide: r[1].hide || [] }; });
+    return call("qeState").then(function (r) {
+      ST = r.items || {}; OPEN = r.open || {};
+      /* approved protocol questions are not in the shipped catalogue: list them from the server */
+      CAT = CAT.filter(function (it) { if (it.b === "PROTO") { delete BY[it.id]; return false; } return true; });
+      Object.keys(ST).forEach(function (id) { var x = ST[id]; if (x.bank === "PROTO" && x.live) { var it = protoItem(id, x.lv, x.live, x.meta); BY[id] = it; CAT.push(it); } });
+    });
+  }
+
+  /* ---------- tabs ---------- */
+  var TAB = "", PAGES = [];
+  function tabs() {
+    PAGES = ME.role === "admin" ? [["browse", "Browse & Edit"], ["review", "Review"], ["queue", "Repair Queue"], ["signoff", "Ready for Sign-Off"], ["proto", "Protocols"], ["evals", "Evaluators"]] : [["review", "Review questions"]];
+    var nq = Object.keys(OPEN).length, ns = Object.keys(ST).filter(function (k) { return ST[k].status === "ai_fixed_pending_review"; }).length;
+    $("tabs").innerHTML = PAGES.map(function (p) { var n = p[0] === "queue" ? nq : p[0] === "signoff" ? ns : 0; return '<button data-t="' + p[0] + '" aria-selected="' + (TAB === p[0] || (TAB === "edit" && p[0] === "browse")) + '">' + p[1] + (n ? '<span class="n">' + n + "</span>" : "") + "</button>"; }).join("");
+    $("tabs").querySelectorAll("button").forEach(function (b) { b.onclick = function () { go(b.dataset.t); }; });
+  }
+  function go(t) {
+    tabs();
+    if (!PAGES.some(function (p) { return p[0] === t; })) t = PAGES[0][0];
+    TAB = t; tabs();
+    ["browse", "edit", "review", "queue", "signoff", "evals", "proto"].forEach(function (k) { show(page(k), k === t); });
+    ({ browse: drawBrowse, review: drawReview, queue: drawQueue, signoff: drawSignoff, evals: drawEvals, proto: drawProto, edit: function () {} })[t]();
+    window.scrollTo(0, 0);
+  }
+
+  /* ---------- Browse ---------- */
+  var F = { text: "", mode: "", lv: "", cat: "", diff: "", flag: "", status: "", bank: "" }, SEL = {}, SHOWN = 150, RES = [];
+  function opt(v, t, cur) { return '<option value="' + esc(v) + '"' + (String(cur) === String(v) ? " selected" : "") + ">" + esc(t) + "</option>"; }
+  function drawBrowse() {
+    var P = page("browse");
+    var lvs = Object.keys(LV).filter(function (k) { return CAT.some(function (it) { return it.lv === k; }); });
+    P.innerHTML = '<div class="card"><div class="filters">' +
+      '<input id="fText" type="search" placeholder="Search stem, answers, drug, id, batch tag" value="' + esc(F.text) + '">' +
+      '<select id="fMode">' + opt("", "Any mode", F.mode) + Object.keys(MODE).map(function (k) { return opt(k, MODE[k], F.mode); }).join("") + "</select>" +
+      '<select id="fLv">' + opt("", "Any role", F.lv) + Object.keys(TRACKS).map(function (t) { return opt("t:" + t, "All " + TRACKS[t], F.lv); }).join("") + lvs.map(function (k) { return opt(k, LV[k], F.lv); }).join("") + "</select>" +
+      '<select id="fCat">' + opt("", "Any category", F.cat) + CATS.map(function (c) { return opt(c, c, F.cat); }).join("") + opt("-", "No category", F.cat) + "</select>" +
+      '<select id="fDiff">' + opt("", "Any difficulty", F.diff) + [1, 2, 3, 4, 5].map(function (d) { return opt(d, "Difficulty " + d, F.diff); }).join("") + opt("0", "Not rated", F.diff) + "</select>" +
+      '<select id="fFlag">' + opt("", "Any rule state", F.flag) + opt("*", "Any rule flag", F.flag) + opt("clean", "No flags", F.flag) + Object.keys(FLAG).map(function (k) { return opt(k, FLAG[k], F.flag); }).join("") + "</select>" +
+      '<select id="fStatus">' + opt("", "Any status", F.status) + Object.keys(STATUS).map(function (k) { return opt(k, STATUS[k], F.status); }).join("") + opt("edited", "Edited (has live changes)", F.status) + "</select>" +
+      '</div><div class="chips" id="fBanks"></div><div class="chips" id="counters"></div></div>' +
+      '<div class="card"><div class="row sp" style="margin-bottom:6px"><b id="resN"></b><div class="row"><span class="muted small" id="selN"></span>' +
+      '<button class="ghost" id="bSelAll">Select shown</button><button class="ghost" id="bSelNone">Clear</button><button class="ghost" id="bSelRelay">Export selected for relay</button><button class="btn" id="bSelAi">Fix selected with Claude</button></div></div><div id="list"></div><div class="row" style="justify-content:center;margin-top:10px"><button class="ghost" id="bMore">Show more</button></div></div>';
+    ["fText", "fMode", "fLv", "fCat", "fDiff", "fFlag", "fStatus"].forEach(function (id) { $(id).oninput = function () { F = { text: $("fText").value, mode: $("fMode").value, lv: $("fLv").value, cat: $("fCat").value, diff: $("fDiff").value, flag: $("fFlag").value, status: $("fStatus").value, bank: F.bank }; SHOWN = 150; runFilter(); }; });
+    $("bMore").onclick = function () { SHOWN += 300; drawList(); };
+    $("bSelAll").onclick = function () { RES.slice(0, SHOWN).forEach(function (it) { SEL[it.id] = 1; }); drawList(); };
+    $("bSelNone").onclick = function () { SEL = {}; drawList(); };
+    $("bSelRelay").onclick = function () { relayExport(Object.keys(SEL).map(function (id) { return BY[id]; }).filter(Boolean)); };
+    $("bSelAi").onclick = function () { aiFix(Object.keys(SEL).map(function (id) { return BY[id]; }).filter(Boolean), this); };
+    runFilter();
+  }
+  function runFilter() {
+    var t = F.text.trim().toLowerCase(), counts = { flags: {}, status: {}, bank: {} };
+    RES = CAT.filter(function (it) {
+      if (F.lv) { if (F.lv.slice(0, 2) === "t:" ? trackOf(it.lv) !== F.lv.slice(2) : it.lv !== F.lv) return false; }
+      var m = metaOf(it), st = statusOf(it), fl = flagsOf(it), s = ST[it.id];
+      if (F.mode && m.mode !== F.mode) return false;
+      if (F.cat && (F.cat === "-" ? m.category : m.category !== F.cat)) return false;
+      if (F.diff !== "" && String(m.difficulty) !== F.diff) return false;
+      if (F.status && (F.status === "edited" ? !(s && s.live) : st !== F.status)) return false;
+      if (F.flag && (F.flag === "*" ? !fl.length : F.flag === "clean" ? fl.length : fl.indexOf(F.flag) < 0)) return false;
+      if (t) { var f = liveFields(it), hay = [it.id, it.dn, it.d, f.q, f.a, (f.w || []).join(" "), (f.opts || []).join(" "), s && s.batchTag].join(" ").toLowerCase(); if (hay.indexOf(t) < 0) return false; }
+      counts.bank[it.b] = (counts.bank[it.b] || 0) + 1;
+      if (F.bank && it.b !== F.bank) return false;
+      fl.forEach(function (k) { counts.flags[k] = (counts.flags[k] || 0) + 1; }); counts.status[st] = (counts.status[st] || 0) + 1;
+      return true;
+    });
+    $("fBanks").innerHTML = '<span class="chip' + (!F.bank ? " on" : "") + '" data-b="">All banks</span>' + Object.keys(BANK).map(function (b) { return '<span class="chip' + (F.bank === b ? " on" : "") + '" data-b="' + b + '">' + BANK[b] + " " + (counts.bank[b] || 0).toLocaleString() + "</span>"; }).join("");
+    $("fBanks").querySelectorAll(".chip").forEach(function (c) { c.onclick = function () { F.bank = c.dataset.b; SHOWN = 150; runFilter(); }; });
+    $("counters").innerHTML = Object.keys(counts.status).map(function (k) { return '<span class="chip s-' + k + '">' + STATUS[k] + " " + counts.status[k].toLocaleString() + "</span>"; }).join("") +
+      Object.keys(FLAG).filter(function (k) { return counts.flags[k]; }).map(function (k) { return '<span class="chip ' + (k === "all_none" ? "block" : "flag") + '" data-f="' + k + '">' + FLAG[k] + " " + counts.flags[k].toLocaleString() + "</span>"; }).join("");
+    $("counters").querySelectorAll("[data-f]").forEach(function (c) { c.onclick = function () { F.flag = c.dataset.f; drawBrowse(); }; });
+    drawList();
+  }
+  function drawList() {
+    $("resN").textContent = "Showing " + Math.min(SHOWN, RES.length).toLocaleString() + " of " + RES.length.toLocaleString() + " matching (" + CAT.length.toLocaleString() + " in the banks)";
+    $("selN").textContent = Object.keys(SEL).length ? Object.keys(SEL).length + " selected" : "";
+    $("list").innerHTML = RES.slice(0, SHOWN).map(function (it) {
+      var st = statusOf(it), fl = flagsOf(it), f = liveFields(it);
+      return '<div class="qrow" data-id="' + it.id + '"><input type="checkbox" data-c="' + it.id + '"' + (SEL[it.id] ? " checked" : "") + '><div class="meta">' + esc(LV[it.lv] || it.lv) + " · " + esc(it.dn || it.d || "general") + '</div><div class="st">' + esc(f.q) + '</div><div class="fl row" style="gap:4px;flex-wrap:nowrap">' +
+        (OPEN[it.id] ? '<span class="chip block">' + OPEN[it.id] + " ticket" + (OPEN[it.id] > 1 ? "s" : "") + "</span>" : "") + (st !== "live" ? '<span class="chip s-' + st + '">' + STATUS[st] + "</span>" : "") + fl.slice(0, 2).map(function (k) { return '<span class="chip flag">' + FLAG[k].split(" ").slice(0, 2).join(" ") + "</span>"; }).join("") + "</div></div>";
+    }).join("") || '<p class="muted">Nothing matches these filters.</p>';
+    show("bMore", RES.length > SHOWN);
+    $("list").querySelectorAll(".qrow").forEach(function (r) { r.onclick = function (e) { if (e.target.dataset.c) { if (e.target.checked) SEL[e.target.dataset.c] = 1; else delete SEL[e.target.dataset.c]; $("selN").textContent = Object.keys(SEL).length ? Object.keys(SEL).length + " selected" : ""; return; } openEditor(r.dataset.id); }; });
+  }
+
+  /* ---------- Editor ---------- */
+  var ED = null;
+  function openEditor(id, preset) {
+    var it = BY[id]; if (!it) return;
+    TAB = "edit"; tabs(); ["browse", "review", "queue", "signoff", "evals", "proto"].forEach(function (k) { show(page(k), false); }); show(page("edit"), true); window.scrollTo(0, 0);
+    page("edit").innerHTML = '<div class="card"><p class="muted">Loading the question, its tickets and its history…</p></div>';
+    call("qeGet", { id: id }).then(function (r) {
+      var d = r.doc || {};
+      ED = { it: it, doc: d, rev: d.rev || 0, f: preset || d.draft || liveFields(it), meta: metaOf(it), revisions: r.revisions || [], tickets: r.tickets || [], order: null, shown: false, fromDraft: !preset && !!d.draft };
+      if (d.meta) ED.meta = Object.assign(ED.meta, d.meta, { role: ED.meta.role, drug: ED.meta.drug });
+      drawEditor();
+    }).catch(function (e) { page("edit").innerHTML = '<div class="msg err">' + esc(errTxt(e)) + "</div>"; });
+  }
+  function drawEditor() {
+    var it = ED.it, f = ED.f, m = ED.meta, isX = !!it.t, st = statusOf(it), P = page("edit");
+    var optsHtml = isX
+      ? f.opts.map(function (o, i) { return '<div class="opt"><input type="checkbox" data-ok="' + i + '"' + (f.ok.indexOf(o) >= 0 ? " checked" : "") + ' title="Correct"><textarea rows="1" data-xo="' + i + '">' + esc(o) + '</textarea><div class="small muted">' + o.length + "</div></div>"; }).join("")
+      : ["a", 0, 1, 2].map(function (k, i) { var v = k === "a" ? f.a : f.w[k]; return '<div class="opt' + (i === 0 ? " right" : "") + '"><div class="let">' + (i === 0 ? "✓" : "✗") + '</div><textarea rows="1" data-o="' + i + '" aria-label="' + (i === 0 ? "Right answer" : "Wrong answer " + i) + '">' + esc(v) + '</textarea><div><div class="small muted" data-len="' + i + '"></div><div class="bar" data-bar="' + i + '"><i></i></div></div></div>'; }).join("");
+    P.innerHTML = '<div class="row sp" style="margin-bottom:10px"><div class="row"><button class="ghost" id="eBack">← Back to the list</button><span class="chip s-' + st + '">' + STATUS[st] + "</span>" + (ED.fromDraft ? '<span class="chip s-draft">Showing your saved draft</span>' : "") + '<span class="muted small">' + esc(BANK[it.b]) + " · " + esc(LV[it.lv] || it.lv) + " · " + esc(it.dn || it.d || "general") + " · id " + esc(it.id) + " · revision " + ED.rev + "</span></div></div>" +
+      '<div class="split"><div><div class="card">' +
+      '<label class="f" for="eQ">Stem <span id="eWords"></span></label><textarea id="eQ" rows="3">' + esc(f.q) + "</textarea>" +
+      '<label class="f">' + (isX ? "Options (tick the correct ones)" : "Answers: the right one first, then three wrong. The app shuffles them.") + "</label>" + optsHtml +
+      '<label class="f" for="eX">Explanation</label><textarea id="eX" rows="3">' + esc(f.x) + "</textarea>" +
+      '<div class="row" style="margin-top:6px"><div style="flex:1;min-width:150px"><label class="f" for="eMode">Mode</label><select id="eMode">' + Object.keys(MODE).map(function (k) { return opt(k, MODE[k], m.mode); }).join("") + "</select></div>" +
+      '<div style="flex:1;min-width:120px"><label class="f" for="eDiff">Difficulty</label><select id="eDiff">' + opt(0, "Not rated", m.difficulty) + [1, 2, 3, 4, 5].map(function (d) { return opt(d, d + (d === 2 ? " Easy" : d === 3 ? " Normal" : d === 4 ? " Hard" : ""), m.difficulty); }).join("") + "</select></div>" +
+      '<div style="flex:1;min-width:150px"><label class="f" for="eCat">Category</label><select id="eCat">' + opt("", "None", m.category) + CATS.map(function (c) { return opt(c, c, m.category); }).join("") + (m.category && CATS.indexOf(m.category) < 0 ? opt(m.category, m.category, m.category) : "") + "</select></div>" +
+      '<div style="flex:1;min-width:140px"><label class="f" for="eTag">Batch tag</label><input id="eTag" value="' + esc(ED.doc.batchTag || "") + '" placeholder="optional"></div></div>' +
+      '<label class="row small" style="margin-top:10px;gap:6px"><input type="checkbox" id="eDose"' + (m.doseOk ? " checked" : "") + '> Resuscitation / safety exception: a dose is allowed here (ACLS, PALS, NRP, anaphylaxis, potassium)</label>' +
+      '</div><div class="card"><h3>Rule check</h3><div id="eLint"></div></div>' +
+      '<div class="card"><div class="row"><button class="btn good" id="ePub">Save &amp; Publish</button><button class="ghost" id="eDraft">Save draft</button>' +
+      (st === "retired" || st === "hidden" ? '<button class="btn warn" id="eRestore">Restore to live</button>' : '<button class="ghost" id="eRetire">Retire</button>') +
+      (isX ? "" : '<button class="btn" id="eAi">AI rewrite</button>') + '<button class="ghost" id="eReset">Reset to the shipped text</button></div><div id="eMsg" class="msg hide"></div><div id="eProp"></div></div>' +
+      (ED.tickets.length ? '<div class="card"><h3>Evaluator tickets</h3>' + ED.tickets.map(ticketHtml).join("") + "</div>" : "") +
+      '<div class="card"><h3>Revision history</h3>' + (ED.revisions.length ? "<table><tr><th>When</th><th>Action</th><th>What it replaced</th><th></th></tr>" + ED.revisions.map(function (r) { var p = {}; try { p = JSON.parse(r.previous_json); } catch (e) {} return "<tr><td>" + new Date(r.timestamp).toLocaleString() + "</td><td>" + esc(r.action) + '</td><td class="small muted">' + esc(p.live ? p.live.q : "the shipped question") + " (" + esc(STATUS[p.hidden ? "hidden" : p.status] || p.status) + ')</td><td><button class="ghost" data-rev="' + r.timestamp + '">Revert to this</button></td></tr>'; }).join("") + "</table>" : '<p class="muted small">No changes yet. This is the question as shipped.</p>') + "</div>" +
+      '</div><div><div class="card" style="position:sticky;top:64px"><div class="row sp"><h3 style="margin:0">Phone preview</h3><div class="row"><button class="ghost" id="pShuf">Shuffle</button><button class="ghost" id="pShow">Show answer</button></div></div><div style="height:10px"></div><div id="phone"></div></div></div></div>';
+    var read = function () {
+      f.q = $("eQ").value; f.x = $("eX").value;
+      if (isX) { var o = []; P.querySelectorAll("[data-xo]").forEach(function (t) { o.push(t.value); }); var ok = []; P.querySelectorAll("[data-ok]").forEach(function (c) { if (c.checked) ok.push(o[+c.dataset.ok]); }); f.opts = o; f.ok = ok; }
+      else { var v = []; P.querySelectorAll("[data-o]").forEach(function (t) { v.push(t.value); }); f.a = v[0]; f.w = v.slice(1); }
+      m.mode = $("eMode").value; m.difficulty = +$("eDiff").value; m.category = $("eCat").value; m.doseOk = $("eDose").checked; f.cat = m.category;
+      refresh();
+    };
+    var refresh = function () {
+      var w = words(f.q), cap = m.difficulty >= 4 ? 35 : 25;
+      $("eWords").innerHTML = '<span style="color:' + (w > cap ? "var(--bad)" : "var(--good)") + '">' + w + " / " + cap + " words</span>";
+      if (!isX) { var L = [f.a].concat(f.w).map(function (s) { return s.length; }), mx = Math.max.apply(null, L.concat([1])), avg = (L[1] + L[2] + L[3]) / 3 || 1; L.forEach(function (n, i) { P.querySelector('[data-len="' + i + '"]').textContent = n + (i === 0 ? " (" + (n >= avg ? "+" : "") + Math.round((n / avg - 1) * 100) + "%)" : ""); var b = P.querySelector('[data-bar="' + i + '"]'); b.firstChild.style.width = Math.round((100 * n) / mx) + "%"; b.classList.toggle("over", i === 0 && n > avg * 1.25 && n === mx); }); }
+      var R = lint(f, m, isX);
+      $("eLint").innerHTML = (R.block.length || R.warn.length ? '<ul class="lint">' + R.block.map(function (k) { return '<li style="color:var(--bad)"><b>Blocks publishing:</b> ' + FLAG[k] + "</li>"; }).join("") + R.warn.map(function (k) { return '<li style="color:var(--warn)">' + FLAG[k] + (k === "dose_unit" ? " (tick the exception box if this is a resuscitation or safety dose)" : k === "hold_stop" ? " (allowed only in Nursing Give / Hold mode)" : k === "long_stem" ? " (cap is " + cap + " words)" : "") + "</li>"; }).join("") + "</ul>" : '<span class="chip okc">Passes every house rule</span>');
+      $("ePub").disabled = !!R.block.length;
+      phone($("phone"), f, isX, ED);
+    };
+    P.querySelectorAll("textarea,select,input").forEach(function (el) { el.oninput = read; });
+    $("eBack").onclick = function () { go("browse"); };
+    $("pShuf").onclick = function () { ED.order = null; ED.shown = false; refresh(); };
+    $("pShow").onclick = function () { ED.shown = !ED.shown; refresh(); };
+    var msg = function (t, k) { $("eMsg").className = "msg " + (k || ""); $("eMsg").textContent = t; show("eMsg", !!t); };
+    var save = function (action, btn) {
+      read(); btn.disabled = true; msg("Saving…");
+      call("qeSave", Object.assign(base(it), { action: action, fields: f, meta: m, batchTag: $("eTag").value, expectRev: ED.rev })).then(function (r) {
+        return loadState().then(function () { it._fl = null; top(action === "publish" ? "Published. Students get it the next time their app checks in (within about 10 minutes, or when they reopen it)." : action === "draft" ? "Draft saved. Students still see the live version." : action === "retire" ? "Retired. It is hidden from students." : "Restored to live.", "ok"); openEditor(it.id); });
+      }).catch(function (e) { btn.disabled = false; msg(errTxt(e), "err"); });
+    };
+    $("ePub").onclick = function () { save("publish", this); };
+    $("eDraft").onclick = function () { save("draft", this); };
+    if ($("eRetire")) $("eRetire").onclick = function () { if (confirm("Retire this question? It is hidden from students until you restore it.")) save("retire", this); };
+    if ($("eRestore")) $("eRestore").onclick = function () { save("restore", this); };
+    $("eReset").onclick = function () { ED.f = fieldsOf(it); ED.fromDraft = false; drawEditor(); };
+    P.querySelectorAll("[data-rev]").forEach(function (b) { b.onclick = function () { if (!confirm("Put this earlier version back live?")) return; b.disabled = true; call("qeRevert", { id: it.id, timestamp: +b.dataset.rev }).then(loadState).then(function () { it._fl = null; top("Reverted.", "ok"); openEditor(it.id); }).catch(function (e) { b.disabled = false; msg(errTxt(e), "err"); }); }; });
+    if ($("eAi")) $("eAi").onclick = function () {
+      read(); var b = this; b.disabled = true; msg("Asking Claude for a rewrite. This takes 10 to 30 seconds…");
+      call("qeAiFix", { items: [Object.assign(base(it), { meta: m, current: f })] }).then(function (r) {
+        b.disabled = false; if (!r.fixed) { msg("Claude could not produce a valid rewrite: " + ((r.failed[0] || {}).why || "unknown"), "err"); return; }
+        return call("qeGet", { id: it.id }).then(function (g) {
+          msg(""); ED.rev = g.doc.rev; var p = g.doc.proposed;
+          $("eProp").innerHTML = '<h3 style="margin-top:14px">Claude\'s proposed rewrite</h3>' + (p.note ? '<p class="small muted">' + esc(p.note) + "</p>" : "") + diffHtml(f, p.fields) + '<div class="row" style="margin-top:10px"><button class="btn" id="pUse">Load into the editor</button><button class="ghost" id="pNo">Discard</button></div><p class="small muted">Nothing is live yet. Load it, adjust if needed, then Save &amp; Publish.</p>';
+          $("pUse").onclick = function () { ED.f = JSON.parse(JSON.stringify(p.fields)); delete ED.f.why; drawEditor(); };
+          $("pNo").onclick = function () { call("qeReject", { id: it.id, note: "discarded in the editor" }).then(loadState).then(function () { $("eProp").innerHTML = ""; }); };
+        });
+      }).catch(function (e) { b.disabled = false; msg(errTxt(e), "err"); });
+    };
+    refresh();
+  }
+  function ticketHtml(t) { return '<div class="tk' + (t.urgent ? " urgent" : "") + '"><b>' + esc({ approve: "Approved", repair: "Flag for repair", retire: "Recommend retire" }[t.verdict] || t.verdict) + "</b>" + (t.urgent ? ' <span class="chip block">Urgent pull</span>' : "") + " " + (t.tags || []).map(function (k) { return '<span class="chip ' + (k === "clinical_error" ? "block" : "flag") + '">' + (TAGS[k] || TAG_SYS[k] || k) + "</span>"; }).join(" ") + (t.note ? "<div>" + esc(t.note) + "</div>" : "") + '<div class="muted small">' + esc(t.who || t.code || "") + " · " + ago(t.at) + (t.status === "resolved" ? " · resolved: " + esc((t.resolution || {}).outcome || "") : "") + "</div></div>"; }
+  function phone(el, f, isX, S) {
+    var opts = isX ? f.opts.slice() : [f.a].concat(f.w);
+    if (!S.order || S.order.length !== opts.length) { S.order = opts.map(function (_, i) { return i; }); for (var i = S.order.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = S.order[i]; S.order[i] = S.order[j]; S.order[j] = t; } }
+    var right = function (o, i) { return isX ? f.ok.indexOf(o) >= 0 : i === 0; };
+    el.innerHTML = '<div class="phone"><div class="ph-top"><span>DrugBug</span><span>' + (isX ? "Select all that apply" : "Question") + '</span></div><div class="ph-q">' + esc(f.q) + "</div>" + S.order.map(function (i) { var o = opts[i]; return '<button class="ph-o' + (S.shown ? (right(o, i) ? " ok" : S.pick === i ? " no" : "") : "") + '" data-p="' + i + '">' + esc(o) + "</button>"; }).join("") + (S.shown ? '<div class="ph-x">' + esc(f.x) + "</div>" : "") + "</div>";
+    el.querySelectorAll("[data-p]").forEach(function (b) { b.onclick = function () { S.pick = +b.dataset.p; S.shown = true; phone(el, f, isX, S); if (S.onPick) S.onPick(); }; });
+  }
+
+  /* ---------- word diff ---------- */
+  function diff(a, b) {
+    var A = String(a || "").split(/\s+/).filter(Boolean), B = String(b || "").split(/\s+/).filter(Boolean), n = A.length, m = B.length, T = [], i, j;
+    for (i = 0; i <= n; i++) { T[i] = new Uint16Array(m + 1); }
+    for (i = n - 1; i >= 0; i--) for (j = m - 1; j >= 0; j--) T[i][j] = A[i] === B[j] ? T[i + 1][j + 1] + 1 : Math.max(T[i + 1][j], T[i][j + 1]);
+    var out = []; i = 0; j = 0;
+    while (i < n && j < m) { if (A[i] === B[j]) { out.push(esc(A[i])); i++; j++; } else if (T[i + 1][j] >= T[i][j + 1]) out.push("<del>" + esc(A[i++]) + "</del>"); else out.push("<ins>" + esc(B[j++]) + "</ins>"); }
+    while (i < n) out.push("<del>" + esc(A[i++]) + "</del>"); while (j < m) out.push("<ins>" + esc(B[j++]) + "</ins>");
+    return out.join(" ");
+  }
+  function sideHtml(title, f) { return '<div class="side"><h4>' + title + "</h4><div><b>" + esc(f.q) + '</b></div><ol type="A"><li class="right">' + esc(f.a) + "</li>" + (f.w || []).map(function (w) { return "<li>" + esc(w) + "</li>"; }).join("") + '</ol><div class="small muted">' + esc(f.x) + '</div><div class="small muted" style="margin-top:6px">' + words(f.q) + " words in the stem</div></div>"; }
+  function diffHtml(cur, nw) {
+    return '<div class="two">' + sideHtml("Current (live)", cur) + '<div class="side"><h4>Proposed</h4><div><b>' + diff(cur.q, nw.q) + '</b></div><ol type="A"><li class="right">' + diff(cur.a, nw.a) + "</li>" + nw.w.map(function (w, i) { return "<li>" + diff((cur.w || [])[i], w) + "</li>"; }).join("") + '</ol><div class="small muted">' + diff(cur.x, nw.x) + '</div><div class="small muted" style="margin-top:6px">' + words(nw.q) + " words in the stem</div></div></div>";
+  }
+
+  /* ---------- Review (evaluators and the owner) ---------- */
+  var RV = null, DONE = 0;
+  function inScope(it) { return ME.role === "admin" || ME.canAll || ME.tracks.indexOf(trackOf(it.lv)) >= 0; }
+  function drawReview() {
+    var P = page("review");
+    if (RV && RV.it) return drawReviewQ();
+    var hid = {}; LIVE.hide.forEach(function (id) { hid[id] = 1; });
+    var pool = CAT.filter(function (it) { return !it.off && inScope(it) && !MINE[it.id] && !hid[it.id] && !(ST[it.id] && (ST[it.id].hidden || ST[it.id].status === "retired")) && (!RVF || it.lv === RVF); });
+    var lvs = Object.keys(LV).filter(function (k) { return CAT.some(function (it) { return it.lv === k && inScope(it); }); });
+    P.innerHTML = '<div class="card" style="max-width:760px;margin:0 auto"><h2>Review questions</h2><p class="muted">You get one question at a time from ' + (ME.role === "admin" || ME.canAll ? "every track" : ME.tracks.map(function (t) { return TRACKS[t]; }).join(", ")) + ". Answer it like a student, then give your verdict. " + (ME.role === "admin" ? "" : "Your reviews are independent: you will not see what other evaluators said.") + '</p><div class="row"><select id="rvLv" style="max-width:320px">' + opt("", "Any role in my tracks", RVF) + lvs.map(function (k) { return opt(k, LV[k], RVF); }).join("") + '</select><button class="btn" id="rvNext">' + (DONE ? "Next question" : "Start") + '</button><span class="muted small">' + pool.length.toLocaleString() + " left for you" + (DONE ? " · " + DONE + " reviewed this session" : "") + '</span></div><div id="rvMsg" class="msg hide"></div></div>';
+    $("rvLv").onchange = function () { RVF = this.value; drawReview(); };
+    $("rvNext").onclick = function () {
+      if (!pool.length) { $("rvMsg").textContent = "Nothing left to review in this selection. Thank you."; show("rvMsg", true); return; }
+      var ids = []; while (ids.length < Math.min(12, pool.length)) { var c = pool[Math.floor(Math.random() * pool.length)].id; if (ids.indexOf(c) < 0) ids.push(c); }
+      this.disabled = true;
+      call("qeLease", { ids: ids }).then(function (r) { if (!r.id) { $("rvMsg").textContent = "Other evaluators are on those right now. Tap again."; show("rvMsg", true); $("rvNext").disabled = false; return; } RV = { it: BY[r.id], order: null, shown: false, verdict: "", tags: {}, urgent: false }; drawReviewQ(); }).catch(function (e) { $("rvMsg").textContent = errTxt(e); show("rvMsg", true); $("rvNext").disabled = false; });
+    };
+  }
+  var RVF = "";
+  function drawReviewQ() {
+    var it = RV.it, f = liveFields(it), isX = !!it.t, P = page("review");
+    P.innerHTML = '<div class="split" style="max-width:1000px;margin:0 auto;grid-template-columns:380px minmax(0,1fr)"><div><div class="card"><div class="muted small" style="margin-bottom:10px">' + esc(LV[it.lv] || it.lv) + " · " + esc(it.dn || it.d || "general") + '</div><div id="rvPhone"></div></div></div><div><div class="card" id="rvGrade"></div></div></div>';
+    RV.onPick = grade; phone($("rvPhone"), f, isX, RV); grade();
+    function grade() {
+      var G = $("rvGrade");
+      if (!RV.shown) { G.innerHTML = '<h3>Your verdict</h3><p class="muted">Answer the question on the left first. The grading opens once you have seen the explanation.</p><button class="ghost" id="rvSkip">Skip this one</button>'; $("rvSkip").onclick = function () { RV = null; drawReview(); }; return; }
+      G.innerHTML = '<h3>Your verdict</h3><div class="verd"><button class="ghost" data-v="approve" aria-pressed="' + (RV.verdict === "approve") + '">Approve</button><button class="ghost" data-v="repair" aria-pressed="' + (RV.verdict === "repair") + '">Flag for repair</button><button class="ghost" data-v="retire" aria-pressed="' + (RV.verdict === "retire") + '">Recommend retire</button></div>' +
+        '<div id="rvMore" class="' + (RV.verdict && RV.verdict !== "approve" ? "" : "hide") + '"><label class="f">What is wrong? (pick all that apply)</label><div class="chips">' + Object.keys(TAGS).map(function (k) { return '<span class="chip' + (RV.tags[k] ? " on" : "") + '" data-g="' + k + '">' + TAGS[k] + "</span>"; }).join("") + '</div><label class="f" for="rvNote">Note for the fix (what should change)</label><textarea id="rvNote" rows="3" maxlength="600" placeholder="Example: option C is also defensible because…">' + esc(RV.note || "") + "</textarea>" +
+        '<label class="row small" style="margin-top:10px;gap:6px"><input type="checkbox" id="rvUrg"' + (RV.urgent ? " checked" : "") + (ME.role !== "admin" && URGENT_LEFT <= 0 ? " disabled" : "") + "> <b>Urgent:</b> pull it from students right now (use for something clinically dangerous or plainly wrong)" + (ME.role === "admin" ? "" : " · " + Math.max(0, URGENT_LEFT) + " of 3 left today") + "</label></div>" +
+        '<div class="row" style="margin-top:14px"><button class="btn" id="rvSend"' + (RV.verdict ? "" : " disabled") + '>Submit and go to the next</button><button class="ghost" id="rvSkip">Skip</button></div><div id="rvErr" class="msg err hide"></div>';
+      G.querySelectorAll("[data-v]").forEach(function (b) { b.onclick = function () { keep(); RV.verdict = b.dataset.v; grade(); }; });
+      G.querySelectorAll("[data-g]").forEach(function (c) { c.onclick = function () { keep(); RV.tags[c.dataset.g] = !RV.tags[c.dataset.g]; grade(); }; });
+      function keep() { if ($("rvNote")) { RV.note = $("rvNote").value; RV.urgent = $("rvUrg").checked; } }
+      $("rvSkip").onclick = function () { RV = null; drawReview(); };
+      $("rvSend").onclick = function () {
+        keep(); var b = this; b.disabled = true;
+        call("qeReview", Object.assign(base(it), { verdict: RV.verdict, tags: Object.keys(RV.tags).filter(function (k) { return RV.tags[k]; }), note: RV.note || "", urgent: RV.urgent })).then(function (r) {
+          MINE[it.id] = 1; DONE++; if (r.urgentLeft != null) URGENT_LEFT = r.urgentLeft; RV = null;
+          (ME.role === "admin" ? loadState() : Promise.resolve()).then(function () { tabs(); drawReview(); $("rvNext").click(); });
+        }).catch(function (e) { b.disabled = false; $("rvErr").textContent = errTxt(e); show("rvErr", true); });
+      };
+    }
+  }
+
+  /* ---------- Repair Queue ---------- */
+  var QSEL = {};
+  function drawQueue() {
+    var P = page("queue"); P.innerHTML = '<div class="card"><p class="muted">Loading the queue…</p></div>';
+    call("qeQueue").then(function (r) {
+      var ids = Object.keys(r.tickets).concat(Object.keys(r.docs).filter(function (id) { return r.docs[id].hidden && r.docs[id].status !== "retired" && !r.tickets[id]; }));
+      ids = ids.filter(function (id) { return BY[id] && !(r.docs[id] && r.docs[id].status === "ai_fixed_pending_review"); });
+      ids.sort(function (a, b) { var u = function (id) { return (r.tickets[id] || []).some(function (t) { return t.urgent; }) ? 1 : 0; }; return u(b) - u(a) || (r.tickets[b] || []).length - (r.tickets[a] || []).length; });
+      P.innerHTML = '<div class="card"><div class="row sp"><div><h2>Repair Queue</h2><p class="muted small">Questions evaluators flagged. Fix them with Claude here (up to ' + ME.aiMax + ' per run), or export a batch to rewrite in a chat and import the result. Either way the rewrite waits in Ready for Sign-Off; nothing goes live from this tab.</p></div><div class="row"><span class="muted small" id="qSelN"></span><button class="ghost" id="qAll">Select all</button><button class="btn" id="qAi">Fix selected with Claude</button><button class="ghost" id="qExp">Export relay batch</button><button class="ghost" id="qImp">Import fixed batch</button></div></div><div id="qMsg" class="msg hide"></div>' +
+        '<div id="qImpBox" class="hide"><label class="f" for="qImpTxt">Paste the fixed batch (the JSON array from the chat)</label><textarea id="qImpTxt" rows="8" spellcheck="false"></textarea><div class="row" style="margin-top:8px"><button class="btn" id="qImpGo">Validate and import</button><input type="file" id="qImpFile" accept=".json,application/json" style="max-width:260px"></div></div></div>' +
+        (ids.length ? ids.map(function (id) {
+          var it = BY[id], d = r.docs[id] || {}, tk = r.tickets[id] || [], f = liveFields(it);
+          return '<div class="card"><div class="row sp"><label class="row" style="gap:8px"><input type="checkbox" data-q="' + id + '"' + (QSEL[id] ? " checked" : "") + '><span class="muted small">' + esc(LV[it.lv] || it.lv) + " · " + esc(it.dn || it.d || "general") + " · " + esc(BANK[it.b]) + "</span>" + (d.hidden ? '<span class="chip s-hidden">Pulled from students</span>' : '<span class="chip s-live">Still live</span>') + (d.lastReject ? '<span class="chip flag">A rewrite was rejected: ' + esc(d.lastReject.note || "no note") + "</span>" : "") + '</label><div class="row">' + (d.hidden ? '<button class="btn warn" data-restore="' + id + '">Restore to live</button>' : "") + '<button class="ghost" data-open="' + id + '">Open in editor</button><button class="ghost" data-dismiss="' + id + '">Dismiss tickets</button><button class="ghost" data-retire="' + id + '">Retire</button></div></div><div style="margin:8px 0"><b>' + esc(f.q) + '</b><div class="small" style="color:var(--good)">✓ ' + esc(f.a || (f.ok || []).join("; ")) + '</div><div class="small muted">✗ ' + esc((f.w || f.opts || []).join("  ·  ")) + "</div></div>" + tk.map(ticketHtml).join("") + "</div>";
+        }).join("") : '<div class="card"><p class="muted">The queue is empty.</p></div>');
+      var msg = function (t, k) { $("qMsg").className = "msg " + (k || ""); $("qMsg").innerHTML = t; show("qMsg", !!t); };
+      var sel = function () { return Object.keys(QSEL).filter(function (id) { return QSEL[id] && ids.indexOf(id) >= 0; }).map(function (id) { return BY[id]; }); };
+      var cnt = function () { $("qSelN").textContent = sel().length ? sel().length + " selected" : ""; }; cnt();
+      P.querySelectorAll("[data-q]").forEach(function (c) { c.onchange = function () { QSEL[c.dataset.q] = c.checked; cnt(); }; });
+      $("qAll").onclick = function () { ids.forEach(function (id) { QSEL[id] = 1; }); drawQueue(); };
+      $("qAi").onclick = function () { aiFix(sel(), this, msg, function () { loadState().then(function () { tabs(); drawQueue(); }); }); };
+      $("qExp").onclick = function () { var s = sel(); if (!s.length) return msg("Select the questions to export first.", "warn"); relayExport(s, r.tickets, r.docs); msg("Copied " + s.length + " question(s) with the brief to your clipboard, and saved the same text as a file. Paste it into the chat, then bring the JSON answer back with Import fixed batch.", "ok"); };
+      $("qImp").onclick = function () { show("qImpBox", $("qImpBox").classList.contains("hide")); };
+      $("qImpFile").onchange = function () { var fr = new FileReader(); fr.onload = function () { $("qImpTxt").value = fr.result; }; if (this.files[0]) fr.readAsText(this.files[0]); };
+      $("qImpGo").onclick = function () {
+        var raw = $("qImpTxt").value, m = raw.match(/\[[\s\S]*\]/), arr; try { arr = JSON.parse(m ? m[0] : raw); } catch (e) { return msg("That is not valid JSON. Paste the whole array, from [ to ].", "err"); }
+        if (!Array.isArray(arr)) return msg("Expected a JSON array of questions.", "err");
+        var items = arr.map(function (x) { var it = BY[x.id]; return it ? Object.assign({}, x, base(it)) : Object.assign({ bank: "Q", lv: "", baseQ: "" }, x); });
+        this.disabled = true; var b = this;
+        call("qeImport", { items: items }).then(function (res) { b.disabled = false; return loadState().then(function () { tabs(); drawQueue(); setTimeout(function () { $("qMsg").className = "msg " + (res.rejected.length ? "warn" : "ok"); $("qMsg").innerHTML = "<b>" + res.imported + " imported</b> and waiting in Ready for Sign-Off." + (res.rejected.length ? "<br><b>" + res.rejected.length + " rejected:</b><br>" + res.rejected.map(function (x) { return esc(x.id) + ": " + esc(x.why); }).join("<br>") : ""); show("qMsg", true); }, 400); }); }).catch(function (e) { b.disabled = false; msg(esc(errTxt(e)), "err"); });
+      };
+      var act = function (attr, fn) { P.querySelectorAll("[" + attr + "]").forEach(function (b) { b.onclick = function () { fn(b.getAttribute(attr), b); }; }); };
+      act("data-open", function (id) { openEditor(id); });
+      act("data-restore", function (id, b) { b.disabled = true; call("qeSave", Object.assign(base(BY[id]), { action: "restore" })).then(loadState).then(function () { top("Restored. Students see it again.", "ok"); tabs(); drawQueue(); }).catch(function (e) { msg(esc(errTxt(e)), "err"); }); });
+      act("data-retire", function (id, b) { if (!confirm("Retire this question?")) return; b.disabled = true; call("qeSave", Object.assign(base(BY[id]), { action: "retire" })).then(loadState).then(function () { tabs(); drawQueue(); }).catch(function (e) { msg(esc(errTxt(e)), "err"); }); });
+      act("data-dismiss", function (id, b) { if (!confirm("Close these tickets with no change to the question?")) return; b.disabled = true; call("qeTicketClose", { id: id }).then(loadState).then(function () { tabs(); drawQueue(); }).catch(function (e) { msg(esc(errTxt(e)), "err"); }); });
+    }).catch(function (e) { P.innerHTML = '<div class="msg err">' + esc(errTxt(e)) + "</div>"; });
+  }
+  function aiFix(list, btn, msg, done) {
+    msg = msg || function (t, k) { top(t.replace(/<[^>]+>/g, " "), k); };
+    list = list.filter(function (it) { return !it.t; });
+    if (!list.length) return msg("Select at least one question (select-all questions are edited by hand).", "warn");
+    if (list.length > ME.aiMax) return msg("Claude fixes at most " + ME.aiMax + " questions per run. You selected " + list.length + ".", "warn");
+    btn.disabled = true; msg("Claude is rewriting " + list.length + " question(s). This can take a few minutes; keep this tab open.");
+    call("qeAiFix", { items: list.map(function (it) { return Object.assign(base(it), { meta: metaOf(it), current: liveFields(it) }); }) }).then(function (r) {
+      btn.disabled = false; SEL = {}; QSEL = {};
+      msg("<b>" + r.fixed + " rewritten</b> and waiting in Ready for Sign-Off." + (r.failed.length ? "<br><b>" + r.failed.length + " failed:</b> " + r.failed.map(function (x) { return esc(x.id) + " (" + esc(x.why) + ")"; }).join(", ") : ""), r.failed.length ? "warn" : "ok");
+      if (done) done(); else loadState().then(tabs);
+    }).catch(function (e) { btn.disabled = false; msg(esc(errTxt(e)), "err"); });
+  }
+  function relayExport(list, tickets, docs) {
+    list = list.filter(function (it) { return !it.t; }); if (!list.length) return top("Select at least one question first.", "warn");
+    var L = "ABCD";
+    var items = list.map(function (it, n) {
+      var f = liveFields(it), m = metaOf(it), o = [f.a].concat(f.w), k = n % 4, ord = o.slice(1); ord.splice(k, 0, o[0]);
+      return { id: it.id, rev: (docs && docs[it.id] && docs[it.id].rev) || (ST[it.id] && ST[it.id].rev) || 0, role: m.role, drug: m.drug, mode: m.mode, target_difficulty: m.difficulty || 3, stem: f.q, options: ord, correct: L[k], explanation: f.x,
+        feedback: ((tickets && tickets[it.id]) || []).map(function (t) { return { verdict: t.verdict, tags: t.tags, note: t.note }; }) };
+    });
+    var text = "--- RELAY: DrugBug question repair batch (" + items.length + " questions) ---\n" +
+      "Rewrite each question to fix the problems listed in its `feedback`, following the DrugBug question-writer brief (Standard Drug Bank mode unless `mode` says step2 or givehold; same drug and role; stem 25 words or fewer, 35 for difficulty 4-5; no negative stems; no hold/stop choices outside givehold; no medication doses or units in options; four parallel options with the right one not the longest; plausible decoys; never all/none of the above).\n" +
+      "Return ONLY a JSON array. One object per question with exactly: id (copy), rev (copy), stem, options (4 strings, A-D order), correct (\"A\"-\"D\"), why_right, why_wrong (object keyed by the three wrong letters), difficulty (1-5), note (one sentence: what changed).\n\n" + JSON.stringify(items, null, 1);
+    try { navigator.clipboard.writeText(text); } catch (e) {}
+    var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type: "text/plain" })); a.download = "drugbug-relay-batch-" + new Date().toISOString().slice(0, 10) + ".txt"; document.body.appendChild(a); a.click(); a.remove();
+    top("Relay batch copied to the clipboard and saved as a file (" + items.length + " questions).", "ok");
+  }
+
+  /* ---------- Ready for Sign-Off ---------- */
+  function drawSignoff() {
+    var P = page("signoff"); P.innerHTML = '<div class="card"><p class="muted">Loading…</p></div>';
+    call("qeQueue").then(function (r) {
+      Object.keys(r.docs).forEach(function (id) { var d = r.docs[id]; if (d.bank === "PROTO" && d.proposed && !BY[id]) BY[id] = protoItem(id, d.lv, d.proposed.fields, d.meta); });
+      var ids = Object.keys(r.docs).filter(function (id) { return r.docs[id].status === "ai_fixed_pending_review" && r.docs[id].proposed && BY[id]; });
+      var nNew = ids.filter(function (id) { return r.docs[id].bank === "PROTO" && !r.docs[id].live; }).length;
+      P.innerHTML = '<div class="card"><h2>Ready for Final Sign-Off</h2><p class="muted small">Each rewrite is shown next to what students see now. Approve puts it live and closes its tickets. Nothing here is live until you approve it.' + (nNew ? " " + nNew + " new protocol question(s) are waiting; each shows the protocol passage it is based on." : "") + "</p></div>" + (ids.length ? ids.map(function (id) {
+        var it = BY[id], d = r.docs[id], p = d.proposed, tk = r.tickets[id] || [], cur = liveFields(it);
+        if (d.bank === "PROTO" && !d.live) { var mm = d.meta || {};
+          return '<div class="card"><div class="row sp"><span class="muted small"><span class="chip s-draft">New protocol question</span> ' + esc(mm.protocolName || "") + " · " + esc(LV[it.lv] || it.lv) + " · difficulty " + (mm.difficulty || "?") + " · written by Claude " + ago(p.at) + '</span><div class="row"><button class="btn good" data-ok="' + id + '">Approve &amp; publish</button><button class="ghost" data-edit="' + id + '">Edit first</button><button class="ghost" data-no="' + id + '">Discard</button></div></div>' +
+            (p.flags && p.flags.length ? '<div class="msg warn">Rule flags: ' + p.flags.map(function (k) { return FLAG[k]; }).join("; ") + "</div>" : "") +
+            '<div class="two">' + sideHtml("Question", p.fields) + '<div class="side"><h4>What the protocol says (checked: this passage is in the uploaded text)</h4><blockquote style="margin:6px 0;padding-left:10px;border-left:3px solid var(--teal)">' + esc(mm.quote || "") + '</blockquote><div class="small muted">' + esc(mm.section || "") + (mm.page ? " · page " + esc(mm.page) : "") + '</div><p class="small muted" style="margin-top:10px">Protocol mode: this agency\'s doses and standing orders may be tested. Confirm the right answer against the passage before approving.</p></div></div></div>'; }
+        var clinical = /CLINICAL ERROR/.test(p.note || "") || tk.some(function (t) { return (t.tags || []).indexOf("clinical_error") >= 0; });
+        return '<div class="card" data-card="' + id + '"><div class="row sp"><span class="muted small">' + esc(LV[it.lv] || it.lv) + " · " + esc(it.dn || it.d || "general") + " · rewritten by " + (p.by === "ai" ? "Claude (one-click)" : "relay import") + " " + ago(p.at) + (d.hidden ? ' · <b style="color:var(--bad)">currently pulled from students</b>' : "") + '</span><div class="row"><button class="btn good" data-ok="' + id + '">Approve &amp; publish</button><button class="ghost" data-edit="' + id + '">Edit first</button><button class="ghost" data-no="' + id + '">Reject</button></div></div>' +
+          (clinical ? '<div class="msg err"><b>Clinical error ticket.</b> An evaluator said the original was clinically wrong. Check the corrected fact yourself before approving; do not rely on the rewrite being right.</div>' : "") +
+          (p.flags && p.flags.length ? '<div class="msg warn">Rule flags on the rewrite: ' + p.flags.map(function (k) { return FLAG[k]; }).join("; ") + "</div>" : "") +
+          (p.note ? '<p class="small muted">' + esc(p.note.replace(/^CLINICAL ERROR TICKET:[^.]*\.\s*/, "")) + "</p>" : "") + diffHtml(cur, p.fields) + tk.map(ticketHtml).join("") + "</div>";
+      }).join("") : '<div class="card"><p class="muted">Nothing is waiting for sign-off.</p></div>');
+      var act = function (attr, fn) { P.querySelectorAll("[" + attr + "]").forEach(function (b) { b.onclick = function () { fn(b.getAttribute(attr), b); }; }); };
+      act("data-ok", function (id, b) { b.disabled = true; call("qeApprove", { id: id }).then(loadState).then(function () { BY[id]._fl = null; top("Approved and live.", "ok"); tabs(); drawSignoff(); }).catch(function (e) { b.disabled = false; top(errTxt(e), "err"); }); });
+      act("data-edit", function (id) { var f = JSON.parse(JSON.stringify(r.docs[id].proposed.fields)); delete f.why; openEditor(id, f); });
+      act("data-no", function (id, b) { var note = prompt("Why is this rewrite rejected? (It goes back to the Repair Queue with your note.)", ""); if (note === null) return; b.disabled = true; call("qeReject", { id: id, note: note }).then(loadState).then(function () { tabs(); drawSignoff(); }).catch(function (e) { b.disabled = false; top(errTxt(e), "err"); }); });
+    }).catch(function (e) { P.innerHTML = '<div class="msg err">' + esc(errTxt(e)) + "</div>"; });
+  }
+
+  /* ---------- Evaluators ---------- */
+  function drawEvals() {
+    var P = page("evals"); P.innerHTML = '<div class="card"><p class="muted">Loading…</p></div>';
+    call("qeEvalList").then(function (r) {
+      P.innerHTML = '<div class="card"><h2>Evaluators</h2><p class="muted small">Evaluators appear here after they sign in on this page and link their evaluator code. Each one reviews only the tracks ticked below, unless "All tracks" is on. Make or revoke the codes themselves on the Admin page.</p>' + (r.evaluators.length ? "<table><tr><th>Evaluator</th><th>Reviews</th>" + Object.keys(TRACKS).map(function (t) { return "<th>" + TRACKS[t] + "</th>"; }).join("") + "<th>All tracks</th></tr>" + r.evaluators.map(function (e) {
+        return "<tr data-u=\"" + esc(e.uid) + '"><td><b>' + esc(e.name || "(no name)") + '</b><div class="small muted">' + esc((e.code || "").replace(/^c-/, "")) + (e.role ? " · " + esc(e.role) : "") + "</div></td><td>" + e.reviews + "</td>" + Object.keys(TRACKS).map(function (t) { return '<td><input type="checkbox" data-t="' + t + '"' + ((e.tracks || []).indexOf(t) >= 0 ? " checked" : "") + "></td>"; }).join("") + '<td><input type="checkbox" data-all="1"' + (e.canAll ? " checked" : "") + "></td></tr>";
+      }).join("") + "</table>" : '<p class="muted">No evaluator has signed in here yet.</p>') + "</div>";
+      P.querySelectorAll("tr[data-u]").forEach(function (tr) { tr.querySelectorAll("input").forEach(function (c) { c.onchange = function () { var tracks = []; tr.querySelectorAll("[data-t]").forEach(function (x) { if (x.checked) tracks.push(x.dataset.t); }); call("qeEvalSet", { uid: tr.dataset.u, tracks: tracks, canAll: tr.querySelector("[data-all]").checked }).then(function () { top("Saved.", "ok"); }).catch(function (e) { top(errTxt(e), "err"); }); }; }); });
+    }).catch(function (e) { P.innerHTML = '<div class="msg err">' + esc(errTxt(e)) + "</div>"; });
+  }
+
+  /* ---------- Protocols: upload a protocol, keep its text, generate grounded questions ---------- */
+  var PR = { list: null, sets: [], cur: null, secs: null, pick: {}, draft: null };
+  function loadScript(src) { return new Promise(function (ok, no) { var s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = function () { no(new Error("Could not load the PDF reader. Check the connection, or paste the text instead.")); }; document.head.appendChild(s); }); }
+  var PDFJS = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
+  function pdfPages(buf) {
+    return (window.pdfjsLib ? Promise.resolve() : loadScript(PDFJS + "pdf.min.js")).then(function () {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + "pdf.worker.min.js";
+      return window.pdfjsLib.getDocument({ data: buf }).promise;
+    }).then(function (pdf) {
+      var out = [], go = function (n) {
+        if (n > pdf.numPages) return out;
+        return pdf.getPage(n).then(function (pg) { return pg.getTextContent(); }).then(function (tc) {
+          var lines = [], y = null, cur = "";
+          tc.items.forEach(function (it) { var yy = Math.round(it.transform[5]); if (y !== null && Math.abs(yy - y) > 2) { lines.push(cur); cur = ""; } y = yy; cur += (cur && !/\s$/.test(cur) && !/^\s/.test(it.str) ? " " : "") + it.str; });
+          lines.push(cur); out.push({ page: n, lines: lines.map(function (l) { return l.replace(/\s+/g, " ").trim(); }).filter(Boolean) }); return go(n + 1);
+        });
+      };
+      return go(1);
+    });
+  }
+  /* pages or pasted text -> sections. A heading is a markdown heading, a numbered title, or a short line in capitals. */
+  function isHead(l) { return /^#{1,4}\s+\S/.test(l) || (l.length <= 90 && l.length >= 4 && (/^(protocol|section|chapter|appendix|policy)\b[\s:#-]*[\w.]+/i.test(l) || /^\d{1,3}(\.\d{1,3}){0,2}[.)]?\s+[A-Z][^.]{3,80}$/.test(l) || (l === l.toUpperCase() && /[A-Z]{4,}/.test(l) && !/[.;]$/.test(l) && l.split(" ").length <= 12))); }
+  function sectionize(pages) {
+    var secs = [], cur = null, push = function () { if (cur && cur.text.trim().length > 20) secs.push(cur); };
+    pages.forEach(function (p) { p.lines.forEach(function (l) {
+      if (isHead(l)) { push(); cur = { title: l.replace(/^#+\s*/, "").slice(0, 160), page: p.page ? String(p.page) : "", text: "" }; return; }
+      if (!cur) cur = { title: p.page ? "Page " + p.page : "Introduction", page: p.page ? String(p.page) : "", text: "" };
+      cur.text += l + "\n";
+    }); });
+    push();
+    var nPages = pages.length, byPage = nPages > 2 && secs.length < nPages / 3;   /* few headings found: fall back to one section per page */
+    if (byPage) secs = pages.map(function (p) { return { title: (p.lines[0] || "").slice(0, 80) || "Page " + p.page, page: String(p.page), text: p.lines.join("\n") }; }).filter(function (x) { return x.text.length > 20; });
+    var out = [];
+    secs.forEach(function (x) { if (x.text.length <= 12000) return out.push(x); for (var i = 0, k = 1; i < x.text.length; i += 12000, k++) out.push({ title: x.title + " (part " + k + ")", page: x.page, text: x.text.slice(i, i + 12000) }); });
+    return out;
+  }
+  function drawProto() {
+    var P = page("proto"); P.innerHTML = '<div class="card"><p class="muted">Loading protocols…</p></div>';
+    call("qpList").then(function (r) {
+      PR.list = r.protocols; PR.sets = r.sets;
+      if (PR.cur) return openProto(PR.cur);
+      P.innerHTML = '<div class="card"><div class="row sp"><div><h2>Protocols</h2><p class="muted small">Upload an agency or regional protocol, keep its text searchable, and have Claude write questions from it. Generated questions go to Ready for Sign-Off. The uploaded text stays on the server; it is never sent to the app.</p></div><button class="btn" id="pNew">Add a protocol</button></div>' +
+        (r.protocols.length ? "<table><tr><th>Protocol</th><th>Code</th><th>Roles</th><th>Effective</th><th>Status</th><th>Text</th><th>Questions</th><th></th></tr>" + r.protocols.map(function (p) {
+          return "<tr><td><b>" + esc(p.name) + "</b></td><td>" + esc(p.code || "") + "</td><td class='small'>" + esc((p.roles || []).map(function (k) { return LV[k] || k; }).join(", ")) + "</td><td>" + esc(p.effective || "") + '</td><td><span class="chip s-' + (p.status === "live" ? "live" : p.status === "archived" ? "retired" : "draft") + '">' + esc(p.status) + "</span></td><td class='small'>" + (p.nSections ? p.nSections + " sections" : "none yet") + "</td><td class='small'>" + p.questions.live + " live · " + p.questions.pending + ' waiting</td><td><button class="ghost" data-p="' + esc(p.id) + '">Open</button></td></tr>';
+        }).join("") + "</table>" : '<p class="muted">No protocols yet.</p>') + "</div>";
+      $("pNew").onclick = function () { PR.cur = "new"; openProto("new"); };
+      P.querySelectorAll("[data-p]").forEach(function (b) { b.onclick = function () { PR.cur = b.dataset.p; PR.pick = {}; openProto(PR.cur); }; });
+    }).catch(function (e) { P.innerHTML = '<div class="msg err">' + esc(errTxt(e)) + "</div>"; });
+  }
+  function openProto(id) {
+    var P = page("proto"), isNew = id === "new";
+    (isNew ? Promise.resolve({ doc: { name: "", code: "", setId: "", roles: [], effective: "", status: "draft" }, sections: [] }) : call("qpGet", { id: id, full: true })).then(function (r) {
+      var d = r.doc; PR.secs = r.sections;
+      var roleKeys = Object.keys(LV);
+      P.innerHTML = '<div class="row" style="margin-bottom:10px"><button class="ghost" id="pBack">← All protocols</button></div>' +
+        '<div class="card"><h2>' + (isNew ? "Add a protocol" : esc(d.name)) + '</h2><div class="row"><div style="flex:2;min-width:260px"><label class="f" for="pName">Protocol name</label><input id="pName" value="' + esc(d.name) + '" placeholder="Montgomery County Hospital District EMS 2026"></div>' +
+        '<div style="flex:1;min-width:150px"><label class="f" for="pCode">Region / agency code</label><input id="pCode" value="' + esc(d.code || "") + '" placeholder="MCHD"></div>' +
+        '<div style="flex:1;min-width:150px"><label class="f" for="pEff">Effective date</label><input id="pEff" type="date" value="' + esc(d.effective || "") + '"></div>' +
+        '<div style="flex:1;min-width:140px"><label class="f" for="pStatus">Status</label><select id="pStatus">' + opt("draft", "Draft", d.status) + opt("live", "Live", d.status) + opt("archived", "Archived", d.status) + "</select></div></div>" +
+        '<label class="f" for="pSet">Who gets this pack: the protocol set people pick in the app\'s Protocols tab</label><select id="pSet">' + opt("", "Not linked yet (questions stay in the editor only)", d.setId) + PR.sets.map(function (s) { return opt(s.id, s.name + (s.state ? " (" + s.state + ")" : "") + (s.status === "unpublished" ? " · unpublished" : ""), d.setId); }).join("") + "</select>" +
+        '<label class="f">Target roles</label><div class="chips" id="pRoles">' + roleKeys.map(function (k) { return '<span class="chip' + ((d.roles || []).indexOf(k) >= 0 ? " on" : "") + '" data-r="' + k + '">' + esc(LV[k]) + "</span>"; }).join("") + "</div>" +
+        '<div class="row" style="margin-top:12px"><button class="btn" id="pSave">' + (isNew ? "Save and continue" : "Save details") + '</button><span id="pSaveMsg" class="small muted"></span></div></div>' +
+        (isNew ? "" :
+          '<div class="card"><h3>Protocol text</h3><p class="small muted">' + (d.nSections ? d.nSections + " sections, " + (d.chars || 0).toLocaleString() + " characters, loaded " + ago(d.textAt) + ". Uploading again replaces the text (do this when the protocol changes); approved questions are kept." : "No text yet. Choose a PDF, Markdown or text file, or paste the text.") + (d.file && d.file.error ? '<br><span style="color:var(--warn)">' + esc(d.file.error) + "</span>" : d.file && d.file.path ? "<br>Original file kept: " + esc(d.file.name) : "") + '</p><div class="row"><input type="file" id="pFile" accept=".pdf,.md,.markdown,.txt,application/pdf,text/plain,text/markdown" style="max-width:320px"><span class="muted small">or</span><button class="ghost" id="pPasteBtn">Paste text</button></div><textarea id="pPaste" class="hide" rows="8" placeholder="Paste the protocol text here. Start each section with a heading line." style="margin-top:8px"></textarea><div id="pDraft"></div></div>' +
+          (r.sections.length ? '<div class="card"><div class="row sp"><h3 style="margin:0">Sections</h3><div class="row"><input id="pSearch" type="search" placeholder="Search the protocol text (a medication, a word)" style="width:320px"><button class="ghost" id="pAll">Select shown</button><button class="ghost" id="pNone">Clear</button></div></div><div id="pSecs" style="max-height:420px;overflow:auto;margin-top:8px"></div></div>' +
+            '<div class="card"><h3>Generate questions from this protocol</h3><p class="small muted">Claude is given only the sections you tick and may not use anything else. Each question must quote the passage it is based on; the server checks that the passage is really in the text and drops the question if it is not. Protocol doses and standing orders may be tested in this mode.</p><div class="row"><div style="flex:1;min-width:200px"><label class="f" for="gLv">Role</label><select id="gLv">' + ((d.roles || []).length ? d.roles : roleKeys).map(function (k) { return opt(k, LV[k] || k, ""); }).join("") + '</select></div><div style="width:110px"><label class="f" for="gN">How many</label><input id="gN" type="number" min="1" max="' + ME.aiMax + '" value="10"></div><div style="width:240px"><label class="f">Easy / Normal / Hard %</label><div class="row" style="flex-wrap:nowrap"><input id="gE" type="number" value="20"><input id="gM" type="number" value="60"><input id="gH" type="number" value="20"></div></div><div style="flex:2;min-width:220px"><label class="f" for="gFocus">Focus (optional)</label><input id="gFocus" placeholder="e.g. RSI medications and their doses"></div></div><div class="row" style="margin-top:12px"><button class="btn" id="gGo">Generate questions from protocol</button><span class="small muted" id="gSel"></span></div><div id="gMsg" class="msg hide"></div></div>' : ""));
+      $("pBack").onclick = function () { PR.cur = null; drawProto(); };
+      P.querySelectorAll("[data-r]").forEach(function (c) { c.onclick = function () { c.classList.toggle("on"); }; });
+      $("pSave").onclick = function () {
+        var b = this, roles = []; P.querySelectorAll("[data-r].on").forEach(function (c) { roles.push(c.dataset.r); }); b.disabled = true;
+        call("qpSave", { id: isNew ? "" : id, name: $("pName").value, code: $("pCode").value, effective: $("pEff").value, status: $("pStatus").value, setId: $("pSet").value, roles: roles }).then(function (x) { PR.cur = x.id; top("Saved.", "ok"); openProto(x.id); }).catch(function (e) { b.disabled = false; $("pSaveMsg").textContent = errTxt(e); });
+      };
+      if (isNew) return;
+      var draft = function (secs, file) {
+        PR.draft = { secs: secs, file: file };
+        $("pDraft").innerHTML = '<div class="msg ' + (secs.length ? "ok" : "err") + '">' + (secs.length ? "Found <b>" + secs.length + " sections</b> (" + secs.reduce(function (n, x) { return n + x.text.length; }, 0).toLocaleString() + " characters). Check the titles below, then save." : "No readable text was found. A scanned PDF has no text layer; paste the text instead.") + "</div>" +
+          (secs.length ? '<div style="max-height:260px;overflow:auto">' + secs.map(function (x, i) { return '<div class="row" style="margin-bottom:4px;flex-wrap:nowrap"><input data-st="' + i + '" value="' + esc(x.title) + '"><span class="small muted" style="white-space:nowrap">' + (x.page ? "p. " + esc(x.page) + " · " : "") + x.text.length.toLocaleString() + " chars</span></div>"; }).join("") + '</div><div class="row" style="margin-top:8px"><button class="btn" id="pSaveText">Save this text</button></div>' : "");
+        if ($("pSaveText")) $("pSaveText").onclick = function () {
+          var b = this; b.disabled = true; P.querySelectorAll("[data-st]").forEach(function (i) { secs[+i.dataset.st].title = i.value; });
+          call("qpSections", { id: id, sections: secs, file: file || null }).then(function (x) { top("Saved " + x.sections + " sections." + (x.file && x.file.error ? " The original file itself was not stored; the text was." : ""), "ok"); openProto(id); }).catch(function (e) { b.disabled = false; top(errTxt(e), "err"); });
+        };
+      };
+      $("pPasteBtn").onclick = function () { show("pPaste", true); $("pPaste").focus(); };
+      $("pPaste").onchange = function () { draft(sectionize([{ page: 0, lines: this.value.split(/\n/).map(function (l) { return l.trim(); }).filter(Boolean) }])); };
+      $("pFile").onchange = function () {
+        var f = this.files[0]; if (!f) return; $("pDraft").innerHTML = '<p class="muted small">Reading ' + esc(f.name) + "…</p>";
+        var b64 = function (buf) { var u = new Uint8Array(buf), s = ""; for (var i = 0; i < u.length; i += 32768) s += String.fromCharCode.apply(null, u.subarray(i, i + 32768)); return btoa(s); };
+        f.arrayBuffer().then(function (buf) {
+          var file = buf.byteLength < 7000000 ? { name: f.name, type: f.type, b64: b64(buf) } : null;
+          if (/\.pdf$/i.test(f.name) || f.type === "application/pdf") return pdfPages(buf.slice(0)).then(function (pages) { draft(sectionize(pages), file); });
+          draft(sectionize([{ page: 0, lines: new TextDecoder().decode(buf).split(/\n/).map(function (l) { return l.trim(); }).filter(Boolean) }]), file);
+        }).catch(function (e) { $("pDraft").innerHTML = '<div class="msg err">' + esc((e && e.message) || "Could not read that file.") + "</div>"; });
+      };
+      if (!r.sections.length) return;
+      var shown = r.sections, secList = function () {
+        var q = $("pSearch").value.trim().toLowerCase();
+        shown = r.sections.filter(function (x) { return !q || x.title.toLowerCase().indexOf(q) >= 0 || (x.text || "").toLowerCase().indexOf(q) >= 0; });
+        $("pSecs").innerHTML = shown.map(function (x) { var i = q ? (x.text || "").toLowerCase().indexOf(q) : -1, pv = i >= 0 ? "…" + x.text.slice(Math.max(0, i - 80), i + 200) + "…" : (x.text || "").slice(0, 200); return '<label class="qrow" style="grid-template-columns:26px 1fr auto;cursor:pointer"><input type="checkbox" data-s="' + x.sid + '"' + (PR.pick[x.sid] ? " checked" : "") + '><div><b>' + esc(x.title) + '</b><div class="small muted">' + esc(pv) + '</div></div><span class="small muted" style="white-space:nowrap">' + (x.page ? "p. " + esc(x.page) + " · " : "") + x.chars.toLocaleString() + "</span></label>"; }).join("") || '<p class="muted">No section contains that.</p>';
+        $("pSecs").querySelectorAll("[data-s]").forEach(function (c) { c.onchange = function () { PR.pick[c.dataset.s] = c.checked; cnt(); }; }); cnt();
+      }, cnt = function () { var ids = Object.keys(PR.pick).filter(function (k) { return PR.pick[k]; }), ch = r.sections.filter(function (x) { return PR.pick[x.sid]; }).reduce(function (n, x) { return n + x.chars; }, 0); $("gSel").textContent = ids.length ? ids.length + " section(s) ticked, " + ch.toLocaleString() + " characters" + (ch > 90000 ? " (too much for one run: the limit is 90,000)" : "") : "Tick the sections to use above."; };
+      $("pSearch").oninput = secList; $("pAll").onclick = function () { shown.forEach(function (x) { PR.pick[x.sid] = true; }); secList(); }; $("pNone").onclick = function () { PR.pick = {}; secList(); };
+      secList();
+      $("gGo").onclick = function () {
+        var b = this, ids = Object.keys(PR.pick).filter(function (k) { return PR.pick[k]; }), m = $("gMsg"), say = function (h, k) { m.className = "msg " + (k || ""); m.innerHTML = h; show(m, true); };
+        if (!ids.length) return say("Tick at least one section first.", "warn");
+        b.disabled = true; say("Claude is writing the questions from the ticked sections. This can take a few minutes; keep this tab open.");
+        call("qpGenerate", { id: id, sections: ids, count: +$("gN").value, lv: $("gLv").value, role: LV[$("gLv").value] || $("gLv").value, mix: [+$("gE").value, +$("gM").value, +$("gH").value], focus: $("gFocus").value }).then(function (x) {
+          b.disabled = false;
+          say("<b>" + x.made + " of " + x.asked + " questions</b> are waiting in Ready for Sign-Off." + (x.dropped.length ? "<br><b>" + x.dropped.length + " dropped by the checks:</b><br>" + x.dropped.map(function (q) { return esc(q.stem || "(no stem)") + " — " + esc(q.why); }).join("<br>") : ""), x.dropped.length ? "warn" : "ok");
+          loadState().then(tabs);
+        }).catch(function (e) { b.disabled = false; say(esc(errTxt(e)), "err"); });
+      };
+    }).catch(function (e) { P.innerHTML = '<div class="msg err">' + esc(errTxt(e)) + '</div><button class="ghost" id="pBack2">← All protocols</button>'; $("pBack2").onclick = function () { PR.cur = null; drawProto(); }; });
+  }
+
+  /* ---------- sign in ---------- */
+  $("bIn").onclick = function () { auth.signInWithEmailAndPassword($("em").value.trim(), $("pw").value).catch(function (e) { $("inMsg").textContent = (e && e.message) || "Couldn't sign in."; show("inMsg", true); }); };
+  $("bGoogle").onclick = function () { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(function (e) { $("inMsg").textContent = (e && e.message) || "Couldn't sign in."; show("inMsg", true); }); };
+  $("bJoin").onclick = function () { var b = this; b.disabled = true; call("qeJoin", { code: $("joinCode").value }).then(start).catch(function (e) { b.disabled = false; $("joinMsg").textContent = errTxt(e); show("joinMsg", true); }); };
+  function start() {
+    show("vIn", false); show("vJoin", false);
+    return call("qeWho").then(function (w) {
+      ME = w; $("roleBadge").textContent = w.role === "admin" ? "Admin" : "Evaluator";
+      return Promise.all([loadCatalog(), loadState()]).then(function () { show("vMain", true); var hq = location.hash.slice(1); if (/^q=/.test(hq) && w.role === "admin" && BY[decodeURIComponent(hq.slice(2))]) { go("browse"); openEditor(decodeURIComponent(hq.slice(2))); return; } go(hq && !/^q=/.test(hq) ? hq : (w.role === "admin" ? "browse" : "review")); });   /* #q=<id> opens that question (from Analytics) */
+    }).catch(function (e) {
+      if (e.status === "PERMISSION_DENIED") { show("vJoin", true); return; }
+      show("vMain", true); top(errTxt(e), "err");
+    });
+  }
+  auth.onAuthStateChanged(function (u) {
+    var real = u && !u.isAnonymous;
+    $("who").innerHTML = real ? esc(u.email || "Signed in") + ' <button class="ghost" id="bOut">Sign out</button>' : "";
+    if (real) $("bOut").onclick = function () { auth.signOut(); };
+    show("vIn", !real); show("vJoin", false); show("vMain", false); ME = null; RV = null;
+    if (real) start();
+  });
+})();
+</script>
+</body>
+</html>
