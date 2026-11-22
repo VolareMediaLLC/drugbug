@@ -38431,10 +38431,10 @@ function hvWeekLeft() { var t = null; try { t = agxNextReset(); } catch (e) {} i
 function hvSoloCard() {
   var wk = 0; try { wk = myWeekXp(); } catch (e) {}
   var days = 0; try { var D = Prog.d.days || {}; days = Object.keys(D).filter(function (k) { var t = new Date(k + "T12:00:00").getTime(); return Date.now() - t < 7 * 86400000 && D[k] > 0; }).length; } catch (e) {}
-  var pts = 0; try { var L = store("rwLog") || [], w0 = agxNextReset() - 7 * 86400000; L.forEach(function (x) { if (x.t >= w0) pts += x.p || 0; }); } catch (e) {}
+  var pts = 0; try { var L = store("rwLog") || [], w0 = agxNextReset() - 7 * 86400000; L.forEach(function (x) { if (x.t >= w0) pts += x.n || 0; }); } catch (e) {}
   return '<section class="hvsolo"><div class="hvshead"><span class="hvseye">This week</span><span class="hvsend">' + (hvWeekLeft() ? "Ends in " + esc(hvWeekLeft()) : "") + '</span></div>' +
-    '<div class="hvsme"><span class="hvsav">' + (function () { try { return myBugArt("lbbug", null, null, myStage()); } catch (e) { return ""; } })() + '</span><div><b>Studying solo</b><span>Your points count for you. Join a team and they count for your agency too.</span></div></div>' +
-    '<div class="hvsstats"><div><b>' + num0(wk) + '</b><span>XP this week</span></div><div><b>' + num0(pts) + '</b><span>points this week</span></div><div><b>' + days + '/7</b><span>days studied</span></div></div>' +
+    '<div class="hvsme"><span class="hvsav">' + (function () { try { return myBugArt("lbbug", null, null, myStage()); } catch (e) { return ""; } })() + '</span><div><b>Studying solo</b><span>Join a team and your right answers score points for your agency.</span></div></div>' +
+    '<div class="hvsstats"><div><b>' + num0(wk) + '</b><span>XP this week</span></div><div><b>' + num0(pts) + '</b><span>sticks this week</span></div><div><b>' + days + '/7</b><span>days studied</span></div></div>' +
     '<button class="btn hvsjoin" data-openagency="1">Join a team</button><p class="muted small">Pick your hospital, EMS agency, fire department or school. Have a class code? Enter it under Classes to join your class scoreboard.</p></section>';
 }
 var HVT = { at: 0, busy: false };
@@ -39873,7 +39873,9 @@ agxPane.addEventListener("change", function (e) {
    answer sticks (the answer itself already scores 10 / minus 5), bought, gifted and prize sticks.
    Difficulty is already in the sticks (games multiply them), so points scale with it too. */
 var STK = { ans: null, src: "", tN: 0, tP: 0, tSrc: "", tT: null };
-var STK_PTS = 10, STK_NOPTS = { answer: 1, purchase: 1, gift: 1, prize: 1 };
+/* Owner, Nov 22 2026: "I had 1000 points extra and I dont like it" -> only answers score. Sticks earn no points;
+   the server ignores stick points too. */
+var STK_PTS = 0, STK_NOPTS = { answer: 1, purchase: 1, gift: 1, prize: 1 };
 var STK_NAMES = { answer: "Question answers", purchase: "Sticks pack", gift: "Gift code", prize: "Prize collected", game: "Brain game", rush: "Bug Rush", daily: "Daily reward", milestone: "Study milestone", activity: "Study activity" };
 (function () { var q0 = qSticks; qSticks = function (ok) { var v = q0(ok); STK.ans = v; setTimeout(function () { STK.ans = null; }, 0); return v; }; })();
 (function () {
@@ -39892,6 +39894,7 @@ function stkPipe(n, src) {
   if (L.length > 150) L = L.slice(-150); store("rwLog", L);
   if (src !== "answer" && src !== "purchase" && n > 0) stkToast(n, pts, team);
 }
+try { var Q0 = store("agxq"); if (Q0 && Q0.sp) { delete Q0.sp; store("agxq", Q0); } } catch (e) {}
 function stkCapped() { return AGX.left === 0 && AGX.leftDay === new Date().toDateString(); }
 function stkLine(n, p) {
   var inA = typeof agxJoined === "function" && agxJoined();
@@ -39908,8 +39911,8 @@ function stkHistoryHtml() {
   var L = (store("rwLog") || []).slice().reverse(); if (!L.length) return "";
   return '<details class="cldim axmore rwhist"><summary>Reward history</summary><ol class="rwlist">' + L.slice(0, 60).map(function (x) {
     var d = new Date(x.t), when; try { when = d.toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }); } catch (e) { when = d.toLocaleDateString(); }
-    return '<li><span>' + esc(STK_NAMES[x.src] || STK_NAMES[String(x.src).split(":")[0]] || x.src) + '<small>' + esc(when) + '</small></span><b>+' + num0(x.n) + ' sticks' + (x.p ? '<small>+' + num0(x.p) + (x.team ? " agency pts" : " pts") + '</small>' : '<small>no points</small>') + '</b></li>';
-  }).join("") + '</ol><p class="muted small">Every stick you earn studying also earns 10 points. Answers score on their own (10 right, minus 5 wrong). Bought, gifted and prize sticks don’t earn points. Agency points stop at 3,000 a day; sticks don’t.</p></details>';
+    return '<li><span>' + esc(STK_NAMES[x.src] || STK_NAMES[String(x.src).split(":")[0]] || x.src) + '<small>' + esc(when) + '</small></span><b>+' + num0(x.n) + ' sticks</b></li>';
+  }).join("") + '</ol><p class="muted small">Sticks are for your bug and the Terrarium. Agency points come only from answering questions: 10 for each right answer, minus 5 for each wrong one, up to 3,000 a day.</p></details>';
 }
 /* sources for the main ways sticks are earned outside answers */
 (function () {
@@ -39930,7 +39933,7 @@ function gmMult() { return GM_MULT[gmDiff()] || 1; }
 function gmPayOf(kind, n, f) { return Math.max(1, Math.round((GM_STICKS[kind] || 1) * (n || 1) * gmMult() * (f || 1))); }
 function gmPayLabel(kind) {
   var per = kind === "scramble" ? " per word" : kind === "blitz" || kind === "frog" ? " per 3" : "", s = gmPayOf(kind, 1);
-  return "+" + s + " sticks" + per + " • +" + num0(s * STK_PTS) + " pts" + (gmMult() > 1 ? ' <i class="gmx">' + gmMult() + "×</i>" : "");
+  return "+" + s + " sticks" + per + (gmMult() > 1 ? ' <i class="gmx">' + gmMult() + "×</i>" : "");
 }
 function gmTierPicker() {
   var cur = gmDiff(), auto = !(+store("gmTier"));
@@ -40057,7 +40060,7 @@ function xwReplay(pid) {
 function xwPanel() {
   var t = xwTopic(), done = xwDoneMap(), ids = Object.keys(done).sort(function (a, b) { return (done[b].last || 0) - (done[a].last || 0); });
   var base = gmPayOf("cross", 1), c = '<div class="xwbar"><div class="xwtopics" role="group" aria-label="Crossword topic">' + XW_TOPICS.map(function (x) { return '<button class="chip' + (x[0] === t ? " on" : "") + '" data-xwtopic="' + x[0] + '" aria-pressed="' + (x[0] === t) + '">' + esc(x[1]) + '</button>'; }).join("") + '</div>';
-  c += '<p class="xwpay small"><b>' + esc(GM_TIER_NAME[gmDiff()]) + '</b> · Payout ' + GM_STICKS.cross + ' × ' + gmMult() + ' = <b>' + base + ' sticks</b> (+' + num0(base * STK_PTS) + ' pts). +25% without Check, +25% fast. Replays pay a quarter.</p>';
+  c += '<p class="xwpay small"><b>' + esc(GM_TIER_NAME[gmDiff()]) + '</b> · Payout ' + GM_STICKS.cross + ' × ' + gmMult() + ' = <b>' + base + ' sticks</b>. +25% without Check, +25% fast. Replays pay a quarter.</p>';
   if (GM && GM.wide === "related") c += '<p class="muted small">Your study path plus related drugs from the full library, so puzzles stay fresh.</p>';
   else if (GM && GM.wide) c += '<p class="muted small">Your study path has only a few of these, so this one uses the full DrugBug library.</p>';
   if (GM && GM.replay) c += '<p class="muted small">✓ Replaying a crossword you finished. It pays a quarter of the sticks.</p>';
