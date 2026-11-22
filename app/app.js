@@ -1582,7 +1582,7 @@ function rnDeptView() {
     var dk = d.key || "school", on = sel.indexOf(dk) >= 0;
     var lab = d.sect !== last ? '<span class="rdsect">' + esc(RN_SECT[d.sect]) + '</span>' : '<span class="rdsect" aria-hidden="true">&nbsp;</span>'; last = d.sect;
     return '<div class="rdcell">' + lab + '<button class="rdcard' + (on ? ' on' : '') + (d.sect === "start" ? ' first' : '') + '" data-rndept="' + d.key + '" data-rnd="' + dk + '" aria-pressed="' + on + '">' +
-      '<span class="rdbug">' + rnBugArt(dk) + '</span><strong>' + esc(d.name) + '</strong><span class="rdbugn">' + esc((RN_BUG[dk] || {}).name || "") + '</span><span class="rdblurb">' + esc(d.blurb) + '</span>' +
+      '<span class="rdbug">' + rnBugArt(dk) + '</span><strong>' + esc(d.name) + '</strong><span class="rdbugn">' + esc((RN_BUG[dk] || {}).name || "") + '</span><span class="rdblurb">' + esc(d.blurb) + '</span>' + (dk === "school" ? '<span class="rdsoon"><b>Coming soon:</b> your Graduation Report. When you graduate, see where you did well and where you struggled across nursing school, and print it out.</span>' : '') +
       (on ? '<span class="rdnow">&#10003; Picked</span>' : '') + '</button></div>';
   }).join("");
   var names = D.filter(function (d) { return sel.indexOf(d.key || "school") >= 0; }).map(function (d) { return d.name; });
@@ -1628,10 +1628,10 @@ function viewLevel() {
   if (rnDeptNeeded()) { setTimeout(function () { var tr = document.getElementById("rdtrack"), on = tr && tr.querySelector(".rdcard.on"); if (on) on.parentNode.scrollIntoView({ inline: "center", block: "nearest" }); }, 30); return topbar() + rnDeptView(); }
   if (isF(S.level) && S.level !== "cpp") S.level = "cpp";
   if (S.view === "level" && isF(S.level) && typeof fmAlias === "function") fmAlias();
-  if (!S.tab || (S.tab !== "hub" && S.tab !== "session" && !tabName(S.tab))) S.tab = "hub";
+  if (!S.tab || (S.tab !== "hub" && S.tab !== "session" && !(S.tab === "ngn" && typeof ngnOn === "function" && ngnOn()) && !tabName(S.tab))) S.tab = "hub";
   if (S.tab !== "hub" && S.tab !== "session" && typeof proLocked === "function" && proLocked(S.tab)) { var lt = S.tab; S.tab = "hub"; setTimeout(function () { openPaywall(tabName(lt), tabTier(lt)); }, 0); }
   if (S.tab === "calc") S.tab = "hub";  /* Calc Lab was removed */
-  var body = S.tab === "hub" ? "" : S.tab === "guide" ? guideView() : /^ft\d$/.test(S.tab) ? guideView(ftOf(S.level, +S.tab.slice(2))) : S.tab === "dash" && typeof dashView === "function" ? dashView() : S.tab === "anatomy" && typeof anatView === "function" ? anatView() : S.tab === "calls" && typeof callsView === "function" ? callsView() : S.tab === "scene" && typeof sceneView === "function" ? sceneView() : S.tab === "systems" && typeof sysView === "function" ? sysView() : S.tab === "protocols" && typeof agpTabView === "function" ? agpTabView() : typeof fieldTab === "function" && isF(S.level) && FM_TABS[S.tab] ? fieldTab(S.tab) : (typeof COMPOUND_TABS !== "undefined" && COMPOUND_TABS[S.tab]) && typeof compoundView === "function" ? compoundView(S.tab) : S.tab === "plants" && typeof plantView === "function" ? plantView() : S.tab === "illicit" && typeof illicitView === "function" ? illicitView() : S.tab === "registry" ? (S.view === "level" && isF(S.level) && typeof fieldMedsView === "function" ? fieldMedsView() : registry()) : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "vlab" ? vlabView() : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? (S.tab = "hub", "") : S.tab === "micro" && typeof microView === "function" ? microView() : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "megacode" ? megaView() : S.tab === "rush" ? rushView() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "flt_ref" && typeof fltRefView === "function" ? fltRefView() : S.tab === "tools" ? toolsView() : S.tab === "medlist" ? (typeof medlistView === "function" ? medlistView() : "") : flashcards();
+  var body = S.tab === "hub" ? "" : S.tab === "ngn" && typeof ngnView === "function" ? ngnView() : S.tab === "guide" ? guideView() : /^ft\d$/.test(S.tab) ? guideView(ftOf(S.level, +S.tab.slice(2))) : S.tab === "dash" && typeof dashView === "function" ? dashView() : S.tab === "anatomy" && typeof anatView === "function" ? anatView() : S.tab === "calls" && typeof callsView === "function" ? callsView() : S.tab === "scene" && typeof sceneView === "function" ? sceneView() : S.tab === "systems" && typeof sysView === "function" ? sysView() : S.tab === "protocols" && typeof agpTabView === "function" ? agpTabView() : typeof fieldTab === "function" && isF(S.level) && FM_TABS[S.tab] ? fieldTab(S.tab) : (typeof COMPOUND_TABS !== "undefined" && COMPOUND_TABS[S.tab]) && typeof compoundView === "function" ? compoundView(S.tab) : S.tab === "plants" && typeof plantView === "function" ? plantView() : S.tab === "illicit" && typeof illicitView === "function" ? illicitView() : S.tab === "registry" ? (S.view === "level" && isF(S.level) && typeof fieldMedsView === "function" ? fieldMedsView() : registry()) : S.tab === "units" ? unitsView() : S.tab === "labs" ? labsView() : S.tab === "blood" ? critView("blood") : S.tab === "flightp" ? critView("flightp") : S.tab === "hemo" ? critView("hemo") : S.tab === "vlab" ? vlabView() : S.tab === "contrast" ? critView("contrast") : S.tab === "families" ? familiesView() : S.tab === "alts" ? altsView() : S.tab === "conds" ? condView() : S.tab === "diseases" && typeof disView === "function" ? disView() : S.tab === "doses" ? (S.tab = "hub", "") : S.tab === "micro" && typeof microView === "function" ? microView() : S.tab === "body" ? '<p class="muted">Organized by body part: drugs that act on each part, and drugs with important adverse effects there.</p>' + bodyView() : S.tab === "prep" ? nrPrep() : S.tab === "scenarios" ? scenarios() : S.tab === "megacode" ? megaView() : S.tab === "rush" ? rushView() : S.tab === "session" ? sessionView() : S.tab === "nbug" ? nbugView() : S.tab === "mylist" ? myListView(true) : S.tab === "progress" ? progressView() + lbView() : S.tab === "shop" ? shopView() : S.tab === "games" ? gamesView() : S.tab === "flt_ref" && typeof fltRefView === "function" ? fltRefView() : S.tab === "tools" ? toolsView() : S.tab === "medlist" ? (typeof medlistView === "function" ? medlistView() : "") : flashcards();
   var msg = S.sessMsg ? '<div class="presult" role="status">' + esc(S.sessMsg) + '</div>' : ''; S.sessMsg = "";
   var notes = (S.tab === "calc" || S.tab === "tools" ? eduBanner() : '') + (["scenarios", "calls", "scene", "rush"].indexOf(S.tab) >= 0 && typeof simBanner === "function" ? simBanner() : '') + (["registry", "guide", "families", "alts", "protocols", "mylist", "labs", "conds"].indexOf(S.tab) >= 0 || /^ft\d$/.test(S.tab) ? eduBanner(true) : '') + (["prep", "session", "nbug", "scenarios", "cards", "rush"].indexOf(S.tab) >= 0 ? esQNote() : '');
   if (S.tab === "hub" && S.hvPage && typeof hvOn === "function" && hvOn()) { var hvp = hvPageHtml(); if (hvp) return topbar() + '<div class="' + ctxClass() + ' hvpage">' + hvp + '</div>'; S.hvPage = false; }
@@ -1968,6 +1968,7 @@ function nrPrep() {
   var drugAll = freeSample() ? fullCount(drugCount) : 0, regAll = freeSample() ? fullCount(regCount) : 0;
   c += '<section class="nrsetup nrfun"><div class="nrtop">' + myBugArt("nrbug", null, null, myStage()) + '<p class="nrtag"><strong>' + esc(exam) + '-style practice.</strong> <span class="muted">' + (isF(ctxKey()) ? 'Pick a length, go.' : 'Pick a deck, pick a length, go.') + '</span></p></div>' + examPill(pool) + creatorNote();
   c += adpNote();
+  if (typeof ngnPrepNote === "function" && reg) c += ngnPrepNote();
   if (regN && isF(ctxKey())) c += '<p class="muted small">' + (freeSample() ? Math.min(regN, freeQsCap()) : regN) + ' questions on medications, blood, trauma, prolonged care, ventilators, labs, CBRN, K9, dive and evacuation.</p>';
   else if (regN) c += '<div class="nrdecks" role="group" aria-label="Question type">' +
     '<button class="nrdeck" data-nrkind="drug" aria-pressed="' + !reg + '"><span class="nrdk-ic" aria-hidden="true">' + icon("pillq") + '</span><strong>Drug questions</strong><span class="nrdk-n">' + drugCount() + '</span>' + proMore(drugCount(), drugAll, "questions") + '<span class="nrdk-sub">' + (nurse ? "Medicines: what to check, report and teach on your unit" : "Doses, actions, uses and side effects") + '</span></button>' +
@@ -7393,7 +7394,7 @@ function megaFinish() {
   st.cs.steps.forEach(function (s, i) { if (st.ans[i] >= 0 && s.options[st.ans[i]].ok) ok++; });
   st.pct = Math.round(100 * ok / n); st.ok = ok;
   var P = Prog.d; P.mega = P.mega || {}; P.mega[st.cs.id] = Math.max(P.mega[st.cs.id] || 0, st.pct);
-  st.sticks = ok * (STICK_RIGHT + palBonus()) + (n - ok) * STICK_TRY + (st.pct === 100 ? 10 : 0); earn(st.sticks); P.xp += ok * 15; checkAch(); saveProg();
+  st.sticks = ok * (STICK_RIGHT + palBonus()) + (n - ok) * STICK_TRY + (st.pct === 100 ? 10 : 0); earn(st.sticks, "answer"); P.xp += ok * 15; checkAch(); saveProg();
   st.fin = megaOutcome(st);
   if (S.tab === "rush" && typeof rushScore === "function") rushScore(st.fin === "saved" ? 1 : -1, ok, n);
 }
@@ -7876,7 +7877,7 @@ function rhyTitle(title, done) { return !done && RHY_LEAK.test(String(title || "
 function rushCase(id) { return (DB.CASES || []).filter(function (c) { return c.id === id; })[0]; }
 function rushCallView(R) {
   var C = R.call, cs = rushCase(C.id); if (!cs) { R.cur = null; return ""; }
-  var c = '<section class="rushcall"><span class="eyebrow">Developing call</span>' + acuTag(cs.acu) + '<h2>' + esc(rhyTitle(cs.title, C.i >= cs.steps.length)) + '</h2>';
+  var c = '<section class="rushcall"><span class="eyebrow">Developing call</span>' + acuTag(cs.acu) + (typeof rushStickBadge === "function" && C.i < cs.steps.length ? rushStickBadge(cs) : "") + '<h2>' + esc(rhyTitle(cs.title, C.i >= cs.steps.length)) + '</h2>';
   if (C.i >= cs.steps.length) {
     var pct = Math.round(100 * C.right / cs.steps.length), good = pct >= 75, mid = pct >= 50;
     c += '<div class="learncard done"><span class="eyebrow">Handoff</span><p class="big">' + pct + '%</p><p>' + C.right + ' of ' + cs.steps.length + ' decisions right on this call.</p>' +
@@ -7887,8 +7888,8 @@ function rushCallView(R) {
   }
   var st = cs.steps[C.i];
   if (!C.order) C.order = shuffle([st.a].concat(st.w));
-  var dt = "";
-  if (C.ans == null) { C.wrongs = C.wrongs || 0; dt = decBar("dc-" + C.id + "-" + C.i + "-" + (S.rush ? S.rush.n : 0), decSecs(cs.acu, st.story + " " + st.q + " " + C.order.join(" "), C.wrongs, C.i > 0 ? 5 : 0), function () { rushCallAnswer(-1); }); }
+  var dt = "", rsRead = typeof rushReading === "function" && rushReading(C);
+  if (C.ans == null && !rsRead) { C.wrongs = C.wrongs || 0; dt = decBar("dc-" + C.id + "-" + C.i + "-" + (S.rush ? S.rush.n : 0), decSecs(cs.acu, st.story + " " + st.q + " " + C.order.join(" "), C.wrongs, C.i > 0 ? 5 : 0), function () { rushCallAnswer(-1); }); }
   /* look back at the scene size-up and earlier parts of the call (owner, Nov 16 2026: "add a way to view the scene size
      up ... in case you need to view previous information"). Opens in place; the decision timer keeps running. */
   var back = "";
@@ -7897,7 +7898,9 @@ function rushCallView(R) {
       return '<li><span class="rbk">' + (j === 0 ? 'Scene size-up' : 'Part ' + (j + 1)) + '</span><p>' + esc(p.story) + '</p><p class="rbd"><b>Decision:</b> ' + esc(p.a) + '</p></li>';
     }).join("") + '</ol></details>';
   }
-  c += '<p class="muted small">Part ' + (C.i + 1) + ' of ' + cs.steps.length + '</p>' + back + pvCall(cs, C) + '<p class="vignette">' + esc(st.story) + '</p><h3 class="qstem">' + esc(st.q) + '</h3>' + dt + '<div class="qopts">';
+  if (rsRead) return c + '<p class="muted small">Part ' + (C.i + 1) + ' of ' + cs.steps.length + '</p>' + back + rushReadView(cs, C, st) + '</section>';
+  var rsSp = typeof rushSplit === "function" && autoOn() ? rushSplit(st) : null, rsAnim = C.drop === C.i && C.ans == null ? " rsin" : "";
+  c += '<p class="muted small">Part ' + (C.i + 1) + ' of ' + cs.steps.length + '</p>' + back + (rsSp ? '<p class="vignette rslead">' + esc(rsSp.lead) + '</p><div class="rsphase2' + rsAnim + '">' + pvCall(cs, C) + rushDropHTML(st) + (rsSp.pl ? '<p class="rspl">' + esc(rsSp.pl) + '</p>' : '') : pvCall(cs, C) + '<p class="vignette">' + esc(st.story) + '</p>') + '<h3 class="qstem">' + esc(st.q) + '</h3>' + dt + '<div class="qopts">';
   C.order.forEach(function (o, k) {
     var cls = C.ans == null ? "" : o === st.a ? " right" : C.ans === k ? " wrong" : " dim";
     c += '<button class="qopt' + cls + '" data-rushopt="' + k + '"' + (C.ans != null ? " disabled" : "") + '><span class="letter">' + "ABCD"[k] + '</span><span>' + esc(o) + '</span></button>';
@@ -7905,21 +7908,23 @@ function rushCallView(R) {
   c += '</div>';
   if (C.ans != null) {
     var right = C.order[C.ans] === st.a;
-    c += '<div class="explain ' + (right ? "ok" : "bad") + '"><strong>' + (right ? "Correct." : C.ans < 0 ? "Time ran out. The patient waited." : "Not the best choice.") + '</strong><p>' + (right ? "" : '<strong>Best: </strong>' + esc(st.a) + '. ') + esc(st.x) + '</p></div>';
+    c += '<div class="explain ' + (right ? "ok" : "bad") + '"><strong>' + (right ? "Correct." : C.ans < 0 ? "Time ran out. The patient waited." : "Not the best choice.") + '</strong><p>' + (right ? "" : '<strong>Best: </strong>' + esc(st.a) + '. ') + esc(st.x) + '</p></div>' + (C.rw && C.rw.i === C.i ? '<p class="rsearn' + (C.rw.total > 1 ? ' up' : '') + '">' + (typeof stickIcon === "function" ? stickIcon(15) : "") + '<b class="rscount" data-to="' + C.rw.total + '">+' + C.rw.total + '</b> sticks' + (C.rw.mult > 1 ? ' <span>' + C.rw.mult + '\u00d7 call' + (C.rw.fast ? ' \u00b7 +' + C.rw.fast + ' quick decision' : '') + (C.rw.streak ? ' \u00b7 +' + C.rw.streak + ' streak' : '') + '</span>' : '') + '</p>' : '');
     /* evaluators grade Bug Rush call parts too (owner, Nov 16 2026: "it won't let my evaluator grade some of the questions") */
     if (typeof isReviewer === "function" && isReviewer()) c += qRateHTML({ id: "rc_" + String(cs.id).replace(/[^A-Za-z0-9-]/g, "") + "_" + C.i, lv: cs.lv, q: st.story + " " + st.q, a: st.a, w: st.w, x: st.x, d: "" });
     var rk = "rc-" + C.id + "-" + C.i, rlast = C.i >= cs.steps.length - 1;
     c += autoBar(rk, 1.1, rlast ? "Handing off" : "Next part");
     c += '<div class="actions"><button class="btn" data-act="rushcnext"' + autoGo(rk) + '>' + (rlast ? "Hand off" : "Continue the call") + '</button></div>';
   }
-  return c + '</section>';
+  return c + (rsSp ? '</div>' : '') + '</section>';
 }
 function rushCallAnswer(k) {
   var R = S.rush, C = R && R.call; if (!C || C.ans != null) return;
   decStop();
   var cs = rushCase(C.id), st = cs.steps[C.i], right = k >= 0 && C.order[k] === st.a;
   C.ans = k; if (right) C.right++; else { C.wrongs = (C.wrongs || 0) + 1; (C.miss = C.miss || []).push(C.i); } feedback(right);
-  if (right) { Prog.d.xp += 10; earn(STICK_RIGHT); } else earn(STICK_TRY);
+  if (C.ansT0 && C.rev === C.i) C.decMs = Math.max(0, Date.now() - C.ansT0);
+  if (right) Prog.d.xp += 10;
+  if (typeof rushReward === "function" && autoOn()) { var rw = rushReward(cs, C, right); rw.i = C.i; C.rw = rw; earn(rw.total); try { rushTelem(C); } catch (e) {} } else { if (right) earn(STICK_RIGHT); else earn(STICK_TRY); }
   try { secAnswer(right); } catch (e) {}
   saveProg();
   if (C.i === cs.steps.length - 1) { C.bonus = 5 + (C.right / cs.steps.length >= 0.75 ? 10 : 0) + (C.right === cs.steps.length ? 5 : 0); earn(C.bonus); var p = C.right / cs.steps.length, hi = cs.acu === "critical" || cs.acu === "red"; rushScore(hi && p >= 0.75 ? 1 : cs.acu === "critical" && p < 0.5 ? -1 : 0, C.right, cs.steps.length); }
@@ -10575,7 +10580,7 @@ function usgForget() {
   try { fetch(usgUrl("usageForget"), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ data: { did: d } }) }).catch(function () {}); } catch (e) {}
   USG.inc = usgNew(); USG.sessSent = false;
 }
-["pointerdown", "keydown", "scroll", "touchstart"].forEach(function (ev) { document.addEventListener(ev, function () { USG.lastAct = Date.now(); }, { passive: true, capture: true }); });
+["pointerdown", "keydown", "scroll", "touchstart"].forEach(function (ev) { document.addEventListener(ev, function () { usgActCredit(); USG.lastAct = Date.now(); }, { passive: true, capture: true }); });
 /* active time: 15-second ticks while the page is visible and someone touched it in the last 2 minutes */
 /* YOUR ANALYTICS (owner, Nov 17 2026: "add a section called analytics that shows people this for themselves"): the same kinds
    of numbers the basic statistics send, kept on this device so each person can see exactly what is counted. */
@@ -10583,13 +10588,10 @@ function myStats() { var m = store("myStats"); if (!m || typeof m !== "object") 
 function myStatAdd(k, n) { try { var m = myStats(); m[k] = (m[k] || 0) + n; store("myStats", m); } catch (e) {} }
 setTimeout(function () { myStatAdd("sess", 1); }, 3000);
 setInterval(function () {
-  if (document.visibilityState === "visible" && Date.now() - USG.lastAct <= 120000 && !usgOn() && agreeRec()) myStatAdd("sec", 15);
-  if (document.visibilityState !== "visible" || Date.now() - USG.lastAct > 120000 || !usgOn()) return;
-  USG.inc.sec += 15;
-  myStatAdd("sec", 15);
+  if (document.visibilityState !== "visible" || !usgOn()) return;
   if (Date.now() - USG.sentAt >= 60000) usgFlush(false);
 }, 15000);
-document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden") usgFlush(true); else { USG.lastAct = Date.now(); } });
+document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden") { usgActCredit(); USG.lastAct = Date.now(); usgFlush(true); } else { USG.lastAct = Date.now(); } });
 window.addEventListener("pagehide", function () { usgFlush(true); });
 setTimeout(function () { usgFlush(false); }, 8000);   /* the visit itself counts even before anything is answered */
 
@@ -10930,7 +10932,7 @@ function settingsView() {
   /* sent here from the Agency Challenge with statistics off: the row flashes, and once it's on there's a way back (owner, Nov 16 2026) */
   var fst = S.flashStats && Date.now() - S.flashStats < 600000;
   /* the statistics on/off switch was removed: basic study statistics are part of the Terms (owner, Nov 17 2026) */
-  pv += setRow("Agency Challenge", "Study for your fire department, EMS agency, hospital or school and compete with others in your state for weekly rewards. Only your nickname shows.", '<button class="btn small ghost" data-openagency="1">' + (agxJoined() ? "Open" : "Join") + '</button>');
+  pv += setRow("Agency Challenge", "Study for your fire department, EMS agency, hospital or school and compete with agencies across the country for weekly rewards. Only your nickname shows.", '<button class="btn small ghost" data-openagency="1">' + (agxJoined() ? "Open" : "Join") + '</button>');
   /* the age range is no longer collected (owner, Nov 17 2026) */
   if (NATIVE) pv += setRow("Ad measurement", "Lets Meta count whether our Facebook and Instagram ads led to installs and app use. Turn off to stop sending these app events to Meta. No name, email, progress or scores are sent.", setTog("adMeas", adMeasOn(), adMeasOn() ? "On" : "Off"));
   pv += setRow("Download my data", "A file with your progress, scores, saved list and settings.", '<button class="btn small ghost" data-act="exportdata">Download</button>');
@@ -14237,7 +14239,7 @@ function bodyStage(ctx, sel) {
   try {
     if ((typeof funOn !== "function" || funOn()) && !S.gbHickSeen) {
       S.gbHickSeen = 1; var nH = (store("gbHick") || 0) + 1; store("gbHick", nH);
-      if (Math.random() < 0.34) setTimeout(function () { try { hickPop("That there's The Great Bug. Drag him round to turn him, and tap a part to see what's in it. Now don't go gettin' weird with him. The authorities are watchin', and they will show up.", 9000); } catch (e) {} }, 700);
+      if (Math.random() < 0.34) setTimeout(function () { try { hickPop("Drag him to turn, tap a part. Keep it decent, the law's watchin'.", 3800); } catch (e) {} }, 700);
     }
   } catch (e) {}
   return hk + '<p class="bm3dname" aria-hidden="true"><span>The Great Bug</span></p><div class="bm3d" data-ctx="' + ctx + '"><div class="bm3dfb">' + bodySVG(sel) + '</div>' + sr +
@@ -15515,8 +15517,8 @@ function gamesView() {
   if (n < 6) return '<div class="empty">There are not enough drugs at this level for games yet. Try the BugDex or a higher level.</div>';
   var L = [["memory", "Memory Match", "Flip cards to match each drug with its class.", "&#129504;"], ["match", "Quick Match", "Connect drugs to what they treat, or poisons to their antidotes.", "&#128279;"], ["cross", "Crossword", "A new med crossword every time, built from your study path.", "&#9638;"], ["scramble", "Word Scramble", "Unscramble the drug name from the clue.", "&#128292;"], ["blitz", "Class Blitz", gmD([75, 60, 50, 40]) + " seconds. Name the class of as many drugs as you can." + (best ? " Your best: " + best + "." : ""), "&#9889;"], ["frog", "Frog Snack", "Bugs fly by carrying answers. Only the right one can be caught." + ((Prog.d.games || {}).frogBest ? " Your best: " + Prog.d.games.frogBest + "." : ""), "&#128056;"]];
   var gk = ctxKey() + "|" + DB.ALLIDS.length, nAll = !freeSample() ? n : GM_ALL[gk] != null ? GM_ALL[gk] : (GM_ALL[gk] = fullCount(function () { return gmIds().length; }));   /* counted once per path */
-  return freeNote("medications in games", n, nAll) + '<p class="gmline"><span class="gmstick" aria-hidden="true">&#10022;</span> ' + n + ' medications, ' + L.length + ' games. Every finished game earns sticks. <span class="gmdiff d' + gmDiff() + '">' + GM_DIFF_NAME[gmDiff()] + ' difficulty</span></p><div class="gmgrid">' + L.map(function (g) {
-    return '<button class="gmcard" data-gm="' + g[0] + '"><span class="gmico" aria-hidden="true">' + g[3] + '</span><strong>' + esc(g[1]) + '</strong><span class="muted small">' + esc(g[2]) + '</span><span class="earned">+' + GM_STICKS[g[0]] + (g[0] === "scramble" ? " per word" : g[0] === "blitz" || g[0] === "frog" ? " per 3" : "") + ' sticks</span></button>';
+  return freeNote("medications in games", n, nAll) + '<p class="gmline"><span class="gmstick" aria-hidden="true">&#10022;</span> ' + n + ' medications, ' + L.length + ' games. Every finished game earns sticks and agency points.</p>' + gmTierPicker() + '<div class="gmgrid">' + L.map(function (g) {
+    return '<button class="gmcard" data-gm="' + g[0] + '"><span class="gmico" aria-hidden="true">' + g[3] + '</span><strong>' + esc(g[1]) + '</strong><span class="muted small">' + esc(g[2]) + '</span><span class="earned">' + gmPayLabel(g[0]) + '</span></button>';
   }).join("") + '</div>';
 }
 
@@ -15649,7 +15651,7 @@ function gmCross() {
     return L.length ? '<div><h3 class="eh">' + title + '</h3><ol class="xclues">' + L.map(function (p) { return '<li><button class="linkish" data-xclue="' + p.r + "," + p.c + "," + d + '"><strong>' + p.n + '.</strong> ' + esc(p.clue) + ' (' + p.w.length + ')</button></li>'; }).join("") + '</ol></div>' : "";
   }
   c += '<div class="xcluecols">' + clues("a", "Across") + clues("d", "Down") + '</div>';
-  if (GM.won) c += '<div class="explain ok"><strong>Solved!</strong> <span class="earned">+' + GM.won + ' sticks</span></div>';
+  if (GM.won) c += '<div class="explain ok"><strong>Solved!</strong> <span class="earned">' + stkLine(GM.won, GM.wonPts) + '</span>' + (GM.wonNote ? '<br><span class="small">' + esc(GM.wonNote) + '</span>' : '') + '</div>';
   c += '<div class="actions">' + (GM.won || GM.revealed ? '<button class="btn" data-gm="again">New crossword</button>' : '<button class="btn" data-gm="xcheck">Check</button><button class="btn ghost" data-gm="xreveal">Show answers</button>') + '</div>';
   return c;
 }
@@ -32351,7 +32353,7 @@ function iapGrant(packId, txn, quiet) {
   var n = iapTotal(p);
   L[key] = { p: p.id, n: n, t: Date.now() };
   Prog.d.bought = (Prog.d.bought || 0) + n;
-  if (typeof earn === "function") earn(n);       /* sticks() counts earned minus spent */
+  if (typeof earn === "function") earn(n, "purchase");       /* sticks() counts earned minus spent */
   if (typeof saveProg === "function") saveProg();
   IAP.busy = ""; IAP.err = "";
   if (!quiet) {
@@ -33000,7 +33002,7 @@ function giftGive(d) {
   if (String(d.id || "").slice(0, 2) !== "c-") codeNameLog(d.rev ? "evaluator" : "gift", d.id); else giftNameKeep();
   Prog.d.gifts = Prog.d.gifts || {};
     Prog.d.gifts[d.id] = Date.now();
-    if (d.sticks > 0) { try { if (typeof stickRepair === "function") stickRepair(); } catch (e) {} earn(d.sticks); got.push(d.sticks.toLocaleString() + " sticks"); }
+    if (d.sticks > 0) { try { if (typeof stickRepair === "function") stickRepair(); } catch (e) {} earn(d.sticks, "gift"); got.push(d.sticks.toLocaleString() + " sticks"); }
     if (d.pro > 0) {
       var from = Math.max(Date.now(), (Prog.d.proGift && Prog.d.proGift.until) || 0);
       Prog.d.proGift = { until: from + d.pro * 864e5 };
@@ -33679,7 +33681,7 @@ function seatCheck() {
   fnCall("groupSeat", {}).then(function (r) {
     var was = seatTier();
     if (r && r.ok) {
-      SEAT.tier = "pro"; SEAT.until = r.live ? r.until : Math.min(r.until, Date.now()); SEAT.orgName = r.orgName || ""; SEAT.alias = r.alias || ""; SEAT.level = seatLvNorm(r.level); SEAT.loaded = true; SEAT.inApp = !!r.inApp; if (r.boost) { SEAT.boost = r.boost; store("seatBoost", r.boost); }
+      SEAT.tier = "pro"; SEAT.until = r.live ? r.until : Math.min(r.until, Date.now()); SEAT.orgName = r.orgName || ""; SEAT.alias = r.alias || ""; SEAT.level = seatLvNorm(r.level); SEAT.loaded = true; SEAT.inApp = !!r.inApp; if (r.protocol && !store("protocol")) { store("protocol", r.protocol); DB._ncache = {}; DB._mcache = null; } seatLockSet(r); if (r.boost) { SEAT.boost = r.boost; store("seatBoost", r.boost); }
       store("seat", { tier: "pro", until: SEAT.until, orgName: SEAT.orgName, alias: SEAT.alias, level: SEAT.level, inApp: SEAT.inApp });
     } else if (r && !r.ok && !(SEAT.redeemedAt && Date.now() - SEAT.redeemedAt < 120000)) {
       SEAT.tier = ""; SEAT.until = 0; SEAT.loaded = true; store("seat", null);
@@ -33747,7 +33749,7 @@ function fnCall(name, data) {
   }).then(function (r) {
     return r.json().catch(function () { return { error: { message: "That service isn't available right now. Try again later.", status: "UNAVAILABLE" } }; });
   }).then(function (j) {
-    if (j && j.error) { var e = new Error(j.error.message || "error"); e.status = j.error.status; throw e; }
+    if (j && j.error) { var e = new Error(j.error.message || "error"); e.status = j.error.status; e.details = j.error.details || null; throw e; }
     return j ? j.result : null;
   });
 }
@@ -33767,7 +33769,7 @@ function groupRedeemKey(raw, win, fail, agreed) {
   store("classConsent", { at: Date.now(), v: 1 });
   GIFT.busy = true; giftDraw();
   fnCall("groupRedeem", { token: raw, consent: true, app: NATIVE ? "ios" : "web" }).then(function (r) {
-    SEAT.tier = "pro"; SEAT.until = r.until; SEAT.orgName = r.orgName; SEAT.alias = r.alias; SEAT.level = seatLvNorm(r.level); SEAT.loaded = true; SEAT.redeemedAt = Date.now(); SEAT.inApp = !!(r.inApp || NATIVE);
+    SEAT.tier = "pro"; SEAT.until = r.until; SEAT.orgName = r.orgName; SEAT.alias = r.alias; SEAT.level = seatLvNorm(r.level); SEAT.loaded = true; SEAT.redeemedAt = Date.now(); if (r.protocol && !store("protocol")) { store("protocol", r.protocol); DB._ncache = {}; DB._mcache = null; } seatLockSet(r); SEAT.inApp = !!(r.inApp || NATIVE);
     store("seat", { tier: "pro", until: r.until, orgName: r.orgName, alias: r.alias, level: SEAT.level, inApp: SEAT.inApp });
     if (typeof webDeepLoad === "function") webDeepLoad();
     if (where0 !== "form") clAdoptLevel(SEAT.level);
@@ -33946,12 +33948,12 @@ function agxPodium(rows, nameOf, subOf, ptsOf) {
   }).join("") + '</div>';
 }
 function agxFlush() {
-  var Q = store("agxq"); if (!Q || !Q.n || AGX.sending || !agxJoined()) return;
-  var sent = { n: Math.min(Q.n, 500), c: Math.min(Q.c, Q.n, 500), av: agxMyAv() }; AGX.sending = true;
+  var Q = store("agxq"); if (!Q || !(Q.n || Q.sp) || AGX.sending || !agxJoined()) return;
+  var sent = { n: Math.min(Q.n || 0, 500), c: Math.min(Q.c || 0, Q.n || 0, 500), sp: Math.min(Q.sp || 0, 15000), av: agxMyAv() }; AGX.sending = true;
   fnCall("agencyScore", sent).then(function (r) {
     AGX.sending = false;
     if (r && r.member === false) { store("agxJoined", null); }
-    var L = store("agxq") || { n: 0, c: 0 }; L.n = Math.max(0, L.n - sent.n); L.c = Math.max(0, L.c - sent.c); store("agxq", L);
+    var L = store("agxq") || { n: 0, c: 0 }; L.n = Math.max(0, (L.n || 0) - sent.n); L.c = Math.max(0, (L.c || 0) - sent.c); L.sp = Math.max(0, (L.sp || 0) - sent.sp); store("agxq", L); if (r && r.left != null) { AGX.left = r.left; AGX.leftDay = new Date().toDateString(); }
   }).catch(function () { AGX.sending = false; });
 }
 window.addEventListener("pagehide", function () { try { agxFlush(); } catch (e) {} });
@@ -33973,7 +33975,7 @@ function agxView() {
   if (agxPushHandler()) c += '<label class="chk axpush"><input type="checkbox" id="agxPushT"' + (store("agxPushOn") ? " checked" : "") + '> Tell me when someone passes me</label>' + (AGX.pushMsg ? '<p class="muted small">' + esc(AGX.pushMsg) + '</p>' : '');
   c += agxChBox() + '<p><button class="btn ghost" data-agx="challenge">Challenge a friend</button> <span class="muted small">Send a link to a friend at any agency or hospital.</span></p>';
   c += agxCdHtml();
-  c += '<div class="cltabs" role="tablist"><button class="' + (AGX.tab === "agency" ? "on" : "") + '" data-agx="tab-agency">My agency</button><button class="' + (AGX.tab === "state" ? "on" : "") + '" data-agx="tab-state">' + esc(A.state) + ' agencies</button><button data-agx="refresh" aria-label="Refresh">↻</button></div>';
+  c += '<div class="cltabs axtiers" role="tablist"><button role="tab" aria-selected="' + (AGX.tab === "agency") + '" class="' + (AGX.tab === "agency" ? "on" : "") + '" data-agx="tab-agency">My Agency</button>' + (D.stateOn ? '<button role="tab" aria-selected="' + (AGX.tab === "state") + '" class="' + (AGX.tab === "state" ? "on" : "") + '" data-agx="tab-state">' + esc(agxStateName(AGX.stPick || A.state)) + '</button>' : '') + '<button role="tab" aria-selected="' + (AGX.tab === "national") + '" class="' + (AGX.tab === "national" ? "on" : "") + '" data-agx="tab-national">National</button><button data-agx="refresh" aria-label="Refresh">↻</button></div>' + agxTierBanner(AGX.tab, D);
   if (AGX.tab === "agency") {
     /* your own bug shows as it is right now, even before the server has it */
     D.board.forEach(function (r) { if (r.me) r.av = agxMyAv() || r.av; });
@@ -33982,13 +33984,14 @@ function agxView() {
       return '<li class="' + (r.me ? "me" : "") + (r.rank <= 3 && r.pts > 0 ? " axtop" : "") + '"><span class="clrk' + (r.rank <= 3 && r.pts > 0 ? " r" + r.rank : "") + '">' + r.rank + '</span>' + agxAvArt(r.av) + '<span class="clal">' + esc(r.nick) + (r.me ? ' <em>you</em>' : '') + (r.dept ? '<small class="axsub">' + esc(agxDeptName(A.type, r.dept)) + '</small>' : '') + '</span><span class="clsc"><b>' + num0(r.pts) + '</b><small>' + (r.acc != null ? r.acc + "% right" : "no answers yet") + '</small></span>' +
         (r.me || r.hidden ? '' : '<button class="axrep" data-agxrep="' + esc(r.mid) + '" aria-label="Report this name">' + (AGX.rep === r.mid ? "Report?" : "⚑") + '</button>') + '</li>';
     }).join("") + '</ol>';
-    c += '<p class="muted small">The top 3 this week are your agency’s team on the ' + esc(A.state) + ' board. 10 points for each right answer and minus 5 for each wrong one, up to ' + num0(D.dayCap) + ' points a day (' + num0(M.todayLeft) + ' left today). Starts over for everyone every Sunday at 7 pm Central.</p>';
+    c += '<p class="muted small">The top 3 this week are your agency’s team on the ' + (D.stateOn ? esc(A.state) : 'National') + ' board. 10 points for each right answer and minus 5 for each wrong one, up to ' + num0(D.dayCap) + ' points a day (' + num0(M.todayLeft) + ' left today). Starts over for everyone every Sunday at 7 pm Central.</p>';
     if (A.members < 3 || A.teamFilled < 3) c += '<div class="axrecruit"><b>Grow your team</b><span>Your agency\u2019s score is its top 3 people added together, so each coworker who joins can add up to 3,000 points a day.</span><button class="btn" data-agx="recruit">Invite a coworker</button></div>';
-  } else {
+  } else if (AGX.tab === "national" || (AGX.stPick && AGX.stPick !== A.state)) { c += agxTierHtml(A); } else {
     {
+      c += agxStatePick(A.state);
       c += agxPodium(D.state, function (r) { return r.name; }, function (r) { return r.city; }, function (r) { return r.top3; });
       c += '<ol class="clboard axboard">' + D.state.map(function (r) {
-        return '<li class="' + (r.mine ? "me" : "") + '"><span class="clrk' + (r.rank <= 3 && r.top3 > 0 ? " r" + r.rank : "") + '">' + r.rank + '</span>' + agxAvArt(r.av) + '<span class="clal">' + esc(r.name) + (r.mine ? ' <em>yours</em>' : '') + (r.unv ? ' <small class="axunv">not checked yet</small>' : '') + '<small class="axsub">' + esc(AGX_TYPES[r.type] || "") + " · " + esc(r.city) + '</small></span><span class="clsc"><b>' + num0(r.top3) + '</b><small>' + (r.filled < 3 ? r.filled + " of 3 on the team" : "top 3") + '</small></span></li>';
+        return '<li class="' + (r.mine ? "me" : "") + (r.id ? ' axclick" data-agxroster="' + esc(r.id) + '" tabindex="0" role="button" aria-label="' + esc(r.name) + ': see who is on this team' : '') + '"><span class="clrk' + (r.rank <= 3 && r.top3 > 0 ? " r" + r.rank : "") + '">' + r.rank + '</span>' + agxAvArt(r.av) + '<span class="clal">' + esc(r.name) + (r.mine ? ' <em>yours</em>' : '') + (r.unv ? ' <small class="axunv">not checked yet</small>' : '') + '<small class="axsub">' + esc(AGX_TYPES[r.type] || "") + " · " + esc(r.city) + '</small></span><span class="clsc"><b>' + num0(r.top3) + '</b><small>' + (r.filled < 3 ? r.filled + " of 3 on the team" : "top 3") + '</small></span></li>';
       }).join("") + '</ol><p class="muted small">Agencies in ' + esc(A.state) + ', ranked by their top 3 people’s points added together this week.</p>';
       var L = D.lastWeek; if (L && L.agencies && L.agencies.length) c += '<div class="clbox"><h4>Last week’s winners</h4>' + L.agencies.map(function (x, i) { return '<p>' + ["🥇", "🥈", "🥉"][i] + " " + esc(x.name) + '<span>' + num0(x.top3) + '</span></p>'; }).join("") + '</div>';
     }
@@ -33996,7 +33999,7 @@ function agxView() {
   if (D.rewardsInfo) c += '<details class="cldim axmore"><summary>\ud83c\udf81 What you can win each week</summary>' + D.rewardsInfo.map(function (x) { return '<p class="small"><b>' + esc(x.what) + ':</b> ' + esc(x.reward) + '</p>'; }).join("") + '<p class="muted small">Rewards are sticks and bugs for the app. Collect them here after the week ends on Sunday at 7 pm Central.</p></details>';
   c += '<details class="cldim axmore"><summary>Nickname and agency</summary><form class="pform" id="agxNickF"><label>Nickname (shown on the boards)<input class="pinput" id="agxNick" maxlength="20" value="' + esc(M.nick) + '" autocomplete="off"></label><label>Department' + agxDeptSel(A.type, M.dept) + '</label><button class="btn ghost" type="submit">Save</button></form>' +
     (M.nickHidden ? '<p class="small">Your name is hidden while we review a report. Choosing a new nickname shows it again.</p>' : '') +
-    '<p class="small"><button class="linkish" data-agx="change">Change agency</button> · <button class="linkish" data-agx="reqnew">Add a new institution</button> · <button class="linkish" data-agx="leave">' + (AGX.leaveAsk ? "Tap again to leave" : "Leave the challenge") + '</button></p>' +
+    agxLockLinks(M) +
     '<p class="muted small">Only your nickname shows. Boards are for fun and study, not a measure of job performance. Agencies aren’t affiliated with DrugBug and don’t endorse it.</p></details>';
   return c;
 }
@@ -34006,7 +34009,7 @@ function agxView() {
 function agxWeekLabel(w) { try { return new Date(w + "T12:00:00Z").toLocaleDateString(undefined, { month: "short", day: "numeric", timeZone: "UTC" }); } catch (e) { return w; } }
 function agxRewardBox(D) {
   var R = (D && D.rewards) || []; if (!R.length) return "";
-  return '<div class="clbox axrw"><h4>\ud83c\udf81 Rewards waiting</h4>' + R.map(function (r) { return '<p class="small"><b>Week of ' + esc(agxWeekLabel(r.wk)) + '</b></p>' + r.items.map(function (it) { return '<p>' + esc(it.label) + '<span>' + (it.kind === "bug" ? esc(RARITY[it.rar] || it.rar) + " bug" : "+" + num0(it.sticks) + " sticks" + (it.acc != null && it.full ? " (" + num0(it.full) + " × " + it.acc + "% right)" : "")) + '</span></p>'; }).join(""); }).join("") +
+  return '<div class="clbox axrw"><h4>\ud83c\udf81 Rewards waiting</h4>' + R.map(function (r) { return '<p class="small"><b>Week of ' + esc(agxWeekLabel(r.wk)) + '</b></p>' + r.items.map(function (it) { return '<p>' + esc(it.label) + '<span>' + (it.kind === "bug" ? esc(RARITY[it.rar] || it.rar) + " bug" : it.kind === "badge" ? "badge" : "+" + num0(it.sticks) + " sticks" + (it.acc != null && it.full ? " (" + num0(it.full) + " × " + it.acc + "% right)" : "")) + '</span></p>'; }).join(""); }).join("") +
     '<p><button class="btn" data-agx="collect"' + (AGX.collecting ? " disabled" : "") + '>Collect</button></p></div>';
 }
 function agxCollect() {
@@ -34021,10 +34024,11 @@ function agxCollect() {
     }
     fnCall("agencyRewardClaim", { wk: R[i].wk }).then(function (r) {
       (r && r.items || []).forEach(function (it) {
-        if (it.kind === "sticks") { earn(it.sticks || 0); sticks += it.sticks || 0; return; }
+        if (it.kind === "sticks") { earn(it.sticks || 0, "prize"); sticks += it.sticks || 0; return; }
+        if (it.kind === "badge") { Prog.d.agxBadges = (Prog.d.agxBadges || []).concat([{ b: it.badge, st: it.st || "", place: it.place || 0, wk: it.wk || R[i].wk, label: it.label }]).slice(-60); got.push(it.label); return; }
         var pool = prizePool(it.rar), pick = pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
         if (pick) { Prog.d.owned = (Prog.d.owned || []).concat([pick.id]); got.push("the " + pick.name + " (" + (RARITY[it.rar] || it.rar) + ")"); }
-        else { var n = PRIZE_STICKS[it.rar] || 200; earn(n); sticks += n; }
+        else { var n = PRIZE_STICKS[it.rar] || 200; earn(n, "prize"); sticks += n; }
       });
       next(i + 1);
     }).catch(function (e) { AGX.collecting = false; agxFail(e, "collect your rewards"); });
@@ -34197,7 +34201,7 @@ setTimeout(function () { var h = agxPushHandler(); if (h && store("agxPushOn")) 
 document.addEventListener("click", function (e) { var t = e.target.closest && e.target.closest("[data-openagency]"); if (t) { e.preventDefault(); openAgency(); } });
 function homeAgencyCard() {
   if (S.view === "gen") return "";   /* every specialty except BugDex (owner, Nov 16 2026) */
-  return '<button class="axcard" data-openagency="1"><span class="axic" aria-hidden="true">🏆</span><span class="axtx"><b>Agency Challenge' + (store("agxRw") ? ' <em class="axnew">Rewards waiting</em>' : '') + '</b><span>' + (agxJoined() ? "See where you and your agency rank against surrounding agencies" : "See where you and your agency rank against surrounding agencies. Weekly rewards.") + '</span></span><span class="fpgo" aria-hidden="true">&rsaquo;</span></button>';
+  return '<button class="axcard" data-openagency="1"><span class="axic" aria-hidden="true">🏆</span><span class="axtx"><b>Agency Challenge' + (store("agxRw") ? ' <em class="axnew">Rewards waiting</em>' : '') + '</b><span>' + (agxJoined() ? "See where you and your agency rank against agencies across the country" : "See where you and your agency rank against agencies across the country. Weekly rewards.") + '</span></span><span class="fpgo" aria-hidden="true">&rsaquo;</span></button>';
 }
 /* NO EMOJIS (owner, Nov 16 2026: "remove every single emoji but the agency challenge ones").
    Every emoji is taken out of the text as the screen is drawn, wherever it came from (app text, drug data, questions).
@@ -34518,7 +34522,7 @@ function dashCollect(r) {
   list.forEach(function (p) {
     if (p.kind === "title") {   /* a weekly title pays sticks (owner, Nov 12 2026) */
       var tk = (r.orgName || "") + ":" + p.pid;
-      if (got[tk] === undefined) { earn(p.sticks || 0); got[tk] = "sticks"; store("prizeGot", got); saveProg(); shown.push({ p: p, bug: "" }); }
+      if (got[tk] === undefined) { earn(p.sticks || 0, "prize"); got[tk] = "sticks"; store("prizeGot", got); saveProg(); shown.push({ p: p, bug: "" }); }
       fnCall("groupPrizeClaim", { week: p.week, pid: p.pid }).catch(function () {});
       return;
     }
@@ -34526,7 +34530,7 @@ function dashCollect(r) {
     if (bug === undefined) {
       var pool = prizePool(p.rar), pick = pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
       if (pick) { Prog.d.owned = (Prog.d.owned || []).concat([pick.id]); bug = pick.id; }
-      else { earn(PRIZE_STICKS[p.rar] || 200); bug = ""; }
+      else { earn(PRIZE_STICKS[p.rar] || 200, "prize"); bug = ""; }
       got[key] = bug; store("prizeGot", got); saveProg();
       shown.push({ p: p, bug: bug });
     }
@@ -34667,7 +34671,7 @@ function dashView() {
   c += '<div class="dcard2"><h3>Last 14 days</h3><div class="dbars">' + L.days.map(function (d) { var h = Math.round(100 * d[1] / max); return '<div class="dbar" title="' + esc(d[0].toLocaleDateString() + ": " + d[1] + " answered") + '"><em><i style="height:' + Math.max(d[1] ? 4 : 0, h) + '%"></i></em><span>' + (d[0].getMonth() + 1) + "/" + d[0].getDate() + '</span></div>'; }).join("") + '</div></div>';
   c += '<div class="dcard2"><h3>Your scores</h3>' + clMine(L.n ? L.m : null) + '</div>';
   if (cls) {
-    c += '<div class="dcard2" id="dashclass"><h3>' + esc(SEAT.orgName || "Your class") + '</h3><p class="muted small">You are <strong>' + esc(SEAT.alias) + '</strong> · Pro until ' + esc(new Date(SEAT.until).toLocaleDateString()) + '</p>';
+    c += '<div class="dcard2" id="dashclass"><h3>' + esc(SEAT.orgName || "Your class") + '</h3><p class="muted small">You are <strong>' + esc(SEAT.alias) + '</strong> · Pro until ' + esc(new Date(SEAT.until).toLocaleDateString()) + ' · ' + seatLeaveHtml() + '</p>';
     if (!CL.data) c += '<p class="muted">' + (CL.busy ? "Loading the class…" : (CL.msg || "The scoreboard needs an internet connection.")) + '</p>';
     else {
       if (!clBoardOn()) c += '<p class="muted small">Class scoreboards are off. Your instructor sees your results under your class key label.</p>';
@@ -38408,17 +38412,60 @@ function hvLead() { S.hvMode = "tile"; var c = ""; try { c = learnSysRow(); } ca
 function hvPageHtml() { S.hvMode = "page"; var c = ""; try { c = learnSysRow(); } catch (e) {} S.hvMode = "tile"; return /class="hvhive/.test(c) ? c : ""; }
 /* ---- Scoreboard: the weekly board first, your own numbers under it (owner, Nov 20 2026) ---- */
 function hvBoard() {
-  var c = ""; try { c = lbView() || ""; } catch (e) {}
-  if (!c) {
-    var wk = 0; try { wk = myWeekXp(); } catch (e) {}
-    c = '<h3 class="eh small">This week</h3><ol class="lb"><li class="me"><span class="rk">1</span><span class="lbav">' + (function () { try { return myBugArt("lbbug", null, null, myStage()); } catch (e) { return ""; } })() + '</span><span class="nm">You</span><span class="xp">' + wk.toLocaleString() + ' XP</span></li></ol><p class="muted small">Weekly XP resets every Monday.</p>';
+  /* Scoreboard (owner, Nov 21 2026): "change the look of 'this week' when you're by yourself. If you join a team make you
+     see the team when you join. Also the prizes need to show for that week." Class seat -> class card as before.
+     In an agency -> the team itself (rank, team score, top members, countdown) right on this page. Solo -> your own week
+     as a card with a clear Join a team step. Both show this week's prizes. */
+  var inC = false; try { inC = lbInClass(); } catch (e) {}
+  if (inC) {
+    var lb = ""; try { lb = lbView() || ""; } catch (e) {}
+    return '<button class="hvteam" data-hvgo="classes"><span class="hvthex" aria-hidden="true"></span><span class="hvttx2"><b>' + esc((typeof SEAT !== "undefined" && SEAT.orgName) || "Your class") + '</b><span>Your code put you on your class scoreboard. Open it to see where you rank.</span></span><span class="hvtgo2" aria-hidden="true">&rsaquo;</span></button>' + (lb ? '<section class="hvboard">' + lb + '</section>' : '') + '<h2 class="hvsth">Your stats</h2>';
   }
-  /* teams (owner, Nov 20 2026): join your hospital, agency or school from here; a class code puts you on the class board instead */
-  var team = "", inC = false; try { inC = lbInClass(); } catch (e) {}
-  if (inC) team = '<button class="hvteam" data-hvgo="classes"><span class="hvthex" aria-hidden="true"></span><span class="hvttx2"><b>' + esc((typeof SEAT !== "undefined" && SEAT.orgName) || "Your class") + '</b><span>Your code put you on your class scoreboard. Open it to see where you rank.</span></span><span class="hvtgo2" aria-hidden="true">&rsaquo;</span></button>';
-  else { var jn = false; try { jn = agxJoined(); } catch (e) {}
-    team = '<button class="hvteam" data-openagency="1"><span class="hvthex" aria-hidden="true"></span><span class="hvttx2"><b>' + (jn ? "Your team" : "Join a team") + '</b><span>' + (jn ? "See where your hospital, agency or school ranks this week." : "Pick your hospital, EMS agency, fire department or school and score for it. Have a class code? Enter it under Classes and you join your class scoreboard automatically.") + '</span></span><span class="hvtgo2" aria-hidden="true">&rsaquo;</span></button>'; }
-  return team + '<section class="hvboard">' + c + '</section><h2 class="hvsth">Your stats</h2>';
+  var jn = false; try { jn = agxJoined(); } catch (e) {}
+  var c = jn ? hvTeamCard() : hvSoloCard();
+  var pub = ""; try { pub = lbView() || ""; } catch (e) {}
+  if (pub && (pub.match(/<li/g) || []).length > 1) c += '<section class="hvboard">' + pub + '</section>';
+  return c + hvPrizeBox() + '<h2 class="hvsth">Your stats</h2>';
+}
+function hvWeekLeft() { var t = null; try { t = agxNextReset(); } catch (e) {} if (!t) return ""; var s = Math.max(0, Math.round((t - Date.now()) / 1000)), d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60); return d ? d + "d " + h + "h" : h + "h " + m + "m"; }
+function hvSoloCard() {
+  var wk = 0; try { wk = myWeekXp(); } catch (e) {}
+  var days = 0; try { var D = Prog.d.days || {}; days = Object.keys(D).filter(function (k) { var t = new Date(k + "T12:00:00").getTime(); return Date.now() - t < 7 * 86400000 && D[k] > 0; }).length; } catch (e) {}
+  var pts = 0; try { var L = store("rwLog") || [], w0 = agxNextReset() - 7 * 86400000; L.forEach(function (x) { if (x.t >= w0) pts += x.p || 0; }); } catch (e) {}
+  return '<section class="hvsolo"><div class="hvshead"><span class="hvseye">This week</span><span class="hvsend">' + (hvWeekLeft() ? "Ends in " + esc(hvWeekLeft()) : "") + '</span></div>' +
+    '<div class="hvsme"><span class="hvsav">' + (function () { try { return myBugArt("lbbug", null, null, myStage()); } catch (e) { return ""; } })() + '</span><div><b>Studying solo</b><span>Your points count for you. Join a team and they count for your agency too.</span></div></div>' +
+    '<div class="hvsstats"><div><b>' + num0(wk) + '</b><span>XP this week</span></div><div><b>' + num0(pts) + '</b><span>points this week</span></div><div><b>' + days + '/7</b><span>days studied</span></div></div>' +
+    '<button class="btn hvsjoin" data-openagency="1">Join a team</button><p class="muted small">Pick your hospital, EMS agency, fire department or school. Have a class code? Enter it under Classes to join your class scoreboard.</p></section>';
+}
+var HVT = { at: 0, busy: false };
+function hvTeamCard() {
+  var D = AGX.data && AGX.data.member ? AGX.data : null;
+  if ((!D || Date.now() - (AGX.at || 0) > 120000) && !HVT.busy && Date.now() - HVT.at > 20000) {
+    HVT.busy = true; HVT.at = Date.now();
+    fnCall("agencyBoard", { av: agxMyAv() }).then(agxOk).then(function (r) { HVT.busy = false; AGX.data = r; AGX.at = Date.now(); store("agxJoined", r.member ? 1 : null); if (S.view === "stats" || document.querySelector(".hvteamcard,.hvsolo")) render(); }).catch(function () { HVT.busy = false; if (document.querySelector(".hvteamcard")) render(); });
+  }
+  if (!D) return '<section class="hvteamcard"><div class="hvshead"><span class="hvseye">Your team this week</span></div><div class="axrload" role="status"><span class="axspin" aria-hidden="true"></span> ' + (HVT.busy ? "Loading your team…" : "Your team shows here when you’re online.") + '</div><button class="btn ghost" data-openagency="1">Open Agency Challenge</button></section>';
+  var A = D.agency, M = D.me, B = (D.board || []).slice(0, 5);
+  if (M && !B.some(function (r) { return r.me; })) { var mine = (D.board || []).filter(function (r) { return r.me; })[0]; if (mine) B.push(mine); }
+  return '<section class="hvteamcard"><div class="hvshead"><span class="hvseye">Your team this week</span><span class="hvsend">' + (hvWeekLeft() ? "Ends in " + esc(hvWeekLeft()) : "") + '</span></div>' +
+    '<button class="hvtname" data-openagency="1"><b>' + esc(A.name) + '</b><span>' + esc(A.city) + ", " + esc(A.state) + " · " + A.members + (A.members === 1 ? " member" : " members") + '</span></button>' +
+    '<div class="hvsstats"><div><b>#' + (M.rank || "–") + '</b><span>your rank</span></div><div><b>' + num0(M.pts) + '</b><span>your points</span></div><div><b>' + num0(A.team) + '</b><span>team score (top 3)</span></div></div>' +
+    '<ol class="lb hvtlb">' + B.map(function (r) { return '<li class="' + (r.me ? "me" : "") + '"><span class="rk">' + r.rank + '</span><span class="lbav">' + (r.me ? (function () { try { return myBugArt("lbbug", null, null, myStage()); } catch (e) { return ""; } })() : agxAvArt(r.av)) + '</span><span class="nm">' + esc(r.nick) + (r.me ? " (you)" : "") + (r.rank <= 3 && r.pts > 0 ? ' <em class="axbadge team">Team</em>' : "") + '</span><span class="xp">' + num0(r.pts) + ' pts</span></li>'; }).join("") + '</ol>' +
+    (D.rewards && D.rewards.length ? '<p class="hvrw">Rewards from last week are waiting.</p>' : '') +
+    '<button class="btn" data-openagency="1">Open your team</button></section>';
+}
+function hvPrizeBox() {
+  var T = (AGX.data && AGX.data.tiers) || store("agxTiers") || null;
+  if (!T && !HVT.tierBusy) { HVT.tierBusy = true; fnCall("agencyTier", { tier: "national" }).then(agxOk).then(function (r) { if (r.tiers) { store("agxTiers", r.tiers); if (document.querySelector(".hvprize")) render(); } }).catch(function () {}); }
+  if (T && AGX.data && AGX.data.tiers) store("agxTiers", T);
+  var L = [];
+  if (T && T.agency) L.push(["🏅", T.agency.title, T.agency.prizes]);
+  if (T && T.stateOn && T.state) L.push(["🏆", T.state.title, T.state.prizes]);
+  if (T && T.national) L.push(["👑", T.national.title, T.national.prizes]);
+  if (!L.length) L = [["🏅", "Internal MVP", ["1st in your agency: Top Contributor badge + an Epic bug", "2nd: a Rare bug · 3rd: a Common bug", "Weekly points milestones: up to 600 sticks"]], ["👑", "National Champions", ["1st-place roster: a Legendary bug", "2nd and 3rd place rosters: an Epic bug", "National Champion badge and the Hall of Fame"]]];
+  return '<section class="hvprize"><div class="hvshead"><span class="hvseye">This week’s prizes</span><span class="hvsend">' + (hvWeekLeft() ? "Ends Sunday 7 pm Central" : "") + '</span></div>' + L.map(function (x) {
+    return '<div class="hvpz"><span class="hvpzic" aria-hidden="true">' + x[0] + '</span><div><b>' + esc(x[1]) + '</b><ul>' + x[2].map(function (p) { return '<li>' + esc(p) + '</li>'; }).join("") + '</ul></div></div>';
+  }).join("") + (T && T.rules ? '<p class="muted small">' + esc(T.rules) + '</p>' : '') + '</section>';
 }
 /* ===== Live devices in Bug Rush (owner, Nov 20 2026) =====
    "add live engines for vent management where you can see real time numbers as the pt breathes on a vent ... Have it take
@@ -39159,5 +39206,1238 @@ function megaLenApply() {
 }
 megaLenApply();
 /* MEGA_LEN_END */
+
+/* ===== Live question edits (owner, Nov 21 2026) =====
+   The Question Editor (drugbugapp.com/qedit) publishes edits, urgent pulls and retirements to the server. The app asks
+   for them (qeLive), keeps the last answer on the device, and lays them over the unchanged data files, so a question can
+   be corrected or pulled with no new build. Every question is found by its id, never by its position, and a pulled
+   question is only marked hidden, so nothing else shifts. Ids are pinned to the shipped text before any layer changes it. */
+/* QE_LIVE_BEGIN */
+/* Phase 1 question fixes (owner-approved, Nov 21 2026): 214 corrected questions and 2 retired drip-rate calculations, keyed by
+   question id and laid over the shipped banks the same way as live edits (a live edit of the same question wins). */
+var P1FIX = {"v": 1, "edit": {"q1kp3s4": {"w": ["Has a very low glucose reading on the meter", "Takes insulin and also a sulfonylurea", "Is confused but can follow commands"], "b": "Q"}, "q13ib1ge": {"q": "Respiratory depression from which pair of substances is unaffected by naloxone?", "w": ["Methadone and oxycodone tablets", "Fentanyl and carfentanil powder", "Codeine and hydrocodone syrup"], "b": "Q"}, "q1k5w358": {"q": "Which effect of acetaminophen is too weak to be clinically useful?", "a": "Anti-inflammatory and antiplatelet action", "w": ["Fever reduction through the hypothalamus", "Pain relief at normal therapeutic doses", "Fever and pain relief in young children"], "b": "Q"}, "q1rqapim": {"q": "Activated charcoal is contraindicated after ingestion of which substance?", "a": "Drain cleaner or gasoline", "w": ["Acetaminophen or aspirin tablets", "Amitriptyline or similar antidepressants", "Sleep aids or antihistamine pills"], "b": "Q"}, "qrwdhnv": {"q": "In most systems, which medication is outside the EMT scope to administer or assist with?", "b": "Q"}, "qisi93m": {"w": ["Small veins deliver it too slowly to raise glucose", "Its thick solution commonly clots the catheter tip", "Its volume can cause acute fluid overload"], "b": "Q"}, "q1ly5lyz": {"q": "A patient with chest pain has nitroglycerin prescribed. Which finding is a contraindication to giving it?", "a": "A blood pressure of 84/50", "w": ["A blood pressure of 118/76", "A pulse rate of 96 per minute", "An oxygen saturation of 93%"], "b": "Q"}, "q8mr18i": {"w": ["Begin CPR immediately for asystole", "Give atropine to restart the rhythm", "Defibrillate at 200 joules immediately"], "b": "Q"}, "qu2b0z7": {"q": "Atropine acts at the AV node. In which rhythm is the block too low in the conduction system for it to help?", "a": "Third-degree block with a wide escape rhythm", "w": ["Sinus bradycardia with a narrow QRS complex", "First-degree block with symptomatic bradycardia", "Junctional bradycardia with a narrow QRS complex"], "b": "Q"}, "q1iqkfux": {"w": ["Naloxone by IV push", "Adenosine by rapid IV push", "Flumazenil by slow IV push"], "b": "Q"}, "qy9wz1j": {"w": ["Diltiazem by slow IV push", "Adenosine by rapid IV push", "Metoprolol by slow IV push"], "b": "Q"}, "qywbtl": {"w": ["Supplemental oxygen", "Chewable aspirin", "Dextrose solutions"], "b": "Q"}, "q1qpfgrk": {"a": "The arrhythmia resolves, hypotension occurs, the QRS widens by half, or the maximum dose is reached", "b": "Q"}, "qj74rcc": {"q": "Which condition does magnesium fail to treat effectively?", "w": ["Torsades de pointes with a long QT", "Eclampsia with ongoing seizures", "Severe asthma unresponsive to albuterol"], "b": "Q"}, "qhdjcmb": {"w": ["A small naloxone dose", "A small atropine dose", "A small flumazenil dose"], "b": "Q"}, "qkleizy": {"w": ["Naloxone titrated IV", "Adenosine by rapid IV push", "Atropine by IV push"], "b": "Q"}, "qjkjc01": {"q": "A 30-year-old has been seizing for 25 minutes despite two adequate midazolam doses. Which change at the receptor level best explains the fading benzodiazepine response?", "a": "GABA-A receptors move inside the neuron during long seizures", "x": "In prolonged seizures the GABA-A receptors that benzodiazepines act on are internalized, so each further dose does less. That is why second-line agents that work elsewhere are needed.", "w": ["Midazolam is cleared by the liver within a few minutes of each dose", "NMDA receptors are blocked by the repeated benzodiazepine doses", "Sodium channels become resistant once a second dose has been given"], "b": "Q"}, "q67k2n7": {"w": ["Full-dose propofol with succinylcholine for speed", "Full-dose etomidate with a reduced rocuronium dose", "Full-dose midazolam with vecuronium for stability"], "b": "Q"}, "qzaxurp": {"w": ["Give labetalol IV to bring the systolic pressure down", "Hyperventilate to an EtCO2 of 25 mmHg to lower the ICP", "Give mannitol for a presumed rise in intracranial pressure"], "b": "Q"}, "q13p77l2": {"w": ["Give naloxone IV, then resume BVM", "Place a supraglottic airway and bag harder", "Give midazolam IV to relax the chest"], "b": "Q"}, "qeibt3m": {"w": ["Ketamine is unsafe, so give full-dose propofol to protect the ICP", "Ketamine is acceptable only after mannitol has been given first", "Ketamine is safe in TBI only at very high doses"], "b": "Q"}, "q1hxcda2": {"w": ["Propofol", "Ketamine", "Midazolam"], "b": "Q"}, "qj0d60v": {"q": "Phentolamine reverses alpha-mediated vasoconstriction. Extravasation of which infusion acts through a different receptor and responds poorly to it?", "b": "Q"}, "q1u7ndx3": {"w": ["Dobutamine alone to improve cardiac output and tissue perfusion", "High-dose dopamine as the only vasoactive agent", "Phenylephrine to restore coronary perfusion pressure"], "b": "Q"}, "qfvek71": {"w": ["Atropine IV", "Calcium chloride IV", "Diphenhydramine IV"], "b": "Q"}, "q1qfbgnl": {"q": "A trauma patient in hemorrhagic shock was injured 3.5 hours ago and has not had TXA. What did CRASH-2 find about starting TXA this late?", "a": "It was linked to more deaths from bleeding", "x": "In CRASH-2, TXA started more than 3 hours after injury was linked to more deaths from bleeding, so it is given only within 3 hours of injury. Blood clots (vascular occlusive events) were not increased.", "w": ["It was safe but no longer reduced bleeding deaths", "It caused more blood clots than early dosing", "It worked only when the fibrinogen level was low"], "b": "Q"}, "q1bj9alj": {"w": ["Plasmapheresis", "Protamine IV", "Charcoal hemoperfusion only"], "b": "Q"}, "q1d9mvjm": {"a": "Benzodiazepine plus sodium bicarbonate IV", "w": ["Phenytoin load plus amiodarone for the wide QRS", "Physostigmine for the anticholinergic toxidrome signs", "Flumazenil to reverse a possible benzodiazepine"], "b": "Q"}, "qpqedyq": {"w": ["Give more calcium only, because the glucose is already high", "Atropine every few minutes as the main therapy", "Glucagon IV as the definitive therapy"], "b": "Q"}, "q13meg44": {"w": ["Haloperidol IM and physical restraint alone", "Labetalol IV as the first drug for the hypertension", "Acetaminophen by mouth plus axillary ice packs"], "b": "Q"}, "q1hlefxu": {"w": ["Dantrolene IV for the muscle-generated hyperthermia", "Bromocriptine via OG tube every 8 hours", "Haloperidol for agitation plus acetaminophen"], "b": "Q"}, "qzkisfg": {"w": ["Yes, by rapid IV push to reverse the delirium quickly", "Yes, because a wide QRS signals cholinergic deficiency", "Yes, as long as atropine is given first as pretreatment"], "b": "Q"}, "q1680ey7": {"w": ["Give methylene blue IV as the usual first-line treatment", "Give hydroxocobalamin IV as an alternative reducing agent", "Give sodium nitrite to convert the methemoglobin back"], "b": "Q"}, "q3bhlj8": {"w": ["Standard lung-protective volumes at a normal rate", "Permissive hypercapnia to protect the injured lungs", "A low rate so bicarbonate can do the buffering"], "b": "Q"}, "q1kq3htr": {"w": ["Mannitol, since it also raises the blood pressure", "Neither; hyperventilate to EtCO2 20 for the whole flight", "Dexamethasone IV to reduce the cerebral edema"], "b": "Q"}, "q1ftwp9t": {"q": "A 61-year-old woman with chest pain took her usual low-dose aspirin this morning. Why does the ACS protocol still call for chewed aspirin now?", "a": "A larger chewed dose blocks platelets faster and more fully", "x": "A daily low dose gives partial, slower platelet inhibition. The larger chewed dose is absorbed quickly and gives rapid, near-complete inhibition during the acute event.", "w": ["The morning tablet has already worn off the platelets by now", "Chewed aspirin opens the blocked coronary artery directly", "A second dose thins the blood by lowering clotting factors"], "b": "Q"}, "q1r8x7o0": {"q": "A 68-year-old with diabetes has new left-sided weakness and slurred speech. Glucose is 41 mg/dL. Why can a low glucose produce stroke-like findings?", "a": "Brain cells run on glucose and fail when it runs low", "x": "Neurons have almost no glucose stores. Hypoglycemia can cause focal deficits that look like a stroke and resolve once glucose is restored.", "w": ["Low glucose makes blood clot inside the brain's arteries", "Insulin narrows the arteries on one side of the brain", "Low glucose raises the pressure inside the skull"], "b": "Q"}, "q14jkrnb": {"q": "A 57-year-old has chest pain with BP 150/90. Aspirin and nitroglycerin are both allowed by protocol. Which statement correctly pairs each drug with what it does?", "a": "Aspirin limits clot growth; nitroglycerin eases the heart's workload", "x": "Aspirin blocks platelets so the clot stops growing. Nitroglycerin dilates veins, lowering the blood returning to the heart and its oxygen demand.", "w": ["Aspirin eases the heart's workload; nitroglycerin limits clot growth", "Aspirin dissolves the clot; nitroglycerin raises the blood pressure", "Aspirin relieves the pain; nitroglycerin thins the circulating blood"], "b": "Q"}, "qhzr075": {"w": ["Give glucagon IM because it is the standard choice when an IV fails", "Give oral glucose gel because he cannot get glucagon", "Give glucagon at half the usual dose to limit side effects"], "b": "Q"}, "qkx5gtm": {"q": "A 64-year-old man is given a sublingual nitroglycerin tablet but chews and swallows it. Why does swallowing make the tablet much less effective?", "a": "The liver removes most of it on the way in", "x": "Swallowed nitroglycerin goes through the liver first, which removes most of it. Under the tongue it is absorbed straight into the bloodstream.", "w": ["Stomach acid converts the drug into an inactive salt", "The drug only works where it touches the tongue", "Swallowed tablets are absorbed too fast to last"], "b": "Q"}, "q13z26mp": {"w": ["Give a full adult dose chewed in case this is a heart attack", "Give a low dose chewed, since he is a teen and not a small child", "Give aspirin only if his fever is above 39 C (102.2 F)"], "b": "Q"}, "qy5ebnj": {"q": "A 76-year-old man with coronary artery disease develops facial swelling, hives, wheezing and BP 80/46 after a new antibiotic. Which actions of epinephrine reverse both the low pressure and the wheezing?", "a": "Alpha constriction of vessels and beta-2 airway relaxation", "x": "Epinephrine tightens leaky, dilated vessels through alpha receptors and opens the airways through beta-2 receptors. It also steadies mast cells. No other drug does all of this.", "w": ["Beta-1 slowing of the heart and alpha relaxation of airways", "Histamine receptor blockade in the vessels and the airways", "Mast cell destruction and beta-1 dilation of the vessels"], "b": "Q"}, "qxnfqkx": {"a": "Weight-based naloxone per protocol", "b": "Q"}, "qis0iw0": {"w": ["Give a full IV push dose for complete reversal", "Give repeated intranasal doses until he is fully awake", "Give oxygen only, since naloxone cannot reverse a patch"], "b": "Q"}, "q8fuv1i": {"q": "After a DuoNeb, a 69-year-old woman with COPD breathes easier but has a dry mouth and a bitter taste. Which drug action explains these effects?", "a": "Ipratropium blocks muscarinic receptors in salivary glands", "x": "Ipratropium is an anticholinergic. Blocking muscarinic receptors dries secretions, and the mist itself tastes bitter. Both are expected.", "w": ["Albuterol stimulates beta-2 receptors in the salivary glands", "Ipratropium releases histamine in the mouth and throat", "Albuterol blocks muscarinic receptors in the airways"], "b": "Q"}, "qsg6oza": {"q": "A 42-year-old woman received one levalbuterol nebulizer 20 minutes ago. She is still wheezing, with SpO2 91% and HR 108. Which drug effect best explains her heart rate?", "a": "Beta-2 stimulation spilling over onto the heart", "x": "Beta-2 agonists are selective, not exclusive. Some beta stimulation reaches the heart and reflexes add to it, so a mild tachycardia is an expected effect.", "w": ["Muscarinic blockade that removes vagal slowing", "Alpha stimulation that tightens the blood vessels", "Histamine release triggered by the nebulized mist"], "b": "Q"}, "qnpyn52": {"q": "A 58-year-old man with crushing chest pressure took his usual enteric-coated low-dose aspirin this morning. Why is chewed, uncoated aspirin still given?", "a": "Chewing gives fast absorption and platelet inhibition", "x": "Enteric coating delays absorption until the tablet reaches the intestine. Chewed uncoated aspirin is absorbed within minutes and inhibits platelets quickly.", "w": ["The coating permanently blocks absorption of the drug", "Uncoated aspirin dissolves the clot inside the artery", "Chewed aspirin protects the stomach from bleeding"], "b": "Q"}, "q19iqeom": {"q": "A 70-year-old man is in cardiac arrest with asystole confirmed in two leads. Why is atropine no longer a routine drug in asystole?", "a": "Excess vagal tone is rarely the cause of asystole", "x": "Atropine only removes vagal slowing. Trials showed no benefit in asystole or PEA, so it was dropped from the arrest algorithm.", "w": ["Atropine converts asystole into ventricular fibrillation", "Atropine cannot circulate during chest compressions", "Atropine blocks the action of epinephrine on the heart"], "b": "Q"}, "qwobry7": {"q": "A 59-year-old man on hemodialysis who makes no urine missed his last session. He has crackles, JVD, BP 196/108 and SpO2 85%. Why is furosemide unlikely to help him?", "a": "It must reach working kidney tubules to act", "x": "Loop diuretics act from inside the kidney tubule. With no urine output the drug has nothing to work on, so fluid is moved by lowering preload and by dialysis.", "w": ["It is removed by dialysis before it can act", "It raises blood pressure in fluid overload", "It works only with a potassium supplement"], "b": "Q"}, "qdhbfkx": {"w": ["Give the cardiac-arrest dose of epinephrine by IV push", "Give diphenhydramine and wait for a response", "Give methylprednisolone and recheck in 15 minutes"], "b": "Q"}, "qxmrqa6": {"q": "A 74-year-old man with prior MI develops wheezing, facial swelling and BP 82/48 after a new antibiotic. Which statement about antihistamines in this reaction is accurate?", "a": "They ease hives but do not reverse shock or swelling", "x": "Antihistamines block further histamine effects on skin. They do not reverse vasodilation, airway edema or bronchospasm already under way, which is why epinephrine is the treatment.", "w": ["They act too briefly to last through the transport", "They raise blood pressure but make the wheezing worse", "They work only when given before the exposure occurs"], "b": "Q"}, "q7a9kpz": {"w": ["Give a full weight-based ibuprofen dose now", "Give half the weight-based dose to be safe", "Give aspirin instead because she is so young"], "b": "Q"}, "q27um2s": {"w": ["The steroid has failed; give a second IV dose right now", "The steroid failed; this means she needs intubation", "Steroids act within minutes; recheck the IV line"], "b": "Q"}, "qm5uzdg": {"a": "Magnesium sulfate IV as a slow infusion", "w": ["Magnesium sulfate by rapid IV push", "Diphenhydramine IV followed by reassessment", "Morphine for air hunger and anxiety"], "b": "Q"}, "q1d3c9pb": {"q": "Four patients need analgesia. In which one would ketamine's sympathetic stimulation be most harmful?", "b": "Q"}, "q11xbb5p": {"w": ["Wait until IV access is obtained", "IO fentanyl through a tibial needle", "IM morphine at the adult dose"], "b": "Q"}, "q1msoddi": {"w": ["Give more naloxone until he is fully awake", "Give a second, larger IV dose to prevent relapse", "Give naloxone IM to extend the effect"], "b": "Q"}, "q8h4ed2": {"w": ["Give another naloxone dose IV for recurrent opioid toxicity", "Give midazolam to control the agitation", "Give furosemide and repeat the naloxone"], "b": "Q"}, "q1spxky9": {"q": "A 55-year-old malnourished man with heavy alcohol use is confused, with a glucose of 42 mg/dL. Why is thiamine given along with the dextrose?", "a": "Thiamine is a cofactor needed to use the glucose load", "x": "Thiamine is needed for glucose metabolism in the brain. In a depleted patient a glucose load uses up what little is left, so thiamine is given too, without delaying the dextrose.", "w": ["Thiamine raises blood glucose by releasing liver glycogen", "Thiamine prevents the dextrose from damaging the vein", "Thiamine reverses the sedating effect of the alcohol"], "b": "Q"}, "q1o6gfhf": {"q": "During a magnesium loading dose for eclampsia, a patient feels warm and flushed and is sweating. RR is 18 and patellar reflexes are present. Which action of magnesium explains this?", "a": "Vasodilation from relaxed vascular smooth muscle", "x": "Magnesium relaxes vascular smooth muscle, so warmth and flushing are expected. Toxicity shows first as lost reflexes, then slowed breathing.", "w": ["Early respiratory muscle weakness from toxicity", "An allergic release of histamine from mast cells", "Blockade of the sweat glands' muscarinic receptors"], "b": "Q"}, "q1p44r1y": {"q": "A trauma patient is receiving TXA. The first part of the dose was pushed over about 30 seconds, and BP falls from 104/68 to 82/50. Which property of TXA explains the fall?", "a": "Rapid IV injection can cause brief hypotension", "x": "TXA given too quickly can drop the blood pressure, which is why it is infused over about 10 minutes. It stabilizes clots; it does not dissolve them.", "w": ["TXA dissolves clots and restarts the bleeding", "TXA blocks alpha receptors in the blood vessels", "TXA triggers anaphylaxis in most trauma patients"], "b": "Q"}, "q534opx": {"w": ["Epinephrine IV push of the cardiac-arrest syringe to stop the reaction", "Nebulized albuterol to prevent future wheezing", "No treatment, since hives alone never progress"], "b": "Q"}, "qqyl04d": {"q": "Four patients need vasoactive support during interfacility transfer. In which patient would vasopressin as the only agent most likely lower cardiac output?", "b": "Q"}, "q1h5mcre": {"q": "A 52-year-old with a type A aortic dissection is in severe distress, hypoxic and needs intubation. BP is 192/110 and HR 112 despite an esmolol infusion. Which induction agent would most likely raise aortic wall stress?", "b": "Q"}, "qc8ow79": {"a": "Give a reduced dose with a pressor ready", "w": ["Give the standard dose with a pressor ready", "Give the standard dose after a fluid bolus", "Give a near-standard dose with fentanyl to blunt the response"], "b": "Q"}, "q37vyu1": {"w": ["Give it slowly over 2 minutes through the existing IV line", "Dilute it in saline and give it over 5 minutes", "Give it IV push only if the client is on a continuous cardiac monitor"], "b": "Q"}, "q3dmute": {"w": ["Regular insulin infusion started right away", "Sodium bicarbonate by IV push for acidosis", "Insulin glargine subcutaneously now"], "b": "Q"}, "q19v1boi": {"q": "A client with DKA on an insulin infusion now has a glucose of 240 mg/dL, but the anion gap is still open. Why is dextrose added while the insulin continues?", "a": "Insulin is still needed to stop ketone production", "x": "Glucose corrects before the acidosis does. Insulin must continue until ketone production stops and the gap closes, so dextrose is added to keep the glucose from falling too far.", "w": ["Dextrose is needed to close the anion gap directly", "Insulin no longer lowers glucose at this level", "Dextrose prevents insulin from lowering potassium"], "b": "Q"}, "q5vmmyz": {"w": ["Give regular insulin by IV push", "Start oral fluids every hour", "Give sodium bicarbonate for the acidosis"], "b": "Q"}, "q1o0xb6h": {"w": ["Tell the client it is a common cold symptom", "Advise doubling fluids and using a humidifier", "Suggest taking the dose at bedtime with food"], "b": "Q"}, "qmww3u9": {"w": ["Take it with a glass of wine in the evening to help you relax", "Take an extra tablet whenever the pain breaks through", "Drive as usual once the first dose has started working"], "b": "Q"}, "q1vib20t": {"w": ["Flush the catheter with normal saline", "Infuse warm saline to dilute the drug in the tissue", "Inject lidocaine around the site to relieve pain"], "b": "Q"}, "q15i7tgj": {"w": ["Take it with a glass of milk to protect your stomach", "Take it at the same time as your antacid each day", "Take it at bedtime with a calcium supplement"], "b": "Q"}, "qksb7ve": {"w": ["A high-potassium banana", "A dose of acetaminophen", "A calcium carbonate antacid"], "b": "Q"}, "qg48pri": {"w": ["Take it in the morning with a large glass of grapefruit juice", "Take it with an antacid to protect your stomach", "Take it only when you eat high-cholesterol foods"], "b": "Q"}, "ql7nwy9": {"w": ["Draw both into one syringe and push them together", "Give them simultaneously through a Y-site", "Mix both into one bag of D5W"], "b": "Q"}, "q1q14qc0": {"w": ["Restrict fluids to 1 liter per day", "Give the dose by rapid IV push", "Give each dose with a high-protein meal"], "b": "Q"}, "q1nwy3jh": {"q": "A client receiving amphotericin B develops fever, chills and rigors one hour into the infusion. What causes this reaction?", "a": "Cytokine release triggered by the drug", "x": "Amphotericin B commonly triggers an infusion reaction through cytokine release. It is not an allergy, which is why premedication is used for later doses.", "w": ["A true allergy mediated by IgE antibodies", "Bacterial contamination of the infusion bag", "Rapid potassium loss through the kidneys"], "b": "Q"}, "qolu80": {"q": "A client who is NPO for surgery has insulin glargine due. Why is basal insulin usually still needed while fasting?", "a": "The liver keeps releasing glucose even without food", "x": "Basal insulin covers the glucose the liver makes around the clock. Without it glucose and ketones rise even in a fasting client, so the dose is clarified, not skipped.", "w": ["Glargine peaks sharply and must be matched to meals", "Fasting makes the body resistant to rapid insulin", "Surgery stops the pancreas from releasing glucagon"], "b": "Q"}, "q6nq5fh": {"w": ["Take the drug every other day until the illness has passed", "Take the dose only when symptoms appear", "Cut the dose in half whenever you have a fever or chills"], "b": "Q"}, "q8j6j6n": {"w": ["Expect lower potassium from the combination", "Give the potassium faster to finish sooner", "Give the dose with food to limit potassium absorption"], "b": "Q"}, "q18cnwy0": {"w": ["Give acetaminophen and recheck in 1 hour", "Give tonight's warfarin dose and document", "Dim the lights and encourage the client to rest"], "b": "Q"}, "q10aj8tm": {"q": "A client with heart failure takes lisinopril, and the creatinine has risen from 1.0 to 2.1 mg/dL in 2 days. How can lisinopril contribute to this?", "a": "It dilates the efferent arteriole, lowering filtration pressure", "x": "Angiotensin II holds the efferent arteriole tight to keep filtration pressure up. ACE inhibitors remove that, so filtration can fall sharply when kidney blood flow is already low.", "w": ["It constricts the afferent arteriole and cuts renal blood flow", "It blocks sodium reabsorption in the loop of Henle", "It forms crystals that obstruct the renal tubules"], "b": "Q"}, "q1swe44o": {"q": "A client took no clozapine for 3 days and asks to restart the usual dose tonight. Why is it restarted at a low dose and retitrated?", "a": "Tolerance to its side effects is lost quickly", "x": "After as little as 48 hours off clozapine, the full dose can cause severe hypotension, sedation and collapse, so it is started low again.", "w": ["The liver enzymes that clear it double during the gap", "The white cell count must first recover from the gap", "The drug builds up in body fat while doses are missed"], "b": "Q"}, "q1qgd6ra": {"q": "A client on norepinephrine has a MAP of 92 mm Hg against an ordered goal of at least 65. Which effect of running it higher than needed is the main concern?", "a": "Alpha vasoconstriction cutting flow to gut, skin and kidneys", "x": "Norepinephrine is mainly an alpha agonist. More than is needed squeezes blood away from the gut, kidneys and extremities.", "w": ["Excess beta-2 dilation dropping the diastolic pressure", "Excess histamine release causing flushing and wheezing", "Excess dopamine receptor action causing nausea and vomiting"], "b": "Q"}, "q1c4wtfp": {"w": ["Expect bright red bleeding to increase each day", "Take an extra dose whenever cramping feels strong", "Take it with grapefruit juice each morning"], "b": "Q"}, "q13753nk": {"w": ["A client who is 68 years old and weighs about 62 kilograms", "A client who takes pantoprazole every morning", "A client 1 day after a total knee replacement"], "b": "Q"}, "q16e2ze9": {"q": "After delivery, a client on an oxytocin infusion has a boggy uterus that does not firm with massage. Why may oxytocin alone fail, so that a second uterotonic is prepared?", "a": "Its receptors saturate, so more drug adds little", "x": "After long exposure the uterus stops responding to more oxytocin. Drugs that act through other receptors are added.", "w": ["Oxytocin relaxes the uterus once bleeding is heavy", "Oxytocin is inactivated by blood inside the uterus", "Oxytocin works only before the placenta delivers"], "b": "Q"}, "qybdcho": {"w": ["Calcium carbonate twice daily with meals", "Loratadine daily for seasonal allergies", "Levothyroxine each morning before food"], "b": "Q"}, "qkl5w4b": {"w": ["Add oral acetaminophen and recheck the pain", "Keep titrating above the ordered maximum rate", "Document the pain and reassess in 2 hours"], "b": "Q"}, "qkj6t3x": {"q": "Four hours into a DKA insulin infusion, glucose is 212 mg/dL and the anion gap is still 19. What does the open gap show about the insulin's work?", "a": "Ketone production is not yet switched off", "x": "The anion gap tracks ketoacids. A gap that is still open means the insulin has more to do, even though the glucose is near target.", "w": ["The insulin has stopped working on glucose", "The kidneys are no longer clearing glucose", "Potassium has shifted fully out of the cells"], "b": "Q"}, "q5ysmoz": {"w": ["Give it as ordered, since it matches the morphine dose she tolerated", "Give it as ordered but over 5 minutes with an oxygen saturation probe", "Give half now and the other half in an hour if pain is not relieved"], "b": "Q"}, "q1v84jug": {"w": ["Give both drugs and recheck the ECG in the morning per the routine unit protocol", "Give the methadone later today to make room for the new medications", "Give the ondansetron now and the levofloxacin after the next ECG"], "b": "Q"}, "q1ofcvgu": {"q": "Which statement by a client discharged on OxyContin shows a need for more teaching?", "b": "Q"}, "q18odv84": {"w": ["Nitrofurantoin monohydrate (Macrobid)", "Cephalexin (Keflex) four times daily", "Fosfomycin as a single oral dose sachet"], "b": "Q"}, "qkrag9w": {"q": "A client has enoxaparin ordered every 12 hours for DVT. Creatinine clearance is 24 mL/min. Why does this clearance matter for enoxaparin?", "a": "The kidneys clear it, so it accumulates and bleeding risk rises", "x": "Enoxaparin is cleared by the kidneys. Below a clearance of 30 the label reduces the frequency to once daily to avoid accumulation and bleeding.", "w": ["The kidneys activate the drug, so it will not work at this level", "The drug injures the kidneys further at any dose that is given", "The drug binds creatinine and falsely raises the reported level"], "b": "Q"}, "q6520r6": {"q": "Which statement by a client taking lithium shows a need for more teaching?", "b": "Q"}, "qmeb3ws": {"w": ["Give it as ordered, since each single dose is within range", "Give it as ordered but only overnight while the child is awake", "Give it orally instead at the same dose and the same interval"], "b": "Q"}, "q1i30m0i": {"w": ["Continue it, since the listed dose is low", "Give it with folic acid on the same day", "Give it only if the platelet count is normal"], "b": "Q"}, "qb5aruo": {"w": ["Reassure the client that a normal troponin rules out any heart problem", "Document the supplement as a home medication only", "Repeat the troponin in one week at an outpatient laboratory"], "b": "Q"}, "q1q8mq1u": {"w": ["Wait and give the next dose on schedule", "Give half a dose mixed with water instead", "Give the next dose crushed in applesauce at bedtime"], "b": "Q"}, "q1vd4fvd": {"q": "A client on warfarin has a newly elevated INR and reports drinking several cups of chamomile tea daily. Which property of chamomile could explain the rise?", "a": "It contains coumarin compounds that may add to warfarin", "x": "Chamomile contains natural coumarins and has been linked to raised INR with warfarin. The INR and the tea are reported to the provider.", "w": ["It supplies vitamin K that strengthens warfarin's effect", "It speeds the clearance of warfarin through the kidneys", "It blocks the absorption of warfarin from the stomach"], "b": "Q"}, "qxclaqp": {"q": "A client taking doxazosin starts a venous supplement containing butcher's broom. Why might this supplement work against doxazosin?", "a": "It stimulates the alpha receptors doxazosin blocks", "x": "Butcher's broom constricts veins through alpha-adrenergic activity, the opposite of an alpha blocker. The supplement is documented and blood pressure monitored.", "w": ["It blocks beta receptors and slows the heart rate", "It induces liver enzymes that clear doxazosin", "It binds doxazosin in the gut and stops absorption"], "b": "Q"}, "qfvqav8": {"q": "A client with diabetes on insulin recently started black seed oil capsules and reports more frequent shaky, sweaty episodes. Which effect of black seed oil best explains these episodes?", "a": "It may lower glucose itself, adding to the insulin", "x": "Black seed (Nigella sativa) has glucose-lowering effects in studies. Added to insulin it can cause hypoglycemia, so glucose is checked and the supplement reported.", "w": ["It may block the insulin receptors in muscle tissue", "It may raise glucose and so trigger rebound lows", "It may speed the breakdown of the injected insulin"], "b": "Q"}, "q1eln39i": {"q": "A client on tacrolimus after a transplant uses elderberry syrup daily. Why is elderberry a concern with tacrolimus?", "a": "It may stimulate the immune system being suppressed", "x": "Elderberry is marketed as an immune stimulant, which works against transplant immunosuppression. Its use is reported to the provider.", "w": ["It may block the kidneys from clearing tacrolimus", "It may add to tacrolimus and deepen immune suppression", "It may bind tacrolimus and turn the urine dark"], "b": "Q"}, "q7wm2ql": {"q": "A client taking warfarin uses daily oil of oregano softgels. Which concern applies to this combination?", "a": "It may add antiplatelet effects and raise bleeding", "x": "Oregano oil may inhibit platelets. Combined with warfarin this can add to bleeding risk, so the supplement is reported.", "w": ["It may supply vitamin K and cancel the warfarin", "It may speed warfarin clearance in the liver", "It may bind warfarin in the gut and block absorption"], "b": "Q"}, "q1pmwxbk": {"q": "A client on clonidine for hypertension also uses a CBG oil and reports dizziness on standing. Which shared action best explains the dizziness?", "a": "Both may act on alpha-2 receptors to lower pressure", "x": "Clonidine is an alpha-2 agonist, and cannabigerol has alpha-2 activity in laboratory studies. Together they may lower pressure further.", "w": ["Both block beta-1 receptors and slow the heart rate", "Both release histamine and dilate the skin vessels", "Both block calcium channels in the heart muscle"], "b": "Q"}, "q1cpk4hv": {"q": "A client on atorvastatin and lisinopril starts a reishi triterpene extract. Which effect of reishi is the reason to report it?", "a": "It may lower blood pressure and affect clotting", "x": "Reishi may lower blood pressure and inhibit platelets. The evidence is limited, so the supplement is documented and reported, not assumed harmless or proven.", "w": ["It is proven to double the effect of atorvastatin", "It is known to block lisinopril absorption fully", "It has no measurable effect on any body system"], "b": "Q"}, "qgibird": {"q": "A client on warfarin uses a joint supplement labeled MSM plus glucosamine and chondroitin. Which concern applies to this product?", "a": "Glucosamine and chondroitin are linked to a higher INR", "x": "Case reports link glucosamine, with or without chondroitin, to raised INR on warfarin. The whole product is reported, not only one ingredient.", "w": ["MSM is the only ingredient with any known drug interaction", "Chondroitin supplies vitamin K and so lowers the INR", "Glucosamine speeds the clearance of warfarin in the liver"], "b": "Q"}, "qyq96hs": {"q": "A client taking clopidogrel after a coronary stent has a new prescription for omeprazole. How does omeprazole interfere with clopidogrel?", "a": "It inhibits CYP2C19, which activates clopidogrel", "x": "Clopidogrel is a prodrug activated by CYP2C19. Omeprazole inhibits that enzyme, so less active drug is formed and platelet inhibition is weaker.", "w": ["It raises stomach pH and blocks clopidogrel absorption", "It induces CYP3A4, which clears clopidogrel faster", "It competes with clopidogrel at the platelet receptor"], "b": "Q"}, "qqxnwbj": {"w": ["Give both together so the child takes fewer doses each day", "Give the iron supplement with milk at the same time as cefdinir", "Give the iron supplement only on days the child misses a cefdinir dose"], "b": "Q"}, "qfduq40": {"q": "Zafirlukast is a leukotriene blocker taken every day. Which use is outside its role?", "w": ["Long-term control of chronic asthma", "Prevention of exercise-related symptoms", "Relief of allergic rhinitis symptoms"], "b": "Q"}, "qlxxf9h": {"q": "A 70-year-old man with COPD is in respiratory distress with an SpO2 of 84%. Why is his oxygen titrated to a target rather than run at maximum flow?", "a": "Excess oxygen can upset gas matching and raise CO2", "x": "Hypoxia is treated first. Oxygen is then titrated because excess oxygen undoes the lung's matching of airflow to blood flow and lets CO2 climb.", "w": ["Oxygen at any flow stops his drive to breathe within minutes", "High oxygen levels cause the bronchi to constrict in COPD", "Oxygen is poorly absorbed by lungs that have emphysema"], "b": "RQ"}, "q1qffg0o": {"q": "A 66-year-old man has chest pain and asks you to help him take his nitroglycerin. Which findings are contraindications to assisting? Select all that apply.", "a": "Systolic blood pressure of 84 mmHg; He took sildenafil for erectile dysfunction 6 hours ago; The nitroglycerin is prescribed to his wife", "b": "RQ"}, "qes9se": {"w": ["Inflate the cuff with additional air and keep ventilating", "Increase the ventilation rate until lung sounds become audible", "Leave it in place and let the hospital team confirm placement"], "b": "RQ"}, "q1f9ffkh": {"q": "An 82-year-old on an anticoagulant tripped and hit her head. She is alert with GCS 15 and a small forehead bruise. Why does her anticoagulant change the risk?", "a": "It lets a small bleed in the skull keep growing", "x": "Anticoagulants do not cause the bleed, but they stop it from sealing. A patient can look well at first and worsen hours later, so she needs evaluation.", "w": ["It raises the pressure inside the skull directly", "It masks pain so she cannot report a headache", "It lowers her GCS even without any bleeding"], "b": "RQ"}, "qzqvkhe": {"w": ["Restrain her and secure the mask tightly", "Lay her flat on the stretcher with a nasal cannula", "Insert a nasopharyngeal airway"], "b": "RQ"}, "q1kadxj3": {"w": ["Whether the cuff needs additional air", "Whether the device should be exchanged for a larger size", "Whether the ventilation rate should be doubled"], "b": "RQ"}, "qu7kl7t": {"w": ["Open both lines wide until the systolic BP is above 120 mmHg to build a reserve", "Give a second full bolus because he has responded well", "Switch to a dextrose solution to give the clotting system energy"], "b": "RQ"}, "q6qi90v": {"w": ["An isotonic fluid bolus to dilute the insulin in her blood", "Start an IV for dextrose before giving anything by mouth", "High-flow oxygen and repeat glucose check in 15 minutes"], "b": "RQ"}, "qqoez7i": {"w": ["Transport and manage the infusion yourself", "Transport after a brief lesson on the pump from the nurse", "Refuse the transfer without discussion"], "b": "RQ"}, "qtudltx": {"w": ["Start a vasopressor with no fluid because he receives dialysis", "Give the full sepsis bolus as fast as possible without reassessing", "Give oral fluids only and avoid IV access"], "b": "RQ"}, "q1u9fgo6": {"w": ["Give pain medication only after the hospital confirms the crisis", "High-flow oxygen for everyone with sickle cell, whatever the SpO2", "Cold packs on the painful areas"], "b": "RQ"}, "q8iek6j": {"q": "Several children are due for the varicella vaccine. Which child has a contraindication to receiving it today?", "b": "RQ"}, "qu860cp": {"w": ["Flush the tube with water every 4 hours", "Change the feeding bag and tubing every 24 hours", "Check the client's weight every morning"], "b": "RQ"}, "qkd0tr3": {"w": ["Raise the head of bed to 90 degrees", "Ask the client to take a deep breath and hold it", "Flush the line with saline"], "b": "RQ"}, "q1wjxmn1": {"w": ["Flush the line and recheck the glucose in the morning", "Double the TPN rate to finish the bag", "Give a high-carbohydrate snack"], "b": "RQ"}, "qqdst4f": {"q": "Which clients have a contraindication to the live measles, mumps and rubella (MMR) vaccine? Select all that apply.", "a": "A client who is 10 weeks pregnant; A client receiving chemotherapy for leukemia; A client with prior anaphylaxis to neomycin", "b": "RQ"}, "q15ci8hu": {"q": "Which finding is outside the three qSOFA criteria?", "b": "RQ"}, "qhv7uid": {"q": "In which trauma patient is permissive hypotension contraindicated?", "b": "RQ"}, "q25uvhg": {"w": ["Give crystalloid alone until Rh-negative blood arrives", "Give only plasma, which carries no risk of sensitization", "Transfuse only after typing her own Rh status in the field"], "b": "RQ"}, "q397hjf": {"q": "Which blood product is unsafe to give to a dog?", "b": "RQ"}, "q5i8yyz": {"q": "Which part of the trauma 'lethal diamond' is left untreated by whole blood or a 1:1:1 transfusion strategy alone?", "b": "RQ"}, "qdoysz5": {"q": "A patient is unresponsive and has no gag reflex. Which medications in the EMT scope are contraindicated? Select all that apply.", "a": "Oral glucose; Activated charcoal; Chewed aspirin", "b": "QX"}, "q1lfvqbi": {"q": "An EMT inspects a medication before giving it. Which findings make the medication unsafe to use? Select all that apply.", "a": "The expiration date has passed; Epinephrine in the auto-injector window looks cloudy or discolored; The label shows another person's name", "b": "QX"}, "q1z7vt9": {"a": "Use the 1 mg/mL concentration for IM injection; Inject into the anterolateral thigh; A repeat dose may be needed in 5 to 10 minutes if symptoms persist", "opts": ["Use the concentrated (1:1,000) vial for IM injection", "Use the dilute cardiac-arrest syringe for IM injection", "Inject into the anterolateral thigh", "Give the full cardiac-arrest syringe by IV push", "A repeat dose may be needed in 5 to 10 minutes if symptoms persist", "Hypertension is a contraindication to epinephrine in anaphylaxis"], "ok": ["Use the concentrated (1:1,000) vial for IM injection", "Inject into the anterolateral thigh", "A repeat dose may be needed in 5 to 10 minutes if symptoms persist"], "b": "QX"}, "q4qfy6c": {"a": "Each dose is 10-20 mcg IV; Doses may be repeated every 2-5 minutes; Monitor for tachycardia and dysrhythmias", "opts": ["Each dose is a small diluted bolus IV", "Each dose is a full cardiac-arrest syringe IV", "Doses may be repeated every 2-5 minutes", "The preferred route for this indication is IM in the thigh", "Monitor for tachycardia and dysrhythmias", "Push-dose epinephrine replaces the need to reassess blood pressure"], "ok": ["Each dose is a small diluted bolus IV", "Doses may be repeated every 2-5 minutes", "Monitor for tachycardia and dysrhythmias"], "b": "QX"}, "qsqnpoo": {"a": "Give small doses slowly and titrate to effect; Use a reduced initial dose because of the patient's age; Monitor SpO2 and capnography with a bag-valve mask ready", "opts": ["Give small doses slowly and titrate to effect", "Give a large dose rapidly to ensure sedation", "Use a reduced initial dose because of the patient's age", "Monitor SpO2 and capnography with a bag-valve mask ready", "Omit monitoring because midazolam is short-acting", "Reverse oversedation with naloxone"], "ok": ["Give small doses slowly and titrate to effect", "Use a reduced initial dose because of the patient's age", "Monitor SpO2 and capnography with a bag-valve mask ready"], "b": "QX"}, "qhp7gdm": {"a": "Full benefit may take several weeks.; Report thoughts of harming yourself right away.; Report fever with tremor, agitation or muscle twitching.", "opts": ["Full benefit may take several weeks.", "Take it only on days when your mood is low.", "Report thoughts of harming yourself right away.", "Report fever with tremor, agitation or muscle twitching.", "St. John's wort can be added to speed the effect."], "ok": ["Full benefit may take several weeks.", "Report thoughts of harming yourself right away.", "Report fever with tremor, agitation or muscle twitching."], "b": "QX"}, "q1fx16cr": {"a": "Avoid alcohol during treatment and for 3 days afterward.; A metallic taste may occur.; Report numbness or tingling in your hands or feet.", "opts": ["Avoid alcohol during treatment and for 3 days afterward.", "A metallic taste may occur.", "Dark urine means the drug is damaging your kidneys.", "Report numbness or tingling in your hands or feet.", "A small amount of alcohol is safe with this drug."], "ok": ["Avoid alcohol during treatment and for 3 days afterward.", "A metallic taste may occur.", "Report numbness or tingling in your hands or feet."], "b": "QX"}, "q1kooda7": {"a": "Rise slowly from lying or sitting.; Report seeing things that are not there.; Report new uncontrolled movements.", "opts": ["Rise slowly from lying or sitting.", "Report seeing things that are not there.", "Take it with a high-protein meal if nausea occurs.", "Report new uncontrolled movements.", "It is safe to take with any antidepressant."], "ok": ["Rise slowly from lying or sitting.", "Report seeing things that are not there.", "Report new uncontrolled movements."], "b": "QX"}, "qyscyt": {"a": "Report black stools or blood in the urine; Tell the dentist or surgeon about the drug before any procedure; Report unusual purple spots on the skin", "opts": ["Report black stools or blood in the urine", "Take the drug only on days when chest pain occurs", "Tell the dentist or surgeon about the drug before any procedure", "Take an extra dose before dental work", "Report unusual purple spots on the skin"], "ok": ["Report black stools or blood in the urine", "Tell the dentist or surgeon about the drug before any procedure", "Report unusual purple spots on the skin"], "b": "QX"}, "qc02e4h": {"a": "Sildenafil taken 10 hours ago; Tadalafil taken 30 hours ago; Riociguat taken daily", "opts": ["Sildenafil taken 10 hours ago", "Low-dose aspirin taken this morning", "Tadalafil taken 30 hours ago", "Metformin taken twice daily", "Riociguat taken daily", "An albuterol inhaler used today"], "ok": ["Sildenafil taken 10 hours ago", "Tadalafil taken 30 hours ago", "Riociguat taken daily"], "b": "QX"}, "qau299o": {"a": "Epinephrine has no contraindication in anaphylaxis; Monitor for chest pain after the dose; Monitor the rhythm for dysrhythmias; Reassess blood pressure for severe hypertension", "opts": ["Epinephrine has no contraindication in anaphylaxis", "A cardiac history is a contraindication to epinephrine", "Monitor for chest pain after the dose", "Monitor the rhythm for dysrhythmias", "Give only an oral antihistamine instead", "Reassess blood pressure for severe hypertension"], "ok": ["Epinephrine has no contraindication in anaphylaxis", "Monitor for chest pain after the dose", "Monitor the rhythm for dysrhythmias", "Reassess blood pressure for severe hypertension"], "b": "QX"}, "qalt3zv": {"a": "Recognize tremor and tachycardia as common effects; Repeat albuterol, up to every 20 minutes for 3 doses; Reassess lung sounds and work of breathing", "opts": ["Tremor after albuterol is a sign of drug toxicity", "Recognize tremor and tachycardia as common effects", "Repeat albuterol, up to every 20 minutes for 3 doses", "Give nitroglycerin to slow the heart rate", "Reassess lung sounds and work of breathing", "A heart rate above 100/min is a contraindication to more albuterol"], "ok": ["Recognize tremor and tachycardia as common effects", "Repeat albuterol, up to every 20 minutes for 3 doses", "Reassess lung sounds and work of breathing"], "b": "QX"}, "qsz6k89": {"a": "Apply CPAP; Give SL nitroglycerin per protocol", "opts": ["Apply CPAP", "Give furosemide IV", "Give SL nitroglycerin per protocol", "Give a saline bolus", "Lay the patient flat for transport"], "ok": ["Apply CPAP", "Give SL nitroglycerin per protocol"], "b": "QX"}, "q9v6zcx": {"a": "Give aspirin if no contraindication; Consider a fluid bolus per protocol; Transport to a PCI-capable center", "opts": ["Give aspirin if no contraindication", "Give nitroglycerin SL", "Consider a fluid bolus per protocol", "Give furosemide", "Give IV metoprolol", "Transport to a PCI-capable center"], "ok": ["Give aspirin if no contraindication", "Consider a fluid bolus per protocol", "Transport to a PCI-capable center"], "b": "QX"}, "q1kn8toz": {"a": "Assist ventilations with a BVM while preparing naloxone; A full-reversal dose of 1.6 mg (0.1 mg/kg) is within the maximum; Respiratory depression may recur as naloxone wears off", "opts": ["Pediatric naloxone is capped far below the adult dose", "Assist ventilations with a BVM while preparing naloxone", "Intranasal naloxone cannot be used in children", "A weight-based full-reversal dose is within the maximum", "Give activated charcoal before naloxone", "Respiratory depression may recur as naloxone wears off"], "ok": ["Assist ventilations with a BVM while preparing naloxone", "A weight-based full-reversal dose is within the maximum", "Respiratory depression may recur as naloxone wears off"], "b": "QX"}, "q1f7bajb": {"a": "Give a normal saline bolus per protocol; Monitor the ECG for potassium-related changes", "opts": ["Give D50 for the altered mental status", "Give a normal saline bolus per protocol", "Give glucagon IM for confusion", "Monitor the ECG for potassium-related changes", "Give oral glucose gel for energy"], "ok": ["Give a normal saline bolus per protocol", "Monitor the ECG for potassium-related changes"], "b": "QX"}, "qrvwks8": {"a": "IM epinephrine is still indicated; Monitor the ECG for dysrhythmias and chest pain", "opts": ["IM epinephrine is still indicated", "Give the cardiac-arrest syringe IV as the first dose", "Coronary disease is a contraindication to epinephrine", "Monitor the ECG for dysrhythmias and chest pain", "Give diphenhydramine instead of epinephrine", "IM epinephrine acts too slowly to help in shock"], "ok": ["IM epinephrine is still indicated", "Monitor the ECG for dysrhythmias and chest pain"], "b": "QX"}, "q1wba9l2": {"a": "Give it through a large, patent IV line; Reassess HR and BP after the dose; Repeat every 10-20 minutes per protocol", "opts": ["Give it through a large, patent IV line", "Calcium is contraindicated in calcium channel blocker overdose", "Reassess HR and BP after the dose", "Push it in the same line as sodium bicarbonate", "Repeat every 10-20 minutes per protocol"], "ok": ["Give it through a large, patent IV line", "Reassess HR and BP after the dose", "Repeat every 10-20 minutes per protocol"], "b": "QX"}, "q1i5zt80": {"a": "Remove contaminated clothing using PPE; Titrate atropine until secretions dry; Give pralidoxime for muscle weakness; Treat seizures with a benzodiazepine", "opts": ["Remove contaminated clothing using PPE", "Cap atropine at the usual bradycardia maximum", "Titrate atropine until secretions dry", "Give pralidoxime for muscle weakness", "Give charcoal while the airway is unprotected", "Treat seizures with a benzodiazepine"], "ok": ["Remove contaminated clothing using PPE", "Titrate atropine until secretions dry", "Give pralidoxime for muscle weakness", "Treat seizures with a benzodiazepine"], "b": "QX"}, "qwzlfti": {"a": "Recognize shivering and fever as common effects; Continue fundal massage and reassess bleeding", "opts": ["Recognize shivering and fever as common effects", "Repeat misoprostol in 15 minutes", "Treat the fever as a reaction to the oxytocin infusion", "Continue fundal massage and reassess bleeding", "Start active cooling with ice packs"], "ok": ["Recognize shivering and fever as common effects", "Continue fundal massage and reassess bleeding"], "b": "QX"}, "q26muo1": {"a": "Preoxygenate with BVM or high-flow first; Use rocuronium 1 mg/kg IV for paralysis; Have atropine ready for bradycardia; Confirm the tube with waveform ETCO2", "opts": ["Preoxygenate with BVM or high-flow first", "Use rocuronium IV for paralysis", "Avoid ketamine because of her age", "Have atropine ready for bradycardia", "Give half the usual succinylcholine dose because of her size", "Confirm the tube with waveform ETCO2"], "ok": ["Preoxygenate with BVM or high-flow first", "Use rocuronium IV for paralysis", "Have atropine ready for bradycardia", "Confirm the tube with waveform ETCO2"], "b": "QX"}, "q9l1det": {"a": "Ketamine for sedation; Small, titrated doses of fentanyl", "opts": ["Ketamine for sedation", "A full-dose propofol IV bolus", "Small, titrated doses of fentanyl", "Repeated large midazolam boluses", "Dexmedetomidine with a full loading dose"], "ok": ["Ketamine for sedation", "Small, titrated doses of fentanyl"], "b": "QX"}, "q1z0a5vh": {"a": "Give 10-20 mcg IV every 2-5 minutes", "opts": ["Give the full cardiac-arrest dose by IV push", "Give small diluted boluses IV every few minutes", "Give the anaphylaxis dose IM in the thigh", "Increase PEEP to raise the BP", "Give fluids only until the drip is ready"], "ok": ["Give small diluted boluses IV every few minutes"], "b": "QX"}, "qp7037ae26": {"q": "Which patient has a contraindication to activated charcoal?", "b": "PILOT"}, "qp968ceee6": {"q": "For which patient is activated charcoal contraindicated?", "b": "PILOT"}, "qpcd063446": {"q": "Atropine raises heart rate by blocking the vagus nerve. In which patient with symptomatic bradycardia will it have little effect?", "b": "PILOT"}, "qpdc97f5e7": {"q": "Which patient has a contraindication to succinylcholine?", "b": "PILOT"}, "qpd7d78f4b": {"q": "Which patient with a rapid irregular tachycardia has a contraindication to IV diltiazem?", "a": "A patient with a wide, irregular rhythm and known WPW syndrome", "b": "PILOT"}, "qp64ae1914": {"q": "Which patient has a contraindication to ketorolac for pain control?", "b": "PILOT"}, "qp6a887876": {"q": "Which ingested substance is poorly adsorbed by activated charcoal?", "b": "PILOT"}, "qpd411203f": {"q": "A 22-year-old swallowed an unknown number of carbamazepine tablets 40 minutes ago. He is drowsy, answers slowly and gags weakly. HR 104, BP 118/70, SpO2 96%. Which feature of this presentation is a contraindication to activated charcoal?", "a": "Depressed consciousness with an unprotected airway", "x": "Charcoal that is vomited and aspirated causes severe lung injury, and a drowsy patient with a weak gag cannot protect the airway. Charcoal is still useful within about an hour, and recirculating drugs such as carbamazepine are bound well by it.", "w": ["Ingestion more than thirty minutes before arrival", "A drug that recirculates through the gut and liver", "Sinus tachycardia with a normal blood pressure"], "b": "PILOT"}, "qpd206acb5": {"q": "Glucagon raises blood glucose by releasing stored liver glycogen. In which patient are those stores most likely depleted?", "b": "PILOT"}, "qpbd7e2f47": {"q": "Which child needs provider guidance before receiving ibuprofen?", "b": "PILOT"}, "qp1712223f": {"q": "Glucagon raises blood glucose by releasing stored liver glycogen. In which home patient are those stores most likely depleted?", "b": "PILOT"}, "qp1byldlk": {"w": ["Take it with a high-protein meal each time", "Expect the urine to turn bright blue or green", "Expect the tremor to be cured within a week"], "b": "PILOT"}, "q9atxe9": {"q": "Which organism is outside cephalexin's coverage?", "b": "Q"}, "q1lj6lv5": {"q": "A 55-year-old man with type 1 diabetes starts metoprolol after a myocardial infarction. Which warning symptom of hypoglycemia remains, because it is not mediated by beta receptors?", "b": "Q"}, "q1k6hus1": {"q": "A 45-year-old woman receiving her first dose of IV vancomycin develops flushing and pruritus of the face, neck and upper chest. Her blood pressure is stable. What is the mechanism of this reaction?", "a": "Direct mast cell degranulation related to infusion rate", "x": "Vancomycin infusion reaction is a rate-related, non-IgE release of histamine from mast cells. It is not a true allergy, which is why slowing the infusion and an antihistamine are enough.", "w": ["IgE-mediated type I hypersensitivity to the drug molecule", "Immune complex deposition in the small vessels of the skin", "T-cell-mediated delayed hypersensitivity to the drug"], "b": "Q"}, "q8rkybu": {"w": ["Intravenous normal saline bolus", "Intravenous unfractionated heparin", "Ticagrelor loading dose"], "b": "Q"}, "qz6vtq6": {"w": ["Icosapent ethyl by mouth twice daily", "Fenofibrate by mouth once daily", "Colesevelam by mouth once daily"], "b": "Q"}, "q1aeb26w": {"w": ["Apixaban twice daily", "Rivaroxaban once daily", "Dabigatran twice daily"], "b": "Q"}, "ql72ufp": {"w": ["Aspirin once daily", "Apixaban twice daily", "Warfarin with a target INR of 2 to 3 for one year"], "b": "Q"}, "qpw2go9": {"w": ["Amiodarone taken at the onset of each episode", "Digoxin taken at symptom onset", "Flecainide alone without any AV nodal blocking agent"], "b": "Q"}, "qgu1y6f": {"w": ["Daily fondaparinux injections", "Weight-based enoxaparin", "Warfarin daily, started now"], "b": "Q"}, "qmknm7e": {"w": ["Unfractionated heparin infusion alone", "Apixaban twice daily by mouth", "Subcutaneous enoxaparin and telemetry"], "b": "Q"}, "q1c7fmnh": {"w": ["Warfarin titrated to an INR of 2 to 3", "Rivaroxaban twice daily", "Dabigatran twice daily"], "b": "Q"}, "q1kxknzn": {"w": ["Rivaroxaban once daily", "Apixaban twice daily", "Aspirin once daily"], "b": "Q"}, "q2qn2h6": {"w": ["Change from the infusion to subcutaneous correction insulin", "Give subcutaneous glargine as the only insulin now", "Double the insulin infusion rate and give a bicarbonate bolus"], "b": "Q"}, "q1mz05d4": {"w": ["Pramipexole nightly", "Carbidopa-levodopa at bedtime", "Diphenhydramine at bedtime"], "b": "Q"}, "qnwhmh0": {"w": ["Intravenous 50 percent dextrose followed by oral thiamine", "Oral thiamine once daily", "Intravenous lorazepam"], "b": "Q"}, "qlmfgm0": {"w": ["Levonorgestrel orally once", "Ulipristal acetate orally once", "Two doses of combined oral contraceptive pills 12 hours apart"], "b": "Q"}, "q1osdlqm": {"w": ["Oral fluconazole once", "Oral fluconazole weekly for 6 months", "Vaginal boric acid capsules for 14 days"], "b": "Q"}, "qxjdxp8": {"w": ["Wait for biopsy results before starting any therapy", "Start low-dose prednisone daily", "Start low-dose aspirin daily alone"], "b": "Q"}, "q1h5h3c3": {"w": ["Sodium zirconium cyclosilicate orally", "Intravenous furosemide", "Patiromer orally with a recheck in 6 hours"], "b": "Q"}, "qv77vd6": {"w": ["IV furosemide before any fluids", "Oral alendronate and increased fluid intake", "Hydrochlorothiazide and oral fluids"], "b": "Q"}, "q17ullf1": {"w": ["Epoetin alfa targeting hemoglobin above 13 g/dL", "Red cell transfusion now", "Oral folic acid alone"], "b": "Q"}, "q19fr1a8": {"w": ["Furosemide", "Allopurinol", "Strict dietary calcium restriction"], "b": "Q"}, "q5lmhx7": {"w": ["Low-dose oral levothyroxine, recheck TSH in 6 weeks", "Active external rewarming with heating blankets only", "IV liothyronine alone"], "b": "Q"}, "q1mwwtk7": {"w": ["Taper prednisone off over the week before surgery", "Continue the usual oral prednisone alone", "Give dexamethasone only if hypotension develops"], "b": "Q"}, "qjg5zqt": {"a": "IV magnesium sulfate", "w": ["IV amiodarone", "IV procainamide infusion", "IV sotalol"], "b": "Q"}, "q4mvuru": {"q": "For which patient is tolvaptan contraindicated as a treatment for hyponatremia?", "b": "Q"}, "q1tyf9xz": {"q": "An 88-year-old woman with CrCl 22 mL/min has uncomplicated cystitis. Which agent should be avoided at this creatinine clearance?", "b": "Q"}, "qpli0ef": {"q": "A patient on hemodialysis needs IV opioid analgesia. Which opioid has active metabolites that accumulate in renal failure?", "b": "Q"}, "q1hicwz3": {"w": ["A lockout interval of about 10 minutes", "A small patient-triggered demand dose", "An hourly dose limit"], "b": "Q"}, "qsca74y": {"w": ["An insulin bolus plus an infusion before any IV fluids", "Hypotonic 0.45% saline as the first liter given his sodium", "Insulin infusion with free water flushes"], "b": "Q"}, "q1h52aws": {"a": "Insulin infusion with dextrose-containing fluids", "x": "This is euglycemic DKA from an SGLT2 inhibitor; insulin suppresses ketogenesis and dextrose prevents hypoglycemia. A near-normal glucose does not mean insulin is unnecessary. The SGLT2 inhibitor is discontinued during the episode, since it is what drives the ketoacidosis.", "w": ["Subcutaneous correction insulin alone, since glucose is under 250", "IV fluids alone until the glucose rises above 250 mg/dL", "Sodium bicarbonate infusion until the gap closes"], "b": "Q"}, "q2q0l7h": {"w": ["Glucagon IM every hour as needed", "Hydrocortisone IV every 8 hours", "Oral diazoxide, then discharge her home"], "b": "Q"}, "q6sjwxu": {"w": ["Furosemide IV", "Repeat calcium every 30 minutes", "Sodium bicarbonate infusion"], "b": "Q"}, "qiguoob": {"w": ["Zoledronic acid at full dose", "Furosemide IV every 6 hours", "Pamidronate over 2 hours"], "b": "Q"}, "q17mc8jw": {"w": ["Hydralazine IV now, repeated as needed", "Labetalol IV now and every 10 minutes", "Start a nicardipine infusion in the step-down unit"], "b": "Q"}, "q1p7eh5": {"w": ["Apixaban twice daily", "Warfarin with an INR goal of 2-3", "Rivaroxaban twice daily"], "b": "Q"}, "q13owl13": {"a": "Magnesium sulfate IV", "w": ["Amiodarone IV", "Procainamide IV infusion", "Lidocaine IV"], "b": "Q"}, "qp42460bc8": {"q": "Patients taking morphine long term develop tolerance to many of its effects. Tolerance fails to develop to which pair of effects?", "b": "PILOT"}, "qpd15e99b1": {"q": "In organophosphate poisoning, which finding persists after atropine because it is nicotinic?", "b": "PILOT"}, "qp2c790d77": {"q": "In which patient with atrial fibrillation is apixaban contraindicated for stroke prevention?", "b": "PILOT"}, "qpd44d5377": {"q": "Misoprostol is considered to prevent NSAID-induced gastric ulcers. Which patient has a contraindication to it?", "b": "PILOT"}, "qp8f9d618b": {"q": "Which opioid side effect usually persists with ongoing use and should be asked about often?", "b": "PILOT"}, "qp9f57ea5e": {"q": "Which dental procedure is exempt from prophylaxis in a high-risk cardiac patient?", "b": "PILOT"}, "qp50d7249c": {"q": "Per ADA guidance, which condition is managed without antibiotics?", "b": "PILOT"}, "qpef382cfa": {"q": "Which tube would falsely raise a lithium level?", "b": "PILOT"}, "qp950c63f9": {"q": "Atropine acts at the AV node. In which rhythm is the block too low in the conduction system for it to help?", "b": "PILOT"}}, "hide": ["q37qpuf", "q1ez8ci0"]};
+var QE = { v: 0, map: null, on: [], pending: null };
+function qePin() {
+  var m = {};
+  ["Q", "RQ", "QX", "PILOT"].forEach(function (b) { (DB[b] || []).forEach(function (q) { try { m[qid(q)] = q; } catch (e) {} }); });
+  QE.map = m; return m;
+}
+function qeRevert() {
+  QE.on.forEach(function (q) {
+    if (q._qe0) { Object.keys(q._qe0).forEach(function (k) { if (q._qe0[k] === undefined) delete q[k]; else q[k] = q._qe0[k]; }); delete q._qe0; try { delete q._rb; } catch (e) {} }
+    if (q._qeHid) { if (q._qeH0 === undefined) delete q.hidden; else q.hidden = q._qeH0; delete q._qeHid; delete q._qeH0; }
+  });
+  QE.on = [];
+}
+function qeApply(L) {
+  try {
+    if (!L || typeof L !== "object") return;
+    qeRevert(); QE.last = L; var m = qePin();
+    L = { v: L.v, edit: Object.assign({}, P1FIX.edit, L.edit || {}), hide: P1FIX.hide.concat(Array.isArray(L.hide) ? L.hide : []) };
+    (Array.isArray(L.hide) ? L.hide : []).forEach(function (id) { var q = m[id]; if (!q || q._qeHid) return; q._qeH0 = q.hidden; q._qeHid = 1; q.hidden = true; QE.on.push(q); });
+    Object.keys(L.edit || {}).forEach(function (id) {
+      var q = m[id], e = L.edit[id], o = {}; if (!q || !e || typeof e !== "object" || q._qeHid) return;
+      ["q", "a", "x", "cat"].forEach(function (f) { if (typeof e[f] === "string" && e[f]) { o[f] = q[f]; q[f] = e[f]; } });
+      if (q.t) {
+        if (Array.isArray(e.opts) && e.opts.length >= 3 && Array.isArray(e.ok) && e.ok.length && e.ok.length < e.opts.length) { o.opts = q.opts; o.ok = q.ok; o.a = o.a === undefined ? q.a : o.a; q.opts = e.opts.map(String); q.ok = e.ok.map(String); q.a = q.ok.join("; "); }
+      } else if (Array.isArray(e.w) && e.w.length === 3) { o.w = q.w; q.w = e.w.map(String); }
+      if (Object.keys(o).length) { q._qe0 = o; QE.on.push(q); try { delete q._rb; } catch (e3) {} }   /* the rule check runs again on the new text */
+    });
+    QE.v = +L.v || 0;
+    try { if (typeof rebuildIndex === "function") rebuildIndex(); } catch (e2) {}
+  } catch (e) {}
+}
+function qeFetch() {
+  try {
+    fnCall("qeLive", { v: QE.v }).then(function (r) {
+      if (!r || r.same || !(r.v >= 0)) return;
+      var L = { v: r.v, edit: r.edit || {}, hide: r.hide || [] };
+      try { store("qeLive", L); } catch (e) {}
+      /* never change a question under someone who is answering it: wait for the home screen */
+      if (S.view === "home") { qeApply(L); try { render(); } catch (e) {} } else QE.pending = L;
+    }).catch(function () {});
+  } catch (e) {}
+}
+(function () {
+  try { qePin(); } catch (e) {}
+  var ov0 = ovApply;
+  ovApply = function (O) { qeRevert(); try { qePin(); } catch (e) {} ov0(O); try { qeApply(QE.pending || QE.last || store("qeLive") || { v: 0, edit: {}, hide: [] }); QE.pending = null; } catch (e) {} };
+  var go0 = go;
+  go = function (view, opts) {
+    if (view === "home") {
+      if (QE.pending) { var L = QE.pending; QE.pending = null; qeApply(L); }
+      /* questions added after start (pilot copies, drug-update re-pilots) get the fixes too */
+      else if (Date.now() - (QE.at || 0) > 20000) { QE.at = Date.now(); try { qeApply(QE.last || store("qeLive") || { v: 0, edit: {}, hide: [] }); } catch (e) {} }
+    }
+    return go0(view, opts);
+  };
+  setTimeout(function () { try { if (S.view === "home") qeApply(QE.last || store("qeLive") || { v: 0, edit: {}, hide: [] }); } catch (e) {} }, 12000);
+  try { qeApply(store("qeLive") || { v: 0, edit: {}, hide: [] }); } catch (e) {}
+  setTimeout(qeFetch, 5000); setInterval(qeFetch, 10 * 60 * 1000);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) qeFetch(); });
+})();
+/* ----- Protocol question packs (owner, Nov 21 2026): approved questions written from an agency's own protocol.
+   Only people who picked that agency's protocol set in the Protocols tab get them, and only at the levels the set
+   covers. They are laid in beside the shipped questions under their own ids and leave when the protocol is turned off.
+   This first version carries the questions that are about one medication in the app. ----- */
+var QP = { set: "", pending: null };
+function qpClear() { if ((DB.Q || []).some(function (q) { return q.qpAdd; })) DB.Q = DB.Q.filter(function (q) { return !q.qpAdd; }); }
+function qpApply(P) {
+  try {
+    qpClear(); var p = activeProtocol(); QP.set = p ? p.id : "";
+    if (!p || !P || P.set !== p.id || !Array.isArray(P.items)) return 0;
+    var byName = {}, n = 0; Object.keys(DB.drugs || {}).forEach(function (id) { try { byName[String(nameOf(id)).toLowerCase()] = id; } catch (e) {} byName[id.toLowerCase()] = id; });
+    P.items.forEach(function (it) {
+      if (!it || typeof it.id !== "string" || typeof it.q !== "string" || typeof it.a !== "string" || !Array.isArray(it.w) || it.w.length !== 3 || !protoAppliesTo(p, it.lv)) return;
+      var d = byName[String(it.drug || "").toLowerCase()]; if (!d) return;
+      DB.Q.push({ id: it.id, lv: it.lv, d: d, q: it.q, a: it.a, w: it.w.map(String), x: String(it.x || ""), cat: String(it.cat || ""), qpAdd: 1, proto: it.pid, _rb: false }); n++;
+    });
+    return n;
+  } catch (e) { return 0; }
+}
+function qpFetch() {
+  try {
+    var p = activeProtocol(); if (!p) { qpClear(); QP.set = ""; return; }
+    fnCall("qpPack", { set: p.id }).then(function (r) {
+      if (!r || r.set !== p.id) return; try { store("qpPack", r); } catch (e) {}
+      if (S.view === "home") qpApply(r); else QP.pending = r;
+    }).catch(function () {});
+  } catch (e) {}
+}
+(function () {
+  var go1 = go;
+  go = function (view, opts) {
+    if (view === "home") { try { var p = activeProtocol(), id = p ? p.id : ""; if (QP.pending) { qpApply(QP.pending); QP.pending = null; } else if (id !== QP.set) { qpApply(store("qpPack")); if (id) qpFetch(); } } catch (e) {} }
+    return go1(view, opts);
+  };
+  setTimeout(function () { try { qpApply(store("qpPack")); } catch (e) {} qpFetch(); }, 7000); setInterval(qpFetch, 10 * 60 * 1000);
+})();
+/* QE_LIVE_END */
+
+/* ===== CLEAN TELEMETRY (owner, Nov 21 2026) =====
+   1. Active time: each action credits the time since the previous one, at most 3 minutes; nothing while the app is hidden.
+      A new session starts after 30 minutes without activity.
+   2. Every usage report carries a batch id and is kept on the device until the server confirms it, so a retry (lost
+      answer, closing the app mid-send, offline) is never counted twice. The same for question totals and class reports.
+   3. First tries are counted apart from repeats; answers are split by mode (questions, Bug Rush, protocols, games).
+   4. Internal copies say so (preview pages, evaluators, admins, TestFlight / sandbox from the iPhone shell) and are kept
+      out of the main numbers. */
+/* CLEAN_BEGIN */
+var ACT = { ms: 0, seat: 0, lastSess: Date.now() };
+function usgActCredit() {
+  try {
+    var now = Date.now(), gap = now - (USG.lastAct || now);
+    if (document.visibilityState !== "visible" || gap <= 0) return;
+    if (gap > 30 * 60000) USG.sessSent = false;   /* back after 30 minutes away: a new session */
+    var add = Math.min(gap, 180000);
+    ACT.ms += add; ACT.seat += add;
+    if (agreeRec()) { ACT.my = (ACT.my || 0) + add; if (ACT.my >= 15000) { var s = Math.floor(ACT.my / 1000); ACT.my -= s * 1000; myStatAdd("sec", s); } }
+  } catch (e) {}
+}
+function usgInternal() {
+  try {
+    if (!NATIVE && !/^(www\.)?drugbugapp\.com$/i.test(location.hostname)) return "preview";
+    if (typeof isReviewer === "function" && isReviewer()) return "eval";
+    if ((typeof Admin !== "undefined" && Admin.on) || (typeof LG !== "undefined" && LG && LG.owner)) return "admin";
+    var env = String(window.DRUGBUG_ENV || "").toLowerCase();   /* the iPhone shell says when it is TestFlight or a sandbox purchase (build 16) */
+    if (NATIVE && /^(sandbox|testflight|review|debug)$/.test(env)) return env === "debug" ? "test" : env;
+  } catch (e) {}
+  return "";
+}
+usgNew = function () { return { q: 0, c: 0, learn: 0, sec: 0, tabs: {}, feats: {}, dr: {}, qa: {}, fq: 0, fc: 0, md: {}, qx: {} }; };
+USG.inc = usgNew();
+var QA = { seen: null, cur: null, t0: Date.now(), dirty: 0 };
+function qaSeen() { if (!QA.seen) { try { QA.seen = store("qSeen") || {}; } catch (e) { QA.seen = {}; } } return QA.seen; }
+function qaSave() { if (QA.dirty) { try { store("qSeen", QA.seen); QA.dirty = 0; } catch (e) {} } }
+function usgMode(q, kind) { if (kind === "game") return "game"; if (kind === "protocol" || (q && (q.qpAdd || q.proto))) return "proto"; return "std"; }
+function usgSeq() { var n = (store("usgSeq") || 0) + 1; store("usgSeq", n); return n; }
+function usgRid() { var a = "abcdefghijklmnopqrstuvwxyz0123456789", s = ""; try { var u = new Uint8Array(20); crypto.getRandomValues(u); for (var i = 0; i < 20; i++) s += a[u[i] % 36]; } catch (e) { for (var j = 0; j < 20; j++) s += a[Math.floor(Math.random() * 36)]; } return s; }
+(function () {
+  var recordInner0 = recordInner;
+  recordInner = function (q, ok, kind, pick) {
+    var k = "", prev = 0, now = Date.now(), dt = (now - QA.t0) / 1000; QA.t0 = now;
+    try { k = q && q.q && typeof qid === "function" ? String(qid(q)) : ""; if (k) prev = qaSeen()[k] || 0; } catch (e) {}
+    QA.cur = { k: k, att: prev + 1, ok: !!ok, q: q };
+    try { return recordInner0.apply(this, arguments); }
+    finally {
+      try {
+        if (k) { qaSeen()[k] = Math.min(prev + 1, 9); QA.dirty = 1; }
+        if (usgOn()) {
+          var I = USG.inc, m = usgMode(q, kind), e = I.md[m] || (I.md[m] = [0, 0]); e[0]++; if (ok) e[1]++;
+          if (k && prev === 0) { I.fq++; if (ok) I.fc++; }
+          if (k && /^q[a-z0-9]{3,20}$/.test(k) && (I.qx[k] || Object.keys(I.qx).length < 200)) {
+            var x = I.qx[k] || (I.qx[k] = { a: [0, 0, 0, 0], w: {}, t: [0, 0, 0, 0, 0, 0] });
+            if (prev === 0) { x.a[0]++; if (ok) x.a[1]++; } else if (prev === 1) { x.a[2]++; if (ok) x.a[3]++; }
+            if (!ok && typeof pick === "string" && pick && !q.t) { var po = pick, wi = (q.w || []).indexOf(pick); if (q._orig && wi >= 0 && q._orig.w && q._orig.w[wi]) po = q._orig.w[wi]; var h = hashStr(po).slice(0, 6); x.w[h] = (x.w[h] || 0) + 1; }
+            if (dt >= 1 && dt < 3600) { var b = dt < 10 ? 0 : dt < 20 ? 1 : dt < 40 ? 2 : dt < 90 ? 3 : dt < 180 ? 4 : 5; x.t[b]++; }
+          }
+        }
+      } catch (e2) {}
+      QA.cur = null;
+    }
+  };
+  /* class seats: first tries per drug class and answers by attempt, for the instructor's roster and learning curve */
+  var groupNote0 = groupNote;
+  groupNote = function (q, ok, kind, topic, pick) {
+    var r = groupNote0.apply(this, arguments);
+    try {
+      var C = QA.cur; if (!C || C.q !== q || !seatActive()) return r;
+      var Q = store("groupq"); if (!Q || !Q.t) return r;
+      Q.att = Q.att || {}; var ak = C.att >= 3 ? "a3" : "a" + C.att, ae = Q.att[ak] || (Q.att[ak] = { n: 0, c: 0 }); ae.n++; if (ok) ae.c++;
+      if (C.att === 1 && q && q.d && DB.drugs[q.d] && typeof groupClassOf === "function") { var ck = groupSlug(groupClassOf(q.d)); if (ck) { Q.fa = Q.fa || {}; var fe = Q.fa[ck] || (Q.fa[ck] = { n: 0, c: 0 }); fe.n++; if (ok) fe.c++; } }
+      store("groupq", Q);
+    } catch (e) {}
+    return r;
+  };
+  var rushScore0 = rushScore;
+  rushScore = function (save, ok, n) {
+    var R = S.rush, fresh = R && R.cur && !R.cur.scored;
+    var r = rushScore0.apply(this, arguments);
+    try { if (fresh && usgOn() && n > 0) { var e = USG.inc.md.rush || (USG.inc.md.rush = [0, 0]); e[0] += n; e[1] += Math.min(ok, n); } } catch (e2) {}
+    return r;
+  };
+})();
+/* the usage report, sent once and kept until the server confirms it */
+usgFlush = function (leaving) {
+  if (!usgOn() || USG.busy) return;
+  qaSave();
+  var send = function (pend) {
+    USG.busy = true;
+    var done = function (ok, status) {
+      USG.busy = false;
+      if (ok) { if (pend.rate) { var pd = store("qratePend") || {}; Object.keys(pend.rate).forEach(function (k) { delete pd[k]; }); store("qratePend", pd); } store("usgPend", null); }
+      else if (status === 400) store("usgPend", null);   /* the server will never take this one */
+    };
+    try { fetch(usgUrl("usagePing"), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ data: pend.data }), keepalive: !!leaving }).then(function (r) { done(r.ok, r.status); }, function () { done(false, 0); }); }
+    catch (e) { done(false, 0); }
+  };
+  var P = store("usgPend");
+  if (P && P.data) { if (leaving || Date.now() - USG.sentAt >= 16000) { USG.sentAt = Date.now(); send(P); } return; }
+  var I = USG.inc, s = Math.floor(ACT.ms / 1000); ACT.ms -= s * 1000; I.sec = s;
+  var has = I.q || I.learn || I.sec >= 1 || Object.keys(I.md).length || (I.rr && I.rr[0]) || Object.keys(usgRates()).length;
+  if (!has && USG.sessSent) { ACT.ms += s * 1000; return; }
+  if (!leaving && Date.now() - USG.sentAt < 16000) { ACT.ms += s * 1000; return; }
+  var rc = (typeof routeCtx === "function" && routeCtx()) || "", d = new Date(), why = usgInternal();
+  var data = { did: usgDid(), bid: usgDid() + "-" + usgSeq(), sv: 2, plat: NATIVE ? "ios" : "web", tier: (function () { try { return tier(); } catch (e) { return "free"; } })(),
+    route: rc || "other", level: S.view === "level" ? usgKey(S.level) : "", ver: APP_VERSION, pid: usgPid(), pay: usgPay(), weak: usgWeak(), optin: { v: 3, ts: (store("agree") || {}).ts || Date.now(), basic: 1 },
+    lh: d.getHours(), ldw: d.getDay(), inc: { q: I.q, c: I.c, sec: I.sec, sess: USG.sessSent ? 0 : 1, fq: I.fq, fc: I.fc, md: I.md, rr: I.rr || undefined }, rate: usgRates() };
+  if (why) data.int = why;
+  if (usgNoCount()) data.nocount = true;
+  if (!why) qtStash2(I.qa, I.qx);
+  var pend = { data: data, rate: data.rate };
+  store("usgPend", pend);
+  USG.inc = usgNew(); USG.sentAt = Date.now(); USG.sessSent = true;
+  send(pend);
+};
+/* anonymous question totals: [answered, right, 1st-try answered, 1st-try right, 2nd-try answered, 2nd-try right], wrong answers
+   picked and seconds-to-answer bands; sent with a random batch id kept until the server confirms it */
+function qtStash2(qa, qx) {
+  try {
+    var P = store("qtPend") || {}, X = store("qtX") || {}, ks = Object.keys(qa || {}); if (!ks.length) return;
+    ks.forEach(function (q) {
+      if (!P[q] && Object.keys(P).length >= 400) return;
+      var a = P[q] || (P[q] = [0, 0, 0, 0, 0, 0]); while (a.length < 6) a.push(0);
+      var v = qa[q], x = (qx || {})[q];
+      a[0] = Math.min(50, a[0] + v[0]); a[1] = Math.min(a[0], a[1] + v[1]);
+      if (x) { a[2] = Math.min(a[0], a[2] + x.a[0]); a[3] = Math.min(a[2], a[3] + x.a[1]); a[4] = Math.min(a[0] - a[2], a[4] + x.a[2]); a[5] = Math.min(a[4], a[5] + x.a[3]);
+        var e = X[q] || (X[q] = { w: {}, t: [0, 0, 0, 0, 0, 0] }); Object.keys(x.w).forEach(function (h) { e.w[h] = Math.min(50, (e.w[h] || 0) + x.w[h]); }); x.t.forEach(function (n, i) { e.t[i] = Math.min(50, e.t[i] + n); }); }
+    });
+    store("qtPend", P); store("qtX", X);
+    if (!QT.t) QT.t = setTimeout(qtFlush, 20000 + Math.floor(Math.random() * 160000));
+  } catch (e) {}
+}
+qtStash = function (qa) { qtStash2(qa, null); };
+qtFlush = function () {
+  QT.t = 0; if (QT.busy || typeof usgOn !== "function" || !usgOn() || usgInternal()) return;
+  var B = store("qtBatch");
+  if (!B) {
+    var P = store("qtPend") || {}, X = store("qtX") || {}, k = Object.keys(P).slice(0, 200); if (!k.length) return;
+    B = { bid: usgRid(), qa: {}, qx: {} };
+    k.forEach(function (q) { B.qa[q] = P[q]; delete P[q]; if (X[q]) { var w = {}; Object.keys(X[q].w).sort(function (a, b) { return X[q].w[b] - X[q].w[a]; }).slice(0, 3).forEach(function (h) { w[h] = X[q].w[h]; }); B.qx[q] = { w: w, t: X[q].t }; delete X[q]; } });
+    store("qtBatch", B); store("qtPend", P); store("qtX", X);
+  }
+  QT.busy = true;
+  try {
+    fetch(usgUrl("qTally"), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ data: B }), credentials: "omit" })
+      .then(function (r) { QT.busy = false; if (!r.ok) return; store("qtBatch", null); if (Object.keys(store("qtPend") || {}).length && !QT.t) QT.t = setTimeout(qtFlush, 30000 + Math.floor(Math.random() * 60000)); }, function () { QT.busy = false; });
+  } catch (e) { QT.busy = false; }
+};
+/* class reports: the same, with active time, first tries by drug class and answers by attempt */
+groupFlush = function () {
+  if (SEAT.busy || !seatActive()) return;
+  var F = store("groupInflight");
+  if (!F) {
+    var Q = store("groupq"); if (!Q || !Q.t) return;
+    if (!Q.t.n && !GROUP_DIMS.some(function (f) { return Q[f] && Object.keys(Q[f]).length; })) return;
+    var lim = function (v, m) { var n = Math.min(v.n, m); return { n: n, c: Math.min(v.c, n) }; };
+    var sent = { t: Q.t.n ? lim(Q.t, 5000) : null, s: {}, x: {}, lb: {} };
+    Object.keys(Q.s).forEach(function (k) { if (Q.s[k].n > 0) sent.s[k] = lim(Q.s[k], 2000); });
+    var room = 200;
+    GROUP_DIMS.forEach(function (f) { var m = Q[f] || {}, o = {}; Object.keys(m).forEach(function (k) { if (room > 0 && m[k].n > 0) { o[k] = lim(m[k], 2000); room--; var L = (Q.lb || {})[f + "_" + k]; if (L) sent.lb[f + "_" + k] = L; } }); sent.x[f] = o; });
+    var payload = { counts: sent.s, total: sent.t, detail: sent.x, labels: sent.lb, bid: usgRid() };
+    var nt = sent.t ? Math.min(Q.nt || 0, sent.t.n) : 0; if (nt) payload.night = nt;
+    var sec = Math.floor(ACT.seat / 1000); if (sec > 0) { payload.sec = sec; ACT.seat -= sec * 1000; }
+    if (Q.att) payload.att = Q.att; if (Q.fa) payload.fa = Q.fa;
+    try { var look = clLook(), ls = look ? JSON.stringify(look) : ""; if (look && ls !== store("clLookSent")) { payload.look = look; payload._ls = ls; } } catch (e) {}
+    /* take what is being sent out of the queue now; it lives in groupInflight until the server confirms it */
+    var take = function (m, part) { Object.keys(part).forEach(function (k) { var e = m && m[k]; if (!e) return; e.n = Math.max(0, e.n - part[k].n); e.c = Math.max(0, Math.min(e.n, e.c - part[k].c)); if (!e.n) delete m[k]; }); };
+    if (sent.t) { Q.t.n = Math.max(0, Q.t.n - sent.t.n); Q.t.c = Math.max(0, Math.min(Q.t.n, Q.t.c - sent.t.c)); }
+    if (nt) Q.nt = Math.max(0, (Q.nt || 0) - nt);
+    take(Q.s, sent.s); GROUP_DIMS.forEach(function (f) { if (Q[f]) take(Q[f], sent.x[f]); });
+    delete Q.att; delete Q.fa;
+    if (Q.lb) Object.keys(Q.lb).forEach(function (k) { var f = k.charAt(0), id = k.slice(2); if (!(Q[f] && Q[f][id])) delete Q.lb[k]; });
+    F = { payload: payload };
+    store("groupInflight", F); store("groupq", Q);
+  }
+  SEAT.busy = true;
+  var p = Object.assign({}, F.payload); delete p._ls;
+  fnCall("groupReport", p).then(function (r) {
+    SEAT.busy = false; store("groupInflight", null);
+    if (r && r.ok === false) { store("groupq", null); return; }
+    if (F.payload._ls && r && r.ok) store("clLookSent", F.payload._ls);
+    var Q2 = store("groupq"), left = Q2 && Q2.t && (Q2.t.n || GROUP_DIMS.some(function (f) { return Q2[f] && Object.keys(Q2[f]).length; }));
+    if (left) { clearTimeout(SEAT.t); SEAT.t = setTimeout(groupFlush, 8000); }
+  }).catch(function () { SEAT.busy = false; clearTimeout(SEAT.t); SEAT.t = setTimeout(groupFlush, 90000); });
+};
+/* leave the class (owner, Nov 21 2026): the seat is let go on the server; the instructor keeps its past results */
+document.addEventListener("click", function (e) {
+  var b = e.target.closest && e.target.closest("[data-seatleave]"); if (!b) return;
+  e.preventDefault();
+  if (b.getAttribute("data-sure") !== "1") { b.setAttribute("data-sure", "1"); b.textContent = "Tap again to leave " + (SEAT.orgName || "this class"); return; }
+  b.disabled = true; b.textContent = "Leaving…";
+  fnCall("groupLeave", { seat: seatSecret(false) || "" }).then(function () {
+    store("seat", null); store("groupq", null); store("groupInflight", null);
+    SEAT.tier = ""; SEAT.until = 0; SEAT.orgName = ""; SEAT.alias = ""; SEAT.level = ""; seatLockSet(null);
+    render();
+  }).catch(function (er) { if (er && er.details && er.details.code === "agency-locked") { seatLockSet({ agency: true, lockUntil: er.details.until, joinedAt: SL().joinedAt }); b.textContent = er.message; return; } b.disabled = false; b.textContent = "Could not leave right now. Try again."; b.removeAttribute("data-sure"); });
+});
+setTimeout(function () { try { if (store("usgPend")) usgFlush(false); if (store("qtBatch")) qtFlush(); if (store("groupInflight")) groupFlush(); } catch (e) {} }, 9000);
+/* CLEAN_END */
+
+/* ===== Agency membership lock (owner, Nov 21 2026) =====
+   One agency at a time, and 30 days in an agency before leaving or switching. The server enforces both (groupRedeem,
+   groupLeave, groupKeyReset); the app shows the date and keeps the buttons from doing anything early. */
+var SEATLOCK;
+function SL() { if (!SEATLOCK) { try { SEATLOCK = store("seatLock"); } catch (e) {} SEATLOCK = SEATLOCK || { agency: false, until: 0, joinedAt: 0 }; } return SEATLOCK; }
+function seatLockSet(r) { SEATLOCK = { agency: !!(r && r.agency), until: (r && r.lockUntil) || 0, joinedAt: (r && r.joinedAt) || 0 }; store("seatLock", SEATLOCK); }
+function seatLocked() { return SL().agency && SL().until > Date.now() && seatActive(); }
+function seatLockWhen() { try { return new Date(SL().until).toLocaleString([], { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" }); } catch (e) { return new Date(SL().until).toLocaleDateString(); } }
+function seatLockLeft() { var ms = SL().until - Date.now(), d = Math.floor(ms / 86400000), h = Math.floor((ms % 86400000) / 3600000); return d >= 1 ? d + " day" + (d === 1 ? "" : "s") + (d < 3 ? " " + h + " h" : "") : Math.max(1, Math.ceil(ms / 3600000)) + " h"; }
+function seatLeaveHtml() {
+  var word = SL().agency ? "agency" : "class";
+  if (seatLocked()) return '<button class="linkish seatlock" disabled aria-disabled="true" data-seatlockcd="1" title="Agency members stay 30 days">Leave agency: available ' + esc(seatLockWhen()) + ' (' + esc(seatLockLeft()) + ' left)</button>';
+  return '<button class="linkish" data-seatleave="1">Leave this ' + word + '</button>';
+}
+/* a live countdown on the disabled button while it is on screen */
+setInterval(function () { var b = document.querySelector("[data-seatlockcd]"); if (!b) return; if (!seatLocked()) { try { render(); } catch (e) {} return; } b.textContent = "Leave agency: available " + seatLockWhen() + " (" + seatLockLeft() + " left)"; }, 60000);
+/* a press that slips through (old screen, another tab) is stopped here before the server says the same */
+document.addEventListener("click", function (e) {
+  var b = e.target.closest && e.target.closest("[data-seatleave]"); if (!b || !seatLocked()) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  b.disabled = true; b.textContent = "Leave agency: available " + seatLockWhen() + " (" + seatLockLeft() + " left)";
+}, true);
+/* while in an agency, other class or agency codes are not sent at all */
+(function () {
+  var orig = groupRedeemKey;
+  groupRedeemKey = function (raw, win, fail, agreed) {
+    if (SL().agency && seatActive()) {
+      return fail(seatLocked()
+        ? "You're a member of " + (SEAT.orgName || "your agency") + " until at least " + seatLockWhen() + " (" + seatLockLeft() + " left). Agency members stay 30 days before they can leave or switch, and you can belong to one agency at a time."
+        : "You're a member of " + (SEAT.orgName || "your agency") + ". You can belong to one agency at a time: leave it from My class first, then enter the new code.");
+    }
+    return orig(raw, win, fail, agreed);
+  };
+})();
+
+/* ===== Bug Rush in two steps (owner, Nov 21 2026) =====
+   "Split each Bug Rush step: read the scenario with no clock, then tap Okay to show the vitals, the question and the
+   choices and start the countdown." Phase 1 (reading): the story only, no monitor, no choices, no timer. Phase 2
+   (answering): the monitor and any vital-sign sentences drop in, then the question, the shuffled choices and the timer.
+   A step may carry its own split (lead = scenarioLead, vd = vitalsDrop [{k,v}] or a sentence, pl = promptLine); older steps
+   are split on the fly: sentences that give vital signs, monitor or lab findings move to phase 2, nothing is lost.
+   Reading time (capped at 3 minutes) and decision time are kept apart and sent with the clean statistics.
+   Sticks: correct Bug Rush calls pay more than bank questions (2x, 3x on critical and red calls), plus a quick-decision
+   bonus timed from the tap (reading never counts against it) and a streak bonus. The numbers come from the server
+   (appCfgPub) so they can be tuned without an app update. Evaluators and reviewers see everything at once, no timer. */
+/* RUSH2_BEGIN */
+var RUSH_STICKS = { base: 3, mult: 2, multHi: 3, fast: 2, fastFrac: 0.5, streak3: 1, streak5: 2, tryPay: 1 };
+var RS_VITAL = /\b(HR|heart rate|pulse (is|of|rate)|BP|blood pressure|RR|resp(iratory)? rate|resps|SpO2|SpO₂|sat(uration)?s? (is|of|are|at)|sats? \d|EtCO2|ETCO2|temp(erature)? (is|of)|glucose|BGL|blood sugar|GCS|monitor shows|the monitor|ECG shows|12-lead shows|rhythm (is|strip)|lab(s)? (show|come back|return)|lactate|potassium (is|of)|pH \d|\d{2,3}\/\d{2,3})\b/i;
+function rushSplit(st) {
+  if (st._sp) return st._sp;
+  var lead = st.lead || "", drop = "", vd = st.vd || null;
+  if (!lead) {
+    var ss = String(st.story || "").match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g) || [st.story || ""], a = [], b = [];
+    /* "The team arrives and places her on the monitor: atrial fibrillation, HR 112, BP 182/98" keeps the first half for
+       reading and moves the readings after the colon to the reveal (owner, Nov 21 2026: no vitals before the vitals) */
+    ss.forEach(function (x, i) {
+      x = x.trim(); if (!RS_VITAL.test(x)) { a.push(x); return; }
+      var k = x.indexOf(":"); if (k > 8 && !/\d/.test(x.slice(0, k)) && RS_VITAL.test(x.slice(k + 1))) { a.push(x.slice(0, k).trim() + "."); b.push(x.slice(k + 1).trim()); return; }
+      (i > 0 || ss.length > 1 ? b : a).push(x);
+    });
+    if (!a.length) { a = b; b = []; }   /* a story that is only vitals stays readable */
+    lead = a.join(" "); drop = b.join(" ");
+  }
+  if (vd && !Array.isArray(vd) && typeof vd === "string") { drop = (drop ? drop + " " : "") + vd; vd = null; }
+  return (st._sp = { lead: lead, drop: drop, vd: Array.isArray(vd) ? vd : null, pl: st.pl || "" });
+}
+/* only the first part of a call has the reading step; every part after it is rapid like before, clock on at once
+   (owner, Nov 21 2026: "Explain the question once at the beginning then make all of the concurrent questions be rapid") */
+function rushReading(C) {
+  if (!C || C.ans != null || C.rev === C.i || !autoOn()) return false;
+  if (C.i > 0) { C.rev = C.i; C.ansT0 = Date.now(); C.decMs = null; C.readMs = 0; C.drop = -1; return false; }
+  return true;
+}
+/* readings the monitor already shows are not repeated in the text under it */
+var RS_ONLYVITAL = /^\s*(and\s+)?(an?\s+)?(HR|heart rate|pulse( rate)?|BP|blood pressure|RR|resp(iratory)? rate|resps|SpO2|SpO₂|O2 sat(uration)?|sat(uration)?s?|EtCO2|ETCO2)\s*(is|of|at|=|:)?\s*[\d\/.]+\s*(%|bpm|beats? per minute|mmHg|\/min|breaths?( per minute|\/min)?|on room air|on RA)?\s*\.?\s*$/i;
+function rsStripVitals(t) {
+  var parts = String(t || "").split(/,|;/), keep = parts.filter(function (p) { return !RS_ONLYVITAL.test(p); });
+  var s = keep.map(function (p) { return p.trim(); }).filter(Boolean).join(", ").replace(/\s+and\s*$/i, "").trim();
+  if (!s) return "";
+  s = s.charAt(0).toUpperCase() + s.slice(1);
+  return /[.!?]$/.test(s) ? s : s + ".";
+}
+function rushHi(cs) { return cs && (cs.acu === "critical" || cs.acu === "red"); }
+function rushStickBadge(cs) { var m = rushHi(cs) ? RUSH_STICKS.multHi : RUSH_STICKS.mult; return '<span class="rsbadge" title="Correct decisions on this call pay ' + m + ' times the usual sticks">' + (typeof stickIcon === "function" ? stickIcon(13) : "") + m + "× sticks</span>"; }
+function rushReward(cs, C, right) {
+  var K = RUSH_STICKS, out = { base: 0, mult: 1, fast: 0, streak: 0, total: 0 };
+  var R = S.rush || {};
+  if (!right) { R.streak = 0; out.total = K.tryPay; out.base = K.tryPay; return out; }
+  R.streak = (R.streak || 0) + 1;
+  out.mult = rushHi(cs) ? K.multHi : K.mult; out.base = K.base * out.mult;
+  var dec = DEC.secs || 15, used = C.decMs != null ? C.decMs / 1000 : dec;
+  if (used <= dec * K.fastFrac) out.fast = K.fast;
+  out.streak = R.streak >= 5 ? K.streak5 : R.streak >= 3 ? K.streak3 : 0;
+  out.total = out.base + out.fast + out.streak;
+  return out;
+}
+function rushReadView(cs, C, st) {
+  var sp = rushSplit(st);
+  if (C.readAt !== C.i) { C.readAt = C.i; C.readT0 = Date.now(); C.readHid = 0; setTimeout(function () { var g = document.querySelector(".rsgo"); if (g && !(document.activeElement && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName))) try { g.focus({ preventScroll: true }); } catch (e) {} }, 40); }
+  return '<div class="rsread"><p class="vignette rslead">' + esc(sp.lead) + '</p>' +
+    '<p class="muted small rsnote">No clock yet. Read the scene, then tap when you are ready: the vitals, the question and the choices appear and the timer starts.</p>' +
+    '<button class="btn rsgo" data-rushreveal="1" autofocus>Okay — show vitals &amp; choices</button></div>';
+}
+function rushDropHTML(st) {
+  var sp = rushSplit(st), h = "";
+  if (sp.vd) h += '<div class="rsvd">' + sp.vd.map(function (x) { return '<span class="rsv"><b>' + esc(x.k) + "</b> " + esc(x.v) + "</span>"; }).join("") + "</div>";
+  var dr = sp.drop && st.v ? (sp.drop.match(/[^.!?]+[.!?]*/g) || []).map(rsStripVitals).filter(Boolean).join(" ") : sp.drop;
+  if (dr) h += '<p class="vignette rsdrop">' + esc(dr) + "</p>";
+  return h;
+}
+document.addEventListener("click", function (e) {
+  var b = e.target.closest && e.target.closest("[data-rushreveal]"); if (!b) return;
+  e.preventDefault(); e.stopPropagation();
+  var C = S.rush && S.rush.call; if (!C || C.ans != null) return;
+  var now = Date.now(); C.rev = C.i; C.readMs = Math.min(180000, Math.max(0, now - (C.readT0 || now) - (C.readHid || 0))); C.ansT0 = now; C.decMs = null; C.drop = C.i;
+  var y = window.scrollY; render(); window.scrollTo(0, y);
+  setTimeout(function () { var f = document.querySelector(".rushcall .qopts .qopt"); if (f) try { f.focus({ preventScroll: true }); } catch (x) {} }, 30);
+}, true);
+document.addEventListener("visibilitychange", function () { var C = S.rush && S.rush.call; if (!C || C.readAt !== C.i || C.rev === C.i) return; if (document.hidden) C.readHidAt = Date.now(); else if (C.readHidAt) { C.readHid = (C.readHid || 0) + Date.now() - C.readHidAt; C.readHidAt = 0; } });
+/* the numbers sent with the clean statistics: Bug Rush steps, reading seconds, decision seconds */
+function rushTelem(C) {
+  try { if (!usgOn() || usgInternal()) return; var I = USG.inc; I.rr = I.rr || [0, 0, 0]; I.rr[0]++; I.rr[1] += Math.round((C.readMs || 0) / 1000); I.rr[2] += Math.round((C.decMs || 0) / 1000); } catch (e) {}
+}
+/* stick values from the server, tunable without an app update (appCfgPub; kept on the device) */
+(function () {
+  try { var k = store("rushSticks"); if (k && typeof k === "object") Object.keys(RUSH_STICKS).forEach(function (n) { if (typeof k[n] === "number") RUSH_STICKS[n] = k[n]; }); } catch (e) {}
+  setTimeout(function () { try { fnCall("appCfgPub", {}).then(function (r) { var k = r && r.rushSticks; if (!k || typeof k !== "object") return; Object.keys(RUSH_STICKS).forEach(function (n) { if (typeof k[n] === "number" && k[n] >= 0 && k[n] <= 50) RUSH_STICKS[n] = k[n]; }); store("rushSticks", RUSH_STICKS); }).catch(function () {}); } catch (e) {} }, 6000);
+})();
+/* RUSH2_END */
+
+/* ===== Clinical & app updates (owner, Nov 21 2026) =====
+   Live announcements from the server (FDA recalls, label changes, question-bank and app updates). Shown once in a skippable
+   window when there is something new, after the terms, the update gate, the tour and the drug-update popup, never over a
+   quiz; both "Got it" and "Skip" close it for good. The bell in the top bar reopens them. Only the last version seen is kept,
+   on this device. */
+/* ANN_BEGIN */
+var ANN = { items: [], latest: 0, at: 0 };
+try { (function () { var c = JSON.parse(localStorage.getItem("drugbug:annFeed") || "null"); if (c && Array.isArray(c.items)) { ANN.items = c.items; ANN.latest = c.latest || 0; } })(); } catch (e) {}
+var ANN_B = { recall: ["FDA Recall", "annr"], label: ["Pharmacology / Guideline Update", "anna"], qbank: ["Question Bank Update", "annb"], custom: ["App Update", "annb"] };
+function annLoad() {
+  try { var c = store("annFeed"); if (c && Array.isArray(c.items)) { ANN.items = c.items; ANN.latest = c.latest || 0; } } catch (e) {}
+  var base = (window.DRUGBUG_CONFIG || {}).functionsUrl || "https://us-central1-drugbug-69d42.cloudfunctions.net";
+  try {
+    fetch(base.replace(/\/$/, "") + "/annFeed", { method: "POST", headers: { "Content-Type": "application/json" }, body: '{"data":{}}', credentials: "omit" })
+      .then(function (r) { return r.ok ? r.json() : null; }).then(function (j) { var r = j && j.result; if (!r || !Array.isArray(r.items)) return; var had = !!document.querySelector("[data-annbell]"); ANN.items = r.items; ANN.latest = r.latest || 0; ANN.at = Date.now(); store("annFeed", r); if (!had && r.items.length && !S.sheet && !document.querySelector(".quiz, .rushcall, .mega")) { try { render(); } catch (e) {} } setTimeout(annMaybe, 1500); }).catch(function () {});
+  } catch (e) {}
+}
+function annBusy() {
+  if (S.view !== "home" || S.sheet || !agreeRec()) return true;
+  if (document.querySelector("#otanews, #tourdlg[open], .paywall, #pwdlg[open], #annbox")) return true;
+  var fu = document.getElementById("fuWall"); if (fu) return true;   /* the update screen comes first */
+  try { if (typeof tourDone === "function" && !tourDone()) return true; } catch (e) {}
+  return false;
+}
+function annMaybe() { try { if (ANN.latest > (store("annSeen") || 0) && !annBusy()) annShow(false); } catch (e) {} }
+function annShow(all) {
+  if (document.getElementById("annbox")) return;
+  var seen = store("annSeen") || 0, list = all ? ANN.items : ANN.items.filter(function (x) { return x.v > seen; });
+  if (!list.length && !all) return;
+  var groups = {}; list.forEach(function (x) { (groups[x.kind] = groups[x.kind] || []).push(x); });
+  var box = document.createElement("div"); box.id = "annbox"; box.className = "otanews"; box.setAttribute("role", "dialog"); box.setAttribute("aria-modal", "true"); box.setAttribute("aria-labelledby", "annh");
+  var c = '<div class="otacard anncard"><button class="otax" data-ann="close" aria-label="Close">×</button><div class="otak">Clinical &amp; app updates</div><h2 id="annh">' + (all ? "Recent updates" : "What's new") + '</h2>';
+  if (!list.length) c += '<p class="muted">No updates right now.</p>';
+  ["recall", "label", "qbank", "custom"].forEach(function (k) {
+    (groups[k] || []).forEach(function (x) {
+      var b = ANN_B[k] || ANN_B.custom;
+      c += '<div class="annitem"><span class="annbadge ' + b[1] + '">' + esc(x.badge || b[0]) + '</span><h3>' + esc(x.title) + '</h3><p>' + esc(x.body) + '</p>' + (x.url ? '<a class="linkish" href="' + esc(x.url) + '" target="_blank" rel="noopener">Official notice</a>' : '') + '<span class="muted small"> · ' + new Date(x.at).toLocaleDateString() + '</span></div>';
+    });
+  });
+  c += '<p class="muted small">Education only. Not for patient care.</p><div class="otabtns">' + (all ? '<button class="btn" data-ann="close">Close</button>' : '<button class="btn" data-ann="close">Got it</button><button class="btn ghost" data-ann="close">Skip</button>') + '</div></div>';
+  box.innerHTML = c;
+  function close() { try { store("annSeen", Math.max(store("annSeen") || 0, ANN.latest)); } catch (e) {} if (box.parentNode) box.parentNode.removeChild(box); document.removeEventListener("keydown", key); try { render(); } catch (e) {} }
+  function key(e) { if (e.key === "Escape") close(); }
+  box.addEventListener("click", function (e) { var t = e.target, a = t.closest && t.closest("[data-ann]"); if (t === box || a) close(); });
+  document.addEventListener("keydown", key);
+  document.body.appendChild(box);
+  var f = box.querySelector("[data-ann]"); if (f) try { f.focus(); } catch (e) {}
+}
+(function () {
+  var tb0 = topbar;
+  topbar = function () {
+    var h = tb0.apply(this, arguments);
+    try {
+      if (ANN.items.length) {
+        var dot = ANN.latest > (store("annSeen") || 0);
+        var bell = '<button class="iconbtn annbell" data-annbell="1" aria-label="Clinical and app updates' + (dot ? ' (new)' : '') + '" title="Clinical & app updates"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5-6.7V3.5a2 2 0 1 0-4 0v.8A7 7 0 0 0 5 11v5l-2 2v1h18v-1Z"/></svg>' + (dot ? '<i class="anndot"></i>' : '') + '</button>';
+        var i = h.indexOf('data-go="settings"'); if (i > 0) { var j = h.lastIndexOf("<button", i); if (j > 0) h = h.slice(0, j) + bell + h.slice(j); }
+      }
+    } catch (e) {}
+    return h;
+  };
+  document.addEventListener("click", function (e) { var b = e.target.closest && e.target.closest("[data-annbell]"); if (!b) return; e.preventDefault(); e.stopPropagation(); annShow(true); }, true);
+  setTimeout(annLoad, 4000);
+  setInterval(function () { if (ANN.latest > (store("annSeen") || 0)) annMaybe(); }, 8000);   /* waits until nothing else is on screen */
+  document.addEventListener("visibilitychange", function () { if (!document.hidden && Date.now() - ANN.at > 30 * 60000) annLoad(); });
+  var go2 = go; go = function (view, opts) { var r = go2(view, opts); if (view === "home") setTimeout(annMaybe, 900); return r; };
+})();
+/* ANN_END */
+
+/* ===== Agency Challenge: rosters + one agency for 30 days (owner, Nov 21 2026) =====
+   Every agency on the state board opens its roster (read-only for everyone signed in): rank, team score and each
+   member's nickname, badge (Team = this week's top 3) and points, highest first. DrugBug's owner also gets the owner
+   tools on each row. The roster is fetched on tap and kept for 60 seconds. The server refuses early switches and
+   leaves too; here the links turn into a date. */
+AGX.rcache = {};
+function agxLockLinks(M) {
+  var until = (M && M.lockUntil) || 0, now = Date.now();
+  if (until > now) {
+    var d = new Date(until), when; try { when = d.toLocaleString([], { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" }); } catch (e) { when = d.toLocaleDateString(); }
+    var left = Math.ceil((until - now) / 86400000);
+    return '<p class="small axlock"><span class="axlockic" aria-hidden="true">🔒</span> <button class="linkish seatlock" disabled aria-disabled="true">Change agency</button> · <button class="linkish seatlock" disabled aria-disabled="true">Add a new institution</button> · <button class="linkish seatlock" disabled aria-disabled="true">Leave the challenge</button><br><span class="muted">Members stay 30 days with an agency. You can leave or switch on <b>' + esc(when) + '</b> (' + left + ' day' + (left === 1 ? '' : 's') + ' left).</span></p>';
+  }
+  return '<p class="small"><button class="linkish" data-agx="leave">' + (AGX.leaveAsk ? "Tap again to leave" : "Leave the challenge") + '</button><br><span class="muted">You can belong to one agency at a time. To move, leave first, then pick the new one (you’ll stay at least 30 days).</span></p>';
+}
+function agxRosterHtml() {
+  var R = AGX.roster; if (!R) return "";
+  var c = '<div class="axrbg" data-agxrclose="1"></div><aside class="axroster" role="dialog" aria-modal="true" aria-labelledby="axrT"><div class="axrhead"><div><h3 id="axrT">' + esc(R.name || "Agency") + '</h3>';
+  var D = R.data;
+  if (D) { var A = D.agency; c += '<p class="muted small">' + esc(AGX_TYPES[A.type] || "") + " · " + esc(A.city) + ", " + esc(A.state) + (A.unv ? ' · <span class="axunv">not checked yet</span>' : '') + '</p>'; }
+  c += '</div><button class="iconbtn" data-agxrclose="1" aria-label="Close roster">✕</button></div>';
+  if (R.busy) return c + '<div class="axrload" role="status"><span class="axspin" aria-hidden="true"></span> Loading the roster…</div></aside>';
+  if (R.err) return c + '<p class="presult" role="alert">' + esc(R.err) + '</p><p><button class="btn ghost" data-agxroster="' + esc(R.id) + '" data-force="1">Try again</button></p></aside>';
+  var A2 = D.agency;
+  var stOn = !!(AGX.data && AGX.data.stateOn), rk = stOn ? A2.rank : A2.natRank, rof = stOn ? A2.of : A2.natOf;
+  c += '<div class="axme axrstats"><div><b>' + (rk ? "#" + rk : "–") + '</b><span>' + (stOn ? "rank in " + esc(A2.state) : "national rank") + (rk && rof ? " of " + rof : "") + '</span></div><div><b>' + num0(A2.team) + '</b><span>team score (top 3)</span></div><div><b>' + A2.members + '</b><span>' + (A2.members === 1 ? "member" : "members") + '</span></div></div>';
+  if (!D.members.length) return c + '<div class="axrempty"><b>No members yet</b><span>Nobody has joined ' + esc(A2.name) + ' so far this season.</span></div></aside>';
+  c += '<ol class="clboard axboard axrlist">' + D.members.map(function (m) {
+    return '<li class="' + (m.me ? "me" : "") + '"><span class="clrk' + (m.badge === "Team" ? " r" + m.rank : "") + '">' + m.rank + '</span>' + agxAvArt(m.av) + '<span class="clal">' + esc(m.nick) + (m.me ? ' <em>you</em>' : '') +
+      ' <span class="axbadge' + (m.badge === "Team" ? " team" : "") + '">' + (m.badge === "Team" ? "Team" : "Member") + '</span>' + (m.dept ? '<small class="axsub">' + esc(agxDeptName(A2.type, m.dept)) + '</small>' : '') + '</span>' +
+      '<span class="clsc"><b>' + num0(m.pts) + '</b><small>' + (m.acc != null ? m.acc + "% right" : "no answers yet") + '</small></span>' +
+      (D.canManage && m.uid ? '<span class="axown"><button class="linkish" data-agxown="hideName" data-u="' + esc(m.uid) + '">Hide name</button> <button class="linkish" data-agxown="remove" data-u="' + esc(m.uid) + '">' + (AGX.rmAsk === m.uid ? "Tap to remove" : "Remove") + '</button></span>' : '') + '</li>';
+  }).join("") + '</ol>';
+  if (D.members.length === 1) c += '<p class="muted small">Just one member so far. An agency’s score is its top 3 added together, so every coworker who joins helps.</p>';
+  if (D.more) c += '<p class="muted small">And ' + D.more + ' more.</p>';
+  c += '<p class="muted small">Points this week. Team = the agency’s top 3. Nicknames only.</p>';
+  return c + '</aside>';
+}
+(function () {
+  var base = agxView;
+  agxView = function () { return base() + agxRosterHtml(); };
+})();
+function agxRosterOpen(id, name, force) {
+  var hit = AGX.rcache[id];
+  AGX.roster = { id: id, name: name || (hit && hit.data.agency.name) || "", busy: false, err: "", data: null };
+  if (hit && !force && Date.now() - hit.at < 60000) { AGX.roster.data = hit.data; agxDraw(); return agxRosterFocus(); }
+  AGX.roster.busy = true; agxDraw(); agxRosterFocus();
+  fnCall("agencyRoster", { aid: id }).then(agxOk).then(function (r) {
+    AGX.rcache[id] = { at: Date.now(), data: r };
+    if (AGX.roster && AGX.roster.id === id) { AGX.roster.busy = false; AGX.roster.data = r; AGX.roster.name = r.agency.name; agxDraw(); agxRosterFocus(); }
+  }).catch(function (e) {
+    if (AGX.roster && AGX.roster.id === id) { AGX.roster.busy = false; AGX.roster.err = e && e.message === "offline" ? "Rosters need an internet connection." : (e && e.message) || "Couldn’t load this roster. Try again."; agxDraw(); }
+  });
+}
+function agxRosterFocus() { setTimeout(function () { var b = agxPane.querySelector(".axroster [data-agxrclose]"); if (b) try { b.focus({ preventScroll: true }); } catch (e) {} }, 0); }
+function agxRosterClose() { var id = AGX.roster && AGX.roster.id; AGX.roster = null; AGX.rmAsk = ""; agxDraw(); if (id) { var row = agxPane.querySelector('[data-agxroster="' + id + '"]'); if (row) try { row.focus({ preventScroll: true }); } catch (e) {} } }
+agxPane.addEventListener("click", function (e) {
+  var x = e.target.closest && e.target.closest("[data-agxrclose]"); if (x) { e.stopPropagation(); return agxRosterClose(); }
+  var o = e.target.closest && e.target.closest("[data-agxown]");
+  if (o) {
+    e.stopPropagation(); var act = o.getAttribute("data-agxown"), u = o.getAttribute("data-u");
+    if (act === "remove" && AGX.rmAsk !== u) { AGX.rmAsk = u; return agxDraw(); }
+    AGX.rmAsk = ""; o.disabled = true;
+    return fnCall("agencyAdmin", { action: act, uid: u }).then(agxOk).then(function () { var id = AGX.roster && AGX.roster.id; if (id) { delete AGX.rcache[id]; agxRosterOpen(id, "", true); } }).catch(function (e2) { if (AGX.roster) { AGX.roster.err = (e2 && e2.message) || "That didn’t work."; agxDraw(); } });
+  }
+  var r = e.target.closest && e.target.closest("[data-agxroster]");
+  if (r) { e.stopPropagation(); var nm = r.querySelector(".clal"); return agxRosterOpen(r.getAttribute("data-agxroster"), nm ? nm.firstChild && nm.firstChild.textContent : "", r.getAttribute("data-force") === "1"); }
+  if (AGX.roster && e.target.closest && e.target.closest(".axroster")) e.stopPropagation();
+}, true);
+agxPane.addEventListener("keydown", function (e) {
+  if (AGX.roster && e.key === "Escape") { e.stopPropagation(); e.preventDefault(); return agxRosterClose(); }
+  var r = e.target.closest && e.target.closest("li[data-agxroster]");
+  if (r && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); r.click(); }
+}, true);
+/* the roster closes with the challenge */
+(function () { var c0 = closeAgency; closeAgency = function () { AGX.roster = null; var x = c0(); try { if (document.querySelector(".hvsolo,.hvteamcard")) render(); } catch (e) {} return x; }; })();
+
+/* ===== Three tiers: My Agency, [State], National (owner, Nov 21 2026) =====
+   State: the person's agency state, or any state they pick. National: the country's top agencies with state badges and
+   the Hall of Fame. Both come from agencyTier on tap and are kept for 2 minutes. Each tab opens with its prize tier. */
+var AGX_STATE_NAMES = { AL: "Alabama", AK: "Alaska", AZ: "Arizona", AR: "Arkansas", CA: "California", CO: "Colorado", CT: "Connecticut", DE: "Delaware", DC: "District of Columbia", FL: "Florida", GA: "Georgia", HI: "Hawaii", ID: "Idaho", IL: "Illinois", IN: "Indiana", IA: "Iowa", KS: "Kansas", KY: "Kentucky", LA: "Louisiana", ME: "Maine", MD: "Maryland", MA: "Massachusetts", MI: "Michigan", MN: "Minnesota", MS: "Mississippi", MO: "Missouri", MT: "Montana", NE: "Nebraska", NV: "Nevada", NH: "New Hampshire", NJ: "New Jersey", NM: "New Mexico", NY: "New York", NC: "North Carolina", ND: "North Dakota", OH: "Ohio", OK: "Oklahoma", OR: "Oregon", PA: "Pennsylvania", PR: "Puerto Rico", RI: "Rhode Island", SC: "South Carolina", SD: "South Dakota", TN: "Tennessee", TX: "Texas", UT: "Utah", VT: "Vermont", VA: "Virginia", WA: "Washington", WV: "West Virginia", WI: "Wisconsin", WY: "Wyoming", GU: "Guam", VI: "U.S. Virgin Islands", AS: "American Samoa", MP: "Northern Mariana Islands" };
+function agxStateName(st) { return AGX_STATE_NAMES[st] || st || "State"; }
+AGX.tcache = {}; AGX.stPick = "";
+function agxStateGuard() { if (AGX.tab === "state" && AGX.data && AGX.data.member && !AGX.data.stateOn) AGX.tab = "national"; }
+(function () { var v0 = agxView; agxView = function () { agxStateGuard(); return v0(); }; })();
+function agxTierKey() { return AGX.tab === "national" ? "national" : "state:" + AGX.stPick; }
+function agxTierLoad(force) {
+  var key = agxTierKey(), hit = AGX.tcache[key];
+  if (hit && !force && Date.now() - hit.at < 120000) return;
+  if (hit && hit.busy) return;
+  AGX.tcache[key] = { at: 0, busy: true, data: hit && hit.data, err: "" };
+  fnCall("agencyTier", AGX.tab === "national" ? { tier: "national" } : { tier: "state", state: AGX.stPick }).then(agxOk).then(function (r) {
+    AGX.tcache[key] = { at: Date.now(), busy: false, data: r, err: "" }; if (AGX.open) agxDraw();
+  }).catch(function (e) { AGX.tcache[key] = { at: 0, busy: false, data: null, err: e && e.message === "offline" ? "This board needs an internet connection." : (e && e.message) || "Couldn’t load this board." }; if (AGX.open) agxDraw(); });
+}
+function agxStatePick(cur) {
+  var v = AGX.stPick || cur;
+  return '<label class="axstpick small">Showing <select class="pinput" data-agxst="1" aria-label="Choose a state">' + Object.keys(AGX_STATE_NAMES).map(function (k) { return '<option value="' + k + '"' + (k === v ? " selected" : "") + '>' + esc(AGX_STATE_NAMES[k]) + (k === cur ? " (yours)" : "") + '</option>'; }).join("") + '</select></label>';
+}
+function agxTierBanner(tab, D) {
+  var T = D && D.tiers; if (!T) return "";
+  var key = tab === "national" ? "national" : tab === "state" ? "state" : "agency", t = T[key]; if (!t) return "";
+  var ic = { agency: "🏅", state: "🏆", national: "👑" }[key];
+  var open = AGX.prizeOpen === key;
+  return '<div class="axprize axp-' + key + '"><button class="axpbtn" data-agxprize="' + key + '" aria-expanded="' + open + '"><span class="axpic" aria-hidden="true">' + ic + '</span><span><b>' + esc(t.title) + '</b><small>' + esc(t.blurb) + '</small></span><span class="axpmore">' + (open ? "Hide" : "Prizes") + '</span></button>' +
+    (open ? '<ul>' + t.prizes.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join("") + '</ul>' + (key !== "agency" && T.rules ? '<p class="muted small">' + esc(T.rules) + '</p>' : '') : '') + '</div>';
+}
+function agxTierHtml(A) {
+  var key = agxTierKey(), hit = AGX.tcache[key]; agxTierLoad(false);
+  var c = AGX.tab === "state" ? agxStatePick(A.state) : "";
+  if (!hit || (!hit.data && hit.busy)) return c + '<div class="axrload" role="status"><span class="axspin" aria-hidden="true"></span> Loading the board…</div>';
+  if (!hit.data) return c + '<p class="presult" role="alert">' + esc(hit.err || "Couldn’t load this board.") + '</p><p><button class="btn ghost" data-agx="refresh">Try again</button></p>';
+  var D = hit.data, nat = AGX.tab === "national";
+  if (!D.rows.length) return c + '<div class="axrempty"><b>No agencies on the board yet this week</b><span>' + (nat ? "Agencies appear here as soon as their members earn points." : "Nobody in " + esc(agxStateName(D.state)) + " has points yet this week. Be the first.") + '</span></div>';
+  c += agxPodium(D.rows, function (r) { return r.name; }, function (r) { return nat ? r.city + ", " + r.state : r.city; }, function (r) { return r.top3; });
+  c += '<ol class="clboard axboard">' + D.rows.map(function (r) {
+    return '<li class="' + (r.mine ? "me " : "") + 'axclick" data-agxroster="' + esc(r.id) + '" tabindex="0" role="button" aria-label="' + esc(r.name) + ': see who is on this team"><span class="clrk' + (r.rank <= 3 && r.top3 > 0 ? " r" + r.rank : "") + '">' + r.rank + '</span>' + agxAvArt(r.av) + '<span class="clal">' + esc(r.name) + (r.mine ? ' <em>yours</em>' : '') + (r.unv ? ' <small class="axunv">not checked yet</small>' : '') + '<small class="axsub">' + (nat ? '<span class="axst" title="' + esc(agxStateName(r.state)) + '">' + esc(r.state) + '</span> ' : '') + esc(AGX_TYPES[r.type] || "") + " · " + esc(r.city) + '</small></span><span class="clsc"><b>' + num0(r.top3) + '</b><small>' + (r.filled < 3 ? r.filled + " of 3 on the team" : "top 3") + '</small></span></li>';
+  }).join("") + '</ol>';
+  c += '<p class="muted small">' + (nat ? D.count + " agencies in " + D.states + (D.states === 1 ? " state" : " states") + " this week, ranked by their top 3 people’s points added together." : "Agencies in " + esc(agxStateName(D.state)) + ", ranked by their top 3 people’s points added together this week.") + ' Tap an agency to see its roster.</p>';
+  var H = nat ? D.hall : D.lastWeek, L = H && H.agencies;
+  if (L && L.length) c += '<div class="clbox axhall"><h4>' + (nat ? "👑 Hall of Fame: last week’s National Champions" : "Last week’s winners") + '</h4>' + L.map(function (x, i) { return '<p>' + ["🥇", "🥈", "🥉"][i] + " " + esc(x.name) + (nat && x.state ? ' <span class="axst">' + esc(x.state) + '</span>' : '') + '<span>' + num0(x.top3) + '</span></p>'; }).join("") + '</div>';
+  return c;
+}
+/* trophies on My Agency */
+(function () {
+  var base = agxView;
+  agxView = function () {
+    var h = base(), B = (Prog && Prog.d && Prog.d.agxBadges) || [];
+    if (AGX.tab !== "agency" || !B.length || !AGX.data || !AGX.data.member) return h;
+    var ic = { mvp: "🏅", state: "🏆", national: "👑" };
+    var t = '<div class="clbox axtroph"><h4>Your trophies</h4><p class="axtrow">' + B.slice(-12).reverse().map(function (b) { return '<span class="axtrophy axt-' + esc(b.b) + '" title="' + esc(b.label) + '">' + (ic[b.b] || "⭐") + '<small>' + esc(b.b === "state" ? b.st + " State" : b.b === "national" ? "National" : "MVP") + '</small></span>'; }).join("") + '</p></div>';
+    var k = h.indexOf('<div class="cltabs');
+    return k > 0 ? h.slice(0, k) + t + h.slice(k) : h + t;
+  };
+})();
+agxPane.addEventListener("click", function (e) {
+  var t = e.target.closest && e.target.closest("[data-agx]");
+  if (t) {
+    var a = t.getAttribute("data-agx");
+    if (a === "tab-national") { e.stopPropagation(); AGX.tab = "national"; agxDraw(); return; }
+    if (a === "tab-state" && AGX.tab === "state" && AGX.stPick) { /* tapping the tab again goes back to your own state */ e.stopPropagation(); AGX.stPick = ""; return agxDraw(); }
+    if (a === "refresh" && AGX.tab !== "agency" && (AGX.tab === "national" || AGX.stPick)) { e.stopPropagation(); agxTierLoad(true); return agxDraw(); }
+  }
+  var p = e.target.closest && e.target.closest("[data-agxprize]");
+  if (p) { e.stopPropagation(); var k = p.getAttribute("data-agxprize"); AGX.prizeOpen = AGX.prizeOpen === k ? "" : k; return agxDraw(); }
+}, true);
+agxPane.addEventListener("change", function (e) {
+  var s = e.target.closest && e.target.closest("[data-agxst]"); if (!s) return;
+  var mine = AGX.data && AGX.data.agency && AGX.data.agency.state;
+  AGX.stPick = s.value === mine ? "" : s.value; AGX.tab = "state"; agxDraw();
+});
+
+/* ===== One reward pipeline: sticks + agency points (owner, Nov 21 2026) =====
+   "Any action earning Sticks automatically awards corresponding scoreboard points." Every earn() in the app now goes
+   through awardSticksAndPoints: the sticks go to the person's balance, and 10 agency points per stick go to their
+   personal points and, when they are in an agency, to the Agency Challenge (sent with the answer counts; the server
+   holds the 3,000-points-a-day ceiling on answers and sticks together). Sticks that never become points:
+   answer sticks (the answer itself already scores 10 / minus 5), bought, gifted and prize sticks.
+   Difficulty is already in the sticks (games multiply them), so points scale with it too. */
+var STK = { ans: null, src: "", tN: 0, tP: 0, tSrc: "", tT: null };
+var STK_PTS = 10, STK_NOPTS = { answer: 1, purchase: 1, gift: 1, prize: 1 };
+var STK_NAMES = { answer: "Question answers", purchase: "Sticks pack", gift: "Gift code", prize: "Prize collected", game: "Brain game", rush: "Bug Rush", daily: "Daily reward", milestone: "Study milestone", activity: "Study activity" };
+(function () { var q0 = qSticks; qSticks = function (ok) { var v = q0(ok); STK.ans = v; setTimeout(function () { STK.ans = null; }, 0); return v; }; })();
+(function () {
+  var e0 = earn;
+  earn = function (n, src) { if (!n) return; e0(n); try { stkPipe(n, src); } catch (e) {} };
+})();
+function awardSticksAndPoints(n, src) { earn(n, src); }
+function stkPipe(n, src) {
+  if (!src) { if (STK.ans != null && STK.ans === n) { src = "answer"; STK.ans = null; } else src = STK.src || "activity"; }
+  var pts = n > 0 && !STK_NOPTS[src] ? n * STK_PTS : 0, team = pts > 0 && typeof agxJoined === "function" && agxJoined() && statsOn();
+  var P = Prog.d; if (pts) P.ptsAll = (P.ptsAll || 0) + pts;
+  if (team) { var Q = store("agxq") || { n: 0, c: 0 }; Q.sp = (Q.sp || 0) + pts; store("agxq", Q); clearTimeout(AGX.t); if (Q.sp >= 300) agxFlush(); else AGX.t = setTimeout(agxFlush, 45000); }
+  var L = store("rwLog") || []; var last = L[L.length - 1];
+  if (last && last.src === src && Date.now() - last.t < 60000) { last.n += n; last.p += pts; last.t = Date.now(); last.team = last.team || team; }
+  else L.push({ t: Date.now(), src: src, n: n, p: pts, team: team });
+  if (L.length > 150) L = L.slice(-150); store("rwLog", L);
+  if (src !== "answer" && src !== "purchase" && n > 0) stkToast(n, pts, team);
+}
+function stkCapped() { return AGX.left === 0 && AGX.leftDay === new Date().toDateString(); }
+function stkLine(n, p) {
+  var inA = typeof agxJoined === "function" && agxJoined();
+  return "+" + num0(n) + " Sticks" + (p ? " • +" + num0(p) + (inA ? (stkCapped() ? " pts (agency daily cap reached)" : " Agency Pts") : " pts") : "");
+}
+function stkToast(n, p) {
+  STK.tN += n; STK.tP += p; clearTimeout(STK.tT);
+  var el = document.getElementById("stkToast");
+  if (!el) { el = document.createElement("div"); el.id = "stkToast"; el.setAttribute("role", "status"); el.setAttribute("aria-live", "polite"); document.body.appendChild(el); }
+  el.textContent = stkLine(STK.tN, STK.tP); el.className = "on";
+  STK.tT = setTimeout(function () { el.className = ""; STK.tN = 0; STK.tP = 0; }, 2600);
+}
+function stkHistoryHtml() {
+  var L = (store("rwLog") || []).slice().reverse(); if (!L.length) return "";
+  return '<details class="cldim axmore rwhist"><summary>Reward history</summary><ol class="rwlist">' + L.slice(0, 60).map(function (x) {
+    var d = new Date(x.t), when; try { when = d.toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }); } catch (e) { when = d.toLocaleDateString(); }
+    return '<li><span>' + esc(STK_NAMES[x.src] || STK_NAMES[String(x.src).split(":")[0]] || x.src) + '<small>' + esc(when) + '</small></span><b>+' + num0(x.n) + ' sticks' + (x.p ? '<small>+' + num0(x.p) + (x.team ? " agency pts" : " pts") + '</small>' : '<small>no points</small>') + '</b></li>';
+  }).join("") + '</ol><p class="muted small">Every stick you earn studying also earns 10 points. Answers score on their own (10 right, minus 5 wrong). Bought, gifted and prize sticks don’t earn points. Agency points stop at 3,000 a day; sticks don’t.</p></details>';
+}
+/* sources for the main ways sticks are earned outside answers */
+(function () {
+  function tag(name, src) { try { var f = eval(name); if (typeof f !== "function") return; var w = function () { var o = STK.src; STK.src = src; try { return f.apply(this, arguments); } finally { STK.src = o; } }; eval(name + " = w"); } catch (e) {} }
+  tag("loginCollect", "daily"); tag("checkAch", "milestone"); tag("rushCallAnswer", "rush");
+})();
+/* reward history at the bottom of the Agency Challenge panel */
+(function () { var b = agxView; agxView = function () { return b() + stkHistoryHtml(); }; })();
+
+/* ===== Brain games: difficulty tiers with payout multipliers (owner, Nov 21 2026) =====
+   Pick the tier on the games page (it starts at the one that fits your level). Sticks are multiplied 1x, 2x, 3.5x
+   and 5x, agency points follow the sticks, and each card shows its payout before you start. */
+var GM_TIER_NAME = ["", "Easy · BLS", "Medium · ALS", "Hard · Critical care", "Expert · Flight"];
+var GM_MULT = [0, 1, 2, 3.5, 5];
+GM_DIFF_NAME = GM_TIER_NAME;
+(function () { var g0 = gmDiff; gmDiff = function () { var t = +store("gmTier") || 0; return t >= 1 && t <= 4 ? t : g0(); }; })();
+function gmMult() { return GM_MULT[gmDiff()] || 1; }
+function gmPayOf(kind, n, f) { return Math.max(1, Math.round((GM_STICKS[kind] || 1) * (n || 1) * gmMult() * (f || 1))); }
+function gmPayLabel(kind) {
+  var per = kind === "scramble" ? " per word" : kind === "blitz" || kind === "frog" ? " per 3" : "", s = gmPayOf(kind, 1);
+  return "+" + s + " sticks" + per + " • +" + num0(s * STK_PTS) + " pts" + (gmMult() > 1 ? ' <i class="gmx">' + gmMult() + "×</i>" : "");
+}
+function gmTierPicker() {
+  var cur = gmDiff(), auto = !(+store("gmTier"));
+  return '<div class="gmtiers" role="radiogroup" aria-label="Difficulty">' + [1, 2, 3, 4].map(function (t) {
+    return '<button role="radio" aria-checked="' + (t === cur) + '" class="gmtier d' + t + (t === cur ? " on" : "") + '" data-gmtier="' + t + '"><b>' + esc(GM_TIER_NAME[t]) + '</b><small>' + GM_MULT[t] + '× sticks and points</small></button>';
+  }).join("") + '</div>' + (auto ? '<p class="muted small">Picked for your level. Harder tiers mean bigger, faster games and bigger payouts.</p>' : '<p class="muted small"><button class="linkish" data-gmtier="0">Back to the tier for my level</button></p>');
+}
+gmWin = function (kind, n, f) {
+  var s = gmPayOf(kind, n, f), o = STK.src; STK.src = "game";
+  try { earn(s, "game"); } finally { STK.src = o; }
+  Prog.d.xp = (Prog.d.xp || 0) + Math.round(5 * (n || 1) * gmMult());
+  var G = Prog.d.games || (Prog.d.games = {}); G[kind] = (G[kind] || 0) + 1; var t = today(); Prog.d.days[t] = (Prog.d.days[t] || 0) + 1;
+  saveProg(); if (typeof feedback === "function") feedback(true); return s;
+};
+
+/* ===== Crosswords: topics, fresh clues, no repeats, completed list (owner, Nov 21 2026) =====
+   - Topic picker: your study path, or Cardiac/ACLS, RSI & Airway, Toxicology, Pediatrics, Vasopressors, Street drugs.
+   - Anti-repeat: the last 150 drugs used in your crosswords are left out until the rest of the pool has had a turn.
+   - Each drug's clue rotates through class, how it works, use, side effects, contraindications, reversal, brand name and
+     pharmacologic class (harder tiers lean on mechanism, side effects and contraindications).
+   - Every puzzle has an id; completed ones are kept on your progress (it syncs with your account) with a checkmark and
+     can be replayed for a quarter of the sticks. New puzzles never repeat a completed id.
+   - Payout: base 5 sticks x tier, +25% solved without Check, +25% solved fast; shown before you start. */
+var XW_TOPICS = [["path", "My study path"], ["cardiac", "Cardiac / ACLS"], ["airway", "RSI & Airway"], ["tox", "Toxicology"], ["peds", "Pediatrics"], ["press", "Vasopressors"], ["street", "Street drugs"]];
+var XW_REPLAY = 0.25, XW_ANG = null, XW_ANG_T = null;
+function xwTopic() { var t = store("xwTopic") || "path"; return XW_TOPICS.some(function (x) { return x[0] === t; }) ? t : "path"; }
+function xwInTopic(id, t) {
+  var d = DB.drugs[id]; if (!d) return false;
+  var tg = d.tags || [], txt = (get(d, 0, 3) + " " + get(d, 0, 4) + " " + get(d, 3, 0)).toLowerCase(), has = function (x) { return tg.indexOf(x) >= 0; };
+  if (t === "cardiac") return has("CA") || /antiarrhythm|cardiac arrest|acls|angina|myocardial|heart failure|anticoagul|antiplatelet|thromboly/.test(txt);
+  if (t === "airway") return has("RSI") || has("SE") || /neuromuscular block|paralytic|induction|sedat|anesthe|intubat/.test(txt);
+  if (t === "tox") return !/antineoplastic|chemotherap|monoclonal|kinase inhibitor|immunotherap|oncolog/.test(txt) && (has("AD") || /antidote|poison|overdose|reversal agent|chelat|toxic ingestion|illicit use/.test(txt) || (has("TX") && (has("PH") || has("ED"))));
+  if (t === "peds") return has("PE") || /pediatric|neonat|infant|children/.test(txt);
+  if (t === "press") return has("VP") || /vasopressor|inotrop|catecholamine|sympathomimetic|alpha.{0,3}1 agonist/.test(txt);
+  if (t === "street") return /illicit use|illicit|street|recreational|hallucinogen|club drug|designer|synthetic cannabinoid|cathinone|xylazine|nitazene|kratom|heroin/.test(txt + " " + String(d.name).toLowerCase());
+  return true;
+}
+function xwWord(d) { var b = String((d && d.name) || "").split("(")[0].trim(); if (!b || b.split(/\s+/).length > 2) return ""; var w = b.replace(/[\s-]/g, "").toUpperCase(); return /^[A-Z]{4,12}$/.test(w) ? w : ""; }
+function xwPool(t) {
+  var ok = function (id) { var d = DB.drugs[id]; return d && xwWord(d) && get(d, 0, 3); };
+  var p = gmIds().filter(function (id) { return ok(id) && xwInTopic(id, t); }), wide = false;
+  var sample = typeof freeSample === "function" && freeSample();   /* the free sample stays on the starter medications */
+  if (t !== "path" && p.length < 24 && !sample) { p = DB.ALLIDS.filter(function (id) { var d = DB.drugs[id]; return ok(id) && xwInTopic(id, t) && !(typeof expoOf === "function" && expoOf(id) && !get(d, 3, 0)); }); wide = true; }
+  /* a small study path gets related drugs from the full library (same field tags), so puzzles don't keep repeating */
+  if (t === "path" && p.length < 80 && !sample) {
+    var tc = {}; p.forEach(function (id) { (DB.drugs[id].tags || []).forEach(function (x) { if (x !== "HM") tc[x] = (tc[x] || 0) + 1; }); });
+    var top = Object.keys(tc).sort(function (a, b) { return tc[b] - tc[a]; }).slice(0, 3), have = {}; p.forEach(function (id) { have[id] = 1; });
+    if (top.length) { DB.ALLIDS.forEach(function (id) { var d = DB.drugs[id]; if (!have[id] && ok(id) && !(typeof expoOf === "function" && expoOf(id)) && (d.tags || []).some(function (x) { return top.indexOf(x) >= 0; })) { p.push(id); have[id] = 1; } }); wide = p.length > 0 && "related"; }
+  }
+  if (p.length < 6) p = gmIds().filter(ok);
+  return { ids: p, wide: wide };
+}
+function xwClean(v) { v = String(v || "").trim(); return !v || /^(none|n\/a|not applicable|unknown|-+)\b/i.test(v) ? "" : v; }
+function xwClue(id, tier) {
+  var d = DB.drugs[id], name = String(d.name).split("(")[0].trim(), al = (String(d.name).match(/\(([^)]*)\)/) || [0, ""])[1].split(/[,;]/).map(function (x) { return x.trim(); }).filter(function (x) { return x.length >= 3; });
+  var mask = function (t) { [name].concat(al).forEach(function (n) { var rx = new RegExp(n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "[a-z]*", "gi"); t = t.replace(rx, "___"); }); return t; };
+  var A = [
+    ["class", "Class", gmShort(get(d, 0, 3), 50)],
+    ["use", "Used for", gmShort(xwClean(get(d, 3, 0)) || get(d, 16, 0), 60)],
+    ["mech", "How it works", gmShort(xwClean(get(d, 2, 0)), 70)],
+    ["side", "Serious side effect", gmShort(xwClean(get(d, 9, 1)) || xwClean(get(d, 9, 0)), 50)],
+    ["contra", "Avoid in", gmShort(xwClean(get(d, 4, 0)), 55)],
+    ["rev", "Reversed or treated with", gmShort(xwClean(get(d, 13, 4)) || xwClean(get(d, 13, 5)), 50)],
+    ["brand", "Brand name", gmShort(xwClean(get(d, 0, 1)).split(/[,;]/)[0], 30)],
+    ["pharm", "Pharmacologic class", gmShort(xwClean(get(d, 0, 4)), 55)]
+  ].filter(function (a) { return a[2] && a[2].length >= 3 && a[2].toLowerCase() !== name.toLowerCase(); });
+  if (!A.length) return { a: "class", clue: mask(gmShort(get(d, 0, 3), 50)) };
+  var pref = tier >= 3 ? ["mech", "side", "contra", "rev", "pharm", "class", "use", "brand"] : ["class", "use", "brand", "side", "mech", "rev", "contra", "pharm"];
+  A.sort(function (x, y) { return pref.indexOf(x[0]) - pref.indexOf(y[0]); });
+  var used = XW_ANG || (XW_ANG = store("xwAng") || {}), last = used[id] || [], cand = A.filter(function (a) { return last.indexOf(a[0]) < 0; }).slice(0, 4), pick = cand.length ? cand[Math.floor(Math.random() * cand.length)] : A[0];
+  used[id] = [pick[0]].concat(last).slice(0, Math.max(1, A.length - 1)); clearTimeout(XW_ANG_T); XW_ANG_T = setTimeout(function () { var k = Object.keys(XW_ANG); if (k.length > 600) k.slice(0, k.length - 600).forEach(function (x) { delete XW_ANG[x]; }); store("xwAng", XW_ANG); }, 50);
+  return { a: pick[0], clue: pick[1] + ": " + mask(pick[2]) };
+}
+function xwHash(s) { var h = 2166136261; for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }
+function xwDoneMap() { var P = Prog.d; P.xwDone = P.xwDone || {}; return P.xwDone; }
+gmCrossNew = function () {
+  var t = xwTopic(), tier = gmDiff(), pool = xwPool(t), P = Prog.d;
+  /* anti-repeat: drugs never used come first, then the ones used longest ago; the last 150 used sit at the back */
+  var hist = (store("xwHist") || []).slice(-150), pos = {}; hist.forEach(function (id, i) { pos[id] = i; });
+  var want = gmD([5, 8, 10, 12]), ord = shuffle(pool.ids.slice()).sort(function (a, b) { return (pos[a] == null ? -1 : pos[a]) - (pos[b] == null ? -1 : pos[b]); });
+  var fresh = ord.slice(0, Math.max(want * 4, 40));
+  var done = xwDoneMap(), X = null, words = [];
+  for (var tries = 0; tries < 4; tries++) {
+    var seen = {};
+    words = shuffle(fresh.slice()).filter(function (id) { var w = xwWord(DB.drugs[id]); if (seen[w]) return false; seen[w] = 1; return true; }).map(function (id) { var c = xwClue(id, tier); return { id: id, w: xwWord(DB.drugs[id]), clue: c.clue, a: c.a }; });
+    X = null;
+    for (var k = 0; k < 6; k++) { var x = gmCrossBuild(shuffle(words.slice()), want); if (!X || x.words.length > X.words.length) X = x; if (X.words.length >= want - 1) break; }
+    if (X && X.words.length >= 3 && !done["xw-" + xwHash(X.words.map(function (p) { return p.w; }).sort().join(","))]) break;
+  }
+  var idOf = {}; words.forEach(function (w) { idOf[w.w] = w.id; });
+  X.words.forEach(function (p) { p.id = idOf[p.w]; });
+  var pid = "xw-" + xwHash(X.words.map(function (p) { return p.w; }).sort().join(","));
+  var used = {}; X.words.forEach(function (p) { used[p.id] = 1; });
+  store("xwHist", hist.filter(function (id) { return !used[id]; }).concat(X.words.map(function (p) { return p.id; })).slice(-150));
+  GM = { kind: "cross", X: X, fill: {}, dir: "a", cur: null, checked: false, won: 0, revealed: false, pid: pid, topic: t, tier: tier, wide: pool.wide, t0: Date.now(), replay: false };
+};
+function xwReplay(pid) {
+  var r = xwDoneMap()[pid]; if (!r || !r.x) return false;
+  var x = JSON.parse(JSON.stringify(r.x)); x.sol = {}; x.words.forEach(function (p) { for (var i = 0; i < p.w.length; i++) x.sol[(p.r + p.dr * i) + "," + (p.c + p.dc * i)] = p.w[i]; });
+  x.nums = {}; x.words.forEach(function (p) { x.nums[p.r + "," + p.c] = p.n; });
+  GM = { kind: "cross", X: x, fill: {}, dir: "a", cur: null, checked: false, won: 0, revealed: false, pid: pid, topic: r.topic, tier: r.tier, t0: Date.now(), replay: true };
+  return true;
+}
+(function () {
+  var w0 = gmWin;
+  gmWin = function (kind, n, f) {
+    if (kind !== "cross" || !GM || GM.kind !== "cross") return w0(kind, n, f);
+    var secs = Math.round((Date.now() - (GM.t0 || Date.now())) / 1000), fast = secs <= GM.X.words.length * 40, clean = !GM.checked, done = xwDoneMap(), had = !!done[GM.pid];
+    var mult = (had || GM.replay ? XW_REPLAY : 1) * (1 + (clean ? 0.25 : 0) + (fast ? 0.25 : 0));
+    var o = store("gmTier"); store("gmTier", GM.tier || gmDiff());
+    var s; try { s = w0(kind, 1, mult); } finally { store("gmTier", o); }
+    GM.wonPts = s * STK_PTS;
+    GM.wonNote = (had || GM.replay ? "Replay: a quarter of the sticks. " : "") + (clean ? "No Check used +25%. " : "") + (fast ? "Fast solve +25%. " : "") + "Solved in " + Math.floor(secs / 60) + ":" + String(secs % 60).padStart(2, "0") + ".";
+    var rec = done[GM.pid] || { first: Date.now(), n: 0 };
+    rec.n++; rec.last = Date.now(); rec.topic = GM.topic; rec.tier = GM.tier; rec.best = Math.min(rec.best || 1e9, secs);
+    rec.x = { R: GM.X.R, C: GM.X.C, words: GM.X.words.map(function (p) { return { w: p.w, clue: p.clue, r: p.r, c: p.c, dr: p.dr, dc: p.dc, n: p.n }; }) };
+    done[GM.pid] = rec;
+    var keys = Object.keys(done).sort(function (a, b) { return (done[b].last || 0) - (done[a].last || 0); });
+    keys.slice(30).forEach(function (k) { delete done[k].x; });   /* the last 30 keep their grid for replay; all ids are kept */
+    keys.slice(500).forEach(function (k) { delete done[k]; });
+    saveProg(); return s;
+  };
+})();
+function xwPanel() {
+  var t = xwTopic(), done = xwDoneMap(), ids = Object.keys(done).sort(function (a, b) { return (done[b].last || 0) - (done[a].last || 0); });
+  var base = gmPayOf("cross", 1), c = '<div class="xwbar"><div class="xwtopics" role="group" aria-label="Crossword topic">' + XW_TOPICS.map(function (x) { return '<button class="chip' + (x[0] === t ? " on" : "") + '" data-xwtopic="' + x[0] + '" aria-pressed="' + (x[0] === t) + '">' + esc(x[1]) + '</button>'; }).join("") + '</div>';
+  c += '<p class="xwpay small"><b>' + esc(GM_TIER_NAME[gmDiff()]) + '</b> · Payout ' + GM_STICKS.cross + ' × ' + gmMult() + ' = <b>' + base + ' sticks</b> (+' + num0(base * STK_PTS) + ' pts). +25% without Check, +25% fast. Replays pay a quarter.</p>';
+  if (GM && GM.wide === "related") c += '<p class="muted small">Your study path plus related drugs from the full library, so puzzles stay fresh.</p>';
+  else if (GM && GM.wide) c += '<p class="muted small">Your study path has only a few of these, so this one uses the full DrugBug library.</p>';
+  if (GM && GM.replay) c += '<p class="muted small">✓ Replaying a crossword you finished. It pays a quarter of the sticks.</p>';
+  if (ids.length) c += '<details class="xwlib"><summary>Completed crosswords (' + ids.length + ')</summary><ol>' + ids.slice(0, 30).map(function (k) { var r = done[k], tn = (XW_TOPICS.filter(function (x) { return x[0] === r.topic; })[0] || [0, "Study path"])[1]; return '<li><span>✓ ' + esc(tn) + ' · ' + esc(GM_TIER_NAME[r.tier] || "") + '<small>' + new Date(r.last).toLocaleDateString() + (r.n > 1 ? " · solved " + r.n + "×" : "") + '</small></span>' + (r.x ? '<button class="btn small ghost" data-xwreplay="' + esc(k) + '">Replay</button>' : '') + '</li>'; }).join("") + '</ol></details>';
+  return c + '</div>';
+}
+(function () {
+  var c0 = gmCross;
+  gmCross = function () {
+    var h = c0(), i = h.indexOf('<div class="xwrap">'); if (i < 0) i = h.indexOf('<div class="empty">');
+    return i < 0 ? h + xwPanel() : h.slice(0, i) + xwPanel() + h.slice(i);
+  };
+})();
+document.addEventListener("click", function (e) {
+  var b = e.target.closest && e.target.closest("[data-gmtier],[data-xwtopic],[data-xwreplay]"); if (!b) return;
+  e.preventDefault(); e.stopPropagation();
+  if (b.hasAttribute("data-gmtier")) { var v = +b.getAttribute("data-gmtier"); store("gmTier", v || null); render(); return; }
+  if (b.hasAttribute("data-xwtopic")) { store("xwTopic", b.getAttribute("data-xwtopic")); GM = null; render(); return; }
+  if (b.hasAttribute("data-xwreplay")) { if (xwReplay(b.getAttribute("data-xwreplay"))) { render(); window.scrollTo(0, 0); } }
+}, true);
+/* NGN STARTER SET (owner, Nov 21 2026): hand-written Next Generation NCLEX-style items for the Nursing School path ONLY.
+   Generic names only. Rule exceptions allowed here and nowhere else (owner, Nov 21 2026):
+   "requires follow-up" stems, and dosage / IV-rate calculations with the rounding rule at the end of the prompt.
+   Scoring follows NCSBN: +/- for select-all and highlight (1 per right pick, minus 1 per wrong pick, never below 0);
+   0/1 for each matrix row, bow-tie slot, drop-down, select-N pick and calculation. */
+var NGN_ITEMS = [
+/* ---------- BOW-TIE ---------- */
+{ id: "ngn-bt-dig", type: "bowtie", fmt: "Bow-tie", step: 4, title: "Digoxin toxicity",
+  chart: { vitals: [["Time", "HR", "BP", "RR", "SpO2", "Temp"], ["0800", "48 irregular", "104/62", "18", "95%", "98.2 F"]],
+    labs: [["Test", "Result", "Reference", ""], ["Potassium", "3.1 mEq/L", "3.5-5.0", "L"], ["Digoxin level", "2.6 ng/mL", "0.5-2.0", "H"], ["Creatinine", "1.6 mg/dL", "0.6-1.2", "H"], ["Sodium", "138 mEq/L", "135-145", ""], ["Glucose", "112 mg/dL", "70-110", ""]],
+    notes: "0800. 78-year-old client with heart failure admitted with 3 days of nausea and poor appetite. Reports seeing yellow-green halos around lights. Alert, oriented, mildly fatigued. Lungs with fine crackles at both bases.",
+    mar: [["Medication", "Route", "Schedule", "Last given"], ["digoxin", "PO", "Daily 0900", "Yesterday 0900"], ["furosemide", "PO", "Daily 0900", "Yesterday 0900"], ["lisinopril", "PO", "Daily 0900", "Yesterday 0900"]] },
+  stem: "Complete the diagram: choose the condition the client is most likely experiencing, 2 actions the nurse should take, and 2 parameters the nurse should monitor.",
+  cond: [["Digoxin toxicity", 1, "Nausea, yellow-green halos, bradycardia, a digoxin level of 2.6 ng/mL and low potassium all point to digoxin toxicity."], ["Acute myocardial infarction", 0, "There is no chest pain or ECG change described; the visual changes and high digoxin level fit toxicity instead."], ["Viral gastroenteritis", 0, "Nausea alone could fit, but not the visual halos, slow irregular pulse and high digoxin level."], ["Hyperkalemia", 0, "The potassium is low (3.1), which raises the risk of digoxin toxicity; it is not high."]],
+  act: [["Withhold the 0900 digoxin dose", 1, "Giving more digoxin to a client with signs of toxicity worsens it; the dose is withheld."], ["Notify the provider of the digoxin and potassium levels", 1, "The provider needs these results to treat the toxicity and the low potassium."], ["Give the scheduled furosemide", 0, "Furosemide lowers potassium further, which makes digoxin toxicity worse; it needs the provider's review first."], ["Encourage 3 liters of oral fluid today", 0, "This client has heart failure with crackles; a large fluid load is unsafe and does not treat the toxicity."], ["Offer an antiemetic and recheck in 4 hours", 0, "Treating the nausea alone delays care for a toxic, bradycardic client."]],
+  mon: [["Heart rate and rhythm on telemetry", 1, "Digoxin toxicity causes bradycardia and dangerous dysrhythmias."], ["Serum potassium", 1, "Low potassium increases digoxin toxicity and must be followed as it is corrected."], ["Blood glucose", 0, "Glucose is near normal and is not affected by digoxin."], ["Peak expiratory flow", 0, "There is no airway problem; peak flow does not track this condition."], ["Hemoglobin A1c", 0, "A1c reflects 3 months of glucose control and does not guide acute care here."]] },
+{ id: "ngn-bt-ss", type: "bowtie", fmt: "Bow-tie", step: 4, title: "Serotonin syndrome",
+  chart: { vitals: [["Time", "HR", "BP", "RR", "SpO2", "Temp"], ["1400", "88", "128/78", "16", "98%", "98.6 F"], ["1800", "118", "158/94", "22", "97%", "102.6 F"]],
+    notes: "1800. Client started tramadol yesterday after knee surgery. Takes sertraline at home. Now restless and agitated, sweating heavily, with tremor, brisk reflexes and clonus at both ankles. Reports diarrhea since noon.",
+    mar: [["Medication", "Route", "Schedule", "Last given"], ["sertraline", "PO", "Daily 0900", "Today 0900"], ["tramadol", "PO", "Every 6 hours PRN pain", "Today 1400"], ["enoxaparin", "Subcut", "Daily 2100", "Yesterday 2100"]] },
+  stem: "Complete the diagram: choose the condition the client is most likely experiencing, 2 actions the nurse should take, and 2 parameters the nurse should monitor.",
+  cond: [["Serotonin syndrome", 1, "Agitation, sweating, fever, tachycardia, hyperreflexia and clonus after adding tramadol to sertraline is serotonin syndrome."], ["Neuroleptic malignant syndrome", 0, "NMS follows antipsychotics and causes slow, rigid muscles, not brisk reflexes and clonus."], ["Anticholinergic toxicity", 0, "Anticholinergic toxicity causes dry, hot skin; this client is sweating heavily."], ["Alcohol withdrawal", 0, "Withdrawal can cause tremor and tachycardia, but clonus after a new serotonergic drug points to serotonin syndrome."]],
+  act: [["Withhold sertraline and tramadol and notify the provider", 1, "Stopping the serotonergic drugs is the first treatment."], ["Begin cooling measures", 1, "A temperature of 102.6 F needs active cooling while treatment starts."], ["Give the PRN tramadol for the knee pain", 0, "Tramadol is one of the causes; more would worsen the syndrome."], ["Apply 4-point restraints", 0, "Restraints increase muscle activity and heat; they are avoided."], ["Dim the lights and recheck in 4 hours", 0, "The client is deteriorating; waiting 4 hours is unsafe."]],
+  mon: [["Temperature", 1, "Rising temperature signals a severe, life-threatening syndrome."], ["Heart rate and blood pressure", 1, "Autonomic instability causes swings in heart rate and blood pressure."], ["Serum digoxin level", 0, "The client is not taking digoxin."], ["Peak expiratory flow", 0, "There is no airway or asthma problem described."], ["Blood glucose", 0, "Glucose is not the key concern in serotonin syndrome."]] },
+/* ---------- MATRIX ---------- */
+{ id: "ngn-mx-hf", type: "matrix", fmt: "Matrix", step: 5, title: "Heart failure orders",
+  chart: { vitals: [["Time", "HR", "BP", "RR", "SpO2", "Temp"], ["0700", "96", "142/88", "24", "91%", "98.4 F"]],
+    labs: [["Test", "Result", "Reference", ""], ["Potassium", "5.9 mEq/L", "3.5-5.0", "H"], ["Creatinine", "1.3 mg/dL", "0.6-1.2", "H"], ["BNP", "1,450 pg/mL", "<100", "H"], ["Sodium", "136 mEq/L", "135-145", ""]],
+    notes: "0700. Client with heart failure and a history of asthma (uses albuterol inhaler). Short of breath lying flat, crackles to mid lungs, 2+ ankle edema. Weight up 2.5 kg in 3 days.",
+    mar: [["New order", "Route", "Schedule", ""], ["furosemide", "IV", "Now", ""], ["spironolactone", "PO", "Daily", ""], ["lisinopril", "PO", "Daily", ""], ["propranolol", "PO", "Twice daily", ""]] },
+  stem: "For each new medication order, choose whether it is indicated, contraindicated, or requires clarification with the provider.",
+  cols: ["Indicated", "Contraindicated", "Requires clarification"],
+  rows: [["furosemide IV", 0, "Fluid overload with crackles, edema and weight gain is what IV furosemide treats, and it also lowers potassium."], ["spironolactone", 1, "Spironolactone raises potassium and is contraindicated when potassium is above 5.0 mEq/L; this client's is 5.9."], ["lisinopril", 2, "ACE inhibitors are core heart failure drugs but raise potassium; with a potassium of 5.9 the nurse clarifies before giving it."], ["propranolol", 1, "Propranolol is a nonselective beta blocker and is contraindicated in asthma because it can cause bronchospasm."]] },
+{ id: "ngn-mx-dka", type: "matrix", fmt: "Trend + matrix", trend: true, step: 6, title: "Insulin infusion for DKA",
+  chart: { labs: [["Test", "0800", "1000", "1200"], ["Glucose (mg/dL)", "520", "410", "290"], ["Potassium (mEq/L)", "5.4", "4.2", "3.3"], ["pH", "7.12", "7.20", "7.28"], ["Anion gap", "24", "18", "14"]],
+    notes: "0800. Client with type 1 diabetes admitted in diabetic ketoacidosis. Regular insulin infusion and IV fluids started at 0800 per protocol.",
+    mar: [["Medication", "Route", "Schedule", ""], ["regular insulin infusion", "IV", "Continuous per protocol", ""], ["0.9% sodium chloride", "IV", "Continuous", ""]] },
+  stem: "Review the trend from 0800 to 1200. For each finding at 1200, choose whether it shows improvement or requires follow-up.",
+  cols: ["Improving", "Requires follow-up"],
+  rows: [["Glucose 290 mg/dL", 0, "Glucose is falling at a steady, safe pace with the insulin infusion."], ["Potassium 3.3 mEq/L", 1, "Insulin moves potassium into cells; a potassium now below 3.5 needs replacement and the provider's review before the infusion continues."], ["pH 7.28", 0, "The pH is rising toward normal as the ketoacidosis clears."], ["Anion gap 14", 0, "A closing anion gap shows ketones are clearing."]] },
+/* ---------- SELECT ALL / SELECT N ---------- */
+{ id: "ngn-sa-vanc", type: "sata", fmt: "Select all that apply", step: 1, title: "Vancomycin infusion",
+  chart: { vitals: [["Time", "HR", "BP", "RR", "SpO2", "Temp"], ["1000", "84", "122/74", "16", "98%", "98.6 F"], ["1030", "102", "104/66", "18", "98%", "98.8 F"]],
+    labs: [["Test", "Day 1", "Day 4", "Reference"], ["Creatinine (mg/dL)", "0.9", "1.8", "0.6-1.2"], ["WBC (x10^3/uL)", "15.2", "9.8", "4.5-11.0"]],
+    notes: "1030. Day 4 of IV vancomycin for cellulitis. Thirty minutes into today's infusion the client has red, itchy flushing of the face and neck. Reports a new ringing in both ears. Urine output 60 mL/hr.",
+    mar: [["Medication", "Route", "Schedule", "Last given"], ["vancomycin", "IV", "Every 12 hours", "Started 1000"]] },
+  stem: "Which findings require follow-up? Select all that apply.",
+  opts: [["Flushing and itching of the face and neck during the infusion", 1, "This is a vancomycin infusion reaction; slowing or pausing the infusion and notifying the provider is needed."], ["Creatinine up from 0.9 to 1.8 mg/dL", 1, "A doubled creatinine suggests kidney injury from vancomycin."], ["New ringing in both ears", 1, "Tinnitus can signal ototoxicity."], ["Temperature 98.8 F", 0, "This temperature is normal."], ["Urine output 60 mL/hr", 0, "This is an adequate urine output."], ["WBC down from 15.2 to 9.8", 0, "A falling white count toward normal shows the infection is responding."]] },
+{ id: "ngn-sn-li", type: "selectn", n: 3, fmt: "Select 3", step: 1, title: "Lithium",
+  chart: { labs: [["Test", "Result", "Reference", ""], ["Lithium level", "2.1 mEq/L", "0.6-1.2", "H"], ["Sodium", "131 mEq/L", "135-145", "L"]],
+    notes: "Client with bipolar disorder taking lithium has had vomiting and diarrhea for 2 days." },
+  stem: "Select the 3 findings that indicate lithium toxicity.",
+  opts: [["Coarse hand tremor", 1, "A coarse tremor is a sign of toxicity; a fine tremor is a common expected effect."], ["Persistent vomiting and diarrhea", 1, "Ongoing GI losses are an early sign of toxicity and also raise lithium levels further."], ["Confusion and unsteady gait", 1, "Confusion and ataxia show neurologic toxicity."], ["Fine hand tremor", 0, "A fine tremor is common at therapeutic levels."], ["Increased thirst", 0, "Thirst and frequent urination are common side effects at therapeutic levels."], ["Gradual weight gain", 0, "Weight gain is a common long-term side effect, not toxicity."], ["Elevated TSH", 0, "Lithium can cause hypothyroidism over time; this is not acute toxicity."]] },
+/* ---------- HIGHLIGHT ---------- */
+{ id: "ngn-hl-meto", type: "highlight", fmt: "Highlight text", step: 1, title: "Before metoprolol",
+  chart: { mar: [["Medication", "Route", "Schedule", ""], ["metoprolol tartrate", "PO", "Twice daily 0900", ""]] },
+  stem: "Read the nurse's note. Click the findings that require the nurse to withhold the 0900 metoprolol and notify the provider.",
+  segs: [["0845. Client", null], ["alert and oriented x4.", 0, "Normal mental status does not affect the dose."], ["Apical pulse 52 and regular.", 1, "A heart rate this slow is a reason to withhold a beta blocker and notify the provider."], ["BP 88/54.", 1, "Low blood pressure is a reason to withhold metoprolol."], ["Lungs clear bilaterally.", 0, "Clear lungs are a normal finding."], ["Reports lightheadedness when standing.", 1, "Lightheadedness with a slow pulse and low blood pressure suggests poor perfusion."], ["Pain 2/10 at the incision.", 0, "Mild pain does not affect the metoprolol dose."], ["Voiding without difficulty.", 0, "A normal finding."]] },
+{ id: "ngn-ht-furo", type: "hltable", fmt: "Highlight table", step: 1, title: "Before IV furosemide",
+  chart: { notes: "Client with heart failure. IV furosemide is due now." },
+  stem: "Click the lab results that require follow-up before the nurse gives IV furosemide.",
+  head: ["Test", "Result", "Reference"],
+  cells: [["Potassium", "2.9 mEq/L", "3.5-5.0", 1, "Furosemide lowers potassium further; a potassium of 2.9 risks dysrhythmias."], ["Sodium", "129 mEq/L", "135-145", 1, "Furosemide can worsen low sodium."], ["Magnesium", "1.3 mg/dL", "1.7-2.2", 1, "Furosemide wastes magnesium, and low magnesium makes low potassium harder to correct."], ["Calcium", "9.0 mg/dL", "8.5-10.5", 0, "Normal."], ["Creatinine", "0.9 mg/dL", "0.6-1.2", 0, "Normal."], ["Glucose", "98 mg/dL", "70-110", 0, "Normal."]] },
+/* ---------- DROP-DOWN (CLOZE) ---------- */
+{ id: "ngn-cz-acei", type: "cloze", fmt: "Drop-down", step: 3, title: "Lisinopril",
+  chart: { vitals: [["Time", "HR", "BP", "RR", "SpO2", "Temp"], ["0830", "92", "134/82", "20", "96%", "98.4 F"]],
+    notes: "0830. Client on lisinopril for 2 weeks has new swelling of the lips and tongue and says the voice sounds hoarse. Has had a dry cough for 1 week.",
+    mar: [["Medication", "Route", "Schedule", ""], ["lisinopril", "PO", "Daily 0900", ""]] },
+  stem: "Complete the sentence.",
+  text: ["The nurse should withhold the lisinopril and notify the provider because the client is at risk for ", 0, " as evidenced by ", 1, "."],
+  drops: [[["airway obstruction", 1, "Angioedema from ACE inhibitors can close the airway."], ["hypoglycemia", 0, "Lisinopril does not cause this."], ["bleeding", 0, "Lisinopril does not cause this."], ["hypokalemia", 0, "ACE inhibitors raise potassium, not lower it."]],
+    [["swelling of the lips and tongue with hoarseness", 1, "Facial and tongue swelling with a hoarse voice is angioedema."], ["a dry cough for 1 week", 0, "A dry cough is a common ACE inhibitor side effect but not an airway emergency."], ["a blood pressure of 134/82", 0, "This blood pressure is acceptable."], ["an oxygen saturation of 96%", 0, "This saturation is normal right now."]]] },
+{ id: "ngn-cz-hep", type: "cloze", fmt: "Drop-down", step: 5, title: "Heparin infusion",
+  chart: { labs: [["Test", "Result", "Reference", ""], ["aPTT", "110 seconds", "Goal 60-80 on heparin", "H"], ["Platelets", "210 x10^3/uL", "150-400", ""], ["Hemoglobin", "11.9 g/dL", "12-16", "L"]],
+    notes: "Client on a continuous IV heparin infusion for a pulmonary embolism has bleeding gums and new bruising on both arms." },
+  stem: "Complete the sentence.",
+  text: ["After stopping the infusion and notifying the provider, the nurse should prepare to give ", 0, " because the client shows ", 1, "."],
+  drops: [[["protamine", 1, "Protamine reverses heparin."], ["vitamin K", 0, "Vitamin K reverses warfarin, not heparin."], ["naloxone", 0, "Naloxone reverses opioids."], ["flumazenil", 0, "Flumazenil reverses benzodiazepines."]],
+    [["excessive anticoagulation", 1, "An aPTT well above goal with new bleeding means too much heparin effect."], ["heparin-induced thrombocytopenia", 0, "The platelet count is normal."], ["an allergic reaction", 0, "Bleeding and a high aPTT are not allergy signs."], ["a new blood clot", 0, "The findings show bleeding, not clotting."]]] },
+/* ---------- TREND (single best answer) ---------- */
+{ id: "ngn-tr-pca", type: "mcq", fmt: "Trend", trend: true, step: 5, title: "Opioid PCA",
+  chart: { vitals: [["Time", "RR", "SpO2", "Sedation", "Pain"], ["0800", "18", "97%", "Alert", "6/10"], ["1000", "12", "94%", "Drowsy, easy to wake", "3/10"], ["1200", "8", "88%", "Hard to wake", "Unable to rate"]],
+    notes: "Postoperative day 1. Morphine patient-controlled analgesia (PCA) started at 0700.",
+    mar: [["Medication", "Route", "Schedule", ""], ["morphine PCA", "IV", "Continuous per order", ""], ["naloxone", "IV", "PRN respiratory depression per protocol", ""]] },
+  stem: "Based on the trend, what is the nurse's priority action at 1200?",
+  opts: [["Stop the PCA, stimulate the client and give naloxone per protocol", 1, "Falling breathing rate, falling oxygen and deepening sedation mean opioid-induced respiratory depression; the opioid is stopped and reversed."], ["Recheck the vital signs in 1 hour", 0, "The trend is worsening; waiting is unsafe."], ["Teach the family to press the PCA button when the client sleeps", 0, "PCA by proxy causes oversedation and is never taught."], ["Raise the head of the bed and document the findings", 0, "Positioning alone does not treat respiratory depression."]] },
+/* ---------- REQUIRES FOLLOW-UP / TEACHING / FOOD / HOLD ---------- */
+{ id: "ngn-fu-ramipril", type: "mcq", fmt: "Teaching: requires follow-up", step: 6, title: "Ramipril teaching",
+  chart: { notes: "Discharge teaching for a client newly prescribed ramipril for hypertension." },
+  stem: "Which statement by the client requires follow-up?",
+  opts: [["\"I'll use a salt substitute to cut down on salt.\"", 1, "Most salt substitutes are potassium chloride; with an ACE inhibitor they can cause dangerous hyperkalemia."], ["\"I'll get up slowly from bed or a chair.\"", 0, "Correct: this prevents dizziness from low blood pressure."], ["\"I'll call right away if my lips or tongue swell.\"", 0, "Correct: angioedema is an emergency."], ["\"I might get a dry, tickly cough.\"", 0, "Correct: a dry cough is a common side effect to report."]] },
+{ id: "ngn-fu-warf", type: "mcq", fmt: "Food interaction", step: 6, title: "Warfarin lunch tray",
+  chart: { notes: "Client on long-term warfarin for atrial fibrillation chooses lunch from the hospital menu. The client says this is not the usual diet at home." },
+  stem: "Which food selection indicates a need for further teaching?",
+  opts: [["A large spinach and kale salad added to the usual diet", 1, "Leafy greens are high in vitamin K; a sudden large increase lowers warfarin's effect. Vitamin K intake should stay consistent."], ["Baked chicken breast", 0, "Low in vitamin K; no concern."], ["White rice", 0, "Low in vitamin K; no concern."], ["A fresh apple", 0, "Low in vitamin K; no concern."]] },
+{ id: "ngn-hg-dig", type: "mcq", fmt: "Give or hold", step: 5, title: "Before digoxin",
+  chart: { vitals: [["Time", "Apical HR", "BP", "RR", "SpO2"], ["0845", "54", "118/70", "16", "97%"]], labs: [["Test", "Result", "Reference", ""], ["Potassium", "4.0 mEq/L", "3.5-5.0", ""], ["Digoxin level", "1.1 ng/mL", "0.5-2.0", ""]] },
+  stem: "The nurse reviews the chart before the 0900 digoxin. Which finding requires the nurse to withhold the dose and notify the provider?",
+  opts: [["Apical heart rate of 54", 1, "Digoxin is usually held for an adult apical rate below 60, per facility policy or the order."], ["Potassium of 4.0 mEq/L", 0, "Normal potassium."], ["Blood pressure of 118/70", 0, "Acceptable blood pressure."], ["Digoxin level of 1.1 ng/mL", 0, "Within the usual reference range."]] },
+/* ---------- CALCULATIONS (Nursing School only) ---------- */
+{ id: "ngn-calc-vanc", type: "calc", fmt: "IV rate calculation", step: 5, title: "Vancomycin rate",
+  stem: "The provider orders vancomycin 1 g in 250 mL of 0.9% sodium chloride to infuse over 90 minutes. At what rate should the nurse set the infusion pump? Round to the nearest whole number.",
+  unit: "mL/hr", ans: "167", why: "250 mL divided by 1.5 hours = 166.67 mL/hr, which rounds to 167 mL/hr." },
+{ id: "ngn-calc-hep", type: "calc", fmt: "IV rate calculation", step: 5, title: "Heparin rate",
+  stem: "A heparin infusion of 25,000 units in 250 mL D5W is ordered to run at 1,000 units/hr. At what rate should the nurse set the pump? Round to the nearest tenth. Do not use a trailing zero.",
+  unit: "mL/hr", ans: "10", why: "The concentration is 25,000 units / 250 mL = 100 units/mL. 1,000 units/hr divided by 100 units/mL = 10 mL/hr. Written without a trailing zero: 10, not 10.0." },
+{ id: "ngn-calc-apap", type: "calc", fmt: "Dosage calculation", step: 5, title: "Pediatric acetaminophen",
+  stem: "Acetaminophen 15 mg/kg by mouth is ordered for a child who weighs 44 lb. The supply is 160 mg per 5 mL. How many mL should the nurse give? Round to the nearest tenth.",
+  unit: "mL", ans: "9.4", why: "44 lb divided by 2.2 = 20 kg. 15 mg x 20 kg = 300 mg. 300 mg divided by 160 mg, times 5 mL = 9.375 mL, which rounds to 9.4 mL." }
+];
+/* ===== NGN Practice: Next Generation NCLEX formats (owner, Nov 21 2026), Nursing School path ONLY =====
+   Bow-tie, matrix, select-all and select-N, highlight text and table, drop-down sentences, trend items, give/hold,
+   teaching "requires follow-up", food interactions and dosage / IV-rate calculations, each with a mock chart
+   (Vitals, Labs, Nurse's notes, MAR) and an explanation for every choice. Shown only when the RN path has
+   "Nursing school RN" selected (nSchoolOn); working RN, flight nurse and EMS paths never see these items. */
+var NGN_STEP = ["", "Recognize cues", "Analyze cues", "Prioritize hypotheses", "Generate solutions", "Take action", "Evaluate outcomes"];
+var NG = { i: -1, sel: null, done: false, tab: "", score: null };
+function ngnOn() { return S.view === "level" && S.level === "rn" && typeof nSchoolOn === "function" && nSchoolOn(); }
+function ngnRec() { var P = Prog.d; P.ngn = P.ngn || {}; return P.ngn; }
+function ngnMax(it) {
+  if (it.type === "bowtie") return 5;
+  if (it.type === "matrix") return it.rows.length;
+  if (it.type === "sata") return it.opts.filter(function (o) { return o[1]; }).length;
+  if (it.type === "selectn") return it.n;
+  if (it.type === "highlight") return it.segs.filter(function (s) { return s[1] === 1; }).length;
+  if (it.type === "hltable") return it.cells.filter(function (c) { return c[3]; }).length;
+  if (it.type === "cloze") return it.drops.length;
+  return 1;
+}
+function ngnScore(it, sel) {
+  var pm = function (list, isRight) { var s = 0; Object.keys(sel).forEach(function (k) { if (!sel[k]) return; s += isRight(+k) ? 1 : -1; }); return Math.max(0, s); };
+  if (it.type === "bowtie") { var s = 0; ["cond", "act", "mon"].forEach(function (g) { Object.keys(sel[g] || {}).forEach(function (k) { if (sel[g][k] && it[g][+k][1]) s++; }); }); return s; }
+  if (it.type === "matrix") return it.rows.filter(function (r, i) { return sel[i] === r[1]; }).length;
+  if (it.type === "sata") return pm(it.opts, function (i) { return it.opts[i][1]; });
+  if (it.type === "selectn") return Object.keys(sel).filter(function (k) { return sel[k] && it.opts[+k][1]; }).length;
+  if (it.type === "highlight") return pm(it.segs, function (i) { return it.segs[i][1] === 1; });
+  if (it.type === "hltable") return pm(it.cells, function (i) { return it.cells[i][3]; });
+  if (it.type === "cloze") return it.drops.filter(function (d, i) { return sel[i] != null && d[sel[i]][1]; }).length;
+  if (it.type === "mcq") return sel.pick != null && it.opts[sel.pick][1] ? 1 : 0;
+  if (it.type === "calc") return String(sel.v || "").trim().replace(/^\+/, "") === it.ans ? 1 : 0;
+  return 0;
+}
+function ngnReady(it, sel) {
+  if (it.type === "bowtie") { var n = function (g) { return Object.keys(sel[g] || {}).filter(function (k) { return sel[g][k]; }).length; }; return n("cond") === 1 && n("act") === 2 && n("mon") === 2; }
+  if (it.type === "matrix") return it.rows.every(function (r, i) { return sel[i] != null; });
+  if (it.type === "selectn") return Object.keys(sel).filter(function (k) { return sel[k]; }).length === it.n;
+  if (it.type === "cloze") return it.drops.every(function (d, i) { return sel[i] != null; });
+  if (it.type === "mcq") return sel.pick != null;
+  if (it.type === "calc") return /\S/.test(sel.v || "");
+  return Object.keys(sel).some(function (k) { return sel[k]; });
+}
+var NGN_RULE = { bowtie: "1 point for each correct choice.", matrix: "1 point for each row.", sata: "Plus/minus scoring: 1 point for each correct choice, minus 1 for each incorrect choice, never below 0.", selectn: "1 point for each correct choice.", highlight: "Plus/minus scoring: 1 point for each correct highlight, minus 1 for each incorrect one, never below 0.", hltable: "Plus/minus scoring: 1 point for each correct highlight, minus 1 for each incorrect one, never below 0.", cloze: "1 point for each drop-down.", mcq: "1 point.", calc: "1 point for the exact answer with the rounding asked for." };
+function ngnChart(it) {
+  var C = it.chart; if (!C) return "";
+  var tabs = [["vitals", "Vitals"], ["labs", "Labs"], ["notes", "Nurse's notes"], ["mar", "MAR"]].filter(function (t) { return C[t[0]]; });
+  if (!tabs.length) return "";
+  var cur = tabs.some(function (t) { return t[0] === NG.tab; }) ? NG.tab : (it.trend && C.vitals ? "vitals" : it.trend && C.labs ? "labs" : C.notes ? "notes" : tabs[0][0]);
+  var tbl = function (rows) { return '<div class="ngtw"><table class="ngt"><tr>' + rows[0].map(function (h) { return "<th>" + esc(h) + "</th>"; }).join("") + "</tr>" + rows.slice(1).map(function (r) { return "<tr>" + r.map(function (c, j) { var flag = rows[0].length === 4 && j === 3 && (c === "H" || c === "L"); return "<td" + (flag ? ' class="ngflag"' : "") + ">" + esc(c) + "</td>"; }).join("") + "</tr>"; }).join("") + "</table></div>"; };
+  var body = cur === "notes" ? '<p class="ngnote">' + esc(C.notes) + "</p>" : tbl(C[cur]);
+  return '<div class="ngchart"><div class="ngtabs" role="tablist">' + tabs.map(function (t) { return '<button role="tab" aria-selected="' + (t[0] === cur) + '" class="' + (t[0] === cur ? "on" : "") + '" data-ngtab="' + t[0] + '">' + t[1] + "</button>"; }).join("") + '</div><div class="ngbody">' + (it.trend && (cur === "vitals" || cur === "labs") ? '<p class="small muted">Trend over time: compare the columns.</p>' : "") + body + "</div></div>";
+}
+function ngnItemHtml(it) {
+  var sel = NG.sel, done = NG.done, c = "";
+  var mark = function (right, picked) { return done ? (right ? (picked ? " ngok" : " ngmiss") : picked ? " ngbad" : "") : picked ? " on" : ""; };
+  var why = function (t, right) { return done ? '<span class="ngwhy' + (right ? " r" : "") + '">' + (right ? "✓ " : "✕ ") + esc(t) + "</span>" : ""; };
+  if (it.type === "bowtie") {
+    var col = function (g, title, need) { return '<div class="ngbcol ngb-' + g + '"><h4>' + title + ' <small>(choose ' + need + ')</small></h4>' + it[g].map(function (o, i) { var p = !!(sel[g] && sel[g][i]); return '<button class="ngopt' + mark(o[1], p) + '" data-ngbt="' + g + "," + i + '"' + (done ? " disabled" : "") + ">" + esc(o[0]) + why(o[2], o[1]) + "</button>"; }).join("") + "</div>"; };
+    var picked = function (g) { return it[g].filter(function (o, i) { return sel[g] && sel[g][i]; }).map(function (o) { return '<span class="ngslot">' + esc(o[0]) + "</span>"; }).join("") || '<span class="ngslot empty">…</span>'; };
+    c += '<div class="ngbow"><div class="ngbl">' + picked("act") + '</div><div class="ngbc">' + picked("cond") + '</div><div class="ngbr">' + picked("mon") + "</div></div>";
+    c += '<div class="ngbcols">' + col("act", "Actions to take", 2) + col("cond", "Condition most likely", 1) + col("mon", "Parameters to monitor", 2) + "</div>";
+  } else if (it.type === "matrix") {
+    c += '<div class="ngtw"><table class="ngt ngmx"><tr><th></th>' + it.cols.map(function (h) { return "<th>" + esc(h) + "</th>"; }).join("") + "</tr>" + it.rows.map(function (r, i) {
+      return "<tr><th scope=\"row\">" + esc(r[0]) + "</th>" + it.cols.map(function (h, j) { var p = sel[i] === j; return '<td><button class="ngcell' + mark(r[1] === j, p) + '" data-ngmx="' + i + "," + j + '" aria-label="' + esc(r[0] + ": " + h) + '" aria-pressed="' + p + '"' + (done ? " disabled" : "") + ">" + (p ? "●" : "○") + "</button></td>"; }).join("") + "</tr>" + (done ? '<tr class="ngwhyrow"><td colspan="' + (it.cols.length + 1) + '">' + why(r[2], sel[i] === r[1]) + "</td></tr>" : "");
+    }).join("") + "</table></div>";
+  } else if (it.type === "sata" || it.type === "selectn" || it.type === "mcq") {
+    var multi = it.type !== "mcq";
+    c += '<div class="ngopts">' + it.opts.map(function (o, i) { var p = multi ? !!sel[i] : sel.pick === i; return '<button class="ngopt ' + (multi ? "chk" : "rad") + mark(o[1], p) + '" data-ngopt="' + i + '" aria-pressed="' + p + '"' + (done ? " disabled" : "") + '><span class="ngbox" aria-hidden="true"></span><span>' + esc(o[0]) + why(o[2], o[1]) + "</span></button>"; }).join("") + "</div>";
+  } else if (it.type === "highlight") {
+    c += '<p class="nghl">' + it.segs.map(function (s, i) { if (s[1] == null) return esc(s[0]) + " "; var p = !!sel[i]; return '<button class="nghs' + mark(s[1] === 1, p) + '" data-nghl="' + i + '" aria-pressed="' + p + '"' + (done ? " disabled" : "") + ">" + esc(s[0]) + "</button> "; }).join("") + "</p>";
+    if (done) c += '<div class="ngwhys">' + it.segs.filter(function (s) { return s[1] != null; }).map(function (s) { return '<p class="small">' + why(s[0] + " " + s[2], s[1] === 1) + "</p>"; }).join("") + "</div>";
+  } else if (it.type === "hltable") {
+    c += '<div class="ngtw"><table class="ngt"><tr>' + it.head.map(function (h) { return "<th>" + esc(h) + "</th>"; }).join("") + "</tr>" + it.cells.map(function (r, i) { var p = !!sel[i]; return '<tr><td>' + esc(r[0]) + '</td><td><button class="nghs' + mark(r[3], p) + '" data-nghl="' + i + '" aria-pressed="' + p + '"' + (done ? " disabled" : "") + ">" + esc(r[1]) + "</button></td><td>" + esc(r[2]) + "</td></tr>" + (done ? '<tr class="ngwhyrow"><td colspan="3">' + why(r[4], r[3]) + "</td></tr>" : ""); }).join("") + "</table></div>";
+  } else if (it.type === "cloze") {
+    c += '<p class="ngcloze">' + it.text.map(function (t) {
+      if (typeof t === "string") return esc(t);
+      var D = it.drops[t], v = sel[t];
+      return '<select class="pinput ngsel' + (done ? (v != null && D[v][1] ? " ngok" : " ngbad") : "") + '" data-ngdrop="' + t + '" aria-label="Drop-down ' + (t + 1) + '"' + (done ? " disabled" : "") + '><option value="">Select…</option>' + D.map(function (o, j) { return '<option value="' + j + '"' + (v === j ? " selected" : "") + ">" + esc(o[0]) + "</option>"; }).join("") + "</select>";
+    }).join("") + "</p>";
+    if (done) c += '<div class="ngwhys">' + it.drops.map(function (D) { return D.map(function (o) { return '<p class="small">' + why(o[0] + ": " + o[2], o[1]) + "</p>"; }).join(""); }).join("") + "</div>";
+  } else if (it.type === "calc") {
+    c += '<div class="ngcalc"><input class="pinput" inputmode="decimal" autocomplete="off" data-ngcalc="1" value="' + esc(sel.v || "") + '" aria-label="Your answer in ' + esc(it.unit) + '"' + (done ? " disabled" : "") + '> <b>' + esc(it.unit) + "</b></div>";
+    if (done) c += '<p class="ngwhy' + (ngnScore(it, sel) ? " r" : "") + '">' + (ngnScore(it, sel) ? "✓ " : "✕ Correct answer: " + esc(it.ans) + " " + esc(it.unit) + ". ") + esc(it.why) + "</p>";
+  }
+  return c;
+}
+function ngnView() {
+  if (!ngnOn()) return '<div class="empty">NGN practice is part of the Nursing School path. Pick Nursing school RN to use it.</div>';
+  var R = ngnRec();
+  if (NG.i < 0) {
+    var done = NGN_ITEMS.filter(function (it) { return R[it.id]; }).length;
+    var c = '<div class="nghead"><h2>NGN Practice</h2><p class="muted small">Next Generation NCLEX formats with a patient chart, partial-credit scoring and an explanation for every choice. ' + NGN_ITEMS.length + ' items in this starter set (' + done + ' done). More NGN items and case studies are on the way.</p><button class="btn" data-ngstart="next">' + (done && done < NGN_ITEMS.length ? "Continue" : "Start") + '</button> <button class="btn ghost" data-ngtoq="1">Back to Questions</button></div>';
+    var groups = {}; NGN_ITEMS.forEach(function (it, i) { (groups[it.fmt] = groups[it.fmt] || []).push(i); });
+    c += '<ol class="nglist">' + NGN_ITEMS.map(function (it, i) { var r = R[it.id]; return '<li><button class="ngrow" data-ngstart="' + i + '"><span><b>' + esc(it.title) + '</b><small>' + esc(it.fmt) + '</small></span><span class="ngsc">' + (r ? "✓ " + r.best + "/" + ngnMax(it) : "") + "</span></button></li>"; }).join("") + "</ol>";
+    return c;
+  }
+  var it = NGN_ITEMS[NG.i], sc = NG.done ? ngnScore(it, NG.sel) : 0, mx = ngnMax(it);
+  var c2 = '<div class="ngitem"><div class="ngtop"><button class="btn small ghost" data-ngback="1">← All items</button><span class="ngfmt">' + esc(it.fmt) + " · " + (NG.i + 1) + " of " + NGN_ITEMS.length + (NGN_STEP[it.step] ? "<small>" + NGN_STEP[it.step] + "</small>" : "") + "</span></div>";
+  c2 += ngnChart(it) + '<p class="ngstem"><b>' + esc(it.stem) + "</b></p>" + ngnItemHtml(it);
+  if (!NG.done) c2 += '<p class="small muted">' + esc(NGN_RULE[it.type]) + '</p><div class="actions"><button class="btn" data-ngsubmit="1"' + (ngnReady(it, NG.sel) ? "" : " disabled") + ">Submit</button></div>";
+  else c2 += '<div class="explain ' + (sc === mx ? "ok" : "") + '"><strong>' + sc + " of " + mx + (mx === 1 ? " point" : " points") + "</strong>" + (NG.earn ? ' <span class="earned">' + stkLine(NG.earn, NG.earn * STK_PTS) + "</span>" : "") + '<br><span class="small">' + esc(NGN_RULE[it.type]) + '</span></div><div class="actions">' + (NG.i < NGN_ITEMS.length - 1 ? '<button class="btn" data-ngstart="' + (NG.i + 1) + '">Next item</button>' : '<button class="btn" data-ngback="1">Finish</button>') + '<button class="btn ghost" data-ngstart="' + NG.i + '">Try again</button></div>';
+  return c2 + "</div>";
+}
+function ngnStart(i) { NG.i = i; NG.sel = NGN_ITEMS[i].type === "bowtie" ? { cond: {}, act: {}, mon: {} } : {}; NG.done = false; NG.tab = ""; NG.earn = 0; }
+document.addEventListener("click", function (e) {
+  if (!ngnActive()) return;
+  var t = e.target.closest && e.target.closest("[data-ngstart],[data-ngback],[data-ngtab],[data-ngbt],[data-ngmx],[data-ngopt],[data-nghl],[data-ngsubmit]"); if (!t) return;
+  e.preventDefault(); e.stopPropagation();
+  var qi = ngnSync(), it = qi || (NG.i >= 0 && S.tab === "ngn" ? NGN_ITEMS[NG.i] : null), sel = NG.sel;
+  if (t.hasAttribute("data-ngstart")) { var v = t.getAttribute("data-ngstart"), R = ngnRec(); if (v === "next") { var n = NGN_ITEMS.findIndex(function (x) { return !R[x.id]; }); v = n < 0 ? 0 : n; } ngnStart(+v); render(); window.scrollTo(0, 0); return; }
+  if (t.hasAttribute("data-ngback")) { NG.i = -1; render(); window.scrollTo(0, 0); return; }
+  if (t.hasAttribute("data-ngtab")) { NG.tab = t.getAttribute("data-ngtab"); if (qi && NG.qs) NG.qs.tab = NG.tab; render(); return; }
+  if (!it || NG.done) return;
+  if (t.hasAttribute("data-ngbt")) { var p = t.getAttribute("data-ngbt").split(","), g = p[0], k = +p[1], need = g === "cond" ? 1 : 2, G = sel[g];
+    if (G[k]) delete G[k]; else { if (need === 1) sel[g] = G = {}; if (Object.keys(G).length >= need) return; G[k] = 1; } render(); return; }
+  if (t.hasAttribute("data-ngmx")) { var q = t.getAttribute("data-ngmx").split(","); sel[+q[0]] = +q[1]; render(); return; }
+  if (t.hasAttribute("data-ngopt")) { var o = +t.getAttribute("data-ngopt"); if (it.type === "mcq") sel.pick = o; else if (sel[o]) delete sel[o]; else { if (it.type === "selectn" && Object.keys(sel).filter(function (x) { return sel[x]; }).length >= it.n) return; sel[o] = 1; } render(); return; }
+  if (t.hasAttribute("data-nghl")) { var h = +t.getAttribute("data-nghl"); if (sel[h]) delete sel[h]; else sel[h] = 1; render(); return; }
+  if (t.hasAttribute("data-ngsubmit")) {
+    if (!ngnReady(it, sel)) return;
+    NG.done = true; var sc = ngnScore(it, sel), mx = ngnMax(it), R2 = ngnRec(), first = !R2[it.id];
+    R2[it.id] = { best: Math.max((R2[it.id] || {}).best || 0, sc), last: Date.now(), n: ((R2[it.id] || {}).n || 0) + 1 };
+    /* sticks: 2 per point the first time, 1 per point on later tries; they earn agency points like other study */
+    NG.earn = sc ? sc * (first ? 2 : 1) : 0; if (NG.earn) earn(NG.earn, "ngn");
+    if (qi && NG.qs) { NG.qs.done = true; NG.qs.earn = NG.earn; S.nr.ans[S.nr.i] = { sc: sc, mx: mx, ngn: it.id }; S.nr.just = S.nr.i; }
+    Prog.d.xp = (Prog.d.xp || 0) + 5 * sc; try { feedback(sc === mx); } catch (x) {}
+    saveProg(); render(); return;
+  }
+}, true);
+document.addEventListener("change", function (e) {
+  if (!ngnActive()) return; var qd = ngnSync(); if ((!qd && NG.i < 0) || NG.done) return;
+  var s = e.target.closest && e.target.closest("[data-ngdrop]"); if (s) { NG.sel[+s.getAttribute("data-ngdrop")] = s.value === "" ? null : +s.value; render(); }
+});
+document.addEventListener("input", function (e) {
+  if (!ngnActive()) return; var qc = ngnSync(); if ((!qc && NG.i < 0) || NG.done) return;
+  var s = e.target.closest && e.target.closest("[data-ngcalc]"); if (s) { NG.sel.v = s.value; var b = document.querySelector("[data-ngsubmit]"); if (b) b.disabled = !/\S/.test(s.value); }
+});
+STK_NAMES.ngn = "NGN practice";
+
+/* ===== Tap your specialty bug to change level (owner, Nov 21 2026) =====
+   "You should be able to click this specialty bug and it will bring you back to the carousel to pick EMT, AEMT,
+   Paramedic, Nursing school stuff like that." The bug on the level banner still does its little hop, then the
+   app opens that route's level carousel with the current level in front. */
+function lvSwitchTo() {
+  if (S.view !== "level" || !S.level) return;
+  var r = routeOfLevel(S.level), v = ROUTES[r] && ROUTES[r].view; if (!v) return;
+  try { store("lastLevel", S.level); } catch (e) {}
+  S.obI = null; S.lvWheelFor = null; S.lvGrid = false;
+  go(v); try { window.scrollTo(0, 0); } catch (e) {}
+}
+document.addEventListener("click", function (e) {
+  var b = e.target.closest && e.target.closest(".band .bugstage"); if (!b || S.view !== "level") return;
+  e.preventDefault();
+  setTimeout(lvSwitchTo, typeof funOn === "function" && funOn() ? 380 : 0);
+}, true);
+document.addEventListener("keydown", function (e) {
+  var b = e.target.closest && e.target.closest(".band .bugstage"); if (!b || S.view !== "level" || (e.key !== "Enter" && e.key !== " ")) return;
+  e.preventDefault(); lvSwitchTo();
+});
+(function () {
+  var r0 = render;
+  render = function () { var x = r0.apply(this, arguments); try { var st = document.querySelector(".band .bugstage"); if (st && S.view === "level" && !st.hasAttribute("role")) { st.setAttribute("role", "button"); st.setAttribute("tabindex", "0"); st.setAttribute("aria-label", "Change level"); st.setAttribute("title", "Change level"); } } catch (e) {} return x; };
+})();
+/* picking RN from the nursing carousel always asks which RN (owner, Nov 21 2026: "When I click nurse its not letting
+   me select what kind of nurse"): Nursing school RN or the departments, with the current choices already ticked */
+document.addEventListener("click", function (e) {
+  var b = e.target.closest && e.target.closest('[data-level="rn"]'); if (!b) return;
+  if (S.view === "level") return;
+  S.rnDept = 1; S.rnPick = null;
+}, true);
+
+/* ===== NGN inside the NCLEX-style questions (owner, Nov 21 2026) =====
+   "Include the NGN with the NCLEX style questions for nursing students only." On the RN path with Nursing school RN
+   selected, an NCLEX-style test now mixes in NGN items (about 1 in 6, ones you haven't done first) between the other
+   questions, never inside a case study. Each one runs in the test with its chart, partial-credit score and explanations;
+   full credit counts as correct in the score. Everyone else's tests are unchanged. */
+function ngnQuizX() { var st = S.nr; if (!st || st.phase !== "quiz" || !st.qs) return null; var x = st.qs[st.i]; return x && x.q && x.q.ngn ? x : null; }
+function ngnActive() { return (S.view === "level" && S.tab === "ngn") || !!ngnQuizX(); }
+function ngnSync() {
+  var x = ngnQuizX(); if (!x) return null; var st = S.nr; st.ngs = st.ngs || {};
+  var s = st.ngs[st.i] || (st.ngs[st.i] = { sel: x.q.ngn.type === "bowtie" ? { cond: {}, act: {}, mon: {} } : {}, done: false, tab: "", earn: 0 });
+  NG.sel = s.sel; NG.done = s.done; NG.tab = s.tab; NG.earn = s.earn || 0; NG.qs = s; return x.q.ngn;
+}
+function ngnStudent() { return S.view === "level" && S.level === "rn" && typeof nSchoolOn === "function" && nSchoolOn(); }
+var NGN_CJ = ["", "cues", "analyze", "prior", "solve", "act", "eval"];
+function ngnPseudo(it) { return { ngn: it, id: it.id, lv: "rn", reg: true, cat: "pharm", q: it.stem, a: "Full credit", x: "Next Gen NCLEX item (" + it.fmt + "). Open NGN practice from Questions to review it.", _cj: NGN_CJ[it.step] || "analyze" }; }
+(function () {
+  var s0 = nrStart;
+  nrStart = function (qs) {
+    var keep = (qs || []).filter(function (q) { return q && q.ngn; }), base = (qs || []).filter(function (q) { return !(q && q.ngn); });
+    var r = s0.call(this, base), st = S.nr;
+    try {
+      var adds = keep.slice();
+      if (!adds.length && st && st.kind === "reg" && ngnStudent() && base.length >= 5) {
+        var R = ngnRec(), want = Math.max(1, Math.round(base.length / 6));
+        adds = shuffle(NGN_ITEMS.slice()).sort(function (a, b) { var ra = R[a.id], rb = R[b.id]; return (ra ? 1 + (ra.best || 0) / ngnMax(a) : 0) - (rb ? 1 + (rb.best || 0) / ngnMax(b) : 0); }).slice(0, want).map(ngnPseudo);
+      }
+      if (adds.length && st && st.qs) {
+        var L = st.qs;
+        if (!keep.length) for (var d = 0, z = L.length - 1; d < adds.length && z >= 0; z--) { if (!L[z].q.cs) { L.splice(z, 1); d++; } }   /* same test length you picked: NGN items take the place of regular ones */
+        var step = Math.max(2, Math.floor(L.length / (adds.length + 1)));
+        adds.forEach(function (q, n) {
+          var at = Math.min(L.length, (n + 1) * step + n);
+          while (at > 0 && at < L.length && L[at - 1].q.cs && L[at].q.cs && L[at - 1].q.csTitle === L[at].q.csTitle) at++;   /* never inside a case study */
+          L.splice(at, 0, { q: q, opts: [] });
+        });
+      }
+    } catch (e) {}
+    return r;
+  };
+  var r0 = nrRight; nrRight = function (x, ans) { if (x && x.q && x.q.ngn) return !!(ans && ans.mx && ans.sc === ans.mx); return r0(x, ans); };
+  var t0 = nrAnsText; nrAnsText = function (x, ans) { if (ans && ans.mx != null && ans.ngn) return ans.sc + " of " + ans.mx + " points"; return t0(x, ans); };
+  var q0 = nrQuiz;
+  nrQuiz = function (st) {
+    var x = st.qs[st.i]; if (!x || !x.q || !x.q.ngn) return q0(st);
+    var it = ngnSync(), total = st.qs.length, a = st.ans[st.i], done = NG.done;
+    var c = '<section class="quiz ngquiz"><div class="qtop"><span class="lbl">Question ' + (st.i + 1) + ' of ' + total + ' <span class="ngpill">NGN · ' + esc(it.fmt) + '</span> ' + cjTag(x.q) + '</span></div>';
+    c += '<div class="prog"><i style="width:' + Math.round(100 * (st.i + (done ? 1 : 0)) / total) + '%"></i></div>';
+    c += ngnChart(it) + '<p class="ngstem"><b>' + esc(it.stem) + '</b></p>' + ngnItemHtml(it);
+    if (!done) return c + '<p class="small muted">' + esc(NGN_RULE[it.type]) + '</p><div class="actions"><button class="btn" data-ngsubmit="1"' + (ngnReady(it, NG.sel) ? "" : " disabled") + '>Submit</button>' + (st.i > 0 ? '<button class="btn ghost" data-act="nrprev">← Previous question</button>' : '') + '</div></section>';
+    c += '<div class="explain ' + (a && a.sc === a.mx ? "ok" : "bad") + '"><strong>' + (a ? a.sc : 0) + " of " + (a ? a.mx : ngnMax(it)) + (a && a.mx === 1 ? " point" : " points") + '</strong>' + (NG.earn ? ' <span class="earned">' + stkLine(NG.earn, NG.earn * STK_PTS) + '</span>' : '') + '<br><span class="small">' + esc(NGN_RULE[it.type]) + (a && a.sc !== a.mx ? " Full credit counts as correct in your score." : "") + '</span></div>';
+    c += '<div class="actions">' + (st.i > 0 ? '<button class="btn ghost" data-act="nrprev">← Previous question</button>' : '') + (st.i < total - 1 ? '<button class="btn" data-act="nrnext">Next question</button>' : '<button class="btn" data-act="nrfinish">See my score</button>') + '</div>';
+    return c + '</section>';
+  };
+})();
+/* the NCLEX-style deck says it includes NGN items, with a way to practice them on their own */
+function ngnPrepNote() {
+  if (!ngnStudent()) return "";
+  return '<div class="ngprep"><span class="ngpill">NGN</span><span>NCLEX-style tests include <b>Next Gen NCLEX items</b> (bow-tie, matrix, chart highlights, drop-downs, trends and dosage calculations), about 1 in 6. <button class="linkish" data-ngonly="1">Practice the ' + NGN_ITEMS.length + ' NGN items on their own</button></span></div>';
+}
+document.addEventListener("click", function (e) { var b = e.target.closest && e.target.closest("[data-ngonly]"); if (!b) return; e.preventDefault(); NG.i = -1; S.tab = "ngn"; render(); window.scrollTo(0, 0); });
+document.addEventListener("click", function (e) { var b = e.target.closest && e.target.closest("[data-ngtoq]"); if (!b) return; e.preventDefault(); S.tab = "prep"; render(); window.scrollTo(0, 0); });
+
+/* Nursing school: Graduation Report, coming soon (owner, Nov 22 2026: "when they graduate they can see where they did
+   poorly and did well and get it printed out when they graduate"). A note only; nothing is built or promised by date. */
+(function () {
+  var r0 = render;
+  render = function () {
+    var x = r0.apply(this, arguments);
+    try {
+      if (S.view === "level" && S.level === "rn" && S.tab === "hub" && typeof ngnOn === "function" && ngnOn() && !document.querySelector(".gradsoon")) {
+        var band = document.querySelector(".band"); if (band && band.parentNode) {
+          var d = document.createElement("div"); d.className = "gradsoon";
+          d.innerHTML = '<span class="gsic" aria-hidden="true">🎓</span><div><b>Coming soon: your Graduation Report</b><span>When you graduate, see where you did well and where you struggled across nursing school: drug classes, body systems, clinical judgment steps and NGN formats. Print it out or save it as a PDF.</span></div>';
+          band.parentNode.insertBefore(d, band.nextSibling);
+        }
+      }
+    } catch (e) {}
+    return x;
+  };
+})();
+
 
 })();
