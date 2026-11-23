@@ -11209,7 +11209,9 @@ function muStart(force) {
   } catch (e) { MU.playing = false; clearInterval(MU.timer); MU.timer = null; }
 }
 function muStop() {
-  clearInterval(MU.timer); MU.timer = null; MU.playing = false; muSession();
+  clearInterval(MU.timer); MU.timer = null; MU.playing = false; muSession(); clearTimeout(MU.preT);
+  /* music off for a minute: let the decoded songs go (owner, Nov 23 2026) */
+  clearTimeout(MU.freeT); MU.freeT = setTimeout(function () { if (!MU.playing) { MU.fbufs = {}; MU.nextId = null; } }, 60000);
   /* the context is shared with every sound effect now, so it stays running: just close the
      music bus. Suspending it here used to mute the whole app until the next tap. */
   try { var c = MU.ctx; if (c && MU.master) { MU.master.gain.cancelScheduledValues(c.currentTime); MU.master.gain.setTargetAtTime(0.0001, c.currentTime, 0.08); } } catch (e) {}
@@ -11390,7 +11392,10 @@ function muFile(T) {
     try { g.gain.setValueCurveAtTime(muCurve(0, lvl), c.currentTime, xf); } catch (e) { g.gain.setValueAtTime(lvl, c.currentTime); }
     s.connect(g); g.connect(MU.fileOut); s.start(); f.src = s; f.g = g; f.lvl = lvl;
     if (muListOn()) {
-      MU.nextId = muPeekNext(); if (MU.nextId) muLoadBuf(trackById(MU.nextId)).catch(function () {});
+      /* the next song is decoded only ~25 s before it's needed, not for the whole song: a decoded song is ~50 MB and
+         holding two of them was a likely reason iOS reset the app (owner, Nov 23 2026) */
+      MU.nextId = muPeekNext(); clearTimeout(MU.preT);
+      if (MU.nextId) { var nid = MU.nextId; MU.preT = setTimeout(function () { if (MU.file === f && MU.nextId === nid) muLoadBuf(trackById(nid)).catch(function () {}); }, Math.max(0, (buf.duration - MU_XF - 25) * 1000)); }
       clearTimeout(MU.advT); MU.advT = setTimeout(function () { if (MU.file === f && muListOn() && !f.adv) { f.adv = 1; muNext(); } }, Math.max(1000, (buf.duration - MU_XF - 0.3) * 1000));
     }
     f.t0 = c.currentTime; f.len = buf.duration; f.bpm = T.bpm || 0; danceStart(f);
@@ -40440,6 +40445,143 @@ document.addEventListener("click", function (e) { var b = e.target.closest && e.
     } catch (e) {}
     return x;
   };
+})();
+
+
+
+/* ===== Come back where you were, restart log, car and headphone controls (owner, Nov 23 2026: "Why does the app
+   sometimes kinda glitch and restart", "when I connect my phone to bluetooth ... it changes the audio to say app and
+   it uses its files"). ----------------------------------------------------------------------------------------------
+   1. iOS can shut down the web part of the iPhone app (most often low memory). The app then reloads with ?resume=1.
+      The screen you were on is remembered, so the reload puts you back there instead of on the home screen.
+   2. Each of those reloads is logged to the owner's error dashboard (what screen, how long the app had been open),
+      so we can see how often and where it happens. No account, name or question text.
+   3. Car / Bluetooth / lock-screen controls: DrugBug shows as "DrugBug" (not "app"), a Play from the car never starts
+      DrugBug's music, and Pause from the car stops it. ---------------------------------------------------------- */
+(function () {
+  var RS_MAX = 30 * 60000, spotT = 0, NOSAVE = { legal: 1, fire: 1 };
+  function spotSave() {
+    try {
+      clearTimeout(spotT); spotT = 0;
+      if (!S || !S.view || NOSAVE[S.view]) return;
+      store("resumeSpot", { v: S.view, l: S.level || null, t: S.tab || null, at: Date.now() });
+    } catch (e) {}
+  }
+  var r0 = render;
+  render = function () { var x = r0.apply(this, arguments); clearTimeout(spotT); spotT = setTimeout(spotSave, 700); return x; };   /* one small write after the screen settles */
+  document.addEventListener("visibilitychange", function () { if (document.hidden) spotSave(); });
+
+  var resumed = false;
+  try { resumed = /[?&]resume=1\b/.test((window.__DBQ || "") + "&" + location.search); } catch (e) {}   /* index.html keeps the start-up query in __DBQ */
+  if (resumed) {
+    var spot = null; try { spot = store("resumeSpot"); } catch (e) {}
+    /* log it: when and where iOS reset the app */
+    try {
+      var base = (window.DRUGBUG_CONFIG || {}).functionsUrl;
+      if (base) fetch(base.replace(/\/$/, "") + "/clientErr", { method: "POST", headers: { "Content-Type": "application/json" }, keepalive: true,
+        body: JSON.stringify({ data: { m: "iOS reset the app (web content restarted)", src: "resume", line: 0, col: 0,
+          stack: "last screen: " + (spot ? [spot.v, spot.l, spot.t].filter(Boolean).join(" / ") + ", " + Math.round((Date.now() - spot.at) / 1000) + " s before" : "unknown"),
+          view: spot && spot.v || "", v: (typeof window.__dbVer === "string" ? window.__dbVer : "") || "ios", plat: "ios" } }) }).catch(function () {});
+    } catch (e) {}
+    /* put them back where they were, once the start-up screens have had their turn */
+    if (spot && spot.v && spot.v !== "home" && Date.now() - (spot.at || 0) < RS_MAX) {
+      setTimeout(function () {
+        try {
+          if (S.view !== "home" && S.view !== "level") return;   /* a gate or onboarding is showing: leave it */
+          if (spot.v === "level" && spot.l) go("level", { level: spot.l }); else go(spot.v, spot.l ? { level: spot.l } : undefined);
+          if (spot.t && S.view === spot.v) { S.tab = spot.t; render(); }
+          window.scrollTo(0, 0);
+        } catch (e) { try { go("home"); } catch (e2) {} }
+      }, 400);
+    }
+  }
+
+  /* car, Bluetooth and lock-screen controls */
+  try {
+    var ms = navigator.mediaSession;
+    if (ms) {
+      try { if (typeof MediaMetadata === "function") ms.metadata = new MediaMetadata({ title: "DrugBug", artist: "DrugBug", album: "Bug music" }); } catch (e) {}
+      var noop = function () {};
+      ["play", "previoustrack", "nexttrack", "seekbackward", "seekforward", "seekto"].forEach(function (a) { try { ms.setActionHandler(a, noop); } catch (e) {} });
+      ["pause", "stop"].forEach(function (a) { try { ms.setActionHandler(a, function () { try { if (MU.playing) muStop(); } catch (e) {} try { ms.playbackState = "paused"; } catch (e) {} }); } catch (e) {} });
+      setInterval(function () { try { ms.playbackState = MU.playing ? "playing" : "none"; } catch (e) {} }, 3000);
+    }
+  } catch (e) {}
+})();
+
+
+
+/* ===== Scoreboard opens on National (owner, Nov 23 2026: "I need the score boards automatically displaying the
+   leadership for national then have a choice to click to view your team. But I want people to automatically see the
+   other people in the game"). Everyone, joined or not, lands on National: the top agencies (tap one to see its people)
+   and the top players this week. "My Team" shows what the Scoreboard showed before (your team, your class or your solo
+   week). The Agency Challenge panel opens on National too. ===== */
+(function () {
+  try { AGX.tab = "national"; } catch (e) {}
+  var HN = { tab: "nat", at: 0, busy: false, data: null, err: "" };
+  try { if (store("hvBoardTab") === "team") HN.tab = "team"; } catch (e) {}
+  function hnLoad(force) {
+    if (HN.busy || (!force && HN.data && Date.now() - HN.at < 120000)) return;
+    HN.busy = true; HN.err = "";
+    fnCall("agencyTier", { tier: "national" }).then(agxOk).then(function (r) {
+      HN.busy = false; HN.data = r; HN.at = Date.now(); if (r.tiers) try { store("agxTiers", r.tiers); } catch (e) {}
+      if (S.view === "stats") render();
+    }).catch(function (e) { HN.busy = false; HN.err = e && e.message === "offline" ? "The National board needs an internet connection." : "Couldn’t load the National board."; if (S.view === "stats") render(); });
+  }
+  function hnNational() {
+    hnLoad(false);
+    var D = HN.data, left = ""; try { left = hvWeekLeft(); } catch (e) {}
+    var c = '<section class="hvnat"><div class="hvshead"><span class="hvseye">National · this week</span><span class="hvsend">' + (left ? "Ends in " + esc(left) : "") + '</span></div>';
+    if (!D) return c + (HN.err ? '<p class="presult" role="alert">' + esc(HN.err) + '</p><p><button class="btn ghost" data-hnre="1">Try again</button></p>' : '<div class="axrload" role="status"><span class="axspin" aria-hidden="true"></span> Loading the National board…</div>') + '</section>';
+    var P = (D.players || []).filter(function (r) { return r.rank <= 25; }), R = D.rows || [];
+    var nP = HN.allP ? 25 : 10, nR = HN.allR ? 25 : 5;
+    c += '<h3 class="hvnh">Top players</h3>';
+    if (!P.length) c += '<p class="muted small">Nobody has points yet this week. Answer a few questions on a team and you’re on the board.</p>';
+    else {
+      c += agxPodium(P, function (r) { return r.nick; }, function (r) { return r.agency; }, function (r) { return r.pts; });
+      c += '<ol class="clboard axboard hvnpl">' + P.slice(0, nP).map(function (r) {
+        return '<li class="' + (r.me ? "me" : "") + (r.rank <= 3 ? " axtop" : "") + (r.aid ? ' axclick" data-hnag="' + esc(r.aid) + '" data-hnname="' + esc(r.agency) + '" tabindex="0" role="button" aria-label="' + esc(r.nick) + ' of ' + esc(r.agency) + ': see this team' : '') + '"><span class="clrk' + (r.rank <= 3 ? " r" + r.rank : "") + '">' + r.rank + '</span>' + agxAvArt(r.av) +
+          '<span class="clal">' + esc(r.nick) + (r.me ? ' <em>you</em>' : '') + '<small class="axsub">' + esc(r.agency || "") + (r.state ? " · " + esc(r.state) : "") + '</small></span>' +
+          '<span class="clsc"><b>' + num0(r.pts) + '</b><small>' + (r.acc != null ? r.acc + "% right" : "") + '</small></span></li>';
+      }).join("") + '</ol>';
+      if (P.length > 10) c += '<p><button class="btn ghost small" data-hnmore="p">' + (HN.allP ? "Show the top 10" : "See the top " + P.length) + '</button></p>';
+    }
+    c += '<h3 class="hvnh">Top agencies</h3>';
+    if (!R.length) c += '<p class="muted small">Agencies show up here as soon as their people earn points.</p>';
+    else c += '<ol class="clboard axboard hvnag">' + R.slice(0, nR).map(function (r) {
+      return '<li class="' + (r.mine ? "me " : "") + 'axclick" data-hnag="' + esc(r.id) + '" data-hnname="' + esc(r.name) + '" tabindex="0" role="button" aria-label="' + esc(r.name) + ': see who is on this team"><span class="clrk' + (r.rank <= 3 && r.top3 > 0 ? " r" + r.rank : "") + '">' + r.rank + '</span>' + agxAvArt(r.av) +
+        '<span class="clal">' + esc(r.name) + (r.mine ? ' <em>yours</em>' : '') + '<small class="axsub">' + esc(r.city || "") + (r.state ? ", " + esc(r.state) : "") + '</small></span><span class="clsc"><b>' + num0(r.top3) + '</b><small>' + (r.filled < 3 ? r.filled + " of 3 on the team" : "top 3") + '</small></span></li>';
+    }).join("") + '</ol>' + (R.length > 5 ? '<p><button class="btn ghost small" data-hnmore="a">' + (HN.allR ? "Show the top 5" : "See the top " + Math.min(25, R.length)) + '</button></p>' : '') + '<p class="muted small">Tap any agency or player to see everyone on that team. Agencies are ranked by their top 3 people’s points added together.</p>';
+    c += '</section>' + hnYou(D);
+    return c;
+  }
+  /* your place, under the boards, however far down it is (owner, Nov 23 2026) */
+  function hnYou(D) {
+    var Y = D.you, c = '<section class="hvnat hvyou"><div class="hvshead"><span class="hvseye">Your place this week</span></div>';
+    if (!Y) return c + '<div class="hvsme"><span class="hvsav">' + (function () { try { return myBugArt("lbbug", null, null, myStage()); } catch (e) { return ""; } })() + '</span><div><b>Not on a team yet</b><span>Pick your hospital, EMS agency, fire department or school and your right answers score points for your team.</span></div></div><button class="btn hvsjoin" data-openagency="1">Join a team</button></section>';
+    c += '<div class="hvyrow"><div><b>' + (Y.rank ? "#" + num0(Y.rank) : "–") + '</b><span>' + (Y.rank ? "of " + num0(Y.of) + " players" : "no points yet") + '</span></div><div><b>' + num0(Y.pts) + '</b><span>your points</span></div><div><b>' + (Y.agRank ? "#" + num0(Y.agRank) : "–") + '</b><span>' + (Y.agRank ? "of " + num0(Y.agOf) + " agencies" : "your agency") + '</span></div></div>';
+    c += '<p class="hvyag"><b>' + esc(Y.agency || "Your agency") + '</b>' + (Y.team ? ' · team score ' + num0(Y.team) : '') + '</p>';
+    if (!Y.rank) c += '<p class="muted small">Answer a few questions and you’ll show up on the board.</p>';
+    return c + '<button class="btn" data-hnag="' + esc(Y.aid) + '" data-hnname="' + esc(Y.agency || "") + '">See my team</button></section>';
+  }
+  var hv0 = hvBoard;
+  hvBoard = function () {
+    var tabs = '<div class="cltabs axtiers hvntabs" role="tablist"><button role="tab" aria-selected="' + (HN.tab === "nat") + '" class="' + (HN.tab === "nat" ? "on" : "") + '" data-hntab="nat">National</button><button role="tab" aria-selected="' + (HN.tab === "team") + '" class="' + (HN.tab === "team" ? "on" : "") + '" data-hntab="team">My Team</button>' + (HN.tab === "nat" ? '<button data-hnre="1" aria-label="Refresh">↻</button>' : '') + '</div>';
+    if (HN.tab === "team") return tabs + hv0();
+    return tabs + hnNational() + hvPrizeBox() + '<h2 class="hvsth">Your stats</h2>';
+  };
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest && e.target.closest("[data-hntab],[data-hnre],[data-hnag],[data-hnmore]"); if (!t) return;
+    if (t.hasAttribute("data-hnmore")) { if (t.getAttribute("data-hnmore") === "p") HN.allP = !HN.allP; else HN.allR = !HN.allR; render(); return; }
+    if (t.hasAttribute("data-hntab")) { HN.tab = t.getAttribute("data-hntab"); try { store("hvBoardTab", HN.tab === "team" ? "team" : null); } catch (x) {} render(); return; }
+    if (t.hasAttribute("data-hnre")) { hnLoad(true); render(); return; }
+    /* a team's people: the same roster window the Agency Challenge uses */
+    try { AGX.open = true; agxPane.hidden = false; AGX.msg = ""; AGX.err = false; agxRosterOpen(t.getAttribute("data-hnag"), t.getAttribute("data-hnname") || ""); try { agxLoad(false); } catch (x) {} } catch (x) {}
+  });
+  document.addEventListener("keydown", function (e) { if ((e.key === "Enter" || e.key === " ") && e.target && e.target.getAttribute && e.target.getAttribute("data-hnag")) { e.preventDefault(); e.target.click(); } });
+  var st = document.createElement("style");
+  st.textContent = '.hvntabs{margin:6px 0 10px}.hvnat{border:1.5px solid var(--line);border-radius:16px;padding:12px 14px;margin:8px 0;background:var(--surface)}.hvnh{margin:14px 0 6px;font-size:15px}.hvnat .axclick{cursor:pointer}.hvnat .clal{min-width:0}.hvnat .axsub{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hvyou{border-color:var(--accent,#7c5cff)}.hvyrow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0}.hvyrow div{display:flex;flex-direction:column;align-items:center;border:1.5px solid var(--line);border-radius:12px;padding:8px 4px}.hvyrow b{font-size:22px;font-variant-numeric:tabular-nums}.hvyrow span{font-size:12px;color:var(--muted);text-align:center}.hvyag{margin:6px 0}';
+  document.head.appendChild(st);
 })();
 
 
