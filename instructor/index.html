@@ -269,7 +269,7 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
     <div>
       <h2>See exactly where every student stands on their medications</h2>
       <p class="lead">DrugBug gives each of your students a private study app, and gives you a live dashboard: the exact questions your class misses most (and the wrong answer they chose), the medications and question styles they struggle with, and an optional class scoreboard.</p>
-      <div class="ctas"><a class="cta" href="#pilot">Start a free pilot</a><a class="cta2" href="#demo">See the demo dashboard</a></div>
+      <div class="ctas"><a class="cta" href="#pilot">Request a quote</a><a class="cta2" href="#demo">See the demo dashboard</a></div>
       <p class="muted small" style="margin-top:12px">DrugBug does not ask students for names or emails. Each student enters a class key, and DrugBug displays class results to you under the key label, such as Student 07. Results include scores and activity by medication and topic and may show missed questions and the answers selected. Keep your key-to-student list outside DrugBug.</p>
     </div>
     <ul class="feats">
@@ -284,8 +284,8 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
 </section>
 
 <section id="vPilot" class="card pilot hide">
-  <h2 id="pilot">Start a free pilot</h2>
-  <p class="muted small">Tell us about your program and we will set up a free pilot class, usually within a day. This opens an email to the DrugBug team with your details filled in.</p>
+  <h2 id="pilot">Request a quote</h2>
+  <p class="muted small">Tell us about your program and we will send you a quote, usually within a day. This opens an email to the DrugBug team with your details filled in.</p>
   <div class="row">
     <label>Program or school<input id="pProg" placeholder="e.g. Lone Star College Paramedic Program"></label>
     <label>Your name and role<input id="pName" placeholder="e.g. Program director"></label>
@@ -298,9 +298,9 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
   </div>
   <label style="margin-top:10px">Anything else<input id="pNote" placeholder="Optional"></label>
   <label class="muted small" style="display:flex;gap:8px;align-items:flex-start;margin-top:12px"><input type="checkbox" id="pAuth" style="width:auto;margin-top:3px"> <span>I am authorized to request or administer this class for my school or agency. I agree to the <a href="../terms.html">Terms of Use</a>. I will distribute class keys only to adults 18 and older and keep any key-to-student list out of DrugBug. The <a href="../privacy.html">Privacy Policy</a> explains how DrugBug handles class and account data.</span></label>
-  <p class="muted small" style="margin-top:6px">Institutional approval and any data agreement your school or agency requires are confirmed separately before a pilot class starts. Before students join, they are told who can see their results. Leaving a class stops new results from being shared with the class; to delete class data, a student or instructor sends a deletion request as described in the Privacy Policy.</p>
-  <div class="row" style="margin-top:12px"><button id="bPilot2">Send pilot request</button><span class="muted small">Or email <a href="mailto:VolareMediaLLC@gmail.com">VolareMediaLLC@gmail.com</a></span></div>
-  <p class="muted small" style="margin-top:8px">Classes are a free pilot under the <a href="../terms.html">Terms of Use</a> (sections 6 and 7) and the <a href="../privacy.html">Privacy Policy</a>. Class keys are for students 18 and older.</p>
+  <p class="muted small" style="margin-top:6px">Institutional approval and any data agreement your school or agency requires are confirmed separately before a class starts. Before students join, they are told who can see their results. Leaving a class stops new results from being shared with the class; to delete class data, a student or instructor sends a deletion request as described in the Privacy Policy.</p>
+  <div class="row" style="margin-top:12px"><button id="bPilot2">Send quote request</button><span class="muted small">Or email <a href="mailto:VolareMediaLLC@gmail.com">VolareMediaLLC@gmail.com</a></span></div>
+  <p class="muted small" style="margin-top:8px">Classes run under the <a href="../terms.html">Terms of Use</a> (sections 6 and 7) and the <a href="../privacy.html">Privacy Policy</a>. Class keys are for students 18 and older.</p>
 </section>
 
 <!-- signed out -->
@@ -320,7 +320,7 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
   <p id="inMsg" class="msg hide"></p>
   <label class="muted small" style="display:flex;gap:8px;align-items:flex-start"><input type="checkbox" id="upAuth" style="width:auto;margin-top:3px"> <span>Creating an account: I am authorized to request or administer this class for my school or agency. I agree to the <a href="../terms.html">Terms of Use</a>. I will distribute class keys only to adults 18 and older and keep any key-to-student list out of DrugBug. The <a href="../privacy.html">Privacy Policy</a> explains how DrugBug handles class and account data.</span></label>
   <p class="muted small">By signing in you agree to the <a href="../terms.html">Terms of Use</a> and <a href="../privacy.html">Privacy Policy</a>.</p>
-  <p class="muted small" style="margin-top:12px">New to DrugBug for instructors? <a href="./">See the demo dashboard</a> or start a free pilot.</p>
+  <p class="muted small" style="margin-top:12px">New to DrugBug for instructors? <a href="./">See the demo dashboard</a> or request a quote.</p>
 </section>
 
 <!-- owner overview -->
@@ -866,7 +866,7 @@ body.embed .mxhead .adm{display:none}
       questions: questions, qAnswered: 412, qMin: 3
     };
   }
-  var DEMO_MSG = "This is the demo. Nothing here is saved. Start a free pilot to get your own class.";
+  var DEMO_MSG = "This is the demo. Nothing here is saved. Request a quote to get your own class.";
   function demoCall(name, data) {
     var D = ST.demoData;
     if (name === "groupDashboard") return Promise.resolve(D);
@@ -903,8 +903,8 @@ body.embed .mxhead .adm{display:none}
     var v = function (id) { return ($(id).value || "").trim(); };
     if (!v("pProg") || !v("pMail")) { alert("Please add your program and work email."); return; }
     if (!$("pAuth").checked) { alert("Please check the authorization and Terms box first."); return; }
-    var body = "Hello DrugBug team,\n\nWe'd like to start a free pilot.\n\nProgram: " + v("pProg") + "\nName and role: " + v("pName") + "\nWork email: " + v("pMail") + "\nStudents: " + v("pN") + "\nLevel: " + v("pLv") + "\nStart date: " + v("pStart") + "\nNotes: " + v("pNote") + "\n";
-    location.href = "mailto:VolareMediaLLC@gmail.com?subject=" + encodeURIComponent("DrugBug pilot request: " + v("pProg")) + "&body=" + encodeURIComponent(body);
+    var body = "Hello DrugBug team,\n\nWe'd like a quote for DrugBug.\n\nProgram: " + v("pProg") + "\nName and role: " + v("pName") + "\nWork email: " + v("pMail") + "\nStudents: " + v("pN") + "\nLevel: " + v("pLv") + "\nStart date: " + v("pStart") + "\nNotes: " + v("pNote") + "\n";
+    location.href = "mailto:VolareMediaLLC@gmail.com?subject=" + encodeURIComponent("DrugBug quote request: " + v("pProg")) + "&body=" + encodeURIComponent(body);
   };
 
   /* ---------- sign in ---------- */
