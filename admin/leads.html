@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Leads · DrugBug</title>
+<style>
+/* Sales leads (owner, Nov 23 2026). Data: leadList / leadGet / leadLog / leadSet / leadAdd / salesLog / salesCodeMake
+   (functions/sales.js). Only the owner and the sales/outreach team can open any of it. */
+:root{--bg:#13111c;--surface:#1d1a2a;--surface2:#251f37;--ink:#f2effb;--muted:#aaa3c4;--line:#322c47;--accent:#a78bfa;--teal:#2dd4bf;--good:#34d399;--warn:#fbbf24;--bad:#f87171}
+@media (prefers-color-scheme:light){:root{--bg:#f6f4fc;--surface:#fff;--surface2:#f1edfa;--ink:#1c1730;--muted:#5f5878;--line:#e2dcef;--accent:#6d28d9;--teal:#0f766e;--good:#047857;--warn:#b45309;--bad:#b91c1c}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1000px;margin:0 auto;padding:16px 16px 50px}
+body.embed .wrap{padding-top:4px}
+h1{font-size:22px;margin:0}h2{font-size:17px;margin:0 0 6px}h3{font-size:14px;margin:12px 0 6px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.sub{color:var(--muted);margin:2px 0 14px;font-size:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+input,select{font:inherit;font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:8px 10px;min-width:0}
+input{flex:1 1 220px}
+.btn{font:inherit;font-weight:700;font-size:14px;padding:8px 14px;border-radius:10px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn:disabled{opacity:.5}
+.msg{font-size:14px;margin:8px 0 0;min-height:1.2em}.msg.err{color:var(--bad)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.kpi{background:var(--surface2);border-radius:10px;padding:10px 12px}.kpi b{display:block;font-size:24px;line-height:1.1}.kpi span{font-size:12.5px;color:var(--muted)}
+.kpi.hi{outline:2px solid var(--good)}
+.days{display:flex;align-items:flex-end;gap:3px;height:70px;margin-top:6px}
+.days i{flex:1;min-width:4px;background:var(--teal);border-radius:3px 3px 0 0;opacity:.85}
+.days i.z{background:var(--line);height:2px!important}
+.dlab{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted)}
+ul.rec{list-style:none;margin:0;padding:0;display:grid;gap:4px;font-size:14px}ul.rec time{color:var(--muted);font-size:12.5px;margin-right:8px}
+table{width:100%;border-collapse:collapse;font-size:14px}td{padding:8px 0;border-top:1px solid var(--line);vertical-align:top}td.r{text-align:right;white-space:nowrap}
+.linkish{font:inherit;font-size:13px;background:none;border:0;color:var(--accent);cursor:pointer;padding:0;text-decoration:underline}
+.muted{color:var(--muted)}.small{font-size:13px}
+
+textarea{font:inherit;font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:8px 10px;width:100%;min-height:90px}
+.tabs{display:flex;gap:6px;margin:0 0 12px;flex-wrap:wrap}.tabs button{font:inherit;font-weight:700;font-size:14px;padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}.tabs button[aria-selected=true]{background:var(--accent);border-color:var(--accent);color:#fff}
+.lead{display:grid;grid-template-columns:1fr auto;gap:4px 12px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);margin-bottom:8px;cursor:pointer}
+.lead:hover,.lead:focus{border-color:var(--accent);outline:none}
+.lead b{font-size:15px}.lead .m{color:var(--muted);font-size:13px}.lead .r{text-align:right;font-size:13px;color:var(--muted);white-space:nowrap}
+.chip{display:inline-block;font-size:11.5px;font-weight:700;border-radius:999px;padding:1px 8px;margin-right:6px;background:var(--surface2);color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.st-new{color:var(--teal)}.st-contacted{color:var(--accent)}.st-interested{color:var(--warn)}.st-won{color:var(--good)}.st-lost{color:var(--bad)}
+.panel[hidden]{display:none}.panel{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;justify-content:flex-end;z-index:9}
+.panel>div{width:min(560px,100%);height:100%;overflow:auto;background:var(--bg);border-left:1px solid var(--line);padding:16px}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.acts a{text-decoration:none}
+.log{list-style:none;margin:0;padding:0}.log li{border-top:1px solid var(--line);padding:8px 0;font-size:14px}.log time{color:var(--muted);font-size:12.5px}
+.sum{background:var(--surface2);border-radius:10px;padding:8px 10px;margin:6px 0 0;font-size:14px}
+.priv{font-size:12.5px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="head"><h1>Leads</h1><p class="sub" id="sub">Loading…</p></div>
+  <div class="tabs" role="tablist"><button data-t="leads" aria-selected="true">Leads</button><button data-t="log" aria-selected="false">Team log</button><button data-t="codes" aria-selected="false" id="tCodes" hidden>Sales codes</button></div>
+  <div id="vLeads">
+    <div class="card"><div class="row">
+      <input id="q" placeholder="Search name, organization, email or phone">
+      <select id="fSt"><option value="">Every status</option><option value="new">New</option><option value="contacted">Contacted</option><option value="interested">Interested</option><option value="won">Won</option><option value="lost">Lost</option></select>
+      <select id="fSrc"><option value="">Every source</option><option value="quote">Quote requests</option><option value="instructor">Instructors</option><option value="agency">Agency requests</option><option value="manual">Added by hand</option></select>
+      <select id="fWho"><option value="">Everyone's</option><option value="me">Mine</option><option value="none">Nobody's yet</option></select>
+      <select id="fSort"><option value="new">Newest first</option><option value="old">Longest in the system</option><option value="touch">Longest since contact</option></select>
+      <button class="btn ghost" id="bAdd">Add a lead</button>
+    </div><p class="priv" style="margin:8px 0 0">Leads are people and places that asked about DrugBug or joined as instructors. Regular app users are never on this list. Notes and summaries are only visible to Adam and the sales team.</p></div>
+    <div id="kpis" class="kpis" style="margin-bottom:12px"></div>
+    <div id="list"></div>
+  </div>
+  <div id="vLog" hidden><div class="card"><div class="row"><select id="lDays"><option value="7">Last 7 days</option><option value="14" selected>Last 14 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option></select><select id="lWho" hidden></select></div></div><div id="logOut"></div></div>
+  <div id="vCodes" hidden><div class="card"><h2>Sales codes</h2><p class="small muted" style="margin:0 0 10px">Each code works once. The person signs in at <b>drugbugapp.com/outreach</b> with their own DrugBug account, enters the code and their name, and joins the sales team. Remove someone on Outreach stats.</p><div class="row"><input id="cFor" placeholder="Who it's for (optional)"><button class="btn" id="cMake">Make a sales code</button></div><p class="msg" id="cMsg"></p><div id="cList"></div></div></div>
+</div>
+<div class="panel" id="pan" hidden><div id="panIn"></div></div>
+<script src="../app/vendor/firebase-app-compat.js"></script>
+<script src="../app/vendor/firebase-auth-compat.js"></script>
+<script src="dash.js?v=7"></script>
+<script>
+(function(){
+  if(/[?&]embed=1/.test(location.search))document.body.classList.add("embed");
+  var $=function(id){return document.getElementById(id)};
+  function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+  function when(t){if(!t)return "never";var d=new Date(t);return d.toLocaleDateString([],{month:"short",day:"numeric",year:d.getFullYear()===new Date().getFullYear()?undefined:"numeric"})+", "+d.toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}
+  function ago(t){if(!t)return "not contacted yet";var m=Math.round((Date.now()-t)/60000);return m<60?m+" min ago":m<1440?Math.round(m/60)+" h ago":Math.round(m/1440)+" d ago"}
+  var SRC={quote:"Quote request",instructor:"Instructor",agency:"Agency request",manual:"Added by hand"};
+  var KIND={call:"Call",text:"Text",email:"Email",meeting:"Meeting",note:"Note",assign:"Assigned",status:"Status","won":"Won","lost":"Lost",add:"Added","quote request":"Quote request","asked again":"Asked again"};
+  var D=null, ME={}, PEOPLE=[], CUR=null;
+  function tab(t){[].forEach.call(document.querySelectorAll(".tabs button"),function(b){b.setAttribute("aria-selected",String(b.getAttribute("data-t")===t))});$("vLeads").hidden=t!=="leads";$("vLog").hidden=t!=="log";$("vCodes").hidden=t!=="codes";if(t==="log")loadLog();if(t==="codes")loadCodes()}
+  document.querySelector(".tabs").onclick=function(e){var b=e.target.closest("[data-t]");if(b)tab(b.getAttribute("data-t"))};
+  function load(){ $("sub").textContent="Loading…"; DASH.call("leadList").then(function(r){D=r;ME=r.me;PEOPLE=r.people||[];$("tCodes").hidden=!ME.owner;
+      $("lWho").hidden=!ME.owner;$("lWho").innerHTML='<option value="">Everyone</option>'+PEOPLE.map(function(p){return '<option value="'+esc(p.uid)+'">'+esc(p.name)+'</option>'}).join("");
+      draw();}).catch(function(e){$("sub").textContent=e.message;$("list").innerHTML=""}); }
+  function draw(){
+    var L=(D&&D.leads)||[], q=$("q").value.trim().toLowerCase(), st=$("fSt").value, src=$("fSrc").value, w=$("fWho").value, so=$("fSort").value;
+    var all=L;
+    L=L.filter(function(x){if(st&&x.status!==st)return false;if(src&&x.src!==src)return false;if(w==="me"&&!(x.assignedTo&&x.assignedTo.uid===ME.uid))return false;if(w==="none"&&x.assignedTo)return false;
+      if(q&&[x.name,x.org,x.email,x.phone,x.city].join(" ").toLowerCase().indexOf(q)<0)return false;return true});
+    L.sort(so==="old"?function(a,b){return a.createdAt-b.createdAt}:so==="touch"?function(a,b){return (a.lastContactAt||0)-(b.lastContactAt||0)}:function(a,b){return b.createdAt-a.createdAt});
+    var cnt=function(f){return all.filter(f).length};
+    $("sub").textContent=all.length+" leads · signed in as "+(ME.name||"")+(ME.owner?" (owner)":" (sales)");
+    $("kpis").innerHTML=[["New",cnt(function(x){return x.status==="new"})],["Contacted",cnt(function(x){return x.status==="contacted"})],["Interested",cnt(function(x){return x.status==="interested"})],["Won",cnt(function(x){return x.status==="won"})],["Mine",cnt(function(x){return x.assignedTo&&x.assignedTo.uid===ME.uid})],["Nobody's yet",cnt(function(x){return !x.assignedTo})]].map(function(k){return '<div class="kpi"><b>'+k[1]+'</b><span>'+k[0]+'</span></div>'}).join("");
+    $("list").innerHTML=L.length?L.map(function(x){return '<div class="lead" tabindex="0" role="button" data-id="'+esc(x.id)+'"><div><b>'+esc(x.org||x.name)+'</b><div class="m"><span class="chip">'+esc(SRC[x.src]||x.src)+'</span>'+esc([x.org?x.name:"",x.role,x.city&&(x.city+(x.state?", "+x.state:""))].filter(Boolean).join(" · "))+'</div></div>'+
+      '<div class="r"><b class="st-'+esc(x.status)+'">'+esc(x.status)+'</b><br>'+(x.assignedTo?esc(x.assignedTo.name):"nobody's yet")+'</div>'+
+      '<div class="m">In the system '+x.days+' day'+(x.days===1?"":"s")+' · last contact '+esc(ago(x.lastContactAt))+(x.lastContactBy?" by "+esc(x.lastContactBy.name):"")+'</div><div class="r">'+(x.contacts||0)+' contact'+(x.contacts===1?"":"s")+'</div></div>'}).join(""):'<p class="muted">No leads match.</p>';
+  }
+  ["q","fSt","fSrc","fWho","fSort"].forEach(function(id){$(id).addEventListener(id==="q"?"input":"change",draw)});
+  $("list").addEventListener("click",function(e){var r=e.target.closest("[data-id]");if(r)open(r.getAttribute("data-id"))});
+  $("list").addEventListener("keydown",function(e){if(e.key==="Enter"){var r=e.target.closest("[data-id]");if(r)open(r.getAttribute("data-id"))}});
+  function close(){$("pan").hidden=true;CUR=null}
+  $("pan").addEventListener("click",function(e){if(e.target===$("pan"))close()});
+  document.addEventListener("keydown",function(e){if(e.key==="Escape"&&!$("pan").hidden)close()});
+  function open(id){CUR=id;$("pan").hidden=false;$("panIn").innerHTML='<p class="muted">Loading…</p>';DASH.call("leadGet",{id:id}).then(panel).catch(function(e){$("panIn").innerHTML='<p class="msg err">'+esc(e.message)+'</p>'})}
+  function panel(r){
+    var x=r.lead, tel=x.phone.replace(/[^0-9+]/g,"");
+    var h='<div class="row" style="justify-content:space-between"><h2 style="margin:0">'+esc(x.org||x.name)+'</h2><button class="btn ghost" data-x="close">Close</button></div>';
+    h+='<p class="small muted" style="margin:4px 0 10px"><span class="chip">'+esc(SRC[x.src]||x.src)+'</span>In the system since '+esc(when(x.createdAt))+' ('+x.days+' days) · last contact '+esc(x.lastContactAt?when(x.lastContactAt)+(x.lastContactBy?" by "+x.lastContactBy.name:"")+(x.lastKind?" ("+x.lastKind+")":""):"never")+'</p>';
+    h+='<div class="card"><p style="margin:0"><b>'+esc(x.name||"No contact person yet")+'</b>'+(x.role?' · '+esc(x.role):'')+'</p>'+(x.email?'<p style="margin:4px 0 0">'+esc(x.email)+'</p>':'')+(x.phone?'<p style="margin:4px 0 0">'+esc(x.phone)+'</p>':'')+(x.city?'<p class="small muted" style="margin:4px 0 0">'+esc(x.city+(x.state?", "+x.state:""))+'</p>':'')+
+      ([x.students&&("Students: "+x.students),x.level&&("Level: "+x.level),x.start&&("Start: "+x.start)].filter(Boolean).length?'<p class="small" style="margin:6px 0 0">'+esc([x.students&&("Students: "+x.students),x.level&&("Level: "+x.level),x.start&&("Start: "+x.start)].filter(Boolean).join(" · "))+'</p>':'')+(x.note?'<p class="small" style="margin:6px 0 0;white-space:pre-wrap">'+esc(x.note)+'</p>':'')+
+      '<div class="acts">'+(tel?'<a class="btn" href="tel:'+esc(tel)+'" data-k="call">Call</a><a class="btn ghost" href="sms:'+esc(tel)+'" data-k="text">Text</a>':'')+(x.email?'<a class="btn ghost" href="mailto:'+esc(x.email)+'?subject='+encodeURIComponent("DrugBug for "+(x.org||"your program"))+'" data-k="email">Email</a>':'')+(!tel&&!x.email?'<span class="small muted">No phone or email yet. Find the main line on their website, then add notes below.</span>':'')+'</div></div>';
+    h+='<div class="card"><h2>Log a contact</h2><div class="row"><select id="lgK"><option value="call">Call</option><option value="text">Text</option><option value="email">Email</option><option value="meeting">Meeting</option><option value="note">Note only</option></select></div><textarea id="lgN" placeholder="What did you talk about? Who did you speak with, what they need, any objection, and the next step with a date." style="margin-top:8px"></textarea><div class="row" style="margin-top:8px"><button class="btn" data-x="log">Save</button><span class="priv">Claude writes a short summary of these notes. Only Adam and the sales team can see notes and summaries.</span></div><p class="msg" id="lgM"></p></div>';
+    var mine=x.assignedTo&&x.assignedTo.uid===ME.uid;
+    h+='<div class="card"><h2>Status and credit</h2><div class="row">'+["new","contacted","interested","won","lost"].map(function(s){return '<button class="btn'+(x.status===s?"":" ghost")+'" data-st="'+s+'">'+s+'</button>'}).join("")+'</div>'+
+      '<p class="small" style="margin:10px 0 6px">Assigned to: <b>'+(x.assignedTo?esc(x.assignedTo.name):"nobody yet")+'</b>'+(x.wonBy?' · <span class="st-won">won by '+esc(x.wonBy.name)+'</span>':'')+'</p>'+
+      (ME.owner?'<div class="row"><select id="asg"><option value="">Nobody</option>'+PEOPLE.map(function(p){return '<option value="'+esc(p.uid)+'"'+(x.assignedTo&&x.assignedTo.uid===p.uid?" selected":"")+'>'+esc(p.name)+'</option>'}).join("")+'</select><button class="btn ghost" data-x="asg">Assign</button></div>':(!x.assignedTo?'<button class="btn" data-x="take">Take this lead</button>':mine?'<button class="btn ghost" data-x="drop">Give it back</button>':''))+
+      '<p class="priv" style="margin:8px 0 0">Won gives the credit to the person the lead is assigned to.</p><p class="msg" id="stM"></p></div>';
+    h+='<div class="card"><h2>History</h2>'+(r.log.length?'<ul class="log">'+r.log.map(function(l){return '<li><time>'+esc(when(l.at))+'</time> · <b>'+esc(KIND[l.kind]||l.kind)+'</b>'+(l.by?' · '+esc(l.by):'')+(l.summary?'<div class="sum">'+esc(l.summary)+'</div>':'')+(l.notes&&!l.summary?'<div class="small" style="white-space:pre-wrap;margin-top:4px">'+esc(l.notes)+'</div>':'')+(l.notes&&l.summary?'<details class="small"><summary>Notes</summary><div style="white-space:pre-wrap">'+esc(l.notes)+'</div></details>':'')+'</li>'}).join("")+'</ul>':'<p class="muted small">Nothing yet.</p>')+'</div>';
+    $("panIn").innerHTML=h; $("panIn").scrollTop=0;
+  }
+  $("panIn").addEventListener("click",function(e){
+    var a=e.target.closest("[data-k]"); if(a){var k=$("lgK");if(k)k.value=a.getAttribute("data-k");setTimeout(function(){var n=$("lgN");if(n)n.focus()},400);return}
+    var b=e.target.closest("[data-x],[data-st]"); if(!b)return;
+    var x=b.getAttribute("data-x"); if(x==="close")return close();
+    function done(m){return function(){refreshOne()}};
+    if(x==="log"){var n=$("lgN").value.trim(),k=$("lgK").value;if(!n&&k==="note"){$("lgM").textContent="Type a note first.";return}b.disabled=true;$("lgM").className="msg";$("lgM").textContent="Saving…";
+      DASH.call("leadLog",{id:CUR,kind:k,notes:n}).then(function(){refreshOne()}).catch(function(er){b.disabled=false;$("lgM").className="msg err";$("lgM").textContent=er.message});return}
+    var data={id:CUR};
+    if(b.hasAttribute("data-st"))data.status=b.getAttribute("data-st");
+    else if(x==="asg")data.assign=$("asg").value;else if(x==="take")data.assign=ME.uid;else if(x==="drop")data.assign="";
+    $("stM").className="msg";$("stM").textContent="Saving…";
+    DASH.call("leadSet",data).then(function(){refreshOne()}).catch(function(er){$("stM").className="msg err";$("stM").textContent=er.message});
+  });
+  function refreshOne(){var id=CUR;DASH.call("leadGet",{id:id}).then(function(r){if(CUR===id)panel(r);if(D)D.leads=D.leads.map(function(l){return l.id===id?r.lead:l});draw()})}
+  $("bAdd").onclick=function(){CUR=null;$("pan").hidden=false;$("panIn").innerHTML='<div class="row" style="justify-content:space-between"><h2 style="margin:0">Add a lead</h2><button class="btn ghost" data-x="close">Close</button></div><div class="card" style="margin-top:10px"><div class="row" style="flex-direction:column;align-items:stretch">'+
+    '<input id="aOrg" placeholder="School, program or agency"><input id="aName" placeholder="Contact person"><input id="aRole" placeholder="Their role"><input id="aEm" placeholder="Email"><input id="aPh" placeholder="Phone"><div class="row"><input id="aCity" placeholder="City"><input id="aSt" placeholder="State" maxlength="2" style="flex:0 0 80px"></div><textarea id="aNote" placeholder="Notes"></textarea></div>'+
+    '<div class="row" style="margin-top:8px"><button class="btn" id="aGo">Add</button></div><p class="msg" id="aMsg"></p></div>';
+    $("aGo").onclick=function(){$("aMsg").className="msg";$("aMsg").textContent="Adding…";DASH.call("leadAdd",{org:$("aOrg").value,name:$("aName").value,role:$("aRole").value,email:$("aEm").value,phone:$("aPh").value,city:$("aCity").value,state:$("aSt").value.toUpperCase(),note:$("aNote").value}).then(function(r){load();open(r.id)}).catch(function(er){$("aMsg").className="msg err";$("aMsg").textContent=er.message})}};
+  function loadLog(){$("logOut").innerHTML='<p class="muted">Loading…</p>';DASH.call("salesLog",{days:Number($("lDays").value),uid:$("lWho").value||undefined}).then(function(r){
+    if(!r.rows.length){$("logOut").innerHTML='<p class="muted">Nothing logged in this time.</p>';return}
+    var by={};r.rows.forEach(function(x){(by[x.by]=by[x.by]||[]).push(x)});
+    $("logOut").innerHTML=Object.keys(by).map(function(n){var R=by[n],c=function(k){return R.filter(function(x){return x.kind===k}).length};
+      return '<div class="card"><h2>'+esc(n)+'</h2><div class="kpis">'+[["Calls",c("call")],["Texts",c("text")],["Emails",c("email")],["Meetings",c("meeting")],["Won",c("won")]].map(function(k){return '<div class="kpi"><b>'+k[1]+'</b><span>'+k[0]+'</span></div>'}).join("")+'</div><ul class="log" style="margin-top:8px">'+R.slice(0,60).map(function(x){return '<li><time>'+esc(when(x.at))+'</time> · <b>'+esc(KIND[x.kind]||x.kind)+'</b> · <a href="#" data-lead="'+esc(x.leadId)+'">'+esc(x.lead||"a lead")+'</a>'+(x.summary?'<div class="sum">'+esc(x.summary)+'</div>':x.notes?'<div class="small" style="margin-top:4px">'+esc(x.notes)+'</div>':'')+'</li>'}).join("")+'</ul></div>'}).join("");
+  }).catch(function(e){$("logOut").innerHTML='<p class="msg err">'+esc(e.message)+'</p>'})}
+  $("lDays").onchange=loadLog;$("lWho").onchange=loadLog;
+  $("logOut").addEventListener("click",function(e){var a=e.target.closest("[data-lead]");if(a){e.preventDefault();open(a.getAttribute("data-lead"))}});
+  function loadCodes(){DASH.call("salesCodeMake",{list:true}).then(function(r){$("cList").innerHTML=r.codes.length?'<table>'+r.codes.map(function(c){return '<tr><td><b>'+esc(c.code)+'</b>'+(c.forName?'<br><span class="small muted">for '+esc(c.forName)+'</span>':'')+'</td><td class="r">'+(c.used?'used by '+esc(c.usedBy)+'<br><span class="small muted">'+esc(when(c.usedAt))+'</span>':'<span class="st-new">not used yet</span>')+'</td></tr>'}).join("")+'</table>':'<p class="muted small">No sales codes yet.</p>'}).catch(function(e){$("cList").innerHTML='<p class="msg err">'+esc(e.message)+'</p>'})}
+  $("cMake").onclick=function(){$("cMsg").className="msg";$("cMsg").textContent="Making…";DASH.call("salesCodeMake",{forName:$("cFor").value}).then(function(r){$("cMsg").innerHTML='New code: <b>'+esc(r.code)+'</b>';$("cFor").value="";loadCodes()}).catch(function(e){$("cMsg").className="msg err";$("cMsg").textContent=e.message})};
+  DASH.auth.onAuthStateChanged(function(u){if(u&&!u.isAnonymous)load();else{$("sub").textContent="Sign in first.";$("list").innerHTML=""}});
+})();
+</script>
+</body>
+</html>
