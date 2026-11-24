@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Med Brief · DrugBug</title>
+<style>
+/* Today's Med Brief (owner, Nov 24 2026). Data: medBriefList / medBriefRun / medBriefSave (functions/brief.js). Owner only. */
+:root{--bg:#13111c;--surface:#1d1a2a;--surface2:#251f37;--ink:#f2effb;--muted:#aaa3c4;--line:#322c47;--accent:#a78bfa;--teal:#2dd4bf;--good:#34d399;--warn:#fbbf24;--bad:#f87171}
+@media (prefers-color-scheme:light){:root{--bg:#f6f4fc;--surface:#fff;--surface2:#f1edfa;--ink:#1c1730;--muted:#5f5878;--line:#e2dcef;--accent:#6d28d9;--teal:#0f766e;--good:#047857;--warn:#b45309;--bad:#b91c1c}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:16px 16px 50px}
+body.embed .wrap{padding-top:4px}
+h1{font-size:22px;margin:0}h2{font-size:17px;margin:0 0 6px}h3{font-size:13px;margin:14px 0 6px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.sub{color:var(--muted);margin:2px 0 14px;font-size:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+input,select,textarea{font:inherit;font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:8px 10px;min-width:0;width:100%}
+textarea{min-height:74px}
+label{display:block;font-size:13px;color:var(--muted);margin:8px 0 3px}
+.btn{font:inherit;font-weight:700;font-size:14px;padding:8px 14px;border-radius:10px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--accent)}.btn.good{background:var(--good);border-color:var(--good)}.btn:disabled{opacity:.5}
+.msg{font-size:14px;margin:8px 0 0;min-height:1.2em}.msg.err{color:var(--bad)}
+.days{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}
+.days button{font:inherit;font-size:13px;font-weight:700;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.days button[aria-current="true"]{border-color:var(--accent);background:var(--surface2)}
+.days i{font-style:normal;margin-left:4px}
+.chip{display:inline-block;font-size:11.5px;font-weight:800;border-radius:999px;padding:1px 9px;margin-right:6px;background:var(--surface2);color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.st-live{color:var(--good)}.st-held{color:var(--warn)}.st-hidden,.st-failed{color:var(--bad)}
+.lv-CRITICAL{background:var(--bad);color:#fff}.lv-REVIEW{background:var(--warn);color:#1c1730}
+.up{border-top:1px solid var(--line);padding:12px 0}.up:first-of-type{border-top:0}
+.up p{margin:4px 0;font-size:14px}.up b.k{color:var(--muted);font-weight:700;font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;margin-right:6px}
+.prev{max-width:380px;border-radius:16px;padding:12px 14px;background:linear-gradient(150deg,#2a2245,#1d1a2a);color:#f2effb;border:1.5px solid #7c5cff;position:relative}
+.prev .x{position:absolute;right:10px;top:6px;opacity:.6}.prev .bd{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#fbbf24}
+.prev b{display:block;font-size:16px;margin:2px 0 4px}.prev p{margin:0 0 6px;font-size:13.5px}.prev .pl{font-size:13px;background:rgba(255,255,255,.08);border-radius:8px;padding:6px 8px}
+.muted{color:var(--muted)}.small{font-size:13px}
+a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Today's Med Brief</h1>
+  <p class="sub" id="sub">Loading…</p>
+  <div class="card"><div class="row" style="justify-content:space-between"><span class="small muted">Runs by itself every morning at 4:47 am Central (5:47 Eastern). Nothing shows in the app until you approve it.</span><button class="btn ghost" id="run">Run it now</button></div><p class="msg" id="runM"></p></div>
+  <div class="days" id="days"></div>
+  <div id="view"></div>
+</div>
+<script src="../app/vendor/firebase-app-compat.js"></script>
+<script src="../app/vendor/firebase-auth-compat.js"></script>
+<script src="dash.js?v=7"></script>
+<script>
+(function(){
+  if(/[?&]embed=1/.test(location.search))document.body.classList.add("embed");
+  var $=function(id){return document.getElementById(id)};
+  function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+  var L=[], CUR="";
+  var TRACKS=["Pharmacy Tech","Pharmacy School","Pharmacist","Nursing School","RN","EMS","Medical School","Allied Health"];
+  var BADGES=["FDA Alert","Safety Pearl","Guideline Shift","New Drug"];
+  var ST={live:"Live in the app",held:"Waiting for you",hidden:"Hidden",failed:"Run failed"};
+  function load(){ $("sub").textContent="Loading…"; DASH.call("medBriefList").then(function(r){L=r.items||[]; if(!CUR||!L.some(function(x){return x.run_date===CUR}))CUR=L[0]?L[0].run_date:""; draw();}).catch(function(e){$("sub").textContent=e.message}); }
+  function draw(){
+    var live=L.filter(function(x){return x.status==="live"}).length, wait=L.filter(function(x){return x.status==="held"}).length;
+    $("sub").textContent=L.length?L.length+" days · "+wait+" waiting for you · "+live+" live":"No briefs yet. The first one runs tomorrow morning, or press Run it now.";
+    $("days").innerHTML=L.map(function(x){var c=(x.admin_dashboard&&x.admin_dashboard.updates_found||[]).filter(function(u){return u.level==="CRITICAL"}).length;
+      return '<button data-d="'+esc(x.run_date)+'" aria-current="'+(x.run_date===CUR)+'">'+esc(x.run_date.slice(5))+' <span class="st-'+esc(x.status)+'">●</span>'+(x.has_urgent_clinical_alert||c?'<i title="urgent or critical">⚠️</i>':'')+'</button>'}).join("");
+    var x=L.filter(function(y){return y.run_date===CUR})[0]; if(!x){$("view").innerHTML="";return}
+    var f=x.app_feed||{}, a=x.admin_dashboard||{}, U=a.updates_found||[];
+    var h='<div class="card"><div class="row" style="justify-content:space-between"><h2 style="margin:0">'+esc(x.run_date)+'</h2><span class="chip st-'+esc(x.status)+'">'+esc(ST[x.status]||x.status)+'</span></div>'+
+      (x.err?'<p class="msg err">Last run: '+esc(x.err)+'</p>':'')+
+      '<p class="small muted" style="margin:4px 0 0">'+(x.has_urgent_clinical_alert?'<b style="color:var(--bad)">Urgent clinical alert</b> · ':'')+(x.searches!=null?x.searches+' web searches · ':'')+(x.model?esc(x.model)+' · ':'')+(x.ms?Math.round(x.ms/1000)+' s':'')+'</p></div>';
+    if(f.card_title){
+      h+='<div class="card"><h2>The card learners see</h2><div class="prev" id="pv"></div>'+
+        '<label for="fT">Headline</label><input id="fT" maxlength="90" value="'+esc(f.card_title)+'">'+
+        '<label for="fB">Badge</label><select id="fB">'+BADGES.map(function(b){return '<option'+(b===f.badge_tag?" selected":"")+'>'+b+'</option>'}).join("")+'</select>'+
+        '<label for="fS">Summary (2-3 sentences)</label><textarea id="fS" maxlength="600">'+esc(f.tldr_summary)+'</textarea>'+
+        '<label for="fP">Quick pearl</label><input id="fP" maxlength="300" value="'+esc(f.quick_pearl)+'">'+
+        '<label>Tracks it applies to</label><div class="row">'+TRACKS.map(function(t){return '<label style="margin:0;color:var(--ink)"><input type="checkbox" style="width:auto" data-tr="'+esc(t)+'"'+((f.affected_tracks||[]).indexOf(t)>=0?" checked":"")+'> '+esc(t)+'</label>'}).join("")+'</div>'+
+        '<div class="row" style="margin-top:12px">'+(x.status!=="live"?'<button class="btn good" data-s="live">Approve: show it in the app</button>':'<button class="btn" data-s="save">Save changes</button><button class="btn ghost" data-s="held">Take it down</button>')+
+        (x.status==="held"?'<button class="btn ghost" data-s="hidden">Skip this day</button>':'')+'</div><p class="msg" id="sM"></p>'+
+        '<p class="small muted" style="margin:6px 0 0">Approved cards show on the home screen for 3 days, newest first. Each person can close it with the X. Editing a live card shows it again to people who closed it.</p></div>';
+    }
+    h+='<div class="card"><h2>Full report ('+U.length+' update'+(U.length===1?'':'s')+')</h2>'+(U.length?U.map(function(u){return '<div class="up">'+(u.level!=="NONE"?'<span class="chip lv-'+esc(u.level)+'">'+esc(u.level)+'</span>':'')+'<span class="chip">'+esc(u.source_authority)+'</span><p><b>'+esc(u.headline)+'</b>'+(u.url?' · <a href="'+esc(u.url)+'" target="_blank" rel="noopener">source</a>':'')+'</p>'+
+      '<p><b class="k">Details</b>'+esc(u.clinical_details)+'</p><p><b class="k">Curriculum</b>'+esc(u.curriculum_alignment)+'</p><p><b class="k">Audit</b>'+esc(u.database_audit_action)+'</p><p><b class="k">Question idea</b>'+esc(u.suggested_new_question_topic)+'</p></div>'}).join(""):'<p class="muted">Nothing new found.</p>')+
+      (a.daily_status_log?'<h3>Sources checked</h3><p class="small">'+esc(a.daily_status_log)+'</p>':'')+
+      '<p class="small muted">This report is written by Claude from web searches of official sources. Check the source link before acting on anything.</p></div>';
+    $("view").innerHTML=h; pv();
+  }
+  function cur(){var tr=[].map.call(document.querySelectorAll("[data-tr]:checked"),function(c){return c.getAttribute("data-tr")});return {card_title:$("fT").value,badge_tag:$("fB").value,tldr_summary:$("fS").value,quick_pearl:$("fP").value,affected_tracks:tr}}
+  function pv(){var p=$("pv");if(!p)return;var f=cur();p.innerHTML='<span class="x" aria-hidden="true">✕</span><span class="bd">💊 Today\'s Med Brief · '+esc(f.badge_tag)+'</span><b>'+esc(f.card_title)+'</b><p>'+esc(f.tldr_summary)+'</p>'+(f.quick_pearl?'<div class="pl">⭐ '+esc(f.quick_pearl)+'</div>':'')}
+  $("view").addEventListener("input",pv); $("view").addEventListener("change",pv);
+  $("days").onclick=function(e){var b=e.target.closest("[data-d]");if(b){CUR=b.getAttribute("data-d");draw()}};
+  $("view").addEventListener("click",function(e){var b=e.target.closest("[data-s]");if(!b)return;var s=b.getAttribute("data-s"),d={date:CUR,app_feed:cur()};if(s!=="save")d.status=s;
+    b.disabled=true;$("sM").className="msg";$("sM").textContent="Saving…";
+    DASH.call("medBriefSave",d).then(function(){$("sM").textContent=s==="live"?"Live in the app.":"Saved.";load()}).catch(function(er){b.disabled=false;$("sM").className="msg err";$("sM").textContent=er.message})});
+  $("run").onclick=function(){var b=$("run");b.disabled=true;$("runM").className="msg";$("runM").textContent="Searching the sources… this takes 1-3 minutes.";
+    DASH.call("medBriefRun").then(function(r){b.disabled=false;$("runM").textContent=r.skipped?"Today's brief is already live.":"Done: "+r.updates+" update"+(r.updates===1?"":"s")+" found.";CUR=r.date;load()}).catch(function(er){b.disabled=false;$("runM").className="msg err";$("runM").textContent=er.message})};
+  DASH.auth.onAuthStateChanged(function(u){if(u&&!u.isAnonymous)load();else{$("sub").textContent="Sign in first (open drugbugapp.com/app and sign in with your owner account).";$("view").innerHTML=""}});
+})();
+</script>
+</body>
+</html>
