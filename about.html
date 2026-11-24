@@ -112,8 +112,31 @@ footer .flinks{margin-top:10px}
 <a class="ctcard" href="mailto:VolareMediaLLC@gmail.com"><b>Email us</b><span>VolareMediaLLC@gmail.com. We usually answer within 2 business days.</span></a>
 <a class="ctcard" href="support.html"><b>Support</b><span>Restoring purchases, cancelling, codes, reporting an error.</span></a>
 <div class="ctcard"><b>Evaluators</b><span>Evaluator enrollment and grading are paused. If you have questions about an existing evaluator account, contact <a href="mailto:VolareMediaLLC@gmail.com">VolareMediaLLC@gmail.com</a>.</span></div>
-<a class="ctcard" href="instructor/"><b>Bring DrugBug to your program</b><span>See the instructor demo and start a free pilot.</span></a>
-</div></section>
+<a class="ctcard" href="instructor/"><b>See the instructor demo</b><span>Click through a sample class dashboard.</span></a>
+</div>
+<div class="ctcard ctform" id="talk"><b>Bring DrugBug to your program</b><span>Leave your details and someone from our team will reach out with more information and pricing.</span>
+<form id="talkF" novalidate>
+<div class="tfrow"><label>Your name<input id="tName" autocomplete="name" maxlength="80" required></label><label>Your role<input id="tRole" maxlength="80" placeholder="e.g. Program director"></label></div>
+<div class="tfrow"><label>School, program or agency<input id="tOrg" maxlength="120" required></label><label>Work email<input id="tEmail" type="email" autocomplete="email" maxlength="120" required></label></div>
+<div class="tfrow"><label>Phone (optional)<input id="tPhone" type="tel" autocomplete="tel" maxlength="30"></label><label>Number of students (optional)<input id="tN" inputmode="numeric" maxlength="6"></label></div>
+<label>Anything you'd like us to know<textarea id="tNote" maxlength="1500" rows="3"></textarea></label>
+<p class="tfine">We use these details only to contact you about DrugBug for your program. See the <a href="privacy.html">Privacy Policy</a>.</p>
+<button type="submit" class="tbtn" id="tGo">Have someone contact me</button>
+<p class="tmsg" id="tMsg" role="status" aria-live="polite"></p>
+</form></div>
+</section>
+<style>.ctform{margin-top:14px}.ctform form{margin-top:10px}.tfrow{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:640px){.tfrow{grid-template-columns:1fr}}.ctform label{display:flex;flex-direction:column;gap:4px;font-size:14px;font-weight:600;margin-bottom:10px}.ctform input,.ctform textarea{font:inherit;font-size:15px;color:var(--ink);background:var(--bg,transparent);border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-weight:400}.tfine{font-size:13px;color:var(--muted);margin:4px 0 10px}.tbtn{font:inherit;font-weight:800;font-size:15px;padding:11px 18px;border-radius:12px;border:0;background:var(--accent);color:#fff;cursor:pointer}.tbtn:disabled{opacity:.6}.tmsg{font-size:14.5px;margin:10px 0 0;min-height:1.2em}.tmsg.err{color:#dc2626}</style>
+<script>
+/* "Bring DrugBug to your program" (sales, Nov 23 2026): the details become a lead on the sales team's Leads list */
+(function(){var f=document.getElementById("talkF");if(!f)return;var $=function(i){return document.getElementById(i)};
+f.addEventListener("submit",function(e){e.preventDefault();var m=$("tMsg");m.className="tmsg";
+var d={name:$("tName").value.trim(),role:$("tRole").value.trim(),org:$("tOrg").value.trim(),email:$("tEmail").value.trim(),phone:$("tPhone").value.trim(),students:$("tN").value.trim(),note:"(About page) "+$("tNote").value.trim()};
+if(d.name.length<2||d.org.length<2||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email)){m.className="tmsg err";m.textContent="Add your name, your school or agency, and a work email.";return}
+$("tGo").disabled=true;m.textContent="Sending…";
+fetch("https://us-central1-drugbug-69d42.cloudfunctions.net/leadSubmit",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({data:d})}).then(function(r){return r.json()}).then(function(j){
+if(j.error)throw new Error(j.error.message||"error");f.innerHTML='<p class="tmsg"><b>Thank you.</b> Someone from our team will contact you soon, usually within 2 business days.</p>';
+}).catch(function(er){$("tGo").disabled=false;m.className="tmsg err";m.textContent=/already/i.test(er.message)?er.message:"That didn't go through. Try again, or email VolareMediaLLC@gmail.com.";});});})();
+</script>
 </main>
 <footer><p>For adult study only. Do not use DrugBug for patient care or clinical decisions. No medical advice.</p>
 <p>DrugBug is not affiliated with or endorsed by any examination, certification or professional organization named in DrugBug.</p>
