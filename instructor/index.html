@@ -285,11 +285,12 @@ details.card>summary{cursor:pointer;list-style:none}details.card>summary::-webki
 
 <section id="vPilot" class="card pilot hide">
   <h2 id="pilot">Request a quote</h2>
-  <p class="muted small">Tell us about your program and we will send you a quote, usually within a day. This opens an email to the DrugBug team with your details filled in.</p>
+  <p class="muted small">Tell us about your program and we will send you a quote, usually within a day. This sends your request to the DrugBug team and opens an email with your details filled in. We use your contact details only to follow up on this request.</p>
   <div class="row">
     <label>Program or school<input id="pProg" placeholder="e.g. Lone Star College Paramedic Program"></label>
     <label>Your name and role<input id="pName" placeholder="e.g. Program director"></label>
     <label>Work email<input id="pMail" type="email"></label>
+    <label>Phone (optional)<input id="pPhone" type="tel" autocomplete="tel"></label>
   </div>
   <div class="row" style="margin-top:10px">
     <label>Students<input id="pN" type="number" min="1" placeholder="24"></label>
@@ -903,7 +904,10 @@ body.embed .mxhead .adm{display:none}
     var v = function (id) { return ($(id).value || "").trim(); };
     if (!v("pProg") || !v("pMail")) { alert("Please add your program and work email."); return; }
     if (!$("pAuth").checked) { alert("Please check the authorization and Terms box first."); return; }
-    var body = "Hello DrugBug team,\n\nWe'd like a quote for DrugBug.\n\nProgram: " + v("pProg") + "\nName and role: " + v("pName") + "\nWork email: " + v("pMail") + "\nStudents: " + v("pN") + "\nLevel: " + v("pLv") + "\nStart date: " + v("pStart") + "\nNotes: " + v("pNote") + "\n";
+    /* the request also lands on the sales team's Leads list (owner, Nov 23 2026) */
+    try { fetch("https://us-central1-drugbug-69d42.cloudfunctions.net/leadSubmit", { method: "POST", headers: { "Content-Type": "application/json" }, keepalive: true,
+      body: JSON.stringify({ data: { org: v("pProg"), name: v("pName") || v("pMail"), email: v("pMail"), phone: v("pPhone"), students: v("pN"), level: v("pLv"), start: v("pStart"), note: v("pNote") } }) }).catch(function () {}); } catch (x) {}
+    var body = "Hello DrugBug team,\n\nWe'd like a quote for DrugBug.\n\nProgram: " + v("pProg") + "\nName and role: " + v("pName") + "\nWork email: " + v("pMail") + (v("pPhone") ? "\nPhone: " + v("pPhone") : "") + "\nStudents: " + v("pN") + "\nLevel: " + v("pLv") + "\nStart date: " + v("pStart") + "\nNotes: " + v("pNote") + "\n";
     location.href = "mailto:VolareMediaLLC@gmail.com?subject=" + encodeURIComponent("DrugBug quote request: " + v("pProg")) + "&body=" + encodeURIComponent(body);
   };
 
