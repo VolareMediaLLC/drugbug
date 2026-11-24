@@ -39,7 +39,7 @@ iframe{flex:1;border:0;width:100%;min-height:calc(100vh - 60px)}
 <body>
 <header>
   <img src="icon-192.png" alt=""><b>DrugBug Outreach</b>
-  <nav id="tabs" hidden><button data-v="list" aria-selected="true">Outreach list</button><button data-v="stats" aria-selected="false">My stats</button></nav>
+  <nav id="tabs" hidden><button data-v="list" aria-selected="true">Outreach list</button><button data-v="leads" aria-selected="false">Leads</button><button data-v="stats" aria-selected="false">My stats</button></nav>
   <div class="who"><button class="inst" id="inst" hidden>Install on this computer</button><span id="me"></span><button id="out" hidden>Sign out</button></div>
 </header>
 <section class="signin" id="vIn" hidden>
@@ -57,6 +57,13 @@ iframe{flex:1;border:0;width:100%;min-height:calc(100vh - 60px)}
   <h2 style="margin:12px 0 4px">Almost there</h2>
   <p class="muted" id="noMsg">This account isn't set up for DrugBug Outreach yet. Ask Adam to add your email on his dashboard, then tap Try again.</p>
   <button class="btn" id="again" type="button">Try again</button>
+  <div style="margin-top:18px;text-align:left;border-top:1px solid rgba(127,127,127,.3);padding-top:14px">
+    <p style="margin:0 0 6px"><b>Have a sales code?</b></p>
+    <input id="scName" placeholder="Your full name" autocomplete="name" style="width:100%;margin-bottom:6px">
+    <input id="scCode" placeholder="SALES-XXXX-XXXX" autocomplete="off" autocapitalize="characters" style="width:100%;margin-bottom:6px">
+    <button class="btn" id="scGo" type="button">Join the sales team</button>
+    <p class="msg" id="scMsg" aria-live="polite"></p>
+  </div>
 </section>
 <main id="vMain" hidden><iframe id="fr" title="Outreach"></iframe></main>
 <script src="../app/vendor/firebase-app-compat.js"></script>
@@ -65,7 +72,7 @@ iframe{flex:1;border:0;width:100%;min-height:calc(100vh - 60px)}
 <script>
 (function(){
   var $=function(id){return document.getElementById(id)}, auth=DASH.auth, emu=/[?&]emu=1/.test(location.search)?"&emu=1":"";
-  var SRC={list:"../admin/outreach.html?embed=1&v=10"+emu,stats:"../admin/helpers.html?embed=1&v=1"+emu};
+  var SRC={list:"../admin/outreach.html?embed=1&v=10"+emu,stats:"../admin/helpers.html?embed=1&v=1"+emu,leads:"../admin/leads.html?embed=1&v=1"+emu};
   function show(v){["vIn","vNo","vMain"].forEach(function(k){$(k).hidden=k!==v});$("tabs").hidden=v!=="vMain";$("out").hidden=v==="vIn"}
   function open(k){[].forEach.call(document.querySelectorAll("#tabs button"),function(b){b.setAttribute("aria-selected",String(b.getAttribute("data-v")===k))});$("fr").src=SRC[k]}
   function check(){DASH.call("dashMe").then(function(r){try{localStorage.setItem("dbStaff",r.role)}catch(x){}$("me").innerHTML=(r.title?'<b style="color:#facc15">'+r.title.replace(/[<>&"]/g,"")+'</b> ':'')+(r.name||"").replace(/[<>&"]/g,"");show("vMain");open("list")}).catch(function(e){$("noMsg").textContent=/not deployed/i.test(e.message)?"DrugBug Outreach is being set up. Try again in a little while.":e.message;show("vNo")})}
@@ -75,6 +82,8 @@ iframe{flex:1;border:0;width:100%;min-height:calc(100vh - 60px)}
   $("bGoogle").onclick=function(){auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(function(e){$("inMsg").textContent=e.message||"Couldn't sign in."})};
   $("out").onclick=function(){auth.signOut()};
   $("again").onclick=check;
+  /* sales code (owner, Nov 23 2026): joins this account to the sales team, then opens the app */
+  $("scGo").onclick=function(){$("scMsg").textContent="Checking…";DASH.call("salesJoin",{code:$("scCode").value.trim().toUpperCase(),name:$("scName").value.trim()}).then(function(){$("scMsg").textContent="You're on the sales team.";check()}).catch(function(e){$("scMsg").textContent=e.message})};
   $("tabs").addEventListener("click",function(e){var b=e.target.closest("[data-v]");if(b)open(b.getAttribute("data-v"))});
   /* "Install on this computer": Chrome and Edge put DrugBug Outreach in the Start menu / Dock with its own icon */
   var deferred=null;window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();deferred=e;$("inst").hidden=false});
