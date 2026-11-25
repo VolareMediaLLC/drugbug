@@ -1290,6 +1290,7 @@ function prepHead() { var st = null; try { st = nrState(); } catch (e) {} return
    just be adaptive questions") */
 function nclexName() { try { return S.view === "level" && S.level === "rn" && typeof nSchoolOn === "function" && nSchoolOn(); } catch (e) { return false; } }
 function prepName() {
+  if (S.view === "level" && S.level === "flightrn") return "Flight Certification Exam Prep";
   if (S.view === "level" && isN(S.level)) return S.level === "cna" ? "CNA Exam Prep" : nclexName() ? "RN Licensure Prep" : "Adaptive Questions";
   if (S.view === "level" && isI(S.level)) return "Imaging Exam Prep";
   if (S.view === "level" && isM(S.level)) return { ms1: "Step 1–Style Prep", ms3: "Step 2 CK–Style Prep", intern: "Step 3–Style Prep" }[S.level];
@@ -1730,7 +1731,7 @@ function nrLevelsFor(k) {
   if (k === "lvn") return ["lvn", "gen"];
   if (k === "paramedic") return ["paramedic", "gen"];
   if (isF(k)) { var fl = DB.FLEVELS.map(function (l) { return l.key; }), out = fl.slice(0, fl.indexOf(k) + 1); return out.concat(k === "asm" || k === "cls" ? ["emt", "gen"] : k === "cmc" ? ["emt", "aemt", "paramedic"] : ["emt", "aemt", "paramedic", "flight"]); } /* Field Medic: its tier bank, plus EMS drug questions on the drugs in this tier's scope (nrPool filters by scope) */
-  if (k === "flightrn") return ["flightrn", "flight"]; /* Flight Nurse: its own bank plus the shared critical care transport items */
+  if (k === "flightrn") return ["flight"]; /* Flight Nurse gets exactly what Flight Paramedic gets (owner, Nov 25 2026: "The Flight Nurse should have the exact same as flight paramedic") */
   if (["cna", "rn", "ms1", "ms3", "intern", "emt", "aemt", "flight"].indexOf(k) >= 0) return [k];
   return ["flight"];
 }
@@ -1748,7 +1749,7 @@ function nrPoolAll0(filter, noGen) {
   if (filter && filter !== "all" && !isF(ctxKey())) allowed = allowed.indexOf(filter) >= 0 ? [filter] : []; /* tiers always study their whole cumulative bank */
   var inScope = null;
   /* Flight Paramedic: only drugs in flight scope (owner, Nov 10 2026) */
-  if (S.view === "level" && (isN(S.level) || isI(S.level) || isF(S.level) || isA(S.level) || S.level === "tccc" || S.level === "flight")) { inScope = {}; scopeFor(S.level).ids.forEach(function (id) { inScope[id] = 1; }); }
+  if (S.view === "level" && (isN(S.level) || isI(S.level) || isF(S.level) || isA(S.level) || S.level === "tccc" || S.level === "flight")) { inScope = {}; scopeFor(S.level === "flightrn" ? "flight" : S.level).ids.forEach(function (id) { inScope[id] = 1; }); }
   var ck = ctxKey();
   /* Allied Health (owner, Nov 15 2026: "why is dental hygiene getting questions about EMT stuff"): the fields have no question
      bank of their own yet, so they borrow drug questions on their own medicines from the other banks, but only ones not
@@ -1871,7 +1872,7 @@ Object.assign(RQ_DOM, { moc: "Management of care", sic: "Safety & infection cont
 var RQ_MIX_RN = { moc: .18, sic: .13, hpm: .09, psy: .09, bcc: .09, pharm: .16, rrp: .12, phys: .14 };
 var RQ_MIX_PN = { moc: .21, sic: .13, hpm: .09, psy: .12, bcc: .1, pharm: .13, rrp: .12, phys: .1 };
 var RQ_MIX_CNA = { bcc: .3, sic: .25, psy: .15, moc: .15, rrp: .15 };
-function rqMix() { if (!nurseCtx()) return RQ_MIX; return S.level === "cna" ? RQ_MIX_CNA : S.level === "lvn" ? RQ_MIX_PN : RQ_MIX_RN; }
+function rqMix() { if (!nurseCtx() || S.level === "flightrn") return RQ_MIX; return S.level === "cna" ? RQ_MIX_CNA : S.level === "lvn" ? RQ_MIX_PN : RQ_MIX_RN; }
 /* Department weighting (owner, Nov 14 2026: "research the most common case for each nurse field and most common medication ... an algorithm
    with what percent the more common medications and cases should show up in"). Sources: HCUP statistical briefs #277, #281, #286, #299,
    #249, #185; CDC NCHS natality data briefs 553/554; SEER 2026 estimates; Haidari 2021 (NICU admissions); Stark 2022 (NICU medication
@@ -1977,15 +1978,15 @@ function creatorNote() {
 }
 /* the flight exams build on the ground ones, so Flight Paramedic and Flight Nurse exam-style decks
    include the paramedic and RN banks under their own (owner, Nov 18 2026: the flight deck had only 5) */
-function regLevels(k, al) { al = (al || nrLevelsFor(k)).slice(); if (k === "flight" && al.indexOf("paramedic") < 0) al.push("paramedic"); if (k === "flightrn" && al.indexOf("rn") < 0) al.push("rn"); return al; }
-function regStarOK(q, k) { return starOK(q, k) || (k === "flight" && q.lv === "paramedic") || (k === "flightrn" && q.lv === "rn"); }
+function regLevels(k, al) { al = (al || nrLevelsFor(k)).slice(); if (k === "flight" && al.indexOf("paramedic") < 0) al.push("paramedic"); if (k === "flightrn" && al.indexOf("paramedic") < 0) al.push("paramedic"); return al; }
+function regStarOK(q, k) { return starOK(q, k) || (k === "flight" && q.lv === "paramedic") || (k === "flightrn" && q.lv === "paramedic"); }
 function regCount() { if (freeSample()) return Math.min(FREE_QS, fullCount(regCount)); var k = ctxKey(), al = isA(k) ? [k] : regLevels(k), f = isF(k); return (DB.RQ || []).filter(function (q) { return al.indexOf(q.lv) >= 0 && regStarOK(q, k) && qVisible(q) && (!f || q.fm); }).length; }
 function nrPrep() {
   var st = nrState();
   if (st.phase === "quiz") return nrQuiz(st);
   if (st.phase === "done") return nrDone(st) + scoreArea();
   var pool = nrPool(st.filter);
-  var nurse = nurseCtx(), exam = nurse ? (S.level === "cna" ? "CNA state exam" : nclexName() ? "NCLEX-RN" : "") : medCtx() ? { ms1: "USMLE Step 1", ms3: "USMLE Step 2 CK", intern: "USMLE Step 3" }[S.level] : imCtx() ? "Imaging exam" : S.level === "flight" ? "Flight and critical care certification exam" : isF(S.level) ? "TCCC" : isA(S.level) ? ((levelObj(S.level) || {}).name || "Your field") + " medication" : "NREMT";
+  var nurse = nurseCtx() && S.level !== "flightrn", exam = nurse ? (S.level === "cna" ? "CNA state exam" : nclexName() ? "NCLEX-RN" : "") : medCtx() ? { ms1: "USMLE Step 1", ms3: "USMLE Step 2 CK", intern: "USMLE Step 3" }[S.level] : imCtx() ? "Imaging exam" : S.level === "flight" || S.level === "flightrn" ? "Flight and critical care certification exam" : isF(S.level) ? "TCCC" : isA(S.level) ? ((levelObj(S.level) || {}).name || "Your field") + " medication" : "NREMT";
   if (isF(ctxKey())) st.kind = "reg";
   var regN = regCount(), reg = st.kind === "reg", filters = nrLevelsFor(ctxKey()).concat(["all"]), n = Math.min(st.n, pool.length);
   /* one simple screen: pick a deck, a length and a mode, then go. Everything else sits under More options. */
@@ -1997,7 +1998,7 @@ function nrPrep() {
   if (regN && isF(ctxKey())) c += '<p class="muted small">' + (freeSample() ? Math.min(regN, freeQsCap()) : regN) + ' questions on medications, blood, trauma, prolonged care, ventilators, labs, CBRN, K9, dive and evacuation.</p>';
   else if (regN) c += '<div class="nrdecks" role="group" aria-label="Question type">' +
     '<button class="nrdeck" data-nrkind="drug" aria-pressed="' + !reg + '"><span class="nrdk-ic" aria-hidden="true">' + icon("pillq") + '</span><strong>Drug questions</strong><span class="nrdk-n">' + drugCount() + '</span>' + proMore(drugCount(), drugAll, "questions") + '<span class="nrdk-sub">' + (nurse ? "Medicines: what to check, report and teach on your unit" : "Doses, actions, uses and side effects") + '</span></button>' +
-    '<button class="nrdeck" data-nrkind="reg" aria-pressed="' + reg + '"><span class="nrdk-ic" aria-hidden="true">' + icon("ecg") + '</span><strong>' + (nurse ? (S.level === "cna" ? "CNA exam-style questions" : nclexName() ? "NCLEX-style questions" : "Adaptive questions") : (isEMSLv(S.level) || S.level === "cp" ? "Registry-style questions" : "Exam-style questions")) + '</strong><span class="nrdk-n">' + (freeSample() ? Math.min(regN, freeQsCap()) : regN) + '</span>' + proMore(freeSample() ? Math.min(regN, freeQsCap()) : regN, regAll, "questions") + '<span class="nrdk-sub">' + (nurse ? (S.level === "cna" ? "Care, safety, communication and your role" : nclexName() ? "Priority, delegation, safety, care and the whole test plan" : "Priority, delegation, safety and whole-patient care") : "Airway, cardiology, trauma, medical and operations") + '</span></button></div>' +
+    '<button class="nrdeck" data-nrkind="reg" aria-pressed="' + reg + '"><span class="nrdk-ic" aria-hidden="true">' + icon("ecg") + '</span><strong>' + (nurse ? (S.level === "cna" ? "CNA exam-style questions" : nclexName() ? "NCLEX-style questions" : "Adaptive questions") : (isEMSLv(S.level) || S.level === "cp" || S.level === "flightrn" ? "Registry-style questions" : "Exam-style questions")) + '</strong><span class="nrdk-n">' + (freeSample() ? Math.min(regN, freeQsCap()) : regN) + '</span>' + proMore(freeSample() ? Math.min(regN, freeQsCap()) : regN, regAll, "questions") + '<span class="nrdk-sub">' + (nurse ? (S.level === "cna" ? "Care, safety, communication and your role" : nclexName() ? "Priority, delegation, safety, care and the whole test plan" : "Priority, delegation, safety and whole-patient care") : "Airway, cardiology, trauma, medical and operations") + '</span></button></div>' +
     (function () { if (!nurse || (S.level !== "rn" && S.level !== "lvn") || typeof myUnit !== "function") return ""; var us0 = myUnits(S.level), u0 = us0[0], uo0 = u0 && typeof unitObj === "function" ? unitObj(u0) : null; return (S.level === "rn" ? nFocusRow(false) : "") + (uo0 && !reg ? '<p class="muted small nrdept">About 3 of every 4 drug questions come from ' + (us0.length > 1 ? 'your departments' : 'your department') + ': <strong>' + esc(us0.map(function (x) { var o = unitObj(x); return o ? o.name : x; }).join(", ")) + '</strong>, weighted to its most-used medicines and most common cases' + (deptTopCases(u0).length ? ' (' + esc(deptTopCases(u0).join(', ')) + ')' : '') + '. The rest cover other medicines.</p>' : ""); })();
   (function () {
     var st2 = seenStats();
@@ -2819,7 +2820,7 @@ document.addEventListener("click", function (e) {
     case "nrmore": S.nrMore = !(S.nrMore || S.exEdit); S.exEdit = false; return render();
     case "exclear": if (Prog.d.exam) delete Prog.d.exam[examKey()]; S.exEdit = false; saveProg(); return render();
     case "cnoteclose": store("cnote1", 1); return render();
-    case "nrstart": var st0 = nrState(), pl0 = nrPool(st0.filter), pk0; if (S.nrFresh) { var fr0 = freshPool(pl0); if (fr0.length >= Math.min(5, st0.n)) pl0 = fr0; } pk0 = st0.kind === "reg" ? (nurseCtx() ? nrWithCases(regCompose(pl0, st0.n, st0.adaptive !== false), nrLevelsFor(ctxKey())) : regCompose(pl0, st0.n, st0.adaptive !== false)) : isEMSLv(ctxKey()) ? nrCompose(pl0, Math.min(st0.n, pl0.length), st0.filter && st0.filter !== "all" ? [st0.filter] : nrLevelsFor(ctxKey()), st0.adaptive !== false) : st0.adaptive !== false ? adaptivePick(pl0, st0.n) : shuffle(pl0).slice(0, st0.n); if (st0.kind !== "reg") { pk0 = diffBalance(pk0, pl0); var dm0 = deptMix(pl0, st0.n, st0.adaptive !== false ? adaptivePick : function (L, k) { return shuffle(L.slice()).slice(0, k); }); if (dm0 && dm0.length) pk0 = dm0; var pf0 = st0.filter && st0.filter !== "all" ? st0.filter : null; var ck0 = ctxKey(), pc0 = pilFor(function (q) { return !pf0 || q.lv === pf0; }); pc0 = pc0.filter(function (q) { return q.lv === ck0; }).concat(pc0.filter(function (q) { return q.lv !== ck0; })); pk0 = pilMix(pk0, pc0.slice(0, 3)); } nrStart(pk0); render(); return window.scrollTo(0, 0);
+    case "nrstart": var st0 = nrState(), pl0 = nrPool(st0.filter), pk0; if (S.nrFresh) { var fr0 = freshPool(pl0); if (fr0.length >= Math.min(5, st0.n)) pl0 = fr0; } pk0 = st0.kind === "reg" ? (nurseCtx() && ctxKey() !== "flightrn" ? nrWithCases(regCompose(pl0, st0.n, st0.adaptive !== false), nrLevelsFor(ctxKey())) : regCompose(pl0, st0.n, st0.adaptive !== false)) : isEMSLv(ctxKey()) || ctxKey() === "flightrn" ? nrCompose(pl0, Math.min(st0.n, pl0.length), st0.filter && st0.filter !== "all" ? [st0.filter] : nrLevelsFor(ctxKey()), st0.adaptive !== false) : st0.adaptive !== false ? adaptivePick(pl0, st0.n) : shuffle(pl0).slice(0, st0.n); if (st0.kind !== "reg") { pk0 = diffBalance(pk0, pl0); var dm0 = deptMix(pl0, st0.n, st0.adaptive !== false ? adaptivePick : function (L, k) { return shuffle(L.slice()).slice(0, k); }); if (dm0 && dm0.length) pk0 = dm0; var pf0 = st0.filter && st0.filter !== "all" ? st0.filter : null; var ck0 = ctxKey(), pc0 = pilFor(function (q) { return !pf0 || q.lv === pf0; }); pc0 = pc0.filter(function (q) { return q.lv === ck0; }).concat(pc0.filter(function (q) { return q.lv !== ck0; })); pk0 = pilMix(pk0, pc0.slice(0, 3)); } nrStart(pk0); render(); return window.scrollTo(0, 0);
     case "autostay": AUTO.stay = AUTO.key; autoCancel(); render(); return;
     case "nrnext": S.nr.i++; render(); return window.scrollTo(0, 0);
     case "nrprev": S.nr.i--; render(); return window.scrollTo(0, 0);
@@ -4317,11 +4318,11 @@ function qgStudy(id, n) {
    Top those up from each drug's own page, at the role's own difficulty, so a learner meets the whole
    formulary instead of the same 300 items. Only drugs with fewer than two hand-written questions are
    topped up, so written items always come first. (Oct 29 2026) */
-var QG_TOPUP = { mh: 3, diet: 3, rrt: 3, pt: 3, slp: 3, surg: 3, anes: 3, dent: 3, phleb: 3, ekg: 3, cp: 2, tccc: 2, gen: 3, rn: 2, flightrn: 2, lvn: 2, ms1: 2, ms3: 2, intern: 2 };
+var QG_TOPUP = { mh: 3, diet: 3, rrt: 3, pt: 3, slp: 3, surg: 3, anes: 3, dent: 3, phleb: 3, ekg: 3, cp: 2, tccc: 2, gen: 3, rn: 2, lvn: 2, ms1: 2, ms3: 2, intern: 2 };
 /* Flight Paramedic and the Critical Care tiers get no auto-made questions (owner, Nov 25 2026: "on the flight paramedic I had
    some silly questions like what is an NSAID. That is too easy and should not be on there"). Those were the page-built
    "belongs to which drug class?" / "primary indication for?" items; these paths now use their hand-written banks only. */
-var QG_NONE = { flight: 1, cpp: 1, cmc: 1 };
+var QG_NONE = { flight: 1, flightrn: 1, cpp: 1, cmc: 1 };
 function qgPoolFor(lv, scopeOk) {
   var per = QG_TOPUP[lv]; if (!per) return [];
   if (QG.pool[lv]) return QG.pool[lv].filter(scopeOk);
