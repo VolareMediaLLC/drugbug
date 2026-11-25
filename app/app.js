@@ -34072,9 +34072,8 @@ function agxView() {
   if (AGX.msg) c += '<p class="presult' + (AGX.err ? "" : " good") + '" role="status">' + esc(AGX.msg) + '</p>';
   var D = AGX.data;
   if (!D) return c + '<p class="muted">' + (AGX.busy ? "Loading…" : "") + '</p>';
-  if (!D.member) return c + hvFeatBox() + agxJoinView();
+  if (!D.member) return c + agxJoinView();
   var A = D.agency, M = D.me;
-  c += hvFeatBox();   /* this week's prize above the boards (Nov 25 2026) */
   c += '<div class="clhead"><b>' + esc(A.name) + '</b><span>' + esc(AGX_TYPES[A.type] || "") + " · " + esc(A.city) + ", " + esc(A.state) + " · " + A.members + (A.members === 1 ? " person" : " people") + '</span>' +
     (A.status === "pending" ? '<span class="axnote">Not checked yet: anyone can join it and it\u2019s on the ' + esc(A.state) + ' board now. Prizes start once we confirm it\u2019s a real place (usually within a day).</span>' : '') + '</div>';
   c += agxRewardBox(D);
@@ -38600,7 +38599,7 @@ function hvPrizeBox() {
   if (T && T.agency) L.push(["🏅", T.agency.title, T.agency.prizes]);
   if (T && T.stateOn && T.state) L.push(["🏆", T.state.title, T.state.prizes]);
   if (T && T.national) L.push(["👑", T.national.title, T.national.prizes]);
-  if (!L.length) L = [["🏅", "Internal MVP", ["1st in your agency: Top Contributor badge + an Epic bug", "2nd: a Rare bug · 3rd: a Common bug", "Weekly points milestones: up to 600 sticks"]], ["👑", "National Champions", ["1st-place roster: a Legendary bug", "2nd and 3rd place rosters: an Epic bug", "National Champion badge and the Hall of Fame"]]];
+  if (!L.length) L = [["🏅", "Internal MVP", ["1st in your agency: 500 sticks + Top Contributor badge", "2nd: 300 sticks · 3rd: 150 sticks", "Weekly points milestones: up to 600 sticks"]], ["👑", "National Champions", ["1st-place roster: a Legendary bug", "2nd and 3rd place rosters: an Epic bug", "National Champion badge and the Hall of Fame"]]];
   /* what you won (owner, Nov 24 2026: "I want stuff you won to say you won it") */
   var won = "", RW = (AGX.data && AGX.data.rewards) || [], WN = (store("agxWon") || []).filter(function (w) { return Date.now() - (w.at || 0) < 35 * 86400000; });
   if (RW.length) won += '<section class="hvprize hvwon"><div class="hvshead"><span class="hvseye">🎉 You won</span></div>' + RW.map(function (r) { return '<p class="small"><b>Week of ' + esc(agxWeekLabel(r.wk)) + '</b></p><ul>' + r.items.map(function (it) { return '<li>You won: ' + esc(it.label) + (it.kind === "bug" ? " (" + esc(RARITY[it.rar] || it.rar) + " bug)" : it.kind === "sticks" ? " (+" + num0(it.sticks) + " sticks)" : it.kind === "badge" ? " (badge)" : "") + '</li>'; }).join("") + '</ul>'; }).join("") + '<button class="btn" data-openagency="1">Collect your prizes</button></section>';
@@ -40672,11 +40671,14 @@ document.addEventListener("click", function (e) { var b = e.target.closest && e.
   try { if (store("hvBoardTab") === "team") HN.tab = "team"; } catch (e) {}
   function hnLoad(force) {
     if (HN.busy || (!force && HN.data && Date.now() - HN.at < 120000)) return;
+    /* after a failed load, wait before trying again on its own: retrying on every redraw froze the Scoreboard when the
+       network or server was down (found Nov 25 2026) */
+    if (!force && HN.failAt && Date.now() - HN.failAt < 60000) return;
     HN.busy = true; HN.err = "";
     fnCall("agencyTier", { tier: "national" }).then(agxOk).then(function (r) {
       HN.busy = false; HN.data = r; HN.at = Date.now(); if (r.tiers) try { store("agxTiers", r.tiers); } catch (e) {}
       if (S.view === "stats") render();
-    }).catch(function (e) { HN.busy = false; HN.err = e && e.message === "offline" ? "The National board needs an internet connection." : "Couldn’t load the National board."; if (S.view === "stats") render(); });
+    }).catch(function (e) { HN.busy = false; HN.failAt = Date.now(); HN.err = e && e.message === "offline" ? "The National board needs an internet connection." : "Couldn’t load the National board."; if (S.view === "stats") render(); });
   }
   function hnNational() {
     hnLoad(false);
@@ -40690,7 +40692,12 @@ document.addEventListener("click", function (e) { var b = e.target.closest && e.
     c += '<h3 class="hvnh big">🏆 Top agencies</h3>';
     if (!R.length) c += '<p class="muted small">Agencies show up here as soon as their people earn points.</p>';
     else c += bigPodium(R, function (r) { return r.name; }, function (r) { return (r.city || "") + (r.state ? ", " + r.state : ""); }, function (r) { return r.top3; }, function (r) { return r.mine; },
-      [{ rar: "legendary", t: "Legendary bug", s: "for everyone on the roster", x: "+ National Champion badge & Hall of Fame" }, { rar: "epic", t: "Epic bug", s: "for everyone on the roster" }, { rar: "epic", t: "Epic bug", s: "for everyone on the roster" }], "a");
+      hnPrizes(T), "a");
+    /* everyone else, right under the prizes (owner, Nov 25 2026) */
+    if (R.length > 3) c += '<ol class="clboard axboard hvnag" start="4">' + R.slice(3, nR).map(function (r) {
+      return '<li class="' + (r.mine ? "me " : "") + 'axclick" data-hnag="' + esc(r.id) + '" data-hnname="' + esc(r.name) + '" tabindex="0" role="button" aria-label="' + esc(r.name) + ': see who is on this team"><span class="clrk">' + r.rank + '</span>' + agxAvArt(r.av) +
+        '<span class="clal">' + esc(r.name) + (r.mine ? ' <em>yours</em>' : '') + '<small class="axsub">' + esc(r.city || "") + (r.state ? ", " + esc(r.state) : "") + '</small></span><span class="clsc"><b>' + num0(r.top3) + '</b><small>' + (r.filled < 3 ? r.filled + " of 3 on the team" : "top 3") + '</small></span></li>';
+    }).join("") + '</ol>' + (R.length > 5 ? '<p><button class="btn ghost small" data-hnmore="a">' + (HN.allR ? "Show the top 5" : "See the top " + Math.min(25, R.length)) + '</button></p>' : '');
     c += '<h3 class="hvnh big">⭐ Top players</h3>';
     if (!P.length) c += '<p class="muted small">Nobody has points yet this week. Answer a few questions on a team and you’re on the board.</p>';
     else c += bigPodium(P, function (r) { return r.nick; }, function (r) { return r.agency; }, function (r) { return r.pts; }, function (r) { return r.me; }, null, "p");
@@ -40702,10 +40709,6 @@ document.addEventListener("click", function (e) { var b = e.target.closest && e.
       }).join("") + '</ol>';
       if (P.length > 10) c += '<p><button class="btn ghost small" data-hnmore="p">' + (HN.allP ? "Show the top 10" : "See the top " + P.length) + '</button></p>';
     }
-    if (R.length > 3) c += '<h3 class="hvnh">More agencies</h3><ol class="clboard axboard hvnag" start="4">' + R.slice(3, nR).map(function (r) {
-      return '<li class="' + (r.mine ? "me " : "") + 'axclick" data-hnag="' + esc(r.id) + '" data-hnname="' + esc(r.name) + '" tabindex="0" role="button" aria-label="' + esc(r.name) + ': see who is on this team"><span class="clrk">' + r.rank + '</span>' + agxAvArt(r.av) +
-        '<span class="clal">' + esc(r.name) + (r.mine ? ' <em>yours</em>' : '') + '<small class="axsub">' + esc(r.city || "") + (r.state ? ", " + esc(r.state) : "") + '</small></span><span class="clsc"><b>' + num0(r.top3) + '</b><small>' + (r.filled < 3 ? r.filled + " of 3 on the team" : "top 3") + '</small></span></li>';
-    }).join("") + '</ol>' + (R.length > 5 ? '<p><button class="btn ghost small" data-hnmore="a">' + (HN.allR ? "Show the top 5" : "See the top " + Math.min(25, R.length)) + '</button></p>' : '');
     c += '<p class="muted small">Tap any agency or player to see everyone on that team. Agencies are ranked by their top 3 people’s points added together.' + (T.rules ? ' ' + esc(T.rules) : '') + '</p>';
     c += '</section>' + hnYou(D);
     return c;
@@ -40739,14 +40742,46 @@ document.addEventListener("click", function (e) { var b = e.target.closest && e.
         '<b class="bpname">' + esc(nameOf(r)) + (meOf(r) ? ' <em>' + (kind === "a" ? "yours" : "you") + '</em>' : '') + '</b>' + (subOf(r) ? '<small class="bpsub">' + esc(subOf(r)) + '</small>' : '') +
         '<span class="bppts">' + num0(ptsOf(r)) + ' pts</span></button>' +
         '<div class="bpblock" aria-hidden="true"><span class="bptop"></span><span class="bpnum">' + pl + '</span>' + (pl === 1 ? '<span class="bpspark">✦</span><span class="bpspark b">✦</span>' : '') + '</div>' +
-        (pz ? '<div class="bpprize r-' + pz.rar + '"><span class="bpsil">' + clSilhouette(pz.rar) + '<i>?</i></span><b>' + esc(pz.t) + '</b><small>' + esc(pz.s) + '</small>' + (pz.x ? '<small class="bpx">' + esc(pz.x) + '</small>' : '') + '</div>' : '') +
+        (pz ? (pz.art ? '<button class="bpprize r-' + pz.rar + ' shown" ' + pz.tap + ' aria-label="' + esc(pz.t) + ': see its lore and stats"><span class="bpsil art">' + pz.art + '</span><b>' + esc(pz.t) + '</b><small>' + esc(pz.s) + '</small>' + (pz.x ? '<small class="bpx">' + esc(pz.x) + '</small>' : '') + '</button>'
+          : '<div class="bpprize r-' + pz.rar + '"><span class="bpsil">' + clSilhouette(pz.rar) + '<i>?</i></span><b>' + esc(pz.t) + '</b><small>' + esc(pz.s) + '</small>' + (pz.x ? '<small class="bpx">' + esc(pz.x) + '</small>' : '') + '</div>') : '') +
         '</div>';
     }).join("") + '</div><div class="bpfloor" aria-hidden="true"></div>';
   }
+  /* this week's named prizes, shown (not hidden) under each podium step; tap for lore and stats (owner, Nov 25 2026) */
+  function hnPrizes(T) {
+    var F = T && T.featured, E = (F && F.epics) || [];
+    var p1 = { rar: "legendary", t: "Legendary bug", s: "for everyone on the roster", x: "+ National Champion badge & Hall of Fame" };
+    try {
+      if (F && F.kind === "bugid" && bugById(F.bug).id === F.bug) p1 = { rar: "legendary", t: F.name, s: "for everyone on the roster · only on the scoreboard", x: "+ National Champion badge & Hall of Fame", art: bugArt(bugById(F.bug)), tap: 'data-pzlore="' + esc(F.bug) + '"' };
+      else if (F && F.kind === "items") { var pw = {}; (F.items || []).forEach(function (x) { if (ITEMS_BY[x]) pw[ITEMS_BY[x].slot] = x; }); p1 = { rar: "legendary", t: F.name, s: "for everyone on the roster · only on the scoreboard", x: "+ National Champion badge & Hall of Fame", art: myBugArt("", null, pw), tap: 'data-pzfit="1"' }; }
+    } catch (e) {}
+    var ep = function (i) { var e = E[i], b = e && bugById(e.id); return b && b.id === e.id ? { rar: "epic", t: b.name, s: "Epic bug for everyone on the roster", art: bugArt(b), tap: 'data-pzlore="' + esc(b.id) + '"' } : { rar: "epic", t: "Epic bug", s: "for everyone on the roster" }; };
+    return [p1, ep(0), ep(1)];
+  }
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest && e.target.closest("[data-pzlore],[data-pzfit]"); if (!t) return;
+    e.preventDefault(); e.stopPropagation();
+    if (t.hasAttribute("data-pzlore")) { try { loreOpen(t.getAttribute("data-pzlore")); } catch (x) {} return; }
+    try { pzFitOpen(); } catch (x) {}
+  }, true);
+  /* the outfit's card: your bug wearing it, the pieces, and the week it can be won */
+  function pzFitOpen() {
+    var T = (HN.data && HN.data.tiers) || store("agxTiers") || {}, F = T.featured; if (!F || F.kind !== "items") return;
+    var pw = {}, pcs = (F.items || []).filter(function (x) { return ITEMS_BY[x]; }); pcs.forEach(function (x) { pw[ITEMS_BY[x].slot] = x; });
+    var dlg = document.getElementById("loredlg"); if (!dlg) { dlg = document.createElement("div"); dlg.id = "loredlg"; document.body.appendChild(dlg); }
+    var wk = pcs.length ? ITEMS_BY[pcs[0]].prizeWk || "" : "";
+    dlg.innerHTML = '<div class="lorescrim" data-loreclose="1"><div class="lorecard" role="dialog" aria-modal="true" aria-label="' + esc(F.name) + '" style="--rc:#d4a017"><div class="loregrab"></div>' +
+      '<div class="lorehead"><div class="loreart">' + myBugArt("", null, pw) + '</div><div><span class="lorepill">scoreboard prize</span><h2>' + esc(F.name) + '</h2><span class="muted small">' + pcs.length + ' pieces · fits every bug</span></div></div>' +
+      '<div class="lorefacts">' + pcs.map(function (x) { return '<div><small>' + esc(({ hat: "Hat", face: "Face", outfit: "Outfit", held: "Held" })[ITEMS_BY[x].slot] || ITEMS_BY[x].slot) + '</small><span>' + esc(ITEMS_BY[x].name) + '</span></div>'; }).join("") + '</div>' +
+      '<h3 class="lorehd">Lore</h3><p class="loretx">' + esc(F.blurb || "") + ' Never sold in the shop.</p>' + (wk ? '<p class="loretx"><b>Scoreboard prize</b> for the week of ' + esc(wk) + '. ' + esc(F.who || "") + '</p>' : '') +
+      '<div class="actions" style="justify-content:center"><button class="btn small" data-loreclose="1">Close</button></div></div></div>';
+    dlg.hidden = false;
+  }
+  (function () { try { var st = document.createElement("style"); st.textContent = ".bpprize.shown{cursor:pointer;font:inherit;color:inherit;text-align:center}.bpprize .bpsil.art svg{width:100%;height:auto;max-width:96px}.bpprize .bpsil.stk{font-size:30px;display:block}"; document.head.appendChild(st); } catch (e) {} })();
   function hnWon() { var w = ""; HVT.wonOnly = true; try { w = hvPrizeBox(); } catch (e) {} HVT.wonOnly = false; return w; }
   function hnTeamPrizes() {
-    return '<div class="bpteam"><b>🏅 Win inside your own team too</b><div class="bptrow">' + [["epic", "1st", "Epic bug + Top Contributor badge"], ["rare", "2nd", "Rare bug"], ["common", "3rd", "Common bug"]].map(function (x) {
-      return '<div class="bpprize r-' + x[0] + '"><span class="bpsil">' + clSilhouette(x[0]) + '<i>?</i></span><b>' + x[1] + '</b><small>' + x[2] + '</small></div>'; }).join("") +
+    return '<div class="bpteam"><b>🏅 Win inside your own team too</b><div class="bptrow">' + [["epic", "1st", "500 sticks + Top Contributor badge"], ["rare", "2nd", "300 sticks"], ["common", "3rd", "150 sticks"]].map(function (x) {
+      return '<div class="bpprize r-' + x[0] + '"><span class="bpsil stk" aria-hidden="true">🪵</span><b>' + x[1] + '</b><small>' + x[2] + '</small></div>'; }).join("") +
       '</div><p class="muted small">Plus weekly points milestones worth up to 600 sticks.</p></div>';
   }
   /* your place, under the boards, however far down it is (owner, Nov 23 2026) */
@@ -40762,9 +40797,8 @@ document.addEventListener("click", function (e) { var b = e.target.closest && e.
   var hv0 = hvBoard;
   hvBoard = function () {
     var tabs = '<div class="cltabs axtiers hvntabs" role="tablist"><button role="tab" aria-selected="' + (HN.tab === "nat") + '" class="' + (HN.tab === "nat" ? "on" : "") + '" data-hntab="nat">National</button><button role="tab" aria-selected="' + (HN.tab === "team") + '" class="' + (HN.tab === "team" ? "on" : "") + '" data-hntab="team">My Team</button>' + (HN.tab === "nat" ? '<button data-hnre="1" aria-label="Refresh">↻</button>' : '') + '</div>';
-    var fx = ""; try { fx = hvFeatBox(); } catch (x) {}   /* this week's prize above the scoreboards (owner, Nov 25 2026) */
-    if (HN.tab === "team") return fx + tabs + hv0();
-    return fx + tabs + hnWon() + hnNational() + '<h2 class="hvsth">Your stats</h2>';
+    if (HN.tab === "team") return tabs + hv0();
+    return tabs + hnWon() + hnNational() + '<h2 class="hvsth">Your stats</h2>';
   };
   document.addEventListener("click", function (e) {
     var t = e.target.closest && e.target.closest("[data-hntab],[data-hnre],[data-hnag],[data-hnmore]"); if (!t) return;
