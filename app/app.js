@@ -1762,9 +1762,10 @@ function nrState() {
 }
 /* unfolding calls: each part is a normal single-answer question that carries the call's story so far */
 function caseItems(c) {
+  try { if (typeof nfixApply === "function") nfixApply(); } catch (e) {}
   return c.steps.map(function (s, k) {
     var q = c._qs && c._qs[k];
-    if (!q) { q = { lv: c.lv, d: s.d, q: s.q, a: s.a, w: s.w, x: s.x, cat: "", cs: c.id, csTitle: c.title, part: k + 1, parts: c.steps.length, story: s.story, dv: s.dv && s.dv.k === "ecg12" ? s.dv : undefined, _sid: qid(s), before: c.steps.slice(0, k).map(function (p) { return p.story; }) }; (c._qs = c._qs || [])[k] = q; }
+    if (!q) { q = { lv: c.lv, d: s.d, q: s.q, a: s.a, w: s.w, x: s.x, cat: "", cs: c.id, csTitle: c.title, part: k + 1, parts: c.steps.length, story: s.story, dv: s.dv && s.dv.k === "ecg12" ? s.dv : undefined, _sid: qid(s), _ck: s._ck, before: c.steps.slice(0, k).map(function (p) { return p.story; }) }; (c._qs = c._qs || [])[k] = q; }
     return q;
   });
 }
@@ -39258,7 +39259,7 @@ function qCite(q) {
   try {
     if (!q) return "";
     if (/(^|\s)Sources?:\s/.test(String(q.x || ""))) return "";   /* the explanation already names its source (edited questions) */
-    var s = q.src || (CITE.m ? (CITE.m[qid(q)] || (q._sid && CITE.m[q._sid]) || "") : ""); if (!CITE.m) citeLoad();   /* _sid: a case-study part asked inside a quiz uses its case step's source */
+    var s = q.src || (CITE.m ? ((q._ck && CITE.m["cs:" + q._ck]) || CITE.m[qid(q)] || (q._sid && CITE.m[q._sid]) || "") : ""); if (!CITE.m) citeLoad();   /* _sid: a case-study part asked inside a quiz uses its case step's source */
     return s ? '<span class="qsrc">Source: ' + esc(s) + '</span>' : "";
   } catch (e) { return ""; }
 }
@@ -40173,7 +40174,7 @@ var NGN_ITEMS = [
     mar: [["Medication", "Route", "Schedule", ""], ["regular insulin infusion", "IV", "Continuous per protocol", ""], ["0.9% sodium chloride", "IV", "Continuous", ""]] },
   stem: "Review the trend from 0800 to 1200. For each finding at 1200, choose whether it shows improvement or requires follow-up.",
   cols: ["Improving", "Requires follow-up"],
-  rows: [["Glucose 290 mg/dL", 0, "Glucose is falling at a steady, safe pace with the insulin infusion."], ["Potassium 3.3 mEq/L", 1, "Insulin moves potassium into cells; a potassium now below 3.5 needs replacement and the provider's review before the infusion continues."], ["pH 7.28", 0, "The pH is rising toward normal as the ketoacidosis clears."], ["Anion gap 14", 0, "A closing anion gap shows ketones are clearing."]] },
+  rows: [["Glucose 290 mg/dL", 0, "Glucose is falling about 55 to 60 mg/dL per hour (520 to 410 to 290 over 4 hours), a steady fall rather than a sudden drop, as the infusion intends."], ["Potassium 3.3 mEq/L", 1, "Insulin moves potassium into cells; a potassium now below 3.5 needs replacement and the provider's review before the infusion continues."], ["pH 7.28", 0, "The pH is rising toward normal as the ketoacidosis clears."], ["Anion gap 14", 0, "A closing anion gap shows ketones are clearing."]] },
 /* ---------- SELECT ALL / SELECT N ---------- */
 { id: "ngn-sa-vanc", type: "sata", fmt: "Select all that apply", step: 1, title: "Vancomycin infusion",
   chart: { vitals: [["Time", "HR", "BP", "RR", "SpO2", "Temp"], ["1000", "84", "122/74", "16", "98%", "98.6 F"], ["1030", "102", "104/66", "18", "98%", "98.8 F"]],
@@ -40790,6 +40791,35 @@ document.addEventListener("click", function (e) { var b = e.target.closest && e.
   document.head.appendChild(st);
 })();
 
+
+/* ===== Nursing content fixes (owner, Nov 24 2026): vancomycin named as the cause of the kidney injury; SVC syndrome keyed
+   to what is taught (no IV or blood pressure in either arm); the spit-hood restraint step retired; DKA potassium uses the
+   current 3.5 mEq/L cutoff. The nursing cases arrive later in the background (data8.js), so this runs again whenever the
+   screen is drawn and before any case becomes quiz questions; each fix applies once. */
+function nfixApply() {
+  if (typeof DB === "undefined") return;
+  /* each case step keeps a stable source key (case id + its original position): many steps share a stem such as
+     "What do you do first?", so the question text alone cannot tell their sources apart */
+  (DB.CASES || []).forEach(function (c) { if (c._ckd) return; c._ckd = 1; (c.steps || []).forEach(function (s, k) { if (!s._ck) s._ck = c.id + ":" + k; }); });
+  function step(cid, q) { var c = (DB.CASES || []).filter(function (x) { return x.id === cid; })[0]; if (!c) return null; for (var i = 0; i < c.steps.length; i++) if (c.steps[i].q === q) return { c: c, i: i, s: c.steps[i] }; return null; }
+  var v = step("nc-renal-2", "Which option should the nurse suggest for the leg pain?");
+  if (v && !v.s._nfix) { v.s._nfix = 1; v.s.x = "Vancomycin is the cause of this client's kidney injury, and ibuprofen, naproxen, ketorolac and celecoxib are all NSAIDs that reduce blood flow to the kidneys and add to the damage. Acetaminophen is not an NSAID and is not nephrotoxic at usual doses, and raising the leg eases the swelling and pain."; }
+  var a = step("on-08", "Which arm should you use?");
+  if (a) {
+    a.s.q = "Where should the new IV and blood pressure cuff go?";
+    a.s.a = "A lower-extremity site per order; no IV or cuff on either arm";
+    a.s.w = ["The right arm, since it has the best veins for an IV", "Either arm, since SVC syndrome does not affect the arms", "The left arm, since the blockage is on the right side"];
+    a.s.x = "Both arms drain into the blocked superior vena cava, so an IV in either arm infuses poorly and raises venous pressure, and an arm cuff adds congestion. Use a lower-extremity site for the IV and blood pressure, per order. The left arm is the tempting answer, but the left side drains into the same blocked vein.";
+    if (a.c._qs) a.c._qs = null;
+  }
+  var r = step("py-03", "Which practice keeps her safest?");
+  if (r) { r.c.steps.splice(r.i, 1); r.c._qs = null; }
+  (DB.LABQ || []).forEach(function (q) {
+    if (!q._nfix && /^A client in DKA has a glucose of 520 mg\/dL and a potassium of 3\.1 mEq\/L/.test(q.q || "")) { q._nfix = 1; q.x = "Insulin drives potassium into the cells. Under the 2024 hyperglycemic crises consensus, insulin is held until potassium is at least 3.5 mEq/L, so the nurse clarifies the order and potassium is replaced first to prevent dangerous hypokalemia and arrhythmias."; }
+  });
+}
+try { nfixApply(); } catch (e) {}
+if (typeof render === "function") (function () { var r0 = render; render = function () { try { nfixApply(); } catch (e) {} return r0.apply(this, arguments); }; })();
 
 /* Agency Challenge tidy-up (owner, Nov 24 2026 screenshot): trophies sit in a neat row from the left with a label under
    each, instead of one icon pushed to the far right; "Challenge a friend" and its note line up side by side. */
