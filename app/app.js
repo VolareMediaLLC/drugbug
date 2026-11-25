@@ -40661,10 +40661,70 @@ function ngnPseudo(it) { return { ngn: it, id: it.id, lv: "rn", reg: true, cat: 
 /* the NCLEX-style deck says it includes NGN items, with a way to practice them on their own */
 function ngnPrepNote() {
   if (!ngnStudent()) return "";
-  return '<div class="ngprep"><span class="ngpill">NGN</span><span>NCLEX-style tests include <b>Next Gen NCLEX items</b> (bow-tie, matrix, chart highlights, drop-downs, trends and dosage calculations), about 1 in 6. <button class="linkish" data-ngonly="1">Practice the ' + NGN_ITEMS.length + ' NGN items on their own</button></span></div>';
+  return '<div class="ngprep"><span class="ngpill">NGN</span><span>NCLEX-style tests include <b>Next Gen NCLEX items</b> (bow-tie, matrix, chart highlights, drop-downs, trends and dosage calculations). Each test follows the NCLEX-RN test plan\u2019s content percentages. <button class="linkish" data-ngonly="1">Practice the ' + NGN_ITEMS.length + ' NGN items on their own</button></span></div>';
 }
 document.addEventListener("click", function (e) { var b = e.target.closest && e.target.closest("[data-ngonly]"); if (!b) return; e.preventDefault(); NG.i = -1; S.tab = "ngn"; render(); window.scrollTo(0, 0); });
 document.addEventListener("click", function (e) { var b = e.target.closest && e.target.closest("[data-ngtoq]"); if (!b) return; e.preventDefault(); S.tab = "prep"; render(); window.scrollTo(0, 0); });
+
+/* ===== NCLEX-style tests for nursing school students follow the NCLEX-RN test plan (owner, Nov 25 2026: "research the
+   most asked content on the nclex and show that same percentage of content in the nclex style questions only for nursing
+   school students"). Source: NCSBN 2026 NCLEX-RN Test Plan (effective April 2026), Distribution of Content:
+   Management of Care 18% (15-21), Safety and Infection Prevention and Control 13% (10-16), Health Promotion and
+   Maintenance 9% (6-12), Psychosocial Integrity 9% (6-12), Basic Care and Comfort 9% (6-12), Pharmacological and
+   Parenteral Therapies 16% (13-19), Reduction of Risk Potential 12% (9-15), Physiological Adaptation 14% (11-17).
+   On the real exam those percentages apply to the stand-alone items; the case studies (three 6-item sets, 18 of the 70
+   scored items at minimum length) come on top. So, on the RN path with Nursing school RN selected:
+   - the stand-alone questions of every test are split by those percentages exactly (largest-remainder rounding, so a
+     10-question test is 2 / 1 / 1 / 1 / 1 / 2 / 1 / 1);
+   - an NGN item counts toward its own category (medication items are Pharmacological therapies) and never takes more
+     than about 60% of a category's questions, so the count stays "about 1 in 6" at most;
+   - case studies are about a quarter of the test at most (one for every 25 questions) and start at 20 questions: a
+     6-part case inside a 10-question test was over half the test and pushed every category off its share.
+   Audit before this change (300 simulated tests each): a 10-question test was 55% case study + 20% NGN, leaving 25% for
+   all eight categories; 25 to 100 questions were 22% case study + 16% NGN (all medication items) with the rest split
+   12 / 8 / 5 / 5 / 5 / 10 / 8 / 9. Everyone else's tests are unchanged. ===== */
+var NCLEX_RN_PLAN = { moc: .18, sic: .13, hpm: .09, psy: .09, bcc: .09, pharm: .16, rrp: .12, phys: .14 };
+var NGN_CAT = { "ngn-ht-furo": "rrp", "ngn-mx-dka": "phys" };   /* every other NGN item is a medication item: pharm */
+function nclexQuotas(m, MX) {
+  var ks = Object.keys(MX), Q = {}, left = m, fr = [];
+  ks.forEach(function (k) { var v = m * MX[k]; Q[k] = Math.floor(v + 1e-9); left -= Q[k]; fr.push([v - Q[k], MX[k], k]); });
+  fr.sort(function (a, b) { return b[0] - a[0] || b[1] - a[1]; });
+  for (var i = 0; i < left && i < fr.length; i++) Q[fr[i][2]]++;
+  return Q;
+}
+(function () {
+  var rc0 = regCompose, wc0 = nrWithCases, LAST = null;
+  regCompose = function (pool, n, adaptive) {
+    if (!ngnStudent()) return rc0(pool, n, adaptive);
+    try {
+      var pick = function (L, k) { return k <= 0 ? [] : adaptive ? adaptivePick(L, k) : shuffle(L.slice()).slice(0, k); };
+      /* case studies: one for every 25 questions, from 20 questions up, never more than about a quarter of the test */
+      var blocks = [], used = 0, allowed = nrLevelsFor(ctxKey());
+      if (n >= 20) {
+        var cases = shuffle((DB.CASES || []).filter(function (c) { return allowed.indexOf(c.lv) >= 0 && c.steps.length; })), wantC = Math.max(1, Math.round(n / 25)), capC = Math.ceil(n * 0.26);
+        for (var i = 0; i < cases.length && blocks.length < wantC; i++) { var it = caseItems(cases[i]); if (used + it.length > capC) continue; blocks.push(it); used += it.length; }
+      }
+      var m = Math.max(0, n - used), Q = nclexQuotas(m, NCLEX_RN_PLAN);
+      /* NGN items, new ones first, inside their own category's share */
+      var adds = [], R = ngnRec(), wantN = m >= 5 ? Math.max(1, Math.round(n / 6)) : 0, ngN = {};
+      shuffle(NGN_ITEMS.slice()).sort(function (a, b) { var ra = R[a.id], rb = R[b.id]; return (ra ? 1 + (ra.best || 0) / ngnMax(a) : 0) - (rb ? 1 + (rb.best || 0) / ngnMax(b) : 0); }).forEach(function (x) {
+        var c = NGN_CAT[x.id] || "pharm"; if (adds.length >= wantN || (ngN[c] || 0) >= Math.round((Q[c] || 0) * 0.6)) return;
+        var pq = ngnPseudo(x); pq.cat = c; adds.push(pq); ngN[c] = (ngN[c] || 0) + 1;
+      });
+      /* the regular questions fill what is left of each category */
+      var out = [];
+      Object.keys(Q).forEach(function (k) { out = out.concat(pick(pool.filter(function (q) { return q.cat === k; }), Q[k] - (ngN[k] || 0))); });
+      var need = m - adds.length - out.length;
+      if (need > 0) out = out.concat(pick(pool.filter(function (q) { return out.indexOf(q) < 0; }), need));
+      var singles = shuffle(out), fin = [], b = 0;
+      var slots = blocks.map(function () { return Math.floor(Math.random() * (singles.length + 1)); }).sort(function (a, c) { return a - c; });
+      for (var j = 0; j <= singles.length; j++) { while (b < blocks.length && slots[b] === j) { fin = fin.concat(blocks[b]); b++; } if (j < singles.length) fin.push(singles[j]); }
+      fin = fin.concat(adds);   /* nrStart places the NGN items between the others, never inside a case study */
+      LAST = fin; return fin;
+    } catch (e) { LAST = null; return rc0(pool, n, adaptive); }
+  };
+  nrWithCases = function (qs, allowed) { if (qs && qs === LAST) { LAST = null; return qs; } return wc0(qs, allowed); };
+})();
 
 /* Nursing school Graduation Report: the "coming soon" note was taken down (owner, Nov 24 2026: "Dont put coming soon graduation report"). */
 
