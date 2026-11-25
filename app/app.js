@@ -33997,7 +33997,7 @@ function agxView() {
   if (!statsOn()) c += '<div class="axrecruit"><b>Your answers aren\u2019t earning points</b><span>Basic study statistics are off. Turn them back on to keep earning points for your team.</span><button class="btn" data-agx="statson">Turn on</button></div>';
   if (M.onTeam) c += '<p class="axteam">You\u2019re on your agency\u2019s top 3 this week.</p>';
   if (agxPushHandler()) c += '<label class="chk axpush"><input type="checkbox" id="agxPushT"' + (store("agxPushOn") ? " checked" : "") + '> Tell me when someone passes me</label>' + (AGX.pushMsg ? '<p class="muted small">' + esc(AGX.pushMsg) + '</p>' : '');
-  c += agxChBox() + '<p><button class="btn ghost" data-agx="challenge">Challenge a friend</button> <span class="muted small">Send a link to a friend at any agency or hospital.</span></p>';
+  c += agxChBox() + '<div class="axchal"><button class="btn ghost" data-agx="challenge">Challenge a friend</button><span class="muted small">Send a link to a friend at any agency or hospital.</span></div>';
   c += agxCdHtml();
   c += '<div class="cltabs axtiers" role="tablist"><button role="tab" aria-selected="' + (AGX.tab === "agency") + '" class="' + (AGX.tab === "agency" ? "on" : "") + '" data-agx="tab-agency">My Agency</button>' + (D.stateOn ? '<button role="tab" aria-selected="' + (AGX.tab === "state") + '" class="' + (AGX.tab === "state" ? "on" : "") + '" data-agx="tab-state">' + esc(agxStateName(AGX.stPick || A.state)) + '</button>' : '') + '<button role="tab" aria-selected="' + (AGX.tab === "national") + '" class="' + (AGX.tab === "national" ? "on" : "") + '" data-agx="tab-national">National</button><button data-agx="refresh" aria-label="Refresh">↻</button></div>' + agxTierBanner(AGX.tab, D);
   if (AGX.tab === "agency") {
@@ -40790,6 +40790,17 @@ document.addEventListener("click", function (e) { var b = e.target.closest && e.
   document.head.appendChild(st);
 })();
 
+
+/* Agency Challenge tidy-up (owner, Nov 24 2026 screenshot): trophies sit in a neat row from the left with a label under
+   each, instead of one icon pushed to the far right; "Challenge a friend" and its note line up side by side. */
+(function () {
+  var st = document.createElement("style");
+  st.textContent = ".axtroph{padding:12px 14px}.axtroph h4{margin:0 0 8px}.clbox p.axtrow{display:flex;flex-wrap:wrap;gap:10px;margin:0;align-items:stretch}" +
+    ".clbox p.axtrow span.axtrophy{margin-left:0;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:72px;padding:8px 10px;border-radius:12px;font-size:30px;line-height:1;font-weight:400;background:var(--surface-2,rgba(127,127,127,.10));border:1px solid var(--line)}" +
+    ".axtrophy small{display:block;margin-top:6px;font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap}" +
+    ".axchal{display:flex;align-items:center;gap:10px 12px;flex-wrap:wrap;margin:10px 0}.axchal .btn{flex:0 0 auto}.axchal span{flex:1 1 180px;line-height:1.35}";
+  document.head.appendChild(st);
+})();
 
 /* ===== looping pictures pause when out of sight (owner, Nov 24 2026: "the app can sometimes feel unresponsive") =====
    The little bug, sparkle and badge loops live inside SVG pictures, which the phone draws on its main thread rather than
