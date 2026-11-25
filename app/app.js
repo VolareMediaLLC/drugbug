@@ -186,7 +186,8 @@ function isF(k) { return k === "asm" || k === "cls" || k === "cmc" || k === "cpp
 function isM(k) { return k === "ms1" || k === "ms3" || k === "intern"; }
 function isI(k) { return k === "rt" || k === "ct" || k === "mri" || k === "nm" || k === "ir"; }
 /* Allied Health route (owner, Nov 5 2026): mental health, dietitian, respiratory therapist. Not cumulative, like Imaging. */
-function isA(k) { return k === "mh" || k === "diet" || k === "rrt" || k === "pt" || k === "slp" || k === "surg" || k === "anes" || k === "dent" || k === "phleb" || k === "ekg"; }
+function isRx(k) { return k === "pharmtech" || k === "pharmschool" || k === "pharmacist"; }   /* Pharmacy path (owner, Nov 24 2026) */
+function isA(k) { return isRx(k) || k === "mh" || k === "diet" || k === "rrt" || k === "pt" || k === "slp" || k === "surg" || k === "anes" || k === "dent" || k === "phleb" || k === "ekg"; }
 DB.ALEVELS = [
   { key: "mh", name: "Mental Health", full: "Mental and behavioral health professionals", bug: "Calm Cicada", color: "mh",
     blurb: "For psych nurses, behavioral health techs, counselors and social workers: psychiatric medicines, side effects to watch for, agitation and crisis care, and substance use treatment." },
@@ -215,10 +216,20 @@ DB.ALEVELS = [
    the code (and in ALEVELS_ALL) but are hidden, and anyone on one of them is sent back to choose a path. */
 var ALLIED_KEEP = { rrt: 1, diet: 1, phleb: 1 };   /* Phlebotomy added back (owner, Nov 17 2026: "I like Phlebotomy") */
 DB.ALEVELS_ALL = DB.ALEVELS;
+/* Pharmacy (owner, Nov 24 2026: "add a pharmacist Tech to Pharmacy School and Pharmicist bug and specialty"; "have a note saying this
+   route is actively being built but make it still usable"). Its own path on the picker; under the hood it uses the Allied Health
+   machinery (own medicine list, own question bank per level). */
+DB.RXLEVELS = [
+  { key: "pharmtech", name: "Pharmacy Technician", full: "Pharmacy technicians (CPhT) and tech students", bug: "Mortar Mantis", color: "rx", blurb: "Brand and generic names, sig codes, calculations, pharmacy law, compounding and medication safety." },
+  { key: "pharmschool", name: "Pharmacy School", full: "PharmD students", bug: "Capsule Cricket", color: "rx", blurb: "Mechanisms, pharmacokinetics, interactions, toxicology and the foundations for the NAPLEX." },
+  { key: "pharmacist", name: "Pharmacist", full: "Pharmacists (RPh / PharmD)", bug: "Apothecary Beetle", color: "rx", blurb: "Therapy choices, monitoring, dose adjustment, counseling and interactions, NAPLEX style." }
+];
+var RX_IDS = "atorvastatin levothyroxine lisinopril metformin amlodipine metoprolol omeprazole simvastatin losartan albuterol gabapentin hydrochlorothiazide sertraline montelukast fluticasone amoxicillin furosemide pantoprazole escitalopram alprazolam prednisone bupropion pravastatin acetaminophen citalopram dextroamphetamine ibuprofen carvedilol trazodone fluoxetine tramadol insulin-glargine clonazepam tamsulosin atenolol potassium-chloride meloxicam rosuvastatin clopidogrel propranolol aspirin cyclobenzaprine hydrocodone glipizide duloxetine methylphenidate venlafaxine zolpidem warfarin oxycodone ethinyl-estradiol allopurinol ergocalciferol insulin-aspart azithromycin metronidazole loratadine lorazepam estradiol lamotrigine glimepiride fenofibrate famotidine apixaban rivaroxaban spironolactone quetiapine valsartan diclofenac cephalexin hydroxyzine buspirone ondansetron tizanidine benazepril cetirizine doxycycline sitagliptin triamcinolone clonidine latanoprost lovastatin topiramate pioglitazone paroxetine mirtazapine prednisolone ciprofloxacin diltiazem sumatriptan aripiprazole finasteride levetiracetam olmesartan donepezil empagliflozin dapagliflozin liraglutide semaglutide dulaglutide insulin-lispro amitriptyline nortriptyline risperidone olanzapine lithium carbamazepine phenytoin digoxin amiodarone nitroglycerin isosorbide-mononitrate hydralazine verapamil nifedipine enalapril ramipril chlorthalidone torsemide bumetanide metolazone ezetimibe colchicine febuxostat alendronate raloxifene oxybutynin tolterodine mirabegron sildenafil tadalafil methotrexate hydroxychloroquine budesonide tiotropium ipratropium salmeterol formoterol benzonatate guaifenesin dextromethorphan pseudoephedrine diphenhydramine nitrofurantoin amoxicillin-clavulanate cefdinir clindamycin levofloxacin fluconazole valacyclovir acyclovir oseltamivir nystatin terbinafine mupirocin bacitracin baclofen methocarbamol naproxen celecoxib morphine hydromorphone fentanyl buprenorphine naloxone methadone naltrexone varenicline nicotine phentermine modafinil atomoxetine guanfacine haloperidol ziprasidone lurasidone clozapine temazepam diazepam midazolam phenobarbital meclizine promethazine metoclopramide prochlorperazine docusate polyethylene-glycol loperamide dicyclomine sucralfate misoprostol esomeprazole lansoprazole heparin enoxaparin dabigatran ticagrelor prasugrel cilostazol vancomycin piperacillin-tazobactam ceftriaxone cefazolin gentamicin meropenem linezolid epinephrine norepinephrine dopamine dobutamine vasopressin propofol ketamine succinylcholine rocuronium dexamethasone methylprednisolone hydrocortisone magnesium-sulfate calcium-gluconate sodium-bicarbonate adenosine labetalol esmolol nicardipine alteplase tranexamic-acid protamine flumazenil octreotide ferrous-sulfate folic-acid cyanocobalamin levonorgestrel medroxyprogesterone norethindrone testosterone thyroid-desiccated desmopressin tacrolimus mycophenolate cyclosporine adalimumab etanercept insulin-detemir insulin-nph glyburide acarbose canagliflozin linagliptin";
 DB.ALEVELS = DB.ALEVELS.filter(function (l) { return ALLIED_KEEP[l.key]; });
-function alliedHidden(k) { return isA(k) && !ALLIED_KEEP[k]; }
+function alliedHidden(k) { return isA(k) && !isRx(k) && !ALLIED_KEEP[k]; }
 /* each field's medicines: whole drug groups, drug tags, and hand-picked additions */
 DB.ASCOPE = {
+  pharmtech: { groups: [], tags: [], ids: RX_IDS }, pharmschool: { groups: [], tags: [], ids: RX_IDS }, pharmacist: { groups: [], tags: [], ids: RX_IDS },
   mh: { groups: ["Antidepressants", "Antipsychotics", "Mood Stabilizers", "ADHD / Stimulants", "Sedatives / Anxiolytics", "Sleep", "Neuro / Psych / Addiction (Advanced)", "Dementia", "Illicit & Recreational Drugs (education)"], tags: ["BH"],
     ids: "naloxone naltrexone buprenorphine methadone disulfiram acamprosate varenicline benztropine diphenhydramine hydroxyzine propranolol clonidine prazosin lithium haloperidol droperidol olanzapine ziprasidone ketamine esketamine lorazepam midazolam thiamine" },
   diet: { groups: ["Vitamins & Supplements", "Vegetable Compounds", "Fruit Compounds", "Probiotics", "Diabetes", "Lipid / Cholesterol", "IV Fluids & Electrolytes", "Renal / Electrolyte", "Thyroid"], tags: [],
@@ -293,10 +304,10 @@ DB.ascopeFor = function (k) {
   DB._acache[k] = { ids: Object.keys(ids).filter(function (id) { return DB.drugs[id]; }).sort(), notes: {}, n: nD };
   return DB._acache[k];
 };
-function routeOfLevel(k) { return isN(k) ? "rn" : isM(k) ? "md" : isI(k) ? "im" : isA(k) ? "ah" : isF(k) ? "fm" : "ph"; }
-var ROUTES = { ph: { view: "levels", hash: "prehospital", name: "Prehospital" }, fm: { view: "flevels", hash: "fieldmedic", name: "Field Medic" }, rn: { view: "nlevels", hash: "nursing", name: "Nursing" }, md: { view: "mlevels", hash: "medschool", name: "Med School" }, im: { view: "ilevels", hash: "imaging", name: "Imaging" }, ah: { view: "alevels", hash: "allied", name: "Hospital Allied Health" } };
-function levelsOf(k) { return isN(k) ? DB.NLEVELS : isM(k) ? DB.MLEVELS : isI(k) ? DB.ILEVELS : isA(k) ? DB.ALEVELS : isF(k) ? DB.FLEVELS : DB.LEVELS; }
-function levelObj(k) { return DB.LEVELS.concat(DB.NLEVELS, DB.MLEVELS, DB.ILEVELS || [], DB.FLEVELS || [], DB.ALEVELS || []).filter(function (l) { return l.key === k; })[0]; }
+function routeOfLevel(k) { return isRx(k) ? "rx" : isN(k) ? "rn" : isM(k) ? "md" : isI(k) ? "im" : isA(k) ? "ah" : isF(k) ? "fm" : "ph"; }
+var ROUTES = { ph: { view: "levels", hash: "prehospital", name: "Prehospital" }, fm: { view: "flevels", hash: "fieldmedic", name: "Field Medic" }, rn: { view: "nlevels", hash: "nursing", name: "Nursing" }, md: { view: "mlevels", hash: "medschool", name: "Med School" }, im: { view: "ilevels", hash: "imaging", name: "Imaging" }, ah: { view: "alevels", hash: "allied", name: "Hospital Allied Health" }, rx: { view: "rxlevels", hash: "pharmacy", name: "Pharmacy" } };
+function levelsOf(k) { return isRx(k) ? DB.RXLEVELS : isN(k) ? DB.NLEVELS : isM(k) ? DB.MLEVELS : isI(k) ? DB.ILEVELS : isA(k) ? DB.ALEVELS : isF(k) ? DB.FLEVELS : DB.LEVELS; }
+function levelObj(k) { return DB.LEVELS.concat(DB.NLEVELS, DB.MLEVELS, DB.ILEVELS || [], DB.FLEVELS || [], DB.ALEVELS || [], DB.RXLEVELS || []).filter(function (l) { return l.key === k; })[0]; }
 function levelIdx(k) { return levelsOf(k).map(function (l) { return l.key; }).indexOf(k); }
 function scopeFor(k) {
   var b = isN(k) ? DB.nscopeFor(k) : isM(k) ? DB.mscopeFor(k) : isI(k) ? DB.iscopeFor(k) : isA(k) ? DB.ascopeFor(k) : isF(k) ? DB.fscopeFor(k) : DB.scopeFor(k), u = isN(k) ? myUnits(k) : [];
@@ -378,7 +389,7 @@ function antennae(c, curl) {
   return '<path d="M90 48 Q80 24 68 20" stroke="' + c + '" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M110 48 Q120 24 132 20" stroke="' + c + '" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="68" cy="20" r="6" fill="' + c + '"/><circle cx="132" cy="20" r="6" fill="' + c + '"/>';
 }
 var BOOTED = 0, LAST_ERR = "";   /* the boot splash is replaced by the first real render (owner, Oct 30 2026) */
-var IMBUG = { pt: { name: "Gym Beetle", body: "beetle", c: ["#fdba74", "#ea580c", "#fff7ed"], acc: ["bandana"] }, slp: { name: "Echo Cricket", body: "cricket", c: ["#f9a8d4", "#db2777", "#fdf2f8"], acc: ["headset"] }, surg: { name: "Scalpel Scorpion", body: "scorpion", c: ["#99f6e4", "#0d9488", "#f0fdfa"], acc: ["mask", "cap"] }, anes: { name: "Ether Earwig", body: "stag", c: ["#a5b4fc", "#4338ca", "#eef2ff"], acc: ["mask", "goggles"] }, dent: { name: "Enamel Ant", body: "ant", c: ["#e0f2fe", "#0ea5e9", "#ffffff"], acc: ["mask", "goggles"] }, phleb: { name: "Vessel Vine-Borer", body: "caterpillar", c: ["#fca5a5", "#b91c1c", "#fef2f2"], acc: ["stetho"] }, ekg: { name: "Pulse Beetle", body: "firefly", c: ["#86efac", "#15803d", "#f0fdf4"], acc: ["stetho", "bolt"] }, cp: { name: "Armor Beetle", body: "beetle", c: ["#93c5fd", "#1d4ed8", "#eff6ff"], acc: ["stetho"] }, tccc: { name: "Hazmat Hornet", body: "wasp", c: ["#bef264", "#3f6212", "#f7fee7"], acc: ["tachelmet", "mask"] }, mh: { name: "Calm Cicada", body: "cicada", c: ["#c4b5fd", "#7c3aed", "#f5f3ff"], acc: ["headset"] }, diet: { name: "Garden Grasshopper", body: "grasshopper", c: ["#bef264", "#65a30d", "#f7fee7"], acc: ["leaf"] }, rrt: { name: "Breathing Bee", body: "bee", c: ["#7dd3fc", "#0284c7", "#f0f9ff"], acc: ["mask"] }, flightrn: { name: "Night Monarch", body: "butterfly", c: ["#f59e0b", "#7c2d12", "#fff7ed"], head: "#fb923c", ink: "#1c1917", wingC: "#fdba74", eyes: "fierce", acc: ["jethelmet", "aviscarf", "stetho"] }, rt: { name: "X-Ray Firefly", body: "firefly", c: ["#7dd3fc", "#0369a1", "#e0f2fe"], acc: ["goggles"] }, ct: { name: "Spiral Scarab", body: "scarab", c: ["#a5b4fc", "#4338ca", "#ffffff"], acc: ["headset"] }, mri: { name: "Magnet Moth", body: "moth", c: ["#c4b5fd", "#6d28d9", "#f5f3ff"], acc: ["bolt"] }, nm: { name: "Glow Worm", body: "caterpillar", c: ["#bef264", "#4d7c0f", "#ffffff"], acc: ["stars"] }, ir: { name: "Cath Cricket", body: "grasshopper", c: ["#5eead4", "#0f766e", "#ffffff"], acc: ["mask"] } };
+var IMBUG = { pharmtech: { name: "Mortar Mantis", body: "mantis", c: ["#99f6e4", "#0d9488", "#f0fdfa"], acc: ["goggles"] }, pharmschool: { name: "Capsule Cricket", body: "cricket", c: ["#fda4af", "#e11d48", "#fff1f2"], acc: ["cap"] }, pharmacist: { name: "Apothecary Beetle", body: "beetle", c: ["#a5b4fc", "#4338ca", "#eef2ff"], acc: ["stetho"] }, pt: { name: "Gym Beetle", body: "beetle", c: ["#fdba74", "#ea580c", "#fff7ed"], acc: ["bandana"] }, slp: { name: "Echo Cricket", body: "cricket", c: ["#f9a8d4", "#db2777", "#fdf2f8"], acc: ["headset"] }, surg: { name: "Scalpel Scorpion", body: "scorpion", c: ["#99f6e4", "#0d9488", "#f0fdfa"], acc: ["mask", "cap"] }, anes: { name: "Ether Earwig", body: "stag", c: ["#a5b4fc", "#4338ca", "#eef2ff"], acc: ["mask", "goggles"] }, dent: { name: "Enamel Ant", body: "ant", c: ["#e0f2fe", "#0ea5e9", "#ffffff"], acc: ["mask", "goggles"] }, phleb: { name: "Vessel Vine-Borer", body: "caterpillar", c: ["#fca5a5", "#b91c1c", "#fef2f2"], acc: ["stetho"] }, ekg: { name: "Pulse Beetle", body: "firefly", c: ["#86efac", "#15803d", "#f0fdf4"], acc: ["stetho", "bolt"] }, cp: { name: "Armor Beetle", body: "beetle", c: ["#93c5fd", "#1d4ed8", "#eff6ff"], acc: ["stetho"] }, tccc: { name: "Hazmat Hornet", body: "wasp", c: ["#bef264", "#3f6212", "#f7fee7"], acc: ["tachelmet", "mask"] }, mh: { name: "Calm Cicada", body: "cicada", c: ["#c4b5fd", "#7c3aed", "#f5f3ff"], acc: ["headset"] }, diet: { name: "Garden Grasshopper", body: "grasshopper", c: ["#bef264", "#65a30d", "#f7fee7"], acc: ["leaf"] }, rrt: { name: "Breathing Bee", body: "bee", c: ["#7dd3fc", "#0284c7", "#f0f9ff"], acc: ["mask"] }, flightrn: { name: "Night Monarch", body: "butterfly", c: ["#f59e0b", "#7c2d12", "#fff7ed"], head: "#fb923c", ink: "#1c1917", wingC: "#fdba74", eyes: "fierce", acc: ["jethelmet", "aviscarf", "stetho"] }, rt: { name: "X-Ray Firefly", body: "firefly", c: ["#7dd3fc", "#0369a1", "#e0f2fe"], acc: ["goggles"] }, ct: { name: "Spiral Scarab", body: "scarab", c: ["#a5b4fc", "#4338ca", "#ffffff"], acc: ["headset"] }, mri: { name: "Magnet Moth", body: "moth", c: ["#c4b5fd", "#6d28d9", "#f5f3ff"], acc: ["bolt"] }, nm: { name: "Glow Worm", body: "caterpillar", c: ["#bef264", "#4d7c0f", "#ffffff"], acc: ["stars"] }, ir: { name: "Cath Cricket", body: "grasshopper", c: ["#5eead4", "#0f766e", "#ffffff"], acc: ["mask"] } };
 function bugSVG(kind) {
   if (IMBUG[kind] && typeof bugArt === "function") return bugArt(IMBUG[kind], "bug", { mood: "happy" });
   var id = "b" + (++uid), s = '<svg class="bug" viewBox="0 0 200 200" role="img" aria-label="' + ({ emt: "Rookie Bug", aemt: "Beetle Medic", paramedic: "Siren Beetle", flight: "Sky Hornet", sage: "Professor Sage, the wise bug", cna: "Helper Ladybug", lvn: "Busy Bee", rn: "Monarch Nurse", ms1: "Bookworm Scholar", ms3: "Firefly Clerk", intern: "Stag Beetle Doc", flightrn: "Night Monarch, the flight nurse bug" }[kind]) + '">';
@@ -550,7 +561,7 @@ function go(view, opts) {
   if ((S.view === "flevels" || S.view === "field" || (S.view === "level" && isF(S.level))) && typeof fmUnlocked === "function" && !fmUnlocked()) { S.view = "home"; view = "home"; } /* Field Medic is hidden until a code is redeemed */
   fixTab();
   Admin.on = view === "admin"; if (view === "level") { store("lastLevel", S.level); S.lvWheelFor = null; S.obI = null; }   /* the level wheel reopens on the bug you just picked (owner, Nov 19 2026) */
-  var h = view === "home" ? "" : view === "admin" ? "admin" : view === "classes" ? "classes" : view === "settings" ? "settings" : view === "stats" ? "stats" : view === "terrarium" ? "terrarium" : view === "levels" ? "prehospital" : view === "flevels" ? "fieldmedic" : view === "nlevels" ? "nursing" : view === "mlevels" ? "medschool" : view === "ilevels" ? "imaging" : view === "alevels" ? "allied" : view === "everyday" ? "everyday" : view === "beginner" ? "beginner" : view === "field" ? "field" : view === "gen" ? "general" : view === "easy" ? "easy" : S.level;
+  var h = view === "home" ? "" : view === "admin" ? "admin" : view === "classes" ? "classes" : view === "settings" ? "settings" : view === "stats" ? "stats" : view === "terrarium" ? "terrarium" : view === "levels" ? "prehospital" : view === "flevels" ? "fieldmedic" : view === "nlevels" ? "nursing" : view === "mlevels" ? "medschool" : view === "ilevels" ? "imaging" : view === "alevels" ? "allied" : view === "rxlevels" ? "pharmacy" : view === "everyday" ? "everyday" : view === "beginner" ? "beginner" : view === "field" ? "field" : view === "gen" ? "general" : view === "easy" ? "easy" : S.level;
   try { history.replaceState(null, "", h ? "#" + h : location.pathname); } catch (e) {}
   render(); window.scrollTo(0, 0);
 }
@@ -578,7 +589,7 @@ function topbar() {
 }
 function backRow() {
   var v = S.view, lab = "", act = "";
-  if (v === "levels" || v === "flevels" || v === "nlevels" || v === "mlevels" || v === "ilevels" || v === "alevels" || (v === "everyday" && !S.evTab) || (v === "beginner" && !S.bgRun)) { lab = "Main menu"; act = 'data-go="home"'; }
+  if (v === "levels" || v === "flevels" || v === "nlevels" || v === "mlevels" || v === "ilevels" || v === "alevels" || v === "rxlevels" || (v === "everyday" && !S.evTab) || (v === "beginner" && !S.bgRun)) { lab = "Main menu"; act = 'data-go="home"'; }
   else if (v === "gen" && S.tab === "hub") { lab = "Main menu"; act = 'data-go="home"'; }
   /* back from inside a specialty goes straight to the main menu, not the level picker (owner, Nov 19 2026) */
   else if (v === "level" && S.tab === "hub") { lab = "Main menu"; act = 'data-go="home"'; }
@@ -790,8 +801,10 @@ var HOME_ROUTES = [
   ["rn", "nlevels", "Nursing", "CNA, LVN/LPN, RN and Flight Nurse: the medicines each licence gives and monitors, and what to check before you give them.", "grub-nurse"],
   ["md", "mlevels", "Medical School", "MS1 to intern: mechanisms and drug classes first, then how it all plays out on the wards.", "grub-doc"],
   ["im", "ilevels", "Imaging", "X-ray, CT, MRI, nuclear medicine and IR: the agents you inject and how to keep patients safe.", "grub-imaging"],
-  ["ah", "alevels", "Hospital Allied Health", "Respiratory therapists, dietitians / nutritionists and phlebotomists: tools and questions built for your job.", "grub-allied"]
+  ["ah", "alevels", "Hospital Allied Health", "Respiratory therapists, dietitians / nutritionists and phlebotomists: tools and questions built for your job.", "grub-allied"],
+  ["rx", "rxlevels", "Pharmacy", "Pharmacy technicians, pharmacy students and pharmacists: names, calculations, law, mechanisms and therapy. New and still being built.", "grub-allied"]
 ];
+if (!(DB.Q || []).some(function (q) { return isRx(q.lv); })) HOME_ROUTES = HOME_ROUTES.filter(function (r) { return r[0] !== "rx"; });   /* Pharmacy appears once its questions (data9.js) are loaded */
 var FPATH_ICO = {
   gen: '<path d="M4 4.5A1.5 1.5 0 0 1 5.5 3H20v15H5.5A1.5 1.5 0 0 0 4 19.5z"/><path d="M4 19.5A1.5 1.5 0 0 0 5.5 21H20"/><path d="M9 8h7M9 11.5h5"/>',
   ev: '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/>',
@@ -799,10 +812,12 @@ var FPATH_ICO = {
   ph: '<path d="M3 12h4l2-5 4 10 2-5h6"/>',
   rn: '<path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z"/>',
   md: '<path d="M6 3v6a5 5 0 0 0 10 0V3"/><path d="M11 14v2a4 4 0 0 0 8 0v-2"/><circle cx="19" cy="12" r="2"/>',
+  rx: '<rect x="4" y="9" width="16" height="6" rx="3" transform="rotate(-35 12 12)"/><path d="M10 9.5l4 5"/>',
   im: '<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3"/>'
 };
 /* what is inside each path, so the menu says more than one line (owner, Nov 5 2026) */
 var ROUTE_MORE = {
+  rx: ["Pharmacy Technician: brand and generic names, sig codes, calculations, law and compounding", "Pharmacy School: mechanisms, pharmacokinetics, interactions and toxicology", "Pharmacist: therapy choices, monitoring, dose adjustment and counseling"],
   ph: ["Study paths from EMT to Flight and Community Paramedic", "Big Calls: stroke, STEMI, sepsis, trauma and ROSC", "NREMT-style questions and Bug Rush calls and codes"],
   rn: ["Hold parameters, labs to watch and patient teaching", "Specialty units: ICU, ER, L&D, NICU and more", "NCLEX-style questions and Nursing Bug drills"],
   md: ["Mechanisms, pharmacokinetics and drug classes", "Step-style questions and advanced lab patterns", "Drug Class Comparisons and Body Systems for rounds"],
@@ -846,7 +861,7 @@ function myListRoute() {
 }
 /* the first thing after the header: get studying */
 function homeStart() {
-  var ll = store("lastLevel"), lo = ll && levelObj(ll), RV = { ph: "levels", fm: "flevels", rn: "nlevels", md: "mlevels", im: "ilevels", ah: "alevels", ev: "beginner" };
+  var ll = store("lastLevel"), lo = ll && levelObj(ll), RV = { ph: "levels", fm: "flevels", rn: "nlevels", md: "mlevels", im: "ilevels", ah: "alevels", rx: "rxlevels", ev: "beginner" };
   var main = lo ? '<button class="btn big" data-level="' + ll + '">Continue: ' + esc(lo.name) + '</button>' : '<button class="btn big" data-go="' + (RV[Prog.d.role] || "gen") + '">Start studying</button>';
   var daily = dailyDone() ? '<span class="sdone">Today\'s 5-min DrugBug: done</span>' : '<button class="btn big ghost" data-sess="daily">Today\'s 5-min DrugBug</button>';
   var gn = typeof growNudge === "function" ? growNudge(200) : null;
@@ -873,10 +888,10 @@ function homeContinue() {
 }
 function viewLevels() {
   if (routeCtx() === "fm") { S.view = "level"; S.level = "cpp"; S.tab = "hub"; return viewLevel(); }
-  var rt = routeCtx(), nurse = rt === "rn", med = rt === "md", img = rt === "im", ally = rt === "ah", fm = rt === "fm", L = nurse ? DB.NLEVELS : med ? DB.MLEVELS : img ? DB.ILEVELS : ally ? DB.ALEVELS : fm ? DB.FLEVELS : DB.LEVELS;
-  var c = topbar() + '<header class="pagehead lvhero ' + (nurse ? "rn" : med ? "md" : img ? "im" : ally ? "ah" : fm ? "fm" : "ph") + '"><h1>' + (fm ? 'Field Medic: choose your tier <span class="pill proto">In development</span>' : nurse ? "Nursing: choose your license" : med ? "Medical school: choose your year" : img ? "Imaging: choose your modality" : ally ? "Allied Health: choose your field" : "Choose your level") + '</h1><p>' + (fm ? "Tactical Combat Casualty Care in four tiers, from every service member to the combat paramedic with prolonged casualty care. Each tier includes every skill and medication from the tiers before it." : img ? "Each modality covers the reaction cart and sedation drugs every tech needs, plus the contrast agents and radiopharmaceuticals for that modality." : ally ? "Each field has its own medicines and its own questions: mental health, nutrition, or airway and breathing." : med ? "Every year studies the full drug library; the exam prep, scenarios and focus change as you advance. Your bug evolves with you." : "Each level includes every drug from the levels before it. Your bug evolves as you level up.") + '</p></header><section class="levels' + (fm ? " flv" : (L.length === 3 || L.length === 5 ? " three" : "")) + '">';
+  var rt = routeCtx(), nurse = rt === "rn", med = rt === "md", img = rt === "im", ally = rt === "ah", rxp = rt === "rx", fm = rt === "fm", L = rxp ? DB.RXLEVELS : nurse ? DB.NLEVELS : med ? DB.MLEVELS : img ? DB.ILEVELS : ally ? DB.ALEVELS : fm ? DB.FLEVELS : DB.LEVELS;
+  var c = topbar() + '<header class="pagehead lvhero ' + (nurse ? "rn" : med ? "md" : img ? "im" : ally ? "ah" : fm ? "fm" : "ph") + '"><h1>' + (rxp ? 'Pharmacy: choose your role <span class="pill proto">Being built</span>' : fm ? 'Field Medic: choose your tier <span class="pill proto">In development</span>' : nurse ? "Nursing: choose your license" : med ? "Medical school: choose your year" : img ? "Imaging: choose your modality" : ally ? "Allied Health: choose your field" : "Choose your level") + '</h1><p>' + (rxp ? "This path is new and actively being built. Questions are being added and reviewed every week, so expect more medicines, more questions and Bug Rush calls soon. Everything here already works." : fm ? "Tactical Combat Casualty Care in four tiers, from every service member to the combat paramedic with prolonged casualty care. Each tier includes every skill and medication from the tiers before it." : img ? "Each modality covers the reaction cart and sedation drugs every tech needs, plus the contrast agents and radiopharmaceuticals for that modality." : ally ? "Each field has its own medicines and its own questions: mental health, nutrition, or airway and breathing." : med ? "Every year studies the full drug library; the exam prep, scenarios and focus change as you advance. Your bug evolves with you." : "Each level includes every drug from the levels before it. Your bug evolves as you level up.") + '</p></header><section class="levels' + (fm ? " flv" : (L.length === 3 || L.length === 5 ? " three" : "")) + '">';
   /* Combat Paramedic & Prolonged Care sits in Prehospital, just before Flight Paramedic, once Field Medic is unlocked (owner, Oct 29 2026) */
-  if (!nurse && !med && !img && !ally && !fm && typeof fmUnlocked === "function" && fmUnlocked()) {   /* Prehospital only, never Allied Health (owner, Nov 5 2026) */
+  if (!nurse && !med && !img && !ally && !rxp && !fm && typeof fmUnlocked === "function" && fmUnlocked()) {   /* Prehospital only, never Allied Health (owner, Nov 5 2026) */
     var cp = DB.FLEVELS.filter(function (x) { return x.key === "cpp"; })[0], fi = L.map(function (x) { return x.key; }).indexOf("flight");
     if (cp && L.indexOf(cp) < 0) { L = L.slice(); L.splice(fi < 0 ? L.length : fi, 0, cp); }
   }
@@ -1273,6 +1288,7 @@ function prepName() {
   if (S.view === "level" && isM(S.level)) return { ms1: "Step 1–Style Prep", ms3: "Step 2 CK–Style Prep", intern: "Step 3–Style Prep" }[S.level];
   if (S.view === "level" && S.level === "flight") return "Flight Certification Exam Prep";
   if (S.view === "level" && isF(S.level)) return "Combat Paramedic Questions";
+  if (S.view === "level" && isRx(S.level)) return "Pharmacy Questions";
   if (S.view === "level" && isA(S.level)) return "Medication Questions";   /* allied fields have no registry bank (Nov 15 2026) */
   return "Registry Exam Prep";
 }
@@ -1697,6 +1713,7 @@ function starOK(q, k) { return starsFor(k).indexOf(qStar(q)) >= 0; }
 function starHTML(n, cls) { var s = "", i; for (i = 1; i <= 4; i++) s += '<span class="' + (i <= n ? "on" : "off") + '">\u2605</span>'; return '<span class="qstars' + (cls ? " " + cls : "") + '" aria-label="Difficulty ' + n + ' of 4">' + s + '</span>'; }
 function starLabel(n) { return ["", "Foundation", "Working", "Advanced", "Expert"][n] || ""; }
 function nrLevelsFor(k) {
+  if (isRx(k)) return [k];
   if (isA(k)) return ["gen", "emt", "aemt", "paramedic", "flight", "lvn", "rn", "flightrn", "ms1", "ms3", "intern", k];
   if (k === "cp") return ["paramedic", "gen", "cp"];      /* Community Paramedic: the paramedic bank plus its own */
   if (k === "tccc") return ["emt", "aemt", "paramedic", "tccc"];   /* every bank, filtered to the field's medicines in nrPool */
@@ -1729,7 +1746,7 @@ function nrPoolAll0(filter, noGen) {
   /* Allied Health (owner, Nov 15 2026: "why is dental hygiene getting questions about EMT stuff"): the fields have no question
      bank of their own yet, so they borrow drug questions on their own medicines from the other banks, but only ones not
      written for another role (EMT, paramedic, nurse, flight, scene, transport...), and never the EMS/nursing registry items. */
-  var alliedRole = isA(ck) ? /\b(EMTs?|AEMTs?|paramedics?|medics?|EMS|prehospital|ambulance|crew|on scene|scene|dispatch(?:ed)?|transport(?:ing)?|flight|helicopter|nurses?|RNs?|LVNs?|LPNs?|CNAs?|nursing|charge nurse|medical director|protocol)\b/i : null;
+  var alliedRole = isA(ck) && !isRx(ck) ? /\b(EMTs?|AEMTs?|paramedics?|medics?|EMS|prehospital|ambulance|crew|on scene|scene|dispatch(?:ed)?|transport(?:ing)?|flight|helicopter|nurses?|RNs?|LVNs?|LPNs?|CNAs?|nursing|charge nurse|medical director|protocol)\b/i : null;
   function ok(q) { return allowed.indexOf(q.lv) >= 0 && starOK(q, ck) && !(q.home && ck !== "gen") && qVisible(q) && (!inScope || (q.d ? inScope[q.d] : !isF(ck))) && (!q.d || !drugLocked(q.d)) && !(alliedRole && q.lv !== ck && q.lv !== "gen" && (!q.d || alliedRole.test(q.q || ""))); }
   if (S.nr && S.nr.kind === "reg" && isA(ck)) return (DB.RQ || []).filter(function (q) { return q.lv === ck && qVisible(q); });
   if (S.nr && S.nr.kind === "reg") { var rAl = regLevels(ck, allowed); return (DB.RQ || []).filter(function (q) { return rAl.indexOf(q.lv) >= 0 && regStarOK(q, ck) && qVisible(q) && (!isF(ck) || q.fm) && (typeof callScaleOK !== "function" || callScaleOK(q)); }); }
@@ -2124,7 +2141,7 @@ function nrQuiz(st) {
     c += '<button class="qopt' + cls + '" data-nropt="' + k + '"' + (reveal ? " disabled" : "") + '><span class="letter">' + "ABCD"[k] + '</span><span>' + esc(o) + '</span></button>';
   });
  c += '</div><div class="qreport">' + reportBtn("question", qRef(q), q.d) + '</div>';
-  if (reveal) c += '<div class="explain ' + (nrRight(x, picked) ? "ok" : "bad") + '"><strong>' + (nrRight(x, picked) ? "Correct." + (st.mode === "practice" ? stickNote(true) : '') : (q.t === "order" ? "Not quite. The correct order is shown above." : (q.t === "multi" ? "Not quite. You found " + (picked || []).filter(function (v) { return q.ok.indexOf(v) >= 0; }).length + " of " + q.ok.length + " correct answers" + ((picked || []).some(function (v) { return q.ok.indexOf(v) < 0; }) ? " and picked a wrong one" : "") + ". Correct answers: " : "Not quite. Correct answer: ") + esc(q.a)) + (st.mode === "practice" ? stickNote(false) : '')) + '</strong><p>' + esc(q.x) + '</p>' + (q.d && DB.drugs[q.d] ? '<button class="linkish" data-drug="' + q.d + '">Review ' + esc(DB.drugs[q.d].name) + '</button>' : '') + '</div>';
+  if (reveal) c += '<div class="explain ' + (nrRight(x, picked) ? "ok" : "bad") + '"><strong>' + (nrRight(x, picked) ? "Correct." + (st.mode === "practice" ? stickNote(true) : '') : (q.t === "order" ? "Not quite. The correct order is shown above." : (q.t === "multi" ? "Not quite. You found " + (picked || []).filter(function (v) { return q.ok.indexOf(v) >= 0; }).length + " of " + q.ok.length + " correct answers" + ((picked || []).some(function (v) { return q.ok.indexOf(v) < 0; }) ? " and picked a wrong one" : "") + ". Correct answers: " : "Not quite. Correct answer: ") + esc(q.a)) + (st.mode === "practice" ? stickNote(false) : '')) + '</strong><p>' + esc(q.x) + qCite(q) + '</p>' + (q.d && DB.drugs[q.d] ? '<button class="linkish" data-drug="' + q.d + '">Review ' + esc(DB.drugs[q.d].name) + '</button>' : '') + '</div>';
   /* students rate every question 1-5, except where the quiz moves on by itself (owner, Nov 20 2026) */
   if (reveal) c += qRateHTML(q, picked != null && st.just === st.i && !(q.t && st.mode === "practice" && !reveal));
   else if (picked != null && typeof isReviewer === "function" && isReviewer()) c += revHTML(q);   /* evaluators grade exam questions too (owner, Nov 13 2026) */
@@ -2175,7 +2192,7 @@ function nrDone(st) {
   c += '<div class="chips">' + Object.keys(by).map(function (k) { return '<span class="chip static">' + (k.indexOf("d:") === 0 ? RQ_DOM[k.slice(2)] : NRLV[k]) + ': ' + by[k][0] + '/' + by[k][1] + '</span>'; }).join("") + '</div>';
   c += '<div class="actions"><button class="btn" data-act="nrnew">New test</button>' + (missed.length ? '<button class="btn ghost" data-act="nrmissed">Practice my ' + missed.length + ' misses</button>' : '') + '</div>';
   if (missed.length) c += '<details class="sec" open><summary>Review what you missed (' + missed.length + ')</summary><div class="fields">' + missed.map(function (m) {
-    return '<div class="miss">' + (m.x.q.cs ? '<p class="muted small"><strong>' + esc(m.x.q.csTitle) + ', part ' + m.x.q.part + ':</strong> ' + esc(m.x.q.story) + '</p>' : '') + '<p class="qstem small">' + esc(m.x.q.q) + '</p><p><span class="pill low">Your answer</span> ' + esc(nrAnsText(m.x, m.a)) + '</p><p><span class="pill good">Correct</span> ' + esc(m.x.q.a) + '</p><p class="muted">' + esc(m.x.q.x) + '</p>' + (m.x.q.d && DB.drugs[m.x.q.d] ? '<button class="linkish" data-drug="' + m.x.q.d + '">Review ' + esc(DB.drugs[m.x.q.d].name) + '</button>' : '') + '</div>';
+    return '<div class="miss">' + (m.x.q.cs ? '<p class="muted small"><strong>' + esc(m.x.q.csTitle) + ', part ' + m.x.q.part + ':</strong> ' + esc(m.x.q.story) + '</p>' : '') + '<p class="qstem small">' + esc(m.x.q.q) + '</p><p><span class="pill low">Your answer</span> ' + esc(nrAnsText(m.x, m.a)) + '</p><p><span class="pill good">Correct</span> ' + esc(m.x.q.a) + '</p><p class="muted">' + esc(m.x.q.x) + qCite(m.x.q) + '</p>' + (m.x.q.d && DB.drugs[m.x.q.d] ? '<button class="linkish" data-drug="' + m.x.q.d + '">Review ' + esc(DB.drugs[m.x.q.d].name) + '</button>' : '') + '</div>';
   }).join("") + '</div></details>';
   /* evaluators grade every question of a test here, since a test hides answers until the end (owner, Nov 13 2026) */
   if (typeof isReviewer === "function" && isReviewer()) c += '<details class="sec" open><summary>Grade these questions (' + total + ')</summary><div class="fields">' + st.qs.map(function (x, i) {
@@ -2573,7 +2590,7 @@ function render() {
      already moved on, so buttons did nothing and nothing explained why. Now it says so and offers
      a way out. (owner reported Flight Paramedic doing this, Oct 30 2026) */
   try {
-    html = ageBlocked() && S.view !== "legal" ? ageBlockView() : needDisc() ? discView() : !ok && S.view !== "legal" ? gateView() : S.view === "legal" ? legalView() : (typeof needFun === "function" && needFun()) ? funView() : (typeof needWelcome === "function" && needWelcome()) ? welcomeView() : needOnboard() ? obView() : S.view === "fire" && typeof fireView === "function" ? fireView() : S.view === "home" ? viewHome() : (S.view === "levels" || S.view === "flevels" || S.view === "nlevels" || S.view === "mlevels" || S.view === "ilevels" || S.view === "alevels") ? viewLevels() : S.view === "easy" ? viewEasy() : S.view === "admin" ? viewAdmin() : S.view === "classes" ? classesView() : S.view === "settings" ? settingsView() : S.view === "stats" && typeof statsView === "function" ? statsView() : S.view === "terrarium" ? ((typeof funOn === "function" && !funOn()) ? (S.view = "home", viewHome()) : terrariumView()) : S.view === "everyday" ? evView() : S.view === "beginner" ? bgView() : S.view === "field" && typeof fieldView === "function" ? fieldView() : viewLevel();
+    html = ageBlocked() && S.view !== "legal" ? ageBlockView() : needDisc() ? discView() : !ok && S.view !== "legal" ? gateView() : S.view === "legal" ? legalView() : (typeof needFun === "function" && needFun()) ? funView() : (typeof needWelcome === "function" && needWelcome()) ? welcomeView() : needOnboard() ? obView() : S.view === "fire" && typeof fireView === "function" ? fireView() : S.view === "home" ? viewHome() : (S.view === "levels" || S.view === "flevels" || S.view === "nlevels" || S.view === "mlevels" || S.view === "ilevels" || S.view === "alevels" || S.view === "rxlevels") ? viewLevels() : S.view === "easy" ? viewEasy() : S.view === "admin" ? viewAdmin() : S.view === "classes" ? classesView() : S.view === "settings" ? settingsView() : S.view === "stats" && typeof statsView === "function" ? statsView() : S.view === "terrarium" ? ((typeof funOn === "function" && !funOn()) ? (S.view = "home", viewHome()) : terrariumView()) : S.view === "everyday" ? evView() : S.view === "beginner" ? bgView() : S.view === "field" && typeof fieldView === "function" ? fieldView() : viewLevel();
   } catch (err) {
     LAST_ERR = (err && (err.message || err)) + "";
     try { if (window.console) console.error("DrugBug render failed:", err); } catch (e) {}
@@ -4027,7 +4044,7 @@ function reviewView() {
   var missed = st.qs.map(function (x, i) { return { x: x, a: st.ans[i] }; }).filter(function (m) { return m.a !== m.x.q.a; });
   var sc = sessScore(), c = '<div class="learncard"><h2>' + sc.c + ' of ' + sc.n + ' correct</h2>';
   if (!missed.length) c += '<p>Everything right. Questions on these drugs will now come up less often.</p>';
-  c += missed.map(function (m) { return '<div class="miss"><p class="qstem small">' + esc(m.x.q.q) + '</p><p><span class="pill low">Your answer</span> ' + esc(m.a || "No answer") + '</p><p><span class="pill good">Correct</span> ' + esc(m.x.q.a) + '</p><p class="muted">' + esc(m.x.q.x) + '</p></div>'; }).join("");
+  c += missed.map(function (m) { return '<div class="miss"><p class="qstem small">' + esc(m.x.q.q) + '</p><p><span class="pill low">Your answer</span> ' + esc(m.a || "No answer") + '</p><p><span class="pill good">Correct</span> ' + esc(m.x.q.a) + '</p><p class="muted">' + esc(m.x.q.x) + qCite(m.x.q) + '</p></div>'; }).join("");
   return c + '</div>';
 }
 function doneView() {
@@ -8162,7 +8179,7 @@ function safetyView() {
   var c = '<section class="safety"><h2>Safety drills</h2><p class="muted">Look-alike/sound-alike names and ISMP high-alert medications: the mix-ups that hurt patients.</p><div class="calccard"><span class="lbl">' + esc(q.kind) + '</span><h3 class="qstem">' + esc(q.q) + '</h3><div class="qopts">';
   s.opts.forEach(function (o, k) { var cls = rev ? (o === q.a ? " right" : o === s.pick ? " wrong" : " dim") : ""; c += '<button class="qopt' + cls + '" data-sopt="' + k + '"' + (rev ? " disabled" : "") + '><span class="letter">' + "ABCD"[k] + '</span><span>' + esc(o) + '</span></button>'; });
   c += '</div>';
-  if (rev) c += '<div class="explain ' + (s.pick === q.a ? "ok" : "bad") + '"><strong>' + (s.pick === q.a ? "Correct." + stickNote(true) : "Not quite." + stickNote(false)) + '</strong><p>' + esc(q.x) + '</p>' + (q.d && DB.drugs[q.d] ? '<button class="linkish" data-drug="' + q.d + '">Review ' + esc(nameOf(q.d)) + '</button>' : '') + '</div><div class="actions"><button class="btn" data-act="snext">Next drill</button></div>';
+  if (rev) c += '<div class="explain ' + (s.pick === q.a ? "ok" : "bad") + '"><strong>' + (s.pick === q.a ? "Correct." + stickNote(true) : "Not quite." + stickNote(false)) + '</strong><p>' + esc(q.x) + qCite(q) + '</p>' + (q.d && DB.drugs[q.d] ? '<button class="linkish" data-drug="' + q.d + '">Review ' + esc(nameOf(q.d)) + '</button>' : '') + '</div><div class="actions"><button class="btn" data-act="snext">Next drill</button></div>';
   if (rev) c += qRateHTML(q);
   return c + '</div><p class="muted small">' + s.c + ' of ' + s.n + ' correct this session.</p><p class="muted small attrib">High-alert drills are adapted from the ISMP List of High-Alert Medications; look-alike pairs are informed by the ISMP List of Confused Drug Names and FDA/ISMP tall-man lettering. ISMP lists © Institute for Safe Medication Practices, used for education with attribution. DrugBug is not affiliated with ISMP; see ismp.org for current lists.</p></section>';
 }
@@ -9246,7 +9263,7 @@ function grubFix() { /* give each path its own starter beetle once (older builds
   if (!P.avatar || P.avatar === "starter") { P.avatar = g; P.avatarTs = Date.now(); }
   P.grubFix = 1; saveProg();
 }
-var ROLES = [["ev", "Beginner to Medicine", "New to medicine: start from zero, one short lesson at a time", "grub-eager", "beginner"], ["ph", "Prehospital", "EMT, AEMT, Paramedic or Flight Paramedic", "grub-medic", "levels"], ["rn", "Nursing", "CNA, LVN/LPN or RN", "grub-nurse", "nlevels"], ["md", "Medical School", "MS1-MS2, MS3-MS4 or Intern", "grub-doc", "mlevels"], ["im", "Imaging", "X-ray, CT, MRI, nuclear medicine or IR", "grub-imaging", "ilevels"], ["ah", "Hospital Allied Health", "Respiratory therapist, dietitian / nutritionist or phlebotomist", "grub-allied", "alevels"]];
+var ROLES = [["ev", "Beginner to Medicine", "New to medicine: start from zero, one short lesson at a time", "grub-eager", "beginner"], ["ph", "Prehospital", "EMT, AEMT, Paramedic or Flight Paramedic", "grub-medic", "levels"], ["rn", "Nursing", "CNA, LVN/LPN or RN", "grub-nurse", "nlevels"], ["md", "Medical School", "MS1-MS2, MS3-MS4 or Intern", "grub-doc", "mlevels"], ["im", "Imaging", "X-ray, CT, MRI, nuclear medicine or IR", "grub-imaging", "ilevels"], ["ah", "Hospital Allied Health", "Respiratory therapist, dietitian / nutritionist or phlebotomist", "grub-allied", "alevels"], ["rx", "Pharmacy", "Pharmacy technician, pharmacy student or pharmacist", "grub-allied", "rxlevels"]].filter(function (r) { return r[0] !== "rx" || (DB.Q || []).some(function (q) { return isRx(q.lv); }); });
 if (ALLIED_OFF) ROLES = ROLES.filter(function (r) { return r[0] !== "ah"; });
 function alliedOff() {
   if (!Prog || !Prog.d) return;
@@ -9309,10 +9326,10 @@ function obCards() {
    synchronously, and render() picks it up once the path is actually on screen so the level
    transition cannot redraw over it (owner, Nov 4 2026). */
 function startLearnPath(sg) {
-  if (!sg) sg = { ph: "levels", rn: "nlevels", md: "mlevels", im: "ilevels", ah: "alevels", ev: "beginner" }[Prog.d.role] || "gen";
+  if (!sg) sg = { ph: "levels", rn: "nlevels", md: "mlevels", im: "ilevels", ah: "alevels", rx: "rxlevels", ev: "beginner" }[Prog.d.role] || "gen";
   S.learnGo = 1;
   if (sg === "gen" || sg === "everyday" || sg === "beginner") return go(sg);
-  var arr = sg === "nlevels" ? DB.NLEVELS : sg === "mlevels" ? DB.MLEVELS : sg === "ilevels" ? (DB.ILEVELS || []) : sg === "alevels" ? (DB.ALEVELS || []) : DB.LEVELS;
+  var arr = sg === "nlevels" ? DB.NLEVELS : sg === "mlevels" ? DB.MLEVELS : sg === "ilevels" ? (DB.ILEVELS || []) : sg === "alevels" ? (DB.ALEVELS || []) : sg === "rxlevels" ? (DB.RXLEVELS || []) : DB.LEVELS;
   arr = (arr || []).filter(function (l) { return !(typeof isF === "function" && isF(l.key)); });
   var last = store("lastLevel"), pick = arr.filter(function (l) { return l.key === last; })[0] || arr[0];
   if (pick) go("level", { level: pick.key }); else go(sg);
@@ -9333,7 +9350,7 @@ function obSel() {
 /* Step 2: once they have a clinical path, the second wheel asks which level, so Hickory knows
    where to take them and the first L.E.A.R.N lands in the right scope (owner, Nov 4 2026). */
 function obLevelsFor(code) {
-  var arr = code === "rn" ? DB.NLEVELS : code === "md" ? DB.MLEVELS : code === "im" ? (DB.ILEVELS || []) : code === "ah" ? (DB.ALEVELS || []) : DB.LEVELS;
+  var arr = code === "rn" ? DB.NLEVELS : code === "md" ? DB.MLEVELS : code === "im" ? (DB.ILEVELS || []) : code === "ah" ? (DB.ALEVELS || []) : code === "rx" ? (DB.RXLEVELS || []) : DB.LEVELS;
   return (arr || []).filter(function (l) { return !(typeof isF === "function" && isF(l.key)); })
     .map(function (l) {
       return { code: l.key, name: l.name, bug: l.bug,
@@ -11669,7 +11686,7 @@ function labDrill(r) {
     c += '<button class="opt' + cls + '" data-labopt="' + i + '"' + (picked != null ? ' disabled' : '') + '>' + esc(o) + '</button>';
   });
   c += '</div>';
-  if (picked != null) c += '<div class="explain ' + (picked === x.q.a ? "ok" : "bad") + '"><strong>' + (picked === x.q.a ? 'Correct.' + stickNote(true) : "Not quite. Correct answer: " + esc(x.q.a) + stickNote(false)) + '</strong><p>' + esc(x.q.x) + '</p>' + (x.q.d && DB.drugs[x.q.d] ? '<button class="linkish" data-drug="' + x.q.d + '">Review ' + esc(nameOf(x.q.d)) + '</button>' : '') + '</div><div class="actions"><button class="btn" data-labnext="1">' + (st.i + 1 < st.qs.length ? "Next question" : "See results") + '</button></div>';
+  if (picked != null) c += '<div class="explain ' + (picked === x.q.a ? "ok" : "bad") + '"><strong>' + (picked === x.q.a ? 'Correct.' + stickNote(true) : "Not quite. Correct answer: " + esc(x.q.a) + stickNote(false)) + '</strong><p>' + esc(x.q.x) + qCite(x.q) + '</p>' + (x.q.d && DB.drugs[x.q.d] ? '<button class="linkish" data-drug="' + x.q.d + '">Review ' + esc(nameOf(x.q.d)) + '</button>' : '') + '</div><div class="actions"><button class="btn" data-labnext="1">' + (st.i + 1 < st.qs.length ? "Next question" : "See results") + '</button></div>';
   if (picked != null) c += qRateHTML(x.q);
   return c + '</section>';
 }
@@ -11808,7 +11825,7 @@ function critDrill(kind) {
   if (st.i >= st.qs.length) return '<section class="labdrill"><h3>' + st.c + ' of ' + st.qs.length + ' correct</h3>' + (st.c === st.qs.length && st.qs.length >= 10 ? '<p class="earned">Perfect! +' + PERFECT_BONUS + ' bonus sticks</p>' : '') + '<div class="actions">' + (st.topic ? '<button class="btn" data-ctstudy="' + st.topic + '">Try again</button><button class="btn ghost" data-cnav="topic">Back to the topic</button>' : '<button class="btn" data-critgo="' + kind + '">Another 10</button><button class="btn ghost" data-cnav="home">Back to sections</button>') + '</div></section>';
   var x = st.qs[st.i], picked = st.pick;
   var c = '<section class="labdrill"><div class="muted small">Question ' + (st.i + 1) + ' of ' + st.qs.length + '</div><p class="qstem">' + esc(x.q.q) + '</p><div class="opts">' + x.opts.map(function (o, i) { var cls = picked == null ? "" : o === x.q.a ? " right" : o === picked ? " wrong" : ""; return '<button class="opt' + cls + '" data-critopt="' + i + '"' + (picked != null ? ' disabled' : '') + '>' + esc(o) + '</button>'; }).join("") + '</div>';
-  if (picked != null) c += '<div class="explain ' + (picked === x.q.a ? "ok" : "bad") + '"><strong>' + (picked === x.q.a ? 'Correct.' + stickNote(true) : "Not quite. Correct answer: " + esc(x.q.a) + stickNote(false)) + '</strong><p>' + esc(x.q.x) + '</p></div><div class="actions"><button class="btn" data-critnext="1">' + (st.i + 1 < st.qs.length ? "Next question" : "See results") + '</button></div>';
+  if (picked != null) c += '<div class="explain ' + (picked === x.q.a ? "ok" : "bad") + '"><strong>' + (picked === x.q.a ? 'Correct.' + stickNote(true) : "Not quite. Correct answer: " + esc(x.q.a) + stickNote(false)) + '</strong><p>' + esc(x.q.x) + qCite(x.q) + '</p></div><div class="actions"><button class="btn" data-critnext="1">' + (st.i + 1 < st.qs.length ? "Next question" : "See results") + '</button></div>';
   if (picked != null) c += qRateHTML(x.q);
   return c + '</section>';
 }
@@ -15375,7 +15392,7 @@ function pkCalm() {
   if (typeof tourDone === "function" && !tourDone()) return false;
   if (typeof topLayerOpen === "function" && topLayerOpen()) return false;
   if (S.sheet || S.sess || S.mupop) return false;
-  var v = S.view; if (v === "home" || v === "levels" || v === "flevels" || v === "nlevels" || v === "mlevels" || v === "ilevels" || v === "alevels" || v === "terrarium") return true;
+  var v = S.view; if (v === "home" || v === "levels" || v === "flevels" || v === "nlevels" || v === "mlevels" || v === "ilevels" || v === "alevels" || v === "rxlevels" || v === "terrarium") return true;
   return (v === "gen" || v === "level" || v === "everyday") && (!S.tab || S.tab === "hub");
 }
 function pkPick() {
@@ -17215,7 +17232,7 @@ function callQuizHTML(C) {
     }).join("") + '</div>' + (Z.ans == null && Z.seq.length ? '<button class="btn small ghost" data-cqreset="1">Start over</button>' : '');
     if (Z.ans != null) h += '<ol class="cqorder">' + q.opts.map(function (o) { return '<li>' + esc(o) + '</li>'; }).join("") + '</ol>';
   }
-  if (Z.ans != null) h += '<div class="cqx ' + (Z.ok ? 'ok' : 'no') + '"><b>' + (Z.ok ? 'Right.' : 'Not quite.') + '</b> ' + esc(q.x) + '</div>' + (true ? qRateHTML(q.lv ? q : Object.assign(q, { lv: "call-" + (C.id || "") })) : '') + '<button class="btn small" data-cqnext="1">' + (Z.i + 1 < Z.list.length ? 'Next' : 'See score') + '</button>';
+  if (Z.ans != null) h += '<div class="cqx ' + (Z.ok ? 'ok' : 'no') + '"><b>' + (Z.ok ? 'Right.' : 'Not quite.') + '</b> ' + esc(q.x) + qCite(q) + '</div>' + (true ? qRateHTML(q.lv ? q : Object.assign(q, { lv: "call-" + (C.id || "") })) : '') + '<button class="btn small" data-cqnext="1">' + (Z.i + 1 < Z.list.length ? 'Next' : 'See score') + '</button>';
   return h + '</div>';
 }
 function cqRender() { var el = document.querySelector(".cq"); if (!el || !S.callId) return render(); var C = CALLS.filter(function (c) { return c.id === S.callId; })[0]; var w = document.createElement("div"); w.innerHTML = callQuizHTML(C); el.parentNode.replaceChild(w.firstChild, el); }
@@ -33934,9 +33951,10 @@ function agxCdTick() {
 }
 /* a small cloud of gold confetti over the 1st place spot only (owner, Nov 16 2026) */
 function agxConfetti() {
-  var out = "", cols = ["#f5c542", "#ffd86b", "#e0a91b", "#fff1b8", "#c99212"];
+  var out = "", cols = ["#f5c542", "#ffd86b", "#e0a91b", "#fff1b8", "#c99212"], now = (typeof performance !== "undefined" && performance.now ? performance.now() : Date.now()) / 1000;
+  /* each piece's delay is tied to the page clock, so a redraw (the refresh button) continues the fall instead of restarting it */
   for (var i = 0; i < 16; i++) {
-    var x = Math.round((i * 37) % 100), dl = ((i * 0.53) % 3).toFixed(2), du = (2.6 + (i % 5) * 0.35).toFixed(2), r = (i * 47) % 360, w = 4 + (i % 3) * 2;
+    var x = Math.round((i * 37) % 100), du0 = 2.6 + (i % 5) * 0.35, du = du0.toFixed(2), dl = ((now + (i * 0.53) % 3) % du0).toFixed(2), r = (i * 47) % 360, w = 4 + (i % 3) * 2;
     out += '<i style="left:' + x + '%;animation-delay:-' + dl + 's;animation-duration:' + du + 's;background:' + cols[i % cols.length] + ';width:' + w + 'px;--r:' + r + 'deg"></i>';
   }
   return '<span class="axconf" aria-hidden="true">' + out + '</span>';
@@ -33989,7 +34007,7 @@ function agxView() {
       return '<li class="' + (r.me ? "me" : "") + (r.rank <= 3 && r.pts > 0 ? " axtop" : "") + '"><span class="clrk' + (r.rank <= 3 && r.pts > 0 ? " r" + r.rank : "") + '">' + r.rank + '</span>' + agxAvArt(r.av) + '<span class="clal">' + esc(r.nick) + (r.me ? ' <em>you</em>' : '') + (r.dept ? '<small class="axsub">' + esc(agxDeptName(A.type, r.dept)) + '</small>' : '') + '</span><span class="clsc"><b>' + num0(r.pts) + '</b><small>' + (r.acc != null ? r.acc + "% right" : "no answers yet") + '</small></span>' +
         (r.me || r.hidden ? '' : '<button class="axrep" data-agxrep="' + esc(r.mid) + '" aria-label="Report this name">' + (AGX.rep === r.mid ? "Report?" : "⚑") + '</button>') + '</li>';
     }).join("") + '</ol>';
-    c += '<p class="muted small">The top 3 this week are your agency’s team on the ' + (D.stateOn ? esc(A.state) : 'National') + ' board. 10 points for each right answer and minus 5 for each wrong one, up to ' + num0(D.dayCap) + ' points a day (' + num0(M.todayLeft) + ' left today). Starts over for everyone every Sunday at 7 pm Central.</p>';
+    c += '<p class="muted small">The top 3 this week are your agency’s team on the ' + (D.stateOn ? esc(A.state) : 'National') + ' board. 10 points for each right answer and minus ' + (D.missCost || 10) + ' for each wrong one, up to ' + num0(D.dayCap) + ' points a day (' + num0(M.todayLeft) + ' left today). Starts over for everyone every Sunday at 7 pm Central.</p>';
     if (A.members < 3 || A.teamFilled < 3) c += '<div class="axrecruit"><b>Grow your team</b><span>Your agency\u2019s score is its top 3 people added together, so each coworker who joins can add up to 3,000 points a day.</span><button class="btn" data-agx="recruit">Invite a coworker</button></div>';
   } else if (AGX.tab === "national" || (AGX.stPick && AGX.stPick !== A.state)) { c += agxTierHtml(A); } else {
     {
@@ -34029,6 +34047,7 @@ function agxCollect() {
     }
     fnCall("agencyRewardClaim", { wk: R[i].wk }).then(function (r) {
       (r && r.items || []).forEach(function (it) {
+        try { var W0 = store("agxWon") || []; W0.unshift({ wk: R[i].wk, label: it.label || "", kind: it.kind, rar: it.rar || "", sticks: it.sticks || 0, at: Date.now() }); store("agxWon", W0.slice(0, 30)); } catch (x) {}
         if (it.kind === "sticks") { earn(it.sticks || 0, "prize"); sticks += it.sticks || 0; return; }
         if (it.kind === "badge") { Prog.d.agxBadges = (Prog.d.agxBadges || []).concat([{ b: it.badge, st: it.st || "", place: it.place || 0, wk: it.wk || R[i].wk, label: it.label }]).slice(-60); got.push(it.label); return; }
         var pool = prizePool(it.rar), pick = pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
@@ -35598,12 +35617,12 @@ document.addEventListener("click", function (e) {
 
 var h = (location.hash || "").slice(1);
 if (h !== "admin") { h = ""; try { history.replaceState(null, "", location.pathname); } catch (e) {} }
-if (h === "admin") { S.view = "admin"; Admin.on = true; } else if (h === "classes" && SOCIAL) S.view = "classes"; else if (h === "settings") S.view = "settings"; else if (h === "terrarium") S.view = "terrarium"; else if (h === "prehospital") S.view = "levels"; else if (h === "nursing") S.view = "nlevels"; else if (h === "medschool") S.view = "mlevels"; else if (h === "imaging") S.view = "ilevels"; else if (h === "allied") S.view = "alevels"; else if (h === "general") S.view = "gen"; else if (h === "easy") S.view = "gen"; else if (levelObj(h)) { S.view = "level"; S.level = h; }
+if (h === "admin") { S.view = "admin"; Admin.on = true; } else if (h === "classes" && SOCIAL) S.view = "classes"; else if (h === "settings") S.view = "settings"; else if (h === "terrarium") S.view = "terrarium"; else if (h === "prehospital") S.view = "levels"; else if (h === "nursing") S.view = "nlevels"; else if (h === "medschool") S.view = "mlevels"; else if (h === "imaging") S.view = "ilevels"; else if (h === "allied") S.view = "alevels"; else if (h === "pharmacy") S.view = "rxlevels"; else if (h === "general") S.view = "gen"; else if (h === "easy") S.view = "gen"; else if (levelObj(h)) { S.view = "level"; S.level = h; }
 if (!h) {
   var hl = SET().homeLevel, rl = Prog.d.role;
   if (hl === "gen") S.view = "gen"; else if (hl && levelObj(hl)) { S.view = "level"; S.level = hl; }
   else if (hl === "path" && rl) {
-    var ll = store("lastLevel"), rv = { ph: "levels", rn: "nlevels", md: "mlevels", im: "ilevels", ah: "alevels" }[rl];
+    var ll = store("lastLevel"), rv = { ph: "levels", rn: "nlevels", md: "mlevels", im: "ilevels", ah: "alevels", rx: "rxlevels" }[rl];
     if (ll && levelObj(ll) && routeOfLevel(ll) === rl) { S.view = "level"; S.level = ll; } else if (rv) S.view = rv; else S.view = "gen";
   }
 }
@@ -36273,7 +36292,7 @@ function loreOpen(id) {
 var GT = { on: false, i: 0, steps: [], el: null };
 function gtSteps() {
   var fun = typeof funOn !== "function" || funOn(), role = (Prog.d && Prog.d.role) || "", beg = role === "ev";
-  var RV = { ph: "levels", rn: "nlevels", md: "mlevels", im: "ilevels", ah: "alevels", ev: "beginner" }, pv = RV[role] || "gen";
+  var RV = { ph: "levels", rn: "nlevels", md: "mlevels", im: "ilevels", ah: "alevels", rx: "rxlevels", ev: "beginner" }, pv = RV[role] || "gen";
   function H(h, p) { return fun ? h : p; }
   var L = [];
   L.push({ t: H("Well, howdy there", "Welcome to DrugBug"), x: H("Name's Hickory. Let me walk ya around the place. Tap the spot that's glowin' and we'll go to the next one. If ya get bored, hit Skip. I won't take it personal. Much.", "A quick walk around the app. Tap the highlighted spot to move on, or skip at any time."), btn: H("Let's go", "Start") });
@@ -38468,7 +38487,12 @@ function hvPrizeBox() {
   if (T && T.stateOn && T.state) L.push(["🏆", T.state.title, T.state.prizes]);
   if (T && T.national) L.push(["👑", T.national.title, T.national.prizes]);
   if (!L.length) L = [["🏅", "Internal MVP", ["1st in your agency: Top Contributor badge + an Epic bug", "2nd: a Rare bug · 3rd: a Common bug", "Weekly points milestones: up to 600 sticks"]], ["👑", "National Champions", ["1st-place roster: a Legendary bug", "2nd and 3rd place rosters: an Epic bug", "National Champion badge and the Hall of Fame"]]];
-  return '<section class="hvprize"><div class="hvshead"><span class="hvseye">This week’s prizes</span><span class="hvsend">' + (hvWeekLeft() ? "Ends Sunday 7 pm Central" : "") + '</span></div>' + L.map(function (x) {
+  /* what you won (owner, Nov 24 2026: "I want stuff you won to say you won it") */
+  var won = "", RW = (AGX.data && AGX.data.rewards) || [], WN = (store("agxWon") || []).filter(function (w) { return Date.now() - (w.at || 0) < 35 * 86400000; });
+  if (RW.length) won += '<section class="hvprize hvwon"><div class="hvshead"><span class="hvseye">🎉 You won</span></div>' + RW.map(function (r) { return '<p class="small"><b>Week of ' + esc(agxWeekLabel(r.wk)) + '</b></p><ul>' + r.items.map(function (it) { return '<li>You won: ' + esc(it.label) + (it.kind === "bug" ? " (" + esc(RARITY[it.rar] || it.rar) + " bug)" : it.kind === "sticks" ? " (+" + num0(it.sticks) + " sticks)" : it.kind === "badge" ? " (badge)" : "") + '</li>'; }).join("") + '</ul>'; }).join("") + '<button class="btn" data-openagency="1">Collect your prizes</button></section>';
+  if (WN.length) won += '<section class="hvprize hvwon"><div class="hvshead"><span class="hvseye">🏅 You won these</span></div><ul>' + WN.slice(0, 8).map(function (w) { return '<li>You won: ' + esc(w.label || (w.kind === "sticks" ? num0(w.sticks) + " sticks" : "a prize")) + ' <small class="muted">· week of ' + esc(agxWeekLabel(w.wk)) + '</small></li>'; }).join("") + '</ul></section>';
+  if (HVT.wonOnly) return won;
+  return won + '<section class="hvprize"><div class="hvshead"><span class="hvseye">This week’s prizes</span><span class="hvsend">' + (hvWeekLeft() ? "Ends Sunday 7 pm Central" : "") + '</span></div>' + L.map(function (x) {
     return '<div class="hvpz"><span class="hvpzic" aria-hidden="true">' + x[0] + '</span><div><b>' + esc(x[1]) + '</b><ul>' + x[2].map(function (p) { return '<li>' + esc(p) + '</li>'; }).join("") + '</ul></div></div>';
   }).join("") + (T && T.rules ? '<p class="muted small">' + esc(T.rules) + '</p>' : '') + '</section>';
 }
@@ -38764,7 +38788,8 @@ rushPool = function () {
     var X = []; P.forEach(function (x) { if (x.k !== "call") return; var c = rushCase(x.id); if (c && (c.steps || []).some(function (st) { return st.dv && st.dv.k === "vent"; })) X.push(x, x); });
     P = P.concat(X.map(function (x) { return { k: x.k, id: x.id }; }));
   }
-  if (typeof isA === "function" && isA(ck)) { var rx = ck === "rrt" ? /^(flv-0[1-7]|pmv-|e12)/ : /^(pmv|icv|e12)/; P = P.filter(function (x) { return x.k !== "call" || !rx.test(x.id); }); }
+  if (typeof isRx === "function" && isRx(ck)) P = [];   /* Pharmacy: no Bug Rush calls yet */
+  else if (typeof isA === "function" && isA(ck)) { var rx = ck === "rrt" ? /^(flv-0[1-7]|pmv-|e12)/ : /^(pmv|icv|e12)/; P = P.filter(function (x) { return x.k !== "call" || !rx.test(x.id); }); }
   return P;
 };
 /* ---- your own stats (everyone) ---- */
@@ -39217,6 +39242,27 @@ megaLenApply();
    for them (qeLive), keeps the last answer on the device, and lays them over the unchanged data files, so a question can
    be corrected or pulled with no new build. Every question is found by its id, never by its position, and a pulled
    question is only marked hidden, so nothing else shifts. Ids are pinned to the shipped text before any layer changes it. */
+
+/* ===== Sources on every question (owner, Nov 24 2026: "have all questions cited where the information came from in the
+   explanation"). Each question's explanation ends with "Source: ..." naming the official reference the fact comes from
+   (FDA label on DailyMed, AHA guideline, ISMP list, DEA rule in 21 CFR, NREMT / National EMS Education Standards...).
+   New questions carry their own q.src; the shipped bank's sources live in content/cites.json (id -> source), loaded once
+   in the background so the app starts as fast as before. ===== */
+var CITE = { m: null, busy: false };
+function citeLoad() {
+  if (CITE.m || CITE.busy) return; CITE.busy = true;
+  try { fetch("content/cites.json").then(function (r) { return r.ok ? r.json() : null; }).then(function (j) { CITE.busy = false; if (j && j.c) CITE.m = j.c; }).catch(function () { CITE.busy = false; }); } catch (e) { CITE.busy = false; }
+}
+function qCite(q) {
+  try {
+    if (!q) return "";
+    var s = q.src || (CITE.m ? CITE.m[qid(q)] : ""); if (!CITE.m) citeLoad();
+    return s ? '<span class="qsrc">Source: ' + esc(s) + '</span>' : "";
+  } catch (e) { return ""; }
+}
+setTimeout(citeLoad, 4000);
+(function () { var st = document.createElement("style"); st.textContent = '.qsrc{display:block;margin-top:6px;font-size:12.5px;color:var(--muted);font-style:italic}'; document.head.appendChild(st); })();
+
 /* QE_LIVE_BEGIN */
 /* Phase 1 question fixes (owner-approved, Nov 21 2026): 214 corrected questions and 2 retired drip-rate calculations, keyed by
    question id and laid over the shipped banks the same way as live edits (a live edit of the same question wins). */
@@ -39917,7 +39963,7 @@ function stkHistoryHtml() {
   return '<details class="cldim axmore rwhist"><summary>Reward history</summary><ol class="rwlist">' + L.slice(0, 60).map(function (x) {
     var d = new Date(x.t), when; try { when = d.toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }); } catch (e) { when = d.toLocaleDateString(); }
     return '<li><span>' + esc(STK_NAMES[x.src] || STK_NAMES[String(x.src).split(":")[0]] || x.src) + '<small>' + esc(when) + '</small></span><b>+' + num0(x.n) + ' sticks</b></li>';
-  }).join("") + '</ol><p class="muted small">Sticks are for your bug and the Terrarium. Agency points come only from answering questions: 10 for each right answer, minus 5 for each wrong one, up to 3,000 a day.</p></details>';
+  }).join("") + '</ol><p class="muted small">Sticks are for your bug and the Terrarium. Agency points come only from answering questions: 10 for each right answer, minus 10 for each wrong one, up to 3,000 a day.</p></details>';
 }
 /* sources for the main ways sticks are earned outside answers */
 (function () {
@@ -40535,25 +40581,69 @@ document.addEventListener("click", function (e) { var b = e.target.closest && e.
     if (!D) return c + (HN.err ? '<p class="presult" role="alert">' + esc(HN.err) + '</p><p><button class="btn ghost" data-hnre="1">Try again</button></p>' : '<div class="axrload" role="status"><span class="axspin" aria-hidden="true"></span> Loading the National board…</div>') + '</section>';
     var P = (D.players || []).filter(function (r) { return r.rank <= 25; }), R = D.rows || [];
     var nP = HN.allP ? 25 : 10, nR = HN.allR ? 25 : 5;
-    c += '<h3 class="hvnh">Top players</h3>';
+    var T = D.tiers || store("agxTiers") || {}, NP = (T.national && T.national.prizes) || [];
+    /* the agencies race for the prizes, so their podium comes first, each prize under its own step (owner, Nov 24 2026) */
+    c += '<h3 class="hvnh big">🏆 Top agencies</h3>';
+    if (!R.length) c += '<p class="muted small">Agencies show up here as soon as their people earn points.</p>';
+    else c += bigPodium(R, function (r) { return r.name; }, function (r) { return (r.city || "") + (r.state ? ", " + r.state : ""); }, function (r) { return r.top3; }, function (r) { return r.mine; },
+      [{ rar: "legendary", t: "Legendary bug", s: "for everyone on the roster", x: "+ National Champion badge & Hall of Fame" }, { rar: "epic", t: "Epic bug", s: "for everyone on the roster" }, { rar: "epic", t: "Epic bug", s: "for everyone on the roster" }], "a");
+    c += '<h3 class="hvnh big">⭐ Top players</h3>';
     if (!P.length) c += '<p class="muted small">Nobody has points yet this week. Answer a few questions on a team and you’re on the board.</p>';
-    else {
-      c += agxPodium(P, function (r) { return r.nick; }, function (r) { return r.agency; }, function (r) { return r.pts; });
-      c += '<ol class="clboard axboard hvnpl">' + P.slice(0, nP).map(function (r) {
-        return '<li class="' + (r.me ? "me" : "") + (r.rank <= 3 ? " axtop" : "") + (r.aid ? ' axclick" data-hnag="' + esc(r.aid) + '" data-hnname="' + esc(r.agency) + '" tabindex="0" role="button" aria-label="' + esc(r.nick) + ' of ' + esc(r.agency) + ': see this team' : '') + '"><span class="clrk' + (r.rank <= 3 ? " r" + r.rank : "") + '">' + r.rank + '</span>' + agxAvArt(r.av) +
+    else c += bigPodium(P, function (r) { return r.nick; }, function (r) { return r.agency; }, function (r) { return r.pts; }, function (r) { return r.me; }, null, "p");
+    if (P.length > 3) {
+      c += '<ol class="clboard axboard hvnpl" start="4">' + P.slice(3, nP).map(function (r) {
+        return '<li class="' + (r.me ? "me" : "") + (r.aid ? ' axclick" data-hnag="' + esc(r.aid) + '" data-hnname="' + esc(r.agency) + '" tabindex="0" role="button" aria-label="' + esc(r.nick) + ' of ' + esc(r.agency) + ': see this team' : '') + '"><span class="clrk">' + r.rank + '</span>' + agxAvArt(r.av) +
           '<span class="clal">' + esc(r.nick) + (r.me ? ' <em>you</em>' : '') + '<small class="axsub">' + esc(r.agency || "") + (r.state ? " · " + esc(r.state) : "") + '</small></span>' +
           '<span class="clsc"><b>' + num0(r.pts) + '</b><small>' + (r.acc != null ? r.acc + "% right" : "") + '</small></span></li>';
       }).join("") + '</ol>';
       if (P.length > 10) c += '<p><button class="btn ghost small" data-hnmore="p">' + (HN.allP ? "Show the top 10" : "See the top " + P.length) + '</button></p>';
     }
-    c += '<h3 class="hvnh">Top agencies</h3>';
-    if (!R.length) c += '<p class="muted small">Agencies show up here as soon as their people earn points.</p>';
-    else c += '<ol class="clboard axboard hvnag">' + R.slice(0, nR).map(function (r) {
-      return '<li class="' + (r.mine ? "me " : "") + 'axclick" data-hnag="' + esc(r.id) + '" data-hnname="' + esc(r.name) + '" tabindex="0" role="button" aria-label="' + esc(r.name) + ': see who is on this team"><span class="clrk' + (r.rank <= 3 && r.top3 > 0 ? " r" + r.rank : "") + '">' + r.rank + '</span>' + agxAvArt(r.av) +
+    if (R.length > 3) c += '<h3 class="hvnh">More agencies</h3><ol class="clboard axboard hvnag" start="4">' + R.slice(3, nR).map(function (r) {
+      return '<li class="' + (r.mine ? "me " : "") + 'axclick" data-hnag="' + esc(r.id) + '" data-hnname="' + esc(r.name) + '" tabindex="0" role="button" aria-label="' + esc(r.name) + ': see who is on this team"><span class="clrk">' + r.rank + '</span>' + agxAvArt(r.av) +
         '<span class="clal">' + esc(r.name) + (r.mine ? ' <em>yours</em>' : '') + '<small class="axsub">' + esc(r.city || "") + (r.state ? ", " + esc(r.state) : "") + '</small></span><span class="clsc"><b>' + num0(r.top3) + '</b><small>' + (r.filled < 3 ? r.filled + " of 3 on the team" : "top 3") + '</small></span></li>';
-    }).join("") + '</ol>' + (R.length > 5 ? '<p><button class="btn ghost small" data-hnmore="a">' + (HN.allR ? "Show the top 5" : "See the top " + Math.min(25, R.length)) + '</button></p>' : '') + '<p class="muted small">Tap any agency or player to see everyone on that team. Agencies are ranked by their top 3 people’s points added together.</p>';
+    }).join("") + '</ol>' + (R.length > 5 ? '<p><button class="btn ghost small" data-hnmore="a">' + (HN.allR ? "Show the top 5" : "See the top " + Math.min(25, R.length)) + '</button></p>' : '');
+    c += '<p class="muted small">Tap any agency or player to see everyone on that team. Agencies are ranked by their top 3 people’s points added together.' + (T.rules ? ' ' + esc(T.rules) : '') + '</p>';
     c += '</section>' + hnYou(D);
     return c;
+  }
+  /* big podium like a winners' stand: 2 / 1 / 3 blocks, the bugs trading a little trash talk, each prize under its step
+     (owner, Nov 24 2026: "have it more out like this as soon as you click on scoreboards ... make a bigger deal about the
+     prizes ... put the prizes under the associated podiums ... have the avatar bugs do a little smack to each other on the
+     podium. Say the nicknames of the person too") */
+  var SMACK = [
+    [1, "Gold looks good on me 😎"], [2, "Only {g1} points back. Watch your six 👀"], [3, "Bronze is just gold that’s warming up 🔥"],
+    [1, "Catch me if you can."], [2, "Sunday 7 pm. That crown is mine."], [3, "I’m {g2} points from passing you, #2 😏"],
+    [1, "Y’all are studying for second place."], [2, "Keep talking. I’ll keep answering."], [3, "Every right answer counts. Bring it 💪"]];
+  function bigPodium(rows, nameOf, subOf, ptsOf, meOf, prizes, kind) {
+    var top = rows.filter(function (r) { return ptsOf(r) > 0; }).slice(0, 3); if (!top.length) return "";
+    var g1 = top[1] ? Math.max(0, ptsOf(top[0]) - ptsOf(top[1])) : 0, g2 = top[2] && top[1] ? Math.max(0, ptsOf(top[1]) - ptsOf(top[2])) : 0;
+    var now = (typeof performance !== "undefined" && performance.now ? performance.now() : Date.now()) / 1000, CYC = 27;
+    var order = [top[1], top[0], top[2]], place = [2, 1, 3];
+    return '<div class="bpod bpod-' + kind + '" role="list" aria-label="Top 3 this week">' + order.map(function (r, i) {
+      var pl = place[i];
+      if (!r) return '<div class="bpc empty" aria-hidden="true"></div>';
+      var lines = SMACK.map(function (x, j) { return [x, j]; }).filter(function (x) { return x[0][0] === pl && top[x[0][0] - 1]; });
+      var bub = top.length > 1 ? '<span class="bpbub" aria-hidden="true">' + lines.map(function (x) {
+        var dl = ((now - x[1] * 3 + (kind === "p" ? 13.5 : 0)) % CYC + CYC) % CYC;   /* tied to the page clock, so a refresh doesn't restart the chatter */
+        return '<i style="animation-delay:-' + dl.toFixed(2) + 's">' + esc(x[0][1].replace("{g1}", num0(g1)).replace("{g2}", num0(g2))) + '</i>';
+      }).join("") + '</span>' : '';
+      var tap = kind === "a" ? ' data-hnag="' + esc(r.id) + '" data-hnname="' + esc(r.name) + '"' : r.aid ? ' data-hnag="' + esc(r.aid) + '" data-hnname="' + esc(r.agency || "") + '"' : '';
+      var pz = prizes && prizes[pl - 1];
+      return '<div class="bpc p' + pl + (meOf(r) ? ' me' : '') + '" role="listitem">' + (pl === 1 ? agxConfetti() : '') + bub +
+        '<button class="bpwho"' + tap + ' aria-label="' + esc(nameOf(r)) + ', ' + ["1st", "2nd", "3rd"][pl - 1] + ' place, ' + num0(ptsOf(r)) + ' points">' +
+        (pl === 1 ? '<span class="bpcrown" aria-hidden="true">👑</span>' : '') + '<span class="bpbug s' + pl + '">' + agxAvArt(r.av, "big") + '</span>' +
+        '<b class="bpname">' + esc(nameOf(r)) + (meOf(r) ? ' <em>' + (kind === "a" ? "yours" : "you") + '</em>' : '') + '</b>' + (subOf(r) ? '<small class="bpsub">' + esc(subOf(r)) + '</small>' : '') +
+        '<span class="bppts">' + num0(ptsOf(r)) + ' pts</span></button>' +
+        '<div class="bpblock" aria-hidden="true"><span class="bptop"></span><span class="bpnum">' + pl + '</span>' + (pl === 1 ? '<span class="bpspark">✦</span><span class="bpspark b">✦</span>' : '') + '</div>' +
+        (pz ? '<div class="bpprize r-' + pz.rar + '"><span class="bpsil">' + clSilhouette(pz.rar) + '<i>?</i></span><b>' + esc(pz.t) + '</b><small>' + esc(pz.s) + '</small>' + (pz.x ? '<small class="bpx">' + esc(pz.x) + '</small>' : '') + '</div>' : '') +
+        '</div>';
+    }).join("") + '</div><div class="bpfloor" aria-hidden="true"></div>';
+  }
+  function hnWon() { var w = ""; HVT.wonOnly = true; try { w = hvPrizeBox(); } catch (e) {} HVT.wonOnly = false; return w; }
+  function hnTeamPrizes() {
+    return '<div class="bpteam"><b>🏅 Win inside your own team too</b><div class="bptrow">' + [["epic", "1st", "Epic bug + Top Contributor badge"], ["rare", "2nd", "Rare bug"], ["common", "3rd", "Common bug"]].map(function (x) {
+      return '<div class="bpprize r-' + x[0] + '"><span class="bpsil">' + clSilhouette(x[0]) + '<i>?</i></span><b>' + x[1] + '</b><small>' + x[2] + '</small></div>'; }).join("") +
+      '</div><p class="muted small">Plus weekly points milestones worth up to 600 sticks.</p></div>';
   }
   /* your place, under the boards, however far down it is (owner, Nov 23 2026) */
   function hnYou(D) {
@@ -40562,13 +40652,14 @@ document.addEventListener("click", function (e) { var b = e.target.closest && e.
     c += '<div class="hvyrow"><div><b>' + (Y.rank ? "#" + num0(Y.rank) : "–") + '</b><span>' + (Y.rank ? "of " + num0(Y.of) + " players" : "no points yet") + '</span></div><div><b>' + num0(Y.pts) + '</b><span>your points</span></div><div><b>' + (Y.agRank ? "#" + num0(Y.agRank) : "–") + '</b><span>' + (Y.agRank ? "of " + num0(Y.agOf) + " agencies" : "your agency") + '</span></div></div>';
     c += '<p class="hvyag"><b>' + esc(Y.agency || "Your agency") + '</b>' + (Y.team ? ' · team score ' + num0(Y.team) : '') + '</p>';
     if (!Y.rank) c += '<p class="muted small">Answer a few questions and you’ll show up on the board.</p>';
+    c += hnTeamPrizes();
     return c + '<button class="btn" data-hnag="' + esc(Y.aid) + '" data-hnname="' + esc(Y.agency || "") + '">See my team</button></section>';
   }
   var hv0 = hvBoard;
   hvBoard = function () {
     var tabs = '<div class="cltabs axtiers hvntabs" role="tablist"><button role="tab" aria-selected="' + (HN.tab === "nat") + '" class="' + (HN.tab === "nat" ? "on" : "") + '" data-hntab="nat">National</button><button role="tab" aria-selected="' + (HN.tab === "team") + '" class="' + (HN.tab === "team" ? "on" : "") + '" data-hntab="team">My Team</button>' + (HN.tab === "nat" ? '<button data-hnre="1" aria-label="Refresh">↻</button>' : '') + '</div>';
     if (HN.tab === "team") return tabs + hv0();
-    return tabs + hnNational() + hvPrizeBox() + '<h2 class="hvsth">Your stats</h2>';
+    return tabs + hnWon() + hnNational() + '<h2 class="hvsth">Your stats</h2>';
   };
   document.addEventListener("click", function (e) {
     var t = e.target.closest && e.target.closest("[data-hntab],[data-hnre],[data-hnag],[data-hnmore]"); if (!t) return;
@@ -40580,9 +40671,137 @@ document.addEventListener("click", function (e) { var b = e.target.closest && e.
   });
   document.addEventListener("keydown", function (e) { if ((e.key === "Enter" || e.key === " ") && e.target && e.target.getAttribute && e.target.getAttribute("data-hnag")) { e.preventDefault(); e.target.click(); } });
   var st = document.createElement("style");
-  st.textContent = '.hvntabs{margin:6px 0 10px}.hvnat{border:1.5px solid var(--line);border-radius:16px;padding:12px 14px;margin:8px 0;background:var(--surface)}.hvnh{margin:14px 0 6px;font-size:15px}.hvnat .axclick{cursor:pointer}.hvnat .clal{min-width:0}.hvnat .axsub{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hvyou{border-color:var(--accent,#7c5cff)}.hvyrow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0}.hvyrow div{display:flex;flex-direction:column;align-items:center;border:1.5px solid var(--line);border-radius:12px;padding:8px 4px}.hvyrow b{font-size:22px;font-variant-numeric:tabular-nums}.hvyrow span{font-size:12px;color:var(--muted);text-align:center}.hvyag{margin:6px 0}';
+  st.textContent = ' .hvnh.big{font-size:19px;margin:16px 0 4px;text-align:center}.bpod{display:grid;grid-template-columns:1fr 1.12fr 1fr;align-items:end;gap:0;margin:56px 0 0;position:relative}.bpc{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;min-width:0}.bpc.empty{visibility:hidden}.bpwho{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;max-width:100%;padding:0 3px;box-sizing:border-box}.bpwho:focus-visible{outline:3px solid #7c5cff;border-radius:10px}.bpbug{display:block;transform-origin:50% 100%}.bpbug .axav.big{width:64px;height:64px}.bpc.p1 .bpbug .axav.big{width:84px;height:84px}.bpbug.s1{animation:bpbob1 2.2s ease-in-out infinite}.bpbug.s2{animation:bplean2 2.6s ease-in-out infinite}.bpbug.s3{animation:bplean3 2.4s ease-in-out infinite}@keyframes bpbob1{50%{transform:translateY(-5px) scale(1.04)}}@keyframes bplean2{0%,100%{transform:rotate(0)}40%{transform:rotate(7deg) translateX(3px)}}@keyframes bplean3{0%,100%{transform:rotate(0)}55%{transform:rotate(-7deg) translateX(-3px)}}.bpcrown{font-size:24px;line-height:1;margin-bottom:-6px;animation:clcrown 2.4s ease-in-out infinite}.bpname{font-weight:900;font-size:14px;line-height:1.15;max-width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere;margin-top:2px}.bpc.p1 .bpname{font-size:16px}.bpname em{font-style:normal;font-size:10.5px;background:#7c5cff;color:#fff;border-radius:99px;padding:1px 6px}.bpsub{font-size:11px;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bppts{font-weight:900;font-size:13px;margin:2px 0 16px;font-variant-numeric:tabular-nums}.bpblock{position:relative;width:100%;display:grid;place-items:center;border-radius:4px 4px 0 0;box-shadow:inset 0 -10px 0 rgba(0,0,0,.12)}.bptop{position:absolute;left:0;right:0;top:-12px;height:12px;clip-path:polygon(8% 0,92% 0,100% 100%,0 100%);filter:brightness(1.15)}.bpnum{font:italic 900 44px/1 system-ui,-apple-system,sans-serif;color:#fff;text-shadow:0 3px 0 rgba(0,0,0,.18)}.bpc.p1 .bpblock{height:118px;background:linear-gradient(160deg,#ffd23f,#f5a800)}.bpc.p1 .bptop{background:#ffd23f}.bpc.p1 .bpnum{font-size:58px}.bpc.p2 .bpblock{height:84px;background:linear-gradient(160deg,#ff6a2b,#e84a0c)}.bpc.p2 .bptop{background:#ff6a2b}.bpc.p3 .bpblock{height:66px;background:linear-gradient(160deg,#e3e5ea,#b8bcc6)}.bpc.p3 .bptop{background:#e3e5ea}.bpc.me .bpblock{box-shadow:inset 0 -10px 0 rgba(0,0,0,.12),0 0 0 3px #7c5cff}.bpspark{position:absolute;right:16%;top:16%;color:#fff;font-size:18px;animation:bptw 1.6s ease-in-out infinite}.bpspark.b{left:16%;right:auto;top:52%;font-size:12px;animation-delay:-.8s}@keyframes bptw{50%{opacity:.25;transform:scale(.6) rotate(30deg)}}.bpfloor{height:12px;margin:0 -4px 10px;border-radius:0 0 50% 50%/0 0 100% 100%;background:linear-gradient(#ff8a1f,#e86a00);box-shadow:0 8px 14px rgba(0,0,0,.18)}.bpod-a .bpprize{margin-top:-2px}.bpprize{display:flex;flex-direction:column;align-items:center;width:calc(100% - 6px);box-sizing:border-box;margin:0 3px;padding:8px 4px 9px;border-radius:12px;border:2px solid var(--line);background:var(--surface);position:relative;overflow:hidden}.bpprize::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.35) 50%,transparent 65%);transform:translateX(-120%);animation:bpshine 3.2s ease-in-out infinite}@keyframes bpshine{60%,100%{transform:translateX(120%)}}.bpprize b{font-size:13px;font-weight:900}.bpprize small{font-size:10.5px;color:var(--muted);line-height:1.25}.bpprize .bpx{color:#d99a00;font-weight:800;margin-top:3px}.bpsil{position:relative;width:46px;height:46px;display:grid;place-items:center}.bpsil svg{width:46px;height:46px}.bpsil i{position:absolute;font-style:normal;font-weight:900;font-size:18px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.6)}.bpprize.r-legendary{border-color:#f5b301;background:linear-gradient(170deg,color-mix(in srgb,#f5b301 22%,var(--surface)),var(--surface));box-shadow:0 0 18px rgba(245,179,1,.35)}.bpprize.r-legendary b{color:#d99a00}.bpprize.r-epic{border-color:#a855f7;background:linear-gradient(170deg,color-mix(in srgb,#a855f7 16%,var(--surface)),var(--surface))}.bpprize.r-epic b{color:#a855f7}.bpprize.r-rare{border-color:#3b82f6}.bpprize.r-rare b{color:#3b82f6}.bpbub{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);width:132px;height:0;z-index:3;pointer-events:none}.bpc.p1 .bpbub{bottom:calc(100% + 6px)}.bpbub i{position:absolute;bottom:4px;left:0;right:0;font-style:normal;font-size:11.5px;font-weight:800;line-height:1.25;color:#1d1a2a;background:#fff;border-radius:12px;padding:6px 8px;box-shadow:0 3px 10px rgba(0,0,0,.2);opacity:0;transform:scale(.6) translateY(6px);animation:bpsay 27s linear infinite}.bpbub i::after{content:"";position:absolute;left:50%;bottom:-6px;margin-left:-6px;border:6px solid transparent;border-top-color:#fff;border-bottom:0}.bpc.p2 .bpbub{left:62%}.bpc.p3 .bpbub{left:38%}@keyframes bpsay{0%{opacity:0;transform:scale(.6) translateY(6px)}1.5%,9.5%{opacity:1;transform:none}11%,100%{opacity:0;transform:scale(.9)}}.bpteam{margin:10px 0 8px;padding:10px;border-radius:14px;background:color-mix(in srgb,#f5b301 10%,transparent);border:1.5px solid color-mix(in srgb,#f5b301 45%,transparent)}.bpteam>b{display:block;text-align:center;font-size:14.5px;margin-bottom:6px}.bptrow{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.bptrow .bpprize{width:auto;margin:0}.hvwon{border:2px solid #f5b301;background:linear-gradient(160deg,color-mix(in srgb,#f5b301 18%,var(--surface)),var(--surface) 60%);box-shadow:0 0 22px rgba(245,179,1,.25)}.hvwon .hvseye{color:#d99a00;font-size:14px}.hvwon li{font-weight:800}@media (prefers-reduced-motion:reduce){.bpbug,.bpspark,.bpprize::after,.bpcrown{animation:none!important}.bpbub i{animation:none;opacity:0}.bpbub i:first-child{opacity:1;transform:none}}.hvntabs{margin:6px 0 10px}.hvnat{border:1.5px solid var(--line);border-radius:16px;padding:12px 14px;margin:8px 0;background:var(--surface)}.hvnh{margin:14px 0 6px;font-size:15px}.hvnat .axclick{cursor:pointer}.hvnat .clal{min-width:0}.hvnat .axsub{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hvyou{border-color:var(--accent,#7c5cff)}.hvyrow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0}.hvyrow div{display:flex;flex-direction:column;align-items:center;border:1.5px solid var(--line);border-radius:12px;padding:8px 4px}.hvyrow b{font-size:22px;font-variant-numeric:tabular-nums}.hvyrow span{font-size:12px;color:var(--muted);text-align:center}.hvyag{margin:6px 0}';
   document.head.appendChild(st);
 })();
 
+
+
+/* Pharmacy path note (owner, Nov 24 2026: "have a note saying this route is actively being built but make it still usable") */
+(function () {
+  var r0 = render;
+  render = function () {
+    var x = r0.apply(this, arguments);
+    try {
+      if (S.view === "level" && isRx(S.level) && S.tab === "hub" && !document.querySelector(".rxsoon")) {
+        var band = document.querySelector(".band"); if (band && band.parentNode) {
+          var d = document.createElement("div"); d.className = "gradsoon rxsoon";
+          d.innerHTML = '<span class="gsic" aria-hidden="true">🧪</span><div><b>This path is being built</b><span>Pharmacy is new. Questions are being added and reviewed every week, and Bug Rush calls for pharmacy are on the way. Everything here already works, and your progress counts.</span></div>';
+          band.parentNode.insertBefore(d, band.nextSibling);
+        }
+      }
+    } catch (e) {}
+    return x;
+  };
+})();
+
+
+/* ===== Today's Med Brief (owner, Nov 24 2026): a short, dismissible card on the home screen with the newest FDA / ISMP /
+   guideline news. The server writes it each morning (functions/brief.js, medBriefToday); the owner approves every card
+   before anyone sees it. Closing it with the X hides that card until a newer or edited one comes out. ===== */
+(function () {
+  var MB = { d: null, at: 0, busy: false };
+  try { MB.d = store("medBrief"); } catch (e) {}
+  function mbLoad() {
+    if (MB.busy || Date.now() - MB.at < 30 * 60000) return;
+    MB.busy = true; MB.at = Date.now();
+    var base = (window.DRUGBUG_CONFIG || {}).functionsUrl || "https://us-central1-drugbug-69d42.cloudfunctions.net";
+    try {
+      fetch(base.replace(/\/$/, "") + "/medBriefToday", { method: "POST", headers: { "Content-Type": "application/json" }, body: '{"data":{}}', credentials: "omit" })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) { MB.busy = false; var r = j && j.result; if (!r) return; var was = JSON.stringify(MB.d || {}); MB.d = r.date ? r : null; try { store("medBrief", MB.d); } catch (e) {} if (JSON.stringify(MB.d || {}) !== was && S.view === "home") mbPaint(); })
+        .catch(function () { MB.busy = false; });
+    } catch (e) { MB.busy = false; }
+  }
+  function mbOn() {
+    var d = MB.d; if (!d || !d.date || !d.card_title) return false;
+    if (Date.parse(d.date + "T12:00:00Z") < Date.now() - 3 * 86400000) return false;
+    var x = null; try { x = store("medBriefX"); } catch (e) {}
+    return !(x && x === d.date + ":" + (d.v || 0));
+  }
+  function mbPaint() {
+    var old = document.querySelector(".mbcard"); if (old) old.remove();
+    if (S.view !== "home" || !mbOn()) return;
+    var wrap = document.querySelector(".homewrap"); if (!wrap) return;
+    var d = MB.d, el = document.createElement("section");
+    el.className = "mbcard" + (d.urgent ? " urgent" : ""); el.setAttribute("aria-label", "Today's Med Brief");
+    el.innerHTML = '<button class="mbx" data-mbx="1" aria-label="Close Today’s Med Brief">✕</button>' +
+      '<span class="mbbd">💊 Today’s Med Brief · ' + esc(d.badge_tag || "") + '</span><b class="mbt">' + esc(d.card_title) + '</b>' +
+      '<p class="mbs">' + esc(d.tldr_summary || "") + '</p>' + (d.quick_pearl ? '<p class="mbp">⭐ ' + esc(d.quick_pearl) + '</p>' : '') +
+      ((d.affected_tracks || []).length ? '<p class="mbtr">' + d.affected_tracks.map(function (t) { return '<span>' + esc(t) + '</span>'; }).join("") + '</p>' : '') +
+      '<p class="mbnote">Study news from official sources. Not medical advice.</p>';
+    var hero = wrap.querySelector(".hero");
+    if (hero && hero.nextSibling) wrap.insertBefore(el, hero.nextSibling); else wrap.appendChild(el);
+  }
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest("[data-mbx]"); if (!b) return;
+    try { store("medBriefX", MB.d.date + ":" + (MB.d.v || 0)); } catch (x) {}
+    var c = document.querySelector(".mbcard"); if (c) c.remove();
+  });
+  var r0 = render;
+  render = function () { var x = r0.apply(this, arguments); try { if (S.view === "home") { mbPaint(); mbLoad(); } } catch (e) {} return x; };
+  var st = document.createElement("style");
+  st.textContent = '.mbcard{position:relative;margin:0 0 14px;padding:12px 40px 10px 14px;border-radius:16px;border:1.5px solid #7c5cff;background:linear-gradient(150deg,color-mix(in srgb,#7c5cff 16%,var(--surface)),var(--surface) 70%)}.mbcard.urgent{border-color:#dc2626;background:linear-gradient(150deg,color-mix(in srgb,#dc2626 14%,var(--surface)),var(--surface) 70%)}.mbx{position:absolute;right:6px;top:6px;width:32px;height:32px;border-radius:50%;border:0;background:transparent;color:var(--muted);font-size:16px;cursor:pointer}.mbx:hover,.mbx:focus-visible{background:color-mix(in srgb,var(--ink) 10%,transparent)}.mbbd{display:block;font-size:11.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#d99a00}.mbcard.urgent .mbbd{color:#dc2626}.mbt{display:block;font-size:17px;margin:3px 0 4px;line-height:1.25}.mbs{margin:0 0 6px;font-size:14.5px;line-height:1.4}.mbp{margin:0 0 6px;font-size:14px;font-weight:700;padding:6px 9px;border-radius:9px;background:color-mix(in srgb,#f5b301 14%,transparent)}.mbtr{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 4px}.mbtr span{font-size:11px;font-weight:700;border-radius:99px;padding:1px 8px;background:color-mix(in srgb,var(--ink) 8%,transparent);color:var(--muted)}.mbnote{margin:0;font-size:11.5px;color:var(--muted)}';
+  document.head.appendChild(st);
+})();
+
+
+/* ===== "Someone passed you" inside the app (owner, Nov 24 2026: "go ahead and wire the getting passed notification").
+   Phone notifications through Apple are built (push.js) but wait for the owner's Apple key. Until then, and for website
+   users always, the app itself tells you: when your agency board loads (opening the app, coming back to it, or opening
+   the Scoreboard / Agency Challenge) and someone who was below you this week is now above you, a banner says who
+   passed you, with a button to the Scoreboard. At most one banner every 20 minutes; never during a quiz or a call. ===== */
+(function () {
+  var PS = { at: 0, seen: 0, busy: false };
+  function busyScreen() { return !!document.querySelector(".quiz, .rushcall, .mega, #tourdlg[open], .paywall"); }
+  function check(D) {
+    try {
+      if (!D || !D.member || !Array.isArray(D.board) || !D.me) return;
+      var me = D.board.filter(function (r) { return r.me; })[0]; if (!me || !(me.pts > 0)) return;
+      var wk = D.wk || "", prev = store("agxPassLast"), cur = { wk: wk, rank: me.rank, below: D.board.filter(function (r) { return !r.me && r.rank > me.rank; }).map(function (r) { return r.nick; }) };
+      store("agxPassLast", cur);
+      if (!prev || prev.wk !== wk || !(me.rank > prev.rank)) return;
+      var by = D.board.filter(function (r) { return !r.me && r.rank < me.rank && (prev.below || []).indexOf(r.nick) >= 0; }).map(function (r) { return r.nick; });
+      if (!by.length) return;
+      var last = 0; try { last = store("agxPassShown") || 0; } catch (e) {}
+      if (Date.now() - last < 20 * 60000) return;
+      store("agxPassShown", Date.now());
+      show(by, me.rank, (D.agency && D.agency.name) || "your agency");
+    } catch (e) {}
+  }
+  function show(by, rank, ag) {
+    if (busyScreen()) { PS.pend = [by, rank, ag]; return; }
+    var old = document.querySelector(".agxpassed"); if (old) old.remove();
+    var t = document.createElement("div"); t.className = "agxpassed"; t.setAttribute("role", "status");
+    t.innerHTML = '<b>' + esc(by.slice(0, 2).join(" and ")) + (by.length > 2 ? " and " + (by.length - 2) + " more" : "") + ' just passed you!</b><span>You’re #' + rank + ' at ' + esc(ag) + ' this week. Answer a few questions to take your spot back.</span><div class="agxpbtns"><button class="btn small" data-agxpgo="1">See the board</button><button class="btn small ghost" data-agxpx="1">Later</button></div>';
+    document.body.appendChild(t);
+    setTimeout(function () { if (t.parentNode) t.remove(); }, 12000);
+  }
+  document.addEventListener("click", function (e) {
+    var g = e.target.closest && e.target.closest("[data-agxpgo],[data-agxpx]"); if (!g) return;
+    var t = document.querySelector(".agxpassed"); if (t) t.remove();
+    if (g.hasAttribute("data-agxpgo")) { try { go("stats"); window.scrollTo(0, 0); } catch (x) {} }
+  });
+  function load() {
+    if (PS.busy || !agxJoined() || Date.now() - PS.at < 10 * 60000) return;
+    PS.busy = true; PS.at = Date.now();
+    fnCall("agencyBoard", { av: agxMyAv() }).then(agxOk).then(function (r) { PS.busy = false; if (!AGX.data || (AGX.at || 0) < Date.now() - 30000) { AGX.data = r; AGX.at = Date.now(); } check(r); }).catch(function () { PS.busy = false; });
+  }
+  /* any board load elsewhere in the app (Scoreboard, Agency Challenge) is checked too */
+  var r0 = render;
+  render = function () {
+    var x = r0.apply(this, arguments);
+    try {
+      if (AGX.data && AGX.at && AGX.at !== PS.seen) { PS.seen = AGX.at; check(AGX.data); }
+      if (PS.pend && !busyScreen()) { var p = PS.pend; PS.pend = null; show(p[0], p[1], p[2]); }
+    } catch (e) {}
+    return x;
+  };
+  setTimeout(load, 9000);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) setTimeout(load, 1500); });
+  var st = document.createElement("style");
+  st.textContent = '.agxpassed{position:fixed;left:50%;top:max(14px,env(safe-area-inset-top));transform:translateX(-50%);z-index:9999;width:min(420px,calc(100vw - 24px));background:linear-gradient(135deg,#7c5cff,#f97316);color:#fff;border-radius:16px;padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.35);animation:clpop .45s cubic-bezier(.2,1.6,.4,1)}.agxpassed b{display:block;font-size:16px}.agxpassed span{display:block;font-size:13.5px;margin-top:2px;opacity:.95}.agxpbtns{display:flex;gap:8px;margin-top:8px}.agxpassed .btn{background:#fff;color:#4c1d95;border:0}.agxpassed .btn.ghost{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.7)}@media (prefers-reduced-motion:reduce){.agxpassed{animation:none}}';
+  document.head.appendChild(st);
+})();
 
 })();
