@@ -34330,7 +34330,7 @@ agxPane.addEventListener("submit", function (e) {
   if (f.id === "agxJoinF" || f.id === "agxNickF") {
     var nick = ($("#agxNick") || {}).value || ""; AGX.fNick = nick; AGX.fDept = ($("#agxDept") || {}).value || ""; var aid = f.id === "agxJoinF" ? AGX.pick.id : AGX.data.agency.id;
     AGX.busy = true; AGX.msg = ""; agxDraw();
-    return fnCall("agencyJoin", { aid: aid, nick: nick, dept: ($("#agxDept") || {}).value || "", av: agxMyAv() }).then(agxOk).then(function () { AGX.busy = false; store("agxJoined", 1); AGX.pick = null; AGX.list = null; AGX.tab = "agency"; AGX.msg = f.id === "agxJoinF" ? "You’re in. Every right answer now earns points for your team." : "Saved."; AGX.err = false; agxLoad(true); }).catch(function (e2) { agxFail(e2, "save that"); });
+    return fnCall("agencyJoin", { aid: aid, nick: nick, dept: ($("#agxDept") || {}).value || "", av: agxMyAv() }).then(agxOk).then(function () { AGX.busy = false; var wasIn = agxJoined(); store("agxJoined", 1); if (!wasIn && f.id === "agxJoinF") agxPushAuto(); AGX.pick = null; AGX.list = null; AGX.tab = "agency"; AGX.msg = f.id === "agxJoinF" ? "You’re in. Every right answer now earns points for your team." : "Saved."; AGX.err = false; agxLoad(true); }).catch(function (e2) { agxFail(e2, "save that"); });
   }
 });
 document.addEventListener("keydown", function (e) { if (e.key === "Escape" && AGX.open) closeAgency(); });
@@ -34342,11 +34342,18 @@ window.DrugBugPush = {
   onDenied: function () { store("agxPushOn", null); AGX.pushMsg = "Notifications are turned off for DrugBug. Turn them on in iPhone Settings > DrugBug > Notifications, then try again."; if (AGX.open) agxDraw(); },
   onError: function () { AGX.pushMsg = "Couldn’t set up notifications right now. Try again later."; if (AGX.open) agxDraw(); }
 };
+/* joining a team turns "Tell me when someone passes me" on by itself (owner, Nov 25 2026: "turn it on automatically if
+   you join a team"); iOS shows its own permission prompt. Not if the person turned the switch off themselves before.
+   Solo Top Players get no passed notifications. */
+function agxPushAuto() {
+  var h = agxPushHandler(); if (!h || store("agxPushOn") || store("agxPushOff")) return;
+  store("agxPushOn", 1); AGX.pushMsg = ""; try { h.postMessage({ cmd: "enable" }); } catch (x) {}
+}
 window.DrugBugAgency = { open: function () { try { openAgency(); } catch (e) {} } };
 agxPane.addEventListener("change", function (e) {
   if (!e.target || e.target.id !== "agxPushT") return; var h = agxPushHandler(); if (!h) return;
-  if (e.target.checked) { store("agxPushOn", 1); AGX.pushMsg = ""; try { h.postMessage({ cmd: "enable" }); } catch (x) {} }
-  else { store("agxPushOn", null); try { h.postMessage({ cmd: "disable" }); } catch (x) {} fnCall("pushRegister", { on: false }).catch(function () {}); }
+  if (e.target.checked) { store("agxPushOn", 1); store("agxPushOff", null); AGX.pushMsg = ""; try { h.postMessage({ cmd: "enable" }); } catch (x) {} }
+  else { store("agxPushOn", null); store("agxPushOff", 1); try { h.postMessage({ cmd: "disable" }); } catch (x) {} fnCall("pushRegister", { on: false }).catch(function () {}); }
 });
 setTimeout(function () { var h = agxPushHandler(); if (h && store("agxPushOn")) try { h.postMessage({ cmd: "hello" }); } catch (e) {} }, 4000);
 (function agxChOpen(tries) { if (!AGX_CHGO) return; if (agreeRec() && !needDisc()) { AGX_CHGO = false; return setTimeout(openAgency, 600); } if (tries < 600) setTimeout(function () { agxChOpen(tries + 1); }, 1000); })(0);
