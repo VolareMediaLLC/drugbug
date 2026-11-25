@@ -10,7 +10,7 @@
   function send(m, src, line, col, stack) {
     try {
       m = String(m || "").slice(0, 300); if (!m || n >= 5) return;
-      if (/^Script error\.?$|ResizeObserver loop|Non-Error promise rejection captured|^offline$|Failed to fetch|NetworkError|Load failed|The operation was aborted|AbortError/i.test(m)) return;
+      if (/^Script error\.?$|ResizeObserver loop|Non-Error promise rejection captured|^offline$|Failed to fetch|NetworkError|Load failed|The operation was aborted|AbortError|auth\/network-request-failed|AudioContext is closed/i.test(m)) return;   /* a dropped connection or a closed sound channel is not a bug (owner, Nov 25 2026) */
       var k = m + "|" + line; if (sent[k]) return; sent[k] = 1; n++;
       var base = (window.DRUGBUG_CONFIG || {}).functionsUrl; if (!base) return;
       var S0 = window.__dbS || {}, plat = window.webkit && window.webkit.messageHandlers ? "ios" : "web";

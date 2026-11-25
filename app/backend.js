@@ -61,7 +61,10 @@
       if (!u) return null;
       fs = firebase.firestore();
       if (EMU) fs.useEmulator("127.0.0.1", 8080);
-      try { fs.enablePersistence({ synchronizeTabs: true }).catch(function () {}); } catch (e) {}
+      /* No IndexedDB cache (owner, Nov 25 2026, App errors card): on iPhones and in Safari the offline cache kept failing
+         ("Indexed Database server", "get records ... without an in-progress transaction") and then shut Firestore down
+         ("The client has already been terminated"), so syncing stopped until the app restarted. Progress is already
+         saved on the device by the app itself, so Firestore now keeps its cache in memory only. */
       D.stage = "ready";
       return true;
     })
