@@ -15080,6 +15080,7 @@ function tglDraw(g, f) {
 }
 function tglFrame() {
   if (!TGL.run) return;
+  if (window.SCRL && SCRL.on) { TGL.sy = null; return requestAnimationFrame(tglFrame); }   /* hold still while the page scrolls */
   var now = Date.now();
   if (now - TGL.chk > 1000) { TGL.chk = now; if (!tglWant()) return tglStop(); }
   if (now - TGL.rt > 500) { TGL.rt = now; tglRects(); }
@@ -40804,4 +40805,44 @@ document.addEventListener("click", function (e) { var b = e.target.closest && e.
   document.head.appendChild(st);
 })();
 
+
+/* ===== looping pictures pause when out of sight (owner, Nov 24 2026: "the app can sometimes feel unresponsive") =====
+   The little bug, sparkle and badge loops live inside SVG pictures, which the phone draws on its main thread rather than
+   handing to the graphics chip. About 40 of them ran at once on the menu, most scrolled out of sight, and kept the main
+   thread busy nearly all the time, so taps were answered late. Each picture now animates only while it is on screen
+   (or within 150 px of it); nothing about how they look changes. */
+(function () {
+  if (!("IntersectionObserver" in window) || !window.WeakSet) return;
+  var st = document.createElement("style");
+  st.textContent = "svg.anoff,svg.anoff *{animation-play-state:paused!important}";
+  document.head.appendChild(st);
+  var io = new IntersectionObserver(function (es) {
+    es.forEach(function (e) { if (!e.target.isConnected) { io.unobserve(e.target); return; } e.target.classList.toggle("anoff", !e.isIntersecting); });
+  }, { rootMargin: "150px 0px" });
+  var seen = new WeakSet(), live = [], all = document.getElementsByTagName("svg"), queued = false;
+  function scan() {
+    queued = false;
+    for (var i = 0; i < all.length; i++) { var g = all[i]; if (seen.has(g) || g.ownerSVGElement) continue; seen.add(g); live.push(g); io.observe(g); }
+    if (live.length > 400) live = live.filter(function (g) { if (g.isConnected) return true; io.unobserve(g); return false; });
+  }
+  function soon() { if (!queued) { queued = true; requestAnimationFrame(scan); } }
+  window.animScan = soon;
+  if (typeof render === "function") { var r0 = render; render = function () { var v = r0.apply(this, arguments); soon(); return v; }; }
+  setInterval(function () { if (!document.hidden) { soon(); live = live.filter(function (g) { if (g.isConnected) return true; io.unobserve(g); return false; }); } }, 1500);
+  soon();
+})();
+
+/* ===== smooth scrolling (owner, Nov 24 2026: "it almost rubberbands a lot ... Smoothness is imperative") =====
+   While the page is moving, the decorations hold still so every frame goes to the scroll: the falling leaves stop
+   redrawing (and no longer get shifted to follow the scroll, which made them jump). The normal iPhone bounce
+   at the top and bottom is kept (owner). The leaves resume 180 ms after scrolling stops. (Pausing every looping CSS animation as well was
+   tried and dropped: switching it on and off cost more than it saved.) */
+var SCRL = window.SCRL = { on: false };
+(function () {
+  var tm = 0;
+  function off() { SCRL.on = false; }
+  function on() { SCRL.on = true; clearTimeout(tm); tm = setTimeout(off, 180); }
+  window.addEventListener("scroll", on, { passive: true, capture: true });
+  window.addEventListener("touchmove", on, { passive: true });
+})();
 })();
