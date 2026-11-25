@@ -4208,7 +4208,11 @@ function qgPeers(id) {
   for (var i = 0; i < gs.length && n < 25; i++) gs[i].ids.forEach(function (o) { if (o !== id && DB.drugs[o] && !m[o]) { m[o] = 1; n++; } });
   return (QG.peers[id] = Object.keys(m));
 }
-function qgMake(lv, id, kind, q, a, w, x) { if (!a || !w) return null; return { lv: lv, d: id, q: q, a: a, w: w, x: x, cat: "", auto: true, src: "page" }; }
+function qgMake(lv, id, kind, q, a, w, x) { if (!a || !w) return null;
+  /* no cut-off choices (report, Nov 25 2026: "Cannot see the rest of answer b, c, or d ... only shows conversion of ..."): a page-built
+     question whose right or wrong answers had to be shortened with "..." is not made at all */
+  if (/\.\.\.$/.test(String(a)) || w.some(function (v) { return /\.\.\.$/.test(String(v)); })) return null;
+  return { lv: lv, d: id, q: q, a: a, w: w, x: x, cat: "", auto: true, src: "page" }; }
 var QG_T = {
   use: function (lv, id, d, nm) {
     var a = qgClause(get(d, 1, 2) || get(d, 3, 0), 140);
