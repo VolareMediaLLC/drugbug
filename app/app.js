@@ -33955,6 +33955,14 @@ var AGX_CHGO = false;
 function agxJoined() { return !!store("agxJoined"); }
 /* on a team, or on Top Players with a nickname (owner, Nov 25 2026): either way answers and learning score points */
 function agxScores() { return agxJoined() || !!store("plNick"); }
+/* what the server knows about you: on a team (store agxJoined) or a Top Players nickname (store plNick) */
+function plNickSync(you) {
+  try { if (!you) return; if (you.aid) store("agxJoined", 1); else if (you.solo && you.nick) store("plNick", you.nick); } catch (e) {}
+}
+function plNickKnown(cb) {
+  if (agxScores()) return cb(true);
+  fnCall("agencyTier", { tier: "national" }).then(function (r) { plNickSync(r && r.you); cb(agxScores()); }).catch(function () { cb(true); });   /* offline: don't nag, try next launch */
+}
 function plNickSave(nick, done) {
   fnCall("playerJoin", { nick: nick, av: agxMyAv() }).then(function (r) { if (r && r.ok) { store("plNick", r.nick); try { agxFlush(); } catch (e) {} } done(r && r.ok ? null : "Couldn\u2019t save that nickname."); })
     .catch(function (e) { done((e && e.message) || "Couldn\u2019t save that nickname."); });
@@ -33979,7 +33987,9 @@ function plNickPrompt(force) {
       if (agxScores() || store("plNickSkip") || document.hidden) return;
       if (typeof tourDone === "function" && !tourDone()) return; if (typeof agreeRec === "function" && !agreeRec()) return;
       if (!Prog.uid || S.sheet || S.sess || (typeof topLayerOpen === "function" && topLayerOpen())) return;
-      clearInterval(t); plNickPrompt();
+      clearInterval(t);
+      /* already on a team or already have a nickname (another phone, or before this update)? never ask (owner, Nov 25 2026) */
+      plNickKnown(function (known) { if (!known && !agxScores()) plNickPrompt(); });
     } catch (e) {}
   }, 4000);
   try { var st = document.createElement("style"); st.textContent = ".plnick{position:fixed;inset:0;z-index:9990;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px}.plnkc{background:var(--surface,#1d1a2a);color:var(--ink,#fff);border:1px solid var(--line,#333);border-radius:18px;padding:18px;max-width:380px;width:100%}.plnkc h3{margin:0 0 6px}.plnkc .pinput{width:100%;margin:8px 0 2px}.plnkerr{color:#f87171;min-height:1em;margin:4px 0}"; document.head.appendChild(st); } catch (e) {}
@@ -34203,7 +34213,7 @@ function agxJoinView() {
   if (!statsOn()) return c + '<div class="axrecruit"><b>Turn on usage statistics first</b><span>The Agency Challenge counts your right answers through Basic study statistics, so it needs them on. You can turn them off later in Settings, which also stops your points.</span><button class="btn" data-agx="statson">Turn on and continue</button></div>';
   if (AGX.pick) {
     return c + '<div class="clhead"><b>' + esc(AGX.pick.name) + '</b><span>' + esc(AGX_TYPES[AGX.pick.type] || "") + " · " + esc(AGX.pick.city) + ", " + esc(AGX.pick.state) + '</span></div>' +
-      '<form class="pform" id="agxJoinF"><label>Your nickname (2 to 20 letters, shown on the boards)<input class="pinput" id="agxNick" maxlength="20" autocomplete="off" required value="' + esc(AGX.fNick || "") + '"></label>' +
+      '<form class="pform" id="agxJoinF">' + (store("plNick") ? '<p class="small">Joining as <b>' + esc(store("plNick")) + '</b>. Your points this week come with you.</p><input type="hidden" id="agxNick" value="' + esc(store("plNick")) + '">' : '<label>Your nickname (2 to 20 letters, shown on the boards)<input class="pinput" id="agxNick" maxlength="20" autocomplete="off" required value="' + esc(AGX.fNick || "") + '"></label>') +
       '<label>Your department (shown next to your nickname)' + agxDeptSel(AGX.pick.type, AGX.fDept || "") + '</label>' +
       '<p class="muted small">Use a first name or a nickname, not your full name. Names that aren’t respectful are blocked, and anyone can report a name. Boards are for fun and study, not a measure of job performance.</p>' +
       '<button class="btn" type="submit"' + (AGX.busy ? " disabled" : "") + '>Join</button> <button class="linkish" type="button" data-agx="unpick">Pick a different agency</button></form>';
@@ -40698,8 +40708,9 @@ document.addEventListener("click", function (e) { var b = e.target.closest && e.
    week). The Agency Challenge panel opens on National too. ===== */
 (function () {
   try { AGX.tab = "national"; } catch (e) {}
-  var HN = { tab: "nat", at: 0, busy: false, data: null, err: "" };
-  try { if (store("hvBoardTab") === "team") HN.tab = "team"; } catch (e) {}
+  /* Top Players is the first tab every time the Scoreboard opens (owner, Nov 25 2026) */
+  var HN = { tab: "pl", at: 0, busy: false, data: null, err: "" };
+  var goHN = go; go = function (view, opts) { if (view === "stats" && S.view !== "stats") HN.tab = "pl"; return goHN(view, opts); };
   function hnLoad(force) {
     if (HN.busy || (!force && HN.data && Date.now() - HN.at < 120000)) return;
     /* after a failed load, wait before trying again on its own: retrying on every redraw froze the Scoreboard when the
@@ -40707,7 +40718,7 @@ document.addEventListener("click", function (e) { var b = e.target.closest && e.
     if (!force && HN.failAt && Date.now() - HN.failAt < 60000) return;
     HN.busy = true; HN.err = "";
     fnCall("agencyTier", { tier: "national" }).then(agxOk).then(function (r) {
-      HN.busy = false; HN.data = r; HN.at = Date.now(); if (r.tiers) try { store("agxTiers", r.tiers); } catch (e) {}
+      HN.busy = false; HN.data = r; HN.at = Date.now(); plNickSync(r.you); if (r.tiers) try { store("agxTiers", r.tiers); } catch (e) {}
       if (S.view === "stats") render();
     }).catch(function (e) { HN.busy = false; HN.failAt = Date.now(); HN.err = e && e.message === "offline" ? "The National board needs an internet connection." : "Couldn’t load the National board."; if (S.view === "stats") render(); });
   }
@@ -40775,7 +40786,7 @@ document.addEventListener("click", function (e) { var b = e.target.closest && e.
     var D = HN.data, left = ""; try { left = hvWeekLeft(); } catch (e) {}
     var c = '<section class="hvnat"><div class="hvshead"><span class="hvseye">Top players · this week</span><span class="hvsend">' + (left ? "Ends in " + esc(left) : "") + '</span></div>';
     if (!D) return c + (HN.err ? '<p class="presult" role="alert">' + esc(HN.err) + '</p><p><button class="btn ghost" data-hnre="1">Try again</button></p>' : '<div class="axrload" role="status"><span class="axspin" aria-hidden="true"></span> Loading Top Players…</div>') + '</section>';
-    var P = (D.players || []).filter(function (r) { return r.rank <= 10; }), Y = D.you, jn = false; try { jn = agxJoined(); } catch (e) {}
+    var P = (D.players || []).filter(function (r) { return r.rank <= 10; }), Y = D.you, jn = false; try { jn = agxJoined() || !!(Y && Y.aid); } catch (e) {}
     if (!P.length) c += '<p class="muted small">Nobody has points yet this week. Answer a few questions and you’re on the board.</p>';
     else c += bigPodium(P, function (r) { return r.nick; }, function (r) { return r.agency || ""; }, function (r) { return r.pts; }, function (r) { return r.me; }, null, "p");
     if (P.length > 3) c += '<ol class="clboard axboard hvnpl" start="4">' + P.slice(3, 10).map(function (r) {
@@ -40786,7 +40797,7 @@ document.addEventListener("click", function (e) { var b = e.target.closest && e.
     /* your own place, only for you, when you're below the top 10 */
     var mine = (D.players || []).filter(function (r) { return r.me; })[0], myRank = mine ? mine.rank : Y && Y.rank;
     if (myRank && myRank > 10) c += '<ol class="clboard axboard hvnpl hvme" start="' + myRank + '"><li class="me"><span class="clrk">' + myRank + '</span>' + (mine ? agxAvArt(mine.av) : '') + '<span class="clal">' + esc((mine && mine.nick) || (Y && Y.nick) || store("plNick") || "You") + ' <em>you</em>' + (mine && mine.agency ? '<small class="axsub">' + esc(mine.agency) + '</small>' : '') + '</span><span class="clsc"><b>' + num0((mine && mine.pts) || (Y && Y.pts) || 0) + '</b><small>only you see this</small></span></li></ol>';
-    if (!agxScores()) c += '<div class="hvsme"><div><b>Get on the board</b><span>Pick a nickname and every right answer counts.</span></div></div><button class="btn hvsjoin" data-plnick="1">Pick a nickname</button>';
+    if (!agxScores() && !jn && !(Y && Y.nick)) c += '<div class="hvsme"><div><b>Get on the board</b><span>Pick a nickname and every right answer counts.</span></div></div><button class="btn hvsjoin" data-plnick="1">Pick a nickname</button>';
     if (!jn) c += '<div class="hvsme"><div><b>Join a team</b><span>Your hospital, EMS agency, fire department or school. Your points count for your team and you can win team prizes.</span></div></div><button class="btn ' + (agxScores() ? '' : 'ghost ') + 'hvsjoin" data-openagency="1">Join a team</button>';
     return c + '</section>';
   }
@@ -40841,7 +40852,7 @@ document.addEventListener("click", function (e) { var b = e.target.closest && e.
   var hv0 = hvBoard;
   hvBoard = function () {
     /* National · Top Players · Join a team / My Team (owner, Nov 25 2026) */
-    var jn = false; try { jn = agxJoined(); } catch (x) {}
+    var jn = false; try { jn = agxJoined() || !!(HN.data && HN.data.you && HN.data.you.aid); } catch (x) {}
     var tb = function (k, label) { return '<button role="tab" aria-selected="' + (HN.tab === k) + '" class="' + (HN.tab === k ? "on" : "") + '" data-hntab="' + k + '">' + label + '</button>'; };
     var tabs = '<div class="cltabs axtiers hvntabs" role="tablist">' + tb("nat", "National") + tb("pl", "Top Players") + tb("team", jn ? "My Team" : "Join a team") + (HN.tab !== "team" ? '<button data-hnre="1" aria-label="Refresh">↻</button>' : '') + '</div>';
     if (HN.tab === "pl") return tabs + hnWon() + hnPlayers() + '<h2 class="hvsth">Your stats</h2>';
@@ -40851,7 +40862,7 @@ document.addEventListener("click", function (e) { var b = e.target.closest && e.
   document.addEventListener("click", function (e) {
     var t = e.target.closest && e.target.closest("[data-hntab],[data-hnre],[data-hnag],[data-hnmore]"); if (!t) return;
     if (t.hasAttribute("data-hnmore")) { if (t.getAttribute("data-hnmore") === "p") HN.allP = !HN.allP; else HN.allR = !HN.allR; render(); return; }
-    if (t.hasAttribute("data-hntab")) { HN.tab = t.getAttribute("data-hntab"); try { store("hvBoardTab", HN.tab === "team" ? "team" : null); } catch (x) {} render(); return; }
+    if (t.hasAttribute("data-hntab")) { HN.tab = t.getAttribute("data-hntab"); render(); return; }
     if (t.hasAttribute("data-hnre")) { hnLoad(true); render(); return; }
     /* a team's people: the same roster window the Agency Challenge uses */
     try { AGX.open = true; agxPane.hidden = false; AGX.msg = ""; AGX.err = false; agxRosterOpen(t.getAttribute("data-hnag"), t.getAttribute("data-hnname") || ""); try { agxLoad(false); } catch (x) {} } catch (x) {}
