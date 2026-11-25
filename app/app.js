@@ -15080,7 +15080,7 @@ function tglDraw(g, f) {
 }
 function tglFrame() {
   if (!TGL.run) return;
-  if (window.SCRL && SCRL.on) { TGL.sy = null; return requestAnimationFrame(tglFrame); }   /* hold still while the page scrolls */
+  TGL.sy = null;   /* the leaves fall on the screen like snow on a window, and keep falling while the page scrolls under them (owner, Nov 24 2026) */
   var now = Date.now();
   if (now - TGL.chk > 1000) { TGL.chk = now; if (!tglWant()) return tglStop(); }
   if (now - TGL.rt > 500) { TGL.rt = now; tglRects(); }
@@ -40833,9 +40833,8 @@ document.addEventListener("click", function (e) { var b = e.target.closest && e.
 })();
 
 /* ===== smooth scrolling (owner, Nov 24 2026: "it almost rubberbands a lot ... Smoothness is imperative") =====
-   While the page is moving, the decorations hold still so every frame goes to the scroll: the falling leaves stop
-   redrawing (and no longer get shifted to follow the scroll, which made them jump). The normal iPhone bounce
-   at the top and bottom is kept (owner). The leaves resume 180 ms after scrolling stops. (Pausing every looping CSS animation as well was
+   SCRL.on is true while the page is moving (and 180 ms after). The falling leaves are no longer shifted to follow the
+   scroll, which made them jump; they keep falling on the screen. The normal iPhone bounce is kept (owner). (Pausing every looping CSS animation as well was
    tried and dropped: switching it on and off cost more than it saved.) */
 var SCRL = window.SCRL = { on: false };
 (function () {
