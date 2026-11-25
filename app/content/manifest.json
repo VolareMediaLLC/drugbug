@@ -1,12 +1,12 @@
 {
  "schema": 1,
- "v": 2026110901,
+ "v": 2026112501,
  "ts": 1794225600000,
- "file": "updates-2026110901.json",
- "sha256": "33443882c62b4bdde47ea39af0535c612fa25f8419fb9da72c987f077367c48d",
- "bytes": 69261,
+ "file": "updates-2026112501.json",
+ "sha256": "81f818af738b95d71fde857b39594acc1385c6ecc9b0d223db5ef207f8c1fdb9",
+ "bytes": 53513,
  "drugs": 6,
- "repilot": 28,
+ "repilot": 0,
  "recalls": {
   "file": "recalls-rc20261103.json",
   "v": "rc20261103",
