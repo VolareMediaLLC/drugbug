@@ -13,5 +13,7 @@
   "sha256": "73723096c1063cd6aefe5a5b804c8847c05cdfba0c4170db1f725e16baf0dfbf",
   "bytes": 772772,
   "drugs": 502
- }
+ },
+ "minIos": "1.2.6",
+ "updateMsg": "A new DrugBug is out with scoreboards, Top Players and fixes. Update on the App Store to keep studying."
 }
