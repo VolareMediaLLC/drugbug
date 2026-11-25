@@ -39953,7 +39953,7 @@ function agxRosterHtml() {
   if (D) { var A = D.agency; c += '<p class="muted small">' + esc(AGX_TYPES[A.type] || "") + " · " + esc(A.city) + ", " + esc(A.state) + (A.unv ? ' · <span class="axunv">not checked yet</span>' : '') + '</p>'; }
   c += '</div><button class="iconbtn" data-agxrclose="1" aria-label="Close roster">✕</button></div>';
   if (R.busy) return c + '<div class="axrload" role="status"><span class="axspin" aria-hidden="true"></span> Loading the roster…</div></aside>';
-  if (R.err) return c + (R.guest ? '<p class="presult">Sign in to see who\u2019s on each team. You\u2019re using DrugBug as a guest on this device, so your own team and points don\u2019t show here either.</p><p><button class="btn" data-acc="nudgego">Sign in</button></p></aside>'
+  if (R.err) return c + (R.guest ? '<p class="presult">Sign in to see who\u2019s on each team.</p>' + ((typeof acctUI !== "function" || acctUI()) ? '<p><button class="btn" data-acc="nudgego">Sign in</button></p>' : '') + '</aside>'
     : '<p class="presult" role="alert">' + esc(R.err) + '</p><p><button class="btn ghost" data-agxroster="' + esc(R.id) + '" data-force="1">Try again</button></p></aside>');
   var A2 = D.agency;
   var stOn = !!(AGX.data && AGX.data.stateOn), rk = stOn ? A2.rank : A2.natRank, rof = stOn ? A2.of : A2.natOf;
@@ -40860,10 +40860,18 @@ document.addEventListener("click", function (e) { var b = e.target.closest && e.
     if (myRank && myRank > 10) c += '<ol class="clboard axboard hvnpl hvme" start="' + myRank + '"><li class="me"><span class="clrk">' + myRank + '</span>' + (mine ? agxAvArt(mine.av) : '') + '<span class="clal">' + esc((mine && mine.nick) || (Y && Y.nick) || store("plNick") || "You") + ' <em>you</em>' + (mine && mine.agency ? '<small class="axsub">' + esc(mine.agency) + '</small>' : '') + '</span><span class="clsc"><b>' + num0((mine && mine.pts) || (Y && Y.pts) || 0) + '</b><small>only you see this</small></span></li></ol>';
     if (!agxScores() && !jn && !(Y && Y.nick)) c += '<div class="hvsme"><div><b>Get on the board</b><span>Pick a nickname and every right answer counts.</span></div></div><button class="btn hvsjoin" data-plnick="1">Pick a nickname</button>';
     if (!jn) c += '<div class="hvsme"><div><b>Join a team</b><span>Your hospital, EMS agency, fire department or school. Your points count for your team and you can win team prizes.</span></div></div><button class="btn ' + (agxScores() ? '' : 'ghost ') + 'hvsjoin" data-openagency="1">Join a team</button>';
-    if (!jn && hnGuest()) c += '<p class="muted small">Already on a team? You\u2019re not signed in on this device. <button class="linkish" data-acc="nudgego">Sign in</button> and your team and points show up.</p>';
+    /* a Top Players-only nickname can be taken off the board (owner, Nov 25 2026: a second account had made a duplicate) */
+    if (!jn && store("plNick")) c += '<p class="muted small"><button class="linkish" data-plrm="1">Remove my nickname from Top Players</button></p>';
     return c + '</section>';
   }
   document.addEventListener("click", function (e) { var t = e.target.closest && e.target.closest("[data-plnick]"); if (!t) return; e.preventDefault(); plNickPrompt(true); });
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest && e.target.closest("[data-plrm]"); if (!t) return; e.preventDefault();
+    if (t.getAttribute("data-plrm") !== "2") { t.setAttribute("data-plrm", "2"); t.textContent = "Tap again to remove " + (store("plNick") || "your nickname") + " and this week\u2019s points"; return; }
+    t.disabled = true; t.textContent = "Removing\u2026";
+    fnCall("agencyLeave", {}).then(function () { store("plNick", null); store("plNickSkip", Date.now()); store("agxq", null); hnLoad(true); render(); })
+      .catch(function (x) { t.disabled = false; t.setAttribute("data-plrm", "1"); t.textContent = (x && x.message === "offline") ? "No internet. Try again." : "Couldn\u2019t remove it. Try again."; });
+  });
   /* this week's named prizes, shown (not hidden) under each podium step; tap for lore and stats (owner, Nov 25 2026) */
   function hnPrizes(T) {
     var F = T && T.featured, E = (F && F.epics) || [];
