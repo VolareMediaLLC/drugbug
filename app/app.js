@@ -34267,7 +34267,7 @@ function agxLoad(force) {
   if (AGX.busy) return; if (!force && AGX.data && Date.now() - AGX.at < 30000) return agxDraw();
   AGX.busy = true; agxDraw(); try { agxFlush(); } catch (e) {}
   setTimeout(function () {
-    fnCall("agencyBoard", { av: agxMyAv(), feat: 1 }).then(agxOk).then(function (r) { AGX.busy = false; AGX.data = r; AGX.at = Date.now(); store("agxJoined", r.member ? 1 : null); store("agxRw", r.rewards && r.rewards.length ? r.rewards.length : null); if (AGX.err) AGX.msg = ""; AGX.err = false; agxDraw(); }).catch(function (e) { agxFail(e, "load the boards"); });
+    fnCall("agencyBoard", { av: agxMyAv(), feat: 1 }).then(agxOk).then(function (r) { agxAcceptCheck(r); AGX.busy = false; AGX.data = r; AGX.at = Date.now(); store("agxJoined", r.member ? 1 : null); store("agxRw", r.rewards && r.rewards.length ? r.rewards.length : null); if (AGX.err) AGX.msg = ""; AGX.err = false; agxDraw(); }).catch(function (e) { agxFail(e, "load the boards"); });
   }, agxJoined() ? 900 : 0);
 }
 function agxNeedStats() {
@@ -34325,7 +34325,7 @@ agxPane.addEventListener("submit", function (e) {
   if (f.id === "agxAddF") {
     var d = { name: ($("#agxAN") || {}).value, type: ($("#agxAT") || {}).value, city: ($("#agxAC") || {}).value, state: ($("#agxAS") || {}).value };
     AGX.busy = true; AGX.msg = ""; agxDraw();
-    return fnCall("agencyAdd", d).then(agxOk).then(function (r) { AGX.busy = false; AGX.adding = false; AGX.pick = r.agency; AGX.st = d.state; store("agxState", d.state); AGX.msg = r.existed ? "That agency was already on the list, so we picked it for you." : ""; AGX.err = false; agxDraw(true); }).catch(function (e2) { agxFail(e2, "add the agency"); });
+    return fnCall("agencyAdd", d).then(agxOk).then(function (r) { try { if (r.agency && r.agency.id && (!r.agency.status || r.agency.status === "pending")) { var pd = store("agxPend") || {}; pd[r.agency.id] = r.agency.name || ""; store("agxPend", pd); } } catch (x) {} AGX.busy = false; AGX.adding = false; AGX.pick = r.agency; AGX.st = d.state; store("agxState", d.state); AGX.msg = r.existed ? "That agency was already on the list, so we picked it for you." : ""; AGX.err = false; agxDraw(true); }).catch(function (e2) { agxFail(e2, "add the agency"); });
   }
   if (f.id === "agxJoinF" || f.id === "agxNickF") {
     var nick = ($("#agxNick") || {}).value || ""; AGX.fNick = nick; AGX.fDept = ($("#agxDept") || {}).value || ""; var aid = f.id === "agxJoinF" ? AGX.pick.id : AGX.data.agency.id;
@@ -34348,6 +34348,29 @@ window.DrugBugPush = {
 function agxPushAuto() {
   var h = agxPushHandler(); if (!h || store("agxPushOn") || store("agxPushOff")) return;
   store("agxPushOn", 1); AGX.pushMsg = ""; try { h.postMessage({ cmd: "enable" }); } catch (x) {}
+}
+/* "your agency has been accepted" (owner, Nov 25 2026: "when people have their agency accepted send them a screen message
+   saying your agency has been accepted join the fight"). The app remembers agencies it saw waiting (one you asked for or
+   joined while it was pending); the first time the board shows one approved, a banner says so. */
+function agxAcceptCheck(r) {
+  try {
+    var A = r && r.member && r.agency; if (!A || !A.id) return;
+    var pd = store("agxPend") || {};
+    if (A.status === "pending") { if (!(A.id in pd)) { pd[A.id] = A.name || ""; store("agxPend", pd); } return; }
+    if (!(A.id in pd)) return;
+    delete pd[A.id]; store("agxPend", Object.keys(pd).length ? pd : null);
+    if (A.status === "hidden") return;
+    setTimeout(function () { agxAcceptShow(A.name || pd[A.id] || "Your agency"); }, 600);
+  } catch (e) {}
+}
+function agxAcceptShow(name) {
+  if (document.querySelector(".quiz, .rushcall, .mega, .paywall")) { setTimeout(function () { agxAcceptShow(name); }, 20000); return; }
+  var old = document.querySelector(".agxpassed"); if (old) old.remove();
+  var t = document.createElement("div"); t.className = "agxpassed agxok"; t.setAttribute("role", "status");
+  t.innerHTML = '<b>Your agency has been accepted!</b><span>' + esc(name) + ' is official. Join the fight: every right answer now scores for your team.</span><div class="agxpbtns"><button class="btn small" data-agxpgo="1">See the scoreboard</button><button class="btn small ghost" data-agxpx="1">Later</button></div>';
+  document.body.appendChild(t);
+  try { if (typeof gfxSnd === "function") gfxSnd("win"); } catch (e) {}
+  setTimeout(function () { if (t.parentNode) t.remove(); }, 15000);
 }
 window.DrugBugAgency = { open: function () { try { openAgency(); } catch (e) {} } };
 agxPane.addEventListener("change", function (e) {
@@ -38617,7 +38640,7 @@ function hvTeamCard() {
   var D = AGX.data && AGX.data.member ? AGX.data : null;
   if ((!D || Date.now() - (AGX.at || 0) > 120000) && !HVT.busy && Date.now() - HVT.at > 20000) {
     HVT.busy = true; HVT.at = Date.now();
-    fnCall("agencyBoard", { av: agxMyAv(), feat: 1 }).then(agxOk).then(function (r) { HVT.busy = false; AGX.data = r; AGX.at = Date.now(); store("agxJoined", r.member ? 1 : null); if (S.view === "stats" || document.querySelector(".hvteamcard,.hvsolo")) render(); }).catch(function () { HVT.busy = false; if (document.querySelector(".hvteamcard")) render(); });
+    fnCall("agencyBoard", { av: agxMyAv(), feat: 1 }).then(agxOk).then(function (r) { agxAcceptCheck(r); HVT.busy = false; AGX.data = r; AGX.at = Date.now(); store("agxJoined", r.member ? 1 : null); if (S.view === "stats" || document.querySelector(".hvteamcard,.hvsolo")) render(); }).catch(function () { HVT.busy = false; if (document.querySelector(".hvteamcard")) render(); });
   }
   if (!D) return '<section class="hvteamcard"><div class="hvshead"><span class="hvseye">Your team this week</span></div><div class="axrload" role="status"><span class="axspin" aria-hidden="true"></span> ' + (HVT.busy ? "Loading your team…" : "Your team shows here when you’re online.") + '</div><button class="btn ghost" data-openagency="1">Open Agency Challenge</button></section>';
   var A = D.agency, M = D.me, B = (D.board || []).slice(0, 5);
