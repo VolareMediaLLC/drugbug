@@ -1598,7 +1598,7 @@ function rnDeptView() {
     var dk = d.key || "school", on = sel.indexOf(dk) >= 0;
     var lab = d.sect !== last ? '<span class="rdsect">' + esc(RN_SECT[d.sect]) + '</span>' : '<span class="rdsect" aria-hidden="true">&nbsp;</span>'; last = d.sect;
     return '<div class="rdcell">' + lab + '<button class="rdcard' + (on ? ' on' : '') + (d.sect === "start" ? ' first' : '') + '" data-rndept="' + d.key + '" data-rnd="' + dk + '" aria-pressed="' + on + '">' +
-      '<span class="rdbug">' + rnBugArt(dk) + '</span><strong>' + esc(d.name) + '</strong><span class="rdbugn">' + esc((RN_BUG[dk] || {}).name || "") + '</span><span class="rdblurb">' + esc(d.blurb) + '</span>' + (dk === "school" ? '<span class="rdsoon"><b>Coming soon:</b> your Graduation Report. When you graduate, see where you did well and where you struggled across nursing school, and print it out.</span>' : '') +
+      '<span class="rdbug">' + rnBugArt(dk) + '</span><strong>' + esc(d.name) + '</strong><span class="rdbugn">' + esc((RN_BUG[dk] || {}).name || "") + '</span><span class="rdblurb">' + esc(d.blurb) + '</span>' + (dk === "school" ? '' : '') +
       (on ? '<span class="rdnow">&#10003; Picked</span>' : '') + '</button></div>';
   }).join("");
   var names = D.filter(function (d) { return sel.indexOf(d.key || "school") >= 0; }).map(function (d) { return d.name; });
@@ -40475,24 +40475,7 @@ function ngnPrepNote() {
 document.addEventListener("click", function (e) { var b = e.target.closest && e.target.closest("[data-ngonly]"); if (!b) return; e.preventDefault(); NG.i = -1; S.tab = "ngn"; render(); window.scrollTo(0, 0); });
 document.addEventListener("click", function (e) { var b = e.target.closest && e.target.closest("[data-ngtoq]"); if (!b) return; e.preventDefault(); S.tab = "prep"; render(); window.scrollTo(0, 0); });
 
-/* Nursing school: Graduation Report, coming soon (owner, Nov 22 2026: "when they graduate they can see where they did
-   poorly and did well and get it printed out when they graduate"). A note only; nothing is built or promised by date. */
-(function () {
-  var r0 = render;
-  render = function () {
-    var x = r0.apply(this, arguments);
-    try {
-      if (S.view === "level" && S.level === "rn" && S.tab === "hub" && typeof ngnOn === "function" && ngnOn() && !document.querySelector(".gradsoon")) {
-        var band = document.querySelector(".band"); if (band && band.parentNode) {
-          var d = document.createElement("div"); d.className = "gradsoon";
-          d.innerHTML = '<span class="gsic" aria-hidden="true">🎓</span><div><b>Coming soon: your Graduation Report</b><span>When you graduate, see where you did well and where you struggled across nursing school: drug classes, body systems, clinical judgment steps and NGN formats. Print it out or save it as a PDF.</span></div>';
-          band.parentNode.insertBefore(d, band.nextSibling);
-        }
-      }
-    } catch (e) {}
-    return x;
-  };
-})();
+/* Nursing school Graduation Report: the "coming soon" note was taken down (owner, Nov 24 2026: "Dont put coming soon graduation report"). */
 
 
 
