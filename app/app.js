@@ -1285,8 +1285,12 @@ function sectionHead() {
    just say Questions (owner, Nov 16 2026: "Normal questions shouldn't say registry exam prep. That should be the exam type
    question label only") */
 function prepHead() { var st = null; try { st = nrState(); } catch (e) {} return (st && st.kind === "reg") || (S.view === "level" && isF(S.level)) ? prepName() : "Questions"; }
+/* only the Nursing school path is called NCLEX-style; every other nursing path's deck is just "Adaptive questions"
+   (owner, Nov 25 2026: "only the nursing schools questions should be labeled nclex style. All other nursing forms should
+   just be adaptive questions") */
+function nclexName() { try { return S.view === "level" && S.level === "rn" && typeof nSchoolOn === "function" && nSchoolOn(); } catch (e) { return false; } }
 function prepName() {
-  if (S.view === "level" && isN(S.level)) return { cna: "CNA Exam Prep", lvn: "PN Licensure Prep", rn: "RN Licensure Prep" }[S.level];
+  if (S.view === "level" && isN(S.level)) return S.level === "cna" ? "CNA Exam Prep" : nclexName() ? "RN Licensure Prep" : "Adaptive Questions";
   if (S.view === "level" && isI(S.level)) return "Imaging Exam Prep";
   if (S.view === "level" && isM(S.level)) return { ms1: "Step 1–Style Prep", ms3: "Step 2 CK–Style Prep", intern: "Step 3–Style Prep" }[S.level];
   if (S.view === "level" && S.level === "flight") return "Flight Certification Exam Prep";
@@ -1981,19 +1985,19 @@ function nrPrep() {
   if (st.phase === "quiz") return nrQuiz(st);
   if (st.phase === "done") return nrDone(st) + scoreArea();
   var pool = nrPool(st.filter);
-  var nurse = nurseCtx(), exam = nurse ? { cna: "CNA state exam", lvn: "NCLEX-PN", rn: "NCLEX-RN" }[S.level] : medCtx() ? { ms1: "USMLE Step 1", ms3: "USMLE Step 2 CK", intern: "USMLE Step 3" }[S.level] : imCtx() ? "Imaging exam" : S.level === "flight" ? "Flight and critical care certification exam" : isF(S.level) ? "TCCC" : isA(S.level) ? ((levelObj(S.level) || {}).name || "Your field") + " medication" : "NREMT";
+  var nurse = nurseCtx(), exam = nurse ? (S.level === "cna" ? "CNA state exam" : nclexName() ? "NCLEX-RN" : "") : medCtx() ? { ms1: "USMLE Step 1", ms3: "USMLE Step 2 CK", intern: "USMLE Step 3" }[S.level] : imCtx() ? "Imaging exam" : S.level === "flight" ? "Flight and critical care certification exam" : isF(S.level) ? "TCCC" : isA(S.level) ? ((levelObj(S.level) || {}).name || "Your field") + " medication" : "NREMT";
   if (isF(ctxKey())) st.kind = "reg";
   var regN = regCount(), reg = st.kind === "reg", filters = nrLevelsFor(ctxKey()).concat(["all"]), n = Math.min(st.n, pool.length);
   /* one simple screen: pick a deck, a length and a mode, then go. Everything else sits under More options. */
   var c = freeSample() ? freeNote("questions", (function () { var cap = freeQsCap(); return regN && !isF(ctxKey()) ? Math.min(cap, drugCount()) + Math.min(cap, regN) : Math.min(FREE_QS, pool.length); })(), fullCount(function () { return (regN && !isF(ctxKey()) ? drugCount() + regCount() : nrPool(st.filter).length); })) : '';
   var drugAll = freeSample() ? fullCount(drugCount) : 0, regAll = freeSample() ? fullCount(regCount) : 0;
-  c += '<section class="nrsetup nrfun"><div class="nrtop">' + myBugArt("nrbug", null, null, myStage()) + '<p class="nrtag"><strong>' + esc(exam) + '-style practice.</strong> <span class="muted">' + (isF(ctxKey()) ? 'Pick a length, go.' : 'Pick a deck, pick a length, go.') + '</span></p></div>' + examPill(pool) + creatorNote();
+  c += '<section class="nrsetup nrfun"><div class="nrtop">' + myBugArt("nrbug", null, null, myStage()) + '<p class="nrtag"><strong>' + (exam ? esc(exam) + '-style practice.' : 'Adaptive practice.') + '</strong> <span class="muted">' + (isF(ctxKey()) ? 'Pick a length, go.' : 'Pick a deck, pick a length, go.') + '</span></p></div>' + examPill(pool) + creatorNote();
   c += adpNote();
   if (typeof ngnPrepNote === "function" && reg) c += ngnPrepNote();
   if (regN && isF(ctxKey())) c += '<p class="muted small">' + (freeSample() ? Math.min(regN, freeQsCap()) : regN) + ' questions on medications, blood, trauma, prolonged care, ventilators, labs, CBRN, K9, dive and evacuation.</p>';
   else if (regN) c += '<div class="nrdecks" role="group" aria-label="Question type">' +
     '<button class="nrdeck" data-nrkind="drug" aria-pressed="' + !reg + '"><span class="nrdk-ic" aria-hidden="true">' + icon("pillq") + '</span><strong>Drug questions</strong><span class="nrdk-n">' + drugCount() + '</span>' + proMore(drugCount(), drugAll, "questions") + '<span class="nrdk-sub">' + (nurse ? "Medicines: what to check, report and teach on your unit" : "Doses, actions, uses and side effects") + '</span></button>' +
-    '<button class="nrdeck" data-nrkind="reg" aria-pressed="' + reg + '"><span class="nrdk-ic" aria-hidden="true">' + icon("ecg") + '</span><strong>' + (nurse ? (S.level === "cna" ? "CNA exam-style questions" : "NCLEX-style questions") : (isEMSLv(S.level) || S.level === "cp" ? "Registry-style questions" : "Exam-style questions")) + '</strong><span class="nrdk-n">' + (freeSample() ? Math.min(regN, freeQsCap()) : regN) + '</span>' + proMore(freeSample() ? Math.min(regN, freeQsCap()) : regN, regAll, "questions") + '<span class="nrdk-sub">' + (nurse ? (S.level === "cna" ? "Care, safety, communication and your role" : "Priority, delegation, safety, care and the whole test plan") : "Airway, cardiology, trauma, medical and operations") + '</span></button></div>' +
+    '<button class="nrdeck" data-nrkind="reg" aria-pressed="' + reg + '"><span class="nrdk-ic" aria-hidden="true">' + icon("ecg") + '</span><strong>' + (nurse ? (S.level === "cna" ? "CNA exam-style questions" : nclexName() ? "NCLEX-style questions" : "Adaptive questions") : (isEMSLv(S.level) || S.level === "cp" ? "Registry-style questions" : "Exam-style questions")) + '</strong><span class="nrdk-n">' + (freeSample() ? Math.min(regN, freeQsCap()) : regN) + '</span>' + proMore(freeSample() ? Math.min(regN, freeQsCap()) : regN, regAll, "questions") + '<span class="nrdk-sub">' + (nurse ? (S.level === "cna" ? "Care, safety, communication and your role" : nclexName() ? "Priority, delegation, safety, care and the whole test plan" : "Priority, delegation, safety and whole-patient care") : "Airway, cardiology, trauma, medical and operations") + '</span></button></div>' +
     (function () { if (!nurse || (S.level !== "rn" && S.level !== "lvn") || typeof myUnit !== "function") return ""; var us0 = myUnits(S.level), u0 = us0[0], uo0 = u0 && typeof unitObj === "function" ? unitObj(u0) : null; return (S.level === "rn" ? nFocusRow(false) : "") + (uo0 && !reg ? '<p class="muted small nrdept">About 3 of every 4 drug questions come from ' + (us0.length > 1 ? 'your departments' : 'your department') + ': <strong>' + esc(us0.map(function (x) { var o = unitObj(x); return o ? o.name : x; }).join(", ")) + '</strong>, weighted to its most-used medicines and most common cases' + (deptTopCases(u0).length ? ' (' + esc(deptTopCases(u0).join(', ')) + ')' : '') + '. The rest cover other medicines.</p>' : ""); })();
   (function () {
     var st2 = seenStats();
@@ -2011,7 +2015,7 @@ function nrPrep() {
   c += '<button class="btn nrgo" data-act="nrstart"' + (pool.length ? "" : " disabled") + '>Start ' + n + ' question' + (n === 1 ? '' : 's') + ' <span aria-hidden="true">&rarr;</span></button>';
   var wn = weakPool().length;
   if (wn) c += '<button class="nrweak" data-act="weakgo"><span class="nrweak-n">' + wn + '</span><span><strong>Weak spots</strong><span class="muted small">Questions you missed and drugs under 70%. Drill ' + Math.min(wn, 20) + ' now.</span></span><span aria-hidden="true">&rsaquo;</span></button>';
-  if (nurseCtx()) c += '<div class="lbl">Clinical judgment step (NCLEX)</div><div class="chips cjchips"><button class="chip" data-cjf="" aria-pressed="' + !S.cjF + '">All six</button>' + CJ_STEPS.map(function (s, i) { return '<button class="chip cj-' + s[0] + '" data-cjf="' + s[0] + '" aria-pressed="' + (S.cjF === s[0]) + '">' + (i + 1) + '. ' + esc(s[1]) + '</button>'; }).join("") + '</div>';
+  if (nurseCtx()) c += '<div class="lbl">Clinical judgment step' + (nclexName() ? ' (NCLEX)' : '') + '</div><div class="chips cjchips"><button class="chip" data-cjf="" aria-pressed="' + !S.cjF + '">All six</button>' + CJ_STEPS.map(function (s, i) { return '<button class="chip cj-' + s[0] + '" data-cjf="' + s[0] + '" aria-pressed="' + (S.cjF === s[0]) + '">' + (i + 1) + '. ' + esc(s[1]) + '</button>'; }).join("") + '</div>';
   c += '<button class="linkish nrmorebtn" data-act="nrmore" aria-expanded="' + !!(S.nrMore || S.exEdit) + '">' + (S.nrMore || S.exEdit ? "Hide options" : "More options") + '</button>';
   if (S.nrMore || S.exEdit) {
     c += '<div class="nrmore">';
@@ -2020,7 +2024,7 @@ if (filters.length > 2 && !reg) c += '<div class="lbl">Question set</div><div cl
     c += '<div class="lbl">Question choice</div><div class="chips"><button class="chip" data-nradapt="1" aria-pressed="' + (st.adaptive !== false) + '">Adaptive: more of what I miss</button><button class="chip" data-nradapt="0" aria-pressed="' + (st.adaptive === false) + '">Random</button></div>';
     c += examCard(pool) + '</div>';
   }
-  c += '<p class="muted small nrfine">Original practice questions, not official ' + esc(exam) + ' items. Your protocols and medical direction come first. ' + (S.level === "flight" && S.view === "level" ? 'Not affiliated with IBSC or BCEN. ' : '') + '<span class="nonaff">' + NONAFF + '</span></p></section>';
+  c += '<p class="muted small nrfine">Original practice questions' + (exam ? ', not official ' + esc(exam) + ' items' : '') + '. Your protocols and medical direction come first. ' + (S.level === "flight" && S.view === "level" ? 'Not affiliated with IBSC or BCEN. ' : '') + '<span class="nonaff">' + NONAFF + '</span></p></section>';
   return c + scoreArea();
 }
 /* small countdown pill at the top of exam prep, once a test date is set */
@@ -2192,7 +2196,7 @@ function nrDone(st) {
     var skk = Object.keys(sk); if (skk.length) { var weak = skk.filter(function (k) { return sk[k][1] >= 2 && sk[k][0] / sk[k][1] < 0.6; }); c += '<p class="small muted" style="margin:10px 0 4px"><strong>By skill</strong>' + (weak.length ? ' &middot; work on: ' + esc(weak.map(function (k) { return SK[k].toLowerCase(); }).join(", ")) : '') + '</p><div class="chips">' + skk.map(function (k) { return '<span class="chip static">' + SK[k] + ': ' + sk[k][0] + '/' + sk[k][1] + '</span>'; }).join("") + '</div>'; }
     if (du && dp[1] && typeof unitObj === "function") c += '<p class="small muted" style="margin:6px 0 0">' + esc(unitObj(du).name) + ' questions: <strong>' + dp[0] + ' of ' + dp[1] + '</strong> right</p>'; }
   if (nurseCtx()) { var cjb = {}; st.qs.forEach(function (x, i) { var k = cjStep(x.q); cjb[k] = cjb[k] || [0, 0]; cjb[k][1]++; if (nrRight(x, st.ans[i])) cjb[k][0]++; });
-    c += '<div class="cjres"><p class="small"><strong>Clinical judgment (NCLEX)</strong></p>' + CJ_STEPS.map(function (s, i) { var v = cjb[s[0]]; if (!v) return ''; var p = Math.round(100 * v[0] / v[1]); return '<div class="cjrow cj-' + s[0] + '"><span>' + (i + 1) + '. ' + esc(s[1]) + '</span><i><b style="width:' + p + '%"></b></i><em>' + v[0] + '/' + v[1] + '</em></div>'; }).join("") + '</div>'; }
+    c += '<div class="cjres"><p class="small"><strong>Clinical judgment' + (nclexName() ? ' (NCLEX)' : '') + '</strong></p>' + CJ_STEPS.map(function (s, i) { var v = cjb[s[0]]; if (!v) return ''; var p = Math.round(100 * v[0] / v[1]); return '<div class="cjrow cj-' + s[0] + '"><span>' + (i + 1) + '. ' + esc(s[1]) + '</span><i><b style="width:' + p + '%"></b></i><em>' + v[0] + '/' + v[1] + '</em></div>'; }).join("") + '</div>'; }
   c += '<div class="chips">' + Object.keys(by).map(function (k) { return '<span class="chip static">' + (k.indexOf("d:") === 0 ? RQ_DOM[k.slice(2)] : NRLV[k]) + ': ' + by[k][0] + '/' + by[k][1] + '</span>'; }).join("") + '</div>';
   c += '<div class="actions"><button class="btn" data-act="nrnew">New test</button>' + (missed.length ? '<button class="btn ghost" data-act="nrmissed">Practice my ' + missed.length + ' misses</button>' : '') + '</div>';
   if (missed.length) c += '<details class="sec" open><summary>Review what you missed (' + missed.length + ')</summary><div class="fields">' + missed.map(function (m) {
@@ -4288,6 +4292,7 @@ var QG_KINDS = {
 };
 /* all generated questions for one drug at one level (cached so wording stays stable in a session) */
 function qgFor(lv, id) {
+  if (QG_NONE[lv]) return [];
   var key = lv + ":" + id; if (QG.cache[key]) return QG.cache[key];
   var d = DB.drugs[id]; if (!d || !d.s) return QG.cache[key] = [];
   var nm = nameOf(id), out = [];
@@ -4308,7 +4313,11 @@ function qgStudy(id, n) {
    Top those up from each drug's own page, at the role's own difficulty, so a learner meets the whole
    formulary instead of the same 300 items. Only drugs with fewer than two hand-written questions are
    topped up, so written items always come first. (Oct 29 2026) */
-var QG_TOPUP = { mh: 3, diet: 3, rrt: 3, pt: 3, slp: 3, surg: 3, anes: 3, dent: 3, phleb: 3, ekg: 3, cp: 2, tccc: 2, gen: 3, rn: 2, flightrn: 2, lvn: 2, ms1: 2, ms3: 2, intern: 2, cpp: 2, flight: 2 };
+var QG_TOPUP = { mh: 3, diet: 3, rrt: 3, pt: 3, slp: 3, surg: 3, anes: 3, dent: 3, phleb: 3, ekg: 3, cp: 2, tccc: 2, gen: 3, rn: 2, flightrn: 2, lvn: 2, ms1: 2, ms3: 2, intern: 2 };
+/* Flight Paramedic and the Critical Care tiers get no auto-made questions (owner, Nov 25 2026: "on the flight paramedic I had
+   some silly questions like what is an NSAID. That is too easy and should not be on there"). Those were the page-built
+   "belongs to which drug class?" / "primary indication for?" items; these paths now use their hand-written banks only. */
+var QG_NONE = { flight: 1, cpp: 1, cmc: 1 };
 function qgPoolFor(lv, scopeOk) {
   var per = QG_TOPUP[lv]; if (!per) return [];
   if (QG.pool[lv]) return QG.pool[lv].filter(scopeOk);
@@ -39297,8 +39306,19 @@ function ovApply(O) {
   try {
     var k; for (k in (O.calls || {})) if (!CALL_OV[k]) CALL_OV[k] = O.calls[k];
     callOvN = -1; callOvApply();
-    var B = { Q: DB.Q, R: DB.RQ, L: DB.LABQ };
-    for (k in (O.q || {})) { var arr = B[k.charAt(0)], q = arr && arr[+k.slice(1)], o = O.q[k]; if (!q || !o) continue; if (o.w) q.w = o.w; if (o.a) q.a = o.a; if (o.q) q.q = o.q; }
+    /* The overlay names each question by its place in the data files. A saved drug-label update takes its re-check
+       questions out of DB.Q before this runs, which moved every later question up and put the rewritten wrong answers
+       (and 53 rewritten right answers) on the question next door: an antibiotic question got alcohol-teaching answers
+       (owner, Nov 25 2026: "one of the answers was something about taking alcohol with it. That's a stupid decoy").
+       Each question carries its original place (q.i), so match on that; a question that has left the pool is skipped. */
+    var B = { Q: DB.Q, R: DB.RQ, L: DB.LABQ }, BI = {};
+    ["Q", "R", "L"].forEach(function (t) { var m = {}, any = false; (B[t] || []).forEach(function (x) { if (x && typeof x.i === "number") { m[x.i] = x; any = true; } }); BI[t] = any ? m : null; });
+    for (k in (O.q || {})) {
+      var t = k.charAt(0), ix = +k.slice(1), arr = B[t], q = null, o = O.q[k];
+      if (BI[t]) q = BI[t][ix] || null; else q = arr && arr[ix];
+      if (!q || !o || q._ov) continue; q._ov = 1;
+      if (o.w) q.w = o.w; if (o.a) q.a = o.a; if (o.q) q.q = o.q;
+    }
     ORG_WHY = O.why || {};
   } catch (e) {}
 }
