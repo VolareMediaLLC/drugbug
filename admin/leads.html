@@ -54,7 +54,7 @@ textarea{font:inherit;font-size:14px;color:var(--ink);background:var(--bg);borde
 <body>
 <div class="wrap">
   <div id="head"><h1>Leads</h1><p class="sub" id="sub">Loading…</p></div>
-  <div class="tabs" role="tablist"><button data-t="leads" aria-selected="true">Leads</button><button data-t="log" aria-selected="false">Team log</button><button data-t="codes" aria-selected="false" id="tCodes" hidden>Sales codes</button></div>
+  <div class="tabs" role="tablist"><button data-t="leads" aria-selected="true">Leads</button><button data-t="log" aria-selected="false">Team log</button><button data-t="dcodes" aria-selected="false">Discount &amp; Pro codes</button><button data-t="codes" aria-selected="false" id="tCodes" hidden>Sales codes</button></div>
   <div id="vLeads">
     <div class="card"><div class="row">
       <input id="q" placeholder="Search name, organization, email or phone">
@@ -68,6 +68,25 @@ textarea{font:inherit;font-size:14px;color:var(--ink);background:var(--bg);borde
     <div id="list"></div>
   </div>
   <div id="vLog" hidden><div class="card"><div class="row"><select id="lDays"><option value="7">Last 7 days</option><option value="14" selected>Last 14 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option></select><select id="lWho" hidden></select></div></div><div id="logOut"></div></div>
+  <div id="vDc" hidden>
+    <div class="card" id="dcAdm" hidden></div>
+    <div class="card"><h2>Notes from Adam</h2><div id="dcNotes"><p class="muted small">Loading…</p></div></div>
+    <div class="card"><h2>Make a code</h2>
+      <p class="small muted" style="margin:0 0 10px">For one person. A discount is 1% to 50% off their <b>first payment</b> of Plus or Pro, and it works when they subscribe on <b>drugbugapp.com</b> (not through the iPhone App Store). They type it in Settings &rarr; Codes on the website before they upgrade. Pro for life works anywhere. Adam sees every code you make.</p>
+      <div class="row"><select id="dcKind"><option value="disc">Discount off the first payment</option><option value="pro">DrugBug Pro for life</option></select><label id="dcPctL" class="row" style="gap:6px"><input id="dcPct" type="number" min="1" max="50" value="20" style="flex:0 0 80px"> % off</label></div>
+      <div class="row" style="margin-top:8px"><input id="dcFor" placeholder="Who it's for (their full name)"><input id="dcTo" placeholder="Who it's going to and how (e.g. Blinn nursing student, by text)"></div>
+      <div class="row" style="margin-top:8px"><input id="dcWhy" placeholder="Why they're getting it"><button class="btn" id="dcMake">Make the code</button></div>
+      <p class="msg" id="dcMsg"></p></div>
+    <div class="card"><h2>Ask for an influencer code</h2>
+      <p class="small muted" style="margin:0 0 10px">An influencer gets DrugBug Pro for life, plus a discount code to share with their followers, with a limit on how many people can use it. Adam approves these first; once he does, both codes show up below for you to send.</p>
+      <div class="row"><input id="irName" placeholder="Influencer's name"><input id="irHandle" placeholder="Handle or link (@name)"></div>
+      <div class="row" style="margin-top:8px"><input id="irPlat" placeholder="Platform (TikTok, Instagram, YouTube…)"><input id="irAud" placeholder="Audience size (e.g. 40k)"></div>
+      <div class="row" style="margin-top:8px"><label class="row" style="gap:6px;flex:0 0 auto">Followers get <input id="irPct" type="number" min="1" max="50" value="20" style="flex:0 0 70px"> % off</label><label class="row" style="gap:6px;flex:0 0 auto">up to <input id="irMax" type="number" min="1" max="10000" value="100" style="flex:0 0 90px"> people</label></div>
+      <textarea id="irWhy" style="margin-top:8px" placeholder="Who they are, why they fit DrugBug, and what you've talked about"></textarea>
+      <div class="row" style="margin-top:8px"><button class="btn" id="irSend">Send to Adam</button></div><p class="msg" id="irMsg"></p></div>
+    <div class="card"><h2>My requests</h2><div id="dcReqs"></div></div>
+    <div class="card"><h2>My codes</h2><div id="dcCodes"></div></div>
+  </div>
   <div id="vCodes" hidden><div class="card"><h2>Sales codes</h2><p class="small muted" style="margin:0 0 10px">Each code works once. The person signs in at <b>drugbugapp.com/outreach</b> with their own DrugBug account, enters the code and their name, and joins the sales team. Remove someone on Outreach stats.</p><div class="row"><input id="cFor" placeholder="Who it's for (optional)"><button class="btn" id="cMake">Make a sales code</button></div><p class="msg" id="cMsg"></p><div id="cList"></div></div></div>
 </div>
 <div class="panel" id="pan" hidden><div id="panIn"></div></div>
@@ -84,7 +103,7 @@ textarea{font:inherit;font-size:14px;color:var(--ink);background:var(--bg);borde
   var SRC={quote:"Quote request",instructor:"Instructor",agency:"Agency request",manual:"Added by hand"};
   var KIND={call:"Call",text:"Text",email:"Email",meeting:"Meeting",note:"Note",assign:"Assigned",status:"Status","won":"Won","lost":"Lost",add:"Added","quote request":"Quote request","asked again":"Asked again"};
   var D=null, ME={}, PEOPLE=[], CUR=null;
-  function tab(t){[].forEach.call(document.querySelectorAll(".tabs button"),function(b){b.setAttribute("aria-selected",String(b.getAttribute("data-t")===t))});$("vLeads").hidden=t!=="leads";$("vLog").hidden=t!=="log";$("vCodes").hidden=t!=="codes";if(t==="log")loadLog();if(t==="codes")loadCodes()}
+  function tab(t){[].forEach.call(document.querySelectorAll(".tabs button"),function(b){b.setAttribute("aria-selected",String(b.getAttribute("data-t")===t))});$("vLeads").hidden=t!=="leads";$("vLog").hidden=t!=="log";$("vCodes").hidden=t!=="codes";$("vDc").hidden=t!=="dcodes";if(t==="log")loadLog();if(t==="codes")loadCodes();if(t==="dcodes")loadDc()}
   document.querySelector(".tabs").onclick=function(e){var b=e.target.closest("[data-t]");if(b)tab(b.getAttribute("data-t"))};
   function load(){ $("sub").textContent="Loading…"; DASH.call("leadList").then(function(r){D=r;ME=r.me;PEOPLE=r.people||[];$("tCodes").hidden=!ME.owner;
       $("lWho").hidden=!ME.owner;$("lWho").innerHTML='<option value="">Everyone</option>'+PEOPLE.map(function(p){return '<option value="'+esc(p.uid)+'">'+esc(p.name)+'</option>'}).join("");
@@ -153,6 +172,53 @@ textarea{font:inherit;font-size:14px;color:var(--ink);background:var(--bg);borde
   $("logOut").addEventListener("click",function(e){var a=e.target.closest("[data-lead]");if(a){e.preventDefault();open(a.getAttribute("data-lead"))}});
   function loadCodes(){DASH.call("salesCodeMake",{list:true}).then(function(r){$("cList").innerHTML=r.codes.length?'<table>'+r.codes.map(function(c){return '<tr><td><b>'+esc(c.code)+'</b>'+(c.forName?'<br><span class="small muted">for '+esc(c.forName)+'</span>':'')+'</td><td class="r">'+(c.used?'used by '+esc(c.usedBy)+'<br><span class="small muted">'+esc(when(c.usedAt))+'</span>':'<span class="st-new">not used yet</span>')+'</td></tr>'}).join("")+'</table>':'<p class="muted small">No sales codes yet.</p>'}).catch(function(e){$("cList").innerHTML='<p class="msg err">'+esc(e.message)+'</p>'})}
   $("cMake").onclick=function(){$("cMsg").className="msg";$("cMsg").textContent="Making…";DASH.call("salesCodeMake",{forName:$("cFor").value}).then(function(r){$("cMsg").innerHTML='New code: <b>'+esc(r.code)+'</b>';$("cFor").value="";loadCodes()}).catch(function(e){$("cMsg").className="msg err";$("cMsg").textContent=e.message})};
+  /* Discount and Pro codes (owner, Nov 24 2026; functions/salescodes.js). The sales team makes one-person codes and asks
+     for influencer codes; Adam approves requests, leaves notes and sees every code here too. */
+  var DC=null;
+  function codeTxt(c){return c.kind==="disc"?c.pct+"% off first payment"+(c.once?"":", up to "+c.max+" people"):"Pro for life"}
+  function codeRow(c,showBy){return '<tr><td><b>'+esc(c.code)+'</b> <button class="linkish" data-dccopy="'+esc(c.code)+'">copy</button><br><span class="small muted">'+esc(codeTxt(c))+(showBy&&c.by?' · made by '+esc(c.by):'')+'</span><br><span class="small">For <b>'+esc(c.forWho)+'</b> · '+esc(c.toWho)+'</span>'+(c.why?'<br><span class="small muted">Why: '+esc(c.why)+'</span>':'')+'</td><td class="r small">'+(c.revoked?'<span class="st-lost">off</span>':c.uses>=(c.max||1)?'<span class="st-won">used</span>':'<span class="st-new">'+c.uses+' / '+(c.max||1)+' used</span>')+'<br><span class="muted">'+esc(when(c.created))+'</span><br><button class="linkish" data-dcoff="'+esc(c.code)+'" data-off="'+(c.revoked?0:1)+'">'+(c.revoked?'turn on':'turn off')+'</button></td></tr>'}
+  function reqRow(q,adm){var t=q.kind==="disc"?'Discount for '+esc(q.forWho)+': '+q.pct+'% off':'Influencer: <b>'+esc(q.influencer)+'</b> '+esc(q.handle)+(q.platform?' on '+esc(q.platform):'')+(q.audience?' ('+esc(q.audience)+')':'')+' · followers '+q.pct+'% off, up to '+q.max;
+    var st=q.status==="pending"?'<span class="st-interested">waiting on Adam</span>':q.status==="approved"?'<span class="st-won">approved</span>':'<span class="st-lost">not approved</span>';
+    var h='<li><time>'+esc(when(q.at))+'</time> '+(adm?'<b>'+esc(q.by)+'</b> · ':'')+st+'<br>'+t+(q.toWho&&q.kind==="disc"?'<br><span class="small">'+esc(q.toWho)+'</span>':'')+'<br><span class="small muted">'+esc(q.why)+'</span>';
+    if(q.status==="approved")h+='<div class="sum">'+(q.pro?'Influencer Pro for life: <b>'+esc(q.pro)+'</b><br>':'')+(q.disc?(q.kind==="disc"?'Code: ':'Followers\' code: ')+'<b>'+esc(q.disc)+'</b>':'')+'</div>';
+    if(q.reply)h+='<div class="small" style="margin-top:4px">Adam: '+esc(q.reply)+'</div>';
+    if(adm&&q.status==="pending")h+='<div class="row" style="margin-top:6px"><label class="row" style="gap:4px;flex:0 0 auto"><input type="number" min="1" max="50" value="'+q.pct+'" data-dpct="'+q.id+'" style="flex:0 0 66px">%</label>'+(q.kind==="disc"?'':'<label class="row" style="gap:4px;flex:0 0 auto">up to <input type="number" min="1" max="10000" value="'+q.max+'" data-dmax="'+q.id+'" style="flex:0 0 86px"></label><label class="row" style="gap:4px;flex:0 0 auto">stops after <input type="number" min="0" max="3650" value="0" data-ddays="'+q.id+'" style="flex:0 0 70px"> days (0 = never)</label>')+'<input data-drep="'+q.id+'" placeholder="Note back to them (optional)"><button class="btn" data-dok="'+q.id+'">Approve</button><button class="btn ghost" data-dno="'+q.id+'">Say no</button></div>';
+    return h+'</li>'}
+  function loadDc(){DASH.call("salesCodesMine").then(function(r){DC=r;
+      $("dcNotes").innerHTML=r.notes.length?r.notes.map(function(n){return '<div class="sum" style="white-space:pre-wrap">'+esc(n.text)+'<div class="small muted" style="margin-top:4px">'+esc(when(n.at))+'</div></div>'}).join(""):'<p class="muted small">No notes yet.</p>';
+      $("dcReqs").innerHTML=r.requests.length?'<ul class="log">'+r.requests.map(function(q){return reqRow(q,false)}).join("")+'</ul>':'<p class="muted small">No requests yet.</p>';
+      $("dcCodes").innerHTML=r.codes.length?'<table>'+r.codes.map(function(c){return codeRow(c,false)}).join("")+'</table>':'<p class="muted small">No codes yet.</p>';
+      if(r.rules&&r.rules.discNeedsOk&&!r.me.owner)$("dcMsg").textContent="Right now Adam approves every discount, so a discount goes to him as a request.";
+      if(r.me.owner)loadDcAdm();
+    }).catch(function(e){$("dcNotes").innerHTML='<p class="msg err">'+esc(e.message)+'</p>'})}
+  function loadDcAdm(){$("dcAdm").hidden=false;$("dcAdm").innerHTML='<p class="muted small">Loading your approvals…</p>';DASH.call("salesCodesAdmin").then(function(a){
+      var pend=a.requests.filter(function(q){return q.status==="pending"});
+      $("dcAdm").innerHTML='<h2>Your approvals'+(pend.length?' <span class="chip" style="background:var(--warn);color:#000">'+pend.length+' waiting</span>':'')+'</h2>'+
+        (pend.length?'<ul class="log">'+pend.map(function(q){return reqRow(q,true)}).join("")+'</ul>':'<p class="muted small">Nothing waiting on you.</p>')+
+        '<h3>Rule</h3><label class="row small" style="gap:8px"><input type="checkbox" id="dcRule" style="flex:0 0 auto"'+(a.rules.discNeedsOk?' checked':'')+'> Every discount needs my OK (off: the team makes one-person discounts themselves; influencer codes always need my OK)</label>'+
+        '<h3>Notes to the sales team</h3><div id="dcAN">'+a.notes.map(function(n){return '<div class="sum" style="white-space:pre-wrap">'+esc(n.text)+'<div class="small muted">'+esc(when(n.at))+(n.unsaved?' · default note, shown until you add your own':' · <button class="linkish" data-ndel="'+esc(n.id)+'">delete</button>')+'</div></div>'}).join("")+'</div><textarea id="dcNote" placeholder="Write a note for Joseph and the sales team"></textarea><div class="row" style="margin-top:6px"><button class="btn" id="dcNoteAdd">Post note</button></div>'+
+        '<h3>Every code the sales team made ('+a.codes.length+')</h3>'+(a.codes.length?'<table>'+a.codes.map(function(c){return codeRow(c,true)}).join("")+'</table>':'<p class="muted small">None yet.</p>')+
+        (a.requests.length>pend.length?'<h3>Decided requests</h3><ul class="log">'+a.requests.filter(function(q){return q.status!=="pending"}).map(function(q){return reqRow(q,true)}).join("")+'</ul>':'');
+    }).catch(function(e){$("dcAdm").innerHTML='<p class="msg err">'+esc(e.message)+'</p>'})}
+  $("dcKind").onchange=function(){$("dcPctL").hidden=this.value!=="disc"};
+  $("dcMake").onclick=function(){var b=this;b.disabled=true;$("dcMsg").className="msg";$("dcMsg").textContent="Making…";
+    DASH.call("salesCodeMint",{kind:$("dcKind").value,pct:Number($("dcPct").value),forWho:$("dcFor").value,toWho:$("dcTo").value,why:$("dcWhy").value}).then(function(r){b.disabled=false;
+      $("dcMsg").innerHTML=r.pending?'Sent to Adam for approval. It shows under My requests.':'New code: <b>'+esc(r.code)+'</b> <button class="linkish" data-dccopy="'+esc(r.code)+'">copy</button>';$("dcFor").value=$("dcTo").value=$("dcWhy").value="";loadDc()})
+    .catch(function(e){b.disabled=false;$("dcMsg").className="msg err";$("dcMsg").textContent=e.message})};
+  $("irSend").onclick=function(){var b=this;b.disabled=true;$("irMsg").className="msg";$("irMsg").textContent="Sending…";
+    DASH.call("salesCodeRequest",{influencer:$("irName").value,handle:$("irHandle").value,platform:$("irPlat").value,audience:$("irAud").value,pct:Number($("irPct").value),max:Number($("irMax").value),why:$("irWhy").value}).then(function(){b.disabled=false;
+      $("irMsg").textContent="Sent. Adam will approve it or get back to you; it shows under My requests.";["irName","irHandle","irPlat","irAud","irWhy"].forEach(function(k){$(k).value=""});loadDc()})
+    .catch(function(e){b.disabled=false;$("irMsg").className="msg err";$("irMsg").textContent=e.message})};
+  $("vDc").addEventListener("click",function(e){var t=e.target,id;
+    if(t.hasAttribute("data-dccopy")){try{navigator.clipboard.writeText(t.getAttribute("data-dccopy"));t.textContent="copied"}catch(x){}return}
+    if(t.hasAttribute("data-dcoff")){DASH.call("salesCodeOff",{code:t.getAttribute("data-dcoff"),off:t.getAttribute("data-off")==="1"}).then(loadDc).catch(function(x){alert(x.message)});return}
+    if((id=t.getAttribute("data-dok"))||(id=t.getAttribute("data-dno"))){var ok=t.hasAttribute("data-dok"),q=function(a){var el=document.querySelector("["+a+'="'+id+'"]');return el?el.value:undefined};t.disabled=true;
+      DASH.call("salesCodeDecide",{id:id,approve:ok,pct:q("data-dpct")!=null?Number(q("data-dpct")):undefined,max:q("data-dmax")!=null?Number(q("data-dmax")):undefined,days:q("data-ddays")!=null?Number(q("data-ddays")):undefined,reply:q("data-drep")||""}).then(loadDc).catch(function(x){t.disabled=false;alert(x.message)});return}
+    if(t.id==="dcNoteAdd"){t.disabled=true;DASH.call("salesNoteSet",{text:$("dcNote").value}).then(loadDc).catch(function(x){t.disabled=false;alert(x.message)});return}
+    if(t.hasAttribute("data-ndel")){if(confirm("Delete this note?"))DASH.call("salesNoteSet",{remove:t.getAttribute("data-ndel")}).then(loadDc);return}
+  });
+  $("vDc").addEventListener("change",function(e){if(e.target.id==="dcRule")DASH.call("salesCodeRules",{discNeedsOk:e.target.checked}).then(loadDc)});
+  if(/[?&]tab=dcodes/.test(location.search))setTimeout(function(){tab("dcodes")},0);
   DASH.auth.onAuthStateChanged(function(u){if(u&&!u.isAnonymous)load();else{$("sub").textContent="Sign in first.";$("list").innerHTML=""}});
 })();
 </script>

@@ -175,6 +175,7 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
 <section data-page="qedit" class="hide"><iframe class="emb" data-src="../qedit/?embed=1" title="Question Editor"></iframe></section>
 <section data-page="brief" class="hide"><iframe class="emb" data-src="brief.html?embed=1" title="Med Brief"></iframe></section>
 <section data-page="leads" class="hide"><iframe class="emb" data-src="leads.html?embed=1" title="Sales leads"></iframe></section>
+<section data-page="salescodes" class="hide"><iframe class="emb" data-src="leads.html?embed=1&tab=dcodes" title="Sales codes and approvals"></iframe></section>
 <section data-page="changes" class="hide"><iframe class="emb" data-src="../review/?embed=1&v=todo" title="Evaluator changes"></iframe></section>
 <section data-page="grading" class="hide"><iframe class="emb" data-src="../review/?embed=1" title="Question grading"></iframe></section>
 
@@ -303,11 +304,12 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
   var META = null, QJ = null;
   function meta() { return META ? Promise.resolve(META) : fetch("meta.json").then(function (r) { return r.json(); }).then(function (m) { META = m; return m; }); }
   function questions() { return QJ ? Promise.resolve(QJ) : fetch("../review/questions.json").then(function (r) { return r.json(); }).then(function (j) { QJ = j; return j; }); }
-  var KIND = { pro: "Pro access", eval: "Evaluator", sticks: "Sticks", bug: "Bug" };
+  var KIND = { pro: "Pro access", eval: "Evaluator", sticks: "Sticks", bug: "Bug", disc: "Discount" };
   function bugName(id) { var b = META && META.bugs.filter(function (x) { return x[0] === id; })[0]; return b ? b[1] : id; }
   function gives(c) {
     if (c.kind === "pro") return c.days >= 36500 ? "Pro for life" : "Pro, " + c.days + " day" + (c.days === 1 ? "" : "s");
     if (c.kind === "eval") return "Pro while evaluating + grading";
+    if (c.kind === "disc") return c.pct + "% off the first payment (website)";
     if (c.kind === "sticks") return fmt(c.sticks) + " sticks";
     if (c.kind === "bug") return bugName(c.bug);
     return c.kind;
@@ -324,10 +326,10 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
   var TAB = "", LOADED = {};
   /* sections in working order (owner, Nov 24 2026: "organize the dashboard, the tabs are random"; the question graders
      and the Question Editor, Med Brief and sales leads are now inside it instead of separate pages) */
-  var GROUPS = { overview: ["overview"], metrics: ["metrics"], questions: ["qedit", "changes", "grading", "analytics", "brief"], people: ["evaluators", "signups"], classes: ["classes", "leads", "outreach", "helpers", "friends"], codes: ["codes"], notes: ["dailylog", "notes"] };
-  var SUBNAME = { qedit: "Question Editor & sign-off", brief: "Med Brief", leads: "Sales leads", outreach: "Agencies & schools", helpers: "Helpers & stats", friends: "Friends & family", signups: "Grader sign-ups", evaluators: "Graders (evaluators)", codes: "Codes", changes: "Grader flags", grading: "Grade questions", analytics: "How students score", dailylog: "Daily log", notes: "Update notes", classes: "Schools" };
+  var GROUPS = { overview: ["overview"], metrics: ["metrics"], questions: ["qedit", "changes", "grading", "analytics", "brief"], people: ["evaluators", "signups"], classes: ["classes", "leads", "outreach", "helpers", "friends"], codes: ["codes", "salescodes"], notes: ["dailylog", "notes"] };
+  var SUBNAME = { qedit: "Question Editor & sign-off", brief: "Med Brief", leads: "Sales leads", outreach: "Agencies & schools", helpers: "Helpers & stats", friends: "Friends & family", signups: "Grader sign-ups", evaluators: "Graders (evaluators)", codes: "Codes", salescodes: "Sales codes & approvals", changes: "Grader flags", grading: "Grade questions", analytics: "How students score", dailylog: "Daily log", notes: "Update notes", classes: "Schools" };
   var SUBNOTE = { changes: "Everything evaluators flagged that you haven't decided yet: Bad or Not relevant votes, suggested fixes, weak wrong answers, pulled questions in the audit and held pilot questions. Mark each one Good (after editing it if needed), Bad or Not relevant and it leaves this list.", evaluators: "Everyone with an evaluator code: what they graded, and their suggestions.", grading: "Read, rate and fix questions. Pilot questions go live after 2 Good votes." };
-  var LASTSUB = { people: "evaluators", questions: "qedit", classes: "classes", notes: "dailylog" };
+  var LASTSUB = { people: "evaluators", questions: "qedit", classes: "classes", notes: "dailylog", codes: "codes" };
   function groupOf(t) { for (var g in GROUPS) if (GROUPS[g].indexOf(t) >= 0) return g; return null; }
   function go(t) {
     if (GROUPS[t] && GROUPS[t].length > 1) t = LASTSUB[t] || GROUPS[t][0];
@@ -902,7 +904,7 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
     var L = codeRows();
     $("cTable").innerHTML = L.length ? '<tr><th>Code</th><th>For</th><th>Gives</th><th class="num">Used</th><th>Used by</th><th>Stops working</th><th>' + (CG ? 'Role' : 'Label') + '</th><th>Made</th><th>Status</th><th></th></tr>' + L.map(function (c) {
       var s = status(c);
-      return '<tr><td><code class="c">' + esc(c.code) + '</code></td><td>' + esc(KIND[c.kind] || c.kind) + '</td><td>' + esc(gives(c)) + '</td><td class="num">' + fmt(c.uses || 0) + (c.once ? " / 1" : c.max ? " / " + fmt(c.max) : "") + '</td><td class="small">' + ((c.who || []).length ? (c.who || []).map(function (w) { return '<b>' + esc(w.name || "no name") + '</b>'; }).slice(0, 3).join(", ") + ((c.who || []).length > 3 ? " +" + ((c.who || []).length - 3) : "") : '<span class="muted">' + (c.once ? "One person" : "Shared") + '</span>') + '</td><td class="small">' + (c.expires ? day(c.expires) : "Never") + '</td><td class="small">' + (grp(c)[0] && !CG ? '<span class="pill">' + esc(grp(c)[0]) + '</span> ' : '') + esc(CG ? grp(c)[1] : grp(c)[0] ? grp(c)[1] : (c.label || "")) + '</td><td class="small muted">' + day(c.created) + '</td><td><span class="pill ' + s[0] + '">' + s[1] + '</span></td>' +
+      return '<tr><td><code class="c">' + esc(c.code) + '</code></td><td>' + esc(KIND[c.kind] || c.kind) + '</td><td>' + esc(gives(c)) + '</td><td class="num">' + fmt(c.uses || 0) + (c.once ? " / 1" : c.max ? " / " + fmt(c.max) : "") + '</td><td class="small">' + ((c.who || []).length ? (c.who || []).map(function (w) { return '<b>' + esc(w.name || "no name") + '</b>'; }).slice(0, 3).join(", ") + ((c.who || []).length > 3 ? " +" + ((c.who || []).length - 3) : "") : '<span class="muted">' + (c.once ? "One person" : "Shared") + '</span>') + '</td><td class="small">' + (c.expires ? day(c.expires) : "Never") + '</td><td class="small">' + (grp(c)[0] && !CG ? '<span class="pill">' + esc(grp(c)[0]) + '</span> ' : '') + esc(CG ? grp(c)[1] : grp(c)[0] ? grp(c)[1] : (c.label || "")) + '</td><td class="small muted">' + day(c.created) + (c.createdBy && c.createdBy.name ? '<br>by ' + esc(c.createdBy.name) : '') + '</td><td><span class="pill ' + s[0] + '">' + s[1] + '</span></td>' +
         '<td><div class="row" style="flex-wrap:nowrap"><button class="ghost" data-copy="' + esc(c.code) + '">Copy</button><button class="ghost" data-relabel="' + esc(c.code) + '">Rename</button><button class="ghost" data-del="' + esc(c.code) + '" style="color:var(--bad)">Delete</button><button class="ghost" data-rev="' + esc(c.code) + '" data-on="' + (c.revoked ? "0" : "1") + '">' + (c.revoked ? "Turn on" : "Turn off") + '</button></div></td></tr>';
     }).join("") : '<tr><td class="muted">' + ((CODES || []).length ? "Nothing matches." : "No codes made here yet. Make some above.") + '</td></tr>';
   }
