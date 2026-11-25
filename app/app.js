@@ -2548,6 +2548,7 @@ function drawSheet() {
   if (S.cmpOn) { c += cmpView(id); sheet.innerHTML = c + '</div>'; translateDom(sheet); return; }
   if (typeof deepView === "function") {
     c += deepTabs();
+    if ((S.dtab === "chem" || S.dtab === "deep") && !deepLocked()) { try { agxLearn(id, S.dtab); } catch (e) {} }   /* learning points */
     if (S.dtab === "chem" && typeof chemTab === "function") { c += chemTab(id) + '<div class="sheetfoot">' + reportBtn("drug", id, id) + '</div>'; sheet.innerHTML = c + '</div>'; return; }
     if (S.dtab === "deep") { c += deepView(id) + '<div class="sheetfoot">' + reportBtn("drug", id, id) + '</div>'; sheet.innerHTML = c + '</div>'; translateDom(sheet); return; }
     if (S.dtab === "allied" && typeof alliedView === "function") { c += alliedView(id); sheet.innerHTML = c + '</div>'; return; }
@@ -2567,6 +2568,7 @@ function drawSheet() {
   c += sourcesPanel(d) + '<div class="sheetfoot">' + reportBtn("drug", id, id) + '</div>';
   if (!phCtx() && routeCtx()) c = c.replace(/Common EMS Name/g, "Common Name").replace(/EMS \/ Clinical Pearls/g, "Clinical Pearls").replace(/What EMS Should Know/g, "What to Know").replace(/What Should EMS Ask About\?/g, "What to Ask About");   /* EMS wording stays on the prehospital path (owner, Nov 24 2026) */
   sheet.innerHTML = c + '</div>'; translateDom(sheet);
+  try { agxLearn(id, S.dtab === "deep" || S.dtab === "chem" ? S.dtab : "main"); } catch (e) {}
 }
 function closeSheet() { sheet.hidden = true; sheet.innerHTML = ""; S.sheet = null; document.body.style.overflow = ""; app.removeAttribute("aria-hidden"); var f = S.sheetFrom; S.sheetFrom = null; if (f && f.isConnected && f.focus) { try { f.focus({ preventScroll: true }); } catch (x) {} } }
 
@@ -33951,11 +33953,33 @@ function agxDeptSel(type, cur) { return '<select class="pinput" id="agxDept"><op
 var AGX_CHGO = false;
 (function () { try { var m = /[?&]agxch=([A-Za-z0-9-]{6,40})\.([a-f0-9]{14})\b/.exec(location.search || ""); if (m) { store("agxCh", { aid: m[1], mid: m[2], at: Date.now() }); AGX_CHGO = true; } } catch (e) {} })();
 function agxJoined() { return !!store("agxJoined"); }
+
+/* Learning points (owner, Nov 25 2026): 1 point for each drug card section opened (Drug page, Chemistry, Wormhole), once
+   per drug and section a day. The server caps them at 300 a day. */
+function agxLearn(id, tab) {
+  if (!id || !agxJoined() || !statsOn()) return;
+  try {
+    var day = new Date().toDateString(), L = store("agxLearn") || {}; if (L.d !== day) L = { d: day, k: {} };
+    var k = id + "|" + (tab || "main"); if (L.k[k]) return; L.k[k] = 1; store("agxLearn", L);
+    var Q = store("agxq") || { n: 0, c: 0 }; Q.lp = (Q.lp || 0) + 1; store("agxq", Q); agxFloat(1);
+    clearTimeout(AGX.t); if (Q.lp >= 20) agxFlush(); else AGX.t = setTimeout(agxFlush, 45000);
+  } catch (e) {}
+}
+/* "+1" / "+10": small, near the bottom, gone in about a second (owner, Nov 25 2026) */
+function agxFloat(n) {
+  try {
+    var el = document.createElement("div"); el.className = "agxfloat"; el.setAttribute("aria-hidden", "true"); el.textContent = "+" + n;
+    el.style.left = (46 + Math.random() * 8).toFixed(1) + "%"; document.body.appendChild(el);
+    setTimeout(function () { el.remove(); }, 1100);
+  } catch (e) {}
+}
+(function () { try { var st = document.createElement("style"); st.textContent = ".agxfloat{position:fixed;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:9998;pointer-events:none;font:800 15px/1 system-ui,sans-serif;color:#facc15;text-shadow:0 1px 2px rgba(0,0,0,.6);animation:agxfl 1.05s ease-out forwards}@keyframes agxfl{0%{opacity:0;transform:translate(-50%,6px)}15%{opacity:1}100%{opacity:0;transform:translate(-50%,-28px)}}@media (prefers-reduced-motion:reduce){.agxfloat{animation:agxflr 1s forwards}@keyframes agxflr{0%,70%{opacity:1}100%{opacity:0}}}"; document.head.appendChild(st); } catch (e) {} })();
 /* every answer anywhere in the app (the same place class answers are counted) */
 function agxNote(ok) {
   if (!agxJoined() || !statsOn()) return;   /* the challenge needs usage statistics turned on (owner, Nov 16 2026) */
   try {
     var Q = store("agxq") || { n: 0, c: 0 }; Q.n++; if (ok) Q.c++; store("agxq", Q);
+    if (ok) agxFloat(10);
     clearTimeout(AGX.t); if (Q.n >= 10) agxFlush(); else AGX.t = setTimeout(agxFlush, 45000);
   } catch (e) {}
 }
@@ -34030,12 +34054,14 @@ function agxPodium(rows, nameOf, subOf, ptsOf) {
   }).join("") + '</div>';
 }
 function agxFlush() {
-  var Q = store("agxq"); if (!Q || !(Q.n || Q.sp) || AGX.sending || !agxJoined()) return;
-  var sent = { n: Math.min(Q.n || 0, 500), c: Math.min(Q.c || 0, Q.n || 0, 500), sp: Math.min(Q.sp || 0, 15000), av: agxMyAv() }; AGX.sending = true;
+  var Q = store("agxq"); if (!Q || !(Q.n || Q.sp || Q.lp) || AGX.sending || !agxJoined()) return;
+  var sent = { n: Math.min(Q.n || 0, 500), c: Math.min(Q.c || 0, Q.n || 0, 500), sp: Math.min(Q.sp || 0, 15000), lp: Math.min(Q.lp || 0, 1000), av: agxMyAv() }; AGX.sending = true;
   fnCall("agencyScore", sent).then(function (r) {
     AGX.sending = false;
     if (r && r.member === false) { store("agxJoined", null); }
-    var L = store("agxq") || { n: 0, c: 0 }; L.n = Math.max(0, (L.n || 0) - sent.n); L.c = Math.max(0, (L.c || 0) - sent.c); L.sp = Math.max(0, (L.sp || 0) - sent.sp); store("agxq", L); if (r && r.left != null) { AGX.left = r.left; AGX.leftDay = new Date().toDateString(); }
+    var L = store("agxq") || { n: 0, c: 0 }; L.n = Math.max(0, (L.n || 0) - sent.n); L.c = Math.max(0, (L.c || 0) - sent.c); L.sp = Math.max(0, (L.sp || 0) - sent.sp); L.lp = Math.max(0, (L.lp || 0) - sent.lp); store("agxq", L);
+    /* Hickory says who you just passed on your team, out of the way (owner, Nov 25 2026) */
+    if (r && r.passed && r.passed.length) { try { shkSay("You passed " + r.passed.slice(0, 2).join(" and ") + (r.passed.length > 2 ? " and more" : "") + " on your team!"); } catch (x) {} } if (r && r.left != null) { AGX.left = r.left; AGX.leftDay = new Date().toDateString(); }
   }).catch(function () { AGX.sending = false; });
 }
 window.addEventListener("pagehide", function () { try { agxFlush(); } catch (e) {} });
@@ -34046,8 +34072,9 @@ function agxView() {
   if (AGX.msg) c += '<p class="presult' + (AGX.err ? "" : " good") + '" role="status">' + esc(AGX.msg) + '</p>';
   var D = AGX.data;
   if (!D) return c + '<p class="muted">' + (AGX.busy ? "Loading…" : "") + '</p>';
-  if (!D.member) return c + agxJoinView();
+  if (!D.member) return c + hvFeatBox() + agxJoinView();
   var A = D.agency, M = D.me;
+  c += hvFeatBox();   /* this week's prize above the boards (Nov 25 2026) */
   c += '<div class="clhead"><b>' + esc(A.name) + '</b><span>' + esc(AGX_TYPES[A.type] || "") + " · " + esc(A.city) + ", " + esc(A.state) + " · " + A.members + (A.members === 1 ? " person" : " people") + '</span>' +
     (A.status === "pending" ? '<span class="axnote">Not checked yet: anyone can join it and it\u2019s on the ' + esc(A.state) + ' board now. Prizes start once we confirm it\u2019s a real place (usually within a day).</span>' : '') + '</div>';
   c += agxRewardBox(D);
@@ -38555,6 +38582,16 @@ function hvTeamCard() {
     (D.rewards && D.rewards.length ? '<p class="hvrw">Rewards from last week are waiting.</p>' : '') +
     '<button class="btn" data-openagency="1">Open your team</button></section>';
 }
+/* this week's scoreboard-only prize, shown ABOVE the scoreboards (owner, Nov 25 2026: "show this weeks prize above the scoreboards") */
+function hvFeatBox() {
+  var T = (AGX.data && AGX.data.tiers) || store("agxTiers") || null, won = "";
+  try {
+    var FX = T && T.featured, fxArt = "";
+    if (FX) { try { if (FX.kind === "items") { var pw = Object.assign({}, myWear()); (FX.items || []).forEach(function (x) { if (ITEMS_BY[x]) pw[ITEMS_BY[x].slot] = x; }); fxArt = myBugArt("", null, pw); } else if (FX.kind === "bugid" && bugById(FX.bug).id === FX.bug) fxArt = bugArt(bugById(FX.bug)); } catch (e) {} }
+    if (FX) won += '<section class="hvprize hvfeat"><div class="hvshead"><span class="hvseye">⭐ Only on the scoreboard</span><span class="hvsend">' + esc(FX.when || "This week") + '</span></div><div class="hvfx">' + (fxArt ? '<div class="hvfxart">' + fxArt + '</div>' : '') + '<div><b>' + esc(FX.name) + '</b><p class="small">' + esc(FX.blurb || "") + '</p><p class="small muted">' + esc(FX.who || "") + ' Never sold in the shop.</p>' + (FX.next ? '<p class="small muted">Next week: ' + esc(FX.next) + '</p>' : '') + '</div></div></section>';
+  } catch (e) {}
+  return won;
+}
 function hvPrizeBox() {
   var T = (AGX.data && AGX.data.tiers) || store("agxTiers") || null;
   if (!T && !HVT.tierBusy) { HVT.tierBusy = true; fnCall("agencyTier", { tier: "national" }).then(agxOk).then(function (r) { if (r.tiers) { store("agxTiers", r.tiers); if (document.querySelector(".hvprize")) render(); } }).catch(function () {}); }
@@ -38569,9 +38606,7 @@ function hvPrizeBox() {
   if (RW.length) won += '<section class="hvprize hvwon"><div class="hvshead"><span class="hvseye">🎉 You won</span></div>' + RW.map(function (r) { return '<p class="small"><b>Week of ' + esc(agxWeekLabel(r.wk)) + '</b></p><ul>' + r.items.map(function (it) { return '<li>You won: ' + esc(it.label) + (it.kind === "bug" ? " (" + esc(RARITY[it.rar] || it.rar) + " bug)" : it.kind === "sticks" ? " (+" + num0(it.sticks) + " sticks)" : it.kind === "badge" ? " (badge)" : "") + '</li>'; }).join("") + '</ul>'; }).join("") + '<button class="btn" data-openagency="1">Collect your prizes</button></section>';
   if (WN.length) won += '<section class="hvprize hvwon"><div class="hvshead"><span class="hvseye">🏅 You won these</span></div><ul>' + WN.slice(0, 8).map(function (w) { return '<li>You won: ' + esc(w.label || (w.kind === "sticks" ? num0(w.sticks) + " sticks" : "a prize")) + ' <small class="muted">· week of ' + esc(agxWeekLabel(w.wk)) + '</small></li>'; }).join("") + '</ul></section>';
   if (HVT.wonOnly) return won;
-  var FX = T && T.featured, fxArt = "";
-  if (FX) { try { if (FX.kind === "items") { var pw = Object.assign({}, myWear()); (FX.items || []).forEach(function (x) { if (ITEMS_BY[x]) pw[ITEMS_BY[x].slot] = x; }); fxArt = myBugArt("", null, pw); } else if (FX.kind === "bugid" && bugById(FX.bug).id === FX.bug) fxArt = bugArt(bugById(FX.bug)); } catch (e) {} }
-  if (FX) won += '<section class="hvprize hvfeat"><div class="hvshead"><span class="hvseye">⭐ Only on the scoreboard</span><span class="hvsend">' + esc(FX.when || "This week") + '</span></div><div class="hvfx">' + (fxArt ? '<div class="hvfxart">' + fxArt + '</div>' : '') + '<div><b>' + esc(FX.name) + '</b><p class="small">' + esc(FX.blurb || "") + '</p><p class="small muted">' + esc(FX.who || "") + ' Never sold in the shop.</p>' + (FX.next ? '<p class="small muted">Next week: ' + esc(FX.next) + '</p>' : '') + '</div></div></section>';
+
   return won + '<section class="hvprize"><div class="hvshead"><span class="hvseye">This week’s prizes</span><span class="hvsend">' + (hvWeekLeft() ? "Ends Sunday 7 pm Central" : "") + '</span></div>' + L.map(function (x) {
     return '<div class="hvpz"><span class="hvpzic" aria-hidden="true">' + x[0] + '</span><div><b>' + esc(x[1]) + '</b><ul>' + x[2].map(function (p) { return '<li>' + esc(p) + '</li>'; }).join("") + '</ul></div></div>';
   }).join("") + (T && T.rules ? '<p class="muted small">' + esc(T.rules) + '</p>' : '') + '</section>';
@@ -40727,8 +40762,9 @@ document.addEventListener("click", function (e) { var b = e.target.closest && e.
   var hv0 = hvBoard;
   hvBoard = function () {
     var tabs = '<div class="cltabs axtiers hvntabs" role="tablist"><button role="tab" aria-selected="' + (HN.tab === "nat") + '" class="' + (HN.tab === "nat" ? "on" : "") + '" data-hntab="nat">National</button><button role="tab" aria-selected="' + (HN.tab === "team") + '" class="' + (HN.tab === "team" ? "on" : "") + '" data-hntab="team">My Team</button>' + (HN.tab === "nat" ? '<button data-hnre="1" aria-label="Refresh">↻</button>' : '') + '</div>';
-    if (HN.tab === "team") return tabs + hv0();
-    return tabs + hnWon() + hnNational() + '<h2 class="hvsth">Your stats</h2>';
+    var fx = ""; try { fx = hvFeatBox(); } catch (x) {}   /* this week's prize above the scoreboards (owner, Nov 25 2026) */
+    if (HN.tab === "team") return fx + tabs + hv0();
+    return fx + tabs + hnWon() + hnNational() + '<h2 class="hvsth">Your stats</h2>';
   };
   document.addEventListener("click", function (e) {
     var t = e.target.closest && e.target.closest("[data-hntab],[data-hnre],[data-hnag],[data-hnmore]"); if (!t) return;
