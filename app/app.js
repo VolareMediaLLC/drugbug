@@ -1764,7 +1764,7 @@ function nrState() {
 function caseItems(c) {
   return c.steps.map(function (s, k) {
     var q = c._qs && c._qs[k];
-    if (!q) { q = { lv: c.lv, d: s.d, q: s.q, a: s.a, w: s.w, x: s.x, cat: "", cs: c.id, csTitle: c.title, part: k + 1, parts: c.steps.length, story: s.story, before: c.steps.slice(0, k).map(function (p) { return p.story; }) }; (c._qs = c._qs || [])[k] = q; }
+    if (!q) { q = { lv: c.lv, d: s.d, q: s.q, a: s.a, w: s.w, x: s.x, cat: "", cs: c.id, csTitle: c.title, part: k + 1, parts: c.steps.length, story: s.story, dv: s.dv && s.dv.k === "ecg12" ? s.dv : undefined, _sid: qid(s), before: c.steps.slice(0, k).map(function (p) { return p.story; }) }; (c._qs = c._qs || [])[k] = q; }
     return q;
   });
 }
@@ -2122,7 +2122,7 @@ function nrItemOpts(st, x, reveal) {
 function caseBox(q) {
   return '<div class="casebox"><div class="casehd"><span class="lbl">' + (nurseCtx() ? "Case study" : "Call in progress") + '</span><strong>' + esc(q.csTitle) + '</strong><span class="pill">Part ' + q.part + ' of ' + q.parts + '</span></div>' +
     (q.before && q.before.length ? '<details class="caseprev"><summary>Earlier on this call (' + q.before.length + ')</summary><ol>' + q.before.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join("") + '</ol></details>' : '') +
-    '<p class="casenow">' + esc(q.story) + '</p></div>';
+    '<p class="casenow">' + esc(q.story) + '</p>' + (q.dv && q.dv.k === "ecg12" && typeof e12Html === "function" ? e12Html(q.dv) : '') + '</div>';   /* the 12-lead the question asks about is shown in quizzes too (owner, Nov 24 2026) */
 }
 function nrQuiz(st) {
   var x = st.qs[st.i], q = x.q, picked = st.ans[st.i], reveal = st.mode === "practice" && picked != null, total = st.qs.length;
@@ -7925,7 +7925,7 @@ function rushCallView(R) {
   c += '</div>';
   if (C.ans != null) {
     var right = C.order[C.ans] === st.a;
-    c += '<div class="explain ' + (right ? "ok" : "bad") + '"><strong>' + (right ? "Correct." : C.ans < 0 ? "Time ran out. The patient waited." : "Not the best choice.") + '</strong><p>' + (right ? "" : '<strong>Best: </strong>' + esc(st.a) + '. ') + esc(st.x) + '</p></div>' + (C.rw && C.rw.i === C.i ? '<p class="rsearn' + (C.rw.total > 1 ? ' up' : '') + '">' + (typeof stickIcon === "function" ? stickIcon(15) : "") + '<b class="rscount" data-to="' + C.rw.total + '">+' + C.rw.total + '</b> sticks' + (C.rw.mult > 1 ? ' <span>' + C.rw.mult + '\u00d7 call' + (C.rw.fast ? ' \u00b7 +' + C.rw.fast + ' quick decision' : '') + (C.rw.streak ? ' \u00b7 +' + C.rw.streak + ' streak' : '') + '</span>' : '') + '</p>' : '');
+    c += '<div class="explain ' + (right ? "ok" : "bad") + '"><strong>' + (right ? "Correct." : C.ans < 0 ? "Time ran out. The patient waited." : "Not the best choice.") + '</strong><p>' + (right ? "" : '<strong>Best: </strong>' + esc(st.a) + '. ') + esc(st.x) + qCite(st) + '</p></div>' + (C.rw && C.rw.i === C.i ? '<p class="rsearn' + (C.rw.total > 1 ? ' up' : '') + '">' + (typeof stickIcon === "function" ? stickIcon(15) : "") + '<b class="rscount" data-to="' + C.rw.total + '">+' + C.rw.total + '</b> sticks' + (C.rw.mult > 1 ? ' <span>' + C.rw.mult + '\u00d7 call' + (C.rw.fast ? ' \u00b7 +' + C.rw.fast + ' quick decision' : '') + (C.rw.streak ? ' \u00b7 +' + C.rw.streak + ' streak' : '') + '</span>' : '') + '</p>' : '');
     /* evaluators grade Bug Rush call parts too (owner, Nov 16 2026: "it won't let my evaluator grade some of the questions") */
     if (typeof isReviewer === "function" && isReviewer()) c += qRateHTML({ id: "rc_" + String(cs.id).replace(/[^A-Za-z0-9-]/g, "") + "_" + C.i, lv: cs.lv, q: st.story + " " + st.q, a: st.a, w: st.w, x: st.x, d: "" });
     var rk = "rc-" + C.id + "-" + C.i, rlast = C.i >= cs.steps.length - 1;
@@ -39257,7 +39257,8 @@ function citeLoad() {
 function qCite(q) {
   try {
     if (!q) return "";
-    var s = q.src || (CITE.m ? CITE.m[qid(q)] : ""); if (!CITE.m) citeLoad();
+    if (/(^|\s)Sources?:\s/.test(String(q.x || ""))) return "";   /* the explanation already names its source (edited questions) */
+    var s = q.src || (CITE.m ? (CITE.m[qid(q)] || (q._sid && CITE.m[q._sid]) || "") : ""); if (!CITE.m) citeLoad();   /* _sid: a case-study part asked inside a quiz uses its case step's source */
     return s ? '<span class="qsrc">Source: ' + esc(s) + '</span>' : "";
   } catch (e) { return ""; }
 }
@@ -40326,6 +40327,7 @@ function ngnItemHtml(it) {
     c += '<div class="ngcalc"><input class="pinput" inputmode="decimal" autocomplete="off" data-ngcalc="1" value="' + esc(sel.v || "") + '" aria-label="Your answer in ' + esc(it.unit) + '"' + (done ? " disabled" : "") + '> <b>' + esc(it.unit) + "</b></div>";
     if (done) c += '<p class="ngwhy' + (ngnScore(it, sel) ? " r" : "") + '">' + (ngnScore(it, sel) ? "✓ " : "✕ Correct answer: " + esc(it.ans) + " " + esc(it.unit) + ". ") + esc(it.why) + "</p>";
   }
+  if (done) { var ns = it.src || (CITE.m ? CITE.m[it.id] : ""); if (!CITE.m) citeLoad(); if (ns) c += '<span class="qsrc">Source: ' + esc(ns) + '</span>'; }   /* every nursing item names its source (owner, Nov 24 2026) */
   return c;
 }
 function ngnView() {
