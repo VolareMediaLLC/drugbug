@@ -34127,7 +34127,7 @@ function agxView() {
   if (AGX.msg) c += '<p class="presult' + (AGX.err ? "" : " good") + '" role="status">' + esc(AGX.msg) + '</p>';
   var D = AGX.data;
   if (!D) return c + '<p class="muted">' + (AGX.busy ? "Loading…" : "") + '</p>';
-  if (!D.member) return c + agxJoinView();
+  if (!D.member) return c + agxRewardBox(D) + agxJoinView();   /* Top Players prizes are collected here without a team (owner, Nov 26 2026) */
   var A = D.agency, M = D.me;
   c += '<div class="clhead"><b>' + esc(A.name) + '</b><span>' + esc(AGX_TYPES[A.type] || "") + " · " + esc(A.city) + ", " + esc(A.state) + " · " + A.members + (A.members === 1 ? " person" : " people") + '</span>' +
     (A.status === "pending" ? '<span class="axnote">Not checked yet: anyone can join it and it\u2019s on the ' + esc(A.state) + ' board now. Prizes start once we confirm it\u2019s a real place (usually within a day).</span>' : '') + '</div>';
@@ -40833,6 +40833,8 @@ function nclexQuotas(m, MX) {
        network or server was down (found Nov 25 2026) */
     if (!force && HN.failAt && Date.now() - HN.failAt < 60000) return;
     HN.busy = true; HN.err = "";
+    /* prizes waiting, also for people not on a team: asked once so "You won" can show on this page (owner, Nov 26 2026) */
+    if (!AGX.data && !AGX.busy && !HN.rwAsked) { HN.rwAsked = true; fnCall("agencyBoard", { av: agxMyAv(), feat: 1 }).then(agxOk).then(function (r) { if (AGX.data) return; try { agxAcceptCheck(r); } catch (e) {} AGX.data = r; AGX.at = Date.now(); store("agxJoined", r.member ? 1 : null); store("agxRw", r.rewards && r.rewards.length ? r.rewards.length : null); if (S.view === "stats") render(); }).catch(function () {}); }
     fnCall("agencyTier", { tier: "national" }).then(agxOk).then(function (r) {
       HN.busy = false; HN.data = r; HN.at = Date.now(); plNickSync(r.you); if (r.tiers) try { store("agxTiers", r.tiers); } catch (e) {}
       if (S.view === "stats") render();
@@ -40941,6 +40943,7 @@ function nclexQuotas(m, MX) {
         '<span class="bppts">' + num0(ptsOf(r)) + ' pts</span></button>' +
         '<div class="bpblock" aria-hidden="true"><span class="bptop"></span><span class="bpnum">' + pl + '</span>' + (pl === 1 ? '<span class="bpspark">✦</span><span class="bpspark b">✦</span>' : '') + '</div>' +
         (pz ? (pz.art ? '<button class="bpprize r-' + pz.rar + ' shown" ' + pz.tap + ' aria-label="' + esc(pz.t) + ': see its lore and stats"><span class="bpsil art">' + pz.art + '</span><b>' + esc(pz.t) + '</b><small>' + esc(pz.s) + '</small>' + (pz.x ? '<small class="bpx">' + esc(pz.x) + '</small>' : '') + '</button>'
+          : pz.stk ? '<div class="bpprize r-' + pz.rar + '"><span class="bpsil stk">' + stickIcon(30) + '</span><b>' + esc(pz.t) + '</b><small>' + esc(pz.s) + '</small></div>'
           : '<div class="bpprize r-' + pz.rar + '"><span class="bpsil">' + clSilhouette(pz.rar) + '<i>?</i></span><b>' + esc(pz.t) + '</b><small>' + esc(pz.s) + '</small>' + (pz.x ? '<small class="bpx">' + esc(pz.x) + '</small>' : '') + '</div>') : '') +
         '</div>';
     }).join("") + '</div><div class="bpfloor" aria-hidden="true"></div>';
@@ -40950,6 +40953,12 @@ function nclexQuotas(m, MX) {
      rank below 10." */
   /* on the website without an account: the board can't know your team, so say how to bring it here (owner, Nov 25 2026) */
   function hnGuest() { try { if (typeof acctUI === "function" && !acctUI()) return false; return !!(ACCT.api && !(ACCT.api.state() || {}).signedIn); } catch (e) { return false; } }
+  /* Top Players prizes under each step, like National (owner, Nov 26 2026: "give 1000 sticks to the top player each week 500
+     for second and 300 for third place. Show below like nationals"). The amounts come from the server. */
+  function hnPlPrizes(D) {
+    var T = (D && D.tiers) || store("agxTiers") || {}, K = (T.players && T.players.sticks) || [1000, 500, 300];
+    return [["legendary", "1st place"], ["epic", "2nd place"], ["rare", "3rd place"]].map(function (x, i) { return { rar: x[0], stk: 1, t: num0(K[i]) + " sticks", s: x[1] + " this week" }; });
+  }
   function hnPlayers() {
     hnLoad(false);
     var D = HN.data, left = ""; try { left = hvWeekLeft(); } catch (e) {}
@@ -40957,7 +40966,8 @@ function nclexQuotas(m, MX) {
     if (!D) return c + (HN.err ? '<p class="presult" role="alert">' + esc(HN.err) + '</p><p><button class="btn ghost" data-hnre="1">Try again</button></p>' : '<div class="axrload" role="status"><span class="axspin" aria-hidden="true"></span> Loading Top Players…</div>') + '</section>';
     var P = (D.players || []).filter(function (r) { return r.rank <= 10; }), Y = D.you, jn = false; try { jn = agxJoined() || !!(Y && Y.aid); } catch (e) {}
     if (!P.length) c += '<p class="muted small">Nobody has points yet this week. Answer a few questions and you’re on the board.</p>';
-    else c += bigPodium(P, function (r) { return r.nick; }, function (r) { return r.agency || ""; }, function (r) { return r.pts; }, function (r) { return r.me; }, null, "p");
+    else c += bigPodium(P, function (r) { return r.nick; }, function (r) { return r.agency || ""; }, function (r) { return r.pts; }, function (r) { return r.me; }, hnPlPrizes(D), "p") +
+      '<p class="muted small">The top 3 players each week win sticks, on a team or not. You keep the share that matches your percent right that week.</p>';
     if (P.length > 3) c += '<ol class="clboard axboard hvnpl" start="4">' + P.slice(3, 10).map(function (r) {
       return '<li class="' + (r.me ? "me" : "") + (r.aid ? ' axclick" data-hnag="' + esc(r.aid) + '" data-hnname="' + esc(r.agency) + '" tabindex="0" role="button"' : '"') + '><span class="clrk">' + r.rank + '</span>' + agxAvArt(r.av) +
         '<span class="clal">' + esc(r.nick) + (r.me ? ' <em>you</em>' : '') + (r.agency ? '<small class="axsub">' + esc(r.agency) + (r.state ? " · " + esc(r.state) : "") + '</small>' : '') + '</span>' +
