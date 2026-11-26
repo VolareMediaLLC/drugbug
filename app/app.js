@@ -41469,4 +41469,35 @@ var BIGC2 = {"calls":[{"id":"stroke","existing":true,"sec_add":[["Bleeding in th
   document.head.appendChild(st);
 })();
 
+/* ===== Unexpected restarts (owner, Nov 25 2026: "It keeps freezing then restarting the app", with music playing and on
+   the Scoreboard). When a phone runs out of memory it shuts the page down without any error, so nothing reached the
+   error log. A small note is kept while the app is open and on screen, and cleared whenever it closes or goes to the
+   background normally. If the next start still finds a fresh note, the last run ended abruptly: that is logged with the
+   screen, whether music was playing and how many songs were loaded. No account, name or question text. ===== */
+(function () {
+  var K = "liveBeat";
+  function beat() {
+    try {
+      if (document.hidden) return;
+      var n = 0; try { n = Object.keys(MU.fbufs || {}).length; } catch (e) {}
+      store(K, { at: Date.now(), v: (S && S.view) || "", t: (S && S.tab) || "", mu: !!(MU.file && MU.file.src), n: n, up: Math.round(performance.now() / 1000) });
+    } catch (e) {}
+  }
+  function clean() { try { localStorage.removeItem("drugbug:" + K); } catch (e) {} }
+  var prev = null, resumed = false; try { prev = store(K); } catch (e) {}
+  try { resumed = /[?&]resume=1\b/.test((window.__DBQ || "") + "&" + location.search); } catch (e) {}   /* that start is logged by the block above */
+  if (prev && prev.at && !resumed && Date.now() - prev.at < 90000) {
+    try {
+      var base = (window.DRUGBUG_CONFIG || {}).functionsUrl, plat = window.webkit && window.webkit.messageHandlers ? "ios" : "web";
+      if (base) fetch(base.replace(/\/$/, "") + "/clientErr", { method: "POST", headers: { "Content-Type": "application/json" }, keepalive: true,
+        body: JSON.stringify({ data: { m: "The app shut down and restarted by itself (most likely out of memory)", src: "restart", line: 0, col: 0,
+          stack: "last screen: " + [prev.v, prev.t].filter(Boolean).join(" / ") + "; music playing: " + (prev.mu ? "yes" : "no") + "; songs loaded: " + (prev.n || 0) + "; open " + (prev.up || 0) + " s; last seen " + Math.round((Date.now() - prev.at) / 1000) + " s before",
+          view: prev.v || "", v: (typeof window.__dbVer === "string" ? window.__dbVer : "") || plat, plat: plat } }) }).catch(function () {});
+    } catch (e) {}
+  }
+  clean(); setTimeout(beat, 3000); setInterval(beat, 5000);
+  window.addEventListener("pagehide", clean);
+  document.addEventListener("visibilitychange", function () { if (document.hidden) clean(); else beat(); });
+})();
+
 })();
