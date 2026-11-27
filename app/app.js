@@ -555,6 +555,80 @@ function hapProg() {
 }
 /* Bug Rush: one warning tap as the patient goes critical (VF, torsades, asystole or no pulse), not on every redraw */
 function hapCrit(on) { if (on && !HAP.crit) hap("warning"); HAP.crit = !!on; }
+/* ---------- iPhone app lifecycle (owner, Nov 27 2026) ----------
+   The iOS app calls three hooks defined here. Plain ES5, and each one is safe to call any number of times.
+   window.DrugBugLifecycle("background" | "foreground")
+     Every requestAnimationFrame loop in the app (3D bug and molecule viewers, Bug Rush monitor, holiday
+     effects, the dancing bugs, eyes that follow the cursor ...) goes through the wrapper below. In the
+     background a frame that comes due is held instead of drawn; in the foreground the held frames are
+     handed back to the browser, so each loop carries on from where it stopped. No loop has to know about
+     it, and cancelAnimationFrame still works on a held frame. Every loop already caps its time step or
+     skips a long gap, so nothing jumps on resume.
+   window.DrugBugMemoryWarning()
+     Lets go of things that are rebuilt on demand: decoded sound effects and songs not playing right now,
+     sprite and lookup caches, and the holiday canvas when nothing is animating on it.
+   window.DrugBugAudioRoute(reason)
+     "unplugged" (headphones out): pause the study music so it does not carry on out of the speaker. It
+     stays paused until the player turns it back on from the music controls; nothing else restarts it. */
+var LIFE = (function () {
+  var L = { bg: false, held: [], live: {}, next: 1e6, resume: function () {} };
+  try {
+    var nr = window.requestAnimationFrame, nc = window.cancelAnimationFrame;
+    if (typeof nr !== "function" || typeof nc !== "function") return L;
+    var arm = function (id, cb) {
+      L.live[id] = nr.call(window, function (t) { delete L.live[id]; if (L.bg) { L.held.push([id, cb]); return; } cb(t); });
+    };
+    window.requestAnimationFrame = function (cb) { var id = L.next++; if (L.bg) L.held.push([id, cb]); else arm(id, cb); return id; };
+    window.cancelAnimationFrame = function (id) {
+      if (L.live[id] != null) { nc.call(window, L.live[id]); delete L.live[id]; return; }
+      for (var i = 0; i < L.held.length; i++) if (L.held[i][0] === id) { L.held.splice(i, 1); return; }
+      if (id < 1e6) nc.call(window, id);   /* a frame asked for before this wrapper was installed */
+    };
+    L.resume = function () { var h = L.held; L.held = []; for (var i = 0; i < h.length; i++) arm(h[i][0], h[i][1]); };
+  } catch (e) {}
+  return L;
+})();
+window.DrugBugLifecycle = function (state) {
+  try {
+    if (state === "background") {
+      if (LIFE.bg) return; LIFE.bg = true;
+      /* the Bug Rush patient monitor's numbers tick on a timer, not a frame */
+      if (typeof PV !== "undefined" && PV.timer) { clearInterval(PV.timer); PV.timer = 0; }
+      if (typeof flushProg === "function") flushProg();   /* iOS may not wake us again before it reclaims the app */
+    } else if (state === "foreground") {
+      if (!LIFE.bg) return; LIFE.bg = false;
+      if (typeof MONS !== "undefined") MONS.prev = -1;   /* no catch-up burst of monitor beeps */
+      if (typeof B3 !== "undefined") B3.last = 0;
+      if (typeof PV !== "undefined" && PV.cur && !PV.timer && document.querySelector(".pvmon")) PV.timer = setInterval(pvTick, 250);
+      LIFE.resume();
+    }
+  } catch (e) {}
+};
+window.DrugBugMemoryWarning = function () {
+  /* decoded sound effects: keep the heart-monitor set while a monitor is on screen */
+  try {
+    var mon = !!document.querySelector(".monitor[data-beats],.pvmon"), keep = { monbeep: mon, heartbeat: mon, defcharge: mon, defthud: mon };
+    Object.keys(SFXBUF).forEach(function (k) { if (!keep[k.replace(/:buf$/, "")]) delete SFXBUF[k]; });
+  } catch (e) {}
+  /* decoded songs: keep only the one playing */
+  try { var cur = MU.file && MU.file.id; Object.keys(MU.fbufs || {}).forEach(function (k) { if (k !== cur) delete MU.fbufs[k]; }); MU.nextId = null; clearTimeout(MU.preT); } catch (e) {}
+  /* off-screen graphics */
+  try { TGL_SPR = {}; } catch (e) {}
+  try { if (!HFX.run && HFX.cv) { if (HFX.cv.parentNode) HFX.cv.parentNode.removeChild(HFX.cv); HFX.cv = null; HFX.g = null; } } catch (e) {}
+  try { if (!B3.open) B3.geo = {}; } catch (e) {}
+  /* lookup caches, all rebuilt the next time they are read */
+  try { DB._ncache = {}; DB._mcache = null; DB._acache = {}; } catch (e) {}
+  try { ALT_CACHE = {}; SYS_CACHE = {}; } catch (e) {}
+};
+window.DrugBugAudioRoute = function (reason) {
+  if (reason !== "unplugged") return;
+  try {
+    if (!MU.playing && !MU.preview) return;
+    MU.routeHold = true; clearTimeout(MU.pvT); MU.preview = null; MU.forced = false;
+    muStop();
+    if (S.mupop && typeof render === "function") render();
+  } catch (e) {}
+};
 /* Classes and the public leaderboard are parked (student-record / FERPA review pending). Turn back on with DRUGBUG_CONFIG.social = true. */
 var SOCIAL = HASDB && !!(window.DRUGBUG_CONFIG && window.DRUGBUG_CONFIG.social === true); if (NATIVE) document.documentElement.setAttribute("data-native", "1");
 var S = { view: "home", level: null, tab: "hub", q: "", tags: {}, group: "all", scen: null, fc: null, sheet: null, full: false };
@@ -10748,7 +10822,7 @@ function SET() { var now = Date.now(); if (SET_OBJ && SET_M && now - SET_TS < 30
 /* sound effects are on for everyone (owner, Nov 5 2026): anyone who had them off is switched back on
    once; after that the switch in Settings is theirs again */
 (function () { try { if (!store("sfxOnce1")) { var s0 = store("settings") || {}; if (s0.sfx === false) { s0.sfx = true; store("settings", s0); } store("sfxOnce1", 1); } } catch (e) {} })();
-function setSet(k, v) { var s = SET(); s[k] = v; store("settings", s); applySettings(); if (k === "music" || k === "musicVol") muSync(); if (k === "remind" || k === "remindAt") remindSync(); if ((k === "weird" || k === "weirdAt") && typeof wdwSync === "function") wdwSync(); }
+function setSet(k, v) { var s = SET(); s[k] = v; store("settings", s); applySettings(); if (k === "music") MU.routeHold = false; if (k === "music" || k === "musicVol") muSync(); if (k === "remind" || k === "remindAt") remindSync(); if ((k === "weird" || k === "weirdAt") && typeof wdwSync === "function") wdwSync(); }
 /* daily study reminder (iPhone app): the app tells iOS what to say; iOS shows it at the chosen time */
 function dueNow() { var D = (Prog.d && Prog.d.drugs) || {}, n = Date.now(); return Object.keys(D).filter(function (id) { return D[id].due && D[id].due <= n + 864e5; }).length; }
 function remindSync() {
@@ -11151,9 +11225,9 @@ function settingsClick(t, a) {
          (owner, Nov 5 2026) */
       try { var mb = t.closest ? t.closest(".musicbtn") : null; mb = mb || document.querySelector(".musicbtn"); if (mb) { var rr = mb.getBoundingClientRect(); document.documentElement.style.setProperty("--mupopTop", Math.round(rr.bottom + 8) + "px"); } } catch (e) {}
       render(); return true;
-    case "mutoggle": MU.armed = true; setSet("music", !muOn()); render(); return true;
+    case "mutoggle": MU.armed = true; if (MU.routeHold && muOn()) { MU.routeHold = false; muSync(); } else setSet("music", !muOn()); render(); return true;
     case "mupopclose": S.mupop = false; render(); return true;
-    case "munext": MU.armed = true; if (!muOn()) setSet("music", true); muNext(); if (!MU.playing) muSync(); return true;
+    case "munext": MU.armed = true; MU.routeHold = false; if (!muOn()) setSet("music", true); muNext(); if (!MU.playing) muSync(); return true;
     case "sfxtest": var was = SET().sfx; if (!was) setSet("sfx", true); sfx(true); setTimeout(function () { sfx(false); if (!was) setSet("sfx", false); render(); }, 450); return true;
     case "sndrecheck":
       audioCtx(); AUD.played = Math.max(0, AUD.played - 1);     /* the check itself should not count */
@@ -11319,7 +11393,7 @@ function muTick() {
 }
 function muPreview(id) {
   if (typeof funOn === "function" && !funOn()) return;   /* Focused: no music */
-  MU.armed = true; MU.preview = id; MU.trackId = null; clearTimeout(MU.pvT);
+  MU.armed = true; MU.routeHold = false; MU.preview = id; MU.trackId = null; clearTimeout(MU.pvT);
   if (!MU.playing) { MU.forced = true; muStart(true); }
   MU.pvT = setTimeout(function () { MU.preview = null; MU.trackId = null; if (MU.forced) { MU.forced = false; if (!muOn()) muStop(); } if (typeof render === "function" && S.shopF === "music") render(); }, 15000);
 }
@@ -11344,6 +11418,7 @@ function muCtx() {
 function muSession() { try { if (navigator.audioSession) { var s0 = typeof SET === "function" ? SET() : {}; navigator.audioSession.type = (s0.sfx || (typeof muOn === "function" && muOn())) ? "playback" : "auto"; } } catch (e) {} }
 function muStart(force) {
   if ((!muOn() && !force) || document.hidden) return;
+  if (MU.routeHold && !force) return;   /* paused when headphones came out */
   muSession();
   try {
     var c = muCtx(); if (!c) return;
@@ -11453,7 +11528,7 @@ document.addEventListener("visibilitychange", function () { if (!document.hidden
 /* quick volume popover from the top-bar note button */
 function muPop() {
   if (!S.mupop) return "";
-  var on = muOn(), v = muLevel();
+  var on = muOn() && !MU.routeHold, v = muLevel();
   return '<div class="mupop" role="dialog" aria-label="Music"><div class="murow"><strong>Background music</strong><button class="muswitch' + (on ? ' on' : '') + '" data-act="mutoggle" role="switch" aria-checked="' + on + '" aria-label="Background music"><span class="mustk" aria-hidden="true"><i></i></span><b>' + (on ? "On" : "Off") + '</b></button></div>' +
     '<label class="muvol"><span>Track</span><select class="pinput" id="mutrack">' + muTrackOptions() + '</select></label><p class="muted small mumore">More tracks in the <button class="linkish" data-goshop="1" data-shopf="music">Terrarium Music shop</button></p>' +
     muListBox() + '<label class="muvol"><span>Volume</span><input type="range" min="0" max="100" step="5" id="muvol" value="' + v + '" aria-label="Music volume"><output id="muvolv">' + v + '%</output></label>' +
