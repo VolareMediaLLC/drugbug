@@ -528,6 +528,33 @@ function bugSVG(kind) {
 
 /* ---------- state ---------- */
 var NATIVE = !!window.DRUGBUG_NATIVE, HASDB = !!(window.claude && typeof window.claude.use === "function");
+/* ---------- Native iPhone haptics (owner, Nov 27 2026) ----------
+   The iOS app injects window.DrugBugHaptic(kind), kind one of light, medium, selection, success, warning, error.
+   On the web it is not defined, so every call below is a no-op there. Plain ES5 on purpose (no ?.), so older
+   browsers can still parse this file. It never throws and never waits on the native side. Two hooks landing on
+   the same moment (an answer sound and the save that follows it) give one tap, not two. */
+var HAP = { at: 0, lv: null, own: null, crit: false };
+function hap(kind) {
+  try {
+    var f = window.DrugBugHaptic; if (typeof f !== "function") return;
+    var now = Date.now(); if (now - HAP.at < 60) return; HAP.at = now;
+    var r = f(kind); if (r && typeof r.catch === "function") r.catch(function () {});
+  } catch (e) {}
+}
+/* level-ups and new bugs: saveProg runs after every XP gain and every bug added to the collection, so it compares
+   the level and the number of owned bugs with the last save. hapBase() takes a fresh baseline without a tap
+   (on load and after the cloud copy is merged in), so syncing another device's progress never buzzes. */
+function hapBase() { try { var P = Prog.d; HAP.lv = P ? xpLevel(P.xp || 0).lv : null; HAP.own = P ? (P.owned || []).length : null; } catch (e) { HAP.lv = null; } }
+function hapProg() {
+  try {
+    var P = Prog.d; if (!P) return;
+    var lv = xpLevel(P.xp || 0).lv, own = (P.owned || []).length;
+    if (HAP.lv != null && (lv > HAP.lv || own > HAP.own)) hap("success");
+    HAP.lv = lv; HAP.own = own;
+  } catch (e) {}
+}
+/* Bug Rush: one warning tap as the patient goes critical (VF, torsades, asystole or no pulse), not on every redraw */
+function hapCrit(on) { if (on && !HAP.crit) hap("warning"); HAP.crit = !!on; }
 /* Classes and the public leaderboard are parked (student-record / FERPA review pending). Turn back on with DRUGBUG_CONFIG.social = true. */
 var SOCIAL = HASDB && !!(window.DRUGBUG_CONFIG && window.DRUGBUG_CONFIG.social === true); if (NATIVE) document.documentElement.setAttribute("data-native", "1");
 var S = { view: "home", level: null, tab: "hub", q: "", tags: {}, group: "all", scen: null, fc: null, sheet: null, full: false };
@@ -2740,7 +2767,7 @@ document.addEventListener("click", function (e) {
   if (a.tab === "myclass") { S.tab = "dash"; render(); setTimeout(function () { var c = document.getElementById("dashclass"); if (c) c.scrollIntoView({ block: "start" }); }, 60); return; }
   if (a.tab && proLocked(a.tab)) { var tn = tabName(a.tab); return openPaywall(tn, tabTier(a.tab)); }
   if (a.fcpick) { S.fcPick = 1; render(); return window.scrollTo(0, 0); }
-  if (a.tab) { S.tab = a.tab; S.sysK = ""; S.scen = null; S.fc = null; S.fcPick = 0; S.group = "all"; fixTab(); render(); return window.scrollTo(0, 0); }
+  if (a.tab) { if (S.tab !== a.tab) hap("selection"); S.tab = a.tab; S.sysK = ""; S.scen = null; S.fc = null; S.fcPick = 0; S.group = "all"; fixTab(); render(); return window.scrollTo(0, 0); }
   if (a.tag) { S.tags[a.tag] = !S.tags[a.tag]; t.setAttribute("aria-pressed", !!S.tags[a.tag]); return refreshGrid(); }
   if (a.form && S.sheet && !sheet.hidden) { formGo(a.form); return; }
   /* My List opens the normal drug cards and you swipe through your list (owner, Nov 15 2026: "Bring back the normal
@@ -3486,6 +3513,7 @@ var MSCORE = { "new": 0, learning: 0.25, familiar: 0.5, proficient: 0.75, master
 var Prog = { d: blankProg(), db: null, uid: null, synced: false, saving: false, dirty: false };
 function blankProg() { return { earned: 0, spent: 0, owned: [], avatar: "starter", avatarTs: 0, drugs: {}, calc: {}, qcat: {}, xp: 0, days: {}, streak: 0, best: 0, lastDaily: "", dailyCount: 0, ach: {}, answered: 0, chal: {} }; }
 (function () { var l = store("progress"); if (l && l.drugs) Prog.d = Object.assign(blankProg(), l); })();
+hapBase();
 /* ---------- Daily login prizes (owner, Nov 5 2026) ----------
    Every different day you open DrugBug counts. Each day has a prize waiting: sticks that grow day by
    day, bonus sticks on milestone days, and rare, epic and legendary bugs that can only be earned this
@@ -3538,6 +3566,7 @@ function dayDiff(a, b) { return Math.round((new Date(b + "T12:00:00") - new Date
    goes to the background) to keep database writes, and cost, low at scale. */
 var PROG_SYNC_MS = 20000;
 function saveProg() {
+  hapProg();
   if (typeof stageCheck === "function") stageCheck();
   store("progress", Prog.d); Prog.dirty = true;
   if (!Prog.db || !Prog.uid || Prog.timer) return;
@@ -3628,7 +3657,7 @@ function initProg() {
     return user.id().then(function (uid) {
       if (!uid) return; Prog.db = db; Prog.uid = uid;
       return db.doc("data/users/" + uid + "/progress").get().then(function (snap) {
-        if (snap.exists) mergeProg(snap.data()); if (typeof WALLET !== "undefined" && WALLET.loaded && typeof stickRepair === "function") stickRepair(); Prog.synced = true; saveProg(); if (!S.sheet && S.view !== "admin") render();
+        if (snap.exists) { mergeProg(snap.data()); hapBase(); } if (typeof WALLET !== "undefined" && WALLET.loaded && typeof stickRepair === "function") stickRepair(); Prog.synced = true; saveProg(); if (!S.sheet && S.view !== "admin") render();
       });
     });
   }).catch(function () {});
@@ -7302,6 +7331,7 @@ function lmHrText() { return LM_ORG[LM.rh] && LM.hrShow ? "HR " + LM.hrShow : "H
 /* afib variability: light / moderate / severe (owner) */
 function lmAfib(lv, hr) { var k = lv === "light" || lv === "mild" ? 0.12 : lv === "severe" ? 0.42 : lv === "moderate" ? 0.26 : (hr < 100 ? 0.12 : hr <= 130 ? 0.26 : 0.42); return k; }
 function lmTarget(rh, hr, pulse, afib, wide) {
+  hapCrit(/^(vf|torsades|asys)$/.test(rh) || pulse === false);
   var t = { rh: rh, hr: hr || (rh === "vf" || rh === "torsades" || rh === "asys" ? 0 : 80), pulse: pulse, afib: rh === "afib" ? lmAfib(afib, hr) : 0, wide: !!wide };
   if (LM.reset || !LM.tgt) { LM.reset = false; LM.wide = t.wide; LM.rh = t.rh; LM.hr = LM.base = t.hr || 80; LM.pulse = pulse; LM.afib = t.afib; LM.tgt = t; LM.beats = []; LM.next = 0; LM.hrShow = t.hr; return; }
   var o = LM.tgt; LM.tgt = t;
@@ -7469,6 +7499,7 @@ function megaView2() {
   return c + '</section>';
 }
 function megaNew(id) {
+  HAP.crit = false;
   var cs = DB.MEGACODE.filter(function (c) { return c.id === id; })[0]; if (!cs) return false;
   LM.reset = true; LM.pause = 0; LM.shock = 0; LM.cv = null;
   S.mega = { cs: cs, i: 0, ans: {}, times: {}, order: cs.steps.map(function (s) { return shuffle(s.options.map(function (_, k) { return k; })); }), left: megaSecs(cs.steps[0]), t0: Date.now() };
@@ -7773,13 +7804,13 @@ function pvSync(key, tgt, dur, opt) {
   if (first) { PV.cur = Object.assign({}, tgt); PV.from = Object.assign({}, tgt); PV.tgt = tgt; PV.t0 = performance.now() / 1000; PV.dur = 0.01; LM.reset = true; }
   else { PV.from = Object.assign({}, PV.cur); PV.tgt = tgt; PV.t0 = performance.now() / 1000; PV.dur = dur || 3; }
   if (PV.from.sbp !== tgt.sbp && !first) { PV.cycling = PV.t0 + Math.min(PV.dur, 2.2); }
-  PV.arrest = /^(vf|vt-np|asys|pea|torsades)$/.test(tgt.rh) ? tgt.rh : "";
+  PV.arrest = /^(vf|vt-np|asys|pea|torsades)$/.test(tgt.rh) ? tgt.rh : ""; hapCrit(!!PV.arrest);
   var rh = tgt.rh === "vt-np" ? "vt" : pvRhName(tgt.rh || "sinus", tgt.hr || 80), pulse = !PV.arrest;
   if (PV.als) lmTarget(rh, PV.arrest && PV.arrest !== "pea" && PV.arrest !== "vt-np" ? 0 : (PV.cur.hr || 80), pulse, null, false);
   if (!PV.timer) PV.timer = setInterval(pvTick, 250);
   setTimeout(pvAttach, 0);
 }
-function pvStop() { clearInterval(PV.timer); PV.timer = 0; PV.key = ""; PV.cur = null; PV.gl = null; PV.temp = null; PV.pl.cv = null; }
+function pvStop() { HAP.crit = false; clearInterval(PV.timer); PV.timer = 0; PV.key = ""; PV.cur = null; PV.gl = null; PV.temp = null; PV.pl.cv = null; }
 function pvEase(u) { return u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u); }
 function pvTick() {
   if (!document.querySelector(".pvmon")) { if (!S.rush) pvStop(); return; }
@@ -10896,6 +10927,7 @@ function audioReport() {
 function audioAlias(o) { try { Object.defineProperty(o, "ctx", { get: audioCtx, set: function () {}, configurable: true }); } catch (e) { o.ctx = null; } return o; }
 var SFX = audioAlias({});
 function sfx(ok) {
+  hap(ok === "pop" ? "light" : ok ? "success" : "error");
   if (!SET().sfx) return;
   try {
     var c = audioCtx(); if (!c) return;
@@ -15683,11 +15715,11 @@ function gmMemTap(i) {
   if (GM.up.length === 2) {
     GM.moves++; var a = GM.cards[GM.up[0]], b = GM.cards[GM.up[1]];
     if (a.p === b.p) {
-      gfxSnd("pop"); gfxHatch(gfxRect('[data-gmmem="' + GM.up[0] + '"]')); gfxHatch(gfxRect('[data-gmmem="' + GM.up[1] + '"]'));
+      gfxSnd("pop"); hap("success"); gfxHatch(gfxRect('[data-gmmem="' + GM.up[0] + '"]')); gfxHatch(gfxRect('[data-gmmem="' + GM.up[1] + '"]'));
       GM.done[a.p] = 1; GM.up = [];
       if (Object.keys(GM.done).length === 6) { GM.won = gmWin("memory"); var rs = []; document.querySelectorAll("[data-gmmem]").forEach(function (e) { rs.push(gfxRect(e)); }); gfxFireflies(rs); setTimeout(gfxCheer, 700); }
     }
-    else { GM.lock = true; setTimeout(function () { if (GM && GM.kind === "memory") { GM.up = []; GM.lock = false; if (S.tab === "games") render(); } }, 900); }
+    else { hap("error"); GM.lock = true; setTimeout(function () { if (GM && GM.kind === "memory") { GM.up = []; GM.lock = false; if (S.tab === "games") render(); } }, 900); }
   }
   render();
 }
@@ -15712,8 +15744,8 @@ function gmMatch() {
 }
 function gmMatchRight(k) {
   var M = GM; if (!M || M.sel == null || M.got[k]) return;
-  if (k === M.sel) { gfxSilk(gfxRect('[data-gmml="' + k + '"]'), gfxRect('[data-gmmr="' + k + '"]')); M.got[k] = 1; M.sel = null; M.bad = null; if (Object.keys(M.got).length === M.pairs.length) { M.won = gmWin("match"); var wr = gfxRect(".matchcols"); setTimeout(function () { gfxWeb(wr); }, 500); setTimeout(gfxCheer, 1300); } }
-  else { gfxBee(gfxRect('[data-gmmr="' + k + '"]')); M.miss++; M.bad = k; setTimeout(function () { if (GM === M) { M.bad = null; if (S.tab === "games") render(); } }, 700); }
+  if (k === M.sel) { hap("success"); gfxSilk(gfxRect('[data-gmml="' + k + '"]'), gfxRect('[data-gmmr="' + k + '"]')); M.got[k] = 1; M.sel = null; M.bad = null; if (Object.keys(M.got).length === M.pairs.length) { M.won = gmWin("match"); var wr = gfxRect(".matchcols"); setTimeout(function () { gfxWeb(wr); }, 500); setTimeout(gfxCheer, 1300); } }
+  else { hap("error"); gfxBee(gfxRect('[data-gmmr="' + k + '"]')); M.miss++; M.bad = k; setTimeout(function () { if (GM === M) { M.bad = null; if (S.tab === "games") render(); } }, 700); }
   render();
 }
 
@@ -15863,7 +15895,7 @@ function gmScramble() {
 }
 function gmTile(k) {
   if (!GM || GM.shown || GM.pick.indexOf(k) >= 0) return; GM.pick.push(k);
-  var w = GM.words[GM.i], good = false; if (GM.pick.length === w.w.length) { GM.shown = true; if (GM.pick.map(function (j) { return GM.tiles[j]; }).join("") === w.w) { good = true; GM.right++; GM.won += gmWin("scramble"); } }
+  var w = GM.words[GM.i], good = false; if (GM.pick.length === w.w.length) { GM.shown = true; if (GM.pick.map(function (j) { return GM.tiles[j]; }).join("") === w.w) { good = true; GM.right++; GM.won += gmWin("scramble"); } hap(good ? "success" : "error"); }
   render();
   if (good) setTimeout(gmCatCrawl, 1000);
 }
@@ -15899,7 +15931,7 @@ function gmBlitzStart() {
 function gmBlitzAns(k) {
   if (!GM || GM.phase !== "play" || GM.fb) return;
   var ok = GM.q.opts[k] === GM.q.f.cls; GM.tries++; if (ok) GM.score++; GM.fb = { k: k, ok: ok };
-  GM.streak = ok ? (GM.streak || 0) + 1 : 0; if (ok) gfxSnd("pop"); else gfxSnd("buzz");
+  GM.streak = ok ? (GM.streak || 0) + 1 : 0; if (ok) gfxSnd("pop"); else gfxSnd("buzz"); hap(ok ? "success" : "error");
   if (GM.streak && GM.streak % 5 === 0) gfxDragonfly();
   render(); setTimeout(function () { if (GM && GM.phase === "play") { GM.fb = null; gmBlitzQ(); if (S.tab === "games") render(); } }, ok ? 250 : 700);
 }
@@ -15994,10 +16026,10 @@ function gmFrogShoot(k, el) {
   if (pond) { var P2 = pond.getBoundingClientRect(); pond.querySelectorAll("[data-gmfrog]").forEach(function (e) { var j = +e.getAttribute("data-gmfrog"), R2 = e.getBoundingClientRect(); GM.bugs[j].fx = (100 * (R2.left + R2.width / 2 - P2.left) / P2.width).toFixed(1); GM.bugs[j].fy = (100 * (R2.top + R2.height / 2 - P2.top) / P2.height).toFixed(1); }); }
   record(GM.q.q, b.ok, "game");
   if (b.ok) {
-    GM.score++; GM.streak = (GM.streak || 0) + 1; GM.mood = GM.streak % 3 === 0 ? "burp" : "happy"; gfxSnd("chomp"); if (GM.mood === "burp") setTimeout(function () { gfxSnd("burp"); }, 350);
+    GM.score++; GM.streak = (GM.streak || 0) + 1; GM.mood = GM.streak % 3 === 0 ? "burp" : "happy"; gfxSnd("chomp"); hap("success"); if (GM.mood === "burp") setTimeout(function () { gfxSnd("burp"); }, 350);
     if (b.gold) { earn(2); GM.bonus = (GM.bonus || 0) + 2; saveProg(); gfxSparkle(el ? gfxRect(el) : null); }
     setTimeout(function () { if (GM && GM.kind === "frog" && GM.shot && GM.shot.k === k) { gmFrogQ(); if (S.tab === "games") render(); } }, 900); }
-  else { GM.hearts--; GM.streak = 0; GM.mood = "grumpy"; }
+  else { GM.hearts--; GM.streak = 0; GM.mood = "grumpy"; hap("error"); }
   render();
 }
 function gmFrogEnd() { GM.phase = "done"; GM.mood = ""; var G = Prog.d.games || (Prog.d.games = {}); if (GM.score > (G.frogBest || 0)) { G.frogBest = GM.score; setTimeout(function () { gfxBest("New best: " + GM.score + " bugs!"); }, 200); } if (GM.score >= 3) setTimeout(gfxCheer, 400); GM.won = GM.score >= 3 ? gmWin("frog", Math.floor(GM.score / 3)) : 0; saveProg(); }
@@ -16725,6 +16757,7 @@ document.addEventListener("click", function (e) {
     var pay = typeof qSticks === "function" ? qSticks(ok) : (ok ? 3 : 1);
     if (typeof earn === "function") earn(pay); AGQ.paid = (AGQ.paid || 0) + pay;
     if (ok) { s[0]++; AGQ.right++; if (typeof gfxSnd === "function") gfxSnd("pop"); } else AGQ.missed.push(it.q);
+    hap(ok ? "success" : "error");
     st[it.q.id] = s; store("agqstats", st); if (typeof saveProg === "function") saveProg();
   }
   if (a === "next") {
@@ -18123,6 +18156,7 @@ document.addEventListener("click", function (e) {
     var sec = t.closest(".iscase"), cs = ISTAT_CASES[+t.getAttribute("data-ischeck")], right = 0, wrong = 0, out = sec.querySelector(".isout");
     sec.classList.add("done");
     sec.querySelectorAll(".isval").forEach(function (b) { var v = cs[3][+b.getAttribute("data-isv")], picked = b.getAttribute("aria-pressed") === "true", off = !!v[2]; b.classList.add(off ? (picked ? "hit" : "miss") : (picked ? "wrongpick" : "ok")); if (picked === off) right++; else wrong++; if (off) b.querySelector("strong").insertAdjacentHTML("beforeend", ' <em>' + (v[2] === "H" ? "high" : "low") + '</em>'); });
+    hap(wrong ? "error" : "success");
     out.hidden = false; out.innerHTML = '<strong>' + (wrong ? right + " of " + cs[3].length + " interpreted correctly." : "All values interpreted correctly.") + '</strong><ul>' + cs[3].filter(function (v) { return v[2]; }).map(function (v) { return '<li><strong>' + esc(v[0]) + ':</strong> ' + esc(v[3]) + '</li>'; }).join("") + '</ul>';
     t.hidden = true; if (!wrong && typeof earn === "function") { earn(2); saveProg(); out.insertAdjacentHTML("beforeend", "<p class=\"earned small\">+2 sticks</p>"); }
     return;
@@ -36442,7 +36476,7 @@ document.addEventListener("click", function (e) {
   }
   if (t.hasAttribute("data-bgquit")) { S.bgRun = null; render(); return window.scrollTo(0, 0); }
   var R = S.bgRun; if (!R && t.getAttribute("data-act") !== "bgpaths") return;
-  if (t.hasAttribute("data-bgopt")) { if (R.pick != null) return; R.pick = +t.getAttribute("data-bgopt"); if (R.pick === 0) { R.right++; R.streak = (R.streak || 0) + 1; } else R.streak = 0; render(); return; }
+  if (t.hasAttribute("data-bgopt")) { if (R.pick != null) return; R.pick = +t.getAttribute("data-bgopt"); if (R.pick === 0) { R.right++; R.streak = (R.streak || 0) + 1; } else R.streak = 0; hap(R.pick === 0 ? "success" : "error"); render(); return; }
   if (t.hasAttribute("data-bgprev")) { if (R.step > 0) R.step--; R.ord = null; render(); return; }
   if (t.hasAttribute("data-bgnext")) { R.step++; R.ord = null; render(); return window.scrollTo(0, 0); }
   if (t.getAttribute("data-act") === "bgpaths") { S.obRedo = 1; S.obSel = null; S.obStep = 1; return go("home"); }
