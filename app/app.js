@@ -3117,29 +3117,70 @@ function qVisible(q) {
 }
 
 var Dex = { db: null, loaded: false, error: null, counts: { drugs: 0, questions: 0, scenarios: 0 } };
+var QMAP = { m: null, n: -1 }, SMAP = { m: null, n: -1 };
 function applyQuestion(doc) {
-  var ex = DB.Q.filter(function (q) { return qid(q) === doc.id; })[0];
+  /* id -> question Map, rebuilt only if DB.Q changed size elsewhere (was a linear filter per doc) */
+  if (!QMAP.m || QMAP.n !== DB.Q.length) { QMAP.m = new Map(); DB.Q.forEach(function (x) { var k = qid(x); if (!QMAP.m.has(k)) QMAP.m.set(k, x); }); }
+  var ex = QMAP.m.get(doc.id);
   var q = ex || { i: DB.Q.length };
   q.id = doc.id; q.lv = doc.lv; q.d = doc.d || ""; q.q = doc.q; q.a = doc.a; q.w = (doc.w || []).slice(0, 3); q.x = doc.x || ""; q.cat = doc.cat || "";
   q.hidden = doc.status === "unpublished"; q.rev = doc.rev || 1;
-  if (!ex) DB.Q.push(q);
+  if (!ex) { DB.Q.push(q); QMAP.m.set(doc.id, q); QMAP.n = DB.Q.length; }
 }
 function applyScenario(doc) {
   var s = JSON.parse(JSON.stringify(doc)); s.hidden = doc.status === "unpublished";
-  var i = DB.SCEN.map(function (x) { return x.id; }).indexOf(doc.id);
-  if (i >= 0) DB.SCEN[i] = s; else DB.SCEN.push(s);
+  if (!SMAP.m || SMAP.n !== DB.SCEN.length) { SMAP.m = new Map(); DB.SCEN.forEach(function (x, j) { if (!SMAP.m.has(x.id)) SMAP.m.set(x.id, j); }); }
+  var i = SMAP.m.has(doc.id) ? SMAP.m.get(doc.id) : -1;
+  if (i >= 0) DB.SCEN[i] = s; else { DB.SCEN.push(s); SMAP.m.set(doc.id, DB.SCEN.length - 1); SMAP.n = DB.SCEN.length; }
+}
+/* Start-up cache (owner request, Nov 27 2026): Firestore's own disk cache stays OFF (it crashed Safari/iPhone),
+   so the four start-up reads are kept in localStorage instead. A copy younger than DEX_TTL is used with no
+   Firestore reads at all; an older one is applied at once and then refreshed. Owners/editors always read live.
+   Any storage failure (full, blocked) just means no cache. */
+var DEX_TTL = 30 * 60 * 1000, DEX_CK = ["drugs", "questions", "scenarios", "content"];
+function dexCacheRead() {
+  try {
+    var m = JSON.parse(localStorage.getItem("drugbug:dexc"));
+    if (!m || m.v !== 1 || m.seed !== SEED_TS || m.app !== (typeof APP_VERSION !== "undefined" ? APP_VERSION : "")) return null;
+    var o = { ts: m.ts };
+    for (var i = 0; i < DEX_CK.length; i++) { var a = JSON.parse(localStorage.getItem("drugbug:dexc." + DEX_CK[i])); if (!Array.isArray(a)) return null; o[DEX_CK[i]] = a; }
+    return o;
+  } catch (e) { return null; }
+}
+function dexCacheClear() { try { localStorage.removeItem("drugbug:dexc"); DEX_CK.forEach(function (k) { localStorage.removeItem("drugbug:dexc." + k); }); } catch (e) {} }
+function dexCacheWrite(o) {
+  try {
+    DEX_CK.forEach(function (k) { localStorage.setItem("drugbug:dexc." + k, JSON.stringify(o[k])); });
+    localStorage.setItem("drugbug:dexc", JSON.stringify({ v: 1, seed: SEED_TS, app: typeof APP_VERSION !== "undefined" ? APP_VERSION : "", ts: Date.now() }));
+  } catch (e) { dexCacheClear(); }   /* storage full or blocked: carry on without a cache */
+}
+function dexApply(o) {
+  o.drugs.forEach(applyRecord); o.questions.forEach(applyQuestion); o.scenarios.forEach(applyScenario); o.content.forEach(applyContent);
+  Dex.counts.drugs = o.drugs.length; Dex.counts.questions = o.questions.length; Dex.counts.scenarios = o.scenarios.length;
 }
 Dex.load = function () {
   if (!window.claude || typeof window.claude.use !== "function") return;
   window.claude.use("db").then(function (db) {
     if (!db) return;
     Dex.db = db;
+    var isEd = false; try { isEd = !!(Admin && Admin.can); } catch (e) {}
+    var C = isEd ? null : dexCacheRead(), fresh = !!C && Date.now() - C.ts < DEX_TTL;
+    if (C) {
+      try { crLoadApply(); dexApply(C); } catch (e) {}
+      if (fresh) { Dex.loaded = true; rebuildIndex(); if (!S.sheet) render(); return; }
+    }
+    var out = { drugs: [], questions: [], scenarios: [], content: [] };
+    function grab(qs, key) { out[key] = qs.docs.map(function (d) { return d.data(); }); return out[key]; }
     var jobs = [
-      db.collection("drugdex").where("updatedAt", ">", SEED_TS).limit(1000).get().then(function (qs) { qs.docs.forEach(function (d) { applyRecord(d.data()); }); Dex.counts.drugs = qs.docs.length; }),
-      db.collection("qbank").limit(1000).get().then(function (qs) { qs.docs.forEach(function (d) { applyQuestion(d.data()); }); Dex.counts.questions = qs.docs.length; }),
-      db.collection("scenbank").limit(1000).get().then(function (qs) { qs.docs.forEach(function (d) { applyScenario(d.data()); }); Dex.counts.scenarios = qs.docs.length; })
+      db.collection("drugdex").where("updatedAt", ">", SEED_TS).limit(1000).get().then(function (qs) { grab(qs, "drugs").forEach(applyRecord); Dex.counts.drugs = qs.docs.length; }),
+      db.collection("qbank").limit(1000).get().then(function (qs) { grab(qs, "questions").forEach(applyQuestion); Dex.counts.questions = qs.docs.length; }),
+      db.collection("scenbank").limit(1000).get().then(function (qs) { grab(qs, "scenarios").forEach(applyScenario); Dex.counts.scenarios = qs.docs.length; })
     ];
-    return Promise.all(jobs).then(function () { return crLoad(db); }).then(function () { Dex.loaded = true; rebuildIndex(); if (!S.sheet) render(); });
+    return Promise.all(jobs).then(function () { return crLoad(db); }).then(function () {
+      out.content = CR.raw || [];
+      if (!isEd) dexCacheWrite(out);   /* editors' own saves would otherwise be hidden by a cache */
+      Dex.loaded = true; rebuildIndex(); if (!S.sheet) render();
+    });
   }).catch(function (e) { Dex.error = e && e.code || "unavailable"; });
 };
 
@@ -12018,9 +12059,10 @@ function applyContent(doc) {
   Object.keys(doc.edits || {}).forEach(function (p) { var cur = crGet(it.root, p); if (typeof cur !== "string") return; if (!(p in O)) O[p] = cur; crSet(it.root, p, doc.edits[p]); });
 }
 function crOrig(k, id, path, root) { var O = CR.orig[k + "~" + id] || {}; return path in O ? O[path] : crGet(root, path); }
+function crLoadApply() { CR_TYPES.forEach(function (t) { if (t[0] !== "drug") crItems(t[0]); }); CR.ready = true; }
 function crLoad(db) {
   CR_TYPES.forEach(function (t) { if (t[0] !== "drug") crItems(t[0]); });
-  return db.collection("content").limit(5000).get().then(function (qs) { qs.docs.forEach(function (d) { applyContent(d.data()); }); CR.ready = true; }).catch(function () { CR.ready = true; });
+  return db.collection("content").limit(5000).get().then(function (qs) { CR.raw = qs.docs.map(function (d) { return d.data(); }); CR.raw.forEach(applyContent); CR.ready = true; }).catch(function () { CR.ready = true; });
 }
 /* views */
 function aiView() {
@@ -14563,7 +14605,9 @@ document.addEventListener("click", function (e) {
   S.cond = t.getAttribute("data-cond") || null; render(); window.scrollTo(0, 0);
 });
 document.addEventListener("input", function (e) {
-  if (e.target.id !== "condq") return; S.condq = e.target.value; var pos = e.target.selectionStart; render(); var f = document.getElementById("condq"); if (f) { f.focus(); try { f.setSelectionRange(pos, pos); } catch (x) {} }
+  if (e.target.id !== "condq") return; S.condq = e.target.value;
+  /* 90 ms debounce, same as the main search (hsq): one render after typing pauses, not one per letter */
+  clearTimeout(S._cqT); S._cqT = setTimeout(function () { var cur = document.getElementById("condq"), pos = cur ? cur.selectionStart : 0; render(); var f = document.getElementById("condq"); if (f) { f.focus(); try { f.setSelectionRange(pos, pos); } catch (x) {} } }, 90);
 });
 
 /* ---------- Optional personal accounts (iPhone app with the backend turned on) ----------
