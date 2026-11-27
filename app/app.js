@@ -12929,7 +12929,7 @@ function evView() {
     return c;
   }
   var T = EVTABS.filter(function (x) { return x[0] === t; })[0] || EVTABS[0];
-  c += '<div class="backrow"><button class="backbtn" data-evtab=""><span aria-hidden="true">&larr;</span> Everyday Health</button></div><div class="tabhero evhero"><span class="thic">' + icon({ cabinet: "pillq", sick: "scenarios", normals: "labs", body: "body", peptides: "families", probiotics: "vegc", all: "registry" }[t] || "registry") + '</span><div class="thtx"><h2>' + esc(T[1]) + '</h2><p>' + esc(T[2].split(/(?<=\.)\s/)[0]) + '</p></div></div>';
+  c += '<div class="backrow"><button class="backbtn" data-evtab=""><span aria-hidden="true">&larr;</span> Everyday Health</button></div><div class="tabhero evhero"><span class="thic">' + icon({ cabinet: "pillq", sick: "scenarios", normals: "labs", body: "body", peptides: "families", probiotics: "vegc", all: "registry" }[t] || "registry") + '</span><div class="thtx"><h2>' + esc(T[1]) + '</h2><p>' + esc(T[2].replace(/(\.)\s[\s\S]*$/, "$1")) + '</p></div></div>';
   if (t === "cabinet") c += evList(["Over-the-Counter Remedies", "Vitamins & Supplements"], "Search the medicine cabinet");
   else if (t === "illicit") c += '' + eduNote("<strong>Education only.</strong> If someone will not wake up or is not breathing, call 911.", "These pages explain effects, risks and overdose signs. They never give instructions for using any drug. Naloxone reverses opioid overdoses.") + evList(["Illicit & Recreational Drugs"], "Search drugs");
   else if (t === "peptides") c += eduNote("<strong>Education only.</strong> NOT FDA APPROVED peptides have no approved use or dose.", "DrugBug is not telling anyone to use them.") + evList(["Peptides"], "Search peptides");
@@ -31239,7 +31239,7 @@ function microView() {
   L.forEach(function (m) { var g = m.g || "Other"; if (!byG[g]) { byG[g] = []; order.push(g); } byG[g].push(m); });
   order.forEach(function (g) {
     c += '<h3 class="eh small">' + esc(g) + '</h3><div class="grid">' + byG[g].map(function (m) {
-      return '<button class="tile" data-micro="' + esc(m.id) + '"><span class="nm">' + esc(m.nm) + '</span>' + (m.also ? '<span class="aka">' + esc(m.also) + '</span>' : '') + '<span class="cl">' + esc(String(m.plain || "").split(/(?<=\.)\s/)[0]) + '</span></button>';
+      return '<button class="tile" data-micro="' + esc(m.id) + '"><span class="nm">' + esc(m.nm) + '</span>' + (m.also ? '<span class="aka">' + esc(m.also) + '</span>' : '') + '<span class="cl">' + esc(String(m.plain || "").replace(/(\.)\s[\s\S]*$/, "$1")) + '</span></button>';
     }).join("") + '</div>';
   });
   return c + '<p class="muted small nrfine">Draft reference for study. Every card is being reviewed; confirm against a current microbiology or infectious disease source before relying on it.</p>';
