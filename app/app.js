@@ -372,6 +372,17 @@ function star(cx, cy, r, fill) {
   s += '<path d="M' + (cx - r * 0.18) + ' ' + (cy - r * 0.35) + ' q' + (r * 0.36) + ' ' + (r * 0.15) + ' 0 ' + (r * 0.3) + ' q-' + (r * 0.36) + ' ' + (r * 0.15) + ' 0 ' + (r * 0.3) + '" stroke="#fff" stroke-width="' + (r * 0.09) + '" fill="none" stroke-linecap="round"/>';
   return s;
 }
+/* Dark legs, antennae and mandibles used to melt into the dark background. A dark limb now carries two hooks for the stylesheet: the limb
+   itself (class bl, or blf for a filled shape) and a light copy underneath (class lgrim) that is only shown in Night Shift Gold, where the limb
+   is also lifted to charcoal-slate #3B4963. In Daylight Clinical the limb keeps its own colour and the copy stays hidden. */
+var LIMB_RIM = "#E2E8F0";
+function limbDark(c) { return typeof c === "string" && c.charAt(0) === "#" && hexLum(c) < .3; }
+function limbRim(str, c) {
+  if (!limbDark(c)) return str;
+  var rim = str.replace(/<circle ([^>]*)>/g, function (m, a) { return '<circle class="lgrim" ' + a.replace(/fill="[^"]*"/, 'fill="' + LIMB_RIM + '"').replace(/ r="([\d.]+)"/, function (_, r) { return ' r="' + (+r + 1.4).toFixed(1) + '"'; }) + '>'; })
+    .replace(/<path ([^>]*)>/g, function (m, a) { return '<path class="lgrim" ' + a.replace(/stroke="[^"]*"/, 'stroke="' + LIMB_RIM + '"').replace(/stroke-width="([\d.]+)"/, function (_, w) { return 'stroke-width="' + (+w + 2.8).toFixed(1) + '"'; }) + '>'; });
+  return rim + str.replace(/<(path|circle) /g, '<$1 class="bl" ');
+}
 function legs(c, w) {
   var L = ["M72 118 Q46 104 34 86", "M66 136 Q40 136 24 128", "M72 154 Q52 168 42 184"], s = "";
   L.forEach(function (p) {
@@ -379,7 +390,7 @@ function legs(c, w) {
     var m = p.replace(/(\d+)(?= |$)/g, function () { return arguments[0]; });
     s += '<path d="' + p.replace(/([MQ ])(\d+)( )(\d+)/g, function (_, a, x, sp, y) { return a + (200 - +x) + sp + y; }) + '" stroke="' + c + '" stroke-width="' + w + '" fill="none" stroke-linecap="round"/>';
   });
-  return s;
+  return limbRim(s, c);
 }
 function eyes(y, big) {
   var r = big || 9;
@@ -388,8 +399,8 @@ function eyes(y, big) {
     '<circle cx="92" cy="' + (y - 2) + '" r="' + (r * 0.17) + '" fill="#fff"/><circle cx="116" cy="' + (y - 2) + '" r="' + (r * 0.17) + '" fill="#fff"/></g>';
 }
 function antennae(c, curl) {
-  if (curl) return '<path d="M90 48 Q78 20 64 26 Q56 32 64 36" stroke="' + c + '" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M110 48 Q122 20 136 26 Q144 32 136 36" stroke="' + c + '" stroke-width="4" fill="none" stroke-linecap="round"/>';
-  return '<path d="M90 48 Q80 24 68 20" stroke="' + c + '" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M110 48 Q120 24 132 20" stroke="' + c + '" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="68" cy="20" r="6" fill="' + c + '"/><circle cx="132" cy="20" r="6" fill="' + c + '"/>';
+  if (curl) return limbRim('<path d="M90 48 Q78 20 64 26 Q56 32 64 36" stroke="' + c + '" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M110 48 Q122 20 136 26 Q144 32 136 36" stroke="' + c + '" stroke-width="4" fill="none" stroke-linecap="round"/>', c);
+  return limbRim('<path d="M90 48 Q80 24 68 20" stroke="' + c + '" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M110 48 Q120 24 132 20" stroke="' + c + '" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="68" cy="20" r="6" fill="' + c + '"/><circle cx="132" cy="20" r="6" fill="' + c + '"/>', c);
 }
 var BOOTED = 0, LAST_ERR = "";   /* the boot splash is replaced by the first real render (owner, Oct 30 2026) */
 var IMBUG = { pharmtech: { name: "Mortar Mantis", body: "mantis", c: ["#99f6e4", "#0d9488", "#f0fdfa"], acc: ["goggles"] }, pharmschool: { name: "Capsule Cricket", body: "cricket", c: ["#fda4af", "#e11d48", "#fff1f2"], acc: ["cap"] }, pharmacist: { name: "Apothecary Scarab", body: "scarab", c: ["#6ee7b7", "#047857", "#ecfdf5"], acc: ["bowtie"] }, pt: { name: "Gym Beetle", body: "beetle", c: ["#fdba74", "#ea580c", "#fff7ed"], acc: ["bandana"] }, slp: { name: "Echo Cricket", body: "cricket", c: ["#f9a8d4", "#db2777", "#fdf2f8"], acc: ["headset"] }, surg: { name: "Scalpel Scorpion", body: "scorpion", c: ["#99f6e4", "#0d9488", "#f0fdfa"], acc: ["mask", "cap"] }, anes: { name: "Ether Earwig", body: "stag", c: ["#a5b4fc", "#4338ca", "#eef2ff"], acc: ["mask", "goggles"] }, dent: { name: "Enamel Ant", body: "ant", c: ["#e0f2fe", "#0ea5e9", "#ffffff"], acc: ["mask", "goggles"] }, phleb: { name: "Vessel Vine-Borer", body: "caterpillar", c: ["#fca5a5", "#b91c1c", "#fef2f2"], acc: ["stetho"] }, ekg: { name: "Pulse Beetle", body: "firefly", c: ["#86efac", "#15803d", "#f0fdf4"], acc: ["stetho", "bolt"] }, cp: { name: "Armor Beetle", body: "beetle", c: ["#93c5fd", "#1d4ed8", "#eff6ff"], acc: ["stetho"] }, tccc: { name: "Hazmat Hornet", body: "wasp", c: ["#bef264", "#3f6212", "#f7fee7"], acc: ["tachelmet", "mask"] }, mh: { name: "Calm Cicada", body: "cicada", c: ["#c4b5fd", "#7c3aed", "#f5f3ff"], acc: ["headset"] }, diet: { name: "Garden Grasshopper", body: "grasshopper", c: ["#bef264", "#65a30d", "#f7fee7"], acc: ["leaf"] }, rrt: { name: "Breathing Bee", body: "bee", c: ["#7dd3fc", "#0284c7", "#f0f9ff"], acc: ["mask"] }, flightrn: { name: "Night Monarch", body: "butterfly", c: ["#f59e0b", "#7c2d12", "#fff7ed"], head: "#fb923c", ink: "#1c1917", wingC: "#fdba74", eyes: "fierce", acc: ["jethelmet", "aviscarf", "stetho"] }, rt: { name: "X-Ray Firefly", body: "firefly", c: ["#7dd3fc", "#0369a1", "#e0f2fe"], acc: ["goggles"] }, ct: { name: "Spiral Scarab", body: "scarab", c: ["#a5b4fc", "#4338ca", "#ffffff"], acc: ["headset"] }, mri: { name: "Magnet Moth", body: "moth", c: ["#c4b5fd", "#6d28d9", "#f5f3ff"], acc: ["bolt"] }, nm: { name: "Glow Worm", body: "caterpillar", c: ["#bef264", "#4d7c0f", "#ffffff"], acc: ["stars"] }, ir: { name: "Cath Cricket", body: "grasshopper", c: ["#5eead4", "#0f766e", "#ffffff"], acc: ["mask"] } };
@@ -6023,7 +6034,7 @@ function speciesMarks(b, t, id, ink, c1, c2, c3) {
    (beetle, scarab, stag, rhino), fireflies, snails, caterpillars and millipedes. The head always stays where it was (100, hy) and the
    torso and hand anchors in BODYFIT_V2 say where the body is, so every hat, face item, outfit, neck piece, back piece and held prop
    still lands on it. Off by default until approved. */
-var BUGART_V2 = false;
+var BUGART_V2 = false;   /* switched on at the end of this block (owner approved, Nov 28 2026) */
 var BODYFIT_V1 = null;
 var BODYFIT_V2 = {
   dragonfly: { r: 24, t: [100, 130, 16, 44], R: [120, 118], L: [80, 118] },
@@ -6054,7 +6065,7 @@ function v2Dragon(c) {
   var half = wing(100, 86 * wf + (dm ? 6 : 0), 17 * wf, dm ? -26 : -13) + wing(114, 78 * wf + (dm ? 6 : 0), 20 * wf, dm ? -16 : 11);
   s += c.W(half + v2Mir(half), 100, 108);
   var legs = 'M93 110 l-9 8 l-3 9 M94 116 l-12 5 l-5 9 M96 122 l-8 7 l-7 8';
-  s += '<path d="' + legs + '" stroke="' + ink + '" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><g transform="translate(200 0) scale(-1 1)"><path d="' + legs + '" stroke="' + ink + '" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>';
+  s += limbRim('<path d="' + legs + '" stroke="' + ink + '" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><g transform="translate(200 0) scale(-1 1)"><path d="' + legs + '" stroke="' + ink + '" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>', ink);
   var n = 12, r0 = dm ? 4.4 : (wide ? 9 : 7.4);
   for (k = 0; k < n; k++) { var yy = 118 + k * 6.6, rr = r0 * (1 - k * .04); s += '<ellipse cx="100" cy="' + yy.toFixed(1) + '" rx="' + rr.toFixed(1) + '" ry="5" fill="' + (k % 2 ? c2 : F) + '" stroke="' + ink + '" stroke-width="1.2"/>'; }
   s += '<path d="M100 119 V192" stroke="' + c3 + '" stroke-width="1.6" opacity=".75"/><path d="M97 192 l-3 7 M103 192 l3 7" stroke="' + ink + '" stroke-width="2.2" stroke-linecap="round"/>';
@@ -6067,14 +6078,14 @@ function v2Dragon(c) {
       '<path d="M' + (x - sg * er * .7) + ' ' + (hy - er * .5) + ' L' + (x + sg * er * .5) + ' ' + (hy - er * .1) + ' M' + (x - sg * er * .8) + ' ' + (hy + er * .1) + ' L' + (x + sg * er * .55) + ' ' + (hy + er * .55) + ' M' + (x - sg * er * .4) + ' ' + (hy + er * .75) + ' L' + (x + sg * er * .2) + ' ' + (hy + er * 1) + '" stroke="' + c3 + '" stroke-width="1.2" opacity=".4"/>' +
       v2Gloss(x - sg * er * .45, hy - er * .65, 3.6, 6, -sg * 28, .8);
   });
-  s += '<ellipse cx="100" cy="' + (hy + 16) + '" rx="10" ry="6" fill="' + c2 + '" stroke="' + ink + '" stroke-width="1.2"/><path d="M95 ' + (hy - 20) + ' l-3 -8 M105 ' + (hy - 20) + ' l3 -8" stroke="' + ink + '" stroke-width="2" stroke-linecap="round"/>';
+  s += '<ellipse cx="100" cy="' + (hy + 16) + '" rx="10" ry="6" fill="' + c2 + '" stroke="' + ink + '" stroke-width="1.2"/>' + limbRim('<path d="M95 ' + (hy - 20) + ' l-3 -8 M105 ' + (hy - 20) + ' l3 -8" stroke="' + ink + '" stroke-width="2" stroke-linecap="round"/>', ink);
   return s;
 }
 /* praying mantis: a triangular head with tall eyes, a long neck, leaf-like folded wings and folded raptorial arms in front (no six plain legs) */
 function v2Mantis(c) {
   var ink = c.ink, c1 = c.c1, c2 = c.c2, c3 = c.c3, F = c.F, hy = 68, s = "", v = c.BV % 3, sd, i;
   var legs = 'M91 134 Q64 138 56 170 L52 190 M93 150 Q72 168 70 192';
-  s += '<path d="' + legs + '" stroke="' + c2 + '" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><g transform="translate(200 0) scale(-1 1)"><path d="' + legs + '" stroke="' + c2 + '" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g><circle cx="56" cy="170" r="3.5" fill="' + ink + '"/><circle cx="144" cy="170" r="3.5" fill="' + ink + '"/>';
+  s += limbRim('<path d="' + legs + '" stroke="' + c2 + '" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><g transform="translate(200 0) scale(-1 1)"><path d="' + legs + '" stroke="' + c2 + '" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>', c2) + limbRim('<circle cx="56" cy="170" r="3.5" fill="' + ink + '"/><circle cx="144" cy="170" r="3.5" fill="' + ink + '"/>', ink);
   var ab = '<path d="M100 104 C134 116 138 166 100 198 C62 166 66 116 100 104Z" fill="' + F + '" stroke="' + ink + '" stroke-width="2.5"/><path d="M100 108 V194 M100 128 L82 146 M100 128 L118 146 M100 152 L86 170 M100 152 L114 170" stroke="' + c2 + '" stroke-width="2" fill="none"/><path d="M84 124 Q80 150 92 178" stroke="#fff" stroke-width="3.5" fill="none" opacity=".5" stroke-linecap="round"/>';
   s += v === 1 ? '<g transform="translate(100 150) scale(1.12 1) translate(-100 -150)">' + ab + '</g>' : v === 2 ? '<g transform="translate(100 150) scale(.82 1.04) translate(-100 -150)">' + ab + '</g>' : ab;
   s += '<path d="M93 96 H107 L109 124 Q100 130 91 124Z" fill="' + c1 + '" stroke="' + ink + '" stroke-width="2"/>';
@@ -6084,7 +6095,7 @@ function v2Mantis(c) {
     s += '<ellipse cx="' + x + '" cy="' + (hy - 3) + '" rx="13" ry="17" fill="' + mixHex(c3, c1, .35) + '" stroke="' + ink + '" stroke-width="2.4"/>' + v2Gloss(x + sg * 4, hy - 13, 3.2, 6, sg * 20, .8) +
       '<path d="M' + (x - 12) + ' ' + (hy - 14) + ' Q' + x + ' ' + (hy - 26) + ' ' + (x + 12) + ' ' + (hy - 14) + '" stroke="' + ink + '" stroke-width="3" fill="none" stroke-linecap="round"/>';
   });
-  s += '<path d="M90 ' + (hy - 28) + ' Q84 ' + (hy - 52) + ' 66 ' + (hy - 58) + ' M110 ' + (hy - 28) + ' Q116 ' + (hy - 52) + ' 134 ' + (hy - 58) + '" stroke="' + ink + '" stroke-width="2.4" fill="none" stroke-linecap="round"/><circle cx="66" cy="' + (hy - 58) + '" r="3" fill="' + ink + '"/><circle cx="134" cy="' + (hy - 58) + '" r="3" fill="' + ink + '"/>';
+  s += limbRim('<path d="M90 ' + (hy - 28) + ' Q84 ' + (hy - 52) + ' 66 ' + (hy - 58) + ' M110 ' + (hy - 28) + ' Q116 ' + (hy - 52) + ' 134 ' + (hy - 58) + '" stroke="' + ink + '" stroke-width="2.4" fill="none" stroke-linecap="round"/><circle cx="66" cy="' + (hy - 58) + '" r="3" fill="' + ink + '"/><circle cx="134" cy="' + (hy - 58) + '" r="3" fill="' + ink + '"/>', ink);
   [-1, 1].forEach(function (sd2) {
     var Sx = 100 + sd2 * 12, Sy = 110, Ex = 100 + sd2 * 36, Ey = 96, Wx = 100 + sd2 * 19, Wy = 124, sp = "";
     for (i = 1; i <= 4; i++) { var tx = Sx + (Ex - Sx) * i / 5, ty = Sy + (Ey - Sy) * i / 5; sp += 'M' + tx.toFixed(1) + ' ' + (ty + 3).toFixed(1) + ' l' + (-sd2 * 2) + ' 7 l' + (sd2 * 5) + ' -4Z '; }
@@ -6098,15 +6109,15 @@ function v2Mantis(c) {
 /* grasshopper and cricket: an angled posture and big muscular bent hind legs for jumping */
 function v2Hopper(c) {
   var ink = c.ink, c1 = c.c1, c2 = c.c2, c3 = c.c3, F = c.F, hy = c.hy, cr = c.t === "cricket", s = "", dark = cr ? mixHex(c2, ink, .25) : c2;
-  var hind = '<path d="M112 168 C126 152 142 134 156 120 C166 124 167 134 160 144 C150 160 134 176 120 184Z" fill="' + dark + '" stroke="' + ink + '" stroke-width="2.5" stroke-linejoin="round"/><path d="M122 164 L140 140 M130 172 L150 148" stroke="' + c3 + '" stroke-width="2" opacity=".55"/><path d="M158 122 L172 192 M172 192 l-8 2 M172 192 l6 2" stroke="' + c1 + '" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M162 136 l7 -3 M165 150 l7 -3 M168 164 l7 -3 M170 178 l7 -3" stroke="' + ink + '" stroke-width="2.4" stroke-linecap="round"/><circle cx="158" cy="122" r="5" fill="' + c1 + '" stroke="' + ink + '" stroke-width="2"/>' + v2Gloss(142, 142, 3, 14, 38, .5);
+  var hind = '<path' + (limbDark(dark) ? ' class="blf"' : '') + ' d="M112 168 C126 152 142 134 156 120 C166 124 167 134 160 144 C150 160 134 176 120 184Z" fill="' + dark + '" stroke="' + ink + '" stroke-width="2.5" stroke-linejoin="round"/><path d="M122 164 L140 140 M130 172 L150 148" stroke="' + c3 + '" stroke-width="2" opacity=".55"/><path d="M158 122 L172 192 M172 192 l-8 2 M172 192 l6 2" stroke="' + c1 + '" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M162 136 l7 -3 M165 150 l7 -3 M168 164 l7 -3 M170 178 l7 -3" stroke="' + ink + '" stroke-width="2.4" stroke-linecap="round"/><circle cx="158" cy="122" r="5" fill="' + c1 + '" stroke="' + ink + '" stroke-width="2"/>' + v2Gloss(142, 142, 3, 14, 38, .5);
   s += hind + v2Mir(hind);
   var mid = 'M88 122 Q66 124 56 146 L52 162 M90 134 Q70 144 66 168';
-  s += '<path d="' + mid + '" stroke="' + ink + '" stroke-width="4.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><g transform="translate(200 0) scale(-1 1)"><path d="' + mid + '" stroke="' + ink + '" stroke-width="4.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>';
+  s += limbRim('<path d="' + mid + '" stroke="' + ink + '" stroke-width="4.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><g transform="translate(200 0) scale(-1 1)"><path d="' + mid + '" stroke="' + ink + '" stroke-width="4.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>', ink);
   s += '<g transform="rotate(-13 100 150)"><ellipse cx="100" cy="154" rx="' + (cr ? 29 : 25) + '" ry="40" fill="' + F + '" stroke="' + ink + '" stroke-width="2.4"/>' +
     '<path d="M100 114 L78 124 Q70 162 98 196 L102 196 Q130 162 122 124Z" fill="' + c2 + '" stroke="' + ink + '" stroke-width="2"/><path d="M100 116 V194 M84 134 Q92 130 100 134 Q108 130 116 134 M82 152 Q91 147 100 152 Q109 147 118 152 M86 170 Q93 166 100 170 Q107 166 114 170" stroke="' + c3 + '" stroke-width="1.6" fill="none" opacity=".8"/>' +
     (cr ? '<path d="M94 190 L88 199 M106 190 L112 199" stroke="' + ink + '" stroke-width="3" stroke-linecap="round"/>' : '') + v2Gloss(84, 140, 3.4, 12, 12, .45) + '</g>';
   s += '<path d="M72 100 Q100 88 128 100 L124 120 Q100 128 76 120Z" fill="' + c1 + '" stroke="' + ink + '" stroke-width="2.4"/><path d="M82 104 Q100 98 118 104" stroke="' + c3 + '" stroke-width="2" fill="none" opacity=".7"/>';
-  s += (cr ? '<path d="M90 50 Q64 14 16 6 M110 50 Q136 14 184 6" stroke="' + ink + '" stroke-width="2.4" fill="none" stroke-linecap="round"/>' : antennae(ink, true));
+  s += (cr ? limbRim('<path d="M90 50 Q64 14 16 6 M110 50 Q136 14 184 6" stroke="' + ink + '" stroke-width="2.4" fill="none" stroke-linecap="round"/>', ink) : antennae(ink, true));
   s += '<ellipse cx="100" cy="' + hy + '" rx="' + (cr ? 28 : 27) + '" ry="' + (cr ? 29 : 30) + '" fill="' + (c.b.head || c1) + '" stroke="' + ink + '" stroke-width="2"/><path d="M78 ' + (hy + 18) + ' Q100 ' + (hy + 30) + ' 122 ' + (hy + 18) + '" stroke="' + ink + '" stroke-width="2" fill="none" opacity=".5"/>';
   return s;
 }
@@ -6125,7 +6136,7 @@ function v2Elytra(c, W, top, bot, iri) {
 function v2Pronotum(c) { return '<path d="M70 101 Q100 88 130 101 Q128 117 100 121 Q72 117 70 101Z" fill="' + c.c2 + '" stroke="' + c.ink + '" stroke-width="2.4"/><path d="M80 103 Q100 96 112 101" stroke="#fff" stroke-width="3" fill="none" opacity=".5" stroke-linecap="round"/>'; }
 /* stag beetle: large toothed mandibles that sweep out beside the head (clear of a hat) */
 function v2Mandibles(c, hy) {
-  var ink = c.ink, c1 = c.c1, f = mixHex(c1, "#ffffff", .2), m = '<path d="M92 ' + (hy + 16) + ' C64 ' + (hy + 24) + ' 38 ' + (hy + 2) + ' 38 ' + (hy - 26) + ' C38 ' + (hy - 44) + ' 46 ' + (hy - 54) + ' 54 ' + (hy - 52) + ' C52 ' + (hy - 32) + ' 62 ' + (hy - 8) + ' 92 ' + (hy + 2) + 'Z" fill="' + f + '" stroke="' + ink + '" stroke-width="3" stroke-linejoin="round"/><path d="M54 ' + (hy - 52) + ' L44 ' + (hy - 64) + ' L60 ' + (hy - 56) + '" fill="' + f + '" stroke="' + ink + '" stroke-width="3" stroke-linejoin="round"/><path d="M52 ' + (hy - 30) + ' l-9 -3 l9 -7Z M58 ' + (hy - 12) + ' l-9 -1 l8 -7Z M70 ' + (hy + 0) + ' l-9 1 l7 -8Z" fill="' + ink + '"/><path d="M48 ' + (hy - 34) + ' Q44 ' + (hy - 8) + ' 66 ' + (hy + 10) + '" stroke="#fff" stroke-width="3" fill="none" opacity=".6" stroke-linecap="round"/>';
+  var ink = c.ink, c1 = c.c1, f = mixHex(c1, "#ffffff", .2), cl = limbDark(f) ? ' class="blf"' : '', m = '<path' + cl + ' d="M92 ' + (hy + 16) + ' C64 ' + (hy + 24) + ' 38 ' + (hy + 2) + ' 38 ' + (hy - 26) + ' C38 ' + (hy - 44) + ' 46 ' + (hy - 54) + ' 54 ' + (hy - 52) + ' C52 ' + (hy - 32) + ' 62 ' + (hy - 8) + ' 92 ' + (hy + 2) + 'Z" fill="' + f + '" stroke="' + ink + '" stroke-width="3" stroke-linejoin="round"/><path d="M54 ' + (hy - 52) + ' L44 ' + (hy - 64) + ' L60 ' + (hy - 56) + '" fill="' + f + '" stroke="' + ink + '" stroke-width="3" stroke-linejoin="round"/><path d="M52 ' + (hy - 30) + ' l-9 -3 l9 -7Z M58 ' + (hy - 12) + ' l-9 -1 l8 -7Z M70 ' + (hy + 0) + ' l-9 1 l7 -8Z" fill="' + ink + '"/><path d="M48 ' + (hy - 34) + ' Q44 ' + (hy - 8) + ' 66 ' + (hy + 10) + '" stroke="#fff" stroke-width="3" fill="none" opacity=".6" stroke-linecap="round"/>';
   return m + v2Mir(m);
 }
 /* rhinoceros beetle: one big curved horn that rises from the forehead (tucked short while a hat is worn) */
@@ -6150,7 +6161,7 @@ function v2Cater(c) {
   if (bv === 1) s += '<path d="M36 156 Q22 132 36 120" stroke="' + ink + '" stroke-width="6" fill="none" stroke-linecap="round"/><circle cx="36" cy="119" r="3" fill="' + c3 + '"/>';
   segs.forEach(function (p, i) {
     var x = p[0], y = p[1], r = p[2], f = i % 2 ? c2 : c1;
-    s += '<path d="M' + (x - 7) + ' ' + (y + r - 3) + ' q-1 8 ' + (-3) + ' 9 h9 M' + (x + 7) + ' ' + (y + r - 3) + ' q1 8 3 9 h-9" stroke="' + ink + '" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>' +
+    s += limbRim('<path d="M' + (x - 7) + ' ' + (y + r - 3) + ' q-1 8 ' + (-3) + ' 9 h9 M' + (x + 7) + ' ' + (y + r - 3) + ' q1 8 3 9 h-9" stroke="' + ink + '" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>', ink) +
       '<ellipse cx="' + x + '" cy="' + y + '" rx="' + (r + 1) + '" ry="' + r + '" fill="' + f + '" stroke="' + ink + '" stroke-width="2"/>' +
       '<path d="M' + (x - r * .5) + ' ' + (y - r * .9) + ' Q' + (x - r * .15) + ' ' + y + ' ' + (x - r * .5) + ' ' + (y + r * .9) + '" stroke="' + ink + '" stroke-width="1.6" fill="none" opacity=".45"/>' +
       '<circle cx="' + x + '" cy="' + (y + 2) + '" r="2.4" fill="' + c3 + '" stroke="' + ink + '" stroke-width="1"/>' + v2Gloss(x - r * .35, y - r * .5, r * .22, r * .34, -20, .5);
@@ -6176,7 +6187,7 @@ function v2Milli(c) {
     var p2 = mp[mi], rot = (p2[3] * 180 / Math.PI + 90).toFixed(0);
     segs += '<g transform="rotate(' + rot + ' ' + p2[0].toFixed(1) + ' ' + p2[1].toFixed(1) + ')"><ellipse cx="' + p2[0].toFixed(1) + '" cy="' + p2[1].toFixed(1) + '" rx="' + p2[2].toFixed(1) + '" ry="' + (p2[2] * .82).toFixed(1) + '" fill="' + (mi % 2 ? c2 : F) + '" stroke="' + ink + '" stroke-width="1.6"/><path d="M' + (p2[0] - p2[2] * .8).toFixed(1) + ' ' + p2[1].toFixed(1) + ' Q' + p2[0].toFixed(1) + ' ' + (p2[1] - p2[2] * .5).toFixed(1) + ' ' + (p2[0] + p2[2] * .8).toFixed(1) + ' ' + p2[1].toFixed(1) + '" stroke="' + c3 + '" stroke-width="1.4" fill="none" opacity=".6"/></g>';
   }
-  s += legs + segs + antennae(ink, true) + '<circle cx="100" cy="' + hy + '" r="26" fill="' + (c.b.head || c1) + '" stroke="' + ink + '" stroke-width="1.8"/>' + v2Gloss(88, hy - 12, 4, 7, -30, .5) + '<path d="M92 ' + (hy + 22) + ' l-4 7 M108 ' + (hy + 22) + ' l4 7" stroke="' + ink + '" stroke-width="2.4" stroke-linecap="round"/>';
+  s += limbRim(legs, ink) + segs + antennae(ink, true) + '<circle cx="100" cy="' + hy + '" r="26" fill="' + (c.b.head || c1) + '" stroke="' + ink + '" stroke-width="1.8"/>' + v2Gloss(88, hy - 12, 4, 7, -30, .5) + '<path d="M92 ' + (hy + 22) + ' l-4 7 M108 ' + (hy + 22) + ' l4 7" stroke="' + ink + '" stroke-width="2.4" stroke-linecap="round"/>';
   return s;
 }
 /* snail: a real coiled shell with growth ridges and a crisp shine, a muscular foot that tapers to a tail, and long eye stalks with eyes */
@@ -6197,11 +6208,13 @@ function v2SnailShell(c, sv) {
 }
 function v2SnailStalks(c, hy) {
   var c2 = c.c2, ink = c.ink;
-  return '<path d="M90 ' + (hy - 22) + ' Q84 ' + (hy - 38) + ' 76 ' + (hy - 46) + ' M110 ' + (hy - 22) + ' Q116 ' + (hy - 38) + ' 124 ' + (hy - 46) + '" stroke="' + c2 + '" stroke-width="6.5" fill="none" stroke-linecap="round"/><circle cx="76" cy="' + (hy - 48) + '" r="7" fill="' + c2 + '" stroke="' + ink + '" stroke-width="1.8"/><circle cx="124" cy="' + (hy - 48) + '" r="7" fill="' + c2 + '" stroke="' + ink + '" stroke-width="1.8"/><circle cx="74" cy="' + (hy - 50) + '" r="2.6" fill="#1b1430"/><circle cx="122" cy="' + (hy - 50) + '" r="2.6" fill="#1b1430"/>';
+  return limbRim('<path d="M90 ' + (hy - 22) + ' Q84 ' + (hy - 38) + ' 76 ' + (hy - 46) + ' M110 ' + (hy - 22) + ' Q116 ' + (hy - 38) + ' 124 ' + (hy - 46) + '" stroke="' + c2 + '" stroke-width="6.5" fill="none" stroke-linecap="round"/><circle cx="76" cy="' + (hy - 48) + '" r="7" fill="' + c2 + '" stroke="' + ink + '" stroke-width="1.8"/><circle cx="124" cy="' + (hy - 48) + '" r="7" fill="' + c2 + '" stroke="' + ink + '" stroke-width="1.8"/><circle cx="74" cy="' + (hy - 50) + '" r="2.6" fill="#1b1430"/><circle cx="122" cy="' + (hy - 50) + '" r="2.6" fill="#1b1430"/>', c2);
 }
 /* visored hats sat across the eyes on every bug; on the new bodies they ride a little higher so the eyes stay clear */
 var V2_RAISE = { knighthelm: -16, flighthelmet: -7, ninjaband: -8 };
+function v2Boot() { artV2(true); }
 var V2_FULL = { dragonfly: 1, mantis: 1, grasshopper: 1, cricket: 1, caterpillar: 1, millipede: 1 };
+v2Boot();
 function bugArt(b, cls, opt) {
   opt = opt || {};
   /* vivid (owner, Nov 28 2026): draw a Veteran or Legend bug without the layers that wash it out (the white sheen, the rainbow iridescence,
@@ -10012,6 +10025,7 @@ function coreMigrate() {
   if (P.role === "ev" || P.role === "im" || P.role === "ah") {   /* only the paths that were removed */
     var nx = (P.interests || [])[0] || (P.startLevel ? routeOfLevel(P.startLevel) : "");
     P.role = CORE_TRACKS[nx] === 1 ? nx : ""; ch = true;   /* nothing left to land on: the first-run carousel opens, progress untouched */
+    if (!P.role) { try { store("tourV", null); store("tourDone", null); if (typeof TR !== "undefined") TR.done = false; } catch (e) {} }   /* and Hickory's skippable tour plays again after they choose */
   }
   if (ch) saveProg();
 }

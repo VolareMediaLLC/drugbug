@@ -4414,6 +4414,13 @@ html.hive:root .wrshort .wrstx{flex:1;display:grid;gap:2px}
 html.hive:root .wrshort .wrstx strong{font:800 17px/1.2 var(--f-display)}
 html.hive:root .wrshort .wrstx span{font-size:13px;color:var(--muted)}
 html.hive:root .wrshort .wrsgo{font-size:26px;color:var(--muted)}
+/* dark legs, antennae and mandibles stay readable in Night Shift Gold (owner, Nov 28 2026): charcoal-slate #3B4963 with a 1.4px light rim.
+   Daylight Clinical keeps the plain dark limb: the light copy (lgrim) stays hidden there. */
+svg.bug .lgrim{display:none}
+html[data-theme="dark"] svg.bug .lgrim{display:inline;opacity:.55}
+html[data-theme="dark"] svg.bug path.bl{stroke:#3B4963;paint-order:stroke fill}
+html[data-theme="dark"] svg.bug circle.bl{fill:#3B4963}
+html[data-theme="dark"] svg.bug .blf{fill:#3B4963;stroke:rgba(226,232,240,.55);stroke-width:1.4px;paint-order:stroke fill}
 </style>
 <script src="app-config.js"></script>
 <script>/* Endorsely affiliate tracking, website only (owner, Nov 13 2026) */
