@@ -5792,6 +5792,9 @@ function speciesMarks(b, t, id, ink, c1, c2, c3) {
 }
 function bugArt(b, cls, opt) {
   opt = opt || {};
+  /* vivid (owner, Nov 28 2026): draw a Veteran or Legend bug without the layers that wash it out (the white sheen, the rainbow iridescence,
+     the grain and the shine), so it reads as strong and as dark-lined as an Adult. Glow, creases, hairs, wings and the wardrobe stay. */
+  var vivid = !!opt.vivid;
   /* Hickory is hand-drawn, not assembled from parts: no wardrobe, no stages, no style filter. */
   if (b && b.hick && typeof learnBugSVG === "function") {
     try { return learnBugSVG().replace('class="hickbug bug"', 'class="hickbug bug ' + (cls || "") + '"'); } catch (e) {}
@@ -5815,12 +5818,12 @@ function bugArt(b, cls, opt) {
   function W(m, cx, cy) {
     if (noWing) return "";
     var out = m;
-    if (st === 5) out += m.replace(/fill="[^"]*"/g, 'fill="url(#' + id + 'i)"').replace(/opacity="[^"]*"/g, "").replace(/stroke="[^"]*"/g, 'stroke="' + ink + '"').replace(/<(path|ellipse|circle) /g, '<$1 opacity=".38" ');
+    if (st === 5 && !vivid) out += m.replace(/fill="[^"]*"/g, 'fill="url(#' + id + 'i)"').replace(/opacity="[^"]*"/g, "").replace(/stroke="[^"]*"/g, 'stroke="' + ink + '"').replace(/<(path|ellipse|circle) /g, '<$1 opacity=".38" ');
     if (wingK !== 1) out = '<g transform="translate(' + ((cx || 100) * (1 - wingK)).toFixed(1) + ' ' + ((cy || 116) * (1 - wingK)).toFixed(1) + ') scale(' + wingK + ')">' + out + '</g>';
     return out;
   }
   var under = "";
-  if (st >= 4) under += '<circle cx="100" cy="120" r="' + (st === 5 ? 96 : 84) + '" fill="url(#' + id + 'a)"/>';
+  if (st >= 4 && !vivid) under += '<circle cx="100" cy="120" r="' + (st === 5 ? 96 : 84) + '" fill="url(#' + id + 'a)"/>';
   /* Legend used to wear four to six sparkles and read as cluttered (owner, Nov 2 2026). One sparkle
      remains as a highlight; the status now comes from a slow gold halo ring and a warm pool of light
      under the bug, which read as "finished" without the glitter. */
@@ -6142,7 +6145,7 @@ function bugArt(b, cls, opt) {
     ol += '<mask id="' + mid + '" maskUnits="userSpaceOnUse" x="0" y="0" width="200" height="200" style="mask-type:alpha"><use href="#' + bg + '"/></mask>' +
       /* light from the top left, shadow pooling at the bottom: works on any blob */
       '<radialGradient id="' + id + 'sh" cx=".34" cy=".26" r=".92">' +
-        '<stop offset="0" stop-color="#ffffff" stop-opacity="' + (hi5 ? ".34" : ".2") + '"/>' +
+        '<stop offset="0" stop-color="#ffffff" stop-opacity="' + (vivid ? "0" : hi5 ? ".34" : ".2") + '"/>' +
         '<stop offset=".45" stop-color="#ffffff" stop-opacity="0"/>' +
         '<stop offset="1" stop-color="#000000" stop-opacity="' + (hi5 ? ".2" : ".13") + '"/>' +
       '</radialGradient>' +
@@ -6151,11 +6154,11 @@ function bugArt(b, cls, opt) {
         '<stop offset=".5" stop-color="#f0abfc" stop-opacity=".14"/>' +
         '<stop offset="1" stop-color="#fde68a" stop-opacity=".2"/></linearGradient>' : '');
     var det = '<rect x="0" y="0" width="200" height="200" fill="url(#' + id + 'sh)"/>';
-    if (hi5) det += '<rect x="0" y="0" width="200" height="200" fill="url(#' + id + 'ir)"/>';   /* iridescence */
+    if (hi5 && !vivid) det += '<rect x="0" y="0" width="200" height="200" fill="url(#' + id + 'ir)"/>';   /* iridescence */
     /* the shell texture is one rect through a shared turbulence filter (see index.html).
        It used to be 120 hand-placed circles per bug, which put 4,000 extra nodes on a shop grid. */
-    det += '<rect x="0" y="0" width="200" height="200" filter="url(#dbgrain' + (hi5 ? 5 : 4) + ')" opacity="' + (hi5 ? ".4" : ".34") + '"/>';
-    if (hi5) det += '<rect x="0" y="0" width="200" height="200" filter="url(#dbshine5)" opacity=".3"/>';
+    if (!vivid) det += '<rect x="0" y="0" width="200" height="200" filter="url(#dbgrain' + (hi5 ? 5 : 4) + ')" opacity="' + (hi5 ? ".4" : ".34") + '"/>';
+    if (hi5 && !vivid) det += '<rect x="0" y="0" width="200" height="200" filter="url(#dbshine5)" opacity=".3"/>';
     var sd = 0, sKey = String(b.id || b.name || "x"), q;
     for (q = 0; q < sKey.length; q++) sd = (sd * 31 + sKey.charCodeAt(q)) % 9973;
     function rnd() { sd = (sd * 1103515245 + 12345) % 2147483648; return sd / 2147483648; }
@@ -6454,7 +6457,7 @@ setTimeout(function () { try { var h = new Date().getHours(); if (h >= 2 && h < 
 function claimBug(id) { var b = bugById(id); if (owned(id) || !(b.admin ? Admin.owner : unlockMet(b))) return; Prog.d.owned = (Prog.d.owned || []).concat([id]); Prog.d.avatar = id; Prog.d.avatarTs = Date.now(); saveProg(); S.shopMsg = "Unlocked " + b.name + ". It's now your bug."; }
 function styleFilter() { var st = STYLES.filter(function (x) { return x[0] === (Prog.d.style || "classic"); })[0]; return st ? st[3] : ""; }
 var MAX_STAGE = STAGE_LV.length;   /* Legend: how every bug is shown unless it is your avatar bubble */
-function myBugArt(cls, mood, wear, stage) { cls = (cls || "") + " me"; if (myBug().hick) return bugArt(myBug(), cls, {}); var f = styleFilter(), a = bugArt(myBug(), cls, { mood: mood || myFace(), wear: wear || myWear(), stage: stage || MAX_STAGE }); return f ? a.replace('<svg class="bug', '<svg style="filter:' + f + '" class="bug') : a; }
+function myBugArt(cls, mood, wear, stage, vivid) { cls = (cls || "") + " me"; if (myBug().hick) return bugArt(myBug(), cls, {}); var f = styleFilter(), a = bugArt(myBug(), cls, { mood: mood || myFace(), wear: wear || myWear(), stage: stage || MAX_STAGE, vivid: !!vivid }); return f ? a.replace('<svg class="bug', '<svg style="filter:var(--bugline) ' + f + '" class="bug') : a; }
 function buyStyle(id) { var st = STYLES.filter(function (x) { return x[0] === id; })[0]; if (!st) return; var own = (Prog.d.styles || []).indexOf(id) >= 0 || st[2] === 0;
   if (!own) { if (sticks() < st[2]) return; Prog.d.spent = (Prog.d.spent || 0) + st[2]; Prog.d.styles = (Prog.d.styles || []).concat([id]); }
   Prog.d.style = id; saveProg(); S.shopMsg = st[1] + " style applied to your bug."; }
@@ -6543,7 +6546,7 @@ function stylesView() {
   var cur = Prog.d.style || "classic", bal = sticks();
   return '<p class="muted">Color styles change how your equipped bug looks. Buy once, use on any bug.</p><div class="shopgrid">' + STYLES.map(function (st) {
     var own = st[2] === 0 || (Prog.d.styles || []).indexOf(st[0]) >= 0, on = cur === st[0];
-    var art = bugArt(myBug(), "", { wear: myWear(), stage: myStage(), mood: myFace() }).replace('<svg class="bug', '<svg style="filter:' + st[3] + '" class="bug');
+    var art = bugArt(myBug(), "", { wear: myWear(), stage: myStage(), mood: myFace() }).replace('<svg class="bug', '<svg style="filter:var(--bugline) ' + st[3] + '" class="bug');
     return '<div class="bugcard' + (on ? " eq" : "") + '">' + art + '<strong>' + esc(st[1]) + '</strong>' + (own ? '<span class="muted small">Owned</span>' : stickTag(st[2])) + '<div class="bact">' + (on ? '<span class="eqd">In use</span>' : own ? '<button class="btn small" data-style="' + st[0] + '">Use</button>' : '<button class="btn small' + (bal >= st[2] ? '' : ' ghost') + '" data-style="' + st[0] + '"' + (bal >= st[2] ? '' : ' disabled') + '>' + (bal >= st[2] ? 'Buy' : 'Need ' + (st[2] - bal) + ' more') + '</button>') + '</div></div>';
   }).join("") + '</div>';
 }
@@ -6676,7 +6679,7 @@ function tankHTML(mine, withMore) {
   var bub = mine.map(function (b, i) {
     var on = me.id === b.id;
     return '<button class="bubble' + (on ? ' on' : '') + '" data-b3id="' + b.id + '" role="listitem" style="--d:' + ((i * 0.37) % 3).toFixed(2) + 's" ' + (on ? 'aria-current="true"' : 'data-equip="' + b.id + '"') + ' aria-label="' + (on ? (es ? "Usando " : "Using ") : (es ? "Usar " : "Use ")) + esc(b.name) + '">' +
-      '<span class="orb r-' + b.rar + '">' + (on ? myBugArt("", null, null, MAX_STAGE) : bugArt(b, "", { stage: MAX_STAGE, mood: "happy" })) + '</span><span class="bname">' + esc(b.name) + '</span>' + (on ? '<em>' + (es ? "Usando" : "Using") + '</em>' : '') + '</button>';
+      '<span class="orb r-' + b.rar + '">' + (on ? myBugArt("", null, null, MAX_STAGE, true) : bugArt(b, "", { stage: MAX_STAGE, mood: "happy", vivid: true })) + '</span><span class="bname">' + esc(b.name) + '</span>' + (on ? '<em>' + (es ? "Usando" : "Using") + '</em>' : '') + '</button>';
   }).join("");
   if (withMore) bub += '<button class="bubble more" data-shopf="bugs" role="listitem"><span class="orb"><span class="plus" aria-hidden="true">+</span></span><span class="bname">' + (es ? "Conseguir más" : "Get more bugs") + '</span></button>';
   return '<div class="pickhead"><h3>' + (es ? "Mi terrario" : "My terrarium") + '</h3><span class="muted small">' + (es ? "Toca para usarlo, mantén pulsado para ver su ficha" : "Tap to use, hold to see its card") + '</span></div>' +
@@ -9008,7 +9011,7 @@ function lbAvatar(av) {
   var face = FACES.some(function (f) { return f[0] === av.f; }) ? av.f : "happy", wear = {};
   if (av.w && typeof av.w === "object") Object.keys(av.w).forEach(function (slot) { var it = ITEMS_BY[av.w[slot]]; if (it && it.slot === slot) wear[slot] = it.id; });
   var st = STYLES.filter(function (x) { return x[0] === av.s; })[0], a = bugArt(b, "lbbug", { mood: face, wear: wear });
-  return st && st[3] ? a.replace('<svg class="bug', '<svg style="filter:' + st[3] + '" class="bug') : a;
+  return st && st[3] ? a.replace('<svg class="bug', '<svg style="filter:var(--bugline) ' + st[3] + '" class="bug') : a;
 }
 function lbView() {
   if (!SOCIAL) return "";
@@ -10937,10 +10940,35 @@ function remindCal() {
   } catch (e) {}
 }
 function themePref() { return store("theme") || "dark"; }
+/* Night Shift Gold (dark, the default) and Daylight Clinical (light). "Match my device" is turned into one of the two here, so the page always has an
+   explicit data-theme and every screen reads the same tokens; it follows the phone when the phone switches (owner, Nov 28 2026). */
+var THEME_BG = { dark: "#0A0F1E", light: "#F8FAFC" }, THEME_MQ = null;
+function themeResolve(th) {
+  if (th === "light" || th === "dark") return th;
+  try { return window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"; } catch (e) { return "dark"; }
+}
+function themeApply() {
+  var r = document.documentElement, t = themeResolve(themePref());
+  r.setAttribute("data-theme", t); r.style.colorScheme = t;
+  /* the browser / status bar colour follows the choice, not just the phone's setting */
+  try {
+    var ms = document.querySelectorAll('meta[name="theme-color"]');
+    for (var i = 0; i < ms.length; i++) { if (i === 0) { ms[i].removeAttribute("media"); ms[i].setAttribute("content", THEME_BG[t]); } else if (ms[i].parentNode) ms[i].parentNode.removeChild(ms[i]); }
+    if (!ms.length) { var m = document.createElement("meta"); m.name = "theme-color"; m.content = THEME_BG[t]; document.head.appendChild(m); }
+  } catch (e) {}
+  return t;
+}
+(function () {
+  try {
+    if (!window.matchMedia) return; THEME_MQ = matchMedia("(prefers-color-scheme: dark)");
+    var on = function () { if (themePref() !== "light" && themePref() !== "dark") { var was = document.documentElement.getAttribute("data-theme"); if (themeApply() !== was) { try { render(); } catch (e) {} } } };
+    if (THEME_MQ.addEventListener) THEME_MQ.addEventListener("change", on); else if (THEME_MQ.addListener) THEME_MQ.addListener(on);
+  } catch (e) {}
+})();
 function applySettings() {
   var s = SET(), r = document.documentElement;
   r.setAttribute("data-text", s.text); r.setAttribute("data-contrast", s.contrast ? "1" : "0"); r.setAttribute("data-motion", s.motion ? "reduce" : "full");
-  var th = themePref(); if (th === "light" || th === "dark") r.setAttribute("data-theme", th); else r.removeAttribute("data-theme");
+  themeApply();
 }
 function megaFactor() { var m = SET().megaTimer; return m === "relaxed" ? 2 : 1; }
 function megaSecs(step) { return step.secs * megaFactor(); }
@@ -11188,7 +11216,7 @@ function settingsView() {
   c = c.replace('<!--SETTABS-->', '<nav class="settabs settop" role="tablist" aria-label="Settings sections">' + tabs.map(function (x) { return '<button role="tab" data-settab="' + x[0] + '" aria-selected="' + (S.setTab === x[0]) + '">' + x[1] + '</button>'; }).join("") + '</nav>');
   // display
   c += setCard("display", "Display",
-    setRow("Theme", "", setOpts("theme", themePref(), [["dark", "Night shift (default)"], ["light", "Day shift"], ["system", "Match my device"]])) +
+    setRow("Theme", "", setOpts("theme", themePref(), [["dark", "Night Shift Gold"], ["light", "Daylight Clinical"], ["system", "Match my device"]])) +
     setRow("Look", "The Hive is the new design. Classic is the one from before.", '<div class="segs" role="radiogroup" aria-label="Look"><button class="seg" role="radio" data-hvlook="hive" aria-checked="' + hvOn() + '">The Hive</button><button class="seg" role="radio" data-hvlook="classic" aria-checked="' + !hvOn() + '">Classic</button></div>') +
     setRow("Text size", "", setOpts("text", s.text, [["normal", "Normal"], ["large", "Large"], ["xl", "Extra large"]])) +
     setRow("High contrast", "Darker text and borders.", setTog("contrast", s.contrast, "High contrast")) +
@@ -11297,7 +11325,7 @@ function setNum(k, v) { return ["dailyGoal", "nrN"].indexOf(k) >= 0 ? +v : ["ada
 function settingsClick(t, a) {
   if (a.set) {
     var k = a.set, v = a.val;
-    if (k === "theme") { store("theme", v); applySettings(); }
+    if (k === "theme") { store("theme", v); applySettings(); try { render(); } catch (e) {} }
     else if (k === "lang") { store("lang", v); if (typeof LANG_C !== "undefined") LANG_C = null; }
     else setSet(k, setNum(k, v));
     if (k === "nrN" || k === "nrMode" || k === "adaptive") S.nr = null;
@@ -34325,7 +34353,7 @@ function agxAvArt(av, cls, me) {
   if (me) { try { var mine = agxMyAv(); if (mine) av = mine; filt = typeof styleFilter === "function" ? styleFilter() : ""; } catch (e0) {} }
   if (!av) av = { b: "starter", s: 1 };   /* not sent yet (older app version): show the starter bug, not a blank circle */
   var art = "", pal = "";
-  try { var b = bugById(av.b); art = bugArt(b, "axbugsvg", { stage: av.s || 5, wear: av.w || {}, mood: av.f || "" }); if (filt) art = art.replace('<svg class="bug', '<svg style="filter:' + filt + '" class="bug'); } catch (e) { art = ""; }
+  try { var b = bugById(av.b); art = bugArt(b, "axbugsvg", { stage: av.s || 5, wear: av.w || {}, mood: av.f || "" }); if (filt) art = art.replace('<svg class="bug', '<svg style="filter:var(--bugline) ' + filt + '" class="bug'); } catch (e) { art = ""; }
   try { var p = av.p && typeof pkById === "function" ? pkById(av.p) : null; if (p) pal = '<span class="axpal">' + pkSvg(p, "", av.ps || 1) + '</span>'; } catch (e2) { pal = ""; }
   return '<span class="axav ' + (cls || "") + '" aria-hidden="true">' + art + pal + '</span>';
 }
@@ -35206,7 +35234,7 @@ function clBugArt(look) {
     var wear = {}; Object.keys((look && look.wear) || {}).forEach(function (sl) { var it = ITEMS_BY[look.wear[sl]]; if (it && it.slot === sl) wear[sl] = look.wear[sl]; });
     var face = look && look.face && FACES.some(function (f) { return f[0] === look.face; }) ? look.face : "happy";
     var a = bugArt(b, "podbug", { mood: face, wear: wear, stage: MAX_STAGE }), st = look && STYLES.filter(function (x) { return x[0] === look.style; })[0];
-    return st && st[3] ? a.replace('<svg class="bug', '<svg style="filter:' + st[3] + '" class="bug') : a;
+    return st && st[3] ? a.replace('<svg class="bug', '<svg style="filter:var(--bugline) ' + st[3] + '" class="bug') : a;
   } catch (e) { return ""; }
 }
 function clMove(r) {
@@ -39677,19 +39705,10 @@ function rushW(k) {
   return w;
 }
 
-/* a one-tap switch between the Hive look and the Classic look, top left of every screen (owner, Nov 20 2026).
-   Only the look changes: the new Bug Rush devices, calls, sounds and fixes are the same in both. */
-function lookBtn() {
-  try {
-    var tb = document.querySelector(".topbar"); if (!tb || tb.querySelector("#lookbtn") || !agreeRec()) return;
-    var b = document.createElement("button"); b.id = "lookbtn"; b.type = "button"; b.setAttribute("data-hvlook", hvOn() ? "classic" : "hive");
-    b.setAttribute("aria-label", hvOn() ? "Switch to the Classic look" : "Switch to the Hive look"); b.title = b.getAttribute("aria-label"); b.innerHTML = (hvOn() ? '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="#F5A524" d="M12 2 21 7v10l-9 5-9-5V7z"/></svg>' : '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="5" fill="currentColor"/></svg>') + '<span class="lkt">' + (hvOn() ? "Hive" : "Classic") + '</span>';
-    var acts = tb.querySelector(".tbacts"); if (acts) acts.insertBefore(b, acts.firstChild); else tb.insertBefore(b, tb.firstChild);   /* in the button row, flush with the rest (owner, Nov 20 2026) */
-  } catch (e) {}
-}
-var lookRender0 = render;
-render = function () { var r = lookRender0.apply(this, arguments); lookBtn(); return r; };
-lookBtn();
+/* The one-tap Hive / Classic switch that sat at the top of every screen was a preview aid for comparing the two looks (owner, Nov 20 2026).
+   Removed Nov 28 2026 now that Night Shift Gold and Daylight Clinical are locked in. Settings > Display > Look still switches the look.
+   This only clears a button left on screen by an older copy of the page. */
+(function () { try { var b = document.getElementById("lookbtn"); if (b && b.parentNode) b.parentNode.removeChild(b); } catch (e) {} })();
 
 /* ===== Fahrenheit everywhere (owner, Nov 20 2026: "change all the Celsius to Fahrenheit") =====
    Temperatures written in Celsius are shown in Fahrenheit as the screen is drawn, wherever the text came from (drug
