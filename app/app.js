@@ -3135,21 +3135,48 @@ function heroHTML() {
   return '<section class="hero ha' + (hol ? ' hol hol-' + hol.id + (hol.base ? ' hol-' + hol.base : '') : '') + '">' + (hol ? holFx(hol) : '') + '<div class="hatx lr-' + rr + '">' + (rr === "legendary" ? '<svg class="lcrown" viewBox="0 0 64 44" aria-hidden="true"><path d="M4 40 L8 12 L22 26 L32 4 L42 26 L56 12 L60 40Z" fill="#fbbf24" stroke="#92400e" stroke-width="3" stroke-linejoin="round"/><circle cx="32" cy="6" r="4" fill="#f43f5e"/><circle cx="8" cy="12" r="3.5" fill="#38bdf8"/><circle cx="56" cy="12" r="3.5" fill="#38bdf8"/><rect x="6" y="34" width="52" height="6" rx="2" fill="#f59e0b"/></svg>' : '') + '<h1 class="logo">Drug<span>Bug</span></h1>' + spk + '</div>' + (typeof funOn === "function" && !funOn() ? '' : '<button class="hbub" data-goshop="1" aria-label="' + lbl + '"><span class="orb">' + myBugArt("herobug", null, hol ? holWear(hol) : null, myStage()) + (typeof pkSide === "function" ? pkSide("hero") : "") + '</span>' + chip + '</button>') + tag + (hol ? holBanner(hol) : '') + '</section>';
 }
 function topLayerOpen() { return ["sbdlg", "accdlg", "rvdlg", "pwdlg", "wdwdlg", "evodlg", "pkdlg", "chemdlg", "tourdlg", "rdlg", "idlg"].some(function (i) { var el = document.getElementById(i); return el && !el.hidden; }); }
-/* Android back button: closes the top layer or goes back one step; returns true when it handled it */
-window.drugbugBack = function () {
+/* Back (Android back button, and the iPhone app's left-edge swipe through window.DrugBugBack, Nov 28 2026).
+   Closes the topmost thing that is open, highest layer first, or steps back one screen. Returns true when it
+   closed or went back, false when it is already on the home screen with nothing open, so the native side
+   knows whether to do anything itself. Each layer closes through its own close function, the same one its
+   close button and Escape key use. */
+function appBack() {
   try {
-    var layers = [["sbdlg", function () { sbIntroClose(); }], ["idlg", function () { if (typeof closeIdeas === "function") closeIdeas(); }], ["rdlg", function () { var el = document.getElementById("rdlg"); if (typeof closeReport === "function") closeReport(); else el.hidden = true; }], ["wdwdlg", function () { if (typeof wdwClose === "function") wdwClose(); }], ["evodlg", function () { if (typeof evoClose === "function") evoClose(); }], ["pkdlg", function () { if (typeof pkClose === "function") pkClose(); }], ["chemdlg", function () { if (typeof chem3Close === "function") chem3Close(); }], ["pwdlg", function () { if (typeof closePaywall === "function") closePaywall(); }], ["tourdlg", function () { if (typeof tourClose === "function") tourClose(); }]];
+    var shown = function (id) { var el = document.getElementById(id); return !!(el && !el.hidden); };
+    var wipe = function (id) { var el = document.getElementById(id); if (el) { el.hidden = true; el.innerHTML = ""; } };
+    /* the layers that sit above every dialog: secret-bug reveal, lore card, 3D bug, start-up notices, drug preview */
+    var sw = document.getElementById("secwin"); if (sw) { sw.click(); return true; }   /* a backdrop tap closes it without equipping */
+    if (shown("loredlg")) { wipe("loredlg"); return true; }
+    if (typeof B3 !== "undefined" && B3.open) { bug3dClose(); return true; }
+    var nb = document.querySelector(".otanews"); if (nb) { nb.click(); return true; }  /* what's-new and announcement boxes close on a backdrop tap */
+    if (shown("pvdlg")) { pvClose(); return true; }
+    if (typeof AGX !== "undefined" && AGX.roster) { agxRosterClose(); return true; }
+    if (S.mupop) { S.mupop = false; render(); return true; }
+    var layers = [["sbdlg", function () { sbIntroClose(); }], ["idlg", function () { if (typeof closeIdeas === "function") closeIdeas(); }], ["rdlg", function () { var el = document.getElementById("rdlg"); if (typeof closeReport === "function") closeReport(); else el.hidden = true; }], ["wdwdlg", function () { if (typeof wdwClose === "function") wdwClose(); }], ["evodlg", function () { if (typeof evoClose === "function") evoClose(); }], ["pkdlg", function () { if (typeof pkClose === "function") pkClose(); }], ["chemdlg", function () { if (typeof chem3Close === "function") chem3Close(); }], ["pwdlg", function () { if (typeof closePaywall === "function") closePaywall(); }], ["tourdlg", function () { if (typeof tourClose === "function") tourClose(); }],
+      ["plandlg", function () { planClose(); }], ["anadlg", function () { if (typeof ANA !== "undefined") ANA.open = false; wipe("anadlg"); }],
+      ["cidlg", function () { wipe("cidlg"); }], ["evwdlg", function () { wipe("evwdlg"); }], ["accdlg", function () { wipe("accdlg"); }], ["rvdlg", function () { wipe("rvdlg"); }]];
     for (var i = 0; i < layers.length; i++) { var el = document.getElementById(layers[i][0]); if (el && !el.hidden) { layers[i][1](); return true; } }
     if (document.body.classList.contains("printing") && typeof closePrint === "function") { closePrint(); return true; }
-    if (S.sheet) { closeSheet(); return true; }
+    /* side panes sit above the drug sheet */
+    if (typeof AGX !== "undefined" && AGX.open) { closeAgency(); return true; }
+    if (typeof CL !== "undefined" && CL.open) { closeClassPane(); return true; }
     if (P.open) { closeProto(); return true; }
+    /* the drug sheet: from the Wormhole, Chemistry or Allied tab back to the drug's main page first, then closed */
+    if (S.sheet && S.dtab && S.dtab !== "main") { S.dtab = "main"; drawSheet(); return true; }
+    if (S.sheet) { closeSheet(); return true; }
+    var cur = document.querySelectorAll(".curious .curbox"); if (cur.length) { for (var c = 0; c < cur.length; c++) cur[c].remove(); return true; }
+    /* inside a screen: press its own back control, so it goes wherever that screen's back goes */
+    var bk = document.querySelectorAll('#app .subback, #app .backbtn, #app [data-act$="back"]');
+    for (var b = 0; b < bk.length; b++) if (bk[b].offsetParent !== null && !bk[b].disabled) { bk[b].click(); return true; }
     if (S.view === "level" && S.tab && S.tab !== "hub") { S.tab = "hub"; S.scen = null; S.fc = null; render(); window.scrollTo(0, 0); return true; }
     if (S.view === "everyday" && S.evTab) { S.evTab = null; render(); window.scrollTo(0, 0); return true; }
     if (S.view === "field" && S.fmTab) { S.fmTab = null; render(); window.scrollTo(0, 0); return true; }
     if (S.view !== "home") { go("home"); return true; }
   } catch (x) {}
   return false;
-};
+}
+window.drugbugBack = appBack;
+window.DrugBugBack = function () { return appBack() === true; };
 
 /* ---------- DrugDex: named-field records, database sync, DrugDex view, sources ---------- */
 // Every monograph is a record of named fields. The 17-section grid the older views use (d.s) is derived from the record.
@@ -16980,8 +17007,9 @@ function c3Shade(hex, f) { /* f > 0 lightens toward white, f < 0 darkens toward 
   function m(c) { return Math.round(f > 0 ? c + (255 - c) * f : c * (1 + f)); } return "rgb(" + m(r) + "," + m(gg) + "," + m(b) + ")"; }
 function chem3Draw(cvIn) {
   var cv = cvIn || chemdlg.querySelector("canvas"); if (!cv || !C3.mol) return;
-  var dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight;
-  if (cv.width !== Math.round(W * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+  /* capped at 2x (Nov 28 2026): Pro iPhones report 3, which drew 2.25 times the pixels for no visible gain */
+  var dpr = Math.min(2, window.devicePixelRatio || 1), W = cv.clientWidth, H = cv.clientHeight;
+  if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
   var g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
   var M = C3.mol, r = C3.rot, sc = Math.min(W, H) / (1.85 * M.R) * C3.zoom, D = M.R * 4;
   var S2 = M.P.map(function (p) { var x = r[0] * p[0] + r[1] * p[1] + r[2] * p[2], y = r[3] * p[0] + r[4] * p[1] + r[5] * p[2], z = r[6] * p[0] + r[7] * p[1] + r[8] * p[2], f = D / (D - z); return [W / 2 + x * sc * f, H / 2 - y * sc * f, z, f]; });
@@ -17026,7 +17054,26 @@ function chem3Draw(cvIn) {
   });
   g.globalAlpha = 1;
 }
-function chem3Loop() { cancelAnimationFrame(C3.raf); if (chemdlg.hidden) return; if (C3.spin) C3.rot = c3Mul(c3Rot(0, .008), C3.rot); chem3Draw(); C3.raf = requestAnimationFrame(chem3Loop); }
+/* Only draws while something changes (Nov 28 2026). Dragging, pinching, zoom and the buttons redraw on their own,
+   so the frame loop runs only while the model spins, the viewer is open and its canvas is on screen; it stops
+   otherwise, and the Spin button or the canvas scrolling back into view starts it again. */
+function c3Watch(cv, restart) {
+  if (!cv || cv._c3io || typeof IntersectionObserver !== "function") return;
+  try {
+    cv._c3vis = true;
+    cv._c3io = new IntersectionObserver(function (es) { var was = cv._c3vis; cv._c3vis = es[es.length - 1].isIntersecting; if (cv._c3vis && !was) restart(); });
+    cv._c3io.observe(cv);
+  } catch (e) { cv._c3io = null; cv._c3vis = true; }
+}
+function c3Unwatch(root) { try { var cv = root && root.querySelector("canvas"); if (cv && cv._c3io) { cv._c3io.disconnect(); cv._c3io = null; } } catch (e) {} }
+function chem3Loop() {
+  cancelAnimationFrame(C3.raf); C3.raf = 0;
+  if (chemdlg.hidden || !C3.mol) return;
+  var cv = chemdlg.querySelector("canvas"), vis = !cv || cv._c3vis !== false;
+  if (C3.spin && vis) C3.rot = c3Mul(c3Rot(0, .008), C3.rot);
+  if (vis) chem3Draw();
+  if (C3.spin && vis) C3.raf = requestAnimationFrame(chem3Loop);
+}
 function chem3Open(id) {
   var m = chemOf(id); if (!m) return; var es = typeof lang === "function" && lang() === "es";
   C3.mol = chem3Build(m); C3.rot = c3Rot(-.35, .5); C3.zoom = 1; C3.pts = {}; C3.spin = !(SET().motion || (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches));
@@ -17047,6 +17094,7 @@ function chem3Open(id) {
   });
   ["pointerup", "pointercancel"].forEach(function (k) { cv.addEventListener(k, function (e) { delete C3.pts[e.pointerId]; }); });
   cv.addEventListener("wheel", function (e) { e.preventDefault(); C3.zoom = Math.max(.4, Math.min(4, C3.zoom * (e.deltaY < 0 ? 1.1 : .9))); chem3Draw(); }, { passive: false });
+  c3Watch(cv, chem3Loop);
   chem3Loop();
 }
 
@@ -17091,6 +17139,7 @@ function pvOpen(id) {
 function pvLoop() {
   cancelAnimationFrame(HPV.raf); if (pvdlg.hidden || !HPV.mol) return;
   var cv = pvdlg.querySelector(".pvmol canvas"); if (!cv) return;
+  c3Watch(cv, pvLoop); if (cv._c3vis === false) return;   /* scrolled out of the box: the observer restarts it */
   var still = typeof SET === "function" && SET().motion || (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
   if (!still && typeof c3Mul === "function") HPV.rot = c3Mul(c3Rot(0, .012), HPV.rot);
   var sv = { mol: C3.mol, rot: C3.rot, zoom: C3.zoom }; C3.mol = HPV.mol; C3.rot = HPV.rot; C3.zoom = 1.05;
@@ -17098,7 +17147,7 @@ function pvLoop() {
   C3.mol = sv.mol; C3.rot = sv.rot; C3.zoom = sv.zoom;
   if (!still) HPV.raf = requestAnimationFrame(pvLoop);
 }
-function pvClose() { cancelAnimationFrame(HPV.raf); pvdlg.hidden = true; pvdlg.innerHTML = ""; document.body.classList.remove("pvon"); HPV.id = null; }
+function pvClose() { cancelAnimationFrame(HPV.raf); c3Unwatch(pvdlg); pvdlg.hidden = true; pvdlg.innerHTML = ""; document.body.classList.remove("pvon"); HPV.id = null; }
 pvdlg.addEventListener("click", function (e) {
   if (e.target === pvdlg) return pvClose();
   var b = e.target.closest && e.target.closest("[data-pv]"); if (!b) return;
@@ -17123,13 +17172,13 @@ document.addEventListener("pointerdown", function (e) {
 document.addEventListener("pointermove", function (e) { if (HPV.t && Math.hypot(e.clientX - HPV.x, e.clientY - HPV.y) > 8) clearTimeout(HPV.t); }, true);
 document.addEventListener("click", function (e) { if (HPV.fired && Date.now() - HPV.fired < 700) { e.preventDefault(); e.stopPropagation(); HPV.fired = 0; } }, true);
 document.addEventListener("contextmenu", function (e) { var el = pvTarget(e.target); if (!el) return; e.preventDefault(); clearTimeout(HPV.t); pvOpen(el.getAttribute("data-drug")); });
-function chem3Close() { cancelAnimationFrame(C3.raf); chemdlg.hidden = true; chemdlg.innerHTML = ""; C3.mol = null; }
+function chem3Close() { cancelAnimationFrame(C3.raf); C3.raf = 0; c3Unwatch(chemdlg); chemdlg.hidden = true; chemdlg.innerHTML = ""; C3.mol = null; }
 document.addEventListener("click", function (e) {
   var o = e.target.closest && e.target.closest("[data-chem3d]");
   if (o) { e.preventDefault(); e.stopPropagation(); chem3Open(o.getAttribute("data-chem3d")); return; }
   var t = e.target.closest && e.target.closest("[data-c3]");
   if (t && chemdlg.contains(t)) { e.preventDefault(); e.stopPropagation(); var k = t.getAttribute("data-c3");
-    if (k === "close") chem3Close(); else if (k === "spin") C3.spin = !C3.spin; else if (k === "in") C3.zoom = Math.min(4, C3.zoom * 1.25); else if (k === "out") C3.zoom = Math.max(.4, C3.zoom / 1.25); else if (k === "reset") { C3.rot = c3Rot(-.35, .5); C3.zoom = 1; } else if (k === "h") { C3.H = !C3.H; try { localStorage.setItem("dbC3H", C3.H ? "1" : "0"); } catch (er) {} var es2 = typeof lang === "function" && lang() === "es"; t.classList.toggle("on", C3.H); t.setAttribute("aria-checked", C3.H); t.textContent = (es2 ? "Hidrógenos: " : "Hydrogens: ") + (C3.H ? (es2 ? "sí" : "on") : (es2 ? "no" : "off")); var nt = chemdlg.querySelector(".c3hn"); if (nt) nt.textContent = C3.H ? (es2 ? "hidrógenos en blanco" : "hydrogens in white") : (es2 ? "hidrógenos ocultos" : "hydrogens hidden"); }
+    if (k === "close") chem3Close(); else if (k === "spin") { C3.spin = !C3.spin; if (C3.spin) { chem3Loop(); return; } } else if (k === "in") C3.zoom = Math.min(4, C3.zoom * 1.25); else if (k === "out") C3.zoom = Math.max(.4, C3.zoom / 1.25); else if (k === "reset") { C3.rot = c3Rot(-.35, .5); C3.zoom = 1; } else if (k === "h") { C3.H = !C3.H; try { localStorage.setItem("dbC3H", C3.H ? "1" : "0"); } catch (er) {} var es2 = typeof lang === "function" && lang() === "es"; t.classList.toggle("on", C3.H); t.setAttribute("aria-checked", C3.H); t.textContent = (es2 ? "Hidrógenos: " : "Hydrogens: ") + (C3.H ? (es2 ? "sí" : "on") : (es2 ? "no" : "off")); var nt = chemdlg.querySelector(".c3hn"); if (nt) nt.textContent = C3.H ? (es2 ? "hidrógenos en blanco" : "hydrogens in white") : (es2 ? "hidrógenos ocultos" : "hydrogens hidden"); }
     chem3Draw(); return; }
   if (e.target === chemdlg) chem3Close();
 }, true);
