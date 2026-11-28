@@ -724,7 +724,7 @@ function go(view, opts) {
   if ((S.view === "flevels" || S.view === "field" || (S.view === "level" && isF(S.level))) && typeof fmUnlocked === "function" && !fmUnlocked()) { S.view = "home"; view = "home"; } /* Field Medic is hidden until a code is redeemed */
   fixTab();
   Admin.on = view === "admin"; if (view === "level") { store("lastLevel", S.level); S.lvWheelFor = null; S.obI = null; }   /* the level wheel reopens on the bug you just picked (owner, Nov 19 2026) */
-  var h = view === "home" ? "" : view === "admin" ? "admin" : view === "classes" ? "classes" : view === "settings" ? "settings" : view === "stats" ? "stats" : view === "terrarium" ? "terrarium" : view === "levels" ? "prehospital" : view === "flevels" ? "fieldmedic" : view === "nlevels" ? "nursing" : view === "mlevels" ? "medschool" : view === "ilevels" ? "imaging" : view === "alevels" ? "allied" : view === "rxlevels" ? "pharmacy" : view === "everyday" ? "everyday" : view === "beginner" ? "beginner" : view === "field" ? "field" : view === "gen" ? "general" : view === "easy" ? "easy" : S.level;
+  var h = view === "home" || view === "learn" || view === "practice" ? "" : view === "admin" ? "admin" : view === "classes" ? "classes" : view === "settings" ? "settings" : view === "stats" ? "stats" : view === "terrarium" ? "terrarium" : view === "levels" ? "prehospital" : view === "flevels" ? "fieldmedic" : view === "nlevels" ? "nursing" : view === "mlevels" ? "medschool" : view === "ilevels" ? "imaging" : view === "alevels" ? "allied" : view === "rxlevels" ? "pharmacy" : view === "everyday" ? "everyday" : view === "beginner" ? "beginner" : view === "field" ? "field" : view === "gen" ? "general" : view === "easy" ? "easy" : S.level;
   try { history.replaceState(null, "", h ? "#" + h : location.pathname); } catch (e) {}
   render(); window.scrollTo(0, 0);
 }
@@ -747,9 +747,148 @@ function topbar() {
   if (S.view === "beginner") c += '<span>/</span><span>' + bgTrackName() + '</span>';
   if (S.view === "everyday") c += '<span>/</span>' + (S.evTab ? '<button data-evtab="">Everyday Health</button>' : '<span>Everyday Health</span>');
   var extra = (!SOCIAL ? '' : '<button class="theme-btn" data-go="classes"' + (S.view === "classes" ? ' aria-current="page"' : '') + '>Classes</button>') + (Admin.can ? '<button class="theme-btn admin-btn" data-go="admin"' + (S.view === "admin" ? ' aria-current="page"' : '') + '><span class="lg">Control Center</span><span class="sm">Control Center</span></button>' : '');
+  if (hvOn()) {
+    /* Hive look: wordmark, stick balance and your bug. Search, music, settings, your plan and the rest are in the menu behind your bug. */
+    var sn = sticks(), iap = typeof iapAvailable === "function" && iapAvailable(), hol0 = null, newAnn = false;
+    try { hol0 = S.view === "home" && typeof holToday === "function" ? holToday() : null; } catch (e0) {}
+    try { newAnn = typeof ANN !== "undefined" && ANN.items && ANN.items.length > 0 && ANN.latest > (store("annSeen") || 0); } catch (e1) {}
+    var pill = fun ? '<button class="tbpill tbsticks' + (iap ? ' hasplus' : '') + '" data-goshop="1" data-shopf="sticks" aria-label="' + sn + ' sticks. Get more sticks" title="Get Sticks">' + stickIcon(18) + '<strong>' + sn.toLocaleString() + '</strong>' + (iap ? '<span class="tbplus" aria-hidden="true">+</span>' : '') + '</button>' : '';
+    var avIn = fun ? myBugArt("tbavart", null, hol0 ? holWear(hol0) : null, myStage(), true) : '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 12a4.500 4.500 0 1 0 0-9 4.500 4.500 0 0 0 0 9zm0 2c-4 0-8 2-8 5v2h16v-2c0-3-4-5-8-5z"/></svg>';
+    var av = '<button class="tbav' + (fun ? '' : ' plain') + (S.menu ? ' on' : '') + '" data-act="tbmenu" aria-haspopup="menu" aria-expanded="' + !!S.menu + '" aria-label="Your menu: search, music, settings and more' + (newAnn ? ' (updates waiting)' : '') + '"><span class="tbavin">' + avIn + '</span>' + (newAnn ? '<i class="tbdot" aria-hidden="true"></i>' : '') + '</button>';
+    c += '</nav><span class="spacer"></span><div class="tbacts">' + pill + av + '</div>' + (S.menu ? tbMenuHTML(extra) : '') + '</div>';
+  } else {
   c += '</nav><span class="spacer"></span><div class="tbacts">' + (stickChip() || tierChip()) + '<span class="tbx">' + extra + '</span><button class="theme-btn srch-btn" data-act="gsearch" aria-label="Search all drugs" title="Search all drugs"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>' + staffBtn() + '<button class="theme-btn menu-btn" data-act="tbmenu" aria-expanded="' + !!S.menu + '" aria-label="More">More</button>' + musicBtn() + gearBtn() + (typeof funOn === "function" && !funOn() ? '' : '<button class="tbsticks' + (typeof iapAvailable === "function" && iapAvailable() ? ' hasplus' : '') + '" data-goshop="1" data-shopf="sticks" aria-label="' + sticks() + ' sticks. Get more sticks" title="Get Sticks">' + stickIcon(18) + (typeof iapAvailable === "function" && iapAvailable() ? '<span class="tbplus" aria-hidden="true">+</span>' : '') + '<strong>' + sticks().toLocaleString() + '</strong></button>') + '</div>' + (S.menu ? '<div class="tbmenu" role="menu">' + extra + '' + (typeof stxBtn === "function" ? stxBtn() : '') + '<button class="theme-btn" data-idea="1">Send an idea</button></div>' : '') + '</div>';
+  }
   return c + (typeof muPop === "function" ? muPop() : "") + backRow();
 }
+/* ===== The new Home, header and tab bar (owner, Nov 28 2026) =====
+   A flagship-iPhone hierarchy for the Hive look: a compact header (wordmark, stick balance, your bug), one bold Continue card, three
+   at-a-glance numbers and today's 5-minute DrugBug, then everything that used to be on Home. The bottom bar is five tabs, Home, Learn,
+   Practice, Terrarium and Ranks, and Learn and Practice sort every existing tool (they are built from the same tool list the level
+   menu uses, so each one opens exactly as it always did). The Classic look keeps its old header and Home. Plain ES5. */
+var HV_ROUTE_NAME = { ph: "Prehospital", rn: "Nursing", md: "Medical School", im: "Imaging", ah: "Allied Health", rx: "Pharmacy", fm: "Field Medic" };
+var HV_START_VIEW = { ph: "levels", fm: "flevels", rn: "nlevels", md: "mlevels", im: "ilevels", ah: "alevels", rx: "rxlevels", ev: "beginner" };
+/* the level the tools on Learn and Practice belong to: the one you last opened, else the one you picked first */
+function hvLevelKey() {
+  var ll = store("lastLevel"); if (ll && levelObj(ll)) return ll;
+  var sl = Prog.d && Prog.d.startLevel; if (sl && levelObj(sl)) return sl;
+  return "paramedic";
+}
+function hvHeroData() {
+  var ll = store("lastLevel"), lo = ll && levelObj(ll);
+  if (!lo) return { has: false, kicker: "Get started", title: "Pick your path", sub: "Choose the level you study for and your bug starts to grow.", pct: 0, cap: "Nothing studied yet" };
+  var ids = [], idx = 0, tot = 1;
+  try { ids = visibleIds(scopeFor(ll).ids).filter(function (id) { return DB.drugs[id]; }); } catch (e) { ids = []; }
+  try { idx = levelIdx(ll); tot = levelsOf(ll).length; } catch (e2) {}
+  var full = ids.filter(function (id) { return mastery(id) === "mastered"; }).length;
+  return { has: true, key: ll, kicker: HV_ROUTE_NAME[routeOfLevel(ll)] || "Your path", title: lo.name, sub: scopeTag(ll, idx, tot), pct: ids.length ? masteryPct(ids) : 0, cap: full + " of " + ids.length + " drugs mastered" };
+}
+/* the bold card at the top of Home: the track you are on, how far along it is, and one big way back in */
+function homeHero2(HOL) {
+  var d = hvHeroData(), fun = typeof funOn !== "function" || funOn(), st = myStage(), b = myBug(), xl = xpLevel((Prog.d && Prog.d.xp) || 0);
+  var mas = fun ? '<button class="hv2mas" data-goshop="1" aria-label="Your bug, ' + esc(b.name) + ', ' + esc(stageName(st)) + '. Open the Terrarium.">' + myBugArt("herobug", null, HOL ? holWear(HOL) : null, st, true) +
+    (typeof pkSide === "function" ? pkSide("hero") : "") + '<span class="hv2stage st' + st + '">' + esc(stageName(st)) + '</span></button>' : '';
+  var cta = d.has ? '<button class="hv2go" data-level="' + esc(d.key) + '">Continue<span aria-hidden="true">&rsaquo;</span></button>'
+    : '<button class="hv2go" data-go="' + (HV_START_VIEW[Prog.d.role] || "gen") + '">Start studying<span aria-hidden="true">&rsaquo;</span></button>';
+  return '<section class="hv2hero' + (fun ? '' : ' nobug') + (HOL ? ' hol hol-' + HOL.id + (HOL.base ? ' hol-' + HOL.base : '') : '') + '" aria-label="Continue studying">' + (HOL ? holFx(HOL) : '') +
+    mas + '<div class="hv2body"><span class="hv2k">' + esc(d.kicker) + '</span><h1 class="hv2t">' + esc(d.title) + '</h1><span class="hv2s">' + esc(d.sub) + '</span>' +
+    '<div class="hv2bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + d.pct + '" aria-label="Drugs mastered"><i style="width:' + d.pct + '%"></i></div>' +
+    '<span class="hv2cap"><span>' + esc(d.cap) + '</span>' + (fun ? '<span>Level ' + xl.lv + '</span>' : '') + '</span>' + cta + '</div></section>' + (HOL ? holBanner(HOL) : '');
+}
+/* three numbers, right under the card */
+function homeStats2() {
+  var L = {}; try { L = dashLocal(); } catch (e) {}
+  var wk = 0; try { wk = (AGX.data && AGX.data.me && AGX.data.me.pts != null) ? AGX.data.me.pts : myWeekXp(); } catch (e2) {}
+  var str = 0, cd = 0, owed = 0, fun = typeof funOn !== "function" || funOn();
+  try { loginTick(); } catch (e5) {}
+  try { str = liveStreak(); } catch (e3) {}
+  try { cd = loginCycleDay(loginDays()); owed = loginOwed().length; } catch (e4) {}
+  var tile = function (v, lab, foot, cls, attr) { return '<' + (attr ? 'button' : 'div') + ' class="hv2st' + (cls ? ' ' + cls : '') + '"' + (attr || '') + '><b>' + esc(String(v)) + '</b><span>' + esc(lab) + '</span>' + (foot ? '<em>' + foot + '</em>' : '') + '</' + (attr ? 'button' : 'div') + '>'; };
+  return '<section class="hv2stats" aria-label="At a glance">' + tile(L.acc == null ? "—" : L.acc + "%", "Accuracy", "") + tile(num0(wk), "Weekly points", "") +
+    (fun ? tile(str, "Day streak", (owed ? 'Check-in ready' : 'Check-in ' + (cd || 1) + '/30'), owed ? 'ready' : '', ' data-act="logintoggle"') : tile(str, "Day streak", "")) + '</section>';
+}
+/* today's 5-minute DrugBug, one tap away */
+function homeToday2() {
+  var done = dailyDone(), gn = typeof growNudge === "function" ? growNudge(200) : null, str = 0; try { str = liveStreak(); } catch (e) {}
+  return '<section class="hv2today"><div class="hv2tx"><span class="eyebrow">Today</span><strong>Today\'s 5-min DrugBug</strong><span class="muted small">' +
+    (done ? 'Done for today. Do another one if you like.' : gn ? esc(gn.text) : '10 quick questions' + (str ? ' · keeps your ' + str + '-day streak' : '')) + '</span></div>' +
+    '<button class="btn' + (done ? ' ghost' : '') + '" data-sess="daily">' + (done ? 'Again' : 'Start') + '</button></section>';
+}
+/* ---------- Learn and Practice ---------- */
+var HV_PRACTICE = ["qs", "rush", "games", "cards", "vlab", "scene", "nbug", "progress"];
+function hvTools(lv) {
+  var v0 = S.view, l0 = S.level, L = [];
+  try { S.view = "level"; S.level = lv; L = tabList(); } catch (e) { L = []; } finally { S.view = v0; S.level = l0; }
+  return L;
+}
+function hvGroupOf(k) { for (var i = 0; i < HUB_GROUPS.length; i++) if (HUB_GROUPS[i][1].indexOf(k) >= 0) return HUB_GROUPS[i][0]; return "More tools"; }
+function hvFirstSentence(t) { t = String(t || ""); var i = t.search(/[.!?](\s|$)/); return i > 0 ? t.slice(0, i + 1) : t; }
+function hvCard(k, title, desc, attr, svg, cls) {
+  var lock = ""; try { if (k && typeof proLocked === "function" && proLocked(k)) lock = '<span class="lockpill">' + (tabTier(k) === "pro" ? "Pro" : "Plus") + '</span>'; } catch (e) {}
+  return '<button class="hv2card' + (lock ? ' locked' : '') + (cls ? ' ' + cls : '') + '" ' + attr + '><span class="hv2ic" aria-hidden="true">' + (svg || (k && ICO[k] ? icon(k) : icon_("qs"))) + '</span><span class="hv2ct"><b>' + esc(title) + lock + '</b><small>' + esc(desc) + '</small></span><span class="hv2chev" aria-hidden="true">&rsaquo;</span></button>';
+}
+function hvPageHead(title, sub) {
+  var lv = hvLevelKey(), lo = levelObj(lv), rc = routeOfLevel(lv), view = HV_START_VIEW[rc] || "levels";
+  return '<header class="hv2ph"><h1>' + esc(title) + '</h1><p class="muted">' + esc(sub) + '</p><div class="hv2for"><span>Tools for <b>' + esc(lo ? lo.name : "your level") + '</b></span><button class="linkish" data-go="' + view + '">Change level</button></div></header>';
+}
+var HV_ICO = {
+  gen: '<path d="M4 4.500A1.500 1.500 0 0 1 5.500 3H20v15H5.500A1.500 1.500 0 0 0 4 19.500z"/><path d="M4 19.500A1.500 1.500 0 0 0 5.500 21H20"/><path d="M9 8h7M9 11.500h5"/>',
+  hive: '<path d="M12 2.500 20 7v10l-8 4.500L4 17V7z"/><path d="M12 9v6M9 10.500 12 12l3-1.500"/>',
+  ev: '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/>',
+  qs: '<circle cx="12" cy="12" r="9"/><path d="M9.500 9.500a2.500 2.500 0 1 1 3.500 2.300c-.7.4-1 .9-1 1.700"/><path d="M12 17h.01"/>',
+  bg: '<path d="M12 3l2.600 5.300 5.900.9-4.300 4.100 1 5.800L12 16.400 6.800 19.100l1-5.800L3.500 9.200l5.900-.9z"/>'
+};
+function learnView() {
+  var lv = hvLevelKey(), T = hvTools(lv), pr = {}, sections = [], by = {}, fun = typeof funOn !== "function" || funOn();
+  HV_PRACTICE.forEach(function (k) { pr[k] = 1; });
+  var has = function (k) { return T.some(function (x) { return x[0] === k; }); };
+  var tab = function (k) { var x = T.filter(function (t) { return t[0] === k; })[0]; return x ? hvCard(k, x[1], HUB_SHORT[k] || hvFirstSentence(x[2]), 'data-hvtab="' + k + '"') : ""; };
+  var first = hvCard("", "BugDex", "Every medication in plain language: search, browse or A to Z.", S.pointGo === "gen" ? 'data-startlearn="gen"' : 'data-go="gen"', icon_("gen"), "feat") +
+    hvCard("", "The Hive", "Every drug in your level, one cell each. Right answers fill it with honey.", 'data-hvgo="hive"', icon_("hive"), "feat") +
+    (has("calls") ? tab("calls").replace('class="hv2card', 'class="hv2card feat') : "") + (has("anatomy") ? tab("anatomy").replace('class="hv2card', 'class="hv2card feat') : "");
+  T.forEach(function (x) {
+    var k = x[0]; if (pr[k] || k === "calls" || k === "anatomy") return;
+    var g = hvGroupOf(k); if (g === "Study and practice") return;
+    (by[g] = by[g] || []).push(hvCard(k, x[1], HUB_SHORT[k] || hvFirstSentence(x[2]), 'data-hvtab="' + k + '"'));
+  });
+  ["Look it up", "Your field", "Field care", "Plants, foods and supplements", "Yours", "More tools"].forEach(function (g) { if (by[g] && by[g].length) sections.push('<h2 class="hv2sec">' + esc(g) + '</h2><div class="hv2list">' + by[g].join("") + '</div>'); });
+  var paths = '<h2 class="hv2sec">Study by role</h2><div class="hv2list">' + hvCard("", "Everyday Health", "Medicines and your body, no clinical background needed.", S.pointGo === "everyday" ? 'data-startlearn="everyday"' : 'data-go="everyday"', icon_("ev")) +
+    hvCard("", bgTrackName(), BG_LINE, 'data-go="beginner"', icon_("bg")) +
+    HOME_ROUTES.map(function (r) { return hvCard("", r[2], hvFirstSentence(r[3]), S.pointGo === r[1] ? 'data-startlearn="' + r[1] + '"' : 'data-go="' + r[1] + '"', FPATH_ICO[r[0]] ? '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + FPATH_ICO[r[0]] + '</svg>' : ''); }).join("") + '</div>';
+  return topbar() + '<div class="hv2page" data-hvpage="learn">' + hvPageHead("Learn", "Look things up and see how they work.") + homeSearch() + '<h2 class="hv2sec">Start here</h2><div class="hv2list">' + first + '</div>' + sections.join("") + paths + '</div>';
+}
+function icon_(k) { return '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + HV_ICO[k] + '</svg>'; }
+function practiceView() {
+  var lv = hvLevelKey(), T = hvTools(lv), items = [];
+  HV_PRACTICE.forEach(function (k) { var x = T.filter(function (t) { return t[0] === k; })[0]; if (x) items.push(hvCard(k, x[1], HUB_SHORT[k] || hvFirstSentence(x[2]), 'data-hvtab="' + k + '"')); });
+  return topbar() + '<div class="hv2page" data-hvpage="practice">' + hvPageHead("Practice", "Questions, calls and games that make it stick.") + homeToday2() +
+    '<h2 class="hv2sec">Train</h2><div class="hv2list">' + items.join("") + '</div>' +
+    '<h2 class="hv2sec">Compete</h2><div class="hv2list">' + hvCard("", "Scoreboard", "Top Players, National and your team this week.", 'data-hvgo="stats"', '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>') + '</div></div>';
+}
+/* a tool card opens that tool in your level, through the real tile so every lock, reset and screen works as it always did */
+document.addEventListener("click", function (e) {
+  var t = e.target.closest && e.target.closest("[data-hvtab]"); if (!t) return;
+  e.preventDefault(); var k = t.getAttribute("data-hvtab"), lv = hvLevelKey();
+  go("level", { level: lv });
+  var b = document.querySelector('.hubtile[data-tab="' + k + '"]') || document.querySelector('[data-tab="' + k + '"]');
+  if (b) b.click(); else { S.tab = k === "qs" ? "prep" : k; render(); }
+  window.scrollTo(0, 0);
+});
+/* tap away from the menu to close it */
+document.addEventListener("click", function (e) {
+  if (!S.menu) return; var t = e.target; if (t.closest && (t.closest(".tbmenu") || t.closest(".tbav"))) return;
+  S.menu = false; try { render(); } catch (x) {}
+}, true);
+/* the menu behind your bug: everything that used to crowd the top bar */
+function tbMenuHTML(extra) {
+  var fun = typeof funOn !== "function" || funOn(), tc = ""; try { tc = tierChip(); } catch (e) {}
+  var g = ""; try { g = gearBtn().replace('class="theme-btn gear"', 'class="theme-btn tbmi gear"').replace("</svg></button>", "</svg><span>Settings</span></button>"); } catch (e2) {}
+  return '<div class="tbmenu" role="menu">' + (tc ? '<div class="tbmhead">' + tc + '</div>' : '') +
+    '<button class="theme-btn tbmi" data-act="gsearch"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="6.500" fill="none" stroke="currentColor" stroke-width="2.200"/><path d="M16 16l4.500 4.500" stroke="currentColor" stroke-width="2.400" stroke-linecap="round"/></svg><span>Search</span></button>' +
+    (fun ? '<button class="theme-btn tbmi musicbtn" data-act="music" aria-pressed="' + muOn() + '" aria-label="Background music"><span class="tbmic">' + muIcon() + '</span><span>Music</span></button>' : '') + g +
+    (typeof staffBtn === "function" ? staffBtn() : '') + extra + (typeof stxBtn === "function" ? stxBtn() : '') + '<button class="theme-btn tbmi" data-idea="1"><span>Send an idea</span></button></div>';
+}
+
 function backRow() {
   var v = S.view, lab = "", act = "";
   if (v === "levels" || v === "flevels" || v === "nlevels" || v === "mlevels" || v === "ilevels" || v === "alevels" || v === "rxlevels" || (v === "everyday" && !S.evTab) || (v === "beginner" && !S.bgRun)) { lab = "Main menu"; act = 'data-go="home"'; }
@@ -835,7 +974,7 @@ function srBuild() {
   add("Terrarium", "Your bug", function () { srGo("terrarium"); }, "bug shop wardrobe sticks dress up", "Your bug and shop");
   add("Get Sticks", "Your bug", function () { srGo("terrarium", { shopF: "sticks" }); }, "buy sticks packs", "Stick packs");
   add("Settings", "App", function () { srGo("settings"); }, "account sign in theme dark mode language reminders notifications delete data privacy statistics", "Account and preferences");
-  add("Music", "App", function () { srGo("home"); setTimeout(function () { var b = document.querySelector('[data-act="music"]'); if (b) b.click(); }, 60); }, "songs tracks playlist", "Play study music");
+  add("Music", "App", function () { srGo("home"); setTimeout(function () { var b = document.querySelector('[data-act="music"]'); if (b) b.click(); else { MU.armed = true; S.mupop = true; render(); } }, 60); }, "songs tracks playlist", "Play study music");
   safe(function () { BUGS.forEach(function (b) { if (b.admin || b.hidden) return; add(b.name, "Bug", function () { srGo("terrarium"); }, b.blurb, "Terrarium"); }); });
   safe(function () { TRACKS.forEach(function (t) { add(t.name, "Music track", function () { srGo("home"); setTimeout(function () { var b = document.querySelector('[data-act="music"]'); if (b) b.click(); }, 60); }, t.desc, "Music"); }); });
   add("Terms of Use", "Legal", function () { S.hsq = ""; openLegal("terms"); }, "terms eula", "");
@@ -929,17 +1068,24 @@ function viewHome() {
     var hit = S.pointGo === go;
     return '<button class="route rmini ' + cls + pt(go) + '" ' + (hit ? 'data-startlearn="' + go + '"' : go.indexOf("level:") === 0 ? 'data-level="' + go.slice(6) + '"' : 'data-go="' + go + '"') + '>' + (hit ? PT : '') + '<span class="mtx"><h2>' + title + '</h2><p>' + line + '</p>' + (ROUTE_MORE[cls] ? '<ul class="rmore">' + ROUTE_MORE[cls].map(function (x) { return '<li>' + esc(x) + '</li>'; }).join("") + '</ul>' : '') + (fun ? routeChips(cls) : '') + '</span><span class="mbug">' + art + '</span></button>';
   }
-  return topbar() + '<div class="homewrap' + hcls + '" data-hol="' + (HOL ? esc(holKey(HOL)) : '') + '">' + homeSearch() + (typeof homeClassCard === "function" ? homeClassCard() : '') + homeTip() +
-   heroHTML() + loginCard() +
-   homeStart() + homeProgress() + (typeof trialBanner === "function" ? trialBanner() : '') +
-   '<h3 class="homegh">Look it up</h3><section class="routes"><div class="minis one">' +
+  var lookup = '<h3 class="homegh">Look it up</h3><section class="routes"><div class="minis one">' +
    (!fun ? mini("gen", "gen", "BugDex", "Every medication, explained in plain language. Search, browse or go A to Z through " + genN.toLocaleString() + " medications.", "") : '') +
    (!fun ? '' : '<button class="route rmini gen' + pt("gen") + '" ' + (S.pointGo === "gen" ? 'data-startlearn="gen"' : 'data-go="gen"') + '>' + (S.pointGo === "gen" ? PT : '') +
      '<span class="mtx">' + (fun ? '<span class="eyebrow">Start here</span>' : '') + '<h2>BugDex</h2><p>Every medication, explained in plain language. Search or browse.</p>' +
      (fun ? routeChips("gen") + '<span class="count">' + genN + ' medications</span>' : '') + '</span>' +
      '<span class="mbug">' + bugSVG("sage") + '</span></button>') + '</div>' +
    '<div class="minis one evbox">' + mini("ev", "everyday", "Everyday Health", EV_LINE, "grub-everyday") + '</div>' + myListRoute() +   /* its own box under the BugDex, for everyone (owner, Nov 18 2026) */
-   '</section>' + homeRoutes(mini) + (typeof fireHomeCard === "function" ? fireHomeCard() : '') + (typeof harvestStrip === "function" ? harvestStrip() : '') + '</div>';
+   '</section>';
+  if (hvOn()) {
+    /* the new Home (owner, Nov 28 2026): Continue card, three numbers, today's 5-min DrugBug, then what was here before */
+    return topbar() + '<div class="homewrap hv2h' + hcls + '" data-hol="' + (HOL ? esc(holKey(HOL)) : '') + '">' + homeHero2(HOL) + homeStats2() + homeToday2() + loginCard() + homeTip() +
+      (typeof homeClassCard === "function" ? homeClassCard() : '') + (typeof trialBanner === "function" ? trialBanner() : '') + homeSearch() + lookup + homeRoutes(mini) +
+      (typeof fireHomeCard === "function" ? fireHomeCard() : '') + (typeof harvestStrip === "function" ? harvestStrip() : '') + '</div>';
+  }
+  return topbar() + '<div class="homewrap' + hcls + '" data-hol="' + (HOL ? esc(holKey(HOL)) : '') + '">' + homeSearch() + (typeof homeClassCard === "function" ? homeClassCard() : '') + homeTip() +
+   heroHTML() + loginCard() +
+   homeStart() + homeProgress() + (typeof trialBanner === "function" ? trialBanner() : '') +
+   lookup + homeRoutes(mini) + (typeof fireHomeCard === "function" ? fireHomeCard() : '') + (typeof harvestStrip === "function" ? harvestStrip() : '') + '</div>';
 }
 /* The main menu shows the path picked on the first run, not all of them (owner, Nov 4 2026).
    "Show every path" is always one tap away and is remembered, so nothing is actually hidden. */
@@ -1043,7 +1189,7 @@ function homeProgress() {
 function homeTip() {
   if (typeof funOn === "function" && !funOn()) return "";   /* nothing to tap: serious mode has no Terrarium chip */
   if (store("tipBug") || (typeof tourDone === "function" && !tourDone())) return "";
-  return '<div class="tbtip" role="note"><span>Tap your bug up here to open your Terrarium.</span><button class="btn small ghost" data-tipbug="1">Got it</button></div>';
+  return '<div class="tbtip" role="note"><span>Tap your bug to open your Terrarium.</span><button class="btn small ghost" data-tipbug="1">Got it</button></div>';
 }
 function homeContinue() {
   var ll = store("lastLevel"), lo = ll && levelObj(ll); if (!lo) return '';
@@ -2762,7 +2908,7 @@ function render() {
      already moved on, so buttons did nothing and nothing explained why. Now it says so and offers
      a way out. (owner reported Flight Paramedic doing this, Oct 30 2026) */
   try {
-    html = ageBlocked() && S.view !== "legal" ? ageBlockView() : needDisc() ? discView() : !ok && S.view !== "legal" ? gateView() : S.view === "legal" ? legalView() : (typeof needFun === "function" && needFun()) ? funView() : (typeof needWelcome === "function" && needWelcome()) ? welcomeView() : needOnboard() ? obView() : S.view === "fire" && typeof fireView === "function" ? fireView() : S.view === "home" ? viewHome() : (S.view === "levels" || S.view === "flevels" || S.view === "nlevels" || S.view === "mlevels" || S.view === "ilevels" || S.view === "alevels" || S.view === "rxlevels") ? viewLevels() : S.view === "easy" ? viewEasy() : S.view === "admin" ? viewAdmin() : S.view === "classes" ? classesView() : S.view === "settings" ? settingsView() : S.view === "stats" && typeof statsView === "function" ? statsView() : S.view === "terrarium" ? ((typeof funOn === "function" && !funOn()) ? (S.view = "home", viewHome()) : terrariumView()) : S.view === "everyday" ? evView() : S.view === "beginner" ? bgView() : S.view === "field" && typeof fieldView === "function" ? fieldView() : viewLevel();
+    html = ageBlocked() && S.view !== "legal" ? ageBlockView() : needDisc() ? discView() : !ok && S.view !== "legal" ? gateView() : S.view === "legal" ? legalView() : (typeof needFun === "function" && needFun()) ? funView() : (typeof needWelcome === "function" && needWelcome()) ? welcomeView() : needOnboard() ? obView() : S.view === "fire" && typeof fireView === "function" ? fireView() : S.view === "home" ? viewHome() : (S.view === "levels" || S.view === "flevels" || S.view === "nlevels" || S.view === "mlevels" || S.view === "ilevels" || S.view === "alevels" || S.view === "rxlevels") ? viewLevels() : S.view === "easy" ? viewEasy() : S.view === "learn" ? learnView() : S.view === "practice" ? practiceView() : S.view === "admin" ? viewAdmin() : S.view === "classes" ? classesView() : S.view === "settings" ? settingsView() : S.view === "stats" && typeof statsView === "function" ? statsView() : S.view === "terrarium" ? ((typeof funOn === "function" && !funOn()) ? (S.view = "home", viewHome()) : terrariumView()) : S.view === "everyday" ? evView() : S.view === "beginner" ? bgView() : S.view === "field" && typeof fieldView === "function" ? fieldView() : viewLevel();
   } catch (err) {
     LAST_ERR = (err && (err.message || err)) + "";
     try { if (window.console) console.error("DrugBug render failed:", err); } catch (e) {}
@@ -2955,7 +3101,7 @@ document.addEventListener("click", function (e) {
       try { if (!on) { S.mupop = false; MU.preview = null; muStop(); } else muSync(); } catch (e) {}   /* Focused has no music at all */
       render(); return;
     }
-    case "gsearch": S.menu = false; if (S.view !== "home") go("home"); setTimeout(function () { var hq = document.getElementById("hsq"); if (hq) { hq.focus(); try { hq.scrollIntoView({ block: "center" }); } catch (e) {} } }, 80); return;
+    case "gsearch": S.menu = false; if (S.view !== "home" && S.view !== "learn") go("home"); setTimeout(function () { var hq = document.getElementById("hsq"); if (hq) { hq.focus(); try { hq.scrollIntoView({ block: "center" }); } catch (e) {} } }, 80); return;
     case "gsearchold": S.menu = false; go("gen", { tab: "registry" }); setTimeout(function () { var q = document.getElementById("q"); if (q) { q.focus(); q.scrollIntoView({ block: "center" }); } }, 60); return;
     case "openproto": S.menu = false; render(); return openProto();
     case "openclass": S.menu = false; render(); return openClassPane();
@@ -11562,7 +11708,7 @@ function muGesture() {
   try { var c = muCtx(); if (c && c.state !== "running") c.resume(); } catch (e) {}
   muStart();
 }
-function muSync() { if (muOn() && MU.armed && muLevel() > 0) muStart(); else muStop(); if (MU.master && MU.ctx) MU.master.gain.setTargetAtTime(muVol(), MU.ctx.currentTime, 0.05); var b = $(".musicbtn"); if (b && b.getAttribute("aria-pressed") !== String(muOn())) { b.setAttribute("aria-pressed", String(muOn())); b.innerHTML = muIcon(); } }
+function muSync() { if (muOn() && MU.armed && muLevel() > 0) muStart(); else muStop(); if (MU.master && MU.ctx) MU.master.gain.setTargetAtTime(muVol(), MU.ctx.currentTime, 0.05); var b = $(".musicbtn"); if (b && b.getAttribute("aria-pressed") !== String(muOn())) { b.setAttribute("aria-pressed", String(muOn())); var mi = b.querySelector(".tbmic"); if (mi) mi.innerHTML = muIcon(); else b.innerHTML = muIcon(); } }
 /* the music button at the top stays a music note (owner, Nov 5 2026) */
 function muIcon() { return '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M9 18.5a2.5 2.5 0 1 1-2-2.45V5l11-2v12.5a2.5 2.5 0 1 1-2-2.45V7.1L9 8.4z"/>' + (muOn() ? '' : '<path d="M3 3l18 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>') + '</svg>'; }
 function musicBtn() { if (typeof funOn === "function" && !funOn()) return ""; return '<button class="theme-btn musicbtn" data-act="music" aria-pressed="' + muOn() + '" aria-label="Background music" title="Background music">' + muIcon() + '</button>'; }
@@ -36797,10 +36943,10 @@ function gtSteps() {
   L.push({ pre: function () { if (S.view !== "home") go("home"); }, sel: "[data-go='gen'].route, [data-startlearn='gen'].route", t: "The BugDex", x: H("The BugDex has got every last drug. Plain-spoke or the whole long story, your pick. Tap it.", "The BugDex has every medication, in plain language or in full. Tap it."), act: function () {} });
   L.push({ sel: ".evbox .route", t: "Everyday Health", x: H("Everybody gets Everyday Health. Medicines, vitamins and your own body, said plain. Tap it.", "Everyone gets Everyday Health: medicines, vitamins and your body, in plain words. Tap it."), act: function () {} });
   if (fun) {
-    L.push({ sel: ".stickchip", t: "Your bug", x: "That's your bug up top. Tap it and I'll show ya the Terrarium.", act: function () { go("terrarium"); } });
+    L.push({ sel: ".hv2mas, .stickchip", t: "Your bug", x: "That's your bug. Tap it and I'll show ya the Terrarium.", act: function () { go("terrarium"); } });
     L.push({ sel: "[data-equip]", t: "The Terrarium", x: "Here's where your bugs live. Tap one to use it. Hold one down to read its story and stats. Tap it.", act: function () {} });
   }
-  L.push({ sel: ".gear", t: H("Settings", "Settings"), x: H("Settings is the little gear. Account, sound, text size, all that. Tap it.", "Settings has your account, sound and display options. Tap it."), act: function () {} });
+  L.push({ sel: ".tbav, .gear", t: H("Your menu", "Your menu"), x: H("Tap your bug up top for your menu. Settings, search, music, all that lives in there.", "Your bug up top opens your menu: Settings, search, music and more."), act: function () {} });
   if (typeof FOCUSED_READY !== "undefined" && FOCUSED_READY) L.push({ sel: ".modetog", t: H("Serious mode", "Focused or Enhanced"), x: H("This button flips ya to Focused: just the studyin', no bugs, no me. I'll be fine. Tap it.", "This switches between Focused (just studying) and Enhanced (bugs, music and animations). Tap it."), act: function () {} });
   L.push({ pre: function () { if (S.view !== "home") go("home"); }, t: H("One more thing", "For study only"), x: H("This here's for learnin', not for takin' care of real patients. Out there, follow your protocols and your medical director. In here, mess up all ya want. That's the point.", "DrugBug is for learning, not patient care. Follow your protocols, instructors and medical direction."), btn: H("Got it", "Got it") });
   L.push({ t: H("Right then", "All set"), x: H("That's about enough jawin'. Come on, let me show ya how this works on a real drug.", "You are ready to start."), btn: H("Show me", "Done"), last: 1 });
@@ -39607,7 +39753,7 @@ document.addEventListener("click", function (e) {
   if (t) { var el = document.getElementById("hvg" + t.getAttribute("data-hvjump")); if (el) try { el.scrollIntoView({ behavior: "smooth", block: "center" }); } catch (x) { el.scrollIntoView(); } return; }
   t = e.target.closest && e.target.closest("[data-hvgo]"); if (!t) return;
   var k = t.getAttribute("data-hvgo"), lv = store("lastLevel") || (Prog.d && Prog.d.startLevel) || "paramedic";
-  if (k === "menu") go("home"); else if (k === "hive" || k === "hivepage") { if (k === "hive" || S.view !== "level") go("level", { level: lv }); S.hvPage = true; S.tab = "hub"; render(); window.scrollTo(0, 0); }
+  if (k === "menu") go("home"); else if (k === "learn") go("learn"); else if (k === "practice") go("practice"); else if (k === "hive" || k === "hivepage") { if (k === "hive" || S.view !== "level") go("level", { level: lv }); S.hvPage = true; S.tab = "hub"; render(); window.scrollTo(0, 0); }
   else if (k === "hub") { S.hvPage = false; render(); window.scrollTo(0, 0); }
   else if (k === "qs") { go("level", { level: lv }); S.tab = "prep"; render(); }
   else if (k === "rush") { go("level", { level: lv }); S.tab = "rush"; render(); }
@@ -39617,15 +39763,21 @@ document.addEventListener("click", function (e) {
 function hvNav() {
   var n = document.getElementById("hvnav");
   if (!hvOn()) { if (n) n.hidden = true; return; }
+  if (n && !n.getAttribute("data-v2")) { n.parentNode.removeChild(n); n = null; }
   if (!n) {
-    n = document.createElement("nav"); n.id = "hvnav"; n.setAttribute("aria-label", "Main");
-    n.innerHTML = [["search", "Search", '<path d="M10.500 3a7.500 7.500 0 0 1 5.900 12.100l4.300 4.200-1.500 1.500-4.200-4.300A7.500 7.500 0 1 1 10.500 3zm0 2.500a5 5 0 1 0 0 10 5 5 0 0 0 0-10z"/>'], ["hive", "Hive", '<path d="M12 2 21 7v10l-9 5-9-5V7z"/>'], ["qs", "Questions", '<path d="M4 4h16v13H9l-5 4zm7 9h2v2h-2zm1-7a3 3 0 0 0-3 3h2a1 1 0 1 1 1.500.9c-.9.5-1.500 1.200-1.500 2.100h2c0-.4.300-.6.800-.9A3 3 0 0 0 12 6z"/>'],
-      ["menu", "Menu", '<path d="M12 4 4 11h2v8h4.500v-5h3v5H18v-8h2z"/>'],
-      ["rush", "Bug Rush", '<path d="M13 2 4 14h6l-1 8 9-12h-6z"/>'], ["terr", "Terrarium", '<path d="M9 3l1.500 2h3L15 3l1.500 1-1.300 1.800A5 5 0 0 1 17 9h3v2h-3v2h3v2h-3a5 5 0 0 1-10 0H4v-2h3v-2H4V9h3a5 5 0 0 1 1.800-3.200L7.500 4z"/>'], ["stats", "Scoreboard", '<path d="M4 20V10h4v10zm6 0V4h4v16zm6 0v-7h4v7z"/>']]
-      .map(function (x) { return x[0] === "menu" ? '<button class="hvmenu" data-hvgo="menu" aria-label="Main menu"><span class="hvhex">' + hvIc(x[2]) + '</span>Menu</button>' : '<button data-hvgo="' + x[0] + '">' + hvIc(x[2]) + x[1] + '</button>'; }).join("");
+    n = document.createElement("nav"); n.id = "hvnav"; n.setAttribute("aria-label", "Main"); n.setAttribute("data-v2", "1");
+    n.innerHTML = [["menu", "Home", '<path d="M12 4 4 11h2v8h4.500v-5h3v5H18v-8h2z"/>'], ["learn", "Learn", '<path d="M5 3h6a2 2 0 0 1 1 .300A2 2 0 0 1 13 3h6a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-6a1 1 0 0 0-1 1 1 1 0 0 0-1-1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/>'],
+      ["practice", "Practice", '<path fill-rule="evenodd" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 4a6 6 0 1 1 0 12 6 6 0 0 1 0-12zm0 3a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>'], ["terr", "Terrarium", '<path d="M9 3l1.500 2h3L15 3l1.500 1-1.300 1.800A5 5 0 0 1 17 9h3v2h-3v2h3v2h-3a5 5 0 0 1-10 0H4v-2h3v-2H4V9h3a5 5 0 0 1 1.800-3.200L7.500 4z"/>'], ["stats", "Ranks", '<path d="M4 20V10h4v10zm6 0V4h4v16zm6 0v-7h4v7z"/>']]
+      .map(function (x) { return '<button data-hvgo="' + x[0] + '">' + hvIc(x[2]) + '<span>' + x[1] + '</span></button>'; }).join("");
     document.body.appendChild(n);
   }
-  var cur = S.view === "home" ? "menu" : S.view === "terrarium" ? "terr" : S.view === "stats" ? "stats" : S.view === "level" ? (S.tab === "prep" ? "qs" : S.tab === "rush" ? "rush" : S.hvPage && S.tab === "hub" ? "hive" : "") : "";
+  var cur = "", v = S.view, tb = S.tab || "";
+  if (v === "home" || /levels$/.test(v)) cur = "menu";
+  else if (v === "learn" || v === "gen" || v === "everyday" || v === "beginner" || v === "easy") cur = "learn";
+  else if (v === "practice") cur = "practice";
+  else if (v === "terrarium") cur = "terr";
+  else if (v === "stats") cur = "stats";
+  else if (v === "level") cur = /^(prep|rush|games|cards|session|vlab|scene|nbug|progress|mega|megacode|scenarios)$/.test(tb) ? "practice" : "learn";
   Array.prototype.forEach.call(n.children, function (b) { if (b.getAttribute("data-hvgo") === cur) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
   n.hidden = !agreeRec();
 }
@@ -39902,7 +40054,7 @@ gtSteps = function () {
   return [
     { t: H("Well, howdy there", "Welcome to DrugBug"), x: H("Name's Hickory. Three quick things and I'll get outta your way.", "Three quick things and you are set."), btn: H("Let's go", "Start") },
     path,
-    { sel: "#hvnav", t: H("Gettin' around", "Getting around"), x: H("This bar goes with ya everywhere. Hive, Questions, Bug Rush, your Terrarium and the Scoreboard. Menu in the middle brings ya home. I'll explain each one the first time ya open it.", "This bar is on every screen: Hive, Questions, Bug Rush, Terrarium and Scoreboard. Menu in the middle goes home. Each one is explained the first time you open it."), btn: H("Got it", "Next") },
+    { sel: "#hvnav", t: H("Gettin' around", "Getting around"), x: H("This bar goes with ya everywhere. Home, Learn, Practice, your Terrarium and the Ranks. Learn has every lookup tool and Practice has every drill. I'll explain each one the first time ya open it.", "This bar is on every screen: Home, Learn, Practice, Terrarium and Ranks. Learn holds every lookup tool and Practice every drill. Each one is explained the first time you open it."), btn: H("Got it", "Next") },
     { pre: function () { if (S.view !== "home") go("home"); }, t: H("One more thing", "For study only"), x: H("This here's for learnin', not for takin' care of real patients. Out there, follow your protocols and your medical director. In here, mess up all ya want. That's the point.", "DrugBug is for learning, not patient care. Follow your protocols, instructors and medical direction."), btn: H("Got it", "Done") }
   ];
 };
