@@ -629,6 +629,65 @@ window.DrugBugAudioRoute = function (reason) {
     if (S.mupop && typeof render === "function") render();
   } catch (e) {}
 };
+
+/* ---------- Wormhole text on demand (owner, Nov 28 2026) ----------
+   DB.DEEP, about 9 MB of Wormhole text, is no longer part of start-up. It lives only in deep.js (it used to sit inside
+   data3.js, data4.js and data5.js) and is fetched the first time something needs it: a drug's Wormhole tab or the
+   Control Center review list. One loader serves everyone. The website asks for "deep.js" next to the page; the iPhone
+   app asks for the same relative name and its scheme handler answers from the bundled www folder (drugbug://app/deep.js),
+   the same way backend.js loads the Firebase files. It is never fetched twice: a script either runs once or fails, and
+   only the Try again button starts a second request. Plain ES5; callbacks, no promises needed.
+   st: 0 not asked yet, 1 downloading, 2 ready, 3 failed (waiting for Try again) */
+var DEEPL = { st: 0, slow: false, slowT: 0, waiters: [] };
+function deepHas() { try { var o = DB.DEEP; if (o) for (var k in o) return true; } catch (e) {} return false; }
+/* ready when it has loaded, or when this page still has the text from the old start-up files (a cached older copy) */
+function deepReady() { return DEEPL.st === 2 || deepHas(); }
+function deepLoad(cb) {
+  if (cb) DEEPL.waiters.push(cb);
+  if (deepReady()) { DEEPL.st = 2; return deepFlush(true); }
+  if (DEEPL.st === 1) return;                         /* already on its way */
+  if (DEEPL.st === 3) return deepFlush(false);        /* failed: wait for the Try again button, never loop */
+  DEEPL.st = 1; DEEPL.slow = false;
+  clearTimeout(DEEPL.slowT); DEEPL.slowT = setTimeout(function () { if (DEEPL.st === 1) { DEEPL.slow = true; deepPaint(); } }, 10000);
+  var sc = document.createElement("script"); sc.src = "deep.js"; sc.async = true;
+  sc.onload = function () { sc.onload = sc.onerror = null; deepFlush(deepHas()); };
+  sc.onerror = function () { sc.onload = sc.onerror = null; try { if (sc.parentNode) sc.parentNode.removeChild(sc); } catch (e) {} deepFlush(false); };
+  document.head.appendChild(sc);
+}
+function deepFlush(ok) {
+  clearTimeout(DEEPL.slowT); DEEPL.slow = false;
+  var first = DEEPL.st === 1;
+  DEEPL.st = ok ? 2 : 3;
+  if (ok && first) deepReapply();
+  var w = DEEPL.waiters; DEEPL.waiters = [];
+  for (var i = 0; i < w.length; i++) { try { w[i](ok); } catch (e) {} }
+  if (first || !ok) deepPaint();
+}
+function deepRetry() { if (DEEPL.st === 3) DEEPL.st = 0; deepLoad(); deepPaint(); }
+/* Wormhole wording that reviewers saved (Control Center > AI content review) is applied onto the entries themselves. At
+   start-up there was nothing to apply it to, so it is applied now, from the saved copies kept in CR.docs. */
+function deepReapply() {
+  try {
+    if (typeof CR === "undefined" || !CR.docs) return;
+    delete CR._items_deep;
+    Object.keys(CR.docs).forEach(function (k) { var d = CR.docs[k]; if (d && d.type === "deep") applyContent(d); });
+  } catch (e) {}
+}
+/* redraw whatever is waiting on the text: an open Wormhole tab (keeping its scroll place) or the review screens */
+function deepPaint() {
+  try {
+    if (S.sheet && S.dtab === "deep" && typeof drawSheet === "function") {
+      var pn = $(".panel", sheet), y = pn ? pn.scrollTop : 0; drawSheet(); pn = $(".panel", sheet); if (pn) pn.scrollTop = y;
+    } else if (S.view === "admin" && typeof render === "function") render();
+  } catch (e) {}
+}
+/* what the Wormhole tab (and the review list) show while the text is on its way, or if it could not come */
+function deepWait(admin) {
+  deepLoad();
+  var back = admin ? '<div class="arowtop"><button class="linkish" data-crback="home">&larr; All AI content</button></div>' : '';
+  if (DEEPL.st === 3) return back + '<div class="deep"><div class="deepwait err" role="alert"><p><strong>Could not load the Wormhole.</strong> Check your connection, then try again.</p><button class="btn" data-act="deepretry">Try again</button></div></div>';
+  return back + '<div class="deep"><div class="deepwait" role="status" aria-live="polite"><span class="deepspin" aria-hidden="true"></span><span>' + (DEEPL.slow ? "Still loading the Wormhole. This is a big download on a slow signal." : "Loading the Wormhole…") + '</span></div></div>';
+}
 /* Classes and the public leaderboard are parked (student-record / FERPA review pending). Turn back on with DRUGBUG_CONFIG.social = true. */
 var SOCIAL = HASDB && !!(window.DRUGBUG_CONFIG && window.DRUGBUG_CONFIG.social === true); if (NATIVE) document.documentElement.setAttribute("data-native", "1");
 var S = { view: "home", level: null, tab: "hub", q: "", tags: {}, group: "all", scen: null, fc: null, sheet: null, full: false };
@@ -12155,7 +12214,7 @@ var CR_LABEL = { origin: "Where it came from", timeline: "Timeline", cell: "Cell
   rl: "Nursing summary", rh: "Hold / notify", ml: "Physician summary", mp: "Physician pearl", use: "Imaging: why it is used", check: "Imaging: screening", watch: "Imaging: monitoring", act: "Imaging: what to do", edu: "Patient education", nurse: "Nursing considerations", cites: "Source",
   name: "Name", what: "What it is", range: "Normal range", crit: "Critical", hi: "High", lo: "Low", rn: "Nursing study points (RN)", share: "What they share", clue: "Name clue", tips: "Tip", diff: "How to tell apart", key: "Key point", how: "How", dont: "Do not use", warn: "Warning", dose: "Dose", rem: "Remember", members: "Drug" };
 function crType(k) { return CR_TYPES.filter(function (t) { return t[0] === k; })[0]; }
-function crItems(k) { var T = crType(k); if (!T) return []; var key = "_items_" + k; return CR[key] || (CR[key] = T[3]()); }
+function crItems(k) { var T = crType(k); if (!T) return []; if (k === "deep" && !deepReady()) return []; var key = "_items_" + k; return CR[key] || (CR[key] = T[3]()); }
 function crGet(o, path) { return path.split(".").reduce(function (x, p) { return x == null ? x : x[p]; }, o); }
 function crSet(o, path, v) { var ps = path.split("."), last = ps.pop(), t = ps.reduce(function (x, p) { return x == null ? x : x[p]; }, o); if (t != null) t[last] = v; }
 function crFields(root) {
@@ -12201,6 +12260,7 @@ function crLoad(db) {
 /* views */
 function aiView() {
   var a = A(), k = a.crt;
+  if (!deepReady()) deepLoad();   /* the Wormhole entries are part of this screen's counts */
   if (k && a.crid) return crItemView(k, a.crid);
   if (k) return crListView(k);
   var tot = 0, rev = 0;
@@ -12209,7 +12269,7 @@ function aiView() {
     var items = crItems(t[0]), n = items.length, r = 0, e = 0, ch = 0;
     items.forEach(function (it) { var s = crStatus(t[0], it.id); if (s === "reviewed") r++; if (s === "changes") ch++; if (crEdited(t[0], it.id)) e++; });
     tot += n; rev += r; var pct = n ? Math.round(100 * r / n) : 0;
-    return '<button class="crcard" data-crt="' + t[0] + '"><strong>' + esc(t[1]) + '</strong><span class="muted small">' + esc(t[2]) + '</span><span class="crnums">' + r + ' of ' + n + ' reviewed' + (ch ? ' · ' + ch + ' need changes' : '') + (e ? ' · ' + e + ' edited' : '') + '</span><span class="cbar"><i style="width:' + pct + '%"></i></span></button>';
+    return '<button class="crcard" data-crt="' + t[0] + '"><strong>' + esc(t[1]) + '</strong><span class="muted small">' + esc(t[2]) + '</span><span class="crnums">' + (t[0] === "deep" && !deepReady() ? "Loading\u2026" : r + ' of ' + n + ' reviewed' + (ch ? ' · ' + ch + ' need changes' : '') + (e ? ' · ' + e + ' edited' : '')) + '</span><span class="cbar"><i style="width:' + pct + '%"></i></span></button>';
   }).join("") + '</div>';
   return '<div class="stats"><div class="stat"><span class="lbl">AI items</span><span class="num">' + tot.toLocaleString() + '</span></div><div class="stat"><span class="lbl">Reviewed</span><span class="num">' + rev.toLocaleString() + '</span></div><div class="stat"><span class="lbl">Left</span><span class="num">' + (tot - rev).toLocaleString() + '</span></div></div>' + c + (CR.ready || !Dex.db ? '' : '<p class="muted small">Loading saved reviews…</p>') + '</section>';
 }
@@ -12222,6 +12282,7 @@ function crFiltered(k) {
   });
 }
 function crListView(k) {
+  if (k === "deep" && !deepReady()) return deepWait(true);
   var a = A(), T = crType(k), list = crFiltered(k), st = a.crs || "all";
   var c = '<div class="arowtop"><button class="linkish" data-crback="home">&larr; All AI content</button></div><h2>' + esc(T[1]) + '</h2><p class="muted small">' + esc(T[2]) + '</p>';
   c += '<div class="tools"><input class="search" id="crq" type="search" placeholder="Search" value="' + esc(a.crq || "") + '"><select class="sel" id="crs">' + [["all", "All"], ["todo", "Not reviewed yet"], ["changes", "Needs changes"], ["reviewed", "Reviewed"], ["edited", "Reworded by you"]].map(function (o) { return '<option value="' + o[0] + '"' + (st === o[0] ? " selected" : "") + '>' + o[1] + '</option>'; }).join("") + '</select></div>';
@@ -12234,6 +12295,7 @@ function crRows(k, list) {
   return list.slice(0, 200).map(function (it) { var s = CR_ST[crStatus(k, it.id)]; return '<div class="arow"><button class="linkish qtext" data-crid="' + esc(it.id) + '">' + esc(it.title.length > 140 ? it.title.slice(0, 140) + "…" : it.title) + '</button>' + (it.sub ? '<span class="muted small">' + esc(it.sub) + '</span>' : '') + pill(s[0], s[1]) + (crEdited(k, it.id) ? pill("Reworded", "on") : '') + '</div>'; }).join("") + (list.length > 200 ? '<p class="muted small">Showing the first 200. Search to narrow the list.</p>' : '');
 }
 function crItemView(k, id) {
+  if (k === "deep" && !deepReady()) return deepWait(true);
   var a = A(), T = crType(k), items = crItems(k), it = items.filter(function (x) { return x.id === id; })[0];
   if (!it) { a.crid = null; return crListView(k); }
   var ix = items.indexOf(it), doc = crDoc(k, id) || {}, s = CR_ST[crStatus(k, id)];
@@ -12414,10 +12476,11 @@ var DEMO = CFG.demo === true && !NATIVE;
 /* Website access codes (web demo only): the build stores SHA-256 hashes of the codes in CFG.webCodes
    [{h, by: "YYYY-MM-DD" last day to redeem, days}]. Redeeming one gives DrugBug Pro in that browser for `days` days. */
 function webPass() { var p = store("webPass"); return p && p.until > Date.now() ? p : null; }
-var WEBDEEP = 0;
-function webDeepLoad() { /* the demo ships Wormhole text for the free drugs only; a code holder gets the rest */
-  if (WEBDEEP || !DEMO || !(webPass() || !PAYWALL)) return; WEBDEEP = 1;   /* with the paywall off on the web demo, everyone gets the full Wormhole (owner, Oct 30 2026) */
-  var sc = document.createElement("script"); sc.src = "deep.js"; sc.onload = function () { if (typeof render === "function") render(); }; sc.onerror = function () { WEBDEEP = 0; }; document.head.appendChild(sc);
+/* The public web demo used to fetch deep.js itself here. Now every build fetches it on first use through deepLoad(); the demo
+   still gets it a moment after start-up once a code is accepted or the paywall is off, so the full Wormhole is warm. */
+function webDeepLoad() {
+  if (!DEMO || !(webPass() || !PAYWALL)) return;   /* with the paywall off on the web demo, everyone gets the full Wormhole (owner, Oct 30 2026) */
+  deepLoad();
 }
 function webCodeTry(raw) {
   var code = String(raw || "").toUpperCase().replace(/[^A-Z0-9]/g, ""), list = CFG.webCodes || [];
@@ -17218,7 +17281,8 @@ window.addEventListener("resize", function () { if (!chemdlg.hidden) chem3Draw()
     '.deep .srcl{margin:6px 0 0;padding-left:18px}.deep .srcl li{margin:2px 0}';
   try { var st = document.createElement("style"); st.textContent = css; document.head.appendChild(st); } catch (e) {}
 })();
-function deepOf(id) { return (DB.DEEP || {})[id] || null; }
+/* null for a drug with no entry, and also while the text has not loaded yet (this asks for it) */
+function deepOf(id) { if (!deepReady()) { deepLoad(); return null; } return (DB.DEEP || {})[id] || null; }
 /* The Wormhole is a DrugBug Pro feature (locked only when subscriptions are on; see modules/pro.js) */
 /* Free teaser: the ~40 free drugs (FREE_SET) open their Wormhole on every plan, so Free users can try it */
 /* The Wormhole and Chemistry are free on every drug you can open (owner, Nov 19 2026): they lock only
@@ -17233,6 +17297,7 @@ function deepTabs() {
   return '<div class="dtabs" role="tablist" aria-label="Drug page sections"><button role="tab" data-dtab="chem" aria-selected="' + (t === "chem") + '"' + (lk ? ' aria-label="Chemistry, DrugBug Plus"' : '') + '>\u{1F9EA} Chemistry' + (lk && typeof tierBadge === "function" ? ' ' + tierBadge("plus") : '') + '</button>' + (al ? '<button role="tab" data-dtab="allied" aria-selected="' + (t === "allied") + '">Worldwide</button>' : '') + '<button role="tab" data-dtab="main" aria-selected="' + (t === "main") + '">Drug page</button><button role="tab" data-dtab="deep" aria-selected="' + (t === "deep") + '"' + (lk ? ' aria-label="Wormhole, DrugBug Plus"' : '') + '>🪱 Wormhole' + (lk && typeof tierBadge === "function" ? ' ' + tierBadge("plus") : '') + '</button></div>';
 }
 function deepClick(t, a) {
+  if (a.act === "deepretry") { deepRetry(); return true; }
   if (a.dtab === "deep" && deepLocked()) { openPaywall("The Wormhole", "plus"); return true; }
   if (a.dtab === "chem" && deepLocked()) { openPaywall("Drug chemistry", "plus"); return true; }
   if (a.dtab) { S.dtab = a.dtab; drawSheet(); var pn = $(".panel", sheet); if (pn) { var tb = $(".dtabs", pn); pn.scrollTop = tb ? Math.max(0, tb.offsetTop - 70) : 0; } return true; }
@@ -17242,6 +17307,7 @@ function deepSec(icon, title, body) { return body ? '<section class="dsec"><h3><
 function deepP(v) { v = String(v || "").trim(); return v && v !== "-" ? '<p>' + esc(v) + '</p>' : ''; }
 function deepOk(v) { v = String(v || "").trim(); return v && v !== "-" && !/^(n\/a|none)$/i.test(v); }
 function deepView(id) {
+  if (!deepReady()) return deepWait(false);
   var d = DB.drugs[id], e = deepOf(id), nm = nameOf(id), c = '<div class="deep">';
   if (lang() === "es") c += '<p class="dnote">La sección "Wormhole" solo está disponible en inglés por ahora.</p>';
   var st = e && typeof crStatus === "function" ? crStatus("deep", id) : "draft";
