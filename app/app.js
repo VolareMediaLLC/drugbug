@@ -715,6 +715,7 @@ function fixTab() {
   if (S.tab === "ixn" || S.tab === "medlist") S.tab = "hub";
 }
 function go(view, opts) {
+  if (opts && opts.level && lvAlias(opts.level) !== opts.level) opts = Object.assign({}, opts, { level: lvAlias(opts.level) });   /* a saved link to AEMT or MS1-MS4 */
   /* Oct 28 2026 (owner): Field Medic is Tier 4 only, medications only. The tier chooser and lower tiers send to Tier 4; back from Tier 4 goes home. */
   if (view === "flevels" || view === "field") { if (S.view === "level" && isF(S.level)) view = "home"; else { view = "level"; opts = Object.assign({}, opts || {}, { level: "cpp" }); } }
   if (view === "level" && opts && opts.level && isF(opts.level) && opts.level !== "cpp") opts = Object.assign({}, opts, { level: "cpp" });
@@ -852,8 +853,7 @@ function learnView() {
     (by[g] = by[g] || []).push(hvCard(k, x[1], HUB_SHORT[k] || hvFirstSentence(x[2]), 'data-hvtab="' + k + '"'));
   });
   ["Look it up", "Your field", "Field care", "Plants, foods and supplements", "Yours", "More tools"].forEach(function (g) { if (by[g] && by[g].length) sections.push('<h2 class="hv2sec">' + esc(g) + '</h2><div class="hv2list">' + by[g].join("") + '</div>'); });
-  var paths = '<h2 class="hv2sec">Study by role</h2><div class="hv2list">' + hvCard("", "Everyday Health", "Medicines and your body, no clinical background needed.", S.pointGo === "everyday" ? 'data-startlearn="everyday"' : 'data-go="everyday"', icon_("ev")) +
-    hvCard("", bgTrackName(), BG_LINE, 'data-go="beginner"', icon_("bg")) +
+  var paths = '<h2 class="hv2sec">Your track</h2><div class="hv2list">' +
     HOME_ROUTES.map(function (r) { return hvCard("", r[2], hvFirstSentence(r[3]), S.pointGo === r[1] ? 'data-startlearn="' + r[1] + '"' : 'data-go="' + r[1] + '"', FPATH_ICO[r[0]] ? '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + FPATH_ICO[r[0]] + '</svg>' : ''); }).join("") + '</div>';
   return topbar() + '<div class="hv2page" data-hvpage="learn">' + hvPageHead("Learn", "Look things up and see how they work.") + homeSearch() + '<h2 class="hv2sec">Start here</h2><div class="hv2list">' + first + '</div>' + sections.join("") + paths + '</div>';
 }
@@ -1074,7 +1074,7 @@ function viewHome() {
      '<span class="mtx">' + (fun ? '<span class="eyebrow">Start here</span>' : '') + '<h2>BugDex</h2><p>Every medication, explained in plain language. Search or browse.</p>' +
      (fun ? routeChips("gen") + '<span class="count">' + genN + ' medications</span>' : '') + '</span>' +
      '<span class="mbug">' + bugSVG("sage") + '</span></button>') + '</div>' +
-   '<div class="minis one evbox">' + mini("ev", "everyday", "Everyday Health", EV_LINE, "grub-everyday") + '</div>' + myListRoute() +   /* its own box under the BugDex, for everyone (owner, Nov 18 2026) */
+   myListRoute() +   /* its own box under the BugDex, for everyone (owner, Nov 18 2026) */
    '</section>';
   if (hvOn()) {
     /* the new Home (owner, Nov 28 2026): Continue card, three numbers, today's 5-min DrugBug, then what was here before */
@@ -1114,6 +1114,8 @@ var HOME_ROUTES = [
   ["rx", "rxlevels", "Pharmacy", "Pharmacy technicians, pharmacy students and pharmacists: names, calculations, law, mechanisms and therapy. New and still being built.", "grub-allied"]
 ];
 if (!(DB.Q || []).some(function (q) { return isRx(q.lv); })) HOME_ROUTES = HOME_ROUTES.filter(function (r) { return r[0] !== "rx"; });   /* Pharmacy appears once its questions (data9.js) are loaded */
+HOME_ROUTES = HOME_ROUTES.filter(function (r) { return r[0] === "ph" || r[0] === "rn" || r[0] === "md" || r[0] === "rx"; });   /* four tracks (Nov 28 2026) */
+HOME_ROUTES.forEach(function (r) { if (r[0] === "ph") r[3] = "EMT, Paramedic, Flight and Community Paramedic. Every level has its own drugs, protocols and question bank, written for the calls you actually run."; if (r[0] === "md") r[3] = "One track for Step 1, Step 2 CK and Step 3: mechanisms and drug classes first, then how it all plays out on the wards."; });
 var FPATH_ICO = {
   gen: '<path d="M4 4.5A1.5 1.5 0 0 1 5.5 3H20v15H5.5A1.5 1.5 0 0 0 4 19.5z"/><path d="M4 19.5A1.5 1.5 0 0 0 5.5 21H20"/><path d="M9 8h7M9 11.5h5"/>',
   ev: '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/>',
@@ -1127,7 +1129,7 @@ var FPATH_ICO = {
 /* what is inside each path, so the menu says more than one line (owner, Nov 5 2026) */
 var ROUTE_MORE = {
   rx: ["Pharmacy Technician: brand and generic names, sig codes, calculations, law and compounding", "Pharmacy School: mechanisms, pharmacokinetics, interactions and toxicology", "Pharmacist: therapy choices, monitoring, dose adjustment and counseling"],
-  ph: ["Study paths from EMT to Flight and Community Paramedic", "Critical Calls: stroke, STEMI, sepsis, trauma and ROSC", "NREMT-style questions and Bug Rush calls and codes"],
+  ph: ["Study paths from EMT to Paramedic, Flight and Community Paramedic", "Critical Calls: stroke, STEMI, sepsis, trauma and ROSC", "NREMT-style questions and Bug Rush calls and codes"],
   rn: ["Hold parameters, labs to watch and patient teaching", "Specialty units: ICU, ER, L&D, NICU and more", "NCLEX-style questions and Nursing Bug drills"],
   md: ["Mechanisms, pharmacokinetics and drug classes", "Step-style questions and advanced lab patterns", "Drug Class Comparisons and Body Systems for rounds"],
   im: ["Contrast agents and radiopharmaceuticals", "Reactions, premedication, eGFR and screening", "Exam-style questions"],
@@ -1148,7 +1150,7 @@ function homeMine() {
 function homeRoutes(mini) {
   var all = homeAll(), mine = homeMine(), list = all || !mine.length ? HOME_ROUTES : mine;
   var picked = Prog.d.interests || [];
-  var showBg = all || picked.indexOf("ev") >= 0 || (!picked.length && Prog.d.role === "ev") || (!picked.length && !mine.length);
+  var showBg = false;   /* Beginner to Medicine and Everyday Health left the main menu (Nov 28 2026) */
   /* Beginner to Medicine takes the old Everyday Health spot; Everyday Health is on everyone's menu (owner, Nov 18 2026) */
   var cards = (showBg ? mini("bg", "beginner", bgTrackName(), BG_LINE, "grub-eager") : "") +
     list.map(function (x) { return mini(x[0], x[1], x[2], x[3], x[4]); }).join("");
@@ -1400,6 +1402,7 @@ function tabList() {
   /* Study sits right after Medications (owner, Nov 5 2026) */
   var ti = -1, ri = -1; L.forEach(function (t, i) { if (t[0] === "qs") ti = i; if (t[0] === "registry") ri = i; });
   if (ti > 0 && ri >= 0 && ti !== ri + 1) { var st = L.splice(ti, 1)[0]; ri = L.map(function (t) { return t[0]; }).indexOf("registry"); L.splice(ri + 1, 0, st); }
+  lmTabs(L);
   return L;
 }
 function tabName(k) { if (k === "dash") return "Dashboard"; if (k === "prep") return "Questions"; var t = tabList().filter(function (x) { return x[0] === k; })[0]; return t ? t[1] : k === "session" ? "Study session" : ""; }
@@ -2038,7 +2041,8 @@ function nrLevelsFor(k) {
   if (k === "paramedic") return ["paramedic", "gen"];
   if (isF(k)) { var fl = DB.FLEVELS.map(function (l) { return l.key; }), out = fl.slice(0, fl.indexOf(k) + 1); return out.concat(k === "asm" || k === "cls" ? ["emt", "gen"] : k === "cmc" ? ["emt", "aemt", "paramedic"] : ["emt", "aemt", "paramedic", "flight"]); } /* Field Medic: its tier bank, plus EMS drug questions on the drugs in this tier's scope (nrPool filters by scope) */
   if (k === "flightrn") return ["flight"]; /* Flight Nurse gets exactly what Flight Paramedic gets (owner, Nov 25 2026: "The Flight Nurse should have the exact same as flight paramedic") */
-  if (["cna", "rn", "ms1", "ms3", "intern", "emt", "aemt", "flight"].indexOf(k) >= 0) return [k];
+  if (isM(k)) return MS_BANKS.slice();   /* one Medical School track: the Step 1, Step 2 CK and Step 3 banks together */
+  if (["cna", "rn", "emt", "aemt", "flight"].indexOf(k) >= 0) return [k];
   return ["flight"];
 }
 function nrPool(filter, noGen) {
@@ -2070,7 +2074,7 @@ function nrState() {
   if (!S.nr) { var ss0 = SET(); S.nr = { phase: "setup", n: ss0.nrN, mode: ss0.nrMode, filter: "", adaptive: ss0.adaptive }; }
   /* each time you open a test in a role, it starts on that role's own questions; "Everything" only if you pick it */
   var k0 = ctxKey(), lv0 = nrLevelsFor(k0);
-  if (S.nr.lv !== k0 && S.nr.phase === "setup") { S.nr.lv = k0; S.nr.filter = lv0.indexOf(k0) >= 0 && DB.Q.some(function (q) { return q.lv === k0; }) ? k0 : (isA(k0) || k0 === "cp" || k0 === "tccc") ? "all" : lv0.indexOf(k0) >= 0 ? k0 : lv0[0] || "all"; }
+  if (S.nr.lv !== k0 && S.nr.phase === "setup") { S.nr.lv = k0; S.nr.filter = lv0.indexOf(k0) >= 0 && DB.Q.some(function (q) { return q.lv === k0; }) ? k0 : (isA(k0) || isM(k0) || k0 === "cp" || k0 === "tccc") ? "all" : lv0.indexOf(k0) >= 0 ? k0 : lv0[0] || "all"; }
   if (!isPro()) { if (S.nr.n > 10) S.nr.n = 10; if (S.nr.mode === "exam") S.nr.mode = "practice"; }
   return S.nr;
 }
@@ -2302,13 +2306,13 @@ function nrPrep() {
   /* one simple screen: pick a deck, a length and a mode, then go. Everything else sits under More options. */
   var c = freeSample() ? freeNote("questions", (function () { var cap = freeQsCap(); return regN && !isF(ctxKey()) ? Math.min(cap, drugCount()) + Math.min(cap, regN) : Math.min(FREE_QS, pool.length); })(), fullCount(function () { return (regN && !isF(ctxKey()) ? drugCount() + regCount() : nrPool(st.filter).length); })) : '';
   var drugAll = freeSample() ? fullCount(drugCount) : 0, regAll = freeSample() ? fullCount(regCount) : 0;
-  c += '<section class="nrsetup nrfun"><div class="nrtop">' + myBugArt("nrbug", null, null, myStage()) + '<p class="nrtag"><strong>' + (exam ? esc(exam) + '-style practice.' : 'Adaptive practice.') + '</strong> <span class="muted">' + (isF(ctxKey()) ? 'Pick a length, go.' : 'Pick a deck, pick a length, go.') + '</span></p></div>' + examPill(pool) + creatorNote();
+  c += '<section class="nrsetup nrfun"><div class="nrtop">' + myBugArt("nrbug", null, null, myStage()) + '<p class="nrtag"><strong>' + (exam && lmStudent() ? esc(exam) + '-style practice.' : lmStudent() ? 'Adaptive practice.' : 'Practice for the job.') + '</strong> <span class="muted">' + (isF(ctxKey()) ? 'Pick a length, go.' : 'Pick a deck, pick a length, go.') + '</span></p></div>' + examPill(pool) + creatorNote();
   c += adpNote();
   if (typeof ngnPrepNote === "function" && reg) c += ngnPrepNote();
   if (regN && isF(ctxKey())) c += '<p class="muted small">' + (freeSample() ? Math.min(regN, freeQsCap()) : regN) + ' questions on medications, blood, trauma, prolonged care, ventilators, labs, CBRN, K9, dive and evacuation.</p>';
   else if (regN) c += '<div class="nrdecks" role="group" aria-label="Question type">' +
     '<button class="nrdeck" data-nrkind="drug" aria-pressed="' + !reg + '"><span class="nrdk-ic" aria-hidden="true">' + icon("pillq") + '</span><strong>Drug questions</strong><span class="nrdk-n">' + drugCount() + '</span>' + proMore(drugCount(), drugAll, "questions") + '<span class="nrdk-sub">' + (nurse ? "Medicines: what to check, report and teach on your unit" : "Doses, actions, uses and side effects") + '</span></button>' +
-    '<button class="nrdeck" data-nrkind="reg" aria-pressed="' + reg + '"><span class="nrdk-ic" aria-hidden="true">' + icon("ecg") + '</span><strong>' + (nurse ? (S.level === "cna" ? "CNA exam-style questions" : nclexName() ? "NCLEX-style questions" : "Adaptive questions") : (isEMSLv(S.level) || S.level === "cp" || S.level === "flightrn" ? "Registry-style questions" : "Exam-style questions")) + '</strong><span class="nrdk-n">' + (freeSample() ? Math.min(regN, freeQsCap()) : regN) + '</span>' + proMore(freeSample() ? Math.min(regN, freeQsCap()) : regN, regAll, "questions") + '<span class="nrdk-sub">' + (nurse ? (S.level === "cna" ? "Care, safety, communication and your role" : nclexName() ? "Priority, delegation, safety, care and the whole test plan" : "Priority, delegation, safety and whole-patient care") : "Airway, cardiology, trauma, medical and operations") + '</span></button></div>' +
+    '<button class="nrdeck" data-nrkind="reg" aria-pressed="' + reg + '"><span class="nrdk-ic" aria-hidden="true">' + icon("ecg") + '</span><strong>' + lmDeckTitle(nurse ? (S.level === "cna" ? "CNA exam-style questions" : nclexName() ? "NCLEX-style questions" : "Adaptive questions") : (isEMSLv(S.level) || S.level === "cp" || S.level === "flightrn" ? "Registry-style questions" : "Exam-style questions")) + '</strong><span class="nrdk-n">' + (freeSample() ? Math.min(regN, freeQsCap()) : regN) + '</span>' + proMore(freeSample() ? Math.min(regN, freeQsCap()) : regN, regAll, "questions") + '<span class="nrdk-sub">' + (nurse ? (S.level === "cna" ? "Care, safety, communication and your role" : nclexName() ? "Priority, delegation, safety, care and the whole test plan" : "Priority, delegation, safety and whole-patient care") : "Airway, cardiology, trauma, medical and operations") + '</span></button></div>' +
     (function () { if (!nurse || (S.level !== "rn" && S.level !== "lvn") || typeof myUnit !== "function") return ""; var us0 = myUnits(S.level), u0 = us0[0], uo0 = u0 && typeof unitObj === "function" ? unitObj(u0) : null; return (S.level === "rn" ? nFocusRow(false) : "") + (uo0 && !reg ? '<p class="muted small nrdept">About 3 of every 4 drug questions come from ' + (us0.length > 1 ? 'your departments' : 'your department') + ': <strong>' + esc(us0.map(function (x) { var o = unitObj(x); return o ? o.name : x; }).join(", ")) + '</strong>, weighted to its most-used medicines and most common cases' + (deptTopCases(u0).length ? ' (' + esc(deptTopCases(u0).join(', ')) + ')' : '') + '. The rest cover other medicines.</p>' : ""); })();
   (function () {
     var st2 = seenStats();
@@ -2322,7 +2326,7 @@ function nrPrep() {
   })();
   (function () { var ks = starsFor(ctxKey()); c += '<div class="starbar">' + ks.map(function (n) { return starHTML(n) + '<b>' + starLabel(n) + '</b>'; }).join('<span class="sep">and</span>') + '<p class="muted small">Questions here are written at ' + (ks.length > 1 ? 'these difficulty levels' : 'this difficulty level') + '. Each role studies its own.</p></div>'; })();
   c += '<div class="nrrow"><span class="nrlbl">How many?</span><div class="nrseg" role="group" aria-label="Number of questions">' + [10, 25, 50, 100].map(function (k) { return '<button data-nrlen="' + k + '" aria-pressed="' + (st.n === k) + '"' + (k > pool.length ? " disabled" : "") + '>' + k + (k > 10 && !isPro() ? '<i class="nrlock" aria-label="Pro">&#9733;</i>' : '') + '</button>'; }).join("") + '</div></div>';
-  c += '<div class="nrmodes" role="group" aria-label="Mode"><button class="nrmode" data-nrmode="practice" aria-pressed="' + (st.mode === "practice") + '"><strong>Practice</strong><span>See each answer as you go</span></button><button class="nrmode" data-nrmode="exam" aria-pressed="' + (st.mode === "exam") + '"><strong>Exam' + (!isPro() ? ' ' + proBadge() : '') + '</strong><span>Answers at the end, like test day</span></button></div>';
+  c += '<div class="nrmodes" role="group" aria-label="Mode"><button class="nrmode" data-nrmode="practice" aria-pressed="' + (st.mode === "practice") + '"><strong>Practice</strong><span>See each answer as you go</span></button><button class="nrmode" data-nrmode="exam" aria-pressed="' + (st.mode === "exam") + '"><strong>' + (lmStudent() ? 'Exam' : 'Timed check') + (!isPro() ? ' ' + proBadge() : '') + '</strong><span>' + (lmStudent() ? 'Answers at the end, like test day' : 'Answers at the end, then review') + '</span></button></div>';
   c += '<button class="btn nrgo" data-act="nrstart"' + (pool.length ? "" : " disabled") + '>Start ' + n + ' question' + (n === 1 ? '' : 's') + ' <span aria-hidden="true">&rarr;</span></button>';
   var wn = weakPool().length;
   if (wn) c += '<button class="nrweak" data-act="weakgo"><span class="nrweak-n">' + wn + '</span><span><strong>Weak spots</strong><span class="muted small">Questions you missed and drugs under 70%. Drill ' + Math.min(wn, 20) + ' now.</span></span><span aria-hidden="true">&rsaquo;</span></button>';
@@ -2331,15 +2335,16 @@ function nrPrep() {
   if (S.nrMore || S.exEdit) {
     c += '<div class="nrmore">';
     if (!reg) c += qNamesChips();
-if (filters.length > 2 && !reg) c += '<div class="lbl">Question set</div><div class="chips">' + filters.map(function (f) { return '<button class="chip" data-nrfilter="' + f + '" aria-pressed="' + (st.filter === f) + '">' + (f === "all" ? "Everything" : NRLV[f]) + ' (' + nrPool(f).length + ')</button>'; }).join("") + '</div>';
+if (filters.length > 2 && !reg && !isM(ctxKey())) c += '<div class="lbl">Question set</div><div class="chips">' + filters.map(function (f) { return '<button class="chip" data-nrfilter="' + f + '" aria-pressed="' + (st.filter === f) + '">' + (f === "all" ? "Everything" : NRLV[f]) + ' (' + nrPool(f).length + ')</button>'; }).join("") + '</div>';
     c += '<div class="lbl">Question choice</div><div class="chips"><button class="chip" data-nradapt="1" aria-pressed="' + (st.adaptive !== false) + '">Adaptive: more of what I miss</button><button class="chip" data-nradapt="0" aria-pressed="' + (st.adaptive === false) + '">Random</button></div>';
-    c += examCard(pool) + '</div>';
+    c += (lmStudent() ? examCard(pool) : '') + '</div>';
   }
-  c += '<p class="muted small nrfine">Original practice questions' + (exam ? ', not official ' + esc(exam) + ' items' : '') + '. Your protocols and medical direction come first. ' + (S.level === "flight" && S.view === "level" ? 'Not affiliated with IBSC or BCEN. ' : '') + '<span class="nonaff">' + NONAFF + '</span></p></section>';
+  c += '<p class="muted small nrfine">Original practice questions' + (exam && lmStudent() ? ', not official ' + esc(exam) + ' items' : '') + '. Your protocols and medical direction come first. ' + (S.level === "flight" && S.view === "level" ? 'Not affiliated with IBSC or BCEN. ' : '') + '<span class="nonaff">' + NONAFF + '</span></p></section>';
   return c + scoreArea();
 }
 /* small countdown pill at the top of exam prep, once a test date is set */
 function examPill(pool) {
+  if (!lmStudent()) return "";   /* professionals do not see a test-date countdown */
   var E = (Prog.d.exam || {})[examKey()], t = today(); if (!E || S.exEdit) return "";
   var days = Math.round((new Date(E + "T00:00:00") - new Date(t + "T00:00:00")) / 864e5); if (days < 0) return "";
   var done = (Prog.d.days || {})[t] || 0, goal = days === 0 ? 0 : Math.max(10, Math.min(150, Math.ceil(pool.length * 1.5 / days)));
@@ -4562,8 +4567,7 @@ var QG = { cache: {}, pool: {}, near: {}, all: {} };
 function qgTier(k) {
   if (k === "gen" || k === "cna") return "easy";
   if (k === "emt" || k === "aemt" || k === "lvn") return "basic";
-  if (k === "ms1") return "med1";
-  if (k === "ms3" || k === "intern") return "med2";
+  if (isM(k)) return "med";
   return "clinical";
 }
 function qgBlank(v) { v = String(v || "").trim(); return !v || /^(-|n\/a|none\b.*|not applicable|not given by ems\.?|unknown|no\b.*(listed|known|contraindications?|antidote).*|not established.*|no data.*|not listed.*|see .*)$/i.test(v); }
@@ -4743,6 +4747,7 @@ var QG_KINDS = {
   easy: ["use", "plain", "common", "brand", "contra"],
   basic: ["use", "cls", "common", "contra", "plain"],
   clinical: ["cls", "ind", "contra", "serious", "antidote", "common"],
+  med: ["moa", "target", "ind", "contra", "serious", "antidote", "pcls"],
   med1: ["moa", "target", "pcls", "serious", "contra"],
   med2: ["ind", "contra", "serious", "antidote", "pcls"]
 };
@@ -4839,6 +4844,8 @@ function viewAdmin() {
   var a = A(), c = topbar() + '<div class="adminwrap">';
   if (!Admin.can) return c + '<header class="pagehead"><h1>Control Center</h1><p>Only the owner and editors of DrugBug can open the Control Center.</p></header></div>';
   c += '<header class="pagehead"><h1>DrugBug Control Center</h1><p>Edit the DrugDex database. Saved changes go live for every user right away, with no new app version. Every save is kept in the revision history.</p></header>';
+  /* the owner's Weekly Rewards / Trophies, one tap from the Control Center home (Nov 28 2026) */
+  if (Admin.owner && a.tab !== "rewards") c += '<button class="wrshort" data-atab="rewards"><span class="wrsic" aria-hidden="true">&#127942;</span><span class="wrstx"><strong>Weekly Rewards / Trophies</strong><span>Pick what 1st, 2nd and 3rd place win each week. Open it here.</span></span><span class="wrsgo" aria-hidden="true">&rsaquo;</span></button>';
   if (!Dex.db) c += '<div class="presult">The database is not connected in this view, so changes cannot be saved. Connect to the internet and sign in.</div>';
   if (Admin.msg) c += '<div class="presult good" role="status">' + esc(Admin.msg) + '</div>';
   if (Admin.owner && typeof HOLI !== "undefined") { var hs = SET(); c += '<div class="setrow"><div class="sl"><strong>Holiday preview (owner only)</strong><span class="muted small">Users always get the holiday theme for the date and cannot turn it off. Pick one to preview it on this device for 1 hour (then it goes back to the real date by itself). Reopen the app to see the opening show and sound.</span></div><div class="sc"><select class="pinput" data-setsel="holPreview" aria-label="Holiday preview"><option value="">Automatic (by date)</option>' + HOLI.map(function (h) { return '<option value="' + h.id + '"' + (hs.holPreview === h.id ? ' selected' : '') + '>' + esc(h.en) + '</option>'; }).join("") + '</select></div></div>'; }
@@ -9770,13 +9777,24 @@ function grubFix() { /* give each path its own starter beetle once (older builds
   if ((P.avatar === "free-mantis" || P.avatar === "free-stickbug") && (P.owned || []).indexOf(P.avatar) < 0) { P.owned = (P.owned || []).concat([P.avatar]); saveProg(); }
   if (P.role === "ev" && (P.owned || []).indexOf("grub-eager") < 0) { P.owned = (P.owned || []).concat(["grub-eager"]); saveProg(); }   /* Beginner to Medicine starter (Nov 18 2026) */
   if (!P.role || P.grubFix) return;
-  var R = ROLES.filter(function (x) { return x[0] === P.role; })[0] || ROLES[0], g = R[3];
+  var R = ROLES_ALL.filter(function (x) { return x[0] === P.role; })[0] || ROLES[0], g = R[3];
   if ((P.owned || []).indexOf(g) < 0) P.owned = (P.owned || []).concat([g]);
   if (!P.avatar || P.avatar === "starter") { P.avatar = g; P.avatarTs = Date.now(); }
   P.grubFix = 1; saveProg();
 }
 var ROLES = [["ev", "Beginner to Medicine", "New to medicine: start from zero, one short lesson at a time", "grub-eager", "beginner"], ["ph", "Prehospital", "EMT, AEMT, Paramedic or Flight Paramedic", "grub-medic", "levels"], ["rn", "Nursing", "CNA, LVN/LPN or RN", "grub-nurse", "nlevels"], ["md", "Medical School", "MS1-MS2, MS3-MS4 or Intern", "grub-doc", "mlevels"], ["im", "Imaging", "X-ray, CT, MRI, nuclear medicine or IR", "grub-imaging", "ilevels"], ["ah", "Hospital Allied Health", "Respiratory therapist, dietitian / nutritionist or phlebotomist", "grub-allied", "alevels"], ["rx", "Pharmacy", "Pharmacy technician, pharmacy student or pharmacist", "grub-allied", "rxlevels"]].filter(function (r) { return r[0] !== "rx" || (DB.Q || []).some(function (q) { return isRx(q.lv); }); });
 if (ALLIED_OFF) ROLES = ROLES.filter(function (r) { return r[0] !== "ah"; });
+/* Four clinical tracks only (owner, Nov 28 2026): Prehospital, Nursing, Medical School and Pharmacy. Beginner to Medicine / Everyday Health,
+   Imaging and Hospital Allied Health leave the path picker, the first-run carousel and the main menu; ROLES_ALL keeps them so an old saved
+   profile can still be read (coreMigrate below moves it to a track that exists). Their pages are untouched and still open from a link. */
+var ROLES_ALL = ROLES.slice(), CORE_TRACKS = { ph: 1, rn: 1, md: 1, rx: 1 };
+ROLES = ROLES.filter(function (r) { return CORE_TRACKS[r[0]]; });
+ROLES.forEach(function (r) { if (r[0] === "ph") r[2] = "EMT, Paramedic, Flight Paramedic or Community Paramedic"; if (r[0] === "md") r[2] = "One Medical School track: Step 1, Step 2 CK and Step 3"; if (r[0] === "rx") r[2] = "Pharmacy technician, pharmacy student or pharmacist"; });
+/* AEMT leaves the Prehospital picker; Medical School is one level (the old MS1-MS2, MS3-MS4 and Intern banks, together) */
+DB.LEVELS = (DB.LEVELS || []).filter(function (l) { return l.key !== "aemt"; });
+DB.MLEVELS = [{ key: "intern", name: "Medical School", full: "Step 1, Step 2 CK and Step 3", bug: "Stag Beetle Doc", color: "intern",
+  blurb: "Mechanisms and drug classes (Step 1), first-line therapy and next best step (Step 2 CK), and safe orders: renal dosing, interactions and holds (Step 3). All in one place." }];
+var MS_BANKS = ["ms1", "ms3", "intern"];
 function alliedOff() {
   if (!Prog || !Prog.d) return;
   var P = Prog.d, ch = false, gone = ALLIED_OFF ? isA : alliedHidden;
@@ -9786,6 +9804,21 @@ function alliedOff() {
   } else if (P.role === "ah" && P.startLevel && gone(P.startLevel)) { P.role = ""; ch = true; }   /* was on a field that's gone: pick a path again */
   if (P.startLevel && gone(P.startLevel)) { delete P.startLevel; ch = true; }
   try { var ll = store("lastLevel"); if (ll && gone(ll)) store("lastLevel", ""); } catch (e) {}
+  if (ch) saveProg();
+}
+/* Old levels and paths that no longer exist, moved to the ones that do (Nov 28 2026): AEMT -> EMT; MS1-MS2 and MS3-MS4 -> Medical School;
+   Imaging and Allied Health levels have no home, so they are cleared and the person picks a track again (their progress is kept). */
+function lvAlias(k) { return k === "aemt" ? "emt" : (k === "ms1" || k === "ms3") ? "intern" : k; }
+function coreMigrate() {
+  var P = Prog && Prog.d; if (!P) return; var ch = false;
+  var fix = function (k) { if (!k) return k; k = lvAlias(k); return (isI(k) || (isA(k) && !isRx(k))) ? "" : k; };
+  if (P.startLevel) { var n = fix(P.startLevel); if (n !== P.startLevel) { if (n) P.startLevel = n; else delete P.startLevel; ch = true; } }
+  try { var ll = store("lastLevel"); if (ll) { var nl = fix(ll); if (nl !== ll) store("lastLevel", nl || ""); } } catch (e) {}
+  if (Array.isArray(P.interests)) { var ni = P.interests.filter(function (k) { return CORE_TRACKS[k] === 1; }); if (ni.length !== P.interests.length) { P.interests = ni; ch = true; } }
+  if (P.role === "ev" || P.role === "im" || P.role === "ah") {   /* only the paths that were removed */
+    var nx = (P.interests || [])[0] || (P.startLevel ? routeOfLevel(P.startLevel) : "");
+    P.role = CORE_TRACKS[nx] === 1 ? nx : ""; ch = true;   /* nothing left to land on: the first-run carousel opens, progress untouched */
+  }
   if (ch) saveProg();
 }
 function needRole() { return !!agreeRec() && !Prog.d.role && S.view !== "legal"; }
@@ -9810,17 +9843,51 @@ function pickFun(on) {
    and as many as you like can be on. What you tick is what the main menu shows afterwards. */
 /* the certification each path is known by: the highest one that is actually common */
 var OB_FLAGSHIP = { ph: "paramedic", rn: "rn", md: "intern", im: "rt", ah: "mh" };
+/* ---------- Student or working professional (owner, Nov 28 2026) ----------
+   Prog.d.learnerMode is "student" or "pro". Students see board exam prep (NREMT-, NCLEX-, USMLE-style) next to drug questions;
+   professionals see clinical practice, field or clinical scenarios and drug mastery, with the exam and school framing left out. */
+var LM_EXAM = { emt: "NREMT", paramedic: "NREMT", cna: "CNA state exam", lvn: "NCLEX-PN", rn: "NCLEX-RN", intern: "USMLE", ms1: "USMLE", ms3: "USMLE", pharmtech: "PTCB", pharmschool: "NAPLEX", pharmacist: "NAPLEX" };
+function lmExam(lv) { return LM_EXAM[lv || (S.view === "level" ? S.level : "")] || "board exam"; }
+function lmDefault(lv) {
+  if (!lv) return "student";
+  if (lv === "flight" || lv === "flightrn" || lv === "cp" || lv === "pharmtech" || lv === "pharmacist" || (typeof isF === "function" && isF(lv))) return "pro";
+  return "student";
+}
+function lmGet() { var P = (Prog && Prog.d) || {}; if (P.learnerMode === "student" || P.learnerMode === "pro") return P.learnerMode; return lmDefault(P.startLevel || store("lastLevel") || ""); }
+function lmStudent() { return lmGet() === "student"; }
+function lmSet(m) { Prog.d.learnerMode = m === "pro" ? "pro" : "student"; saveProg(); lmSync(); try { render(); } catch (e) {} }
+/* the two tiles whose names change with the mode; HUB_SHORT is the one-line text under a tile */
+function lmSync() {
+  var st = lmStudent(), lv = S.view === "level" ? S.level : (store("lastLevel") || ""), ex = lmExam(lv), nurse = typeof isN === "function" && isN(lv);
+  HUB_SHORT.qs = st ? "Board exam prep: " + ex + "-style practice and exam mode, plus drug questions" : "Drug mastery: questions on what to give, hold and watch for";
+  HUB_SHORT.rush = st ? "Codes, cases and calls, back to back" : (nurse ? "Clinical scenarios back to back: codes, cases and unfolding calls" : "Field scenarios back to back: codes, cases and unfolding calls");
+}
+/* the second question deck: for students the board exam it prepares for, for professionals the clinical or field scenarios */
+function lmDeckTitle(t) {
+  if (lmStudent()) { var ex = lmExam(S.level); return /^(Registry|Exam)-style/.test(t) ? "Board exam prep: " + ex + "-style" : /NCLEX-style/.test(t) ? "Board exam prep: " + t : t; }
+  return typeof isN === "function" && isN(S.level) ? "Clinical practice questions" : "Field scenario questions";
+}
+function lmChoice() { return !!(Prog && Prog.d && Prog.d.role && Prog.d.role !== "none"); }
+function lmTabs(L) {
+  lmSync();
+  var st = lmStudent(), ex = lmExam(S.view === "level" ? S.level : ""), nurse = S.view === "level" && isN(S.level);
+  L.forEach(function (t) {
+    if (t[0] === "qs") { t[1] = st ? "Exam Prep & Drug Questions" : "Drug Mastery"; t[2] = st ? "Board exam prep (" + ex + "-style practice and exam mode) and drug questions for this level." : "Drug questions, quick checks and the ones you miss."; }
+    else if (t[0] === "rush" && !st) { t[1] = nurse ? "Clinical Scenarios" : "Field Scenarios"; t[2] = "Random calls and cases back to back: codes, clinical decisions and unfolding calls."; }
+  });
+  return L;
+}
 function obCards() {
-  var ev = ROLES.filter(function (r) { return r[0] === "ev"; })[0];
-  var out = [{ code: "ev", name: ev[1], line: ev[2], bug: ev[3], blurb: "Never studied medicine? Short lessons teach the basics one small idea at a time, then you can move on to a specialty.", sub: "For anyone \u2014 no clinical background needed. Everyday Health comes with every path." }];
+  var out = [];
   var BLURB = {
-    ph: "EMT, AEMT, Paramedic, Flight Paramedic and Community Paramedic, each with its own drug list, protocols and registry-style questions.",
+    ph: "EMT, Paramedic, Flight Paramedic and Community Paramedic, each with its own drug list, protocols and registry-style questions.",
     rn: "CNA, LVN/LPN, RN and Flight Nurse, with specialty units, lab values and licensure-style questions.",
-    md: "MS1 through Intern: mechanisms, board-style questions, drug alternatives and the wards view of every drug.",
+    rx: "Pharmacy technician, pharmacy school and pharmacist: names, calculations, law, mechanisms, kinetics, interactions and therapy.",
+    md: "Step 1, Step 2 CK and Step 3 in one track: mechanisms, board-style questions, drug alternatives and the wards view of every drug.",
     im: "X-ray, CT, MRI, nuclear medicine and IR: contrast agents, radiopharmaceuticals and contrast safety.",
     ah: "Respiratory therapists, dietitians / nutritionists and phlebotomists, each with its own tools and questions."
   };
-  ROLES.filter(function (r) { return r[0] !== "ev"; }).forEach(function (r) {
+  ROLES.forEach(function (r) {
     /* Show the path's headline certification, not the rarest one above it. The last level in
        each list is a specialty a small number of people hold - Flight Paramedic, Flight Nurse -
        and leading with it misrepresents the path. The one people recognise is Paramedic, or RN.
@@ -9853,9 +9920,8 @@ function obSel() {
     /* drugbugapp.com/app/?path=ph (or rn, md, im, ah) from a pilot site's quick-start sheet or QR code picks
        their path for them, so a crew member doesn't land on Everyday Health (Nov 13 2026) */
     var qp = ((window.__DBQ || "").match(/[?&]path=([a-z]{2})\b/) || [])[1];
-    if (qp && /^(ph|rn|md|im|ah|ev)$/.test(qp) && !(Prog.d.interests || []).length) { S.obSel[qp] = 1; try { var qi = obCards().map(function (c) { return c.code; }).indexOf(qp); if (qi > 0 && S.obI == null) S.obI = qi; } catch (e) {} }
-    else (Prog.d.interests || ["ev"]).forEach(function (k) { S.obSel[k] = 1; });
-    if (!Object.keys(S.obSel).length) S.obSel.ev = 1;
+    if (qp && /^(ph|rn|md|rx)$/.test(qp) && !(Prog.d.interests || []).length) { S.obSel[qp] = 1; try { var qi = obCards().map(function (c) { return c.code; }).indexOf(qp); if (qi > 0 && S.obI == null) S.obI = qi; } catch (e) {} }
+    else (Prog.d.interests || []).forEach(function (k) { if (CORE_TRACKS[k]) S.obSel[k] = 1; });
   }
   return S.obSel;
 }
@@ -9875,7 +9941,44 @@ function obPrimary() {
   return obCards().map(function (c) { return c.code; })
     .filter(function (k) { return sel[k] && k !== "ev"; })[0] || "";
 }
-function obStep() { return S.obStep === 3 ? 3 : S.obStep === 2 && obPrimary() ? 2 : 1; }
+function obStep() { return S.obStep === 3 ? 3 : (S.obStep === 4 || S.obStep === 5) && S.obPend ? S.obStep : S.obStep === 2 && obPrimary() ? 2 : 1; }
+/* After the level (owner, Nov 28 2026): nursing asks for a specialty, EMT / Paramedic / nursing ask Student or Working Professional, and
+   Flight Paramedic, Flight Nurse (and every other level) go straight in. Medical School is a student track, Pharmacy follows its own level. */
+function obNeedSpec(lv) { return (lv === "lvn" || lv === "rn") && obSpecList(lv).length > 0; }
+function obNeedLearn(lv) { return lv === "emt" || lv === "paramedic" || lv === "cna" || lv === "lvn" || lv === "rn"; }
+function obSpecList(lv) { try { return rnDepts().filter(function (d) { return d.key && unitsFor(lv).some(function (x) { return x.key === d.key; }); }); } catch (e) { return []; } }
+function obToMode(lv) {
+  S.obPend = null;
+  if (FOCUSED_READY && !store("modeAsked") && !S.obRedo) { S.obModeNext = { level: lv }; S.obStep = 3; render(); window.scrollTo(0, 0); return true; }
+  obFinish(lv); return true;
+}
+function obAfterLevel(lv) {
+  S.obPend = lv;
+  if (obNeedSpec(lv)) { S.obSpec = S.obSpec || []; S.obStep = 4; }
+  else if (obNeedLearn(lv)) S.obStep = 5;
+  else return obToMode(lv);
+  render(); window.scrollTo(0, 0); return true;
+}
+function obLevelName(lv) { var o = levelObj(lv); return o ? o.name : lv; }
+function obSpecView() {
+  var lv = S.obPend, L = obSpecList(lv), sel = S.obSpec || [];
+  return '<div class="gate obgate obspec obspecs"><h1>What is your specialty?</h1><p>Pick one or more units, or skip for general ' + esc(obLevelName(lv)) + ' nursing. The medicines, questions and Bug Rush calls follow what you pick, and you can change it any time.</p>' +
+    '<div class="obchips" role="group" aria-label="Specialty">' + L.map(function (d) { var on = sel.indexOf(d.key) >= 0; return '<button class="obchip' + (on ? ' on' : '') + '" data-obspec="' + esc(d.key) + '" aria-pressed="' + on + '">' + esc(d.name) + '</button>'; }).join("") + '</div>' +
+    '<div class="obfoot"><button class="btn big" data-obspecdone="1">' + (sel.length ? 'Continue with ' + sel.length + ' picked' : 'Skip: general nursing') + '</button><button class="btn ghost" data-obback4="1">Back</button></div></div>';
+}
+function obLearnView() {
+  var lv = S.obPend, nm = obLevelName(lv), ex = lmExam(lv);
+  return '<div class="gate obgate obspec oblearn"><h1>Are you a student or a working professional?</h1><p>This sets how DrugBug talks to you. You can switch it any time in Settings.</p>' +
+    '<div class="obmrow"><button class="obmode student" data-oblm="student"><strong>' + esc(nm) + ' Student</strong><span class="obml">Studying for ' + esc(ex) + '.</span><ul><li>Board exam prep: ' + esc(ex) + '-style questions and exam mode</li><li>Drug questions and practice tests</li></ul></button>' +
+    '<button class="obmode pro" data-oblm="pro"><strong>' + esc(nm) + ' Professional</strong><span class="obml">Working in the field or on the floor.</span><ul><li>Clinical practice and ' + (isN(lv) ? 'clinical' : 'field') + ' scenarios</li><li>Drug mastery: what to give, hold and watch for</li></ul></button></div>' +
+    '<div class="obfoot"><button class="btn ghost" data-obback5="1">Back</button></div></div>';
+}
+function obApplyNursing(lv, student) {
+  if (!isN(lv) || lv === "cna" || lv === "flightrn") return;
+  var u = (S.obSpec || []).slice(); if (student || !u.length) u.push("school");   /* students (and anyone who skipped) also get general nursing-school content */
+  store("nunits", u); store("nunit", u.filter(function (x) { return x !== "school"; })[0] || ""); store("nunitFocus", "all"); store("rnDeptAsked", 1);
+  try { UNITC = {}; } catch (e) {}
+}
 /* Step 3 (owner, Nov 5 2026): Focused or Enhanced, asked once, right after the level */
 function obModeView() {
   var fx = function (m, title, line, pts) {
@@ -9925,6 +10028,8 @@ function obWheel(C, i, sel) {
 }
 function obView() {
   if (obStep() === 3) return obModeView();
+  if (obStep() === 4) return obSpecView();
+  if (obStep() === 5) return obLearnView();
   var step = obStep(), C = obList(), sel = step === 1 ? obSel() : null,
       i = ((S.obI == null ? 0 : S.obI) % C.length + C.length) % C.length, cur = C[i];
   if (step === 2) {
@@ -9978,12 +10083,18 @@ function obClick(t, a) {
     S.obSel = null; S.obI = null; pickRole("ev");
     return true;
   }
-  if (a.obfinish) { if (FOCUSED_READY && !store("modeAsked") && !S.obRedo) { S.obModeNext = { level: a.obfinish }; S.obStep = 3; render(); window.scrollTo(0, 0); return true; } obFinish(a.obfinish); return true; }
+  if (a.obfinish) return obAfterLevel(a.obfinish);
+  if (a.obspec) { var sp = S.obSpec || (S.obSpec = []), si = sp.indexOf(a.obspec); if (si >= 0) sp.splice(si, 1); else sp.push(a.obspec); render(); return true; }
+  if (a.obspecdone) { if (obNeedLearn(S.obPend)) { S.obStep = 5; render(); window.scrollTo(0, 0); return true; } obApplyNursing(S.obPend, false); return obToMode(S.obPend); }
+  if (a.lmset) { lmSet(a.lmset); return true; }
+  if (a.oblm) { var lm0 = a.oblm === "pro" ? "pro" : "student", lv0 = S.obPend; Prog.d.learnerMode = lm0; obApplyNursing(lv0, lm0 === "student"); saveProg(); lmSync(); return obToMode(lv0); }
+  if (a.obback4) { S.obStep = 2; S.obPend = null; render(); return true; }
+  if (a.obback5) { S.obStep = obNeedSpec(S.obPend) ? 4 : 2; if (S.obStep === 2) S.obPend = null; render(); return true; }
   if (a.lvgrid) { S.lvGrid = true; render(); return true; }
   if (a.obagain) { obAgain(); window.scrollTo(0, 0); return true; }   /* Settings > Study > Your specialty: this button was never wired up (owner, Nov 5 2026) */
   if (a.obmode) { obModePick(a.obmode); return true; }
   if (a.obmodeset) { var fn = a.obmodeset !== "focused"; if (fn !== funOn()) { setSet("fun", fn); setSet("sfx", fn); store("funAsked", 1); store("modeAsked", 1); try { document.documentElement.setAttribute("data-serious", fn ? "" : "1"); } catch (e) {} try { if (!fn) { S.mupop = false; MU.preview = null; muStop(); } else muSync(); } catch (e) {} } render(); return true; }
-  if (a.obmodeback) { var nb = S.obModeNext || {}; S.obStep = nb.ev ? 1 : 2; render(); return true; }
+  if (a.obmodeback) { var nb = S.obModeNext || {}; if (nb.level && obNeedLearn(nb.level)) { S.obPend = nb.level; S.obStep = 5; } else S.obStep = nb.ev ? 1 : 2; render(); return true; }
   if (a.obback) { S.obStep = 1; S.obI = 0; render(); return true; }
   return false;
 }
@@ -10043,7 +10154,8 @@ function obFinish(levelKey, fromMode) {
   var redo = !!S.obRedo, picked = Prog.d.interests || [], primary = obPrimary();
   if (levelKey) store("lastLevel", levelKey);
   Prog.d.startLevel = levelKey || "";
-  S.obSel = null; S.obI = null; S.obStep = 1;
+  if (levelKey && !obNeedLearn(levelKey)) Prog.d.learnerMode = lmDefault(levelKey);   /* Flight, Community Paramedic, Medical School and Pharmacy do not ask */
+  S.obSel = null; S.obI = null; S.obStep = 1; S.obPend = null; S.obSpec = null;
   pickRole(primary || picked.filter(function (k) { return k !== "ev"; })[0] || "ev");
   var done = 0, land = function () {
     if (done) return; done = 1;
@@ -10116,7 +10228,7 @@ function roleView() {
 }
 function pickRole(r) {
   S.obRedo = 0;
-  var R = ROLES.filter(function (x) { return x[0] === r; })[0];
+  var R = ROLES_ALL.filter(function (x) { return x[0] === r; })[0];
   Prog.d.role = r;
   var G = R || ROLES[0]; /* every path starts with its version of the starter beetle; BugDex browsers get the Garden Beetle */
   { var g = G[3]; if ((Prog.d.owned || []).indexOf(g) < 0) Prog.d.owned = (Prog.d.owned || []).concat([g]); if (!Prog.d.avatar || Prog.d.avatar === "starter") { Prog.d.avatar = g; Prog.d.avatarTs = Date.now(); } }
@@ -11402,7 +11514,7 @@ function myAnalyticsView() {
   var m = myStats(), on = statsOn(), wk = usgWeak(), acc = m.q ? Math.round(100 * m.c / m.q) : null;
   var hrs = Math.floor((m.sec || 0) / 3600), mins = Math.round(((m.sec || 0) % 3600) / 60);
   var lv = (Prog.d && (Prog.d.startLevel || store("lastLevel"))) || "", lo = lv && typeof levelObj === "function" ? levelObj(lv) : null;
-  var rr = Prog.d && Prog.d.role && typeof ROLES !== "undefined" ? ROLES.filter(function (x) { return x[0] === Prog.d.role; })[0] : null, route = rr ? rr[1] : "Not picked yet";
+  var rr = Prog.d && Prog.d.role && typeof ROLES_ALL !== "undefined" ? ROLES_ALL.filter(function (x) { return x[0] === Prog.d.role; })[0] : null, route = rr ? rr[1] : "Not picked yet";
   var plan = { free: "Free", plus: "DrugBug Plus", pro: "DrugBug Pro" }[(function () { try { return tier(); } catch (e) { return "free"; } })()] || "Free";
   var pay = { apple: "paid through the App Store", web: "paid on the website", trial: "free trial", code: "App Store offer code", free: "from a code, class or bonus" }[usgPay()] || "";
   var tile = function (v, l, sub) { return '<div class="anTile"><b>' + v + '</b><span>' + esc(l) + '</span>' + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</div>'; };
@@ -11447,10 +11559,11 @@ function settingsView() {
   c += setCard("study", "Study preferences",
     /* first thing in Study: go back and pick your specialty and level again (owner, Nov 5 2026) */
     setRow("Your specialty", obIntLine() + (store("lastLevel") && levelObj(store("lastLevel")) ? " \u00b7 level: " + levelObj(store("lastLevel")).name : "") + ". Go back to the start and choose a different specialty or level. Your progress, bugs and sticks stay.", '<button class="btn small" data-obagain="1">Choose my specialty</button>') +
+    (lmChoice() ? setRow("I am a", "Students see board exam prep next to drug questions. Professionals see clinical practice, field scenarios and drug mastery instead. Switch any time.", '<div class="segs" role="radiogroup" aria-label="Learner mode"><button class="seg" role="radio" aria-checked="' + lmStudent() + '" data-lmset="student">Student</button><button class="seg" role="radio" aria-checked="' + !lmStudent() + '" data-lmset="pro">Working professional</button></div>') : "") +
     (!FOCUSED_READY ? "" : setRow("Focused or Enhanced", "Focused is for studying: just the medicine, the questions and your progress, with no bugs, music, sound or animations. Enhanced is the full DrugBug: your bug and the Terrarium, Hickory, music, sounds and the level animations. The medicine and the questions are the same in both.", '<span class="seg2">' + ['focused', 'enhanced'].map(function (m) { var on = (m === 'enhanced') === funOn(); return '<button class="chip" data-obmodeset="' + m + '" aria-pressed="' + on + '">' + (m === 'focused' ? 'Focused' : 'Enhanced') + '</button>'; }).join('') + '</span>')) +
     setRow("Open DrugBug to", "Where the app starts each time you open it.", '<select class="pinput" data-setsel="homeLevel"><option value="">The main menu (default)</option><option value="path"' + (s.homeLevel === "path" ? " selected" : "") + '>My path</option><option value="gen"' + (s.homeLevel === "gen" ? " selected" : "") + '>BugDex</option>' + lvls.map(function (l) { return '<option value="' + l.key + '"' + (s.homeLevel === l.key ? " selected" : "") + '>' + esc(l.name) + '</option>'; }).join("") + '</select>') +
     setRow("Daily goal", "Questions in the Daily DrugBug.", setOpts("dailyGoal", s.dailyGoal, [[5, "5"], [10, "10"], [20, "20"]])) +
-    setRow("Exam prep length", "Default number of questions.", setOpts("nrN", s.nrN, [[10, "10"], [25, "25"], [50, "50"], [100, "100"]])) +
+    setRow(lmStudent() ? "Exam prep length" : "Quiz length", "Default number of questions.", setOpts("nrN", s.nrN, [[10, "10"], [25, "25"], [50, "50"], [100, "100"]])) +
     setRow("Exam prep mode", "", setOpts("nrMode", s.nrMode, [["practice", "Practice"], ["exam", "Exam"]])) +
     setRow("Medication names in questions", "Generic names by default. Pick Brand names to be asked by brand, or mix both.", setOpts("qnames", s.qnames || "generic", [["generic", "Generic names (default)"], ["brand", "Brand names"], ["all", "Generic and brand mixed"]])) +
     setRow("Question choice", "", setOpts("adaptive", s.adaptive ? "1" : "0", [["1", "Adaptive"], ["0", "Random"]])) +
@@ -35634,7 +35747,7 @@ function clAdoptLevel(lv) {
     if (I.indexOf(rt) < 0) Prog.d.interests = I.filter(function (k) { return k !== "ev" || I.length > 1; }).concat([rt]);
     Prog.d.startLevel = lv; store("lastLevel", lv);
     if (!Prog.d.role || Prog.d.role === "ev") {
-      var R = ROLES.filter(function (x) { return x[0] === rt; })[0]; Prog.d.role = rt;
+      var R = ROLES_ALL.filter(function (x) { return x[0] === rt; })[0]; Prog.d.role = rt;
       if (R) { var g = R[3]; if ((Prog.d.owned || []).indexOf(g) < 0) Prog.d.owned = (Prog.d.owned || []).concat([g]); if (!Prog.d.avatar || Prog.d.avatar === "starter") { Prog.d.avatar = g; Prog.d.avatarTs = Date.now(); } }
     }
     S.obRedo = 0; S.obSel = null; S.obStep = 1; S.obKey = false;
@@ -36802,7 +36915,7 @@ document.addEventListener("keydown", function (e) { if (B3.open && e.key === "Es
   document.head.appendChild(st);
 })();
 
-Dex.load(); try { otaInit(); } catch (e) {} initProg(); try { alliedOff(); } catch (e) {} if (typeof grubFix === "function") grubFix(); if (agreeRec() && typeof trialBegin === "function") trialBegin(); setTimeout(function () { if (typeof remindSync === "function") remindSync(); if (typeof wdwSync === "function") wdwSync(); if (typeof watchSync === "function") watchSync(); }, 1500); initAdmin(); initLegal(); if (typeof accInit === "function") accInit(); if (typeof walletInit === "function") walletInit(); if (typeof subInit === "function") subInit(); setTimeout(loadProtocolSets, 400);
+Dex.load(); try { otaInit(); } catch (e) {} initProg(); try { alliedOff(); } catch (e) {} try { coreMigrate(); } catch (e) {} try { lmSync(); } catch (e) {} if (typeof grubFix === "function") grubFix(); if (agreeRec() && typeof trialBegin === "function") trialBegin(); setTimeout(function () { if (typeof remindSync === "function") remindSync(); if (typeof wdwSync === "function") wdwSync(); if (typeof watchSync === "function") watchSync(); }, 1500); initAdmin(); initLegal(); if (typeof accInit === "function") accInit(); if (typeof walletInit === "function") walletInit(); if (typeof subInit === "function") subInit(); setTimeout(loadProtocolSets, 400);
 /* ---------- Beginner to Medicine, the full course (owner, Nov 18 2026) ----------
    47 units in 5 stages that match the bug stages (Hatchling to Legend). Each lesson: five idea cards,
    then four questions with explanations. Each unit ends with a checkpoint: eight questions from the
@@ -37022,7 +37135,7 @@ function gtSteps() {
     L.push({ sel: "[data-tab='rush']", t: "Bug Rush", x: H("Bug Rush: codes, cases and calls on a live monitor. Pick right and your patient perks up. Tap it.", "Bug Rush: codes, cases and calls on a live monitor. The vitals react to your choices. Tap it."), act: function () {} });
   }
   L.push({ pre: function () { if (S.view !== "home") go("home"); }, sel: "[data-go='gen'].route, [data-startlearn='gen'].route", t: "The BugDex", x: H("The BugDex has got every last drug. Plain-spoke or the whole long story, your pick. Tap it.", "The BugDex has every medication, in plain language or in full. Tap it."), act: function () {} });
-  L.push({ sel: ".evbox .route", t: "Everyday Health", x: H("Everybody gets Everyday Health. Medicines, vitamins and your own body, said plain. Tap it.", "Everyone gets Everyday Health: medicines, vitamins and your body, in plain words. Tap it."), act: function () {} });
+  if (document.querySelector(".evbox .route")) L.push({ sel: ".evbox .route", t: "Everyday Health", x: H("Everybody gets Everyday Health. Medicines, vitamins and your own body, said plain. Tap it.", "Everyone gets Everyday Health: medicines, vitamins and your body, in plain words. Tap it."), act: function () {} });
   if (fun) {
     L.push({ sel: ".hv2mas, .stickchip", t: "Your bug", x: "That's your bug. Tap it and I'll show ya the Terrarium.", act: function () { go("terrarium"); } });
     L.push({ sel: "[data-equip]", t: "The Terrarium", x: "Here's where your bugs live. Tap one to use it. Hold one down to read its story and stats. Tap it.", act: function () {} });
