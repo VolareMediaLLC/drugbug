@@ -4621,7 +4621,7 @@ function viewAdmin() {
   if (!Dex.db) c += '<div class="presult">The database is not connected in this view, so changes cannot be saved. Connect to the internet and sign in.</div>';
   if (Admin.msg) c += '<div class="presult good" role="status">' + esc(Admin.msg) + '</div>';
   if (Admin.owner && typeof HOLI !== "undefined") { var hs = SET(); c += '<div class="setrow"><div class="sl"><strong>Holiday preview (owner only)</strong><span class="muted small">Users always get the holiday theme for the date and cannot turn it off. Pick one to preview it on this device for 1 hour (then it goes back to the real date by itself). Reopen the app to see the opening show and sound.</span></div><div class="sc"><select class="pinput" data-setsel="holPreview" aria-label="Holiday preview"><option value="">Automatic (by date)</option>' + HOLI.map(function (h) { return '<option value="' + h.id + '"' + (hs.holPreview === h.id ? ' selected' : '') + '>' + esc(h.en) + '</option>'; }).join("") + '</select></div></div>'; }
-  c += '<div class="tabs">' + [["flags", "Flagged" + (flagCount() ? " (" + flagCount() + ")" : "")], ["ai", "AI content review"], ["drugs", "Medications"], ["review", "Review queue"], ["questions", "Questions"], ["scenarios", "Scenarios"], ["protocols", "Protocol sets"], ["reports", "Error reports"], ["history", "Revision history"], ["requests", "Protocol requests"], ["moderation", "Leaderboard"], ["compliance", "Compliance"]].concat(NATIVE ? [["licenses", "School licenses"]] : []).map(function (t) { return '<button class="tab" data-atab="' + t[0] + '" aria-selected="' + (a.tab === t[0]) + '">' + t[1] + '</button>'; }).join("") + '</div><div class="admin">';
+  c += '<div class="tabs">' + [["flags", "Flagged" + (flagCount() ? " (" + flagCount() + ")" : "")], ["ai", "AI content review"], ["drugs", "Medications"], ["review", "Review queue"], ["questions", "Questions"], ["scenarios", "Scenarios"], ["protocols", "Protocol sets"], ["reports", "Error reports"], ["history", "Revision history"], ["requests", "Protocol requests"], ["moderation", "Leaderboard"], ["compliance", "Compliance"]].concat(NATIVE ? [["licenses", "School licenses"]] : [], Admin.owner ? [["rewards", "Weekly rewards"]] : []).map(function (t) { return '<button class="tab" data-atab="' + t[0] + '" aria-selected="' + (a.tab === t[0]) + '">' + t[1] + '</button>'; }).join("") + '</div><div class="admin">';
   if (a.tab === "flags") c += flagsView();
   else if (a.tab === "ai") c += aiView();
   else if (a.tab === "drugs") c += a.form ? drugForm() : drugList();
@@ -4633,6 +4633,7 @@ function viewAdmin() {
   else if (a.tab === "moderation") c += modView();
   else if (a.tab === "compliance") c += complianceView();
   else if (a.tab === "licenses") c += licensesView();
+  else if (a.tab === "rewards") c += wrView();
   else if (a.tab === "protocols") c += a.psedit ? psForm() : psList();
   else c += reqView();
   return c + '</div></div>';
@@ -6542,7 +6543,7 @@ function stylesView() {
   var cur = Prog.d.style || "classic", bal = sticks();
   return '<p class="muted">Color styles change how your equipped bug looks. Buy once, use on any bug.</p><div class="shopgrid">' + STYLES.map(function (st) {
     var own = st[2] === 0 || (Prog.d.styles || []).indexOf(st[0]) >= 0, on = cur === st[0];
-    var art = bugArt(myBug(), "", { wear: myWear(), stage: myStage() }).replace('<svg class="bug', '<svg style="filter:' + st[3] + '" class="bug');
+    var art = bugArt(myBug(), "", { wear: myWear(), stage: myStage(), mood: myFace() }).replace('<svg class="bug', '<svg style="filter:' + st[3] + '" class="bug');
     return '<div class="bugcard' + (on ? " eq" : "") + '">' + art + '<strong>' + esc(st[1]) + '</strong>' + (own ? '<span class="muted small">Owned</span>' : stickTag(st[2])) + '<div class="bact">' + (on ? '<span class="eqd">In use</span>' : own ? '<button class="btn small" data-style="' + st[0] + '">Use</button>' : '<button class="btn small' + (bal >= st[2] ? '' : ' ghost') + '" data-style="' + st[0] + '"' + (bal >= st[2] ? '' : ' disabled') + '>' + (bal >= st[2] ? 'Buy' : 'Need ' + (st[2] - bal) + ' more') + '</button>') + '</div></div>';
   }).join("") + '</div>';
 }
@@ -6614,7 +6615,7 @@ function stageCheck() {
 function showEvolve(st) {
   var es = lang() === "es", b = myBug(), nx = STAGE_LV[st];
   evodlg.innerHTML = '<div class="panel pwpanel evopanel" role="dialog" aria-modal="true" aria-label="' + (es ? "Tu insecto creció" : "Your bug grew") + '" tabindex="-1"><p class="wdwkick">' + (es ? "¡Tu insecto creció!" : "Your bug grew!") + '</p>' +
-    '<div class="evoart"><div class="evofrom">' + bugArt(b, "", { stage: st - 1, wear: myWear(), mood: myFace() }) + '</div><span class="evoarrow" aria-hidden="true">→</span><div class="evoto">' + myBugArt("big", "joy", null, st) + '</div></div>' +
+    '<div class="evoart"><div class="evofrom">' + myBugArt("", null, null, st - 1) + '</div><span class="evoarrow" aria-hidden="true">→</span><div class="evoto">' + myBugArt("big", "joy", null, st) + '</div></div>' +
     '<h2>' + esc(b.name) + (es ? " ahora es " : (st === 3 ? " is now an " : " is now a ")) + esc(stageName(st)) + '</h2><p>' + STAGE_NEW[es ? "es" : "en"][st - 1] + '</p>' +
     (nx ? '<p class="muted small">' + (es ? "Siguiente etapa: " + esc(stageName(st + 1)) + " en el nivel " + nx + "." : "Next stage: " + esc(stageName(st + 1)) + " at level " + nx + ".") + '</p>' : '') +
     '<div class="btnrow"><button class="btn" data-evo="shop">' + (es ? "Ver en el Terrario" : "See it in the Terrarium") + '</button><button class="btn ghost" data-evo="close">' + (es ? "¡Genial!" : "Nice!") + '</button></div></div>';
@@ -6675,7 +6676,7 @@ function tankHTML(mine, withMore) {
   var bub = mine.map(function (b, i) {
     var on = me.id === b.id;
     return '<button class="bubble' + (on ? ' on' : '') + '" data-b3id="' + b.id + '" role="listitem" style="--d:' + ((i * 0.37) % 3).toFixed(2) + 's" ' + (on ? 'aria-current="true"' : 'data-equip="' + b.id + '"') + ' aria-label="' + (on ? (es ? "Usando " : "Using ") : (es ? "Usar " : "Use ")) + esc(b.name) + '">' +
-      '<span class="orb r-' + b.rar + '">' + bugArt(b, "", { stage: MAX_STAGE, wear: on ? myWear() : {}, mood: on ? myFace() : "happy" }) + '</span><span class="bname">' + esc(b.name) + '</span>' + (on ? '<em>' + (es ? "Usando" : "Using") + '</em>' : '') + '</button>';
+      '<span class="orb r-' + b.rar + '">' + (on ? myBugArt("", null, null, MAX_STAGE) : bugArt(b, "", { stage: MAX_STAGE, mood: "happy" })) + '</span><span class="bname">' + esc(b.name) + '</span>' + (on ? '<em>' + (es ? "Usando" : "Using") + '</em>' : '') + '</button>';
   }).join("");
   if (withMore) bub += '<button class="bubble more" data-shopf="bugs" role="listitem"><span class="orb"><span class="plus" aria-hidden="true">+</span></span><span class="bname">' + (es ? "Conseguir más" : "Get more bugs") + '</span></button>';
   return '<div class="pickhead"><h3>' + (es ? "Mi terrario" : "My terrarium") + '</h3><span class="muted small">' + (es ? "Toca para usarlo, mantén pulsado para ver su ficha" : "Tap to use, hold to see its card") + '</span></div>' +
@@ -15134,16 +15135,16 @@ function holOn(d) {
   var ems = holNthDow(y, 4, 0, 3); if (holIn(d, ems, new Date(y, 4, ems.getDate() + 6))) return "ems"; /* EMS Week: the third full week of May, Sunday to Saturday */
   if (m === 6 && day >= 1 && day <= 4) return "july4";
   if (m === 9 && day >= 24) return "halloween";
-  /* the whole week into the Sunday after, so it gets the same run Halloween does (owner, Nov 1 2026) */
-  var tg = holNthDow(y, 10, 4, 4); if (holIn(d, new Date(y, 10, tg.getDate() - 6), new Date(y, 10, tg.getDate() + 3))) return "thanksgiving";
+  /* the week up to Thanksgiving Day (the 4th Thursday of November) and nothing after it: the theme is off the day after (owner, Nov 27 2026; it used to run to the Sunday after) */
+  var tg = holNthDow(y, 10, 4, 4); if (holIn(d, new Date(y, 10, tg.getDate() - 6), new Date(y, 10, tg.getDate()))) return "thanksgiving";
   if (m === 11 && day === 25) return "christmas"; /* Merry Christmas only on Christmas Day */
   if (m === 11 && day >= 18 && day <= 30) return "winter"; /* snowy days around Christmas */
   return "";
 }
 function holKey(h) { return h ? (h.base || h.id) : ""; }
-/* Pinned (owner, Nov 1 2026): Thanksgiving is the theme until further notice, whatever the date
-   says. Set HOL_PIN = "" to hand it back to the calendar in holOn(). */
-var HOL_PIN = "thanksgiving";
+/* Was pinned to "thanksgiving" (owner, Nov 1 2026) "until further notice", which kept the theme on after the holiday had
+   passed. Handed back to the calendar in holOn() on Nov 27 2026. Set it to a holiday id only to force one on. */
+var HOL_PIN = "";
 function holToday() {
   if (typeof funOn === "function" && !funOn()) return null;   /* Serious mode: no holiday dressing */
   var s = SET(); /* always on: there is no user setting for holidays */
@@ -15310,9 +15311,9 @@ function harvestStrip() {
 function tglPileH(x) { var h = 0; for (var i = 0; i < TGL.pile.length; i++) { var p = TGL.pile[i]; if (Math.abs(p.x - x) < p.s * 1.4) h += p.s * 0.45; } return Math.min(h, TGL_PILE_MAX + 4); }
 function tglWindow() {
   var d = new Date(), y = d.getFullYear(), tg = holNthDow(y, 10, 4, 4);
-  return d >= new Date(y, 10, 1) && d <= new Date(y, 10, tg.getDate() + 1, 23, 59, 59);
+  return d >= new Date(y, 10, 1) && d <= new Date(y, 10, tg.getDate(), 23, 59, 59);
 }
-var TGL_ON = true;    /* a gentle fall until the day after Thanksgiving, main menu only (owner, Nov 5 2026) */
+var TGL_ON = true;    /* a gentle fall up to the end of Thanksgiving Day, main menu only (owner, Nov 5 2026; ends on the day itself since Nov 27 2026) */
 var TGL_GENTLE = true;   /* a few leaves, slow, no gusts, no bouncing, no pile */
 function tglWant() {
   if (!TGL_ON) return false;
@@ -34316,10 +34317,15 @@ function agxMyAv() {
     return av;
   } catch (e) { return null; }
 }
-function agxAvArt(av, cls) {
+function agxAvArt(av, cls, me) {
+  /* A row that is YOU always shows your bug as it is right now: the bug, its stage, face, pal, wardrobe and colour style. The copy the
+     server keeps is only as new as your last answer and is empty until your first one, which used to leave the plain starter bug on
+     your own row (owner, Nov 28 2026). Other people are drawn from the copy the server has of theirs. */
+  var filt = "";
+  if (me) { try { var mine = agxMyAv(); if (mine) av = mine; filt = typeof styleFilter === "function" ? styleFilter() : ""; } catch (e0) {} }
   if (!av) av = { b: "starter", s: 1 };   /* not sent yet (older app version): show the starter bug, not a blank circle */
   var art = "", pal = "";
-  try { var b = bugById(av.b); art = bugArt(b, "axbugsvg", { stage: av.s || 5, wear: av.w || {}, mood: av.f || "" }); } catch (e) { art = ""; }
+  try { var b = bugById(av.b); art = bugArt(b, "axbugsvg", { stage: av.s || 5, wear: av.w || {}, mood: av.f || "" }); if (filt) art = art.replace('<svg class="bug', '<svg style="filter:' + filt + '" class="bug'); } catch (e) { art = ""; }
   try { var p = av.p && typeof pkById === "function" ? pkById(av.p) : null; if (p) pal = '<span class="axpal">' + pkSvg(p, "", av.ps || 1) + '</span>'; } catch (e2) { pal = ""; }
   return '<span class="axav ' + (cls || "") + '" aria-hidden="true">' + art + pal + '</span>';
 }
@@ -34371,7 +34377,7 @@ function agxPodium(rows, nameOf, subOf, ptsOf) {
   var order = [top[1], top[0], top[2]], place = [2, 1, 3];
   return '<div class="axpod" role="list" aria-label="Top 3 this week">' + order.map(function (r, i) {
     if (!r) return '<div class="axpodc empty"></div>';
-    return '<div class="axpodc p' + place[i] + (r.me || r.mine ? ' me' : '') + '" role="listitem">' + (place[i] === 1 ? agxConfetti() : '') + agxAvArt(r.av, "big") +
+    return '<div class="axpodc p' + place[i] + (r.me || r.mine ? ' me' : '') + '" role="listitem">' + (place[i] === 1 ? agxConfetti() : '') + agxAvArt(r.av, "big", r.me) +
       '<b class="axpodn">' + esc(nameOf(r)) + '</b>' + (subOf(r) ? '<small>' + esc(subOf(r)) + '</small>' : '') +
       '<div class="axstep"><span class="axplace">' + place[i] + '</span><span class="axpts">' + num0(ptsOf(r)) + '</span></div></div>';
   }).join("") + '</div>';
@@ -34412,10 +34418,10 @@ function agxView() {
     D.board.forEach(function (r) { if (r.me) r.av = agxMyAv() || r.av; });
     c += agxPodium(D.board, function (r) { return r.nick; }, function (r) { return r.dept ? agxDeptName(A.type, r.dept) : ""; }, function (r) { return r.pts; });
     c += '<ol class="clboard axboard">' + D.board.map(function (r) {
-      return '<li class="' + (r.me ? "me" : "") + (r.rank <= 3 && r.pts > 0 ? " axtop" : "") + '"><span class="clrk' + (r.rank <= 3 && r.pts > 0 ? " r" + r.rank : "") + '">' + r.rank + '</span>' + agxAvArt(r.av) + '<span class="clal">' + esc(r.nick) + (r.me ? ' <em>you</em>' : '') + (r.dept ? '<small class="axsub">' + esc(agxDeptName(A.type, r.dept)) + '</small>' : '') + '</span><span class="clsc"><b>' + num0(r.pts) + '</b><small>' + (r.acc != null ? r.acc + "% right" : "no answers yet") + '</small></span>' +
+      return '<li class="' + (r.me ? "me" : "") + (r.rank <= 3 && r.pts > 0 ? " axtop" : "") + '"><span class="clrk' + (r.rank <= 3 && r.pts > 0 ? " r" + r.rank : "") + '">' + r.rank + '</span>' + agxAvArt(r.av, "", r.me) + '<span class="clal">' + esc(r.nick) + (r.me ? ' <em>you</em>' : '') + (r.dept ? '<small class="axsub">' + esc(agxDeptName(A.type, r.dept)) + '</small>' : '') + '</span><span class="clsc"><b>' + num0(r.pts) + '</b><small>' + (r.acc != null ? r.acc + "% right" : "no answers yet") + '</small></span>' +
         (r.me || r.hidden ? '' : '<button class="axrep" data-agxrep="' + esc(r.mid) + '" aria-label="Report this name">' + (AGX.rep === r.mid ? "Report?" : "⚑") + '</button>') + '</li>';
     }).join("") + '</ol>';
-    c += '<p class="muted small">The top 3 this week are your agency’s team on the ' + (D.stateOn ? esc(A.state) : 'National') + ' board. 10 points for each right answer and minus ' + (D.missCost || 10) + ' for each wrong one, up to ' + num0(D.dayCap) + ' points a day (' + num0(M.todayLeft) + ' left today). Starts over for everyone every Sunday at 7 pm Central.</p>';
+    c += '<p class="muted small">The top 3 this week are your agency’s team on the ' + (D.stateOn ? esc(A.state) : 'National') + ' board. 10 points for each right answer, ' + agxMissText(D) + ', up to ' + num0(D.dayCap) + ' points a day (' + num0(M.todayLeft) + ' left today). Starts over for everyone every Sunday at 7 pm Central.</p>';
     if (A.members < 3 || A.teamFilled < 3) c += '<div class="axrecruit"><b>Grow your team</b><span>Your agency\u2019s score is its top 3 people added together, so each coworker who joins can add up to 3,000 points a day.</span><button class="btn" data-agx="recruit">Invite a coworker</button></div>';
   } else if (AGX.tab === "national" || (AGX.stPick && AGX.stPick !== A.state)) { c += agxTierHtml(A); } else {
     {
@@ -38917,6 +38923,44 @@ function hvSoloCard() {
     '<div class="hvsstats"><div><b>' + num0(wk) + '</b><span>XP this week</span></div><div><b>' + num0(pts) + '</b><span>sticks this week</span></div><div><b>' + days + '/7</b><span>days studied</span></div></div>' +
     '<button class="btn hvsjoin" data-openagency="1">Join a team</button><p class="muted small">Pick your hospital, EMS agency, fire department or school. Have a class code? Enter it under Classes to join your class scoreboard.</p></section>';
 }
+/* ---------- Weekly rewards the owner picks (owner, Nov 28 2026) ----------
+   The server sends what each podium place wins as `rewardsLive` (agencyTier national for everyone, agencyBoard for people on a team):
+   { wk, players: { p1, p2, p3 }, team: {...}, state: {...}, national: {...} }, a place being a list of rewards, [] for no prize, or
+   null for "nothing picked: use the usual prize". The owner picks them in Control Center > Weekly rewards (weeklyRewardsGet / Set),
+   with no app update. A reward is { kind: "sticks", sticks } | { kind: "bug", rar } | { kind: "bugid", bug, name } |
+   { kind: "items", items: [...], name }. These turn them into the same prize cards the Top Agencies podium uses. */
+var RWL = { tier: null, fit: {} };
+function rwLive() { var a = RWL.tier, b = null; try { b = AGX.data && AGX.data.rewardsLive; } catch (e) {} return (a && a.players ? a : b && b.players ? b : a || b) || null; }
+function rwCap(x) { x = String(x || ""); return x.charAt(0).toUpperCase() + x.slice(1); }
+function rwSay(it) {
+  if (!it) return "";
+  if (it.kind === "sticks") return num0(it.sticks) + " sticks";
+  if (it.kind === "bug") return (it.rar === "epic" ? "an " : "a ") + rwCap(it.rar) + " bug";
+  return it.name || "";
+}
+var RW_RAR = ["legendary", "epic", "rare"], RW_ORD = ["1st place", "2nd place", "3rd place"];
+/* one place's rewards -> a prize card for bigPodium, or null when nothing was picked (the caller keeps its usual card).
+   sub is the small line under the title. The first reward is the card; any others are listed under it. */
+function rwPrize(items, i, sub) {
+  if (!items) return null;
+  var rar = RW_RAR[i] || "rare", ord = RW_ORD[i] || "";
+  if (!items.length) return { rar: "common", none: 1, t: "No prize", s: sub || ord + " this week" };
+  var it = items[0], pz = { rar: rar, t: rwSay(it), s: sub || ord + " this week" };
+  if (items.length > 1) pz.x = "+ " + items.slice(1).map(rwSay).join(" + ");
+  try {
+    if (it.kind === "sticks") pz.stk = 1;
+    else if (it.kind === "bug") pz.rar = it.rar;
+    else if (it.kind === "bugid") {
+      var b = bugById(it.bug);
+      if (b && b.id === it.bug) { pz.rar = /^(common|rare|epic|legendary)$/.test(b.rar) ? b.rar : rar; pz.art = bugArt(b); pz.tap = 'data-pzlore="' + esc(b.id) + '"'; }
+    } else if (it.kind === "items") {
+      var pw = {}, ok = 0; (it.items || []).forEach(function (x) { if (ITEMS_BY[x]) { pw[ITEMS_BY[x].slot] = x; ok++; } });
+      if (ok) { var k = "rw" + i + "-" + (it.items || []).join(","); RWL.fit[k] = { name: it.name, items: it.items }; pz.art = myBugArt("", null, pw); pz.tap = 'data-pzfit="' + esc(k) + '"'; }
+    }
+  } catch (e) {}
+  return pz;
+}
+function rwHasOther(g) { var L = rwLive(), G = L && L[g]; return !!G && ["p1", "p2", "p3"].some(function (p) { return (G[p] || []).some(function (x) { return x.kind !== "sticks"; }); }); }
 var HVT = { at: 0, busy: false };
 function hvTeamCard() {
   var D = AGX.data && AGX.data.member ? AGX.data : null;
@@ -38963,6 +39007,228 @@ function hvPrizeBox() {
     return '<div class="hvpz"><span class="hvpzic" aria-hidden="true">' + x[0] + '</span><div><b>' + esc(x[1]) + '</b><ul>' + x[2].map(function (p) { return '<li>' + esc(p) + '</li>'; }).join("") + '</ul></div></div>';
   }).join("") + (T && T.rules ? '<p class="muted small">' + esc(T.rules) + '</p>' : '') + '</section>';
 }
+/* ===== Control Center > Weekly rewards (owner, Nov 28 2026) =====
+   Pick what 1st, 2nd and 3rd place win each week on Top Players, inside each agency, on the state boards and on the National board,
+   with no app update. Talks to the owner-only Cloud Functions weeklyRewardsGet / weeklyRewardsSet (functions/weeklyrewards.js), which
+   keep Firestore weeklyRewards/default (every week without its own document) and weeklyRewards/<Monday YYYY-MM-DD> (one week).
+   A place left on "Usual prize" falls through to the week's document, then the default, then the amounts built into the server.
+   "No prize" is a real choice. Rewards come from the app's own catalog (every bug and wardrobe piece in this build) or from what the
+   server has already seen. A week can be changed until it ends (Sunday 7 pm Central); the default can be changed any time. */
+var WRW = { st: 0, err: "", data: null, sel: "default", draft: null, dirty: false, busy: false, msg: "", bad: "", resetAsk: false };
+var WR_GROUPS = ["players", "team", "state", "national"], WR_PL = ["p1", "p2", "p3"], WR_ORD = ["1st", "2nd", "3rd"];
+var WR_INFO = {
+  players: ["Top Players", "The top 3 players in the country, on a team or not."],
+  team: ["Agencies: top 3 in each agency", "The top 3 people inside every approved agency (500 points or more that week)."],
+  state: ["State boards", "The top 3 people of the 1st, 2nd and 3rd agencies in each state. State boards are paused right now, so this only matters once they are back on."],
+  national: ["National board", "Everyone eligible on the roster of the 1st, 2nd and 3rd agencies in the country."]
+};
+var WR_KINDS = [["sticks", "Sticks"], ["bug", "A random bug of a rarity"], ["bugid", "A named bug"], ["items", "An outfit"]];
+var WR_RARS = ["common", "rare", "epic", "legendary"], WR_ID = /^[a-z0-9][a-z0-9_-]{1,39}$/;
+function wrCopy(doc) {
+  var d = { note: (doc && doc.note) || "" };
+  WR_GROUPS.forEach(function (g) {
+    var src = doc && doc[g]; if (!src) return;
+    WR_PL.forEach(function (p) { if (Array.isArray(src[p])) { d[g] = d[g] || {}; d[g][p] = JSON.parse(JSON.stringify(src[p])); } });
+  });
+  return d;
+}
+function wrDocOf(sel) {
+  var D = WRW.data; if (!D) return null;
+  if (sel === "default") return D["default"] || null;
+  var w = (D.weeks || []).filter(function (x) { return x.wk === sel; })[0]; return w ? w.doc : null;
+}
+function wrPick(sel) { WRW.sel = sel; WRW.draft = wrCopy(wrDocOf(sel)); WRW.dirty = false; WRW.bad = ""; WRW.resetAsk = false; }
+function wrLoad(force) {
+  if (WRW.busy || (!force && (WRW.st === 1 || WRW.st === 2))) return;
+  WRW.st = 1; WRW.err = "";
+  fnCall("weeklyRewardsGet", {}).then(function (r) {
+    if (!r || !r.ok) throw new Error("The server did not send the rewards.");
+    WRW.data = r; WRW.st = 2;
+    var known = WRW.sel === "default" || (r.weeks || []).some(function (x) { return x.wk === WRW.sel; });
+    if (!WRW.draft || !known || !WRW.dirty) wrPick(known ? WRW.sel : "default");
+    if (S.view === "admin") render();
+  }).catch(function (e) {
+    WRW.st = 3; WRW.err = e && e.message === "offline" ? "Weekly rewards need an internet connection and a signed-in owner account." : (e && e.message) || "Couldn’t load the weekly rewards.";
+    if (S.view === "admin") render();
+  });
+}
+/* the same checks the server makes, so mistakes show here, next to the place, before anything is sent */
+function wrClean(it) {
+  if (!it || !it.kind) return "pick a type of reward";
+  if (it.kind === "sticks") { var n = Math.round(+it.sticks); return n >= 1 && n <= 10000 ? { kind: "sticks", sticks: n } : "sticks must be 1 to 10,000"; }
+  if (it.kind === "bug") return WR_RARS.indexOf(it.rar) >= 0 ? { kind: "bug", rar: it.rar } : "pick a rarity";
+  if (it.kind === "bugid") { var id = String(it.bug || "").toLowerCase(); return WR_ID.test(id) ? { kind: "bugid", bug: id, name: String(it.name || id).slice(0, 40) } : "pick a bug"; }
+  if (it.kind === "items") {
+    var ids = (it.items || []).map(function (x) { return String(x || "").toLowerCase(); });
+    if (!ids.length || ids.length > 8 || !ids.every(function (x) { return WR_ID.test(x); })) return "an outfit needs 1 to 8 pieces";
+    return { kind: "items", items: ids, name: String(it.name || "").trim().slice(0, 40) || (ITEMS_BY[ids[0]] ? ITEMS_BY[ids[0]].name : ids[0]) };
+  }
+  return "pick a type of reward";
+}
+function wrPayload() {
+  var dft = WRW.draft || {}, out = { week: WRW.sel, note: String(dft.note || "").slice(0, 200) }, any = false, bad = "";
+  WR_GROUPS.forEach(function (g) {
+    WR_PL.forEach(function (p, i) {
+      var L = dft[g] && dft[g][p]; if (!Array.isArray(L)) return;
+      any = true; var items = [];
+      L.forEach(function (it) { var c = wrClean(it); if (typeof c === "string") { if (!bad) bad = WR_INFO[g][0] + ", " + WR_ORD[i] + ": " + c + "."; } else items.push(c); });
+      out[g] = out[g] || {}; out[g][p] = items;
+    });
+  });
+  if (bad) return { bad: bad };
+  if (!any) return { bad: "Nothing is picked yet. Choose a reward for at least one place, or use Reset to go back to the usual prizes." };
+  return out;
+}
+/* what a place pays if it is left on "Usual prize": the week falls back to the default, the default to the server's own amounts */
+function wrFallback(g, i) {
+  var D = WRW.data || {}, p = WR_PL[i];
+  if (WRW.sel !== "default") { var d = D["default"]; if (d && d[g] && Array.isArray(d[g][p])) return { items: d[g][p], from: "the default" }; }
+  var B = D.builtIn && D.builtIn[g]; return { items: (B && B[i]) || null, from: "the usual prize" };
+}
+function wrSayList(items) { return items && items.length ? items.map(rwSay).join(" + ") : "no prize"; }
+function wrBugList() {
+  var seen = {}, L = [];
+  BUGS.forEach(function (b) { if (!b || b.admin || b.hick || b.id === "starter" || seen[b.id]) return; seen[b.id] = 1; L.push({ id: b.id, name: b.name, rar: b.rar || "" }); });
+  ((WRW.data && WRW.data.catalog && WRW.data.catalog.bugs) || []).forEach(function (b) { if (!seen[b.id]) { seen[b.id] = 1; L.push({ id: b.id, name: b.name + " (not in this app version)", rar: "" }); } });
+  var R = { legendary: 0, epic: 1, rare: 2, common: 3 };
+  return L.sort(function (a, b) { var x = R[a.rar] == null ? 9 : R[a.rar], y = R[b.rar] == null ? 9 : R[b.rar]; return x - y || String(a.name).localeCompare(b.name); });
+}
+function wrKey(g, p, k) { return ' data-g="' + g + '" data-p="' + p + '"' + (k == null ? '' : ' data-k="' + k + '"'); }
+function wrItemHTML(g, p, k, it) {
+  var key = wrKey(g, p, k), h = '<div class="writ"><div class="writr"><select class="sel" data-wr="kind"' + key + ' aria-label="Type of reward">' +
+    WR_KINDS.map(function (x) { return '<option value="' + x[0] + '"' + (it.kind === x[0] ? " selected" : "") + '>' + x[1] + '</option>'; }).join("") + '</select>';
+  if (it.kind === "sticks") h += '<label class="wrinl"><input class="pinput wrnum" type="number" inputmode="numeric" min="1" max="10000" step="1" list="wrpre" data-wr="sticks"' + key + ' value="' + esc(it.sticks == null ? "" : it.sticks) + '" aria-label="How many sticks"> sticks</label>';
+  else if (it.kind === "bug") h += '<select class="sel" data-wr="rar"' + key + ' aria-label="Rarity">' + WR_RARS.map(function (r) { return '<option value="' + r + '"' + (it.rar === r ? " selected" : "") + '>' + rwCap(r) + '</option>'; }).join("") + '</select>';
+  else if (it.kind === "bugid") h += '<select class="sel wrwide" data-wr="bug"' + key + ' aria-label="Bug"><option value="">Pick a bug from the catalog…</option>' +
+    wrBugList().map(function (b) { return '<option value="' + esc(b.id) + '"' + (it.bug === b.id ? " selected" : "") + '>' + esc(b.name) + (b.rar ? ' · ' + esc(b.rar) : '') + '</option>'; }).join("") + '</select>';
+  h += '<button class="btn small ghost" data-wr="del"' + key + ' aria-label="Remove this reward">Remove</button></div>';
+  if (it.kind === "items") {
+    var outs = (WRW.data && WRW.data.catalog && WRW.data.catalog.outfits) || [], cur = (it.items || []).join(",");
+    h += '<div class="writr"><select class="sel wrwide" data-wr="outfit"' + key + ' aria-label="Known outfits"><option value="">Pick a known outfit, or build one below…</option>' +
+      outs.map(function (o, oi) { return '<option value="' + oi + '"' + ((o.items || []).join(",") === cur ? " selected" : "") + '>' + esc(o.name) + ' (' + (o.items || []).length + ' pieces)</option>'; }).join("") + '</select>' +
+      '<input class="pinput wrname" maxlength="40" data-wr="oname"' + key + ' value="' + esc(it.name || "") + '" placeholder="Outfit name, e.g. Plague Doctor outfit" aria-label="Outfit name"></div>';
+    var slots = {}; ITEMS.forEach(function (x) { (slots[x.slot] = slots[x.slot] || []).push(x); });
+    h += '<details class="wrpcs"><summary>Pieces from the wardrobe: ' + ((it.items || []).length ? esc((it.items || []).map(function (x) { return ITEMS_BY[x] ? ITEMS_BY[x].name : x; }).join(", ")) : 'none yet') + ' (up to 8)</summary>' +
+      Object.keys(slots).map(function (sl) { return '<fieldset><legend>' + esc(rwCap(sl)) + '</legend>' + slots[sl].map(function (x) { return '<label><input type="checkbox" data-wr="piece" data-id="' + esc(x.id) + '"' + key + ((it.items || []).indexOf(x.id) >= 0 ? " checked" : "") + '> ' + esc(x.name) + '</label>'; }).join("") + '</fieldset>'; }).join("") + '</details>';
+  }
+  var pz = null; try { pz = (it.kind === "bugid" || it.kind === "items") && typeof wrClean(it) !== "string" ? rwPrize([wrClean(it)], 0) : null; } catch (e) {}
+  if (pz && pz.art) h += '<div class="wrprev" aria-hidden="true">' + pz.art + '</div>';
+  return h + '</div>';
+}
+function wrPlaceHTML(g, i) {
+  var p = WR_PL[i], dft = WRW.draft || {}, L = dft[g] && dft[g][p], mode = !Array.isArray(L) ? "auto" : L.length ? "custom" : "none", fb = wrFallback(g, i), key = wrKey(g, p);
+  var h = '<div class="wrpl"><div class="wrph"><b class="wrord r' + (i + 1) + '">' + WR_ORD[i] + '</b><select class="sel" data-wr="mode"' + key + ' aria-label="' + WR_ORD[i] + ' place">' +
+    [["auto", "Usual prize"], ["custom", "Pick rewards"], ["none", "No prize"]].map(function (m) { return '<option value="' + m[0] + '"' + (mode === m[0] ? " selected" : "") + '>' + m[1] + '</option>'; }).join("") + '</select>' +
+    '<span class="muted small">' + (mode === "auto" ? 'Pays ' + esc(fb.from) + ': ' + esc(fb.items ? wrSayList(fb.items) : "the built-in prize") : mode === "none" ? 'Nobody wins anything at this place.' : 'Pays: ' + esc(wrSayList((L || []).map(function (x) { var c = wrClean(x); return typeof c === "string" ? null : c; }).filter(Boolean)))) + '</span></div>';
+  if (mode === "custom") {
+    h += L.map(function (it, k) { return wrItemHTML(g, p, k, it); }).join("");
+    if (L.length < 4) h += '<button class="btn small ghost" data-wr="add"' + key + '>+ Add another reward</button>';
+  }
+  return h + '</div>';
+}
+function wrView() {
+  wrLoad(false);
+  var D = WRW.data, c = '<section class="wrw"><h2>Weekly rewards</h2><p class="muted">Choose what 1st, 2nd and 3rd place win each week on Top Players, inside each agency, on the state boards and on the National board. Saved picks reach every player’s app with no update. Winners are worked out the first time they open the scoreboards after the week ends, so a week can be changed until Sunday 7 pm Central. The default can be changed any time.</p>';
+  if (!Admin.owner) return c + '<p class="presult">Only the owner can change weekly rewards.</p></section>';
+  if (WRW.st === 3 && !D) return c + '<p class="presult" role="alert">' + esc(WRW.err) + '</p><p><button class="btn ghost" data-wr="reload">Try again</button></p></section>';
+  if (!D) return c + '<div class="axrload" role="status"><span class="axspin" aria-hidden="true"></span> Loading the weekly rewards…</div></section>';
+  var weeks = D.weeks || [], lab = function (wk, i) { var t = ""; try { t = agxWeekLabel(wk); } catch (e) { t = wk; } return "Week of " + t + (i === 0 ? " (this week)" : i === 1 ? " (next week)" : "") + (weeks[i] && weeks[i].doc ? " · has its own picks" : ""); };
+  c += '<div class="wrbar"><label class="wrinl"><span>Editing</span><select class="sel wrwide" data-wr="sel" aria-label="Which rewards to edit"><option value="default"' + (WRW.sel === "default" ? " selected" : "") + '>Default (every week without its own picks)' + (D["default"] ? "" : " · not set yet") + '</option>' +
+    weeks.map(function (w, i) { return '<option value="' + esc(w.wk) + '"' + (WRW.sel === w.wk ? " selected" : "") + '>' + esc(lab(w.wk, i)) + '</option>'; }).join("") + '</select></label>' +
+    '<label class="wrinl"><span>Start from</span><select class="sel" data-wr="copyfrom" aria-label="Copy picks from"><option value="">Copy picks from…</option><option value="default">The default</option>' +
+    weeks.filter(function (w) { return w.doc && w.wk !== WRW.sel; }).map(function (w) { return '<option value="' + esc(w.wk) + '">' + esc(lab(w.wk, weeks.indexOf(w))) + '</option>'; }).join("") + '</select></label>' +
+    '<button class="btn small ghost" data-wr="reload">Reload</button></div>';
+  if (WRW.msg) c += '<p class="presult good" role="status">' + esc(WRW.msg) + '</p>';
+  if (WRW.bad) c += '<p class="presult" role="alert">' + esc(WRW.bad) + '</p>';
+  if (WRW.st === 3) c += '<p class="presult" role="alert">' + esc(WRW.err) + '</p>';
+  c += '<datalist id="wrpre">' + (((D.catalog && D.catalog.sticksPresets) || [100, 150, 200, 300, 500, 750, 1000, 1500, 2000, 5000]).map(function (n) { return '<option value="' + n + '">'; }).join("")) + '</datalist>';
+  c += WR_GROUPS.map(function (g) {
+    return '<div class="clbox wrg"><h3>' + esc(WR_INFO[g][0]) + '</h3><p class="muted small">' + esc(WR_INFO[g][1]) + '</p>' + [0, 1, 2].map(function (i) { return wrPlaceHTML(g, i); }).join("") + '</div>';
+  }).join("");
+  c += '<label class="wrnote"><span class="muted small">Note for yourself (optional, not shown to players)</span><input class="pinput" maxlength="200" data-wr="note" value="' + esc((WRW.draft && WRW.draft.note) || "") + '"></label>';
+  var hasDoc = !!wrDocOf(WRW.sel);
+  c += '<div class="actions sticky"><button class="btn" data-wr="save"' + (WRW.busy ? " disabled" : "") + '>' + (WRW.busy ? "Saving…" : WRW.sel === "default" ? "Save the default" : "Save this week") + '</button>' +
+    (hasDoc ? '<button class="btn ghost" data-wr="reset"' + (WRW.busy ? " disabled" : "") + '>' + (WRW.resetAsk ? "Tap again to delete these picks" : WRW.sel === "default" ? "Reset the default" : "Reset this week") + '</button>' : '') +
+    (WRW.dirty ? '<span class="muted small">Not saved yet</span>' : '') + '</div>';
+  c += '<p class="muted small">Sticks are cut to each winner’s percent right that week; bugs and outfits are not. Named bugs and outfits reach people on app 1.2.6 or newer; older apps hold them until the person updates. ' + esc((D.catalog && D.catalog.note) || "") + '</p>';
+  return c + '</section>';
+}
+function wrPlace(t, make) {
+  var g = t.getAttribute("data-g"), p = t.getAttribute("data-p"); if (WR_GROUPS.indexOf(g) < 0 || WR_PL.indexOf(p) < 0 || !WRW.draft) return null;
+  var d = WRW.draft; if (make) { d[g] = d[g] || {}; if (!Array.isArray(d[g][p])) d[g][p] = []; }
+  return d[g] && Array.isArray(d[g][p]) ? d[g][p] : null;
+}
+function wrNewItem(kind) { return kind === "bug" ? { kind: "bug", rar: "epic" } : kind === "bugid" ? { kind: "bugid", bug: "", name: "" } : kind === "items" ? { kind: "items", items: [], name: "" } : { kind: "sticks", sticks: 500 }; }
+function wrSave() {
+  var P = wrPayload(); if (P.bad) { WRW.bad = P.bad; WRW.msg = ""; return render(); }
+  WRW.busy = true; WRW.bad = ""; WRW.msg = ""; render();
+  fnCall("weeklyRewardsSet", P).then(function (r) {
+    WRW.busy = false; WRW.dirty = false; WRW.msg = (WRW.sel === "default" ? "Default saved." : "Saved for the week of " + agxWeekLabel(WRW.sel) + ".") + " It reaches the scoreboards within a few minutes.";
+    try { RWL.tier = null; } catch (e) {}
+    WRW.st = 0; wrLoad(true); render();
+  }).catch(function (e) { WRW.busy = false; WRW.bad = e && e.message === "offline" ? "No internet connection, so nothing was saved." : (e && e.message) || "Couldn’t save. Try again."; render(); });
+}
+function wrReset() {
+  if (!WRW.resetAsk) { WRW.resetAsk = true; return render(); }
+  WRW.resetAsk = false; WRW.busy = true; render();
+  fnCall("weeklyRewardsSet", { week: WRW.sel, reset: true }).then(function () {
+    WRW.busy = false; WRW.msg = (WRW.sel === "default" ? "The default was deleted: every week without its own picks pays the usual prizes." : "This week’s picks were deleted: it falls back to the default."); WRW.dirty = false;
+    try { RWL.tier = null; } catch (e) {}
+    WRW.draft = null; WRW.st = 0; wrLoad(true); render();
+  }).catch(function (e) { WRW.busy = false; WRW.bad = (e && e.message) || "Couldn’t reset. Try again."; render(); });
+}
+document.addEventListener("click", function (e) {
+  var t = e.target.closest && e.target.closest('button[data-wr]'); if (!t || S.view !== "admin") return;
+  e.preventDefault(); var a = t.getAttribute("data-wr"), L;
+  WRW.msg = "";
+  if (a === "reload") { WRW.st = 0; wrLoad(true); return render(); }
+  if (a === "save") return wrSave();
+  if (a === "reset") return wrReset();
+  WRW.resetAsk = false;
+  if (a === "add") { L = wrPlace(t, true); if (L && L.length < 4) { L.push(wrNewItem("sticks")); WRW.dirty = true; } return render(); }
+  if (a === "del") { L = wrPlace(t, false); var k = +t.getAttribute("data-k"); if (L && L[k]) { L.splice(k, 1); WRW.dirty = true; } return render(); }
+});
+function wrField(e) {
+  var t = e.target; if (!t || !t.getAttribute || !t.hasAttribute("data-wr") || S.view !== "admin") return;
+  var a = t.getAttribute("data-wr"), v = t.value, L, it, k = +t.getAttribute("data-k"), structural = e.type === "change";
+  if (a === "sel") { if (e.type !== "change") return; wrPick(v); WRW.msg = ""; return render(); }
+  if (a === "copyfrom") {
+    if (e.type !== "change" || !v) return;
+    var src = wrDocOf(v); if (!src) { WRW.bad = "That one has no picks to copy."; return render(); }
+    var note = WRW.draft && WRW.draft.note; WRW.draft = wrCopy(src); WRW.draft.note = note || ""; WRW.dirty = true; WRW.msg = "Copied. Change anything you like, then save."; WRW.bad = ""; return render();
+  }
+  if (a === "note") { if (WRW.draft) { WRW.draft.note = v.slice(0, 200); WRW.dirty = true; } return; }
+  if (a === "mode") {
+    if (e.type !== "change") return;
+    var g = t.getAttribute("data-g"), p = t.getAttribute("data-p"); if (!WRW.draft || WR_GROUPS.indexOf(g) < 0) return;
+    WRW.draft[g] = WRW.draft[g] || {};
+    if (v === "auto") delete WRW.draft[g][p]; else if (v === "none") WRW.draft[g][p] = []; else if (!(WRW.draft[g][p] || []).length) WRW.draft[g][p] = [wrNewItem("sticks")];
+    WRW.dirty = true; return render();
+  }
+  L = wrPlace(t, false); it = L && L[k]; if (!it) return;
+  WRW.dirty = true;
+  if (a === "kind") { if (e.type !== "change") return; L[k] = wrNewItem(v); return render(); }
+  if (a === "sticks") { it.sticks = v === "" ? "" : +v; if (structural) render(); return; }
+  if (a === "rar") { it.rar = v; return structural ? render() : undefined; }
+  if (a === "bug") { if (!structural) return; var b = v ? bugById(v) : null; it.bug = v; it.name = b && b.id === v ? b.name : (wrBugList().filter(function (x) { return x.id === v; })[0] || {}).name || v; return render(); }
+  if (a === "outfit") { if (!structural || v === "") return; var o = ((WRW.data && WRW.data.catalog && WRW.data.catalog.outfits) || [])[+v]; if (o) { it.items = (o.items || []).slice(0, 8); it.name = o.name || ""; } return render(); }
+  if (a === "oname") { it.name = v.slice(0, 40); return; }
+  if (a === "piece") {
+    var id = t.getAttribute("data-id"), list = (it.items || []).slice(), at = list.indexOf(id);
+    if (t.checked && at < 0) { var slot = ITEMS_BY[id] && ITEMS_BY[id].slot; list = list.filter(function (x) { return !(ITEMS_BY[x] && ITEMS_BY[x].slot === slot); }); if (list.length >= 8) { t.checked = false; WRW.bad = "An outfit can have at most 8 pieces."; return render(); } list.push(id); }
+    else if (!t.checked && at >= 0) list.splice(at, 1);
+    it.items = list; if (!it.name && list.length && ITEMS_BY[list[0]]) it.name = ITEMS_BY[list[0]].name;
+    var det = t.closest && t.closest("details"), open = det && det.open; render();
+    if (open) { try { var el = document.querySelector('.wrpcs input[data-id="' + id + '"][data-g="' + t.getAttribute("data-g") + '"][data-p="' + t.getAttribute("data-p") + '"][data-k="' + k + '"]'); var d2 = el && el.closest("details"); if (d2) { d2.open = true; el.focus(); } } catch (x) {} }
+  }
+}
+document.addEventListener("change", wrField);
+document.addEventListener("input", wrField);
+(function () { try { var st = document.createElement("style"); st.textContent = ".wrw h2{margin:6px 0}.wrbar{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin:12px 0}.wrinl{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}.wrinl>span{font-weight:600}.wrwide{min-width:min(340px,100%)}" +
+  ".wrg{margin:14px 0;padding:14px}.wrg h3{margin:0 0 2px}.wrpl{border-top:1px solid var(--line);padding:10px 0}.wrph{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.wrord{display:inline-grid;place-items:center;min-width:44px;height:30px;border-radius:99px;background:var(--surface-2);font-weight:800}" +
+  ".wrord.r1{background:#fde68a;color:#78350f}.wrord.r2{background:#e5e7eb;color:#374151}.wrord.r3{background:#fed7aa;color:#7c2d12}.writ{margin:8px 0 0 54px;padding:10px;border:1.5px dashed var(--line);border-radius:14px;display:grid;gap:8px}.writr{display:flex;flex-wrap:wrap;gap:8px;align-items:center}" +
+  ".wrnum{width:120px}.wrname{max-width:340px}.wrpcs summary{cursor:pointer;font-weight:600}.wrpcs fieldset{border:0;margin:6px 0;padding:0;display:flex;flex-wrap:wrap;gap:4px 12px}.wrpcs legend{font-weight:700;margin-bottom:2px}.wrpcs label{font-size:14px}" +
+  ".wrprev svg{width:84px;height:auto}.wrnote{display:grid;gap:4px;margin:12px 0}@media (max-width:560px){.writ{margin-left:0}}"; document.head.appendChild(st); } catch (e) {} })();
 /* ===== Live devices in Bug Rush (owner, Nov 20 2026) =====
    "add live engines for vent management where you can see real time numbers as the pt breathes on a vent ... Have it take
    the place of the monitor on those questions ... pressure gauges and everything ... an aortic balloon pump engine ...
@@ -40276,7 +40542,7 @@ function agxRosterHtml() {
   c += '<div class="axme axrstats"><div><b>' + (rk ? "#" + rk : "–") + '</b><span>' + (stOn ? "rank in " + esc(A2.state) : "national rank") + (rk && rof ? " of " + rof : "") + '</span></div><div><b>' + num0(A2.team) + '</b><span>team score (top 3)</span></div><div><b>' + A2.members + '</b><span>' + (A2.members === 1 ? "member" : "members") + '</span></div></div>';
   if (!D.members.length) return c + '<div class="axrempty"><b>No members yet</b><span>Nobody has joined ' + esc(A2.name) + ' so far this season.</span></div></aside>';
   c += '<ol class="clboard axboard axrlist">' + D.members.map(function (m) {
-    return '<li class="' + (m.me ? "me" : "") + '"><span class="clrk' + (m.badge === "Team" ? " r" + m.rank : "") + '">' + m.rank + '</span>' + agxAvArt(m.av) + '<span class="clal">' + esc(m.nick) + (m.me ? ' <em>you</em>' : '') +
+    return '<li class="' + (m.me ? "me" : "") + '"><span class="clrk' + (m.badge === "Team" ? " r" + m.rank : "") + '">' + m.rank + '</span>' + agxAvArt(m.av, "", m.me) + '<span class="clal">' + esc(m.nick) + (m.me ? ' <em>you</em>' : '') +
       ' <span class="axbadge' + (m.badge === "Team" ? " team" : "") + '">' + (m.badge === "Team" ? "Team" : "Member") + '</span>' + (m.dept ? '<small class="axsub">' + esc(agxDeptName(A2.type, m.dept)) + '</small>' : '') + '</span>' +
       '<span class="clsc"><b>' + num0(m.pts) + '</b><small>' + (m.acc != null ? m.acc + "% right" : "no answers yet") + '</small></span>' +
       (D.canManage && m.uid ? '<span class="axown"><button class="linkish" data-agxown="hideName" data-u="' + esc(m.uid) + '">Hide name</button> <button class="linkish" data-agxown="remove" data-u="' + esc(m.uid) + '">' + (AGX.rmAsk === m.uid ? "Tap to remove" : "Remove") + '</button></span>' : '') + '</li>';
@@ -40331,6 +40597,8 @@ agxPane.addEventListener("keydown", function (e) {
 var AGX_STATE_NAMES = { AL: "Alabama", AK: "Alaska", AZ: "Arizona", AR: "Arkansas", CA: "California", CO: "Colorado", CT: "Connecticut", DE: "Delaware", DC: "District of Columbia", FL: "Florida", GA: "Georgia", HI: "Hawaii", ID: "Idaho", IL: "Illinois", IN: "Indiana", IA: "Iowa", KS: "Kansas", KY: "Kentucky", LA: "Louisiana", ME: "Maine", MD: "Maryland", MA: "Massachusetts", MI: "Michigan", MN: "Minnesota", MS: "Mississippi", MO: "Missouri", MT: "Montana", NE: "Nebraska", NV: "Nevada", NH: "New Hampshire", NJ: "New Jersey", NM: "New Mexico", NY: "New York", NC: "North Carolina", ND: "North Dakota", OH: "Ohio", OK: "Oklahoma", OR: "Oregon", PA: "Pennsylvania", PR: "Puerto Rico", RI: "Rhode Island", SC: "South Carolina", SD: "South Dakota", TN: "Tennessee", TX: "Texas", UT: "Utah", VT: "Vermont", VA: "Virginia", WA: "Washington", WV: "West Virginia", WI: "Wisconsin", WY: "Wyoming", GU: "Guam", VI: "U.S. Virgin Islands", AS: "American Samoa", MP: "Northern Mariana Islands" };
 function agxStateName(st) { return AGX_STATE_NAMES[st] || st || "State"; }
 AGX.tcache = {}; AGX.stPick = "";
+/* Wrong answers take no points away (owner, Nov 28 2026). The server tells us its cost; if it has not been updated yet we say what it still does. */
+function agxMissText(D) { var m = D && +D.missCost; return m > 0 ? "minus " + m + " for each wrong one" : "nothing taken off for a wrong one"; }
 function agxStateGuard() { if (AGX.tab === "state" && AGX.data && AGX.data.member && !AGX.data.stateOn) AGX.tab = "national"; }
 (function () { var v0 = agxView; agxView = function () { agxStateGuard(); return v0(); }; })();
 function agxTierKey() { return AGX.tab === "national" ? "national" : "state:" + AGX.stPick; }
@@ -40447,7 +40715,7 @@ function stkHistoryHtml() {
   return '<details class="cldim axmore rwhist"><summary>Reward history</summary><ol class="rwlist">' + L.slice(0, 60).map(function (x) {
     var d = new Date(x.t), when; try { when = d.toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }); } catch (e) { when = d.toLocaleDateString(); }
     return '<li><span>' + esc(STK_NAMES[x.src] || STK_NAMES[String(x.src).split(":")[0]] || x.src) + '<small>' + esc(when) + '</small></span><b>+' + num0(x.n) + ' sticks</b></li>';
-  }).join("") + '</ol><p class="muted small">Sticks are for your bug and the Terrarium. Agency points come only from answering questions: 10 for each right answer, minus 10 for each wrong one, up to 3,000 a day.</p></details>';
+  }).join("") + '</ol><p class="muted small">Sticks are for your bug and the Terrarium. Agency points come only from answering questions: 10 for each right answer, ' + agxMissText(AGX.data) + ', up to 3,000 a day.</p></details>';
 }
 /* sources for the main ways sticks are earned outside answers */
 (function () {
@@ -41104,7 +41372,7 @@ function nclexQuotas(m, MX) {
     /* prizes waiting, also for people not on a team: asked once so "You won" can show on this page (owner, Nov 26 2026) */
     if (!AGX.data && !AGX.busy && !HN.rwAsked) { HN.rwAsked = true; fnCall("agencyBoard", { av: agxMyAv(), feat: 1 }).then(agxOk).then(function (r) { if (AGX.data) return; try { agxAcceptCheck(r); } catch (e) {} AGX.data = r; AGX.at = Date.now(); store("agxJoined", r.member ? 1 : null); store("agxRw", r.rewards && r.rewards.length ? r.rewards.length : null); if (S.view === "stats") render(); }).catch(function () {}); }
     fnCall("agencyTier", { tier: "national" }).then(agxOk).then(function (r) {
-      HN.busy = false; HN.data = r; HN.at = Date.now(); plNickSync(r.you); if (r.tiers) try { store("agxTiers", r.tiers); } catch (e) {}
+      HN.busy = false; HN.data = r; HN.at = Date.now(); if (r.rewardsLive) RWL.tier = r.rewardsLive; plNickSync(r.you); if (r.tiers) try { store("agxTiers", r.tiers); } catch (e) {}
       if (S.view === "stats") render();
     }).catch(function (e) { HN.busy = false; HN.failAt = Date.now(); HN.err = e && e.message === "offline" ? "The National board needs an internet connection." : "Couldn’t load the National board."; if (S.view === "stats") render(); });
   }
@@ -41206,12 +41474,12 @@ function nclexQuotas(m, MX) {
       var pz = prizes && prizes[pl - 1];
       return '<div class="bpc p' + pl + (meOf(r) ? ' me' : '') + '" role="listitem">' + (pl === 1 ? agxConfetti() : '') + bub +
         '<button class="bpwho"' + tap + ' aria-label="' + esc(nameOf(r)) + ', ' + ["1st", "2nd", "3rd"][pl - 1] + ' place, ' + num0(ptsOf(r)) + ' points">' +
-        (pl === 1 ? '<span class="bpcrown" aria-hidden="true">👑</span>' : '') + '<span class="bpbug s' + pl + '">' + agxAvArt(r.av, "big") + '</span>' +
+        (pl === 1 ? '<span class="bpcrown" aria-hidden="true">👑</span>' : '') + '<span class="bpbug s' + pl + '">' + agxAvArt(r.av, "big", kind === "p" && meOf(r)) + '</span>' +
         '<b class="bpname">' + esc(nameOf(r)) + (meOf(r) ? ' <em>' + (kind === "a" ? "yours" : "you") + '</em>' : '') + '</b>' + (subOf(r) ? '<small class="bpsub">' + esc(subOf(r)) + '</small>' : '') +
         '<span class="bppts">' + num0(ptsOf(r)) + ' pts</span></button>' +
         '<div class="bpblock" aria-hidden="true"><span class="bptop"></span><span class="bpnum">' + pl + '</span>' + (pl === 1 ? '<span class="bpspark">✦</span><span class="bpspark b">✦</span>' : '') + '</div>' +
-        (pz ? (pz.art ? '<button class="bpprize r-' + pz.rar + ' shown" ' + pz.tap + ' aria-label="' + esc(pz.t) + ': see its lore and stats"><span class="bpsil art">' + pz.art + '</span><b>' + esc(pz.t) + '</b><small>' + esc(pz.s) + '</small>' + (pz.x ? '<small class="bpx">' + esc(pz.x) + '</small>' : '') + '</button>'
-          : pz.stk ? '<div class="bpprize r-' + pz.rar + '"><span class="bpsil stk">' + stickIcon(30) + '</span><b>' + esc(pz.t) + '</b><small>' + esc(pz.s) + '</small></div>'
+        (pz ? (pz.none ? '<div class="bpprize r-common"><span class="bpsil stk" aria-hidden="true">&ndash;</span><b>' + esc(pz.t) + '</b><small>' + esc(pz.s) + '</small></div>' : pz.art ? '<button class="bpprize r-' + pz.rar + ' shown" ' + pz.tap + ' aria-label="' + esc(pz.t) + ': see its lore and stats"><span class="bpsil art">' + pz.art + '</span><b>' + esc(pz.t) + '</b><small>' + esc(pz.s) + '</small>' + (pz.x ? '<small class="bpx">' + esc(pz.x) + '</small>' : '') + '</button>'
+          : pz.stk ? '<div class="bpprize r-' + pz.rar + '"><span class="bpsil stk">' + stickIcon(30) + '</span><b>' + esc(pz.t) + '</b><small>' + esc(pz.s) + '</small>' + (pz.x ? '<small class="bpx">' + esc(pz.x) + '</small>' : '') + '</div>'
           : '<div class="bpprize r-' + pz.rar + '"><span class="bpsil">' + clSilhouette(pz.rar) + '<i>?</i></span><b>' + esc(pz.t) + '</b><small>' + esc(pz.s) + '</small>' + (pz.x ? '<small class="bpx">' + esc(pz.x) + '</small>' : '') + '</div>') : '') +
         '</div>';
     }).join("") + '</div><div class="bpfloor" aria-hidden="true"></div>';
@@ -41224,8 +41492,10 @@ function nclexQuotas(m, MX) {
   /* Top Players prizes under each step, like National (owner, Nov 26 2026: "give 1000 sticks to the top player each week 500
      for second and 300 for third place. Show below like nationals"). The amounts come from the server. */
   function hnPlPrizes(D) {
-    var T = (D && D.tiers) || store("agxTiers") || {}, K = (T.players && T.players.sticks) || [1000, 500, 300];
-    return [["legendary", "1st place"], ["epic", "2nd place"], ["rare", "3rd place"]].map(function (x, i) { return { rar: x[0], stk: 1, t: num0(K[i]) + " sticks", s: x[1] + " this week" }; });
+    var T = (D && D.tiers) || store("agxTiers") || {}, K = (T.players && T.players.sticks) || [1000, 500, 300], L = rwLive(), G = L && L.players;
+    return [["legendary", "1st place"], ["epic", "2nd place"], ["rare", "3rd place"]].map(function (x, i) {
+      return rwPrize(G && G["p" + (i + 1)], i) || { rar: x[0], stk: 1, t: num0(K[i]) + " sticks", s: x[1] + " this week" };
+    });
   }
   function hnPlayers() {
     hnLoad(false);
@@ -41235,15 +41505,15 @@ function nclexQuotas(m, MX) {
     var P = (D.players || []).filter(function (r) { return r.rank <= 10; }), Y = D.you, jn = false; try { jn = agxJoined() || !!(Y && Y.aid); } catch (e) {}
     if (!P.length) c += '<p class="muted small">Nobody has points yet this week. Answer a few questions and you’re on the board.</p>';
     else c += bigPodium(P, function (r) { return r.nick; }, function (r) { return r.agency || ""; }, function (r) { return r.pts; }, function (r) { return r.me; }, hnPlPrizes(D), "p") +
-      '<p class="muted small">The top 3 players each week win sticks, on a team or not. You keep the share that matches your percent right that week.</p>';
+      '<p class="muted small">' + (rwHasOther("players") ? 'The top 3 players each week win the prizes above, on a team or not. Sticks are cut to the share that matches your percent right that week; bugs and outfits are not.' : 'The top 3 players each week win sticks, on a team or not. You keep the share that matches your percent right that week.') + '</p>';
     if (P.length > 3) c += '<ol class="clboard axboard hvnpl" start="4">' + P.slice(3, 10).map(function (r) {
-      return '<li class="' + (r.me ? "me" : "") + (r.aid ? ' axclick" data-hnag="' + esc(r.aid) + '" data-hnname="' + esc(r.agency) + '" tabindex="0" role="button"' : '"') + '><span class="clrk">' + r.rank + '</span>' + agxAvArt(r.av) +
+      return '<li class="' + (r.me ? "me" : "") + (r.aid ? ' axclick" data-hnag="' + esc(r.aid) + '" data-hnname="' + esc(r.agency) + '" tabindex="0" role="button"' : '"') + '><span class="clrk">' + r.rank + '</span>' + agxAvArt(r.av, "", r.me) +
         '<span class="clal">' + esc(r.nick) + (r.me ? ' <em>you</em>' : '') + (r.agency ? '<small class="axsub">' + esc(r.agency) + (r.state ? " · " + esc(r.state) : "") + '</small>' : '') + '</span>' +
         '<span class="clsc"><b>' + num0(r.pts) + '</b><small>' + (r.acc != null ? r.acc + "% right" : "") + '</small></span></li>';
     }).join("") + '</ol>';
     /* your own place, only for you, when you're below the top 10 */
     var mine = (D.players || []).filter(function (r) { return r.me; })[0], myRank = mine ? mine.rank : Y && Y.rank;
-    if (myRank && myRank > 10) c += '<ol class="clboard axboard hvnpl hvme" start="' + myRank + '"><li class="me"><span class="clrk">' + myRank + '</span>' + (mine ? agxAvArt(mine.av) : '') + '<span class="clal">' + esc((mine && mine.nick) || (Y && Y.nick) || store("plNick") || "You") + ' <em>you</em>' + (mine && mine.agency ? '<small class="axsub">' + esc(mine.agency) + '</small>' : '') + '</span><span class="clsc"><b>' + num0((mine && mine.pts) || (Y && Y.pts) || 0) + '</b><small>only you see this</small></span></li></ol>';
+    if (myRank && myRank > 10) c += '<ol class="clboard axboard hvnpl hvme" start="' + myRank + '"><li class="me"><span class="clrk">' + myRank + '</span>' + agxAvArt(mine ? mine.av : null, "", true) + '<span class="clal">' + esc((mine && mine.nick) || (Y && Y.nick) || store("plNick") || "You") + ' <em>you</em>' + (mine && mine.agency ? '<small class="axsub">' + esc(mine.agency) + '</small>' : '') + '</span><span class="clsc"><b>' + num0((mine && mine.pts) || (Y && Y.pts) || 0) + '</b><small>only you see this</small></span></li></ol>';
     if (!agxScores() && !jn && !(Y && Y.nick)) c += '<div class="hvsme"><div><b>Get on the board</b><span>Pick a nickname and every right answer counts.</span></div></div><button class="btn hvsjoin" data-plnick="1">Pick a nickname</button>';
     if (!jn) c += '<div class="hvsme"><div><b>Join a team</b><span>Your hospital, EMS agency, fire department or school. Your points count for your team and you can win team prizes.</span></div></div><button class="btn ' + (agxScores() ? '' : 'ghost ') + 'hvsjoin" data-openagency="1">Join a team</button>';
     /* a Top Players-only nickname can be taken off the board (owner, Nov 25 2026: a second account had made a duplicate) */
@@ -41267,17 +41537,20 @@ function nclexQuotas(m, MX) {
       else if (F && F.kind === "items") { var pw = {}; (F.items || []).forEach(function (x) { if (ITEMS_BY[x]) pw[ITEMS_BY[x].slot] = x; }); p1 = { rar: "legendary", t: F.name, s: "for everyone on the roster · only on the scoreboard", x: "+ National Champion badge & Hall of Fame", art: myBugArt("", null, pw), tap: 'data-pzfit="1"' }; }
     } catch (e) {}
     var ep = function (i) { var e = E[i], b = e && bugById(e.id); return b && b.id === e.id ? { rar: "epic", t: b.name, s: "Epic bug for everyone on the roster", art: bugArt(b), tap: 'data-pzlore="' + esc(b.id) + '"' } : { rar: "epic", t: "Epic bug", s: "for everyone on the roster" }; };
-    return [p1, ep(0), ep(1)];
+    var base = [p1, ep(0), ep(1)], L = rwLive(), G = L && L.national;
+    return base.map(function (x, i) { return rwPrize(G && G["p" + (i + 1)], i, "for everyone on the roster") || x; });
   }
   document.addEventListener("click", function (e) {
     var t = e.target.closest && e.target.closest("[data-pzlore],[data-pzfit]"); if (!t) return;
     e.preventDefault(); e.stopPropagation();
     if (t.hasAttribute("data-pzlore")) { try { loreOpen(t.getAttribute("data-pzlore")); } catch (x) {} return; }
-    try { pzFitOpen(); } catch (x) {}
+    try { pzFitOpen(t.getAttribute("data-pzfit")); } catch (x) {}
   }, true);
   /* the outfit's card: your bug wearing it, the pieces, and the week it can be won */
   function pzFitOpen() {
-    var T = (HN.data && HN.data.tiers) || store("agxTiers") || {}, F = T.featured; if (!F || F.kind !== "items") return;
+    var T = (HN.data && HN.data.tiers) || store("agxTiers") || {}, F = T.featured, key = arguments[0];
+    if (key && key !== "1" && RWL.fit[key]) F = { kind: "items", name: RWL.fit[key].name, items: RWL.fit[key].items, blurb: "", who: "" };
+    if (!F || F.kind !== "items") return;
     var pw = {}, pcs = (F.items || []).filter(function (x) { return ITEMS_BY[x]; }); pcs.forEach(function (x) { pw[ITEMS_BY[x].slot] = x; });
     var dlg = document.getElementById("loredlg"); if (!dlg) { dlg = document.createElement("div"); dlg.id = "loredlg"; document.body.appendChild(dlg); }
     var wk = pcs.length ? ITEMS_BY[pcs[0]].prizeWk || "" : "";
@@ -41307,10 +41580,10 @@ function nclexQuotas(m, MX) {
   }
   var hv0 = hvBoard;
   hvBoard = function () {
-    /* National · Top Players · Join a team / My Team (owner, Nov 25 2026) */
-    var jn = false; try { jn = agxJoined() || !!(HN.data && HN.data.you && HN.data.you.aid); } catch (x) {}
+    /* National · Top Players · My Team. The same three tabs, with the same names, on the website and in the iPhone app; the My Team tab
+       says "Join a team" inside it when you are not on one yet (owner, Nov 28 2026; it used to relabel the tab itself) */
     var tb = function (k, label) { return '<button role="tab" aria-selected="' + (HN.tab === k) + '" class="' + (HN.tab === k ? "on" : "") + '" data-hntab="' + k + '">' + label + '</button>'; };
-    var tabs = '<div class="cltabs axtiers hvntabs" role="tablist">' + tb("nat", "National") + tb("pl", "Top Players") + tb("team", jn ? "My Team" : "Join a team") + (HN.tab !== "team" ? '<button data-hnre="1" aria-label="Refresh">↻</button>' : '') + '</div>';
+    var tabs = '<div class="cltabs axtiers hvntabs" role="tablist">' + tb("nat", "National") + tb("pl", "Top Players") + tb("team", "My Team") + (HN.tab !== "team" ? '<button data-hnre="1" aria-label="Refresh">↻</button>' : '') + '</div>';
     if (HN.tab === "pl") return tabs + hnWon() + hnPlayers() + '<h2 class="hvsth">Your stats</h2>';
     if (HN.tab === "team") return tabs + hv0();
     return tabs + hnWon() + hnNational() + '<h2 class="hvsth">Your stats</h2>';
