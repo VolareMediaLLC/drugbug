@@ -42708,4 +42708,222 @@ var BIGC2 = {"calls":[{"id":"stroke","existing":true,"sec_add":[["Bleeding in th
   document.addEventListener("visibilitychange", function () { if (document.hidden) clean(); else beat(); });
 })();
 
+/* ===== Five tabs and color themes (owner, Nov 27 2026: "do the night shift gold and daylight clinical as color options"; "group them cleanly under the 5 bottom tabs (Home · Learn ·
+   Practice · Terrarium · Ranks)", "Organize, don't delete", and "a small 4-theme color bar at the very top ... that only
+   swaps CSS color variables without altering layout, icons, or custom bug art").
+   Nothing is removed. Every hub tile still exists: Home keeps the dashboard, the Hive, the 5-minute DrugBug and the
+   agency card; Learn holds every reference tile (Medications, Disease Lab, Anatomy, the Great Bug, Protocols, My List,
+   Progress...); Practice holds every practice tile (Questions, Critical Calls, Bug Rush, Flashcards, Brain Games...).
+   Search stays in the header, the path switch stays in the breadcrumb and on Home. Hive look only; Classic is untouched. */
+var DB5_PRACTICE = ["qs", "calls", "rush", "vlab", "cards", "games", "scene", "nbug"];
+var DB5_PALS = [
+  ["gold", "Night Shift Gold", ["#0A0F1E", "#3B6CF6", "#F59E0B"], "dark", "Night Shift Gold"],
+  ["day", "Daylight Clinical", ["#F8FAFC", "#2563EB", "#0F172A"], "light", "Daylight Clinical"]
+];
+var DB5_ROLES = ["aemt", "anes", "cna", "cp", "ct", "dent", "diet", "ekg", "emt", "flight", "gen", "intern", "ir", "lvn", "medic", "mh", "mri", "ms1", "ms3", "nm", "phleb", "plum", "pt", "rn", "rrt", "rt", "slp", "surg", "tccc"];
+function db5Vars(v) {
+  var r = "";
+  Object.keys(v).forEach(function (k) { if (k !== "role" && k !== "roleSoft" && k !== "tints") r += "--" + k + ":" + v[k] + ";"; });
+  DB5_ROLES.forEach(function (k) { r += "--" + k + ":" + v.role + ";--" + k + "-soft:" + v.roleSoft + ";"; });
+  v.tints.forEach(function (c, i) { r += "--hvg" + i + ":" + c + ";"; });
+  return r;
+}
+var DB5_VARS = {
+  gold: { bg: "#0A0F1E", surface: "#131C31", "surface-2": "#182340", ink: "#F1F5F9", muted: "#9AA6C6", line: "#26324F", "hv-lip": "#060A14",
+    "hv-br": "#7FA4FF", "hv-brd": "#2A46A8", "hv-tint": "#22315E", "hv-hn": "#F59E0B", "hv-hnd": "#B45309", "hv-hnt": "#2A2008", "hv-ink": "#2A1700",
+    "hv-grad": "linear-gradient(90deg,#0EA5A4,#3B6CF6 55%,#5B4BDB)", "hv-navi": "#8FA6E0", "hv-wax": "#0E1424", gold: "#F59E0B",
+    lg1: "#2DD4BF", lg2: "#60A5FA", lg3: "#A5B4FC", ok: "#34C374", bad: "#F2686C", warn: "#F59E0B", role: "#7FA4FF", roleSoft: "#22315E",
+    tints: ["#22315E", "#1B3B4F", "#2F2A60", "#1E3557", "#372A5A", "#24394B", "#273147"] },
+  ecg: { bg: "#0B1219", surface: "#13202C", "surface-2": "#172836", ink: "#ECFEFF", muted: "#93A9B5", line: "#22394A", "hv-lip": "#050A0F",
+    "hv-br": "#22D3EE", "hv-brd": "#0E7490", "hv-tint": "#0E3A47", "hv-hn": "#10B981", "hv-hnd": "#047857", "hv-hnt": "#0A2E24", "hv-ink": "#022C22",
+    "hv-grad": "linear-gradient(90deg,#06B6D4,#0891B2 55%,#10B981)", "hv-navi": "#7FA6B5", "hv-wax": "#0A161E", gold: "#10B981",
+    lg1: "#22D3EE", lg2: "#06B6D4", lg3: "#34D399", ok: "#10B981", bad: "#FB7185", warn: "#22D3EE", role: "#22D3EE", roleSoft: "#0E3A47",
+    tints: ["#0E3A47", "#123C3A", "#173447", "#0F3340", "#16303D", "#123A35", "#1A2C38"] },
+  bio: { bg: "#0D0B1A", surface: "#17152B", "surface-2": "#1D1A36", ink: "#F5F3FF", muted: "#A7A1CB", line: "#2E2A55", "hv-lip": "#07050F",
+    "hv-br": "#A78BFA", "hv-brd": "#5B21B6", "hv-tint": "#2E1F5E", "hv-hn": "#2DD4BF", "hv-hnd": "#0F766E", "hv-hnt": "#0C2B2A", "hv-ink": "#042F2C",
+    "hv-grad": "linear-gradient(90deg,#7C3AED,#8B5CF6 50%,#0D9488)", "hv-navi": "#9C96C2", "hv-wax": "#120F24", gold: "#2DD4BF",
+    lg1: "#2DD4BF", lg2: "#A78BFA", lg3: "#C4B5FD", ok: "#2DD4BF", bad: "#F472B6", warn: "#C084FC", role: "#A78BFA", roleSoft: "#2E1F5E",
+    tints: ["#2E1F5E", "#1F2A55", "#352560", "#22285A", "#3A2560", "#1E3A44", "#262245"] },
+  day: { bg: "#F8FAFC", surface: "#FFFFFF", "surface-2": "#EEF2F8", ink: "#0F172A", muted: "#475569", line: "#E2E8F0", "hv-lip": "#CBD5E1",
+    "hv-br": "#2563EB", "hv-brd": "#1E40AF", "hv-tint": "#DBEAFE", "hv-hn": "#2563EB", "hv-hnd": "#1E40AF", "hv-hnt": "#DBEAFE", "hv-ink": "#0F172A",
+    "hv-grad": "linear-gradient(90deg,#2563EB,#1D4ED8)", "hv-navi": "#64748B", "hv-wax": "#FFFFFF", gold: "#D97706",
+    lg1: "#0D9488", lg2: "#2563EB", lg3: "#7C3AED", ok: "#16A34A", bad: "#DC2626", warn: "#B45309", role: "#2563EB", roleSoft: "#DBEAFE",
+    tints: ["#DBEAFE", "#D9F2F0", "#E6E0FF", "#DCEBFA", "#EFE0F7", "#DDE9EE", "#E9EEF6"] }
+};
+function db5Css() {
+  if (document.getElementById("db5css")) return;
+  var c = "";
+  Object.keys(DB5_VARS).forEach(function (k) { c += 'html.hive:root[data-dbpal="' + k + '"],html.hive:root[data-dbpal="' + k + '"][data-theme]{' + db5Vars(DB5_VARS[k]) + '}'; });
+  c += '#db5bar{display:none}html.hive #db5bar{display:flex;gap:5px;justify-content:center;flex-wrap:wrap;padding:6px max(8px,env(safe-area-inset-left,0px)) 6px max(8px,env(safe-area-inset-right,0px));background:var(--bg);border-bottom:1px solid var(--line)}' +
+    '#db5bar button{display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 9px;border-radius:15px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:600 12px Inter,system-ui,sans-serif;cursor:pointer}' +
+    '#db5bar button[aria-pressed="true"]{border-color:var(--hv-hn);box-shadow:0 0 0 2px color-mix(in srgb,var(--hv-hn) 30%,transparent)}' +
+    '#db5bar i{display:inline-flex}#db5bar i b{width:10px;height:10px;border-radius:5px;margin-left:-3px;box-shadow:0 0 0 1.5px var(--surface)}#db5bar i b:first-child{margin-left:0}' +
+    '#db5bar .db5s{display:none}@media (max-width:560px){#db5bar .db5n{display:none}#db5bar .db5s{display:inline}#db5bar button{padding:0 8px;font-size:11.5px}#db5bar{flex-wrap:nowrap}}' +
+    '#hvnav[data-db5] button{flex:1;min-width:0}html.hive #hvnav[data-db5] .hvmenu{color:var(--hv-navi)}html.hive #hvnav[data-db5] .hvmenu[aria-current]{color:var(--hv-hn)}' +
+    'html[data-dbpal="ecg"] #hvnav[data-db5] .hvhex{background:linear-gradient(160deg,#22D3EE,#06B6D4 55%,#059669);color:#022C33}html[data-dbpal="bio"] #hvnav[data-db5] .hvhex{background:linear-gradient(160deg,#A78BFA,#7C3AED 55%,#0D9488);color:#fff}html[data-dbpal="day"] #hvnav[data-db5] .hvhex{background:linear-gradient(160deg,#3B82F6,#2563EB 55%,#1E40AF);color:#fff}' +
+    'html[data-db5sec="learn"] .dstrip,html[data-db5sec="learn"] .dailymini,html[data-db5sec="practice"] .dstrip,html[data-db5sec="practice"] .dailymini{display:none}' +
+    '.db5h{margin:4px 0 2px}.db5h h2{margin:0;font-size:24px}.db5h p{margin:2px 0 0;color:var(--muted);font-size:14px}' +
+    '.db5jump{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}' +
+    '.db5jump button{text-align:left;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:18px;padding:14px;cursor:pointer;display:flex;flex-direction:column;gap:4px}' +
+    '.db5jump b{font:700 16px var(--f-display)}.db5jump span{font-size:12.5px;color:var(--muted);line-height:1.35}' +
+    '.db5path{display:inline-flex;align-items:center;gap:6px;margin-top:10px;border:0;background:none;color:var(--hv-br);font:600 14px var(--f-body);cursor:pointer;padding:6px 0}';
+
+  /* prototype look (owner, Nov 27 2026: "Simplify a lot of my buttons", picked: header 7 -> 3, Home like the prototype, simpler tiles) */
+  var H = 'html.hive.db5ui ';
+  var hide = ['#lookbtn', '.topbar .stickplus', '.topbar .srch-btn', '.topbar .menu-btn', '.topbar .musicbtn', '.topbar .gear', '.topbar .crumbs'].map(function (x) { return H + x; }).join(',');
+  c += hide + '{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip-path:inset(50%)!important;opacity:0!important;pointer-events:none!important;margin:0!important;padding:0!important;border:0!important}' +
+    H + '.topbar .stickchip{border-radius:50%!important;width:44px!important;height:44px!important;padding:0!important;border:2px solid var(--hv-br)!important;background:var(--hv-tint)!important;overflow:hidden}' + H + '.topbar .stickchip svg{width:40px!important;height:40px!important}' +
+    H + '.topbar .stickchip{font-size:0!important;color:transparent!important}' +
+    '.db5streak{display:none}' +
+    H + '.topbar{flex-wrap:nowrap!important;align-items:center!important;gap:8px!important}' + H + '.topbar .spacer{flex:1 1 auto!important}' + H + '.topbar .tbacts{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:8px!important;width:auto!important;flex:0 0 auto!important;margin:0 0 0 auto!important;overflow:visible!important;-webkit-mask-image:none!important;mask-image:none!important}' + H + '.topbar .tbacts .tbsticks{margin:0!important;order:1}' + H + '.topbar .tbacts .db5streak{order:2}' + H + '.topbar .tbacts .stickchip{order:3}' +
+    H + '.dailymini .dmt{flex:1 1 180px;min-width:0}' +
+    H + '.db5streak{display:inline-flex;align-items:center;gap:5px;height:34px;padding:0 11px;border-radius:17px;background:var(--surface);border:1.5px solid var(--line);font:700 14px Inter,system-ui,sans-serif;color:var(--ink)}' + H + '.db5streak svg{width:16px;height:16px;fill:var(--hv-hn)}' +
+    H + '[data-db5sec] .backbtn,html.hive.db5ui[data-db5sec] .backbtn{display:none!important}' +
+    H + '.dailymini{border-radius:20px!important;padding:14px 12px 14px 16px!important;border:1.5px solid var(--line)!important;background:var(--surface)!important}' +
+    H + '.dailymini .btn.small{height:42px;padding:0 18px;font-size:15px}' +
+    H + '.hubtile{clip-path:none!important;border-radius:20px!important;border:1px solid var(--line)!important;background:var(--surface)!important;box-shadow:none!important;background-image:none!important}' +
+    H + '.hubtile .ico{clip-path:none!important;border-radius:12px!important;width:40px!important;height:40px!important;padding:8px!important;background:var(--hv-tint)!important;color:var(--hv-br)!important}' +
+    H + '.hubtile.locked{opacity:.85}' +
+    '#db5sheet{position:fixed;inset:0;z-index:90;display:flex;align-items:flex-end;justify-content:center;background:rgba(3,6,14,.55)}#db5sheet[hidden]{display:none}' +
+    '#db5sheet .s{width:100%;max-width:520px;background:var(--bg);border-top:1.5px solid var(--line);border-radius:26px 26px 0 0;padding:10px 16px calc(22px + env(safe-area-inset-bottom,0px));max-height:85vh;overflow-y:auto}' +
+    '#db5sheet .g{width:40px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 12px}' +
+    '#db5sheet h2{font:700 20px var(--f-display);margin:0 0 10px;color:var(--ink)}' +
+    '#db5sheet .l{border:1.5px solid var(--line);border-radius:18px;overflow:hidden;background:var(--surface)}' +
+    '#db5sheet .l button{display:flex;align-items:center;gap:12px;width:100%;padding:13px 16px;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);font:600 15px var(--f-body);text-align:left;cursor:pointer}' +
+    '#db5sheet .l button:last-child{border-bottom:0}#db5sheet .l small{display:block;font-weight:400;font-size:12.5px;color:var(--muted);margin-top:1px}' +
+    '#db5sheet .ic{width:36px;height:36px;border-radius:11px;background:var(--hv-tint);color:var(--hv-br);display:grid;place-items:center;flex:none}#db5sheet .ic svg{width:20px;height:20px;fill:currentColor}';
+  var st = document.createElement("style"); st.id = "db5css"; st.textContent = c; document.head.appendChild(st);
+}
+function db5Pal(id) {
+  var p = DB5_PALS.filter(function (x) { return x[0] === id; })[0] || DB5_PALS[0];
+  document.documentElement.setAttribute("data-dbpal", p[0]);
+  if (hvOn()) document.documentElement.setAttribute("data-theme", p[3]);
+  try { localStorage.setItem("dbPal", p[0]); } catch (e) {}
+  try { var m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute("content", DB5_VARS[p[0]].bg); } catch (e) {}
+  var b = document.getElementById("db5bar");
+  if (b) Array.prototype.forEach.call(b.children, function (x) { x.setAttribute("aria-pressed", String(x.getAttribute("data-db5pal") === p[0])); });
+}
+function db5Bar() {
+  if (document.getElementById("db5bar")) return;
+  var b = document.createElement("div"); b.id = "db5bar"; b.setAttribute("role", "group"); b.setAttribute("aria-label", "Color theme");
+  b.innerHTML = DB5_PALS.map(function (p) { return '<button type="button" data-db5pal="' + p[0] + '" aria-label="' + esc(p[1]) + ' colors"><i aria-hidden="true">' + p[2].map(function (c) { return '<b style="background:' + c + '"></b>'; }).join("") + '</i><span class="db5n">' + esc(p[1]) + '</span><span class="db5s">' + esc(p[4]) + '</span></button>'; }).join("");
+  document.body.insertBefore(b, document.body.firstChild);
+}
+document.addEventListener("click", function (e) {
+  var t = e.target.closest && e.target.closest("[data-db5pal]"); if (!t) return;
+  db5Pal(t.getAttribute("data-db5pal"));
+});
+function db5Lv() { return store("lastLevel") || (Prog.d && Prog.d.startLevel) || "paramedic"; }
+document.addEventListener("click", function (e) {
+  var t = e.target.closest && e.target.closest("[data-db5go]"); if (!t) return;
+  var k = t.getAttribute("data-db5go");
+  if (k === "terr") { go("terrarium"); return; }
+  if (k === "ranks") { go("stats"); return; }
+  if (S.view !== "level") go("level", { level: db5Lv() });
+  S.db5 = k; S.tab = "hub"; S.hvPage = false; render(); window.scrollTo(0, 0);
+});
+
+/* the hub, split by tab: same tiles, same order, same code; only which section shows changes */
+var db5Hub0 = hubView;
+hubView = function () {
+  if (!hvOn() || S.view !== "level") return db5Hub0.apply(this, arguments);
+  var sec = S.db5 || "home";
+  var T0 = tabList, H0 = hvLead, LT0 = learnTile, LS0 = learnSysRow, A0 = homeAgencyCard, R0 = rnDeptChip, out = "";
+  var none = function () { return ""; };
+  try {
+    if (sec !== "home") { hvLead = none; learnTile = none; learnSysRow = none; homeAgencyCard = none; rnDeptChip = none; }
+    tabList = function () {
+      var L = T0.apply(this, arguments) || [];
+      if (sec === "home") return [];
+      return L.filter(function (t) { var p = DB5_PRACTICE.indexOf(t[0]) >= 0; return sec === "practice" ? p : !p; });
+    };
+    out = db5Hub0.apply(this, arguments);
+  } finally { tabList = T0; hvLead = H0; learnTile = LT0; learnSysRow = LS0; homeAgencyCard = A0; rnDeptChip = R0; }
+  if (sec === "learn") return '<div class="db5h"><h2>Learn</h2><p>Medications, conditions, anatomy, the Great Bug, your protocols and your list.</p></div>' + out;
+  if (sec === "practice") return '<div class="db5h"><h2>Practice</h2><p>Questions, Critical Calls, Bug Rush, flashcards and games.</p></div>' + out;
+  return out + '<div class="db5jump"><button type="button" data-db5go="learn"><b>Learn</b><span>Medications, Disease Lab, Anatomy, Protocols, My List</span></button><button type="button" data-db5go="practice"><b>Practice</b><span>Questions, Critical Calls, Bug Rush, Flashcards, Brain Games</span></button></div>' +
+    '<button type="button" class="db5path" data-hvgo="menu">Switch path or field &rsaquo;</button>';
+};
+
+
+/* the bug in the header opens one sheet with everything that used to sit next to it */
+var DB5_ME = [
+  ["terr", "Your Terrarium", "Your bug, wardrobe and collection", '<path d="M9 3l1.500 2h3L15 3l1.500 1-1.300 1.800A5 5 0 0 1 17 9h3v2h-3v2h3v2h-3a5 5 0 0 1-10 0H4v-2h3v-2H4V9h3a5 5 0 0 1 1.800-3.200L7.500 4z"/>', '.topbar .stickchip'],
+  ["search", "Search", "Every drug, condition and topic", '<path d="M10.500 3a7.500 7.500 0 0 1 5.900 12.100l4.300 4.200-1.500 1.500-4.200-4.300A7.500 7.500 0 1 1 10.500 3zm0 2.500a5 5 0 1 0 0 10 5 5 0 0 0 0-10z"/>', '.topbar .srch-btn'],
+  ["sticks", "Get sticks", "Sticks for bugs and gear", '<path d="M4 20 19 5l1.500 1.500-15 15z"/>', '.topbar .stickplus'],
+  ["more", "More", "Everything else in the menu", '<path d="M5 10h3v3H5zm5.500 0h3v3h-3zM16 10h3v3h-3z"/>', '.topbar .menu-btn'],
+  ["music", "Background music", "Turn it on or off", '<path d="M9 18V5l11-2v13h-2V6l-7 1.300V18a3 3 0 1 1-2-2.800z"/>', '.topbar .musicbtn'],
+  ["settings", "Settings", "Path, sound, display", '<path d="M12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8zm-1-6h2l.500 3 2 .800 2.400-1.800 1.400 1.400L17.500 8l.800 2 3 .500v2l-3 .500-.800 2 1.800 2.400-1.400 1.400-2.400-1.800-2 .800-.500 3h-2l-.500-3-2-.800-2.400 1.800-1.400-1.400L6.500 16l-.800-2-3-.500v-2l3-.500.800-2-1.800-2.400 1.400-1.400L8.500 5.800l2-.800z"/>', '.topbar .gear'],
+  ["look", "Classic look", "Switch back to the old design", '<path d="M12 2 21 7v10l-9 5-9-5V7z"/>', '#lookbtn']
+];
+function db5Sheet(open) {
+  var sh = document.getElementById("db5sheet");
+  if (!sh) {
+    sh = document.createElement("div"); sh.id = "db5sheet"; sh.hidden = true;
+    sh.innerHTML = '<div class="s" role="dialog" aria-label="You"><div class="g"></div><h2>You</h2><div class="l">' + DB5_ME.map(function (r) { return '<button type="button" data-db5me="' + r[0] + '"><span class="ic" aria-hidden="true">' + hvIc(r[3]) + '</span><span>' + esc(r[1]) + '<small>' + esc(r[2]) + '</small></span></button>'; }).join("") + '</div></div>';
+    document.body.appendChild(sh);
+  }
+  sh.hidden = !open;
+}
+document.addEventListener("click", function (e) {
+  if (!document.documentElement.classList.contains("db5ui")) return;
+  var sh = document.getElementById("db5sheet");
+  if (sh && !sh.hidden) {
+    var row = e.target.closest && e.target.closest("[data-db5me]");
+    if (row) {
+      var r = DB5_ME.filter(function (x) { return x[0] === row.getAttribute("data-db5me"); })[0]; db5Sheet(false);
+      DB5_ME.__pass = true; try { var el = document.querySelector(r[4]); if (el) el.click(); } finally { DB5_ME.__pass = false; }
+      e.preventDefault(); e.stopPropagation(); return;
+    }
+    if (!(e.target.closest && e.target.closest("#db5sheet .s"))) { db5Sheet(false); e.preventDefault(); e.stopPropagation(); return; }
+  }
+  if (DB5_ME.__pass) return;
+  var bug = e.target.closest && e.target.closest(".topbar .stickchip");
+  if (bug) { e.preventDefault(); e.stopPropagation(); db5Sheet(true); }
+}, true);
+function db5Streak() {
+  var t = document.querySelector(".topbar .tbacts"); if (!t) return;
+  var s = t.querySelector(".db5streak"), n = 0; try { n = liveStreak() || 0; } catch (e) {}
+  if (!s) { s = document.createElement("span"); s.className = "db5streak"; t.insertBefore(s, t.firstChild); }
+  s.setAttribute("aria-label", n + "-day streak");
+  s.innerHTML = hvIc('<path d="M12 2c1 4 6 6.500 6 12a6 6 0 0 1-12 0c0-3.500 2.500-5 2.500-8 2 1.500 3 3.500 3 5.500 1.500-3 0-6.500.500-9.500z"/>') + n;
+}
+
+/* the bottom bar: five tabs in place of seven buttons (Hive moved onto Home, Questions and Bug Rush into Practice,
+   Search stays in the header, Menu is "Switch path" on Home) */
+var DB5_IC = {
+  home: '<path d="M12 3 3 10.500V21h6.500v-6h5v6H21V10.500z"/>',
+  learn: '<path d="M5 3h11a3 3 0 0 1 3 3v15H7a2 2 0 0 1-2-2zm2 14v2h10v-2zm2-10v2h6V7z"/>',
+  practice: '<path d="M13 2 4 14h6l-1 8 9-12h-6z"/>',
+  terr: '<path d="M9 3l1.500 2h3L15 3l1.500 1-1.300 1.800A5 5 0 0 1 17 9h3v2h-3v2h3v2h-3a5 5 0 0 1-10 0H4v-2h3v-2H4V9h3a5 5 0 0 1 1.800-3.200L7.500 4z"/>',
+  ranks: '<path d="M4 20V10h4v10zm6 0V4h4v16zm6 0v-7h4v7z"/>'
+};
+function db5Cur() {
+  if (S.view === "terrarium") return "terr";
+  if (S.view === "stats") return "ranks";
+  if (S.view !== "level") return "";
+  if (S.tab && S.tab !== "hub") return DB5_PRACTICE.indexOf(S.tab) >= 0 || S.tab === "prep" ? "practice" : "learn";
+  if (S.hvPage) return "home";
+  return S.db5 || "home";
+}
+hvNav = function () {
+  var n = document.getElementById("hvnav");
+  if (!hvOn()) { if (n) n.hidden = true; document.documentElement.classList.remove("db5ui"); return; }
+  db5Css(); db5Bar(); document.documentElement.classList.add("db5ui"); try { db5Streak(); } catch (e) {}
+  if (!n) { n = document.createElement("nav"); n.id = "hvnav"; n.setAttribute("aria-label", "Main"); document.body.appendChild(n); }
+  if (!n.hasAttribute("data-db5")) {
+    n.setAttribute("data-db5", "1");
+    n.innerHTML = [["home", "Home"], ["learn", "Learn"], ["practice", "Practice"], ["terr", "Terrarium"], ["ranks", "Ranks"]].map(function (x) {
+      return x[0] === "practice" ? '<button class="hvmenu" data-db5go="practice" aria-label="Practice"><span class="hvhex">' + hvIc(DB5_IC.practice) + '</span>Practice</button>'
+        : '<button data-db5go="' + x[0] + '">' + hvIc(DB5_IC[x[0]]) + x[1] + '</button>';
+    }).join("");
+  }
+  var sec = S.view === "level" && (!S.tab || S.tab === "hub") && !S.hvPage ? (S.db5 || "home") : "";
+  if (sec) document.documentElement.setAttribute("data-db5sec", sec); else document.documentElement.removeAttribute("data-db5sec");
+  var cur = db5Cur();
+  Array.prototype.forEach.call(n.children, function (b) { if (b.getAttribute("data-db5go") === cur) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
+  n.hidden = !agreeRec();
+};
+try { db5Css(); db5Pal((function () { try { return localStorage.getItem("dbPal"); } catch (e) { return null; } })() || "gold"); } catch (e) {}
+try { hvNav(); } catch (e) {}
 })();
