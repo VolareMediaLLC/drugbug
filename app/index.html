@@ -4358,6 +4358,51 @@ html.hive:root #hvnav button svg{width:26px;height:26px;fill:currentColor}
 html.hive:root #hvnav button[aria-current]{color:var(--ink)}
 html.hive:root #hvnav button[aria-current] svg{color:var(--hv-hn);filter:none}
 html.hive:root #hvnav button[aria-current]::before{content:"";position:absolute;top:-6px;left:50%;width:28px;height:3px;margin-left:-14px;border-radius:0 0 4px 4px;background:var(--hv-hn)}
+/* ===== Sleek gradient cards: lower Home cards and Scoreboard (owner, Nov 28 2026) =====
+   Navy fading to a jewel tone on the right, a 4px gold bar on the left, small pills, a crisp bug on the right.
+   Everything comes from theme tokens: --bg --surface --ink --muted --line --hv-hn, so Night Shift Gold and Daylight Clinical both follow. */
+html.hive:root{--cmix:36%;--cend:#5B4BDB}
+html.hive:root[data-theme="light"]{--cmix:17%}
+html.hive:root .route.rmini,html.hive:root .route.mlsmall,html.hive:root .clboard li,html.hive:root .hvsolo,html.hive:root .hvteamcard,html.hive:root .hvprize,html.hive:root .hvyou,html.hive:root .hvnat > .hvsme,html.hive:root .bpteam{
+ background:linear-gradient(100deg,color-mix(in srgb,var(--bg) 55%,var(--surface)) 0%,var(--surface) 42%,color-mix(in srgb,var(--cend) var(--cmix),var(--surface)) 100%)!important;background-image:linear-gradient(100deg,color-mix(in srgb,var(--bg) 55%,var(--surface)) 0%,var(--surface) 42%,color-mix(in srgb,var(--cend) var(--cmix),var(--surface)) 100%)!important;
+ color:var(--ink);border:1px solid var(--line);border-left:4px solid var(--hv-hn);border-radius:16px;box-shadow:none;clip-path:none}
+html.hive:root .route.rmini.gen{--cend:#6D4AFF}html.hive:root .route.rmini.ev,html.hive:root .route.rmini.bg,html.hive:root .route.rmini.im,html.hive:root .route.rmini.ah{--cend:#0EA5A4}
+html.hive:root .route.rmini.ph,html.hive:root .route.rmini.rn,html.hive:root .route.rmini.md{--cend:#4F5BDB}
+html.hive:root .route.mlsmall{--cend:#7C5CE0}
+html.hive:root .route.rmini,html.hive:root .homewrap .route.rmini,html.hive:root .route.rmini.gen,html.hive:root .homewrap .route.rmini.gen{height:auto;min-height:0;display:flex;flex-direction:row!important;align-items:center!important;gap:10px;padding:14px 12px 14px 14px;margin:0 0 10px}
+html.hive:root .route.rmini::before,html.hive:root .route.rmini::after{display:none!important}
+html.hive:root .route.rmini .mtx{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:0}
+html.hive:root .route.rmini h2{color:var(--ink);font-size:18px;line-height:1.2}
+html.hive:root .route.rmini h2::after{width:28px;height:3px;margin-top:4px}
+html.hive:root .route.rmini p{color:var(--muted);font-size:13px;line-height:1.35;margin-top:4px;-webkit-line-clamp:2}
+html.hive:root .route.rmini .rmore{display:none}
+html.hive:root .route.rmini .eyebrow{display:inline-block;margin:0 0 4px;padding:2px 9px;border-radius:999px;background:color-mix(in srgb,var(--hv-hn) 20%,transparent);color:var(--hv-hn);font:800 10.5px/1.4 var(--f-body);letter-spacing:.1em;text-transform:uppercase}
+html.hive:root .route.rmini .rchips{display:flex;flex-wrap:wrap;gap:5px;margin:7px 0 0}
+html.hive:root .route.rmini .rchips span{padding:3px 9px;border-radius:999px;border:1px solid color-mix(in srgb,var(--cend) 45%,var(--line));background:color-mix(in srgb,var(--cend) 22%,transparent);color:var(--ink);font:700 11px/1.3 var(--f-body)}
+html.hive:root .route.rmini .count{margin:6px 0 0;padding:0;font:600 12px var(--f-body);color:var(--muted);opacity:1}
+html.hive:root .route.rmini .mbug{flex:none;align-self:center;width:72px;height:72px;margin:0;background:none;box-shadow:none;filter:none;opacity:1;display:grid;place-items:center}
+html.hive:root .route.rmini .mbug svg,html.hive:root .homewrap .route.rmini .mbug svg{width:72px;height:72px;filter:none!important;opacity:1;mix-blend-mode:normal}
+html.hive:root .route.rmini .mbug::before,html.hive:root .route.rmini .mbug::after{display:none!important}
+html.hive:root .route.mlsmall strong{color:var(--ink)}html.hive:root .route.mlsmall span{color:var(--muted)}
+/* Scoreboard rows */
+html.hive:root .clboard{display:grid;gap:8px;padding:0;list-style:none}
+html.hive:root .clboard li{grid-template-columns:34px 44px 1fr auto;padding:9px 12px 9px 10px;margin:0}
+html.hive:root .clboard.hvnpl li,html.hive:root .clboard.hvtlb li{grid-template-columns:34px 44px 1fr auto}
+html.hive:root .clboard li.me{border-color:var(--hv-hn);border-left-color:var(--hv-hn);box-shadow:0 0 0 1px var(--hv-hn) inset}
+html.hive:root .clboard li.axclick{grid-template-columns:34px 44px 1fr auto 14px}html.hive:root .clboard li.axclick::after{margin:0;text-align:right}
+html.hive:root .clboard .clrk,html.hive:root .clboard .rk{display:inline-grid;place-items:center;min-width:28px;height:24px;padding:0 8px;border-radius:999px;background:color-mix(in srgb,var(--hv-hn) 22%,transparent);color:var(--hv-hn);font:800 12px/1 var(--f-body)}
+html.hive:root .clboard .clal{color:var(--ink);font-weight:700;min-width:0}
+html.hive:root .clboard .clal em{font-style:normal;font-size:10.5px;font-weight:800;padding:1px 7px;border-radius:999px;background:var(--hv-hn);color:#3D2700;margin-left:4px}
+html.hive:root .clboard .axsub,html.hive:root .clboard .clsc small{color:var(--muted)}
+html.hive:root .clboard .clsc b{color:var(--ink);font-family:var(--f-display)}
+html.hive:root .clboard .lbav svg,html.hive:root .clboard li svg{filter:none}
+html.hive:root .hvsolo,html.hive:root .hvteamcard,html.hive:root .hvprize,html.hive:root .hvyou,html.hive:root .bpteam{padding:14px 14px 14px 16px}
+html.hive:root .hvseye{display:inline-block;padding:2px 10px;border-radius:999px;background:color-mix(in srgb,var(--hv-hn) 20%,transparent);color:var(--hv-hn);font:800 11px/1.5 var(--f-body);letter-spacing:.1em;text-transform:uppercase}
+/* the Top Players / Agencies / My Team switcher: one compact segmented pill */
+html.hive:root .hvntabs{display:flex;gap:0;padding:4px;margin:6px 0 12px;border:1.5px solid var(--line);border-radius:999px;background:var(--surface)}
+html.hive:root .hvntabs button{flex:1 1 0;min-width:0;padding:8px 6px;border:0;border-radius:999px;background:none;color:var(--muted);font:700 14px var(--f-body);white-space:nowrap}
+html.hive:root .hvntabs button.on{background:var(--hv-hn);color:#3D2700;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+html.hive:root .hvntabs button[data-hnre]{flex:none;width:38px;padding:8px 0}
 </style>
 <script src="app-config.js"></script>
 <script>/* Endorsely affiliate tracking, website only (owner, Nov 13 2026) */

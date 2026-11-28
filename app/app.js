@@ -11636,8 +11636,7 @@ function muRefundOld() { /* give back sticks spent on retired tracks, once */
 function trackById(id) { return TRACKS.filter(function (t) { return t.id === id; })[0] || TRACKS[0]; }
 function muSeason(k) {
   var d = new Date(), mo = d.getMonth(), day = d.getDate();
-  if (k === "halloween") return mo === 9 || (mo === 10 && day <= 1);
-  if (k === "thanksgiving") return mo === 10 && day >= 1;   /* all of November */
+  if (k === "halloween" || k === "thanksgiving") { try { return holOn(d) === k; } catch (e) { return false; } }   /* the holiday music follows the holiday calendar exactly (owner, Nov 28 2026) */
   return true;
 }
 function trackAvail(t) { return muOnly(t.id) && (!t.season || muSeason(t.season)); }
@@ -15304,15 +15303,15 @@ function holOn(d) {
   if ((m === 11 && day === 31) || (m === 0 && day <= 2)) return "newyear";
   if (m === 1 && day >= 10 && day <= 14) return "valentine";
   if (m === 2 && day >= 14 && day <= 17) return "stpatrick";
-  var ea = holEaster(y); if (holIn(d, new Date(y, ea.getMonth(), ea.getDate() - 3), new Date(y, ea.getMonth(), ea.getDate() + 1))) return "easter";
+  var ea = holEaster(y); if (holIn(d, new Date(y, ea.getMonth(), ea.getDate() - 7), new Date(y, ea.getMonth(), ea.getDate() + 1))) return "easter"; /* Palm Sunday through Easter Monday */;
   if (m === 4 && day >= 6 && day <= 12) return "nurses";
   var ems = holNthDow(y, 4, 0, 3); if (holIn(d, ems, new Date(y, 4, ems.getDate() + 6))) return "ems"; /* EMS Week: the third full week of May, Sunday to Saturday */
   if (m === 6 && day >= 1 && day <= 4) return "july4";
   if (m === 9 && day >= 24) return "halloween";
-  /* the week up to Thanksgiving Day (the 4th Thursday of November) and nothing after it: the theme is off the day after (owner, Nov 27 2026; it used to run to the Sunday after) */
-  var tg = holNthDow(y, 10, 4, 4); if (holIn(d, new Date(y, 10, tg.getDate() - 6), new Date(y, 10, tg.getDate()))) return "thanksgiving";
+  /* Thanksgiving week: the Sunday through Thanksgiving Day (the 4th Thursday of November) and nothing after it: the theme is off the day after (owner, Nov 27 2026; it used to run to the Sunday after) */
+  var tg = holNthDow(y, 10, 4, 4); if (holIn(d, new Date(y, 10, tg.getDate() - 4), new Date(y, 10, tg.getDate()))) return "thanksgiving";
   if (m === 11 && day === 25) return "christmas"; /* Merry Christmas only on Christmas Day */
-  if (m === 11 && day >= 18 && day <= 30) return "winter"; /* snowy days around Christmas */
+  if (m === 11 && day >= 18 && day <= 30) return "winter"; /* snowy days: Dec 18-24 and Dec 26-30 (Dec 25 returned above, Dec 31 is New Year) */
   return "";
 }
 function holKey(h) { return h ? (h.base || h.id) : ""; }
@@ -15485,7 +15484,7 @@ function harvestStrip() {
 function tglPileH(x) { var h = 0; for (var i = 0; i < TGL.pile.length; i++) { var p = TGL.pile[i]; if (Math.abs(p.x - x) < p.s * 1.4) h += p.s * 0.45; } return Math.min(h, TGL_PILE_MAX + 4); }
 function tglWindow() {
   var d = new Date(), y = d.getFullYear(), tg = holNthDow(y, 10, 4, 4);
-  return d >= new Date(y, 10, 1) && d <= new Date(y, 10, tg.getDate(), 23, 59, 59);
+  return d >= new Date(y, 10, tg.getDate() - 4) && d <= new Date(y, 10, tg.getDate(), 23, 59, 59);
 }
 var TGL_ON = true;    /* a gentle fall up to the end of Thanksgiving Day, main menu only (owner, Nov 5 2026; ends on the day itself since Nov 27 2026) */
 var TGL_GENTLE = true;   /* a few leaves, slow, no gusts, no bouncing, no pile */
@@ -41533,7 +41532,7 @@ function nclexQuotas(m, MX) {
   try { AGX.tab = "national"; } catch (e) {}
   /* Top Players is the first tab every time the Scoreboard opens (owner, Nov 25 2026) */
   var HN = { tab: "pl", at: 0, busy: false, data: null, err: "" };
-  var goHN = go; go = function (view, opts) { if (view === "stats" && S.view !== "stats") HN.tab = "pl"; return goHN(view, opts); };
+  var goHN = go; go = function (view, opts) { if (view === "stats") HN.tab = "pl"; return goHN(view, opts); };   /* every time Ranks is opened, even from Ranks itself (owner, Nov 28 2026) */
   function hnLoad(force) {
     if (HN.busy || (!force && HN.data && Date.now() - HN.at < 120000)) return;
     /* after a failed load, wait before trying again on its own: retrying on every redraw froze the Scoreboard when the
@@ -41751,10 +41750,10 @@ function nclexQuotas(m, MX) {
   }
   var hv0 = hvBoard;
   hvBoard = function () {
-    /* National · Top Players · My Team. The same three tabs, with the same names, on the website and in the iPhone app; the My Team tab
+    /* Top Players · Agencies · My Team (Agencies is the National board). The same three tabs, with the same names, on the website and in the iPhone app; the My Team tab
        says "Join a team" inside it when you are not on one yet (owner, Nov 28 2026; it used to relabel the tab itself) */
     var tb = function (k, label) { return '<button role="tab" aria-selected="' + (HN.tab === k) + '" class="' + (HN.tab === k ? "on" : "") + '" data-hntab="' + k + '">' + label + '</button>'; };
-    var tabs = '<div class="cltabs axtiers hvntabs" role="tablist">' + tb("nat", "National") + tb("pl", "Top Players") + tb("team", "My Team") + (HN.tab !== "team" ? '<button data-hnre="1" aria-label="Refresh">↻</button>' : '') + '</div>';
+    var tabs = '<div class="cltabs axtiers hvntabs" role="tablist">' + tb("pl", "Top Players") + tb("nat", "Agencies") + tb("team", "My Team") + (HN.tab !== "team" ? '<button data-hnre="1" aria-label="Refresh">↻</button>' : '') + '</div>';
     if (HN.tab === "pl") return tabs + hnWon() + hnPlayers() + '<h2 class="hvsth">Your stats</h2>';
     if (HN.tab === "team") return tabs + hv0();
     return tabs + hnWon() + hnNational() + '<h2 class="hvsth">Your stats</h2>';
