@@ -4273,6 +4273,23 @@ html:root .bubble .orb::after,html.hive:root .tank .orb::after{opacity:.3}
 html:root .bubble .bname{background:color-mix(in srgb,var(--bg) 72%,transparent);color:var(--ink)}
 html:root .bubble.more .orb{background:color-mix(in srgb,var(--bugbg) 60%,transparent);border-style:dashed}
 </style>
+<style id="trcss">
+.trtag{display:inline-flex;flex-wrap:wrap;gap:4px;justify-content:center;margin:4px 0}
+.trtag b{font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;border-radius:999px;padding:2px 8px;line-height:1.35}
+.trleg{background:linear-gradient(135deg,#fde68a,#f59e0b);color:#1c1100}
+.trwon{background:#1c1100;color:#fde68a;border:1px solid #f59e0b}
+.trtag.mini{position:absolute;top:2px;right:0;flex-direction:column;gap:2px;margin:0}
+.bpprize .trtag{margin-top:6px}
+</style>
+<style id="vacss">
+@media (max-width:560px){.tbmenu .gear span{display:inline}}
+.vapills{display:flex;align-items:center;gap:4px;padding:4px;margin:6px 8px;border:1px solid var(--line);border-radius:999px;background:var(--surface-2,var(--surface))}
+.vapills .vak{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:0 8px}
+.vapills .vap{font:inherit;font-size:12.5px;font-weight:700;border:0;border-radius:999px;padding:6px 12px;background:transparent;color:var(--ink);cursor:pointer}
+.vapills .vap.on{background:#F59E0B;color:#1c1100}
+#vabar{position:fixed;z-index:9000;top:max(8px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;padding:5px 6px 5px 14px;border-radius:999px;background:#F59E0B;color:#1c1100;font-size:13px;font-weight:600;box-shadow:0 6px 18px rgba(0,0,0,.35);max-width:94vw}
+#vabar button{font:inherit;font-size:12.5px;font-weight:800;border:0;border-radius:999px;padding:6px 12px;background:#1c1100;color:#fde68a;cursor:pointer}
+</style>
 <style id="homeui">
 /* ===== New Home, header and tab bar (Hive look; owner, Nov 28 2026) =====
    Every colour here is a theme token (--bg --surface --surface-2 --line --ink --muted --btn --link --bugbg --hv-hn --lg1..3), so Night Shift

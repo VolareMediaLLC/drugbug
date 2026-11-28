@@ -42,6 +42,8 @@ button.ghost:hover{border-color:var(--accent)}
 <script src="adm-common.js"></script>
 <script>
 (function () {
+  var KNOWN_OUTFITS = [{ items: ["pupwreath", "pupbeard", "puptoga", "pupscepter"], name: "Pupienus (Roman Emperor) outfit" }, { items: ["plaguehat", "plaguemask", "plaguecoat", "plaguecane"], name: "Plague Doctor outfit" }];
+  function withKnown(list) { var out = list.slice(); KNOWN_OUTFITS.forEach(function (k) { if (!out.some(function (o) { return (o.items || []).join(",") === k.items.join(","); })) out.push(k); }); return out; }
   var A = window.ADM, esc = A.esc, root = document.getElementById("root");
   var GROUPS = [["players", "Top Players", "The top 3 players in the country, on a team or not."], ["team", "Agencies: top 3 in each agency", "The top 3 people inside every approved agency (500 points or more that week)."],
     ["state", "State boards", "The top 3 people of the 1st, 2nd and 3rd agencies in each state (state boards are paused right now)."], ["national", "National board", "Everyone eligible on the roster of the 1st, 2nd and 3rd agencies in the country."]];
@@ -86,7 +88,7 @@ button.ghost:hover{border-color:var(--accent)}
     if (it.kind === "sticks") h += '<input type="number" min="1" max="' + (cat.maxSticks || 10000) + '" step="1" list="presets" data-f="sticks"' + key + ' value="' + esc(it.sticks == null ? "" : it.sticks) + '" aria-label="Number of sticks"> <span class="hint">sticks</span>';
     else if (it.kind === "bug") h += '<select data-f="rar"' + key + ' aria-label="Rarity">' + (cat.rarities || ["common", "rare", "epic", "legendary"]).map(function (r) { return '<option value="' + r + '"' + (it.rar === r ? " selected" : "") + ">" + r + "</option>"; }).join("") + "</select>";
     else if (it.kind === "bugid") h += '<select data-f="pickbug"' + key + ' aria-label="Known bugs"><option value="">Pick a known bug…</option>' + (cat.bugs || []).map(function (b) { return '<option value="' + esc(b.id) + '|' + esc(b.name) + '">' + esc(b.name) + "</option>"; }).join("") + '</select><input type="text" class="wide" placeholder="bug id, e.g. warlord-hercules" data-f="bug"' + key + ' value="' + esc(it.bug || "") + '"><input type="text" placeholder="Name shown" data-f="name"' + key + ' value="' + esc(it.name || "") + '">';
-    else h += '<select data-f="pickoutfit"' + key + ' aria-label="Known outfits"><option value="">Pick a known outfit…</option>' + (cat.outfits || []).map(function (o) { return '<option value="' + esc(o.items.join(",")) + '|' + esc(o.name) + '">' + esc(o.name) + "</option>"; }).join("") + '</select><input type="text" class="wide" placeholder="item ids, e.g. plaguehat, plaguecoat" data-f="items"' + key + ' value="' + esc(it.items || "") + '"><input type="text" placeholder="Outfit name" data-f="name"' + key + ' value="' + esc(it.name || "") + '">';
+    else h += '<select data-f="pickoutfit"' + key + ' aria-label="Known outfits"><option value="">Pick a known outfit…</option>' + withKnown(cat.outfits || []).map(function (o) { return '<option value="' + esc(o.items.join(",")) + '|' + esc(o.name) + '">' + esc(o.name) + "</option>"; }).join("") + '</select><input type="text" class="wide" placeholder="item ids, e.g. plaguehat, plaguecoat" data-f="items"' + key + ' value="' + esc(it.items || "") + '"><input type="text" placeholder="Outfit name" data-f="name"' + key + ' value="' + esc(it.name || "") + '">';
     return h + '<button class="ghost" data-a="del"' + key + ' aria-label="Remove this reward">Remove</button></div>';
   }
   function place(g, p, i) {

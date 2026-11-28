@@ -894,7 +894,7 @@ document.addEventListener("click", function (e) {
 function tbMenuHTML(extra) {
   var fun = typeof funOn !== "function" || funOn(), tc = ""; try { tc = tierChip(); } catch (e) {}
   var g = ""; try { g = gearBtn().replace('class="theme-btn gear"', 'class="theme-btn tbmi gear"').replace("</svg></button>", "</svg><span>Settings</span></button>"); } catch (e2) {}
-  return '<div class="tbmenu" role="menu">' + (tc ? '<div class="tbmhead">' + tc + '</div>' : '') +
+  return '<div class="tbmenu" role="menu">' + (tc ? '<div class="tbmhead">' + tc + '</div>' : '') + (typeof vaPills === "function" ? vaPills() : '') +
     '<button class="theme-btn tbmi" data-act="gsearch"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="6.500" fill="none" stroke="currentColor" stroke-width="2.200"/><path d="M16 16l4.500 4.500" stroke="currentColor" stroke-width="2.400" stroke-linecap="round"/></svg><span>Search</span></button>' +
     (fun ? '<button class="theme-btn tbmi musicbtn" data-act="music" aria-pressed="' + muOn() + '" aria-label="Background music"><span class="tbmic">' + muIcon() + '</span><span>Music</span></button>' : '') + g +
     (typeof staffBtn === "function" ? staffBtn() : '') + extra + (typeof stxBtn === "function" ? stxBtn() : '') + '<button class="theme-btn tbmi" data-idea="1"><span>Send an idea</span></button></div>';
@@ -4838,6 +4838,34 @@ function rebuildIndex() {
   DB.order.forEach(function (id) { all[id] = 1; });
   DB.ALLIDS = Object.keys(all); DB.PHIDS = Object.keys(ph); DB._ncache = {}; DB._nskip = null; DB._mcache = null; DB._dn = null; DB._dnn = null; DB._mldl = null; DB._dsi = null; DB._mix = null; if (typeof COND_IDX !== "undefined") COND_IDX = {}; if (typeof ALT_CACHE !== "undefined") ALT_CACHE = {};
 }
+/* Owner-only "View as" (owner, Nov 28 2026): the owner or an editor can look at DrugBug as a Pro user or a Free user on their own
+   account. While it is on, the Control Center links go away and tier() answers with the chosen plan, so every Free lock, limit
+   and upgrade prompt is the real one. A small bar always shows what you are viewing and exits in one tap. Plain ES5. */
+function vaReal() { return !!(Admin.real && (Admin.real.can || Admin.real.owner)); }
+function vaMode() { if (!vaReal()) return ""; var m = store("viewAs"); return m === "pro" || m === "free" ? m : ""; }
+function vaApply() { var r = Admin.real; if (!r) return; var m = vaMode(); Admin.can = m ? false : r.can; Admin.owner = m ? false : r.owner; }
+function vaPills() {
+  if (!vaReal()) return "";
+  var m = vaMode();
+  return '<div class="vapills" role="group" aria-label="View as"><span class="vak">View as</span>' + [["", "Admin"], ["pro", "Pro"], ["free", "Free"]].map(function (x) {
+    return '<button type="button" class="vap' + (m === x[0] ? ' on' : '') + '" data-va="' + x[0] + '" aria-pressed="' + (m === x[0]) + '">' + x[1] + '</button>';
+  }).join("") + '</div>';
+}
+function vaBar() {
+  var m = vaMode(), el = document.getElementById("vabar");
+  if (!m) { if (el) el.remove(); return; }
+  if (!el) { el = document.createElement("div"); el.id = "vabar"; el.setAttribute("role", "status"); document.body.appendChild(el); }
+  el.innerHTML = '<span>Viewing as: <b>' + (m === "pro" ? "Pro" : "Free") + '</b></span><button type="button" data-va="">Exit preview</button>';
+}
+function vaSet(m) {
+  store("viewAs", m || null); S.menu = false; vaApply(); vaBar();
+  if (S.view === "admin") S.view = "home";
+  try { render(); } catch (e) {}
+}
+document.addEventListener("click", function (e) {
+  var b = e.target.closest && e.target.closest("[data-va]"); if (!b || !vaReal()) return;
+  e.preventDefault(); e.stopPropagation(); vaSet(b.getAttribute("data-va"));
+}, true);
 function initAdmin() {
   if (!window.claude || typeof window.claude.use !== "function") return;
   /* The buyer's-eye copy is a demo build: even the owner sees it as a visitor does,
@@ -4845,7 +4873,7 @@ function initAdmin() {
   if (typeof CFG !== "undefined" && CFG.demo === true) return;
   window.claude.use("user").then(function (u) {
     if (!u) return;
-    return Promise.all([u.canEdit(), typeof u.id === "function" ? u.id() : null, typeof u.isOwner === "function" ? u.isOwner() : false]).then(function (v) { Admin.can = !!v[0]; Admin.uid = v[1]; var wasOwner = Admin.owner; Admin.owner = !!v[2]; if (Admin.owner && !wasOwner && S.view === "terrarium") render(); P.owner = P.owner || Admin.can; if (Admin.can && S.view !== "admin") { var tb = $(".topbar"); if (tb && !$("[data-go='admin']", tb)) render(); } });
+    return Promise.all([u.canEdit(), typeof u.id === "function" ? u.id() : null, typeof u.isOwner === "function" ? u.isOwner() : false]).then(function (v) { Admin.uid = v[1]; var wasOwner = Admin.owner; Admin.real = { can: !!v[0], owner: !!v[2] }; vaApply(); vaBar(); if (Admin.owner && !wasOwner && S.view === "terrarium") render(); P.owner = P.owner || Admin.can; if (Admin.can && S.view !== "admin") { var tb = $(".topbar"); if (tb && !$("[data-go='admin']", tb)) render(); } });
   }).catch(function () {});
 }
 function A() { if (!S.adm) S.adm = { tab: "ai", q: "", filter: "all", edit: null, form: null, hist: null, qf: { lv: "", q: "", st: "all" }, qedit: null, sedit: null, log: null }; return S.adm; }
@@ -6907,6 +6935,10 @@ function buyBug(id) {
 }
 function equipBug(id) { if (!owned(id)) return; Prog.d.avatar = id; Prog.d.avatarTs = Date.now(); saveProg(); S.shopMsg = b2n(id) + " equipped."; }
 function b2n(id) { return bugById(id).name; }
+/* Trophy items (owner, Nov 28 2026): any bug or outfit won on the weekly leaderboard or podium is Legendary and says how it was won,
+   so prized pieces never look like store stock. A piece counts when it is a scoreboard prize or has a recorded win (Prog.d.prizeAt). */
+function isTrophy(o) { return !!(o && (o.prize || (Prog.d && Prog.d.prizeAt && Prog.d.prizeAt[o.id]))); }
+function trophyTag(mini) { return mini ? '<span class="trtag mini"><b class="trleg">Legendary</b><b class="trwon">Won</b></span>' : '<span class="trtag"><b class="trleg">Legendary</b><b class="trwon">Won \u00b7 Weekly Leaderboard</b></span>'; }
 function shopView() {
   var f = S.shopF || "home", me = myBug(), bal = sticks();
   var c = '<section class="shop">';
@@ -6950,7 +6982,7 @@ function shopView() {
       pend ? '<button class="btn small" data-buyok="' + b.id + '">Buy for ' + b.price + '</button><button class="btn small ghost" data-buyno="1">Cancel</button>' :
       '<button class="btn small' + (can ? '' : ' ghost') + '" data-buy="' + b.id + '"' + (can ? '' : ' disabled') + '>' + (can ? 'Buy' : 'Need ' + (b.price - bal) + ' more') + '</button>';
     if (b.secret && !own) return '<div class="bugcard secret hvlk r-' + b.rar + '" data-bugid="' + b.id + '"><span class="secsil">' + bugArt(b, "", { mood: "happy" }) + '</span><strong>???</strong><span class="rar">Secret</span><span class="muted small">Won in a funny way</span><div class="bact"><span class="muted small">Locked</span></div></div>';
-    return '<div class="bugcard r-' + b.rar + (eq ? " eq" : "") + (own ? "" : " hvlk") + '" data-bugid="' + b.id + '"' + (B3_READY ? ' data-bug3d="' + b.id + '" title="Tap to see ' + esc(b.name) + ' in 3D"' : '') + '>' + bugArt(b) + (B3_READY ? '<span class="b3tag">3D</span>' : '') + '<strong>' + esc(b.name) + '</strong>' + (b.secret && b.won ? '<span class="muted small secwon">' + esc(b.won) + '</span>' : '') + '<span class="rar">' + RARITY[b.rar] + '</span>' + (own ? '<span class="muted small">Owned</span>' : b.admin ? '<span class="muted small">Administrator only</span>' : b.login ? '<span class="muted small">Daily login prize</span>' : b.king ? '<span class="muted small">Collection king</span>' : !b.price ? '<span class="muted small">Free</span>' : b.unlock ? '<span class="muted small">Free when unlocked</span>' : stickTag(b.price) + (b.season && inSeason(b) ? '<span class="muted small">Until the end of ' + MONTHS[b.season[1]] + '</span>' : '')) + '<div class="bact">' + act + '</div></div>';
+    return '<div class="bugcard r-' + b.rar + (eq ? " eq" : "") + (own ? "" : " hvlk") + '" data-bugid="' + b.id + '"' + (B3_READY ? ' data-bug3d="' + b.id + '" title="Tap to see ' + esc(b.name) + ' in 3D"' : '') + '>' + bugArt(b) + (B3_READY ? '<span class="b3tag">3D</span>' : '') + '<strong>' + esc(b.name) + '</strong>' + (b.secret && b.won ? '<span class="muted small secwon">' + esc(b.won) + '</span>' : '') + (isTrophy(b) ? trophyTag() : '<span class="rar">' + RARITY[b.rar] + '</span>') + (own ? '<span class="muted small">Owned</span>' : b.admin ? '<span class="muted small">Administrator only</span>' : b.login ? '<span class="muted small">Daily login prize</span>' : b.king ? '<span class="muted small">Collection king</span>' : !b.price ? '<span class="muted small">Free</span>' : b.unlock ? '<span class="muted small">Free when unlocked</span>' : stickTag(b.price) + (b.season && inSeason(b) ? '<span class="muted small">Until the end of ' + MONTHS[b.season[1]] + '</span>' : '')) + '<div class="bact">' + act + '</div></div>';
   }
   var TIERS = [["admin", "Administrator only", "Just for you"], ["starter", "Starter", "Free"], ["common", "Common", "300–800 sticks"], ["rare", "Rare", "1,200–2,000 sticks"], ["epic", "Epic", "2,800–4,800 sticks"], ["legendary", "Legendary", "7,000–12,000 sticks"], ["seasonal", "Seasonal", "2,400 sticks, only in season"], ["earned", "Earned by mastery", "Free when you unlock them"]];
   function tierOf(b) { return b.secret ? "secret" : b.admin ? "admin" : b.king ? "king" : b.login ? "login" : b.id === "starter" || b.grub || b.free ? "starter" : b.rar; }
@@ -7114,7 +7146,7 @@ function tankHTML(mine, withMore) {
   var bub = mine.map(function (b, i) {
     var on = me.id === b.id;
     return '<button class="bubble' + (on ? ' on' : '') + '" data-b3id="' + b.id + '" role="listitem" style="--d:' + ((i * 0.37) % 3).toFixed(2) + 's" ' + (on ? 'aria-current="true"' : 'data-equip="' + b.id + '"') + ' aria-label="' + (on ? (es ? "Usando " : "Using ") : (es ? "Usar " : "Use ")) + esc(b.name) + '">' +
-      '<span class="orb r-' + b.rar + '">' + (on ? myBugArt("", null, null, MAX_STAGE, true) : bugArt(b, "", { stage: MAX_STAGE, mood: "happy", vivid: true })) + '</span><span class="bname">' + esc(b.name) + '</span>' + (on ? '<em>' + (es ? "Usando" : "Using") + '</em>' : '') + '</button>';
+      '<span class="orb r-' + (isTrophy(b) ? 'legendary' : b.rar) + '">' + (on ? myBugArt("", null, null, MAX_STAGE, true) : bugArt(b, "", { stage: MAX_STAGE, mood: "happy", vivid: true })) + '</span><span class="bname">' + esc(b.name) + '</span>' + (isTrophy(b) ? trophyTag(1) : '') + (on ? '<em>' + (es ? "Usando" : "Using") + '</em>' : '') + '</button>';
   }).join("");
   if (withMore) bub += '<button class="bubble more" data-shopf="bugs" role="listitem"><span class="orb"><span class="plus" aria-hidden="true">+</span></span><span class="bname">' + (es ? "Conseguir más" : "Get more bugs") + '</span></button>';
   return '<div class="pickhead"><h3>' + (es ? "Mi terrario" : "My terrarium") + '</h3><span class="muted small">' + (es ? "Toca para usarlo, mantén pulsado para ver su ficha" : "Tap to use, hold to see its card") + '</span></div>' +
@@ -7547,8 +7579,38 @@ ITEMS.push(
       [128, 148, 168].map(function (yy) { return '<circle cx="106" cy="' + (yy + o) + '" r="2.6" fill="#b45309"/>'; }).join("") + '<path d="M62 ' + (150 + o) + ' Q100 ' + (158 + o) + ' 138 ' + (150 + o) + '" stroke="#78350f" stroke-width="5" fill="none"/><rect x="94" y="' + (149 + o) + '" width="12" height="9" rx="1" fill="none" stroke="#d4a017" stroke-width="2"/>'; } },
   { id: "plaguecane", name: "Plague Doctor Cane", slot: "held", price: 0, prize: "scoreboard", prizeWk: "Nov 23 to 29, 2026", draw: function () { return '<path d="M158 112 L165 204" stroke="#3f2a14" stroke-width="5" stroke-linecap="round"/><circle cx="157.5" cy="108" r="6.5" fill="#d4a017" stroke="#78350f" stroke-width="1.5"/>'; } }
 );
+/* Pupienus, the Roman Emperor outfit (owner, Nov 28 2026): a scoreboard prize, never sold (it.prize). A golden laurel wreath with purple ribbons, a white
+   beard, a half-purple half-white toga with a gold edge, hem and a fibula clasp, and an eagle scepter. Drawn from the same hatY / oy anchors as every
+   other piece so it sits on all the bug bodies, V2 included. */
+ITEMS.push(
+  { id: "pupwreath", name: "Pupienus Laurel Wreath", slot: "hat", price: 0, prize: "scoreboard", prizeWk: "Nov 23 to 29, 2026", draw: function (y) {
+      var t = hatY(y), s = '<path d="M64 ' + (t + 14) + ' Q100 ' + (t - 12) + ' 136 ' + (t + 14) + '" fill="none" stroke="#a16207" stroke-width="3"/>', i, a, x, yy, rot, n = 9;
+      for (i = 0; i <= n; i++) {
+        a = Math.PI + (Math.PI * i) / n; x = 100 + 36 * Math.cos(a); yy = (t + 14) + 22 * Math.sin(a); rot = (a * 180 / Math.PI) + 90;
+        s += '<ellipse cx="' + x.toFixed(1) + '" cy="' + yy.toFixed(1) + '" rx="7.500" ry="3.800" transform="rotate(' + rot.toFixed(0) + ' ' + x.toFixed(1) + ' ' + yy.toFixed(1) + ')" fill="#f5c542" stroke="#a16207" stroke-width="1.300"/>' +
+          '<ellipse cx="' + (x + 1.500).toFixed(1) + '" cy="' + (yy - 1).toFixed(1) + '" rx="3" ry="1.200" transform="rotate(' + rot.toFixed(0) + ' ' + x.toFixed(1) + ' ' + yy.toFixed(1) + ')" fill="#fde68a" opacity=".8"/>';
+      }
+      return s + '<path d="M65 ' + (t + 15) + ' q-7 8 -4 20 M135 ' + (t + 15) + ' q7 8 4 20" fill="none" stroke="#6d28d9" stroke-width="4.500" stroke-linecap="round"/><circle cx="100" cy="' + (t - 8) + '" r="3.200" fill="#dc2626" stroke="#7f1d1d" stroke-width="1"/>'; } },
+  { id: "pupbeard", name: "Pupienus Beard", slot: "face", price: 0, prize: "scoreboard", prizeWk: "Nov 23 to 29, 2026", draw: function (y) {
+      return '<path d="M76 ' + (y + 9) + ' Q74 ' + (y + 32) + ' 100 ' + (y + 41) + ' Q126 ' + (y + 32) + ' 124 ' + (y + 9) + ' Q112 ' + (y + 20) + ' 100 ' + (y + 17) + ' Q88 ' + (y + 20) + ' 76 ' + (y + 9) + 'Z" fill="#f1f5f9" stroke="#94a3b8" stroke-width="2"/>' +
+        '<path d="M86 ' + (y + 24) + ' q3 6 0 10 M96 ' + (y + 26) + ' q3 7 0 11 M106 ' + (y + 26) + ' q-3 7 0 11 M115 ' + (y + 24) + ' q-3 6 0 10" fill="none" stroke="#cbd5e1" stroke-width="1.600" stroke-linecap="round"/>' +
+        '<path d="M88 ' + (y + 15) + ' Q100 ' + (y + 10) + ' 112 ' + (y + 15) + ' Q100 ' + (y + 22) + ' 88 ' + (y + 15) + 'Z" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.400"/>'; } },
+  { id: "puptoga", name: "Pupienus Imperial Toga", slot: "outfit", price: 0, prize: "scoreboard", prizeWk: "Nov 23 to 29, 2026", draw: function (y) {
+      var o = oy(y);
+      return '<path d="M100 ' + (99 + o) + ' Q78 ' + (97 + o) + ' 60 ' + (104 + o) + ' L44 ' + (198 + o) + ' Q72 ' + (206 + o) + ' 100 ' + (204 + o) + 'Z" fill="#6d28d9" stroke="#3b0764" stroke-width="2.500"/>' +
+        '<path d="M100 ' + (99 + o) + ' Q122 ' + (97 + o) + ' 140 ' + (104 + o) + ' L156 ' + (198 + o) + ' Q128 ' + (206 + o) + ' 100 ' + (204 + o) + 'Z" fill="#f8fafc" stroke="#94a3b8" stroke-width="2.500"/>' +
+        '<path d="M100 ' + (99 + o) + ' V' + (204 + o) + '" stroke="#f5c542" stroke-width="3.600"/>' +
+        '<path d="M50 ' + (190 + o) + ' Q100 ' + (198 + o) + ' 152 ' + (190 + o) + '" fill="none" stroke="#f5c542" stroke-width="3" stroke-dasharray="7 4"/>' +
+        '<path d="M60 ' + (150 + o) + ' Q100 ' + (160 + o) + ' 140 ' + (150 + o) + '" fill="none" stroke="#92400e" stroke-width="5" stroke-linecap="round"/>' +
+        '<path d="M70 ' + (120 + o) + ' Q86 ' + (132 + o) + ' 94 ' + (112 + o) + '" fill="none" stroke="#4c1d95" stroke-width="2" opacity=".6"/>' +
+        '<circle cx="100" cy="' + (112 + o) + '" r="6.500" fill="#f5c542" stroke="#a16207" stroke-width="1.800"/><circle cx="100" cy="' + (112 + o) + '" r="3" fill="#dc2626" stroke="#7f1d1d" stroke-width="1"/>'; } },
+  { id: "pupscepter", name: "Pupienus Eagle Scepter", slot: "held", price: 0, prize: "scoreboard", prizeWk: "Nov 23 to 29, 2026", draw: function () {
+      return '<path d="M158 112 L165 206" stroke="#fde68a" stroke-width="5" stroke-linecap="round"/><path d="M158 112 L165 206" stroke="#a16207" stroke-width="1.400" stroke-dasharray="3 5" stroke-linecap="round"/>' +
+        '<path d="M158 108 Q146 100 140 106 Q146 112 152 110 Q145 116 142 122 Q152 118 158 114 Q164 118 174 122 Q171 116 164 110 Q170 112 176 106 Q170 100 158 108Z" fill="#f5c542" stroke="#a16207" stroke-width="1.600" stroke-linejoin="round"/>' +
+        '<circle cx="158" cy="102" r="4.500" fill="#f5c542" stroke="#a16207" stroke-width="1.500"/><path d="M161 101 l5 2 l-5 1.500Z" fill="#b45309"/><circle cx="159" cy="101" r="1" fill="#1c1917"/>'; } }
+);
 (function () { try { var st = document.createElement("style"); st.textContent = ".hvfeat{border-color:#d4a017!important}.hvfx{display:flex;gap:12px;align-items:center}.hvfxart{flex:0 0 104px;width:104px}.hvfxart svg{width:104px;height:auto}.hvfx p{margin:4px 0}"; document.head.appendChild(st); } catch (e) {} })();
-var PRIZE_SETS = { plague: { name: "Plague Doctor outfit", items: ["plaguehat", "plaguemask", "plaguecoat", "plaguecane"] } };
+var PRIZE_SETS = { plague: { name: "Plague Doctor outfit", items: ["plaguehat", "plaguemask", "plaguecoat", "plaguecane"] }, pupienus: { name: "Pupienus (Roman Emperor) outfit", items: ["pupwreath", "pupbeard", "puptoga", "pupscepter"] } };
 var ITEMS_BY = {}; ITEMS.forEach(function (it) { ITEMS_BY[it.id] = it; });
 var SLOTS = [["outfit", "Outfits"], ["hair", "Perms & Hair"], ["hat", "Hats"], ["face", "Eyewear"], ["neck", "Neck"], ["back", "Back"], ["left", "Other hand"], ["held", "In hand"], ["fx", "Effects"]];
 function myWear() { return Prog.d.wear || {}; }
@@ -7575,7 +7637,7 @@ function itemsView() {
       var act = on ? '<button class="btn small ghost" data-unwear="' + it.id + '">Take off</button>' : own ? '<button class="btn small" data-wear="' + it.id + '">Wear</button>' :
         pend ? '<button class="btn small" data-ibuyok="' + it.id + '">Buy for ' + it.price + '</button><button class="btn small ghost" data-buyno="1">Cancel</button>' :
         '<button class="btn small' + (bal >= it.price ? '' : ' ghost') + '" data-ibuy="' + it.id + '"' + (bal >= it.price ? '' : ' disabled') + '>' + (bal >= it.price ? 'Buy' : 'Need ' + (it.price - bal) + ' more') + '</button>';
-      return '<div class="bugcard' + (on ? " eq" : "") + '">' + myBugArt("", null, pv) + '<strong>' + esc(it.name) + (it.nw && !own ? ' <span class="newtag">New</span>' : '') + '</strong>' + (own ? '<span class="muted small">' + (on ? "Wearing" : it.prize ? "Scoreboard prize" : "Owned") + (it.prize ? '<br>Week of ' + esc(it.prizeWk || "") + ((Prog.d.prizeAt || {})[it.id] ? ' · won ' + esc(new Date(Prog.d.prizeAt[it.id]).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })) : '') : '') + '</span>' : stickTag(it.price)) + '<div class="bact">' + act + '</div></div>';
+      return '<div class="bugcard' + (on ? " eq" : "") + '">' + myBugArt("", null, pv) + '<strong>' + esc(it.name) + (it.nw && !own ? ' <span class="newtag">New</span>' : '') + '</strong>' + (isTrophy(it) ? trophyTag() : '') + (own ? '<span class="muted small">' + (on ? "Wearing" : it.prize ? "Scoreboard prize" : "Owned") + (it.prize ? '<br>Week of ' + esc(it.prizeWk || "") + ((Prog.d.prizeAt || {})[it.id] ? ' · won ' + esc(new Date(Prog.d.prizeAt[it.id]).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })) : '') : '') + '</span>' : stickTag(it.price)) + '<div class="bact">' + act + '</div></div>';
     }).join("") + '</div>';
   });
   return c;
@@ -12060,7 +12122,7 @@ function muCtx() {
   if (!MU.master || MU.outCtx !== c0) {
     MU.outCtx = c0; var c = c0; MU.master = c.createGain(); MU.master.gain.value = 0;
     /* recorded tracks are already mixed: the compressor only catches peaks */
-    var comp = c.createDynamicsCompressor(); comp.threshold.value = -4; comp.ratio.value = 4; comp.knee.value = 20; MU.comp = comp;
+    var comp = c.createDynamicsCompressor(); comp.threshold.value = -4; comp.ratio.value = 4; comp.knee.value = 20; comp.attack.value = 0.012; comp.release.value = 0.28; MU.comp = comp;   /* a soft attack and a slow release, so the limiter never pumps or clicks (Nov 28 2026) */
     MU.fileOut = c.createGain(); MU.fileOut.gain.value = 0.6; MU.fileOut.connect(MU.master);
     MU.master.connect(comp); comp.connect(c.destination);
   }
@@ -13068,6 +13130,7 @@ function webCodeTry(raw) {
   });
 }
 function tier() {
+  var va = typeof vaMode === "function" ? vaMode() : ""; if (va) return va;   /* owner's View as */
   if (!PAYWALL) return "pro";
   if (typeof giftPro === "function" && giftPro()) return "pro";   /* a gift code (modules/gift.js) */
   if (typeof fmPassActive === "function" && fmPassActive() && typeof S !== "undefined" && S.view === "level" && typeof isF === "function" && isF(S.level)) return "pro"; /* Field Medic month code */
@@ -13302,7 +13365,7 @@ function proCard() {
   if (P.cancel) c += '<button class="btn small ghost" data-pw="' + P.cancel + '">Manage or cancel</button>';
   if (P.tier !== "pro") c += '<button class="btn small" data-pw="open">' + (P.tier === "free" ? "See plans" : "Upgrade to Pro") + '</button>';
   if (NATIVE) c += '<button class="btn small ghost" data-pw="restore">Restore purchases</button>';
-  return c + '</div></section>' + (typeof iapBox === "function" ? iapBox() : '');
+  return c + '</div>' + (typeof vaPills === "function" ? vaPills() : '') + '</section>' + (typeof iapBox === "function" ? iapBox() : '');
 }
 document.addEventListener("click", function (e) {
   var t = e.target.closest("[data-pw]"); if (!t) { if (e.target === pwdlg) closePaywall(); return; }
@@ -16044,16 +16107,31 @@ window.addEventListener("resize", function () { if (HFX.cv) hfxSize(); });
 /* ---------- holiday sounds: made live with WebAudio (no audio files), mixed into the music output so the music volume applies.
    They play only when music is on and Settings > Holiday sounds is on. */
 function hsOk() { return typeof muOn === "function" && muOn() && typeof MU !== "undefined" && MU.ctx && MU.ctx.state === "running" && MU.master && muLevel() > 0; }
+/* Holiday sounds, cleaned up (owner, Nov 28 2026). Everything here is made live, so it gets a studio chain: every note ramps in over 15 to 40 ms and out
+   with an exponential release (no clicks or pops), harsh square and sawtooth tones go through a warm low-pass (800 to 1800 Hz), and the whole set shares a
+   soft delay send for a little room. The recorded study music is left as mastered (it is already level-matched and crossfaded). */
+var HS_BUSV = null;
+function hsBus() {
+  var c = MU.ctx, dst = HS_OUT || MU.master;
+  if (HS_BUSV && HS_BUSV.c === c && HS_BUSV.dst === dst) return HS_BUSV.inp;
+  var inp = c.createGain(), send = c.createGain(), dl = c.createDelay(0.6), fb = c.createGain(), lp = c.createBiquadFilter();
+  send.gain.value = 0.16; dl.delayTime.value = 0.21; fb.gain.value = 0.28; lp.type = "lowpass"; lp.frequency.value = 2400; lp.Q.value = 0.5;
+  inp.connect(dst); inp.connect(send); send.connect(dl); dl.connect(lp); lp.connect(fb); fb.connect(dl); lp.connect(dst);
+  HS_BUSV = { c: c, dst: dst, inp: inp }; return inp;
+}
+function hsAtt(a) { return Math.max(0.015, Math.min(0.04, a || 0.02)); }
 function hsNoise(t, dur, o) {
   var c = MU.ctx, src = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(); o = o || {};
   src.buffer = muNoiseBuf(); src.loop = true; f.type = o.type || "bandpass"; f.frequency.setValueAtTime(o.f || 1000, t); if (o.f2) f.frequency.exponentialRampToValueAtTime(o.f2, t + dur); f.Q.value = o.q || 1;
-  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(o.v || .1, t + (o.a || .005)); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  src.connect(f); f.connect(g); g.connect(HS_OUT || MU.master); src.start(t); src.stop(t + dur + .05); return f;
+  var at = Math.min(hsAtt(o.a), dur * 0.5);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(o.v || .1, t + at); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  src.connect(f); f.connect(g); g.connect(hsBus()); src.start(t); src.stop(t + dur + .05); return f;
 }
 function hsTone(t, type, f0, f1, dur, v, a) {
-  var c = MU.ctx, o = c.createOscillator(), g = c.createGain(); o.type = type; o.frequency.setValueAtTime(f0, t); if (f1 && f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, t + dur * .9);
-  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + (a || .01)); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  o.connect(g); g.connect(HS_OUT || MU.master); o.start(t); o.stop(t + dur + .05); return o;
+  var c = MU.ctx, o = c.createOscillator(), g = c.createGain(), at = Math.min(hsAtt(a), dur * 0.5), harsh = type === "square" || type === "sawtooth", lp = null; o.type = type; o.frequency.setValueAtTime(f0, t); if (f1 && f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, t + dur * .9);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + at); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  if (harsh) { lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = Math.max(800, Math.min(1800, Math.max(f0, f1 || 0) * 3.5)); lp.Q.value = 0.6; o.connect(lp); lp.connect(g); } else o.connect(g);
+  g.connect(hsBus()); o.start(t); o.stop(t + dur + .05); return o;
 }
 var HS_OUT = null, HS_GAIN = { halloween: 3, winter: 2.4, newyear: .9, valentine: .45, stpatrick: 5, easter: 5, nurses: 3.5, ems: 2.2, thanksgiving: 2.2, july4: 1 };
 var HS = {
@@ -39679,7 +39757,8 @@ function wrItemHTML(g, p, k, it) {
     wrBugList().map(function (b) { return '<option value="' + esc(b.id) + '"' + (it.bug === b.id ? " selected" : "") + '>' + esc(b.name) + (b.rar ? ' · ' + esc(b.rar) : '') + '</option>'; }).join("") + '</select>';
   h += '<button class="btn small ghost" data-wr="del"' + key + ' aria-label="Remove this reward">Remove</button></div>';
   if (it.kind === "items") {
-    var outs = (WRW.data && WRW.data.catalog && WRW.data.catalog.outfits) || [], cur = (it.items || []).join(",");
+    var outs = ((WRW.data && WRW.data.catalog && WRW.data.catalog.outfits) || []).slice(), cur = (it.items || []).join(",");
+    Object.keys(PRIZE_SETS).forEach(function (k) { var ps = PRIZE_SETS[k]; if (!outs.some(function (o) { return (o.items || []).join(",") === ps.items.join(","); })) outs.push({ items: ps.items.slice(), name: ps.name }); });
     h += '<div class="writr"><select class="sel wrwide" data-wr="outfit"' + key + ' aria-label="Known outfits"><option value="">Pick a known outfit, or build one below…</option>' +
       outs.map(function (o, oi) { return '<option value="' + oi + '"' + ((o.items || []).join(",") === cur ? " selected" : "") + '>' + esc(o.name) + ' (' + (o.items || []).length + ' pieces)</option>'; }).join("") + '</select>' +
       '<input class="pinput wrname" maxlength="40" data-wr="oname"' + key + ' value="' + esc(it.name || "") + '" placeholder="Outfit name, e.g. Plague Doctor outfit" aria-label="Outfit name"></div>';
@@ -42051,7 +42130,7 @@ function nclexQuotas(m, MX) {
         '<b class="bpname">' + esc(nameOf(r)) + (meOf(r) ? ' <em>' + (kind === "a" ? "yours" : "you") + '</em>' : '') + '</b>' + (subOf(r) ? '<small class="bpsub">' + esc(subOf(r)) + '</small>' : '') +
         '<span class="bppts">' + num0(ptsOf(r)) + ' pts</span></button>' +
         '<div class="bpblock" aria-hidden="true"><span class="bptop"></span><span class="bpnum">' + pl + '</span>' + (pl === 1 ? '<span class="bpspark">✦</span><span class="bpspark b">✦</span>' : '') + '</div>' +
-        (pz ? (pz.none ? '<div class="bpprize r-common"><span class="bpsil stk" aria-hidden="true">&ndash;</span><b>' + esc(pz.t) + '</b><small>' + esc(pz.s) + '</small></div>' : pz.art ? '<button class="bpprize r-' + pz.rar + ' shown" ' + pz.tap + ' aria-label="' + esc(pz.t) + ': see its lore and stats"><span class="bpsil art">' + pz.art + '</span><b>' + esc(pz.t) + '</b><small>' + esc(pz.s) + '</small>' + (pz.x ? '<small class="bpx">' + esc(pz.x) + '</small>' : '') + '</button>'
+        (pz ? (pz.none ? '<div class="bpprize r-common"><span class="bpsil stk" aria-hidden="true">&ndash;</span><b>' + esc(pz.t) + '</b><small>' + esc(pz.s) + '</small></div>' : pz.art ? '<button class="bpprize r-' + pz.rar + ' shown" ' + pz.tap + ' aria-label="' + esc(pz.t) + ': see its lore and stats"><span class="bpsil art">' + pz.art + '</span><b>' + esc(pz.t) + '</b><small>' + esc(pz.s) + '</small>' + trophyTag() + (pz.x ? '<small class="bpx">' + esc(pz.x) + '</small>' : '') + '</button>'
           : pz.stk ? '<div class="bpprize r-' + pz.rar + '"><span class="bpsil stk">' + stickIcon(30) + '</span><b>' + esc(pz.t) + '</b><small>' + esc(pz.s) + '</small>' + (pz.x ? '<small class="bpx">' + esc(pz.x) + '</small>' : '') + '</div>'
           : '<div class="bpprize r-' + pz.rar + '"><span class="bpsil">' + clSilhouette(pz.rar) + '<i>?</i></span><b>' + esc(pz.t) + '</b><small>' + esc(pz.s) + '</small>' + (pz.x ? '<small class="bpx">' + esc(pz.x) + '</small>' : '') + '</div>') : '') +
         '</div>';
