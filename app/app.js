@@ -2085,7 +2085,7 @@ function caseItems(c) {
 }
 function nrWithCases(qs, allowed) {
   /* registry tests: roughly one whole call for every 10 questions, each kept in order as one block */
-  var cases = shuffle((DB.CASES || []).filter(function (c) { return allowed.indexOf(c.lv) >= 0 && c.steps.length; }));
+  var cases = caseQueue((DB.CASES || []).filter(function (c) { return allowed.indexOf(c.lv) >= 0 && c.steps.length; }), qs);
   /* nursing: case studies from your own department first (Nov 14 2026) */
   try { var cu = nurseCtx() && typeof myUnit === "function" ? myUnit(S.level) : null; if (cu) cases.sort(function (a, b) { return (b.unit === cu) - (a.unit === cu); }); } catch (e) {}
   var want = qs.length >= 8 ? Math.max(1, Math.round(qs.length / (nurseCtx() ? 25 : 10))) : 0, blocks = [], used = 0;
@@ -2102,9 +2102,9 @@ var CJ_SHARE = 0.45, SATA_SHARE = 0.25;
 var QSCEN_RX = /\b\d{1,3}[- ](year|month|week|day)[- ]old\b|\b(patient|client|man|woman|child|infant|toddler|teen|resident|crew|partner)\b|\bBP\b|\bHR\b|\bSpO2\b|you arrive|on scene|is found|presents|complains/i;
 function qScen(q) { return q.cj || q.cs || QSCEN_RX.test(q.q); }
 function nrCompose(pool, n, allowed, adaptive) {
-  var pick = function (L, k) { return k <= 0 ? [] : adaptive ? adaptivePick(L, k) : shuffle(L.slice()).slice(0, k); };
+  var pick = function (L, k) { return k <= 0 ? [] : adaptive ? adaptivePick(L, k) : qPick(L, k); };
   var target = Math.round(n * CJ_SHARE);
-  var blocks = [], used = 0, cases = shuffle((DB.CASES || []).filter(function (c) { return allowed.indexOf(c.lv) >= 0 && c.steps.length; }));
+  var blocks = [], used = 0, cases = caseQueue((DB.CASES || []).filter(function (c) { return allowed.indexOf(c.lv) >= 0 && c.steps.length; }), pool);
   var wantCalls = n >= 8 ? Math.max(1, Math.round(n / 20)) : 0;
   for (var i = 0; i < cases.length && blocks.length < wantCalls; i++) { var it = caseItems(cases[i]); if (used + it.length > target) continue; blocks.push(it); used += it.length; }
   var cjPool = pool.filter(function (q) { return q.cj; }), other = pool.filter(function (q) { return !q.cj; });
@@ -2126,6 +2126,7 @@ function nrCompose(pool, n, allowed, adaptive) {
 }
 function nrStart(qs) {
   var st = nrState();
+  var dupK = {}; qs = qs.filter(function (q) { var k = q && q.q ? qkey(q) : null; if (!k) return true; if (dupK[k]) return false; dupK[k] = 1; return true; });   /* never the same question twice in one quiz */
   st.qs = qs.map(mixItem);
   st.i = 0; st.ans = {}; st.sel = {}; st.rec = {}; st.end = 0; st.phase = "quiz"; st.start = Date.now(); st.saved = false; /* rec must reset, or answers at indices used by an earlier test earned no sticks */
 }
@@ -2219,7 +2220,9 @@ function deptMix(pool, n, pick) {
   var seen = seenMap(), miss = (Prog.d && Prog.d.miss) || {}, dc = {};
   pool.forEach(function (q) { if (q.d) dc[q.d] = (dc[q.d] || 0) + 1; });
   function base(q) {
-    var k = qid(q), w = seen[k] ? DEPT_MIX.seen : 1, m = miss[k] || 0;
+    var k = qid(q), m = miss[k] || 0, qx = Prog.d && Prog.d.qx && Prog.d.qx[k], ago = qx ? Math.max(0, Date.now() - qxMs(qx)) : 1e12;
+    /* unseen and missed (after a short cool-down) first; anything answered before goes behind them, the longest ago first (Nov 28 2026) */
+    var w = !seen[k] ? 1 : (m && ago >= QCOOL) ? 1 : 1e-4 * (1 + Math.min(ago / 864e5, 60));
     w *= 1 + Math.min(m, 3) * 0.5;
     if (q.d && dc[q.d] > 1) w /= Math.sqrt(dc[q.d]);
     if (u && q.unit === u) w *= 1.25;
@@ -2263,7 +2266,7 @@ function deptHas(u, q) { if (!q || !q.d) return false; var P = DEPT_PROF[u]; if 
 function deptTopCases(u) { var P = DEPT_PROF[u]; return P ? P.cases.slice().sort(function (a, b) { return b[1] - a[1]; }).slice(0, 3).map(function (c) { return c[0]; }) : []; }
 
 function regCompose(pool, n, adaptive) {
-  var pick = function (L, k) { return k <= 0 ? [] : adaptive ? adaptivePick(L, k) : shuffle(L.slice()).slice(0, k); }, out = [];
+  var pick = function (L, k) { return k <= 0 ? [] : adaptive ? adaptivePick(L, k) : qPick(L, k); }, out = [];
   var MX = rqMix(); Object.keys(MX).forEach(function (d) { out = out.concat(pick(pool.filter(function (q) { return q.cat === d; }), Math.round(n * MX[d]))); });
   if (out.length < n) out = out.concat(pick(pool.filter(function (q) { return out.indexOf(q) < 0; }), n - out.length));
   return shuffle(out.slice(0, n));
@@ -3126,7 +3129,7 @@ document.addEventListener("click", function (e) {
     case "nrmore": S.nrMore = !(S.nrMore || S.exEdit); S.exEdit = false; return render();
     case "exclear": if (Prog.d.exam) delete Prog.d.exam[examKey()]; S.exEdit = false; saveProg(); return render();
     case "cnoteclose": store("cnote1", 1); return render();
-    case "nrstart": var st0 = nrState(), pl0 = nrPool(st0.filter), pk0; if (S.nrFresh) { var fr0 = freshPool(pl0); if (fr0.length >= Math.min(5, st0.n)) pl0 = fr0; } pk0 = st0.kind === "reg" ? (nurseCtx() && ctxKey() !== "flightrn" ? nrWithCases(regCompose(pl0, st0.n, st0.adaptive !== false), nrLevelsFor(ctxKey())) : regCompose(pl0, st0.n, st0.adaptive !== false)) : isEMSLv(ctxKey()) || ctxKey() === "flightrn" ? nrCompose(pl0, Math.min(st0.n, pl0.length), st0.filter && st0.filter !== "all" ? [st0.filter] : nrLevelsFor(ctxKey()), st0.adaptive !== false) : st0.adaptive !== false ? adaptivePick(pl0, st0.n) : shuffle(pl0).slice(0, st0.n); if (st0.kind !== "reg") { pk0 = diffBalance(pk0, pl0); var dm0 = deptMix(pl0, st0.n, st0.adaptive !== false ? adaptivePick : function (L, k) { return shuffle(L.slice()).slice(0, k); }); if (dm0 && dm0.length) pk0 = dm0; var pf0 = st0.filter && st0.filter !== "all" ? st0.filter : null; var ck0 = ctxKey(), pc0 = pilFor(function (q) { return !pf0 || q.lv === pf0; }); pc0 = pc0.filter(function (q) { return q.lv === ck0; }).concat(pc0.filter(function (q) { return q.lv !== ck0; })); pk0 = pilMix(pk0, pc0.slice(0, 3)); } nrStart(pk0); render(); return window.scrollTo(0, 0);
+    case "nrstart": var st0 = nrState(), pl0 = nrPool(st0.filter), pk0; if (S.nrFresh) { var fr0 = freshPool(pl0); if (fr0.length >= Math.min(5, st0.n)) pl0 = fr0; } pk0 = st0.kind === "reg" ? (nurseCtx() && ctxKey() !== "flightrn" ? nrWithCases(regCompose(pl0, st0.n, st0.adaptive !== false), nrLevelsFor(ctxKey())) : regCompose(pl0, st0.n, st0.adaptive !== false)) : isEMSLv(ctxKey()) || ctxKey() === "flightrn" ? nrCompose(pl0, Math.min(st0.n, pl0.length), st0.filter && st0.filter !== "all" ? [st0.filter] : nrLevelsFor(ctxKey()), st0.adaptive !== false) : st0.adaptive !== false ? adaptivePick(pl0, st0.n) : qPick(pl0, st0.n); if (st0.kind !== "reg") { pk0 = qBalance(pk0, qQueue(pl0), st0.n); var dm0 = deptMix(pl0, st0.n, st0.adaptive !== false ? adaptivePick : function (L, k) { return qPick(L, k); }); if (dm0 && dm0.length) pk0 = dm0; var pf0 = st0.filter && st0.filter !== "all" ? st0.filter : null; var ck0 = ctxKey(), pc0 = pilFor(function (q) { return !pf0 || q.lv === pf0; }); pc0 = pc0.filter(function (q) { return q.lv === ck0; }).concat(pc0.filter(function (q) { return q.lv !== ck0; })); pk0 = pilMix(pk0, pc0.slice(0, 3)); } nrStart(pk0); render(); return window.scrollTo(0, 0);
     case "autostay": AUTO.stay = AUTO.key; autoCancel(); render(); return;
     case "nrnext": S.nr.i++; render(); return window.scrollTo(0, 0);
     case "nrprev": S.nr.i--; render(); return window.scrollTo(0, 0);
@@ -3999,10 +4002,12 @@ function recordInner(q, ok, kind, pick) {
     s.last = Date.now(); s.due = s.last + BOX_DAYS[s.b] * DAY;
   }
   if (q && q.q && typeof qid === "function") {
-    var M = P.miss || (P.miss = {}), k = qid(q);
+    var M = P.miss || (P.miss = {}), k = qkey(q);
     if (!ok) M[k] = (M[k] || 0) + 1; else if (M[k]) { M[k]--; if (M[k] <= 0) delete M[k]; }
     /* every question answered is remembered, so "new to me" and the done/left counts work (owner, Oct 29 2026) */
     var SN = P.seen || (P.seen = {}); if (!SN[k]) SN[k] = 1; else if (SN[k] < 99) SN[k]++;
+    /* how many times it was right, and when it was last answered, so the question queue can push it to the back (Nov 28 2026) */
+    var QX = P.qx || (P.qx = {}), qx = QX[k] || (QX[k] = [0, 0, 0]); if (ok && qx[0] < 99) qx[0]++; qx[1] = qxSec(Date.now()); qx[2] = P.qseq = (P.qseq || 0) + 1;
   }
   if (q && q.cat) { P.qcat = P.qcat || {}; var cs = P.qcat[q.cat] || (P.qcat[q.cat] = { n: 0, c: 0 }); cs.n++; if (ok) cs.c++; }
   /* the last 30 answers drive the adaptive mix (owner, Nov 19 2026) */
@@ -4025,16 +4030,69 @@ function weightOf(q) {
   if (s) { if (Date.now() >= (s.due || 0)) w *= 1.6; var misses = (s.h || "").slice(-5).split("").filter(function (x) { return x === "0"; }).length; w += misses * 1.5; }
   return w * (typeof relW === "function" ? relW(q) : 1);
 }
+/* ---------- Unseen-first question queue (owner, Nov 28 2026) ----------
+   Students on the Prehospital tracks kept seeing the same questions even when they answered them right. Questions used to be drawn
+   at random (with relevance only nudging the odds), so a question you got right was as likely to come back as one you had never
+   seen, and the "only questions I have not seen" switch was off by default. Now every quiz, in every mode and on every track, is
+   drawn from a queue built from the pool the learner is allowed to see (so Free, Plus and Pro limits are unchanged):
+     1. questions never answered, and questions missed before (once a short cool-down has passed): front of the queue, missed ones
+        likelier to come first;
+     2. questions answered before: behind them, the longest ago first, so a question answered right goes to the back and nothing
+        repeats until the whole unseen pool is used up (and then the oldest comes round first, so nothing repeats back-to-back);
+   Each answer stores how many times it was right and when (Prog.d.qx[id] = [rightCount, secondsSince2020, answerNumber]). A question's id is
+   shared by every copy of it (brand and generic wording), and a draw never holds the same id twice. */
+var QCOOL = 20 * 60000;
+/* the step questions of a call share wording between calls ("What does this 12-lead show?"), so their ids collide; they are tracked by call and step instead */
+function qkey(q) { return q && q.cs ? "cs:" + q.cs + ":" + (q.part || 0) : qid(q); }
+/* whole calls come unseen-first too: calls never answered first, then the ones answered longest ago */
+function caseQueue(list, pool) {
+  var P = Prog.d || {}, SN = P.seen || {}, X = P.qx || {}, rows = (list || []).map(function (c) {
+    var seen = 0, ts = 0, i;   /* a call counts as worked through once any of its steps was answered */
+    for (i = 1; i <= c.steps.length; i++) { var k = "cs:" + c.id + ":" + i, x = X[k]; if (SN[k]) { seen = 1; if (x && x[1] > ts) ts = x[1]; } }
+    return { c: c, t: seen, k: seen ? ts + Math.random() : Math.random() };
+  });
+  rows.sort(function (a, b) { return a.t - b.t || a.k - b.k; });
+  /* a call already worked through waits while unanswered questions remain, so a small bank does not hand back the same call every quiz */
+  if (pool && pool.some(qFront)) rows = rows.filter(function (r) { return !r.t; });
+  return rows.map(function (r) { return r.c; });
+}
+function qxSec(ts) { return Math.floor((ts - 1577836800000) / 1000); }
+function qxMs(x) { return x ? x[1] * 1000 + 1577836800000 : 0; }
+function qQueue(pool, w) {
+  var now = Date.now(), P = Prog.d || {}, SN = P.seen || {}, M = P.miss || {}, X = P.qx || {}, seenId = {}, rows = [];
+  (pool || []).forEach(function (q) {
+    var k = qkey(q); if (seenId[k]) return; seenId[k] = 1;
+    var x = X[k], last = qxMs(x), miss = M[k] || 0, wt = w ? Math.max(w(q), 1e-6) : 1, tier, key;
+    if (!SN[k]) { tier = 0; key = Math.pow(Math.random(), 1 / wt); }
+    else if (miss && (!last || now - last >= QCOOL)) { tier = 0; key = Math.pow(Math.random(), 1 / (wt * (1 + Math.min(miss, 4) * 1.5))); }
+    else { tier = 1; key = (x ? x[1] : 0) * 1e6 + (x && x[2] ? x[2] % 1e6 : 0) + Math.random(); }
+    rows.push({ q: q, t: tier, k: key });
+  });
+  rows.sort(function (a, b) { return a.t - b.t || (a.t === 0 ? b.k - a.k : a.k - b.k); });
+  return rows.map(function (r) { return r.q; });
+}
+/* the first k questions of the queue (the same as a random draw when nothing has been answered yet) */
+function qPick(pool, k, w) { return k <= 0 ? [] : qQueue(pool, w).slice(0, k); }
+/* in the front of the queue: never answered, or missed and past its cool-down */
+function qFront(q) {
+  var k = qkey(q), P = Prog.d || {}; if (!(P.seen || {})[k]) return true;
+  var m = (P.miss || {})[k] || 0, x = (P.qx || {})[k]; return !!m && (!x || Date.now() - qxMs(x) >= QCOOL);
+}
+/* the difficulty mix may swap questions only among ones not answered yet; once the front of the queue is used up (a quiz holding an answered question), it leaves the order alone */
+function qBalance(out, queue, n) {
+  if (out.some(function (q) { return !qFront(q); })) return out;
+  return diffBalance(out, queue.filter(qFront).slice(0, Math.max(n * 3, n + 40)));
+}
 function adaptivePick(pool, n) {
-  /* random by default (owner, Nov 13 2026: "make it random and not adaptive"); only relevance still
-     makes low-relevance questions rarer. Adaptive comes back when someone picks it for a test. */
+  /* Order: unseen and missed first, then what was answered longest ago (see qQueue). Inside that, relevance, and the learner's weak
+     areas when adaptive is on, decide who goes first. Adaptive used to be the only thing that looked at what you had answered. */
   var adapt = SET().adaptive === true || !!(S.nr && S.nr.adaptive === true);
-  var items = pool.map(function (q) { return { q: q, k: Math.pow(Math.random(), 1 / (adapt ? weightOf(q) : (typeof relW === "function" ? relW(q) : 1))) }; });
-  items.sort(function (a, b) { return b.k - a.k; });
-  var out = [], seenDrug = {};
-  items.forEach(function (it) { if (out.length < n && (!it.q.d || (seenDrug[it.q.d] || 0) < 2)) { out.push(it.q); seenDrug[it.q.d] = (seenDrug[it.q.d] || 0) + 1; } });
-  items.forEach(function (it) { if (out.length < n && out.indexOf(it.q) < 0) out.push(it.q); });
-  return diffBalance(out, pool);
+  var wf = function (q) { return adapt ? weightOf(q) : (typeof relW === "function" ? relW(q) : 1); };
+  var queue = qQueue(pool, wf), out = [], seenDrug = {};
+  queue.forEach(function (q) { if (out.length < n && (!q.d || (seenDrug[q.d] || 0) < 2)) { out.push(q); seenDrug[q.d] = (seenDrug[q.d] || 0) + 1; } });
+  queue.forEach(function (q) { if (out.length < n && out.indexOf(q) < 0) out.push(q); });
+  /* the difficulty balance may only swap in questions from the front of the queue, never a question already answered while fresh ones remain */
+  return qBalance(out, queue, n);
 }
 /* ---------- Difficulty mix (owner, Nov 7 2026) ----------
    Once a question is graded it has an average difficulty from 1 to 5 (players', evaluators' and the
@@ -16242,7 +16300,10 @@ function gmTile(k) {
 /* ---- Class Blitz (60 second speed round) ---- */
 function gmBlitzNew() { GM = { kind: "blitz", phase: "ready", score: 0, tries: 0, q: null, end: 0, timer: null, won: 0, fb: null }; }
 function gmBlitzQ() {
-  var all = gmIds().map(gmFact), f = all[Math.floor(Math.random() * all.length)], cls = {};
+  var all = gmIds().map(gmFact), f, cls = {};
+  /* a shuffled deck, so a drug does not come round again until every drug has been asked (Nov 28 2026) */
+  if (!GM.deck || !GM.deck.length) { var last = GM.q && GM.q.f && GM.q.f.id; GM.deck = shuffle(all.map(function (x, i) { return i; })); if (GM.deck.length > 1 && all[GM.deck[GM.deck.length - 1]] && all[GM.deck[GM.deck.length - 1]].id === last) GM.deck.unshift(GM.deck.pop()); }
+  f = all[GM.deck.pop()] || all[0];
   all.forEach(function (x) { if (x.cls.toLowerCase() !== f.cls.toLowerCase()) cls[x.cls.toLowerCase()] = x.cls; });
   var wrong = shuffle(Object.keys(cls)).slice(0, gmD([2, 3, 3, 3])).map(function (k) { return cls[k]; });
   GM.q = { f: f, opts: shuffle([f.cls].concat(wrong)) };
@@ -41428,11 +41489,11 @@ function nclexQuotas(m, MX) {
   regCompose = function (pool, n, adaptive) {
     if (!ngnStudent()) return rc0(pool, n, adaptive);
     try {
-      var pick = function (L, k) { return k <= 0 ? [] : adaptive ? adaptivePick(L, k) : shuffle(L.slice()).slice(0, k); };
+      var pick = function (L, k) { return k <= 0 ? [] : adaptive ? adaptivePick(L, k) : qPick(L, k); };
       /* case studies: one for every 25 questions, from 20 questions up, never more than about a quarter of the test */
       var blocks = [], used = 0, allowed = nrLevelsFor(ctxKey());
       if (n >= 20) {
-        var cases = shuffle((DB.CASES || []).filter(function (c) { return allowed.indexOf(c.lv) >= 0 && c.steps.length; })), wantC = Math.max(1, Math.round(n / 25)), capC = Math.ceil(n * 0.26);
+        var cases = caseQueue((DB.CASES || []).filter(function (c) { return allowed.indexOf(c.lv) >= 0 && c.steps.length; }), pool), wantC = Math.max(1, Math.round(n / 25)), capC = Math.ceil(n * 0.26);
         for (var i = 0; i < cases.length && blocks.length < wantC; i++) { var it = caseItems(cases[i]); if (used + it.length > capC) continue; blocks.push(it); used += it.length; }
       }
       var m = Math.max(0, n - used), Q = nclexQuotas(m, NCLEX_RN_PLAN);
