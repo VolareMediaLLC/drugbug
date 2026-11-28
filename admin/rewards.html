@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Weekly Rewards · DrugBug</title>
+<style>
+:root{--bg:#13111c;--surface:#1d1a2a;--surface2:#251f37;--ink:#f2effb;--muted:#aaa3c4;--line:#322c47;--accent:#a78bfa;--teal:#2dd4bf;--good:#34d399;--warn:#fbbf24;--bad:#f87171;--gold:#f5b301}
+@media (prefers-color-scheme:light){:root{--bg:#f6f4fc;--surface:#fff;--surface2:#f1edfa;--ink:#1c1730;--muted:#5f5878;--line:#e2dcef;--accent:#6d28d9;--teal:#0f766e;--good:#047857;--warn:#b45309;--bad:#b91c1c;--gold:#b7860b}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1000px;margin:0 auto;padding:16px 16px 60px}
+html.embed .wrap{padding-top:4px}
+h1{font-size:22px;margin:0 0 2px}h2{font-size:17px;margin:0}
+.muted{color:var(--muted)}.small{font-size:13px}
+.card{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:14px;padding:16px;margin:14px 0}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.sp{justify-content:space-between}
+select,input[type=text],input[type=number],textarea{font:inherit;color:var(--ink);background:var(--surface2);border:1px solid var(--line);border-radius:9px;padding:8px 10px;max-width:100%}
+textarea{width:100%;min-height:54px}
+label.f{display:block;font-weight:650;font-size:13px;color:var(--muted);margin:10px 0 4px}
+button.btn{font:inherit;font-weight:700;font-size:14px;padding:9px 16px;border-radius:10px;border:0;background:var(--accent);color:#fff;cursor:pointer}
+button.btn:disabled{opacity:.5;cursor:default}
+button.ghost{font:inherit;font-size:13px;font-weight:650;padding:7px 12px;border-radius:9px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+button.ghost:hover{border-color:var(--accent)}
+.msg{padding:10px 12px;border-radius:10px;background:var(--surface2);margin:12px 0;font-size:14px}.msg.good{border:1px solid var(--good)}.msg.bad{border:1px solid var(--bad)}
+.place{display:grid;grid-template-columns:70px 1fr;gap:10px;padding:12px 0;border-top:1px solid var(--line)}
+.place:first-of-type{border-top:0}
+.ord{font-weight:800;font-size:15px;padding-top:6px}.ord.r1{color:var(--gold)}.ord.r2{color:#9aa7b8}.ord.r3{color:#c08457}
+.itm{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0;padding:8px 10px;background:var(--surface2);border-radius:10px}
+.itm input[type=number]{width:110px}.itm input.wide{min-width:200px}
+.hint{font-size:12.5px;color:var(--muted)}
+.pill{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--surface2);color:var(--muted)}
+.pill.on{background:color-mix(in srgb,var(--gold) 22%,transparent);color:var(--gold)}
+.sticky{position:sticky;bottom:0;background:linear-gradient(transparent,var(--bg) 30%);padding:14px 0 6px}
+</style>
+</head>
+<body>
+<div class="wrap" id="root"><p class="muted">Loading…</p></div>
+<script src="../app/vendor/firebase-app-compat.js"></script>
+<script src="../app/vendor/firebase-auth-compat.js"></script>
+<script src="adm-common.js"></script>
+<script>
+(function () {
+  var A = window.ADM, esc = A.esc, root = document.getElementById("root");
+  var GROUPS = [["players", "Top Players", "The top 3 players in the country, on a team or not."], ["team", "Agencies: top 3 in each agency", "The top 3 people inside every approved agency (500 points or more that week)."],
+    ["state", "State boards", "The top 3 people of the 1st, 2nd and 3rd agencies in each state (state boards are paused right now)."], ["national", "National board", "Everyone eligible on the roster of the 1st, 2nd and 3rd agencies in the country."]];
+  var PL = ["p1", "p2", "p3"], ORD = ["1st", "2nd", "3rd"], KINDS = [["sticks", "Sticks"], ["bug", "A random bug of a rarity"], ["bugid", "A named bug"], ["items", "A wardrobe outfit"]];
+  var D = null, ST = { week: "default", g: {}, note: "", busy: false, msg: "", bad: false }, ERR = "";
+
+  /* ---------- the form state <-> a stored document ---------- */
+  function blank() { var g = {}; GROUPS.forEach(function (x) { g[x[0]] = {}; PL.forEach(function (p) { g[x[0]][p] = { mode: "usual", items: [] }; }); }); return g; }
+  function fromDoc(doc) {
+    var g = blank(); if (!doc) return g;
+    GROUPS.forEach(function (x) { PL.forEach(function (p) {
+      var L = doc[x[0]] && doc[x[0]][p]; if (!Array.isArray(L)) return;
+      g[x[0]][p] = L.length ? { mode: "custom", items: L.map(function (it) { return it.kind === "items" ? { kind: "items", items: (it.items || []).join(", "), name: it.name || "" } : Object.assign({}, it); }) } : { mode: "none", items: [] };
+    }); });
+    return g;
+  }
+  function toDoc() {
+    var out = {}, any = false;
+    GROUPS.forEach(function (x) { PL.forEach(function (p) {
+      var c = ST.g[x[0]][p]; if (c.mode === "usual") return;
+      any = true; (out[x[0]] = out[x[0]] || {})[p] = c.mode === "none" ? [] : c.items.map(function (it) {
+        if (it.kind === "sticks") return { kind: "sticks", sticks: Math.round(Number(it.sticks)) || 0 };
+        if (it.kind === "bug") return { kind: "bug", rar: it.rar || "rare" };
+        if (it.kind === "bugid") return { kind: "bugid", bug: String(it.bug || "").trim().toLowerCase(), name: String(it.name || "").trim() };
+        return { kind: "items", items: String(it.items || "").split(/[,\s]+/).map(function (s) { return s.trim().toLowerCase(); }).filter(Boolean), name: String(it.name || "").trim() };
+      });
+    }); });
+    return any ? out : null;
+  }
+  function say(it) {
+    if (!it) return "";
+    if (it.kind === "sticks") return Number(it.sticks).toLocaleString() + " sticks";
+    if (it.kind === "bug") return "a random " + it.rar + " bug";
+    return it.name || it.bug || "";
+  }
+  function builtin(g, i) { var b = D && D.builtIn && D.builtIn[g] && D.builtIn[g][i]; return b && b.length ? b.map(say).join(" + ") : "nothing"; }
+
+  /* ---------- drawing ---------- */
+  function weekLabel(w) { var t = w.wk === D.current ? "This week" : "Week of " + w.wk; return t + (w.doc ? " (has its own picks)" : ""); }
+  function itemRow(g, p, k, it) {
+    var key = ' data-g="' + g + '" data-p="' + p + '" data-k="' + k + '"', cat = (D.catalog || {}), h = '<div class="itm"><select data-f="kind"' + key + ' aria-label="Type of reward">' + KINDS.map(function (o) { return '<option value="' + o[0] + '"' + (it.kind === o[0] ? " selected" : "") + ">" + o[1] + "</option>"; }).join("") + "</select>";
+    if (it.kind === "sticks") h += '<input type="number" min="1" max="' + (cat.maxSticks || 10000) + '" step="1" list="presets" data-f="sticks"' + key + ' value="' + esc(it.sticks == null ? "" : it.sticks) + '" aria-label="Number of sticks"> <span class="hint">sticks</span>';
+    else if (it.kind === "bug") h += '<select data-f="rar"' + key + ' aria-label="Rarity">' + (cat.rarities || ["common", "rare", "epic", "legendary"]).map(function (r) { return '<option value="' + r + '"' + (it.rar === r ? " selected" : "") + ">" + r + "</option>"; }).join("") + "</select>";
+    else if (it.kind === "bugid") h += '<select data-f="pickbug"' + key + ' aria-label="Known bugs"><option value="">Pick a known bug…</option>' + (cat.bugs || []).map(function (b) { return '<option value="' + esc(b.id) + '|' + esc(b.name) + '">' + esc(b.name) + "</option>"; }).join("") + '</select><input type="text" class="wide" placeholder="bug id, e.g. warlord-hercules" data-f="bug"' + key + ' value="' + esc(it.bug || "") + '"><input type="text" placeholder="Name shown" data-f="name"' + key + ' value="' + esc(it.name || "") + '">';
+    else h += '<select data-f="pickoutfit"' + key + ' aria-label="Known outfits"><option value="">Pick a known outfit…</option>' + (cat.outfits || []).map(function (o) { return '<option value="' + esc(o.items.join(",")) + '|' + esc(o.name) + '">' + esc(o.name) + "</option>"; }).join("") + '</select><input type="text" class="wide" placeholder="item ids, e.g. plaguehat, plaguecoat" data-f="items"' + key + ' value="' + esc(it.items || "") + '"><input type="text" placeholder="Outfit name" data-f="name"' + key + ' value="' + esc(it.name || "") + '">';
+    return h + '<button class="ghost" data-a="del"' + key + ' aria-label="Remove this reward">Remove</button></div>';
+  }
+  function place(g, p, i) {
+    var c = ST.g[g][p], h = '<div class="place"><div class="ord r' + (i + 1) + '">' + ORD[i] + '</div><div><select data-f="mode" data-g="' + g + '" data-p="' + p + '" aria-label="' + ORD[i] + ' place">' +
+      '<option value="usual"' + (c.mode === "usual" ? " selected" : "") + ">Usual prize (" + esc(builtin(g, i)) + ")</option><option value=\"none\"" + (c.mode === "none" ? " selected" : "") + ">No prize</option><option value=\"custom\"" + (c.mode === "custom" ? " selected" : "") + ">Pick rewards…</option></select>";
+    if (c.mode === "custom") { c.items.forEach(function (it, k) { h += itemRow(g, p, k, it); }); if (c.items.length < ((D.catalog && D.catalog.maxPerPlace) || 4)) h += '<button class="ghost" data-a="add" data-g="' + g + '" data-p="' + p + '">+ Add another reward</button>'; }
+    return h + "</div></div>";
+  }
+  function draw() {
+    if (!D) { root.innerHTML = '<h1>Weekly Rewards / Trophies</h1>' + (ERR ? '<div class="msg bad" role="alert">' + esc(ERR) + '</div><button class="btn" data-a="reload">Try again</button>' : '<p class="muted">Loading…</p>'); return; }
+    var cur = ST.week, wk = D.weeks.filter(function (w) { return w.wk === cur; })[0], h = '<div class="row sp"><div><h1>Weekly Rewards / Trophies</h1><div class="muted small">What 1st, 2nd and 3rd place win each week. Saved changes reach the website and the iPhone app right away, with no app update.</div></div></div>';
+    h += '<div class="card"><div class="row"><label class="f" style="margin:0">Editing</label><select id="week" aria-label="Which rewards to edit"><option value="default"' + (cur === "default" ? " selected" : "") + ">The default (every week without its own picks)</option>" + D.weeks.map(function (w) { return '<option value="' + w.wk + '"' + (cur === w.wk ? " selected" : "") + ">" + esc(weekLabel(w)) + "</option>"; }).join("") + "</select>" +
+      '<button class="ghost" data-a="copydef">Copy the default into this form</button><button class="ghost" data-a="reset">Go back to the usual prizes</button></div>' +
+      '<div class="hint" style="margin-top:8px">A place left on "Usual prize" falls through to the week\'s picks, then the default, then the built-in amounts. "No prize" is a real choice. A week can be changed until it ends (Sunday 7 pm Central); the default any time.</div></div>';
+    if (ST.msg) h += '<div class="msg ' + (ST.bad ? "bad" : "good") + '" role="status">' + esc(ST.msg) + "</div>";
+    GROUPS.forEach(function (x) { h += '<div class="card"><h2>' + x[1] + '</h2><div class="hint">' + x[2] + "</div>" + PL.map(function (p, i) { return place(x[0], p, i); }).join("") + "</div>"; });
+    h += '<datalist id="presets">' + ((D.catalog && D.catalog.sticksPresets) || [100, 500, 1000]).map(function (n) { return '<option value="' + n + '">'; }).join("") + "</datalist>";
+    h += '<div class="card"><label class="f" for="note" style="margin-top:0">Note for yourself (optional, up to 200 characters)</label><input type="text" id="note" maxlength="200" style="width:100%" value="' + esc(ST.note) + '"></div>';
+    h += '<div class="sticky row"><button class="btn" data-a="save"' + (ST.busy ? " disabled" : "") + ">" + (ST.busy ? "Saving…" : "Save " + (cur === "default" ? "the default" : "this week")) + '</button><span class="hint">' + (cur === "default" ? "Default" : "Week of " + esc(cur)) + (wk && wk.doc ? ' <span class="pill on">has saved picks</span>' : ' <span class="pill">using the default</span>') + "</span></div>";
+    root.innerHTML = h;
+  }
+
+  /* ---------- load / save ---------- */
+  function pick() { var w = ST.week === "default" ? D.default : (D.weeks.filter(function (x) { return x.wk === ST.week; })[0] || {}).doc; ST.g = fromDoc(w); ST.note = (w && w.note) || ""; }
+  function load(keep) {
+    ERR = ""; if (!keep) D = null; draw();
+    return A.call("weeklyRewardsGet").then(function (r) { D = r; if (!keep) ST.week = "default"; pick(); }).catch(function (e) { ERR = A.errTxt(e); D = null; }).then(draw);
+  }
+  function save() {
+    var doc = toDoc(); ST.msg = ""; ST.bad = false;
+    if (!doc) { ST.msg = 'Nothing to save: every place is on "Usual prize". Pick rewards for at least one place, or use "Go back to the usual prizes".'; ST.bad = true; return draw(); }
+    ST.busy = true; draw();
+    A.call("weeklyRewardsSet", Object.assign({ week: ST.week, note: ST.note }, doc)).then(function () { ST.msg = "Saved. These rewards are live for " + (ST.week === "default" ? "every week without its own picks." : "the week of " + ST.week + "."); return load(true); })
+      .catch(function (e) { ST.msg = A.errTxt(e); ST.bad = true; }).then(function () { ST.busy = false; draw(); window.scrollTo(0, 0); });
+  }
+  function reset() {
+    if (!confirm("Go back to the usual prizes for " + (ST.week === "default" ? "the default" : "the week of " + ST.week) + "?")) return;
+    ST.busy = true; draw();
+    A.call("weeklyRewardsSet", { week: ST.week, reset: true }).then(function () { ST.msg = "Back to the usual prizes."; ST.bad = false; return load(true); }).catch(function (e) { ST.msg = A.errTxt(e); ST.bad = true; }).then(function () { ST.busy = false; draw(); });
+  }
+
+  /* ---------- events ---------- */
+  function cell(el) { return ST.g[el.getAttribute("data-g")][el.getAttribute("data-p")]; }
+  root.addEventListener("change", function (e) {
+    var el = e.target, f = el.getAttribute("data-f");
+    if (el.id === "week") { ST.week = el.value; ST.msg = ""; pick(); return draw(); }
+    if (!f) return;
+    var c = cell(el), k = +el.getAttribute("data-k");
+    if (f === "mode") { c.mode = el.value; if (c.mode === "custom" && !c.items.length) c.items.push({ kind: "sticks", sticks: 1000 }); return draw(); }
+    var it = c.items[k]; if (!it) return;
+    if (f === "kind") { var kind = el.value; c.items[k] = kind === "sticks" ? { kind: kind, sticks: 1000 } : kind === "bug" ? { kind: kind, rar: "rare" } : kind === "bugid" ? { kind: kind, bug: "", name: "" } : { kind: kind, items: "", name: "" }; return draw(); }
+    if (f === "pickbug" && el.value) { var pb = el.value.split("|"); it.bug = pb[0]; it.name = pb[1] || pb[0]; return draw(); }
+    if (f === "pickoutfit" && el.value) { var po = el.value.split("|"); it.items = po[0].split(",").join(", "); it.name = po[1] || ""; return draw(); }
+    it[f] = el.value;
+  });
+  root.addEventListener("input", function (e) { var el = e.target, f = el.getAttribute("data-f"); if (el.id === "note") { ST.note = el.value; return; } if (f && /^(sticks|bug|name|items)$/.test(f)) { var c = cell(el), it = c.items[+el.getAttribute("data-k")]; if (it) it[f] = el.value; } });
+  root.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-a]"); if (!b) return; var a = b.getAttribute("data-a");
+    if (a === "reload") return load();
+    if (a === "save") return save();
+    if (a === "reset") return reset();
+    if (a === "copydef") { ST.g = fromDoc(D.default); ST.msg = "Copied the default into this form. Change what you like, then save."; ST.bad = false; return draw(); }
+    var c = cell(b);
+    if (a === "add") { c.items.push({ kind: "sticks", sticks: 500 }); return draw(); }
+    if (a === "del") { c.items.splice(+b.getAttribute("data-k"), 1); if (!c.items.length) c.mode = "usual"; return draw(); }
+  });
+  A.ready.then(function (u) { if (!u) { ERR = "Sign in on the dashboard first."; return draw(); } load(); });
+})();
+</script>
+</body>
+</html>

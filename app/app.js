@@ -15391,7 +15391,7 @@ function accInit() {
     render();   /* the first-run account step waits on this (modules/welcome.js) */
     try { if (typeof titleSync === "function") setTimeout(titleSync, 1500); } catch (e) {}
     try { setTimeout(pwGate, 400); } catch (e) {}
-    a.onChange(function (s) { ACCT.st = s; accBonusAuto(s); if (S.view === "settings") render(); try { if (typeof titleSync === "function") setTimeout(titleSync, 1200); } catch (e) {} try { setTimeout(pwGate, 400); } catch (e) {} try { if (typeof stxRolesFetch === "function") setTimeout(stxRolesFetch, 300); } catch (e) {} });
+    a.onChange(function (s) { ACCT.st = s; try { initAdmin(); } catch (e0) {} accBonusAuto(s);   /* signing in later (or as another person) re-checks who may open the Control Center */ if (S.view === "settings") render(); try { if (typeof titleSync === "function") setTimeout(titleSync, 1200); } catch (e) {} try { setTimeout(pwGate, 400); } catch (e) {} try { if (typeof stxRolesFetch === "function") setTimeout(stxRolesFetch, 300); } catch (e) {} });
     if (S.view === "settings") render();
   }).catch(function () {});
 }

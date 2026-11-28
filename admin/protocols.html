@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Protocols &amp; AI Questions · DrugBug</title>
+<style>
+:root{--bg:#13111c;--surface:#1d1a2a;--surface2:#251f37;--ink:#f2effb;--muted:#aaa3c4;--line:#322c47;--accent:#a78bfa;--teal:#2dd4bf;--good:#34d399;--warn:#fbbf24;--bad:#f87171}
+@media (prefers-color-scheme:light){:root{--bg:#f6f4fc;--surface:#fff;--surface2:#f1edfa;--ink:#1c1730;--muted:#5f5878;--line:#e2dcef;--accent:#6d28d9;--teal:#0f766e;--good:#047857;--warn:#b45309;--bad:#b91c1c}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1000px;margin:0 auto;padding:16px 16px 70px}
+html.embed .wrap{padding-top:4px}
+h1{font-size:22px;margin:0 0 2px}h2{font-size:17px;margin:0 0 4px}h3{font-size:14px;margin:12px 0 6px}
+.muted{color:var(--muted)}.small{font-size:13px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin:14px 0}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.sp{justify-content:space-between}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+select,input[type=text],input[type=number],input[type=date],textarea{font:inherit;color:var(--ink);background:var(--surface2);border:1px solid var(--line);border-radius:9px;padding:8px 10px;max-width:100%;width:100%}
+textarea{min-height:90px;resize:vertical}
+label.f{display:block;font-weight:650;font-size:13px;color:var(--muted);margin:10px 0 4px}
+.chk{display:inline-flex;gap:6px;align-items:center;margin:4px 12px 4px 0;font-size:14px}.chk input{width:auto}
+button.btn{font:inherit;font-weight:700;font-size:14px;padding:9px 16px;border-radius:10px;border:0;background:var(--accent);color:#fff;cursor:pointer}
+button.btn:disabled{opacity:.5;cursor:default}
+button.ghost{font:inherit;font-size:13px;font-weight:650;padding:7px 12px;border-radius:9px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+button.ghost:hover{border-color:var(--accent)}
+.msg{padding:10px 12px;border-radius:10px;background:var(--surface2);margin:12px 0;font-size:14px}.msg.good{border:1px solid var(--good)}.msg.bad{border:1px solid var(--bad)}.msg.warn{border:1px solid var(--warn)}
+.pill{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--surface2);color:var(--muted);margin-left:4px}
+.pill.ok{background:color-mix(in srgb,var(--good) 18%,transparent);color:var(--good)}.pill.wn{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
+.plist .it{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:9px 0;border-top:1px solid var(--line)}.plist .it:first-child{border-top:0}
+.plist .it.on{background:color-mix(in srgb,var(--accent) 10%,transparent);margin:0 -8px;padding:9px 8px;border-radius:8px}
+.secs{max-height:180px;overflow:auto;font-size:13px;border:1px solid var(--line);border-radius:9px;padding:6px 10px;background:var(--surface2)}
+.q{border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0;background:var(--surface2)}
+.q.off{opacity:.5}
+.q .opt{display:flex;gap:8px;align-items:center;margin:4px 0}.q .opt b{width:20px;text-align:center}
+.q .quote{font-size:12.5px;color:var(--muted);border-left:3px solid var(--line);padding-left:8px;margin:6px 0}
+.q .bad{color:var(--bad);font-size:13px;font-weight:650}
+.sticky{position:sticky;bottom:0;background:linear-gradient(transparent,var(--bg) 30%);padding:14px 0 6px}
+</style>
+</head>
+<body>
+<div class="wrap" id="root"><p class="muted">Loading…</p></div>
+<script src="../app/vendor/firebase-app-compat.js"></script>
+<script src="../app/vendor/firebase-auth-compat.js"></script>
+<script src="../app/vendor/firebase-firestore-compat.js"></script>
+<script src="adm-common.js"></script>
+<script>
+(function () {
+  var A = window.ADM, esc = A.esc, root = document.getElementById("root");
+  var LEVELS = [["emt", "EMT", "EMS"], ["paramedic", "Paramedic", "EMS"], ["flight", "Flight Paramedic", "EMS"], ["cp", "Community Paramedic", "EMS"], ["cna", "CNA", "Nursing"], ["lvn", "LVN / LPN", "Nursing"], ["rn", "RN", "Nursing"], ["flightrn", "Flight Nurse", "Nursing"], ["intern", "Medical School", "Med school"], ["pharmtech", "Pharmacy Technician", "Hospital"], ["pharmschool", "Pharmacy School", "Hospital"], ["pharmacist", "Pharmacist", "Hospital"]];
+  var STATES = "AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY".split(" ");
+  var DRUGS = null;
+  fetch("meta.json").then(function (r) { return r.json(); }).then(function (m) { DRUGS = m.drugs || null; }).catch(function () {});
+  var P = { list: null, sets: [], sel: null, doc: null, secs: [], form: { name: "", code: "", state: "", type: "EMS", roles: [], effective: "", text: "", fileName: "", sections: [] },
+    pub: { perm: false, permBy: "", rules: "" }, gen: { lv: "", count: 8, focus: "" }, qs: null, dropped: [], msg: "", kind: "good", busy: "", err: "" };
+  var msg = function (t, k) { P.msg = t; P.kind = k || "good"; };
+
+  /* ---------- turning a file or pasted text into sections ---------- */
+  function splitText(text, pageOf) {
+    var lines = String(text || "").replace(/\r/g, "").split("\n"), secs = [], cur = null;
+    var head = function (l) { var t = l.trim(); if (!t || t.length > 90) return ""; var m = t.match(/^#{1,4}\s+(.+)$/); if (m) return m[1]; if (/^(\d+(\.\d+)*[.)]?|[IVX]+\.)\s+[A-Z]/.test(t) && t.length < 80 && !/[.;]$/.test(t)) return t; if (t.length < 60 && /[A-Z]{3}/.test(t) && t === t.toUpperCase() && /[A-Z]/.test(t) && !/[a-z]/.test(t)) return t; return ""; };
+    function flush() { if (cur && cur.text.trim().length > 20) { cur.text = cur.text.trim(); secs.push(cur); } cur = null; }
+    lines.forEach(function (l, i) {
+      var h = head(l), pg = pageOf ? pageOf(i) : "";
+      if (h && (!cur || cur.text.length > 60 || /^#/.test(l.trim()))) { flush(); cur = { title: h.slice(0, 120), page: pg, text: "" }; return; }
+      if (!cur) cur = { title: "", page: pg, text: "" };
+      if (cur.text.length > 6000 && !l.trim()) { var t0 = cur.title; flush(); cur = { title: t0 ? t0 + " (continued)" : "", page: pg, text: "" }; }
+      cur.text += l + "\n";
+    });
+    flush();
+    secs.forEach(function (s, i) { if (!s.title) s.title = (s.text.split("\n")[0] || "Section " + (i + 1)).slice(0, 80); });
+    return secs;
+  }
+  function readPdf(file) {
+    function lib() { return window.pdfjsLib ? Promise.resolve(window.pdfjsLib) : new Promise(function (res, rej) { var s = document.createElement("script"); s.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"; s.onload = function () { window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"; res(window.pdfjsLib); }; s.onerror = function () { rej(new Error("The PDF reader could not load. Paste the text instead.")); }; document.head.appendChild(s); }); }
+    return Promise.all([lib(), file.arrayBuffer()]).then(function (r) {
+      return r[0].getDocument({ data: r[1] }).promise.then(function (pdf) {
+        var all = [], pages = [], chain = Promise.resolve();
+        for (var n = 1; n <= pdf.numPages; n++) (function (n) { chain = chain.then(function () { return pdf.getPage(n).then(function (pg) { return pg.getTextContent(); }).then(function (tc) {
+          var y = null, line = "";
+          tc.items.forEach(function (it) { var yy = Math.round(it.transform[5]); if (y !== null && Math.abs(yy - y) > 3) { all.push(line); pages.push(n); line = ""; } y = yy; line += it.str + (it.hasEOL ? "" : " "); });
+          if (line) { all.push(line); pages.push(n); } all.push(""); pages.push(n);
+        }); }); })(n);
+        return chain.then(function () { return { text: all.join("\n"), pageOf: function (i) { return String(pages[i] || ""); } }; });
+      });
+    });
+  }
+  function setSections(secs, name) { P.form.sections = secs; P.form.fileName = name || ""; }
+  function fromText() { setSections(splitText(P.form.text), P.form.fileName); }
+
+  /* ---------- drawing ---------- */
+  function lvName(k) { var x = LEVELS.filter(function (l) { return l[0] === k; })[0]; return x ? x[1] : k; }
+  function statusPill(d) { return '<span class="pill ' + (d.status === "live" ? "ok" : "") + '">' + esc(d.status || "draft") + "</span>"; }
+  function draw() {
+    var F = P.form, h = '<h1>Protocols &amp; AI Questions</h1><div class="muted small">Upload or paste an agency protocol, publish it live to the app, then have Claude write board-style questions from its rules, edit them and publish them to the live question bank. No app update needed.</div>';
+    if (P.err) h += '<div class="msg bad" role="alert">' + esc(P.err) + "</div>";
+    if (P.msg) h += '<div class="msg ' + P.kind + '" role="status">' + esc(P.msg) + "</div>";
+    /* library */
+    h += '<div class="card"><div class="row sp"><h2>Your protocols</h2><button class="ghost" data-a="new">New protocol</button></div><div class="plist">' +
+      (P.list === null ? '<p class="muted">Loading…</p>' : P.list.length ? P.list.map(function (d) { var q = d.questions || {}; return '<div class="it' + (P.sel === d.id ? " on" : "") + '"><div><strong>' + esc(d.name) + "</strong>" + statusPill(d) + '<div class="muted small">' + esc(d.code || "no code") + " · " + (d.nSections || 0) + " sections · " + (q.live || 0) + " approved, " + (q.pending || 0) + " waiting in the editor</div></div><button class=\"ghost\" data-a=\"open\" data-id=\"" + esc(d.id) + '">Open</button></div>'; }).join("") : '<p class="muted">No protocols yet. Add one below.</p>') + "</div></div>";
+    /* form */
+    h += '<div class="card"><h2>' + (P.sel ? "Protocol: " + esc(F.name || "") : "New protocol") + '</h2><div class="grid"><div><label class="f" for="pName">Title *</label><input type="text" id="pName" data-k="name" value="' + esc(F.name) + '" placeholder="2026 County EMS Clinical Guidelines"></div>' +
+      '<div><label class="f" for="pCode">Agency or region (code or name)</label><input type="text" id="pCode" data-k="code" value="' + esc(F.code) + '" placeholder="e.g. TX-HARRIS"></div>' +
+      '<div><label class="f" for="pState">State</label><select id="pState" data-k="state"><option value="">—</option>' + STATES.map(function (s) { return "<option" + (F.state === s ? " selected" : "") + ">" + s + "</option>"; }).join("") + "</select></div>" +
+      '<div><label class="f" for="pType">Type</label><select id="pType" data-k="type">' + ["EMS", "Nursing", "Hospital", "Med school"].map(function (s) { return "<option" + (F.type === s ? " selected" : "") + ">" + s + "</option>"; }).join("") + "</select></div>" +
+      '<div><label class="f" for="pEff">Effective date</label><input type="date" id="pEff" data-k="effective" value="' + esc(F.effective) + '"></div></div>' +
+      '<label class="f">Roles it applies to (none checked = every role)</label><div id="pRoles">' + LEVELS.map(function (l) { return '<label class="chk"><input type="checkbox" data-role="' + l[0] + '"' + (F.roles.indexOf(l[0]) >= 0 ? " checked" : "") + "> " + esc(l[1]) + "</label>"; }).join("") + "</div>" +
+      '<label class="f" for="pFile">Upload a file (.txt, .md or .pdf)</label><input type="file" id="pFile" accept=".txt,.md,.markdown,.pdf,text/plain,text/markdown,application/pdf">' +
+      '<label class="f" for="pText">…or paste the protocol text</label><textarea id="pText" data-k="text" rows="8" placeholder="Paste the protocol here. Headings (lines starting with # or numbered or ALL CAPS) become sections.">' + esc(F.text) + "</textarea>" +
+      '<div class="small muted" id="secInfo" style="margin-top:6px">' + (F.sections.length ? "<strong>" + F.sections.length + " sections</strong> ready (" + F.sections.reduce(function (n, s) { return n + s.text.length; }, 0).toLocaleString() + " characters)" + (F.fileName ? " from " + esc(F.fileName) : "") : "No text yet.") + "</div>" +
+      (F.sections.length ? '<div class="secs">' + F.sections.map(function (s, i) { return (i + 1) + ". " + esc(s.title) + (s.page ? " (p. " + esc(s.page) + ")" : "") + ' <span class="muted">' + s.text.length.toLocaleString() + " chars</span>"; }).join("<br>") + "</div>" : "") +
+      '<div class="row" style="margin-top:12px"><button class="btn" data-a="save"' + (P.busy ? " disabled" : "") + ">" + (P.busy === "save" ? "Saving…" : "Save protocol and text") + "</button>" + (P.doc ? '<span class="muted small">Saved: ' + (P.doc.nSections || 0) + " sections stored. Saving again replaces the stored text.</span>" : "") + "</div></div>";
+    /* publish */
+    if (P.sel) h += '<div class="card"><h2>Publish live to the app</h2><div class="small muted">Adds this protocol to the Protocols tab in the app (Firestore <code>protocols</code>) for every user, on the website and in the iPhone app, right away. Agency protocols belong to the agency, so publishing needs their written permission on file.</div>' +
+      '<label class="chk" style="margin-top:10px"><input type="checkbox" id="perm"' + (P.pub.perm ? " checked" : "") + "> Written permission from the agency is on file</label>" +
+      '<label class="f" for="permBy">Granted by (name and title) *</label><input type="text" id="permBy" value="' + esc(P.pub.permBy) + '">' +
+      '<label class="f" for="rules">Drug rules (optional): one per line as <code>drug-id | dose | note</code>, e.g. <code>epinephrine | 1 mg IV/IO every 3 to 5 min | cardiac arrest</code></label><textarea id="rules" rows="4">' + esc(P.pub.rules) + "</textarea>" +
+      '<div class="row" style="margin-top:12px"><button class="btn" data-a="publish"' + (P.busy ? " disabled" : "") + ">" + (P.busy === "publish" ? "Publishing…" : (P.doc && P.doc.status === "live" ? "Update the live protocol" : "Publish live to the app")) + "</button>" + (P.doc && P.doc.status === "live" ? '<button class="ghost" data-a="unpublish">Take it off the app</button>' : "") + "</div></div>";
+    /* AI questions */
+    h += '<div class="card"><h2>AI questions from this protocol</h2><div class="small muted">Claude writes questions only from the text above. Each one carries an exact passage copied from the protocol; a question whose passage is not in the text is thrown away. Nothing goes live until you publish it below.</div>' +
+      '<div class="grid"><div><label class="f" for="gLv">Role the questions are for *</label><select id="gLv"><option value="">Pick a role…</option>' + LEVELS.map(function (l) { return '<option value="' + l[0] + '"' + (P.gen.lv === l[0] ? " selected" : "") + ">" + esc(l[1]) + "</option>"; }).join("") + "</select></div>" +
+      '<div><label class="f" for="gCount">How many (1 to 25)</label><input type="number" id="gCount" min="1" max="25" value="' + esc(P.gen.count) + '"></div></div>' +
+      '<label class="f" for="gFocus">Focus (optional)</label><input type="text" id="gFocus" maxlength="300" value="' + esc(P.gen.focus) + '" placeholder="e.g. cardiac arrest drugs and doses">' +
+      '<div class="row" style="margin-top:12px"><button class="btn" id="bGen" data-a="gen"' + (P.busy ? " disabled" : "") + ">" + (P.busy === "gen" ? "Claude is writing…" : "Generate Questions with Claude") + "</button></div></div>";
+    if (P.qs) h += questions();
+    root.innerHTML = h;
+  }
+  function questions() {
+    var inc = P.qs.filter(function (q) { return q.on && !q.done; }).length, h = '<div class="card"><div class="row sp"><h2>Review and edit (' + P.qs.length + ")</h2><span class=\"muted small\">Change the stem, the right answer, the decoys or the explanation, untick any you do not want, then publish.</span></div>";
+    if (P.dropped.length) h += '<div class="msg warn small">' + P.dropped.length + " draft" + (P.dropped.length === 1 ? " was" : "s were") + " dropped because the protocol text did not back them up: " + P.dropped.slice(0, 3).map(function (d) { return esc(d.why); }).join("; ") + ".</div>";
+    P.qs.forEach(function (q, i) {
+      var bad = check(q);
+      h += '<div class="q' + (q.on ? "" : " off") + '" data-i="' + i + '"><div class="row sp"><label class="chk"><input type="checkbox" data-q="on"' + (q.on ? " checked" : "") + (q.done ? " disabled" : "") + "> " + (q.done ? "Published live" : "Include") + '</label><span class="muted small">' + esc(q.section || "") + (q.page ? " · p. " + esc(q.page) : "") + (q.flags && q.flags.length ? " · notes: " + esc(q.flags.join(", ")) : "") + "</span></div>" +
+        '<label class="f">Question</label><textarea data-q="q" rows="2">' + esc(q.q) + "</textarea>" +
+        '<div class="opt"><b>&#10003;</b><input type="text" data-q="a" value="' + esc(q.a) + '" aria-label="Right answer"></div>' +
+        q.w.map(function (w, j) { return '<div class="opt"><b>' + "BCD"[j] + '</b><input type="text" data-q="w' + j + '" value="' + esc(w) + '" aria-label="Wrong answer ' + "BCD"[j] + '"></div>'; }).join("") +
+        '<label class="f">Why it is right</label><textarea data-q="x" rows="2">' + esc(q.x) + "</textarea>" +
+        '<div class="grid"><div><label class="f">Category</label><input type="text" data-q="cat" value="' + esc(q.cat) + '"></div><div><label class="f">Drug id (optional)</label><input type="text" data-q="d" value="' + esc(q.d) + '" placeholder="e.g. epinephrine"></div><div><label class="f">Role</label><select data-q="lv">' + LEVELS.map(function (l) { return '<option value="' + l[0] + '"' + (q.lv === l[0] ? " selected" : "") + ">" + esc(l[1]) + "</option>"; }).join("") + "</select></div></div>" +
+        '<div class="quote">Protocol passage: &ldquo;' + esc(q.quote) + "&rdquo;</div>" + (bad && q.on ? '<div class="bad" role="alert">' + esc(bad) + "</div>" : "") + "</div>";
+    });
+    return h + '<div class="sticky row"><button class="btn" data-a="pubq"' + (P.busy || !inc ? " disabled" : "") + ">" + (P.busy === "pubq" ? "Publishing…" : "Publish " + inc + " question" + (inc === 1 ? "" : "s") + " live") + '</button><span class="muted small">They are written to the live question bank and show up in the app without an update. They appear for everyone studying that role, and each one cites this protocol.</span></div></div>';
+  }
+  function check(q) {
+    var o = [q.a].concat(q.w).map(function (s) { return String(s || "").trim(); });
+    if (!String(q.q || "").trim()) return "The question is empty.";
+    if (o.some(function (s) { return !s; })) return "Every answer needs text.";
+    if (new Set(o.map(function (s) { return s.toLowerCase(); })).size !== 4) return "Two answers are the same.";
+    if (/all of the above|none of the above|both a and b/i.test(o.join(" | "))) return "Do not use 'all/none of the above'.";
+    if (q.d && DRUGS && !DRUGS[q.d]) return "The drug id \"" + q.d + "\" is not in DrugBug. Fix it or clear it.";
+    if (!q.lv) return "Pick the role.";
+    return "";
+  }
+
+  /* ---------- actions ---------- */
+  function hash(s) { var h = 5381, i; for (i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0; return (h >>> 0).toString(36); }
+  function load() { return A.call("qpList").then(function (r) { P.list = r.protocols || []; P.sets = r.sets || []; P.err = ""; }).catch(function (e) { P.list = []; P.err = A.errTxt(e); }).then(draw); }
+  function open(id) {
+    var d = (P.list || []).filter(function (x) { return x.id === id; })[0]; if (!d) return;
+    P.sel = id; P.doc = d; P.qs = null; P.dropped = [];
+    P.form = { name: d.name || "", code: d.code || "", state: d.state || "", type: d.type || "EMS", roles: (d.roles || []).slice(), effective: d.effective || "", text: "", fileName: "", sections: [] };
+    P.pub = { perm: !!d.perm, permBy: d.permBy || "", rules: d.rules || "" }; P.gen.lv = (d.roles || [])[0] || P.gen.lv; msg("", "good"); draw();
+  }
+  function save() {
+    var F = P.form; if (F.name.trim().length < 3) { msg("Give the protocol a title (at least 3 letters).", "bad"); return draw(); }
+    P.busy = "save"; msg("", "good"); draw();
+    A.call("qpSave", { id: P.sel || undefined, name: F.name.trim(), code: F.code.trim(), roles: F.roles, effective: F.effective, status: (P.doc && P.doc.status) || "draft", setId: (P.doc && P.doc.setId) || "" }).then(function (r) {
+      P.sel = r.id; var meta = { id: r.id, name: F.name.trim(), code: F.code.trim().toUpperCase(), roles: F.roles.slice(), effective: F.effective, status: (P.doc && P.doc.status) || "draft", setId: (P.doc && P.doc.setId) || "" };
+      if (!F.sections.length) { P.doc = Object.assign({}, P.doc || {}, meta); msg("Saved the details. Add the protocol text (a file or pasted) to write questions from it."); return; }
+      return A.call("qpSections", { id: r.id, sections: F.sections.map(function (s) { return { title: s.title, page: s.page || "", text: s.text }; }) }).then(function (s) {
+        P.doc = Object.assign({}, P.doc || {}, meta, { nSections: s.sections, chars: s.chars }); msg("Saved. " + s.sections + " sections (" + s.chars.toLocaleString() + " characters) are stored and ready for questions.");
+      });
+    }).catch(function (e) { msg(A.errTxt(e), "bad"); }).then(function () { P.busy = ""; return load(); });
+  }
+  function parseRules(t) {
+    var out = {}; String(t || "").split("\n").forEach(function (ln) { var p = ln.split("|").map(function (s) { return s.trim(); }); var id = (p[0] || "").toLowerCase(); if (!id) return; out[id] = { mode: "note", lv: [], dose: p[1] || "", note: p[2] || "" }; });
+    return out;
+  }
+  function publish() {
+    var F = P.form, U = P.pub;
+    if (!U.perm || !U.permBy.trim()) { msg("Publishing needs written permission on file and the name of who granted it.", "bad"); return draw(); }
+    var rules = parseRules(U.rules), bad = DRUGS ? Object.keys(rules).filter(function (id) { return !DRUGS[id]; }) : [];
+    if (bad.length) { msg("Unknown drug id in the rules: " + bad.join(", "), "bad"); return draw(); }
+    P.busy = "publish"; draw();
+    var id = P.sel, doc = { id: id, name: F.name.trim(), agency: F.code.trim() || F.name.trim(), state: F.state, type: F.type, levels: F.roles.slice(), status: "published", perm: true, permBy: U.permBy.trim(), drugs: rules, rev: ((P.doc && P.doc.rev) || 0) + 1, updatedAt: Date.now(), by: (A.user() || {}).uid || "" };
+    A.db().doc("protocols/" + id).set(doc).then(function () {
+      return A.call("qpSave", { id: id, name: doc.name, code: F.code.trim(), roles: F.roles, effective: F.effective, status: "live", setId: id });
+    }).then(function () { P.doc = Object.assign({}, P.doc, { status: "live", setId: id, perm: true, permBy: doc.permBy, rev: doc.rev }); msg("Live. \"" + doc.name + "\" is now in the Protocols tab for everyone, on the website and in the iPhone app."); })
+      .catch(function (e) { msg(/permission|insufficient/i.test((e && e.message) || "") ? "Firestore refused the write. Your account must be listed in the admins collection." : A.errTxt(e), "bad"); }).then(function () { P.busy = ""; return load(); });
+  }
+  function unpublish() {
+    P.busy = "publish"; draw();
+    A.db().doc("protocols/" + P.sel).set({ status: "unpublished", updatedAt: Date.now() }, { merge: true }).then(function () { return A.call("qpSave", { id: P.sel, name: P.form.name.trim(), code: P.form.code.trim(), roles: P.form.roles, effective: P.form.effective, status: "draft", setId: (P.doc && P.doc.setId) || "" }); })
+      .then(function () { P.doc = Object.assign({}, P.doc, { status: "draft" }); msg("Taken off the app. Users who picked it keep their other settings."); }).catch(function (e) { msg(A.errTxt(e), "bad"); }).then(function () { P.busy = ""; return load(); });
+  }
+  function generate() {
+    var g = P.gen, count = Math.round(Number(g.count)) || 0;
+    if (!g.lv) { msg("Pick the role these questions are for.", "bad"); return draw(); }
+    if (count < 1 || count > 25) { msg("Ask for 1 to 25 questions per run.", "bad"); return draw(); }
+    var req = { title: P.form.name.trim(), lv: g.lv, role: lvName(g.lv), count: count, focus: g.focus };
+    if (P.sel && P.doc && P.doc.nSections && !P.form.sections.length) req.id = P.sel; else if (P.form.sections.length) req.sections = P.form.sections.map(function (s) { return { title: s.title, page: s.page || "", text: s.text }; }); else { msg("Add the protocol text first (upload a file or paste it).", "bad"); return draw(); }
+    if (P.sel && !req.id) req.title = req.title || "Protocol";
+    P.busy = "gen"; msg("", "good"); draw();
+    A.call("generateProtocolQuestions", req).then(function (r) {
+      P.dropped = r.dropped || []; P.qs = (r.questions || []).map(function (q) { return { q: q.q, a: q.a, w: (q.w || []).slice(0, 3), x: q.x || "", cat: q.cat || "", d: DRUGS && q.d && !DRUGS[q.d] ? "" : (q.d || ""), lv: q.lv || g.lv, section: q.section || "", page: q.page || "", quote: q.quote || "", flags: q.flags || [], on: true, done: false }; });
+      msg(P.qs.length ? "Claude wrote " + P.qs.length + " grounded question" + (P.qs.length === 1 ? "" : "s") + ". Review them below." : "No usable questions came back. Try a different focus or more text.", P.qs.length ? "good" : "warn");
+    }).catch(function (e) { msg(A.errTxt(e), "bad"); }).then(function () { P.busy = ""; draw(); });
+  }
+  function publishQs() {
+    var todo = P.qs.filter(function (q) { return q.on && !q.done; }), bad = todo.map(check).filter(Boolean);
+    if (bad.length) { msg("Fix the highlighted questions before publishing (" + bad[0] + ")", "bad"); return draw(); }
+    if (!todo.length) return;
+    var pname = P.form.name.trim(), pid = P.sel || "", by = (A.user() || {}).uid || "", n = 0;
+    P.busy = "pubq"; draw();
+    var chain = Promise.resolve();
+    todo.forEach(function (q) {
+      chain = chain.then(function () {
+        var id = "qp" + hash(pid + "|" + q.q), doc = { id: id, lv: q.lv, d: q.d || "", q: q.q.trim(), a: q.a.trim(), w: q.w.map(function (s) { return s.trim(); }), x: String(q.x || "").trim(), cat: q.cat || "", status: "published", rev: 1, src: "protocol", protocolId: pid, protocolName: pname, section: q.section || "", quote: q.quote || "", at: Date.now(), by: by };
+        return A.db().doc("qbank/" + id).set(doc).then(function () { q.done = true; n++; });
+      });
+    });
+    chain.then(function () { msg(n + " question" + (n === 1 ? " is" : "s are") + " live in the question bank now. The app picks them up without an update."); })
+      .catch(function (e) { msg((n ? n + " published, then stopped: " : "") + (/permission|insufficient/i.test((e && e.message) || "") ? "Firestore refused the write. Your account must be listed in the admins collection." : A.errTxt(e)), "bad"); }).then(function () { P.busy = ""; draw(); });
+  }
+
+  /* ---------- events ---------- */
+  root.addEventListener("input", function (e) {
+    var el = e.target, k = el.getAttribute("data-k");
+    if (k) { P.form[k] = el.value; if (k === "text") { clearTimeout(P.t); P.t = setTimeout(function () { fromText(); var i = document.getElementById("secInfo"); if (i) i.innerHTML = P.form.sections.length ? "<strong>" + P.form.sections.length + " sections</strong> ready. Save to store them." : "No text yet."; }, 400); } return; }
+    if (el.id === "permBy") P.pub.permBy = el.value; else if (el.id === "rules") P.pub.rules = el.value; else if (el.id === "gCount") P.gen.count = el.value; else if (el.id === "gFocus") P.gen.focus = el.value;
+    var qe = el.getAttribute("data-q"), card = el.closest(".q"); if (qe && card) { var q = P.qs[+card.getAttribute("data-i")]; if (/^w\d$/.test(qe)) q.w[+qe.slice(1)] = el.value; else if (qe !== "on") q[qe] = el.value; }
+  });
+  root.addEventListener("change", function (e) {
+    var el = e.target, qe = el.getAttribute("data-q"), card = el.closest(".q");
+    if (el.id === "pFile") {
+      var f = el.files && el.files[0]; if (!f) return;
+      msg("Reading " + f.name + "…", "good"); draw();
+      var pr = /\.pdf$/i.test(f.name) ? readPdf(f).then(function (r) { P.form.text = r.text; setSections(splitText(r.text, r.pageOf), f.name); }) : f.text().then(function (t) { P.form.text = t; setSections(splitText(t), f.name); });
+      pr.then(function () { msg(P.form.sections.length ? "Read " + P.form.sections.length + " sections from " + f.name + "." : "No readable text was found in " + f.name + ". If it is a scanned PDF, paste the text instead.", P.form.sections.length ? "good" : "bad"); }).catch(function (x) { msg(A.errTxt(x), "bad"); }).then(draw);
+      return;
+    }
+    if (el.getAttribute("data-role")) { var r = el.getAttribute("data-role"), i = P.form.roles.indexOf(r); if (el.checked && i < 0) P.form.roles.push(r); else if (!el.checked && i >= 0) P.form.roles.splice(i, 1); return; }
+    if (el.getAttribute("data-k")) { P.form[el.getAttribute("data-k")] = el.value; return; }
+    if (el.id === "perm") P.pub.perm = el.checked; else if (el.id === "gLv") P.gen.lv = el.value;
+    if (qe && card) { var q = P.qs[+card.getAttribute("data-i")]; if (qe === "on") { q.on = el.checked; draw(); } else if (qe === "lv") q.lv = el.value; else if (!/^w\d$/.test(qe)) q[qe] = el.value; }
+  });
+  root.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-a]"); if (!b) return; var a = b.getAttribute("data-a");
+    if (a === "new") { P.sel = null; P.doc = null; P.qs = null; P.form = { name: "", code: "", state: "", type: "EMS", roles: [], effective: "", text: "", fileName: "", sections: [] }; P.pub = { perm: false, permBy: "", rules: "" }; msg("", "good"); return draw(); }
+    if (a === "open") return open(b.getAttribute("data-id"));
+    if (a === "save") return save();
+    if (a === "publish") return publish();
+    if (a === "unpublish") return unpublish();
+    if (a === "gen") return generate();
+    if (a === "pubq") return publishQs();
+  });
+  A.ready.then(function (u) { if (!u) { P.err = "Sign in on the dashboard first."; P.list = []; return draw(); } draw(); load(); });
+})();
+</script>
+</body>
+</html>

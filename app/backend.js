@@ -69,7 +69,17 @@
       return true;
     })
     .catch(function (e) { D.err = D.err || (e && (e.code || e.message)) || "unknown"; if (D.stage !== "sdk-missing") D.stage = "error-" + D.stage; return null; });
-  var owner = function () { var u = auth && auth.currentUser; return !!u && !u.isAnonymous && (C.ownerUids || []).indexOf(u.uid) >= 0; };
+  /* Who counts as the owner or an admin (Nov 28 2026): the uids in app-config.js (ownerUids) AND anyone with a document in Firestore admins/{uid}, which is
+     the same list the security rules and the Control Center trust. admins/{uid} can be read by its own person only, so each signed-in user asks about
+     themself once; the answer is kept until they sign in as someone else. */
+  var adminSeen = { uid: "", ok: false, done: false };
+  var owner = function () {
+    var u = auth && auth.currentUser;
+    if (!u || u.isAnonymous) return Promise.resolve(false);
+    if ((C.ownerUids || []).indexOf(u.uid) >= 0) return Promise.resolve(true);
+    if (adminSeen.done && adminSeen.uid === u.uid) return Promise.resolve(adminSeen.ok);
+    return fs.doc("admins/" + u.uid).get().then(function (d) { adminSeen = { uid: u.uid, ok: !!d.exists, done: true }; return adminSeen.ok; }, function () { return false; });
+  };
 
   /* Sign in with Apple happens natively (AuthenticationServices) through messageHandlers.auth; the native side
      returns {idToken, rawNonce, code} or {error}. */
@@ -169,7 +179,7 @@
         if (name === "user") return {
           id: function () { return Promise.resolve(auth.currentUser ? auth.currentUser.uid : null); },
           me: function () { return Promise.resolve({ id: auth.currentUser ? auth.currentUser.uid : null, name: "" }); },
-          isOwner: function () { return Promise.resolve(owner()); }, canEdit: function () { return Promise.resolve(owner()); }, can: function () { return Promise.resolve(owner()); }
+          isOwner: function () { return owner(); }, canEdit: function () { return owner(); }, can: function () { return owner(); }
         };
         if (name === "account") return account;
         return null;

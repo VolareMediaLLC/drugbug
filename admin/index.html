@@ -160,6 +160,7 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
   <button role="tab" data-tab="people">Graders</button>
   <button role="tab" data-tab="classes">Schools &amp; sales</button>
   <button role="tab" data-tab="codes">Codes</button>
+  <button role="tab" data-tab="rewards">Rewards</button>
   <button role="tab" data-tab="notes">Updates</button>
 </nav>
 <nav class="subtabs hide" id="subtabs" aria-label="Section pages"></nav>
@@ -170,6 +171,10 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
   <div class="lights" id="lights"><span class="light"><i></i>Checking…</span></div>
   <div class="cock" id="cock"></div>
 </section>
+
+<!-- REWARDS and PROTOCOLS (Nov 28 2026) -->
+<section data-page="rewards" class="hide"><iframe class="emb" data-src="rewards.html?embed=1" title="Weekly Rewards and Trophies"></iframe></section>
+<section data-page="protocols" class="hide"><iframe class="emb" data-src="protocols.html?embed=1" title="Protocols and AI Questions"></iframe></section>
 
 <!-- GRADING -->
 <section data-page="qedit" class="hide"><iframe class="emb" data-src="../qedit/?embed=1" title="Question Editor"></iframe></section>
@@ -262,6 +267,7 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
 
 <script src="../app/vendor/firebase-app-compat.js"></script>
 <script src="../app/vendor/firebase-auth-compat.js"></script>
+<script src="../app/vendor/firebase-firestore-compat.js"></script>
 <script>
 (function () {
   "use strict";
@@ -326,8 +332,8 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
   var TAB = "", LOADED = {};
   /* sections in working order (owner, Nov 24 2026: "organize the dashboard, the tabs are random"; the question graders
      and the Question Editor, Med Brief and sales leads are now inside it instead of separate pages) */
-  var GROUPS = { overview: ["overview"], metrics: ["metrics"], questions: ["qedit", "changes", "grading", "analytics", "brief"], people: ["evaluators", "signups"], classes: ["classes", "leads", "outreach", "helpers", "friends"], codes: ["codes", "salescodes"], notes: ["dailylog", "notes"] };
-  var SUBNAME = { qedit: "Question Editor & sign-off", brief: "Med Brief", leads: "Sales leads", outreach: "Agencies & schools", helpers: "Helpers & stats", friends: "Friends & family", signups: "Grader sign-ups", evaluators: "Graders (evaluators)", codes: "Codes", salescodes: "Sales codes & approvals", changes: "Grader flags", grading: "Grade questions", analytics: "How students score", dailylog: "Daily log", notes: "Update notes", classes: "Schools" };
+  var GROUPS = { overview: ["overview"], metrics: ["metrics"], rewards: ["rewards"], questions: ["qedit", "protocols", "changes", "grading", "analytics", "brief"], people: ["evaluators", "signups"], classes: ["classes", "leads", "outreach", "helpers", "friends"], codes: ["codes", "salescodes"], notes: ["dailylog", "notes"] };
+  var SUBNAME = { protocols: "Protocols & AI Questions", rewards: "Weekly Rewards / Trophies", qedit: "Question Editor & sign-off", brief: "Med Brief", leads: "Sales leads", outreach: "Agencies & schools", helpers: "Helpers & stats", friends: "Friends & family", signups: "Grader sign-ups", evaluators: "Graders (evaluators)", codes: "Codes", salescodes: "Sales codes & approvals", changes: "Grader flags", grading: "Grade questions", analytics: "How students score", dailylog: "Daily log", notes: "Update notes", classes: "Schools" };
   var SUBNOTE = { changes: "Everything evaluators flagged that you haven't decided yet: Bad or Not relevant votes, suggested fixes, weak wrong answers, pulled questions in the audit and held pilot questions. Mark each one Good (after editing it if needed), Bad or Not relevant and it leaves this list.", evaluators: "Everyone with an evaluator code: what they graded, and their suggestions.", grading: "Read, rate and fix questions. Pilot questions go live after 2 Good votes." };
   var LASTSUB = { people: "evaluators", questions: "qedit", classes: "classes", notes: "dailylog", codes: "codes" };
   function groupOf(t) { for (var g in GROUPS) if (GROUPS[g].indexOf(t) >= 0) return g; return null; }
@@ -369,7 +375,15 @@ svg.sp{width:100%;display:block;margin-top:6px}.sp.none{font-size:12px;color:var
     LOADED = {};
     /* adminOverview answers only the owner; anyone else is shown the door */
     call("adminOverview").then(function (o) { OV = o; enter(); }).catch(function (e) {
-      if (/owner|permission/i.test(e.message)) { show("vNo", true); return; }
+      if (/owner|permission/i.test(e.message)) {
+        /* not in the server's OWNER_UIDS list: anyone listed in Firestore admins/{uid} (the list the security rules trust) still gets in. The Rewards and
+           Protocols tools answer to that list; the older panels that only answer OWNER_UIDS show a note instead of numbers. */
+        firebase.firestore().doc("admins/" + u.uid).get().then(function (d) {
+          if (!d.exists) { show("vNo", true); return; }
+          OV = null; OV_ERR = "Signed in as an admin. Some Home panels need your uid in the server's OWNER_UIDS list"; enter();
+        }).catch(function () { show("vNo", true); });
+        return;
+      }
       OV = null; OV_ERR = errTxt(e); enter();    /* functions not deployed yet: still show the rest */
     });
   });
